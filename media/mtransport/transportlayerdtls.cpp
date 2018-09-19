@@ -1528,7 +1528,7 @@ TransportLayerDtls::RecordCipherTelemetry() {
   nsresult rv = GetCipherSuite(&cipher);
 
   if (NS_FAILED(rv)) {
-    MOZ_MTLOG(ML_ERROR, "Failed to get cipher suite");
+    MOZ_MTLOG(ML_ERROR, "Failed to get DTLS cipher suite");
     return;
   }
 
@@ -1580,6 +1580,34 @@ TransportLayerDtls::RecordCipherTelemetry() {
   }
 
   Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_CIPHER, t_cipher);
+
+  rv = GetSrtpCipher(&cipher);
+
+  if (NS_FAILED(rv)) {
+    MOZ_MTLOG(ML_ERROR, "Failed to get SRTP cipher suite");
+    return;
+  }
+
+  mozilla::Telemetry::LABELS_WEBRTC_SRTP_CIPHER label =
+    mozilla::Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Unknown;
+
+  switch (cipher) {
+    case kDtlsSrtpAes128CmHmacSha1_80:
+      label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Aes128CmHmacSha1_80;
+      break;
+    case kDtlsSrtpAes128CmHmacSha1_32:
+      label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Aes128CmHmacSha1_32;
+      break;
+    case kDtlsSrtpAeadAes128Gcm:
+      label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::AeadAes128Gcm;
+      break;
+    case kDtlsSrtpAeadAes256Gcm:
+      label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::AeadAes256Gcm;
+      break;
+  }
+
+  Telemetry::AccumulateCategorical(label);
+
 }
 
 }  // close namespace
