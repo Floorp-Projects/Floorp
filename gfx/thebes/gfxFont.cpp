@@ -10,6 +10,7 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SVGContextPaint.h"
 
 #include "mozilla/Logging.h"
@@ -827,6 +828,13 @@ gfxFont::gfxFont(const RefPtr<UnscaledFont>& aUnscaledFont,
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gFontCount;
 #endif
+
+    // Turn off AA for Ahem for testing purposes when requested.
+    if (MOZ_UNLIKELY(StaticPrefs::gfx_font_ahem_antialias_none() &&
+                     mFontEntry->FamilyName().EqualsLiteral("Ahem"))) {
+        mAntialiasOption = kAntialiasNone;
+    }
+
     mKerningSet = HasFeatureSet(HB_TAG('k','e','r','n'), mKerningEnabled);
 }
 
