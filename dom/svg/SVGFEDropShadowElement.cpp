@@ -104,18 +104,20 @@ SVGFEDropShadowElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                             SVGContentUtils::Y, &mNumberAttributes[DY])));
 
   FilterPrimitiveDescription descr(PrimitiveType::DropShadow);
-  descr.Attributes().Set(eDropShadowStdDeviation, Size(stdX, stdY));
-  descr.Attributes().Set(eDropShadowOffset, offset);
+  DropShadowAttributes atts;
+  atts.mStdDeviation = Size(stdX, stdY);
+  atts.mOffset = offset;
 
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
     const nsStyleSVGReset* styleSVGReset = frame->Style()->StyleSVGReset();
     Color color(Color::FromABGR(styleSVGReset->mFloodColor.CalcColor(frame)));
     color.a *= styleSVGReset->mFloodOpacity;
-    descr.Attributes().Set(eDropShadowColor, color);
+    atts.mColor = color;
   } else {
-    descr.Attributes().Set(eDropShadowColor, Color());
+    atts.mColor = Color();
   }
+  descr.Attributes() = AsVariant(std::move(atts));
   return descr;
 }
 

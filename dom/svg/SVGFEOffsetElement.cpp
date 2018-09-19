@@ -67,11 +67,13 @@ SVGFEOffsetElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                             nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   FilterPrimitiveDescription descr(PrimitiveType::Offset);
+  OffsetAttributes atts;
   IntPoint offset(int32_t(aInstance->GetPrimitiveNumber(
                             SVGContentUtils::X, &mNumberAttributes[DX])),
                   int32_t(aInstance->GetPrimitiveNumber(
                             SVGContentUtils::Y, &mNumberAttributes[DY])));
-  descr.Attributes().Set(eOffsetOffset, offset);
+  atts.mValue = offset;
+  descr.Attributes() = AsVariant(std::move(atts));
   return descr;
 }
 

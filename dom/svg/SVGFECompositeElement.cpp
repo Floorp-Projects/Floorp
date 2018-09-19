@@ -116,15 +116,17 @@ SVGFECompositeElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   FilterPrimitiveDescription descr(PrimitiveType::Composite);
+  CompositeAttributes atts;
   uint32_t op = mEnumAttributes[OPERATOR].GetAnimValue();
-  descr.Attributes().Set(eCompositeOperator, op);
+  atts.mOperator = op;
 
   if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
     float k[4];
     GetAnimatedNumberValues(k, k+1, k+2, k+3, nullptr);
-    descr.Attributes().Set(eCompositeCoefficients, k, 4);
+    atts.mCoefficients.AppendElements(k, 4);
   }
 
+  descr.Attributes() = AsVariant(std::move(atts));
   return descr;
 }
 

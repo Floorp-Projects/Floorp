@@ -81,7 +81,9 @@ SVGFEGaussianBlurElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance
   }
 
   FilterPrimitiveDescription descr(PrimitiveType::GaussianBlur);
-  descr.Attributes().Set(eGaussianBlurStdDeviation, Size(stdX, stdY));
+  GaussianBlurAttributes atts;
+  atts.mStdDeviation = Size(stdX, stdY);
+  descr.Attributes() = AsVariant(std::move(atts));
   return descr;
 }
 

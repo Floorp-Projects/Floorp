@@ -121,9 +121,10 @@ SVGFEMorphologyElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   int32_t rx, ry;
   GetRXY(&rx, &ry, *aInstance);
   FilterPrimitiveDescription descr(PrimitiveType::Morphology);
-  descr.Attributes().Set(eMorphologyRadii, Size(rx, ry));
-  descr.Attributes().Set(eMorphologyOperator,
-                         (uint32_t)mEnumAttributes[OPERATOR].GetAnimValue());
+  MorphologyAttributes atts;
+  atts.mRadii = Size(rx, ry);
+  atts.mOperator = (uint32_t)mEnumAttributes[OPERATOR].GetAnimValue();
+  descr.Attributes() = AsVariant(std::move(atts));
   return descr;
 }
 

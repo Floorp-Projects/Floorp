@@ -44,17 +44,17 @@ SVGFEDistantLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
           aAttribute == nsGkAtoms::elevation);
 }
 
-AttributeMap
-SVGFEDistantLightElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
+LightType
+SVGFEDistantLightElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance,
+                                                 nsTArray<float>& aFloatAttributes)
 {
   float azimuth, elevation;
   GetAnimatedNumberValues(&azimuth, &elevation, nullptr);
 
-  AttributeMap map;
-  map.Set(eLightType, (uint32_t)eLightTypeDistant);
-  map.Set(eDistantLightAzimuth, azimuth);
-  map.Set(eDistantLightElevation, elevation);
-  return map;
+  aFloatAttributes.SetLength(kDistantLightNumAttributes);
+  aFloatAttributes[kDistantLightAzimuthIndex] = azimuth;
+  aFloatAttributes[kDistantLightElevationIndex] = elevation;
+  return LightType::Distant;
 }
 
 already_AddRefed<SVGAnimatedNumber>
