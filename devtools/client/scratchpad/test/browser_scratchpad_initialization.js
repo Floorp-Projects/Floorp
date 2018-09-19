@@ -13,7 +13,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  gBrowser.loadURI("data:text/html,initialization test for Scratchpad");
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html,initialization test for Scratchpad");
 }
 
 function runTests() {

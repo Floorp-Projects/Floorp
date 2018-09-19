@@ -32,7 +32,7 @@ function test() {
       aCallback();
     });
 
-    aWindow.gBrowser.selectedBrowser.loadURI(testURI);
+    BrowserTestUtils.loadURI(aWindow.gBrowser.selectedBrowser, testURI);
   }
 
   function openPrivateBrowsingModeByUI(aWindow, aCallback) {

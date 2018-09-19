@@ -247,6 +247,9 @@ var ContentSearch = {
       this._reply(msg, "Blur");
       browser.loadURI(submission.uri.spec, {
         postData: submission.postData,
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
+          userContextId: win.gBrowser.selectedBrowser.getAttribute("userContextId"),
+        }),
       });
     } else {
       let params = {

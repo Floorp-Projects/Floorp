@@ -467,10 +467,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitTree(ParseNode* pn, ValueUsage valueUsage = ValueUsage::WantValue,
                                EmitLineNumberNote emitLineNote = EMIT_LINENOTE);
 
-    // Emit code for the tree rooted at pn with its own TDZ cache.
-    MOZ_MUST_USE bool emitTreeInBranch(ParseNode* pn,
-                                       ValueUsage valueUsage = ValueUsage::WantValue);
-
     // Emit global, eval, or module code for tree rooted at body. Always
     // encompasses the entire source.
     MOZ_MUST_USE bool emitScript(ParseNode* body);
@@ -774,7 +770,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool setOrEmitSetFunName(ParseNode* maybeFun, HandleAtom name);
 
     MOZ_MUST_USE bool emitInitializer(ParseNode* initializer, ParseNode* pattern);
-    MOZ_MUST_USE bool emitInitializerInBranch(ParseNode* initializer, ParseNode* pattern);
 
     MOZ_MUST_USE bool emitCallSiteObject(CallSiteNode* callSiteObj);
     MOZ_MUST_USE bool emitTemplateString(ListNode* templateString);

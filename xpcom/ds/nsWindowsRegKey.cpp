@@ -331,10 +331,9 @@ nsWindowsRegKey::ReadStringValue(const nsAString& aName, nsAString& aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsAString::iterator begin;
-  aResult.BeginWriting(begin);
+  auto begin = aResult.BeginWriting();
 
-  rv = RegQueryValueExW(mKey, flatName.get(), 0, &type, (LPBYTE)begin.get(),
+  rv = RegQueryValueExW(mKey, flatName.get(), 0, &type, (LPBYTE)begin,
                         &size);
 
   if (!aResult.CharAt(resultLen - 1)) {
@@ -423,11 +422,10 @@ nsWindowsRegKey::ReadBinaryValue(const nsAString& aName, nsACString& aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsACString::iterator begin;
-  aResult.BeginWriting(begin);
+  auto begin = aResult.BeginWriting();
 
   rv = RegQueryValueExW(mKey, PromiseFlatString(aName).get(), 0, nullptr,
-                        (LPBYTE)begin.get(), &size);
+                        (LPBYTE)begin, &size);
   return (rv == ERROR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
 }
 

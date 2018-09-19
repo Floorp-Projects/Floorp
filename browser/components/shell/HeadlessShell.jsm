@@ -13,9 +13,9 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 // before they are called.
 const progressListeners = new Map();
 
-function loadContentWindow(webNavigation, uri) {
+function loadContentWindow(webNavigation, uri, principal) {
   return new Promise((resolve, reject) => {
-    webNavigation.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    webNavigation.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null, principal);
     let docShell = webNavigation.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDocShell);
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -50,7 +50,7 @@ async function takeScreenshot(fullWidth, fullHeight, contentWidth, contentHeight
   try {
     var windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
     // nsIWindowlessBrowser inherits from nsIWebNavigation.
-    let contentWindow = await loadContentWindow(windowlessBrowser, url);
+    let contentWindow = await loadContentWindow(windowlessBrowser, url, Services.scriptSecurityManager.getSystemPrincipal());
     contentWindow.resizeTo(contentWidth, contentHeight);
 
     let canvas = contentWindow.document.createElementNS("http://www.w3.org/1999/xhtml", "html:canvas");

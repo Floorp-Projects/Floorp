@@ -19,7 +19,9 @@ from mozharness.mozilla.fetches import FetchesMixin
 class SingleTestMixin(FetchesMixin):
     """Utility functions for per-test testing like test verification and per-test coverage."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(SingleTestMixin, self).__init__(**kwargs)
+
         self.suites = {}
         self.tests_downloaded = False
         self.reftest_test_dir = None

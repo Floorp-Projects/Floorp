@@ -33,7 +33,7 @@ function test() {
     is(workerClient1.isClosed, false, "worker in tab 1 should not be closed");
 
     executeSoon(() => {
-      tab.linkedBrowser.loadURI(TAB2_URL);
+      BrowserTestUtils.loadURI(tab.linkedBrowser, TAB2_URL);
     });
     yield waitForWorkerClose(workerClient1);
     is(workerClient1.isClosed, true, "worker in tab 1 should be closed");
