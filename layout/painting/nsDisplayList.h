@@ -3881,6 +3881,7 @@ public:
   virtual void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) = 0;
   virtual already_AddRefed<imgIContainer> GetImage() = 0;
   virtual nsRect GetDestRect() const = 0;
+  virtual nsSize GetRepeatSize() const { return nsSize(0, 0); }
 
   bool SupportsOptimizingToImage() const override { return true; }
 };
@@ -4408,6 +4409,7 @@ public:
     nsRect backgroundRect;
     nsRect fillArea;
     nsRect destArea;
+    nsSize repeatSize;
     uint32_t layer;
     bool isRasterImage;
     bool shouldFixToViewport;
@@ -4514,6 +4516,7 @@ public:
                                nsDisplayListBuilder* aBuilder) override;
   already_AddRefed<imgIContainer> GetImage() override;
   nsRect GetDestRect() const override;
+  nsSize GetRepeatSize() const override;
 
   void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) override
   {
@@ -4584,6 +4587,7 @@ protected:
   nsRect mBackgroundRect; // relative to the reference frame
   nsRect mFillRect;
   nsRect mDestRect;
+  nsSize mRepeatSize;
   /* Bounds of this display item */
   nsRect mBounds;
   uint32_t mLayer;
