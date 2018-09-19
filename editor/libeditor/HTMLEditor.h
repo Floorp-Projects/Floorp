@@ -21,7 +21,6 @@
 #include "nsICSSLoaderObserver.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMEventListener.h"
-#include "nsIEditorBlobListener.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
 #include "nsIHTMLAbsPosEditor.h"
@@ -1490,7 +1489,7 @@ protected: // Shouldn't be used by friend classes
   MaybeCollapseSelectionAtFirstEditableNode(
     bool aIgnoreIfSelectionInEditingHost);
 
-  class BlobReader final : public nsIEditorBlobListener
+  class BlobReader final
   {
   public:
     BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
@@ -1498,8 +1497,11 @@ protected: // Shouldn't be used by friend classes
                nsINode* aDestinationNode, int32_t aDestOffset,
                bool aDoDeleteSelection);
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIEDITORBLOBLISTENER
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BlobReader)
+    NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(BlobReader)
+
+    nsresult OnResult(const nsACString& aResult);
+    nsresult OnError(const nsAString& aErrorName);
 
   private:
     ~BlobReader()
@@ -1552,6 +1554,42 @@ protected: // Shouldn't be used by friend classes
                       Element** aNewCell);
 
   /**
+   * DeleteSelectedTableColumnsWithTransaction() removes cell elements which
+   * belong to same columns of selected cell elements.
+   * If only one cell element is selected or first selection range is
+   * in a cell, removes cell elements which belong to same column.
+   * If 2 or more cell elements are selected, removes cell elements which
+   * belong to any of all selected columns.  In this case,
+   * aNumberOfColumnsToDelete is ignored.
+   * If there is no selection ranges, returns error.
+   * If selection is not in a cell element, this does not return error,
+   * just does nothing.
+   * WARNING: This does not remove <col> nor <colgroup> elements.
+   *
+   * @param aNumberOfColumnsToDelete    Number of columns to remove.  This is
+   *                                    ignored if 2 ore more cells are
+   *                                    selected.
+   */
+  nsresult
+  DeleteSelectedTableColumnsWithTransaction(int32_t aNumberOfColumnsToDelete);
+
+  /**
+   * DeleteTableColumnWithTransaction() removes cell elements which belong
+   * to the specified column.
+   * This method adjusts colspan attribute value if cells spanning the
+   * column to delete.
+   * WARNING: This does not remove <col> nor <colgroup> elements.
+   *
+   * @param aTableElement       The <table> element which contains the
+   *                            column which you want to remove.
+   * @param aRowIndex           Index of the column which you want to remove.
+   *                            0 is the first column.
+   */
+  nsresult
+  DeleteTableColumnWithTransaction(Element& aTableElement,
+                                   int32_t aColumnIndex);
+
+  /**
    * DeleteSelectedTableRowsWithTransaction() removes <tr> elements.
    * If only one cell element is selected or first selection range is
    * in a cell, removes <tr> elements starting from a <tr> element
@@ -1586,7 +1624,6 @@ protected: // Shouldn't be used by friend classes
   /**
    * Helpers that don't touch the selection or do batch transactions.
    */
-  nsresult DeleteColumn(Element* aTable, int32_t aColIndex);
   nsresult DeleteCellContents(Element* aCell);
 
   /**
@@ -1616,11 +1653,16 @@ protected: // Shouldn't be used by friend classes
   static nsTableWrapperFrame* GetTableFrame(Element* aTable);
 
   /**
-   * Needed to do appropriate deleting when last cell or row is about to be
-   * deleted.  This doesn't count cells that don't start in the given row (are
-   * spanning from row above).
+   * GetNumberOfCellsInRow() returns number of actual cell elements in the row.
+   * If some cells appear by "rowspan" in other rows, they are ignored.
+   *
+   * @param aTableElement   The <table> element.
+   * @param aRowIndex       Valid row index in aTableElement.  This method
+   *                        counts cell elements in the row.
+   * @return                -1 if this meets unexpected error.
+   *                        Otherwise, number of cells which this method found.
    */
-  int32_t GetNumberOfCellsInRow(Element* aTable, int32_t rowIndex);
+  int32_t GetNumberOfCellsInRow(Element& aTableElement, int32_t aRowIndex);
 
   /**
    * Test if all cells in row or column at given index are selected.
@@ -2265,6 +2307,7 @@ protected:
   friend class EditorBase;
   friend class EmptyEditableFunctor;
   friend class HTMLEditRules;
+  friend class SlurpBlobEventListener;
   friend class TextEditor;
   friend class WSRunObject;
 };

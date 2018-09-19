@@ -61,7 +61,25 @@ interface nsITableEditor : nsISupports
     *  have to be contiguous.
     */
   void deleteTableCell(in long  aNumber);
-  void deleteTableColumn(in long  aNumber);
+
+  /**
+   * deleteTableColumn() removes cell elements which belong to same columns
+   * of selected cell elements.
+   * If only one cell element is selected or first selection range is
+   * in a cell, removes cell elements which belong to same column.
+   * If 2 or more cell elements are selected, removes cell elements which
+   * belong to any of all selected columns.  In this case,
+   * aNumberOfColumnsToDelete is ignored.
+   * If there is no selection ranges, throws exception.
+   * If selection is not in a cell element, just does nothing without
+   * throwing exception.
+   * WARNING: This does not remove <col> nor <colgroup> elements.
+   *
+   * @param aNumberOfColumnsToDelete    Number of columns to remove.  This is
+   *                                    ignored if 2 ore more cells are
+   *                                    selected.
+   */
+  void deleteTableColumn(in long aNumberOfColumnsToDelete);
 
   /**
    * deleteTableRow() removes <tr> elements.
