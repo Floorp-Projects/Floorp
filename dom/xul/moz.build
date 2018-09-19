@@ -23,6 +23,7 @@ if CONFIG['MOZ_XUL']:
 
     EXPORTS.mozilla.dom += [
         'XULFrameElement.h',
+        'XULMenuElement.h',
         'XULPopupElement.h',
         'XULScrollElement.h',
     ]
@@ -38,6 +39,7 @@ if CONFIG['MOZ_XUL']:
         'nsXULSortService.cpp',
         'XULDocument.cpp',
         'XULFrameElement.cpp',
+        'XULMenuElement.cpp',
         'XULPopupElement.cpp',
         'XULScrollElement.cpp',
     ]
