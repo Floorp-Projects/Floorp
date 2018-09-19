@@ -194,8 +194,12 @@ typedef bool (*IonBinaryArithICFn)(JSContext* cx, HandleScript outerScript, IonB
 static const VMFunction IonBinaryArithICInfo =
     FunctionInfo<IonBinaryArithICFn>(IonBinaryArithIC::update, "IonBinaryArithIC::update");
 
-typedef bool (*IonCompareICFn)(JSContext* cx, HandleScript outerScript, IonCompareIC* stub,
-                                    HandleValue lhs, HandleValue rhs, MutableHandleValue res);
+typedef bool (*IonCompareICFn)(JSContext* cx,
+                               HandleScript outerScript,
+                               IonCompareIC* stub,
+                               HandleValue lhs,
+                               HandleValue rhs,
+                               bool* res);
 static const VMFunction IonCompareICInfo =
     FunctionInfo<IonCompareICFn>(IonCompareIC::update, "IonCompareIC::update");
 
@@ -419,8 +423,8 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         pushArg(ImmGCPtr(gen->info().script()));
         callVM(IonCompareICInfo, lir);
 
-        StoreValueTo(compareIC->output()).generate(this);
-        restoreLiveIgnore(lir, StoreValueTo(compareIC->output()).clobbered());
+        StoreRegisterTo(compareIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreRegisterTo(compareIC->output()).clobbered());
 
         masm.jump(ool->rejoin());
         return;
@@ -2930,11 +2934,11 @@ CodeGenerator::visitStringReplace(LStringReplace* lir)
 }
 
 void
-CodeGenerator::visitBinaryCache(LBinaryCache* lir)
+CodeGenerator::visitBinaryValueCache(LBinaryValueCache* lir)
 {
     LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
-    TypedOrValueRegister lhs = TypedOrValueRegister(ToValue(lir, LBinaryCache::LhsInput));
-    TypedOrValueRegister rhs = TypedOrValueRegister(ToValue(lir, LBinaryCache::RhsInput));
+    TypedOrValueRegister lhs = TypedOrValueRegister(ToValue(lir, LBinaryValueCache::LhsInput));
+    TypedOrValueRegister rhs = TypedOrValueRegister(ToValue(lir, LBinaryValueCache::RhsInput));
     ValueOperand output = ToOutValue(lir);
 
     JSOp jsop = JSOp(*lir->mirRaw()->toInstruction()->resumePoint()->pc());
@@ -2950,6 +2954,22 @@ CodeGenerator::visitBinaryCache(LBinaryCache* lir)
         addIC(lir, allocateIC(ic));
         return;
       }
+      default:
+        MOZ_CRASH("Unsupported jsop in MBinaryValueCache");
+    }
+}
+
+void
+CodeGenerator::visitBinaryBoolCache(LBinaryBoolCache* lir)
+{
+    LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
+    TypedOrValueRegister lhs = TypedOrValueRegister(ToValue(lir, LBinaryBoolCache::LhsInput));
+    TypedOrValueRegister rhs = TypedOrValueRegister(ToValue(lir, LBinaryBoolCache::RhsInput));
+    Register output = ToRegister(lir->output());
+
+    JSOp jsop = JSOp(*lir->mirRaw()->toInstruction()->resumePoint()->pc());
+
+    switch (jsop) {
       case JSOP_LT:
       case JSOP_LE:
       case JSOP_GT:
@@ -2963,7 +2983,7 @@ CodeGenerator::visitBinaryCache(LBinaryCache* lir)
         return;
       }
       default:
-        MOZ_CRASH("Unsupported jsop in MBinaryCache");
+        MOZ_CRASH("Unsupported jsop in MBinaryBoolCache");
     }
 }
 
