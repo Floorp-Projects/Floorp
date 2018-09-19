@@ -117,6 +117,12 @@
         ] };
       testAccessibleTree("grid", tree);
 
+      tree =
+        { SECTION: [ // presentation_owner
+          // Can't own ancestor, so no children.
+        ] };
+      testAccessibleTree("presentation_owner", tree);
+
       SimpleTest.finish();
     }
 
@@ -180,6 +186,12 @@
   <div role="row" id="grid-row2">
     <div role="gridcell">cell 2,1</div>
     <div role="gridcell">cell 2,2</div>
+  </div>
+
+  <!-- Owned child which is an ancestor of its owner but didn't yet exist when
+       aria-owns relocation was processed (bug 1485097). -->
+  <div id="presentation" role="presentation">
+    <div id="presentation_owner" aria-owns="presentation"></div>
   </div>
 </body>
 

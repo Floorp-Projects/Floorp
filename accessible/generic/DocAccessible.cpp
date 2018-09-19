@@ -19,6 +19,7 @@
 #include "TreeWalker.h"
 #include "xpcAccessibleDocument.h"
 
+#include "nsContentUtils.h"
 #include "nsIMutableArray.h"
 #include "nsICommandManager.h"
 #include "nsIDocShell.h"
@@ -2089,6 +2090,11 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
 
     // Make an attempt to create an accessible if it wasn't created yet.
     if (!child) {
+      // An owned child cannot be an ancestor of the owner.
+      if (nsContentUtils::ContentIsDescendantOf(aOwner->Elm(), childEl)) {
+        continue;
+      }
+
       if (aOwner->IsAcceptableChild(childEl)) {
         child = GetAccService()->CreateAccessible(childEl, aOwner);
         if (child) {
