@@ -193,12 +193,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
     }
   }
 
+  int dst_width = buffer->width();
+  int dst_height = buffer->height();
+
+  // LibYuv expects pre-rotation_mode values for dst.
+  // Stride values should correspond to the destination values.
+  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
+    std::swap(dst_width, dst_height);
+  }
+
   const int conversionResult = libyuv::ConvertToI420(
       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
       buffer.get()->StrideV(), 0, 0,  // No Cropping
-      width, height, target_width, target_height, rotation_mode,
+      width, height, dst_width, dst_height, rotation_mode,
       ConvertVideoType(frameInfo.videoType));
   if (conversionResult != 0) {
     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
