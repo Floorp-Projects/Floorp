@@ -77,7 +77,10 @@ protected:
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override
   {
-    aAttrs = ImageLayerAttributes(mSamplingFilter, mScaleToSize, mScaleMode);
+    aAttrs = ImageLayerAttributes(mSamplingFilter,
+                                  mScaleToSize,
+                                  mScaleMode,
+                                  mRepeatSize);
   }
 
   virtual Layer* AsLayer() override { return this; }

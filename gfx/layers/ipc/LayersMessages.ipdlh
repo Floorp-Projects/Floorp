@@ -306,7 +306,13 @@ struct RefLayerAttributes {
   LayersId id;
   EventRegionsOverride eventRegionsOverride;
 };
-struct ImageLayerAttributes     { SamplingFilter samplingFilter; IntSize scaleToSize; ScaleMode scaleMode; };
+
+struct ImageLayerAttributes {
+  SamplingFilter samplingFilter;
+  IntSize scaleToSize;
+  ScaleMode scaleMode;
+  IntSize repeatSize;
+};
 
 union SpecificLayerAttributes {
   null_t;

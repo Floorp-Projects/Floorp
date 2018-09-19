@@ -638,6 +638,7 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
     const ImageLayerAttributes& attrs = specific.get_ImageLayerAttributes();
     imageLayer->SetSamplingFilter(attrs.samplingFilter());
     imageLayer->SetScaleToSize(attrs.scaleToSize(), attrs.scaleMode());
+    imageLayer->SetRepeatSize(attrs.repeatSize());
     break;
   }
   default:
