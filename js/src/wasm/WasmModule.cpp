@@ -39,14 +39,17 @@ using namespace js::wasm;
 
 class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
 {
-    SharedModule            module_;
     SharedCompileArgs       compileArgs_;
+    SharedBytes             bytecode_;
+    SharedModule            module_;
     Atomic<bool>            cancelled_;
 
   public:
-    Tier2GeneratorTaskImpl(Module& module, const CompileArgs& compileArgs)
-      : module_(&module),
-        compileArgs_(&compileArgs),
+    Tier2GeneratorTaskImpl(const CompileArgs& compileArgs, const ShareableBytes& bytecode,
+                           Module& module)
+      : compileArgs_(&compileArgs),
+        bytecode_(&bytecode),
+        module_(&module),
         cancelled_(false)
     {}
 
@@ -59,16 +62,16 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
     }
 
     void execute() override {
-        CompileTier2(*compileArgs_, *module_, &cancelled_);
+        CompileTier2(*compileArgs_, bytecode_->bytes, *module_, &cancelled_);
     }
 };
 
 void
-Module::startTier2(const CompileArgs& args)
+Module::startTier2(const CompileArgs& args, const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(!testingTier2Active_);
 
-    auto task = MakeUnique<Tier2GeneratorTaskImpl>(*this, args);
+    auto task = MakeUnique<Tier2GeneratorTaskImpl>(args, bytecode, *this);
     if (!task) {
         return;
     }
@@ -81,14 +84,14 @@ Module::startTier2(const CompileArgs& args)
 }
 
 bool
-Module::finishTier2(const LinkData& linkData2, UniqueCodeTier code2)
+Module::finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const
 {
     MOZ_ASSERT(code().bestTier() == Tier::Baseline && code2->tier() == Tier::Ion);
 
     // Install the data in the data structures. They will not be visible
     // until commitTier2().
 
-    if (!code().setTier2(std::move(code2), *bytecode_, linkData2)) {
+    if (!code().setTier2(std::move(code2), linkData2)) {
         return false;
     }
 
@@ -173,6 +176,7 @@ Module::serializedSize(const LinkData& linkData) const
            SerializedVectorSize(structTypes_) +
            SerializedVectorSize(dataSegments_) +
            SerializedVectorSize(elemSegments_) +
+           SerializedVectorSize(customSections_) +
            code_->serializedSize();
 }
 
@@ -190,11 +194,12 @@ Module::serialize(const LinkData& linkData, uint8_t* begin, size_t size) const
     cursor = SerializeVector(cursor, structTypes_);
     cursor = SerializeVector(cursor, dataSegments_);
     cursor = SerializeVector(cursor, elemSegments_);
+    cursor = SerializeVector(cursor, customSections_);
     cursor = code_->serialize(cursor, linkData);
     MOZ_RELEASE_ASSERT(cursor == begin + size);
 }
 
-/* static */ SharedModule
+/* static */ MutableModule
 Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
 {
     MutableMetadata metadata(maybeMetadata);
@@ -206,13 +211,6 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
     }
 
     const uint8_t* cursor = begin;
-
-    // Temporary. (asm.js doesn't save bytecode)
-    MOZ_RELEASE_ASSERT(maybeMetadata->isAsmJS());
-    MutableBytes bytecode = js_new<ShareableBytes>();
-    if (!bytecode) {
-        return nullptr;
-    }
 
     LinkData linkData(Tier::Serialized);
     cursor = linkData.deserialize(cursor);
@@ -250,8 +248,21 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
         return nullptr;
     }
 
+    CustomSectionVector customSections;
+    cursor = DeserializeVector(cursor, &customSections);
+    if (!cursor) {
+        return nullptr;
+    }
+
+    if (metadata->nameCustomSectionIndex) {
+        metadata->namePayload = customSections[*metadata->nameCustomSectionIndex].payload;
+    } else {
+        MOZ_RELEASE_ASSERT(!metadata->moduleName);
+        MOZ_RELEASE_ASSERT(metadata->funcNames.empty());
+    }
+
     SharedCode code;
-    cursor = Code::deserialize(cursor, *bytecode, linkData, *metadata, &code);
+    cursor = Code::deserialize(cursor, linkData, *metadata, &code);
     if (!cursor) {
         return nullptr;
     }
@@ -265,7 +276,7 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
                           std::move(structTypes),
                           std::move(dataSegments),
                           std::move(elemSegments),
-                          *bytecode);
+                          std::move(customSections));
 }
 
 /* virtual */ JSObject*
@@ -309,7 +320,7 @@ MapFile(PRFileDesc* file, PRFileInfo* info)
     return UniqueMapping(memory, MemUnmap(info->size));
 }
 
-SharedModule
+RefPtr<JS::WasmModule>
 wasm::DeserializeModule(PRFileDesc* bytecodeFile, UniqueChars filename, unsigned line)
 {
     PRFileInfo bytecodeInfo;
@@ -349,7 +360,13 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, UniqueChars filename, unsigned
 
     UniqueChars error;
     UniqueCharsVector warnings;
-    return CompileBuffer(*args, *bytecode, &error, &warnings);
+    SharedModule module = CompileBuffer(*args, *bytecode, &error, &warnings);
+    if (!module) {
+        return nullptr;
+    }
+
+    // The public interface is effectively const.
+    return RefPtr<JS::WasmModule>(const_cast<Module*>(module.get()));
 }
 
 /* virtual */ void
@@ -367,7 +384,7 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
              SizeOfVectorExcludingThis(structTypes_, mallocSizeOf) +
              SizeOfVectorExcludingThis(dataSegments_, mallocSizeOf) +
              SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
-             bytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
+             SizeOfVectorExcludingThis(customSections_, mallocSizeOf);
 
     if (debugUnlinkedCode_) {
         *data += debugUnlinkedCode_->sizeOfExcludingThis(mallocSizeOf);
@@ -885,7 +902,7 @@ Module::getDebugEnabledCode() const
     }
 
     MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables));
-    if (!debugCode || !debugCode->initialize(*bytecode_, *debugLinkData_)) {
+    if (!debugCode || !debugCode->initialize(*debugLinkData_)) {
         return nullptr;
     }
 
@@ -1021,48 +1038,28 @@ Module::instantiate(JSContext* cx,
         return false;
     }
 
-    // Debugging mutates code (for traps, stepping, etc) and thus may need to
-    // clone the code on each instantiation.
-
-    SharedCode code(code_);
+    SharedCode code;
+    UniqueDebugState maybeDebug;
     if (metadata().debugEnabled) {
         code = getDebugEnabledCode();
         if (!code) {
             ReportOutOfMemory(cx);
             return false;
         }
-    }
 
-    // To support viewing the source of an instance (Instance::createText), the
-    // instance must hold onto a ref of the bytecode (keeping it alive). This
-    // wastes memory for most users, so we try to only save the source when a
-    // developer actually cares: when the realm is debuggable (which is true
-    // when the web console is open), has code compiled with debug flag
-    // enabled or a names section is present (since this going to be stripped
-    // for non-developer builds).
-
-    const ShareableBytes* maybeBytecode = nullptr;
-    if (cx->realm()->isDebuggee() || metadata().debugEnabled ||
-        !metadata().funcNames.empty() || !!metadata().moduleName)
-    {
-        maybeBytecode = bytecode_.get();
-    }
-
-    // The debug object must be present even when debugging is not enabled: It
-    // provides the lazily created source text for the program, even if that
-    // text is a placeholder message when debugging is not enabled.
-
-    bool binarySource = cx->realm()->debuggerObservesBinarySource();
-    auto debug = cx->make_unique<DebugState>(code, maybeBytecode, binarySource);
-    if (!debug) {
-        return false;
+        bool binarySource = cx->realm()->debuggerObservesBinarySource();
+        maybeDebug = cx->make_unique<DebugState>(*code, *this, binarySource);
+        if (!maybeDebug) {
+            return false;
+        }
+    } else {
+        code = code_;
     }
 
     instance.set(WasmInstanceObject::create(cx,
                                             code,
                                             dataSegments_,
                                             elemSegments_,
-                                            std::move(debug),
                                             std::move(tlsData),
                                             memory,
                                             std::move(tables),
@@ -1070,7 +1067,8 @@ Module::instantiate(JSContext* cx,
                                             metadata().globals,
                                             globalImportValues,
                                             globalObjs,
-                                            instanceProto));
+                                            instanceProto,
+                                            std::move(maybeDebug)));
     if (!instance) {
         return false;
     }

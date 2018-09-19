@@ -468,7 +468,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
         // These classes require special handling due to shared resources which
         // we must be careful not to report twice.
         if (obj->is<WasmModuleObject>()) {
-            wasm::Module& module = obj->as<WasmModuleObject>().module();
+            const wasm::Module& module = obj->as<WasmModuleObject>().module();
             if (ScriptSource* ss = module.metadata().maybeScriptSource()) {
                 CollectScriptSourceStats<granularity>(closure, ss);
             }

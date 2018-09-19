@@ -324,6 +324,26 @@ nsBlockFrame::~nsBlockFrame()
 }
 
 void
+nsBlockFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aWindowSizes) const
+{
+  nsContainerFrame::AddSizeOfExcludingThisForTree(aWindowSizes);
+
+  // Add the size of any nsLineBox::mFrames hashtables we might have:
+  for (ConstLineIterator line = LinesBegin(), line_end = LinesEnd();
+       line != line_end; ++line) {
+    line->AddSizeOfExcludingThis(aWindowSizes);
+  }
+  const FrameLines* overflowLines = GetOverflowLines();
+  if (overflowLines) {
+    ConstLineIterator line = overflowLines->mLines.begin(),
+                      line_end = overflowLines->mLines.end();
+    for (; line != line_end; ++line) {
+      line->AddSizeOfExcludingThis(aWindowSizes);
+    }
+  }
+}
+
+void
 nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
 {
   ClearLineCursor();

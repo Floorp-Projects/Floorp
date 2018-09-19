@@ -7007,7 +7007,7 @@ JS_PUBLIC_API(RefPtr<JS::WasmModule>)
 JS::GetWasmModule(HandleObject obj)
 {
     MOZ_ASSERT(JS::IsWasmModuleObject(obj));
-    return &CheckedUnwrap(obj)->as<WasmModuleObject>().module();
+    return const_cast<wasm::Module*>(&CheckedUnwrap(obj)->as<WasmModuleObject>().module());
 }
 
 JS_PUBLIC_API(RefPtr<JS::WasmModule>)

@@ -89,7 +89,7 @@ WasmHandleDebugTrap()
     DebugFrame* debugFrame = DebugFrame::from(fp);
 
     if (site->kind() == CallSite::EnterFrame) {
-        if (!instance->enterFrameTrapsEnabled()) {
+        if (!instance->debug().enterFrameTrapsEnabled()) {
             return true;
         }
         debugFrame->setIsDebuggee();

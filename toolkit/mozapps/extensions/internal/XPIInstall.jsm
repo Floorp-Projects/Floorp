@@ -1797,6 +1797,10 @@ class AddonInstall {
         if (this.existingAddon) {
           await XPIInternal.BootstrapScope.get(this.existingAddon).update(
             this.addon, !this.addon.disabled, install);
+
+          if (this.addon.disabled) {
+            flushJarCache(this.file);
+          }
         } else {
           await install();
           await XPIInternal.BootstrapScope.get(this.addon).install(undefined, true);

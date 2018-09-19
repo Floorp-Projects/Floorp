@@ -12,7 +12,6 @@ XPIDL_SOURCES += [
     'nsIDOMXULCommandDispatcher.idl',
     'nsIDOMXULContainerElement.idl',
     'nsIDOMXULControlElement.idl',
-    'nsIDOMXULLabeledControlEl.idl',
     'nsIDOMXULMenuListElement.idl',
     'nsIDOMXULMultSelectCntrlEl.idl',
     'nsIDOMXULRelatedElement.idl',

@@ -23,7 +23,7 @@
   </binding>
 
   <binding id="basetext" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <implementation implements="nsIDOMXULLabeledControlElement">
+    <implementation>
       <!-- public implementation -->
       <property name="label"      onset="this.setAttribute('label',val); return val;"
                                   onget="return this.getAttribute('label');"/>

@@ -179,9 +179,10 @@ struct ModuleEnvironment
 
     // Fields decoded as part of the wasm module tail:
     DataSegmentEnvVector      dataSegments;
-    Maybe<NameInBytecode>     moduleName;
-    NameInBytecodeVector      funcNames;
-    CustomSectionVector       customSections;
+    CustomSectionEnvVector    customSections;
+    Maybe<uint32_t>           nameCustomSectionIndex;
+    Maybe<Name>               moduleName;
+    NameVector                funcNames;
 
     explicit ModuleEnvironment(HasGcTypes gcTypesConfigured,
                                CompilerEnvironment* compilerEnv,
@@ -436,7 +437,7 @@ class Encoder
     }
 
     // A "section" is a contiguous range of bytes that stores its own size so
-    // that it may be trivially skipped without examining the contents. Sections
+    // that it may be trivially skipped without examining the payload. Sections
     // require backpatching since the size of the section is only known at the
     // end while the size's varU32 must be stored at the beginning. Immediately
     // after the section length is the string id of the section.

@@ -6579,7 +6579,7 @@ struct SharedObjectMailbox
             SharedArrayRawBuffer* buffer;
             uint32_t              length;
         } sarb;
-        wasm::Module*             module;
+        const wasm::Module*       module;
     };
 
     SharedObjectMailbox() : tag(MailboxTag::Empty) {}

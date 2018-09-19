@@ -1268,8 +1268,8 @@ GCRuntime::parseAndSetZeal(const char* str)
     return true;
 }
 
-static const char*
-AllocKindName(AllocKind kind)
+const char*
+js::gc::AllocKindName(AllocKind kind)
 {
     static const char* const names[] = {
 #define EXPAND_THING_NAME(allocKind, _1, _2, _3, _4, _5, _6) \

@@ -281,7 +281,7 @@ AppendToString(const char* str, UTF8Bytes* bytes)
 #endif
 
 static void
-SendCodeRangesToProfiler(const ModuleSegment& ms, const Bytes& bytecode, const Metadata& metadata,
+SendCodeRangesToProfiler(const ModuleSegment& ms, const Metadata& metadata,
                          const CodeRangeVector& codeRanges)
 {
     bool enabled = false;
@@ -304,7 +304,7 @@ SendCodeRangesToProfiler(const ModuleSegment& ms, const Bytes& bytecode, const M
         uintptr_t size = codeRange.end() - codeRange.begin();
 
         UTF8Bytes name;
-        if (!metadata.getFuncNameStandalone(&bytecode, codeRange.funcIndex(), &name)) {
+        if (!metadata.getFuncNameStandalone(codeRange.funcIndex(), &name)) {
             return;
         }
 
@@ -404,7 +404,6 @@ ModuleSegment::create(Tier tier, const Bytes& unlinkedBytes, const LinkData& lin
 
 bool
 ModuleSegment::initialize(const CodeTier& codeTier,
-                          const ShareableBytes& bytecode,
                           const LinkData& linkData,
                           const Metadata& metadata,
                           const MetadataTier& metadataTier)
@@ -420,7 +419,7 @@ ModuleSegment::initialize(const CodeTier& codeTier,
         return false;
     }
 
-    SendCodeRangesToProfiler(*this, bytecode.bytes, metadata, metadataTier.codeRanges);
+    SendCodeRangesToProfiler(*this, metadata, metadataTier.codeRanges);
 
     // See comments in CodeSegment::initialize() for why this must be last.
     return CodeSegment::initialize(codeTier);
@@ -976,22 +975,10 @@ Metadata::serializedSize() const
            SerializedVectorSize(funcTypeIds) +
            SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
+           sizeof(moduleName) +
            SerializedPodVectorSize(funcNames) +
-           SerializedPodVectorSize(customSections) +
            filename.serializedSize() +
            sourceMapURL.serializedSize();
-}
-
-size_t
-Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return SizeOfVectorExcludingThis(funcTypeIds, mallocSizeOf) +
-           globals.sizeOfExcludingThis(mallocSizeOf) +
-           tables.sizeOfExcludingThis(mallocSizeOf) +
-           funcNames.sizeOfExcludingThis(mallocSizeOf) +
-           customSections.sizeOfExcludingThis(mallocSizeOf) +
-           filename.sizeOfExcludingThis(mallocSizeOf) +
-           sourceMapURL.sizeOfExcludingThis(mallocSizeOf);
 }
 
 uint8_t*
@@ -1002,8 +989,8 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializeVector(cursor, funcTypeIds);
     cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
+    cursor = WriteBytes(cursor, &moduleName, sizeof(moduleName));
     cursor = SerializePodVector(cursor, funcNames);
-    cursor = SerializePodVector(cursor, customSections);
     cursor = filename.serialize(cursor);
     cursor = sourceMapURL.serialize(cursor);
     return cursor;
@@ -1016,14 +1003,25 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializeVector(cursor, &funcTypeIds)) &&
     (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
+    (cursor = ReadBytes(cursor, &moduleName, sizeof(moduleName))) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
-    (cursor = DeserializePodVector(cursor, &customSections)) &&
     (cursor = filename.deserialize(cursor)) &&
     (cursor = sourceMapURL.deserialize(cursor));
     debugEnabled = false;
     debugFuncArgTypes.clear();
     debugFuncReturnTypes.clear();
     return cursor;
+}
+
+size_t
+Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return SizeOfVectorExcludingThis(funcTypeIds, mallocSizeOf) +
+           globals.sizeOfExcludingThis(mallocSizeOf) +
+           tables.sizeOfExcludingThis(mallocSizeOf) +
+           funcNames.sizeOfExcludingThis(mallocSizeOf) +
+           filename.sizeOfExcludingThis(mallocSizeOf) +
+           sourceMapURL.sizeOfExcludingThis(mallocSizeOf);
 }
 
 struct ProjectFuncIndex
@@ -1057,11 +1055,11 @@ MetadataTier::lookupFuncExport(uint32_t funcIndex, size_t* funcExportIndex) cons
 }
 
 static bool
-AppendNameInBytecode(const Bytes* maybeBytecode, const NameInBytecode& name, UTF8Bytes* bytes)
+AppendName(const Bytes& namePayload, const Name& name, UTF8Bytes* bytes)
 {
-    MOZ_RELEASE_ASSERT(name.offset <= maybeBytecode->length());
-    MOZ_RELEASE_ASSERT(name.length <= maybeBytecode->length() - name.offset);
-    return bytes->append((const char*)maybeBytecode->begin() + name.offset, name.length);
+    MOZ_RELEASE_ASSERT(name.offsetInNamePayload <= namePayload.length());
+    MOZ_RELEASE_ASSERT(name.length <= namePayload.length() - name.offsetInNamePayload);
+    return bytes->append((const char*)namePayload.begin() + name.offsetInNamePayload, name.length);
 }
 
 static bool
@@ -1080,11 +1078,10 @@ AppendFunctionIndexName(uint32_t funcIndex, UTF8Bytes* bytes)
 }
 
 bool
-Metadata::getFuncName(NameContext ctx, const Bytes* maybeBytecode, uint32_t funcIndex,
-                      UTF8Bytes* name) const
+Metadata::getFuncName(NameContext ctx, uint32_t funcIndex, UTF8Bytes* name) const
 {
     if (moduleName && moduleName->length != 0) {
-        if (!AppendNameInBytecode(maybeBytecode, *moduleName, name)) {
+        if (!AppendName(namePayload->bytes, *moduleName, name)) {
             return false;
         }
         if (!name->append('.')) {
@@ -1093,7 +1090,7 @@ Metadata::getFuncName(NameContext ctx, const Bytes* maybeBytecode, uint32_t func
     }
 
     if (funcIndex < funcNames.length() && funcNames[funcIndex].length != 0) {
-        return AppendNameInBytecode(maybeBytecode, funcNames[funcIndex], name);
+        return AppendName(namePayload->bytes, funcNames[funcIndex], name);
     }
 
     if (ctx == NameContext::BeforeLocation) {
@@ -1101,6 +1098,25 @@ Metadata::getFuncName(NameContext ctx, const Bytes* maybeBytecode, uint32_t func
     }
 
     return AppendFunctionIndexName(funcIndex, name);
+}
+
+bool
+CodeTier::initialize(const Code& code,
+                     const LinkData& linkData,
+                     const Metadata& metadata)
+{
+    MOZ_ASSERT(!initialized());
+    code_ = &code;
+
+    MOZ_ASSERT(lazyStubs_.lock()->empty());
+
+    // See comments in CodeSegment::initialize() for why this must be last.
+    if (!segment_->initialize(*this, linkData, metadata, *metadata_)) {
+        return false;
+    }
+
+    MOZ_ASSERT(initialized());
+    return true;
 }
 
 size_t
@@ -1222,11 +1238,11 @@ Code::Code(UniqueCodeTier tier1, const Metadata& metadata, JumpTables&& maybeJum
 {}
 
 bool
-Code::initialize(const ShareableBytes& bytecode, const LinkData& linkData)
+Code::initialize(const LinkData& linkData)
 {
     MOZ_ASSERT(!initialized());
 
-    if (!tier1_->initialize(*this, bytecode, linkData, *metadata_)) {
+    if (!tier1_->initialize(*this, linkData, *metadata_)) {
         return false;
     }
 
@@ -1235,13 +1251,12 @@ Code::initialize(const ShareableBytes& bytecode, const LinkData& linkData)
 }
 
 bool
-Code::setTier2(UniqueCodeTier tier2, const ShareableBytes& bytecode,
-               const LinkData& linkData) const
+Code::setTier2(UniqueCodeTier tier2, const LinkData& linkData) const
 {
     MOZ_RELEASE_ASSERT(!hasTier2());
     MOZ_RELEASE_ASSERT(tier2->tier() == Tier::Ion && tier1_->tier() == Tier::Baseline);
 
-    if (!tier2->initialize(*this, bytecode, linkData, *metadata_)) {
+    if (!tier2->initialize(*this, linkData, *metadata_)) {
         return false;
     }
 
@@ -1415,7 +1430,7 @@ Code::lookupTrap(void* pc, Trap* trapOut, BytecodeOffset* bytecode) const
 // since, once we start sampling, we'll be in a signal-handing context where we
 // cannot malloc.
 void
-Code::ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) const
+Code::ensureProfilingLabels(bool profilingEnabled) const
 {
     auto labels = profilingLabels_.lock();
 
@@ -1441,7 +1456,7 @@ Code::ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) c
         MOZ_ASSERT(bytecodeStr);
 
         UTF8Bytes name;
-        if (!metadata().getFuncNameStandalone(maybeBytecode, codeRange.funcIndex(), &name)) {
+        if (!metadata().getFuncNameStandalone(codeRange.funcIndex(), &name)) {
             return;
         }
         if (!name.append(" (", 2)) {
@@ -1515,26 +1530,6 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
     }
 }
 
-bool
-CodeTier::initialize(const Code& code,
-                     const ShareableBytes& bytecode,
-                     const LinkData& linkData,
-                     const Metadata& metadata)
-{
-    MOZ_ASSERT(!initialized());
-    code_ = &code;
-
-    MOZ_ASSERT(lazyStubs_.lock()->empty());
-
-    // See comments in CodeSegment::initialize() for why this must be last.
-    if (!segment_->initialize(*this, bytecode, linkData, metadata, *metadata_)) {
-        return false;
-    }
-
-    MOZ_ASSERT(initialized());
-    return true;
-}
-
 size_t
 Code::serializedSize() const
 {
@@ -1554,7 +1549,6 @@ Code::serialize(uint8_t* cursor, const LinkData& linkData) const
 
 /* static */ const uint8_t*
 Code::deserialize(const uint8_t* cursor,
-                  const ShareableBytes& bytecode,
                   const LinkData& linkData,
                   Metadata& metadata,
                   SharedCode* out)
@@ -1576,7 +1570,7 @@ Code::deserialize(const uint8_t* cursor,
     }
 
     MutableCode code = js_new<Code>(std::move(codeTier), metadata, std::move(jumpTables));
-    if (!code || !code->initialize(bytecode, linkData)) {
+    if (!code || !code->initialize(linkData)) {
         return nullptr;
     }
 
