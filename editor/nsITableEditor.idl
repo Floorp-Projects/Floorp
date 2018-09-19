@@ -45,10 +45,13 @@ interface nsITableEditor : nsISupports
     */
   void deleteTable();
 
-  /** Delete just the cell contents
-    * This is what should happen when Delete key is used
-    *   for selected cells, to minimize upsetting the table layout
-    */
+  /**
+   * deleteTableCellContents() removes any contents in cell elements.  If two
+   * or more cell elements are selected, this removes all selected cells'
+   * contents.  Otherwise, this removes contents of a cell which contains
+   * first selection range.  This does nothing without exception if selection
+   * is not in cell element.
+   */
   void deleteTableCellContents();
 
   /** Delete cell elements as well as contents

@@ -642,6 +642,15 @@ protected: // May be called by friends.
   GetNextSelectedTableCellElement(Selection& aSelection,
                                   ErrorResult& aRv) const;
 
+  /**
+   * DeleteTableCellContentsWithTransaction() removes any contents in cell
+   * elements.  If two or more cell elements are selected, this removes
+   * all selected cells' contents.  Otherwise, this removes contents of
+   * a cell which contains first selection range.  This does not return
+   * error even if selection is not in cell element, just does nothing.
+   */
+  nsresult DeleteTableCellContentsWithTransaction();
+
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
                                   int32_t aOffset,
                                   bool* outIsSpace,
@@ -1622,9 +1631,12 @@ protected: // Shouldn't be used by friend classes
   DeleteTableRowWithTransaction(Element& aTableElement, int32_t aRowIndex);
 
   /**
-   * Helpers that don't touch the selection or do batch transactions.
+   * DeleteAllChildrenWithTransaction() removes all children of aElement from
+   * the tree.
+   *
+   * @param aElement        The element whose children you want to remove.
    */
-  nsresult DeleteCellContents(Element* aCell);
+  nsresult DeleteAllChildrenWithTransaction(Element& aElement);
 
   /**
    * Move all contents from aCellToMerge into aTargetCell (append at end).
