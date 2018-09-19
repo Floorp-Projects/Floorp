@@ -299,6 +299,34 @@ PaymentRequestParent::ChangeShippingOption(const nsAString& aRequestId,
   return NS_OK;
 }
 
+nsresult
+PaymentRequestParent::ChangePayerDetail(const nsAString& aRequestId,
+                                        const nsAString& aPayerName,
+                                        const nsAString& aPayerEmail,
+                                        const nsAString& aPayerPhone)
+{
+  nsAutoString requestId(aRequestId);
+  nsAutoString payerName(aPayerName);
+  nsAutoString payerEmail(aPayerEmail);
+  nsAutoString payerPhone(aPayerPhone);
+  if (!NS_IsMainThread()) {
+    RefPtr<PaymentRequestParent> self = this;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("dom::PaymentRequestParent::ChangePayerDetail",
+                                                     [self, requestId, payerName, payerEmail, payerPhone] ()
+    {
+      self->ChangePayerDetail(requestId, payerName, payerEmail, payerPhone);
+    });
+    return NS_DispatchToMainThread(r);
+  }
+  if (!mActorAlive) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!SendChangePayerDetail(requestId, payerName, payerEmail, payerPhone)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 mozilla::ipc::IPCResult
 PaymentRequestParent::Recv__delete__()
 {
