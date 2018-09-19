@@ -131,10 +131,12 @@
           const vremote = test.pcRemote.remoteMediaElements[0];
           ok(vlocal, "Should have local video element for pcLocal");
           ok(vremote, "Should have remote video element for pcRemote");
-          ok(vlocal.videoWidth > 0, "source width is positive");
-          ok(vlocal.videoHeight > 0, "source height is positive");
-          is(vremote.videoWidth, vlocal.videoWidth, "sink is same width as source");
-          is(vremote.videoHeight, vlocal.videoHeight,  "sink is same height as source");
+          is(vlocal.videoWidth, 50, "correct source width");
+          is(vlocal.videoHeight, 50, "correct source height");
+          is(vremote.videoWidth, 48,
+             "sink is same width as source, modulo our cropping algorithm");
+          is(vremote.videoHeight, 48,
+             "sink is same height as source, modulo our cropping algorithm");
         },
         function PC_REMOTE_SET_RTP_SECOND_RID(test) {
           // Now, cause pcRemote to filter out everything but RID "bar", only
@@ -165,10 +167,12 @@
           const vremote = test.pcRemote.remoteMediaElements[0];
           ok(vlocal, "Should have local video element for pcLocal");
           ok(vremote, "Should have remote video element for pcRemote");
-          ok(vlocal.videoWidth > 0, "source width is positive");
-          ok(vlocal.videoHeight > 0, "source height is positive");
-          is(vremote.videoWidth, vlocal.videoWidth / 2, "sink is 1/2 width of source");
-          is(vremote.videoHeight, vlocal.videoHeight / 2, "sink is 1/2 height of source");
+          is(vlocal.videoWidth, 50, "correct source width");
+          is(vlocal.videoHeight, 50, "correct source height");
+          is(vremote.videoWidth, 24,
+             "sink is 1/2 width of source, modulo our cropping algorithm");
+          is(vremote.videoHeight, 24,
+             "sink is 1/2 height of source, modulo our cropping algorithm");
         },
       ]);
 
