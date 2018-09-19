@@ -1631,6 +1631,22 @@ protected: // Shouldn't be used by friend classes
   DeleteTableRowWithTransaction(Element& aTableElement, int32_t aRowIndex);
 
   /**
+   * DeleteTableCellWithTransaction() removes table cell elements.  If two or
+   * more cell elements are selected, this removes all selected cell elements.
+   * Otherwise, this removes some cell elements starting from selected cell
+   * element or a cell containing first selection range.  When this removes
+   * last cell element in <tr> or <table>, this removes the <tr> or the
+   * <table> too.  Note that when removing a cell causes number of its row
+   * becomes less than the others, this method does NOT fill the place with
+   * rowspan nor colspan.  This does not return error even if selection is not
+   * in cell element, just does nothing.
+   *
+   * @param aNumberOfCellsToDelete  Number of cells to remove.  This is ignored
+   *                                if 2 or more cells are selected.
+   */
+  nsresult DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete);
+
+  /**
    * DeleteAllChildrenWithTransaction() removes all children of aElement from
    * the tree.
    *
