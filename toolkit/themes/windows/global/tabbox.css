@@ -21,7 +21,7 @@ tabpanels {
 tab {
   -moz-appearance: tab;
   margin-top: 2px;
-  padding: 1px 4px 2px 4px;
+  padding: 1px 4px 2px;
   color: -moz-DialogText;
 }
 
@@ -31,7 +31,7 @@ tab {
 
 tab[visuallyselected="true"] {
   margin-top: 0;
-  padding: 1px 6px 4px 6px;
+  padding: 1px 6px 4px;
 }
 
 tab:-moz-focusring > .tab-middle {
