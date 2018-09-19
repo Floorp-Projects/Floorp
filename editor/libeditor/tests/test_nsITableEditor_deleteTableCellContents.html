@@ -1,0 +1,170 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsITableEditor.deleteTableCellContents()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable>out of table<table><tr><td>default content</td></tr></table></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  selection.collapse(editor.firstChild, 0);
+  getTableEditor().deleteTableCellContents();
+  is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
+     "nsITableEditor.deleteTableColumn() should do nothing if selection is not in <table>");
+
+  selection.removeAllRanges();
+  try {
+    getTableEditor().deleteTableCellContents();
+    ok(false, "getTableEditor().deleteTableCellContents() without selection ranges should throw exception");
+  } catch (e) {
+    ok(true, "getTableEditor().deleteTableCellContents() without selection ranges should throw exception");
+  }
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td id="select">cell1-1</td><td>cell1-2</td></tr>' +
+                       "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  let range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableCellContents();
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td id="select"><br></td><td>cell1-2</td></tr>' +
+                         "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td id="select"><ul><li>list1</li></ul></td><td>cell1-2</td></tr>' +
+                       "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableCellContents();
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td id="select"><br></td><td>cell1-2</td></tr>' +
+                         "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.deleteTableCellContents() should replace the selected cell's <ul> element with <br> element");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td id="select1">cell1-1</td><td>cell1-2</td></tr>' +
+                       '<tr><td id="select2">cell2-1</td><td>cell2-2</td></tr>' +
+                     "</table>";
+  editor.focus();
+  range = document.createRange();
+  range.selectNode(document.getElementById("select1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select2"));
+  selection.addRange(range);
+  getTableEditor().deleteTableCellContents();
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td id="select1"><br></td><td>cell1-2</td></tr>' +
+                         '<tr><td id="select2"><br></td><td>cell2-2</td></tr>' +
+                       "</tbody></table>",
+     "nsITableEditor.deleteTableCellContents() should replace the selected 2 cells' text with <br> element");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td id="select1">cell1-1</td><td id="select2">cell1-2</td></tr>' +
+                       '<tr><td id="select3">cell2-1</td><td id="select4">cell2-2</td></tr>' +
+                     "</table>";
+  editor.focus();
+  range = document.createRange();
+  range.selectNode(document.getElementById("select1"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select2"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select3"));
+  selection.addRange(range);
+  range = document.createRange();
+  range.selectNode(document.getElementById("select4"));
+  selection.addRange(range);
+  getTableEditor().deleteTableCellContents();
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td id="select1"><br></td><td id="select2"><br></td></tr>' +
+                         '<tr><td id="select3"><br></td><td id="select4"><br></td></tr>' +
+                       "</tbody></table>",
+     "nsITableEditor.deleteTableCellContents() should replace the selected 4 cells' text with <br> element");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td id="select" rowspan="2">cell1-1</td><td>cell1-2</td></tr>' +
+                       "<tr><td>cell2-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableCellContents();
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td id="select" rowspan="2"><br></td><td>cell1-2</td></tr>' +
+                         "<tr><td>cell2-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element (even if the cell is row-spanning)");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td id="select" colspan="2">cell1-1</td></tr>' +
+                       "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  range = document.createRange();
+  range.selectNode(document.getElementById("select"));
+  selection.addRange(range);
+  getTableEditor().deleteTableCellContents();
+  is(editor.innerHTML, "<table><tbody>" +
+                          '<tr><td id="select" colspan="2"><br></td></tr>' +
+                          "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                        "</tbody></table>",
+     "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element (even if the cell is column-spanning)");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td id="select">cell1-1</td><td>cell1-2</td></tr>' +
+                       "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // Requires layout information.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().deleteTableCellContents();
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td id="select"><br></td><td>cell1-2</td></tr>' +
+                         "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.deleteTableCellContents() should replace a cell's text with <br> element when the cell contains selection range");
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(SpecialPowers.Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>
