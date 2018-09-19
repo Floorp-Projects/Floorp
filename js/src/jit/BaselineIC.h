@@ -905,16 +905,16 @@ class ICCacheIR_Monitored : public ICMonitoredStub
 class ICUpdatedStub : public ICStub
 {
   protected:
-    // Pointer to the start of the type updating stub chain.
-    ICStub* firstUpdateStub_;
-
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
     uint32_t numOptimizedStubs_;
 
+    // Pointer to the start of the type updating stub chain.
+    ICStub* firstUpdateStub_;
+
     ICUpdatedStub(Kind kind, JitCode* stubCode)
       : ICStub(kind, ICStub::Updated, stubCode),
-        firstUpdateStub_(nullptr),
-        numOptimizedStubs_(0)
+        numOptimizedStubs_(0),
+        firstUpdateStub_(nullptr)
     {}
 
   public:
