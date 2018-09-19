@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_X86_FWD_TXFM_SSE2_H_
-#define AOM_DSP_X86_FWD_TXFM_SSE2_H_
+#ifndef AOM_AOM_DSP_X86_FWD_TXFM_SSE2_H_
+#define AOM_AOM_DSP_X86_FWD_TXFM_SSE2_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -152,4 +152,4 @@ static INLINE void store_output(const __m128i *poutput, tran_low_t *dst_ptr) {
 }  // extern "C"
 #endif
 
-#endif  // AOM_DSP_X86_FWD_TXFM_SSE2_H_
+#endif  // AOM_AOM_DSP_X86_FWD_TXFM_SSE2_H_

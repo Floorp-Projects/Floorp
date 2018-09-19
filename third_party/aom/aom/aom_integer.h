@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef AOM_AOM_INTEGER_H_
-#define AOM_AOM_INTEGER_H_
+#ifndef AOM_AOM_AOM_INTEGER_H_
+#define AOM_AOM_AOM_INTEGER_H_
 
 /* get ptrdiff_t, size_t, wchar_t, NULL */
 #include <stddef.h>
@@ -103,4 +103,4 @@ int aom_uleb_encode_fixed_size(uint64_t value, size_t available,
 }  // extern "C"
 #endif  // __cplusplus
 
-#endif  // AOM_AOM_INTEGER_H_
+#endif  // AOM_AOM_AOM_INTEGER_H_

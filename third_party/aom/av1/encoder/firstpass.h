@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_FIRSTPASS_H_
-#define AV1_ENCODER_FIRSTPASS_H_
+#ifndef AOM_AV1_ENCODER_FIRSTPASS_H_
+#define AOM_AV1_ENCODER_FIRSTPASS_H_
 
 #include "av1/common/enums.h"
 #include "av1/common/onyxc_int.h"
@@ -47,15 +47,7 @@ typedef struct {
 //       number of bi-predictive frames.
 #define BFG_INTERVAL 2
 // The maximum number of extra ALTREF's except ALTREF_FRAME
-// NOTE: REF_FRAMES indicates the maximum number of frames that may be buffered
-//       to serve as references. Currently REF_FRAMES == 8.
-#define USE_GF16_MULTI_LAYER 0
-
-#if USE_GF16_MULTI_LAYER
-#define MAX_EXT_ARFS (REF_FRAMES - BWDREF_FRAME)
-#else  // !USE_GF16_MULTI_LAYER
 #define MAX_EXT_ARFS (REF_FRAMES - BWDREF_FRAME - 1)
-#endif  // USE_GF16_MULTI_LAYER
 
 #define MIN_EXT_ARF_INTERVAL 4
 
@@ -126,6 +118,7 @@ typedef struct {
   unsigned char arf_pos_in_gf[(MAX_LAG_BUFFERS * 2) + 1];
   unsigned char pyramid_level[(MAX_LAG_BUFFERS * 2) + 1];
   unsigned char pyramid_height;
+  unsigned char pyramid_lvl_nodes[MAX_PYRAMID_LVL];
 #endif
   unsigned char brf_src_offset[(MAX_LAG_BUFFERS * 2) + 1];
   unsigned char bidir_pred_enabled[(MAX_LAG_BUFFERS * 2) + 1];
@@ -197,10 +190,6 @@ void av1_configure_buffer_updates_firstpass(struct AV1_COMP *cpi,
 // Post encode update of the rate control parameters for 2-pass
 void av1_twopass_postencode_update(struct AV1_COMP *cpi);
 
-#if USE_GF16_MULTI_LAYER
-void av1_ref_frame_map_idx_updates(struct AV1_COMP *cpi, int gf_frame_index);
-#endif  // USE_GF16_MULTI_LAYER
-
 static INLINE int get_number_of_extra_arfs(int interval, int arf_pending) {
   if (arf_pending && MAX_EXT_ARFS > 0)
     return interval >= MIN_EXT_ARF_INTERVAL * (MAX_EXT_ARFS + 1)
@@ -216,4 +205,4 @@ static INLINE int get_number_of_extra_arfs(int interval, int arf_pending) {
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_FIRSTPASS_H_
+#endif  // AOM_AV1_ENCODER_FIRSTPASS_H_

@@ -28,8 +28,8 @@
 /*!\file
  * \brief Provides controls common to both the AOM encoder and decoder.
  */
-#ifndef AOM_AOM_H_
-#define AOM_AOM_H_
+#ifndef AOM_AOM_AOM_H_
+#define AOM_AOM_AOM_H_
 
 #include "aom/aom_codec.h"
 #include "aom/aom_image.h"
@@ -144,4 +144,4 @@ AOM_CTRL_USE_TYPE(AV1_COPY_NEW_FRAME_IMAGE, aom_image_t *)
 }  // extern "C"
 #endif
 
-#endif  // AOM_AOM_H_
+#endif  // AOM_AOM_AOM_H_

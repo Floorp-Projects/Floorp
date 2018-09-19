@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_X86_TXFM_COMMON_AVX2_H_
-#define AOM_DSP_X86_TXFM_COMMON_AVX2_H_
+#ifndef AOM_AOM_DSP_X86_TXFM_COMMON_AVX2_H_
+#define AOM_AOM_DSP_X86_TXFM_COMMON_AVX2_H_
 
 #include <emmintrin.h>
 #include "aom/aom_integer.h"
@@ -196,4 +196,4 @@ static INLINE void round_shift_16bit_w16_avx2(__m256i *in, int size, int bit) {
 }
 #endif
 
-#endif  // AOM_DSP_X86_TXFM_COMMON_AVX2_H_
+#endif  // AOM_AOM_DSP_X86_TXFM_COMMON_AVX2_H_

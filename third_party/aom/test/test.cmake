@@ -20,17 +20,20 @@ include("${AOM_ROOT}/test/test_data_util.cmake")
 
 set(AOM_UNIT_TEST_DATA_LIST_FILE "${AOM_ROOT}/test/test-data.sha1")
 
-list(APPEND AOM_UNIT_TEST_WRAPPER_SOURCES "${AOM_CONFIG_DIR}/usage_exit.c"
+list(APPEND AOM_UNIT_TEST_WRAPPER_SOURCES "${AOM_GEN_SRC_DIR}/usage_exit.c"
             "${AOM_ROOT}/test/test_libaom.cc")
 
 list(APPEND AOM_UNIT_TEST_COMMON_SOURCES
             "${AOM_ROOT}/test/acm_random.h"
             "${AOM_ROOT}/test/aom_integer_test.cc"
+            "${AOM_ROOT}/test/av1_config_test.cc"
+            "${AOM_ROOT}/test/blockd_test.cc"
             "${AOM_ROOT}/test/clear_system_state.h"
             "${AOM_ROOT}/test/codec_factory.h"
             "${AOM_ROOT}/test/decode_test_driver.cc"
             "${AOM_ROOT}/test/decode_test_driver.h"
             "${AOM_ROOT}/test/function_equivalence_test.h"
+            "${AOM_ROOT}/test/log2_test.cc"
             "${AOM_ROOT}/test/md5_helper.h"
             "${AOM_ROOT}/test/register_state_check.h"
             "${AOM_ROOT}/test/test_vectors.cc"
@@ -45,6 +48,7 @@ if(CONFIG_INTERNAL_STATS)
 endif()
 
 list(APPEND AOM_UNIT_TEST_DECODER_SOURCES "${AOM_ROOT}/test/decode_api_test.cc"
+            "${AOM_ROOT}/test/external_frame_buffer_test.cc"
             "${AOM_ROOT}/test/invalid_file_test.cc"
             "${AOM_ROOT}/test/test_vector_test.cc"
             "${AOM_ROOT}/test/ivf_video_source.h")
@@ -53,8 +57,6 @@ list(APPEND AOM_UNIT_TEST_ENCODER_SOURCES
             "${AOM_ROOT}/test/active_map_test.cc"
             "${AOM_ROOT}/test/altref_test.cc"
             "${AOM_ROOT}/test/aq_segment_test.cc"
-            "${AOM_ROOT}/test/av1_txfm_test.cc"
-            "${AOM_ROOT}/test/av1_txfm_test.h"
             "${AOM_ROOT}/test/borders_test.cc"
             "${AOM_ROOT}/test/cpu_speed_test.cc"
             "${AOM_ROOT}/test/datarate_test.cc"
@@ -78,7 +80,7 @@ list(APPEND AOM_UNIT_TEST_ENCODER_SOURCES
 list(APPEND AOM_DECODE_PERF_TEST_SOURCES "${AOM_ROOT}/test/decode_perf_test.cc")
 list(APPEND AOM_ENCODE_PERF_TEST_SOURCES "${AOM_ROOT}/test/encode_perf_test.cc")
 list(APPEND AOM_UNIT_TEST_WEBM_SOURCES "${AOM_ROOT}/test/webm_video_source.h")
-list(APPEND AOM_TEST_INTRA_PRED_SPEED_SOURCES "${AOM_CONFIG_DIR}/usage_exit.c"
+list(APPEND AOM_TEST_INTRA_PRED_SPEED_SOURCES "${AOM_GEN_SRC_DIR}/usage_exit.c"
             "${AOM_ROOT}/test/test_intra_pred_speed.cc")
 
 if(NOT BUILD_SHARED_LIBS)
@@ -105,6 +107,7 @@ if(NOT BUILD_SHARED_LIBS)
 
   if(CONFIG_AV1_DECODER AND CONFIG_AV1_ENCODER)
     list(APPEND AOM_UNIT_TEST_COMMON_SOURCES
+                "${AOM_ROOT}/test/av1_encoder_parms_get_to_decoder.cc"
                 "${AOM_ROOT}/test/av1_ext_tile_test.cc"
                 "${AOM_ROOT}/test/binary_codes_test.cc"
                 "${AOM_ROOT}/test/boolcoder_test.cc"
@@ -168,6 +171,8 @@ if(NOT BUILD_SHARED_LIBS)
               "${AOM_ROOT}/test/av1_inv_txfm1d_test.cc"
               "${AOM_ROOT}/test/av1_inv_txfm2d_test.cc"
               "${AOM_ROOT}/test/av1_round_shift_array_test.cc"
+              "${AOM_ROOT}/test/av1_txfm_test.cc"
+              "${AOM_ROOT}/test/av1_txfm_test.h"
               "${AOM_ROOT}/test/av1_wedge_utils_test.cc"
               "${AOM_ROOT}/test/blend_a64_mask_1d_test.cc"
               "${AOM_ROOT}/test/blend_a64_mask_test.cc"
@@ -184,11 +189,16 @@ if(NOT BUILD_SHARED_LIBS)
               "${AOM_ROOT}/test/noise_model_test.cc"
               "${AOM_ROOT}/test/obmc_sad_test.cc"
               "${AOM_ROOT}/test/obmc_variance_test.cc"
+              "${AOM_ROOT}/test/pickrst_test.cc"
               "${AOM_ROOT}/test/sad_test.cc"
               "${AOM_ROOT}/test/subtract_test.cc"
               "${AOM_ROOT}/test/reconinter_test.cc"
               "${AOM_ROOT}/test/sum_squares_test.cc"
-              "${AOM_ROOT}/test/variance_test.cc")
+              "${AOM_ROOT}/test/variance_test.cc"
+              "${AOM_ROOT}/test/wiener_test.cc"
+              "${AOM_ROOT}/test/warp_filter_test.cc"
+              "${AOM_ROOT}/test/warp_filter_test_util.cc"
+              "${AOM_ROOT}/test/warp_filter_test_util.h")
 
   list(APPEND AOM_UNIT_TEST_ENCODER_INTRIN_SSE4_1
               "${AOM_ROOT}/test/av1_highbd_iht_test.cc"
@@ -201,10 +211,8 @@ if(NOT BUILD_SHARED_LIBS)
     list(APPEND AOM_UNIT_TEST_ENCODER_SOURCES
                 "${AOM_ROOT}/test/av1_convolve_scale_test.cc"
                 "${AOM_ROOT}/test/av1_horz_only_frame_superres_test.cc"
-                "${AOM_ROOT}/test/intra_edge_test.cc"
-                "${AOM_ROOT}/test/warp_filter_test.cc"
-                "${AOM_ROOT}/test/warp_filter_test_util.cc"
-                "${AOM_ROOT}/test/warp_filter_test_util.h")
+                "${AOM_ROOT}/test/intra_edge_test.cc")
+
   endif()
 
   if(HAVE_SSE4_2)
@@ -224,6 +232,9 @@ if(ENABLE_TESTS)
 
   if(MSVC) # Force static run time to avoid collisions with googletest.
     include("${AOM_ROOT}/build/cmake/msvc_runtime.cmake")
+    if(BUILD_SHARED_LIBS)
+      set(AOM_DISABLE_GTEST_CMAKE 1)
+    endif()
   endif()
 
   if(BUILD_SHARED_LIBS AND APPLE) # Silence an RPATH warning.

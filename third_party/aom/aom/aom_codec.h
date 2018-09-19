@@ -33,11 +33,11 @@
  *       }
  *     </pre>
  *
- * Once initialized, the instance is manged using other functions from
+ * Once initialized, the instance is managed using other functions from
  * the aom_codec_* family.
  */
-#ifndef AOM_AOM_CODEC_H_
-#define AOM_AOM_CODEC_H_
+#ifndef AOM_AOM_AOM_CODEC_H_
+#define AOM_AOM_AOM_CODEC_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -259,12 +259,6 @@ typedef enum aom_superblock_size {
  *
  */
 int aom_codec_version(void);
-#define AOM_VERSION_MAJOR(v) \
-  ((v >> 16) & 0xff) /**< extract major from packed version */
-#define AOM_VERSION_MINOR(v) \
-  ((v >> 8) & 0xff) /**< extract minor from packed version */
-#define AOM_VERSION_PATCH(v) \
-  ((v >> 0) & 0xff) /**< extract patch from packed version */
 
 /*!\brief Return the version major number */
 #define aom_codec_version_major() ((aom_codec_version() >> 16) & 0xff)
@@ -526,4 +520,4 @@ typedef struct cfg_options {
 #ifdef __cplusplus
 }
 #endif
-#endif  // AOM_AOM_CODEC_H_
+#endif  // AOM_AOM_AOM_CODEC_H_

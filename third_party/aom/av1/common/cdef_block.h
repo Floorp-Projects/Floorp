@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#if !defined(_CDEF_BLOCK_H)
-#define _CDEF_BLOCK_H (1)
+#ifndef AOM_AV1_COMMON_CDEF_BLOCK_H_
+#define AOM_AV1_COMMON_CDEF_BLOCK_H_
 
 #include "av1/common/odintrin.h"
 
@@ -56,4 +56,4 @@ void cdef_filter_fb(uint8_t *dst8, uint16_t *dst16, int dstride, uint16_t *in,
                     cdef_list *dlist, int cdef_count, int level,
                     int sec_strength, int pri_damping, int sec_damping,
                     int coeff_shift);
-#endif
+#endif  // AOM_AV1_COMMON_CDEF_BLOCK_H_

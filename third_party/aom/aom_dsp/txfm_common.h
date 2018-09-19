@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_TXFM_COMMON_H_
-#define AOM_DSP_TXFM_COMMON_H_
+#ifndef AOM_AOM_DSP_TXFM_COMMON_H_
+#define AOM_AOM_DSP_TXFM_COMMON_H_
 
 #include "aom_dsp/aom_dsp_common.h"
 #include "av1/common/enums.h"
@@ -88,4 +88,4 @@ static INLINE tran_high_t fdct_round_shift(tran_high_t input) {
   return rv;
 }
 
-#endif  // AOM_DSP_TXFM_COMMON_H_
+#endif  // AOM_AOM_DSP_TXFM_COMMON_H_

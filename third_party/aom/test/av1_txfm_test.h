@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_TXFM_TEST_H_
-#define AV1_TXFM_TEST_H_
+#ifndef AOM_TEST_AV1_TXFM_TEST_H_
+#define AOM_TEST_AV1_TXFM_TEST_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -132,4 +132,4 @@ void txfm_stage_range_check(const int8_t *stage_range, int stage_num,
                             const int8_t cos_bit, int low_range,
                             int high_range);
 }  // namespace libaom_test
-#endif  // AV1_TXFM_TEST_H_
+#endif  // AOM_TEST_AV1_TXFM_TEST_H_

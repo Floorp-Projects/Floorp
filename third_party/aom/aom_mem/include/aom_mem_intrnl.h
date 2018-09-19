@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_
-#define AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_
+#ifndef AOM_AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_
+#define AOM_AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_
 
 #include "config/aom_config.h"
 
@@ -30,4 +30,4 @@
 #define align_addr(addr, align) \
   (void *)(((size_t)(addr) + ((align)-1)) & ~(size_t)((align)-1))
 
-#endif  // AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_
+#endif  // AOM_AOM_MEM_INCLUDE_AOM_MEM_INTRNL_H_

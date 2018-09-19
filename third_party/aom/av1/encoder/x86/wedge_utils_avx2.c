@@ -14,7 +14,7 @@
 #include <smmintrin.h>
 
 #include "aom_dsp/x86/synonyms.h"
-
+#include "aom_dsp/x86/synonyms_avx2.h"
 #include "aom/aom_integer.h"
 
 #include "av1/common/reconinter.h"
@@ -31,7 +31,7 @@ uint64_t av1_wedge_sse_from_residuals_avx2(const int16_t *r1, const int16_t *d,
   uint64_t csse;
 
   const __m256i v_mask_max_w = _mm256_set1_epi16(MAX_MASK_VALUE);
-  const __m256i v_zext_q = _mm256_set1_epi64x(0xffffffff);
+  const __m256i v_zext_q = yy_set1_64_from_32i(0xffffffff);
 
   __m256i v_acc0_q = _mm256_setzero_si256();
 

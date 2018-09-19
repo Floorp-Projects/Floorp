@@ -37,6 +37,10 @@ struct Y4mTestParam {
 const Y4mTestParam kY4mTestVectors[] = {
   { "park_joy_90p_8_420.y4m", 8, AOM_IMG_FMT_I420,
     "e5406275b9fc6bb3436c31d4a05c1cab" },
+  { "park_joy_90p_8_420_monochrome.y4m", 8, AOM_IMG_FMT_I420,
+    "95ef5bf6218580588be24a5271bb6a7f" },
+  { "park_joy_90p_8_420_vertical_csp.y4m", 8, AOM_IMG_FMT_I420,
+    "f53a40fec15254ac312527339d9c686b" },
   { "park_joy_90p_8_422.y4m", 8, AOM_IMG_FMT_I422,
     "284a47a47133b12884ec3a14e959a0b6" },
   { "park_joy_90p_8_444.y4m", 8, AOM_IMG_FMT_I444,
@@ -55,24 +59,7 @@ const Y4mTestParam kY4mTestVectors[] = {
     "5a6481a550821dab6d0192f5c63845e9" },
 };
 
-static void write_image_file(const aom_image_t *img, FILE *file) {
-  int plane, y;
-  for (plane = 0; plane < 3; ++plane) {
-    const unsigned char *buf = img->planes[plane];
-    const int stride = img->stride[plane];
-    const int bytes_per_sample = (img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) ? 2 : 1;
-    const int h =
-        (plane ? (img->d_h + img->y_chroma_shift) >> img->y_chroma_shift
-               : img->d_h);
-    const int w =
-        (plane ? (img->d_w + img->x_chroma_shift) >> img->x_chroma_shift
-               : img->d_w);
-    for (y = 0; y < h; ++y) {
-      fwrite(buf, bytes_per_sample, w, file);
-      buf += stride;
-    }
-  }
-}
+static const int PLANES_YUV[] = { AOM_PLANE_Y, AOM_PLANE_U, AOM_PLANE_V };
 
 class Y4mVideoSourceTest : public ::testing::TestWithParam<Y4mTestParam>,
                            public ::libaom_test::Y4mVideoSource {
@@ -162,12 +149,13 @@ class Y4mVideoWriteTest : public Y4mVideoSourceTest {
     tmpfile_ = new libaom_test::TempOutFile;
     ASSERT_TRUE(tmpfile_->file() != NULL);
     y4m_write_file_header(buf, sizeof(buf), kWidth, kHeight, &framerate,
-                          y4m_.aom_fmt, y4m_.bit_depth);
+                          img()->monochrome, img()->csp, y4m_.aom_fmt,
+                          y4m_.bit_depth);
     fputs(buf, tmpfile_->file());
     for (unsigned int i = start_; i < limit_; i++) {
       y4m_write_frame_header(buf, sizeof(buf));
       fputs(buf, tmpfile_->file());
-      write_image_file(img(), tmpfile_->file());
+      y4m_write_image_file(img(), PLANES_YUV, tmpfile_->file());
       Next();
     }
     ReplaceInputFile(tmpfile_->file());

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_INV_TXFM2D_CFG_H_
-#define AV1_INV_TXFM2D_CFG_H_
+#ifndef AOM_AV1_COMMON_AV1_INV_TXFM1D_CFG_H_
+#define AOM_AV1_COMMON_AV1_INV_TXFM1D_CFG_H_
 #include "av1/common/av1_inv_txfm1d.h"
 
 // sum of fwd_shift_##
@@ -44,4 +44,4 @@ extern const int8_t *inv_txfm_shift_ls[TX_SIZES_ALL];
 extern const int8_t inv_cos_bit_col[5 /*row*/][5 /*col*/];
 extern const int8_t inv_cos_bit_row[5 /*row*/][5 /*col*/];
 
-#endif  // AV1_INV_TXFM2D_CFG_H_
+#endif  // AOM_AV1_COMMON_AV1_INV_TXFM1D_CFG_H_

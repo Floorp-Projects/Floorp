@@ -10,7 +10,9 @@
  */
 
 #include <assert.h>
+#include <math.h>
 
+#include "aom_dsp/aom_dsp_common.h"
 #include "av1/encoder/ml.h"
 
 void av1_nn_predict(const float *features, const NN_CONFIG *nn_config,
@@ -54,4 +56,18 @@ void av1_nn_predict(const float *features, const NN_CONFIG *nn_config,
     output[node] = val + bias[node];
     weights += num_input_nodes;
   }
+}
+
+void av1_nn_softmax(const float *input, float *output, int n) {
+  // Softmax function is invariant to adding the same constant
+  // to all input values, so we subtract the maximum input to avoid
+  // possible overflow.
+  float max_inp = input[0];
+  for (int i = 1; i < n; i++) max_inp = AOMMAX(max_inp, input[i]);
+  float sum_out = 0.0f;
+  for (int i = 0; i < n; i++) {
+    output[i] = (float)exp(input[i] - max_inp);
+    sum_out += output[i];
+  }
+  for (int i = 0; i < n; i++) output[i] /= sum_out;
 }

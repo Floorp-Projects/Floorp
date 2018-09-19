@@ -9,6 +9,9 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#ifndef AOM_AV1_COMMON_X86_CFL_SIMD_H_
+#define AOM_AV1_COMMON_X86_CFL_SIMD_H_
+
 #include "av1/common/blockd.h"
 
 // SSSE3 version is optimal for with == 4, we reuse them in AVX2
@@ -236,3 +239,5 @@ void predict_hbd_16x16_ssse3(const int16_t *pred_buf_q3, uint16_t *dst,
                              int dst_stride, int alpha_q3, int bd);
 void predict_hbd_16x32_ssse3(const int16_t *pred_buf_q3, uint16_t *dst,
                              int dst_stride, int alpha_q3, int bd);
+
+#endif  // AOM_AV1_COMMON_X86_CFL_SIMD_H_

@@ -18,6 +18,12 @@
 #include "av1/common/x86/av1_inv_txfm_avx2.h"
 #include "av1/common/x86/av1_inv_txfm_ssse3.h"
 
+// TODO(venkatsanampudi@ittiam.com): move this to header file
+
+// Sqrt2, Sqrt2^2, Sqrt2^3, Sqrt2^4, Sqrt2^5
+static int32_t NewSqrt2list[TX_SIZES] = { 5793, 2 * 4096, 2 * 5793, 4 * 4096,
+                                          4 * 5793 };
+
 static INLINE void idct16_stage5_avx2(__m256i *x1, const int32_t *cospi,
                                       const __m256i _r, int8_t cos_bit) {
   const __m256i cospi_m32_p32 = pair_set_w16_epi16(-cospi[32], cospi[32]);

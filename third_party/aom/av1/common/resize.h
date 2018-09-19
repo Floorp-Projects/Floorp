@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_RESIZE_H_
-#define AV1_ENCODER_RESIZE_H_
+#ifndef AOM_AV1_COMMON_RESIZE_H_
+#define AOM_AV1_COMMON_RESIZE_H_
 
 #include <stdio.h>
 #include "aom/aom_integer.h"
@@ -109,4 +109,4 @@ int32_t av1_get_upscale_convolve_step(int in_length, int out_length);
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_RESIZE_H_
+#endif  // AOM_AV1_COMMON_RESIZE_H_

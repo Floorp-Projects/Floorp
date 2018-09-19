@@ -9,6 +9,9 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#ifndef AOM_AV1_COMMON_CDEF_BLOCK_SIMD_H_
+#define AOM_AV1_COMMON_CDEF_BLOCK_SIMD_H_
+
 #include "config/av1_rtcd.h"
 
 #include "av1/common/cdef_block.h"
@@ -913,3 +916,5 @@ void SIMD_FUNC(copy_rect8_16bit_to_16bit)(uint16_t *dst, int dstride,
     }
   }
 }
+
+#endif  // AOM_AV1_COMMON_CDEF_BLOCK_SIMD_H_

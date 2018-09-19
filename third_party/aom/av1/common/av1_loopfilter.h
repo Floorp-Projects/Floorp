@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_LOOPFILTER_H_
-#define AV1_COMMON_LOOPFILTER_H_
+#ifndef AOM_AV1_COMMON_AV1_LOOPFILTER_H_
+#define AOM_AV1_COMMON_AV1_LOOPFILTER_H_
 
 #include "config/aom_config.h"
 
@@ -60,51 +60,20 @@ typedef struct {
   uint8_t lfl_y_hor[MI_SIZE_64X64][MI_SIZE_64X64];
   uint8_t lfl_y_ver[MI_SIZE_64X64][MI_SIZE_64X64];
 
-  // U plane vertical edge and horizontal edge filter level
-  uint8_t lfl_u_hor[MI_SIZE_64X64][MI_SIZE_64X64];
-  uint8_t lfl_u_ver[MI_SIZE_64X64][MI_SIZE_64X64];
+  // U plane filter level
+  uint8_t lfl_u[MI_SIZE_64X64][MI_SIZE_64X64];
 
-  // V plane vertical edge and horizontal edge filter level
-  uint8_t lfl_v_hor[MI_SIZE_64X64][MI_SIZE_64X64];
-  uint8_t lfl_v_ver[MI_SIZE_64X64][MI_SIZE_64X64];
+  // V plane filter level
+  uint8_t lfl_v[MI_SIZE_64X64][MI_SIZE_64X64];
+
+  // other info
+  FilterMask skip;
+  FilterMask is_vert_border;
+  FilterMask is_horz_border;
+  // Y or UV planes, 5 tx sizes: 4x4, 8x8, 16x16, 32x32, 64x64
+  FilterMask tx_size_ver[2][5];
+  FilterMask tx_size_hor[2][5];
 } LoopFilterMask;
-
-// To determine whether to apply loop filtering at one transform block edge,
-// we need information of the neighboring transform block. Specifically,
-// in determining a vertical edge, we need the information of the tx block
-// to its left. For a horizontal edge, we need info of the tx block above it.
-// Thus, we need to record info of right column and bottom row of tx blocks.
-// We record the information of the neighboring superblock, when bitmask
-// building for a superblock is finished. And it will be used for next
-// superblock bitmask building.
-// Information includes:
-// ------------------------------------------------------------
-//                    MI_SIZE_64X64
-// Y  tx_size above |--------------|
-// Y  tx_size left  |--------------|
-// UV tx_size above |--------------|
-// UV tx_size left  |--------------|
-// Y level above    |--------------|
-// Y level left     |--------------|
-// U level above    |--------------|
-// U level left     |--------------|
-// V level above    |--------------|
-// V level left     |--------------|
-// skip             |--------------|
-// ------------------------------------------------------------
-typedef struct {
-  TX_SIZE tx_size_y_above[MI_SIZE_64X64];
-  TX_SIZE tx_size_y_left[MI_SIZE_64X64];
-  TX_SIZE tx_size_uv_above[MI_SIZE_64X64];
-  TX_SIZE tx_size_uv_left[MI_SIZE_64X64];
-  uint8_t y_level_above[MI_SIZE_64X64];
-  uint8_t y_level_left[MI_SIZE_64X64];
-  uint8_t u_level_above[MI_SIZE_64X64];
-  uint8_t u_level_left[MI_SIZE_64X64];
-  uint8_t v_level_above[MI_SIZE_64X64];
-  uint8_t v_level_left[MI_SIZE_64X64];
-  uint8_t skip[MI_SIZE_64X64];
-} LpfSuperblockInfo;
 #endif  // LOOP_FILTER_BITMASK
 
 struct loopfilter {
@@ -130,7 +99,6 @@ struct loopfilter {
   LoopFilterMask *lfm;
   size_t lfm_num;
   int lfm_stride;
-  LpfSuperblockInfo neighbor_sb_lpf_info;
 #endif  // LOOP_FILTER_BITMASK
 };
 
@@ -157,9 +125,15 @@ void av1_loop_filter_init(struct AV1Common *cm);
 void av1_loop_filter_frame_init(struct AV1Common *cm, int plane_start,
                                 int plane_end);
 
+#if LOOP_FILTER_BITMASK
+void av1_loop_filter_frame(YV12_BUFFER_CONFIG *frame, struct AV1Common *cm,
+                           struct macroblockd *mbd, int is_decoding,
+                           int plane_start, int plane_end, int partial_frame);
+#else
 void av1_loop_filter_frame(YV12_BUFFER_CONFIG *frame, struct AV1Common *cm,
                            struct macroblockd *mbd, int plane_start,
                            int plane_end, int partial_frame);
+#endif
 
 void av1_filter_block_plane_vert(const struct AV1Common *const cm,
                                  const MACROBLOCKD *const xd, const int plane,
@@ -180,6 +154,9 @@ typedef struct LoopFilterWorkerData {
   MACROBLOCKD *xd;
 } LFWorkerData;
 
+uint8_t get_filter_level(const struct AV1Common *cm,
+                         const loop_filter_info_n *lfi_n, const int dir_idx,
+                         int plane, const MB_MODE_INFO *mbmi);
 #if LOOP_FILTER_BITMASK
 void av1_setup_bitmask(struct AV1Common *const cm, int mi_row, int mi_col,
                        int plane, int subsampling_x, int subsampling_y,
@@ -192,10 +169,59 @@ void av1_filter_block_plane_ver(struct AV1Common *const cm,
 void av1_filter_block_plane_hor(struct AV1Common *const cm,
                                 struct macroblockd_plane *const plane, int pl,
                                 int mi_row, int mi_col);
+LoopFilterMask *get_loop_filter_mask(const struct AV1Common *const cm,
+                                     int mi_row, int mi_col);
+int get_index_shift(int mi_col, int mi_row, int *index);
+
+static const FilterMask left_txform_mask[TX_SIZES] = {
+  { { 0x0000000000000001ULL,  // TX_4X4,
+      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+
+  { { 0x0000000000010001ULL,  // TX_8X8,
+      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+
+  { { 0x0001000100010001ULL,  // TX_16X16,
+      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+
+  { { 0x0001000100010001ULL,  // TX_32X32,
+      0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+
+  { { 0x0001000100010001ULL,  // TX_64X64,
+      0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL } },
+};
+
+static const uint64_t above_txform_mask[2][TX_SIZES] = {
+  {
+      0x0000000000000001ULL,  // TX_4X4
+      0x0000000000000003ULL,  // TX_8X8
+      0x000000000000000fULL,  // TX_16X16
+      0x00000000000000ffULL,  // TX_32X32
+      0x000000000000ffffULL,  // TX_64X64
+  },
+  {
+      0x0000000000000001ULL,  // TX_4X4
+      0x0000000000000005ULL,  // TX_8X8
+      0x0000000000000055ULL,  // TX_16X16
+      0x0000000000005555ULL,  // TX_32X32
+      0x0000000055555555ULL,  // TX_64X64
+  },
+};
+
+extern const int mask_id_table_tx_4x4[BLOCK_SIZES_ALL];
+
+extern const int mask_id_table_tx_8x8[BLOCK_SIZES_ALL];
+
+extern const int mask_id_table_tx_16x16[BLOCK_SIZES_ALL];
+
+extern const int mask_id_table_tx_32x32[BLOCK_SIZES_ALL];
+
+extern const FilterMask left_mask_univariant_reordered[67];
+
+extern const FilterMask above_mask_univariant_reordered[67];
 #endif
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_LOOPFILTER_H_
+#endif  // AOM_AV1_COMMON_AV1_LOOPFILTER_H_

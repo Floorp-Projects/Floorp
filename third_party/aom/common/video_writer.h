@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef VIDEO_WRITER_H_
-#define VIDEO_WRITER_H_
+#ifndef AOM_COMMON_VIDEO_WRITER_H_
+#define AOM_COMMON_VIDEO_WRITER_H_
 
 #include "common/video_common.h"
 
@@ -42,4 +42,4 @@ int aom_video_writer_write_frame(AvxVideoWriter *writer, const uint8_t *buffer,
 }  // extern "C"
 #endif
 
-#endif  // VIDEO_WRITER_H_
+#endif  // AOM_COMMON_VIDEO_WRITER_H_

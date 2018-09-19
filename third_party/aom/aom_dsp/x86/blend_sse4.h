@@ -9,25 +9,44 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_X86_BLEND_SSE4_H_
-#define AOM_DSP_X86_BLEND_SSE4_H_
+#ifndef AOM_AOM_DSP_X86_BLEND_SSE4_H_
+#define AOM_AOM_DSP_X86_BLEND_SSE4_H_
 
 #include "aom_dsp/blend.h"
 #include "aom_dsp/x86/synonyms.h"
+static const uint8_t g_blend_a64_mask_shuffle[32] = {
+  0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15,
+  0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15,
+};
 
 //////////////////////////////////////////////////////////////////////////////
 // Common kernels
 //////////////////////////////////////////////////////////////////////////////
 
 static INLINE __m128i blend_4(const uint8_t *src0, const uint8_t *src1,
-                              const __m128i v_m0_w, const __m128i v_m1_w) {
+                              const __m128i *v_m0_w, const __m128i *v_m1_w) {
   const __m128i v_s0_b = xx_loadl_32(src0);
   const __m128i v_s1_b = xx_loadl_32(src1);
   const __m128i v_s0_w = _mm_cvtepu8_epi16(v_s0_b);
   const __m128i v_s1_w = _mm_cvtepu8_epi16(v_s1_b);
 
-  const __m128i v_p0_w = _mm_mullo_epi16(v_s0_w, v_m0_w);
-  const __m128i v_p1_w = _mm_mullo_epi16(v_s1_w, v_m1_w);
+  const __m128i v_p0_w = _mm_mullo_epi16(v_s0_w, *v_m0_w);
+  const __m128i v_p1_w = _mm_mullo_epi16(v_s1_w, *v_m1_w);
+  const __m128i v_sum_w = _mm_add_epi16(v_p0_w, v_p1_w);
+  const __m128i v_res_w = xx_roundn_epu16(v_sum_w, AOM_BLEND_A64_ROUND_BITS);
+
+  return v_res_w;
+}
+
+static INLINE __m128i blend_8(const uint8_t *src0, const uint8_t *src1,
+                              const __m128i *v_m0_w, const __m128i *v_m1_w) {
+  const __m128i v_s0_b = xx_loadl_64(src0);
+  const __m128i v_s1_b = xx_loadl_64(src1);
+  const __m128i v_s0_w = _mm_cvtepu8_epi16(v_s0_b);
+  const __m128i v_s1_w = _mm_cvtepu8_epi16(v_s1_b);
+
+  const __m128i v_p0_w = _mm_mullo_epi16(v_s0_w, *v_m0_w);
+  const __m128i v_p1_w = _mm_mullo_epi16(v_s1_w, *v_m1_w);
 
   const __m128i v_sum_w = _mm_add_epi16(v_p0_w, v_p1_w);
 
@@ -36,21 +55,49 @@ static INLINE __m128i blend_4(const uint8_t *src0, const uint8_t *src1,
   return v_res_w;
 }
 
-static INLINE __m128i blend_8(const uint8_t *src0, const uint8_t *src1,
-                              const __m128i v_m0_w, const __m128i v_m1_w) {
+static INLINE __m128i blend_4_u8(const uint8_t *src0, const uint8_t *src1,
+                                 const __m128i *v_m0_b, const __m128i *v_m1_b,
+                                 const __m128i *rounding) {
+  const __m128i v_s0_b = xx_loadl_32(src0);
+  const __m128i v_s1_b = xx_loadl_32(src1);
+
+  const __m128i v_p0_w = _mm_maddubs_epi16(_mm_unpacklo_epi8(v_s0_b, v_s1_b),
+                                           _mm_unpacklo_epi8(*v_m0_b, *v_m1_b));
+
+  const __m128i v_res_w = _mm_mulhrs_epi16(v_p0_w, *rounding);
+  const __m128i v_res = _mm_packus_epi16(v_res_w, v_res_w);
+  return v_res;
+}
+
+static INLINE __m128i blend_8_u8(const uint8_t *src0, const uint8_t *src1,
+                                 const __m128i *v_m0_b, const __m128i *v_m1_b,
+                                 const __m128i *rounding) {
   const __m128i v_s0_b = xx_loadl_64(src0);
   const __m128i v_s1_b = xx_loadl_64(src1);
-  const __m128i v_s0_w = _mm_cvtepu8_epi16(v_s0_b);
-  const __m128i v_s1_w = _mm_cvtepu8_epi16(v_s1_b);
 
-  const __m128i v_p0_w = _mm_mullo_epi16(v_s0_w, v_m0_w);
-  const __m128i v_p1_w = _mm_mullo_epi16(v_s1_w, v_m1_w);
+  const __m128i v_p0_w = _mm_maddubs_epi16(_mm_unpacklo_epi8(v_s0_b, v_s1_b),
+                                           _mm_unpacklo_epi8(*v_m0_b, *v_m1_b));
 
-  const __m128i v_sum_w = _mm_add_epi16(v_p0_w, v_p1_w);
+  const __m128i v_res_w = _mm_mulhrs_epi16(v_p0_w, *rounding);
+  const __m128i v_res = _mm_packus_epi16(v_res_w, v_res_w);
+  return v_res;
+}
 
-  const __m128i v_res_w = xx_roundn_epu16(v_sum_w, AOM_BLEND_A64_ROUND_BITS);
+static INLINE __m128i blend_16_u8(const uint8_t *src0, const uint8_t *src1,
+                                  const __m128i *v_m0_b, const __m128i *v_m1_b,
+                                  const __m128i *rounding) {
+  const __m128i v_s0_b = xx_loadu_128(src0);
+  const __m128i v_s1_b = xx_loadu_128(src1);
 
-  return v_res_w;
+  const __m128i v_p0_w = _mm_maddubs_epi16(_mm_unpacklo_epi8(v_s0_b, v_s1_b),
+                                           _mm_unpacklo_epi8(*v_m0_b, *v_m1_b));
+  const __m128i v_p1_w = _mm_maddubs_epi16(_mm_unpackhi_epi8(v_s0_b, v_s1_b),
+                                           _mm_unpackhi_epi8(*v_m0_b, *v_m1_b));
+
+  const __m128i v_res0_w = _mm_mulhrs_epi16(v_p0_w, *rounding);
+  const __m128i v_res1_w = _mm_mulhrs_epi16(v_p1_w, *rounding);
+  const __m128i v_res = _mm_packus_epi16(v_res0_w, v_res1_w);
+  return v_res;
 }
 
 typedef __m128i (*blend_unit_fn)(const uint16_t *src0, const uint16_t *src1,
@@ -141,4 +188,4 @@ static INLINE __m128i blend_8_b12(const uint16_t *src0, const uint16_t *src1,
   return v_res_w;
 }
 
-#endif  // AOM_DSP_X86_BLEND_SSE4_H_
+#endif  // AOM_AOM_DSP_X86_BLEND_SSE4_H_

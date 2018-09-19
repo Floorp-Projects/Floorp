@@ -39,7 +39,7 @@ static void blend_a64_vmask_w4_sse4_1(uint8_t *dst, uint32_t dst_stride,
     const __m128i v_m0_w = _mm_set1_epi16(*mask);
     const __m128i v_m1_w = _mm_sub_epi16(v_maxval_w, v_m0_w);
 
-    const __m128i v_res_w = blend_4(src0, src1, v_m0_w, v_m1_w);
+    const __m128i v_res_w = blend_4(src0, src1, &v_m0_w, &v_m1_w);
 
     const __m128i v_res_b = _mm_packus_epi16(v_res_w, v_res_w);
 
@@ -64,7 +64,7 @@ static void blend_a64_vmask_w8_sse4_1(uint8_t *dst, uint32_t dst_stride,
     const __m128i v_m0_w = _mm_set1_epi16(*mask);
     const __m128i v_m1_w = _mm_sub_epi16(v_maxval_w, v_m0_w);
 
-    const __m128i v_res_w = blend_8(src0, src1, v_m0_w, v_m1_w);
+    const __m128i v_res_w = blend_8(src0, src1, &v_m0_w, &v_m1_w);
 
     const __m128i v_res_b = _mm_packus_epi16(v_res_w, v_res_w);
 
@@ -90,9 +90,9 @@ static void blend_a64_vmask_w16n_sse4_1(uint8_t *dst, uint32_t dst_stride,
     const __m128i v_m0_w = _mm_set1_epi16(*mask);
     const __m128i v_m1_w = _mm_sub_epi16(v_maxval_w, v_m0_w);
     for (c = 0; c < w; c += 16) {
-      const __m128i v_resl_w = blend_8(src0 + c, src1 + c, v_m0_w, v_m1_w);
+      const __m128i v_resl_w = blend_8(src0 + c, src1 + c, &v_m0_w, &v_m1_w);
       const __m128i v_resh_w =
-          blend_8(src0 + c + 8, src1 + c + 8, v_m0_w, v_m1_w);
+          blend_8(src0 + c + 8, src1 + c + 8, &v_m0_w, &v_m1_w);
 
       const __m128i v_res_b = _mm_packus_epi16(v_resl_w, v_resh_w);
 

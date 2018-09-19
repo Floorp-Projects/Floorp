@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_GLOBAL_MOTION_H_
-#define AV1_ENCODER_GLOBAL_MOTION_H_
+#ifndef AOM_AV1_ENCODER_GLOBAL_MOTION_H_
+#define AOM_AV1_ENCODER_GLOBAL_MOTION_H_
 
 #include "aom/aom_integer.h"
 #include "aom_scale/yv12config.h"
@@ -61,4 +61,4 @@ int compute_global_motion_feature_based(TransformationType type,
 #ifdef __cplusplus
 }  // extern "C"
 #endif
-#endif  // AV1_ENCODER_GLOBAL_MOTION_H_
+#endif  // AOM_AV1_ENCODER_GLOBAL_MOTION_H_

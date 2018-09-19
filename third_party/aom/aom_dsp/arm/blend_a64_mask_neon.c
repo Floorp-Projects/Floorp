@@ -86,7 +86,8 @@ static INLINE void blend_4x4(uint8_t *dst, uint32_t dst_stride,
                              const int16x8_t vec_round_bits) {
   int16x8_t src0_0, src0_1;
   int16x8_t src1_0, src1_1;
-  uint64x2_t tu0, tu1, tu2, tu3;
+  uint64x2_t tu0 = vdupq_n_u64(0), tu1 = vdupq_n_u64(0), tu2 = vdupq_n_u64(0),
+             tu3 = vdupq_n_u64(0);
   int16x8_t mask0_1, mask2_3;
   int16x8_t res0, res1;
 
@@ -154,7 +155,8 @@ void aom_lowbd_blend_a64_d16_mask_neon(
   assert(IS_POWER_OF_TWO(w));
 
   uint8x8_t s0, s1, s2, s3;
-  uint32x2_t tu0, tu1, tu2, tu3;
+  uint32x2_t tu0 = vdup_n_u32(0), tu1 = vdup_n_u32(0), tu2 = vdup_n_u32(0),
+             tu3 = vdup_n_u32(0);
   uint8x16_t t0, t1, t2, t3, t4, t5, t6, t7;
   int16x8_t mask0, mask1, mask2, mask3;
   int16x8_t mask4, mask5, mask6, mask7;

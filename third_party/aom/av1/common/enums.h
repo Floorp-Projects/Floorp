@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_ENUMS_H_
-#define AV1_COMMON_ENUMS_H_
+#ifndef AOM_AV1_COMMON_ENUMS_H_
+#define AOM_AV1_COMMON_ENUMS_H_
 
 #include "config/aom_config.h"
 
@@ -274,7 +274,7 @@ typedef enum ATTRIBUTE_PACKED {
   TX_TYPES,
 } TX_TYPE;
 
-typedef enum {
+typedef enum ATTRIBUTE_PACKED {
   REG_REG,
   REG_SMOOTH,
   REG_SHARP,
@@ -438,6 +438,8 @@ typedef enum ATTRIBUTE_PACKED {
   COMP_INTER_MODE_START = NEAREST_NEARESTMV,
   COMP_INTER_MODE_END = MB_MODE_COUNT,
   COMP_INTER_MODE_NUM = COMP_INTER_MODE_END - COMP_INTER_MODE_START,
+  INTER_MODE_START = NEARESTMV,
+  INTER_MODE_END = MB_MODE_COUNT,
   INTRA_MODES = PAETH_PRED + 1,  // PAETH_PRED has to be the last intra mode.
   INTRA_INVALID = MB_MODE_COUNT  // For uv_mode in inter blocks
 } PREDICTION_MODE;
@@ -478,7 +480,7 @@ typedef enum ATTRIBUTE_PACKED {
   INTERINTRA_MODES
 } INTERINTRA_MODE;
 
-typedef enum {
+typedef enum ATTRIBUTE_PACKED {
   COMPOUND_AVERAGE,
   COMPOUND_WEDGE,
   COMPOUND_DIFFWTD,
@@ -614,4 +616,4 @@ typedef enum ATTRIBUTE_PACKED {
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_ENUMS_H_
+#endif  // AOM_AV1_COMMON_ENUMS_H_

@@ -12,8 +12,8 @@
  * Copyright (C) 2002-2010 The Xiph.Org Foundation and contributors.
  */
 
-#ifndef Y4MINPUT_H_
-#define Y4MINPUT_H_
+#ifndef AOM_COMMON_Y4MINPUT_H_
+#define AOM_COMMON_Y4MINPUT_H_
 
 #include <stdio.h>
 #include "aom/aom_image.h"
@@ -66,4 +66,4 @@ int y4m_input_fetch_frame(y4m_input *_y4m, FILE *_fin, aom_image_t *img);
 }  // extern "C"
 #endif
 
-#endif  // Y4MINPUT_H_
+#endif  // AOM_COMMON_Y4MINPUT_H_

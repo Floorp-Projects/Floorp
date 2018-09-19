@@ -54,11 +54,10 @@
 #include "aom/aom_decoder.h"
 #include "aom/aom_encoder.h"
 #include "aom/aomcx.h"
+#include "aom_scale/yv12config.h"
 #include "common/tools_common.h"
 #include "common/video_writer.h"
 #include "examples/encoder_util.h"
-
-#define AOM_BORDER_IN_PIXELS 288
 
 static const char *exec_name;
 

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_RATECTRL_H_
-#define AV1_ENCODER_RATECTRL_H_
+#ifndef AOM_AV1_ENCODER_RATECTRL_H_
+#define AOM_AV1_ENCODER_RATECTRL_H_
 
 #include "aom/aom_codec.h"
 #include "aom/aom_integer.h"
@@ -25,13 +25,27 @@ extern "C" {
 #define BPER_MB_NORMBITS 9
 
 #define CUSTOMIZED_GF 1
-#define FIX_GF_INTERVAL_LENGTH 0
 
-#if FIX_GF_INTERVAL_LENGTH
+#if CONFIG_FIX_GF_LENGTH
 #define FIXED_GF_LENGTH 16
+#define MAX_PYRAMID_LVL 4
+// We allow a frame to have at most two left/right descendants before changing
+// them into to a subtree, i.e., we allow the following structure:
+/*                    OUT_OF_ORDER_FRAME
+                     / /              \ \
+(two left children) F F                F F (two right children) */
+// Therefore the max gf size supported by 4 layer structure is
+// 1 (KEY/OVERLAY) + 1 + 2 + 4 + 16 (two children on both side of their parent)
+#define MAX_PYRAMID_SIZE 24
 #define USE_SYMM_MULTI_LAYER 1
+#define REDUCE_LAST_ALT_BOOST 1
+#define REDUCE_LAST_GF_LENGTH 1
+#define MULTI_LVL_BOOST_VBR_CQ 1
 #else
 #define USE_SYMM_MULTI_LAYER 0
+#define REDUCE_LAST_ALT_BOOST 0
+#define REDUCE_LAST_GF_LENGTH 0
+#define MULTI_LVL_BOOST_VBR_CQ 0
 #endif
 
 #if USE_SYMM_MULTI_LAYER
@@ -159,6 +173,9 @@ typedef struct {
 
   // Auto frame-scaling variables.
   int rf_level_maxq[RATE_FACTOR_LEVELS];
+  float_t arf_boost_factor;
+  // Q index used for ALT frame
+  int arf_q;
 } RATE_CONTROL;
 
 struct AV1_COMP;
@@ -228,7 +245,7 @@ void av1_rc_compute_frame_size_bounds(const struct AV1_COMP *cpi,
                                       int *frame_over_shoot_limit);
 
 // Picks q and q bounds given the target for bits
-int av1_rc_pick_q_and_bounds(const struct AV1_COMP *cpi, int width, int height,
+int av1_rc_pick_q_and_bounds(struct AV1_COMP *cpi, int width, int height,
                              int *bottom_index, int *top_index);
 
 // Estimates q to achieve a target bits per frame
@@ -275,4 +292,4 @@ int av1_resize_one_pass_cbr(struct AV1_COMP *cpi);
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_RATECTRL_H_
+#endif  // AOM_AV1_ENCODER_RATECTRL_H_

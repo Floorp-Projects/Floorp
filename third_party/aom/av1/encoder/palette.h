@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_PALETTE_H_
-#define AV1_ENCODER_PALETTE_H_
+#ifndef AOM_AV1_ENCODER_PALETTE_H_
+#define AOM_AV1_ENCODER_PALETTE_H_
 
 #include "av1/common/blockd.h"
 
@@ -93,4 +93,4 @@ int av1_palette_color_cost_uv(const PALETTE_MODE_INFO *const pmi,
 }  // extern "C"
 #endif
 
-#endif /* AV1_ENCODER_PALETTE_H_ */
+#endif  // AOM_AV1_ENCODER_PALETTE_H_

@@ -179,9 +179,14 @@ static void print_variance_y(FILE *debug_file, aom_image_t *raw,
                              int block_size, aom_film_grain_t *grain) {
   aom_image_t renoised;
   grain->apply_grain = 1;
-  grain->random_seed = 1071;
+  grain->random_seed = 7391;
   aom_img_alloc(&renoised, raw->fmt, raw->w, raw->h, 1);
-  av1_add_film_grain(grain, denoised, &renoised);
+
+  if (av1_add_film_grain(grain, denoised, &renoised)) {
+    fprintf(stderr, "Internal failure in av1_add_film_grain().\n");
+    aom_img_free(&renoised);
+    return;
+  }
 
   const int num_blocks_w = (raw->w + block_size - 1) / block_size;
   const int num_blocks_h = (raw->h + block_size - 1) / block_size;
@@ -324,7 +329,7 @@ int main(int argc, char *argv[]) {
   const int num_blocks_h = (info.frame_height + block_size - 1) / block_size;
   uint8_t *flat_blocks = (uint8_t *)aom_malloc(num_blocks_w * num_blocks_h);
   // Sets the random seed on the first entry in the output table
-  int16_t random_seed = 1071;
+  int16_t random_seed = 7391;
   aom_noise_model_t noise_model;
   aom_noise_model_params_t params = { AOM_NOISE_SHAPE_SQUARE, 3, args.bit_depth,
                                       high_bd };
