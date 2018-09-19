@@ -24,7 +24,7 @@ toolbarbutton {
 }
 
 .toolbarbutton-text {
-  margin: 0;
+  margin: 0 !important; /* !important for overriding global.css */
   text-align: center;
 }
 
@@ -91,7 +91,7 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
-  -moz-appearance: none;
+  -moz-appearance: none !important;
   list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;

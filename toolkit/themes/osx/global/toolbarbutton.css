@@ -13,8 +13,8 @@ toolbarbutton {
 }
 
 .toolbarbutton-text {
-  margin: 0;
-  padding: 0;
+  margin: 0 !important; /* !important for overriding global.css */
+  padding: 0px;
   text-align: center;
   vertical-align: middle;
 }
@@ -29,7 +29,7 @@ toolbarbutton[disabled="true"][open="true"] {
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
-  -moz-appearance: none;
+  -moz-appearance: none !important;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
   padding-inline-start: 2px;
   width: auto;
@@ -37,6 +37,8 @@ toolbarbutton[disabled="true"][open="true"] {
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png");
+  padding: 0;
+  padding-inline-start: 2px;
 }
 
 /* ::::: toolbarbutton badged ::::: */

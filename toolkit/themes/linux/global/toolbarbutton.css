@@ -28,7 +28,7 @@ toolbarbutton {
 }
 
 .toolbarbutton-text {
-  margin: 0;
+  margin: 0 !important; /* !important for overriding global.css */
   text-align: center;
 }
 
@@ -40,7 +40,7 @@ toolbarbutton:hover {
   color: -moz-buttonhovertext;
 }
 
-toolbarbutton:hover:active:not([disabled="true"]),
+toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
   padding-top: 4px;
   padding-bottom: 2px;
@@ -49,7 +49,11 @@ toolbarbutton[open="true"] {
   color: ButtonText;
 }
 
-toolbarbutton[disabled="true"] {
+toolbarbutton[disabled="true"],
+toolbarbutton[disabled="true"]:hover,
+toolbarbutton[disabled="true"]:hover:active,
+toolbarbutton[disabled="true"][open="true"] {
+  padding: 3px;
   color: GrayText;
 }
 
@@ -64,7 +68,11 @@ toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
-  -moz-appearance: toolbarbutton-dropdown;
+  -moz-appearance: toolbarbutton-dropdown !important;
+}
+
+.toolbarbutton-menu-dropmarker[disabled="true"] {
+  padding: 0 !important;
 }
 
 /* ::::: toolbarbutton badged ::::: */
