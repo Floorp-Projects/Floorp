@@ -351,17 +351,29 @@ template<typename Tok> JS::Result<Ok>
 BinASTParser<Tok>::checkPositionalParameterIndices(Handle<GCVector<JSAtom*>> positionalParams,
                                                    ListNode* params)
 {
-    MOZ_ASSERT(positionalParams.get().length() == params->count());
+#ifdef DEBUG
+    // positionalParams should have the same length as non-rest parameters.
+    size_t paramsCount = params->count();
+    if (paramsCount > 0) {
+        if (params->last()->isKind(ParseNodeKind::Spread)) {
+            paramsCount--;
+        }
+    }
+    MOZ_ASSERT(positionalParams.get().length() == paramsCount);
+#endif
 
     uint32_t i = 0;
     for (ParseNode* param : params->contents()) {
         if (param->isKind(ParseNodeKind::Assign)) {
             param = param->as<AssignmentNode>().left();
         }
+        if (param->isKind(ParseNodeKind::Spread)) {
+            continue;
+        }
+
         MOZ_ASSERT(param->isKind(ParseNodeKind::Name) ||
                    param->isKind(ParseNodeKind::Object) ||
-                   param->isKind(ParseNodeKind::Array) ||
-                   param->isKind(ParseNodeKind::Spread));
+                   param->isKind(ParseNodeKind::Array));
 
         if (JSAtom* name = positionalParams.get()[i]) {
             // Simple or default parameter.

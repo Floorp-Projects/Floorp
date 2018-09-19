@@ -64,7 +64,7 @@ nsReflowFrameRunnable::Run()
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewProgressMeterFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewProgressMeterFrame (nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle)
 {
   return new (aPresShell) nsProgressMeterFrame(aStyle);
 }
