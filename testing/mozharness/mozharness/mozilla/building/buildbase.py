@@ -41,7 +41,6 @@ from mozharness.mozilla.automation import (
 from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.mozilla.testing.unittest import tbox_print_summary
-from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.base.python import (
     PerfherderResourceOptionsMixin,
     VirtualenvMixin,
@@ -671,7 +670,7 @@ def generate_build_UID():
     return uuid.uuid4().hex
 
 
-class BuildScript(AutomationMixin, BalrogMixin,
+class BuildScript(AutomationMixin,
                   VirtualenvMixin, MercurialScript,
                   SecretsMixin, PerfherderResourceOptionsMixin):
     def __init__(self, **kwargs):
@@ -1768,28 +1767,6 @@ or run without that action (ie: --no-{action})"
 
         if perfherder_data["suites"]:
             self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
-
-    def update(self):
-        """ submit balrog update steps. """
-        if self.config.get('forced_artifact_build'):
-            self.info('Skipping due to forced artifact build.')
-            return
-        if not self.query_is_nightly():
-            self.info("Not a nightly build, skipping balrog submission.")
-            return
-
-        # grab any props available from this or previous unclobbered runs
-        self.generate_build_props(console_output=False,
-                                  halt_on_failure=False)
-
-        # generate balrog props as artifacts
-        if self.config.get('taskcluster_nightly'):
-            env = self.query_mach_build_env(multiLocale=False)
-            props_path = os.path.join(env["UPLOAD_PATH"],
-                    'balrog_props.json')
-            self.generate_balrog_props(props_path)
-            return
-
 
     def valgrind_test(self):
         '''Execute mach's valgrind-test for memory leaks'''
