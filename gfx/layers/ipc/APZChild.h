@@ -25,7 +25,7 @@ public:
   explicit APZChild(RefPtr<GeckoContentController> aController);
   ~APZChild();
 
-  mozilla::ipc::IPCResult RecvRequestContentRepaint(const FrameMetrics& frame) override;
+  mozilla::ipc::IPCResult RecvRequestContentRepaint(const RepaintRequest& aRequest) override;
 
   mozilla::ipc::IPCResult RecvUpdateOverscrollVelocity(const float& aX, const float& aY, const bool& aIsRootContent) override;
 

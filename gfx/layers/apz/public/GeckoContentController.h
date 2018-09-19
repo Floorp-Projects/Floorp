@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/DefineEnum.h"         // for MOZ_DEFINE_ENUM
 #include "mozilla/EventForwards.h"      // for Modifiers
+#include "mozilla/layers/RepaintRequest.h" // for RepaintRequest
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
@@ -27,7 +28,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GeckoContentController)
 
   /**
-   * Requests a paint of the given FrameMetrics |aFrameMetrics| from Gecko.
+   * Requests a paint of the given RepaintRequest |aRequest| from Gecko.
    * Implementations per-platform are responsible for actually handling this.
    *
    * This method must always be called on the repaint thread, which depends
@@ -35,7 +36,7 @@ public:
    * Gecko main thread, while for RemoteContentController it is the compositor
    * thread where it can send IPDL messages.
    */
-  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) = 0;
+  virtual void RequestContentRepaint(const RepaintRequest& aRequest) = 0;
 
   /**
    * Different types of tap-related events that can be sent in
