@@ -18,7 +18,7 @@
 #include "seccomon.h"
 #include "secdert.h"
 #include "secoidt.h"
-#include "keyt.h"
+#include "keythi.h"
 #include "certt.h"
 
 SEC_BEGIN_PROTOS

@@ -14,7 +14,7 @@
 #include "pkcs11.h"
 #include "pk11func.h"
 #include "secitem.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secoid.h"
 #include "secasn1.h"
 #include "secerr.h"

@@ -12,7 +12,7 @@
 #include "plarena.h"
 #include "seccomon.h"
 #include "secoidt.h"
-#include "keyt.h"
+#include "keythi.h"
 #include "certt.h"
 #include "ocspt.h"
 
