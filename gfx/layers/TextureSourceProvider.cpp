@@ -46,6 +46,7 @@ TextureSourceProvider::ReadUnlockTextures()
     texture->ReadUnlock();
   }
 #endif
+  mReferenceUntilAfterComposition.Clear();
   mUnlockAfterComposition.Clear();
 }
 
@@ -53,6 +54,12 @@ void
 TextureSourceProvider::UnlockAfterComposition(TextureHost* aTexture)
 {
   mUnlockAfterComposition.AppendElement(aTexture);
+}
+
+void
+TextureSourceProvider::ReferenceUntilAfterComposition(DataTextureSource* aTextureSource)
+{
+  mReferenceUntilAfterComposition.AppendElement(aTextureSource);
 }
 
 bool

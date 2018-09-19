@@ -1,65 +1,21 @@
-// This is a part of rust-chrono.
-// Copyright (c) 2014-2015, Kang Seonghoon.
+// This is a part of Chrono.
 // See README.md and LICENSE.txt for details.
 
 //! ISO 8601 calendar date without timezone.
-//!
-//! # Calendar Date
-//!
-//! The ISO 8601 **calendar date** follows the proleptic Gregorian calendar.
-//! It is like a normal civil calendar but note some slight differences:
-//!
-//! * Dates before the Gregorian calendar's inception in 1582 are defined via the extrapolation.
-//!   Be careful, as historical dates are often noted in the Julian calendar and others
-//!   and the transition to Gregorian may differ across countries (as late as early 20C).
-//!
-//!   (Some example: Both Shakespeare from Britain and Cervantes from Spain seemingly died
-//!   on the same calendar date---April 23, 1616---but in the different calendar.
-//!   Britain used the Julian calendar at that time, so Shakespeare's death is later.)
-//!
-//! * ISO 8601 calendars has the year 0, which is 1 BCE (a year before 1 CE).
-//!   If you need a typical BCE/BC and CE/AD notation for year numbers,
-//!   use the [`Datelike::year_ce`](../../trait.Datelike.html#method.year_ce) method.
-//!
-//! # Week Date
-//!
-//! The ISO 8601 **week date** is a triple of year number, week number
-//! and [day of the week](../../enum.Weekday.html) with the following rules:
-//!
-//! * A week consists of Monday through Sunday, and is always numbered within some year.
-//!   The week number ranges from 1 to 52 or 53 depending on the year.
-//!
-//! * The week 1 of given year is defined as the first week containing January 4 of that year,
-//!   or equivalently, the first week containing four or more days in that year.
-//!
-//! * The year number in the week date may *not* correspond to the actual Gregorian year.
-//!   For example, January 3, 2016 (Sunday) was on the last (53rd) week of 2015.
-//!
-//! Chrono's date types default to the ISO 8601 [calendar date](#calendar-date),
-//! but the [`Datelike::isoweekdate`](../../trait.Datelike.html#tymethod.isoweekdate) method
-//! can be used to get the corresponding week date.
-//!
-//! # Ordinal Date
-//!
-//! The ISO 8601 **ordinal date** is a pair of year number and day of the year ("ordinal").
-//! The ordinal number ranges from 1 to 365 or 366 depending on the year.
-//! The year number is same to that of the [calendar date](#calendar-date).
-//!
-//! This is currently the internal format of Chrono's date types.
 
-use std::{str, fmt, hash};
-use std::ops::{Add, Sub};
-use num::traits::ToPrimitive;
+use std::{str, fmt};
+use std::ops::{Add, Sub, AddAssign, SubAssign};
+use num_traits::ToPrimitive;
+use oldtime::Duration as OldDuration;
 
 use {Weekday, Datelike};
 use div::div_mod_floor;
-use duration::Duration;
-use naive::time::NaiveTime;
-use naive::datetime::NaiveDateTime;
+use naive::{NaiveTime, NaiveDateTime, IsoWeek};
 use format::{Item, Numeric, Pad};
 use format::{parse, Parsed, ParseError, ParseResult, DelayedFormat, StrftimeItems};
 
-use self::internals::{DateImpl, Of, Mdf, YearFlags};
+use super::isoweek;
+use super::internals::{self, DateImpl, Of, Mdf, YearFlags};
 
 const MAX_YEAR: i32 = internals::MAX_YEAR;
 const MIN_YEAR: i32 = internals::MIN_YEAR;
@@ -86,29 +42,84 @@ const MIN_DAYS_FROM_YEAR_0: i32 = (MIN_YEAR + 400_000) * 365 +
                                   (MIN_YEAR + 400_000) / 100 +
                                   (MIN_YEAR + 400_000) / 400 - 146097_000;
 
+#[cfg(test)] // only used for testing, but duplicated in naive::datetime
+const MAX_BITS: usize = 44;
+
 /// ISO 8601 calendar date without timezone.
-/// Allows for every [proleptic Gregorian date](./index.html#calendar-date)
+/// Allows for every [proleptic Gregorian date](#calendar-date)
 /// from Jan 1, 262145 BCE to Dec 31, 262143 CE.
 /// Also supports the conversion from ISO 8601 ordinal and week date.
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+///
+/// # Calendar Date
+///
+/// The ISO 8601 **calendar date** follows the proleptic Gregorian calendar.
+/// It is like a normal civil calendar but note some slight differences:
+///
+/// * Dates before the Gregorian calendar's inception in 1582 are defined via the extrapolation.
+///   Be careful, as historical dates are often noted in the Julian calendar and others
+///   and the transition to Gregorian may differ across countries (as late as early 20C).
+///
+///   (Some example: Both Shakespeare from Britain and Cervantes from Spain seemingly died
+///   on the same calendar date---April 23, 1616---but in the different calendar.
+///   Britain used the Julian calendar at that time, so Shakespeare's death is later.)
+///
+/// * ISO 8601 calendars has the year 0, which is 1 BCE (a year before 1 CE).
+///   If you need a typical BCE/BC and CE/AD notation for year numbers,
+///   use the [`Datelike::year_ce`](../trait.Datelike.html#method.year_ce) method.
+///
+/// # Week Date
+///
+/// The ISO 8601 **week date** is a triple of year number, week number
+/// and [day of the week](../enum.Weekday.html) with the following rules:
+///
+/// * A week consists of Monday through Sunday, and is always numbered within some year.
+///   The week number ranges from 1 to 52 or 53 depending on the year.
+///
+/// * The week 1 of given year is defined as the first week containing January 4 of that year,
+///   or equivalently, the first week containing four or more days in that year.
+///
+/// * The year number in the week date may *not* correspond to the actual Gregorian year.
+///   For example, January 3, 2016 (Sunday) was on the last (53rd) week of 2015.
+///
+/// Chrono's date types default to the ISO 8601 [calendar date](#calendar-date),
+/// but [`Datelike::iso_week`](../trait.Datelike.html#tymethod.iso_week) and
+/// [`Datelike::weekday`](../trait.Datelike.html#tymethod.weekday) methods
+/// can be used to get the corresponding week date.
+///
+/// # Ordinal Date
+///
+/// The ISO 8601 **ordinal date** is a pair of year number and day of the year ("ordinal").
+/// The ordinal number ranges from 1 to 365 or 366 depending on the year.
+/// The year number is same to that of the [calendar date](#calendar-date).
+///
+/// This is currently the internal format of Chrono's date types.
+#[derive(PartialEq, Eq, Hash, PartialOrd, Ord, Copy, Clone)]
 pub struct NaiveDate {
     ymdf: DateImpl, // (year << 13) | of
 }
 
 /// The minimum possible `NaiveDate` (January 1, 262145 BCE).
-pub const MIN: NaiveDate = NaiveDate { ymdf: (MIN_YEAR << 13) | (1 << 4) | 0o07 /*FE*/ };
+pub const MIN_DATE: NaiveDate = NaiveDate { ymdf: (MIN_YEAR << 13) | (1 << 4) | 0o07 /*FE*/ };
 /// The maximum possible `NaiveDate` (December 31, 262143 CE).
-pub const MAX: NaiveDate = NaiveDate { ymdf: (MAX_YEAR << 13) | (365 << 4) | 0o17 /*F*/ };
+pub const MAX_DATE: NaiveDate = NaiveDate { ymdf: (MAX_YEAR << 13) | (365 << 4) | 0o17 /*F*/ };
 
-// as it is hard to verify year flags in `MIN` and `MAX`, we use a separate run-time test.
+// as it is hard to verify year flags in `MIN_DATE` and `MAX_DATE`,
+// we use a separate run-time test.
 #[test]
 fn test_date_bounds() {
     let calculated_min = NaiveDate::from_ymd(MIN_YEAR, 1, 1);
     let calculated_max = NaiveDate::from_ymd(MAX_YEAR, 12, 31);
-    assert!(MIN == calculated_min,
-            "`MIN` should have a year flag {:?}", calculated_min.of().flags());
-    assert!(MAX == calculated_max,
-            "`MAX` should have a year flag {:?}", calculated_max.of().flags());
+    assert!(MIN_DATE == calculated_min,
+            "`MIN_DATE` should have a year flag {:?}", calculated_min.of().flags());
+    assert!(MAX_DATE == calculated_max,
+            "`MAX_DATE` should have a year flag {:?}", calculated_max.of().flags());
+
+    // let's also check that the entire range do not exceed 2^44 seconds
+    // (sometimes used for bounding `Duration` against overflow)
+    let maxsecs = MAX_DATE.signed_duration_since(MIN_DATE).num_seconds();
+    let maxsecs = maxsecs + 86401; // also take care of DateTime
+    assert!(maxsecs < (1 << MAX_BITS),
+            "The entire `NaiveDate` range somehow exceeds 2^{} seconds", MAX_BITS);
 }
 
 impl NaiveDate {
@@ -127,27 +138,7 @@ impl NaiveDate {
         NaiveDate::from_of(year, mdf.to_of())
     }
 
-    /// Makes a new `NaiveDate` from the serialized representation.
-    /// Used for serialization formats.
-    #[cfg(feature = "rustc-serialize")]
-    fn from_serialized(ymdf: i32) -> Option<NaiveDate> {
-        // check if the year flag is correct
-        if (ymdf & 0b1111) as u8 != YearFlags::from_year(ymdf >> 13).0 { return None; }
-
-        // check if the ordinal is in the range
-        let date = NaiveDate { ymdf: ymdf };
-        if !date.of().valid() { return None; }
-
-        Some(date)
-    }
-
-    /// Returns a serialized representation of this `NaiveDate`.
-    #[cfg(feature = "rustc-serialize")]
-    fn to_serialized(&self) -> i32 {
-        self.ymdf
-    }
-
-    /// Makes a new `NaiveDate` from the [calendar date](./index.html#calendar-date)
+    /// Makes a new `NaiveDate` from the [calendar date](#calendar-date)
     /// (year, month and day).
     ///
     /// Panics on the out-of-range date, invalid month and/or day.
@@ -162,14 +153,16 @@ impl NaiveDate {
     /// assert_eq!(d.month(), 3);
     /// assert_eq!(d.day(), 14);
     /// assert_eq!(d.ordinal(), 73); // day of year
-    /// assert_eq!(d.isoweekdate(), (2015, 11, Weekday::Sat)); // ISO week and weekday
+    /// assert_eq!(d.iso_week().year(), 2015);
+    /// assert_eq!(d.iso_week().week(), 11);
+    /// assert_eq!(d.weekday(), Weekday::Sat);
     /// assert_eq!(d.num_days_from_ce(), 735671); // days since January 1, 1 CE
     /// ~~~~
     pub fn from_ymd(year: i32, month: u32, day: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(year, month, day).expect("invalid or out-of-range date")
     }
 
-    /// Makes a new `NaiveDate` from the [calendar date](./index.html#calendar-date)
+    /// Makes a new `NaiveDate` from the [calendar date](#calendar-date)
     /// (year, month and day).
     ///
     /// Returns `None` on the out-of-range date, invalid month and/or day.
@@ -179,20 +172,21 @@ impl NaiveDate {
     /// ~~~~
     /// use chrono::NaiveDate;
     ///
-    /// let ymd = |y,m,d| NaiveDate::from_ymd_opt(y, m, d);
-    /// assert!(ymd(2015, 3, 14).is_some());
-    /// assert!(ymd(2015, 0, 14).is_none());
-    /// assert!(ymd(2015, 2, 29).is_none());
-    /// assert!(ymd(-4, 2, 29).is_some()); // 5 BCE is a leap year
-    /// assert!(ymd(400000, 1, 1).is_none());
-    /// assert!(ymd(-400000, 1, 1).is_none());
+    /// let from_ymd_opt = NaiveDate::from_ymd_opt;
+    ///
+    /// assert!(from_ymd_opt(2015, 3, 14).is_some());
+    /// assert!(from_ymd_opt(2015, 0, 14).is_none());
+    /// assert!(from_ymd_opt(2015, 2, 29).is_none());
+    /// assert!(from_ymd_opt(-4, 2, 29).is_some()); // 5 BCE is a leap year
+    /// assert!(from_ymd_opt(400000, 1, 1).is_none());
+    /// assert!(from_ymd_opt(-400000, 1, 1).is_none());
     /// ~~~~
     pub fn from_ymd_opt(year: i32, month: u32, day: u32) -> Option<NaiveDate> {
         let flags = YearFlags::from_year(year);
         NaiveDate::from_mdf(year, Mdf::new(month, day, flags))
     }
 
-    /// Makes a new `NaiveDate` from the [ordinal date](./index.html#ordinal-date)
+    /// Makes a new `NaiveDate` from the [ordinal date](#ordinal-date)
     /// (year and day of the year).
     ///
     /// Panics on the out-of-range date and/or invalid day of year.
@@ -207,14 +201,16 @@ impl NaiveDate {
     /// assert_eq!(d.year(), 2015);
     /// assert_eq!(d.month(), 3);
     /// assert_eq!(d.day(), 14);
-    /// assert_eq!(d.isoweekdate(), (2015, 11, Weekday::Sat)); // ISO week and weekday
+    /// assert_eq!(d.iso_week().year(), 2015);
+    /// assert_eq!(d.iso_week().week(), 11);
+    /// assert_eq!(d.weekday(), Weekday::Sat);
     /// assert_eq!(d.num_days_from_ce(), 735671); // days since January 1, 1 CE
     /// ~~~~
     pub fn from_yo(year: i32, ordinal: u32) -> NaiveDate {
         NaiveDate::from_yo_opt(year, ordinal).expect("invalid or out-of-range date")
     }
 
-    /// Makes a new `NaiveDate` from the [ordinal date](./index.html#ordinal-date)
+    /// Makes a new `NaiveDate` from the [ordinal date](#ordinal-date)
     /// (year and day of the year).
     ///
     /// Returns `None` on the out-of-range date and/or invalid day of year.
@@ -224,21 +220,22 @@ impl NaiveDate {
     /// ~~~~
     /// use chrono::NaiveDate;
     ///
-    /// let yo = |y,o| NaiveDate::from_yo_opt(y, o);
-    /// assert!(yo(2015, 100).is_some());
-    /// assert!(yo(2015, 0).is_none());
-    /// assert!(yo(2015, 365).is_some());
-    /// assert!(yo(2015, 366).is_none());
-    /// assert!(yo(-4, 366).is_some()); // 5 BCE is a leap year
-    /// assert!(yo(400000, 1).is_none());
-    /// assert!(yo(-400000, 1).is_none());
+    /// let from_yo_opt = NaiveDate::from_yo_opt;
+    ///
+    /// assert!(from_yo_opt(2015, 100).is_some());
+    /// assert!(from_yo_opt(2015, 0).is_none());
+    /// assert!(from_yo_opt(2015, 365).is_some());
+    /// assert!(from_yo_opt(2015, 366).is_none());
+    /// assert!(from_yo_opt(-4, 366).is_some()); // 5 BCE is a leap year
+    /// assert!(from_yo_opt(400000, 1).is_none());
+    /// assert!(from_yo_opt(-400000, 1).is_none());
     /// ~~~~
     pub fn from_yo_opt(year: i32, ordinal: u32) -> Option<NaiveDate> {
         let flags = YearFlags::from_year(year);
         NaiveDate::from_of(year, Of::new(ordinal, flags))
     }
 
-    /// Makes a new `NaiveDate` from the [ISO week date](./index.html#week-date)
+    /// Makes a new `NaiveDate` from the [ISO week date](#week-date)
     /// (year, week number and day of the week).
     /// The resulting `NaiveDate` may have a different year from the input year.
     ///
@@ -250,7 +247,9 @@ impl NaiveDate {
     /// use chrono::{NaiveDate, Datelike, Weekday};
     ///
     /// let d = NaiveDate::from_isoywd(2015, 11, Weekday::Sat);
-    /// assert_eq!(d.isoweekdate(), (2015, 11, Weekday::Sat));
+    /// assert_eq!(d.iso_week().year(), 2015);
+    /// assert_eq!(d.iso_week().week(), 11);
+    /// assert_eq!(d.weekday(), Weekday::Sat);
     /// assert_eq!(d.year(), 2015);
     /// assert_eq!(d.month(), 3);
     /// assert_eq!(d.day(), 14);
@@ -261,7 +260,7 @@ impl NaiveDate {
         NaiveDate::from_isoywd_opt(year, week, weekday).expect("invalid or out-of-range date")
     }
 
-    /// Makes a new `NaiveDate` from the [ISO week date](./index.html#week-date)
+    /// Makes a new `NaiveDate` from the [ISO week date](#week-date)
     /// (year, week number and day of the week).
     /// The resulting `NaiveDate` may have a different year from the input year.
     ///
@@ -272,38 +271,38 @@ impl NaiveDate {
     /// ~~~~
     /// use chrono::{NaiveDate, Weekday};
     ///
-    /// let ymd = |y,m,d| NaiveDate::from_ymd(y, m, d);
-    /// let isoywd = |y,w,d| NaiveDate::from_isoywd_opt(y, w, d);
+    /// let from_ymd = NaiveDate::from_ymd;
+    /// let from_isoywd_opt = NaiveDate::from_isoywd_opt;
     ///
-    /// assert_eq!(isoywd(2015, 0, Weekday::Sun), None);
-    /// assert_eq!(isoywd(2015, 10, Weekday::Sun), Some(ymd(2015, 3, 8)));
-    /// assert_eq!(isoywd(2015, 30, Weekday::Mon), Some(ymd(2015, 7, 20)));
-    /// assert_eq!(isoywd(2015, 60, Weekday::Mon), None);
+    /// assert_eq!(from_isoywd_opt(2015, 0, Weekday::Sun), None);
+    /// assert_eq!(from_isoywd_opt(2015, 10, Weekday::Sun), Some(from_ymd(2015, 3, 8)));
+    /// assert_eq!(from_isoywd_opt(2015, 30, Weekday::Mon), Some(from_ymd(2015, 7, 20)));
+    /// assert_eq!(from_isoywd_opt(2015, 60, Weekday::Mon), None);
     ///
-    /// assert_eq!(isoywd(400000, 10, Weekday::Fri), None);
-    /// assert_eq!(isoywd(-400000, 10, Weekday::Sat), None);
+    /// assert_eq!(from_isoywd_opt(400000, 10, Weekday::Fri), None);
+    /// assert_eq!(from_isoywd_opt(-400000, 10, Weekday::Sat), None);
     /// ~~~~
     ///
     /// The year number of ISO week date may differ from that of the calendar date.
     ///
     /// ~~~~
     /// # use chrono::{NaiveDate, Weekday};
-    /// # let ymd = |y,m,d| NaiveDate::from_ymd(y, m, d);
-    /// # let isoywd = |y,w,d| NaiveDate::from_isoywd_opt(y, w, d);
+    /// # let from_ymd = NaiveDate::from_ymd;
+    /// # let from_isoywd_opt = NaiveDate::from_isoywd_opt;
     /// //           Mo Tu We Th Fr Sa Su
     /// // 2014-W52  22 23 24 25 26 27 28    has 4+ days of new year,
     /// // 2015-W01  29 30 31  1  2  3  4 <- so this is the first week
-    /// assert_eq!(isoywd(2014, 52, Weekday::Sun), Some(ymd(2014, 12, 28)));
-    /// assert_eq!(isoywd(2014, 53, Weekday::Mon), None);
-    /// assert_eq!(isoywd(2015, 1, Weekday::Mon), Some(ymd(2014, 12, 29)));
+    /// assert_eq!(from_isoywd_opt(2014, 52, Weekday::Sun), Some(from_ymd(2014, 12, 28)));
+    /// assert_eq!(from_isoywd_opt(2014, 53, Weekday::Mon), None);
+    /// assert_eq!(from_isoywd_opt(2015, 1, Weekday::Mon), Some(from_ymd(2014, 12, 29)));
     ///
     /// // 2015-W52  21 22 23 24 25 26 27    has 4+ days of old year,
     /// // 2015-W53  28 29 30 31  1  2  3 <- so this is the last week
     /// // 2016-W01   4  5  6  7  8  9 10
-    /// assert_eq!(isoywd(2015, 52, Weekday::Sun), Some(ymd(2015, 12, 27)));
-    /// assert_eq!(isoywd(2015, 53, Weekday::Sun), Some(ymd(2016, 1, 3)));
-    /// assert_eq!(isoywd(2015, 54, Weekday::Mon), None);
-    /// assert_eq!(isoywd(2016, 1, Weekday::Mon), Some(ymd(2016, 1, 4)));
+    /// assert_eq!(from_isoywd_opt(2015, 52, Weekday::Sun), Some(from_ymd(2015, 12, 27)));
+    /// assert_eq!(from_isoywd_opt(2015, 53, Weekday::Sun), Some(from_ymd(2016, 1, 3)));
+    /// assert_eq!(from_isoywd_opt(2015, 54, Weekday::Mon), None);
+    /// assert_eq!(from_isoywd_opt(2016, 1, Weekday::Mon), Some(from_ymd(2016, 1, 4)));
     /// ~~~~
     pub fn from_isoywd_opt(year: i32, week: u32, weekday: Weekday) -> Option<NaiveDate> {
         let flags = YearFlags::from_year(year);
@@ -347,7 +346,9 @@ impl NaiveDate {
     /// assert_eq!(d.month(), 3);
     /// assert_eq!(d.day(), 14);
     /// assert_eq!(d.ordinal(), 73); // day of year
-    /// assert_eq!(d.isoweekdate(), (2015, 11, Weekday::Sat)); // ISO week and weekday
+    /// assert_eq!(d.iso_week().year(), 2015);
+    /// assert_eq!(d.iso_week().week(), 11);
+    /// assert_eq!(d.weekday(), Weekday::Sat);
     /// ~~~~
     ///
     /// While not directly supported by Chrono,
@@ -387,17 +388,19 @@ impl NaiveDate {
     /// ~~~~
     /// use chrono::NaiveDate;
     ///
-    /// let days = |ndays| NaiveDate::from_num_days_from_ce_opt(ndays);
-    /// assert_eq!(days(730000),     Some(NaiveDate::from_ymd(1999, 9, 3)));
-    /// assert_eq!(days(1),          Some(NaiveDate::from_ymd(1, 1, 1)));
-    /// assert_eq!(days(0),          Some(NaiveDate::from_ymd(0, 12, 31)));
-    /// assert_eq!(days(-1),         Some(NaiveDate::from_ymd(0, 12, 30)));
-    /// assert_eq!(days(100000000),  None);
-    /// assert_eq!(days(-100000000), None);
+    /// let from_ndays_opt = NaiveDate::from_num_days_from_ce_opt;
+    /// let from_ymd = NaiveDate::from_ymd;
+    ///
+    /// assert_eq!(from_ndays_opt(730_000),      Some(from_ymd(1999, 9, 3)));
+    /// assert_eq!(from_ndays_opt(1),            Some(from_ymd(1, 1, 1)));
+    /// assert_eq!(from_ndays_opt(0),            Some(from_ymd(0, 12, 31)));
+    /// assert_eq!(from_ndays_opt(-1),           Some(from_ymd(0, 12, 30)));
+    /// assert_eq!(from_ndays_opt(100_000_000),  None);
+    /// assert_eq!(from_ndays_opt(-100_000_000), None);
     /// ~~~~
     pub fn from_num_days_from_ce_opt(days: i32) -> Option<NaiveDate> {
         let days = days + 365; // make December 31, 1 BCE equal to day 0
-        let (year_div_400, cycle) = div_mod_floor(days, 146097);
+        let (year_div_400, cycle) = div_mod_floor(days, 146_097);
         let (year_mod_400, ordinal) = internals::cycle_to_yo(cycle as u32);
         let flags = YearFlags::from_year_mod_400(year_mod_400 as i32);
         NaiveDate::from_of(year_div_400 * 400 + year_mod_400 as i32,
@@ -405,7 +408,7 @@ impl NaiveDate {
     }
 
     /// Parses a string with the specified format string and returns a new `NaiveDate`.
-    /// See the [`format::strftime` module](../../format/strftime/index.html)
+    /// See the [`format::strftime` module](../format/strftime/index.html)
     /// on the supported escape sequences.
     ///
     /// # Example
@@ -413,9 +416,11 @@ impl NaiveDate {
     /// ~~~~
     /// use chrono::NaiveDate;
     ///
-    /// assert_eq!(NaiveDate::parse_from_str("2015-09-05", "%Y-%m-%d"),
+    /// let parse_from_str = NaiveDate::parse_from_str;
+    ///
+    /// assert_eq!(parse_from_str("2015-09-05", "%Y-%m-%d"),
     ///            Ok(NaiveDate::from_ymd(2015, 9, 5)));
-    /// assert_eq!(NaiveDate::parse_from_str("5sep2015", "%d%b%Y"),
+    /// assert_eq!(parse_from_str("5sep2015", "%d%b%Y"),
     ///            Ok(NaiveDate::from_ymd(2015, 9, 5)));
     /// ~~~~
     ///
@@ -423,7 +428,8 @@ impl NaiveDate {
     ///
     /// ~~~~
     /// # use chrono::NaiveDate;
-    /// assert_eq!(NaiveDate::parse_from_str("2014-5-17T12:34:56+09:30", "%Y-%m-%dT%H:%M:%S%z"),
+    /// # let parse_from_str = NaiveDate::parse_from_str;
+    /// assert_eq!(parse_from_str("2014-5-17T12:34:56+09:30", "%Y-%m-%dT%H:%M:%S%z"),
     ///            Ok(NaiveDate::from_ymd(2014, 5, 17)));
     /// ~~~~
     ///
@@ -431,15 +437,17 @@ impl NaiveDate {
     ///
     /// ~~~~
     /// # use chrono::NaiveDate;
-    /// assert!(NaiveDate::parse_from_str("2015/9", "%Y/%m").is_err());
-    /// assert!(NaiveDate::parse_from_str("2015/9/31", "%Y/%m/%d").is_err());
+    /// # let parse_from_str = NaiveDate::parse_from_str;
+    /// assert!(parse_from_str("2015/9", "%Y/%m").is_err());
+    /// assert!(parse_from_str("2015/9/31", "%Y/%m/%d").is_err());
     /// ~~~~
     ///
     /// All parsed fields should be consistent to each other, otherwise it's an error.
     ///
     /// ~~~~
     /// # use chrono::NaiveDate;
-    /// assert!(NaiveDate::parse_from_str("Sat, 09 Aug 2013", "%a, %d %b %Y").is_err());
+    /// # let parse_from_str = NaiveDate::parse_from_str;
+    /// assert!(parse_from_str("Sat, 09 Aug 2013", "%a, %d %b %Y").is_err());
     /// ~~~~
     pub fn parse_from_str(s: &str, fmt: &str) -> ParseResult<NaiveDate> {
         let mut parsed = Parsed::new();
@@ -463,12 +471,12 @@ impl NaiveDate {
     /// ~~~~
     #[inline]
     pub fn and_time(&self, time: NaiveTime) -> NaiveDateTime {
-        NaiveDateTime::new(self.clone(), time)
+        NaiveDateTime::new(*self, time)
     }
 
     /// Makes a new `NaiveDateTime` from the current date, hour, minute and second.
     ///
-    /// No [leap second](../time/index.html#leap-second-handling) is allowed here;
+    /// No [leap second](./struct.NaiveTime.html#leap-second-handling) is allowed here;
     /// use `NaiveDate::and_hms_*` methods with a subsecond parameter instead.
     ///
     /// Panics on invalid hour, minute and/or second.
@@ -492,7 +500,7 @@ impl NaiveDate {
 
     /// Makes a new `NaiveDateTime` from the current date, hour, minute and second.
     ///
-    /// No [leap second](../time/index.html#leap-second-handling) is allowed here;
+    /// No [leap second](./struct.NaiveTime.html#leap-second-handling) is allowed here;
     /// use `NaiveDate::and_hms_*_opt` methods with a subsecond parameter instead.
     ///
     /// Returns `None` on invalid hour, minute and/or second.
@@ -516,7 +524,7 @@ impl NaiveDate {
     /// Makes a new `NaiveDateTime` from the current date, hour, minute, second and millisecond.
     ///
     /// The millisecond part can exceed 1,000
-    /// in order to represent the [leap second](../time/index.html#leap-second-handling).
+    /// in order to represent the [leap second](./struct.NaiveTime.html#leap-second-handling).
     ///
     /// Panics on invalid hour, minute, second and/or millisecond.
     ///
@@ -541,7 +549,7 @@ impl NaiveDate {
     /// Makes a new `NaiveDateTime` from the current date, hour, minute, second and millisecond.
     ///
     /// The millisecond part can exceed 1,000
-    /// in order to represent the [leap second](../time/index.html#leap-second-handling).
+    /// in order to represent the [leap second](./struct.NaiveTime.html#leap-second-handling).
     ///
     /// Returns `None` on invalid hour, minute, second and/or millisecond.
     ///
@@ -567,7 +575,7 @@ impl NaiveDate {
     /// Makes a new `NaiveDateTime` from the current date, hour, minute, second and microsecond.
     ///
     /// The microsecond part can exceed 1,000,000
-    /// in order to represent the [leap second](../time/index.html#leap-second-handling).
+    /// in order to represent the [leap second](./struct.NaiveTime.html#leap-second-handling).
     ///
     /// Panics on invalid hour, minute, second and/or microsecond.
     ///
@@ -592,7 +600,7 @@ impl NaiveDate {
     /// Makes a new `NaiveDateTime` from the current date, hour, minute, second and microsecond.
     ///
     /// The microsecond part can exceed 1,000,000
-    /// in order to represent the [leap second](../time/index.html#leap-second-handling).
+    /// in order to represent the [leap second](./struct.NaiveTime.html#leap-second-handling).
     ///
     /// Returns `None` on invalid hour, minute, second and/or microsecond.
     ///
@@ -618,7 +626,7 @@ impl NaiveDate {
     /// Makes a new `NaiveDateTime` from the current date, hour, minute, second and nanosecond.
     ///
     /// The nanosecond part can exceed 1,000,000,000
-    /// in order to represent the [leap second](../time/index.html#leap-second-handling).
+    /// in order to represent the [leap second](./struct.NaiveTime.html#leap-second-handling).
     ///
     /// Panics on invalid hour, minute, second and/or nanosecond.
     ///
@@ -643,7 +651,7 @@ impl NaiveDate {
     /// Makes a new `NaiveDateTime` from the current date, hour, minute, second and nanosecond.
     ///
     /// The nanosecond part can exceed 1,000,000,000
-    /// in order to represent the [leap second](../time/index.html#leap-second-handling).
+    /// in order to represent the [leap second](./struct.NaiveTime.html#leap-second-handling).
     ///
     /// Returns `None` on invalid hour, minute, second and/or nanosecond.
     ///
@@ -675,7 +683,7 @@ impl NaiveDate {
     /// Returns the packed ordinal-flags.
     #[inline]
     fn of(&self) -> Of {
-        Of((self.ymdf & 0b1111_11111_1111) as u32)
+        Of((self.ymdf & 0b1_1111_1111_1111) as u32)
     }
 
     /// Makes a new `NaiveDate` with the packed month-day-flags changed.
@@ -693,7 +701,7 @@ impl NaiveDate {
     fn with_of(&self, of: Of) -> Option<NaiveDate> {
         if of.valid() {
             let Of(of) = of;
-            Some(NaiveDate { ymdf: (self.ymdf & !0b111111111_1111) | of as DateImpl })
+            Some(NaiveDate { ymdf: (self.ymdf & !0b1_1111_1111_1111) | of as DateImpl })
         } else {
             None
         }
@@ -725,11 +733,11 @@ impl NaiveDate {
     ///
     /// ~~~~
     /// use chrono::NaiveDate;
-    /// use chrono::naive::date::MAX;
+    /// use chrono::naive::MAX_DATE;
     ///
     /// assert_eq!(NaiveDate::from_ymd(2015, 6, 3).succ_opt(),
     ///            Some(NaiveDate::from_ymd(2015, 6, 4)));
-    /// assert_eq!(MAX.succ_opt(), None);
+    /// assert_eq!(MAX_DATE.succ_opt(), None);
     /// ~~~~
     #[inline]
     pub fn succ_opt(&self) -> Option<NaiveDate> {
@@ -762,11 +770,11 @@ impl NaiveDate {
     ///
     /// ~~~~
     /// use chrono::NaiveDate;
-    /// use chrono::naive::date::MIN;
+    /// use chrono::naive::MIN_DATE;
     ///
     /// assert_eq!(NaiveDate::from_ymd(2015, 6, 3).pred_opt(),
     ///            Some(NaiveDate::from_ymd(2015, 6, 2)));
-    /// assert_eq!(MIN.pred_opt(), None);
+    /// assert_eq!(MIN_DATE.pred_opt(), None);
     /// ~~~~
     #[inline]
     pub fn pred_opt(&self) -> Option<NaiveDate> {
@@ -780,22 +788,27 @@ impl NaiveDate {
     /// # Example
     ///
     /// ~~~~
-    /// use chrono::{NaiveDate, Duration};
-    /// use chrono::naive::date::MAX;
+    /// # extern crate chrono; extern crate time; fn main() {
+    /// use chrono::NaiveDate;
+    /// use chrono::naive::MAX_DATE;
+    /// use time::Duration;
     ///
     /// let d = NaiveDate::from_ymd(2015, 9, 5);
-    /// assert_eq!(d.checked_add(Duration::days(40)), Some(NaiveDate::from_ymd(2015, 10, 15)));
-    /// assert_eq!(d.checked_add(Duration::days(-40)), Some(NaiveDate::from_ymd(2015, 7, 27)));
-    /// assert_eq!(d.checked_add(Duration::days(1000_000_000)), None);
-    /// assert_eq!(d.checked_add(Duration::days(-1000_000_000)), None);
-    /// assert_eq!(MAX.checked_add(Duration::days(1)), None);
+    /// assert_eq!(d.checked_add_signed(Duration::days(40)),
+    ///            Some(NaiveDate::from_ymd(2015, 10, 15)));
+    /// assert_eq!(d.checked_add_signed(Duration::days(-40)),
+    ///            Some(NaiveDate::from_ymd(2015, 7, 27)));
+    /// assert_eq!(d.checked_add_signed(Duration::days(1_000_000_000)), None);
+    /// assert_eq!(d.checked_add_signed(Duration::days(-1_000_000_000)), None);
+    /// assert_eq!(MAX_DATE.checked_add_signed(Duration::days(1)), None);
+    /// # }
     /// ~~~~
-    pub fn checked_add(self, rhs: Duration) -> Option<NaiveDate> {
+    pub fn checked_add_signed(self, rhs: OldDuration) -> Option<NaiveDate> {
         let year = self.year();
         let (mut year_div_400, year_mod_400) = div_mod_floor(year, 400);
         let cycle = internals::yo_to_cycle(year_mod_400 as u32, self.of().ordinal());
         let cycle = try_opt!((cycle as i32).checked_add(try_opt!(rhs.num_days().to_i32())));
-        let (cycle_div_400y, cycle) = div_mod_floor(cycle, 146097);
+        let (cycle_div_400y, cycle) = div_mod_floor(cycle, 146_097);
         year_div_400 += cycle_div_400y;
 
         let (year_mod_400, ordinal) = internals::cycle_to_yo(cycle as u32);
@@ -811,28 +824,69 @@ impl NaiveDate {
     /// # Example
     ///
     /// ~~~~
-    /// use chrono::{NaiveDate, Duration};
-    /// use chrono::naive::date::MIN;
+    /// # extern crate chrono; extern crate time; fn main() {
+    /// use chrono::NaiveDate;
+    /// use chrono::naive::MIN_DATE;
+    /// use time::Duration;
     ///
     /// let d = NaiveDate::from_ymd(2015, 9, 5);
-    /// assert_eq!(d.checked_sub(Duration::days(40)), Some(NaiveDate::from_ymd(2015, 7, 27)));
-    /// assert_eq!(d.checked_sub(Duration::days(-40)), Some(NaiveDate::from_ymd(2015, 10, 15)));
-    /// assert_eq!(d.checked_sub(Duration::days(1000_000_000)), None);
-    /// assert_eq!(d.checked_sub(Duration::days(-1000_000_000)), None);
-    /// assert_eq!(MIN.checked_sub(Duration::days(1)), None);
+    /// assert_eq!(d.checked_sub_signed(Duration::days(40)),
+    ///            Some(NaiveDate::from_ymd(2015, 7, 27)));
+    /// assert_eq!(d.checked_sub_signed(Duration::days(-40)),
+    ///            Some(NaiveDate::from_ymd(2015, 10, 15)));
+    /// assert_eq!(d.checked_sub_signed(Duration::days(1_000_000_000)), None);
+    /// assert_eq!(d.checked_sub_signed(Duration::days(-1_000_000_000)), None);
+    /// assert_eq!(MIN_DATE.checked_sub_signed(Duration::days(1)), None);
+    /// # }
     /// ~~~~
-    pub fn checked_sub(self, rhs: Duration) -> Option<NaiveDate> {
+    pub fn checked_sub_signed(self, rhs: OldDuration) -> Option<NaiveDate> {
         let year = self.year();
         let (mut year_div_400, year_mod_400) = div_mod_floor(year, 400);
         let cycle = internals::yo_to_cycle(year_mod_400 as u32, self.of().ordinal());
         let cycle = try_opt!((cycle as i32).checked_sub(try_opt!(rhs.num_days().to_i32())));
-        let (cycle_div_400y, cycle) = div_mod_floor(cycle, 146097);
+        let (cycle_div_400y, cycle) = div_mod_floor(cycle, 146_097);
         year_div_400 += cycle_div_400y;
 
         let (year_mod_400, ordinal) = internals::cycle_to_yo(cycle as u32);
         let flags = YearFlags::from_year_mod_400(year_mod_400 as i32);
         NaiveDate::from_of(year_div_400 * 400 + year_mod_400 as i32,
                            Of::new(ordinal, flags))
+    }
+
+    /// Subtracts another `NaiveDate` from the current date.
+    /// Returns a `Duration` of integral numbers.
+    ///
+    /// This does not overflow or underflow at all,
+    /// as all possible output fits in the range of `Duration`.
+    ///
+    /// # Example
+    ///
+    /// ~~~~
+    /// # extern crate chrono; extern crate time; fn main() {
+    /// use chrono::NaiveDate;
+    /// use time::Duration;
+    ///
+    /// let from_ymd = NaiveDate::from_ymd;
+    /// let since = NaiveDate::signed_duration_since;
+    ///
+    /// assert_eq!(since(from_ymd(2014, 1, 1), from_ymd(2014, 1, 1)), Duration::zero());
+    /// assert_eq!(since(from_ymd(2014, 1, 1), from_ymd(2013, 12, 31)), Duration::days(1));
+    /// assert_eq!(since(from_ymd(2014, 1, 1), from_ymd(2014, 1, 2)), Duration::days(-1));
+    /// assert_eq!(since(from_ymd(2014, 1, 1), from_ymd(2013, 9, 23)), Duration::days(100));
+    /// assert_eq!(since(from_ymd(2014, 1, 1), from_ymd(2013, 1, 1)), Duration::days(365));
+    /// assert_eq!(since(from_ymd(2014, 1, 1), from_ymd(2010, 1, 1)), Duration::days(365*4 + 1));
+    /// assert_eq!(since(from_ymd(2014, 1, 1), from_ymd(1614, 1, 1)), Duration::days(365*400 + 97));
+    /// # }
+    /// ~~~~
+    pub fn signed_duration_since(self, rhs: NaiveDate) -> OldDuration {
+        let year1 = self.year();
+        let year2 = rhs.year();
+        let (year1_div_400, year1_mod_400) = div_mod_floor(year1, 400);
+        let (year2_div_400, year2_mod_400) = div_mod_floor(year2, 400);
+        let cycle1 = i64::from(internals::yo_to_cycle(year1_mod_400 as u32, self.of().ordinal()));
+        let cycle2 = i64::from(internals::yo_to_cycle(year2_mod_400 as u32, rhs.of().ordinal()));
+        OldDuration::days((i64::from(year1_div_400) - i64::from(year2_div_400)) * 146_097 +
+                          (cycle1 - cycle2))
     }
 
     /// Formats the date with the specified formatting items.
@@ -850,16 +904,26 @@ impl NaiveDate {
     /// let fmt = StrftimeItems::new("%Y-%m-%d");
     /// let d = NaiveDate::from_ymd(2015, 9, 5);
     /// assert_eq!(d.format_with_items(fmt.clone()).to_string(), "2015-09-05");
-    /// assert_eq!(d.format("%Y-%m-%d").to_string(), "2015-09-05");
+    /// assert_eq!(d.format("%Y-%m-%d").to_string(),             "2015-09-05");
+    /// ~~~~
+    ///
+    /// The resulting `DelayedFormat` can be formatted directly via the `Display` trait.
+    ///
+    /// ~~~~
+    /// # use chrono::NaiveDate;
+    /// # use chrono::format::strftime::StrftimeItems;
+    /// # let fmt = StrftimeItems::new("%Y-%m-%d").clone();
+    /// # let d = NaiveDate::from_ymd(2015, 9, 5);
+    /// assert_eq!(format!("{}", d.format_with_items(fmt)), "2015-09-05");
     /// ~~~~
     #[inline]
     pub fn format_with_items<'a, I>(&self, items: I) -> DelayedFormat<I>
             where I: Iterator<Item=Item<'a>> + Clone {
-        DelayedFormat::new(Some(self.clone()), None, items)
+        DelayedFormat::new(Some(*self), None, items)
     }
 
     /// Formats the date with the specified format string.
-    /// See the [`format::strftime` module](../../format/strftime/index.html)
+    /// See the [`format::strftime` module](../format/strftime/index.html)
     /// on the supported escape sequences.
     ///
     /// This returns a `DelayedFormat`,
@@ -881,6 +945,15 @@ impl NaiveDate {
     /// assert_eq!(d.format("%Y-%m-%d").to_string(), "2015-09-05");
     /// assert_eq!(d.format("%A, %-d %B, %C%y").to_string(), "Saturday, 5 September, 2015");
     /// ~~~~
+    ///
+    /// The resulting `DelayedFormat` can be formatted directly via the `Display` trait.
+    ///
+    /// ~~~~
+    /// # use chrono::NaiveDate;
+    /// # let d = NaiveDate::from_ymd(2015, 9, 5);
+    /// assert_eq!(format!("{}", d.format("%Y-%m-%d")), "2015-09-05");
+    /// assert_eq!(format!("{}", d.format("%A, %-d %B, %C%y")), "Saturday, 5 September, 2015");
+    /// ~~~~
     #[inline]
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
         self.format_with_items(StrftimeItems::new(fmt))
@@ -888,7 +961,7 @@ impl NaiveDate {
 }
 
 impl Datelike for NaiveDate {
-    /// Returns the year number in the [calendar date](./index.html#calendar-date).
+    /// Returns the year number in the [calendar date](#calendar-date).
     ///
     /// # Example
     ///
@@ -950,7 +1023,7 @@ impl Datelike for NaiveDate {
     /// assert_eq!(NaiveDate::from_ymd(-308, 3, 14).day(), 14);
     /// ~~~~
     ///
-    /// Combined with [`NaiveDate::pred`](./struct.NaiveDate.html#method.pred),
+    /// Combined with [`NaiveDate::pred`](#method.pred),
     /// one can determine the number of days in a particular month.
     /// (Note that this panics when `year` is out of range.)
     ///
@@ -1007,7 +1080,7 @@ impl Datelike for NaiveDate {
     /// assert_eq!(NaiveDate::from_ymd(-308, 3, 14).ordinal(), 74);
     /// ~~~~
     ///
-    /// Combined with [`NaiveDate::pred`](./struct.NaiveDate.html#method.pred),
+    /// Combined with [`NaiveDate::pred`](#method.pred),
     /// one can determine the number of days in a particular year.
     /// (Note that this panics when `year` is out of range.)
     ///
@@ -1065,21 +1138,9 @@ impl Datelike for NaiveDate {
         self.of().weekday()
     }
 
-    fn isoweekdate(&self) -> (i32, u32, Weekday) {
-        let of = self.of();
-        let year = self.year();
-        let (rawweek, weekday) = of.isoweekdate_raw();
-        if rawweek < 1 { // previous year
-            let prevlastweek = YearFlags::from_year(year - 1).nisoweeks();
-            (year - 1, prevlastweek, weekday)
-        } else {
-            let lastweek = of.flags().nisoweeks();
-            if rawweek > lastweek { // next year
-                (year + 1, 1, weekday)
-            } else {
-                (year, rawweek, weekday)
-            }
-        }
+    #[inline]
+    fn iso_week(&self) -> IsoWeek {
+        isoweek::iso_week_from_yof(self.year(), self.of())
     }
 
     /// Makes a new `NaiveDate` with the year number changed.
@@ -1241,108 +1302,127 @@ impl Datelike for NaiveDate {
     }
 }
 
-/// `NaiveDate` can be used as a key to the hash maps.
-impl hash::Hash for NaiveDate {
-    fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        // don't need to strip flags, as we can safely assume that it is correct
-        self.ymdf.hash(state);
-    }
-}
-
 /// An addition of `Duration` to `NaiveDate` discards the fractional days,
 /// rounding to the closest integral number of days towards `Duration::zero()`.
 ///
 /// Panics on underflow or overflow.
-/// Use [`NaiveDate::checked_add`](#method.checked_add) to detect that.
+/// Use [`NaiveDate::checked_add_signed`](#method.checked_add_signed) to detect that.
 ///
 /// # Example
 ///
 /// ~~~~
-/// use chrono::{NaiveDate, Duration};
+/// # extern crate chrono; extern crate time; fn main() {
+/// use chrono::NaiveDate;
+/// use time::Duration;
 ///
-/// let ymd = |y,m,d| NaiveDate::from_ymd(y, m, d);
-/// assert_eq!(ymd(2014, 1, 1) + Duration::zero(),             ymd(2014, 1, 1));
-/// assert_eq!(ymd(2014, 1, 1) + Duration::seconds(86399),     ymd(2014, 1, 1));
-/// assert_eq!(ymd(2014, 1, 1) + Duration::seconds(-86399),    ymd(2014, 1, 1));
-/// assert_eq!(ymd(2014, 1, 1) + Duration::days(1),            ymd(2014, 1, 2));
-/// assert_eq!(ymd(2014, 1, 1) + Duration::days(-1),           ymd(2013, 12, 31));
-/// assert_eq!(ymd(2014, 1, 1) + Duration::days(364),          ymd(2014, 12, 31));
-/// assert_eq!(ymd(2014, 1, 1) + Duration::days(365*4 + 1),    ymd(2018, 1, 1));
-/// assert_eq!(ymd(2014, 1, 1) + Duration::days(365*400 + 97), ymd(2414, 1, 1));
+/// let from_ymd = NaiveDate::from_ymd;
+///
+/// assert_eq!(from_ymd(2014, 1, 1) + Duration::zero(),             from_ymd(2014, 1, 1));
+/// assert_eq!(from_ymd(2014, 1, 1) + Duration::seconds(86399),     from_ymd(2014, 1, 1));
+/// assert_eq!(from_ymd(2014, 1, 1) + Duration::seconds(-86399),    from_ymd(2014, 1, 1));
+/// assert_eq!(from_ymd(2014, 1, 1) + Duration::days(1),            from_ymd(2014, 1, 2));
+/// assert_eq!(from_ymd(2014, 1, 1) + Duration::days(-1),           from_ymd(2013, 12, 31));
+/// assert_eq!(from_ymd(2014, 1, 1) + Duration::days(364),          from_ymd(2014, 12, 31));
+/// assert_eq!(from_ymd(2014, 1, 1) + Duration::days(365*4 + 1),    from_ymd(2018, 1, 1));
+/// assert_eq!(from_ymd(2014, 1, 1) + Duration::days(365*400 + 97), from_ymd(2414, 1, 1));
+/// # }
 /// ~~~~
-impl Add<Duration> for NaiveDate {
+impl Add<OldDuration> for NaiveDate {
     type Output = NaiveDate;
 
     #[inline]
-    fn add(self, rhs: Duration) -> NaiveDate {
-        self.checked_add(rhs).expect("`NaiveDate + Duration` overflowed")
+    fn add(self, rhs: OldDuration) -> NaiveDate {
+        self.checked_add_signed(rhs).expect("`NaiveDate + Duration` overflowed")
     }
 }
 
-/// A subtraction of `NaiveDate` from `NaiveDate` yields a `Duration` of integral numbers.
-///
-/// This does not overflow or underflow at all,
-/// as all possible output fits in the range of `Duration`.
-///
-/// # Example
-///
-/// ~~~~
-/// use chrono::{NaiveDate, Duration};
-///
-/// let ymd = |y,m,d| NaiveDate::from_ymd(y, m, d);
-/// assert_eq!(ymd(2014, 1, 1) - ymd(2014, 1, 1),   Duration::zero());
-/// assert_eq!(ymd(2014, 1, 1) - ymd(2013, 12, 31), Duration::days(1));
-/// assert_eq!(ymd(2014, 1, 1) - ymd(2014, 1, 2),   Duration::days(-1));
-/// assert_eq!(ymd(2014, 1, 1) - ymd(2013, 9, 23),  Duration::days(100));
-/// assert_eq!(ymd(2014, 1, 1) - ymd(2013, 1, 1),   Duration::days(365));
-/// assert_eq!(ymd(2014, 1, 1) - ymd(2010, 1, 1),   Duration::days(365*4 + 1));
-/// assert_eq!(ymd(2014, 1, 1) - ymd(1614, 1, 1),   Duration::days(365*400 + 97));
-/// ~~~~
-impl Sub<NaiveDate> for NaiveDate {
-    type Output = Duration;
-
-    fn sub(self, rhs: NaiveDate) -> Duration {
-        let year1 = self.year();
-        let year2 = rhs.year();
-        let (year1_div_400, year1_mod_400) = div_mod_floor(year1, 400);
-        let (year2_div_400, year2_mod_400) = div_mod_floor(year2, 400);
-        let cycle1 = internals::yo_to_cycle(year1_mod_400 as u32, self.of().ordinal()) as i64;
-        let cycle2 = internals::yo_to_cycle(year2_mod_400 as u32, rhs.of().ordinal()) as i64;
-        Duration::days((year1_div_400 as i64 - year2_div_400 as i64) * 146097 + (cycle1 - cycle2))
+impl AddAssign<OldDuration> for NaiveDate {
+    #[inline]
+    fn add_assign(&mut self, rhs: OldDuration) {
+        *self = self.add(rhs);
     }
 }
 
 /// A subtraction of `Duration` from `NaiveDate` discards the fractional days,
 /// rounding to the closest integral number of days towards `Duration::zero()`.
+/// It is same to the addition with a negated `Duration`.
 ///
 /// Panics on underflow or overflow.
-/// Use [`NaiveDate::checked_sub`](#method.checked_sub) to detect that.
+/// Use [`NaiveDate::checked_sub_signed`](#method.checked_sub_signed) to detect that.
 ///
 /// # Example
 ///
 /// ~~~~
-/// use chrono::{NaiveDate, Duration};
+/// # extern crate chrono; extern crate time; fn main() {
+/// use chrono::NaiveDate;
+/// use time::Duration;
 ///
-/// let ymd = |y,m,d| NaiveDate::from_ymd(y, m, d);
-/// assert_eq!(ymd(2014, 1, 1) - Duration::zero(),             ymd(2014, 1, 1));
-/// assert_eq!(ymd(2014, 1, 1) - Duration::seconds(86399),     ymd(2014, 1, 1));
-/// assert_eq!(ymd(2014, 1, 1) - Duration::seconds(-86399),    ymd(2014, 1, 1));
-/// assert_eq!(ymd(2014, 1, 1) - Duration::days(1),            ymd(2013, 12, 31));
-/// assert_eq!(ymd(2014, 1, 1) - Duration::days(-1),           ymd(2014, 1, 2));
-/// assert_eq!(ymd(2014, 1, 1) - Duration::days(364),          ymd(2013, 1, 2));
-/// assert_eq!(ymd(2014, 1, 1) - Duration::days(365*4 + 1),    ymd(2010, 1, 1));
-/// assert_eq!(ymd(2014, 1, 1) - Duration::days(365*400 + 97), ymd(1614, 1, 1));
+/// let from_ymd = NaiveDate::from_ymd;
+///
+/// assert_eq!(from_ymd(2014, 1, 1) - Duration::zero(),             from_ymd(2014, 1, 1));
+/// assert_eq!(from_ymd(2014, 1, 1) - Duration::seconds(86399),     from_ymd(2014, 1, 1));
+/// assert_eq!(from_ymd(2014, 1, 1) - Duration::seconds(-86399),    from_ymd(2014, 1, 1));
+/// assert_eq!(from_ymd(2014, 1, 1) - Duration::days(1),            from_ymd(2013, 12, 31));
+/// assert_eq!(from_ymd(2014, 1, 1) - Duration::days(-1),           from_ymd(2014, 1, 2));
+/// assert_eq!(from_ymd(2014, 1, 1) - Duration::days(364),          from_ymd(2013, 1, 2));
+/// assert_eq!(from_ymd(2014, 1, 1) - Duration::days(365*4 + 1),    from_ymd(2010, 1, 1));
+/// assert_eq!(from_ymd(2014, 1, 1) - Duration::days(365*400 + 97), from_ymd(1614, 1, 1));
+/// # }
 /// ~~~~
-impl Sub<Duration> for NaiveDate {
+impl Sub<OldDuration> for NaiveDate {
     type Output = NaiveDate;
 
     #[inline]
-    fn sub(self, rhs: Duration) -> NaiveDate {
-        self.checked_sub(rhs).expect("`NaiveDate - Duration` overflowed")
+    fn sub(self, rhs: OldDuration) -> NaiveDate {
+        self.checked_sub_signed(rhs).expect("`NaiveDate - Duration` overflowed")
     }
 }
 
-/// The `Debug` output of the naive date `d` is same to `d.format("%Y-%m-%d")`.
+impl SubAssign<OldDuration> for NaiveDate {
+    #[inline]
+    fn sub_assign(&mut self, rhs: OldDuration) {
+        *self = self.sub(rhs);
+    }
+}
+
+/// Subtracts another `NaiveDate` from the current date.
+/// Returns a `Duration` of integral numbers.
+/// 
+/// This does not overflow or underflow at all,
+/// as all possible output fits in the range of `Duration`.
+///
+/// The implementation is a wrapper around
+/// [`NaiveDate::signed_duration_since`](#method.signed_duration_since).
+///
+/// # Example
+///
+/// ~~~~
+/// # extern crate chrono; extern crate time; fn main() {
+/// use chrono::NaiveDate;
+/// use time::Duration;
+///
+/// let from_ymd = NaiveDate::from_ymd;
+///
+/// assert_eq!(from_ymd(2014, 1, 1) - from_ymd(2014, 1, 1), Duration::zero());
+/// assert_eq!(from_ymd(2014, 1, 1) - from_ymd(2013, 12, 31), Duration::days(1));
+/// assert_eq!(from_ymd(2014, 1, 1) - from_ymd(2014, 1, 2), Duration::days(-1));
+/// assert_eq!(from_ymd(2014, 1, 1) - from_ymd(2013, 9, 23), Duration::days(100));
+/// assert_eq!(from_ymd(2014, 1, 1) - from_ymd(2013, 1, 1), Duration::days(365));
+/// assert_eq!(from_ymd(2014, 1, 1) - from_ymd(2010, 1, 1), Duration::days(365*4 + 1));
+/// assert_eq!(from_ymd(2014, 1, 1) - from_ymd(1614, 1, 1), Duration::days(365*400 + 97));
+/// # }
+/// ~~~~
+impl Sub<NaiveDate> for NaiveDate {
+    type Output = OldDuration;
+
+    #[inline]
+    fn sub(self, rhs: NaiveDate) -> OldDuration {
+        self.signed_duration_since(rhs)
+    }
+}
+
+/// The `Debug` output of the naive date `d` is same to
+/// [`d.format("%Y-%m-%d")`](../format/strftime/index.html).
 ///
 /// The string printed can be readily parsed via the `parse` method on `str`.
 ///
@@ -1376,7 +1456,8 @@ impl fmt::Debug for NaiveDate {
     }
 }
 
-/// The `Display` output of the naive date `d` is same to `d.format("%Y-%m-%d")`.
+/// The `Display` output of the naive date `d` is same to
+/// [`d.format("%Y-%m-%d")`](../format/strftime/index.html).
 ///
 /// The string printed can be readily parsed via the `parse` method on `str`.
 ///
@@ -1401,7 +1482,8 @@ impl fmt::Display for NaiveDate {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { fmt::Debug::fmt(self, f) }
 }
 
-/// Parsing a str into a `NaiveDate` uses the same format, `%Y-%m-%d`, as `Debug` and `Display`.
+/// Parsing a `str` into a `NaiveDate` uses the same format,
+/// [`%Y-%m-%d`](../format/strftime/index.html), as in `Debug` and `Display`.
 ///
 /// # Example
 ///
@@ -1409,10 +1491,10 @@ impl fmt::Display for NaiveDate {
 /// use chrono::NaiveDate;
 ///
 /// let d = NaiveDate::from_ymd(2015, 9, 18);
-/// assert_eq!(format!("{}", d).parse::<NaiveDate>(), Ok(d));
+/// assert_eq!("2015-09-18".parse::<NaiveDate>(), Ok(d));
 ///
 /// let d = NaiveDate::from_ymd(12345, 6, 7);
-/// assert_eq!(format!("{}", d).parse::<NaiveDate>(), Ok(d));
+/// assert_eq!("+12345-6-7".parse::<NaiveDate>(), Ok(d));
 ///
 /// assert!("foo".parse::<NaiveDate>().is_err());
 /// ~~~~
@@ -1435,183 +1517,172 @@ impl str::FromStr for NaiveDate {
     }
 }
 
+#[cfg(all(test, any(feature = "rustc-serialize", feature = "serde")))]
+fn test_encodable_json<F, E>(to_string: F)
+    where F: Fn(&NaiveDate) -> Result<String, E>, E: ::std::fmt::Debug
+{
+    assert_eq!(to_string(&NaiveDate::from_ymd(2014, 7, 24)).ok(),
+               Some(r#""2014-07-24""#.into()));
+    assert_eq!(to_string(&NaiveDate::from_ymd(0, 1, 1)).ok(),
+               Some(r#""0000-01-01""#.into()));
+    assert_eq!(to_string(&NaiveDate::from_ymd(-1, 12, 31)).ok(),
+               Some(r#""-0001-12-31""#.into()));
+    assert_eq!(to_string(&MIN_DATE).ok(),
+               Some(r#""-262144-01-01""#.into()));
+    assert_eq!(to_string(&MAX_DATE).ok(),
+               Some(r#""+262143-12-31""#.into()));
+}
+
+#[cfg(all(test, any(feature = "rustc-serialize", feature = "serde")))]
+fn test_decodable_json<F, E>(from_str: F)
+    where F: Fn(&str) -> Result<NaiveDate, E>, E: ::std::fmt::Debug
+{
+    use std::{i32, i64};
+
+    assert_eq!(from_str(r#""2016-07-08""#).ok(), Some(NaiveDate::from_ymd(2016, 7, 8)));
+    assert_eq!(from_str(r#""2016-7-8""#).ok(), Some(NaiveDate::from_ymd(2016, 7, 8)));
+    assert_eq!(from_str(r#""+002016-07-08""#).ok(), Some(NaiveDate::from_ymd(2016, 7, 8)));
+    assert_eq!(from_str(r#""0000-01-01""#).ok(), Some(NaiveDate::from_ymd(0, 1, 1)));
+    assert_eq!(from_str(r#""0-1-1""#).ok(), Some(NaiveDate::from_ymd(0, 1, 1)));
+    assert_eq!(from_str(r#""-0001-12-31""#).ok(), Some(NaiveDate::from_ymd(-1, 12, 31)));
+    assert_eq!(from_str(r#""-262144-01-01""#).ok(), Some(MIN_DATE));
+    assert_eq!(from_str(r#""+262143-12-31""#).ok(), Some(MAX_DATE));
+
+    // bad formats
+    assert!(from_str(r#""""#).is_err());
+    assert!(from_str(r#""20001231""#).is_err());
+    assert!(from_str(r#""2000-00-00""#).is_err());
+    assert!(from_str(r#""2000-02-30""#).is_err());
+    assert!(from_str(r#""2001-02-29""#).is_err());
+    assert!(from_str(r#""2002-002-28""#).is_err());
+    assert!(from_str(r#""yyyy-mm-dd""#).is_err());
+    assert!(from_str(r#"0"#).is_err());
+    assert!(from_str(r#"20.01"#).is_err());
+    assert!(from_str(&i32::MIN.to_string()).is_err());
+    assert!(from_str(&i32::MAX.to_string()).is_err());
+    assert!(from_str(&i64::MIN.to_string()).is_err());
+    assert!(from_str(&i64::MAX.to_string()).is_err());
+    assert!(from_str(r#"{}"#).is_err());
+    // pre-0.3.0 rustc-serialize format is now invalid
+    assert!(from_str(r#"{"ymdf":20}"#).is_err());
+    assert!(from_str(r#"null"#).is_err());
+}
+
 #[cfg(feature = "rustc-serialize")]
 mod rustc_serialize {
     use super::NaiveDate;
     use rustc_serialize::{Encodable, Encoder, Decodable, Decoder};
 
-    // TODO the current serialization format is NEVER intentionally defined.
-    // this basically follows the automatically generated implementation for those traits,
-    // plus manual verification steps for avoiding security problem.
-    // in the future it is likely to be redefined to more sane and reasonable format.
-
     impl Encodable for NaiveDate {
         fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-            let ymdf = self.to_serialized();
-            s.emit_struct("NaiveDate", 1, |s| {
-                try!(s.emit_struct_field("ymdf", 0, |s| ymdf.encode(s)));
-                Ok(())
-            })
+            format!("{:?}", self).encode(s)
         }
     }
 
     impl Decodable for NaiveDate {
         fn decode<D: Decoder>(d: &mut D) -> Result<NaiveDate, D::Error> {
-            d.read_struct("NaiveDate", 1, |d| {
-                let ymdf = try!(d.read_struct_field("ymdf", 0, Decodable::decode));
-                NaiveDate::from_serialized(ymdf).ok_or_else(|| d.error("invalid date"))
-            })
+            d.read_str()?.parse().map_err(|_| d.error("invalid date"))
         }
     }
 
+    #[cfg(test)] use rustc_serialize::json;
+
     #[test]
     fn test_encodable() {
-        use rustc_serialize::json::encode;
-
-        assert_eq!(encode(&NaiveDate::from_ymd(2016, 7, 8)).ok(),
-                   Some(r#"{"ymdf":16518115}"#.into()));
-        assert_eq!(encode(&NaiveDate::from_ymd(0, 1, 1)).ok(),
-                   Some(r#"{"ymdf":20}"#.into()));
-        assert_eq!(encode(&NaiveDate::from_ymd(-1, 12, 31)).ok(),
-                   Some(r#"{"ymdf":-2341}"#.into()));
-        assert_eq!(encode(&super::MIN).ok(),
-                   Some(r#"{"ymdf":-2147483625}"#.into()));
-        assert_eq!(encode(&super::MAX).ok(),
-                   Some(r#"{"ymdf":2147481311}"#.into()));
+        super::test_encodable_json(json::encode);
     }
 
     #[test]
     fn test_decodable() {
-        use rustc_serialize::json;
-        use std::{i32, i64};
-
-        let decode = |s: &str| json::decode::<NaiveDate>(s);
-
-        assert_eq!(decode(r#"{"ymdf":16518115}"#).ok(), Some(NaiveDate::from_ymd(2016, 7, 8)));
-        assert_eq!(decode(r#"{"ymdf":20}"#).ok(), Some(NaiveDate::from_ymd(0, 1, 1)));
-        assert_eq!(decode(r#"{"ymdf":-2341}"#).ok(), Some(NaiveDate::from_ymd(-1, 12, 31)));
-        assert_eq!(decode(r#"{"ymdf":-2147483625}"#).ok(), Some(super::MIN));
-        assert_eq!(decode(r#"{"ymdf":2147481311}"#).ok(), Some(super::MAX));
-
-        // some extreme values and zero are always invalid
-        assert!(decode(r#"{"ymdf":0}"#).is_err());
-        assert!(decode(r#"{"ymdf":1}"#).is_err());
-        assert!(decode(r#"{"ymdf":-1}"#).is_err());
-        assert!(decode(&format!(r#"{{"ymdf":{}}}"#, i32::MIN)).is_err());
-        assert!(decode(&format!(r#"{{"ymdf":{}}}"#, i32::MAX)).is_err());
-        assert!(decode(&format!(r#"{{"ymdf":{}}}"#, i64::MIN)).is_err());
-        assert!(decode(&format!(r#"{{"ymdf":{}}}"#, i64::MAX)).is_err());
-
-        // bad formats
-        assert!(decode(r#"{"ymdf":20.01}"#).is_err());
-        assert!(decode(r#"{"ymdf":"string"}"#).is_err());
-        assert!(decode(r#"{"ymdf":null}"#).is_err());
-        assert!(decode(r#"{}"#).is_err());
-        assert!(decode(r#"{"date":20}"#).is_err());
-        assert!(decode(r#"20"#).is_err());
-        assert!(decode(r#""string""#).is_err());
-        assert!(decode(r#""2016-07-08""#).is_err()); // :(
-        assert!(decode(r#"null"#).is_err());
+        super::test_decodable_json(json::decode);
     }
 }
 
 #[cfg(feature = "serde")]
 mod serde {
+    use std::fmt;
     use super::NaiveDate;
-    use serde::{ser, de};
+    use serdelib::{ser, de};
 
     // TODO not very optimized for space (binary formats would want something better)
 
     impl ser::Serialize for NaiveDate {
-        fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where S: ser::Serializer
         {
-            serializer.serialize_str(&format!("{:?}", self))
+            struct FormatWrapped<'a, D: 'a> {
+                inner: &'a D
+            }
+
+            impl<'a, D: fmt::Debug> fmt::Display for FormatWrapped<'a, D> {
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    self.inner.fmt(f)
+                }
+            }
+
+            serializer.collect_str(&FormatWrapped { inner: &self })
         }
     }
 
     struct NaiveDateVisitor;
 
-    impl de::Visitor for NaiveDateVisitor {
+    impl<'de> de::Visitor<'de> for NaiveDateVisitor {
         type Value = NaiveDate;
 
-        fn visit_str<E>(&mut self, value: &str) -> Result<NaiveDate, E>
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result 
+        {
+            write!(formatter, "a formatted date string")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<NaiveDate, E>
             where E: de::Error
         {
             value.parse().map_err(|err| E::custom(format!("{}", err)))
         }
     }
 
-    impl de::Deserialize for NaiveDate {
-        fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
-            where D: de::Deserializer
+    impl<'de> de::Deserialize<'de> for NaiveDate {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where D: de::Deserializer<'de>
         {
-            deserializer.deserialize(NaiveDateVisitor)
+            deserializer.deserialize_str(NaiveDateVisitor)
         }
     }
 
     #[cfg(test)] extern crate serde_json;
+    #[cfg(test)] extern crate bincode;
 
     #[test]
     fn test_serde_serialize() {
-        use self::serde_json::to_string;
-
-        assert_eq!(to_string(&NaiveDate::from_ymd(2014, 7, 24)).ok(),
-                   Some(r#""2014-07-24""#.into()));
-        assert_eq!(to_string(&NaiveDate::from_ymd(0, 1, 1)).ok(),
-                   Some(r#""0000-01-01""#.into()));
-        assert_eq!(to_string(&NaiveDate::from_ymd(-1, 12, 31)).ok(),
-                   Some(r#""-0001-12-31""#.into()));
-        assert_eq!(to_string(&super::MIN).ok(),
-                   Some(r#""-262144-01-01""#.into()));
-        assert_eq!(to_string(&super::MAX).ok(),
-                   Some(r#""+262143-12-31""#.into()));
+        super::test_encodable_json(self::serde_json::to_string);
     }
 
     #[test]
     fn test_serde_deserialize() {
-        use self::serde_json;
-        use std::{i32, i64};
+        super::test_decodable_json(|input| self::serde_json::from_str(&input));
+    }
 
-        let from_str = |s: &str| serde_json::from_str::<NaiveDate>(s);
+    #[test]
+    fn test_serde_bincode() {
+        // Bincode is relevant to test separately from JSON because
+        // it is not self-describing.
+        use self::bincode::{Infinite, serialize, deserialize};
 
-        assert_eq!(from_str(r#""2016-07-08""#).ok(), Some(NaiveDate::from_ymd(2016, 7, 8)));
-        assert_eq!(from_str(r#""2016-7-8""#).ok(), Some(NaiveDate::from_ymd(2016, 7, 8)));
-        assert_eq!(from_str(r#""+002016-07-08""#).ok(), Some(NaiveDate::from_ymd(2016, 7, 8)));
-        assert_eq!(from_str(r#""0000-01-01""#).ok(), Some(NaiveDate::from_ymd(0, 1, 1)));
-        assert_eq!(from_str(r#""0-1-1""#).ok(), Some(NaiveDate::from_ymd(0, 1, 1)));
-        assert_eq!(from_str(r#""-0001-12-31""#).ok(), Some(NaiveDate::from_ymd(-1, 12, 31)));
-        assert_eq!(from_str(r#""-262144-01-01""#).ok(), Some(super::MIN));
-        assert_eq!(from_str(r#""+262143-12-31""#).ok(), Some(super::MAX));
-
-        // bad formats
-        assert!(from_str(r#""""#).is_err());
-        assert!(from_str(r#""20001231""#).is_err());
-        assert!(from_str(r#""2000-00-00""#).is_err());
-        assert!(from_str(r#""2000-02-30""#).is_err());
-        assert!(from_str(r#""2001-02-29""#).is_err());
-        assert!(from_str(r#""2002-002-28""#).is_err());
-        assert!(from_str(r#""yyyy-mm-dd""#).is_err());
-        assert!(from_str(r#"0"#).is_err());
-        assert!(from_str(r#"20.01"#).is_err());
-        assert!(from_str(&i32::MIN.to_string()).is_err());
-        assert!(from_str(&i32::MAX.to_string()).is_err());
-        assert!(from_str(&i64::MIN.to_string()).is_err());
-        assert!(from_str(&i64::MAX.to_string()).is_err());
-        assert!(from_str(r#"{}"#).is_err());
-        assert!(from_str(r#"{"ymdf":20}"#).is_err()); // :(
-        assert!(from_str(r#"null"#).is_err());
+        let d = NaiveDate::from_ymd(2014, 7, 24);
+        let encoded = serialize(&d, Infinite).unwrap();
+        let decoded: NaiveDate = deserialize(&encoded).unwrap();
+        assert_eq!(d, decoded);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::NaiveDate;
-    use super::{MIN, MIN_YEAR, MIN_DAYS_FROM_YEAR_0};
-    use super::{MAX, MAX_YEAR, MAX_DAYS_FROM_YEAR_0};
+    use super::{MIN_DATE, MIN_YEAR, MIN_DAYS_FROM_YEAR_0};
+    use super::{MAX_DATE, MAX_YEAR, MAX_DAYS_FROM_YEAR_0};
     use {Datelike, Weekday};
-    use duration::Duration;
     use std::{i32, u32};
+    use oldtime::Duration;
 
     #[test]
     fn test_date_from_ymd() {
@@ -1689,7 +1760,7 @@ mod tests {
     }
 
     #[test]
-    fn test_date_from_isoymd_and_isoweekdate() {
+    fn test_date_from_isoywd_and_iso_week() {
         for year in 2000..2401 {
             for week in 1..54 {
                 for &weekday in [Weekday::Mon, Weekday::Tue, Weekday::Wed, Weekday::Thu,
@@ -1698,10 +1769,9 @@ mod tests {
                     if d.is_some() {
                         let d = d.unwrap();
                         assert_eq!(d.weekday(), weekday);
-                        let (year_, week_, weekday_) = d.isoweekdate();
-                        assert_eq!(year_, year);
-                        assert_eq!(week_, week);
-                        assert_eq!(weekday_, weekday);
+                        let w = d.iso_week();
+                        assert_eq!(w.year(), year);
+                        assert_eq!(w.week(), week);
                     }
                 }
             }
@@ -1713,8 +1783,8 @@ mod tests {
                     let d = NaiveDate::from_ymd_opt(year, month, day);
                     if d.is_some() {
                         let d = d.unwrap();
-                        let (year_, week_, weekday_) = d.isoweekdate();
-                        let d_ = NaiveDate::from_isoywd(year_, week_, weekday_);
+                        let w = d.iso_week();
+                        let d_ = NaiveDate::from_isoywd(w.year(), w.week(), d.weekday());
                         assert_eq!(d, d_);
                     }
                 }
@@ -1747,10 +1817,10 @@ mod tests {
             assert_eq!(from_ndays_from_ce(days).map(|d| d.num_days_from_ce()), Some(days));
         }
 
-        assert_eq!(from_ndays_from_ce(MIN.num_days_from_ce()), Some(MIN));
-        assert_eq!(from_ndays_from_ce(MIN.num_days_from_ce() - 1), None);
-        assert_eq!(from_ndays_from_ce(MAX.num_days_from_ce()), Some(MAX));
-        assert_eq!(from_ndays_from_ce(MAX.num_days_from_ce() + 1), None);
+        assert_eq!(from_ndays_from_ce(MIN_DATE.num_days_from_ce()), Some(MIN_DATE));
+        assert_eq!(from_ndays_from_ce(MIN_DATE.num_days_from_ce() - 1), None);
+        assert_eq!(from_ndays_from_ce(MAX_DATE.num_days_from_ce()), Some(MAX_DATE));
+        assert_eq!(from_ndays_from_ce(MAX_DATE.num_days_from_ce() + 1), None);
     }
 
     #[test]
@@ -1856,7 +1926,7 @@ mod tests {
         assert_eq!(ymd(2014, 5, 31).succ_opt(), Some(ymd(2014, 6, 1)));
         assert_eq!(ymd(2014, 12, 31).succ_opt(), Some(ymd(2015, 1, 1)));
         assert_eq!(ymd(2016, 2, 28).succ_opt(), Some(ymd(2016, 2, 29)));
-        assert_eq!(ymd(MAX.year(), 12, 31).succ_opt(), None);
+        assert_eq!(ymd(MAX_DATE.year(), 12, 31).succ_opt(), None);
     }
 
     #[test]
@@ -1866,7 +1936,7 @@ mod tests {
         assert_eq!(ymd(2015, 1, 1).pred_opt(), Some(ymd(2014, 12, 31)));
         assert_eq!(ymd(2014, 6, 1).pred_opt(), Some(ymd(2014, 5, 31)));
         assert_eq!(ymd(2014, 5, 7).pred_opt(), Some(ymd(2014, 5, 6)));
-        assert_eq!(ymd(MIN.year(), 1, 1).pred_opt(), None);
+        assert_eq!(ymd(MIN_DATE.year(), 1, 1).pred_opt(), None);
     }
 
     #[test]
@@ -1874,8 +1944,8 @@ mod tests {
         fn check((y1,m1,d1): (i32, u32, u32), rhs: Duration, ymd: Option<(i32, u32, u32)>) {
             let lhs = NaiveDate::from_ymd(y1, m1, d1);
             let sum = ymd.map(|(y,m,d)| NaiveDate::from_ymd(y, m, d));
-            assert_eq!(lhs.checked_add(rhs), sum);
-            assert_eq!(lhs.checked_sub(-rhs), sum);
+            assert_eq!(lhs.checked_add_signed(rhs), sum);
+            assert_eq!(lhs.checked_sub_signed(-rhs), sum);
         }
 
         check((2014, 1, 1), Duration::zero(), Some((2014, 1, 1)));
@@ -1904,8 +1974,8 @@ mod tests {
         fn check((y1,m1,d1): (i32, u32, u32), (y2,m2,d2): (i32, u32, u32), diff: Duration) {
             let lhs = NaiveDate::from_ymd(y1, m1, d1);
             let rhs = NaiveDate::from_ymd(y2, m2, d2);
-            assert_eq!(lhs - rhs, diff);
-            assert_eq!(rhs - lhs, -diff);
+            assert_eq!(lhs.signed_duration_since(rhs), diff);
+            assert_eq!(rhs.signed_duration_since(lhs), -diff);
         }
 
         check((2014, 1, 1), (2014, 1, 1), Duration::zero());
@@ -1917,6 +1987,26 @@ mod tests {
 
         check((MAX_YEAR, 12, 31), (0, 1, 1), Duration::days(MAX_DAYS_FROM_YEAR_0 as i64));
         check((MIN_YEAR, 1, 1), (0, 1, 1), Duration::days(MIN_DAYS_FROM_YEAR_0 as i64));
+    }
+
+    #[test]
+    fn test_date_addassignment() {
+        let ymd = NaiveDate::from_ymd;
+        let mut date = ymd(2016, 10, 1);
+        date += Duration::days(10);
+        assert_eq!(date,  ymd(2016, 10, 11));
+        date += Duration::days(30);
+        assert_eq!(date, ymd(2016, 11, 10));
+    }
+
+    #[test]
+    fn test_date_subassignment() {
+        let ymd = NaiveDate::from_ymd;
+        let mut date = ymd(2016, 10, 11);
+        date -= Duration::days(10);
+        assert_eq!(date,  ymd(2016, 10, 1));
+        date -= Duration::days(2);
+        assert_eq!(date, ymd(2016, 9, 29));
     }
 
     #[test]
@@ -2026,781 +2116,6 @@ mod tests {
                    "2008,08,53,53,01");
         assert_eq!(NaiveDate::from_ymd(2010, 1, 3).format("%G,%g,%U,%W,%V").to_string(),
                    "2009,09,01,00,53");
-    }
-}
-
-/// The internal implementation of the calendar and ordinal date.
-///
-/// The current implementation is optimized for determining year, month, day and day of week.
-/// 4-bit `YearFlags` map to one of 14 possible classes of year in the Gregorian calendar,
-/// which are included in every packed `NaiveDate` instance.
-/// The conversion between the packed calendar date (`Mdf`) and the ordinal date (`Of`) is
-/// based on the moderately-sized lookup table (~1.5KB)
-/// and the packed representation is chosen for the efficient lookup.
-/// Every internal data structure does not validate its input,
-/// but the conversion keeps the valid value valid and the invalid value invalid
-/// so that the user-facing `NaiveDate` can validate the input as late as possible.
-#[allow(dead_code)] // some internal methods have been left for consistency
-mod internals {
-    use std::{i32, fmt};
-    use num::traits::FromPrimitive;
-    use Weekday;
-    use div::{div_rem, mod_floor};
-
-    /// The internal date representation. This also includes the packed `Mdf` value.
-    pub type DateImpl = i32;
-
-    pub const MAX_YEAR: DateImpl = i32::MAX >> 13;
-    pub const MIN_YEAR: DateImpl = i32::MIN >> 13;
-
-    /// The year flags (aka the dominical letter).
-    ///
-    /// There are 14 possible classes of year in the Gregorian calendar:
-    /// common and leap years starting with Monday through Sunday.
-    /// The `YearFlags` stores this information into 4 bits `abbb`,
-    /// where `a` is `1` for the common year (simplifies the `Of` validation)
-    /// and `bbb` is a non-zero `Weekday` (mapping `Mon` to 7) of the last day in the past year
-    /// (simplifies the day of week calculation from the 1-based ordinal).
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub struct YearFlags(pub u8);
-
-    pub const A: YearFlags = YearFlags(0o15); pub const AG: YearFlags = YearFlags(0o05);
-    pub const B: YearFlags = YearFlags(0o14); pub const BA: YearFlags = YearFlags(0o04);
-    pub const C: YearFlags = YearFlags(0o13); pub const CB: YearFlags = YearFlags(0o03);
-    pub const D: YearFlags = YearFlags(0o12); pub const DC: YearFlags = YearFlags(0o02);
-    pub const E: YearFlags = YearFlags(0o11); pub const ED: YearFlags = YearFlags(0o01);
-    pub const F: YearFlags = YearFlags(0o17); pub const FE: YearFlags = YearFlags(0o07);
-    pub const G: YearFlags = YearFlags(0o16); pub const GF: YearFlags = YearFlags(0o06);
-
-    static YEAR_TO_FLAGS: [YearFlags; 400] = [
-        BA, G, F, E, DC, B, A, G, FE, D, C, B, AG, F, E, D, CB, A, G, F,
-        ED, C, B, A, GF, E, D, C, BA, G, F, E, DC, B, A, G, FE, D, C, B,
-        AG, F, E, D, CB, A, G, F, ED, C, B, A, GF, E, D, C, BA, G, F, E,
-        DC, B, A, G, FE, D, C, B, AG, F, E, D, CB, A, G, F, ED, C, B, A,
-        GF, E, D, C, BA, G, F, E, DC, B, A, G, FE, D, C, B, AG, F, E, D, // 100
-        C,  B, A, G, FE, D, C, B, AG, F, E, D, CB, A, G, F, ED, C, B, A,
-        GF, E, D, C, BA, G, F, E, DC, B, A, G, FE, D, C, B, AG, F, E, D,
-        CB, A, G, F, ED, C, B, A, GF, E, D, C, BA, G, F, E, DC, B, A, G,
-        FE, D, C, B, AG, F, E, D, CB, A, G, F, ED, C, B, A, GF, E, D, C,
-        BA, G, F, E, DC, B, A, G, FE, D, C, B, AG, F, E, D, CB, A, G, F, // 200
-        E,  D, C, B, AG, F, E, D, CB, A, G, F, ED, C, B, A, GF, E, D, C,
-        BA, G, F, E, DC, B, A, G, FE, D, C, B, AG, F, E, D, CB, A, G, F,
-        ED, C, B, A, GF, E, D, C, BA, G, F, E, DC, B, A, G, FE, D, C, B,
-        AG, F, E, D, CB, A, G, F, ED, C, B, A, GF, E, D, C, BA, G, F, E,
-        DC, B, A, G, FE, D, C, B, AG, F, E, D, CB, A, G, F, ED, C, B, A, // 300
-        G,  F, E, D, CB, A, G, F, ED, C, B, A, GF, E, D, C, BA, G, F, E,
-        DC, B, A, G, FE, D, C, B, AG, F, E, D, CB, A, G, F, ED, C, B, A,
-        GF, E, D, C, BA, G, F, E, DC, B, A, G, FE, D, C, B, AG, F, E, D,
-        CB, A, G, F, ED, C, B, A, GF, E, D, C, BA, G, F, E, DC, B, A, G,
-        FE, D, C, B, AG, F, E, D, CB, A, G, F, ED, C, B, A, GF, E, D, C, // 400
-    ];
-
-    static YEAR_DELTAS: [u8; 401] = [
-         0,  1,  1,  1,  1,  2,  2,  2,  2,  3,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,
-         5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  8,  9,  9,  9,  9, 10, 10, 10,
-        10, 11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15,
-        15, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20,
-        20, 21, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, // 100
-        25, 25, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 27, 28, 28, 28, 28, 29, 29, 29,
-        29, 30, 30, 30, 30, 31, 31, 31, 31, 32, 32, 32, 32, 33, 33, 33, 33, 34, 34, 34,
-        34, 35, 35, 35, 35, 36, 36, 36, 36, 37, 37, 37, 37, 38, 38, 38, 38, 39, 39, 39,
-        39, 40, 40, 40, 40, 41, 41, 41, 41, 42, 42, 42, 42, 43, 43, 43, 43, 44, 44, 44,
-        44, 45, 45, 45, 45, 46, 46, 46, 46, 47, 47, 47, 47, 48, 48, 48, 48, 49, 49, 49, // 200
-        49, 49, 49, 49, 49, 50, 50, 50, 50, 51, 51, 51, 51, 52, 52, 52, 52, 53, 53, 53,
-        53, 54, 54, 54, 54, 55, 55, 55, 55, 56, 56, 56, 56, 57, 57, 57, 57, 58, 58, 58,
-        58, 59, 59, 59, 59, 60, 60, 60, 60, 61, 61, 61, 61, 62, 62, 62, 62, 63, 63, 63,
-        63, 64, 64, 64, 64, 65, 65, 65, 65, 66, 66, 66, 66, 67, 67, 67, 67, 68, 68, 68,
-        68, 69, 69, 69, 69, 70, 70, 70, 70, 71, 71, 71, 71, 72, 72, 72, 72, 73, 73, 73, // 300
-        73, 73, 73, 73, 73, 74, 74, 74, 74, 75, 75, 75, 75, 76, 76, 76, 76, 77, 77, 77,
-        77, 78, 78, 78, 78, 79, 79, 79, 79, 80, 80, 80, 80, 81, 81, 81, 81, 82, 82, 82,
-        82, 83, 83, 83, 83, 84, 84, 84, 84, 85, 85, 85, 85, 86, 86, 86, 86, 87, 87, 87,
-        87, 88, 88, 88, 88, 89, 89, 89, 89, 90, 90, 90, 90, 91, 91, 91, 91, 92, 92, 92,
-        92, 93, 93, 93, 93, 94, 94, 94, 94, 95, 95, 95, 95, 96, 96, 96, 96, 97, 97, 97, 97 // 400+1
-    ];
-
-    pub fn cycle_to_yo(cycle: u32) -> (u32, u32) {
-        let (mut year_mod_400, mut ordinal0) = div_rem(cycle, 365);
-        let delta = YEAR_DELTAS[year_mod_400 as usize] as u32;
-        if ordinal0 < delta {
-            year_mod_400 -= 1;
-            ordinal0 += 365 - YEAR_DELTAS[year_mod_400 as usize] as u32;
-        } else {
-            ordinal0 -= delta;
-        }
-        (year_mod_400, ordinal0 + 1)
-    }
-
-    pub fn yo_to_cycle(year_mod_400: u32, ordinal: u32) -> u32 {
-        year_mod_400 * 365 + YEAR_DELTAS[year_mod_400 as usize] as u32 + ordinal - 1
-    }
-
-    impl YearFlags {
-        #[inline]
-        pub fn from_year(year: i32) -> YearFlags {
-            let year = mod_floor(year, 400);
-            YearFlags::from_year_mod_400(year)
-        }
-
-        #[inline]
-        pub fn from_year_mod_400(year: i32) -> YearFlags {
-            YEAR_TO_FLAGS[year as usize]
-        }
-
-        #[inline]
-        pub fn ndays(&self) -> u32 {
-            let YearFlags(flags) = *self;
-            366 - (flags >> 3) as u32
-        }
-
-        #[inline]
-        pub fn isoweek_delta(&self) -> u32 {
-            let YearFlags(flags) = *self;
-            let mut delta = flags as u32 & 0b111;
-            if delta < 3 { delta += 7; }
-            delta
-        }
-
-        #[inline]
-        pub fn nisoweeks(&self) -> u32 {
-            let YearFlags(flags) = *self;
-            52 + ((0b00000100_00000110 >> flags as usize) & 1)
-        }
-    }
-
-    impl fmt::Debug for YearFlags {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            let YearFlags(flags) = *self;
-            match flags {
-                0o15 => "A".fmt(f),  0o05 => "AG".fmt(f),
-                0o14 => "B".fmt(f),  0o04 => "BA".fmt(f),
-                0o13 => "C".fmt(f),  0o03 => "CB".fmt(f),
-                0o12 => "D".fmt(f),  0o02 => "DC".fmt(f),
-                0o11 => "E".fmt(f),  0o01 => "ED".fmt(f),
-                0o10 => "F?".fmt(f), 0o00 => "FE?".fmt(f), // non-canonical
-                0o17 => "F".fmt(f),  0o07 => "FE".fmt(f),
-                0o16 => "G".fmt(f),  0o06 => "GF".fmt(f),
-                _ => write!(f, "YearFlags({})", flags),
-            }
-        }
-    }
-
-    pub const MIN_OL: u32 = 1 << 1;
-    pub const MAX_OL: u32 = 366 << 1; // larger than the non-leap last day `(365 << 1) | 1`
-    pub const MIN_MDL: u32 = (1 << 6) | (1 << 1);
-    pub const MAX_MDL: u32 = (12 << 6) | (31 << 1) | 1;
-
-    const XX: i8 = -128;
-    static MDL_TO_OL: [i8; (MAX_MDL as usize + 1)] = [
-         XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
-         XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
-         XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
-         XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, // 0
-         XX, XX, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-         64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-         64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-         64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, // 1
-         XX, XX, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-         66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-         66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-         66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, XX, XX, XX, XX, XX, // 2
-         XX, XX, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74,
-         72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74,
-         72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74,
-         72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, // 3
-         XX, XX, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76,
-         74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76,
-         74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76,
-         74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, XX, XX, // 4
-         XX, XX, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80,
-         78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80,
-         78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80,
-         78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, // 5
-         XX, XX, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82,
-         80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82,
-         80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82,
-         80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, XX, XX, // 6
-         XX, XX, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86,
-         84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86,
-         84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86,
-         84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, // 7
-         XX, XX, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88,
-         86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88,
-         86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88,
-         86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, // 8
-         XX, XX, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90,
-         88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90,
-         88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90,
-         88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, XX, XX, // 9
-         XX, XX, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94,
-         92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94,
-         92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94,
-         92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, // 10
-         XX, XX, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96,
-         94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96,
-         94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96,
-         94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, XX, XX, // 11
-         XX, XX, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100,
-         98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100,
-         98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100,
-         98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, // 12
-    ];
-
-    static OL_TO_MDL: [u8; (MAX_OL as usize + 1)] = [
-          0,  0,                                                         // 0
-         64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-         64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-         64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-         64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,         // 1
-         66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-         66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-         66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,
-         66, 66, 66, 66, 66, 66, 66, 66, 66,                             // 2
-             74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74,
-         72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74,
-         72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74,
-         72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72, 74, 72,     // 3
-             76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76,
-         74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76,
-         74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76,
-         74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74, 76, 74,             // 4
-             80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80,
-         78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80,
-         78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80,
-         78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78, 80, 78,     // 5
-             82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82,
-         80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82,
-         80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82,
-         80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80, 82, 80,             // 6
-             86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86,
-         84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86,
-         84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86,
-         84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84, 86, 84,     // 7
-             88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88,
-         86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88,
-         86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88,
-         86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86, 88, 86,     // 8
-             90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90,
-         88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90,
-         88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90,
-         88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88, 90, 88,             // 9
-             94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94,
-         92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94,
-         92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94,
-         92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92, 94, 92,     // 10
-             96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96,
-         94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96,
-         94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96,
-         94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94, 96, 94,             // 11
-            100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100,
-         98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100,
-         98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100,
-         98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,100, 98,     // 12
-    ];
-
-    /// Ordinal (day of year) and year flags: `(ordinal << 4) | flags`.
-    ///
-    /// The whole bits except for the least 3 bits are referred as `Ol` (ordinal and leap flag),
-    /// which is an index to the `OL_TO_MDL` lookup table.
-    #[derive(PartialEq, PartialOrd, Copy, Clone)]
-    pub struct Of(pub u32);
-
-    impl Of {
-        #[inline]
-        fn clamp_ordinal(ordinal: u32) -> u32 {
-            if ordinal > 366 {0} else {ordinal}
-        }
-
-        #[inline]
-        pub fn new(ordinal: u32, YearFlags(flags): YearFlags) -> Of {
-            let ordinal = Of::clamp_ordinal(ordinal);
-            Of((ordinal << 4) | (flags as u32))
-        }
-
-        #[inline]
-        pub fn from_mdf(Mdf(mdf): Mdf) -> Of {
-            let mdl = mdf >> 3;
-            match MDL_TO_OL.get(mdl as usize) {
-                Some(&v) => Of(mdf.wrapping_sub((v as i32 as u32 & 0x3ff) << 3)),
-                None => Of(0)
-            }
-        }
-
-        #[inline]
-        pub fn valid(&self) -> bool {
-            let Of(of) = *self;
-            let ol = of >> 3;
-            MIN_OL <= ol && ol <= MAX_OL
-        }
-
-        #[inline]
-        pub fn ordinal(&self) -> u32 {
-            let Of(of) = *self;
-            of >> 4
-        }
-
-        #[inline]
-        pub fn with_ordinal(&self, ordinal: u32) -> Of {
-            let ordinal = Of::clamp_ordinal(ordinal);
-            let Of(of) = *self;
-            Of((of & 0b1111) | (ordinal << 4))
-        }
-
-        #[inline]
-        pub fn flags(&self) -> YearFlags {
-            let Of(of) = *self;
-            YearFlags((of & 0b1111) as u8)
-        }
-
-        #[inline]
-        pub fn with_flags(&self, YearFlags(flags): YearFlags) -> Of {
-            let Of(of) = *self;
-            Of((of & !0b1111) | (flags as u32))
-        }
-
-        #[inline]
-        pub fn weekday(&self) -> Weekday {
-            let Of(of) = *self;
-            Weekday::from_u32(((of >> 4) + (of & 0b111)) % 7).unwrap()
-        }
-
-        #[inline]
-        pub fn isoweekdate_raw(&self) -> (u32, Weekday) {
-            // week ordinal = ordinal + delta
-            let Of(of) = *self;
-            let weekord = (of >> 4).wrapping_add(self.flags().isoweek_delta());
-            (weekord / 7, Weekday::from_u32(weekord % 7).unwrap())
-        }
-
-        #[inline]
-        pub fn to_mdf(&self) -> Mdf {
-            Mdf::from_of(*self)
-        }
-
-        #[inline]
-        pub fn succ(&self) -> Of {
-            let Of(of) = *self;
-            Of(of + (1 << 4))
-        }
-
-        #[inline]
-        pub fn pred(&self) -> Of {
-            let Of(of) = *self;
-            Of(of - (1 << 4))
-        }
-    }
-
-    impl fmt::Debug for Of {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            let Of(of) = *self;
-            write!(f, "Of(({} << 4) | {:#04o} /*{:?}*/)",
-                   of >> 4, of & 0b1111, YearFlags((of & 0b1111) as u8))
-        }
-    }
-
-    /// Month, day of month and year flags: `(month << 9) | (day << 4) | flags`
-    ///
-    /// The whole bits except for the least 3 bits are referred as `Mdl`
-    /// (month, day of month and leap flag),
-    /// which is an index to the `MDL_TO_OL` lookup table.
-    #[derive(PartialEq, PartialOrd, Copy, Clone)]
-    pub struct Mdf(pub u32);
-
-    impl Mdf {
-        #[inline]
-        fn clamp_month(month: u32) -> u32 {
-            if month > 12 {0} else {month}
-        }
-
-        #[inline]
-        fn clamp_day(day: u32) -> u32 {
-            if day > 31 {0} else {day}
-        }
-
-        #[inline]
-        pub fn new(month: u32, day: u32, YearFlags(flags): YearFlags) -> Mdf {
-            let month = Mdf::clamp_month(month);
-            let day = Mdf::clamp_day(day);
-            Mdf((month << 9) | (day << 4) | (flags as u32))
-        }
-
-        #[inline]
-        pub fn from_of(Of(of): Of) -> Mdf {
-            let ol = of >> 3;
-            match OL_TO_MDL.get(ol as usize) {
-                Some(&v) => Mdf(of + ((v as u32) << 3)),
-                None => Mdf(0)
-            }
-        }
-
-        #[inline]
-        pub fn valid(&self) -> bool {
-            let Mdf(mdf) = *self;
-            let mdl = mdf >> 3;
-            match MDL_TO_OL.get(mdl as usize) {
-                Some(&v) => v >= 0,
-                None => false
-            }
-        }
-
-        #[inline]
-        pub fn month(&self) -> u32 {
-            let Mdf(mdf) = *self;
-            mdf >> 9
-        }
-
-        #[inline]
-        pub fn with_month(&self, month: u32) -> Mdf {
-            let month = Mdf::clamp_month(month);
-            let Mdf(mdf) = *self;
-            Mdf((mdf & 0b11111_1111) | (month << 9))
-        }
-
-        #[inline]
-        pub fn day(&self) -> u32 {
-            let Mdf(mdf) = *self;
-            (mdf >> 4) & 0b11111
-        }
-
-        #[inline]
-        pub fn with_day(&self, day: u32) -> Mdf {
-            let day = Mdf::clamp_day(day);
-            let Mdf(mdf) = *self;
-            Mdf((mdf & !0b11111_0000) | (day << 4))
-        }
-
-        #[inline]
-        pub fn flags(&self) -> YearFlags {
-            let Mdf(mdf) = *self;
-            YearFlags((mdf & 0b1111) as u8)
-        }
-
-        #[inline]
-        pub fn with_flags(&self, YearFlags(flags): YearFlags) -> Mdf {
-            let Mdf(mdf) = *self;
-            Mdf((mdf & !0b1111) | (flags as u32))
-        }
-
-        #[inline]
-        pub fn to_of(&self) -> Of {
-            Of::from_mdf(*self)
-        }
-    }
-
-    impl fmt::Debug for Mdf {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            let Mdf(mdf) = *self;
-            write!(f, "Mdf(({} << 9) | ({} << 4) | {:#04o} /*{:?}*/)",
-                   mdf >> 9, (mdf >> 4) & 0b11111, mdf & 0b1111, YearFlags((mdf & 0b1111) as u8))
-        }
-    }
-
-    #[cfg(test)]
-    mod tests {
-        #[cfg(bench)] extern crate test;
-
-        use Weekday;
-        use super::{Of, Mdf};
-        use super::{YearFlags, A, B, C, D, E, F, G, AG, BA, CB, DC, ED, FE, GF};
-        use num::iter::range_inclusive;
-        use std::u32;
-
-        const NONLEAP_FLAGS: [YearFlags; 7] = [A, B, C, D, E, F, G];
-        const LEAP_FLAGS: [YearFlags; 7] = [AG, BA, CB, DC, ED, FE, GF];
-        const FLAGS: [YearFlags; 14] = [A, B, C, D, E, F, G, AG, BA, CB, DC, ED, FE, GF];
-
-        #[test]
-        fn test_year_flags_ndays_from_year() {
-            assert_eq!(YearFlags::from_year(2014).ndays(), 365);
-            assert_eq!(YearFlags::from_year(2012).ndays(), 366);
-            assert_eq!(YearFlags::from_year(2000).ndays(), 366);
-            assert_eq!(YearFlags::from_year(1900).ndays(), 365);
-            assert_eq!(YearFlags::from_year(1600).ndays(), 366);
-            assert_eq!(YearFlags::from_year(   1).ndays(), 365);
-            assert_eq!(YearFlags::from_year(   0).ndays(), 366); // 1 BCE (proleptic Gregorian)
-            assert_eq!(YearFlags::from_year(  -1).ndays(), 365); // 2 BCE
-            assert_eq!(YearFlags::from_year(  -4).ndays(), 366); // 5 BCE
-            assert_eq!(YearFlags::from_year( -99).ndays(), 365); // 100 BCE
-            assert_eq!(YearFlags::from_year(-100).ndays(), 365); // 101 BCE
-            assert_eq!(YearFlags::from_year(-399).ndays(), 365); // 400 BCE
-            assert_eq!(YearFlags::from_year(-400).ndays(), 366); // 401 BCE
-        }
-
-        #[test]
-        fn test_year_flags_nisoweeks() {
-            assert_eq!(A.nisoweeks(), 52);
-            assert_eq!(B.nisoweeks(), 52);
-            assert_eq!(C.nisoweeks(), 52);
-            assert_eq!(D.nisoweeks(), 53);
-            assert_eq!(E.nisoweeks(), 52);
-            assert_eq!(F.nisoweeks(), 52);
-            assert_eq!(G.nisoweeks(), 52);
-            assert_eq!(AG.nisoweeks(), 52);
-            assert_eq!(BA.nisoweeks(), 52);
-            assert_eq!(CB.nisoweeks(), 52);
-            assert_eq!(DC.nisoweeks(), 53);
-            assert_eq!(ED.nisoweeks(), 53);
-            assert_eq!(FE.nisoweeks(), 52);
-            assert_eq!(GF.nisoweeks(), 52);
-        }
-
-        #[cfg(bench)]
-        #[bench]
-        fn bench_year_flags_from_year(bh: &mut test::Bencher) {
-            bh.iter(|| {
-                for year in -999i32..1000 {
-                    YearFlags::from_year(year);
-                }
-            });
-        }
-
-        #[test]
-        fn test_of() {
-            fn check(expected: bool, flags: YearFlags, ordinal1: u32, ordinal2: u32) {
-                for ordinal in range_inclusive(ordinal1, ordinal2) {
-                    let of = Of::new(ordinal, flags);
-                    assert!(of.valid() == expected,
-                            "ordinal {} = {:?} should be {} for dominical year {:?}",
-                            ordinal, of, if expected {"valid"} else {"invalid"}, flags);
-                }
-            }
-
-            for &flags in NONLEAP_FLAGS.iter() {
-                check(false, flags, 0, 0);
-                check(true, flags, 1, 365);
-                check(false, flags, 366, 1024);
-                check(false, flags, u32::MAX, u32::MAX);
-            }
-
-            for &flags in LEAP_FLAGS.iter() {
-                check(false, flags, 0, 0);
-                check(true, flags, 1, 366);
-                check(false, flags, 367, 1024);
-                check(false, flags, u32::MAX, u32::MAX);
-            }
-        }
-
-        #[test]
-        fn test_mdf_valid() {
-            fn check(expected: bool, flags: YearFlags, month1: u32, day1: u32,
-                     month2: u32, day2: u32) {
-                for month in range_inclusive(month1, month2) {
-                    for day in range_inclusive(day1, day2) {
-                        let mdf = Mdf::new(month, day, flags);
-                        assert!(mdf.valid() == expected,
-                                "month {} day {} = {:?} should be {} for dominical year {:?}",
-                                month, day, mdf, if expected {"valid"} else {"invalid"}, flags);
-                    }
-                }
-            }
-
-            for &flags in NONLEAP_FLAGS.iter() {
-                check(false, flags, 0, 0, 0, 1024);
-                check(false, flags, 0, 0, 16, 0);
-                check(true, flags,  1, 1,  1, 31); check(false, flags,  1, 32,  1, 1024);
-                check(true, flags,  2, 1,  2, 28); check(false, flags,  2, 29,  2, 1024);
-                check(true, flags,  3, 1,  3, 31); check(false, flags,  3, 32,  3, 1024);
-                check(true, flags,  4, 1,  4, 30); check(false, flags,  4, 31,  4, 1024);
-                check(true, flags,  5, 1,  5, 31); check(false, flags,  5, 32,  5, 1024);
-                check(true, flags,  6, 1,  6, 30); check(false, flags,  6, 31,  6, 1024);
-                check(true, flags,  7, 1,  7, 31); check(false, flags,  7, 32,  7, 1024);
-                check(true, flags,  8, 1,  8, 31); check(false, flags,  8, 32,  8, 1024);
-                check(true, flags,  9, 1,  9, 30); check(false, flags,  9, 31,  9, 1024);
-                check(true, flags, 10, 1, 10, 31); check(false, flags, 10, 32, 10, 1024);
-                check(true, flags, 11, 1, 11, 30); check(false, flags, 11, 31, 11, 1024);
-                check(true, flags, 12, 1, 12, 31); check(false, flags, 12, 32, 12, 1024);
-                check(false, flags, 13, 0, 16, 1024);
-                check(false, flags, u32::MAX, 0, u32::MAX, 1024);
-                check(false, flags, 0, u32::MAX, 16, u32::MAX);
-                check(false, flags, u32::MAX, u32::MAX, u32::MAX, u32::MAX);
-            }
-
-            for &flags in LEAP_FLAGS.iter() {
-                check(false, flags, 0, 0, 0, 1024);
-                check(false, flags, 0, 0, 16, 0);
-                check(true, flags,  1, 1,  1, 31); check(false, flags,  1, 32,  1, 1024);
-                check(true, flags,  2, 1,  2, 29); check(false, flags,  2, 30,  2, 1024);
-                check(true, flags,  3, 1,  3, 31); check(false, flags,  3, 32,  3, 1024);
-                check(true, flags,  4, 1,  4, 30); check(false, flags,  4, 31,  4, 1024);
-                check(true, flags,  5, 1,  5, 31); check(false, flags,  5, 32,  5, 1024);
-                check(true, flags,  6, 1,  6, 30); check(false, flags,  6, 31,  6, 1024);
-                check(true, flags,  7, 1,  7, 31); check(false, flags,  7, 32,  7, 1024);
-                check(true, flags,  8, 1,  8, 31); check(false, flags,  8, 32,  8, 1024);
-                check(true, flags,  9, 1,  9, 30); check(false, flags,  9, 31,  9, 1024);
-                check(true, flags, 10, 1, 10, 31); check(false, flags, 10, 32, 10, 1024);
-                check(true, flags, 11, 1, 11, 30); check(false, flags, 11, 31, 11, 1024);
-                check(true, flags, 12, 1, 12, 31); check(false, flags, 12, 32, 12, 1024);
-                check(false, flags, 13, 0, 16, 1024);
-                check(false, flags, u32::MAX, 0, u32::MAX, 1024);
-                check(false, flags, 0, u32::MAX, 16, u32::MAX);
-                check(false, flags, u32::MAX, u32::MAX, u32::MAX, u32::MAX);
-            }
-        }
-
-        #[test]
-        fn test_of_fields() {
-            for &flags in FLAGS.iter() {
-                for ordinal in range_inclusive(1u32, 366) {
-                    let of = Of::new(ordinal, flags);
-                    if of.valid() {
-                        assert_eq!(of.ordinal(), ordinal);
-                    }
-                }
-            }
-        }
-
-        #[test]
-        fn test_of_with_fields() {
-            fn check(flags: YearFlags, ordinal: u32) {
-                let of = Of::new(ordinal, flags);
-
-                for ordinal in range_inclusive(0u32, 1024) {
-                    let of = of.with_ordinal(ordinal);
-                    assert_eq!(of.valid(), Of::new(ordinal, flags).valid());
-                    if of.valid() {
-                        assert_eq!(of.ordinal(), ordinal);
-                    }
-                }
-            }
-
-            for &flags in NONLEAP_FLAGS.iter() {
-                check(flags, 1);
-                check(flags, 365);
-            }
-            for &flags in LEAP_FLAGS.iter() {
-                check(flags, 1);
-                check(flags, 366);
-            }
-        }
-
-        #[test]
-        fn test_of_weekday() {
-            assert_eq!(Of::new(1, A).weekday(), Weekday::Sun);
-            assert_eq!(Of::new(1, B).weekday(), Weekday::Sat);
-            assert_eq!(Of::new(1, C).weekday(), Weekday::Fri);
-            assert_eq!(Of::new(1, D).weekday(), Weekday::Thu);
-            assert_eq!(Of::new(1, E).weekday(), Weekday::Wed);
-            assert_eq!(Of::new(1, F).weekday(), Weekday::Tue);
-            assert_eq!(Of::new(1, G).weekday(), Weekday::Mon);
-            assert_eq!(Of::new(1, AG).weekday(), Weekday::Sun);
-            assert_eq!(Of::new(1, BA).weekday(), Weekday::Sat);
-            assert_eq!(Of::new(1, CB).weekday(), Weekday::Fri);
-            assert_eq!(Of::new(1, DC).weekday(), Weekday::Thu);
-            assert_eq!(Of::new(1, ED).weekday(), Weekday::Wed);
-            assert_eq!(Of::new(1, FE).weekday(), Weekday::Tue);
-            assert_eq!(Of::new(1, GF).weekday(), Weekday::Mon);
-
-            for &flags in FLAGS.iter() {
-                let mut prev = Of::new(1, flags).weekday();
-                for ordinal in range_inclusive(2u32, flags.ndays()) {
-                    let of = Of::new(ordinal, flags);
-                    let expected = prev.succ();
-                    assert_eq!(of.weekday(), expected);
-                    prev = expected;
-                }
-            }
-        }
-
-        #[test]
-        fn test_mdf_fields() {
-            for &flags in FLAGS.iter() {
-                for month in range_inclusive(1u32, 12) {
-                    for day in range_inclusive(1u32, 31) {
-                        let mdf = Mdf::new(month, day, flags);
-                        if mdf.valid() {
-                            assert_eq!(mdf.month(), month);
-                            assert_eq!(mdf.day(), day);
-                        }
-                    }
-                }
-            }
-        }
-
-        #[test]
-        fn test_mdf_with_fields() {
-            fn check(flags: YearFlags, month: u32, day: u32) {
-                let mdf = Mdf::new(month, day, flags);
-
-                for month in range_inclusive(0u32, 16) {
-                    let mdf = mdf.with_month(month);
-                    assert_eq!(mdf.valid(), Mdf::new(month, day, flags).valid());
-                    if mdf.valid() {
-                        assert_eq!(mdf.month(), month);
-                        assert_eq!(mdf.day(), day);
-                    }
-                }
-
-                for day in range_inclusive(0u32, 1024) {
-                    let mdf = mdf.with_day(day);
-                    assert_eq!(mdf.valid(), Mdf::new(month, day, flags).valid());
-                    if mdf.valid() {
-                        assert_eq!(mdf.month(), month);
-                        assert_eq!(mdf.day(), day);
-                    }
-                }
-            }
-
-            for &flags in NONLEAP_FLAGS.iter() {
-                check(flags, 1, 1);
-                check(flags, 1, 31);
-                check(flags, 2, 1);
-                check(flags, 2, 28);
-                check(flags, 2, 29);
-                check(flags, 12, 31);
-            }
-            for &flags in LEAP_FLAGS.iter() {
-                check(flags, 1, 1);
-                check(flags, 1, 31);
-                check(flags, 2, 1);
-                check(flags, 2, 29);
-                check(flags, 2, 30);
-                check(flags, 12, 31);
-            }
-        }
-
-        #[test]
-        fn test_of_isoweekdate_raw() {
-            for &flags in FLAGS.iter() {
-                // January 4 should be in the first week
-                let (week, _) = Of::new(4 /* January 4 */, flags).isoweekdate_raw();
-                assert_eq!(week, 1);
-            }
-        }
-
-        #[test]
-        fn test_of_to_mdf() {
-            for i in range_inclusive(0u32, 8192) {
-                let of = Of(i);
-                assert_eq!(of.valid(), of.to_mdf().valid());
-            }
-        }
-
-        #[test]
-        fn test_mdf_to_of() {
-            for i in range_inclusive(0u32, 8192) {
-                let mdf = Mdf(i);
-                assert_eq!(mdf.valid(), mdf.to_of().valid());
-            }
-        }
-
-        #[test]
-        fn test_of_to_mdf_to_of() {
-            for i in range_inclusive(0u32, 8192) {
-                let of = Of(i);
-                if of.valid() {
-                    assert_eq!(of, of.to_mdf().to_of());
-                }
-            }
-        }
-
-        #[test]
-        fn test_mdf_to_of_to_mdf() {
-            for i in range_inclusive(0u32, 8192) {
-                let mdf = Mdf(i);
-                if mdf.valid() {
-                    assert_eq!(mdf, mdf.to_of().to_mdf());
-                }
-            }
-        }
     }
 }
 

@@ -348,6 +348,9 @@ add_task(async function test_userScripts_exported_APIs() {
       ],
       user_scripts: {
         api_script: "api-script.js",
+        // The following is an unexpected manifest property, that we expect to be ignored and
+        // to not prevent the test extension from being installed and run as expected.
+        unexpected_manifest_key: "test-unexpected-key",
       },
     },
     background,

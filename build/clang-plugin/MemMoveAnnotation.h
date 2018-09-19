@@ -12,7 +12,7 @@
 class MemMoveAnnotation final : public CustomTypeAnnotation {
 public:
   MemMoveAnnotation()
-      : CustomTypeAnnotation("moz_non_memmovable", "non-memmove()able") {}
+      : CustomTypeAnnotation(moz_non_memmovable, "non-memmove()able") {}
 
   virtual ~MemMoveAnnotation() {}
 

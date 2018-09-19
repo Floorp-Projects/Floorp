@@ -125,6 +125,14 @@ public class Updater {
     void startUpdate(final int flags) {
         prefs.setLastAttemptDate();
 
+        if (!UpdateServiceHelper.isUpdaterEnabled(context)) {
+            if (DEBUG) {
+                Log.i(logtag, "Updater not enabled");
+            }
+            sendCheckUpdateResult(CheckUpdateResult.NOT_AVAILABLE);
+            return;
+        }
+
         NetworkInfo netInfo = connectivityManager.getActiveNetworkInfo();
         if (netInfo == null || !netInfo.isConnected()) {
             if (DEBUG) {

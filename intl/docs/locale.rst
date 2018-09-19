@@ -389,7 +389,7 @@ That means that if Windows is in "**en**-AU" and Firefox is in "**en**-US" Gecko
 into Windows Regional Preferences, but if Windows is in "**de**-CH" and Firefox
 is in "**fr**-FR" it won't.
 In order to force Gecko to look into OS preferences irrelevant of the language match,
-set the flag :js:`intl.locale.use_os_preferences` to :js:`true`.
+set the flag :js:`intl.regional_prefs.use_os_locales` to :js:`true`.
 
 UI Direction
 ------------

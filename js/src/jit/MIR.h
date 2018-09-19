@@ -4841,7 +4841,7 @@ class MBitNot
       : MUnaryInstruction(classOpcode, input)
     {
         specialization_ = MIRType::None;
-        setResultType(MIRType::Int32);
+        setResultType(MIRType::Value);
         setMovable();
     }
 
@@ -5005,7 +5005,7 @@ class MBinaryBitwiseInstruction
         maskMatchesRightRange(false)
     {
         MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64);
-        setResultType(type);
+        setResultType(MIRType::Value);
         setMovable();
     }
 

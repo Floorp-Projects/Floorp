@@ -626,13 +626,17 @@ IsOlsonCompatibleWindowsTimeZoneId(const char* tz)
 }
 #elif ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
 static inline const char*
-TZContainsPath(const char* tzVar)
+TZContainsAbsolutePath(const char* tzVar)
 {
-    // A TZ beginning with a colon is expected to be followed by a path --
-    // typically an absolute path (often /etc/localtime), but alternatively a
-    // path relative to /usr/share/zoneinfo/.
-    // NB: We currently only support absolute paths.
-    return tzVar[0] == ':' && tzVar[1] == '/' ? tzVar + 1 : nullptr;
+    // A TZ environment variable may be an absolute path. The path
+    // format of TZ may begin with a colon. (ICU handles relative paths.)
+    if (tzVar[0] == ':' && tzVar[1] == '/') {
+        return tzVar + 1;
+    }
+    if (tzVar[0] == '/') {
+        return tzVar;
+    }
+    return nullptr;
 }
 
 /**
@@ -777,10 +781,13 @@ js::ResyncICUDefaultTimeZone()
                 // TODO: Handle invalid time zone identifiers (bug 342068).
             }
 #else
-            // Handle links (starting with ':') manually because ICU currently
-            // doesn't support the TZ filespec format.
+            // The TZ environment variable allows both absolute and
+            // relative paths, optionally beginning with a colon (':').
+            // (Relative paths, without the colon, are just Olson time
+            // zone names.)  We need to handle absolute paths ourselves,
+            // including handling that they might be symlinks.
             // <https://unicode-org.atlassian.net/browse/ICU-13694>
-            if (const char* tzlink = TZContainsPath(tz))
+            if (const char* tzlink = TZContainsAbsolutePath(tz))
                 tzid.setTo(ReadTimeZoneLink(tzlink));
 #endif /* defined(XP_WIN) */
 

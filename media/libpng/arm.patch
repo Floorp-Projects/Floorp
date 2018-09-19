@@ -1,11 +1,7 @@
-diff --git ../../../libpng-1.6.16/arm/arm_init.c arm/arm_init.c
---- ../../../libpng-1.6.16/arm/arm_init.c	2014-12-21 22:08:08.000000000 -0500
-+++ arm/arm_init.c	2014-12-22 17:33:57.556305506 -0500
-@@ -29,17 +29,17 @@
-  * You may set the macro PNG_ARM_NEON_FILE to the file name of file containing
-  * a fragment of C source code which defines the png_have_neon function.  There
-  * are a number of implementations in contrib/arm-neon, but the only one that
-  * has partial support is contrib/arm-neon/linux.c - a generic Linux
+diff --git a/arm/arm_init.c b/arm/arm_init.c
+--- a/arm/arm_init.c
++++ b/arm/arm_init.c
+@@ -33,9 +33,9 @@
   * implementation which reads /proc/cpufino.
   */
  #ifndef PNG_ARM_NEON_FILE
@@ -16,18 +12,10 @@ diff --git ../../../libpng-1.6.16/arm/arm_init.c arm/arm_init.c
  #endif
  
  #ifdef PNG_ARM_NEON_FILE
- 
- #include <signal.h> /* for sig_atomic_t */
- static int png_have_neon(png_structp png_ptr);
- #include PNG_ARM_NEON_FILE
-diff --git ../../../libpng-1.6.16/arm/filter_neon.S arm/filter_neon.S
---- ../../../libpng-1.6.16/arm/filter_neon.S	2014-12-21 22:08:08.000000000 -0500
-+++ arm/filter_neon.S	2014-12-22 17:43:31.588323649 -0500
-@@ -5,16 +5,22 @@
-  * Written by Mans Rullgard, 2011.
-  * Last changed in libpng 1.6.16 [December 22, 2014]
-  *
-  * This code is released under the libpng license.
+diff --git a/arm/filter_neon.S b/arm/filter_neon.S
+--- a/arm/filter_neon.S
++++ b/arm/filter_neon.S
+@@ -9,8 +9,14 @@
   * For conditions of distribution and use, see the disclaimer
   * and license in png.h
   */
@@ -42,7 +30,3 @@ diff --git ../../../libpng-1.6.16/arm/filter_neon.S arm/filter_neon.S
   * definitions (or not) of PNG_ARM_NEON_OPT and PNG_ARM_NEON_IMPLEMENTATION.
   */
  #define PNG_VERSION_INFO_ONLY
- #include "../pngpriv.h"
- 
- #if defined(__linux__) && defined(__ELF__)
- .section .note.GNU-stack,"",%progbits /* mark stack as non-executable */

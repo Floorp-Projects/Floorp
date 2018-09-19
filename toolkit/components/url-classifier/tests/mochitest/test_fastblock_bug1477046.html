@@ -127,6 +127,7 @@ async function setupTest() {
   await SpecialPowers.pushPrefEnv({ "set": [
     ["browser.contentblocking.enabled", true],
     ["browser.fastblock.enabled", true],
+    ["browser.fastblock.limit", 0],
     ["browser.fastblock.timeout", 5000],
     ["network.http.tailing.enabled", true],
     ["privacy.trackingprotection.enabled", false],

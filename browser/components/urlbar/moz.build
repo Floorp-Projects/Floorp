@@ -8,7 +8,9 @@ with Files("**"):
 EXTRA_JS_MODULES += [
     'UrlbarController.jsm',
     'UrlbarInput.jsm',
+    'UrlbarPrefs.jsm',
     'UrlbarTokenizer.jsm',
+    'UrlbarUtils.jsm',
     'UrlbarView.jsm',
 ]
 

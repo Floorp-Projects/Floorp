@@ -84,7 +84,7 @@ bool MustReturnFromCallerChecker::immediatelyReturns(
     if (auto CE = dyn_cast<CallExpr>(AfterTrivials)) {
       auto Callee = CE->getDirectCallee();
       if (Callee &&
-          hasCustomAnnotation(Callee, "moz_may_call_after_must_return")) {
+          hasCustomAttribute<moz_may_call_after_must_return>(Callee)) {
         continue;
       }
 

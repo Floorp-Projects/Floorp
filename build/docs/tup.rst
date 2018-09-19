@@ -83,6 +83,27 @@ the future according to developer demand and build team availability.
 
 * Tests in automation - Requires packaging
 
+Tup builds in automation
+========================
+
+Tup builds run on integration branches as ``Btup`` in treeherder. There are
+some aspects of the Tup builds that are currently implemented outside of the
+make build system, and divergences may cause the ``Btup`` job to fail until
+the build is completely integrated. There are two known situations this has
+come up.
+
+* Changes to the xpidl/webidl/ipdl build - these are given special treatment
+  by the make backend that is re-created in the tup backend. An update to a
+  Makefile implementing one of these parts of the build may require a
+  corresponding change to ``python/mozbuild/mozbuild/backend/tup.py``
+* Build scripts generating new outputs - due to the implementation of Tup,
+  outputs from ``build.rs`` that run during the build must be known to Tup
+  before the build starts. The current outputs are enumerated in
+  ``python/mozbuild/mozbuild/backend/cargo_build_defs.py``. Modifying the set
+  of outputs from a build script will require a corresponding update to this
+  file.
+
+
 How to Contribute
 =================
 

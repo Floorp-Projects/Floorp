@@ -1,7 +1,23 @@
 #!/bin/bash
 set -x -e -v
 
-# This script is for building clang for Linux.
+# This script is for building a mingw-clang toolchain for use on Linux.
+
+if [[ $# -eq 0 ]]; then
+    echo "Provide either x86 or x64 to specify a toolchain."
+    exit 1;
+elif [ "$1" == "x86" ]; then
+  machine="i686"
+  compiler_rt_machine="i386"
+  crt_flags="--enable-lib32 --disable-lib64"
+elif [ "$1" == "x64" ]; then
+  machine="x86_64"
+  compiler_rt_machine="x86_64"
+  crt_flags="--disable-lib32 --enable-lib64"
+else
+  echo "Provide either x86 or x64 to specify a toolchain."
+  exit 1;
+fi
 
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
@@ -9,13 +25,13 @@ UPLOAD_DIR=$HOME/artifacts
 
 TOOLCHAIN_DIR=$WORKSPACE/moz-toolchain
 INSTALL_DIR=$TOOLCHAIN_DIR/build/stage3/clang
-CROSS_PREFIX_DIR=$INSTALL_DIR/x86_64-w64-mingw32
+CROSS_PREFIX_DIR=$INSTALL_DIR/$machine-w64-mingw32
 SRC_DIR=$TOOLCHAIN_DIR/src
 
 CLANG_VERSION=7.0.0
 make_flags="-j$(nproc)"
 
-mingw_version=5b72d83ec57e2aba171e9fe78a48104c5037f20d
+mingw_version=cb090affef8ebcd8c13ffc271b4500dea3b52f33
 libunwind_version=86ab23972978242b6f9e27cebc239f3e8428b1af
 
 binutils_version=2.27
@@ -61,22 +77,22 @@ prepare() {
 install_wrappers() {
   pushd $INSTALL_DIR/bin
 
-  cat <<EOF >x86_64-w64-mingw32-clang
+  cat <<EOF >$machine-w64-mingw32-clang
 #!/bin/sh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-\$DIR/clang -target x86_64-264-mingw32 --sysroot \$DIR/../x86_64-w64-mingw32 -rtlib=compiler-rt -stdlib=libc++ -fuse-ld=lld -fdwarf-exceptions -Qunused-arguments "\$@"
+\$DIR/clang -target $machine-w64-mingw32 --sysroot \$DIR/../$machine-w64-mingw32 -rtlib=compiler-rt -stdlib=libc++ -fuse-ld=lld -fdwarf-exceptions -Qunused-arguments "\$@"
 EOF
-  chmod +x x86_64-w64-mingw32-clang
+  chmod +x $machine-w64-mingw32-clang
 
-  cat <<EOF >x86_64-w64-mingw32-clang++
+  cat <<EOF >$machine-w64-mingw32-clang++
 #!/bin/sh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-\$DIR/clang -target x86_64-w64-mingw32 --sysroot \$DIR/../x86_64-w64-mingw32 --driver-mode=g++ -rtlib=compiler-rt -stdlib=libc++ -fuse-ld=lld -fdwarf-exceptions -Qunused-arguments "\$@"
+\$DIR/clang -target $machine-w64-mingw32 --sysroot \$DIR/../$machine-w64-mingw32 --driver-mode=g++ -rtlib=compiler-rt -stdlib=libc++ -fuse-ld=lld -fdwarf-exceptions -Qunused-arguments "\$@"
 EOF
-  chmod +x x86_64-w64-mingw32-clang++
+  chmod +x $machine-w64-mingw32-clang++
 
-  CC="x86_64-w64-mingw32-clang"
-  CXX="x86_64-w64-mingw32-clang++"
+  CC="$machine-w64-mingw32-clang"
+  CXX="$machine-w64-mingw32-clang++"
 
   popd
 }
@@ -84,7 +100,7 @@ EOF
 build_mingw() {
   mkdir mingw-w64-headers
   pushd mingw-w64-headers
-  $SRC_DIR/mingw-w64/mingw-w64-headers/configure --host=x86_64-w64-mingw32 \
+  $SRC_DIR/mingw-w64/mingw-w64-headers/configure --host=$machine-w64-mingw32 \
                                                  --enable-sdk=all \
                                                  --enable-secure-api \
                                                  --enable-idl \
@@ -96,9 +112,8 @@ build_mingw() {
 
   mkdir mingw-w64-crt
   pushd mingw-w64-crt
-  $SRC_DIR/mingw-w64/mingw-w64-crt/configure --host=x86_64-w64-mingw32 \
-                                             --disable-lib32 \
-                                             --enable-lib64 \
+  $SRC_DIR/mingw-w64/mingw-w64-crt/configure --host=$machine-w64-mingw32 \
+                                             $crt_flags \
                                              --with-default-msvcrt=ucrt \
                                              CC="$CC" \
                                              AR=llvm-ar \
@@ -111,7 +126,7 @@ build_mingw() {
 
   mkdir widl
   pushd widl
-  $SRC_DIR/mingw-w64/mingw-w64-tools/widl/configure --target=x86_64-w64-mingw32 --prefix=$INSTALL_DIR
+  $SRC_DIR/mingw-w64/mingw-w64-tools/widl/configure --target=$machine-w64-mingw32 --prefix=$INSTALL_DIR
   make $make_flags
   make $make_flags install
   popd
@@ -127,12 +142,12 @@ build_compiler_rt() {
       -DCMAKE_AR=$INSTALL_DIR/bin/llvm-ar \
       -DCMAKE_RANLIB=$INSTALL_DIR/bin/llvm-ranlib \
       -DCMAKE_C_COMPILER_WORKS=1 \
-      -DCMAKE_C_COMPILER_TARGET=x86_64-windows-gnu \
+      -DCMAKE_C_COMPILER_TARGET=$compiler_rt_machine-windows-gnu \
       -DCOMPILER_RT_DEFAULT_TARGET_ONLY=TRUE \
       $SRC_DIR/compiler-rt/lib/builtins
   make $make_flags
   mkdir -p $INSTALL_DIR/lib/clang/$CLANG_VERSION/lib/windows
-  cp lib/windows/libclang_rt.builtins-x86_64.a $INSTALL_DIR/lib/clang/$CLANG_VERSION/lib/windows/
+  cp lib/windows/libclang_rt.builtins-$compiler_rt_machine.a $INSTALL_DIR/lib/clang/$CLANG_VERSION/lib/windows/
   popd
 }
 
@@ -192,7 +207,7 @@ build_libcxx() {
       -DLIBCXXABI_USE_COMPILER_RT=ON \
       -DLIBCXXABI_ENABLE_EXCEPTIONS=ON \
       -DLIBCXXABI_ENABLE_THREADS=ON \
-      -DLIBCXXABI_TARGET_TRIPLE=x86_64-w64-mingw32 \
+      -DLIBCXXABI_TARGET_TRIPLE=$machine-w64-mingw32 \
       -DLIBCXXABI_ENABLE_SHARED=OFF \
       -DLIBCXXABI_LIBCXX_INCLUDES=$SRC_DIR/libcxx/include \
       -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
@@ -250,12 +265,12 @@ build_windres() {
   $SRC_DIR/binutils-$binutils_version/configure --prefix=$INSTALL_DIR \
                                                 --disable-multilib \
                                                 --disable-nls \
-                                                --target=x86_64-w64-mingw32
+                                                --target=$machine-w64-mingw32
   make $make_flags
 
   # Manually install only nm and windres
-  cp binutils/windres $INSTALL_DIR/bin/x86_64-w64-mingw32-windres
-  cp binutils/nm-new $INSTALL_DIR/bin/x86_64-w64-mingw32-nm
+  cp binutils/windres $INSTALL_DIR/bin/$machine-w64-mingw32-windres
+  cp binutils/nm-new $INSTALL_DIR/bin/$machine-w64-mingw32-nm
   popd
 }
 
