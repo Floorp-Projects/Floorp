@@ -11,13 +11,14 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/WritingModes.h"
 #include "nsBidiPresUtils.h"
 #include "nsFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsPresArena.h"
 #include "nsPrintfCString.h"
-#include "mozilla/Sprintf.h"
+#include "nsWindowSizes.h"
 
 #ifdef DEBUG
 static int32_t ctorCount;
@@ -91,6 +92,15 @@ NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
   newLine->NoteFramesMovedFrom(aFromLine);
   newLine->mContainerSize = aFromLine->mContainerSize;
   return newLine;
+}
+
+void
+nsLineBox::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
+{
+  if (mFlags.mHasHashedFrames) {
+    aSizes.mLayoutFramePropertiesSize +=
+      mFrames->ShallowSizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
+  }
 }
 
 void

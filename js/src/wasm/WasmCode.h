@@ -178,7 +178,6 @@ class ModuleSegment : public CodeSegment
                                       const LinkData& linkData);
 
     bool initialize(const CodeTier& codeTier,
-                    const ShareableBytes& bytecode,
                     const LinkData& linkData,
                     const Metadata& metadata,
                     const MetadataTier& metadataTier);
@@ -327,44 +326,6 @@ enum class MemoryUsage
     Shared = 2
 };
 
-// NameInBytecode represents a name that is embedded in the wasm bytecode.
-// The presence of NameInBytecode implies that bytecode has been kept.
-
-struct NameInBytecode
-{
-    uint32_t offset;
-    uint32_t length;
-
-    NameInBytecode()
-      : offset(UINT32_MAX), length(0)
-    {}
-    NameInBytecode(uint32_t offset, uint32_t length)
-      : offset(offset), length(length)
-    {}
-};
-
-typedef Vector<NameInBytecode, 0, SystemAllocPolicy> NameInBytecodeVector;
-
-// CustomSection represents a custom section in the bytecode which can be
-// extracted via Module.customSections. The (offset, length) pair does not
-// include the custom section name.
-
-struct CustomSection
-{
-    NameInBytecode name;
-    uint32_t offset;
-    uint32_t length;
-
-    CustomSection() = default;
-    CustomSection(NameInBytecode name, uint32_t offset, uint32_t length)
-      : name(name), offset(offset), length(length)
-    {}
-};
-
-typedef Vector<CustomSection, 0, SystemAllocPolicy> CustomSectionVector;
-typedef Vector<ValTypeVector, 0, SystemAllocPolicy> FuncArgTypesVector;
-typedef Vector<ExprType, 0, SystemAllocPolicy> FuncReturnTypesVector;
-
 // Metadata holds all the data that is needed to describe compiled wasm code
 // at runtime (as opposed to data that is only used to statically link or
 // instantiate a module).
@@ -386,7 +347,7 @@ struct MetadataCacheablePod
     uint32_t              globalDataLength;
     Maybe<uint32_t>       maxMemoryLength;
     Maybe<uint32_t>       startFuncIndex;
-    Maybe<NameInBytecode> moduleName;
+    Maybe<uint32_t>       nameCustomSectionIndex;
     bool                  filenameIsURL;
 
     explicit MetadataCacheablePod(ModuleKind kind)
@@ -400,16 +361,23 @@ struct MetadataCacheablePod
 };
 
 typedef uint8_t ModuleHash[8];
+typedef Vector<ValTypeVector, 0, SystemAllocPolicy> FuncArgTypesVector;
+typedef Vector<ExprType, 0, SystemAllocPolicy> FuncReturnTypesVector;
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 {
     FuncTypeWithIdVector  funcTypeIds;
     GlobalDescVector      globals;
     TableDescVector       tables;
-    NameInBytecodeVector  funcNames;
-    CustomSectionVector   customSections;
     CacheableChars        filename;
     CacheableChars        sourceMapURL;
+
+    // namePayload points at the name section's CustomSection::payload so that
+    // the Names (which are use payload-relative offsets) can be used
+    // independently of the Module without duplicating the name section.
+    SharedBytes           namePayload;
+    Maybe<Name>           moduleName;
+    NameVector            funcNames;
 
     // Debug-enabled code is not serialized.
     bool                  debugEnabled;
@@ -459,14 +427,13 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 
     enum NameContext { Standalone, BeforeLocation };
 
-    virtual bool getFuncName(NameContext ctx, const Bytes* maybeBytecode, uint32_t funcIndex,
-                             UTF8Bytes* name) const;
+    virtual bool getFuncName(NameContext ctx, uint32_t funcIndex, UTF8Bytes* name) const;
 
-    bool getFuncNameStandalone(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes* name) const {
-        return getFuncName(NameContext::Standalone, maybeBytecode, funcIndex, name);
+    bool getFuncNameStandalone(uint32_t funcIndex, UTF8Bytes* name) const {
+        return getFuncName(NameContext::Standalone, funcIndex, name);
     }
-    bool getFuncNameBeforeLocation(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes* name) const {
-        return getFuncName(NameContext::BeforeLocation, maybeBytecode, funcIndex, name);
+    bool getFuncNameBeforeLocation(uint32_t funcIndex, UTF8Bytes* name) const {
+        return getFuncName(NameContext::BeforeLocation, funcIndex, name);
     }
 
     WASM_DECLARE_SERIALIZABLE_VIRTUAL(Metadata);
@@ -634,11 +601,7 @@ class CodeTier
     {}
 
     bool initialized() const { return !!code_ && segment_->initialized(); }
-
-    bool initialize(const Code& code,
-                    const ShareableBytes& bytecode,
-                    const LinkData& linkData,
-                    const Metadata& metadata);
+    bool initialize(const Code& code, const LinkData& linkData, const Metadata& metadata);
 
     Tier tier() const { return segment_->tier(); }
     const ExclusiveData<LazyStubTier>& lazyStubs() const { return lazyStubs_; }
@@ -730,7 +693,7 @@ class Code : public ShareableBase<Code>
          JumpTables&& maybeJumpTables);
     bool initialized() const { return tier1_->initialized(); }
 
-    bool initialize(const ShareableBytes& bytecode, const LinkData& linkData);
+    bool initialize(const LinkData& linkData);
 
     void setTieringEntry(size_t i, void* target) const { jumpTables_.setTieringEntry(i, target); }
     void** tieringJumpTable() const { return jumpTables_.tiering(); }
@@ -739,8 +702,7 @@ class Code : public ShareableBase<Code>
     void** getAddressOfJitEntry(size_t i) const { return jumpTables_.getAddressOfJitEntry(i); }
     uint32_t getFuncIndex(JSFunction* fun) const;
 
-    bool setTier2(UniqueCodeTier tier2, const ShareableBytes& bytecode,
-                  const LinkData& linkData) const;
+    bool setTier2(UniqueCodeTier tier2, const LinkData& linkData) const;
     void commitTier2() const;
 
     bool hasTier2() const { return hasTier2_; }
@@ -770,7 +732,7 @@ class Code : public ShareableBase<Code>
     // To save memory, profilingLabels_ are generated lazily when profiling mode
     // is enabled.
 
-    void ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) const;
+    void ensureProfilingLabels(bool profilingEnabled) const;
     const char* profilingLabel(uint32_t funcIndex) const;
 
     // about:memory reporting:
@@ -788,7 +750,6 @@ class Code : public ShareableBase<Code>
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
     static const uint8_t* deserialize(const uint8_t* cursor,
-                                      const ShareableBytes& bytecode,
                                       const LinkData& linkData,
                                       Metadata& metadata,
                                       SharedCode* code);
