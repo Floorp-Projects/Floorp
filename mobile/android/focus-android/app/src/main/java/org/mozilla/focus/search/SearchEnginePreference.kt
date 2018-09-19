@@ -28,7 +28,7 @@ class SearchEnginePreference : Preference, SharedPreferences.OnSharedPreferenceC
     }
 
     override fun onAttached() {
-        title = defaultSearchEngineName
+        summary = defaultSearchEngineName
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
         super.onAttached()
     }
@@ -40,7 +40,7 @@ class SearchEnginePreference : Preference, SharedPreferences.OnSharedPreferenceC
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         if (key == context.resources.getString(R.string.pref_key_search_engine)) {
-            title = defaultSearchEngineName
+            summary = defaultSearchEngineName
         }
     }
 

@@ -106,7 +106,7 @@ public class SettingsScreenshots extends ScreenshotTest {
         onView(withText(R.string.preference_category_search))
                 .perform(click());
         Screengrab.screenshot("Search_Submenu");
-        onView(withText(R.string.preference_search_engine_default))
+        onView(withText(R.string.preference_search_engine_label))
                 .perform(click());
         onView(withText(R.string.preference_search_installed_search_engines))
                 .check(matches(isDisplayed()));
@@ -146,7 +146,7 @@ public class SettingsScreenshots extends ScreenshotTest {
         device.waitForIdle();
         Espresso.pressBack();
         device.waitForIdle();
-        onView(withText(R.string.preference_search_engine_default))
+        onView(withText(R.string.preference_search_engine_label))
                 .check(matches(isDisplayed()));
 
         /* Tap autocomplete menu */

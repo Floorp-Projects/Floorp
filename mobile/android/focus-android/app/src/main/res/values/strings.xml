@@ -162,6 +162,9 @@
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Default</string>
 
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Search engine</string>
+
     <!-- Text that is shown below a "switch" preference that is enabled. -->
     <string name="preference_state_on">On</string>
 

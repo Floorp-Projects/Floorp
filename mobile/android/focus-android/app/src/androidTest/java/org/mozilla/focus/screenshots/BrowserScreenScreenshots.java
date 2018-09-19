@@ -126,7 +126,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
         openSettings();
         onView(withText(R.string.preference_category_search))
                 .perform(click());
-        onView(withText(R.string.preference_search_engine_default))
+        onView(withText(R.string.preference_search_engine_label))
                 .perform(click());
         onView(withText(R.string.preference_search_installed_search_engines))
                 .check(matches(isDisplayed()));
