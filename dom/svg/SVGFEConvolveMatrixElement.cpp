@@ -172,7 +172,7 @@ SVGFEConvolveMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstan
                                                     const nsTArray<bool>& aInputsAreTainted,
                                                     nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
-  const FilterPrimitiveDescription failureDescription(PrimitiveType::Empty);
+  FilterPrimitiveDescription failureDescription(PrimitiveType::Empty);
 
   const SVGNumberList &kernelMatrix =
     mNumberListAttributes[KERNELMATRIX].GetAnimValue();

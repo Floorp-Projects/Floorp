@@ -87,7 +87,7 @@ SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aIns
       AttributeMap functionAttributes;
       functionAttributes.Set(eComponentTransferFunctionType,
                              (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
-      descr.Attributes().Set(attributeNames[i], functionAttributes);
+      descr.Attributes().Set(attributeNames[i], std::move(functionAttributes));
     }
   }
   return descr;

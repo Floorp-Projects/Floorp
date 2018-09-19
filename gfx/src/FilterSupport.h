@@ -96,6 +96,10 @@ enum AttributeName {
   eFloodColor,
   eTileSourceRect,
   eOpacityOpacity,
+  // In many cases R, G, and B will all use an identical
+  // attribute map - in this case we can reduce unnecessary
+  // copying by having one shared AttributeName
+  eComponentTransferFunctionRGB,
   eComponentTransferFunctionR,
   eComponentTransferFunctionG,
   eComponentTransferFunctionB,
@@ -190,6 +194,8 @@ public:
   AttributeMap();
   AttributeMap(const AttributeMap& aOther);
   AttributeMap& operator=(const AttributeMap& aOther);
+  AttributeMap(AttributeMap&& aOther);
+  AttributeMap& operator=(AttributeMap&& aOther);
   bool operator==(const AttributeMap& aOther) const;
   bool operator!=(const AttributeMap& aOther) const
   {
@@ -207,7 +213,7 @@ public:
   void Set(AttributeName aName, const Matrix5x4& aValue);
   void Set(AttributeName aName, const Point3D& aValue);
   void Set(AttributeName aName, const Color& aValue);
-  void Set(AttributeName aName, const AttributeMap& aValue);
+  void Set(AttributeName aName, AttributeMap&& aValue);
   void Set(AttributeName aName, const float* aValues, int32_t aLength);
 
   bool GetBool(AttributeName aName) const;
@@ -220,7 +226,8 @@ public:
   Matrix5x4 GetMatrix5x4(AttributeName aName) const;
   Point3D GetPoint3D(AttributeName aName) const;
   Color GetColor(AttributeName aName) const;
-  AttributeMap GetAttributeMap(AttributeName aName) const;
+  const AttributeMap& GetAttributeMap(AttributeName aName) const;
+  const AttributeMap* MaybeGetAttributeMap(AttributeName aName) const;
   const nsTArray<float>& GetFloats(AttributeName aName) const;
 
   uint32_t Count() const;
@@ -311,6 +318,8 @@ public:
 
   FilterPrimitiveDescription();
   explicit FilterPrimitiveDescription(PrimitiveType aType);
+  FilterPrimitiveDescription(FilterPrimitiveDescription&& aOther);
+  FilterPrimitiveDescription& operator=(FilterPrimitiveDescription&& aOther);
   FilterPrimitiveDescription(const FilterPrimitiveDescription& aOther);
   FilterPrimitiveDescription& operator=(const FilterPrimitiveDescription& aOther);
 
@@ -394,9 +403,10 @@ private:
  */
 struct FilterDescription final {
   FilterDescription() {}
-  explicit FilterDescription(const nsTArray<FilterPrimitiveDescription>& aPrimitives)
-   : mPrimitives(aPrimitives)
-  {}
+  explicit FilterDescription(nsTArray<FilterPrimitiveDescription>&& aPrimitives)
+  {
+    mPrimitives.SwapElements(aPrimitives);
+  }
 
   bool operator==(const FilterDescription& aOther) const;
   bool operator!=(const FilterDescription& aOther) const
