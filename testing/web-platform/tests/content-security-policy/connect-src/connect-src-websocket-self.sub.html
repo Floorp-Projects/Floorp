@@ -2,12 +2,11 @@
 <html>
 
 <head>
-    <!-- Programmatically converted from a WebKit Reftest, please forgive resulting idiosyncraciws.-->
     <meta http-equiv="Content-Security-Policy" content="connect-src 'self'; script-src 'self' 'unsafe-inline';">
     <title>connect-src-websocket-blocked</title>
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
-    <script src='../support/logTest.sub.js?logs=["blocked","violated-directive=connect-src"]'></script>
+    <script src='../support/logTest.sub.js?logs=["allowed", "allowed"]'></script>
     <script src="../support/alertAssert.sub.js?alerts=[]"></script>
 </head>
 
@@ -18,9 +17,21 @@
         });
 
         try {
-            var ws = new WebSocket("ws://{{domains[www1]}}:{{ports[http][0]}}/echo");
+            var ws = new WebSocket("ws://{{host}}:{{location[port]}}/echo");
 
             if (ws.readyState == WebSocket.CLOSING || ws.readyState == WebSocket.CLOSED) {
+                log("blocked");
+            } else {
+                log("allowed");
+            }
+        } catch (e) {
+            log("blocked");
+        }
+
+        try {
+            var wss = new WebSocket("wss://{{host}}:{{location[port]}}/echo");
+
+            if (wss.readyState == WebSocket.CLOSING || wss.readyState == WebSocket.CLOSED) {
                 log("blocked");
             } else {
                 log("allowed");
