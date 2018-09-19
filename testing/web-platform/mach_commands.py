@@ -39,7 +39,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             sys.path.append(build_path)
 
         if kwargs["config"] is None:
-            kwargs["config"] = os.path.join(self.topobjdir, '_tests', 'web-platform', 'wptrunner.local.ini')
+            kwargs["config"] = os.path.join(here, 'wptrunner.ini')
 
         if kwargs["prefs_root"] is None:
             kwargs["prefs_root"] = os.path.join(self.topsrcdir, 'testing', 'profiles')
@@ -136,7 +136,7 @@ class WebPlatformTestsUpdater(MozbuildObject):
         from update import updatecommandline
 
         if kwargs["config"] is None:
-            kwargs["config"] = os.path.join(self.topobjdir, '_tests', 'web-platform', 'wptrunner.local.ini')
+            kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
         if kwargs["product"] is None:
             kwargs["product"] = "firefox"
 
@@ -293,22 +293,21 @@ testing/web-platform/tests for tests that may be shared
 
 
 class WPTManifestUpdater(MozbuildObject):
-    def run_update(self, rebuild=False, **kwargs):
+    def run_update(self, check_clean=False, rebuild=False, **kwargs):
         import manifestupdate
         from wptrunner import wptlogging
         logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
         wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
-        config_dir = os.path.abspath(os.path.join(self.topobjdir, '_tests', 'web-platform'))
-        manifestupdate.update(logger, wpt_dir, rebuild, config_dir)
+        manifestupdate.update(logger, wpt_dir, check_clean, rebuild)
 
 
 class WPTManifestDownloader(MozbuildObject):
-    def run_download(self, manifest_update=True, force=False, **kwargs):
+    def run_download(self, path=None, tests_root=None, force=False, **kwargs):
         import manifestdownload
         from wptrunner import wptlogging
         logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
-        wpt_dir = os.path.abspath(os.path.join(self.topobjdir, '_tests', 'web-platform'))
-        manifestdownload.run(wpt_dir, self.topsrcdir, logger, force, manifest_update)
+        wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
+        manifestdownload.run(logger, wpt_dir, self.topsrcdir, force)
 
 
 def create_parser_update():
@@ -372,8 +371,6 @@ class MachCommands(MachCommandBase):
                 params["include"].append(item["name"])
             del params["test_objects"]
 
-        self.wpt_manifest_download(**params)
-        params["manifest_update"] = False
         wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
         wpt_runner = WebPlatformTestsRunner(wpt_setup)
         return wpt_runner.run(**params)
@@ -439,6 +436,7 @@ class MachCommands(MachCommandBase):
         self.setup()
         wpt_manifest_updater = self._spawn(WPTManifestUpdater)
         return wpt_manifest_updater.run_update(**params)
+
 
     @Command("wpt-manifest-download",
              category="testing",

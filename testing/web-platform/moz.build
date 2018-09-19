@@ -4,6 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+WEB_PLATFORM_TESTS_MANIFESTS += [
+    ('meta/MANIFEST.json', 'tests/'),
+    ('mozilla/meta/MANIFEST.json', 'mozilla/tests/')
+]
+
 TEST_HARNESS_FILES['web-platform'] += [
     'mach_commands_base.py',
     'mach_test_package_commands.py',

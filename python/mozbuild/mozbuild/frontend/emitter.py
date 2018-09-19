@@ -83,6 +83,7 @@ from .reader import SandboxValidationError
 from ..testing import (
     TEST_MANIFESTS,
     REFTEST_FLAVORS,
+    WEB_PLATFORM_TESTS_FLAVORS,
     SupportFilesConverter,
 )
 
@@ -1457,6 +1458,11 @@ class TreeMetadataEmitter(LoggingMixin):
                 for obj in self._process_reftest_manifest(context, flavor, path, manifest):
                     yield obj
 
+        for flavor in WEB_PLATFORM_TESTS_FLAVORS:
+            for path, manifest in context.get("%s_MANIFESTS" % flavor.upper().replace('-', '_'), []):
+                for obj in self._process_web_platform_tests_manifest(context, path, manifest):
+                    yield obj
+
     def _process_test_manifest(self, context, info, manifest_path, mpmanifest):
         flavor, install_root, install_subdir, package_tests = info
 
@@ -1582,6 +1588,40 @@ class TreeMetadataEmitter(LoggingMixin):
                 'support-files': '',
                 'subsuite': '',
             })
+
+        yield obj
+
+    def _process_web_platform_tests_manifest(self, context, paths, manifest):
+        manifest_path, tests_root = paths
+        manifest_full_path = mozpath.normpath(mozpath.join(
+            context.srcdir, manifest_path))
+        manifest_reldir = mozpath.dirname(mozpath.relpath(manifest_full_path,
+            context.config.topsrcdir))
+        tests_root = mozpath.normpath(mozpath.join(context.srcdir, tests_root))
+
+        # Create a equivalent TestManifest object
+        obj = TestManifest(context, manifest_full_path, manifest,
+                           flavor="web-platform-tests",
+                           relpath=mozpath.join(manifest_reldir,
+                                                mozpath.basename(manifest_path)),
+                           install_prefix="web-platform/")
+
+
+        for test_type, path, tests in manifest:
+            path = mozpath.join(tests_root, path)
+            if test_type not in ["testharness", "reftest", "wdspec"]:
+                continue
+
+            for test in tests:
+                obj.tests.append({
+                    'path': path,
+                    'here': mozpath.dirname(path),
+                    'manifest': manifest_path,
+                    'name': test.id,
+                    'head': '',
+                    'support-files': '',
+                    'subsuite': '',
+                })
 
         yield obj
 

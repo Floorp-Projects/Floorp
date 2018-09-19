@@ -282,13 +282,10 @@ class TestMetadata(object):
     configuration.
     """
 
-    def __init__(self, all_tests, srcdir, test_defaults=None):
+    def __init__(self, all_tests, test_defaults=None):
         self._tests_by_path = OrderedDefaultDict(list)
         self._tests_by_flavor = defaultdict(set)
         self._test_dirs = set()
-        self._objdir = os.path.abspath(os.path.join(all_tests, os.pardir))
-        self._wpt_loaded = False
-        self._srcdir = srcdir
 
         with open(all_tests, 'rb') as fh:
             test_data = pickle.load(fh)
@@ -381,9 +378,6 @@ class TestMetadata(object):
 
         candidate_paths = set()
 
-        if any(self.is_wpt_path(path) for path in paths):
-            self.add_wpt_manifest_data()
-
         for path in sorted(paths):
             if path is None:
                 candidate_paths |= set(self._tests_by_path.keys())
@@ -411,61 +405,6 @@ class TestMetadata(object):
             for test in fltr(tests):
                 yield test
 
-    def is_wpt_path(self, path):
-        if path is None:
-            return True
-        if mozpath.match(path, "testing/web-platform/tests/**"):
-            return True
-        if mozpath.match(path, "testing/web-platform/mozilla/tests/**"):
-            return True
-        return False
-
-    def add_wpt_manifest_data(self):
-        if self._wpt_loaded:
-            return
-
-        wpt_path = os.path.join(self._srcdir, "testing", "web-platform")
-        wptrunner_path = os.path.join(wpt_path, "tests", "tools", "wptrunner")
-        manifest_path = os.path.join(self._objdir, "_tests", "web-platform")
-
-        sys.path = [wpt_path, wptrunner_path] + sys.path
-
-        import manifestdownload
-        import wptrunner
-        from wptrunner.wptrunner import testloader
-
-        manifestdownload.run(manifest_path, self._srcdir)
-
-        kwargs = {"config": os.path.join(self._objdir, "_tests", "web-platform",
-                                         "wptrunner.local.ini"),
-                  "tests_root": None,
-                  "metadata_root": None}
-
-        wptrunner.wptcommandline.set_from_config(kwargs)
-        manifests = testloader.ManifestLoader(kwargs["test_paths"]).load()
-
-        for manifest, data in manifests.iteritems():
-            tests_root = data["tests_path"]
-            for test_type, path, tests in manifest:
-                path = os.path.join(tests_root, path)
-                if test_type not in ["testharness", "reftest", "wdspec"]:
-                    continue
-                for test in tests:
-                    self._tests_by_path[path].append({
-                        "path": path,
-                        "flavor": "web-platform-tests",
-                        "here": os.path.dirname(path),
-                        "manifest": data["manifest_path"],
-                        "name": test.id,
-                        "file_relpath": path,
-                        "head": "",
-                        "support-files": "",
-                        "subsuite": test_type,
-                        "dir_relpath": os.path.relpath(os.path.dirname(path), wpt_path)
-                        })
-
-        self._wpt_loaded = True
-
 
 class TestResolver(MozbuildObject):
     """Helper to resolve tests from the current environment to test files."""
@@ -489,7 +428,6 @@ class TestResolver(MozbuildObject):
 
         self._tests = TestMetadata(os.path.join(self.topobjdir,
                                                 'all-tests.pkl'),
-                                   self.topsrcdir,
                                    test_defaults=os.path.join(self.topobjdir,
                                                               'test-defaults.pkl'))
 

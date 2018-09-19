@@ -139,11 +139,13 @@ wptlint-gecko:
     treeherder:
         symbol: W
     run:
-        mach: lint -l wpt -f treeherder
+        mach: lint -l wpt -l wpt_manifest -f treeherder
     when:
         files-changed:
             - 'testing/web-platform/tests/**'
             - 'testing/web-platform/mozilla/tests/**'
+            - 'testing/web-platform/meta/MANIFEST.json'
+            - 'testing/web-platform/mozilla/meta/MANIFEST.json'
 
 yaml:
     description: yamllint run over the gecko codebase
