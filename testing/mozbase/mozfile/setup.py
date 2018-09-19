@@ -24,5 +24,5 @@ setup(name=PACKAGE_NAME,
       include_package_data=True,
       zip_safe=False,
       install_requires=['six >= 1.10.0'],
-      tests_require=['mozhttpd']
+      tests_require=['wptserve']
       )
