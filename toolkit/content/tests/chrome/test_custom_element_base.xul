@@ -12,7 +12,10 @@
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
-  <simpleelement id="simple"/>
+  <button id="one"/>
+  <simpleelement id="two" style="-moz-user-focus: normal;"/>
+  <simpleelement id="three" disabled="true" style="-moz-user-focus: normal;"/>
+  <button id="four"/>
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
@@ -22,7 +25,7 @@
   async function runTests() {
     ok(MozXULElement, "MozXULElement defined on the window");
     testParseXULToFragment();
-    testCustomInterface();
+    await testCustomInterface();
 
     let htmlWin = await new Promise(resolve => {
       let htmlIframe = document.createElement("iframe");
@@ -51,29 +54,37 @@
     deck.remove();
   }
 
-  function testCustomInterface() {
+  async function testCustomInterface() {
     class SimpleElement extends MozXULElement {
       get disabled() {
-        return false;
+        return this.getAttribute("disabled") == "true";
       }
 
       set disabled(val) {
+        if (val) this.setAttribute("disabled", "true");
+        else this.removeAttribute("disabled");
+        return val;
       }
 
       get tabIndex() {
-        return 0;
+        return parseInt(this.getAttribute("tabIndex")) || 0;
       }
 
       set tabIndex(val) {
+        if (val) this.setAttribute("tabIndex", val);
+        else this.removeAttribute("tabIndex");
+        return val;
       }
     }
 
-    customElements.define("simpleelement", SimpleElement);
     MozXULElement.implementCustomInterface(SimpleElement, [Ci.nsIDOMXULControlElement]);
+    customElements.define("simpleelement", SimpleElement);
+
+    let twoElement = document.getElementById("two");
 
     is(document.documentElement.getCustomInterfaceCallback, undefined,
        "No getCustomInterfaceCallback on non-custom element");
-    is(typeof document.getElementById("simple").getCustomInterfaceCallback, "function",
+    is(typeof twoElement.getCustomInterfaceCallback, "function",
        "getCustomInterfaceCallback available on custom element when set");
     try {
       document.documentElement.QueryInterface(Ci.nsIDOMXULControlElement)
@@ -81,8 +92,41 @@
     } catch (ex) {
       ok(true, "Non-custom element implements custom interface");
     }
-    ok(document.getElementById("simple").QueryInterface(Ci.nsIDOMXULControlElement),
-       "Implements custom interface");
+
+    // Try various ways to get the custom interface.
+
+    let asControl = twoElement.getCustomInterfaceCallback(Ci.nsIDOMXULControlElement);
+    ok(asControl, twoElement, "getCustomInterface returns interface implementation ");
+
+    asControl = twoElement.QueryInterface(Ci.nsIDOMXULControlElement);
+    ok(asControl, "QueryInterface to nsIDOMXULControlElement");
+    ok(asControl instanceof Node, "Control is a Node");
+
+    // Now make sure that the custom element handles focus/tabIndex as needed by shitfing
+    // focus around and enabling/disabling the simple elements.
+
+    // Enable Full Keyboard Access emulation on Mac
+    await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
+
+    ok(!twoElement.disabled, "two is enabled");
+    ok(document.getElementById("three").disabled, "three is disabled");
+
+    await SimpleTest.promiseFocus();
+    ok(document.hasFocus(), "has focus");
+    
+    // This should skip the disabled simpleelement.
+    synthesizeKey("VK_TAB");
+    is(document.activeElement.id, "one", "Tab 1");
+    synthesizeKey("VK_TAB");
+    is(document.activeElement.id, "two", "Tab 2");
+    synthesizeKey("VK_TAB");
+    is(document.activeElement.id, "four", "Tab 3");
+
+    twoElement.disabled = true;
+    is(twoElement.getAttribute("disabled"), "true", "two disabled after change");
+
+    synthesizeKey("VK_TAB", { shiftKey: true });
+    is(document.activeElement.id, "one", "Tab 1");
   }
   ]]>
   </script>

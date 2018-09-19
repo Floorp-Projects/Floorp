@@ -124,7 +124,7 @@ function runTest()
 function menulistShown()
 {
   let menulist = document.getElementById(test.list);
-  is(menulist.menuBoxObject.activeChild.label, menulist.getItemAtIndex(test.initial).label, test.list + " initial selection");
+  is(menulist.activeChild.label, menulist.getItemAtIndex(test.initial).label, test.list + " initial selection");
 
   let cs = window.getComputedStyle(menulist.menupopup);
   let bpTop = parseFloat(cs.paddingTop) + parseFloat(cs.borderTopWidth);
@@ -138,12 +138,12 @@ function menulistShown()
 
   for (let i = 0; i < test.downs.length; i++) {
     sendKey("PAGE_DOWN");
-    is(menulist.menuBoxObject.activeChild.label, menulist.getItemAtIndex(test.downs[i]).label, test.list + " page down " + i);
+    is(menulist.activeChild.label, menulist.getItemAtIndex(test.downs[i]).label, test.list + " page down " + i);
   }
 
   for (let i = 0; i < test.ups.length; i++) {
     sendKey("PAGE_UP");
-    is(menulist.menuBoxObject.activeChild.label, menulist.getItemAtIndex(test.ups[i]).label, test.list + " page up " + i);
+    is(menulist.activeChild.label, menulist.getItemAtIndex(test.ups[i]).label, test.list + " page up " + i);
   }
 
   menulist.open = false;

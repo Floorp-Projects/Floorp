@@ -59,7 +59,6 @@
          PlacesCommandHook.updateBookmarkAllTabsCommand() -->
     <command id="Browser:BookmarkAllTabs"
              oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueCurrentPages);"/>
-    <command id="Browser:Home"    oncommand="BrowserHome();"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
     <command id="Browser:BackOrBackDuplicate" oncommand="BrowserBack(event);" disabled="true">
       <observes element="Browser:Back" attribute="disabled"/>
@@ -202,7 +201,7 @@
     <key id="goBackKb2" key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
     <key id="goForwardKb2" key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
 #endif
-    <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
+    <key id="goHome" keycode="VK_HOME" oncommand="BrowserHome();" modifiers="alt"/>
     <key keycode="VK_F5" command="Browser:Reload"/>
 #ifndef XP_MACOSX
     <key id="showAllHistoryKb" key="&showAllHistoryCmd.commandkey;" command="Browser:ShowAllHistory" modifiers="accel,shift"/>

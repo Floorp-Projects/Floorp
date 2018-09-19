@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/MenuBoxObject.h"
-#include "mozilla/dom/MenuBoxObjectBinding.h"
-
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/Element.h"
@@ -15,49 +12,36 @@
 #include "nsMenuBarListener.h"
 #include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
+#include "mozilla/dom/XULMenuElement.h"
+#include "mozilla/dom/XULMenuElementBinding.h"
+#include "nsXULPopupManager.h"
 
 namespace mozilla {
 namespace dom {
 
-MenuBoxObject::MenuBoxObject()
+JSObject*
+XULMenuElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
+  return XULMenuElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-MenuBoxObject::~MenuBoxObject()
+nsIFrame*
+XULMenuElement::GetFrame()
 {
-}
+  nsCOMPtr<nsIContent> kungFuDeathGrip = this; // keep a reference
 
-JSObject* MenuBoxObject::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return MenuBoxObject_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-void MenuBoxObject::OpenMenu(bool aOpenFlag)
-{
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) {
-    nsIFrame* frame = GetFrame(false);
-    if (frame) {
-      if (aOpenFlag) {
-        nsCOMPtr<nsIContent> content = mContent;
-        pm->ShowMenu(content, false, false);
-      }
-      else {
-        nsMenuFrame* menu = do_QueryFrame(frame);
-        if (menu) {
-          nsMenuPopupFrame* popupFrame = menu->GetPopup();
-          if (popupFrame)
-            pm->HidePopup(popupFrame->GetContent(), false, true, false, false);
-        }
-      }
-    }
+  nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(FlushType::Frames);
   }
+
+  return GetPrimaryFrame();
 }
 
 already_AddRefed<Element>
-MenuBoxObject::GetActiveChild()
+XULMenuElement::GetActiveChild()
 {
-  nsMenuFrame* menu = do_QueryFrame(GetFrame(false));
+  nsMenuFrame* menu = do_QueryFrame(GetFrame());
   if (menu) {
     RefPtr<Element> el;
     menu->GetActiveChild(getter_AddRefs(el));
@@ -66,15 +50,17 @@ MenuBoxObject::GetActiveChild()
   return nullptr;
 }
 
-void MenuBoxObject::SetActiveChild(Element* arg)
+void
+XULMenuElement::SetActiveChild(Element* arg)
 {
-  nsMenuFrame* menu = do_QueryFrame(GetFrame(false));
+  nsMenuFrame* menu = do_QueryFrame(GetFrame());
   if (menu) {
     menu->SetActiveChild(arg);
   }
 }
 
-bool MenuBoxObject::HandleKeyPress(KeyboardEvent& keyEvent)
+bool
+XULMenuElement::HandleKeyPress(KeyboardEvent& keyEvent)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) {
@@ -89,7 +75,7 @@ bool MenuBoxObject::HandleKeyPress(KeyboardEvent& keyEvent)
   if (nsMenuBarListener::IsAccessKeyPressed(&keyEvent))
     return false;
 
-  nsMenuFrame* menu = do_QueryFrame(GetFrame(false));
+  nsMenuFrame* menu = do_QueryFrame(GetFrame());
   if (!menu) {
     return false;
   }
@@ -115,9 +101,10 @@ bool MenuBoxObject::HandleKeyPress(KeyboardEvent& keyEvent)
   }
 }
 
-bool MenuBoxObject::OpenedWithKey()
+bool
+XULMenuElement::OpenedWithKey()
 {
-  nsMenuFrame* menuframe = do_QueryFrame(GetFrame(false));
+  nsMenuFrame* menuframe = do_QueryFrame(GetFrame());
   if (!menuframe) {
     return false;
   }
