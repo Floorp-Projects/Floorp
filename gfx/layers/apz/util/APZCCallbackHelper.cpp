@@ -48,31 +48,31 @@ using dom::TabParent;
 
 uint64_t APZCCallbackHelper::sLastTargetAPZCNotificationInputBlock = uint64_t(-1);
 
-void
+ScreenMargin
 APZCCallbackHelper::AdjustDisplayPortForScrollDelta(
-    mozilla::layers::FrameMetrics& aFrameMetrics,
+    const RepaintRequest& aRequest,
     const CSSPoint& aActualScrollOffset)
 {
   // Correct the display-port by the difference between the requested scroll
   // offset and the resulting scroll offset after setting the requested value.
   ScreenPoint shift =
-      (aFrameMetrics.GetScrollOffset() - aActualScrollOffset) *
-      aFrameMetrics.DisplayportPixelsPerCSSPixel();
-  ScreenMargin margins = aFrameMetrics.GetDisplayPortMargins();
+      (aRequest.GetScrollOffset() - aActualScrollOffset) *
+      aRequest.DisplayportPixelsPerCSSPixel();
+  ScreenMargin margins = aRequest.GetDisplayPortMargins();
   margins.left -= shift.x;
   margins.right += shift.x;
   margins.top -= shift.y;
   margins.bottom += shift.y;
-  aFrameMetrics.SetDisplayPortMargins(margins);
+  return margins;
 }
 
-static void
-RecenterDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics)
+static ScreenMargin
+RecenterDisplayPort(const ScreenMargin& aDisplayPort)
 {
-  ScreenMargin margins = aFrameMetrics.GetDisplayPortMargins();
+  ScreenMargin margins = aDisplayPort;
   margins.right = margins.left = margins.LeftRight() / 2;
   margins.top = margins.bottom = margins.TopBottom() / 2;
-  aFrameMetrics.SetDisplayPortMargins(margins);
+  return margins;
 }
 
 static already_AddRefed<nsIPresShell>
@@ -86,12 +86,12 @@ GetPresShell(const nsIContent* aContent)
 }
 
 static CSSPoint
-ScrollFrameTo(nsIScrollableFrame* aFrame, const FrameMetrics& aMetrics, bool& aSuccessOut)
+ScrollFrameTo(nsIScrollableFrame* aFrame, const RepaintRequest& aRequest, bool& aSuccessOut)
 {
   aSuccessOut = false;
-  CSSPoint targetScrollPosition = aMetrics.IsRootContent()
-    ? aMetrics.GetViewport().TopLeft()
-    : aMetrics.GetScrollOffset();
+  CSSPoint targetScrollPosition = aRequest.IsRootContent()
+    ? aRequest.GetViewport().TopLeft()
+    : aRequest.GetScrollOffset();
 
   if (!aFrame) {
     return targetScrollPosition;
@@ -102,7 +102,7 @@ ScrollFrameTo(nsIScrollableFrame* aFrame, const FrameMetrics& aMetrics, bool& aS
   // If the repaint request was triggered due to a previous main-thread scroll
   // offset update sent to the APZ, then we don't need to do another scroll here
   // and we can just return.
-  if (!aMetrics.GetScrollOffsetUpdated()) {
+  if (!aRequest.GetScrollOffsetUpdated()) {
     return geckoScrollPosition;
   }
 
@@ -159,34 +159,34 @@ ScrollFrameTo(nsIScrollableFrame* aFrame, const FrameMetrics& aMetrics, bool& aS
 
 /**
  * Scroll the scroll frame associated with |aContent| to the scroll position
- * requested in |aMetrics|.
- * The scroll offset in |aMetrics| is updated to reflect the actual scroll
- * position.
- * The displayport stored in |aMetrics| and the callback-transform stored on
- * the content are updated to reflect any difference between the requested
- * and actual scroll positions.
+ * requested in |aRequest|.
+ *
+ * Any difference between the requested and actual scroll positions is used to
+ * update the callback-transform stored on the content, and return a new
+ * display port.
  */
-static void
+static ScreenMargin
 ScrollFrame(nsIContent* aContent,
-            FrameMetrics& aMetrics)
+            const RepaintRequest& aRequest)
 {
   // Scroll the window to the desired spot
-  nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.GetScrollId());
+  nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
   if (sf) {
-    sf->ResetScrollInfoIfGeneration(aMetrics.GetScrollGeneration());
-    sf->SetScrollableByAPZ(!aMetrics.IsScrollInfoLayer());
+    sf->ResetScrollInfoIfGeneration(aRequest.GetScrollGeneration());
+    sf->SetScrollableByAPZ(!aRequest.IsScrollInfoLayer());
     if (sf->IsRootScrollFrameOfDocument()) {
       if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
-        shell->SetVisualViewportOffset(CSSPoint::ToAppUnits(aMetrics.GetScrollOffset()));
+        shell->SetVisualViewportOffset(CSSPoint::ToAppUnits(aRequest.GetScrollOffset()));
       }
     }
   }
   bool scrollUpdated = false;
-  CSSPoint apzScrollOffset = aMetrics.GetScrollOffset();
-  CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics, scrollUpdated);
+  ScreenMargin displayPortMargins = aRequest.GetDisplayPortMargins();
+  CSSPoint apzScrollOffset = aRequest.GetScrollOffset();
+  CSSPoint actualScrollOffset = ScrollFrameTo(sf, aRequest, scrollUpdated);
 
   if (scrollUpdated) {
-    if (aMetrics.IsScrollInfoLayer()) {
+    if (aRequest.IsScrollInfoLayer()) {
       // In cases where the APZ scroll offset is different from the content scroll
       // offset, we want to interpret the margins as relative to the APZ scroll
       // offset except when the frame is not scrollable by APZ. Therefore, if the
@@ -198,17 +198,17 @@ ScrollFrame(nsIContent* aContent,
     } else {
       // Correct the display port due to the difference between mScrollOffset and the
       // actual scroll offset.
-      APZCCallbackHelper::AdjustDisplayPortForScrollDelta(aMetrics, actualScrollOffset);
+      displayPortMargins = APZCCallbackHelper::AdjustDisplayPortForScrollDelta(aRequest, actualScrollOffset);
     }
-  } else if (aMetrics.IsRootContent() &&
-             aMetrics.GetScrollOffset() != aMetrics.GetViewport().TopLeft()) {
+  } else if (aRequest.IsRootContent() &&
+             aRequest.GetScrollOffset() != aRequest.GetViewport().TopLeft()) {
     // APZ uses the visual viewport's offset to calculate where to place the
     // display port, so the display port is misplaced when a pinch zoom occurs.
     //
     // We need to force a display port adjustment in the following paint to
     // account for a difference between mScrollOffset and the actual scroll
     // offset in repaints requested by AsyncPanZoomController::NotifyLayersUpdated.
-    APZCCallbackHelper::AdjustDisplayPortForScrollDelta(aMetrics, actualScrollOffset);
+    displayPortMargins = APZCCallbackHelper::AdjustDisplayPortForScrollDelta(aRequest, actualScrollOffset);
   } else {
     // For whatever reason we couldn't update the scroll offset on the scroll frame,
     // which means the data APZ used for its displayport calculation is stale. Fall
@@ -216,10 +216,8 @@ ScrollFrame(nsIContent* aContent,
     // displayport because tile-alignment depends on the scroll position, and the
     // scroll position here is out of our control. See bug 966507 comment 21 for a
     // more detailed explanation.
-    RecenterDisplayPort(aMetrics);
+    displayPortMargins = RecenterDisplayPort(aRequest.GetDisplayPortMargins());
   }
-
-  aMetrics.SetScrollOffset(actualScrollOffset);
 
   // APZ transforms inputs assuming we applied the exact scroll offset it
   // requested (|apzScrollOffset|). Since we may not have, record the difference
@@ -232,35 +230,36 @@ ScrollFrame(nsIContent* aContent,
   // get another repaint request when APZ confirms. In the interval while this
   // is happening we can just leave the callback transform as it was.
   bool mainThreadScrollChanged =
-    sf && sf->CurrentScrollGeneration() != aMetrics.GetScrollGeneration() && nsLayoutUtils::CanScrollOriginClobberApz(sf->LastScrollOrigin());
+    sf && sf->CurrentScrollGeneration() != aRequest.GetScrollGeneration() && nsLayoutUtils::CanScrollOriginClobberApz(sf->LastScrollOrigin());
   if (aContent && !mainThreadScrollChanged) {
     CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
     aContent->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(scrollDelta),
                           nsINode::DeleteProperty<CSSPoint>);
   }
+
+  return displayPortMargins;
 }
 
 static void
 SetDisplayPortMargins(nsIPresShell* aPresShell,
                       nsIContent* aContent,
-                      const FrameMetrics& aMetrics)
+                      ScreenMargin aDisplayPortMargins,
+                      CSSSize aDisplayPortBase)
 {
   if (!aContent) {
     return;
   }
 
   bool hadDisplayPort = nsLayoutUtils::HasDisplayPort(aContent);
-  ScreenMargin margins = aMetrics.GetDisplayPortMargins();
-  nsLayoutUtils::SetDisplayPortMargins(aContent, aPresShell, margins, 0);
+  nsLayoutUtils::SetDisplayPortMargins(aContent, aPresShell, aDisplayPortMargins, 0);
   if (!hadDisplayPort) {
     nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         aContent->GetPrimaryFrame(), nsLayoutUtils::RepaintMode::Repaint);
   }
 
-  CSSSize baseSize = aMetrics.CalculateCompositedSizeInCssPixels();
   nsRect base(0, 0,
-              baseSize.width * AppUnitsPerCSSPixel(),
-              baseSize.height * AppUnitsPerCSSPixel());
+              aDisplayPortBase.width * AppUnitsPerCSSPixel(),
+              aDisplayPortBase.height * AppUnitsPerCSSPixel());
   nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
 }
 
@@ -273,24 +272,24 @@ SetPaintRequestTime(nsIContent* aContent, const TimeStamp& aPaintRequestTime)
 }
 
 void
-APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
+APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest)
 {
-  if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
+  if (aRequest.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
     return;
   }
-  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
+  nsIContent* content = nsLayoutUtils::FindContentFor(aRequest.GetScrollId());
   if (!content) {
     return;
   }
 
   nsCOMPtr<nsIPresShell> shell = GetPresShell(content);
-  if (!shell || aMetrics.GetPresShellId() != shell->GetPresShellId()) {
+  if (!shell || aRequest.GetPresShellId() != shell->GetPresShellId()) {
     return;
   }
 
-  MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
+  MOZ_ASSERT(aRequest.GetUseDisplayPortMargins());
 
-  if (gfxPrefs::APZAllowZooming() && aMetrics.GetScrollOffsetUpdated()) {
+  if (gfxPrefs::APZAllowZooming() && aRequest.GetScrollOffsetUpdated()) {
     // If zooming is disabled then we don't really want to let APZ fiddle
     // with these things. In theory setting the resolution here should be a
     // no-op, but setting the visual viewport size is bad because it can cause a
@@ -308,45 +307,51 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
     // the time this repaint request was fired, consider this request out of date
     // and drop it; setting a zoom based on the out-of-date resolution can have
     // the effect of getting us stuck with the stale resolution.
-    if (!FuzzyEqualsMultiplicative(presShellResolution, aMetrics.GetPresShellResolution())) {
+    if (!FuzzyEqualsMultiplicative(presShellResolution, aRequest.GetPresShellResolution())) {
       return;
     }
 
     // The pres shell resolution is updated by the the async zoom since the
     // last paint.
-    presShellResolution = aMetrics.GetPresShellResolution()
-                        * aMetrics.GetAsyncZoom().scale;
+    presShellResolution = aRequest.GetPresShellResolution()
+                        * aRequest.GetAsyncZoom().scale;
     shell->SetResolutionAndScaleTo(presShellResolution);
   }
 
   // Do this as late as possible since scrolling can flush layout. It also
   // adjusts the display port margins, so do it before we set those.
-  ScrollFrame(content, aMetrics);
+  ScreenMargin displayPortMargins = ScrollFrame(content, aRequest);
 
-  SetDisplayPortMargins(shell, content, aMetrics);
-  SetPaintRequestTime(content, aMetrics.GetPaintRequestTime());
+  SetDisplayPortMargins(shell,
+    content,
+    displayPortMargins,
+    aRequest.CalculateCompositedSizeInCssPixels());
+  SetPaintRequestTime(content, aRequest.GetPaintRequestTime());
 }
 
 void
-APZCCallbackHelper::UpdateSubFrame(FrameMetrics& aMetrics)
+APZCCallbackHelper::UpdateSubFrame(const RepaintRequest& aRequest)
 {
-  if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
+  if (aRequest.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
     return;
   }
-  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
+  nsIContent* content = nsLayoutUtils::FindContentFor(aRequest.GetScrollId());
   if (!content) {
     return;
   }
 
-  MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
+  MOZ_ASSERT(aRequest.GetUseDisplayPortMargins());
 
   // We don't currently support zooming for subframes, so nothing extra
   // needs to be done beyond the tasks common to this and UpdateRootFrame.
-  ScrollFrame(content, aMetrics);
+  ScreenMargin displayPortMargins = ScrollFrame(content, aRequest);
   if (nsCOMPtr<nsIPresShell> shell = GetPresShell(content)) {
-    SetDisplayPortMargins(shell, content, aMetrics);
+    SetDisplayPortMargins(shell,
+      content,
+      displayPortMargins,
+      aRequest.CalculateCompositedSizeInCssPixels());
   }
-  SetPaintRequestTime(content, aMetrics.GetPaintRequestTime());
+  SetPaintRequestTime(content, aRequest.GetPaintRequestTime());
 }
 
 bool

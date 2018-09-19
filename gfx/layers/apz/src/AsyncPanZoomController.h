@@ -9,6 +9,7 @@
 
 #include "CrossProcessMutex.h"
 #include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Monitor.h"
@@ -150,6 +151,8 @@ class AsyncPanZoomController {
 
   typedef mozilla::MonitorAutoLock MonitorAutoLock;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
+  typedef mozilla::layers::RepaintRequest::ScrollOffsetUpdateType
+    RepaintUpdateType;
 
 public:
   enum GestureBehavior {
@@ -808,7 +811,8 @@ protected:
    * from a non-main thread, it will redispatch itself to the main thread, and
    * use the latest metrics during the redispatch.
    */
-  void RequestContentRepaint(bool aUserAction = true);
+  void RequestContentRepaint(RepaintUpdateType aUpdateType =
+                               RepaintUpdateType::eUserAction);
 
   /**
    * Send the provided metrics to Gecko to trigger a repaint. This function
@@ -816,7 +820,8 @@ protected:
    * called on the main thread.
    */
   void RequestContentRepaint(const FrameMetrics& aFrameMetrics,
-                             const ParentLayerPoint& aVelocity);
+                             const ParentLayerPoint& aVelocity,
+                             RepaintUpdateType aUpdateType);
 
   /**
    * Gets the current frame metrics. This is *not* the Gecko copy stored in the
@@ -933,8 +938,8 @@ private:
   // sending messages back to Gecko.
   ScrollMetadata mLastContentPaintMetadata;
   FrameMetrics& mLastContentPaintMetrics;  // for convenience, refers to mLastContentPaintMetadata.mMetrics
-  // The last metrics used for a content repaint request.
-  FrameMetrics mLastPaintRequestMetrics;
+  // The last content repaint request.
+  RepaintRequest mLastPaintRequestMetrics;
   // The metrics that we expect content to have. This is updated when we
   // request a content repaint, and when we receive a shadow layers update.
   // This allows us to transform events into Gecko's coordinate space.

@@ -11,7 +11,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 include protocol PCompositorBridge;
 
 using CSSRect from "Units.h";
-using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
+using struct mozilla::layers::RepaintRequest from "mozilla/layers/RepaintRequest.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
@@ -50,7 +50,7 @@ parent:
 
 child:
 
-  async RequestContentRepaint(FrameMetrics frame);
+  async RequestContentRepaint(RepaintRequest request);
 
   async UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent);
 

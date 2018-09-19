@@ -53,15 +53,14 @@ ChromeProcessController::InitializeRoot()
 }
 
 void
-ChromeProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
+ChromeProcessController::RequestContentRepaint(const RepaintRequest& aRequest)
 {
   MOZ_ASSERT(IsRepaintThread());
 
-  FrameMetrics metrics = aFrameMetrics;
-  if (metrics.IsRootContent()) {
-    APZCCallbackHelper::UpdateRootFrame(metrics);
+  if (aRequest.IsRootContent()) {
+    APZCCallbackHelper::UpdateRootFrame(aRequest);
   } else {
-    APZCCallbackHelper::UpdateSubFrame(metrics);
+    APZCCallbackHelper::UpdateSubFrame(aRequest);
   }
 }
 
