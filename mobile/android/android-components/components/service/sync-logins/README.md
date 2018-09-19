@@ -52,7 +52,7 @@ When inserting records (e.g. creating records for use with `LoginsStorage.add`),
 
 The hostname this record corresponds to. It is an error to attempt to insert or update a record to have a blank hostname, and attempting to do so `InvalidRecordException` being thrown.
 
-#### `username: String?`
+#### `username: String? = null`
 
 The username associated with this record, which may be blank if no username is asssociated with this login.
 
@@ -68,7 +68,7 @@ The challenge string for HTTP Basic authentication. Exactly one of `httpRealm` o
 
 The submission URL for the form where this login may be entered. As mentioned above, exactly one of `httpRealm` or `formSubmitURL` is allowed to be present, and attempting to insert or update a record to have both or neither will result in an `InvalidRecordException` being thrown.
 
-#### `timesUsed: Int`
+#### `timesUsed: Int = 0`
 
 A lower bound on the number of times this record has been "used". This number may not record uses that occurred on remote devices (since they may not record the uses). This may be zero for records synced remotely that have no usage information.
 
@@ -80,19 +80,19 @@ A use is recorded (and `timeLastUsed` is updated accordingly) in the following s
 
 This is a metadata field, and as such, is ignored by `LoginsStorage.add` and `LoginsStorage.update`.
 
-#### `timeCreated: Long`
+#### `timeCreated: Long = 0L`
 
 An upper bound on the time of creation in milliseconds from the unix epoch. Not all clients record this so an upper bound is the best estimate possible.
 
 This is a metadata field, and as such, is ignored by `LoginsStorage.add` and `LoginsStorage.update`.
 
-#### `timeLastUsed: Long`
+#### `timeLastUsed: Long = 0L`
 
 A lower bound on the time of last use in milliseconds from the unix epoch. This may be zero for records synced remotely that have no usage information. It is updated to the current timestamp in the same scenarios described in the documentation for `timesUsed`.
 
 This is a metadata field, and as such, is ignored by `LoginsStorage.add` and `LoginsStorage.update`.
 
-#### `timePasswordChanged: Long`
+#### `timePasswordChanged: Long = 0L`
 
 A lower bound on the time that the `password` field was last changed in milliseconds from the unix epoch. This is updated when a `LoginsStorage.update` operation changes the password of the record.
 
@@ -219,6 +219,21 @@ This error is thrown during `LoginsStorage.add` and `LoginsStorage.update` opera
 - A record with a blank `hostname` is invalid.
 - A record that doesn't have a `formSubmitURL` nor a `httpRealm` is invalid.
 - A record that has both a `formSubmitURL` and a `httpRealm` is invalid.
+
+#### `InvalidKeyException`
+
+This error is thrown in one of the two cases:
+
+1. An to unlock a database that was encrypted with a key
+2. An attempt to unlock a file that is not a database.
+
+SQLcipher does not give any way to distinguish between these two cases.
+
+Note: If the SQLcipher-based API (this version) is used to open a databases created with the mentat-based API (version 0.3.0 and earlier), this error will also be emitted.
+
+#### `RequestFailedException`
+
+This error is emitted during a call to `LoginsStorage.sync()` if we fail to connect to the sync servers. It indicates network problems.
 
 ## `SyncResult`
 
