@@ -1574,6 +1574,22 @@ protected: // Shouldn't be used by friend classes
   DeleteSelectedTableColumnsWithTransaction(int32_t aNumberOfColumnsToDelete);
 
   /**
+   * DeleteTableColumnWithTransaction() removes cell elements which belong
+   * to the specified column.
+   * This method adjusts colspan attribute value if cells spanning the
+   * column to delete.
+   * WARNING: This does not remove <col> nor <colgroup> elements.
+   *
+   * @param aTableElement       The <table> element which contains the
+   *                            column which you want to remove.
+   * @param aRowIndex           Index of the column which you want to remove.
+   *                            0 is the first column.
+   */
+  nsresult
+  DeleteTableColumnWithTransaction(Element& aTableElement,
+                                   int32_t aColumnIndex);
+
+  /**
    * DeleteSelectedTableRowsWithTransaction() removes <tr> elements.
    * If only one cell element is selected or first selection range is
    * in a cell, removes <tr> elements starting from a <tr> element
@@ -1608,7 +1624,6 @@ protected: // Shouldn't be used by friend classes
   /**
    * Helpers that don't touch the selection or do batch transactions.
    */
-  nsresult DeleteColumn(Element* aTable, int32_t aColIndex);
   nsresult DeleteCellContents(Element* aCell);
 
   /**

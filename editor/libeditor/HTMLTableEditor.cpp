@@ -900,8 +900,8 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
               startRowIndex = nextSelectedCellIndexes.mRow;
               nextCol = nextSelectedCellIndexes.mColumn;
             }
-            // Delete entire Col
-            rv = DeleteColumn(table, startColIndex);
+            // Delete all cells which belong to the column.
+            rv = DeleteTableColumnWithTransaction(*table, startColIndex);
             NS_ENSURE_SUCCESS(rv, rv);
             if (cell) {
               // For the next cell, subtract 1 for col. deleted
@@ -1166,7 +1166,7 @@ HTMLEditor::DeleteSelectedTableColumnsWithTransaction(
       std::min(aNumberOfColumnsToDelete,
                tableSize.mColumnCount - startColIndex);
     for (int32_t i = 0; i < columnCountToRemove; i++) {
-      rv = DeleteColumn(table, startColIndex);
+      rv = DeleteTableColumnWithTransaction(*table, startColIndex);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1203,7 +1203,7 @@ HTMLEditor::DeleteSelectedTableColumnsWithTransaction(
       startRowIndex = cellIndexes.mRow;
       nextCol = cellIndexes.mColumn;
     }
-    rv = DeleteColumn(table, startColIndex);
+    rv = DeleteTableColumnWithTransaction(*table, startColIndex);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1212,109 +1212,108 @@ HTMLEditor::DeleteSelectedTableColumnsWithTransaction(
 }
 
 nsresult
-HTMLEditor::DeleteColumn(Element* aTable,
-                         int32_t aColIndex)
+HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
+                                             int32_t aColumnIndex)
 {
-  if (NS_WARN_IF(!aTable)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  RefPtr<Element> cell;
-  int32_t startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
-  bool    isSelected;
-  int32_t rowIndex = 0;
-
+  // XXX Why don't this method remove proper <col> (and <colgroup>)?
   ErrorResult error;
-  do {
+  for (int32_t rowIndex = 0;; rowIndex++) {
+    RefPtr<Element> cell;
+    int32_t startRowIndex = 0, startColIndex = 0;
+    int32_t rowSpan = 0, colSpan = 0;
+    int32_t actualRowSpan = 0, actualColSpan = 0;
+    bool isSelected = false;
     nsresult rv =
-      GetCellDataAt(aTable, rowIndex, aColIndex, getter_AddRefs(cell),
+      GetCellDataAt(&aTableElement, rowIndex, aColumnIndex,
+                    getter_AddRefs(cell),
                     &startRowIndex, &startColIndex, &rowSpan, &colSpan,
                     &actualRowSpan, &actualColSpan, &isSelected);
-    // Failure means that there is no more cell in the row.  In this case,
-    // we shouldn't return error since we just reach the end of the row.
+    // Failure means that there is no more row in the table.  In this case,
+    // we shouldn't return error since we just reach the end of the table.
     // XXX Ideally, GetCellDataAt() should return
     //     NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND in such case instead of
     //     error.  However, it's used by a lot of methods, so, it's really
     //     risky to change it.
-    if (NS_FAILED(rv)) {
-      break;
+    if (NS_FAILED(rv) || !cell) {
+      return NS_OK;
     }
 
-    if (cell) {
-      // Find cells that don't start in column we are deleting
-      if (startColIndex < aColIndex || colSpan > 1 || !colSpan) {
-        // We have a cell spanning this location
-        // Decrease its colspan to keep table rectangular,
-        // but if colSpan=0, it will adjust automatically
-        if (colSpan > 0) {
-          NS_ASSERTION((colSpan > 1),"Bad COLSPAN in DeleteTableColumn");
-          SetColSpan(cell, colSpan-1);
-        }
-        if (startColIndex == aColIndex) {
-          // Cell is in column to be deleted, but must have colspan > 1,
-          // so delete contents of cell instead of cell itself
-          // (We must have reset colspan above)
-          DeleteCellContents(cell);
-        }
-        // To next cell in column
-        rowIndex += actualRowSpan;
-      } else {
-        // Delete the cell
-        if (GetNumberOfCellsInRow(*aTable, rowIndex) == 1) {
-          // Only 1 cell in row - delete the row
-          Element* parentRow =
-            GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cell);
-          if (NS_WARN_IF(!parentRow)) {
-            return NS_ERROR_FAILURE;
-          }
-
-          //  But first check if its the only row left
-          //  so we can delete the entire table
-          //  (This should never happen but it's the safe thing to do)
-          TableSize tableSize(*this, *aTable, error);
-          if (NS_WARN_IF(error.Failed())) {
-            return error.StealNSResult();
-          }
-
-          if (tableSize.mRowCount == 1) {
-            RefPtr<Selection> selection = GetSelection();
-            if (NS_WARN_IF(!selection)) {
-              return NS_ERROR_FAILURE;
-            }
-            rv = DeleteTableElementAndChildrenWithTransaction(*selection,
-                                                              *aTable);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return rv;
-            }
-            return NS_OK;
-          }
-
-          // Delete the row by placing caret in cell we were to delete.
-          // We need to call DeleteTableRowWithTransaction() to handle cells
-          // with rowspan.
-          rv = DeleteTableRowWithTransaction(*aTable, startRowIndex);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-
-          // Note that we don't incremenet rowIndex
-          // since a row was deleted and "next"
-          // row now has current rowIndex
-        } else {
-          // A more "normal" deletion
-          rv = DeleteNodeWithTransaction(*cell);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-
-          //Skip over any rows spanned by this cell
-          rowIndex += actualRowSpan;
-        }
+    // Find cells that don't start in column we are deleting.
+    MOZ_ASSERT(colSpan >= 0);
+    if (startColIndex < aColumnIndex || colSpan != 1) {
+      // If we have a cell spanning this location, decrease its colspan to
+      // keep table rectangular, but if colspan is 0, it'll be adjusted
+      // automatically.
+      if (colSpan > 0) {
+        NS_WARNING_ASSERTION(colSpan > 1, "colspan should be 2 or larger");
+        SetColSpan(cell, colSpan - 1);
       }
+      if (startColIndex == aColumnIndex) {
+        // Cell is in column to be deleted, but must have colspan > 1,
+        // so delete contents of cell instead of cell itself (We must have
+        // reset colspan above).
+        DeleteCellContents(cell);
+      }
+      // Skip rows which the removed cell spanned.
+      rowIndex += actualRowSpan - 1;
+      continue;
     }
-  } while (cell);
 
-  return NS_OK;
+    // Delete the cell
+    int32_t numberOfCellsInRow =
+      GetNumberOfCellsInRow(aTableElement, rowIndex);
+    NS_WARNING_ASSERTION(numberOfCellsInRow > 0,
+      "Failed to count existing cells in the row");
+    if (numberOfCellsInRow != 1) {
+      // If removing cell is not the last cell of the row, we can just remove
+      // it.
+      rv = DeleteNodeWithTransaction(*cell);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      // Skip rows which the removed cell spanned.
+      rowIndex += actualRowSpan - 1;
+      continue;
+    }
+
+    // When the cell is the last cell in the row, remove the row instead.
+    Element* parentRow =
+      GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cell);
+    if (NS_WARN_IF(!parentRow)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Check if its the only row left in the table.  If so, we can delete
+    // the table instead.
+    TableSize tableSize(*this, aTableElement, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+
+    if (tableSize.mRowCount == 1) {
+      // We're deleting the last row.  So, let's remove the <table> now.
+      RefPtr<Selection> selection = GetSelection();
+      if (NS_WARN_IF(!selection)) {
+        return NS_ERROR_FAILURE;
+      }
+      rv = DeleteTableElementAndChildrenWithTransaction(*selection,
+                                                        aTableElement);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      return NS_OK;
+    }
+
+    // Delete the row by placing caret in cell we were to delete.  We need
+    // to call DeleteTableRowWithTransaction() to handle cells with rowspan.
+    rv = DeleteTableRowWithTransaction(aTableElement, startRowIndex);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Note that we decrement rowIndex since a row was deleted.
+    rowIndex--;
+  }
 }
 
 NS_IMETHODIMP
