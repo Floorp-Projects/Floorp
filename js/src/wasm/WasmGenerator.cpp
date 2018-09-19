@@ -449,17 +449,11 @@ ModuleGenerator::linkCallSites()
     masm_.haltingAlign(CodeAlignment);
 
     // Create far jumps for calls that have relative offsets that may otherwise
-    // go out of range. Far jumps are created for two cases: direct calls
-    // between function definitions and calls to trap exits by trap out-of-line
-    // paths. Far jump code is shared when possible to reduce bloat. This method
-    // is called both between function bodies (at a frequency determined by the
-    // ISA's jump range) and once at the very end of a module's codegen after
-    // all possible calls/traps have been emitted.
+    // go out of range. This method is called both between function bodies (at a
+    // frequency determined by the ISA's jump range) and once at the very end of
+    // a module's codegen after all possible calls/traps have been emitted.
 
     OffsetMap existingCallFarJumps;
-
-    TrapMaybeOffsetArray existingTrapFarJumps;
-
     for (; lastPatchedCallSite_ < metadataTier_->callSites.length(); lastPatchedCallSite_++) {
         const CallSite& callSite = metadataTier_->callSites[lastPatchedCallSite_];
         const CallSiteTarget& target = callSiteTargets_[lastPatchedCallSite_];
@@ -972,7 +966,7 @@ ModuleGenerator::finishCodeTier()
 }
 
 bool
-ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
+ModuleGenerator::finishMetadata(const Bytes& bytecode)
 {
     // Finish initialization of Metadata, which is only needed for constructing
     // the initial Module, not for tier-2 compilation.
@@ -1037,7 +1031,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
         return nullptr;
     }
 
-    if (!finishMetadata(bytecode)) {
+    if (!finishMetadata(bytecode.bytes)) {
         return nullptr;
     }
 
@@ -1100,6 +1094,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
 
     UniqueBytes debugUnlinkedCode;
     UniqueLinkData debugLinkData;
+    const ShareableBytes* debugBytecode = nullptr;
     if (env_->debugEnabled()) {
         MOZ_ASSERT(mode() == CompileMode::Once);
         MOZ_ASSERT(tier() == Tier::Debug);
@@ -1112,6 +1107,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
         masm_.executableCopy(debugUnlinkedCode->begin(), /* flushICache = */ false);
 
         debugLinkData = std::move(linkData_);
+        debugBytecode = &bytecode;
     }
 
     // All the components are finished, so create the complete Module and start
@@ -1124,15 +1120,15 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
                                           std::move(dataSegments),
                                           std::move(env_->elemSegments),
                                           std::move(customSections),
-                                          bytecode,
                                           std::move(debugUnlinkedCode),
-                                          std::move(debugLinkData));
+                                          std::move(debugLinkData),
+                                          debugBytecode);
     if (!module) {
         return nullptr;
     }
 
     if (mode() == CompileMode::Tier1) {
-        module->startTier2(*compileArgs_);
+        module->startTier2(*compileArgs_, bytecode);
     }
 
     if (linkData) {

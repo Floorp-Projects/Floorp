@@ -1100,6 +1100,25 @@ Metadata::getFuncName(NameContext ctx, uint32_t funcIndex, UTF8Bytes* name) cons
     return AppendFunctionIndexName(funcIndex, name);
 }
 
+bool
+CodeTier::initialize(const Code& code,
+                     const LinkData& linkData,
+                     const Metadata& metadata)
+{
+    MOZ_ASSERT(!initialized());
+    code_ = &code;
+
+    MOZ_ASSERT(lazyStubs_.lock()->empty());
+
+    // See comments in CodeSegment::initialize() for why this must be last.
+    if (!segment_->initialize(*this, linkData, metadata, *metadata_)) {
+        return false;
+    }
+
+    MOZ_ASSERT(initialized());
+    return true;
+}
+
 size_t
 CodeTier::serializedSize() const
 {
@@ -1509,25 +1528,6 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
     for (auto t : tiers()) {
         codeTier(t).addSizeOfMisc(mallocSizeOf, code, data);
     }
-}
-
-bool
-CodeTier::initialize(const Code& code,
-                     const LinkData& linkData,
-                     const Metadata& metadata)
-{
-    MOZ_ASSERT(!initialized());
-    code_ = &code;
-
-    MOZ_ASSERT(lazyStubs_.lock()->empty());
-
-    // See comments in CodeSegment::initialize() for why this must be last.
-    if (!segment_->initialize(*this, linkData, metadata, *metadata_)) {
-        return false;
-    }
-
-    MOZ_ASSERT(initialized());
-    return true;
 }
 
 size_t
