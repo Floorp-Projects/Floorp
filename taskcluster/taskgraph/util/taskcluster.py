@@ -202,6 +202,13 @@ def rerun_task(task_id):
         _do_request(get_task_url(task_id, use_proxy=True) + '/rerun', json={})
 
 
+def get_current_scopes():
+    """Get the current scopes.  This only makes sense in a task with the Taskcluster
+    proxy enabled, where it returns the actual scopes accorded to the task."""
+    resp = _do_request('http://taskcluster/auth/v1/scopes/current')
+    return resp.json().get("scopes", [])
+
+
 def get_purge_cache_url(provisioner_id, worker_type, use_proxy=False):
     if use_proxy:
         TASK_URL = 'http://taskcluster/purge-cache/v1/purge-cache/{}/{}'
