@@ -56,7 +56,7 @@ function test() {
       aCallback();
     });
 
-    BrowserTestUtils.loadURI(aWindow.gBrowser.selectedBrowser, testURI);
+    aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }
 
   function testOnWindow(aOptions, aCallback) {

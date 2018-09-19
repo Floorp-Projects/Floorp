@@ -16,7 +16,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<title>Bug 1140839</title>" +
+  gBrowser.loadURI("data:text/html,<title>Bug 1140839</title>" +
                    "<p>test Scratchpad should remember View options");
 }
 

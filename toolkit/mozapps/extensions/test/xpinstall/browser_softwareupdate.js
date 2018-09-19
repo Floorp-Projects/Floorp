@@ -9,7 +9,7 @@ function test() {
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "startsoftwareupdate.html? " + encodeURIComponent(TESTROOT + "amosigned.xpi"));
+  gBrowser.loadURI(TESTROOT + "startsoftwareupdate.html? " + encodeURIComponent(TESTROOT + "amosigned.xpi"));
 }
 
 function install_ended(install, addon) {

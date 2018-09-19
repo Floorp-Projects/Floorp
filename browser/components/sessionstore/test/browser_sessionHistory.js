@@ -76,7 +76,7 @@ add_task(async function test_pageshow() {
   await promiseBrowserLoaded(browser);
 
   // Create a second shistory entry.
-  BrowserTestUtils.loadURI(browser, URL2);
+  browser.loadURI(URL2);
   await promiseBrowserLoaded(browser);
 
   // Wait until shistory changes.
@@ -164,7 +164,7 @@ add_task(async function test_about_page_navigate() {
   // Verify that the title is also recorded.
   is(entries[0].title, "about:blank", "title is correct");
 
-  BrowserTestUtils.loadURI(browser, "about:robots");
+  browser.loadURI("about:robots");
   await promiseBrowserLoaded(browser);
 
   // Check that we have changed the history entry.

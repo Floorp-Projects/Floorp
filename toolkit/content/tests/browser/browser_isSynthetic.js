@@ -44,13 +44,13 @@ add_task(async function() {
   is(browser.isSyntheticDocument, false, "Should not be synthetic");
 
   let loadPromise = waitForPageShow(browser);
-  BrowserTestUtils.loadURI(browser, "data:text/html;charset=utf-8,<html/>");
+  browser.loadURI("data:text/html;charset=utf-8,<html/>");
   await loadPromise;
   is(listener.wasSynthetic, false, "Should not be synthetic");
   is(browser.isSyntheticDocument, false, "Should not be synthetic");
 
   loadPromise = waitForPageShow(browser);
-  BrowserTestUtils.loadURI(browser, FILES + "empty.png");
+  browser.loadURI(FILES + "empty.png");
   await loadPromise;
   is(listener.wasSynthetic, true, "Should be synthetic");
   is(browser.isSyntheticDocument, true, "Should be synthetic");

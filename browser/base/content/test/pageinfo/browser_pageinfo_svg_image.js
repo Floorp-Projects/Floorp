@@ -35,5 +35,5 @@ function test() {
     }, {capture: true, once: true});
   });
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URI);
+  gBrowser.selectedBrowser.loadURI(URI);
 }

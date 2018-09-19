@@ -33,9 +33,7 @@
     {
       this.invoke = function loadURI_invoke()
       {
-        tabBrowser().loadURI(aURI, {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-        });
+        tabBrowser().loadURI(aURI);
       }
 
       this.eventSeq = [

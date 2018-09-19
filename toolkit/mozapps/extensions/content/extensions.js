@@ -1983,8 +1983,7 @@ var gDiscoverView = {
       this._browser.addProgressListener(this);
 
       if (this.loaded)
-        this._loadURL(this.homepageURL.spec, false, notifyInitialized,
-                      Services.scriptSecurityManager.getSystemPrincipal());
+        this._loadURL(this.homepageURL.spec, false, notifyInitialized);
       else
         notifyInitialized();
     };
@@ -2053,8 +2052,7 @@ var gDiscoverView = {
     }
 
     this._loadURL(this.homepageURL.spec, aIsRefresh,
-                  gViewController.notifyViewChanged.bind(gViewController),
-                  Services.scriptSecurityManager.getSystemPrincipal());
+                  gViewController.notifyViewChanged.bind(gViewController));
   },
 
   canRefresh() {
@@ -2074,7 +2072,7 @@ var gDiscoverView = {
     this.node.selectedPanel = this._error;
   },
 
-  _loadURL(aURL, aKeepHistory, aCallback, aPrincipal) {
+  _loadURL(aURL, aKeepHistory, aCallback) {
     if (this._browser.currentURI.spec == aURL) {
       if (aCallback)
         aCallback();
@@ -2088,10 +2086,7 @@ var gDiscoverView = {
     if (!aKeepHistory)
       flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
 
-    this._browser.loadURI(aURL, {
-      flags,
-      triggeringPrincipal: aPrincipal || Services.scriptSecurityManager.createNullPrincipal({}),
-    });
+    this._browser.loadURI(aURL, { flags });
   },
 
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
@@ -3121,9 +3116,7 @@ var gDetailView = {
 
       mm.sendAsyncMessage("Extension:InitBrowser", browserOptions);
 
-      browser.loadURI(optionsURL, {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
+      browser.loadURI(optionsURL);
     });
   },
 

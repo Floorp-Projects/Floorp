@@ -26,7 +26,7 @@ add_task(async function test1() {
   });
 
   info("loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
 
   await waitForMessage(true, gBrowser);
   is(getPermission(testPageURL, "indexedDB"),
@@ -50,7 +50,7 @@ add_task(async function test2() {
   });
 
   info("loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
 
   await waitForMessage(true, gBrowser);
   is(getPermission(testPageURL, "indexedDB"),

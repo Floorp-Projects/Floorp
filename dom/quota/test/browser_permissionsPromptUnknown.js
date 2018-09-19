@@ -25,7 +25,7 @@ add_task(async function testPermissionUnknownInPrivateWindow() {
   win.gBrowser.selectedTab = BrowserTestUtils.addTab(win.gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, testPageURL);
+  win.gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage(false, win.gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
