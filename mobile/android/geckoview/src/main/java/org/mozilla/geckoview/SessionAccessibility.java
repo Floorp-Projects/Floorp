@@ -5,12 +5,14 @@
 
 package org.mozilla.geckoview;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.mozglue.JNIObject;
 
 import android.content.Context;
 import android.graphics.Matrix;
@@ -232,6 +234,8 @@ public class SessionAccessibility {
     /* package */  final GeckoSession mSession;
     // This is the view that delegates accessibility to us. We also sends event through it.
     private View mView;
+    // The native portion of the node provider.
+    /* package */ final NativeProvider nativeProvider = new NativeProvider();
     // Have we reached the last item in content?
     private boolean mLastItem;
     // Used to store the JSON message and populate the event later in the code path.
@@ -240,6 +244,8 @@ public class SessionAccessibility {
     private SparseArray<GeckoBundle> mAutoFillNodes;
     private SparseArray<EventCallback> mAutoFillRoots;
     private int mAutoFillFocusedId = View.NO_ID;
+
+    private boolean mAttached = false;
 
     /* package */ SessionAccessibility(final GeckoSession session) {
         mSession = session;
@@ -802,5 +808,21 @@ public class SessionAccessibility {
                     AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, View.NO_ID);
             ((ViewParent) mView).requestSendAccessibilityEvent(mView, event);
         }
+    }
+
+    /* package */ final class NativeProvider extends JNIObject {
+        @WrapForJNI(calledFrom = "ui")
+        private void setAttached(final boolean attached) {
+            if (attached) {
+                mAttached = true;
+            } else if (mAttached) {
+                mAttached = false;
+                disposeNative();
+            }
+        }
+
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+        @Override
+        protected native void disposeNative();
     }
 }
