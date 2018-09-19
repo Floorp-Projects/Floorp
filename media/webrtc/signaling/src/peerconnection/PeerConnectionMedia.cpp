@@ -1210,11 +1210,14 @@ nsresult
 PeerConnectionMedia::AddRIDExtension(MediaStreamTrack& aRecvTrack,
                                      unsigned short aExtensionId)
 {
+  DebugOnly<bool> trackFound = false;
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
     if (transceiver->HasReceiveTrack(&aRecvTrack)) {
       transceiver->AddRIDExtension(aExtensionId);
+      trackFound = true;
     }
   }
+  MOZ_ASSERT(trackFound);
   return NS_OK;
 }
 
@@ -1222,11 +1225,15 @@ nsresult
 PeerConnectionMedia::AddRIDFilter(MediaStreamTrack& aRecvTrack,
                                   const nsAString& aRid)
 {
+  DebugOnly<bool> trackFound = false;
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    MOZ_ASSERT(transceiver->HasReceiveTrack(&aRecvTrack));
     if (transceiver->HasReceiveTrack(&aRecvTrack)) {
       transceiver->AddRIDFilter(aRid);
+      trackFound = true;
     }
   }
+  MOZ_ASSERT(trackFound);
   return NS_OK;
 }
 
