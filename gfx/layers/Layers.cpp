@@ -2199,7 +2199,6 @@ ImageLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (mSamplingFilter != SamplingFilter::GOOD) {
     AppendToString(aStream, mSamplingFilter, " [filter=", "]");
   }
-  AppendToString(aStream, mRepeatSize, " [repeatSize=", "]");
 }
 
 void
