@@ -1082,7 +1082,19 @@ HTMLEditor::DeleteCellContents(Element* aCell)
 }
 
 NS_IMETHODIMP
-HTMLEditor::DeleteTableColumn(int32_t aNumber)
+HTMLEditor::DeleteTableColumn(int32_t aNumberOfColumnsToDelete)
+{
+  nsresult rv =
+    DeleteSelectedTableColumnsWithTransaction(aNumberOfColumnsToDelete);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::DeleteSelectedTableColumnsWithTransaction(
+              int32_t aNumberOfColumnsToDelete)
 {
   RefPtr<Selection> selection;
   RefPtr<Element> table;
@@ -1096,9 +1108,9 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  if (NS_WARN_IF(!table) || NS_WARN_IF(!cell)) {
+  if (NS_WARN_IF(!selection) || NS_WARN_IF(!table) || NS_WARN_IF(!cell)) {
     // Don't fail if no cell found.
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+    return NS_OK;
   }
 
   ErrorResult error;
@@ -1109,11 +1121,13 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
 
   AutoPlaceholderBatch beginBatching(this);
 
+  // Prevent rules testing until we're done
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::eDeleteNode,
+                                      nsIEditor::eNext);
+
   // Shortcut the case of deleting all columns in table
-  if (!startColIndex && aNumber >= tableSize.mColumnCount) {
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
+  if (!startColIndex && aNumberOfColumnsToDelete >= tableSize.mColumnCount) {
     rv = DeleteTableElementAndChildrenWithTransaction(*selection, *table);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1121,13 +1135,6 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
     return NS_OK;
   }
 
-  // Check for counts too high
-  aNumber = std::min(aNumber, (tableSize.mColumnCount - startColIndex));
-
-  // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::eDeleteNode,
-                                      nsIEditor::eNext);
 
   // Test if deletion is controlled by selected cells
   RefPtr<Element> firstSelectedCellElement =
@@ -1136,9 +1143,9 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
     return error.StealNSResult();
   }
 
-  uint32_t rangeCount = selection->RangeCount();
+  MOZ_ASSERT(selection->RangeCount());
 
-  if (firstSelectedCellElement && rangeCount > 1) {
+  if (firstSelectedCellElement && selection->RangeCount() > 1) {
     CellIndexes firstCellIndexes(*firstSelectedCellElement, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
@@ -1146,49 +1153,59 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
     startRowIndex = firstCellIndexes.mRow;
     startColIndex = firstCellIndexes.mColumn;
   }
-  //We control selection resetting after the insert...
+
+  // We control selection resetting after the insert...
   AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              startColIndex, ePreviousRow,
                                              false);
 
-  if (firstSelectedCellElement && rangeCount > 1) {
-    // Use selected cells to determine what rows to delete
-    cell = firstSelectedCellElement;
-
-    while (cell) {
-      if (cell != firstSelectedCellElement) {
-        CellIndexes cellIndexes(*cell, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-        startRowIndex = cellIndexes.mRow;
-        startColIndex = cellIndexes.mColumn;
-      }
-      // Find the next cell in a different column
-      // to continue after we delete this column
-      int32_t nextCol = startColIndex;
-      while (nextCol == startColIndex) {
-        cell = GetNextSelectedTableCellElement(*selection, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-        if (!cell) {
-          break;
-        }
-        CellIndexes cellIndexes(*cell, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-        startRowIndex = cellIndexes.mRow;
-        nextCol = cellIndexes.mColumn;
-      }
+  // If 2 or more cells are not selected, removing columns starting from
+  // a column which contains first selection range.
+  if (!firstSelectedCellElement || selection->RangeCount() == 1) {
+    int32_t columnCountToRemove =
+      std::min(aNumberOfColumnsToDelete,
+               tableSize.mColumnCount - startColIndex);
+    for (int32_t i = 0; i < columnCountToRemove; i++) {
       rv = DeleteColumn(table, startColIndex);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
-  } else {
-    for (int32_t i = 0; i < aNumber; i++) {
-      rv = DeleteColumn(table, startColIndex);
-      NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
+  // If 2 or more cells are selected, remove all columns which contain selected
+  // cells.  I.e., we ignore aNumberOfColumnsToDelete in this case.
+  for (cell = firstSelectedCellElement; cell;) {
+    if (cell != firstSelectedCellElement) {
+      CellIndexes cellIndexes(*cell, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+      startRowIndex = cellIndexes.mRow;
+      startColIndex = cellIndexes.mColumn;
+    }
+    // Find the next cell in a different column
+    // to continue after we delete this column
+    int32_t nextCol = startColIndex;
+    while (nextCol == startColIndex) {
+      cell = GetNextSelectedTableCellElement(*selection, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+      if (!cell) {
+        break;
+      }
+      CellIndexes cellIndexes(*cell, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+      startRowIndex = cellIndexes.mRow;
+      nextCol = cellIndexes.mColumn;
+    }
+    rv = DeleteColumn(table, startColIndex);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
   return NS_OK;

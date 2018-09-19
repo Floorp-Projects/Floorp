@@ -1554,6 +1554,26 @@ protected: // Shouldn't be used by friend classes
                       Element** aNewCell);
 
   /**
+   * DeleteSelectedTableColumnsWithTransaction() removes cell elements which
+   * belong to same columns of selected cell elements.
+   * If only one cell element is selected or first selection range is
+   * in a cell, removes cell elements which belong to same column.
+   * If 2 or more cell elements are selected, removes cell elements which
+   * belong to any of all selected columns.  In this case,
+   * aNumberOfColumnsToDelete is ignored.
+   * If there is no selection ranges, returns error.
+   * If selection is not in a cell element, this does not return error,
+   * just does nothing.
+   * WARNING: This does not remove <col> nor <colgroup> elements.
+   *
+   * @param aNumberOfColumnsToDelete    Number of columns to remove.  This is
+   *                                    ignored if 2 ore more cells are
+   *                                    selected.
+   */
+  nsresult
+  DeleteSelectedTableColumnsWithTransaction(int32_t aNumberOfColumnsToDelete);
+
+  /**
    * DeleteSelectedTableRowsWithTransaction() removes <tr> elements.
    * If only one cell element is selected or first selection range is
    * in a cell, removes <tr> elements starting from a <tr> element
