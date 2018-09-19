@@ -783,6 +783,86 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen)
   mVideoConduit->StopTransmitting();
 }
 
+TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling)
+{
+  std::vector<unsigned int> ssrcs = {42, 43, 44};
+  mVideoConduit->SetLocalSSRCs(ssrcs);
+
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::SimulcastEncoding encoding2;
+  VideoCodecConfig::SimulcastEncoding encoding3;
+  encoding.constraints.scaleDownBy = 2;
+  encoding2.constraints.scaleDownBy = 4;
+  encoding3.constraints.scaleDownBy = 6;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mSimulcastEncodings.push_back(encoding2);
+  codecConfig.mSimulcastEncodings.push_back(encoding3);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+  mVideoConduit->StartTransmitting();
+  std::vector<webrtc::VideoStream> videoStreams;
+
+  SendVideoFrame(1281, 721, 1);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 3U);
+  EXPECT_EQ(videoStreams[2].width, 480U);
+  EXPECT_EQ(videoStreams[2].height, 240U);
+  EXPECT_EQ(videoStreams[1].width, 240U);
+  EXPECT_EQ(videoStreams[1].height, 120U);
+  EXPECT_EQ(videoStreams[0].width, 120U);
+  EXPECT_EQ(videoStreams[0].height, 60U);
+
+  SendVideoFrame(1281, 721, 2);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 3U);
+  EXPECT_EQ(videoStreams[2].width, 480U);
+  EXPECT_EQ(videoStreams[2].height, 240U);
+  EXPECT_EQ(videoStreams[1].width, 240U);
+  EXPECT_EQ(videoStreams[1].height, 120U);
+  EXPECT_EQ(videoStreams[0].width, 120U);
+  EXPECT_EQ(videoStreams[0].height, 60U);
+
+  SendVideoFrame(1280, 720, 3);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 3U);
+  EXPECT_EQ(videoStreams[2].width, 640U);
+  EXPECT_EQ(videoStreams[2].height, 352U);
+  EXPECT_EQ(videoStreams[1].width, 320U);
+  EXPECT_EQ(videoStreams[1].height, 176U);
+  EXPECT_EQ(videoStreams[0].width, 160U);
+  EXPECT_EQ(videoStreams[0].height, 88U);
+
+  codecConfig.mSimulcastEncodings[0].constraints.scaleDownBy = 1;
+  codecConfig.mSimulcastEncodings[1].constraints.scaleDownBy = 2;
+  codecConfig.mSimulcastEncodings[2].constraints.scaleDownBy = 4;
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  SendVideoFrame(1280, 720, 4);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 3U);
+  EXPECT_EQ(videoStreams[2].width, 1280U);
+  EXPECT_EQ(videoStreams[2].height, 720U);
+  EXPECT_EQ(videoStreams[1].width, 640U);
+  EXPECT_EQ(videoStreams[1].height, 360U);
+  EXPECT_EQ(videoStreams[0].width, 320U);
+  EXPECT_EQ(videoStreams[0].height, 180U);
+
+  mVideoConduit->StopTransmitting();
+}
+
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastScreenshare)
 {
   std::vector<unsigned int> ssrcs = {42, 43, 44};
