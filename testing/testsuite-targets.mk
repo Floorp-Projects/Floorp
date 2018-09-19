@@ -153,11 +153,8 @@ endif
 package-tests-prepare-dest:
 	$(NSINSTALL) -D $(test_archive_dir)
 
-download-wpt-manifest:
-	$(call py_action,download_wpt_manifest)
-
 define package_archive
-package-tests-$(1): stage-all package-tests-prepare-dest download-wpt-manifest
+package-tests-$(1): stage-all package-tests-prepare-dest
 	$$(call py_action,test_archive, \
 		$(1) \
 		'$$(abspath $$(test_archive_dir))/$$(PKG_BASENAME).$(1).tests.$(2)')
@@ -271,7 +268,6 @@ check::
   xpcshell-tests \
   jstestbrowser \
   package-tests \
-  download-wpt-manifest \
   package-tests-prepare-dest \
   package-tests-common \
   make-stage-dir \
