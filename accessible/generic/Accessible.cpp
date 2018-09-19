@@ -804,20 +804,15 @@ Accessible::XULElmName(DocAccessible* aDocument,
    */
 
   // CASE #1 (via label attribute) -- great majority of the cases
-  nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl = do_QueryInterface(aElm);
-  if (labeledEl) {
-    labeledEl->GetLabel(aName);
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemEl = do_QueryInterface(aElm);
+  if (itemEl) {
+    itemEl->GetLabel(aName);
   } else {
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> itemEl = do_QueryInterface(aElm);
-    if (itemEl) {
-      itemEl->GetLabel(aName);
-    } else {
-      nsCOMPtr<nsIDOMXULSelectControlElement> select = do_QueryInterface(aElm);
-      // Use label if this is not a select control element which
-      // uses label attribute to indicate which option is selected
-      if (!select && aElm->IsElement()) {
-        aElm->AsElement()->GetAttribute(NS_LITERAL_STRING("label"), aName);
-      }
+    // Use @label if this is not a select control element, which uses label
+    // attribute to indicate, which option is selected.
+    nsCOMPtr<nsIDOMXULSelectControlElement> select = do_QueryInterface(aElm);
+    if (!select) {
+      aElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
     }
   }
 
