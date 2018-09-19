@@ -44,14 +44,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
   if (sizemode == "maximized") {
     docElt.setAttribute("sizemode", sizemode);
 
-    // Set the size to use when the user leaves the maximized mode.
-    // The persisted size is the outer size, but the height/width
-    // attributes set the inner size.
-    let xulWin = win.docShell.treeOwner
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIXULWindow);
-    height -= xulWin.outerToInnerHeightDifferenceInCSSPixels;
-    width -= xulWin.outerToInnerWidthDifferenceInCSSPixels;
+    // Needed for when the user leaves the maximized mode.
     docElt.setAttribute("height", height);
     docElt.setAttribute("width", width);
   } else {
