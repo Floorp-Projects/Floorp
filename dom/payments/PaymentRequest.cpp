@@ -10,7 +10,9 @@
 #include "mozilla/dom/PaymentRequestChild.h"
 #include "mozilla/dom/PaymentResponse.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
+#include "nsIScriptError.h"
 #include "nsIURLParser.h"
 #include "nsNetCID.h"
 #include "PaymentRequestManager.h"
@@ -691,15 +693,23 @@ already_AddRefed<Promise>
 PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
                      ErrorResult& aRv)
 {
-  if (!EventStateManager::IsHandlingUserInput()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
   nsIGlobalObject* global = GetOwnerGlobal();
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
   MOZ_ASSERT(win);
   nsIDocument* doc = win->GetExtantDoc();
+
+  if (!EventStateManager::IsHandlingUserInput()) {
+    nsString msg = NS_LITERAL_STRING("User activation is now required to call PaymentRequest.show()");
+    nsContentUtils::ReportToConsoleNonLocalized(msg,
+                                                nsIScriptError::warningFlag,
+                                                NS_LITERAL_CSTRING("Security"),
+                                                doc);
+    if (StaticPrefs::dom_payments_request_user_interaction_required()) {
+      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return nullptr;
+    }
+  }
+
   if (!doc || !doc->IsCurrentActiveDocument()) {
     aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
     return nullptr;
