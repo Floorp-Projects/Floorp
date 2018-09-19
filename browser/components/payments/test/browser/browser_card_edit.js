@@ -43,6 +43,9 @@ async function add_link(aOptions = {}) {
       let title = content.document.querySelector("basic-card-form h2");
       is(title.textContent, "Add Credit Card", "Add title should be set");
 
+      let saveButton = content.document.querySelector("basic-card-form .save-button");
+      is(saveButton.textContent, "Add", "Save button has the correct label");
+
       is(state.isPrivate, testArgs.isPrivate,
          "isPrivate flag has expected value when shown from a private/non-private session");
     }, aOptions);
@@ -399,6 +402,9 @@ add_task(async function test_edit_link() {
 
     let title = content.document.querySelector("basic-card-form h2");
     is(title.textContent, "Edit Credit Card", "Edit title should be set");
+
+    let saveButton = content.document.querySelector("basic-card-form .save-button");
+    is(saveButton.textContent, "Update", "Save button has the correct label");
 
     let card = Object.assign({}, PTU.BasicCards.JohnDoe);
     // cc-number cannot be modified
