@@ -40,9 +40,17 @@
 
 namespace mozilla {
 
+// Convert (SI) kilobits/sec to (SI) bits/sec
+#define KBPS(kbps) kbps * 1000
+
+const int kViEMinCodecBitrate_bps = KBPS(30);
 const unsigned int kVideoMtu = 1200;
 const int kQpMax = 56;
 
+template<typename T>
+T MinIgnoreZero(const T& a, const T& b);
+
+class VideoStreamFactory;
 class WebrtcAudioConduit;
 class nsThread;
 
@@ -68,14 +76,6 @@ class WebrtcVideoConduit : public VideoSessionConduit
                          , public rtc::VideoSourceInterface<webrtc::VideoFrame>
 {
 public:
-  struct ResolutionAndBitrateLimits
-  {
-    int resolution_in_mb;
-    int min_bitrate_bps;
-    int start_bitrate_bps;
-    int max_bitrate_bps;
-  };
-
   //VoiceEngine defined constant for Payload Name Size.
   static const unsigned int CODEC_PLNAME_SIZE;
 
@@ -421,8 +421,6 @@ private:
    * Stores encoder configuration information and produces
    * a VideoEncoderConfig from it.
    */
-  class VideoStreamFactory;
-
   class VideoEncoderConfigBuilder {
   public:
     /**
@@ -434,7 +432,7 @@ private:
       double jsScaleDownBy=1.0; // user-controlled downscale
     };
     void SetEncoderSpecificSettings(rtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings> aSettings);
-    void SetVideoStreamFactory(rtc::scoped_refptr<WebrtcVideoConduit::VideoStreamFactory> aFactory);
+    void SetVideoStreamFactory(rtc::scoped_refptr<VideoStreamFactory> aFactory);
     void SetMinTransmitBitrateBps(int aXmitMinBps);
     void SetContentType(webrtc::VideoEncoderConfig::ContentType aContentType);
     void SetResolutionDivisor(unsigned char aDivisor);
@@ -455,65 +453,6 @@ private:
 
   // Utility function to dump recv codec database
   void DumpCodecDB() const;
-
-  // Factory class for VideoStreams... vie_encoder.cc will call this to reconfigure.
-  class VideoStreamFactory : public webrtc::VideoEncoderConfig::VideoStreamFactoryInterface
-  {
-  public:
-    VideoStreamFactory(VideoCodecConfig aConfig,
-                       webrtc::VideoCodecMode aCodecMode,
-                       int aMinBitrate, int aStartBitrate,
-                       int aPrefMaxBitrate, int aNegotiatedMaxBitrate,
-                       unsigned int aSendingFramerate)
-      : mCodecMode(aCodecMode)
-      , mSendingFramerate(aSendingFramerate)
-      , mCodecConfig(std::forward<VideoCodecConfig>(aConfig))
-      , mMinBitrate(aMinBitrate)
-      , mStartBitrate(aStartBitrate)
-      , mPrefMaxBitrate(aPrefMaxBitrate)
-      , mNegotiatedMaxBitrate(aNegotiatedMaxBitrate)
-      , mSimulcastAdapter(MakeUnique<cricket::VideoAdapter>())
-    {}
-
-    void SetCodecMode(webrtc::VideoCodecMode aCodecMode)
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-      mCodecMode = aCodecMode;
-    }
-
-    void SetSendingFramerate(unsigned int aSendingFramerate)
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-      mSendingFramerate = aSendingFramerate;
-    }
-
-  private:
-    // This gets called off-main thread and may hold internal webrtc.org
-    // locks. May *NOT* lock the conduit's mutex, to avoid deadlocks.
-    std::vector<webrtc::VideoStream>
-      CreateEncoderStreams(int width, int height,
-                           const webrtc::VideoEncoderConfig& config) override;
-
-    // Used to limit number of streams for screensharing.
-    Atomic<webrtc::VideoCodecMode> mCodecMode;
-
-    // The framerate we're currently sending at.
-    Atomic<unsigned int> mSendingFramerate;
-
-    // The current send codec config, containing simulcast layer configs.
-    const VideoCodecConfig mCodecConfig;
-
-    // Bitrate limits in bps.
-    const int mMinBitrate = 0;
-    const int mStartBitrate = 0;
-    const int mPrefMaxBitrate = 0;
-    const int mNegotiatedMaxBitrate = 0;
-
-    // Adapter for simulcast layers. We use this to handle scaleResolutionDownBy
-    // for layers. It's separate from the conduit's mVideoAdapter to not affect
-    // scaling settings for incoming frames.
-    UniquePtr<cricket::VideoAdapter> mSimulcastAdapter;
-  };
 
   // Video Latency Test averaging filter
   void VideoLatencyUpdate(uint64_t new_sample);
