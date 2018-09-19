@@ -1618,11 +1618,16 @@ protected: // Shouldn't be used by friend classes
   static nsTableWrapperFrame* GetTableFrame(Element* aTable);
 
   /**
-   * Needed to do appropriate deleting when last cell or row is about to be
-   * deleted.  This doesn't count cells that don't start in the given row (are
-   * spanning from row above).
+   * GetNumberOfCellsInRow() returns number of actual cell elements in the row.
+   * If some cells appear by "rowspan" in other rows, they are ignored.
+   *
+   * @param aTableElement   The <table> element.
+   * @param aRowIndex       Valid row index in aTableElement.  This method
+   *                        counts cell elements in the row.
+   * @return                -1 if this meets unexpected error.
+   *                        Otherwise, number of cells which this method found.
    */
-  int32_t GetNumberOfCellsInRow(Element* aTable, int32_t rowIndex);
+  int32_t GetNumberOfCellsInRow(Element& aTableElement, int32_t aRowIndex);
 
   /**
    * Test if all cells in row or column at given index are selected.
