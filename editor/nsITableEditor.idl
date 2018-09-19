@@ -54,16 +54,21 @@ interface nsITableEditor : nsISupports
    */
   void deleteTableCellContents();
 
-  /** Delete cell elements as well as contents
-    * @param aNumber   Number of contiguous cells, rows, or columns
-    *
-    * When there are more than 1 selected cells, aNumber is ignored.
-    * For Delete Rows or Columns, the complete columns or rows are
-    *  determined by the selected cells. E.g., to delete 2 complete rows,
-    *  user simply selects a cell in each, and they don't
-    *  have to be contiguous.
-    */
-  void deleteTableCell(in long  aNumber);
+  /**
+   * deleteTableCell() removes table cell elements.  If two or more cell
+   * elements are selected, this removes all selected cell elements.
+   * Otherwise, this removes some cell elements starting from selected cell
+   * element or a cell containing first selection range.  When this removes
+   * last cell element in <tr> or <table>, this removes the <tr> or the
+   * <table> too.  Note that when removing a cell causes number of its row
+   * becomes less than the others, this method does NOT fill the place with
+   * rowspan nor colspan.  This does nothing without exception if selection is
+   * not in cell element.
+   *
+   * @param aNumberOfCellsToDelete  Number of cells to remove.  This is ignored
+   *                                if 2 or more cells are selected.
+   */
+  void deleteTableCell(in long aNumberOfCellsToDelete);
 
   /**
    * deleteTableColumn() removes cell elements which belong to same columns
