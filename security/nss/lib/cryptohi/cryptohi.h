@@ -14,7 +14,7 @@
 #include "secoidt.h"
 #include "secdert.h"
 #include "cryptoht.h"
-#include "keyt.h"
+#include "keythi.h"
 #include "certt.h"
 
 SEC_BEGIN_PROTOS
