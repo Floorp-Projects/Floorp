@@ -33,15 +33,7 @@ class ToolboxTabsOrderManager {
 
     // Call mouseUp() to clear the state to prepare for in case a dragging was in progress
     // when the destroy() was called.
-    this.onMouseUp();
-
-    // Remove panel id which is not in panel definitions and addons list.
-    let prefIds = Services.prefs.getCharPref(PREFERENCE_NAME, "").split(",");
-    const extensions = await AddonManager.getAllAddons();
-    const definitions = gDevTools.getToolDefinitionArray();
-    prefIds = prefIds.filter(id => definitions.find(d => id === (d.extensionId || d.id)) ||
-                                   extensions.find(e => id === e.id));
-    Services.prefs.setCharPref(PREFERENCE_NAME, prefIds.join(","));
+    await this.onMouseUp();
   }
 
   insertBefore(target) {
@@ -61,7 +53,7 @@ class ToolboxTabsOrderManager {
            tabElement.nextSibling.id === "tools-chevron-menu-button";
   }
 
-  saveOrderPreference() {
+  async saveOrderPreference() {
     const tabs = [...this.toolboxTabsElement.querySelectorAll(".devtools-tab")];
     const tabIds = tabs.map(tab => tab.dataset.extensionId || tab.dataset.id);
     // Concat the overflowed tabs id since they are not contained in visible tabs.
@@ -75,8 +67,15 @@ class ToolboxTabsOrderManager {
     const dragTargetId =
       this.dragTarget.dataset.extensionId || this.dragTarget.dataset.id;
     const prefIds = getTabsOrderFromPreference();
+    const absoluteIds = toAbsoluteOrder(prefIds, currentTabIds, dragTargetId);
 
-    const result = toAbsoluteOrder(prefIds, currentTabIds, dragTargetId);
+    // Remove panel id which is not in panel definitions and addons list.
+    const extensions = await AddonManager.getAllAddons();
+    const definitions = gDevTools.getToolDefinitionArray();
+    const result =
+      absoluteIds.filter(id => definitions.find(d => id === (d.extensionId || d.id)) ||
+                               extensions.find(e => id === e.id));
+
     Services.prefs.setCharPref(PREFERENCE_NAME, result.join(","));
   }
 
@@ -147,7 +146,7 @@ class ToolboxTabsOrderManager {
     this.previousPageX = e.pageX;
   }
 
-  onMouseUp() {
+  async onMouseUp() {
     if (!this.dragTarget) {
       // The case in here has two type:
       // 1. Although destroy method was called, it was not during reordering.
@@ -156,7 +155,7 @@ class ToolboxTabsOrderManager {
     }
 
     if (this.isOrderUpdated) {
-      this.saveOrderPreference();
+      await this.saveOrderPreference();
 
       // Log which tabs reordered. The question we want to answer is:
       // "How frequently are the tabs re-ordered, also which tabs get re-ordered?"
