@@ -11,7 +11,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test the 'Jump to line' feature in Scratchpad");
+  gBrowser.loadURI("data:text/html,<p>test the 'Jump to line' feature in Scratchpad");
 }
 
 function runTests(aWindow, aScratchpad) {

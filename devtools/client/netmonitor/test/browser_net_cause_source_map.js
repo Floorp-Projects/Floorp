@@ -26,7 +26,7 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
   let waitPromise = waitForNetworkEvents(monitor, N_EXPECTED_REQUESTS);
-  BrowserTestUtils.loadURI(tab.linkedBrowser, CAUSE_URL);
+  tab.linkedBrowser.loadURI(CAUSE_URL);
   await waitPromise;
 
   info("Clicking item and waiting for details panel to open");

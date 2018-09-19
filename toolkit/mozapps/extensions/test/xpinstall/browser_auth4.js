@@ -18,7 +18,7 @@ function test() {
     "Unsigned XPI": TESTROOT + "authRedirect.sjs?" + TESTROOT + "amosigned.xpi",
   }));
   gNewTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.loadURI(gBrowser.getBrowserForTab(gNewTab), TESTROOT + "installtrigger.html?" + triggers);
+  gBrowser.getBrowserForTab(gNewTab).loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
 function get_auth_info() {

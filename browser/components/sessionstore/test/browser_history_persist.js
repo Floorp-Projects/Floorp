@@ -34,7 +34,7 @@ add_task(async function check_history_not_persisted() {
   });
 
   // Load a new URL into the tab, it should replace the about:blank history entry
-  BrowserTestUtils.loadURI(browser, "about:robots");
+  browser.loadURI("about:robots");
   await promiseBrowserLoaded(browser);
   await ContentTask.spawn(browser, null, function() {
     let sessionHistory = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -77,7 +77,7 @@ add_task(async function check_history_default_persisted() {
   });
 
   // Load a new URL into the tab, it should replace the about:blank history entry
-  BrowserTestUtils.loadURI(browser, "about:robots");
+  browser.loadURI("about:robots");
   await promiseBrowserLoaded(browser);
   await ContentTask.spawn(browser, null, function() {
     let sessionHistory = docShell.QueryInterface(Ci.nsIInterfaceRequestor)

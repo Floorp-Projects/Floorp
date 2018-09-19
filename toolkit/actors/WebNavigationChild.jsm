@@ -107,9 +107,6 @@ class WebNavigationChild extends ActorChild {
       baseURI = Services.io.newURI(baseURI);
     if (triggeringPrincipal)
       triggeringPrincipal = Utils.deserializePrincipal(triggeringPrincipal);
-    if (!triggeringPrincipal) {
-      triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal({});
-    }
     this._wrapURIChangeCall(() => {
       return this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
                                                    postData, headers, baseURI, triggeringPrincipal);

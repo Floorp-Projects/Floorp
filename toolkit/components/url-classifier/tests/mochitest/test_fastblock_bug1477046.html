@@ -106,7 +106,7 @@ function testOnWindow(resolve, reject) {
   let win = mainWindow.OpenBrowserWindow({remote: true});
 
   whenDelayedStartupFinished(win, function() {
-    SimpleTest.executeSoon(function() { BrowserTestUtils.loadURI(win.gBrowser, gContentPage); });
+    SimpleTest.executeSoon(function() { win.gBrowser.loadURI(gContentPage); });
     awaitBrowserLoaded(win.gBrowser.selectedBrowser).then(() => {
       resolve(win);
     }).catch((reason) => {

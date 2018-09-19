@@ -18,7 +18,7 @@ add_task(async function mixed_content_block_for_target_top_test() {
   let loadPromise = BrowserTestUtils.browserLoaded(testBrowser, false, url);
   let frameLoadPromise = BrowserTestUtils.browserLoaded(testBrowser, true,
                                                         frameUrl);
-  BrowserTestUtils.loadURI(testBrowser, url);
+  testBrowser.loadURI(url);
   await loadPromise;
   await frameLoadPromise;
 

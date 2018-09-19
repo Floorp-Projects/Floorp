@@ -24,7 +24,7 @@ add_task(async function testPermissionAllow() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage(true, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
@@ -50,7 +50,7 @@ add_task(async function testNoPermissionPrompt() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage(true, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),

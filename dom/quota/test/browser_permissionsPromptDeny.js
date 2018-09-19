@@ -24,7 +24,7 @@ add_task(async function testPermissionDenied() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage(false, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
@@ -50,7 +50,7 @@ add_task(async function testNoPermissionPrompt() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage(false, gBrowser);
 
   is(getPermission(testPageURL, "persistent-storage"),
@@ -78,7 +78,7 @@ add_task(async function testPermissionDeniedDismiss() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   info("Loading test page: " + testPageURL);
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
   await waitForMessage(false, gBrowser);
 
   // Pressing ESC results in a temporary block permission on the browser object.

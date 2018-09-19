@@ -326,13 +326,10 @@ function startAndLoadURI(pageName) {
   start_time = Date.now();
   if (loadNoCache) {
     content.loadURI(pageName, {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
     });
   } else {
-    content.loadURI(pageName, {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    content.loadURI(pageName);
   }
 }
 

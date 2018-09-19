@@ -191,9 +191,7 @@ function closeAllButOneTab(url = "about:blank") {
   // Close all tabs except the last so we don't quit the browser.
   while (gBrowser.tabs.length > 1)
     gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
-  gBrowser.selectedBrowser.loadURI(url, {
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  });
+  gBrowser.selectedBrowser.loadURI(url);
   if (gBrowser.selectedTab.pinned)
     gBrowser.unpinTab(gBrowser.selectedTab);
   let newTabButton = browserWindow.document.getAnonymousElementByAttribute(browserWindow.gBrowser.tabContainer, "class", "tabs-newtab-button toolbarbutton-1");

@@ -88,7 +88,7 @@ function test() {
     });
   });
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "data:text/plain,test page");
+  gBrowser.selectedBrowser.loadURI("data:text/plain,test page");
 }
 
 function checkURLBarIcon(aExpectTranslated = false) {
