@@ -66,10 +66,7 @@ if (outerRect.width == outer.clientWidth &&
     "set": [["layout.css.scrollbar-colors.enabled", true]],
   }, function() {
     document.querySelector('#style').textContent = `
-      .outer {
-        scrollbar-face-color: blue;
-        scrollbar-track-color: cyan;
-      }
+      .outer { scrollbar-color: blue cyan; }
     `;
 
     let canvas = snapshotRect(window, outerRect);

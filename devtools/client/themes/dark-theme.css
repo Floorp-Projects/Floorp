@@ -31,8 +31,7 @@ body {
 :root[platform="mac"] {
   /* Set colors for native scrollbars on Windows dark theme */
   /* Other platforms support for scrollbar theming is Bug 1460109 */
-  scrollbar-face-color: var(--theme-body-color-inactive);
-  scrollbar-track-color: var(--theme-splitter-color);
+  scrollbar-color: var(--theme-body-color-inactive) var(--theme-splitter-color);
 }
 
 .theme-selected,

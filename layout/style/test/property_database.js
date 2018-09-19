@@ -8102,21 +8102,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-colors.enabled")) {
-  gCSSProperties["scrollbar-face-color"] = {
-    domProp: "scrollbarFaceColor",
+  gCSSProperties["scrollbar-color"] = {
+    domProp: "scrollbarColor",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
-    other_values: [ "red", "blue", "#ffff00" ],
-    invalid_values: [ "ffff00" ]
-  };
-  gCSSProperties["scrollbar-track-color"] = {
-    domProp: "scrollbarTrackColor",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "red", "blue", "#ffff00" ],
-    invalid_values: [ "ffff00" ]
+    other_values: [ "red green", "blue yellow", "#ffff00 white" ],
+    invalid_values: [ "ffff00 red", "auto red", "red auto", "green" ]
   };
 }
 
