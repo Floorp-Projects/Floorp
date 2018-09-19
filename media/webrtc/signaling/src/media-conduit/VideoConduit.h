@@ -155,17 +155,6 @@ public:
   MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) override;
 
   /**
-   * Function to set the encoding bitrate limits based on incoming frame size and rate
-   * @param width, height: dimensions of the frame
-   * @param cap: user-enforced max bitrate, or 0
-   * @param aVideoStream stream to apply bitrates to
-   */
-  void SelectBitrates(unsigned short width,
-                      unsigned short height,
-                      int cap,
-                      webrtc::VideoStream& aVideoStream);
-
-  /**
    * Function to select and change the encoding resolution based on incoming frame size
    * and current available bandwidth.
    * @param width, height: dimensions of the frame
@@ -242,6 +231,7 @@ public:
   }
 
   webrtc::VideoCodecMode CodecMode() const {
+    MOZ_ASSERT(NS_IsMainThread());
     return mCodecMode;
   }
 
@@ -467,22 +457,62 @@ private:
   void DumpCodecDB() const;
 
   // Factory class for VideoStreams... vie_encoder.cc will call this to reconfigure.
-  // We need to give it access to the conduit to make it's decisions
   class VideoStreamFactory : public webrtc::VideoEncoderConfig::VideoStreamFactoryInterface
   {
   public:
-    VideoStreamFactory(const std::string& aCodecName,
-                       WebrtcVideoConduit *aConduit)
-      : mCodecName(aCodecName),
-        mConduit(aConduit) {}
+    VideoStreamFactory(VideoCodecConfig aConfig,
+                       webrtc::VideoCodecMode aCodecMode,
+                       int aMinBitrate, int aStartBitrate,
+                       int aPrefMaxBitrate, int aNegotiatedMaxBitrate,
+                       unsigned int aSendingFramerate)
+      : mCodecMode(aCodecMode)
+      , mSendingFramerate(aSendingFramerate)
+      , mCodecConfig(std::forward<VideoCodecConfig>(aConfig))
+      , mMinBitrate(aMinBitrate)
+      , mStartBitrate(aStartBitrate)
+      , mPrefMaxBitrate(aPrefMaxBitrate)
+      , mNegotiatedMaxBitrate(aNegotiatedMaxBitrate)
+      , mSimulcastAdapter(MakeUnique<cricket::VideoAdapter>())
+    {}
+
+    void SetCodecMode(webrtc::VideoCodecMode aCodecMode)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      mCodecMode = aCodecMode;
+    }
+
+    void SetSendingFramerate(unsigned int aSendingFramerate)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      mSendingFramerate = aSendingFramerate;
+    }
 
   private:
+    // This gets called off-main thread and may hold internal webrtc.org
+    // locks. May *NOT* lock the conduit's mutex, to avoid deadlocks.
     std::vector<webrtc::VideoStream>
       CreateEncoderStreams(int width, int height,
                            const webrtc::VideoEncoderConfig& config) override;
-    std::string mCodecName;
-    // this is owned by the conduit!
-    WebrtcVideoConduit* mConduit;
+
+    // Used to limit number of streams for screensharing.
+    Atomic<webrtc::VideoCodecMode> mCodecMode;
+
+    // The framerate we're currently sending at.
+    Atomic<unsigned int> mSendingFramerate;
+
+    // The current send codec config, containing simulcast layer configs.
+    const VideoCodecConfig mCodecConfig;
+
+    // Bitrate limits in bps.
+    const int mMinBitrate = 0;
+    const int mStartBitrate = 0;
+    const int mPrefMaxBitrate = 0;
+    const int mNegotiatedMaxBitrate = 0;
+
+    // Adapter for simulcast layers. We use this to handle scaleResolutionDownBy
+    // for layers. It's separate from the conduit's mVideoAdapter to not affect
+    // scaling settings for incoming frames.
+    UniquePtr<cricket::VideoAdapter> mSimulcastAdapter;
   };
 
   // Video Latency Test averaging filter
@@ -526,12 +556,6 @@ private:
   // Adapter handling resolution constraints from signaling and sinks.
   // Written only on main thread. Guarded by mMutex, except for reads on main.
   UniquePtr<cricket::VideoAdapter> mVideoAdapter;
-
-  // Adapter for simulcast layers. We use this to handle scaleResolutionDownBy
-  // for layers. It's separate from mVideoAdapter to not affect scaling settings
-  // for incoming frames.
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
-  UniquePtr<cricket::VideoAdapter> mSimulcastAdapter;
 
   // Our own record of the sinks added to mVideoBroadcaster so we can support
   // dispatching updates to sinks from off-main-thread. Main thread only.
@@ -620,8 +644,8 @@ private:
   // Main thread only.
   RefPtr<WebrtcAudioConduit> mSyncedTo;
 
-  // Written on main thread, read anywhere.
-  Atomic<webrtc::VideoCodecMode> mCodecMode;
+  // Main thread only.
+  webrtc::VideoCodecMode mCodecMode;
 
   // WEBRTC.ORG Call API
   // Const so can be accessed on any thread. Most methods are called on
@@ -633,6 +657,10 @@ private:
 
   // Main thread only.
   VideoEncoderConfigBuilder mEncoderConfig;
+
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Calls can happen on any thread.
+  RefPtr<rtc::RefCountedObject<VideoStreamFactory>> mVideoStreamFactory;
 
   // Main thread only.
   webrtc::VideoReceiveStream::Config mRecvStreamConfig;
