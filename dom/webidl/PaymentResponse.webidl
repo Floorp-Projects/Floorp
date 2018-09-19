@@ -18,7 +18,7 @@ enum PaymentComplete {
 
 [SecureContext,
  Func="mozilla::dom::PaymentRequest::PrefEnabled"]
-interface PaymentResponse {
+interface PaymentResponse : EventTarget {
   [Default] object toJSON();
 
   readonly attribute DOMString       requestId;
@@ -36,4 +36,6 @@ interface PaymentResponse {
   // If the dictionary argument has no required members, it must be optional.
   [NewObject]
   Promise<void> retry(optional PaymentValidationErrors errorFields);
+
+  attribute EventHandler onpayerdetailchange;
 };

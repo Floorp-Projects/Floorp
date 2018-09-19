@@ -796,22 +796,22 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
 
     pProc = (void*)GetProcAddress(hKernel, "LoadLibraryA");
     if (pProc) {
-      gStartAddressesToBlock->append(pProc);
+      Unused << gStartAddressesToBlock->append(pProc);
     }
 
     pProc = (void*)GetProcAddress(hKernel, "LoadLibraryW");
     if (pProc) {
-      gStartAddressesToBlock->append(pProc);
+      Unused << gStartAddressesToBlock->append(pProc);
     }
 
     pProc = (void*)GetProcAddress(hKernel, "LoadLibraryExA");
     if (pProc) {
-      gStartAddressesToBlock->append(pProc);
+      Unused << gStartAddressesToBlock->append(pProc);
     }
 
     pProc = (void*)GetProcAddress(hKernel, "LoadLibraryExW");
     if (pProc) {
-      gStartAddressesToBlock->append(pProc);
+      Unused << gStartAddressesToBlock->append(pProc);
     }
   }
 #endif
