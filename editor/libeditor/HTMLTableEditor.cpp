@@ -949,11 +949,11 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
                           &startRowIndex, &startColIndex);
       NS_ENSURE_SUCCESS(rv, rv);
       // Don't fail if no cell found
-      if (NS_WARN_IF(!cell)) {
+      if (NS_WARN_IF(!table) || NS_WARN_IF(!cell)) {
         return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
       }
 
-      if (GetNumberOfCellsInRow(table, startRowIndex) == 1) {
+      if (GetNumberOfCellsInRow(*table, startRowIndex) == 1) {
         Element* parentRow =
           GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cell);
         if (NS_WARN_IF(!parentRow)) {
@@ -1213,7 +1213,15 @@ HTMLEditor::DeleteColumn(Element* aTable,
       GetCellDataAt(aTable, rowIndex, aColIndex, getter_AddRefs(cell),
                     &startRowIndex, &startColIndex, &rowSpan, &colSpan,
                     &actualRowSpan, &actualColSpan, &isSelected);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Failure means that there is no more cell in the row.  In this case,
+    // we shouldn't return error since we just reach the end of the row.
+    // XXX Ideally, GetCellDataAt() should return
+    //     NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND in such case instead of
+    //     error.  However, it's used by a lot of methods, so, it's really
+    //     risky to change it.
+    if (NS_FAILED(rv)) {
+      break;
+    }
 
     if (cell) {
       // Find cells that don't start in column we are deleting
@@ -1235,7 +1243,7 @@ HTMLEditor::DeleteColumn(Element* aTable,
         rowIndex += actualRowSpan;
       } else {
         // Delete the cell
-        if (GetNumberOfCellsInRow(aTable, rowIndex) == 1) {
+        if (GetNumberOfCellsInRow(*aTable, rowIndex) == 1) {
           // Only 1 cell in row - delete the row
           Element* parentRow =
             GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cell);
@@ -3042,33 +3050,48 @@ HTMLEditor::GetTableFrame(Element* aTableElement)
 
 //Return actual number of cells (a cell with colspan > 1 counts as just 1)
 int32_t
-HTMLEditor::GetNumberOfCellsInRow(Element* aTable,
-                                  int32_t rowIndex)
+HTMLEditor::GetNumberOfCellsInRow(Element& aTableElement,
+                                  int32_t aRowIndex)
 {
-  int32_t cellCount = 0;
-  RefPtr<Element> cell;
-  int32_t colIndex = 0;
-  do {
-    int32_t startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
-    bool    isSelected;
+  IgnoredErrorResult ignoredError;
+  TableSize tableSize(*this, aTableElement, ignoredError);
+  if (NS_WARN_IF(ignoredError.Failed())) {
+    return -1;
+  }
+
+  int32_t numberOfCells = 0;
+  for (int32_t columnIndex = 0; columnIndex < tableSize.mColumnCount;) {
+    RefPtr<Element> cellElement;
+    int32_t startRowIndex = 0, startColIndex = 0;
+    int32_t rowSpan = 0, colSpan = 0;
+    int32_t actualRowSpan = 0, actualColSpan = 0;
+    bool isSelected = false;
     nsresult rv =
-      GetCellDataAt(aTable, rowIndex, colIndex, getter_AddRefs(cell),
+      GetCellDataAt(&aTableElement, aRowIndex, columnIndex,
+                    getter_AddRefs(cellElement),
                     &startRowIndex, &startColIndex, &rowSpan, &colSpan,
                     &actualRowSpan, &actualColSpan, &isSelected);
-    NS_ENSURE_SUCCESS(rv, 0);
-    if (cell) {
-      // Only count cells that start in row we are working with
-      if (startRowIndex == rowIndex) {
-        cellCount++;
-      }
-      //Next possible location for a cell
-      colIndex += actualColSpan;
-    } else {
-      colIndex++;
+    // Failure means that there is no more cell in the row.  In this case,
+    // we shouldn't return error since we just reach the end of the row.
+    // XXX Ideally, GetCellDataAt() should return
+    //     NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND in such case instead of
+    //     error.  However, it's used by a lot of methods, so, it's really
+    //     risky to change it.
+    if (NS_FAILED(rv)) {
+      break;
     }
-  } while (cell);
-
-  return cellCount;
+    if (cellElement) {
+      // Only count cells that start in row we are working with
+      if (startRowIndex == aRowIndex) {
+        numberOfCells++;
+      }
+      // Next possible location for a cell
+      columnIndex += actualColSpan;
+    } else {
+      columnIndex++;
+    }
+  }
+  return numberOfCells;
 }
 
 NS_IMETHODIMP
@@ -3179,7 +3202,7 @@ HTMLEditor::GetCellDataAt(Element* aTable,
     // Get the selected table or the table enclosing the selection anchor.
     table =
       GetElementOrParentByTagNameAtSelection(*selection, *nsGkAtoms::table);
-    if (!table) {
+    if (NS_WARN_IF(!table)) {
       return NS_ERROR_FAILURE;
     }
     aTable = table;
@@ -3190,7 +3213,7 @@ HTMLEditor::GetCellDataAt(Element* aTable,
 
   nsTableCellFrame* cellFrame =
     tableFrame->GetCellFrameAt(aRowIndex, aColIndex);
-  if (!cellFrame) {
+  if (NS_WARN_IF(!cellFrame)) {
     return NS_ERROR_FAILURE;
   }
 
