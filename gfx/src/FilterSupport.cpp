@@ -1091,7 +1091,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
     already_AddRefed<FilterNode> match(const DiffuseLightingAttributes& aLighting)
     {
       bool isSpecular =
-        mDescription.Type() == PrimitiveType::SpecularLighting;
+        mDescription.Attributes().is<SpecularLightingAttributes>();
 
       if (aLighting.mLightType == LightType::None) {
         return nullptr;
@@ -1230,28 +1230,25 @@ InputAlphaModelForPrimitive(const FilterPrimitiveDescription& aDescr,
                             int32_t aInputIndex,
                             AlphaModel aOriginalAlphaModel)
 {
-  switch (aDescr.Type()) {
-    case PrimitiveType::Tile:
-    case PrimitiveType::Offset:
-    case PrimitiveType::ToAlpha:
+  const PrimitiveAttributes& atts = aDescr.Attributes();
+  if (atts.is<TileAttributes>() ||
+      atts.is<OffsetAttributes>() ||
+      atts.is<ToAlphaAttributes>()) {
       return aOriginalAlphaModel;
-
-    case PrimitiveType::ColorMatrix:
-    case PrimitiveType::ComponentTransfer:
-      return AlphaModel::Unpremultiplied;
-
-    case PrimitiveType::DisplacementMap:
-      return aInputIndex == 0 ?
-        AlphaModel::Premultiplied : AlphaModel::Unpremultiplied;
-
-    case PrimitiveType::ConvolveMatrix:
-      MOZ_ASSERT(aDescr.Attributes().is<ConvolveMatrixAttributes>());
-      return aDescr.Attributes().as<ConvolveMatrixAttributes>().mPreserveAlpha ?
-        AlphaModel::Unpremultiplied : AlphaModel::Premultiplied;
-
-    default:
-      return AlphaModel::Premultiplied;
   }
+  if (atts.is<ColorMatrixAttributes>() ||
+      atts.is<ComponentTransferAttributes>()) {
+    return AlphaModel::Unpremultiplied;
+  }
+  if (atts.is<DisplacementMapAttributes>()) {
+    return aInputIndex == 0 ?
+      AlphaModel::Premultiplied : AlphaModel::Unpremultiplied;
+  }
+  if (atts.is<ConvolveMatrixAttributes>()) {
+    return atts.as<ConvolveMatrixAttributes>().mPreserveAlpha ?
+      AlphaModel::Unpremultiplied : AlphaModel::Premultiplied;
+  }
+  return AlphaModel::Premultiplied;
 }
 
 static AlphaModel
@@ -2040,24 +2037,21 @@ FilterSupport::ComputeSourceNeededRegions(const FilterDescription& aFilter,
 // FilterPrimitiveDescription
 
 FilterPrimitiveDescription::FilterPrimitiveDescription()
- : mType(PrimitiveType::Empty)
- , mAttributes(EmptyAttributes())
+ : mAttributes(EmptyAttributes())
  , mOutputColorSpace(ColorSpace::SRGB)
  , mIsTainted(false)
 {
 }
 
-FilterPrimitiveDescription::FilterPrimitiveDescription(PrimitiveType aType)
- : mType(aType)
- , mAttributes(EmptyAttributes())
+FilterPrimitiveDescription::FilterPrimitiveDescription(PrimitiveAttributes&& aAttributes)
+ : mAttributes(std::move(aAttributes))
  , mOutputColorSpace(ColorSpace::SRGB)
  , mIsTainted(false)
 {
 }
 
 FilterPrimitiveDescription::FilterPrimitiveDescription(const FilterPrimitiveDescription& aOther)
- : mType(aOther.mType)
- , mAttributes(aOther.mAttributes)
+ : mAttributes(aOther.mAttributes)
  , mInputPrimitives(aOther.mInputPrimitives)
  , mFilterPrimitiveSubregion(aOther.mFilterPrimitiveSubregion)
  , mFilterSpaceBounds(aOther.mFilterSpaceBounds)
@@ -2071,7 +2065,6 @@ FilterPrimitiveDescription&
 FilterPrimitiveDescription::operator=(const FilterPrimitiveDescription& aOther)
 {
   if (this != &aOther) {
-    mType = aOther.mType;
     mAttributes = aOther.mAttributes;
     mInputPrimitives = aOther.mInputPrimitives;
     mFilterPrimitiveSubregion = aOther.mFilterPrimitiveSubregion;
@@ -2084,8 +2077,7 @@ FilterPrimitiveDescription::operator=(const FilterPrimitiveDescription& aOther)
 }
 
 FilterPrimitiveDescription::FilterPrimitiveDescription(FilterPrimitiveDescription&& aOther)
- : mType(aOther.mType)
- , mAttributes(std::move(aOther.mAttributes))
+ : mAttributes(std::move(aOther.mAttributes))
  , mInputPrimitives(std::move(aOther.mInputPrimitives))
  , mFilterPrimitiveSubregion(aOther.mFilterPrimitiveSubregion)
  , mFilterSpaceBounds(aOther.mFilterSpaceBounds)
@@ -2099,7 +2091,6 @@ FilterPrimitiveDescription&
 FilterPrimitiveDescription::operator=(FilterPrimitiveDescription&& aOther)
 {
   if (this != &aOther) {
-    mType = aOther.mType;
     mAttributes = std::move(aOther.mAttributes);
     mInputPrimitives = std::move(aOther.mInputPrimitives);
     mFilterPrimitiveSubregion = aOther.mFilterPrimitiveSubregion;
@@ -2114,8 +2105,7 @@ FilterPrimitiveDescription::operator=(FilterPrimitiveDescription&& aOther)
 bool
 FilterPrimitiveDescription::operator==(const FilterPrimitiveDescription& aOther) const
 {
-  return mType == aOther.mType &&
-    mFilterPrimitiveSubregion.IsEqualInterior(aOther.mFilterPrimitiveSubregion) &&
+  return mFilterPrimitiveSubregion.IsEqualInterior(aOther.mFilterPrimitiveSubregion) &&
     mFilterSpaceBounds.IsEqualInterior(aOther.mFilterSpaceBounds) &&
     mOutputColorSpace == aOther.mOutputColorSpace &&
     mIsTainted == aOther.mIsTainted &&

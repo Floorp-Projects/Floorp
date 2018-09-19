@@ -69,15 +69,13 @@ SVGFEDiffuseLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInsta
 {
   float diffuseConstant = mNumberAttributes[DIFFUSE_CONSTANT].GetAnimValue();
 
-  FilterPrimitiveDescription descr(PrimitiveType::DiffuseLighting);
   DiffuseLightingAttributes atts;
   atts.mLightingConstant = diffuseConstant;
   if (!AddLightingAttributes(&atts, aInstance)) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return FilterPrimitiveDescription();
   }
 
-  descr.Attributes() = AsVariant(std::move(atts));
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 bool
