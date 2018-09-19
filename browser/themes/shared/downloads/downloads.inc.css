@@ -84,6 +84,11 @@
   padding: 0;
 }
 
+#downloadsSummary {
+  /* Reserve the same space as the button and separator in download items. */
+  padding-inline-end: 59px;
+}
+
 #downloadsHistory {
   padding-inline-start: 14px;
   padding-inline-end: 14px;
@@ -149,33 +154,18 @@
   background-image: url("chrome://browser/skin/info.svg");
 }
 
-/* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
-   a vbox with class .downloadContainer. We set the font-size of the entire
-   container to --downloads-item-font-size-factor because:
-
-   1) This is the size that we want .downloadDetails to be
-   2) The container's width is set by localizers by &downloadDetails.width;,
-      which is a ch unit. Since this is the value that should control the
-      panel width, we apply it to the outer container to constrain
-      .downloadTarget and .downloadProgress.
-
-   Finally, since we want .downloadTarget's font-size to be at 100% of the
-   font-size of .downloadContainer's parent, we use calc to go from the
-   smaller font-size back to the original font-size.
- */
 .downloadContainer {
-  font-size: calc(100% * var(--downloads-item-font-size-factor));
   margin-inline-end: 13px;
 }
 
 #downloadsSummaryDescription,
 .downloadTarget {
   margin: 0;
-  font-size: calc(100% / var(--downloads-item-font-size-factor));
 }
 
 #downloadsSummaryDetails,
 .downloadDetails {
+  font-size: calc(100% * var(--downloads-item-font-size-factor));
   opacity: var(--downloads-item-details-opacity);
   /* Use calc() to keep the height consistent with .downloadTarget, so that the
      progress bar can be vertically centered. */

@@ -105,6 +105,7 @@
     <panelview id="downloadsPanel-mainView">
       <vbox class="panel-view-body-unscrollable">
         <richlistbox id="downloadsListBox"
+                     style="width: &downloads.width;"
                      context="downloadsContextMenu"
                      onmouseover="DownloadsView.onDownloadMouseOver(event);"
                      onmouseout="DownloadsView.onDownloadMouseOut(event);"
@@ -124,10 +125,9 @@
                 onclick="DownloadsSummary.onClick(event);">
             <image class="downloadTypeIcon" />
             <vbox pack="center"
-                  class="downloadContainer"
-                  style="width: &downloadDetails.width;">
-              <description id="downloadsSummaryDescription"
-                           style="min-width: &downloadsSummary.minWidth2;"/>
+                  flex="1"
+                  class="downloadContainer">
+              <description id="downloadsSummaryDescription"/>
               <progressmeter id="downloadsSummaryProgress"
                              class="downloadProgress"
                              min="0"
