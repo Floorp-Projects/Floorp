@@ -479,9 +479,13 @@ TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
     }
   }
 
-  // TODO: Update conduits?
-
-  mJsepTransceiver->mSendTrack.SetJsConstraints(constraints);
+  if (mJsepTransceiver->mSendTrack.SetJsConstraints(constraints)) {
+    if (mTransmitPipeline->Transmitting()) {
+      WebrtcGmpPCHandleSetter setter(mPCHandle);
+      DebugOnly<nsresult> rv = UpdateConduit();
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+  }
 
   // Update webrtc track id in JS; the ids in SDP are not surfaced to content,
   // because they don't follow the rules that track/stream ids must. Our JS

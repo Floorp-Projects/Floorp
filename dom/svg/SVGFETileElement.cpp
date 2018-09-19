@@ -54,7 +54,7 @@ SVGFETileElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                           const nsTArray<bool>& aInputsAreTainted,
                                           nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
-  return FilterPrimitiveDescription(PrimitiveType::Tile);
+  return FilterPrimitiveDescription(AsVariant(TileAttributes()));
 }
 
 bool

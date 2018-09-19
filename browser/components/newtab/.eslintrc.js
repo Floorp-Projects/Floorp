@@ -78,7 +78,6 @@ module.exports = {
     "camelcase": 0,
     "capitalized-comments": 0,
     "class-methods-use-this": 0,
-    "comma-dangle": [2, "never"],
     "consistent-this": [2, "use-bind"],
     "curly": [2, "all"],
     "default-case": 0,

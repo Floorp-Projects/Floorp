@@ -82,8 +82,18 @@ export class ASRouterAdmin extends React.PureComponent {
     </tbody></table>);
   }
 
+  renderTableHead() {
+    return (<thead>
+      <tr className="message-item">
+        <td>id</td>
+        <td>source</td>
+        <td>last updated</td>
+      </tr>
+    </thead>);
+  }
+
   renderProviders() {
-    return (<table><tbody>
+    return (<table>{this.renderTableHead()}<tbody>
       {this.state.providers.map((provider, i) => {
         let label = "(local)";
         if (provider.type === "remote") {
@@ -94,6 +104,7 @@ export class ASRouterAdmin extends React.PureComponent {
         return (<tr className="message-item" key={i}>
           <td>{provider.id}</td>
           <td>{label}</td>
+          <td>{provider.lastUpdated ? new Date(provider.lastUpdated).toString() : ""}</td>
         </tr>);
       })}
     </tbody></table>);

@@ -5,7 +5,6 @@ config = {
         'clobber',
         'build',
         'check-test',
-        # 'update',
     ],
     'stage_platform': 'linux64-asan-reporter',
     #### 64 bit build specific #####

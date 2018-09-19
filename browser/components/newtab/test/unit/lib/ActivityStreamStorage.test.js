@@ -11,12 +11,12 @@ describe("ActivityStreamStorage", () => {
     sandbox = sinon.sandbox.create();
     indexedDB = {
       open: sandbox.stub().resolves({}),
-      deleteDatabase: sandbox.stub().resolves()
+      deleteDatabase: sandbox.stub().resolves(),
     };
     overrider.set({IndexedDB: indexedDB});
     storage = new ActivityStreamStorage({
       storeNames: ["storage_test"],
-      telemetry: {handleUndesiredEvent: sandbox.stub()}
+      telemetry: {handleUndesiredEvent: sandbox.stub()},
     });
   });
   afterEach(() => {
@@ -48,7 +48,7 @@ describe("ActivityStreamStorage", () => {
       storeStub = {
         getAll: sandbox.stub().resolves(),
         get: sandbox.stub().resolves(),
-        put: sandbox.stub().resolves()
+        put: sandbox.stub().resolves(),
       };
       sandbox.stub(storage, "_getStore").resolves(storeStub);
       testStorage = storage.getDbTable("storage_test");
@@ -107,7 +107,7 @@ describe("ActivityStreamStorage", () => {
   it("should handle an array of object store names", async () => {
     storage = new ActivityStreamStorage({
       storeNames: ["store1", "store2"],
-      telemetry: {}
+      telemetry: {},
     });
     const dbStub = {createObjectStore: sandbox.stub(), objectStoreNames: {contains: sandbox.stub().returns(false)}};
     await storage.db;
@@ -122,7 +122,7 @@ describe("ActivityStreamStorage", () => {
   it("should skip creating existing stores", async () => {
     storage = new ActivityStreamStorage({
       storeNames: ["store1", "store2"],
-      telemetry: {}
+      telemetry: {},
     });
     const dbStub = {createObjectStore: sandbox.stub(), objectStoreNames: {contains: sandbox.stub().returns(true)}};
     await storage.db;

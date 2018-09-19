@@ -2288,7 +2288,10 @@ nsIDocument::ResetToURI(nsIURI* aURI,
 
   mSecurityInfo = nullptr;
 
-  mDocumentLoadGroup = nullptr;
+  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+  if (!aLoadGroup || group != aLoadGroup) {
+    mDocumentLoadGroup = nullptr;
+  }
 
   // Delete references to sub-documents and kill the subdocument map,
   // if any. It holds strong references

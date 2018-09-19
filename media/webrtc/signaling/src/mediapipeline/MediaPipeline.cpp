@@ -1370,6 +1370,14 @@ MediaPipelineTransmit::Stop()
   mConduit->StopTransmitting();
 }
 
+bool
+MediaPipelineTransmit::Transmitting() const
+{
+  ASSERT_ON_THREAD(mMainThread);
+
+  return mTransmitting;
+}
+
 void
 MediaPipelineTransmit::Start()
 {

@@ -53,7 +53,7 @@ async function addHighlightsBookmarks(count) { // eslint-disable-line no-unused-
   const bookmarks = new Array(count).fill(null).map((entry, i) => ({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "foo",
-    url: `https://mozilla${i}.com/nowNew`
+    url: `https://mozilla${i}.com/nowNew`,
   }));
 
   for (let placeInfo of bookmarks) {
@@ -87,7 +87,7 @@ function addContentHelpers() {
       const contextMenu = item.querySelector(".context-menu");
       const contextMenuList = contextMenu.querySelector(".context-menu-list");
       return [...contextMenuList.getElementsByClassName("context-menu-item")];
-    }
+    },
   });
 }
 

@@ -17,6 +17,7 @@ const TEST_STARTING_ORDER = ["inspector", "webconsole", "jsdebugger", "styleedit
 
 add_task(async function() {
   const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
     manifest: {
       devtools_page: "extension.html",
       applications: {
@@ -78,13 +79,15 @@ add_task(async function() {
                    "performance", "memory", "netmonitor", "accessibility", EXTENSION];
   await dndToolTab(toolbox, dragTarget, dropTarget);
   assertToolTabPreferenceOrder(expectedOrder);
+  await resizeWindow(toolbox, originalWindowWidth, originalWindowHeight);
 
-  info("Test for saving the preference updated after destroying");
+  info("Test the preference after uninstalling extension");
+  prepareToolTabReorderTest(toolbox, TEST_STARTING_ORDER);
   await extension.unload();
-  const target = gDevTools.getTargetForTab(tab);
-  await gDevTools.closeToolbox(target);
-  await target.destroy();
-  assertToolTabPreferenceOrder(["storage", "inspector", "webconsole", "jsdebugger",
-                                "styleeditor", "performance", "memory", "netmonitor",
-                                "accessibility"]);
+  dragTarget = "webconsole";
+  dropTarget = "inspector";
+  expectedOrder = ["webconsole", "inspector", "jsdebugger", "styleeditor",
+                   "performance", "memory", "netmonitor", "storage", "accessibility"];
+  await dndToolTab(toolbox, dragTarget, dropTarget);
+  assertToolTabPreferenceOrder(expectedOrder);
 });

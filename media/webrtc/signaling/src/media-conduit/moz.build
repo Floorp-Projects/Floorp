@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     'MediaDataDecoderCodec.cpp',
     'RtpSourceObserver.cpp',
     'VideoConduit.cpp',
+    'VideoStreamFactory.cpp',
     'WebrtcGmpVideoCodec.cpp',
     'WebrtcMediaDataDecoderCodec.cpp',
 ]
