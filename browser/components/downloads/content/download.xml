@@ -28,8 +28,7 @@
         </xul:stack>
         <xul:vbox pack="center"
                   flex="1"
-                  class="downloadContainer"
-                  style="width: &downloadDetails.width;">
+                  class="downloadContainer">
           <!-- We're letting localizers put a min-width in here primarily
                because of the downloads summary at the bottom of the list of
                download items. An element in the summary has the same min-width
@@ -39,7 +38,6 @@
                -->
           <xul:description class="downloadTarget"
                            crop="center"
-                           style="min-width: &downloadsSummary.minWidth2;"
                            xbl:inherits="value=displayName,tooltiptext=displayName"/>
           <xul:progressmeter anonid="progressmeter"
                              class="downloadProgress"
