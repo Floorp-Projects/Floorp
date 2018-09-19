@@ -468,7 +468,9 @@ var UITour = {
           }
 
           // We want to replace the current tab.
-          browser.loadURI(url.href);
+          browser.loadURI(url.href, {
+            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          });
         });
         break;
       }
@@ -483,7 +485,9 @@ var UITour = {
           }
 
           // We want to replace the current tab.
-          browser.loadURI(url.href);
+          browser.loadURI(url.href, {
+            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          });
         });
         break;
       }

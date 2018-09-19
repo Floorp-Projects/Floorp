@@ -16,8 +16,10 @@ async function runTests(browser, accDoc) {
   testStates(evt.accessible, STATE_FOCUSED);
 
   onFocus = waitForEvent(EVENT_FOCUS, "buttonInputDoc");
-  browser.loadURI(snippetToURL(
-    `<input id="input" type="button" value="button">`, { id: "buttonInputDoc" }));
+  let url = snippetToURL(`<input id="input" type="button" value="button">`, { id: "buttonInputDoc" });
+  browser.loadURI(url, {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()
+  });
   evt = await onFocus;
   testStates(evt.accessible, STATE_FOCUSED);
 

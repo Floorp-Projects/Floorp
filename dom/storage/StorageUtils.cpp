@@ -91,8 +91,7 @@ ReverseString(const nsACString& aSource, nsACString& aResult)
   aSource.EndReading(sourceEnd);
 
   aResult.SetLength(aSource.Length());
-  nsACString::iterator destEnd;
-  aResult.EndWriting(destEnd);
+  auto destEnd = aResult.EndWriting();
 
   while (sourceBegin != sourceEnd) {
     *(--destEnd) = *sourceBegin;

@@ -281,7 +281,7 @@ var ViewSourceContent = {
   loadSourceFromURL(URL) {
     let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    webNav.loadURI(URL, loadFlags, null, null, null);
+    webNav.loadURI(URL, loadFlags, null, null, null, Services.scriptSecurityManager.getSystemPrincipal());
   },
 
   /**
@@ -604,7 +604,8 @@ var ViewSourceContent = {
     webNav.loadURIWithOptions(uri, loadFlags,
                               null, referrerPolicy, // referrer
                               null, null, // postData, headers
-                              Services.io.newURI(baseURI));
+                              Services.io.newURI(baseURI),
+                              Services.scriptSecurityManager.getSystemPrincipal());
   },
 
   /**

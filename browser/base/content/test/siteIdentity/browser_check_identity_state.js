@@ -275,7 +275,7 @@ async function noCertErrorTest(secureCheck) {
   gBrowser.selectedTab = newTab;
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
-  gBrowser.loadURI("https://nocert.example.com/");
+  BrowserTestUtils.loadURI(gBrowser, "https://nocert.example.com/");
   await promise;
   is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
   is(getConnectionState(), "not-secure", "Connection should be file");

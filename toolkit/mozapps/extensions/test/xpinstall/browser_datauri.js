@@ -29,7 +29,7 @@ function runTest() {
   });
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.loadURI(TESTROOT + "redirect.sjs?mode=redirect");
+  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "redirect.sjs?mode=redirect");
 }
 
 function install_blocked(installInfo) {

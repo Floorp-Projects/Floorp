@@ -30,5 +30,5 @@ function test() {
     }
   });
 
-  tab.linkedBrowser.loadURI("http://example.com/browser/browser/base/content/test/general/dummy_page.html");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com/browser/browser/base/content/test/general/dummy_page.html");
 }

@@ -14,20 +14,41 @@ import time
 from mozharness.mozilla.automation import TBPL_RETRY, EXIT_STATUS_DICT
 
 
-class AndroidMixin:
+class AndroidMixin(object):
     """
        Mixin class used by Android test scripts.
     """
 
-    def init(self):
+    def __init__(self, **kwargs):
         self.logcat_proc = None
         self.logcat_file = None
 
-        self.adb_path = self.query_exe('adb')
+        self._adb_path = None
         self.sdk_level = None
-        self.device_name = os.environ['DEVICE_NAME']
-        self.device_serial = os.environ['DEVICE_SERIAL']
-        self.device_ip = os.environ['DEVICE_IP']
+        self.device_name = os.environ.get('DEVICE_NAME', None)
+        self.device_serial = os.environ.get('DEVICE_SERIAL', None)
+        self.device_ip = os.environ.get('DEVICE_IP', None)
+        super(AndroidMixin, self).__init__(**kwargs)
+
+    @property
+    def adb_path(self):
+        '''Get the path to the adb executable.
+
+        Defer the use of query_exe() since it is defined by the
+        BaseScript Mixin which hasn't finished initialing by the
+        time the AndroidMixin is first initialized.
+        '''
+        if not self._adb_path:
+            try:
+                self._adb_path = self.query_exe('adb')
+            except AttributeError:
+                # Ignore attribute errors since BaseScript will
+                # attempt to access properties before the other Mixins
+                # have completed initialization. We recover afterwards
+                # when additional attemps occur after initialization
+                # is completed.
+                pass
+        return self._adb_path
 
     def _retry(self, max_attempts, interval, func, description, max_time=0):
         '''
@@ -180,7 +201,6 @@ class AndroidMixin:
         """
            Install the specified apk.
         """
-        self.init()
         cmd = [self.adb_path, '-s', self.device_serial, 'shell',
                'getprop', 'ro.build.version.sdk']
         self.sdk_level, _ = self._run_with_timeout(30, cmd)

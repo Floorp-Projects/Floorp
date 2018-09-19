@@ -136,7 +136,7 @@ add_task(async function testChromeHearsPluginCrashFirst() {
   let win = await BrowserTestUtils.openNewBrowserWindow({remote: true});
   let browser = win.gBrowser.selectedBrowser;
 
-  browser.loadURI(CRASH_URL);
+  BrowserTestUtils.loadURI(browser, CRASH_URL);
   await BrowserTestUtils.browserLoaded(browser);
 
   // In this case, we want the <object> to match the -moz-handler-crashed
@@ -205,7 +205,7 @@ add_task(async function testContentHearsCrashFirst() {
   let win = await BrowserTestUtils.openNewBrowserWindow({remote: true});
   let browser = win.gBrowser.selectedBrowser;
 
-  browser.loadURI(CRASH_URL);
+  BrowserTestUtils.loadURI(browser, CRASH_URL);
   await BrowserTestUtils.browserLoaded(browser);
 
   // In this case, we want the <object> to match the -moz-handler-crashed

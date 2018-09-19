@@ -54,7 +54,7 @@ async function openTestTabInOwnProcess(name, knownTabs) {
   knownTabs.byName.set(name, knownTab);
 
   // Now trigger the actual load of our page.
-  tab.linkedBrowser.loadURI(realUrl);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, realUrl);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   is(tab.linkedBrowser.frameLoader.tabParent.osPid, pid, "still same pid");
   return knownTab;

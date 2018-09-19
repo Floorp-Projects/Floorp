@@ -5,7 +5,7 @@
 add_task(async function() {
   let testWindow = await BrowserTestUtils.openNewBrowserWindow();
 
-  testWindow.gBrowser.loadURI("data:text/html,<h1>A Page</h1>");
+  BrowserTestUtils.loadURI(testWindow.gBrowser, "data:text/html,<h1>A Page</h1>");
   await BrowserTestUtils.browserLoaded(testWindow.gBrowser.selectedBrowser);
 
   await SimpleTest.promiseFocus(testWindow.gBrowser.selectedBrowser);

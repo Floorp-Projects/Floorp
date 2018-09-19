@@ -789,11 +789,8 @@ nsBinaryInputStream::ReadString(nsAString& aString)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsAString::iterator start;
-  aString.BeginWriting(start);
-
   WriteStringClosure closure;
-  closure.mWriteCursor = start.get();
+  closure.mWriteCursor = aString.BeginWriting();
   closure.mHasCarryoverByte = false;
 
   rv = ReadSegments(WriteSegmentToString, &closure,

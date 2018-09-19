@@ -2997,7 +2997,6 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   nsAutoCString buffer, baseDomain;
   bool isMore = true;
   int32_t hostIndex, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
-  nsACString::char_iterator iter;
   int32_t numInts;
   int64_t expires;
   bool isDomain, isHttpOnly = false;
@@ -3065,8 +3064,8 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
 
     // check the expirytime first - if it's expired, ignore
     // nullstomp the trailing tab, to avoid copying the string
-    buffer.BeginWriting(iter);
-    *(iter += nameIndex - 1) = char(0);
+    auto iter = buffer.BeginWriting() + nameIndex - 1;
+    *iter = char(0);
     numInts = PR_sscanf(buffer.get() + expiresIndex, "%lld", &expires);
     if (numInts != 1 || expires < currentTime) {
       continue;

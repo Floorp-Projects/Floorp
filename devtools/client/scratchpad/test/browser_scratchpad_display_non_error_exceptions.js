@@ -11,7 +11,7 @@ function test() {
     openScratchpad(runTests, {"state": {"text": ""}});
   });
 
-  gBrowser.loadURI("data:text/html, test that exceptions are output as " +
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html, test that exceptions are output as " +
                    "comments correctly in Scratchpad");
 }
 

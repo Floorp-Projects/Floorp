@@ -220,10 +220,8 @@ nsLocalFile::GetRelativeDescriptor(nsIFile* aFromFile, nsACString& aResult)
   }
 
   // get raw pointer to mutable string buffer
-  char16_t* thisPathPtr;
-  thisPath.BeginWriting(thisPathPtr);
-  char16_t* fromPathPtr;
-  fromPath.BeginWriting(fromPathPtr);
+  char16_t* thisPathPtr = thisPath.BeginWriting();
+  char16_t* fromPathPtr = fromPath.BeginWriting();
 
   SplitPath(thisPathPtr, thisNodes);
   SplitPath(fromPathPtr, fromNodes);

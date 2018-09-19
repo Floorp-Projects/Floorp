@@ -14,7 +14,7 @@
         title="396519 test">
 
   <script type="application/javascript"><![CDATA[
-
+    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
     const LISTEN_EVENTS = ["pageshow"];
 
     var gBrowser;
@@ -93,7 +93,6 @@
     }
 
     function* testsIterator() {
-
       // Tests 1 + 2:
       //  Back/forward between two simple documents. Bfcache will be used.
 
@@ -102,33 +101,33 @@
 
       gTestCount++;
       gExpected = [false];
-      gBrowser.loadURI(test1Doc);
+      BrowserTestUtils.loadURI(gBrowser, test1Doc);
       yield undefined;
 
       gTestCount++;
       gExpected = [true, false];
       var test2Doc = test1Doc.replace(/1/,"2");
-      gBrowser.loadURI(test2Doc);
+      BrowserTestUtils.loadURI(gBrowser, test2Doc);
       yield undefined;
 
       gTestCount++;
       gExpected = [true, true, false];
-      gBrowser.loadURI(test1Doc);
+      BrowserTestUtils.loadURI(gBrowser, test1Doc);
       yield undefined;
 
       gTestCount++;
       gExpected = [true, true, true, false];
-      gBrowser.loadURI(test2Doc);
+      BrowserTestUtils.loadURI(gBrowser, test2Doc);
       yield undefined;
 
       gTestCount++;
       gExpected = [false, true, true, true, false];
-      gBrowser.loadURI(test1Doc);
+      BrowserTestUtils.loadURI(gBrowser, test1Doc);
       yield undefined;
 
       gTestCount++;
       gExpected = [false, false, true, true, true, false];
-      gBrowser.loadURI(test2Doc);
+      BrowserTestUtils.loadURI(gBrowser, test2Doc);
       yield undefined;
 
       gTestCount++;

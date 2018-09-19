@@ -29,6 +29,10 @@ enum ChaosFeature {
   HashTableIteration = 0x10,
   // Randomly refuse to use cached version of image (when allowed by spec).
   ImageCache = 0x20,
+  // Delay dispatching threads to encourage dispatched tasks to run.
+  TaskDispatching = 0x40,
+  // Delay task running to encourage sending threads to run.
+  TaskRunning = 0x80,
   Any = 0xffffffff,
 };
 

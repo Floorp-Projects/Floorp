@@ -190,7 +190,9 @@ this.SnippetsFeed = class SnippetsFeed {
   async showFirefoxAccounts(browser) {
     const url = await FxAccounts.config.promiseSignUpURI("snippets");
     // We want to replace the current tab.
-    browser.loadURI(url);
+    browser.loadURI(url, {
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+    });
   }
 
   async onAction(action) {

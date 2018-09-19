@@ -341,7 +341,7 @@ function waitForViewportLoad(ui) {
 
 function load(browser, url) {
   const loaded = BrowserTestUtils.browserLoaded(browser, false, url);
-  browser.loadURI(url);
+  BrowserTestUtils.loadURI(browser, url);
   return loaded;
 }
 

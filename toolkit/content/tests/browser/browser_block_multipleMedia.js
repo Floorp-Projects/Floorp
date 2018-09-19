@@ -86,7 +86,7 @@ add_task(async function block_multiple_media() {
   info("- open new background tab -");
   let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
-  browser.loadURI(PAGE);
+  BrowserTestUtils.loadURI(browser, PAGE);
   await BrowserTestUtils.browserLoaded(browser);
 
   info("- tab should be blocked -");

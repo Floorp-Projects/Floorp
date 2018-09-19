@@ -32,7 +32,7 @@ function check_menu_at_page(url, testFn) {
     let dclPromise = ContentTask.spawn(browser, null, async function() {
       await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
     });
-    browser.loadURI(url);
+    BrowserTestUtils.loadURI(browser, url);
     await dclPromise;
 
     let menu = document.getElementById("menu_HelpPopup");

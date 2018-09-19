@@ -46,6 +46,7 @@
 #include "GeckoProfiler.h"
 #include "InputEventStatistics.h"
 #include "ThreadEventTarget.h"
+#include "ThreadDelay.h"
 
 #ifdef XP_LINUX
 #ifdef __GLIBC__
@@ -1100,6 +1101,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
     if (event) {
       LOG(("THRD(%p) running [%p]\n", this, event.get()));
+
+      // Delay event processing to encourage whoever dispatched this event
+      // to run.
+      DelayForChaosMode(ChaosFeature::TaskRunning, 1000);
 
       if (IsMainThread()) {
         BackgroundHangMonitor().NotifyActivity();

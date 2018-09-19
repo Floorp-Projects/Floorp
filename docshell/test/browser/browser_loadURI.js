@@ -19,8 +19,11 @@ function test() {
                    createInstance(Ci.nsIMIMEInputStream);
   postStream.addHeader("Content-Type", "application/x-www-form-urlencoded");
   postStream.setData(dataStream);
+  var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
+                          .getService(Ci.nsIPrincipal);
 
   tab.linkedBrowser.loadURI("http://mochi.test:8888/browser/docshell/test/browser/print_postdata.sjs", {
+    triggeringPrincipal: systemPrincipal,
     postData: postStream,
   });
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
