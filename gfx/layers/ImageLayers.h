@@ -61,11 +61,25 @@ public:
     }
   }
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the repeat size.
+   * IntSize(0, 0) means do not repeat.
+   */
+  void SetRepeatSize(const gfx::IntSize& aRepeatSize)
+  {
+    if (mRepeatSize == aRepeatSize) {
+      return;
+    }
+    mRepeatSize = aRepeatSize;
+    Mutated();
+  }
 
   ImageContainer* GetContainer() { return mContainer; }
   gfx::SamplingFilter GetSamplingFilter() { return mSamplingFilter; }
   const gfx::IntSize& GetScaleToSize() { return mScaleToSize; }
   ScaleMode GetScaleMode() { return mScaleMode; }
+  const gfx::IntSize& GetRepeatSize() { return mRepeatSize; }
 
   MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
 
@@ -88,6 +102,7 @@ protected:
   gfx::SamplingFilter mSamplingFilter;
   gfx::IntSize mScaleToSize;
   ScaleMode mScaleMode;
+  gfx::IntSize mRepeatSize;
   gfx::Matrix4x4 mEffectiveTransformForBuffer;
 };
 
