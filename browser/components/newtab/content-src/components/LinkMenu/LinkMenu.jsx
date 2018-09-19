@@ -25,7 +25,7 @@ export class _LinkMenu extends React.PureComponent {
             const userEventData = Object.assign({
               event: userEvent,
               source,
-              action_position: index
+              action_position: index,
             }, siteInfo);
             props.dispatch(ac.UserEvent(userEventData));
           }

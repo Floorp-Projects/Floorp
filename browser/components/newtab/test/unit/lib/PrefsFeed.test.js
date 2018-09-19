@@ -19,12 +19,12 @@ describe("PrefsFeed", () => {
     feed = new PrefsFeed(FAKE_PREFS);
     const storage = {
       getAll: sandbox.stub().resolves(),
-      set: sandbox.stub().resolves()
+      set: sandbox.stub().resolves(),
     };
     feed.store = {
       dispatch: sinon.spy(),
       getState() { return this.state; },
-      dbStorage: {getDbTable: sandbox.stub().returns(storage)}
+      dbStorage: {getDbTable: sandbox.stub().returns(storage)},
     };
     // Setup for tests that don't call `init`
     feed._storage = storage;
@@ -35,7 +35,7 @@ describe("PrefsFeed", () => {
       observeBranch: sinon.spy(),
       ignore: sinon.spy(),
       ignoreBranch: sinon.spy(),
-      reset: sinon.stub()
+      reset: sinon.stub(),
     };
     overrider.set({PrivateBrowsingUtils: {enabled: true}});
   });
@@ -251,7 +251,7 @@ describe("PrefsFeed", () => {
       assert.calledOnce(feed.store.dispatch);
       assert.calledWithExactly(feed.store.dispatch, ac.OnlyToMain({
         type: at.UPDATE_SECTION_PREFS,
-        data: {id: "topsites", value: {collapsed: true}}
+        data: {id: "topsites", value: {collapsed: true}},
       }));
     });
     it("should reset any migrated prefs", () => {

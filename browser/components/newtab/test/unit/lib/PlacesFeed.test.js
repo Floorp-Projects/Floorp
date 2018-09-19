@@ -10,7 +10,7 @@ const SOURCES = {
   SYNC: 1,
   IMPORT: 2,
   RESTORE: 5,
-  RESTORE_ON_STARTUP: 6
+  RESTORE_ON_STARTUP: 6,
 };
 
 const BLOCKED_EVENT = "newtab-linkBlocked"; // The event dispatched in NewTabUtils when a link is blocked;
@@ -29,8 +29,8 @@ describe("PlacesFeed", () => {
         deleteBookmark: sandbox.spy(),
         deleteHistoryEntry: sandbox.spy(),
         blockURL: sandbox.spy(),
-        addPocketEntry: sandbox.spy(() => Promise.resolve())
-      }
+        addPocketEntry: sandbox.spy(() => Promise.resolve()),
+      },
     });
     sandbox.stub(global.PlacesUtils.bookmarks, "TYPE_BOOKMARK").value(TYPE_BOOKMARK);
     sandbox.stub(global.PlacesUtils.bookmarks, "SOURCES").value(SOURCES);
@@ -46,9 +46,9 @@ describe("PlacesFeed", () => {
       createInstance() {
         return {
           initWithCallback: sinon.stub().callsFake(callback => callback()),
-          cancel: sinon.spy()
+          cancel: sinon.spy(),
         };
-      }
+      },
     };
     feed = new PlacesFeed();
     feed.store = {dispatch: sinon.spy()};
@@ -122,7 +122,7 @@ describe("PlacesFeed", () => {
       const openWindowAction = {
         type: at.OPEN_NEW_WINDOW,
         data: {url: "foo.com"},
-        _target: {browser: {ownerGlobal: {openLinkIn}}}
+        _target: {browser: {ownerGlobal: {openLinkIn}}},
       };
 
       feed.onAction(openWindowAction);
@@ -138,7 +138,7 @@ describe("PlacesFeed", () => {
       const openWindowAction = {
         type: at.OPEN_PRIVATE_WINDOW,
         data: {url: "foo.com"},
-        _target: {browser: {ownerGlobal: {openLinkIn}}}
+        _target: {browser: {ownerGlobal: {openLinkIn}}},
       };
 
       feed.onAction(openWindowAction);
@@ -154,7 +154,7 @@ describe("PlacesFeed", () => {
       const openLinkAction = {
         type: at.OPEN_LINK,
         data: {url: "foo.com"},
-        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "current"}}}
+        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "current"}}},
       };
 
       feed.onAction(openLinkAction);
@@ -171,7 +171,7 @@ describe("PlacesFeed", () => {
       const openLinkAction = {
         type: at.OPEN_LINK,
         data: {url: "foo.com", referrer: "foo.com/ref"},
-        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "tab"}}}
+        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "tab"}}},
       };
 
       feed.onAction(openLinkAction);
@@ -192,9 +192,9 @@ describe("PlacesFeed", () => {
         type: at.OPEN_LINK,
         data: {
           typedBonus: true,
-          url: "foo.com"
+          url: "foo.com",
         },
-        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "tab"}}}
+        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "tab"}}},
       };
 
       feed.onAction(openLinkAction);
@@ -206,7 +206,7 @@ describe("PlacesFeed", () => {
       const openLinkAction = {
         type: at.OPEN_LINK,
         data: {url: "foo.com", open_url: "getpocket.com/foo", type: "pocket"},
-        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "current"}}}
+        _target: {browser: {ownerGlobal: {openLinkIn, whereToOpenLink: e => "current"}}},
       };
 
       feed.onAction(openLinkAction);
@@ -230,7 +230,7 @@ describe("PlacesFeed", () => {
       const action = {
         type: at.FILL_SEARCH_TERM,
         data: {label: "@Foo"},
-        _target: {browser: {ownerGlobal: {gURLBar: locationBar}}}
+        _target: {browser: {ownerGlobal: {gURLBar: locationBar}}},
       };
 
       feed.fillSearchTopSiteTerm(action);
@@ -242,7 +242,7 @@ describe("PlacesFeed", () => {
       const action = {
         type: at.SAVE_TO_POCKET,
         data: {site: {url: "raspberry.com", title: "raspberry"}},
-        _target: {browser: {}}
+        _target: {browser: {}},
       };
       sinon.stub(feed, "saveToPocket");
       feed.onAction(action);
@@ -251,7 +251,7 @@ describe("PlacesFeed", () => {
     it("should call NewTabUtils.activityStreamLinks.addPocketEntry if we are saving a pocket story", async () => {
       const action = {
         data: {site: {url: "raspberry.com", title: "raspberry"}},
-        _target: {browser: {}}
+        _target: {browser: {}},
       };
       await feed.saveToPocket(action.data.site, action._target.browser);
       assert.calledOnce(global.NewTabUtils.activityStreamLinks.addPocketEntry);
@@ -261,7 +261,7 @@ describe("PlacesFeed", () => {
       const e = new Error("Error");
       const action = {
         data: {site: {url: "raspberry.com", title: "raspberry"}},
-        _target: {browser: {}}
+        _target: {browser: {}},
       };
       global.NewTabUtils.activityStreamLinks.addPocketEntry = sandbox.stub().rejects(e);
       await feed.saveToPocket(action.data.site, action._target.browser);
@@ -272,7 +272,7 @@ describe("PlacesFeed", () => {
       global.NewTabUtils.activityStreamLinks.addPocketEntry = sandbox.stub().resolves({item: {open_url: "pocket.com/itemID", item_id: 1234}});
       const action = {
         data: {site: {url: "raspberry.com", title: "raspberry"}},
-        _target: {browser: {}}
+        _target: {browser: {}},
       };
       await feed.saveToPocket(action.data.site, action._target.browser);
       assert.equal(feed.store.dispatch.firstCall.args[0].type, at.PLACES_SAVED_TO_POCKET);
@@ -280,14 +280,14 @@ describe("PlacesFeed", () => {
         url: "raspberry.com",
         title: "raspberry",
         pocket_id: 1234,
-        open_url: "pocket.com/itemID"
+        open_url: "pocket.com/itemID",
       });
     });
     it("should only broadcast if we got some data back from addPocketEntry", async () => {
       global.NewTabUtils.activityStreamLinks.addPocketEntry = sandbox.stub().resolves(null);
       const action = {
         data: {site: {url: "raspberry.com", title: "raspberry"}},
-        _target: {browser: {}}
+        _target: {browser: {}},
       };
       await feed.saveToPocket(action.data.site, action._target.browser);
       assert.notCalled(feed.store.dispatch);

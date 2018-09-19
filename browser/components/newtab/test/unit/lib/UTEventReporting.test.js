@@ -1,6 +1,6 @@
 import {
   UTSessionPing,
-  UTUserEventPing
+  UTUserEventPing,
 } from "test/schemas/pings";
 import {GlobalOverrider} from "test/unit/utils";
 import {UTEventReporting} from "lib/UTEventReporting.jsm";
@@ -13,7 +13,7 @@ const FAKE_EVENT_PING_PC = {
   "session_id": "abc",
   "page": "about:newtab",
   "action_position": 5,
-  "locale": "en-US"
+  "locale": "en-US",
 };
 const FAKE_SESSION_PING_PC = {
   "session_duration": 1234,
@@ -21,7 +21,7 @@ const FAKE_SESSION_PING_PC = {
   "user_prefs": 63,
   "session_id": "abc",
   "page": "about:newtab",
-  "locale": "en-US"
+  "locale": "en-US",
 };
 const FAKE_EVENT_PING_UT = [
   "activity_stream", "event", "CLICK", "TOP_SITES", {
@@ -29,16 +29,16 @@ const FAKE_EVENT_PING_UT = [
     "user_prefs": "63",
     "session_id": "abc",
     "page": "about:newtab",
-    "action_position": "5"
-  }
+    "action_position": "5",
+  },
 ];
 const FAKE_SESSION_PING_UT = [
   "activity_stream", "end", "session", "1234", {
     "addon_version": "123",
     "user_prefs": "63",
     "session_id": "abc",
-    "page": "about:newtab"
-  }
+    "page": "about:newtab",
+  },
 ];
 
 describe("UTEventReporting", () => {

@@ -24,7 +24,7 @@ describe("ActivityStream", () => {
       "lib/TopSitesFeed.jsm": {TopSitesFeed: Fake},
       "lib/TopStoriesFeed.jsm": {TopStoriesFeed: Fake},
       "lib/HighlightsFeed.jsm": {HighlightsFeed: Fake},
-      "lib/ASRouterFeed.jsm": {ASRouterFeed: Fake}
+      "lib/ASRouterFeed.jsm": {ASRouterFeed: Fake},
     }));
     as = new ActivityStream();
     sandbox.stub(as.store, "init");

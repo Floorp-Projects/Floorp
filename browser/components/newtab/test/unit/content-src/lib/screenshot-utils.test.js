@@ -10,7 +10,7 @@ describe("ScreenshotUtils", () => {
     globals = new GlobalOverrider();
     url = {
       createObjectURL: globals.sandbox.stub().returns(DEFAULT_BLOB_URL),
-      revokeObjectURL: globals.sandbox.spy()
+      revokeObjectURL: globals.sandbox.spy(),
     };
     globals.set("URL", url);
   });
@@ -98,11 +98,11 @@ describe("ScreenshotUtils", () => {
   describe("#isBlob", () => {
     let state = {
       blobImage: {path: "/test", url: "blob://test"},
-      normalImage: {url: "https://test-url"}
+      normalImage: {url: "https://test-url"},
     };
     let props = {
       blobImage: {path: "/test", data: new Blob([0])},
-      normalImage: "https://test-url"
+      normalImage: "https://test-url",
     };
     it("should return false if image is null", () => {
       assert.isFalse(ScreenshotUtils.isBlob(true, null));

@@ -15,6 +15,12 @@ const {SectionsManager} = ChromeUtils.import("resource://activity-stream/lib/Sec
 const {UserDomainAffinityProvider} = ChromeUtils.import("resource://activity-stream/lib/UserDomainAffinityProvider.jsm", {});
 const {PersistentCache} = ChromeUtils.import("resource://activity-stream/lib/PersistentCache.jsm", {});
 
+/* Not yet using personalization v2 taggers
+const {NaiveBayesTextTagger} = ChromeUtils.import("resource://activity-stream/lib/NaiveBayesTextTagger.jsm", {});
+const {NmfTextTagger} = ChromeUtils.import("resource://activity-stream/lib/NmfTextTagger.jsm", {});
+const {RecipeExecutor} = ChromeUtils.import("resource://activity-stream/lib/RecipeExecutor.jsm", {});
+*/
+
 ChromeUtils.defineModuleGetter(this, "perfService", "resource://activity-stream/common/PerfService.jsm");
 ChromeUtils.defineModuleGetter(this, "pktApi", "chrome://pocket/content/pktApi.jsm");
 
@@ -199,7 +205,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         "url": s.url,
         "min_score": s.min_score || 0,
         "score": this.personalized && this.affinityProvider ? this.affinityProvider.calculateItemRelevanceScore(s) : s.item_score || 1,
-        "spoc_meta": this.show_spocs ? {campaign_id: s.campaign_id, caps: s.caps} : {}
+        "spoc_meta": this.show_spocs ? {campaign_id: s.campaign_id, caps: s.caps} : {},
       }))
       .sort(this.personalized ? this.compareScore : (a, b) => 0);
   }
@@ -266,7 +272,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
     this.store.dispatch(ac.PerfEvent({
       event: "topstories.domain.affinity.calculation.ms",
-      value: Math.round(perfService.absNow() - start)
+      value: Math.round(perfService.absNow() - start),
     }));
 
     const affinities = this.affinityProvider.getAffinities();

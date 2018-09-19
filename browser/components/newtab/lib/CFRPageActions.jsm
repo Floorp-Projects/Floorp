@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Localization} = ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
+ChromeUtils.import("resource://gre/modules/Localization.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
@@ -50,28 +50,11 @@ class PageAction {
     this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
     this._l10n = new Localization([
-      "browser/newtab/asrouter.ftl"
+      "browser/newtab/asrouter.ftl",
     ]);
 
     // Saved timeout IDs for scheduled state changes, so they can be cancelled
     this.stateTransitionTimeoutIDs = [];
-
-    this.container.onclick = this._handleClick;
-  }
-
-  _dispatchImpression(message) {
-    this._dispatchToASRouter({type: "IMPRESSION", data: message});
-  }
-
-  _sendTelemetry(ping) {
-    // Note `useClientID` is set to true to tell TelemetryFeed to use client_id
-    // instead of `impression_id`. TelemetryFeed is also responsible for deciding
-    // whether to use `message_id` or `bucket_id` based on the release channel and
-    // shield study setup.
-    this._dispatchToASRouter({
-      type: "DOORHANGER_TELEMETRY",
-      data: {useClientID: true, action: "cfr_user_event", source: "CFR", ...ping}
-    });
   }
 
   async show(recommendation, shouldExpand = false) {
@@ -85,6 +68,11 @@ class PageAction {
     await this.window.promiseDocumentFlushed;
     const [{width}] = this.label.getClientRects();
     this.urlbar.style.setProperty("--cfr-label-width", `${width}px`);
+
+    this.container.addEventListener("click", this._handleClick);
+    // Collapse the recommendation on url bar focus in order to free up more
+    // space to display and edit the url
+    this.urlbar.addEventListener("focus", this._collapse);
 
     if (shouldExpand) {
       this._clearScheduledStateChanges();
@@ -107,42 +95,39 @@ class PageAction {
     this.container.hidden = true;
     this._clearScheduledStateChanges();
     this.urlbar.removeAttribute("cfr-recommendation-state");
-    // This is safe even if this.currentNotification is invalid/undefined
-    this.window.PopupNotifications.remove(this.currentNotification);
-  }
-
-  dispatchUserAction(action) {
-    this._dispatchToASRouter(
-      {type: "USER_ACTION", data: action},
-      {browser: this.window.gBrowser.selectedBrowser}
-    );
-  }
-
-  _expand(delay = 0) {
-    if (!delay) {
-      // Non-delayed state change overrides any scheduled state changes
-      this._clearScheduledStateChanges();
-      this.urlbar.setAttribute("cfr-recommendation-state", "expanded");
-    } else {
-      this.stateTransitionTimeoutIDs.push(this.window.setTimeout(() => {
-        this.urlbar.setAttribute("cfr-recommendation-state", "expanded");
-      }, delay));
+    this.container.removeEventListener("click", this._handleClick);
+    this.urlbar.removeEventListener("focus", this._collapse);
+    if (this.currentNotification) {
+      this.window.PopupNotifications.remove(this.currentNotification);
+      this.currentNotification = null;
     }
   }
 
-  _collapse(delay = 0) {
-    if (!delay) {
+  _expand(delay) {
+    if (delay > 0) {
+      this.stateTransitionTimeoutIDs.push(this.window.setTimeout(() => {
+        this.urlbar.setAttribute("cfr-recommendation-state", "expanded");
+      }, delay));
+    } else {
       // Non-delayed state change overrides any scheduled state changes
       this._clearScheduledStateChanges();
-      if (this.urlbar.getAttribute("cfr-recommendation-state") === "expanded") {
-        this.urlbar.setAttribute("cfr-recommendation-state", "collapsed");
-      }
-    } else {
+      this.urlbar.setAttribute("cfr-recommendation-state", "expanded");
+    }
+  }
+
+  _collapse(delay) {
+    if (delay > 0) {
       this.stateTransitionTimeoutIDs.push(this.window.setTimeout(() => {
         if (this.urlbar.getAttribute("cfr-recommendation-state") === "expanded") {
           this.urlbar.setAttribute("cfr-recommendation-state", "collapsed");
         }
       }, delay));
+    } else {
+      // Non-delayed state change overrides any scheduled state changes
+      this._clearScheduledStateChanges();
+      if (this.urlbar.getAttribute("cfr-recommendation-state") === "expanded") {
+        this.urlbar.setAttribute("cfr-recommendation-state", "collapsed");
+      }
     }
   }
 
@@ -158,9 +143,29 @@ class PageAction {
   _popupStateChange(state) {
     if (["dismissed", "removed"].includes(state)) {
       this._collapse();
-      // This is safe even if this.currentNotification is invalid/undefined
-      this.window.PopupNotifications.remove(this.currentNotification);
+      if (this.currentNotification) {
+        this.window.PopupNotifications.remove(this.currentNotification);
+        this.currentNotification = null;
+      }
     }
+  }
+
+  dispatchUserAction(action) {
+    this._dispatchToASRouter(
+      {type: "USER_ACTION", data: action},
+      {browser: this.window.gBrowser.selectedBrowser}
+    );
+  }
+
+  _dispatchImpression(message) {
+    this._dispatchToASRouter({type: "IMPRESSION", data: message});
+  }
+
+  _sendTelemetry(ping) {
+    this._dispatchToASRouter({
+      type: "DOORHANGER_TELEMETRY",
+      data: {action: "cfr_user_event", source: "CFR", ...ping},
+    });
   }
 
   _blockMessage(messageID) {
@@ -179,12 +184,27 @@ class PageAction {
    */
   async getStrings(string, subAttribute = "") {
     if (!string.string_id) {
+      if (subAttribute) {
+        if (string.attributes) {
+          return string.attributes[subAttribute];
+        }
+
+        Cu.reportError(`String ${string.value} does not contain any attributes`);
+        return subAttribute;
+      }
+
+      if (typeof string.value === "string") {
+        const stringWithAttributes = new String(string.value); // eslint-disable-line no-new-wrappers
+        stringWithAttributes.attributes = string.attributes;
+        return stringWithAttributes;
+      }
+
       return string;
     }
 
     const [localeStrings] = await this._l10n.formatMessages([{
       id: string.string_id,
-      args: string.args
+      args: string.args,
     }]);
 
     const mainString = new String(localeStrings.value); // eslint-disable-line no-new-wrappers
@@ -243,7 +263,7 @@ class PageAction {
 
     author.textContent = await this.getStrings({
       string_id: "cfr-doorhanger-extension-author",
-      args: {name: content.addon.author}
+      args: {name: content.addon.author},
     });
 
     footerText.textContent = await this.getStrings(content.text);
@@ -258,7 +278,7 @@ class PageAction {
 
       const ratingString = await this.getStrings({
         string_id: "cfr-doorhanger-extension-rating",
-        args: {total: rating}
+        args: {total: rating},
       }, "tooltiptext");
       footerFilledStars.setAttribute("tooltiptext", ratingString);
       footerEmptyStars.setAttribute("tooltiptext", ratingString);
@@ -273,7 +293,7 @@ class PageAction {
     if (users) {
       footerUsers.setAttribute("value", await this.getStrings({
         string_id: "cfr-doorhanger-extension-total-users",
-        args: {total: users}
+        args: {total: users},
       }));
       footerUsers.removeAttribute("hidden");
     } else {
@@ -306,7 +326,7 @@ class PageAction {
         this.hide();
         this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "INSTALL"});
         RecommendationMap.delete(browser);
-      }
+      },
     };
 
     const secondaryActions = [{
@@ -316,13 +336,13 @@ class PageAction {
         this.hide();
         this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "DISMISS"});
         RecommendationMap.delete(browser);
-      }
+      },
     }];
 
     const options = {
       popupIconURL: content.addon.icon,
       hideClose: true,
-      eventCallback: this._popupStateChange
+      eventCallback: this._popupStateChange,
     };
 
     this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "CLICK_DOORHANGER"});
@@ -434,8 +454,12 @@ const CFRPageActions = {
     // WeakMaps don't have a `clear` method
     PageActionMap = new WeakMap();
     RecommendationMap = new WeakMap();
-  }
+    this.PageActionMap = PageActionMap;
+    this.RecommendationMap = RecommendationMap;
+  },
 };
+
+this.PageAction = PageAction;
 this.CFRPageActions = CFRPageActions;
 
-const EXPORTED_SYMBOLS = ["CFRPageActions"];
+const EXPORTED_SYMBOLS = ["CFRPageActions", "PageAction"];

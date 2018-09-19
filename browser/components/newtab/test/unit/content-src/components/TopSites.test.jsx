@@ -14,7 +14,7 @@ import {_TopSites as TopSites} from "content-src/components/TopSites/TopSites";
 
 const perfSvc = {
   mark() {},
-  getMostRecentAbsMarkStartByName() {}
+  getMostRecentAbsMarkStartByName() {},
 };
 
 const DEFAULT_PROPS = {
@@ -24,7 +24,7 @@ const DEFAULT_PROPS = {
   topSiteIconType: () => "no_image",
   dispatch() {},
   intl: {formatMessage: x => x},
-  perfSvc
+  perfSvc,
 };
 
 const DEFAULT_BLOB_URL = "blob://test";
@@ -105,11 +105,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 0
+            "no_image": 0,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should correctly count TopSite images - just screenshot", () => {
@@ -127,11 +127,11 @@ describe("<TopSites>", () => {
             "screenshot": 1,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 0
+            "no_image": 0,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should correctly count TopSite images - custom_screenshot", () => {
@@ -149,11 +149,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 0
+            "no_image": 0,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should correctly count TopSite images - screenshot + favicon", () => {
@@ -171,11 +171,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 0
+            "no_image": 0,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should correctly count TopSite images - rich_icon", () => {
@@ -193,11 +193,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 1,
-            "no_image": 0
+            "no_image": 0,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should correctly count TopSite images - tippytop", () => {
@@ -215,11 +215,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 2,
             "rich_icon": 0,
-            "no_image": 1
+            "no_image": 1,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should correctly count TopSite images - no image", () => {
@@ -237,11 +237,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 1
+            "no_image": 1,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should correctly count pinned Top Sites", () => {
@@ -259,11 +259,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 3
+            "no_image": 3,
           },
           topsites_pinned: 2,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should correctly count search shortcut Top Sites", () => {
@@ -281,11 +281,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 2
+            "no_image": 2,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 2
-        }
+          topsites_search_shortcuts: 2,
+        },
       }));
     });
     it("should only count visible top sites on wide layout", () => {
@@ -304,11 +304,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 8
+            "no_image": 8,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
     it("should only count visible top sites on normal layout", () => {
@@ -326,11 +326,11 @@ describe("<TopSites>", () => {
             "screenshot": 0,
             "tippytop": 0,
             "rich_icon": 0,
-            "no_image": 6
+            "no_image": 6,
           },
           topsites_pinned: 0,
-          topsites_search_shortcuts: 0
-        }
+          topsites_search_shortcuts: 0,
+        },
       }));
     });
   });
@@ -344,7 +344,7 @@ describe("<TopSiteLink>", () => {
     globals = new GlobalOverrider();
     url = {
       createObjectURL: globals.sandbox.stub().returns(DEFAULT_BLOB_URL),
-      revokeObjectURL: globals.sandbox.spy()
+      revokeObjectURL: globals.sandbox.spy(),
     };
     globals.set("URL", url);
     link = {url: "https://foo.com", screenshot: "foo.jpg", hostname: "foo"};
@@ -496,7 +496,7 @@ describe("<TopSiteLink>", () => {
             this.prevented = true;
           },
           target: {blur() {}},
-          type
+          type,
         };
         wrapper.simulate(type, event);
         return event;
@@ -632,7 +632,7 @@ describe("<TopSite>", () => {
         isPinned: true,
         searchTopSite: true,
         hostname: "google",
-        label: "@google"
+        label: "@google",
       };
       const wrapper = shallow(<TopSite link={Object.assign({}, link, siteInfo)} index={3} dispatch={dispatch} />);
 
@@ -715,7 +715,7 @@ describe("<TopSiteForm>", () => {
   describe("#previewButton", () => {
     beforeEach(() => setup({
       site: {customScreenshotURL: "http://foo.com"},
-      previewResponse: null
+      previewResponse: null,
     }));
 
     it("should render the preview button on invalid urls", () => {
@@ -739,7 +739,7 @@ describe("<TopSiteForm>", () => {
     beforeEach(() => {
       setup({
         site: {customScreenshotURL: "http://foo.com", url: "http://foo.com"},
-        previewResponse: null
+        previewResponse: null,
       });
     });
 
@@ -758,11 +758,11 @@ describe("<TopSiteForm>", () => {
       assert.calledTwice(wrapper.props().dispatch);
       assert.calledWith(wrapper.props().dispatch, ac.AlsoToMain({
         type: at.PREVIEW_REQUEST,
-        data: {url: "http://screenshot"}
+        data: {url: "http://screenshot"},
       }));
       assert.calledWith(wrapper.props().dispatch, ac.UserEvent({
         event: "PREVIEW_REQUEST",
-        source: "TOP_SITES"
+        source: "TOP_SITES",
       }));
     });
   });
@@ -840,7 +840,7 @@ describe("<TopSiteForm>", () => {
         {
           data: {site: {label: "a label", url: "http://valid.com"}, index: -1},
           meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-          type: at.TOP_SITES_PIN
+          type: at.TOP_SITES_PIN,
         }
       );
       assert.calledWith(
@@ -848,7 +848,7 @@ describe("<TopSiteForm>", () => {
         {
           data: {action_position: -1, source: "TOP_SITES", event: "TOP_SITES_EDIT"},
           meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-          type: at.TELEMETRY_USER_EVENT
+          type: at.TELEMETRY_USER_EVENT,
         }
       );
     });
@@ -860,7 +860,7 @@ describe("<TopSiteForm>", () => {
         {
           data: {site: {url: "http://valid.com"}, index: -1},
           meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-          type: at.TOP_SITES_PIN
+          type: at.TOP_SITES_PIN,
         }
       );
     });
@@ -915,7 +915,7 @@ describe("<TopSiteForm>", () => {
         {
           data: {site: {label: "baz", url: "https://foo.bar", customScreenshotURL: "http://foo"}, index: 7},
           meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-          type: at.TOP_SITES_PIN
+          type: at.TOP_SITES_PIN,
         }
       );
       assert.calledWith(
@@ -923,7 +923,7 @@ describe("<TopSiteForm>", () => {
         {
           data: {action_position: 7, source: "TOP_SITES", event: "TOP_SITES_EDIT"},
           meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-          type: at.TELEMETRY_USER_EVENT
+          type: at.TELEMETRY_USER_EVENT,
         }
       );
     });
@@ -937,7 +937,7 @@ describe("<TopSiteForm>", () => {
         {
           data: {site: {label: "baz", url: "https://foo.bar", customScreenshotURL: null}, index: 7},
           meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-          type: at.TOP_SITES_PIN
+          type: at.TOP_SITES_PIN,
         }
       );
     });
@@ -951,7 +951,7 @@ describe("<TopSiteForm>", () => {
         {
           data: {site: {label: "baz", url: "https://foo.bar", customScreenshotURL: "http://foo"}, index: -1},
           meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-          type: at.TOP_SITES_PIN
+          type: at.TOP_SITES_PIN,
         }
       );
     });
@@ -963,7 +963,7 @@ describe("<TopSiteForm>", () => {
         {
           data: {site: {url: "https://foo.bar", customScreenshotURL: "http://foo"}, index: 7},
           meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-          type: at.TOP_SITES_PIN
+          type: at.TOP_SITES_PIN,
         }
       );
     });
@@ -1085,7 +1085,7 @@ describe("<TopSiteList>", () => {
       draggedIndex: 1,
       draggedSite: site2,
       draggedTitle: "bar",
-      topSitesPreview: []
+      topSitesPreview: [],
     });
     wrapper.setProps({TopSites: {rows: [site2, site1]}});
     assert.deepEqual(instance.state, TopSiteList.DEFAULT_STATE);
@@ -1104,12 +1104,12 @@ describe("<TopSiteList>", () => {
     assert.calledWith(dispatch, {
       data: {draggedFromIndex: 7, index: 3, site: {label: "foo", url: "https://foo.com", customScreenshotURL: "foo"}},
       meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-      type: "TOP_SITES_INSERT"
+      type: "TOP_SITES_INSERT",
     });
     assert.calledWith(dispatch, {
       data: {action_position: 3, event: "DROP", source: "TOP_SITES"},
       meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-      type: "TELEMETRY_USER_EVENT"
+      type: "TELEMETRY_USER_EVENT",
     });
   });
   it("should make a topSitesPreview onDragEnter", () => {
@@ -1119,7 +1119,7 @@ describe("<TopSiteList>", () => {
     instance.setState({
       draggedIndex: 4,
       draggedSite: site,
-      draggedTitle: "foo"
+      draggedTitle: "foo",
     });
     const draggedSite = Object.assign({}, site, {isPinned: true, isDragged: true});
     instance.onDragEvent({type: "dragenter"}, 2);
@@ -1136,7 +1136,7 @@ describe("<TopSiteList>", () => {
     instance.setState({
       draggedIndex: 0,
       draggedSite: site1,
-      draggedTitle: "foo"
+      draggedTitle: "foo",
     });
     let draggedSite = Object.assign({}, site1, {isPinned: true, isDragged: true});
     assert.deepEqual(instance._makeTopSitesPreview(1), [site2, draggedSite, site3, null, null, null, null, null]);
@@ -1155,7 +1155,7 @@ describe("<TopSiteList>", () => {
     instance.setState({
       draggedIndex: 1,
       draggedSite: site2,
-      draggedTitle: "bar"
+      draggedTitle: "bar",
     });
     draggedSite = Object.assign({}, site2, {isPinned: true, isDragged: true});
     assert.deepEqual(instance._makeTopSitesPreview(0), [draggedSite, site1, site3, null, null, null, null, null]);

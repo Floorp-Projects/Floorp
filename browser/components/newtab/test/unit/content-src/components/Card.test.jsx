@@ -19,16 +19,16 @@ let DEFAULT_PROPS = {
     type: "history",
     description: "A description for foo",
     image: "http://www.foo.com/img.png",
-    guid: 1
+    guid: 1,
   },
   eventSource: "TOP_STORIES",
   shouldSendImpressionStats: true,
-  contextMenuOptions: ["Separator"]
+  contextMenuOptions: ["Separator"],
 };
 
 let DEFAULT_BLOB_IMAGE = {
   path: "/testpath",
-  data: new Blob([0])
+  data: new Blob([0]),
 };
 
 function mountCardWithProps(props) {
@@ -99,7 +99,7 @@ describe("<Card>", () => {
     const linkWithCustomContext = {
       type: "history",
       context: "Custom",
-      icon: "icon-url"
+      icon: "icon-url",
     };
 
     wrapper = shallow(<Card {...Object.assign({}, DEFAULT_PROPS, {link: linkWithCustomContext})} />);
@@ -120,7 +120,7 @@ describe("<Card>", () => {
   it("should send SHOW_DOWNLOAD_FILE if we clicked on a download", () => {
     const downloadLink = {
       type: "download",
-      url: "download.mov"
+      url: "download.mov",
     };
     wrapper = mountCardWithProps(Object.assign({}, DEFAULT_PROPS, {link: downloadLink}));
     const card = wrapper.find(".card");
@@ -133,7 +133,7 @@ describe("<Card>", () => {
   it("should send OPEN_LINK if we clicked on anything other than a download", () => {
     const nonDownloadLink = {
       type: "history",
-      url: "download.mov"
+      url: "download.mov",
     };
     wrapper = mountCardWithProps(Object.assign({}, DEFAULT_PROPS, {link: nonDownloadLink}));
     const card = wrapper.find(".card");
@@ -149,7 +149,7 @@ describe("<Card>", () => {
     beforeEach(() => {
       url = {
         createObjectURL: globals.sandbox.stub().returns(DEFAULT_BLOB_URL),
-        revokeObjectURL: globals.sandbox.spy()
+        revokeObjectURL: globals.sandbox.spy(),
       };
       globals.set("URL", url);
     });
@@ -252,7 +252,7 @@ describe("<Card>", () => {
       global.Image.prototype = {
         addEventListener(event, callback) {
           triggerImage[event] = () => Promise.resolve(callback());
-        }
+        },
       };
 
       link = Object.assign({}, DEFAULT_PROPS.link);
@@ -325,14 +325,14 @@ describe("<Card>", () => {
       assert.calledWith(DEFAULT_PROPS.dispatch.secondCall, ac.UserEvent({
         event: "CLICK",
         source: DEFAULT_PROPS.eventSource,
-        action_position: DEFAULT_PROPS.index
+        action_position: DEFAULT_PROPS.index,
       }));
 
       // third dispatch call is to send impression stats
       assert.calledWith(DEFAULT_PROPS.dispatch.thirdCall, ac.ImpressionStats({
         source: DEFAULT_PROPS.eventSource,
         click: 0,
-        tiles: [{id: DEFAULT_PROPS.link.guid, pos: DEFAULT_PROPS.index}]
+        tiles: [{id: DEFAULT_PROPS.link.guid, pos: DEFAULT_PROPS.index}],
       }));
     });
     it("should provide card_type to telemetry info if type is not history", () => {
@@ -349,7 +349,7 @@ describe("<Card>", () => {
         event: "CLICK",
         source: DEFAULT_PROPS.eventSource,
         action_position: DEFAULT_PROPS.index,
-        value: {card_type: link.type}
+        value: {card_type: link.type},
       }));
     });
     it("should notify Web Extensions with WEBEXT_CLICK if props.isWebExtension is true", () => {
@@ -360,7 +360,7 @@ describe("<Card>", () => {
       assert.calledWith(DEFAULT_PROPS.dispatch, ac.WebExtEvent(at.WEBEXT_CLICK, {
         source: "MyExtension",
         url: DEFAULT_PROPS.link.url,
-        action_position: 3
+        action_position: 3,
       }));
     });
   });

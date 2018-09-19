@@ -1,26 +1,26 @@
 export const cardContextTypes = {
   history: {
     intlID: "type_label_visited",
-    icon: "history-item"
+    icon: "history-item",
   },
   bookmark: {
     intlID: "type_label_bookmarked",
-    icon: "bookmark-added"
+    icon: "bookmark-added",
   },
   trending: {
     intlID: "type_label_recommended",
-    icon: "trending"
+    icon: "trending",
   },
   now: {
     intlID: "type_label_now",
-    icon: "now"
+    icon: "now",
   },
   pocket: {
     intlID: "type_label_pocket",
-    icon: "pocket"
+    icon: "pocket",
   },
   download: {
     intlID: "type_label_downloaded",
-    icon: "download"
-  }
+    icon: "download",
+  },
 };

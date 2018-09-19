@@ -75,6 +75,10 @@
       "type": "boolean",
       "description": "To be used by fundraising only, increases height to roughly 120px. Defaults to false."
     },
+    "do_not_autoblock": {
+      "type": "boolean",
+      "description": "Used to prevent blocking the snippet after the CTA (link or button) has been clicked"
+    },
     "links": {
       "additionalProperties": {
         "url": {
