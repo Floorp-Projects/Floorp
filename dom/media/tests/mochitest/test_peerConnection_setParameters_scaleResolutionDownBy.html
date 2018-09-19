@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1253499",
+  title: "Live-updating scaleResolutionDownBy"
+});
+
+let sender, localElem, remoteElem;
+let originalWidth, originalAspectRatio, originalScale;
+
+async function checkScaleDownBy(scale) {
+  sender.setParameters({ encodings: [{ scaleResolutionDownBy: scale }] });
+  await haveEvent(remoteElem, "resize", wait(5000, new Error("Timeout")));
+
+  // Find the expected resolution. Internally we pick the closest lower
+  // resolution with an identical aspect ratio.
+  let expectedWidth = Math.floor(originalWidth / scale);
+  while (expectedWidth / originalAspectRatio % 1 != 0) {
+    --expectedWidth;
+  }
+  is(remoteElem.videoWidth, expectedWidth,
+    `Width should have scaled down by ${scale}`);
+  is(remoteElem.videoHeight, expectedWidth / originalAspectRatio,
+    `Height should have scaled down by ${scale}`);
+}
+
+runNetworkTest(async function (options) {
+  await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
+
+  let test = new PeerConnectionTest(options);
+  test.setMediaConstraints([{video: true}], []);
+  test.chain.append([
+    function CHECK_PRECONDITIONS() {
+      is(test.pcLocal._pc.getSenders().length, 1,
+          "Should have 1 local sender");
+      is(test.pcLocal.localMediaElements.length, 1,
+          "Should have 1 local sending media element");
+      is(test.pcRemote.remoteMediaElements.length, 1,
+          "Should have 1 remote media element");
+
+      sender = test.pcLocal._pc.getSenders()[0];
+      localElem = test.pcLocal.localMediaElements[0];
+      remoteElem = test.pcRemote.remoteMediaElements[0];
+
+      remoteElem.addEventListener("resize", () =>
+        info(`Video resized to ${remoteElem.videoWidth}x${remoteElem.videoHeight}`));
+
+      originalWidth = localElem.videoWidth;
+      originalAspectRatio = originalWidth / localElem.videoHeight;
+      originalScale = remoteElem.videoWidth / originalWidth;
+      info(`Original width is ${originalWidth}`);
+    },
+    function PC_LOCAL_SCALEDOWNBY_2() {
+      return checkScaleDownBy(2);
+    },
+    function PC_LOCAL_SCALEDOWNBY_4() {
+      return checkScaleDownBy(4);
+    },
+    function PC_LOCAL_SCALEDOWNBY_15() {
+      return checkScaleDownBy(15);
+    },
+    function PC_LOCAL_SCALEDOWNBY_8() {
+      return checkScaleDownBy(8);
+    },
+    function PC_LOCAL_SCALEDOWNBY_1() {
+      return checkScaleDownBy(1);
+    },
+  ]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>
