@@ -2932,6 +2932,9 @@ public:
 
     bool IsSameOrigin(nsIPrincipal* aOther) const;
 
+    // Does the principal of compartment a subsume the principal of compartment b?
+    static bool Subsumes(JS::Compartment* aCompA, JS::Compartment* aCompB);
+
     bool MightBeWebContent() const;
 
     const mozilla::SiteIdentifier& SiteRef() const {
