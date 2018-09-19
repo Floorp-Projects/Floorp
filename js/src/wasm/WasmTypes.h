@@ -1179,6 +1179,48 @@ typedef RefPtr<DataSegment> MutableDataSegment;
 typedef SerializableRefPtr<const DataSegment> SharedDataSegment;
 typedef Vector<SharedDataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
+// The CustomSection(Env) structs are like DataSegment(Env): CustomSectionEnv is
+// stored in the ModuleEnvironment and CustomSection holds a copy of the payload
+// and is stored in the wasm::Module.
+
+struct CustomSectionEnv
+{
+    uint32_t nameOffset;
+    uint32_t nameLength;
+    uint32_t payloadOffset;
+    uint32_t payloadLength;
+};
+
+typedef Vector<CustomSectionEnv, 0, SystemAllocPolicy> CustomSectionEnvVector;
+
+struct CustomSection
+{
+    Bytes name;
+    SharedBytes payload;
+
+    WASM_DECLARE_SERIALIZABLE(CustomSection)
+};
+
+typedef Vector<CustomSection, 0, SystemAllocPolicy> CustomSectionVector;
+
+// A Name represents a string of utf8 chars embedded within the name custom
+// section. The offset of a name is expressed relative to the beginning of the
+// name section's payload so that Names can stored in wasm::Code, which only
+// holds the name section's bytes, not the whole bytecode.
+
+struct Name
+{
+    // All fields are treated as cacheable POD:
+    uint32_t offsetInNamePayload;
+    uint32_t length;
+
+    Name()
+      : offsetInNamePayload(UINT32_MAX), length(0)
+    {}
+};
+
+typedef Vector<Name, 0, SystemAllocPolicy> NameVector;
+
 // FuncTypeIdDesc describes a function type that can be used by call_indirect
 // and table-entry prologues to structurally compare whether the caller and
 // callee's signatures *structurally* match. To handle the general case, a

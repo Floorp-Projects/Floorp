@@ -232,7 +232,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // called to augment the given Module with tier 2 code.
 
     SharedModule finishModule(const ShareableBytes& bytecode, UniqueLinkData* linkData = nullptr);
-    MOZ_MUST_USE bool finishTier2(Module& module);
+    MOZ_MUST_USE bool finishTier2(const Module& module);
 
     ExclusiveDeferredValidationState& deferredValidationState() {
         return deferredValidationState_;

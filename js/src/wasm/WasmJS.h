@@ -107,9 +107,9 @@ class WasmModuleObject : public NativeObject
     static bool construct(JSContext*, unsigned, Value*);
 
     static WasmModuleObject* create(JSContext* cx,
-                                    wasm::Module& module,
+                                    const wasm::Module& module,
                                     HandleObject proto = nullptr);
-    wasm::Module& module() const;
+    const wasm::Module& module() const;
 };
 
 // The class of WebAssembly.Global.  This wraps a storage location, and there is
@@ -216,7 +216,6 @@ class WasmInstanceObject : public NativeObject
                                       RefPtr<const wasm::Code> code,
                                       const wasm::DataSegmentVector& dataSegments,
                                       const wasm::ElemSegmentVector& elemSegments,
-                                      UniquePtr<wasm::DebugState> debug,
                                       wasm::UniqueTlsData tlsData,
                                       HandleWasmMemoryObject memory,
                                       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
@@ -224,7 +223,8 @@ class WasmInstanceObject : public NativeObject
                                       const wasm::GlobalDescVector& globals,
                                       wasm::HandleValVector globalImportValues,
                                       const WasmGlobalObjectVector& globalObjs,
-                                      HandleObject proto);
+                                      HandleObject proto,
+                                      UniquePtr<wasm::DebugState> maybeDebug);
     void initExportsObj(JSObject& exportsObj);
 
     wasm::Instance& instance() const;

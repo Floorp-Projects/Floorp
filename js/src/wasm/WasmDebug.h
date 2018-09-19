@@ -20,7 +20,7 @@
 #define wasm_debug_h
 
 #include "js/HashTable.h"
-#include "wasm/WasmCode.h"
+#include "wasm/WasmModule.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {
@@ -55,13 +55,14 @@ typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>, SystemAl
 class DebugState
 {
     const SharedCode         code_;
-    const SharedBytes        maybeBytecode_;
+    const SharedModule       module_;
     bool                     binarySource_;
 
     // State maintained when debugging is enabled. In this case, the Code is
     // not actually shared, but is referenced uniquely by the instance that is
     // being debugged.
 
+    bool                     enterFrameTrapsEnabled_;
     uint32_t                 enterAndLeaveFrameTrapsCounter_;
     WasmBreakpointSiteMap    breakpointSites_;
     StepModeCounters         stepModeCounters_;
@@ -69,24 +70,23 @@ class DebugState
     void toggleDebugTrap(uint32_t offset, bool enabled);
 
   public:
-    DebugState(SharedCode code,
-               const ShareableBytes* maybeBytecode,
-               bool binarySource);
+    DebugState(const Code& code, const Module& module, bool binarySource);
 
-    const Bytes* maybeBytecode() const { return maybeBytecode_ ? &maybeBytecode_->bytes : nullptr; }
+    const Bytes& bytecode() const { return module_->bytecode().bytes; }
     bool binarySource() const { return binarySource_; }
 
-    JSString* createText(JSContext* cx);
     bool getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets);
     bool getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets);
-    bool getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column);
-    bool totalSourceLines(JSContext* cx, uint32_t* count);
+    bool getOffsetLocation(uint32_t offset, size_t* lineno, size_t* column);
+    uint32_t totalSourceLines();
 
     // The Code can track enter/leave frame events. Any such event triggers
     // debug trap. The enter/leave frame events enabled or disabled across
     // all functions.
 
     void adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled);
+    void ensureEnterFrameTrapsState(JSContext* cx, bool enabled);
+    bool enterFrameTrapsEnabled() const { return enterFrameTrapsEnabled_; }
 
     // When the Code is debugEnabled, individual breakpoints can be enabled or
     // disabled at instruction offsets.
@@ -113,14 +113,12 @@ class DebugState
 
     // Debug URL helpers.
 
-    JSString* debugDisplayURL(JSContext* cx) const;
     bool getSourceMappingURL(JSContext* cx, MutableHandleString result) const;
 
     // Accessors for commonly used elements of linked structures.
 
     const MetadataTier& metadata(Tier t) const { return code_->metadata(t); }
     const Metadata& metadata() const { return code_->metadata(); }
-    bool debugEnabled() const { return metadata().debugEnabled; }
     const CodeRangeVector& codeRanges(Tier t) const { return metadata(t).codeRanges; }
     const CallSiteVector& callSites(Tier t) const { return metadata(t).callSites; }
 
