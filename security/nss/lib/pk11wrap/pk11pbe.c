@@ -23,7 +23,7 @@
 #include "pkcs11.h"
 #include "pk11func.h"
 #include "secitem.h"
-#include "key.h"
+#include "keyhi.h"
 
 typedef struct SEC_PKCS5PBEParameterStr SEC_PKCS5PBEParameter;
 struct SEC_PKCS5PBEParameterStr {

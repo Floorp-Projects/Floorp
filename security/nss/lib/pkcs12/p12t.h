@@ -6,7 +6,7 @@
 #define _P12T_H_
 
 #include "secoid.h"
-#include "key.h"
+#include "keythi.h"
 #include "pkcs11.h"
 #include "secpkcs7.h"
 #include "secdig.h" /* for SGNDigestInfo */

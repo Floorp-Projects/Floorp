@@ -14,7 +14,7 @@
 #include "secasn1.h"
 #include "secitem.h"
 #include "cert.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secerr.h"
 
 typedef struct smime_cipher_map_struct {
