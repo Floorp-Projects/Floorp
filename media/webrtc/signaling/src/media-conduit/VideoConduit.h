@@ -527,6 +527,12 @@ private:
   // Written only on main thread. Guarded by mMutex, except for reads on main.
   UniquePtr<cricket::VideoAdapter> mVideoAdapter;
 
+  // Adapter for simulcast layers. We use this to handle scaleResolutionDownBy
+  // for layers. It's separate from mVideoAdapter to not affect scaling settings
+  // for incoming frames.
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  UniquePtr<cricket::VideoAdapter> mSimulcastAdapter;
+
   // Our own record of the sinks added to mVideoBroadcaster so we can support
   // dispatching updates to sinks from off-main-thread. Main thread only.
   AutoTArray<rtc::VideoSinkInterface<webrtc::VideoFrame>*, 1> mRegisteredSinks;
