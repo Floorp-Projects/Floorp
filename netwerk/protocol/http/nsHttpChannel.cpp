@@ -418,17 +418,6 @@ nsHttpChannel::Init(nsIURI *uri,
     if (NS_FAILED(rv))
         return rv;
 
-#ifdef MOZ_GECKO_PROFILER
-    mLastStatusReported = TimeStamp::Now(); // in case we enable the profiler after Init()
-    if (profiler_is_active()) {
-        int32_t priority = PRIORITY_NORMAL;
-        GetPriority(&priority);
-        profiler_add_network_marker(uri, priority, channelId, NetworkLoadType::LOAD_START,
-                                    mChannelCreationTimestamp, mLastStatusReported,
-                                    0);
-    }
-#endif
-
     LOG(("nsHttpChannel::Init [this=%p]\n", this));
 
     return rv;
@@ -6288,11 +6277,18 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         uint64_t sourceEventId, parentTaskId;
         tasktracer::SourceEventType sourceEventType;
         GetCurTraceInfo(&sourceEventId, &parentTaskId, &sourceEventType);
-        nsCOMPtr<nsIURI> uri;
-        GetURI(getter_AddRefs(uri));
         nsAutoCString urispec;
-        uri->GetSpec(urispec);
+        mURI->GetSpec(urispec);
         tasktracer::AddLabel("nsHttpChannel::AsyncOpen %s", urispec.get());
+    }
+#endif
+
+#ifdef MOZ_GECKO_PROFILER
+    mLastStatusReported = TimeStamp::Now(); // in case we enable the profiler after AsyncOpen()
+    if (profiler_is_active()) {
+        profiler_add_network_marker(mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
+                                    mChannelCreationTimestamp, mLastStatusReported,
+                                    0);
     }
 #endif
 
