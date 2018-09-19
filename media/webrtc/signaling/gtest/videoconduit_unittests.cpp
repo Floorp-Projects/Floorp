@@ -535,9 +535,9 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecScaleResolutionBy)
     sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
   ASSERT_EQ(videoStreams.size(), 2U);
   ASSERT_EQ(videoStreams[0].width, 160U);
-  ASSERT_EQ(videoStreams[0].height, 90U);
+  ASSERT_EQ(videoStreams[0].height, 88U);
   ASSERT_EQ(videoStreams[1].width, 320U);
-  ASSERT_EQ(videoStreams[1].height, 180U);
+  ASSERT_EQ(videoStreams[1].height, 176U);
   mVideoConduit->StopTransmitting();
 }
 
@@ -748,10 +748,38 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen)
   codecConfig.mSimulcastEncodings.push_back(encoding3);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
   mVideoConduit->StartTransmitting();
+
+  // This should crop to 16-alignment to help with scaling
+  SendVideoFrame(26, 24, 1);
   std::vector<webrtc::VideoStream> videoStreams;
-  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(26, 24, mCall->mEncoderConfig);
-  ASSERT_EQ(videoStreams.size(), 2U);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 3U);
+  EXPECT_EQ(videoStreams[2].width, 16U);
+  EXPECT_EQ(videoStreams[2].height, 16U);
+  EXPECT_EQ(videoStreams[1].width, 8U);
+  EXPECT_EQ(videoStreams[1].height, 8U);
+  EXPECT_EQ(videoStreams[0].width, 4U);
+  EXPECT_EQ(videoStreams[0].height, 4U);
+
+  // Test that we are able to remove the 16-alignment cropping (non-simulcast)
+  codecConfig.mSimulcastEncodings.clear();
+  codecConfig.mSimulcastEncodings.push_back(encoding);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  mVideoConduit->SetLocalSSRCs({42});
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  SendVideoFrame(26, 24, 2);
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(
+    sink->mVideoFrame.width(), sink->mVideoFrame.height(), mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].width, 26U);
+  EXPECT_EQ(videoStreams[0].height, 24U);
+
   mVideoConduit->StopTransmitting();
 }
 
@@ -1146,6 +1174,30 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting)
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 3000U);
   ASSERT_EQ(sink->mOnFrameCount, 3U);
 
+  // ScaleResolutionDownBy
+  VideoCodecConfig codecConfigScaleDownBy(120, "VP8", constraints);
+  encoding.constraints.maxFs = 0;
+  encoding.constraints.scaleDownBy = 3.7;
+  codecConfigScaleDownBy.mSimulcastEncodings.push_back(encoding);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigScaleDownBy);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  SendVideoFrame(1280, 720, 4);
+  ASSERT_EQ(sink->mVideoFrame.width(), 320);
+  ASSERT_EQ(sink->mVideoFrame.height(), 180);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 4000U);
+  ASSERT_EQ(sink->mOnFrameCount, 4U);
+
+  codecConfigScaleDownBy.mSimulcastEncodings[0].constraints.scaleDownBy = 1.3;
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigScaleDownBy);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  SendVideoFrame(641, 359, 5);
+  ASSERT_EQ(sink->mVideoFrame.width(), 480);
+  ASSERT_EQ(sink->mVideoFrame.height(), 267);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 5000U);
+  ASSERT_EQ(sink->mOnFrameCount, 5U);
+
   mVideoConduit->StopTransmitting();
 }
 
@@ -1362,7 +1414,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeSimulcastScaleResolutionBy)
 
   SendVideoFrame(1280, 720, 2);
   ASSERT_EQ(sink->mVideoFrame.width(), 640);
-  ASSERT_EQ(sink->mVideoFrame.height(), 360);
+  ASSERT_EQ(sink->mVideoFrame.height(), 352);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
   ASSERT_EQ(sink->mOnFrameCount, 2U);
   mVideoConduit->StopTransmitting();
