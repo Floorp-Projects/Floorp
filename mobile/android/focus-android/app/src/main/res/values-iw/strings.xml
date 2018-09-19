@@ -228,5 +228,6 @@
   <string name="tip_set_default_browser">פתיחת כל קישור עם %1$s\n הגדרת %1$s כדפדפן ברירת המחדל</string>
   <string name="tip_autocomplete_url">השלמת כתובות עבור האתרים הנפוצים שלך\n יש ללחוץ לחיצה ארוכה על כתובת כלשהי בסרגל הכתובת</string>
   <string name="tip_open_in_new_tab">פתיחת קישור בלשונית חדשה\n יש ללחוץ לחיצה ארוכה על כל קישור שהוא בעמוד</string>
+  <string name="tip_request_desktop">אפשר להציע לך לצפות באתר לשולחן העבודה?%1$s תפריט &gt; בקשת אתר שולחני</string>
   <string name="tip_disable_tips">כיבוי עצות במסך ההתחלה של %1$s</string>
 </resources>
