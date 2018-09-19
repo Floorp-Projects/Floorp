@@ -48,13 +48,14 @@ struct CompileArgs;
 
 class Module : public JS::WasmModule
 {
-    const SharedCode        code_;
-    const ImportVector      imports_;
-    const ExportVector      exports_;
-    const StructTypeVector  structTypes_;
-    const DataSegmentVector dataSegments_;
-    const ElemSegmentVector elemSegments_;
-    const SharedBytes       bytecode_;
+    const SharedCode          code_;
+    const ImportVector        imports_;
+    const ExportVector        exports_;
+    const StructTypeVector    structTypes_;
+    const DataSegmentVector   dataSegments_;
+    const ElemSegmentVector   elemSegments_;
+    const CustomSectionVector customSections_;
+    const SharedBytes         bytecode_;
 
     // These fields are only meaningful when code_->metadata().debugEnabled.
     // `debugCodeClaimed_` is set to false initially and then to true when
@@ -96,6 +97,7 @@ class Module : public JS::WasmModule
            StructTypeVector&& structTypes,
            DataSegmentVector&& dataSegments,
            ElemSegmentVector&& elemSegments,
+           CustomSectionVector&& customSections,
            const ShareableBytes& bytecode,
            UniqueConstBytes debugUnlinkedCode = nullptr,
            UniqueLinkData debugLinkData = nullptr)
@@ -105,6 +107,7 @@ class Module : public JS::WasmModule
         structTypes_(std::move(structTypes)),
         dataSegments_(std::move(dataSegments)),
         elemSegments_(std::move(elemSegments)),
+        customSections_(std::move(customSections)),
         bytecode_(&bytecode),
         debugCodeClaimed_(false),
         debugUnlinkedCode_(std::move(debugUnlinkedCode)),
@@ -121,6 +124,7 @@ class Module : public JS::WasmModule
     const MetadataTier& metadata(Tier t) const { return code_->metadata(t); }
     const ImportVector& imports() const { return imports_; }
     const ExportVector& exports() const { return exports_; }
+    const CustomSectionVector& customSections() const { return customSections_; }
     const ShareableBytes& bytecode() const { return *bytecode_; }
     uint32_t codeLength(Tier t) const { return code_->segment(t).length(); }
 
@@ -141,7 +145,7 @@ class Module : public JS::WasmModule
     // be installed and made visible.
 
     void startTier2(const CompileArgs& args);
-    bool finishTier2(const LinkData& linkData2, UniqueCodeTier code2);
+    bool finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const;
 
     void testingBlockOnTier2Complete() const;
     bool testingTier2Active() const { return testingTier2Active_; }
@@ -171,11 +175,12 @@ class Module : public JS::WasmModule
     bool extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const;
 };
 
-typedef RefPtr<Module> SharedModule;
+typedef RefPtr<Module> MutableModule;
+typedef RefPtr<const Module> SharedModule;
 
 // JS API implementations:
 
-SharedModule
+RefPtr<JS::WasmModule>
 DeserializeModule(PRFileDesc* bytecode, UniqueChars filename, unsigned line);
 
 } // namespace wasm

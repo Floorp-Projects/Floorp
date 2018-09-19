@@ -92,7 +92,7 @@ CompileBuffer(const CompileArgs& args,
 // Attempt to compile the second tier of the given wasm::Module.
 
 void
-CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancelled);
+CompileTier2(const CompileArgs& args, const Module& module, Atomic<bool>* cancelled);
 
 // Compile the given WebAssembly module which has been broken into three
 // partitions:

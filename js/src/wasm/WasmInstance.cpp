@@ -23,6 +23,8 @@
 #include "jit/InlinableNatives.h"
 #include "jit/JitCommon.h"
 #include "jit/JitRealm.h"
+#include "util/StringBuffer.h"
+#include "util/Text.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmModule.h"
 
@@ -697,22 +699,23 @@ Instance::postBarrier(Instance* instance, gc::Cell** location)
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
                    SharedCode code,
-                   UniqueDebugState debug,
                    UniqueTlsData tlsDataIn,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
                    Handle<FunctionVector> funcImports,
                    HandleValVector globalImportValues,
-                   const WasmGlobalObjectVector& globalObjs)
+                   const WasmGlobalObjectVector& globalObjs,
+                   UniqueDebugState maybeDebug)
   : realm_(cx->realm()),
     object_(object),
     code_(code),
-    debug_(std::move(debug)),
     tlsData_(std::move(tlsDataIn)),
     memory_(memory),
     tables_(std::move(tables)),
-    enterFrameTrapsEnabled_(false)
+    maybeDebug_(std::move(maybeDebug))
 {
+    MOZ_ASSERT(!!maybeDebug_ == metadata().debugEnabled);
+
 #ifdef DEBUG
     for (auto t : code_->tiers()) {
         MOZ_ASSERT(funcImports.length() == metadata(t).funcImports.length());
@@ -1145,7 +1148,7 @@ Instance::getFuncDisplayAtom(JSContext* cx, uint32_t funcIndex) const
     // The "display name" of a function is primarily shown in Error.stack which
     // also includes location, so use getFuncNameBeforeLocation.
     UTF8Bytes name;
-    if (!metadata().getFuncNameBeforeLocation(debug_->maybeBytecode(), funcIndex, &name)) {
+    if (!metadata().getFuncNameBeforeLocation(funcIndex, &name)) {
         return nullptr;
     }
 
@@ -1155,7 +1158,7 @@ Instance::getFuncDisplayAtom(JSContext* cx, uint32_t funcIndex) const
 void
 Instance::ensureProfilingLabels(bool profilingEnabled) const
 {
-    return code_->ensureProfilingLabels(debug_->maybeBytecode(), profilingEnabled);
+    return code_->ensureProfilingLabels(profilingEnabled);
 }
 
 void
@@ -1191,15 +1194,63 @@ Instance::deoptimizeImportExit(uint32_t funcImportIndex)
     import.baselineScript = nullptr;
 }
 
-void
-Instance::ensureEnterFrameTrapsState(JSContext* cx, bool enabled)
+JSString*
+Instance::createDisplayURL(JSContext* cx)
 {
-    if (enterFrameTrapsEnabled_ == enabled) {
-        return;
+    // In the best case, we simply have a URL, from a streaming compilation of a
+    // fetched Response.
+
+    if (metadata().filenameIsURL) {
+        return NewStringCopyZ<CanGC>(cx, metadata().filename.get());
     }
 
-    debug_->adjustEnterAndLeaveFrameTrapsState(cx, enabled);
-    enterFrameTrapsEnabled_ = enabled;
+    // Otherwise, build wasm module URL from following parts:
+    // - "wasm:" as protocol;
+    // - URI encoded filename from metadata (if can be encoded), plus ":";
+    // - 64-bit hash of the module bytes (as hex dump).
+
+    StringBuffer result(cx);
+    if (!result.append("wasm:")) {
+        return nullptr;
+    }
+
+    if (const char* filename = metadata().filename.get()) {
+        // EncodeURI returns false due to invalid chars or OOM -- fail only
+        // during OOM.
+        JSString* filenamePrefix = EncodeURI(cx, filename, strlen(filename));
+        if (!filenamePrefix) {
+            if (cx->isThrowingOutOfMemory()) {
+                return nullptr;
+            }
+
+            MOZ_ASSERT(!cx->isThrowingOverRecursed());
+            cx->clearPendingException();
+            return nullptr;
+        }
+
+        if (!result.append(filenamePrefix)) {
+            return nullptr;
+        }
+    }
+
+    if (metadata().debugEnabled) {
+        if (!result.append(":")) {
+            return nullptr;
+        }
+
+        const ModuleHash& hash = metadata().debugHash;
+        for (size_t i = 0; i < sizeof(ModuleHash); i++) {
+            char digit1 = hash[i] / 16, digit2 = hash[i] % 16;
+            if (!result.append((char)(digit1 < 10 ? digit1 + '0' : digit1 + 'a' - 10))) {
+                return nullptr;
+            }
+            if (!result.append((char)(digit2 < 10 ? digit2 + '0' : digit2 + 'a' - 10))) {
+                return nullptr;
+            }
+        }
+    }
+
+    return result.finishString();
 }
 
 void
@@ -1217,6 +1268,9 @@ Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
          *data += table->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenTables);
     }
 
-    debug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
+    if (maybeDebug_) {
+        maybeDebug_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
+    }
+
     code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code, data);
 }

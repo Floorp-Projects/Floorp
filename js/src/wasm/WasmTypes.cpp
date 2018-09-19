@@ -517,6 +517,50 @@ DataSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
     return bytes.sizeOfExcludingThis(mallocSizeOf);
 }
 
+size_t
+CustomSection::serializedSize() const
+{
+    return SerializedPodVectorSize(name) +
+           SerializedPodVectorSize(payload->bytes);
+}
+
+uint8_t*
+CustomSection::serialize(uint8_t* cursor) const
+{
+    cursor = SerializePodVector(cursor, name);
+    cursor = SerializePodVector(cursor, payload->bytes);
+    return cursor;
+}
+
+const uint8_t*
+CustomSection::deserialize(const uint8_t* cursor)
+{
+    cursor = DeserializePodVector(cursor, &name);
+    if (!cursor) {
+        return nullptr;
+    }
+
+    Bytes bytes;
+    cursor = DeserializePodVector(cursor, &bytes);
+    if (!cursor) {
+        return nullptr;
+    }
+    payload = js_new<ShareableBytes>(std::move(bytes));
+    if (!payload) {
+        return nullptr;
+    }
+
+    return cursor;
+}
+
+size_t
+CustomSection::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return name.sizeOfExcludingThis(mallocSizeOf) +
+           sizeof(*payload) +
+           payload->sizeOfExcludingThis(mallocSizeOf);
+}
+
 //  Heap length on ARM should fit in an ARM immediate. We approximate the set
 //  of valid ARM immediates with the predicate:
 //    2^n for n in [16, 24)

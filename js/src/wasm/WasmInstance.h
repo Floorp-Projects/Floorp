@@ -51,13 +51,12 @@ class Instance
     jit::TrampolinePtr              preBarrierCode_;
 #endif
     const SharedCode                code_;
-    const UniqueDebugState          debug_;
     const UniqueTlsData             tlsData_;
     GCPtrWasmMemoryObject           memory_;
-    SharedTableVector               tables_;
+    const SharedTableVector         tables_;
     DataSegmentVector               passiveDataSegments_;
     ElemSegmentVector               passiveElemSegments_;
-    bool                            enterFrameTrapsEnabled_;
+    const UniqueDebugState          maybeDebug_;
 
     // Internal helpers:
     const void** addressOfFuncTypeId(const FuncTypeIdDesc& funcTypeId) const;
@@ -75,13 +74,13 @@ class Instance
     Instance(JSContext* cx,
              HandleWasmInstanceObject object,
              SharedCode code,
-             UniqueDebugState debug,
              UniqueTlsData tlsData,
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
              Handle<FunctionVector> funcImports,
              HandleValVector globalImportValues,
-             const WasmGlobalObjectVector& globalObjs);
+             const WasmGlobalObjectVector& globalObjs,
+             UniqueDebugState maybeDebug);
     ~Instance();
     bool init(JSContext* cx,
               const DataSegmentVector& dataSegments,
@@ -91,8 +90,8 @@ class Instance
     JS::Realm* realm() const { return realm_; }
     const Code& code() const { return *code_; }
     const CodeTier& code(Tier t) const { return code_->codeTier(t); }
-    DebugState& debug() { return *debug_; }
-    const DebugState& debug() const { return *debug_; }
+    bool debugEnabled() const { return !!maybeDebug_; }
+    DebugState& debug() { return *maybeDebug_; }
     const ModuleSegment& moduleSegment(Tier t) const { return code_->segment(t); }
     TlsData* tlsData() const { return tlsData_.get(); }
     uint8_t* globalData() const { return (uint8_t*)&tlsData_->globalArea; }
@@ -158,11 +157,9 @@ class Instance
 
     void initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffset, uint32_t len);
 
-    // Debug support:
+    // Debugger support:
 
-    bool debugEnabled() const { return metadata().debugEnabled; }
-    bool enterFrameTrapsEnabled() const { return enterFrameTrapsEnabled_; }
-    void ensureEnterFrameTrapsState(JSContext* cx, bool enabled);
+    JSString* createDisplayURL(JSContext* cx);
 
     // about:memory reporting:
 

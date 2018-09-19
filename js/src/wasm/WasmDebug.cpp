@@ -24,8 +24,6 @@
 #include "gc/FreeOp.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/MacroAssembler.h"
-#include "util/StringBuffer.h"
-#include "util/Text.h"
 #include "vm/Debugger.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmValidate.h"
@@ -36,25 +34,15 @@ using namespace js::wasm;
 
 using mozilla::BinarySearchIf;
 
-DebugState::DebugState(SharedCode code,
-                       const ShareableBytes* maybeBytecode,
-                       bool binarySource)
-  : code_(std::move(code)),
-    maybeBytecode_(maybeBytecode),
+DebugState::DebugState(const Code& code, const Module& module, bool binarySource)
+  : code_(&code),
+    module_(&module),
     binarySource_(binarySource),
+    enterFrameTrapsEnabled_(false),
     enterAndLeaveFrameTrapsCounter_(0)
 {
-    MOZ_ASSERT_IF(debugEnabled(), maybeBytecode);
+    MOZ_ASSERT(code.metadata().debugEnabled);
 }
-
-const char enabledMessage[] =
-    "Restart with developer tools open to view WebAssembly source.";
-
-const char noBinarySource[] =
-    "Configure the debugger to display WebAssembly bytecode.";
-
-const char notGeneratedMessage[] =
-    "WebAssembly text generation was disabled.";
 
 static const uint32_t DefaultBinarySourceColumnNumber = 1;
 
@@ -69,32 +57,9 @@ SlowCallSiteSearchByOffset(const MetadataTier& metadata, uint32_t offset)
     return nullptr;
 }
 
-JSString*
-DebugState::createText(JSContext* cx)
-{
-    StringBuffer buffer(cx);
-    if (!maybeBytecode_) {
-        if (!buffer.append(enabledMessage)) {
-            return nullptr;
-        }
-    } else if (binarySource_) {
-        if (!buffer.append(notGeneratedMessage)) {
-            return nullptr;
-        }
-    } else {
-        if (!buffer.append(noBinarySource)) {
-            return nullptr;
-        }
-    }
-    return buffer.finishString();
-}
-
 bool
 DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets)
 {
-    if (!debugEnabled()) {
-        return true;
-    }
     if (!binarySource_) {
         return true;
     }
@@ -108,9 +73,6 @@ DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offse
 bool
 DebugState::getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets)
 {
-    if (!metadata().debugEnabled) {
-        return true;
-    }
     if (!binarySource_) {
         return true;
     }
@@ -127,38 +89,23 @@ DebugState::getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets)
 }
 
 bool
-DebugState::getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column)
+DebugState::getOffsetLocation(uint32_t offset, size_t* lineno, size_t* column)
 {
-    *found = false;
-    if (!debugEnabled()) {
-        return true;
-    }
     if (!binarySource_) {
-        return true;
+        return false;
     }
     if (!SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset)) {
-        return true; // offset was not found
+        return false;
     }
-    *found = true;
     *lineno = offset;
     *column = DefaultBinarySourceColumnNumber;
     return true;
 }
 
-bool
-DebugState::totalSourceLines(JSContext* cx, uint32_t* count)
+uint32_t
+DebugState::totalSourceLines()
 {
-    *count = 0;
-    if (!debugEnabled()) {
-        return true;
-    }
-    if (!binarySource_) {
-        return true;
-    }
-    if (maybeBytecode_) {
-        *count = maybeBytecode_->length();
-    }
-    return true;
+    return binarySource_ ? bytecode().length() : 0;
 }
 
 bool
@@ -170,7 +117,6 @@ DebugState::stepModeEnabled(uint32_t funcIndex) const
 bool
 DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 {
-    MOZ_ASSERT(debugEnabled());
     const CodeRange& codeRange = codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
     MOZ_ASSERT(codeRange.isFunction());
 
@@ -204,7 +150,6 @@ DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 bool
 DebugState::decrementStepModeCount(FreeOp* fop, uint32_t funcIndex)
 {
-    MOZ_ASSERT(debugEnabled());
     const CodeRange& codeRange = codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
     MOZ_ASSERT(codeRange.isFunction());
 
@@ -237,16 +182,12 @@ DebugState::decrementStepModeCount(FreeOp* fop, uint32_t funcIndex)
 bool
 DebugState::hasBreakpointTrapAtOffset(uint32_t offset)
 {
-    if (!debugEnabled()) {
-        return false;
-    }
     return SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset);
 }
 
 void
 DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled)
 {
-    MOZ_ASSERT(debugEnabled());
     const CallSite* callSite = SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset);
     if (!callSite) {
         return;
@@ -364,7 +305,6 @@ DebugState::toggleDebugTrap(uint32_t offset, bool enabled)
 void
 DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled)
 {
-    MOZ_ASSERT(debugEnabled());
     MOZ_ASSERT_IF(!enabled, enterAndLeaveFrameTrapsCounter_ > 0);
 
     bool wasEnabled = enterAndLeaveFrameTrapsCounter_ > 0;
@@ -390,11 +330,21 @@ DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled)
     }
 }
 
+void
+DebugState::ensureEnterFrameTrapsState(JSContext* cx, bool enabled)
+{
+    if (enterFrameTrapsEnabled_ == enabled) {
+        return;
+    }
+
+    adjustEnterAndLeaveFrameTrapsState(cx, enabled);
+
+    enterFrameTrapsEnabled_ = enabled;
+}
+
 bool
 DebugState::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t* argsLength)
 {
-    MOZ_ASSERT(debugEnabled());
-
     const ValTypeVector& args = metadata().debugFuncArgTypes[funcIndex];
     *argsLength = args.length();
     if (!locals->appendAll(args)) {
@@ -404,17 +354,15 @@ DebugState::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t
     // Decode local var types from wasm binary function body.
     const CodeRange& range = codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
     // In wasm, the Code points to the function start via funcLineOrBytecode.
-    MOZ_ASSERT(!metadata().isAsmJS() && maybeBytecode_);
     size_t offsetInModule = range.funcLineOrBytecode();
-    Decoder d(maybeBytecode_->begin() + offsetInModule,  maybeBytecode_->end(),
-              offsetInModule, /* error = */ nullptr);
+    Decoder d(bytecode().begin() + offsetInModule,  bytecode().end(), offsetInModule,
+              /* error = */ nullptr);
     return DecodeValidatedLocalEntries(d, locals);
 }
 
 ExprType
 DebugState::debugGetResultType(uint32_t funcIndex)
 {
-    MOZ_ASSERT(debugEnabled());
     return metadata().debugFuncReturnTypes[funcIndex];
 }
 
@@ -475,77 +423,21 @@ DebugState::getGlobal(Instance& instance, uint32_t globalIndex, MutableHandleVal
     return true;
 }
 
-
-JSString*
-DebugState::debugDisplayURL(JSContext* cx) const
-{
-    // Build wasm module URL from following parts:
-    // - "wasm:" as protocol;
-    // - URI encoded filename from metadata (if can be encoded), plus ":";
-    // - 64-bit hash of the module bytes (as hex dump).
-
-    js::StringBuffer result(cx);
-    if (!result.append("wasm:")) {
-        return nullptr;
-    }
-
-    if (const char* filename = metadata().filename.get()) {
-        // EncodeURI returns false due to invalid chars or OOM -- fail only
-        // during OOM.
-        JSString* filenamePrefix = EncodeURI(cx, filename, strlen(filename));
-        if (!filenamePrefix) {
-            if (cx->isThrowingOutOfMemory()) {
-                return nullptr;
-            }
-
-            MOZ_ASSERT(!cx->isThrowingOverRecursed());
-            cx->clearPendingException(); // ignore invalid URI
-        } else if (!result.append(filenamePrefix)) {
-            return nullptr;
-        }
-    }
-
-    if (metadata().debugEnabled) {
-        if (!result.append(":")) {
-            return nullptr;
-        }
-
-        const ModuleHash& hash = metadata().debugHash;
-        for (size_t i = 0; i < sizeof(ModuleHash); i++) {
-            char digit1 = hash[i] / 16, digit2 = hash[i] % 16;
-            if (!result.append((char)(digit1 < 10 ? digit1 + '0' : digit1 + 'a' - 10))) {
-                return nullptr;
-            }
-            if (!result.append((char)(digit2 < 10 ? digit2 + '0' : digit2 + 'a' - 10))) {
-                return nullptr;
-            }
-        }
-    }
-
-    return result.finishString();
-}
-
 bool
 DebugState::getSourceMappingURL(JSContext* cx, MutableHandleString result) const
 {
     result.set(nullptr);
-    if (!maybeBytecode_) {
-        return true;
-    }
 
-    for (const CustomSection& customSection : metadata().customSections) {
-        const NameInBytecode& sectionName = customSection.name;
-        if (strlen(SourceMappingURLSectionName) != sectionName.length ||
-            memcmp(SourceMappingURLSectionName, maybeBytecode_->begin() + sectionName.offset,
-                   sectionName.length) != 0)
+    for (const CustomSection& customSection : module_->customSections()) {
+        const Bytes& sectionName = customSection.name;
+        if (strlen(SourceMappingURLSectionName) != sectionName.length() ||
+            memcmp(SourceMappingURLSectionName, sectionName.begin(), sectionName.length()) != 0)
         {
             continue;
         }
 
         // Parse found "SourceMappingURL" custom section.
-        Decoder d(maybeBytecode_->begin() + customSection.offset,
-                  maybeBytecode_->begin() + customSection.offset + customSection.length,
-                  customSection.offset,
+        Decoder d(customSection.payload->begin(), customSection.payload->end(), 0,
                   /* error = */ nullptr);
         uint32_t nchars;
         if (!d.readVarU32(&nchars)) {
@@ -587,7 +479,5 @@ DebugState::addSizeOfMisc(MallocSizeOf mallocSizeOf,
                           size_t* data) const
 {
     code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code, data);
-    if (maybeBytecode_) {
-        *data += maybeBytecode_->sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenBytes);
-    }
+    module_->addSizeOfMisc(mallocSizeOf, seenMetadata, seenBytes, seenCode, code, data);
 }

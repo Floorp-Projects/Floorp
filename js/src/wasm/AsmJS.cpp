@@ -367,9 +367,7 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     ScriptSource* maybeScriptSource() const override {
         return scriptSource.get();
     }
-    bool getFuncName(NameContext ctx, const Bytes* maybeBytecode, uint32_t funcIndex,
-                     UTF8Bytes* name) const override
-    {
+    bool getFuncName(NameContext ctx, uint32_t funcIndex, UTF8Bytes* name) const override {
         const char* p = asmJSFuncNames[funcIndex].get();
         if (!p) {
             return true;
@@ -2404,7 +2402,7 @@ IsLiteralInt(ModuleValidator& m, ParseNode* pn, uint32_t* u32)
 
 namespace {
 
-typedef Vector<PropertyName*, 4, SystemAllocPolicy> NameVector;
+typedef Vector<PropertyName*, 4, SystemAllocPolicy> LabelVector;
 
 // Encapsulates the building of an asm bytecode function from an asm.js function
 // source code, packing the asm.js code into the asm bytecode form that can
@@ -2534,7 +2532,7 @@ class MOZ_STACK_CLASS FunctionValidator
         return encoder().writeOp(Op::End);
     }
 
-    bool pushUnbreakableBlock(const NameVector* labels = nullptr) {
+    bool pushUnbreakableBlock(const LabelVector* labels = nullptr) {
         if (labels) {
             for (PropertyName* label : *labels) {
                 if (!breakLabels_.putNew(label, blockDepth_)) {
@@ -2546,7 +2544,7 @@ class MOZ_STACK_CLASS FunctionValidator
         return encoder().writeOp(Op::Block) &&
                encoder().writeFixedU8(uint8_t(ExprType::Void));
     }
-    bool popUnbreakableBlock(const NameVector* labels = nullptr) {
+    bool popUnbreakableBlock(const LabelVector* labels = nullptr) {
         if (labels) {
             for (PropertyName* label : *labels) {
                 removeLabel(label, &breakLabels_);
@@ -2622,7 +2620,7 @@ class MOZ_STACK_CLASS FunctionValidator
         return writeBr(continuableStack_.back());
     }
 
-    bool addLabels(const NameVector& labels, uint32_t relativeBreakDepth,
+    bool addLabels(const LabelVector& labels, uint32_t relativeBreakDepth,
                    uint32_t relativeContinueDepth)
     {
         for (PropertyName* label : labels) {
@@ -2635,7 +2633,7 @@ class MOZ_STACK_CLASS FunctionValidator
         }
         return true;
     }
-    void removeLabels(const NameVector& labels) {
+    void removeLabels(const LabelVector& labels) {
         for (PropertyName* label : labels) {
             removeLabel(label, &breakLabels_);
             removeLabel(label, &continueLabels_);
@@ -5171,7 +5169,7 @@ CheckLoopConditionOnEntry(FunctionValidator& f, ParseNode* cond)
 }
 
 static bool
-CheckWhile(FunctionValidator& f, ParseNode* whileStmt, const NameVector* labels = nullptr)
+CheckWhile(FunctionValidator& f, ParseNode* whileStmt, const LabelVector* labels = nullptr)
 {
     MOZ_ASSERT(whileStmt->isKind(ParseNodeKind::While));
     ParseNode* cond = BinaryLeft(whileStmt);
@@ -5213,7 +5211,7 @@ CheckWhile(FunctionValidator& f, ParseNode* whileStmt, const NameVector* labels 
 }
 
 static bool
-CheckFor(FunctionValidator& f, ParseNode* forStmt, const NameVector* labels = nullptr)
+CheckFor(FunctionValidator& f, ParseNode* forStmt, const LabelVector* labels = nullptr)
 {
     MOZ_ASSERT(forStmt->isKind(ParseNodeKind::For));
     ParseNode* forHead = BinaryLeft(forStmt);
@@ -5299,7 +5297,7 @@ CheckFor(FunctionValidator& f, ParseNode* forStmt, const NameVector* labels = nu
 }
 
 static bool
-CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt, const NameVector* labels = nullptr)
+CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt, const LabelVector* labels = nullptr)
 {
     MOZ_ASSERT(whileStmt->isKind(ParseNodeKind::DoWhile));
     ParseNode* body = BinaryLeft(whileStmt);
@@ -5356,14 +5354,14 @@ CheckDoWhile(FunctionValidator& f, ParseNode* whileStmt, const NameVector* label
     return true;
 }
 
-static bool CheckStatementList(FunctionValidator& f, ParseNode*, const NameVector* = nullptr);
+static bool CheckStatementList(FunctionValidator& f, ParseNode*, const LabelVector* = nullptr);
 
 static bool
 CheckLabel(FunctionValidator& f, ParseNode* labeledStmt)
 {
     MOZ_ASSERT(labeledStmt->isKind(ParseNodeKind::Label));
 
-    NameVector labels;
+    LabelVector labels;
     ParseNode* innermost = labeledStmt;
     do {
         if (!labels.append(LabeledStatementLabel(innermost))) {
@@ -5751,7 +5749,7 @@ CheckReturn(FunctionValidator& f, ParseNode* returnStmt)
 }
 
 static bool
-CheckStatementList(FunctionValidator& f, ParseNode* stmtList, const NameVector* labels /*= nullptr */)
+CheckStatementList(FunctionValidator& f, ParseNode* stmtList, const LabelVector* labels /*= nullptr */)
 {
     MOZ_ASSERT(stmtList->isKind(ParseNodeKind::StatementList));
 
@@ -6630,7 +6628,7 @@ GetImports(JSContext* cx, const AsmJSMetadata& metadata, HandleValue globalVal,
 }
 
 static bool
-TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata& metadata,
+TryInstantiate(JSContext* cx, CallArgs args, const Module& module, const AsmJSMetadata& metadata,
                MutableHandleWasmInstanceObject instanceObj, MutableHandleObject exportObj)
 {
     HandleValue globalVal = args.get(0);
@@ -6734,7 +6732,7 @@ HandleInstantiationFailure(JSContext* cx, CallArgs args, const AsmJSMetadata& me
     return InternalCallOrConstruct(cx, args, args.isConstructing() ? CONSTRUCT : NO_CONSTRUCT);
 }
 
-static Module&
+static const Module&
 AsmJSModuleFunctionToModule(JSFunction* fun)
 {
     MOZ_ASSERT(IsAsmJSModule(fun));
@@ -6749,7 +6747,7 @@ js::InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     JSFunction* callee = &args.callee().as<JSFunction>();
-    Module& module = AsmJSModuleFunctionToModule(callee);
+    const Module& module = AsmJSModuleFunctionToModule(callee);
     const AsmJSMetadata& metadata = module.metadata().asAsmJS();
 
     RootedWasmInstanceObject instanceObj(cx);
@@ -7151,7 +7149,8 @@ struct ScopedCacheEntryOpenedForRead
 } // unnamed namespace
 
 static JS::AsmJSCacheResult
-StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, const LinkData& linkData, JSContext* cx)
+StoreAsmJSModuleInCache(AsmJSParser& parser, const Module& module, const LinkData& linkData,
+                        JSContext* cx)
 {
     ModuleCharsForStore moduleChars;
     if (!moduleChars.init(parser)) {
