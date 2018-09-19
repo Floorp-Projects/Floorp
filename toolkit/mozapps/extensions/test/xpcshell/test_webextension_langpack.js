@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
+"use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
@@ -57,6 +58,10 @@ function promiseLangpackStartup() {
     }, EVENT);
   });
 }
+
+add_task(async function setup() {
+  Services.prefs.clearUserPref("extensions.startupScanScopes");
+});
 
 /**
  * This is a basic life-cycle test which verifies that
@@ -142,6 +147,36 @@ add_task(async function() {
   }
 
   await addon.uninstall();
+  await promiseShutdownManager();
+});
+
+add_task(async function test_amazing_disappearing_langpacks() {
+  let check = (yes) => {
+    equal(L10nRegistry.getAvailableLocales().includes("und"), yes);
+    equal(Services.locale.getAvailableLocales().includes("und"), yes);
+  };
+
+  await promiseStartupManager();
+
+  check(false);
+
+  await Promise.all([
+    promiseLangpackStartup(),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
+  ]);
+
+  check(true);
+
+  await promiseShutdownManager();
+
+  check(false);
+
+  await AddonTestUtils.manuallyUninstall(AddonTestUtils.profileExtensions,
+                                        ID);
+
+  await promiseStartupManager();
+
+  check(false);
 });
 
 /**
