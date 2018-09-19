@@ -4,12 +4,6 @@
 
 "use strict";
 
-const { BrowserLoader } =
-  ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
-const { require } = BrowserLoader({
-  baseURI: "resource://devtools/client/aboutdebugging-new/",
-  window,
-});
 const Services = require("Services");
 
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
@@ -96,15 +90,13 @@ const AboutDebugging = {
     const state = this.store.getState();
 
     L10nRegistry.removeSource("aboutdebugging");
-    // Call removeNetworkLocationsObserver before unwatchRuntime,
-    // follow up in Bug 1490950.
-    removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
 
     const currentRuntimeId = state.runtimes.selectedRuntimeId;
     if (currentRuntimeId) {
       await this.actions.unwatchRuntime(currentRuntimeId);
     }
 
+    removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
     setDebugTargetCollapsibilities(state.ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);
   },
