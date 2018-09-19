@@ -204,29 +204,32 @@ Decoder::startCustomSection(const char* expected, size_t expectedLength, ModuleE
             goto fail;
         }
 
-        NameInBytecode name;
-        if (!readVarU32(&name.length) || name.length > bytesRemain()) {
+        CustomSectionEnv sec;
+        if (!readVarU32(&sec.nameLength) || sec.nameLength > bytesRemain()) {
             goto fail;
         }
 
-        name.offset = currentOffset();
-        uint32_t payloadOffset = name.offset + name.length;
+        sec.nameOffset = currentOffset();
+        sec.payloadOffset = sec.nameOffset + sec.nameLength;
+
         uint32_t payloadEnd = (*range)->start + (*range)->size;
-        if (payloadOffset > payloadEnd) {
+        if (sec.payloadOffset > payloadEnd) {
             goto fail;
         }
+
+        sec.payloadLength = payloadEnd - sec.payloadOffset;
 
         // Now that we have a valid custom section, record its offsets in the
         // metadata which can be queried by the user via Module.customSections.
         // Note: after an entry is appended, it may be popped if this loop or
         // the loop in startSection needs to rewind.
-        if (!env->customSections.emplaceBack(name, payloadOffset, payloadEnd - payloadOffset)) {
+        if (!env->customSections.append(sec)) {
             return false;
         }
 
         // If this is the expected custom section, we're done.
-        if (!expected || (expectedLength == name.length && !memcmp(cur_, expected, name.length))) {
-            cur_ += name.length;
+        if (!expected || (expectedLength == sec.nameLength && !memcmp(cur_, expected, sec.nameLength))) {
+            cur_ += sec.nameLength;
             return true;
         }
 
@@ -2505,7 +2508,7 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
 }
 
 static bool
-DecodeModuleNameSubsection(Decoder& d, ModuleEnvironment* env)
+DecodeModuleNameSubsection(Decoder& d, const CustomSectionEnv& nameSection, ModuleEnvironment* env)
 {
     Maybe<uint32_t> endOffset;
     if (!d.startNameSubsection(NameType::Module, &endOffset)) {
@@ -2515,20 +2518,16 @@ DecodeModuleNameSubsection(Decoder& d, ModuleEnvironment* env)
         return true;
     }
 
-    // Don't use NameInBytecode for module name; instead store a copy of the
-    // string. This way supplying a module name doesn't need to save the whole
-    // bytecode. While function names are likely to be stripped in practice,
-    // module names aren't necessarily.
-
-    uint32_t nameLength;
-    if (!d.readVarU32(&nameLength)) {
+    Name moduleName;
+    if (!d.readVarU32(&moduleName.length)) {
         return d.fail("failed to read module name length");
     }
 
-    NameInBytecode moduleName(d.currentOffset(), nameLength);
+    MOZ_ASSERT(d.currentOffset() >= nameSection.payloadOffset);
+    moduleName.offsetInNamePayload = d.currentOffset() - nameSection.payloadOffset;
 
     const uint8_t* bytes;
-    if (!d.readBytes(nameLength, &bytes)) {
+    if (!d.readBytes(moduleName.length, &bytes)) {
         return d.fail("failed to read module name bytes");
     }
 
@@ -2538,7 +2537,7 @@ DecodeModuleNameSubsection(Decoder& d, ModuleEnvironment* env)
 }
 
 static bool
-DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
+DecodeFunctionNameSubsection(Decoder& d, const CustomSectionEnv& nameSection, ModuleEnvironment* env)
 {
     Maybe<uint32_t> endOffset;
     if (!d.startNameSubsection(NameType::Function, &endOffset)) {
@@ -2553,7 +2552,7 @@ DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
         return d.fail("bad function name count");
     }
 
-    NameInBytecodeVector funcNames;
+    NameVector funcNames;
 
     for (uint32_t i = 0; i < nameCount; ++i) {
         uint32_t funcIndex = 0;
@@ -2566,12 +2565,12 @@ DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
             return d.fail("invalid function index");
         }
 
-        uint32_t nameLength = 0;
-        if (!d.readVarU32(&nameLength) || nameLength > MaxStringLength) {
+        Name funcName;
+        if (!d.readVarU32(&funcName.length) || funcName.length > MaxStringLength) {
             return d.fail("unable to read function name length");
         }
 
-        if (!nameLength) {
+        if (!funcName.length) {
             continue;
         }
 
@@ -2579,9 +2578,10 @@ DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
             return false;
         }
 
-        NameInBytecode funcName(d.currentOffset(), nameLength);
+        MOZ_ASSERT(d.currentOffset() >= nameSection.payloadOffset);
+        funcName.offsetInNamePayload = d.currentOffset() - nameSection.payloadOffset;
 
-        if (!d.readBytes(nameLength)) {
+        if (!d.readBytes(funcName.length)) {
             return d.fail("unable to read function name bytes");
         }
 
@@ -2609,13 +2609,16 @@ DecodeNameSection(Decoder& d, ModuleEnvironment* env)
         return true;
     }
 
+    env->nameCustomSectionIndex = Some(env->customSections.length() - 1);
+    const CustomSectionEnv& nameSection = env->customSections.back();
+
     // Once started, custom sections do not report validation errors.
 
-    if (!DecodeModuleNameSubsection(d, env)) {
+    if (!DecodeModuleNameSubsection(d, nameSection, env)) {
         goto finish;
     }
 
-    if (!DecodeFunctionNameSubsection(d, env)) {
+    if (!DecodeFunctionNameSubsection(d, nameSection, env)) {
         goto finish;
     }
 

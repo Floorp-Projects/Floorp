@@ -73,7 +73,7 @@ wasm::Realm::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
     instance.ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
     if (instance.debugEnabled() && instance.realm()->debuggerObservesAllExecution()) {
-        instance.ensureEnterFrameTrapsState(cx, true);
+        instance.debug().ensureEnterFrameTrapsState(cx, true);
     }
 
     {

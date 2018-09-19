@@ -32,6 +32,6 @@ assertEq(s.format, "wasm");
 var source2 = s.source;
 
 // The text is predefined if wasm binary sources are enabled.
-assertEq(source2.text, '[wasm]');
+assertEq(source2.text, '[debugger missing wasm binary-to-text conversion]');
 // The binary contains Uint8Array which is equal to wasm bytecode;
 arraysEqual(source2.binary, wasmTextToBinary('(module (func) (export "" 0))'));
