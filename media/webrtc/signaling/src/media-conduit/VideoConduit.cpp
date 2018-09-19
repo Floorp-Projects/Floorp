@@ -84,6 +84,10 @@ static const char* kRedPayloadName = "red";
 // the encoder.
 #define SCALER_BUFFER_POOL_SIZE 5
 
+// The pixel alignment to use for the highest resolution layer when simulcast
+// is active and one or more layers are being scaled.
+#define SIMULCAST_RESOLUTION_ALIGNMENT 16
+
 // Convert (SI) kilobits/sec to (SI) bits/sec
 #define KBPS(kbps) kbps * 1000
 
@@ -804,13 +808,6 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(
   size_t streamCount = config.number_of_streams;
   webrtc::VideoCodecMode codecMode = mConduit->mCodecMode;
 
-  // Disallow odd width and height, they will cause aspect ratio checks to
-  // fail in the webrtc.org code. We can hit transient states after window
-  // sharing ends where odd resolutions are requested for the camera.
-  streamCount = std::min(streamCount, static_cast<size_t>(
-                         1 + std::min(CountTrailingZeroes32(width),
-                                      CountTrailingZeroes32(height))));
-
   // We only allow one layer when screensharing
   if (codecMode == webrtc::VideoCodecMode::kScreensharing) {
     streamCount = 1;
@@ -821,51 +818,79 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(
   MOZ_ASSERT(mConduit);
   MutexAutoLock lock(mConduit->mMutex);
 
-  // XXX webrtc.org code has a restriction on simulcast layers that each
-  // layer must be 1/2 the dimension of the previous layer - not sure why.
-  // This means we can't use scaleResolutionBy/scaleDownBy (yet), even if
-  // the user specified it.  The one exception is that we can apply it on
-  // the full-resolution stream (which also happens to handle the
-  // non-simulcast usage case). NOTE: we make an assumption here, not in the
-  // spec, that the first stream is the full-resolution stream.
-#if 0
-  // XXX What we'd like to do for each simulcast stream...
-  if (simulcastEncoding.constraints.scaleDownBy > 1.0) {
-    uint32_t new_width = width / simulcastEncoding.constraints.scaleDownBy;
-    uint32_t new_height = height / simulcastEncoding.constraints.scaleDownBy;
+  // We assume that the first stream is the full-resolution stream.
 
-    if (new_width != width || new_height != height) {
-      if (streamCount == 1) {
-        CSFLogVerbose(LOGTAG, "%s: ConstrainPreservingAspectRatio", __FUNCTION__);
-        // Use less strict scaling in unicast. That way 320x240 / 3 = 106x79.
-        ConstrainPreservingAspectRatio(new_width, new_height,
-                                       &width, &height);
-      } else {
-        CSFLogVerbose(LOGTAG, "%s: ConstrainPreservingAspectRatioExact", __FUNCTION__);
-        // webrtc.org supposedly won't tolerate simulcast unless every stream
-        // is exactly the same aspect ratio. 320x240 / 3 = 80x60.
-        ConstrainPreservingAspectRatioExact(new_width * new_height,
-                                            &width, &height);
-      }
-    }
-  }
-#endif
+  // This ensures all simulcast layers will be of the same aspect ratio as the input.
+  mConduit->mSimulcastAdapter->OnOutputFormatRequest(
+    cricket::VideoFormat(width, height, 0, 0));
 
   for (size_t idx = streamCount - 1; streamCount > 0; idx--, streamCount--) {
     webrtc::VideoStream video_stream;
-    // Stream dimensions must be divisable by 2^(n-1), where n is the number of layers.
-    // Each lower resolution layer is 1/2^(n-1) of the size of largest layer,
-    // where n is the number of the layer
-
-    // width/height will be overridden on the first frame; they must be 'sane' for
-    // SetSendCodec()
-    video_stream.width = width >> idx;
-    video_stream.height = height >> idx;
-    // We want to ensure this picks up the current framerate, so indirect
-    video_stream.max_framerate = mConduit->mSendingFramerate;
-
     auto& simulcastEncoding = mConduit->mCurSendCodecConfig->mSimulcastEncodings[idx];
     MOZ_ASSERT(simulcastEncoding.constraints.scaleDownBy >= 1.0);
+
+    // All streams' dimensions must retain the aspect ratio of the input stream.
+    // Note that the first stream might already have been scaled by us.
+    // Webrtc.org doesn't know this, so we have to adjust lower layers manually.
+    int unusedCropWidth, unusedCropHeight, outWidth, outHeight;
+    if (idx == 0) {
+      // This is the highest-resolution stream. We avoid calling
+      // AdaptFrameResolution on this because precision errors in VideoAdapter
+      // can cause the out-resolution to be an odd pixel smaller than the
+      // source (1920x1419 has caused this). We shortcut this instead.
+      outWidth = width;
+      outHeight = height;
+    } else {
+      float effectiveScaleDownBy =
+        simulcastEncoding.constraints.scaleDownBy /
+        mConduit->mCurSendCodecConfig->mSimulcastEncodings[0].constraints.scaleDownBy;
+      MOZ_ASSERT(effectiveScaleDownBy >= 1.0);
+      mConduit->mSimulcastAdapter->OnScaleResolutionBy(
+        effectiveScaleDownBy > 1.0 ?
+          rtc::Optional<float>(effectiveScaleDownBy) :
+          rtc::Optional<float>());
+      bool rv = mConduit->mSimulcastAdapter->AdaptFrameResolution(
+        width,
+        height,
+        0, // Ok, since we don't request an output format with an interval
+        &unusedCropWidth,
+        &unusedCropHeight,
+        &outWidth,
+        &outHeight);
+
+      if (!rv) {
+        // The only thing that can make AdaptFrameResolution fail in this case
+        // is if this layer is scaled so far down that it has less than one pixel.
+        outWidth = 0;
+        outHeight = 0;
+      }
+    }
+
+    if (outWidth == 0 || outHeight == 0) {
+      CSFLogInfo(LOGTAG,
+                 "%s Stream with RID %s ignored because of no resolution.",
+                 __FUNCTION__, simulcastEncoding.rid.c_str());
+      continue;
+    }
+
+    MOZ_ASSERT(outWidth > 0);
+    MOZ_ASSERT(outHeight > 0);
+    video_stream.width = outWidth;
+    video_stream.height = outHeight;
+
+    CSFLogInfo(LOGTAG, "%s Input frame %ux%u, RID %s scaling to %zux%zu",
+               __FUNCTION__, width, height, simulcastEncoding.rid.c_str(),
+               video_stream.width, video_stream.height);
+
+    if (video_stream.width * height != width * video_stream.height) {
+      CSFLogInfo(LOGTAG,
+                 "%s Stream with RID %s ignored because of bad aspect ratio.",
+                 __FUNCTION__, simulcastEncoding.rid.c_str());
+      continue;
+    }
+
+    // We want to ensure this picks up the current framerate, so indirect
+    video_stream.max_framerate = mConduit->mSendingFramerate;
 
     mConduit->SelectBitrates(
       video_stream.width, video_stream.height,
@@ -935,8 +960,8 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 
   size_t streamCount = std::min(codecConfig->mSimulcastEncodings.size(),
                                 (size_t)webrtc::kMaxSimulcastStreams);
-  CSFLogDebug(LOGTAG, "%s for VideoConduit:%p stream count:%d", __FUNCTION__,
-              this, static_cast<int>(streamCount));
+  CSFLogDebug(LOGTAG, "%s for VideoConduit:%p stream count:%zu", __FUNCTION__,
+              this, streamCount);
 
   mSendingFramerate = 0;
   mEncoderConfig.ClearStreams();
@@ -957,7 +982,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution changes
   mNegotiatedMaxBitrate = codecConfig->mTias;
 
-  if (mLastWidth == 0 && mMinBitrateEstimate) {
+  if (mLastWidth == 0 && mMinBitrateEstimate != 0) {
     // Only do this at the start; use "have we send a frame" as a reasonable stand-in.
     // min <= start <= max (which can be -1, note!)
     webrtc::Call::Config::BitrateConfig config;
@@ -978,7 +1003,9 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
       codecConfig->mName, this));
 
   // Reset the VideoAdapter. SelectResolution will ensure limits are set.
-  mVideoAdapter = MakeUnique<cricket::VideoAdapter>();
+  mVideoAdapter = MakeUnique<cricket::VideoAdapter>(
+    streamCount > 1 ? SIMULCAST_RESOLUTION_ALIGNMENT : 1);
+  mSimulcastAdapter = MakeUnique<cricket::VideoAdapter>();
   mVideoAdapter->OnScaleResolutionBy(
     (streamCount >= 1 && codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy > 1.0) ?
       rtc::Optional<float>(codecConfig->mSimulcastEncodings[0].constraints.scaleDownBy) :
@@ -994,7 +1021,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   // for the GMP H.264 encoder/decoder!!
   mEncoderConfig.SetMinTransmitBitrateBps(0);
   // Expected max number of encodings
-  mEncoderConfig.SetMaxEncodings(codecConfig->mSimulcastEncodings.size());
+  mEncoderConfig.SetMaxEncodings(streamCount);
 
   // If only encoder stream attibutes have been changed, there is no need to stop,
   // create a new webrtc::VideoSendStream, and restart.
