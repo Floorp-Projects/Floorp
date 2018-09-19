@@ -7157,8 +7157,6 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, const Module& module, const LinkDat
         return JS::AsmJSCache_InternalError;
     }
 
-    MOZ_RELEASE_ASSERT(module.bytecode().length() == 0);
-
     size_t moduleSize = module.serializedSize(linkData);
     MOZ_RELEASE_ASSERT(moduleSize <= UINT32_MAX);
 

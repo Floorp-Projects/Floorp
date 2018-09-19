@@ -202,7 +202,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finishCodegen();
     bool finishMetadataTier();
     UniqueCodeTier finishCodeTier();
-    bool finishMetadata(const ShareableBytes& bytecode);
+    bool finishMetadata(const Bytes& bytecode);
 
     bool isAsmJS() const { return env_->isAsmJS(); }
     Tier tier() const { return env_->tier(); }

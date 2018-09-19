@@ -72,7 +72,7 @@ class DebugState
   public:
     DebugState(const Code& code, const Module& module, bool binarySource);
 
-    const Bytes& bytecode() const { return module_->bytecode().bytes; }
+    const Bytes& bytecode() const { return module_->debugBytecode(); }
     bool binarySource() const { return binarySource_; }
 
     bool getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets);

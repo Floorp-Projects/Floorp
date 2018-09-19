@@ -543,12 +543,13 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
 }
 
 void
-wasm::CompileTier2(const CompileArgs& args, const Module& module, Atomic<bool>* cancelled)
+wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode, const Module& module,
+                   Atomic<bool>* cancelled)
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
     UniqueChars error;
-    Decoder d(module.bytecode().bytes, 0, &error);
+    Decoder d(bytecode, 0, &error);
 
     HasGcTypes gcTypesConfigured = HasGcTypes::False; // No Ion support yet
     CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Ion, DebugEnabled::False,
