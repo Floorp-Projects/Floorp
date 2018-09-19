@@ -642,6 +642,15 @@ protected: // May be called by friends.
   GetNextSelectedTableCellElement(Selection& aSelection,
                                   ErrorResult& aRv) const;
 
+  /**
+   * DeleteTableCellContentsWithTransaction() removes any contents in cell
+   * elements.  If two or more cell elements are selected, this removes
+   * all selected cells' contents.  Otherwise, this removes contents of
+   * a cell which contains first selection range.  This does not return
+   * error even if selection is not in cell element, just does nothing.
+   */
+  nsresult DeleteTableCellContentsWithTransaction();
+
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
                                   int32_t aOffset,
                                   bool* outIsSpace,
@@ -1246,6 +1255,11 @@ protected: // Shouldn't be used by friend classes
      */
     void Update(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
                 ErrorResult& aRv);
+
+    bool IsEmpty() const
+    {
+      return !mRowCount || !mColumnCount;
+    }
   };
 
   /**
@@ -1622,9 +1636,28 @@ protected: // Shouldn't be used by friend classes
   DeleteTableRowWithTransaction(Element& aTableElement, int32_t aRowIndex);
 
   /**
-   * Helpers that don't touch the selection or do batch transactions.
+   * DeleteTableCellWithTransaction() removes table cell elements.  If two or
+   * more cell elements are selected, this removes all selected cell elements.
+   * Otherwise, this removes some cell elements starting from selected cell
+   * element or a cell containing first selection range.  When this removes
+   * last cell element in <tr> or <table>, this removes the <tr> or the
+   * <table> too.  Note that when removing a cell causes number of its row
+   * becomes less than the others, this method does NOT fill the place with
+   * rowspan nor colspan.  This does not return error even if selection is not
+   * in cell element, just does nothing.
+   *
+   * @param aNumberOfCellsToDelete  Number of cells to remove.  This is ignored
+   *                                if 2 or more cells are selected.
    */
-  nsresult DeleteCellContents(Element* aCell);
+  nsresult DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete);
+
+  /**
+   * DeleteAllChildrenWithTransaction() removes all children of aElement from
+   * the tree.
+   *
+   * @param aElement        The element whose children you want to remove.
+   */
+  nsresult DeleteAllChildrenWithTransaction(Element& aElement);
 
   /**
    * Move all contents from aCellToMerge into aTargetCell (append at end).

@@ -24,20 +24,23 @@ class PaymentAddress;
 class PaymentRequestChild;
 class PaymentResponse;
 
-class PaymentRequest final : public DOMEventTargetHelper
-                           , public PromiseNativeHandler
-			   , public nsIDocumentActivity
+class PaymentRequest final
+  : public DOMEventTargetHelper
+  , public PromiseNativeHandler
+  , public nsIDocumentActivity
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PaymentRequest, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PaymentRequest,
+                                                         DOMEventTargetHelper)
   NS_DECL_NSIDOCUMENTACTIVITY
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<PaymentRequest>
-  CreatePaymentRequest(nsPIDOMWindowInner* aWindow, nsresult& aRv);
+  static already_AddRefed<PaymentRequest> CreatePaymentRequest(
+    nsPIDOMWindowInner* aWindow,
+    nsresult& aRv);
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
@@ -47,56 +50,51 @@ public:
   static nsresult IsValidPaymentMethodIdentifier(const nsAString& aIdentifier,
                                                  nsAString& aErrorMsg);
 
-  static nsresult IsValidMethodData(JSContext* aCx,
-                                    const Sequence<PaymentMethodData>& aMethodData,
-                                    nsAString& aErrorMsg);
+  static nsresult IsValidMethodData(
+    JSContext* aCx,
+    const Sequence<PaymentMethodData>& aMethodData,
+    nsAString& aErrorMsg);
 
-  static nsresult
-  IsValidNumber(const nsAString& aItem,
-                const nsAString& aStr,
-                nsAString& aErrorMsg);
-  static nsresult
-  IsNonNegativeNumber(const nsAString& aItem,
-                      const nsAString& aStr,
-                      nsAString& aErrorMsg);
+  static nsresult IsValidNumber(const nsAString& aItem,
+                                const nsAString& aStr,
+                                nsAString& aErrorMsg);
+  static nsresult IsNonNegativeNumber(const nsAString& aItem,
+                                      const nsAString& aStr,
+                                      nsAString& aErrorMsg);
 
-  static nsresult
-  IsValidCurrencyAmount(const nsAString& aItem,
-                        const PaymentCurrencyAmount& aAmount,
-                        const bool aIsTotalItem,
-                        nsAString& aErrorMsg);
+  static nsresult IsValidCurrencyAmount(const nsAString& aItem,
+                                        const PaymentCurrencyAmount& aAmount,
+                                        const bool aIsTotalItem,
+                                        nsAString& aErrorMsg);
 
-  static nsresult
-  IsValidCurrency(const nsAString& aItem,
-                  const nsAString& aCurrency,
-                  nsAString& aErrorMsg);
+  static nsresult IsValidCurrency(const nsAString& aItem,
+                                  const nsAString& aCurrency,
+                                  nsAString& aErrorMsg);
 
-  static nsresult
-  IsValidDetailsInit(const PaymentDetailsInit& aDetails,
-                     const bool aRequestShipping,
-                     nsAString& aErrorMsg);
+  static nsresult IsValidDetailsInit(const PaymentDetailsInit& aDetails,
+                                     const bool aRequestShipping,
+                                     nsAString& aErrorMsg);
 
-  static nsresult
-  IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails,
-                       const bool aRequestShipping);
+  static nsresult IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails,
+                                       const bool aRequestShipping);
 
-  static nsresult
-  IsValidDetailsBase(const PaymentDetailsBase& aDetails,
-                     const bool aRequestShipping,
-                     nsAString& aErrorMsg);
+  static nsresult IsValidDetailsBase(const PaymentDetailsBase& aDetails,
+                                     const bool aRequestShipping,
+                                     nsAString& aErrorMsg);
 
-  static already_AddRefed<PaymentRequest>
-  Constructor(const GlobalObject& aGlobal,
-              const Sequence<PaymentMethodData>& aMethodData,
-              const PaymentDetailsInit& aDetails,
-              const PaymentOptions& aOptions,
-              ErrorResult& aRv);
+  static already_AddRefed<PaymentRequest> Constructor(
+    const GlobalObject& aGlobal,
+    const Sequence<PaymentMethodData>& aMethodData,
+    const PaymentDetailsInit& aDetails,
+    const PaymentOptions& aOptions,
+    ErrorResult& aRv);
 
   already_AddRefed<Promise> CanMakePayment(ErrorResult& aRv);
   void RespondCanMakePayment(bool aResult);
 
-  already_AddRefed<Promise> Show(const Optional<OwningNonNull<Promise>>& detailsPromise,
-                                 ErrorResult& aRv);
+  already_AddRefed<Promise> Show(
+    const Optional<OwningNonNull<Promise>>& detailsPromise,
+    ErrorResult& aRv);
   void RespondShowPayment(const nsAString& aMethodName,
                           const nsAString& aDetails,
                           const nsAString& aPayerName,
@@ -121,6 +119,8 @@ public:
   bool IsUpdating() const { return mUpdating; }
   void SetUpdating(bool aUpdating);
 
+  already_AddRefed<PaymentResponse> GetResponse() const;
+
   already_AddRefed<PaymentAddress> GetShippingAddress() const;
   // Update mShippingAddress and fire shippingaddresschange event
   nsresult UpdateShippingAddress(const nsAString& aCountry,
@@ -134,42 +134,36 @@ public:
                                  const nsAString& aRecipient,
                                  const nsAString& aPhone);
 
-
   void SetShippingOption(const nsAString& aShippingOption);
   void GetShippingOption(nsAString& aRetVal) const;
+  void GetOptions(PaymentOptions& aRetVal) const;
+  void SetOptions(const PaymentOptions& aOptions);
   nsresult UpdateShippingOption(const nsAString& aShippingOption);
 
-  nsresult UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails,
+  nsresult UpdatePayment(JSContext* aCx,
+                         const PaymentDetailsUpdate& aDetails,
                          bool aDeferredShow);
   void AbortUpdate(nsresult aRv, bool aDeferredShow);
 
   void SetShippingType(const Nullable<PaymentShippingType>& aShippingType);
   Nullable<PaymentShippingType> GetShippingType() const;
 
-  inline void ShippingWasRequested()
-  {
-    mRequestShipping = true;
-  }
+  inline void ShippingWasRequested() { mRequestShipping = true; }
 
-  void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
-  void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   IMPL_EVENT_HANDLER(merchantvalidation);
   IMPL_EVENT_HANDLER(shippingaddresschange);
   IMPL_EVENT_HANDLER(shippingoptionchange);
   IMPL_EVENT_HANDLER(paymentmethodchange);
 
-  void SetIPC(PaymentRequestChild* aChild)
-  {
-    mIPC = aChild;
-  }
+  void SetIPC(PaymentRequestChild* aChild) { mIPC = aChild; }
 
-  PaymentRequestChild* GetIPC()
-  {
-    return mIPC;
-  }
+  PaymentRequestChild* GetIPC() const { return mIPC; }
+
+private:
+  PaymentOptions mOptions;
 
 protected:
   ~PaymentRequest();
@@ -206,8 +200,8 @@ protected:
 
   Nullable<PaymentShippingType> mShippingType;
 
-  // "true" when there is a pending updateWith() call to update the payment request
-  // and "false" otherwise.
+  // "true" when there is a pending updateWith() call to update the payment
+  // request and "false" otherwise.
   bool mUpdating;
 
   // Whether shipping was requested. This models [[options]].requestShipping,
@@ -221,7 +215,8 @@ protected:
   // The error is set in AbortUpdate(). The value is NS_OK by default.
   nsresult mUpdateError;
 
-  enum {
+  enum
+  {
     eUnknown,
     eCreated,
     eInteractive,
@@ -230,7 +225,6 @@ protected:
 
   PaymentRequestChild* mIPC;
 };
-
 } // namespace dom
 } // namespace mozilla
 

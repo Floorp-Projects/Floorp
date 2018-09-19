@@ -1815,7 +1815,9 @@ public:
    */
   bool IsInWillChangeBudget(nsIFrame* aFrame, const nsSize& aSize);
 
-  void ClearWillChangeBudget(nsIFrame* aFrame);
+  void RemoveFromWillChangeBudget(nsIFrame* aFrame);
+
+  void ClearWillChangeBudget();
 
   void EnterSVGEffectsContents(nsDisplayList* aHoistedItemsStorage);
   void ExitSVGEffectsContents();
@@ -2040,13 +2042,19 @@ private:
 
   struct FrameWillChangeBudget
   {
-    FrameWillChangeBudget(nsIFrame* aFrame, uint32_t aUsage)
-      : mFrame(aFrame)
+    FrameWillChangeBudget()
+      : mPresContext(nullptr)
+      , mUsage(0)
+    {
+    }
+
+    FrameWillChangeBudget(nsPresContext* aPresContext, uint32_t aUsage)
+      : mPresContext(aPresContext)
       , mUsage(aUsage)
     {
     }
 
-    nsIFrame* mFrame;
+    nsPresContext* mPresContext;
     uint32_t mUsage;
   };
 
@@ -2084,7 +2092,8 @@ private:
 
   // Any frame listed in this set is already counted in the budget
   // and thus is in-budget.
-  nsDataHashtable<nsPtrHashKey<nsIFrame>, uint32_t> mWillChangeBudgetSet;
+  nsDataHashtable<nsPtrHashKey<nsIFrame>, FrameWillChangeBudget>
+    mWillChangeBudgetSet;
 
   // Area of animated geometry root budget already allocated
   uint32_t mUsedAGRBudget;
@@ -3359,7 +3368,7 @@ public:
   /**
    * Remove all items from the list and call their destructors.
    */
-  void DeleteAll(nsDisplayListBuilder* aBuilder);
+  virtual void DeleteAll(nsDisplayListBuilder* aBuilder);
 
   /**
    * @return the item at the top of the list, or null if the list is empty
@@ -3754,7 +3763,7 @@ public:
     return *this;
   }
 
-  void DeleteAll(nsDisplayListBuilder* aBuilder)
+  void DeleteAll(nsDisplayListBuilder* aBuilder) override
   {
     for (OldItemInfo& i : mOldItems) {
       if (i.mItem) {
@@ -3881,6 +3890,7 @@ public:
   virtual void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) = 0;
   virtual already_AddRefed<imgIContainer> GetImage() = 0;
   virtual nsRect GetDestRect() const = 0;
+  virtual nsSize GetRepeatSize() const { return nsSize(0, 0); }
 
   bool SupportsOptimizingToImage() const override { return true; }
 };
@@ -4408,6 +4418,7 @@ public:
     nsRect backgroundRect;
     nsRect fillArea;
     nsRect destArea;
+    nsSize repeatSize;
     uint32_t layer;
     bool isRasterImage;
     bool shouldFixToViewport;
@@ -4514,6 +4525,7 @@ public:
                                nsDisplayListBuilder* aBuilder) override;
   already_AddRefed<imgIContainer> GetImage() override;
   nsRect GetDestRect() const override;
+  nsSize GetRepeatSize() const override;
 
   void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) override
   {
@@ -4584,6 +4596,7 @@ protected:
   nsRect mBackgroundRect; // relative to the reference frame
   nsRect mFillRect;
   nsRect mDestRect;
+  nsSize mRepeatSize;
   /* Bounds of this display item */
   nsRect mBounds;
   uint32_t mLayer;

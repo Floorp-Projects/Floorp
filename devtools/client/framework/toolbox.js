@@ -37,6 +37,8 @@ const { BrowserLoader } =
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
+loader.lazyRequireGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm", true);
 loader.lazyRequireGetter(this, "getHighlighterUtils",
   "devtools/client/framework/toolbox-highlighter-utils", true);
 loader.lazyRequireGetter(this, "Selection",
@@ -901,6 +903,7 @@ Toolbox.prototype = {
   },
 
   _addHostListeners: function() {
+    // Add navigation keys
     this.shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
                  event => {
                    this.selectNextTool();
@@ -917,6 +920,24 @@ Toolbox.prototype = {
                    event.preventDefault();
                  });
 
+    // Close toolbox key-shortcut handler
+    const onClose = event => this.destroy();
+    this.shortcuts.on(L10N.getStr("toolbox.toggleToolboxF12.key"), onClose);
+
+    // CmdOrCtrl+W is registered only when the toolbox is running in
+    // detached window. In the other case the entire browser tab
+    // is closed when the user uses this shortcut.
+    if (this.hostType == "window") {
+      this.shortcuts.on(L10N.getStr("toolbox.closeToolbox.key"), onClose);
+    }
+
+    if (AppConstants.platform == "macosx") {
+      this.shortcuts.on(L10N.getStr("toolbox.toggleToolboxOSX.key"), onClose);
+    } else {
+      this.shortcuts.on(L10N.getStr("toolbox.toggleToolbox.key"), onClose);
+    }
+
+    // Add event listeners
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress);
     this.doc.addEventListener("focus", this._onFocus, true);
     this.win.addEventListener("unload", this.destroy);
@@ -991,48 +1012,22 @@ Toolbox.prototype = {
       return;
     }
 
-    const doc = this.win.parent.document;
-
     for (const item of Startup.KeyShortcuts) {
-      // KeyShortcuts contain tool-specific and global key shortcuts,
-      // here we only need to copy shortcut specific to each tool.
-      if (!item.toolId) {
-        continue;
+      const { id, toolId, shortcut, modifiers } = item;
+      const electronKey = KeyShortcuts.parseXulKey(modifiers, shortcut);
+
+      if (id == "browserConsole") {
+        // Add key for toggling the browser console from the detached window
+        this.shortcuts.on(electronKey, () => {
+          HUDService.toggleBrowserConsole();
+        });
+      } else if (toolId) {
+        // KeyShortcuts contain tool-specific and global key shortcuts,
+        // here we only need to copy shortcut specific to each tool.
+        this.shortcuts.on(electronKey, () => {
+          this.selectTool(toolId, "key_shortcut").then(() => this.fireCustomKey(toolId));
+        });
       }
-      const { toolId, shortcut, modifiers } = item;
-
-      const key = doc.createXULElement("key");
-
-      key.id = "key_" + toolId;
-
-      if (shortcut.startsWith("VK_")) {
-        key.setAttribute("keycode", shortcut);
-      } else {
-        key.setAttribute("key", shortcut);
-      }
-
-      key.setAttribute("modifiers", modifiers);
-      // needed. See bug 371900
-      key.setAttribute("oncommand", "void(0);");
-      key.addEventListener("command", () => {
-        this.selectTool(toolId, "key_shortcut").then(() => this.fireCustomKey(toolId));
-      }, true);
-      doc.getElementById("toolbox-keyset").appendChild(key);
-    }
-
-    // Add key for toggling the browser console from the detached window
-    if (!doc.getElementById("key_browserconsole")) {
-      const key = doc.createXULElement("key");
-      key.id = "key_browserconsole";
-
-      key.setAttribute("key", L10N.getStr("browserConsoleCmd.commandkey"));
-      key.setAttribute("modifiers", "accel,shift");
-      // needed. See bug 371900
-      key.setAttribute("oncommand", "void(0)");
-      key.addEventListener("command", () => {
-        HUDService.toggleBrowserConsole();
-      }, true);
-      doc.getElementById("toolbox-keyset").appendChild(key);
     }
   },
 

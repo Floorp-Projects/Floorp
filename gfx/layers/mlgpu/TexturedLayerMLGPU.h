@@ -41,6 +41,10 @@ public:
     return Nothing();
   }
 
+  gfx::Point GetDestOrigin() const {
+    return mDestOrigin;
+  }
+
   // Mask layers aren't prepared like normal layers. They are bound as
   // mask operations are built. Mask layers are never tiled (they are
   // scaled to a lower resolution if too big), so this pathway returns
@@ -63,6 +67,7 @@ protected:
   RefPtr<TextureSource> mTexture;
   RefPtr<TextureSource> mBigImageTexture;
   gfx::IntRect mPictureRect;
+  gfx::IntPoint mDestOrigin;
 };
 
 // This is a pseudo layer that wraps a tile in an ImageLayer backed by a
