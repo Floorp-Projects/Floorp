@@ -73,6 +73,55 @@ activity_stream:
       page: about:home or about_newtab - the page where the event occurred
       user_prefs: An integer representaing a user's A-S settings.
 
+addonsManager:
+  install:
+    description: >
+      This events are recorded during the install and update flow for extensions and themes,
+      the value of the event is an install_id shared by the events related to the same install
+      or update flow.
+    objects: ["extension", "theme", "locale", "dictionary", "other", "unknown"]
+    methods: ["install", "update"]
+    extra_keys:
+      addon_id: A string which identify the extension (when available)
+      download_time: The number of ms needed to complete the download
+      error: The AddonManager error related to an install or update failure.
+      source: The source that originally triggered the add-on installation
+      method: >
+        The method used by the source to install the add-on (included when the source can use more than one,
+        e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
+      num_perms: The number of permissions shown to the user in the extension permission doorhanger
+      num_origins: The number of origins shown to the user in the extension permission doorhanger
+      updated_from: Determine if an update has been requested by the user or the application ("app" / "user")
+      step: >
+        The current step in the install or update flow:
+          - started, postponed, cancelled, failed, permissions_prompt, completed
+          - site_warning, site_blocked, install_disabled_warning
+          - download_started, download_completed, download_failed
+    notification_emails: ["addons-dev-internal@mozilla.com"]
+    expiry_version: "68"
+    record_in_processes: ["main"]
+    bug_numbers: [1433335]
+    release_channel_collection: opt-out
+  manage:
+    description: >
+      This events are recorded when an installed add-ons is being disable/enabled/uninstalled,
+      the value of the event is the addon_id (which also allow to correlate multiple events
+      related to each other).
+    objects: ["extension", "theme", "locale", "dictionary", "other"]
+    methods: ["disable", "enable", "sideload_prompt", "uninstall"]
+    extra_keys:
+      source: The source from which the addon has been installed
+      method: >
+        The method used by the source to install the add-on (included when the source can use more than one,
+        e.g. install events with source "about:addons" may have "install-from-file" or "url" as method).
+      num_perms: The number of permissions shown to the user for a sideload extension permissions doorhanger
+      num_origins: The number of origins shown to the user for a sideload extension permissions doorhanger
+    notification_emails: ["addons-dev-internal@mozilla.com"]
+    expiry_version: "68"
+    record_in_processes: ["main"]
+    bug_numbers: [1433335]
+    release_channel_collection: opt-out
+
 extensions.data:
   migrateResult:
     objects: ["storageLocal"]

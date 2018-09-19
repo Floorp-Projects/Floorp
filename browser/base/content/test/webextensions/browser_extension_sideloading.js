@@ -110,6 +110,7 @@ add_task(async function() {
   });
 
   hookExtensionsTelemetry();
+  AddonTestUtils.hookAMTelemetryEvents();
 
   let changePromise = new Promise(resolve => {
     ExtensionsUI.on("change", function listener() {
@@ -270,4 +271,78 @@ add_task(async function() {
   }
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // Assert that the expected AddonManager telemetry are being recorded.
+  const expectedExtra = {source: "app-profile", method: "sideload"};
+  const noPermissionsExtra = {...expectedExtra, num_perms: "0", num_origins: "0"};
+  const baseEvent = {object: "extension", extra: expectedExtra};
+  const createBaseEventAddon = (n) => ({...baseEvent, value: `addon${n}@tests.mozilla.org`});
+  const getEventsForAddonId = (events, addonId) => events.filter(ev => ev.value === addonId);
+
+  const amEvents = AddonTestUtils.getAMTelemetryEvents();
+
+  // Test telemetry events for addon1 (1 permission and 1 origin).
+  info("Test telemetry events collected for addon1");
+
+  const baseEventAddon1 = createBaseEventAddon(1);
+  const collectedEventsAddon1 = getEventsForAddonId(amEvents, baseEventAddon1.value);
+  const expectedEventsAddon1 = [
+    {
+      ...baseEventAddon1, method: "sideload_prompt",
+      extra: {...expectedExtra, num_perms: "1", num_origins: "1"},
+    },
+    {...baseEventAddon1, method: "uninstall"},
+  ];
+
+  let i = 0;
+  for (let event of collectedEventsAddon1) {
+    Assert.deepEqual(event, expectedEventsAddon1[i++],
+                     "Got the expected telemetry event");
+  }
+
+  is(collectedEventsAddon1.length, expectedEventsAddon1.length,
+     "Got the expected number of telemetry events for addon1");
+
+  // Test telemetry events for addon2 (no permissions).
+  info("Test telemetry events collected for addon2");
+
+  const baseEventAddon2 = createBaseEventAddon(2);
+  const collectedEventsAddon2 = getEventsForAddonId(amEvents, baseEventAddon2.value);
+  const expectedEventsAddon2 = [
+    {...baseEventAddon2, method: "sideload_prompt", extra: {...noPermissionsExtra}},
+    {...baseEventAddon2, method: "enable"},
+    {...baseEventAddon2, method: "uninstall"},
+  ];
+
+  i = 0;
+  for (let event of collectedEventsAddon2) {
+    Assert.deepEqual(event, expectedEventsAddon2[i++],
+                     "Got the expected telemetry event");
+  }
+
+  is(collectedEventsAddon2.length, expectedEventsAddon2.length,
+     "Got the expected number of telemetry events for addon2");
+
+  // Test telemetry events for addon3 (no permissions and 1 origin).
+  info("Test telemetry events collected for addon2");
+
+  const baseEventAddon3 = createBaseEventAddon(3);
+  const collectedEventsAddon3 = getEventsForAddonId(amEvents, baseEventAddon3.value);
+  const expectedEventsAddon3 = [
+    {
+      ...baseEventAddon3, method: "sideload_prompt",
+      extra: {...expectedExtra, num_perms: "0", num_origins: "1"},
+    },
+    {...baseEventAddon3, method: "enable"},
+    {...baseEventAddon3, method: "uninstall"},
+  ];
+
+  i = 0;
+  for (let event of collectedEventsAddon3) {
+    Assert.deepEqual(event, expectedEventsAddon3[i++],
+                     "Got the expected telemetry event");
+  }
+
+  is(collectedEventsAddon3.length, expectedEventsAddon3.length,
+     "Got the expected number of telemetry events for addon3");
 });
