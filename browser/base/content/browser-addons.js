@@ -297,7 +297,13 @@ var gXPInstallObserver = {
       let secondaryAction = {
         label: gNavigatorBundle.getString("xpinstallPromptMessage.dontAllow"),
         accessKey: gNavigatorBundle.getString("xpinstallPromptMessage.dontAllow.accesskey"),
-        callback: () => {},
+        callback: () => {
+          for (let install of installInfo.installs) {
+            if (install.state != AddonManager.STATE_CANCELLED) {
+              install.cancel();
+            }
+          }
+        },
       };
 
       secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED);
