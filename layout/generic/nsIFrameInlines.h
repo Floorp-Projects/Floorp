@@ -180,4 +180,14 @@ nsIFrame::GetInFlowParent() const
   return GetParent();
 }
 
+nsContainerFrame*
+nsIFrame::GetInFlowParentIgnoringAnonBoxes() const
+{
+  nsContainerFrame* parent = GetInFlowParent();
+  while (parent && parent->Style()->IsAnonBox()) {
+    parent = parent->GetInFlowParent();
+  }
+  return parent;
+}
+
 #endif
