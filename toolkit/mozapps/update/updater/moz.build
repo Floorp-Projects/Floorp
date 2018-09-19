@@ -11,6 +11,7 @@ else:
 
 updater_rel_path = ''
 include('updater-common.build')
+DIRS += ['updater-dep']
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['updater-xpcshell']
 
@@ -25,6 +26,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
                 SRCDIR + '/Launchd.plist']
 
 GENERATED_FILES = [
+    'dep1Cert.h',
+    'dep2Cert.h',
     'primaryCert.h',
     'secondaryCert.h',
     'xpcshellCert.h',
@@ -37,10 +40,14 @@ secondary_cert = GENERATED_FILES['secondaryCert.h']
 # have to regenerate it.
 # ./certutil -L -d modules/libmar/tests/unit/data -n mycert -r > xpcshellCertificate.der
 xpcshell_cert = GENERATED_FILES['xpcshellCert.h']
+dep1_cert = GENERATED_FILES['dep1Cert.h']
+dep2_cert = GENERATED_FILES['dep2Cert.h']
 
 primary_cert.script = 'gen_cert_header.py:create_header'
 secondary_cert.script = 'gen_cert_header.py:create_header'
 xpcshell_cert.script = 'gen_cert_header.py:create_header'
+dep1_cert.script = 'gen_cert_header.py:create_header'
+dep2_cert.script = 'gen_cert_header.py:create_header'
 
 if CONFIG['MOZ_UPDATE_CHANNEL'] in ('beta', 'release', 'esr'):
     primary_cert.inputs += ['release_primary.der']
@@ -54,6 +61,8 @@ else:
     primary_cert.inputs += ['dep1.der']
     secondary_cert.inputs += ['dep2.der']
 
+dep1_cert.inputs += ['dep1.der']
+dep2_cert.inputs += ['dep2.der']
 xpcshell_cert.inputs += ['xpcshellCertificate.der']
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:

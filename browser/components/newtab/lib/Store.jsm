@@ -147,7 +147,7 @@ this.Store = class Store {
   async _initIndexedDB(telemetryKey) {
     this.dbStorage = new ActivityStreamStorage({
       storeNames: ["sectionPrefs", "snippets"],
-      telemetry: this.feeds.get(telemetryKey)
+      telemetry: this.feeds.get(telemetryKey),
     });
     // Accessing the db causes the object stores to be created / migrated.
     // This needs to happen before other instances try to access the db, which

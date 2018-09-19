@@ -5,7 +5,7 @@ const TIME_SEGMENTS = [
   {"id": "hour", "startTime": 3600, "endTime": 0, "weightPosition": 1},
   {"id": "day", "startTime": 86400, "endTime": 3600, "weightPosition": 0.75},
   {"id": "week", "startTime": 604800, "endTime": 86400, "weightPosition": 0.5},
-  {"id": "weekPlus", "startTime": null, "endTime": 604800, "weightPosition": 0.25}
+  {"id": "weekPlus", "startTime": null, "endTime": 604800, "weightPosition": 0.25},
 ];
 
 const PARAMETER_SETS = {
@@ -16,7 +16,7 @@ const PARAMETER_SETS = {
     "perfectFrequencyVisits": 10,
     "perfectCombinedDomainScore": 2,
     "multiDomainBoost": 0.1,
-    "itemScoreFactor": 0
+    "itemScoreFactor": 0,
   },
   "paramSet2": {
     "recencyFactor": 1,
@@ -25,8 +25,8 @@ const PARAMETER_SETS = {
     "perfectFrequencyVisits": 10,
     "perfectCombinedDomainScore": 2,
     "multiDomainBoost": 0.1,
-    "itemScoreFactor": 0
-  }
+    "itemScoreFactor": 0,
+  },
 };
 
 describe("User Domain Affinity Provider", () => {
@@ -73,7 +73,7 @@ describe("User Domain Affinity Provider", () => {
         "hour": {"a.com": 1, "b.com": 2},
         "day": {"a.com": 4},
         "week": {"c.com": 1},
-        "weekPlus": {"a.com": 1, "d.com": 3}
+        "weekPlus": {"a.com": 1, "d.com": 3},
       };
       instance.queryVisits = ts => visitCounts[ts.id];
 
@@ -92,11 +92,11 @@ describe("User Domain Affinity Provider", () => {
       const expectedScores = {
         "a.com": {
           "paramSet1": Math.min(1, expScoreAHourPs1 + expScoreADayPs1 + expScoreAWeekPlusPs1),
-          "paramSet2": Math.min(1, expScoreAHourPs2 + expScoreADayPs2 + expScoreAWeekPlusPs2)
+          "paramSet2": Math.min(1, expScoreAHourPs2 + expScoreADayPs2 + expScoreAWeekPlusPs2),
         },
         "b.com": {"paramSet1": expScoreBHourPs1, "paramSet2": expScoreBHourPs2},
         "c.com": {"paramSet1": expScoreCWeekPs1, "paramSet2": expScoreCWeekPs2},
-        "d.com": {"paramSet1": expScoreDWeekPlusPs1, "paramSet2": expScoreDWeekPlusPs2}
+        "d.com": {"paramSet1": expScoreDWeekPlusPs1, "paramSet2": expScoreDWeekPlusPs2},
       };
 
       const scores = instance.calculateAllUserDomainAffinityScores();
@@ -106,8 +106,8 @@ describe("User Domain Affinity Provider", () => {
       const scores = {
         "a.com": {
           "paramSet1": 1,
-          "paramSet2": 0.9
-        }
+          "paramSet2": 0.9,
+        },
       };
       instance = new UserDomainAffinityProvider(TIME_SEGMENTS, PARAMETER_SETS, 100, "v1", scores);
 
@@ -116,7 +116,7 @@ describe("User Domain Affinity Provider", () => {
         "parameterSets": PARAMETER_SETS,
         "maxHistoryQueryResults": 100,
         "scores": scores,
-        "version": "v1"
+        "version": "v1",
       };
       assert.deepEqual(instance.getAffinities(), expectedAffinities);
     });
@@ -129,7 +129,7 @@ describe("User Domain Affinity Provider", () => {
         "hour": {"a.com": 1, "b.com": 2},
         "day": {"a.com": 4},
         "week": {"c.com": 1},
-        "weekPlus": {"a.com": 1, "d.com": 3}
+        "weekPlus": {"a.com": 1, "d.com": 3},
       };
       instance.queryVisits = ts => visitCounts[ts.id];
       instance.scores = instance.calculateAllUserDomainAffinityScores();
@@ -137,7 +137,7 @@ describe("User Domain Affinity Provider", () => {
       const testItem = {
         "domain_affinities": {"a.com": 1},
         "item_score": 1,
-        "parameter_set": "paramSet2"
+        "parameter_set": "paramSet2",
       };
       const combinedDomainScore = instance.scores["a.com"].paramSet2 * Math.pow(ps.multiDomainBoost + 1, 1);
       const expectedItemScore = instance.calculateScore(combinedDomainScore,

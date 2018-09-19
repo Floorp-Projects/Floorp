@@ -36,7 +36,7 @@ protected:
   virtual ~SVGComponentTransferFunctionElement() {}
 
 public:
-  typedef gfx::AttributeMap AttributeMap;
+  typedef gfx::ComponentTransferAttributes ComponentTransferAttributes;
 
   // interfaces:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
@@ -48,7 +48,7 @@ public:
 
   virtual int32_t GetChannel() = 0;
 
-  AttributeMap ComputeAttributes();
+  void ComputeAttributes(int32_t aChannel, ComponentTransferAttributes& aAttributes);
 
   // WebIDL
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;

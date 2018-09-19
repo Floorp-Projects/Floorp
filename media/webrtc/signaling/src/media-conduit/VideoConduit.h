@@ -40,9 +40,17 @@
 
 namespace mozilla {
 
+// Convert (SI) kilobits/sec to (SI) bits/sec
+#define KBPS(kbps) kbps * 1000
+
+const int kViEMinCodecBitrate_bps = KBPS(30);
 const unsigned int kVideoMtu = 1200;
 const int kQpMax = 56;
 
+template<typename T>
+T MinIgnoreZero(const T& a, const T& b);
+
+class VideoStreamFactory;
 class WebrtcAudioConduit;
 class nsThread;
 
@@ -68,14 +76,6 @@ class WebrtcVideoConduit : public VideoSessionConduit
                          , public rtc::VideoSourceInterface<webrtc::VideoFrame>
 {
 public:
-  struct ResolutionAndBitrateLimits
-  {
-    int resolution_in_mb;
-    int min_bitrate_bps;
-    int start_bitrate_bps;
-    int max_bitrate_bps;
-  };
-
   //VoiceEngine defined constant for Payload Name Size.
   static const unsigned int CODEC_PLNAME_SIZE;
 
@@ -155,17 +155,6 @@ public:
   MediaConduitErrorCode SetReceiverTransport(RefPtr<TransportInterface> aTransport) override;
 
   /**
-   * Function to set the encoding bitrate limits based on incoming frame size and rate
-   * @param width, height: dimensions of the frame
-   * @param cap: user-enforced max bitrate, or 0
-   * @param aVideoStream stream to apply bitrates to
-   */
-  void SelectBitrates(unsigned short width,
-                      unsigned short height,
-                      int cap,
-                      webrtc::VideoStream& aVideoStream);
-
-  /**
    * Function to select and change the encoding resolution based on incoming frame size
    * and current available bandwidth.
    * @param width, height: dimensions of the frame
@@ -242,6 +231,7 @@ public:
   }
 
   webrtc::VideoCodecMode CodecMode() const {
+    MOZ_ASSERT(NS_IsMainThread());
     return mCodecMode;
   }
 
@@ -431,8 +421,6 @@ private:
    * Stores encoder configuration information and produces
    * a VideoEncoderConfig from it.
    */
-  class VideoStreamFactory;
-
   class VideoEncoderConfigBuilder {
   public:
     /**
@@ -444,7 +432,7 @@ private:
       double jsScaleDownBy=1.0; // user-controlled downscale
     };
     void SetEncoderSpecificSettings(rtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings> aSettings);
-    void SetVideoStreamFactory(rtc::scoped_refptr<WebrtcVideoConduit::VideoStreamFactory> aFactory);
+    void SetVideoStreamFactory(rtc::scoped_refptr<VideoStreamFactory> aFactory);
     void SetMinTransmitBitrateBps(int aXmitMinBps);
     void SetContentType(webrtc::VideoEncoderConfig::ContentType aContentType);
     void SetResolutionDivisor(unsigned char aDivisor);
@@ -465,25 +453,6 @@ private:
 
   // Utility function to dump recv codec database
   void DumpCodecDB() const;
-
-  // Factory class for VideoStreams... vie_encoder.cc will call this to reconfigure.
-  // We need to give it access to the conduit to make it's decisions
-  class VideoStreamFactory : public webrtc::VideoEncoderConfig::VideoStreamFactoryInterface
-  {
-  public:
-    VideoStreamFactory(const std::string& aCodecName,
-                       WebrtcVideoConduit *aConduit)
-      : mCodecName(aCodecName),
-        mConduit(aConduit) {}
-
-  private:
-    std::vector<webrtc::VideoStream>
-      CreateEncoderStreams(int width, int height,
-                           const webrtc::VideoEncoderConfig& config) override;
-    std::string mCodecName;
-    // this is owned by the conduit!
-    WebrtcVideoConduit* mConduit;
-  };
 
   // Video Latency Test averaging filter
   void VideoLatencyUpdate(uint64_t new_sample);
@@ -614,8 +583,8 @@ private:
   // Main thread only.
   RefPtr<WebrtcAudioConduit> mSyncedTo;
 
-  // Written on main thread, read anywhere.
-  Atomic<webrtc::VideoCodecMode> mCodecMode;
+  // Main thread only.
+  webrtc::VideoCodecMode mCodecMode;
 
   // WEBRTC.ORG Call API
   // Const so can be accessed on any thread. Most methods are called on
@@ -627,6 +596,10 @@ private:
 
   // Main thread only.
   VideoEncoderConfigBuilder mEncoderConfig;
+
+  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Calls can happen on any thread.
+  RefPtr<rtc::RefCountedObject<VideoStreamFactory>> mVideoStreamFactory;
 
   // Main thread only.
   webrtc::VideoReceiveStream::Config mRecvStreamConfig;

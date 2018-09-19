@@ -16,7 +16,7 @@ const DEFAULT_PROPS = {
   collapsed: false,
   onUpdate: () => {},
   visible: false,
-  dispatch: () => {}
+  dispatch: () => {},
 };
 
 describe("<SectionMenu>", () => {
@@ -149,7 +149,7 @@ describe("<SectionMenu>", () => {
       section_menu_action_expand_section: {id: DEFAULT_PROPS.id, value: {collapsed: false}},
       section_menu_action_manage_section: undefined,
       section_menu_action_add_topsite: {index: -1},
-      section_menu_action_privacy_notice: {url: DEFAULT_PROPS.privacyNoticeURL}
+      section_menu_action_privacy_notice: {url: DEFAULT_PROPS.privacyNoticeURL},
     };
     const {options} = shallowWithIntl(<SectionMenu {...DEFAULT_PROPS} dispatch={dispatch} options={propOptions} />)
       .find(ContextMenu).props();

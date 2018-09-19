@@ -37,7 +37,7 @@ const DEFAULT_SITES = new Map([
   ["PL", "https://www.youtube.com/,https://www.facebook.com/,https://allegro.pl/,https://www.wikipedia.org/,https://www.olx.pl/,https://www.wykop.pl/"],
   ["RU", "https://vk.com/,https://www.youtube.com/,https://ok.ru/,https://www.avito.ru/,https://www.aliexpress.com/,https://www.wikipedia.org/"],
   ["GB", "https://www.youtube.com/,https://www.facebook.com/,https://www.reddit.com/,https://www.amazon.co.uk/,https://www.bbc.co.uk/,https://www.ebay.co.uk/"],
-  ["FR", "https://www.youtube.com/,https://www.facebook.com/,https://www.wikipedia.org/,https://www.amazon.fr/,https://www.leboncoin.fr/,https://twitter.com/"]
+  ["FR", "https://www.youtube.com/,https://www.facebook.com/,https://www.wikipedia.org/,https://www.amazon.fr/,https://www.leboncoin.fr/,https://twitter.com/"],
 ]);
 const GEO_PREF = "browser.search.region";
 const SPOCS_GEOS = ["US"];
@@ -54,7 +54,7 @@ function showSpocs({geo}) {
 const PREFS_CONFIG = new Map([
   ["default.sites", {
     title: "Comma-separated list of default top sites to fill in behind visited sites",
-    getValue: ({geo}) => DEFAULT_SITES.get(DEFAULT_SITES.has(geo) ? geo : "")
+    getValue: ({geo}) => DEFAULT_SITES.get(DEFAULT_SITES.has(geo) ? geo : ""),
   }],
   ["feeds.section.topstories.options", {
     title: "Configuration options for top stories feed",
@@ -70,12 +70,12 @@ const PREFS_CONFIG = new Map([
       stories_referrer: "https://getpocket.com/recommendations",
       topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       show_spocs: showSpocs(args),
-      personalized: true
-    })
+      personalized: true,
+    }),
   }],
   ["showSponsored", {
     title: "Show sponsored cards in spoc experiment (show_spocs in topstories.options has to be set to true as well)",
-    value: true
+    value: true,
   }],
   ["pocketCta", {
     title: "Pocket cta and button for logged out users.",
@@ -83,90 +83,90 @@ const PREFS_CONFIG = new Map([
       cta_button: "",
       cta_text: "",
       cta_url: "",
-      use_cta: false
-    })
+      use_cta: false,
+    }),
   }],
   ["filterAdult", {
     title: "Remove adult pages from sites, highlights, etc.",
-    value: true
+    value: true,
   }],
   ["migrationExpired", {
     title: "Boolean flag that decides whether to show the migration message or not.",
-    value: false
+    value: false,
   }],
   ["migrationLastShownDate", {
     title: "Timestamp when migration message was last shown. In seconds.",
-    value: 0
+    value: 0,
   }],
   ["migrationRemainingDays", {
     title: "Number of days to show the manual migration message",
-    value: 4
+    value: 4,
   }],
   ["prerender", {
     title: "Use the prerendered version of activity-stream.html. This is set automatically by PrefsFeed.jsm.",
-    value: true
+    value: true,
   }],
   ["showSearch", {
     title: "Show the Search bar",
-    value: true
+    value: true,
   }],
   ["disableSnippets", {
     title: "Disable snippets on activity stream",
-    value: false
+    value: false,
   }],
   ["topSitesRows", {
     title: "Number of rows of Top Sites to display",
-    value: 1
+    value: 1,
   }],
   ["telemetry", {
     title: "Enable system error and usage data collection",
     value: true,
-    value_local_dev: false
+    value_local_dev: false,
   }],
   ["telemetry.ut.events", {
     title: "Enable Unified Telemetry event data collection",
     value: AppConstants.EARLY_BETA_OR_EARLIER,
-    value_local_dev: false
+    value_local_dev: false,
   }],
   ["telemetry.ping.endpoint", {
     title: "Telemetry server endpoint",
-    value: "https://tiles.services.mozilla.com/v4/links/activity-stream"
+    value: "https://tiles.services.mozilla.com/v4/links/activity-stream",
   }],
   ["section.highlights.includeVisited", {
     title: "Boolean flag that decides whether or not to show visited pages in highlights.",
-    value: true
+    value: true,
   }],
   ["section.highlights.includeBookmarks", {
     title: "Boolean flag that decides whether or not to show bookmarks in highlights.",
-    value: true
+    value: true,
   }],
   ["section.highlights.includePocket", {
     title: "Boolean flag that decides whether or not to show saved Pocket stories in highlights.",
-    value: true
+    value: true,
   }],
   ["section.highlights.includeDownloads", {
     title: "Boolean flag that decides whether or not to show saved recent Downloads in highlights.",
-    value: true
+    value: true,
   }],
   ["section.highlights.rows", {
     title: "Number of rows of Highlights to display",
-    value: 2
+    value: 2,
   }],
   ["section.topstories.rows", {
     title: "Number of rows of Top Stories to display",
-    value: 1
+    value: 1,
   }],
   ["sectionOrder", {
     title: "The rendering order for the sections",
-    value: "topsites,topstories,highlights"
+    value: "topsites,topstories,highlights",
   }],
   ["improvesearch.noDefaultSearchTile", {
     title: "Experiment to remove tiles that are the same as the default search",
-    value: true
+    value: true,
   }],
   ["improvesearch.topSiteSearchShortcuts", {
     title: "Experiment to show special top sites that perform keyword searches",
-    value: AppConstants.MOZ_UPDATE_CHANNEL !== "release"
+    value: AppConstants.MOZ_UPDATE_CHANNEL !== "release",
   }],
   ["improvesearch.topSiteSearchShortcuts.searchEngines", {
     title: "An ordered, comma-delimited list of search shortcuts that we should try and pin",
@@ -187,15 +187,15 @@ const PREFS_CONFIG = new Map([
         searchShortcuts.push("amazon");
       }
       return searchShortcuts.join(",");
-    }
+    },
   }],
   ["improvesearch.topSiteSearchShortcuts.havePinned", {
     title: "A comma-delimited list of search shortcuts that have previously been pinned",
-    value: ""
+    value: "",
   }],
-  ["asrouterExperimentEnabled", {
-    title: "Is the message center experiment on?",
-    value: false
+  ["asrouter.devtoolsEnabled", {
+    title: "Are the asrouter devtools enabled?",
+    value: false,
   }],
   ["asrouter.messageProviders", {
     title: "Configuration for ASRouter message providers",
@@ -211,21 +211,21 @@ const PREFS_CONFIG = new Map([
       type: "local",
       localProvider: "OnboardingMessageProvider",
       enabled: false,
-      cohort: 0
+      cohort: 0,
     }, {
       id: "snippets",
       type: "remote",
-      url: "https://snippets.cdn.mozilla.net/us-west/bundles/bundle_d6d90fb9098ce8b45e60acf601bcb91b68322309.json",
+      url: "https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/",
       updateCycleInMs: ONE_HOUR_IN_MS * 4,
-      enabled: AppConstants.MOZ_UPDATE_CHANNEL !== "release"
+      enabled: false,
     }, {
       id: "cfr",
       type: "local",
       localProvider: "CFRMessageProvider",
       enabled: AppConstants.MOZ_UPDATE_CHANNEL !== "release",
-      cohort: 0
-    }])
-  }]
+      cohort: 0,
+    }]),
+  }],
 ]);
 
 // Array of each feed's FEEDS_CONFIG factory and values to add to PREFS_CONFIG
@@ -234,43 +234,43 @@ const FEEDS_DATA = [
     name: "aboutpreferences",
     factory: () => new AboutPreferences(),
     title: "about:preferences rendering",
-    value: true
+    value: true,
   },
   {
     name: "migration",
     factory: () => new ManualMigration(),
     title: "Manual migration wizard",
-    value: true
+    value: true,
   },
   {
     name: "newtabinit",
     factory: () => new NewTabInit(),
     title: "Sends a copy of the state to each new tab that is opened",
-    value: true
+    value: true,
   },
   {
     name: "places",
     factory: () => new PlacesFeed(),
     title: "Listens for and relays various Places-related events",
-    value: true
+    value: true,
   },
   {
     name: "prefs",
     factory: () => new PrefsFeed(PREFS_CONFIG),
     title: "Preferences",
-    value: true
+    value: true,
   },
   {
     name: "sections",
     factory: () => new SectionsFeed(),
     title: "Manages sections",
-    value: true
+    value: true,
   },
   {
     name: "section.highlights",
     factory: () => new HighlightsFeed(),
     title: "Fetches content recommendations from places db",
-    value: true
+    value: true,
   },
   {
     name: "section.topstories",
@@ -281,47 +281,47 @@ const FEEDS_DATA = [
       const locales = ({
         "US": ["en-CA", "en-GB", "en-US", "en-ZA"],
         "CA": ["en-CA", "en-GB", "en-US", "en-ZA"],
-        "DE": ["de", "de-DE", "de-AT", "de-CH"]
+        "DE": ["de", "de-DE", "de-AT", "de-CH"],
       })[geo];
       return !!locales && locales.includes(locale);
-    }
+    },
   },
   {
     name: "snippets",
     factory: () => new SnippetsFeed(),
     title: "Gets snippets data",
-    value: true
+    value: true,
   },
   {
     name: "systemtick",
     factory: () => new SystemTickFeed(),
     title: "Produces system tick events to periodically check for data expiry",
-    value: true
+    value: true,
   },
   {
     name: "telemetry",
     factory: () => new TelemetryFeed(),
     title: "Relays telemetry-related actions to PingCentre",
-    value: true
+    value: true,
   },
   {
     name: "favicon",
     factory: () => new FaviconFeed(),
     title: "Fetches tippy top manifests from remote service",
-    value: true
+    value: true,
   },
   {
     name: "topsites",
     factory: () => new TopSitesFeed(),
     title: "Queries places and gets metadata for Top Sites section",
-    value: true
+    value: true,
   },
   {
     name: "asrouterfeed",
     factory: () => new ASRouterFeed(),
     title: "Handles AS Router messages, such as snippets and onboaridng",
-    value: true
-  }
+    value: true,
+  },
 ];
 
 const FEEDS_CONFIG = new Map();
@@ -351,7 +351,7 @@ this.ActivityStream = class ActivityStream {
       // Hook up the store and let all feeds and pages initialize
       this.store.init(this.feeds, ac.BroadcastToContent({
         type: at.INIT,
-        data: {}
+        data: {},
       }), {type: at.UNINIT});
 
       this.initialized = true;
@@ -451,7 +451,7 @@ this.ActivityStream = class ActivityStream {
 
       const newValue = prefConfig.getValue({
         geo: this.geo,
-        locale: this.locale
+        locale: this.locale,
       });
 
       // If there's an existing value and it has changed, that means we need to

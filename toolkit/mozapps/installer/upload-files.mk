@@ -87,6 +87,10 @@ ifdef MOZ_CLANG_RT_ASAN_LIB_PATH
   JSSHELL_BINS += $(notdir $(MOZ_CLANG_RT_ASAN_LIB_PATH))
 endif
 
+ifdef FUZZING_INTERFACES
+  JSSHELL_BINS += fuzz-tests$(BIN_SUFFIX)
+endif
+
 MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin --strip $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
 
 JARLOG_DIR = $(topobjdir)/jarlog/

@@ -25,7 +25,7 @@ window.gActivityStreamStrings = {
   "menu_action_delete_pocket": "Pocket سے جزف کریں",
   "menu_action_archive_pocket": "Archive in Pocket",
   "menu_action_show_file_mac_os": "Show in Finder",
-  "menu_action_show_file_windows": "Open Containing Folder",
+  "menu_action_show_file_windows": "حامل پوشہ کھولیں",
   "menu_action_show_file_linux": "Open Containing Folder",
   "menu_action_show_file_default": "مسل دکھائیں",
   "menu_action_open_file": "مسل کھولیں",

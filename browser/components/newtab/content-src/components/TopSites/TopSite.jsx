@@ -5,7 +5,7 @@ import {
   MIN_RICH_FAVICON_SIZE,
   TOP_SITES_CONTEXT_MENU_OPTIONS,
   TOP_SITES_SEARCH_SHORTCUTS_CONTEXT_MENU_OPTIONS,
-  TOP_SITES_SOURCE
+  TOP_SITES_SOURCE,
 } from "./TopSitesConstants";
 import {LinkMenu} from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
@@ -139,7 +139,7 @@ export class TopSiteLink extends React.PureComponent {
       imageClassName = "top-site-icon rich-icon";
       imageStyle = {
         backgroundColor: link.backgroundColor,
-        backgroundImage: `url(${tippyTopIcon})`
+        backgroundImage: `url(${tippyTopIcon})`,
       };
       smallFaviconStyle = {backgroundImage:  `url(${tippyTopIcon})`};
     } else if (link.customScreenshotURL) {
@@ -147,14 +147,14 @@ export class TopSiteLink extends React.PureComponent {
       imageClassName = "top-site-icon rich-icon";
       imageStyle = {
         backgroundColor: link.backgroundColor,
-        backgroundImage: hasScreenshotImage ? `url(${this.state.screenshotImage.url})` : "none"
+        backgroundImage: hasScreenshotImage ? `url(${this.state.screenshotImage.url})` : "none",
       };
     } else if (tippyTopIcon || faviconSize >= MIN_RICH_FAVICON_SIZE) {
       // styles and class names for top sites with rich icons
       imageClassName = "top-site-icon rich-icon";
       imageStyle = {
         backgroundColor: link.backgroundColor,
-        backgroundImage: `url(${tippyTopIcon || link.favicon})`
+        backgroundImage: `url(${tippyTopIcon || link.favicon})`,
       };
     } else {
       // styles and class names for top sites with screenshot + small icon in top left corner
@@ -178,7 +178,7 @@ export class TopSiteLink extends React.PureComponent {
         onClick: this.onDragEvent,
         onDragEnd: this.onDragEvent,
         onDragStart: this.onDragEvent,
-        onMouseDown: this.onDragEvent
+        onMouseDown: this.onDragEvent,
       };
     }
     return (<li className={topSiteOuterClassName} onDrop={this.onDragEvent} onDragOver={this.onDragEvent} onDragEnter={this.onDragEvent} onDragLeave={this.onDragEvent} {...draggableProps}>
@@ -205,7 +205,7 @@ export class TopSiteLink extends React.PureComponent {
 TopSiteLink.defaultProps = {
   title: "",
   link: {},
-  isDraggable: true
+  isDraggable: true,
 };
 
 export class TopSite extends React.PureComponent {
@@ -238,7 +238,7 @@ export class TopSite extends React.PureComponent {
     this.props.dispatch(ac.UserEvent(Object.assign({
       event,
       source: TOP_SITES_SOURCE,
-      action_position: this.props.index
+      action_position: this.props.index,
     }, this._getTelemetryInfo())));
   }
 
@@ -252,12 +252,12 @@ export class TopSite extends React.PureComponent {
     if (!this.props.link.searchTopSite) {
       this.props.dispatch(ac.OnlyToMain({
         type: at.OPEN_LINK,
-        data: Object.assign(this.props.link, {event: {altKey, button, ctrlKey, metaKey, shiftKey}})
+        data: Object.assign(this.props.link, {event: {altKey, button, ctrlKey, metaKey, shiftKey}}),
       }));
     } else {
       this.props.dispatch(ac.OnlyToMain({
         type: at.FILL_SEARCH_TERM,
-        data: {label: this.props.link.label}
+        data: {label: this.props.link.label},
       }));
     }
   }
@@ -300,7 +300,7 @@ export class TopSite extends React.PureComponent {
 }
 TopSite.defaultProps = {
   link: {},
-  onActivate() {}
+  onActivate() {},
 };
 
 export class TopSitePlaceholder extends React.PureComponent {
@@ -330,7 +330,7 @@ export class _TopSiteList extends React.PureComponent {
       draggedIndex: null,
       draggedSite: null,
       draggedTitle: null,
-      topSitesPreview: null
+      topSitesPreview: null,
     };
   }
 
@@ -358,7 +358,7 @@ export class _TopSiteList extends React.PureComponent {
     this.props.dispatch(ac.UserEvent({
       event,
       source: TOP_SITES_SOURCE,
-      action_position: index
+      action_position: index,
     }));
   }
 
@@ -370,7 +370,7 @@ export class _TopSiteList extends React.PureComponent {
           draggedIndex: index,
           draggedSite: link,
           draggedTitle: title,
-          activeIndex: null
+          activeIndex: null,
         });
         this.userEvent("DRAG", index);
         break;
@@ -398,11 +398,11 @@ export class _TopSiteList extends React.PureComponent {
                 label: this.state.draggedTitle,
                 customScreenshotURL: this.state.draggedSite.customScreenshotURL,
                 // Only if the search topsites experiment is enabled
-                ...(this.state.draggedSite.searchTopSite && {searchTopSite: true})
+                ...(this.state.draggedSite.searchTopSite && {searchTopSite: true}),
               },
               index,
-              draggedFromIndex: this.state.draggedIndex
-            }
+              draggedFromIndex: this.state.draggedIndex,
+            },
           }));
           this.userEvent("DROP", index);
         }
@@ -470,7 +470,7 @@ export class _TopSiteList extends React.PureComponent {
     const commonProps = {
       onDragEvent: this.onDragEvent,
       dispatch: props.dispatch,
-      intl: props.intl
+      intl: props.intl,
     };
     // We assign a key to each placeholder slot. We need it to be independent
     // of the slot index (i below) so that the keys used stay the same during
@@ -486,7 +486,7 @@ export class _TopSiteList extends React.PureComponent {
       const link = topSites[i] && Object.assign({}, topSites[i], {iconType: this.props.topSiteIconType(topSites[i])});
       const slotProps = {
         key: link ? link.url : holeIndex++,
-        index: i
+        index: i,
       };
       if (i >= maxNarrowVisibleIndex) {
         slotProps.className = "hide-for-narrow";

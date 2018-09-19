@@ -4,10 +4,12 @@ import {mountWithIntl, shallowWithIntl} from "test/unit/utils";
 import {Section, SectionIntl, _Sections as Sections} from "content-src/components/Sections/Sections";
 import {actionTypes as at} from "common/Actions.jsm";
 import {PlaceholderCard} from "content-src/components/Card/Card";
+import {PocketLoggedInCta} from "content-src/components/PocketLoggedInCta/PocketLoggedInCta";
 import {Provider} from "react-redux";
 import React from "react";
 import {SectionMenu} from "content-src/components/SectionMenu/SectionMenu";
 import {shallow} from "enzyme";
+import {Topics} from "content-src/components/Topics/Topics";
 import {TopSites} from "content-src/components/TopSites/TopSites";
 
 function mountSectionWithProps(props) {
@@ -28,7 +30,7 @@ describe("<Sections>", () => {
       id: `foo_bar_${i}`,
       title: `Foo Bar ${i}`,
       enabled: !!(i % 2),
-      rows: []
+      rows: [],
     }));
     wrapper = shallow(<Sections Sections={FAKE_SECTIONS} Prefs={{values: {sectionOrder: FAKE_SECTIONS.map(i => i.id).join(",")}}} />);
   });
@@ -77,11 +79,11 @@ describe("<Section>", () => {
       rows: [{link: "http://localhost", index: 0}],
       emptyState: {
         icon: "check",
-        message: "Some message"
+        message: "Some message",
       },
       rowsPref: "section.rows",
       maxRows: 4,
-      Prefs: {values: {"section.rows": 2}}
+      Prefs: {values: {"section.rows": 2}},
     };
     wrapper = mountSectionIntlWithProps(FAKE_SECTION);
   });
@@ -141,8 +143,9 @@ describe("<Section>", () => {
     beforeEach(() => {
       Object.assign(FAKE_SECTION, {
         initialized: true,
+        dispatch: () => {},
         rows: [],
-        emptyState: {message: "Some message", icon: "moz-extension://some/extension/path"}
+        emptyState: {message: "Some message", icon: "moz-extension://some/extension/path"},
       });
       wrapper = shallowWithIntl(
         <Section {...FAKE_SECTION} />);
@@ -154,7 +157,7 @@ describe("<Section>", () => {
       Object.assign(FAKE_SECTION, {
         initialized: false,
         rows: [],
-        emptyState: {message: "Some message", icon: "moz-extension://some/extension/path"}
+        emptyState: {message: "Some message", icon: "moz-extension://some/extension/path"},
       });
       wrapper = shallowWithIntl(
         <Section {...FAKE_SECTION} />);
@@ -177,7 +180,7 @@ describe("<Section>", () => {
         topics: [],
         read_more_endpoint: "http://localhost/read-more",
         maxRows: 1,
-        eventSource: "TOP_STORIES"
+        eventSource: "TOP_STORIES",
       };
     });
     it("should not render for empty topics", () => {
@@ -187,16 +190,16 @@ describe("<Section>", () => {
     });
     it("should render for non-empty topics", () => {
       TOP_STORIES_SECTION.topics = [{name: "topic1", url: "topic-url1"}];
+      wrapper = shallow(<Section Pocket={{pocketCta: {useCta: true}, isUserLoggedIn: true}} {...TOP_STORIES_SECTION} />);
 
-      wrapper = mountSectionIntlWithProps(TOP_STORIES_SECTION);
-
-      assert.lengthOf(wrapper.find(".topics"), 1);
+      assert.lengthOf(wrapper.find(Topics), 1);
+      assert.lengthOf(wrapper.find(PocketLoggedInCta), 0);
     });
     it("should delay render of third rec to give time for potential spoc", async () => {
       TOP_STORIES_SECTION.rows = [
         {guid: 1, link: "http://localhost"},
         {guid: 2, link: "http://localhost"},
-        {guid: 3, link: "http://localhost"}
+        {guid: 3, link: "http://localhost"},
       ];
       wrapper = shallow(<Section Pocket={{waitingForSpoc: true, pocketCta: {}}} {...TOP_STORIES_SECTION} />);
       assert.lengthOf(wrapper.find(PlaceholderCard), 1);
@@ -204,17 +207,53 @@ describe("<Section>", () => {
       wrapper.setProps({
         Pocket: {
           waitingForSpoc: false,
-          pocketCta: {}
-        }
+          pocketCta: {},
+        },
       });
       assert.lengthOf(wrapper.find(PlaceholderCard), 0);
     });
-    it("should render for uninitialized topics", () => {
+    it("should render container for uninitialized topics to ensure content doesn't shift", () => {
       delete TOP_STORIES_SECTION.topics;
 
       wrapper = mountSectionIntlWithProps(TOP_STORIES_SECTION);
 
-      assert.lengthOf(wrapper.find(".topics"), 1);
+      assert.lengthOf(wrapper.find(".top-stories-bottom-container"), 1);
+      assert.lengthOf(wrapper.find(Topics), 0);
+      assert.lengthOf(wrapper.find(PocketLoggedInCta), 0);
+    });
+
+    it("should render a pocket cta if not logged in and set to display cta", () => {
+      TOP_STORIES_SECTION.topics = [{name: "topic1", url: "topic-url1"}];
+      wrapper = shallow(<Section Pocket={{pocketCta: {useCta: true}, isUserLoggedIn: false}} {...TOP_STORIES_SECTION} />);
+
+      assert.lengthOf(wrapper.find(Topics), 0);
+      assert.lengthOf(wrapper.find(PocketLoggedInCta), 1);
+    });
+    it("should render nothing while loading to avoid a flicker of log in state", () => {
+      TOP_STORIES_SECTION.topics = [{name: "topic1", url: "topic-url1"}];
+      wrapper = shallow(<Section Pocket={{pocketCta: {useCta: false}}} {...TOP_STORIES_SECTION} />);
+
+      assert.lengthOf(wrapper.find(Topics), 0);
+      assert.lengthOf(wrapper.find(PocketLoggedInCta), 0);
+    });
+    it("should render a topics list if set to not display cta with either logged or out", () => {
+      TOP_STORIES_SECTION.topics = [{name: "topic1", url: "topic-url1"}];
+      wrapper = shallow(<Section Pocket={{pocketCta: {useCta: false}, isUserLoggedIn: false}} {...TOP_STORIES_SECTION} />);
+
+      assert.lengthOf(wrapper.find(Topics), 1);
+      assert.lengthOf(wrapper.find(PocketLoggedInCta), 0);
+
+      wrapper = shallow(<Section Pocket={{pocketCta: {useCta: false}, isUserLoggedIn: true}} {...TOP_STORIES_SECTION} />);
+
+      assert.lengthOf(wrapper.find(Topics), 1);
+      assert.lengthOf(wrapper.find(PocketLoggedInCta), 0);
+    });
+    it("should render nothing if set to display a cta and not logged in or out (waiting for state)", () => {
+      TOP_STORIES_SECTION.topics = [{name: "topic1", url: "topic-url1"}];
+      wrapper = shallow(<Section Pocket={{pocketCta: {useCta: true}}} {...TOP_STORIES_SECTION} />);
+
+      assert.lengthOf(wrapper.find(Topics), 0);
+      assert.lengthOf(wrapper.find(PocketLoggedInCta), 0);
     });
   });
 
@@ -230,10 +269,10 @@ describe("<Section>", () => {
       document: {
         visibilityState: "visible",
         addEventListener: sinon.stub(),
-        removeEventListener: sinon.stub()
+        removeEventListener: sinon.stub(),
       },
       eventSource: "TOP_STORIES",
-      options: {personalized: false}
+      options: {personalized: false},
     };
 
     function renderSection(props = {}) {
@@ -271,8 +310,8 @@ describe("<Section>", () => {
         document: {
           visibilityState: "hidden",
           addEventListener: sinon.spy(),
-          removeEventListener: sinon.spy()
-        }
+          removeEventListener: sinon.spy(),
+        },
       };
 
       renderSection(props);
@@ -301,8 +340,8 @@ describe("<Section>", () => {
         document: {
           visibilityState: "hidden",
           addEventListener: sinon.spy(),
-          removeEventListener: sinon.spy()
-        }
+          removeEventListener: sinon.spy(),
+        },
       };
 
       const section = renderSection(props);
@@ -348,7 +387,7 @@ describe("<Section>", () => {
         FAKE_TOPSTORIES_SECTION_PROPS,
         {
           rows: [{guid: 123}],
-          pref: {collapsed: true}
+          pref: {collapsed: true},
         }
       ));
 
@@ -359,7 +398,7 @@ describe("<Section>", () => {
         FAKE_TOPSTORIES_SECTION_PROPS,
         {
           rows: [{guid: 123}],
-          pref: {collapsed: false}
+          pref: {collapsed: false},
         }
       ));
 
@@ -384,8 +423,8 @@ describe("<Section>", () => {
         document: {
           visibilityState: "hidden",
           addEventListener: (ev, cb) => listeners.add(cb),
-          removeEventListener: (ev, cb) => listeners.delete(cb)
-        }
+          removeEventListener: (ev, cb) => listeners.delete(cb),
+        },
       };
 
       wrapper = renderSection(props);
@@ -411,6 +450,31 @@ describe("<Section>", () => {
     });
   });
 
+  describe("tab rehydrated", () => {
+    it("should fire NEW_TAB_REHYDRATED event", () => {
+      const dispatch = sinon.spy();
+      const TOP_STORIES_SECTION = {
+        id: "topstories",
+        title: "TopStories",
+        pref: {collapsed: false},
+        initialized: false,
+        rows: [{guid: 1, link: "http://localhost", isDefault: true}],
+        topics: [],
+        read_more_endpoint: "http://localhost/read-more",
+        maxRows: 1,
+        eventSource: "TOP_STORIES",
+      };
+      wrapper = shallow(<Section Pocket={{waitingForSpoc: true, pocketCta: {}}} {...TOP_STORIES_SECTION} dispatch={dispatch} />);
+      assert.notCalled(dispatch);
+
+      wrapper.setProps({initialized: true});
+
+      assert.calledOnce(dispatch);
+      const [action] = dispatch.firstCall.args;
+      assert.equal("NEW_TAB_REHYDRATED", action.type);
+    });
+  });
+
   describe("#numRows", () => {
     it("should return maxRows if there is no rowsPref set", () => {
       delete FAKE_SECTION.rowsPref;
@@ -423,7 +487,7 @@ describe("<Section>", () => {
       Object.assign(FAKE_SECTION, {
         rowsPref: "section.rows",
         maxRows: 4,
-        Prefs: {values: {"section.rows": numRows}}
+        Prefs: {values: {"section.rows": numRows}},
       });
       wrapper = mountSectionWithProps(FAKE_SECTION);
       assert.equal(wrapper.find(Section).instance().numRows, numRows);
@@ -434,7 +498,7 @@ describe("<Section>", () => {
       Object.assign(FAKE_SECTION, {
         rowsPref: "section.rows",
         maxRows: 4,
-        Prefs: {values: {"section.rows": numRows}}
+        Prefs: {values: {"section.rows": numRows}},
       });
       wrapper = mountSectionWithProps(FAKE_SECTION);
       assert.equal(wrapper.find(Section).instance().numRows, numRows);

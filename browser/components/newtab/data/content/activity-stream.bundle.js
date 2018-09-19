@@ -211,7 +211,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -885,26 +885,40 @@ function addSnippetsSubscriber(store) {
 
   store.subscribe(_asyncToGenerator(function* () {
     const state = store.getState();
-    let snippetsEnabled = false;
-    try {
-      snippetsEnabled = JSON.parse(state.Prefs.values["asrouter.messageProviders"]).find(function (i) {
-        return i.id === "snippets";
-      }).enabled;
-    } catch (e) {}
-    const isASRouterEnabled = state.Prefs.values.asrouterExperimentEnabled && snippetsEnabled;
-    // state.Prefs.values["feeds.snippets"]:  Should snippets be shown?
-    // state.Snippets.initialized             Is the snippets data initialized?
-    // snippets.initialized:                  Is SnippetsProvider currently initialised?
-    if (state.Prefs.values["feeds.snippets"] &&
-    // If the message center experiment is enabled, don't show snippets
-    !isASRouterEnabled && !state.Prefs.values.disableSnippets && state.Snippets.initialized && !snippets.initialized &&
+
+    /**
+     * Sorry this code is so complicated. It will be removed soon.
+     * This is what the different values actually mean:
+     *
+     * ASRouter.initialized                   Is ASRouter.jsm initialised?
+     * ASRouter.allowLegacySnippets           Are ASRouter snippets turned OFF (i.e. legacy snippets are allowed)
+     * state.Prefs.values["feeds.snippets"]   User preference for snippets
+     * state.Snippets.initialized             Is SnippetsFeed.jsm initialised?
+     * snippets.initialized                   Is in-content snippets currently initialised?
+     * state.Prefs.values.disableSnippets     This pref is used to disable legacy snippets in an emergency
+     *                                        in a way that is not user-editable (true = disabled)
+     */
+
+    /** If we should initialize snippets... */
+    if (state.Prefs.values["feeds.snippets"] && state.ASRouter.initialized && state.ASRouter.allowLegacySnippets && !state.Prefs.values.disableSnippets && state.Snippets.initialized && !snippets.initialized &&
     // Don't call init multiple times
     !initializing && location.href !== "about:welcome") {
       initializing = true;
       yield snippets.init({ appData: state.Snippets });
+      // istanbul ignore if
+      if (state.Prefs.values["asrouter.devtoolsEnabled"]) {
+        console.log("Legacy snippets initialized"); // eslint-disable-line no-console
+      }
       initializing = false;
-    } else if ((state.Prefs.values["feeds.snippets"] === false || state.Prefs.values.disableSnippets === true) && snippets.initialized) {
+
+      /** If we should remove snippets... */
+    } else if ((state.Prefs.values["feeds.snippets"] === false || state.Prefs.values.disableSnippets === true || state.ASRouter.initialized && !state.ASRouter.allowLegacySnippets) && snippets.initialized) {
+      // Remove snippets
       snippets.uninit();
+      // istanbul ignore if
+      if (state.Prefs.values["asrouter.devtoolsEnabled"]) {
+        console.log("Legacy snippets removed"); // eslint-disable-line no-console
+      }
     }
   }));
 
@@ -1095,6 +1109,9 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
       id: "NEWTAB_FOOTER_BAR_CONTENT"
     };
     this.sendUserActionTelemetry(Object.assign({ event: "CLICK_BUTTON" }, metric));
+    if (!this.state.message.content.do_not_autoblock) {
+      ASRouterUtils.blockById(this.state.message.id);
+    }
   }
 
   onBlockById(id) {
@@ -1184,15 +1201,34 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
       sendUserActionTelemetry: this.sendUserActionTelemetry }));
   }
 
+  renderPreviewBanner() {
+    if (this.state.message.provider !== "preview") {
+      return null;
+    }
+
+    return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
+      "div",
+      { className: "snippets-preview-banner" },
+      react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("span", { className: "icon icon-small-spacer icon-info" }),
+      react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
+        "span",
+        null,
+        "Preview Purposes Only"
+      )
+    );
+  }
+
   render() {
     const { message, bundle } = this.state;
     if (!message.id && !bundle.template) {
       return null;
     }
-    if (bundle.template === "onboarding") {
-      return this.renderOnboarding();
-    }
-    return this.renderSnippets();
+    return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
+      "div",
+      null,
+      this.renderPreviewBanner(),
+      bundle.template === "onboarding" ? this.renderOnboarding() : this.renderSnippets()
+    );
   }
 }
 
@@ -1566,8 +1602,7 @@ function debounce(func, wait) {
 
 class _Base extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
   componentWillMount() {
-    const { App, locale } = this.props;
-    this.sendNewTabRehydrated(App);
+    const { locale } = this.props;
     addLocaleDataForReactIntl(locale);
     if (this.props.isFirstrun) {
       global.document.body.classList.add("welcome", "hide-main");
@@ -1588,29 +1623,8 @@ class _Base extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
     this.updateTheme();
   }
 
-  hasTopStoriesSectionChanged(nextProps) {
-    const nPropsSections = nextProps.Sections.find(section => section.id === "topstories");
-    const tPropsSections = this.props.Sections.find(section => section.id === "topstories");
-    if (nPropsSections && nPropsSections.options) {
-      if (!tPropsSections || !tPropsSections.options) {
-        return true;
-      }
-      if (nPropsSections.options.show_spocs !== tPropsSections.options.show_spocs) {
-        return true;
-      }
-      if (nPropsSections.options.stories_endpoint !== tPropsSections.options.stories_endpoint) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  componentWillUpdate(nextProps) {
+  componentWillUpdate() {
     this.updateTheme();
-    if (this.hasTopStoriesSectionChanged(nextProps)) {
-      this.renderNotified = false;
-    }
-    this.sendNewTabRehydrated(nextProps.App);
   }
 
   updateTheme() {
@@ -1621,39 +1635,18 @@ class _Base extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
     global.document.body.className = bodyClassName;
   }
 
-  // The NEW_TAB_REHYDRATED event is used to inform feeds that their
-  // data has been consumed e.g. for counting the number of tabs that
-  // have rendered that data.
-  sendNewTabRehydrated(App) {
-    if (App && App.initialized && !this.renderNotified) {
-      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].NEW_TAB_REHYDRATED, data: {} }));
-      this.renderNotified = true;
-    }
-  }
-
   render() {
     const { props } = this;
     const { App, locale, strings } = props;
     const { initialized } = App;
 
     const prefs = props.Prefs.values;
-    if (prefs.asrouterExperimentEnabled && window.location.hash === "#asrouter") {
+    if (prefs["asrouter.devtoolsEnabled"] && window.location.hash === "#asrouter") {
       return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ASRouterAdmin_ASRouterAdmin__WEBPACK_IMPORTED_MODULE_2__["ASRouterAdmin"], null);
     }
 
     if (!props.isPrerendered && !initialized) {
       return null;
-    }
-
-    // Until we can delete the existing onboarding tour, just hide the onboarding button when users are in
-    // the new simplified onboarding experiment. CSS hacks ftw
-    let isOnboardingEnabled = false;
-    try {
-      isOnboardingEnabled = JSON.parse(prefs["asrouter.messageProviders"]).find(i => i.id === "onboarding").enabled;
-    } catch (e) {}
-
-    if (isOnboardingEnabled) {
-      global.document.body.classList.add("hide-onboarding");
     }
 
     return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
@@ -1889,10 +1882,37 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
     );
   }
 
+  renderTableHead() {
+    return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+      "thead",
+      null,
+      react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+        "tr",
+        { className: "message-item" },
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+          "td",
+          null,
+          "id"
+        ),
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+          "td",
+          null,
+          "source"
+        ),
+        react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+          "td",
+          null,
+          "last updated"
+        )
+      )
+    );
+  }
+
   renderProviders() {
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
       "table",
       null,
+      this.renderTableHead(),
       react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
         "tbody",
         null,
@@ -1919,6 +1939,11 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
               "td",
               null,
               label
+            ),
+            react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+              "td",
+              null,
+              provider.lastUpdated ? new Date(provider.lastUpdated).toString() : ""
             )
           );
         })
@@ -2480,10 +2505,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SectionIntl", function() { return SectionIntl; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Sections", function() { return _Sections; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Sections", function() { return Sections; });
-/* harmony import */ var content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(47);
-/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(13);
-/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_intl__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2);
+/* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
+/* harmony import */ var content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(47);
+/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(13);
+/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_intl__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var content_src_components_CollapsibleSection_CollapsibleSection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(27);
 /* harmony import */ var content_src_components_ComponentPerfTimer_ComponentPerfTimer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(30);
 /* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(16);
@@ -2518,7 +2543,7 @@ function getFormattedMessage(message) {
     "span",
     null,
     message
-  ) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], message);
+  ) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_2__["FormattedMessage"], message);
 }
 
 class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
@@ -2540,7 +2565,7 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
     const cards = props.rows.slice(0, maxCards);
 
     if (this.needsImpressionStats(cards)) {
-      props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_2__["actionCreators"].ImpressionStats({
+      props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].ImpressionStats({
         source: props.eventSource,
         tiles: cards.map(link => ({ id: link.guid }))
       }));
@@ -2580,6 +2605,10 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
     }
   }
 
+  componentWillMount() {
+    this.sendNewTabRehydrated(this.props.initialized);
+  }
+
   componentDidMount() {
     if (this.props.rows.length && !this.props.pref.collapsed) {
       this.sendImpressionStatsOrAddListener();
@@ -2602,6 +2631,10 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
     }
   }
 
+  componentWillUpdate(nextProps) {
+    this.sendNewTabRehydrated(nextProps.initialized);
+  }
+
   componentWillUnmount() {
     if (this._onVisibilityChange) {
       this.props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
@@ -2622,6 +2655,16 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
     return false;
   }
 
+  // The NEW_TAB_REHYDRATED event is used to inform feeds that their
+  // data has been consumed e.g. for counting the number of tabs that
+  // have rendered that data.
+  sendNewTabRehydrated(initialized) {
+    if (initialized && !this.renderNotified) {
+      this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].AlsoToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].NEW_TAB_REHYDRATED, data: {} }));
+      this.renderNotified = true;
+    }
+  }
+
   render() {
     const {
       id, eventSource, title, icon, rows, Pocket, topics,
@@ -2636,11 +2679,18 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
     const maxCards = maxCardsPerRow * numRows;
     const maxCardsOnNarrow = CARDS_PER_ROW_DEFAULT * numRows;
 
-    const shouldShowPocketCta = id === "topstories" && Pocket.pocketCta.useCta && !Pocket.isUserLoggedIn;
+    const { pocketCta, isUserLoggedIn } = Pocket || {};
+    const { useCta } = pocketCta || {};
 
-    // Show topics only for top stories and if it's not initialized yet (so
-    // content doesn't shift when it is loaded) or has loaded with topics
-    const shouldShowTopics = id === "topstories" && (!topics || topics.length > 0) && !shouldShowPocketCta;
+    // Don't display anything until we have a definitve result from Pocket,
+    // to avoid a flash of logged out state while we render.
+    const isPocketLoggedInDefined = isUserLoggedIn === true || isUserLoggedIn === false;
+
+    const shouldShowPocketCta = id === "topstories" && useCta && isUserLoggedIn === false;
+
+    // Show topics only for top stories and if it has loaded with topics.
+    // The classs .top-stories-bottom-container ensures content doesn't shift as things load.
+    const shouldShowTopics = id === "topstories" && topics && topics.length > 0 && (useCta && isUserLoggedIn === true || !useCta && isPocketLoggedInDefined);
 
     const realRows = rows.slice(0, maxCards);
 
@@ -2661,7 +2711,7 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
         if (!usePlaceholder && i === 2 && waitingForSpoc) {
           usePlaceholder = true;
         }
-        cards.push(!usePlaceholder ? react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_0__["Card"], { key: i,
+        cards.push(!usePlaceholder ? react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_1__["Card"], { key: i,
           index: i,
           className: className,
           dispatch: dispatch,
@@ -2669,7 +2719,7 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
           contextMenuOptions: contextMenuOptions,
           eventSource: eventSource,
           shouldSendImpressionStats: this.props.shouldSendImpressionStats,
-          isWebExtension: this.props.isWebExtension }) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_0__["PlaceholderCard"], { key: i, className: className }));
+          isWebExtension: this.props.isWebExtension }) : react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Card_Card__WEBPACK_IMPORTED_MODULE_1__["PlaceholderCard"], { key: i, className: className }));
       }
     }
 
@@ -2734,7 +2784,7 @@ Section.defaultProps = {
   title: ""
 };
 
-const SectionIntl = Object(react_redux__WEBPACK_IMPORTED_MODULE_5__["connect"])(state => ({ Prefs: state.Prefs, Pocket: state.Pocket }))(Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["injectIntl"])(Section));
+const SectionIntl = Object(react_redux__WEBPACK_IMPORTED_MODULE_5__["connect"])(state => ({ Prefs: state.Prefs, Pocket: state.Pocket }))(Object(react_intl__WEBPACK_IMPORTED_MODULE_2__["injectIntl"])(Section));
 
 class _Sections extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
   renderSections() {
@@ -5064,7 +5114,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
             _this.setState({ flowId, flowBeginTime });
           }
         } catch (error) {
-          _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { value: "FXA_METRICS_ERROR" } }));
+          _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_ERROR" } }));
         }
       }
     })();
@@ -5307,20 +5357,35 @@ class DetectUserSessionStart {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "enableASRouterContent", function() { return enableASRouterContent; });
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "enableASRouterContent", function() { return enableASRouterContent; });
 function enableASRouterContent(store, asrouterContent) {
+  let didHideOnboarding = false;
+
   // Enable asrouter content
   store.subscribe(() => {
     const state = store.getState();
-    if (state.Prefs.values.asrouterExperimentEnabled && !asrouterContent.initialized) {
+    if (!state.ASRouter.initialized) {
+      return;
+    }
+
+    if (!asrouterContent.initialized) {
       asrouterContent.init();
-    } else if (!state.Prefs.values.asrouterExperimentEnabled && asrouterContent.initialized) {
-      asrouterContent.uninit();
+    }
+
+    // Until we can delete the existing onboarding tour, just hide the onboarding button when users are in
+    // the new simplified onboarding experiment. CSS hacks ftw
+    if (state.ASRouter.allowLegacyOnboarding === false && !didHideOnboarding) {
+      global.document.body.classList.add("hide-onboarding");
+      didHideOnboarding = true;
+    } else if (state.ASRouter.allowLegacyOnboarding === true && didHideOnboarding) {
+      global.document.body.classList.remove("hide-onboarding");
+      didHideOnboarding = false;
     }
   });
   // Return this for testing purposes
   return { asrouterContent };
 }
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
 /* 42 */
@@ -8029,6 +8094,9 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
   onButtonClick() {
     this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", id: this.props.UISurface });
     this.props.onAction(this.props.content.button_action);
+    if (!this.props.content.do_not_autoblock) {
+      this.props.onBlock();
+    }
   }
 
   renderTitle() {
@@ -8156,6 +8224,11 @@ const INITIAL_STATE = {
     // Have we received real data from the app yet?
     initialized: false
   },
+  ASRouter: {
+    initialized: false,
+    allowLegacyOnboarding: null,
+    allowLegacySnippets: null
+  },
   Snippets: { initialized: false },
   TopSites: {
     // Have we received real data from history yet?
@@ -8179,7 +8252,7 @@ const INITIAL_STATE = {
   },
   Sections: [],
   Pocket: {
-    isUserLoggedIn: false,
+    isUserLoggedIn: null,
     pocketCta: {},
     waitingForSpoc: true
   }
@@ -8190,6 +8263,17 @@ function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
     case Actions["actionTypes"].INIT:
       return Object.assign({}, prevState, action.data || {}, { initialized: true });
+    default:
+      return prevState;
+  }
+}
+
+function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
+  switch (action.type) {
+    case Actions["actionTypes"].AS_ROUTER_INITIALIZED:
+      return Object.assign({}, action.data, { initialized: true });
+    case Actions["actionTypes"].AS_ROUTER_PREF_CHANGED:
+      return Object.assign({}, prevState, action.data);
     default:
       return prevState;
   }
@@ -8331,6 +8415,8 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       return Object.assign({}, prevState, { rows: newRows });
     case Actions["actionTypes"].UPDATE_SEARCH_SHORTCUTS:
       return Object.assign({}, prevState, { searchShortcuts: action.data.searchShortcuts });
+    case Actions["actionTypes"].SNIPPETS_PREVIEW_MODE:
+      return Object.assign({}, prevState, { rows: [] });
     default:
       return prevState;
   }
@@ -8508,6 +8594,8 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
     case Actions["actionTypes"].DELETE_FROM_POCKET:
     case Actions["actionTypes"].ARCHIVE_FROM_POCKET:
       return prevState.map(section => Object.assign({}, section, { rows: section.rows.filter(site => site.pocket_id !== action.data.pocket_id) }));
+    case Actions["actionTypes"].SNIPPETS_PREVIEW_MODE:
+      return prevState.map(section => Object.assign({}, section, { rows: [] }));
     default:
       return prevState;
   }
@@ -8548,7 +8636,7 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   }
 }
 
-var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket };
+var reducers = { TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Pocket };
 
 /***/ }),
 /* 46 */

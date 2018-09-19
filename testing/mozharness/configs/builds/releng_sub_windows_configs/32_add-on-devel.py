@@ -5,7 +5,6 @@ config = {
         'clobber',
         'build',
         'check-test',
-#        'update',
     ],
     'stage_platform': 'win32-add-on-devel',
     #### 32 bit build specific #####

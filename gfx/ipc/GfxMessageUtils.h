@@ -36,7 +36,7 @@ namespace mozilla {
 
 typedef gfxImageFormat PixelFormat;
 
-} // namespace mozilla
+} // namespace
 
 namespace IPC {
 
@@ -254,27 +254,11 @@ struct ParamTraits<mozilla::gfx::FeatureStatus>
 {};
 
 template <>
-struct ParamTraits<mozilla::gfx::AttributeName>
+struct ParamTraits<mozilla::gfx::LightType>
   : public ContiguousEnumSerializer<
-             mozilla::gfx::AttributeName,
-             mozilla::gfx::eBlendBlendmode,
-             mozilla::gfx::eLastAttributeName>
-{};
-
-template <>
-struct ParamTraits<mozilla::gfx::AttributeType>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::AttributeType,
-             mozilla::gfx::AttributeType::eBool,
-             mozilla::gfx::AttributeType::Max>
-{};
-
-template <>
-struct ParamTraits<mozilla::gfx::PrimitiveType>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::PrimitiveType,
-             mozilla::gfx::PrimitiveType::Empty,
-             mozilla::gfx::PrimitiveType::Max>
+             mozilla::gfx::LightType,
+             mozilla::gfx::LightType::None,
+             mozilla::gfx::LightType::Max>
 {};
 
 template <>
@@ -737,104 +721,446 @@ struct ParamTraits<mozilla::YUVColorSpace>
 {};
 
 template <>
-struct ParamTraits<mozilla::gfx::AttributeMap>
+struct ParamTraits<mozilla::gfx::ImplicitlyCopyableFloatArray>
+  : public ParamTraits<nsTArray<float>>
 {
-  typedef mozilla::gfx::AttributeMap paramType;
+  typedef mozilla::gfx::ImplicitlyCopyableFloatArray paramType;
+};
+
+template <>
+struct ParamTraits<mozilla::gfx::EmptyAttributes>
+{
+  typedef mozilla::gfx::EmptyAttributes paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.Count());
-    for (auto iter = aParam.ConstIter(); !iter.Done(); iter.Next()) {
-      mozilla::gfx::AttributeName name =
-        mozilla::gfx::AttributeName(iter.Key());
-      mozilla::gfx::AttributeType type =
-        mozilla::gfx::AttributeMap::GetType(iter.UserData());
+  }
 
-      WriteParam(aMsg, type);
-      WriteParam(aMsg, name);
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return true;
+  }
+};
 
-      switch (type) {
+template <>
+struct ParamTraits<mozilla::gfx::MergeAttributes>
+{
+  typedef mozilla::gfx::MergeAttributes paramType;
 
-#define CASE_TYPE(typeName)                                          \
-    case mozilla::gfx::AttributeType::e##typeName:                     \
-      WriteParam(aMsg, aParam.Get##typeName(name)); \
-      break;
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+  }
 
-    CASE_TYPE(Bool)
-    CASE_TYPE(Uint)
-    CASE_TYPE(Float)
-    CASE_TYPE(Size)
-    CASE_TYPE(IntSize)
-    CASE_TYPE(IntPoint)
-    CASE_TYPE(Matrix)
-    CASE_TYPE(Matrix5x4)
-    CASE_TYPE(Point3D)
-    CASE_TYPE(Color)
-    CASE_TYPE(AttributeMap)
-    CASE_TYPE(Floats)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return true;
+  }
+};
 
-#undef CASE_TYPE
+template <>
+struct ParamTraits<mozilla::gfx::ToAlphaAttributes>
+{
+  typedef mozilla::gfx::ToAlphaAttributes paramType;
 
-        default:
-          MOZ_CRASH("GFX: unhandled attribute type");
-      }
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::gfx::TileAttributes>
+{
+  typedef mozilla::gfx::TileAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::gfx::BlendAttributes>
+{
+  typedef mozilla::gfx::BlendAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mBlendMode);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mBlendMode);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::MorphologyAttributes>
+{
+  typedef mozilla::gfx::MorphologyAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mOperator);
+    WriteParam(aMsg, aParam.mRadii);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mOperator) ||
+        !ReadParam(aMsg, aIter, &aResult->mRadii)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::FloodAttributes>
+{
+  typedef mozilla::gfx::FloodAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mColor);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mColor)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::OpacityAttributes>
+{
+  typedef mozilla::gfx::OpacityAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mOpacity);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mOpacity)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::OffsetAttributes>
+{
+  typedef mozilla::gfx::OffsetAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mValue);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mValue)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::DisplacementMapAttributes>
+{
+  typedef mozilla::gfx::DisplacementMapAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mScale);
+    WriteParam(aMsg, aParam.mXChannel);
+    WriteParam(aMsg, aParam.mYChannel);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mScale) ||
+        !ReadParam(aMsg, aIter, &aResult->mXChannel) ||
+        !ReadParam(aMsg, aIter, &aResult->mYChannel)) {
+      return false;
+  }
+  return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::TurbulenceAttributes>
+{
+  typedef mozilla::gfx::TurbulenceAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mOffset);
+    WriteParam(aMsg, aParam.mBaseFrequency);
+    WriteParam(aMsg, aParam.mSeed);
+    WriteParam(aMsg, aParam.mOctaves);
+    WriteParam(aMsg, aParam.mStitchable);
+    WriteParam(aMsg, aParam.mType);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mOffset) ||
+        !ReadParam(aMsg, aIter, &aResult->mBaseFrequency) ||
+        !ReadParam(aMsg, aIter, &aResult->mSeed) ||
+        !ReadParam(aMsg, aIter, &aResult->mOctaves) ||
+        !ReadParam(aMsg, aIter, &aResult->mStitchable) ||
+        !ReadParam(aMsg, aIter, &aResult->mType)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::ImageAttributes>
+{
+  typedef mozilla::gfx::ImageAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mFilter);
+    WriteParam(aMsg, aParam.mInputIndex);
+    WriteParam(aMsg, aParam.mTransform);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mFilter) ||
+        !ReadParam(aMsg, aIter, &aResult->mInputIndex) ||
+        !ReadParam(aMsg, aIter, &aResult->mTransform)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::GaussianBlurAttributes>
+{
+  typedef mozilla::gfx::GaussianBlurAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mStdDeviation);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mStdDeviation)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::DropShadowAttributes>
+{
+  typedef mozilla::gfx::DropShadowAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mStdDeviation);
+    WriteParam(aMsg, aParam.mOffset);
+    WriteParam(aMsg, aParam.mColor);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mStdDeviation) ||
+        !ReadParam(aMsg, aIter, &aResult->mOffset) ||
+        !ReadParam(aMsg, aIter, &aResult->mColor)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::ColorMatrixAttributes>
+{
+  typedef mozilla::gfx::ColorMatrixAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mValues);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mType) ||
+        !ReadParam(aMsg, aIter, &aResult->mValues)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::ComponentTransferAttributes>
+{
+  typedef mozilla::gfx::ComponentTransferAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    for (int i = 0; i < 4; ++i) {
+      WriteParam(aMsg, aParam.mTypes[i]);
+    }
+    for (int i = 0; i < 4; ++i) {
+      WriteParam(aMsg, aParam.mValues[i]);
     }
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    uint32_t count;
-    if (!ReadParam(aMsg, aIter, &count)) {
+    for (int i = 0; i < 4; ++i) {
+      if (!ReadParam(aMsg, aIter, &aResult->mTypes[i])) {
+        return false;
+      }
+    }
+    for (int i = 0; i < 4; ++i) {
+      if (!ReadParam(aMsg, aIter, &aResult->mValues[i])){
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::ConvolveMatrixAttributes>
+{
+  typedef mozilla::gfx::ConvolveMatrixAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mKernelSize);
+    WriteParam(aMsg, aParam.mKernelMatrix);
+    WriteParam(aMsg, aParam.mDivisor);
+    WriteParam(aMsg, aParam.mBias);
+    WriteParam(aMsg, aParam.mTarget);
+    WriteParam(aMsg, aParam.mEdgeMode);
+    WriteParam(aMsg, aParam.mKernelUnitLength);
+    WriteParam(aMsg, aParam.mPreserveAlpha);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mKernelSize) ||
+        !ReadParam(aMsg, aIter, &aResult->mKernelMatrix) ||
+        !ReadParam(aMsg, aIter, &aResult->mDivisor) ||
+        !ReadParam(aMsg, aIter, &aResult->mBias) ||
+        !ReadParam(aMsg, aIter, &aResult->mTarget) ||
+        !ReadParam(aMsg, aIter, &aResult->mEdgeMode) ||
+        !ReadParam(aMsg, aIter, &aResult->mKernelUnitLength) ||
+        !ReadParam(aMsg, aIter, &aResult->mPreserveAlpha)) {
       return false;
     }
-    for (uint32_t i = 0; i < count; i++) {
-      mozilla::gfx::AttributeType type;
-      if (!ReadParam(aMsg, aIter, &type)) {
-        return false;
-      }
-      mozilla::gfx::AttributeName name;
-      if (!ReadParam(aMsg, aIter, &name)) {
-        return false;
-      }
-      switch (type) {
+    return true;
+  }
+};
 
-#define HANDLE_TYPE(type, typeName)                                    \
-        case mozilla::gfx::AttributeType::e##typeName:                 \
-        {                                                              \
-          type value;                                                  \
-          if (!ReadParam(aMsg, aIter, &value)) {                       \
-            return false;                                              \
-          }                                                            \
-          aResult->Set(name, value);                                   \
-          break;                                                       \
-        }
+template<>
+struct ParamTraits<mozilla::gfx::DiffuseLightingAttributes>
+{
+  typedef mozilla::gfx::DiffuseLightingAttributes paramType;
 
-        HANDLE_TYPE(bool, Bool)
-        HANDLE_TYPE(uint32_t, Uint)
-        HANDLE_TYPE(float, Float)
-        HANDLE_TYPE(mozilla::gfx::Size, Size)
-        HANDLE_TYPE(mozilla::gfx::IntSize, IntSize)
-        HANDLE_TYPE(mozilla::gfx::IntPoint, IntPoint)
-        HANDLE_TYPE(mozilla::gfx::Matrix, Matrix)
-        HANDLE_TYPE(mozilla::gfx::Matrix5x4, Matrix5x4)
-        HANDLE_TYPE(mozilla::gfx::Point3D, Point3D)
-        HANDLE_TYPE(mozilla::gfx::Color, Color)
-        HANDLE_TYPE(mozilla::gfx::AttributeMap, AttributeMap)
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mLightType);
+    WriteParam(aMsg, aParam.mLightValues);
+    WriteParam(aMsg, aParam.mSurfaceScale);
+    WriteParam(aMsg, aParam.mKernelUnitLength);
+    WriteParam(aMsg, aParam.mColor);
+    WriteParam(aMsg, aParam.mLightingConstant);
+    WriteParam(aMsg, aParam.mSpecularExponent);
+  }
 
-#undef HANDLE_TYPE
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mLightType) ||
+        !ReadParam(aMsg, aIter, &aResult->mLightValues) ||
+        !ReadParam(aMsg, aIter, &aResult->mSurfaceScale) ||
+        !ReadParam(aMsg, aIter, &aResult->mKernelUnitLength) ||
+        !ReadParam(aMsg, aIter, &aResult->mColor) ||
+        !ReadParam(aMsg, aIter, &aResult->mLightingConstant) ||
+        !ReadParam(aMsg, aIter, &aResult->mSpecularExponent)) {
+      return false;
+    }
+    return true;
+  }
+};
 
-        case mozilla::gfx::AttributeType::eFloats:
-        {
-          nsTArray<float> value;
-          if (!ReadParam(aMsg, aIter, &value)) {
-            return false;
-          }
-          aResult->Set(name, &value[0], value.Length());
-          break;
-        }
-        default:
-          MOZ_CRASH("GFX: unhandled attribute type");
-      }
+template<>
+struct ParamTraits<mozilla::gfx::SpecularLightingAttributes>
+{
+  typedef mozilla::gfx::SpecularLightingAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mLightType);
+    WriteParam(aMsg, aParam.mLightValues);
+    WriteParam(aMsg, aParam.mSurfaceScale);
+    WriteParam(aMsg, aParam.mKernelUnitLength);
+    WriteParam(aMsg, aParam.mColor);
+    WriteParam(aMsg, aParam.mLightingConstant);
+    WriteParam(aMsg, aParam.mSpecularExponent);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mLightType) ||
+        !ReadParam(aMsg, aIter, &aResult->mLightValues) ||
+        !ReadParam(aMsg, aIter, &aResult->mSurfaceScale) ||
+        !ReadParam(aMsg, aIter, &aResult->mKernelUnitLength) ||
+        !ReadParam(aMsg, aIter, &aResult->mColor) ||
+        !ReadParam(aMsg, aIter, &aResult->mLightingConstant) ||
+        !ReadParam(aMsg, aIter, &aResult->mSpecularExponent)) {
+      return false;
+    }
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::CompositeAttributes>
+{
+  typedef mozilla::gfx::CompositeAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mOperator);
+    WriteParam(aMsg, aParam.mCoefficients);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mOperator) ||
+        !ReadParam(aMsg, aIter, &aResult->mCoefficients)) {
+      return false;
     }
     return true;
   }
@@ -847,7 +1173,6 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.Type());
     WriteParam(aMsg, aParam.PrimitiveSubregion());
     WriteParam(aMsg, aParam.FilterSpaceBounds());
     WriteParam(aMsg, aParam.IsTainted());
@@ -862,14 +1187,12 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    mozilla::gfx::PrimitiveType type;
     mozilla::gfx::IntRect primitiveSubregion;
     mozilla::gfx::IntRect filterSpaceBounds;
     bool isTainted = false;
     mozilla::gfx::ColorSpace outputColorSpace;
     size_t numberOfInputs = 0;
-    if (!ReadParam(aMsg, aIter, &type) ||
-        !ReadParam(aMsg, aIter, &primitiveSubregion) ||
+    if (!ReadParam(aMsg, aIter, &primitiveSubregion) ||
         !ReadParam(aMsg, aIter, &filterSpaceBounds) ||
         !ReadParam(aMsg, aIter, &isTainted) ||
         !ReadParam(aMsg, aIter, &outputColorSpace) ||
@@ -877,7 +1200,6 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
       return false;
     }
 
-    aResult->SetType(type);
     aResult->SetPrimitiveSubregion(primitiveSubregion);
     aResult->SetFilterSpaceBounds(filterSpaceBounds);
     aResult->SetIsTainted(isTainted);

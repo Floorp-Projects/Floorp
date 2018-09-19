@@ -2058,7 +2058,7 @@ this.VideoControlsImplPageWidget = class {
       <!ENTITY % videocontrolsDTD SYSTEM "chrome://global/locale/videocontrols.dtd">
       %videocontrolsDTD;
       ]>
-      <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml">
+      <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml" role="none">
         <link rel="stylesheet" type="text/css" href="chrome://global/skin/media/videocontrols.css" />
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div id="statusOverlay" class="statusOverlay stackItem" hidden="true">
@@ -2265,7 +2265,7 @@ this.NoControlsImplPageWidget = class {
       <!ENTITY % videocontrolsDTD SYSTEM "chrome://global/locale/videocontrols.dtd">
       %videocontrolsDTD;
       ]>
-      <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml">
+      <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml" role="none">
         <link rel="stylesheet" type="text/css" href="chrome://global/skin/media/videocontrols.css" />
         <div id="controlsContainer" class="controlsContainer" role="none" hidden="true">
           <div class="controlsOverlay stackItem">

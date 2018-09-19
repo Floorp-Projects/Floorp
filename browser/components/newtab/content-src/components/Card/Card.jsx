@@ -26,7 +26,7 @@ export class _Card extends React.PureComponent {
       activeCard: null,
       imageLoaded: false,
       showContextMenu: false,
-      cardImage: null
+      cardImage: null,
     };
     this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
@@ -108,7 +108,7 @@ export class _Card extends React.PureComponent {
     event.preventDefault();
     this.setState({
       activeCard: this.props.index,
-      showContextMenu: true
+      showContextMenu: true,
     });
   }
 
@@ -129,33 +129,33 @@ export class _Card extends React.PureComponent {
     if (this.props.link.type === "download") {
       this.props.dispatch(ac.OnlyToMain({
         type: at.SHOW_DOWNLOAD_FILE,
-        data: this.props.link
+        data: this.props.link,
       }));
     } else {
       const {altKey, button, ctrlKey, metaKey, shiftKey} = event;
       this.props.dispatch(ac.OnlyToMain({
         type: at.OPEN_LINK,
-        data: Object.assign(this.props.link, {event: {altKey, button, ctrlKey, metaKey, shiftKey}})
+        data: Object.assign(this.props.link, {event: {altKey, button, ctrlKey, metaKey, shiftKey}}),
       }));
     }
     if (this.props.isWebExtension) {
       this.props.dispatch(ac.WebExtEvent(at.WEBEXT_CLICK, {
         source: this.props.eventSource,
         url: this.props.link.url,
-        action_position: this.props.index
+        action_position: this.props.index,
       }));
     } else {
       this.props.dispatch(ac.UserEvent(Object.assign({
         event: "CLICK",
         source: this.props.eventSource,
-        action_position: this.props.index
+        action_position: this.props.index,
       }, this._getTelemetryInfo())));
 
       if (this.props.shouldSendImpressionStats) {
         this.props.dispatch(ac.ImpressionStats({
           source: this.props.eventSource,
           click: 0,
-          tiles: [{id: this.props.link.guid, pos: this.props.index}]
+          tiles: [{id: this.props.link.guid, pos: this.props.index}],
         }));
       }
     }
@@ -209,7 +209,7 @@ export class _Card extends React.PureComponent {
       "card-outer",
       className,
       isContextMenuOpen && "active",
-      props.placeholder && "placeholder"
+      props.placeholder && "placeholder",
     ].filter(v => v).join(" ");
 
     return (<li className={outerClassName}>
@@ -231,7 +231,7 @@ export class _Card extends React.PureComponent {
               "card-text",
               icon ? "" : "no-context",
               link.description ? "" : "no-description",
-              link.hostname ? "" : "no-host-name"
+              link.hostname ? "" : "no-host-name",
             ].join(" ")}>
               <h4 className="card-title" dir="auto">{link.title}</h4>
               <p className="card-description" dir="auto">{link.description}</p>

@@ -19,6 +19,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
 
   <script type="application/javascript">
 
+    async function loadAudioSource() {
+      /**
+       * Setting the source dynamically and wait for it to load,
+       * so we can test the accessibility tree of the control in its ready and
+       * stable state.
+       *
+       * See bug 1484048 comment 25 for discussion on how it switches UI when
+       * loading a statically declared source.
+       */
+      await new Promise(resolve => {
+        let el = document.getElementById("audio");
+        el.addEventListener("canplaythrough", resolve, {once: true});
+        el.src = "../bug461281.ogg";
+      });
+
+      doTest();
+    }
+
     function doTest() {
       // ////////////////////////////////////////////////////////////////////////
       // test the accessible tree
@@ -62,7 +80,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yLoadEvent(loadAudioSource);
   </script>
 </head>
 <body>
@@ -75,8 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
   <pre id="test">
   </pre>
 
-  <audio id="audio" src="../bug461281.ogg"
-         controls="true"></audio>
+  <audio id="audio" controls="true"></audio>
 
   <div id="eventDump"></div>
 </body>

@@ -271,6 +271,38 @@ add_task(async function test_scrollPaymentRequestPage() {
   el1.parentElement.style.height = "";
 });
 
+add_task(async function test_acceptedCards() {
+  let initialState = el1.requestStore.getState();
+  let paymentMethods = [{
+    supportedMethods: "basic-card",
+    data: {
+      supportedNetworks: ["visa", "mastercard"],
+    },
+  }];
+  el1.requestStore.setState({
+    request: Object.assign({}, initialState.request, {
+      paymentMethods,
+    }),
+  });
+  await asyncElementRendered();
+
+  let acceptedCards = el1._acceptedCardsList;
+  ok(acceptedCards && !isHidden(acceptedCards), "Accepted cards list is present and visible");
+
+  paymentMethods = [{
+    supportedMethods: "basic-card",
+  }];
+  el1.requestStore.setState({
+    request: Object.assign({}, initialState.request, {
+      paymentMethods,
+    }),
+  });
+  await asyncElementRendered();
+
+  acceptedCards = el1._acceptedCardsList;
+  ok(acceptedCards && isHidden(acceptedCards), "Accepted cards list is present but hidden");
+});
+
 add_task(async function test_picker_labels() {
   await setup();
   let picker = el1._shippingOptionPicker;
