@@ -12,7 +12,7 @@ add_task(async function test_remote_window_open_js_uri() {
 
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
 
-  browser.loadURI(`javascript:1;`);
+  BrowserTestUtils.loadURI(browser, `javascript:1;`);
   await ContentTask.spawn(browser, {}, async function() {
     info("origin " + content.document.nodePrincipal.origin);
 
@@ -35,7 +35,7 @@ add_task(async function test_remote_window_open_js_uri2() {
 
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
 
-  browser.loadURI(`javascript:
+  BrowserTestUtils.loadURI(browser, `javascript:
     let iframe = document.createElement("iframe");
     iframe.src = "http://example.com";
     iframe.id = "iframe1";

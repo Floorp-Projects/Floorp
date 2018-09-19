@@ -41,7 +41,7 @@ function check_audio_pause_state(expectedPauseState) {
 
 async function suspended_pause(url, browser) {
   info("### Start test for suspended-pause ###");
-  browser.loadURI(url);
+  BrowserTestUtils.loadURI(browser, url);
 
   info("- page should have playing audio -");
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
@@ -67,7 +67,7 @@ async function suspended_pause(url, browser) {
 
 async function suspended_pause_disposable(url, browser) {
   info("### Start test for suspended-pause-disposable ###");
-  browser.loadURI(url);
+  BrowserTestUtils.loadURI(browser, url);
 
   info("- page should have playing audio -");
   await wait_for_event(browser, "DOMAudioPlaybackStarted");
@@ -93,7 +93,7 @@ async function suspended_pause_disposable(url, browser) {
 
 async function suspended_stop_disposable(url, browser) {
   info("### Start test for suspended-stop-disposable ###");
-  browser.loadURI(url);
+  BrowserTestUtils.loadURI(browser, url);
 
   info("- page should have playing audio -");
   await wait_for_event(browser, "DOMAudioPlaybackStarted");

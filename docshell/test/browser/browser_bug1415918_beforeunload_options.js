@@ -104,7 +104,7 @@ add_task(async function test() {
 
   buttonId = "button0";
   url = TEST_PATH + "file_bug1415918_beforeunload_2.html";
-  browser.loadURI(url);
+  BrowserTestUtils.loadURI(browser, url);
   await BrowserTestUtils.browserLoaded(browser, false, url);
   buttonId = "";
 
@@ -158,7 +158,7 @@ add_task(async function test() {
 
   buttonId = "button0";
   url = TEST_PATH + "file_bug1415918_beforeunload_3.html";
-  browser.loadURI(url);
+  BrowserTestUtils.loadURI(browser, url);
   await BrowserTestUtils.browserLoaded(browser, false, url);
 
   // Prompt is shown, user clicks OK.

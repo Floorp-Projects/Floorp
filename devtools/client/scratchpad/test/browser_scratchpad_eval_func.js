@@ -10,7 +10,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  gBrowser.loadURI("data:text/html;charset=utf8,test Scratchpad eval function.");
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8,test Scratchpad eval function.");
 }
 
 function reportErrorAndQuit(error) {

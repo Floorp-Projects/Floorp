@@ -78,7 +78,7 @@ let forgetWinHelper = async function(forgetFn) {
   // Create a tab worth remembering.
   let tab = newWin.gBrowser.selectedTab;
   let browser = tab.linkedBrowser;
-  browser.loadURI(PAGE);
+  BrowserTestUtils.loadURI(browser, PAGE);
   await BrowserTestUtils.browserLoaded(browser, false, PAGE);
   await TabStateFlusher.flush(browser);
 

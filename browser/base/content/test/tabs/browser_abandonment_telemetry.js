@@ -77,7 +77,7 @@ const PROBE_TESTS = [
     category: "back",
 
     async prepare(browser) {
-      browser.loadURI(PAGE_2);
+      BrowserTestUtils.loadURI(browser, PAGE_2);
       await BrowserTestUtils.browserLoaded(browser);
     },
 
@@ -96,7 +96,7 @@ const PROBE_TESTS = [
     category: "forward",
 
     async prepare(browser) {
-      browser.loadURI(PAGE_2);
+      BrowserTestUtils.loadURI(browser, PAGE_2);
       await BrowserTestUtils.browserLoaded(browser);
       let pageShow =
         BrowserTestUtils.waitForContentEvent(browser, "pageshow");
@@ -119,9 +119,9 @@ const PROBE_TESTS = [
     category: "historyNavigation",
 
     async prepare(browser) {
-      browser.loadURI(PAGE_2);
+      BrowserTestUtils.loadURI(browser, PAGE_2);
       await BrowserTestUtils.browserLoaded(browser);
-      browser.loadURI("http://example.com");
+      BrowserTestUtils.loadURI(browser, "http://example.com");
       await BrowserTestUtils.browserLoaded(browser);
       await TabStateFlusher.flush(browser);
     },
@@ -141,9 +141,9 @@ const PROBE_TESTS = [
     category: "historyNavigation",
 
     async prepare(browser) {
-      browser.loadURI(PAGE_2);
+      BrowserTestUtils.loadURI(browser, PAGE_2);
       await BrowserTestUtils.browserLoaded(browser);
-      browser.loadURI("http://example.com");
+      BrowserTestUtils.loadURI(browser, "http://example.com");
       await BrowserTestUtils.browserLoaded(browser);
       let pageShow =
         BrowserTestUtils.waitForContentEvent(browser, "pageshow");

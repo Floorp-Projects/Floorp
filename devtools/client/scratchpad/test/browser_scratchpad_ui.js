@@ -10,7 +10,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  gBrowser.loadURI("data:text/html,<title>foobarBug636725</title>" +
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<title>foobarBug636725</title>" +
                    "<p>test inspect() in Scratchpad");
 }
 

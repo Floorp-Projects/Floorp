@@ -64,8 +64,8 @@ class CodeCoverageMixin(SingleTestMixin):
     prefix = None
     per_test_reports = {}
 
-    def __init__(self):
-        super(CodeCoverageMixin, self).__init__()
+    def __init__(self, **kwargs):
+        super(CodeCoverageMixin, self).__init__(**kwargs)
 
     @property
     def code_coverage_enabled(self):

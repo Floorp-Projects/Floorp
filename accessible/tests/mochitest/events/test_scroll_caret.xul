@@ -43,7 +43,9 @@
 
       this.invoke = function loadTab_invoke()
       {
-        tabBrowser().loadURI(aURL);
+        tabBrowser().loadURI(aURL, {
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
       }
 
       this.getID = function loadTab_getID()

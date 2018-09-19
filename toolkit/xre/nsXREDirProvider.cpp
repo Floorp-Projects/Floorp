@@ -1134,11 +1134,10 @@ GetRegWindowsAppDataFolder(bool aLocal, nsAString& _retval)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsAString::iterator begin;
-  _retval.BeginWriting(begin);
+  auto begin = _retval.BeginWriting();
 
   res = RegQueryValueExW(key, (aLocal ? L"Local AppData" : L"AppData"),
-                         nullptr, nullptr, (LPBYTE) begin.get(), &size);
+                         nullptr, nullptr, (LPBYTE) begin, &size);
   ::RegCloseKey(key);
   if (res != ERROR_SUCCESS) {
     _retval.SetLength(0);

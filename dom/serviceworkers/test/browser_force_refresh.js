@@ -40,7 +40,7 @@ function test() {
     gBrowser.selectedTab = tab;
 
     tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
-    gBrowser.loadURI(url);
+    BrowserTestUtils.loadURI(gBrowser, url);
 
     async function done() {
       tab.linkedBrowser.messageManager.removeMessageListener("test:event", eventHandler);

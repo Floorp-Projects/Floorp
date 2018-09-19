@@ -6,6 +6,7 @@
 
 #include "nsCOMArray.h"
 #include "nsIClassInfoImpl.h"
+#include "ThreadDelay.h"
 #include "nsThreadPool.h"
 #include "nsThreadManager.h"
 #include "nsThread.h"
@@ -99,6 +100,11 @@ nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
     mEventsAvailable.Notify();
     stackSize = mStackSize;
   }
+
+  auto delay = MakeScopeExit([&]() {
+      // Delay to encourage the receiving task to run before we do work.
+      DelayForChaosMode(ChaosFeature::TaskDispatching, 1000);
+  });
 
   LOG(("THRD-P(%p) put [spawn=%d]\n", this, spawnThread));
   if (!spawnThread) {
@@ -228,6 +234,11 @@ nsThreadPool::Run()
     }
     if (event) {
       LOG(("THRD-P(%p) %s running [%p]\n", this, mName.BeginReading(), event.get()));
+
+      // Delay event processing to encourage whoever dispatched this event
+      // to run.
+      DelayForChaosMode(ChaosFeature::TaskRunning, 1000);
+
       event->Run();
     }
   } while (!exitThread);

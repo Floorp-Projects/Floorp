@@ -82,7 +82,7 @@ async function expectFocusOnF6(backward, expectedDocument, expectedElement, onCo
 // Load a page and navigate between it and the chrome window.
 add_task(async function() {
   let page1Promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.selectedBrowser.loadURI(testPage1);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testPage1);
   await page1Promise;
 
   // When the urlbar is focused, pressing F6 should focus the root of the content page.

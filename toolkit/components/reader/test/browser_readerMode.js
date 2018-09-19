@@ -172,7 +172,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
   await observeAttribute(menuitem, "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticle.html";
-      tab.linkedBrowser.loadURI(url);
+      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     },
     () => {
       is(menuitem.hidden, false, "menuitem's hidden attribute should be false on a reader-able page");
@@ -185,7 +185,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
   await observeAttribute(menuitem, "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticleHiddenNodes.html";
-      tab.linkedBrowser.loadURI(url);
+      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     },
     () => {
       is(menuitem.hidden, true, "menuitem's hidden attribute should be true on a non-reader-able page");
@@ -198,7 +198,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
   await observeAttribute(menuitem, "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticle.html";
-      tab.linkedBrowser.loadURI(url);
+      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     },
     () => {
       is(menuitem.hidden, false, "menuitem's hidden attribute should be false on a reader-able page");
@@ -235,7 +235,7 @@ add_task(async function test_reader_view_element_attribute_transform() {
   await observeAttribute(menuitem, "hidden",
     () => {
       let url = TEST_PATH + "readerModeArticleHiddenNodes.html";
-      tab.linkedBrowser.loadURI(url);
+      BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     },
     () => {
       is(menuitem.hidden, true, "menuitem's hidden attribute should be true on a non-reader-able page");

@@ -24,7 +24,7 @@ function test() {
 
   function waitForTabLoad(aWin, aCallback) {
     BrowserTestUtils.browserLoaded(aWin.gBrowser.selectedBrowser).then(aCallback);
-    aWin.gBrowser.selectedBrowser.loadURI(pageURI);
+    BrowserTestUtils.loadURI(aWin.gBrowser.selectedBrowser, pageURI);
   }
 
   testOnWindow(true, function(win) {

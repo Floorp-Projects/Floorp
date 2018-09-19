@@ -64,7 +64,8 @@ BrowserElementWebNavigation.prototype = {
     // No equivalent in the current BrowserElement API
     this.loadURIWithOptions(uri, flags, referrer,
                             Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-                            postData, headers, null, null);
+                            postData, headers, null,
+                            Services.scriptSecurityManager.createNullPrincipal({}));
   },
 
   loadURIWithOptions(uri, flags, referrer, referrerPolicy, postData, headers,
@@ -80,7 +81,7 @@ BrowserElementWebNavigation.prototype = {
       baseURI: baseURI ? baseURI.spec : null,
       triggeringPrincipal: triggeringPrincipal
                            ? Utils.serializePrincipal(triggeringPrincipal)
-                           : null,
+                           : Services.scriptSecurityManager.createNullPrincipal({}),
       requestTime: telemetry.msSystemNow(),
     });
   },

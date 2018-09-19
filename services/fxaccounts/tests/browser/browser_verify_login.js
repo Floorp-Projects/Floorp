@@ -14,7 +14,7 @@ add_task(async function() {
   };
   info("testVerifyNewSignin");
   setupMockAlertsService();
-  gBrowser.selectedBrowser.loadURI("about:robots");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
   await waitForDocLoadComplete();
 
   let waitForTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);

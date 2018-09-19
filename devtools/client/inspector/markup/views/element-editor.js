@@ -282,6 +282,7 @@ ElementEditor.prototype = {
     const showEventBadge = this.node.hasEventListeners;
     if (this._eventBadge && !showEventBadge) {
       this._eventBadge.remove();
+      this._eventBadge = null;
     } else if (showEventBadge && !this._eventBadge) {
       this._createEventBadge();
     }
@@ -304,6 +305,7 @@ ElementEditor.prototype = {
     const showDisplayBadge = this.node.displayType in DISPLAY_TYPES;
     if (this._displayBadge && !showDisplayBadge) {
       this._displayBadge.remove();
+      this._displayBadge = null;
     } else if (showDisplayBadge) {
       if (!this._displayBadge) {
         this._createDisplayBadge();
@@ -339,6 +341,7 @@ ElementEditor.prototype = {
     const showCustomBadge = !!this.node.customElementLocation;
     if (this._customBadge && !showCustomBadge) {
       this._customBadge.remove();
+      this._customBadge = null;
     } else if (!this._customBadge && showCustomBadge) {
       this._createCustomBadge();
     }
