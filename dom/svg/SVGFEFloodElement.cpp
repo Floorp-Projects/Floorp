@@ -40,7 +40,6 @@ SVGFEFloodElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            const nsTArray<bool>& aInputsAreTainted,
                                            nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
-  FilterPrimitiveDescription descr(PrimitiveType::Flood);
   FloodAttributes atts;
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
@@ -51,8 +50,7 @@ SVGFEFloodElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   } else {
     atts.mColor = Color();
   }
-  descr.Attributes() = AsVariant(std::move(atts));
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 //----------------------------------------------------------------------

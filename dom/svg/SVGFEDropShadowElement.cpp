@@ -95,7 +95,7 @@ SVGFEDropShadowElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                              &mNumberPairAttributes[STD_DEV],
                                              nsSVGNumberPair::eSecond);
   if (stdX < 0 || stdY < 0) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return FilterPrimitiveDescription();
   }
 
   IntPoint offset(int32_t(aInstance->GetPrimitiveNumber(
@@ -103,7 +103,6 @@ SVGFEDropShadowElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                   int32_t(aInstance->GetPrimitiveNumber(
                             SVGContentUtils::Y, &mNumberAttributes[DY])));
 
-  FilterPrimitiveDescription descr(PrimitiveType::DropShadow);
   DropShadowAttributes atts;
   atts.mStdDeviation = Size(stdX, stdY);
   atts.mOffset = offset;
@@ -117,8 +116,7 @@ SVGFEDropShadowElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   } else {
     atts.mColor = Color();
   }
-  descr.Attributes() = AsVariant(std::move(atts));
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 bool

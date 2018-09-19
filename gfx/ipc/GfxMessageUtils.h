@@ -254,14 +254,6 @@ struct ParamTraits<mozilla::gfx::FeatureStatus>
 {};
 
 template <>
-struct ParamTraits<mozilla::gfx::PrimitiveType>
-  : public ContiguousEnumSerializer<
-             mozilla::gfx::PrimitiveType,
-             mozilla::gfx::PrimitiveType::Empty,
-             mozilla::gfx::PrimitiveType::Max>
-{};
-
-template <>
 struct ParamTraits<mozilla::gfx::LightType>
   : public ContiguousEnumSerializer<
              mozilla::gfx::LightType,
@@ -1181,7 +1173,6 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.Type());
     WriteParam(aMsg, aParam.PrimitiveSubregion());
     WriteParam(aMsg, aParam.FilterSpaceBounds());
     WriteParam(aMsg, aParam.IsTainted());
@@ -1196,14 +1187,12 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    mozilla::gfx::PrimitiveType type;
     mozilla::gfx::IntRect primitiveSubregion;
     mozilla::gfx::IntRect filterSpaceBounds;
     bool isTainted = false;
     mozilla::gfx::ColorSpace outputColorSpace;
     size_t numberOfInputs = 0;
-    if (!ReadParam(aMsg, aIter, &type) ||
-        !ReadParam(aMsg, aIter, &primitiveSubregion) ||
+    if (!ReadParam(aMsg, aIter, &primitiveSubregion) ||
         !ReadParam(aMsg, aIter, &filterSpaceBounds) ||
         !ReadParam(aMsg, aIter, &isTainted) ||
         !ReadParam(aMsg, aIter, &outputColorSpace) ||
@@ -1211,7 +1200,6 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
       return false;
     }
 
-    aResult->SetType(type);
     aResult->SetPrimitiveSubregion(primitiveSubregion);
     aResult->SetFilterSpaceBounds(filterSpaceBounds);
     aResult->SetIsTainted(isTainted);

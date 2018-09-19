@@ -77,14 +77,12 @@ SVGFEGaussianBlurElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance
                                              &mNumberPairAttributes[STD_DEV],
                                              nsSVGNumberPair::eSecond);
   if (stdX < 0 || stdY < 0) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return FilterPrimitiveDescription();
   }
 
-  FilterPrimitiveDescription descr(PrimitiveType::GaussianBlur);
   GaussianBlurAttributes atts;
   atts.mStdDeviation = Size(stdX, stdY);
-  descr.Attributes() = AsVariant(std::move(atts));
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 bool

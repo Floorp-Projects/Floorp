@@ -217,7 +217,7 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return FilterPrimitiveDescription();
   }
 
   nsCOMPtr<imgIRequest> currentRequest;
@@ -236,7 +236,7 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   }
 
   if (!image) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return FilterPrimitiveDescription();
   }
 
   IntSize nativeSize;
@@ -252,7 +252,6 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 
   SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(frame);
 
-  FilterPrimitiveDescription descr(PrimitiveType::Image);
   ImageAttributes atts;
   atts.mFilter = (uint32_t)samplingFilter;
   atts.mTransform = TM;
@@ -261,9 +260,7 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   size_t imageIndex = aInputImages.Length();
   aInputImages.AppendElement(image);
   atts.mInputIndex = (uint32_t)imageIndex;
-  descr.Attributes() = AsVariant(std::move(atts));
-
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 bool

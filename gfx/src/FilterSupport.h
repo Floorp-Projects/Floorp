@@ -94,30 +94,6 @@ struct FilterAttribute;
 // Limits
 const float kMaxStdDeviation = 500;
 
-enum class PrimitiveType {
-  Empty = 0,
-  Blend,
-  Morphology,
-  ColorMatrix,
-  Flood,
-  Tile,
-  ComponentTransfer,
-  Opacity,
-  ConvolveMatrix,
-  Offset,
-  DisplacementMap,
-  Turbulence,
-  Composite,
-  Merge,
-  Image,
-  GaussianBlur,
-  DropShadow,
-  DiffuseLighting,
-  SpecularLighting,
-  ToAlpha,
-  Max
-};
-
 // Simple PrimitiveAttributes:
 
 struct EmptyAttributes {
@@ -468,14 +444,12 @@ public:
   };
 
   FilterPrimitiveDescription();
-  explicit FilterPrimitiveDescription(PrimitiveType aType);
+  explicit FilterPrimitiveDescription(PrimitiveAttributes&& aAttributes);
   FilterPrimitiveDescription(FilterPrimitiveDescription&& aOther);
   FilterPrimitiveDescription& operator=(FilterPrimitiveDescription&& aOther);
   FilterPrimitiveDescription(const FilterPrimitiveDescription& aOther);
   FilterPrimitiveDescription& operator=(const FilterPrimitiveDescription& aOther);
 
-  PrimitiveType Type() const { return mType; }
-  void SetType(PrimitiveType aType) { mType = aType; }
   const PrimitiveAttributes& Attributes() const { return mAttributes; }
   PrimitiveAttributes& Attributes() { return mAttributes; }
 
@@ -537,7 +511,6 @@ public:
   }
 
 private:
-  PrimitiveType mType;
   PrimitiveAttributes mAttributes;
   nsTArray<int32_t> mInputPrimitives;
   IntRect mFilterPrimitiveSubregion;

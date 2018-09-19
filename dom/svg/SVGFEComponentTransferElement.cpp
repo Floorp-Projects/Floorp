@@ -72,7 +72,6 @@ SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aIns
     }
   }
 
-  FilterPrimitiveDescription descr(PrimitiveType::ComponentTransfer);
   ComponentTransferAttributes atts;
   for (int32_t i = 0; i < 4; i++) {
     if (childForChannel[i]) {
@@ -82,8 +81,7 @@ SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aIns
         (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY;
     }
   }
-  descr.Attributes() = AsVariant(std::move(atts));
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 bool
