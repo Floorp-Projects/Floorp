@@ -100,16 +100,7 @@ ifelse($#, 2, _MOZ_AC_DEFINE_UNQUOTED($1, $2), $#, 3, _MOZ_AC_DEFINE_UNQUOTED($1
 
 dnl Replace AC_OUTPUT to create and call a python config.status
 define([MOZ_CREATE_CONFIG_STATUS],
-[dnl Top source directory in Windows format (as opposed to msys format).
-WIN_TOP_SRC=
-case "$host_os" in
-mingw*)
-    WIN_TOP_SRC=`cd $srcdir; pwd -W`
-    ;;
-esac
-AC_SUBST(WIN_TOP_SRC)
-
-dnl Used in all Makefile.in files
+[dnl Used in all Makefile.in files
 top_srcdir=$srcdir
 AC_SUBST(top_srcdir)
 

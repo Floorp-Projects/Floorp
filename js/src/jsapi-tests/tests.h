@@ -95,14 +95,14 @@ class JSAPITest
 
 #define EXEC(s) do { if (!exec(s, __FILE__, __LINE__)) return false; } while (false)
 
-    bool exec(const char* bytes, const char* filename, int lineno);
+    bool exec(const char* utf8, const char* filename, int lineno);
 
     // Like exec(), but doesn't call fail() if JS::Evaluate returns false.
-    bool execDontReport(const char* bytes, const char* filename, int lineno);
+    bool execDontReport(const char* utf8, const char* filename, int lineno);
 
 #define EVAL(s, vp) do { if (!evaluate(s, __FILE__, __LINE__, vp)) return false; } while (false)
 
-    bool evaluate(const char* bytes, const char* filename, int lineno, JS::MutableHandleValue vp);
+    bool evaluate(const char* utf8, const char* filename, int lineno, JS::MutableHandleValue vp);
 
     JSAPITestString jsvalToSource(JS::HandleValue v) {
         if (JSString* str = JS_ValueToSource(cx, v)) {

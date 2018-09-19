@@ -214,6 +214,8 @@ class WasmInstanceObject : public NativeObject
 
     static WasmInstanceObject* create(JSContext* cx,
                                       RefPtr<const wasm::Code> code,
+                                      const wasm::DataSegmentVector& dataSegments,
+                                      const wasm::ElemSegmentVector& elemSegments,
                                       UniquePtr<wasm::DebugState> debug,
                                       wasm::UniqueTlsData tlsData,
                                       HandleWasmMemoryObject memory,
@@ -222,7 +224,6 @@ class WasmInstanceObject : public NativeObject
                                       const wasm::GlobalDescVector& globals,
                                       wasm::HandleValVector globalImportValues,
                                       const WasmGlobalObjectVector& globalObjs,
-                                      const wasm::ShareableBytes* bytecode,
                                       HandleObject proto);
     void initExportsObj(JSObject& exportsObj);
 
@@ -234,7 +235,7 @@ class WasmInstanceObject : public NativeObject
                                     uint32_t funcIndex,
                                     MutableHandleFunction fun);
 
-    const wasm::CodeRange& getExportedFunctionCodeRange(HandleFunction fun, wasm::Tier tier);
+    const wasm::CodeRange& getExportedFunctionCodeRange(JSFunction* fun, wasm::Tier tier);
 
     static WasmInstanceScope* getScope(JSContext* cx, HandleWasmInstanceObject instanceObj);
     static WasmFunctionScope* getFunctionScope(JSContext* cx,

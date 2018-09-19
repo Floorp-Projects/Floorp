@@ -335,7 +335,7 @@ class SearchBar extends _react.Component {
     }, _react2.default.createElement(_SearchInput2.default, {
       query: this.state.query,
       count: count,
-      placeholder: L10N.getStr("sourceSearch.search.placeholder"),
+      placeholder: L10N.getStr("sourceSearch.search.placeholder2"),
       summaryMsg: this.buildSummaryMsg(),
       onChange: this.onChange,
       onBlur: this.onBlur,

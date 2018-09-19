@@ -171,7 +171,7 @@ bool
 DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 {
     MOZ_ASSERT(debugEnabled());
-    const CodeRange& codeRange = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
+    const CodeRange& codeRange = codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
     MOZ_ASSERT(codeRange.isFunction());
 
     StepModeCounters::AddPtr p = stepModeCounters_.lookupForAdd(funcIndex);
@@ -205,7 +205,7 @@ bool
 DebugState::decrementStepModeCount(FreeOp* fop, uint32_t funcIndex)
 {
     MOZ_ASSERT(debugEnabled());
-    const CodeRange& codeRange = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
+    const CodeRange& codeRange = codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
     MOZ_ASSERT(codeRange.isFunction());
 
     MOZ_ASSERT(!stepModeCounters_.empty());
@@ -402,7 +402,7 @@ DebugState::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t
     }
 
     // Decode local var types from wasm binary function body.
-    const CodeRange& range = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
+    const CodeRange& range = codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
     // In wasm, the Code points to the function start via funcLineOrBytecode.
     MOZ_ASSERT(!metadata().isAsmJS() && maybeBytecode_);
     size_t offsetInModule = range.funcLineOrBytecode();

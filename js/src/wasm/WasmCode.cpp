@@ -593,7 +593,8 @@ CacheableChars::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 size_t
 MetadataTier::serializedSize() const
 {
-    return SerializedPodVectorSize(codeRanges) +
+    return SerializedPodVectorSize(funcToCodeRange) +
+           SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
            trapSites.serializedSize() +
            SerializedVectorSize(funcImports) +
@@ -603,7 +604,8 @@ MetadataTier::serializedSize() const
 size_t
 MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return codeRanges.sizeOfExcludingThis(mallocSizeOf) +
+    return funcToCodeRange.sizeOfExcludingThis(mallocSizeOf) +
+           codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            trapSites.sizeOfExcludingThis(mallocSizeOf) +
            SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
@@ -613,25 +615,26 @@ MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 uint8_t*
 MetadataTier::serialize(uint8_t* cursor) const
 {
-    MOZ_ASSERT(debugTrapFarJumpOffsets.empty() && debugFuncToCodeRange.empty());
+    cursor = SerializePodVector(cursor, funcToCodeRange);
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
     cursor = trapSites.serialize(cursor);
     cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, funcExports);
+    MOZ_ASSERT(debugTrapFarJumpOffsets.empty());
     return cursor;
 }
 
 /* static */ const uint8_t*
 MetadataTier::deserialize(const uint8_t* cursor)
 {
+    (cursor = DeserializePodVector(cursor, &funcToCodeRange)) &&
     (cursor = DeserializePodVector(cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cursor, &callSites)) &&
     (cursor = trapSites.deserialize(cursor)) &&
     (cursor = DeserializeVector(cursor, &funcImports)) &&
     (cursor = DeserializeVector(cursor, &funcExports));
-    debugTrapFarJumpOffsets.clear();
-    debugFuncToCodeRange.clear();
+    MOZ_ASSERT(debugTrapFarJumpOffsets.empty());
     return cursor;
 }
 
@@ -740,8 +743,8 @@ LazyStubTier::createMany(HasGcTypes gcTypesConfigured, const Uint32Vector& funcE
     JitContext jitContext(&alloc);
     WasmMacroAssembler masm(alloc);
 
-    const CodeRangeVector& moduleRanges = codeTier.metadata().codeRanges;
-    const FuncExportVector& funcExports = codeTier.metadata().funcExports;
+    const MetadataTier& metadata = codeTier.metadata();
+    const FuncExportVector& funcExports = metadata.funcExports;
     uint8_t* moduleSegmentBase = codeTier.segment().base();
 
     CodeRangeVector codeRanges;
@@ -749,8 +752,7 @@ LazyStubTier::createMany(HasGcTypes gcTypesConfigured, const Uint32Vector& funcE
     for (uint32_t funcExportIndex : funcExportIndices) {
         const FuncExport& fe = funcExports[funcExportIndex];
         numExpectedRanges += fe.funcType().temporarilyUnsupportedAnyRef() ? 1 : 2;
-        void* calleePtr = moduleSegmentBase +
-                          moduleRanges[fe.funcCodeRangeIndex()].funcNormalEntry();
+        void* calleePtr = moduleSegmentBase + metadata.codeRange(fe).funcNormalEntry();
         Maybe<ImmPtr> callee;
         callee.emplace(calleePtr, ImmPtr::NoCheckToken());
         if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee, /* asmjs */ false,
@@ -931,6 +933,9 @@ LazyStubTier::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* dat
 bool
 MetadataTier::clone(const MetadataTier& src)
 {
+    if (!funcToCodeRange.appendAll(src.funcToCodeRange)) {
+        return false;
+    }
     if (!codeRanges.appendAll(src.codeRanges)) {
         return false;
     }
@@ -938,9 +943,6 @@ MetadataTier::clone(const MetadataTier& src)
         return false;
     }
     if (!debugTrapFarJumpOffsets.appendAll(src.debugTrapFarJumpOffsets)) {
-        return false;
-    }
-    if (!debugFuncToCodeRange.appendAll(src.debugFuncToCodeRange)) {
         return false;
     }
 
@@ -1212,15 +1214,11 @@ JumpTables::init(CompileMode mode, const ModuleSegment& ms, const CodeRangeVecto
     return true;
 }
 
-Code::Code(UniqueCodeTier tier1, const Metadata& metadata,
-           JumpTables&& maybeJumpTables, DataSegmentVector&& dataSegments,
-           ElemSegmentVector&& elemSegments)
+Code::Code(UniqueCodeTier tier1, const Metadata& metadata, JumpTables&& maybeJumpTables)
   : tier1_(std::move(tier1)),
     metadata_(&metadata),
     profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector()),
-    jumpTables_(std::move(maybeJumpTables)),
-    dataSegments_(std::move(dataSegments)),
-    elemSegments_(std::move(elemSegments))
+    jumpTables_(std::move(maybeJumpTables))
 {}
 
 bool
@@ -1510,9 +1508,7 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              metadata().sizeOfIncludingThisIfNotSeen(mallocSizeOf, seenMetadata) +
              profilingLabels_.lock()->sizeOfExcludingThis(mallocSizeOf) +
-             jumpTables_.sizeOfMiscExcludingThis() +
-             dataSegments_.sizeOfExcludingThis(mallocSizeOf) +
-             SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf);
+             jumpTables_.sizeOfMiscExcludingThis();
 
     for (auto t : tiers()) {
         codeTier(t).addSizeOfMisc(mallocSizeOf, code, data);
@@ -1543,8 +1539,6 @@ size_t
 Code::serializedSize() const
 {
     return metadata().serializedSize() +
-           SerializedPodVectorSize(dataSegments_) +
-           SerializedVectorSize(elemSegments_) +
            codeTier(Tier::Serialized).serializedSize();
 }
 
@@ -1554,8 +1548,6 @@ Code::serialize(uint8_t* cursor, const LinkData& linkData) const
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
 
     cursor = metadata().serialize(cursor);
-    cursor = SerializePodVector(cursor, dataSegments_);
-    cursor = SerializeVector(cursor, elemSegments_);
     cursor = codeTier(Tier::Serialized).serialize(cursor, linkData);
     return cursor;
 }
@@ -1572,16 +1564,6 @@ Code::deserialize(const uint8_t* cursor,
         return nullptr;
     }
 
-    DataSegmentVector dataSegments;
-    cursor = DeserializePodVector(cursor, &dataSegments);
-    if (!cursor)
-        return nullptr;
-
-    ElemSegmentVector elemSegments;
-    cursor = DeserializeVector(cursor, &elemSegments);
-    if (!cursor)
-        return nullptr;
-
     UniqueCodeTier codeTier;
     cursor = CodeTier::deserialize(cursor, linkData, &codeTier);
     if (!cursor) {
@@ -1593,10 +1575,7 @@ Code::deserialize(const uint8_t* cursor,
         return nullptr;
     }
 
-    MutableCode code = js_new<Code>(std::move(codeTier), metadata,
-                                    std::move(jumpTables),
-                                    std::move(dataSegments),
-                                    std::move(elemSegments));
+    MutableCode code = js_new<Code>(std::move(codeTier), metadata, std::move(jumpTables));
     if (!code || !code->initialize(bytecode, linkData)) {
         return nullptr;
     }

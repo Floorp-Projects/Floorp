@@ -617,6 +617,8 @@ ContentParent::PreallocateProcess()
                       eNotRecordingOrReplaying,
                       /* aRecordingFile = */ EmptyString());
 
+  PreallocatedProcessManager::AddBlocker(process);
+
   if (!process->LaunchSubprocess(PROCESS_PRIORITY_PREALLOC)) {
     return nullptr;
   }
@@ -882,7 +884,6 @@ ContentParent::GetNewOrUsedBrowserProcess(Element* aFrameElement,
   PreallocatedProcessManager::AddBlocker(p);
 
   if (!p->LaunchSubprocess(aPriority)) {
-    PreallocatedProcessManager::RemoveBlocker(p);
     return nullptr;
   }
 
@@ -1757,10 +1758,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   // Signal shutdown completion regardless of error state, so we can
   // finish waiting in the xpcom-shutdown/profile-before-change observer.
   mIPCOpen = false;
-
-  // RemoveBlocker is idempotent, and this may have been destroyed
-  // after launch but before RecvFirstIdle.
-  PreallocatedProcessManager::RemoveBlocker(this);
 
   if (mHangMonitorActor) {
     ProcessHangMonitor::RemoveProcess(mHangMonitorActor);

@@ -1,0 +1,18 @@
+<!doctype html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<body>
+<script>
+async_test(t => {
+  test_driver.bless('speechSynthesis.speak', t.step_func(() => {
+    const utter = new SpeechSynthesisUtterance('test');
+    utter.onerror = t.unreached_func('error event');
+    speechSynthesis.speak(utter);
+    utter.onstart = t.step_func(() => {
+      utter.onend = t.step_func_done();
+    });
+  }));
+}, 'speechSynthesis.speak() fires start and end events');
+</script>

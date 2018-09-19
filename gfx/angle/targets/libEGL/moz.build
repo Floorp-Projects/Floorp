@@ -153,6 +153,6 @@ OS_LIBS += [
 #    '/WX',
 #]
 
-DEFFILE = SRCDIR + '/../../checkout/src/libEGL/libEGL.def'
+DEFFILE = '../../checkout/src/libEGL/libEGL.def'
 RCFILE = '../../checkout/src/libEGL/libEGL.rc'
 GeckoSharedLibrary('libEGL', linkage=None)

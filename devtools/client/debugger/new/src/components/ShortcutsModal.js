@@ -51,7 +51,7 @@ class ShortcutsModal extends _react.Component {
   renderSearchShortcuts() {
     return _react2.default.createElement("ul", {
       className: "shortcuts-list"
-    }, this.renderShorcutItem(L10N.getStr("shortcuts.fileSearch"), (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2"))), this.renderShorcutItem(L10N.getStr("shortcuts.searchAgain"), (0, _text.formatKeyShortcut)(L10N.getStr("sourceSearch.search.again.key2"))), this.renderShorcutItem(L10N.getStr("shortcuts.projectSearch"), (0, _text.formatKeyShortcut)(L10N.getStr("projectTextSearch.key"))), this.renderShorcutItem(L10N.getStr("shortcuts.functionSearch"), (0, _text.formatKeyShortcut)(L10N.getStr("functionSearch.key"))), this.renderShorcutItem(L10N.getStr("shortcuts.gotoLine"), (0, _text.formatKeyShortcut)(L10N.getStr("gotoLineModal.key2"))));
+    }, this.renderShorcutItem(L10N.getStr("shortcuts.fileSearch2"), (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2"))), this.renderShorcutItem(L10N.getStr("shortcuts.searchAgain2"), (0, _text.formatKeyShortcut)(L10N.getStr("sourceSearch.search.again.key2"))), this.renderShorcutItem(L10N.getStr("shortcuts.projectSearch2"), (0, _text.formatKeyShortcut)(L10N.getStr("projectTextSearch.key"))), this.renderShorcutItem(L10N.getStr("shortcuts.functionSearch2"), (0, _text.formatKeyShortcut)(L10N.getStr("functionSearch.key"))), this.renderShorcutItem(L10N.getStr("shortcuts.gotoLine"), (0, _text.formatKeyShortcut)(L10N.getStr("gotoLineModal.key2"))));
   }
 
   renderShortcutsContent() {

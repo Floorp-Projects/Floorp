@@ -11,6 +11,7 @@ xul|tabs {
 }
 
 xul|tab[visuallyselected] {
+  color: inherit;
   text-shadow: none;
 }
 

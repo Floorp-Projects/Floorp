@@ -11,22 +11,68 @@
 #include "base/string_util.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
+namespace {
+// NtQuerySection is an internal (but believed to be stable) API and the
+// structures it uses are defined in nt_internals.h.
+// So we have to define them ourselves.
+typedef enum _SECTION_INFORMATION_CLASS {
+  SectionBasicInformation,
+} SECTION_INFORMATION_CLASS;
+
+typedef struct _SECTION_BASIC_INFORMATION {
+  PVOID BaseAddress;
+  ULONG Attributes;
+  LARGE_INTEGER Size;
+} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
+
+typedef ULONG(__stdcall* NtQuerySectionType)(
+    HANDLE SectionHandle,
+    SECTION_INFORMATION_CLASS SectionInformationClass,
+    PVOID SectionInformation,
+    ULONG SectionInformationLength,
+    PULONG ResultLength);
+
+// Checks if the section object is safe to map. At the moment this just means
+// it's not an image section.
+bool IsSectionSafeToMap(HANDLE handle) {
+  static NtQuerySectionType nt_query_section_func =
+    reinterpret_cast<NtQuerySectionType>(
+      ::GetProcAddress(::GetModuleHandle(L"ntdll.dll"), "NtQuerySection"));
+  DCHECK(nt_query_section_func);
+
+  // The handle must have SECTION_QUERY access for this to succeed.
+  SECTION_BASIC_INFORMATION basic_information = {};
+  ULONG status =
+      nt_query_section_func(handle, SectionBasicInformation, &basic_information,
+                            sizeof(basic_information), nullptr);
+  if (status) {
+    return false;
+  }
+
+  return (basic_information.Attributes & SEC_IMAGE) != SEC_IMAGE;
+}
+
+} // namespace (unnamed)
+
 namespace base {
 
 SharedMemory::SharedMemory()
-    : mapped_file_(NULL),
+    : external_section_(false),
+      mapped_file_(NULL),
       memory_(NULL),
       read_only_(false),
       max_size_(0) {
 }
 
 SharedMemory::~SharedMemory() {
+  external_section_ = true;
   Close();
 }
 
 bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
   DCHECK(mapped_file_ == NULL);
 
+  external_section_ = true;
   mapped_file_ = handle;
   read_only_ = read_only;
   return true;
@@ -58,8 +104,12 @@ bool SharedMemory::Map(size_t bytes) {
   if (mapped_file_ == NULL)
     return false;
 
+  if (external_section_ && !IsSectionSafeToMap(mapped_file_)) {
+    return false;
+  }
+
   memory_ = MapViewOfFile(mapped_file_,
-      read_only_ ? FILE_MAP_READ : FILE_MAP_ALL_ACCESS, 0, 0, bytes);
+      read_only_ ? FILE_MAP_READ : FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, bytes);
   if (memory_ != NULL) {
     return true;
   }
@@ -79,7 +129,7 @@ bool SharedMemory::ShareToProcessCommon(ProcessId processId,
                                         SharedMemoryHandle *new_handle,
                                         bool close_self) {
   *new_handle = 0;
-  DWORD access = STANDARD_RIGHTS_REQUIRED | FILE_MAP_READ;
+  DWORD access = FILE_MAP_READ | SECTION_QUERY;
   DWORD options = 0;
   HANDLE mapped_file = mapped_file_;
   HANDLE result;
