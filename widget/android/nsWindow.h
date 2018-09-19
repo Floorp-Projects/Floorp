@@ -38,6 +38,10 @@ namespace mozilla {
     namespace ipc {
         class Shmem;
     } // namespace ipc
+
+    namespace a11y {
+      class SessionAccessibility;
+    }
 }
 
 class nsWindow final : public nsBaseWidget
@@ -186,6 +190,10 @@ private:
     NativePtr<mozilla::widget::GeckoEditableSupport> mEditableSupport;
     mozilla::jni::Object::GlobalRef mEditableParent;
 
+    // Object that implements native SessionAccessibility calls.
+    // Strong referenced by the Java instance.
+    NativePtr<mozilla::a11y::SessionAccessibility> mSessionAccessibility;
+
     class GeckoViewSupport;
     // Object that implements native GeckoView calls and associated states.
     // nullptr for nsWindows that were not opened from GeckoView.
@@ -306,6 +314,8 @@ public:
 
     mozilla::jni::Object::Ref& GetEditableParent() { return mEditableParent; }
 
+    mozilla::a11y::SessionAccessibility* GetSessionAccessibility() { return mSessionAccessibility; }
+
     void RecvToolbarAnimatorMessageFromCompositor(int32_t aMessage) override;
     void UpdateRootFrameMetrics(const ScreenPoint& aScrollOffset, const CSSToScreenScale& aZoom) override;
     void RecvScreenPixels(mozilla::ipc::Shmem&& aMem, const ScreenIntSize& aSize) override;
@@ -353,6 +363,7 @@ private:
 // Explicit template declarations to make clang be quiet.
 template<> const char nsWindow::NativePtr<nsWindow::LayerViewSupport>::sName[];
 template<> const char nsWindow::NativePtr<mozilla::widget::GeckoEditableSupport>::sName[];
+template<> const char nsWindow::NativePtr<mozilla::a11y::SessionAccessibility>::sName[];
 template<> const char nsWindow::NativePtr<nsWindow::NPZCSupport>::sName[];
 
 template<class Impl>
