@@ -9405,6 +9405,8 @@ nsDisplayPerspective::CreateWebRenderCommands(
   Point3D roundedOrigin(NS_round(newOrigin.x), NS_round(newOrigin.y), 0);
 
   gfx::Matrix4x4 transformForSC = gfx::Matrix4x4::Translation(roundedOrigin);
+  
+  nsIFrame* perspectiveFrame = mFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc,
@@ -9418,7 +9420,7 @@ nsDisplayPerspective::CreateWebRenderCommands(
                            &perspectiveMatrix,
                            gfx::CompositionOp::OP_OVER,
                            !BackfaceIsHidden(),
-                           true);
+                           perspectiveFrame->Extend3DContext());
 
   return mList.CreateWebRenderCommands(
     aBuilder, aResources, sc, aManager, aDisplayListBuilder);
