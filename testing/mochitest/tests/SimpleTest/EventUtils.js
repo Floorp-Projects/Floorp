@@ -2613,6 +2613,9 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
   obs.removeObserver(trapDrag, "on-datatransfer-available");
 
   var dataTransfer = sess.dataTransfer;
+  if (!dataTransfer) {
+    throw new Error("No data transfer object after synthesizing the mouse!");
+  }
 
   // The EventStateManager will fire our dragenter event if it needs to.
   var event = createDragEventObject("dragover", aDestElement, aDestWindow,

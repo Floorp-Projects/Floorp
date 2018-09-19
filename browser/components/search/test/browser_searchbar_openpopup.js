@@ -460,6 +460,14 @@ add_task(async function dont_consume_clicks() {
 
 // Dropping text to the searchbar should open the popup
 add_task(async function drop_opens_popup() {
+  // The previous task leaves focus in the URL bar. However, in that case drags
+  // can be interpreted as being selection drags by the drag manager, which
+  // breaks the drag synthesis from EventUtils.js below. To avoid this, focus
+  // the browser content instead.
+  let focusEventPromise = BrowserTestUtils.waitForEvent(gBrowser.selectedBrowser, "focus");
+  gBrowser.selectedBrowser.focus();
+  await focusEventPromise;
+
   let promise = promiseEvent(searchPopup, "popupshown");
   // Use a source for the drop that is outside of the search bar area, to avoid
   // it receiving a mousedown and causing the popup to sometimes open.
