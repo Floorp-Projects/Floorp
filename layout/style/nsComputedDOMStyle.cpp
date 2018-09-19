@@ -3854,21 +3854,21 @@ nsComputedDOMStyle::DoGetOverflow()
 {
   const nsStyleDisplay* display = StyleDisplay();
 
-  RefPtr<nsROCSSPrimitiveValue> overflowY = new nsROCSSPrimitiveValue;
-  overflowY->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(display->mOverflowY,
-                                   nsCSSProps::kOverflowKTable));
-  if (display->mOverflowX == display->mOverflowY) {
-    return overflowY.forget();
-  }
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  valueList->AppendCSSValue(overflowY.forget());
-
   RefPtr<nsROCSSPrimitiveValue> overflowX = new nsROCSSPrimitiveValue;
   overflowX->SetIdent(
     nsCSSProps::ValueToKeywordEnum(display->mOverflowX,
                                    nsCSSProps::kOverflowKTable));
+  if (display->mOverflowX == display->mOverflowY) {
+    return overflowX.forget();
+  }
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   valueList->AppendCSSValue(overflowX.forget());
+
+  RefPtr<nsROCSSPrimitiveValue> overflowY= new nsROCSSPrimitiveValue;
+  overflowY->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(display->mOverflowY,
+                                   nsCSSProps::kOverflowKTable));
+  valueList->AppendCSSValue(overflowY.forget());
   return valueList.forget();
 }
 
