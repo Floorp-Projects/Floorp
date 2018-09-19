@@ -22,7 +22,7 @@ from mozbuild.util import memoize
 actions = []
 callbacks = {}
 
-Action = namedtuple('Action', ['order', 'action_builder'])
+Action = namedtuple('Action', ['order', 'cb_name', 'generic', 'action_builder'])
 
 
 def is_json(data):
@@ -268,7 +268,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
 
             return rv
 
-        actions.append(Action(order, action_builder))
+        actions.append(Action(order, cb_name, generic, action_builder))
 
         mem['registered'] = True
         callbacks[cb_name] = cb
@@ -305,6 +305,33 @@ def render_actions_json(parameters, graph_config):
     }
 
 
+def sanity_check_task_scope(callback, parameters, graph_config):
+    """
+    If this action is not generic, then verify that this task has the necessary
+    scope to run the action. This serves as a backstop preventing abuse by
+    running non-generic actions using generic hooks. While scopes should
+    prevent serious damage from such abuse, it's never a valid thing to do.
+    """
+    for action in _get_actions(graph_config):
+        if action.cb_name == callback:
+            break
+    else:
+        raise Exception('No action with cb_name {}'.format(callback))
+
+    actionPerm = 'generic' if action.generic else action.cb_name
+
+    repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
+    head_repository = parameters[repo_param]
+    assert head_repository.startswith('https://hg.mozilla.org/')
+    expected_scope = 'assume:repo:{}:action:{}'.format(head_repository[8:], actionPerm)
+
+    # the scope should appear literally; no need for a satisfaction check. The use of
+    # get_current_scopes here calls the auth service through the Taskcluster Proxy, giving
+    # the precise scopes available to this task.
+    if expected_scope not in taskcluster.get_current_scopes():
+        raise Exception('Expected task scope {} for this action'.format(expected_scope))
+
+
 def trigger_action_callback(task_group_id, task_id, input, callback, parameters, root,
                             test=False):
     """
@@ -316,11 +343,14 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
     cb = callbacks.get(callback, None)
     if not cb:
         raise Exception('Unknown callback: {}. Known callbacks: {}'.format(
-            callback, callbacks))
+            callback, ', '.join(callbacks)))
 
     if test:
         create.testing = True
         taskcluster.testing = True
+
+    if not test:
+        sanity_check_task_scope(callback, parameters, graph_config)
 
     # fetch the target task, if taskId was given
     # FIXME: many actions don't need this, so move this fetch into the callbacks
