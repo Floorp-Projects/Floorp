@@ -838,7 +838,7 @@ ModuleGenerator::finishFuncDefs()
 }
 
 bool
-ModuleGenerator::finishCode()
+ModuleGenerator::finishCodegen()
 {
     // Now that all functions and stubs are generated and their CodeRanges
     // known, patch all calls (which can emit far jumps) and far jumps. Linking
@@ -870,7 +870,7 @@ ModuleGenerator::finishCode()
 }
 
 bool
-ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
+ModuleGenerator::finishMetadataTier()
 {
     // Assert all sorted metadata is sorted.
 #ifdef DEBUG
@@ -901,24 +901,6 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     }
 #endif
 
-    // Copy over data from the ModuleEnvironment.
-
-    metadata_->memoryUsage = env_->memoryUsage;
-    metadata_->temporaryGcTypesConfigured = env_->gcTypesConfigured;
-    metadata_->minMemoryLength = env_->minMemoryLength;
-    metadata_->maxMemoryLength = env_->maxMemoryLength;
-    metadata_->startFuncIndex = env_->startFuncIndex;
-    metadata_->moduleName = env_->moduleName;
-    metadata_->tables = std::move(env_->tables);
-    metadata_->globals = std::move(env_->globals);
-    metadata_->funcNames = std::move(env_->funcNames);
-    metadata_->customSections = std::move(env_->customSections);
-
-    // Inflate the global bytes up to page size so that the total bytes are a
-    // page size (as required by the allocator functions).
-
-    metadata_->globalDataLength = AlignBytes(metadata_->globalDataLength, gc::SystemPageSize());
-
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
 
@@ -931,39 +913,11 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
         metadataTier_->trapSites[trap].podResizeToFit();
     }
 
-    // Copy over additional debug information.
-
-    if (env_->debugEnabled()) {
-        metadata_->debugEnabled = true;
-
-        const size_t numFuncTypes = env_->funcTypes.length();
-        if (!metadata_->debugFuncArgTypes.resize(numFuncTypes)) {
-            return false;
-        }
-        if (!metadata_->debugFuncReturnTypes.resize(numFuncTypes)) {
-            return false;
-        }
-        for (size_t i = 0; i < numFuncTypes; i++) {
-            if (!metadata_->debugFuncArgTypes[i].appendAll(env_->funcTypes[i]->args())) {
-                return false;
-            }
-            metadata_->debugFuncReturnTypes[i] = env_->funcTypes[i]->ret();
-        }
-
-        static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
-                      "The ModuleHash size shall not exceed the SHA1 hash size.");
-        mozilla::SHA1Sum::Hash hash;
-        mozilla::SHA1Sum sha1Sum;
-        sha1Sum.update(bytecode.begin(), bytecode.length());
-        sha1Sum.finish(hash);
-        memcpy(metadata_->debugHash, hash, sizeof(ModuleHash));
-    }
-
     return true;
 }
 
-UniqueModuleSegment
-ModuleGenerator::finish(const ShareableBytes& bytecode)
+UniqueCodeTier
+ModuleGenerator::finishCodeTier()
 {
     MOZ_ASSERT(finishedFuncDefs_);
 
@@ -1001,15 +955,71 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     // Finish linking and metadata.
 
-    if (!finishCode()) {
+    if (!finishCodegen()) {
         return nullptr;
     }
 
-    if (!finishMetadata(bytecode)) {
+    if (!finishMetadataTier()) {
         return nullptr;
     }
 
-    return ModuleSegment::create(tier(), masm_, *linkData_);
+    UniqueModuleSegment segment = ModuleSegment::create(tier(), masm_, *linkData_);
+    if (!segment) {
+        return nullptr;
+    }
+
+    return js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(segment));
+}
+
+bool
+ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
+{
+    // Finish initialization of Metadata, which is only needed for constructing
+    // the initial Module, not for tier-2 compilation.
+    MOZ_ASSERT(mode() != CompileMode::Tier2);
+
+    // Copy over data from the ModuleEnvironment.
+
+    metadata_->memoryUsage = env_->memoryUsage;
+    metadata_->temporaryGcTypesConfigured = env_->gcTypesConfigured;
+    metadata_->minMemoryLength = env_->minMemoryLength;
+    metadata_->maxMemoryLength = env_->maxMemoryLength;
+    metadata_->startFuncIndex = env_->startFuncIndex;
+    metadata_->moduleName = env_->moduleName;
+    metadata_->tables = std::move(env_->tables);
+    metadata_->globals = std::move(env_->globals);
+    metadata_->funcNames = std::move(env_->funcNames);
+    metadata_->customSections = std::move(env_->customSections);
+
+    // Copy over additional debug information.
+
+    if (env_->debugEnabled()) {
+        metadata_->debugEnabled = true;
+
+        const size_t numFuncTypes = env_->funcTypes.length();
+        if (!metadata_->debugFuncArgTypes.resize(numFuncTypes)) {
+            return false;
+        }
+        if (!metadata_->debugFuncReturnTypes.resize(numFuncTypes)) {
+            return false;
+        }
+        for (size_t i = 0; i < numFuncTypes; i++) {
+            if (!metadata_->debugFuncArgTypes[i].appendAll(env_->funcTypes[i]->args())) {
+                return false;
+            }
+            metadata_->debugFuncReturnTypes[i] = env_->funcTypes[i]->ret();
+        }
+
+        static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
+                      "The ModuleHash size shall not exceed the SHA1 hash size.");
+        mozilla::SHA1Sum::Hash hash;
+        mozilla::SHA1Sum sha1Sum;
+        sha1Sum.update(bytecode.begin(), bytecode.length());
+        sha1Sum.finish(hash);
+        memcpy(metadata_->debugHash, hash, sizeof(ModuleHash));
+    }
+
+    return true;
 }
 
 SharedModule
@@ -1017,18 +1027,17 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
 {
     MOZ_ASSERT(mode() == CompileMode::Once || mode() == CompileMode::Tier1);
 
-    UniqueModuleSegment moduleSegment = finish(bytecode);
-    if (!moduleSegment) {
+    UniqueCodeTier codeTier = finishCodeTier();
+    if (!codeTier) {
         return nullptr;
     }
 
     JumpTables jumpTables;
-    if (!jumpTables.init(mode(), *moduleSegment, metadataTier_->codeRanges)) {
+    if (!jumpTables.init(mode(), codeTier->segment(), codeTier->metadata().codeRanges)) {
         return nullptr;
     }
 
-    auto codeTier = js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(moduleSegment));
-    if (!codeTier) {
+    if (!finishMetadata(bytecode)) {
         return nullptr;
     }
 
@@ -1048,7 +1057,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
     if (!dataSegments.reserve(env_->dataSegments.length())) {
         return nullptr;
     }
-    for (DataSegmentEnv& srcSeg : env_->dataSegments) {
+    for (const DataSegmentEnv& srcSeg : env_->dataSegments) {
         MutableDataSegment dstSeg = js_new<DataSegment>(srcSeg);
         if (!dstSeg) {
             return nullptr;
@@ -1112,13 +1121,8 @@ ModuleGenerator::finishTier2(Module& module)
         return false;
     }
 
-    UniqueModuleSegment moduleSegment = finish(module.bytecode());
-    if (!moduleSegment) {
-        return false;
-    }
-
-    auto code = js::MakeUnique<CodeTier>(std::move(metadataTier_), std::move(moduleSegment));
-    if (!code) {
+    UniqueCodeTier codeTier = finishCodeTier();
+    if (!codeTier) {
         return false;
     }
 
@@ -1128,7 +1132,7 @@ ModuleGenerator::finishTier2(Module& module)
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
-    return module.finishTier2(*linkData_, std::move(code));
+    return module.finishTier2(*linkData_, std::move(codeTier));
 }
 
 size_t
