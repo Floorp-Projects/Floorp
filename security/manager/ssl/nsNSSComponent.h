@@ -128,10 +128,6 @@ public:
   ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() override;
 
-  // The following two methods are thread-safe.
-  static bool AreAnyWeakCiphersEnabled();
-  static void UseWeakCiphersOnSocket(PRFileDesc* fd);
-
   static void FillTLSVersionRange(SSLVersionRange& rangeOut,
                                   uint32_t minFromPrefs,
                                   uint32_t maxFromPrefs,
