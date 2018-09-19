@@ -13,7 +13,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8,test Scratchpad pretty print.");
+  gBrowser.loadURI("data:text/html;charset=utf8,test Scratchpad pretty print.");
 }
 
 function runTests(sw) {

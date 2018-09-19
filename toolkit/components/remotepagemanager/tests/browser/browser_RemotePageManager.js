@@ -82,7 +82,7 @@ add_task(async function init_navigate() {
   is(port.browser, gBrowser.selectedBrowser, "Port is for the correct browser");
 
   let loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  BrowserTestUtils.loadURI(gBrowser, "about:blank");
+  gBrowser.loadURI("about:blank");
 
   await waitForMessage(port, "RemotePage:Unload");
 

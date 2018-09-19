@@ -36,7 +36,7 @@ function test() {
     });
   });
 
-  BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8,<p>test window focus for Scratchpad.");
+  gBrowser.loadURI("data:text/html;charset=utf8,<p>test window focus for Scratchpad.");
 }
 
 function testFocus(sw, hud) {

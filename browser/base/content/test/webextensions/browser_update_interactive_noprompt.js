@@ -19,7 +19,7 @@ add_task(async function setup() {
 async function testUpdateNoPrompt(filename, id,
                                   initialVersion = "1.0", updateVersion = "2.0") {
   // Navigate away to ensure that BrowserOpenAddonMgr() opens a new tab
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
+  gBrowser.selectedBrowser.loadURI("about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Install initial version of the test extension

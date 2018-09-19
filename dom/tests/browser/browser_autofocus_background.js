@@ -13,7 +13,7 @@ add_task(async function() {
 
   // Load the second tab in the background.
   let loadedPromise = BrowserTestUtils.browserLoaded(tabs[1].linkedBrowser);
-  BrowserTestUtils.loadURI(tabs[1].linkedBrowser, testingList[0].uri);
+  tabs[1].linkedBrowser.loadURI(testingList[0].uri);
   await loadedPromise;
 
   for (var i = 0; i < testingList.length; ++i) {

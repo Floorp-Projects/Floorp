@@ -87,7 +87,7 @@ function openTabAndScratchpad(aOptions = {}) {
     BrowserTestUtils.browserLoaded(selectedBrowser).then(function() {
       openScratchpad((win, sp) => resolve([win, sp]), aOptions);
     });
-    BrowserTestUtils.loadURI(gBrowser, "data:text/html;charset=utf8," + (aOptions.tabContent || ""));
+    gBrowser.loadURI("data:text/html;charset=utf8," + (aOptions.tabContent || ""));
   });
 }
 

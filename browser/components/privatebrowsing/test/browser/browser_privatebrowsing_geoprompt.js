@@ -36,14 +36,14 @@ add_task(async function test() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let browser = win.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(browser, testPageURL);
+  browser.loadURI(testPageURL);
   await BrowserTestUtils.browserLoaded(browser);
 
   await checkGeolocation(false, win);
 
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
   let privateBrowser = privateWin.gBrowser.selectedBrowser;
-  BrowserTestUtils.loadURI(privateBrowser, testPageURL);
+  privateBrowser.loadURI(testPageURL);
   await BrowserTestUtils.browserLoaded(privateBrowser);
 
   await checkGeolocation(true, privateWin);

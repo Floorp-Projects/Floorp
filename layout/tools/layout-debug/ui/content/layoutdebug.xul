@@ -110,9 +110,7 @@
 
         <textbox id="urlbar" flex="1"
                  onkeypress="if (event.keyCode == 13)
-                               gBrowser.loadURI(this.value, {
-                                 triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-                               });" />
+                               gBrowser.loadURI(this.value);" />
       </toolbar>
     </toolbox>
 
