@@ -6138,6 +6138,46 @@ NukeAllCCWs(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+RecomputeWrappers(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() > 2) {
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "recomputeWrappers");
+        return false;
+    }
+
+    JS::Compartment* sourceComp = nullptr;
+    if (args.get(0).isObject()) {
+        sourceComp = GetObjectCompartment(UncheckedUnwrap(&args[0].toObject()));
+    }
+
+    JS::Compartment* targetComp = nullptr;
+    if (args.get(1).isObject()) {
+        targetComp = GetObjectCompartment(UncheckedUnwrap(&args[1].toObject()));
+    }
+
+    struct SingleOrAllCompartments final : public CompartmentFilter {
+        JS::Compartment* comp;
+        explicit SingleOrAllCompartments(JS::Compartment* c) : comp(c) {}
+        virtual bool match(JS::Compartment* c) const override {
+            return !comp || comp == c;
+        }
+    };
+
+    if (!js::RecomputeWrappers(cx,
+                               SingleOrAllCompartments(sourceComp),
+                               SingleOrAllCompartments(targetComp)))
+    {
+        return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 GetMaxArgs(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -8195,6 +8235,12 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
     JS_FN_HELP("nukeAllCCWs", NukeAllCCWs, 0, 0,
 "nukeAllCCWs()",
 "  Like nukeCCW, but for all CrossCompartmentWrappers targeting the current compartment."),
+
+    JS_FN_HELP("recomputeWrappers", RecomputeWrappers, 2, 0,
+"recomputeWrappers([src, [target]])",
+"  Recompute all cross-compartment wrappers. src and target are both optional\n"
+"  and can be used to filter source or target compartments: the unwrapped\n"
+"  object's compartment is used as CompartmentFilter.\n"),
 
     JS_FN_HELP("wrapWithProto", WrapWithProto, 2, 0,
 "wrapWithProto(obj)",
