@@ -362,7 +362,7 @@ HangMonitorChild::InterruptCallback()
 void
 HangMonitorChild::AnnotateHang(BackgroundHangAnnotations& aAnnotations)
 {
-  if (mPaintWhileInterruptingJSForce) {
+  if (mPaintWhileInterruptingJSActive) {
     aAnnotations.AddAnnotation(NS_LITERAL_STRING("PaintWhileInterruptingJS"), true);
   }
 }

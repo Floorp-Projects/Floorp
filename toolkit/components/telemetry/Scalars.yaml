@@ -421,7 +421,7 @@ services.sync:
     description: >
       Records transitions between login states of "success", "unverified"
       and "rejected.
-    expires: "65"
+    expires: "68"
     kind: boolean
     keyed: true
     notification_emails:

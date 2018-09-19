@@ -389,17 +389,11 @@ VARCACHE_PREF(
 // Full-screen prefs
 //---------------------------------------------------------------------------
 
-#ifdef RELEASE_OR_BETA
-# define PREF_VALUE false
-#else
-# define PREF_VALUE true
-#endif
 VARCACHE_PREF(
   "full-screen-api.unprefix.enabled",
    full_screen_api_unprefix_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 //---------------------------------------------------------------------------
 // Graphics prefs

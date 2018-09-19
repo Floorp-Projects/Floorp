@@ -567,11 +567,10 @@ IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript, IonUnaryArithIC
 
     switch (op) {
       case JSOP_BITNOT: {
-        int32_t result;
-        if (!BitNot(cx, val, &result)) {
+        RootedValue valCopy(cx, val);
+        if (!BitNot(cx, &valCopy, res)) {
             return false;
         }
-        res.setInt32(result);
         break;
       }
       case JSOP_NEG: {
@@ -649,27 +648,21 @@ IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript, IonBinaryArith
         }
         break;
       case JSOP_BITOR: {
-        int32_t result;
-        if (!BitOr(cx, lhs, rhs, &result)) {
+        if (!BitOr(cx, &lhsCopy, &rhsCopy, ret)) {
             return false;
         }
-        ret.setInt32(result);
         break;
       }
       case JSOP_BITXOR: {
-        int32_t result;
-        if (!BitXor(cx, lhs, rhs, &result)) {
+        if (!BitXor(cx, &lhsCopy, &rhsCopy, ret)) {
             return false;
         }
-        ret.setInt32(result);
         break;
       }
       case JSOP_BITAND: {
-        int32_t result;
-        if (!BitAnd(cx, lhs, rhs, &result)) {
+        if (!BitAnd(cx, &lhsCopy, &rhsCopy, ret)) {
             return false;
         }
-        ret.setInt32(result);
         break;
       }
      default:

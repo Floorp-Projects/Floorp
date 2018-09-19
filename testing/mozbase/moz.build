@@ -8,6 +8,7 @@ PYTHON_UNITTEST_MANIFESTS += [
     'manifestparser/tests/manifest.ini',
     'mozcrash/tests/manifest.ini',
     'mozdebug/tests/manifest.ini',
+    'mozdevice/tests/manifest.ini',
     'mozfile/tests/manifest.ini',
     'mozhttpd/tests/manifest.ini',
     'mozinfo/tests/manifest.ini',

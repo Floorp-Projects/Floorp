@@ -21,7 +21,7 @@ void NoAddRefReleaseOnReturnChecker::check(
   // to a MOZ_NO_ADDREF_RELEASE_ON_RETURN function or method.
   if (auto *Call = dyn_cast<CallExpr>(Base)) {
     if (auto *Callee = Call->getDirectCallee()) {
-      if (hasCustomAnnotation(Callee, "moz_no_addref_release_on_return")) {
+      if (hasCustomAttribute<moz_no_addref_release_on_return>(Callee)) {
         diag(Call->getLocStart(),
              "%1 cannot be called on the return value of %0",
              DiagnosticIDs::Error)

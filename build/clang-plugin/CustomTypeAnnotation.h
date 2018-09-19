@@ -5,6 +5,7 @@
 #ifndef CustomTypeAnnotation_h__
 #define CustomTypeAnnotation_h__
 
+#include "CustomAttributes.h"
 #include "plugin.h"
 
 class CustomTypeAnnotation {
@@ -27,13 +28,13 @@ class CustomTypeAnnotation {
   };
   typedef DenseMap<void *, AnnotationReason> ReasonCache;
 
-  const char *Spelling;
+  CustomAttributes Attribute;
   const char *Pretty;
   ReasonCache Cache;
 
 public:
-  CustomTypeAnnotation(const char *Spelling, const char *Pretty)
-      : Spelling(Spelling), Pretty(Pretty){};
+  CustomTypeAnnotation(CustomAttributes Attribute, const char *Pretty)
+      : Attribute(Attribute), Pretty(Pretty){};
 
   virtual ~CustomTypeAnnotation() {}
 

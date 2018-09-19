@@ -70,12 +70,12 @@ linux64-clang-7:
     toolchains:
         - linux64-gcc-4.9
 
-linux64-clang-7-mingw:
-    description: "MinGW-Clang 7 Pre toolchain build"
+linux64-clang-7-mingw-x86:
+    description: "MinGW-Clang 7 Pre x86 toolchain build"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TMW(clang7p)
+        symbol: TMW(clang7p32)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
@@ -83,6 +83,33 @@ linux64-clang-7-mingw:
     run:
         using: toolchain-script
         script: build-clang-7-pre-mingw.sh
+        arguments: [
+            'x86'
+        ]
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-7-pre-mingw.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clangmingw.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
+linux64-clang-7-mingw-x64:
+    description: "MinGW-Clang 7 Pre x64 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TMW(clang7p64)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
+    worker:
+        max-run-time: 7200
+    run:
+        using: toolchain-script
+        script: build-clang-7-pre-mingw.sh
+        arguments: [
+            'x64'
+        ]
         resources:
             - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-7-pre-mingw.json'

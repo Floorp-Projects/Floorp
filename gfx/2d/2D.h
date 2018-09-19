@@ -1859,7 +1859,7 @@ public:
                                   Float aGamma,
                                   Float aContrast);
 
-  static void UpdateSystemTextQuality();
+  static void SetSystemTextQuality(uint8_t aQuality);
 
 private:
   static StaticRefPtr<ID2D1Device> mD2D1Device;

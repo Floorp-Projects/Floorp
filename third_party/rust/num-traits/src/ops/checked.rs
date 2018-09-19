@@ -1,8 +1,8 @@
-use core::ops::{Add, Sub, Mul, Div, Shl, Shr};
+use core::ops::{Add, Div, Mul, Rem, Shl, Shr, Sub};
 
 /// Performs addition that returns `None` instead of wrapping around on
 /// overflow.
-pub trait CheckedAdd: Sized + Add<Self, Output=Self> {
+pub trait CheckedAdd: Sized + Add<Self, Output = Self> {
     /// Adds two numbers, checking for overflow. If overflow happens, `None` is
     /// returned.
     fn checked_add(&self, v: &Self) -> Option<Self>;
@@ -16,7 +16,7 @@ macro_rules! checked_impl {
                 <$t>::$method(*self, *v)
             }
         }
-    }
+    };
 }
 
 checked_impl!(CheckedAdd, checked_add, u8);
@@ -24,15 +24,19 @@ checked_impl!(CheckedAdd, checked_add, u16);
 checked_impl!(CheckedAdd, checked_add, u32);
 checked_impl!(CheckedAdd, checked_add, u64);
 checked_impl!(CheckedAdd, checked_add, usize);
+#[cfg(has_i128)]
+checked_impl!(CheckedAdd, checked_add, u128);
 
 checked_impl!(CheckedAdd, checked_add, i8);
 checked_impl!(CheckedAdd, checked_add, i16);
 checked_impl!(CheckedAdd, checked_add, i32);
 checked_impl!(CheckedAdd, checked_add, i64);
 checked_impl!(CheckedAdd, checked_add, isize);
+#[cfg(has_i128)]
+checked_impl!(CheckedAdd, checked_add, i128);
 
 /// Performs subtraction that returns `None` instead of wrapping around on underflow.
-pub trait CheckedSub: Sized + Sub<Self, Output=Self> {
+pub trait CheckedSub: Sized + Sub<Self, Output = Self> {
     /// Subtracts two numbers, checking for underflow. If underflow happens,
     /// `None` is returned.
     fn checked_sub(&self, v: &Self) -> Option<Self>;
@@ -43,16 +47,20 @@ checked_impl!(CheckedSub, checked_sub, u16);
 checked_impl!(CheckedSub, checked_sub, u32);
 checked_impl!(CheckedSub, checked_sub, u64);
 checked_impl!(CheckedSub, checked_sub, usize);
+#[cfg(has_i128)]
+checked_impl!(CheckedSub, checked_sub, u128);
 
 checked_impl!(CheckedSub, checked_sub, i8);
 checked_impl!(CheckedSub, checked_sub, i16);
 checked_impl!(CheckedSub, checked_sub, i32);
 checked_impl!(CheckedSub, checked_sub, i64);
 checked_impl!(CheckedSub, checked_sub, isize);
+#[cfg(has_i128)]
+checked_impl!(CheckedSub, checked_sub, i128);
 
 /// Performs multiplication that returns `None` instead of wrapping around on underflow or
 /// overflow.
-pub trait CheckedMul: Sized + Mul<Self, Output=Self> {
+pub trait CheckedMul: Sized + Mul<Self, Output = Self> {
     /// Multiplies two numbers, checking for underflow or overflow. If underflow
     /// or overflow happens, `None` is returned.
     fn checked_mul(&self, v: &Self) -> Option<Self>;
@@ -63,16 +71,20 @@ checked_impl!(CheckedMul, checked_mul, u16);
 checked_impl!(CheckedMul, checked_mul, u32);
 checked_impl!(CheckedMul, checked_mul, u64);
 checked_impl!(CheckedMul, checked_mul, usize);
+#[cfg(has_i128)]
+checked_impl!(CheckedMul, checked_mul, u128);
 
 checked_impl!(CheckedMul, checked_mul, i8);
 checked_impl!(CheckedMul, checked_mul, i16);
 checked_impl!(CheckedMul, checked_mul, i32);
 checked_impl!(CheckedMul, checked_mul, i64);
 checked_impl!(CheckedMul, checked_mul, isize);
+#[cfg(has_i128)]
+checked_impl!(CheckedMul, checked_mul, i128);
 
 /// Performs division that returns `None` instead of panicking on division by zero and instead of
 /// wrapping around on underflow and overflow.
-pub trait CheckedDiv: Sized + Div<Self, Output=Self> {
+pub trait CheckedDiv: Sized + Div<Self, Output = Self> {
     /// Divides two numbers, checking for underflow, overflow and division by
     /// zero. If any of that happens, `None` is returned.
     fn checked_div(&self, v: &Self) -> Option<Self>;
@@ -83,15 +95,108 @@ checked_impl!(CheckedDiv, checked_div, u16);
 checked_impl!(CheckedDiv, checked_div, u32);
 checked_impl!(CheckedDiv, checked_div, u64);
 checked_impl!(CheckedDiv, checked_div, usize);
+#[cfg(has_i128)]
+checked_impl!(CheckedDiv, checked_div, u128);
 
 checked_impl!(CheckedDiv, checked_div, i8);
 checked_impl!(CheckedDiv, checked_div, i16);
 checked_impl!(CheckedDiv, checked_div, i32);
 checked_impl!(CheckedDiv, checked_div, i64);
 checked_impl!(CheckedDiv, checked_div, isize);
+#[cfg(has_i128)]
+checked_impl!(CheckedDiv, checked_div, i128);
+
+/// Performs an integral remainder that returns `None` instead of panicking on division by zero and
+/// instead of wrapping around on underflow and overflow.
+pub trait CheckedRem: Sized + Rem<Self, Output = Self> {
+    /// Finds the remainder of dividing two numbers, checking for underflow, overflow and division
+    /// by zero. If any of that happens, `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::CheckedRem;
+    /// use std::i32::MIN;
+    ///
+    /// assert_eq!(CheckedRem::checked_rem(&10, &7), Some(3));
+    /// assert_eq!(CheckedRem::checked_rem(&10, &-7), Some(3));
+    /// assert_eq!(CheckedRem::checked_rem(&-10, &7), Some(-3));
+    /// assert_eq!(CheckedRem::checked_rem(&-10, &-7), Some(-3));
+    ///
+    /// assert_eq!(CheckedRem::checked_rem(&10, &0), None);
+    ///
+    /// assert_eq!(CheckedRem::checked_rem(&MIN, &1), Some(0));
+    /// assert_eq!(CheckedRem::checked_rem(&MIN, &-1), None);
+    /// ```
+    fn checked_rem(&self, v: &Self) -> Option<Self>;
+}
+
+checked_impl!(CheckedRem, checked_rem, u8);
+checked_impl!(CheckedRem, checked_rem, u16);
+checked_impl!(CheckedRem, checked_rem, u32);
+checked_impl!(CheckedRem, checked_rem, u64);
+checked_impl!(CheckedRem, checked_rem, usize);
+#[cfg(has_i128)]
+checked_impl!(CheckedRem, checked_rem, u128);
+
+checked_impl!(CheckedRem, checked_rem, i8);
+checked_impl!(CheckedRem, checked_rem, i16);
+checked_impl!(CheckedRem, checked_rem, i32);
+checked_impl!(CheckedRem, checked_rem, i64);
+checked_impl!(CheckedRem, checked_rem, isize);
+#[cfg(has_i128)]
+checked_impl!(CheckedRem, checked_rem, i128);
+
+macro_rules! checked_impl_unary {
+    ($trait_name:ident, $method:ident, $t:ty) => {
+        impl $trait_name for $t {
+            #[inline]
+            fn $method(&self) -> Option<$t> {
+                <$t>::$method(*self)
+            }
+        }
+    };
+}
+
+/// Performs negation that returns `None` if the result can't be represented.
+pub trait CheckedNeg: Sized {
+    /// Negates a number, returning `None` for results that can't be represented, like signed `MIN`
+    /// values that can't be positive, or non-zero unsigned values that can't be negative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use num_traits::CheckedNeg;
+    /// use std::i32::MIN;
+    ///
+    /// assert_eq!(CheckedNeg::checked_neg(&1_i32), Some(-1));
+    /// assert_eq!(CheckedNeg::checked_neg(&-1_i32), Some(1));
+    /// assert_eq!(CheckedNeg::checked_neg(&MIN), None);
+    ///
+    /// assert_eq!(CheckedNeg::checked_neg(&0_u32), Some(0));
+    /// assert_eq!(CheckedNeg::checked_neg(&1_u32), None);
+    /// ```
+    fn checked_neg(&self) -> Option<Self>;
+}
+
+checked_impl_unary!(CheckedNeg, checked_neg, u8);
+checked_impl_unary!(CheckedNeg, checked_neg, u16);
+checked_impl_unary!(CheckedNeg, checked_neg, u32);
+checked_impl_unary!(CheckedNeg, checked_neg, u64);
+checked_impl_unary!(CheckedNeg, checked_neg, usize);
+#[cfg(has_i128)]
+checked_impl_unary!(CheckedNeg, checked_neg, u128);
+
+checked_impl_unary!(CheckedNeg, checked_neg, i8);
+checked_impl_unary!(CheckedNeg, checked_neg, i16);
+checked_impl_unary!(CheckedNeg, checked_neg, i32);
+checked_impl_unary!(CheckedNeg, checked_neg, i64);
+checked_impl_unary!(CheckedNeg, checked_neg, isize);
+#[cfg(has_i128)]
+checked_impl_unary!(CheckedNeg, checked_neg, i128);
 
 /// Performs a left shift that returns `None` on overflow.
-pub trait CheckedShl: Sized + Shl<u32, Output=Self> {
+pub trait CheckedShl: Sized + Shl<u32, Output = Self> {
     /// Shifts a number to the left, checking for overflow. If overflow happens,
     /// `None` is returned.
     ///
@@ -116,7 +221,7 @@ macro_rules! checked_shift_impl {
                 <$t>::$method(*self, rhs)
             }
         }
-    }
+    };
 }
 
 checked_shift_impl!(CheckedShl, checked_shl, u8);
@@ -124,15 +229,19 @@ checked_shift_impl!(CheckedShl, checked_shl, u16);
 checked_shift_impl!(CheckedShl, checked_shl, u32);
 checked_shift_impl!(CheckedShl, checked_shl, u64);
 checked_shift_impl!(CheckedShl, checked_shl, usize);
+#[cfg(has_i128)]
+checked_shift_impl!(CheckedShl, checked_shl, u128);
 
 checked_shift_impl!(CheckedShl, checked_shl, i8);
 checked_shift_impl!(CheckedShl, checked_shl, i16);
 checked_shift_impl!(CheckedShl, checked_shl, i32);
 checked_shift_impl!(CheckedShl, checked_shl, i64);
 checked_shift_impl!(CheckedShl, checked_shl, isize);
+#[cfg(has_i128)]
+checked_shift_impl!(CheckedShl, checked_shl, i128);
 
 /// Performs a right shift that returns `None` on overflow.
-pub trait CheckedShr: Sized + Shr<u32, Output=Self> {
+pub trait CheckedShr: Sized + Shr<u32, Output = Self> {
     /// Shifts a number to the left, checking for overflow. If overflow happens,
     /// `None` is returned.
     ///
@@ -154,9 +263,13 @@ checked_shift_impl!(CheckedShr, checked_shr, u16);
 checked_shift_impl!(CheckedShr, checked_shr, u32);
 checked_shift_impl!(CheckedShr, checked_shr, u64);
 checked_shift_impl!(CheckedShr, checked_shr, usize);
+#[cfg(has_i128)]
+checked_shift_impl!(CheckedShr, checked_shr, u128);
 
 checked_shift_impl!(CheckedShr, checked_shr, i8);
 checked_shift_impl!(CheckedShr, checked_shr, i16);
 checked_shift_impl!(CheckedShr, checked_shr, i32);
 checked_shift_impl!(CheckedShr, checked_shr, i64);
 checked_shift_impl!(CheckedShr, checked_shr, isize);
+#[cfg(has_i128)]
+checked_shift_impl!(CheckedShr, checked_shr, i128);
