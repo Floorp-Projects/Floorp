@@ -72,10 +72,10 @@
 
 
       //////////////////////////////////////////////////////////////////////////
-      // Name for nsIDOMXULLabeledControlElement.
+      // Name from @label attribute.
 
       // Gets the name from @label attribute.
-      testName("btn_nsIDOMXULLabeledControlElement", "labeled element");
+      testName("btn_labelattr", "labeled element");
 
 
       //////////////////////////////////////////////////////////////////////////
@@ -271,8 +271,8 @@
   <button id="btn_labelledby_mixed_menulist"
           aria-labelledby="labelledby_mixed_menulist"/>
 
-  <!-- nsIDOMXULLabeledControlElement -->
-  <button id="btn_nsIDOMXULLabeledControlElement"
+  <!-- @label -->
+  <button id="btn_labelattr"
           label="labeled element"/>
 
   <!-- nsIDOMXULSelectControlItemElement -->
