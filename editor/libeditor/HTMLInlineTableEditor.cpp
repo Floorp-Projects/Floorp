@@ -227,7 +227,9 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
   } else if (anonclass.EqualsLiteral("mozTableAddRowAfter")) {
     InsertTableRow(1, true);
   } else if (anonclass.EqualsLiteral("mozTableRemoveColumn")) {
-    DeleteTableColumn(1);
+    DebugOnly<nsresult> rv = DeleteSelectedTableColumnsWithTransaction(1);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to delete the selected table column");
     hideUI = (colCount == 1);
   } else if (anonclass.EqualsLiteral("mozTableRemoveRow")) {
     DebugOnly<nsresult> rv = DeleteSelectedTableRowsWithTransaction(1);
