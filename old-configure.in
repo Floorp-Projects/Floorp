@@ -66,7 +66,7 @@ W32API_VERSION=3.14
 GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.24.0
+SQLITE_VERSION=3.25.1
 
 dnl Set various checks
 dnl ========================================================
