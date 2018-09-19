@@ -17,6 +17,7 @@ Test the basic-card-form element
 
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/components/accepted-cards.css"/>
 </head>
 <body>
   <p id="display">
@@ -86,6 +87,7 @@ add_task(async function test_backButton() {
   let stateChangePromise = promiseStateChange(form.requestStore);
   is(form.pageTitleHeading.textContent, "Sample page title 2", "Check title");
   is(form.backButton.textContent, "Back", "Check label");
+  form.backButton.scrollIntoView();
   synthesizeMouseAtCenter(form.backButton, {});
 
   let {page} = await stateChangePromise;

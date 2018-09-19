@@ -262,7 +262,6 @@ add_task(async function test_supportedNetworks() {
       ok(!content.document.getElementById("pay").disabled, "pay button should not be disabled");
     });
 
-    info("call manuallyClickCancel");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
