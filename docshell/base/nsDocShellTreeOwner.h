@@ -174,12 +174,16 @@ private:
   int32_t mMouseScreenY;
 
   bool mShowingTooltip;
+
   bool mTooltipShownOnce;
+
+  // The string of text that we last displayed.
+  nsString mLastShownTooltipText;
 
   // The node hovered over that fired the timer. This may turn into the node
   // that triggered the tooltip, but only if the timer ever gets around to
   // firing. This is a strong reference, because the tooltip content can be
-  // destroyed while we're waiting for the tooltip to pup up, and we need to
+  // destroyed while we're waiting for the tooltip to pop up, and we need to
   // detect that. It's set only when the tooltip timer is created and launched.
   // The timer must either fire or be cancelled (or possibly released?), and we
   // release this reference in each of those cases. So we don't leak.

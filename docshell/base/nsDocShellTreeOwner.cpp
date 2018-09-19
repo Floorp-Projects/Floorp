@@ -1213,13 +1213,12 @@ ChromeTooltipListener::MouseMove(Event* aMouseEvent)
 
   if (mTooltipTimer) {
     mTooltipTimer->Cancel();
+    mTooltipTimer = nullptr;
   }
 
-  if (!mShowingTooltip && !mTooltipShownOnce) {
+  if (!mShowingTooltip) {
     nsIEventTarget* target = nullptr;
-
-    nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetComposedTarget();
-    if (eventTarget) {
+    if (nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetComposedTarget()) {
       mPossibleTooltipNode = do_QueryInterface(eventTarget);
       nsCOMPtr<nsIGlobalObject> global(eventTarget->GetOwnerGlobal());
       if (global) {
@@ -1365,7 +1364,9 @@ ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
         self->mPossibleTooltipNode, getter_Copies(tooltipText),
         getter_Copies(directionText), &textFound);
 
-      if (textFound) {
+      if (textFound &&
+          (!self->mTooltipShownOnce ||
+           tooltipText != self->mLastShownTooltipText)) {
         LayoutDeviceIntPoint screenDot = widget->WidgetToScreenOffset();
         double scaleFactor = 1.0;
         if (shell->GetPresContext()) {
@@ -1377,6 +1378,7 @@ ChromeTooltipListener::sTooltipCallback(nsITimer* aTimer,
         self->ShowTooltip(self->mMouseScreenX - screenDot.x / scaleFactor,
                           self->mMouseScreenY - screenDot.y / scaleFactor,
                           tooltipText, directionText);
+        self->mLastShownTooltipText = std::move(tooltipText);
       }
     }
 
