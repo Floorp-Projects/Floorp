@@ -297,14 +297,6 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
     startTime = Some(TimeStamp::Now());
   }
 
-#ifdef WIN32
-  if (aCallbackData) {
-    // Content processes don't get OnPaint called. So update here whenever we
-    // may do Thebes drawing.
-    gfxDWriteFont::UpdateClearTypeUsage();
-  }
-#endif
-
   AUTO_PROFILER_LABEL("ClientLayerManager::EndTransactionInternal", GRAPHICS);
 
 #ifdef MOZ_LAYERS_HAVE_LOG

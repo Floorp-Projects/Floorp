@@ -927,6 +927,10 @@ BufferTextureHost::UnbindTextureSource()
     mFirstSource->Unbind();
   }
 
+  if (mFirstSource && mFirstSource->IsDirectMap() && mProvider) {
+    mProvider->ReferenceUntilAfterComposition(mFirstSource);
+  }
+
   // This texture is not used by any layer anymore.
   // If the texture doesn't have an intermediate buffer, it means we are
   // compositing synchronously on the CPU, so we don't need to wait until

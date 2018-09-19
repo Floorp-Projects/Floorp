@@ -91,16 +91,17 @@ subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   // hence we use protocol flags to accomplish that, but we also
   // want resource:, chrome: and moz-icon to be subject to CSP
   // (which also use URI_IS_LOCAL_RESOURCE).
-  // Exception to the rule are images and styles using a scheme
-  // of resource: or chrome:
-  bool isImgOrStyle = contentType == nsIContentPolicy::TYPE_IMAGE ||
-                      contentType == nsIContentPolicy::TYPE_STYLESHEET;
+  // Exception to the rule are images, styles, and localization DTDs
+  // using a scheme of resource: or chrome:
+  bool isImgOrStyleOrDTD = contentType == nsIContentPolicy::TYPE_IMAGE ||
+                      contentType == nsIContentPolicy::TYPE_STYLESHEET ||
+                      contentType == nsIContentPolicy::TYPE_DTD;
   rv = aURI->SchemeIs("resource", &match);
-  if (NS_SUCCEEDED(rv) && match && !isImgOrStyle) {
+  if (NS_SUCCEEDED(rv) && match && !isImgOrStyleOrDTD) {
     return true;
   }
   rv = aURI->SchemeIs("chrome", &match);
-  if (NS_SUCCEEDED(rv) && match && !isImgOrStyle) {
+  if (NS_SUCCEEDED(rv) && match && !isImgOrStyleOrDTD) {
     return true;
   }
   rv = aURI->SchemeIs("moz-icon", &match);

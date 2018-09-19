@@ -959,11 +959,9 @@ Factory::SupportsD2D1()
 
 BYTE sSystemTextQuality = CLEARTYPE_QUALITY;
 void
-Factory::UpdateSystemTextQuality()
+Factory::SetSystemTextQuality(uint8_t aQuality)
 {
-#ifdef WIN32
-  gfx::UpdateSystemTextQuality();
-#endif
+  sSystemTextQuality = aQuality;
 }
 
 uint64_t
