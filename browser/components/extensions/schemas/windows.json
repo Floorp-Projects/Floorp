@@ -313,6 +313,11 @@
                 "optional": true,
                 "description": "Allow scripts to close the window."
               },
+              "cookieStoreId": {
+                "type": "string",
+                "optional": true,
+                "description": "The CookieStoreId to use for all tabs that were created when the window is opened."
+              },
               "titlePreface": {
                 "type": "string",
                 "optional": true,
