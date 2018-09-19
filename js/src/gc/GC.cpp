@@ -4248,11 +4248,6 @@ GCRuntime::purgeRuntime()
 
     MOZ_ASSERT(unmarkGrayStack.empty());
     unmarkGrayStack.clearAndFree();
-
-    // If we're the main runtime, tell helper threads to free their unused
-    // memory when they are next idle.
-    if (!rt->parentRuntime)
-        HelperThreadState().triggerFreeUnusedMemory();
 }
 
 bool
