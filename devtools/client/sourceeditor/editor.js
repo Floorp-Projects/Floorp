@@ -402,8 +402,17 @@ Editor.prototype = {
       popup.openPopupAtScreen(ev.screenX, ev.screenY, true);
     });
 
-    cm.on("focus", () => this.emit("focus"));
-    cm.on("scroll", () => this.emit("scroll"));
+    const pipedEvents = [
+      "beforeChange",
+      "changes",
+      "cursorActivity",
+      "focus",
+      "scroll",
+    ];
+    for (const eventName of pipedEvents) {
+      cm.on(eventName, () => this.emit(eventName));
+    }
+
     cm.on("change", () => {
       this.emit("change");
       if (!this._lastDirty) {
@@ -411,8 +420,6 @@ Editor.prototype = {
         this.emit("dirty-change");
       }
     });
-    cm.on("changes", () => this.emit("changes"));
-    cm.on("cursorActivity", () => this.emit("cursorActivity"));
 
     cm.on("gutterClick", (cmArg, line, gutter, ev) => {
       const lineOrOffset = !this.isWasm ? line : this.lineToWasmOffset(line);
