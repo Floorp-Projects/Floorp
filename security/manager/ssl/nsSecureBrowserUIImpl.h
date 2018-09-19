@@ -39,6 +39,7 @@ protected:
 
   uint32_t mState;
   nsWeakPtr mDocShell;
+  nsWeakPtr mWebProgress;
   nsCOMPtr<nsITransportSecurityInfo> mTopLevelSecurityInfo;
 };
 
