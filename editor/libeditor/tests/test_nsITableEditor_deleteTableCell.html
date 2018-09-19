@@ -199,8 +199,8 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select4"));
   selection.addRange(range);
   getTableEditor().deleteTableCell(1);
-  todo_is(editor.innerHTML, "",
-          "nsITableEditor.deleteTableCellContents(1) should remove also <table> element when all cell elements are selected");
+  is(editor.innerHTML, "",
+     "nsITableEditor.deleteTableCellContents(1) should remove also <table> element when all cell elements are selected");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +

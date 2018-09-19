@@ -1255,6 +1255,11 @@ protected: // Shouldn't be used by friend classes
      */
     void Update(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
                 ErrorResult& aRv);
+
+    bool IsEmpty() const
+    {
+      return !mRowCount || !mColumnCount;
+    }
   };
 
   /**
