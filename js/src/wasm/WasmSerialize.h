@@ -19,6 +19,8 @@
 #ifndef wasm_serialize_h
 #define wasm_serialize_h
 
+#include <type_traits>
+
 #include "js/Vector.h"
 
 namespace js {
@@ -179,6 +181,36 @@ DeserializePodVectorChecked(const uint8_t* cursor, size_t* remain, mozilla::Vect
     }
     cursor = ReadBytesChecked(cursor, remain, vec->begin(), length * sizeof(T));
     return cursor;
+}
+
+template <class T>
+inline size_t
+SerializableRefPtr<T>::serializedSize() const
+{
+    return (*this)->serializedSize();
+}
+
+template <class T>
+inline uint8_t*
+SerializableRefPtr<T>::serialize(uint8_t* cursor) const
+{
+    return (*this)->serialize(cursor);
+}
+
+template <class T>
+inline const uint8_t*
+SerializableRefPtr<T>::deserialize(const uint8_t* cursor)
+{
+    auto* t = js_new<std::remove_const_t<T>>();
+    *this = t;
+    return t->deserialize(cursor);
+}
+
+template <class T>
+inline size_t
+SerializableRefPtr<T>::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return (*this)->sizeOfExcludingThis(mallocSizeOf);
 }
 
 } // namespace wasm

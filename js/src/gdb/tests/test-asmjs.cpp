@@ -29,11 +29,9 @@ FRAGMENT(asmjs, segfault) {
     CompileOptions opts(cx);
     opts.setFileAndLine(__FILE__, line0 + 1);
     opts.asmJSOption = JS::AsmJSOption::Enabled;
-    Rooted<Value> rval(cx);
-    bool ok;
-    ok = false;
 
-    ok = Evaluate(cx, opts, bytes, strlen(bytes), &rval);
+    Rooted<Value> rval(cx);
+    bool ok = JS::EvaluateUtf8(cx, opts, bytes, strlen(bytes), &rval);
 
     breakpoint();
 

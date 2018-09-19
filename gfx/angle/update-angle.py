@@ -509,7 +509,7 @@ def export_target(root):
             total_used_files.add(def_path)
 
             def_rel_path = list(fixup_paths([def_path]))[0]
-            extras['DEFFILE'] = "SRCDIR + '/{}'".format(def_rel_path)
+            extras['DEFFILE'] = "'{}'".format(def_rel_path)
 
     os_libs = list(map( lambda x: x[:-len('.lib')], set(accum_desc.get('libs', [])) ))
 

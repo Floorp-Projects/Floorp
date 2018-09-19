@@ -64,7 +64,6 @@ BEGIN_TEST(testXDR_bug506491)
     // compile
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8(cx, options, s, strlen(s), &script));
@@ -93,7 +92,6 @@ BEGIN_TEST(testXDR_bug516827)
     // compile an empty script
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
-    options.setUTF8(true);
 
     JS::RootedScript script(cx);
     CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
@@ -119,7 +117,6 @@ BEGIN_TEST(testXDR_source)
     for (const char** s = samples; *s; s++) {
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, __LINE__);
-        options.setUTF8(true);
 
         JS::RootedScript script(cx);
         CHECK(JS::CompileUtf8(cx, options, *s, strlen(*s), &script));
@@ -150,7 +147,6 @@ BEGIN_TEST(testXDR_sourceMap)
     for (const char** sm = sourceMaps; *sm; sm++) {
         JS::CompileOptions options(cx);
         options.setFileAndLine(__FILE__, __LINE__);
-        options.setUTF8(true);
 
         CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
         CHECK(script);

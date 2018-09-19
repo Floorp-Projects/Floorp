@@ -975,9 +975,10 @@ wasm::GenerateDirectCallFromJit(MacroAssembler& masm,
 #endif
 
     // Actual call.
-    const wasm::CodeTier& codeTier = inst.code().codeTier(inst.code().bestTier());
-    uint32_t offset = codeTier.metadata().codeRanges[fe.funcCodeRangeIndex()].funcNormalEntry();
-    void* callee = codeTier.segment().base() + offset;
+    const CodeTier& codeTier = inst.code().codeTier(inst.code().bestTier());
+    const MetadataTier& metadata = codeTier.metadata();
+    const CodeRange& codeRange = metadata.codeRange(fe);
+    void* callee = codeTier.segment().base() + codeRange.funcNormalEntry();
 
     masm.assertStackAlignment(WasmStackAlignment);
     masm.callJit(ImmPtr(callee));
@@ -1412,7 +1413,7 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
     Register scratch = ABINonArgReturnReg1;  // repeatedly clobbered
 
     // 2.1. Get JSFunction callee
-    masm.loadWasmGlobalPtr(fi.tlsDataOffset() + offsetof(FuncImportTls, obj), callee);
+    masm.loadWasmGlobalPtr(fi.tlsDataOffset() + offsetof(FuncImportTls, fun), callee);
 
     // 2.2. Save callee
     masm.storePtr(callee, Address(masm.getStackPointer(), argOffset));

@@ -33,6 +33,10 @@ if CONFIG['ACCESSIBILITY']:
         LOCAL_INCLUDES += [
             '/accessible/mac',
         ]
+    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+        LOCAL_INCLUDES += [
+            '/accessible/android',
+        ]
     else:
         LOCAL_INCLUDES += [
             '/accessible/other',
@@ -44,4 +48,3 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 FINAL_LIBRARY = 'xul'
-

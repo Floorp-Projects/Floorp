@@ -52,8 +52,9 @@ FRAGMENT(unwind, simple) {
 
     JS::CompileOptions opts(cx);
     opts.setFileAndLine(__FILE__, line0 + 1);
+
     JS::Rooted<JS::Value> rval(cx);
-    JS::Evaluate(cx, opts, bytes, strlen(bytes), &rval);
+    JS::EvaluateUtf8(cx, opts, bytes, strlen(bytes), &rval);
 
     js::jit::JitOptions.baselineWarmUpThreshold = saveThreshold;
 }

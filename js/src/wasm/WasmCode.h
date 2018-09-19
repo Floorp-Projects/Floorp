@@ -213,7 +213,6 @@ class FuncExport
     FuncType funcType_;
     MOZ_INIT_OUTSIDE_CTOR struct CacheablePod {
         uint32_t funcIndex_;
-        uint32_t funcCodeRangeIndex_;
         uint32_t eagerInterpEntryOffset_; // Machine code offset
         bool     hasEagerStubs_;
     } pod;
@@ -224,7 +223,6 @@ class FuncExport
       : funcType_(std::move(funcType))
     {
         pod.funcIndex_ = funcIndex;
-        pod.funcCodeRangeIndex_ = UINT32_MAX;
         pod.eagerInterpEntryOffset_ = UINT32_MAX;
         pod.hasEagerStubs_ = hasEagerStubs;
     }
@@ -232,10 +230,6 @@ class FuncExport
         MOZ_ASSERT(pod.eagerInterpEntryOffset_ == UINT32_MAX);
         MOZ_ASSERT(hasEagerStubs());
         pod.eagerInterpEntryOffset_ = entryOffset;
-    }
-    void initFuncCodeRangeIndex(uint32_t codeRangeIndex) {
-        MOZ_ASSERT(pod.funcCodeRangeIndex_ == UINT32_MAX);
-        pod.funcCodeRangeIndex_ = codeRangeIndex;
     }
 
     bool hasEagerStubs() const {
@@ -246,10 +240,6 @@ class FuncExport
     }
     uint32_t funcIndex() const {
         return pod.funcIndex_;
-    }
-    uint32_t funcCodeRangeIndex() const {
-        MOZ_ASSERT(pod.funcCodeRangeIndex_ != UINT32_MAX);
-        return pod.funcCodeRangeIndex_;
     }
     uint32_t eagerInterpEntryOffset() const {
         MOZ_ASSERT(pod.eagerInterpEntryOffset_ != UINT32_MAX);
@@ -491,6 +481,7 @@ struct MetadataTier
 
     const Tier            tier;
 
+    Uint32Vector          funcToCodeRange;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
     TrapSiteVectorArray   trapSites;
@@ -499,10 +490,13 @@ struct MetadataTier
 
     // Debug information, not serialized.
     Uint32Vector          debugTrapFarJumpOffsets;
-    Uint32Vector          debugFuncToCodeRange;
 
     FuncExport& lookupFuncExport(uint32_t funcIndex, size_t* funcExportIndex = nullptr);
     const FuncExport& lookupFuncExport(uint32_t funcIndex, size_t* funcExportIndex = nullptr) const;
+
+    const CodeRange& codeRange(const FuncExport& funcExport) const {
+        return codeRanges[funcToCodeRange[funcExport.funcIndex()]];
+    }
 
     bool clone(const MetadataTier& src);
 
@@ -729,13 +723,11 @@ class Code : public ShareableBase<Code>
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
     JumpTables                          jumpTables_;
-    const DataSegmentVector             dataSegments_;
-    const ElemSegmentVector             elemSegments_;
 
   public:
-    Code(UniqueCodeTier tier1, const Metadata& metadata,
-         JumpTables&& maybeJumpTables, DataSegmentVector&& dataSegments,
-         ElemSegmentVector&& elemSegments);
+    Code(UniqueCodeTier tier1,
+         const Metadata& metadata,
+         JumpTables&& maybeJumpTables);
     bool initialized() const { return tier1_->initialized(); }
 
     bool initialize(const ShareableBytes& bytecode, const LinkData& linkData);
@@ -760,8 +752,6 @@ class Code : public ShareableBase<Code>
 
     const CodeTier& codeTier(Tier tier) const;
     const Metadata& metadata() const { return *metadata_; }
-    const DataSegmentVector& dataSegments() const { return dataSegments_; }
-    const ElemSegmentVector& elemSegments() const { return elemSegments_; }
 
     const ModuleSegment& segment(Tier iter) const {
         return codeTier(iter).segment();

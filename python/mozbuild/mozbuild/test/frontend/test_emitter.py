@@ -190,7 +190,9 @@ class TestEmitterBasic(unittest.TestCase):
             'RCFILE': 'foo.rc',
             'RESFILE': 'bar.res',
             'RCINCLUDE': 'bar.rc',
-            'DEFFILE': 'baz.def',
+            'EXTRA_DEPS': [mozpath.join(mozpath.relpath(reader.config.topsrcdir,
+                                                        reader.config.topobjdir),
+                                        'baz.def')],
             'WIN32_EXE_LDFLAGS': ['-subsystem:console'],
         }
 

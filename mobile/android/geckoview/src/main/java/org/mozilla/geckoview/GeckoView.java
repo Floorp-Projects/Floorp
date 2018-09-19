@@ -159,6 +159,10 @@ public class GeckoView extends FrameLayout {
                 mDisplay.screenOriginChanged(mOrigin[0], mOrigin[1]);
             }
         }
+
+        public boolean shouldPinOnScreen() {
+            return mDisplay != null ? mDisplay.shouldPinOnScreen() : false;
+        }
     }
 
     public GeckoView(final Context context) {
@@ -210,6 +214,19 @@ public class GeckoView extends FrameLayout {
         if (mSurfaceView != null) {
             mSurfaceView.setBackgroundColor(color);
         }
+    }
+
+    /**
+     * Return whether the view should be pinned on the screen. When pinned, the view
+     * should not be moved on the screen due to animation, scrolling, etc. A common reason
+     * for the view being pinned is when the user is dragging a selection caret inside
+     * the view; normal user interaction would be disrupted in that case if the view
+     * was moved on screen.
+     *
+     * @return True if view should be pinned on the screen.
+     */
+    public boolean shouldPinOnScreen() {
+        return mDisplay.shouldPinOnScreen();
     }
 
     /* package */ void setActive(final boolean active) {

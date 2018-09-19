@@ -104,7 +104,7 @@ xul|caption xul|label {
 xul|groupbox {
   -moz-appearance: none;
   border: none;
-  margin: 0;
+  margin: 0 0 32px;
   padding: 0;
 }
 
@@ -134,6 +134,7 @@ xul|tabs {
   border-top: 1px solid var(--in-content-box-border-color);
   border-bottom: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-page-background);
+  color: var(--in-content-tab-color);
 }
 
 xul|tab {
@@ -141,7 +142,7 @@ xul|tab {
   margin-top: 0;
   padding: 4px 20px;
   min-height: 44px;
-  color: var(--in-content-tab-color);
+  color: inherit;
   background-color: var(--in-content-page-background);
   border-width: 0;
   /* !important overrides tabbox.css RTL and visuallyselected rules */

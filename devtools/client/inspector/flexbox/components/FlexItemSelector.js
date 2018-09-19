@@ -7,9 +7,11 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
+const {
+  getSelectorFromGrip,
+  translateNodeFrontToGrip,
+} = require("devtools/client/inspector/shared/utils");
 
-// Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
 const ElementNode = REPS.ElementNode;
@@ -43,7 +45,7 @@ class FlexItemSelector extends PureComponent {
     for (const item of flexItems) {
       const grip = translateNodeFrontToGrip(item.nodeFront);
       menuItems.push({
-        label: getLabel(grip),
+        label: getSelectorFromGrip(grip),
         type: "checkbox",
         checked: item === flexItem,
         click: () => onToggleFlexItemShown(item.nodeFront),
@@ -59,61 +61,20 @@ class FlexItemSelector extends PureComponent {
     const { flexItem } = this.props;
 
     return (
-      dom.div({ className: "flex-item-selector-wrapper" },
-        dom.button(
-          {
-            id: "flex-item-selector",
-            className: "devtools-button devtools-dropdown-button",
-            onClick: this.onShowFlexItemMenu,
-          },
-          Rep(
-            {
-              defaultRep: ElementNode,
-              mode: MODE.TINY,
-              object: translateNodeFrontToGrip(flexItem.nodeFront)
-            }
-          )
-        )
+      dom.button(
+        {
+          id: "flex-item-selector",
+          className: "devtools-button devtools-dropdown-button",
+          onClick: this.onShowFlexItemMenu,
+        },
+        Rep({
+          defaultRep: ElementNode,
+          mode: MODE.TINY,
+          object: translateNodeFrontToGrip(flexItem.nodeFront),
+        })
       )
     );
   }
-}
-
-/**
- * Returns a selector label of the Element Rep from the grip. This is based on the
- * getElements() function in our devtools-reps component for a ElementNode.
- *
- * @param  {Object} grip
- *         Grip-like object that can be used with Reps.
- * @return {String} selector label of the element node.
- */
-function getLabel(grip) {
-  const {
-    attributes,
-    nodeName,
-    isAfterPseudoElement,
-    isBeforePseudoElement
-  } = grip.preview;
-
-  if (isAfterPseudoElement || isBeforePseudoElement) {
-    return `::${isAfterPseudoElement ? "after" : "before"}`;
-  }
-
-  let label = nodeName;
-
-  if (attributes.id) {
-    label += `#${attributes.id}`;
-  }
-
-  if (attributes.class) {
-    label += attributes.class
-      .trim()
-      .split(/\s+/)
-      .map(cls => `.${cls}`)
-      .join("");
-  }
-
-  return label;
 }
 
 module.exports = FlexItemSelector;
