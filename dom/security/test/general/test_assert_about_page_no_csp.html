@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1490977: Test Assertion if content privileged about: page has no CSP</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="testframe"></iframe>
+<script class="testbody" type="text/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectAssertions(0, 1);
+
+  // Test Setup:
+  // The test overrules the whitelist of about: pages that are allowed to load without a CSP
+  // and makes sure to hit the assertion within AssertContentPrivilegedAboutPageHasCSP().
+  // However, due to the caching mechanism within AssertContentPrivilegedAboutPageHasCSP this
+  // test loads a second dummy data: URI to reset the old cache and finally resets the pref
+  // used for testing purposes.
+
+  let origWhiteList = SpecialPowers.getCharPref("csp.content_privileged_about_uris_without_csp");
+
+  SpecialPowers.setCharPref("csp.content_privileged_about_uris_without_csp", "");
+  SpecialPowers.setBoolPref("csp.overrule_content_privileged_about_uris_without_csp_whitelist", true);
+
+  ok(true, "sanity: prefs flipped and test runs");
+  let myFrame = document.getElementById("testframe");
+  myFrame.src = "about:blank";
+  // booom :-)
+
+  SpecialPowers.setCharPref("csp.content_privileged_about_uris_without_csp", origWhiteList);
+  myFrame.src = "data:text/html,<body>just a dumy data: URI</body>";
+
+  SpecialPowers.setBoolPref("csp.overrule_content_privileged_about_uris_without_csp_whitelist", false);
+
+  SimpleTest.finish();
+</script>
+</pre>
+</body>
+</html>

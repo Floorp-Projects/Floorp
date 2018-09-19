@@ -32,7 +32,7 @@
       </xul:moz-input-box>
     </content>
 
-    <implementation implements="nsIDOMXULLabeledControlElement">
+    <implementation>
       <!-- nsIDOMXULLabeledControlElement -->
       <field name="crop">""</field>
       <field name="image">""</field>

@@ -10,7 +10,6 @@
 #include "Accessible-inl.h"
 #include "AccIterator.h"
 #include "nsCoreUtils.h"
-#include "nsIDOMXULLabeledControlEl.h"
 #include "mozilla/dom/Text.h"
 
 using namespace mozilla;
@@ -307,20 +306,17 @@ nsTextEquivUtils::AppendFromDOMNode(nsIContent *aContent, nsAString *aString)
 
   if (aContent->IsXULElement()) {
     nsAutoString textEquivalent;
-    nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl =
-      do_QueryInterface(aContent);
-
-    if (labeledEl) {
-      labeledEl->GetLabel(textEquivalent);
+    if (aContent->NodeInfo()->Equals(nsGkAtoms::label, kNameSpaceID_XUL)) {
+      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                                     textEquivalent);
     } else {
-      if (aContent->NodeInfo()->Equals(nsGkAtoms::label,
-                                       kNameSpaceID_XUL))
-        aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                                       textEquivalent);
+      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label,
+                                     textEquivalent);
+    }
 
-      if (textEquivalent.IsEmpty())
-        aContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::tooltiptext, textEquivalent);
+    if (textEquivalent.IsEmpty()) {
+      aContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                     nsGkAtoms::tooltiptext, textEquivalent);
     }
 
     AppendString(aString, textEquivalent);

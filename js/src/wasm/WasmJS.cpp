@@ -598,7 +598,7 @@ WasmModuleObject::finalize(FreeOp* fop, JSObject* obj)
 }
 
 static bool
-IsModuleObject(JSObject* obj, Module** module)
+IsModuleObject(JSObject* obj, const Module** module)
 {
     JSObject* unwrapped = CheckedUnwrap(obj);
     if (!unwrapped || !unwrapped->is<WasmModuleObject>()) {
@@ -610,7 +610,7 @@ IsModuleObject(JSObject* obj, Module** module)
 }
 
 static bool
-GetModuleArg(JSContext* cx, CallArgs args, const char* name, Module** module)
+GetModuleArg(JSContext* cx, CallArgs args, const char* name, const Module** module)
 {
     if (!args.requireAtLeast(cx, name, 1)) {
         return false;
@@ -732,7 +732,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    Module* module;
+    const Module* module;
     if (!GetModuleArg(cx, args, "WebAssembly.Module.imports", &module)) {
         return false;
     }
@@ -806,7 +806,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    Module* module;
+    const Module* module;
     if (!GetModuleArg(cx, args, "WebAssembly.Module.exports", &module)) {
         return false;
     }
@@ -874,7 +874,7 @@ WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    Module* module;
+    const Module* module;
     if (!GetModuleArg(cx, args, "WebAssembly.Module.customSections", &module)) {
         return false;
     }
@@ -898,24 +898,22 @@ WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp)
         JS::DeflateStringToUTF8Buffer(flat, RangedPtr<char>(name.begin(), name.length()));
     }
 
-    const uint8_t* bytecode = module->bytecode().begin();
-
     AutoValueVector elems(cx);
     RootedArrayBufferObject buf(cx);
-    for (const CustomSection& sec : module->metadata().customSections) {
-        if (name.length() != sec.name.length) {
+    for (const CustomSection& cs : module->customSections()) {
+        if (name.length() != cs.name.length()) {
             continue;
         }
-        if (memcmp(name.begin(), bytecode + sec.name.offset, name.length())) {
+        if (memcmp(name.begin(), cs.name.begin(), name.length())) {
             continue;
         }
 
-        buf = ArrayBufferObject::create(cx, sec.length);
+        buf = ArrayBufferObject::create(cx, cs.payload->length());
         if (!buf) {
             return false;
         }
 
-        memcpy(buf->dataPointer(), bytecode + sec.offset, sec.length);
+        memcpy(buf->dataPointer(), cs.payload->begin(), cs.payload->length());
         if (!elems.append(ObjectValue(*buf))) {
             return false;
         }
@@ -931,7 +929,7 @@ WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* static */ WasmModuleObject*
-WasmModuleObject::create(JSContext* cx, Module& module, HandleObject proto)
+WasmModuleObject::create(JSContext* cx, const Module& module, HandleObject proto)
 {
     AutoSetNewObjectMetadata metadata(cx);
     auto* obj = NewObjectWithGivenProto<WasmModuleObject>(cx, proto);
@@ -939,7 +937,7 @@ WasmModuleObject::create(JSContext* cx, Module& module, HandleObject proto)
         return nullptr;
     }
 
-    obj->initReservedSlot(MODULE_SLOT, PrivateValue(&module));
+    obj->initReservedSlot(MODULE_SLOT, PrivateValue(const_cast<Module*>(&module)));
     module.AddRef();
     // We account for the first tier here; the second tier, if different, will be
     // accounted for separately when it's been compiled.
@@ -1059,11 +1057,11 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-Module&
+const Module&
 WasmModuleObject::module() const
 {
     MOZ_ASSERT(is<WasmModuleObject>());
-    return *(Module*)getReservedSlot(MODULE_SLOT).toPrivate();
+    return *(const Module*)getReservedSlot(MODULE_SLOT).toPrivate();
 }
 
 // ============================================================================
@@ -1159,7 +1157,6 @@ WasmInstanceObject::create(JSContext* cx,
                            SharedCode code,
                            const DataSegmentVector& dataSegments,
                            const ElemSegmentVector& elemSegments,
-                           UniqueDebugState debug,
                            UniqueTlsData tlsData,
                            HandleWasmMemoryObject memory,
                            SharedTableVector&& tables,
@@ -1167,7 +1164,8 @@ WasmInstanceObject::create(JSContext* cx,
                            const GlobalDescVector& globals,
                            HandleValVector globalImportValues,
                            const WasmGlobalObjectVector& globalObjs,
-                           HandleObject proto)
+                           HandleObject proto,
+                           UniqueDebugState maybeDebug)
 {
     UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
     if (!exports) {
@@ -1227,13 +1225,13 @@ WasmInstanceObject::create(JSContext* cx,
     auto* instance = cx->new_<Instance>(cx,
                                         obj,
                                         code,
-                                        std::move(debug),
                                         std::move(tlsData),
                                         memory,
                                         std::move(tables),
                                         funcImports,
                                         globalImportValues,
-                                        globalObjs);
+                                        globalObjs,
+                                        std::move(maybeDebug));
     if (!instance) {
         return nullptr;
     }
@@ -1300,7 +1298,7 @@ WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    Module* module;
+    const Module* module;
     if (!args[0].isObject() || !IsModuleObject(&args[0].toObject(), &module)) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MOD_ARG);
         return false;
@@ -2686,7 +2684,7 @@ Reject(JSContext* cx, const CompileArgs& args, Handle<PromiseObject*> promise,
 }
 
 static bool
-Resolve(JSContext* cx, Module& module, Handle<PromiseObject*> promise, bool instantiate,
+Resolve(JSContext* cx, const Module& module, Handle<PromiseObject*> promise, bool instantiate,
         HandleObject importObj, const UniqueCharsVector& warnings)
 {
     if (!ReportCompileWarnings(cx, warnings)) {
@@ -2879,7 +2877,7 @@ WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp)
         return RejectWithPendingException(cx, promise, callArgs);
     }
 
-    Module* module;
+    const Module* module;
     if (IsModuleObject(firstArg, &module)) {
         RootedWasmInstanceObject instanceObj(cx);
         if (!Instantiate(cx, *module, importObj, &instanceObj)) {
