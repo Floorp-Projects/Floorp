@@ -61,13 +61,13 @@ describe("ASRouterUISurface", () => {
       },
       removeEventListener(event, listener) {
         this._listeners.delete(listener);
-      }
+      },
     };
     global = new GlobalOverrider();
     global.set({
       RPMAddMessageListener: sandbox.stub(),
       RPMRemoveMessageListener: sandbox.stub(),
-      RPMSendAsyncMessage: sandbox.stub()
+      RPMSendAsyncMessage: sandbox.stub(),
     });
 
     sandbox.stub(ASRouterUtils, "sendTelemetry");
@@ -90,6 +90,16 @@ describe("ASRouterUISurface", () => {
     assert.isTrue(wrapper.exists());
   });
 
+  it("should render a preview banner if message provider is preview", () => {
+    wrapper.setState({message: {...FAKE_MESSAGE, provider: "preview"}});
+    assert.isTrue(wrapper.find(".snippets-preview-banner").exists());
+  });
+
+  it("should not render a preview banner if message provider is not preview", () => {
+    wrapper.setState({message: FAKE_MESSAGE});
+    assert.isFalse(wrapper.find(".snippets-preview-banner").exists());
+  });
+
   describe("snippets", () => {
     it("should send correct event and source when snippet is blocked", () => {
       wrapper.setState({message: FAKE_MESSAGE});
@@ -104,7 +114,7 @@ describe("ASRouterUISurface", () => {
     it("should return an object with anchor elements", () => {
       const cta = {
         url: "https://foo.com",
-        metric: "foo"
+        metric: "foo",
       };
       const stub = sandbox.stub();
       const result = convertLinks({cta}, stub);
@@ -121,6 +131,23 @@ describe("ASRouterUISurface", () => {
     function simulateVisibilityChange(value) {
       fakeDocument.visibilityState = value;
     }
+
+    it("should call blockById after CTA link is clicked", () => {
+      wrapper.setState({message: FAKE_MESSAGE});
+      sandbox.stub(ASRouterUtils, "blockById");
+      wrapper.instance().sendClick({target: {dataset: {metric: ""}}});
+
+      assert.calledOnce(ASRouterUtils.blockById);
+      assert.calledWithExactly(ASRouterUtils.blockById, FAKE_MESSAGE.id);
+    });
+
+    it("should not call blockById if do_not_autoblock is true", () => {
+      wrapper.setState({message: {...FAKE_MESSAGE, ...{content: {...FAKE_MESSAGE.content, do_not_autoblock: true}}}});
+      sandbox.stub(ASRouterUtils, "blockById");
+      wrapper.instance().sendClick({target: {dataset: {metric: ""}}});
+
+      assert.notCalled(ASRouterUtils.blockById);
+    });
 
     it("should not send an impression if no message exists", () => {
       simulateVisibilityChange("visible");

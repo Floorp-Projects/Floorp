@@ -5,7 +5,6 @@ config = {
         'clobber',
         'build',
         'check-test',
-        'update',  # decided by query_is_nightly()
     ],
     'debug_build': True,
     'stage_platform': 'linux-debug',

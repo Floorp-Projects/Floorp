@@ -4,7 +4,6 @@ config = {
     'default_actions': [
         'clobber',
         'build',
-        'update',  # decided by query_is_nightly()
     ],
     'stage_platform': 'macosx64-searchfox-debug',
     'debug_build': True,

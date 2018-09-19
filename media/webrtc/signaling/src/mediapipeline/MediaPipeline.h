@@ -320,6 +320,8 @@ public:
                         bool aIsVideo,
                         RefPtr<MediaSessionConduit> aConduit);
 
+  bool Transmitting() const;
+
   void Start() override;
   void Stop() override;
 

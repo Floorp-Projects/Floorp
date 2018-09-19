@@ -5,7 +5,6 @@ config = {
         'clobber',
         'build',
         'check-test',
-        'update',  # decided by query_is_nightly()
     ],
     'stage_platform': 'macosx64-ccov-debug',
     'debug_build': True,

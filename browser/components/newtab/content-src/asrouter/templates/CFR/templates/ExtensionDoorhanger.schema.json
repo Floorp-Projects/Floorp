@@ -44,8 +44,20 @@
         "label": {
           "oneOf": [
             {
-              "type": "string",
-              "description": "Text for button tooltip used to provide information about the doorhanger."
+              "type": "object",
+              "properties": {
+                "attributes": {
+                  "type": "object",
+                  "properties": {
+                    "tooltiptext": {
+                      "type": "string",
+                      "description": "Text for button tooltip used to provide information about the doorhanger."
+                    }
+                  },
+                  "required": ["tooltiptext"]
+                }
+              },
+              "required": ["attributes"]
             },
             {
               "type": "object",

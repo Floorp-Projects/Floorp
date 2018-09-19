@@ -109,8 +109,8 @@ describe("Reducers", () => {
           url: "bar.com",
           bookmarkGuid: "bookmark123",
           bookmarkTitle: "Title for bar.com",
-          dateAdded: 1234567
-        }
+          dateAdded: 1234567,
+        },
       };
       const nextState = TopSites(oldState, action);
       const [, newRow] = nextState.rows;
@@ -133,8 +133,8 @@ describe("Reducers", () => {
           url: "bar.com",
           bookmarkGuid: "bookmark123",
           bookmarkTitle: "Title for bar.com",
-          dateAdded: 123456
-        }]
+          dateAdded: 123456,
+        }],
       };
       const action = {type: at.PLACES_BOOKMARK_REMOVED, data: {url: "bar.com"}};
       const nextState = TopSites(oldState, action);
@@ -179,10 +179,15 @@ describe("Reducers", () => {
     it("should update searchShortcuts on UPDATE_SEARCH_SHORTCUTS", () => {
       const shortcuts = [
         {keyword: "@google", shortURL: "google", url: "https://google.com", searchIdentifier: /^google/},
-        {keyword: "@baidu", shortURL: "baidu", url: "https://baidu.com", searchIdentifier: /^baidu/}
+        {keyword: "@baidu", shortURL: "baidu", url: "https://baidu.com", searchIdentifier: /^baidu/},
       ];
       const nextState = TopSites(undefined, {type: at.UPDATE_SEARCH_SHORTCUTS, data: {searchShortcuts: shortcuts}});
       assert.deepEqual(shortcuts, nextState.searchShortcuts);
+    });
+    it("should remove all content on SNIPPETS_PREVIEW_MODE", () => {
+      const oldState = {rows: [{url: "foo.com"}, {url: "bar.com"}]};
+      const nextState = TopSites(oldState, {type: at.SNIPPETS_PREVIEW_MODE});
+      assert.lengthOf(nextState.rows, 0);
     });
   });
   describe("Prefs", () => {
@@ -260,7 +265,7 @@ describe("Reducers", () => {
         initialized: false,
         rows: [{url: "www.foo.bar", pocket_id: 123}, {url: "www.other.url"}],
         order: i,
-        type: "history"
+        type: "history",
       }));
     });
 
@@ -430,8 +435,8 @@ describe("Reducers", () => {
           url: "www.foo.bar",
           bookmarkGuid: "bookmark123",
           bookmarkTitle: "Title for bar.com",
-          dateAdded: 1234567
-        }
+          dateAdded: 1234567,
+        },
       };
       const nextState = Sections(oldState, action);
       // check a section to ensure the correct url was bookmarked
@@ -456,8 +461,8 @@ describe("Reducers", () => {
         type: at.PLACES_BOOKMARK_REMOVED,
         data: {
           url: "www.foo.bar",
-          bookmarkGuid: "bookmark123"
-        }
+          bookmarkGuid: "bookmark123",
+        },
       };
       // add some bookmark data for the first url in rows
       oldState.forEach(item => {
@@ -490,8 +495,8 @@ describe("Reducers", () => {
         data: {
           url: "www.foo.bar",
           pocket_id: 1234,
-          title: "Title for bar.com"
-        }
+          title: "Title for bar.com",
+        },
       };
       const nextState = Sections(oldState, action);
       // check a section to ensure the correct url was saved to pocket
@@ -506,6 +511,13 @@ describe("Reducers", () => {
       // old row is unchanged
       assert.equal(oldRow, oldState[0].rows[1]);
     });
+    it("should remove all content on SNIPPETS_PREVIEW_MODE", () => {
+      const previewMode = {type: at.SNIPPETS_PREVIEW_MODE};
+      const newState = Sections(oldState, previewMode);
+      newState.forEach(section => {
+        assert.lengthOf(section.rows, 0);
+      });
+    });
   });
   describe("#insertPinned", () => {
     let links;
@@ -517,7 +529,7 @@ describe("Reducers", () => {
     it("should place pinned links where they belong", () => {
       const pinned = [
         {"url": "http://github.com/mozilla/activity-stream", "title": "moz/a-s"},
-        {"url": "http://example.com", "title": "example"}
+        {"url": "http://example.com", "title": "example"},
       ];
       const result = insertPinned(links, pinned);
       for (let index of [0, 1]) {
@@ -533,7 +545,7 @@ describe("Reducers", () => {
         {"url": "http://github.com/mozilla/activity-stream", "title": "moz/a-s"},
         null,
         null,
-        {"url": "http://example.com", "title": "example"}
+        {"url": "http://example.com", "title": "example"},
       ];
       const result = insertPinned(links, pinned);
       for (let index of [1, 4]) {
@@ -609,6 +621,9 @@ describe("Reducers", () => {
       const state = Pocket(undefined, {type: at.POCKET_WAITING_FOR_SPOC, data: false});
       assert.isFalse(state.waitingForSpoc);
     });
+    it("should have undefined for initial isUserLoggedIn state", () => {
+      assert.isNull(Pocket(undefined, {type: "some_action"}).isUserLoggedIn);
+    });
     it("should set isUserLoggedIn to false on a POCKET_LOGGED_IN with null", () => {
       const state = Pocket(undefined, {type: at.POCKET_LOGGED_IN, data: null});
       assert.isFalse(state.isUserLoggedIn);
@@ -626,7 +641,7 @@ describe("Reducers", () => {
         cta_button: "cta button",
         cta_text: "cta text",
         cta_url: "https://cta-url.com",
-        use_cta: true
+        use_cta: true,
       };
       const state = Pocket(undefined, {type: at.POCKET_CTA, data});
       assert.equal(state.pocketCta.ctaButton, data.cta_button);

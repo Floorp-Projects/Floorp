@@ -473,7 +473,13 @@ audio > xul|videocontrols,
 [error="errorDecode"]          > [anonid="errorDecode"],
 [error="errorSrcNotSupported"] > [anonid="errorSrcNotSupported"],
 [error="errorNoSource"]        > [anonid="errorNoSource"],
-[error="errorGeneric"]         > [anonid="errorGeneric"] {
+[error="errorGeneric"]         > [anonid="errorGeneric"],
+[error="errorAborted"]         > [id="errorAborted"],
+[error="errorNetwork"]         > [id="errorNetwork"],
+[error="errorDecode"]          > [id="errorDecode"],
+[error="errorSrcNotSupported"] > [id="errorSrcNotSupported"],
+[error="errorNoSource"]        > [id="errorNoSource"],
+[error="errorGeneric"]         > [id="errorGeneric"] {
   display: inline;
 }
 

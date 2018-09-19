@@ -56,3 +56,18 @@
     display: block;
   }
 }
+
+.snippets-preview-banner {
+  font-size: 15px;
+  line-height: 42px;
+  color: $grey-60-70;
+  background: $grey-30-60;
+  text-align: center;
+  position: absolute;
+  top: 0;
+  width: 100%;
+
+  span {
+    vertical-align: middle;
+  }
+}

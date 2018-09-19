@@ -24,13 +24,13 @@ describe("SectionsManager", () => {
     fakePlacesUtils = {history: {update: sinon.stub(), insert: sinon.stub()}};
     globals.set({
       Services: fakeServices,
-      PlacesUtils: fakePlacesUtils
+      PlacesUtils: fakePlacesUtils,
     });
     // Redecorate SectionsManager to remove any listeners that have been added
     EventEmitter.decorate(SectionsManager);
     storage = {
       get: sandbox.stub().resolves(),
-      set: sandbox.stub().resolves()
+      set: sandbox.stub().resolves(),
     };
   });
 
@@ -270,7 +270,7 @@ describe("SectionsManager", () => {
       SectionsManager.CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES = {
         "bookmark": ["KeepMe", "RemoveMe"],
         "pocket": ["KeepMe", "RemoveMe"],
-        "history": ["KeepMe", "RemoveMe"]
+        "history": ["KeepMe", "RemoveMe"],
       };
       SectionsManager.updateSection("highlights", {rows: FAKE_ROWS}, false);
       const highlights = SectionsManager.sections.get("highlights").FAKE_ROWS;
@@ -345,7 +345,7 @@ describe("SectionsManager", () => {
         title: "title",
         description: "description",
         image: "image",
-        type: "trending"
+        type: "trending",
       }];
       SectionsManager.addSection("topstories", {rows});
       // Simulate 2 sections.
@@ -354,7 +354,7 @@ describe("SectionsManager", () => {
         title: "title",
         description: "description",
         image: "image",
-        type: "bookmark"
+        type: "bookmark",
       }];
       SectionsManager.addSection("highlights", {rows});
     });
@@ -372,7 +372,7 @@ describe("SectionsManager", () => {
         url: "bar",
         title: "title",
         description: "description",
-        previewImageURL: "image"
+        previewImageURL: "image",
       });
     });
     it("should call PlacesUtils.history.insert", () => {
@@ -382,7 +382,7 @@ describe("SectionsManager", () => {
       assert.calledWithExactly(fakePlacesUtils.history.insert, {
         url: "bar",
         title: "title",
-        visits: [{}]
+        visits: [{}],
       });
     });
   });
@@ -399,7 +399,7 @@ describe("SectionsFeed", () => {
     SectionsManager.initialized = false;
     storage = {
       get: sandbox.stub().resolves(),
-      set: sandbox.stub().resolves()
+      set: sandbox.stub().resolves(),
     };
     feed = new SectionsFeed();
     feed.store = {dispatch: sinon.spy()};
@@ -410,12 +410,12 @@ describe("SectionsFeed", () => {
         Prefs: {
           values: {
             "sectionOrder": "topsites,topstories,highlights",
-            "feeds.topsites": true
-          }
+            "feeds.topsites": true,
+          },
         },
-        Sections: [{initialized: false}]
+        Sections: [{initialized: false}],
       },
-      dbStorage: {getDbTable: sandbox.stub().returns(storage)}
+      dbStorage: {getDbTable: sandbox.stub().returns(storage)},
     };
   });
   afterEach(() => {
@@ -433,7 +433,7 @@ describe("SectionsFeed", () => {
         [SectionsManager.ADD_SECTION, feed.onAddSection],
         [SectionsManager.REMOVE_SECTION, feed.onRemoveSection],
         [SectionsManager.UPDATE_SECTION, feed.onUpdateSection],
-        [SectionsManager.UPDATE_SECTION_CARD, feed.onUpdateSectionCard]
+        [SectionsManager.UPDATE_SECTION_CARD, feed.onUpdateSectionCard],
       ]) {
         assert.calledWith(SectionsManager.on, event, listener);
       }
@@ -461,7 +461,7 @@ describe("SectionsFeed", () => {
         [SectionsManager.ADD_SECTION, feed.onAddSection],
         [SectionsManager.REMOVE_SECTION, feed.onRemoveSection],
         [SectionsManager.UPDATE_SECTION, feed.onUpdateSection],
-        [SectionsManager.UPDATE_SECTION_CARD, feed.onUpdateSectionCard]
+        [SectionsManager.UPDATE_SECTION_CARD, feed.onUpdateSectionCard],
       ]) {
         assert.calledWith(SectionsManager.off, event, listener);
       }
@@ -490,7 +490,7 @@ describe("SectionsFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         data: {name: "sectionOrder", value: `${FAKE_ID},topsites,topstories,highlights`},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-        type: "SET_PREF"
+        type: "SET_PREF",
       });
     });
   });
@@ -660,7 +660,7 @@ describe("SectionsFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         data: {name: "sectionOrder", value: "topstories,topsites,highlights"},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-        type: "SET_PREF"
+        type: "SET_PREF",
       });
       feed.store.dispatch.reset();
       feed.moveSection("topstories", +1);
@@ -668,7 +668,7 @@ describe("SectionsFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         data: {name: "sectionOrder", value: "topsites,highlights,topstories"},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-        type: "SET_PREF"
+        type: "SET_PREF",
       });
     });
     it("should Move Up correctly", () => {
@@ -678,7 +678,7 @@ describe("SectionsFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         data: {name: "sectionOrder", value: "topstories,topsites,highlights"},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-        type: "SET_PREF"
+        type: "SET_PREF",
       });
       feed.store.dispatch.reset();
       feed.moveSection("highlights", -1);
@@ -686,7 +686,7 @@ describe("SectionsFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         data: {name: "sectionOrder", value: "topsites,highlights,topstories"},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-        type: "SET_PREF"
+        type: "SET_PREF",
       });
     });
     it("should skip over sections that aren't enabled", () => {
@@ -696,7 +696,7 @@ describe("SectionsFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         data: {name: "sectionOrder", value: "highlights,topsites,topstories"},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-        type: "SET_PREF"
+        type: "SET_PREF",
       });
       feed.store.dispatch.reset();
       feed.moveSection("topsites", +1);
@@ -704,7 +704,7 @@ describe("SectionsFeed", () => {
       assert.calledWith(feed.store.dispatch, {
         data: {name: "sectionOrder", value: "topstories,highlights,topsites"},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
-        type: "SET_PREF"
+        type: "SET_PREF",
       });
     });
   });

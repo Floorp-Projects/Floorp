@@ -255,7 +255,8 @@ private:
    */
   nsresult BuildPrimitivesForFilter(const nsStyleFilter& aFilter,
                                     nsIFrame* aTargetFrame,
-                                    bool aInputIsTainted);
+                                    bool aInputIsTainted,
+                                    nsTArray<FilterPrimitiveDescription>& aPrimitiveDescriptions);
 
   /**
    * Computes the filter space bounds of the areas that we actually *need* from
@@ -372,7 +373,6 @@ private:
   gfxMatrix               mPaintTransform;
 
   nsTArray<RefPtr<SourceSurface>> mInputImages;
-  nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
   FilterDescription mFilterDescription;
   bool mInitialized;
 };

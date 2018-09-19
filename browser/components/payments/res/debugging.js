@@ -292,6 +292,7 @@ let BASIC_CARDS_1 = {
     "cc-name": "John Smith",
     "cc-exp-month": 6,
     "cc-exp-year": 2024,
+    "cc-type": "visa",
     "cc-given-name": "John",
     "cc-additional-name": "",
     "cc-family-name": "Smith",
@@ -309,6 +310,7 @@ let BASIC_CARDS_1 = {
     "cc-name": "Jane Doe",
     "cc-exp-month": 5,
     "cc-exp-year": 2023,
+    "cc-type": "mastercard",
     "cc-given-name": "Jane",
     "cc-additional-name": "",
     "cc-family-name": "Doe",
@@ -327,6 +329,7 @@ let BASIC_CARDS_1 = {
     "cc-given-name": "Jane",
     "cc-additional-name": "",
     "cc-family-name": "Fields",
+    "cc-type": "discover",
   },
   "missing-cc-name": {
     methodName: "basic-card",
@@ -340,6 +343,7 @@ let BASIC_CARDS_1 = {
     "cc-exp-month": 8,
     "cc-exp-year": 2024,
     "cc-exp": "2024-08",
+    "cc-type": "amex",
   },
 };
 

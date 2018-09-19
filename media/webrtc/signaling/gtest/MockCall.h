@@ -58,6 +58,10 @@ public:
 
 class MockVideoSendStream : public webrtc::VideoSendStream {
 public:
+  explicit MockVideoSendStream(VideoEncoderConfig&& config)
+    : mEncoderConfig(std::move(config))
+  {}
+
   void Start() override {}
 
   void Stop() override {}
@@ -149,8 +153,7 @@ public:
                                          VideoEncoderConfig encoder_config) override {
     MOZ_RELEASE_ASSERT(!mCurrentVideoSendStream);
     mVideoSendConfig = config.Copy();
-    mEncoderConfig = encoder_config.Copy();
-    mCurrentVideoSendStream = new MockVideoSendStream;
+    mCurrentVideoSendStream = new MockVideoSendStream(encoder_config.Copy());
     return mCurrentVideoSendStream;
   }
 
@@ -209,13 +212,18 @@ public:
     return nullptr;
   }
 
+  std::vector<webrtc::VideoStream> CreateEncoderStreams(int width, int height)
+  {
+    const VideoEncoderConfig& config = mCurrentVideoSendStream->mEncoderConfig;
+    return config.video_stream_factory->CreateEncoderStreams(width, height, config);
+  }
+
   virtual ~MockCall() {};
 
   AudioReceiveStream::Config mAudioReceiveConfig;
   AudioSendStream::Config mAudioSendConfig;
   VideoReceiveStream::Config mVideoReceiveConfig;
   VideoSendStream::Config mVideoSendConfig;
-  VideoEncoderConfig mEncoderConfig;
   Call::Stats mStats;
   MockVideoSendStream* mCurrentVideoSendStream;
 };
