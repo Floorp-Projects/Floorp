@@ -265,7 +265,7 @@ pref("devtools.webconsole.ui.filterbar", false);
 pref("devtools.browserconsole.ui.filterbar", false);
 
 // Max number of inputs to store in web console history.
-pref("devtools.webconsole.inputHistoryCount", 50);
+pref("devtools.webconsole.inputHistoryCount", 300);
 
 // Persistent logging: |true| if you want the relevant tool to keep all of the
 // logged messages after reloading the page, |false| if you want the output to
