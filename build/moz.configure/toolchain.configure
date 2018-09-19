@@ -1861,3 +1861,51 @@ def have_libfuzzer_flag_fuzzer_no_link(value):
 
 
 set_config('HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK', have_libfuzzer_flag_fuzzer_no_link)
+
+# Shared library building
+# ==============================================================
+
+# XXX: The use of makefile constructs in these variables is awful.
+@depends(target, c_compiler)
+def make_shared_library(target, compiler):
+    if target.os == 'WINNT':
+        if compiler.type in ('gcc', 'clang'):
+            return namespace(
+                mkshlib=['$(CXX)', '$(DSO_LDOPTS)', '-o', '$@'],
+                mkcshlib=['$(CC)', '$(DSO_LDOPTS)', '-o', '$@'],
+            )
+        else:
+            linker = [
+                '$(LINKER)',
+                '-NOLOGO', '-DLL',
+                '-OUT:$@',
+                '-PDB:$(LINK_PDBFILE)',
+                '$(DSO_LDOPTS)'
+            ]
+            return namespace(
+                mkshlib=linker,
+                mkcshlib=linker,
+            )
+
+    cc = ['$(CC)', '$(COMPUTED_C_LDFLAGS)']
+    cxx = ['$(CXX)', '$(COMPUTED_CXX_LDFLAGS)']
+    flags = ['$(PGO_CFLAGS)', '$(DSO_PIC_CFLAGS)', '$(DSO_LDOPTS)']
+    output = ['-o', '$@']
+
+    if target.kernel == 'Darwin':
+        soname = []
+    elif target.os == 'NetBSD':
+        soname = ['-Wl,-soname,$(DSO_SONAME)']
+    else:
+        assert compiler.type in ('gcc', 'clang')
+
+        soname = ['-Wl,-h,$(DSO_SONAME)']
+
+    return namespace(
+        mkshlib=cxx + flags + soname + output,
+        mkcshlib=cc + flags + soname + output,
+    )
+
+
+set_config('MKSHLIB', make_shared_library.mkshlib)
+set_config('MKCSHLIB', make_shared_library.mkcshlib)
