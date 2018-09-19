@@ -26,10 +26,6 @@ public:
                                  nsIPaymentAddress* aAddress);
   nsresult ChangeShippingOption(const nsAString& aRequestId,
                                 const nsAString& aOption);
-  nsresult ChangePayerDetail(const nsAString& aRequestId,
-                             const nsAString& aPayerName,
-                             const nsAString& aPayerEmail,
-                             const nsAString& aPayerPhone);
 
 protected:
   mozilla::ipc::IPCResult

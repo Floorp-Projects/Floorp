@@ -35,12 +35,6 @@ protected:
   RecvChangeShippingOption(const nsString& aRequestId,
                            const nsString& aOption) override;
 
-  mozilla::ipc::IPCResult
-  RecvChangePayerDetail(const nsString& aRequestId,
-                        const nsString& aPayerName,
-                        const nsString& aPayerEmail,
-                        const nsString& aPayerPhone) override;
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:

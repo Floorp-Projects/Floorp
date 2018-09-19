@@ -82,25 +82,6 @@ PaymentRequestChild::RecvChangeShippingOption(const nsString& aRequestId,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PaymentRequestChild::RecvChangePayerDetail(const nsString& aRequestId,
-                                           const nsString& aPayerName,
-                                           const nsString& aPayerEmail,
-                                           const nsString& aPayerPhone)
-{
-  if (!mRequest) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
-  MOZ_ASSERT(manager);
-  RefPtr<PaymentRequest> request(mRequest);
-  nsresult rv = manager->ChangePayerDetail(request, aPayerName, aPayerEmail, aPayerPhone);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
 void
 PaymentRequestChild::ActorDestroy(ActorDestroyReason aWhy)
 {

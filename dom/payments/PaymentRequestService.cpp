@@ -564,31 +564,5 @@ PaymentRequestService::IsBasicCardPayment(const nsAString& aRequestId)
   return false;
 }
 
-NS_IMETHODIMP
-PaymentRequestService::ChangePayerDetail(const nsAString& aRequestId,
-                                         const nsAString& aPayerName,
-                                         const nsAString& aPayerEmail,
-                                         const nsAString& aPayerPhone)
-{
-  nsCOMPtr<nsIPaymentRequest> request;
-  nsresult rv = GetPaymentRequestById(aRequestId, getter_AddRefs(request));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  MOZ_ASSERT(request);
-  payments::PaymentRequest* rowRequest =
-    static_cast<payments::PaymentRequest*>(request.get());
-  if (!rowRequest->GetIPC()) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = rowRequest->GetIPC()->ChangePayerDetail(
-    aRequestId, aPayerName, aPayerEmail, aPayerPhone);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 } // end of namespace dom
 } // end of namespace mozilla

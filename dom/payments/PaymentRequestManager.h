@@ -69,11 +69,6 @@ public:
   nsresult ChangeShippingOption(PaymentRequest* aRequest,
                                 const nsAString& aOption);
 
-  nsresult ChangePayerDetail(PaymentRequest* aRequest,
-                             const nsAString& aPayerName,
-                             const nsAString& aPayerEmail,
-                             const nsAString& aPayerPhone);
-
   // Called to ensure that we don't "leak" aRequest if we shut down while it had
   // an active request to the parent.
   void RequestIPCOver(PaymentRequest* aRequest);
