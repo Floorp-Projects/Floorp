@@ -321,11 +321,14 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // Delete whole cells: we will replace with new table content.
 
     // Braces for artificial block to scope AutoSelectionRestorer.
-    // Save current selection since DeleteTableCell() perturbs it.
+    // Save current selection since DeleteTableCellWithTransaction() perturbs
+    // it.
     {
       AutoSelectionRestorer selectionRestorer(selection, this);
-      rv = DeleteTableCell(1);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = DeleteTableCellWithTransaction(1);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
     // collapse selection to beginning of deleted table content
     selection->CollapseToStart(IgnoreErrors());
