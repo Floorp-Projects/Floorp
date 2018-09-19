@@ -145,7 +145,8 @@ object WebContextMenu {
         hitTarget: IWebView.HitTarget,
         context: Context
     ) = with(navigationView) {
-        val appLinkData = getAppDataForLink(context, hitTarget.linkURL)
+        val appLinkData =
+            if (hitTarget.linkURL != null) getAppDataForLink(context, hitTarget.linkURL) else null
         inflateMenu(R.menu.menu_browser_context)
 
         menu.findItem(R.id.menu_open_with_app).isVisible = appLinkData != null
