@@ -41,7 +41,7 @@ export class SearchShortcutsForm extends React.PureComponent {
     searchShortcuts.forEach(shortcut => {
       shortcuts.push({
         ...shortcut,
-        isSelected: !!rows.find(row => row && row.isPinned && row.searchTopSite && row.label === shortcut.keyword),
+        isSelected: !!rows.find(row => row && row.isPinned && row.searchTopSite && row.label === shortcut.keyword)
       });
     });
     this.state = {shortcuts};
@@ -84,8 +84,8 @@ export class SearchShortcutsForm extends React.PureComponent {
       type: at.UPDATE_PINNED_SEARCH_SHORTCUTS,
       data: {
         addedShortcuts: pinQueue,
-        deletedShortcuts: unpinQueue,
-      },
+        deletedShortcuts: unpinQueue
+      }
     }));
 
     // Send the Telemetry pings.
@@ -93,14 +93,14 @@ export class SearchShortcutsForm extends React.PureComponent {
       this.props.dispatch(ac.UserEvent({
         source: TOP_SITES_SOURCE,
         event: "SEARCH_EDIT_ADD",
-        value: {search_vendor: shortcut.searchVendor},
+        value: {search_vendor: shortcut.searchVendor}
       }));
     });
     unpinQueue.forEach(shortcut => {
       this.props.dispatch(ac.UserEvent({
         source: TOP_SITES_SOURCE,
         event: "SEARCH_EDIT_DELETE",
-        value: {search_vendor: shortcut.searchVendor},
+        value: {search_vendor: shortcut.searchVendor}
       }));
     });
 
@@ -112,7 +112,7 @@ export class SearchShortcutsForm extends React.PureComponent {
       url: shortcut.url,
       searchTopSite: true,
       label: shortcut.keyword,
-      searchVendor: shortcut.shortURL,
+      searchVendor: shortcut.shortURL
     };
   }
 

@@ -14,12 +14,7 @@ const dedupe = new Dedupe(site => site && site.url);
 const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
-    initialized: false,
-  },
-  ASRouter: {
-    initialized: false,
-    allowLegacyOnboarding: null,
-    allowLegacySnippets: null,
+    initialized: false
   },
   Snippets: {initialized: false},
   TopSites: {
@@ -32,39 +27,28 @@ const INITIAL_STATE = {
     // Used in content only to open the SearchShortcutsForm modal.
     showSearchShortcutsForm: false,
     // The list of available search shortcuts.
-    searchShortcuts: [],
+    searchShortcuts: []
   },
   Prefs: {
     initialized: false,
-    values: {},
+    values: {}
   },
   Dialog: {
     visible: false,
-    data: {},
+    data: {}
   },
   Sections: [],
   Pocket: {
-    isUserLoggedIn: null,
+    isUserLoggedIn: false,
     pocketCta: {},
-    waitingForSpoc: true,
-  },
+    waitingForSpoc: true
+  }
 };
 
 function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
     case at.INIT:
       return Object.assign({}, prevState, action.data || {}, {initialized: true});
-    default:
-      return prevState;
-  }
-}
-
-function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
-  switch (action.type) {
-    case at.AS_ROUTER_INITIALIZED:
-      return {...action.data, initialized: true};
-    case at.AS_ROUTER_PREF_CHANGED:
-      return {...prevState, ...action.data};
     default:
       return prevState;
   }
@@ -118,8 +102,8 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       return Object.assign({}, prevState, {
         editForm: {
           index: action.data.index,
-          previewResponse: null,
-        },
+          previewResponse: null
+        }
       });
     case at.TOP_SITES_CANCEL_EDIT:
       return Object.assign({}, prevState, {editForm: null});
@@ -135,8 +119,8 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         editForm: {
           index: prevState.editForm.index,
           previewResponse: action.data.preview,
-          previewUrl: action.data.url,
-        },
+          previewUrl: action.data.url
+        }
       });
     case at.PREVIEW_REQUEST:
       if (!prevState.editForm) {
@@ -146,8 +130,8 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         editForm: {
           index: prevState.editForm.index,
           previewResponse: null,
-          previewUrl: action.data.url,
-        },
+          previewUrl: action.data.url
+        }
       });
     case at.PREVIEW_REQUEST_CANCEL:
       if (!prevState.editForm) {
@@ -156,8 +140,8 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       return Object.assign({}, prevState, {
         editForm: {
           index: prevState.editForm.index,
-          previewResponse: null,
-        },
+          previewResponse: null
+        }
       });
     case at.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
@@ -203,8 +187,6 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       return Object.assign({}, prevState, {rows: newRows});
     case at.UPDATE_SEARCH_SHORTCUTS:
       return {...prevState, searchShortcuts: action.data.searchShortcuts};
-    case at.SNIPPETS_PREVIEW_MODE:
-      return {...prevState, rows: []};
     default:
       return prevState;
   }
@@ -330,11 +312,11 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
               bookmarkGuid,
               bookmarkTitle,
               bookmarkDateCreated: dateAdded,
-              type: "bookmark",
+              type: "bookmark"
             });
           }
           return item;
-        }),
+        })
       }));
     case at.PLACES_SAVED_TO_POCKET:
       if (!action.data) {
@@ -347,11 +329,11 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
               open_url: action.data.open_url,
               pocket_id: action.data.pocket_id,
               title: action.data.title,
-              type: "pocket",
+              type: "pocket"
             });
           }
           return item;
-        }),
+        })
       }));
     case at.PLACES_BOOKMARK_REMOVED:
       if (!action.data) {
@@ -371,7 +353,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
             return newSite;
           }
           return item;
-        }),
+        })
       }));
     case at.PLACES_LINK_DELETED:
     case at.PLACES_LINK_BLOCKED:
@@ -384,8 +366,6 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
     case at.ARCHIVE_FROM_POCKET:
       return prevState.map(section =>
         Object.assign({}, section, {rows: section.rows.filter(site => site.pocket_id !== action.data.pocket_id)}));
-    case at.SNIPPETS_PREVIEW_MODE:
-      return prevState.map(section => ({...section, rows: []}));
     default:
       return prevState;
   }
@@ -419,8 +399,8 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
           ctaButton: action.data.cta_button,
           ctaText: action.data.cta_text,
           ctaUrl: action.data.cta_url,
-          useCta: action.data.use_cta,
-        },
+          useCta: action.data.use_cta
+        }
       };
     default:
       return prevState;
@@ -431,6 +411,6 @@ this.INITIAL_STATE = INITIAL_STATE;
 this.TOP_SITES_DEFAULT_ROWS = TOP_SITES_DEFAULT_ROWS;
 this.TOP_SITES_MAX_SITES_PER_ROW = TOP_SITES_MAX_SITES_PER_ROW;
 
-this.reducers = {TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Pocket};
+this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket};
 
 const EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_ROWS", "TOP_SITES_MAX_SITES_PER_ROW"];

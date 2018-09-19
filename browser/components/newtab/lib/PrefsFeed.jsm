@@ -22,8 +22,8 @@ const PREF_MIGRATION = {
   collapsed: new Map([
     ["collapseTopSites", "topsites"],
     ["section.highlights.collapsed", "highlights"],
-    ["section.topstories.collapsed", "topstories"],
-  ]),
+    ["section.topstories.collapsed", "topstories"]
+  ])
 };
 
 this.PrefsFeed = class PrefsFeed {

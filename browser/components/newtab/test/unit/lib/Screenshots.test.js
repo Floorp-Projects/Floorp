@@ -18,13 +18,13 @@ describe("Screenshots", () => {
       wm: {
         getEnumerator() {
           return Array(10);
-        },
-      },
+        }
+      }
     };
     globals.set("BackgroundPageThumbs", {captureIfMissing: sandbox.spy(() => Promise.resolve())});
     globals.set("PageThumbs", {
       _store: sandbox.stub(),
-      getThumbnailPath: sandbox.spy(() => FAKE_THUMBNAIL_PATH),
+      getThumbnailPath: sandbox.spy(() => FAKE_THUMBNAIL_PATH)
     });
     globals.set("PrivateBrowsingUtils", {isWindowPrivate: sandbox.spy(() => false)});
     testFile = {size: 1};

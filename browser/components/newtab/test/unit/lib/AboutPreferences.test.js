@@ -87,7 +87,7 @@ describe("AboutPreferences Feed", () => {
       global.Cc["@mozilla.org/browser/aboutnewtab-service;1"] = {
         getService() {
           return {activityStreamLocale};
-        },
+        }
       };
       fetchStub = sandbox.stub().resolves({text: () => Promise.resolve(fetchText)});
       globals.set("fetch", fetchStub);
@@ -135,10 +135,10 @@ describe("AboutPreferences Feed", () => {
         createXULElement: sandbox.stub().returns(node),
         createProcessingInstruction: sandbox.stub(),
         getElementById: sandbox.stub().returns(node),
-        insertBefore: sandbox.stub().returnsArg(0),
+        insertBefore: sandbox.stub().returnsArg(0)
       },
       Preferences,
-      gHomePane,
+      gHomePane
     }, strings, prefStructure);
     beforeEach(() => {
       node = {
@@ -146,13 +146,13 @@ describe("AboutPreferences Feed", () => {
         classList: {add: sandbox.stub()},
         cloneNode: sandbox.stub().returnsThis(),
         insertAdjacentElement: sandbox.stub().returnsArg(1),
-        setAttribute: sandbox.stub(),
+        setAttribute: sandbox.stub()
       };
       strings = {};
       prefStructure = [];
       Preferences = {
         add: sandbox.stub(),
-        get: sandbox.stub().returns({}),
+        get: sandbox.stub().returns({})
       };
       gHomePane = {toggleRestoreDefaultsBtn: sandbox.stub()};
     });

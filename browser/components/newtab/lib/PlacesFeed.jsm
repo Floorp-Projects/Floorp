@@ -4,6 +4,7 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 
@@ -43,7 +44,7 @@ class HistoryObserver extends Observer {
     this.dispatch({type: at.PLACES_LINKS_CHANGED});
     this.dispatch({
       type: at.PLACES_LINK_DELETED,
-      data: {url: uri.spec},
+      data: {url: uri.spec}
     });
   }
 
@@ -114,8 +115,8 @@ class BookmarksObserver extends Observer {
         bookmarkGuid,
         bookmarkTitle,
         dateAdded,
-        url: uri.spec,
-      },
+        url: uri.spec
+      }
     });
   }
 
@@ -139,7 +140,7 @@ class BookmarksObserver extends Observer {
       this.dispatch({type: at.PLACES_LINKS_CHANGED});
       this.dispatch({
         type: at.PLACES_BOOKMARK_REMOVED,
-        data: {url: uri.spec, bookmarkGuid: guid},
+        data: {url: uri.spec, bookmarkGuid: guid}
       });
     }
   }
@@ -229,7 +230,7 @@ class PlacesFeed {
     if (topic === LINK_BLOCKED_EVENT) {
       this.store.dispatch(ac.BroadcastToContent({
         type: at.PLACES_LINK_BLOCKED,
-        data: {url: value},
+        data: {url: value}
       }));
     }
   }
@@ -240,7 +241,7 @@ class PlacesFeed {
   openLink(action, where = "", isPrivate = false) {
     const params = {
       private: isPrivate,
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})
     };
 
     // Always include the referrer (even for http links) if we have one
@@ -269,7 +270,7 @@ class PlacesFeed {
       if (data) {
         this.store.dispatch(ac.BroadcastToContent({
           type: at.PLACES_SAVED_TO_POCKET,
-          data: {url, open_url: data.item.open_url, title, pocket_id: data.item.item_id},
+          data: {url, open_url: data.item.open_url, title, pocket_id: data.item.item_id}
         }));
       }
     } catch (err) {

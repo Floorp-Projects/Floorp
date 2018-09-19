@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Gai ezagunak:",
   "pocket_read_even_more": "Ikusi istorio gehiago",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Argibide gehiago",
+  "pocket_learn_more": "Learn More",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Hasi nabigatzen eta azkenaldian bisitatutako edo laster-marka egindako aparteko artikulu, bideo eta orriak erakutsiko ditugu.",
