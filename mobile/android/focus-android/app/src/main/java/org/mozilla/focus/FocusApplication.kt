@@ -8,6 +8,7 @@ package org.mozilla.focus
 import android.os.StrictMode
 import android.support.v7.preference.PreferenceManager
 import kotlinx.coroutines.experimental.CoroutineDispatcher
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.asCoroutineDispatcher
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
@@ -43,6 +44,7 @@ class FocusApplication : LocaleAwareApplication() {
 
     companion object {
         private const val FRETBOARD_BLOCKING_DISK_READ_TIMEOUT = 1000
+        private const val FRETBOARD_BLOCKING_NETWORK_READ_TIMEOUT = 5000
     }
 
     var visibilityLifeCycleCallback: VisibilityLifeCycleCallback? = null
@@ -57,7 +59,7 @@ class FocusApplication : LocaleAwareApplication() {
         PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
         runBlocking {
-            loadExperiments()
+            val experimentLoadJob = loadExperiments()
 
             enableStrictMode()
 
@@ -69,6 +71,7 @@ class FocusApplication : LocaleAwareApplication() {
                 registerForLocaleUpdates(this@FocusApplication)
             }
 
+            experimentLoadJob.join()
             WebViewProvider.determineEngine(this@FocusApplication)
 
             TelemetryWrapper.init(this@FocusApplication)
@@ -87,7 +90,7 @@ class FocusApplication : LocaleAwareApplication() {
         }
     }
 
-    private suspend fun loadExperiments() {
+    private suspend fun loadExperiments(): Job {
         val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
         val experimentSource = KintoExperimentSource(
                 EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME)
@@ -95,8 +98,10 @@ class FocusApplication : LocaleAwareApplication() {
         withTimeoutOrNull(FRETBOARD_BLOCKING_DISK_READ_TIMEOUT) {
             fretboard.loadExperiments() // load current settings from disk
         }
-        launch(IO) {
-            fretboard.updateExperiments() // then update disk and memory from the network
+        return launch(IO) {
+            withTimeoutOrNull(FRETBOARD_BLOCKING_NETWORK_READ_TIMEOUT) {
+                fretboard.updateExperiments() // then update disk and memory from the network
+            }
         }
     }
 
