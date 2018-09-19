@@ -106,7 +106,7 @@ const test = Test(async function() {
   pageShown = receive("content-page-shown", isData);
   let pageHidden = receive("content-page-hidden", isData);
 
-  browser1.loadURI(uri2);
+  BrowserTestUtils.loadURI(browser1, uri2);
 
   let hiddenPage = await pageHidden;
   is(interactiveDocument1, hiddenPage, "loaded document is hidden");
@@ -140,7 +140,7 @@ const test = Test(async function() {
 
   info("load uri#3");
 
-  browser1.loadURI(uri3);
+  BrowserTestUtils.loadURI(browser1, uri3);
 
   pageShown = receive("content-page-shown", isData);
 

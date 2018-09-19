@@ -430,7 +430,7 @@ add_task(async function test_inner_window_scenarios() {
 
     // Now send the page back to the test page for
     // the next few tests.
-    browser.loadURI(PAGE_URL);
+    BrowserTestUtils.loadURI(browser, PAGE_URL);
     await BrowserTestUtils.browserLoaded(browser);
 
     // We want to test hasBeforeUnload works properly with
@@ -634,7 +634,7 @@ add_task(async function test_outer_window_scenarios() {
 
     // Now send the page back to the test page for
     // the next few tests.
-    browser.loadURI(PAGE_URL);
+    BrowserTestUtils.loadURI(browser, PAGE_URL);
     await BrowserTestUtils.browserLoaded(browser);
 
     // We should initially start with hasBeforeUnload set to false.

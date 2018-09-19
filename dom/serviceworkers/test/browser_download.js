@@ -74,7 +74,7 @@ function test() {
 
       return downloadList.addView(downloadListener);
     }).then(function() {
-      gBrowser.loadURI(url);
+      BrowserTestUtils.loadURI(gBrowser, url);
     });
   });
 }

@@ -12,7 +12,7 @@ add_task(async function findbar_test() {
   let promise = ContentTask.spawn(newTab.linkedBrowser, null, async function() {
     await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
   });
-  newTab.linkedBrowser.loadURI("http://example.com/browser/" +
+  BrowserTestUtils.loadURI(newTab.linkedBrowser, "http://example.com/browser/" +
     "browser/base/content/test/general/test_bug628179.html");
   await promise;
 

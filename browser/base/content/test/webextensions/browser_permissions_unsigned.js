@@ -15,7 +15,7 @@ add_task(async function test_unsigned() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  gBrowser.selectedBrowser.loadURI(`${BASE}/file_install_extensions.html`);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, `${BASE}/file_install_extensions.html`);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   ContentTask.spawn(gBrowser.selectedBrowser, `${BASE}/browser_webext_unsigned.xpi`, async function(url) {

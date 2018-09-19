@@ -122,6 +122,6 @@ function test() {
     openScratchpad(startTest);
   });
 
-  gBrowser.loadURI("data:text/html,<p>test reverting to last saved state of" +
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test reverting to last saved state of" +
                    " a file </p>");
 }

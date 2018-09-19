@@ -410,11 +410,16 @@ public:
 
   nsString Path() { return GetString("path"); }
 
-  bool Bootstrapped() { return GetBool("bootstrapped"); }
+  nsString Type() { return GetString("type", "extension"); }
 
   bool Enabled() { return GetBool("enabled"); }
 
   double LastModifiedTime() { return GetNumber("lastModifiedTime"); }
+
+  bool ShouldCheckStartupModifications()
+  {
+    return Type().EqualsLiteral("webextension-langpack");
+  }
 
 
   Result<nsCOMPtr<nsIFile>, nsresult> FullPath();
@@ -451,8 +456,15 @@ Addon::UpdateLastModifiedTime()
   nsCOMPtr<nsIFile> file;
   MOZ_TRY_VAR(file, FullPath());
 
+  JS::RootedObject obj(mCx, mObject);
+
   bool result;
   if (NS_FAILED(file->Exists(&result)) || !result) {
+    JS::RootedValue value(mCx, JS::NullValue());
+    if (!JS_SetProperty(mCx, obj, "currentModifiedTime", value)) {
+      JS_ClearPendingException(mCx);
+    }
+
     return true;
   }
 
@@ -472,8 +484,6 @@ Addon::UpdateLastModifiedTime()
   if (NS_FAILED(manifest->GetLastModifiedTime(&time))) {
     return true;
   }
-
-  JS::RootedObject obj(mCx, mObject);
 
   double lastModified = time;
   JS::RootedValue value(mCx, JS::NumberValue(lastModified));
@@ -529,14 +539,12 @@ AddonManagerStartup::ReadStartupData(JSContext* cx, JS::MutableHandleValue locat
   for (auto e1 : PropertyIter(cx, locs)) {
     InstallLocation loc(e1);
 
-    if (!loc.ShouldCheckStartupModifications()) {
-      continue;
-    }
+    bool shouldCheck = loc.ShouldCheckStartupModifications();
 
     for (auto e2 : loc.Addons()) {
       Addon addon(e2);
 
-      if (addon.Enabled()) {
+      if (addon.Enabled() && (shouldCheck || addon.ShouldCheckStartupModifications())) {
         bool changed;
         MOZ_TRY_VAR(changed, addon.UpdateLastModifiedTime());
         if (changed) {

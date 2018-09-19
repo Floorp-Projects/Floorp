@@ -62,7 +62,7 @@ add_task(async function() {
 
     // Check that same-origin load doesn't break the affinity.
     promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_HTTP + "foo");
-    httpBrowser.loadURI(TEST_HTTP + "foo");
+    BrowserTestUtils.loadURI(httpBrowser, TEST_HTTP + "foo");
     await promiseLoad;
     await CheckBrowserInPid(httpBrowser, filePid,
       "Check that http tab still in file content process after same origin load.");
@@ -93,7 +93,7 @@ add_task(async function() {
 
     // Check that file:// URI load doesn't break the affinity.
     promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, uriString);
-    httpBrowser.loadURI(uriString);
+    BrowserTestUtils.loadURI(httpBrowser, uriString);
     await promiseLoad;
     await CheckBrowserInPid(httpBrowser, filePid,
       "Check that http tab still in file content process after file:// load.");
@@ -109,7 +109,7 @@ add_task(async function() {
 
     // Check that cross-origin load does break the affinity.
     promiseLoad = BrowserTestUtils.browserLoaded(httpBrowser, false, TEST_CROSS_ORIGIN);
-    httpBrowser.loadURI(TEST_CROSS_ORIGIN);
+    BrowserTestUtils.loadURI(httpBrowser, TEST_CROSS_ORIGIN);
     await promiseLoad;
     await CheckBrowserNotInPid(httpBrowser, filePid,
       "Check that http tab not in file content process after cross origin load.");

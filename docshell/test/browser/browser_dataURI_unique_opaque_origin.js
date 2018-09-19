@@ -14,7 +14,7 @@ add_task(async function test_dataURI_unique_opaque_origin() {
   let pagePrincipal = browser.contentPrincipal;
   info("pagePrincial " + pagePrincipal.origin);
 
-  browser.loadURI("data:text/html,hi");
+  BrowserTestUtils.loadURI(browser, "data:text/html,hi");
   await BrowserTestUtils.browserLoaded(browser);
 
   await ContentTask.spawn(browser, { principal: pagePrincipal }, async function(args) {

@@ -43,7 +43,12 @@ pub enum GeneralAction {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct PauseAction {
-    pub duration: u64,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub duration: Option<u64>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -251,7 +256,7 @@ mod test {
             id: Some("none".into()),
             actions: ActionsType::Null {
                 actions: vec![NullActionItem::General(GeneralAction::Pause(PauseAction {
-                    duration: 1,
+                    duration: Some(1),
                 }))],
             },
         };
@@ -358,7 +363,7 @@ mod test {
         }"#;
         let data = ActionsType::Null {
             actions: vec![NullActionItem::General(GeneralAction::Pause(PauseAction {
-                duration: 1,
+                duration: Some(1),
             }))],
         };
 
@@ -443,7 +448,7 @@ mod test {
     #[test]
     fn test_json_null_action_item_general() {
         let json = r#"{"type":"pause","duration":1}"#;
-        let data = NullActionItem::General(GeneralAction::Pause(PauseAction { duration: 1 }));
+        let data = NullActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
 
         check_serialize_deserialize(&json, &data);
     }
@@ -457,7 +462,7 @@ mod test {
     #[test]
     fn test_json_general_action_pause() {
         let json = r#"{"type":"pause","duration":1}"#;
-        let data = GeneralAction::Pause(PauseAction { duration: 1 });
+        let data = GeneralAction::Pause(PauseAction { duration: Some(1) });
 
         check_serialize_deserialize(&json, &data);
     }
@@ -465,8 +470,9 @@ mod test {
     #[test]
     fn test_json_general_action_pause_with_duration_missing() {
         let json = r#"{"type":"pause"}"#;
+        let data = GeneralAction::Pause(PauseAction { duration: None });
 
-        assert!(serde_json::from_str::<GeneralAction>(&json).is_err());
+        check_serialize_deserialize(&json, &data);
     }
 
     #[test]
@@ -493,7 +499,7 @@ mod test {
     #[test]
     fn test_json_key_action_item_general() {
         let json = r#"{"type":"pause","duration":1}"#;
-        let data = KeyActionItem::General(GeneralAction::Pause(PauseAction { duration: 1 }));
+        let data = KeyActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
 
         check_serialize_deserialize(&json, &data);
     }
@@ -647,7 +653,7 @@ mod test {
     #[test]
     fn test_json_pointer_action_item_general() {
         let json = r#"{"type":"pause","duration":1}"#;
-        let data = PointerActionItem::General(GeneralAction::Pause(PauseAction { duration: 1 }));
+        let data = PointerActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
 
         check_serialize_deserialize(&json, &data);
     }

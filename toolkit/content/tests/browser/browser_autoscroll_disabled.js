@@ -7,7 +7,7 @@ add_task(async function() {
 </body></html>';
 
   let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  gBrowser.loadURI(dataUri);
+  BrowserTestUtils.loadURI(gBrowser, dataUri);
   await loadedPromise;
 
   await BrowserTestUtils.synthesizeMouse("#i", 50, 50, { button: 1 },

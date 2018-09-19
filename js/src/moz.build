@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include('js-config.mozbuild')
+include('js-cxxflags.mozbuild')
+
 # Directory metadata
 component_engine = ('Core', 'JavaScript Engine')
 component_gc     = ('Core', 'JavaScript: GC')
@@ -699,14 +702,6 @@ DIRS += [
 
 FINAL_LIBRARY = 'js'
 
-if CONFIG['NIGHTLY_BUILD']:
-    DEFINES['ENABLE_BINARYDATA'] = True
-    DEFINES['ENABLE_WASM_BULKMEM_OPS'] = True
-    DEFINES['ENABLE_WASM_SATURATING_TRUNC_OPS'] = True
-    DEFINES['ENABLE_WASM_THREAD_OPS'] = True
-    DEFINES['ENABLE_WASM_GC'] = True
-    DEFINES['WASM_PRIVATE_REFTYPES'] = True
-
 if CONFIG['JS_BUILD_BINAST']:
     # Using SOURCES, as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
     # These parts of BinAST are designed only to test evolutions of the
@@ -728,49 +723,6 @@ if CONFIG['JS_BUILD_BINAST']:
         SOURCES['frontend/BinToken.cpp'].flags += libfuzzer_flags
         SOURCES['frontend/BinTokenReaderBase.cpp'].flags += libfuzzer_flags
         SOURCES['frontend/BinTokenReaderMultipart.cpp'].flags += libfuzzer_flags
-
-# Wasm code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64
-# so that it is easy to use the huge-mapping optimization for other
-# 64-bit platforms in the future.
-
-if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_ARM64']:
-    DEFINES['WASM_HUGE_MEMORY'] = True
-
-if CONFIG['MOZ_DEBUG'] or CONFIG['NIGHTLY_BUILD']:
-    DEFINES['JS_CACHEIR_SPEW'] = True
-
-# Also set in shell/moz.build
-DEFINES['ENABLE_SHARED_ARRAY_BUFFER'] = True
-
-DEFINES['EXPORT_JS_API'] = True
-
-if CONFIG['JS_HAS_CTYPES']:
-    DEFINES['JS_HAS_CTYPES'] = True
-
-if CONFIG['MOZ_LINKER']:
-    DEFINES['MOZ_LINKER'] = True
-
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    # Prevent floating point errors caused by VC++ optimizations
-    # XXX We should add this to CXXFLAGS, too?
-    CFLAGS += ['-fp:precise']
-    # C4805 warns mixing bool with other integral types in computation.
-    # But given the conversion from bool is specified, and this is a
-    # pattern widely used in code in js/src, suppress this warning here.
-    CXXFLAGS += ['-wd4805']
-    # C4661 ("no suitable definition provided for explicit template
-    # instantiation request") is emitted for all Parser methods that
-    # have a Parser<FullParseHandler> definition but no
-    # Parser<SyntaxParseHandler> definition, see bug 1167030.
-    CXXFLAGS += ['-wd4661']
-    # FIXME: unary minus operator applied to unsigned type (bug 1229189)
-    CXXFLAGS += ['-wd4146']
-    # FIXME: 'operation' : conversion from 'type1' to 'type2' of
-    # greater size (bug 1259304)
-    CXXFLAGS += ['-wd4312']
-
-CFLAGS += CONFIG['MOZ_ICU_CFLAGS']
-CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
 
 # Prepare self-hosted JS code for embedding
 GENERATED_FILES += [('selfhosted.out.h', 'selfhosted.js')]
@@ -819,14 +771,6 @@ selfhosted.inputs = [
 if CONFIG['JS_HAS_CTYPES']:
     if CONFIG['MOZ_SYSTEM_FFI']:
         CXXFLAGS += CONFIG['MOZ_FFI_CFLAGS']
-    else:
-        # Windows needs this to be linked with a static library.
-        DEFINES['FFI_BUILDING'] = True
-
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    # Also disable strict-aliasing for GCC compiler, that is enabled by default
-    # starting with version 7.1, see Bug 1363009
-    CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing']
 
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

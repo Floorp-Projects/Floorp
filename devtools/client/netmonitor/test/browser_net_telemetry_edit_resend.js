@@ -27,7 +27,7 @@ add_task(async function() {
 
   // Reload to have one request in the list.
   const waitForEvents = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.loadURI(SIMPLE_URL);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, SIMPLE_URL);
   await waitForEvents;
 
   // Open context menu and execute "Edit & Resend".

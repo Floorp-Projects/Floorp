@@ -26,7 +26,7 @@ add_task(async function setup() {
 
 async function testDeviceConnected(deviceName) {
   info("testDeviceConnected with deviceName=" + deviceName);
-  gBrowser.selectedBrowser.loadURI("about:robots");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
   await waitForDocLoadComplete();
 
   let waitForTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
