@@ -63,8 +63,7 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select"));
   selection.addRange(range);
   getTableEditor().deleteTableColumn(2);
-  // XXX I don't know why <br> element is inserted different from deleteTableRow().
-  is(editor.innerHTML, "<br>",
+  is(editor.innerHTML, "",
      "nsITableEditor.deleteTableColumn(2) should delete the <table> since there is only 2 columns");
 
   selection.removeAllRanges();
@@ -74,8 +73,7 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select"));
   selection.addRange(range);
   getTableEditor().deleteTableColumn(3);
-  // XXX I don't know why <br> element is inserted different from deleteTableRow().
-  is(editor.innerHTML, "<br>",
+  is(editor.innerHTML, "",
      "nsITableEditor.deleteTableColumn(3) should delete the <table> when argument is larger than actual number of columns");
 
   selection.removeAllRanges();
@@ -95,8 +93,7 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select"));
   selection.addRange(range);
   getTableEditor().deleteTableColumn(3);
-  // XXX I don't know why <br> element is inserted different from deleteTableRow().
-  is(editor.innerHTML, "<br>",
+  is(editor.innerHTML, "",
      "nsITableEditor.deleteTableColumn(3) should delete the <table> since the argument equals actual number of columns");
 
   // Similar to selected a cell, when selection is in a cell, the cell should
@@ -131,8 +128,7 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select").firstChild);
   selection.addRange(range);
   getTableEditor().deleteTableColumn(2);
-  // XXX I don't know why <br> element is inserted different from deleteTableRow().
-  is(editor.innerHTML, "<br>",
+  is(editor.innerHTML, "",
      "nsITableEditor.deleteTableColumn(2) should delete the <table> since there is only 2 columns");
 
   selection.removeAllRanges();
@@ -143,8 +139,7 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select").firstChild);
   selection.addRange(range);
   getTableEditor().deleteTableColumn(3);
-  // XXX I don't know why <br> element is inserted different from deleteTableRow().
-  is(editor.innerHTML, "<br>",
+  is(editor.innerHTML, "",
      "nsITableEditor.deleteTableColumn(3) should delete the <table> when argument is larger than actual number of columns");
 
   selection.removeAllRanges();
@@ -166,8 +161,7 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select").firstChild);
   selection.addRange(range);
   getTableEditor().deleteTableColumn(3);
-  // XXX I don't know why <br> element is inserted different from deleteTableRow().
-  is(editor.innerHTML, "<br>",
+  is(editor.innerHTML, "",
      "nsITableEditor.deleteTableColumn(3) should delete the <table> since the argument equals actual number of columns");
 
   // The argument should be ignored when 2 or more cells are selected.
@@ -195,8 +189,7 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select2"));
   selection.addRange(range);
   getTableEditor().deleteTableColumn(2);
-  // XXX I don't know why <br> element is inserted different from deleteTableRow().
-  is(editor.innerHTML, "<br>",
+  is(editor.innerHTML, "",
      "nsITableEditor.deleteTableColumn(2) should delete the <table> since 2 is number of columns of the <table>");
 
   selection.removeAllRanges();
@@ -209,8 +202,7 @@ SimpleTest.waitForFocus(function() {
   range.selectNode(document.getElementById("select2"));
   selection.addRange(range);
   getTableEditor().deleteTableColumn(2);
-  // XXX I don't know why <br> element is inserted different from deleteTableRow().
-  is(editor.innerHTML, "<br>",
+  is(editor.innerHTML, "",
      "nsITableEditor.deleteTableColumn(2) should delete the <table> since 2 is number of columns of the <table>");
 
   selection.removeAllRanges();
