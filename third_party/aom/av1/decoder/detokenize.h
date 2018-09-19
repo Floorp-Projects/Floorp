@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_DECODER_DETOKENIZE_H_
-#define AV1_DECODER_DETOKENIZE_H_
+#ifndef AOM_AV1_DECODER_DETOKENIZE_H_
+#define AOM_AV1_DECODER_DETOKENIZE_H_
 
 #include "config/aom_config.h"
 
@@ -26,4 +26,4 @@ void av1_decode_palette_tokens(MACROBLOCKD *const xd, int plane, aom_reader *r);
 #ifdef __cplusplus
 }  // extern "C"
 #endif
-#endif  // AV1_DECODER_DETOKENIZE_H_
+#endif  // AOM_AV1_DECODER_DETOKENIZE_H_

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_INV_TXFM1D_H_
-#define AV1_INV_TXFM1D_H_
+#ifndef AOM_AV1_COMMON_AV1_INV_TXFM1D_H_
+#define AOM_AV1_COMMON_AV1_INV_TXFM1D_H_
 
 #include "av1/common/av1_txfm.h"
 
@@ -58,4 +58,4 @@ void av1_iidentity32_c(const int32_t *input, int32_t *output, int8_t cos_bit,
 }
 #endif
 
-#endif  // AV1_INV_TXFM1D_H_
+#endif  // AOM_AV1_COMMON_AV1_INV_TXFM1D_H_

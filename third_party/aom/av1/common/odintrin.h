@@ -11,8 +11,8 @@
 
 /* clang-format off */
 
-#ifndef AV1_COMMON_ODINTRIN_H_
-#define AV1_COMMON_ODINTRIN_H_
+#ifndef AOM_AV1_COMMON_ODINTRIN_H_
+#define AOM_AV1_COMMON_ODINTRIN_H_
 
 #include <stdlib.h>
 #include <string.h>
@@ -46,9 +46,9 @@ extern uint32_t OD_DIVU_SMALL_CONSTS[OD_DIVU_DMAX][2];
 #define OD_MAXI AOMMAX
 #define OD_CLAMPI(min, val, max) (OD_MAXI(min, OD_MINI(val, max)))
 
-#define OD_CLZ0 (1)
-#define OD_CLZ(x) (-get_msb(x))
-#define OD_ILOG_NZ(x) (OD_CLZ0 - OD_CLZ(x))
+/*Integer logarithm (base 2) of a nonzero unsigned 32-bit integer.
+  OD_ILOG_NZ(x) = (int)floor(log2(x)) + 1.*/
+#define OD_ILOG_NZ(x) (1 + get_msb(x))
 
 /*Enable special features for gcc and compatible compilers.*/
 #if defined(__GNUC__) && defined(__GNUC_MINOR__) && defined(__GNUC_PATCHLEVEL__)
@@ -93,4 +93,4 @@ extern uint32_t OD_DIVU_SMALL_CONSTS[OD_DIVU_DMAX][2];
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_ODINTRIN_H_
+#endif  // AOM_AV1_COMMON_ODINTRIN_H_

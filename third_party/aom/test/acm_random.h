@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef TEST_ACM_RANDOM_H_
-#define TEST_ACM_RANDOM_H_
+#ifndef AOM_TEST_ACM_RANDOM_H_
+#define AOM_TEST_ACM_RANDOM_H_
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
@@ -81,4 +81,4 @@ class ACMRandom {
 
 }  // namespace libaom_test
 
-#endif  // TEST_ACM_RANDOM_H_
+#endif  // AOM_TEST_ACM_RANDOM_H_

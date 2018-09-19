@@ -295,7 +295,6 @@ int64_t aom_get_sse_plane(const YV12_BUFFER_CONFIG *a,
       default: assert(plane >= 0 && plane <= 2); return 0;
     }
   }
-  (void)highbd;
   switch (plane) {
     case 0: return aom_get_y_sse(a, b);
     case 1: return aom_get_u_sse(a, b);

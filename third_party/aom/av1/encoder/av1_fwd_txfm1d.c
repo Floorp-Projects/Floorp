@@ -11,24 +11,7 @@
 
 #include <stdlib.h>
 #include "av1/encoder/av1_fwd_txfm1d.h"
-
-#if CONFIG_COEFFICIENT_RANGE_CHECKING
-void range_check_func(int32_t stage, const int32_t *input, const int32_t *buf,
-                      int32_t size, int8_t bit);
-
-#define range_check(stage, input, buf, size, bit) \
-  range_check_func(stage, input, buf, size, bit)
-#else  // CONFIG_COEFFICIENT_RANGE_CHECKING
-
-#define range_check(stage, input, buf, size, bit) \
-  {                                               \
-    (void)stage;                                  \
-    (void)input;                                  \
-    (void)buf;                                    \
-    (void)size;                                   \
-    (void)bit;                                    \
-  }
-#endif  // CONFIG_COEFFICIENT_RANGE_CHECKING
+#include "av1/common/av1_txfm.h"
 
 void av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
                    const int8_t *stage_range) {
@@ -40,7 +23,7 @@ void av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   int32_t step[4];
 
   // stage 0;
-  range_check(stage, input, input, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, input, size, stage_range[stage]);
 
   // stage 1;
   stage++;
@@ -49,7 +32,7 @@ void av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[1] = input[1] + input[2];
   bf1[2] = -input[2] + input[1];
   bf1[3] = -input[3] + input[0];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 2
   stage++;
@@ -60,7 +43,7 @@ void av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[1] = half_btf(-cospi[32], bf0[1], cospi[32], bf0[0], cos_bit);
   bf1[2] = half_btf(cospi[48], bf0[2], cospi[16], bf0[3], cos_bit);
   bf1[3] = half_btf(cospi[48], bf0[3], -cospi[16], bf0[2], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 3
   stage++;
@@ -70,7 +53,7 @@ void av1_fdct4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[1] = bf0[2];
   bf1[2] = bf0[1];
   bf1[3] = bf0[3];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
 void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -83,7 +66,7 @@ void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   int32_t step[8];
 
   // stage 0;
-  range_check(stage, input, input, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, input, size, stage_range[stage]);
 
   // stage 1;
   stage++;
@@ -96,7 +79,7 @@ void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = -input[5] + input[2];
   bf1[6] = -input[6] + input[1];
   bf1[7] = -input[7] + input[0];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 2
   stage++;
@@ -111,7 +94,7 @@ void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = half_btf(-cospi[32], bf0[5], cospi[32], bf0[6], cos_bit);
   bf1[6] = half_btf(cospi[32], bf0[6], cospi[32], bf0[5], cos_bit);
   bf1[7] = bf0[7];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 3
   stage++;
@@ -126,7 +109,7 @@ void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = -bf0[5] + bf0[4];
   bf1[6] = -bf0[6] + bf0[7];
   bf1[7] = bf0[7] + bf0[6];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 4
   stage++;
@@ -141,7 +124,7 @@ void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = half_btf(cospi[24], bf0[5], cospi[40], bf0[6], cos_bit);
   bf1[6] = half_btf(cospi[24], bf0[6], -cospi[40], bf0[5], cos_bit);
   bf1[7] = half_btf(cospi[56], bf0[7], -cospi[8], bf0[4], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 5
   stage++;
@@ -155,7 +138,7 @@ void av1_fdct8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = bf0[5];
   bf1[6] = bf0[3];
   bf1[7] = bf0[7];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
 void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -168,7 +151,7 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   int32_t step[16];
 
   // stage 0;
-  range_check(stage, input, input, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, input, size, stage_range[stage]);
 
   // stage 1;
   stage++;
@@ -189,7 +172,7 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = -input[13] + input[2];
   bf1[14] = -input[14] + input[1];
   bf1[15] = -input[15] + input[0];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 2
   stage++;
@@ -212,7 +195,7 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = half_btf(cospi[32], bf0[13], cospi[32], bf0[10], cos_bit);
   bf1[14] = bf0[14];
   bf1[15] = bf0[15];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 3
   stage++;
@@ -235,7 +218,7 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = -bf0[13] + bf0[14];
   bf1[14] = bf0[14] + bf0[13];
   bf1[15] = bf0[15] + bf0[12];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 4
   stage++;
@@ -258,7 +241,7 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = half_btf(cospi[48], bf0[13], -cospi[16], bf0[10], cos_bit);
   bf1[14] = half_btf(cospi[16], bf0[14], cospi[48], bf0[9], cos_bit);
   bf1[15] = bf0[15];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 5
   stage++;
@@ -281,7 +264,7 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = -bf0[13] + bf0[12];
   bf1[14] = -bf0[14] + bf0[15];
   bf1[15] = bf0[15] + bf0[14];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 6
   stage++;
@@ -304,7 +287,7 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = half_btf(cospi[44], bf0[13], -cospi[20], bf0[10], cos_bit);
   bf1[14] = half_btf(cospi[28], bf0[14], -cospi[36], bf0[9], cos_bit);
   bf1[15] = half_btf(cospi[60], bf0[15], -cospi[4], bf0[8], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 7
   stage++;
@@ -326,7 +309,7 @@ void av1_fdct16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = bf0[11];
   bf1[14] = bf0[7];
   bf1[15] = bf0[15];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
 void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -339,7 +322,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   int32_t step[32];
 
   // stage 0;
-  range_check(stage, input, input, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, input, size, stage_range[stage]);
 
   // stage 1;
   stage++;
@@ -376,7 +359,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = -input[29] + input[2];
   bf1[30] = -input[30] + input[1];
   bf1[31] = -input[31] + input[0];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 2
   stage++;
@@ -415,7 +398,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = bf0[29];
   bf1[30] = bf0[30];
   bf1[31] = bf0[31];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 3
   stage++;
@@ -454,7 +437,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = bf0[29] + bf0[26];
   bf1[30] = bf0[30] + bf0[25];
   bf1[31] = bf0[31] + bf0[24];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 4
   stage++;
@@ -493,7 +476,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = half_btf(cospi[16], bf0[29], cospi[48], bf0[18], cos_bit);
   bf1[30] = bf0[30];
   bf1[31] = bf0[31];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 5
   stage++;
@@ -532,7 +515,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = -bf0[29] + bf0[30];
   bf1[30] = bf0[30] + bf0[29];
   bf1[31] = bf0[31] + bf0[28];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 6
   stage++;
@@ -571,7 +554,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = half_btf(cospi[56], bf0[29], -cospi[8], bf0[18], cos_bit);
   bf1[30] = half_btf(cospi[8], bf0[30], cospi[56], bf0[17], cos_bit);
   bf1[31] = bf0[31];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 7
   stage++;
@@ -610,7 +593,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = -bf0[29] + bf0[28];
   bf1[30] = -bf0[30] + bf0[31];
   bf1[31] = bf0[31] + bf0[30];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 8
   stage++;
@@ -649,7 +632,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = half_btf(cospi[46], bf0[29], -cospi[18], bf0[18], cos_bit);
   bf1[30] = half_btf(cospi[30], bf0[30], -cospi[34], bf0[17], cos_bit);
   bf1[31] = half_btf(cospi[62], bf0[31], -cospi[2], bf0[16], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 9
   stage++;
@@ -687,7 +670,7 @@ void av1_fdct32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[29] = bf0[23];
   bf1[30] = bf0[15];
   bf1[31] = bf0[31];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
 void av1_fadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -698,7 +681,7 @@ void av1_fadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   int32_t s0, s1, s2, s3, s4, s5, s6, s7;
 
   // stage 0
-  range_check(0, input, input, 4, stage_range[0]);
+  av1_range_check_buf(0, input, input, 4, stage_range[0]);
   x0 = input[0];
   x1 = input[1];
   x2 = input[2];
@@ -746,7 +729,7 @@ void av1_fadst4_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   output[1] = round_shift(s1, bit);
   output[2] = round_shift(s2, bit);
   output[3] = round_shift(s3, bit);
-  range_check(6, input, output, 4, stage_range[6]);
+  av1_range_check_buf(6, input, output, 4, stage_range[6]);
 }
 
 void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -759,7 +742,7 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   int32_t step[8];
 
   // stage 0;
-  range_check(stage, input, input, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, input, size, stage_range[stage]);
 
   // stage 1;
   stage++;
@@ -773,7 +756,7 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = input[6];
   bf1[6] = input[2];
   bf1[7] = -input[5];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 2
   stage++;
@@ -788,7 +771,7 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = bf0[5];
   bf1[6] = half_btf(cospi[32], bf0[6], cospi[32], bf0[7], cos_bit);
   bf1[7] = half_btf(cospi[32], bf0[6], -cospi[32], bf0[7], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 3
   stage++;
@@ -802,7 +785,7 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = bf0[5] + bf0[7];
   bf1[6] = bf0[4] - bf0[6];
   bf1[7] = bf0[5] - bf0[7];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 4
   stage++;
@@ -817,7 +800,7 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = half_btf(cospi[48], bf0[4], -cospi[16], bf0[5], cos_bit);
   bf1[6] = half_btf(-cospi[48], bf0[6], cospi[16], bf0[7], cos_bit);
   bf1[7] = half_btf(cospi[16], bf0[6], cospi[48], bf0[7], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 5
   stage++;
@@ -831,7 +814,7 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = bf0[1] - bf0[5];
   bf1[6] = bf0[2] - bf0[6];
   bf1[7] = bf0[3] - bf0[7];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 6
   stage++;
@@ -846,7 +829,7 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = half_btf(cospi[28], bf0[4], -cospi[36], bf0[5], cos_bit);
   bf1[6] = half_btf(cospi[52], bf0[6], cospi[12], bf0[7], cos_bit);
   bf1[7] = half_btf(cospi[12], bf0[6], -cospi[52], bf0[7], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 7
   stage++;
@@ -860,7 +843,7 @@ void av1_fadst8_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[5] = bf0[2];
   bf1[6] = bf0[7];
   bf1[7] = bf0[0];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
 void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -873,7 +856,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   int32_t step[16];
 
   // stage 0;
-  range_check(stage, input, input, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, input, size, stage_range[stage]);
 
   // stage 1;
   stage++;
@@ -895,7 +878,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = -input[13];
   bf1[14] = -input[5];
   bf1[15] = input[10];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 2
   stage++;
@@ -918,7 +901,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = bf0[13];
   bf1[14] = half_btf(cospi[32], bf0[14], cospi[32], bf0[15], cos_bit);
   bf1[15] = half_btf(cospi[32], bf0[14], -cospi[32], bf0[15], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 3
   stage++;
@@ -940,7 +923,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = bf0[13] + bf0[15];
   bf1[14] = bf0[12] - bf0[14];
   bf1[15] = bf0[13] - bf0[15];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 4
   stage++;
@@ -963,7 +946,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = half_btf(cospi[48], bf0[12], -cospi[16], bf0[13], cos_bit);
   bf1[14] = half_btf(-cospi[48], bf0[14], cospi[16], bf0[15], cos_bit);
   bf1[15] = half_btf(cospi[16], bf0[14], cospi[48], bf0[15], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 5
   stage++;
@@ -985,7 +968,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = bf0[9] - bf0[13];
   bf1[14] = bf0[10] - bf0[14];
   bf1[15] = bf0[11] - bf0[15];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 6
   stage++;
@@ -1008,7 +991,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = half_btf(cospi[8], bf0[12], cospi[56], bf0[13], cos_bit);
   bf1[14] = half_btf(-cospi[24], bf0[14], cospi[40], bf0[15], cos_bit);
   bf1[15] = half_btf(cospi[40], bf0[14], cospi[24], bf0[15], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 7
   stage++;
@@ -1030,7 +1013,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = bf0[5] - bf0[13];
   bf1[14] = bf0[6] - bf0[14];
   bf1[15] = bf0[7] - bf0[15];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 8
   stage++;
@@ -1053,7 +1036,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = half_btf(cospi[14], bf0[12], -cospi[50], bf0[13], cos_bit);
   bf1[14] = half_btf(cospi[58], bf0[14], cospi[6], bf0[15], cos_bit);
   bf1[15] = half_btf(cospi[6], bf0[14], -cospi[58], bf0[15], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 9
   stage++;
@@ -1075,7 +1058,7 @@ void av1_fadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[13] = bf0[2];
   bf1[14] = bf0[15];
   bf1[15] = bf0[0];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }
 
 void av1_fidentity4_c(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -1084,14 +1067,14 @@ void av1_fidentity4_c(const int32_t *input, int32_t *output, int8_t cos_bit,
   for (int i = 0; i < 4; ++i)
     output[i] = round_shift((int64_t)input[i] * NewSqrt2, NewSqrt2Bits);
   assert(stage_range[0] + NewSqrt2Bits <= 32);
-  range_check(0, input, output, 4, stage_range[0]);
+  av1_range_check_buf(0, input, output, 4, stage_range[0]);
 }
 
 void av1_fidentity8_c(const int32_t *input, int32_t *output, int8_t cos_bit,
                       const int8_t *stage_range) {
   (void)cos_bit;
   for (int i = 0; i < 8; ++i) output[i] = input[i] * 2;
-  range_check(0, input, output, 8, stage_range[0]);
+  av1_range_check_buf(0, input, output, 8, stage_range[0]);
 }
 
 void av1_fidentity16_c(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -1100,14 +1083,14 @@ void av1_fidentity16_c(const int32_t *input, int32_t *output, int8_t cos_bit,
   for (int i = 0; i < 16; ++i)
     output[i] = round_shift((int64_t)input[i] * 2 * NewSqrt2, NewSqrt2Bits);
   assert(stage_range[0] + NewSqrt2Bits <= 32);
-  range_check(0, input, output, 16, stage_range[0]);
+  av1_range_check_buf(0, input, output, 16, stage_range[0]);
 }
 
 void av1_fidentity32_c(const int32_t *input, int32_t *output, int8_t cos_bit,
                        const int8_t *stage_range) {
   (void)cos_bit;
   for (int i = 0; i < 32; ++i) output[i] = input[i] * 4;
-  range_check(0, input, output, 32, stage_range[0]);
+  av1_range_check_buf(0, input, output, 32, stage_range[0]);
 }
 
 void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
@@ -1120,7 +1103,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   int32_t step[64];
 
   // stage 0;
-  range_check(stage, input, input, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, input, size, stage_range[stage]);
 
   // stage 1;
   stage++;
@@ -1189,7 +1172,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = -input[61] + input[2];
   bf1[62] = -input[62] + input[1];
   bf1[63] = -input[63] + input[0];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 2
   stage++;
@@ -1260,7 +1243,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = bf0[61];
   bf1[62] = bf0[62];
   bf1[63] = bf0[63];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 3
   stage++;
@@ -1331,7 +1314,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = bf0[61] + bf0[50];
   bf1[62] = bf0[62] + bf0[49];
   bf1[63] = bf0[63] + bf0[48];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 4
   stage++;
@@ -1402,7 +1385,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = bf0[61];
   bf1[62] = bf0[62];
   bf1[63] = bf0[63];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 5
   stage++;
@@ -1473,7 +1456,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = bf0[61] + bf0[58];
   bf1[62] = bf0[62] + bf0[57];
   bf1[63] = bf0[63] + bf0[56];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 6
   stage++;
@@ -1544,7 +1527,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = half_btf(cospi[8], bf0[61], cospi[56], bf0[34], cos_bit);
   bf1[62] = bf0[62];
   bf1[63] = bf0[63];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 7
   stage++;
@@ -1615,7 +1598,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = -bf0[61] + bf0[62];
   bf1[62] = bf0[62] + bf0[61];
   bf1[63] = bf0[63] + bf0[60];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 8
   stage++;
@@ -1686,7 +1669,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = half_btf(cospi[60], bf0[61], -cospi[4], bf0[34], cos_bit);
   bf1[62] = half_btf(cospi[4], bf0[62], cospi[60], bf0[33], cos_bit);
   bf1[63] = bf0[63];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 9
   stage++;
@@ -1757,7 +1740,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = -bf0[61] + bf0[60];
   bf1[62] = -bf0[62] + bf0[63];
   bf1[63] = bf0[63] + bf0[62];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 10
   stage++;
@@ -1828,7 +1811,7 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = half_btf(cospi[47], bf0[61], -cospi[17], bf0[34], cos_bit);
   bf1[62] = half_btf(cospi[31], bf0[62], -cospi[33], bf0[33], cos_bit);
   bf1[63] = half_btf(cospi[63], bf0[63], -cospi[1], bf0[32], cos_bit);
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 
   // stage 11
   stage++;
@@ -1898,5 +1881,5 @@ void av1_fdct64_new(const int32_t *input, int32_t *output, int8_t cos_bit,
   bf1[61] = bf0[47];
   bf1[62] = bf0[31];
   bf1[63] = bf0[63];
-  range_check(stage, input, bf1, size, stage_range[stage]);
+  av1_range_check_buf(stage, input, bf1, size, stage_range[stage]);
 }

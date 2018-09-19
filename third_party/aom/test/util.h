@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef TEST_UTIL_H_
-#define TEST_UTIL_H_
+#ifndef AOM_TEST_UTIL_H_
+#define AOM_TEST_UTIL_H_
 
 #include <stdio.h>
 #include <math.h>
@@ -50,4 +50,4 @@ static INLINE double get_time_mark(aom_usec_timer *t) {
   return static_cast<double>(aom_usec_timer_elapsed(t));
 }
 
-#endif  // TEST_UTIL_H_
+#endif  // AOM_TEST_UTIL_H_

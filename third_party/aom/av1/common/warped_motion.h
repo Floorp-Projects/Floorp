@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_WARPED_MOTION_H_
-#define AV1_COMMON_WARPED_MOTION_H_
+#ifndef AOM_AV1_COMMON_WARPED_MOTION_H_
+#define AOM_AV1_COMMON_WARPED_MOTION_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,4 +92,4 @@ int find_projection(int np, int *pts1, int *pts2, BLOCK_SIZE bsize, int mvy,
                     int mi_col);
 
 int get_shear_params(WarpedMotionParams *wm);
-#endif  // AV1_COMMON_WARPED_MOTION_H_
+#endif  // AOM_AV1_COMMON_WARPED_MOTION_H_

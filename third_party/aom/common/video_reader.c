@@ -17,11 +17,13 @@
 #include "common/obudec.h"
 #include "common/tools_common.h"
 #include "common/video_reader.h"
+#include "common/webmdec.h"
 
 struct AvxVideoReaderStruct {
   AvxVideoInfo info;
   struct AvxInputContext input_ctx;
   struct ObuDecInputContext obu_ctx;
+  struct WebmInputContext webm_ctx;
   uint8_t *buffer;
   size_t buffer_size;
   size_t frame_size;
@@ -49,6 +51,13 @@ AvxVideoReader *aom_video_reader_open(const char *filename) {
     reader->info.codec_fourcc = reader->input_ctx.fourcc;
     reader->info.frame_width = reader->input_ctx.width;
     reader->info.frame_height = reader->input_ctx.height;
+#if CONFIG_WEBM_IO
+  } else if (file_is_webm(&reader->webm_ctx, &reader->input_ctx)) {
+    reader->input_ctx.file_type = FILE_TYPE_WEBM;
+    reader->info.codec_fourcc = reader->input_ctx.fourcc;
+    reader->info.frame_width = reader->input_ctx.width;
+    reader->info.frame_height = reader->input_ctx.height;
+#endif
   } else if (file_is_obu(&reader->obu_ctx)) {
     reader->input_ctx.file_type = FILE_TYPE_OBU;
     // assume AV1
@@ -83,6 +92,11 @@ int aom_video_reader_read_frame(AvxVideoReader *reader) {
     return !obudec_read_temporal_unit(&reader->obu_ctx, &reader->buffer,
                                       &reader->frame_size,
                                       &reader->buffer_size);
+#if CONFIG_WEBM_IO
+  } else if (reader->input_ctx.file_type == FILE_TYPE_WEBM) {
+    return !webm_read_frame(&reader->webm_ctx, &reader->buffer,
+                            &reader->frame_size, &reader->buffer_size);
+#endif
   } else {
     assert(0);
     return 0;

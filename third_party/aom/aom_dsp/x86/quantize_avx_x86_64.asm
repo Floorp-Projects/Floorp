@@ -16,15 +16,11 @@
 SECTION .text
 
 %macro QUANTIZE_FN 2
-cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
+cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, zbin, round, quant, \
                                 shift, qcoeff, dqcoeff, dequant, \
                                 eob, scan, iscan
 
   vzeroupper
-
-  ; If we can skip this block, then just zero the output
-  cmp                         skipmp, 0
-  jne .blank
 
 %ifnidn %1, b_32x32
 
@@ -83,14 +79,14 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
 .single_nonzero:
 
   ; Actual quantization of size 16 block - setup pointers, rounders, etc.
-  movifnidn                       r4, roundmp
-  movifnidn                       r5, quantmp
-  mov                             r3, dequantmp
-  mov                             r6, shiftmp
-  mova                            m1, [r4]              ; m1 = round
-  mova                            m2, [r5]              ; m2 = quant
-  mova                            m3, [r3]              ; m3 = dequant
-  mova                            m4, [r6]              ; m4 = shift
+  movifnidn                       r3, roundmp
+  movifnidn                       r4, quantmp
+  mov                             r6, dequantmp
+  mov                             r5, shiftmp
+  mova                            m1, [r3]              ; m1 = round
+  mova                            m2, [r4]              ; m2 = quant
+  mova                            m3, [r6]              ; m3 = dequant
+  mova                            m4, [r5]              ; m4 = shift
 
   mov                             r3, iscanmp
 
@@ -174,20 +170,20 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
 
 %endif ; %ifnidn %1, b_32x32
 
-DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
+DEFINE_ARGS coeff, ncoeff, zbin, round, quant, shift, \
             qcoeff, dqcoeff, dequant, eob, scan, iscan
 
   ; Actual quantization loop - setup pointers, rounders, etc.
   movifnidn                   coeffq, coeffmp
   movifnidn                  ncoeffq, ncoeffmp
-  mov                             r2, dequantmp
   movifnidn                    zbinq, zbinmp
   movifnidn                   roundq, roundmp
   movifnidn                   quantq, quantmp
+  movifnidn                 dequantq, dequantmp
   mova                            m0, [zbinq]              ; m0 = zbin
   mova                            m1, [roundq]             ; m1 = round
   mova                            m2, [quantq]             ; m2 = quant
-  mova                            m3, [r2]                 ; m3 = dequant
+  mova                            m3, [dequantq]           ; m3 = dequant
   pcmpeqw                         m4, m4                   ; All lanes -1
 %ifidn %1, b_32x32
   psubw                           m0, m4
@@ -199,7 +195,7 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
 
   mov                             r2, shiftmp
   mov                             r3, qcoeffmp
-  mova                            m4, [r2]                 ; m4 = shift
+  mova                            m4, [r2]            ; m4 = shift
   mov                             r4, dqcoeffmp
   mov                             r5, iscanmp
 %ifidn %1, b_32x32
@@ -207,7 +203,7 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
 %endif
   pxor                            m5, m5                   ; m5 = dedicated zero
 
-  DEFINE_ARGS coeff, ncoeff, d1, qcoeff, dqcoeff, iscan, d2, d3, d4, d5, eob
+  DEFINE_ARGS coeff, ncoeff, d1, qcoeff, dqcoeff, iscan, d2, d3, d4, eob
 
 
   lea                         coeffq, [  coeffq+ncoeffq*4]
@@ -432,39 +428,8 @@ DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
   mov                           [r2], ax
   vzeroupper
   RET
-
-  ; Skip-block, i.e. just write all zeroes
-.blank:
-
-DEFINE_ARGS coeff, ncoeff, skip, zbin, round, quant, shift, \
-            qcoeff, dqcoeff, dequant, eob, scan, iscan
-
-  mov                             r0, dqcoeffmp
-  movifnidn                  ncoeffq, ncoeffmp
-  mov                             r2, qcoeffmp
-  mov                             r3, eobmp
-
-DEFINE_ARGS dqcoeff, ncoeff, qcoeff, eob
-
-  lea                       dqcoeffq, [dqcoeffq+ncoeffq*4]
-  lea                        qcoeffq, [ qcoeffq+ncoeffq*4]
-  neg                        ncoeffq
-  pxor                            m7, m7
-
-.blank_loop:
-  mova       [dqcoeffq+ncoeffq*4+ 0], ymm7
-  mova       [dqcoeffq+ncoeffq*4+32], ymm7
-  mova        [qcoeffq+ncoeffq*4+ 0], ymm7
-  mova        [qcoeffq+ncoeffq*4+32], ymm7
-  add                        ncoeffq, mmsize
-  jl .blank_loop
-
-  mov                         [eobq], word 0
-
-  vzeroupper
-  RET
 %endmacro
 
 INIT_XMM avx
-QUANTIZE_FN b, 7
-QUANTIZE_FN b_32x32, 7
+QUANTIZE_FN b, 9
+QUANTIZE_FN b_32x32, 9

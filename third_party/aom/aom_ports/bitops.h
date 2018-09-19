@@ -9,12 +9,13 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_PORTS_BITOPS_H_
-#define AOM_PORTS_BITOPS_H_
+#ifndef AOM_AOM_PORTS_BITOPS_H_
+#define AOM_AOM_PORTS_BITOPS_H_
 
 #include <assert.h>
 
 #include "aom_ports/msvc.h"
+#include "config/aom_config.h"
 
 #ifdef _MSC_VER
 #if defined(_M_X64) || defined(_M_IX86)
@@ -27,6 +28,8 @@
 extern "C" {
 #endif
 
+// get_msb:
+// Returns (int)floor(log2(n)). n must be > 0.
 // These versions of get_msb() are only valid when n != 0 because all
 // of the optimized versions are undefined when n == 0:
 // https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
@@ -49,7 +52,6 @@ static INLINE int get_msb(unsigned int n) {
 }
 #undef USE_MSC_INTRINSICS
 #else
-// Returns (int)floor(log2(n)). n must be > 0.
 static INLINE int get_msb(unsigned int n) {
   int log = 0;
   unsigned int value = n;
@@ -73,4 +75,4 @@ static INLINE int get_msb(unsigned int n) {
 }  // extern "C"
 #endif
 
-#endif  // AOM_PORTS_BITOPS_H_
+#endif  // AOM_AOM_PORTS_BITOPS_H_

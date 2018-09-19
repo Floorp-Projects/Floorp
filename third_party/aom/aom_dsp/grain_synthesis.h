@@ -13,8 +13,8 @@
  * \brief Describes film grain parameters and film grain synthesis
  *
  */
-#ifndef AOM_AOM_GRAIN_SYNTHESIS_H_
-#define AOM_AOM_GRAIN_SYNTHESIS_H_
+#ifndef AOM_AOM_DSP_GRAIN_SYNTHESIS_H_
+#define AOM_AOM_DSP_GRAIN_SYNTHESIS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,6 +85,8 @@ typedef struct {
  *
  * Add film grain to an image
  *
+ * Returns 0 for success, -1 for failure
+ *
  * \param[in]    grain_params     Grain parameters
  * \param[in]    luma             luma plane
  * \param[in]    cb               cb plane
@@ -94,25 +96,27 @@ typedef struct {
  * \param[in]    luma_stride      luma plane stride
  * \param[in]    chroma_stride    chroma plane stride
  */
-void av1_add_film_grain_run(const aom_film_grain_t *grain_params, uint8_t *luma,
-                            uint8_t *cb, uint8_t *cr, int height, int width,
-                            int luma_stride, int chroma_stride,
-                            int use_high_bit_depth, int chroma_subsamp_y,
-                            int chroma_subsamp_x, int mc_identity);
+int av1_add_film_grain_run(const aom_film_grain_t *grain_params, uint8_t *luma,
+                           uint8_t *cb, uint8_t *cr, int height, int width,
+                           int luma_stride, int chroma_stride,
+                           int use_high_bit_depth, int chroma_subsamp_y,
+                           int chroma_subsamp_x, int mc_identity);
 
 /*!\brief Add film grain
  *
  * Add film grain to an image
  *
+ * Returns 0 for success, -1 for failure
+ *
  * \param[in]    grain_params     Grain parameters
  * \param[in]    src              Source image
  * \param[out]   dst              Resulting image with grain
  */
-void av1_add_film_grain(const aom_film_grain_t *grain_params,
-                        const aom_image_t *src, aom_image_t *dst);
+int av1_add_film_grain(const aom_film_grain_t *grain_params,
+                       const aom_image_t *src, aom_image_t *dst);
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // AOM_AOM_GRAIN_SYNTHESIS_H_
+#endif  // AOM_AOM_DSP_GRAIN_SYNTHESIS_H_

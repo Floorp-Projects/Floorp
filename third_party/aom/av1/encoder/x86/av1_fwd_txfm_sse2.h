@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef AV1_COMMON_X86_AV1_FWD_TXFM_SSE2_H_
-#define AV1_COMMON_X86_AV1_FWD_TXFM_SSE2_H_
+#ifndef AOM_AV1_ENCODER_X86_AV1_FWD_TXFM_SSE2_H_
+#define AOM_AV1_ENCODER_X86_AV1_FWD_TXFM_SSE2_H_
 
 #include <immintrin.h>
 
@@ -114,4 +114,4 @@ static const transform_1d_sse2 col_txfm8x32_arr[TX_TYPES] = {
 }
 #endif
 
-#endif  // AV1_COMMON_X86_AV1_FWD_TXFM_SSE2_H_
+#endif  // AOM_AV1_ENCODER_X86_AV1_FWD_TXFM_SSE2_H_

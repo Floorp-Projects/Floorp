@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "aom_dsp/x86/synonyms.h"
+#include "aom_dsp/x86/sum_squares_sse2.h"
 #include "config/aom_dsp_rtcd.h"
 
 static INLINE __m128i xx_loadh_64(__m128i a, const void *b) {
@@ -44,8 +45,7 @@ static INLINE __m128i sum_squares_i16_4x4_sse2(const int16_t *src, int stride) {
   return _mm_add_epi32(v_sq_01_d, v_sq_23_d);
 }
 
-static uint64_t aom_sum_squares_2d_i16_4x4_sse2(const int16_t *src,
-                                                int stride) {
+uint64_t aom_sum_squares_2d_i16_4x4_sse2(const int16_t *src, int stride) {
   const __m128i v_sum_0123_d = sum_squares_i16_4x4_sse2(src, stride);
   __m128i v_sum_d =
       _mm_add_epi32(v_sum_0123_d, _mm_srli_epi64(v_sum_0123_d, 32));
@@ -53,8 +53,8 @@ static uint64_t aom_sum_squares_2d_i16_4x4_sse2(const int16_t *src,
   return (uint64_t)_mm_cvtsi128_si32(v_sum_d);
 }
 
-static uint64_t aom_sum_squares_2d_i16_4xn_sse2(const int16_t *src, int stride,
-                                                int height) {
+uint64_t aom_sum_squares_2d_i16_4xn_sse2(const int16_t *src, int stride,
+                                         int height) {
   int r = 0;
   __m128i v_acc_q = _mm_setzero_si128();
   do {
@@ -76,7 +76,7 @@ static uint64_t aom_sum_squares_2d_i16_4xn_sse2(const int16_t *src, int stride,
 // maintenance instructions in the common case of 4x4.
 __attribute__((noinline))
 #endif
-static uint64_t
+uint64_t
 aom_sum_squares_2d_i16_nxn_sse2(const int16_t *src, int stride, int width,
                                 int height) {
   int r = 0;

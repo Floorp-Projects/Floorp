@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_AOM_FILTER_H_
-#define AOM_DSP_AOM_FILTER_H_
+#ifndef AOM_AOM_DSP_AOM_FILTER_H_
+#define AOM_AOM_DSP_AOM_FILTER_H_
 
 #include "aom/aom_integer.h"
 
@@ -53,4 +53,4 @@ static const uint8_t bilinear_filters_2t[BIL_SUBPEL_SHIFTS][2] = {
 }  // extern "C"
 #endif
 
-#endif  // AOM_DSP_AOM_FILTER_H_
+#endif  // AOM_AOM_DSP_AOM_FILTER_H_

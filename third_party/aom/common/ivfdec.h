@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef IVFDEC_H_
-#define IVFDEC_H_
+#ifndef AOM_COMMON_IVFDEC_H_
+#define AOM_COMMON_IVFDEC_H_
 
 #include "common/tools_common.h"
 
@@ -27,4 +27,4 @@ int ivf_read_frame(FILE *infile, uint8_t **buffer, size_t *bytes_read,
 } /* extern "C" */
 #endif
 
-#endif  // IVFDEC_H_
+#endif  // AOM_COMMON_IVFDEC_H_

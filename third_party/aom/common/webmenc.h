@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef WEBMENC_H_
-#define WEBMENC_H_
+#ifndef AOM_COMMON_WEBMENC_H_
+#define AOM_COMMON_WEBMENC_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,4 +53,4 @@ void write_webm_file_footer(struct WebmOutputContext *webm_ctx);
 }  // extern "C"
 #endif
 
-#endif  // WEBMENC_H_
+#endif  // AOM_COMMON_WEBMENC_H_

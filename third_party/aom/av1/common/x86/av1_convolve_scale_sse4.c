@@ -14,7 +14,6 @@
 
 #include "config/aom_dsp_rtcd.h"
 
-#include "aom_dsp/aom_convolve.h"
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_dsp/aom_filter.h"
 #include "av1/common/convolve.h"

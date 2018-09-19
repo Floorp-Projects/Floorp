@@ -14,8 +14,8 @@
 // Original source:
 //  https://chromium.googlesource.com/webm/libwebp
 
-#ifndef AOM_THREAD_H_
-#define AOM_THREAD_H_
+#ifndef AOM_AOM_UTIL_AOM_THREAD_H_
+#define AOM_AOM_UTIL_AOM_THREAD_H_
 
 #include "config/aom_config.h"
 
@@ -427,4 +427,4 @@ const AVxWorkerInterface *aom_get_worker_interface(void);
 }  // extern "C"
 #endif
 
-#endif  // AOM_THREAD_H_
+#endif  // AOM_AOM_UTIL_AOM_THREAD_H_

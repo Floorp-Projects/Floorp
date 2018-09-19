@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_BITREADER_H_
-#define AOM_DSP_BITREADER_H_
+#ifndef AOM_AOM_DSP_BITREADER_H_
+#define AOM_AOM_DSP_BITREADER_H_
 
 #include <assert.h>
 #include <limits.h>
@@ -67,6 +67,12 @@ static INLINE const uint8_t *aom_reader_find_end(aom_reader *r) {
 
 static INLINE int aom_reader_has_error(aom_reader *r) {
   return aom_daala_reader_has_error(r);
+}
+
+// Returns true if the bit reader has tried to decode more data from the buffer
+// than was actually provided.
+static INLINE int aom_reader_has_overflowed(const aom_reader *r) {
+  return aom_daala_reader_has_overflowed(r);
 }
 
 // Returns the position in the bit reader in bits.
@@ -151,4 +157,4 @@ static INLINE int aom_read_symbol_(aom_reader *r, aom_cdf_prob *cdf,
 }  // extern "C"
 #endif
 
-#endif  // AOM_DSP_BITREADER_H_
+#endif  // AOM_AOM_DSP_BITREADER_H_

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef DECODETXB_H_
-#define DECODETXB_H_
+#ifndef AOM_AV1_DECODER_DECODETXB_H_
+#define AOM_AV1_DECODER_DECODETXB_H_
 
 #include "config/aom_config.h"
 
@@ -29,4 +29,4 @@ void av1_read_coeffs_txb_facade(const AV1_COMMON *const cm,
                                 MACROBLOCKD *const xd, aom_reader *const r,
                                 const int plane, const int row, const int col,
                                 const TX_SIZE tx_size);
-#endif  //  DECODETXB_H_
+#endif  // AOM_AV1_DECODER_DECODETXB_H_

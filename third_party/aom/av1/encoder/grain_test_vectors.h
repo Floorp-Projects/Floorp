@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef AV1_GRAIN_TEST_VECTORS_H_
-#define AV1_GRAIN_TEST_VECTORS_H_
+#ifndef AOM_AV1_ENCODER_GRAIN_TEST_VECTORS_H_
+#define AOM_AV1_ENCODER_GRAIN_TEST_VECTORS_H_
 
 /* Test vectors for emulation of different film grain types.
  * Note that bit depth would be derived from the bitstream and
@@ -778,4 +778,4 @@ static aom_film_grain_t film_grain_test_vectors[16] = {
       45231 /* random_seed */
   },
 };
-#endif  // AV1_GRAIN_TEST_VECTORS_H_
+#endif  // AOM_AV1_ENCODER_GRAIN_TEST_VECTORS_H_

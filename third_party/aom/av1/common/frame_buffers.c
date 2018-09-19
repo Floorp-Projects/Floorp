@@ -38,6 +38,17 @@ void av1_free_internal_frame_buffers(InternalFrameBufferList *list) {
   list->int_fb = NULL;
 }
 
+void av1_zero_unused_internal_frame_buffers(InternalFrameBufferList *list) {
+  int i;
+
+  assert(list != NULL);
+
+  for (i = 0; i < list->num_internal_frame_buffers; ++i) {
+    if (list->int_fb[i].data && !list->int_fb[i].in_use)
+      memset(list->int_fb[i].data, 0, list->int_fb[i].size);
+  }
+}
+
 int av1_get_frame_buffer(void *cb_priv, size_t min_size,
                          aom_codec_frame_buffer_t *fb) {
   int i;

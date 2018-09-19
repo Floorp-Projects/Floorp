@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_X86_CONVOLVE_AVX2_H_
-#define AOM_DSP_X86_CONVOLVE_AVX2_H_
+#ifndef AOM_AOM_DSP_X86_CONVOLVE_AVX2_H_
+#define AOM_AOM_DSP_X86_CONVOLVE_AVX2_H_
 
 // filters for 16
 DECLARE_ALIGNED(32, static const uint8_t, filt_global_avx2[]) = {
@@ -27,6 +27,11 @@ DECLARE_ALIGNED(32, static const uint8_t, filt_d4_global_avx2[]) = {
   0, 1, 2, 3,  1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6, 0, 1, 2, 3,  1, 2,
   3, 4, 2, 3,  4, 5, 3, 4, 5, 6, 4, 5, 6, 7, 5, 6, 7, 8, 6, 7,  8, 9,
   7, 8, 9, 10, 4, 5, 6, 7, 5, 6, 7, 8, 6, 7, 8, 9, 7, 8, 9, 10,
+};
+
+DECLARE_ALIGNED(32, static const uint8_t, filt4_d4_global_avx2[]) = {
+  2, 3, 4, 5, 3, 4, 5, 6, 4, 5, 6, 7, 5, 6, 7, 8,
+  2, 3, 4, 5, 3, 4, 5, 6, 4, 5, 6, 7, 5, 6, 7, 8,
 };
 
 static INLINE void prepare_coeffs_lowbd(
@@ -191,4 +196,4 @@ static INLINE __m256i highbd_convolve_rounding(
   return res_round;
 }
 
-#endif
+#endif  // AOM_AOM_DSP_X86_CONVOLVE_AVX2_H_

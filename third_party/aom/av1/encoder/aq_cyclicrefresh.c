@@ -80,9 +80,11 @@ CYCLIC_REFRESH *av1_cyclic_refresh_alloc(int mi_rows, int mi_cols) {
 }
 
 void av1_cyclic_refresh_free(CYCLIC_REFRESH *cr) {
-  aom_free(cr->map);
-  aom_free(cr->last_coded_q_map);
-  aom_free(cr);
+  if (cr != NULL) {
+    aom_free(cr->map);
+    aom_free(cr->last_coded_q_map);
+    aom_free(cr);
+  }
 }
 
 // Check if we should turn off cyclic refresh based on bitrate condition.

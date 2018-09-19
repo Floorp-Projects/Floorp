@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_ONYXC_INT_H_
-#define AV1_COMMON_ONYXC_INT_H_
+#ifndef AOM_AV1_COMMON_ONYXC_INT_H_
+#define AOM_AV1_COMMON_ONYXC_INT_H_
 
 #include "config/aom_config.h"
 #include "config/av1_rtcd.h"
@@ -480,6 +480,7 @@ typedef struct AV1Common {
 
   int byte_alignment;
   int skip_loop_filter;
+  int skip_film_grain;
 
   // Private data associated with the frame buffer callbacks.
   void *cb_priv;
@@ -823,18 +824,18 @@ static INLINE void set_mi_row_col(MACROBLOCKD *xd, const TileInfo *const tile,
     xd->chroma_left_mbmi = chroma_left_mi;
   }
 
-  xd->n8_h = bh;
-  xd->n8_w = bw;
+  xd->n4_h = bh;
+  xd->n4_w = bw;
   xd->is_sec_rect = 0;
-  if (xd->n8_w < xd->n8_h) {
+  if (xd->n4_w < xd->n4_h) {
     // Only mark is_sec_rect as 1 for the last block.
     // For PARTITION_VERT_4, it would be (0, 0, 0, 1);
     // For other partitions, it would be (0, 1).
-    if (!((mi_col + xd->n8_w) & (xd->n8_h - 1))) xd->is_sec_rect = 1;
+    if (!((mi_col + xd->n4_w) & (xd->n4_h - 1))) xd->is_sec_rect = 1;
   }
 
-  if (xd->n8_w > xd->n8_h)
-    if (mi_row & (xd->n8_w - 1)) xd->is_sec_rect = 1;
+  if (xd->n4_w > xd->n4_h)
+    if (mi_row & (xd->n4_w - 1)) xd->is_sec_rect = 1;
 }
 
 static INLINE aom_cdf_prob *get_y_mode_cdf(FRAME_CONTEXT *tile_ctx,
@@ -1115,18 +1116,18 @@ static INLINE void set_txfm_ctx(TXFM_CONTEXT *txfm_ctx, uint8_t txs, int len) {
   for (i = 0; i < len; ++i) txfm_ctx[i] = txs;
 }
 
-static INLINE void set_txfm_ctxs(TX_SIZE tx_size, int n8_w, int n8_h, int skip,
+static INLINE void set_txfm_ctxs(TX_SIZE tx_size, int n4_w, int n4_h, int skip,
                                  const MACROBLOCKD *xd) {
   uint8_t bw = tx_size_wide[tx_size];
   uint8_t bh = tx_size_high[tx_size];
 
   if (skip) {
-    bw = n8_w * MI_SIZE;
-    bh = n8_h * MI_SIZE;
+    bw = n4_w * MI_SIZE;
+    bh = n4_h * MI_SIZE;
   }
 
-  set_txfm_ctx(xd->above_txfm_context, bw, n8_w);
-  set_txfm_ctx(xd->left_txfm_context, bh, n8_h);
+  set_txfm_ctx(xd->above_txfm_context, bw, n4_w);
+  set_txfm_ctx(xd->left_txfm_context, bh, n4_h);
 }
 
 static INLINE void txfm_partition_update(TXFM_CONTEXT *above_ctx,
@@ -1338,4 +1339,4 @@ static INLINE uint8_t major_minor_to_seq_level_idx(BitstreamLevel bl) {
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_ONYXC_INT_H_
+#endif  // AOM_AV1_COMMON_ONYXC_INT_H_

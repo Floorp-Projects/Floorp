@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef OBUDEC_H_
-#define OBUDEC_H_
+#ifndef AOM_COMMON_OBUDEC_H_
+#define AOM_COMMON_OBUDEC_H_
 
 #include "common/tools_common.h"
 
@@ -45,4 +45,4 @@ void obudec_free(struct ObuDecInputContext *obu_ctx);
 } /* extern "C" */
 #endif
 
-#endif  // OBUDEC_H_
+#endif  // AOM_COMMON_OBUDEC_H_

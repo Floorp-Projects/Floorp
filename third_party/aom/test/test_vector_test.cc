@@ -119,7 +119,8 @@ TEST_P(TestVectorTest, MD5Match) {
   testing::internal::scoped_ptr<libaom_test::CompressedVideoSource> video;
   if (filename.substr(filename.length() - 3, 3) == "ivf") {
     video.reset(new libaom_test::IVFVideoSource(filename));
-  } else if (filename.substr(filename.length() - 4, 4) == "webm") {
+  } else if (filename.substr(filename.length() - 4, 4) == "webm" ||
+             filename.substr(filename.length() - 3, 3) == "mkv") {
 #if CONFIG_WEBM_IO
     video.reset(new libaom_test::WebMVideoSource(filename));
 #else

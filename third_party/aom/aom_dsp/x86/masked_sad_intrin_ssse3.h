@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef _AOM_DSP_X86_MASKED_SAD_INTRIN_SSSE3_H
-#define _AOM_DSP_X86_MASKED_SAD_INTRIN_SSSE3_H
+#ifndef AOM_AOM_DSP_X86_MASKED_SAD_INTRIN_SSSE3_H_
+#define AOM_AOM_DSP_X86_MASKED_SAD_INTRIN_SSSE3_H_
 
 unsigned int aom_masked_sad8xh_ssse3(const uint8_t *src_ptr, int src_stride,
                                      const uint8_t *a_ptr, int a_stride,
@@ -30,4 +30,4 @@ unsigned int aom_highbd_masked_sad4xh_ssse3(const uint8_t *src8, int src_stride,
                                             const uint8_t *m_ptr, int m_stride,
                                             int height);
 
-#endif
+#endif  // AOM_AOM_DSP_X86_MASKED_SAD_INTRIN_SSSE3_H_

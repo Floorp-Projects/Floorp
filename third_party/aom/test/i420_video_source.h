@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef TEST_I420_VIDEO_SOURCE_H_
-#define TEST_I420_VIDEO_SOURCE_H_
+#ifndef AOM_TEST_I420_VIDEO_SOURCE_H_
+#define AOM_TEST_I420_VIDEO_SOURCE_H_
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -31,4 +31,4 @@ class I420VideoSource : public YUVVideoSource {
 
 }  // namespace libaom_test
 
-#endif  // TEST_I420_VIDEO_SOURCE_H_
+#endif  // AOM_TEST_I420_VIDEO_SOURCE_H_

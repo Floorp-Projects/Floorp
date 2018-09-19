@@ -28,22 +28,35 @@ int32_t random_warped_param(libaom_test::ACMRandom *rnd, int bits) {
 
 void generate_warped_model(libaom_test::ACMRandom *rnd, int32_t *mat,
                            int16_t *alpha, int16_t *beta, int16_t *gamma,
-                           int16_t *delta) {
+                           int16_t *delta, const int is_alpha_zero,
+                           const int is_beta_zero, const int is_gamma_zero,
+                           const int is_delta_zero) {
   while (1) {
+    int rnd8 = rnd->Rand8() & 3;
     mat[0] = random_warped_param(rnd, WARPEDMODEL_PREC_BITS + 6);
     mat[1] = random_warped_param(rnd, WARPEDMODEL_PREC_BITS + 6);
     mat[2] = (random_warped_param(rnd, WARPEDMODEL_PREC_BITS - 3)) +
              (1 << WARPEDMODEL_PREC_BITS);
     mat[3] = random_warped_param(rnd, WARPEDMODEL_PREC_BITS - 3);
-    // 50/50 chance of generating ROTZOOM vs. AFFINE models
-    if (rnd->Rand8() & 1) {
+
+    if (rnd8 <= 1) {
       // AFFINE
       mat[4] = random_warped_param(rnd, WARPEDMODEL_PREC_BITS - 3);
       mat[5] = (random_warped_param(rnd, WARPEDMODEL_PREC_BITS - 3)) +
                (1 << WARPEDMODEL_PREC_BITS);
-    } else {
+    } else if (rnd8 == 2) {
       mat[4] = -mat[3];
       mat[5] = mat[2];
+    } else {
+      mat[4] = random_warped_param(rnd, WARPEDMODEL_PREC_BITS - 3);
+      mat[5] = (random_warped_param(rnd, WARPEDMODEL_PREC_BITS - 3)) +
+               (1 << WARPEDMODEL_PREC_BITS);
+      if (is_alpha_zero == 1) mat[2] = 1 << WARPEDMODEL_PREC_BITS;
+      if (is_beta_zero == 1) mat[3] = 0;
+      if (is_gamma_zero == 1) mat[4] = 0;
+      if (is_delta_zero == 1)
+        mat[5] = (((int64_t)mat[3] * mat[4] + (mat[2] / 2)) / mat[2]) +
+                 (1 << WARPEDMODEL_PREC_BITS);
     }
 
     // Calculate the derived parameters and check that they are suitable
@@ -78,14 +91,16 @@ void generate_warped_model(libaom_test::ACMRandom *rnd, int32_t *mat,
 }
 
 namespace AV1WarpFilter {
-::testing::internal::ParamGenerator<WarpTestParam> BuildParams(
+::testing::internal::ParamGenerator<WarpTestParams> BuildParams(
     warp_affine_func filter) {
-  const WarpTestParam params[] = {
+  WarpTestParam params[] = {
     make_tuple(4, 4, 50000, filter),  make_tuple(8, 8, 50000, filter),
     make_tuple(64, 64, 1000, filter), make_tuple(4, 16, 20000, filter),
     make_tuple(32, 8, 10000, filter),
   };
-  return ::testing::ValuesIn(params);
+  return ::testing::Combine(::testing::ValuesIn(params),
+                            ::testing::Values(0, 1), ::testing::Values(0, 1),
+                            ::testing::Values(0, 1), ::testing::Values(0, 1));
 }
 
 AV1WarpFilterTest::~AV1WarpFilterTest() {}
@@ -97,7 +112,13 @@ void AV1WarpFilterTest::RunSpeedTest(warp_affine_func test_impl) {
   const int w = 128, h = 128;
   const int border = 16;
   const int stride = w + 2 * border;
-  const int out_w = GET_PARAM(0), out_h = GET_PARAM(1);
+  WarpTestParam params = GET_PARAM(0);
+  const int out_w = ::testing::get<0>(params),
+            out_h = ::testing::get<1>(params);
+  const int is_alpha_zero = GET_PARAM(1);
+  const int is_beta_zero = GET_PARAM(2);
+  const int is_gamma_zero = GET_PARAM(3);
+  const int is_delta_zero = GET_PARAM(4);
   int sub_x, sub_y;
   const int bd = 8;
 
@@ -110,10 +131,11 @@ void AV1WarpFilterTest::RunSpeedTest(warp_affine_func test_impl) {
   uint8_t *output = new uint8_t[output_n];
   int32_t mat[8];
   int16_t alpha, beta, gamma, delta;
-  ConvolveParams conv_params = get_conv_params(0, 0, 0, bd);
+  ConvolveParams conv_params = get_conv_params(0, 0, bd);
   CONV_BUF_TYPE *dsta = new CONV_BUF_TYPE[output_n];
-
-  generate_warped_model(&rnd_, mat, &alpha, &beta, &gamma, &delta);
+  generate_warped_model(&rnd_, mat, &alpha, &beta, &gamma, &delta,
+                        is_alpha_zero, is_beta_zero, is_gamma_zero,
+                        is_delta_zero);
 
   for (int r = 0; r < h; ++r)
     for (int c = 0; c < w; ++c) input[r * stride + c] = rnd_.Rand8();
@@ -126,7 +148,7 @@ void AV1WarpFilterTest::RunSpeedTest(warp_affine_func test_impl) {
   sub_y = 0;
   int do_average = 0;
 
-  conv_params = get_conv_params_no_round(0, do_average, 0, dsta, out_w, 1, bd);
+  conv_params = get_conv_params_no_round(do_average, 0, dsta, out_w, 1, bd);
   conv_params.use_jnt_comp_avg = 0;
 
   const int num_loops = 1000000000 / (out_w + out_h);
@@ -150,8 +172,14 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
   const int w = 128, h = 128;
   const int border = 16;
   const int stride = w + 2 * border;
-  const int out_w = GET_PARAM(0), out_h = GET_PARAM(1);
-  const int num_iters = GET_PARAM(2);
+  WarpTestParam params = GET_PARAM(0);
+  const int is_alpha_zero = GET_PARAM(1);
+  const int is_beta_zero = GET_PARAM(2);
+  const int is_gamma_zero = GET_PARAM(3);
+  const int is_delta_zero = GET_PARAM(4);
+  const int out_w = ::testing::get<0>(params),
+            out_h = ::testing::get<1>(params);
+  const int num_iters = ::testing::get<2>(params);
   int i, j, sub_x, sub_y;
   const int bd = 8;
 
@@ -164,7 +192,7 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
   uint8_t *output2 = new uint8_t[output_n];
   int32_t mat[8];
   int16_t alpha, beta, gamma, delta;
-  ConvolveParams conv_params = get_conv_params(0, 0, 0, bd);
+  ConvolveParams conv_params = get_conv_params(0, 0, bd);
   CONV_BUF_TYPE *dsta = new CONV_BUF_TYPE[output_n];
   CONV_BUF_TYPE *dstb = new CONV_BUF_TYPE[output_n];
   for (int i = 0; i < output_n; ++i) output[i] = output2[i] = rnd_.Rand8();
@@ -180,15 +208,18 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
     const int use_no_round = rnd_.Rand8() & 1;
     for (sub_x = 0; sub_x < 2; ++sub_x)
       for (sub_y = 0; sub_y < 2; ++sub_y) {
-        generate_warped_model(&rnd_, mat, &alpha, &beta, &gamma, &delta);
+        generate_warped_model(&rnd_, mat, &alpha, &beta, &gamma, &delta,
+                              is_alpha_zero, is_beta_zero, is_gamma_zero,
+                              is_delta_zero);
+
         for (int ii = 0; ii < 2; ++ii) {
           for (int jj = 0; jj < 5; ++jj) {
             for (int do_average = 0; do_average <= 1; ++do_average) {
               if (use_no_round) {
-                conv_params = get_conv_params_no_round(0, do_average, 0, dsta,
-                                                       out_w, 1, bd);
+                conv_params =
+                    get_conv_params_no_round(do_average, 0, dsta, out_w, 1, bd);
               } else {
-                conv_params = get_conv_params(0, 0, 0, bd);
+                conv_params = get_conv_params(0, 0, bd);
               }
               if (jj >= 4) {
                 conv_params.use_jnt_comp_avg = 0;
@@ -201,8 +232,8 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
                                 out_h, out_w, sub_x, sub_y, &conv_params, alpha,
                                 beta, gamma, delta);
               if (use_no_round) {
-                conv_params = get_conv_params_no_round(0, do_average, 0, dstb,
-                                                       out_w, 1, bd);
+                conv_params =
+                    get_conv_params_no_round(do_average, 0, dstb, out_w, 1, bd);
               }
               if (jj >= 4) {
                 conv_params.use_jnt_comp_avg = 0;
@@ -246,7 +277,7 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
 }  // namespace AV1WarpFilter
 
 namespace AV1HighbdWarpFilter {
-::testing::internal::ParamGenerator<HighbdWarpTestParam> BuildParams(
+::testing::internal::ParamGenerator<HighbdWarpTestParams> BuildParams(
     highbd_warp_affine_func filter) {
   const HighbdWarpTestParam params[] = {
     make_tuple(4, 4, 100, 8, filter),    make_tuple(8, 8, 100, 8, filter),
@@ -258,7 +289,9 @@ namespace AV1HighbdWarpFilter {
     make_tuple(64, 64, 100, 12, filter), make_tuple(4, 16, 100, 12, filter),
     make_tuple(32, 8, 100, 12, filter),
   };
-  return ::testing::ValuesIn(params);
+  return ::testing::Combine(::testing::ValuesIn(params),
+                            ::testing::Values(0, 1), ::testing::Values(0, 1),
+                            ::testing::Values(0, 1), ::testing::Values(0, 1));
 }
 
 AV1HighbdWarpFilterTest::~AV1HighbdWarpFilterTest() {}
@@ -272,8 +305,13 @@ void AV1HighbdWarpFilterTest::RunSpeedTest(highbd_warp_affine_func test_impl) {
   const int w = 128, h = 128;
   const int border = 16;
   const int stride = w + 2 * border;
-  const int out_w = GET_PARAM(0), out_h = GET_PARAM(1);
-  const int bd = GET_PARAM(3);
+  HighbdWarpTestParam param = GET_PARAM(0);
+  const int is_alpha_zero = GET_PARAM(1);
+  const int is_beta_zero = GET_PARAM(2);
+  const int is_gamma_zero = GET_PARAM(3);
+  const int is_delta_zero = GET_PARAM(4);
+  const int out_w = ::testing::get<0>(param), out_h = ::testing::get<1>(param);
+  const int bd = ::testing::get<3>(param);
   const int mask = (1 << bd) - 1;
   int sub_x, sub_y;
 
@@ -285,10 +323,12 @@ void AV1HighbdWarpFilterTest::RunSpeedTest(highbd_warp_affine_func test_impl) {
   uint16_t *output = new uint16_t[output_n];
   int32_t mat[8];
   int16_t alpha, beta, gamma, delta;
-  ConvolveParams conv_params = get_conv_params(0, 0, 0, bd);
+  ConvolveParams conv_params = get_conv_params(0, 0, bd);
   CONV_BUF_TYPE *dsta = new CONV_BUF_TYPE[output_n];
 
-  generate_warped_model(&rnd_, mat, &alpha, &beta, &gamma, &delta);
+  generate_warped_model(&rnd_, mat, &alpha, &beta, &gamma, &delta,
+                        is_alpha_zero, is_beta_zero, is_gamma_zero,
+                        is_delta_zero);
   // Generate an input block and extend its borders horizontally
   for (int r = 0; r < h; ++r)
     for (int c = 0; c < w; ++c) input[r * stride + c] = rnd_.Rand16() & mask;
@@ -303,7 +343,7 @@ void AV1HighbdWarpFilterTest::RunSpeedTest(highbd_warp_affine_func test_impl) {
   sub_y = 0;
   int do_average = 0;
   conv_params.use_jnt_comp_avg = 0;
-  conv_params = get_conv_params_no_round(0, do_average, 0, dsta, out_w, 1, bd);
+  conv_params = get_conv_params_no_round(do_average, 0, dsta, out_w, 1, bd);
 
   const int num_loops = 1000000000 / (out_w + out_h);
   aom_usec_timer timer;
@@ -328,9 +368,14 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
   const int w = 128, h = 128;
   const int border = 16;
   const int stride = w + 2 * border;
-  const int out_w = GET_PARAM(0), out_h = GET_PARAM(1);
-  const int num_iters = GET_PARAM(2);
-  const int bd = GET_PARAM(3);
+  HighbdWarpTestParam param = GET_PARAM(0);
+  const int is_alpha_zero = GET_PARAM(1);
+  const int is_beta_zero = GET_PARAM(2);
+  const int is_gamma_zero = GET_PARAM(3);
+  const int is_delta_zero = GET_PARAM(4);
+  const int out_w = ::testing::get<0>(param), out_h = ::testing::get<1>(param);
+  const int bd = ::testing::get<3>(param);
+  const int num_iters = ::testing::get<2>(param);
   const int mask = (1 << bd) - 1;
   int i, j, sub_x, sub_y;
 
@@ -343,7 +388,7 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
   uint16_t *output2 = new uint16_t[output_n];
   int32_t mat[8];
   int16_t alpha, beta, gamma, delta;
-  ConvolveParams conv_params = get_conv_params(0, 0, 0, bd);
+  ConvolveParams conv_params = get_conv_params(0, 0, bd);
   CONV_BUF_TYPE *dsta = new CONV_BUF_TYPE[output_n];
   CONV_BUF_TYPE *dstb = new CONV_BUF_TYPE[output_n];
   for (int i = 0; i < output_n; ++i) output[i] = output2[i] = rnd_.Rand16();
@@ -361,15 +406,17 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
     const int use_no_round = rnd_.Rand8() & 1;
     for (sub_x = 0; sub_x < 2; ++sub_x)
       for (sub_y = 0; sub_y < 2; ++sub_y) {
-        generate_warped_model(&rnd_, mat, &alpha, &beta, &gamma, &delta);
+        generate_warped_model(&rnd_, mat, &alpha, &beta, &gamma, &delta,
+                              is_alpha_zero, is_beta_zero, is_gamma_zero,
+                              is_delta_zero);
         for (int ii = 0; ii < 2; ++ii) {
           for (int jj = 0; jj < 5; ++jj) {
             for (int do_average = 0; do_average <= 1; ++do_average) {
               if (use_no_round) {
-                conv_params = get_conv_params_no_round(0, do_average, 0, dsta,
-                                                       out_w, 1, bd);
+                conv_params =
+                    get_conv_params_no_round(do_average, 0, dsta, out_w, 1, bd);
               } else {
-                conv_params = get_conv_params(0, 0, 0, bd);
+                conv_params = get_conv_params(0, 0, bd);
               }
               if (jj >= 4) {
                 conv_params.use_jnt_comp_avg = 0;
@@ -385,8 +432,8 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
               if (use_no_round) {
                 // TODO(angiebird): Change this to test_impl once we have SIMD
                 // implementation
-                conv_params = get_conv_params_no_round(0, do_average, 0, dstb,
-                                                       out_w, 1, bd);
+                conv_params =
+                    get_conv_params_no_round(do_average, 0, dstb, out_w, 1, bd);
               }
               if (jj >= 4) {
                 conv_params.use_jnt_comp_avg = 0;

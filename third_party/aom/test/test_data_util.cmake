@@ -14,6 +14,18 @@ list(APPEND AOM_TEST_DATA_FILE_NAMES
             "hantro_odd.yuv"
             "invalid-bug-1814.ivf"
             "invalid-bug-1814.ivf.res"
+            "invalid-oss-fuzz-10061.ivf"
+            "invalid-oss-fuzz-10061.ivf.res"
+            "invalid-oss-fuzz-10117-mc-buf-use-highbd.ivf"
+            "invalid-oss-fuzz-10117-mc-buf-use-highbd.ivf.res"
+            "invalid-oss-fuzz-10227.ivf"
+            "invalid-oss-fuzz-10227.ivf.res"
+            "invalid-oss-fuzz-9463.ivf"
+            "invalid-oss-fuzz-9463.ivf.res"
+            "invalid-oss-fuzz-9482.ivf"
+            "invalid-oss-fuzz-9482.ivf.res"
+            "invalid-oss-fuzz-9720.ivf"
+            "invalid-oss-fuzz-9720.ivf.res"
             "park_joy_90p_10_420.y4m"
             "park_joy_90p_10_422.y4m"
             "park_joy_90p_10_444.y4m"
@@ -22,6 +34,8 @@ list(APPEND AOM_TEST_DATA_FILE_NAMES
             "park_joy_90p_12_444.y4m"
             "park_joy_90p_8_420_a10-1.y4m"
             "park_joy_90p_8_420.y4m"
+            "park_joy_90p_8_420_monochrome.y4m"
+            "park_joy_90p_8_420_vertical_csp.y4m"
             "park_joy_90p_8_422.y4m"
             "park_joy_90p_8_444.y4m"
             "desktop_credits.y4m"
@@ -494,7 +508,11 @@ if(CONFIG_AV1_DECODER)
               "av1-1-b8-01-size-66x66.ivf"
               "av1-1-b8-01-size-66x66.ivf.md5"
               "av1-1-b8-02-allintra.ivf"
-              "av1-1-b8-02-allintra.ivf.md5")
+              "av1-1-b8-02-allintra.ivf.md5"
+              "av1-1-b8-03-sizeup.mkv"
+              "av1-1-b8-03-sizeup.mkv.md5"
+              "av1-1-b8-03-sizedown.mkv"
+              "av1-1-b8-03-sizedown.mkv.md5")
 endif()
 
 if(ENABLE_ENCODE_PERF_TESTS AND CONFIG_AV1_ENCODER)

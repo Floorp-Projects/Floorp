@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_X86_SYNONYMS_H_
-#define AOM_DSP_X86_SYNONYMS_H_
+#ifndef AOM_AOM_DSP_X86_SYNONYMS_H_
+#define AOM_AOM_DSP_X86_SYNONYMS_H_
 
 #include <immintrin.h>
 
@@ -103,15 +103,6 @@ static INLINE __m128i xx_roundn_epi32_unsigned(__m128i v_val_d, int bits) {
   return _mm_srai_epi32(v_tmp_d, bits);
 }
 
-// This is equivalent to ROUND_POWER_OF_TWO_SIGNED(v_val_d, bits)
-static INLINE __m128i xx_roundn_epi32(__m128i v_val_d, int bits) {
-  const __m128i v_bias_d = _mm_set1_epi32((1 << bits) >> 1);
-  const __m128i v_sign_d = _mm_srai_epi32(v_val_d, 31);
-  const __m128i v_tmp_d =
-      _mm_add_epi32(_mm_add_epi32(v_val_d, v_bias_d), v_sign_d);
-  return _mm_srai_epi32(v_tmp_d, bits);
-}
-
 static INLINE __m128i xx_roundn_epi16(__m128i v_val_d, int bits) {
   const __m128i v_bias_d = _mm_set1_epi16((1 << bits) >> 1);
   const __m128i v_sign_d = _mm_srai_epi16(v_val_d, 15);
@@ -120,4 +111,4 @@ static INLINE __m128i xx_roundn_epi16(__m128i v_val_d, int bits) {
   return _mm_srai_epi16(v_tmp_d, bits);
 }
 
-#endif  // AOM_DSP_X86_SYNONYMS_H_
+#endif  // AOM_AOM_DSP_X86_SYNONYMS_H_

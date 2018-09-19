@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_COMMON_H_
-#define AV1_COMMON_COMMON_H_
+#ifndef AOM_AV1_COMMON_COMMON_H_
+#define AOM_AV1_COMMON_COMMON_H_
 
 /* Interface header for common constant data structures and lookup tables */
 
@@ -60,4 +60,4 @@ static INLINE int get_unsigned_bits(unsigned int num_values) {
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_COMMON_H_
+#endif  // AOM_AV1_COMMON_COMMON_H_

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_X86_CONVOLVE_SSE2_H_
-#define AOM_DSP_X86_CONVOLVE_SSE2_H_
+#ifndef AOM_AOM_DSP_X86_CONVOLVE_SSE2_H_
+#define AOM_AOM_DSP_X86_CONVOLVE_SSE2_H_
 
 // Note:
 //  This header file should be put below any x86 intrinsics head file
@@ -118,4 +118,4 @@ static INLINE __m128i highbd_convolve_rounding_sse2(
   return res_round;
 }
 
-#endif
+#endif  // AOM_AOM_DSP_X86_CONVOLVE_SSE2_H_

@@ -17,12 +17,8 @@
 #include "aom_ports/mem.h"
 #include "aom/aom_integer.h"
 
+#include "aom_dsp/aom_filter.h"
 #include "aom_dsp/variance.h"
-
-static const uint8_t bilinear_filters[8][2] = {
-  { 128, 0 }, { 112, 16 }, { 96, 32 }, { 80, 48 },
-  { 64, 64 }, { 48, 80 },  { 32, 96 }, { 16, 112 },
-};
 
 static void var_filter_block2d_bil_w8(const uint8_t *src_ptr,
                                       uint8_t *output_ptr,
@@ -83,9 +79,9 @@ unsigned int aom_sub_pixel_variance8x8_neon(const uint8_t *src, int src_stride,
   DECLARE_ALIGNED(16, uint8_t, fdata3[9 * 8]);
 
   var_filter_block2d_bil_w8(src, fdata3, src_stride, 1, 9, 8,
-                            bilinear_filters[xoffset]);
+                            bilinear_filters_2t[xoffset]);
   var_filter_block2d_bil_w8(fdata3, temp2, 8, 8, 8, 8,
-                            bilinear_filters[yoffset]);
+                            bilinear_filters_2t[yoffset]);
   return aom_variance8x8_neon(temp2, 8, dst, dst_stride, sse);
 }
 
@@ -98,9 +94,9 @@ unsigned int aom_sub_pixel_variance16x16_neon(const uint8_t *src,
   DECLARE_ALIGNED(16, uint8_t, fdata3[17 * 16]);
 
   var_filter_block2d_bil_w16(src, fdata3, src_stride, 1, 17, 16,
-                             bilinear_filters[xoffset]);
+                             bilinear_filters_2t[xoffset]);
   var_filter_block2d_bil_w16(fdata3, temp2, 16, 16, 16, 16,
-                             bilinear_filters[yoffset]);
+                             bilinear_filters_2t[yoffset]);
   return aom_variance16x16_neon(temp2, 16, dst, dst_stride, sse);
 }
 
@@ -113,9 +109,9 @@ unsigned int aom_sub_pixel_variance32x32_neon(const uint8_t *src,
   DECLARE_ALIGNED(16, uint8_t, fdata3[33 * 32]);
 
   var_filter_block2d_bil_w16(src, fdata3, src_stride, 1, 33, 32,
-                             bilinear_filters[xoffset]);
+                             bilinear_filters_2t[xoffset]);
   var_filter_block2d_bil_w16(fdata3, temp2, 32, 32, 32, 32,
-                             bilinear_filters[yoffset]);
+                             bilinear_filters_2t[yoffset]);
   return aom_variance32x32_neon(temp2, 32, dst, dst_stride, sse);
 }
 
@@ -128,8 +124,8 @@ unsigned int aom_sub_pixel_variance64x64_neon(const uint8_t *src,
   DECLARE_ALIGNED(16, uint8_t, fdata3[65 * 64]);
 
   var_filter_block2d_bil_w16(src, fdata3, src_stride, 1, 65, 64,
-                             bilinear_filters[xoffset]);
+                             bilinear_filters_2t[xoffset]);
   var_filter_block2d_bil_w16(fdata3, temp2, 64, 64, 64, 64,
-                             bilinear_filters[yoffset]);
+                             bilinear_filters_2t[yoffset]);
   return aom_variance64x64_neon(temp2, 64, dst, dst_stride, sse);
 }

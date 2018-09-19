@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef TEST_FUNCTION_EQUIVALENCE_TEST_H_
-#define TEST_FUNCTION_EQUIVALENCE_TEST_H_
+#ifndef AOM_TEST_FUNCTION_EQUIVALENCE_TEST_H_
+#define AOM_TEST_FUNCTION_EQUIVALENCE_TEST_H_
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/acm_random.h"
@@ -66,4 +66,4 @@ class FunctionEquivalenceTest : public ::testing::TestWithParam<FuncParam<T> > {
 };
 
 }  // namespace libaom_test
-#endif  // TEST_FUNCTION_EQUIVALENCE_TEST_H_
+#endif  // AOM_TEST_FUNCTION_EQUIVALENCE_TEST_H_

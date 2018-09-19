@@ -52,6 +52,7 @@ class SumSquaresTest : public ::testing::TestWithParam<TestFuncs> {
     aom_free(src_);
   }
   void RunTest(int isRandom);
+  void RunSpeedTest();
 
   void GenRandomData(int width, int height, int stride) {
     const int msb = 11;  // Up to 12 bit input
@@ -108,6 +109,38 @@ void SumSquaresTest::RunTest(int isRandom) {
   }
 }
 
+void SumSquaresTest::RunSpeedTest() {
+  for (int block = BLOCK_4X4; block < BLOCK_SIZES_ALL; block++) {
+    const int width = block_size_wide[block];   // Up to 128x128
+    const int height = block_size_high[block];  // Up to 128x128
+    int stride = 4 << rnd_(7);                  // Up to 256 stride
+    while (stride < width) {                    // Make sure it's valid
+      stride = 4 << rnd_(7);
+    }
+    GenExtremeData(width, height, stride);
+    const int num_loops = 1000000000 / (width + height);
+    aom_usec_timer timer;
+    aom_usec_timer_start(&timer);
+
+    for (int i = 0; i < num_loops; ++i)
+      params_.ref_func(src_, stride, width, height);
+
+    aom_usec_timer_mark(&timer);
+    const int elapsed_time = static_cast<int>(aom_usec_timer_elapsed(&timer));
+    printf("SumSquaresTest C %3dx%-3d: %7.2f ns\n", width, height,
+           1000.0 * elapsed_time / num_loops);
+
+    aom_usec_timer timer1;
+    aom_usec_timer_start(&timer1);
+    for (int i = 0; i < num_loops; ++i)
+      params_.tst_func(src_, stride, width, height);
+    aom_usec_timer_mark(&timer1);
+    const int elapsed_time1 = static_cast<int>(aom_usec_timer_elapsed(&timer1));
+    printf("SumSquaresTest Test %3dx%-3d: %7.2f ns\n", width, height,
+           1000.0 * elapsed_time1 / num_loops);
+  }
+}
+
 TEST_P(SumSquaresTest, OperationCheck) {
   RunTest(1);  // GenRandomData
 }
@@ -115,6 +148,8 @@ TEST_P(SumSquaresTest, OperationCheck) {
 TEST_P(SumSquaresTest, ExtremeValues) {
   RunTest(0);  // GenExtremeData
 }
+
+TEST_P(SumSquaresTest, DISABLED_Speed) { RunSpeedTest(); }
 
 #if HAVE_SSE2
 
@@ -124,6 +159,13 @@ INSTANTIATE_TEST_CASE_P(
                                 &aom_sum_squares_2d_i16_sse2)));
 
 #endif  // HAVE_SSE2
+
+#if HAVE_AVX2
+INSTANTIATE_TEST_CASE_P(
+    AVX2, SumSquaresTest,
+    ::testing::Values(TestFuncs(&aom_sum_squares_2d_i16_c,
+                                &aom_sum_squares_2d_i16_avx2)));
+#endif  // HAVE_AVX2
 
 //////////////////////////////////////////////////////////////////////////////
 // 1D version

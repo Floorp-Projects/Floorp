@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_BINARY_CODES_READER_H_
-#define AOM_DSP_BINARY_CODES_READER_H_
+#ifndef AOM_AOM_DSP_BINARY_CODES_READER_H_
+#define AOM_AOM_DSP_BINARY_CODES_READER_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,10 +40,8 @@ uint16_t aom_read_primitive_refsubexpfin_(aom_reader *r, uint16_t n, uint16_t k,
 int16_t aom_rb_read_signed_primitive_refsubexpfin(
     struct aom_read_bit_buffer *rb, uint16_t n, uint16_t k, int16_t ref);
 
-uint32_t aom_rb_read_uvlc(struct aom_read_bit_buffer *rb);
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // AOM_DSP_BINARY_CODES_READER_H_
+#endif  // AOM_AOM_DSP_BINARY_CODES_READER_H_

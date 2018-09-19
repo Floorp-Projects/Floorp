@@ -133,6 +133,38 @@ static INLINE int64_t get_coeff_dist(tran_low_t tcoeff, tran_low_t dqcoeff,
   return error;
 }
 
+static const int8_t eob_to_pos_small[33] = {
+  0, 1, 2,                                        // 0-2
+  3, 3,                                           // 3-4
+  4, 4, 4, 4,                                     // 5-8
+  5, 5, 5, 5, 5, 5, 5, 5,                         // 9-16
+  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6  // 17-32
+};
+
+static const int8_t eob_to_pos_large[17] = {
+  6,                               // place holder
+  7,                               // 33-64
+  8,  8,                           // 65-128
+  9,  9,  9,  9,                   // 129-256
+  10, 10, 10, 10, 10, 10, 10, 10,  // 257-512
+  11                               // 513-
+};
+
+static INLINE int get_eob_pos_token(const int eob, int *const extra) {
+  int t;
+
+  if (eob < 33) {
+    t = eob_to_pos_small[eob];
+  } else {
+    const int e = AOMMIN((eob - 1) >> 5, 16);
+    t = eob_to_pos_large[e];
+  }
+
+  *extra = eob - k_eob_group_start[t];
+
+  return t;
+}
+
 #if CONFIG_ENTROPY_STATS
 void av1_update_eob_context(int cdf_idx, int eob, TX_SIZE tx_size,
                             TX_CLASS tx_class, PLANE_TYPE plane,
@@ -464,8 +496,12 @@ void av1_write_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
                           aom_writer *w, int blk_row, int blk_col, int plane,
                           TX_SIZE tx_size, const tran_low_t *tcoeff,
                           uint16_t eob, TXB_CTX *txb_ctx) {
-  const PLANE_TYPE plane_type = get_plane_type(plane);
   const TX_SIZE txs_ctx = get_txsize_entropy_ctx(tx_size);
+  FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
+  aom_write_symbol(w, eob == 0,
+                   ec_ctx->txb_skip_cdf[txs_ctx][txb_ctx->txb_skip_ctx], 2);
+  if (eob == 0) return;
+  const PLANE_TYPE plane_type = get_plane_type(plane);
   const TX_TYPE tx_type = av1_get_tx_type(plane_type, xd, blk_row, blk_col,
                                           tx_size, cm->reduced_tx_set_used);
   const TX_CLASS tx_class = tx_type_to_class[tx_type];
@@ -475,18 +511,10 @@ void av1_write_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
   const int bwl = get_txb_bwl(tx_size);
   const int width = get_txb_wide(tx_size);
   const int height = get_txb_high(tx_size);
-  FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
+
   uint8_t levels_buf[TX_PAD_2D];
   uint8_t *const levels = set_levels(levels_buf, width);
   DECLARE_ALIGNED(16, int8_t, coeff_contexts[MAX_TX_SQUARE]);
-
-  aom_write_symbol(w, eob == 0,
-                   ec_ctx->txb_skip_cdf[txs_ctx][txb_ctx->txb_skip_ctx], 2);
-  if (plane == 0 && eob == 0) {
-    assert(tx_type == DCT_DCT);
-  }
-  if (eob == 0) return;
-
   av1_txb_init_levels(tcoeff, width, height, levels);
 
   av1_write_tx_type(cm, xd, blk_row, blk_col, plane, tx_size, w);

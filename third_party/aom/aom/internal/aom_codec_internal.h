@@ -38,11 +38,11 @@
  *       }
  *     </pre>
  *
- * Once initialized, the instance is manged using other functions from
+ * Once initialized, the instance is managed using other functions from
  * the aom_codec_* family.
  */
-#ifndef AOM_INTERNAL_AOM_CODEC_INTERNAL_H_
-#define AOM_INTERNAL_AOM_CODEC_INTERNAL_H_
+#ifndef AOM_AOM_INTERNAL_AOM_CODEC_INTERNAL_H_
+#define AOM_AOM_INTERNAL_AOM_CODEC_INTERNAL_H_
 #include "../aom_decoder.h"
 #include "../aom_encoder.h"
 #include <stdarg.h>
@@ -438,4 +438,4 @@ void aom_merge_corrupted_flag(int *corrupted, int value);
 }  // extern "C"
 #endif
 
-#endif  // AOM_INTERNAL_AOM_CODEC_INTERNAL_H_
+#endif  // AOM_AOM_INTERNAL_AOM_CODEC_INTERNAL_H_
