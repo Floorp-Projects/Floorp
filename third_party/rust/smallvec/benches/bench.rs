@@ -17,6 +17,7 @@ trait Vector<T>: for<'a> From<&'a [T]> + Extend<T> + ExtendFromSlice<T> {
     fn remove(&mut self, p: usize) -> T;
     fn insert(&mut self, n: usize, val: T);
     fn from_elem(val: T, n: usize) -> Self;
+    fn from_elems(val: &[T]) -> Self;
 }
 
 impl<T: Copy> Vector<T> for Vec<T> {
@@ -42,6 +43,10 @@ impl<T: Copy> Vector<T> for Vec<T> {
 
     fn from_elem(val: T, n: usize) -> Self {
         vec![val; n]
+    }
+
+    fn from_elems(val: &[T]) -> Self {
+        val.to_owned()
     }
 }
 
@@ -69,6 +74,10 @@ impl<T: Copy> Vector<T> for SmallVec<[T; VEC_SIZE]> {
     fn from_elem(val: T, n: usize) -> Self {
         smallvec![val; n]
     }
+
+    fn from_elems(val: &[T]) -> Self {
+        SmallVec::from_slice(val)
+    }
 }
 
 macro_rules! make_benches {
@@ -92,6 +101,8 @@ make_benches! {
         bench_remove_small => gen_remove(VEC_SIZE as _),
         bench_extend => gen_extend(SPILLED_SIZE as _),
         bench_extend_small => gen_extend(VEC_SIZE as _),
+        bench_from_iter => gen_from_iter(SPILLED_SIZE as _),
+        bench_from_iter_small => gen_from_iter(VEC_SIZE as _),
         bench_from_slice => gen_from_slice(SPILLED_SIZE as _),
         bench_from_slice_small => gen_from_slice(VEC_SIZE as _),
         bench_extend_from_slice => gen_extend_from_slice(SPILLED_SIZE as _),
@@ -112,6 +123,8 @@ make_benches! {
         bench_remove_vec_small => gen_remove(VEC_SIZE as _),
         bench_extend_vec => gen_extend(SPILLED_SIZE as _),
         bench_extend_vec_small => gen_extend(VEC_SIZE as _),
+        bench_from_iter_vec => gen_from_iter(SPILLED_SIZE as _),
+        bench_from_iter_vec_small => gen_from_iter(VEC_SIZE as _),
         bench_from_slice_vec => gen_from_slice(SPILLED_SIZE as _),
         bench_from_slice_vec_small => gen_from_slice(VEC_SIZE as _),
         bench_extend_from_slice_vec => gen_extend_from_slice(SPILLED_SIZE as _),
@@ -179,10 +192,18 @@ fn gen_extend<V: Vector<u64>>(n: u64, b: &mut Bencher) {
     });
 }
 
-fn gen_from_slice<V: Vector<u64>>(n: u64, b: &mut Bencher) {
+fn gen_from_iter<V: Vector<u64>>(n: u64, b: &mut Bencher) {
     let v: Vec<u64> = (0..n).collect();
     b.iter(|| {
         let vec = V::from(&v);
+        vec
+    });
+}
+
+fn gen_from_slice<V: Vector<u64>>(n: u64, b: &mut Bencher) {
+    let v: Vec<u64> = (0..n).collect();
+    b.iter(|| {
+        let vec = V::from_elems(&v);
         vec
     });
 }
