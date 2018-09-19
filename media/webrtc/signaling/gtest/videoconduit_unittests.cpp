@@ -1293,4 +1293,38 @@ TEST_F(VideoConduitTest, DISABLED_TestVideoEncodeMaxWidthAndHeight)
   mVideoConduit->RemoveSink(sink.get());
 }
 
+TEST_F(VideoConduitTest, TestVideoEncodeScaleResolutionBy)
+{
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::SimulcastEncoding encoding;
+  encoding.constraints.scaleDownBy = 2;
+  std::vector<webrtc::VideoStream> videoStreams;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mEncodingConstraints.maxFs = 3600;
+  codecConfig.mSimulcastEncodings.push_back(encoding);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+  mVideoConduit->StartTransmitting();
+  SendVideoFrame(1280, 720, 1);
+  ASSERT_EQ(sink->mVideoFrame.width(), 640);
+  ASSERT_EQ(sink->mVideoFrame.height(), 360);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 1000U);
+  ASSERT_EQ(sink->mOnFrameCount, 1U);
+
+  SendVideoFrame(640, 360, 2);
+  ASSERT_EQ(sink->mVideoFrame.width(), 320);
+  ASSERT_EQ(sink->mVideoFrame.height(), 180);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
+  ASSERT_EQ(sink->mOnFrameCount, 2U);
+  mVideoConduit->StopTransmitting();
+  mVideoConduit->RemoveSink(sink.get());
+}
+
 } // End namespace test.
