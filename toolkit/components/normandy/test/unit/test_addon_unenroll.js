@@ -67,8 +67,7 @@ add_task(async function test_addon_unenroll() {
                   context,
                   name: "study.onStudyEnded",
                   register: fire => {
-                    AddonStudies.addUnenrollListener(this.extension.id,
-                                                     () => fire.sync());
+                    AddonStudies.addUnenrollListener(this.extension.id, reason => fire.sync(reason));
                     return () => {};
                   },
                 }).api(),
@@ -80,8 +79,8 @@ add_task(async function test_addon_unenroll() {
     },
 
     background() {
-      browser.study.onStudyEnded.addListener(() => {
-        browser.test.sendMessage("got-event");
+      browser.study.onStudyEnded.addListener(reason => {
+        browser.test.sendMessage("got-event", reason);
         return new Promise(resolve => {
           browser.test.onMessage.addListener(resolve);
         });
@@ -98,6 +97,7 @@ add_task(async function test_addon_unenroll() {
   let extension = ExtensionTestUtils.expectExtension(ID);
 
   const RECIPE_ID = 1;
+  const UNENROLL_REASON = "test-ending";
   let action = new AddonStudyAction();
   await action.runRecipe({
     id: RECIPE_ID,
@@ -115,10 +115,11 @@ add_task(async function test_addon_unenroll() {
   ok(addon, "Extension is installed");
 
   // Tell Normandy to end the study, the extension event should be fired.
-  let unenrollPromise = action.unenroll(RECIPE_ID);
+  let unenrollPromise = action.unenroll(RECIPE_ID, UNENROLL_REASON);
 
-  await extension.awaitMessage("got-event");
+  let receivedReason = await extension.awaitMessage("got-event");
   info("Got onStudyEnded event in extension");
+  equal(receivedReason, UNENROLL_REASON, "Unenroll reason should be passed");
 
   // The extension has not yet finished its unenrollment tasks, so it
   // should not yet be uninstalled.
@@ -131,5 +132,5 @@ add_task(async function test_addon_unenroll() {
   await unenrollPromise;
 
   addon = await AddonManager.getAddonByID(ID);
-  equal(addon, null, "Afer resolving studyEnded promise, extension is uninstalled");
+  equal(addon, null, "After resolving studyEnded promise, extension is uninstalled");
 });
