@@ -3398,6 +3398,23 @@ HTMLEditor::DeleteNodeWithTransaction(nsINode& aNode)
   return NS_OK;
 }
 
+nsresult
+HTMLEditor::DeleteAllChildrenWithTransaction(Element& aElement)
+{
+  // Prevent rules testing until we're done
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::eDeleteNode,
+                                      nsIEditor::eNext);
+
+  while (nsCOMPtr<nsINode> child = aElement.GetLastChild()) {
+    nsresult rv = DeleteNodeWithTransaction(*child);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HTMLEditor::DeleteNode(nsINode* aNode)
 {

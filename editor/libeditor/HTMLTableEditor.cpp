@@ -1005,6 +1005,16 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
 NS_IMETHODIMP
 HTMLEditor::DeleteTableCellContents()
 {
+  nsresult rv = DeleteTableCellContentsWithTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::DeleteTableCellContentsWithTransaction()
+{
   RefPtr<Selection> selection;
   RefPtr<Element> table;
   RefPtr<Element> cell;
@@ -1014,9 +1024,13 @@ HTMLEditor::DeleteTableCellContents()
                                getter_AddRefs(cell),
                                nullptr, nullptr,
                                &startRowIndex, &startColIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Don't fail if no cell found
-  NS_ENSURE_TRUE(cell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!selection) || NS_WARN_IF(!cell)) {
+    // Don't fail if no cell found.
+    return NS_OK;
+  }
 
 
   AutoPlaceholderBatch beginBatching(this);
@@ -1024,7 +1038,7 @@ HTMLEditor::DeleteTableCellContents()
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
-  //Don't let Rules System change the selection
+  // Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   ErrorResult error;
@@ -1035,7 +1049,6 @@ HTMLEditor::DeleteTableCellContents()
   }
 
   if (firstSelectedCellElement) {
-    ErrorResult error;
     CellIndexes firstCellIndexes(*firstSelectedCellElement, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
@@ -1050,32 +1063,19 @@ HTMLEditor::DeleteTableCellContents()
                                              false);
 
   while (cell) {
-    DeleteCellContents(cell);
-    if (firstSelectedCellElement) {
-      // We doing a selected cells, so do all of them
-      cell = GetNextSelectedTableCellElement(*selection, error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
-      }
-    } else {
-      cell = nullptr;
+    DebugOnly<nsresult> rv = DeleteAllChildrenWithTransaction(*cell);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to remove all children of the cell element");
+    // If selection is not in cell-select mode, we should remove only the cell
+    // which contains first selection range.
+    if (!firstSelectedCellElement) {
+      return NS_OK;
     }
-  }
-  return NS_OK;
-}
-
-nsresult
-HTMLEditor::DeleteCellContents(Element* aCell)
-{
-  // Prevent rules testing until we're done
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::eDeleteNode,
-                                      nsIEditor::eNext);
-
-  while (nsCOMPtr<nsINode> child = aCell->GetLastChild()) {
-    nsresult rv = DeleteNodeWithTransaction(*child);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    // If there are 2 or more selected cells, keep handling the other selected
+    // cells.
+    cell = GetNextSelectedTableCellElement(*selection, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
     }
   }
   return NS_OK;
@@ -1252,7 +1252,9 @@ HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
         // Cell is in column to be deleted, but must have colspan > 1,
         // so delete contents of cell instead of cell itself (We must have
         // reset colspan above).
-        DeleteCellContents(cell);
+        DebugOnly<nsresult> rv = DeleteAllChildrenWithTransaction(*cell);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+          "Failed to remove all children of the cell element");
       }
       // Skip rows which the removed cell spanned.
       rowIndex += actualRowSpan - 1;
