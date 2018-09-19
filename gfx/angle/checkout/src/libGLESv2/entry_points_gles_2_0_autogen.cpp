@@ -758,11 +758,12 @@ void GL_APIENTRY DrawArrays(GLenum mode, GLint first, GLsizei count)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawArrays>(mode, first, count);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawArrays>(modePacked, first, count);
 
-        if (context->skipValidation() || ValidateDrawArrays(context, mode, first, count))
+        if (context->skipValidation() || ValidateDrawArrays(context, modePacked, first, count))
         {
-            context->drawArrays(mode, first, count);
+            context->drawArrays(modePacked, first, count);
         }
     }
 }
@@ -777,11 +778,13 @@ void GL_APIENTRY DrawElements(GLenum mode, GLsizei count, GLenum type, const voi
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawElements>(mode, count, type, indices);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawElements>(modePacked, count, type, indices);
 
-        if (context->skipValidation() || ValidateDrawElements(context, mode, count, type, indices))
+        if (context->skipValidation() ||
+            ValidateDrawElements(context, modePacked, count, type, indices))
         {
-            context->drawElements(mode, count, type, indices);
+            context->drawElements(modePacked, count, type, indices);
         }
     }
 }

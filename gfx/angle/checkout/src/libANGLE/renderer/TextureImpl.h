@@ -62,6 +62,7 @@ class TextureImpl : public FramebufferAttachmentObjectImpl
                                   GLenum format,
                                   GLenum type,
                                   const gl::PixelUnpackState &unpack,
+                                  gl::Buffer *unpackBuffer,
                                   const uint8_t *pixels) = 0;
 
     virtual gl::Error setCompressedImage(const gl::Context *context,

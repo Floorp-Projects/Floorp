@@ -34,6 +34,21 @@ bool IsAMD(VendorID vendorId)
     return vendorId == kVendorID_AMD;
 }
 
+bool IsARM(VendorID vendorId)
+{
+    return vendorId == kVendorID_ARM;
+}
+
+bool IsImgTec(VendorID vendorId)
+{
+    return vendorId == kVendorID_ImgTec;
+}
+
+bool IsKazan(VendorID vendorId)
+{
+    return vendorId == kVendorID_Kazan;
+}
+
 bool IsIntel(VendorID vendorId)
 {
     return vendorId == kVendorID_Intel;
@@ -47,6 +62,16 @@ bool IsNvidia(VendorID vendorId)
 bool IsQualcomm(VendorID vendorId)
 {
     return vendorId == kVendorID_Qualcomm;
+}
+
+bool IsVeriSilicon(VendorID vendorId)
+{
+    return vendorId == kVendorID_VeriSilicon;
+}
+
+bool IsVivante(VendorID vendorId)
+{
+    return vendorId == kVendorID_Vivante;
 }
 
 bool ParseAMDBrahmaDriverVersion(const std::string &content, std::string *version)

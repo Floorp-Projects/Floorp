@@ -9,8 +9,8 @@
 
 #include "libANGLE/Stream.h"
 
-#include <platform/Platform.h>
 #include <EGL/eglext.h>
+#include <platform/Platform.h>
 
 #include "common/debug.h"
 #include "common/mathutil.h"
@@ -25,7 +25,8 @@ namespace egl
 {
 
 Stream::Stream(Display *display, const AttributeMap &attribs)
-    : mDisplay(display),
+    : mLabel(nullptr),
+      mDisplay(display),
       mProducerImplementation(nullptr),
       mState(EGL_STREAM_STATE_CREATED_KHR),
       mProducerFrame(0),
@@ -53,6 +54,16 @@ Stream::~Stream()
             plane.texture->releaseStream();
         }
     }
+}
+
+void Stream::setLabel(EGLLabelKHR label)
+{
+    mLabel = label;
+}
+
+EGLLabelKHR Stream::getLabel() const
+{
+    return mLabel;
 }
 
 void Stream::setConsumerLatency(EGLint latency)
@@ -118,7 +129,7 @@ Error Stream::createConsumerGLTextureExternal(const AttributeMap &attributes, gl
     ASSERT(context != nullptr);
 
     const auto &glState = context->getGLState();
-    EGLenum bufferType = attributes.getAsInt(EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER);
+    EGLenum bufferType  = attributes.getAsInt(EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER);
     if (bufferType == EGL_RGB_BUFFER)
     {
         mPlanes[0].texture = glState.getTargetTexture(gl::TextureType::External);

@@ -30,44 +30,44 @@ const std::string &Query::getLabel() const
     return mLabel;
 }
 
-Error Query::begin()
+Error Query::begin(const Context *context)
 {
-    return mQuery->begin();
+    return mQuery->begin(context);
 }
 
-Error Query::end()
+Error Query::end(const Context *context)
 {
-    return mQuery->end();
+    return mQuery->end(context);
 }
 
-Error Query::queryCounter()
+Error Query::queryCounter(const Context *context)
 {
-    return mQuery->queryCounter();
+    return mQuery->queryCounter(context);
 }
 
-Error Query::getResult(GLint *params)
+Error Query::getResult(const Context *context, GLint *params)
 {
-    return mQuery->getResult(params);
+    return mQuery->getResult(context, params);
 }
 
-Error Query::getResult(GLuint *params)
+Error Query::getResult(const Context *context, GLuint *params)
 {
-    return mQuery->getResult(params);
+    return mQuery->getResult(context, params);
 }
 
-Error Query::getResult(GLint64 *params)
+Error Query::getResult(const Context *context, GLint64 *params)
 {
-    return mQuery->getResult(params);
+    return mQuery->getResult(context, params);
 }
 
-Error Query::getResult(GLuint64 *params)
+Error Query::getResult(const Context *context, GLuint64 *params)
 {
-    return mQuery->getResult(params);
+    return mQuery->getResult(context, params);
 }
 
-Error Query::isResultAvailable(bool *available)
+Error Query::isResultAvailable(const Context *context, bool *available)
 {
-    return mQuery->isResultAvailable(available);
+    return mQuery->isResultAvailable(context, available);
 }
 
 QueryType Query::getType() const

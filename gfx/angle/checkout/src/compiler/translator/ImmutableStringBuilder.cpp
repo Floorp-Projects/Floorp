@@ -9,6 +9,8 @@
 
 #include "compiler/translator/ImmutableStringBuilder.h"
 
+#include <stdio.h>
+
 namespace sh
 {
 
@@ -37,6 +39,14 @@ ImmutableStringBuilder &ImmutableStringBuilder::operator<<(const char &c)
     ASSERT(mPos + 1 <= mMaxLength);
     mData[mPos++] = c;
     return *this;
+}
+
+void ImmutableStringBuilder::appendDecimal(const uint32_t &u)
+{
+    int numChars = snprintf(mData + mPos, mMaxLength - mPos, "%d", u);
+    ASSERT(numChars >= 0);
+    ASSERT(mPos + numChars <= mMaxLength);
+    mPos += numChars;
 }
 
 ImmutableStringBuilder::operator ImmutableString()

@@ -8,9 +8,11 @@
 
 #include "libANGLE/renderer/d3d/d3d9/VertexDeclarationCache.h"
 
+#include "libANGLE/Context.h"
 #include "libANGLE/VertexAttribute.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/d3d/ProgramD3D.h"
+#include "libANGLE/renderer/d3d/d3d9/Context9.h"
 #include "libANGLE/renderer/d3d/d3d9/VertexBuffer9.h"
 #include "libANGLE/renderer/d3d/d3d9/formatutils9.h"
 
@@ -42,7 +44,8 @@ VertexDeclarationCache::~VertexDeclarationCache()
     }
 }
 
-gl::Error VertexDeclarationCache::applyDeclaration(
+angle::Result VertexDeclarationCache::applyDeclaration(
+    const gl::Context *context,
     IDirect3DDevice9 *device,
     const std::vector<TranslatedAttribute> &attributes,
     gl::Program *program,
@@ -152,7 +155,7 @@ gl::Error VertexDeclarationCache::applyDeclaration(
             VertexBuffer9 *vertexBuffer = GetAs<VertexBuffer9>(attributes[i].vertexBuffer.get());
 
             unsigned int offset = 0;
-            ANGLE_TRY_RESULT(attributes[i].computeOffset(start), offset);
+            ANGLE_TRY(attributes[i].computeOffset(context, start, &offset));
 
             if (mAppliedVBs[stream].serial != attributes[i].serial ||
                 mAppliedVBs[stream].stride != attributes[i].stride ||
@@ -207,7 +210,7 @@ gl::Error VertexDeclarationCache::applyDeclaration(
                 mLastSetVDecl = entry->vertexDeclaration;
             }
 
-            return gl::NoError();
+            return angle::Result::Continue();
         }
     }
 
@@ -230,17 +233,14 @@ gl::Error VertexDeclarationCache::applyDeclaration(
 
     memcpy(lastCache->cachedElements, elements, (element - elements) * sizeof(D3DVERTEXELEMENT9));
     HRESULT result = device->CreateVertexDeclaration(elements, &lastCache->vertexDeclaration);
-    if (FAILED(result))
-    {
-        return gl::OutOfMemory() << "Failed to create internal vertex declaration, "
-                                 << gl::FmtHR(result);
-    }
+    ANGLE_TRY_HR(GetImplAs<Context9>(context), result,
+                 "Failed to create internal vertex declaration");
 
     device->SetVertexDeclaration(lastCache->vertexDeclaration);
     mLastSetVDecl = lastCache->vertexDeclaration;
     lastCache->lruCount = ++mMaxLru;
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 void VertexDeclarationCache::markStateDirty()

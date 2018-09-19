@@ -168,6 +168,7 @@ typedef void (GL_APIENTRYP PFNGLEGLIMAGETARGETTEXTURE2DOESCONTEXTANGLE)(GLeglCon
 typedef void (GL_APIENTRYP PFNGLENDQUERYEXTCONTEXTANGLE)(GLeglContext ctx, GLenum target);
 typedef void (GL_APIENTRYP PFNGLFINISHFENCENVCONTEXTANGLE)(GLeglContext ctx, GLuint fence);
 typedef void (GL_APIENTRYP PFNGLFLUSHMAPPEDBUFFERRANGEEXTCONTEXTANGLE)(GLeglContext ctx, GLenum target, GLintptr offset, GLsizeiptr length);
+typedef void (GL_APIENTRYP PFNGLFRAMEBUFFERTEXTUREEXTCONTEXTANGLE)(GLeglContext ctx, GLenum target, GLenum attachment, GLuint texture, GLint level);
 typedef void (GL_APIENTRYP PFNGLGENFENCESNVCONTEXTANGLE)(GLeglContext ctx, GLsizei n, GLuint *fences);
 typedef void (GL_APIENTRYP PFNGLGENQUERIESEXTCONTEXTANGLE)(GLeglContext ctx, GLsizei n, GLuint *ids);
 typedef void (GL_APIENTRYP PFNGLGENVERTEXARRAYSOESCONTEXTANGLE)(GLeglContext ctx, GLsizei n, GLuint *arrays);
@@ -193,6 +194,7 @@ typedef GLboolean (GL_APIENTRYP PFNGLISQUERYEXTCONTEXTANGLE)(GLeglContext ctx, G
 typedef GLboolean (GL_APIENTRYP PFNGLISVERTEXARRAYOESCONTEXTANGLE)(GLeglContext ctx, GLuint array);
 typedef void *(GL_APIENTRYP PFNGLMAPBUFFEROESCONTEXTANGLE)(GLeglContext ctx, GLenum target, GLenum access);
 typedef void *(GL_APIENTRYP PFNGLMAPBUFFERRANGEEXTCONTEXTANGLE)(GLeglContext ctx, GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
+typedef void (GL_APIENTRYP PFNGLMAXSHADERCOMPILERTHREADSKHRCONTEXTANGLE)(GLeglContext ctx, GLuint count);
 typedef void (GL_APIENTRYP PFNGLOBJECTLABELKHRCONTEXTANGLE)(GLeglContext ctx, GLenum identifier, GLuint name, GLsizei length, const GLchar *label);
 typedef void (GL_APIENTRYP PFNGLOBJECTPTRLABELKHRCONTEXTANGLE)(GLeglContext ctx, const void *ptr, GLsizei length, const GLchar *label);
 typedef void (GL_APIENTRYP PFNGLPOPDEBUGGROUPKHRCONTEXTANGLE)(GLeglContext ctx);
@@ -307,6 +309,7 @@ typedef void (GL_APIENTRYP PFNGLGETQUERYOBJECTI64VROBUSTANGLECONTEXTANGLE)(GLegl
 typedef void (GL_APIENTRYP PFNGLGETQUERYOBJECTUI64VROBUSTANGLECONTEXTANGLE)(GLeglContext ctx, GLuint id, GLenum pname, GLsizei bufSize, GLsizei * length, GLuint64 * params);
 typedef void (GL_APIENTRYP PFNGLFRAMEBUFFERTEXTUREMULTIVIEWLAYEREDANGLECONTEXTANGLE)(GLeglContext ctx, GLenum target, GLenum attachment, GLuint texture, GLint level, GLint baseViewIndex, GLsizei numViews);
 typedef void (GL_APIENTRYP PFNGLFRAMEBUFFERTEXTUREMULTIVIEWSIDEBYSIDEANGLECONTEXTANGLE)(GLeglContext ctx, GLenum target, GLenum attachment, GLuint texture, GLint level, GLsizei numViews, const GLint * viewportOffsets);
+typedef void (GL_APIENTRYP PFNGLTEXSTORAGE3DMULTISAMPLEANGLECONTEXTANGLE)(GLeglContext ctx, GLenum target, GLsizei samples, GLint sizedinternalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations);
 #ifdef GL_GLEXT_PROTOTYPES
 GL_APICALL void GL_APIENTRY glActiveTextureContextANGLE(GLeglContext ctx, GLenum texture);
 GL_APICALL void GL_APIENTRY glAttachShaderContextANGLE(GLeglContext ctx, GLuint program, GLuint shader);
@@ -468,6 +471,7 @@ GL_APICALL void GL_APIENTRY glEGLImageTargetTexture2DOESContextANGLE(GLeglContex
 GL_APICALL void GL_APIENTRY glEndQueryEXTContextANGLE(GLeglContext ctx, GLenum target);
 GL_APICALL void GL_APIENTRY glFinishFenceNVContextANGLE(GLeglContext ctx, GLuint fence);
 GL_APICALL void GL_APIENTRY glFlushMappedBufferRangeEXTContextANGLE(GLeglContext ctx, GLenum target, GLintptr offset, GLsizeiptr length);
+GL_APICALL void GL_APIENTRY glFramebufferTextureEXTContextANGLE(GLeglContext ctx, GLenum target, GLenum attachment, GLuint texture, GLint level);
 GL_APICALL void GL_APIENTRY glGenFencesNVContextANGLE(GLeglContext ctx, GLsizei n, GLuint *fences);
 GL_APICALL void GL_APIENTRY glGenQueriesEXTContextANGLE(GLeglContext ctx, GLsizei n, GLuint *ids);
 GL_APICALL void GL_APIENTRY glGenVertexArraysOESContextANGLE(GLeglContext ctx, GLsizei n, GLuint *arrays);
@@ -493,6 +497,7 @@ GL_APICALL GLboolean GL_APIENTRY glIsQueryEXTContextANGLE(GLeglContext ctx, GLui
 GL_APICALL GLboolean GL_APIENTRY glIsVertexArrayOESContextANGLE(GLeglContext ctx, GLuint array);
 GL_APICALL void *GL_APIENTRY glMapBufferOESContextANGLE(GLeglContext ctx, GLenum target, GLenum access);
 GL_APICALL void *GL_APIENTRY glMapBufferRangeEXTContextANGLE(GLeglContext ctx, GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
+GL_APICALL void GL_APIENTRY glMaxShaderCompilerThreadsKHRContextANGLE(GLeglContext ctx, GLuint count);
 GL_APICALL void GL_APIENTRY glObjectLabelKHRContextANGLE(GLeglContext ctx, GLenum identifier, GLuint name, GLsizei length, const GLchar *label);
 GL_APICALL void GL_APIENTRY glObjectPtrLabelKHRContextANGLE(GLeglContext ctx, const void *ptr, GLsizei length, const GLchar *label);
 GL_APICALL void GL_APIENTRY glPopDebugGroupKHRContextANGLE(GLeglContext ctx);
@@ -607,4 +612,5 @@ GL_APICALL void GL_APIENTRY glGetQueryObjecti64vRobustANGLEContextANGLE(GLeglCon
 GL_APICALL void GL_APIENTRY glGetQueryObjectui64vRobustANGLEContextANGLE(GLeglContext ctx, GLuint id, GLenum pname, GLsizei bufSize, GLsizei * length, GLuint64 * params);
 GL_APICALL void GL_APIENTRY glFramebufferTextureMultiviewLayeredANGLEContextANGLE(GLeglContext ctx, GLenum target, GLenum attachment, GLuint texture, GLint level, GLint baseViewIndex, GLsizei numViews);
 GL_APICALL void GL_APIENTRY glFramebufferTextureMultiviewSideBySideANGLEContextANGLE(GLeglContext ctx, GLenum target, GLenum attachment, GLuint texture, GLint level, GLsizei numViews, const GLint * viewportOffsets);
+GL_APICALL void GL_APIENTRY glTexStorage3DMultisampleANGLEContextANGLE(GLeglContext ctx, GLenum target, GLsizei samples, GLint sizedinternalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations);
 #endif

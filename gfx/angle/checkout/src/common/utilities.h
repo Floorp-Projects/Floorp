@@ -17,6 +17,7 @@
 #include <vector>
 #include "angle_gl.h"
 
+#include "common/PackedEnums.h"
 #include "common/mathutil.h"
 
 namespace sh
@@ -70,7 +71,7 @@ IndexRange ComputeIndexRange(GLenum indexType,
 // Get the primitive restart index value for the given index type.
 GLuint GetPrimitiveRestartIndex(GLenum indexType);
 
-bool IsTriangleMode(GLenum drawMode);
+bool IsTriangleMode(PrimitiveMode drawMode);
 bool IsIntegerFormat(GLenum unsizedFormat);
 
 // Returns the product of the sizes in the vector, or 1 if the vector is empty. Doesn't currently
@@ -142,7 +143,7 @@ unsigned int ElementTypeSize(GLenum elementType);
 namespace egl
 {
 static const EGLenum FirstCubeMapTextureTarget = EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR;
-static const EGLenum LastCubeMapTextureTarget = EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR;
+static const EGLenum LastCubeMapTextureTarget  = EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR;
 bool IsCubeMapTextureTarget(EGLenum target);
 size_t CubeMapTextureTargetToLayerIndex(EGLenum target);
 EGLenum LayerIndexToCubeMapTextureTarget(size_t index);
@@ -160,14 +161,15 @@ GLuint EGLClientBufferToGLObjectHandle(EGLClientBuffer buffer);
 namespace gl_egl
 {
 EGLenum GLComponentTypeToEGLColorComponentType(GLenum glComponentType);
+EGLClientBuffer GLObjectHandleToEGLClientBuffer(GLuint handle);
 }  // namespace gl_egl
 
 #if !defined(ANGLE_ENABLE_WINDOWS_STORE)
 std::string getTempPath();
-void writeFile(const char* path, const void* data, size_t size);
+void writeFile(const char *path, const void *data, size_t size);
 #endif
 
-#if defined (ANGLE_PLATFORM_WINDOWS)
+#if defined(ANGLE_PLATFORM_WINDOWS)
 void ScheduleYield();
 #endif
 

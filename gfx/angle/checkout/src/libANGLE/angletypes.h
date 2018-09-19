@@ -10,11 +10,11 @@
 #define LIBANGLE_ANGLETYPES_H_
 
 #include "common/Color.h"
+#include "common/PackedEnums.h"
 #include "common/bitset_utils.h"
 #include "common/vector_utils.h"
 #include "libANGLE/Constants.h"
 #include "libANGLE/Error.h"
-#include "libANGLE/PackedEnums.h"
 #include "libANGLE/RefCountObject.h"
 
 #include <stdint.h>
@@ -27,20 +27,6 @@ namespace gl
 {
 class Buffer;
 class Texture;
-
-enum PrimitiveType
-{
-    PRIMITIVE_POINTS,
-    PRIMITIVE_LINES,
-    PRIMITIVE_LINE_STRIP,
-    PRIMITIVE_LINE_LOOP,
-    PRIMITIVE_TRIANGLES,
-    PRIMITIVE_TRIANGLE_STRIP,
-    PRIMITIVE_TRIANGLE_FAN,
-    PRIMITIVE_TYPE_MAX,
-};
-
-PrimitiveType GetPrimitiveType(GLenum drawMode);
 
 struct Rectangle
 {
@@ -74,13 +60,15 @@ bool ClipRectangle(const Rectangle &source, const Rectangle &clip, Rectangle *in
 
 struct Offset
 {
-    Offset() : x(0), y(0), z(0) {}
-    Offset(int x_in, int y_in, int z_in) : x(x_in), y(y_in), z(z_in) {}
+    constexpr Offset() : x(0), y(0), z(0) {}
+    constexpr Offset(int x_in, int y_in, int z_in) : x(x_in), y(y_in), z(z_in) {}
 
     int x;
     int y;
     int z;
 };
+
+constexpr Offset kOffsetZero(0, 0, 0);
 
 bool operator==(const Offset &a, const Offset &b);
 bool operator!=(const Offset &a, const Offset &b);
@@ -301,6 +289,9 @@ using UniformBlockBindingMask = angle::BitSet<IMPLEMENTATION_MAX_COMBINED_SHADER
 // Used in Framebuffer / Program
 using DrawBufferMask = angle::BitSet<IMPLEMENTATION_MAX_DRAW_BUFFERS>;
 
+template <typename T>
+using TexLevelArray = std::array<T, IMPLEMENTATION_MAX_TEXTURE_LEVELS>;
+
 constexpr size_t MAX_COMPONENT_TYPE_MASK_INDEX = 16;
 struct ComponentTypeMask final
 {
@@ -336,6 +327,14 @@ using DrawBuffersArray = std::array<T, IMPLEMENTATION_MAX_DRAW_BUFFERS>;
 
 template <typename T>
 using AttribArray = std::array<T, MAX_VERTEX_ATTRIBS>;
+
+using ActiveTextureMask = angle::BitSet<IMPLEMENTATION_MAX_ACTIVE_TEXTURES>;
+
+template <typename T>
+using ActiveTextureArray = std::array<T, IMPLEMENTATION_MAX_ACTIVE_TEXTURES>;
+
+using ActiveTexturePointerArray = ActiveTextureArray<Texture *>;
+using ActiveTextureTypeArray    = ActiveTextureArray<TextureType>;
 
 // OffsetBindingPointer.getSize() returns the size specified by the user, which may be larger than
 // the size of the bound buffer. This function reduces the returned size to fit the bound buffer if
@@ -451,7 +450,7 @@ class DestroyThenDelete
 
     void operator()(ObjT *obj)
     {
-        ANGLE_SWALLOW_ERR(obj->onDestroy(mContext));
+        (void)(obj->onDestroy(mContext));
         delete obj;
     }
 

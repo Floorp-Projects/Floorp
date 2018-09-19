@@ -50,25 +50,26 @@ class Framebuffer9 : public FramebufferD3D
     }
 
   private:
-    gl::Error clearImpl(const gl::Context *context, const ClearParameters &clearParams) override;
+    angle::Result clearImpl(const gl::Context *context,
+                            const ClearParameters &clearParams) override;
 
-    gl::Error readPixelsImpl(const gl::Context *context,
-                             const gl::Rectangle &area,
-                             GLenum format,
-                             GLenum type,
-                             size_t outputPitch,
-                             const gl::PixelPackState &pack,
-                             uint8_t *pixels) override;
+    angle::Result readPixelsImpl(const gl::Context *context,
+                                 const gl::Rectangle &area,
+                                 GLenum format,
+                                 GLenum type,
+                                 size_t outputPitch,
+                                 const gl::PixelPackState &pack,
+                                 uint8_t *pixels) override;
 
-    gl::Error blitImpl(const gl::Context *context,
-                       const gl::Rectangle &sourceArea,
-                       const gl::Rectangle &destArea,
-                       const gl::Rectangle *scissor,
-                       bool blitRenderTarget,
-                       bool blitDepth,
-                       bool blitStencil,
-                       GLenum filter,
-                       const gl::Framebuffer *sourceFramebuffer) override;
+    angle::Result blitImpl(const gl::Context *context,
+                           const gl::Rectangle &sourceArea,
+                           const gl::Rectangle &destArea,
+                           const gl::Rectangle *scissor,
+                           bool blitRenderTarget,
+                           bool blitDepth,
+                           bool blitStencil,
+                           GLenum filter,
+                           const gl::Framebuffer *sourceFramebuffer) override;
 
     GLenum getRenderTargetImplementationFormat(RenderTargetD3D *renderTarget) const override;
 

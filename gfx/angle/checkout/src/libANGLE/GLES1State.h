@@ -76,29 +76,29 @@ struct FogParameters
 
 struct TextureEnvironmentParameters
 {
-    TextureEnvMode envMode      = TextureEnvMode::Modulate;
+    TextureEnvMode mode         = TextureEnvMode::Modulate;
     TextureCombine combineRgb   = TextureCombine::Modulate;
     TextureCombine combineAlpha = TextureCombine::Modulate;
 
-    TextureSrc src0rgb   = TextureSrc::Texture;
-    TextureSrc src0alpha = TextureSrc::Texture;
+    TextureSrc src0Rgb   = TextureSrc::Texture;
+    TextureSrc src0Alpha = TextureSrc::Texture;
 
-    TextureSrc src1rgb   = TextureSrc::Previous;
-    TextureSrc src1alpha = TextureSrc::Previous;
+    TextureSrc src1Rgb   = TextureSrc::Previous;
+    TextureSrc src1Alpha = TextureSrc::Previous;
 
-    TextureSrc src2rgb   = TextureSrc::Constant;
-    TextureSrc src2alpha = TextureSrc::Constant;
+    TextureSrc src2Rgb   = TextureSrc::Constant;
+    TextureSrc src2Alpha = TextureSrc::Constant;
 
-    TextureOp op0rgb   = TextureOp::SrcColor;
-    TextureOp op0alpha = TextureOp::SrcAlpha;
+    TextureOp op0Rgb   = TextureOp::SrcColor;
+    TextureOp op0Alpha = TextureOp::SrcAlpha;
 
-    TextureOp op1rgb   = TextureOp::SrcColor;
-    TextureOp op1alpha = TextureOp::SrcAlpha;
+    TextureOp op1Rgb   = TextureOp::SrcColor;
+    TextureOp op1Alpha = TextureOp::SrcAlpha;
 
-    TextureOp op2rgb   = TextureOp::SrcAlpha;
-    TextureOp op2alpha = TextureOp::SrcAlpha;
+    TextureOp op2Rgb   = TextureOp::SrcAlpha;
+    TextureOp op2Alpha = TextureOp::SrcAlpha;
 
-    ColorF envColor    = {0.0f, 0.0f, 0.0f, 0.0f};
+    ColorF color       = {0.0f, 0.0f, 0.0f, 0.0f};
     GLfloat rgbScale   = 1.0f;
     GLfloat alphaScale = 1.0f;
 
@@ -107,11 +107,17 @@ struct TextureEnvironmentParameters
 
 struct PointParameters
 {
-    GLfloat pointSizeMin;
-    GLfloat pointSizeMax;
-    GLfloat pointFadeThresholdSize;
-    angle::Vector3 pointDistanceAttenuation;
-    GLfloat pointSize;
+    GLfloat pointSizeMin                    = 0.0f;
+    GLfloat pointSizeMax                    = 1.0f;
+    GLfloat pointFadeThresholdSize          = 1.0f;
+    angle::Vector3 pointDistanceAttenuation = {1.0f, 0.0f, 0.0f};
+    GLfloat pointSize                       = 1.0f;
+};
+
+struct ClipPlaneParameters
+{
+    bool enabled;
+    angle::Vector4 equation;
 };
 
 class Context;
@@ -142,6 +148,8 @@ class GLES1State final : angle::NonCopyable
     void setMatrixMode(MatrixType mode);
     MatrixType getMatrixMode() const;
 
+    GLint getCurrentMatrixStackDepth(GLenum param) const;
+
     void pushMatrix();
     void popMatrix();
 
@@ -149,13 +157,47 @@ class GLES1State final : angle::NonCopyable
     MatrixStack &currentMatrixStack();
     const MatrixStack &currentMatrixStack() const;
 
+    const angle::Mat4 &getModelviewMatrix() const;
+
     void loadMatrix(const angle::Mat4 &m);
     void multMatrix(const angle::Mat4 &m);
 
+    void setLogicOp(LogicalOperation opcodePacked);
+
     void setClientStateEnabled(ClientVertexArrayType clientState, bool enable);
+    void setTexCoordArrayEnabled(unsigned int unit, bool enable);
     bool isClientStateEnabled(ClientVertexArrayType clientState) const;
     bool isTexCoordArrayEnabled(unsigned int unit) const;
     bool isTextureTargetEnabled(unsigned int unit, const TextureType type) const;
+
+    LightModelParameters &lightModelParameters();
+    const LightModelParameters &lightModelParameters() const;
+
+    LightParameters &lightParameters(unsigned int light);
+    const LightParameters &lightParameters(unsigned int light) const;
+
+    MaterialParameters &materialParameters();
+    const MaterialParameters &materialParameters() const;
+    bool isColorMaterialEnabled() const;
+
+    void setShadeModel(ShadingModel model);
+
+    void setClipPlane(unsigned int plane, const GLfloat *equation);
+    void getClipPlane(unsigned int plane, GLfloat *equation) const;
+
+    FogParameters &fogParameters();
+    const FogParameters &fogParameters() const;
+
+    TextureEnvironmentParameters &textureEnvironment(unsigned int unit);
+    const TextureEnvironmentParameters &textureEnvironment(unsigned int unit) const;
+
+    PointParameters &pointParameters();
+    const PointParameters &pointParameters() const;
+
+    AttributesMask getVertexArraysAttributeMask() const;
+
+    void setHint(GLenum target, GLenum mode);
+    GLenum getHint(GLenum target);
 
   private:
     friend class State;
@@ -176,7 +218,6 @@ class GLES1State final : angle::NonCopyable
     std::vector<bool> mTexCoordArrayEnabled;
 
     // Table 6.7-6.16 (IsEnabled)
-    std::vector<bool> mClipPlaneEnabled;
     bool mLineSmoothEnabled;
     bool mPointSmoothEnabled;
     bool mPointSpriteEnabled;
@@ -228,7 +269,7 @@ class GLES1State final : angle::NonCopyable
     LogicalOperation mLogicOp;
 
     // Table 6.7
-    std::vector<angle::Vector4> mClipPlanes;
+    std::vector<ClipPlaneParameters> mClipPlanes;
 
     // Table 6.19
     HintSetting mLineSmoothHint;

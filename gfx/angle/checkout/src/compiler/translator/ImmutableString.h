@@ -138,6 +138,7 @@ class ImmutableString
     size_t mLength;
 };
 
+constexpr ImmutableString kEmptyImmutableString("");
 }  // namespace sh
 
 std::ostream &operator<<(std::ostream &os, const sh::ImmutableString &str);

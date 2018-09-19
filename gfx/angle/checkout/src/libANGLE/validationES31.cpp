@@ -410,7 +410,7 @@ bool ValidateGetBooleani_vRobustANGLE(Context *context,
     return true;
 }
 
-bool ValidateDrawIndirectBase(Context *context, GLenum mode, const void *indirect)
+bool ValidateDrawIndirectBase(Context *context, PrimitiveMode mode, const void *indirect)
 {
     if (context->getClientVersion() < ES_3_1)
     {
@@ -468,10 +468,10 @@ bool ValidateDrawIndirectBase(Context *context, GLenum mode, const void *indirec
     return true;
 }
 
-bool ValidateDrawArraysIndirect(Context *context, GLenum mode, const void *indirect)
+bool ValidateDrawArraysIndirect(Context *context, PrimitiveMode mode, const void *indirect)
 {
-    const State &state                          = context->getGLState();
-    TransformFeedback *curTransformFeedback     = state.getCurrentTransformFeedback();
+    const State &state                      = context->getGLState();
+    TransformFeedback *curTransformFeedback = state.getCurrentTransformFeedback();
     if (curTransformFeedback && curTransformFeedback->isActive() &&
         !curTransformFeedback->isPaused())
     {
@@ -516,16 +516,19 @@ bool ValidateDrawArraysIndirect(Context *context, GLenum mode, const void *indir
     return true;
 }
 
-bool ValidateDrawElementsIndirect(Context *context, GLenum mode, GLenum type, const void *indirect)
+bool ValidateDrawElementsIndirect(Context *context,
+                                  PrimitiveMode mode,
+                                  GLenum type,
+                                  const void *indirect)
 {
     if (!ValidateDrawElementsBase(context, mode, type))
     {
         return false;
     }
 
-    const State &state             = context->getGLState();
-    const VertexArray *vao         = state.getVertexArray();
-    Buffer *elementArrayBuffer     = vao->getElementArrayBuffer().get();
+    const State &state         = context->getGLState();
+    const VertexArray *vao     = state.getVertexArray();
+    Buffer *elementArrayBuffer = vao->getElementArrayBuffer().get();
     if (!elementArrayBuffer)
     {
         context->handleError(InvalidOperation() << "zero is bound to ELEMENT_ARRAY_BUFFER");
@@ -1022,65 +1025,7 @@ bool ValidateTexStorage2DMultisample(Context *context,
         return false;
     }
 
-    const Caps &caps = context->getCaps();
-    if (static_cast<GLuint>(width) > caps.max2DTextureSize ||
-        static_cast<GLuint>(height) > caps.max2DTextureSize)
-    {
-        context
-            ->handleError(InvalidValue()
-                          << "Width and height must be less than or equal to GL_MAX_TEXTURE_SIZE.");
-        return false;
-    }
-
-    if (samples == 0)
-    {
-        context->handleError(InvalidValue() << "Samples may not be zero.");
-        return false;
-    }
-
-    const TextureCaps &formatCaps = context->getTextureCaps().get(internalFormat);
-    if (!formatCaps.renderable)
-    {
-        context->handleError(InvalidEnum() << "SizedInternalformat must be color-renderable, "
-                                              "depth-renderable, or stencil-renderable.");
-        return false;
-    }
-
-    // The ES3.1 spec(section 8.8) states that an INVALID_ENUM error is generated if internalformat
-    // is one of the unsized base internalformats listed in table 8.11.
-    const InternalFormat &formatInfo = GetSizedInternalFormatInfo(internalFormat);
-    if (formatInfo.internalFormat == GL_NONE)
-    {
-        context->handleError(
-            InvalidEnum()
-            << "Internalformat is one of the unsupported unsized base internalformats.");
-        return false;
-    }
-
-    if (static_cast<GLuint>(samples) > formatCaps.getMaxSamples())
-    {
-        context->handleError(
-            InvalidOperation()
-            << "Samples must not be greater than maximum supported value for the format.");
-        return false;
-    }
-
-    Texture *texture = context->getTargetTexture(target);
-    if (!texture || texture->id() == 0)
-    {
-        context->handleError(InvalidOperation() << "Zero is bound to target.");
-        return false;
-    }
-
-    if (texture->getImmutableFormat())
-    {
-        context->handleError(InvalidOperation() << "The value of TEXTURE_IMMUTABLE_FORMAT for "
-                                                   "the texture currently bound to target on "
-                                                   "the active texture unit is true.");
-        return false;
-    }
-
-    return true;
+    return ValidateTexStorageMultisample(context, target, samples, internalFormat, width, height);
 }
 
 bool ValidateGetMultisamplefv(Context *context, GLenum pname, GLuint index, GLfloat *val)
@@ -1960,6 +1905,85 @@ bool ValidateSampleMaski(Context *context, GLuint maskNumber, GLbitfield mask)
     }
 
     return true;
+}
+
+bool ValidateFramebufferTextureEXT(Context *context,
+                                   GLenum target,
+                                   GLenum attachment,
+                                   GLuint texture,
+                                   GLint level)
+{
+    if (!context->getExtensions().geometryShader)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidOperation(), GeometryShaderExtensionNotEnabled);
+        return false;
+    }
+
+    if (texture != 0)
+    {
+        gl::Texture *tex = context->getTexture(texture);
+
+        // [EXT_geometry_shader] Section 9.2.8 "Attaching Texture Images to a Framebuffer"
+        // An INVALID_VALUE error is generated if <texture> is not the name of a texture object.
+        // We put this validation before ValidateFramebufferTextureBase because it is an
+        // INVALID_OPERATION error for both FramebufferTexture2D and FramebufferTextureLayer:
+        // [OpenGL ES 3.1] Chapter 9.2.8 (FramebufferTexture2D)
+        // An INVALID_OPERATION error is generated if texture is not zero, and does not name an
+        // existing texture object of type matching textarget.
+        // [OpenGL ES 3.1 Chapter 9.2.8 (FramebufferTextureLayer)
+        // An INVALID_OPERATION error is generated if texture is non-zero and is not the name of a
+        // three-dimensional or two-dimensional array texture.
+        if (tex == nullptr)
+        {
+            ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidTextureName);
+            return false;
+        }
+
+        if (!ValidMipLevel(context, tex->getType(), level))
+        {
+            ANGLE_VALIDATION_ERR(context, InvalidValue(), InvalidMipLevel);
+            return false;
+        }
+    }
+
+    if (!ValidateFramebufferTextureBase(context, target, attachment, texture, level))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// GL_ANGLE_texture_multisample_array
+bool ValidateTexStorage3DMultisampleANGLE(Context *context,
+                                          TextureType target,
+                                          GLsizei samples,
+                                          GLint sizedinternalformat,
+                                          GLsizei width,
+                                          GLsizei height,
+                                          GLsizei depth,
+                                          GLboolean fixedsamplelocations)
+{
+    if (!context->getExtensions().textureMultisampleArray)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidEnum(), MultisampleArrayExtensionRequired);
+        return false;
+    }
+
+    if (target != TextureType::_2DMultisampleArray)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidEnum(), TargetMustBeTexture2DMultisampleArrayANGLE);
+        return false;
+    }
+
+    if (width < 1 || height < 1 || depth < 1)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidValue(), NegativeSize);
+        return false;
+    }
+
+    return ValidateTexStorageMultisample(context, target, samples, sizedinternalformat, width,
+                                         height);
 }
 
 }  // namespace gl
