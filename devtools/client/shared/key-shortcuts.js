@@ -59,7 +59,7 @@ const ElectronKeysMapping = {
 };
 
 /**
- * Helper to listen for keyboard events decribed in .properties file.
+ * Helper to listen for keyboard events described in .properties file.
  *
  * let shortcuts = new KeyShortcuts({
  *   window
@@ -184,6 +184,28 @@ KeyShortcuts.stringify = function(shortcut) {
   return list.join("+");
 };
 
+/*
+ * Parse an xul-like key string and return an electron-like string.
+ */
+KeyShortcuts.parseXulKey = function(modifiers, shortcut) {
+  modifiers = modifiers.split(",").map(mod => {
+    if (mod == "alt") {
+      return "Alt";
+    } else if (mod == "shift") {
+      return "Shift";
+    } else if (mod == "accel") {
+      return "CmdOrCtrl";
+    }
+    return mod;
+  }).join("+");
+
+  if (shortcut.startsWith("VK_")) {
+    shortcut = shortcut.substr(3);
+  }
+
+  return modifiers + "+" + shortcut;
+};
+
 KeyShortcuts.prototype = {
   destroy() {
     this.target.removeEventListener("keydown", this);
@@ -201,7 +223,7 @@ KeyShortcuts.prototype = {
       return false;
     }
     if (shortcut.shift != event.shiftKey) {
-      // Shift is a special modifier, it may implicitely be required if the expected key
+      // Shift is a special modifier, it may implicitly be required if the expected key
       // is a special character accessible via shift.
       const isAlphabetical = event.key && event.key.match(/[a-zA-Z]/);
       // OSX: distinguish cmd+[key] from cmd+shift+[key] shortcuts (Bug 1300458)
