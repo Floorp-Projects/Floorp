@@ -472,8 +472,9 @@ add_task(async function test_syncs_clients_with_local_database() {
   // This simulates what remote-settings would do when initializing a local database.
   // We don't want to instantiate a client using the RemoteSettings() API
   // since we want to test «unknown» clients that have a local database.
-  await (new Kinto.adapters.IDB("blocklists/addons")).saveLastModified(42);
-  await (new Kinto.adapters.IDB("main/recipes")).saveLastModified(43);
+  const dbName = "remote-settings";
+  await (new Kinto.adapters.IDB("blocklists/addons", { dbName })).saveLastModified(42);
+  await (new Kinto.adapters.IDB("main/recipes", { dbName })).saveLastModified(43);
 
   let error;
   try {

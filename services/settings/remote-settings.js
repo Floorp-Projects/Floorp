@@ -297,7 +297,11 @@ class RemoteSettingsClient {
    */
   async openCollection() {
     if (!this._kinto) {
-      this._kinto = new Kinto();
+      this._kinto = new Kinto({
+        bucket: this.bucketName,
+        adapter: Kinto.adapters.IDB,
+        adapterOptions: { dbName: "remote-settings", migrateOldData: false },
+      });
     }
     const options = {
       localFields: this.localFields,
@@ -570,30 +574,15 @@ class RemoteSettingsClient {
 }
 
 /**
- * Check if an IndexedDB database exists for the specified bucket and collection.
+ * Check if local data exist for the specified client.
  *
- * @param {String} bucket
- * @param {String} collection
+ * @param {RemoteSettingsClient} client
  * @return {bool} Whether it exists or not.
  */
-async function databaseExists(bucket, collection) {
-  // The dbname is chosen by kinto.js from the bucket and collection names.
-  // https://github.com/Kinto/kinto.js/blob/41aa1526e/src/collection.js#L231
-  const dbname = `${bucket}/${collection}`;
-  try {
-    await new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbname, 1);
-      request.onupgradeneeded = event => {
-        event.target.transaction.abort();
-        reject(event.target.error);
-      };
-      request.onerror = event => reject(event.target.error);
-      request.onsuccess = event => resolve(event.target.result);
-    });
-    return true;
-  } catch (e) {
-    return false;
-  }
+async function hasLocalData(client) {
+  const kintoCol = await client.openCollection();
+  const timestamp = await kintoCol.db.getLastModified();
+  return timestamp !== null;
 }
 
 /**
@@ -658,25 +647,21 @@ function remoteSettingsFunction() {
     // Check if a client was registered for this bucket/collection. Potentially
     // with some specific options like signer, filter function etc.
     const client = _clients.get(collectionName);
-
-    if (client) {
-      // If the bucket name was changed manually on the client instance and does not
-      // match, don't return it.
-      if (client.bucketName == bucketName) {
-        return client;
-      }
-
-    // There was no client registered for this bucket/collection, but it's the main bucket,
+    if (client && client.bucketName == bucketName) {
+      return client;
+    }
+    // There was no client registered for this collection, but it's the main bucket,
     // therefore we can instantiate a client with the default options.
     // So if we have a local database or if we ship a JSON dump, then it means that
     // this client is known but it was not registered yet (eg. calling module not "imported" yet).
-    } else if (bucketName == Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET)) {
+    if (bucketName == Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET)) {
+      const c = new RemoteSettingsClient(collectionName, defaultOptions);
       const [dbExists, localDump] = await Promise.all([
-        databaseExists(bucketName, collectionName),
+        hasLocalData(c),
         hasLocalDump(bucketName, collectionName),
       ]);
       if (dbExists || localDump) {
-        return new RemoteSettingsClient(collectionName, defaultOptions);
+        return c;
       }
     }
     // Else, we cannot return a client insttance because we are not able to synchronize data in specific buckets.

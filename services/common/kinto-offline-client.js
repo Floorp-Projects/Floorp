@@ -33,10 +33,10 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 11.2.2 - 0bf146a
+ * Version 12.0.2 - 2ad36df
  */
 
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 /*
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,24 +51,18 @@ var EXPORTED_SYMBOLS = ["Kinto"];
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _KintoBase = require("../src/KintoBase");
+var _KintoBase = _interopRequireDefault(require("../src/KintoBase"));
 
-var _KintoBase2 = _interopRequireDefault(_KintoBase);
+var _base = _interopRequireDefault(require("../src/adapters/base"));
 
-var _base = require("../src/adapters/base");
-
-var _base2 = _interopRequireDefault(_base);
-
-var _IDB = require("../src/adapters/IDB");
-
-var _IDB2 = _interopRequireDefault(_IDB);
+var _IDB = _interopRequireDefault(require("../src/adapters/IDB"));
 
 var _utils = require("../src/utils");
 
@@ -77,31 +71,36 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(global, ["fetch", "indexedDB"]);
+const {
+  EventEmitter
+} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
+const {
+  generateUUID
+} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator); // Use standalone kinto-http module landed in FFx.
 
-const { EventEmitter } = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
-const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const {
+  KintoHttpClient
+} = ChromeUtils.import("resource://services-common/kinto-http-client.js");
 
-// Use standalone kinto-http module landed in FFx.
-const { KintoHttpClient } = ChromeUtils.import("resource://services-common/kinto-http-client.js");
-
-class Kinto extends _KintoBase2.default {
+class Kinto extends _KintoBase.default {
   static get adapters() {
     return {
-      BaseAdapter: _base2.default,
-      IDB: _IDB2.default
+      BaseAdapter: _base.default,
+      IDB: _IDB.default
     };
   }
 
   constructor(options = {}) {
     const events = {};
     EventEmitter.decorate(events);
-
     const defaults = {
-      adapter: _IDB2.default,
+      adapter: _IDB.default,
       events,
       ApiClass: KintoHttpClient
     };
-    super({ ...defaults, ...options });
+    super({ ...defaults,
+      ...options
+    });
   }
 
   collection(collName, options = {}) {
@@ -109,16 +108,23 @@ class Kinto extends _KintoBase2.default {
       validate(id) {
         return typeof id == "string" && _utils.RE_RECORD_ID.test(id);
       },
+
       generate() {
         return generateUUID().toString().replace(/[{}]/g, "");
       }
-    };
-    return super.collection(collName, { idSchema, ...options });
-  }
-}
 
-exports.default = Kinto; // This fixes compatibility with CommonJS required by browserify.
+    };
+    return super.collection(collName, {
+      idSchema,
+      ...options
+    });
+  }
+
+} // This fixes compatibility with CommonJS required by browserify.
 // See http://stackoverflow.com/questions/33505992/babel-6-changes-how-it-exports-default/33683495#33683495
+
+
+exports.default = Kinto;
 
 if (typeof module === "object") {
   module.exports = Kinto;
@@ -132,24 +138,21 @@ if (typeof module === "object") {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _collection = require("./collection");
+var _collection = _interopRequireDefault(require("./collection"));
 
-var _collection2 = _interopRequireDefault(_collection);
-
-var _base = require("./adapters/base");
-
-var _base2 = _interopRequireDefault(_base);
+var _base = _interopRequireDefault(require("./adapters/base"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const DEFAULT_BUCKET_NAME = "default";
 const DEFAULT_REMOTE = "http://localhost:8888/v1";
 const DEFAULT_RETRY = 1;
-
 /**
  * KintoBase class.
  */
+
 class KintoBase {
   /**
    * Provides a public access to the base adapter class. Users can create a
@@ -159,10 +162,9 @@ class KintoBase {
    */
   static get adapters() {
     return {
-      BaseAdapter: _base2.default
+      BaseAdapter: _base.default
     };
   }
-
   /**
    * Synchronization strategies. Available strategies are:
    *
@@ -172,10 +174,11 @@ class KintoBase {
    *
    * @type {Object}
    */
-  static get syncStrategy() {
-    return _collection2.default.strategy;
-  }
 
+
+  static get syncStrategy() {
+    return _collection.default.strategy;
+  }
   /**
    * Constructor.
    *
@@ -185,7 +188,6 @@ class KintoBase {
    * - `{EventEmitter}` `events`         Events handler.
    * - `{BaseAdapter}`  `adapter`        The base DB adapter class.
    * - `{Object}`       `adapterOptions` Options given to the adapter.
-   * - `{String}`       `dbPrefix`       The DB name prefix.
    * - `{Object}`       `headers`        The HTTP headers to use.
    * - `{Object}`       `retry`          Number of retries when the server fails to process the request (default: `1`)
    * - `{String}`       `requestMode`    The HTTP CORS mode to use.
@@ -193,13 +195,18 @@ class KintoBase {
    *
    * @param  {Object} options The options object.
    */
+
+
   constructor(options = {}) {
     const defaults = {
       bucket: DEFAULT_BUCKET_NAME,
       remote: DEFAULT_REMOTE,
       retry: DEFAULT_RETRY
     };
-    this._options = { ...defaults, ...options };
+    this._options = { ...defaults,
+      ...options
+    };
+
     if (!this._options.adapter) {
       throw new Error("No adapter provided");
     }
@@ -212,14 +219,13 @@ class KintoBase {
       requestMode,
       retry,
       timeout
-    } = this._options;
-
-    // public properties
+    } = this._options; // public properties
 
     /**
      * The kinto HTTP client instance.
      * @type {KintoClient}
      */
+
     this.api = new ApiClass(remote, {
       events,
       headers,
@@ -231,9 +237,9 @@ class KintoBase {
      * The event emitter instance.
      * @type {EventEmitter}
      */
+
     this.events = this._options.events;
   }
-
   /**
    * Creates a {@link Collection} instance. The second (optional) parameter
    * will set collection-level options like e.g. `remoteTransformers`.
@@ -246,28 +252,40 @@ class KintoBase {
    * @param  {Object} [options.localFields]        Array<Field> (default: `[]`])
    * @return {Collection}
    */
+
+
   collection(collName, options = {}) {
     if (!collName) {
       throw new Error("missing collection name");
     }
-    const { bucket, events, adapter, adapterOptions, dbPrefix } = {
-      ...this._options,
+
+    const {
+      bucket,
+      events,
+      adapter,
+      adapterOptions
+    } = { ...this._options,
       ...options
     };
-    const { idSchema, remoteTransformers, hooks, localFields } = options;
-
-    return new _collection2.default(bucket, collName, this.api, {
+    const {
+      idSchema,
+      remoteTransformers,
+      hooks,
+      localFields
+    } = options;
+    return new _collection.default(bucket, collName, this.api, {
       events,
       adapter,
       adapterOptions,
-      dbPrefix,
       idSchema,
       remoteTransformers,
       hooks,
       localFields
     });
   }
+
 }
+
 exports.default = KintoBase;
 
 },{"./adapters/base":5,"./collection":6}],4:[function(require,module,exports){
@@ -276,30 +294,133 @@ exports.default = KintoBase;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.open = open;
+exports.execute = execute;
+exports.default = void 0;
 
-var _base = require("./base.js");
-
-var _base2 = _interopRequireDefault(_base);
+var _base = _interopRequireDefault(require("./base.js"));
 
 var _utils = require("../utils");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const INDEXED_FIELDS = ["id", "_status", "last_modified"];
+/**
+ * Small helper that wraps the opening of an IndexedDB into a Promise.
+ *
+ * @param dbname          {String}   The database name.
+ * @param version         {Integer}  Schema version
+ * @param onupgradeneeded {Function} The callback to execute if schema is
+ *                                   missing or different.
+ * @return {Promise<IDBDatabase>}
+ */
 
+async function open(dbname, {
+  version,
+  onupgradeneeded
+}) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbname, version);
+
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+
+      db.onerror = event => reject(event.target.error);
+
+      return onupgradeneeded(event);
+    };
+
+    request.onerror = event => {
+      reject(event.target.error);
+    };
+
+    request.onsuccess = event => {
+      const db = event.target.result;
+      resolve(db);
+    };
+  });
+}
+/**
+ * Helper to run the specified callback in a single transaction on the
+ * specified store.
+ * The helper focuses on transaction wrapping into a promise.
+ *
+ * @param db           {IDBDatabase} The database instance.
+ * @param name         {String}      The store name.
+ * @param callback     {Function}    The piece of code to execute in the transaction.
+ * @param options      {Object}      Options.
+ * @param options.mode {String}      Transaction mode (default: read).
+ * @return {Promise} any value returned by the callback.
+ */
+
+
+async function execute(db, name, callback, options = {}) {
+  const {
+    mode
+  } = options;
+  return new Promise((resolve, reject) => {
+    // On Safari, calling IDBDatabase.transaction with mode == undefined raises
+    // a TypeError.
+    const transaction = mode ? db.transaction([name], mode) : db.transaction([name]);
+    const store = transaction.objectStore(name); // Let the callback abort this transaction.
+
+    const abort = e => {
+      transaction.abort();
+      reject(e);
+    }; // Execute the specified callback **synchronously**.
+
+
+    let result;
+
+    try {
+      result = callback(store, abort);
+    } catch (e) {
+      abort(e);
+    }
+
+    transaction.onerror = event => reject(event.target.error);
+
+    transaction.oncomplete = event => resolve(result);
+  });
+}
+/**
+ * Helper to wrap the deletion of an IndexedDB database into a promise.
+ *
+ * @param dbName {String} the database to delete
+ * @return {Promise}
+ */
+
+
+async function deleteDatabase(dbName) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(dbName);
+
+    request.onsuccess = event => resolve(event.target);
+
+    request.onerror = event => reject(event.target.error);
+  });
+}
 /**
  * IDB cursor handlers.
  * @type {Object}
  */
+
+
 const cursorHandlers = {
   all(filters, done) {
     const results = [];
-    return function (event) {
+    return event => {
       const cursor = event.target.result;
+
       if (cursor) {
-        if ((0, _utils.filterObject)(filters, cursor.value)) {
-          results.push(cursor.value);
+        const {
+          value
+        } = cursor;
+
+        if ((0, _utils.filterObject)(filters, value)) {
+          results.push(value);
         }
+
         cursor.continue();
       } else {
         done(results);
@@ -307,111 +428,120 @@ const cursorHandlers = {
     };
   },
 
-  in(values, done) {
-    if (values.length === 0) {
-      return done([]);
-    }
-    const sortedValues = [].slice.call(values).sort();
+  in(values, filters, done) {
     const results = [];
     return function (event) {
       const cursor = event.target.result;
+
       if (!cursor) {
         done(results);
         return;
       }
-      const { key, value } = cursor;
-      let i = 0;
-      while (key > sortedValues[i]) {
+
+      const {
+        key,
+        value
+      } = cursor; // `key` can be an array of two values (see `keyPath` in indices definitions).
+
+      let i = 0; // `values` can be an array of arrays if we filter using an index whose key path
+      // is an array (eg. `cursorHandlers.in([["bid/cid", 42], ["bid/cid", 43]], ...)`)
+
+      while (key > values[i]) {
         // The cursor has passed beyond this key. Check next.
         ++i;
-        if (i === sortedValues.length) {
+
+        if (i === values.length) {
           done(results); // There is no next. Stop searching.
+
           return;
         }
       }
-      if (key === sortedValues[i]) {
-        results.push(value);
+
+      const isEqual = Array.isArray(key) ? (0, _utils.arrayEqual)(key, values[i]) : key === values[i];
+
+      if (isEqual) {
+        if ((0, _utils.filterObject)(filters, value)) {
+          results.push(value);
+        }
+
         cursor.continue();
       } else {
-        cursor.continue(sortedValues[i]);
+        cursor.continue(values[i]);
       }
     };
   }
+
 };
-
-/**
- * Extract from filters definition the first indexed field. Since indexes were
- * created on single-columns, extracting a single one makes sense.
- *
- * @param  {Object} filters The filters object.
- * @return {String|undefined}
- */
-function findIndexedField(filters) {
-  const filteredFields = Object.keys(filters);
-  const indexedFields = filteredFields.filter(field => {
-    return INDEXED_FIELDS.includes(field);
-  });
-  return indexedFields[0];
-}
-
 /**
  * Creates an IDB request and attach it the appropriate cursor event handler to
  * perform a list query.
  *
  * Multiple matching values are handled by passing an array.
  *
+ * @param  {String}           cid        The collection id (ie. `{bid}/{cid}`)
  * @param  {IDBStore}         store      The IDB store.
- * @param  {String|undefined} indexField The indexed field to query, if any.
- * @param  {Any}              value      The value to filter, if any.
- * @param  {Object}           filters    More filters.
+ * @param  {Object}           filters    Filter the records by field.
  * @param  {Function}         done       The operation completion handler.
  * @return {IDBRequest}
  */
-function createListRequest(store, indexField, value, filters, done) {
+
+function createListRequest(cid, store, filters, done) {
+  // Introspect filters and check if they leverage an indexed field.
+  const indexField = Object.keys(filters).find(field => {
+    return INDEXED_FIELDS.includes(field);
+  });
+
   if (!indexField) {
-    // Get all records.
-    const request = store.openCursor();
+    // Get all records for this collection (ie. cid)
+    const request = store.index("cid").openCursor(IDBKeyRange.only(cid));
     request.onsuccess = cursorHandlers.all(filters, done);
     return request;
-  }
+  } // If `indexField` was used already, don't filter again.
 
-  // WHERE IN equivalent clause
+
+  const remainingFilters = (0, _utils.omitKeys)(filters, indexField); // value specified in the filter (eg. `filters: { _status: ["created", "updated"] }`)
+
+  const value = filters[indexField]; // WHERE IN equivalent clause
+
   if (Array.isArray(value)) {
-    const request = store.index(indexField).openCursor();
-    request.onsuccess = cursorHandlers.in(value, done);
-    return request;
-  }
+    if (value.length === 0) {
+      return done([]);
+    }
 
-  // WHERE field = value clause
-  const request = store.index(indexField).openCursor(IDBKeyRange.only(value));
-  request.onsuccess = cursorHandlers.all(filters, done);
+    const values = value.map(i => [cid, i]).sort();
+    const range = IDBKeyRange.bound(values[0], values[values.length - 1]);
+    const request = store.index(indexField).openCursor(range);
+    request.onsuccess = cursorHandlers.in(values, remainingFilters, done);
+    return request;
+  } // WHERE field = value clause
+
+
+  const request = store.index(indexField).openCursor(IDBKeyRange.only([cid, value]));
+  request.onsuccess = cursorHandlers.all(remainingFilters, done);
   return request;
 }
-
 /**
  * IndexedDB adapter.
  *
  * This adapter doesn't support any options.
  */
-class IDB extends _base2.default {
+
+
+class IDB extends _base.default {
   /**
    * Constructor.
    *
-   * @param  {String} store The store name.
-   * @param  {Object} options Adapter options.
-   * @param  {String} options.dbname The IndexedDB name (default: same as store).
+   * @param  {String} cid  The key base for this collection (eg. `bid/cid`)
+   * @param  {Object} options
+   * @param  {String} options.dbName         The IndexedDB name (default: `"KintoDB"`)
+   * @param  {String} options.migrateOldData Whether old database data should be migrated (default: `false`)
    */
-  constructor(storeName, options = {}) {
+  constructor(cid, options = {}) {
     super();
+    this.cid = cid;
+    this.dbName = options.dbName || "KintoDB";
+    this._options = options;
     this._db = null;
-    // public properties
-    /**
-     * The database name.
-     * @type {String}
-     */
-    this.storeName = storeName;
-    const { dbname = storeName } = options;
-    this.dbname = dbname;
   }
 
   _handleError(method, err) {
@@ -419,102 +549,132 @@ class IDB extends _base2.default {
     error.stack = err.stack;
     throw error;
   }
-
   /**
    * Ensures a connection to the IndexedDB database has been opened.
    *
    * @override
    * @return {Promise}
    */
-  open() {
+
+
+  async open() {
     if (this._db) {
-      return Promise.resolve(this);
-    }
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbname, 1);
-      request.onupgradeneeded = event => {
-        // DB object
-        const db = event.target.result;
-        // Main collection store
-        const collStore = db.createObjectStore(this.storeName, {
-          keyPath: "id"
-        });
-        // Primary key (generated by IdSchema, UUID by default)
-        collStore.createIndex("id", "id", { unique: true });
-        // Local record status ("synced", "created", "updated", "deleted")
-        collStore.createIndex("_status", "_status");
-        // Last modified field
-        collStore.createIndex("last_modified", "last_modified");
+      return this;
+    } // In previous versions, we used to have a database with name `${bid}/${cid}`.
+    // Check if it exists, and migrate data once new schema is in place.
+    // Note: the built-in migrations from IndexedDB can only be used if the
+    // database name does not change.
 
-        // Metadata store
-        const metaStore = db.createObjectStore("__meta__", {
-          keyPath: "name"
+
+    const dataToMigrate = this._options.migrateOldData ? await migrationRequired(this.cid) : null;
+    this._db = await open(this.dbName, {
+      version: 1,
+      onupgradeneeded: event => {
+        const db = event.target.result; // Records store
+
+        const recordsStore = db.createObjectStore("records", {
+          keyPath: ["_cid", "id"]
+        }); // An index to obtain all the records in a collection.
+
+        recordsStore.createIndex("cid", "_cid"); // Here we create indices for every known field in records by collection.
+        // Record id (generated by IdSchema, UUID by default)
+
+        recordsStore.createIndex("id", ["_cid", "id"]); // Local record status ("synced", "created", "updated", "deleted")
+
+        recordsStore.createIndex("_status", ["_cid", "_status"]); // Last modified field
+
+        recordsStore.createIndex("last_modified", ["_cid", "last_modified"]); // Timestamps store
+
+        db.createObjectStore("timestamps", {
+          keyPath: "cid"
         });
-        metaStore.createIndex("name", "name", { unique: true });
-      };
-      request.onerror = event => reject(event.target.error);
-      request.onsuccess = event => {
-        this._db = event.target.result;
-        resolve(this);
-      };
+      }
     });
-  }
 
+    if (dataToMigrate) {
+      const {
+        records,
+        timestamp
+      } = dataToMigrate;
+      await this.loadDump(records);
+      await this.saveLastModified(timestamp);
+      console.log(`${this.cid}: data was migrated successfully.`); // Delete the old database.
+
+      await deleteDatabase(this.cid);
+      console.warn(`${this.cid}: old database was deleted.`);
+    }
+
+    return this;
+  }
   /**
    * Closes current connection to the database.
    *
    * @override
    * @return {Promise}
    */
+
+
   close() {
     if (this._db) {
       this._db.close(); // indexedDB.close is synchronous
+
+
       this._db = null;
     }
+
     return Promise.resolve();
   }
-
   /**
-   * Returns a transaction and an object store for this collection.
+   * Returns a transaction and an object store for a store name.
    *
    * To determine if a transaction has completed successfully, we should rather
    * listen to the transaction’s complete event rather than the IDBObjectStore
    * request’s success event, because the transaction may still fail after the
    * success event fires.
    *
-   * @param  {String}      mode  Transaction mode ("readwrite" or undefined)
-   * @param  {String|null} name  Store name (defaults to coll name)
+   * @param  {String}      name  Store name
+   * @param  {Function}    callback to execute
+   * @param  {Object}      options Options
+   * @param  {String}      options.mode  Transaction mode ("readwrite" or undefined)
    * @return {Object}
    */
-  prepare(mode = undefined, name = null) {
-    const storeName = name || this.storeName;
-    // On Safari, calling IDBDatabase.transaction with mode == undefined raises
-    // a TypeError.
-    const transaction = mode ? this._db.transaction([storeName], mode) : this._db.transaction([storeName]);
-    const store = transaction.objectStore(storeName);
-    return { transaction, store };
-  }
 
+
+  async prepare(name, callback, options) {
+    await this.open();
+    await execute(this._db, name, callback, options);
+  }
   /**
    * Deletes every records in the current collection.
    *
    * @override
    * @return {Promise}
    */
+
+
   async clear() {
     try {
-      await this.open();
-      return new Promise((resolve, reject) => {
-        const { transaction, store } = this.prepare("readwrite");
-        store.clear();
-        transaction.onerror = event => reject(new Error(event.target.error));
-        transaction.oncomplete = () => resolve();
+      await this.prepare("records", store => {
+        const range = IDBKeyRange.only(this.cid);
+        const request = store.index("cid").openKeyCursor(range);
+
+        request.onsuccess = event => {
+          const cursor = event.target.result;
+
+          if (cursor) {
+            store.delete(cursor.primaryKey);
+            cursor.continue();
+          }
+        };
+
+        return request;
+      }, {
+        mode: "readwrite"
       });
     } catch (e) {
       this._handleError("clear", e);
     }
   }
-
   /**
    * Executes the set of synchronous CRUD operations described in the provided
    * callback within an IndexedDB transaction, for current db store.
@@ -532,21 +692,23 @@ class IDB extends _base2.default {
    *
    * @example
    * const db = new IDB("example");
-   * db.execute(transaction => {
+   * const result = await db.execute(transaction => {
    *   transaction.create({id: 1, title: "foo"});
    *   transaction.update({id: 2, title: "bar"});
    *   transaction.delete(3);
    *   return "foo";
-   * })
-   *   .catch(console.error.bind(console));
-   *   .then(console.log.bind(console)); // => "foo"
+   * });
    *
    * @override
    * @param  {Function} callback The operation description callback.
    * @param  {Object}   options  The options object.
    * @return {Promise}
    */
-  async execute(callback, options = { preload: [] }) {
+
+
+  async execute(callback, options = {
+    preload: []
+  }) {
     // Transactions in IndexedDB are autocommited when a callback does not
     // perform any additional operation.
     // The way Promises are implemented in Firefox (see https://bugzilla.mozilla.org/show_bug.cgi?id=1193394)
@@ -557,39 +719,50 @@ class IDB extends _base2.default {
     // - http://stackoverflow.com/a/28388805/330911
     // - http://stackoverflow.com/a/10405196
     // - https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
-    await this.open();
-    return new Promise((resolve, reject) => {
-      // Start transaction.
-      const { transaction, store } = this.prepare("readwrite");
-      // Preload specified records using index.
-      const ids = options.preload;
-      store.index("id").openCursor().onsuccess = cursorHandlers.in(ids, records => {
+    let result;
+    await this.prepare("records", (store, abort) => {
+      const runCallback = (preloaded = []) => {
+        // Expose a consistent API for every adapter instead of raw store methods.
+        const proxy = transactionProxy(this, store, preloaded); // The callback is executed synchronously within the same transaction.
+
+        try {
+          const returned = callback(proxy);
+
+          if (returned instanceof Promise) {
+            // XXX: investigate how to provide documentation details in error.
+            throw new Error("execute() callback should not return a Promise.");
+          } // Bring to scope that will be returned (once promise awaited).
+
+
+          result = returned;
+        } catch (e) {
+          // The callback has thrown an error explicitly. Abort transaction cleanly.
+          abort(e);
+        }
+      }; // No option to preload records, go straight to `callback`.
+
+
+      if (!options.preload.length) {
+        return runCallback();
+      } // Preload specified records using a list request.
+
+
+      const filters = {
+        id: options.preload
+      };
+      createListRequest(this.cid, store, filters, records => {
         // Store obtained records by id.
         const preloaded = records.reduce((acc, record) => {
-          acc[record.id] = record;
+          acc[record.id] = (0, _utils.omitKeys)(record, ["_cid"]);
           return acc;
         }, {});
-        // Expose a consistent API for every adapter instead of raw store methods.
-        const proxy = transactionProxy(store, preloaded);
-        // The callback is executed synchronously within the same transaction.
-        let result;
-        try {
-          result = callback(proxy);
-        } catch (e) {
-          transaction.abort();
-          reject(e);
-        }
-        if (result instanceof Promise) {
-          // XXX: investigate how to provide documentation details in error.
-          reject(new Error("execute() callback should not return a Promise."));
-        }
-        // XXX unsure if we should manually abort the transaction on error
-        transaction.onerror = event => reject(new Error(event.target.error));
-        transaction.oncomplete = event => resolve(result);
+        runCallback(preloaded);
       });
+    }, {
+      mode: "readwrite"
     });
+    return result;
   }
-
   /**
    * Retrieve a record by its primary key from the IndexedDB database.
    *
@@ -597,20 +770,19 @@ class IDB extends _base2.default {
    * @param  {String} id The record id.
    * @return {Promise}
    */
+
+
   async get(id) {
     try {
-      await this.open();
-      return new Promise((resolve, reject) => {
-        const { transaction, store } = this.prepare();
-        const request = store.get(id);
-        transaction.onerror = event => reject(new Error(event.target.error));
-        transaction.oncomplete = () => resolve(request.result);
+      let record;
+      await this.prepare("records", store => {
+        store.get([this.cid, id]).onsuccess = e => record = e.target.result;
       });
+      return record;
     } catch (e) {
       this._handleError("get", e);
     }
   }
-
   /**
    * Lists all records from the IndexedDB database.
    *
@@ -618,35 +790,31 @@ class IDB extends _base2.default {
    * @param  {Object} params  The filters and order to apply to the results.
    * @return {Promise}
    */
-  async list(params = { filters: {} }) {
-    const { filters } = params;
-    const indexField = findIndexedField(filters);
-    const value = filters[indexField];
+
+
+  async list(params = {
+    filters: {}
+  }) {
+    const {
+      filters
+    } = params;
+
     try {
-      await this.open();
-      const results = await new Promise((resolve, reject) => {
-        let results = [];
-        // If `indexField` was used already, don't filter again.
-        const remainingFilters = (0, _utils.omitKeys)(filters, indexField);
-
-        const { transaction, store } = this.prepare();
-        createListRequest(store, indexField, value, remainingFilters, _results => {
-          // we have received all requested records, parking them within
-          // current scope
-          results = _results;
+      let results = [];
+      await this.prepare("records", store => {
+        createListRequest(this.cid, store, filters, _results => {
+          // we have received all requested records that match the filters,
+          // we now park them within current scope and hide the `_cid` attribute.
+          results = _results.map(r => (0, _utils.omitKeys)(r, ["_cid"]));
         });
-        transaction.onerror = event => reject(new Error(event.target.error));
-        transaction.oncomplete = event => resolve(results);
-      });
-
-      // The resulting list of records is sorted.
+      }); // The resulting list of records is sorted.
       // XXX: with some efforts, this could be fully implemented using IDB API.
+
       return params.order ? (0, _utils.sortObjects)(params.order, results) : results;
     } catch (e) {
       this._handleError("list", e);
     }
   }
-
   /**
    * Store the lastModified value into metadata store.
    *
@@ -654,35 +822,42 @@ class IDB extends _base2.default {
    * @param  {Number}  lastModified
    * @return {Promise}
    */
+
+
   async saveLastModified(lastModified) {
     const value = parseInt(lastModified, 10) || null;
-    await this.open();
-    return new Promise((resolve, reject) => {
-      const { transaction, store } = this.prepare("readwrite", "__meta__");
-      store.put({ name: `${this.storeName}-lastModified`, value: value });
-      transaction.onerror = event => reject(event.target.error);
-      transaction.oncomplete = event => resolve(value);
-    });
-  }
 
+    try {
+      await this.prepare("timestamps", store => store.put({
+        cid: this.cid,
+        value
+      }), {
+        mode: "readwrite"
+      });
+      return value;
+    } catch (e) {
+      this._handleError("saveLastModified", e);
+    }
+  }
   /**
    * Retrieve saved lastModified value.
    *
    * @override
    * @return {Promise}
    */
-  async getLastModified() {
-    await this.open();
-    return new Promise((resolve, reject) => {
-      const { transaction, store } = this.prepare(undefined, "__meta__");
-      const request = store.get(`${this.storeName}-lastModified`);
-      transaction.onerror = event => reject(event.target.error);
-      transaction.oncomplete = event => {
-        resolve(request.result && request.result.value || null);
-      };
-    });
-  }
 
+
+  async getLastModified() {
+    try {
+      let entry = null;
+      await this.prepare("timestamps", store => {
+        store.get(this.cid).onsuccess = e => entry = e.target.result;
+      });
+      return entry ? entry.value : null;
+    } catch (e) {
+      this._handleError("getLastModified", e);
+    }
+  }
   /**
    * Load a dump of records exported from a server.
    *
@@ -690,6 +865,8 @@ class IDB extends _base2.default {
    * @param  {Array} records The records to load.
    * @return {Promise}
    */
+
+
   async loadDump(records) {
     try {
       await this.execute(transaction => {
@@ -697,48 +874,123 @@ class IDB extends _base2.default {
       });
       const previousLastModified = await this.getLastModified();
       const lastModified = Math.max(...records.map(record => record.last_modified));
+
       if (lastModified > previousLastModified) {
         await this.saveLastModified(lastModified);
       }
+
       return records;
     } catch (e) {
       this._handleError("loadDump", e);
     }
   }
+
 }
+/**
+ * IDB transaction proxy.
+ *
+ * @param  {IDB} adapter        The call IDB adapter
+ * @param  {IDBStore} store     The IndexedDB database store.
+ * @param  {Array}    preloaded The list of records to make available to
+ *                              get() (default: []).
+ * @return {Object}
+ */
 
-exports.default = IDB; /**
-                        * IDB transaction proxy.
-                        *
-                        * @param  {IDBStore} store     The IndexedDB database store.
-                        * @param  {Array}    preloaded The list of records to make available to
-                        *                              get() (default: []).
-                        * @return {Object}
-                        */
 
-function transactionProxy(store, preloaded = []) {
+exports.default = IDB;
+
+function transactionProxy(adapter, store, preloaded = []) {
+  const _cid = adapter.cid;
   return {
     create(record) {
-      store.add(record);
+      store.add({ ...record,
+        _cid
+      });
     },
 
     update(record) {
-      store.put(record);
+      store.put({ ...record,
+        _cid
+      });
     },
 
     delete(id) {
-      store.delete(id);
+      store.delete([_cid, id]);
     },
 
     get(id) {
       return preloaded[id];
     }
+
   };
+}
+/**
+ * Up to version 10.X of kinto.js, each collection had its own collection.
+ * The database name was `${bid}/${cid}` (eg. `"blocklists/certificates"`)
+ * and contained only one store with the same name.
+ */
+
+
+async function migrationRequired(dbName) {
+  let exists = true;
+  const db = await open(dbName, {
+    version: 1,
+    onupgradeneeded: event => {
+      exists = false;
+    }
+  }); // Check that the DB we're looking at is really a legacy one,
+  // and not some remainder of the open() operation above.
+
+  exists &= db.objectStoreNames.contains("__meta__") && db.objectStoreNames.contains(dbName);
+
+  if (!exists) {
+    db.close(); // Testing the existence creates it, so delete it :)
+
+    await deleteDatabase(dbName);
+    return null;
+  }
+
+  console.warn(`${dbName}: old IndexedDB database found.`);
+
+  try {
+    // Scan all records.
+    let records;
+    await execute(db, dbName, store => {
+      store.openCursor().onsuccess = cursorHandlers.all({}, res => records = res);
+    });
+    console.log(`${dbName}: found ${records.length} records.`); // Check if there's a entry for this.
+
+    let timestamp = null;
+    await execute(db, "__meta__", store => {
+      store.get(`${dbName}-lastModified`).onsuccess = e => {
+        timestamp = e.target.result ? e.target.result.value : null;
+      };
+    }); // Some previous versions, also used to store the timestamps without prefix.
+
+    if (!timestamp) {
+      await execute(db, "__meta__", store => {
+        store.get("lastModified").onsuccess = e => {
+          timestamp = e.target.result ? e.target.result.value : null;
+        };
+      });
+    }
+
+    console.log(`${dbName}: ${timestamp ? "found" : "no"} timestamp.`); // Those will be inserted in the new database/schema.
+
+    return {
+      records,
+      timestamp
+    };
+  } catch (e) {
+    console.error("Error occured during migration", e);
+    return null;
+  } finally {
+    db.close();
+  }
 }
 
 },{"../utils":7,"./base.js":5}],5:[function(require,module,exports){
 "use strict";
-
 /**
  * Base db adapter.
  *
@@ -748,6 +1000,8 @@ function transactionProxy(store, preloaded = []) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
+
 class BaseAdapter {
   /**
    * Deletes every records present in the database.
@@ -758,7 +1012,6 @@ class BaseAdapter {
   clear() {
     throw new Error("Not Implemented.");
   }
-
   /**
    * Executes a batch of operations within a single transaction.
    *
@@ -767,10 +1020,13 @@ class BaseAdapter {
    * @param  {Object}   options  The options object.
    * @return {Promise}
    */
-  execute(callback, options = { preload: [] }) {
+
+
+  execute(callback, options = {
+    preload: []
+  }) {
     throw new Error("Not Implemented.");
   }
-
   /**
    * Retrieve a record by its primary key from the database.
    *
@@ -778,10 +1034,11 @@ class BaseAdapter {
    * @param  {String} id The record id.
    * @return {Promise}
    */
+
+
   get(id) {
     throw new Error("Not Implemented.");
   }
-
   /**
    * Lists all records from the database.
    *
@@ -789,10 +1046,14 @@ class BaseAdapter {
    * @param  {Object} params  The filters and order to apply to the results.
    * @return {Promise}
    */
-  list(params = { filters: {}, order: "" }) {
+
+
+  list(params = {
+    filters: {},
+    order: ""
+  }) {
     throw new Error("Not Implemented.");
   }
-
   /**
    * Store the lastModified value.
    *
@@ -800,20 +1061,22 @@ class BaseAdapter {
    * @param  {Number}  lastModified
    * @return {Promise}
    */
+
+
   saveLastModified(lastModified) {
     throw new Error("Not Implemented.");
   }
-
   /**
    * Retrieve saved lastModified value.
    *
    * @abstract
    * @return {Promise}
    */
+
+
   getLastModified() {
     throw new Error("Not Implemented.");
   }
-
   /**
    * Load a dump of records exported from a server.
    *
@@ -821,10 +1084,14 @@ class BaseAdapter {
    * @param  {Array} records The records to load.
    * @return {Promise}
    */
+
+
   loadDump(records) {
     throw new Error("Not Implemented.");
   }
+
 }
+
 exports.default = BaseAdapter;
 
 },{}],6:[function(require,module,exports){
@@ -833,16 +1100,12 @@ exports.default = BaseAdapter;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CollectionTransaction = exports.SyncResultObject = undefined;
 exports.recordsEqual = recordsEqual;
+exports.CollectionTransaction = exports.default = exports.SyncResultObject = void 0;
 
-var _base = require("./adapters/base");
+var _base = _interopRequireDefault(require("./adapters/base"));
 
-var _base2 = _interopRequireDefault(_base);
-
-var _IDB = require("./adapters/IDB");
-
-var _IDB2 = _interopRequireDefault(_IDB);
+var _IDB = _interopRequireDefault(require("./adapters/IDB"));
 
 var _utils = require("./utils");
 
@@ -852,7 +1115,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const RECORD_FIELDS_TO_CLEAN = ["_status"];
 const AVAILABLE_HOOKS = ["incoming-changes"];
-
 /**
  * Compare two records omitting local fields and synchronization
  * attributes (like _status and last_modified)
@@ -861,15 +1123,19 @@ const AVAILABLE_HOOKS = ["incoming-changes"];
  * @param {Array} localFields Additional fields to ignore during the comparison
  * @return {boolean}
  */
+
 function recordsEqual(a, b, localFields = []) {
   const fieldsToClean = RECORD_FIELDS_TO_CLEAN.concat(["last_modified"]).concat(localFields);
+
   const cleanLocal = r => (0, _utils.omitKeys)(r, fieldsToClean);
+
   return (0, _utils.deepEqual)(cleanLocal(a), cleanLocal(b));
 }
-
 /**
  * Synchronization result object.
  */
+
+
 class SyncResultObject {
   /**
    * Object default values.
@@ -889,10 +1155,11 @@ class SyncResultObject {
       resolved: []
     };
   }
-
   /**
    * Public constructor.
    */
+
+
   constructor() {
     /**
      * Current synchronization result status; becomes `false` when conflicts or
@@ -902,7 +1169,6 @@ class SyncResultObject {
     this.ok = true;
     Object.assign(this, SyncResultObject.defaults);
   }
-
   /**
    * Adds entries for a given result type.
    *
@@ -910,17 +1176,22 @@ class SyncResultObject {
    * @param {Array}  entries The result entries.
    * @return {SyncResultObject}
    */
+
+
   add(type, entries) {
     if (!Array.isArray(this[type])) {
       return;
     }
+
     if (!Array.isArray(entries)) {
       entries = [entries];
-    }
-    // Deduplicate entries by id. If the values don't have `id` attribute, just
+    } // Deduplicate entries by id. If the values don't have `id` attribute, just
     // keep all.
+
+
     const recordsWithoutId = new Set();
     const recordsById = new Map();
+
     function addOneRecord(record) {
       if (!record.id) {
         recordsWithoutId.add(record);
@@ -928,28 +1199,31 @@ class SyncResultObject {
         recordsById.set(record.id, record);
       }
     }
+
     this[type].forEach(addOneRecord);
     entries.forEach(addOneRecord);
-
     this[type] = Array.from(recordsById.values()).concat(Array.from(recordsWithoutId));
     this.ok = this.errors.length + this.conflicts.length === 0;
     return this;
   }
-
   /**
    * Reinitializes result entries for a given result type.
    *
    * @param  {String} type The result type.
    * @return {SyncResultObject}
    */
+
+
   reset(type) {
     this[type] = SyncResultObject.defaults[type];
     this.ok = this.errors.length + this.conflicts.length === 0;
     return this;
   }
+
 }
 
 exports.SyncResultObject = SyncResultObject;
+
 function createUUIDSchema() {
   return {
     generate() {
@@ -959,11 +1233,14 @@ function createUUIDSchema() {
     validate(id) {
       return typeof id == "string" && _utils.RE_RECORD_ID.test(id);
     }
+
   };
 }
 
 function markStatus(record, status) {
-  return { ...record, _status: status };
+  return { ...record,
+    _status: status
+  };
 }
 
 function markDeleted(record) {
@@ -973,7 +1250,6 @@ function markDeleted(record) {
 function markSynced(record) {
   return markStatus(record, "synced");
 }
-
 /**
  * Import a remote change into the local database.
  *
@@ -982,35 +1258,59 @@ function markSynced(record) {
  * @param  {Array<String>}       localFields The list of fields that remain local.
  * @return {Object}
  */
+
+
 function importChange(transaction, remote, localFields) {
   const local = transaction.get(remote.id);
+
   if (!local) {
     // Not found locally but remote change is marked as deleted; skip to
     // avoid recreation.
     if (remote.deleted) {
-      return { type: "skipped", data: remote };
+      return {
+        type: "skipped",
+        data: remote
+      };
     }
+
     const synced = markSynced(remote);
     transaction.create(synced);
-    return { type: "created", data: synced };
-  }
-  // Compare local and remote, ignoring local fields.
-  const isIdentical = recordsEqual(local, remote, localFields);
-  // Apply remote changes on local record.
-  const synced = { ...local, ...markSynced(remote) };
-  // Detect or ignore conflicts if record has also been modified locally.
+    return {
+      type: "created",
+      data: synced
+    };
+  } // Compare local and remote, ignoring local fields.
+
+
+  const isIdentical = recordsEqual(local, remote, localFields); // Apply remote changes on local record.
+
+  const synced = { ...local,
+    ...markSynced(remote)
+  }; // Detect or ignore conflicts if record has also been modified locally.
+
   if (local._status !== "synced") {
     // Locally deleted, unsynced: scheduled for remote deletion.
     if (local._status === "deleted") {
-      return { type: "skipped", data: local };
+      return {
+        type: "skipped",
+        data: local
+      };
     }
+
     if (isIdentical) {
       // If records are identical, import anyway, so we bump the
       // local last_modified value from the server and set record
       // status to "synced".
       transaction.update(synced);
-      return { type: "updated", data: { old: local, new: synced } };
+      return {
+        type: "updated",
+        data: {
+          old: local,
+          new: synced
+        }
+      };
     }
+
     if (local.last_modified !== undefined && local.last_modified === remote.last_modified) {
       // If our local version has the same last_modified as the remote
       // one, this represents an object that corresponds to a resolved
@@ -1019,36 +1319,54 @@ function importChange(transaction, remote, localFields) {
       // But if our last_modified is undefined,
       // that means we've created the same object locally as one on
       // the server, which *must* be a conflict.
-      return { type: "void" };
+      return {
+        type: "void"
+      };
     }
+
     return {
       type: "conflicts",
-      data: { type: "incoming", local: local, remote: remote }
+      data: {
+        type: "incoming",
+        local: local,
+        remote: remote
+      }
     };
-  }
-  // Local record was synced.
+  } // Local record was synced.
+
+
   if (remote.deleted) {
     transaction.delete(remote.id);
-    return { type: "deleted", data: local };
-  }
-  // Import locally.
-  transaction.update(synced);
-  // if identical, simply exclude it from all SyncResultObject lists
-  const type = isIdentical ? "void" : "updated";
-  return { type, data: { old: local, new: synced } };
-}
+    return {
+      type: "deleted",
+      data: local
+    };
+  } // Import locally.
 
+
+  transaction.update(synced); // if identical, simply exclude it from all SyncResultObject lists
+
+  const type = isIdentical ? "void" : "updated";
+  return {
+    type,
+    data: {
+      old: local,
+      new: synced
+    }
+  };
+}
 /**
  * Abstracts a collection of records stored in the local database, providing
  * CRUD operations and synchronization helpers.
  */
+
+
 class Collection {
   /**
    * Constructor.
    *
    * Options:
    * - `{BaseAdapter} adapter` The DB adapter (default: `IDB`)
-   * - `{String} dbPrefix`     The DB name prefix (default: `""`)
    *
    * @param  {String} bucket  The bucket identifier.
    * @param  {String} name    The collection name.
@@ -1059,78 +1377,89 @@ class Collection {
     this._bucket = bucket;
     this._name = name;
     this._lastModified = null;
+    const DBAdapter = options.adapter || _IDB.default;
 
-    const DBAdapter = options.adapter || _IDB2.default;
     if (!DBAdapter) {
       throw new Error("No adapter provided");
     }
-    const dbPrefix = options.dbPrefix || "";
-    const db = new DBAdapter(`${dbPrefix}${bucket}/${name}`, options.adapterOptions);
-    if (!(db instanceof _base2.default)) {
+
+    const db = new DBAdapter(`${bucket}/${name}`, options.adapterOptions);
+
+    if (!(db instanceof _base.default)) {
       throw new Error("Unsupported adapter.");
-    }
-    // public properties
+    } // public properties
+
     /**
      * The db adapter instance
      * @type {BaseAdapter}
      */
+
+
     this.db = db;
     /**
      * The Api instance.
      * @type {KintoClient}
      */
+
     this.api = api;
     /**
      * The event emitter instance.
      * @type {EventEmitter}
      */
+
     this.events = options.events;
     /**
      * The IdSchema instance.
      * @type {Object}
      */
+
     this.idSchema = this._validateIdSchema(options.idSchema);
     /**
      * The list of remote transformers.
      * @type {Array}
      */
+
     this.remoteTransformers = this._validateRemoteTransformers(options.remoteTransformers);
     /**
      * The list of hooks.
      * @type {Object}
      */
+
     this.hooks = this._validateHooks(options.hooks);
     /**
      * The list of fields names that will remain local.
      * @type {Array}
      */
+
     this.localFields = options.localFields || [];
   }
-
   /**
    * The collection name.
    * @type {String}
    */
+
+
   get name() {
     return this._name;
   }
-
   /**
    * The bucket name.
    * @type {String}
    */
+
+
   get bucket() {
     return this._bucket;
   }
-
   /**
    * The last modified timestamp.
    * @type {Number}
    */
+
+
   get lastModified() {
     return this._lastModified;
   }
-
   /**
    * Synchronization strategies. Available strategies are:
    *
@@ -1140,6 +1469,8 @@ class Collection {
    *
    * @type {Object}
    */
+
+
   static get strategy() {
     return {
       CLIENT_WINS: "client_wins",
@@ -1147,17 +1478,19 @@ class Collection {
       MANUAL: "manual"
     };
   }
-
   /**
    * Validates an idSchema.
    *
    * @param  {Object|undefined} idSchema
    * @return {Object}
    */
+
+
   _validateIdSchema(idSchema) {
     if (typeof idSchema === "undefined") {
       return createUUIDSchema();
     }
+
     if (typeof idSchema !== "object") {
       throw new Error("idSchema must be an object.");
     } else if (typeof idSchema.generate !== "function") {
@@ -1165,22 +1498,26 @@ class Collection {
     } else if (typeof idSchema.validate !== "function") {
       throw new Error("idSchema must provide a validate function.");
     }
+
     return idSchema;
   }
-
   /**
    * Validates a list of remote transformers.
    *
    * @param  {Array|undefined} remoteTransformers
    * @return {Array}
    */
+
+
   _validateRemoteTransformers(remoteTransformers) {
     if (typeof remoteTransformers === "undefined") {
       return [];
     }
+
     if (!Array.isArray(remoteTransformers)) {
       throw new Error("remoteTransformers should be an array.");
     }
+
     return remoteTransformers.map(transformer => {
       if (typeof transformer !== "object") {
         throw new Error("A transformer must be an object.");
@@ -1189,41 +1526,48 @@ class Collection {
       } else if (typeof transformer.decode !== "function") {
         throw new Error("A transformer must provide a decode function.");
       }
+
       return transformer;
     });
   }
-
   /**
    * Validate the passed hook is correct.
    *
    * @param {Array|undefined} hook.
    * @return {Array}
    **/
+
+
   _validateHook(hook) {
     if (!Array.isArray(hook)) {
       throw new Error("A hook definition should be an array of functions.");
     }
+
     return hook.map(fn => {
       if (typeof fn !== "function") {
         throw new Error("A hook definition should be an array of functions.");
       }
+
       return fn;
     });
   }
-
   /**
    * Validates a list of hooks.
    *
    * @param  {Object|undefined} hooks
    * @return {Object}
    */
+
+
   _validateHooks(hooks) {
     if (typeof hooks === "undefined") {
       return {};
     }
+
     if (Array.isArray(hooks)) {
       throw new Error("hooks should be an object, not an array.");
     }
+
     if (typeof hooks !== "object") {
       throw new Error("hooks should be an object.");
     }
@@ -1234,23 +1578,28 @@ class Collection {
       if (!AVAILABLE_HOOKS.includes(hook)) {
         throw new Error("The hook should be one of " + AVAILABLE_HOOKS.join(", "));
       }
+
       validatedHooks[hook] = this._validateHook(hooks[hook]);
     }
+
     return validatedHooks;
   }
-
   /**
    * Deletes every records in the current collection and marks the collection as
    * never synced.
    *
    * @return {Promise}
    */
+
+
   async clear() {
     await this.db.clear();
     await this.db.saveLastModified(null);
-    return { data: [], permissions: {} };
+    return {
+      data: [],
+      permissions: {}
+    };
   }
-
   /**
    * Encodes a record.
    *
@@ -1258,15 +1607,17 @@ class Collection {
    * @param  {Object} record The record object to encode.
    * @return {Promise}
    */
+
+
   _encodeRecord(type, record) {
     if (!this[`${type}Transformers`].length) {
       return Promise.resolve(record);
     }
+
     return (0, _utils.waterfall)(this[`${type}Transformers`].map(transformer => {
       return record => transformer.encode(record);
     }), record);
   }
-
   /**
    * Decodes a record.
    *
@@ -1274,15 +1625,17 @@ class Collection {
    * @param  {Object} record The record object to decode.
    * @return {Promise}
    */
+
+
   _decodeRecord(type, record) {
     if (!this[`${type}Transformers`].length) {
       return Promise.resolve(record);
     }
+
     return (0, _utils.waterfall)(this[`${type}Transformers`].reverse().map(transformer => {
       return record => transformer.decode(record);
     }), record);
   }
-
   /**
    * Adds a record to the local database, asserting that none
    * already exist with this ID.
@@ -1302,38 +1655,48 @@ class Collection {
    * @param  {Object} options
    * @return {Promise}
    */
-  create(record, options = { useRecordId: false, synced: false }) {
+
+
+  create(record, options = {
+    useRecordId: false,
+    synced: false
+  }) {
     // Validate the record and its ID (if any), even though this
     // validation is also done in the CollectionTransaction method,
     // because we need to pass the ID to preloadIds.
     const reject = msg => Promise.reject(new Error(msg));
+
     if (typeof record !== "object") {
       return reject("Record is not an object.");
     }
+
     if ((options.synced || options.useRecordId) && !record.hasOwnProperty("id")) {
       return reject("Missing required Id; synced and useRecordId options require one");
     }
+
     if (!options.synced && !options.useRecordId && record.hasOwnProperty("id")) {
       return reject("Extraneous Id; can't create a record having one set.");
     }
-    const newRecord = {
-      ...record,
+
+    const newRecord = { ...record,
       id: options.synced || options.useRecordId ? record.id : this.idSchema.generate(record),
       _status: options.synced ? "synced" : "created"
     };
+
     if (!this.idSchema.validate(newRecord.id)) {
       return reject(`Invalid Id: ${newRecord.id}`);
     }
+
     return this.execute(txn => txn.create(newRecord), {
       preloadIds: [newRecord.id]
     }).catch(err => {
       if (options.useRecordId) {
         throw new Error("Couldn't create record. It may have been virtually deleted.");
       }
+
       throw err;
     });
   }
-
   /**
    * Like {@link CollectionTransaction#update}, but wrapped in its own transaction.
    *
@@ -1346,16 +1709,23 @@ class Collection {
    * @param  {Object} options
    * @return {Promise}
    */
-  update(record, options = { synced: false, patch: false }) {
+
+
+  update(record, options = {
+    synced: false,
+    patch: false
+  }) {
     // Validate the record and its ID, even though this validation is
     // also done in the CollectionTransaction method, because we need
     // to pass the ID to preloadIds.
     if (typeof record !== "object") {
       return Promise.reject(new Error("Record is not an object."));
     }
+
     if (!record.hasOwnProperty("id")) {
       return Promise.reject(new Error("Cannot update a record missing id."));
     }
+
     if (!this.idSchema.validate(record.id)) {
       return Promise.reject(new Error(`Invalid Id: ${record.id}`));
     }
@@ -1364,13 +1734,14 @@ class Collection {
       preloadIds: [record.id]
     });
   }
-
   /**
    * Like {@link CollectionTransaction#upsert}, but wrapped in its own transaction.
    *
    * @param  {Object} record
    * @return {Promise}
    */
+
+
   upsert(record) {
     // Validate the record and its ID, even though this validation is
     // also done in the CollectionTransaction method, because we need
@@ -1378,16 +1749,19 @@ class Collection {
     if (typeof record !== "object") {
       return Promise.reject(new Error("Record is not an object."));
     }
+
     if (!record.hasOwnProperty("id")) {
       return Promise.reject(new Error("Cannot update a record missing id."));
     }
+
     if (!this.idSchema.validate(record.id)) {
       return Promise.reject(new Error(`Invalid Id: ${record.id}`));
     }
 
-    return this.execute(txn => txn.upsert(record), { preloadIds: [record.id] });
+    return this.execute(txn => txn.upsert(record), {
+      preloadIds: [record.id]
+    });
   }
-
   /**
    * Like {@link CollectionTransaction#get}, but wrapped in its own transaction.
    *
@@ -1398,20 +1772,28 @@ class Collection {
    * @param  {Object} options
    * @return {Promise}
    */
-  get(id, options = { includeDeleted: false }) {
-    return this.execute(txn => txn.get(id, options), { preloadIds: [id] });
-  }
 
+
+  get(id, options = {
+    includeDeleted: false
+  }) {
+    return this.execute(txn => txn.get(id, options), {
+      preloadIds: [id]
+    });
+  }
   /**
    * Like {@link CollectionTransaction#getAny}, but wrapped in its own transaction.
    *
    * @param  {String} id
    * @return {Promise}
    */
-  getAny(id) {
-    return this.execute(txn => txn.getAny(id), { preloadIds: [id] });
-  }
 
+
+  getAny(id) {
+    return this.execute(txn => txn.getAny(id), {
+      preloadIds: [id]
+    });
+  }
   /**
    * Same as {@link Collection#delete}, but wrapped in its own transaction.
    *
@@ -1423,25 +1805,37 @@ class Collection {
    * @param  {Object} options  The options object.
    * @return {Promise}
    */
-  delete(id, options = { virtual: true }) {
+
+
+  delete(id, options = {
+    virtual: true
+  }) {
     return this.execute(transaction => {
       return transaction.delete(id, options);
-    }, { preloadIds: [id] });
+    }, {
+      preloadIds: [id]
+    });
   }
-
   /**
    * Same as {@link Collection#deleteAll}, but wrapped in its own transaction, execulding the parameter.
    *
    * @return {Promise}
    */
+
+
   async deleteAll() {
-    const { data } = await this.list({}, { includeDeleted: false });
+    const {
+      data
+    } = await this.list({}, {
+      includeDeleted: false
+    });
     const recordIds = data.map(record => record.id);
     return this.execute(transaction => {
       return transaction.deleteAll(recordIds);
-    }, { preloadIds: recordIds });
+    }, {
+      preloadIds: recordIds
+    });
   }
-
   /**
    * The same as {@link CollectionTransaction#deleteAny}, but wrapped
    * in its own transaction.
@@ -1449,10 +1843,13 @@ class Collection {
    * @param  {String} id       The record's Id.
    * @return {Promise}
    */
-  deleteAny(id) {
-    return this.execute(txn => txn.deleteAny(id), { preloadIds: [id] });
-  }
 
+
+  deleteAny(id) {
+    return this.execute(txn => txn.deleteAny(id), {
+      preloadIds: [id]
+    });
+  }
   /**
    * Lists records from the local database.
    *
@@ -1467,16 +1864,28 @@ class Collection {
    * @param  {Object} options The options object.
    * @return {Promise}
    */
-  async list(params = {}, options = { includeDeleted: false }) {
-    params = { order: "-last_modified", filters: {}, ...params };
+
+
+  async list(params = {}, options = {
+    includeDeleted: false
+  }) {
+    params = {
+      order: "-last_modified",
+      filters: {},
+      ...params
+    };
     const results = await this.db.list(params);
     let data = results;
+
     if (!options.includeDeleted) {
       data = results.filter(record => record._status !== "deleted");
     }
-    return { data, permissions: {} };
-  }
 
+    return {
+      data,
+      permissions: {}
+    };
+  }
   /**
    * Imports remote changes into the local database.
    * This method is in charge of detecting the conflicts, and resolve them
@@ -1486,23 +1895,36 @@ class Collection {
    * @param  {String}           strategy         The {@link Collection.strategy} (default: MANUAL)
    * @return {Promise}
    */
+
+
   async importChanges(syncResultObject, decodedChanges, strategy = Collection.strategy.MANUAL) {
     // Retrieve records matching change ids.
     try {
-      const { imports, resolved } = await this.db.execute(transaction => {
+      const {
+        imports,
+        resolved
+      } = await this.db.execute(transaction => {
         const imports = decodedChanges.map(remote => {
           // Store remote change into local database.
           return importChange(transaction, remote, this.localFields);
         });
         const conflicts = imports.filter(i => i.type === "conflicts").map(i => i.data);
+
         const resolved = this._handleConflicts(transaction, conflicts, strategy);
-        return { imports, resolved };
-      }, { preload: decodedChanges.map(record => record.id) });
 
-      // Lists of created/updated/deleted records
-      imports.forEach(({ type, data }) => syncResultObject.add(type, data));
+        return {
+          imports,
+          resolved
+        };
+      }, {
+        preload: decodedChanges.map(record => record.id)
+      }); // Lists of created/updated/deleted records
 
-      // Automatically resolved conflicts (if not manual)
+      imports.forEach(({
+        type,
+        data
+      }) => syncResultObject.add(type, data)); // Automatically resolved conflicts (if not manual)
+
       if (resolved.length > 0) {
         syncResultObject.reset("conflicts").add("resolved", resolved);
       }
@@ -1511,14 +1933,13 @@ class Collection {
         type: "incoming",
         message: err.message,
         stack: err.stack
-      };
-      // XXX one error of the whole transaction instead of per atomic op
+      }; // XXX one error of the whole transaction instead of per atomic op
+
       syncResultObject.add("errors", data);
     }
 
     return syncResultObject;
   }
-
   /**
    * Imports the responses of pushed changes into the local database.
    * Basically it stores the timestamp assigned by the server into the local
@@ -1529,35 +1950,45 @@ class Collection {
    * @param  {String}           strategy         The {@link Collection.strategy}.
    * @return {Promise}
    */
+
+
   async _applyPushedResults(syncResultObject, toApplyLocally, conflicts, strategy = Collection.strategy.MANUAL) {
     const toDeleteLocally = toApplyLocally.filter(r => r.deleted);
     const toUpdateLocally = toApplyLocally.filter(r => !r.deleted);
-
-    const { published, resolved } = await this.db.execute(transaction => {
+    const {
+      published,
+      resolved
+    } = await this.db.execute(transaction => {
       const updated = toUpdateLocally.map(record => {
         const synced = markSynced(record);
         transaction.update(synced);
         return synced;
       });
       const deleted = toDeleteLocally.map(record => {
-        transaction.delete(record.id);
-        // Amend result data with the deleted attribute set
-        return { id: record.id, deleted: true };
-      });
-      const published = updated.concat(deleted);
-      // Handle conflicts, if any
-      const resolved = this._handleConflicts(transaction, conflicts, strategy);
-      return { published, resolved };
-    });
+        transaction.delete(record.id); // Amend result data with the deleted attribute set
 
+        return {
+          id: record.id,
+          deleted: true
+        };
+      });
+      const published = updated.concat(deleted); // Handle conflicts, if any
+
+      const resolved = this._handleConflicts(transaction, conflicts, strategy);
+
+      return {
+        published,
+        resolved
+      };
+    });
     syncResultObject.add("published", published);
 
     if (resolved.length > 0) {
       syncResultObject.reset("conflicts").reset("resolved").add("resolved", resolved);
     }
+
     return syncResultObject;
   }
-
   /**
    * Handles synchronization conflicts according to specified strategy.
    *
@@ -1566,14 +1997,18 @@ class Collection {
    * @return {Promise<Array<Object>>} The resolved conflicts, as an
    *    array of {accepted, rejected} objects
    */
+
+
   _handleConflicts(transaction, conflicts, strategy) {
     if (strategy === Collection.strategy.MANUAL) {
       return [];
     }
+
     return conflicts.map(conflict => {
       const resolution = strategy === Collection.strategy.CLIENT_WINS ? conflict.local : conflict.remote;
       const rejected = strategy === Collection.strategy.CLIENT_WINS ? conflict.remote : conflict.local;
       let accepted, status, id;
+
       if (resolution === null) {
         // We "resolved" with the server-side deletion. Delete locally.
         // This only happens during SERVER_WINS because the local
@@ -1582,22 +2017,28 @@ class Collection {
         // and there is no remote version available; see kinto-http.js
         // batch.js:aggregate.
         transaction.delete(conflict.local.id);
-        accepted = null;
-        // The record was deleted, but that status is "synced" with
+        accepted = null; // The record was deleted, but that status is "synced" with
         // the server, so we don't need to push the change.
+
         status = "synced";
         id = conflict.local.id;
       } else {
         const updated = this._resolveRaw(conflict, resolution);
+
         transaction.update(updated);
         accepted = updated;
         status = updated._status;
         id = updated.id;
       }
-      return { rejected, accepted, id, _status: status };
+
+      return {
+        rejected,
+        accepted,
+        id,
+        _status: status
+      };
     });
   }
-
   /**
    * Execute a bunch of operations in a transaction.
    *
@@ -1620,7 +2061,11 @@ class Collection {
    * @return {Promise} Resolves with the result of the given function
    *    when the transaction commits.
    */
-  execute(doOperations, { preloadIds = [] } = {}) {
+
+
+  execute(doOperations, {
+    preloadIds = []
+  } = {}) {
     for (const id of preloadIds) {
       if (!this.idSchema.validate(id)) {
         return Promise.reject(Error(`Invalid Id: ${id}`));
@@ -1632,9 +2077,10 @@ class Collection {
       const result = doOperations(txn);
       txn.emitEvents();
       return result;
-    }, { preload: preloadIds });
+    }, {
+      preload: preloadIds
+    });
   }
-
   /**
    * Resets the local records as if they were never synced; existing records are
    * marked as newly created, deleted records are dropped.
@@ -1644,8 +2090,17 @@ class Collection {
    *
    * @return {Promise} Resolves with the number of processed records.
    */
+
+
   async resetSyncStatus() {
-    const unsynced = await this.list({ filters: { _status: ["deleted", "synced"] }, order: "" }, { includeDeleted: true });
+    const unsynced = await this.list({
+      filters: {
+        _status: ["deleted", "synced"]
+      },
+      order: ""
+    }, {
+      includeDeleted: true
+    });
     await this.db.execute(transaction => {
       unsynced.data.forEach(record => {
         if (record._status === "deleted") {
@@ -1653,8 +2108,7 @@ class Collection {
           transaction.delete(record.id);
         } else {
           // Records that were synced become «created».
-          transaction.update({
-            ...record,
+          transaction.update({ ...record,
             last_modified: undefined,
             _status: "created"
           });
@@ -1665,7 +2119,6 @@ class Collection {
     await this.db.saveLastModified(null);
     return unsynced.data.length;
   }
-
   /**
    * Returns an object containing two lists:
    *
@@ -1674,16 +2127,25 @@ class Collection {
    *
    * @return {Promise}
    */
+
+
   async gatherLocalChanges() {
     const unsynced = await this.list({
-      filters: { _status: ["created", "updated"] },
+      filters: {
+        _status: ["created", "updated"]
+      },
       order: ""
     });
-    const deleted = await this.list({ filters: { _status: "deleted" }, order: "" }, { includeDeleted: true });
-
+    const deleted = await this.list({
+      filters: {
+        _status: "deleted"
+      },
+      order: ""
+    }, {
+      includeDeleted: true
+    });
     return await Promise.all(unsynced.data.concat(deleted.data).map(this._encodeRecord.bind(this, "remote")));
   }
-
   /**
    * Fetch remote changes, import them to the local database, and handle
    * conflicts according to `options.strategy`. Then, updates the passed
@@ -1697,32 +2159,39 @@ class Collection {
    * @param  {Object}                 options
    * @return {Promise}
    */
+
+
   async pullChanges(client, syncResultObject, options = {}) {
     if (!syncResultObject.ok) {
       return syncResultObject;
     }
 
     const since = this.lastModified ? this.lastModified : await this.db.getLastModified();
-
     options = {
       strategy: Collection.strategy.MANUAL,
       lastModified: since,
       headers: {},
       ...options
-    };
-
-    // Optionally ignore some records when pulling for changes.
+    }; // Optionally ignore some records when pulling for changes.
     // (avoid redownloading our own changes on last step of #sync())
+
     let filters;
+
     if (options.exclude) {
       // Limit the list of excluded records to the first 50 records in order
       // to remain under de-facto URL size limit (~2000 chars).
       // http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184#417184
       const exclude_id = options.exclude.slice(0, 50).map(r => r.id).join(",");
-      filters = { exclude_id };
-    }
-    // First fetch remote changes from the server
-    const { data, last_modified } = await client.listRecords({
+      filters = {
+        exclude_id
+      };
+    } // First fetch remote changes from the server
+
+
+    const {
+      data,
+      last_modified
+    } = await client.listRecords({
       // Since should be ETag (see https://github.com/Kinto/kinto.js/issues/356)
       since: options.lastModified ? `${options.lastModified}` : undefined,
       headers: options.headers,
@@ -1730,37 +2199,39 @@ class Collection {
       // Fetch every page by default (FIXME: option to limit pages, see #277)
       pages: Infinity,
       filters
-    });
-    // last_modified is the ETag header value (string).
+    }); // last_modified is the ETag header value (string).
     // For retro-compatibility with first kinto.js versions
     // parse it to integer.
-    const unquoted = last_modified ? parseInt(last_modified, 10) : undefined;
 
-    // Check if server was flushed.
+    const unquoted = last_modified ? parseInt(last_modified, 10) : undefined; // Check if server was flushed.
     // This is relevant for the Kinto demo server
     // (and thus for many new comers).
+
     const localSynced = options.lastModified;
     const serverChanged = unquoted > options.lastModified;
     const emptyCollection = data.length === 0;
+
     if (!options.exclude && localSynced && serverChanged && emptyCollection) {
       throw Error("Server has been flushed.");
     }
 
-    syncResultObject.lastModified = unquoted;
+    syncResultObject.lastModified = unquoted; // Decode incoming changes.
 
-    // Decode incoming changes.
     const decodedChanges = await Promise.all(data.map(change => {
       return this._decodeRecord("remote", change);
-    }));
-    // Hook receives decoded records.
-    const payload = { lastModified: unquoted, changes: decodedChanges };
-    const afterHooks = await this.applyHook("incoming-changes", payload);
+    })); // Hook receives decoded records.
 
-    // No change, nothing to import.
+    const payload = {
+      lastModified: unquoted,
+      changes: decodedChanges
+    };
+    const afterHooks = await this.applyHook("incoming-changes", payload); // No change, nothing to import.
+
     if (afterHooks.changes.length > 0) {
       // Reflect these changes locally
       await this.importChanges(syncResultObject, afterHooks.changes, options.strategy);
     }
+
     return syncResultObject;
   }
 
@@ -1768,19 +2239,21 @@ class Collection {
     if (typeof this.hooks[hookName] == "undefined") {
       return Promise.resolve(payload);
     }
+
     return (0, _utils.waterfall)(this.hooks[hookName].map(hook => {
       return record => {
         const result = hook(payload, this);
         const resultThenable = result && typeof result.then === "function";
         const resultChanges = result && result.hasOwnProperty("changes");
+
         if (!(resultThenable || resultChanges)) {
           throw new Error(`Invalid return value for hook: ${JSON.stringify(result)} has no 'then()' or 'changes' properties`);
         }
+
         return result;
       };
     }), payload);
   }
-
   /**
    * Publish local changes to the remote server and updates the passed
    * {@link SyncResultObject} with publication results.
@@ -1793,15 +2266,17 @@ class Collection {
    * @param  {Object}                 options          The options object.
    * @return {Promise}
    */
+
+
   async pushChanges(client, changes, syncResultObject, options = {}) {
     if (!syncResultObject.ok) {
       return syncResultObject;
     }
+
     const safe = !options.strategy || options.strategy !== Collection.CLIENT_WINS;
     const toDelete = changes.filter(r => r._status == "deleted");
-    const toSync = changes.filter(r => r._status != "deleted");
+    const toSync = changes.filter(r => r._status != "deleted"); // Perform a batch request with every changes.
 
-    // Perform a batch request with every changes.
     const synced = await client.batch(batch => {
       toDelete.forEach(r => {
         // never published locally deleted records should not be pusblished
@@ -1812,6 +2287,7 @@ class Collection {
       toSync.forEach(r => {
         // Clean local fields (like _status) before sending to server.
         const published = this.cleanLocalFields(r);
+
         if (r._status === "created") {
           batch.createRecord(published);
         } else {
@@ -1823,63 +2299,73 @@ class Collection {
       retry: options.retry,
       safe,
       aggregate: true
-    });
+    }); // Store outgoing errors into sync result object
 
-    // Store outgoing errors into sync result object
-    syncResultObject.add("errors", synced.errors.map(e => ({ ...e, type: "outgoing" })));
+    syncResultObject.add("errors", synced.errors.map(e => ({ ...e,
+      type: "outgoing"
+    }))); // Store outgoing conflicts into sync result object
 
-    // Store outgoing conflicts into sync result object
     const conflicts = [];
-    for (const { type, local, remote } of synced.conflicts) {
+
+    for (const {
+      type,
+      local,
+      remote
+    } of synced.conflicts) {
       // Note: we ensure that local data are actually available, as they may
       // be missing in the case of a published deletion.
-      const safeLocal = local && local.data || { id: remote.id };
-      const realLocal = await this._decodeRecord("remote", safeLocal);
-      // We can get "null" from the remote side if we got a conflict
+      const safeLocal = local && local.data || {
+        id: remote.id
+      };
+      const realLocal = await this._decodeRecord("remote", safeLocal); // We can get "null" from the remote side if we got a conflict
       // and there is no remote version available; see kinto-http.js
       // batch.js:aggregate.
+
       const realRemote = remote && (await this._decodeRecord("remote", remote));
-      const conflict = { type, local: realLocal, remote: realRemote };
+      const conflict = {
+        type,
+        local: realLocal,
+        remote: realRemote
+      };
       conflicts.push(conflict);
     }
-    syncResultObject.add("conflicts", conflicts);
 
-    // Records that must be deleted are either deletions that were pushed
+    syncResultObject.add("conflicts", conflicts); // Records that must be deleted are either deletions that were pushed
     // to server (published) or deleted records that were never pushed (skipped).
-    const missingRemotely = synced.skipped.map(r => ({ ...r, deleted: true }));
 
-    // For created and updated records, the last_modified coming from server
+    const missingRemotely = synced.skipped.map(r => ({ ...r,
+      deleted: true
+    })); // For created and updated records, the last_modified coming from server
     // will be stored locally.
     // Reflect publication results locally using the response from
     // the batch request.
-    const published = synced.published.map(c => c.data);
-    const toApplyLocally = published.concat(missingRemotely);
 
-    // Apply the decode transformers, if any
+    const published = synced.published.map(c => c.data);
+    const toApplyLocally = published.concat(missingRemotely); // Apply the decode transformers, if any
+
     const decoded = await Promise.all(toApplyLocally.map(record => {
       return this._decodeRecord("remote", record);
-    }));
-
-    // We have to update the local records with the responses of the server
+    })); // We have to update the local records with the responses of the server
     // (eg. last_modified values etc.).
+
     if (decoded.length > 0 || conflicts.length > 0) {
       await this._applyPushedResults(syncResultObject, decoded, conflicts, options.strategy);
     }
 
     return syncResultObject;
   }
-
   /**
    * Return a copy of the specified record without the local fields.
    *
    * @param  {Object} record  A record with potential local fields.
    * @return {Object}
    */
+
+
   cleanLocalFields(record) {
     const localKeys = RECORD_FIELDS_TO_CLEAN.concat(this.localFields);
     return (0, _utils.omitKeys)(record, localKeys);
   }
-
   /**
    * Resolves a conflict, updating local record according to proposed
    * resolution — keeping remote record `last_modified` value as a reference for
@@ -1889,30 +2375,35 @@ class Collection {
    * @param  {Object} resolution The proposed record.
    * @return {Promise}
    */
+
+
   resolve(conflict, resolution) {
     return this.db.execute(transaction => {
       const updated = this._resolveRaw(conflict, resolution);
+
       transaction.update(updated);
-      return { data: updated, permissions: {} };
+      return {
+        data: updated,
+        permissions: {}
+      };
     });
   }
-
   /**
    * @private
    */
+
+
   _resolveRaw(conflict, resolution) {
-    const resolved = {
-      ...resolution,
+    const resolved = { ...resolution,
       // Ensure local record has the latest authoritative timestamp
       last_modified: conflict.remote && conflict.remote.last_modified
-    };
-    // If the resolution object is strictly equal to the
+    }; // If the resolution object is strictly equal to the
     // remote record, then we can mark it as synced locally.
     // Otherwise, mark it as updated (so that the resolution is pushed).
+
     const synced = (0, _utils.deepEqual)(resolved, conflict.remote);
     return markStatus(resolved, synced ? "synced" : "updated");
   }
-
   /**
    * Synchronize remote and local data. The promise will resolve with a
    * {@link SyncResultObject}, though will reject:
@@ -1934,6 +2425,8 @@ class Collection {
    * @return {Promise}
    * @throws {Error} If an invalid remote option is passed.
    */
+
+
   async sync(options = {
     strategy: Collection.strategy.MANUAL,
     headers: {},
@@ -1943,76 +2436,85 @@ class Collection {
     collection: null,
     remote: null
   }) {
-    options = {
-      ...options,
+    options = { ...options,
       bucket: options.bucket || this.bucket,
       collection: options.collection || this.name
     };
-
     const previousRemote = this.api.remote;
+
     if (options.remote) {
       // Note: setting the remote ensures it's valid, throws when invalid.
       this.api.remote = options.remote;
     }
+
     if (!options.ignoreBackoff && this.api.backoff > 0) {
       const seconds = Math.ceil(this.api.backoff / 1000);
       return Promise.reject(new Error(`Server is asking clients to back off; retry in ${seconds}s or use the ignoreBackoff option.`));
     }
 
     const client = this.api.bucket(options.bucket).collection(options.collection);
-
     const result = new SyncResultObject();
+
     try {
       // Fetch last changes from the server.
       await this.pullChanges(client, result, options);
-      const { lastModified } = result;
+      const {
+        lastModified
+      } = result; // Fetch local changes
 
-      // Fetch local changes
-      const toSync = await this.gatherLocalChanges();
+      const toSync = await this.gatherLocalChanges(); // Publish local changes and pull local resolutions
 
-      // Publish local changes and pull local resolutions
-      await this.pushChanges(client, toSync, result, options);
+      await this.pushChanges(client, toSync, result, options); // Publish local resolution of push conflicts to server (on CLIENT_WINS)
 
-      // Publish local resolution of push conflicts to server (on CLIENT_WINS)
       const resolvedUnsynced = result.resolved.filter(r => r._status !== "synced");
+
       if (resolvedUnsynced.length > 0) {
         const resolvedEncoded = await Promise.all(resolvedUnsynced.map(resolution => {
           let record = resolution.accepted;
+
           if (record === null) {
-            record = { id: resolution.id, _status: resolution._status };
+            record = {
+              id: resolution.id,
+              _status: resolution._status
+            };
           }
+
           return this._encodeRecord("remote", record);
         }));
         await this.pushChanges(client, resolvedEncoded, result, options);
-      }
-      // Perform a last pull to catch changes that occured after the last pull,
+      } // Perform a last pull to catch changes that occured after the last pull,
       // while local changes were pushed. Do not do it nothing was pushed.
+
+
       if (result.published.length > 0) {
         // Avoid redownloading our own changes during the last pull.
-        const pullOpts = {
-          ...options,
+        const pullOpts = { ...options,
           lastModified,
           exclude: result.published
         };
         await this.pullChanges(client, result, pullOpts);
-      }
+      } // Don't persist lastModified value if any conflict or error occured
 
-      // Don't persist lastModified value if any conflict or error occured
+
       if (result.ok) {
         // No conflict occured, persist collection's lastModified value
         this._lastModified = await this.db.saveLastModified(result.lastModified);
       }
     } catch (e) {
-      this.events.emit("sync:error", { ...options, error: e });
+      this.events.emit("sync:error", { ...options,
+        error: e
+      });
       throw e;
     } finally {
       // Ensure API default remote is reverted if a custom one's been used
       this.api.remote = previousRemote;
     }
-    this.events.emit("sync:success", { ...options, result });
+
+    this.events.emit("sync:success", { ...options,
+      result
+    });
     return result;
   }
-
   /**
    * Load a list of records already synced with the remote server.
    *
@@ -2022,6 +2524,8 @@ class Collection {
    * @param  {Array} records The previously exported list of records to load.
    * @return {Promise} with the effectively imported records.
    */
+
+
   async loadDump(records) {
     if (!Array.isArray(records)) {
       throw new Error("Records is not an array.");
@@ -2035,75 +2539,87 @@ class Collection {
       if (!record.last_modified) {
         throw new Error("Record has no last_modified value: " + JSON.stringify(record));
       }
-    }
-
-    // Fetch all existing records from local database,
+    } // Fetch all existing records from local database,
     // and skip those who are newer or not marked as synced.
-
     // XXX filter by status / ids in records
 
-    const { data } = await this.list({}, { includeDeleted: true });
+
+    const {
+      data
+    } = await this.list({}, {
+      includeDeleted: true
+    });
     const existingById = data.reduce((acc, record) => {
       acc[record.id] = record;
       return acc;
     }, {});
-
     const newRecords = records.filter(record => {
       const localRecord = existingById[record.id];
-      const shouldKeep =
-      // No local record with this id.
-      localRecord === undefined ||
-      // Or local record is synced
-      localRecord._status === "synced" &&
-      // And was synced from server
-      localRecord.last_modified !== undefined &&
-      // And is older than imported one.
+      const shouldKeep = // No local record with this id.
+      localRecord === undefined || // Or local record is synced
+      localRecord._status === "synced" && // And was synced from server
+      localRecord.last_modified !== undefined && // And is older than imported one.
       record.last_modified > localRecord.last_modified;
       return shouldKeep;
     });
-
     return await this.db.loadDump(newRecords.map(markSynced));
   }
-}
 
-exports.default = Collection; /**
-                               * A Collection-oriented wrapper for an adapter's transaction.
-                               *
-                               * This defines the high-level functions available on a collection.
-                               * The collection itself offers functions of the same name. These will
-                               * perform just one operation in its own transaction.
-                               */
+}
+/**
+ * A Collection-oriented wrapper for an adapter's transaction.
+ *
+ * This defines the high-level functions available on a collection.
+ * The collection itself offers functions of the same name. These will
+ * perform just one operation in its own transaction.
+ */
+
+
+exports.default = Collection;
 
 class CollectionTransaction {
   constructor(collection, adapterTransaction) {
     this.collection = collection;
     this.adapterTransaction = adapterTransaction;
-
     this._events = [];
   }
 
   _queueEvent(action, payload) {
-    this._events.push({ action, payload });
+    this._events.push({
+      action,
+      payload
+    });
   }
-
   /**
    * Emit queued events, to be called once every transaction operations have
    * been executed successfully.
    */
+
+
   emitEvents() {
-    for (const { action, payload } of this._events) {
+    for (const {
+      action,
+      payload
+    } of this._events) {
       this.collection.events.emit(action, payload);
     }
+
     if (this._events.length > 0) {
-      const targets = this._events.map(({ action, payload }) => ({
+      const targets = this._events.map(({
+        action,
+        payload
+      }) => ({
         action,
         ...payload
       }));
-      this.collection.events.emit("change", { targets });
+
+      this.collection.events.emit("change", {
+        targets
+      });
     }
+
     this._events = [];
   }
-
   /**
    * Retrieve a record by its id from the local database, or
    * undefined if none exists.
@@ -2113,11 +2629,15 @@ class CollectionTransaction {
    * @param  {String} id
    * @return {Object}
    */
+
+
   getAny(id) {
     const record = this.adapterTransaction.get(id);
-    return { data: record, permissions: {} };
+    return {
+      data: record,
+      permissions: {}
+    };
   }
-
   /**
    * Retrieve a record by its id from the local database.
    *
@@ -2128,15 +2648,19 @@ class CollectionTransaction {
    * @param  {Object} options
    * @return {Object}
    */
-  get(id, options = { includeDeleted: false }) {
+
+
+  get(id, options = {
+    includeDeleted: false
+  }) {
     const res = this.getAny(id);
+
     if (!res.data || !options.includeDeleted && res.data._status === "deleted") {
       throw new Error(`Record with id=${id} not found.`);
     }
 
     return res;
   }
-
   /**
    * Deletes a record from the local database.
    *
@@ -2148,30 +2672,44 @@ class CollectionTransaction {
    * @param  {Object} options  The options object.
    * @return {Object}
    */
-  delete(id, options = { virtual: true }) {
+
+
+  delete(id, options = {
+    virtual: true
+  }) {
     // Ensure the record actually exists.
     const existing = this.adapterTransaction.get(id);
     const alreadyDeleted = existing && existing._status == "deleted";
+
     if (!existing || alreadyDeleted && options.virtual) {
       throw new Error(`Record with id=${id} not found.`);
-    }
-    // Virtual updates status.
+    } // Virtual updates status.
+
+
     if (options.virtual) {
       this.adapterTransaction.update(markDeleted(existing));
     } else {
       // Delete for real.
       this.adapterTransaction.delete(id);
     }
-    this._queueEvent("delete", { data: existing });
-    return { data: existing, permissions: {} };
-  }
 
+    this._queueEvent("delete", {
+      data: existing
+    });
+
+    return {
+      data: existing,
+      permissions: {}
+    };
+  }
   /**
    * Soft delete all records from the local database.
    *
    * @param  {Array} ids        Array of non-deleted Record Ids.
    * @return {Object}
    */
+
+
   deleteAll(ids) {
     const existingRecords = [];
     ids.forEach(id => {
@@ -2179,10 +2717,15 @@ class CollectionTransaction {
       this.delete(id);
     });
 
-    this._queueEvent("deleteAll", { data: existingRecords });
-    return { data: existingRecords, permissions: {} };
-  }
+    this._queueEvent("deleteAll", {
+      data: existingRecords
+    });
 
+    return {
+      data: existingRecords,
+      permissions: {}
+    };
+  }
   /**
    * Deletes a record from the local database, if any exists.
    * Otherwise, do nothing.
@@ -2190,15 +2733,28 @@ class CollectionTransaction {
    * @param  {String} id       The record's Id.
    * @return {Object}
    */
+
+
   deleteAny(id) {
     const existing = this.adapterTransaction.get(id);
+
     if (existing) {
       this.adapterTransaction.update(markDeleted(existing));
-      this._queueEvent("delete", { data: existing });
-    }
-    return { data: { id, ...existing }, deleted: !!existing, permissions: {} };
-  }
 
+      this._queueEvent("delete", {
+        data: existing
+      });
+    }
+
+    return {
+      data: {
+        id,
+        ...existing
+      },
+      deleted: !!existing,
+      permissions: {}
+    };
+  }
   /**
    * Adds a record to the local database, asserting that none
    * already exist with this ID.
@@ -2206,22 +2762,32 @@ class CollectionTransaction {
    * @param  {Object} record, which must contain an ID
    * @return {Object}
    */
+
+
   create(record) {
     if (typeof record !== "object") {
       throw new Error("Record is not an object.");
     }
+
     if (!record.hasOwnProperty("id")) {
       throw new Error("Cannot create a record missing id");
     }
+
     if (!this.collection.idSchema.validate(record.id)) {
       throw new Error(`Invalid Id: ${record.id}`);
     }
 
     this.adapterTransaction.create(record);
-    this._queueEvent("create", { data: record });
-    return { data: record, permissions: {} };
-  }
 
+    this._queueEvent("create", {
+      data: record
+    });
+
+    return {
+      data: record,
+      permissions: {}
+    };
+  }
   /**
    * Updates a record from the local database.
    *
@@ -2234,28 +2800,49 @@ class CollectionTransaction {
    * @param  {Object} options
    * @return {Object}
    */
-  update(record, options = { synced: false, patch: false }) {
+
+
+  update(record, options = {
+    synced: false,
+    patch: false
+  }) {
     if (typeof record !== "object") {
       throw new Error("Record is not an object.");
     }
+
     if (!record.hasOwnProperty("id")) {
       throw new Error("Cannot update a record missing id.");
     }
+
     if (!this.collection.idSchema.validate(record.id)) {
       throw new Error(`Invalid Id: ${record.id}`);
     }
 
     const oldRecord = this.adapterTransaction.get(record.id);
+
     if (!oldRecord) {
       throw new Error(`Record with id=${record.id} not found.`);
     }
-    const newRecord = options.patch ? { ...oldRecord, ...record } : record;
-    const updated = this._updateRaw(oldRecord, newRecord, options);
-    this.adapterTransaction.update(updated);
-    this._queueEvent("update", { data: updated, oldRecord });
-    return { data: updated, oldRecord, permissions: {} };
-  }
 
+    const newRecord = options.patch ? { ...oldRecord,
+      ...record
+    } : record;
+
+    const updated = this._updateRaw(oldRecord, newRecord, options);
+
+    this.adapterTransaction.update(updated);
+
+    this._queueEvent("update", {
+      data: updated,
+      oldRecord
+    });
+
+    return {
+      data: updated,
+      oldRecord,
+      permissions: {}
+    };
+  }
   /**
    * Lower-level primitive for updating a record while respecting
    * _status and last_modified.
@@ -2264,22 +2851,27 @@ class CollectionTransaction {
    * @param  {Object} newRecord: the record to replace it with
    * @return {Object}
    */
-  _updateRaw(oldRecord, newRecord, { synced = false } = {}) {
-    const updated = { ...newRecord };
-    // Make sure to never loose the existing timestamp.
+
+
+  _updateRaw(oldRecord, newRecord, {
+    synced = false
+  } = {}) {
+    const updated = { ...newRecord
+    }; // Make sure to never loose the existing timestamp.
+
     if (oldRecord && oldRecord.last_modified && !updated.last_modified) {
       updated.last_modified = oldRecord.last_modified;
-    }
-    // If only local fields have changed, then keep record as synced.
+    } // If only local fields have changed, then keep record as synced.
     // If status is created, keep record as created.
     // If status is deleted, mark as updated.
+
+
     const isIdentical = oldRecord && recordsEqual(oldRecord, updated, this.localFields);
     const keepSynced = isIdentical && oldRecord._status == "synced";
     const neverSynced = !oldRecord || oldRecord && oldRecord._status == "created";
     const newStatus = keepSynced || synced ? "synced" : neverSynced ? "created" : "updated";
     return markStatus(updated, newStatus);
   }
-
   /**
    * Upsert a record into the local database.
    *
@@ -2291,31 +2883,51 @@ class CollectionTransaction {
    * @param  {Object} record
    * @return {Object}
    */
+
+
   upsert(record) {
     if (typeof record !== "object") {
       throw new Error("Record is not an object.");
     }
+
     if (!record.hasOwnProperty("id")) {
       throw new Error("Cannot update a record missing id.");
     }
+
     if (!this.collection.idSchema.validate(record.id)) {
       throw new Error(`Invalid Id: ${record.id}`);
     }
+
     let oldRecord = this.adapterTransaction.get(record.id);
+
     const updated = this._updateRaw(oldRecord, record);
-    this.adapterTransaction.update(updated);
-    // Don't return deleted records -- pretend they are gone
+
+    this.adapterTransaction.update(updated); // Don't return deleted records -- pretend they are gone
+
     if (oldRecord && oldRecord._status == "deleted") {
       oldRecord = undefined;
     }
+
     if (oldRecord) {
-      this._queueEvent("update", { data: updated, oldRecord });
+      this._queueEvent("update", {
+        data: updated,
+        oldRecord
+      });
     } else {
-      this._queueEvent("create", { data: updated });
+      this._queueEvent("create", {
+        data: updated
+      });
     }
-    return { data: updated, oldRecord, permissions: {} };
+
+    return {
+      data: updated,
+      oldRecord,
+      permissions: {}
+    };
   }
+
 }
+
 exports.CollectionTransaction = CollectionTransaction;
 
 },{"./adapters/IDB":4,"./adapters/base":5,"./utils":7,"uuid":2}],7:[function(require,module,exports){
@@ -2330,17 +2942,20 @@ exports.filterObjects = filterObjects;
 exports.waterfall = waterfall;
 exports.deepEqual = deepEqual;
 exports.omitKeys = omitKeys;
-const RE_RECORD_ID = exports.RE_RECORD_ID = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/;
-
+exports.arrayEqual = arrayEqual;
+exports.RE_RECORD_ID = void 0;
+const RE_RECORD_ID = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/;
 /**
  * Checks if a value is undefined.
  * @param  {Any}  value
  * @return {Boolean}
  */
+
+exports.RE_RECORD_ID = RE_RECORD_ID;
+
 function _isUndefined(value) {
   return typeof value === "undefined";
 }
-
 /**
  * Sorts records in a list according to a given ordering.
  *
@@ -2348,6 +2963,8 @@ function _isUndefined(value) {
  * @param  {Array}  list  The collection to order.
  * @return {Array}
  */
+
+
 function sortObjects(order, list) {
   const hasDash = order[0] === "-";
   const field = hasDash ? order.slice(1) : order;
@@ -2356,16 +2973,18 @@ function sortObjects(order, list) {
     if (a[field] && _isUndefined(b[field])) {
       return direction;
     }
+
     if (b[field] && _isUndefined(a[field])) {
       return -direction;
     }
+
     if (_isUndefined(a[field]) && _isUndefined(b[field])) {
       return 0;
     }
+
     return a[field] > b[field] ? direction : -direction;
   });
 }
-
 /**
  * Test if a single object matches all given filters.
  *
@@ -2373,16 +2992,19 @@ function sortObjects(order, list) {
  * @param  {Object} entry    The object to filter.
  * @return {Boolean}
  */
+
+
 function filterObject(filters, entry) {
   return Object.keys(filters).every(filter => {
     const value = filters[filter];
+
     if (Array.isArray(value)) {
       return value.some(candidate => candidate === entry[filter]);
     }
+
     return entry[filter] === value;
   });
 }
-
 /**
  * Filters records in a list matching all given filters.
  *
@@ -2390,12 +3012,13 @@ function filterObject(filters, entry) {
  * @param  {Array}  list     The collection to filter.
  * @return {Array}
  */
+
+
 function filterObjects(filters, list) {
   return list.filter(entry => {
     return filterObject(filters, entry);
   });
 }
-
 /**
  * Resolves a list of functions sequentially, which can be sync or async; in
  * case of async, functions must return a promise.
@@ -2404,15 +3027,17 @@ function filterObjects(filters, list) {
  * @param  {Any}   init The initial value.
  * @return {Promise}
  */
+
+
 function waterfall(fns, init) {
   if (!fns.length) {
     return Promise.resolve(init);
   }
+
   return fns.reduce((promise, nextFn) => {
     return promise.then(nextFn);
   }, Promise.resolve(init));
 }
-
 /**
  * Simple deep object comparison function. This only supports comparison of
  * serializable JavaScript objects.
@@ -2421,27 +3046,33 @@ function waterfall(fns, init) {
  * @param  {Object} b The compared object.
  * @return {Boolean}
  */
+
+
 function deepEqual(a, b) {
   if (a === b) {
     return true;
   }
+
   if (typeof a !== typeof b) {
     return false;
   }
+
   if (!(a && typeof a == "object") || !(b && typeof b == "object")) {
     return false;
   }
+
   if (Object.keys(a).length !== Object.keys(b).length) {
     return false;
   }
+
   for (const k in a) {
     if (!deepEqual(a[k], b[k])) {
       return false;
     }
   }
+
   return true;
 }
-
 /**
  * Return an object without the specified keys.
  *
@@ -2449,14 +3080,32 @@ function deepEqual(a, b) {
  * @param  {Array}  keys       The list of keys to exclude.
  * @return {Object}            A copy without the specified keys.
  */
+
+
 function omitKeys(obj, keys = []) {
   return Object.keys(obj).reduce((acc, key) => {
     if (!keys.includes(key)) {
       acc[key] = obj[key];
     }
+
     return acc;
   }, {});
 }
 
+function arrayEqual(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  for (let i = a.length; i--;) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 },{}]},{},[1])(1)
 });
+
