@@ -98,8 +98,16 @@ cargo_extra_outputs = {
 }
 
 cargo_extra_flags = {
-    'style': [
-        '-l', 'static=global_static',
-        '-L', 'native=%(libloading_outdir)s',
-    ]
+    'custom-build': {
+        'style': [
+            '-l', 'static=global_static',
+            '-L', 'native=%(libloading_outdir)s',
+        ],
+    },
+    'lib': {
+        'lmdb-sys': [
+            '-l', 'static=lmdb',
+            '-L', 'native=%(lmdb-sys_outdir)s'
+        ]
+    }
 }
