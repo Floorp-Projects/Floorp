@@ -7269,6 +7269,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock* predecessor, jsbytecode* pc, bool 
 
             // Extract typeset from value.
             LifoAlloc* lifoAlloc = alloc().lifoAlloc();
+            LifoAlloc::AutoFallibleScope fallibleAllocator(lifoAlloc);
             TemporaryTypeSet* typeSet =
                 lifoAlloc->new_<TemporaryTypeSet>(lifoAlloc, existingType);
             if (!typeSet) {
