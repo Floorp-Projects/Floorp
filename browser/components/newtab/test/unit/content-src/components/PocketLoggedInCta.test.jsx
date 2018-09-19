@@ -26,8 +26,8 @@ describe("<PocketLoggedInCta>", () => {
     const wrapper = shallowWithIntl(<PocketLoggedInCtaRaw Pocket={{
       pocketCta: {
         ctaButton: "button",
-        ctaText: "text",
-      },
+        ctaText: "text"
+      }
     }} />);
 
     const message = wrapper.find(FormattedMessage);

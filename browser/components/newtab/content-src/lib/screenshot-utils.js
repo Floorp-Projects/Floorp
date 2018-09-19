@@ -46,5 +46,5 @@ export const ScreenshotUtils = {
     // This will only handle the remaining three possible outcomes.
     // (i.e. everything except when both image and localImage are present)
     return !remoteImage && !localImage;
-  },
+  }
 };

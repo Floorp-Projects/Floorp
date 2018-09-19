@@ -35,7 +35,7 @@ const USER_PREFS_ENCODING = {
   "feeds.section.topstories": 1 << 2,
   "feeds.section.highlights": 1 << 3,
   "feeds.snippets": 1 << 4,
-  "showSponsored": 1 << 5,
+  "showSponsored": 1 << 5
 };
 
 const PREF_IMPRESSION_ID = "impressionId";
@@ -102,7 +102,7 @@ this.TelemetryFeed = class TelemetryFeed {
     try {
       data_to_save = {
         load_trigger_ts: perfService.getMostRecentAbsMarkStartByName("browser-open-newtab-start"),
-        load_trigger_type: "menu_plus_or_keyboard",
+        load_trigger_type: "menu_plus_or_keyboard"
       };
     } catch (e) {
       // if no mark was returned, we have nothing to save
@@ -149,8 +149,8 @@ this.TelemetryFeed = class TelemetryFeed {
       {
         value: new PingCentre({
           topic: ACTIVITY_STREAM_ID,
-          overrideEndpointPref: ACTIVITY_STREAM_ENDPOINT_PREF,
-        }),
+          overrideEndpointPref: ACTIVITY_STREAM_ENDPOINT_PREF
+        })
       });
     return this.pingCentre;
   }
@@ -257,8 +257,8 @@ this.TelemetryFeed = class TelemetryFeed {
       perf: {
         load_trigger_type,
         is_preloaded: false,
-        is_prerendered: false,
-      },
+        is_prerendered: false
+      }
     };
 
     if (load_trigger_ts) {
@@ -329,7 +329,7 @@ this.TelemetryFeed = class TelemetryFeed {
     const ping = {
       addon_version: Services.appinfo.appBuildID,
       locale: Services.locale.getAppLocaleAsLangTag(),
-      user_prefs: this.userPreferences,
+      user_prefs: this.userPreferences
     };
 
     // If the ping is part of a user session, add session-related info
@@ -359,7 +359,7 @@ this.TelemetryFeed = class TelemetryFeed {
         action: "activity_stream_impression_stats",
         impression_id: this._impressionId,
         client_id: "n/a",
-        session_id: "n/a",
+        session_id: "n/a"
       }
     );
   }
@@ -397,7 +397,7 @@ this.TelemetryFeed = class TelemetryFeed {
         page: session.page,
         session_duration: session.session_duration,
         action: "activity_stream_session",
-        perf: session.perf,
+        perf: session.perf
       }
     );
   }
@@ -413,7 +413,7 @@ this.TelemetryFeed = class TelemetryFeed {
       client_id: "n/a",
       addon_version: Services.appinfo.appBuildID,
       locale: Services.locale.getAppLocaleAsLangTag(),
-      impression_id: this._impressionId,
+      impression_id: this._impressionId
     };
     if (action.data.includeClientID) {
       // Ping-centre client will fill in the client_id if it's not provided in the ping
@@ -599,5 +599,5 @@ const EXPORTED_SYMBOLS = [
   "PREF_IMPRESSION_ID",
   "TELEMETRY_PREF",
   "EVENTS_TELEMETRY_PREF",
-  "ROUTER_MESSAGE_PROVIDER_PREF",
+  "ROUTER_MESSAGE_PROVIDER_PREF"
 ];

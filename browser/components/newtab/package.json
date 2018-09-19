@@ -37,7 +37,7 @@
     "eslint": "4.19.1",
     "eslint-plugin-import": "2.11.0",
     "eslint-plugin-json": "1.2.0",
-    "eslint-plugin-mozilla": "0.16.0",
+    "eslint-plugin-mozilla": "0.14.0",
     "eslint-plugin-no-unsanitized": "3.0.0",
     "eslint-plugin-promise": "3.7.0",
     "eslint-plugin-react": "7.7.0",
@@ -75,7 +75,7 @@
   "engines": {
     "firefox": ">=45.0 <=*",
     "//": "when changing node versions, also edit .travis.yml and .nvmrc",
-    "node": "8.*"
+    "node": "7.*"
   },
   "homepage": "https://github.com/mozilla/activity-stream",
   "keywords": [

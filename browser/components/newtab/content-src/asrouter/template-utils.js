@@ -8,7 +8,7 @@ export function safeURI(url) {
     "https:",
     "data:",
     "resource:",
-    "chrome:",
+    "chrome:"
   ].includes(protocol);
   if (!isAllowed) {
     console.warn(`The protocol ${protocol} is not allowed for template URLs.`); // eslint-disable-line no-console
