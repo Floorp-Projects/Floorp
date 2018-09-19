@@ -17,7 +17,6 @@ namespace xpc {
 
 class AccessCheck {
   public:
-    static bool subsumes(JS::Compartment* a, JS::Compartment* b);
     static bool subsumes(JSObject* a, JSObject* b);
     static bool wrapperSubsumes(JSObject* wrapper);
     static bool subsumesConsideringDomain(JS::Compartment* a, JS::Compartment* b);
