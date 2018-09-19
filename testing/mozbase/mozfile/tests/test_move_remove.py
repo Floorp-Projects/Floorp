@@ -81,7 +81,7 @@ class MozfileRemoveTestCase(unittest.TestCase):
         """Test removing a directory with an open file"""
         # Open a file in the generated stub
         filepath = os.path.join(self.tempdir, *stubs.files[1])
-        f = file(filepath, 'w')
+        f = open(filepath, 'w')
         f.write('foo-bar')
 
         # keep file open and then try removing the dir-tree
