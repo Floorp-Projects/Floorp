@@ -35,10 +35,10 @@ class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
         backgroundView.setOnClickListener(this)
 
         cardView = view.findViewById(R.id.card)
-        cardView.viewTreeObserver.addOnPreDrawListener(OneShotOnPreDrawListener(cardView) {
+        OneShotOnPreDrawListener(cardView) {
             playAnimation(false)
             true
-        })
+        }
 
         val sessionManager = requireComponents.sessionManager
 

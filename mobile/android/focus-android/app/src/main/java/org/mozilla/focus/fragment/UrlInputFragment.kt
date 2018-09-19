@@ -280,10 +280,10 @@ class UrlInputFragment :
         urlView?.inputType = urlView.inputType or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
 
         if (urlInputContainerView != null) {
-            urlInputContainerView.viewTreeObserver.addOnPreDrawListener(OneShotOnPreDrawListener(urlInputContainerView) {
+            OneShotOnPreDrawListener(urlInputContainerView) {
                 animateFirstDraw()
                 true
-            })
+            }
         }
 
         if (isOverlay) {
@@ -381,10 +381,10 @@ class UrlInputFragment :
             displayedPopupMenu?.let {
                 it.dismiss()
 
-                menuView.viewTreeObserver.addOnPreDrawListener (OneShotOnPreDrawListener(menuView) {
+                OneShotOnPreDrawListener(menuView) {
                     showHomeMenu(menuView)
                     false
-                })
+                }
             }
         }
     }
