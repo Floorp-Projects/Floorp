@@ -60,11 +60,11 @@ function runTests()
     keyCheck(list, "KEY_ArrowUp", iswin ? 1 : 4, 1, "cursor up wrap");
 
     list.selectedIndex = 4;
-    list.menuBoxObject.activeChild = list.selectedItem;
+    list.activeChild = list.selectedItem;
     keyCheck(list, "KEY_ArrowDown", iswin ? 4 : 1, 4, "cursor down wrap");
 
     list.selectedIndex = 0;
-    list.menuBoxObject.activeChild = list.selectedItem;
+    list.activeChild = list.selectedItem;
   }
 
   // check that attempting to open the menulist does not change the selection
@@ -171,7 +171,7 @@ function tabAndScroll()
   var item = list.getItemAtIndex(10);
   var originalPosition = item.getBoundingClientRect().top;
 
-  list.menuBoxObject.activeChild = item;
+  list.activeChild = item;
   ok(item.getBoundingClientRect().top < originalPosition,
     "position of item 1: " + item.getBoundingClientRect().top + " -> " + originalPosition);
 
@@ -257,20 +257,20 @@ function checkCursorNavigation()
 
   // Check whether cursor up and down wraps.
   list.selectedIndex = 0;
-  list.menuBoxObject.activeChild = list.selectedItem;
+  list.activeChild = list.selectedItem;
   synthesizeKey("KEY_ArrowUp");
-  is(list.menuBoxObject.activeChild,
+  is(list.activeChild,
      document.getElementById(iswin || ismac ? "b1" : "b4"), "cursor up wrap while open");
 
   list.selectedIndex = 3;
-  list.menuBoxObject.activeChild = list.selectedItem;
+  list.activeChild = list.selectedItem;
   synthesizeKey("KEY_ArrowDown");
-  is(list.menuBoxObject.activeChild,
+  is(list.activeChild,
      document.getElementById(iswin || ismac ? "b4" : "b1"), "cursor down wrap while open");
 
   synthesizeKey("KEY_ArrowUp", {altKey: true});
   is(list.open, ismac, "alt+up closes popup");
- 
+
   if (ismac) {
     list.open = false;
   }
