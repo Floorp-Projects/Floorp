@@ -1327,4 +1327,46 @@ TEST_F(VideoConduitTest, TestVideoEncodeScaleResolutionBy)
   mVideoConduit->RemoveSink(sink.get());
 }
 
+TEST_F(VideoConduitTest, TestVideoEncodeSimulcastScaleResolutionBy)
+{
+  std::vector<unsigned int> ssrcs = {42, 43, 44};
+  mVideoConduit->SetLocalSSRCs(ssrcs);
+
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::SimulcastEncoding encoding2;
+  VideoCodecConfig::SimulcastEncoding encoding3;
+  encoding.constraints.scaleDownBy = 2;
+  encoding2.constraints.scaleDownBy = 3;
+  encoding3.constraints.scaleDownBy = 4;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mSimulcastEncodings.push_back(encoding2);
+  codecConfig.mSimulcastEncodings.push_back(encoding3);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+
+  mVideoConduit->StartTransmitting();
+  SendVideoFrame(640, 480, 1);
+  // Check actually configured streams in encoder sink.
+  ASSERT_EQ(sink->mVideoFrame.width(), 320);
+  ASSERT_EQ(sink->mVideoFrame.height(), 240);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 1000U);
+  ASSERT_EQ(sink->mOnFrameCount, 1U);
+
+  SendVideoFrame(1280, 720, 2);
+  ASSERT_EQ(sink->mVideoFrame.width(), 640);
+  ASSERT_EQ(sink->mVideoFrame.height(), 360);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
+  ASSERT_EQ(sink->mOnFrameCount, 2U);
+  mVideoConduit->StopTransmitting();
+  mVideoConduit->RemoveSink(sink.get());
+}
+
 } // End namespace test.
