@@ -95,4 +95,23 @@ class FxaResultTest {
 
         assertTrue(chainComplete)
     }
+
+
+    @Test
+    fun nullableResult() {
+        var chainComplete = false
+
+        val nullableAndNull: FxaResult<Int?> = FxaResult.fromValue(null)
+
+        nullableAndNull.then { value ->
+            assertEquals(value, null)
+            val nullableButExists: FxaResult<Int?> = FxaResult.fromValue(4)
+            nullableButExists
+        }.whenComplete { value ->
+            assertEquals(value, 4)
+            chainComplete = true
+        }
+
+        assertTrue(chainComplete)
+    }
 }
