@@ -142,6 +142,9 @@ add_task(async function test_edit_link() {
 
       let title = content.document.querySelector("address-form h2");
       is(title.textContent, "Edit Shipping Address", "Page title should be set");
+
+      let saveButton = content.document.querySelector("address-form .save-button");
+      is(saveButton.textContent, "Update", "Save button has the correct label");
     });
 
     let editOptions = {
@@ -235,6 +238,9 @@ add_task(async function test_add_payer_contact_name_email_link() {
       let title = content.document.querySelector("address-form h2");
       is(title.textContent, "Add Payer Contact", "Page title should be set");
 
+      let saveButton = content.document.querySelector("address-form .save-button");
+      is(saveButton.textContent, "Add", "Save button has the correct label");
+
       info("check that non-payer requested fields are hidden");
       for (let selector of ["#organization", "#tel"]) {
         let element = content.document.querySelector(selector);
@@ -320,6 +326,9 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
 
       let title = content.document.querySelector("address-form h2");
       is(title.textContent, "Edit Payer Contact", "Page title should be set");
+
+      let saveButton = content.document.querySelector("address-form .save-button");
+      is(saveButton.textContent, "Update", "Save button has the correct label");
 
       info("check that non-payer requested fields are hidden");
       let formElements =
