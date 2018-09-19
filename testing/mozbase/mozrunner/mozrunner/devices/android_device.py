@@ -212,6 +212,13 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
             emulator.wait_for_start()
             device_verified = True
 
+    if device_verified and "DEVICE_SERIAL" not in os.environ:
+        devices = adbhost.devices(timeout=10)
+        for d in devices:
+            if d['state'] == 'device':
+                os.environ["DEVICE_SERIAL"] = d['device_serial']
+                break
+
     if device_verified and install:
         # Determine if Firefox is installed on the device; if not,
         # prompt to install. This feature allows a test command to
