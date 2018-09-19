@@ -7,8 +7,6 @@
 """Code to integration with automation.
 """
 
-import os
-
 try:
     import simplejson as json
     assert json
@@ -73,38 +71,6 @@ class AutomationMixin(object):
     def query_failure(self, key):
         return key in self.failures
 
-    def set_property(self, prop_name, prop_value):
-        self.info("Setting property %s to %s" % (prop_name, prop_value))
-        self.properties[prop_name] = prop_value
-        return self.properties[prop_name]
-
-    def query_property(self, prop_name):
-        return self.properties.get(prop_name)
-
     def query_is_nightly(self):
         """returns whether or not the script should run as a nightly build."""
         return bool(self.config.get('nightly_build'))
-
-    def dump_properties(self, prop_list=None, file_name="properties",
-                        error_level=ERROR):
-        c = self.config
-        if not os.path.isabs(file_name):
-            file_name = os.path.join(c['base_work_dir'], "properties",
-                                     file_name)
-        dir_name = os.path.dirname(file_name)
-        if not os.path.isdir(dir_name):
-            self.mkdir_p(dir_name)
-        if not prop_list:
-            prop_list = self.properties.keys()
-            self.info("Writing properties to %s" % file_name)
-        else:
-            if not isinstance(prop_list, (list, tuple)):
-                self.log("dump_properties: Can't dump non-list prop_list %s!" %
-                         str(prop_list), level=error_level)
-                return
-            self.info("Writing properties %s to %s" % (str(prop_list),
-                                                       file_name))
-        contents = ""
-        for prop in prop_list:
-            contents += "%s:%s\n" % (prop, self.properties.get(prop, "None"))
-        return self.write_to_file(file_name, contents)
