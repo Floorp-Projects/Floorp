@@ -298,9 +298,14 @@ public:
   {
     std::string rid;
     EncodingConstraints constraints;
+    bool operator==(const JsConstraints& other) const
+    {
+      return rid == other.rid && constraints == other.constraints;
+    }
   };
 
-  void SetJsConstraints(const std::vector<JsConstraints>& constraintsList);
+  // Returns true if the constraints changed.
+  bool SetJsConstraints(const std::vector<JsConstraints>& constraintsList);
 
   void GetJsConstraints(std::vector<JsConstraints>* outConstraintsList) const
   {

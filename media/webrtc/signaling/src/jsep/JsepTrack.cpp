@@ -156,11 +156,29 @@ JsepTrack::AddToAnswer(const SdpMediaSection& offer,
   }
 }
 
-void
+bool
 JsepTrack::SetJsConstraints(
     const std::vector<JsConstraints>& constraintsList)
 {
+  bool constraintsChanged = mJsEncodeConstraints != constraintsList;
   mJsEncodeConstraints = constraintsList;
+
+  // Also update negotiated details with constraints, as these can change
+  // without negotiation.
+
+  if (!mNegotiatedDetails) {
+    return constraintsChanged;
+  }
+
+  for (JsepTrackEncoding* encoding : mNegotiatedDetails->mEncodings.values) {
+    for (const JsConstraints& jsConstraints : mJsEncodeConstraints) {
+      if (jsConstraints.rid == encoding->mRid) {
+        encoding->mConstraints = jsConstraints.constraints;
+      }
+    }
+  }
+
+  return constraintsChanged;
 }
 
 void
