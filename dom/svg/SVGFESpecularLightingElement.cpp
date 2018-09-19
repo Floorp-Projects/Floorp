@@ -83,9 +83,15 @@ SVGFESpecularLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInst
   }
 
   FilterPrimitiveDescription descr(PrimitiveType::SpecularLighting);
-  descr.Attributes().Set(eSpecularLightingSpecularConstant, specularConstant);
-  descr.Attributes().Set(eSpecularLightingSpecularExponent, specularExponent);
-  return AddLightingAttributes(descr, aInstance);
+  SpecularLightingAttributes atts;
+  atts.mLightingConstant = specularConstant;
+  atts.mSpecularExponent = specularExponent;
+  if (!AddLightingAttributes(static_cast<DiffuseLightingAttributes*>(&atts), aInstance)) {
+    return FilterPrimitiveDescription(PrimitiveType::Empty);
+  }
+
+  descr.Attributes() = AsVariant(std::move(atts));
+  return descr;
 }
 
 bool

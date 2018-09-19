@@ -101,7 +101,9 @@ SVGFEDisplacementMapElement::GetPrimitiveDescription(nsSVGFilterInstance* aInsta
     // If the map is tainted, refuse to apply the effect and act as a
     // pass-through filter instead, as required by the spec.
     FilterPrimitiveDescription descr(PrimitiveType::Offset);
-    descr.Attributes().Set(eOffsetOffset, IntPoint(0, 0));
+    OffsetAttributes atts;
+    atts.mValue = IntPoint(0, 0);
+    descr.Attributes() = AsVariant(std::move(atts));
     return descr;
   }
 
@@ -110,9 +112,11 @@ SVGFEDisplacementMapElement::GetPrimitiveDescription(nsSVGFilterInstance* aInsta
   uint32_t xChannel = mEnumAttributes[CHANNEL_X].GetAnimValue();
   uint32_t yChannel = mEnumAttributes[CHANNEL_Y].GetAnimValue();
   FilterPrimitiveDescription descr(PrimitiveType::DisplacementMap);
-  descr.Attributes().Set(eDisplacementMapScale, scale);
-  descr.Attributes().Set(eDisplacementMapXChannel, xChannel);
-  descr.Attributes().Set(eDisplacementMapYChannel, yChannel);
+  DisplacementMapAttributes atts;
+  atts.mScale = scale;
+  atts.mXChannel = xChannel;
+  atts.mYChannel = yChannel;
+  descr.Attributes() = AsVariant(std::move(atts));
   return descr;
 }
 

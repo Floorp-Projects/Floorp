@@ -95,25 +95,26 @@ SVGFEColorMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   const SVGNumberList &values = mNumberListAttributes[VALUES].GetAnimValue();
 
   FilterPrimitiveDescription descr(PrimitiveType::ColorMatrix);
+  ColorMatrixAttributes atts;
   if (!mNumberListAttributes[VALUES].IsExplicitlySet() &&
       (type == SVG_FECOLORMATRIX_TYPE_MATRIX ||
        type == SVG_FECOLORMATRIX_TYPE_SATURATE ||
        type == SVG_FECOLORMATRIX_TYPE_HUE_ROTATE)) {
-    descr.Attributes().Set(eColorMatrixType, (uint32_t)SVG_FECOLORMATRIX_TYPE_MATRIX);
+    atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_MATRIX;
     static const float identityMatrix[] =
       { 1, 0, 0, 0, 0,
         0, 1, 0, 0, 0,
         0, 0, 1, 0, 0,
         0, 0, 0, 1, 0 };
-    descr.Attributes().Set(eColorMatrixValues, identityMatrix, 20);
+    atts.mValues.AppendElements(identityMatrix, 20);
   } else {
-    descr.Attributes().Set(eColorMatrixType, type);
+    atts.mType = type;
     if (values.Length()) {
-      descr.Attributes().Set(eColorMatrixValues, &values[0], values.Length());
-    } else {
-      descr.Attributes().Set(eColorMatrixValues, nullptr, 0);
+      atts.mValues.AppendElements(&values[0], values.Length());
     }
   }
+
+  descr.Attributes() = AsVariant(std::move(atts));
   return descr;
 }
 
