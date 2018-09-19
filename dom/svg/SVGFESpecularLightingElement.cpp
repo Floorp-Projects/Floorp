@@ -79,19 +79,17 @@ SVGFESpecularLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInst
 
   // specification defined range (15.22)
   if (specularExponent < 1 || specularExponent > 128) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return FilterPrimitiveDescription();
   }
 
-  FilterPrimitiveDescription descr(PrimitiveType::SpecularLighting);
   SpecularLightingAttributes atts;
   atts.mLightingConstant = specularConstant;
   atts.mSpecularExponent = specularExponent;
   if (!AddLightingAttributes(static_cast<DiffuseLightingAttributes*>(&atts), aInstance)) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    return FilterPrimitiveDescription();
   }
 
-  descr.Attributes() = AsVariant(std::move(atts));
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 bool

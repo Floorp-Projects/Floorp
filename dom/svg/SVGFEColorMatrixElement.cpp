@@ -94,7 +94,6 @@ SVGFEColorMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   uint32_t type = mEnumAttributes[TYPE].GetAnimValue();
   const SVGNumberList &values = mNumberListAttributes[VALUES].GetAnimValue();
 
-  FilterPrimitiveDescription descr(PrimitiveType::ColorMatrix);
   ColorMatrixAttributes atts;
   if (!mNumberListAttributes[VALUES].IsExplicitlySet() &&
       (type == SVG_FECOLORMATRIX_TYPE_MATRIX ||
@@ -114,8 +113,7 @@ SVGFEColorMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
     }
   }
 
-  descr.Attributes() = AsVariant(std::move(atts));
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 bool

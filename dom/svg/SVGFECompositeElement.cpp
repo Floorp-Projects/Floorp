@@ -115,7 +115,6 @@ SVGFECompositeElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                const nsTArray<bool>& aInputsAreTainted,
                                                nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
-  FilterPrimitiveDescription descr(PrimitiveType::Composite);
   CompositeAttributes atts;
   uint32_t op = mEnumAttributes[OPERATOR].GetAnimValue();
   atts.mOperator = op;
@@ -126,8 +125,7 @@ SVGFECompositeElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
     atts.mCoefficients.AppendElements(k, 4);
   }
 
-  descr.Attributes() = AsVariant(std::move(atts));
-  return descr;
+  return FilterPrimitiveDescription(AsVariant(std::move(atts)));
 }
 
 bool
