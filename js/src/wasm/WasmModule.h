@@ -48,13 +48,13 @@ struct CompileArgs;
 
 class Module : public JS::WasmModule
 {
-    const SharedCode        code_;
-    const ImportVector      imports_;
-    const ExportVector      exports_;
-    const StructTypeVector  structTypes_;
-    const DataSegmentVector dataSegments_;
-    const ElemSegmentVector elemSegments_;
-    const SharedBytes       bytecode_;
+    const SharedCode          code_;
+    const ImportVector        imports_;
+    const ExportVector        exports_;
+    const StructTypeVector    structTypes_;
+    const DataSegmentVector   dataSegments_;
+    const ElemSegmentVector   elemSegments_;
+    const CustomSectionVector customSections_;
 
     // These fields are only meaningful when code_->metadata().debugEnabled.
     // `debugCodeClaimed_` is set to false initially and then to true when
@@ -67,6 +67,7 @@ class Module : public JS::WasmModule
     mutable Atomic<bool>    debugCodeClaimed_;
     const UniqueConstBytes  debugUnlinkedCode_;
     const UniqueLinkData    debugLinkData_;
+    const SharedBytes       debugBytecode_;
 
     // This flag is only used for testing purposes and is racily updated as soon
     // as tier-2 compilation finishes (in success or failure).
@@ -96,19 +97,21 @@ class Module : public JS::WasmModule
            StructTypeVector&& structTypes,
            DataSegmentVector&& dataSegments,
            ElemSegmentVector&& elemSegments,
-           const ShareableBytes& bytecode,
+           CustomSectionVector&& customSections,
            UniqueConstBytes debugUnlinkedCode = nullptr,
-           UniqueLinkData debugLinkData = nullptr)
+           UniqueLinkData debugLinkData = nullptr,
+           const ShareableBytes* debugBytecode = nullptr)
       : code_(&code),
         imports_(std::move(imports)),
         exports_(std::move(exports)),
         structTypes_(std::move(structTypes)),
         dataSegments_(std::move(dataSegments)),
         elemSegments_(std::move(elemSegments)),
-        bytecode_(&bytecode),
+        customSections_(std::move(customSections)),
         debugCodeClaimed_(false),
         debugUnlinkedCode_(std::move(debugUnlinkedCode)),
         debugLinkData_(std::move(debugLinkData)),
+        debugBytecode_(debugBytecode),
         testingTier2Active_(false)
     {
         MOZ_ASSERT_IF(metadata().debugEnabled, debugUnlinkedCode_ && debugLinkData_);
@@ -121,7 +124,8 @@ class Module : public JS::WasmModule
     const MetadataTier& metadata(Tier t) const { return code_->metadata(t); }
     const ImportVector& imports() const { return imports_; }
     const ExportVector& exports() const { return exports_; }
-    const ShareableBytes& bytecode() const { return *bytecode_; }
+    const CustomSectionVector& customSections() const { return customSections_; }
+    const Bytes& debugBytecode() const { return debugBytecode_->bytes; }
     uint32_t codeLength(Tier t) const { return code_->segment(t).length(); }
 
     // Instantiate this module with the given imports:
@@ -140,8 +144,8 @@ class Module : public JS::WasmModule
     // finishTier2() from a helper thread, passing tier-variant data which will
     // be installed and made visible.
 
-    void startTier2(const CompileArgs& args);
-    bool finishTier2(const LinkData& linkData2, UniqueCodeTier code2);
+    void startTier2(const CompileArgs& args, const ShareableBytes& bytecode);
+    bool finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const;
 
     void testingBlockOnTier2Complete() const;
     bool testingTier2Active() const { return testingTier2Active_; }
@@ -171,11 +175,12 @@ class Module : public JS::WasmModule
     bool extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const;
 };
 
-typedef RefPtr<Module> SharedModule;
+typedef RefPtr<Module> MutableModule;
+typedef RefPtr<const Module> SharedModule;
 
 // JS API implementations:
 
-SharedModule
+RefPtr<JS::WasmModule>
 DeserializeModule(PRFileDesc* bytecode, UniqueChars filename, unsigned line);
 
 } // namespace wasm

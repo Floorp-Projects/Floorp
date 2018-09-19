@@ -145,7 +145,7 @@ static UniqueChars MakeStringCopy(const char* s)
 }
 
 /* static */ UniqueChars
-TypeSet::TypeString(TypeSet::Type type)
+TypeSet::TypeString(const TypeSet::Type type)
 {
     if (type.isPrimitive() || type.isUnknown() || type.isAnyObject()) {
         return MakeStringCopy(NonObjectTypeString(type));
@@ -163,7 +163,7 @@ TypeSet::TypeString(TypeSet::Type type)
 }
 
 /* static */ UniqueChars
-TypeSet::ObjectGroupString(ObjectGroup* group)
+TypeSet::ObjectGroupString(const ObjectGroup* group)
 {
     return TypeString(TypeSet::ObjectType(group));
 }

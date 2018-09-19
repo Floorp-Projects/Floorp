@@ -588,7 +588,7 @@ class ObjectGroup : public gc::TenuredCell
     static ArrayObject* getCopyOnWriteObject(JSScript* script, jsbytecode* pc);
 
     // Returns false if not found.
-    static bool findAllocationSite(JSContext* cx, ObjectGroup* group,
+    static bool findAllocationSite(JSContext* cx, const ObjectGroup* group,
                                    JSScript** script, uint32_t* offset);
 
   private:
@@ -693,7 +693,7 @@ class ObjectGroupRealm
     ObjectGroupRealm(ObjectGroupRealm&) = delete;
     void operator=(ObjectGroupRealm&) = delete;
 
-    static ObjectGroupRealm& get(ObjectGroup* group);
+    static ObjectGroupRealm& get(const ObjectGroup* group);
     static ObjectGroupRealm& getForNewObject(JSContext* cx);
 
     void replaceAllocationSiteGroup(JSScript* script, jsbytecode* pc,

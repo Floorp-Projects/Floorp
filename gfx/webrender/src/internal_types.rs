@@ -66,8 +66,8 @@ pub enum SourceTexture {
     RenderTaskCache(SavedTargetIndex),
 }
 
-pub const ORTHO_NEAR_PLANE: f32 = -1000000.0;
-pub const ORTHO_FAR_PLANE: f32 = 1000000.0;
+pub const ORTHO_NEAR_PLANE: f32 = -100000.0;
+pub const ORTHO_FAR_PLANE: f32 = 100000.0;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]

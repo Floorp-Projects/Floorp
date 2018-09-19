@@ -118,6 +118,9 @@ IsValidAllocKind(AllocKind kind)
     return kind >= AllocKind::FIRST && kind <= AllocKind::LAST;
 }
 
+const char*
+AllocKindName(AllocKind kind);
+
 inline bool
 IsObjectAllocKind(AllocKind kind)
 {
