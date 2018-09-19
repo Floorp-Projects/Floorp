@@ -24,7 +24,6 @@ async function playStateIsUpdatedDynamically(walker, animations) {
 
   info("Getting the animation player front for this node");
   const [player] = await animations.getAnimationPlayersForNode(node);
-  await player.ready();
 
   let state = await player.getCurrentState();
   is(state.playState, "running",
@@ -34,7 +33,7 @@ async function playStateIsUpdatedDynamically(walker, animations) {
        "it to finish");
   const onFinished = waitForAnimationPlayState(player, "finished");
   // Set the currentTime to 98s, knowing that the animation lasts for 100s.
-  await player.setCurrentTime(98 * 1000);
+  await animations.setCurrentTimes([player], 98 * 1000, false);
   state = await onFinished;
   is(state.playState, "finished",
     "The animation has ended and the state has been updated");

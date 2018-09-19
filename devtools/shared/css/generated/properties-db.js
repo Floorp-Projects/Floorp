@@ -3052,8 +3052,7 @@ exports.CSS_PROPERTIES = {
       "-moz-user-modify",
       "-moz-user-focus",
       "caret-color",
-      "scrollbar-face-color",
-      "scrollbar-track-color",
+      "scrollbar-color",
       "text-anchor",
       "color-interpolation",
       "color-interpolation-filters",
@@ -9365,6 +9364,10 @@ exports.PREFERENCES = [
     "layout.css.scroll-snap.enabled"
   ],
   [
+    "scrollbar-color",
+    "layout.css.scrollbar-colors.enabled"
+  ],
+  [
     "shape-outside",
     "layout.css.shape-outside.enabled"
   ],
@@ -9379,14 +9382,6 @@ exports.PREFERENCES = [
   [
     "scroll-snap-points-y",
     "layout.css.scroll-snap.enabled"
-  ],
-  [
-    "scrollbar-face-color",
-    "layout.css.scrollbar-colors.enabled"
-  ],
-  [
-    "scrollbar-track-color",
-    "layout.css.scrollbar-colors.enabled"
   ],
   [
     "scroll-snap-destination",

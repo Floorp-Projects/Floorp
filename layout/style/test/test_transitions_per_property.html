@@ -329,15 +329,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-colors.enabled")) {
-  supported_properties["scrollbar-face-color"] = [
-    test_color_transition,
-    test_currentcolor_transition,
-    test_auto_color_transition,
-  ];
-  supported_properties["scrollbar-track-color"] = [
-    test_color_transition,
-    test_currentcolor_transition,
-    test_auto_color_transition,
+  supported_properties["scrollbar-color"] = [
+    test_scrollbar_color_transition,
   ];
 }
 
@@ -1487,25 +1480,38 @@ function test_angle_transition(prop) {
   check_distance(prop, '45deg', '70deg', '145deg');
 }
 
-function test_color_transition(prop, get_color=(x => x), is_shorthand=false) {
+function get_color_options(options) {
+  let {
+    get_color = x => x,
+    set_color = x => x,
+    is_shorthand = false,
+  } = options;
+  return { get_color, set_color, is_shorthand };
+}
+
+function test_color_transition(prop, options={}) {
+  let { get_color, set_color, is_shorthand } = get_color_options(options);
+
   div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "rgb(255, 28, 0)", "");
+  div.style.setProperty(prop, set_color("rgb(255, 28, 0)"), "");
   is(get_color(cs.getPropertyValue(prop)), "rgb(255, 28, 0)",
      "color-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "rgb(75, 84, 128)", "");
+  div.style.setProperty(prop, set_color("rgb(75, 84, 128)"), "");
   is(get_color(cs.getPropertyValue(prop)), "rgb(210, 42, 32)",
      "color-valued property " + prop + ": interpolation of colors");
 
   if (!is_shorthand) {
-    check_distance(prop, "rgb(255, 28, 0)", "rgb(210, 42, 32)",
-                         "rgb(75, 84, 128)");
+    check_distance(prop, set_color("rgb(255, 28, 0)"),
+                   set_color("rgb(210, 42, 32)"),
+                   set_color("rgb(75, 84, 128)"));
   }
 
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "rgb(0, 255, 0)", "");
-  var vals = cs.getPropertyValue(prop).match(/rgb\(([^, ]*), ([^, ]*), ([^, ]*)\)/);
+  div.style.setProperty(prop, set_color("rgb(0, 255, 0)"), "");
+  var color = get_color(cs.getPropertyValue(prop));
+  var vals = color.match(/rgb\(([^, ]*), ([^, ]*), ([^, ]*)\)/);
   is(vals.length, 4,
      "color-valued property " + prop + ": flush before clamping test (length)");
   is(vals[1], "0",
@@ -1515,9 +1521,10 @@ function test_color_transition(prop, get_color=(x => x), is_shorthand=false) {
   is(vals[3], "0",
      "color-valued property " + prop + ": flush before clamping test (blue)");
   div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "rgb(255, 0, 128)", "");
+  div.style.setProperty(prop, set_color("rgb(255, 0, 128)"), "");
   // FIXME: Once we support non-sRGB colors, these tests will need fixing.
-  vals = cs.getPropertyValue(prop).match(/rgb\(([^, ]*), ([^, ]*), ([^, ]*)\)/);
+  color = get_color(cs.getPropertyValue(prop));
+  vals = color.match(/rgb\(([^, ]*), ([^, ]*), ([^, ]*)\)/);
   is(vals.length, 4,
      "color-valued property " + prop + ": clamping of negatives (length)");
   is(vals[1], "0",
@@ -1529,28 +1536,30 @@ function test_color_transition(prop, get_color=(x => x), is_shorthand=false) {
   div.style.setProperty("transition-timing-function", "linear", "");
 }
 
-function test_currentcolor_transition(prop, get_color=(x => x), is_shorthand=false) {
+function test_currentcolor_transition(prop, options={}) {
+  let { get_color, set_color } = get_color_options(options);
+
   const msg_prefix = `color-valued property ${prop}: `;
   div.style.setProperty("transition-property", "none", "");
   (prop == "color" ? div.parentNode : div).style.
     setProperty("color", "rgb(128, 0, 0)", "");
-  div.style.setProperty(prop, "rgb(0, 0, 128)", "");
+  div.style.setProperty(prop, set_color("rgb(0, 0, 128)"), "");
   is(get_color(cs.getPropertyValue(prop)), "rgb(0, 0, 128)",
      msg_prefix + "computed value before transition");
   div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "currentcolor", "");
+  div.style.setProperty(prop, set_color("currentcolor"), "");
   is(get_color(cs.getPropertyValue(prop)), "rgb(32, 0, 96)",
      msg_prefix + "interpolation of rgb color and currentcolor");
 
   if (prop != "color") {
     div.style.setProperty("transition-property", "none", "");
     div.style.setProperty("color", "rgb(128, 0, 0)", "");
-    div.style.setProperty(prop, "rgb(0, 0, 128)", "");
+    div.style.setProperty(prop, set_color("rgb(0, 0, 128)"), "");
     is(get_color(cs.getPropertyValue(prop)), "rgb(0, 0, 128)",
        msg_prefix + "computed value before transition");
     div.style.setProperty("transition-property", `color, ${prop}`, "");
     div.style.setProperty("color", "rgb(0, 128, 0)", "");
-    div.style.setProperty(prop, "currentcolor", "");
+    div.style.setProperty(prop, set_color("currentcolor"), "");
     is(cs.getPropertyValue("color"), "rgb(96, 32, 0)",
        "interpolation of rgb color property");
     is(get_color(cs.getPropertyValue(prop)), "rgb(24, 8, 96)",
@@ -1560,11 +1569,11 @@ function test_currentcolor_transition(prop, get_color=(x => x), is_shorthand=fal
   div.style.setProperty("transition-property", "none", "");
   (prop == "color" ? div.parentNode : div).style.
     setProperty("color", "rgba(128, 0, 0, 0.6)", "");
-  div.style.setProperty(prop, "rgba(0, 0, 128, 0.8)", "");
+  div.style.setProperty(prop, set_color("rgba(0, 0, 128, 0.8)"), "");
   is(get_color(cs.getPropertyValue(prop)), "rgba(0, 0, 128, 0.8)",
      msg_prefix + "computed value before transition");
   div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "currentcolor", "");
+  div.style.setProperty(prop, set_color("currentcolor"), "");
   is(get_color(cs.getPropertyValue(prop)), "rgba(26, 0, 102, 0.75)",
      msg_prefix + "interpolation of rgba color and currentcolor");
 
@@ -1574,7 +1583,9 @@ function test_currentcolor_transition(prop, get_color=(x => x), is_shorthand=fal
   (prop == "color" ? div.parentNode : div).style.removeProperty("color");
 }
 
-function test_auto_color_transition(prop, get_color=(x => x), is_shorthand=false) {
+function test_auto_color_transition(prop, options={}) {
+  let { get_color, set_color } = get_color_options(options);
+
   const msg_prefix = `color-valued property ${prop}: `;
   const test_color = "rgb(51, 102, 153)";
   div.style.setProperty("transition-property", "none", "");
@@ -1584,7 +1595,7 @@ function test_auto_color_transition(prop, get_color=(x => x), is_shorthand=false
         msg_prefix + "ensure used auto value is different than our test color");
 
   div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, test_color, "");
+  div.style.setProperty(prop, set_color(test_color), "");
   is(get_color(cs.getPropertyValue(prop)), test_color,
      msg_prefix + "not interpolatable between auto and rgb color");
 }
@@ -1596,11 +1607,40 @@ function get_color_from_shorthand_value(value) {
 }
 
 function test_color_shorthand_transition(prop) {
-  test_color_transition(prop, get_color_from_shorthand_value, true);
+  test_color_transition(prop, {
+    get_color: get_color_from_shorthand_value,
+    is_shorthand: true,
+  });
 }
 
 function test_currentcolor_shorthand_transition(prop) {
-  test_currentcolor_transition(prop, get_color_from_shorthand_value, true);
+  test_currentcolor_transition(prop, {
+    get_color: get_color_from_shorthand_value,
+    is_shorthand: true,
+  });
+}
+
+function test_scrollbar_color_transition(prop) {
+  function split_colors(value) {
+    const colors = value.match(/^(rgba?\(.+?\)) (rgba?\(.+?\))$/);
+    isnot(colors, null, "scrollbar-color should consist of two colors");
+    return { thumb: colors[1], track: colors[2] };
+  }
+  const TEST_FUNCS = [
+    test_color_transition,
+    test_currentcolor_transition,
+    test_auto_color_transition,
+  ];
+  for (let test_func of TEST_FUNCS) {
+    test_func(prop, {
+      get_color: value => split_colors(value).thumb,
+      set_color: value => value + " blue",
+    });
+    test_func(prop, {
+      get_color: value => split_colors(value).track,
+      set_color: value => "blue " + value,
+    });
+  }
 }
 
 function test_shape_or_url_equals(computedValStr, expected)
