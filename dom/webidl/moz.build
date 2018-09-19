@@ -665,7 +665,6 @@ WEBIDL_FILES = [
     'MediaTrackConstraintSet.webidl',
     'MediaTrackSettings.webidl',
     'MediaTrackSupportedConstraints.webidl',
-    'MenuBoxObject.webidl',
     'MerchantValidationEvent.webidl',
     'MessageChannel.webidl',
     'MessageEvent.webidl',

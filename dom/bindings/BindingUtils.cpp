@@ -52,6 +52,7 @@
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/XULFrameElementBinding.h"
+#include "mozilla/dom/XULMenuElementBinding.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
@@ -3861,6 +3862,9 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
                 definition->mLocalName == nsGkAtoms::browser ||
                 definition->mLocalName == nsGkAtoms::editor) {
       cb = XULFrameElement_Binding::GetConstructorObject;
+    } else if (definition->mLocalName == nsGkAtoms::menu ||
+               definition->mLocalName == nsGkAtoms::menulist) {
+      cb = XULMenuElement_Binding::GetConstructorObject;
     } else if (definition->mLocalName == nsGkAtoms::scrollbox) {
       cb = XULScrollElement_Binding::GetConstructorObject;
     } else {

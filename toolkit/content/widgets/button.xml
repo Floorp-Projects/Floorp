@@ -25,8 +25,8 @@
 
       <property name="open" onget="return this.hasAttribute('open');">
         <setter><![CDATA[
-          if (this.boxObject instanceof MenuBoxObject) {
-            this.boxObject.openMenu(val);
+          if (this.hasMenu()) {
+            this.openMenu(val);
           } else if (val) {
             // Fall back to just setting the attribute
             this.setAttribute("open", "true");
@@ -128,7 +128,7 @@
 
       <handler event="keypress">
       <![CDATA[
-        if (this.boxObject instanceof MenuBoxObject) {
+        if (this.hasMenu()) {
           if (this.open)
             return;
         } else {

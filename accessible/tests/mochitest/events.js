@@ -70,6 +70,11 @@ function isHTMLElement(aNode) {
          aNode.namespaceURI == "http://www.w3.org/1999/xhtml";
 }
 
+function isXULElement(aNode) {
+  return aNode.nodeType == aNode.ELEMENT_NODE &&
+         aNode.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+}
+
 /**
  * Executes the function when requested event is handled.
  *
@@ -1092,17 +1097,18 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
     // Scroll the node into view, otherwise synth click may fail.
     if (isHTMLElement(targetNode)) {
       targetNode.scrollIntoView(true);
-    } else if (ChromeUtils.getClassName(targetNode) == "XULElement") {
+    } else if (isXULElement(targetNode)) {
       var targetAcc = getAccessible(targetNode);
       targetAcc.scrollTo(SCROLL_TYPE_ANYWHERE);
     }
 
     var x = 1, y = 1;
     if (aArgs && ("where" in aArgs) && aArgs.where == "right") {
-      if (isHTMLElement(targetNode))
+      if (isHTMLElement(targetNode)) {
         x = targetNode.offsetWidth - 1;
-    else if (ChromeUtils.getClassName(targetNode) == "XULElement")
+      } else if (isXULElement(targetNode)) {
         x = targetNode.boxObject.width - 1;
+      }
     }
     synthesizeMouse(targetNode, x, y, aArgs ? aArgs : {});
   };

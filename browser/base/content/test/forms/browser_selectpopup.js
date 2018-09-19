@@ -145,17 +145,17 @@ async function doSelectTests(contentType, content) {
   is(selectPopup.children[1].getAttribute("label"), "One", "option label");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(2), "Select item 2");
+  is(menulist.activeChild, menulist.getItemAtIndex(2), "Select item 2");
   is(menulist.selectedIndex, isWindows ? 2 : 1, "Select item 2 selectedIndex");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(3), "Select item 3");
+  is(menulist.activeChild, menulist.getItemAtIndex(3), "Select item 3");
   is(menulist.selectedIndex, isWindows ? 3 : 1, "Select item 3 selectedIndex");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   // On Windows, one can navigate on disabled menuitems
-  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(9),
+  is(menulist.activeChild, menulist.getItemAtIndex(9),
      "Skip optgroup header and disabled items select item 7");
   is(menulist.selectedIndex, isWindows ? 9 : 1, "Select or skip disabled item selectedIndex");
 
@@ -164,7 +164,7 @@ async function doSelectTests(contentType, content) {
   }
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(3), "Select item 3 again");
+  is(menulist.activeChild, menulist.getItemAtIndex(3), "Select item 3 again");
   is(menulist.selectedIndex, isWindows ? 3 : 1, "Select item 3 selectedIndex");
 
   is((await getInputEvents()), 0, "Before closed - number of input events");

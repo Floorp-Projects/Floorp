@@ -75,6 +75,7 @@
 #include "nsICSSDeclaration.h"
 #include "nsLayoutUtils.h"
 #include "XULFrameElement.h"
+#include "XULMenuElement.h"
 #include "XULPopupElement.h"
 #include "XULScrollElement.h"
 
@@ -157,6 +158,12 @@ nsXULElement* nsXULElement::Construct(already_AddRefed<mozilla::dom::NodeInfo>&&
       nodeInfo->Equals(nsGkAtoms::editor)) {
     already_AddRefed<mozilla::dom::NodeInfo> frameni = nodeInfo.forget();
     return new XULFrameElement(frameni);
+  }
+
+  if (nodeInfo->Equals(nsGkAtoms::menu) ||
+      nodeInfo->Equals(nsGkAtoms::menulist)) {
+    already_AddRefed<mozilla::dom::NodeInfo> menuni = nodeInfo.forget();
+    return new XULMenuElement(menuni);
   }
 
   if (nodeInfo->Equals(nsGkAtoms::scrollbox)) {
@@ -304,7 +311,17 @@ NS_IMPL_RELEASE_INHERITED(nsXULElement, nsStyledElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
     NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_INTERFACE_MAP_END_INHERITING(nsStyledElement)
+
+    nsCOMPtr<nsISupports> iface =
+      CustomElementRegistry::CallGetCustomInterface(this, aIID);
+    if (iface) {
+      iface->QueryInterface(aIID, aInstancePtr);
+      if (*aInstancePtr) {
+        return NS_OK;
+      }
+    }
+
+NS_INTERFACE_MAP_END_INHERITING(Element)
 
 //----------------------------------------------------------------------
 // nsINode interface
@@ -494,6 +511,39 @@ nsXULElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
   }
 
   return shouldFocus;
+}
+
+bool
+nsXULElement::HasMenu()
+{
+  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame());
+  return menu != nullptr;
+}
+
+void
+nsXULElement::OpenMenu(bool aOpenFlag)
+{
+  nsCOMPtr<nsIDocument> doc = GetUncomposedDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(FlushType::Frames);
+  }
+
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm) {
+    if (aOpenFlag) {
+      // Nothing will happen if this element isn't a menu.
+      pm->ShowMenu(this, false, false);
+    }
+    else {
+      nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame());
+      if (menu) {
+        nsMenuPopupFrame* popupFrame = menu->GetPopup();
+        if (popupFrame) {
+          pm->HidePopup(popupFrame->GetContent(), false, true, false, false);
+        }
+      }
+    }
+  }
 }
 
 bool
