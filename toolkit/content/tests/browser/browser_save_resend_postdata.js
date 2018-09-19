@@ -17,7 +17,7 @@ MockFilePicker.init(window);
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.loadURI("http://mochi.test:8888/browser/toolkit/content/tests/browser/data/post_form_outer.sjs");
+  BrowserTestUtils.loadURI(gBrowser, "http://mochi.test:8888/browser/toolkit/content/tests/browser/data/post_form_outer.sjs");
 
   gBrowser.addEventListener("pageshow", function pageShown(event) {
     if (event.target.location == "about:blank")

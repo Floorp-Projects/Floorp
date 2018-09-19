@@ -327,7 +327,7 @@ function test() {
     openScratchpad(startTest);
   });
 
-  gBrowser.loadURI("data:text/html,<p>test recent files in Scratchpad");
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test recent files in Scratchpad");
 }
 
 function finishTest() {

@@ -115,7 +115,7 @@ function stop_audio1_from_page() {
 }
 
 async function audio_competing_for_active_agent(url, browser) {
-  browser.loadURI(url);
+  BrowserTestUtils.loadURI(browser, url);
 
   info("- page should have playing audio -");
   await wait_for_event(browser, "DOMAudioPlaybackStarted");

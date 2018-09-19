@@ -17,7 +17,7 @@ add_task(async function() {
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   const wait = waitForNetworkEvents(monitor, 1);
-  tab.linkedBrowser.loadURI(SIMPLE_URL);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, SIMPLE_URL);
   await wait;
 
   const item = getSortedRequests(store.getState()).get(0);

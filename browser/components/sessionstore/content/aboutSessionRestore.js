@@ -180,7 +180,9 @@ function restoreSession() {
 
 function startNewSession() {
   if (Services.prefs.getIntPref("browser.startup.page") == 0)
-    getBrowserWindow().gBrowser.loadURI("about:blank");
+    getBrowserWindow().gBrowser.loadURI("about:blank", {
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+    });
   else
     getBrowserWindow().BrowserHome();
 }

@@ -108,11 +108,10 @@ public:
   typedef nsTSubstringTuple<T> substring_tuple_type;
 
   typedef nsReadingIterator<char_type> const_iterator;
-  typedef nsWritingIterator<char_type> iterator;
+  typedef char_type* iterator;
 
   typedef nsTStringComparator<char_type> comparator_type;
 
-  typedef char_type* char_iterator;
   typedef const char_type* const_char_iterator;
 
   typedef uint32_t index_type;

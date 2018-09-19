@@ -1,7 +1,7 @@
 add_task(async function() {
   let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, true);
   const htmlContent = "data:text/html, <iframe src='data:text/html,text text'></iframe>";
-  gBrowser.loadURI(htmlContent);
+  BrowserTestUtils.loadURI(gBrowser, htmlContent);
   await loadedPromise;
 
   await ContentTask.spawn(gBrowser.selectedBrowser, { }, async function(arg) {

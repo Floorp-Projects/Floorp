@@ -49,6 +49,7 @@ function ContentProcessTargetActor(connection) {
     .createInstance(Ci.nsIPrincipal);
   const sandbox = Cu.Sandbox(systemPrincipal, {
     sandboxPrototype,
+    wantGlobalProperties: ["ChromeUtils"],
   });
   this._consoleScope = sandbox;
 

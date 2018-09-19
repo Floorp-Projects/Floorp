@@ -68,6 +68,6 @@ function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
     aFinalURL = aURL;
 
   info("Wait for load tab event");
-  aTab.linkedBrowser.loadURI(aURL);
+  BrowserTestUtils.loadURI(aTab.linkedBrowser, aURL);
   return BrowserTestUtils.browserLoaded(aTab.linkedBrowser, false, aFinalURL);
 }

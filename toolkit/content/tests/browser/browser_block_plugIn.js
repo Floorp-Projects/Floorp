@@ -11,7 +11,7 @@ add_task(async function setup_test_preference() {
 add_task(async function block_plug_in() {
   info("- open new background tab -");
   let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  tab.linkedBrowser.loadURI(PAGE);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- tab should be blocked -");

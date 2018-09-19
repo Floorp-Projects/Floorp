@@ -20,7 +20,7 @@ add_task(async function() {
     // Navigate to data URI.
     let promiseLoad = BrowserTestUtils.browserLoaded(fileBrowser, false,
                                                      DATA_URI);
-    fileBrowser.loadURI(DATA_URI);
+    BrowserTestUtils.loadURI(fileBrowser, DATA_URI);
     let href = await promiseLoad;
     is(href, DATA_URI, "Check data URI loaded.");
     let dataPid = await ContentTask.spawn(fileBrowser, null, () => {

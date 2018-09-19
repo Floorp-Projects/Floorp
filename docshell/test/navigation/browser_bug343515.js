@@ -101,7 +101,7 @@ function step3() {
     }
   }).then(() => {
     // Navigate tab 2 to a different page
-    ctx.tab2Browser.loadURI(testPath + "bug343515_pg3.html");
+    BrowserTestUtils.loadURI(ctx.tab2Browser, testPath + "bug343515_pg3.html");
 
     // bug343515_pg3.html consists of a page with two iframes, one of which
     // contains another iframe, so there'll be a total of 4 load events
@@ -170,7 +170,7 @@ function step5() {
     return BrowserTestUtils.switchTab(gBrowser, ctx.tab1);
   }).then(() => {
     // Navigate to page 3
-    ctx.tab1Browser.loadURI(testPath + "bug343515_pg3.html");
+    BrowserTestUtils.loadURI(ctx.tab1Browser, testPath + "bug343515_pg3.html");
 
     // bug343515_pg3.html consists of a page with two iframes, one of which
     // contains another iframe, so there'll be a total of 4 load events

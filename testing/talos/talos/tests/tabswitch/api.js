@@ -220,7 +220,9 @@ async function test(window) {
   // We'll switch back to about:blank after each tab switch
   // in an attempt to put the graphics layer into a "steady"
   // state before switching to the next tab.
-  initialTab.linkedBrowser.loadURI("about:blank", null, null);
+  initialTab.linkedBrowser.loadURI("about:blank", {
+    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+  });
 
   let tabs = gBrowser.getTabsToTheEndFrom(initialTab);
   let times = [];

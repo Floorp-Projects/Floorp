@@ -73,6 +73,7 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     'IdleTaskRunner.cpp',
+    'ThreadDelay.cpp',
 ]
 
 UNIFIED_SOURCES += [

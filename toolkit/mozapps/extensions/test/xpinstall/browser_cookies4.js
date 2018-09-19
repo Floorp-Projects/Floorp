@@ -20,7 +20,7 @@ function test() {
     "Cookie check": TESTROOT2 + "cookieRedirect.sjs?" + TESTROOT + "amosigned.xpi",
   }));
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
 }
 
 function download_failed(install) {

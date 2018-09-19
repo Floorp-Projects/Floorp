@@ -45,7 +45,7 @@ add_task(async function mute_web_audio() {
   info("- open new tab -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  tab.linkedBrowser.loadURI(PAGE);
+  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- tab should be audible -");

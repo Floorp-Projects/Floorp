@@ -57,7 +57,7 @@ add_task(async function test_urlbar_fragment_enter() {
 add_task(async function test_backButton_forwardButton() {
   await withTestPage(async function(aBrowser) {
     // Load a new page in the tab so we can test going back
-    aBrowser.loadURI("https://example.com" + DIRECTORY_PATH + "formless_basic.html?second");
+    BrowserTestUtils.loadURI(aBrowser, "https://example.com" + DIRECTORY_PATH + "formless_basic.html?second");
     await BrowserTestUtils.browserLoaded(aBrowser, false,
                                          "https://example.com" + DIRECTORY_PATH +
                                          "formless_basic.html?second");
@@ -121,7 +121,7 @@ add_task(async function test_back_keyboard_shortcut() {
   }
   await withTestPage(async function(aBrowser) {
     // Load a new page in the tab so we can test going back
-    aBrowser.loadURI("https://example.com" + DIRECTORY_PATH + "formless_basic.html?second");
+    BrowserTestUtils.loadURI(aBrowser, "https://example.com" + DIRECTORY_PATH + "formless_basic.html?second");
     await BrowserTestUtils.browserLoaded(aBrowser, false,
                                          "https://example.com" + DIRECTORY_PATH +
                                          "formless_basic.html?second");

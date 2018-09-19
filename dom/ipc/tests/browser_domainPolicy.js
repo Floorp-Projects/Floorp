@@ -49,7 +49,7 @@ async function test_domainPolicy() {
 
       return loadBase();
     });
-    tab.linkedBrowser.loadURI("http://mochi.test:8888/browser/dom/ipc/tests/file_domainPolicy_base.html");
+    BrowserTestUtils.loadURI(tab.linkedBrowser, "http://mochi.test:8888/browser/dom/ipc/tests/file_domainPolicy_base.html");
     return initPromise;
   }
 

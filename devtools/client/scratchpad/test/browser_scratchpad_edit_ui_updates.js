@@ -16,7 +16,7 @@ function test() {
     openScratchpad(runTests);
   });
 
-  gBrowser.loadURI("data:text/html,test Edit menu updates Scratchpad - bug 699130");
+  BrowserTestUtils.loadURI(gBrowser, "data:text/html,test Edit menu updates Scratchpad - bug 699130");
 }
 
 function runTests() {
