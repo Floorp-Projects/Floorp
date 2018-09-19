@@ -114,4 +114,50 @@ class FxaResultTest {
 
         assertTrue(chainComplete)
     }
+
+    @Test
+    fun exceptionChainSkipsMissing() {
+        var chainComplete = false
+
+        FxaResult.fromValue(42).then { value: Int ->
+            assertEquals(value, 42)
+            FxaResult.fromException<String>(Exception("test"))
+        }.then { value: String ->
+            fail("Shouldn't call onValue (1)")
+            FxaResult.fromValue("dummy 1")
+        }.then({ value: String ->
+            fail("Shouldn't call onValue (2)")
+            FxaResult.fromValue("dummy 2")
+        }, { value: Exception ->
+            assertEquals(value.message, "test")
+            chainComplete = true
+            FxaResult()
+        })
+
+        assertTrue(chainComplete)
+    }
+
+    @Test
+    fun exceptionChainHandlesThrows() {
+        var chainComplete = false
+
+        FxaResult.fromException<Int>(Exception("test 1")).then({ value: Int ->
+            fail("Shouldn't call onValue (1)")
+            FxaResult.fromValue("dummy value 0")
+        }, { error ->
+            assertEquals(error.message, "test 1")
+            throw Exception("test 2")
+        }).then({
+            fail("Shouldn't call onValue (2)")
+            FxaResult.fromValue("dummy value 1")
+        }, { error ->
+            assertEquals(error.message, "test 2")
+            FxaResult.fromValue("value")
+        }).whenComplete { value ->
+            assertEquals(value, "value")
+            chainComplete = true
+        }
+
+        assertTrue(chainComplete)
+    }
 }

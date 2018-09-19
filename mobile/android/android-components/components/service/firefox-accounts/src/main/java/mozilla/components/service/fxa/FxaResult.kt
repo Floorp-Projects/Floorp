@@ -111,11 +111,17 @@ class FxaResult<T> {
 
             override fun onException(exception: Exception) {
                 if (exceptionListener == null) {
-                    // Do not swallow thrown exceptions if a listener is not present
-                    throw exception
+                    // Let later handlers in the chain handle the exception.
+                    result.completeFrom(fromException(exception))
+                } else {
+                    try {
+                        result.completeFrom(exceptionListener.onException(exception))
+                    } catch (ex: Exception) {
+                        // Allow users to `throw err` instead of returning `FxaResult.fromException`
+                        // (similar to JavaScript promises).
+                        result.completeFrom(fromException(ex))
+                    }
                 }
-
-                result.completeFrom(exceptionListener.onException(exception))
             }
         }
 
