@@ -441,10 +441,7 @@ public:
    * To allow native code to call methods of chrome-implemented custom elements,
    * a helper method may be defined in the custom element called
    * 'getCustomInterfaceCallback'. This method takes an IID and returns an
-   * object which implements an XPCOM interface. If there is no
-   * getCustomInterfaceCallback or the callback doesn't return an object,
-   * QueryInterface is called on aElement to see if this interface is
-   * implemented directly.
+   * object which implements an XPCOM interface.
    *
    * This returns null if aElement is not from a chrome document.
    */
