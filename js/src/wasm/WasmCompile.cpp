@@ -543,7 +543,7 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
 }
 
 void
-wasm::CompileTier2(const CompileArgs& args, Module& module, Atomic<bool>* cancelled)
+wasm::CompileTier2(const CompileArgs& args, const Module& module, Atomic<bool>* cancelled)
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 

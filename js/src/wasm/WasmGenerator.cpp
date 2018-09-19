@@ -985,11 +985,11 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     metadata_->minMemoryLength = env_->minMemoryLength;
     metadata_->maxMemoryLength = env_->maxMemoryLength;
     metadata_->startFuncIndex = env_->startFuncIndex;
-    metadata_->moduleName = env_->moduleName;
     metadata_->tables = std::move(env_->tables);
     metadata_->globals = std::move(env_->globals);
+    metadata_->nameCustomSectionIndex = env_->nameCustomSectionIndex;
+    metadata_->moduleName = env_->moduleName;
     metadata_->funcNames = std::move(env_->funcNames);
-    metadata_->customSections = std::move(env_->customSections);
 
     // Copy over additional debug information.
 
@@ -1042,7 +1042,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
     }
 
     MutableCode code = js_new<Code>(std::move(codeTier), *metadata_, std::move(jumpTables));
-    if (!code || !code->initialize(bytecode, *linkData_)) {
+    if (!code || !code->initialize(*linkData_)) {
         return nullptr;
     }
 
@@ -1052,6 +1052,9 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
             return nullptr;
         }
     }
+
+    // Copy over data from the Bytecode, which is going away at the end of
+    // compilation.
 
     DataSegmentVector dataSegments;
     if (!dataSegments.reserve(env_->dataSegments.length())) {
@@ -1067,6 +1070,33 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
         }
         dataSegments.infallibleAppend(std::move(dstSeg));
     }
+
+    CustomSectionVector customSections;
+    if (!customSections.reserve(env_->customSections.length())) {
+        return nullptr;
+    }
+    for (const CustomSectionEnv& srcSec : env_->customSections) {
+        CustomSection sec;
+        if (!sec.name.append(bytecode.begin() + srcSec.nameOffset, srcSec.nameLength)) {
+            return nullptr;
+        }
+        MutableBytes payload = js_new<ShareableBytes>();
+        if (!payload) {
+            return nullptr;
+        }
+        if (!payload->append(bytecode.begin() + srcSec.payloadOffset, srcSec.payloadLength)) {
+            return nullptr;
+        }
+        sec.payload = std::move(payload);
+        customSections.infallibleAppend(std::move(sec));
+    }
+
+    if (env_->nameCustomSectionIndex) {
+        metadata_->namePayload = customSections[*env_->nameCustomSectionIndex].payload;
+    }
+
+    // See Module debugCodeClaimed_ comments for why we need to make a separate
+    // debug copy.
 
     UniqueBytes debugUnlinkedCode;
     UniqueLinkData debugLinkData;
@@ -1084,15 +1114,19 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
         debugLinkData = std::move(linkData_);
     }
 
-    SharedModule module(js_new<Module>(*code,
-                                       std::move(env_->imports),
-                                       std::move(env_->exports),
-                                       std::move(structTypes),
-                                       std::move(dataSegments),
-                                       std::move(env_->elemSegments),
-                                       bytecode,
-                                       std::move(debugUnlinkedCode),
-                                       std::move(debugLinkData)));
+    // All the components are finished, so create the complete Module and start
+    // tier-2 compilation if requested.
+
+    MutableModule module = js_new<Module>(*code,
+                                          std::move(env_->imports),
+                                          std::move(env_->exports),
+                                          std::move(structTypes),
+                                          std::move(dataSegments),
+                                          std::move(env_->elemSegments),
+                                          std::move(customSections),
+                                          bytecode,
+                                          std::move(debugUnlinkedCode),
+                                          std::move(debugLinkData));
     if (!module) {
         return nullptr;
     }
@@ -1111,7 +1145,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
 }
 
 bool
-ModuleGenerator::finishTier2(Module& module)
+ModuleGenerator::finishTier2(const Module& module)
 {
     MOZ_ASSERT(mode() == CompileMode::Tier2);
     MOZ_ASSERT(tier() == Tier::Ion);

@@ -2785,7 +2785,7 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
             }
 
             bool enableTrap = observing == Debugger::IsObserving::Observing;
-            instance->ensureEnterFrameTrapsState(cx, enableTrap);
+            instance->debug().ensureEnterFrameTrapsState(cx, enableTrap);
         }
     }
 
@@ -5931,12 +5931,13 @@ struct DebuggerScriptGetLineCountMatcher
         }
         return match(script);
     }
-    ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        uint32_t result;
-        if (!wasmInstance->instance().debug().totalSourceLines(cx_, &result)) {
-            return false;
+    ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+        wasm::Instance& instance = instanceObj->instance();
+        if (instance.debugEnabled()) {
+            totalLines = double(instance.debug().totalSourceLines());
+        } else {
+            totalLines = 0;
         }
-        totalLines = double(result);
         return true;
     }
 };
@@ -6390,15 +6391,16 @@ class DebuggerScriptGetOffsetLocationMatcher
         }
         return match(script);
     }
-    ReturnType match(Handle<WasmInstanceObject*> instance) {
-        size_t lineno;
-        size_t column;
-        bool found;
-        if (!instance->instance().debug().getOffsetLocation(cx_, offset_, &found, &lineno, &column)) {
+    ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+        wasm::Instance& instance = instanceObj->instance();
+        if (!instance.debugEnabled()) {
+            JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
             return false;
         }
 
-        if (!found) {
+        size_t lineno;
+        size_t column;
+        if (!instance.debug().getOffsetLocation(offset_, &lineno, &column)) {
             JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
             return false;
         }
@@ -6696,9 +6698,11 @@ class DebuggerScriptGetAllColumnOffsetsMatcher
         }
         return match(script);
     }
-    ReturnType match(Handle<WasmInstanceObject*> instance) {
+    ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+        wasm::Instance& instance = instanceObj->instance();
+
         Vector<wasm::ExprLoc> offsets(cx_);
-        if (!instance->instance().debug().getAllColumnOffsets(cx_, &offsets)) {
+        if (instance.debugEnabled() && !instance.debug().getAllColumnOffsets(cx_, &offsets)) {
             return false;
         }
 
@@ -6785,9 +6789,11 @@ class DebuggerScriptGetLineOffsetsMatcher
         }
         return match(script);
     }
-    ReturnType match(Handle<WasmInstanceObject*> instance) {
+    ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+        wasm::Instance& instance = instanceObj->instance();
+
         Vector<uint32_t> offsets(cx_);
-        if (!instance->instance().debug().getLineOffsets(cx_, lineno_, &offsets)) {
+        if (instance.debugEnabled() && !instance.debug().getLineOffsets(cx_, lineno_, &offsets)) {
             return false;
         }
 
@@ -7108,7 +7114,7 @@ struct DebuggerScriptSetBreakpointMatcher
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         wasm::Instance& instance = wasmInstance->instance();
-        if (!instance.debug().hasBreakpointTrapAtOffset(offset_)) {
+        if (!instance.debugEnabled() || !instance.debug().hasBreakpointTrapAtOffset(offset_)) {
             JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
             return false;
         }
@@ -7216,8 +7222,12 @@ class DebuggerScriptClearBreakpointMatcher
         }
         return match(script);
     }
-    ReturnType match(Handle<WasmInstanceObject*> instance) {
-        return instance->instance().debug().clearBreakpointsIn(cx_, instance, dbg_, handler_);
+    ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+        wasm::Instance& instance = instanceObj->instance();
+        if (!instance.debugEnabled()) {
+            return true;
+        }
+        return instance.debug().clearBreakpointsIn(cx_, instanceObj, dbg_, handler_);
     }
 };
 
@@ -7653,13 +7663,15 @@ class DebuggerSourceGetTextMatcher
         return ss->substring(cx_, 0, ss->length());
     }
 
-    ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        if (wasmInstance->instance().debug().maybeBytecode() &&
-            wasmInstance->instance().debug().binarySource())
-        {
-            return NewStringCopyZ<CanGC>(cx_, "[wasm]");
+    ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+        wasm::Instance& instance = instanceObj->instance();
+        const char* msg;
+        if (!instance.debugEnabled()) {
+            msg = "Restart with developer tools open to view WebAssembly source.";
+        } else {
+            msg = "[debugger missing wasm binary-to-text conversion]";
         }
-        return wasmInstance->instance().debug().createText(cx_);
+        return NewStringCopyZ<CanGC>(cx_, msg);
     }
 };
 
@@ -7696,22 +7708,22 @@ DebuggerSource_getBinary(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedWasmInstanceObject wasmInstance(cx, referent.as<WasmInstanceObject*>());
-    if (!wasmInstance->instance().debug().binarySource()) {
+    RootedWasmInstanceObject instanceObj(cx, referent.as<WasmInstanceObject*>());
+    wasm::Instance& instance = instanceObj->instance();
+
+    if (!instance.debugEnabled() || !instance.debug().binarySource()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_DEBUG_NO_BINARY_SOURCE);
         return false;
     }
 
-    auto bytecode = wasmInstance->instance().debug().maybeBytecode();
-    size_t arrLength = bytecode ? bytecode->length() : 0;
-    RootedObject arr(cx, JS_NewUint8Array(cx, arrLength));
+    const wasm::Bytes& bytecode = instance.debug().bytecode();
+    RootedObject arr(cx, JS_NewUint8Array(cx, bytecode.length()));
     if (!arr) {
         return false;
     }
-    if (bytecode) {
-        memcpy(arr->as<TypedArrayObject>().viewDataUnshared(), bytecode->begin(), arrLength);
-    }
+
+    memcpy(arr->as<TypedArrayObject>().viewDataUnshared(), bytecode.begin(), bytecode.length());
 
     args.rval().setObject(*arr);
     return true;
@@ -7735,18 +7747,8 @@ class DebuggerSourceGetURLMatcher
         }
         return Nothing();
     }
-    ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        if (wasmInstance->instance().metadata().filenameIsURL) {
-            JSString* str = NewStringCopyZ<CanGC>(cx_, wasmInstance->instance().metadata().filename.get());
-            if (!str) {
-                return Nothing();
-            }
-            return Some(str);
-        }
-        if (JSString* str = wasmInstance->instance().debug().debugDisplayURL(cx_)) {
-            return Some(str);
-        }
-        return Nothing();
+    ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+        return Some(instanceObj->instance().createDisplayURL(cx_));
     }
 };
 
@@ -8009,17 +8011,18 @@ class DebuggerSourceGetSourceMapURLMatcher
         result_.set(str);
         return true;
     }
-    ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        // sourceMapURL is not available if debugger was not in
-        // allowWasmBinarySource mode.
-        if (!wasmInstance->instance().debug().binarySource()) {
+    ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+        wasm::Instance& instance = instanceObj->instance();
+        if (!instance.debugEnabled()) {
             result_.set(nullptr);
             return true;
         }
+
         RootedString str(cx_);
-        if (!wasmInstance->instance().debug().getSourceMappingURL(cx_, &str)) {
+        if (!instance.debug().getSourceMappingURL(cx_, &str)) {
             return false;
         }
+
         result_.set(str);
         return true;
     }
