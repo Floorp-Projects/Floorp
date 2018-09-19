@@ -9,8 +9,8 @@
 //   Declares ANGLE-specific enums classes for GLenums and functions operating
 //   on them.
 
-#ifndef LIBANGLE_PACKEDGLENUMS_AUTOGEN_H_
-#define LIBANGLE_PACKEDGLENUMS_AUTOGEN_H_
+#ifndef COMMON_PACKEDGLENUMS_AUTOGEN_H_
+#define COMMON_PACKEDGLENUMS_AUTOGEN_H_
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -224,6 +224,43 @@ template <>
 MatrixType FromGLenum<MatrixType>(GLenum from);
 GLenum ToGLenum(MatrixType from);
 
+enum class PointParameter : uint8_t
+{
+    PointSizeMin             = 0,
+    PointSizeMax             = 1,
+    PointFadeThresholdSize   = 2,
+    PointDistanceAttenuation = 3,
+
+    InvalidEnum = 4,
+    EnumCount   = 4,
+};
+
+template <>
+PointParameter FromGLenum<PointParameter>(GLenum from);
+GLenum ToGLenum(PointParameter from);
+
+enum class PrimitiveMode : uint8_t
+{
+    Points                 = 0,
+    Lines                  = 1,
+    LineLoop               = 2,
+    LineStrip              = 3,
+    Triangles              = 4,
+    TriangleStrip          = 5,
+    TriangleFan            = 6,
+    LinesAdjacency         = 7,
+    LineStripAdjacency     = 8,
+    TrianglesAdjacency     = 9,
+    TriangleStripAdjacency = 10,
+
+    InvalidEnum = 11,
+    EnumCount   = 11,
+};
+
+template <>
+PrimitiveMode FromGLenum<PrimitiveMode>(GLenum from);
+GLenum ToGLenum(PrimitiveMode from);
+
 enum class QueryType : uint8_t
 {
     AnySamples                         = 0,
@@ -306,6 +343,49 @@ template <>
 TextureEnvMode FromGLenum<TextureEnvMode>(GLenum from);
 GLenum ToGLenum(TextureEnvMode from);
 
+enum class TextureEnvParameter : uint8_t
+{
+    Mode              = 0,
+    Color             = 1,
+    CombineRgb        = 2,
+    CombineAlpha      = 3,
+    RgbScale          = 4,
+    AlphaScale        = 5,
+    Src0Rgb           = 6,
+    Src1Rgb           = 7,
+    Src2Rgb           = 8,
+    Src0Alpha         = 9,
+    Src1Alpha         = 10,
+    Src2Alpha         = 11,
+    Op0Rgb            = 12,
+    Op1Rgb            = 13,
+    Op2Rgb            = 14,
+    Op0Alpha          = 15,
+    Op1Alpha          = 16,
+    Op2Alpha          = 17,
+    PointCoordReplace = 18,
+
+    InvalidEnum = 19,
+    EnumCount   = 19,
+};
+
+template <>
+TextureEnvParameter FromGLenum<TextureEnvParameter>(GLenum from);
+GLenum ToGLenum(TextureEnvParameter from);
+
+enum class TextureEnvTarget : uint8_t
+{
+    Env         = 0,
+    PointSprite = 1,
+
+    InvalidEnum = 2,
+    EnumCount   = 2,
+};
+
+template <>
+TextureEnvTarget FromGLenum<TextureEnvTarget>(GLenum from);
+GLenum ToGLenum(TextureEnvTarget from);
+
 enum class TextureOp : uint8_t
 {
     OneMinusSrcAlpha = 0,
@@ -338,21 +418,22 @@ GLenum ToGLenum(TextureSrc from);
 
 enum class TextureTarget : uint8_t
 {
-    _2D              = 0,
-    _2DArray         = 1,
-    _2DMultisample   = 2,
-    _3D              = 3,
-    External         = 4,
-    Rectangle        = 5,
-    CubeMapPositiveX = 6,
-    CubeMapNegativeX = 7,
-    CubeMapPositiveY = 8,
-    CubeMapNegativeY = 9,
-    CubeMapPositiveZ = 10,
-    CubeMapNegativeZ = 11,
+    _2D                 = 0,
+    _2DArray            = 1,
+    _2DMultisample      = 2,
+    _2DMultisampleArray = 3,
+    _3D                 = 4,
+    External            = 5,
+    Rectangle           = 6,
+    CubeMapPositiveX    = 7,
+    CubeMapNegativeX    = 8,
+    CubeMapPositiveY    = 9,
+    CubeMapNegativeY    = 10,
+    CubeMapPositiveZ    = 11,
+    CubeMapNegativeZ    = 12,
 
-    InvalidEnum = 12,
-    EnumCount   = 12,
+    InvalidEnum = 13,
+    EnumCount   = 13,
 };
 
 template <>
@@ -361,16 +442,17 @@ GLenum ToGLenum(TextureTarget from);
 
 enum class TextureType : uint8_t
 {
-    _2D            = 0,
-    _2DArray       = 1,
-    _2DMultisample = 2,
-    _3D            = 3,
-    External       = 4,
-    Rectangle      = 5,
-    CubeMap        = 6,
+    _2D                 = 0,
+    _2DArray            = 1,
+    _2DMultisample      = 2,
+    _2DMultisampleArray = 3,
+    _3D                 = 4,
+    External            = 5,
+    Rectangle           = 6,
+    CubeMap             = 7,
 
-    InvalidEnum = 7,
-    EnumCount   = 7,
+    InvalidEnum = 8,
+    EnumCount   = 8,
 };
 
 template <>
@@ -395,4 +477,4 @@ GLenum ToGLenum(VertexArrayType from);
 
 }  // namespace gl
 
-#endif  // LIBANGLE_PACKEDGLENUMS_AUTOGEN_H_
+#endif  // COMMON_PACKEDGLENUMS_AUTOGEN_H_

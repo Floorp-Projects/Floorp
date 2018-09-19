@@ -18,10 +18,6 @@ namespace
 angle::PlatformMethods g_platformMethods;
 }  // anonymous namespace
 
-angle::PlatformMethods::PlatformMethods()
-{
-}
-
 angle::PlatformMethods *ANGLEPlatformCurrent()
 {
     return &g_platformMethods;

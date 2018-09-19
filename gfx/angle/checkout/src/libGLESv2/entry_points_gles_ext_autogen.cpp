@@ -95,12 +95,14 @@ void GL_APIENTRY DrawArraysInstancedANGLE(GLenum mode,
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawArraysInstancedANGLE>(mode, first, count, primcount);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawArraysInstancedANGLE>(modePacked, first, count,
+                                                                    primcount);
 
         if (context->skipValidation() ||
-            ValidateDrawArraysInstancedANGLE(context, mode, first, count, primcount))
+            ValidateDrawArraysInstancedANGLE(context, modePacked, first, count, primcount))
         {
-            context->drawArraysInstanced(mode, first, count, primcount);
+            context->drawArraysInstanced(modePacked, first, count, primcount);
         }
     }
 }
@@ -119,13 +121,14 @@ void GL_APIENTRY DrawElementsInstancedANGLE(GLenum mode,
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawElementsInstancedANGLE>(mode, count, type, indices,
-                                                                      primcount);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawElementsInstancedANGLE>(modePacked, count, type,
+                                                                      indices, primcount);
 
-        if (context->skipValidation() ||
-            ValidateDrawElementsInstancedANGLE(context, mode, count, type, indices, primcount))
+        if (context->skipValidation() || ValidateDrawElementsInstancedANGLE(
+                                             context, modePacked, count, type, indices, primcount))
         {
-            context->drawElementsInstanced(mode, count, type, indices, primcount);
+            context->drawElementsInstanced(modePacked, count, type, indices, primcount);
         }
     }
 }
@@ -1929,6 +1932,37 @@ void GL_APIENTRY GetQueryObjectui64vRobustANGLE(GLuint id,
     }
 }
 
+// GL_ANGLE_texture_multisample_array
+void GL_APIENTRY TexStorage3DMultisampleANGLE(GLenum target,
+                                              GLsizei samples,
+                                              GLint sizedinternalformat,
+                                              GLsizei width,
+                                              GLsizei height,
+                                              GLsizei depth,
+                                              GLboolean fixedsamplelocations)
+{
+    EVENT(
+        "(GLenum target = 0x%X, GLsizei samples = %d, GLint sizedinternalformat = %d, GLsizei "
+        "width = %d, GLsizei height = %d, GLsizei depth = %d, GLboolean fixedsamplelocations = %u)",
+        target, samples, sizedinternalformat, width, height, depth, fixedsamplelocations);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        TextureType targetPacked = FromGLenum<TextureType>(target);
+        context->gatherParams<EntryPoint::TexStorage3DMultisampleANGLE>(
+            targetPacked, samples, sizedinternalformat, width, height, depth, fixedsamplelocations);
+
+        if (context->skipValidation() || ValidateTexStorage3DMultisampleANGLE(
+                                             context, targetPacked, samples, sizedinternalformat,
+                                             width, height, depth, fixedsamplelocations))
+        {
+            context->texStorage3DMultisample(targetPacked, samples, sizedinternalformat, width,
+                                             height, depth, fixedsamplelocations);
+        }
+    }
+}
+
 // GL_ANGLE_translated_shader_source
 void GL_APIENTRY GetTranslatedShaderSourceANGLE(GLuint shader,
                                                 GLsizei bufsize,
@@ -2921,6 +2955,29 @@ void GL_APIENTRY DrawBuffersEXT(GLsizei n, const GLenum *bufs)
     }
 }
 
+// GL_EXT_geometry_shader
+void GL_APIENTRY FramebufferTextureEXT(GLenum target,
+                                       GLenum attachment,
+                                       GLuint texture,
+                                       GLint level)
+{
+    EVENT("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLuint texture = %u, GLint level = %d)",
+          target, attachment, texture, level);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::FramebufferTextureEXT>(target, attachment, texture,
+                                                                 level);
+
+        if (context->skipValidation() ||
+            ValidateFramebufferTextureEXT(context, target, attachment, texture, level))
+        {
+            context->framebufferTexture(target, attachment, texture, level);
+        }
+    }
+}
+
 // GL_EXT_map_buffer_range
 void GL_APIENTRY FlushMappedBufferRangeEXT(GLenum target, GLintptr offset, GLsizeiptr length)
 {
@@ -3377,6 +3434,23 @@ void GL_APIENTRY PushDebugGroupKHR(GLenum source, GLuint id, GLsizei length, con
             ValidatePushDebugGroupKHR(context, source, id, length, message))
         {
             context->pushDebugGroup(source, id, length, message);
+        }
+    }
+}
+
+// GL_KHR_parallel_shader_compile
+void GL_APIENTRY MaxShaderCompilerThreadsKHR(GLuint count)
+{
+    EVENT("(GLuint count = %u)", count);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        context->gatherParams<EntryPoint::MaxShaderCompilerThreadsKHR>(count);
+
+        if (context->skipValidation() || ValidateMaxShaderCompilerThreadsKHR(context, count))
+        {
+            context->maxShaderCompilerThreads(count);
         }
     }
 }
@@ -4525,11 +4599,13 @@ void GL_APIENTRY BeginTransformFeedbackContextANGLE(GLeglContext ctx, GLenum pri
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::BeginTransformFeedback>(primitiveMode);
+        PrimitiveMode primitiveModePacked = FromGLenum<PrimitiveMode>(primitiveMode);
+        context->gatherParams<EntryPoint::BeginTransformFeedback>(primitiveModePacked);
 
-        if (context->skipValidation() || ValidateBeginTransformFeedback(context, primitiveMode))
+        if (context->skipValidation() ||
+            ValidateBeginTransformFeedback(context, primitiveModePacked))
         {
-            context->beginTransformFeedback(primitiveMode);
+            context->beginTransformFeedback(primitiveModePacked);
         }
     }
 }
@@ -6454,11 +6530,12 @@ void GL_APIENTRY DrawArraysContextANGLE(GLeglContext ctx, GLenum mode, GLint fir
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawArrays>(mode, first, count);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawArrays>(modePacked, first, count);
 
-        if (context->skipValidation() || ValidateDrawArrays(context, mode, first, count))
+        if (context->skipValidation() || ValidateDrawArrays(context, modePacked, first, count))
         {
-            context->drawArrays(mode, first, count);
+            context->drawArrays(modePacked, first, count);
         }
     }
 }
@@ -6471,11 +6548,12 @@ void GL_APIENTRY DrawArraysIndirectContextANGLE(GLeglContext ctx, GLenum mode, c
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawArraysIndirect>(mode, indirect);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawArraysIndirect>(modePacked, indirect);
 
-        if (context->skipValidation() || ValidateDrawArraysIndirect(context, mode, indirect))
+        if (context->skipValidation() || ValidateDrawArraysIndirect(context, modePacked, indirect))
         {
-            context->drawArraysIndirect(mode, indirect);
+            context->drawArraysIndirect(modePacked, indirect);
         }
     }
 }
@@ -6493,12 +6571,14 @@ void GL_APIENTRY DrawArraysInstancedContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawArraysInstanced>(mode, first, count, instancecount);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawArraysInstanced>(modePacked, first, count,
+                                                               instancecount);
 
         if (context->skipValidation() ||
-            ValidateDrawArraysInstanced(context, mode, first, count, instancecount))
+            ValidateDrawArraysInstanced(context, modePacked, first, count, instancecount))
         {
-            context->drawArraysInstanced(mode, first, count, instancecount);
+            context->drawArraysInstanced(modePacked, first, count, instancecount);
         }
     }
 }
@@ -6516,12 +6596,14 @@ void GL_APIENTRY DrawArraysInstancedANGLEContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawArraysInstancedANGLE>(mode, first, count, primcount);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawArraysInstancedANGLE>(modePacked, first, count,
+                                                                    primcount);
 
         if (context->skipValidation() ||
-            ValidateDrawArraysInstancedANGLE(context, mode, first, count, primcount))
+            ValidateDrawArraysInstancedANGLE(context, modePacked, first, count, primcount))
         {
-            context->drawArraysInstanced(mode, first, count, primcount);
+            context->drawArraysInstanced(modePacked, first, count, primcount);
         }
     }
 }
@@ -6575,11 +6657,13 @@ void GL_APIENTRY DrawElementsContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawElements>(mode, count, type, indices);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawElements>(modePacked, count, type, indices);
 
-        if (context->skipValidation() || ValidateDrawElements(context, mode, count, type, indices))
+        if (context->skipValidation() ||
+            ValidateDrawElements(context, modePacked, count, type, indices))
         {
-            context->drawElements(mode, count, type, indices);
+            context->drawElements(modePacked, count, type, indices);
         }
     }
 }
@@ -6596,12 +6680,13 @@ void GL_APIENTRY DrawElementsIndirectContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawElementsIndirect>(mode, type, indirect);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawElementsIndirect>(modePacked, type, indirect);
 
         if (context->skipValidation() ||
-            ValidateDrawElementsIndirect(context, mode, type, indirect))
+            ValidateDrawElementsIndirect(context, modePacked, type, indirect))
         {
-            context->drawElementsIndirect(mode, type, indirect);
+            context->drawElementsIndirect(modePacked, type, indirect);
         }
     }
 }
@@ -6622,13 +6707,14 @@ void GL_APIENTRY DrawElementsInstancedContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawElementsInstanced>(mode, count, type, indices,
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawElementsInstanced>(modePacked, count, type, indices,
                                                                  instancecount);
 
         if (context->skipValidation() ||
-            ValidateDrawElementsInstanced(context, mode, count, type, indices, instancecount))
+            ValidateDrawElementsInstanced(context, modePacked, count, type, indices, instancecount))
         {
-            context->drawElementsInstanced(mode, count, type, indices, instancecount);
+            context->drawElementsInstanced(modePacked, count, type, indices, instancecount);
         }
     }
 }
@@ -6649,13 +6735,14 @@ void GL_APIENTRY DrawElementsInstancedANGLEContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawElementsInstancedANGLE>(mode, count, type, indices,
-                                                                      primcount);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawElementsInstancedANGLE>(modePacked, count, type,
+                                                                      indices, primcount);
 
-        if (context->skipValidation() ||
-            ValidateDrawElementsInstancedANGLE(context, mode, count, type, indices, primcount))
+        if (context->skipValidation() || ValidateDrawElementsInstancedANGLE(
+                                             context, modePacked, count, type, indices, primcount))
         {
-            context->drawElementsInstanced(mode, count, type, indices, primcount);
+            context->drawElementsInstanced(modePacked, count, type, indices, primcount);
         }
     }
 }
@@ -6677,13 +6764,14 @@ void GL_APIENTRY DrawRangeElementsContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::DrawRangeElements>(mode, start, end, count, type,
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawRangeElements>(modePacked, start, end, count, type,
                                                              indices);
 
         if (context->skipValidation() ||
-            ValidateDrawRangeElements(context, mode, start, end, count, type, indices))
+            ValidateDrawRangeElements(context, modePacked, start, end, count, type, indices))
         {
-            context->drawRangeElements(mode, start, end, count, type, indices);
+            context->drawRangeElements(modePacked, start, end, count, type, indices);
         }
     }
 }
@@ -7307,6 +7395,30 @@ void GL_APIENTRY FramebufferTexture2DOESContextANGLE(GLeglContext ctx,
                                             level))
         {
             context->framebufferTexture2D(target, attachment, textargetPacked, texture, level);
+        }
+    }
+}
+
+void GL_APIENTRY FramebufferTextureEXTContextANGLE(GLeglContext ctx,
+                                                   GLenum target,
+                                                   GLenum attachment,
+                                                   GLuint texture,
+                                                   GLint level)
+{
+    EVENT("(GLenum target = 0x%X, GLenum attachment = 0x%X, GLuint texture = %u, GLint level = %d)",
+          target, attachment, texture, level);
+
+    Context *context = static_cast<gl::Context *>(ctx);
+    if (context)
+    {
+        ASSERT(context == GetValidGlobalContext());
+        context->gatherParams<EntryPoint::FramebufferTextureEXT>(target, attachment, texture,
+                                                                 level);
+
+        if (context->skipValidation() ||
+            ValidateFramebufferTextureEXT(context, target, attachment, texture, level))
+        {
+            context->framebufferTexture(target, attachment, texture, level);
         }
     }
 }
@@ -8368,11 +8480,12 @@ void GL_APIENTRY GetLightfvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::GetLightfv>(light, pname, params);
+        LightParameter pnamePacked = FromGLenum<LightParameter>(pname);
+        context->gatherParams<EntryPoint::GetLightfv>(light, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateGetLightfv(context, light, pname, params))
+        if (context->skipValidation() || ValidateGetLightfv(context, light, pnamePacked, params))
         {
-            context->getLightfv(light, pname, params);
+            context->getLightfv(light, pnamePacked, params);
         }
     }
 }
@@ -8389,11 +8502,12 @@ void GL_APIENTRY GetLightxvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::GetLightxv>(light, pname, params);
+        LightParameter pnamePacked = FromGLenum<LightParameter>(pname);
+        context->gatherParams<EntryPoint::GetLightxv>(light, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateGetLightxv(context, light, pname, params))
+        if (context->skipValidation() || ValidateGetLightxv(context, light, pnamePacked, params))
         {
-            context->getLightxv(light, pname, params);
+            context->getLightxv(light, pnamePacked, params);
         }
     }
 }
@@ -8410,11 +8524,12 @@ void GL_APIENTRY GetMaterialfvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::GetMaterialfv>(face, pname, params);
+        MaterialParameter pnamePacked = FromGLenum<MaterialParameter>(pname);
+        context->gatherParams<EntryPoint::GetMaterialfv>(face, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateGetMaterialfv(context, face, pname, params))
+        if (context->skipValidation() || ValidateGetMaterialfv(context, face, pnamePacked, params))
         {
-            context->getMaterialfv(face, pname, params);
+            context->getMaterialfv(face, pnamePacked, params);
         }
     }
 }
@@ -8431,11 +8546,12 @@ void GL_APIENTRY GetMaterialxvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::GetMaterialxv>(face, pname, params);
+        MaterialParameter pnamePacked = FromGLenum<MaterialParameter>(pname);
+        context->gatherParams<EntryPoint::GetMaterialxv>(face, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateGetMaterialxv(context, face, pname, params))
+        if (context->skipValidation() || ValidateGetMaterialxv(context, face, pnamePacked, params))
         {
-            context->getMaterialxv(face, pname, params);
+            context->getMaterialxv(face, pnamePacked, params);
         }
     }
 }
@@ -9238,11 +9354,14 @@ void GL_APIENTRY GetTexEnvfvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::GetTexEnvfv>(target, pname, params);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::GetTexEnvfv>(targetPacked, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateGetTexEnvfv(context, target, pname, params))
+        if (context->skipValidation() ||
+            ValidateGetTexEnvfv(context, targetPacked, pnamePacked, params))
         {
-            context->getTexEnvfv(target, pname, params);
+            context->getTexEnvfv(targetPacked, pnamePacked, params);
         }
     }
 }
@@ -9259,11 +9378,14 @@ void GL_APIENTRY GetTexEnvivContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::GetTexEnviv>(target, pname, params);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::GetTexEnviv>(targetPacked, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateGetTexEnviv(context, target, pname, params))
+        if (context->skipValidation() ||
+            ValidateGetTexEnviv(context, targetPacked, pnamePacked, params))
         {
-            context->getTexEnviv(target, pname, params);
+            context->getTexEnviv(targetPacked, pnamePacked, params);
         }
     }
 }
@@ -9280,11 +9402,14 @@ void GL_APIENTRY GetTexEnvxvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::GetTexEnvxv>(target, pname, params);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::GetTexEnvxv>(targetPacked, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateGetTexEnvxv(context, target, pname, params))
+        if (context->skipValidation() ||
+            ValidateGetTexEnvxv(context, targetPacked, pnamePacked, params))
         {
-            context->getTexEnvxv(target, pname, params);
+            context->getTexEnvxv(targetPacked, pnamePacked, params);
         }
     }
 }
@@ -10327,11 +10452,12 @@ void GL_APIENTRY LightfContextANGLE(GLeglContext ctx, GLenum light, GLenum pname
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::Lightf>(light, pname, param);
+        LightParameter pnamePacked = FromGLenum<LightParameter>(pname);
+        context->gatherParams<EntryPoint::Lightf>(light, pnamePacked, param);
 
-        if (context->skipValidation() || ValidateLightf(context, light, pname, param))
+        if (context->skipValidation() || ValidateLightf(context, light, pnamePacked, param))
         {
-            context->lightf(light, pname, param);
+            context->lightf(light, pnamePacked, param);
         }
     }
 }
@@ -10348,11 +10474,12 @@ void GL_APIENTRY LightfvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::Lightfv>(light, pname, params);
+        LightParameter pnamePacked = FromGLenum<LightParameter>(pname);
+        context->gatherParams<EntryPoint::Lightfv>(light, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateLightfv(context, light, pname, params))
+        if (context->skipValidation() || ValidateLightfv(context, light, pnamePacked, params))
         {
-            context->lightfv(light, pname, params);
+            context->lightfv(light, pnamePacked, params);
         }
     }
 }
@@ -10365,11 +10492,12 @@ void GL_APIENTRY LightxContextANGLE(GLeglContext ctx, GLenum light, GLenum pname
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::Lightx>(light, pname, param);
+        LightParameter pnamePacked = FromGLenum<LightParameter>(pname);
+        context->gatherParams<EntryPoint::Lightx>(light, pnamePacked, param);
 
-        if (context->skipValidation() || ValidateLightx(context, light, pname, param))
+        if (context->skipValidation() || ValidateLightx(context, light, pnamePacked, param))
         {
-            context->lightx(light, pname, param);
+            context->lightx(light, pnamePacked, param);
         }
     }
 }
@@ -10386,11 +10514,12 @@ void GL_APIENTRY LightxvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::Lightxv>(light, pname, params);
+        LightParameter pnamePacked = FromGLenum<LightParameter>(pname);
+        context->gatherParams<EntryPoint::Lightxv>(light, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateLightxv(context, light, pname, params))
+        if (context->skipValidation() || ValidateLightxv(context, light, pnamePacked, params))
         {
-            context->lightxv(light, pname, params);
+            context->lightxv(light, pnamePacked, params);
         }
     }
 }
@@ -10522,11 +10651,12 @@ void GL_APIENTRY LogicOpContextANGLE(GLeglContext ctx, GLenum opcode)
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::LogicOp>(opcode);
+        LogicalOperation opcodePacked = FromGLenum<LogicalOperation>(opcode);
+        context->gatherParams<EntryPoint::LogicOp>(opcodePacked);
 
-        if (context->skipValidation() || ValidateLogicOp(context, opcode))
+        if (context->skipValidation() || ValidateLogicOp(context, opcodePacked))
         {
-            context->logicOp(opcode);
+            context->logicOp(opcodePacked);
         }
     }
 }
@@ -10615,11 +10745,12 @@ void GL_APIENTRY MaterialfContextANGLE(GLeglContext ctx, GLenum face, GLenum pna
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::Materialf>(face, pname, param);
+        MaterialParameter pnamePacked = FromGLenum<MaterialParameter>(pname);
+        context->gatherParams<EntryPoint::Materialf>(face, pnamePacked, param);
 
-        if (context->skipValidation() || ValidateMaterialf(context, face, pname, param))
+        if (context->skipValidation() || ValidateMaterialf(context, face, pnamePacked, param))
         {
-            context->materialf(face, pname, param);
+            context->materialf(face, pnamePacked, param);
         }
     }
 }
@@ -10636,11 +10767,12 @@ void GL_APIENTRY MaterialfvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::Materialfv>(face, pname, params);
+        MaterialParameter pnamePacked = FromGLenum<MaterialParameter>(pname);
+        context->gatherParams<EntryPoint::Materialfv>(face, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateMaterialfv(context, face, pname, params))
+        if (context->skipValidation() || ValidateMaterialfv(context, face, pnamePacked, params))
         {
-            context->materialfv(face, pname, params);
+            context->materialfv(face, pnamePacked, params);
         }
     }
 }
@@ -10653,11 +10785,12 @@ void GL_APIENTRY MaterialxContextANGLE(GLeglContext ctx, GLenum face, GLenum pna
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::Materialx>(face, pname, param);
+        MaterialParameter pnamePacked = FromGLenum<MaterialParameter>(pname);
+        context->gatherParams<EntryPoint::Materialx>(face, pnamePacked, param);
 
-        if (context->skipValidation() || ValidateMaterialx(context, face, pname, param))
+        if (context->skipValidation() || ValidateMaterialx(context, face, pnamePacked, param))
         {
-            context->materialx(face, pname, param);
+            context->materialx(face, pnamePacked, param);
         }
     }
 }
@@ -10674,11 +10807,12 @@ void GL_APIENTRY MaterialxvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::Materialxv>(face, pname, param);
+        MaterialParameter pnamePacked = FromGLenum<MaterialParameter>(pname);
+        context->gatherParams<EntryPoint::Materialxv>(face, pnamePacked, param);
 
-        if (context->skipValidation() || ValidateMaterialxv(context, face, pname, param))
+        if (context->skipValidation() || ValidateMaterialxv(context, face, pnamePacked, param))
         {
-            context->materialxv(face, pname, param);
+            context->materialxv(face, pnamePacked, param);
         }
     }
 }
@@ -10721,6 +10855,23 @@ void GL_APIENTRY MatrixModeContextANGLE(GLeglContext ctx, GLenum mode)
         if (context->skipValidation() || ValidateMatrixMode(context, modePacked))
         {
             context->matrixMode(modePacked);
+        }
+    }
+}
+
+void GL_APIENTRY MaxShaderCompilerThreadsKHRContextANGLE(GLeglContext ctx, GLuint count)
+{
+    EVENT("(GLuint count = %u)", count);
+
+    Context *context = static_cast<gl::Context *>(ctx);
+    if (context)
+    {
+        ASSERT(context == GetValidGlobalContext());
+        context->gatherParams<EntryPoint::MaxShaderCompilerThreadsKHR>(count);
+
+        if (context->skipValidation() || ValidateMaxShaderCompilerThreadsKHR(context, count))
+        {
+            context->maxShaderCompilerThreads(count);
         }
     }
 }
@@ -11036,11 +11187,12 @@ void GL_APIENTRY PointParameterfContextANGLE(GLeglContext ctx, GLenum pname, GLf
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::PointParameterf>(pname, param);
+        PointParameter pnamePacked = FromGLenum<PointParameter>(pname);
+        context->gatherParams<EntryPoint::PointParameterf>(pnamePacked, param);
 
-        if (context->skipValidation() || ValidatePointParameterf(context, pname, param))
+        if (context->skipValidation() || ValidatePointParameterf(context, pnamePacked, param))
         {
-            context->pointParameterf(pname, param);
+            context->pointParameterf(pnamePacked, param);
         }
     }
 }
@@ -11053,11 +11205,12 @@ void GL_APIENTRY PointParameterfvContextANGLE(GLeglContext ctx, GLenum pname, co
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::PointParameterfv>(pname, params);
+        PointParameter pnamePacked = FromGLenum<PointParameter>(pname);
+        context->gatherParams<EntryPoint::PointParameterfv>(pnamePacked, params);
 
-        if (context->skipValidation() || ValidatePointParameterfv(context, pname, params))
+        if (context->skipValidation() || ValidatePointParameterfv(context, pnamePacked, params))
         {
-            context->pointParameterfv(pname, params);
+            context->pointParameterfv(pnamePacked, params);
         }
     }
 }
@@ -11070,11 +11223,12 @@ void GL_APIENTRY PointParameterxContextANGLE(GLeglContext ctx, GLenum pname, GLf
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::PointParameterx>(pname, param);
+        PointParameter pnamePacked = FromGLenum<PointParameter>(pname);
+        context->gatherParams<EntryPoint::PointParameterx>(pnamePacked, param);
 
-        if (context->skipValidation() || ValidatePointParameterx(context, pname, param))
+        if (context->skipValidation() || ValidatePointParameterx(context, pnamePacked, param))
         {
-            context->pointParameterx(pname, param);
+            context->pointParameterx(pnamePacked, param);
         }
     }
 }
@@ -11087,11 +11241,12 @@ void GL_APIENTRY PointParameterxvContextANGLE(GLeglContext ctx, GLenum pname, co
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::PointParameterxv>(pname, params);
+        PointParameter pnamePacked = FromGLenum<PointParameter>(pname);
+        context->gatherParams<EntryPoint::PointParameterxv>(pnamePacked, params);
 
-        if (context->skipValidation() || ValidatePointParameterxv(context, pname, params))
+        if (context->skipValidation() || ValidatePointParameterxv(context, pnamePacked, params))
         {
-            context->pointParameterxv(pname, params);
+            context->pointParameterxv(pnamePacked, params);
         }
     }
 }
@@ -12702,11 +12857,12 @@ void GL_APIENTRY ShadeModelContextANGLE(GLeglContext ctx, GLenum mode)
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::ShadeModel>(mode);
+        ShadingModel modePacked = FromGLenum<ShadingModel>(mode);
+        context->gatherParams<EntryPoint::ShadeModel>(modePacked);
 
-        if (context->skipValidation() || ValidateShadeModel(context, mode))
+        if (context->skipValidation() || ValidateShadeModel(context, modePacked))
         {
-            context->shadeModel(mode);
+            context->shadeModel(modePacked);
         }
     }
 }
@@ -12925,11 +13081,13 @@ void GL_APIENTRY TexEnvfContextANGLE(GLeglContext ctx, GLenum target, GLenum pna
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::TexEnvf>(target, pname, param);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::TexEnvf>(targetPacked, pnamePacked, param);
 
-        if (context->skipValidation() || ValidateTexEnvf(context, target, pname, param))
+        if (context->skipValidation() || ValidateTexEnvf(context, targetPacked, pnamePacked, param))
         {
-            context->texEnvf(target, pname, param);
+            context->texEnvf(targetPacked, pnamePacked, param);
         }
     }
 }
@@ -12946,11 +13104,14 @@ void GL_APIENTRY TexEnvfvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::TexEnvfv>(target, pname, params);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::TexEnvfv>(targetPacked, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateTexEnvfv(context, target, pname, params))
+        if (context->skipValidation() ||
+            ValidateTexEnvfv(context, targetPacked, pnamePacked, params))
         {
-            context->texEnvfv(target, pname, params);
+            context->texEnvfv(targetPacked, pnamePacked, params);
         }
     }
 }
@@ -12963,11 +13124,13 @@ void GL_APIENTRY TexEnviContextANGLE(GLeglContext ctx, GLenum target, GLenum pna
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::TexEnvi>(target, pname, param);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::TexEnvi>(targetPacked, pnamePacked, param);
 
-        if (context->skipValidation() || ValidateTexEnvi(context, target, pname, param))
+        if (context->skipValidation() || ValidateTexEnvi(context, targetPacked, pnamePacked, param))
         {
-            context->texEnvi(target, pname, param);
+            context->texEnvi(targetPacked, pnamePacked, param);
         }
     }
 }
@@ -12984,11 +13147,14 @@ void GL_APIENTRY TexEnvivContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::TexEnviv>(target, pname, params);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::TexEnviv>(targetPacked, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateTexEnviv(context, target, pname, params))
+        if (context->skipValidation() ||
+            ValidateTexEnviv(context, targetPacked, pnamePacked, params))
         {
-            context->texEnviv(target, pname, params);
+            context->texEnviv(targetPacked, pnamePacked, params);
         }
     }
 }
@@ -13002,11 +13168,13 @@ void GL_APIENTRY TexEnvxContextANGLE(GLeglContext ctx, GLenum target, GLenum pna
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::TexEnvx>(target, pname, param);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::TexEnvx>(targetPacked, pnamePacked, param);
 
-        if (context->skipValidation() || ValidateTexEnvx(context, target, pname, param))
+        if (context->skipValidation() || ValidateTexEnvx(context, targetPacked, pnamePacked, param))
         {
-            context->texEnvx(target, pname, param);
+            context->texEnvx(targetPacked, pnamePacked, param);
         }
     }
 }
@@ -13023,11 +13191,14 @@ void GL_APIENTRY TexEnvxvContextANGLE(GLeglContext ctx,
     if (context)
     {
         ASSERT(context == GetValidGlobalContext());
-        context->gatherParams<EntryPoint::TexEnvxv>(target, pname, params);
+        TextureEnvTarget targetPacked   = FromGLenum<TextureEnvTarget>(target);
+        TextureEnvParameter pnamePacked = FromGLenum<TextureEnvParameter>(pname);
+        context->gatherParams<EntryPoint::TexEnvxv>(targetPacked, pnamePacked, params);
 
-        if (context->skipValidation() || ValidateTexEnvxv(context, target, pname, params))
+        if (context->skipValidation() ||
+            ValidateTexEnvxv(context, targetPacked, pnamePacked, params))
         {
-            context->texEnvxv(target, pname, params);
+            context->texEnvxv(targetPacked, pnamePacked, params);
         }
     }
 }
@@ -17654,6 +17825,38 @@ FramebufferTextureMultiviewSideBySideANGLEContextANGLE(GLeglContext ctx,
         {
             context->framebufferTextureMultiviewSideBySide(target, attachment, texture, level,
                                                            numViews, viewportOffsets);
+        }
+    }
+}
+
+void GL_APIENTRY TexStorage3DMultisampleANGLEContextANGLE(GLeglContext ctx,
+                                                          GLenum target,
+                                                          GLsizei samples,
+                                                          GLint sizedinternalformat,
+                                                          GLsizei width,
+                                                          GLsizei height,
+                                                          GLsizei depth,
+                                                          GLboolean fixedsamplelocations)
+{
+    EVENT(
+        "(GLenum target = 0x%X, GLsizei samples = %d, GLint sizedinternalformat = %d, GLsizei "
+        "width = %d, GLsizei height = %d, GLsizei depth = %d, GLboolean fixedsamplelocations = %u)",
+        target, samples, sizedinternalformat, width, height, depth, fixedsamplelocations);
+
+    Context *context = static_cast<gl::Context *>(ctx);
+    if (context)
+    {
+        ASSERT(context == GetValidGlobalContext());
+        TextureType targetPacked = FromGLenum<TextureType>(target);
+        context->gatherParams<EntryPoint::TexStorage3DMultisampleANGLE>(
+            targetPacked, samples, sizedinternalformat, width, height, depth, fixedsamplelocations);
+
+        if (context->skipValidation() || ValidateTexStorage3DMultisampleANGLE(
+                                             context, targetPacked, samples, sizedinternalformat,
+                                             width, height, depth, fixedsamplelocations))
+        {
+            context->texStorage3DMultisample(targetPacked, samples, sizedinternalformat, width,
+                                             height, depth, fixedsamplelocations);
         }
     }
 }

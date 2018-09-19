@@ -84,6 +84,7 @@ TVariable::TVariable(TSymbolTable *symbolTable,
       unionArray(nullptr)
 {
     ASSERT(mType);
+    ASSERT(name.empty() || symbolType != SymbolType::Empty);
 }
 
 TStructure::TStructure(TSymbolTable *symbolTable,
@@ -183,7 +184,7 @@ void TFunction::addParameter(const TVariable *p)
     mParametersVector->push_back(p);
     mParameters  = mParametersVector->data();
     mParamCount  = mParametersVector->size();
-    mMangledName = ImmutableString("");
+    mMangledName = kEmptyImmutableString;
 }
 
 void TFunction::shareParameters(const TFunction &parametersSource)
@@ -218,4 +219,17 @@ bool TFunction::isImageFunction() const
            (name() == kImageSizeName || name() == kImageLoadName || name() == kImageStoreName);
 }
 
+bool TFunction::hasSamplerInStructParams() const
+{
+    for (size_t paramIndex = 0; paramIndex < mParamCount; ++paramIndex)
+    {
+        const TVariable *param = getParam(paramIndex);
+        if (param->getType().isStructureContainingSamplers())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 }  // namespace sh

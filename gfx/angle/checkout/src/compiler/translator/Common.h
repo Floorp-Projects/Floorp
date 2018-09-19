@@ -121,7 +121,7 @@ inline TString str(T i)
 inline const char *AllocatePoolCharArray(const char *str, size_t strLength)
 {
     size_t requiredSize = strLength + 1;
-    char *buffer = reinterpret_cast<char *>(GetGlobalPoolAllocator()->allocate(requiredSize));
+    char *buffer        = static_cast<char *>(GetGlobalPoolAllocator()->allocate(requiredSize));
     memcpy(buffer, str, requiredSize);
     ASSERT(buffer[strLength] == '\0');
     return buffer;

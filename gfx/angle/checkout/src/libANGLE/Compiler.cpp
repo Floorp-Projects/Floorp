@@ -97,9 +97,9 @@ Compiler::Compiler(rx::GLImplFactory *implFactory, const ContextState &state)
     mResources.MaxProgramTextureGatherOffset    = caps.maxProgramTextureGatherOffset;
     mResources.MinProgramTextureGatherOffset    = caps.minProgramTextureGatherOffset;
     mResources.MaxImageUnits                    = caps.maxImageUnits;
-    mResources.MaxVertexImageUniforms           = caps.maxVertexImageUniforms;
-    mResources.MaxFragmentImageUniforms         = caps.maxFragmentImageUniforms;
-    mResources.MaxComputeImageUniforms          = caps.maxComputeImageUniforms;
+    mResources.MaxVertexImageUniforms           = caps.maxShaderImageUniforms[ShaderType::Vertex];
+    mResources.MaxFragmentImageUniforms         = caps.maxShaderImageUniforms[ShaderType::Fragment];
+    mResources.MaxComputeImageUniforms          = caps.maxShaderImageUniforms[ShaderType::Compute];
     mResources.MaxCombinedImageUniforms         = caps.maxCombinedImageUniforms;
     mResources.MaxCombinedShaderOutputResources = caps.maxCombinedShaderOutputResources;
     mResources.MaxUniformLocations              = caps.maxUniformLocations;
@@ -110,18 +110,21 @@ Compiler::Compiler(rx::GLImplFactory *implFactory, const ContextState &state)
         mResources.MaxComputeWorkGroupSize[index]  = caps.maxComputeWorkGroupSize[index];
     }
 
-    mResources.MaxComputeUniformComponents = caps.maxComputeUniformComponents;
+    mResources.MaxComputeUniformComponents = caps.maxShaderUniformComponents[ShaderType::Compute];
     mResources.MaxComputeTextureImageUnits = caps.maxShaderTextureImageUnits[ShaderType::Compute];
 
-    mResources.MaxComputeAtomicCounters       = caps.maxComputeAtomicCounters;
-    mResources.MaxComputeAtomicCounterBuffers = caps.maxComputeAtomicCounterBuffers;
+    mResources.MaxComputeAtomicCounters = caps.maxShaderAtomicCounters[ShaderType::Compute];
+    mResources.MaxComputeAtomicCounterBuffers =
+        caps.maxShaderAtomicCounterBuffers[ShaderType::Compute];
 
-    mResources.MaxVertexAtomicCounters         = caps.maxVertexAtomicCounters;
-    mResources.MaxFragmentAtomicCounters       = caps.maxFragmentAtomicCounters;
+    mResources.MaxVertexAtomicCounters         = caps.maxShaderAtomicCounters[ShaderType::Vertex];
+    mResources.MaxFragmentAtomicCounters       = caps.maxShaderAtomicCounters[ShaderType::Fragment];
     mResources.MaxCombinedAtomicCounters       = caps.maxCombinedAtomicCounters;
     mResources.MaxAtomicCounterBindings        = caps.maxAtomicCounterBufferBindings;
-    mResources.MaxVertexAtomicCounterBuffers   = caps.maxVertexAtomicCounterBuffers;
-    mResources.MaxFragmentAtomicCounterBuffers = caps.maxFragmentAtomicCounterBuffers;
+    mResources.MaxVertexAtomicCounterBuffers =
+        caps.maxShaderAtomicCounterBuffers[ShaderType::Vertex];
+    mResources.MaxFragmentAtomicCounterBuffers =
+        caps.maxShaderAtomicCounterBuffers[ShaderType::Fragment];
     mResources.MaxCombinedAtomicCounterBuffers = caps.maxCombinedAtomicCounterBuffers;
     mResources.MaxAtomicCounterBufferSize      = caps.maxAtomicCounterBufferSize;
 
@@ -138,18 +141,20 @@ Compiler::Compiler(rx::GLImplFactory *implFactory, const ContextState &state)
 
     // Geometry Shader constants
     mResources.EXT_geometry_shader              = extensions.geometryShader;
-    mResources.MaxGeometryUniformComponents     = caps.maxGeometryUniformComponents;
+    mResources.MaxGeometryUniformComponents = caps.maxShaderUniformComponents[ShaderType::Geometry];
     mResources.MaxGeometryUniformBlocks         = caps.maxShaderUniformBlocks[ShaderType::Geometry];
     mResources.MaxGeometryInputComponents       = caps.maxGeometryInputComponents;
     mResources.MaxGeometryOutputComponents      = caps.maxGeometryOutputComponents;
     mResources.MaxGeometryOutputVertices        = caps.maxGeometryOutputVertices;
     mResources.MaxGeometryTotalOutputComponents = caps.maxGeometryTotalOutputComponents;
     mResources.MaxGeometryTextureImageUnits = caps.maxShaderTextureImageUnits[ShaderType::Geometry];
-    mResources.MaxGeometryAtomicCounterBuffers = caps.maxGeometryAtomicCounterBuffers;
-    mResources.MaxGeometryAtomicCounters       = caps.maxGeometryAtomicCounters;
-    mResources.MaxGeometryShaderStorageBlocks  = caps.maxShaderStorageBlocks[ShaderType::Geometry];
-    mResources.MaxGeometryShaderInvocations    = caps.maxGeometryShaderInvocations;
-    mResources.MaxGeometryImageUniforms        = caps.maxGeometryImageUniforms;
+
+    mResources.MaxGeometryAtomicCounterBuffers =
+        caps.maxShaderAtomicCounterBuffers[ShaderType::Geometry];
+    mResources.MaxGeometryAtomicCounters      = caps.maxShaderAtomicCounters[ShaderType::Geometry];
+    mResources.MaxGeometryShaderStorageBlocks = caps.maxShaderStorageBlocks[ShaderType::Geometry];
+    mResources.MaxGeometryShaderInvocations   = caps.maxGeometryShaderInvocations;
+    mResources.MaxGeometryImageUniforms       = caps.maxShaderImageUniforms[ShaderType::Geometry];
 }
 
 Compiler::~Compiler()

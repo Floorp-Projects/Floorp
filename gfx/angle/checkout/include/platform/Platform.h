@@ -266,7 +266,7 @@ inline void DefaultCacheProgram(PlatformMethods *platform,
 
 struct ANGLE_PLATFORM_EXPORT PlatformMethods
 {
-    PlatformMethods();
+    PlatformMethods() {}
 
     // User data pointer for any implementation specific members. Put it at the start of the
     // platform structure so it doesn't become overwritten if one version of the platform

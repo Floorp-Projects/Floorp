@@ -295,11 +295,11 @@ class pool_allocator
 #else
     pointer allocate(size_type n)
     {
-        return reinterpret_cast<pointer>(getAllocator().allocate(n * sizeof(T)));
+        return static_cast<pointer>(getAllocator().allocate(n * sizeof(T)));
     }
     pointer allocate(size_type n, const void *)
     {
-        return reinterpret_cast<pointer>(getAllocator().allocate(n * sizeof(T)));
+        return static_cast<pointer>(getAllocator().allocate(n * sizeof(T)));
     }
     void deallocate(pointer, size_type) {}
 #endif  // _RWSTD_ALLOCATOR

@@ -74,15 +74,6 @@ void InitializeViewIDAndInstanceID(const TVariable *viewID,
     initializers->push_back(viewIDInitializer);
 }
 
-void DeclareGlobalVariable(TIntermBlock *root, const TVariable *variable)
-{
-    TIntermDeclaration *declaration = new TIntermDeclaration();
-    declaration->appendDeclarator(new TIntermSymbol(variable));
-
-    TIntermSequence *globalSequence = root->getSequence();
-    globalSequence->insert(globalSequence->begin(), declaration);
-}
-
 // Adds a branch to write int(ViewID_OVR) to either gl_ViewportIndex or gl_Layer. The branch is
 // added to the end of the initializers' sequence.
 void SelectViewIndexInVertexShader(const TVariable *viewID,

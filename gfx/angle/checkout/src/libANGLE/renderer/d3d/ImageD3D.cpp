@@ -29,34 +29,34 @@ ImageD3D::ImageD3D()
 {
 }
 
-gl::Error ImageD3D::setManagedSurface2D(const gl::Context *context,
-                                        TextureStorage *storage,
-                                        int level)
+angle::Result ImageD3D::setManagedSurface2D(const gl::Context *context,
+                                            TextureStorage *storage,
+                                            int level)
 {
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error ImageD3D::setManagedSurfaceCube(const gl::Context *context,
-                                          TextureStorage *storage,
-                                          int face,
-                                          int level)
+angle::Result ImageD3D::setManagedSurfaceCube(const gl::Context *context,
+                                              TextureStorage *storage,
+                                              int face,
+                                              int level)
 {
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error ImageD3D::setManagedSurface3D(const gl::Context *context,
-                                        TextureStorage *storage,
-                                        int level)
+angle::Result ImageD3D::setManagedSurface3D(const gl::Context *context,
+                                            TextureStorage *storage,
+                                            int level)
 {
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error ImageD3D::setManagedSurface2DArray(const gl::Context *context,
-                                             TextureStorage *storage,
-                                             int layer,
-                                             int level)
+angle::Result ImageD3D::setManagedSurface2DArray(const gl::Context *context,
+                                                 TextureStorage *storage,
+                                                 int layer,
+                                                 int level)
 {
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 }  // namespace rx

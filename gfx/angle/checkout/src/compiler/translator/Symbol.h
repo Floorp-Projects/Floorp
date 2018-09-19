@@ -20,22 +20,6 @@ namespace sh
 
 class TSymbolTable;
 
-enum class SymbolType
-{
-    BuiltIn,
-    UserDefined,
-    AngleInternal,
-    Empty  // Meaning symbol without a name.
-};
-
-enum class SymbolClass
-{
-    Function,
-    Variable,
-    Struct,
-    InterfaceBlock
-};
-
 // Symbol base class. (Can build functions or variables out of these...)
 class TSymbol : angle::NonCopyable
 {
@@ -199,9 +183,9 @@ struct TParameter
     const TVariable *createVariable(TSymbolTable *symbolTable)
     {
         const ImmutableString constName(name);
-        const TType *constType   = type;
-        name                     = nullptr;
-        type                     = nullptr;
+        const TType *constType = type;
+        name                   = nullptr;
+        type                   = nullptr;
         return new TVariable(symbolTable, constName, constType,
                              constName.empty() ? SymbolType::Empty : SymbolType::UserDefined);
     }
@@ -250,6 +234,7 @@ class TFunction : public TSymbol
 
     bool isMain() const;
     bool isImageFunction() const;
+    bool hasSamplerInStructParams() const;
 
     // Note: Only to be used for static built-in functions!
     constexpr TFunction(const TSymbolUniqueId &id,

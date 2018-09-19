@@ -241,6 +241,16 @@ enum TOperator
     EOpMemoryBarrierShared,
     EOpGroupMemoryBarrier,
 
+    // Atomic functions
+    EOpAtomicAdd,
+    EOpAtomicMin,
+    EOpAtomicMax,
+    EOpAtomicAnd,
+    EOpAtomicOr,
+    EOpAtomicXor,
+    EOpAtomicExchange,
+    EOpAtomicCompSwap,
+
     //  Geometry only
     EOpEmitVertex,
     EOpEndPrimitive
@@ -251,5 +261,8 @@ const char *GetOperatorString(TOperator op);
 
 // Say whether or not a binary or unary operation changes the value of a variable.
 bool IsAssignment(TOperator op);
+
+// Say whether or not an operator represents an atomic function.
+bool IsAtomicFunction(TOperator op);
 
 #endif  // COMPILER_TRANSLATOR_OPERATOR_H_

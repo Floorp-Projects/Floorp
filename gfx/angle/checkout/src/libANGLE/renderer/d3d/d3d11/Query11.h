@@ -16,6 +16,7 @@
 
 namespace rx
 {
+class Context11;
 class Renderer11;
 
 class Query11 : public QueryImpl
@@ -24,17 +25,17 @@ class Query11 : public QueryImpl
     Query11(Renderer11 *renderer, gl::QueryType type);
     ~Query11() override;
 
-    gl::Error begin() override;
-    gl::Error end() override;
-    gl::Error queryCounter() override;
-    gl::Error getResult(GLint *params) override;
-    gl::Error getResult(GLuint *params) override;
-    gl::Error getResult(GLint64 *params) override;
-    gl::Error getResult(GLuint64 *params) override;
-    gl::Error isResultAvailable(bool *available) override;
+    gl::Error begin(const gl::Context *context) override;
+    gl::Error end(const gl::Context *context) override;
+    gl::Error queryCounter(const gl::Context *context) override;
+    gl::Error getResult(const gl::Context *context, GLint *params) override;
+    gl::Error getResult(const gl::Context *context, GLuint *params) override;
+    gl::Error getResult(const gl::Context *context, GLint64 *params) override;
+    gl::Error getResult(const gl::Context *context, GLuint64 *params) override;
+    gl::Error isResultAvailable(const gl::Context *context, bool *available) override;
 
-    gl::Error pause();
-    gl::Error resume();
+    angle::Result pause(Context11 *context11);
+    angle::Result resume(Context11 *context11);
 
   private:
     struct QueryState final : private angle::NonCopyable
@@ -50,11 +51,11 @@ class Query11 : public QueryImpl
         bool finished;
     };
 
-    gl::Error flush(bool force);
-    gl::Error testQuery(QueryState *queryState);
+    angle::Result flush(Context11 *context11, bool force);
+    angle::Result testQuery(Context11 *context11, QueryState *queryState);
 
     template <typename T>
-    gl::Error getResultBase(T *params);
+    angle::Result getResultBase(Context11 *context11, T *params);
 
     GLuint64 mResult;
     GLuint64 mResultSum;

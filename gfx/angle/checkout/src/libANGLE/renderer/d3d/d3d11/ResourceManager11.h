@@ -10,6 +10,7 @@
 #define LIBANGLE_RENDERER_D3D_D3D11_RESOURCEFACTORY11_H_
 
 #include <array>
+#include <atomic>
 #include <memory>
 
 #include "common/MemoryBuffer.h"
@@ -31,6 +32,11 @@ HRESULT SetDebugName(angle::ComPtr<T> &resource, const char *name)
     return SetDebugName(resource.Get(), name);
 }
 }  // namespace d3d11
+
+namespace d3d
+{
+class Context;
+}  // namespace d3d
 
 class Renderer11;
 class ResourceManager11;
@@ -294,21 +300,23 @@ class ResourceManager11 final : angle::NonCopyable
     ~ResourceManager11();
 
     template <typename T>
-    gl::Error allocate(Renderer11 *renderer,
-                       const GetDescFromD3D11<T> *desc,
-                       GetInitDataFromD3D11<T> *initData,
-                       Resource11<T> *resourceOut);
+    angle::Result allocate(d3d::Context *context,
+                           Renderer11 *renderer,
+                           const GetDescFromD3D11<T> *desc,
+                           GetInitDataFromD3D11<T> *initData,
+                           Resource11<T> *resourceOut);
 
     template <typename T>
-    gl::Error allocate(Renderer11 *renderer,
-                       const GetDescFromD3D11<T> *desc,
-                       GetInitDataFromD3D11<T> *initData,
-                       SharedResource11<T> *sharedRes)
+    angle::Result allocate(d3d::Context *context,
+                           Renderer11 *renderer,
+                           const GetDescFromD3D11<T> *desc,
+                           GetInitDataFromD3D11<T> *initData,
+                           SharedResource11<T> *sharedRes)
     {
         Resource11<T> res;
-        ANGLE_TRY(allocate(renderer, desc, initData, &res));
+        ANGLE_TRY(allocate(context, renderer, desc, initData, &res));
         *sharedRes = std::move(res);
-        return gl::NoError();
+        return angle::Result::Continue();
     }
 
     template <typename T>
@@ -330,8 +338,8 @@ class ResourceManager11 final : angle::NonCopyable
 
     bool mInitializeAllocations;
 
-    std::array<size_t, NumResourceTypes> mAllocatedResourceCounts;
-    std::array<uint64_t, NumResourceTypes> mAllocatedResourceDeviceMemory;
+    std::array<std::atomic_size_t, NumResourceTypes> mAllocatedResourceCounts;
+    std::array<std::atomic_uint64_t, NumResourceTypes> mAllocatedResourceDeviceMemory;
     angle::MemoryBuffer mZeroMemory;
 
     std::vector<D3D11_SUBRESOURCE_DATA> mShadowInitData;
