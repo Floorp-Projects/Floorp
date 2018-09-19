@@ -1049,6 +1049,11 @@ class VideoFrameEmitter {
     }
   }
 
+  size(width, height) {
+    this._canvas.width = width;
+    this._canvas.height = height;
+  }
+
   start() {
     if (this._started) {
       info("*** emitter already started");
