@@ -24,7 +24,7 @@ describe("Store", () => {
     ({Store} = injector({
       "lib/ActivityStreamMessageChannel.jsm": {ActivityStreamMessageChannel},
       "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
-      "lib/ActivityStreamStorage.jsm": {ActivityStreamStorage: FakeActivityStreamStorage}
+      "lib/ActivityStreamStorage.jsm": {ActivityStreamStorage: FakeActivityStreamStorage},
     }));
     store = new Store();
     sandbox.stub(store, "_initIndexedDB").resolves();
@@ -238,7 +238,7 @@ describe("Store", () => {
       store.init(new Map([
         ["a", () => ({})],
         ["b", () => ({})],
-        ["c", () => ({})]
+        ["c", () => ({})],
       ]));
 
       store.uninit();
