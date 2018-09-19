@@ -1,9 +1,14 @@
 const {AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
+
+AddonTestUtils.initMochitest(this);
+
 const ID = "update2@tests.mozilla.org";
 const ID_ICON = "update_icon2@tests.mozilla.org";
 const ID_PERMS = "update_perms@tests.mozilla.org";
 const ID_LEGACY = "legacy_update@tests.mozilla.org";
+const FAKE_INSTALL_TELEMETRY_SOURCE = "fake-install-source";
 
 requestLongerTimeout(2);
 
@@ -52,6 +57,7 @@ add_task(async function setup() {
 });
 
 hookExtensionsTelemetry();
+AddonTestUtils.hookAMTelemetryEvents();
 
 // Helper function to test background updates.
 async function backgroundUpdateTest(url, id, checkIconFn) {
@@ -64,7 +70,8 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   ]});
 
   // Install version 1.0 of the test extension
-  let addon = await promiseInstallAddon(url);
+  let addon = await promiseInstallAddon(url, {source: FAKE_INSTALL_TELEMETRY_SOURCE});
+  let addonId = addon.id;
 
   ok(addon, "Addon was installed");
   is(getBadgeStatus(), "", "Should not start out with an addon alert badge");
@@ -170,8 +177,37 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   // Should have recorded 1 canceled followed by 1 accepted update.
   expectTelemetry(["updateRejected", "updateAccepted"]);
 
-  addon.uninstall();
+  await addon.uninstall();
   await SpecialPowers.popPrefEnv();
+
+  // Test that the expected telemetry events have been recorded (and that they include the
+  // permission_prompt event).
+  const amEvents = AddonTestUtils.getAMTelemetryEvents();
+  const updateEvents = amEvents.filter(evt => evt.method === "update").map(evt => {
+    delete evt.value;
+    return evt;
+  });
+
+  Assert.deepEqual(updateEvents.map(evt => evt.extra && evt.extra.step), [
+    // First update (cancelled).
+    "started", "download_started", "download_completed", "permissions_prompt", "cancelled",
+    // Second update (completed).
+    "started", "download_started", "download_completed", "permissions_prompt", "completed",
+  ], "Got the steps from the collected telemetry events");
+
+  const method = "update";
+  const object = "extension";
+  const baseExtra = {
+    addon_id: addonId,
+    source: FAKE_INSTALL_TELEMETRY_SOURCE,
+    step: "permissions_prompt",
+    updated_from: "app",
+  };
+
+  Assert.deepEqual(updateEvents.filter(evt => evt.extra && evt.extra.step === "permissions_prompt"), [
+    {method, object, extra: {...baseExtra, num_perms: "1", num_origins: "1"}},
+    {method, object, extra: {...baseExtra, num_perms: "1", num_origins: "1"}},
+  ], "Got the expected permission_prompts events");
 }
 
 function checkDefaultIcon(icon) {

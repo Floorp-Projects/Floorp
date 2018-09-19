@@ -1318,6 +1318,8 @@ class AddonInstall {
    * @param {Object?} [options.installTelemetryInfo]
    *        An optional object which provides details about the installation source
    *        included in the addon manager telemetry events.
+   * @param {boolean} [options.isUserRequestedUpdate]
+   *        An optional boolean, true if the install object is related to a user triggered update.
    * @param {function(string) : Promise<void>} [options.promptHandler]
    *        A callback to prompt the user before installing.
    */
@@ -1360,6 +1362,7 @@ class AddonInstall {
     this.name = options.name || null;
     this.type = options.type || null;
     this.version = options.version || null;
+    this.isUserRequestedUpdate = options.isUserRequestedUpdate;
     this.installTelemetryInfo = null;
 
     if (options.installTelemetryInfo) {
@@ -1653,6 +1656,8 @@ class AddonInstall {
           existingAddon: this.existingAddon ? this.existingAddon.wrapper : null,
           addon: this.addon.wrapper,
           icon: this.getIcon(),
+          // Used in AMTelemetry to detect the install flow related to this prompt.
+          install: this.wrapper,
         };
 
         try {
@@ -2073,6 +2078,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     this.crypto = null;
     this.badCertHandler = null;
     this.restartDownload = false;
+    this.downloadStartedAt = null;
 
     this._callInstallListeners("onNewInstall", this.listeners, this.wrapper);
   }
@@ -2119,6 +2125,8 @@ var DownloadAddonInstall = class extends AddonInstall {
    * Starts downloading the add-on's XPI file.
    */
   startDownload() {
+    this.downloadStartedAt = Cu.now();
+
     this.state = AddonManager.STATE_DOWNLOADING;
     if (!this._callInstallListeners("onDownloadStarted")) {
       logger.debug("onDownloadStarted listeners cancelled installation of addon " + this.sourceURI.spec);
@@ -2433,8 +2441,10 @@ var DownloadAddonInstall = class extends AddonInstall {
  *        The add-on being updated
  * @param {Object} aUpdate
  *        The metadata about the new version from the update manifest
+ * @param {boolean} isUserRequested
+ *        An optional boolean, true if the install object is related to a user triggered update.
  */
-function createUpdate(aCallback, aAddon, aUpdate) {
+function createUpdate(aCallback, aAddon, aUpdate, isUserRequested) {
   let url = Services.io.newURI(aUpdate.updateURL);
 
   (async function() {
@@ -2445,6 +2455,7 @@ function createUpdate(aCallback, aAddon, aUpdate) {
       type: aAddon.type,
       icons: aAddon.icons,
       version: aUpdate.version,
+      isUserRequestedUpdate: isUserRequested,
     };
 
     let install;
@@ -2469,6 +2480,10 @@ function createUpdate(aCallback, aAddon, aUpdate) {
 const wrapperMap = new WeakMap();
 let installFor = wrapper => wrapperMap.get(wrapper);
 
+// Numeric id included in the install telemetry events to correlate multiple events related
+// to the same install or update flow.
+let nextInstallId = 0;
+
 /**
  * Creates a wrapper for an AddonInstall that only exposes the public API
  *
@@ -2477,6 +2492,7 @@ let installFor = wrapper => wrapperMap.get(wrapper);
  */
 function AddonInstallWrapper(aInstall) {
   wrapperMap.set(this, aInstall);
+  this.installId = ++nextInstallId;
 }
 
 AddonInstallWrapper.prototype = {
@@ -2512,6 +2528,14 @@ AddonInstallWrapper.prototype = {
 
   get installTelemetryInfo() {
     return installFor(this).installTelemetryInfo;
+  },
+
+  get isUserRequestedUpdate() {
+    return Boolean(installFor(this).isUserRequestedUpdate);
+  },
+
+  get downloadStartedAt() {
+    return installFor(this).downloadStartedAt;
   },
 
   install() {
@@ -2569,6 +2593,7 @@ var UpdateChecker = function(aAddon, aListener, aReason, aAppVersion, aPlatformV
   this.appVersion = aAppVersion;
   this.platformVersion = aPlatformVersion;
   this.syncCompatibility = (aReason == AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+  this.isUserRequested = (aReason == AddonManager.UPDATE_WHEN_USER_REQUESTED);
 
   let updateURL = aAddon.updateURL;
   if (!updateURL) {
@@ -2709,7 +2734,7 @@ UpdateChecker.prototype = {
 
       createUpdate(aInstall => {
         sendUpdateAvailableMessages(this, aInstall);
-      }, this.addon, update);
+      }, this.addon, update, this.isUserRequested);
     } else {
       sendUpdateAvailableMessages(this, null);
     }

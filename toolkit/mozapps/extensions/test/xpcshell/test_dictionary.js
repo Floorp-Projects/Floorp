@@ -156,6 +156,9 @@ var HunspellEngine = {
 
 add_task(async function setup() {
   await promiseStartupManager();
+
+  // Starts collecting the Addon Manager Telemetry events.
+  AddonTestUtils.hookAMTelemetryEvents();
 });
 
 // Tests that installing doesn't require a restart
@@ -219,6 +222,19 @@ add_task(async function test_1() {
   } catch (e) {
     // Expected the chrome url to not be registered
   }
+
+  // Test the collected telemetry events.
+  let amEvents = AddonTestUtils.getAMTelemetryEvents().filter(evt => {
+    return evt.method === "install" && evt.object === "dictionary";
+  }).map(evt => {
+    // collect only the remaining event properties (just the extra vars) to run assertions on them.
+    return evt.extra;
+  });
+
+  Assert.deepEqual(amEvents, [
+    {step: "started", addon_id: addon.id},
+    {step: "completed", addon_id: addon.id},
+  ], "Got the expected telemetry events");
 });
 
 // Tests that disabling doesn't require a restart
@@ -250,6 +266,15 @@ add_task(async function test_2() {
   ok(!addon.appDisabled);
   ok(addon.userDisabled);
   ok(!addon.isActive);
+
+  // Test the collected telemetry events.
+  let amEvents = AddonTestUtils.getAMTelemetryEvents().filter(evt => {
+    return evt.object === "dictionary";
+  });
+
+  Assert.deepEqual(amEvents, [
+    {method: "disable", object: "dictionary", value: addon.id, extra: null},
+  ], "Got the expected telemetry events");
 });
 
 // Test that restarting doesn't accidentally re-enable
