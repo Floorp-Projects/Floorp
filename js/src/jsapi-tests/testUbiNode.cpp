@@ -88,7 +88,6 @@ BEGIN_TEST(test_ubiNodeZone)
     CHECK(JS::ubi::Node(global2).zone() != global1->zone());
 
     JS::CompileOptions options(cx);
-    options.setUTF8(true);
 
     // Create a string and a script in the original zone...
     RootedString string1(cx, JS_NewStringCopyZ(cx, "Simpson's Individual Stringettes!"));
@@ -136,7 +135,6 @@ BEGIN_TEST(test_ubiNodeCompartment)
     CHECK(JS::ubi::Node(global2).realm() != global1->nonCCWRealm());
 
     JS::CompileOptions options(cx);
-    options.setUTF8(true);
 
     // Create a script in the original realm...
     RootedScript script1(cx);

@@ -19,14 +19,14 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test-closure-optimized-out.html";
 
 add_task(async function() {
+  const breakpointLine = 18;
   const hud = await openNewTabAndConsole(TEST_URI);
   await openDebugger();
 
   const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
 
-  await addBreakpoint(dbg, "test-closure-optimized-out.html", 18);
-  await waitForThreadEvents(dbg, "resumed");
+  await addBreakpoint(dbg, "test-closure-optimized-out.html", breakpointLine);
 
   // Cause the debuggee to pause
   await pauseDebugger(dbg);
@@ -50,7 +50,7 @@ add_task(async function() {
 
   info("Remove the breakpoint");
   const source = findSource(dbg, "test-closure-optimized-out.html");
-  await removeBreakpoint(dbg, source.id, 18);
+  await removeBreakpoint(dbg, source.id, breakpointLine);
 });
 
 async function pauseDebugger(dbg) {
