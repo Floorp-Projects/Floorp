@@ -60,23 +60,5 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
   ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
 }
 
-gfx::IntPoint
-ImageLayer::GetTopLeftTilePos(const gfx::IntRect& aDestRect,
-                              const gfx::IntRect& aFillRect,
-                              const gfx::IntSize& aRepeatSize)
-{
-  int x = aDestRect.x;
-  while (aRepeatSize.width && x > aFillRect.x) {
-    x -= aRepeatSize.width;
-  }
-
-  int y = aDestRect.y;
-  while (aRepeatSize.width && y > aFillRect.y) {
-    y -= aRepeatSize.height;
-  }
-
-  return gfx::IntPoint(x, y);
-}
-
 } // namespace layers
 } // namespace mozilla
