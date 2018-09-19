@@ -13,24 +13,64 @@
 namespace sh
 {
 
-void TIntermSymbol::traverse(TIntermTraverser *it)
+// Traverse the intermediate representation tree, and call a node type specific visit function for
+// each node. Traversal is done recursively through the node member function traverse(). Nodes with
+// children can have their whole subtree skipped if preVisit is turned on and the type specific
+// function returns false.
+template <typename T>
+void TIntermTraverser::traverse(T *node)
 {
-    it->traverseSymbol(this);
+    ScopedNodeInTraversalPath addToPath(this, node);
+    if (!addToPath.isWithinDepthLimit())
+        return;
+
+    bool visit = true;
+
+    // Visit the node before children if pre-visiting.
+    if (preVisit)
+        visit = node->visit(PreVisit, this);
+
+    if (visit)
+    {
+        size_t childIndex = 0;
+        size_t childCount = node->getChildCount();
+
+        while (childIndex < childCount && visit)
+        {
+            node->getChildNode(childIndex)->traverse(this);
+            if (inVisit && childIndex != childCount - 1)
+            {
+                visit = node->visit(InVisit, this);
+            }
+            ++childIndex;
+        }
+
+        if (visit && postVisit)
+            node->visit(PostVisit, this);
+    }
 }
 
-void TIntermRaw::traverse(TIntermTraverser *it)
+void TIntermNode::traverse(TIntermTraverser *it)
 {
-    it->traverseRaw(this);
+    it->traverse(this);
+}
+
+void TIntermSymbol::traverse(TIntermTraverser *it)
+{
+    TIntermTraverser::ScopedNodeInTraversalPath addToPath(it, this);
+    it->visitSymbol(this);
 }
 
 void TIntermConstantUnion::traverse(TIntermTraverser *it)
 {
-    it->traverseConstantUnion(this);
+    TIntermTraverser::ScopedNodeInTraversalPath addToPath(it, this);
+    it->visitConstantUnion(this);
 }
 
-void TIntermSwizzle::traverse(TIntermTraverser *it)
+void TIntermFunctionPrototype::traverse(TIntermTraverser *it)
 {
-    it->traverseSwizzle(this);
+    TIntermTraverser::ScopedNodeInTraversalPath addToPath(it, this);
+    it->visitFunctionPrototype(this);
 }
 
 void TIntermBinary::traverse(TIntermTraverser *it)
@@ -43,26 +83,6 @@ void TIntermUnary::traverse(TIntermTraverser *it)
     it->traverseUnary(this);
 }
 
-void TIntermTernary::traverse(TIntermTraverser *it)
-{
-    it->traverseTernary(this);
-}
-
-void TIntermIfElse::traverse(TIntermTraverser *it)
-{
-    it->traverseIfElse(this);
-}
-
-void TIntermSwitch::traverse(TIntermTraverser *it)
-{
-    it->traverseSwitch(this);
-}
-
-void TIntermCase::traverse(TIntermTraverser *it)
-{
-    it->traverseCase(this);
-}
-
 void TIntermFunctionDefinition::traverse(TIntermTraverser *it)
 {
     it->traverseFunctionDefinition(this);
@@ -71,21 +91,6 @@ void TIntermFunctionDefinition::traverse(TIntermTraverser *it)
 void TIntermBlock::traverse(TIntermTraverser *it)
 {
     it->traverseBlock(this);
-}
-
-void TIntermInvariantDeclaration::traverse(TIntermTraverser *it)
-{
-    it->traverseInvariantDeclaration(this);
-}
-
-void TIntermDeclaration::traverse(TIntermTraverser *it)
-{
-    it->traverseDeclaration(this);
-}
-
-void TIntermFunctionPrototype::traverse(TIntermTraverser *it)
-{
-    it->traverseFunctionPrototype(this);
 }
 
 void TIntermAggregate::traverse(TIntermTraverser *it)
@@ -98,9 +103,103 @@ void TIntermLoop::traverse(TIntermTraverser *it)
     it->traverseLoop(this);
 }
 
-void TIntermBranch::traverse(TIntermTraverser *it)
+void TIntermPreprocessorDirective::traverse(TIntermTraverser *it)
 {
-    it->traverseBranch(this);
+    it->visitPreprocessorDirective(this);
+}
+
+bool TIntermSymbol::visit(Visit visit, TIntermTraverser *it)
+{
+    it->visitSymbol(this);
+    return false;
+}
+
+bool TIntermConstantUnion::visit(Visit visit, TIntermTraverser *it)
+{
+    it->visitConstantUnion(this);
+    return false;
+}
+
+bool TIntermFunctionPrototype::visit(Visit visit, TIntermTraverser *it)
+{
+    it->visitFunctionPrototype(this);
+    return false;
+}
+
+bool TIntermFunctionDefinition::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitFunctionDefinition(visit, this);
+}
+
+bool TIntermUnary::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitUnary(visit, this);
+}
+
+bool TIntermSwizzle::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitSwizzle(visit, this);
+}
+
+bool TIntermBinary::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitBinary(visit, this);
+}
+
+bool TIntermTernary::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitTernary(visit, this);
+}
+
+bool TIntermAggregate::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitAggregate(visit, this);
+}
+
+bool TIntermDeclaration::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitDeclaration(visit, this);
+}
+
+bool TIntermInvariantDeclaration::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitInvariantDeclaration(visit, this);
+}
+
+bool TIntermBlock::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitBlock(visit, this);
+}
+
+bool TIntermIfElse::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitIfElse(visit, this);
+}
+
+bool TIntermLoop::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitLoop(visit, this);
+}
+
+bool TIntermBranch::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitBranch(visit, this);
+}
+
+bool TIntermSwitch::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitSwitch(visit, this);
+}
+
+bool TIntermCase::visit(Visit visit, TIntermTraverser *it)
+{
+    return it->visitCase(visit, this);
+}
+
+bool TIntermPreprocessorDirective::visit(Visit visit, TIntermTraverser *it)
+{
+    it->visitPreprocessorDirective(this);
+    return false;
 }
 
 TIntermTraverser::TIntermTraverser(bool preVisit,
@@ -115,6 +214,8 @@ TIntermTraverser::TIntermTraverser(bool preVisit,
       mInGlobalScope(true),
       mSymbolTable(symbolTable)
 {
+    // Only enabling inVisit is not supported.
+    ASSERT(!(inVisit && !preVisit && !postVisit));
 }
 
 TIntermTraverser::~TIntermTraverser()
@@ -191,90 +292,9 @@ bool TLValueTrackingTraverser::isInFunctionCallOutParameter() const
     return mInFunctionCallOutParameter;
 }
 
-//
-// Traverse the intermediate representation tree, and
-// call a node type specific function for each node.
-// Done recursively through the member function Traverse().
-// Node types can be skipped if their function to call is 0,
-// but their subtree will still be traversed.
-// Nodes with children can have their whole subtree skipped
-// if preVisit is turned on and the type specific function
-// returns false.
-//
-
-//
-// Traversal functions for terminals are straighforward....
-//
-void TIntermTraverser::traverseSymbol(TIntermSymbol *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    visitSymbol(node);
-}
-
-void TIntermTraverser::traverseConstantUnion(TIntermConstantUnion *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    visitConstantUnion(node);
-}
-
-void TIntermTraverser::traverseSwizzle(TIntermSwizzle *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitSwizzle(PreVisit, node);
-
-    if (visit)
-    {
-        node->getOperand()->traverse(this);
-    }
-
-    if (visit && postVisit)
-        visitSwizzle(PostVisit, node);
-}
-
-//
-// Traverse a binary node.
-//
 void TIntermTraverser::traverseBinary(TIntermBinary *node)
 {
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    //
-    // visit the node before children if pre-visiting.
-    //
-    if (preVisit)
-        visit = visitBinary(PreVisit, node);
-
-    //
-    // Visit the children, in the right order.
-    //
-    if (visit)
-    {
-        if (node->getLeft())
-            node->getLeft()->traverse(this);
-
-        if (inVisit)
-            visit = visitBinary(InVisit, node);
-
-        if (visit && node->getRight())
-            node->getRight()->traverse(this);
-    }
-
-    //
-    // Visit the node after the children, if requested and the traversal
-    // hasn't been cancelled yet.
-    //
-    if (visit && postVisit)
-        visitBinary(PostVisit, node);
+    traverse(node);
 }
 
 void TLValueTrackingTraverser::traverseBinary(TIntermBinary *node)
@@ -285,82 +305,60 @@ void TLValueTrackingTraverser::traverseBinary(TIntermBinary *node)
 
     bool visit = true;
 
-    //
     // visit the node before children if pre-visiting.
-    //
     if (preVisit)
-        visit = visitBinary(PreVisit, node);
+        visit = node->visit(PreVisit, this);
 
-    //
     // Visit the children, in the right order.
-    //
     if (visit)
     {
-        // Some binary operations like indexing can be inside an expression which must be an
-        // l-value.
-        bool parentOperatorRequiresLValue     = operatorRequiresLValue();
-        bool parentInFunctionCallOutParameter = isInFunctionCallOutParameter();
         if (node->isAssignment())
         {
             ASSERT(!isLValueRequiredHere());
             setOperatorRequiresLValue(true);
         }
 
-        if (node->getLeft())
-            node->getLeft()->traverse(this);
-
-        if (inVisit)
-            visit = visitBinary(InVisit, node);
+        node->getLeft()->traverse(this);
 
         if (node->isAssignment())
             setOperatorRequiresLValue(false);
 
-        // Index is not required to be an l-value even when the surrounding expression is required
-        // to be an l-value.
-        TOperator op = node->getOp();
-        if (op == EOpIndexDirect || op == EOpIndexDirectInterfaceBlock ||
-            op == EOpIndexDirectStruct || op == EOpIndexIndirect)
-        {
-            setOperatorRequiresLValue(false);
-            setInFunctionCallOutParameter(false);
-        }
+        if (inVisit)
+            visit = node->visit(InVisit, this);
 
-        if (visit && node->getRight())
+        if (visit)
+        {
+            // Some binary operations like indexing can be inside an expression which must be an
+            // l-value.
+            bool parentOperatorRequiresLValue     = operatorRequiresLValue();
+            bool parentInFunctionCallOutParameter = isInFunctionCallOutParameter();
+
+            // Index is not required to be an l-value even when the surrounding expression is
+            // required to be an l-value.
+            TOperator op = node->getOp();
+            if (op == EOpIndexDirect || op == EOpIndexDirectInterfaceBlock ||
+                op == EOpIndexDirectStruct || op == EOpIndexIndirect)
+            {
+                setOperatorRequiresLValue(false);
+                setInFunctionCallOutParameter(false);
+            }
+
             node->getRight()->traverse(this);
 
-        setOperatorRequiresLValue(parentOperatorRequiresLValue);
-        setInFunctionCallOutParameter(parentInFunctionCallOutParameter);
-    }
+            setOperatorRequiresLValue(parentOperatorRequiresLValue);
+            setInFunctionCallOutParameter(parentInFunctionCallOutParameter);
 
-    //
-    // Visit the node after the children, if requested and the traversal
-    // hasn't been cancelled yet.
-    //
-    if (visit && postVisit)
-        visitBinary(PostVisit, node);
+            // Visit the node after the children, if requested and the traversal
+            // hasn't been cancelled yet.
+            if (postVisit)
+                visit = node->visit(PostVisit, this);
+        }
+    }
 }
 
-//
-// Traverse a unary node.  Same comments in binary node apply here.
-//
 void TIntermTraverser::traverseUnary(TIntermUnary *node)
 {
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitUnary(PreVisit, node);
-
-    if (visit)
-    {
-        node->getOperand()->traverse(this);
-    }
-
-    if (visit && postVisit)
-        visitUnary(PostVisit, node);
+    traverse(node);
 }
 
 void TLValueTrackingTraverser::traverseUnary(TIntermUnary *node)
@@ -372,7 +370,7 @@ void TLValueTrackingTraverser::traverseUnary(TIntermUnary *node)
     bool visit = true;
 
     if (preVisit)
-        visit = visitUnary(PreVisit, node);
+        visit = node->visit(PreVisit, this);
 
     if (visit)
     {
@@ -392,13 +390,13 @@ void TLValueTrackingTraverser::traverseUnary(TIntermUnary *node)
         node->getOperand()->traverse(this);
 
         setOperatorRequiresLValue(false);
-    }
 
-    if (visit && postVisit)
-        visitUnary(PostVisit, node);
+        if (postVisit)
+            visit = node->visit(PostVisit, this);
+    }
 }
 
-// Traverse a function definition node.
+// Traverse a function definition node. This keeps track of global scope.
 void TIntermTraverser::traverseFunctionDefinition(TIntermFunctionDefinition *node)
 {
     ScopedNodeInTraversalPath addToPath(this, node);
@@ -408,25 +406,26 @@ void TIntermTraverser::traverseFunctionDefinition(TIntermFunctionDefinition *nod
     bool visit = true;
 
     if (preVisit)
-        visit = visitFunctionDefinition(PreVisit, node);
+        visit = node->visit(PreVisit, this);
 
     if (visit)
     {
-        mInGlobalScope = false;
-
         node->getFunctionPrototype()->traverse(this);
         if (inVisit)
-            visit = visitFunctionDefinition(InVisit, node);
-        node->getBody()->traverse(this);
-
-        mInGlobalScope = true;
+            visit = node->visit(InVisit, this);
+        if (visit)
+        {
+            mInGlobalScope = false;
+            node->getBody()->traverse(this);
+            mInGlobalScope = true;
+            if (postVisit)
+                visit = node->visit(PostVisit, this);
+        }
     }
-
-    if (visit && postVisit)
-        visitFunctionDefinition(PostVisit, node);
 }
 
-// Traverse a block node.
+// Traverse a block node. This keeps track of the position of traversed child nodes within the block
+// so that nodes may be inserted before or after them.
 void TIntermTraverser::traverseBlock(TIntermBlock *node)
 {
     ScopedNodeInTraversalPath addToPath(this, node);
@@ -440,119 +439,35 @@ void TIntermTraverser::traverseBlock(TIntermBlock *node)
     TIntermSequence *sequence = node->getSequence();
 
     if (preVisit)
-        visit = visitBlock(PreVisit, node);
+        visit = node->visit(PreVisit, this);
 
     if (visit)
     {
         for (auto *child : *sequence)
         {
-            child->traverse(this);
-            if (visit && inVisit)
+            if (visit)
             {
-                if (child != sequence->back())
-                    visit = visitBlock(InVisit, node);
+                child->traverse(this);
+                if (inVisit)
+                {
+                    if (child != sequence->back())
+                        visit = node->visit(InVisit, this);
+                }
+
+                incrementParentBlockPos();
             }
-
-            incrementParentBlockPos();
         }
-    }
 
-    if (visit && postVisit)
-        visitBlock(PostVisit, node);
+        if (visit && postVisit)
+            visit = node->visit(PostVisit, this);
+    }
 
     popParentBlock();
 }
 
-void TIntermTraverser::traverseInvariantDeclaration(TIntermInvariantDeclaration *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-    {
-        visit = visitInvariantDeclaration(PreVisit, node);
-    }
-
-    if (visit)
-    {
-        node->getSymbol()->traverse(this);
-        if (postVisit)
-        {
-            visitInvariantDeclaration(PostVisit, node);
-        }
-    }
-}
-
-// Traverse a declaration node.
-void TIntermTraverser::traverseDeclaration(TIntermDeclaration *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    TIntermSequence *sequence = node->getSequence();
-
-    if (preVisit)
-        visit = visitDeclaration(PreVisit, node);
-
-    if (visit)
-    {
-        for (auto *child : *sequence)
-        {
-            child->traverse(this);
-            if (visit && inVisit)
-            {
-                if (child != sequence->back())
-                    visit = visitDeclaration(InVisit, node);
-            }
-        }
-    }
-
-    if (visit && postVisit)
-        visitDeclaration(PostVisit, node);
-}
-
-void TIntermTraverser::traverseFunctionPrototype(TIntermFunctionPrototype *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-
-    visitFunctionPrototype(node);
-}
-
-// Traverse an aggregate node.  Same comments in binary node apply here.
 void TIntermTraverser::traverseAggregate(TIntermAggregate *node)
 {
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    TIntermSequence *sequence = node->getSequence();
-
-    if (preVisit)
-        visit = visitAggregate(PreVisit, node);
-
-    if (visit)
-    {
-        for (auto *child : *sequence)
-        {
-            child->traverse(this);
-            if (visit && inVisit)
-            {
-                if (child != sequence->back())
-                    visit = visitAggregate(InVisit, node);
-            }
-        }
-    }
-
-    if (visit && postVisit)
-        visitAggregate(PostVisit, node);
+    traverse(node);
 }
 
 bool TIntermTraverser::CompareInsertion(const NodeInsertMultipleEntry &a,
@@ -668,203 +583,46 @@ void TLValueTrackingTraverser::traverseAggregate(TIntermAggregate *node)
     TIntermSequence *sequence = node->getSequence();
 
     if (preVisit)
-        visit = visitAggregate(PreVisit, node);
+        visit = node->visit(PreVisit, this);
 
     if (visit)
     {
         size_t paramIndex = 0u;
         for (auto *child : *sequence)
         {
-            if (node->getFunction())
+            if (visit)
             {
-                // Both built-ins and user defined functions should have the function symbol set.
-                ASSERT(paramIndex < node->getFunction()->getParamCount());
-                TQualifier qualifier =
-                    node->getFunction()->getParam(paramIndex)->getType().getQualifier();
-                setInFunctionCallOutParameter(qualifier == EvqOut || qualifier == EvqInOut);
-                ++paramIndex;
-            }
-            else
-            {
-                ASSERT(node->isConstructor());
-            }
-
-            child->traverse(this);
-            if (visit && inVisit)
-            {
-                if (child != sequence->back())
-                    visit = visitAggregate(InVisit, node);
+                if (node->getFunction())
+                {
+                    // Both built-ins and user defined functions should have the function symbol
+                    // set.
+                    ASSERT(paramIndex < node->getFunction()->getParamCount());
+                    TQualifier qualifier =
+                        node->getFunction()->getParam(paramIndex)->getType().getQualifier();
+                    setInFunctionCallOutParameter(qualifier == EvqOut || qualifier == EvqInOut);
+                    ++paramIndex;
+                }
+                else
+                {
+                    ASSERT(node->isConstructor());
+                }
+                child->traverse(this);
+                if (inVisit)
+                {
+                    if (child != sequence->back())
+                        visit = node->visit(InVisit, this);
+                }
             }
         }
         setInFunctionCallOutParameter(false);
-    }
 
-    if (visit && postVisit)
-        visitAggregate(PostVisit, node);
+        if (visit && postVisit)
+            visit = node->visit(PostVisit, this);
+    }
 }
 
-//
-// Traverse a ternary node.  Same comments in binary node apply here.
-//
-void TIntermTraverser::traverseTernary(TIntermTernary *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitTernary(PreVisit, node);
-
-    if (visit)
-    {
-        node->getCondition()->traverse(this);
-        if (node->getTrueExpression())
-            node->getTrueExpression()->traverse(this);
-        if (node->getFalseExpression())
-            node->getFalseExpression()->traverse(this);
-    }
-
-    if (visit && postVisit)
-        visitTernary(PostVisit, node);
-}
-
-// Traverse an if-else node.  Same comments in binary node apply here.
-void TIntermTraverser::traverseIfElse(TIntermIfElse *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitIfElse(PreVisit, node);
-
-    if (visit)
-    {
-        node->getCondition()->traverse(this);
-        if (node->getTrueBlock())
-            node->getTrueBlock()->traverse(this);
-        if (node->getFalseBlock())
-            node->getFalseBlock()->traverse(this);
-    }
-
-    if (visit && postVisit)
-        visitIfElse(PostVisit, node);
-}
-
-//
-// Traverse a switch node.  Same comments in binary node apply here.
-//
-void TIntermTraverser::traverseSwitch(TIntermSwitch *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitSwitch(PreVisit, node);
-
-    if (visit)
-    {
-        node->getInit()->traverse(this);
-        if (inVisit)
-            visit = visitSwitch(InVisit, node);
-        if (visit && node->getStatementList())
-            node->getStatementList()->traverse(this);
-    }
-
-    if (visit && postVisit)
-        visitSwitch(PostVisit, node);
-}
-
-//
-// Traverse a case node.  Same comments in binary node apply here.
-//
-void TIntermTraverser::traverseCase(TIntermCase *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitCase(PreVisit, node);
-
-    if (visit && node->getCondition())
-    {
-        node->getCondition()->traverse(this);
-    }
-
-    if (visit && postVisit)
-        visitCase(PostVisit, node);
-}
-
-//
-// Traverse a loop node.  Same comments in binary node apply here.
-//
 void TIntermTraverser::traverseLoop(TIntermLoop *node)
 {
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitLoop(PreVisit, node);
-
-    if (visit)
-    {
-        if (node->getInit())
-            node->getInit()->traverse(this);
-
-        if (node->getCondition())
-            node->getCondition()->traverse(this);
-
-        if (node->getBody())
-            node->getBody()->traverse(this);
-
-        if (node->getExpression())
-            node->getExpression()->traverse(this);
-    }
-
-    if (visit && postVisit)
-        visitLoop(PostVisit, node);
+    traverse(node);
 }
-
-//
-// Traverse a branch node.  Same comments in binary node apply here.
-//
-void TIntermTraverser::traverseBranch(TIntermBranch *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    if (!addToPath.isWithinDepthLimit())
-        return;
-
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitBranch(PreVisit, node);
-
-    if (visit && node->getExpression())
-    {
-        node->getExpression()->traverse(this);
-    }
-
-    if (visit && postVisit)
-        visitBranch(PostVisit, node);
-}
-
-void TIntermTraverser::traverseRaw(TIntermRaw *node)
-{
-    ScopedNodeInTraversalPath addToPath(this, node);
-    visitRaw(node);
-}
-
 }  // namespace sh

@@ -14,9 +14,9 @@
 #include <climits>
 #include <cstdarg>
 #include <cstddef>
-#include <string>
 #include <set>
 #include <sstream>
+#include <string>
 #include <vector>
 
 // A helper class to disallow copy and assignment operators
@@ -31,11 +31,11 @@ class NonCopyable
 {
   protected:
     constexpr NonCopyable() = default;
-    ~NonCopyable() = default;
+    ~NonCopyable()          = default;
 
   private:
-    NonCopyable(const NonCopyable&) = delete;
-    void operator=(const NonCopyable&) = delete;
+    NonCopyable(const NonCopyable &) = delete;
+    void operator=(const NonCopyable &) = delete;
 };
 
 extern const uintptr_t DirtyPointer;
@@ -86,7 +86,7 @@ void SafeRelease(T (&resourceBlock)[N])
 }
 
 template <typename T>
-void SafeRelease(T& resource)
+void SafeRelease(T &resource)
 {
     if (resource)
     {
@@ -103,7 +103,7 @@ void SafeDelete(T *&resource)
 }
 
 template <typename T>
-void SafeDeleteContainer(T& resource)
+void SafeDeleteContainer(T &resource)
 {
     for (auto &element : resource)
     {
@@ -113,7 +113,7 @@ void SafeDeleteContainer(T& resource)
 }
 
 template <typename T>
-void SafeDeleteArray(T*& resource)
+void SafeDeleteArray(T *&resource)
 {
     delete[] resource;
     resource = nullptr;
@@ -148,7 +148,7 @@ inline bool IsMaskFlagSet(T mask, T flag)
     return (mask & flag) == flag;
 }
 
-inline const char* MakeStaticString(const std::string &str)
+inline const char *MakeStaticString(const std::string &str)
 {
     static std::set<std::string> strings;
     std::set<std::string>::iterator it = strings.find(str);
@@ -173,10 +173,7 @@ inline std::string Str(int i)
     return strstr.str();
 }
 
-size_t FormatStringIntoVector(const char *fmt, va_list vararg, std::vector<char>& buffer);
-
-std::string FormatString(const char *fmt, va_list vararg);
-std::string FormatString(const char *fmt, ...);
+size_t FormatStringIntoVector(const char *fmt, va_list vararg, std::vector<char> &buffer);
 
 template <typename T>
 std::string ToString(const T &value)
@@ -207,13 +204,69 @@ std::string ToString(const T &value)
 #define GL_BGRA8_TYPELESS_ANGLEX 0x6AC3
 #define GL_BGRA8_TYPELESS_SRGB_ANGLEX 0x6AC4
 
+#define GL_R8_SSCALED_ANGLEX 0x6AC6
+#define GL_RG8_SSCALED_ANGLEX 0x6AC7
+#define GL_RGB8_SSCALED_ANGLEX 0x6AC8
+#define GL_RGBA8_SSCALED_ANGLEX 0x6AC9
+#define GL_R8_USCALED_ANGLEX 0x6ACA
+#define GL_RG8_USCALED_ANGLEX 0x6ACB
+#define GL_RGB8_USCALED_ANGLEX 0x6ACC
+#define GL_RGBA8_USCALED_ANGLEX 0x6ACD
+
+#define GL_R16_SSCALED_ANGLEX 0x6ACE
+#define GL_RG16_SSCALED_ANGLEX 0x6ACF
+#define GL_RGB16_SSCALED_ANGLEX 0x6AD0
+#define GL_RGBA16_SSCALED_ANGLEX 0x6AD1
+#define GL_R16_USCALED_ANGLEX 0x6AD2
+#define GL_RG16_USCALED_ANGLEX 0x6AD3
+#define GL_RGB16_USCALED_ANGLEX 0x6AD4
+#define GL_RGBA16_USCALED_ANGLEX 0x6AD5
+
+#define GL_R32_SSCALED_ANGLEX 0x6AD6
+#define GL_RG32_SSCALED_ANGLEX 0x6AD7
+#define GL_RGB32_SSCALED_ANGLEX 0x6AD8
+#define GL_RGBA32_SSCALED_ANGLEX 0x6AD9
+#define GL_R32_USCALED_ANGLEX 0x6ADA
+#define GL_RG32_USCALED_ANGLEX 0x6ADB
+#define GL_RGB32_USCALED_ANGLEX 0x6ADC
+#define GL_RGBA32_USCALED_ANGLEX 0x6ADD
+
+#define GL_R32_SNORM_ANGLEX 0x6ADE
+#define GL_RG32_SNORM_ANGLEX 0x6ADF
+#define GL_RGB32_SNORM_ANGLEX 0x6AE0
+#define GL_RGBA32_SNORM_ANGLEX 0x6AE1
+#define GL_R32_UNORM_ANGLEX 0x6AE2
+#define GL_RG32_UNORM_ANGLEX 0x6AE3
+#define GL_RGB32_UNORM_ANGLEX 0x6AE4
+#define GL_RGBA32_UNORM_ANGLEX 0x6AE5
+
+#define GL_R32_FIXED_ANGLEX 0x6AE6
+#define GL_RG32_FIXED_ANGLEX 0x6AE7
+#define GL_RGB32_FIXED_ANGLEX 0x6AE8
+#define GL_RGBA32_FIXED_ANGLEX 0x6AE9
+
+#define GL_RGB10_A2_SINT_ANGLEX 0x6AEA
+#define GL_RGB10_A2_SNORM_ANGLEX 0x6AEB
+#define GL_RGB10_A2_SSCALED_ANGLEX 0x6AEC
+#define GL_RGB10_A2_USCALED_ANGLEX 0x6AED
+
 // TODO(jmadill): Clean this up at some point.
 #define EGL_PLATFORM_ANGLE_PLATFORM_METHODS_ANGLEX 0x9999
 
+// This internal enum is used to filter internal errors that are already handled.
+// TODO(jmadill): Remove this when refactor is done. http://anglebug.com/2491
+#define GL_INTERNAL_ERROR_ANGLEX 0x6AEE
+
 #define ANGLE_TRY_CHECKED_MATH(result)                     \
-    if (!result.IsValid())                                 \
+    if (!result)                                           \
     {                                                      \
         return gl::InternalError() << "Integer overflow."; \
+    }
+
+#define ANGLE_TRY_ALLOCATION(result)                                       \
+    if (!result)                                                           \
+    {                                                                      \
+        return gl::OutOfMemory() << "Failed to allocate internal buffer."; \
     }
 
 // The below inlining code lifted from V8.
@@ -236,6 +289,18 @@ std::string ToString(const T &value)
 #define ANGLE_INLINE inline
 #endif
 
+#if defined(__clang__) || (defined(__GNUC__) && defined(__has_attribute))
+#if __has_attribute(noinline)
+#define ANGLE_NOINLINE __attribute__((noinline))
+#else
+#define ANGLE_NOINLINE
+#endif
+#elif defined(_MSC_VER)
+#define ANGLE_NOINLINE __declspec(noinline)
+#else
+#define ANGLE_NOINLINE
+#endif
+
 #ifndef ANGLE_STRINGIFY
 #define ANGLE_STRINGIFY(x) #x
 #endif
@@ -255,4 +320,4 @@ std::string ToString(const T &value)
 #define ANGLE_NO_DISCARD
 #endif  // __has_cpp_attribute(nodiscard)
 
-#endif // COMMON_ANGLEUTILS_H_
+#endif  // COMMON_ANGLEUTILS_H_

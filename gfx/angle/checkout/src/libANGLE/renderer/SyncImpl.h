@@ -15,20 +15,29 @@
 
 #include "angle_gl.h"
 
+namespace gl
+{
+class Context;
+}  // namespace gl
+
 namespace rx
 {
-
 class SyncImpl : angle::NonCopyable
 {
   public:
     SyncImpl(){};
     virtual ~SyncImpl(){};
 
-    virtual gl::Error set(GLenum condition, GLbitfield flags) = 0;
-    virtual gl::Error clientWait(GLbitfield flags, GLuint64 timeout, GLenum *outResult) = 0;
-    virtual gl::Error serverWait(GLbitfield flags, GLuint64 timeout) = 0;
-    virtual gl::Error getStatus(GLint *outResult) = 0;
+    virtual gl::Error set(const gl::Context *context, GLenum condition, GLbitfield flags) = 0;
+    virtual gl::Error clientWait(const gl::Context *context,
+                                 GLbitfield flags,
+                                 GLuint64 timeout,
+                                 GLenum *outResult)                                       = 0;
+    virtual gl::Error serverWait(const gl::Context *context,
+                                 GLbitfield flags,
+                                 GLuint64 timeout)                                        = 0;
+    virtual gl::Error getStatus(const gl::Context *context, GLint *outResult)             = 0;
 };
-}
+}  // namespace rx
 
 #endif  // LIBANGLE_RENDERER_FENCESYNCIMPL_H_

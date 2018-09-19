@@ -8,6 +8,9 @@
 // executable implementation details.
 
 #include "libANGLE/renderer/d3d/d3d11/ShaderExecutable11.h"
+
+#include "libANGLE/Context.h"
+#include "libANGLE/renderer/d3d/d3d11/Context11.h"
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 
 namespace rx
@@ -100,7 +103,9 @@ UniformStorage11::~UniformStorage11()
 {
 }
 
-gl::Error UniformStorage11::getConstantBuffer(Renderer11 *renderer, const d3d11::Buffer **bufferOut)
+angle::Result UniformStorage11::getConstantBuffer(const gl::Context *context,
+                                                  Renderer11 *renderer,
+                                                  const d3d11::Buffer **bufferOut)
 {
     if (size() > 0 && !mConstantBuffer.valid())
     {
@@ -109,11 +114,12 @@ gl::Error UniformStorage11::getConstantBuffer(Renderer11 *renderer, const d3d11:
         desc.Usage             = D3D11_USAGE_DEFAULT;
         desc.BindFlags         = D3D11_BIND_CONSTANT_BUFFER;
 
-        ANGLE_TRY(renderer->allocateResource(desc, &mConstantBuffer));
+        ANGLE_TRY(
+            renderer->allocateResource(GetImplAs<Context11>(context), desc, &mConstantBuffer));
     }
 
     *bufferOut = &mConstantBuffer;
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 }  // namespace rx

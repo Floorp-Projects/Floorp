@@ -61,8 +61,7 @@ class RenderbufferState final : angle::NonCopyable
     InitState mInitState;
 };
 
-class Renderbuffer final : public egl::ImageSibling,
-                           public LabeledObject
+class Renderbuffer final : public RefCountObject, public egl::ImageSibling, public LabeledObject
 {
   public:
     Renderbuffer(rx::GLImplFactory *implFactory, GLuint id);
@@ -96,7 +95,7 @@ class Renderbuffer final : public egl::ImageSibling,
 
     // FramebufferAttachmentObject Impl
     Extents getAttachmentSize(const ImageIndex &imageIndex) const override;
-    const Format &getAttachmentFormat(GLenum binding, const ImageIndex &imageIndex) const override;
+    Format getAttachmentFormat(GLenum binding, const ImageIndex &imageIndex) const override;
     GLsizei getAttachmentSamples(const ImageIndex &imageIndex) const override;
 
     void onAttach(const Context *context) override;

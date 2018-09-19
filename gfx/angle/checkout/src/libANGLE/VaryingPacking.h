@@ -128,9 +128,6 @@ struct PackedVaryingRegister final
 
     // The column of the register row into which we've packed this varying.
     unsigned int registerColumn;
-
-    // Assigned after packing
-    unsigned int semanticIndex;
 };
 
 // Supported packing modes:
@@ -152,9 +149,7 @@ class VaryingPacking final : angle::NonCopyable
     VaryingPacking(GLuint maxVaryingVectors, PackMode packMode);
     ~VaryingPacking();
 
-    bool packUserVaryings(gl::InfoLog &infoLog,
-                          const std::vector<PackedVarying> &packedVaryings,
-                          const std::vector<std::string> &tfVaryings);
+    bool packUserVaryings(gl::InfoLog &infoLog, const std::vector<PackedVarying> &packedVaryings);
 
     bool collectAndPackUserVaryings(gl::InfoLog &infoLog,
                                     const ProgramMergedVaryings &mergedVaryings,

@@ -65,12 +65,6 @@ bool Token::uValue(unsigned int *value) const
     return numeric_lex_int(text, value);
 }
 
-bool Token::fValue(float *value) const
-{
-    ASSERT(type == CONST_FLOAT);
-    return numeric_lex_float(text, value);
-}
-
 std::ostream &operator<<(std::ostream &out, const Token &token)
 {
     if (token.hasLeadingSpace())

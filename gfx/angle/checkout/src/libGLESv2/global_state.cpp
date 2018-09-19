@@ -12,6 +12,7 @@
 #include "common/platform.h"
 #include "common/tls.h"
 
+#include "libANGLE/Debug.h"
 #include "libANGLE/Thread.h"
 
 namespace gl
@@ -38,6 +39,7 @@ namespace
 {
 
 static TLSIndex threadTLS = TLS_INVALID_INDEX;
+Debug *g_Debug            = nullptr;
 
 Thread *AllocateCurrentThread()
 {
@@ -57,6 +59,15 @@ Thread *AllocateCurrentThread()
     return thread;
 }
 
+void AllocateDebug()
+{
+    // TODO(geofflang): Lock around global allocation. http://anglebug.com/2464
+    if (g_Debug == nullptr)
+    {
+        g_Debug = new Debug();
+    }
+}
+
 }  // anonymous namespace
 
 Thread *GetCurrentThread()
@@ -72,6 +83,12 @@ Thread *GetCurrentThread()
     // ANGLE issue 488: when the dll is loaded after thread initialization,
     // thread local storage (current) might not exist yet.
     return (current ? current : AllocateCurrentThread());
+}
+
+Debug *GetDebug()
+{
+    AllocateDebug();
+    return g_Debug;
 }
 
 }  // namespace egl
@@ -90,8 +107,16 @@ bool DeallocateCurrentThread()
     return SetTLSValue(threadTLS, nullptr);
 }
 
+void DealocateDebug()
+{
+    SafeDelete(g_Debug);
+}
+
 bool InitializeProcess()
 {
+    ASSERT(g_Debug == nullptr);
+    AllocateDebug();
+
     threadTLS = CreateTLSIndex();
     if (threadTLS == TLS_INVALID_INDEX)
     {
@@ -103,6 +128,8 @@ bool InitializeProcess()
 
 bool TerminateProcess()
 {
+    DealocateDebug();
+
     if (!DeallocateCurrentThread())
     {
         return false;

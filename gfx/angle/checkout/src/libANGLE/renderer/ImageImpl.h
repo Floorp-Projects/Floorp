@@ -19,6 +19,7 @@ class Context;
 
 namespace egl
 {
+class Display;
 class ImageSibling;
 struct ImageState;
 }  // namespace egl
@@ -30,7 +31,7 @@ class ImageImpl : angle::NonCopyable
   public:
     ImageImpl(const egl::ImageState &state) : mState(state) {}
     virtual ~ImageImpl() {}
-    virtual egl::Error initialize() = 0;
+    virtual egl::Error initialize(const egl::Display *display) = 0;
 
     virtual gl::Error orphan(const gl::Context *context, egl::ImageSibling *sibling) = 0;
 

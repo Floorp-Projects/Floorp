@@ -115,7 +115,7 @@ bool PruneNoOpsTraverser::visitDeclaration(Visit, TIntermDeclaration *node)
                     type->setQualifier(EvqTemporary);
                 }
                 TVariable *variable =
-                    new TVariable(mSymbolTable, ImmutableString(""), type, SymbolType::Empty);
+                    new TVariable(mSymbolTable, kEmptyImmutableString, type, SymbolType::Empty);
                 queueReplacementWithParent(node, declaratorSymbol, new TIntermSymbol(variable),
                                            OriginalNode::IS_DROPPED);
             }

@@ -17,6 +17,7 @@
 
 #include "common/angleutils.h"
 #include "libANGLE/AttributeMap.h"
+#include "libANGLE/Debug.h"
 
 namespace rx
 {
@@ -35,11 +36,14 @@ class Display;
 class Error;
 class Thread;
 
-class Stream final : angle::NonCopyable
+class Stream final : public LabeledObject, angle::NonCopyable
 {
   public:
     Stream(Display *display, const AttributeMap &attribs);
     ~Stream();
+
+    void setLabel(EGLLabelKHR label) override;
+    EGLLabelKHR getLabel() const override;
 
     enum class ConsumerType
     {
@@ -100,6 +104,8 @@ class Stream final : angle::NonCopyable
     Error postD3D11Texture(void *texture, const AttributeMap &attributes);
 
   private:
+    EGLLabelKHR mLabel;
+
     // Associated display
     Display *mDisplay;
 
