@@ -3619,8 +3619,9 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
   return InitData{ aBuilder,         aFrame,
                    aBackgroundStyle, image,
                    aBackgroundRect,  state.mFillArea,
-                   state.mDestArea,  aLayer,
-                   isRasterImage,    shouldFixToViewport };
+                   state.mDestArea,  state.mRepeatSize,
+                   aLayer,           isRasterImage,
+                   shouldFixToViewport };
 }
 
 nsDisplayBackgroundImage::nsDisplayBackgroundImage(
@@ -3634,6 +3635,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
   , mBackgroundRect(aInitData.backgroundRect)
   , mFillRect(aInitData.fillArea)
   , mDestRect(aInitData.destArea)
+  , mRepeatSize(aInitData.repeatSize)
   , mLayer(aInitData.layer)
   , mIsRasterImage(aInitData.isRasterImage)
   , mShouldFixToViewport(aInitData.shouldFixToViewport)
@@ -4095,11 +4097,6 @@ nsDisplayBackgroundImage::CanOptimizeToImageLayer(
     return false;
   }
 
-  // We currently can't handle tiled backgrounds.
-  if (!mDestRect.Contains(mFillRect)) {
-    return false;
-  }
-
   // For 'contain' and 'cover', we allow any pixel of the image to be sampled
   // because there isn't going to be any spriting/atlasing going on.
   const nsStyleImageLayers::Layer& layer =
@@ -4118,6 +4115,12 @@ nsRect
 nsDisplayBackgroundImage::GetDestRect() const
 {
   return mDestRect;
+}
+
+nsSize
+nsDisplayBackgroundImage::GetRepeatSize() const
+{
+  return mRepeatSize;
 }
 
 already_AddRefed<imgIContainer>
@@ -4811,12 +4814,17 @@ nsDisplayImageContainer::ConfigureLayer(
   const LayoutDeviceRect destRect(
     LayoutDeviceIntRect::FromAppUnitsToNearest(GetDestRect(), factor));
 
+  float xScale = destRect.width / containerSize.width;
+  float yScale = destRect.height / containerSize.height;
+
   const LayoutDevicePoint p = destRect.TopLeft();
   Matrix transform = Matrix::Translation(p.x + aParameters.mOffset.x,
                                          p.y + aParameters.mOffset.y);
-  transform.PreScale(destRect.width / containerSize.width,
-                     destRect.height / containerSize.height);
+  transform.PreScale(xScale, yScale);
   aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
+  aLayer->SetRepeatSize(GetRepeatSize().ScaleToNearestPixels(1.0f / xScale,
+                                                             1.0f / yScale,
+                                                             factor));
 }
 
 already_AddRefed<ImageContainer>
