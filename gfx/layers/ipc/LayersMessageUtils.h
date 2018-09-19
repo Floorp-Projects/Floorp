@@ -23,6 +23,7 @@
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/RefCountedShmem.h"
+#include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/Move.h"
 
 #include <stdint.h>
@@ -92,6 +93,14 @@ struct ParamTraits<mozilla::layers::FrameMetrics::ScrollOffsetUpdateType>
              mozilla::layers::FrameMetrics::ScrollOffsetUpdateType,
              mozilla::layers::FrameMetrics::ScrollOffsetUpdateType::eNone,
              mozilla::layers::FrameMetrics::sHighestScrollOffsetUpdateType>
+{};
+
+template<>
+struct ParamTraits<mozilla::layers::RepaintRequest::ScrollOffsetUpdateType>
+  : public ContiguousEnumSerializerInclusive<
+             mozilla::layers::RepaintRequest::ScrollOffsetUpdateType,
+             mozilla::layers::RepaintRequest::ScrollOffsetUpdateType::eNone,
+             mozilla::layers::RepaintRequest::sHighestScrollOffsetUpdateType>
 {};
 
 template <>
@@ -204,6 +213,55 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRootContent) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetDoSmoothScroll) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUseDisplayPortMargins) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsScrollInfoLayer));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::RepaintRequest>
+    : BitfieldHelper<mozilla::layers::RepaintRequest>
+{
+  typedef mozilla::layers::RepaintRequest paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mScrollId);
+    WriteParam(aMsg, aParam.mPresShellResolution);
+    WriteParam(aMsg, aParam.mCompositionBounds);
+    WriteParam(aMsg, aParam.mCumulativeResolution);
+    WriteParam(aMsg, aParam.mDevPixelsPerCSSPixel);
+    WriteParam(aMsg, aParam.mScrollOffset);
+    WriteParam(aMsg, aParam.mZoom);
+    WriteParam(aMsg, aParam.mScrollGeneration);
+    WriteParam(aMsg, aParam.mDisplayPortMargins);
+    WriteParam(aMsg, aParam.mPresShellId);
+    WriteParam(aMsg, aParam.mViewport);
+    WriteParam(aMsg, aParam.mExtraResolution);
+    WriteParam(aMsg, aParam.mPaintRequestTime);
+    WriteParam(aMsg, aParam.mScrollUpdateType);
+    WriteParam(aMsg, aParam.mIsRootContent);
+    WriteParam(aMsg, aParam.mUseDisplayPortMargins);
+    WriteParam(aMsg, aParam.mIsScrollInfoLayer);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mScrollId) &&
+            ReadParam(aMsg, aIter, &aResult->mPresShellResolution) &&
+            ReadParam(aMsg, aIter, &aResult->mCompositionBounds) &&
+            ReadParam(aMsg, aIter, &aResult->mCumulativeResolution) &&
+            ReadParam(aMsg, aIter, &aResult->mDevPixelsPerCSSPixel) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollOffset) &&
+            ReadParam(aMsg, aIter, &aResult->mZoom) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollGeneration) &&
+            ReadParam(aMsg, aIter, &aResult->mDisplayPortMargins) &&
+            ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
+            ReadParam(aMsg, aIter, &aResult->mViewport) &&
+            ReadParam(aMsg, aIter, &aResult->mExtraResolution) &&
+            ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRootContent) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUseDisplayPortMargins) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsScrollInfoLayer));
   }
