@@ -496,11 +496,13 @@ class IonCompareIC : public IonIC
 
     TypedOrValueRegister lhs_;
     TypedOrValueRegister rhs_;
-    ValueOperand output_;
+    Register output_;
 
-    public:
-
-    IonCompareIC(LiveRegisterSet liveRegs, TypedOrValueRegister lhs, TypedOrValueRegister rhs,  ValueOperand output)
+  public:
+    IonCompareIC(LiveRegisterSet liveRegs,
+                 TypedOrValueRegister lhs,
+                 TypedOrValueRegister rhs,
+                 Register output)
       : IonIC(CacheKind::Compare),
         liveRegs_(liveRegs),
         lhs_(lhs),
@@ -511,10 +513,14 @@ class IonCompareIC : public IonIC
     LiveRegisterSet liveRegs() const { return liveRegs_; }
     TypedOrValueRegister lhs() const { return lhs_; }
     TypedOrValueRegister rhs() const { return rhs_; }
-    ValueOperand output() const { return output_; }
+    Register output() const { return output_; }
 
-    static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonCompareIC* stub,
-                                    HandleValue lhs, HandleValue rhs, MutableHandleValue res);
+    static MOZ_MUST_USE bool update(JSContext* cx,
+                                    HandleScript outerScript,
+                                    IonCompareIC* stub,
+                                    HandleValue lhs,
+                                    HandleValue rhs,
+                                    bool* res);
 };
 
 class IonUnaryArithIC : public IonIC
