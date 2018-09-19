@@ -7,24 +7,43 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/PaymentResponse.h"
 #include "mozilla/dom/BasicCardPaymentBinding.h"
+#include "mozilla/dom/PaymentRequestUpdateEvent.h"
 #include "BasicCardPayment.h"
 #include "PaymentAddress.h"
 #include "PaymentRequestUtils.h"
+#include "mozilla/EventStateManager.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PaymentResponse, mOwner,
-                                      mShippingAddress, mPromise)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PaymentResponse)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(PaymentResponse)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(PaymentResponse)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PaymentResponse,
+                                               DOMEventTargetHelper)
+  // Don't need NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER because
+  // DOMEventTargetHelper does it for us.
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PaymentResponse,
+                                                  DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mShippingAddress)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimer)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PaymentResponse,
+                                                DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mShippingAddress)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTimer)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PaymentResponse)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(PaymentResponse, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(PaymentResponse, DOMEventTargetHelper)
 
 PaymentResponse::PaymentResponse(nsPIDOMWindowInner* aWindow,
                                  PaymentRequest* aRequest,
@@ -36,7 +55,7 @@ PaymentResponse::PaymentResponse(nsPIDOMWindowInner* aWindow,
                                  const nsAString& aPayerName,
                                  const nsAString& aPayerEmail,
                                  const nsAString& aPayerPhone)
-  : mOwner(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mCompleteCalled(false)
   , mRequest(aRequest)
   , mRequestId(aRequestId)
@@ -58,9 +77,7 @@ PaymentResponse::PaymentResponse(nsPIDOMWindowInner* aWindow,
                           aWindow->EventTargetFor(TaskCategory::Other));
 }
 
-PaymentResponse::~PaymentResponse()
-{
-}
+PaymentResponse::~PaymentResponse() = default;
 
 JSObject*
 PaymentResponse::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -81,7 +98,8 @@ PaymentResponse::GetMethodName(nsString& aRetVal) const
 }
 
 void
-PaymentResponse::GetDetails(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) const
+PaymentResponse::GetDetails(JSContext* aCx,
+                            JS::MutableHandle<JSObject*> aRetVal) const
 {
   RefPtr<BasicCardService> service = BasicCardService::GetService();
   MOZ_ASSERT(service);
@@ -89,7 +107,7 @@ PaymentResponse::GetDetails(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal
     DeserializeToJSObject(mDetails, aCx, aRetVal);
   } else {
     BasicCardResponse response;
-    nsresult rv = service->DecodeBasicCardData(mDetails, mOwner, response);
+    nsresult rv = service->DecodeBasicCardData(mDetails, GetOwner(), response);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -115,12 +133,14 @@ PaymentResponse::GetPayerName(nsString& aRetVal) const
   aRetVal = mPayerName;
 }
 
-void PaymentResponse::GetPayerEmail(nsString& aRetVal) const
+void
+PaymentResponse::GetPayerEmail(nsString& aRetVal) const
 {
   aRetVal = mPayerEmail;
 }
 
-void PaymentResponse::GetPayerPhone(nsString& aRetVal) const
+void
+PaymentResponse::GetPayerPhone(nsString& aRetVal) const
 {
   aRetVal = mPayerPhone;
 }
@@ -161,7 +181,12 @@ PaymentResponse::Complete(PaymentComplete result, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsIGlobalObject* global = mOwner->AsGlobal();
+  if (NS_WARN_IF(!GetOwner())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsIGlobalObject* global = GetOwner()->AsGlobal();
   ErrorResult errResult;
   RefPtr<Promise> promise = Promise::Create(global, errResult);
   if (errResult.Failed()) {
@@ -188,7 +213,7 @@ PaymentResponse::Retry(JSContext* aCx,
                        const PaymentValidationErrors& aErrors,
                        ErrorResult& aRv)
 {
-  nsIGlobalObject* global = mOwner->AsGlobal();
+  nsIGlobalObject* global = GetOwner()->AsGlobal();
   ErrorResult errResult;
   RefPtr<Promise> promise = Promise::Create(global, errResult);
   if (errResult.Failed()) {
@@ -201,7 +226,12 @@ PaymentResponse::Retry(JSContext* aCx,
     mTimer = nullptr;
   }
 
-  nsIDocument* doc = mOwner->GetExtantDoc();
+  if (NS_WARN_IF(!GetOwner())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsIDocument* doc = GetOwner()->GetExtantDoc();
   if (!doc || !doc->IsCurrentActiveDocument()) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     return promise.forget();
@@ -246,11 +276,15 @@ PaymentResponse::RespondRetry(const nsAString& aMethodName,
   mPayerEmail = aPayerEmail;
   mPayerPhone = aPayerPhone;
 
+  if (NS_WARN_IF(!GetOwner())) {
+    return;
+  }
+
   NS_NewTimerWithCallback(getter_AddRefs(mTimer),
                           this,
                           StaticPrefs::dom_payments_response_timeout(),
                           nsITimer::TYPE_ONE_SHOT,
-                          mOwner->EventTargetFor(TaskCategory::Other));
+                          GetOwner()->EventTargetFor(TaskCategory::Other));
   MOZ_ASSERT(mRetryPromise);
   mRetryPromise->MaybeResolve(JS::UndefinedHandleValue);
   mRetryPromise = nullptr;
@@ -265,7 +299,8 @@ PaymentResponse::RejectRetry(nsresult aRejectReason)
 }
 
 nsresult
-PaymentResponse::ValidatePaymentValidationErrors(const PaymentValidationErrors& aErrors)
+PaymentResponse::ValidatePaymentValidationErrors(
+  const PaymentValidationErrors& aErrors)
 {
   // Should not be empty errors
   // check PaymentValidationErrors.error
@@ -318,8 +353,7 @@ PaymentResponse::ValidatePaymentValidationErrors(const PaymentValidationErrors& 
       !addErrors.mRecipient.Value().IsEmpty()) {
     return NS_OK;
   }
-  if (addErrors.mRegion.WasPassed() &&
-      !addErrors.mRegion.Value().IsEmpty()) {
+  if (addErrors.mRegion.WasPassed() && !addErrors.mRegion.Value().IsEmpty()) {
     return NS_OK;
   }
   if (addErrors.mRegionCode.WasPassed() &&
@@ -334,7 +368,7 @@ PaymentResponse::ValidatePaymentValidationErrors(const PaymentValidationErrors& 
 }
 
 NS_IMETHODIMP
-PaymentResponse::Notify(nsITimer *timer)
+PaymentResponse::Notify(nsITimer* timer)
 {
   mTimer = nullptr;
   if (mCompleteCalled) {
@@ -349,6 +383,40 @@ PaymentResponse::Notify(nsITimer *timer)
   }
 
   return manager->CompletePayment(mRequest, PaymentComplete::Unknown, true);
+}
+
+nsresult
+PaymentResponse::UpdatePayerDetail(const nsAString& aPayerName,
+                                   const nsAString& aPayerEmail,
+                                   const nsAString& aPayerPhone)
+{
+  MOZ_ASSERT(mRequest->ReadyForUpdate());
+  PaymentOptions options;
+  mRequest->GetOptions(options);
+  if (options.mRequestPayerName) {
+    mPayerName = aPayerName;
+  }
+  if (options.mRequestPayerEmail) {
+    mPayerEmail = aPayerEmail;
+  }
+  if (options.mRequestPayerPhone) {
+    mPayerPhone = aPayerPhone;
+  }
+  return DispatchUpdateEvent(NS_LITERAL_STRING("payerdetailchange"));
+}
+
+nsresult
+PaymentResponse::DispatchUpdateEvent(const nsAString& aType)
+{
+  PaymentRequestUpdateEventInit init;
+  RefPtr<PaymentRequestUpdateEvent> event =
+    PaymentRequestUpdateEvent::Constructor(this, aType, init);
+  event->SetTrusted(true);
+  event->SetRequest(mRequest);
+
+  ErrorResult rv;
+  DispatchEvent(*event, rv);
+  return rv.StealNSResult();
 }
 
 } // namespace dom

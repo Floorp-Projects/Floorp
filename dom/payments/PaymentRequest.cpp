@@ -605,7 +605,6 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return nullptr;
   }
-
   return request.forget();
 }
 
@@ -965,6 +964,13 @@ PaymentRequest::SetUpdating(bool aUpdating)
   mUpdating = aUpdating;
 }
 
+already_AddRefed<PaymentResponse>
+PaymentRequest::GetResponse() const
+{
+  RefPtr<PaymentResponse> response = mResponse;
+  return response.forget();
+}
+
 nsresult
 PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
 {
@@ -1070,6 +1076,16 @@ Nullable<PaymentShippingType>
 PaymentRequest::GetShippingType() const
 {
   return mShippingType;
+}
+
+void PaymentRequest::GetOptions(PaymentOptions& aRetVal) const
+{
+  aRetVal = mOptions;
+}
+
+void PaymentRequest::SetOptions(const PaymentOptions& aOptions)
+{
+  mOptions = aOptions;
 }
 
 void
