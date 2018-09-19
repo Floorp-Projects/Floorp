@@ -82,71 +82,13 @@ TBPL_UPLOAD_ERRORS = [
 
 class MakeUploadOutputParser(OutputParser):
     tbpl_error_list = TBPL_UPLOAD_ERRORS
-    # let's create a switch case using name-spaces/dict
-    # rather than a long if/else with duplicate code
-    property_conditions = [
-        # key: property name, value: condition
-        ('symbolsUrl', "m.endswith('crashreporter-symbols.zip') or "
-                       "m.endswith('crashreporter-symbols-full.zip')"),
-        ('testsUrl', "m.endswith(('tests.tar.bz2', 'tests.zip', 'tests.tar.gz'))"),
-        ('robocopApkUrl', "m.endswith('apk') and 'robocop' in m"),
-        ('jsshellUrl', "'jsshell-' in m and m.endswith('.zip')"),
-        ('partialMarUrl', "m.endswith('.mar') and '.partial.' in m"),
-        ('completeMarUrl', "m.endswith('.mar')"),
-        ('codeCoverageUrl', "m.endswith('code-coverage-gcno.zip')"),
-    ]
 
-    def __init__(self, use_package_as_marfile=False, package_filename=None, **kwargs):
+    def __init__(self, **kwargs):
         super(MakeUploadOutputParser, self).__init__(**kwargs)
-        self.matches = {}
         self.tbpl_status = TBPL_SUCCESS
-        self.use_package_as_marfile = use_package_as_marfile
-        self.package_filename = package_filename
 
     def parse_single_line(self, line):
-        prop_assigned = False
-        pat = r'''^(https?://.*?\.(?:tar\.bz2|dmg|zip|apk|rpm|mar|tar\.gz))$'''
-        m = re.compile(pat).match(line)
-        if m:
-            m = m.group(1)
-            for prop, condition in self.property_conditions:
-                if eval(condition):
-                    self.matches[prop] = m
-                    prop_assigned = True
-                    break
-            if not prop_assigned:
-                # if we found a match but haven't identified the prop then this
-                # is the packageURL. Alternatively, if we already know the
-                # package filename, then use that explicitly so we don't pick up
-                # just any random file and assume it's the package.
-                if not self.package_filename or m.endswith(self.package_filename):
-                    self.matches['packageUrl'] = m
-
-                    # For android builds, the package is also used as the mar file.
-                    # Grab the first one, since that is the one in the
-                    # nightly/YYYY/MM directory
-                    if self.use_package_as_marfile:
-                        if 'tinderbox-builds' in m or 'nightly/latest-' in m:
-                            self.info("Skipping wrong packageUrl: %s" % m)
-                        else:
-                            if 'completeMarUrl' in self.matches:
-                                self.fatal("Found multiple package URLs. Please update buildbase.py")
-                            self.info("Using package as mar file: %s" % m)
-                            self.matches['completeMarUrl'] = m
-                            u, self.package_filename = os.path.split(m)
-
-        if self.use_package_as_marfile and self.package_filename:
-            # The checksum file is also dumped during 'make upload'. Look
-            # through here to get the hash and filesize of the android package
-            # for balrog submission.
-            pat = r'''^([^ ]*) sha512 ([0-9]*) %s$''' % self.package_filename
-            m = re.compile(pat).match(line)
-            if m:
-                self.matches['completeMarHash'] = m.group(1)
-                self.matches['completeMarSize'] = m.group(2)
-                self.info("Using package as mar file and found package hash=%s size=%s" % (m.group(1), m.group(2)))
-
-        # now let's check for retry errors which will give log levels:
+        # let's check for retry errors which will give log levels:
         # tbpl status as RETRY and mozharness status as WARNING
         for error_check in self.tbpl_error_list:
             if error_check['regex'].search(line):
@@ -843,9 +785,6 @@ or run without that action (ie: --no-{action})"
             self.info("Creating buildid through current time")
             buildid = generate_build_ID()
 
-        if c.get('is_automation') or os.environ.get("TASK_ID"):
-            self.set_property('buildid', buildid)
-
         self.buildid = buildid
         return self.buildid
 
@@ -1087,31 +1026,6 @@ or run without that action (ie: --no-{action})"
             )
         return revision.encode('ascii', 'replace') if revision else None
 
-    def _query_props_set_by_mach(self, console_output=True, error_level=FATAL):
-        mach_properties_path = os.path.join(
-            self.query_abs_dirs()['abs_obj_dir'], 'dist', 'mach_build_properties.json'
-        )
-        self.info("setting properties set by mach build. Looking in path: %s"
-                  % mach_properties_path)
-        if os.path.exists(mach_properties_path):
-            with self.opened(mach_properties_path, error_level=error_level) as (fh, err):
-                build_props = json.load(fh)
-                if err:
-                    self.log("%s exists but there was an error reading the "
-                             "properties. props: `%s` - error: "
-                             "`%s`" % (mach_properties_path,
-                                       build_props or 'None',
-                                       err or 'No error'),
-                             error_level)
-                if console_output:
-                    self.info("Properties set from 'mach build'")
-                    self.info(pprint.pformat(build_props))
-            for key, prop in build_props.iteritems():
-                if prop != 'UNKNOWN':
-                    self.set_property(key, prop)
-        else:
-            self.info("No mach_build_properties.json found - not importing properties.")
-
     def generate_build_props(self, console_output=True, halt_on_failure=False):
         """sets props found from mach build and, in addition, buildid,
         sourcestamp,  appVersion, and appName."""
@@ -1122,10 +1036,6 @@ or run without that action (ie: --no-{action})"
 
         if self.generated_build_props:
             return
-
-        # grab props set by mach if any
-        self._query_props_set_by_mach(console_output=console_output,
-                                      error_level=error_level)
 
         dirs = self.query_abs_dirs()
         print_conf_setting_path = os.path.join(dirs['abs_src_dir'],
@@ -1141,25 +1051,10 @@ or run without that action (ie: --no-{action})"
                                             dirs['abs_app_ini_path']),
                      level=error_level)
         self.info("Setting properties found in: %s" % dirs['abs_app_ini_path'])
-        base_cmd = [
-            sys.executable, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
-            print_conf_setting_path, dirs['abs_app_ini_path'], 'App'
-        ]
-        properties_needed = [
-            {'ini_name': 'SourceStamp', 'prop_name': 'sourcestamp'},
-            {'ini_name': 'Version', 'prop_name': 'appVersion'},
-            {'ini_name': 'Name', 'prop_name': 'appName'}
-        ]
         env = self.query_build_env()
         # dirs['abs_obj_dir'] can be different from env['MOZ_OBJDIR'] on
         # mac, and that confuses mach.
         del env['MOZ_OBJDIR']
-        for prop in properties_needed:
-            prop_val = self.get_output_from_command(
-                base_cmd + [prop['ini_name']], cwd=dirs['abs_obj_dir'],
-                halt_on_failure=halt_on_failure, env=env
-            )
-            self.set_property(prop['prop_name'], prop_val)
 
         if self.config.get('is_automation'):
             self.info("Verifying buildid from application.ini matches buildid "
@@ -1315,16 +1210,12 @@ or run without that action (ie: --no-{action})"
 
         parser = MakeUploadOutputParser(config=self.config,
                                         log_obj=self.log_obj,
-                                        use_package_as_marfile=True,
-                                        package_filename=package_filename,
                                         )
         upload_cmd = ['make', 'upload', 'AB_CD=multi']
         self.run_command(upload_cmd,
                          env=self.query_mach_build_env(multiLocale=False),
                          cwd=objdir, halt_on_failure=True,
                          output_parser=parser)
-        for prop in parser.matches:
-            self.set_property(prop, parser.matches[prop])
         upload_files_cmd = [
             'make',
             'echo-variable-UPLOAD_FILES',
