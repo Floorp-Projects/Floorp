@@ -140,6 +140,13 @@ TabClient.prototype = {
   attachWorker: function(workerTargetActor) {
     return this.client.attachWorker(workerTargetActor);
   },
+
+  logInPage: DebuggerClient.requester({
+    type: "logInPage",
+    text: arg(0),
+    category: arg(1),
+    flags: arg(2),
+  }),
 };
 
 eventSource(TabClient.prototype);
