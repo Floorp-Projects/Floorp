@@ -31,6 +31,7 @@
 #include "jsfriendapi.h"
 #include "js/LocaleSensitive.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Atomics.h"
@@ -2272,7 +2273,7 @@ RuntimeService::PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWin
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(StaticPrefs::network_cookie_cookieBehavior() ==
                nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-             StaticPrefs::browser_contentblocking_enabled());
+             AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions());
 
   nsTArray<WorkerPrivate*> workers;
   GetWorkersForWindow(aWindow, workers);
@@ -2884,7 +2885,7 @@ PropagateFirstPartyStorageAccessGrantedToWorkers(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(StaticPrefs::network_cookie_cookieBehavior() ==
                nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-             StaticPrefs::browser_contentblocking_enabled());
+             AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions());
 
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
