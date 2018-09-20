@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNativeThemeGTK.h"
+#include "HeadlessThemeGTK.h"
 #include "nsStyleConsts.h"
 #include "gtkdrawing.h"
 #include "ScreenHelperGTK.h"
@@ -25,6 +26,7 @@
 #include "nsAttrValueInlines.h"
 
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Services.h"
 
@@ -64,6 +66,9 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeGTK, nsNativeTheme, nsITheme,
                                                              nsIObserver)
 
 static int gLastGdkError;
+
+// from nsWindow.cpp
+extern bool gDisableNativeTheme;
 
 // Return scale factor of the monitor where the window is located
 // by the most part or layout.css.devPixelsPerPx pref if set to > 0.
@@ -2142,4 +2147,25 @@ nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetTy
     default:
       return false;
   }
+}
+
+already_AddRefed<nsITheme>
+do_GetNativeTheme()
+{
+  if (gDisableNativeTheme) {
+    return nullptr;
+  }
+
+  static nsCOMPtr<nsITheme> inst;
+
+  if (!inst) {
+    if (gfxPlatform::IsHeadless()) {
+      inst = new HeadlessThemeGTK();
+    } else {
+      inst = new nsNativeThemeGTK();
+    }
+    ClearOnShutdown(&inst);
+  }
+
+  return do_AddRef(inst);
 }
