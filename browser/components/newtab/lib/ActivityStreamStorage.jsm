@@ -30,7 +30,7 @@ this.ActivityStreamStorage = class ActivityStreamStorage {
       return {
         get: this._get.bind(this, storeName),
         getAll: this._getAll.bind(this, storeName),
-        set: this._set.bind(this, storeName),
+        set: this._set.bind(this, storeName)
       };
     }
 

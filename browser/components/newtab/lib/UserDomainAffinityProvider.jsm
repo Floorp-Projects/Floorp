@@ -13,7 +13,7 @@ const DEFAULT_TIME_SEGMENTS = [
   {"id": "day", "startTime": 86400, "endTime": 3600, "weightPosition": 0.75},
   {"id": "week", "startTime": 604800, "endTime": 86400, "weightPosition": 0.5},
   {"id": "weekPlus", "startTime": 0, "endTime": 604800, "weightPosition": 0.25},
-  {"id": "alltime", "startTime": 0, "endTime": 0, "weightPosition": 0.25},
+  {"id": "alltime", "startTime": 0, "endTime": 0, "weightPosition": 0.25}
 ];
 
 const DEFAULT_PARAMETER_SETS = {
@@ -24,8 +24,8 @@ const DEFAULT_PARAMETER_SETS = {
     "perfectFrequencyVisits": 10,
     "perfectCombinedDomainScore": 2,
     "multiDomainBoost": 0.1,
-    "itemScoreFactor": 0,
-  },
+    "itemScoreFactor": 0
+  }
 };
 
 const DEFAULT_MAX_HISTORY_QUERY_RESULTS = 1000;
@@ -322,7 +322,7 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
       parameterSets: this.parameterSets,
       maxHistoryQueryResults: this.maxHistoryQueryResults,
       version: this.version,
-      scores: this.scores,
+      scores: this.scores
     };
   }
 };

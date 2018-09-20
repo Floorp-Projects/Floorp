@@ -14,7 +14,7 @@ export class TopSiteForm extends React.PureComponent {
       url: site ? site.url : "",
       validationError: false,
       customScreenshotUrl: site ? site.customScreenshotURL : "",
-      showCustomScreenshotForm: site ? site.customScreenshotURL : false,
+      showCustomScreenshotForm: site ? site.customScreenshotURL : false
     };
     this.onClearScreenshotInput = this.onClearScreenshotInput.bind(this);
     this.onLabelChange = this.onLabelChange.bind(this);
@@ -35,14 +35,14 @@ export class TopSiteForm extends React.PureComponent {
   onUrlChange(event) {
     this.setState({
       url: event.target.value,
-      validationError: false,
+      validationError: false
     });
   }
 
   onClearUrlClick() {
     this.setState({
       url: "",
-      validationError: false,
+      validationError: false
     });
   }
 
@@ -53,7 +53,7 @@ export class TopSiteForm extends React.PureComponent {
   _updateCustomScreenshotInput(customScreenshotUrl) {
     this.setState({
       customScreenshotUrl,
-      validationError: false,
+      validationError: false
     });
     this.props.dispatch({type: at.PREVIEW_REQUEST_CANCEL});
   }
@@ -89,12 +89,12 @@ export class TopSiteForm extends React.PureComponent {
       }
       this.props.dispatch(ac.AlsoToMain({
         type: at.TOP_SITES_PIN,
-        data: {site, index},
+        data: {site, index}
       }));
       this.props.dispatch(ac.UserEvent({
         source: TOP_SITES_SOURCE,
         event: "TOP_SITES_EDIT",
-        action_position: index,
+        action_position: index
       }));
 
       this.props.onClose();
@@ -106,11 +106,11 @@ export class TopSiteForm extends React.PureComponent {
     if (this.validateForm()) {
       this.props.dispatch(ac.AlsoToMain({
         type: at.PREVIEW_REQUEST,
-        data: {url: this.cleanUrl(this.state.customScreenshotUrl)},
+        data: {url: this.cleanUrl(this.state.customScreenshotUrl)}
       }));
       this.props.dispatch(ac.UserEvent({
         source: TOP_SITES_SOURCE,
-        event: "PREVIEW_REQUEST",
+        event: "PREVIEW_REQUEST"
       }));
     }
   }
@@ -247,5 +247,5 @@ export class TopSiteForm extends React.PureComponent {
 
 TopSiteForm.defaultProps = {
   site: null,
-  index: -1,
+  index: -1
 };

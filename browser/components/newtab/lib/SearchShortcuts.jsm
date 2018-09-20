@@ -11,7 +11,7 @@ const SEARCH_SHORTCUTS = [
   {keyword: "@amazon", shortURL: "amazon", url: "https://amazon.com"},
   {keyword: "@\u767E\u5EA6", shortURL: "baidu", url: "https://baidu.com"},
   {keyword: "@google", shortURL: "google", url: "https://google.com"},
-  {keyword: "@\u044F\u043D\u0434\u0435\u043A\u0441", shortURL: "yandex", url: "https://yandex.com"},
+  {keyword: "@\u044F\u043D\u0434\u0435\u043A\u0441", shortURL: "yandex", url: "https://yandex.com"}
 ];
 this.SEARCH_SHORTCUTS = SEARCH_SHORTCUTS;
 
@@ -22,7 +22,7 @@ this.CUSTOM_SEARCH_SHORTCUTS = [
   {keyword: "@duckduckgo", shortURL: "duckduckgo", url: "https://duckduckgo.com"},
   {keyword: "@ebay", shortURL: "ebay", url: "https://ebay.com"},
   {keyword: "@twitter", shortURL: "twitter", url: "https://twitter.com"},
-  {keyword: "@wikipedia", shortURL: "wikipedia", url: "https://wikipedia.org"},
+  {keyword: "@wikipedia", shortURL: "wikipedia", url: "https://wikipedia.org"}
 ];
 
 // Note: you must add the activity stream branch to the beginning of this if using outside activity stream

@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
@@ -2967,5 +2969,5 @@ gAdultSet = new Set([
   "zwQ/3MzTJ9rfBmrANIh14w==",
   "zwY6tCjjya/bgrYaCncaag==",
   "zxsSqovedB3HT99jVblCnQ==",
-  "zyA9f5J7mw5InjhcfeumAQ==",
+  "zyA9f5J7mw5InjhcfeumAQ=="
 ]);

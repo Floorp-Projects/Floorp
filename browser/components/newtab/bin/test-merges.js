@@ -79,7 +79,7 @@ function findNewlyMergedPRs() {
     "base:master",
 
     // if it's already been pushed to pine, don't do it again
-    `-label:${ALREADY_PUSHED_LABEL}`,
+    `-label:${ALREADY_PUSHED_LABEL}`
   ];
 
   console.log(`Searching ${AS_REPO} for newly merged PRs`);
@@ -97,7 +97,7 @@ function getPRMergeCommitId(prNumber) {
   return github.issues.getEvents({
     owner: AS_REPO_OWNER,
     repo: AS_REPO_NAME,
-    issue_number: prNumber,
+    issue_number: prNumber
   }).then(({data}) => {
     if (data.incomplete_results) {
       // XXX should handle this case theoretically, but since we'll be running
@@ -190,7 +190,7 @@ function commitToHg([commitId, commitMsg]) {
         "--addremove",
         "-m",
         `${commitMsg}\n\nExport of ${commitId} from ${AS_REPO_OWNER}/${AS_REPO_NAME}`,
-        ".",
+        "."
       ],
       {cwd: TESTING_LOCAL_MC, env: process.env, timeout: 5 * 60 * 1000},
       (code, stdout, stderr) => {
@@ -257,7 +257,7 @@ function annotateGithubPR(prNumber, annotation) {
     owner: AS_REPO_OWNER,
     repo: AS_REPO_NAME,
     number: prNumber,
-    body: annotation,
+    body: annotation
   }).catch(reason => console.log(reason));
 }
 
@@ -271,7 +271,7 @@ function labelGithubPR(prNumber) {
     owner: AS_REPO_OWNER,
     repo: AS_REPO_NAME,
     number: prNumber,
-    labels: [ALREADY_PUSHED_LABEL],
+    labels: [ALREADY_PUSHED_LABEL]
   }).catch(reason => console.log(reason));
 }
 

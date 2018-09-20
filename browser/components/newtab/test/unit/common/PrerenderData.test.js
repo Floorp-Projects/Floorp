@@ -45,7 +45,7 @@ describe("_PrerenderData", () => {
       FAKE_PREFS = {foo: true, bar: false};
       const instance = new _PrerenderData({
         initialPrefs: FAKE_PREFS,
-        validation: ["foo", "bar"],
+        validation: ["foo", "bar"]
       });
       assert.isTrue(instance.arePrefsValid(getPrefs));
     });
@@ -53,7 +53,7 @@ describe("_PrerenderData", () => {
       FAKE_PREFS = {foo: true, bar: false};
       const instance = new _PrerenderData({
         initialPrefs: {foo: true, bar: true},
-        validation: ["foo"],
+        validation: ["foo"]
       });
 
       assert.isTrue(instance.arePrefsValid(getPrefs));
@@ -62,7 +62,7 @@ describe("_PrerenderData", () => {
       FAKE_PREFS = {foo: false, floo: true, bar: false, blar: true};
       const instance = new _PrerenderData({
         initialPrefs: {foo: true, floo: true, bar: true, blar: true},
-        validation: [{oneOf: ["foo", "floo"]}, {oneOf: ["bar", "blar"]}],
+        validation: [{oneOf: ["foo", "floo"]}, {oneOf: ["bar", "blar"]}]
       });
 
       assert.isTrue(instance.arePrefsValid(getPrefs));
@@ -71,7 +71,7 @@ describe("_PrerenderData", () => {
       FAKE_PREFS = {foo: true, bar: false};
       const instance = new _PrerenderData({
         initialPrefs: {foo: true, bar: true},
-        validation: ["foo", "bar"],
+        validation: ["foo", "bar"]
       });
 
       assert.isFalse(instance.arePrefsValid(getPrefs));
@@ -80,7 +80,7 @@ describe("_PrerenderData", () => {
       FAKE_PREFS = {foo: true, bar: false, baz: false};
       const instance = new _PrerenderData({
         initialPrefs: {foo: true, bar: true, baz: true},
-        validation: ["foo", {oneOf: ["bar", "baz"]}],
+        validation: ["foo", {oneOf: ["bar", "baz"]}]
       });
 
       assert.isFalse(instance.arePrefsValid(getPrefs));
@@ -89,7 +89,7 @@ describe("_PrerenderData", () => {
       FAKE_PREFS = {foo: true, bar: false};
       const instance = new _PrerenderData({
         initialPrefs: {foo: true, bar: true},
-        validation: ["foo", {indexedDB: ["collapsed"]}],
+        validation: ["foo", {indexedDB: ["collapsed"]}]
       });
 
       assert.isFalse(instance.arePrefsValid(getPrefs, [{collapsed: true}]));
