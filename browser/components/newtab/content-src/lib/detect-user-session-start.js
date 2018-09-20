@@ -44,7 +44,7 @@ export class DetectUserSessionStart {
 
       this._store.dispatch(ac.AlsoToMain({
         type: at.SAVE_SESSION_PERF_DATA,
-        data: {visibility_event_rcvd_ts}
+        data: {visibility_event_rcvd_ts},
       }));
     } catch (ex) {
       // If this failed, it's likely because the `privacy.resistFingerprinting`

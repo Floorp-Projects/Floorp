@@ -1,5 +1,14 @@
 import {GlobalOverrider} from "test/unit/utils";
 import {MessageLoaderUtils} from "lib/ASRouter.jsm";
+const {STARTPAGE_VERSION} = MessageLoaderUtils;
+
+const FAKE_STORAGE = {
+  set() {
+    return Promise.resolve();
+  },
+  get() { return Promise.resolve(); },
+};
+const FAKE_RESPONSE_HEADERS = {get() {}};
 
 describe("MessageLoaderUtils", () => {
   let fetchStub;
@@ -19,7 +28,7 @@ describe("MessageLoaderUtils", () => {
       const sourceMessage = {id: "foo"};
       const provider = {id: "provider123", type: "local", messages: [sourceMessage]};
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
 
       assert.isArray(result.messages);
       // Does the message have the right properties?
@@ -29,10 +38,10 @@ describe("MessageLoaderUtils", () => {
     });
     it("should return messages for remote provider", async () => {
       const sourceMessage = {id: "foo"};
-      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve({messages: [sourceMessage]})});
+      fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve({messages: [sourceMessage]}), headers: FAKE_RESPONSE_HEADERS});
       const provider = {id: "provider123", type: "remote", url: "https://foo.com"};
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
       assert.isArray(result.messages);
       // Does the message have the right properties?
       const [message] = result.messages;
@@ -42,7 +51,7 @@ describe("MessageLoaderUtils", () => {
     });
     describe("remote provider HTTP codes", () => {
       const testMessage = {id: "foo"};
-      const provider = {id: "provider123", type: "remote", url: "https://foo.com"};
+      const provider = {id: "provider123", type: "remote", url: "https://foo.com", updateCycleInMs: 300};
       const respJson = {messages: [testMessage]};
 
       function assertReturnsCorrectMessages(actual) {
@@ -55,43 +64,121 @@ describe("MessageLoaderUtils", () => {
       }
 
       it("should return messages for 200 response", async () => {
-        fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(respJson)});
-        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider));
+        fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(respJson), headers: FAKE_RESPONSE_HEADERS});
+        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE));
       });
 
       it("should return messages for a 302 response with json", async () => {
-        fetchStub.resolves({ok: false, status: 302, json: () => Promise.resolve(respJson)});
-        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider));
+        fetchStub.resolves({ok: false, status: 302, json: () => Promise.resolve(respJson), headers: FAKE_RESPONSE_HEADERS});
+        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE));
       });
 
       it("should return an empty array for a 204 response", async () => {
-        fetchStub.resolves({ok: true, status: 204, json: () => ""});
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+        fetchStub.resolves({ok: true, status: 204, json: () => "", headers: FAKE_RESPONSE_HEADERS});
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
         assert.deepEqual(result.messages, []);
       });
 
       it("should return an empty array for a 500 response", async () => {
-        fetchStub.resolves({ok: false, status: 500, json: () => ""});
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+        fetchStub.resolves({ok: false, status: 500, json: () => "", headers: FAKE_RESPONSE_HEADERS});
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
         assert.deepEqual(result.messages, []);
       });
 
+      it("should return cached messages for a 304 response", async () => {
+        clock.tick(302);
+        const messages = [{id: "message-1"}, {id: "message-2"}];
+        const fakeStorage = {
+          set() {
+            return Promise.resolve();
+          },
+          get() {
+            return Promise.resolve({
+              [provider.id]: {
+                version: STARTPAGE_VERSION,
+                url: provider.url,
+                messages,
+                etag: "etag0987654321",
+                lastFetched: 1,
+              },
+            });
+          },
+        };
+        fetchStub.resolves({ok: true, status: 304, json: () => "", headers: FAKE_RESPONSE_HEADERS});
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, fakeStorage);
+        assert.equal(result.messages.length, messages.length);
+        messages.forEach(message => {
+          assert.ok(result.messages.find(m => m.id === message.id));
+        });
+      });
+
       it("should return an empty array if json doesn't parse properly", async () => {
-        fetchStub.resolves({ok: false, status: 200, json: () => ""});
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+        fetchStub.resolves({ok: false, status: 200, json: () => "", headers: FAKE_RESPONSE_HEADERS});
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
         assert.deepEqual(result.messages, []);
       });
 
       it("should return an empty array if the request rejects", async () => {
         fetchStub.rejects(new Error("something went wrong"));
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
         assert.deepEqual(result.messages, []);
+      });
+    });
+    describe("remote provider caching", () => {
+      const provider = {id: "provider123", type: "remote", url: "https://foo.com", updateCycleInMs: 300};
+
+      it("should return cached results if they aren't expired", async () => {
+        clock.tick(1);
+        const messages = [{id: "message-1"}, {id: "message-2"}];
+        const fakeStorage = {
+          set() { return Promise.resolve(); },
+          get() {
+            return Promise.resolve({
+              [provider.id]: {
+                version: STARTPAGE_VERSION,
+                url: provider.url,
+                messages,
+                etag: "etag0987654321",
+                lastFetched: Date.now(),
+              },
+            });
+          },
+        };
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, fakeStorage);
+        assert.equal(result.messages.length, messages.length);
+        messages.forEach(message => {
+          assert.ok(result.messages.find(m => m.id === message.id));
+        });
+      });
+
+      it("should return fetch results if the cache messages are expired", async () => {
+        clock.tick(302);
+        const testMessage = {id: "foo"};
+        const respJson = {messages: [testMessage]};
+        const fakeStorage = {
+          set() { return Promise.resolve(); },
+          get() {
+            return Promise.resolve({
+              [provider.id]: {
+                version: STARTPAGE_VERSION,
+                url: provider.url,
+                messages: [{id: "message-1"}, {id: "message-2"}],
+                etag: "etag0987654321",
+                lastFetched: 1,
+              },
+            });
+          },
+        };
+        fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(respJson), headers: FAKE_RESPONSE_HEADERS});
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, fakeStorage);
+        assert.equal(result.messages.length, 1);
+        assert.equal(result.messages[0].id, testMessage.id);
       });
     });
     it("should return an empty array for a remote provider with a blank URL without attempting a request", async () => {
       const provider = {id: "provider123", type: "remote", url: ""};
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
 
       assert.notCalled(fetchStub);
       assert.deepEqual(result.messages, []);
@@ -101,7 +188,7 @@ describe("MessageLoaderUtils", () => {
       const provider = {
         id: "provider123",
         type: "remote",
-        url: "foo.com"
+        url: "foo.com",
       };
 
       fetchStub.resolves({
@@ -110,10 +197,11 @@ describe("MessageLoaderUtils", () => {
         json: () => new Promise(resolve => {
           clock.tick(42);
           resolve({messages: [sourceMessage]});
-        })
+        }),
+        headers: FAKE_RESPONSE_HEADERS,
       });
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
 
       assert.propertyVal(result, "lastUpdated", 42);
     });
@@ -149,7 +237,7 @@ describe("MessageLoaderUtils", () => {
       installAddonStub = sandbox.stub();
       globals.set("AddonManager", {
         getInstallForURL: getInstallStub,
-        installAddonFromWebpage: installAddonStub
+        installAddonFromWebpage: installAddonStub,
       });
     });
     afterEach(() => {
@@ -172,6 +260,25 @@ describe("MessageLoaderUtils", () => {
 
       assert.notCalled(getInstallStub);
       assert.notCalled(installAddonStub);
+    });
+  });
+
+  describe("#cleanupCache", () => {
+    it("should remove data for providers no longer active", async () => {
+      const fakeStorage = {
+        get: sinon.stub().returns(Promise.resolve({
+          "id-1": {},
+          "id-2": {},
+          "id-3": {},
+        })),
+        set: sinon.stub().returns(Promise.resolve()),
+      };
+      const fakeProviders = [{id: "id-1", type: "remote"}, {id: "id-3", type: "remote"}];
+
+      await MessageLoaderUtils.cleanupCache(fakeProviders, fakeStorage);
+
+      assert.calledOnce(fakeStorage.set);
+      assert.calledWith(fakeStorage.set, MessageLoaderUtils.REMOTE_LOADER_CACHE_KEY, {"id-1": {}, "id-3": {}});
     });
   });
 });
