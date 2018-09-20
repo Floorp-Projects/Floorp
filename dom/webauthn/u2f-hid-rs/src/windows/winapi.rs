@@ -14,47 +14,53 @@ use util::io_err;
 
 extern crate libc;
 extern crate winapi;
-use self::winapi::*;
+
+use platform::winapi::winapi::shared::{guiddef, minwindef, ntdef, windef};
+use platform::winapi::winapi::shared::{hidclass, hidpi, hidusage};
+use platform::winapi::winapi::um::{handleapi, setupapi};
 
 #[link(name = "setupapi")]
 extern "stdcall" {
     fn SetupDiGetClassDevsW(
-        ClassGuid: *const GUID,
-        Enumerator: PCSTR,
-        hwndParent: HWND,
-        flags: DWORD,
-    ) -> HDEVINFO;
+        ClassGuid: *const guiddef::GUID,
+        Enumerator: ntdef::PCSTR,
+        hwndParent: windef::HWND,
+        flags: minwindef::DWORD,
+    ) -> setupapi::HDEVINFO;
 
-    fn SetupDiDestroyDeviceInfoList(DeviceInfoSet: HDEVINFO) -> BOOL;
+    fn SetupDiDestroyDeviceInfoList(DeviceInfoSet: setupapi::HDEVINFO) -> minwindef::BOOL;
 
     fn SetupDiEnumDeviceInterfaces(
-        DeviceInfoSet: HDEVINFO,
-        DeviceInfoData: PSP_DEVINFO_DATA,
-        InterfaceClassGuid: *const GUID,
-        MemberIndex: DWORD,
-        DeviceInterfaceData: PSP_DEVICE_INTERFACE_DATA,
-    ) -> BOOL;
+        DeviceInfoSet: setupapi::HDEVINFO,
+        DeviceInfoData: setupapi::PSP_DEVINFO_DATA,
+        InterfaceClassGuid: *const guiddef::GUID,
+        MemberIndex: minwindef::DWORD,
+        DeviceInterfaceData: setupapi::PSP_DEVICE_INTERFACE_DATA,
+    ) -> minwindef::BOOL;
 
     fn SetupDiGetDeviceInterfaceDetailW(
-        DeviceInfoSet: HDEVINFO,
-        DeviceInterfaceData: PSP_DEVICE_INTERFACE_DATA,
-        DeviceInterfaceDetailData: PSP_DEVICE_INTERFACE_DETAIL_DATA_W,
-        DeviceInterfaceDetailDataSize: DWORD,
-        RequiredSize: PDWORD,
-        DeviceInfoData: PSP_DEVINFO_DATA,
-    ) -> BOOL;
+        DeviceInfoSet: setupapi::HDEVINFO,
+        DeviceInterfaceData: setupapi::PSP_DEVICE_INTERFACE_DATA,
+        DeviceInterfaceDetailData: setupapi::PSP_DEVICE_INTERFACE_DETAIL_DATA_W,
+        DeviceInterfaceDetailDataSize: minwindef::DWORD,
+        RequiredSize: minwindef::PDWORD,
+        DeviceInfoData: setupapi::PSP_DEVINFO_DATA,
+    ) -> minwindef::BOOL;
 }
 
 #[link(name = "hid")]
 extern "stdcall" {
     fn HidD_GetPreparsedData(
-        HidDeviceObject: HANDLE,
-        PreparsedData: *mut PHIDP_PREPARSED_DATA,
-    ) -> BOOLEAN;
+        HidDeviceObject: ntdef::HANDLE,
+        PreparsedData: *mut hidpi::PHIDP_PREPARSED_DATA,
+    ) -> ntdef::BOOLEAN;
 
-    fn HidD_FreePreparsedData(PreparsedData: PHIDP_PREPARSED_DATA) -> BOOLEAN;
+    fn HidD_FreePreparsedData(PreparsedData: hidpi::PHIDP_PREPARSED_DATA) -> ntdef::BOOLEAN;
 
-    fn HidP_GetCaps(PreparsedData: PHIDP_PREPARSED_DATA, Capabilities: PHIDP_CAPS) -> NTSTATUS;
+    fn HidP_GetCaps(
+        PreparsedData: hidpi::PHIDP_PREPARSED_DATA,
+        Capabilities: hidpi::PHIDP_CAPS,
+    ) -> ntdef::NTSTATUS;
 }
 
 macro_rules! offset_of {
@@ -70,28 +76,28 @@ fn from_wide_ptr(ptr: *const u16, len: usize) -> String {
 }
 
 pub struct DeviceInfoSet {
-    set: HDEVINFO,
+    set: setupapi::HDEVINFO,
 }
 
 impl DeviceInfoSet {
     pub fn new() -> io::Result<Self> {
-        let flags = DIGCF_PRESENT | DIGCF_DEVICEINTERFACE;
+        let flags = setupapi::DIGCF_PRESENT | setupapi::DIGCF_DEVICEINTERFACE;
         let set = unsafe {
             SetupDiGetClassDevsW(
-                &GUID_DEVINTERFACE_HID,
+                &hidclass::GUID_DEVINTERFACE_HID,
                 ptr::null_mut(),
                 ptr::null_mut(),
                 flags,
             )
         };
-        if set == INVALID_HANDLE_VALUE {
+        if set == handleapi::INVALID_HANDLE_VALUE {
             return Err(io_err("SetupDiGetClassDevsW failed!"));
         }
 
         Ok(Self { set })
     }
 
-    pub fn get(&self) -> HDEVINFO {
+    pub fn get(&self) -> setupapi::HDEVINFO {
         self.set
     }
 
@@ -108,7 +114,7 @@ impl Drop for DeviceInfoSet {
 
 pub struct DeviceInfoSetIter<'a> {
     set: &'a DeviceInfoSet,
-    index: DWORD,
+    index: minwindef::DWORD,
 }
 
 impl<'a> DeviceInfoSetIter<'a> {
@@ -121,14 +127,16 @@ impl<'a> Iterator for DeviceInfoSetIter<'a> {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut device_interface_data = unsafe { mem::uninitialized::<SP_DEVICE_INTERFACE_DATA>() };
-        device_interface_data.cbSize = mem::size_of::<SP_DEVICE_INTERFACE_DATA>() as UINT;
+        let mut device_interface_data =
+            unsafe { mem::uninitialized::<setupapi::SP_DEVICE_INTERFACE_DATA>() };
+        device_interface_data.cbSize =
+            mem::size_of::<setupapi::SP_DEVICE_INTERFACE_DATA>() as minwindef::UINT;
 
         let rv = unsafe {
             SetupDiEnumDeviceInterfaces(
                 self.set.get(),
                 ptr::null_mut(),
-                &GUID_DEVINTERFACE_HID,
+                &hidclass::GUID_DEVINTERFACE_HID,
                 self.index,
                 &mut device_interface_data,
             )
@@ -179,13 +187,13 @@ impl<'a> Iterator for DeviceInfoSetIter<'a> {
 }
 
 struct DeviceInterfaceDetailData {
-    data: PSP_DEVICE_INTERFACE_DETAIL_DATA_W,
+    data: setupapi::PSP_DEVICE_INTERFACE_DETAIL_DATA_W,
     path_len: usize,
 }
 
 impl DeviceInterfaceDetailData {
     fn new(size: usize) -> Option<Self> {
-        let mut cb_size = mem::size_of::<SP_DEVICE_INTERFACE_DETAIL_DATA_W>();
+        let mut cb_size = mem::size_of::<setupapi::SP_DEVICE_INTERFACE_DETAIL_DATA_W>();
         if cfg!(target_pointer_width = "32") {
             cb_size = 4 + 2; // 4-byte uint + default TCHAR size. size_of is inaccurate.
         }
@@ -195,16 +203,16 @@ impl DeviceInterfaceDetailData {
             return None;
         }
 
-        let data = unsafe { libc::malloc(size) as PSP_DEVICE_INTERFACE_DETAIL_DATA_W };
+        let data = unsafe { libc::malloc(size) as setupapi::PSP_DEVICE_INTERFACE_DETAIL_DATA_W };
         if data.is_null() {
             return None;
         }
 
         // Set total size of the structure.
-        unsafe { (*data).cbSize = cb_size as UINT };
+        unsafe { (*data).cbSize = cb_size as minwindef::UINT };
 
         // Compute offset of `SP_DEVICE_INTERFACE_DETAIL_DATA_W.DevicePath`.
-        let offset = offset_of!(SP_DEVICE_INTERFACE_DETAIL_DATA_W, DevicePath);
+        let offset = offset_of!(setupapi::SP_DEVICE_INTERFACE_DETAIL_DATA_W, DevicePath);
 
         Some(Self {
             data,
@@ -212,7 +220,7 @@ impl DeviceInterfaceDetailData {
         })
     }
 
-    fn get(&self) -> PSP_DEVICE_INTERFACE_DETAIL_DATA_W {
+    fn get(&self) -> setupapi::PSP_DEVICE_INTERFACE_DETAIL_DATA_W {
         self.data
     }
 
@@ -228,24 +236,24 @@ impl Drop for DeviceInterfaceDetailData {
 }
 
 pub struct DeviceCapabilities {
-    caps: HIDP_CAPS,
+    caps: hidpi::HIDP_CAPS,
 }
 
 impl DeviceCapabilities {
-    pub fn new(handle: HANDLE) -> io::Result<Self> {
+    pub fn new(handle: ntdef::HANDLE) -> io::Result<Self> {
         let mut preparsed_data = ptr::null_mut();
         let rv = unsafe { HidD_GetPreparsedData(handle, &mut preparsed_data) };
         if rv == 0 || preparsed_data.is_null() {
             return Err(io_err("HidD_GetPreparsedData failed!"));
         }
 
-        let mut caps: HIDP_CAPS = unsafe { mem::uninitialized() };
+        let mut caps: hidpi::HIDP_CAPS = unsafe { mem::uninitialized() };
 
         unsafe {
             let rv = HidP_GetCaps(preparsed_data, &mut caps);
             HidD_FreePreparsedData(preparsed_data);
 
-            if rv != HIDP_STATUS_SUCCESS {
+            if rv != hidpi::HIDP_STATUS_SUCCESS {
                 return Err(io_err("HidP_GetCaps failed!"));
             }
         }
@@ -253,11 +261,11 @@ impl DeviceCapabilities {
         Ok(Self { caps })
     }
 
-    pub fn usage(&self) -> USAGE {
+    pub fn usage(&self) -> hidusage::USAGE {
         self.caps.Usage
     }
 
-    pub fn usage_page(&self) -> USAGE {
+    pub fn usage_page(&self) -> hidusage::USAGE {
         self.caps.UsagePage
     }
 }

@@ -6,7 +6,7 @@
 
 use std::mem;
 
-use consts::{FIDO_USAGE_U2FHID, FIDO_USAGE_PAGE};
+use consts::{FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID};
 
 // The 4 MSBs (the tag) are set when it's a long item.
 const HID_MASK_LONG_ITEM_TAG: u8 = 0b11110000;

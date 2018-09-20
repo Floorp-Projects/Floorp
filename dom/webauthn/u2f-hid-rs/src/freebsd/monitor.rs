@@ -24,7 +24,8 @@ impl Event {
                 ref dev,
                 parent: _,
                 location: _,
-            } if dev.starts_with("uhid") =>
+            }
+                if dev.starts_with("uhid") =>
             {
                 Some(Event::Add(("/dev/".to_owned() + dev).into()))
             }
@@ -32,7 +33,8 @@ impl Event {
                 ref dev,
                 parent: _,
                 location: _,
-            } if dev.starts_with("uhid") =>
+            }
+                if dev.starts_with("uhid") =>
             {
                 Some(Event::Remove(("/dev/".to_owned() + dev).into()))
             }
