@@ -56,8 +56,8 @@ let REQUEST_1 = {
     shippingAddressErrors: {},
     shippingOptions: [
       {
-        id: "123",
-        label: "Fast",
+        id: "std",
+        label: "Standard (3-5 business days)",
         amount: {
           currency: "USD",
           value: 10,
@@ -65,11 +65,12 @@ let REQUEST_1 = {
         selected: false,
       },
       {
-        id: "456",
-        label: "Faster (default)",
+        id: "super-slow",
+        // Long to test truncation
+        label: "Ssssssssuuuuuuuuupppppeeeeeeerrrrr sssssllllllloooooowwwwww",
         amount: {
           currency: "USD",
-          value: 20,
+          value: 1.50,
         },
         selected: true,
       },
