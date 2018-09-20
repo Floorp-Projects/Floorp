@@ -54,6 +54,7 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
     {}
 
     ~Tier2GeneratorTaskImpl() override {
+        module_->tier2Listener_ = nullptr;
         module_->testingTier2Active_ = false;
     }
 
@@ -66,8 +67,17 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
     }
 };
 
+Module::~Module()
+{
+    // Note: Modules can be destroyed on any thread.
+    MOZ_ASSERT(!tier2Listener_);
+    MOZ_ASSERT(!testingTier2Active_);
+}
+
 void
-Module::startTier2(const CompileArgs& args, const ShareableBytes& bytecode)
+Module::startTier2(const CompileArgs& args,
+                   const ShareableBytes& bytecode,
+                   JS::OptimizedEncodingListener* listener)
 {
     MOZ_ASSERT(!testingTier2Active_);
 
@@ -76,8 +86,9 @@ Module::startTier2(const CompileArgs& args, const ShareableBytes& bytecode)
         return;
     }
 
-    // This flag will be cleared asynchronously by ~Tier2GeneratorTaskImpl()
-    // on success or failure.
+    // These will be cleared asynchronously by ~Tier2GeneratorTaskImpl() if not
+    // sooner by finishTier2().
+    tier2Listener_ = listener;
     testingTier2Active_ = true;
 
     StartOffThreadWasmTier2Generator(std::move(task));
@@ -156,6 +167,14 @@ Module::finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const
         }
     }
 
+    // Tier-2 is done; let everyone know.
+
+    testingTier2Active_ = false;
+    if (tier2Listener_) {
+        serialize(linkData2, *tier2Listener_);
+        tier2Listener_ = nullptr;
+    }
+
     return true;
 }
 
@@ -170,7 +189,11 @@ Module::testingBlockOnTier2Complete() const
 /* virtual */ size_t
 Module::serializedSize(const LinkData& linkData) const
 {
-    return linkData.serializedSize() +
+    JS::BuildIdCharVector buildId;
+    JS::GetOptimizedEncodingBuildId(&buildId);
+
+    return SerializedPodVectorSize(buildId) +
+           linkData.serializedSize() +
            SerializedVectorSize(imports_) +
            SerializedVectorSize(exports_) +
            SerializedVectorSize(structTypes_) +
@@ -187,7 +210,11 @@ Module::serialize(const LinkData& linkData, uint8_t* begin, size_t size) const
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
     MOZ_RELEASE_ASSERT(code_->hasTier(Tier::Serialized));
 
+    JS::BuildIdCharVector buildId;
+    JS::GetOptimizedEncodingBuildId(&buildId);
+
     uint8_t* cursor = begin;
+    cursor = SerializePodVector(cursor, buildId);
     cursor = linkData.serialize(cursor);
     cursor = SerializeVector(cursor, imports_);
     cursor = SerializeVector(cursor, exports_);
@@ -211,6 +238,17 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
     }
 
     const uint8_t* cursor = begin;
+
+    JS::BuildIdCharVector currentBuildId;
+    JS::GetOptimizedEncodingBuildId(&currentBuildId);
+
+    JS::BuildIdCharVector deserializedBuildId;
+    cursor = DeserializePodVector(cursor, &deserializedBuildId);
+    if (!cursor) {
+        return nullptr;
+    }
+
+    MOZ_RELEASE_ASSERT(EqualContainers(currentBuildId, deserializedBuildId));
 
     LinkData linkData(Tier::Serialized);
     cursor = linkData.deserialize(cursor);
@@ -279,6 +317,19 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
                           std::move(customSections));
 }
 
+void
+Module::serialize(const LinkData& linkData, JS::OptimizedEncodingListener& listener) const
+{
+    Vector<uint8_t, 0, SystemAllocPolicy> bytes;
+    if (!bytes.resize(serializedSize(linkData))) {
+        return;
+    }
+
+    serialize(linkData, bytes.begin(), bytes.length());
+
+    listener.storeOptimizedEncoding(bytes.begin(), bytes.length());
+}
+
 /* virtual */ JSObject*
 Module::createObject(JSContext* cx)
 {
@@ -288,6 +339,33 @@ Module::createObject(JSContext* cx)
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
     return WasmModuleObject::create(cx, *this, proto);
+}
+
+bool
+wasm::GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId)
+{
+    // From a JS API perspective, the "build id" covers everything that can
+    // cause machine code to become invalid, so include both the actual build-id
+    // and cpu-id.
+
+    if (!GetBuildId || !GetBuildId(buildId)) {
+        return false;
+    }
+
+    uint32_t cpu = ObservedCPUFeatures();
+
+    if (!buildId->reserve(buildId->length() + 10 /* "()" + 8 nibbles */)) {
+        return false;
+    }
+
+    buildId->infallibleAppend('(');
+    while (cpu) {
+        buildId->infallibleAppend('0' + (cpu & 0xf));
+        cpu >>= 4;
+    }
+    buildId->infallibleAppend(')');
+
+    return true;
 }
 
 struct MemUnmap

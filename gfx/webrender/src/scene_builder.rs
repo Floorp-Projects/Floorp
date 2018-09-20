@@ -6,7 +6,10 @@ use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImage
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, Epoch};
 use api::{BuiltDisplayList, ColorF, LayoutSize, NotificationRequest, Checkpoint};
 use api::channel::MsgSender;
+#[cfg(feature = "capture")]
+use capture::CaptureConfig;
 use frame_builder::{FrameBuilderConfig, FrameBuilder};
+use clip::{ClipDataInterner, ClipDataUpdateList};
 use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
 use internal_types::{FastHashMap, FastHashSet};
@@ -67,6 +70,7 @@ pub struct BuiltTransaction {
     pub frame_ops: Vec<FrameMsg>,
     pub removed_pipelines: Vec<PipelineId>,
     pub notifications: Vec<NotificationRequest>,
+    pub clip_updates: Option<ClipDataUpdateList>,
     pub scene_build_start_time: u64,
     pub scene_build_end_time: u64,
     pub build_frame: bool,
@@ -100,6 +104,7 @@ pub struct LoadScene {
     pub view: DocumentView,
     pub config: FrameBuilderConfig,
     pub build_frame: bool,
+    pub clip_interner: ClipDataInterner,
 }
 
 pub struct BuiltScene {
@@ -118,6 +123,8 @@ pub enum SceneBuilderRequest {
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
     Stop,
+    #[cfg(feature = "capture")]
+    SaveScene(CaptureConfig),
     #[cfg(feature = "replay")]
     LoadScenes(Vec<LoadScene>),
 }
@@ -137,8 +144,26 @@ pub enum SceneSwapResult {
     Aborted,
 }
 
+// A document in the scene builder contains the current scene,
+// as well as a persistent clip interner. This allows clips
+// to be de-duplicated, and persisted in the GPU cache between
+// display lists.
+struct Document {
+    scene: Scene,
+    clip_interner: ClipDataInterner,
+}
+
+impl Document {
+    fn new(scene: Scene) -> Self {
+        Document {
+            scene,
+            clip_interner: ClipDataInterner::new(),
+        }
+    }
+}
+
 pub struct SceneBuilder {
-    documents: FastHashMap<DocumentId, Scene>,
+    documents: FastHashMap<DocumentId, Document>,
     rx: Receiver<SceneBuilderRequest>,
     tx: Sender<SceneBuilderResult>,
     api_tx: MsgSender<ApiMsg>,
@@ -199,6 +224,10 @@ impl SceneBuilder {
                 Ok(SceneBuilderRequest::LoadScenes(msg)) => {
                     self.load_scenes(msg);
                 }
+                #[cfg(feature = "capture")]
+                Ok(SceneBuilderRequest::SaveScene(config)) => {
+                    self.save_scene(config);
+                }
                 Ok(SceneBuilderRequest::Stop) => {
                     self.tx.send(SceneBuilderResult::Stopped).unwrap();
                     // We don't need to send a WakeUp to api_tx because we only
@@ -224,14 +253,24 @@ impl SceneBuilder {
         }
     }
 
+    #[cfg(feature = "capture")]
+    fn save_scene(&mut self, config: CaptureConfig) {
+        for (id, doc) in &self.documents {
+            let clip_interner_name = format!("clip-interner-{}-{}", (id.0).0, id.1);
+            config.serialize(&doc.clip_interner, clip_interner_name);
+        }
+    }
+
     #[cfg(feature = "replay")]
     fn load_scenes(&mut self, scenes: Vec<LoadScene>) {
-        for item in scenes {
+        for mut item in scenes {
             self.config = item.config;
 
             let scene_build_start_time = precise_time_ns();
 
             let mut built_scene = None;
+            let mut clip_updates = None;
+
             if item.scene.has_root_pipeline() {
                 let mut clip_scroll_tree = ClipScrollTree::new();
                 let mut new_scene = Scene::new();
@@ -246,7 +285,10 @@ impl SceneBuilder {
                     &mut new_scene,
                     item.scene_id,
                     &mut self.picture_id_generator,
+                    &mut item.clip_interner,
                 );
+
+                clip_updates = Some(item.clip_interner.end_frame_and_get_pending_updates());
 
                 built_scene = Some(BuiltScene {
                     scene: new_scene,
@@ -255,7 +297,13 @@ impl SceneBuilder {
                 });
             }
 
-            self.documents.insert(item.document_id, item.scene);
+            self.documents.insert(
+                item.document_id,
+                Document {
+                    scene: item.scene,
+                    clip_interner: item.clip_interner,
+                },
+            );
 
             let txn = Box::new(BuiltTransaction {
                 document_id: item.document_id,
@@ -270,6 +318,7 @@ impl SceneBuilder {
                 notifications: Vec::new(),
                 scene_build_start_time,
                 scene_build_end_time: precise_time_ns(),
+                clip_updates,
             });
 
             self.forward_built_transaction(txn);
@@ -281,7 +330,10 @@ impl SceneBuilder {
 
         let scene_build_start_time = precise_time_ns();
 
-        let scene = self.documents.entry(txn.document_id).or_insert(Scene::new());
+        let doc = self.documents
+                      .entry(txn.document_id)
+                      .or_insert(Document::new(Scene::new()));
+        let scene = &mut doc.scene;
 
         for update in txn.display_list_updates.drain(..) {
             scene.set_display_list(
@@ -307,6 +359,7 @@ impl SceneBuilder {
         }
 
         let mut built_scene = None;
+        let mut clip_updates = None;
         if scene.has_root_pipeline() {
             if let Some(request) = txn.request_scene_build.take() {
                 let mut clip_scroll_tree = ClipScrollTree::new();
@@ -322,7 +375,11 @@ impl SceneBuilder {
                     &mut new_scene,
                     request.scene_id,
                     &mut self.picture_id_generator,
+                    &mut doc.clip_interner,
                 );
+
+                // Retrieve the list of updates from the clip interner.
+                clip_updates = Some(doc.clip_interner.end_frame_and_get_pending_updates());
 
                 built_scene = Some(BuiltScene {
                     scene: new_scene,
@@ -360,6 +417,7 @@ impl SceneBuilder {
             frame_ops: replace(&mut txn.frame_ops, Vec::new()),
             removed_pipelines: replace(&mut txn.removed_pipelines, Vec::new()),
             notifications: replace(&mut txn.notifications, Vec::new()),
+            clip_updates,
             scene_build_start_time,
             scene_build_end_time: precise_time_ns(),
         })

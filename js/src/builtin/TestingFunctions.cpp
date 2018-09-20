@@ -635,6 +635,22 @@ WasmDebuggingIsSupported(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+WasmStreamingIsSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(wasm::HasStreamingSupport(cx));
+    return true;
+}
+
+static bool
+WasmCachingIsSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(wasm::HasCachingSupport(cx));
+    return true;
+}
+
+static bool
 WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -5852,6 +5868,14 @@ gc::ZealModeHelpText),
 "wasmDebuggingIsSupported()",
 "  Returns a boolean indicating whether WebAssembly debugging is supported on the current device;\n"
 "  returns false also if WebAssembly is not supported"),
+
+    JS_FN_HELP("wasmStreamingIsSupported", WasmStreamingIsSupported, 0, 0,
+"wasmStreamingIsSupported()",
+"  Returns a boolean indicating whether WebAssembly caching is supported by the runtime."),
+
+    JS_FN_HELP("wasmCachingIsSupported", WasmCachingIsSupported, 0, 0,
+"wasmCachingIsSupported()",
+"  Returns a boolean indicating whether WebAssembly caching is supported by the runtime."),
 
     JS_FN_HELP("wasmThreadsSupported", WasmThreadsSupported, 0, 0,
 "wasmThreadsSupported()",

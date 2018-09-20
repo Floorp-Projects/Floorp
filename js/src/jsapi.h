@@ -3419,6 +3419,10 @@ typedef bool
 extern JS_PUBLIC_API(void)
 InitDispatchToEventLoop(JSContext* cx, DispatchToEventLoopCallback callback, void* closure);
 
+/* Vector of characters used for holding build ids. */
+
+typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
+
 /**
  * The ConsumeStreamCallback is called from an active JSContext, passing a
  * StreamConsumer that wishes to consume the given host object as a stream of
@@ -3431,7 +3435,39 @@ InitDispatchToEventLoop(JSContext* cx, DispatchToEventLoopCallback callback, voi
  *
  * Note: consumeChunk() and streamClosed() may be called synchronously by
  * ConsumeStreamCallback.
+ *
+ * When streamClosed() is called, the embedding may optionally pass an
+ * OptimizedEncodingListener*, indicating that there is a cache entry associated
+ * with this stream that can store an optimized encoding of the bytes that were
+ * just streamed at some point in the future by having SpiderMonkey call
+ * storeOptimizedEncoding(). Until the optimized encoding is ready, SpiderMonkey
+ * will hold an outstanding refcount to keep the listener alive.
+ *
+ * After storeOptimizedEncoding() is called, on cache hit, the embedding
+ * may call consumeOptimizedEncoding() instead of consumeChunk()/streamClosed().
+ * The embedding must ensure that the GetOptimizedEncodingBuildId() at the time
+ * when an optimized encoding is created is the same as when it is later
+ * consumed.
  */
+
+class OptimizedEncodingListener
+{
+  protected:
+    virtual ~OptimizedEncodingListener() {}
+
+  public:
+    // SpiderMonkey will hold an outstanding reference count as long as it holds
+    // a pointer to OptimizedEncodingListener.
+    virtual MozExternalRefCountType MOZ_XPCOM_ABI AddRef() = 0;
+    virtual MozExternalRefCountType MOZ_XPCOM_ABI Release() = 0;
+
+    // SpiderMonkey may optionally call storeOptimizedEncoding() after it has
+    // finished processing a streamed resource.
+    virtual void storeOptimizedEncoding(const uint8_t* bytes, size_t length) = 0;
+};
+
+extern JS_PUBLIC_API(bool)
+GetOptimizedEncodingBuildId(BuildIdCharVector* buildId);
 
 class JS_PUBLIC_API(StreamConsumer)
 {
@@ -3449,11 +3485,17 @@ class JS_PUBLIC_API(StreamConsumer)
     // Called by the embedding when the stream is closed according to the
     // contract described above.
     enum CloseReason { EndOfFile, Error };
-    virtual void streamClosed(CloseReason reason) = 0;
+    virtual void streamClosed(CloseReason reason,
+                              OptimizedEncodingListener* listener = nullptr) = 0;
+
+    // Called by the embedding *instead of* consumeChunk()/streamClosed() if an
+    // optimized encoding is available from a previous streaming of the same
+    // contents with the same optimized build id.
+    virtual void consumeOptimizedEncoding(const uint8_t* begin, size_t length) = 0;
 
     // Provides optional stream attributes such as base or source mapping URLs.
-    // Necessarily called before consumeChunk() or streamClosed(). The caller
-    // retains ownership of the given strings.
+    // Necessarily called before consumeChunk(), streamClosed() or
+    // consumeOptimizedEncoding(). The caller retains ownership of the strings.
     virtual void noteResponseURLs(const char* maybeUrl, const char* maybeSourceMapUrl) = 0;
 };
 
@@ -4635,8 +4677,6 @@ SetAsmJSCacheOps(JSContext* cx, const AsmJSCacheOps* callbacks);
  * engine, it is critical that the buildId shall change for each new build of
  * the JS engine.
  */
-
-typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
 
 typedef bool
 (* BuildIdOp)(BuildIdCharVector* buildId);
