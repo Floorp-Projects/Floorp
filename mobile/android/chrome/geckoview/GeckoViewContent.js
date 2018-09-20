@@ -49,7 +49,6 @@ class GeckoViewContent extends GeckoViewContentModule {
     addEventListener("pageshow", this, options);
     addEventListener("focusin", this, options);
     addEventListener("focusout", this, options);
-    addEventListener("mozcaretstatechanged", this, options);
 
     // Notify WebExtension process script that this tab is ready for extension content to load.
     Services.obs.notifyObservers(this.messageManager, "tab-content-frameloader-created");
@@ -234,7 +233,6 @@ class GeckoViewContent extends GeckoViewContentModule {
     }
   }
 
-  // eslint-disable-next-line complexity
   handleEvent(aEvent) {
     debug `handleEvent: ${aEvent.type}`;
 
@@ -333,14 +331,6 @@ class GeckoViewContent extends GeckoViewContentModule {
       case "pageshow":
         if (aEvent.target === content.document && aEvent.persisted) {
           this._scanAutoFillDocument(aEvent.target);
-        }
-        break;
-      case "mozcaretstatechanged":
-        if (aEvent.reason === "presscaret" || aEvent.reason === "releasecaret") {
-          this.eventDispatcher.sendRequest({
-            type: "GeckoView:PinOnScreen",
-            pinned: aEvent.reason === "presscaret",
-          });
         }
         break;
     }
