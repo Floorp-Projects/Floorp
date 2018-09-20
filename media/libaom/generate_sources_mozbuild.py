@@ -78,6 +78,7 @@ if __name__ == '__main__':
         'ENABLE_TESTS': 0,
         'ENABLE_TOOLS': 0,
         'ENABLE_DOCS': 0,
+        'ENABLE_NEON': 1,
         'AOM_TEST_TEST_CMAKE_': 1, #prevent building tests
     }
 
