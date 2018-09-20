@@ -22,14 +22,17 @@ add_task(async function() {
   ok(!btn.firstChild, "The frame list button has no children");
 
   // Open frame menu and wait till it's available on the screen.
-  const menu = await toolbox.showFramesMenu({target: btn});
-  await once(menu, "open");
+  const framePanel = toolbox.doc.getElementById("command-button-frames-panel");
+  btn.click();
+  ok(framePanel, "popup panel has created.");
+  await waitUntil(() => framePanel.classList.contains("tooltip-visible"));
 
-  const frames = menu.items;
-  is(frames.length, 2, "We have both frames in the list");
+  const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
+  const buttonNodeList = menuList.querySelectorAll(".command");
+  is(buttonNodeList.length, 2, "We have both frames in the list");
 
   // Select the iframe
-  frames[1].click();
+  buttonNodeList[1].click();
 
   let navigating = once(target, "will-navigate");
 
