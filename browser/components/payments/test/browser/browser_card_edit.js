@@ -172,6 +172,28 @@ async function add_link(aOptions = {}) {
 
     await verifyPersistCheckbox(frame, cardOptions);
 
+    await spawnPaymentDialogTask(frame, async function checkSaveButtonUpdatesOnCCNumberChange() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      let button = content.document.querySelector(`basic-card-form button.primary`);
+      ok(!button.disabled, "Save button should not be disabled");
+
+      let field = content.document.getElementById("cc-number");
+      field.focus();
+      EventUtils.sendString("a", content.window);
+      button.focus();
+
+      ok(button.disabled, "Save button should be disabled with incorrect number");
+
+      field.focus();
+      content.fillField(field, PTU.BasicCards.JaneMasterCard["cc-number"]);
+      button.focus();
+
+      ok(!button.disabled, "Save button should be enabled with correct number");
+    });
+
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
     await spawnPaymentDialogTask(frame, async function waitForSummaryPage(testArgs = {}) {
