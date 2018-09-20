@@ -81,31 +81,8 @@ public:
   }
 protected:
   struct TransportData {
-    std::string mIceUfrag;
-    std::string mIcePwd;
-    int iceCredentialSerial;
     std::map<std::string, std::vector<uint8_t> > mFingerprints;
   };
-
-  void
-  GenerateNewIceCredentials(const JsepSessionImpl& session,
-                            TransportData& tdata)
-  {
-    std::ostringstream ostr;
-    ostr << session.GetName() << "-" << ++tdata.iceCredentialSerial;
-
-    // Values here semi-borrowed from JSEP draft.
-    tdata.mIceUfrag = ostr.str() + "-ufrag";
-    tdata.mIcePwd = ostr.str() + "-1234567890";
-  }
-
-  void
-  ModifyOffererIceCredentials()
-  {
-    GenerateNewIceCredentials(*mSessionOff, *mOffererTransport);
-    mSessionOff->SetIceCredentials(mOffererTransport->mIceUfrag,
-                                   mOffererTransport->mIcePwd);
-  }
 
   void
   AddDtlsFingerprint(const std::string& alg, JsepSessionImpl& session,
@@ -121,9 +98,6 @@ protected:
   void
   AddTransportData(JsepSessionImpl& session, TransportData& tdata)
   {
-    tdata.iceCredentialSerial = 0;
-    GenerateNewIceCredentials(session, tdata);
-    session.SetIceCredentials(tdata.mIceUfrag, tdata.mIcePwd);
     AddDtlsFingerprint("sha-1", session, tdata);
     AddDtlsFingerprint("sha-256", session, tdata);
   }
@@ -816,13 +790,6 @@ protected:
     JsepAnswerOptions options;
     std::string answer;
 
-    // detect ice restart and generate new ice credentials (like
-    // PeerConnectionImpl does).
-    if (mSessionAns->RemoteIceIsRestarting()) {
-      GenerateNewIceCredentials(*mSessionAns, *mAnswererTransport);
-      mSessionAns->SetIceCredentials(mAnswererTransport->mIceUfrag,
-                                     mAnswererTransport->mIcePwd);
-    }
     nsresult rv = mSessionAns->CreateAnswer(options, &answer);
     EXPECT_EQ(NS_OK, rv);
 
@@ -1342,9 +1309,10 @@ protected:
                const char* replaceStr) const
   {
     if (searchStr[0] == '\0') return;
-    size_t pos;
-    while ((pos = sdp->find(searchStr)) != std::string::npos) {
+    size_t pos = 0;
+    while ((pos = sdp->find(searchStr, pos)) != std::string::npos) {
       sdp->replace(pos, strlen(searchStr), replaceStr);
+      pos += strlen(replaceStr);
     }
   }
 
@@ -1533,8 +1501,8 @@ private:
       if (!mSdpHelper.IsBundleSlave(*sdp, i)) {
         const SdpAttributeList& attrs = msection.GetAttributeList();
 
-        ASSERT_EQ(source.mIceUfrag, attrs.GetIceUfrag());
-        ASSERT_EQ(source.mIcePwd, attrs.GetIcePwd());
+        ASSERT_FALSE(attrs.GetIceUfrag().empty());
+        ASSERT_FALSE(attrs.GetIcePwd().empty());
         const SdpFingerprintAttributeList& fps = attrs.GetFingerprint();
         for (auto fp = fps.mFingerprints.begin(); fp != fps.mFingerprints.end();
              ++fp) {
@@ -4286,7 +4254,6 @@ TEST_F(JsepSessionTest, TestIceRestart)
 
   JsepOfferOptions options;
   options.mIceRestart = Some(true);
-  ModifyOffererIceCredentials();
 
   std::string reoffer = CreateOffer(Some(options));
   SetLocalOffer(reoffer, CHECK_SUCCESS);
@@ -4333,6 +4300,26 @@ TEST_F(JsepSessionTest, TestIceRestart)
             reanswerMediaAttrs.GetIcePwd().c_str());
   ASSERT_NE(answerMediaAttrs.GetIceUfrag().c_str(),
             reanswerMediaAttrs.GetIceUfrag().c_str());
+
+  auto offererTransceivers = mSessionOff->GetTransceivers();
+  auto answererTransceivers = mSessionAns->GetTransceivers();
+  ASSERT_EQ(reofferMediaAttrs.GetIceUfrag(),
+            offererTransceivers[0]->mTransport.mLocalUfrag);
+  ASSERT_EQ(reofferMediaAttrs.GetIceUfrag(),
+            answererTransceivers[0]->mTransport.mIce->GetUfrag());
+  ASSERT_EQ(reofferMediaAttrs.GetIcePwd(),
+            offererTransceivers[0]->mTransport.mLocalPwd);
+  ASSERT_EQ(reofferMediaAttrs.GetIcePwd(),
+            answererTransceivers[0]->mTransport.mIce->GetPassword());
+
+  ASSERT_EQ(reanswerMediaAttrs.GetIceUfrag(),
+            answererTransceivers[0]->mTransport.mLocalUfrag);
+  ASSERT_EQ(reanswerMediaAttrs.GetIceUfrag(),
+            offererTransceivers[0]->mTransport.mIce->GetUfrag());
+  ASSERT_EQ(reanswerMediaAttrs.GetIcePwd(),
+            answererTransceivers[0]->mTransport.mLocalPwd);
+  ASSERT_EQ(reanswerMediaAttrs.GetIcePwd(),
+            offererTransceivers[0]->mTransport.mIce->GetPassword());
 }
 
 TEST_F(JsepSessionTest, TestAnswererIndicatingIceRestart)
@@ -4354,7 +4341,8 @@ TEST_F(JsepSessionTest, TestAnswererIndicatingIceRestart)
   std::string reanswer = CreateAnswer();
 
   // change the ice pwd and ufrag
-  ReplaceInSdp(&reanswer, "Answerer-1-", "bad-2-");
+  ReplaceInSdp(&reanswer, "a=ice-ufrag:", "a=ice-ufrag:bad-");
+  ReplaceInSdp(&reanswer, "a=ice-pwd:", "a=ice-pwd:bad-");
   SetLocalAnswer(reanswer, CHECK_SUCCESS);
   nsresult rv = mSessionOff->SetRemoteDescription(kJsepSdpAnswer, reanswer);
   ASSERT_NE(NS_OK, rv); // NS_ERROR_INVALID_ARG

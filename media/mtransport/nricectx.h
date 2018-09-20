@@ -68,6 +68,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "m_cpp_utils.h"
 #include "nricestunaddr.h"
+#include "nricemediastream.h"
 
 typedef struct nr_ice_ctx_ nr_ice_ctx;
 typedef struct nr_ice_peer_ctx_ nr_ice_peer_ctx;
@@ -204,7 +205,6 @@ class NrIceStats {
 };
 
 class NrIceCtx {
- friend class NrIceCtxHandler;
  public:
   enum ConnectionState { ICE_CTX_INIT,
                          ICE_CTX_CHECKING,
@@ -229,12 +229,22 @@ class NrIceCtx {
                 ICE_POLICY_ALL
   };
 
+  static RefPtr<NrIceCtx> Create(const std::string& name,
+                                 bool allow_loopback = false,
+                                 bool tcp_enabled = true,
+                                 bool allow_link_local = false,
+                                 NrIceCtx::Policy policy =
+                                   NrIceCtx::ICE_POLICY_ALL);
+
+  RefPtr<NrIceMediaStream> CreateStream(const std::string& id,
+                                        const std::string& name,
+                                        int components);
+  void DestroyStream(const std::string& id);
+
   // initialize ICE globals, crypto, and logging
   static void InitializeGlobals(bool allow_loopback = false,
                                 bool tcp_enabled = true,
                                 bool allow_link_local = false);
-  static std::string GetNewUfrag();
-  static std::string GetNewPwd();
 
   // static GetStunAddrs for use in parent process to support
   // sandboxing restrictions
@@ -242,7 +252,6 @@ class NrIceCtx {
   void SetStunAddrs(const nsTArray<NrIceStunAddr>& addrs);
 
   bool Initialize();
-  bool Initialize(const std::string& ufrag, const std::string& pwd);
 
   int SetNat(const RefPtr<TestNat>& aNat);
 
@@ -257,8 +266,6 @@ class NrIceCtx {
 
   // Testing only.
   void destroy_peer_ctx();
-
-  void SetStream(const std::string& id, NrIceMediaStream* stream);
 
   RefPtr<NrIceMediaStream> GetStream(const std::string& id) {
     auto it = streams_.find(id);
@@ -280,10 +287,6 @@ class NrIceCtx {
 
   // The name of the ctx
   const std::string& name() const { return name_; }
-
-  // Get ufrag and password.
-  std::string ufrag() const;
-  std::string pwd() const;
 
   // Current state
   ConnectionState connection_state() const {

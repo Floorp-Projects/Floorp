@@ -10,7 +10,6 @@ mtransport_lcppsrcs = [
     'nr_socket_prsock.cpp',
     'nr_timer.cpp',
     'nricectx.cpp',
-    'nricectxhandler.cpp',
     'nricemediastream.cpp',
     'nriceresolver.cpp',
     'nriceresolverfake.cpp',

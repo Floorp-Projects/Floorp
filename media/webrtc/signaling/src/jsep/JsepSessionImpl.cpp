@@ -55,6 +55,21 @@ static std::bitset<128> GetForbiddenSdpPayloadTypes() {
   return forbidden;
 }
 
+static std::string GetRandomHex()
+{
+  uint32_t rand;
+  SECStatus rv =
+    PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&rand), sizeof(rand));
+  if (rv != SECSuccess) {
+    MOZ_CRASH();
+    return "";
+  }
+
+  std::ostringstream os;
+  os << std::hex << std::setfill('0') << std::setw(8) << rand;
+  return os.str();
+}
+
 nsresult
 JsepSessionImpl::Init()
 {
@@ -73,6 +88,8 @@ JsepSessionImpl::Init()
   mRunSdpComparer = Preferences::GetBool("media.peerconnection.sdp.rust.compare",
                                          false);
 
+  mIceUfrag = GetRandomHex();
+  mIcePwd = GetRandomHex();
   return NS_OK;
 }
 
@@ -109,17 +126,6 @@ JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> transceiver)
   // We do not set mLevel yet, we do that either on createOffer, or setRemote
 
   mTransceivers.push_back(transceiver);
-  return NS_OK;
-}
-
-nsresult
-JsepSessionImpl::SetIceCredentials(const std::string& ufrag,
-                                   const std::string& pwd)
-{
-  mLastError.clear();
-  mIceUfrag = ufrag;
-  mIcePwd = pwd;
-
   return NS_OK;
 }
 
@@ -420,12 +426,14 @@ JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
                              std::string* offer)
 {
   mLastError.clear();
-  mLocalIceIsRestarting = options.mIceRestart.isSome() && *(options.mIceRestart);
 
   if (mState != kJsepStateStable) {
     JSEP_SET_ERROR("Cannot create offer in state " << GetStateStr(mState));
     return NS_ERROR_UNEXPECTED;
   }
+
+  // This is one of those places where CreateOffer sets some state.
+  SetIceRestarting(options.mIceRestart.isSome() && *(options.mIceRestart));
 
   UniquePtr<Sdp> sdp;
 
@@ -976,7 +984,7 @@ JsepSessionImpl::SetRemoteDescription(JsepSdpType type, const std::string& sdp)
   if (NS_SUCCEEDED(rv)) {
     mRemoteIsIceLite = iceLite;
     mIceOptions = iceOptions;
-    mRemoteIceIsRestarting = iceRestarting;
+    SetIceRestarting(iceRestarting);
   }
 
   return rv;
@@ -986,6 +994,10 @@ nsresult
 JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
                                          const UniquePtr<Sdp>& remote)
 {
+  // local ufrag/pwd has been negotiated; we will never go back to the old ones
+  mOldIceUfrag.clear();
+  mOldIcePwd.clear();
+
   bool remoteIceLite =
       remote->GetAttributeList().HasAttribute(SdpAttribute::kIceLiteAttribute);
 
@@ -1136,12 +1148,13 @@ JsepSessionImpl::EnsureHasOwnTransport(const SdpMediaSection& msection,
 {
   JsepTransport& transport = transceiver->mTransport;
 
-  // TODO: Detect ICE restart on a per-msection basis.
-  if (mLocalIceIsRestarting || mRemoteIceIsRestarting ||
-      !transceiver->HasOwnTransport()) {
+  if (!transceiver->HasOwnTransport()) {
     // Transceiver didn't own this transport last time, it won't now either
     transport.Close();
   }
+
+  transport.mLocalUfrag = msection.GetAttributeList().GetIceUfrag();
+  transport.mLocalPwd = msection.GetAttributeList().GetIcePwd();
 
   transceiver->ClearBundleLevel();
 
@@ -1169,7 +1182,9 @@ JsepSessionImpl::FinalizeTransport(const SdpAttributeList& remote,
     return NS_OK;
   }
 
-  if (!transport->mIce) {
+  if (!transport->mIce ||
+      transport->mIce->mUfrag != remote.GetIceUfrag() ||
+      transport->mIce->mPwd != remote.GetIcePwd()) {
     UniquePtr<JsepIceTransport> ice = MakeUnique<JsepIceTransport>();
 
     // We do sanity-checking for these in ParseSdp
@@ -1254,8 +1269,7 @@ JsepSessionImpl::CopyPreviousTransportParams(const Sdp& oldAnswer,
         mSdpHelper.AreOldTransportParamsValid(oldAnswer,
                                               offerersPreviousSdp,
                                               newOffer,
-                                              i) &&
-        !mRemoteIceIsRestarting
+                                              i)
        ) {
       // If newLocal is an offer, this will be the number of components we used
       // last time, and if it is an answer, this will be the number of
@@ -1798,8 +1812,7 @@ JsepSessionImpl::ValidateRemoteDescription(const Sdp& description)
 
     bool differ = mSdpHelper.IceCredentialsDiffer(newMsection, oldMsection);
 
-    // Detect bad answer ICE restart when offer doesn't request ICE restart
-    if (mIsOfferer && differ && !mLocalIceIsRestarting) {
+    if (mIsOfferer && differ && !IsIceRestarting()) {
       JSEP_SET_ERROR("Remote description indicates ICE restart but offer did not "
                      "request ICE restart (new remote description changes either "
                      "the ice-ufrag or ice-pwd)");
@@ -2364,6 +2377,28 @@ JsepSessionImpl::GetAnswer() const
 {
   return mWasOffererLastTime ? mCurrentRemoteDescription.get()
                              : mCurrentLocalDescription.get();
+}
+
+void
+JsepSessionImpl::SetIceRestarting(bool restarting)
+{
+  if (restarting) {
+    // not restarting -> restarting
+    if (!IsIceRestarting()) {
+      // We don't set this more than once, so the old ufrag/pwd is preserved
+      // even if we CreateOffer({iceRestart:true}) multiple times in a row.
+      mOldIceUfrag = mIceUfrag;
+      mOldIcePwd = mIcePwd;
+    }
+    mIceUfrag = GetRandomHex();
+    mIcePwd = GetRandomHex();
+  } else if (IsIceRestarting()) {
+    // restarting -> not restarting, restore old ufrag/pwd
+    mIceUfrag = mOldIceUfrag;
+    mIcePwd = mOldIcePwd;
+    mOldIceUfrag.clear();
+    mOldIcePwd.clear();
+  }
 }
 
 nsresult

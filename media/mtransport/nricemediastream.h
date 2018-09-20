@@ -137,9 +137,15 @@ struct NrIceCandidatePair {
 
 class NrIceMediaStream {
  public:
-  static RefPtr<NrIceMediaStream> Create(NrIceCtx *ctx,
-                                         const std::string& name,
-                                         int components);
+  NrIceMediaStream(NrIceCtx *ctx,
+                   const std::string& id,
+                   const std::string& name,
+                   size_t components);
+
+  nsresult SetIceCredentials(const std::string& ufrag, const std::string& pwd);
+  nsresult ConnectToPeer(const std::string& ufrag,
+                         const std::string& pwd,
+                         const std::vector<std::string>& peer_attrs);
   enum State { ICE_CONNECTING, ICE_OPEN, ICE_CLOSED};
 
   State state() const { return state_; }
@@ -147,8 +153,8 @@ class NrIceMediaStream {
   // The name of the stream
   const std::string& name() const { return name_; }
 
-  // Get all the candidates
-  std::vector<std::string> GetCandidates() const;
+  // Get all the ICE attributes; used for testing
+  std::vector<std::string> GetAttributes() const;
 
   nsresult GetLocalCandidates(std::vector<NrIceCandidate>* candidates) const;
   nsresult GetRemoteCandidates(std::vector<NrIceCandidate>* candidates) const;
@@ -158,10 +164,6 @@ class NrIceMediaStream {
   nsresult GetCandidatePairs(std::vector<NrIceCandidatePair>* out_pairs) const;
 
   nsresult GetDefaultCandidate(int component, NrIceCandidate* candidate) const;
-
-  // Parse remote attributes
-  nsresult ParseAttributes(std::vector<std::string>& candidates);
-  bool HasParsedAttributes() const { return has_parsed_attrs_; }
 
   // Parse trickle ICE candidate
   nsresult ParseTrickleCandidate(const std::string& candidate);
@@ -182,8 +184,7 @@ class NrIceMediaStream {
   // The number of components
   size_t components() const { return components_; }
 
-  // The underlying nICEr stream
-  nr_ice_media_stream *stream() { return stream_; }
+  bool HasStream(nr_ice_media_stream *stream) const;
   // Signals to indicate events. API users can (and should)
   // register for these.
 
@@ -192,6 +193,7 @@ class NrIceMediaStream {
 
   // Set your state to ready. Called by the NrIceCtx;
   void Ready();
+  void Failed();
 
   // Close the stream. Called by the NrIceCtx.
   // Different from the destructor because other people
@@ -201,8 +203,6 @@ class NrIceMediaStream {
 
   // So the receiver of SignalCandidate can determine which transport
   // the candidate belongs to.
-  void SetId(const std::string& id) { id_ = id; }
-
   const std::string& GetId() const { return id_; }
 
   sigslot::signal2<NrIceMediaStream *, const std::string& >
@@ -216,13 +216,11 @@ class NrIceMediaStream {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceMediaStream)
 
  private:
-  NrIceMediaStream(NrIceCtx *ctx,
-                   const std::string& name,
-                   size_t components);
-
   ~NrIceMediaStream();
 
   DISALLOW_COPY_ASSIGN(NrIceMediaStream);
+
+  void CloseStream(nr_ice_media_stream **stream);
 
   State state_;
   nr_ice_ctx *ctx_;
@@ -230,8 +228,8 @@ class NrIceMediaStream {
   const std::string name_;
   const size_t components_;
   nr_ice_media_stream *stream_;
-  std::string id_;
-  bool has_parsed_attrs_;
+  nr_ice_media_stream *old_stream_;
+  const std::string id_;
 };
 
 

@@ -51,6 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsIDNSService.h"
 #include "nsIDNSListener.h"
 #include "nsICancelable.h"
+#include "nricectx.h"
 
 typedef struct nr_resolver_ nr_resolver;
 typedef struct nr_resolver_vtbl_ nr_resolver_vtbl;

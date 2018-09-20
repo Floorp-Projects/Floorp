@@ -104,7 +104,10 @@ public:
 
     nr_ice_add_media_stream(ice_ctx_,
                             const_cast<char *>(name_.c_str()),
+                            "ufrag",
+                            "pass",
                             2, &ice_media_stream_);
+    EXPECT_EQ(2UL, GetStreamAttributes().size());
 
     nr_ice_media_stream_initialize(ice_ctx_, ice_media_stream_);
   }
@@ -144,30 +147,46 @@ public:
     ASSERT_TRUE(r == 0 || r == R_WOULDBLOCK);
   }
 
-  std::vector<std::string> GetLocalCandidates() const {
-    char attr[256];
-    std::vector<std::string> candidates;
-    nr_ice_component* comp = STAILQ_FIRST(&ice_media_stream_->components);
-    while(comp){
-      if (comp->state != NR_ICE_COMPONENT_DISABLED) {
-        nr_ice_candidate *cand = TAILQ_FIRST(&comp->candidates);
-        while(cand){
-          int r = nr_ice_format_candidate_attribute(cand, attr, 255);
-          if (r == 0) {
-            candidates.push_back(attr);
-          }
+  std::vector<std::string> GetStreamAttributes() {
+    std::vector<std::string> attributes;
+    test_utils_->sts_target()->Dispatch(
+        WrapRunnableRet(&attributes,
+                        this,
+                        &IcePeer::GetStreamAttributes_s),
+        NS_DISPATCH_SYNC);
+    return attributes;
+  }
 
-          cand = TAILQ_NEXT(cand, entry_comp);
-        }
-      }
+  std::vector<std::string> GetStreamAttributes_s() {
 
-      comp = STAILQ_NEXT(comp, entry);
+    char **attrs = nullptr;
+    int attrct;
+    std::vector<std::string> ret;
+
+    int r =
+      nr_ice_media_stream_get_attributes(ice_media_stream_, &attrs, &attrct);
+    EXPECT_EQ(0, r);
+
+    for (int i=0; i<attrct; i++) {
+      ret.push_back(std::string(attrs[i]));
+      RFREE(attrs[i]);
     }
+    RFREE(attrs);
 
-    return candidates;
+    return ret;
   }
 
   std::vector<std::string> GetGlobalAttributes() {
+    std::vector<std::string> attributes;
+    test_utils_->sts_target()->Dispatch(
+        WrapRunnableRet(&attributes,
+                        this,
+                        &IcePeer::GetGlobalAttributes_s),
+        NS_DISPATCH_SYNC);
+    return attributes;
+  }
+
+  std::vector<std::string> GetGlobalAttributes_s() {
 
     char **attrs = nullptr;
     int attrct;
@@ -203,6 +222,14 @@ public:
   }
 
   void SetRemoteAttributes(std::vector<std::string> attributes) {
+    test_utils_->sts_target()->Dispatch(
+        WrapRunnable(this,
+                     &IcePeer::SetRemoteAttributes_s,
+                     attributes),
+        NS_DISPATCH_SYNC);
+  }
+
+  void SetRemoteAttributes_s(std::vector<std::string> attributes) {
     int r;
 
     std::vector<char*> attrs;
@@ -329,11 +356,11 @@ TEST_F(TestNrSocketIceUnitTest, TestIcePeer) {
   ASSERT_NE(peer.ice_ctx_, nullptr);
   ASSERT_NE(peer.peer_ctx_, nullptr);
   ASSERT_NE(peer.ice_media_stream_, nullptr);
+  ASSERT_EQ(2UL, peer.GetStreamAttributes().size())
+    << "Should have ice-ufrag and ice-pwd";
   peer.Gather();
-  std::vector<std::string> attrs = peer.GetGlobalAttributes();
-  ASSERT_NE(attrs.size(), 0UL);
-  std::vector<std::string> candidates = peer.GetLocalCandidates();
-  ASSERT_NE(candidates.size(), 0UL);
+  ASSERT_LT(2UL, peer.GetStreamAttributes().size())
+    << "Should have ice-ufrag, ice-pwd, and at least one candidate.";
 }
 
 TEST_F(TestNrSocketIceUnitTest, TestIcePeersNoNAT) {
@@ -348,13 +375,13 @@ TEST_F(TestNrSocketIceUnitTest, TestIcePeersNoNAT) {
   peer2.Gather();
   std::vector<std::string> attrs = peer.GetGlobalAttributes();
   peer2.ParseGlobalAttributes(attrs);
-  std::vector<std::string> candidates = peer.GetLocalCandidates();
-  peer2.SetRemoteAttributes(candidates);
+  std::vector<std::string> attributes = peer.GetStreamAttributes();
+  peer2.SetRemoteAttributes(attributes);
 
   attrs = peer2.GetGlobalAttributes();
   peer.ParseGlobalAttributes(attrs);
-  candidates = peer2.GetLocalCandidates();
-  peer.SetRemoteAttributes(candidates);
+  attributes = peer2.GetStreamAttributes();
+  peer.SetRemoteAttributes(attributes);
   peer2.StartChecks();
   peer.StartChecks();
 
@@ -406,13 +433,13 @@ TEST_F(TestNrSocketIceUnitTest, TestIcePeersPacketLoss) {
   peer2.Gather();
   std::vector<std::string> attrs = peer.GetGlobalAttributes();
   peer2.ParseGlobalAttributes(attrs);
-  std::vector<std::string> candidates = peer.GetLocalCandidates();
-  peer2.SetRemoteAttributes(candidates);
+  std::vector<std::string> attributes = peer.GetStreamAttributes();
+  peer2.SetRemoteAttributes(attributes);
 
   attrs = peer2.GetGlobalAttributes();
   peer.ParseGlobalAttributes(attrs);
-  candidates = peer2.GetLocalCandidates();
-  peer.SetRemoteAttributes(candidates);
+  attributes = peer2.GetStreamAttributes();
+  peer.SetRemoteAttributes(attributes);
   peer2.StartChecks();
   peer.StartChecks();
 
