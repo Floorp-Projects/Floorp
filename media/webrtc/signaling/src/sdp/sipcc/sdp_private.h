@@ -324,9 +324,6 @@ extern sdp_result_e sdp_build_attribute(sdp_t *sdp_p, uint16_t token, flex_strin
 
 extern void sdp_parse_payload_types(sdp_t *sdp_p, sdp_mca_t *mca_p,
                                      const char *ptr);
-extern sdp_result_e sdp_parse_multiple_profile_payload_types(sdp_t *sdp_p,
-                                               sdp_mca_t *mca_p,
-                                               const char *ptr);
 extern sdp_result_e
 sdp_parse_attr_sdescriptions(sdp_t *sdp_p, sdp_attr_t *attr_p,
                              const char *ptr);
