@@ -1545,7 +1545,7 @@ impl YamlFrameReader {
 
         let reference_frame_id = dl.push_reference_frame(info, transform.into(), perspective);
 
-        let numeric_id = yaml["id"].as_i64();
+        let numeric_id = yaml["reference-frame-id"].as_i64();
         if let Some(numeric_id) = numeric_id {
             self.add_clip_id_mapping(numeric_id as u64, reference_frame_id);
         }
