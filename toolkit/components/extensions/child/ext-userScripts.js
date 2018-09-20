@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const USERSCRIPT_PREFNAME = "extensions.webextensions.userScripts.enabled";
-const USERSCRIPT_DISABLED_ERRORMSG = `userScripts APIs are currently experimental and must be enabled with the ${USERSCRIPT_PREFNAME} preference.`;
+var USERSCRIPT_PREFNAME = "extensions.webextensions.userScripts.enabled";
+var USERSCRIPT_DISABLED_ERRORMSG = `userScripts APIs are currently experimental and must be enabled with the ${USERSCRIPT_PREFNAME} preference.`;
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "userScriptsEnabled", USERSCRIPT_PREFNAME, false);
 
@@ -163,13 +163,6 @@ this.userScripts = class extends ExtensionAPI {
 
             return convertToAPIObject(scriptId, options);
           });
-        },
-        setScriptAPIs(exportedAPIMethods) {
-          if (!userScriptsEnabled) {
-            throw new ExtensionError(USERSCRIPT_DISABLED_ERRORMSG);
-          }
-
-          context.setUserScriptAPIs(exportedAPIMethods);
         },
       },
     };
