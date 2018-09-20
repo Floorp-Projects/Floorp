@@ -395,7 +395,7 @@ def av1(value, target):
         if target.os == 'WINNT' and target.cpu == 'x86':
             enabled = False
         else:
-            enabled = target.os != 'Android'
+            enabled = True
     if enabled:
         return True
 
