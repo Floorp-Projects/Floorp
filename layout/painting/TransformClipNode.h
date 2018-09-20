@@ -26,10 +26,10 @@ class TransformClipNode {
 public:
   TransformClipNode(const RefPtr<TransformClipNode>& aParent,
                     const gfx::Matrix4x4Flagged& aTransform,
-                    const Maybe<nsRect>& aClip)
-  : mParent(aParent)
-  , mTransform(aTransform)
-  , mClip(aClip)
+                    const Maybe<gfx::IntRect>& aClip)
+    : mParent(aParent)
+    , mTransform(aTransform)
+    , mClip(aClip)
   {
     MOZ_COUNT_CTOR(TransformClipNode);
   }
@@ -56,7 +56,7 @@ public:
                      NSAppUnitsToFloatPixels(aRect.y, aA2D),
                      NSAppUnitsToFloatPixels(aRect.width, aA2D),
                      NSAppUnitsToFloatPixels(aRect.height, aA2D));
-    TransformRect(result, aA2D);
+    TransformRect(result);
     return nsRect(NSFloatPixelsToAppUnits(result.x, aA2D),
                   NSFloatPixelsToAppUnits(result.y, aA2D),
                   NSFloatPixelsToAppUnits(result.width, aA2D),
@@ -67,14 +67,14 @@ public:
    * Transforms and clips |aRect| up to the root transform node.
    * |aRect| is expected to be in integer pixels.
    */
-  gfx::IntRect TransformRect(const gfx::IntRect& aRect, const int32_t aA2D)
+  gfx::IntRect TransformRect(const gfx::IntRect& aRect)
   {
     if (aRect.IsEmpty()) {
       return aRect;
     }
 
     gfx::Rect result(IntRectToRect(aRect));
-    TransformRect(result, aA2D);
+    TransformRect(result);
     return RoundedToInt(result);
   }
 
@@ -82,7 +82,7 @@ public:
    * Transforms and clips |aRegion| up to the root transform node.
    * |aRegion| is expected be in integer pixels.
    */
-  nsIntRegion TransformRegion(const nsIntRegion& aRegion, const int32_t aA2D)
+  nsIntRegion TransformRegion(const nsIntRegion& aRegion)
   {
     if (aRegion.IsEmpty()) {
       return aRegion;
@@ -96,8 +96,7 @@ public:
       result = result.Transform(transform.GetMatrix());
 
       if (node->Clip()) {
-        const nsRect& clip = *node->Clip();
-        const gfx::IntRect clipRect = clip.ToNearestPixels(aA2D);
+        const gfx::IntRect clipRect = *node->Clip();
         result.AndWith(clipRect);
       }
 
@@ -111,10 +110,7 @@ protected:
   /**
    * Returns the post-transform clip, if there is one.
    */
-  const Maybe<nsRect>& Clip() const
-  {
-    return mClip;
-  }
+  const Maybe<gfx::IntRect>& Clip() const { return mClip; }
 
   /**
    * Returns the matrix that transforms the item bounds to the coordinate space
@@ -125,7 +121,7 @@ protected:
     return mTransform;
   }
 
-  void TransformRect(gfx::Rect& aRect, const int32_t aA2D)
+  void TransformRect(gfx::Rect& aRect)
   {
     const TransformClipNode* node = this;
     while (node) {
@@ -133,8 +129,7 @@ protected:
       gfx::Rect maxBounds = gfx::Rect::MaxIntRect();
 
       if (node->Clip()) {
-        const nsRect& clip = *node->Clip();
-        maxBounds = IntRectToRect(clip.ToNearestPixels(aA2D));
+        maxBounds = IntRectToRect(*node->Clip());
       }
 
       aRect = transform.TransformAndClipBounds(aRect, maxBounds);
@@ -150,7 +145,7 @@ private:
 
   const RefPtr<TransformClipNode> mParent;
   const gfx::Matrix4x4Flagged mTransform;
-  const Maybe<nsRect> mClip;
+  const Maybe<gfx::IntRect> mClip;
 };
 
 } // namespace mozilla
