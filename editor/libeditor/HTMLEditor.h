@@ -42,6 +42,7 @@ class nsRange;
 
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
+class AutoSetTemporaryAncestorLimiter;
 class DocumentResizeEventListener;
 class EmptyEditableFunctor;
 class ResizerSelectionListener;
@@ -2397,6 +2398,7 @@ protected:
   ParagraphSeparator mDefaultParagraphSeparator;
 
   friend class AutoSelectionSetterAfterTableEdit;
+  friend class AutoSetTemporaryAncestorLimiter;
   friend class CSSEditUtils;
   friend class DocumentResizeEventListener;
   friend class EditorBase;
