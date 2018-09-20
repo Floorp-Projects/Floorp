@@ -147,6 +147,15 @@ TabClient.prototype = {
     category: arg(1),
     flags: arg(2),
   }),
+
+  listFrames: DebuggerClient.requester({
+    type: "listFrames",
+  }),
+
+  switchToFrame: DebuggerClient.requester({
+    type: "switchToFrame",
+    windowId: arg(0),
+  }),
 };
 
 eventSource(TabClient.prototype);
