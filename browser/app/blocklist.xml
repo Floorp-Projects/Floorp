@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1536613417349" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1537309752952" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2377,6 +2377,22 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="81eb67a5-3fdb-448c-aadd-5f4d3b7cf281" id="/^((\{686fc9c5-c339-43db-b93a-5181a217f9a6\})|(\{eb4b28c8-7f2d-4327-a00c-40de4299ba44\})|(\{58d735b4-9d6c-4e37-b146-7b9f7e79e318\})|(\{ff608c10-2abc-415c-9fe8-0fdd8e988de8\})|(\{5a8145e2-6cbb-4509-a268-f3121429656c\})|(\{6d451f29-1d6b-4c34-a510-c1234488b0a3\})|(\{de71f09a-3342-48c5-95c1-4b0f17567554\})|(\{df106b04-984e-4e27-97b6-3f3150e98a9e\})|(\{70DE470A-4DC0-11E6-A074-0C08D310C1A8\})|(\{4dcde019-2a1b-499b-a5cd-322828e1279b\})|(\{1ec3563f-1567-49a6-bb5c-75d52334b01c\})|(\{c140c82e-98e6-49fd-ae17-0627e6f7c5e1\})|(\{2581c1f6-5ad9-48d4-8008-4c37dcea1984\})|(\{a2bcc6f7-14f7-4083-b4b0-c335edc68612\})|(\{4c726bb6-a2af-44ed-b498-794cfd8d8838\})|(\{fa6c39a6-cd11-477b-966d-f388f0ba4203\})|(\{26c7bd04-18d3-47f5-aeec-bb54e562acf2\})|(\{7a961c90-2071-4f94-9d9a-d4e3bbf247c0\})|(\{a0481ea2-03f0-4e56-a0e1-030908ecb43e\})|(\{c98fb54e-d25f-43f4-bd72-dfaa736391e2\})|(\{da57263d-adfc-4768-91f7-b3b076c20d63\})|(\{3abb352c-8735-4fb6-9fd6-8117aea3d705\})|(contactus@unzipper\.com)|(\{a1499769-6978-4647-ac0f-78da4652716d\})|(\{581D0A4C-1013-11E7-938B-FCD2A0406E17\})|(\{68feffe4-bfd8-4fc3-8320-8178a3b7aa67\})|(\{823489ae-1bf8-4403-acdd-ea1bdc6431da\})|(\{4c0d11c3-ee81-4f73-a63c-da23d8388abd\})|(\{dc7d2ecc-9cc3-40d7-93ed-ef6f3219bd6f\})|(\{21f29077-6271-46fc-8a79-abaeedb2002b\})|(\{55d15d4d-da76-44ab-95a3-639315be5ef8\})|(\{edfbec6b-8432-4856-930d-feb334fb69c1\})|(\{f81a3bf7-d626-48cf-bd24-64e111ddc580\})|(\{4407ab94-60ae-4526-b1ab-2521ffd285c7\})|(\{4aa2ba11-f87b-4950-8250-cd977252e556\})|(\{646b0c4d-4c6f-429d-9b09-37101b36ed1c\})|(\{1b2d76f1-4906-42d2-9643-0ce928505dab\})|(\{1869f89d-5f15-4c0d-b993-2fa8f09694fb\})|(\{7e4edd36-e3a6-4ddb-9e98-22b4e9eb4721\})|(\{e9c9ad8c-84ba-43f2-9ae2-c1448694a2a0\})|(\{6b2bb4f0-78ea-47c2-a03a-f4bf8f916eda\})|(\{539e1692-5841-4ac6-b0cd-40db15c34738\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3108c151-9f25-4eca-8d80-a2fbb2d9bd07" id="updater-pro-unlisted@mozilla.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="54b3e69a-40ae-4be5-b7cf-cf51c526dcfb" id="/^((\{c9226c62-9948-4038-b247-2b95a921135b\})|(\{5de34d4f-b891-4575-b54b-54c53b4e6418\})|(\{9f7ac3be-8f1c-47c6-8ebe-655b29eb7f21\})|(\{bb33ccaf-e279-4253-8946-cfae19a35aa4\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="c651780e-c185-4d6c-b509-d34673c158a3" id="Safe@vietbacsecurity.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="89d714f6-9f35-4107-b8af-a16777f66337" id="admin@vietbacsecurity.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
