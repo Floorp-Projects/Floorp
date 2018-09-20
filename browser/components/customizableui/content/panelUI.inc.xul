@@ -212,7 +212,7 @@
                          class="subviewbutton subviewbutton-iconic"
                          oncommand="ContentBlocking.openPreferences('appMenu-trackingprotection'); PanelUI.hide();"
                          label="&trackingProtection.title;"/>
-          <toolbarseparator orient="vertical"/>
+          <toolbarseparator id="appMenu-tp-vertical-separator" orient="vertical"/>
           <toolbarbutton id="appMenu-tp-toggle"
                          enabled="false"
                          oncommand="ContentBlocking.onGlobalToggleCommand();" />

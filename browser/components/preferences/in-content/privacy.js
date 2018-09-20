@@ -613,12 +613,16 @@ var gPrivacyPane = {
       document.getElementById(id).hidden = contentBlockingUiEnabled != visibleState[id];
     }
 
-    // Update the Do Not Track section to not mention "Tracking Protection".
     if (contentBlockingUiEnabled) {
+      // Update the Do Not Track section to not mention "Tracking Protection".
       let dntDefaultRadioItem =
         document.querySelector("#doNotTrackRadioGroup > radio[value=false]");
       document.l10n.setAttributes(
         dntDefaultRadioItem, "do-not-track-option-default-content-blocking");
+
+      // Potentially hide the global toggle.
+      document.getElementById("contentBlockingCheckboxContainer").hidden =
+        !Services.prefs.getBoolPref("browser.contentblocking.global-toggle.enabled", true);
     }
 
     // Allow turning off the "(recommended)" label using a pref

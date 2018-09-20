@@ -10,6 +10,7 @@ const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TP_LIST_PREF = "urlclassifier.trackingTable";
 const FB_PREF = "browser.fastblock.enabled";
 const NCB_PREF = "network.cookie.cookieBehavior";
+const TOGGLE_PREF = "browser.contentblocking.global-toggle.enabled";
 
 requestLongerTimeout(2);
 
@@ -17,6 +18,7 @@ requestLongerTimeout(2);
 add_task(async function testContentBlockingToggle() {
   SpecialPowers.pushPrefEnv({set: [
     [CB_UI_PREF, true],
+    [TOGGLE_PREF, true],
   ]});
 
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
@@ -295,6 +297,7 @@ function checkControlState(doc, dependentControls) {
 async function doDependentControlChecks(dependentControls,
                                         alwaysDisabledControls = []) {
   Services.prefs.setBoolPref(CB_PREF, true);
+  Services.prefs.setBoolPref(TOGGLE_PREF, true);
 
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
@@ -332,6 +335,7 @@ async function doDependentControlChecks(dependentControls,
   checkControlStateWorker(doc, alwaysDisabledControls, false);
 
   Services.prefs.clearUserPref(CB_PREF);
+  Services.prefs.clearUserPref(TOGGLE_PREF);
   gBrowser.removeCurrentTab();
 }
 
