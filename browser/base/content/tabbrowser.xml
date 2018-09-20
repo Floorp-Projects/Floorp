@@ -764,8 +764,9 @@
             return;
 
           if (this.arrowScrollbox.smoothScroll) {
-            let selected = !this.selectedItem.pinned &&
-                           this.selectedItem.getBoundingClientRect();
+            let selectedTab = this.selectedItem;
+            let selected = !selectedTab.pinned &&
+                           selectedTab.getBoundingClientRect();
 
             // Can we make both the new tab and the selected tab completely visible?
             if (!selected ||
