@@ -23,6 +23,7 @@ struct DNSRecord
 union DNSRequestResponse
 {
   DNSRecord;
+  nsCString[];   // The result of a by-type query
   nsresult;   // if error
 };
 
