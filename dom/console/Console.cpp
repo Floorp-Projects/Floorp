@@ -1002,14 +1002,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
 // Console object is used on workers.
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Console)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsoleEventNotifier)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDumpFunction)
   tmp->Shutdown();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Console)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsoleEventNotifier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDumpFunction)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -1054,7 +1054,8 @@ Console::Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
     }
   }
 
-  RefPtr<Console> console = new Console(aCx, aWindow, outerWindowID, innerWindowID);
+  RefPtr<Console> console =
+    new Console(aCx, aWindow->AsGlobal(), outerWindowID, innerWindowID);
   console->Initialize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -1064,13 +1065,14 @@ Console::Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 }
 
 /* static */ already_AddRefed<Console>
-Console::CreateForWorklet(JSContext* aCx, uint64_t aOuterWindowID,
-                          uint64_t aInnerWindowID, ErrorResult& aRv)
+Console::CreateForWorklet(JSContext* aCx, nsIGlobalObject* aGlobal,
+                          uint64_t aOuterWindowID, uint64_t aInnerWindowID,
+                          ErrorResult& aRv)
 {
   WorkletThread::AssertIsOnWorkletThread();
 
   RefPtr<Console> console =
-    new Console(aCx, nullptr, aOuterWindowID, aInnerWindowID);
+    new Console(aCx, aGlobal, aOuterWindowID, aInnerWindowID);
   console->Initialize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -1079,9 +1081,9 @@ Console::CreateForWorklet(JSContext* aCx, uint64_t aOuterWindowID,
   return console.forget();
 }
 
-Console::Console(JSContext* aCx, nsPIDOMWindowInner* aWindow,
+Console::Console(JSContext* aCx, nsIGlobalObject* aGlobal,
                  uint64_t aOuterWindowID, uint64_t aInnerWindowID)
-  : mWindow(aWindow)
+  : mGlobal(aGlobal)
   , mOuterID(aOuterWindowID)
   , mInnerID(aInnerWindowID)
   , mDumpToStdout(false)
@@ -1118,7 +1120,7 @@ Console::Initialize(ErrorResult& aRv)
       return;
     }
 
-    if (mWindow) {
+    if (mGlobal) {
       aRv = obs->AddObserver(this, "inner-window-destroyed", true);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
@@ -1546,10 +1548,10 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   OriginAttributes oa;
 
   if (NS_IsMainThread()) {
-    if (mWindow) {
+    if (mGlobal) {
       // Save the principal's OriginAttributes in the console event data
       // so that we will be able to filter messages by origin attributes.
-      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mWindow);
+      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mGlobal);
       if (NS_WARN_IF(!sop)) {
         return;
       }
@@ -1564,7 +1566,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
 #ifdef DEBUG
       if (!nsContentUtils::IsSystemPrincipal(principal)) {
-        nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
+        nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mGlobal);
         if (webNav) {
           nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
           MOZ_ASSERT(loadContext);
@@ -1668,7 +1670,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   }
 
   if (NS_IsMainThread()) {
-    if (mWindow) {
+    if (mGlobal) {
       callData->SetIDs(mOuterID, mInnerID);
     } else if (!mPassedInnerID.IsEmpty()) {
       callData->SetIDs(NS_LITERAL_STRING("jsm"), mPassedInnerID);
@@ -2865,8 +2867,8 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
                         const Sequence<JS::Value>& aData,
                         DOMHighResTimeStamp* aTimeStamp)
 {
-  if (mWindow) {
-    nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(mWindow);
+  if (nsCOMPtr<nsPIDOMWindowInner> innerWindow = do_QueryInterface(mGlobal)) {
+    nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(innerWindow);
     MOZ_ASSERT(win);
 
     RefPtr<Performance> performance = win->GetPerformance();
@@ -2876,7 +2878,7 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
 
     *aTimeStamp = performance->Now();
 
-    nsDocShell* docShell = static_cast<nsDocShell*>(mWindow->GetDocShell());
+    nsDocShell* docShell = static_cast<nsDocShell*>(win->GetDocShell());
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
     bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
 
