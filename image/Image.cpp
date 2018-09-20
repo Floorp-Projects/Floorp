@@ -160,7 +160,6 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
       case ImgDrawResult::SUCCESS:
       case ImgDrawResult::BAD_IMAGE:
       case ImgDrawResult::BAD_ARGS:
-      case ImgDrawResult::NOT_SUPPORTED:
         container.forget(aOutContainer);
         return entry->mLastDrawResult;
       case ImgDrawResult::NOT_READY:
@@ -219,7 +218,6 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
             case ImgDrawResult::SUCCESS:
             case ImgDrawResult::BAD_IMAGE:
             case ImgDrawResult::BAD_ARGS:
-            case ImgDrawResult::NOT_SUPPORTED:
               container.forget(aOutContainer);
               return entry->mLastDrawResult;
             case ImgDrawResult::NOT_READY:

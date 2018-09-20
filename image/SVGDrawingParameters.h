@@ -24,8 +24,7 @@ struct SVGDrawingParameters
   typedef mozilla::gfx::SamplingFilter SamplingFilter;
 
   SVGDrawingParameters(gfxContext* aContext,
-                       const nsIntSize& aRasterSize,
-                       const nsIntSize& aDrawSize,
+                       const nsIntSize& aSize,
                        const ImageRegion& aRegion,
                        SamplingFilter aSamplingFilter,
                        const Maybe<SVGImageContext>& aSVGContext,
@@ -33,12 +32,11 @@ struct SVGDrawingParameters
                        uint32_t aFlags,
                        float aOpacity)
     : context(aContext)
-    , size(aRasterSize)
-    , drawSize(aDrawSize)
+    , size(aSize.width, aSize.height)
     , region(aRegion)
     , samplingFilter(aSamplingFilter)
     , svgContext(aSVGContext)
-    , viewportSize(aRasterSize)
+    , viewportSize(aSize)
     , animationTime(aAnimationTime)
     , flags(aFlags)
     , opacity(aOpacity)
@@ -52,8 +50,7 @@ struct SVGDrawingParameters
   }
 
   gfxContext*                   context;
-  IntSize                       size; // Size to rasterize a surface at.
-  IntSize                       drawSize; // Size to draw the given surface at.
+  IntSize                       size;
   ImageRegion                   region;
   SamplingFilter                samplingFilter;
   const Maybe<SVGImageContext>& svgContext;
