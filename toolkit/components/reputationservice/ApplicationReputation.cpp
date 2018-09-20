@@ -173,6 +173,9 @@ private:
   // NULLs.
   nsCString mResponse;
 
+  // The clock records the start time of a remote lookup request, used by telemetry.
+  PRIntervalTime mTelemetryRemoteRequestStartMs;
+
   // Returns the type of download binary for the file.
   ClientDownloadRequest::DownloadType GetDownloadType(const nsACString& aFilename);
 
@@ -1540,6 +1543,8 @@ PendingLookup::SendRemoteQueryInternal()
   NS_NewTimerWithCallback(getter_AddRefs(mTimeoutTimer),
                           this, timeoutMs, nsITimer::TYPE_ONE_SHOT);
 
+  mTelemetryRemoteRequestStartMs = PR_IntervalNow();
+
   rv = mChannel->AsyncOpen2(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1619,8 +1624,15 @@ PendingLookup::OnStopRequest(nsIRequest *aRequest,
   if (aResult != NS_ERROR_NET_TIMEOUT) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT,
       false);
-  }
 
+    MOZ_ASSERT(mTelemetryRemoteRequestStartMs > 0);
+    int32_t msecs =
+      PR_IntervalToMilliseconds(PR_IntervalNow() - mTelemetryRemoteRequestStartMs);
+
+    MOZ_ASSERT(msecs >= 0);
+    mozilla::Telemetry::Accumulate(
+      mozilla::Telemetry::APPLICATION_REPUTATION_REMOTE_LOOKUP_RESPONSE_TIME, msecs);
+  }
 
   nsresult rv = OnStopRequestInternal(aRequest, aContext, aResult,
                                       &shouldBlock, &verdict);
