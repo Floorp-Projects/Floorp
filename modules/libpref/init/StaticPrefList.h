@@ -1286,6 +1286,27 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Whether Content Blocking UI has been enabled.
+// Enable the new Content Blocking UI only on Nightly.
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "browser.contentblocking.ui.enabled",
+   browser_contentblocking_ui_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Whether Content Blocking Third-Party Cookies UI has been enabled.
+VARCACHE_PREF(
+  "browser.contentblocking.rejecttrackers.ui.enabled",
+   browser_contentblocking_rejecttrackers_ui_enabled,
+  bool, false
+)
+
 // Whether FastBlock has been enabled.
 VARCACHE_PREF(
   "browser.fastblock.enabled",
