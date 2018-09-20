@@ -1508,6 +1508,11 @@ pref("browser.contentblocking.ui.enabled", false);
 
 pref("browser.contentblocking.global-toggle.enabled", true);
 
+// Enable blocking access to storage from tracking resources by default on Nightly
+#ifdef NIGHTLY_BUILD
+pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
+#endif
+
 // Define a set of default features for the Content Blocking UI
 pref("browser.contentblocking.fastblock.ui.enabled", true);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
