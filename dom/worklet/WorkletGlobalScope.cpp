@@ -55,7 +55,7 @@ WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 {
   if (!mConsole) {
     const WorkletLoadInfo& loadInfo = mImpl->LoadInfo();
-    mConsole = Console::CreateForWorklet(aCx,
+    mConsole = Console::CreateForWorklet(aCx, this,
                                          loadInfo.OuterWindowID(),
                                          loadInfo.InnerWindowID(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
