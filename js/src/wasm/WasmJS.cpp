@@ -115,6 +115,25 @@ wasm::HasSupport(JSContext* cx)
            HasAvailableCompilerTier(cx);
 }
 
+bool
+wasm::HasStreamingSupport(JSContext* cx)
+{
+    // This should match EnsureStreamSupport().
+
+    return HasSupport(cx) &&
+           cx->runtime()->offThreadPromiseState.ref().initialized() &&
+           CanUseExtraThreads() &&
+           cx->runtime()->consumeStreamCallback;
+}
+
+bool
+wasm::HasCachingSupport(JSContext* cx)
+{
+    return HasStreamingSupport(cx) &&
+           cx->options().wasmIon() &&
+           IonCanCompile();
+}
+
 static bool
 ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, MutableHandleVal val)
 {
@@ -2935,6 +2954,8 @@ WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp)
 static bool
 EnsureStreamSupport(JSContext* cx)
 {
+    // This should match wasm::HasStreamingSupport().
+
     if (!EnsurePromiseSupport(cx)) {
         return false;
     }
@@ -2974,12 +2995,13 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
     Bytes                        envBytes_;        // immutable after Env state
     SectionRange                 codeSection_;     // immutable after Env state
     Bytes                        codeBytes_;       // not resized after Env state
-    uint8_t*                     codeStreamEnd_;
-    ExclusiveStreamEnd           exclusiveCodeStreamEnd_;
+    uint8_t*                     codeBytesEnd_;
+    ExclusiveBytesPtr            exclusiveCodeBytesEnd_;
     Bytes                        tailBytes_;       // immutable after Tail state
-    ExclusiveTailBytesPtr        exclusiveTailBytes_;
+    ExclusiveStreamEndData       exclusiveStreamEnd_;
     Maybe<uint32_t>              streamError_;
     Atomic<bool>                 streamFailed_;
+    Tier2Listener                tier2Listener_;
 
     // Mutated on helper thread (execute()):
     SharedModule                 module_;
@@ -3037,8 +3059,8 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
         MOZ_ASSERT(!streamError_);
         streamError_ = Some(errorNumber);
         streamFailed_ = true;
-        exclusiveCodeStreamEnd_.lock().notify_one();
-        exclusiveTailBytes_.lock().notify_one();
+        exclusiveCodeBytesEnd_.lock().notify_one();
+        exclusiveStreamEnd_.lock().notify_one();
         setClosedAndDestroyAfterHelperThreadStarted();
         return false;
     }
@@ -3067,8 +3089,8 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
                 return rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
             }
 
-            codeStreamEnd_ = codeBytes_.begin();
-            exclusiveCodeStreamEnd_.lock().get() = codeStreamEnd_;
+            codeBytesEnd_ = codeBytes_.begin();
+            exclusiveCodeBytesEnd_.lock().get() = codeBytesEnd_;
 
             if (!StartOffThreadPromiseHelperTask(this)) {
                 return rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
@@ -3086,17 +3108,17 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
             return true;
           }
           case Code: {
-            size_t copyLength = Min<size_t>(length, codeBytes_.end() - codeStreamEnd_);
-            memcpy(codeStreamEnd_, begin, copyLength);
-            codeStreamEnd_ += copyLength;
+            size_t copyLength = Min<size_t>(length, codeBytes_.end() - codeBytesEnd_);
+            memcpy(codeBytesEnd_, begin, copyLength);
+            codeBytesEnd_ += copyLength;
 
             {
-                auto codeStreamEnd = exclusiveCodeStreamEnd_.lock();
-                codeStreamEnd.get() = codeStreamEnd_;
+                auto codeStreamEnd = exclusiveCodeBytesEnd_.lock();
+                codeStreamEnd.get() = codeBytesEnd_;
                 codeStreamEnd.notify_one();
             }
 
-            if (codeStreamEnd_ != codeBytes_.end()) {
+            if (codeBytesEnd_ != codeBytes_.end()) {
                 return true;
             }
 
@@ -3121,7 +3143,8 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
         MOZ_CRASH("unreachable");
     }
 
-    void streamClosed(JS::StreamConsumer::CloseReason closeReason) override {
+    void streamClosed(JS::StreamConsumer::CloseReason closeReason,
+                      JS::OptimizedEncodingListener* tier2Listener) override {
         switch (closeReason) {
           case JS::StreamConsumer::EndOfFile:
             switch (streamState_.lock().get()) {
@@ -3138,9 +3161,12 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
               case Code:
               case Tail:
                 {
-                    auto tailBytes = exclusiveTailBytes_.lock();
-                    tailBytes.get() = &tailBytes_;
-                    tailBytes.notify_one();
+                    auto streamEnd = exclusiveStreamEnd_.lock();
+                    MOZ_ASSERT(!streamEnd->reached);
+                    streamEnd->reached = true;
+                    streamEnd->tailBytes = &tailBytes_;
+                    streamEnd->tier2Listener = tier2Listener;
+                    streamEnd.notify_one();
                 }
                 setClosedAndDestroyAfterHelperThreadStarted();
                 return;
@@ -3165,14 +3191,21 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
         MOZ_CRASH("unreachable");
     }
 
+    void consumeOptimizedEncoding(const uint8_t* begin, size_t length) override {
+        module_ = Module::deserialize(begin, length);
+
+        MOZ_ASSERT(streamState_.lock().get() == Env);
+        setClosedAndDestroyBeforeHelperThreadStarted();
+    }
+
     // Called on a helper thread:
 
     void execute() override {
         module_ = CompileStreaming(*compileArgs_,
                                    envBytes_,
                                    codeBytes_,
-                                   exclusiveCodeStreamEnd_,
-                                   exclusiveTailBytes_,
+                                   exclusiveCodeBytesEnd_,
+                                   exclusiveStreamEnd_,
                                    streamFailed_,
                                    &compileError_,
                                    &warnings_);
@@ -3209,9 +3242,9 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
         importObj_(cx, importObj),
         streamState_(mutexid::WasmStreamStatus, Env),
         codeSection_{},
-        codeStreamEnd_(nullptr),
-        exclusiveCodeStreamEnd_(mutexid::WasmCodeStreamEnd, nullptr),
-        exclusiveTailBytes_(mutexid::WasmTailBytesPtr, nullptr),
+        codeBytesEnd_(nullptr),
+        exclusiveCodeBytesEnd_(mutexid::WasmCodeBytesEnd, nullptr),
+        exclusiveStreamEnd_(mutexid::WasmStreamEnd),
         streamFailed_(false)
     {
         MOZ_ASSERT_IF(importObj_, instantiate_);
