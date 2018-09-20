@@ -370,13 +370,6 @@ gfxPlatformFontList::InitFontList()
 }
 
 void
-gfxPlatformFontList::GenerateFontListKey(const nsAString& aKeyName, nsAString& aResult)
-{
-    aResult = aKeyName;
-    ToLowerCase(aResult);
-}
-
-void
 gfxPlatformFontList::GenerateFontListKey(const nsACString& aKeyName, nsACString& aResult)
 {
     aResult = aKeyName;
