@@ -53,15 +53,11 @@ WorkletGlobalScope::WrapObject(JSContext* aCx,
 already_AddRefed<Console>
 WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 {
-  RefPtr<WorkletThread> thread = WorkletThread::Get();
-  MOZ_ASSERT(thread);
-
   if (!mConsole) {
-    mConsole =
-      Console::CreateForWorklet(aCx,
-                                thread->GetWorkletLoadInfo().OuterWindowID(),
-                                thread->GetWorkletLoadInfo().InnerWindowID(),
-                                aRv);
+    const WorkletLoadInfo& loadInfo = mImpl->LoadInfo();
+    mConsole = Console::CreateForWorklet(aCx,
+                                         loadInfo.OuterWindowID(),
+                                         loadInfo.InnerWindowID(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -76,10 +72,7 @@ WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
 {
   WorkletThread::AssertIsOnWorkletThread();
 
-  WorkletThread* workletThread = WorkletThread::Get();
-  MOZ_ASSERT(workletThread);
-
-  if (!workletThread->GetWorkletLoadInfo().DumpEnabled()) {
+  if (!mImpl->LoadInfo().DumpEnabled()) {
     return;
   }
 
