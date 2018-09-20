@@ -8,7 +8,7 @@
 <script type="application/javascript">
   createHTML({
     bug: "906986",
-    title: "Renegotiation: restart ice, local and remote rollback"
+    title: "Renegotiation: restart ice, local and remote rollback, without a subsequent ICE restart"
   });
 
   var test;
@@ -43,13 +43,6 @@
           }
         },
 
-        function PC_LOCAL_EXPECT_ICE_CONNECTED(test) {
-          test.pcLocal.iceCheckingIceRollbackExpected = true;
-        },
-        function PC_REMOTE_EXPECT_ICE_CONNECTED(test) {
-          test.pcRemote.iceCheckingIceRollbackExpected = true;
-        },
-
         function PC_REMOTE_ROLLBACK(test) {
           return test.setRemoteDescription(test.pcRemote, { type: "rollback" },
                                            STABLE);
@@ -72,11 +65,8 @@
           return test.pcLocal.endOfTrickleIce;
         },
 
-        function PC_LOCAL_EXPECT_ICE_CHECKING(test) {
-          test.pcLocal.expectIceChecking();
-        },
-        function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
-          test.pcRemote.expectIceChecking();
+        function PC_LOCAL_SET_OFFER_OPTION(test) {
+          test.setOfferOptions({ iceRestart: false });
         }
       ],
       1 // Replaces after second PC_REMOTE_CREATE_ANSWER

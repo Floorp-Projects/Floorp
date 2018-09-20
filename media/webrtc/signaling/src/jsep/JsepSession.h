@@ -99,13 +99,8 @@ public:
   }
 
   // Set up the ICE And DTLS data.
-  virtual nsresult SetIceCredentials(const std::string& ufrag,
-                                     const std::string& pwd) = 0;
-  virtual const std::string& GetUfrag() const = 0;
-  virtual const std::string& GetPwd() const = 0;
   virtual nsresult SetBundlePolicy(JsepBundlePolicy policy) = 0;
   virtual bool RemoteIsIceLite() const = 0;
-  virtual bool RemoteIceIsRestarting() const = 0;
   virtual std::vector<std::string> GetIceOptions() const = 0;
 
   virtual nsresult AddDtlsFingerprint(const std::string& algorithm,
@@ -185,6 +180,7 @@ public:
   // ICE controlling or controlled
   virtual bool IsIceControlling() const = 0;
   virtual bool IsOfferer() const = 0;
+  virtual bool IsIceRestarting() const = 0;
 
   virtual const std::string
   GetLastError() const
