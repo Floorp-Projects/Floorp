@@ -304,10 +304,22 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::Turbulence(const Poi
 static inline Float
 MakeNonNegative(Float aValue, Float aIncrementSize)
 {
+  if (aIncrementSize == 0) {
+    return 0;
+  }
   if (aValue >= 0) {
     return aValue;
   }
   return aValue + ceilf(-aValue / aIncrementSize) * aIncrementSize;
+}
+
+static inline Float
+FiniteDivide(Float aValue, Float aDivisor)
+{
+  if (aDivisor == 0) {
+    return 0;
+  }
+  return aValue / aDivisor;
 }
 
 template<TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t, typename u8x16_t>
@@ -316,8 +328,8 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::EquivalentNonNegativ
 {
   Size basePeriod = Stitch ? Size(mStitchInfo.width, mStitchInfo.height) :
                              Size(sBSize, sBSize);
-  Size repeatingSize(basePeriod.width / mBaseFrequency.width,
-                     basePeriod.height / mBaseFrequency.height);
+  Size repeatingSize(FiniteDivide(basePeriod.width, mBaseFrequency.width),
+                     FiniteDivide(basePeriod.height, mBaseFrequency.height));
   return Point(MakeNonNegative(aOffset.x, repeatingSize.width),
                MakeNonNegative(aOffset.y, repeatingSize.height));
 }
