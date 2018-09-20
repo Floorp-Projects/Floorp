@@ -18,8 +18,9 @@ Test the payment-dialog custom element
   <link rel="stylesheet" type="text/css" href="../../res/containers/rich-picker.css"/>
 </head>
 <body>
-  <p id="display">
-    <iframe id="templateFrame" src="../../res/paymentRequest.xhtml" width="0" height="0"></iframe>
+  <p id="display" style="height: 100vh; margin: 0;">
+    <iframe id="templateFrame" src="../../res/paymentRequest.xhtml" width="0" height="0"
+            style="float: left;"></iframe>
   </p>
 <div id="content" style="display: none">
 
@@ -40,11 +41,7 @@ add_task(async function setupOnce() {
   await SimpleTest.promiseFocus(templateFrame.contentWindow);
 
   let displayEl = document.getElementById("display");
-  // Import the templates from the real shipping dialog to avoid duplication.
-  for (let template of templateFrame.contentDocument.querySelectorAll("template")) {
-    let imported = document.importNode(template, true);
-    displayEl.appendChild(imported);
-  }
+  importDialogDependencies(templateFrame, displayEl);
 
   el1 = new PaymentDialog();
   displayEl.appendChild(el1);

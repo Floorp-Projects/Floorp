@@ -1,7 +1,7 @@
 "use strict";
 
 /* exported asyncElementRendered, promiseStateChange, promiseContentToChromeMessage, deepClone,
-   PTU, registerConsoleFilter, fillField */
+   PTU, registerConsoleFilter, fillField, importDialogDependencies */
 
 const PTU = SpecialPowers.Cu.import("resource://testing-common/PaymentTestUtils.jsm", {})
                             .PaymentTestUtils;
@@ -41,6 +41,27 @@ function promiseContentToChromeMessage(messageType) {
       resolve(event.detail);
     });
   });
+}
+
+/**
+ * Import the templates and stylesheets from the real shipping dialog to avoid
+ * duplication in the tests.
+ * @param {HTMLIFrameElement} templateFrame - Frame to copy the resources from
+ * @param {HTMLElement} destinationEl - Where to append the copied resources
+ */
+function importDialogDependencies(templateFrame, destinationEl) {
+  for (let template of templateFrame.contentDocument.querySelectorAll("template")) {
+    let imported = document.importNode(template, true);
+    destinationEl.appendChild(imported);
+  }
+
+  let baseURL = new URL("../../res/", window.location.href);
+  let stylesheetLinks = templateFrame.contentDocument.querySelectorAll("link[rel~='stylesheet']");
+  for (let stylesheet of stylesheetLinks) {
+    let imported = document.importNode(stylesheet, true);
+    imported.href = new URL(imported.getAttribute("href"), baseURL);
+    destinationEl.appendChild(imported);
+  }
 }
 
 function deepClone(obj) {
