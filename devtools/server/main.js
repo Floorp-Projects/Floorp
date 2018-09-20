@@ -328,11 +328,6 @@ var DebuggerServer = {
       constructor: "InspectorActor",
       type: { target: true }
     });
-    this.registerModule("devtools/server/actors/call-watcher", {
-      prefix: "callWatcher",
-      constructor: "CallWatcherActor",
-      type: { target: true }
-    });
     this.registerModule("devtools/server/actors/canvas", {
       prefix: "canvas",
       constructor: "CanvasActor",
