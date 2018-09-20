@@ -6,31 +6,29 @@
 
 <!DOCTYPE html [
 <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
-<!ENTITY % urlClassifierDTD SYSTEM "chrome://global/locale/aboutUrlClassifier.dtd"> %urlClassifierDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>&aboutUrlClassifier.title;</title>
+  <title data-l10n-id="url-classifier-title"></title>
   <link rel="stylesheet" href="chrome://global/content/aboutUrlClassifier.css" type="text/css"/>
+  <link rel="localization" href="toolkit/about/url-classifier.ftl"/>
   <script type="text/javascript" src="chrome://global/content/aboutUrlClassifier.js"></script>
 </head>
 
 <body onload="onLoad()" class="wide-container">
-  <h1>&aboutUrlClassifier.title;</h1>
+  <h1 data-l10n-id="url-classifier-title"></h1>
   <div id="provider">
-    <h2 class="major-section">&aboutUrlClassifier.providerTitle;</h2>
+    <h2 class="major-section" data-l10n-id="url-classifier-provider-title"></h2>
     <table id="provider-table">
       <thead>
         <tr id="provider-head-row">
-          <th id="col-provider">&aboutUrlClassifier.provider;</th>
-          <th id="col-lastupdatetime">&aboutUrlClassifier.providerLastUpdateTime;</th>
-          <th id="col-nextupdatetime">&aboutUrlClassifier.providerNextUpdateTime;</th>
-          <th id="col-backofftime">&aboutUrlClassifier.providerBackOffTime;</th>
-          <th id="col-lastupdateresult">&aboutUrlClassifier.providerLastUpdateStatus;</th>
-          <th id="col-update">&aboutUrlClassifier.providerUpdateBtn;</th>
+          <th id="col-provider" data-l10n-id="url-classifier-provider"></th>
+          <th id="col-lastupdatetime" data-l10n-id="url-classifier-provider-last-update-time"></th>
+          <th id="col-nextupdatetime" data-l10n-id="url-classifier-provider-next-update-time"></th>
+          <th id="col-backofftime" data-l10n-id="url-classifier-provider-back-off-time"></th>
+          <th id="col-lastupdateresult" data-l10n-id="url-classifier-provider-last-update-status"></th>
+          <th id="col-update" data-l10n-id="url-classifier-provider-update-btn"></th>
         </tr>
       </thead>
       <tbody id="provider-table-body">
@@ -39,19 +37,19 @@
     </table>
   </div>
   <div id="cache">
-    <h2 class="major-section">&aboutUrlClassifier.cacheTitle;</h2>
+    <h2 class="major-section" data-l10n-id="url-classifier-cache-title"></h2>
     <div id="cache-modules" class="options">
-      <button id="refresh-cache-btn">&aboutUrlClassifier.cacheRefreshBtn;</button>
-      <button id="clear-cache-btn">&aboutUrlClassifier.cacheClearBtn;</button>
+      <button id="refresh-cache-btn" data-l10n-id="url-classifier-cache-refresh-btn"></button>
+      <button id="clear-cache-btn" data-l10n-id="url-classifier-cache-clear-btn"></button>
       <br></br>
     </div>
     <table id="cache-table">
       <thead>
         <tr id="cache-head-row">
-          <th id="col-tablename">&aboutUrlClassifier.cacheTableName;</th>
-          <th id="col-negativeentries">&aboutUrlClassifier.cacheNCacheEntries;</th>
-          <th id="col-positiveentries">&aboutUrlClassifier.cachePCacheEntries;</th>
-          <th id="col-showentries">&aboutUrlClassifier.cacheShowEntries;</th>
+          <th id="col-tablename" data-l10n-id="url-classifier-cache-table-name"></th>
+          <th id="col-negativeentries" data-l10n-id="url-classifier-cache-ncache-entries"></th>
+          <th id="col-positiveentries" data-l10n-id="url-classifier-cache-pcache-entries"></th>
+          <th id="col-showentries" data-l10n-id="url-classifier-cache-show-entries"></th>
         </tr>
       </thead>
       <tbody id="cache-table-body">
@@ -61,15 +59,15 @@
     <br></br>
   </div>
   <div id="cache-entries">
-    <h2 class="major-section">&aboutUrlClassifier.cacheEntries;</h2>
+    <h2 class="major-section" data-l10n-id="url-classifier-cache-entries"></h2>
     <table id="cache-entries-table">
       <thead>
         <tr id="cache-entries-row">
-          <th id="col-table">&aboutUrlClassifier.cacheTableName;</th>
-          <th id="col-prefix">&aboutUrlClassifier.cachePrefix;</th>
-          <th id="col-n-expire">&aboutUrlClassifier.cacheNCacheExpiry;</th>
-          <th id="col-fullhash">&aboutUrlClassifier.cacheFullhash;</th>
-          <th id="col-p-expire">&aboutUrlClassifier.cachePCacheExpiry;</th>
+          <th id="col-table" data-l10n-id="url-classifier-cache-table-name"></th>
+          <th id="col-prefix" data-l10n-id="url-classifier-cache-prefix"></th>
+          <th id="col-n-expire" data-l10n-id="url-classifier-cache-ncache-expiry"></th>
+          <th id="col-fullhash" data-l10n-id="url-classifier-cache-fullhash"></th>
+          <th id="col-p-expire" data-l10n-id="url-classifier-cache-pcache-expiry"></th>
         </tr>
       </thead>
       <tbody id="cache-entries-table-body">
@@ -78,38 +76,38 @@
     </table>
   </div>
   <div id="debug">
-    <h2 class="major-section">&aboutUrlClassifier.debugTitle;</h2>
+    <h2 class="major-section" data-l10n-id="url-classifier-debug-title"></h2>
     <div id="debug-modules" class="options">
       <input id="log-modules" type="text" value=""/>
-      <button id="set-log-modules">&aboutUrlClassifier.debugModuleBtn;</button>
+      <button id="set-log-modules" data-l10n-id="url-classifier-debug-module-btn"></button>
       <br></br>
       <input id="log-file" type="text" value=""/>
-      <button id="set-log-file">&aboutUrlClassifier.debugFileBtn;</button>
+      <button id="set-log-file" data-l10n-id="url-classifier-debug-file-btn"></button>
       <br></br>
       <div class="toggle-container-with-text">
         <input id="js-log" type="checkbox"/>
-        <label for="js-log">&aboutUrlClassifier.debugJSLogChk;</label>
+        <label for="js-log" data-l10n-id="url-classifier-debug-js-log-chk"></label>
       </div>
     </div>
     <table id="debug-table">
     <tbody>
     <tr>
-      <th class="column">&aboutUrlClassifier.debugSBModules;</th>
+      <th class="column" data-l10n-id="url-classifier-debug-sb-modules"></th>
       <td id="sb-log-modules">
       </td>
     </tr>
     <tr>
-      <th class="column">&aboutUrlClassifier.debugModules;</th>
+      <th class="column" data-l10n-id="url-classifier-debug-modules"></th>
       <td id="cur-log-modules">
       </td>
     </tr>
     <tr>
-      <th class="column">&aboutUrlClassifier.debugSBJSModules;</th>
+      <th class="column" data-l10n-id="url-classifier-debug-sbjs-modules"></th>
       <td id="cur-js-log">
       </td>
     </tr>
     <tr>
-      <th class="column">&aboutUrlClassifier.debugFile;</th>
+      <th class="column" data-l10n-id="url-classifier-debug-file"></th>
       <td id="cur-log-file">
       </td>
     </tr>

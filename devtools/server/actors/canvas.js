@@ -7,8 +7,8 @@
 
 const defer = require("devtools/shared/defer");
 const protocol = require("devtools/shared/protocol");
-const {CallWatcherActor} = require("devtools/server/actors/call-watcher");
-const {CallWatcherFront} = require("devtools/shared/fronts/call-watcher");
+const {CallWatcher} = require("devtools/server/actors/utils/call-watcher");
+const {METHOD_FUNCTION, SETTER_FUNCTION} = require("devtools/shared/fronts/function-call");
 const {WebGLPrimitiveCounter} = require("devtools/server/actors/canvas/primitive");
 const {
   frameSnapshotSpec,
@@ -148,7 +148,7 @@ exports.CanvasActor = protocol.ActorClassWithSpec(canvasSpec, {
     }
     this._initialized = true;
 
-    this._callWatcher = new CallWatcherActor(this.conn, this.targetActor);
+    this._callWatcher = new CallWatcher(this.conn, this.targetActor);
     this._callWatcher.onCall = this._onContentFunctionCall;
     this._callWatcher.setup({
       tracedGlobals: CANVAS_CONTEXTS,
@@ -509,8 +509,8 @@ var ContextUtils = {
    * In case of a 2D context, a new canvas is created, since there's no
    * intrinsic state that can't be easily duplicated.
    *
-   * @param number contexType
-   *        The type of context to use. See the CallWatcherFront scope types.
+   * @param number contextType
+   *        The type of context to use. See the FunctionCallFront constants.
    * @param HTMLCanvasElement canvas
    *        The canvas element which is the source of all context calls.
    * @param array calls
@@ -594,9 +594,9 @@ var ContextUtils = {
           continue;
         }
       }
-      if (type == CallWatcherFront.METHOD_FUNCTION) {
+      if (type == METHOD_FUNCTION) {
         replayContext[name].apply(replayContext, args);
-      } else if (type == CallWatcherFront.SETTER_FUNCTION) {
+      } else if (type == SETTER_FUNCTION) {
         replayContext[name] = args;
       }
       if (CanvasFront.DRAW_CALLS.has(name)) {

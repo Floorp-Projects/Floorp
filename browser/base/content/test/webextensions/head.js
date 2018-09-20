@@ -1,3 +1,4 @@
+ChromeUtils.defineModuleGetter(this, "AddonTestUtils", "resource://testing-common/AddonTestUtils.jsm");
 
 const BASE = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content/", "https://example.com/");
@@ -68,13 +69,17 @@ function promiseInstallEvent(addon, event) {
  *
  * @param {string} url
  *        URL of the .xpi file to install
+ * @param {Object?} installTelemetryInfo
+ *        an optional object that contains additional details used by the telemetry events.
  *
  * @returns {Promise}
  *          Resolves when the extension has been installed with the Addon
  *          object as the resolution value.
  */
-async function promiseInstallAddon(url) {
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
+async function promiseInstallAddon(url, installTelemetryInfo) {
+  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall",
+                                                    null, null, null, null, null,
+                                                    installTelemetryInfo);
   install.install();
 
   let addon = await new Promise(resolve => {
@@ -353,7 +358,10 @@ async function testInstallMethod(installFn, telemetryBase) {
 // `autoUpdate` specifies whether the test should be run with
 // updates applied automatically or not.
 async function interactiveUpdateTest(autoUpdate, checkFn) {
+  AddonTestUtils.initMochitest(this);
+
   const ID = "update2@tests.mozilla.org";
+  const FAKE_INSTALL_SOURCE = "fake-install-source";
 
   await SpecialPowers.pushPrefEnv({set: [
     // We don't have pre-pinned certificates for the local mochitest server
@@ -365,6 +373,8 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
     // Point updates to the local mochitest server
     ["extensions.update.url", `${BASE}/browser_webext_update.json`],
   ]});
+
+  AddonTestUtils.hookAMTelemetryEvents();
 
   // Trigger an update check, manually applying the update if we're testing
   // without auto-update.
@@ -405,7 +415,9 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Install version 1.0 of the test extension
-  let addon = await promiseInstallAddon(`${BASE}/browser_webext_update1.xpi`);
+  let addon = await promiseInstallAddon(`${BASE}/browser_webext_update1.xpi`, {
+    source: FAKE_INSTALL_SOURCE,
+  });
   ok(addon, "Addon was installed");
   is(addon.version, "1.0", "Version 1 of the addon is installed");
 
@@ -444,6 +456,43 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await addon.uninstall();
   await SpecialPowers.popPrefEnv();
+
+  const collectedUpdateEvents = AddonTestUtils.getAMTelemetryEvents().filter(evt => {
+    return evt.method === "update";
+  });
+
+  Assert.deepEqual(collectedUpdateEvents.map(evt => evt.extra.step), [
+    // First update is cancelled on the permission prompt.
+    "started", "download_started", "download_completed", "permissions_prompt", "cancelled",
+    // Second update is expected to be completed.
+    "started", "download_started", "download_completed", "permissions_prompt", "completed",
+  ], "Got the expected sequence on update telemetry events");
+
+  ok(collectedUpdateEvents.every(evt => evt.extra.addon_id === ID),
+     "Every update telemetry event should have the expected addon_id extra var");
+
+  ok(collectedUpdateEvents.every(evt => evt.extra.source === FAKE_INSTALL_SOURCE),
+     "Every update telemetry event should have the expected source extra var");
+
+  ok(collectedUpdateEvents.every(evt => evt.extra.updated_from === "user"),
+     "Every update telemetry event should have the update_from extra var 'user'");
+
+  let hasPermissionsExtras = collectedUpdateEvents.filter(evt => {
+    return evt.extra.step === "permissions_prompt";
+  }).every(evt => !!evt.extra.num_perms && !!evt.extra.num_origins);
+
+  ok(hasPermissionsExtras,
+     "Every 'permissions_prompt' update telemetry event should have the permissions extra vars");
+
+  let hasDownloadTimeExtras = collectedUpdateEvents.filter(evt => {
+    return evt.extra.step === "download_completed";
+  }).every(evt => {
+    const download_time = parseInt(evt.extra.download_time, 10);
+    return !isNaN(download_time) && download_time > 0;
+  });
+
+  ok(hasDownloadTimeExtras,
+     "Every 'download_completed' update telemetry event should have a download_time extra vars");
 }
 
 // The tests in this directory install a bunch of extensions but they
@@ -491,4 +540,3 @@ function expectTelemetry(values) {
   Assert.deepEqual(values, collectedTelemetry);
   collectedTelemetry = [];
 }
-

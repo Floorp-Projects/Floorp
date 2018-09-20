@@ -31,6 +31,8 @@
     class TestCustomElement extends XULElement {
       constructor() {
         super();
+
+        this.attachShadow({mode: "open"});
       }
 
       connectedCallback() {
@@ -87,6 +89,7 @@
 
     function basicCustomElementCreate() {
       let element = document.createElementNS(XUL_NS, "test-custom-element");
+      ok(element.shadowRoot, "Shadow DOM works even with pref off");
       document.querySelector("#content").appendChild(element);
       is(element.textContent, "foo", "Should have set the textContent");
       ok(element instanceof TestCustomElement, "Should be an instance of TestCustomElement");

@@ -100,7 +100,7 @@ AboutNewTabService.prototype = {
   classID: Components.ID("{dfcd2adc-7867-4d3a-ba70-17501f208142}"),
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIAboutNewTabService,
-    Ci.nsIObserver
+    Ci.nsIObserver,
   ]),
 
   observe(subject, topic, data) {
@@ -153,7 +153,7 @@ AboutNewTabService.prototype = {
             `${BASE_URL}vendor/redux.js`,
             `${BASE_URL}vendor/react-redux.js`,
             `${BASE_URL}prerendered/${this.activityStreamLocale}/activity-stream-strings.js`,
-            `${BASE_URL}data/content/activity-stream.bundle.js`
+            `${BASE_URL}data/content/activity-stream.bundle.js`,
           ];
 
           if (this._activityStreamPrerender) {
@@ -251,7 +251,7 @@ AboutNewTabService.prototype = {
       this._activityStreamPrerender ? "-prerendered" : "",
       this._activityStreamDebug ? "-debug" : "",
       this._privilegedContentProcess ? "-noscripts" : "",
-      ".html"
+      ".html",
     ].join("");
   },
 
@@ -339,7 +339,7 @@ AboutNewTabService.prototype = {
       Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
     }
     this.initialized = false;
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AboutNewTabService]);

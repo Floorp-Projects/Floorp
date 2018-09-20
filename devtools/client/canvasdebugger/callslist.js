@@ -5,6 +5,7 @@
 /* globals window, document */
 "use strict";
 
+const { METHOD_FUNCTION } = require("devtools/shared/fronts/function-call");
 /**
  * Functions handling details about a single recorded animation frame snapshot
  * (the calls list, rendering preview, thumbnails filmstrip etc.).
@@ -93,7 +94,7 @@ var CallsListView = extend(WidgetMethods, {
       argsPreview.setAttribute("crop", "end");
       argsPreview.setAttribute("flex", "100");
       // Getters and setters are displayed differently from regular methods.
-      if (call.type == CallWatcherFront.METHOD_FUNCTION) {
+      if (call.type == METHOD_FUNCTION) {
         argsPreview.setAttribute("value", "(" + call.argsPreview + ")");
       } else {
         argsPreview.setAttribute("value", " = " + call.argsPreview);

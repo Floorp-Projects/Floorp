@@ -4,14 +4,9 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const bundle = Services.strings.createBundle(
-  "chrome://global/locale/aboutUrlClassifier.properties");
-
 const UPDATE_BEGIN = "safebrowsing-update-begin";
 const UPDATE_FINISH = "safebrowsing-update-finished";
 const JSLOG_PREF = "browser.safebrowsing.debug";
-
-const STR_NA = bundle.GetStringFromName("NotAvailable");
 
 function unLoad() {
   window.removeEventListener("unload", unLoad);
@@ -64,7 +59,7 @@ var Provider = {
     document.getElementById("update-" + p).disabled = true;
 
     let elem = document.getElementById(p + "-col-lastupdateresult");
-    elem.childNodes[0].nodeValue = bundle.GetStringFromName("Updating");
+    document.l10n.setAttributes(elem, "url-classifier-updating");
   },
 
   onFinishUpdate(aSubject, aTopic, aData) {
@@ -84,13 +79,11 @@ var Provider = {
 
     let elem = document.getElementById(p + "-col-lastupdateresult");
     if (aData.startsWith("success")) {
-      elem.childNodes[0].nodeValue = bundle.GetStringFromName("success");
+      document.l10n.setAttributes(elem, "url-classifier-success");
     } else if (aData.startsWith("update error")) {
-      elem.childNodes[0].nodeValue =
-        bundle.formatStringFromName("updateError", [aData.split(": ")[1]], 1);
+      document.l10n.setAttributes(elem, "url-classifier-update-error", {error: [aData.split(": ")[1]]});
     } else if (aData.startsWith("download error")) {
-      elem.childNodes[0].nodeValue =
-        bundle.formatStringFromName("downloadError", [aData.split(": ")[1]], 1);
+      document.l10n.setAttributes(elem, "url-classifier-download-error", {error: [aData.split(": ")[1]]});
     } else {
       elem.childNodes[0].nodeValue = aData;
     }
@@ -126,12 +119,12 @@ var Provider = {
           btn.id = "update-" + provider;
           btn.addEventListener("click", () => { this.update(provider); });
 
-          let str = bundle.GetStringFromName("TriggerUpdate");
-          btn.appendChild(document.createTextNode(str));
+          document.l10n.setAttributes(btn, "url-classifier-trigger-update");
           td.appendChild(btn);
+        } else if (column.id === "col-lastupdateresult") {
+            document.l10n.setAttributes(td, "url-classifier-not-available");
         } else {
-          let str = column.id === "col-lastupdateresult" ? STR_NA : "";
-          td.appendChild(document.createTextNode(str));
+          td.appendChild(document.createTextNode(""));
         }
         tr.appendChild(td);
       }
@@ -146,20 +139,25 @@ var Provider = {
 
       let pref = "browser.safebrowsing.provider." + provider + ".lastupdatetime";
       let lut = Services.prefs.getCharPref(pref, "");
-      values["col-lastupdatetime"] = lut ? new Date(lut * 1) : STR_NA;
+      values["col-lastupdatetime"] = lut ? new Date(lut * 1) : null;
 
       pref = "browser.safebrowsing.provider." + provider + ".nextupdatetime";
       let nut = Services.prefs.getCharPref(pref, "");
-      values["col-nextupdatetime"] = nut ? new Date(nut * 1) : STR_NA;
+      values["col-nextupdatetime"] = nut ? new Date(nut * 1) : null;
 
       let listmanager = Cc["@mozilla.org/url-classifier/listmanager;1"]
                         .getService(Ci.nsIUrlListManager);
       let bot = listmanager.getBackOffTime(provider);
-      values["col-backofftime"] = bot ? new Date(bot * 1) : STR_NA;
+      values["col-backofftime"] = bot ? new Date(bot * 1) : null;
 
       for (let key of Object.keys(values)) {
         let elem = document.getElementById(provider + "-" + key);
-        elem.childNodes[0].nodeValue = values[key];
+        if (values[key]) {
+          elem.removeAttribute("data-l10n-id");
+          elem.childNodes[0].nodeValue = values[key];
+        } else {
+          document.l10n.setAttributes(elem, "url-classifier-not-available");
+        }
       }
     }
   },
@@ -175,7 +173,7 @@ var Provider = {
     if (!listmanager.forceUpdates(tables)) {
       // This may because of back-off algorithm.
       let elem = document.getElementById(provider + "-col-lastupdateresult");
-      elem.childNodes[0].nodeValue = bundle.GetStringFromName("CannotUpdate");
+      document.l10n.setAttributes(elem, "url-classifier-cannot-update");
     }
   },
 
@@ -246,8 +244,19 @@ var Cache = {
         if (i == 0 && tds.length != cols) {
           td.setAttribute("colspan", cols - tds.length + 1);
         }
-        let elem = typeof v === "object" ? v : document.createTextNode(v);
-        td.appendChild(elem);
+
+        if (typeof v === "object") {
+          if (v.l10n) {
+            document.l10n.setAttributes(td, v.l10n);
+          } else {
+            td.removeAttribute("data-l10n-id");
+            td.appendChild(v);
+          }
+        } else {
+          td.removeAttribute("data-l10n-id");
+          td.textContent = v;
+        }
+
         tr.appendChild(td);
       });
       body.appendChild(tr);
@@ -290,7 +299,7 @@ var Cache = {
                   let list = [match.fullhash, new Date(match.expiry * 1000).toString()];
                   tds = tds.concat(list);
                 } else {
-                  tds = tds.concat([STR_NA, STR_NA]);
+                  tds = tds.concat([{l10n: "url-classifier-not-available"}, {l10n: "url-classifier-not-available"}]);
                 }
                 createRow(tds, document.getElementById("cache-entries-table-body"), 5);
                 j++;
@@ -449,9 +458,11 @@ var Debug = {
     jsChk.checked = enabled;
 
     let curJSLog = document.getElementById("cur-js-log");
-    curJSLog.childNodes[0].nodeValue = enabled ?
-      bundle.GetStringFromName("Enabled") :
-      bundle.GetStringFromName("Disabled");
+    if (enabled) {
+      document.l10n.setAttributes(curJSLog, "url-classifier-enabled");
+    } else {
+      document.l10n.setAttributes(curJSLog, "url-classifier-disabled");
+    }
   },
 
   jslog() {
