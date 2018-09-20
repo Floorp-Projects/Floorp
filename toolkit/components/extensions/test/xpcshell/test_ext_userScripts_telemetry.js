@@ -10,7 +10,7 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
-add_task(async function test_userScripts_telemetry() {
+async function run_userScripts_telemetry_test() {
   function apiScript() {
     browser.userScripts.setScriptAPIs({
       US_test_sendMessage([msg, data], scriptMetadata, scriptGlobal) {
@@ -120,4 +120,9 @@ add_task(async function test_userScripts_telemetry() {
 
   await contentPage.close();
   await extension2.unload();
+}
+
+add_task(async function test_userScripts_telemetry() {
+  await runWithPrefs([["extensions.webextensions.userScripts.enabled", true]],
+                     run_userScripts_telemetry_test);
 });
