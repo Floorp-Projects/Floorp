@@ -8,6 +8,7 @@ const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://act
 const MIGRATION_ENDED_EVENT = "Migration:Ended";
 const MS_PER_DAY = 86400000;
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "MigrationUtils", "resource:///modules/MigrationUtils.jsm");

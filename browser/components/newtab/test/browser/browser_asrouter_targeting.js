@@ -1,4 +1,4 @@
-const {ASRouterTargeting, TopFrecentSitesCache, TotalBookmarksCountCache} =
+const {ASRouterTargeting, TopFrecentSitesCache} =
   ChromeUtils.import("resource://activity-stream/lib/ASRouterTargeting.jsm", {});
 const {AddonTestUtils} =
   ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
@@ -30,7 +30,7 @@ add_task(async function should_handle_async_getters() {
 add_task(async function find_matching_message() {
   const messages = [
     {id: "foo", targeting: "FOO"},
-    {id: "bar", targeting: "!FOO"},
+    {id: "bar", targeting: "!FOO"}
   ];
   const context = {FOO: true};
 
@@ -111,46 +111,23 @@ add_task(async function checkProfileAgeReset() {
 });
 
 add_task(async function checkCurrentDate() {
-  let message = {id: "foo", targeting: `currentDate < '${new Date(Date.now() + 5000)}'|date`};
+  let message = {id: "foo", targeting: `currentDate < '${new Date(Date.now() + 1000)}'|date`};
   is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
     "should select message based on currentDate < timestamp");
 
-  message = {id: "foo", targeting: `currentDate > '${new Date(Date.now() - 5000)}'|date`};
+  message = {id: "foo", targeting: `currentDate > '${new Date(Date.now() - 1000)}'|date`};
   is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
     "should select message based on currentDate > timestamp");
 });
 
-add_task(async function check_usesFirefoxSync() {
+add_task(async function checkhasFxAccount() {
   await pushPrefs(["services.sync.username", "someone@foo.com"]);
-  is(await ASRouterTargeting.Environment.usesFirefoxSync, true,
+  is(await ASRouterTargeting.Environment.hasFxAccount, true,
     "should return true if a fx account is set");
 
-  const message = {id: "foo", targeting: "usesFirefoxSync"};
+  const message = {id: "foo", targeting: "hasFxAccount"};
   is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
-    "should select correct item by usesFirefoxSync");
-});
-
-add_task(async function check_totalBookmarksCount() {
-  // Make sure we remove default bookmarks so they don't interfere
-  await clearHistoryAndBookmarks();
-  const message = {id: "foo", targeting: "totalBookmarksCount > 0"};
-
-  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), undefined,
-    "Should not select any message because");
-
-  const bookmark = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    title: "foo",
-    url: "https://mozilla1.com/nowNew",
-  });
-
-  TotalBookmarksCountCache.expire();
-
-  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
-    "Should select correct item after bookmarks are added.");
-
-  // Cleanup
-  await PlacesUtils.bookmarks.remove(bookmark.guid);
+    "should select correct item by hasFxAccount");
 });
 
 add_task(async function checksearchEngines() {
@@ -209,13 +186,13 @@ add_task(async function checkAddonsInfo() {
     manifest: {
       applications: {gecko: {id: FAKE_ID}},
       name: FAKE_NAME,
-      version: FAKE_VERSION,
-    },
+      version: FAKE_VERSION
+    }
   });
 
   await Promise.all([
     AddonTestUtils.promiseWebExtensionStartup(FAKE_ID),
-    AddonManager.installTemporaryAddon(xpi),
+    AddonManager.installTemporaryAddon(xpi)
   ]);
 
   const {addons} = await AddonManager.getActiveAddons(["extension", "service"]);
@@ -265,11 +242,11 @@ add_task(async function checkFrecentSites() {
   for (const [uri, count, visitDate] of [
     ["https://mozilla1.com/", 10, timeDaysAgo(0)], // frecency 1000
     ["https://mozilla2.com/", 5, timeDaysAgo(1)],  // frecency 500
-    ["https://mozilla3.com/", 1, timeDaysAgo(2)],   // frecency 100
+    ["https://mozilla3.com/", 1, timeDaysAgo(2)]   // frecency 100
   ]) {
     [...Array(count).keys()].forEach(() => visits.push({
       uri,
-      visitDate: visitDate * 1000, // Places expects microseconds
+      visitDate: visitDate * 1000 // Places expects microseconds
     }));
   }
 
@@ -308,20 +285,6 @@ add_task(async function checkFrecentSites() {
   TopFrecentSitesCache.expire();
 });
 
-add_task(async function check_firefox_version() {
-  const message = {id: "foo", targeting: "firefoxVersion > 0"};
-  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
-    "should select correct item when filtering by firefox version");
-});
-
-add_task(async function check_region() {
-  await SpecialPowers.pushPrefEnv({"set": [["browser.search.region", "DE"]]});
-
-  const message = {id: "foo", targeting: "region in ['DE']"};
-  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
-    "should select correct item when filtering by firefox geo");
-});
-
 add_task(async function check_browserSettings() {
   is(await ASRouterTargeting.Environment.browserSettings.attribution, TelemetryEnvironment.currentEnvironment.settings.attribution,
     "should return correct attribution info");
@@ -340,16 +303,16 @@ add_task(async function check_sync() {
 });
 
 add_task(async function check_onboarding_cohort() {
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: 1}])]);
+  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: 1}]));
   is(await ASRouterTargeting.Environment.isInExperimentCohort, 1);
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify(17)]);
+  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify(17));
   is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: "hello"}])]);
+  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: "hello"}]));
   is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
 });
 
 add_task(async function check_provider_cohorts() {
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: "foo"}, {id: "cfr", messages: [], cohort: "bar"}])]);
+  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: "foo"}, {id: "cfr", cohort: "bar"}]));
   is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo");
   is(await ASRouterTargeting.Environment.providerCohorts.cfr, "bar");
 });

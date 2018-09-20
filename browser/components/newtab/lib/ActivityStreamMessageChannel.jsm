@@ -19,7 +19,7 @@ const DEFAULT_OPTIONS = {
   },
   pageURL: ABOUT_NEW_TAB_URL,
   outgoingMessageName: "ActivityStream:MainToContent",
-  incomingMessageName: "ActivityStream:ContentToMain",
+  incomingMessageName: "ActivityStream:ContentToMain"
 };
 
 this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
@@ -85,7 +85,7 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
    * @param  {string} targetId The portID of the port that sent the message
    */
   onActionFromContent(action, targetId) {
-    this.dispatch(ac.AlsoToMain(action, this.validatePortID(targetId)));
+    this.dispatch(ac.AlsoToMain(action, targetId));
   }
 
   /**
@@ -113,25 +113,12 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
   }
 
   /**
-   * A valid portID is a combination of process id and port
-   * https://searchfox.org/mozilla-central/rev/196560b95f191b48ff7cba7c2ba9237bba6b5b6a/toolkit/components/remotepagemanager/RemotePageManagerChild.jsm#14
-   */
-  validatePortID(id) {
-    if (typeof id !== "string" || !id.includes(":")) {
-      Cu.reportError("Invalid portID");
-    }
-
-    return id;
-  }
-
-  /**
    * getIdByTarget - Retrieve the id of a message target, if it exists in this.targets
    *
    * @param  {obj} targetObj A message target
    * @return {string|null} The unique id of the target, if it exists.
    */
   getTargetById(id) {
-    this.validatePortID(id);
     for (let port of this.channel.messagePorts) {
       if (port.portID === id) {
         return port;
@@ -236,7 +223,7 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
   onNewTabInit(msg) {
     this.onActionFromContent({
       type: at.NEW_TAB_INIT,
-      data: msg.target,
+      data: msg.target
     }, msg.target.portID);
   }
 

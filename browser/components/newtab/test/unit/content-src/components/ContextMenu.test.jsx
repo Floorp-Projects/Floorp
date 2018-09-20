@@ -5,7 +5,7 @@ import React from "react";
 const DEFAULT_PROPS = {
   onUpdate: () => {},
   options: [],
-  tabbableOptionsLength: 0,
+  tabbableOptionsLength: 0
 };
 
 describe("<ContextMenu>", () => {

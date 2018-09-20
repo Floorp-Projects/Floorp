@@ -20,14 +20,14 @@ describe("FaviconFeed", () => {
       favicons: {
         setAndFetchFaviconForPage: sandbox.spy(),
         getFaviconDataForPage: () => Promise.resolve(null),
-        FAVICON_LOAD_NON_PRIVATE: 1,
+        FAVICON_LOAD_NON_PRIVATE: 1
       },
       history: {
         TRANSITIONS: {
           REDIRECT_TEMPORARY: 1,
-          REDIRECT_PERMANENT: 2,
-        },
-      },
+          REDIRECT_PERMANENT: 2
+        }
+      }
     });
     globals.set("NewTabUtils", {activityStreamProvider: {executePlacesQuery: () => Promise.resolve([])}});
     siteIconsPref = true;
@@ -38,7 +38,7 @@ describe("FaviconFeed", () => {
     feed.store = {
       dispatch: sinon.spy(),
       getState() { return this.state; },
-      state: {Prefs: {values: {"tippyTop.service.endpoint": FAKE_ENDPOINT}}},
+      state: {Prefs: {values: {"tippyTop.service.endpoint": FAKE_ENDPOINT}}}
     };
   });
   afterEach(() => {

@@ -185,7 +185,7 @@ describe("<LinkMenu>", () => {
       title: "bar",
       type: "bookmark",
       typedBonus: true,
-      url: "https://foo.com",
+      url: "https://foo.com"
     };
     const dispatch = sinon.stub();
     const propOptions = ["ShowFile", "CopyDownloadLink", "GoToDownloadPage", "RemoveDownload", "Separator", "RemoveBookmark", "AddBookmark", "OpenInNewWindow", "OpenInPrivateWindow", "BlockUrl", "DeleteUrl", "PinTopSite", "UnpinTopSite", "SaveToPocket", "DeleteFromPocket", "ArchiveFromPocket", "WebExtDismiss"];
@@ -205,7 +205,7 @@ describe("<LinkMenu>", () => {
       menu_action_show_file_default: {url: FAKE_SITE.url},
       menu_action_copy_download_link: {url: FAKE_SITE.url},
       menu_action_go_to_download_page: {url: FAKE_SITE.referrer},
-      menu_action_remove_download: {url: FAKE_SITE.url},
+      menu_action_remove_download: {url: FAKE_SITE.url}
     };
 
     const {options} = shallowWithIntl(<LinkMenu
