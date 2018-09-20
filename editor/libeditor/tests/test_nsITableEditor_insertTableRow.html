@@ -1,0 +1,171 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsITableEditor.insertTableRow()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable>out of table<table><tr><td>default content</td></tr></table></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  selection.collapse(editor.firstChild, 0);
+  getTableEditor().insertTableRow(1, false);
+  is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
+     "nsITableEditor.insertTableRow(1, false) should do nothing if selection is not in <table>");
+  getTableEditor().insertTableRow(1, true);
+  is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
+     "nsITableEditor.insertTableRow(1, true) should do nothing if selection is not in <table>");
+
+  selection.removeAllRanges();
+  try {
+    getTableEditor().insertTableRow(1, false);
+    ok(false, "getTableEditor().insertTableRow(1, false) without selection ranges should throw exception");
+  } catch (e) {
+    ok(true, "getTableEditor().insertTableRow(1, false) without selection ranges should throw exception");
+  }
+  try {
+    getTableEditor().insertTableRow(1, true);
+    ok(false, "getTableEditor().insertTableRow(1, true) without selection ranges should throw exception");
+  } catch (e) {
+    ok(true, "getTableEditor().insertTableRow(1, true) without selection ranges should throw exception");
+  }
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                       '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableRow(1, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                         '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+                         '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableRow(1, false) should insert a row above the second row");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                       '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableRow(1, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                         '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                         '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableRow(1, true) should insert a row below the second row");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td rowspan="2">cell1-2</td></tr>' +
+                       '<tr><td id="select">cell2-1</td></tr>' +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableRow(1, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td rowspan="3">cell1-2</td></tr>' +
+                         '<tr><td valign="top"><br></td></tr>' +
+                         '<tr><td id="select">cell2-1</td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableRow(1, false) should insert a row above the second row and rowspan in the first row should be increased");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td rowspan="3">cell1-2</td></tr>' +
+                       '<tr><td id="select">cell2-1</td></tr>' +
+                       "<tr><td>cell3-1</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableRow(1, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td rowspan="4">cell1-2</td></tr>' +
+                         '<tr><td id="select">cell2-1</td></tr>' +
+                         '<tr><td valign="top"><br></td></tr>' +
+                         "<tr><td>cell3-1</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableRow(1, true) should insert a row below the second row and rowspan in the first row should be increased");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td id="select" rowspan="2">cell1-2</td></tr>' +
+                       "<tr><td>cell2-1</td></tr>" +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 1);
+  getTableEditor().insertTableRow(2, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+                         '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+                         '<tr><td>cell1-1</td><td id="select" rowspan="2">cell1-2</td></tr>' +
+                         "<tr><td>cell2-1</td></tr>" +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableRow(2, false) should insert 2 rows above the first row");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td id="select" rowspan="2">cell1-2</td></tr>' +
+                       "<tr><td>cell2-1</td></tr>" +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 1);
+  getTableEditor().insertTableRow(2, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td id="select" rowspan="2">cell1-2</td></tr>' +
+                         "<tr><td>cell2-1</td></tr>" +
+                         '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+                         '<tr><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableRow(2, false) should insert 2 rows below the second row (i.e., below the bottom row of the row-spanning cell");
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(SpecialPowers.Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>
