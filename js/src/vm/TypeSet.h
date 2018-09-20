@@ -745,8 +745,7 @@ class ConstraintTypeSet : public TypeSet
     /* Add a new constraint to this set. */
     bool addConstraint(JSContext* cx, TypeConstraint* constraint, bool callExisting = true);
 
-    inline void sweep(const AutoSweepBase& sweep, JS::Zone* zone,
-                      AutoClearTypeInferenceStateOnOOM& oom);
+    inline void sweep(const AutoSweepBase& sweep, JS::Zone* zone);
     inline void trace(JS::Zone* zone, JSTracer* trc);
 };
 
