@@ -109,11 +109,8 @@ private:
   DrawableSurface mSurface;
   MatchType mMatchType;
 
-  /// mSuggestedSize will be the size of the returned surface if the result is
-  /// SUBSTITUTE_BECAUSE_BEST. It will be empty for EXACT, and can contain a
-  /// non-empty size possibly different from the returned surface (if any) for
-  /// all other results. If non-empty, it will always be the size the caller
-  /// should request any decodes at.
+  /// If given, the size the caller should request a decode at. This may or may
+  /// not match the size the caller requested from the cache.
   gfx::IntSize mSuggestedSize;
 };
 
