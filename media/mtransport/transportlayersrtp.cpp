@@ -104,11 +104,9 @@ TransportLayerSrtp::SendPacket(MediaPacket& packet)
   nsresult res;
   switch (packet.type()) {
     case MediaPacket::RTP:
-      MOZ_MTLOG(ML_INFO, "Attempting to protect RTP...");
       res = mSendSrtp->ProtectRtp(packet.data(), packet.len(), packet.capacity(), &out_len);
       break;
     case MediaPacket::RTCP:
-      MOZ_MTLOG(ML_INFO, "Attempting to protect RTCP...");
       res = mSendSrtp->ProtectRtcp(packet.data(), packet.len(), packet.capacity(), &out_len);
       break;
     default:
@@ -117,7 +115,9 @@ TransportLayerSrtp::SendPacket(MediaPacket& packet)
 
   if (NS_FAILED(res)) {
     MOZ_MTLOG(ML_ERROR,
-                "Error protecting RTP/RTCP len=" << packet.len()
+                "Error protecting "
+                << (packet.type() == MediaPacket::RTP ? "RTP" : "RTCP")
+                << " len=" << packet.len()
                 << "[" << std::hex
                 << packet.data()[0] << " "
                 << packet.data()[1] << " "
@@ -243,11 +243,9 @@ TransportLayerSrtp::PacketReceived(TransportLayer* layer, MediaPacket& packet)
 
   if (IsRtp(packet.data(), packet.len())) {
     packet.SetType(MediaPacket::RTP);
-    MOZ_MTLOG(ML_INFO, "Attempting to unprotect RTP...");
     res = mRecvSrtp->UnprotectRtp(packet.data(), packet.len(), packet.len(), &outLen);
   } else {
     packet.SetType(MediaPacket::RTCP);
-    MOZ_MTLOG(ML_INFO, "Attempting to unprotect RTCP...");
     res = mRecvSrtp->UnprotectRtcp(packet.data(), packet.len(), packet.len(), &outLen);
   }
 
@@ -258,7 +256,9 @@ TransportLayerSrtp::PacketReceived(TransportLayer* layer, MediaPacket& packet)
     // TODO: What do we do wrt packet dumping here? Maybe signal an empty
     // packet? Signal the still-encrypted packet?
     MOZ_MTLOG(ML_ERROR,
-                "Error unprotecting RTP/RTCP len=" << packet.len()
+                "Error unprotecting "
+                << (packet.type() == MediaPacket::RTP ? "RTP" : "RTCP")
+                << " len=" << packet.len()
                 << "[" << std::hex
                 << packet.data()[0] << " "
                 << packet.data()[1] << " "
