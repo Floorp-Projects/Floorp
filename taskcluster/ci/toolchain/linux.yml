@@ -88,7 +88,7 @@ linux64-clang-7-mingw-x86:
         ]
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-7-pre-mingw.json'
+            - 'build/build-clang/clang-7-mingw.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clangmingw.tar.xz
     toolchains:
