@@ -15886,10 +15886,15 @@ nsresult QuotaClient::GetDatabaseFilenames(
       continue;
     }
 
-    // Skip Desktop Service Store (.DS_Store) files. These files are only used
-    // on Mac OS X, but the profile can be shared across different operating
-    // systems, so we check it on all platforms.
-    if (leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+    // Skip OS metadata files. These files are only used in different platforms,
+    // but the profile can be shared across different operating systems, so we
+    // check it on all platforms.
+    if (QuotaManager::IsOSMetadata(leafName)) {
+      continue;
+    }
+
+    // Skip files starting with ".".
+    if (QuotaManager::IsDotFile(leafName)) {
       continue;
     }
 
@@ -15963,6 +15968,11 @@ nsresult QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (QuotaManager::IsOSMetadata(leafName) ||
+        QuotaManager::IsDotFile(leafName)) {
+      continue;
     }
 
     // Journal files and sqlite-shm files don't count towards usage.
