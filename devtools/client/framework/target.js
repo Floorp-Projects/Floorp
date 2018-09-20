@@ -723,14 +723,7 @@ TabTarget.prototype = {
   logErrorInPage: function(text, category) {
     if (this.activeTab && this.activeTab.traits.logInPage) {
       const errorFlag = 0;
-      const packet = {
-        to: this.form.actor,
-        type: "logInPage",
-        flags: errorFlag,
-        text,
-        category,
-      };
-      this.client.request(packet);
+      this.activeTab.logInPage(text, category, errorFlag);
     }
   },
 
@@ -745,14 +738,7 @@ TabTarget.prototype = {
   logWarningInPage: function(text, category) {
     if (this.activeTab && this.activeTab.traits.logInPage) {
       const warningFlag = 1;
-      const packet = {
-        to: this.form.actor,
-        type: "logInPage",
-        flags: warningFlag,
-        text,
-        category,
-      };
-      this.client.request(packet);
+      this.activeTab.logInPage(text, category, warningFlag);
     }
   },
 };

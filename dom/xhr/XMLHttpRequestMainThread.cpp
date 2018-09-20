@@ -131,6 +131,8 @@ namespace {
   const nsString kLiteralString_readystatechange = NS_LITERAL_STRING("readystatechange");
   const nsString kLiteralString_xmlhttprequest = NS_LITERAL_STRING("xmlhttprequest");
   const nsString kLiteralString_DOMContentLoaded = NS_LITERAL_STRING("DOMContentLoaded");
+  const nsCString kLiteralString_charset = NS_LITERAL_CSTRING("charset");
+  const nsCString kLiteralString_UTF_8 = NS_LITERAL_CSTRING("UTF-8");
 }
 
 // CIDs
@@ -2728,7 +2730,7 @@ XMLHttpRequestMainThread::Send(JSContext* aCx,
 
   if (aData.Value().IsDocument()) {
     BodyExtractor<nsIDocument> body(&aData.Value().GetAsDocument());
-    aRv = SendInternal(&body);
+    aRv = SendInternal(&body, true);
     return;
   }
 
@@ -2765,7 +2767,7 @@ XMLHttpRequestMainThread::Send(JSContext* aCx,
 
   if (aData.Value().IsUSVString()) {
     BodyExtractor<const nsAString> body(&aData.Value().GetAsUSVString());
-    aRv = SendInternal(&body);
+    aRv = SendInternal(&body, true);
     return;
   }
 }
@@ -2791,7 +2793,8 @@ XMLHttpRequestMainThread::MaybeSilentSendFailure(nsresult aRv)
 }
 
 nsresult
-XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
+XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
+                                       bool aBodyIsDocumentOrString)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2853,6 +2856,13 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
       mAuthorRequestHeaders.Get("content-type", uploadContentType);
       if (uploadContentType.IsVoid()) {
         uploadContentType = defaultContentType;
+      } else if (aBodyIsDocumentOrString &&
+                 StaticPrefs::dom_xhr_standard_content_type_normalization()) {
+        UniquePtr<CMimeType> parsed = CMimeType::Parse(uploadContentType);
+        if (parsed && parsed->HasParameter(kLiteralString_charset)) {
+          parsed->SetParameterValue(kLiteralString_charset, kLiteralString_UTF_8);
+          parsed->Serialize(uploadContentType);
+        }
       }
 
       // We don't want to set a charset for streams.
