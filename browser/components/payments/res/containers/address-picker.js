@@ -13,8 +13,16 @@ import paymentRequest from "../paymentRequest.js";
  */
 
 export default class AddressPicker extends RichPicker {
+  static get pickerAttributes() {
+    return [
+      "address-fields",
+      "break-after-nth-field",
+      "data-field-separator",
+    ];
+  }
+
   static get observedAttributes() {
-    return RichPicker.observedAttributes.concat(["address-fields"]);
+    return RichPicker.observedAttributes.concat(AddressPicker.pickerAttributes);
   }
 
   constructor() {
@@ -24,7 +32,7 @@ export default class AddressPicker extends RichPicker {
 
   attributeChangedCallback(name, oldValue, newValue) {
     super.attributeChangedCallback(name, oldValue, newValue);
-    if (name == "address-fields" && oldValue !== newValue) {
+    if (AddressPicker.pickerAttributes.includes(name) && oldValue !== newValue) {
       this.render(this.requestStore.getState());
     }
   }
@@ -98,6 +106,20 @@ export default class AddressPicker extends RichPicker {
         } else {
           optionEl.removeAttribute(key);
         }
+      }
+
+      optionEl.dataset.fieldSeparator = this.dataset.fieldSeparator;
+
+      if (this.hasAttribute("address-fields")) {
+        optionEl.setAttribute("address-fields", this.getAttribute("address-fields"));
+      } else {
+        optionEl.removeAttribute("address-fields");
+      }
+
+      if (this.hasAttribute("break-after-nth-field")) {
+        optionEl.setAttribute("break-after-nth-field", this.getAttribute("break-after-nth-field"));
+      } else {
+        optionEl.removeAttribute("break-after-nth-field");
       }
 
       // fieldNames getter is not used here because it returns a default array with
