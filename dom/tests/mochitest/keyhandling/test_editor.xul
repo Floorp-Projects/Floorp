@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+
+<window title="Browser element keyhandling tests"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    const IS_MAC = navigator.platform.indexOf("Mac") === 0;
+    const VK = {};
+    const CHARS = {};
+
+    // Copied values from NativeKeyCodes.js and EventUtils.js
+    if (IS_MAC) {
+      VK.LEFT = MAC_VK_LeftArrow;
+      CHARS.LEFT = "\uF702";
+      VK.RIGHT = MAC_VK_RightArrow;
+      CHARS.RIGHT = "\uF703";
+      VK.UP = MAC_VK_UpArrow;
+      CHARS.UP = "\uF700";
+      VK.DOWN = MAC_VK_DownArrow;
+      CHARS.DOWN = "\uF701";
+      VK.SPACE = MAC_VK_Space;
+      VK.X = MAC_VK_ANSI_X;
+      VK.V = MAC_VK_ANSI_V;
+      VK.A = MAC_VK_ANSI_A;
+      VK.Z = MAC_VK_ANSI_Z;
+      VK.BACKSPACE = MAC_VK_PC_Backspace;
+      CHARS.BACKSPACE = "\u007F";
+    } else {
+      VK.LEFT = WIN_VK_LEFT;
+      CHARS.LEFT = "";
+      VK.RIGHT = WIN_VK_RIGHT;
+      CHARS.RIGHT = "";
+      VK.HOME = WIN_VK_HOME;
+      CHARS.HOME = "";
+      VK.END = WIN_VK_END;
+      CHARS.END = "";
+      VK.SPACE = WIN_VK_SPACE;
+      VK.X = WIN_VK_X;
+      VK.V = WIN_VK_V;
+      VK.A = WIN_VK_A;
+      VK.Z = WIN_VK_Z;
+      VK.Y = WIN_VK_Y;
+      VK.BACKSPACE = WIN_VK_BACK;
+      CHARS.BACKSPACE = "";
+    }
+
+    function waitForEvent(target, event) {
+      info(`Waiting for ${event} event.`);
+      return new Promise(resolve => {
+        browser.addEventListener(event, resolve, { once: true });
+      });
+    }
+
+    function synthesizeKey(keyCode, modifiers, chars) {
+      return new Promise((resolve, reject) => {
+        if (!synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, keyCode, modifiers, chars, chars, resolve)) {
+          reject();
+        }
+      });
+    }
+
+    function* nodes(element) {
+      let node = element.firstChild;
+      while (node) {
+        yield node;
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          yield* nodes(node);
+        }
+
+        node = node.nextSibling;
+      }
+    }
+
+    async function checkElement(element, start, selectedText, content = "Test text") {
+      selectionPosition = (element, range) => {
+        let pos = 0;
+        for (let node of nodes(element)) {
+          if (node.nodeType === Node.TEXT_NODE) {
+            if (node === range.startContainer) {
+              return pos + range.startOffset;
+            } else {
+              pos += node.nodeValue.length;
+            }
+          } else if (node === range.startContainer) {
+            for (let i = 0; i < range.startOffset; i++) {
+              pos += node.childNodes[i].textContent.length;
+            }
+
+            return pos;
+          }
+        }
+
+        throw new Error("startContainer of range never found.");
+      }
+
+      isReady = () => {
+        let selection = element.contentWindow.getSelection();
+        let range = selection.getRangeAt(0);
+        let pos = selectionPosition(element.contentDocument.documentElement, range);
+
+        if (start != pos) {
+          return false;
+        }
+        if (selectedText != selection.toString()) {
+          return false;
+        }
+        if (content != element.contentDocument.documentElement.textContent) {
+          return false;
+        }
+        return true;
+      };
+
+      for (let i = 0; i < 10; i++) {
+        if (isReady()) {
+          return;
+        }
+
+        SimpleTest.requestFlakyTimeout("Polling for changes to apply");
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      ok(false, `Timed out waiting for state ${start} "${selectedText}" "${content}"`);
+      let selection = element.contentWindow.getSelection();
+      let range = selection.getRangeAt(0);
+      info(`${selectionPosition(element.contentDocument.documentElement, range)} "${selection.toString()}" "${element.contentDocument.documentElement.textContent}"`);
+    }
+
+    async function test() {
+      let editor = document.getElementById("editor");
+      editor.contentDocument.designMode = "on";
+      editor.contentWindow.focus();
+      let edit = editor.getEditor(editor.contentWindow);
+      edit.beginningOfDocument();
+
+      await checkElement(editor, 0, "");
+
+      info("right");
+      await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+      await checkElement(editor, 1, "");
+
+      info("shift+right");
+      await synthesizeKey(VK.RIGHT, { shiftKey: true }, CHARS.RIGHT);
+      await checkElement(editor, 1, "e");
+
+      info("shift+right");
+      await synthesizeKey(VK.RIGHT, { shiftKey: true }, CHARS.RIGHT);
+      await checkElement(editor, 1, "es");
+
+      info("shift+left");
+      await synthesizeKey(VK.LEFT, { shiftKey: true }, CHARS.LEFT);
+      await checkElement(editor, 1, "e");
+
+      info("shift+left");
+      await synthesizeKey(VK.LEFT, { shiftKey: true }, CHARS.LEFT);
+      await checkElement(editor, 1, "");
+
+      info("shift+left");
+      await synthesizeKey(VK.LEFT, { shiftKey: true }, CHARS.LEFT);
+      await checkElement(editor, 0, "T");
+
+      info("shift+right");
+      await synthesizeKey(VK.RIGHT, { shiftKey: true }, CHARS.RIGHT);
+      await checkElement(editor, 1, "");
+
+      info("left");
+      await synthesizeKey(VK.LEFT, {}, CHARS.LEFT);
+      await checkElement(editor, 0, "");
+
+      if (IS_MAC) {
+        info("down");
+        await synthesizeKey(VK.DOWN, { shiftKey: true }, CHARS.DOWN);
+      } else {
+        info("end");
+        await synthesizeKey(VK.END, { shiftKey: true }, CHARS.END);
+      }
+      await checkElement(editor, 0, "Test text");
+
+      info("cut");
+      await synthesizeKey(VK.X, { accelKey: true }, "x");
+      await checkElement(editor, 0, "", "");
+      let text = SpecialPowers.getClipboardData("text/unicode");
+      is(text, "Test text", "Should have cut to the clipboard");
+      SpecialPowers.clipboardCopyString("New text");
+
+      info("paste");
+      await synthesizeKey(VK.V, { accelKey: true }, "v");
+      await checkElement(editor, 8, "", "New text");
+
+      if (IS_MAC) {
+        info("up");
+        await synthesizeKey(VK.UP, {}, CHARS.UP);
+      } else {
+        info("home");
+        await synthesizeKey(VK.HOME, {}, CHARS.HOME);
+      }
+      await checkElement(editor, 0, "", "New text");
+
+      info("select all");
+      await synthesizeKey(VK.A, { accelKey: true}, "a", "select");
+      await checkElement(editor, 0, "New text", "New text");
+
+      info("right");
+      await synthesizeKey(VK.RIGHT, {}, CHARS.RIGHT);
+      await checkElement(editor, 8, "", "New text");
+
+      info("word left");
+      if (IS_MAC) {
+        await synthesizeKey(VK.LEFT, { altKey: true }, CHARS.LEFT);
+      } else {
+        await synthesizeKey(VK.LEFT, { ctrlKey: true }, CHARS.LEFT);
+      }
+      await checkElement(editor, 4, "", "New text");
+
+      info("delete word left");
+      if (IS_MAC) {
+        await synthesizeKey(VK.BACKSPACE, { altKey: true }, CHARS.BACKSPACE);
+      } else {
+        await synthesizeKey(VK.BACKSPACE, { ctrlKey: true }, CHARS.BACKSPACE);
+      }
+      await checkElement(editor, 0, "", "text");
+
+      info("undo");
+      await synthesizeKey(VK.Z, { accelKey: true }, "z");
+      await checkElement(editor, 4, "", "New text");
+
+      info("redo");
+      if (IS_MAC) {
+        await synthesizeKey(VK.Z, { accelKey: true, shiftKey: true }, "z");
+      } else {
+        await synthesizeKey(VK.Y, { accelKey: true }, "y");
+      }
+      await checkElement(editor, 0, "", "text");
+
+      SimpleTest.finish();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <editor id="editor" editortype="text" src="data:text/plain,Test text" style="height: 500px"/>
+</window>
