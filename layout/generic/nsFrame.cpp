@@ -1604,7 +1604,7 @@ bool
 nsIFrame::Combines3DTransformWithAncestors(const nsStyleDisplay* aStyleDisplay) const
 {
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
-  nsIFrame* parent = GetClosestFlattenedTreeAncestorPrimaryFrame();
+  nsIFrame* parent = GetInFlowParent();
   if (!parent || !parent->Extend3DContext()) {
     return false;
   }
@@ -2625,9 +2625,9 @@ FrameParticipatesIn3DContext(nsIFrame* aAncestor, nsIFrame* aDescendant) {
   MOZ_ASSERT(aAncestor != aDescendant);
   MOZ_ASSERT(aAncestor->Extend3DContext());
   nsIFrame* frame;
-  for (frame = aDescendant->GetClosestFlattenedTreeAncestorPrimaryFrame();
+  for (frame = aDescendant->GetInFlowParent();
        frame && aAncestor != frame;
-       frame = frame->GetClosestFlattenedTreeAncestorPrimaryFrame()) {
+       frame = frame->GetInFlowParent()) {
     if (!frame->Extend3DContext()) {
       return false;
     }
