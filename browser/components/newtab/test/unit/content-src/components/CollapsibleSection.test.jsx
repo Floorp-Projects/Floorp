@@ -14,9 +14,9 @@ const DEFAULT_PROPS = {
   document: {
     addEventListener: () => {},
     removeEventListener: () => {},
-    visibilityState: "visible"
+    visibilityState: "visible",
   },
-  dispatch: () => {}
+  dispatch: () => {},
 };
 
 describe("CollapsibleSection", () => {

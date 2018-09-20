@@ -41,11 +41,15 @@ public class CrashReporter {
     private static final String PAGE_URL_KEY = "URL";
     private static final String NOTES_KEY = "Notes";
     private static final String SERVER_URL_KEY = "ServerURL";
+    private static final String STACK_TRACES_KEY = "StackTraces";
     private static final String PRODUCT_NAME_KEY = "ProductName";
     private static final String PRODUCT_ID_KEY = "ProductID";
     private static final String PRODUCT_ID = "{eeb82917-e434-4870-8148-5c03d4caa81b}";
     private static final List<String> IGNORE_KEYS = Arrays.asList(
-            SERVER_URL_KEY, NOTES_KEY, PAGE_URL_KEY
+            NOTES_KEY,
+            PAGE_URL_KEY,
+            SERVER_URL_KEY,
+            STACK_TRACES_KEY
     );
 
     /**

@@ -8,7 +8,6 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
 const { CanvasFront } = require("devtools/shared/fronts/canvas");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { extend } = require("devtools/shared/extend");

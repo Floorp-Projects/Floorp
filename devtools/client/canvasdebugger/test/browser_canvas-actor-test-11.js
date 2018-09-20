@@ -31,7 +31,7 @@ async function ifTestingSupported() {
   is(functionCalls.length, 8,
     "The number of function call actors is correct.");
 
-  is(functionCalls[0].type, CallWatcherFront.METHOD_FUNCTION,
+  is(functionCalls[0].type, METHOD_FUNCTION,
     "The first called function is correctly identified as a method.");
   is(functionCalls[0].name, "clearRect",
     "The first called function's name is correct.");
@@ -44,7 +44,7 @@ async function ifTestingSupported() {
   is(functionCalls[0].callerPreview, "Object",
     "The first called function's caller preview is correct.");
 
-  is(functionCalls[6].type, CallWatcherFront.METHOD_FUNCTION,
+  is(functionCalls[6].type, METHOD_FUNCTION,
     "The penultimate called function is correctly identified as a method.");
   is(functionCalls[6].name, "fillRect",
     "The penultimate called function's name is correct.");
@@ -57,7 +57,7 @@ async function ifTestingSupported() {
   is(functionCalls[6].callerPreview, "Object",
     "The penultimate called function's caller preview is correct.");
 
-  is(functionCalls[7].type, CallWatcherFront.METHOD_FUNCTION,
+  is(functionCalls[7].type, METHOD_FUNCTION,
     "The last called function is correctly identified as a method.");
   is(functionCalls[7].name, "setTimeout",
     "The last called function's name is correct.");

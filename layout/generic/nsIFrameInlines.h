@@ -7,6 +7,7 @@
 #ifndef nsIFrameInlines_h___
 #define nsIFrameInlines_h___
 
+#include "mozilla/dom/ElementInlines.h"
 #include "nsContainerFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleStructInlines.h"
@@ -178,6 +179,44 @@ nsIFrame::GetInFlowParent() const
   }
 
   return GetParent();
+}
+
+// We generally want to follow the style tree for preserve-3d, jumping through
+// display: contents.
+//
+// There are various fun mismatches between the flattened tree and the frame
+// tree which makes this non-trivial to do looking at the frame tree state:
+//
+//  - Anon boxes. You'd have to step through them, because you generally want to
+//    ignore them.
+//
+//  - IB-splits, which produce a frame tree where frames for the block inside
+//    the inline are not children of any frame from the inline.
+//
+//  - display: contents, which makes DOM ancestors not have frames even when a
+//    descendant does.
+//
+// See GetFlattenedTreeParentElementForStyle for the difference between it and
+// plain GetFlattenedTreeParentElement.
+nsIFrame*
+nsIFrame::GetClosestFlattenedTreeAncestorPrimaryFrame() const
+{
+  if (!mContent) {
+    return nullptr;
+  }
+  Element* parent = mContent->GetFlattenedTreeParentElementForStyle();
+  while (parent) {
+    if (nsIFrame* frame = parent->GetPrimaryFrame()) {
+      return frame;
+    }
+    // NOTE(emilio): This should be an assert except we have code in tree which
+    // violates invariants like the <frameset> frame construction code.
+    if (MOZ_UNLIKELY(!parent->IsDisplayContents())) {
+      return nullptr;
+    }
+    parent = parent->GetFlattenedTreeParentElementForStyle();
+  }
+  return nullptr;
 }
 
 #endif

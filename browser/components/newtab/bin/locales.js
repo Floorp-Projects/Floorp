@@ -107,5 +107,5 @@ exports.CENTRAL_LOCALES = [
   "wo",
   "xh",
   "zh-CN",
-  "zh-TW"
+  "zh-TW",
 ];

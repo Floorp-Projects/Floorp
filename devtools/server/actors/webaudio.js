@@ -8,7 +8,7 @@
 const { Cu } = require("chrome");
 
 const protocol = require("devtools/shared/protocol");
-const { CallWatcherActor } = require("devtools/server/actors/call-watcher");
+const { CallWatcher } = require("devtools/server/actors/utils/call-watcher");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const AutomationTimeline = require("./utils/automation-timeline");
 const {
@@ -455,7 +455,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
 
     this._initialized = true;
 
-    this._callWatcher = new CallWatcherActor(this.conn, this.targetActor);
+    this._callWatcher = new CallWatcher(this.conn, this.targetActor);
     this._callWatcher.onCall = this._onContentFunctionCall;
     this._callWatcher.setup({
       tracedGlobals: AUDIO_GLOBALS,

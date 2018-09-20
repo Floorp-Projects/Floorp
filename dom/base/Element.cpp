@@ -1182,7 +1182,8 @@ Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
    * 1. If context object’s namespace is not the HTML namespace,
    *    then throw a "NotSupportedError" DOMException.
    */
-  if (!IsHTMLElement()) {
+  if (!IsHTMLElement() &&
+      !(XRE_IsParentProcess() && IsXULElement() && nsContentUtils::AllowXULXBLForPrincipal(NodePrincipal()))) {
     aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }

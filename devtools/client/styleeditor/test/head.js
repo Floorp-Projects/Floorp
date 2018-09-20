@@ -115,3 +115,30 @@ var getComputedStyleProperty = async function(args) {
     }
   );
 };
+
+/**
+ * Wait for "media-list-changed" events to settle on StyleEditorUI.
+ * Returns a promise that resolves the number of events caught while waiting.
+ *
+ * @param {StyleEditorUI} ui
+ *        Current StyleEditorUI on which media-list-changed events should be fired.
+ * @param {Number} delay
+ */
+function waitForManyEvents(ui, delay) {
+  return new Promise(resolve => {
+    let timer;
+    let count = 0;
+    const onEvent = () => {
+      count++;
+      clearTimeout(timer);
+
+      // Wait for some time to catch subsequent events.
+      timer = setTimeout(() => {
+        // Remove the listener and resolve.
+        ui.off("media-list-changed", onEvent);
+        resolve(count);
+      }, delay);
+    };
+    ui.on("media-list-changed", onEvent);
+  });
+}

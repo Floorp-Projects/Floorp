@@ -27,7 +27,6 @@ DevToolsModules(
     'animation.js',
     'array-buffer.js',
     'breakpoint.js',
-    'call-watcher.js',
     'canvas.js',
     'common.js',
     'css-properties.js',

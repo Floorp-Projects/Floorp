@@ -4,9 +4,7 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
-const Services = require("Services");
 
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient",
@@ -311,23 +309,6 @@ TabTarget.prototype = {
   // Bug 1465635 hopes to blow up these classes entirely.
   get isBrowsingContext() {
     return this._isBrowsingContext;
-  },
-
-  get window() {
-    // XXX - this is a footgun for e10s - there .contentWindow will be null,
-    // and even though .contentWindowAsCPOW *might* work, it will not work
-    // in all contexts.  Consumers of .window need to be refactored to not
-    // rely on this.
-    if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-      console.error("The .window getter on devtools' |target| object isn't " +
-                    "e10s friendly!\n" + Error().stack);
-    }
-    // Be extra careful here, since this may be called by HS_getHudByWindow
-    // during shutdown.
-    if (this._tab && this._tab.linkedBrowser) {
-      return this._tab.linkedBrowser.contentWindow;
-    }
-    return null;
   },
 
   get name() {

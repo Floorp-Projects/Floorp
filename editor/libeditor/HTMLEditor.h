@@ -1569,6 +1569,28 @@ protected: // Shouldn't be used by friend classes
   };
 
   /**
+   * InsertTableCellsWithTransaction() inserts <td> elements before or after
+   * a cell element containing first selection range.  I.e., if the cell
+   * spans columns and aInsertPosition is eAfterSelectedCell, new columns
+   * will be inserted after the right-most column which contains the cell.
+   * Note that this simply inserts <td> elements, i.e., colspan and rowspan
+   * around the cell containing selection are not modified.  So, for example,
+   * adding a cell to rectangular table changes non-rectangular table.
+   * And if the cell containing selection is at left of row-spanning cell,
+   * it may be moved to right side of the row-spanning cell after inserting
+   * some cell elements before it.  Similarly, colspan won't be adjusted
+   * for keeping table rectangle.
+   * If first selection range is not in table cell element, this does nothing
+   * but does not return error.
+   *
+   * @param aNumberOfCellssToInsert     Number of cells to insert.
+   * @param aInsertPosition             Before or after the target cell which
+   *                                    contains first selection range.
+   */
+  nsresult InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
+                                           InsertPosition aInsertPosition);
+
+  /**
    * InsertTableColumnsWithTransaction() inserts columns before or after
    * a cell element containing first selection range.  I.e., if the cell
    * spans columns and aInsertPosition is eAfterSelectedCell, new columns

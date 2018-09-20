@@ -14,6 +14,9 @@ add_task(async function setup() {
   AddonTestUtils.initializeURLPreloader();
 
   await promiseStartupManager();
+
+  // Starts collecting the Addon Manager Telemetry events.
+  AddonTestUtils.hookAMTelemetryEvents();
 });
 
 add_task(async function test_validation() {
@@ -73,6 +76,38 @@ add_task(async function test_validation() {
 
   await addon.uninstall();
   await addon2.uninstall();
+
+  let amEvents = AddonTestUtils.getAMTelemetryEvents();
+
+  let amInstallEvents = amEvents.filter(evt => evt.method === "install").map(evt => {
+    const {object, extra} = evt;
+    return {object, extra};
+  });
+
+  Assert.deepEqual(amInstallEvents.filter(evt => evt.object === "unknown"), [
+    {object: "unknown", extra: {step: "started", error: "ERROR_CORRUPT_FILE"}},
+    {object: "unknown", extra: {step: "started", error: "ERROR_CORRUPT_FILE"}},
+  ], "Got the expected install telemetry events for the corrupted dictionaries");
+
+  Assert.deepEqual(amInstallEvents.filter(evt => evt.extra.addon_id === addon.id), [
+    {object: "dictionary", extra: {step: "started", addon_id: addon.id}},
+    {object: "dictionary", extra: {step: "completed", addon_id: addon.id}},
+  ], "Got the expected install telemetry events for the first installed dictionary");
+
+  Assert.deepEqual(amInstallEvents.filter(evt => evt.extra.addon_id === addon2.id), [
+    {object: "dictionary", extra: {step: "started", addon_id: addon2.id}},
+    {object: "dictionary", extra: {step: "completed", addon_id: addon2.id}},
+  ], "Got the expected install telemetry events for the second installed dictionary");
+
+  let amUninstallEvents = amEvents.filter(evt => evt.method === "uninstall").map(evt => {
+    const {object, value} = evt;
+    return {object, value};
+  });
+
+  Assert.deepEqual(amUninstallEvents, [
+    {object: "dictionary", value: addon.id},
+    {object: "dictionary", value: addon2.id},
+  ], "Got the expected uninstall telemetry events");
 });
 
 const WORD = "Flehgragh";
@@ -164,4 +199,9 @@ add_task(async function test_migration() {
   await promiseStartupManager();
 
   ok(spellCheck.check(WORD), "Word should pass check while add-on load is loaded");
+});
+
+add_task(function teardown_telemetry_events() {
+  // Ignore any additional telemetry events collected in this file.
+  AddonTestUtils.getAMTelemetryEvents();
 });

@@ -12,7 +12,7 @@ const {CENTRAL_LOCALES, DEFAULT_LOCALE} = require("./locales");
 //       in mozilla-central.
 const DEFAULT_OPTIONS = {
   addonPath: "..",
-  baseUrl: "resource://activity-stream/"
+  baseUrl: "resource://activity-stream/",
 };
 
 // Locales that should be displayed RTL
@@ -76,7 +76,7 @@ function templateHTML(options, html) {
     `${options.baseUrl}vendor/redux.js`,
     `${options.baseUrl}vendor/react-redux.js`,
     `${options.baseUrl}prerendered/${options.locale}/activity-stream-strings.js`,
-    `${options.baseUrl}data/content/activity-stream.bundle.js`
+    `${options.baseUrl}data/content/activity-stream.bundle.js`,
   ];
   if (isPrerendered) {
     scripts.unshift(`${options.baseUrl}prerendered/static/activity-stream-initial-state.js`);
@@ -155,7 +155,7 @@ const STATIC_FILES = new Map([
   ["activity-stream-debug-noscripts.html", ({options}) => templateHTML(Object.assign({}, options, {noscripts: true}))],
   ["activity-stream-initial-state.js", ({state}) => templateJs("gActivityStreamPrerenderedState", "static", state)],
   ["activity-stream-prerendered-debug.html", ({html, options}) => templateHTML(options, html)],
-  ["activity-stream-prerendered-debug-noscripts.html", ({html, options}) => templateHTML(Object.assign({}, options, {noscripts: true}), html)]
+  ["activity-stream-prerendered-debug-noscripts.html", ({html, options}) => templateHTML(Object.assign({}, options, {noscripts: true}), html)],
 ]);
 
 const LOCALIZED_FILES = new Map([
@@ -163,7 +163,7 @@ const LOCALIZED_FILES = new Map([
   ["activity-stream-prerendered-noscripts.html", ({html, options}) => templateHTML(Object.assign({}, options, {noscripts: true}), html)],
   ["activity-stream-strings.js", ({options: {locale, strings}}) => templateJs("gActivityStreamStrings", locale, strings)],
   ["activity-stream.html", ({options}) => templateHTML(options)],
-  ["activity-stream-noscripts.html", ({options}) => templateHTML(Object.assign({}, options, {noscripts: true}))]
+  ["activity-stream-noscripts.html", ({options}) => templateHTML(Object.assign({}, options, {noscripts: true}))],
 ]);
 
 /**
@@ -177,8 +177,8 @@ function main() { // eslint-disable-line max-statements
   const args = require("minimist")(process.argv.slice(2), {
     alias: {
       addonPath: "a",
-      baseUrl: "b"
-    }
+      baseUrl: "b",
+    },
   });
 
   const baseOptions = Object.assign({debug: false}, DEFAULT_OPTIONS, args || {});
@@ -211,7 +211,7 @@ function main() { // eslint-disable-line max-statements
     const options = Object.assign({}, baseOptions, {
       direction: getTextDirection(locale),
       locale,
-      strings
+      strings,
     });
 
     // Put locale-specific files in their own directory

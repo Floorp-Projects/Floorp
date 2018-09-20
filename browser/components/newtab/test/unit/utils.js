@@ -205,7 +205,7 @@ EventEmitter.prototype = {
         }
       }
     }
-  }
+  },
 };
 
 export function FakePerformance() {}
@@ -236,7 +236,7 @@ FakePerformance.prototype = {
       name,
       "entryType": "mark",
       "startTime": ++this.callsToMark,
-      "duration": 0
+      "duration": 0,
     };
 
     if (this.marks.has(name)) {
@@ -245,7 +245,7 @@ FakePerformance.prototype = {
     }
 
     this.marks.set(name, [markObj]);
-  }
+  },
 };
 
 /**
@@ -269,6 +269,6 @@ export function shallowWithIntl(node, options = {}) {
 export function mountWithIntl(node, options = {}) {
   return mount(nodeWithIntlProp(node), Object.assign({}, options, {
     context: {intl},
-    childContextTypes: {intl: intlShape}
+    childContextTypes: {intl: intlShape},
   }));
 }

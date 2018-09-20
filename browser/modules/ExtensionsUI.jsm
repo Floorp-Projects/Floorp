@@ -11,6 +11,7 @@ ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AMTelemetry:  "resource://gre/modules/AddonManager.jsm",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -121,6 +122,14 @@ var ExtensionsUI = {
       permissions: addon.userPermissions,
       type: "sideload",
     });
+
+    AMTelemetry.recordManageEvent(addon, "sideload_prompt", {
+      num_perms: addon.userPermissions && addon.userPermissions.permissions ?
+        addon.userPermissions.permissions.length : 0,
+      num_origins: addon.userPermissions && addon.userPermissions.origins ?
+        addon.userPermissions.origins.length : 0,
+    });
+
     this.showAddonsManager(browser, strings, addon.iconURL, "sideload")
         .then(async answer => {
           if (answer) {
