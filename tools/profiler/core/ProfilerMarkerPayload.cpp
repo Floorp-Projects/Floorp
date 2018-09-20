@@ -112,7 +112,6 @@ DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
   WriteTime(aWriter, aProcessStartTime, mTimeStamp, "timeStamp");
   aWriter.StringProperty("eventType", NS_ConvertUTF16toUTF8(mEventType).get());
-  aWriter.IntProperty("phase", mPhase);
 }
 
 void
