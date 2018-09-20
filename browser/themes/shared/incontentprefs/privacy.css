@@ -54,8 +54,9 @@
   margin-top: 4px !important;
 }
 
+#contentBlockingCategories,
 #contentBlockingCheckboxContainer {
-  margin: 16px 0;
+  margin-top: 16px;
 }
 
 #contentBlockingToggleLabel {
