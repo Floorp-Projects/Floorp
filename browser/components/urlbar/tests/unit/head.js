@@ -14,10 +14,21 @@ if (commonFile) {
 // Put any other stuff relative to this test folder below.
 
 ChromeUtils.import("resource:///modules/UrlbarController.jsm");
+ChromeUtils.defineModuleGetter(this, "UrlbarInput",
+                               "resource:///modules/UrlbarInput.jsm");
 ChromeUtils.defineModuleGetter(this, "UrlbarTokenizer",
                                "resource:///modules/UrlbarTokenizer.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
                                "resource://testing-common/PlacesTestUtils.jsm");
+
+// ================================================
+// Load mocking/stubbing library, sinon
+// docs: http://sinonjs.org/releases/v2.3.2/
+// Sinon needs Timer.jsm for setTimeout etc.
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
+/* globals sinon */
+// ================================================
 
 /**
  * @param {string} searchString The search string to insert into the context.
