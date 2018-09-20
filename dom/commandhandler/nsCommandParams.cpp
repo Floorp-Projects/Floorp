@@ -336,10 +336,10 @@ nsCommandParams::HashMoveEntry(PLDHashTable* aTable,
                                const PLDHashEntryHdr* aFrom,
                                PLDHashEntryHdr* aTo)
 {
-  const HashEntry* fromEntry = static_cast<const HashEntry*>(aFrom);
+  auto* fromEntry = const_cast<HashEntry*>(static_cast<const HashEntry*>(aFrom));
   HashEntry* toEntry = static_cast<HashEntry*>(aTo);
 
-  new (toEntry) HashEntry(*fromEntry);
+  new (KnownNotNull, toEntry) HashEntry(std::move(*fromEntry));
 
   fromEntry->~HashEntry();
 }
