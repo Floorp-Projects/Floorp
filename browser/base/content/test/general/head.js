@@ -200,13 +200,6 @@ function resetBlocklist() {
   Services.prefs.setCharPref("extensions.blocklist.url", _originalTestBlocklistURL);
 }
 
-function whenNewWindowLoaded(aOptions, aCallback) {
-  let win = OpenBrowserWindow(aOptions);
-  win.addEventListener("load", function() {
-    aCallback(win);
-  }, {once: true});
-}
-
 function promiseWindowClosed(win) {
   let promise = BrowserTestUtils.domWindowClosed(win);
   win.close();
@@ -233,17 +226,20 @@ function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
   });
 }
 
-function whenNewTabLoaded(aWindow, aCallback) {
+async function whenNewTabLoaded(aWindow, aCallback) {
   aWindow.BrowserOpenTab();
 
+  let expectedURL = aboutNewTabService.newTabURL;
   let browser = aWindow.gBrowser.selectedBrowser;
-  let doc = browser.contentDocumentAsCPOW;
-  if (doc && doc.readyState === "complete") {
-    aCallback();
-    return;
+  let loadPromise = BrowserTestUtils.browserLoaded(browser, false, expectedURL);
+  let alreadyLoaded = await ContentTask.spawn(browser, expectedURL, url => {
+    let doc = content.document;
+    return doc && doc.readyState === "complete" && doc.location.href == url;
+  });
+  if (!alreadyLoaded) {
+    await loadPromise;
   }
-
-  whenTabLoaded(aWindow.gBrowser.selectedTab, aCallback);
+  aCallback();
 }
 
 function whenTabLoaded(aTab, aCallback) {
