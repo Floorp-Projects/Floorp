@@ -3052,8 +3052,14 @@ HTMLInputElement::GetRadioGroupContainer() const
     return nullptr;
   }
 
-  //XXXsmaug It isn't clear how this should work in Shadow DOM.
-  return static_cast<nsDocument*>(GetUncomposedDoc());
+  DocumentOrShadowRoot* docOrShadow = GetUncomposedDocOrConnectedShadowRoot();
+  if (!docOrShadow) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIRadioGroupContainer> container =
+    do_QueryInterface(&(docOrShadow->AsNode()));
+  return container;
 }
 
 HTMLInputElement*
@@ -4632,7 +4638,8 @@ HTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Add radio to document if we don't have a form already (if we do it's
   // already been added into that group)
-  if (aDocument && !mForm && mType == NS_FORM_INPUT_RADIO) {
+  if (!mForm && mType == NS_FORM_INPUT_RADIO &&
+      GetUncomposedDocOrConnectedShadowRoot()) {
     AddedToRadioGroup();
   }
 
@@ -6570,7 +6577,7 @@ HTMLInputElement::AddedToRadioGroup()
 {
   // If the element is neither in a form nor a document, there is no group so we
   // should just stop here.
-  if (!mForm && (!IsInUncomposedDoc() || IsInAnonymousSubtree())) {
+  if (!mForm && (!GetUncomposedDocOrConnectedShadowRoot() || IsInAnonymousSubtree())) {
     return;
   }
 
