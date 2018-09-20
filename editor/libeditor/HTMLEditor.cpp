@@ -1183,8 +1183,10 @@ HTMLEditor::TabInTable(bool inIsShift,
   if (!(*outHandled) && !inIsShift) {
     // If we haven't handled it yet, then we must have run off the end of the
     // table.  Insert a new row.
-    rv = InsertTableRow(1, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = InsertTableRowsWithTransaction(1, InsertPosition::eAfterSelectedCell);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     *outHandled = true;
     // Put selection in right place.  Use table code to get selection and index
     // to new row...
