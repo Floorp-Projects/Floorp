@@ -867,15 +867,12 @@ public:
   /**
    * Gets the parent of a frame, using the parent of the placeholder for
    * out-of-flow frames.
+   *
+   * This is effectively the primary frame (or one of the continuations) of the
+   * closest flattened tree ancestor that has a frame (flattened tree ancestors
+   * may not have frames in presence of display: contents).
    */
   inline nsContainerFrame* GetInFlowParent() const;
-
-  /**
-   * Gets the primary frame of the closest flattened tree ancestor that has a
-   * frame (flattened tree ancestors may not have frames in presence of display:
-   * contents).
-   */
-  inline nsIFrame* GetClosestFlattenedTreeAncestorPrimaryFrame() const;
 
   /**
    * Return the placeholder for this frame (which must be out-of-flow).
