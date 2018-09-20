@@ -843,7 +843,6 @@ const VIRTUAL_KEYCODE_LOOKUP = {
   "\uE008": "VK_SHIFT",
   "\uE009": "VK_CONTROL",
   "\uE00A": "VK_ALT",
-  "\uE03D": "VK_META",
   "\uE00B": "VK_PAUSE",
   "\uE00C": "VK_ESCAPE",
   "\uE00D": "VK_SPACE",  // printable
@@ -887,6 +886,21 @@ const VIRTUAL_KEYCODE_LOOKUP = {
   "\uE03A": "VK_F10",
   "\uE03B": "VK_F11",
   "\uE03C": "VK_F12",
+  "\uE03D": "VK_META",
+  "\uE050": "VK_SHIFT",
+  "\uE051": "VK_CONTROL",
+  "\uE052": "VK_ALT",
+  "\uE053": "VK_META",
+  "\uE054": "VK_PAGE_UP",
+  "\uE055": "VK_PAGE_DOWN",
+  "\uE056": "VK_END",
+  "\uE057": "VK_HOME",
+  "\uE058": "VK_LEFT",
+  "\uE059": "VK_UP",
+  "\uE05A": "VK_RIGHT",
+  "\uE05B": "VK_DOWN",
+  "\uE05C": "VK_INSERT",
+  "\uE05D": "VK_DELETE",
 };
 
 function getKeyCode(c) {
