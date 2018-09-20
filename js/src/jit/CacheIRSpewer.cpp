@@ -155,8 +155,22 @@ CacheIRSpewer::valueProperty(const char* name, const Value& v)
             j.endStringProperty();
         }
     } else if (v.isObject()) {
-        j.formatProperty("value", "%p (shape: %p)", &v.toObject(),
-                         v.toObject().maybeShape());
+        JSObject& object = v.toObject();
+        bool indexed = object.isNative() && object.as<NativeObject>().isIndexed();
+        j.formatProperty("value", "%p (shape: %p)%s", &object, object.maybeShape(),
+                         indexed ? " indexed" : "");
+        if (indexed) {
+            NativeObject& native = object.as<NativeObject>();
+            j.beginObjectProperty("indexed");
+            {
+                j.property("denseInitializedLength",native.getDenseInitializedLength());
+                j.property("denseCapacity",native.getDenseCapacity());
+                j.property("denseElementsAreSealed", native.denseElementsAreSealed());
+                j.property("denseElementsAreCopyOnWrite", native.denseElementsAreCopyOnWrite());
+                j.property("denseElementsAreFrozen", native.denseElementsAreFrozen());
+            }
+            j.endObject();
+        }
     }
 
     j.endObject();
