@@ -1855,12 +1855,23 @@ add_gcc_flag(
 
 @depends(c_compiler.try_compile(flags=['-fsanitize=fuzzer-no-link'],
          check_msg='whether the C compiler supports -fsanitize=fuzzer-no-link'))
-def have_libfuzzer_flag_fuzzer_no_link(value):
+def libfuzzer_flags(value):
     if value:
-        return True
+        no_link_flag_supported = True
+        # recommended for (and only supported by) clang >= 6
+        use_flags = ['-fsanitize=fuzzer-no-link']
+    else:
+        no_link_flag_supported = False
+        use_flags = ['-fsanitize-coverage=trace-pc-guard,trace-cmp']
 
+    return namespace(
+        no_link_flag_supported=no_link_flag_supported,
+        use_flags=use_flags,
+    )
 
-set_config('HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK', have_libfuzzer_flag_fuzzer_no_link)
+set_config('HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK', libfuzzer_flags.no_link_flag_supported)
+set_config('LIBFUZZER_FLAGS', libfuzzer_flags.use_flags)
+add_old_configure_assignment('LIBFUZZER_FLAGS', libfuzzer_flags.use_flags)
 
 # Shared library building
 # ==============================================================
