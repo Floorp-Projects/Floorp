@@ -2,6 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const USERSCRIPT_PREFNAME = "extensions.webextensions.userScripts.enabled";
+const USERSCRIPT_DISABLED_ERRORMSG = `userScripts APIs are currently experimental and must be enabled with the ${USERSCRIPT_PREFNAME} preference.`;
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "userScriptsEnabled", USERSCRIPT_PREFNAME, false);
+
 Cu.importGlobalProperties(["crypto", "TextEncoder"]);
 
 var {
@@ -143,6 +148,10 @@ this.userScripts = class extends ExtensionAPI {
     return {
       userScripts: {
         register(options) {
+          if (!userScriptsEnabled) {
+            throw new ExtensionError(USERSCRIPT_DISABLED_ERRORMSG);
+          }
+
           let scriptId = getUniqueId();
           return context.cloneScope.Promise.resolve().then(async () => {
             options.scriptId = scriptId;
@@ -156,6 +165,10 @@ this.userScripts = class extends ExtensionAPI {
           });
         },
         setScriptAPIs(exportedAPIMethods) {
+          if (!userScriptsEnabled) {
+            throw new ExtensionError(USERSCRIPT_DISABLED_ERRORMSG);
+          }
+
           context.setUserScriptAPIs(exportedAPIMethods);
         },
       },
