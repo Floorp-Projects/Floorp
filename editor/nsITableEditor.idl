@@ -30,7 +30,21 @@ interface nsITableEditor : nsISupports
     *                     else insert before current cell
     */
   void insertTableCell(in long  aNumber, in boolean aAfter);
-  void insertTableColumn(in long  aNumber, in boolean aAfter);
+
+  /**
+   * insertTableColumn() inserts columns before or after a cell element
+   * containing first selection range.  I.e., if the cell spans columns and
+   * aInsertAfterSelectedCell is tre, new columns will be inserted after the
+   * right-most column which contains the cell.  If first selection range is
+   * not in table cell element, this does nothing without exception.
+   *
+   * @param aNumberOfColumnsToInsert    Number of columns to insert.
+   * @param aInsertAfterSelectedCell    true if new columns will be inserted
+   *                                    before current cell.  Otherwise, will
+   *                                    be inserted after the cell.
+   */
+  void insertTableColumn(in long aNumberOfColumnsToInsert,
+                         in boolean aInsertAfterSelectedCell);
 
   /*
    * insertTableRow() inserts <tr> elements before or after a <td> element
