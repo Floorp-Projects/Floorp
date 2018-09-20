@@ -18,21 +18,18 @@ pw_1: times 8 dw 1
 
 SECTION .text
 
-; TODO(yunqingwang)fix quantize_b code for skip=1 case.
 %macro QUANTIZE_FN 2
-cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
+cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, zbin, round, quant, \
                                 shift, qcoeff, dqcoeff, dequant, \
                                 eob, scan, iscan
-  cmp                    dword skipm, 0
-  jne .blank
 
   ; actual quantize loop - setup pointers, rounders, etc.
   movifnidn                   coeffq, coeffmp
   movifnidn                  ncoeffq, ncoeffmp
-  mov                             r2, dequantmp
   movifnidn                    zbinq, zbinmp
   movifnidn                   roundq, roundmp
   movifnidn                   quantq, quantmp
+  movifnidn                 dequantq, dequantmp
   mova                            m0, [zbinq]              ; m0 = zbin
   mova                            m1, [roundq]             ; m1 = round
   mova                            m2, [quantq]             ; m2 = quant
@@ -44,18 +41,18 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   psrlw                           m0, 1                    ; m0 = (m0 + 1) / 2
   psrlw                           m1, 1                    ; m1 = (m1 + 1) / 2
 %endif
-  mova                            m3, [r2q]                ; m3 = dequant
-  psubw                           m0, [GLOBAL(pw_1)]
+  mova                            m3, [dequantq]           ; m3 = dequant
   mov                             r2, shiftmp
-  mov                             r3, qcoeffmp
+  psubw                           m0, [GLOBAL(pw_1)]
   mova                            m4, [r2]                 ; m4 = shift
+  mov                             r3, qcoeffmp
   mov                             r4, dqcoeffmp
   mov                             r5, iscanmp
 %ifidn %1, b_32x32
   psllw                           m4, 1
 %endif
   pxor                            m5, m5                   ; m5 = dedicated zero
-  DEFINE_ARGS coeff, ncoeff, d1, qcoeff, dqcoeff, iscan, d2, d3, d4, d5, eob
+  DEFINE_ARGS coeff, ncoeff, d1, qcoeff, dqcoeff, iscan, d2, d3, d4, eob
   lea                         coeffq, [  coeffq+ncoeffq*4]
   lea                        qcoeffq, [ qcoeffq+ncoeffq*4]
   lea                       dqcoeffq, [dqcoeffq+ncoeffq*4]
@@ -268,33 +265,8 @@ cglobal quantize_%1, 0, %2, 15, coeff, ncoeff, skip, zbin, round, quant, \
   pextrw                          r6, m8, 0
   mov                             [r2], r6
   RET
-
-  ; skip-block, i.e. just write all zeroes
-.blank:
-  mov                             r0, dqcoeffmp
-  movifnidn                  ncoeffq, ncoeffmp
-  mov                             r2, qcoeffmp
-  mov                             r3, eobmp
-  DEFINE_ARGS dqcoeff, ncoeff, qcoeff, eob
-  lea                       dqcoeffq, [dqcoeffq+ncoeffq*4]
-  lea                        qcoeffq, [ qcoeffq+ncoeffq*4]
-  neg                        ncoeffq
-  pxor                            m7, m7
-.blank_loop:
-  mova       [dqcoeffq+ncoeffq*4+ 0], m7
-  mova       [dqcoeffq+ncoeffq*4+16], m7
-  mova       [dqcoeffq+ncoeffq*4+32], m7
-  mova       [dqcoeffq+ncoeffq*4+48], m7
-  mova        [qcoeffq+ncoeffq*4+ 0], m7
-  mova        [qcoeffq+ncoeffq*4+16], m7
-  mova        [qcoeffq+ncoeffq*4+32], m7
-  mova        [qcoeffq+ncoeffq*4+48], m7
-  add                        ncoeffq, mmsize
-  jl .blank_loop
-  mov                    word [eobq], 0
-  RET
 %endmacro
 
 INIT_XMM ssse3
-QUANTIZE_FN b, 7
-QUANTIZE_FN b_32x32, 7
+QUANTIZE_FN b, 9
+QUANTIZE_FN b_32x32, 9

@@ -39,3 +39,9 @@ uint32_t aom_daala_reader_tell(const daala_reader *r) {
 uint32_t aom_daala_reader_tell_frac(const daala_reader *r) {
   return od_ec_dec_tell_frac(&r->ec);
 }
+
+int aom_daala_reader_has_overflowed(const daala_reader *r) {
+  const uint32_t tell_bits = aom_daala_reader_tell(r);
+  const uint32_t tell_bytes = (tell_bits + 7) >> 3;
+  return ((ptrdiff_t)tell_bytes > r->buffer_end - r->buffer);
+}

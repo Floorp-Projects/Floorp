@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef AV1_ENCODER_CORNER_MATCH_H_
-#define AV1_ENCODER_CORNER_MATCH_H_
+#ifndef AOM_AV1_ENCODER_CORNER_MATCH_H_
+#define AOM_AV1_ENCODER_CORNER_MATCH_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,4 +30,4 @@ int determine_correspondence(unsigned char *frm, int *frm_corners,
                              int height, int frm_stride, int ref_stride,
                              int *correspondence_pts);
 
-#endif  // AV1_ENCODER_CORNER_MATCH_H_
+#endif  // AOM_AV1_ENCODER_CORNER_MATCH_H_

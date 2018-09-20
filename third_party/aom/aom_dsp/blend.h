@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_BLEND_H_
-#define AOM_DSP_BLEND_H_
+#ifndef AOM_AOM_DSP_BLEND_H_
+#define AOM_AOM_DSP_BLEND_H_
 
 #include "aom_ports/mem.h"
 
@@ -42,4 +42,4 @@
 #define DIFF_FACTOR_LOG2 4
 #define DIFF_FACTOR (1 << DIFF_FACTOR_LOG2)
 
-#endif  // AOM_DSP_BLEND_H_
+#endif  // AOM_AOM_DSP_BLEND_H_

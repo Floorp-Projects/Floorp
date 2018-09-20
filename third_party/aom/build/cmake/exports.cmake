@@ -34,7 +34,8 @@ function(setup_exports_target)
                             -DAOM_SYM_FILE="${aom_sym_file}" -DAOM_MSVC=${MSVC}
                             -DAOM_XCODE=${XCODE} -DCONFIG_NAME=$<CONFIG>
                             -DCONFIG_AV1_DECODER=${CONFIG_AV1_DECODER}
-                            -DCONFIG_AV1_ENCODER=${CONFIG_AV1_ENCODER} -P
+                            -DCONFIG_AV1_ENCODER=${CONFIG_AV1_ENCODER}
+                            -DENABLE_TESTS=${ENABLE_TESTS} -P
                             "${AOM_ROOT}/build/cmake/generate_exports.cmake"
                     SOURCES ${AOM_EXPORTS_SOURCES}
                     DEPENDS ${AOM_EXPORTS_SOURCES})
@@ -47,10 +48,12 @@ function(setup_exports_target)
     set_property(TARGET aom APPEND_STRING
                  PROPERTY LINK_FLAGS "-exported_symbols_list ${aom_sym_file}")
   elseif(WIN32)
-    message(FATAL_ERROR "Windows DLL builds not supported yet.")
     if(NOT MSVC)
       set_property(TARGET aom APPEND_STRING
                    PROPERTY LINK_FLAGS "-Wl,--version-script ${aom_sym_file}")
+    else()
+      set_property(TARGET aom APPEND_STRING
+                   PROPERTY LINK_FLAGS "/DEF:${aom_sym_file}")
     endif()
 
     # TODO(tomfinegan): Sort out the import lib situation and flags for MSVC.

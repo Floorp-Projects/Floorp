@@ -43,6 +43,7 @@
 #include "av1/common/entropy.h"
 #include "av1/common/entropymode.h"
 #include "av1/common/entropymv.h"
+#include "av1/common/frame_buffers.h"
 #include "av1/common/idct.h"
 #include "av1/common/mvref_common.h"
 #include "av1/common/pred_common.h"
@@ -87,18 +88,25 @@ int av1_check_trailing_bits(AV1Decoder *pbi, struct aom_read_bit_buffer *rb) {
 static void set_planes_to_neutral_grey(const SequenceHeader *const seq_params,
                                        const YV12_BUFFER_CONFIG *const buf,
                                        int only_chroma) {
-  const int val = 1 << (seq_params->bit_depth - 1);
-
-  for (int plane = only_chroma; plane < MAX_MB_PLANE; plane++) {
-    const int is_uv = plane > 0;
-    for (int row_idx = 0; row_idx < buf->crop_heights[is_uv]; row_idx++) {
-      if (seq_params->use_highbitdepth) {
-        // TODO(yaowu): replace this with aom_memset16() for speed
-        for (int col_idx = 0; col_idx < buf->crop_widths[is_uv]; col_idx++) {
-          uint16_t *base = CONVERT_TO_SHORTPTR(buf->buffers[plane]);
-          base[row_idx * buf->strides[is_uv] + col_idx] = val;
+  if (seq_params->use_highbitdepth) {
+    const int val = 1 << (seq_params->bit_depth - 1);
+    for (int plane = only_chroma; plane < MAX_MB_PLANE; plane++) {
+      const int is_uv = plane > 0;
+      uint16_t *const base = CONVERT_TO_SHORTPTR(buf->buffers[plane]);
+      // Set the first row to neutral grey. Then copy the first row to all
+      // subsequent rows.
+      if (buf->crop_heights[is_uv] > 0) {
+        aom_memset16(base, val, buf->crop_widths[is_uv]);
+        for (int row_idx = 1; row_idx < buf->crop_heights[is_uv]; row_idx++) {
+          memcpy(&base[row_idx * buf->strides[is_uv]], base,
+                 sizeof(*base) * buf->crop_widths[is_uv]);
         }
-      } else {
+      }
+    }
+  } else {
+    for (int plane = only_chroma; plane < MAX_MB_PLANE; plane++) {
+      const int is_uv = plane > 0;
+      for (int row_idx = 0; row_idx < buf->crop_heights[is_uv]; row_idx++) {
         memset(&buf->buffers[plane][row_idx * buf->uv_stride], 1 << 7,
                buf->crop_widths[is_uv]);
       }
@@ -687,11 +695,10 @@ static INLINE void dec_build_inter_predictors(const AV1_COMMON *cm,
       for (int x = 0; x < b8_w; x += b4_w) {
         MB_MODE_INFO *this_mbmi = xd->mi[row * xd->mi_stride + col];
         is_compound = has_second_ref(this_mbmi);
-        DECLARE_ALIGNED(32, CONV_BUF_TYPE, tmp_dst[8 * 8]);
         int tmp_dst_stride = 8;
         assert(bw < 8 || bh < 8);
         ConvolveParams conv_params = get_conv_params_no_round(
-            0, 0, plane, tmp_dst, tmp_dst_stride, is_compound, xd->bd);
+            0, plane, xd->tmp_conv_dst, tmp_dst_stride, is_compound, xd->bd);
         conv_params.use_jnt_comp_avg = 0;
         struct buf_2d *const dst_buf = &pd->dst;
         uint8_t *dst = dst_buf->buf + dst_buf->stride * y + x;
@@ -735,7 +742,6 @@ static INLINE void dec_build_inter_predictors(const AV1_COMMON *cm,
         extend_mc_border(sf, pre_buf, scaled_mv, block, subpel_x_mv,
                          subpel_y_mv, 0, is_intrabc, highbd, xd->mc_buf[ref],
                          &pre, &src_stride);
-        conv_params.ref = ref;
         conv_params.do_average = ref;
         if (is_masked_compound_type(mi->interinter_comp.type)) {
           // masked compound type has its own average mechanism
@@ -762,7 +768,6 @@ static INLINE void dec_build_inter_predictors(const AV1_COMMON *cm,
     uint8_t *const dst = dst_buf->buf;
     uint8_t *pre[2];
     SubpelParams subpel_params[2];
-    DECLARE_ALIGNED(32, uint16_t, tmp_dst[MAX_SB_SIZE * MAX_SB_SIZE]);
     int src_stride[2];
     for (ref = 0; ref < 1 + is_compound; ++ref) {
       const struct scale_factors *const sf =
@@ -797,7 +802,7 @@ static INLINE void dec_build_inter_predictors(const AV1_COMMON *cm,
     }
 
     ConvolveParams conv_params = get_conv_params_no_round(
-        0, 0, plane, tmp_dst, MAX_SB_SIZE, is_compound, xd->bd);
+        0, plane, xd->tmp_conv_dst, MAX_SB_SIZE, is_compound, xd->bd);
     av1_jnt_comp_weight_assign(cm, mi, 0, &conv_params.fwd_offset,
                                &conv_params.bck_offset,
                                &conv_params.use_jnt_comp_avg, is_compound);
@@ -808,7 +813,6 @@ static INLINE void dec_build_inter_predictors(const AV1_COMMON *cm,
       WarpTypesAllowed warp_types;
       warp_types.global_warp_allowed = is_global[ref];
       warp_types.local_warp_allowed = mi->motion_mode == WARPED_CAUSAL;
-      conv_params.ref = ref;
       conv_params.do_average = ref;
       if (is_masked_compound_type(mi->interinter_comp.type)) {
         // masked compound type has its own average mechanism
@@ -931,7 +935,7 @@ static void dec_build_prediction_by_above_preds(
   // Adjust mb_to_bottom_edge to have the correct value for the OBMC
   // prediction block. This is half the height of the original block,
   // except for 128-wide blocks, where we only use a height of 32.
-  int this_height = xd->n8_h * MI_SIZE;
+  int this_height = xd->n4_h * MI_SIZE;
   int pred_height = AOMMIN(this_height / 2, 32);
   xd->mb_to_bottom_edge += (this_height - pred_height) * 8;
 
@@ -984,7 +988,7 @@ static void dec_build_prediction_by_left_preds(
   // Adjust mb_to_right_edge to have the correct value for the OBMC
   // prediction block. This is half the width of the original block,
   // except for 128-wide blocks, where we only use a width of 32.
-  int this_width = xd->n8_w * MI_SIZE;
+  int this_width = xd->n4_w * MI_SIZE;
   int pred_width = AOMMIN(this_width / 2, 32);
   xd->mb_to_right_edge += (this_width - pred_width) * 8;
 
@@ -1006,8 +1010,6 @@ static void dec_build_obmc_inter_predictors_sb(const AV1_COMMON *cm,
                                                MACROBLOCKD *xd, int mi_row,
                                                int mi_col) {
   const int num_planes = av1_num_planes(cm);
-  DECLARE_ALIGNED(16, uint8_t, tmp_buf1[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
-  DECLARE_ALIGNED(16, uint8_t, tmp_buf2[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
   uint8_t *dst_buf1[MAX_MB_PLANE], *dst_buf2[MAX_MB_PLANE];
   int dst_stride1[MAX_MB_PLANE] = { MAX_SB_SIZE, MAX_SB_SIZE, MAX_SB_SIZE };
   int dst_stride2[MAX_MB_PLANE] = { MAX_SB_SIZE, MAX_SB_SIZE, MAX_SB_SIZE };
@@ -1018,19 +1020,23 @@ static void dec_build_obmc_inter_predictors_sb(const AV1_COMMON *cm,
 
   if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
     int len = sizeof(uint16_t);
-    dst_buf1[0] = CONVERT_TO_BYTEPTR(tmp_buf1);
-    dst_buf1[1] = CONVERT_TO_BYTEPTR(tmp_buf1 + MAX_SB_SQUARE * len);
-    dst_buf1[2] = CONVERT_TO_BYTEPTR(tmp_buf1 + MAX_SB_SQUARE * 2 * len);
-    dst_buf2[0] = CONVERT_TO_BYTEPTR(tmp_buf2);
-    dst_buf2[1] = CONVERT_TO_BYTEPTR(tmp_buf2 + MAX_SB_SQUARE * len);
-    dst_buf2[2] = CONVERT_TO_BYTEPTR(tmp_buf2 + MAX_SB_SQUARE * 2 * len);
+    dst_buf1[0] = CONVERT_TO_BYTEPTR(xd->tmp_obmc_bufs[0]);
+    dst_buf1[1] =
+        CONVERT_TO_BYTEPTR(xd->tmp_obmc_bufs[0] + MAX_SB_SQUARE * len);
+    dst_buf1[2] =
+        CONVERT_TO_BYTEPTR(xd->tmp_obmc_bufs[0] + MAX_SB_SQUARE * 2 * len);
+    dst_buf2[0] = CONVERT_TO_BYTEPTR(xd->tmp_obmc_bufs[1]);
+    dst_buf2[1] =
+        CONVERT_TO_BYTEPTR(xd->tmp_obmc_bufs[1] + MAX_SB_SQUARE * len);
+    dst_buf2[2] =
+        CONVERT_TO_BYTEPTR(xd->tmp_obmc_bufs[1] + MAX_SB_SQUARE * 2 * len);
   } else {
-    dst_buf1[0] = tmp_buf1;
-    dst_buf1[1] = tmp_buf1 + MAX_SB_SQUARE;
-    dst_buf1[2] = tmp_buf1 + MAX_SB_SQUARE * 2;
-    dst_buf2[0] = tmp_buf2;
-    dst_buf2[1] = tmp_buf2 + MAX_SB_SQUARE;
-    dst_buf2[2] = tmp_buf2 + MAX_SB_SQUARE * 2;
+    dst_buf1[0] = xd->tmp_obmc_bufs[0];
+    dst_buf1[1] = xd->tmp_obmc_bufs[0] + MAX_SB_SQUARE;
+    dst_buf1[2] = xd->tmp_obmc_bufs[0] + MAX_SB_SQUARE * 2;
+    dst_buf2[0] = xd->tmp_obmc_bufs[1];
+    dst_buf2[1] = xd->tmp_obmc_bufs[1] + MAX_SB_SQUARE;
+    dst_buf2[2] = xd->tmp_obmc_bufs[1] + MAX_SB_SQUARE * 2;
   }
   dec_build_prediction_by_above_preds(cm, xd, mi_row, mi_col, dst_buf1,
                                       dst_width1, dst_height1, dst_stride1);
@@ -1069,8 +1075,9 @@ static void predict_inter_block(AV1_COMMON *const cm, MACROBLOCKD *const xd,
   }
 
   dec_build_inter_predictors_sb(cm, xd, mi_row, mi_col, NULL, bsize);
-  if (mbmi->motion_mode == OBMC_CAUSAL)
+  if (mbmi->motion_mode == OBMC_CAUSAL) {
     dec_build_obmc_inter_predictors_sb(cm, xd, mi_row, mi_col);
+  }
 #if CONFIG_MISMATCH_DEBUG
   for (int plane = 0; plane < num_planes; ++plane) {
     const struct macroblockd_plane *pd = &xd->plane[plane];
@@ -1225,9 +1232,18 @@ static void decode_token_recon_block(AV1Decoder *const pbi,
                     set_color_index_map_offset);
 }
 
+#if LOOP_FILTER_BITMASK
+static void store_bitmask_vartx(AV1_COMMON *cm, int mi_row, int mi_col,
+                                BLOCK_SIZE bsize, TX_SIZE tx_size,
+                                MB_MODE_INFO *mbmi);
+#endif
+
 static void read_tx_size_vartx(MACROBLOCKD *xd, MB_MODE_INFO *mbmi,
-                               TX_SIZE tx_size, int depth, int blk_row,
-                               int blk_col, aom_reader *r) {
+                               TX_SIZE tx_size, int depth,
+#if LOOP_FILTER_BITMASK
+                               AV1_COMMON *cm, int mi_row, int mi_col,
+#endif
+                               int blk_row, int blk_col, aom_reader *r) {
   FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
   int is_split = 0;
   const BLOCK_SIZE bsize = mbmi->sb_type;
@@ -1271,15 +1287,29 @@ static void read_tx_size_vartx(MACROBLOCKD *xd, MB_MODE_INFO *mbmi,
       mbmi->tx_size = sub_txs;
       txfm_partition_update(xd->above_txfm_context + blk_col,
                             xd->left_txfm_context + blk_row, sub_txs, tx_size);
+#if LOOP_FILTER_BITMASK
+      store_bitmask_vartx(cm, mi_row + blk_row, mi_col + blk_col, BLOCK_8X8,
+                          TX_4X4, mbmi);
+#endif
       return;
     }
+#if LOOP_FILTER_BITMASK
+    if (depth + 1 == MAX_VARTX_DEPTH) {
+      store_bitmask_vartx(cm, mi_row + blk_row, mi_col + blk_col,
+                          txsize_to_bsize[tx_size], sub_txs, mbmi);
+    }
+#endif
 
     assert(bsw > 0 && bsh > 0);
     for (int row = 0; row < tx_size_high_unit[tx_size]; row += bsh) {
       for (int col = 0; col < tx_size_wide_unit[tx_size]; col += bsw) {
         int offsetr = blk_row + row;
         int offsetc = blk_col + col;
-        read_tx_size_vartx(xd, mbmi, sub_txs, depth + 1, offsetr, offsetc, r);
+        read_tx_size_vartx(xd, mbmi, sub_txs, depth + 1,
+#if LOOP_FILTER_BITMASK
+                           cm, mi_row, mi_col,
+#endif
+                           offsetr, offsetc, r);
       }
     }
   } else {
@@ -1293,6 +1323,10 @@ static void read_tx_size_vartx(MACROBLOCKD *xd, MB_MODE_INFO *mbmi,
     mbmi->tx_size = tx_size;
     txfm_partition_update(xd->above_txfm_context + blk_col,
                           xd->left_txfm_context + blk_row, tx_size, tx_size);
+#if LOOP_FILTER_BITMASK
+    store_bitmask_vartx(cm, mi_row + blk_row, mi_col + blk_col,
+                        txsize_to_bsize[tx_size], tx_size, mbmi);
+#endif
   }
 }
 
@@ -1330,6 +1364,191 @@ static TX_SIZE read_tx_size(AV1_COMMON *cm, MACROBLOCKD *xd, int is_inter,
   }
 }
 
+#if LOOP_FILTER_BITMASK
+static void store_bitmask_vartx(AV1_COMMON *cm, int mi_row, int mi_col,
+                                BLOCK_SIZE bsize, TX_SIZE tx_size,
+                                MB_MODE_INFO *mbmi) {
+  LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
+  const TX_SIZE tx_size_y_vert = txsize_vert_map[tx_size];
+  const TX_SIZE tx_size_y_horz = txsize_horz_map[tx_size];
+  const TX_SIZE tx_size_uv_vert = txsize_vert_map[av1_get_max_uv_txsize(
+      mbmi->sb_type, cm->seq_params.subsampling_x,
+      cm->seq_params.subsampling_y)];
+  const TX_SIZE tx_size_uv_horz = txsize_horz_map[av1_get_max_uv_txsize(
+      mbmi->sb_type, cm->seq_params.subsampling_x,
+      cm->seq_params.subsampling_y)];
+  const int is_square_transform_size = tx_size <= TX_64X64;
+  int mask_id = 0;
+  int offset = 0;
+  const int half_ratio_tx_size_max32 =
+      (tx_size > TX_64X64) & (tx_size <= TX_32X16);
+  if (is_square_transform_size) {
+    switch (tx_size) {
+      case TX_4X4: mask_id = mask_id_table_tx_4x4[bsize]; break;
+      case TX_8X8:
+        mask_id = mask_id_table_tx_8x8[bsize];
+        offset = 19;
+        break;
+      case TX_16X16:
+        mask_id = mask_id_table_tx_16x16[bsize];
+        offset = 33;
+        break;
+      case TX_32X32:
+        mask_id = mask_id_table_tx_32x32[bsize];
+        offset = 42;
+        break;
+      case TX_64X64: mask_id = 46; break;
+      default: assert(!is_square_transform_size); return;
+    }
+    mask_id += offset;
+  } else if (half_ratio_tx_size_max32) {
+    int tx_size_equal_block_size = bsize == txsize_to_bsize[tx_size];
+    mask_id = 47 + 2 * (tx_size - TX_4X8) + (tx_size_equal_block_size ? 0 : 1);
+  } else if (tx_size == TX_32X64) {
+    mask_id = 59;
+  } else if (tx_size == TX_64X32) {
+    mask_id = 60;
+  } else {  // quarter ratio tx size
+    mask_id = 61 + (tx_size - TX_4X16);
+  }
+  int index = 0;
+  const int row = mi_row % MI_SIZE_64X64;
+  const int col = mi_col % MI_SIZE_64X64;
+  const int shift = get_index_shift(col, row, &index);
+  const int vert_shift = tx_size_y_vert <= TX_8X8 ? shift : col;
+  for (int i = 0; i + index < 4; ++i) {
+    // y vertical.
+    lfm->tx_size_ver[0][tx_size_y_horz].bits[i + index] |=
+        (left_mask_univariant_reordered[mask_id].bits[i] << vert_shift);
+    // y horizontal.
+    lfm->tx_size_hor[0][tx_size_y_vert].bits[i + index] |=
+        (above_mask_univariant_reordered[mask_id].bits[i] << shift);
+    // u/v vertical.
+    lfm->tx_size_ver[1][tx_size_uv_horz].bits[i + index] |=
+        (left_mask_univariant_reordered[mask_id].bits[i] << vert_shift);
+    // u/v horizontal.
+    lfm->tx_size_hor[1][tx_size_uv_vert].bits[i + index] |=
+        (above_mask_univariant_reordered[mask_id].bits[i] << shift);
+  }
+}
+
+static void store_bitmask_univariant_tx(AV1_COMMON *cm, int mi_row, int mi_col,
+                                        BLOCK_SIZE bsize, MB_MODE_INFO *mbmi) {
+  // Use a lookup table that provides one bitmask for a given block size and
+  // a univariant transform size.
+  int index;
+  int shift;
+  int row;
+  int col;
+  LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
+  const TX_SIZE tx_size_y_vert = txsize_vert_map[mbmi->tx_size];
+  const TX_SIZE tx_size_y_horz = txsize_horz_map[mbmi->tx_size];
+  const TX_SIZE tx_size_uv_vert = txsize_vert_map[av1_get_max_uv_txsize(
+      mbmi->sb_type, cm->seq_params.subsampling_x,
+      cm->seq_params.subsampling_y)];
+  const TX_SIZE tx_size_uv_horz = txsize_horz_map[av1_get_max_uv_txsize(
+      mbmi->sb_type, cm->seq_params.subsampling_x,
+      cm->seq_params.subsampling_y)];
+  const int is_square_transform_size = mbmi->tx_size <= TX_64X64;
+  int mask_id = 0;
+  int offset = 0;
+  const int half_ratio_tx_size_max32 =
+      (mbmi->tx_size > TX_64X64) & (mbmi->tx_size <= TX_32X16);
+  if (is_square_transform_size) {
+    switch (mbmi->tx_size) {
+      case TX_4X4: mask_id = mask_id_table_tx_4x4[bsize]; break;
+      case TX_8X8:
+        mask_id = mask_id_table_tx_8x8[bsize];
+        offset = 19;
+        break;
+      case TX_16X16:
+        mask_id = mask_id_table_tx_16x16[bsize];
+        offset = 33;
+        break;
+      case TX_32X32:
+        mask_id = mask_id_table_tx_32x32[bsize];
+        offset = 42;
+        break;
+      case TX_64X64: mask_id = 46; break;
+      default: assert(!is_square_transform_size); return;
+    }
+    mask_id += offset;
+  } else if (half_ratio_tx_size_max32) {
+    int tx_size_equal_block_size = bsize == txsize_to_bsize[mbmi->tx_size];
+    mask_id =
+        47 + 2 * (mbmi->tx_size - TX_4X8) + (tx_size_equal_block_size ? 0 : 1);
+  } else if (mbmi->tx_size == TX_32X64) {
+    mask_id = 59;
+  } else if (mbmi->tx_size == TX_64X32) {
+    mask_id = 60;
+  } else {  // quarter ratio tx size
+    mask_id = 61 + (mbmi->tx_size - TX_4X16);
+  }
+  row = mi_row % MI_SIZE_64X64;
+  col = mi_col % MI_SIZE_64X64;
+  shift = get_index_shift(col, row, &index);
+  const int vert_shift = tx_size_y_vert <= TX_8X8 ? shift : col;
+  for (int i = 0; i + index < 4; ++i) {
+    // y vertical.
+    lfm->tx_size_ver[0][tx_size_y_horz].bits[i + index] |=
+        (left_mask_univariant_reordered[mask_id].bits[i] << vert_shift);
+    // y horizontal.
+    lfm->tx_size_hor[0][tx_size_y_vert].bits[i + index] |=
+        (above_mask_univariant_reordered[mask_id].bits[i] << shift);
+    // u/v vertical.
+    lfm->tx_size_ver[1][tx_size_uv_horz].bits[i + index] |=
+        (left_mask_univariant_reordered[mask_id].bits[i] << vert_shift);
+    // u/v horizontal.
+    lfm->tx_size_hor[1][tx_size_uv_vert].bits[i + index] |=
+        (above_mask_univariant_reordered[mask_id].bits[i] << shift);
+  }
+}
+
+static void store_bitmask_other_info(AV1_COMMON *cm, int mi_row, int mi_col,
+                                     BLOCK_SIZE bsize, MB_MODE_INFO *mbmi) {
+  int index;
+  int shift;
+  int row;
+  LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
+  const int row_start = mi_row % MI_SIZE_64X64;
+  const int col_start = mi_col % MI_SIZE_64X64;
+  shift = get_index_shift(col_start, row_start, &index);
+  const uint64_t top_edge_mask =
+      ((uint64_t)1 << (shift + mi_size_wide[bsize])) - ((uint64_t)1 << shift);
+  lfm->is_horz_border.bits[index] |= top_edge_mask;
+  const int is_vert_border = mask_id_table_vert_border[bsize];
+  const int vert_shift = block_size_high[bsize] <= 8 ? shift : col_start;
+  for (int i = 0; i + index < 4; ++i) {
+    lfm->is_vert_border.bits[i + index] |=
+        (left_mask_univariant_reordered[is_vert_border].bits[i] << vert_shift);
+  }
+  const int is_skip = mbmi->skip && is_inter_block(mbmi);
+  if (is_skip) {
+    const int is_skip_mask = mask_id_table_tx_4x4[bsize];
+    for (int i = 0; i + index < 4; ++i) {
+      lfm->skip.bits[i + index] |=
+          (above_mask_univariant_reordered[is_skip_mask].bits[i] << shift);
+    }
+  }
+  const uint8_t level_vert_y = get_filter_level(cm, &cm->lf_info, 0, 0, mbmi);
+  const uint8_t level_horz_y = get_filter_level(cm, &cm->lf_info, 1, 0, mbmi);
+  const uint8_t level_u = get_filter_level(cm, &cm->lf_info, 0, 1, mbmi);
+  const uint8_t level_v = get_filter_level(cm, &cm->lf_info, 0, 2, mbmi);
+  for (int r = mi_row; r < mi_row + mi_size_high[bsize]; r++) {
+    index = 0;
+    row = r % MI_SIZE_64X64;
+    memset(&lfm->lfl_y_ver[row][col_start], level_vert_y,
+           sizeof(uint8_t) * mi_size_wide[bsize]);
+    memset(&lfm->lfl_y_hor[row][col_start], level_horz_y,
+           sizeof(uint8_t) * mi_size_wide[bsize]);
+    memset(&lfm->lfl_u[row][col_start], level_u,
+           sizeof(uint8_t) * mi_size_wide[bsize]);
+    memset(&lfm->lfl_v[row][col_start], level_v,
+           sizeof(uint8_t) * mi_size_wide[bsize]);
+  }
+}
+#endif
+
 static void parse_decode_block(AV1Decoder *const pbi, ThreadData *const td,
                                int mi_row, int mi_col, aom_reader *r,
                                PARTITION_TYPE partition, BLOCK_SIZE bsize) {
@@ -1353,14 +1572,46 @@ static void parse_decode_block(AV1Decoder *const pbi, ThreadData *const td,
 
     for (int idy = 0; idy < height; idy += bh)
       for (int idx = 0; idx < width; idx += bw)
-        read_tx_size_vartx(xd, mbmi, max_tx_size, 0, idy, idx, r);
+        read_tx_size_vartx(xd, mbmi, max_tx_size, 0,
+#if LOOP_FILTER_BITMASK
+                           cm, mi_row, mi_col,
+#endif
+                           idy, idx, r);
   } else {
     mbmi->tx_size = read_tx_size(cm, xd, inter_block_tx, !mbmi->skip, r);
     if (inter_block_tx)
       memset(mbmi->inter_tx_size, mbmi->tx_size, sizeof(mbmi->inter_tx_size));
-    set_txfm_ctxs(mbmi->tx_size, xd->n8_w, xd->n8_h,
+    set_txfm_ctxs(mbmi->tx_size, xd->n4_w, xd->n4_h,
                   mbmi->skip && is_inter_block(mbmi), xd);
+#if LOOP_FILTER_BITMASK
+    const int w = mi_size_wide[bsize];
+    const int h = mi_size_high[bsize];
+    if (w <= mi_size_wide[BLOCK_64X64] && h <= mi_size_high[BLOCK_64X64]) {
+      store_bitmask_univariant_tx(cm, mi_row, mi_col, bsize, mbmi);
+    } else {
+      for (int row = 0; row < h; row += mi_size_high[BLOCK_64X64]) {
+        for (int col = 0; col < w; col += mi_size_wide[BLOCK_64X64]) {
+          store_bitmask_univariant_tx(cm, mi_row + row, mi_col + col,
+                                      BLOCK_64X64, mbmi);
+        }
+      }
+    }
+#endif
   }
+#if LOOP_FILTER_BITMASK
+  const int w = mi_size_wide[bsize];
+  const int h = mi_size_high[bsize];
+  if (w <= mi_size_wide[BLOCK_64X64] && h <= mi_size_high[BLOCK_64X64]) {
+    store_bitmask_other_info(cm, mi_row, mi_col, bsize, mbmi);
+  } else {
+    for (int row = 0; row < h; row += mi_size_high[BLOCK_64X64]) {
+      for (int col = 0; col < w; col += mi_size_wide[BLOCK_64X64]) {
+        store_bitmask_other_info(cm, mi_row + row, mi_col + col, BLOCK_64X64,
+                                 mbmi);
+      }
+    }
+  }
+#endif
 
   if (cm->delta_q_present_flag) {
     for (int i = 0; i < MAX_SEGMENTS; i++) {
@@ -1952,6 +2203,11 @@ static void setup_quantization(AV1_COMMON *const cm,
       cm->v_dc_delta_q = cm->u_dc_delta_q;
       cm->v_ac_delta_q = cm->u_ac_delta_q;
     }
+  } else {
+    cm->u_dc_delta_q = 0;
+    cm->u_ac_delta_q = 0;
+    cm->v_dc_delta_q = 0;
+    cm->v_ac_delta_q = 0;
   }
   cm->dequant_bit_depth = seq_params->bit_depth;
   cm->using_qmatrix = aom_rb_read_bit(rb);
@@ -2082,29 +2338,9 @@ static void resize_context_buffers(AV1_COMMON *cm, int width, int height) {
   cm->cur_frame->height = cm->height;
 }
 
-static void setup_frame_size(AV1_COMMON *cm, int frame_size_override_flag,
-                             struct aom_read_bit_buffer *rb) {
-  const SequenceHeader *const seq_params = &cm->seq_params;
-  int width, height;
+static void setup_buffer_pool(AV1_COMMON *cm) {
   BufferPool *const pool = cm->buffer_pool;
-
-  if (frame_size_override_flag) {
-    int num_bits_width = seq_params->num_bits_width;
-    int num_bits_height = seq_params->num_bits_height;
-    av1_read_frame_size(rb, num_bits_width, num_bits_height, &width, &height);
-    if (width > seq_params->max_frame_width ||
-        height > seq_params->max_frame_height) {
-      aom_internal_error(&cm->error, AOM_CODEC_CORRUPT_FRAME,
-                         "Frame dimensions are larger than the maximum values");
-    }
-  } else {
-    width = seq_params->max_frame_width;
-    height = seq_params->max_frame_height;
-  }
-
-  setup_superres(cm, rb, &width, &height);
-  resize_context_buffers(cm, width, height);
-  setup_render_size(cm, rb);
+  const SequenceHeader *const seq_params = &cm->seq_params;
 
   lock_buffer_pool(pool);
   if (aom_realloc_frame_buffer(
@@ -2140,6 +2376,31 @@ static void setup_frame_size(AV1_COMMON *cm, int frame_size_override_flag,
   pool->frame_bufs[cm->new_fb_idx].buf.render_height = cm->render_height;
 }
 
+static void setup_frame_size(AV1_COMMON *cm, int frame_size_override_flag,
+                             struct aom_read_bit_buffer *rb) {
+  const SequenceHeader *const seq_params = &cm->seq_params;
+  int width, height;
+
+  if (frame_size_override_flag) {
+    int num_bits_width = seq_params->num_bits_width;
+    int num_bits_height = seq_params->num_bits_height;
+    av1_read_frame_size(rb, num_bits_width, num_bits_height, &width, &height);
+    if (width > seq_params->max_frame_width ||
+        height > seq_params->max_frame_height) {
+      aom_internal_error(&cm->error, AOM_CODEC_CORRUPT_FRAME,
+                         "Frame dimensions are larger than the maximum values");
+    }
+  } else {
+    width = seq_params->max_frame_width;
+    height = seq_params->max_frame_height;
+  }
+
+  setup_superres(cm, rb, &width, &height);
+  resize_context_buffers(cm, width, height);
+  setup_render_size(cm, rb);
+  setup_buffer_pool(cm);
+}
+
 static void setup_sb_size(SequenceHeader *seq_params,
                           struct aom_read_bit_buffer *rb) {
   set_sb_size(seq_params, aom_rb_read_bit(rb) ? BLOCK_128X128 : BLOCK_64X64);
@@ -2158,7 +2419,6 @@ static void setup_frame_size_with_refs(AV1_COMMON *cm,
   int width, height;
   int found = 0;
   int has_valid_ref_frame = 0;
-  BufferPool *const pool = cm->buffer_pool;
   for (int i = 0; i < INTER_REFS_PER_FRAME; ++i) {
     if (aom_rb_read_bit(rb)) {
       YV12_BUFFER_CONFIG *const buf = cm->frame_refs[i].buf;
@@ -2208,39 +2468,7 @@ static void setup_frame_size_with_refs(AV1_COMMON *cm,
       aom_internal_error(&cm->error, AOM_CODEC_CORRUPT_FRAME,
                          "Referenced frame has incompatible color format");
   }
-
-  lock_buffer_pool(pool);
-  if (aom_realloc_frame_buffer(
-          get_frame_new_buffer(cm), cm->width, cm->height,
-          seq_params->subsampling_x, seq_params->subsampling_y,
-          seq_params->use_highbitdepth, AOM_BORDER_IN_PIXELS,
-          cm->byte_alignment,
-          &pool->frame_bufs[cm->new_fb_idx].raw_frame_buffer, pool->get_fb_cb,
-          pool->cb_priv)) {
-    unlock_buffer_pool(pool);
-    aom_internal_error(&cm->error, AOM_CODEC_MEM_ERROR,
-                       "Failed to allocate frame buffer");
-  }
-  unlock_buffer_pool(pool);
-
-  pool->frame_bufs[cm->new_fb_idx].buf.subsampling_x =
-      seq_params->subsampling_x;
-  pool->frame_bufs[cm->new_fb_idx].buf.subsampling_y =
-      seq_params->subsampling_y;
-  pool->frame_bufs[cm->new_fb_idx].buf.bit_depth =
-      (unsigned int)seq_params->bit_depth;
-  pool->frame_bufs[cm->new_fb_idx].buf.color_primaries =
-      seq_params->color_primaries;
-  pool->frame_bufs[cm->new_fb_idx].buf.transfer_characteristics =
-      seq_params->transfer_characteristics;
-  pool->frame_bufs[cm->new_fb_idx].buf.matrix_coefficients =
-      seq_params->matrix_coefficients;
-  pool->frame_bufs[cm->new_fb_idx].buf.monochrome = seq_params->monochrome;
-  pool->frame_bufs[cm->new_fb_idx].buf.chroma_sample_position =
-      seq_params->chroma_sample_position;
-  pool->frame_bufs[cm->new_fb_idx].buf.color_range = seq_params->color_range;
-  pool->frame_bufs[cm->new_fb_idx].buf.render_width = cm->render_width;
-  pool->frame_bufs[cm->new_fb_idx].buf.render_height = cm->render_height;
+  setup_buffer_pool(cm);
 }
 
 // Same function as av1_read_uniform but reading from uncompresses header wb
@@ -2252,7 +2480,7 @@ static int rb_read_uniform(struct aom_read_bit_buffer *const rb, int n) {
   if (v < m)
     return v;
   else
-    return (v << 1) - m + aom_rb_read_literal(rb, 1);
+    return (v << 1) - m + aom_rb_read_bit(rb);
 }
 
 static void read_tile_info_max_tile(AV1_COMMON *const cm,
@@ -2344,6 +2572,10 @@ static void read_tile_info(AV1Decoder *const pbi,
     // tile to use for cdf update
     cm->context_update_tile_id =
         aom_rb_read_literal(rb, cm->log2_tile_rows + cm->log2_tile_cols);
+    if (cm->context_update_tile_id >= cm->tile_rows * cm->tile_cols) {
+      aom_internal_error(&cm->error, AOM_CODEC_CORRUPT_FRAME,
+                         "Invalid context_update_tile_id");
+    }
     // tile size magnitude
     pbi->tile_size_bytes = aom_rb_read_literal(rb, 2) + 1;
   }
@@ -2746,31 +2978,13 @@ static INLINE void sync_write(AV1DecRowMTSync *const dec_row_mt_sync, int r,
 #endif  // CONFIG_MULTITHREAD
 }
 
-static INLINE int get_sb_rows_in_tile(AV1Decoder *pbi, TileInfo tile) {
-  AV1_COMMON *cm = &pbi->common;
-  int mi_rows_aligned_to_sb = ALIGN_POWER_OF_TWO(
-      tile.mi_row_end - tile.mi_row_start, cm->seq_params.mib_size_log2);
-  int sb_rows = mi_rows_aligned_to_sb >> cm->seq_params.mib_size_log2;
-
-  return sb_rows;
-}
-
-static INLINE int get_sb_cols_in_tile(AV1Decoder *pbi, TileInfo tile) {
-  AV1_COMMON *cm = &pbi->common;
-  int mi_cols_aligned_to_sb = ALIGN_POWER_OF_TWO(
-      tile.mi_col_end - tile.mi_col_start, cm->seq_params.mib_size_log2);
-  int sb_cols = mi_cols_aligned_to_sb >> cm->seq_params.mib_size_log2;
-
-  return sb_cols;
-}
-
 static void decode_tile_sb_row(AV1Decoder *pbi, ThreadData *const td,
                                TileInfo tile_info, const int mi_row) {
   AV1_COMMON *const cm = &pbi->common;
   const int num_planes = av1_num_planes(cm);
   TileDataDec *const tile_data =
       pbi->tile_data + tile_info.tile_row * cm->tile_cols + tile_info.tile_col;
-  const int sb_cols_in_tile = get_sb_cols_in_tile(pbi, tile_info);
+  const int sb_cols_in_tile = av1_get_sb_cols_in_tile(cm, tile_info);
   const int sb_row_in_tile =
       (mi_row - tile_info.mi_row_start) >> cm->seq_params.mib_size_log2;
   int sb_col_in_tile = 0;
@@ -2792,15 +3006,11 @@ static void decode_tile_sb_row(AV1Decoder *pbi, ThreadData *const td,
 }
 
 static int check_trailing_bits_after_symbol_coder(aom_reader *r) {
+  if (aom_reader_has_overflowed(r)) return -1;
+
   uint32_t nb_bits = aom_reader_tell(r);
   uint32_t nb_bytes = (nb_bits + 7) >> 3;
-
-  const uint8_t *p_begin = aom_reader_find_begin(r);
-  const uint8_t *p_end = aom_reader_find_end(r);
-
-  // It is legal to have no padding bytes (nb_bytes == p_end - p_begin).
-  if ((ptrdiff_t)nb_bytes > p_end - p_begin) return -1;
-  const uint8_t *p = p_begin + nb_bytes;
+  const uint8_t *p = aom_reader_find_begin(r) + nb_bytes;
 
   // aom_reader_tell() returns 1 for a newly initialized decoder, and the
   // return value only increases as values are decoded. So nb_bits > 0, and
@@ -2810,6 +3020,7 @@ static int check_trailing_bits_after_symbol_coder(aom_reader *r) {
   if ((last_byte & (2 * pattern - 1)) != pattern) return -1;
 
   // Make sure that all padding bytes are zero as required by the spec.
+  const uint8_t *p_end = aom_reader_find_end(r);
   while (p < p_end) {
     if (*p != 0) return -1;
     p++;
@@ -2863,6 +3074,11 @@ static void decode_tile(AV1Decoder *pbi, ThreadData *const td, int tile_row,
       // Bit-stream parsing and decoding of the superblock
       decode_partition(pbi, td, mi_row, mi_col, td->bit_reader,
                        cm->seq_params.sb_size, 0x3);
+
+      if (aom_reader_has_overflowed(td->bit_reader)) {
+        aom_merge_corrupted_flag(&td->xd.corrupted, 1);
+        return;
+      }
     }
   }
 
@@ -2950,6 +3166,11 @@ static const uint8_t *decode_tiles(AV1Decoder *pbi, const uint8_t *data,
   td->xd.corrupted = 0;
   td->xd.mc_buf[0] = td->mc_buf[0];
   td->xd.mc_buf[1] = td->mc_buf[1];
+  td->xd.tmp_conv_dst = td->tmp_conv_dst;
+  for (int j = 0; j < 2; ++j) {
+    td->xd.tmp_obmc_bufs[j] = td->tmp_obmc_bufs[j];
+  }
+
   for (tile_row = tile_rows_start; tile_row < tile_rows_end; ++tile_row) {
     const int row = inv_row_order ? tile_rows - 1 - tile_row : tile_row;
 
@@ -3236,6 +3457,7 @@ static int row_mt_worker_hook(void *arg1, void *arg2) {
 #endif
     frame_row_mt_info->row_mt_exit = 1;
 #if CONFIG_MULTITHREAD
+    pthread_cond_broadcast(pbi->row_mt_cond_);
     pthread_mutex_unlock(pbi->row_mt_mutex_);
 #endif
     return 0;
@@ -3386,16 +3608,24 @@ static void alloc_dec_jobs(AV1DecTileMT *tile_mt_info, AV1_COMMON *cm,
                   aom_malloc(sizeof(*tile_mt_info->job_queue) * num_tiles));
 }
 
-void av1_free_mc_tmp_buf(ThreadData *thread_data, int use_highbd) {
+void av1_free_mc_tmp_buf(ThreadData *thread_data) {
   int ref;
   for (ref = 0; ref < 2; ref++) {
-    if (use_highbd)
+    if (thread_data->mc_buf_use_highbd)
       aom_free(CONVERT_TO_SHORTPTR(thread_data->mc_buf[ref]));
     else
       aom_free(thread_data->mc_buf[ref]);
     thread_data->mc_buf[ref] = NULL;
   }
   thread_data->mc_buf_size = 0;
+  thread_data->mc_buf_use_highbd = 0;
+
+  aom_free(thread_data->tmp_conv_dst);
+  thread_data->tmp_conv_dst = NULL;
+  for (int i = 0; i < 2; ++i) {
+    aom_free(thread_data->tmp_obmc_bufs[i]);
+    thread_data->tmp_obmc_bufs[i] = NULL;
+  }
 }
 
 static void allocate_mc_tmp_buf(AV1_COMMON *const cm, ThreadData *thread_data,
@@ -3411,6 +3641,17 @@ static void allocate_mc_tmp_buf(AV1_COMMON *const cm, ThreadData *thread_data,
     }
   }
   thread_data->mc_buf_size = buf_size;
+  thread_data->mc_buf_use_highbd = use_highbd;
+
+  CHECK_MEM_ERROR(cm, thread_data->tmp_conv_dst,
+                  aom_memalign(32, MAX_SB_SIZE * MAX_SB_SIZE *
+                                       sizeof(*thread_data->tmp_conv_dst)));
+  for (int i = 0; i < 2; ++i) {
+    CHECK_MEM_ERROR(
+        cm, thread_data->tmp_obmc_bufs[i],
+        aom_memalign(16, 2 * MAX_MB_PLANE * MAX_SB_SQUARE *
+                             sizeof(*thread_data->tmp_obmc_bufs[i])));
+  }
 }
 
 static void reset_dec_workers(AV1Decoder *pbi, AVxWorkerHook worker_hook,
@@ -3425,6 +3666,10 @@ static void reset_dec_workers(AV1Decoder *pbi, AVxWorkerHook worker_hook,
     thread_data->td->xd.corrupted = 0;
     thread_data->td->xd.mc_buf[0] = thread_data->td->mc_buf[0];
     thread_data->td->xd.mc_buf[1] = thread_data->td->mc_buf[1];
+    thread_data->td->xd.tmp_conv_dst = thread_data->td->tmp_conv_dst;
+    for (int j = 0; j < 2; ++j) {
+      thread_data->td->xd.tmp_obmc_bufs[j] = thread_data->td->tmp_obmc_bufs[j];
+    }
     winterface->sync(worker);
 
     worker->hook = worker_hook;
@@ -3511,7 +3756,7 @@ static void decode_mt_init(AV1Decoder *pbi) {
   for (worker_idx = 0; worker_idx < pbi->max_threads - 1; ++worker_idx) {
     DecWorkerData *const thread_data = pbi->thread_data + worker_idx;
     if (thread_data->td->mc_buf_size != buf_size) {
-      av1_free_mc_tmp_buf(thread_data->td, use_highbd);
+      av1_free_mc_tmp_buf(thread_data->td);
       allocate_mc_tmp_buf(cm, thread_data->td, buf_size, use_highbd);
     }
   }
@@ -3783,8 +4028,8 @@ static const uint8_t *decode_tiles_row_mt(AV1Decoder *pbi, const uint8_t *data,
       TileDataDec *tile_data = pbi->tile_data + row * cm->tile_cols + col;
       av1_tile_init(&tile_data->tile_info, cm, row, col);
 
-      max_sb_rows =
-          AOMMAX(max_sb_rows, get_sb_rows_in_tile(pbi, tile_data->tile_info));
+      max_sb_rows = AOMMAX(max_sb_rows,
+                           av1_get_sb_rows_in_tile(cm, tile_data->tile_info));
     }
   }
 
@@ -3905,6 +4150,8 @@ void av1_read_film_grain_params(AV1_COMMON *cm,
 
   if (!seq_params->monochrome)
     pars->chroma_scaling_from_luma = aom_rb_read_bit(rb);
+  else
+    pars->chroma_scaling_from_luma = 0;
 
   if (seq_params->monochrome || pars->chroma_scaling_from_luma ||
       ((seq_params->subsampling_x == 1) && (seq_params->subsampling_y == 1) &&
@@ -4412,6 +4659,29 @@ static void show_existing_frame_reset(AV1Decoder *const pbi,
   *cm->fc = cm->frame_contexts[existing_frame_idx];
 }
 
+static INLINE void reset_frame_buffers(AV1_COMMON *cm) {
+  RefCntBuffer *const frame_bufs = cm->buffer_pool->frame_bufs;
+  int i;
+
+  memset(&cm->ref_frame_map, -1, sizeof(cm->ref_frame_map));
+  memset(&cm->next_ref_frame_map, -1, sizeof(cm->next_ref_frame_map));
+
+  lock_buffer_pool(cm->buffer_pool);
+  for (i = 0; i < FRAME_BUFFERS; ++i) {
+    if (i != cm->new_fb_idx) {
+      frame_bufs[i].ref_count = 0;
+      cm->buffer_pool->release_fb_cb(cm->buffer_pool->cb_priv,
+                                     &frame_bufs[i].raw_frame_buffer);
+    } else {
+      assert(frame_bufs[i].ref_count == 1);
+    }
+    frame_bufs[i].cur_frame_offset = 0;
+    av1_zero(frame_bufs[i].ref_frame_offset);
+  }
+  av1_zero_unused_internal_frame_buffers(&cm->buffer_pool->int_frame_buffers);
+  unlock_buffer_pool(cm->buffer_pool);
+}
+
 // On success, returns 0. On failure, calls aom_internal_error and does not
 // return.
 static int read_uncompressed_header(AV1Decoder *pbi,
@@ -4443,6 +4713,11 @@ static int read_uncompressed_header(AV1Decoder *pbi,
     cm->reset_decoder_state = 0;
 
     if (cm->show_existing_frame) {
+      if (pbi->sequence_header_changed) {
+        aom_internal_error(
+            &cm->error, AOM_CODEC_CORRUPT_FRAME,
+            "New sequence header starts with a show_existing_frame.");
+      }
       // Show an existing frame directly.
       const int existing_frame_idx = aom_rb_read_literal(rb, 3);
       const int frame_to_show = cm->ref_frame_map[existing_frame_idx];
@@ -4493,6 +4768,18 @@ static int read_uncompressed_header(AV1Decoder *pbi,
     }
 
     cm->frame_type = (FRAME_TYPE)aom_rb_read_literal(rb, 2);  // 2 bits
+    if (pbi->sequence_header_changed) {
+      if (pbi->common.frame_type == KEY_FRAME) {
+        // This is the start of a new coded video sequence.
+        pbi->sequence_header_changed = 0;
+        pbi->decoding_first_frame = 1;
+        reset_frame_buffers(&pbi->common);
+      } else {
+        aom_internal_error(&cm->error, AOM_CODEC_CORRUPT_FRAME,
+                           "Sequence header has changed without a keyframe.");
+      }
+    }
+
     cm->show_frame = aom_rb_read_bit(rb);
     if (seq_params->still_picture &&
         (cm->frame_type != KEY_FRAME || !cm->show_frame)) {
@@ -4582,8 +4869,7 @@ static int read_uncompressed_header(AV1Decoder *pbi,
       }
     }
 
-    frame_size_override_flag =
-        frame_is_sframe(cm) ? 1 : aom_rb_read_literal(rb, 1);
+    frame_size_override_flag = frame_is_sframe(cm) ? 1 : aom_rb_read_bit(rb);
 
     cm->frame_offset =
         aom_rb_read_literal(rb, seq_params->order_hint_bits_minus_1 + 1);
@@ -5152,7 +5438,7 @@ static void setup_frame_info(AV1Decoder *pbi) {
   const int use_highbd = cm->seq_params.use_highbitdepth ? 1 : 0;
   const int buf_size = MC_TEMP_BUF_PELS << use_highbd;
   if (pbi->td.mc_buf_size != buf_size) {
-    av1_free_mc_tmp_buf(&pbi->td, use_highbd);
+    av1_free_mc_tmp_buf(&pbi->td);
     allocate_mc_tmp_buf(cm, &pbi->td, buf_size, use_highbd);
   }
 }
@@ -5166,6 +5452,11 @@ void av1_decode_tg_tiles_and_wrapup(AV1Decoder *pbi, const uint8_t *data,
   const int tile_count_tg = end_tile - start_tile + 1;
 
   if (initialize_flag) setup_frame_info(pbi);
+  const int num_planes = av1_num_planes(cm);
+#if LOOP_FILTER_BITMASK
+  av1_loop_filter_frame_init(cm, 0, num_planes);
+  av1_zero_array(cm->lf.lfm, cm->lf.lfm_num);
+#endif
 
   if (pbi->max_threads > 1 && !(cm->large_scale_tile && !pbi->ext_tile_debug) &&
       pbi->row_mt)
@@ -5177,7 +5468,6 @@ void av1_decode_tg_tiles_and_wrapup(AV1Decoder *pbi, const uint8_t *data,
   else
     *p_data_end = decode_tiles(pbi, data, data_end, start_tile, end_tile);
 
-  const int num_planes = av1_num_planes(cm);
   // If the bit stream is monochrome, set the U and V buffers to a constant.
   if (num_planes < 3) {
     set_planes_to_neutral_grey(&cm->seq_params, xd->cur_buf, 1);
@@ -5190,7 +5480,7 @@ void av1_decode_tg_tiles_and_wrapup(AV1Decoder *pbi, const uint8_t *data,
   if (!cm->allow_intrabc && !cm->single_tile_decoding) {
     if (cm->lf.filter_level[0] || cm->lf.filter_level[1]) {
 #if LOOP_FILTER_BITMASK
-      av1_loop_filter_frame(get_frame_new_buffer(cm), cm, &pbi->mb, 0,
+      av1_loop_filter_frame(get_frame_new_buffer(cm), cm, &pbi->mb, 1, 0,
                             num_planes, 0);
 #else
       if (pbi->num_workers > 1) {
@@ -5255,6 +5545,7 @@ void av1_decode_tg_tiles_and_wrapup(AV1Decoder *pbi, const uint8_t *data,
 
   if (!xd->corrupted) {
     if (cm->refresh_frame_context == REFRESH_FRAME_CONTEXT_BACKWARD) {
+      assert(cm->context_update_tile_id < pbi->allocated_tiles);
       *cm->fc = pbi->tile_data[cm->context_update_tile_id].tctx;
       av1_reset_cdf_symbol_counters(cm->fc);
     }

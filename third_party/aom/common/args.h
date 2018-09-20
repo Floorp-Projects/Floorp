@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef ARGS_H_
-#define ARGS_H_
+#ifndef AOM_COMMON_ARGS_H_
+#define AOM_COMMON_ARGS_H_
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -65,4 +65,4 @@ int arg_parse_list(const struct arg *arg, int *list, int n);
 }  // extern "C"
 #endif
 
-#endif  // ARGS_H_
+#endif  // AOM_COMMON_ARGS_H_

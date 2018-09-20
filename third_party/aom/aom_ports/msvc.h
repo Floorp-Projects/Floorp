@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_PORTS_MSVC_H_
-#define AOM_PORTS_MSVC_H_
+#ifndef AOM_AOM_PORTS_MSVC_H_
+#define AOM_AOM_PORTS_MSVC_H_
 #ifdef _MSC_VER
 
 #include "config/aom_config.h"
@@ -72,4 +72,4 @@ static INLINE __m256i _mm256_insert_epi32(__m256i a, int b, const int i) {
 #endif  // _MSC_VER <= 1900
 #endif  // HAVE_AVX
 #endif  // _MSC_VER
-#endif  // AOM_PORTS_MSVC_H_
+#endif  // AOM_AOM_PORTS_MSVC_H_

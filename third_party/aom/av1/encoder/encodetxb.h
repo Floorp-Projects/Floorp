@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef ENCODETXB_H_
-#define ENCODETXB_H_
+#ifndef AOM_AV1_ENCODER_ENCODETXB_H_
+#define AOM_AV1_ENCODER_ENCODETXB_H_
 
 #include "config/aom_config.h"
 
@@ -84,4 +84,4 @@ int av1_optimize_txb_new(const struct AV1_COMP *cpi, MACROBLOCK *x, int plane,
 }
 #endif
 
-#endif  // COEFFS_CODING_H_
+#endif  // AOM_AV1_ENCODER_ENCODETXB_H_

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef _AOM_DSP_X86_LPF_COMMON_X86_H
-#define _AOM_DSP_X86_LPF_COMMON_X86_H
+#ifndef AOM_AOM_DSP_X86_LPF_COMMON_SSE2_H_
+#define AOM_AOM_DSP_X86_LPF_COMMON_SSE2_H_
 
 #include <emmintrin.h>  // SSE2
 
@@ -212,4 +212,4 @@ static INLINE void highbd_transpose8x16_sse2(
                            d4 + 1, d5 + 1, d6 + 1, d7 + 1);
 }
 
-#endif  // _AOM_DSP_X86_LPF_COMMON_X86_H
+#endif  // AOM_AOM_DSP_X86_LPF_COMMON_SSE2_H_

@@ -1356,6 +1356,7 @@ class RTCPeerConnection {
   }
 
   addTransceiver(sendTrackOrKind, init) {
+    this._checkClosed();
     let transceiver = this._addTransceiverNoEvents(sendTrackOrKind, init);
     this.updateNegotiationNeeded();
     return transceiver;

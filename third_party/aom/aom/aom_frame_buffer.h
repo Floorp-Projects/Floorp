@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_AOM_FRAME_BUFFER_H_
-#define AOM_AOM_FRAME_BUFFER_H_
+#ifndef AOM_AOM_AOM_FRAME_BUFFER_H_
+#define AOM_AOM_AOM_FRAME_BUFFER_H_
 
 /*!\file
  * \brief Describes the decoder external frame buffer interface.
@@ -81,4 +81,4 @@ typedef int (*aom_release_frame_buffer_cb_fn_t)(void *priv,
 }  // extern "C"
 #endif
 
-#endif  // AOM_AOM_FRAME_BUFFER_H_
+#endif  // AOM_AOM_AOM_FRAME_BUFFER_H_

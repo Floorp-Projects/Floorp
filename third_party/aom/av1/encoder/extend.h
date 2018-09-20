@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_EXTEND_H_
-#define AV1_ENCODER_EXTEND_H_
+#ifndef AOM_AV1_ENCODER_EXTEND_H_
+#define AOM_AV1_ENCODER_EXTEND_H_
 
 #include "aom_scale/yv12config.h"
 #include "aom/aom_integer.h"
@@ -29,4 +29,4 @@ void av1_copy_and_extend_frame_with_rect(const YV12_BUFFER_CONFIG *src,
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_EXTEND_H_
+#endif  // AOM_AV1_ENCODER_EXTEND_H_

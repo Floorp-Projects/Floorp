@@ -78,23 +78,24 @@ if(NOT EXISTS "${AOM_DEFAULTS}")
 endif()
 
 include("${AOM_ROOT}/build/cmake/aom_config_defaults.cmake")
-get_cmake_property(cmake_cache_vars CACHE_VARIABLES)
+list(APPEND aom_build_vars ${AOM_DETECT_VARS} ${AOM_CONFIG_VARS})
+list(SORT aom_build_vars)
 
 set(aom_config_h_template "${AOM_CONFIG_DIR}/config/aom_config.h.cmake")
 file(WRITE "${aom_config_h_template}" ${h_file_header_block})
-foreach(cache_var ${cmake_cache_vars})
-  if(NOT "${cache_var}" MATCHES "AOM_CONFIG_DIR\|AOM_ROOT\|^CMAKE_")
+foreach(aom_var ${aom_build_vars})
+  if(NOT "${aom_var}" STREQUAL "AOM_RTCD_FLAGS")
     file(APPEND "${aom_config_h_template}"
-                "\#define ${cache_var} \${${cache_var}}\n")
+                "\#define ${aom_var} \${${aom_var}}\n")
   endif()
 endforeach()
-file(APPEND "${aom_config_h_template}" "\#endif  /* AOM_CONFIG_H_ */")
+file(APPEND "${aom_config_h_template}" "\#endif  // AOM_CONFIG_H_")
 
 set(aom_asm_config_template "${AOM_CONFIG_DIR}/config/aom_config.asm.cmake")
 file(WRITE "${aom_asm_config_template}" ${asm_file_header_block})
-foreach(cache_var ${cmake_cache_vars})
-  if(NOT "${cache_var}" MATCHES "AOM_CONFIG_DIR\|AOM_ROOT\|^CMAKE_\|INLINE")
-    file(APPEND "${aom_asm_config_template}"
-                "${cache_var} equ \${${cache_var}}\n")
+foreach(aom_var ${aom_build_vars})
+  if(NOT "${aom_var}" STREQUAL "INLINE" AND NOT "${aom_var}" STREQUAL
+     "AOM_RTCD_FLAGS")
+    file(APPEND "${aom_asm_config_template}" "${aom_var} equ \${${aom_var}}\n")
   endif()
 endforeach()

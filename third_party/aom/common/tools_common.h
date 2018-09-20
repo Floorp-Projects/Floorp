@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef TOOLS_COMMON_H_
-#define TOOLS_COMMON_H_
+#ifndef AOM_COMMON_TOOLS_COMMON_H_
+#define AOM_COMMON_TOOLS_COMMON_H_
 
 #include <stdio.h>
 
@@ -161,4 +161,4 @@ void aom_img_truncate_16_to_8(aom_image_t *dst, const aom_image_t *src);
 } /* extern "C" */
 #endif
 
-#endif  // TOOLS_COMMON_H_
+#endif  // AOM_COMMON_TOOLS_COMMON_H_

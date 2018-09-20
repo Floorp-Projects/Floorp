@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_FFT_COMMON_H_
-#define AOM_DSP_FFT_COMMON_H_
+#ifndef AOM_AOM_DSP_FFT_COMMON_H_
+#define AOM_AOM_DSP_FFT_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -1047,4 +1047,4 @@ void aom_ifft_2d_gen(const float *input, float *temp, float *output, int n,
           add(w93[0], sub(mul(kWeight5, w157[0]), mul(kWeight6, w157[1]))));   \
   }
 
-#endif  // AOM_DSP_FFT_COMMON_H_
+#endif  // AOM_AOM_DSP_FFT_COMMON_H_

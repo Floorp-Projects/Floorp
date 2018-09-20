@@ -175,14 +175,15 @@ void av1_setup_pc_tree(AV1_COMMON *cm, ThreadData *td) {
 }
 
 void av1_free_pc_tree(ThreadData *td, const int num_planes) {
-  const int tree_nodes_inc = 1024;
-
-  const int tree_nodes = tree_nodes_inc + 256 + 64 + 16 + 4 + 1;
-  int i;
-  for (i = 0; i < tree_nodes; ++i)
-    free_tree_contexts(&td->pc_tree[i], num_planes);
-  aom_free(td->pc_tree);
-  td->pc_tree = NULL;
+  if (td->pc_tree != NULL) {
+    const int tree_nodes_inc = 1024;
+    const int tree_nodes = tree_nodes_inc + 256 + 64 + 16 + 4 + 1;
+    for (int i = 0; i < tree_nodes; ++i) {
+      free_tree_contexts(&td->pc_tree[i], num_planes);
+    }
+    aom_free(td->pc_tree);
+    td->pc_tree = NULL;
+  }
 }
 
 void av1_copy_tree_context(PICK_MODE_CONTEXT *dst_ctx,

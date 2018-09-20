@@ -562,7 +562,7 @@ static int64_t highbd_warp_error(
   const int error_bsize_h = AOMMIN(p_height, WARP_ERROR_BLOCK);
   uint16_t tmp[WARP_ERROR_BLOCK * WARP_ERROR_BLOCK];
 
-  ConvolveParams conv_params = get_conv_params(0, 0, 0, bd);
+  ConvolveParams conv_params = get_conv_params(0, 0, bd);
   conv_params.use_jnt_comp_avg = 0;
   for (int i = p_row; i < p_row + p_height; i += WARP_ERROR_BLOCK) {
     for (int j = p_col; j < p_col + p_width; j += WARP_ERROR_BLOCK) {
@@ -845,7 +845,7 @@ static int64_t warp_error(WarpedMotionParams *wm, const uint8_t *const ref,
   int error_bsize_w = AOMMIN(p_width, WARP_ERROR_BLOCK);
   int error_bsize_h = AOMMIN(p_height, WARP_ERROR_BLOCK);
   uint8_t tmp[WARP_ERROR_BLOCK * WARP_ERROR_BLOCK];
-  ConvolveParams conv_params = get_conv_params(0, 0, 0, 8);
+  ConvolveParams conv_params = get_conv_params(0, 0, 8);
   conv_params.use_jnt_comp_avg = 0;
 
   for (int i = p_row; i < p_row + p_height; i += WARP_ERROR_BLOCK) {

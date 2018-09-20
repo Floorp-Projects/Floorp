@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef IVFENC_H_
-#define IVFENC_H_
+#ifndef AOM_COMMON_IVFENC_H_
+#define AOM_COMMON_IVFENC_H_
 
 #include "common/tools_common.h"
 
@@ -31,4 +31,4 @@ void ivf_write_frame_size(FILE *outfile, size_t frame_size);
 } /* extern "C" */
 #endif
 
-#endif  // IVFENC_H_
+#endif  // AOM_COMMON_IVFENC_H_

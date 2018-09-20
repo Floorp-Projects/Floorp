@@ -16,7 +16,6 @@
 #include "av1/common/common.h"
 #include "av1/common/filter.h"
 #include "aom/aom_integer.h"
-#include "aom_dsp/aom_convolve.h"
 #include "aom_dsp/aom_filter.h"
 #include "aom_ports/mem.h"
 #include "aom_ports/system_state.h"

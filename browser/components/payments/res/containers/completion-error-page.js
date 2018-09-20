@@ -47,7 +47,9 @@ export default class CompletionErrorPage extends PaymentStateSubscriberMixin(Pay
 
     let {request} = this.requestStore.getState();
     let {displayHost} = request.topLevelPrincipal.URI;
-    for (let key of ["pageTitle", "suggestion-heading", "suggestion-1", "suggestion-2"]) {
+    for (let key of [
+      "pageTitle", "suggestion-heading", "suggestion-1", "suggestion-2", "suggestion-3",
+    ]) {
       if (this.dataset[key]) {
         this.dataset[key] = this.dataset[key].replace("**host-name**", displayHost);
       }
@@ -64,6 +66,9 @@ export default class CompletionErrorPage extends PaymentStateSubscriberMixin(Pay
     }
     if (this.dataset["suggestion-2"]) {
       this.suggestions[1] = this.dataset["suggestion-2"];
+    }
+    if (this.dataset["suggestion-3"]) {
+      this.suggestions[2] = this.dataset["suggestion-3"];
     }
 
     let suggestionsFragment = document.createDocumentFragment();

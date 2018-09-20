@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef VIDEO_COMMON_H_
-#define VIDEO_COMMON_H_
+#ifndef AOM_COMMON_VIDEO_COMMON_H_
+#define AOM_COMMON_VIDEO_COMMON_H_
 
 #include "common/tools_common.h"
 
@@ -22,4 +22,4 @@ typedef struct {
   unsigned int is_annexb;
 } AvxVideoInfo;
 
-#endif  // VIDEO_COMMON_H_
+#endif  // AOM_COMMON_VIDEO_COMMON_H_

@@ -34,21 +34,21 @@ function gen_rtcd_header {
 
   AOM_CONFIG=$BASE_DIR/$LIBAOM_CONFIG_DIR/$1/config/aom_config.h
 
-  $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
+  $BASE_DIR/$LIBAOM_SRC_DIR/build/cmake/rtcd.pl \
     --arch=$2 \
-    --sym=aom_rtcd $3 \
+    --sym=av1_rtcd $3 \
     --config=$AOM_CONFIG \
     $BASE_DIR/$LIBAOM_SRC_DIR/av1/common/av1_rtcd_defs.pl \
     > $BASE_DIR/$LIBAOM_CONFIG_DIR/$1/config/av1_rtcd.h
 
-  $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
+  $BASE_DIR/$LIBAOM_SRC_DIR/build/cmake/rtcd.pl \
     --arch=$2 \
     --sym=aom_scale_rtcd $3 \
     --config=$AOM_CONFIG \
     $BASE_DIR/$LIBAOM_SRC_DIR/aom_scale/aom_scale_rtcd.pl \
     > $BASE_DIR/$LIBAOM_CONFIG_DIR/$1/config/aom_scale_rtcd.h
 
-  $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
+  $BASE_DIR/$LIBAOM_SRC_DIR/build/cmake/rtcd.pl \
     --arch=$2 \
     --sym=aom_dsp_rtcd $3 \
     --config=$AOM_CONFIG \

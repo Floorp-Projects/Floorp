@@ -14,6 +14,7 @@
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/mem.h"
 #include "aom_scale/yv12config.h"
+#include "av1/common/enums.h"
 
 /****************************************************************************
  *  Exports
@@ -50,11 +51,11 @@ int aom_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf, int width, int height,
                              int border, int byte_alignment,
                              aom_codec_frame_buffer_t *fb,
                              aom_get_frame_buffer_cb_fn_t cb, void *cb_priv) {
-  if (ybf) {
 #if CONFIG_SIZE_LIMIT
-    if (width > DECODE_WIDTH_LIMIT || height > DECODE_HEIGHT_LIMIT) return -1;
+  if (width > DECODE_WIDTH_LIMIT || height > DECODE_HEIGHT_LIMIT) return -1;
 #endif
 
+  if (ybf) {
     const int aom_byte_align = (byte_alignment == 0) ? 1 : byte_alignment;
     const int aligned_width = (width + 7) & ~7;
     const int aligned_height = (height + 7) & ~7;
@@ -73,6 +74,17 @@ int aom_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf, int width, int height,
         (1 + use_highbitdepth) * (yplane_size + 2 * uvplane_size);
 
     uint8_t *buf = NULL;
+
+#if defined AOM_MAX_ALLOCABLE_MEMORY
+    // The size of ybf->buffer_alloc.
+    uint64_t alloc_size = frame_size;
+    // The size of ybf->y_buffer_8bit.
+    if (use_highbitdepth) alloc_size += yplane_size;
+    // The decoder may allocate REF_FRAMES frame buffers in the frame buffer
+    // pool. Bound the total amount of allocated memory as if these REF_FRAMES
+    // frame buffers were allocated in a single allocation.
+    if (alloc_size > AOM_MAX_ALLOCABLE_MEMORY / REF_FRAMES) return -1;
+#endif
 
     if (cb != NULL) {
       const int align_addr_extra_size = 31;
@@ -94,7 +106,7 @@ int aom_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf, int width, int height,
       // This memset is needed for fixing the issue of using uninitialized
       // value in msan test. It will cause a perf loss, so only do this for
       // msan test.
-      memset(ybf->buffer_alloc, 0, (int)frame_size);
+      memset(ybf->buffer_alloc, 0, (size_t)frame_size);
 #endif
 #endif
     } else if (frame_size > (size_t)ybf->buffer_alloc_sz) {
@@ -165,7 +177,11 @@ int aom_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf, int width, int height,
       ybf->y_buffer_8bit = (uint8_t *)aom_memalign(32, (size_t)yplane_size);
       if (!ybf->y_buffer_8bit) return -1;
     } else {
-      assert(!ybf->y_buffer_8bit);
+      if (ybf->y_buffer_8bit) {
+        aom_free(ybf->y_buffer_8bit);
+        ybf->y_buffer_8bit = NULL;
+        ybf->buf_8bit_valid = 0;
+      }
     }
 
     ybf->corrupted = 0; /* assume not corrupted by errors */

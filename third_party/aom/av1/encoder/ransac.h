@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_RANSAC_H_
-#define AV1_ENCODER_RANSAC_H_
+#ifndef AOM_AV1_ENCODER_RANSAC_H_
+#define AOM_AV1_ENCODER_RANSAC_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,4 +32,4 @@ int ransac_rotzoom(int *matched_points, int npoints, int *num_inliers_by_motion,
 int ransac_translation(int *matched_points, int npoints,
                        int *num_inliers_by_motion, double *params_by_motion,
                        int num_motions);
-#endif  // AV1_ENCODER_RANSAC_H_
+#endif  // AOM_AV1_ENCODER_RANSAC_H_

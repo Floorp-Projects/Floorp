@@ -20,6 +20,7 @@
 #include "test/util.h"
 #include "test/av1_txfm_test.h"
 #include "av1/common/av1_txfm.h"
+#include "av1/encoder/hybrid_fwd_txfm.h"
 
 using libaom_test::ACMRandom;
 using libaom_test::TYPE_TXFM;
@@ -351,4 +352,160 @@ INSTANTIATE_TEST_CASE_P(AVX2, AV1FwdTxfm2dTest,
                         Combine(ValuesIn(fwd_txfm_for_avx2),
                                 Values(av1_lowbd_fwd_txfm_avx2)));
 #endif  // HAVE_AVX2
+
+typedef void (*Highbd_fwd_txfm_func)(const int16_t *src_diff, tran_low_t *coeff,
+                                     int diff_stride, TxfmParam *txfm_param);
+
+void AV1HighbdFwdTxfm2dMatchTest(TX_SIZE tx_size,
+                                 Highbd_fwd_txfm_func target_func) {
+  const int bd_ar[2] = { 10, 12 };
+  TxfmParam param;
+  memset(&param, 0, sizeof(param));
+  const int rows = tx_size_high[tx_size];
+  const int cols = tx_size_wide[tx_size];
+  for (int i = 0; i < 2; ++i) {
+    const int bd = bd_ar[i];
+    for (int tx_type = 0; tx_type < TX_TYPES; ++tx_type) {
+      if (libaom_test::IsTxSizeTypeValid(
+              tx_size, static_cast<TX_TYPE>(tx_type)) == false) {
+        continue;
+      }
+
+      FwdTxfm2dFunc ref_func = libaom_test::fwd_txfm_func_ls[tx_size];
+      if (ref_func != NULL) {
+        DECLARE_ALIGNED(32, int16_t, input[64 * 64]) = { 0 };
+        DECLARE_ALIGNED(32, int32_t, output[64 * 64]);
+        DECLARE_ALIGNED(32, int32_t, ref_output[64 * 64]);
+        int input_stride = 64;
+        ACMRandom rnd(ACMRandom::DeterministicSeed());
+        for (int cnt = 0; cnt < 500; ++cnt) {
+          if (cnt == 0) {
+            for (int r = 0; r < rows; ++r) {
+              for (int c = 0; c < cols; ++c) {
+                input[r * input_stride + c] = (1 << bd) - 1;
+              }
+            }
+          } else {
+            for (int r = 0; r < rows; ++r) {
+              for (int c = 0; c < cols; ++c) {
+                input[r * input_stride + c] = rnd.Rand16() % (1 << bd);
+              }
+            }
+          }
+          param.tx_type = (TX_TYPE)tx_type;
+          param.tx_size = (TX_SIZE)tx_size;
+          param.tx_set_type = EXT_TX_SET_ALL16;
+          param.bd = bd;
+
+          ref_func(input, ref_output, input_stride, (TX_TYPE)tx_type, bd);
+          target_func(input, output, input_stride, &param);
+          const int check_rows = AOMMIN(32, rows);
+          const int check_cols = AOMMIN(32, rows * cols / check_rows);
+          for (int r = 0; r < check_rows; ++r) {
+            for (int c = 0; c < check_cols; ++c) {
+              ASSERT_EQ(ref_output[r * check_cols + c],
+                        output[r * check_cols + c])
+                  << "[" << r << "," << c << "] cnt:" << cnt
+                  << " tx_size: " << tx_size << " tx_type: " << tx_type;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void AV1HighbdFwdTxfm2dSpeedTest(TX_SIZE tx_size,
+                                 Highbd_fwd_txfm_func target_func) {
+  const int bd_ar[2] = { 10, 12 };
+  TxfmParam param;
+  memset(&param, 0, sizeof(param));
+  const int rows = tx_size_high[tx_size];
+  const int cols = tx_size_wide[tx_size];
+  const int num_loops = 1000000 / (rows * cols);
+
+  for (int i = 0; i < 2; ++i) {
+    const int bd = bd_ar[i];
+    for (int tx_type = 0; tx_type < TX_TYPES; ++tx_type) {
+      if (libaom_test::IsTxSizeTypeValid(
+              tx_size, static_cast<TX_TYPE>(tx_type)) == false) {
+        continue;
+      }
+
+      FwdTxfm2dFunc ref_func = libaom_test::fwd_txfm_func_ls[tx_size];
+      if (ref_func != NULL) {
+        DECLARE_ALIGNED(32, int16_t, input[64 * 64]) = { 0 };
+        DECLARE_ALIGNED(32, int32_t, output[64 * 64]);
+        DECLARE_ALIGNED(32, int32_t, ref_output[64 * 64]);
+        int input_stride = 64;
+        ACMRandom rnd(ACMRandom::DeterministicSeed());
+
+        for (int r = 0; r < rows; ++r) {
+          for (int c = 0; c < cols; ++c) {
+            input[r * input_stride + c] = rnd.Rand16() % (1 << bd);
+          }
+        }
+
+        param.tx_type = (TX_TYPE)tx_type;
+        param.tx_size = (TX_SIZE)tx_size;
+        param.tx_set_type = EXT_TX_SET_ALL16;
+        param.bd = bd;
+
+        aom_usec_timer ref_timer, test_timer;
+
+        aom_usec_timer_start(&ref_timer);
+        for (int i = 0; i < num_loops; ++i) {
+          ref_func(input, ref_output, input_stride, (TX_TYPE)tx_type, bd);
+        }
+        aom_usec_timer_mark(&ref_timer);
+        const int elapsed_time_c =
+            static_cast<int>(aom_usec_timer_elapsed(&ref_timer));
+
+        aom_usec_timer_start(&test_timer);
+        for (int i = 0; i < num_loops; ++i) {
+          target_func(input, output, input_stride, &param);
+        }
+        aom_usec_timer_mark(&test_timer);
+        const int elapsed_time_simd =
+            static_cast<int>(aom_usec_timer_elapsed(&test_timer));
+
+        printf(
+            "txfm_size[%d] \t txfm_type[%d] \t c_time=%d \t simd_time=%d \t "
+            "gain=%d \n",
+            tx_size, tx_type, elapsed_time_c, elapsed_time_simd,
+            (elapsed_time_c / elapsed_time_simd));
+      }
+    }
+  }
+}
+
+typedef ::testing::tuple<TX_SIZE, Highbd_fwd_txfm_func> HighbdFwdTxfm2dParam;
+
+class AV1HighbdFwdTxfm2dTest
+    : public ::testing::TestWithParam<HighbdFwdTxfm2dParam> {};
+
+TEST_P(AV1HighbdFwdTxfm2dTest, match) {
+  AV1HighbdFwdTxfm2dMatchTest(GET_PARAM(0), GET_PARAM(1));
+}
+
+TEST_P(AV1HighbdFwdTxfm2dTest, DISABLED_Speed) {
+  AV1HighbdFwdTxfm2dSpeedTest(GET_PARAM(0), GET_PARAM(1));
+}
+
+using ::testing::Combine;
+using ::testing::Values;
+using ::testing::ValuesIn;
+
+#if HAVE_SSE4_1
+static TX_SIZE Highbd_fwd_txfm_for_sse4_1[] = {
+  TX_4X4,  TX_8X8,  TX_16X16, TX_32X32, TX_64X64, TX_4X8,   TX_8X4,
+  TX_8X16, TX_16X8, TX_16X32, TX_32X16, TX_32X64, TX_64X32, TX_4X16,
+  TX_16X4, TX_8X32, TX_32X8,  TX_16X64, TX_64X16,
+};
+
+INSTANTIATE_TEST_CASE_P(SSE4_1, AV1HighbdFwdTxfm2dTest,
+                        Combine(ValuesIn(Highbd_fwd_txfm_for_sse4_1),
+                                Values(av1_highbd_fwd_txfm)));
+#endif  // HAVE_SSE4_1
+
 }  // namespace

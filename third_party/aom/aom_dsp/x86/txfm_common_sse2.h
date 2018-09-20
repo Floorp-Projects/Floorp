@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_X86_TXFM_COMMON_SSE2_H_
-#define AOM_DSP_X86_TXFM_COMMON_SSE2_H_
+#ifndef AOM_AOM_DSP_X86_TXFM_COMMON_SSE2_H_
+#define AOM_AOM_DSP_X86_TXFM_COMMON_SSE2_H_
 
 #include <emmintrin.h>
 #include "aom/aom_integer.h"
@@ -26,4 +26,4 @@ static INLINE __m128i mm_reverse_epi16(const __m128i x) {
   return _mm_shuffle_epi32(b, 0x4e);
 }
 
-#endif  // AOM_DSP_X86_TXFM_COMMON_SSE2_H_
+#endif  // AOM_AOM_DSP_X86_TXFM_COMMON_SSE2_H_

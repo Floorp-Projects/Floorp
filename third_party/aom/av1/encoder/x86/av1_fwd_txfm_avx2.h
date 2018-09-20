@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_FWD_TXFM_AVX2_H_
-#define AV1_FWD_TXFM_AVX2_H_
+#ifndef AOM_AV1_ENCODER_X86_AV1_FWD_TXFM_AVX2_H_
+#define AOM_AV1_ENCODER_X86_AV1_FWD_TXFM_AVX2_H_
 #include <immintrin.h>
 
 static INLINE __m256i av1_round_shift_32_avx2(__m256i vec, int bit) {
@@ -100,4 +100,4 @@ static INLINE void btf_32_avx2_type1_new(const __m256i ww0, const __m256i ww1,
   *in1 = _mm256_srai_epi32(temp1, cos_bit);
 }
 
-#endif  // AV1_FWD_TXFM_AVX2_H_
+#endif  // AOM_AV1_ENCODER_X86_AV1_FWD_TXFM_AVX2_H_

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_RD_H_
-#define AV1_ENCODER_RD_H_
+#ifndef AOM_AV1_ENCODER_RD_H_
+#define AOM_AV1_ENCODER_RD_H_
 
 #include <limits.h>
 
@@ -57,8 +57,6 @@ typedef enum {
   THR_NEARESTA,
   THR_NEARESTG,
 
-  THR_DC,
-
   THR_NEWMV,
   THR_NEWL2,
   THR_NEWL3,
@@ -99,12 +97,6 @@ typedef enum {
   THR_COMP_NEAREST_NEARESTLL3,
   THR_COMP_NEAREST_NEARESTLG,
   THR_COMP_NEAREST_NEARESTBA,
-
-  THR_PAETH,
-
-  THR_SMOOTH,
-  THR_SMOOTH_V,
-  THR_SMOOTH_H,
 
   THR_COMP_NEAR_NEARLA,
   THR_COMP_NEW_NEARESTLA,
@@ -202,15 +194,6 @@ typedef enum {
   THR_COMP_NEW_NEWGA2,
   THR_COMP_GLOBAL_GLOBALGA2,
 
-  THR_H_PRED,
-  THR_V_PRED,
-  THR_D135_PRED,
-  THR_D203_PRED,
-  THR_D157_PRED,
-  THR_D67_PRED,
-  THR_D113_PRED,
-  THR_D45_PRED,
-
   THR_COMP_NEAR_NEARLL2,
   THR_COMP_NEW_NEARESTLL2,
   THR_COMP_NEAREST_NEWLL2,
@@ -243,7 +226,26 @@ typedef enum {
   THR_COMP_NEW_NEWBA,
   THR_COMP_GLOBAL_GLOBALBA,
 
-  MAX_MODES
+  THR_DC,
+  THR_PAETH,
+  THR_SMOOTH,
+  THR_SMOOTH_V,
+  THR_SMOOTH_H,
+  THR_H_PRED,
+  THR_V_PRED,
+  THR_D135_PRED,
+  THR_D203_PRED,
+  THR_D157_PRED,
+  THR_D67_PRED,
+  THR_D113_PRED,
+  THR_D45_PRED,
+
+  MAX_MODES,
+
+  LAST_SINGLE_REF_MODES = THR_GLOBALG,
+  MAX_SINGLE_REF_MODES = LAST_SINGLE_REF_MODES + 1,
+  LAST_COMP_REF_MODES = THR_COMP_GLOBAL_GLOBALBA,
+  MAX_COMP_REF_MODES = LAST_COMP_REF_MODES + 1
 } THR_MODES;
 
 typedef enum {
@@ -392,6 +394,10 @@ void av1_initialize_me_consts(const struct AV1_COMP *cpi, MACROBLOCK *x,
 void av1_model_rd_from_var_lapndz(int64_t var, unsigned int n,
                                   unsigned int qstep, int *rate, int64_t *dist);
 
+void av1_model_rd_curvfit(double xqr, double *rate_f, double *distbysse_f);
+void av1_model_rd_surffit(double xm, double yl, double *rate_f,
+                          double *distbysse_f);
+
 int av1_get_switchable_rate(const AV1_COMMON *const cm, MACROBLOCK *x,
                             const MACROBLOCKD *xd);
 
@@ -455,4 +461,4 @@ void av1_fill_coeff_costs(MACROBLOCK *x, FRAME_CONTEXT *fc,
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_RD_H_
+#endif  // AOM_AV1_ENCODER_RD_H_

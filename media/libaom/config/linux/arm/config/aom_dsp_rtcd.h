@@ -1412,7 +1412,7 @@ void aom_dsp_rtcd(void);
 #include "aom_ports/arm.h"
 static void setup_rtcd_internal(void)
 {
-    int flags = arm_cpu_caps();
+    int flags = aom_arm_cpu_caps();
 
     (void)flags;
 

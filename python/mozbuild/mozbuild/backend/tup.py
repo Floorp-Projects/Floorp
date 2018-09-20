@@ -796,6 +796,13 @@ class TupBackend(CommonBackend):
                     invocation['outputs'][0].endswith('.rlib')):
                     return invocation['env']['OUT_DIR']
 
+        def get_lmdb_sys_outdir():
+            for invocation in invocations:
+                if (invocation['package_name'] == 'lmdb-sys' and
+                    len(invocation['outputs']) >= 1 and
+                    invocation['outputs'][0].endswith('.rlib')):
+                    return invocation['env']['OUT_DIR']
+
         def display_name(invocation):
             output_str = ''
             if invocation['outputs']:
@@ -843,11 +850,13 @@ class TupBackend(CommonBackend):
                 for output in cargo_extra_outputs.get(shortname, []):
                     outputs.append(os.path.join(invocation['env']['OUT_DIR'], output))
 
-            if (invocation['target_kind'][0] == 'custom-build' and
-                os.path.basename(invocation['program']) == 'rustc'):
-                flags = cargo_extra_flags.get(shortname, [])
+            if os.path.basename(invocation['program']) == 'rustc':
+                flags = cargo_extra_flags.get(invocation['target_kind'][0], {}).get(shortname, [])
                 for flag in flags:
-                    command.append(flag % {'libloading_outdir': get_libloading_outdir()})
+                    command.append(flag % {
+                        'libloading_outdir': get_libloading_outdir(),
+                        'lmdb-sys_outdir': get_lmdb_sys_outdir(),
+                    })
 
             if 'rustc' in invocation['program']:
                 header = 'RUSTC'

@@ -62,24 +62,14 @@ if __name__ == '__main__':
         'CMAKE_CURRENT_SOURCE_DIR': AOM_DIR,
         'CONFIG_AV1_DECODER': 1,
         'CONFIG_AV1_ENCODER': 0,
-        'CONFIG_BGSPRITE': 0,
-        'CONFIG_CDEF_SINGLEPASS': 0,
-        'CONFIG_CFL': 0,
-        'CONFIG_HASH_ME': 0,
-        'CONFIG_HIGH_BITDEPTH': 0,
+        'CONFIG_COLLECT_INTER_MODE_RD_STATS': 0,
         'CONFIG_INSPECTION': 0,
         'CONFIG_INTERNAL_STATS': 0,
         'CONFIG_LIBYUV': 0,
-        'CONFIG_LOWBITDEPTH': 0,
-        'CONFIG_LV_MAP': 0,
-        'CONFIG_MOTION_VAR': 0,
+        'CONFIG_LOWBITDEPTH': 1,
         'CONFIG_MULTITHREAD': 1,
-        'CONFIG_NCOBMC_ADAPT_WEIGHT': 0,
         'CONFIG_PIC': 0,
-        'CONFIG_PVQ': 0,
-        'CONFIG_UNIT_TESTS': 0,
         'CONFIG_WEBM_IO': 0,
-        'CONFIG_XIPHRC': 0,
         'CMAKE_CURRENT_BINARY_DIR': 'OBJDIR',
         'CMAKE_INSTALL_PREFIX': 'INSTALLDIR',
         'CMAKE_SYSTEM_NAME': 'Linux',
@@ -87,6 +77,7 @@ if __name__ == '__main__':
         'ENABLE_EXAMPLES': 0,
         'ENABLE_TESTS': 0,
         'ENABLE_TOOLS': 0,
+        'ENABLE_DOCS': 0,
         'AOM_TEST_TEST_CMAKE_': 1, #prevent building tests
     }
 
@@ -115,6 +106,8 @@ if __name__ == '__main__':
         variables['INLINE'] = 'inline'
         if cpu == 'x86' and system == 'linux':
             variables['CONFIG_PIC'] = 1
+        if cpu == 'armv7':
+            variables['CONFIG_PIC'] = 1
         if system == 'win' and not arch.startswith('mingw'):
             variables['MSVC'] = 1
 
@@ -124,9 +117,7 @@ if __name__ == '__main__':
 
         # Disable HAVE_UNISTD_H.
         cache_variables.remove('HAVE_UNISTD_H')
-
         write_aom_config(system, arch, variables, cache_variables)
-
         # Currently, the sources are the same for each supported cpu
         # regardless of operating system / compiler. If that changes, we'll
         # have to generate sources for each combination.

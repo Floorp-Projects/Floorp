@@ -11,8 +11,8 @@
 
 // Utility functions used by encoder binaries.
 
-#ifndef EXAMPLES_ENCODER_UTIL_H_
-#define EXAMPLES_ENCODER_UTIL_H_
+#ifndef AOM_EXAMPLES_ENCODER_UTIL_H_
+#define AOM_EXAMPLES_ENCODER_UTIL_H_
 
 #include "aom/aom_image.h"
 
@@ -30,4 +30,4 @@ void aom_find_mismatch(const aom_image_t *const img1,
 int aom_compare_img(const aom_image_t *const img1,
                     const aom_image_t *const img2);
 
-#endif  // EXAMPLES_ENCODER_UTIL_H_
+#endif  // AOM_EXAMPLES_ENCODER_UTIL_H_

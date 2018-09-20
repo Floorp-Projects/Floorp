@@ -40,7 +40,7 @@ static int arm_cpu_env_mask(void) {
 
 #if !CONFIG_RUNTIME_CPU_DETECT
 
-int arm_cpu_caps(void) {
+int aom_arm_cpu_caps(void) {
   /* This function should actually be a no-op. There is no way to adjust any of
    * these because the RTCD tables do not exist: the functions are called
    * statically */
@@ -62,7 +62,7 @@ int arm_cpu_caps(void) {
 #define WIN32_EXTRA_LEAN
 #include <windows.h>
 
-int arm_cpu_caps(void) {
+int aom_arm_cpu_caps(void) {
   int flags;
   int mask;
   if (!arm_cpu_env_flags(&flags)) {
@@ -90,7 +90,7 @@ int arm_cpu_caps(void) {
 #elif defined(__ANDROID__) /* end _MSC_VER */
 #include <cpu-features.h>
 
-int arm_cpu_caps(void) {
+int aom_arm_cpu_caps(void) {
   int flags;
   int mask;
   uint64_t features;
@@ -110,7 +110,7 @@ int arm_cpu_caps(void) {
 
 #include <stdio.h>
 
-int arm_cpu_caps(void) {
+int aom_arm_cpu_caps(void) {
   FILE *fin;
   int flags;
   int mask;

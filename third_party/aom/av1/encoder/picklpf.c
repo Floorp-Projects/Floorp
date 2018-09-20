@@ -70,7 +70,7 @@ static int64_t try_filter_frame(const YV12_BUFFER_CONFIG *sd,
       // TODO(any): please enable multi-thread and remove the flag when loop
       // filter mask is compatible with multi-thread.
 #if LOOP_FILTER_BITMASK
-  av1_loop_filter_frame(cm->frame_to_show, cm, &cpi->td.mb.e_mbd, plane,
+  av1_loop_filter_frame(cm->frame_to_show, cm, &cpi->td.mb.e_mbd, 0, plane,
                         plane + 1, partial_frame);
 #else
   if (cpi->num_workers > 1)
@@ -193,6 +193,7 @@ void av1_pick_filter_level(const YV12_BUFFER_CONFIG *sd, AV1_COMP *cpi,
   (void)sd;
 
   lf->sharpness_level = 0;
+  cpi->td.mb.rdmult = cpi->rd.RDMULT;
 
   if (method == LPF_PICK_MINIMAL_LPF) {
     lf->filter_level[0] = 0;

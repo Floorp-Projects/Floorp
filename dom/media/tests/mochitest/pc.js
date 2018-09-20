@@ -1778,21 +1778,16 @@ PeerConnectionWrapper.prototype = {
    *        The stats to check from this PeerConnectionWrapper
    */
   checkStats : function(stats, twoMachines) {
-    const isWinXP = navigator.userAgent.includes("Windows NT 5.1");
-
     // Use spec way of enumerating stats
     var counters = {};
     for (let [key, res] of stats) {
       info("Checking stats for " + key + " : " + res);
       // validate stats
       ok(res.id == key, "Coherent stats id");
-      var nowish = Date.now() + 1000;        // TODO: clock drift observed
-      var minimum = this.whenCreated - 1000; // on Windows XP (Bug 979649)
-      if (isWinXP) {
-        todo(false, "Can't reliably test rtcp timestamps on WinXP (Bug 979649)");
-
-      } else if (false) { // Bug 1325430 - timestamps aren't working properly in update 49
-	// else if (!twoMachines) {
+      var nowish = Date.now();
+      var minimum = this.whenCreated;
+      if (false) { // Bug 1325430 - timestamps aren't working properly in update 49
+      // if (!twoMachines) {
         // Bug 1225729: On android, sometimes the first RTCP of the first
         // test run gets this value, likely because no RTP has been sent yet.
         if (res.timestamp != 2085978496000) {

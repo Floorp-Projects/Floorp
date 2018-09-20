@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef _V64_INTRINSICS_H
-#define _V64_INTRINSICS_H
+#ifndef AOM_AOM_DSP_SIMD_V64_INTRINSICS_H_
+#define AOM_AOM_DSP_SIMD_V64_INTRINSICS_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -229,4 +229,4 @@ SIMD_INLINE v64 v64_shr_n_s32(v64 a, unsigned int c) {
   return c_v64_shr_n_s32(a, c);
 }
 
-#endif /* _V64_INTRINSICS_H */
+#endif  // AOM_AOM_DSP_SIMD_V64_INTRINSICS_H_
