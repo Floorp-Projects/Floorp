@@ -844,6 +844,13 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   DOMRect getBoundsWithoutFlushing(in Element aElement);
 
+  /**
+   * Returns the offset of the window's visual viewport relative to the
+   * layout viewport. 
+   */
+  void getVisualViewportOffsetRelativeToLayoutViewport(out float aOffsetX, 
+                                                       out float aOffsetY);
+
   const long FLUSH_NONE = -1;
   const long FLUSH_STYLE = 0;
   const long FLUSH_LAYOUT = 1;
