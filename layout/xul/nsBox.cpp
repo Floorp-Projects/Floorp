@@ -63,15 +63,17 @@ nsBox::EndXULLayout(nsBoxLayoutState& aState)
 }
 
 bool nsBox::gGotTheme = false;
-nsITheme* nsBox::gTheme = nullptr;
+StaticRefPtr<nsITheme> nsBox::gTheme;
 
 nsBox::nsBox(ClassID aID)
   : nsIFrame(aID)
 {
   MOZ_COUNT_CTOR(nsBox);
   if (!gGotTheme) {
-    gGotTheme = true;
-    CallGetService("@mozilla.org/chrome/chrome-native-theme;1", &gTheme);
+    gTheme = do_GetNativeTheme();
+    if (gTheme) {
+      gGotTheme = true;
+    }
   }
 }
 
@@ -86,7 +88,7 @@ nsBox::~nsBox()
 nsBox::Shutdown()
 {
   gGotTheme = false;
-  NS_IF_RELEASE(gTheme);
+  gTheme = nullptr;
 }
 
 nsresult
