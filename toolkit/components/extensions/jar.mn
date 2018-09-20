@@ -49,4 +49,5 @@ toolkit.jar:
     content/extensions/child/ext-test.js (child/ext-test.js)
     content/extensions/child/ext-toolkit.js (child/ext-toolkit.js)
     content/extensions/child/ext-userScripts.js (child/ext-userScripts.js)
+    content/extensions/child/ext-userScripts-content.js (child/ext-userScripts-content.js)
     content/extensions/child/ext-webRequest.js (child/ext-webRequest.js)

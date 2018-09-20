@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[
+  {
+    "namespace": "userScripts",
+    "permissions": ["manifest:user_scripts"],
+    "allowedContexts": ["content"],
+    "types": [
+      {
+        "id": "ExportedAPIMethods",
+        "type": "object",
+        "description": "A set of API methods provided by the extensions to its userScripts",
+        "additionalProperties": { "type": "function" }
+      }
+    ],
+    "functions": [
+      {
+        "name": "setScriptAPIs",
+        "allowedContexts": ["content", "content_only"],
+        "type": "function",
+        "description": "Provides a set of custom API methods available to the registered userScripts",
+        "parameters": [
+          {
+            "name": "exportedAPIMethods",
+            "$ref": "ExportedAPIMethods"
+          }
+        ]
+      }
+    ]
+  }
+]
