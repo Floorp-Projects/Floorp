@@ -8,10 +8,11 @@
 xul|tabs {
   padding-right: 0;
   padding-left: 0;
+  position: static;
 }
 
 xul|tab[visuallyselected] {
-  color: inherit;
+  color: inherit !important;
   text-shadow: none;
 }
 

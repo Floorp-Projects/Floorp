@@ -41,6 +41,7 @@ public:
   , mBuilderDumpIndex(0)
   , mDumpIndent(0)
   , mDoGrouping(false)
+  , mContainsSVGGroup(false)
   {}
 
   void Destroy();
@@ -120,6 +121,8 @@ public:
   bool ShouldDumpDisplayList();
   wr::usize GetBuilderDumpIndex() { return mBuilderDumpIndex; }
 
+  bool GetContainsSVGGroup() { return mContainsSVGGroup; }
+
   // Those are data that we kept between transactions. We used to cache some
   // data in the layer. But in layers free mode, we don't have layer which
   // means we need some other place to cached the data between transaction.
@@ -194,6 +197,10 @@ public:
   // Whether consecutive inactive display items should be grouped into one
   // blob image.
   bool mDoGrouping;
+
+  // True if the most recently build display list contained an svg that
+  // we did grouping for.
+  bool mContainsSVGGroup;
 };
 
 } // namespace layers

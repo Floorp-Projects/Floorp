@@ -4630,8 +4630,7 @@ AssertGCStateForSweep(Zone* zone)
 }
 
 void
-ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone,
-                         AutoClearTypeInferenceStateOnOOM& oom)
+ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone)
 {
     AssertGCStateForSweep(zone);
 
@@ -4664,7 +4663,7 @@ ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone,
                 if (pentry) {
                     *pentry = key;
                 } else {
-                    oom.setOOM();
+                    zone->types.setOOMSweepingTypes();
                     flags |= TYPE_FLAG_ANYOBJECT;
                     clearObjects();
                     objectCount = 0;
@@ -4721,7 +4720,7 @@ ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone,
                 copy->setNext(constraintList_);
                 constraintList_ = copy;
             } else {
-                oom.setOOM();
+                zone->types.setOOMSweepingTypes();
             }
         }
         TypeConstraint* next = constraint->next();
@@ -4744,23 +4743,6 @@ ObjectGroup::clearProperties(const AutoSweepObjectGroup& sweep)
     propertySet = nullptr;
 }
 
-static void
-EnsureHasAutoClearTypeInferenceStateOnOOM(AutoClearTypeInferenceStateOnOOM*& oom, Zone* zone,
-                                          Maybe<AutoClearTypeInferenceStateOnOOM>& fallback)
-{
-    if (!oom) {
-        if (AutoEnterAnalysis* analysis = zone->types.activeAnalysis) {
-            if (analysis->oom.isNothing()) {
-                analysis->oom.emplace(zone);
-            }
-            oom = analysis->oom.ptr();
-        } else {
-            fallback.emplace(zone);
-            oom = &fallback.ref();
-        }
-    }
-}
-
 /*
  * Before sweeping the arenas themselves, scan all groups in a compartment to
  * fixup weak references: property type sets referencing dead JS and type
@@ -4769,15 +4751,16 @@ EnsureHasAutoClearTypeInferenceStateOnOOM(AutoClearTypeInferenceStateOnOOM*& oom
  * objects are accessed before their contents have been swept.
  */
 void
-ObjectGroup::sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStateOnOOM* oom)
+ObjectGroup::sweep(const AutoSweepObjectGroup& sweep)
 {
     MOZ_ASSERT(generation() != zoneFromAnyThread()->types.generation);
     setGeneration(zone()->types.generation);
 
     AssertGCStateForSweep(zone());
 
-    Maybe<AutoClearTypeInferenceStateOnOOM> fallbackOOM;
-    EnsureHasAutoClearTypeInferenceStateOnOOM(oom, zone(), fallbackOOM);
+    Maybe<AutoClearTypeInferenceStateOnOOM> clearStateOnOOM;
+    if (!zone()->types.isSweepingTypes())
+        clearStateOnOOM.emplace(zone());
 
     AutoTouchingGrayThings tgt;
 
@@ -4853,12 +4836,12 @@ ObjectGroup::sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStat
                                       (typeLifoAlloc, propertySet, propertyCount, newProp->id);
                     if (pentry) {
                         *pentry = newProp;
-                        newProp->types.sweep(sweep, zone(), *oom);
+                        newProp->types.sweep(sweep, zone());
                         continue;
                     }
                 }
 
-                oom->setOOM();
+                zone()->types.setOOMSweepingTypes();
                 addFlags(sweep, OBJECT_FLAG_DYNAMIC_MASK | OBJECT_FLAG_UNKNOWN_PROPERTIES);
                 clearProperties(sweep);
                 return;
@@ -4881,9 +4864,9 @@ ObjectGroup::sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStat
             JS_POISON(prop, JS_SWEPT_TI_PATTERN, sizeof(Property), MemCheckKind::MakeUndefined);
             if (newProp) {
                 propertySet = (Property**) newProp;
-                newProp->types.sweep(sweep, zone(), *oom);
+                newProp->types.sweep(sweep, zone());
             } else {
-                oom->setOOM();
+                zone()->types.setOOMSweepingTypes();
                 addFlags(sweep, OBJECT_FLAG_DYNAMIC_MASK | OBJECT_FLAG_UNKNOWN_PROPERTIES);
                 clearProperties(sweep);
                 return;
@@ -4895,15 +4878,16 @@ ObjectGroup::sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStat
 }
 
 /* static */ void
-JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep, AutoClearTypeInferenceStateOnOOM* oom)
+JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep)
 {
     MOZ_ASSERT(typesGeneration() != zone()->types.generation);
     setTypesGeneration(zone()->types.generation);
 
     AssertGCStateForSweep(zone());
 
-    Maybe<AutoClearTypeInferenceStateOnOOM> fallbackOOM;
-    EnsureHasAutoClearTypeInferenceStateOnOOM(oom, zone(), fallbackOOM);
+    Maybe<AutoClearTypeInferenceStateOnOOM> clearStateOnOOM;
+    if (!zone()->types.isSweepingTypes())
+        clearStateOnOOM.emplace(zone());
 
     TypeZone& types = zone()->types;
 
@@ -4944,10 +4928,10 @@ JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep, AutoClearTypeInferenc
 
     // Remove constraints and references to dead objects from stack type sets.
     for (unsigned i = 0; i < num; i++) {
-        typeArray[i].sweep(sweep, zone(), *oom);
+        typeArray[i].sweep(sweep, zone());
     }
 
-    if (oom->hadOOM()) {
+    if (zone()->types.hadOOMSweepingTypes()) {
         // It's possible we OOM'd while copying freeze constraints, so they
         // need to be regenerated.
         bitFields_.hasFreezeConstraints_ = false;
@@ -5000,6 +4984,7 @@ TypeZone::TypeZone(Zone* zone)
     sweepTypeLifoAlloc(zone, (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     sweepReleaseTypes(zone, false),
     sweepingTypes(zone, false),
+    oomSweepingTypes(zone, false),
     keepTypeScripts(zone, false),
     activeAnalysis(zone, nullptr)
 {
@@ -5046,7 +5031,7 @@ TypeZone::clearAllNewScriptsOnOOM()
 }
 
 AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
-  : zone(zone), oom(false)
+  : zone(zone)
 {
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
     MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
@@ -5055,15 +5040,15 @@ AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
 
 AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM()
 {
-    zone->types.setSweepingTypes(false);
-
-    if (oom) {
+    if (zone->types.hadOOMSweepingTypes()) {
         JSRuntime* rt = zone->runtimeFromMainThread();
         js::CancelOffThreadIonCompile(rt);
         zone->setPreservingCode(false);
         zone->discardJitCode(rt->defaultFreeOp(), /* discardBaselineCode = */ false);
         zone->types.clearAllNewScriptsOnOOM();
     }
+
+    zone->types.setSweepingTypes(false);
 }
 
 #ifdef DEBUG

@@ -64,31 +64,31 @@ linux64-clang-7:
         script: build-clang-7-linux.sh
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-7-pre-linux64.json'
+            - 'build/build-clang/clang-7-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-4.9
 
 linux64-clang-7-mingw-x86:
-    description: "MinGW-Clang 7 Pre x86 toolchain build"
+    description: "MinGW-Clang 7 x86 toolchain build"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TMW(clang7p32)
+        symbol: TMW(clang7-32)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
         max-run-time: 7200
     run:
         using: toolchain-script
-        script: build-clang-7-pre-mingw.sh
+        script: build-clang-7-mingw.sh
         arguments: [
             'x86'
         ]
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-7-pre-mingw.json'
+            - 'build/build-clang/clang-7-mingw.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clangmingw.tar.xz
     toolchains:
@@ -99,20 +99,20 @@ linux64-clang-7-mingw-x64:
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TMW(clang7p64)
+        symbol: TMW(clang7-64)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
         max-run-time: 7200
     run:
         using: toolchain-script
-        script: build-clang-7-pre-mingw.sh
+        script: build-clang-7-mingw.sh
         arguments: [
             'x64'
         ]
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-7-pre-mingw.json'
+            - 'build/build-clang/clang-7-mingw.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clangmingw.tar.xz
     toolchains:
