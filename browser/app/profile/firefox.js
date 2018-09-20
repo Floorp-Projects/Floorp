@@ -1506,6 +1506,8 @@ pref("browser.contentblocking.ui.enabled", true);
 pref("browser.contentblocking.ui.enabled", false);
 #endif
 
+pref("browser.contentblocking.global-toggle.enabled", true);
+
 // Define a set of default features for the Content Blocking UI
 pref("browser.contentblocking.fastblock.ui.enabled", true);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
