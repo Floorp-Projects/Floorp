@@ -228,6 +228,12 @@ protected:
       mCallback->Call("promise callback");
       aAso.CheckForInterrupt();
     }
+    // Now that mCallback is no longer needed, clear any pointers it contains to
+    // JS GC things. This removes any storebuffer entries associated with those
+    // pointers, which can cause problems by taking up memory and by triggering
+    // minor GCs. This otherwise would not happen until the next minor GC or
+    // cycle collection.
+    mCallback->Reset();
   }
 
   virtual bool Suppressed() override
