@@ -103,22 +103,6 @@ HUDService.prototype = {
   },
 
   /**
-   * Returns the Web Console object associated to a content window.
-   *
-   * @param nsIDOMWindow contentWindow
-   * @returns object
-   */
-  getHudByWindow(contentWindow) {
-    for (const [, hud] of this.consoles) {
-      const target = hud.target;
-      if (target && target.tab && target.window === contentWindow) {
-        return hud;
-      }
-    }
-    return null;
-  },
-
-  /**
    * Returns the console instance for a given id.
    *
    * @param string id
@@ -126,24 +110,6 @@ HUDService.prototype = {
    */
   getHudReferenceById(id) {
     return this.consoles.get(id);
-  },
-
-  /**
-   * Find if there is a Web Console open for the current tab and return the
-   * instance.
-   * @return object|null
-   *         The WebConsole object or null if the active tab has no open Web
-   *         Console.
-   */
-  getOpenWebConsole() {
-    const tab = this.currentContext().gBrowser.selectedTab;
-    if (!tab || !TargetFactory.isKnownTab(tab)) {
-      return null;
-    }
-    const target = TargetFactory.forTab(tab);
-    const toolbox = gDevTools.getToolbox(target);
-    const panel = toolbox ? toolbox.getPanel("webconsole") : null;
-    return panel ? panel.hud : null;
   },
 
   /**
