@@ -8,17 +8,14 @@ import {
   FAKE_REMOTE_PROVIDER,
   FAKE_REMOTE_SETTINGS_PROVIDER,
   FakeRemotePageManager,
-  PARENT_TO_CHILD_MESSAGE_NAME,
+  PARENT_TO_CHILD_MESSAGE_NAME
 } from "./constants";
-import {actionCreators as ac} from "common/Actions.jsm";
-import {ASRouterPreferences} from "lib/ASRouterPreferences.jsm";
 import {ASRouterTriggerListeners} from "lib/ASRouterTriggerListeners.jsm";
 import {CFRPageActions} from "lib/CFRPageActions.jsm";
 import {GlobalOverrider} from "test/unit/utils";
 import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
 
 const MESSAGE_PROVIDER_PREF_NAME = "browser.newtabpage.activity-stream.asrouter.messageProviders";
-const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 const FAKE_PROVIDERS = [FAKE_LOCAL_PROVIDER, FAKE_REMOTE_PROVIDER, FAKE_REMOTE_SETTINGS_PROVIDER];
 const ALL_MESSAGE_IDS = [...FAKE_LOCAL_MESSAGES, ...FAKE_REMOTE_MESSAGES].map(message => message.id);
 const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
@@ -42,35 +39,35 @@ describe("ASRouter", () => {
   let providerBlockList;
   let messageImpressions;
   let providerImpressions;
-  let previousSessionEnd;
   let fetchStub;
   let clock;
   let getStringPrefStub;
+  let addObserverStub;
   let dispatchStub;
 
   function createFakeStorage() {
     const getStub = sandbox.stub();
-    getStub.returns(Promise.resolve());
     getStub.withArgs("messageBlockList").returns(Promise.resolve(messageBlockList));
     getStub.withArgs("providerBlockList").returns(Promise.resolve(providerBlockList));
     getStub.withArgs("messageImpressions").returns(Promise.resolve(messageImpressions));
     getStub.withArgs("providerImpressions").returns(Promise.resolve(providerImpressions));
-    getStub.withArgs("previousSessionEnd").returns(Promise.resolve(previousSessionEnd));
     return {
       get: getStub,
-      set: sandbox.stub().returns(Promise.resolve()),
+      set: sandbox.stub().returns(Promise.resolve())
     };
   }
 
-  function setMessageProviderPref(value) {
-    sandbox.stub(ASRouterPreferences, "providers").get(() => value);
+  function setMessageProviderPref(value, prefName = MESSAGE_PROVIDER_PREF_NAME) {
+    getStringPrefStub
+      .withArgs(prefName, "")
+      .returns(JSON.stringify(value));
   }
 
   async function createRouterAndInit(providers = FAKE_PROVIDERS) {
     setMessageProviderPref(providers);
     channel = new FakeRemotePageManager();
     dispatchStub = sandbox.stub();
-    Router = new _ASRouter(FAKE_LOCAL_PROVIDERS);
+    Router = new _ASRouter(MESSAGE_PROVIDER_PREF_NAME, FAKE_LOCAL_PROVIDERS);
     await Router.init(channel, createFakeStorage(), dispatchStub);
   }
 
@@ -79,23 +76,17 @@ describe("ASRouter", () => {
     providerBlockList = [];
     messageImpressions = {};
     providerImpressions = {};
-    previousSessionEnd = 100;
     sandbox = sinon.sandbox.create();
-
-    sandbox.spy(ASRouterPreferences, "init");
-    sandbox.spy(ASRouterPreferences, "uninit");
-    sandbox.spy(ASRouterPreferences, "addListener");
-    sandbox.spy(ASRouterPreferences, "removeListener");
-
     clock = sandbox.useFakeTimers();
     fetchStub = sandbox.stub(global, "fetch")
       .withArgs("http://fake.com/endpoint")
       .resolves({ok: true, status: 200, json: () => Promise.resolve({messages: FAKE_REMOTE_MESSAGES})});
     getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
+    addObserverStub = sandbox.stub(global.Services.prefs, "addObserver");
+
     await createRouterAndInit();
   });
   afterEach(() => {
-    ASRouterPreferences.uninit();
     sandbox.restore();
   });
 
@@ -113,9 +104,13 @@ describe("ASRouter", () => {
       const [, listenerAdded] = channel.addMessageListener.firstCall.args;
       assert.isFunction(listenerAdded);
     });
+    it("should add an observer for the messageProviderPref", () => {
+      assert.calledOnce(addObserverStub);
+      assert.calledWith(addObserverStub, MESSAGE_PROVIDER_PREF_NAME);
+    });
     it("should set state.messageBlockList to the block list in persistent storage", async () => {
       messageBlockList = ["foo"];
-      Router = new _ASRouter();
+      Router = new _ASRouter({providers: FAKE_PROVIDERS});
       await Router.init(channel, createFakeStorage(), dispatchStub);
 
       assert.deepEqual(Router.state.messageBlockList, ["foo"]);
@@ -125,14 +120,14 @@ describe("ASRouter", () => {
       // otherwise they will be cleaned up by .cleanupImpressions()
       const testMessage = {id: "foo", frequency: {lifetimeCap: 10}};
       messageImpressions = {foo: [0, 1, 2]};
-      setMessageProviderPref([{id: "onboarding", type: "local", messages: [testMessage]}]);
-      Router = new _ASRouter();
+
+      Router = new _ASRouter({providers: [{id: "onboarding", type: "local", messages: [testMessage]}]});
       await Router.init(channel, createFakeStorage(), dispatchStub);
 
       assert.deepEqual(Router.state.messageImpressions, messageImpressions);
     });
     it("should await .loadMessagesFromAllProviders() and add messages from providers to state.messages", async () => {
-      Router = new _ASRouter(FAKE_LOCAL_PROVIDERS);
+      Router = new _ASRouter(MESSAGE_PROVIDER_PREF_NAME, FAKE_LOCAL_PROVIDERS);
 
       const loadMessagesSpy = sandbox.spy(Router, "loadMessagesFromAllProviders");
       await Router.init(channel, createFakeStorage(), dispatchStub);
@@ -140,6 +135,24 @@ describe("ASRouter", () => {
       assert.calledOnce(loadMessagesSpy);
       assert.isArray(Router.state.messages);
       assert.lengthOf(Router.state.messages, FAKE_LOCAL_MESSAGES.length + FAKE_REMOTE_MESSAGES.length);
+    });
+    it("should call loadMessagesFromAllProviders on pref change", async () => {
+      sandbox.spy(Router, "loadMessagesFromAllProviders");
+
+      await Router.observe();
+
+      assert.calledOnce(Router.loadMessagesFromAllProviders);
+    });
+    it("should update the list of providers on pref change", async () => {
+      const modifiedRemoteProvider = Object.assign({}, FAKE_REMOTE_PROVIDER, {url: "baz.com"});
+      setMessageProviderPref([FAKE_LOCAL_PROVIDER, modifiedRemoteProvider, FAKE_REMOTE_SETTINGS_PROVIDER]);
+
+      const {length} = Router.state.providers;
+      await Router.observe("", "", MESSAGE_PROVIDER_PREF_NAME);
+
+      const provider = Router.state.providers.find(p => p.url === "baz.com");
+      assert.lengthOf(Router.state.providers, length);
+      assert.isDefined(provider);
     });
     it("should load additional whitelisted hosts", async () => {
       getStringPrefStub.returns("[\"whitelist.com\"]");
@@ -160,101 +173,6 @@ describe("ASRouter", () => {
     it("should set this.dispatchToAS to the third parameter passed to .init()", async () => {
       assert.equal(Router.dispatchToAS, dispatchStub);
     });
-    it("should set state.previousSessionEnd from IndexedDB", async () => {
-      previousSessionEnd = 200;
-      await createRouterAndInit();
-
-      assert.equal(Router.state.previousSessionEnd, previousSessionEnd);
-    });
-    it("should dispatch a AS_ROUTER_INITIALIZED event to AS with ASRouterPreferences.specialConditions", async () => {
-      assert.calledOnce(Router.dispatchToAS);
-      assert.calledWith(Router.dispatchToAS, ac.BroadcastToContent({type: "AS_ROUTER_INITIALIZED", data: ASRouterPreferences.specialConditions}));
-    });
-  });
-
-  describe("preference changes", () => {
-    it("should call ASRouterPreferences.init and add a listener on init", () => {
-      assert.calledOnce(ASRouterPreferences.init);
-      assert.calledWith(ASRouterPreferences.addListener, Router.onPrefChange);
-    });
-    it("should call ASRouterPreferences.uninit and remove the listener on uninit", () => {
-      Router.uninit();
-      assert.calledOnce(ASRouterPreferences.uninit);
-      assert.calledWith(ASRouterPreferences.removeListener, Router.onPrefChange);
-    });
-    it("should call loadMessagesFromAllProviders on pref change", () => {
-      sandbox.spy(Router, "loadMessagesFromAllProviders");
-
-      ASRouterPreferences.observe(null, null, MESSAGE_PROVIDER_PREF_NAME);
-
-      assert.calledOnce(Router.loadMessagesFromAllProviders);
-    });
-    it("should update the list of providers on pref change", () => {
-      const modifiedRemoteProvider = Object.assign({}, FAKE_REMOTE_PROVIDER, {url: "baz.com"});
-      setMessageProviderPref([FAKE_LOCAL_PROVIDER, modifiedRemoteProvider, FAKE_REMOTE_SETTINGS_PROVIDER]);
-
-      const {length} = Router.state.providers;
-
-      ASRouterPreferences.observe(null, null, MESSAGE_PROVIDER_PREF_NAME);
-
-      const provider = Router.state.providers.find(p => p.url === "baz.com");
-      assert.lengthOf(Router.state.providers, length);
-      assert.isDefined(provider);
-    });
-  });
-
-  describe("setState", () => {
-    it("should broadcast a message to update the admin tool on a state change if the asrouter.devtoolsEnabled pref is", async () => {
-      sandbox.stub(ASRouterPreferences, "devtoolsEnabled").get(() => true);
-      await Router.setState({foo: 123});
-
-      assert.calledWith(channel.sendAsyncMessage, "ASRouter:parent-to-child", {type: "ADMIN_SET_STATE", data: Router.state});
-    });
-    it("should not send a message on a state change asrouter.devtoolsEnabled pref is on", async () => {
-      sandbox.stub(ASRouterPreferences, "devtoolsEnabled").get(() => false);
-      await Router.setState({foo: 123});
-
-      assert.notCalled(channel.sendAsyncMessage);
-    });
-  });
-
-  describe("#overrideOrEnableLegacyOnboarding", () => {
-    it("should set the onboarding finished pref to true if it is true and ASRPreferences.allowLegacyOnboarding is false", async () => {
-      sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(ONBOARDING_FINISHED_PREF).returns(false);
-      sandbox.stub(ASRouterPreferences, "specialConditions").get(() => ({allowLegacyOnboarding: false}));
-      const setStub = sandbox.stub(global.Services.prefs, "setBoolPref");
-
-      Router.overrideOrEnableLegacyOnboarding();
-      assert.calledWith(setStub, ONBOARDING_FINISHED_PREF, true);
-    });
-    it("should set the onboarding finished pref to false if it is false and ASRPreferences.allowLegacyOnboarding is true", async () => {
-      sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(ONBOARDING_FINISHED_PREF).returns(true);
-      sandbox.stub(ASRouterPreferences, "specialConditions").get(() => ({allowLegacyOnboarding: true}));
-      const setStub = sandbox.stub(global.Services.prefs, "setBoolPref");
-
-      Router.overrideOrEnableLegacyOnboarding();
-      assert.calledWith(setStub, ONBOARDING_FINISHED_PREF, false);
-    });
-    it("should call .overrideOrEnableLegacyOnboarding on init", async () => {
-      Router = new _ASRouter();
-      sandbox.spy(Router, "overrideOrEnableLegacyOnboarding");
-
-      await Router.init(channel, createFakeStorage(), dispatchStub);
-
-      assert.calledOnce(Router.overrideOrEnableLegacyOnboarding);
-    });
-    it("should call .overrideOrEnableLegacyOnboarding on a preference change", async () => {
-      sandbox.spy(Router, "overrideOrEnableLegacyOnboarding");
-
-      await Router.onPrefChange();
-
-      assert.calledOnce(Router.overrideOrEnableLegacyOnboarding);
-    });
-    it("should call .overrideOrEnableLegacyOnboarding on uninit", async () => {
-      sandbox.spy(Router, "overrideOrEnableLegacyOnboarding");
-      Router.uninit();
-      assert.calledOnce(Router.overrideOrEnableLegacyOnboarding);
-    });
   });
 
   describe("#loadMessagesFromAllProviders", () => {
@@ -267,7 +185,7 @@ describe("ASRouter", () => {
 
     it("should not trigger an update if not enough time has passed for a provider", async () => {
       await createRouterAndInit([
-        {id: "remotey", type: "remote", enabled: true, url: "http://fake.com/endpoint", updateCycleInMs: 300},
+        {id: "remotey", type: "remote", enabled: true, url: "http://fake.com/endpoint", updateCycleInMs: 300}
       ]);
 
       const previousState = Router.state;
@@ -279,7 +197,7 @@ describe("ASRouter", () => {
     });
     it("should not trigger an update if we only have local providers", async () => {
       await createRouterAndInit([
-        {id: "foo", type: "local", enabled: true, messages: FAKE_LOCAL_MESSAGES},
+        {id: "foo", type: "local", enabled: true, messages: FAKE_LOCAL_MESSAGES}
       ]);
 
       const previousState = Router.state;
@@ -293,7 +211,7 @@ describe("ASRouter", () => {
       const NEW_MESSAGES = [{id: "new_123"}];
       await createRouterAndInit([
         {id: "remotey", type: "remote", url: "http://fake.com/endpoint", enabled: true, updateCycleInMs: 300},
-        {id: "alocalprovider", type: "local", enabled: true, messages: FAKE_LOCAL_MESSAGES},
+        {id: "alocalprovider", type: "local", enabled: true, messages: FAKE_LOCAL_MESSAGES}
       ]);
       fetchStub
         .withArgs("http://fake.com/endpoint")
@@ -315,8 +233,8 @@ describe("ASRouter", () => {
         {id: "foo", type: "local", enabled: true, messages: [
           {id: "foo", template: "simple_template", trigger: {id: "firstRun"}, content: {title: "Foo", body: "Foo123"}},
           {id: "bar1", template: "simple_template", trigger: {id: "openURL", params: ["www.mozilla.org", "www.mozilla.com"]}, content: {title: "Bar1", body: "Bar123"}},
-          {id: "bar2", template: "simple_template", trigger: {id: "openURL", params: ["www.example.com"]}, content: {title: "Bar2", body: "Bar123"}},
-        ]},
+          {id: "bar2", template: "simple_template", trigger: {id: "openURL", params: ["www.example.com"]}, content: {title: "Bar2", body: "Bar123"}}
+        ]}
       ]);
       /* eslint-enable object-curly-newline */ /* eslint-enable object-property-newline */
 
@@ -340,7 +258,7 @@ describe("ASRouter", () => {
       const provider = {id: "foo", enabled: true, type: "remote", url: "https://www.mozilla.org/%STARTPAGE_VERSION%/"};
       setMessageProviderPref([provider]);
       Router._updateMessageProviders();
-      assert.equal(Router.state.providers[0].url, `https://www.mozilla.org/${parseInt(expectedStartpageVersion, 10)}/`);
+      assert.equal(Router.state.providers[0].url, `https://www.mozilla.org/${expectedStartpageVersion}/`);
     });
     it("should replace other params in remote provider urls by calling Services.urlFormater.formatURL", () => {
       const url = "https://www.example.com/";
@@ -358,7 +276,7 @@ describe("ASRouter", () => {
     it("should only add the providers that are enabled", () => {
       const providers = [
         {id: "foo", enabled: false, type: "remote", url: "https://www.foo.com/"},
-        {id: "bar", enabled: true, type: "remote", url: "https://www.bar.com/"},
+        {id: "bar", enabled: true, type: "remote", url: "https://www.bar.com/"}
       ];
       setMessageProviderPref(providers);
       Router._updateMessageProviders();
@@ -423,12 +341,6 @@ describe("ASRouter", () => {
     it("should set .dispatchToAS to null", () => {
       Router.uninit();
       assert.isNull(Router.dispatchToAS);
-    });
-    it("should save previousSessionEnd", () => {
-      Router.uninit();
-
-      assert.calledOnce(Router._storage.set);
-      assert.calledWithExactly(Router._storage.set, "previousSessionEnd", sinon.match.number);
     });
   });
 
@@ -503,13 +415,6 @@ describe("ASRouter", () => {
 
       assert.calledWith(global.fetch, url);
       assert.lengthOf(Router.state.providers.filter(p => p.url === url), 0);
-    });
-    it("should dispatch SNIPPETS_PREVIEW_MODE when adding a preview endpoint", async () => {
-      const url = "https://snippets-admin.mozilla.org/foo";
-      const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST", data: {endpoint: {url}}});
-      await Router.onMessage(msg);
-
-      assert.calledWithExactly(Router.dispatchToAS, ac.OnlyToOneContent({type: "SNIPPETS_PREVIEW_MODE"}, msg.target.portID));
     });
     it("should not add a url that is not from a whitelisted host", async () => {
       const url = "https://mozilla.org";
@@ -618,10 +523,19 @@ describe("ASRouter", () => {
     });
   });
 
-  describe("#onMessage: CONNECT_UI_REQUEST", () => {
+  describe("#onMessage: CONNECT_UI_REQUEST GET_NEXT_MESSAGE", () => {
     it("should call sendNextMessage on CONNECT_UI_REQUEST", async () => {
       sandbox.stub(Router, "sendNextMessage").resolves();
       const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
+
+      await Router.onMessage(msg);
+
+      assert.calledOnce(Router.sendNextMessage);
+      assert.calledWithExactly(Router.sendNextMessage, sinon.match.instanceOf(FakeRemotePageManager), {});
+    });
+    it("should call sendNextMessage on GET_NEXT_MESSAGE", async () => {
+      sandbox.stub(Router, "sendNextMessage").resolves();
+      const msg = fakeAsyncMessage({type: "GET_NEXT_MESSAGE"});
 
       await Router.onMessage(msg);
 
@@ -657,7 +571,7 @@ describe("ASRouter", () => {
       const expectedObj = {
         template: testMessage1.template,
         provider: testMessage1.provider,
-        bundle: [{content: testMessage1.content, id: testMessage1.id, order: 1}, {content: testMessage2.content, id: testMessage2.id}],
+        bundle: [{content: testMessage1.content, id: testMessage1.id, order: 1}, {content: testMessage2.content, id: testMessage2.id}]
       };
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: expectedObj});
     });
@@ -672,13 +586,13 @@ describe("ASRouter", () => {
       const expectedObj = {
         template: testMessage1.template,
         provider: testMessage1.provider,
-        bundle: [{content: testMessage1.content, id: testMessage1.id, order: 1}, {content: testMessage2.content, id: testMessage2.id, order: 2}],
+        bundle: [{content: testMessage1.content, id: testMessage1.id, order: 1}, {content: testMessage2.content, id: testMessage2.id, order: 2}]
       };
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: expectedObj});
     });
     it("should get the bundle and send the message if the message has a bundle", async () => {
       sandbox.stub(Router, "sendNextMessage").resolves();
-      const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
+      const msg = fakeAsyncMessage({type: "GET_NEXT_MESSAGE"});
       msg.bundled = 2; // force this message to want to be bundled
       await Router.onMessage(msg);
       assert.calledOnce(Router.sendNextMessage);
@@ -696,7 +610,7 @@ describe("ASRouter", () => {
     });
     it("consider the trigger when picking a message", async () => {
       const messages = [
-        {id: "foo1", template: "simple_template", bundled: 1, trigger: {id: "foo"}, content: {title: "Foo1", body: "Foo123-1"}},
+        {id: "foo1", template: "simple_template", bundled: 1, trigger: {id: "foo"}, content: {title: "Foo1", body: "Foo123-1"}}
       ];
 
       const {data} = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "foo"}}});
@@ -707,7 +621,7 @@ describe("ASRouter", () => {
       let messages = [
         {id: "foo1", template: "simple_template", bundled: 2, trigger: {id: "foo"}, content: {title: "Foo1", body: "Foo123-1"}},
         {id: "foo2", template: "simple_template", bundled: 2, trigger: {id: "bar"}, content: {title: "Foo2", body: "Foo123-2"}},
-        {id: "foo3", template: "simple_template", bundled: 2, trigger: {id: "foo"}, content: {title: "Foo3", body: "Foo123-3"}},
+        {id: "foo3", template: "simple_template", bundled: 2, trigger: {id: "foo"}, content: {title: "Foo3", body: "Foo123-3"}}
       ];
       await Router.setState({messages});
       const {target} = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "foo"}}});
@@ -715,9 +629,6 @@ describe("ASRouter", () => {
       assert.equal(bundle.length, 2);
       // it should have picked foo1 and foo3 only
       assert.isTrue(bundle.every(elem => elem.id === "foo1" || elem.id === "foo3"));
-    });
-    it("should have previousSessionEnd in the message context", () => {
-      assert.propertyVal(Router._getMessagesContext(), "previousSessionEnd", 100);
     });
   });
 
@@ -817,8 +728,6 @@ describe("ASRouter", () => {
   describe("#onMessage: DOORHANGER_TELEMETRY", () => {
     it("should dispatch an AS_ROUTER_TELEMETRY_USER_EVENT on DOORHANGER_TELEMETRY message", async () => {
       const msg = fakeAsyncMessage({type: "DOORHANGER_TELEMETRY", data: {message_id: "foo"}});
-      dispatchStub.reset();
-
       await Router.onMessage(msg);
 
       assert.calledOnce(dispatchStub);
@@ -1119,9 +1028,7 @@ describe("ASRouter", () => {
     it("should dispatch an event when a targeting expression throws an error", async () => {
       sandbox.stub(global.FilterExpressions, "eval").returns(Promise.reject(new Error("fake error")));
       await Router.setState({messages: [{id: "foo", targeting: "foo2.[[("}]});
-      const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
-      dispatchStub.reset();
-
+      const msg = fakeAsyncMessage({type: "GET_NEXT_MESSAGE"});
       await Router.onMessage(msg);
 
       assert.calledOnce(dispatchStub);

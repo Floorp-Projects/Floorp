@@ -1,8 +1,6 @@
 ChromeUtils.import("resource://gre/modules/components-utils/FilterExpressions.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ASRouterPreferences",
-  "resource://activity-stream/lib/ASRouterPreferences.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "NewTabUtils",
@@ -13,11 +11,9 @@ ChromeUtils.defineModuleGetter(this, "ShellService",
   "resource:///modules/ShellService.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
 
 const FXA_USERNAME_PREF = "services.sync.username";
-const SEARCH_REGION_PREF = "browser.search.region";
+const MESSAGE_PROVDIER_EXPERIMENT_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
 const MOZ_JEXL_FILEPATH = "mozjexl";
 
 const {activityStreamProvider: asProvider} = NewTabUtils;
@@ -27,48 +23,31 @@ const FRECENT_SITES_IGNORE_BLOCKED = true;
 const FRECENT_SITES_NUM_ITEMS = 25;
 const FRECENT_SITES_MIN_FRECENCY = 100;
 
-function CachedTargetingGetter(property, options = null, updateInterval = FRECENT_SITES_UPDATE_INTERVAL) {
-  const targetingGetter = {
-    _lastUpdated: 0,
-    _value: null,
-    // For testing
-    expire() {
-      this._lastUpdated = 0;
-      this._value = null;
-    },
-  };
-
-  Object.defineProperty(targetingGetter, property, {
-    get: () => new Promise(async (resolve, reject) => {
+const TopFrecentSitesCache = {
+  _lastUpdated: 0,
+  _topFrecentSites: null,
+  get topFrecentSites() {
+    return new Promise(async resolve => {
       const now = Date.now();
-      if (now - targetingGetter._lastUpdated >= updateInterval) {
-        try {
-          targetingGetter._value = await asProvider[property](options);
-          targetingGetter._lastUpdated = now;
-        } catch (e) {
-          Cu.reportError(e);
-          reject(e);
-        }
+      if (now - this._lastUpdated >= FRECENT_SITES_UPDATE_INTERVAL) {
+        this._topFrecentSites = await asProvider.getTopFrecentSites({
+          ignoreBlocked: FRECENT_SITES_IGNORE_BLOCKED,
+          numItems: FRECENT_SITES_NUM_ITEMS,
+          topsiteFrecency: FRECENT_SITES_MIN_FRECENCY,
+          onePerDomain: true,
+          includeFavicon: false
+        });
+        this._lastUpdated = now;
       }
-      resolve(targetingGetter._value);
-    }),
-  });
-
-  return targetingGetter;
-}
-
-const TopFrecentSitesCache = new CachedTargetingGetter(
-  "getTopFrecentSites",
-  {
-    ignoreBlocked: FRECENT_SITES_IGNORE_BLOCKED,
-    numItems: FRECENT_SITES_NUM_ITEMS,
-    topsiteFrecency: FRECENT_SITES_MIN_FRECENCY,
-    onePerDomain: true,
-    includeFavicon: false,
+      resolve(this._topFrecentSites);
+    });
+  },
+  // For testing
+  expire() {
+    this._lastUpdated = 0;
+    this._topFrecentSites = null;
   }
-);
-
-const TotalBookmarksCountCache = new CachedTargetingGetter("getTotalBookmarksCount");
+};
 
 /**
  * removeRandomItemFromArray - Removes a random item from the array and returns it.
@@ -85,7 +64,7 @@ const TargetingGetters = {
     const {settings} = TelemetryEnvironment.currentEnvironment;
     return {
       attribution: settings.attribution,
-      update: settings.update,
+      update: settings.update
     };
   },
   get currentDate() {
@@ -97,14 +76,14 @@ const TargetingGetters = {
   get profileAgeReset() {
     return new ProfileAge(null, null).reset;
   },
-  get usesFirefoxSync() {
+  get hasFxAccount() {
     return Services.prefs.prefHasUserValue(FXA_USERNAME_PREF);
   },
   get sync() {
     return {
       desktopDevices: Services.prefs.getIntPref("services.sync.clients.devices.desktop", 0),
       mobileDevices: Services.prefs.getIntPref("services.sync.clients.devices.mobile", 0),
-      totalDevices: Services.prefs.getIntPref("services.sync.numClients", 0),
+      totalDevices: Services.prefs.getIntPref("services.sync.numClients", 0)
     };
   },
   get addonsInfo() {
@@ -116,13 +95,13 @@ const TargetingGetters = {
             version: addon.version,
             type: addon.type,
             isSystem: addon.isSystem,
-            isWebExtension: addon.isWebExtension,
+            isWebExtension: addon.isWebExtension
           };
           if (fullData) {
             Object.assign(info[addon.id], {
               name: addon.name,
               userDisabled: addon.userDisabled,
-              installDate: addon.installDate,
+              installDate: addon.installDate
             });
           }
         }
@@ -139,7 +118,7 @@ const TargetingGetters = {
             current: Services.search.defaultEngine.identifier,
             installed: engines
               .map(engine => engine.identifier)
-              .filter(engine => engine),
+              .filter(engine => engine)
           });
         } else {
           resolve({installed: [], current: ""});
@@ -157,35 +136,39 @@ const TargetingGetters = {
     return Services.prefs.getIntPref("devtools.selfxss.count");
   },
   get topFrecentSites() {
-    return TopFrecentSitesCache.getTopFrecentSites.then(sites => sites.map(site => (
+    return TopFrecentSitesCache.topFrecentSites.then(sites => sites.map(site => (
       {
         url: site.url,
         host: (new URL(site.url)).hostname,
         frecency: site.frecency,
-        lastVisitDate: site.lastVisitDate,
+        lastVisitDate: site.lastVisitDate
       }
     )));
   },
   // Temporary targeting function for the purposes of running the simplified onboarding experience
   get isInExperimentCohort() {
-    const {cohort} = ASRouterPreferences.providers.find(i => i.id === "onboarding") || {};
-    return (typeof cohort === "number" ? cohort : 0);
+    const allProviders = Services.prefs.getStringPref(MESSAGE_PROVDIER_EXPERIMENT_PREF, "");
+    try {
+      const {cohort} = JSON.parse(allProviders).find(i => i.id === "onboarding");
+      return (typeof cohort === "number" ? cohort : 0);
+    } catch (e) {
+      Cu.reportError("Problem parsing JSON message provider pref for ASRouter");
+    }
+    return 0;
   },
   get providerCohorts() {
-    return ASRouterPreferences.providers.reduce((prev, current) => {
-      prev[current.id] = current.cohort || "";
-      return prev;
-    }, {});
-  },
-  get totalBookmarksCount() {
-    return TotalBookmarksCountCache.getTotalBookmarksCount;
-  },
-  get firefoxVersion() {
-    return parseInt(AppConstants.MOZ_APP_VERSION.match(/\d+/), 10);
-  },
-  get region() {
-    return Services.prefs.getStringPref(SEARCH_REGION_PREF, "");
-  },
+    const allProviders = Services.prefs.getStringPref(MESSAGE_PROVDIER_EXPERIMENT_PREF, "");
+    const cohorts = {};
+    try {
+      JSON.parse(allProviders).reduce((prev, current) => {
+        prev[current.id] = current.cohort || "";
+        return prev;
+      }, cohorts);
+    } catch (e) {
+      Cu.reportError("Problem parsing JSON message provider pref for ASRouter");
+    }
+    return cohorts;
+  }
 };
 
 this.ASRouterTargeting = {
@@ -193,17 +176,10 @@ this.ASRouterTargeting = {
 
   ERROR_TYPES: {
     MALFORMED_EXPRESSION: "MALFORMED_EXPRESSION",
-    OTHER_ERROR: "OTHER_ERROR",
+    OTHER_ERROR: "OTHER_ERROR"
   },
 
-  isMatch(filterExpression, customContext) {
-    let context = this.Environment;
-    if (customContext) {
-      context = {};
-      Object.defineProperties(context, Object.getOwnPropertyDescriptors(this.Environment));
-      Object.defineProperties(context, Object.getOwnPropertyDescriptors(customContext));
-    }
-
+  isMatch(filterExpression, context = this.Environment) {
     return FilterExpressions.eval(filterExpression, context);
   },
 
@@ -272,11 +248,9 @@ this.ASRouterTargeting = {
       }
     }
     return match;
-  },
+  }
 };
 
 // Export for testing
 this.TopFrecentSitesCache = TopFrecentSitesCache;
-this.TotalBookmarksCountCache = TotalBookmarksCountCache;
-this.CachedTargetingGetter = CachedTargetingGetter;
-this.EXPORTED_SYMBOLS = ["ASRouterTargeting", "TopFrecentSitesCache", "TotalBookmarksCountCache", "CachedTargetingGetter"];
+this.EXPORTED_SYMBOLS = ["ASRouterTargeting", "TopFrecentSitesCache"];
