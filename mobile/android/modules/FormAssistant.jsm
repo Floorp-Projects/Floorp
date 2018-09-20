@@ -378,9 +378,17 @@ var FormAssistant = {
       scrollY += rect.top + parseInt(top);
     }
 
+    // The rect computed above is relative to the origin of the viewport frame,
+    // i.e. the layout viewport origin, but the consumer of the
+    // FormAssist::AutoCompleteResult messaage expects a rect relative to
+    // the visual viewport origin, so translate between the two.
+    let offsetX = {}, offsetY = {};
+    aElement.ownerGlobal.windowUtils
+        .getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
+
     return {
-      x: r.left + scrollX,
-      y: r.top + scrollY,
+      x: r.left + scrollX - offsetX.value,
+      y: r.top + scrollY - offsetY.value,
       w: r.width,
       h: r.height,
     };
