@@ -703,6 +703,10 @@ html|input.urlbar-input {
 
 #tabbrowser-tabs {
   -moz-box-align: stretch;
+  padding-left: 0;
+  padding-right: 0;
+  margin-bottom: 0;
+  position: static;
 }
 
 /**
