@@ -25,6 +25,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'pref'
 
 EXPORTS.mozilla += [
+    'init/ContentBlockingDefaultPrefValues.h',
     'init/StaticPrefList.h',
     'nsRelativeFilePref.h',
     'Preferences.h',
