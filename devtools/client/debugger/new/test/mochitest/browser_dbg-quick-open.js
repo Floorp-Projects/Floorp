@@ -57,29 +57,31 @@ function quickOpen(dbg, query, shortcut = "quickOpen") {
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 
-  info("test opening and closing");
+  info("Testing opening and closing");
   quickOpen(dbg, "");
   pressKey(dbg, "Escape");
   assertDisabled(dbg);
 
-  await waitForSource(dbg, "switching-01");
-  quickOpen(dbg, "sw");
-  pressKey(dbg, "Enter");
-  await waitForSelectedSource(dbg, "switching-01");
-
-  info("Arrow keys and check to see if source is selected");
+  info("Testing the number of results for source search");
   quickOpen(dbg, "sw");
   is(resultCount(dbg), 2, "two file results");
   pressKey(dbg, "Escape");
 
+  info("Testing source search and check to see if source is selected");
+  await waitForSource(dbg, "switching-01");
+  quickOpen(dbg, "sw1");
+  is(resultCount(dbg), 1, "one file results");
+  pressKey(dbg, "Enter");
+  await waitForSelectedSource(dbg, "switching-01");
 
+  info("Testing arrow keys in source search and check to see if source is selected");
   quickOpen(dbg, "sw2");
+  is(resultCount(dbg), 1, "one file results");
   pressKey(dbg, "Down");
   pressKey(dbg, "Enter");
-
   await waitForSelectedSource(dbg, "switching-02");
 
-
+  info("Testing hitting tab closes the search");
   quickOpen(dbg, "sw");
   pressKey(dbg, "Tab");
   assertDisabled(dbg);
