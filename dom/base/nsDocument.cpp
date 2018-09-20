@@ -12525,7 +12525,7 @@ nsIDocument::MaybeAllowStorageForOpener()
 {
   if (StaticPrefs::network_cookie_cookieBehavior() !=
         nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      !StaticPrefs::browser_contentblocking_enabled()) {
+      !AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()) {
     return;
   }
 
