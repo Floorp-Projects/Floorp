@@ -104,13 +104,224 @@ class ToolboxToolbar extends Component {
   }
 
   /**
+   * A little helper function to call renderToolboxButtons for buttons at the start
+   * of the toolbox.
+   */
+  renderToolboxButtonsStart() {
+    return this.renderToolboxButtons(true);
+  }
+
+  /**
+   * A little helper function to call renderToolboxButtons for buttons at the end
+   * of the toolbox.
+   */
+  renderToolboxButtonsEnd() {
+    return this.renderToolboxButtons(false);
+  }
+
+  /**
+   * Render all of the tabs, this takes in a list of toolbox button states. These are plain
+   * objects that have all of the relevant information needed to render the button.
+   * See Toolbox.prototype._createButtonState in devtools/client/framework/toolbox.js for
+   * documentation on this object.
+   *
+   * @param {String} focusedButton - The id of the focused button.
+   * @param {Array} toolboxButtons - Array of objects that define the command buttons.
+   * @param {Function} focusButton - Keep a record of the currently focused button.
+   * @param {boolean} isStart - Render either the starting buttons, or ending buttons.
+   */
+  renderToolboxButtons(isStart) {
+    const {
+      focusedButton,
+      toolboxButtons,
+      focusButton
+    } = this.props;
+    const visibleButtons = toolboxButtons.filter(command => {
+      const {isVisible, isInStartContainer} = command;
+      return isVisible && (isStart ? isInStartContainer : !isInStartContainer);
+    });
+
+    if (visibleButtons.length === 0) {
+      return null;
+    }
+
+    // The RDM button, if present, should always go last
+    const rdmIndex = visibleButtons.findIndex(
+      button => button.id === "command-button-responsive"
+    );
+    if (rdmIndex !== -1 && rdmIndex !== visibleButtons.length - 1) {
+      const rdm = visibleButtons.splice(rdmIndex, 1)[0];
+      visibleButtons.push(rdm);
+    }
+
+    const renderedButtons =
+      visibleButtons.map(command => {
+        const {
+          id,
+          description,
+          disabled,
+          onClick,
+          isChecked,
+          className: buttonClass,
+          onKeyDown
+        } = command;
+        return button({
+          id,
+          title: description,
+          disabled,
+          className: (
+            "command-button devtools-button "
+            + buttonClass + (isChecked ? " checked" : "")
+          ),
+          onClick: (event) => {
+            onClick(event);
+            focusButton(id);
+          },
+          onFocus: () => focusButton(id),
+          tabIndex: id === focusedButton ? "0" : "-1",
+          onKeyDown: (event) => {
+            onKeyDown(event);
+          }
+        });
+      });
+
+    // Add the appropriate separator, if needed.
+    const children = renderedButtons;
+    if (renderedButtons.length) {
+      if (isStart) {
+        children.push(this.renderSeparator());
+        // For the end group we add a separator *before* the RDM button if it
+        // exists, but only if it is not the only button.
+      } else if (rdmIndex !== -1 && visibleButtons.length > 1) {
+        children.splice(
+          children.length - 1,
+          0,
+          this.renderSeparator()
+        );
+      }
+    }
+
+    return div({id: `toolbox-buttons-${isStart ? "start" : "end"}`}, ...children);
+  }
+
+  /**
+   * Render a separator.
+   */
+  renderSeparator() {
+    return div({className: "devtools-separator"});
+  }
+
+  /**
+   * Render the toolbox control buttons. The following props are expected:
+   *
+   * @param {string} props.focusedButton
+   *        The id of the focused button.
+   * @param {string} props.currentToolId
+   *        The id of the currently selected tool, e.g. "inspector".
+   * @param {Object[]} props.hostTypes
+   *        Array of host type objects.
+   * @param {string} props.hostTypes[].position
+   *        Position name.
+   * @param {Function} props.hostTypes[].switchHost
+   *        Function to switch the host.
+   * @param {string} props.currentHostType
+   *        The current docking configuration.
+   * @param {boolean} props.areDockOptionsEnabled
+   *        They are not enabled in certain situations like when they are in the
+   *        WebIDE.
+   * @param {boolean} props.canCloseToolbox
+   *        Do we need to add UI for closing the toolbox? We don't when the
+   *        toolbox is undocked, for example.
+   * @param {boolean} props.isSplitConsoleActive
+   *         Is the split console currently visible?
+   *        toolbox is undocked, for example.
+   * @param {boolean|undefined} props.disableAutohide
+   *        Are we disabling the behavior where pop-ups are automatically
+   *        closed when clicking outside them?
+   *        (Only defined for the browser toolbox.)
+   * @param {Function} props.selectTool
+   *        Function to select a tool based on its id.
+   * @param {Function} props.toggleOptions
+   *        Function to turn the options panel on / off.
+   * @param {Function} props.toggleSplitConsole
+   *        Function to turn the split console on / off.
+   * @param {Function} props.toggleNoAutohide
+   *        Function to turn the disable pop-up autohide behavior on / off.
+   * @param {Function} props.closeToolbox
+   *        Completely close the toolbox.
+   * @param {Function} props.focusButton
+   *        Keep a record of the currently focused button.
+   * @param {Object} props.L10N
+   *        Localization interface.
+   * @param {Object} props.toolbox
+   *        The devtools toolbox. Used by the MenuButton component to display
+   *        the menu popup.
+   * @param {Object} refs
+   *        The components refs object. Used to keep a reference to the MenuButton
+   *        for the meatball menu so that we can tell it to resize its contents
+   *        when they change.
+   */
+  renderToolboxControls() {
+    const {
+      focusedButton,
+      canCloseToolbox,
+      closeToolbox,
+      focusButton,
+      L10N,
+      toolbox,
+    } = this.props;
+
+    const meatballMenuButtonId = "toolbox-meatball-menu-button";
+
+    const meatballMenuButton = MenuButton(
+      {
+        id: meatballMenuButtonId,
+        menuId: meatballMenuButtonId + "-panel",
+        doc: toolbox.doc,
+        onFocus: () => focusButton(meatballMenuButtonId),
+        className: "devtools-button",
+        title: L10N.getStr("toolbox.meatballMenu.button.tooltip"),
+        tabIndex: focusedButton === meatballMenuButtonId ? "0" : "-1",
+        ref: "meatballMenuButton",
+      },
+      MeatballMenu({
+        ...this.props,
+        hostTypes: this.props.areDockOptionsEnabled ? this.props.hostTypes : [],
+        onResize: () => {
+          this.refs.meatballMenuButton.resizeContent();
+        },
+      })
+    );
+
+    const closeButtonId = "toolbox-close";
+
+    const closeButton = canCloseToolbox
+      ? button({
+        id: closeButtonId,
+        onFocus: () => focusButton(closeButtonId),
+        className: "devtools-button",
+        title: L10N.getStr("toolbox.closebutton.tooltip"),
+        onClick: () => {
+          closeToolbox();
+        },
+        tabIndex: focusedButton === "toolbox-close" ? "0" : "-1",
+      })
+      : null;
+
+    return div({id: "toolbox-controls"},
+      meatballMenuButton,
+      closeButton
+    );
+  }
+
+  /**
    * The render function is kept fairly short for maintainability. See the individual
    * render functions for how each of the sections is rendered.
    */
   render() {
     const classnames = ["devtools-tabbar"];
-    const startButtons = renderToolboxButtonsStart(this.props);
-    const endButtons = renderToolboxButtonsEnd(this.props);
+    const startButtons = this.renderToolboxButtonsStart();
+    const endButtons = this.renderToolboxButtonsEnd();
 
     if (!startButtons) {
       classnames.push("devtools-tabbar-has-start");
@@ -128,7 +339,7 @@ class ToolboxToolbar extends Component {
           startButtons,
           ToolboxTabs(this.props),
           endButtons,
-          renderToolboxControls(this.props, this.refs)
+          this.renderToolboxControls()
         )
       )
       : div({ className: classnames.join(" ") });
@@ -136,209 +347,3 @@ class ToolboxToolbar extends Component {
 }
 
 module.exports = ToolboxToolbar;
-
-/**
- * A little helper function to call renderToolboxButtons for buttons at the start
- * of the toolbox.
- */
-function renderToolboxButtonsStart(props) {
-  return renderToolboxButtons(props, true);
-}
-
-/**
-* A little helper function to call renderToolboxButtons for buttons at the end
-* of the toolbox.
- */
-function renderToolboxButtonsEnd(props) {
-  return renderToolboxButtons(props, false);
-}
-
-/**
- * Render all of the tabs, this takes in a list of toolbox button states. These are plain
- * objects that have all of the relevant information needed to render the button.
- * See Toolbox.prototype._createButtonState in devtools/client/framework/toolbox.js for
- * documentation on this object.
- *
- * @param {String} focusedButton - The id of the focused button.
- * @param {Array} toolboxButtons - Array of objects that define the command buttons.
- * @param {Function} focusButton - Keep a record of the currently focused button.
- * @param {boolean} isStart - Render either the starting buttons, or ending buttons.
- */
-function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isStart) {
-  const visibleButtons = toolboxButtons.filter(command => {
-    const {isVisible, isInStartContainer} = command;
-    return isVisible && (isStart ? isInStartContainer : !isInStartContainer);
-  });
-
-  if (visibleButtons.length === 0) {
-    return null;
-  }
-
-  // The RDM button, if present, should always go last
-  const rdmIndex = visibleButtons.findIndex(
-    button => button.id === "command-button-responsive"
-  );
-  if (rdmIndex !== -1 && rdmIndex !== visibleButtons.length - 1) {
-    const rdm = visibleButtons.splice(rdmIndex, 1)[0];
-    visibleButtons.push(rdm);
-  }
-
-  const renderedButtons =
-    visibleButtons.map(command => {
-      const {
-        id,
-        description,
-        disabled,
-        isChecked,
-        onClick,
-        className: buttonClass,
-        onKeyDown
-      } = command;
-      return button({
-        id,
-        title: description,
-        disabled,
-        className: (
-          "command-button devtools-button "
-          + buttonClass + (isChecked ? " checked" : "")
-        ),
-        onClick: (event) => {
-          onClick(event);
-          focusButton(id);
-        },
-        onFocus: () => focusButton(id),
-        tabIndex: id === focusedButton ? "0" : "-1",
-        onKeyDown: (event) => {
-          onKeyDown(event);
-        }
-      });
-    });
-
-  // Add the appropriate separator, if needed.
-  const children = renderedButtons;
-  if (renderedButtons.length) {
-    if (isStart) {
-      children.push(renderSeparator());
-    // For the end group we add a separator *before* the RDM button if it
-    // exists, but only if it is not the only button.
-    } else if (rdmIndex !== -1 && visibleButtons.length > 1) {
-      children.splice(
-        children.length - 1,
-        0,
-        renderSeparator()
-      );
-    }
-  }
-
-  return div({id: `toolbox-buttons-${isStart ? "start" : "end"}`}, ...children);
-}
-
-/**
- * Render a separator.
- */
-function renderSeparator() {
-  return div({className: "devtools-separator"});
-}
-
-/**
- * Render the toolbox control buttons. The following props are expected:
- *
- * @param {string} props.focusedButton
- *        The id of the focused button.
- * @param {string} props.currentToolId
- *        The id of the currently selected tool, e.g. "inspector".
- * @param {Object[]} props.hostTypes
- *        Array of host type objects.
- * @param {string} props.hostTypes[].position
- *        Position name.
- * @param {Function} props.hostTypes[].switchHost
- *        Function to switch the host.
- * @param {string} props.currentHostType
- *        The current docking configuration.
- * @param {boolean} props.areDockOptionsEnabled
- *        They are not enabled in certain situations like when they are in the
- *        WebIDE.
- * @param {boolean} props.canCloseToolbox
- *        Do we need to add UI for closing the toolbox? We don't when the
- *        toolbox is undocked, for example.
- * @param {boolean} props.isSplitConsoleActive
- *         Is the split console currently visible?
- *        toolbox is undocked, for example.
- * @param {boolean|undefined} props.disableAutohide
- *        Are we disabling the behavior where pop-ups are automatically
- *        closed when clicking outside them?
- *        (Only defined for the browser toolbox.)
- * @param {Function} props.selectTool
- *        Function to select a tool based on its id.
- * @param {Function} props.toggleOptions
- *        Function to turn the options panel on / off.
- * @param {Function} props.toggleSplitConsole
- *        Function to turn the split console on / off.
- * @param {Function} props.toggleNoAutohide
- *        Function to turn the disable pop-up autohide behavior on / off.
- * @param {Function} props.closeToolbox
- *        Completely close the toolbox.
- * @param {Function} props.focusButton
- *        Keep a record of the currently focused button.
- * @param {Object} props.L10N
- *        Localization interface.
- * @param {Object} props.toolbox
- *        The devtools toolbox. Used by the MenuButton component to display
- *        the menu popup.
- * @param {Object} refs
- *        The components refs object. Used to keep a reference to the MenuButton
- *        for the meatball menu so that we can tell it to resize its contents
- *        when they change.
- */
-function renderToolboxControls(props, refs) {
-  const {
-    focusedButton,
-    canCloseToolbox,
-    closeToolbox,
-    focusButton,
-    L10N,
-    toolbox,
-  } = props;
-
-  const meatballMenuButtonId = "toolbox-meatball-menu-button";
-
-  const meatballMenuButton = MenuButton(
-    {
-      id: meatballMenuButtonId,
-      menuId: meatballMenuButtonId + "-panel",
-      doc: toolbox.doc,
-      onFocus: () => focusButton(meatballMenuButtonId),
-      className: "devtools-button",
-      title: L10N.getStr("toolbox.meatballMenu.button.tooltip"),
-      tabIndex: focusedButton === meatballMenuButtonId ? "0" : "-1",
-      ref: "meatballMenuButton",
-    },
-    MeatballMenu({
-      ...props,
-      hostTypes: props.areDockOptionsEnabled ? props.hostTypes : [],
-      onResize: () => {
-        refs.meatballMenuButton.resizeContent();
-      },
-    })
-  );
-
-  const closeButtonId = "toolbox-close";
-
-  const closeButton = canCloseToolbox
-    ? button({
-      id: closeButtonId,
-      onFocus: () => focusButton(closeButtonId),
-      className: "devtools-button",
-      title: L10N.getStr("toolbox.closebutton.tooltip"),
-      onClick: () => {
-        closeToolbox();
-      },
-      tabIndex: focusedButton === "toolbox-close" ? "0" : "-1",
-    })
-    : null;
-
-  return div({id: "toolbox-controls"},
-    meatballMenuButton,
-    closeButton
-  );
-}
