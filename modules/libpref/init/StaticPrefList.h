@@ -382,6 +382,13 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 30000 /* 30 seconds */
 )
 
+// Enable content type normalization of XHR uploads via MIME Sniffing standard
+VARCACHE_PREF(
+  "dom.xhr.standard_content_type_normalization",
+   dom_xhr_standard_content_type_normalization,
+  RelaxedAtomicBool, true
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------

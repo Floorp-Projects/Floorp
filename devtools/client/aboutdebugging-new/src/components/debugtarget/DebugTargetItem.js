@@ -57,7 +57,7 @@ class DebugTargetItem extends PureComponent {
   render() {
     return dom.li(
       {
-        className: "debug-target-item",
+        className: "debug-target-item js-debug-target-item",
       },
       this.renderIcon(),
       this.renderInfo(),

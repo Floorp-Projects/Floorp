@@ -301,7 +301,7 @@ private:
   virtual ~XMLHttpRequestMainThread();
 
   nsresult MaybeSilentSendFailure(nsresult aRv);
-  nsresult SendInternal(const BodyExtractorBase* aBody);
+  nsresult SendInternal(const BodyExtractorBase* aBody, bool aBodyIsDocumentOrString = false);
 
   bool IsCrossSiteCORSRequest() const;
   bool IsDeniedCrossSiteCORSRequest();

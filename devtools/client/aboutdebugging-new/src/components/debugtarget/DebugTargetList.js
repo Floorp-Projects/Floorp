@@ -59,7 +59,7 @@ class DebugTargetList extends PureComponent {
 
     return dom.ul(
       {
-        className: "debug-target-list" +
+        className: "debug-target-list js-debug-target-list" +
                    (isCollapsed ? " debug-target-list--collapsed" : ""),
         ref: this.listRef,
       },

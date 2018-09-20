@@ -596,6 +596,16 @@ CompartmentOriginInfo::IsSameOrigin(nsIPrincipal* aOther) const
     return mOrigin->FastEquals(aOther);
 }
 
+/* static */ bool
+CompartmentOriginInfo::Subsumes(JS::Compartment* aCompA, JS::Compartment* aCompB)
+{
+    CompartmentPrivate* apriv = CompartmentPrivate::Get(aCompA);
+    CompartmentPrivate* bpriv = CompartmentPrivate::Get(aCompB);
+    MOZ_ASSERT(apriv);
+    MOZ_ASSERT(bpriv);
+    return apriv->originInfo.mOrigin->FastSubsumes(bpriv->originInfo.mOrigin);
+}
+
 void
 SetCompartmentChangedDocumentDomain(JS::Compartment* compartment)
 {
