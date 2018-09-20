@@ -30,7 +30,7 @@ async function ifTestingSupported() {
   is(CallsListView.visibleItems.length, 1,
     "Only one item should now be visible in the calls list.");
 
-  is(CallsListView.visibleItems[0].attachment.actor.type, CallWatcherFront.METHOD_FUNCTION,
+  is(CallsListView.visibleItems[0].attachment.actor.type, METHOD_FUNCTION,
     "The visible item's type has the expected value.");
   is(CallsListView.visibleItems[0].attachment.actor.name, "clearRect",
     "The visible item's name has the expected value.");
