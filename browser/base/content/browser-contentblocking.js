@@ -180,6 +180,7 @@ var ContentBlocking = {
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
   PREF_INTRO_COUNT_TP: "privacy.trackingprotection.introCount",
+  PREF_GLOBAL_TOGGLE: "browser.contentblocking.global-toggle.enabled",
   content: null,
   icon: null,
   activeTooltipText: null,
@@ -197,6 +198,11 @@ var ContentBlocking = {
   get appMenuButton() {
     delete this.appMenuButton;
     return this.appMenuButton = document.getElementById("appMenu-tp-toggle");
+  },
+
+  get appMenuVerticalSeparator() {
+    delete this.appMenuVerticalSeparator;
+    return this.appMenuVerticalSeparator = document.getElementById("appMenu-tp-vertical-separator");
   },
 
   strings: {
@@ -264,6 +270,20 @@ var ContentBlocking = {
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     this.reportBreakageLearnMore.href = baseURL + "blocking-breakage";
 
+    this.updateGlobalToggleVisibility = () => {
+      if (Services.prefs.getBoolPref(this.PREF_GLOBAL_TOGGLE, true)) {
+        this.appMenuButton.removeAttribute("hidden");
+        this.appMenuVerticalSeparator.removeAttribute("hidden");
+      } else {
+        this.appMenuButton.setAttribute("hidden", "true");
+        this.appMenuVerticalSeparator.setAttribute("hidden", "true");
+      }
+    };
+
+    this.updateGlobalToggleVisibility();
+
+    Services.prefs.addObserver(this.PREF_GLOBAL_TOGGLE, this.updateGlobalToggleVisibility);
+
     this.updateReportBreakageUI = () => {
       this.reportBreakageButton.hidden = !Services.prefs.getBoolPref(this.PREF_REPORT_BREAKAGE_ENABLED);
     };
@@ -310,6 +330,7 @@ var ContentBlocking = {
 
     Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
     Services.prefs.removeObserver(this.PREF_REPORT_BREAKAGE_ENABLED, this.updateReportBreakageUI);
+    Services.prefs.removeObserver(this.PREF_GLOBAL_TOGGLE, this.updateGlobalToggleVisibility);
   },
 
   get enabled() {
