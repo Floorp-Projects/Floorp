@@ -459,20 +459,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType, nsIFrame* aF
         aWidgetType == StyleAppearance::MozWindowButtonRestore) {
       aState->backdrop = !nsWindow::GetTopLevelWindowActiveState(aFrame);
     }
-
-    if (aWidgetType ==  StyleAppearance::ScrollbarbuttonUp ||
-        aWidgetType ==  StyleAppearance::ScrollbarbuttonDown ||
-        aWidgetType ==  StyleAppearance::ScrollbarbuttonLeft ||
-        aWidgetType ==  StyleAppearance::ScrollbarbuttonRight ||
-        aWidgetType == StyleAppearance::ScrollbarVertical ||
-        aWidgetType == StyleAppearance::ScrollbarHorizontal ||
-        aWidgetType == StyleAppearance::ScrollbartrackHorizontal ||
-        aWidgetType == StyleAppearance::ScrollbartrackVertical ||
-        aWidgetType == StyleAppearance::ScrollbarthumbVertical||
-        aWidgetType == StyleAppearance::ScrollbarthumbHorizontal) {
-      EventStates docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
-      aState->backdrop = docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
-    }
   }
 
   switch (aWidgetType) {
@@ -2133,16 +2119,6 @@ nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetTy
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
     case StyleAppearance::MozWindowButtonRestore:
-    case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-    case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::ScrollbartrackHorizontal:
-    case StyleAppearance::ScrollbartrackVertical:
-    case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal:
       return true;
     default:
       return false;
