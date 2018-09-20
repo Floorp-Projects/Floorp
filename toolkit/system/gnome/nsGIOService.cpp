@@ -282,7 +282,8 @@ public:
   uint32_t            mIndex;
 };
 
-NS_IMPL_ISUPPORTS(GIOUTF8StringEnumerator, nsIUTF8StringEnumerator)
+NS_IMPL_ISUPPORTS(GIOUTF8StringEnumerator, nsIUTF8StringEnumerator,
+                  nsIStringEnumerator)
 
 NS_IMETHODIMP
 GIOUTF8StringEnumerator::HasMore(bool* aResult)

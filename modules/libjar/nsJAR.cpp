@@ -392,7 +392,8 @@ nsJAR::ReadLine(const char** src)
   return length;
 }
 
-NS_IMPL_ISUPPORTS(nsJAREnumerator, nsIUTF8StringEnumerator)
+NS_IMPL_ISUPPORTS(nsJAREnumerator, nsIUTF8StringEnumerator,
+                  nsIStringEnumerator)
 
 //----------------------------------------------
 // nsJAREnumerator::HasMore
