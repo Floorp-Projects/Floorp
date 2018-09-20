@@ -36,9 +36,9 @@ public class SessionDurationMeasurement extends TelemetryMeasurement {
         timeAtSessionStartNano = getSystemTimeNano();
     }
 
-    public synchronized void recordSessionEnd() {
+    public synchronized boolean recordSessionEnd() {
         if (!sessionStarted) {
-            throw new IllegalStateException("Expected session to be started before session end is called");
+            return false;
         }
 
         sessionStarted = false;
@@ -52,6 +52,7 @@ public class SessionDurationMeasurement extends TelemetryMeasurement {
         preferences.edit()
                 .putLong(PREFERENCE_DURATION, totalElapsedSeconds + sessionElapsedSeconds)
                 .apply();
+        return true;
     }
 
     @Override

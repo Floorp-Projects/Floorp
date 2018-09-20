@@ -11,6 +11,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
@@ -91,22 +92,22 @@ public class SessionDurationMeasurementTest {
         measurement.recordSessionStart();
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testStoppingAlreadyStoppedSessionThrowsException() {
+    @Test
+    public void testStoppingAlreadyStoppedSessionReturnsFalse() {
         final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
         final SessionDurationMeasurement measurement = new SessionDurationMeasurement(configuration);
 
         measurement.recordSessionStart();
 
-        measurement.recordSessionEnd();
-        measurement.recordSessionEnd();
+        assertTrue(measurement.recordSessionEnd());
+        assertFalse(measurement.recordSessionEnd());
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testStoppingNeverStartedSessionThrowsException() {
+    @Test
+    public void testStoppingNeverStartedSessionReturnsFalse() {
         final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
         final SessionDurationMeasurement measurement = new SessionDurationMeasurement(configuration);
 
-        measurement.recordSessionEnd();
+        assertFalse(measurement.recordSessionEnd());
     }
 }
