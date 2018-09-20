@@ -195,6 +195,18 @@ tasks:
           path: /build/android-components/components/ui/icons/build/target.maven.zip
           expires: "{{ '1 year' | $fromNow }}"
           type: file
+        public/build/ui.fonts.maven.zip:
+          path: /build/android-components/components/ui/fonts/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/ui.progress.maven.zip:
+          path: /build/android-components/components/ui/progress/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
+        public/build/ui.tabcounter.maven.zip:
+          path: /build/android-components/components/ui/tabcounter/build/target.maven.zip
+          expires: "{{ '1 year' | $fromNow }}"
+          type: file
 
     metadata:
       name: Android Components - Release ({{ event.version }})
