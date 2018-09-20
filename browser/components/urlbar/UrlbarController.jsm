@@ -10,29 +10,14 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // XXX This is a fake manager to provide a basic integration test whilst we
 // are still constructing the manager.
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
 const ProvidersManager = {
   queryStart(queryContext, controller) {
-    queryContext.results = [];
-    for (let i = 0; i < 12; i++) {
-      const SWITCH_TO_TAB = Math.random() < .3;
-      let url = "http://www." + queryContext.searchString;
-      while (Math.random() < .9) {
-        url += queryContext.searchString;
-      }
-      let title = queryContext.searchString;
-      while (Math.random() < .5) {
-        title += queryContext.isPrivate ? " private" : " foo bar";
-      }
-      queryContext.results.push({
-        title,
-        type: SWITCH_TO_TAB ? "switchtotab" : "normal",
-        url,
-      });
-    }
+    queryContext.results = [{url: queryContext.searchString}];
     controller.receiveResults(queryContext);
   },
 };
+/* eslint-enable require-jsdoc */
 
 /**
  * QueryContext defines a user's autocomplete input from within the Address Bar.
@@ -105,9 +90,9 @@ class UrlbarController {
    *
    * @param {object} [options]
    *   The initial options for UrlbarController.
-   * @param {object} [options.manager]
-   *   Optional fake providers manager to override the built-in providers manager.
-   *   Intended for use in unit tests only.
+   * @param {string} [options.manager]
+   *   The string the user entered in autocomplete. Could be the empty string
+   *   in the case of the user opening the popup via the mouse.
    */
   constructor(options = {}) {
     this.manager = options.manager || ProvidersManager;
@@ -123,9 +108,9 @@ class UrlbarController {
   handleQuery(queryContext) {
     queryContext.autoFill = Services.prefs.getBoolPref("browser.urlbar.autoFill", true);
 
-    this._notify("onQueryStarted", queryContext);
-
     this.manager.queryStart(queryContext, this);
+
+    this._notify("onQueryStarted", queryContext);
   }
 
   /**

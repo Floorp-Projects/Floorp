@@ -17,7 +17,6 @@ class UrlbarView {
   constructor(urlbar) {
     this.urlbar = urlbar;
     this.panel = urlbar.panel;
-    this.controller = urlbar.controller;
     this.document = urlbar.panel.ownerDocument;
     this.window = this.document.defaultView;
 
@@ -36,8 +35,6 @@ class UrlbarView {
         event.target.toggleAttribute("overflow", false);
       }
     });
-
-    this.controller.addQueryListener(this);
   }
 
   /**
@@ -63,6 +60,10 @@ class UrlbarView {
 
     this.panel.openPopup(this.urlbar.textbox.closest("toolbar"), "after_end", 0, -1);
 
+    this._rows.textContent = "";
+    for (let i = 0; i < 12; i++) {
+      this._addRow();
+    }
     this._rows.firstElementChild.toggleAttribute("selected", true);
   }
 
@@ -72,19 +73,8 @@ class UrlbarView {
   close() {
   }
 
-  // UrlbarController listener methods.
-  onQueryStarted(queryContext) {
-    this._rows.textContent = "";
-  }
-
-  onQueryResults(queryContext) {
-    for (let result of queryContext.results) {
-      this._addRow(result);
-    }
-    this.open();
-  }
-
   // Private methods below.
+  /* eslint-disable require-jsdoc */
 
   _getBoundsWithoutFlushing(element) {
     return this.window.windowUtils.getBoundsWithoutFlushing(element);
@@ -94,10 +84,12 @@ class UrlbarView {
     return this.document.createElementNS("http://www.w3.org/1999/xhtml", name);
   }
 
-  _addRow(result) {
+  _addRow() {
+    const SWITCH_TO_TAB = Math.random() < .3;
+
     let item = this._createElement("div");
     item.className = "urlbarView-row";
-    if (result.type == "switchtotab") {
+    if (SWITCH_TO_TAB) {
       item.setAttribute("action", "switch-to-tab");
     }
 
@@ -115,17 +107,22 @@ class UrlbarView {
 
     let title = this._createElement("span");
     title.className = "urlbarView-title";
-    title.textContent = result.title;
+    do {
+      title.textContent += "foo bar ";
+    } while (Math.random() < .5);
     content.appendChild(title);
 
     let secondary = this._createElement("span");
     secondary.className = "urlbarView-secondary";
-    if (result.type == "switchtotab") {
+    if (SWITCH_TO_TAB) {
       secondary.classList.add("urlbarView-action");
       secondary.textContent = "Switch to Tab";
     } else {
       secondary.classList.add("urlbarView-url");
-      secondary.textContent = result.url;
+      secondary.textContent = "http://www";
+      while (Math.random() < .95) {
+        secondary.textContent += ".xyz";
+      }
     }
     content.appendChild(secondary);
 

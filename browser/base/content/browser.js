@@ -278,10 +278,7 @@ Object.defineProperty(this, "gURLBar", {
     }
 
     return this.gURLBar =
-      new UrlbarInput({
-        textbox: element,
-        panel: document.getElementById("urlbar-results"),
-      });
+      new UrlbarInput(element, document.getElementById("urlbar-results"));
   },
 });
 
