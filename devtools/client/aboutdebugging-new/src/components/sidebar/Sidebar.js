@@ -18,6 +18,7 @@ const SidebarItem = createFactory(require("./SidebarItem"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
+const USB_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 
 class Sidebar extends PureComponent {
   static get propTypes() {
@@ -65,7 +66,15 @@ class Sidebar extends PureComponent {
           selectable: runtimeHasClient,
         });
       }),
-      ...runtimes.usbRuntimes.map(runtime => dom.li({}, runtime.name)),
+      ...runtimes.usbRuntimes.map(runtime =>
+        SidebarItem({
+          id: `usb-${ runtime.id }`,
+          dispatch,
+          icon: USB_ICON,
+          isSelected: false,
+          name: runtime.name,
+          selectable: false,
+        })),
     ];
   }
 
