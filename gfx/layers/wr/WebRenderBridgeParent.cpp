@@ -1541,6 +1541,9 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 void
 WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame)
 {
+  // This function should only get called in the root WRBP
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
+
   TimeStamp start = TimeStamp::Now();
   mAsyncImageManager->SetCompositionTime(start);
 
@@ -1552,7 +1555,6 @@ WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame)
 
   // Handle transaction that is related to DisplayList.
   wr::TransactionBuilder sceneBuilderTxn;
-  sceneBuilderTxn.SetLowPriority(!IsRootWebRenderBridgeParent());
   wr::AutoTransactionSender sender(mApi, &sceneBuilderTxn);
 
   // Adding and updating wr::ImageKeys of ImageHosts that uses ImageBridge are
