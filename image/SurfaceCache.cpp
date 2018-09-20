@@ -1630,5 +1630,30 @@ SurfaceCache::MaximumCapacity()
   return sInstance->MaximumCapacity();
 }
 
+/* static */ bool
+SurfaceCache::IsLegalSize(const IntSize& aSize)
+{
+  // reject over-wide or over-tall images
+  const int32_t k64KLimit = 0x0000FFFF;
+  if (MOZ_UNLIKELY(aSize.width > k64KLimit || aSize.height > k64KLimit )) {
+    NS_WARNING("image too big");
+    return false;
+  }
+
+  // protect against invalid sizes
+  if (MOZ_UNLIKELY(aSize.height <= 0 || aSize.width <= 0)) {
+    return false;
+  }
+
+  // check to make sure we don't overflow a 32-bit
+  CheckedInt32 requiredBytes = CheckedInt32(aSize.width) *
+                               CheckedInt32(aSize.height) * 4;
+  if (MOZ_UNLIKELY(!requiredBytes.isValid())) {
+    NS_WARNING("width or height too large");
+    return false;
+  }
+  return true;
+}
+
 } // namespace image
 } // namespace mozilla
