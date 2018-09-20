@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="utf-8">
+<title>Bug 1490518</title>
+</head>
+<body>
+<div style="position: absolute; top: 0px; left: 0px; transform: scale(2.0);">
+    <div style="position: absolute; top: 0px; left: 0px; width: 200px; background: green; height: 50px; will-change: opacity"></div>
+    <svg width="200" height="200" style="position: absolute; top: 50px; left: 0px;">
+        <rect x="0" y="0" width="200" height="200" fill="transparent"/>
+    	<rect x="0" y="0" width="200" height="200" fill="blue" id="rect"/>
+    </svg>
+</div>
+
+<script>
+function doTest() {
+  document.getElementById("rect").style.visibility = "hidden";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>
