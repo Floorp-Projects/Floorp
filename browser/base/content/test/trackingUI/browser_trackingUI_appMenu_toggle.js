@@ -5,13 +5,17 @@
 
 const CB_PREF = "browser.contentblocking.enabled";
 const CB_UI_PREF = "browser.contentblocking.ui.enabled";
+const TOGGLE_PREF = "browser.contentblocking.global-toggle.enabled";
 
 ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
 
 // Test that the app menu toggle correctly flips the TP pref in
 // normal windows and private windows.
 add_task(async function testGlobalToggle() {
-  await SpecialPowers.pushPrefEnv({set: [[CB_UI_PREF, true]]});
+  await SpecialPowers.pushPrefEnv({set: [
+    [CB_UI_PREF, true],
+    [TOGGLE_PREF, true],
+  ]});
 
   let panelUIButton = await TestUtils.waitForCondition(() => document.getElementById("PanelUI-menu-button"));
 
@@ -43,7 +47,10 @@ add_task(async function testGlobalToggle() {
 // Test that the app menu toggle correctly flips the TP pref in
 // normal windows and private windows.
 add_task(async function testGlobalToggleTP() {
-  await SpecialPowers.pushPrefEnv({set: [[CB_UI_PREF, false]]});
+  await SpecialPowers.pushPrefEnv({set: [
+    [CB_UI_PREF, false],
+    [TOGGLE_PREF, true],
+  ]});
 
   async function runTest(privateWindow) {
     let win = await BrowserTestUtils.openNewBrowserWindow({private: privateWindow});
