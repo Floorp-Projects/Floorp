@@ -83,6 +83,7 @@ mod gpu_glyph_renderer;
 mod gpu_types;
 mod hit_test;
 mod image;
+mod intern;
 mod internal_types;
 mod picture;
 mod prim_store;
