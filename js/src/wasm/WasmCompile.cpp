@@ -587,15 +587,15 @@ wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode, const Module&
 class StreamingDecoder
 {
     Decoder d_;
-    const ExclusiveStreamEnd& streamEnd_;
+    const ExclusiveBytesPtr& codeBytesEnd_;
     const Atomic<bool>& cancelled_;
 
   public:
     StreamingDecoder(const ModuleEnvironment& env, const Bytes& begin,
-                     const ExclusiveStreamEnd& streamEnd, const Atomic<bool>& cancelled,
+                     const ExclusiveBytesPtr& codeBytesEnd, const Atomic<bool>& cancelled,
                      UniqueChars* error, UniqueCharsVector* warnings)
       : d_(begin, env.codeSection->start, error, warnings),
-        streamEnd_(streamEnd),
+        codeBytesEnd_(codeBytesEnd),
         cancelled_(cancelled)
     {}
 
@@ -614,12 +614,12 @@ class StreamingDecoder
     bool waitForBytes(size_t numBytes) {
         numBytes = Min(numBytes, d_.bytesRemain());
         const uint8_t* requiredEnd = d_.currentPosition() + numBytes;
-        auto streamEnd = streamEnd_.lock();
-        while (streamEnd < requiredEnd) {
+        auto codeBytesEnd = codeBytesEnd_.lock();
+        while (codeBytesEnd < requiredEnd) {
             if (cancelled_) {
                 return false;
             }
-            streamEnd.wait();
+            codeBytesEnd.wait();
         }
         return true;
     }
@@ -673,8 +673,8 @@ SharedModule
 wasm::CompileStreaming(const CompileArgs& args,
                        const Bytes& envBytes,
                        const Bytes& codeBytes,
-                       const ExclusiveStreamEnd& codeStreamEnd,
-                       const ExclusiveTailBytesPtr& tailBytesPtr,
+                       const ExclusiveBytesPtr& codeBytesEnd,
+                       const ExclusiveStreamEndData& exclusiveStreamEnd,
                        const Atomic<bool>& cancelled,
                        UniqueChars* error,
                        UniqueCharsVector* warnings)
@@ -704,7 +704,7 @@ wasm::CompileStreaming(const CompileArgs& args,
 
     {
         MOZ_ASSERT(env->codeSection->size == codeBytes.length());
-        StreamingDecoder d(*env, codeBytes, codeStreamEnd, cancelled, error, warnings);
+        StreamingDecoder d(*env, codeBytes, codeBytesEnd, cancelled, error, warnings);
 
         if (!DecodeCodeSection(*env, d, mg)) {
             return nullptr;
@@ -714,16 +714,17 @@ wasm::CompileStreaming(const CompileArgs& args,
     }
 
     {
-        auto tailBytesPtrGuard = tailBytesPtr.lock();
-        while (!tailBytesPtrGuard) {
+        auto streamEnd = exclusiveStreamEnd.lock();
+        while (!streamEnd->reached) {
             if (cancelled) {
                 return nullptr;
             }
-            tailBytesPtrGuard.wait();
+            streamEnd.wait();
         }
     }
 
-    const Bytes& tailBytes = *tailBytesPtr.lock();
+    const StreamEndData& streamEnd = exclusiveStreamEnd.lock();
+    const Bytes& tailBytes = *streamEnd.tailBytes;
 
     {
         Decoder d(tailBytes, env->codeSection->end(), error, warnings);
@@ -740,5 +741,5 @@ wasm::CompileStreaming(const CompileArgs& args,
         return nullptr;
     }
 
-    return mg.finishModule(*bytecode);
+    return mg.finishModule(*bytecode, streamEnd.tier2Listener);
 }
