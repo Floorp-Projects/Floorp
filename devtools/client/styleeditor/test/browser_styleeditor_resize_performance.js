@@ -12,7 +12,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "many-media-rules-sourcemaps/index.html";
 
-// Maximum delay expected between two media-list-changed events.
+// Maximum delay allowed between two media-list-changed events.
 const EVENTS_DELAY = 2000;
 
 // The window resize will still trigger several resize events which will lead to several
@@ -30,14 +30,14 @@ add_task(async function() {
   // Ensure the window is above 500px wide for @media (min-width: 500px)
   if (originalWidth < 500) {
     info("Window is too small for the test, resize it to > 800px width");
-    const onMediaListChanged = waitForManyEvents(ui, win);
+    const onMediaListChanged = waitForManyEvents(ui, EVENTS_DELAY);
     await resizeWindow(800, ui, win);
     info("Wait for media-list-changed events to settle");
     await onMediaListChanged;
   }
 
   info("Resize the window to stop matching media queries, and trigger the UI updates");
-  const onMediaListChanged = waitForManyEvents(ui, win);
+  const onMediaListChanged = waitForManyEvents(ui, win, EVENTS_DELAY);
   await resizeWindow(400, ui, win);
   const eventsCount = await onMediaListChanged;
 
@@ -48,35 +48,11 @@ add_task(async function() {
 });
 
 /**
- * Resize the window to the provided width and wait for media-list-changed events to
- * settle.
+ * Resize the window to the provided width.
  */
 async function resizeWindow(width, ui, win) {
   const onResize = once(win, "resize");
   win.resizeTo(width, win.outerHeight);
   info("Wait for window resize event");
   await onResize;
-}
-
-/**
- * Wait for "media-list-changed" events to settle on StyleEditorUI.
- * Returns a promise that resolves the number of events caught while waiting.
- */
-function waitForManyEvents(ui, win) {
-  return new Promise(resolve => {
-    let timer;
-    let count = 0;
-    const onEvent = () => {
-      count++;
-      win.clearTimeout(timer);
-
-      // Wait for some time to catch subsequent events.
-      timer = win.setTimeout(() => {
-        // Remove the listener and resolve.
-        ui.off("media-list-changed", onEvent);
-        resolve(count);
-      }, EVENTS_DELAY);
-    };
-    ui.on("media-list-changed", onEvent);
-  });
 }

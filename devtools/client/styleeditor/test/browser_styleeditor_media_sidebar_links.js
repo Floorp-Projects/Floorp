@@ -81,8 +81,10 @@ async function testMediaLink(editor, tab, ui, itemIndex, type, value) {
 async function closeRDM(tab, ui) {
   info("Closing responsive mode");
   ResponsiveUIManager.toggle(window, tab);
-  const onMediaChange = once(ui, "media-list-changed");
+  const onMediaChange = waitForManyEvents(ui, 1000);
   await once(ResponsiveUIManager, "off");
+
+  info("Wait for media-list-changed events to settle on StyleEditorUI");
   await onMediaChange;
   ok(!ResponsiveUIManager.isActiveForTab(tab),
      "Responsive mode should no longer be active.");
