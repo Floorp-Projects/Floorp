@@ -258,9 +258,18 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
 /* static */ bool
 AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()
 {
-  return StaticPrefs::browser_contentblocking_enabled() &&
-         StaticPrefs::browser_contentblocking_ui_enabled() &&
-         StaticPrefs::browser_contentblocking_rejecttrackers_ui_enabled();
+#include "mozilla/ContentBlockingDefaultPrefValues.h"
+
+  return StaticPrefs::browser_contentblocking_enabled() ==
+           CONTENTBLOCKING_ENABLED &&
+         StaticPrefs::browser_contentblocking_ui_enabled() ==
+           CONTENTBLOCKING_UI_ENABLED &&
+         StaticPrefs::browser_contentblocking_rejecttrackers_ui_enabled() ==
+           CONTENTBLOCKING_REJECTTRACKERS_UI_ENABLED;
+
+#undef CONTENTBLOCKING_ENABLED
+#undef CONTENTBLOCKING_UI_ENABLED
+#undef CONTENTBLOCKING_REJECTTRACKERS_UI_ENABLED
 }
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
