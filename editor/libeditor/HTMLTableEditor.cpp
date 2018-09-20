@@ -167,8 +167,22 @@ HTMLEditor::SetRowSpan(Element* aCell,
 }
 
 NS_IMETHODIMP
-HTMLEditor::InsertTableCell(int32_t aNumber,
-                            bool aAfter)
+HTMLEditor::InsertTableCell(int32_t aNumberOfCellsToInsert,
+                            bool aInsertAfterSelectedCell)
+{
+  nsresult rv =
+    InsertTableCellsWithTransaction(aNumberOfCellsToInsert,
+      aInsertAfterSelectedCell ? InsertPosition::eAfterSelectedCell :
+                                 InsertPosition::eBeforeSelectedCell);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
+                                            InsertPosition aInsertPosition)
 {
   RefPtr<Element> table;
   RefPtr<Element> curCell;
@@ -179,45 +193,71 @@ HTMLEditor::InsertTableCell(int32_t aNumber,
                                getter_AddRefs(curCell),
                                getter_AddRefs(cellParent), &cellOffset,
                                &startRowIndex, &startColIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Don't fail if no cell found
-  NS_ENSURE_TRUE(curCell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!curCell)) {
+    // Don't fail if no cell found.
+    return NS_OK;
+  }
 
-  // Get more data for current cell in row we are inserting at (we need COLSPAN)
-  int32_t curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
-  bool    isSelected;
+  // Get more data for current cell in row we are inserting at since we need
+  // colspan value.
+  int32_t curStartRowIndex = 0, curStartColIndex = 0;
+  int32_t rowSpan = 0, colSpan = 0;
+  int32_t actualRowSpan = 0, actualColSpan = 0;
+  bool isSelected = false;
   rv = GetCellDataAt(table, startRowIndex, startColIndex,
                      getter_AddRefs(curCell),
                      &curStartRowIndex, &curStartColIndex, &rowSpan, &colSpan,
                      &actualRowSpan, &actualColSpan, &isSelected);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(curCell, NS_ERROR_FAILURE);
-  int32_t newCellIndex = aAfter ? (startColIndex+colSpan) : startColIndex;
-  //We control selection resetting after the insert...
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!curCell)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int32_t newCellIndex;
+  switch (aInsertPosition) {
+    case InsertPosition::eBeforeSelectedCell:
+      newCellIndex = startColIndex;
+      break;
+    case InsertPosition::eAfterSelectedCell:
+      newCellIndex = startColIndex + colSpan;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid InsertPosition");
+  }
+
+  // We control selection resetting after the insert.
   AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              newCellIndex, ePreviousColumn,
                                              false);
-  //...so suppress Rules System selection munging
+  // So, suppress Rules System selection munging.
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
-  for (int32_t i = 0; i < aNumber; i++) {
+  EditorDOMPoint pointToInsert(cellParent, cellOffset);
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  if (aInsertPosition == InsertPosition::eAfterSelectedCell) {
+    DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+                         "Faild to move insertion point after the cell");
+  }
+  for (int32_t i = 0; i < aNumberOfCellsToInsert; i++) {
     RefPtr<Element> newCell = CreateElementWithDefaults(*nsGkAtoms::td);
-    if (newCell) {
-      if (aAfter) {
-        cellOffset++;
-      }
-      rv = InsertNodeWithTransaction(*newCell,
-                                     EditorRawDOMPoint(cellParent, cellOffset));
-      if (NS_FAILED(rv)) {
-        break;
-      }
-    } else {
-      rv = NS_ERROR_FAILURE;
+    if (NS_WARN_IF(!newCell)) {
+      return NS_ERROR_FAILURE;
+    }
+    AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
+    rv = InsertNodeWithTransaction(*newCell, pointToInsert);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
-  // XXX This is perhaps the result of the last call of
-  //     InsertNodeWithTransaction() or CreateElementWithDefaults().
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -503,12 +543,14 @@ HTMLEditor::InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
       }
 
       // Simply set selection to the current cell. So, we can let
-      // InsertTableCell() do the work.  Insert a new cell before current one.
+      // InsertTableCellsWithTransaction() do the work.  Insert a new cell
+      // before current one.
       IgnoredErrorResult ignoredError;
       selection->Collapse(RawRangeBoundary(curCell, 0), ignoredError);
       NS_WARNING_ASSERTION(!ignoredError.Failed(),
         "Failed to collapse Selection into the cell");
-      rv = InsertTableCell(aNumberOfColumnsToInsert, false);
+      rv = InsertTableCellsWithTransaction(aNumberOfColumnsToInsert,
+                                           InsertPosition::eBeforeSelectedCell);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert a cell element");
       continue;
     }
@@ -555,10 +597,12 @@ HTMLEditor::InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
     selection->Collapse(RawRangeBoundary(curCell, 0), ignoredError);
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
       "Failed to collapse Selection into the cell");
-    rv = InsertTableCell(aNumberOfColumnsToInsert, true);
+    rv = InsertTableCellsWithTransaction(aNumberOfColumnsToInsert,
+                                         InsertPosition::eAfterSelectedCell);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert a cell element");
   }
-  // XXX This is perhaps the result of the last call of InsertTableCell().
+  // XXX This is perhaps the result of the last call of
+  //     InsertTableCellsWithTransaction().
   return rv;
 }
 
