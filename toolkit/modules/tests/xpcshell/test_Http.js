@@ -18,7 +18,7 @@ const kPostPath = "/post";
 const kPostUrl = kBaseUrl + kPostPath;
 const kPostDataSent = [["foo", "bar"], ["complex", "!*()@"]];
 const kPostDataReceived = "foo=bar&complex=%21%2A%28%29%40";
-const kPostMimeTypeReceived = "application/x-www-form-urlencoded; charset=utf-8";
+const kPostMimeTypeReceived = "application/x-www-form-urlencoded;charset=UTF-8";
 
 const kJsonPostPath = "/json_post";
 const kJsonPostUrl = kBaseUrl + kJsonPostPath;
@@ -232,6 +232,9 @@ add_test(function test_OverrideMimeType() {
 });
 
 function run_test() {
+  const PREF = "dom.xhr.standard_content_type_normalization";
+  Services.prefs.setBoolPref(PREF, true);
+
   // Set up a mock HTTP server to serve a success page.
   server = new HttpServer();
   server.registerPathHandler(kSuccessPath, successResult);
@@ -251,6 +254,7 @@ function run_test() {
 
   // Teardown.
   registerCleanupFunction(function() {
+    Services.prefs.clearUserPref(PREF);
     server.stop(function() { });
   });
 }

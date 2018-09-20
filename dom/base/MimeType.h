@@ -48,6 +48,10 @@ public:
   void GetFullType(nsTSubstring<char_type>& aStr) const;
 
   // @param aName - the name of the parameter
+  // @return true if the parameter name is found, false otherwise.
+  bool HasParameter(const nsTSubstring<char_type>& aName) const;
+
+  // @param aName - the name of the parameter
   // @param aOutput - will hold the value of the parameter (quoted if necessary)
   // @param aAppend - if true, the method will append to the string;
   //                  otherwise the string is truncated before appending.
@@ -55,6 +59,11 @@ public:
   bool GetParameterValue(const nsTSubstring<char_type>& aName,
                          nsTSubstring<char_type>& aOutput,
                          bool aAppend = false) const;
+
+  // @param aName - the name of the parameter
+  // @param aValue - the value of the parameter
+  void SetParameterValue(const nsTSubstring<char_type>& aName,
+                         const nsTSubstring<char_type>& aValue);
 };
 
 using MimeType = TMimeType<char16_t>;
