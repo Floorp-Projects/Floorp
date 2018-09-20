@@ -1,9 +1,4 @@
 #!/bin/bash
-
-# cctools sometimes needs to be rebuilt when clang is modified.
-# Until bug 1471905 is addressed, increase the following number
-# when a forced rebuild of cctools is necessary: 1
-
 set -x -e -v
 
 # This script is for building cctools (Apple's binutils) for Mac OS X on

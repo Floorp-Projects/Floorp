@@ -10,7 +10,6 @@ import subprocess
 import platform
 import json
 import argparse
-import fnmatch
 import glob
 import errno
 import re
@@ -223,9 +222,6 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
         if is_windows():
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
             cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
-        else:
-            # libllvm as a shared library is not supported on Windows
-            cmake_args += ["-DLLVM_LINK_LLVM_DYLIB=ON"]
         if ranlib is not None:
             cmake_args += ["-DCMAKE_RANLIB=%s" % slashify_path(ranlib)]
         if libtool is not None:
@@ -370,17 +366,11 @@ def prune_final_dir_for_clang_tidy(final_dir):
 
     # Keep include/ intact.
 
-    # In lib/, only keep lib/clang/N.M.O/include and the LLVM shared library.
+    # In lib/, only keep lib/clang/N.M.O/include.
     re_ver_num = re.compile(r"^\d+\.\d+\.\d+$", re.I)
     for f in glob.glob("%s/lib/*" % final_dir):
-        name = os.path.basename(f)
-        if name == "clang":
-            continue
-        if is_darwin() and name == 'libLLVM.dylib':
-            continue
-        if is_linux() and fnmatch.fnmatch(name, 'libLLVM*.so'):
-            continue
-        delete(f)
+        if os.path.basename(f) != "clang":
+            delete(f)
     for f in glob.glob("%s/lib/clang/*" % final_dir):
         if re_ver_num.search(os.path.basename(f)) is None:
             delete(f)
@@ -610,11 +600,11 @@ if __name__ == "__main__":
         extra_asmflags = []
         extra_ldflags = []
     elif is_linux():
-        extra_cflags = []
-        extra_cxxflags = []
+        extra_cflags = ["-static-libgcc"]
+        extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
         extra_cflags2 = ["-fPIC"]
         # Silence clang's warnings about arguments not being used in compilation.
-        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments']
+        extra_cxxflags2 = ["-fPIC", '-Qunused-arguments', "-static-libstdc++"]
         extra_asmflags = []
         extra_ldflags = []
 

@@ -16,7 +16,6 @@
     "cxx": "/builds/worker/workspace/build/src/gcc/bin/g++",
     "as": "/builds/worker/workspace/build/src/gcc/bin/gcc",
     "patches": [
-      "static-llvm-symbolizer.patch",
       "find_symbolizer_linux.patch",
       "r322325.patch",
       "r322401.patch",
