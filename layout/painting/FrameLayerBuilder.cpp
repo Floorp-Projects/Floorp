@@ -2297,13 +2297,12 @@ InvalidatePreTransformRect(PaintedLayer* aLayer,
 
   nsRect rect = aClip.ApplyNonRoundedIntersection(aRect);
 
+  if (aTransform) {
+    rect = aTransform->TransformRect(rect, data->mAppUnitsPerDevPixel);
+  }
+
   nsIntRect pixelRect = rect.ScaleToOutsidePixels(
     data->mXScale, data->mYScale, data->mAppUnitsPerDevPixel);
-
-  if (aTransform) {
-    pixelRect =
-      aTransform->TransformRect(pixelRect, data->mAppUnitsPerDevPixel);
-  }
 
   InvalidatePostTransformRegion(aLayer, pixelRect, aTranslation);
 }
@@ -2369,18 +2368,21 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(
           t->GetUserData(&gPaintedDisplayItemLayerUserData));
       if (paintedData && data->mGeometry) {
         const int32_t appUnitsPerDevPixel = paintedData->mAppUnitsPerDevPixel;
-        nsRegion old = data->mGeometry->ComputeInvalidationRegion();
-        nsIntRegion rgn = old.ScaleToOutsidePixels(
-          paintedData->mXScale, paintedData->mYScale, appUnitsPerDevPixel);
+        nsRegion rgn = data->mGeometry->ComputeInvalidationRegion();
+        nsIntRegion pixelRgn = rgn.ToOutsidePixels(appUnitsPerDevPixel);
 
         if (data->mTransform) {
-          rgn = data->mTransform->TransformRegion(rgn, appUnitsPerDevPixel);
+          pixelRgn =
+            data->mTransform->TransformRegion(pixelRgn);
         }
 
-        rgn.MoveBy(-GetTranslationForPaintedLayer(t));
+        pixelRgn =
+          pixelRgn.ScaleRoundOut(paintedData->mXScale, paintedData->mYScale);
+
+        pixelRgn.MoveBy(-GetTranslationForPaintedLayer(t));
 
         paintedData->mRegionToInvalidate.Or(paintedData->mRegionToInvalidate,
-                                            rgn);
+                                            pixelRgn);
         paintedData->mRegionToInvalidate.SimplifyOutward(8);
       }
     }
@@ -4902,7 +4904,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         transformNode->TransformRect(itemContent, mAppUnitsPerDevPixel);
 
       itemDrawRect =
-        transformNode->TransformRect(itemDrawRect, mAppUnitsPerDevPixel);
+        transformNode->TransformRect(itemDrawRect);
     }
 
 #ifdef DEBUG
@@ -5411,9 +5413,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
         const Matrix4x4Flagged& matrix = transform->GetTransformForRendering();
 
-        Maybe<nsRect> clip;
+        Maybe<gfx::IntRect> clip;
         if (itemClip.HasClip()) {
-          clip.emplace(itemClip.NonRoundedIntersection());
+          const nsRect nonRoundedClip = itemClip.NonRoundedIntersection();
+          clip.emplace(nonRoundedClip.ToNearestPixels(mAppUnitsPerDevPixel));
         }
 
         transformNode = new TransformClipNode(transformNode, matrix, clip);
@@ -5615,13 +5618,13 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
       combined.And(combined, clipRegion);
     }
 
-    invalidPixels = combined.ScaleToOutsidePixels(
-      layerData->mXScale, layerData->mYScale, appUnitsPerDevPixel);
+    invalidPixels = combined.ToOutsidePixels(appUnitsPerDevPixel);
 
     if (aData->mTransform) {
-      invalidPixels =
-        aData->mTransform->TransformRegion(invalidPixels, appUnitsPerDevPixel);
+      invalidPixels = aData->mTransform->TransformRegion(invalidPixels);
     }
+
+    invalidPixels.ScaleRoundOut(layerData->mXScale, layerData->mYScale);
 
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -5811,15 +5814,15 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
                       layer);
       }
 #endif
+
+      if (data && data->mTransform) {
+        invalid = data->mTransform->TransformRegion(invalid);
+      }
+
       invalid.ScaleRoundOut(paintedData->mXScale, paintedData->mYScale);
 
       if (hasClip) {
         invalid.And(invalid, intClip);
-      }
-
-      if (data && data->mTransform) {
-        invalid = data->mTransform->TransformRegion(
-          invalid, paintedData->mAppUnitsPerDevPixel);
       }
 
       InvalidatePostTransformRegion(
