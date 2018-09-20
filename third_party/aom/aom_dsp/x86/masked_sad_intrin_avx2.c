@@ -9,7 +9,6 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include <stdio.h>
 #include <tmmintrin.h>
 
 #include "config/aom_config.h"

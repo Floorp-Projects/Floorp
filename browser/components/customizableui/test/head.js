@@ -444,12 +444,12 @@ function promisePopupEvent(aPopup, aEventSuffix) {
 // This is a simpler version of the context menu check that
 // exists in contextmenu_common.js.
 function checkContextMenu(aContextMenu, aExpectedEntries, aWindow = window) {
-  let childNodes = [...aContextMenu.childNodes];
+  let children = [...aContextMenu.children];
   // Ignore hidden nodes:
-  childNodes = childNodes.filter((n) => !n.hidden);
+  children = children.filter((n) => !n.hidden);
 
-  for (let i = 0; i < childNodes.length; i++) {
-    let menuitem = childNodes[i];
+  for (let i = 0; i < children.length; i++) {
+    let menuitem = children[i];
     try {
       if (aExpectedEntries[i][0] == "---") {
         is(menuitem.localName, "menuseparator", "menuseparator expected");

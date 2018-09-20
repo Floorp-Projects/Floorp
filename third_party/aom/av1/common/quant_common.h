@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_QUANT_COMMON_H_
-#define AV1_COMMON_QUANT_COMMON_H_
+#ifndef AOM_AV1_COMMON_QUANT_COMMON_H_
+#define AOM_AV1_COMMON_QUANT_COMMON_H_
 
 #include "aom/aom_codec.h"
 #include "av1/common/seg_common.h"
@@ -60,4 +60,4 @@ const qm_val_t *av1_qmatrix(struct AV1Common *cm, int qindex, int comp,
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_QUANT_COMMON_H_
+#endif  // AOM_AV1_COMMON_QUANT_COMMON_H_

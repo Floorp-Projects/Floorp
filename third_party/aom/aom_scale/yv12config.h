@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_SCALE_YV12CONFIG_H_
-#define AOM_SCALE_YV12CONFIG_H_
+#ifndef AOM_AOM_SCALE_YV12CONFIG_H_
+#define AOM_AOM_SCALE_YV12CONFIG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +28,11 @@ extern "C" {
 // TODO(jingning): Use unified inter predictor for encoder and
 // decoder during the development process. Revisit the frame border
 // to improve the decoder performance.
+#if CONFIG_REDUCED_ENCODER_BORDER
+#define AOM_BORDER_IN_PIXELS 160
+#else
 #define AOM_BORDER_IN_PIXELS 288
+#endif  // CONFIG_REDUCED_ENCODER_BORDER
 
 typedef struct yv12_buffer_config {
   union {
@@ -136,4 +140,4 @@ int aom_free_frame_buffer(YV12_BUFFER_CONFIG *ybf);
 }
 #endif
 
-#endif  // AOM_SCALE_YV12CONFIG_H_
+#endif  // AOM_AOM_SCALE_YV12CONFIG_H_

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_UTIL_DEBUG_UTIL_H_
-#define AOM_UTIL_DEBUG_UTIL_H_
+#ifndef AOM_AOM_UTIL_DEBUG_UTIL_H_
+#define AOM_AOM_UTIL_DEBUG_UTIL_H_
 
 #include "config/aom_config.h"
 
@@ -66,4 +66,4 @@ void mismatch_check_block_tx(const uint8_t *src, int src_stride,
 }  // extern "C"
 #endif
 
-#endif  // AOM_UTIL_DEBUG_UTIL_H_
+#endif  // AOM_AOM_UTIL_DEBUG_UTIL_H_

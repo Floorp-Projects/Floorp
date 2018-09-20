@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_PORTS_AOM_ONCE_H_
-#define AOM_PORTS_AOM_ONCE_H_
+#ifndef AOM_AOM_PORTS_AOM_ONCE_H_
+#define AOM_AOM_PORTS_AOM_ONCE_H_
 
 #include "config/aom_config.h"
 
@@ -135,4 +135,4 @@ static void aom_once(void (*func)(void)) {
 }
 #endif
 
-#endif  // AOM_PORTS_AOM_ONCE_H_
+#endif  // AOM_AOM_PORTS_AOM_ONCE_H_

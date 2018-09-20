@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_TXB_COMMON_H_
-#define AV1_COMMON_TXB_COMMON_H_
+#ifndef AOM_AV1_COMMON_TXB_COMMON_H_
+#define AOM_AV1_COMMON_TXB_COMMON_H_
 
 extern const int16_t k_eob_group_start[12];
 extern const int16_t k_eob_offset_bits[12];
@@ -34,24 +34,6 @@ static const int base_level_count_to_index[13] = {
   0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3,
 };
 
-// Note: TX_PAD_2D is dependent to this offset table.
-static const int base_ref_offset[BASE_CONTEXT_POSITION_NUM][2] = {
-  /* clang-format off*/
-  { -2, 0 }, { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -2 }, { 0, -1 }, { 0, 1 },
-  { 0, 2 },  { 1, -1 },  { 1, 0 },  { 1, 1 },  { 2, 0 }
-  /* clang-format on*/
-};
-
-#define CONTEXT_MAG_POSITION_NUM 3
-static const int mag_ref_offset_with_txclass[3][CONTEXT_MAG_POSITION_NUM][2] = {
-  { { 0, 1 }, { 1, 0 }, { 1, 1 } },
-  { { 0, 1 }, { 1, 0 }, { 0, 2 } },
-  { { 0, 1 }, { 1, 0 }, { 2, 0 } }
-};
-static const int mag_ref_offset[CONTEXT_MAG_POSITION_NUM][2] = {
-  { 0, 1 }, { 1, 0 }, { 1, 1 }
-};
-
 static const TX_CLASS tx_type_to_class[TX_TYPES] = {
   TX_CLASS_2D,     // DCT_DCT
   TX_CLASS_2D,     // ADST_DCT
@@ -71,61 +53,6 @@ static const TX_CLASS tx_type_to_class[TX_TYPES] = {
   TX_CLASS_HORIZ,  // H_FLIPADST
 };
 
-static const int8_t eob_to_pos_small[33] = {
-  0, 1, 2,                                        // 0-2
-  3, 3,                                           // 3-4
-  4, 4, 4, 4,                                     // 5-8
-  5, 5, 5, 5, 5, 5, 5, 5,                         // 9-16
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6  // 17-32
-};
-
-static const int8_t eob_to_pos_large[17] = {
-  6,                               // place holder
-  7,                               // 33-64
-  8,  8,                           // 65-128
-  9,  9,  9,  9,                   // 129-256
-  10, 10, 10, 10, 10, 10, 10, 10,  // 257-512
-  11                               // 513-
-};
-
-static INLINE int get_eob_pos_token(const int eob, int *const extra) {
-  int t;
-
-  if (eob < 33) {
-    t = eob_to_pos_small[eob];
-  } else {
-    const int e = AOMMIN((eob - 1) >> 5, 16);
-    t = eob_to_pos_large[e];
-  }
-
-  *extra = eob - k_eob_group_start[t];
-
-  return t;
-}
-
-static INLINE int av1_get_eob_pos_ctx(const TX_TYPE tx_type,
-                                      const int eob_token) {
-  static const int8_t tx_type_to_offset[TX_TYPES] = {
-    -1,  // DCT_DCT
-    -1,  // ADST_DCT
-    -1,  // DCT_ADST
-    -1,  // ADST_ADST
-    -1,  // FLIPADST_DCT
-    -1,  // DCT_FLIPADST
-    -1,  // FLIPADST_FLIPADST
-    -1,  // ADST_FLIPADST
-    -1,  // FLIPADST_ADST
-    -1,  // IDTX
-    10,  // V_DCT
-    10,  // H_DCT
-    10,  // V_ADST
-    10,  // H_ADST
-    10,  // V_FLIPADST
-    10,  // H_FLIPADST
-  };
-  return eob_token + tx_type_to_offset[tx_type];
-}
-
 static INLINE int get_txb_bwl(TX_SIZE tx_size) {
   tx_size = av1_get_adjusted_tx_size(tx_size);
   return tx_size_wide_log2[tx_size];
@@ -141,66 +68,12 @@ static INLINE int get_txb_high(TX_SIZE tx_size) {
   return tx_size_high[tx_size];
 }
 
-static INLINE void get_base_count_mag(int *mag, int *count,
-                                      const tran_low_t *tcoeffs, int bwl,
-                                      int height, int row, int col) {
-  mag[0] = 0;
-  mag[1] = 0;
-  for (int i = 0; i < NUM_BASE_LEVELS; ++i) count[i] = 0;
-  for (int idx = 0; idx < BASE_CONTEXT_POSITION_NUM; ++idx) {
-    const int ref_row = row + base_ref_offset[idx][0];
-    const int ref_col = col + base_ref_offset[idx][1];
-    if (ref_row < 0 || ref_col < 0 || ref_row >= height ||
-        ref_col >= (1 << bwl))
-      continue;
-    const int pos = (ref_row << bwl) + ref_col;
-    tran_low_t abs_coeff = abs(tcoeffs[pos]);
-    // count
-    for (int i = 0; i < NUM_BASE_LEVELS; ++i) {
-      count[i] += abs_coeff > i;
-    }
-    // mag
-    if (base_ref_offset[idx][0] >= 0 && base_ref_offset[idx][1] >= 0) {
-      if (abs_coeff > mag[0]) {
-        mag[0] = abs_coeff;
-        mag[1] = 1;
-      } else if (abs_coeff == mag[0]) {
-        ++mag[1];
-      }
-    }
-  }
-}
-
 static INLINE uint8_t *set_levels(uint8_t *const levels_buf, const int width) {
   return levels_buf + TX_PAD_TOP * (width + TX_PAD_HOR);
 }
 
 static INLINE int get_padded_idx(const int idx, const int bwl) {
   return idx + ((idx >> bwl) << TX_PAD_HOR_LOG2);
-}
-
-static INLINE int get_level_count(const uint8_t *const levels, const int stride,
-                                  const int row, const int col, const int level,
-                                  const int (*nb_offset)[2], const int nb_num) {
-  int count = 0;
-
-  for (int idx = 0; idx < nb_num; ++idx) {
-    const int ref_row = row + nb_offset[idx][0];
-    const int ref_col = col + nb_offset[idx][1];
-    const int pos = ref_row * stride + ref_col;
-    count += levels[pos] > level;
-  }
-  return count;
-}
-
-static INLINE void get_level_mag(const uint8_t *const levels, const int stride,
-                                 const int row, const int col, int *const mag) {
-  for (int idx = 0; idx < CONTEXT_MAG_POSITION_NUM; ++idx) {
-    const int ref_row = row + mag_ref_offset[idx][0];
-    const int ref_col = col + mag_ref_offset[idx][1];
-    const int pos = ref_row * stride + ref_col;
-    mag[idx] = levels[pos];
-  }
 }
 
 static INLINE int get_base_ctx_from_count_mag(int row, int col, int count,
@@ -267,84 +140,6 @@ static INLINE int get_base_ctx_from_count_mag(int row, int col, int count,
   return ctx_idx;
 }
 
-static INLINE int get_base_ctx(const uint8_t *const levels,
-                               const int c,  // raster order
-                               const int bwl, const int level_minus_1,
-                               const int count) {
-  const int row = c >> bwl;
-  const int col = c - (row << bwl);
-  const int stride = (1 << bwl) + TX_PAD_HOR;
-  int mag_count = 0;
-  int nb_mag[3] = { 0 };
-
-  get_level_mag(levels, stride, row, col, nb_mag);
-
-  for (int idx = 0; idx < 3; ++idx)
-    mag_count += nb_mag[idx] > (level_minus_1 + 1);
-  const int ctx_idx =
-      get_base_ctx_from_count_mag(row, col, count, AOMMIN(2, mag_count));
-  return ctx_idx;
-}
-
-#define BR_CONTEXT_POSITION_NUM 8  // Base range coefficient context
-// Note: TX_PAD_2D is dependent to this offset table.
-static const int br_ref_offset[BR_CONTEXT_POSITION_NUM][2] = {
-  /* clang-format off*/
-  { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 },
-  { 0, 1 },   { 1, -1 }, { 1, 0 },  { 1, 1 },
-  /* clang-format on*/
-};
-
-static const int br_level_map[9] = {
-  0, 0, 1, 1, 2, 2, 3, 3, 3,
-};
-
-// Note: If BR_MAG_OFFSET changes, the calculation of offset in
-// get_br_ctx_from_count_mag() must be updated.
-#define BR_MAG_OFFSET 1
-// TODO(angiebird): optimize this function by using a table to map from
-// count/mag to ctx
-
-static INLINE int get_br_count_mag(int *mag, const tran_low_t *tcoeffs, int bwl,
-                                   int height, int row, int col, int level) {
-  mag[0] = 0;
-  mag[1] = 0;
-  int count = 0;
-  for (int idx = 0; idx < BR_CONTEXT_POSITION_NUM; ++idx) {
-    const int ref_row = row + br_ref_offset[idx][0];
-    const int ref_col = col + br_ref_offset[idx][1];
-    if (ref_row < 0 || ref_col < 0 || ref_row >= height ||
-        ref_col >= (1 << bwl))
-      continue;
-    const int pos = (ref_row << bwl) + ref_col;
-    tran_low_t abs_coeff = abs(tcoeffs[pos]);
-    count += abs_coeff > level;
-    if (br_ref_offset[idx][0] >= 0 && br_ref_offset[idx][1] >= 0) {
-      if (abs_coeff > mag[0]) {
-        mag[0] = abs_coeff;
-        mag[1] = 1;
-      } else if (abs_coeff == mag[0]) {
-        ++mag[1];
-      }
-    }
-  }
-  return count;
-}
-
-static INLINE int get_br_ctx_from_count_mag(const int row, const int col,
-                                            const int count, const int mag) {
-  // DC: 0 - 1
-  // Top row: 2 - 4
-  // Left column: 5 - 7
-  // others: 8 - 11
-  static const int offset_pos[2][2] = { { 8, 5 }, { 2, 0 } };
-  const int mag_clamp = AOMMIN(mag, 6);
-  const int offset = mag_clamp >> 1;
-  const int ctx =
-      br_level_map[count] + offset * BR_TMP_OFFSET + offset_pos[!row][!col];
-  return ctx;
-}
-
 static INLINE int get_br_ctx_2d(const uint8_t *const levels,
                                 const int c,  // raster order
                                 const int bwl) {
@@ -395,38 +190,6 @@ static AOM_FORCE_INLINE int get_br_ctx(const uint8_t *const levels,
 
   return mag + 14;
 }
-
-#define SIG_REF_OFFSET_NUM 5
-
-// Note: TX_PAD_2D is dependent to these offset tables.
-static const int sig_ref_offset[SIG_REF_OFFSET_NUM][2] = {
-  { 0, 1 }, { 1, 0 }, { 1, 1 }, { 0, 2 }, { 2, 0 }
-  // , { 1, 2 }, { 2, 1 },
-};
-
-static const int sig_ref_offset_vert[SIG_REF_OFFSET_NUM][2] = {
-  { 1, 0 }, { 2, 0 }, { 0, 1 }, { 3, 0 }, { 4, 0 }
-  // , { 1, 1 }, { 2, 1 },
-};
-
-static const int sig_ref_offset_horiz[SIG_REF_OFFSET_NUM][2] = {
-  { 0, 1 }, { 0, 2 }, { 1, 0 }, { 0, 3 }, { 0, 4 }
-  // , { 1, 1 }, { 1, 2 },
-};
-
-#define SIG_REF_DIFF_OFFSET_NUM 3
-
-static const int sig_ref_diff_offset[SIG_REF_DIFF_OFFSET_NUM][2] = {
-  { 1, 1 }, { 0, 2 }, { 2, 0 }
-};
-
-static const int sig_ref_diff_offset_vert[SIG_REF_DIFF_OFFSET_NUM][2] = {
-  { 2, 0 }, { 3, 0 }, { 4, 0 }
-};
-
-static const int sig_ref_diff_offset_horiz[SIG_REF_DIFF_OFFSET_NUM][2] = {
-  { 0, 2 }, { 0, 3 }, { 0, 4 }
-};
 
 static const uint8_t clip_max3[256] = {
   0, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -658,4 +421,4 @@ static INLINE void get_txb_ctx(const BLOCK_SIZE plane_bsize,
 
 void av1_init_lv_map(AV1_COMMON *cm);
 
-#endif  // AV1_COMMON_TXB_COMMON_H_
+#endif  // AOM_AV1_COMMON_TXB_COMMON_H_

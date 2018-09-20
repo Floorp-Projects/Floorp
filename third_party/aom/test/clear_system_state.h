@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef TEST_CLEAR_SYSTEM_STATE_H_
-#define TEST_CLEAR_SYSTEM_STATE_H_
+#ifndef AOM_TEST_CLEAR_SYSTEM_STATE_H_
+#define AOM_TEST_CLEAR_SYSTEM_STATE_H_
 
 #include "config/aom_config.h"
 
@@ -28,4 +28,4 @@ inline void ClearSystemState() {
 }
 
 }  // namespace libaom_test
-#endif  // TEST_CLEAR_SYSTEM_STATE_H_
+#endif  // AOM_TEST_CLEAR_SYSTEM_STATE_H_

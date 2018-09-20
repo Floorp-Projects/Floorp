@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_NOISE_MODEL_H_
-#define AOM_DSP_NOISE_MODEL_H_
+#ifndef AOM_AOM_DSP_NOISE_MODEL_H_
+#define AOM_AOM_DSP_NOISE_MODEL_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -320,4 +320,4 @@ void aom_denoise_and_model_free(struct aom_denoise_and_model_t *denoise_model);
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
-#endif  // AOM_DSP_NOISE_MODEL_H_
+#endif  // AOM_AOM_DSP_NOISE_MODEL_H_

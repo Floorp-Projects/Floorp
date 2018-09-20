@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_ENCODEMB_H_
-#define AV1_ENCODER_ENCODEMB_H_
+#ifndef AOM_AV1_ENCODER_ENCODEMB_H_
+#define AOM_AV1_ENCODER_ENCODEMB_H_
 
 #include "config/aom_config.h"
 
@@ -47,7 +47,18 @@ typedef enum AV1_XFORM_QUANT {
 
 void av1_encode_sb(const struct AV1_COMP *cpi, MACROBLOCK *x, BLOCK_SIZE bsize,
                    int mi_row, int mi_col, RUN_TYPE dry_run);
+
+void av1_foreach_transformed_block_in_plane(
+    const MACROBLOCKD *const xd, BLOCK_SIZE bsize, int plane,
+    foreach_transformed_block_visitor visit, void *arg);
+
+void av1_foreach_transformed_block(const MACROBLOCKD *const xd,
+                                   BLOCK_SIZE bsize, int mi_row, int mi_col,
+                                   foreach_transformed_block_visitor visit,
+                                   void *arg, const int num_planes);
+
 void av1_encode_sby_pass1(AV1_COMMON *cm, MACROBLOCK *x, BLOCK_SIZE bsize);
+
 void av1_xform_quant(const AV1_COMMON *cm, MACROBLOCK *x, int plane, int block,
                      int blk_row, int blk_col, BLOCK_SIZE plane_bsize,
                      TX_SIZE tx_size, TX_TYPE tx_type,
@@ -82,4 +93,4 @@ void av1_encode_intra_block_plane(const struct AV1_COMP *cpi, MACROBLOCK *x,
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_ENCODEMB_H_
+#endif  // AOM_AV1_ENCODER_ENCODEMB_H_

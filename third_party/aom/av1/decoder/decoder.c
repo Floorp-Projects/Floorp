@@ -37,16 +37,11 @@
 #include "av1/decoder/obu.h"
 
 static void initialize_dec(void) {
-  static volatile int init_done = 0;
-
-  if (!init_done) {
-    av1_rtcd();
-    aom_dsp_rtcd();
-    aom_scale_rtcd();
-    av1_init_intra_predictors();
-    av1_init_wedge_masks();
-    init_done = 1;
-  }
+  av1_rtcd();
+  aom_dsp_rtcd();
+  aom_scale_rtcd();
+  av1_init_intra_predictors();
+  av1_init_wedge_masks();
 }
 
 static void dec_setup_mi(AV1_COMMON *cm) {
@@ -171,8 +166,7 @@ void av1_decoder_remove(AV1Decoder *pbi) {
   if (pbi->thread_data) {
     for (int worker_idx = 0; worker_idx < pbi->max_threads - 1; worker_idx++) {
       DecWorkerData *const thread_data = pbi->thread_data + worker_idx;
-      const int use_highbd = pbi->common.seq_params.use_highbitdepth ? 1 : 0;
-      av1_free_mc_tmp_buf(thread_data->td, use_highbd);
+      av1_free_mc_tmp_buf(thread_data->td);
       aom_free(thread_data->td);
     }
     aom_free(pbi->thread_data);
@@ -209,8 +203,7 @@ void av1_decoder_remove(AV1Decoder *pbi) {
 #if CONFIG_ACCOUNTING
   aom_accounting_clear(&pbi->accounting);
 #endif
-  const int use_highbd = pbi->common.seq_params.use_highbitdepth ? 1 : 0;
-  av1_free_mc_tmp_buf(&pbi->td, use_highbd);
+  av1_free_mc_tmp_buf(&pbi->td);
 
   aom_free(pbi);
 }

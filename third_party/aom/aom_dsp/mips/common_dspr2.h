@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_COMMON_MIPS_DSPR2_H_
-#define AOM_COMMON_MIPS_DSPR2_H_
+#ifndef AOM_AOM_DSP_MIPS_COMMON_DSPR2_H_
+#define AOM_AOM_DSP_MIPS_COMMON_DSPR2_H_
 
 #include <assert.h>
 
@@ -48,4 +48,4 @@ static INLINE void prefetch_store_streamed(unsigned char *dst) {
 }  // extern "C"
 #endif
 
-#endif  // AOM_COMMON_MIPS_DSPR2_H_
+#endif  // AOM_AOM_DSP_MIPS_COMMON_DSPR2_H_

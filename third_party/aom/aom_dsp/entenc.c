@@ -60,6 +60,7 @@ static void od_ec_enc_normalize(od_ec_enc *enc, od_ec_window low,
   int s;
   c = enc->cnt;
   assert(rng <= 65535U);
+  // The number of leading zeros in the 16-bit binary representation of rng.
   d = 16 - OD_ILOG_NZ(rng);
   s = c + d;
   /*TODO: Right now we flush every time we have at least one byte available.

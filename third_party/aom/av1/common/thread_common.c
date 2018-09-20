@@ -304,8 +304,9 @@ static INLINE void thread_loop_filter_rows(
 }
 
 // Row-based multi-threaded loopfilter hook
-static int loop_filter_row_worker(AV1LfSync *const lf_sync,
-                                  LFWorkerData *const lf_data) {
+static int loop_filter_row_worker(void *arg1, void *arg2) {
+  AV1LfSync *const lf_sync = (AV1LfSync *)arg1;
+  LFWorkerData *const lf_data = (LFWorkerData *)arg2;
   thread_loop_filter_rows(lf_data->frame_buffer, lf_data->cm, lf_data->planes,
                           lf_data->xd, lf_sync);
   return 1;
@@ -342,7 +343,7 @@ static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
     AVxWorker *const worker = &workers[i];
     LFWorkerData *const lf_data = &lf_sync->lfdata[i];
 
-    worker->hook = (AVxWorkerHook)loop_filter_row_worker;
+    worker->hook = loop_filter_row_worker;
     worker->data1 = lf_sync;
     worker->data2 = lf_data;
 
@@ -649,8 +650,9 @@ AV1LrMTInfo *get_lr_job_info(AV1LrSync *lr_sync) {
 }
 
 // Implement row loop restoration for each thread.
-static int loop_restoration_row_worker(AV1LrSync *const lr_sync,
-                                       LRWorkerData *lrworkerdata) {
+static int loop_restoration_row_worker(void *arg1, void *arg2) {
+  AV1LrSync *const lr_sync = (AV1LrSync *)arg1;
+  LRWorkerData *lrworkerdata = (LRWorkerData *)arg2;
   AV1LrStruct *lr_ctxt = (AV1LrStruct *)lrworkerdata->lr_ctxt;
   FilterFrameCtxt *ctxt = lr_ctxt->ctxt;
   int lr_unit_row;
@@ -714,10 +716,12 @@ static void foreach_rest_unit_in_planes_mt(AV1LrStruct *lr_ctxt,
   int num_rows_lr = 0;
 
   for (int plane = 0; plane < num_planes; plane++) {
+    if (cm->rst_info[plane].frame_restoration_type == RESTORE_NONE) continue;
+
     const AV1PixelRect tile_rect = ctxt[plane].tile_rect;
     const int max_tile_h = tile_rect.bottom - tile_rect.top;
 
-    const int unit_size = cm->seq_params.sb_size == BLOCK_128X128 ? 128 : 64;
+    const int unit_size = cm->rst_info[plane].restoration_unit_size;
 
     num_rows_lr =
         AOMMAX(num_rows_lr, av1_lr_count_units_in_tile(unit_size, max_tile_h));
@@ -746,7 +750,7 @@ static void foreach_rest_unit_in_planes_mt(AV1LrStruct *lr_ctxt,
   for (i = 0; i < num_workers; ++i) {
     AVxWorker *const worker = &workers[i];
     lr_sync->lrworkerdata[i].lr_ctxt = (void *)lr_ctxt;
-    worker->hook = (AVxWorkerHook)loop_restoration_row_worker;
+    worker->hook = loop_restoration_row_worker;
     worker->data1 = lr_sync;
     worker->data2 = &lr_sync->lrworkerdata[i];
 

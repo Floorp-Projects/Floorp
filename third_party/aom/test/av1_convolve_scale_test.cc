@@ -279,7 +279,7 @@ class ConvolveScaleTestBase : public ::testing::Test {
     filter_x_.set(ntaps_x_, false);
     filter_y_.set(ntaps_y_, true);
     convolve_params_ =
-        get_conv_params_no_round(0, avg_ != false, 0, NULL, 0, 1, bd);
+        get_conv_params_no_round(avg_ != false, 0, NULL, 0, 1, bd);
 
     delete image_;
     image_ = new TestImage<SrcPixel>(width_, height_, bd_);

@@ -110,7 +110,7 @@ static INLINE void quantize(const __m256i *qp, __m256i *c,
 }
 
 void aom_highbd_quantize_b_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                                int skip_block, const int16_t *zbin_ptr,
+                                const int16_t *zbin_ptr,
                                 const int16_t *round_ptr,
                                 const int16_t *quant_ptr,
                                 const int16_t *quant_shift_ptr,
@@ -120,12 +120,23 @@ void aom_highbd_quantize_b_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
   (void)scan;
   const unsigned int step = 8;
 
-  if (LIKELY(!skip_block)) {
-    __m256i qp[5], coeff;
-    init_qp(zbin_ptr, round_ptr, quant_ptr, dequant_ptr, quant_shift_ptr, qp);
-    coeff = _mm256_loadu_si256((const __m256i *)coeff_ptr);
+  __m256i qp[5], coeff;
+  init_qp(zbin_ptr, round_ptr, quant_ptr, dequant_ptr, quant_shift_ptr, qp);
+  coeff = _mm256_loadu_si256((const __m256i *)coeff_ptr);
 
-    __m256i eob = _mm256_setzero_si256();
+  __m256i eob = _mm256_setzero_si256();
+  quantize(qp, &coeff, iscan, qcoeff_ptr, dqcoeff_ptr, &eob);
+
+  coeff_ptr += step;
+  qcoeff_ptr += step;
+  dqcoeff_ptr += step;
+  iscan += step;
+  n_coeffs -= step;
+
+  update_qp(qp);
+
+  while (n_coeffs > 0) {
+    coeff = _mm256_loadu_si256((const __m256i *)coeff_ptr);
     quantize(qp, &coeff, iscan, qcoeff_ptr, dqcoeff_ptr, &eob);
 
     coeff_ptr += step;
@@ -133,40 +144,17 @@ void aom_highbd_quantize_b_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
     dqcoeff_ptr += step;
     iscan += step;
     n_coeffs -= step;
-
-    update_qp(qp);
-
-    while (n_coeffs > 0) {
-      coeff = _mm256_loadu_si256((const __m256i *)coeff_ptr);
-      quantize(qp, &coeff, iscan, qcoeff_ptr, dqcoeff_ptr, &eob);
-
-      coeff_ptr += step;
-      qcoeff_ptr += step;
-      dqcoeff_ptr += step;
-      iscan += step;
-      n_coeffs -= step;
-    }
-    {
-      __m256i eob_s;
-      eob_s = _mm256_shuffle_epi32(eob, 0xe);
-      eob = _mm256_max_epi16(eob, eob_s);
-      eob_s = _mm256_shufflelo_epi16(eob, 0xe);
-      eob = _mm256_max_epi16(eob, eob_s);
-      eob_s = _mm256_shufflelo_epi16(eob, 1);
-      eob = _mm256_max_epi16(eob, eob_s);
-      const __m128i final_eob = _mm_max_epi16(_mm256_castsi256_si128(eob),
-                                              _mm256_extractf128_si256(eob, 1));
-      *eob_ptr = _mm_extract_epi16(final_eob, 0);
-    }
-  } else {
-    do {
-      const __m256i zero = _mm256_setzero_si256();
-      _mm256_storeu_si256((__m256i *)qcoeff_ptr, zero);
-      _mm256_storeu_si256((__m256i *)dqcoeff_ptr, zero);
-      qcoeff_ptr += step;
-      dqcoeff_ptr += step;
-      n_coeffs -= step;
-    } while (n_coeffs > 0);
-    *eob_ptr = 0;
+  }
+  {
+    __m256i eob_s;
+    eob_s = _mm256_shuffle_epi32(eob, 0xe);
+    eob = _mm256_max_epi16(eob, eob_s);
+    eob_s = _mm256_shufflelo_epi16(eob, 0xe);
+    eob = _mm256_max_epi16(eob, eob_s);
+    eob_s = _mm256_shufflelo_epi16(eob, 1);
+    eob = _mm256_max_epi16(eob, eob_s);
+    const __m128i final_eob = _mm_max_epi16(_mm256_castsi256_si128(eob),
+                                            _mm256_extractf128_si256(eob, 1));
+    *eob_ptr = _mm_extract_epi16(final_eob, 0);
   }
 }

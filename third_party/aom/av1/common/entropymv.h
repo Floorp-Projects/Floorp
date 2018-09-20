@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_ENTROPYMV_H_
-#define AV1_COMMON_ENTROPYMV_H_
+#ifndef AOM_AV1_COMMON_ENTROPYMV_H_
+#define AOM_AV1_COMMON_ENTROPYMV_H_
 
 #include "config/aom_config.h"
 
@@ -91,16 +91,6 @@ typedef struct {
   nmv_component comps[2];
 } nmv_context;
 
-static INLINE MV_JOINT_TYPE av1_get_mv_joint(const MV *mv) {
-  if (mv->row == 0) {
-    return mv->col == 0 ? MV_JOINT_ZERO : MV_JOINT_HNZVZ;
-  } else {
-    return mv->col == 0 ? MV_JOINT_HZVNZ : MV_JOINT_HNZVNZ;
-  }
-}
-
-MV_CLASS_TYPE av1_get_mv_class(int z, int *offset);
-
 typedef enum {
   MV_SUBPEL_NONE = -1,
   MV_SUBPEL_LOW_PRECISION = 0,
@@ -111,4 +101,4 @@ typedef enum {
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_ENTROPYMV_H_
+#endif  // AOM_AV1_COMMON_ENTROPYMV_H_

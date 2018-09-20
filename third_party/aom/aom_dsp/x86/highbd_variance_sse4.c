@@ -168,8 +168,8 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance4x4_sse4_1(
   aom_highbd_var_filter_block2d_bil_second_pass(fdata3, temp2, 4, 4, 4, 4,
                                                 bilinear_filters_2t[yoffset]);
 
-  aom_highbd_comp_avg_pred(temp3, second_pred, 4, 4, CONVERT_TO_BYTEPTR(temp2),
-                           4);
+  aom_highbd_comp_avg_pred(CONVERT_TO_BYTEPTR(temp3), second_pred, 4, 4,
+                           CONVERT_TO_BYTEPTR(temp2), 4);
 
   return aom_highbd_8_variance4x4(CONVERT_TO_BYTEPTR(temp3), 4, dst, dst_stride,
                                   sse);
@@ -188,8 +188,8 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance4x4_sse4_1(
   aom_highbd_var_filter_block2d_bil_second_pass(fdata3, temp2, 4, 4, 4, 4,
                                                 bilinear_filters_2t[yoffset]);
 
-  aom_highbd_comp_avg_pred(temp3, second_pred, 4, 4, CONVERT_TO_BYTEPTR(temp2),
-                           4);
+  aom_highbd_comp_avg_pred(CONVERT_TO_BYTEPTR(temp3), second_pred, 4, 4,
+                           CONVERT_TO_BYTEPTR(temp2), 4);
 
   return aom_highbd_10_variance4x4(CONVERT_TO_BYTEPTR(temp3), 4, dst,
                                    dst_stride, sse);
@@ -208,8 +208,8 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance4x4_sse4_1(
   aom_highbd_var_filter_block2d_bil_second_pass(fdata3, temp2, 4, 4, 4, 4,
                                                 bilinear_filters_2t[yoffset]);
 
-  aom_highbd_comp_avg_pred(temp3, second_pred, 4, 4, CONVERT_TO_BYTEPTR(temp2),
-                           4);
+  aom_highbd_comp_avg_pred(CONVERT_TO_BYTEPTR(temp3), second_pred, 4, 4,
+                           CONVERT_TO_BYTEPTR(temp2), 4);
 
   return aom_highbd_12_variance4x4(CONVERT_TO_BYTEPTR(temp3), 4, dst,
                                    dst_stride, sse);

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef _V128_INTRINSICS_H
-#define _V128_INTRINSICS_H
+#ifndef AOM_AOM_DSP_SIMD_V128_INTRINSICS_ARM_H_
+#define AOM_AOM_DSP_SIMD_V128_INTRINSICS_ARM_H_
 
 #include <arm_neon.h>
 
@@ -375,7 +375,8 @@ SIMD_INLINE uint32_t v128_movemask_8(v128 a) {
   uint64x2_t m = vpaddlq_u32(vpaddlq_u16(vpaddlq_u8(
       vandq_u8(vreinterpretq_u8_s64(a),
                vreinterpretq_u8_u64(vdupq_n_u64(0x8040201008040201ULL))))));
-  return v64_u64(v64_ziplo_8(v128_high_v64((v128)m), v128_low_v64((v128)m)));
+  return v64_low_u32(
+      v64_ziplo_8(v128_high_v64((v128)m), v128_low_v64((v128)m)));
 #endif
 }
 
@@ -954,4 +955,4 @@ SIMD_INLINE uint64_t v128_ssd_s16_sum(ssd128_internal_s16 s) {
   return v64_u64(v128_low_v64(s)) + v64_u64(v128_high_v64(s));
 }
 
-#endif /* _V128_INTRINSICS_H */
+#endif  // AOM_AOM_DSP_SIMD_V128_INTRINSICS_ARM_H_

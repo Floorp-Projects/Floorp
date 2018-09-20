@@ -27,15 +27,7 @@
 namespace {
 using libaom_test::ACMRandom;
 
-#define QUAN_PARAM_LIST                                                   \
-  const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block,         \
-      const int16_t *zbin_ptr, const int16_t *round_ptr,                  \
-      const int16_t *quant_ptr, const int16_t *quant_shift_ptr,           \
-      tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,                    \
-      const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, \
-      const int16_t *iscan
-
-#define QUAN_PARAM_LIST_NO_SKIP                                               \
+#define QUAN_PARAM_LIST                                                       \
   const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *zbin_ptr,    \
       const int16_t *round_ptr, const int16_t *quant_ptr,                     \
       const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,                 \
@@ -43,42 +35,32 @@ using libaom_test::ACMRandom;
       const int16_t *scan, const int16_t *iscan
 
 typedef void (*QuantizeFunc)(QUAN_PARAM_LIST);
-typedef void (*QuantizeFuncHbd)(QUAN_PARAM_LIST_NO_SKIP, int log_scale);
-typedef void (*QuantizeFuncNoSkip)(QUAN_PARAM_LIST_NO_SKIP);
+typedef void (*QuantizeFuncHbd)(QUAN_PARAM_LIST, int log_scale);
 
 #define HBD_QUAN_FUNC                                                      \
   fn(coeff_ptr, n_coeffs, zbin_ptr, round_ptr, quant_ptr, quant_shift_ptr, \
      qcoeff_ptr, dqcoeff_ptr, dequant_ptr, eob_ptr, scan, iscan, log_scale)
 
-#define LBD_QUAN_FUNC_NO_SKIP                                              \
+#define LBD_QUAN_FUNC                                                      \
   fn(coeff_ptr, n_coeffs, zbin_ptr, round_ptr, quant_ptr, quant_shift_ptr, \
      qcoeff_ptr, dqcoeff_ptr, dequant_ptr, eob_ptr, scan, iscan)
 
 template <QuantizeFuncHbd fn>
 void highbd_quan16x16_wrapper(QUAN_PARAM_LIST) {
-  (void)skip_block;
   const int log_scale = 0;
   HBD_QUAN_FUNC;
 }
 
 template <QuantizeFuncHbd fn>
 void highbd_quan32x32_wrapper(QUAN_PARAM_LIST) {
-  (void)skip_block;
   const int log_scale = 1;
   HBD_QUAN_FUNC;
 }
 
 template <QuantizeFuncHbd fn>
 void highbd_quan64x64_wrapper(QUAN_PARAM_LIST) {
-  (void)skip_block;
   const int log_scale = 2;
   HBD_QUAN_FUNC;
-}
-
-template <QuantizeFuncNoSkip fn>
-void lowbd_quan_wrapper(QUAN_PARAM_LIST) {
-  (void)skip_block;
-  LBD_QUAN_FUNC_NO_SKIP;
 }
 
 typedef enum { TYPE_B, TYPE_DC, TYPE_FP } QuantType;
@@ -125,7 +107,6 @@ class QuantizeTest : public ::testing::TestWithParam<QuantizeParam> {
   void QuantizeRun(bool is_loop, int q = 0, int test_num = 1) {
     tran_low_t *coeff_ptr = coeff_;
     const intptr_t n_coeffs = coeff_num();
-    const int skip_block = 0;
 
     tran_low_t *qcoeff_ref = coeff_ptr + n_coeffs;
     tran_low_t *dqcoeff_ref = qcoeff_ref + n_coeffs;
@@ -158,13 +139,13 @@ class QuantizeTest : public ::testing::TestWithParam<QuantizeParam> {
 
       memset(qcoeff_ref, 0, 5 * n_coeffs * sizeof(*qcoeff_ref));
 
-      quant_ref_(coeff_ptr, n_coeffs, skip_block, zbin, round, quant,
-                 quant_shift, qcoeff_ref, dqcoeff_ref, dequant, &eob[0],
-                 sc->scan, sc->iscan);
+      quant_ref_(coeff_ptr, n_coeffs, zbin, round, quant, quant_shift,
+                 qcoeff_ref, dqcoeff_ref, dequant, &eob[0], sc->scan,
+                 sc->iscan);
 
-      ASM_REGISTER_STATE_CHECK(quant_(
-          coeff_ptr, n_coeffs, skip_block, zbin, round, quant, quant_shift,
-          qcoeff, dqcoeff, dequant, &eob[1], sc->scan, sc->iscan));
+      ASM_REGISTER_STATE_CHECK(quant_(coeff_ptr, n_coeffs, zbin, round, quant,
+                                      quant_shift, qcoeff, dqcoeff, dequant,
+                                      &eob[1], sc->scan, sc->iscan));
 
       for (int j = 0; j < n_coeffs; ++j) {
         ASSERT_EQ(qcoeff_ref[j], qcoeff[j])
@@ -286,7 +267,6 @@ TEST_P(QuantizeTest, CoeffHalfDequant) {
 TEST_P(QuantizeTest, DISABLED_Speed) {
   tran_low_t *coeff_ptr = coeff_;
   const intptr_t n_coeffs = coeff_num();
-  const int skip_block = 0;
 
   tran_low_t *qcoeff_ref = coeff_ptr + n_coeffs;
   tran_low_t *dqcoeff_ref = qcoeff_ref + n_coeffs;
@@ -312,8 +292,8 @@ TEST_P(QuantizeTest, DISABLED_Speed) {
 
   aom_usec_timer_start(&timer);
   for (int n = 0; n < kNumTests; ++n) {
-    quant_(coeff_ptr, n_coeffs, skip_block, zbin, round_fp, quant_fp,
-           quant_shift, qcoeff, dqcoeff, dequant, eob, sc->scan, sc->iscan);
+    quant_(coeff_ptr, n_coeffs, zbin, round_fp, quant_fp, quant_shift, qcoeff,
+           dqcoeff, dequant, eob, sc->scan, sc->iscan);
   }
   aom_usec_timer_mark(&timer);
 
@@ -325,33 +305,24 @@ using ::testing::make_tuple;
 
 #if HAVE_AVX2
 const QuantizeParam kQParamArrayAvx2[] = {
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_avx2>, TX_16X16, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_avx2, TX_16X16, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_avx2>, TX_4X16, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_avx2, TX_4X16, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_avx2>, TX_16X4, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_avx2, TX_16X4, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_avx2>, TX_32X8, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_avx2, TX_32X8, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_avx2>, TX_8X32, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_avx2, TX_8X32, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_32x32_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_32x32_avx2>, TX_32X32, TYPE_FP,
-             AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_32x32_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_32x32_avx2>, TX_16X64, TYPE_FP,
-             AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_32x32_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_32x32_avx2>, TX_64X16, TYPE_FP,
-             AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_64x64_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_64x64_avx2>, TX_64X64, TYPE_FP,
-             AOM_BITS_8),
+  make_tuple(&av1_quantize_fp_32x32_c, &av1_quantize_fp_32x32_avx2, TX_32X32,
+             TYPE_FP, AOM_BITS_8),
+  make_tuple(&av1_quantize_fp_32x32_c, &av1_quantize_fp_32x32_avx2, TX_16X64,
+             TYPE_FP, AOM_BITS_8),
+  make_tuple(&av1_quantize_fp_32x32_c, &av1_quantize_fp_32x32_avx2, TX_64X16,
+             TYPE_FP, AOM_BITS_8),
+  make_tuple(&av1_quantize_fp_64x64_c, &av1_quantize_fp_64x64_avx2, TX_64X64,
+             TYPE_FP, AOM_BITS_8),
   make_tuple(&highbd_quan16x16_wrapper<av1_highbd_quantize_fp_c>,
              &highbd_quan16x16_wrapper<av1_highbd_quantize_fp_avx2>, TX_16X16,
              TYPE_FP, AOM_BITS_8),
@@ -393,20 +364,17 @@ INSTANTIATE_TEST_CASE_P(AVX2, QuantizeTest,
 
 #if HAVE_SSE2
 const QuantizeParam kQParamArraySSE2[] = {
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_sse2>, TX_16X16, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_sse2, TX_16X16, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_sse2>, TX_4X16, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_sse2, TX_4X16, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_sse2>, TX_16X4, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_sse2, TX_16X4, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_sse2>, TX_8X32, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_sse2, TX_8X32, TYPE_FP,
              AOM_BITS_8),
-  make_tuple(&lowbd_quan_wrapper<av1_quantize_fp_c>,
-             &lowbd_quan_wrapper<av1_quantize_fp_sse2>, TX_32X8, TYPE_FP,
+  make_tuple(&av1_quantize_fp_c, &av1_quantize_fp_sse2, TX_32X8, TYPE_FP,
+             AOM_BITS_8),
+  make_tuple(&aom_quantize_b_c, &aom_quantize_b_sse2, TX_16X16, TYPE_B,
              AOM_BITS_8),
   make_tuple(&aom_highbd_quantize_b_c, &aom_highbd_quantize_b_sse2, TX_16X16,
              TYPE_B, AOM_BITS_8),
@@ -426,4 +394,32 @@ INSTANTIATE_TEST_CASE_P(SSE2, QuantizeTest,
                         ::testing::ValuesIn(kQParamArraySSE2));
 #endif
 
+#if HAVE_SSSE3 && ARCH_X86_64
+INSTANTIATE_TEST_CASE_P(
+    SSSE3, QuantizeTest,
+    ::testing::Values(make_tuple(&aom_quantize_b_c, &aom_quantize_b_ssse3,
+                                 TX_16X16, TYPE_B, AOM_BITS_8)));
+
+// Like libvpx, the ssse3 and avx quantize tests do not pass.
+// https://bugs.chromium.org/p/webm/issues/detail?id=1448
+INSTANTIATE_TEST_CASE_P(
+    DISABLED_SSSE3_32x32, QuantizeTest,
+    ::testing::Values(make_tuple(&aom_quantize_b_32x32_c,
+                                 &aom_quantize_b_32x32_ssse3, TX_16X16, TYPE_B,
+                                 AOM_BITS_8)));
+
+#endif  // HAVE_SSSE3 && ARCH_X86_64
+
+#if HAVE_AVX && ARCH_X86_64
+INSTANTIATE_TEST_CASE_P(
+    AVX, QuantizeTest,
+    ::testing::Values(
+        make_tuple(&aom_quantize_b_c, &aom_quantize_b_avx, TX_16X16, TYPE_B,
+                   AOM_BITS_8),
+        // Although these tests will not pass against _c, test them against each
+        // other so there is some minor checking.
+        make_tuple(&aom_quantize_b_32x32_ssse3, &aom_quantize_b_32x32_avx,
+                   TX_32X32, TYPE_B, AOM_BITS_8)));
+
+#endif  // HAVE_AVX && ARCH_X86_64
 }  // namespace

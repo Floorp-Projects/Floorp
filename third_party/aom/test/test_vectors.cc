@@ -131,7 +131,8 @@ const char *const kAV1TestVectors[] = {
   "av1-1-b8-01-size-66x16.ivf",    "av1-1-b8-01-size-66x18.ivf",
   "av1-1-b8-01-size-66x32.ivf",    "av1-1-b8-01-size-66x34.ivf",
   "av1-1-b8-01-size-66x64.ivf",    "av1-1-b8-01-size-66x66.ivf",
-  "av1-1-b8-02-allintra.ivf",
+  "av1-1-b8-02-allintra.ivf",      "av1-1-b8-03-sizedown.mkv",
+  "av1-1-b8-03-sizeup.mkv"
 };
 const int kNumAV1TestVectors = NELEMENTS(kAV1TestVectors);
 #endif  // CONFIG_AV1_DECODER

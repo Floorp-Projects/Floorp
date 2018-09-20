@@ -34,8 +34,8 @@ void aom_blend_a64_hmask_neon(uint8_t *dst, uint32_t dst_stride,
   uint8x8_t tmp0, tmp1;
   uint8x16_t res_q;
   uint16x8_t res, res_low, res_high;
-  uint32x2_t tmp0_32, tmp1_32;
-  uint16x4_t tmp0_16, tmp1_16;
+  uint32x2_t tmp0_32 = vdup_n_u32(0), tmp1_32 = vdup_n_u32(0);
+  uint16x4_t tmp0_16 = vdup_n_u16(0), tmp1_16 = vdup_n_u16(0);
   const uint8x8_t vdup_64 = vdup_n_u8((uint8_t)64);
 
   if (w >= 16) {

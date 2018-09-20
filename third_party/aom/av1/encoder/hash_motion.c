@@ -13,14 +13,12 @@
 
 #include "config/av1_rtcd.h"
 
+#include "av1/encoder/block.h"
 #include "av1/encoder/hash.h"
 #include "av1/encoder/hash_motion.h"
 
 static const int crc_bits = 16;
 static const int block_size_bits = 3;
-static CRC_CALCULATOR crc_calculator1;
-static CRC_CALCULATOR crc_calculator2;
-static int g_crc_initialized = 0;
 
 static void hash_table_clear_all(hash_table *p_hash_table) {
   if (p_hash_table->p_lookup_table == NULL) {
@@ -106,11 +104,11 @@ static int hash_block_size_to_index(int block_size) {
   }
 }
 
-void av1_hash_table_init(hash_table *p_hash_table) {
-  if (g_crc_initialized == 0) {
-    av1_crc_calculator_init(&crc_calculator1, 24, 0x5D6DCB);
-    av1_crc_calculator_init(&crc_calculator2, 24, 0x864CFB);
-    g_crc_initialized = 1;
+void av1_hash_table_init(hash_table *p_hash_table, MACROBLOCK *x) {
+  if (x->g_crc_initialized == 0) {
+    av1_crc_calculator_init(&x->crc_calculator1, 24, 0x5D6DCB);
+    av1_crc_calculator_init(&x->crc_calculator2, 24, 0x864CFB);
+    x->g_crc_initialized = 1;
   }
   p_hash_table->p_lookup_table = NULL;
 }
@@ -181,7 +179,8 @@ int32_t av1_has_exact_match(hash_table *p_hash_table, uint32_t hash_value1,
 
 void av1_generate_block_2x2_hash_value(const YV12_BUFFER_CONFIG *picture,
                                        uint32_t *pic_block_hash[2],
-                                       int8_t *pic_block_same_info[3]) {
+                                       int8_t *pic_block_same_info[3],
+                                       MACROBLOCK *x) {
   const int width = 2;
   const int height = 2;
   const int x_end = picture->y_crop_width - width + 1;
@@ -201,9 +200,9 @@ void av1_generate_block_2x2_hash_value(const YV12_BUFFER_CONFIG *picture,
         pic_block_same_info[1][pos] = is_block16_2x2_col_same_value(p);
 
         pic_block_hash[0][pos] = av1_get_crc_value(
-            &crc_calculator1, (uint8_t *)p, length * sizeof(p[0]));
+            &x->crc_calculator1, (uint8_t *)p, length * sizeof(p[0]));
         pic_block_hash[1][pos] = av1_get_crc_value(
-            &crc_calculator2, (uint8_t *)p, length * sizeof(p[0]));
+            &x->crc_calculator2, (uint8_t *)p, length * sizeof(p[0]));
         pos++;
       }
       pos += width - 1;
@@ -220,9 +219,9 @@ void av1_generate_block_2x2_hash_value(const YV12_BUFFER_CONFIG *picture,
         pic_block_same_info[1][pos] = is_block_2x2_col_same_value(p);
 
         pic_block_hash[0][pos] =
-            av1_get_crc_value(&crc_calculator1, p, length * sizeof(p[0]));
+            av1_get_crc_value(&x->crc_calculator1, p, length * sizeof(p[0]));
         pic_block_hash[1][pos] =
-            av1_get_crc_value(&crc_calculator2, p, length * sizeof(p[0]));
+            av1_get_crc_value(&x->crc_calculator2, p, length * sizeof(p[0]));
         pos++;
       }
       pos += width - 1;
@@ -235,7 +234,8 @@ void av1_generate_block_hash_value(const YV12_BUFFER_CONFIG *picture,
                                    uint32_t *src_pic_block_hash[2],
                                    uint32_t *dst_pic_block_hash[2],
                                    int8_t *src_pic_block_same_info[3],
-                                   int8_t *dst_pic_block_same_info[3]) {
+                                   int8_t *dst_pic_block_same_info[3],
+                                   MACROBLOCK *x) {
   const int pic_width = picture->y_crop_width;
   const int x_end = picture->y_crop_width - block_size + 1;
   const int y_end = picture->y_crop_height - block_size + 1;
@@ -254,14 +254,14 @@ void av1_generate_block_hash_value(const YV12_BUFFER_CONFIG *picture,
       p[2] = src_pic_block_hash[0][pos + src_size * pic_width];
       p[3] = src_pic_block_hash[0][pos + src_size * pic_width + src_size];
       dst_pic_block_hash[0][pos] =
-          av1_get_crc_value(&crc_calculator1, (uint8_t *)p, length);
+          av1_get_crc_value(&x->crc_calculator1, (uint8_t *)p, length);
 
       p[0] = src_pic_block_hash[1][pos];
       p[1] = src_pic_block_hash[1][pos + src_size];
       p[2] = src_pic_block_hash[1][pos + src_size * pic_width];
       p[3] = src_pic_block_hash[1][pos + src_size * pic_width + src_size];
       dst_pic_block_hash[1][pos] =
-          av1_get_crc_value(&crc_calculator2, (uint8_t *)p, length);
+          av1_get_crc_value(&x->crc_calculator2, (uint8_t *)p, length);
 
       dst_pic_block_same_info[0][pos] =
           src_pic_block_same_info[0][pos] &&
@@ -388,17 +388,9 @@ int av1_hash_is_vertical_perfect(const YV12_BUFFER_CONFIG *picture,
   return 1;
 }
 
-// global buffer for hash value calculation of a block
-// used only in av1_get_block_hash_value()
-#define AOM_BUFFER_SIZE_FOR_BLOCK_HASH (4096)
-// [first hash/second hash]
-// [two buffers used ping-pong]
-// [num of 2x2 blocks in 128x128]
-static uint32_t hash_value_buffer[2][2][AOM_BUFFER_SIZE_FOR_BLOCK_HASH];
-
 void av1_get_block_hash_value(uint8_t *y_src, int stride, int block_size,
                               uint32_t *hash_value1, uint32_t *hash_value2,
-                              int use_highbitdepth) {
+                              int use_highbitdepth, MACROBLOCK *x) {
   uint32_t to_hash[4];
   const int add_value = hash_block_size_to_index(block_size) << crc_bits;
   assert(add_value >= 0);
@@ -415,10 +407,12 @@ void av1_get_block_hash_value(uint8_t *y_src, int stride, int block_size,
         get_pixels_in_1D_short_array_by_block_2x2(
             y16_src + y_pos * stride + x_pos, stride, pixel_to_hash);
         assert(pos < AOM_BUFFER_SIZE_FOR_BLOCK_HASH);
-        hash_value_buffer[0][0][pos] = av1_get_crc_value(
-            &crc_calculator1, (uint8_t *)pixel_to_hash, sizeof(pixel_to_hash));
-        hash_value_buffer[1][0][pos] = av1_get_crc_value(
-            &crc_calculator2, (uint8_t *)pixel_to_hash, sizeof(pixel_to_hash));
+        x->hash_value_buffer[0][0][pos] =
+            av1_get_crc_value(&x->crc_calculator1, (uint8_t *)pixel_to_hash,
+                              sizeof(pixel_to_hash));
+        x->hash_value_buffer[1][0][pos] =
+            av1_get_crc_value(&x->crc_calculator2, (uint8_t *)pixel_to_hash,
+                              sizeof(pixel_to_hash));
       }
     }
   } else {
@@ -429,10 +423,10 @@ void av1_get_block_hash_value(uint8_t *y_src, int stride, int block_size,
         get_pixels_in_1D_char_array_by_block_2x2(y_src + y_pos * stride + x_pos,
                                                  stride, pixel_to_hash);
         assert(pos < AOM_BUFFER_SIZE_FOR_BLOCK_HASH);
-        hash_value_buffer[0][0][pos] = av1_get_crc_value(
-            &crc_calculator1, pixel_to_hash, sizeof(pixel_to_hash));
-        hash_value_buffer[1][0][pos] = av1_get_crc_value(
-            &crc_calculator2, pixel_to_hash, sizeof(pixel_to_hash));
+        x->hash_value_buffer[0][0][pos] = av1_get_crc_value(
+            &x->crc_calculator1, pixel_to_hash, sizeof(pixel_to_hash));
+        x->hash_value_buffer[1][0][pos] = av1_get_crc_value(
+            &x->crc_calculator2, pixel_to_hash, sizeof(pixel_to_hash));
       }
     }
   }
@@ -457,24 +451,24 @@ void av1_get_block_hash_value(uint8_t *y_src, int stride, int block_size,
         assert(srcPos + src_sub_block_in_width + 1 <
                AOM_BUFFER_SIZE_FOR_BLOCK_HASH);
         assert(dst_pos < AOM_BUFFER_SIZE_FOR_BLOCK_HASH);
-        to_hash[0] = hash_value_buffer[0][src_idx][srcPos];
-        to_hash[1] = hash_value_buffer[0][src_idx][srcPos + 1];
+        to_hash[0] = x->hash_value_buffer[0][src_idx][srcPos];
+        to_hash[1] = x->hash_value_buffer[0][src_idx][srcPos + 1];
         to_hash[2] =
-            hash_value_buffer[0][src_idx][srcPos + src_sub_block_in_width];
-        to_hash[3] =
-            hash_value_buffer[0][src_idx][srcPos + src_sub_block_in_width + 1];
+            x->hash_value_buffer[0][src_idx][srcPos + src_sub_block_in_width];
+        to_hash[3] = x->hash_value_buffer[0][src_idx]
+                                         [srcPos + src_sub_block_in_width + 1];
 
-        hash_value_buffer[0][dst_idx][dst_pos] = av1_get_crc_value(
-            &crc_calculator1, (uint8_t *)to_hash, sizeof(to_hash));
+        x->hash_value_buffer[0][dst_idx][dst_pos] = av1_get_crc_value(
+            &x->crc_calculator1, (uint8_t *)to_hash, sizeof(to_hash));
 
-        to_hash[0] = hash_value_buffer[1][src_idx][srcPos];
-        to_hash[1] = hash_value_buffer[1][src_idx][srcPos + 1];
+        to_hash[0] = x->hash_value_buffer[1][src_idx][srcPos];
+        to_hash[1] = x->hash_value_buffer[1][src_idx][srcPos + 1];
         to_hash[2] =
-            hash_value_buffer[1][src_idx][srcPos + src_sub_block_in_width];
-        to_hash[3] =
-            hash_value_buffer[1][src_idx][srcPos + src_sub_block_in_width + 1];
-        hash_value_buffer[1][dst_idx][dst_pos] = av1_get_crc_value(
-            &crc_calculator2, (uint8_t *)to_hash, sizeof(to_hash));
+            x->hash_value_buffer[1][src_idx][srcPos + src_sub_block_in_width];
+        to_hash[3] = x->hash_value_buffer[1][src_idx]
+                                         [srcPos + src_sub_block_in_width + 1];
+        x->hash_value_buffer[1][dst_idx][dst_pos] = av1_get_crc_value(
+            &x->crc_calculator2, (uint8_t *)to_hash, sizeof(to_hash));
         dst_pos++;
       }
     }
@@ -483,8 +477,6 @@ void av1_get_block_hash_value(uint8_t *y_src, int stride, int block_size,
     sub_block_in_width >>= 1;
   }
 
-  *hash_value1 = (hash_value_buffer[0][dst_idx][0] & crc_mask) + add_value;
-  *hash_value2 = hash_value_buffer[1][dst_idx][0];
+  *hash_value1 = (x->hash_value_buffer[0][dst_idx][0] & crc_mask) + add_value;
+  *hash_value2 = x->hash_value_buffer[1][dst_idx][0];
 }
-
-#undef AOM_BUFFER_SIZE_FOR_BLOCK_HASH

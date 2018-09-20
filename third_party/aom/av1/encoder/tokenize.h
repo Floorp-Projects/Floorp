@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_TOKENIZE_H_
-#define AV1_ENCODER_TOKENIZE_H_
+#ifndef AOM_AV1_ENCODER_TOKENIZE_H_
+#define AOM_AV1_ENCODER_TOKENIZE_H_
 
 #include "av1/common/entropy.h"
 #include "av1/encoder/block.h"
@@ -70,4 +70,4 @@ static INLINE int av1_get_tx_eob(const struct segmentation *seg, int segment_id,
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_TOKENIZE_H_
+#endif  // AOM_AV1_ENCODER_TOKENIZE_H_

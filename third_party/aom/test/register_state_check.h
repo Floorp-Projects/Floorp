@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef TEST_REGISTER_STATE_CHECK_H_
-#define TEST_REGISTER_STATE_CHECK_H_
+#ifndef AOM_TEST_REGISTER_STATE_CHECK_H_
+#define AOM_TEST_REGISTER_STATE_CHECK_H_
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
@@ -145,4 +145,4 @@ class RegisterStateCheckMMX {
 #define API_REGISTER_STATE_CHECK ASM_REGISTER_STATE_CHECK
 #endif
 
-#endif  // TEST_REGISTER_STATE_CHECK_H_
+#endif  // AOM_TEST_REGISTER_STATE_CHECK_H_

@@ -99,4 +99,4 @@ void aom_film_grain_table_free(aom_film_grain_table_t *t);
 }
 #endif
 
-#endif
+#endif  // AOM_AOM_DSP_GRAIN_TABLE_H_

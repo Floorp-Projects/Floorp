@@ -18,6 +18,7 @@
 #include "aom_ports/mem_ops.h"
 
 #include "av1/common/common.h"
+#include "av1/common/obu_util.h"
 #include "av1/common/timing.h"
 #include "av1/decoder/decoder.h"
 #include "av1/decoder/decodeframe.h"
@@ -41,85 +42,6 @@ typedef enum {
   SCALABILITY_S2T3h = 13,
   SCALABILITY_SS = 14
 } SCALABILITY_STRUCTURES;
-
-// Returns 1 when OBU type is valid, and 0 otherwise.
-static int valid_obu_type(int obu_type) {
-  int valid_type = 0;
-  switch (obu_type) {
-    case OBU_SEQUENCE_HEADER:
-    case OBU_TEMPORAL_DELIMITER:
-    case OBU_FRAME_HEADER:
-    case OBU_TILE_GROUP:
-    case OBU_METADATA:
-    case OBU_FRAME:
-    case OBU_REDUNDANT_FRAME_HEADER:
-    case OBU_TILE_LIST:
-    case OBU_PADDING: valid_type = 1; break;
-    default: break;
-  }
-  return valid_type;
-}
-
-// Parses OBU header and stores values in 'header'.
-static aom_codec_err_t read_obu_header(struct aom_read_bit_buffer *rb,
-                                       int is_annexb, ObuHeader *header) {
-  if (!rb || !header) return AOM_CODEC_INVALID_PARAM;
-
-  const ptrdiff_t bit_buffer_byte_length = rb->bit_buffer_end - rb->bit_buffer;
-  if (bit_buffer_byte_length < 1) return AOM_CODEC_CORRUPT_FRAME;
-
-  header->size = 1;
-
-  if (aom_rb_read_bit(rb) != 0) {
-    // Forbidden bit. Must not be set.
-    return AOM_CODEC_CORRUPT_FRAME;
-  }
-
-  header->type = (OBU_TYPE)aom_rb_read_literal(rb, 4);
-
-  if (!valid_obu_type(header->type)) return AOM_CODEC_CORRUPT_FRAME;
-
-  header->has_extension = aom_rb_read_bit(rb);
-  header->has_size_field = aom_rb_read_bit(rb);
-
-  if (!header->has_size_field && !is_annexb) {
-    // section 5 obu streams must have obu_size field set.
-    return AOM_CODEC_UNSUP_BITSTREAM;
-  }
-
-  if (aom_rb_read_bit(rb) != 0) {
-    // obu_reserved_1bit must be set to 0.
-    return AOM_CODEC_CORRUPT_FRAME;
-  }
-
-  if (header->has_extension) {
-    if (bit_buffer_byte_length == 1) return AOM_CODEC_CORRUPT_FRAME;
-
-    header->size += 1;
-    header->temporal_layer_id = aom_rb_read_literal(rb, 3);
-    header->spatial_layer_id = aom_rb_read_literal(rb, 2);
-    if (aom_rb_read_literal(rb, 3) != 0) {
-      // extension_header_reserved_3bits must be set to 0.
-      return AOM_CODEC_CORRUPT_FRAME;
-    }
-  }
-
-  return AOM_CODEC_OK;
-}
-
-aom_codec_err_t aom_read_obu_header(uint8_t *buffer, size_t buffer_length,
-                                    size_t *consumed, ObuHeader *header,
-                                    int is_annexb) {
-  if (buffer_length < 1 || !consumed || !header) return AOM_CODEC_INVALID_PARAM;
-
-  // TODO(tomfinegan): Set the error handler here and throughout this file, and
-  // confirm parsing work done via aom_read_bit_buffer is successful.
-  struct aom_read_bit_buffer rb = { buffer, buffer + buffer_length, 0, NULL,
-                                    NULL };
-  aom_codec_err_t parse_result = read_obu_header(&rb, is_annexb, header);
-  if (parse_result == AOM_CODEC_OK) *consumed = header->size;
-  return parse_result;
-}
 
 aom_codec_err_t aom_get_num_layers_from_operating_point_idc(
     int operating_point_idc, unsigned int *number_spatial_layers,
@@ -208,7 +130,7 @@ static uint32_t read_sequence_header_obu(AV1Decoder *pbi,
   SequenceHeader *const seq_params = &sh;
 
   seq_params->profile = av1_read_profile(rb);
-  if (seq_params->profile > PROFILE_2) {
+  if (seq_params->profile > CONFIG_MAX_DECODE_PROFILE) {
     cm->error.error_code = AOM_CODEC_UNSUP_BITSTREAM;
     return 0;
   }
@@ -349,10 +271,8 @@ static uint32_t read_sequence_header_obu(AV1Decoder *pbi,
   // If a sequence header has been decoded before, we check if the new
   // one is consistent with the old one.
   if (pbi->sequence_header_ready) {
-    if (!are_seq_headers_consistent(&cm->seq_params, seq_params)) {
-      aom_internal_error(&cm->error, AOM_CODEC_UNSUP_BITSTREAM,
-                         "Inconsistent sequence headers received.");
-    }
+    if (!are_seq_headers_consistent(&cm->seq_params, seq_params))
+      pbi->sequence_header_changed = 1;
   }
 
   cm->seq_params = *seq_params;
@@ -620,9 +540,9 @@ static void read_metadata_hdr_mdcv(const uint8_t *data, size_t sz) {
 
 static void scalability_structure(struct aom_read_bit_buffer *rb) {
   int spatial_layers_cnt = aom_rb_read_literal(rb, 2);
-  int spatial_layer_dimensions_present_flag = aom_rb_read_literal(rb, 1);
-  int spatial_layer_description_present_flag = aom_rb_read_literal(rb, 1);
-  int temporal_group_description_present_flag = aom_rb_read_literal(rb, 1);
+  int spatial_layer_dimensions_present_flag = aom_rb_read_bit(rb);
+  int spatial_layer_description_present_flag = aom_rb_read_bit(rb);
+  int temporal_group_description_present_flag = aom_rb_read_bit(rb);
   aom_rb_read_literal(rb, 3);  // reserved
 
   if (spatial_layer_dimensions_present_flag) {
@@ -643,8 +563,8 @@ static void scalability_structure(struct aom_read_bit_buffer *rb) {
     temporal_group_size = aom_rb_read_literal(rb, 8);
     for (i = 0; i < temporal_group_size; i++) {
       aom_rb_read_literal(rb, 3);
-      aom_rb_read_literal(rb, 1);
-      aom_rb_read_literal(rb, 1);
+      aom_rb_read_bit(rb);
+      aom_rb_read_bit(rb);
       int temporal_group_ref_cnt = aom_rb_read_literal(rb, 3);
       for (j = 0; j < temporal_group_ref_cnt; j++) {
         aom_rb_read_literal(rb, 8);
@@ -716,61 +636,6 @@ static size_t read_metadata(const uint8_t *data, size_t sz) {
   return sz;
 }
 
-static aom_codec_err_t read_obu_size(const uint8_t *data,
-                                     size_t bytes_available,
-                                     size_t *const obu_size,
-                                     size_t *const length_field_size) {
-  uint64_t u_obu_size = 0;
-  if (aom_uleb_decode(data, bytes_available, &u_obu_size, length_field_size) !=
-      0) {
-    return AOM_CODEC_CORRUPT_FRAME;
-  }
-
-  if (u_obu_size > UINT32_MAX) return AOM_CODEC_CORRUPT_FRAME;
-  *obu_size = (size_t)u_obu_size;
-  return AOM_CODEC_OK;
-}
-
-aom_codec_err_t aom_read_obu_header_and_size(const uint8_t *data,
-                                             size_t bytes_available,
-                                             int is_annexb,
-                                             ObuHeader *obu_header,
-                                             size_t *const payload_size,
-                                             size_t *const bytes_read) {
-  size_t length_field_size = 0, obu_size = 0;
-  aom_codec_err_t status;
-
-  if (is_annexb) {
-    // Size field comes before the OBU header, and includes the OBU header
-    status =
-        read_obu_size(data, bytes_available, &obu_size, &length_field_size);
-
-    if (status != AOM_CODEC_OK) return status;
-  }
-
-  struct aom_read_bit_buffer rb = { data + length_field_size,
-                                    data + bytes_available, 0, NULL, NULL };
-
-  status = read_obu_header(&rb, is_annexb, obu_header);
-  if (status != AOM_CODEC_OK) return status;
-
-  if (is_annexb) {
-    // Derive the payload size from the data we've already read
-    if (obu_size < obu_header->size) return AOM_CODEC_CORRUPT_FRAME;
-
-    *payload_size = obu_size - obu_header->size;
-  } else {
-    // Size field comes after the OBU header, and is just the payload size
-    status = read_obu_size(data + obu_header->size,
-                           bytes_available - obu_header->size, payload_size,
-                           &length_field_size);
-    if (status != AOM_CODEC_OK) return status;
-  }
-
-  *bytes_read = length_field_size + obu_header->size;
-  return AOM_CODEC_OK;
-}
-
 // On success, returns a boolean that indicates whether the decoding of the
 // current frame is finished. On failure, sets cm->error.error_code and
 // returns -1.
@@ -781,8 +646,6 @@ int aom_decode_frame_from_obus(struct AV1Decoder *pbi, const uint8_t *data,
   int frame_decoding_finished = 0;
   int is_first_tg_obu_received = 1;
   uint32_t frame_header_size = 0;
-  int seq_header_received = 0;
-  size_t seq_header_size = 0;
   ObuHeader obu_header;
   memset(&obu_header, 0, sizeof(obu_header));
   pbi->seen_frame_header = 0;
@@ -853,19 +716,8 @@ int aom_decode_frame_from_obus(struct AV1Decoder *pbi, const uint8_t *data,
         pbi->seen_frame_header = 0;
         break;
       case OBU_SEQUENCE_HEADER:
-        if (!seq_header_received) {
-          decoded_payload_size = read_sequence_header_obu(pbi, &rb);
-          if (cm->error.error_code != AOM_CODEC_OK) return -1;
-
-          seq_header_size = decoded_payload_size;
-          seq_header_received = 1;
-        } else {
-          // Seeing another sequence header, skip as all sequence headers are
-          // required to be identical except for the contents of
-          // operating_parameters_info and the amount of trailing bits.
-          // TODO(yaowu): verifying redundant sequence headers are identical.
-          decoded_payload_size = seq_header_size;
-        }
+        decoded_payload_size = read_sequence_header_obu(pbi, &rb);
+        if (cm->error.error_code != AOM_CODEC_OK) return -1;
         break;
       case OBU_FRAME_HEADER:
       case OBU_REDUNDANT_FRAME_HEADER:
@@ -889,6 +741,7 @@ int aom_decode_frame_from_obus(struct AV1Decoder *pbi, const uint8_t *data,
           assert(rb.bit_offset == 0);
           rb.bit_offset = 8 * frame_header_size;
         }
+
         decoded_payload_size = frame_header_size;
         pbi->frame_header_size = frame_header_size;
 
@@ -938,6 +791,11 @@ int aom_decode_frame_from_obus(struct AV1Decoder *pbi, const uint8_t *data,
         decoded_payload_size = read_metadata(data, payload_size);
         break;
       case OBU_TILE_LIST:
+        if (CONFIG_NORMAL_TILE_MODE) {
+          cm->error.error_code = AOM_CODEC_UNSUP_BITSTREAM;
+          return -1;
+        }
+
         // This OBU type is purely for the large scale tile coding mode.
         // The common camera frame header has to be already decoded.
         if (!pbi->camera_frame_header_ready) {

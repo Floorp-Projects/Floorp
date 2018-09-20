@@ -11,9 +11,8 @@
 
 #include <emmintrin.h>
 
-#include "config/aom_dsp_rtcd.h"
+#include "config/av1_rtcd.h"
 
-#include "aom_dsp/aom_convolve.h"
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_dsp/aom_filter.h"
 #include "aom_dsp/x86/convolve_common_intrin.h"
@@ -76,8 +75,8 @@ static INLINE __m128i convolve_hi_y(const __m128i *const s,
   return convolve(ss, coeffs);
 }
 
-void av1_convolve_y_sr_sse2(const uint8_t *src, int src_stride,
-                            const uint8_t *dst, int dst_stride, int w, int h,
+void av1_convolve_y_sr_sse2(const uint8_t *src, int src_stride, uint8_t *dst,
+                            int dst_stride, int w, int h,
                             const InterpFilterParams *filter_params_x,
                             const InterpFilterParams *filter_params_y,
                             const int subpel_x_q4, const int subpel_y_q4,
@@ -237,8 +236,8 @@ void av1_convolve_y_sr_sse2(const uint8_t *src, int src_stride,
   }
 }
 
-void av1_convolve_x_sr_sse2(const uint8_t *src, int src_stride,
-                            const uint8_t *dst, int dst_stride, int w, int h,
+void av1_convolve_x_sr_sse2(const uint8_t *src, int src_stride, uint8_t *dst,
+                            int dst_stride, int w, int h,
                             const InterpFilterParams *filter_params_x,
                             const InterpFilterParams *filter_params_y,
                             const int subpel_x_q4, const int subpel_y_q4,

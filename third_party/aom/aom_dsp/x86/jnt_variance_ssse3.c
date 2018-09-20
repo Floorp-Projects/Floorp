@@ -120,11 +120,11 @@ void aom_jnt_comp_avg_upsampled_pred_ssse3(
     MACROBLOCKD *xd, const struct AV1Common *const cm, int mi_row, int mi_col,
     const MV *const mv, uint8_t *comp_pred, const uint8_t *pred, int width,
     int height, int subpel_x_q3, int subpel_y_q3, const uint8_t *ref,
-    int ref_stride, const JNT_COMP_PARAMS *jcp_param) {
+    int ref_stride, const JNT_COMP_PARAMS *jcp_param, int subpel_search) {
   int n;
   int i;
   aom_upsampled_pred(xd, cm, mi_row, mi_col, mv, comp_pred, width, height,
-                     subpel_x_q3, subpel_y_q3, ref, ref_stride);
+                     subpel_x_q3, subpel_y_q3, ref, ref_stride, subpel_search);
   /*The total number of pixels must be a multiple of 16 (e.g., 4x4).*/
   assert(!(width * height & 15));
   n = width * height >> 4;

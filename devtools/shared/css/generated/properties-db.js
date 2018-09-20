@@ -7565,8 +7565,8 @@ exports.CSS_PROPERTIES = {
   "overflow": {
     "isInherited": false,
     "subproperties": [
-      "overflow-y",
-      "overflow-x"
+      "overflow-x",
+      "overflow-y"
     ],
     "supports": [],
     "values": [

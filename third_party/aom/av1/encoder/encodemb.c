@@ -222,11 +222,8 @@ static void encode_block(int plane, int block, int blk_row, int blk_col,
 
   a = &args->ta[blk_col];
   l = &args->tl[blk_row];
-  // Assert not magic number (uninitialized).
-  assert(plane != 0 || x->blk_skip[blk_row * bw + blk_col] != 234);
 
-  if ((plane != 0 || x->blk_skip[blk_row * bw + blk_col] == 0) &&
-      !mbmi->skip_mode) {
+  if (!is_blk_skip(x, plane, blk_row * bw + blk_col) && !mbmi->skip_mode) {
     TX_TYPE tx_type = av1_get_tx_type(pd->plane_type, xd, blk_row, blk_col,
                                       tx_size, cm->reduced_tx_set_used);
     if (args->enable_optimize_b) {
@@ -350,6 +347,66 @@ static void encode_block_inter(int plane, int block, int blk_row, int blk_col,
   }
 }
 
+void av1_foreach_transformed_block_in_plane(
+    const MACROBLOCKD *const xd, BLOCK_SIZE bsize, int plane,
+    foreach_transformed_block_visitor visit, void *arg) {
+  const struct macroblockd_plane *const pd = &xd->plane[plane];
+  // block and transform sizes, in number of 4x4 blocks log 2 ("*_b")
+  // 4x4=0, 8x8=2, 16x16=4, 32x32=6, 64x64=8
+  // transform size varies per plane, look it up in a common way.
+  const TX_SIZE tx_size = av1_get_tx_size(plane, xd);
+  const BLOCK_SIZE plane_bsize =
+      get_plane_block_size(bsize, pd->subsampling_x, pd->subsampling_y);
+  const uint8_t txw_unit = tx_size_wide_unit[tx_size];
+  const uint8_t txh_unit = tx_size_high_unit[tx_size];
+  const int step = txw_unit * txh_unit;
+  int i = 0, r, c;
+
+  // If mb_to_right_edge is < 0 we are in a situation in which
+  // the current block size extends into the UMV and we won't
+  // visit the sub blocks that are wholly within the UMV.
+  const int max_blocks_wide = max_block_wide(xd, plane_bsize, plane);
+  const int max_blocks_high = max_block_high(xd, plane_bsize, plane);
+
+  int blk_row, blk_col;
+
+  const BLOCK_SIZE max_unit_bsize =
+      get_plane_block_size(BLOCK_64X64, pd->subsampling_x, pd->subsampling_y);
+  int mu_blocks_wide = block_size_wide[max_unit_bsize] >> tx_size_wide_log2[0];
+  int mu_blocks_high = block_size_high[max_unit_bsize] >> tx_size_high_log2[0];
+  mu_blocks_wide = AOMMIN(max_blocks_wide, mu_blocks_wide);
+  mu_blocks_high = AOMMIN(max_blocks_high, mu_blocks_high);
+
+  // Keep track of the row and column of the blocks we use so that we know
+  // if we are in the unrestricted motion border.
+  for (r = 0; r < max_blocks_high; r += mu_blocks_high) {
+    const int unit_height = AOMMIN(mu_blocks_high + r, max_blocks_high);
+    // Skip visiting the sub blocks that are wholly within the UMV.
+    for (c = 0; c < max_blocks_wide; c += mu_blocks_wide) {
+      const int unit_width = AOMMIN(mu_blocks_wide + c, max_blocks_wide);
+      for (blk_row = r; blk_row < unit_height; blk_row += txh_unit) {
+        for (blk_col = c; blk_col < unit_width; blk_col += txw_unit) {
+          visit(plane, i, blk_row, blk_col, plane_bsize, tx_size, arg);
+          i += step;
+        }
+      }
+    }
+  }
+}
+
+void av1_foreach_transformed_block(const MACROBLOCKD *const xd,
+                                   BLOCK_SIZE bsize, int mi_row, int mi_col,
+                                   foreach_transformed_block_visitor visit,
+                                   void *arg, const int num_planes) {
+  for (int plane = 0; plane < num_planes; ++plane) {
+    if (!is_chroma_reference(mi_row, mi_col, bsize,
+                             xd->plane[plane].subsampling_x,
+                             xd->plane[plane].subsampling_y))
+      continue;
+    av1_foreach_transformed_block_in_plane(xd, bsize, plane, visit, arg);
+  }
+}
+
 typedef struct encode_block_pass1_args {
   AV1_COMMON *cm;
   MACROBLOCK *x;
@@ -382,7 +439,7 @@ static void encode_block_pass1(int plane, int block, int blk_row, int blk_col,
     txfm_param.tx_set_type = av1_get_ext_tx_set_type(
         txfm_param.tx_size, is_inter_block(xd->mi[0]), cm->reduced_tx_set_used);
     if (txfm_param.is_hbd) {
-      av1_highbd_inv_txfm_add_4x4(dqcoeff, dst, pd->dst.stride, &txfm_param);
+      av1_highbd_inv_txfm_add(dqcoeff, dst, pd->dst.stride, &txfm_param);
       return;
     }
     av1_inv_txfm_add(dqcoeff, dst, pd->dst.stride, &txfm_param);
@@ -513,9 +570,7 @@ void av1_encode_block_intra(int plane, int block, int blk_row, int blk_col,
   av1_predict_intra_block_facade(cm, xd, plane, blk_col, blk_row, tx_size);
 
   const int bw = block_size_wide[plane_bsize] >> tx_size_wide_log2[0];
-  // Assert not magic number (uninitialized).
-  assert(plane != 0 || x->blk_skip[blk_row * bw + blk_col] != 234);
-  if (plane == 0 && x->blk_skip[blk_row * bw + blk_col]) {
+  if (plane == 0 && is_blk_skip(x, plane, blk_row * bw + blk_col)) {
     *eob = 0;
     p->txb_entropy_ctx[block] = 0;
   } else {

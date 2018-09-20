@@ -32,8 +32,8 @@
 // Border over which to compute the global motion
 #define ERRORADV_BORDER 0
 
-static const double erroradv_tr[] = { 0.75, 0.70, 0.65 };
-static const double erroradv_prod_tr[] = { 22000, 20000, 18000 };
+static const double erroradv_tr[] = { 0.65, 0.60, 0.55 };
+static const double erroradv_prod_tr[] = { 20000, 18000, 16000 };
 
 int is_enough_erroradvantage(double best_erroradvantage, int params_cost,
                              int erroradv_type) {

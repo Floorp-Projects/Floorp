@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef AOM_ACCOUNTING_H_
-#define AOM_ACCOUNTING_H_
+#ifndef AOM_AV1_DECODER_ACCOUNTING_H_
+#define AOM_AV1_DECODER_ACCOUNTING_H_
 #include <stdlib.h>
 #include "aom/aomdx.h"
 
@@ -79,4 +79,4 @@ void aom_accounting_dump(Accounting *accounting);
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
-#endif  // AOM_ACCOUNTING_H_
+#endif  // AOM_AV1_DECODER_ACCOUNTING_H_

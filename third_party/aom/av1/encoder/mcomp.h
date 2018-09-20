@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_MCOMP_H_
-#define AV1_ENCODER_MCOMP_H_
+#ifndef AOM_AV1_ENCODER_MCOMP_H_
+#define AOM_AV1_ENCODER_MCOMP_H_
 
 #include "av1/encoder/block.h"
 #include "aom_dsp/variance.h"
@@ -31,6 +31,11 @@ extern "C" {
 // for Block_16x16
 #define BORDER_MV_PIXELS_B16 (16 + AOM_INTERP_EXTEND)
 
+#define SEARCH_RANGE_8P 3
+#define SEARCH_GRID_STRIDE_8P (2 * SEARCH_RANGE_8P + 1)
+#define SEARCH_GRID_CENTER_8P \
+  (SEARCH_RANGE_8P * SEARCH_GRID_STRIDE_8P + SEARCH_RANGE_8P)
+
 // motion search site
 typedef struct search_site {
   MV mv;
@@ -42,6 +47,11 @@ typedef struct search_site_config {
   int ss_count;
   int searches_per_step;
 } search_site_config;
+
+typedef struct {
+  MV coord;
+  int coord_offset;
+} search_neighbors;
 
 void av1_init_dsmotion_compensation(search_site_config *cfg, int stride);
 void av1_init3smotion_compensation(search_site_config *cfg, int stride);
@@ -120,14 +130,15 @@ int av1_refining_search_8p_c(MACROBLOCK *x, int error_per_bit, int search_range,
 
 int av1_full_pixel_search(const struct AV1_COMP *cpi, MACROBLOCK *x,
                           BLOCK_SIZE bsize, MV *mvp_full, int step_param,
-                          int error_per_bit, int *cost_list, const MV *ref_mv,
-                          int var_max, int rd, int x_pos, int y_pos, int intra);
+                          int method, int run_mesh_search, int error_per_bit,
+                          int *cost_list, const MV *ref_mv, int var_max, int rd,
+                          int x_pos, int y_pos, int intra);
 
-int av1_obmc_full_pixel_diamond(const struct AV1_COMP *cpi, MACROBLOCK *x,
-                                MV *mvp_full, int step_param, int sadpb,
-                                int further_steps, int do_refine,
-                                const aom_variance_fn_ptr_t *fn_ptr,
-                                const MV *ref_mv, MV *dst_mv, int is_second);
+int av1_obmc_full_pixel_search(const struct AV1_COMP *cpi, MACROBLOCK *x,
+                               MV *mvp_full, int step_param, int sadpb,
+                               int further_steps, int do_refine,
+                               const aom_variance_fn_ptr_t *fn_ptr,
+                               const MV *ref_mv, MV *dst_mv, int is_second);
 int av1_find_best_obmc_sub_pixel_tree_up(
     MACROBLOCK *x, const AV1_COMMON *const cm, int mi_row, int mi_col,
     MV *bestmv, const MV *ref_mv, int allow_hp, int error_per_bit,
@@ -147,4 +158,4 @@ unsigned int av1_refine_warped_mv(const struct AV1_COMP *cpi,
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_MCOMP_H_
+#endif  // AOM_AV1_ENCODER_MCOMP_H_
