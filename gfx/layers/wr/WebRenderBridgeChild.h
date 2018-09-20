@@ -74,6 +74,7 @@ public:
                       const gfx::IntSize& aSize,
                       TransactionId aTransactionId,
                       const WebRenderScrollData& aScrollData,
+                      bool aContainsSVGroup,
                       const mozilla::TimeStamp& aRefreshStartTime,
                       const mozilla::TimeStamp& aTxnStartTime);
   void EndEmptyTransaction(const FocusTarget& aFocusTarget,
