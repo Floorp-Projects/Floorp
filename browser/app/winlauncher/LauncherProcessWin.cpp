@@ -137,9 +137,7 @@ IsSameBinaryAsParentProcess()
     return mozilla::Nothing();
   }
 
-  bool isSame = parentExeLen == ourExeOk &&
-                !_wcsnicmp(ourExe, parentExe, ourExeOk);
-  return mozilla::Some(isSame);
+  return mozilla::DoPathsPointToIdenticalFile(parentExe, ourExe);
 }
 
 #endif // defined(MOZ_LAUNCHER_PROCESS)
