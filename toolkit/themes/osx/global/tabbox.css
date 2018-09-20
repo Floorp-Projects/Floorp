@@ -22,9 +22,6 @@ tabpanels {
 tabs {
   -moz-box-align: center;
   font: menu;
-}
-
-tabbox > tabs {
   padding: 0 10px;
   margin-bottom: -12px;
   position: relative;
