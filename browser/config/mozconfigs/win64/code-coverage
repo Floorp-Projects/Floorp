@@ -28,8 +28,8 @@ if [ -d "$topsrcdir/clang" ]; then
     export LDFLAGS="clang_rt.profile-x86_64.lib"
 fi
 
-export CFLAGS="--coverage"
-export CXXFLAGS="--coverage"
+export CFLAGS="--coverage -Xclang -coverage-no-function-names-in-data"
+export CXXFLAGS="--coverage -Xclang -coverage-no-function-names-in-data"
 export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Zno-landing-pads"
 
 . "$topsrcdir/build/mozconfig.common.override"
