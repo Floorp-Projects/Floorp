@@ -484,7 +484,7 @@ private:
   Mutex mCallbackMutex;
   webrtc::DecodedImageCallback* mCallback;
   Atomic<uint64_t> mCachedPluginId;
-  GMPErr mDecoderStatus;
+  Atomic<GMPErr, ReleaseAcquire> mDecoderStatus;
   std::string mPCHandle;
 };
 
