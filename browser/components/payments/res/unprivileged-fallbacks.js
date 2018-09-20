@@ -81,11 +81,11 @@ var PaymentDialogUtils = {
       "postalCodeLabel": country == "US" ? "zip" : "postalCode",
       "fieldsOrder": [
         {fieldId: "name", newLine: true},
-        {fieldId: "organization", newLine: true},
         {fieldId: "street-address", newLine: true},
         {fieldId: "address-level2"},
         {fieldId: "address-level1"},
         {fieldId: "postal-code"},
+        {fieldId: "organization"},
       ],
       // The following values come from addressReferences.js and should not be changed.
       /* eslint-disable-next-line max-len */

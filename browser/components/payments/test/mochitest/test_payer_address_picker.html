@@ -12,6 +12,7 @@ Test the paymentOptions address-picker
 
   <script src="../../res/vendor/custom-elements.min.js"></script>
   <script src="../../res/unprivileged-fallbacks.js"></script>
+  <script src="autofillEditForms.js"></script>
 
   <link rel="stylesheet" type="text/css" href="../../res/components/rich-select.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/components/address-option.css"/>
@@ -19,7 +20,7 @@ Test the paymentOptions address-picker
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-  <p id="display">
+  <p id="display" style="height: 100vh; margin: 0;">
     <iframe id="templateFrame" src="../../res/paymentRequest.xhtml" width="0" height="0"></iframe>
   </p>
 <div id="content" style="display: none">
@@ -126,11 +127,7 @@ add_task(async function setup_once() {
   await SimpleTest.promiseFocus(templateFrame.contentWindow);
 
   let displayEl = document.getElementById("display");
-  // Import the templates from the real shipping dialog to avoid duplication.
-  for (let template of templateFrame.contentDocument.querySelectorAll("template")) {
-    let imported = document.importNode(template, true);
-    displayEl.appendChild(imported);
-  }
+  importDialogDependencies(templateFrame, displayEl);
 
   elDialog = new PaymentDialog();
   displayEl.appendChild(elDialog);
@@ -193,8 +190,7 @@ add_task(async function test_visible_fields() {
     ok(elem, `field ${fieldName} exists`);
     ok(isVisible(elem), `field ${fieldName} is visible`);
   }
-  ok(!isVisible(closedRichOption.querySelector(".street-address")),
-     "street-address is not visible");
+  ok(!closedRichOption.querySelector(".street-address"), "street-address element is not present");
 });
 
 add_task(async function test_selective_fields() {
@@ -207,6 +203,7 @@ add_task(async function test_selective_fields() {
   });
 
   let payerFieldVariations = [
+    {requestPayerName: true, requestPayerEmail: true, requestPayerPhone: true },
     {requestPayerName: true, requestPayerEmail: false, requestPayerPhone: false },
     {requestPayerName: false, requestPayerEmail: true, requestPayerPhone: false },
     {requestPayerName: false, requestPayerEmail: false, requestPayerPhone: true },
@@ -224,12 +221,22 @@ add_task(async function test_selective_fields() {
     let elEmail = closedRichOption.querySelector(".email");
     let elPhone = closedRichOption.querySelector(".tel");
 
-    is(isVisible(elName), payerFields.requestPayerName,
+    is(!!elName && isVisible(elName), payerFields.requestPayerName,
        "name field is correctly toggled");
-    is(isVisible(elEmail), payerFields.requestPayerEmail,
+    is(!!elEmail && isVisible(elEmail), payerFields.requestPayerEmail,
        "email field is correctly toggled");
-    is(isVisible(elPhone), payerFields.requestPayerPhone,
+    is(!!elPhone && isVisible(elPhone), payerFields.requestPayerPhone,
        "tel field is correctly toggled");
+
+    let numPayerFieldsRequested = [...Object.values(payerFields)].filter(val => val).length;
+    is(elPicker.getAttribute("break-after-nth-field"), numPayerFieldsRequested == 3 ? "1" : null,
+       "Check @break-after-nth-field");
+    if (numPayerFieldsRequested == 3) {
+      is(closedRichOption.breakAfterNthField, "1",
+         "Make sure @break-after-nth-field was propagated to <address-option>");
+    } else {
+      is(closedRichOption.breakAfterNthField, null, "Make sure @break-after-nth-field was cleared");
+    }
   }
 });
 
