@@ -92,8 +92,12 @@ private:
                           const IntSize& aSize,
                           uint32_t aFlags) override;
 
-  /// Attempt to find a matching cached surface in the SurfaceCache.
-  already_AddRefed<SourceSurface>
+  /**
+   * Attempt to find a matching cached surface in the SurfaceCache. Returns the
+   * cached surface, if found, and the size to rasterize at, if applicable.
+   * If we cannot rasterize, it will be the requested size to draw at (aSize).
+   */
+  Tuple<RefPtr<SourceSurface>, IntSize>
     LookupCachedSurface(const IntSize& aSize,
                         const Maybe<SVGImageContext>& aSVGContext,
                         uint32_t aFlags);
@@ -105,6 +109,9 @@ private:
   /// Create a gfxDrawable which callbacks into the SVG document.
   already_AddRefed<gfxDrawable>
     CreateSVGDrawable(const SVGDrawingParameters& aParams);
+
+  /// Returns true if we use the surface cache to store rasterized copies.
+  bool UseSurfaceCacheForSize(const IntSize& aSize) const;
 
   /// Rasterize the SVG into a surface. aWillCache will be set to whether or
   /// not the new surface was put into the cache.
