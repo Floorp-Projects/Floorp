@@ -6,11 +6,6 @@
 // 2) with channel, but with no docshell parent
 
 function run_test() {
-  // Set the needed content blocking prefs
-  Services.prefs.setBoolPref("browser.contentblocking.enabled", true);
-  Services.prefs.setBoolPref("browser.contentblocking.ui.enabled", true);
-  Services.prefs.setBoolPref("browser.contentblocking.rejecttrackers.ui.enabled", true);
-
   // Create URIs and channels pointing to foo.com and bar.com.
   // We will use these to put foo.com into first and third party contexts.
   var spec1 = "http://foo.com/foo.html";

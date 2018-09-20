@@ -2021,7 +2021,7 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
   mHasStorageAccess = false;
   nsIURI* uri = aDocument->GetDocumentURI();
   if (newInnerWindow) {
-    if (AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions() &&
+    if (StaticPrefs::browser_contentblocking_enabled() &&
         StaticPrefs::network_cookie_cookieBehavior() ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER &&
         nsContentUtils::IsThirdPartyWindowOrChannel(newInnerWindow, nullptr,
