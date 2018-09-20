@@ -24,6 +24,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/net/ReferrerPolicy.h"
@@ -70,11 +71,11 @@ public:
     MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
   }
 
-  URIPrincipalReferrerPolicyAndCORSModeHashKey(const URIPrincipalReferrerPolicyAndCORSModeHashKey& toCopy)
-    : nsURIHashKey(toCopy),
-      mPrincipal(toCopy.mPrincipal),
-      mCORSMode(toCopy.mCORSMode),
-      mReferrerPolicy(toCopy.mReferrerPolicy)
+  URIPrincipalReferrerPolicyAndCORSModeHashKey(URIPrincipalReferrerPolicyAndCORSModeHashKey&& toMove)
+    : nsURIHashKey(std::move(toMove)),
+      mPrincipal(std::move(toMove.mPrincipal)),
+      mCORSMode(std::move(toMove.mCORSMode)),
+      mReferrerPolicy(std::move(toMove.mReferrerPolicy))
   {
     MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
   }
