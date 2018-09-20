@@ -532,8 +532,8 @@ protected:
     : nsURIHashKey(aURI)
     {
     }
-    VisitHashKey(const VisitHashKey& aOther)
-    : nsURIHashKey(aOther)
+    VisitHashKey(VisitHashKey&& aOther)
+      : nsURIHashKey(std::move(aOther))
     {
       MOZ_ASSERT_UNREACHABLE("Do not call me!");
     }
