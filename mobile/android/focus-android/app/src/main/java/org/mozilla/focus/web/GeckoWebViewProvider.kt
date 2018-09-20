@@ -19,6 +19,7 @@ import android.util.Log
 import android.view.View
 import android.webkit.WebSettings
 import org.json.JSONException
+import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.gecko.GeckoViewPrompt
 import org.mozilla.focus.gecko.NestedGeckoView
@@ -218,12 +219,39 @@ class GeckoWebViewProvider : IWebViewProvider {
             callback?.onRequestDesktopStateChanged(shouldRequestDesktop)
         }
 
+        @Suppress("ComplexMethod")
         override fun onSharedPreferenceChanged(
             sharedPreferences: SharedPreferences,
-            prefName: String
+            key: String
         ) {
-            updateBlocking()
-            applyAppSettings()
+            when (key) {
+                context.getString(R.string.pref_key_privacy_block_social),
+                context.getString(R.string.pref_key_privacy_block_ads),
+                context.getString(R.string.pref_key_privacy_block_analytics),
+                context.getString(R.string.pref_key_privacy_block_other) -> updateBlocking()
+                context.getString(R.string.pref_key_performance_block_javascript)
+                -> geckoRuntime!!.settings.javaScriptEnabled =
+                        !Settings.getInstance(context).shouldBlockJavaScript()
+                context.getString(R.string.pref_key_performance_block_webfonts)
+                -> geckoRuntime!!.settings.webFontsEnabled =
+                        !Settings.getInstance(context).shouldBlockWebFonts()
+                context.getString(R.string.pref_key_remote_debugging) ->
+                    geckoRuntime!!.settings.remoteDebuggingEnabled = false
+                context.getString(R.string.pref_key_performance_enable_cookies) -> {
+                    val cookiesValue = if (Settings.getInstance(context).shouldBlockCookies() &&
+                        Settings.getInstance(context).shouldBlockThirdPartyCookies()
+                    ) {
+                        GeckoRuntimeSettings.COOKIE_ACCEPT_NONE
+                    } else if (Settings.getInstance(context).shouldBlockThirdPartyCookies()) {
+                        GeckoRuntimeSettings.COOKIE_ACCEPT_FIRST_PARTY
+                    } else {
+                        GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
+                    }
+                    geckoRuntime!!.settings.cookieBehavior = cookiesValue
+                }
+                else -> return
+            }
+            reload()
         }
 
         private fun applyAppSettings() {

@@ -96,6 +96,7 @@ class SystemWebView(context: Context, attrs: AttributeSet) : NestedWebView(conte
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         WebViewProvider.applyAppSettings(context, settings, this)
+        reload()
     }
 
     override fun onPause() {
