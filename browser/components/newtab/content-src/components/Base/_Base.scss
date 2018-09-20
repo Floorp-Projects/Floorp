@@ -59,7 +59,7 @@ main {
   $selectors-to-hide: '
     .section-title,
     .sections-list .section:last-of-type,
-    .topics
+    .topic
   ';
 
   #{$selectors-to-hide} {

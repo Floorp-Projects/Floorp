@@ -8,12 +8,12 @@ describe("filterAdult", () => {
     hashStub = {
       finish: sinon.stub().callsFake(() => hashValue),
       init: sinon.stub(),
-      update: sinon.stub(),
+      update: sinon.stub()
     };
     global.Cc["@mozilla.org/security/hash;1"] = {
       createInstance() {
         return hashStub;
-      },
+      }
     };
   });
 

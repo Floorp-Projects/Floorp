@@ -8,7 +8,7 @@ import {
   globalImportContext,
   MAIN_MESSAGE_TYPE,
   PRELOAD_MESSAGE_TYPE,
-  UI_CODE,
+  UI_CODE
 } from "common/Actions.jsm";
 
 describe("Actions", () => {
@@ -48,7 +48,7 @@ describe("ActionCreators", () => {
       assert.deepEqual(newAction, {
         type: "FOO",
         data: "BAR",
-        meta: {from: CONTENT_MESSAGE_TYPE, to: MAIN_MESSAGE_TYPE},
+        meta: {from: CONTENT_MESSAGE_TYPE, to: MAIN_MESSAGE_TYPE}
       });
     });
     it("should add the fromTarget if it was supplied", () => {
@@ -74,7 +74,7 @@ describe("ActionCreators", () => {
       assert.deepEqual(newAction, {
         type: "FOO",
         data: "BAR",
-        meta: {from: MAIN_MESSAGE_TYPE, to: CONTENT_MESSAGE_TYPE, toTarget: targetId},
+        meta: {from: MAIN_MESSAGE_TYPE, to: CONTENT_MESSAGE_TYPE, toTarget: targetId}
       });
     });
     it("should throw if no targetId is provided", () => {
@@ -114,7 +114,7 @@ describe("ActionCreators", () => {
       assert.deepEqual(newAction, {
         type: "FOO",
         data: "BAR",
-        meta: {from: MAIN_MESSAGE_TYPE, to: CONTENT_MESSAGE_TYPE},
+        meta: {from: MAIN_MESSAGE_TYPE, to: CONTENT_MESSAGE_TYPE}
       });
     });
     describe("isBroadcastToContent", () => {
@@ -134,7 +134,7 @@ describe("ActionCreators", () => {
       assert.deepEqual(newAction, {
         type: "FOO",
         data: "BAR",
-        meta: {from: MAIN_MESSAGE_TYPE, to: PRELOAD_MESSAGE_TYPE},
+        meta: {from: MAIN_MESSAGE_TYPE, to: PRELOAD_MESSAGE_TYPE}
       });
     });
   });
