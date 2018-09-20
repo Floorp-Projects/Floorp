@@ -51,7 +51,7 @@ import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 
-public final class GeckoSession extends LayerSession
+public class GeckoSession extends LayerSession
         implements Parcelable {
     private static final String LOGTAG = "GeckoSession";
     private static final boolean DEBUG = false;
