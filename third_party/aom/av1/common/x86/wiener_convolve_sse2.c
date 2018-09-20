@@ -32,7 +32,8 @@ void av1_wiener_convolve_add_src_sse2(const uint8_t *src, ptrdiff_t src_stride,
 
   DECLARE_ALIGNED(16, uint16_t,
                   temp[(MAX_SB_SIZE + SUBPEL_TAPS - 1) * MAX_SB_SIZE]);
-  int intermediate_height = h + SUBPEL_TAPS - 1;
+  int intermediate_height = h + SUBPEL_TAPS - 2;
+  memset(temp + (intermediate_height * MAX_SB_SIZE), 0, MAX_SB_SIZE);
   int i, j;
   const int center_tap = ((SUBPEL_TAPS - 1) / 2);
   const uint8_t *const src_ptr = src - center_tap * src_stride - center_tap;

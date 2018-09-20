@@ -27,8 +27,8 @@ void aom_blend_a64_vmask_neon(uint8_t *dst, uint32_t dst_stride,
   uint8x8_t tmp0, tmp1;
   uint8x16_t tmp0_q, tmp1_q, res_q;
   uint16x8_t res, res_low, res_high;
-  uint32x2_t tmp0_32, tmp1_32;
-  uint16x4_t tmp0_16, tmp1_16;
+  uint32x2_t tmp0_32 = vdup_n_u32(0), tmp1_32 = vdup_n_u32(0);
+  uint16x4_t tmp0_16 = vdup_n_u16(0), tmp1_16 = vdup_n_u16(0);
   assert(IMPLIES(src0 == dst, src0_stride == dst_stride));
   assert(IMPLIES(src1 == dst, src1_stride == dst_stride));
 

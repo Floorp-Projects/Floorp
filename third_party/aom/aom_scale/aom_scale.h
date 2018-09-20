@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_SCALE_AOM_SCALE_H_
-#define AOM_SCALE_AOM_SCALE_H_
+#ifndef AOM_AOM_SCALE_AOM_SCALE_H_
+#define AOM_AOM_SCALE_AOM_SCALE_H_
 
 #include "aom_scale/yv12config.h"
 
@@ -20,4 +20,4 @@ extern void aom_scale_frame(YV12_BUFFER_CONFIG *src, YV12_BUFFER_CONFIG *dst,
                             unsigned int vscale, unsigned int vratio,
                             unsigned int interlaced, const int num_planes);
 
-#endif  // AOM_SCALE_AOM_SCALE_H_
+#endif  // AOM_AOM_SCALE_AOM_SCALE_H_

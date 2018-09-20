@@ -275,7 +275,7 @@ double aom_get_ssim_metrics(uint8_t *img1, int img1_pitch, uint8_t *img2,
   for (i = 0; i < height;
        i += 4, img1 += img1_pitch * 4, img2 += img2_pitch * 4) {
     for (j = 0; j < width; j += 4, ++c) {
-      Ssimv sv = { 0 };
+      Ssimv sv = { 0, 0, 0, 0, 0, 0 };
       double ssim;
       double ssim2;
       double dssim;

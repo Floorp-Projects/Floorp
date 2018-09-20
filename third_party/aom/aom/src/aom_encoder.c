@@ -16,7 +16,9 @@
 #include "config/aom_config.h"
 
 #if HAVE_FEXCEPT
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <fenv.h>
 #endif
 
@@ -45,9 +47,6 @@ aom_codec_err_t aom_codec_enc_init_ver(aom_codec_ctx_t *ctx,
   else if (!(iface->caps & AOM_CODEC_CAP_ENCODER))
     res = AOM_CODEC_INCAPABLE;
   else if ((flags & AOM_CODEC_USE_PSNR) && !(iface->caps & AOM_CODEC_CAP_PSNR))
-    res = AOM_CODEC_INCAPABLE;
-  else if ((flags & AOM_CODEC_USE_OUTPUT_PARTITION) &&
-           !(iface->caps & AOM_CODEC_CAP_OUTPUT_PARTITION))
     res = AOM_CODEC_INCAPABLE;
   else {
     ctx->iface = iface;
@@ -80,9 +79,6 @@ aom_codec_err_t aom_codec_enc_init_multi_ver(
   else if (!(iface->caps & AOM_CODEC_CAP_ENCODER))
     res = AOM_CODEC_INCAPABLE;
   else if ((flags & AOM_CODEC_USE_PSNR) && !(iface->caps & AOM_CODEC_CAP_PSNR))
-    res = AOM_CODEC_INCAPABLE;
-  else if ((flags & AOM_CODEC_USE_OUTPUT_PARTITION) &&
-           !(iface->caps & AOM_CODEC_CAP_OUTPUT_PARTITION))
     res = AOM_CODEC_INCAPABLE;
   else {
     int i;

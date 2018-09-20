@@ -17,11 +17,12 @@
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/system_state.h"
-#include "av1/encoder/segmentation.h"
-#include "av1/encoder/mcomp.h"
 #include "av1/common/blockd.h"
 #include "av1/common/reconinter.h"
 #include "av1/common/reconintra.h"
+#include "av1/encoder/mcomp.h"
+#include "av1/encoder/reconinter_enc.h"
+#include "av1/encoder/segmentation.h"
 
 static unsigned int do_16x16_motion_iteration(AV1_COMP *cpi, const MV *ref_mv,
                                               int mb_row, int mb_col) {
@@ -140,7 +141,7 @@ static int find_best_16x16_intra(AV1_COMP *cpi, PREDICTION_MODE *pbest_mode) {
 
   // calculate SATD for each intra prediction mode;
   // we're intentionally not doing 4x4, we just want a rough estimate
-  for (mode = DC_PRED; mode <= PAETH_PRED; mode++) {
+  for (mode = INTRA_MODE_START; mode < INTRA_MODE_END; mode++) {
     unsigned int err;
 
     xd->mi[0]->mode = mode;

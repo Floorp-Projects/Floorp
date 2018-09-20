@@ -68,23 +68,6 @@ static const int mode_lf_lut[] = {
 //    10101010|10101010
 //
 // A loopfilter should be applied to every other 4x4 horizontally.
-// TODO(chengchen): make these tables static
-const FilterMask left_txform_mask[TX_SIZES] = {
-  { { 0xffffffffffffffffULL,  // TX_4X4,
-      0xffffffffffffffffULL, 0xffffffffffffffffULL, 0xffffffffffffffffULL } },
-
-  { { 0x5555555555555555ULL,  // TX_8X8,
-      0x5555555555555555ULL, 0x5555555555555555ULL, 0x5555555555555555ULL } },
-
-  { { 0x1111111111111111ULL,  // TX_16X16,
-      0x1111111111111111ULL, 0x1111111111111111ULL, 0x1111111111111111ULL } },
-
-  { { 0x0101010101010101ULL,  // TX_32X32,
-      0x0101010101010101ULL, 0x0101010101010101ULL, 0x0101010101010101ULL } },
-
-  { { 0x0001000100010001ULL,  // TX_64X64,
-      0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL } },
-};
 
 // 256 bit masks (64x64 / 4x4) for above transform size for Y plane.
 // We use 4 uint64_t to represent the 256 bit.
@@ -113,98 +96,314 @@ const FilterMask left_txform_mask[TX_SIZES] = {
 //    00000000|00000000
 //
 // A loopfilter should be applied to every other 4x4 horizontally.
-const FilterMask above_txform_mask[TX_SIZES] = {
-  { { 0xffffffffffffffffULL,  // TX_4X4
-      0xffffffffffffffffULL, 0xffffffffffffffffULL, 0xffffffffffffffffULL } },
 
-  { { 0x0000ffff0000ffffULL,  // TX_8X8
-      0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL } },
-
-  { { 0x000000000000ffffULL,  // TX_16X16
-      0x000000000000ffffULL, 0x000000000000ffffULL, 0x000000000000ffffULL } },
-
-  { { 0x000000000000ffffULL,  // TX_32X32
-      0x0000000000000000ULL, 0x000000000000ffffULL, 0x0000000000000000ULL } },
-
-  { { 0x000000000000ffffULL,  // TX_64X64
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+const int mask_id_table_tx_4x4[BLOCK_SIZES_ALL] = {
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, -1, -1, -1, 13, 14, 15, 16, 17, 18
 };
 
-// 64 bit mask to shift and set for each prediction size. A bit is set for
-// each 4x4 block that would be in the top left most block of the given block
-// size in the 64x64 block.
-const FilterMask size_mask_y[BLOCK_SIZES_ALL] = {
-  { { 0x0000000000000001ULL,  // BLOCK_4X4
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+const int mask_id_table_tx_8x8[BLOCK_SIZES_ALL] = {
+  -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, 10, 11, 12, 13
+};
 
-  { { 0x0000000000010001ULL,  // BLOCK_4X8
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+const int mask_id_table_tx_16x16[BLOCK_SIZES_ALL] = {
+  -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, -1, -1, -1, -1, -1, -1, -1, 7, 8
+};
 
-  { { 0x0000000000000003ULL,  // BLOCK_8X4
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+const int mask_id_table_tx_32x32[BLOCK_SIZES_ALL] = { -1, -1, -1, -1, -1, -1,
+                                                      -1, -1, -1, 0,  1,  2,
+                                                      3,  -1, -1, -1, -1, -1,
+                                                      -1, -1, -1, -1 };
 
-  { { 0x0000000000030003ULL,  // BLOCK_8X8
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
+const FilterMask left_mask_univariant_reordered[67] = {
+  // TX_4X4
+  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X4, TX_4X4
+  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X8, TX_4X4
+  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X4, TX_4X4
+  { { 0x0000000000030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X8, TX_4X4
+  { { 0x0003000300030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X16, TX_4X4
+  { { 0x00000000000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X8, TX_4X4
+  { { 0x000f000f000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X16, TX_4X4
+  { { 0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X32, TX_4X4
+  { { 0x00ff00ff00ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X16, TX_4X4
+  { { 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X32, TX_4X4
+  { { 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL,
+      0x00ff00ff00ff00ffULL } },  // block size 32X64, TX_4X4
+  { { 0xffffffffffffffffULL, 0xffffffffffffffffULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_4X4
+  { { 0xffffffffffffffffULL, 0xffffffffffffffffULL, 0xffffffffffffffffULL,
+      0xffffffffffffffffULL } },  // block size 64X64, TX_4X4
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X16, TX_4X4
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X4, TX_4X4
+  { { 0x0003000300030003ULL, 0x0003000300030003ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X32, TX_4X4
+  { { 0x0000000000ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X8, TX_4X4
+  { { 0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x000f000f000f000fULL,
+      0x000f000f000f000fULL } },  // block size 16X64, TX_4X4
+  { { 0xffffffffffffffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_4X4
+  // TX_8X8
+  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X8, TX_8X8
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X16, TX_8X8
+  { { 0x0000000000050005ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X8, TX_8X8
+  { { 0x0005000500050005ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X16, TX_8X8
+  { { 0x0005000500050005ULL, 0x0005000500050005ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X32, TX_8X8
+  { { 0x0055005500550055ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X16, TX_8X8
+  { { 0x0055005500550055ULL, 0x0055005500550055ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X32, TX_8X8
+  { { 0x0055005500550055ULL, 0x0055005500550055ULL, 0x0055005500550055ULL,
+      0x0055005500550055ULL } },  // block size 32X64, TX_8X8
+  { { 0x5555555555555555ULL, 0x5555555555555555ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_8X8
+  { { 0x5555555555555555ULL, 0x5555555555555555ULL, 0x5555555555555555ULL,
+      0x5555555555555555ULL } },  // block size 64X64, TX_8X8
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X32, TX_8X8
+  { { 0x0000000000550055ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X8, TX_8X8
+  { { 0x0005000500050005ULL, 0x0005000500050005ULL, 0x0005000500050005ULL,
+      0x0005000500050005ULL } },  // block size 16X64, TX_8X8
+  { { 0x5555555555555555ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_8X8
+  // TX_16X16
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X16, TX_16X16
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X32, TX_16X16
+  { { 0x0011001100110011ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X16, TX_16X16
+  { { 0x0011001100110011ULL, 0x0011001100110011ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X32, TX_16X16
+  { { 0x0011001100110011ULL, 0x0011001100110011ULL, 0x0011001100110011ULL,
+      0x0011001100110011ULL } },  // block size 32X64, TX_16X16
+  { { 0x1111111111111111ULL, 0x1111111111111111ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_16X16
+  { { 0x1111111111111111ULL, 0x1111111111111111ULL, 0x1111111111111111ULL,
+      0x1111111111111111ULL } },  // block size 64X64, TX_16X16
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
+      0x0001000100010001ULL } },  // block size 16X64, TX_16X16
+  { { 0x1111111111111111ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_16X16
+  // TX_32X32
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X32, TX_32X32
+  { { 0x0101010101010101ULL, 0x0101010101010101ULL, 0x0101010101010101ULL,
+      0x0101010101010101ULL } },  // block size 32X64, TX_32X32
+  { { 0x0101010101010101ULL, 0x0101010101010101ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_32X32
+  { { 0x0101010101010101ULL, 0x0101010101010101ULL, 0x0101010101010101ULL,
+      0x0101010101010101ULL } },  // block size 64X64, TX_32X32
+  // TX_64X64
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
+      0x0001000100010001ULL } },  // block size 64X64, TX_64X64
+  // 2:1, 1:2 transform sizes.
+  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X8, TX_4X8
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X16, TX_4X8
+  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X4, TX_8X4
+  { { 0x0000000000000005ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X4, TX_8X4
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X16, TX_8X16
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X32, TX_8X16
+  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X8, TX_16X8
+  { { 0x0000000000110011ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X8, TX_16X8
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X32, TX_16X32
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
+      0x0001000100010001ULL } },  // block size 16X64, TX_16X32
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X16, TX_32X16
+  { { 0x0101010101010101ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_32X16
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
+      0x0001000100010001ULL } },  // block size 32X64, TX_32X64
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_64X32
+  // 4:1, 1:4 transform sizes.
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X16, TX_4X16
+  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X4, TX_16X4
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X32, TX_8X32
+  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X8, TX_32X8
+  { { 0x0001000100010001ULL, 0x0001000100010001ULL, 0x0001000100010001ULL,
+      0x0001000100010001ULL } },  // block size 16X64, TX_16X64
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_64X16
+};
 
-  { { 0x0003000300030003ULL,  // BLOCK_8X16
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x00000000000f000fULL,  // BLOCK_16X8
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x000f000f000f000fULL,  // BLOCK_16X16
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x000f000f000f000fULL,  // BLOCK_16X32
-      0x000f000f000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x00ff00ff00ff00ffULL,  // BLOCK_32X16
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x00ff00ff00ff00ffULL,  // BLOCK_32X32
-      0x00ff00ff00ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x00ff00ff00ff00ffULL,  // BLOCK_32X64
-      0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL } },
-
-  { { 0xffffffffffffffffULL,  // BLOCK_64X32
-      0xffffffffffffffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0xffffffffffffffffULL,  // BLOCK_64X64
-      0xffffffffffffffffULL, 0xffffffffffffffffULL, 0xffffffffffffffffULL } },
-  // Y plane max coding block size is 128x128, but the codec divides it
-  // into 4 64x64 blocks.
-  // BLOCK_64X128
-  { { 0x0ULL, 0x0ULL, 0x0ULL, 0x0ULL } },
-  // BLOCK_128X64
-  { { 0x0ULL, 0x0ULL, 0x0ULL, 0x0ULL } },
-  // BLOCK_128X128
-  { { 0x0ULL, 0x0ULL, 0x0ULL, 0x0ULL } },
-
-  { { 0x0001000100010001ULL,  // BLOCK_4X16
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x000000000000000fULL,  // BLOCK_16X4
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x0003000300030003ULL,  // BLOCK_8X32
-      0x0003000300030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x0000000000ff00ffULL,  // BLOCK_32X8
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } },
-
-  { { 0x000f000f000f000fULL,  // BLOCK_16X64
-      0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x000f000f000f000fULL } },
-
-  { { 0xffffffffffffffffULL,  // BLOCK_64X16
-      0x0000000000000000ULL, 0x0000000000000000ULL, 0x0000000000000000ULL } }
+const FilterMask above_mask_univariant_reordered[67] = {
+  // TX_4X4
+  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X4, TX_4X4
+  { { 0x0000000000010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X8, TX_4X4
+  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X4, TX_4X4
+  { { 0x0000000000030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X8, TX_4X4
+  { { 0x0003000300030003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X16, TX_4X4
+  { { 0x00000000000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X8, TX_4X4
+  { { 0x000f000f000f000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X16, TX_4X4
+  { { 0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X32, TX_4X4
+  { { 0x00ff00ff00ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X16, TX_4X4
+  { { 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X32, TX_4X4
+  { { 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL, 0x00ff00ff00ff00ffULL,
+      0x00ff00ff00ff00ffULL } },  // block size 32X64, TX_4X4
+  { { 0xffffffffffffffffULL, 0xffffffffffffffffULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_4X4
+  { { 0xffffffffffffffffULL, 0xffffffffffffffffULL, 0xffffffffffffffffULL,
+      0xffffffffffffffffULL } },  // block size 64X64, TX_4x4
+  { { 0x0001000100010001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X16, TX_4X4
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X4, TX_4X4
+  { { 0x0003000300030003ULL, 0x0003000300030003ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X32, TX_4X4
+  { { 0x0000000000ff00ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X8, TX_4X4
+  { { 0x000f000f000f000fULL, 0x000f000f000f000fULL, 0x000f000f000f000fULL,
+      0x000f000f000f000fULL } },  // block size 16X64, TX_4X4
+  { { 0xffffffffffffffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_4X4
+  // TX_8X8
+  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X8, TX_8X8
+  { { 0x0000000300000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X16, TX_8X8
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X8, TX_8X8
+  { { 0x0000000f0000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X16, TX_8X8
+  { { 0x0000000f0000000fULL, 0x0000000f0000000fULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X32, TX_8X8
+  { { 0x000000ff000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X16, TX_8X8
+  { { 0x000000ff000000ffULL, 0x000000ff000000ffULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X32, TX_8X8
+  { { 0x000000ff000000ffULL, 0x000000ff000000ffULL, 0x000000ff000000ffULL,
+      0x000000ff000000ffULL } },  // block size 32X64, TX_8X8
+  { { 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_8X8
+  { { 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL, 0x0000ffff0000ffffULL,
+      0x0000ffff0000ffffULL } },  // block size 64X64, TX_8X8
+  { { 0x0000000300000003ULL, 0x0000000300000003ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X32, TX_8X8
+  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X8, TX_8X8
+  { { 0x0000000f0000000fULL, 0x0000000f0000000fULL, 0x0000000f0000000fULL,
+      0x0000000f0000000fULL } },  // block size 16X64, TX_8X8
+  { { 0x0000ffff0000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_8X8
+  // TX_16X16
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X16, TX_16X16
+  { { 0x000000000000000fULL, 0x000000000000000fULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X32, TX_16X16
+  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X16, TX_16X16
+  { { 0x00000000000000ffULL, 0x00000000000000ffULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X32, TX_16X16
+  { { 0x00000000000000ffULL, 0x00000000000000ffULL, 0x00000000000000ffULL,
+      0x00000000000000ffULL } },  // block size 32X64, TX_16X16
+  { { 0x000000000000ffffULL, 0x000000000000ffffULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_16X16
+  { { 0x000000000000ffffULL, 0x000000000000ffffULL, 0x000000000000ffffULL,
+      0x000000000000ffffULL } },  // block size 64X64, TX_16X16
+  { { 0x000000000000000fULL, 0x000000000000000fULL, 0x000000000000000fULL,
+      0x000000000000000fULL } },  // block size 16X64, TX_16X16
+  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_16X16
+  // TX_32X32
+  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X32, TX_32X32
+  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x00000000000000ffULL,
+      0x0000000000000000ULL } },  // block size 32X64, TX_32X32
+  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_32X32
+  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x000000000000ffffULL,
+      0x0000000000000000ULL } },  // block size 64X64, TX_32X32
+  // TX_64X64
+  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X64, TX_64X64
+  // 2:1, 1:2 transform sizes.
+  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X8, TX_4X8
+  { { 0x0000000100000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X16, TX_4X8
+  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X4, TX_8X4
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X4, TX_8X4
+  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X16, TX_8X16
+  { { 0x0000000000000003ULL, 0x0000000000000003ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X32, TX_8X16
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X8, TX_16X8
+  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X8, TX_16X8
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X32, TX_16X32
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x000000000000000fULL,
+      0x0000000000000000ULL } },  // block size 16X64, TX_16X32
+  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X16, TX_32X16
+  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_32X16
+  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X64, TX_32X64
+  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X32, TX_64X32
+  // 4:1, 1:4 transform sizes.
+  { { 0x0000000000000001ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 4X16, TX_4X16
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X4, TX_16X4
+  { { 0x0000000000000003ULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 8X32, TX_8X32
+  { { 0x00000000000000ffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 32X8, TX_32X8
+  { { 0x000000000000000fULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 16X64, TX_16X64
+  { { 0x000000000000ffffULL, 0x0000000000000000ULL, 0x0000000000000000ULL,
+      0x0000000000000000ULL } },  // block size 64X16, TX_64X16
 };
 
 LoopFilterMask *get_loop_filter_mask(const AV1_COMMON *const cm, int mi_row,
                                      int mi_col) {
-  if ((mi_row << MI_SIZE_LOG2) >= cm->height ||
-      (mi_col << MI_SIZE_LOG2) >= cm->width)
-    return NULL;
   assert(cm->lf.lfm != NULL);
   const int row = mi_row >> MIN_MIB_SIZE_LOG2;  // 64x64
   const int col = mi_col >> MIN_MIB_SIZE_LOG2;
@@ -248,10 +447,10 @@ static void update_sharpness(loop_filter_info_n *lfi, int sharpness_lvl) {
            SIMD_WIDTH);
   }
 }
-static uint8_t get_filter_level(const AV1_COMMON *cm,
-                                const loop_filter_info_n *lfi_n,
-                                const int dir_idx, int plane,
-                                const MB_MODE_INFO *mbmi) {
+
+uint8_t get_filter_level(const AV1_COMMON *cm, const loop_filter_info_n *lfi_n,
+                         const int dir_idx, int plane,
+                         const MB_MODE_INFO *mbmi) {
   const int segment_id = mbmi->segment_id;
   if (cm->delta_lf_present_flag) {
     int delta_lf;
@@ -374,30 +573,6 @@ void av1_loop_filter_frame_init(AV1_COMMON *cm, int plane_start,
       }
     }
   }
-
-#if LOOP_FILTER_BITMASK
-  memset(lf->neighbor_sb_lpf_info.tx_size_y_above, TX_64X64,
-         sizeof(TX_SIZE) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.tx_size_y_left, TX_64X64,
-         sizeof(TX_SIZE) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.tx_size_uv_above, TX_64X64,
-         sizeof(TX_SIZE) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.tx_size_uv_left, TX_64X64,
-         sizeof(TX_SIZE) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.y_level_above, 0,
-         sizeof(uint8_t) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.y_level_left, 0,
-         sizeof(uint8_t) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.u_level_above, 0,
-         sizeof(uint8_t) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.u_level_left, 0,
-         sizeof(uint8_t) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.v_level_above, 0,
-         sizeof(uint8_t) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.v_level_left, 0,
-         sizeof(uint8_t) * MI_SIZE_64X64);
-  memset(lf->neighbor_sb_lpf_info.skip, 0, sizeof(uint8_t) * MI_SIZE_64X64);
-#endif  // LOOP_FILTER_BITMASK
 }
 
 #if LOOP_FILTER_BITMASK
@@ -413,7 +588,7 @@ void av1_loop_filter_frame_init(AV1_COMMON *cm, int plane_start,
 // After locating which uint64_t, mi_row % 4 is the
 // row offset, and each row has 16 = 1 << stride_log2 4x4 units.
 // Therefore, shift = (row << stride_log2) + mi_col;
-static int get_index_shift(int mi_col, int mi_row, int *index) {
+int get_index_shift(int mi_col, int mi_row, int *index) {
   // *index = mi_row >> 2;
   // rows = mi_row % 4;
   // stride_log2 = 4;
@@ -588,15 +763,9 @@ static void setup_masks(AV1_COMMON *const cm, int mi_row, int mi_col, int plane,
           else
             lfm->lfl_y_hor[row][col] = level;
         } else if (plane == 1) {
-          if (dir == VERT_EDGE)
-            lfm->lfl_u_ver[row][col] = level;
-          else
-            lfm->lfl_u_hor[row][col] = level;
+          lfm->lfl_u[row][col] = level;
         } else {
-          if (dir == VERT_EDGE)
-            lfm->lfl_v_ver[row][col] = level;
-          else
-            lfm->lfl_v_hor[row][col] = level;
+          lfm->lfl_v[row][col] = level;
         }
       }
     }
@@ -623,11 +792,12 @@ static void setup_masks(AV1_COMMON *const cm, int mi_row, int mi_col, int plane,
           const TX_SIZE prev_tx_size =
               plane ? av1_get_max_uv_txsize(mbmi_prev->sb_type, ssx, ssy)
                     : mbmi_prev->tx_size;
-          const TX_SIZE min_tx_size =
-              (dir == VERT_EDGE) ? AOMMIN(txsize_horz_map[tx_size],
-                                          txsize_horz_map[prev_tx_size])
-                                 : AOMMIN(txsize_vert_map[tx_size],
-                                          txsize_vert_map[prev_tx_size]);
+          TX_SIZE min_tx_size = (dir == VERT_EDGE)
+                                    ? AOMMIN(txsize_horz_map[tx_size],
+                                             txsize_horz_map[prev_tx_size])
+                                    : AOMMIN(txsize_vert_map[tx_size],
+                                             txsize_vert_map[prev_tx_size]);
+          min_tx_size = AOMMIN(min_tx_size, TX_16X16);
           assert(min_tx_size < TX_SIZES);
           const int row = r % MI_SIZE_64X64;
           const int col = c % MI_SIZE_64X64;
@@ -883,13 +1053,11 @@ void av1_setup_bitmask(AV1_COMMON *const cm, int mi_row, int mi_col, int plane,
       } else if (plane == 1) {
         av1_zero(lfm->left_u);
         av1_zero(lfm->above_u);
-        av1_zero(lfm->lfl_u_ver);
-        av1_zero(lfm->lfl_u_hor);
+        av1_zero(lfm->lfl_u);
       } else {
         av1_zero(lfm->left_v);
         av1_zero(lfm->above_v);
-        av1_zero(lfm->lfl_v_ver);
-        av1_zero(lfm->lfl_v_hor);
+        av1_zero(lfm->lfl_v);
       }
     }
   }
@@ -979,13 +1147,10 @@ static void filter_selectively_vert_row2(
 
         if ((mask_16x16_0 & mask_16x16_1) & 1) {
           if (plane) {
-            // TODO(any): add aom_lpf_vertical_6_dual for chroma plane.
-            aom_lpf_vertical_6(s, pitch, lfi0->mblim, lfi0->lim, lfi0->hev_thr);
-            aom_lpf_vertical_6(s + 4 * pitch, pitch, lfi1->mblim, lfi1->lim,
-                               lfi1->hev_thr);
+            aom_lpf_vertical_6_dual(s, pitch, lfi0->mblim, lfi0->lim,
+                                    lfi0->hev_thr, lfi1->mblim, lfi1->lim,
+                                    lfi1->hev_thr);
           } else {
-            // TODO(any): add dual function simd function. Current sse2 code
-            // just called aom_lpf_vertical_14_sse2 twice.
             aom_lpf_vertical_14_dual(s, pitch, lfi0->mblim, lfi0->lim,
                                      lfi0->hev_thr, lfi1->mblim, lfi1->lim,
                                      lfi1->hev_thr);
@@ -1005,9 +1170,9 @@ static void filter_selectively_vert_row2(
 
         if ((mask_8x8_0 & mask_8x8_1) & 1) {
           if (plane) {
-            aom_lpf_vertical_6(s, pitch, lfi0->mblim, lfi0->lim, lfi0->hev_thr);
-            aom_lpf_vertical_6(s + 4 * pitch, pitch, lfi1->mblim, lfi1->lim,
-                               lfi1->hev_thr);
+            aom_lpf_vertical_6_dual(s, pitch, lfi0->mblim, lfi0->lim,
+                                    lfi0->hev_thr, lfi1->mblim, lfi1->lim,
+                                    lfi1->hev_thr);
           } else {
             aom_lpf_vertical_8_dual(s, pitch, lfi0->mblim, lfi0->lim,
                                     lfi0->hev_thr, lfi1->mblim, lfi1->lim,
@@ -1070,10 +1235,9 @@ static void highbd_filter_selectively_vert_row2(
 
         if ((mask_16x16_0 & mask_16x16_1) & 1) {
           if (plane) {
-            aom_highbd_lpf_vertical_6(s, pitch, lfi0->mblim, lfi0->lim,
-                                      lfi0->hev_thr, bd);
-            aom_highbd_lpf_vertical_6(s + 4 * pitch, pitch, lfi1->mblim,
-                                      lfi1->lim, lfi1->hev_thr, bd);
+            aom_highbd_lpf_vertical_6_dual(s, pitch, lfi0->mblim, lfi0->lim,
+                                           lfi0->hev_thr, lfi1->mblim,
+                                           lfi1->lim, lfi1->hev_thr, bd);
           } else {
             aom_highbd_lpf_vertical_14_dual(s, pitch, lfi0->mblim, lfi0->lim,
                                             lfi0->hev_thr, lfi1->mblim,
@@ -1094,10 +1258,9 @@ static void highbd_filter_selectively_vert_row2(
 
         if ((mask_8x8_0 & mask_8x8_1) & 1) {
           if (plane) {
-            aom_highbd_lpf_vertical_6(s, pitch, lfi0->mblim, lfi0->lim,
-                                      lfi0->hev_thr, bd);
-            aom_highbd_lpf_vertical_6(s + 4 * pitch, pitch, lfi1->mblim,
-                                      lfi1->lim, lfi1->hev_thr, bd);
+            aom_highbd_lpf_vertical_6_dual(s, pitch, lfi0->mblim, lfi0->lim,
+                                           lfi0->hev_thr, lfi1->mblim,
+                                           lfi1->lim, lfi1->hev_thr, bd);
           } else {
             aom_highbd_lpf_vertical_8_dual(s, pitch, lfi0->mblim, lfi0->lim,
                                            lfi0->hev_thr, lfi1->mblim,
@@ -1163,13 +1326,15 @@ static void filter_selectively_horiz(uint8_t *s, int pitch, int plane,
             plane ? aom_lpf_horizontal_6 : aom_lpf_horizontal_14;
 
         if ((mask_16x16 & two_block_mask) == two_block_mask) {
-          /*
-          aom_lpf_horizontal_14_dual(s, pitch, lfi->mblim, lfi->lim,
-                                     lfi->hev_thr);
-          */
-
-          lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
-          lpf_horizontal(s + 4, pitch, lfin->mblim, lfin->lim, lfin->hev_thr);
+          if (plane) {
+            aom_lpf_horizontal_6_dual(s, pitch, lfi->mblim, lfi->lim,
+                                      lfi->hev_thr, lfin->mblim, lfin->lim,
+                                      lfin->hev_thr);
+          } else {
+            aom_lpf_horizontal_14_dual(s, pitch, lfi->mblim, lfi->lim,
+                                       lfi->hev_thr, lfin->mblim, lfin->lim,
+                                       lfin->hev_thr);
+          }
           count = 2;
         } else {
           lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
@@ -1181,28 +1346,24 @@ static void filter_selectively_horiz(uint8_t *s, int pitch, int plane,
             plane ? aom_lpf_horizontal_6 : aom_lpf_horizontal_8;
 
         if ((mask_8x8 & two_block_mask) == two_block_mask) {
-          /*
-          aom_lpf_horizontal_8_dual(s, pitch, lfi->mblim, lfi->lim,
-                                    lfi->hev_thr, lfin->mblim, lfin->lim,
-                                    lfin->hev_thr);
-          */
-
-          lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
-          lpf_horizontal(s + 4, pitch, lfin->mblim, lfin->lim, lfin->hev_thr);
+          if (plane) {
+            aom_lpf_horizontal_6_dual(s, pitch, lfi->mblim, lfi->lim,
+                                      lfi->hev_thr, lfin->mblim, lfin->lim,
+                                      lfin->hev_thr);
+          } else {
+            aom_lpf_horizontal_8_dual(s, pitch, lfi->mblim, lfi->lim,
+                                      lfi->hev_thr, lfin->mblim, lfin->lim,
+                                      lfin->hev_thr);
+          }
           count = 2;
         } else {
           lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
         }
       } else if (mask_4x4 & 1) {
         if ((mask_4x4 & two_block_mask) == two_block_mask) {
-          /*
           aom_lpf_horizontal_4_dual(s, pitch, lfi->mblim, lfi->lim,
                                     lfi->hev_thr, lfin->mblim, lfin->lim,
                                     lfin->hev_thr);
-          */
-          aom_lpf_horizontal_4(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
-          aom_lpf_horizontal_4(s + 4, pitch, lfin->mblim, lfin->lim,
-                               lfin->hev_thr);
           count = 2;
         } else {
           aom_lpf_horizontal_4(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr);
@@ -1239,15 +1400,15 @@ static void highbd_filter_selectively_horiz(
             plane ? aom_highbd_lpf_horizontal_6 : aom_highbd_lpf_horizontal_14;
 
         if ((mask_16x16 & two_block_mask) == two_block_mask) {
-          /*
-          aom_highbd_lpf_horizontal_14_dual(s, pitch, lfi->mblim, lfi->lim,
-                                            lfi->hev_thr, bd);
-          */
-
-          highbd_lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr,
-                                bd);
-          highbd_lpf_horizontal(s + 4, pitch, lfin->mblim, lfin->lim,
-                                lfin->hev_thr, bd);
+          if (plane) {
+            aom_highbd_lpf_horizontal_6_dual(s, pitch, lfi->mblim, lfi->lim,
+                                             lfi->hev_thr, lfin->mblim,
+                                             lfin->lim, lfin->hev_thr, bd);
+          } else {
+            aom_highbd_lpf_horizontal_14_dual(s, pitch, lfi->mblim, lfi->lim,
+                                              lfi->hev_thr, lfin->mblim,
+                                              lfin->lim, lfin->hev_thr, bd);
+          }
           count = 2;
         } else {
           highbd_lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr,
@@ -1258,15 +1419,15 @@ static void highbd_filter_selectively_horiz(
             plane ? aom_highbd_lpf_horizontal_6 : aom_highbd_lpf_horizontal_8;
 
         if ((mask_8x8 & two_block_mask) == two_block_mask) {
-          /*
-          aom_highbd_lpf_horizontal_8_dual(s, pitch, lfi->mblim, lfi->lim,
-                                           lfi->hev_thr, lfin->mblim, lfin->lim,
-                                           lfin->hev_thr, bd);
-          */
-          highbd_lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr,
-                                bd);
-          highbd_lpf_horizontal(s + 4, pitch, lfin->mblim, lfin->lim,
-                                lfin->hev_thr, bd);
+          if (plane) {
+            aom_highbd_lpf_horizontal_6_dual(s, pitch, lfi->mblim, lfi->lim,
+                                             lfi->hev_thr, lfin->mblim,
+                                             lfin->lim, lfin->hev_thr, bd);
+          } else {
+            aom_highbd_lpf_horizontal_8_dual(s, pitch, lfi->mblim, lfi->lim,
+                                             lfi->hev_thr, lfin->mblim,
+                                             lfin->lim, lfin->hev_thr, bd);
+          }
           count = 2;
         } else {
           highbd_lpf_horizontal(s, pitch, lfi->mblim, lfi->lim, lfi->hev_thr,
@@ -1274,15 +1435,9 @@ static void highbd_filter_selectively_horiz(
         }
       } else if (mask_4x4 & 1) {
         if ((mask_4x4 & two_block_mask) == two_block_mask) {
-          /*
           aom_highbd_lpf_horizontal_4_dual(s, pitch, lfi->mblim, lfi->lim,
                                            lfi->hev_thr, lfin->mblim, lfin->lim,
                                            lfin->hev_thr, bd);
-          */
-          aom_highbd_lpf_horizontal_4(s, pitch, lfi->mblim, lfi->lim,
-                                      lfi->hev_thr, bd);
-          aom_highbd_lpf_horizontal_4(s + 4, pitch, lfin->mblim, lfin->lim,
-                                      lfin->hev_thr, bd);
           count = 2;
         } else {
           aom_highbd_lpf_horizontal_4(s, pitch, lfi->mblim, lfi->lim,
@@ -1299,43 +1454,289 @@ static void highbd_filter_selectively_horiz(
   }
 }
 
-static int compare_ref_dst(AV1_COMMON *const cm, uint8_t *ref_buf,
-                           uint8_t *dst_buf, int ref_stride, int dst_stride,
-                           int start, int end) {
-  return 0;
+void av1_build_bitmask_vert_info(
+    AV1_COMMON *const cm, const struct macroblockd_plane *const plane_ptr,
+    int plane) {
+  const int subsampling_x = plane_ptr->subsampling_x;
+  const int subsampling_y = plane_ptr->subsampling_y;
+  const int row_step = (MI_SIZE >> MI_SIZE_LOG2);
+  const int is_uv = plane > 0;
+  TX_SIZE tx_size = TX_16X16, prev_tx_size = TX_16X16;
+  uint8_t level, prev_level = 1;
+  int skip, prev_skip = 0;
+  int is_coding_block_border;
 
-  start <<= MI_SIZE_LOG2;
-  end <<= MI_SIZE_LOG2;
-  uint8_t *ref0 = ref_buf;
-  uint8_t *dst0 = dst_buf;
-  if (cm->seq_params.use_highbitdepth) {
-    const uint16_t *ref16 = CONVERT_TO_SHORTPTR(ref_buf);
-    const uint16_t *dst16 = CONVERT_TO_SHORTPTR(dst_buf);
-    for (int j = 0; j < 4; ++j) {
-      for (int i = start; i < end; ++i)
-        if (ref16[i] != dst16[i]) {
-          ref_buf = ref0;
-          dst_buf = dst0;
-          return i + 1;
+  for (int r = 0; (r << MI_SIZE_LOG2) < plane_ptr->dst.height; r += row_step) {
+    const int mi_row = r << subsampling_y;
+    const int row = mi_row % MI_SIZE_64X64;
+    int index = 0;
+    const int shift = get_index_shift(0, row, &index);
+
+    for (int c = 0; (c << MI_SIZE_LOG2) < plane_ptr->dst.width;
+         c += (tx_size_wide_unit[TX_64X64] >> subsampling_x)) {
+      const int mi_col = c << subsampling_x;
+      LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
+
+      for (int col_in_unit = 0;
+           col_in_unit < (tx_size_wide_unit[TX_64X64] >> subsampling_x);) {
+        const int x = (c + col_in_unit) << MI_SIZE_LOG2;
+        if (x >= plane_ptr->dst.width) break;
+        const int col = col_in_unit << subsampling_x;
+        const uint64_t mask = ((uint64_t)1 << (shift | col));
+        skip = lfm->skip.bits[index] & mask;
+        is_coding_block_border = lfm->is_vert_border.bits[index] & mask;
+        switch (plane) {
+          case 0: level = lfm->lfl_y_ver[row][col]; break;
+          case 1: level = lfm->lfl_u[row][col]; break;
+          case 2: level = lfm->lfl_v[row][col]; break;
+          default: assert(plane >= 0 && plane <= 2); return;
         }
-      ref16 += ref_stride;
-      dst16 += dst_stride;
-    }
-  } else {
-    for (int j = 0; j < 4; ++j) {
-      for (int i = start; i < end; ++i)
-        if (ref_buf[i] != dst_buf[i]) {
-          ref_buf = ref0;
-          dst_buf = dst0;
-          return i + 1;
+        for (TX_SIZE ts = TX_4X4; ts <= TX_64X64; ++ts) {
+          if (is_uv && ts == TX_64X64) continue;
+          if (lfm->tx_size_ver[is_uv][ts].bits[index] & mask) {
+            tx_size = ts;
+            break;
+          }
         }
-      ref_buf += ref_stride;
-      dst_buf += dst_stride;
+        if ((c + col_in_unit > 0) && (level || prev_level) &&
+            (!prev_skip || !skip || is_coding_block_border)) {
+          const TX_SIZE min_tx_size =
+              AOMMIN(TX_16X16, AOMMIN(tx_size, prev_tx_size));
+          const int tmp_row = (mi_row | subsampling_y) % MI_SIZE_64X64;
+          const int tmp_col = (col | subsampling_x) % MI_SIZE_64X64;
+          const int shift_1 = get_index_shift(tmp_col, tmp_row, &index);
+          const uint64_t mask_1 = ((uint64_t)1 << shift_1);
+          switch (plane) {
+            case 0: lfm->left_y[min_tx_size].bits[index] |= mask_1; break;
+            case 1: lfm->left_u[min_tx_size].bits[index] |= mask_1; break;
+            case 2: lfm->left_v[min_tx_size].bits[index] |= mask_1; break;
+            default: assert(plane >= 0 && plane <= 2); return;
+          }
+        }
+
+        // update prev info
+        prev_level = level;
+        prev_skip = skip;
+        prev_tx_size = tx_size;
+        // advance
+        col_in_unit += tx_size_wide_unit[tx_size];
+      }
     }
   }
-  ref_buf = ref0;
-  dst_buf = dst0;
-  return 0;
+}
+
+void av1_build_bitmask_horz_info(
+    AV1_COMMON *const cm, const struct macroblockd_plane *const plane_ptr,
+    int plane) {
+  const int subsampling_x = plane_ptr->subsampling_x;
+  const int subsampling_y = plane_ptr->subsampling_y;
+  const int col_step = (MI_SIZE >> MI_SIZE_LOG2);
+  const int is_uv = plane > 0;
+  TX_SIZE tx_size = TX_16X16, prev_tx_size = TX_16X16;
+  uint8_t level, prev_level = 1;
+  int skip, prev_skip = 0;
+  int is_coding_block_border;
+
+  for (int c = 0; (c << MI_SIZE_LOG2) < plane_ptr->dst.width; c += col_step) {
+    const int mi_col = c << subsampling_x;
+    const int col = mi_col % MI_SIZE_64X64;
+
+    for (int r = 0; (r << MI_SIZE_LOG2) < plane_ptr->dst.height;
+         r += (tx_size_high_unit[TX_64X64] >> subsampling_y)) {
+      const int mi_row = r << subsampling_y;
+      LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
+
+      for (int r_in_unit = 0;
+           r_in_unit < (tx_size_high_unit[TX_64X64] >> subsampling_y);) {
+        const int y = (r + r_in_unit) << MI_SIZE_LOG2;
+        if (y >= plane_ptr->dst.height) break;
+        const int row = r_in_unit << subsampling_y;
+        int index = 0;
+        const int shift = get_index_shift(col, row, &index);
+        const uint64_t mask = ((uint64_t)1 << shift);
+        skip = lfm->skip.bits[index] & mask;
+        is_coding_block_border = lfm->is_horz_border.bits[index] & mask;
+        switch (plane) {
+          case 0: level = lfm->lfl_y_hor[row][col]; break;
+          case 1: level = lfm->lfl_u[row][col]; break;
+          case 2: level = lfm->lfl_v[row][col]; break;
+          default: assert(plane >= 0 && plane <= 2); return;
+        }
+        for (TX_SIZE ts = TX_4X4; ts <= TX_64X64; ++ts) {
+          if (is_uv && ts == TX_64X64) continue;
+          if (lfm->tx_size_hor[is_uv][ts].bits[index] & mask) {
+            tx_size = ts;
+            break;
+          }
+        }
+        if ((r + r_in_unit > 0) && (level || prev_level) &&
+            (!prev_skip || !skip || is_coding_block_border)) {
+          const TX_SIZE min_tx_size =
+              AOMMIN(TX_16X16, AOMMIN(tx_size, prev_tx_size));
+          const int tmp_row = (row | subsampling_y) % MI_SIZE_64X64;
+          const int tmp_col = (mi_col | subsampling_x) % MI_SIZE_64X64;
+          const int shift_1 = get_index_shift(tmp_col, tmp_row, &index);
+          const uint64_t mask_1 = ((uint64_t)1 << shift_1);
+
+          switch (plane) {
+            case 0: lfm->above_y[min_tx_size].bits[index] |= mask_1; break;
+            case 1: lfm->above_u[min_tx_size].bits[index] |= mask_1; break;
+            case 2: lfm->above_v[min_tx_size].bits[index] |= mask_1; break;
+            default: assert(plane >= 0 && plane <= 2); return;
+          }
+        }
+
+        // update prev info
+        prev_level = level;
+        prev_skip = skip;
+        prev_tx_size = tx_size;
+        // advance
+        r_in_unit += tx_size_high_unit[tx_size];
+      }
+    }
+  }
+}
+
+void av1_filter_block_plane_bitmask_vert(
+    AV1_COMMON *const cm, struct macroblockd_plane *const plane_ptr, int pl,
+    int mi_row, int mi_col) {
+  struct buf_2d *const dst = &plane_ptr->dst;
+  uint8_t *const buf0 = dst->buf;
+  const int ssx = plane_ptr->subsampling_x;
+  const int ssy = plane_ptr->subsampling_y;
+  const int mask_cutoff = 0xffff;
+  const int row_step = 1 << ssy;
+  const int two_row_step = 2 << ssy;
+  const int row_stride = dst->stride << MI_SIZE_LOG2;
+  const int two_row_stride = row_stride << 1;
+  uint64_t mask_16x16 = 0;
+  uint64_t mask_8x8 = 0;
+  uint64_t mask_4x4 = 0;
+  uint8_t *lfl;
+  uint8_t *lfl2;
+  LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
+  assert(lfm);
+
+  // 1. vertical filtering. filter two rows at a time
+  for (int r = 0;
+       ((mi_row + r) << MI_SIZE_LOG2) < cm->height && r < MI_SIZE_64X64;
+       r += two_row_step) {
+    const int row = r | ssy;
+    const int row_next = row + row_step;
+    const int col = ssx;
+    int index = 0;
+    const int shift = get_index_shift(col, row, &index);
+    int index_next = 0;
+    const int shift_next = get_index_shift(col, row_next, &index_next);
+    switch (pl) {
+      case 0:
+        mask_16x16 = lfm->left_y[TX_16X16].bits[index];
+        mask_8x8 = lfm->left_y[TX_8X8].bits[index];
+        mask_4x4 = lfm->left_y[TX_4X4].bits[index];
+        lfl = &lfm->lfl_y_ver[row][col];
+        lfl2 = &lfm->lfl_y_ver[row_next][col];
+        break;
+      case 1:
+        mask_16x16 = lfm->left_u[TX_16X16].bits[index];
+        mask_8x8 = lfm->left_u[TX_8X8].bits[index];
+        mask_4x4 = lfm->left_u[TX_4X4].bits[index];
+        lfl = &lfm->lfl_u[row][col];
+        lfl2 = &lfm->lfl_u[row_next][col];
+        break;
+      case 2:
+        mask_16x16 = lfm->left_v[TX_16X16].bits[index];
+        mask_8x8 = lfm->left_v[TX_8X8].bits[index];
+        mask_4x4 = lfm->left_v[TX_4X4].bits[index];
+        lfl = &lfm->lfl_v[row][col];
+        lfl2 = &lfm->lfl_v[row_next][col];
+        break;
+      default: assert(pl >= 0 && pl <= 2); return;
+    }
+    uint64_t mask_16x16_0 = (mask_16x16 >> shift) & mask_cutoff;
+    uint64_t mask_8x8_0 = (mask_8x8 >> shift) & mask_cutoff;
+    uint64_t mask_4x4_0 = (mask_4x4 >> shift) & mask_cutoff;
+    uint64_t mask_16x16_1 = (mask_16x16 >> shift_next) & mask_cutoff;
+    uint64_t mask_8x8_1 = (mask_8x8 >> shift_next) & mask_cutoff;
+    uint64_t mask_4x4_1 = (mask_4x4 >> shift_next) & mask_cutoff;
+
+    if (cm->seq_params.use_highbitdepth)
+      highbd_filter_selectively_vert_row2(
+          ssx, CONVERT_TO_SHORTPTR(dst->buf), dst->stride, pl, mask_16x16_0,
+          mask_8x8_0, mask_4x4_0, mask_16x16_1, mask_8x8_1, mask_4x4_1,
+          &cm->lf_info, lfl, lfl2, (int)cm->seq_params.bit_depth);
+    else
+      filter_selectively_vert_row2(
+          ssx, dst->buf, dst->stride, pl, mask_16x16_0, mask_8x8_0, mask_4x4_0,
+          mask_16x16_1, mask_8x8_1, mask_4x4_1, &cm->lf_info, lfl, lfl2);
+    dst->buf += two_row_stride;
+  }
+  // reset buf pointer for horizontal filtering
+  dst->buf = buf0;
+}
+
+void av1_filter_block_plane_bitmask_horz(
+    AV1_COMMON *const cm, struct macroblockd_plane *const plane_ptr, int pl,
+    int mi_row, int mi_col) {
+  struct buf_2d *const dst = &plane_ptr->dst;
+  uint8_t *const buf0 = dst->buf;
+  const int ssx = plane_ptr->subsampling_x;
+  const int ssy = plane_ptr->subsampling_y;
+  const int mask_cutoff = 0xffff;
+  const int row_step = 1 << ssy;
+  const int row_stride = dst->stride << MI_SIZE_LOG2;
+  uint64_t mask_16x16 = 0;
+  uint64_t mask_8x8 = 0;
+  uint64_t mask_4x4 = 0;
+  uint8_t *lfl;
+  LoopFilterMask *lfm = get_loop_filter_mask(cm, mi_row, mi_col);
+  assert(lfm);
+  for (int r = 0;
+       ((mi_row + r) << MI_SIZE_LOG2) < cm->height && r < MI_SIZE_64X64;
+       r += row_step) {
+    if (mi_row + r == 0) {
+      dst->buf += row_stride;
+      continue;
+    }
+    const int row = r | ssy;
+    const int col = ssx;
+    int index = 0;
+    const int shift = get_index_shift(col, row, &index);
+    switch (pl) {
+      case 0:
+        mask_16x16 = lfm->above_y[TX_16X16].bits[index];
+        mask_8x8 = lfm->above_y[TX_8X8].bits[index];
+        mask_4x4 = lfm->above_y[TX_4X4].bits[index];
+        lfl = &lfm->lfl_y_hor[row][col];
+        break;
+      case 1:
+        mask_16x16 = lfm->above_u[TX_16X16].bits[index];
+        mask_8x8 = lfm->above_u[TX_8X8].bits[index];
+        mask_4x4 = lfm->above_u[TX_4X4].bits[index];
+        lfl = &lfm->lfl_u[row][col];
+        break;
+      case 2:
+        mask_16x16 = lfm->above_v[TX_16X16].bits[index];
+        mask_8x8 = lfm->above_v[TX_8X8].bits[index];
+        mask_4x4 = lfm->above_v[TX_4X4].bits[index];
+        lfl = &lfm->lfl_v[row][col];
+        break;
+      default: assert(pl >= 0 && pl <= 2); return;
+    }
+    mask_16x16 = (mask_16x16 >> shift) & mask_cutoff;
+    mask_8x8 = (mask_8x8 >> shift) & mask_cutoff;
+    mask_4x4 = (mask_4x4 >> shift) & mask_cutoff;
+
+    if (cm->seq_params.use_highbitdepth)
+      highbd_filter_selectively_horiz(
+          CONVERT_TO_SHORTPTR(dst->buf), dst->stride, pl, ssx, mask_16x16,
+          mask_8x8, mask_4x4, &cm->lf_info, lfl, (int)cm->seq_params.bit_depth);
+    else
+      filter_selectively_horiz(dst->buf, dst->stride, pl, ssx, mask_16x16,
+                               mask_8x8, mask_4x4, &cm->lf_info, lfl);
+    dst->buf += row_stride;
+  }
+  // reset buf pointer for next block
+  dst->buf = buf0;
 }
 
 void av1_filter_block_plane_ver(AV1_COMMON *const cm,
@@ -1385,15 +1786,15 @@ void av1_filter_block_plane_ver(AV1_COMMON *const cm,
           mask_16x16 = lfm->left_u[TX_16X16].bits[index];
           mask_8x8 = lfm->left_u[TX_8X8].bits[index];
           mask_4x4 = lfm->left_u[TX_4X4].bits[index];
-          lfl = &lfm->lfl_u_ver[row][col];
-          lfl2 = &lfm->lfl_u_ver[row_next][col];
+          lfl = &lfm->lfl_u[row][col];
+          lfl2 = &lfm->lfl_u[row_next][col];
           break;
         case 2:
           mask_16x16 = lfm->left_v[TX_16X16].bits[index];
           mask_8x8 = lfm->left_v[TX_8X8].bits[index];
           mask_4x4 = lfm->left_v[TX_4X4].bits[index];
-          lfl = &lfm->lfl_v_ver[row][col];
-          lfl2 = &lfm->lfl_v_ver[row_next][col];
+          lfl = &lfm->lfl_v[row][col];
+          lfl2 = &lfm->lfl_v[row_next][col];
           break;
         default: assert(pl >= 0 && pl <= 2); return;
       }
@@ -1460,13 +1861,13 @@ void av1_filter_block_plane_hor(AV1_COMMON *const cm,
           mask_16x16 = lfm->above_u[TX_16X16].bits[index];
           mask_8x8 = lfm->above_u[TX_8X8].bits[index];
           mask_4x4 = lfm->above_u[TX_4X4].bits[index];
-          lfl = &lfm->lfl_u_hor[row][col];
+          lfl = &lfm->lfl_u[row][col];
           break;
         case 2:
           mask_16x16 = lfm->above_v[TX_16X16].bits[index];
           mask_8x8 = lfm->above_v[TX_8X8].bits[index];
           mask_4x4 = lfm->above_v[TX_4X4].bits[index];
-          lfl = &lfm->lfl_v_hor[row][col];
+          lfl = &lfm->lfl_v[row][col];
           break;
         default: assert(pl >= 0 && pl <= 2); return;
       }
@@ -1820,12 +2221,54 @@ void av1_filter_block_plane_horz(const AV1_COMMON *const cm,
 
 static void loop_filter_rows(YV12_BUFFER_CONFIG *frame_buffer, AV1_COMMON *cm,
                              MACROBLOCKD *xd, int start, int stop,
+#if LOOP_FILTER_BITMASK
+                             int is_decoding,
+#endif
                              int plane_start, int plane_end) {
   struct macroblockd_plane *pd = xd->plane;
   const int col_start = 0;
   const int col_end = cm->mi_cols;
   int mi_row, mi_col;
   int plane;
+
+#if LOOP_FILTER_BITMASK
+  if (is_decoding) {
+    for (plane = plane_start; plane < plane_end; plane++) {
+      if (plane == 0 && !(cm->lf.filter_level[0]) && !(cm->lf.filter_level[1]))
+        break;
+      else if (plane == 1 && !(cm->lf.filter_level_u))
+        continue;
+      else if (plane == 2 && !(cm->lf.filter_level_v))
+        continue;
+
+      av1_setup_dst_planes(pd, cm->seq_params.sb_size, frame_buffer, 0, 0,
+                           plane, plane + 1);
+      av1_build_bitmask_vert_info(cm, &pd[plane], plane);
+      av1_build_bitmask_horz_info(cm, &pd[plane], plane);
+
+      // apply loop filtering which only goes through buffer once
+      for (mi_row = start; mi_row < stop; mi_row += MI_SIZE_64X64) {
+        for (mi_col = col_start; mi_col < col_end; mi_col += MI_SIZE_64X64) {
+          av1_setup_dst_planes(pd, MI_SIZE_64X64, frame_buffer, mi_row, mi_col,
+                               plane, plane + 1);
+          av1_filter_block_plane_bitmask_vert(cm, &pd[plane], plane, mi_row,
+                                              mi_col);
+          if (mi_col - MI_SIZE_64X64 >= 0) {
+            av1_setup_dst_planes(pd, MI_SIZE_64X64, frame_buffer, mi_row,
+                                 mi_col - MI_SIZE_64X64, plane, plane + 1);
+            av1_filter_block_plane_bitmask_horz(cm, &pd[plane], plane, mi_row,
+                                                mi_col - MI_SIZE_64X64);
+          }
+        }
+        av1_setup_dst_planes(pd, MI_SIZE_64X64, frame_buffer, mi_row,
+                             mi_col - MI_SIZE_64X64, plane, plane + 1);
+        av1_filter_block_plane_bitmask_horz(cm, &pd[plane], plane, mi_row,
+                                            mi_col - MI_SIZE_64X64);
+      }
+    }
+    return;
+  }
+#endif
 
   for (plane = plane_start; plane < plane_end; plane++) {
     if (plane == 0 && !(cm->lf.filter_level[0]) && !(cm->lf.filter_level[1]))
@@ -1910,8 +2353,11 @@ static void loop_filter_rows(YV12_BUFFER_CONFIG *frame_buffer, AV1_COMMON *cm,
 }
 
 void av1_loop_filter_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
-                           MACROBLOCKD *xd, int plane_start, int plane_end,
-                           int partial_frame) {
+                           MACROBLOCKD *xd,
+#if LOOP_FILTER_BITMASK
+                           int is_decoding,
+#endif
+                           int plane_start, int plane_end, int partial_frame) {
   int start_mi_row, end_mi_row, mi_rows_to_filter;
 
   start_mi_row = 0;
@@ -1923,6 +2369,9 @@ void av1_loop_filter_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
   }
   end_mi_row = start_mi_row + mi_rows_to_filter;
   av1_loop_filter_frame_init(cm, plane_start, plane_end);
-  loop_filter_rows(frame, cm, xd, start_mi_row, end_mi_row, plane_start,
-                   plane_end);
+  loop_filter_rows(frame, cm, xd, start_mi_row, end_mi_row,
+#if LOOP_FILTER_BITMASK
+                   is_decoding,
+#endif
+                   plane_start, plane_end);
 }

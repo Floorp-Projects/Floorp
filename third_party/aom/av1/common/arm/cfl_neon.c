@@ -131,7 +131,7 @@ static void cfl_luma_subsampling_444_lbd_neon(const uint8_t *input,
   } while ((pred_buf_q3 += CFL_BUF_LINE) < end);
 }
 
-#if __ARM_ARCH <= 7
+#ifndef __aarch64__
 uint16x8_t vpaddq_u16(uint16x8_t a, uint16x8_t b) {
   return vcombine_u16(vpadd_u16(vget_low_u16(a), vget_high_u16(a)),
                       vpadd_u16(vget_low_u16(b), vget_high_u16(b)));
@@ -311,7 +311,7 @@ static INLINE void subtract_average_neon(const uint16_t *src, int16_t *dst,
 
   // Permute and add in such a way that each lane contains the block sum.
   // [A+C+B+D, B+D+A+C, C+A+D+B, D+B+C+A]
-#if __ARM_ARCH >= 8
+#ifdef __aarch64__
   sum_32x4 = vpaddq_u32(sum_32x4, sum_32x4);
   sum_32x4 = vpaddq_u32(sum_32x4, sum_32x4);
 #else

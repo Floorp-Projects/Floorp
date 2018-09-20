@@ -181,15 +181,22 @@ INSTANTIATE_TEST_CASE_P(SSE2, EncodeTxbTest,
                         ::testing::Values(av1_get_nz_map_contexts_sse2));
 #endif
 
-#if HAVE_SSE4_1
-class EncodeTxbInitLevelTest : public ::testing::TestWithParam<int> {
+typedef void (*av1_txb_init_levels_func)(const tran_low_t *const coeff,
+                                         const int width, const int height,
+                                         uint8_t *const levels);
+
+typedef ::testing::tuple<av1_txb_init_levels_func, int> TxbInitLevelParam;
+
+class EncodeTxbInitLevelTest
+    : public ::testing::TestWithParam<TxbInitLevelParam> {
  public:
   virtual ~EncodeTxbInitLevelTest() {}
   virtual void TearDown() { libaom_test::ClearSystemState(); }
-  void RunTest(int tx_size, int is_speed);
+  void RunTest(av1_txb_init_levels_func test_func, int tx_size, int is_speed);
 };
 
-void EncodeTxbInitLevelTest::RunTest(int tx_size, int is_speed) {
+void EncodeTxbInitLevelTest::RunTest(av1_txb_init_levels_func test_func,
+                                     int tx_size, int is_speed) {
   const int width = get_txb_wide((TX_SIZE)tx_size);
   const int height = get_txb_high((TX_SIZE)tx_size);
   tran_low_t coeff[MAX_TX_SQUARE];
@@ -215,7 +222,7 @@ void EncodeTxbInitLevelTest::RunTest(int tx_size, int is_speed) {
   const double t1 = get_time_mark(&timer);
   aom_usec_timer_start(&timer);
   for (int i = 0; i < run_times; ++i) {
-    av1_txb_init_levels_sse4_1(coeff, width, height, levels1);
+    test_func(coeff, width, height, levels1);
   }
   const double t2 = get_time_mark(&timer);
   if (is_speed) {
@@ -232,11 +239,24 @@ void EncodeTxbInitLevelTest::RunTest(int tx_size, int is_speed) {
   }
 }
 
-TEST_P(EncodeTxbInitLevelTest, match) { RunTest(GetParam(), 0); }
-TEST_P(EncodeTxbInitLevelTest, DISABLED_Speed) { RunTest(GetParam(), 1); }
+TEST_P(EncodeTxbInitLevelTest, match) {
+  RunTest(GET_PARAM(0), GET_PARAM(1), 0);
+}
 
-INSTANTIATE_TEST_CASE_P(SSE4_1, EncodeTxbInitLevelTest,
-                        ::testing::Range(0, static_cast<int>(TX_SIZES_ALL), 1));
+TEST_P(EncodeTxbInitLevelTest, DISABLED_Speed) {
+  RunTest(GET_PARAM(0), GET_PARAM(1), 1);
+}
+
+#if HAVE_SSE4_1
+INSTANTIATE_TEST_CASE_P(
+    SSE4_1, EncodeTxbInitLevelTest,
+    ::testing::Combine(::testing::Values(&av1_txb_init_levels_sse4_1),
+                       ::testing::Range(0, static_cast<int>(TX_SIZES_ALL), 1)));
 #endif
-
+#if HAVE_AVX2
+INSTANTIATE_TEST_CASE_P(
+    AVX2, EncodeTxbInitLevelTest,
+    ::testing::Combine(::testing::Values(&av1_txb_init_levels_avx2),
+                       ::testing::Range(0, static_cast<int>(TX_SIZES_ALL), 1)));
+#endif
 }  // namespace

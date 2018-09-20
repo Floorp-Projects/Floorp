@@ -18,18 +18,36 @@
 #include "av1/encoder/encodemv.h"
 
 #include "aom_dsp/aom_dsp_common.h"
+#include "aom_ports/bitops.h"
+
+static INLINE int mv_class_base(MV_CLASS_TYPE c) {
+  return c ? CLASS0_SIZE << (c + 2) : 0;
+}
+
+// If n != 0, returns the floor of log base 2 of n. If n == 0, returns 0.
+static INLINE uint8_t log_in_base_2(unsigned int n) {
+  // get_msb() is only valid when n != 0.
+  return n == 0 ? 0 : get_msb(n);
+}
+
+static INLINE MV_CLASS_TYPE get_mv_class(int z, int *offset) {
+  const MV_CLASS_TYPE c = (z >= CLASS0_SIZE * 4096)
+                              ? MV_CLASS_10
+                              : (MV_CLASS_TYPE)log_in_base_2(z >> 3);
+  if (offset) *offset = z - mv_class_base(c);
+  return c;
+}
 
 static void encode_mv_component(aom_writer *w, int comp, nmv_component *mvcomp,
                                 MvSubpelPrecision precision) {
+  assert(comp != 0);
   int offset;
   const int sign = comp < 0;
   const int mag = sign ? -comp : comp;
-  const int mv_class = av1_get_mv_class(mag - 1, &offset);
+  const int mv_class = get_mv_class(mag - 1, &offset);
   const int d = offset >> 3;         // int mv data
   const int fr = (offset >> 1) & 3;  // fractional mv data
   const int hp = offset & 1;         // high precision mv data
-
-  assert(comp != 0);
 
   // Sign
   aom_write_symbol(w, sign, mvcomp->sign_cdf, 2);
@@ -89,7 +107,7 @@ static void build_nmv_component_cost_table(int *mvcost,
   for (v = 1; v <= MV_MAX; ++v) {
     int z, c, o, d, e, f, cost = 0;
     z = v - 1;
-    c = av1_get_mv_class(z, &o);
+    c = get_mv_class(z, &o);
     cost += class_cost[c];
     d = (o >> 3);     /* int mv data */
     f = (o >> 1) & 3; /* fractional pel mv data */

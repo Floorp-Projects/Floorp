@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_ML_H_
-#define AV1_ENCODER_ML_H_
+#ifndef AOM_AV1_ENCODER_ML_H_
+#define AOM_AV1_ENCODER_ML_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,8 +37,13 @@ typedef struct {
 void av1_nn_predict(const float *features, const NN_CONFIG *nn_config,
                     float *output);
 
+// Applies the softmax normalization function to the input
+// to get a valid probability distribution in the output:
+// output[i] = exp(input[i]) / sum_{k \in [0,n)}(exp(input[k]))
+void av1_nn_softmax(const float *input, float *output, int n);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_RD_H_
+#endif  // AOM_AV1_ENCODER_ML_H_

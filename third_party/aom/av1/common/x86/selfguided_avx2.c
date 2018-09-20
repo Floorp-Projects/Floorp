@@ -546,17 +546,18 @@ static void final_filter_fast(int32_t *dst, int dst_stride, const int32_t *A,
   }
 }
 
-void av1_selfguided_restoration_avx2(const uint8_t *dgd8, int width, int height,
-                                     int dgd_stride, int32_t *flt0,
-                                     int32_t *flt1, int flt_stride,
-                                     int sgr_params_idx, int bit_depth,
-                                     int highbd) {
+int av1_selfguided_restoration_avx2(const uint8_t *dgd8, int width, int height,
+                                    int dgd_stride, int32_t *flt0,
+                                    int32_t *flt1, int flt_stride,
+                                    int sgr_params_idx, int bit_depth,
+                                    int highbd) {
   // The ALIGN_POWER_OF_TWO macro here ensures that column 1 of Atl, Btl,
   // Ctl and Dtl is 32-byte aligned.
   const int buf_elts = ALIGN_POWER_OF_TWO(RESTORATION_PROC_UNIT_PELS, 3);
 
-  DECLARE_ALIGNED(32, int32_t,
-                  buf[4 * ALIGN_POWER_OF_TWO(RESTORATION_PROC_UNIT_PELS, 3)]);
+  int32_t *buf = aom_memalign(
+      32, 4 * sizeof(*buf) * ALIGN_POWER_OF_TWO(RESTORATION_PROC_UNIT_PELS, 3));
+  if (!buf) return -1;
 
   const int width_ext = width + 2 * SGRPROJ_BORDER_HORZ;
   const int height_ext = height + 2 * SGRPROJ_BORDER_VERT;
@@ -625,6 +626,8 @@ void av1_selfguided_restoration_avx2(const uint8_t *dgd8, int width, int height,
     final_filter(flt1, flt_stride, A, B, buf_stride, dgd8, dgd_stride, width,
                  height, highbd);
   }
+  aom_free(buf);
+  return 0;
 }
 
 void apply_selfguided_restoration_avx2(const uint8_t *dat8, int width,
@@ -635,8 +638,10 @@ void apply_selfguided_restoration_avx2(const uint8_t *dat8, int width,
   int32_t *flt0 = tmpbuf;
   int32_t *flt1 = flt0 + RESTORATION_UNITPELS_MAX;
   assert(width * height <= RESTORATION_UNITPELS_MAX);
-  av1_selfguided_restoration_avx2(dat8, width, height, stride, flt0, flt1,
-                                  width, eps, bit_depth, highbd);
+  const int ret = av1_selfguided_restoration_avx2(
+      dat8, width, height, stride, flt0, flt1, width, eps, bit_depth, highbd);
+  (void)ret;
+  assert(!ret);
   const sgr_params_type *const params = &sgr_params[eps];
   int xq[2];
   decode_xq(xqd, xq, params);

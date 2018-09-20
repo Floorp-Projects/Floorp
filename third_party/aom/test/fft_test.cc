@@ -17,9 +17,6 @@
 
 #include "aom_dsp/fft_common.h"
 #include "aom_mem/aom_mem.h"
-#if ARCH_X86 || ARCH_X86_64
-#include "aom_ports/x86.h"
-#endif
 #include "av1/common/common.h"
 #include "config/aom_dsp_rtcd.h"
 #include "test/acm_random.h"
@@ -80,14 +77,11 @@ std::vector<std::complex<float> > fft2d(const InputType *input, int n) {
 struct FFTTestArg {
   int n;
   void (*fft)(const float *input, float *temp, float *output);
-  int flag;
-  FFTTestArg(int n_in, tform_fun_t fft_in, int flag_in)
-      : n(n_in), fft(fft_in), flag(flag_in) {}
+  FFTTestArg(int n_in, tform_fun_t fft_in) : n(n_in), fft(fft_in) {}
 };
 
 std::ostream &operator<<(std::ostream &os, const FFTTestArg &test_arg) {
-  return os << "fft_arg { n:" << test_arg.n << " fft:" << test_arg.fft
-            << " flag:" << test_arg.flag << "}";
+  return os << "fft_arg { n:" << test_arg.n << " fft:" << test_arg.fft << " }";
 }
 
 class FFT2DTest : public ::testing::TestWithParam<FFTTestArg> {
@@ -100,26 +94,18 @@ class FFT2DTest : public ::testing::TestWithParam<FFTTestArg> {
     memset(input_, 0, sizeof(*input_) * n * n);
     memset(temp_, 0, sizeof(*temp_) * n * n);
     memset(output_, 0, sizeof(*output_) * n * n * 2);
-#if ARCH_X86 || ARCH_X86_64
-    disabled_ = GetParam().flag != 0 && !(x86_simd_caps() & GetParam().flag);
-#else
-    disabled_ = GetParam().flag != 0;
-#endif
   }
   void TearDown() {
     aom_free(input_);
     aom_free(temp_);
     aom_free(output_);
   }
-  int disabled_;
   float *input_;
   float *temp_;
   float *output_;
 };
 
 TEST_P(FFT2DTest, Correct) {
-  if (disabled_) return;
-
   int n = GetParam().n;
   for (int i = 0; i < n * n; ++i) {
     input_[i] = 1;
@@ -137,8 +123,6 @@ TEST_P(FFT2DTest, Correct) {
 }
 
 TEST_P(FFT2DTest, Benchmark) {
-  if (disabled_) return;
-
   int n = GetParam().n;
   float sum = 0;
   for (int i = 0; i < 1000 * (64 - n); ++i) {
@@ -149,39 +133,40 @@ TEST_P(FFT2DTest, Benchmark) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
-    FFT2DTestC, FFT2DTest,
-    ::testing::Values(FFTTestArg(2, aom_fft2x2_float_c, 0),
-                      FFTTestArg(4, aom_fft4x4_float_c, 0),
-                      FFTTestArg(8, aom_fft8x8_float_c, 0),
-                      FFTTestArg(16, aom_fft16x16_float_c, 0),
-                      FFTTestArg(32, aom_fft32x32_float_c, 0)));
+INSTANTIATE_TEST_CASE_P(C, FFT2DTest,
+                        ::testing::Values(FFTTestArg(2, aom_fft2x2_float_c),
+                                          FFTTestArg(4, aom_fft4x4_float_c),
+                                          FFTTestArg(8, aom_fft8x8_float_c),
+                                          FFTTestArg(16, aom_fft16x16_float_c),
+                                          FFTTestArg(32,
+                                                     aom_fft32x32_float_c)));
 #if ARCH_X86 || ARCH_X86_64
+#if HAVE_SSE2
 INSTANTIATE_TEST_CASE_P(
-    FFT2DTestSSE2, FFT2DTest,
-    ::testing::Values(FFTTestArg(4, aom_fft4x4_float_sse2, HAS_SSE2),
-                      FFTTestArg(8, aom_fft8x8_float_sse2, HAS_SSE2),
-                      FFTTestArg(16, aom_fft16x16_float_sse2, HAS_SSE2),
-                      FFTTestArg(32, aom_fft32x32_float_sse2, HAS_SSE2)));
-
+    SSE2, FFT2DTest,
+    ::testing::Values(FFTTestArg(4, aom_fft4x4_float_sse2),
+                      FFTTestArg(8, aom_fft8x8_float_sse2),
+                      FFTTestArg(16, aom_fft16x16_float_sse2),
+                      FFTTestArg(32, aom_fft32x32_float_sse2)));
+#endif  // HAVE_SSE2
+#if HAVE_AVX2
 INSTANTIATE_TEST_CASE_P(
-    FFT2DTestAVX2, FFT2DTest,
-    ::testing::Values(FFTTestArg(8, aom_fft8x8_float_avx2, HAS_AVX2),
-                      FFTTestArg(16, aom_fft16x16_float_avx2, HAS_AVX2),
-                      FFTTestArg(32, aom_fft32x32_float_avx2, HAS_AVX2)));
-#endif
+    AVX2, FFT2DTest,
+    ::testing::Values(FFTTestArg(8, aom_fft8x8_float_avx2),
+                      FFTTestArg(16, aom_fft16x16_float_avx2),
+                      FFTTestArg(32, aom_fft32x32_float_avx2)));
+#endif  // HAVE_AVX2
+#endif  // ARCH_X86 || ARCH_X86_64
 
 struct IFFTTestArg {
   int n;
   tform_fun_t ifft;
-  int flag;
-  IFFTTestArg(int n_in, tform_fun_t ifft_in, int flag_in)
-      : n(n_in), ifft(ifft_in), flag(flag_in) {}
+  IFFTTestArg(int n_in, tform_fun_t ifft_in) : n(n_in), ifft(ifft_in) {}
 };
 
 std::ostream &operator<<(std::ostream &os, const IFFTTestArg &test_arg) {
   return os << "ifft_arg { n:" << test_arg.n << " fft:" << test_arg.ifft
-            << " flag:" << test_arg.flag << "}";
+            << " }";
 }
 
 class IFFT2DTest : public ::testing::TestWithParam<IFFTTestArg> {
@@ -194,25 +179,18 @@ class IFFT2DTest : public ::testing::TestWithParam<IFFTTestArg> {
     memset(input_, 0, sizeof(*input_) * n * n * 2);
     memset(temp_, 0, sizeof(*temp_) * n * n * 2);
     memset(output_, 0, sizeof(*output_) * n * n);
-#if ARCH_X86 || ARCH_X86_64
-    disabled_ = GetParam().flag != 0 && !(x86_simd_caps() & GetParam().flag);
-#else
-    disabled_ = GetParam().flag != 0;
-#endif
   }
   void TearDown() {
     aom_free(input_);
     aom_free(temp_);
     aom_free(output_);
   }
-  int disabled_;
   float *input_;
   float *temp_;
   float *output_;
 };
 
 TEST_P(IFFT2DTest, Correctness) {
-  if (disabled_) return;
   int n = GetParam().n;
   ASSERT_GE(n, 2);
   std::vector<float> expected(n * n);
@@ -240,7 +218,6 @@ TEST_P(IFFT2DTest, Correctness) {
 };
 
 TEST_P(IFFT2DTest, Benchmark) {
-  if (disabled_) return;
   int n = GetParam().n;
   float sum = 0;
   for (int i = 0; i < 1000 * (64 - n); ++i) {
@@ -251,24 +228,29 @@ TEST_P(IFFT2DTest, Benchmark) {
   }
 }
 INSTANTIATE_TEST_CASE_P(
-    IFFT2DTestC, IFFT2DTest,
-    ::testing::Values(IFFTTestArg(2, aom_ifft2x2_float_c, 0),
-                      IFFTTestArg(4, aom_ifft4x4_float_c, 0),
-                      IFFTTestArg(8, aom_ifft8x8_float_c, 0),
-                      IFFTTestArg(16, aom_ifft16x16_float_c, 0),
-                      IFFTTestArg(32, aom_ifft32x32_float_c, 0)));
+    C, IFFT2DTest,
+    ::testing::Values(IFFTTestArg(2, aom_ifft2x2_float_c),
+                      IFFTTestArg(4, aom_ifft4x4_float_c),
+                      IFFTTestArg(8, aom_ifft8x8_float_c),
+                      IFFTTestArg(16, aom_ifft16x16_float_c),
+                      IFFTTestArg(32, aom_ifft32x32_float_c)));
 #if ARCH_X86 || ARCH_X86_64
+#if HAVE_SSE2
 INSTANTIATE_TEST_CASE_P(
-    IFFT2DTestSSE2, IFFT2DTest,
-    ::testing::Values(IFFTTestArg(4, aom_ifft4x4_float_sse2, HAS_SSE2),
-                      IFFTTestArg(8, aom_ifft8x8_float_sse2, HAS_SSE2),
-                      IFFTTestArg(16, aom_ifft16x16_float_sse2, HAS_SSE2),
-                      IFFTTestArg(32, aom_ifft32x32_float_sse2, HAS_SSE2)));
+    SSE2, IFFT2DTest,
+    ::testing::Values(IFFTTestArg(4, aom_ifft4x4_float_sse2),
+                      IFFTTestArg(8, aom_ifft8x8_float_sse2),
+                      IFFTTestArg(16, aom_ifft16x16_float_sse2),
+                      IFFTTestArg(32, aom_ifft32x32_float_sse2)));
+#endif  // HAVE_SSE2
 
+#if HAVE_AVX2
 INSTANTIATE_TEST_CASE_P(
-    IFFT2DTestAVX2, IFFT2DTest,
-    ::testing::Values(IFFTTestArg(8, aom_ifft8x8_float_avx2, HAS_AVX2),
-                      IFFTTestArg(16, aom_ifft16x16_float_avx2, HAS_AVX2),
-                      IFFTTestArg(32, aom_ifft32x32_float_avx2, HAS_AVX2)));
-#endif
+    AVX2, IFFT2DTest,
+    ::testing::Values(IFFTTestArg(8, aom_ifft8x8_float_avx2),
+                      IFFTTestArg(16, aom_ifft16x16_float_avx2),
+                      IFFTTestArg(32, aom_ifft32x32_float_avx2)));
+#endif  // HAVE_AVX2
+#endif  // ARCH_X86 || ARCH_X86_64
+
 }  // namespace

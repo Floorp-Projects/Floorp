@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_RDOPT_H_
-#define AV1_ENCODER_RDOPT_H_
+#ifndef AOM_AV1_ENCODER_RDOPT_H_
+#define AOM_AV1_ENCODER_RDOPT_H_
 
 #include "av1/common/blockd.h"
 #include "av1/common/txb_common.h"
@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 #define MAX_REF_MV_SERCH 3
+#define DEFAULT_LUMA_INTERP_SKIP_FLAG 1
+#define DEFAULT_CHROMA_INTERP_SKIP_FLAG 2
+#define DEFAULT_INTERP_SKIP_FLAG \
+  (DEFAULT_LUMA_INTERP_SKIP_FLAG | DEFAULT_CHROMA_INTERP_SKIP_FLAG)
 
 struct TileInfo;
 struct macroblock;
@@ -111,7 +115,7 @@ unsigned int av1_high_get_sby_perpixel_variance(const struct AV1_COMP *cpi,
                                                 const struct buf_2d *ref,
                                                 BLOCK_SIZE bs, int bd);
 
-void av1_rd_pick_inter_mode_sb(const struct AV1_COMP *cpi,
+void av1_rd_pick_inter_mode_sb(struct AV1_COMP *cpi,
                                struct TileDataEnc *tile_data,
                                struct macroblock *x, int mi_row, int mi_col,
                                struct RD_STATS *rd_cost, BLOCK_SIZE bsize,
@@ -123,14 +127,12 @@ void av1_rd_pick_inter_mode_sb_seg_skip(
     BLOCK_SIZE bsize, PICK_MODE_CONTEXT *ctx, int64_t best_rd_so_far);
 
 #if CONFIG_COLLECT_INTER_MODE_RD_STATS
-#define INTER_MODE_RD_TEST 0
-void av1_inter_mode_data_init();
-void av1_inter_mode_data_fit(int rdmult);
-void av1_inter_mode_data_show(const AV1_COMMON *cm);
+void av1_inter_mode_data_init(struct TileDataEnc *tile_data);
+void av1_inter_mode_data_fit(TileDataEnc *tile_data, int rdmult);
 #endif
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_RDOPT_H_
+#endif  // AOM_AV1_ENCODER_RDOPT_H_

@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_PORTS_SANITIZER_H_
-#define AOM_PORTS_SANITIZER_H_
+#ifndef AOM_AOM_PORTS_SANITIZER_H_
+#define AOM_AOM_PORTS_SANITIZER_H_
 
 // AddressSanitizer support.
 
@@ -35,4 +35,4 @@
 #define ASAN_UNPOISON_MEMORY_REGION(addr, size) ((void)(addr), (void)(size))
 #endif
 
-#endif  // AOM_PORTS_SANITIZER_H_
+#endif  // AOM_AOM_PORTS_SANITIZER_H_

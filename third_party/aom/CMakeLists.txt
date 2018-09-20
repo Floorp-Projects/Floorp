@@ -18,45 +18,6 @@ if(NOT EMSCRIPTEN)
   endif()
 endif()
 
-option(ENABLE_CCACHE "Enable ccache support." OFF)
-option(ENABLE_DECODE_PERF_TESTS "Enables decoder performance tests" OFF)
-option(ENABLE_DISTCC "Enable distcc support." OFF)
-option(ENABLE_DOCS "Enable documentation generation (doxygen required)." ON)
-option(ENABLE_ENCODE_PERF_TESTS "Enables encoder performance tests" OFF)
-option(ENABLE_EXAMPLES "Enables build of example code." ON)
-option(ENABLE_GOMA "Enable goma support." OFF)
-option(ENABLE_IDE_TEST_HOSTING
-       "Enables running tests within IDEs like Visual Studio and Xcode." OFF)
-option(ENABLE_NASM "Use nasm instead of yasm for x86 assembly." OFF)
-option(ENABLE_TESTDATA "Enables unit test data download targets." ON)
-option(ENABLE_TESTS "Enables unit tests." ON)
-option(ENABLE_TOOLS "Enable applications in tools sub directory." ON)
-option(ENABLE_WERROR "Converts warnings to errors at compile time." OFF)
-
-# ARM assembly/intrinsics flags.
-option(ENABLE_NEON "Enables NEON optimizations on ARM targets." ON)
-
-# MIPS assembly/intrinsics flags.
-option(ENABLE_DSPR2 "Enables DSPR2 optimizations on MIPS targets." OFF)
-option(ENABLE_MSA "Enables MSA optimizations on MIPS targets." OFF)
-
-# VSX intrinsics flags.
-option(ENABLE_VSX "Enables VSX optimizations on PowerPC targets." ON)
-
-# x86/x86_64 assembly/intrinsics flags.
-option(ENABLE_MMX "Enables MMX optimizations on x86/x86_64 targets." ON)
-option(ENABLE_SSE "Enables SSE optimizations on x86/x86_64 targets." ON)
-option(ENABLE_SSE2 "Enables SSE2 optimizations on x86/x86_64 targets." ON)
-option(ENABLE_SSE3 "Enables SSE3 optimizations on x86/x86_64 targets." ON)
-option(ENABLE_SSSE3 "Enables SSSE3 optimizations on x86/x86_64 targets." ON)
-option(ENABLE_SSE4_1 "Enables SSE4_1 optimizations on x86/x86_64 targets." ON)
-option(ENABLE_SSE4_2 "Enables SSE4_2 optimizations on x86/x86_64 targets." ON)
-option(ENABLE_AVX "Enables AVX optimizations on x86/x86_64 targets." ON)
-option(ENABLE_AVX2 "Enables AVX2 optimizations on x86/x86_64 targets." ON)
-
-# $BUILD_SHARED_LIBS is a CMake built-in-- it's listed here for visibility.
-option(BUILD_SHARED_LIBS "CMake should generate a shared library build." OFF)
-
 project(AOM C CXX)
 
 set(AOM_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -95,7 +56,7 @@ list(APPEND AOM_RTCD_SOURCES
             "${AOM_ROOT}/aom_scale/aom_scale_rtcd.c"
             "${AOM_ROOT}/av1/common/av1_rtcd_defs.pl"
             "${AOM_ROOT}/av1/common/av1_rtcd.c"
-            "${AOM_ROOT}/build/make/rtcd.pl")
+            "${AOM_ROOT}/build/cmake/rtcd.pl")
 
 list(APPEND AOM_LIBWEBM_SOURCES
             "${AOM_ROOT}/third_party/libwebm/common/hdr_util.cc"
@@ -161,12 +122,19 @@ list(APPEND AOM_SOURCES
             "${AOM_ROOT}/aom/src/aom_image.c"
             "${AOM_ROOT}/aom/src/aom_integer.c")
 
-list(APPEND AOM_COMMON_APP_UTIL_SOURCES "${AOM_ROOT}/common/args.c"
-            "${AOM_ROOT}/common/args.h" "${AOM_ROOT}/common/md5_utils.c"
+list(APPEND AOM_COMMON_APP_UTIL_SOURCES
+            "${AOM_ROOT}/common/args.c"
+            "${AOM_ROOT}/common/args.h"
+            "${AOM_ROOT}/common/av1_config.c"
+            "${AOM_ROOT}/common/av1_config.h"
+            "${AOM_ROOT}/common/md5_utils.c"
             "${AOM_ROOT}/common/md5_utils.h"
             "${AOM_ROOT}/common/tools_common.c"
             "${AOM_ROOT}/common/tools_common.h"
-            "${AOM_ROOT}/common/video_common.h" "${AOM_ROOT}/common/y4menc.c"
+            "${AOM_ROOT}/common/video_common.h"
+            "${AOM_ROOT}/common/rawenc.c"
+            "${AOM_ROOT}/common/rawenc.h"
+            "${AOM_ROOT}/common/y4menc.c"
             "${AOM_ROOT}/common/y4menc.h")
 
 list(APPEND AOM_DECODER_APP_UTIL_SOURCES "${AOM_ROOT}/common/ivfdec.c"
@@ -255,10 +223,10 @@ add_rtcd_build_step("${AOM_ROOT}/av1/common/av1_rtcd_defs.pl"
 add_library(aom_rtcd OBJECT ${AOM_RTCD_SOURCES})
 add_dependencies(aom_rtcd aom_version)
 
-if (ENABLE_EXAMPLES)
-add_library(aom_encoder_stats OBJECT ${AOM_ENCODER_STATS_SOURCES})
-endif ()
-
+if(ENABLE_EXAMPLES)
+  add_library(aom_encoder_stats OBJECT ${AOM_ENCODER_STATS_SOURCES})
+  set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_encoder_stats)
+endif()
 add_library(aom ${AOM_SOURCES} $<TARGET_OBJECTS:aom_rtcd>)
 
 if(NOT MSVC AND NOT APPLE)
@@ -288,8 +256,8 @@ endforeach()
 # aom_common_app_util library must define this function. This is a convenience
 # to allow omission of the function from applications that might want to use
 # other pieces of the util support without defining usage_exit().
-file(WRITE "${AOM_CONFIG_DIR}/usage_exit.c" "void usage_exit(void) {}")
-file(WRITE "${AOM_CONFIG_DIR}/usage_exit.cc"
+file(WRITE "${AOM_GEN_SRC_DIR}/usage_exit.c" "void usage_exit(void) {}")
+file(WRITE "${AOM_GEN_SRC_DIR}/usage_exit.cc"
            "extern \"C\" void usage_exit(void) {}")
 
 #
@@ -349,6 +317,8 @@ if(CONFIG_AV1_DECODER AND ENABLE_EXAMPLES)
       add_preproc_definition(_POSIX_SOURCE)
       append_link_flag_to_target("inspect" "-s TOTAL_MEMORY=402653184")
       append_link_flag_to_target("inspect" "-s MODULARIZE=1")
+      append_link_flag_to_target(
+        "inspect" "-s \'EXTRA_EXPORTED_RUNTIME_METHODS=[\"UTF8ToString\"]\'")
       append_link_flag_to_target("inspect"
                                  "-s EXPORT_NAME=\"\'DecoderModule\'\"")
       append_link_flag_to_target("inspect" "--memory-init-file 0")
@@ -407,7 +377,7 @@ if(CONFIG_AV1_ENCODER)
       # TODO(tomfinegan): Sort out why a simple link command with
       # aom_entropy_optimizer.c won't work on macos, but dragging in all the
       # helper machinery allows the link to succeed.
-      add_executable(aom_entropy_optimizer "${AOM_CONFIG_DIR}/usage_exit.c"
+      add_executable(aom_entropy_optimizer "${AOM_GEN_SRC_DIR}/usage_exit.c"
                      "${AOM_ROOT}/tools/aom_entropy_optimizer.c"
                      $<TARGET_OBJECTS:aom_common_app_util>
                      $<TARGET_OBJECTS:aom_encoder_app_util>)
@@ -434,7 +404,7 @@ endif()
 if(ENABLE_TOOLS)
   if(CONFIG_AV1_DECODER)
     require_cxx_flag_nomsvc("-std=c++11" NO)
-    add_executable(dump_obu "${AOM_CONFIG_DIR}/usage_exit.cc"
+    add_executable(dump_obu "${AOM_GEN_SRC_DIR}/usage_exit.cc"
                    "${AOM_ROOT}/tools/dump_obu.cc"
                    "${AOM_ROOT}/tools/obu_parser.cc"
                    "${AOM_ROOT}/tools/obu_parser.h"
@@ -555,9 +525,7 @@ endif()
 
 if(HAVE_PTHREAD_H AND CONFIG_MULTITHREAD)
   find_package(Threads)
-  foreach(app_target ${AOM_APP_TARGETS})
-    target_link_libraries(${app_target} ${AOM_LIB_LINK_TYPE} Threads::Threads)
-  endforeach()
+  target_link_libraries(aom ${AOM_LIB_LINK_TYPE} Threads::Threads)
 endif()
 
 if(XCODE)

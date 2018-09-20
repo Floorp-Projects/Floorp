@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_COMMON_RESTORATION_H_
-#define AV1_COMMON_RESTORATION_H_
+#ifndef AOM_AV1_COMMON_RESTORATION_H_
+#define AOM_AV1_COMMON_RESTORATION_H_
 
 #include "aom_ports/mem.h"
 #include "config/aom_config.h"
@@ -120,6 +120,7 @@ extern "C" {
 // If WIENER_WIN_CHROMA == WIENER_WIN - 2, that implies 5x5 filters are used for
 // chroma. To use 7x7 for chroma set WIENER_WIN_CHROMA to WIENER_WIN.
 #define WIENER_WIN_CHROMA (WIENER_WIN - 2)
+#define WIENER_WIN2_CHROMA ((WIENER_WIN_CHROMA) * (WIENER_WIN_CHROMA))
 
 #define WIENER_FILT_PREC_BITS 7
 #define WIENER_FILT_STEP (1 << WIENER_FILT_PREC_BITS)
@@ -373,4 +374,4 @@ void av1_lr_sync_write_dummy(void *const lr_sync, int r, int c,
 }  // extern "C"
 #endif
 
-#endif  // AV1_COMMON_RESTORATION_H_
+#endif  // AOM_AV1_COMMON_RESTORATION_H_

@@ -26,7 +26,6 @@
    Apply horizontal filter and store in a temporary buffer. When applying
    vertical filter, overwrite the original pixel values.
  */
-
 void av1_wiener_convolve_add_src_neon(const uint8_t *src, ptrdiff_t src_stride,
                                       uint8_t *dst, ptrdiff_t dst_stride,
                                       const int16_t *filter_x, int x_step_q4,
@@ -78,8 +77,10 @@ void av1_wiener_convolve_add_src_neon(const uint8_t *src, ptrdiff_t src_stride,
   /* if height is a multiple of 8 */
   if (!(h & 7)) {
     int16x8_t res0, res1, res2, res3;
-    uint16x8_t res4, res5, res6, res7, res8, res9, res10, res11;
+    uint16x8_t res4;
     uint8x8_t t0, t1, t2, t3, t4, t5, t6, t7;
+#if defined(__aarch64__)
+    uint16x8_t res5, res6, res7, res8, res9, res10, res11;
     uint8x8_t t8, t9, t10, t11, t12, t13, t14;
 
     do {
@@ -190,16 +191,64 @@ void av1_wiener_convolve_add_src_neon(const uint8_t *src, ptrdiff_t src_stride,
       dst_ptr += 8 * MAX_SB_SIZE;
       height -= 8;
     } while (height > 0);
+#else
+    uint8x8_t temp_0;
+
+    do {
+      const uint8_t *s;
+
+      __builtin_prefetch(src_ptr);
+
+      t0 = vld1_u8(src_ptr);  // a0 a1 a2 a3 a4 a5 a6 a7
+      s = src_ptr + 8;
+      d_tmp = dst_ptr;
+      width = w;
+
+      __builtin_prefetch(dst_ptr);
+
+      do {
+        t7 = vld1_u8(s);  // a8 a9 a10 a11 a12 a13 a14 a15
+        temp_0 = t0;
+        t0 = t7;
+
+        t1 = vext_u8(temp_0, t7, 1);  // a1 a2 a3 a4 a5 a6 a7 a8
+        t2 = vext_u8(temp_0, t7, 2);  // a2 a3 a4 a5 a6 a7 a8 a9
+        t3 = vext_u8(temp_0, t7, 3);  // a3 a4 a5 a6 a7 a8 a9 a10
+        t4 = vext_u8(temp_0, t7, 4);  // a4 a5 a6 a7 a8 a9 a10 a11
+        t5 = vext_u8(temp_0, t7, 5);  // a5 a6 a7 a8 a9 a10 a11 a12
+        t6 = vext_u8(temp_0, t7, 6);  // a6 a7 a8 a9 a10 a11 a12 a13
+        t7 = vext_u8(temp_0, t7, 7);  // a7 a8 a9 a10 a11 a12 a13 a14
+
+        res0 = vreinterpretq_s16_u16(vaddl_u8(temp_0, t6));
+        res1 = vreinterpretq_s16_u16(vaddl_u8(t1, t5));
+        res2 = vreinterpretq_s16_u16(vaddl_u8(t2, t4));
+        res3 = vreinterpretq_s16_u16(vmovl_u8(t3));
+        res4 = wiener_convolve8_horiz_8x8(res0, res1, res2, res3, filter_x_tmp,
+                                          bd, conv_params->round_0);
+
+        vst1q_u16(d_tmp, res4);
+
+        s += 8;
+        d_tmp += 8;
+        width -= 8;
+      } while (width > 0);
+      src_ptr += src_stride;
+      dst_ptr += MAX_SB_SIZE;
+      height--;
+    } while (height > 0);
+#endif
   } else {
     /*if height is a multiple of 4*/
-    int16x8_t tt0, tt1, tt2, tt3;
     const uint8_t *s;
-    uint16x4_t res0, res1, res2, res3, res4, res5, res6, res7;
-    uint16x8_t d0, d1, d2, d3;
-    int16x4_t s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
-    int16x4_t s11, s12, s13, s14;
+    int16x8_t tt0, tt1, tt2, tt3;
+    uint16x8_t d0;
     uint8x8_t t0, t1, t2, t3;
 
+#if defined(__aarch64__)
+    uint16x4_t res0, res1, res2, res3, res4, res5, res6, res7;
+    uint16x8_t d1, d2, d3;
+    int16x4_t s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
+    int16x4_t s11, s12, s13, s14;
     do {
       __builtin_prefetch(src_ptr + 0 * src_stride);
       __builtin_prefetch(src_ptr + 1 * src_stride);
@@ -292,11 +341,61 @@ void av1_wiener_convolve_add_src_neon(const uint8_t *src, ptrdiff_t src_stride,
       dst_ptr += 4 * MAX_SB_SIZE;
       height -= 4;
     } while (height > 0);
+#else
+    uint8x8_t temp_0, t4, t5, t6, t7;
+
+    do {
+      __builtin_prefetch(src_ptr);
+
+      t0 = vld1_u8(src_ptr);  // a0 a1 a2 a3 a4 a5 a6 a7
+
+      __builtin_prefetch(dst_ptr);
+
+      s = src_ptr + 8;
+      d_tmp = dst_ptr;
+      width = w;
+
+      do {
+        t7 = vld1_u8(s);  // a8 a9 a10 a11 a12 a13 a14 a15
+        temp_0 = t0;
+        t0 = t7;
+
+        t1 = vext_u8(temp_0, t7, 1);  // a1 a2 a3 a4 a5 a6 a7 a8
+        t2 = vext_u8(temp_0, t7, 2);  // a2 a3 a4 a5 a6 a7 a8 a9
+        t3 = vext_u8(temp_0, t7, 3);  // a3 a4 a5 a6 a7 a8 a9 a10
+        t4 = vext_u8(temp_0, t7, 4);  // a4 a5 a6 a7 a8 a9 a10 a11
+        t5 = vext_u8(temp_0, t7, 5);  // a5 a6 a7 a8 a9 a10 a11 a12
+        t6 = vext_u8(temp_0, t7, 6);  // a6 a7 a8 a9 a10 a11 a12 a13
+        t7 = vext_u8(temp_0, t7, 7);  // a7 a8 a9 a10 a11 a12 a13 a14
+
+        tt0 = vreinterpretq_s16_u16(vaddl_u8(temp_0, t6));
+        tt1 = vreinterpretq_s16_u16(vaddl_u8(t1, t5));
+        tt2 = vreinterpretq_s16_u16(vaddl_u8(t2, t4));
+        tt3 = vreinterpretq_s16_u16(vmovl_u8(t3));
+        d0 = wiener_convolve8_horiz_8x8(tt0, tt1, tt2, tt3, filter_x_tmp, bd,
+                                        conv_params->round_0);
+
+        vst1q_u16(d_tmp, d0);
+
+        s += 8;
+        d_tmp += 8;
+        width -= 8;
+      } while (width > 0);
+
+      src_ptr += src_stride;
+      dst_ptr += MAX_SB_SIZE;
+      height -= 1;
+    } while (height > 0);
+#endif
   }
 
   {
-    int16x8_t s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
-    uint8x8_t t0, t1, t2, t3;
+    int16x8_t s0, s1, s2, s3, s4, s5, s6, s7;
+    uint8x8_t t0;
+#if defined(__aarch64__)
+    int16x8_t s8, s9, s10;
+    uint8x8_t t1, t2, t3;
+#endif
     int16_t *src_tmp_ptr, *s;
     uint8_t *dst_tmp_ptr;
     height = h;
@@ -324,6 +423,7 @@ void av1_wiener_convolve_add_src_neon(const uint8_t *src, ptrdiff_t src_stride,
       d = dst_tmp_ptr;
       height = h;
 
+#if defined(__aarch64__)
       do {
         __builtin_prefetch(dst_tmp_ptr + 0 * dst_stride);
         __builtin_prefetch(dst_tmp_ptr + 1 * dst_stride);
@@ -397,5 +497,34 @@ void av1_wiener_convolve_add_src_neon(const uint8_t *src, ptrdiff_t src_stride,
 
       w -= 8;
     } while (w > 0);
+#else
+      do {
+        __builtin_prefetch(dst_tmp_ptr + 0 * dst_stride);
+
+        s7 = vld1q_s16(s);
+        s += src_stride;
+
+        t0 = wiener_convolve8_vert_4x8(s0, s1, s2, s3, s4, s5, s6, filter_y_tmp,
+                                       bd, conv_params->round_1);
+
+        vst1_u8(d, t0);
+        d += dst_stride;
+
+        s0 = s1;
+        s1 = s2;
+        s2 = s3;
+        s3 = s4;
+        s4 = s5;
+        s5 = s6;
+        s6 = s7;
+        height -= 1;
+      } while (height > 0);
+
+      src_tmp_ptr += 8;
+      dst_tmp_ptr += 8;
+
+      w -= 8;
+    } while (w > 0);
+#endif
   }
 }

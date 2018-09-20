@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef AOM_DSP_X86_CONVOLVE_H_
-#define AOM_DSP_X86_CONVOLVE_H_
+#ifndef AOM_AOM_DSP_X86_CONVOLVE_H_
+#define AOM_AOM_DSP_X86_CONVOLVE_H_
 
 #include <assert.h>
 
@@ -17,7 +17,6 @@
 
 #include "aom/aom_integer.h"
 #include "aom_ports/mem.h"
-#include "aom_dsp/aom_convolve.h"
 
 typedef void filter8_1dfunction(const uint8_t *src_ptr, ptrdiff_t src_pitch,
                                 uint8_t *output_ptr, ptrdiff_t out_pitch,
@@ -34,7 +33,30 @@ typedef void filter8_1dfunction(const uint8_t *src_ptr, ptrdiff_t src_pitch,
     (void)y_step_q4;                                                         \
     assert((-128 <= filter[3]) && (filter[3] <= 127));                       \
     assert(step_q4 == 16);                                                   \
-    if (filter[0] | filter[1] | filter[2]) {                                 \
+    if (((filter[0] | filter[1] | filter[6] | filter[7]) == 0) &&            \
+        (filter[2] | filter[5])) {                                           \
+      while (w >= 16) {                                                      \
+        aom_filter_block1d16_##dir##4_##avg##opt(src_start, src_stride, dst, \
+                                                 dst_stride, h, filter);     \
+        src += 16;                                                           \
+        dst += 16;                                                           \
+        w -= 16;                                                             \
+      }                                                                      \
+      while (w >= 8) {                                                       \
+        aom_filter_block1d8_##dir##4_##avg##opt(src_start, src_stride, dst,  \
+                                                dst_stride, h, filter);      \
+        src += 8;                                                            \
+        dst += 8;                                                            \
+        w -= 8;                                                              \
+      }                                                                      \
+      while (w >= 4) {                                                       \
+        aom_filter_block1d4_##dir##4_##avg##opt(src_start, src_stride, dst,  \
+                                                dst_stride, h, filter);      \
+        src += 4;                                                            \
+        dst += 4;                                                            \
+        w -= 4;                                                              \
+      }                                                                      \
+    } else if (filter[0] | filter[1] | filter[2]) {                          \
       while (w >= 16) {                                                      \
         aom_filter_block1d16_##dir##8_##avg##opt(src_start, src_stride, dst, \
                                                  dst_stride, h, filter);     \
@@ -153,4 +175,4 @@ typedef void highbd_filter8_1dfunction(const uint16_t *src_ptr,
     }                                                                      \
   }
 
-#endif  // AOM_DSP_X86_CONVOLVE_H_
+#endif  // AOM_AOM_DSP_X86_CONVOLVE_H_

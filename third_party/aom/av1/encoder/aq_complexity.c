@@ -143,9 +143,10 @@ void av1_caq_select_segment(const AV1_COMP *cpi, MACROBLOCK *mb, BLOCK_SIZE bs,
         get_aq_c_strength(cm->base_qindex, cm->seq_params.bit_depth);
 
     aom_clear_system_state();
-    low_var_thresh = (cpi->oxcf.pass == 2) ? AOMMAX(cpi->twopass.mb_av_energy,
-                                                    MIN_DEFAULT_LV_THRESH)
-                                           : DEFAULT_LV_THRESH;
+    low_var_thresh =
+        (cpi->oxcf.pass == 2)
+            ? AOMMAX(exp(cpi->twopass.mb_av_energy), MIN_DEFAULT_LV_THRESH)
+            : DEFAULT_LV_THRESH;
 
     av1_setup_src_planes(mb, cpi->source, mi_row, mi_col, num_planes);
     logvar = av1_log_block_var(cpi, mb, bs);

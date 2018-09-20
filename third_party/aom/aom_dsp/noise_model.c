@@ -1135,7 +1135,9 @@ int aom_noise_model_get_grain_parameters(aom_noise_model_t *const noise_model,
     fprintf(stderr, "params.lag = %d > 3\n", noise_model->params.lag);
     return 0;
   }
+  uint16_t random_seed = film_grain->random_seed;
   memset(film_grain, 0, sizeof(*film_grain));
+  film_grain->random_seed = random_seed;
 
   film_grain->apply_grain = 1;
   film_grain->update_parameters = 1;
@@ -1633,7 +1635,7 @@ int aom_denoise_and_model_run(struct aom_denoise_and_model_t *ctx,
       return 0;
     }
     if (!film_grain->random_seed) {
-      film_grain->random_seed = 1071;
+      film_grain->random_seed = 7391;
     }
     memcpy(raw_data[0], ctx->denoised[0],
            (strides[0] * sd->y_height) << use_highbd);

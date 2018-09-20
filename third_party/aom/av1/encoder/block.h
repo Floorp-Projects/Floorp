@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_BLOCK_H_
-#define AV1_ENCODER_BLOCK_H_
+#ifndef AOM_AV1_ENCODER_BLOCK_H_
+#define AOM_AV1_ENCODER_BLOCK_H_
 
 #include "av1/common/entropymv.h"
 #include "av1/common/entropy.h"
@@ -170,6 +170,7 @@ typedef struct {
   InterpFilters filters;
   int_mv mv[2];
   int8_t ref_frames[2];
+  COMPOUND_TYPE comp_type;
 } INTERPOLATION_FILTER_STATS;
 
 typedef struct macroblock MACROBLOCK;
@@ -253,6 +254,19 @@ struct macroblock {
   uint8_t *left_pred_buf;
 
   PALETTE_BUFFER *palette_buffer;
+
+  CONV_BUF_TYPE *tmp_conv_dst;
+  uint8_t *tmp_obmc_bufs[2];
+
+  // buffer for hash value calculation of a block
+  // used only in av1_get_block_hash_value()
+  // [first hash/second hash]
+  // [two buffers used ping-pong]
+  uint32_t *hash_value_buffer[2][2];
+
+  CRC_CALCULATOR crc_calculator1;
+  CRC_CALCULATOR crc_calculator2;
+  int g_crc_initialized;
 
   // These define limits to motion vector components to prevent them
   // from extending outside the UMV borders
@@ -344,7 +358,6 @@ struct macroblock {
 #if CONFIG_DIST_8X8
   int using_dist_8x8;
   aom_tune_metric tune_metric;
-  DECLARE_ALIGNED(16, int16_t, pred_luma[MAX_SB_SQUARE]);
 #endif  // CONFIG_DIST_8X8
   int comp_idx_cost[COMP_INDEX_CONTEXTS][2];
   int comp_group_idx_cost[COMP_GROUP_IDX_CONTEXTS][2];
@@ -352,6 +365,8 @@ struct macroblock {
   int tx_search_prune[EXT_TX_SET_TYPES];
   int must_find_valid_partition;
   int tx_split_prune_flag;  // Flag to skip tx split RD search.
+  int recalc_luma_mc_data;  // Flag to indicate recalculation of MC data during
+                            // interpolation filter search
 };
 
 static INLINE int is_rect_tx_allowed_bsize(BLOCK_SIZE bsize) {
@@ -400,8 +415,38 @@ static INLINE int tx_size_to_depth(TX_SIZE tx_size, BLOCK_SIZE bsize) {
   return depth;
 }
 
+static INLINE void set_blk_skip(MACROBLOCK *x, int plane, int blk_idx,
+                                int skip) {
+  if (skip)
+    x->blk_skip[blk_idx] |= 1UL << plane;
+  else
+    x->blk_skip[blk_idx] &= ~(1UL << plane);
+#ifndef NDEBUG
+  // Set chroma planes to uninitialized states when luma is set to check if
+  // it will be set later
+  if (plane == 0) {
+    x->blk_skip[blk_idx] |= 1UL << (1 + 4);
+    x->blk_skip[blk_idx] |= 1UL << (2 + 4);
+  }
+
+  // Clear the initialization checking bit
+  x->blk_skip[blk_idx] &= ~(1UL << (plane + 4));
+#endif
+}
+
+static INLINE int is_blk_skip(MACROBLOCK *x, int plane, int blk_idx) {
+#ifndef NDEBUG
+  // Check if this is initialized
+  assert(!(x->blk_skip[blk_idx] & (1UL << (plane + 4))));
+
+  // The magic number is 0x77, this is to test if there is garbage data
+  assert((x->blk_skip[blk_idx] & 0x88) == 0);
+#endif
+  return (x->blk_skip[blk_idx] >> plane) & 1;
+}
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_BLOCK_H_
+#endif  // AOM_AV1_ENCODER_BLOCK_H_

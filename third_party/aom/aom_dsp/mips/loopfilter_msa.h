@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_DSP_LOOPFILTER_MSA_H_
-#define AOM_DSP_LOOPFILTER_MSA_H_
+#ifndef AOM_AOM_DSP_MIPS_LOOPFILTER_MSA_H_
+#define AOM_AOM_DSP_MIPS_LOOPFILTER_MSA_H_
 
 #include "aom_dsp/mips/macros_msa.h"
 
@@ -248,4 +248,4 @@
     mask_out = limit_in < (v16u8)mask_out;                                   \
     mask_out = __msa_xori_b(mask_out, 0xff);                                 \
   }
-#endif /* AOM_DSP_LOOPFILTER_MSA_H_ */
+#endif  // AOM_AOM_DSP_MIPS_LOOPFILTER_MSA_H_

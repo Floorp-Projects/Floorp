@@ -53,6 +53,13 @@ nsSecureBrowserUIImpl::Init(mozIDOMWindowProxy* aWindow)
     return NS_ERROR_FAILURE;
   }
 
+  // Save this so we can compare it to the web progress in OnLocationChange.
+  nsresult rv;
+  mWebProgress = do_GetWeakReference(wp, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   return wp->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION);
 }
 
@@ -239,10 +246,17 @@ nsSecureBrowserUIImpl::UpdateStateAndSecurityInfo(nsIChannel* channel,
   return NS_OK;
 }
 
-// We receive this notification whenever a top-level navigation occurs. When we
-// do, we extract any relevant security information and set our state
-// accordingly. We then call OnSecurityChange to notify any downstream listeners
-// of the security state.
+// We receive this notification for the nsIWebProgress we added ourselves to
+// (i.e. the window we were passed in Init, which should be the top-level
+// window or whatever corresponds to an <iframe mozbrowser> element). In some
+// cases, we also receive it from nsIWebProgress instances that are children of
+// that nsIWebProgress. We ignore notifications from children because they don't
+// change the top-level state (if children load mixed or tracking content, the
+// docShell will know and will tell us in GetState when we call
+// CheckForBlockedContent).
+// When we receive a notification from the top-level nsIWebProgress, we extract
+// any relevant security information and set our state accordingly. We then call
+// OnSecurityChange to notify any downstream listeners of the security state.
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIRequest* aRequest,
@@ -257,6 +271,17 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
           ("%p OnLocationChange: %p %p %s %x", this, aWebProgress, aRequest,
            aLocation->GetSpecOrDefault().get(), aFlags));
+
+  // Filter out events from children. See comment at the top of this function.
+  // It would be nice if the attribute isTopLevel worked for this, but that
+  // filters out events for <iframe mozbrowser> elements, which means they don't
+  // get OnSecurityChange events from this implementation. Instead, we check to
+  // see if the web progress we were handed here is the same one as we were
+  // initialized with.
+  nsCOMPtr<nsIWebProgress> originalWebProgress = do_QueryReferent(mWebProgress);
+  if (aWebProgress != originalWebProgress) {
+    return NS_OK;
+  }
 
   // Clear any state that varies by location.
   if (!(aFlags & LOCATION_CHANGE_SAME_DOCUMENT)) {

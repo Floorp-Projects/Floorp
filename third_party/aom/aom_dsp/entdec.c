@@ -112,6 +112,7 @@ static int od_ec_dec_normalize(od_ec_dec *dec, od_ec_window dif, unsigned rng,
                                int ret) {
   int d;
   assert(rng <= 65535U);
+  // The number of leading zeros in the 16-bit binary representation of rng.
   d = 16 - OD_ILOG_NZ(rng);
   dec->cnt -= d;
   /*This is equivalent to shifting in 1's instead of 0's.*/

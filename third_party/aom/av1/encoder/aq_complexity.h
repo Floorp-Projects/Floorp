@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_AQ_COMPLEXITY_H_
-#define AV1_ENCODER_AQ_COMPLEXITY_H_
+#ifndef AOM_AV1_ENCODER_AQ_COMPLEXITY_H_
+#define AOM_AV1_ENCODER_AQ_COMPLEXITY_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,4 +34,4 @@ void av1_setup_in_frame_q_adj(struct AV1_COMP *cpi);
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_AQ_COMPLEXITY_H_
+#endif  // AOM_AV1_ENCODER_AQ_COMPLEXITY_H_

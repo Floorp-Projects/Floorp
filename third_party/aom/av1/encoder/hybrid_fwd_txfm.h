@@ -9,8 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AV1_ENCODER_HYBRID_FWD_TXFM_H_
-#define AV1_ENCODER_HYBRID_FWD_TXFM_H_
+#ifndef AOM_AV1_ENCODER_HYBRID_FWD_TXFM_H_
+#define AOM_AV1_ENCODER_HYBRID_FWD_TXFM_H_
 
 #include "config/aom_config.h"
 
@@ -28,4 +28,4 @@ void av1_highbd_fwd_txfm(const int16_t *src_diff, tran_low_t *coeff,
 }  // extern "C"
 #endif
 
-#endif  // AV1_ENCODER_HYBRID_FWD_TXFM_H_
+#endif  // AOM_AV1_ENCODER_HYBRID_FWD_TXFM_H_

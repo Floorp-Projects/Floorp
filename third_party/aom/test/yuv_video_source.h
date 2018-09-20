@@ -8,8 +8,8 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#ifndef TEST_YUV_VIDEO_SOURCE_H_
-#define TEST_YUV_VIDEO_SOURCE_H_
+#ifndef AOM_TEST_YUV_VIDEO_SOURCE_H_
+#define AOM_TEST_YUV_VIDEO_SOURCE_H_
 
 #include <cstdio>
 #include <cstdlib>
@@ -120,4 +120,4 @@ class YUVVideoSource : public VideoSource {
 
 }  // namespace libaom_test
 
-#endif  // TEST_YUV_VIDEO_SOURCE_H_
+#endif  // AOM_TEST_YUV_VIDEO_SOURCE_H_
