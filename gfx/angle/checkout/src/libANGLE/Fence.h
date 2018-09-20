@@ -31,9 +31,9 @@ class FenceNV final : angle::NonCopyable
     explicit FenceNV(rx::FenceNVImpl *impl);
     virtual ~FenceNV();
 
-    Error set(GLenum condition);
-    Error test(GLboolean *outResult);
-    Error finish();
+    Error set(const Context *context, GLenum condition);
+    Error test(const Context *context, GLboolean *outResult);
+    Error finish(const Context *context);
 
     bool isSet() const { return mIsSet; }
     GLboolean getStatus() const { return mStatus; }
@@ -59,10 +59,10 @@ class Sync final : public RefCountObject, public LabeledObject
     void setLabel(const std::string &label) override;
     const std::string &getLabel() const override;
 
-    Error set(GLenum condition, GLbitfield flags);
-    Error clientWait(GLbitfield flags, GLuint64 timeout, GLenum *outResult);
-    Error serverWait(GLbitfield flags, GLuint64 timeout);
-    Error getStatus(GLint *outResult) const;
+    Error set(const Context *context, GLenum condition, GLbitfield flags);
+    Error clientWait(const Context *context, GLbitfield flags, GLuint64 timeout, GLenum *outResult);
+    Error serverWait(const Context *context, GLbitfield flags, GLuint64 timeout);
+    Error getStatus(const Context *context, GLint *outResult) const;
 
     GLenum getCondition() const { return mCondition; }
     GLbitfield getFlags() const { return mFlags; }

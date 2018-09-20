@@ -13,7 +13,7 @@
 #include "cert.h"
 #include "nspr.h"
 #include "secder.h"
-#include "key.h"
+#include "keyhi.h"
 #include "nss.h"
 
 /*

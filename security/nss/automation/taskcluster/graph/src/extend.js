@@ -790,12 +790,12 @@ async function scheduleWindows(name, base, build_script) {
   base = merge(base, {
     workerType: "nss-win2012r2",
     env: {
-      PATH: "c:\\mozilla-build\\python;c:\\mozilla-build\\msys\\local\\bin;" +
-            "c:\\mozilla-build\\7zip;c:\\mozilla-build\\info-zip;" +
-            "c:\\mozilla-build\\python\\Scripts;c:\\mozilla-build\\yasm;" +
-            "c:\\mozilla-build\\msys\\bin;c:\\Windows\\system32;" +
-            "c:\\mozilla-build\\upx391w;c:\\mozilla-build\\moztools-x64\\bin;" +
-            "c:\\mozilla-build\\wget",
+      PATH: "c:\\mozilla-build\\bin;c:\\mozilla-build\\python;" +
+	    "c:\\mozilla-build\\msys\\local\\bin;c:\\mozilla-build\\7zip;" +
+	    "c:\\mozilla-build\\info-zip;c:\\mozilla-build\\python\\Scripts;" +
+	    "c:\\mozilla-build\\yasm;c:\\mozilla-build\\msys\\bin;" +
+	    "c:\\Windows\\system32;c:\\mozilla-build\\upx391w;" +
+	    "c:\\mozilla-build\\moztools-x64\\bin;c:\\mozilla-build\\wget",
       DOMSUF: "localdomain",
       HOST: "localhost",
     }

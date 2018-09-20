@@ -311,4 +311,10 @@ std::ostream &FmtHex(std::ostream &os, T value)
     ANGLE_EMPTY_STATEMENT
 #endif  // defined(ANGLE_TRACE_ENABLED) || defined(ANGLE_ENABLE_ASSERTS)
 
+#if defined(ANGLE_PLATFORM_WINDOWS)
+#define ANGLE_FUNCTION __FUNCTION__
+#else
+#define ANGLE_FUNCTION __func__
+#endif
+
 #endif   // COMMON_DEBUG_H_

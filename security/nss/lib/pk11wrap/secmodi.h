@@ -13,7 +13,7 @@
 #include "secdert.h"
 #include "certt.h"
 #include "secmodt.h"
-#include "keyt.h"
+#include "keythi.h"
 
 SEC_BEGIN_PROTOS
 

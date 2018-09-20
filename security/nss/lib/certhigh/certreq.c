@@ -5,7 +5,7 @@
 #include "cert.h"
 #include "certt.h"
 #include "secder.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secitem.h"
 #include "secasn1.h"
 #include "secerr.h"

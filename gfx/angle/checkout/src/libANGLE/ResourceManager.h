@@ -75,7 +75,9 @@ class TypedResourceManager : public ResourceManagerBase<HandleAllocatorType>
 
     // Inlined in the header for performance.
     template <typename... ArgTypes>
-    ResourceType *checkObjectAllocation(rx::GLImplFactory *factory, GLuint handle, ArgTypes... args)
+    ANGLE_INLINE ResourceType *checkObjectAllocation(rx::GLImplFactory *factory,
+                                                     GLuint handle,
+                                                     ArgTypes... args)
     {
         ResourceType *value = mObjectMap.query(handle);
         if (value)
@@ -88,6 +90,19 @@ class TypedResourceManager : public ResourceManagerBase<HandleAllocatorType>
             return nullptr;
         }
 
+        return checkObjectAllocationImpl(factory, handle, args...);
+    }
+
+    void reset(const Context *context) override;
+
+    ResourceMap<ResourceType> mObjectMap;
+
+  private:
+    template <typename... ArgTypes>
+    ResourceType *checkObjectAllocationImpl(rx::GLImplFactory *factory,
+                                            GLuint handle,
+                                            ArgTypes... args)
+    {
         ResourceType *object = ImplT::AllocateNewObject(factory, handle, args...);
 
         if (!mObjectMap.contains(handle))
@@ -98,10 +113,6 @@ class TypedResourceManager : public ResourceManagerBase<HandleAllocatorType>
 
         return object;
     }
-
-    void reset(const Context *context) override;
-
-    ResourceMap<ResourceType> mObjectMap;
 };
 
 class BufferManager : public TypedResourceManager<Buffer, HandleAllocator, BufferManager>
@@ -110,7 +121,7 @@ class BufferManager : public TypedResourceManager<Buffer, HandleAllocator, Buffe
     GLuint createBuffer();
     Buffer *getBuffer(GLuint handle) const;
 
-    Buffer *checkBufferAllocation(rx::GLImplFactory *factory, GLuint handle)
+    ANGLE_INLINE Buffer *checkBufferAllocation(rx::GLImplFactory *factory, GLuint handle)
     {
         return checkObjectAllocation(factory, handle);
     }
@@ -249,7 +260,7 @@ class FramebufferManager
     Framebuffer *getFramebuffer(GLuint handle) const;
     void setDefaultFramebuffer(Framebuffer *framebuffer);
 
-    void invalidateFramebufferComplenessCache() const;
+    void invalidateFramebufferComplenessCache(const Context *context) const;
 
     Framebuffer *checkFramebufferAllocation(rx::GLImplFactory *factory,
                                             const Caps &caps,

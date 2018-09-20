@@ -42,10 +42,8 @@ class ShaderD3D : public ShaderImpl
     ShCompileOptions prepareSourceAndReturnOptions(const gl::Context *context,
                                                    std::stringstream *sourceStream,
                                                    std::string *sourcePath) override;
-    bool postTranslateCompile(const gl::Context *context,
-                              gl::Compiler *compiler,
-                              std::string *infoLog) override;
-    std::string getDebugInfo(const gl::Context *context) const override;
+    bool postTranslateCompile(gl::Compiler *compiler, std::string *infoLog) override;
+    std::string getDebugInfo() const override;
 
     // D3D-specific methods
     void uncompile();

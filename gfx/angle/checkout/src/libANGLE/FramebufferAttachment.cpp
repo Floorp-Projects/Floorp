@@ -251,6 +251,11 @@ GLint FramebufferAttachment::layer() const
     return (index.has3DLayer() ? index.getLayerIndex() : 0);
 }
 
+bool FramebufferAttachment::isLayered() const
+{
+    return mTarget.textureIndex().isLayered();
+}
+
 GLsizei FramebufferAttachment::getNumViews() const
 {
     return mNumViews;

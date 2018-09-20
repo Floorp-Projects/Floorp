@@ -349,12 +349,18 @@ static gl::TextureCaps GenerateTextureFormatCaps(GLenum internalFormat, IDirect3
 
     if (d3dFormatInfo.renderFormat != D3DFMT_UNKNOWN)
     {
-        textureCaps.renderable = SUCCEEDED(d3d9->CheckDeviceFormat(adapter, deviceType, adapterFormat, D3DUSAGE_RENDERTARGET, D3DRTYPE_TEXTURE, d3dFormatInfo.renderFormat));
+        textureCaps.textureAttachment = SUCCEEDED(
+            d3d9->CheckDeviceFormat(adapter, deviceType, adapterFormat, D3DUSAGE_RENDERTARGET,
+                                    D3DRTYPE_TEXTURE, d3dFormatInfo.renderFormat));
 
-        if ((formatInfo.depthBits > 0 || formatInfo.stencilBits > 0) && !textureCaps.renderable)
+        if ((formatInfo.depthBits > 0 || formatInfo.stencilBits > 0) &&
+            !textureCaps.textureAttachment)
         {
-            textureCaps.renderable = SUCCEEDED(d3d9->CheckDeviceFormat(adapter, deviceType, adapterFormat, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, d3dFormatInfo.renderFormat));
+            textureCaps.textureAttachment = SUCCEEDED(
+                d3d9->CheckDeviceFormat(adapter, deviceType, adapterFormat, D3DUSAGE_DEPTHSTENCIL,
+                                        D3DRTYPE_TEXTURE, d3dFormatInfo.renderFormat));
         }
+        textureCaps.renderbuffer = textureCaps.textureAttachment;
 
         textureCaps.sampleCounts.insert(1);
         for (unsigned int i = D3DMULTISAMPLE_2_SAMPLES; i <= D3DMULTISAMPLE_16_SAMPLES; i++)
@@ -478,7 +484,7 @@ void GenerateCaps(IDirect3D9 *d3d9,
     const size_t MAX_VERTEX_CONSTANT_VECTORS_D3D9 = 256;
     caps->maxVertexUniformVectors =
         MAX_VERTEX_CONSTANT_VECTORS_D3D9 - GetReservedVertexUniformVectors();
-    caps->maxVertexUniformComponents = caps->maxVertexUniformVectors * 4;
+    caps->maxShaderUniformComponents[gl::ShaderType::Vertex] = caps->maxVertexUniformVectors * 4;
 
     caps->maxShaderUniformBlocks[gl::ShaderType::Vertex] = 0;
 
@@ -509,7 +515,8 @@ void GenerateCaps(IDirect3D9 *d3d9,
         ((deviceCaps.PixelShaderVersion >= D3DPS_VERSION(3, 0)) ? MAX_PIXEL_CONSTANT_VECTORS_SM3
                                                                 : MAX_PIXEL_CONSTANT_VECTORS_SM2) -
         GetReservedFragmentUniformVectors();
-    caps->maxFragmentUniformComponents = caps->maxFragmentUniformVectors * 4;
+    caps->maxShaderUniformComponents[gl::ShaderType::Fragment] =
+        caps->maxFragmentUniformVectors * 4;
     caps->maxShaderUniformBlocks[gl::ShaderType::Fragment]     = 0;
     caps->maxFragmentInputComponents = caps->maxVertexOutputComponents;
     caps->maxShaderTextureImageUnits[gl::ShaderType::Fragment] = 16;
@@ -521,8 +528,8 @@ void GenerateCaps(IDirect3D9 *d3d9,
     caps->maxUniformBlockSize = 0;
     caps->uniformBufferOffsetAlignment = 0;
     caps->maxCombinedUniformBlocks = 0;
-    caps->maxCombinedVertexUniformComponents = 0;
-    caps->maxCombinedFragmentUniformComponents = 0;
+    caps->maxCombinedShaderUniformComponents[gl::ShaderType::Vertex]   = 0;
+    caps->maxCombinedShaderUniformComponents[gl::ShaderType::Fragment] = 0;
     caps->maxVaryingComponents = 0;
 
     // Aggregate shader limits

@@ -9,11 +9,11 @@
 #ifndef LIBANGLE_RENDERER_BUFFERIMPL_H_
 #define LIBANGLE_RENDERER_BUFFERIMPL_H_
 
+#include "common/PackedEnums.h"
 #include "common/angleutils.h"
 #include "common/mathutil.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/Observer.h"
-#include "libANGLE/PackedEnums.h"
 
 #include <stdint.h>
 
@@ -49,14 +49,14 @@ class BufferImpl : public angle::Subject
                                   BufferImpl *source,
                                   GLintptr sourceOffset,
                                   GLintptr destOffset,
-                                  GLsizeiptr size) = 0;
+                                  GLsizeiptr size)                                  = 0;
     virtual gl::Error map(const gl::Context *context, GLenum access, void **mapPtr) = 0;
     virtual gl::Error mapRange(const gl::Context *context,
                                size_t offset,
                                size_t length,
                                GLbitfield access,
-                               void **mapPtr) = 0;
-    virtual gl::Error unmap(const gl::Context *context, GLboolean *result) = 0;
+                               void **mapPtr)                                       = 0;
+    virtual gl::Error unmap(const gl::Context *context, GLboolean *result)          = 0;
 
     virtual gl::Error getIndexRange(const gl::Context *context,
                                     GLenum type,

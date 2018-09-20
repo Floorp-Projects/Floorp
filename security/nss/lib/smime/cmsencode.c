@@ -9,7 +9,7 @@
 #include "cmslocal.h"
 
 #include "cert.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secasn1.h"
 #include "secoid.h"
 #include "secitem.h"

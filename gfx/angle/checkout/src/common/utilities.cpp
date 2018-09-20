@@ -14,10 +14,10 @@
 #include <set>
 
 #if defined(ANGLE_ENABLE_WINDOWS_STORE)
-#  include <wrl.h>
-#  include <wrl/wrappers/corewrappers.h>
-#  include <windows.applicationmodel.core.h>
-#  include <windows.graphics.display.h>
+#include <windows.applicationmodel.core.h>
+#include <windows.graphics.display.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
 #endif
 
 namespace
@@ -102,72 +102,72 @@ int VariableComponentCount(GLenum type)
 
 GLenum VariableComponentType(GLenum type)
 {
-    switch(type)
+    switch (type)
     {
-      case GL_BOOL:
-      case GL_BOOL_VEC2:
-      case GL_BOOL_VEC3:
-      case GL_BOOL_VEC4:
-        return GL_BOOL;
-      case GL_FLOAT:
-      case GL_FLOAT_VEC2:
-      case GL_FLOAT_VEC3:
-      case GL_FLOAT_VEC4:
-      case GL_FLOAT_MAT2:
-      case GL_FLOAT_MAT3:
-      case GL_FLOAT_MAT4:
-      case GL_FLOAT_MAT2x3:
-      case GL_FLOAT_MAT3x2:
-      case GL_FLOAT_MAT2x4:
-      case GL_FLOAT_MAT4x2:
-      case GL_FLOAT_MAT3x4:
-      case GL_FLOAT_MAT4x3:
-        return GL_FLOAT;
-      case GL_INT:
-      case GL_SAMPLER_2D:
-      case GL_SAMPLER_2D_RECT_ANGLE:
-      case GL_SAMPLER_3D:
-      case GL_SAMPLER_CUBE:
-      case GL_SAMPLER_2D_ARRAY:
-      case GL_SAMPLER_EXTERNAL_OES:
-      case GL_SAMPLER_2D_MULTISAMPLE:
-      case GL_INT_SAMPLER_2D:
-      case GL_INT_SAMPLER_3D:
-      case GL_INT_SAMPLER_CUBE:
-      case GL_INT_SAMPLER_2D_ARRAY:
-      case GL_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_UNSIGNED_INT_SAMPLER_2D:
-      case GL_UNSIGNED_INT_SAMPLER_3D:
-      case GL_UNSIGNED_INT_SAMPLER_CUBE:
-      case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-      case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_SAMPLER_2D_SHADOW:
-      case GL_SAMPLER_CUBE_SHADOW:
-      case GL_SAMPLER_2D_ARRAY_SHADOW:
-      case GL_INT_VEC2:
-      case GL_INT_VEC3:
-      case GL_INT_VEC4:
-      case GL_IMAGE_2D:
-      case GL_INT_IMAGE_2D:
-      case GL_UNSIGNED_INT_IMAGE_2D:
-      case GL_IMAGE_3D:
-      case GL_INT_IMAGE_3D:
-      case GL_UNSIGNED_INT_IMAGE_3D:
-      case GL_IMAGE_2D_ARRAY:
-      case GL_INT_IMAGE_2D_ARRAY:
-      case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
-      case GL_IMAGE_CUBE:
-      case GL_INT_IMAGE_CUBE:
-      case GL_UNSIGNED_INT_IMAGE_CUBE:
-      case GL_UNSIGNED_INT_ATOMIC_COUNTER:
-          return GL_INT;
-      case GL_UNSIGNED_INT:
-      case GL_UNSIGNED_INT_VEC2:
-      case GL_UNSIGNED_INT_VEC3:
-      case GL_UNSIGNED_INT_VEC4:
-        return GL_UNSIGNED_INT;
-      default:
-        UNREACHABLE();
+        case GL_BOOL:
+        case GL_BOOL_VEC2:
+        case GL_BOOL_VEC3:
+        case GL_BOOL_VEC4:
+            return GL_BOOL;
+        case GL_FLOAT:
+        case GL_FLOAT_VEC2:
+        case GL_FLOAT_VEC3:
+        case GL_FLOAT_VEC4:
+        case GL_FLOAT_MAT2:
+        case GL_FLOAT_MAT3:
+        case GL_FLOAT_MAT4:
+        case GL_FLOAT_MAT2x3:
+        case GL_FLOAT_MAT3x2:
+        case GL_FLOAT_MAT2x4:
+        case GL_FLOAT_MAT4x2:
+        case GL_FLOAT_MAT3x4:
+        case GL_FLOAT_MAT4x3:
+            return GL_FLOAT;
+        case GL_INT:
+        case GL_SAMPLER_2D:
+        case GL_SAMPLER_2D_RECT_ANGLE:
+        case GL_SAMPLER_3D:
+        case GL_SAMPLER_CUBE:
+        case GL_SAMPLER_2D_ARRAY:
+        case GL_SAMPLER_EXTERNAL_OES:
+        case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_INT_SAMPLER_2D:
+        case GL_INT_SAMPLER_3D:
+        case GL_INT_SAMPLER_CUBE:
+        case GL_INT_SAMPLER_2D_ARRAY:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D:
+        case GL_UNSIGNED_INT_SAMPLER_3D:
+        case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_SHADOW:
+        case GL_SAMPLER_CUBE_SHADOW:
+        case GL_SAMPLER_2D_ARRAY_SHADOW:
+        case GL_INT_VEC2:
+        case GL_INT_VEC3:
+        case GL_INT_VEC4:
+        case GL_IMAGE_2D:
+        case GL_INT_IMAGE_2D:
+        case GL_UNSIGNED_INT_IMAGE_2D:
+        case GL_IMAGE_3D:
+        case GL_INT_IMAGE_3D:
+        case GL_UNSIGNED_INT_IMAGE_3D:
+        case GL_IMAGE_2D_ARRAY:
+        case GL_INT_IMAGE_2D_ARRAY:
+        case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
+        case GL_IMAGE_CUBE:
+        case GL_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_ATOMIC_COUNTER:
+            return GL_INT;
+        case GL_UNSIGNED_INT:
+        case GL_UNSIGNED_INT_VEC2:
+        case GL_UNSIGNED_INT_VEC3:
+        case GL_UNSIGNED_INT_VEC4:
+            return GL_UNSIGNED_INT;
+        default:
+            UNREACHABLE();
     }
 
     return GL_NONE;
@@ -175,13 +175,18 @@ GLenum VariableComponentType(GLenum type)
 
 size_t VariableComponentSize(GLenum type)
 {
-    switch(type)
+    switch (type)
     {
-      case GL_BOOL:         return sizeof(GLint);
-      case GL_FLOAT:        return sizeof(GLfloat);
-      case GL_INT:          return sizeof(GLint);
-      case GL_UNSIGNED_INT: return sizeof(GLuint);
-      default:       UNREACHABLE();
+        case GL_BOOL:
+            return sizeof(GLint);
+        case GL_FLOAT:
+            return sizeof(GLfloat);
+        case GL_INT:
+            return sizeof(GLint);
+        case GL_UNSIGNED_INT:
+            return sizeof(GLuint);
+        default:
+            UNREACHABLE();
     }
 
     return 0;
@@ -202,26 +207,26 @@ GLenum VariableBoolVectorType(GLenum type)
 {
     switch (type)
     {
-      case GL_FLOAT:
-      case GL_INT:
-      case GL_UNSIGNED_INT:
-        return GL_BOOL;
-      case GL_FLOAT_VEC2:
-      case GL_INT_VEC2:
-      case GL_UNSIGNED_INT_VEC2:
-        return GL_BOOL_VEC2;
-      case GL_FLOAT_VEC3:
-      case GL_INT_VEC3:
-      case GL_UNSIGNED_INT_VEC3:
-        return GL_BOOL_VEC3;
-      case GL_FLOAT_VEC4:
-      case GL_INT_VEC4:
-      case GL_UNSIGNED_INT_VEC4:
-        return GL_BOOL_VEC4;
+        case GL_FLOAT:
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+            return GL_BOOL;
+        case GL_FLOAT_VEC2:
+        case GL_INT_VEC2:
+        case GL_UNSIGNED_INT_VEC2:
+            return GL_BOOL_VEC2;
+        case GL_FLOAT_VEC3:
+        case GL_INT_VEC3:
+        case GL_UNSIGNED_INT_VEC3:
+            return GL_BOOL_VEC3;
+        case GL_FLOAT_VEC4:
+        case GL_INT_VEC4:
+        case GL_UNSIGNED_INT_VEC4:
+            return GL_BOOL_VEC4;
 
-      default:
-        UNREACHABLE();
-        return GL_NONE;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
     }
 }
 
@@ -229,72 +234,72 @@ int VariableRowCount(GLenum type)
 {
     switch (type)
     {
-      case GL_NONE:
-        return 0;
-      case GL_BOOL:
-      case GL_FLOAT:
-      case GL_INT:
-      case GL_UNSIGNED_INT:
-      case GL_BOOL_VEC2:
-      case GL_FLOAT_VEC2:
-      case GL_INT_VEC2:
-      case GL_UNSIGNED_INT_VEC2:
-      case GL_BOOL_VEC3:
-      case GL_FLOAT_VEC3:
-      case GL_INT_VEC3:
-      case GL_UNSIGNED_INT_VEC3:
-      case GL_BOOL_VEC4:
-      case GL_FLOAT_VEC4:
-      case GL_INT_VEC4:
-      case GL_UNSIGNED_INT_VEC4:
-      case GL_SAMPLER_2D:
-      case GL_SAMPLER_3D:
-      case GL_SAMPLER_CUBE:
-      case GL_SAMPLER_2D_ARRAY:
-      case GL_SAMPLER_EXTERNAL_OES:
-      case GL_SAMPLER_2D_RECT_ANGLE:
-      case GL_SAMPLER_2D_MULTISAMPLE:
-      case GL_INT_SAMPLER_2D:
-      case GL_INT_SAMPLER_3D:
-      case GL_INT_SAMPLER_CUBE:
-      case GL_INT_SAMPLER_2D_ARRAY:
-      case GL_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_UNSIGNED_INT_SAMPLER_2D:
-      case GL_UNSIGNED_INT_SAMPLER_3D:
-      case GL_UNSIGNED_INT_SAMPLER_CUBE:
-      case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-      case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_SAMPLER_2D_SHADOW:
-      case GL_SAMPLER_CUBE_SHADOW:
-      case GL_SAMPLER_2D_ARRAY_SHADOW:
-      case GL_IMAGE_2D:
-      case GL_INT_IMAGE_2D:
-      case GL_UNSIGNED_INT_IMAGE_2D:
-      case GL_IMAGE_2D_ARRAY:
-      case GL_INT_IMAGE_2D_ARRAY:
-      case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
-      case GL_IMAGE_3D:
-      case GL_INT_IMAGE_3D:
-      case GL_UNSIGNED_INT_IMAGE_3D:
-      case GL_IMAGE_CUBE:
-      case GL_INT_IMAGE_CUBE:
-      case GL_UNSIGNED_INT_IMAGE_CUBE:
-      case GL_UNSIGNED_INT_ATOMIC_COUNTER:
-          return 1;
-      case GL_FLOAT_MAT2:
-      case GL_FLOAT_MAT3x2:
-      case GL_FLOAT_MAT4x2:
-        return 2;
-      case GL_FLOAT_MAT3:
-      case GL_FLOAT_MAT2x3:
-      case GL_FLOAT_MAT4x3:
-        return 3;
-      case GL_FLOAT_MAT4:
-      case GL_FLOAT_MAT2x4:
-      case GL_FLOAT_MAT3x4:
-        return 4;
-      default:
-        UNREACHABLE();
+        case GL_NONE:
+            return 0;
+        case GL_BOOL:
+        case GL_FLOAT:
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+        case GL_BOOL_VEC2:
+        case GL_FLOAT_VEC2:
+        case GL_INT_VEC2:
+        case GL_UNSIGNED_INT_VEC2:
+        case GL_BOOL_VEC3:
+        case GL_FLOAT_VEC3:
+        case GL_INT_VEC3:
+        case GL_UNSIGNED_INT_VEC3:
+        case GL_BOOL_VEC4:
+        case GL_FLOAT_VEC4:
+        case GL_INT_VEC4:
+        case GL_UNSIGNED_INT_VEC4:
+        case GL_SAMPLER_2D:
+        case GL_SAMPLER_3D:
+        case GL_SAMPLER_CUBE:
+        case GL_SAMPLER_2D_ARRAY:
+        case GL_SAMPLER_EXTERNAL_OES:
+        case GL_SAMPLER_2D_RECT_ANGLE:
+        case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_INT_SAMPLER_2D:
+        case GL_INT_SAMPLER_3D:
+        case GL_INT_SAMPLER_CUBE:
+        case GL_INT_SAMPLER_2D_ARRAY:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D:
+        case GL_UNSIGNED_INT_SAMPLER_3D:
+        case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_SHADOW:
+        case GL_SAMPLER_CUBE_SHADOW:
+        case GL_SAMPLER_2D_ARRAY_SHADOW:
+        case GL_IMAGE_2D:
+        case GL_INT_IMAGE_2D:
+        case GL_UNSIGNED_INT_IMAGE_2D:
+        case GL_IMAGE_2D_ARRAY:
+        case GL_INT_IMAGE_2D_ARRAY:
+        case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
+        case GL_IMAGE_3D:
+        case GL_INT_IMAGE_3D:
+        case GL_UNSIGNED_INT_IMAGE_3D:
+        case GL_IMAGE_CUBE:
+        case GL_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_ATOMIC_COUNTER:
+            return 1;
+        case GL_FLOAT_MAT2:
+        case GL_FLOAT_MAT3x2:
+        case GL_FLOAT_MAT4x2:
+            return 2;
+        case GL_FLOAT_MAT3:
+        case GL_FLOAT_MAT2x3:
+        case GL_FLOAT_MAT4x3:
+            return 3;
+        case GL_FLOAT_MAT4:
+        case GL_FLOAT_MAT2x4:
+        case GL_FLOAT_MAT3x4:
+            return 4;
+        default:
+            UNREACHABLE();
     }
 
     return 0;
@@ -304,72 +309,72 @@ int VariableColumnCount(GLenum type)
 {
     switch (type)
     {
-      case GL_NONE:
-        return 0;
-      case GL_BOOL:
-      case GL_FLOAT:
-      case GL_INT:
-      case GL_UNSIGNED_INT:
-      case GL_SAMPLER_2D:
-      case GL_SAMPLER_3D:
-      case GL_SAMPLER_CUBE:
-      case GL_SAMPLER_2D_ARRAY:
-      case GL_SAMPLER_2D_MULTISAMPLE:
-      case GL_INT_SAMPLER_2D:
-      case GL_INT_SAMPLER_3D:
-      case GL_INT_SAMPLER_CUBE:
-      case GL_INT_SAMPLER_2D_ARRAY:
-      case GL_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_SAMPLER_EXTERNAL_OES:
-      case GL_SAMPLER_2D_RECT_ANGLE:
-      case GL_UNSIGNED_INT_SAMPLER_2D:
-      case GL_UNSIGNED_INT_SAMPLER_3D:
-      case GL_UNSIGNED_INT_SAMPLER_CUBE:
-      case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-      case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_SAMPLER_2D_SHADOW:
-      case GL_SAMPLER_CUBE_SHADOW:
-      case GL_SAMPLER_2D_ARRAY_SHADOW:
-      case GL_IMAGE_2D:
-      case GL_INT_IMAGE_2D:
-      case GL_UNSIGNED_INT_IMAGE_2D:
-      case GL_IMAGE_3D:
-      case GL_INT_IMAGE_3D:
-      case GL_UNSIGNED_INT_IMAGE_3D:
-      case GL_IMAGE_2D_ARRAY:
-      case GL_INT_IMAGE_2D_ARRAY:
-      case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
-      case GL_IMAGE_CUBE:
-      case GL_INT_IMAGE_CUBE:
-      case GL_UNSIGNED_INT_IMAGE_CUBE:
-      case GL_UNSIGNED_INT_ATOMIC_COUNTER:
-          return 1;
-      case GL_BOOL_VEC2:
-      case GL_FLOAT_VEC2:
-      case GL_INT_VEC2:
-      case GL_UNSIGNED_INT_VEC2:
-      case GL_FLOAT_MAT2:
-      case GL_FLOAT_MAT2x3:
-      case GL_FLOAT_MAT2x4:
-        return 2;
-      case GL_BOOL_VEC3:
-      case GL_FLOAT_VEC3:
-      case GL_INT_VEC3:
-      case GL_UNSIGNED_INT_VEC3:
-      case GL_FLOAT_MAT3:
-      case GL_FLOAT_MAT3x2:
-      case GL_FLOAT_MAT3x4:
-        return 3;
-      case GL_BOOL_VEC4:
-      case GL_FLOAT_VEC4:
-      case GL_INT_VEC4:
-      case GL_UNSIGNED_INT_VEC4:
-      case GL_FLOAT_MAT4:
-      case GL_FLOAT_MAT4x2:
-      case GL_FLOAT_MAT4x3:
-        return 4;
-      default:
-        UNREACHABLE();
+        case GL_NONE:
+            return 0;
+        case GL_BOOL:
+        case GL_FLOAT:
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+        case GL_SAMPLER_2D:
+        case GL_SAMPLER_3D:
+        case GL_SAMPLER_CUBE:
+        case GL_SAMPLER_2D_ARRAY:
+        case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_INT_SAMPLER_2D:
+        case GL_INT_SAMPLER_3D:
+        case GL_INT_SAMPLER_CUBE:
+        case GL_INT_SAMPLER_2D_ARRAY:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_EXTERNAL_OES:
+        case GL_SAMPLER_2D_RECT_ANGLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D:
+        case GL_UNSIGNED_INT_SAMPLER_3D:
+        case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_SHADOW:
+        case GL_SAMPLER_CUBE_SHADOW:
+        case GL_SAMPLER_2D_ARRAY_SHADOW:
+        case GL_IMAGE_2D:
+        case GL_INT_IMAGE_2D:
+        case GL_UNSIGNED_INT_IMAGE_2D:
+        case GL_IMAGE_3D:
+        case GL_INT_IMAGE_3D:
+        case GL_UNSIGNED_INT_IMAGE_3D:
+        case GL_IMAGE_2D_ARRAY:
+        case GL_INT_IMAGE_2D_ARRAY:
+        case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
+        case GL_IMAGE_CUBE:
+        case GL_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_ATOMIC_COUNTER:
+            return 1;
+        case GL_BOOL_VEC2:
+        case GL_FLOAT_VEC2:
+        case GL_INT_VEC2:
+        case GL_UNSIGNED_INT_VEC2:
+        case GL_FLOAT_MAT2:
+        case GL_FLOAT_MAT2x3:
+        case GL_FLOAT_MAT2x4:
+            return 2;
+        case GL_BOOL_VEC3:
+        case GL_FLOAT_VEC3:
+        case GL_INT_VEC3:
+        case GL_UNSIGNED_INT_VEC3:
+        case GL_FLOAT_MAT3:
+        case GL_FLOAT_MAT3x2:
+        case GL_FLOAT_MAT3x4:
+            return 3;
+        case GL_BOOL_VEC4:
+        case GL_FLOAT_VEC4:
+        case GL_INT_VEC4:
+        case GL_UNSIGNED_INT_VEC4:
+        case GL_FLOAT_MAT4:
+        case GL_FLOAT_MAT4x2:
+        case GL_FLOAT_MAT4x3:
+            return 4;
+        default:
+            UNREACHABLE();
     }
 
     return 0;
@@ -379,27 +384,27 @@ bool IsSamplerType(GLenum type)
 {
     switch (type)
     {
-      case GL_SAMPLER_2D:
-      case GL_SAMPLER_3D:
-      case GL_SAMPLER_CUBE:
-      case GL_SAMPLER_2D_ARRAY:
-      case GL_SAMPLER_EXTERNAL_OES:
-      case GL_SAMPLER_2D_MULTISAMPLE:
-      case GL_SAMPLER_2D_RECT_ANGLE:
-      case GL_INT_SAMPLER_2D:
-      case GL_INT_SAMPLER_3D:
-      case GL_INT_SAMPLER_CUBE:
-      case GL_INT_SAMPLER_2D_ARRAY:
-      case GL_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_UNSIGNED_INT_SAMPLER_2D:
-      case GL_UNSIGNED_INT_SAMPLER_3D:
-      case GL_UNSIGNED_INT_SAMPLER_CUBE:
-      case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-      case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_SAMPLER_2D_SHADOW:
-      case GL_SAMPLER_CUBE_SHADOW:
-      case GL_SAMPLER_2D_ARRAY_SHADOW:
-        return true;
+        case GL_SAMPLER_2D:
+        case GL_SAMPLER_3D:
+        case GL_SAMPLER_CUBE:
+        case GL_SAMPLER_2D_ARRAY:
+        case GL_SAMPLER_EXTERNAL_OES:
+        case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_RECT_ANGLE:
+        case GL_INT_SAMPLER_2D:
+        case GL_INT_SAMPLER_3D:
+        case GL_INT_SAMPLER_CUBE:
+        case GL_INT_SAMPLER_2D_ARRAY:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D:
+        case GL_UNSIGNED_INT_SAMPLER_3D:
+        case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_SHADOW:
+        case GL_SAMPLER_CUBE_SHADOW:
+        case GL_SAMPLER_2D_ARRAY_SHADOW:
+            return true;
     }
 
     return false;
@@ -451,16 +456,27 @@ GLenum TransposeMatrixType(GLenum type)
 
     switch (type)
     {
-      case GL_FLOAT_MAT2:   return GL_FLOAT_MAT2;
-      case GL_FLOAT_MAT3:   return GL_FLOAT_MAT3;
-      case GL_FLOAT_MAT4:   return GL_FLOAT_MAT4;
-      case GL_FLOAT_MAT2x3: return GL_FLOAT_MAT3x2;
-      case GL_FLOAT_MAT3x2: return GL_FLOAT_MAT2x3;
-      case GL_FLOAT_MAT2x4: return GL_FLOAT_MAT4x2;
-      case GL_FLOAT_MAT4x2: return GL_FLOAT_MAT2x4;
-      case GL_FLOAT_MAT3x4: return GL_FLOAT_MAT4x3;
-      case GL_FLOAT_MAT4x3: return GL_FLOAT_MAT3x4;
-      default: UNREACHABLE(); return GL_NONE;
+        case GL_FLOAT_MAT2:
+            return GL_FLOAT_MAT2;
+        case GL_FLOAT_MAT3:
+            return GL_FLOAT_MAT3;
+        case GL_FLOAT_MAT4:
+            return GL_FLOAT_MAT4;
+        case GL_FLOAT_MAT2x3:
+            return GL_FLOAT_MAT3x2;
+        case GL_FLOAT_MAT3x2:
+            return GL_FLOAT_MAT2x3;
+        case GL_FLOAT_MAT2x4:
+            return GL_FLOAT_MAT4x2;
+        case GL_FLOAT_MAT4x2:
+            return GL_FLOAT_MAT2x4;
+        case GL_FLOAT_MAT3x4:
+            return GL_FLOAT_MAT4x3;
+        case GL_FLOAT_MAT4x3:
+            return GL_FLOAT_MAT3x4;
+        default:
+            UNREACHABLE();
+            return GL_NONE;
     }
 }
 
@@ -485,7 +501,8 @@ int AllocateFirstFreeBits(unsigned int *bits, unsigned int allocationSize, unsig
 {
     ASSERT(allocationSize <= bitsSize);
 
-    unsigned int mask = std::numeric_limits<unsigned int>::max() >> (std::numeric_limits<unsigned int>::digits - allocationSize);
+    unsigned int mask = std::numeric_limits<unsigned int>::max() >>
+                        (std::numeric_limits<unsigned int>::digits - allocationSize);
 
     for (unsigned int i = 0; i < bitsSize - allocationSize + 1; i++)
     {
@@ -542,20 +559,21 @@ GLuint GetPrimitiveRestartIndex(GLenum indexType)
     }
 }
 
-bool IsTriangleMode(GLenum drawMode)
+bool IsTriangleMode(PrimitiveMode drawMode)
 {
     switch (drawMode)
     {
-      case GL_TRIANGLES:
-      case GL_TRIANGLE_FAN:
-      case GL_TRIANGLE_STRIP:
-        return true;
-      case GL_POINTS:
-      case GL_LINES:
-      case GL_LINE_LOOP:
-      case GL_LINE_STRIP:
-        return false;
-      default: UNREACHABLE();
+        case PrimitiveMode::Triangles:
+        case PrimitiveMode::TriangleFan:
+        case PrimitiveMode::TriangleStrip:
+            return true;
+        case PrimitiveMode::Points:
+        case PrimitiveMode::Lines:
+        case PrimitiveMode::LineLoop:
+        case PrimitiveMode::LineStrip:
+            return false;
+        default:
+            UNREACHABLE();
     }
 
     return false;
@@ -582,90 +600,90 @@ int VariableSortOrder(GLenum type)
 {
     switch (type)
     {
-      // 1. Arrays of mat4 and mat4
-      // Non-square matrices of type matCxR consume the same space as a square
-      // matrix of type matN where N is the greater of C and R
-      case GL_FLOAT_MAT4:
-      case GL_FLOAT_MAT2x4:
-      case GL_FLOAT_MAT3x4:
-      case GL_FLOAT_MAT4x2:
-      case GL_FLOAT_MAT4x3:
-        return 0;
+        // 1. Arrays of mat4 and mat4
+        // Non-square matrices of type matCxR consume the same space as a square
+        // matrix of type matN where N is the greater of C and R
+        case GL_FLOAT_MAT4:
+        case GL_FLOAT_MAT2x4:
+        case GL_FLOAT_MAT3x4:
+        case GL_FLOAT_MAT4x2:
+        case GL_FLOAT_MAT4x3:
+            return 0;
 
-      // 2. Arrays of mat2 and mat2 (since they occupy full rows)
-      case GL_FLOAT_MAT2:
-        return 1;
+        // 2. Arrays of mat2 and mat2 (since they occupy full rows)
+        case GL_FLOAT_MAT2:
+            return 1;
 
-      // 3. Arrays of vec4 and vec4
-      case GL_FLOAT_VEC4:
-      case GL_INT_VEC4:
-      case GL_BOOL_VEC4:
-      case GL_UNSIGNED_INT_VEC4:
-        return 2;
+        // 3. Arrays of vec4 and vec4
+        case GL_FLOAT_VEC4:
+        case GL_INT_VEC4:
+        case GL_BOOL_VEC4:
+        case GL_UNSIGNED_INT_VEC4:
+            return 2;
 
-      // 4. Arrays of mat3 and mat3
-      case GL_FLOAT_MAT3:
-      case GL_FLOAT_MAT2x3:
-      case GL_FLOAT_MAT3x2:
-        return 3;
+        // 4. Arrays of mat3 and mat3
+        case GL_FLOAT_MAT3:
+        case GL_FLOAT_MAT2x3:
+        case GL_FLOAT_MAT3x2:
+            return 3;
 
-      // 5. Arrays of vec3 and vec3
-      case GL_FLOAT_VEC3:
-      case GL_INT_VEC3:
-      case GL_BOOL_VEC3:
-      case GL_UNSIGNED_INT_VEC3:
-        return 4;
+        // 5. Arrays of vec3 and vec3
+        case GL_FLOAT_VEC3:
+        case GL_INT_VEC3:
+        case GL_BOOL_VEC3:
+        case GL_UNSIGNED_INT_VEC3:
+            return 4;
 
-      // 6. Arrays of vec2 and vec2
-      case GL_FLOAT_VEC2:
-      case GL_INT_VEC2:
-      case GL_BOOL_VEC2:
-      case GL_UNSIGNED_INT_VEC2:
-        return 5;
+        // 6. Arrays of vec2 and vec2
+        case GL_FLOAT_VEC2:
+        case GL_INT_VEC2:
+        case GL_BOOL_VEC2:
+        case GL_UNSIGNED_INT_VEC2:
+            return 5;
 
-      // 7. Single component types
-      case GL_FLOAT:
-      case GL_INT:
-      case GL_BOOL:
-      case GL_UNSIGNED_INT:
-      case GL_SAMPLER_2D:
-      case GL_SAMPLER_CUBE:
-      case GL_SAMPLER_EXTERNAL_OES:
-      case GL_SAMPLER_2D_RECT_ANGLE:
-      case GL_SAMPLER_2D_ARRAY:
-      case GL_SAMPLER_2D_MULTISAMPLE:
-      case GL_SAMPLER_3D:
-      case GL_INT_SAMPLER_2D:
-      case GL_INT_SAMPLER_3D:
-      case GL_INT_SAMPLER_CUBE:
-      case GL_INT_SAMPLER_2D_ARRAY:
-      case GL_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_UNSIGNED_INT_SAMPLER_2D:
-      case GL_UNSIGNED_INT_SAMPLER_3D:
-      case GL_UNSIGNED_INT_SAMPLER_CUBE:
-      case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-      case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
-      case GL_SAMPLER_2D_SHADOW:
-      case GL_SAMPLER_2D_ARRAY_SHADOW:
-      case GL_SAMPLER_CUBE_SHADOW:
-      case GL_IMAGE_2D:
-      case GL_INT_IMAGE_2D:
-      case GL_UNSIGNED_INT_IMAGE_2D:
-      case GL_IMAGE_3D:
-      case GL_INT_IMAGE_3D:
-      case GL_UNSIGNED_INT_IMAGE_3D:
-      case GL_IMAGE_2D_ARRAY:
-      case GL_INT_IMAGE_2D_ARRAY:
-      case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
-      case GL_IMAGE_CUBE:
-      case GL_INT_IMAGE_CUBE:
-      case GL_UNSIGNED_INT_IMAGE_CUBE:
-      case GL_UNSIGNED_INT_ATOMIC_COUNTER:
-          return 6;
+        // 7. Single component types
+        case GL_FLOAT:
+        case GL_INT:
+        case GL_BOOL:
+        case GL_UNSIGNED_INT:
+        case GL_SAMPLER_2D:
+        case GL_SAMPLER_CUBE:
+        case GL_SAMPLER_EXTERNAL_OES:
+        case GL_SAMPLER_2D_RECT_ANGLE:
+        case GL_SAMPLER_2D_ARRAY:
+        case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_3D:
+        case GL_INT_SAMPLER_2D:
+        case GL_INT_SAMPLER_3D:
+        case GL_INT_SAMPLER_CUBE:
+        case GL_INT_SAMPLER_2D_ARRAY:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D:
+        case GL_UNSIGNED_INT_SAMPLER_3D:
+        case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_SHADOW:
+        case GL_SAMPLER_2D_ARRAY_SHADOW:
+        case GL_SAMPLER_CUBE_SHADOW:
+        case GL_IMAGE_2D:
+        case GL_INT_IMAGE_2D:
+        case GL_UNSIGNED_INT_IMAGE_2D:
+        case GL_IMAGE_3D:
+        case GL_INT_IMAGE_3D:
+        case GL_UNSIGNED_INT_IMAGE_3D:
+        case GL_IMAGE_2D_ARRAY:
+        case GL_INT_IMAGE_2D_ARRAY:
+        case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
+        case GL_IMAGE_CUBE:
+        case GL_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_ATOMIC_COUNTER:
+            return 6;
 
-      default:
-        UNREACHABLE();
-        return 0;
+        default:
+            UNREACHABLE();
+            return 0;
     }
 }
 
@@ -952,6 +970,12 @@ EGLenum GLComponentTypeToEGLColorComponentType(GLenum glComponentType)
             return EGL_NONE;
     }
 }
+
+EGLClientBuffer GLObjectHandleToEGLClientBuffer(GLuint handle)
+{
+    return reinterpret_cast<EGLClientBuffer>(static_cast<uintptr_t>(handle));
+}
+
 }  // namespace gl_egl
 
 #if !defined(ANGLE_ENABLE_WINDOWS_STORE)
@@ -980,9 +1004,9 @@ std::string getTempPath()
 #endif
 }
 
-void writeFile(const char* path, const void* content, size_t size)
+void writeFile(const char *path, const void *content, size_t size)
 {
-    FILE* file = fopen(path, "w");
+    FILE *file = fopen(path, "w");
     if (!file)
     {
         UNREACHABLE();
@@ -992,9 +1016,9 @@ void writeFile(const char* path, const void* content, size_t size)
     fwrite(content, sizeof(char), size, file);
     fclose(file);
 }
-#endif // !ANGLE_ENABLE_WINDOWS_STORE
+#endif  // !ANGLE_ENABLE_WINDOWS_STORE
 
-#if defined (ANGLE_PLATFORM_WINDOWS)
+#if defined(ANGLE_PLATFORM_WINDOWS)
 
 // Causes the thread to relinquish the remainder of its time slice to any
 // other thread that is ready to run.If there are no other threads ready

@@ -13,15 +13,16 @@
 
 #include "libANGLE/Buffer.h"
 #include "libANGLE/Context.h"
+#include "libANGLE/Texture.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/d3d/d3d11/Buffer11.h"
-#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
-#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
-#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/renderer/d3d/d3d11/Context11.h"
 #include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
-#include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
+#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 #include "libANGLE/renderer/d3d/d3d11/TextureStorage11.h"
-#include "libANGLE/Texture.h"
+#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
+#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
 
 // Precompiled shaders
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/buffertotexture11_gs.h"
@@ -48,11 +49,11 @@ PixelTransfer11::~PixelTransfer11()
 {
 }
 
-gl::Error PixelTransfer11::loadResources()
+angle::Result PixelTransfer11::loadResources(const gl::Context *context)
 {
     if (mResourcesLoaded)
     {
-        return gl::NoError();
+        return angle::Result::Continue();
     }
 
     D3D11_RASTERIZER_DESC rasterDesc;
@@ -67,7 +68,9 @@ gl::Error PixelTransfer11::loadResources()
     rasterDesc.MultisampleEnable = FALSE;
     rasterDesc.AntialiasedLineEnable = FALSE;
 
-    ANGLE_TRY(mRenderer->allocateResource(rasterDesc, &mCopyRasterizerState));
+    Context11 *context11 = GetImplAs<Context11>(context);
+
+    ANGLE_TRY(mRenderer->allocateResource(context11, rasterDesc, &mCopyRasterizerState));
 
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
     depthStencilDesc.DepthEnable = true;
@@ -85,7 +88,7 @@ gl::Error PixelTransfer11::loadResources()
     depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
     depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-    ANGLE_TRY(mRenderer->allocateResource(depthStencilDesc, &mCopyDepthStencilState));
+    ANGLE_TRY(mRenderer->allocateResource(context11, depthStencilDesc, &mCopyDepthStencilState));
 
     D3D11_BUFFER_DESC constantBufferDesc = { 0 };
     constantBufferDesc.ByteWidth = roundUp<UINT>(sizeof(CopyShaderParams), 32u);
@@ -95,23 +98,25 @@ gl::Error PixelTransfer11::loadResources()
     constantBufferDesc.MiscFlags = 0;
     constantBufferDesc.StructureByteStride = 0;
 
-    ANGLE_TRY(mRenderer->allocateResource(constantBufferDesc, &mParamsConstantBuffer));
+    ANGLE_TRY(mRenderer->allocateResource(context11, constantBufferDesc, &mParamsConstantBuffer));
     mParamsConstantBuffer.setDebugName("PixelTransfer11 constant buffer");
 
     // init shaders
-    ANGLE_TRY(mRenderer->allocateResource(ShaderData(g_VS_BufferToTexture), &mBufferToTextureVS));
+    ANGLE_TRY(mRenderer->allocateResource(context11, ShaderData(g_VS_BufferToTexture),
+                                          &mBufferToTextureVS));
     mBufferToTextureVS.setDebugName("BufferToTexture VS");
 
-    ANGLE_TRY(mRenderer->allocateResource(ShaderData(g_GS_BufferToTexture), &mBufferToTextureGS));
+    ANGLE_TRY(mRenderer->allocateResource(context11, ShaderData(g_GS_BufferToTexture),
+                                          &mBufferToTextureGS));
     mBufferToTextureGS.setDebugName("BufferToTexture GS");
 
-    ANGLE_TRY(buildShaderMap());
+    ANGLE_TRY(buildShaderMap(context));
 
     StructZero(&mParamsData);
 
     mResourcesLoaded = true;
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 void PixelTransfer11::setBufferToTextureCopyParams(const gl::Box &destArea, const gl::Extents &destSize, GLenum internalFormat,
@@ -137,15 +142,15 @@ void PixelTransfer11::setBufferToTextureCopyParams(const gl::Box &destArea, cons
     parametersOut->FirstSlice           = destArea.z;
 }
 
-gl::Error PixelTransfer11::copyBufferToTexture(const gl::Context *context,
-                                               const gl::PixelUnpackState &unpack,
-                                               unsigned int offset,
-                                               RenderTargetD3D *destRenderTarget,
-                                               GLenum destinationFormat,
-                                               GLenum sourcePixelsType,
-                                               const gl::Box &destArea)
+angle::Result PixelTransfer11::copyBufferToTexture(const gl::Context *context,
+                                                   const gl::PixelUnpackState &unpack,
+                                                   unsigned int offset,
+                                                   RenderTargetD3D *destRenderTarget,
+                                                   GLenum destinationFormat,
+                                                   GLenum sourcePixelsType,
+                                                   const gl::Box &destArea)
 {
-    ANGLE_TRY(loadResources());
+    ANGLE_TRY(loadResources(context));
 
     gl::Extents destSize = destRenderTarget->getExtents();
 
@@ -173,7 +178,7 @@ gl::Error PixelTransfer11::copyBufferToTexture(const gl::Context *context,
     ASSERT(srvFormat != DXGI_FORMAT_UNKNOWN);
     Buffer11 *bufferStorage11 = GetAs<Buffer11>(sourceBuffer.getImplementation());
     const d3d11::ShaderResourceView *bufferSRV = nullptr;
-    ANGLE_TRY_RESULT(bufferStorage11->getSRV(context, srvFormat), bufferSRV);
+    ANGLE_TRY(bufferStorage11->getSRV(context, srvFormat, &bufferSRV));
     ASSERT(bufferSRV != nullptr);
 
     const d3d11::RenderTargetView &textureRTV =
@@ -216,21 +221,23 @@ gl::Error PixelTransfer11::copyBufferToTexture(const gl::Context *context,
     UINT numPixels = (destArea.width * destArea.height * destArea.depth);
     deviceContext->Draw(numPixels, 0);
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error PixelTransfer11::buildShaderMap()
+angle::Result PixelTransfer11::buildShaderMap(const gl::Context *context)
 {
     d3d11::PixelShader bufferToTextureFloat;
     d3d11::PixelShader bufferToTextureInt;
     d3d11::PixelShader bufferToTextureUint;
 
-    ANGLE_TRY(
-        mRenderer->allocateResource(ShaderData(g_PS_BufferToTexture_4F), &bufferToTextureFloat));
-    ANGLE_TRY(
-        mRenderer->allocateResource(ShaderData(g_PS_BufferToTexture_4I), &bufferToTextureInt));
-    ANGLE_TRY(
-        mRenderer->allocateResource(ShaderData(g_PS_BufferToTexture_4UI), &bufferToTextureUint));
+    Context11 *context11 = GetImplAs<Context11>(context);
+
+    ANGLE_TRY(mRenderer->allocateResource(context11, ShaderData(g_PS_BufferToTexture_4F),
+                                          &bufferToTextureFloat));
+    ANGLE_TRY(mRenderer->allocateResource(context11, ShaderData(g_PS_BufferToTexture_4I),
+                                          &bufferToTextureInt));
+    ANGLE_TRY(mRenderer->allocateResource(context11, ShaderData(g_PS_BufferToTexture_4UI),
+                                          &bufferToTextureUint));
 
     bufferToTextureFloat.setDebugName("BufferToTexture RGBA ps");
     bufferToTextureInt.setDebugName("BufferToTexture RGBA-I ps");
@@ -240,7 +247,7 @@ gl::Error PixelTransfer11::buildShaderMap()
     mBufferToTexturePSMap[GL_INT]          = std::move(bufferToTextureInt);
     mBufferToTexturePSMap[GL_UNSIGNED_INT] = std::move(bufferToTextureUint);
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 const d3d11::PixelShader *PixelTransfer11::findBufferToTexturePS(GLenum internalFormat) const

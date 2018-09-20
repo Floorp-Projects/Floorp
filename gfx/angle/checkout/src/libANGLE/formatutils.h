@@ -9,9 +9,9 @@
 #ifndef LIBANGLE_FORMATUTILS_H_
 #define LIBANGLE_FORMATUTILS_H_
 
+#include <stdint.h>
 #include <cstddef>
 #include <ostream>
-#include <stdint.h>
 
 #include "angle_gl.h"
 #include "libANGLE/Caps.h"
@@ -41,7 +41,8 @@ struct Type
     Type();
 
     GLuint bytes;
-    GLuint bytesShift; // Bit shift by this value to effectively divide/multiply by "bytes" in a more optimal way
+    GLuint bytesShift;  // Bit shift by this value to effectively divide/multiply by "bytes" in a
+                        // more optimal way
     bool specialInterpretation;
 };
 const Type &GetTypeInfo(GLenum type);
@@ -55,32 +56,37 @@ struct InternalFormat
 
     GLuint computePixelBytes(GLenum formatType) const;
 
-    ErrorOrResult<GLuint> computeRowPitch(GLenum formatType,
+    ANGLE_NO_DISCARD bool computeRowPitch(GLenum formatType,
                                           GLsizei width,
                                           GLint alignment,
-                                          GLint rowLength) const;
-    ErrorOrResult<GLuint> computeDepthPitch(GLsizei height,
+                                          GLint rowLength,
+                                          GLuint *resultOut) const;
+    ANGLE_NO_DISCARD bool computeDepthPitch(GLsizei height,
                                             GLint imageHeight,
-                                            GLuint rowPitch) const;
-    ErrorOrResult<GLuint> computeDepthPitch(GLenum formatType,
+                                            GLuint rowPitch,
+                                            GLuint *resultOut) const;
+    ANGLE_NO_DISCARD bool computeDepthPitch(GLenum formatType,
                                             GLsizei width,
                                             GLsizei height,
                                             GLint alignment,
                                             GLint rowLength,
-                                            GLint imageHeight) const;
+                                            GLint imageHeight,
+                                            GLuint *resultOut) const;
 
-    ErrorOrResult<GLuint> computeCompressedImageSize(const Extents &size) const;
+    ANGLE_NO_DISCARD bool computeCompressedImageSize(const Extents &size, GLuint *resultOut) const;
 
-    ErrorOrResult<GLuint> computeSkipBytes(GLenum formatType,
+    ANGLE_NO_DISCARD bool computeSkipBytes(GLenum formatType,
                                            GLuint rowPitch,
                                            GLuint depthPitch,
                                            const PixelStoreStateBase &state,
-                                           bool is3D) const;
+                                           bool is3D,
+                                           GLuint *resultOut) const;
 
-    ErrorOrResult<GLuint> computePackUnpackEndByte(GLenum formatType,
-                                                       const Extents &size,
-                                                       const PixelStoreStateBase &state,
-                                                       bool is3D) const;
+    ANGLE_NO_DISCARD bool computePackUnpackEndByte(GLenum formatType,
+                                                   const Extents &size,
+                                                   const PixelStoreStateBase &state,
+                                                   bool is3D,
+                                                   GLuint *resultOut) const;
 
     bool isLUMA() const;
     GLenum getReadPixelsFormat() const;
@@ -128,8 +134,9 @@ struct InternalFormat
 
     typedef bool (*SupportCheckFunction)(const Version &, const Extensions &);
     SupportCheckFunction textureSupport;
-    SupportCheckFunction renderSupport;
     SupportCheckFunction filterSupport;
+    SupportCheckFunction textureAttachmentSupport;  // glFramebufferTexture2D
+    SupportCheckFunction renderbufferSupport;       // glFramebufferRenderbuffer
 };
 
 // A "Format" wraps an InternalFormat struct, querying it from either a sized internal format or
@@ -307,7 +314,15 @@ struct VertexFormat : private angle::NonCopyable
     bool pureInteger;
 };
 
-VertexFormatType GetVertexFormatType(GLenum type, GLboolean normalized, GLuint components, bool pureInteger);
+angle::FormatID GetVertexFormatID(GLenum type,
+                                  GLboolean normalized,
+                                  GLuint components,
+                                  bool pureInteger);
+angle::FormatID GetVertexFormatID(const VertexAttribute &attrib);
+VertexFormatType GetVertexFormatType(GLenum type,
+                                     GLboolean normalized,
+                                     GLuint components,
+                                     bool pureInteger);
 VertexFormatType GetVertexFormatType(const VertexAttribute &attrib);
 VertexFormatType GetVertexFormatType(const VertexAttribute &attrib, GLenum currentValueType);
 const VertexFormat &GetVertexFormatFromType(VertexFormatType vertexFormatType);
@@ -327,4 +342,4 @@ bool ValidES3CopyConversion(GLenum textureFormat, GLenum framebufferFormat);
 
 }  // namespace gl
 
-#endif // LIBANGLE_FORMATUTILS_H_
+#endif  // LIBANGLE_FORMATUTILS_H_

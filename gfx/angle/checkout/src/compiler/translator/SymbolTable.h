@@ -82,14 +82,17 @@ class TSymbolTable : angle::NonCopyable, TSymbolTableBase
     // successful, and false if the declaration failed due to redefinition.
     bool declare(TSymbol *symbol);
 
+    // Only used to declare internal variables.
+    bool declareInternal(TSymbol *symbol);
+
     // Functions are always declared at global scope.
     void declareUserDefinedFunction(TFunction *function, bool insertUnmangledName);
 
     // These return the TFunction pointer to keep using to refer to this function.
     const TFunction *markFunctionHasPrototypeDeclaration(const ImmutableString &mangledName,
-                                                         bool *hadPrototypeDeclarationOut);
+                                                         bool *hadPrototypeDeclarationOut) const;
     const TFunction *setFunctionParameterNamesFromDefinition(const TFunction *function,
-                                                             bool *wasDefinedOut);
+                                                             bool *wasDefinedOut) const;
 
     // Return false if the gl_in array size has already been initialized with a mismatching value.
     bool setGlInArraySize(unsigned int inputArraySize);
@@ -107,6 +110,10 @@ class TSymbolTable : angle::NonCopyable, TSymbolTableBase
     // find() is guaranteed not to retain a reference to the ImmutableString, so an ImmutableString
     // with a reference to a short-lived char * is fine to pass here.
     const TSymbol *find(const ImmutableString &name, int shaderVersion) const;
+
+    const TSymbol *findUserDefined(const ImmutableString &name) const;
+
+    TFunction *findUserDefinedFunction(const ImmutableString &name) const;
 
     const TSymbol *findGlobal(const ImmutableString &name) const;
 
@@ -151,8 +158,6 @@ class TSymbolTable : angle::NonCopyable, TSymbolTableBase
     int nextUniqueIdValue();
 
     class TSymbolTableLevel;
-
-    TFunction *findUserDefinedFunction(const ImmutableString &name) const;
 
     void initSamplerDefaultPrecision(TBasicType samplerType);
 

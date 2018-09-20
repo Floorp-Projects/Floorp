@@ -66,11 +66,11 @@ class TOutputGLSLBase : public TIntermTraverser
     bool visitDeclaration(Visit visit, TIntermDeclaration *node) override;
     bool visitLoop(Visit visit, TIntermLoop *node) override;
     bool visitBranch(Visit visit, TIntermBranch *node) override;
+    void visitPreprocessorDirective(TIntermPreprocessorDirective *node) override;
 
     void visitCodeBlock(TIntermBlock *node);
 
-    ImmutableString hashFieldName(const TSymbol *containingStruct,
-                                  const ImmutableString &fieldName);
+    ImmutableString hashFieldName(const TField *field);
     // Same as hashName(), but without hashing "main".
     ImmutableString hashFunctionNameIfNeeded(const TFunction *func);
     // Used to translate function names for differences between ESSL and GLSL

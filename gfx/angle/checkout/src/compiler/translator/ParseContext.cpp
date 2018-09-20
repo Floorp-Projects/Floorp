@@ -251,52 +251,52 @@ bool TParseContext::parseVectorFields(const TSourceLoc &line,
         {
             case 'x':
                 (*fieldOffsets)[i] = 0;
-                fieldSet[i]       = exyzw;
+                fieldSet[i]        = exyzw;
                 break;
             case 'r':
                 (*fieldOffsets)[i] = 0;
-                fieldSet[i]       = ergba;
+                fieldSet[i]        = ergba;
                 break;
             case 's':
                 (*fieldOffsets)[i] = 0;
-                fieldSet[i]       = estpq;
+                fieldSet[i]        = estpq;
                 break;
             case 'y':
                 (*fieldOffsets)[i] = 1;
-                fieldSet[i]       = exyzw;
+                fieldSet[i]        = exyzw;
                 break;
             case 'g':
                 (*fieldOffsets)[i] = 1;
-                fieldSet[i]       = ergba;
+                fieldSet[i]        = ergba;
                 break;
             case 't':
                 (*fieldOffsets)[i] = 1;
-                fieldSet[i]       = estpq;
+                fieldSet[i]        = estpq;
                 break;
             case 'z':
                 (*fieldOffsets)[i] = 2;
-                fieldSet[i]       = exyzw;
+                fieldSet[i]        = exyzw;
                 break;
             case 'b':
                 (*fieldOffsets)[i] = 2;
-                fieldSet[i]       = ergba;
+                fieldSet[i]        = ergba;
                 break;
             case 'p':
                 (*fieldOffsets)[i] = 2;
-                fieldSet[i]       = estpq;
+                fieldSet[i]        = estpq;
                 break;
 
             case 'w':
                 (*fieldOffsets)[i] = 3;
-                fieldSet[i]       = exyzw;
+                fieldSet[i]        = exyzw;
                 break;
             case 'a':
                 (*fieldOffsets)[i] = 3;
-                fieldSet[i]       = ergba;
+                fieldSet[i]        = ergba;
                 break;
             case 'q':
                 (*fieldOffsets)[i] = 3;
-                fieldSet[i]       = estpq;
+                fieldSet[i]        = estpq;
                 break;
             default:
                 error(line, "illegal vector field selection", compString);
@@ -367,25 +367,26 @@ void TParseContext::outOfRangeError(bool isError,
 //
 // Same error message for all places assignments don't work.
 //
-void TParseContext::assignError(const TSourceLoc &line, const char *op, TString left, TString right)
+void TParseContext::assignError(const TSourceLoc &line,
+                                const char *op,
+                                const TType &left,
+                                const TType &right)
 {
-    std::stringstream reasonStream;
+    TInfoSinkBase reasonStream;
     reasonStream << "cannot convert from '" << right << "' to '" << left << "'";
-    std::string reason = reasonStream.str();
-    error(line, reason.c_str(), op);
+    error(line, reasonStream.c_str(), op);
 }
 
 //
 // Same error message for all places unary operations don't work.
 //
-void TParseContext::unaryOpError(const TSourceLoc &line, const char *op, TString operand)
+void TParseContext::unaryOpError(const TSourceLoc &line, const char *op, const TType &operand)
 {
-    std::stringstream reasonStream;
+    TInfoSinkBase reasonStream;
     reasonStream << "wrong operand type - no operation '" << op
                  << "' exists that takes an operand of type " << operand
                  << " (or there is no acceptable conversion)";
-    std::string reason = reasonStream.str();
-    error(line, reason.c_str(), op);
+    error(line, reasonStream.c_str(), op);
 }
 
 //
@@ -393,16 +394,15 @@ void TParseContext::unaryOpError(const TSourceLoc &line, const char *op, TString
 //
 void TParseContext::binaryOpError(const TSourceLoc &line,
                                   const char *op,
-                                  TString left,
-                                  TString right)
+                                  const TType &left,
+                                  const TType &right)
 {
-    std::stringstream reasonStream;
+    TInfoSinkBase reasonStream;
     reasonStream << "wrong operand types - no operation '" << op
                  << "' exists that takes a left-hand operand of type '" << left
                  << "' and a right operand of type '" << right
                  << "' (or there is no acceptable conversion)";
-    std::string reason = reasonStream.str();
-    error(line, reason.c_str(), op);
+    error(line, reasonStream.c_str(), op);
 }
 
 void TParseContext::checkPrecisionSpecified(const TSourceLoc &line,
@@ -1045,8 +1045,9 @@ bool TParseContext::checkArrayElementIsNotArray(const TSourceLoc &line,
 {
     if (mShaderVersion < 310 && elementType.isArray())
     {
-        error(line, "cannot declare arrays of arrays",
-              TType(elementType).getCompleteString().c_str());
+        TInfoSinkBase typeString;
+        typeString << TType(elementType);
+        error(line, "cannot declare arrays of arrays", typeString.c_str());
         return false;
     }
     return true;
@@ -1076,8 +1077,10 @@ bool TParseContext::checkIsValidTypeAndQualifierForArray(const TSourceLoc &index
         sh::IsVarying(elementType.qualifier) &&
         !IsGeometryShaderInput(mShaderType, elementType.qualifier))
     {
+        TInfoSinkBase typeString;
+        typeString << TType(elementType);
         error(indexLocation, "cannot declare arrays of structs of this qualifier",
-              TType(elementType).getCompleteString().c_str());
+              typeString.c_str());
         return false;
     }
     return checkIsValidQualifierForArray(indexLocation, elementType);
@@ -1852,7 +1855,7 @@ TIntermTyped *TParseContext::parseVariableIdentifier(const TSourceLoc &location,
     }
 
     const TType &variableType = variable->getType();
-    TIntermTyped *node = nullptr;
+    TIntermTyped *node        = nullptr;
 
     if (variable->getConstPointer() && variableType.canReplaceWithConstantUnion())
     {
@@ -1922,10 +1925,9 @@ bool TParseContext::executeInitializer(const TSourceLoc &line,
     {
         if (EvqConst != initializer->getType().getQualifier())
         {
-            std::stringstream reasonStream;
-            reasonStream << "assigning non-constant to '" << type->getCompleteString() << "'";
-            std::string reason = reasonStream.str();
-            error(line, reason.c_str(), "=");
+            TInfoSinkBase reasonStream;
+            reasonStream << "assigning non-constant to '" << *type << "'";
+            error(line, reasonStream.c_str(), "=");
 
             // We're still going to declare the variable to avoid extra error messages.
             type->setQualifier(EvqTemporary);
@@ -1975,8 +1977,7 @@ bool TParseContext::executeInitializer(const TSourceLoc &line,
 
     if (!binaryOpCommonCheck(EOpInitialize, intermSymbol, initializer, line))
     {
-        assignError(line, "=", variable->getType().getCompleteString(),
-                    initializer->getCompleteString());
+        assignError(line, "=", variable->getType(), initializer->getType());
         return false;
     }
 
@@ -2293,7 +2294,7 @@ void TParseContext::checkLocalVariableConstStorageQualifier(const TQualifierWrap
         {
             error(storageQualifier.getLine(),
                   "Local variables can only use the const storage qualifier.",
-                  storageQualifier.getQualifierString().c_str());
+                  storageQualifier.getQualifierString());
         }
     }
 }
@@ -2435,7 +2436,7 @@ TIntermDeclaration *TParseContext::parseSingleDeclaration(
     declarationQualifierErrorCheck(publicType.qualifier, publicType.layoutQualifier,
                                    identifierOrTypeLocation);
 
-    bool emptyDeclaration = (identifier == "");
+    bool emptyDeclaration                  = (identifier == "");
     mDeferredNonEmptyDeclarationErrorCheck = emptyDeclaration;
 
     TIntermSymbol *symbol = nullptr;
@@ -2447,7 +2448,7 @@ TIntermDeclaration *TParseContext::parseSingleDeclaration(
         if (type->getBasicType() == EbtStruct)
         {
             TVariable *emptyVariable =
-                new TVariable(&symbolTable, ImmutableString(""), type, SymbolType::Empty);
+                new TVariable(&symbolTable, kEmptyImmutableString, type, SymbolType::Empty);
             symbol = new TIntermSymbol(emptyVariable);
         }
         else if (IsAtomicCounter(publicType.getBasicType()))
@@ -3396,8 +3397,10 @@ TFunction *TParseContext::parseFunctionHeader(const TPublicType &type,
         if (type.isStructureContainingArrays())
         {
             // ESSL 1.00.17 section 6.1 Function Definitions
+            TInfoSinkBase typeString;
+            typeString << TType(type);
             error(location, "structures containing arrays can't be function return values",
-                  TType(type).getCompleteString().c_str());
+                  typeString.c_str());
         }
     }
 
@@ -4714,7 +4717,8 @@ TFieldList *TParseContext::addStructDeclaratorList(const TPublicType &typeSpecif
             type->makeArrays(*declarator->arraySizes());
         }
 
-        TField *field = new TField(type, declarator->name(), declarator->line());
+        TField *field =
+            new TField(type, declarator->name(), declarator->line(), SymbolType::UserDefined);
         checkIsBelowStructNestingLimit(typeSpecifier.getLine(), *field);
         fieldList->push_back(field);
     }
@@ -4870,7 +4874,7 @@ TIntermTyped *TParseContext::createUnaryMath(TOperator op,
             if (child->getBasicType() != EbtBool || child->isMatrix() || child->isArray() ||
                 child->isVector())
             {
-                unaryOpError(loc, GetOperatorString(op), child->getCompleteString());
+                unaryOpError(loc, GetOperatorString(op), child->getType());
                 return nullptr;
             }
             break;
@@ -4878,7 +4882,7 @@ TIntermTyped *TParseContext::createUnaryMath(TOperator op,
             if ((child->getBasicType() != EbtInt && child->getBasicType() != EbtUInt) ||
                 child->isMatrix() || child->isArray())
             {
-                unaryOpError(loc, GetOperatorString(op), child->getCompleteString());
+                unaryOpError(loc, GetOperatorString(op), child->getType());
                 return nullptr;
             }
             break;
@@ -4892,7 +4896,7 @@ TIntermTyped *TParseContext::createUnaryMath(TOperator op,
                 child->getBasicType() == EbtBool || child->isArray() ||
                 IsOpaqueType(child->getBasicType()))
             {
-                unaryOpError(loc, GetOperatorString(op), child->getCompleteString());
+                unaryOpError(loc, GetOperatorString(op), child->getType());
                 return nullptr;
             }
             break;
@@ -4903,7 +4907,7 @@ TIntermTyped *TParseContext::createUnaryMath(TOperator op,
 
     if (child->getMemoryQualifier().writeonly)
     {
-        unaryOpError(loc, GetOperatorString(op), child->getCompleteString());
+        unaryOpError(loc, GetOperatorString(op), child->getType());
         return nullptr;
     }
 
@@ -5326,8 +5330,7 @@ TIntermTyped *TParseContext::addBinaryMath(TOperator op,
     TIntermTyped *node = addBinaryMathInternal(op, left, right, loc);
     if (node == 0)
     {
-        binaryOpError(loc, GetOperatorString(op), left->getCompleteString(),
-                      right->getCompleteString());
+        binaryOpError(loc, GetOperatorString(op), left->getType(), right->getType());
         return left;
     }
     return node;
@@ -5341,8 +5344,7 @@ TIntermTyped *TParseContext::addBinaryMathBooleanResult(TOperator op,
     TIntermTyped *node = addBinaryMathInternal(op, left, right, loc);
     if (node == nullptr)
     {
-        binaryOpError(loc, GetOperatorString(op), left->getCompleteString(),
-                      right->getCompleteString());
+        binaryOpError(loc, GetOperatorString(op), left->getType(), right->getType());
         node = CreateBoolNode(false);
         node->setLine(loc);
     }
@@ -5373,7 +5375,7 @@ TIntermTyped *TParseContext::addAssign(TOperator op,
     }
     if (node == nullptr)
     {
-        assignError(loc, "assign", left->getCompleteString(), right->getCompleteString());
+        assignError(loc, "assign", left->getType(), right->getType());
         return left;
     }
     if (op != EOpAssign)
@@ -5545,8 +5547,8 @@ void TParseContext::checkTextureOffsetConst(TIntermAggregate *functionCall)
 {
     ASSERT(functionCall->getOp() == EOpCallBuiltInFunction);
     const TFunction *func                  = functionCall->getFunction();
-    TIntermNode *offset        = nullptr;
-    TIntermSequence *arguments = functionCall->getSequence();
+    TIntermNode *offset                    = nullptr;
+    TIntermSequence *arguments             = functionCall->getSequence();
     bool useTextureGatherOffsetConstraints = false;
     if (BuiltInGroup::isTextureOffsetNoBias(func))
     {
@@ -5618,10 +5620,10 @@ void TParseContext::checkTextureOffsetConst(TIntermAggregate *functionCall)
 
 void TParseContext::checkAtomicMemoryBuiltinFunctions(TIntermAggregate *functionCall)
 {
-    ASSERT(functionCall->getOp() == EOpCallBuiltInFunction);
     const TFunction *func = functionCall->getFunction();
     if (BuiltInGroup::isAtomicMemory(func))
     {
+        ASSERT(IsAtomicFunction(functionCall->getOp()));
         TIntermSequence *arguments = functionCall->getSequence();
         TIntermTyped *memNode      = (*arguments)[0]->getAsTyped();
 
@@ -5843,9 +5845,12 @@ TIntermTyped *TParseContext::addNonConstructorFunctionCall(TFunctionLookup *fnCa
                     ASSERT(callNode != nullptr);
                     return callNode;
                 }
+
                 TIntermAggregate *callNode =
                     TIntermAggregate::CreateBuiltInFunctionCall(*fnCandidate, &fnCall->arguments());
                 callNode->setLine(loc);
+
+                checkAtomicMemoryBuiltinFunctions(callNode);
 
                 // Some built-in functions have out parameters too.
                 functionCallRValueLValueErrorCheck(fnCandidate, callNode);
@@ -5862,7 +5867,6 @@ TIntermTyped *TParseContext::addNonConstructorFunctionCall(TFunctionLookup *fnCa
             checkTextureOffsetConst(callNode);
             checkTextureGather(callNode);
             checkImageMemoryAccessForBuiltinFunctions(callNode);
-            checkAtomicMemoryBuiltinFunctions(callNode);
             functionCallRValueLValueErrorCheck(fnCandidate, callNode);
             return callNode;
         }
@@ -5884,12 +5888,10 @@ TIntermTyped *TParseContext::addTernarySelection(TIntermTyped *cond,
 
     if (trueExpression->getType() != falseExpression->getType())
     {
-        std::stringstream reasonStream;
-        reasonStream << "mismatching ternary operator operand types '"
-                     << trueExpression->getCompleteString() << " and '"
-                     << falseExpression->getCompleteString() << "'";
-        std::string reason = reasonStream.str();
-        error(loc, reason.c_str(), "?:");
+        TInfoSinkBase reasonStream;
+        reasonStream << "mismatching ternary operator operand types '" << trueExpression->getType()
+                     << " and '" << falseExpression->getType() << "'";
+        error(loc, reasonStream.c_str(), "?:");
         return falseExpression;
     }
     if (IsOpaqueType(trueExpression->getBasicType()))

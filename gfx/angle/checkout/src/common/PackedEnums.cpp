@@ -6,7 +6,7 @@
 //   Declares ANGLE-specific enums classes for GLEnum and functions operating
 //   on them.
 
-#include "libANGLE/PackedEnums.h"
+#include "common/PackedEnums.h"
 
 #include "common/utilities.h"
 
@@ -34,12 +34,19 @@ TextureType TextureTargetToType(TextureTarget target)
             return TextureType::_2DArray;
         case TextureTarget::_2DMultisample:
             return TextureType::_2DMultisample;
+        case TextureTarget::_2DMultisampleArray:
+            return TextureType::_2DMultisampleArray;
         case TextureTarget::_3D:
             return TextureType::_3D;
         default:
             UNREACHABLE();
             return TextureType::InvalidEnum;
     }
+}
+
+bool IsCubeMapFaceTarget(TextureTarget target)
+{
+    return TextureTargetToType(target) == TextureType::CubeMap;
 }
 
 TextureTarget NonCubeTextureTypeToTarget(TextureType type)
@@ -56,6 +63,8 @@ TextureTarget NonCubeTextureTypeToTarget(TextureType type)
             return TextureTarget::_2DArray;
         case TextureType::_2DMultisample:
             return TextureTarget::_2DMultisample;
+        case TextureType::_2DMultisampleArray:
+            return TextureTarget::_2DMultisampleArray;
         case TextureType::_3D:
             return TextureTarget::_3D;
         default:
@@ -94,7 +103,7 @@ TextureTarget CubeFaceIndexToTextureTarget(size_t face)
 
 size_t CubeMapTextureTargetToFaceIndex(TextureTarget target)
 {
-    ASSERT(TextureTargetToType(target) == TextureType::CubeMap);
+    ASSERT(IsCubeMapFaceTarget(target));
     return static_cast<uint8_t>(target) - static_cast<uint8_t>(TextureTarget::CubeMapPositiveX);
 }
 
@@ -143,6 +152,41 @@ TextureType SamplerTypeToTextureType(GLenum samplerType)
 }
 
 }  // namespace gl
+
+namespace egl
+{
+MessageType ErrorCodeToMessageType(EGLint errorCode)
+{
+    switch (errorCode)
+    {
+        case EGL_BAD_ALLOC:
+        case EGL_CONTEXT_LOST:
+        case EGL_NOT_INITIALIZED:
+            return MessageType::Critical;
+
+        case EGL_BAD_ACCESS:
+        case EGL_BAD_ATTRIBUTE:
+        case EGL_BAD_CONFIG:
+        case EGL_BAD_CONTEXT:
+        case EGL_BAD_CURRENT_SURFACE:
+        case EGL_BAD_DISPLAY:
+        case EGL_BAD_MATCH:
+        case EGL_BAD_NATIVE_PIXMAP:
+        case EGL_BAD_NATIVE_WINDOW:
+        case EGL_BAD_PARAMETER:
+        case EGL_BAD_SURFACE:
+        case EGL_BAD_STREAM_KHR:
+        case EGL_BAD_STATE_KHR:
+        case EGL_BAD_DEVICE_EXT:
+            return MessageType::Error;
+
+        case EGL_SUCCESS:
+        default:
+            UNREACHABLE();
+            return MessageType::InvalidEnum;
+    }
+}
+}  // namespace egl
 
 namespace egl_gl
 {

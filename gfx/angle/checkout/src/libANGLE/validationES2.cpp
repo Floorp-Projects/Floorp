@@ -799,6 +799,28 @@ bool ValidCap(const Context *context, GLenum cap, bool queryOnly)
         case GL_COLOR_ARRAY:
         case GL_TEXTURE_COORD_ARRAY:
         case GL_TEXTURE_2D:
+        case GL_LIGHTING:
+        case GL_LIGHT0:
+        case GL_LIGHT1:
+        case GL_LIGHT2:
+        case GL_LIGHT3:
+        case GL_LIGHT4:
+        case GL_LIGHT5:
+        case GL_LIGHT6:
+        case GL_LIGHT7:
+        case GL_NORMALIZE:
+        case GL_RESCALE_NORMAL:
+        case GL_COLOR_MATERIAL:
+        case GL_CLIP_PLANE0:
+        case GL_CLIP_PLANE1:
+        case GL_CLIP_PLANE2:
+        case GL_CLIP_PLANE3:
+        case GL_CLIP_PLANE4:
+        case GL_CLIP_PLANE5:
+        case GL_FOG:
+        case GL_POINT_SMOOTH:
+        case GL_LINE_SMOOTH:
+        case GL_COLOR_LOGIC_OP:
             return context->getClientVersion() < Version(2, 0);
         case GL_POINT_SIZE_ARRAY_OES:
             return context->getClientVersion() < Version(2, 0) &&
@@ -806,7 +828,9 @@ bool ValidCap(const Context *context, GLenum cap, bool queryOnly)
         case GL_TEXTURE_CUBE_MAP:
             return context->getClientVersion() < Version(2, 0) &&
                    context->getExtensions().textureCubeMap;
-
+        case GL_POINT_SPRITE_OES:
+            return context->getClientVersion() < Version(2, 0) &&
+                   context->getExtensions().pointSprite;
         default:
             return false;
     }
@@ -2418,22 +2442,20 @@ bool ValidateBlitFramebufferANGLE(Context *context,
 {
     if (!context->getExtensions().framebufferBlit)
     {
-        context->handleError(InvalidOperation() << "Blit extension not available.");
+        ANGLE_VALIDATION_ERR(context, InvalidOperation(), BlitExtensionNotAvailable);
         return false;
     }
 
     if (srcX1 - srcX0 != dstX1 - dstX0 || srcY1 - srcY0 != dstY1 - dstY0)
     {
         // TODO(jmadill): Determine if this should be available on other implementations.
-        context->handleError(InvalidOperation() << "Scaling and flipping in "
-                                                   "BlitFramebufferANGLE not supported by this "
-                                                   "implementation.");
+        ANGLE_VALIDATION_ERR(context, InvalidOperation(), BlitExtensionScaleOrFlip);
         return false;
     }
 
     if (filter == GL_LINEAR)
     {
-        context->handleError(InvalidEnum() << "Linear blit not supported in this extension");
+        ANGLE_VALIDATION_ERR(context, InvalidEnum(), BlitExtensionLinear);
         return false;
     }
 
@@ -2452,7 +2474,8 @@ bool ValidateBlitFramebufferANGLE(Context *context,
                 readColorAttachment->type() != GL_RENDERBUFFER &&
                 readColorAttachment->type() != GL_FRAMEBUFFER_DEFAULT)
             {
-                context->handleError(InvalidOperation());
+                ANGLE_VALIDATION_ERR(context, InvalidOperation(),
+                                     BlitExtensionFromInvalidAttachmentType);
                 return false;
             }
 
@@ -2468,7 +2491,8 @@ bool ValidateBlitFramebufferANGLE(Context *context,
                         attachment->type() != GL_RENDERBUFFER &&
                         attachment->type() != GL_FRAMEBUFFER_DEFAULT)
                     {
-                        context->handleError(InvalidOperation());
+                        ANGLE_VALIDATION_ERR(context, InvalidOperation(),
+                                             BlitExtensionToInvalidAttachmentType);
                         return false;
                     }
 
@@ -2476,7 +2500,8 @@ bool ValidateBlitFramebufferANGLE(Context *context,
                     if (!Format::EquivalentForBlit(attachment->getFormat(),
                                                    readColorAttachment->getFormat()))
                     {
-                        context->handleError(InvalidOperation());
+                        ANGLE_VALIDATION_ERR(context, InvalidOperation(),
+                                             BlitExtensionFormatMismatch);
                         return false;
                     }
                 }
@@ -2487,7 +2512,8 @@ bool ValidateBlitFramebufferANGLE(Context *context,
                 IsPartialBlit(context, readColorAttachment, drawColorAttachment, srcX0, srcY0,
                               srcX1, srcY1, dstX0, dstY0, dstX1, dstY1))
             {
-                context->handleError(InvalidOperation());
+                ANGLE_VALIDATION_ERR(context, InvalidOperation(),
+                                     BlitExtensionMultisampledWholeBufferBlit);
                 return false;
             }
         }
@@ -2510,15 +2536,15 @@ bool ValidateBlitFramebufferANGLE(Context *context,
                                   dstX0, dstY0, dstX1, dstY1))
                 {
                     // only whole-buffer copies are permitted
-                    context->handleError(InvalidOperation() << "Only whole-buffer depth and "
-                                                               "stencil blits are supported by "
-                                                               "this extension.");
+                    ANGLE_VALIDATION_ERR(context, InvalidOperation(),
+                                         BlitExtensionDepthStencilWholeBufferBlit);
                     return false;
                 }
 
                 if (readBuffer->getSamples() != 0 || drawBuffer->getSamples() != 0)
                 {
-                    context->handleError(InvalidOperation());
+                    ANGLE_VALIDATION_ERR(context, InvalidOperation(),
+                                         BlitExtensionMultisampledDepthOrStencil);
                     return false;
                 }
             }
@@ -2531,7 +2557,8 @@ bool ValidateBlitFramebufferANGLE(Context *context,
 
 bool ValidateClear(Context *context, GLbitfield mask)
 {
-    Framebuffer *fbo = context->getGLState().getDrawFramebuffer();
+    Framebuffer *fbo             = context->getGLState().getDrawFramebuffer();
+    const Extensions &extensions = context->getExtensions();
 
     if (!ValidateFramebufferComplete(context, fbo))
     {
@@ -2544,7 +2571,7 @@ bool ValidateClear(Context *context, GLbitfield mask)
         return false;
     }
 
-    if (context->getExtensions().webglCompatibility && (mask & GL_COLOR_BUFFER_BIT) != 0)
+    if (extensions.webglCompatibility && (mask & GL_COLOR_BUFFER_BIT) != 0)
     {
         constexpr GLenum validComponentTypes[] = {GL_FLOAT, GL_UNSIGNED_NORMALIZED,
                                                   GL_SIGNED_NORMALIZED};
@@ -2557,6 +2584,20 @@ bool ValidateClear(Context *context, GLbitfield mask)
             {
                 return false;
             }
+        }
+    }
+
+    if (extensions.multiview && extensions.disjointTimerQuery)
+    {
+        const State &state       = context->getGLState();
+        Framebuffer *framebuffer = state.getDrawFramebuffer();
+        if (framebuffer->getNumViews() > 1 && state.isQueryActive(QueryType::TimeElapsed))
+        {
+            context->handleError(InvalidOperation() << "There is an active query for target "
+                                                       "GL_TIME_ELAPSED_EXT when the number of "
+                                                       "views in the active draw framebuffer is "
+                                                       "greater than 1.");
+            return false;
         }
     }
 
@@ -2711,14 +2752,15 @@ bool ValidateCompressedTexImage2D(Context *context,
     }
 
     const InternalFormat &formatInfo = GetSizedInternalFormatInfo(internalformat);
-    auto blockSizeOrErr = formatInfo.computeCompressedImageSize(gl::Extents(width, height, 1));
-    if (blockSizeOrErr.isError())
+
+    GLuint blockSize = 0;
+    if (!formatInfo.computeCompressedImageSize(gl::Extents(width, height, 1), &blockSize))
     {
-        context->handleError(blockSizeOrErr.getError());
+        ANGLE_VALIDATION_ERR(context, InvalidOperation(), IntegerOverflow);
         return false;
     }
 
-    if (imageSize < 0 || static_cast<GLuint>(imageSize) != blockSizeOrErr.getResult())
+    if (imageSize < 0 || static_cast<GLuint>(imageSize) != blockSize)
     {
         ANGLE_VALIDATION_ERR(context, InvalidValue(), CompressedTextureDimensionsMustMatchData);
         return false;
@@ -2805,14 +2847,14 @@ bool ValidateCompressedTexSubImage2D(Context *context,
     }
 
     const InternalFormat &formatInfo = GetSizedInternalFormatInfo(format);
-    auto blockSizeOrErr = formatInfo.computeCompressedImageSize(gl::Extents(width, height, 1));
-    if (blockSizeOrErr.isError())
+    GLuint blockSize                 = 0;
+    if (!formatInfo.computeCompressedImageSize(gl::Extents(width, height, 1), &blockSize))
     {
-        context->handleError(blockSizeOrErr.getError());
+        ANGLE_VALIDATION_ERR(context, InvalidOperation(), IntegerOverflow);
         return false;
     }
 
-    if (imageSize < 0 || static_cast<GLuint>(imageSize) != blockSizeOrErr.getResult())
+    if (imageSize < 0 || static_cast<GLuint>(imageSize) != blockSize)
     {
         context->handleError(InvalidValue());
         return false;
@@ -2984,7 +3026,13 @@ bool ValidateBindTexture(Context *context, TextureType target, GLuint texture)
                 return false;
             }
             break;
-
+        case TextureType::_2DMultisampleArray:
+            if (!context->getExtensions().textureMultisampleArray)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidEnum(), MultisampleArrayExtensionRequired);
+                return false;
+            }
+            break;
         case TextureType::External:
             if (!context->getExtensions().eglImageExternal &&
                 !context->getExtensions().eglStreamConsumerExternal)
@@ -3811,7 +3859,7 @@ bool ValidateProgramPathFragmentInputGenCHROMIUM(Context *context,
     if (location == -1)
         return true;
 
-    const auto &binding = programObject->getFragmentInputBindingInfo(context, location);
+    const auto &binding = programObject->getFragmentInputBindingInfo(location);
 
     if (!binding.valid)
     {
@@ -4622,7 +4670,7 @@ bool ValidateBlendFuncSeparate(Context *context,
                     "Simultaneous use of GL_CONSTANT_ALPHA/GL_ONE_MINUS_CONSTANT_ALPHA and "
                     "GL_CONSTANT_COLOR/GL_ONE_MINUS_CONSTANT_COLOR not supported by this "
                     "implementation.";
-                ERR() << msg;
+                WARN() << msg;
             }
             context->handleError(InvalidOperation() << msg);
             return false;
@@ -5308,6 +5356,17 @@ bool ValidateHint(Context *context, GLenum target, GLenum mode)
             }
             break;
 
+        case GL_PERSPECTIVE_CORRECTION_HINT:
+        case GL_POINT_SMOOTH_HINT:
+        case GL_LINE_SMOOTH_HINT:
+        case GL_FOG_HINT:
+            if (context->getClientMajorVersion() >= 2)
+            {
+                ANGLE_VALIDATION_ERR(context, InvalidEnum(), EnumNotSupported);
+                return false;
+            }
+            break;
+
         default:
             ANGLE_VALIDATION_ERR(context, InvalidEnum(), EnumNotSupported);
             return false;
@@ -5764,13 +5823,13 @@ bool ValidateViewport(Context *context, GLint x, GLint y, GLsizei width, GLsizei
     return true;
 }
 
-bool ValidateDrawArrays(Context *context, GLenum mode, GLint first, GLsizei count)
+bool ValidateDrawArrays(Context *context, PrimitiveMode mode, GLint first, GLsizei count)
 {
     return ValidateDrawArraysCommon(context, mode, first, count, 1);
 }
 
 bool ValidateDrawElements(Context *context,
-                          GLenum mode,
+                          PrimitiveMode mode,
                           GLsizei count,
                           GLenum type,
                           const void *indices)
@@ -6018,13 +6077,6 @@ bool ValidateFramebufferTexture2D(Context *context,
                 ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidTextureTarget);
                 return false;
         }
-
-        const Format &format = tex->getFormat(textarget, level);
-        if (format.info->compressed)
-        {
-            context->handleError(InvalidOperation());
-            return false;
-        }
     }
 
     return true;
@@ -6091,7 +6143,7 @@ bool ValidateGenerateMipmap(Context *context, TextureType target)
     bool formatUnsized = !format.sized;
     bool formatColorRenderableAndFilterable =
         format.filterSupport(context->getClientVersion(), context->getExtensions()) &&
-        format.renderSupport(context->getClientVersion(), context->getExtensions());
+        format.textureAttachmentSupport(context->getClientVersion(), context->getExtensions());
     if (!formatUnsized && !formatColorRenderableAndFilterable)
     {
         ANGLE_VALIDATION_ERR(context, InvalidOperation(), GenerateMipmapNotAllowed);
@@ -6106,11 +6158,9 @@ bool ValidateGenerateMipmap(Context *context, TextureType target)
         return false;
     }
 
-    // ES3 and WebGL grant mipmap generation for sRGBA (with alpha) textures but GL_EXT_sRGB does
-    // not.  Differentiate the ES3 format from the extension format by checking if the format is
-    // sized, GL_EXT_sRGB does not add any sized formats.
-    bool supportsSRGBMipmapGeneration = context->getExtensions().webglCompatibility;
-    if (!supportsSRGBMipmapGeneration && !format.sized && format.colorEncoding == GL_SRGB)
+    // According to the OpenGL extension spec EXT_sRGB.txt, EXT_SRGB is based on ES 2.0 and
+    // generateMipmap is not allowed if texture format is SRGB_EXT or SRGB_ALPHA_EXT.
+    if (context->getClientVersion() < Version(3, 0) && format.colorEncoding == GL_SRGB)
     {
         ANGLE_VALIDATION_ERR(context, InvalidOperation(), GenerateMipmapNotAllowed);
         return false;
@@ -6239,7 +6289,7 @@ bool ValidateReadPixels(Context *context,
 
 bool ValidateTexParameterf(Context *context, TextureType target, GLenum pname, GLfloat param)
 {
-    return ValidateTexParameterBase(context, target, pname, -1, &param);
+    return ValidateTexParameterBase(context, target, pname, 1, &param);
 }
 
 bool ValidateTexParameterfv(Context *context,
@@ -6252,7 +6302,7 @@ bool ValidateTexParameterfv(Context *context,
 
 bool ValidateTexParameteri(Context *context, TextureType target, GLenum pname, GLint param)
 {
-    return ValidateTexParameterBase(context, target, pname, -1, &param);
+    return ValidateTexParameterBase(context, target, pname, 1, &param);
 }
 
 bool ValidateTexParameteriv(Context *context, TextureType target, GLenum pname, const GLint *params)
@@ -6614,6 +6664,16 @@ bool ValidateTexStorage3DEXT(Context *context,
 
     return ValidateES3TexStorage3DParameters(context, target, levels, internalformat, width, height,
                                              depth);
+}
+
+bool ValidateMaxShaderCompilerThreadsKHR(Context *context, GLuint count)
+{
+    if (!context->getExtensions().parallelShaderCompile)
+    {
+        ANGLE_VALIDATION_ERR(context, InvalidOperation(), ExtensionNotEnabled);
+        return false;
+    }
+    return true;
 }
 
 }  // namespace gl
