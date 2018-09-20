@@ -24,6 +24,11 @@ class MenuList extends PureComponent {
 
       // Children of the list.
       children: PropTypes.any,
+
+      // Called whenever there is a change to the hovered or selected child.
+      // The callback is passed the ID of the highlighted child or null if no
+      // child is highlighted.
+      onHighlightedChildChange: PropTypes.func,
     };
   }
 
@@ -31,10 +36,30 @@ class MenuList extends PureComponent {
     super(props);
 
     this.onKeyDown = this.onKeyDown.bind(this);
+    this.onMouseOverOrFocus = this.onMouseOverOrFocus.bind(this);
+    this.onMouseOutOrBlur = this.onMouseOutOrBlur.bind(this);
+    this.notifyHighlightedChildChange = this.notifyHighlightedChildChange.bind(this);
 
     this.setWrapperRef = element => {
       this.wrapperRef = element;
     };
+  }
+
+  onMouseOverOrFocus(e) {
+    this.notifyHighlightedChildChange(e.target.id);
+  }
+
+  onMouseOutOrBlur(e) {
+    const hoveredElem = this.wrapperRef.querySelector(":hover");
+    if (!hoveredElem) {
+      this.notifyHighlightedChildChange(null);
+    }
+  }
+
+  notifyHighlightedChildChange(id) {
+    if (this.props.onHighlightedChildChange) {
+      this.props.onHighlightedChildChange(id);
+    }
   }
 
   onKeyDown(e) {
@@ -103,6 +128,10 @@ class MenuList extends PureComponent {
       role: "menu",
       ref: this.setWrapperRef,
       onKeyDown: this.onKeyDown,
+      onMouseOver: this.onMouseOverOrFocus,
+      onMouseOut: this.onMouseOutOrBlur,
+      onFocus: this.onMouseOverOrFocus,
+      onBlur: this.onMouseOutOrBlur
     };
 
     if (this.props.id) {
