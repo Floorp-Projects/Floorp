@@ -32,7 +32,7 @@
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 struct AddressLock
 {
@@ -101,7 +101,7 @@ js::jit::AtomicOperations::loadSeqCst(T* addr)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -133,7 +133,7 @@ js::jit::AtomicOperations::storeSeqCst(T* addr, T val)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline void
@@ -166,7 +166,7 @@ js::jit::AtomicOperations::compareExchangeSeqCst(T* addr, T oldval, T newval)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -206,7 +206,7 @@ js::jit::AtomicOperations::fetchAddSeqCst(T* addr, T val)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -242,7 +242,7 @@ js::jit::AtomicOperations::fetchSubSeqCst(T* addr, T val)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -279,7 +279,7 @@ js::jit::AtomicOperations::fetchAndSeqCst(T* addr, T val)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -315,7 +315,7 @@ js::jit::AtomicOperations::fetchOrSeqCst(T* addr, T val)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -352,7 +352,7 @@ js::jit::AtomicOperations::fetchXorSeqCst(T* addr, T val)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -390,7 +390,7 @@ js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -443,7 +443,7 @@ js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline void
@@ -510,7 +510,7 @@ js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val)
 
 namespace js { namespace jit {
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 template<>
 inline int64_t
@@ -536,7 +536,7 @@ js::jit::AtomicOperations::exchangeSeqCst(uint64_t* addr, uint64_t val)
 
 } }
 
-#if defined(JS_CODEGEN_MIPS32)
+#if !defined(JS_64BIT)
 
 inline void
 js::jit::AddressLock::acquire()
