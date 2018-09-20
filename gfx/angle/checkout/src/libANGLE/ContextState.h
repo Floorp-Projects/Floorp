@@ -13,6 +13,7 @@
 #include "common/angleutils.h"
 #include "libANGLE/State.h"
 #include "libANGLE/Version.h"
+#include "libANGLE/WorkerThread.h"
 #include "libANGLE/params.h"
 
 namespace gl

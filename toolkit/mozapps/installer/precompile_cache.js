@@ -15,12 +15,7 @@ function endsWith(str, end) {
 }
 
 function jar_entries(jarReader, pattern) {
-  var entries = [];
-  var enumerator = jarReader.findEntries(pattern);
-  while (enumerator.hasMore()) {
-    entries.push(enumerator.getNext());
-  }
-  return entries;
+  return Array.from(jarReader.findEntries(pattern));
 }
 
 function dir_entries(baseDir, subpath, ext) {

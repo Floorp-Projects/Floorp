@@ -424,12 +424,8 @@ Framebuffer *FramebufferManager::AllocateNewObject(rx::GLImplFactory *factory,
 // static
 void FramebufferManager::DeleteObject(const Context *context, Framebuffer *framebuffer)
 {
-    // Default framebuffer are owned by their respective Surface
-    if (framebuffer->id() != 0)
-    {
-        framebuffer->onDestroy(context);
-        delete framebuffer;
-    }
+    framebuffer->onDestroy(context);
+    delete framebuffer;
 }
 
 GLuint FramebufferManager::createFramebuffer()
@@ -448,13 +444,13 @@ void FramebufferManager::setDefaultFramebuffer(Framebuffer *framebuffer)
     mObjectMap.assign(0, framebuffer);
 }
 
-void FramebufferManager::invalidateFramebufferComplenessCache() const
+void FramebufferManager::invalidateFramebufferComplenessCache(const Context *context) const
 {
     for (const auto &framebuffer : mObjectMap)
     {
         if (framebuffer.second)
         {
-            framebuffer.second->invalidateCompletenessCache();
+            framebuffer.second->invalidateCompletenessCache(context);
         }
     }
 }

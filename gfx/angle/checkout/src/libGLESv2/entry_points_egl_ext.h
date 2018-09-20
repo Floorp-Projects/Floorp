@@ -17,18 +17,40 @@ namespace egl
 {
 
 // EGL_ANGLE_query_surface_pointer
-ANGLE_EXPORT EGLBoolean EGLAPIENTRY QuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value);
+ANGLE_EXPORT EGLBoolean EGLAPIENTRY QuerySurfacePointerANGLE(EGLDisplay dpy,
+                                                             EGLSurface surface,
+                                                             EGLint attribute,
+                                                             void **value);
 
 // EGL_NV_post_sub_buffer
-ANGLE_EXPORT EGLBoolean EGLAPIENTRY PostSubBufferNV(EGLDisplay dpy, EGLSurface surface, EGLint x, EGLint y, EGLint width, EGLint height);
+ANGLE_EXPORT EGLBoolean EGLAPIENTRY PostSubBufferNV(EGLDisplay dpy,
+                                                    EGLSurface surface,
+                                                    EGLint x,
+                                                    EGLint y,
+                                                    EGLint width,
+                                                    EGLint height);
 
 // EGL_EXT_platform_base
-ANGLE_EXPORT EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_display, const EGLint *attrib_list);
+ANGLE_EXPORT EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform,
+                                                          void *native_display,
+                                                          const EGLint *attrib_list);
+ANGLE_EXPORT EGLSurface EGLAPIENTRY CreatePlatformWindowSurfaceEXT(EGLDisplay dpy,
+                                                                   EGLConfig config,
+                                                                   void *native_window,
+                                                                   const EGLint *attrib_list);
+ANGLE_EXPORT EGLSurface EGLAPIENTRY CreatePlatformPixmapSurfaceEXT(EGLDisplay dpy,
+                                                                   EGLConfig config,
+                                                                   void *native_pixmap,
+                                                                   const EGLint *attrib_list);
 
 // EGL_EXT_device_query
-ANGLE_EXPORT EGLBoolean EGLAPIENTRY QueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute, EGLAttrib *value);
-ANGLE_EXPORT EGLBoolean EGLAPIENTRY QueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribute, EGLAttrib *value);
-ANGLE_EXPORT const char * EGLAPIENTRY QueryDeviceStringEXT(EGLDeviceEXT device, EGLint name);
+ANGLE_EXPORT EGLBoolean EGLAPIENTRY QueryDisplayAttribEXT(EGLDisplay dpy,
+                                                          EGLint attribute,
+                                                          EGLAttrib *value);
+ANGLE_EXPORT EGLBoolean EGLAPIENTRY QueryDeviceAttribEXT(EGLDeviceEXT device,
+                                                         EGLint attribute,
+                                                         EGLAttrib *value);
+ANGLE_EXPORT const char *EGLAPIENTRY QueryDeviceStringEXT(EGLDeviceEXT device, EGLint name);
 
 // EGL_KHR_image_base/EGL_KHR_image
 ANGLE_EXPORT EGLImageKHR EGLAPIENTRY CreateImageKHR(EGLDisplay dpy,
@@ -87,13 +109,18 @@ ANGLE_EXPORT EGLBoolean EGLAPIENTRY GetSyncValuesCHROMIUM(EGLDisplay dpy,
                                                           EGLuint64KHR *msc,
                                                           EGLuint64KHR *sbc);
 
-// EGL_EXT_swap_buffers_with_damage
-ANGLE_EXPORT EGLBoolean SwapBuffersWithDamageEXT(EGLDisplay dpy,
-                                                 EGLSurface surface,
-                                                 EGLint *rects,
-                                                 EGLint n_rects);
+// EGL_KHR_swap_buffers_with_damage
+ANGLE_EXPORT EGLBoolean EGLAPIENTRY SwapBuffersWithDamageKHR(EGLDisplay dpy,
+                                                             EGLSurface surface,
+                                                             EGLint *rects,
+                                                             EGLint n_rects);
 
-//
+// EGL_ANDROID_presentation_time
+ANGLE_EXPORT EGLBoolean EGLAPIENTRY PresentationTimeANDROID(EGLDisplay dpy,
+                                                            EGLSurface surface,
+                                                            EGLnsecsANDROID time);
+
+// EGL_ANGLE_program_cache_control
 ANGLE_EXPORT EGLint EGLAPIENTRY ProgramCacheGetAttribANGLE(EGLDisplay dpy, EGLenum attrib);
 ANGLE_EXPORT void EGLAPIENTRY ProgramCacheQueryANGLE(EGLDisplay dpy,
                                                      EGLint index,
@@ -108,6 +135,17 @@ ANGLE_EXPORT void EGLAPIENTRY ProgramCachePopulateANGLE(EGLDisplay dpy,
                                                         EGLint binarysize);
 ANGLE_EXPORT EGLint EGLAPIENTRY ProgramCacheResizeANGLE(EGLDisplay dpy, EGLint limit, EGLenum mode);
 
+// EGL_KHR_debug
+ANGLE_EXPORT EGLint EGLAPIENTRY DebugMessageControlKHR(EGLDEBUGPROCKHR callback,
+                                                       const EGLAttrib *attrib_list);
+
+ANGLE_EXPORT EGLBoolean EGLAPIENTRY QueryDebugKHR(EGLint attribute, EGLAttrib *value);
+
+ANGLE_EXPORT EGLint EGLAPIENTRY LabelObjectKHR(EGLDisplay display,
+                                               EGLenum objectType,
+                                               EGLObjectKHR object,
+                                               EGLLabelKHR label);
+
 }  // namespace egl
 
-#endif // LIBGLESV2_ENTRYPOINTSEGLEXT_H_
+#endif  // LIBGLESV2_ENTRYPOINTSEGLEXT_H_

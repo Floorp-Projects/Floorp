@@ -9,7 +9,7 @@
 //   Implements ANGLE-specific enums classes for GLenums and functions operating
 //   on them.
 
-#include "libANGLE/PackedGLEnums_autogen.h"
+#include "common/PackedGLEnums_autogen.h"
 #include "common/debug.h"
 
 namespace gl
@@ -552,6 +552,106 @@ GLenum ToGLenum(MatrixType from)
 }
 
 template <>
+PointParameter FromGLenum<PointParameter>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_POINT_SIZE_MIN:
+            return PointParameter::PointSizeMin;
+        case GL_POINT_SIZE_MAX:
+            return PointParameter::PointSizeMax;
+        case GL_POINT_FADE_THRESHOLD_SIZE:
+            return PointParameter::PointFadeThresholdSize;
+        case GL_POINT_DISTANCE_ATTENUATION:
+            return PointParameter::PointDistanceAttenuation;
+        default:
+            return PointParameter::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(PointParameter from)
+{
+    switch (from)
+    {
+        case PointParameter::PointSizeMin:
+            return GL_POINT_SIZE_MIN;
+        case PointParameter::PointSizeMax:
+            return GL_POINT_SIZE_MAX;
+        case PointParameter::PointFadeThresholdSize:
+            return GL_POINT_FADE_THRESHOLD_SIZE;
+        case PointParameter::PointDistanceAttenuation:
+            return GL_POINT_DISTANCE_ATTENUATION;
+        default:
+            UNREACHABLE();
+            return 0;
+    }
+}
+
+template <>
+PrimitiveMode FromGLenum<PrimitiveMode>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_POINTS:
+            return PrimitiveMode::Points;
+        case GL_LINES:
+            return PrimitiveMode::Lines;
+        case GL_LINE_LOOP:
+            return PrimitiveMode::LineLoop;
+        case GL_LINE_STRIP:
+            return PrimitiveMode::LineStrip;
+        case GL_TRIANGLES:
+            return PrimitiveMode::Triangles;
+        case GL_TRIANGLE_STRIP:
+            return PrimitiveMode::TriangleStrip;
+        case GL_TRIANGLE_FAN:
+            return PrimitiveMode::TriangleFan;
+        case GL_LINES_ADJACENCY_EXT:
+            return PrimitiveMode::LinesAdjacency;
+        case GL_LINE_STRIP_ADJACENCY_EXT:
+            return PrimitiveMode::LineStripAdjacency;
+        case GL_TRIANGLES_ADJACENCY_EXT:
+            return PrimitiveMode::TrianglesAdjacency;
+        case GL_TRIANGLE_STRIP_ADJACENCY_EXT:
+            return PrimitiveMode::TriangleStripAdjacency;
+        default:
+            return PrimitiveMode::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(PrimitiveMode from)
+{
+    switch (from)
+    {
+        case PrimitiveMode::Points:
+            return GL_POINTS;
+        case PrimitiveMode::Lines:
+            return GL_LINES;
+        case PrimitiveMode::LineLoop:
+            return GL_LINE_LOOP;
+        case PrimitiveMode::LineStrip:
+            return GL_LINE_STRIP;
+        case PrimitiveMode::Triangles:
+            return GL_TRIANGLES;
+        case PrimitiveMode::TriangleStrip:
+            return GL_TRIANGLE_STRIP;
+        case PrimitiveMode::TriangleFan:
+            return GL_TRIANGLE_FAN;
+        case PrimitiveMode::LinesAdjacency:
+            return GL_LINES_ADJACENCY_EXT;
+        case PrimitiveMode::LineStripAdjacency:
+            return GL_LINE_STRIP_ADJACENCY_EXT;
+        case PrimitiveMode::TrianglesAdjacency:
+            return GL_TRIANGLES_ADJACENCY_EXT;
+        case PrimitiveMode::TriangleStripAdjacency:
+            return GL_TRIANGLE_STRIP_ADJACENCY_EXT;
+        default:
+            UNREACHABLE();
+            return 0;
+    }
+}
+
+template <>
 QueryType FromGLenum<QueryType>(GLenum from)
 {
     switch (from)
@@ -760,6 +860,130 @@ GLenum ToGLenum(TextureEnvMode from)
 }
 
 template <>
+TextureEnvParameter FromGLenum<TextureEnvParameter>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_TEXTURE_ENV_MODE:
+            return TextureEnvParameter::Mode;
+        case GL_TEXTURE_ENV_COLOR:
+            return TextureEnvParameter::Color;
+        case GL_COMBINE_RGB:
+            return TextureEnvParameter::CombineRgb;
+        case GL_COMBINE_ALPHA:
+            return TextureEnvParameter::CombineAlpha;
+        case GL_RGB_SCALE:
+            return TextureEnvParameter::RgbScale;
+        case GL_ALPHA_SCALE:
+            return TextureEnvParameter::AlphaScale;
+        case GL_SRC0_RGB:
+            return TextureEnvParameter::Src0Rgb;
+        case GL_SRC1_RGB:
+            return TextureEnvParameter::Src1Rgb;
+        case GL_SRC2_RGB:
+            return TextureEnvParameter::Src2Rgb;
+        case GL_SRC0_ALPHA:
+            return TextureEnvParameter::Src0Alpha;
+        case GL_SRC1_ALPHA:
+            return TextureEnvParameter::Src1Alpha;
+        case GL_SRC2_ALPHA:
+            return TextureEnvParameter::Src2Alpha;
+        case GL_OPERAND0_RGB:
+            return TextureEnvParameter::Op0Rgb;
+        case GL_OPERAND1_RGB:
+            return TextureEnvParameter::Op1Rgb;
+        case GL_OPERAND2_RGB:
+            return TextureEnvParameter::Op2Rgb;
+        case GL_OPERAND0_ALPHA:
+            return TextureEnvParameter::Op0Alpha;
+        case GL_OPERAND1_ALPHA:
+            return TextureEnvParameter::Op1Alpha;
+        case GL_OPERAND2_ALPHA:
+            return TextureEnvParameter::Op2Alpha;
+        case GL_COORD_REPLACE_OES:
+            return TextureEnvParameter::PointCoordReplace;
+        default:
+            return TextureEnvParameter::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(TextureEnvParameter from)
+{
+    switch (from)
+    {
+        case TextureEnvParameter::Mode:
+            return GL_TEXTURE_ENV_MODE;
+        case TextureEnvParameter::Color:
+            return GL_TEXTURE_ENV_COLOR;
+        case TextureEnvParameter::CombineRgb:
+            return GL_COMBINE_RGB;
+        case TextureEnvParameter::CombineAlpha:
+            return GL_COMBINE_ALPHA;
+        case TextureEnvParameter::RgbScale:
+            return GL_RGB_SCALE;
+        case TextureEnvParameter::AlphaScale:
+            return GL_ALPHA_SCALE;
+        case TextureEnvParameter::Src0Rgb:
+            return GL_SRC0_RGB;
+        case TextureEnvParameter::Src1Rgb:
+            return GL_SRC1_RGB;
+        case TextureEnvParameter::Src2Rgb:
+            return GL_SRC2_RGB;
+        case TextureEnvParameter::Src0Alpha:
+            return GL_SRC0_ALPHA;
+        case TextureEnvParameter::Src1Alpha:
+            return GL_SRC1_ALPHA;
+        case TextureEnvParameter::Src2Alpha:
+            return GL_SRC2_ALPHA;
+        case TextureEnvParameter::Op0Rgb:
+            return GL_OPERAND0_RGB;
+        case TextureEnvParameter::Op1Rgb:
+            return GL_OPERAND1_RGB;
+        case TextureEnvParameter::Op2Rgb:
+            return GL_OPERAND2_RGB;
+        case TextureEnvParameter::Op0Alpha:
+            return GL_OPERAND0_ALPHA;
+        case TextureEnvParameter::Op1Alpha:
+            return GL_OPERAND1_ALPHA;
+        case TextureEnvParameter::Op2Alpha:
+            return GL_OPERAND2_ALPHA;
+        case TextureEnvParameter::PointCoordReplace:
+            return GL_COORD_REPLACE_OES;
+        default:
+            UNREACHABLE();
+            return 0;
+    }
+}
+
+template <>
+TextureEnvTarget FromGLenum<TextureEnvTarget>(GLenum from)
+{
+    switch (from)
+    {
+        case GL_TEXTURE_ENV:
+            return TextureEnvTarget::Env;
+        case GL_POINT_SPRITE_OES:
+            return TextureEnvTarget::PointSprite;
+        default:
+            return TextureEnvTarget::InvalidEnum;
+    }
+}
+
+GLenum ToGLenum(TextureEnvTarget from)
+{
+    switch (from)
+    {
+        case TextureEnvTarget::Env:
+            return GL_TEXTURE_ENV;
+        case TextureEnvTarget::PointSprite:
+            return GL_POINT_SPRITE_OES;
+        default:
+            UNREACHABLE();
+            return 0;
+    }
+}
+
+template <>
 TextureOp FromGLenum<TextureOp>(GLenum from)
 {
     switch (from)
@@ -842,6 +1066,8 @@ TextureTarget FromGLenum<TextureTarget>(GLenum from)
             return TextureTarget::_2DArray;
         case GL_TEXTURE_2D_MULTISAMPLE:
             return TextureTarget::_2DMultisample;
+        case GL_TEXTURE_2D_MULTISAMPLE_ARRAY_ANGLE:
+            return TextureTarget::_2DMultisampleArray;
         case GL_TEXTURE_3D:
             return TextureTarget::_3D;
         case GL_TEXTURE_EXTERNAL_OES:
@@ -875,6 +1101,8 @@ GLenum ToGLenum(TextureTarget from)
             return GL_TEXTURE_2D_ARRAY;
         case TextureTarget::_2DMultisample:
             return GL_TEXTURE_2D_MULTISAMPLE;
+        case TextureTarget::_2DMultisampleArray:
+            return GL_TEXTURE_2D_MULTISAMPLE_ARRAY_ANGLE;
         case TextureTarget::_3D:
             return GL_TEXTURE_3D;
         case TextureTarget::External:
@@ -910,6 +1138,8 @@ TextureType FromGLenum<TextureType>(GLenum from)
             return TextureType::_2DArray;
         case GL_TEXTURE_2D_MULTISAMPLE:
             return TextureType::_2DMultisample;
+        case GL_TEXTURE_2D_MULTISAMPLE_ARRAY_ANGLE:
+            return TextureType::_2DMultisampleArray;
         case GL_TEXTURE_3D:
             return TextureType::_3D;
         case GL_TEXTURE_EXTERNAL_OES:
@@ -933,6 +1163,8 @@ GLenum ToGLenum(TextureType from)
             return GL_TEXTURE_2D_ARRAY;
         case TextureType::_2DMultisample:
             return GL_TEXTURE_2D_MULTISAMPLE;
+        case TextureType::_2DMultisampleArray:
+            return GL_TEXTURE_2D_MULTISAMPLE_ARRAY_ANGLE;
         case TextureType::_3D:
             return GL_TEXTURE_3D;
         case TextureType::External:

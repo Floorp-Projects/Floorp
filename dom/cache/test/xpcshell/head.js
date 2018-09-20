@@ -33,12 +33,7 @@ function create_test_profile(zipFileName) {
                   .createInstance(Ci.nsIZipReader);
   zipReader.open(packageFile);
 
-  var entryNames = [];
-  var entries = zipReader.findEntries(null);
-  while (entries.hasMore()) {
-    var entry = entries.getNext();
-    entryNames.push(entry);
-  }
+  var entryNames = Array.from(zipReader.findEntries(null));
   entryNames.sort();
 
   for (var entryName of entryNames) {

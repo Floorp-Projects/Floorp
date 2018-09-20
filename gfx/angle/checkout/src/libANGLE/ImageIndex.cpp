@@ -56,6 +56,9 @@ TextureTarget TextureTypeToTarget(TextureType type, GLint layerIndex)
 {
     if (type == TextureType::CubeMap)
     {
+        // As GL_TEXTURE_CUBE_MAP cannot be a texture target in texImage*D APIs, so we don't allow
+        // an entire cube map to have a texture target.
+        ASSERT(layerIndex != ImageIndex::kEntireLevel);
         return CubeFaceIndexToTextureTarget(layerIndex);
     }
     else
@@ -79,11 +82,24 @@ bool ImageIndex::hasLayer() const
     return mLayerIndex != kEntireLevel;
 }
 
+bool ImageIndex::isLayered() const
+{
+    switch (mType)
+    {
+        case TextureType::_2DArray:
+        case TextureType::CubeMap:
+        case TextureType::_3D:
+            return mLayerIndex == kEntireLevel;
+        default:
+            return false;
+    }
+}
+
 bool ImageIndex::has3DLayer() const
 {
     // It's quicker to check != CubeMap than calling usesTex3D, which checks multiple types. This
     // ASSERT validates the check gives the same result.
-    ASSERT(!hasLayer() || (mType != TextureType::CubeMap == usesTex3D()));
+    ASSERT(!hasLayer() || ((mType != TextureType::CubeMap) == usesTex3D()));
     return (hasLayer() && mType != TextureType::CubeMap);
 }
 
@@ -109,6 +125,11 @@ bool ImageIndex::valid() const
     return mType != TextureType::InvalidEnum;
 }
 
+bool ImageIndex::isEntireLevelCubeMap() const
+{
+    return mType == TextureType::CubeMap && mLayerIndex == ImageIndex::kEntireLevel;
+}
+
 ImageIndex ImageIndex::Make2D(GLint levelIndex)
 {
     return ImageIndex(TextureType::_2D, levelIndex, kEntireLevel, 1);
@@ -119,9 +140,9 @@ ImageIndex ImageIndex::MakeRectangle(GLint levelIndex)
     return ImageIndex(TextureType::Rectangle, levelIndex, kEntireLevel, 1);
 }
 
-ImageIndex ImageIndex::MakeCube(TextureTarget target, GLint levelIndex)
+ImageIndex ImageIndex::MakeCubeMapFace(TextureTarget target, GLint levelIndex)
 {
-    ASSERT(TextureTargetToType(target) == TextureType::CubeMap);
+    ASSERT(IsCubeMapFaceTarget(target));
     return ImageIndex(TextureType::CubeMap, levelIndex, TextureTargetToLayer(target), 1);
 }
 

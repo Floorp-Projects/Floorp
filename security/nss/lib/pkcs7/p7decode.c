@@ -16,7 +16,7 @@
                     /* include should be removed! */
 /*#include "cdbhdl.h" */
 #include "cryptohi.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secasn1.h"
 #include "secitem.h"
 #include "secoid.h"

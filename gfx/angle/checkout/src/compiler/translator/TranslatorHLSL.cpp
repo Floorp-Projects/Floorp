@@ -14,6 +14,7 @@
 #include "compiler/translator/tree_ops/ExpandIntegerPowExpressions.h"
 #include "compiler/translator/tree_ops/PruneEmptyCases.h"
 #include "compiler/translator/tree_ops/RemoveDynamicIndexing.h"
+#include "compiler/translator/tree_ops/RewriteAtomicFunctionExpressions.h"
 #include "compiler/translator/tree_ops/RewriteElseBlocks.h"
 #include "compiler/translator/tree_ops/RewriteTexelFetchOffset.h"
 #include "compiler/translator/tree_ops/RewriteUnaryMinusOperatorInt.h"
@@ -126,9 +127,15 @@ void TranslatorHLSL::translate(TIntermBlock *root,
         sh::RewriteUnaryMinusOperatorInt(root);
     }
 
+    if (getShaderVersion() >= 310)
+    {
+        sh::RewriteAtomicFunctionExpressions(root, &getSymbolTable());
+    }
+
     sh::OutputHLSL outputHLSL(getShaderType(), getShaderVersion(), getExtensionBehavior(),
                               getSourcePath(), getOutputType(), numRenderTargets, getUniforms(),
-                              compileOptions, &getSymbolTable(), perfDiagnostics);
+                              compileOptions, getComputeShaderLocalSize(), &getSymbolTable(),
+                              perfDiagnostics);
 
     outputHLSL.output(root, getInfoSink().obj);
 

@@ -1,12 +1,6 @@
 # META: timeout=long
 
-from tests.actions.support.refine import get_keys, filter_dict, get_events
-
-
-def test_perform_no_actions_send_no_events(session, key_reporter, key_chain):
-    key_chain.perform()
-    assert len(get_keys(key_reporter)) == 0
-    assert len(get_events(session)) == 0
+from tests.release_actions.support.refine import filter_dict, get_events, get_keys
 
 
 def test_release_no_actions_sends_no_events(session, key_reporter):

@@ -109,9 +109,12 @@ class TParseContext : angle::NonCopyable
                            int vecSize,
                            TVector<int> *fieldOffsets);
 
-    void assignError(const TSourceLoc &line, const char *op, TString left, TString right);
-    void unaryOpError(const TSourceLoc &line, const char *op, TString operand);
-    void binaryOpError(const TSourceLoc &line, const char *op, TString left, TString right);
+    void assignError(const TSourceLoc &line, const char *op, const TType &left, const TType &right);
+    void unaryOpError(const TSourceLoc &line, const char *op, const TType &operand);
+    void binaryOpError(const TSourceLoc &line,
+                       const char *op,
+                       const TType &left,
+                       const TType &right);
 
     // Check functions - the ones that return bool return false if an error was generated.
 

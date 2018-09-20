@@ -1,10 +1,12 @@
 # META: timeout=long
 
 import pytest
-import time
-from tests.actions.support.keys import ALL_EVENTS, Keys
-from tests.actions.support.refine import filter_dict, get_keys, get_events
+
 from webdriver import error
+
+from tests.perform_actions.support.keys import ALL_EVENTS, Keys
+from tests.perform_actions.support.refine import filter_dict, get_events, get_keys
+
 
 @pytest.mark.parametrize("name,expected", ALL_EVENTS.items())
 def test_webdriver_special_key_sends_keydown(session,

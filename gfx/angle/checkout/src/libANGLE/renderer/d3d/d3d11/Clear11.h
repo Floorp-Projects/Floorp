@@ -38,9 +38,9 @@ class Clear11 : angle::NonCopyable
     ~Clear11();
 
     // Clears the framebuffer with the supplied clear parameters, assumes that the framebuffer is currently applied.
-    gl::Error clearFramebuffer(const gl::Context *context,
-                               const ClearParameters &clearParams,
-                               const gl::FramebufferState &fboData);
+    angle::Result clearFramebuffer(const gl::Context *context,
+                                   const ClearParameters &clearParams,
+                                   const gl::FramebufferState &fboData);
 
   private:
     class ShaderManager final : angle::NonCopyable
@@ -48,14 +48,15 @@ class Clear11 : angle::NonCopyable
       public:
         ShaderManager();
         ~ShaderManager();
-        gl::Error getShadersAndLayout(Renderer11 *renderer,
-                                      const INT clearType,
-                                      const uint32_t numRTs,
-                                      const bool hasLayeredLayout,
-                                      const d3d11::InputLayout **il,
-                                      const d3d11::VertexShader **vs,
-                                      const d3d11::GeometryShader **gs,
-                                      const d3d11::PixelShader **ps);
+        angle::Result getShadersAndLayout(const gl::Context *context,
+                                          Renderer11 *renderer,
+                                          const INT clearType,
+                                          const uint32_t numRTs,
+                                          const bool hasLayeredLayout,
+                                          const d3d11::InputLayout **il,
+                                          const d3d11::VertexShader **vs,
+                                          const d3d11::GeometryShader **gs,
+                                          const d3d11::PixelShader **ps);
 
       private:
         constexpr static size_t kNumShaders = D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT;
@@ -73,9 +74,9 @@ class Clear11 : angle::NonCopyable
     };
 
     bool useVertexBuffer() const;
-    gl::Error ensureConstantBufferCreated();
-    gl::Error ensureVertexBufferCreated();
-    gl::Error ensureResourcesInitialized();
+    angle::Result ensureConstantBufferCreated(const gl::Context *context);
+    angle::Result ensureVertexBufferCreated(const gl::Context *context);
+    angle::Result ensureResourcesInitialized(const gl::Context *context);
 
     Renderer11 *mRenderer;
     bool mResourcesInitialized;

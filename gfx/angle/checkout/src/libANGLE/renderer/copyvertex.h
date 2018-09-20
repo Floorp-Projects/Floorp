@@ -4,15 +4,17 @@
 // found in the LICENSE file.
 //
 
-// copyvertex.h: Defines D3D11 vertex buffer copying and conversion functions
+// copyvertex.h: Defines vertex buffer copying and conversion functions
 
-#ifndef LIBANGLE_RENDERER_D3D_D3D11_COPYVERTEX_H_
-#define LIBANGLE_RENDERER_D3D_D3D11_COPYVERTEX_H_
+#ifndef LIBANGLE_RENDERER_COPYVERTEX_H_
+#define LIBANGLE_RENDERER_COPYVERTEX_H_
 
 #include "common/mathutil.h"
 
 namespace rx
 {
+
+using VertexCopyFunction = void (*)(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
 
 // 'alphaDefaultValueBits' gives the default value for the alpha channel (4th component)
 template <typename T, size_t inputComponentCount, size_t outputComponentCount, uint32_t alphaDefaultValueBits>
@@ -35,6 +37,6 @@ inline void CopyXYZ10W2ToXYZW32FVertexData(const uint8_t *input, size_t stride, 
 
 }
 
-#include "copyvertex.inl"
+#include "copyvertex.inc"
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_COPYVERTEX_H_
+#endif // LIBANGLE_RENDERER_COPYVERTEX_H_

@@ -6,7 +6,7 @@
 #define _P12_H_
 
 #include "secoid.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secpkcs7.h"
 #include "p12t.h"
 

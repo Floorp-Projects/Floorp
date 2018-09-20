@@ -9,7 +9,90 @@
 #include "nsSimpleEnumerator.h"
 #include "nsSupportsPrimitives.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/dom/IteratorResultBinding.h"
+#include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsTArray.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
+namespace {
+
+class JSStringEnumerator final : public nsIJSEnumerator
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIJSENUMERATOR
+
+  explicit JSStringEnumerator(nsIStringEnumerator* aEnumerator)
+    : mEnumerator(do_QueryInterface(aEnumerator))
+  {
+    MOZ_ASSERT(mEnumerator);
+  }
+
+private:
+  ~JSStringEnumerator() = default;
+
+  nsCOMPtr<nsIStringEnumerator> mEnumerator;
+};
+
+} // anonymous namespace
+
+nsresult
+JSStringEnumerator::Iterator(nsIJSEnumerator** aResult)
+{
+  RefPtr<JSStringEnumerator> result(this);
+  result.forget(aResult);
+  return NS_OK;
+}
+
+nsresult
+JSStringEnumerator::Next(JSContext* aCx, JS::MutableHandleValue aResult)
+{
+  RootedDictionary<IteratorResult> result(aCx);
+
+  nsAutoString elem;
+  if (NS_FAILED(mEnumerator->GetNext(elem))) {
+    result.mDone = true;
+  } else {
+    result.mDone = false;
+
+    if (!ToJSValue(aCx, elem,
+                   JS::MutableHandleValue::fromMarkedLocation(&result.mValue))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  if (!ToJSValue(aCx, result, aResult)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(JSStringEnumerator, nsIJSEnumerator)
+
+//
+// nsStringEnumeratorBase
+//
+
+nsresult
+nsStringEnumeratorBase::GetNext(nsAString& aResult)
+{
+  nsAutoCString str;
+  MOZ_TRY(GetNext(str));
+
+  CopyUTF8toUTF16(str, aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStringEnumeratorBase::StringIterator(nsIJSEnumerator** aRetVal)
+{
+  auto result = MakeRefPtr<JSStringEnumerator>(this);
+  result.forget(aRetVal);
+  return NS_OK;
+}
 
 //
 // nsStringEnumerator
@@ -53,6 +136,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIUTF8STRINGENUMERATOR
+  NS_DECL_NSISTRINGENUMERATORBASE
 
   // have to declare nsIStringEnumerator manually, because of
   // overlapping method names
@@ -179,6 +263,14 @@ nsStringEnumerator::GetNext(nsACString& aResult)
     aResult = mCArray->ElementAt(mIndex++);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStringEnumerator::StringIterator(nsIJSEnumerator** aRetVal)
+{
+  auto result = MakeRefPtr<JSStringEnumerator>(this);
+  result.forget(aRetVal);
   return NS_OK;
 }
 

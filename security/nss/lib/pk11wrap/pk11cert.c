@@ -15,7 +15,7 @@
 #include "cert.h"
 #include "certi.h"
 #include "secitem.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secoid.h"
 #include "pkcs7t.h"
 #include "cmsreclist.h"

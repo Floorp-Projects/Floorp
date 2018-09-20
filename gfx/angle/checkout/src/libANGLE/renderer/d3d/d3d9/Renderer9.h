@@ -79,8 +79,8 @@ class Renderer9 : public RendererD3D
     void startScene();
     void endScene();
 
-    gl::Error flush();
-    gl::Error finish();
+    angle::Result flush(const gl::Context *context);
+    angle::Result finish(const gl::Context *context);
 
     bool isValidNativeWindow(EGLNativeWindowType window) const override;
     NativeWindowD3D *createNativeWindow(EGLNativeWindowType window,
@@ -105,63 +105,66 @@ class Renderer9 : public RendererD3D
 
     ContextImpl *createContext(const gl::ContextState &state) override;
 
-    gl::Error allocateEventQuery(IDirect3DQuery9 **outQuery);
+    angle::Result allocateEventQuery(const gl::Context *context, IDirect3DQuery9 **outQuery);
     void freeEventQuery(IDirect3DQuery9 *query);
 
     // resource creation
-    gl::Error createVertexShader(const DWORD *function,
-                                 size_t length,
-                                 IDirect3DVertexShader9 **outShader);
-    gl::Error createPixelShader(const DWORD *function,
-                                size_t length,
-                                IDirect3DPixelShader9 **outShader);
+    angle::Result createVertexShader(Context9 *context9,
+                                     const DWORD *function,
+                                     size_t length,
+                                     IDirect3DVertexShader9 **outShader);
+    angle::Result createPixelShader(Context9 *context9,
+                                    const DWORD *function,
+                                    size_t length,
+                                    IDirect3DPixelShader9 **outShader);
     HRESULT createVertexBuffer(UINT Length, DWORD Usage, IDirect3DVertexBuffer9 **ppVertexBuffer);
     HRESULT createIndexBuffer(UINT Length,
                               DWORD Usage,
                               D3DFORMAT Format,
                               IDirect3DIndexBuffer9 **ppIndexBuffer);
-    gl::Error setSamplerState(const gl::Context *context,
-                              gl::ShaderType type,
-                              int index,
-                              gl::Texture *texture,
-                              const gl::SamplerState &sampler);
-    gl::Error setTexture(const gl::Context *context,
-                         gl::ShaderType type,
-                         int index,
-                         gl::Texture *texture);
+    angle::Result setSamplerState(const gl::Context *context,
+                                  gl::ShaderType type,
+                                  int index,
+                                  gl::Texture *texture,
+                                  const gl::SamplerState &sampler);
+    angle::Result setTexture(const gl::Context *context,
+                             gl::ShaderType type,
+                             int index,
+                             gl::Texture *texture);
 
-    gl::Error updateState(const gl::Context *context, GLenum drawMode);
+    angle::Result updateState(const gl::Context *context, gl::PrimitiveMode drawMode);
 
     void setScissorRectangle(const gl::Rectangle &scissor, bool enabled);
     void setViewport(const gl::Rectangle &viewport,
                      float zNear,
                      float zFar,
-                     GLenum drawMode,
+                     gl::PrimitiveMode drawMode,
                      GLenum frontFace,
                      bool ignoreViewport);
 
-    gl::Error applyRenderTarget(const gl::Context *context,
-                                const RenderTarget9 *colorRenderTarget,
-                                const RenderTarget9 *depthStencilRenderTarget);
-    gl::Error applyUniforms(ProgramD3D *programD3D);
-    bool applyPrimitiveType(GLenum primitiveType, GLsizei elementCount, bool usesPointSize);
-    gl::Error applyVertexBuffer(const gl::Context *context,
-                                GLenum mode,
-                                GLint first,
-                                GLsizei count,
-                                GLsizei instances,
-                                TranslatedIndexData *indexInfo);
-    gl::Error applyIndexBuffer(const gl::Context *context,
-                               const void *indices,
-                               GLsizei count,
-                               GLenum mode,
-                               GLenum type,
-                               TranslatedIndexData *indexInfo);
+    angle::Result applyRenderTarget(const gl::Context *context,
+                                    const RenderTarget9 *colorRenderTarget,
+                                    const RenderTarget9 *depthStencilRenderTarget);
+    void applyUniforms(ProgramD3D *programD3D);
+    bool applyPrimitiveType(gl::PrimitiveMode primitiveType,
+                            GLsizei elementCount,
+                            bool usesPointSize);
+    angle::Result applyVertexBuffer(const gl::Context *context,
+                                    gl::PrimitiveMode mode,
+                                    GLint first,
+                                    GLsizei count,
+                                    GLsizei instances,
+                                    TranslatedIndexData *indexInfo);
+    angle::Result applyIndexBuffer(const gl::Context *context,
+                                   const void *indices,
+                                   GLsizei count,
+                                   gl::PrimitiveMode mode,
+                                   GLenum type,
+                                   TranslatedIndexData *indexInfo);
 
-    gl::Error clear(const gl::Context *context,
-                    const ClearParameters &clearParams,
-                    const RenderTarget9 *colorRenderTarget,
-                    const RenderTarget9 *depthStencilRenderTarget);
+    void clear(const ClearParameters &clearParams,
+               const RenderTarget9 *colorRenderTarget,
+               const RenderTarget9 *depthStencilRenderTarget);
 
     void markAllStateDirty();
 
@@ -188,95 +191,102 @@ class Renderer9 : public RendererD3D
     DWORD getCapsDeclTypes() const;
 
     // Pixel operations
-    gl::Error copyImage2D(const gl::Context *context,
-                          const gl::Framebuffer *framebuffer,
-                          const gl::Rectangle &sourceRect,
-                          GLenum destFormat,
-                          const gl::Offset &destOffset,
-                          TextureStorage *storage,
-                          GLint level) override;
-    gl::Error copyImageCube(const gl::Context *context,
-                            const gl::Framebuffer *framebuffer,
-                            const gl::Rectangle &sourceRect,
-                            GLenum destFormat,
-                            const gl::Offset &destOffset,
-                            TextureStorage *storage,
-                            gl::TextureTarget target,
-                            GLint level) override;
-    gl::Error copyImage3D(const gl::Context *context,
-                          const gl::Framebuffer *framebuffer,
-                          const gl::Rectangle &sourceRect,
-                          GLenum destFormat,
-                          const gl::Offset &destOffset,
-                          TextureStorage *storage,
-                          GLint level) override;
-    gl::Error copyImage2DArray(const gl::Context *context,
-                               const gl::Framebuffer *framebuffer,
-                               const gl::Rectangle &sourceRect,
-                               GLenum destFormat,
-                               const gl::Offset &destOffset,
-                               TextureStorage *storage,
-                               GLint level) override;
+    angle::Result copyImage2D(const gl::Context *context,
+                              const gl::Framebuffer *framebuffer,
+                              const gl::Rectangle &sourceRect,
+                              GLenum destFormat,
+                              const gl::Offset &destOffset,
+                              TextureStorage *storage,
+                              GLint level) override;
+    angle::Result copyImageCube(const gl::Context *context,
+                                const gl::Framebuffer *framebuffer,
+                                const gl::Rectangle &sourceRect,
+                                GLenum destFormat,
+                                const gl::Offset &destOffset,
+                                TextureStorage *storage,
+                                gl::TextureTarget target,
+                                GLint level) override;
+    angle::Result copyImage3D(const gl::Context *context,
+                              const gl::Framebuffer *framebuffer,
+                              const gl::Rectangle &sourceRect,
+                              GLenum destFormat,
+                              const gl::Offset &destOffset,
+                              TextureStorage *storage,
+                              GLint level) override;
+    angle::Result copyImage2DArray(const gl::Context *context,
+                                   const gl::Framebuffer *framebuffer,
+                                   const gl::Rectangle &sourceRect,
+                                   GLenum destFormat,
+                                   const gl::Offset &destOffset,
+                                   TextureStorage *storage,
+                                   GLint level) override;
 
-    gl::Error copyTexture(const gl::Context *context,
-                          const gl::Texture *source,
-                          GLint sourceLevel,
-                          const gl::Rectangle &sourceRect,
-                          GLenum destFormat,
-                          GLenum destType,
-                          const gl::Offset &destOffset,
-                          TextureStorage *storage,
-                          gl::TextureTarget destTarget,
-                          GLint destLevel,
-                          bool unpackFlipY,
-                          bool unpackPremultiplyAlpha,
-                          bool unpackUnmultiplyAlpha) override;
-    gl::Error copyCompressedTexture(const gl::Context *context,
-                                    const gl::Texture *source,
-                                    GLint sourceLevel,
-                                    TextureStorage *storage,
-                                    GLint destLevel) override;
+    angle::Result copyTexture(const gl::Context *context,
+                              const gl::Texture *source,
+                              GLint sourceLevel,
+                              const gl::Rectangle &sourceRect,
+                              GLenum destFormat,
+                              GLenum destType,
+                              const gl::Offset &destOffset,
+                              TextureStorage *storage,
+                              gl::TextureTarget destTarget,
+                              GLint destLevel,
+                              bool unpackFlipY,
+                              bool unpackPremultiplyAlpha,
+                              bool unpackUnmultiplyAlpha) override;
+    angle::Result copyCompressedTexture(const gl::Context *context,
+                                        const gl::Texture *source,
+                                        GLint sourceLevel,
+                                        TextureStorage *storage,
+                                        GLint destLevel) override;
 
     // RenderTarget creation
-    gl::Error createRenderTarget(int width,
-                                 int height,
-                                 GLenum format,
-                                 GLsizei samples,
-                                 RenderTargetD3D **outRT) override;
-    gl::Error createRenderTargetCopy(RenderTargetD3D *source, RenderTargetD3D **outRT) override;
+    angle::Result createRenderTarget(const gl::Context *context,
+                                     int width,
+                                     int height,
+                                     GLenum format,
+                                     GLsizei samples,
+                                     RenderTargetD3D **outRT) override;
+    angle::Result createRenderTargetCopy(const gl::Context *context,
+                                         RenderTargetD3D *source,
+                                         RenderTargetD3D **outRT) override;
 
     // Shader operations
-    gl::Error loadExecutable(const uint8_t *function,
-                             size_t length,
-                             gl::ShaderType type,
-                             const std::vector<D3DVarying> &streamOutVaryings,
-                             bool separatedOutputBuffers,
-                             ShaderExecutableD3D **outExecutable) override;
-    gl::Error compileToExecutable(gl::InfoLog &infoLog,
-                                  const std::string &shaderHLSL,
-                                  gl::ShaderType type,
-                                  const std::vector<D3DVarying> &streamOutVaryings,
-                                  bool separatedOutputBuffers,
-                                  const angle::CompilerWorkaroundsD3D &workarounds,
-                                  ShaderExecutableD3D **outExectuable) override;
-    gl::Error ensureHLSLCompilerInitialized() override;
+    angle::Result loadExecutable(const gl::Context *context,
+                                 const uint8_t *function,
+                                 size_t length,
+                                 gl::ShaderType type,
+                                 const std::vector<D3DVarying> &streamOutVaryings,
+                                 bool separatedOutputBuffers,
+                                 ShaderExecutableD3D **outExecutable) override;
+    angle::Result compileToExecutable(const gl::Context *context,
+                                      gl::InfoLog &infoLog,
+                                      const std::string &shaderHLSL,
+                                      gl::ShaderType type,
+                                      const std::vector<D3DVarying> &streamOutVaryings,
+                                      bool separatedOutputBuffers,
+                                      const angle::CompilerWorkaroundsD3D &workarounds,
+                                      ShaderExecutableD3D **outExectuable) override;
+    angle::Result ensureHLSLCompilerInitialized(const gl::Context *context) override;
 
     UniformStorageD3D *createUniformStorage(size_t storageSize) override;
 
     // Image operations
     ImageD3D *createImage() override;
-    gl::Error generateMipmap(const gl::Context *context, ImageD3D *dest, ImageD3D *source) override;
-    gl::Error generateMipmapUsingD3D(const gl::Context *context,
-                                     TextureStorage *storage,
-                                     const gl::TextureState &textureState) override;
-    gl::Error copyImage(const gl::Context *context,
-                        ImageD3D *dest,
-                        ImageD3D *source,
-                        const gl::Rectangle &sourceRect,
-                        const gl::Offset &destOffset,
-                        bool unpackFlipY,
-                        bool unpackPremultiplyAlpha,
-                        bool unpackUnmultiplyAlpha) override;
+    angle::Result generateMipmap(const gl::Context *context,
+                                 ImageD3D *dest,
+                                 ImageD3D *source) override;
+    angle::Result generateMipmapUsingD3D(const gl::Context *context,
+                                         TextureStorage *storage,
+                                         const gl::TextureState &textureState) override;
+    angle::Result copyImage(const gl::Context *context,
+                            ImageD3D *dest,
+                            ImageD3D *source,
+                            const gl::Rectangle &sourceRect,
+                            const gl::Offset &destOffset,
+                            bool unpackFlipY,
+                            bool unpackPremultiplyAlpha,
+                            bool unpackUnmultiplyAlpha) override;
     TextureStorage *createTextureStorage2D(SwapChainD3D *swapChain) override;
     TextureStorage *createTextureStorageEGLImage(EGLImageD3D *eglImage,
                                                  RenderTargetD3D *renderTargetD3D) override;
@@ -324,16 +334,16 @@ class Renderer9 : public RendererD3D
 
     // Buffer-to-texture and Texture-to-buffer copies
     bool supportsFastCopyBufferToTexture(GLenum internalFormat) const override;
-    gl::Error fastCopyBufferToTexture(const gl::Context *context,
-                                      const gl::PixelUnpackState &unpack,
-                                      unsigned int offset,
-                                      RenderTargetD3D *destRenderTarget,
-                                      GLenum destinationFormat,
-                                      GLenum sourcePixelsType,
-                                      const gl::Box &destArea) override;
+    angle::Result fastCopyBufferToTexture(const gl::Context *context,
+                                          const gl::PixelUnpackState &unpack,
+                                          unsigned int offset,
+                                          RenderTargetD3D *destRenderTarget,
+                                          GLenum destinationFormat,
+                                          GLenum sourcePixelsType,
+                                          const gl::Box &destArea) override;
 
     // D3D9-renderer specific methods
-    gl::Error boxFilter(IDirect3DSurface9 *source, IDirect3DSurface9 *dest);
+    angle::Result boxFilter(Context9 *context9, IDirect3DSurface9 *source, IDirect3DSurface9 *dest);
 
     D3DPOOL getTexturePool(DWORD usage) const;
 
@@ -344,14 +354,17 @@ class Renderer9 : public RendererD3D
 
     // Warning: you should ensure binding really matches attrib.bindingIndex before using this
     // function.
-    gl::ErrorOrResult<unsigned int> getVertexSpaceRequired(const gl::VertexAttribute &attrib,
-                                                           const gl::VertexBinding &binding,
-                                                           size_t count,
-                                                           GLsizei instances) const override;
+    angle::Result getVertexSpaceRequired(const gl::Context *context,
+                                         const gl::VertexAttribute &attrib,
+                                         const gl::VertexBinding &binding,
+                                         size_t count,
+                                         GLsizei instances,
+                                         unsigned int *bytesRequiredOut) const override;
 
-    gl::Error copyToRenderTarget(IDirect3DSurface9 *dest,
-                                 IDirect3DSurface9 *source,
-                                 bool fromManaged);
+    angle::Result copyToRenderTarget(const gl::Context *context,
+                                     IDirect3DSurface9 *dest,
+                                     IDirect3DSurface9 *source,
+                                     bool fromManaged);
 
     RendererClass getRendererClass() const override;
 
@@ -361,18 +374,18 @@ class Renderer9 : public RendererD3D
 
     StateManager9 *getStateManager() { return &mStateManager; }
 
-    gl::Error genericDrawArrays(const gl::Context *context,
-                                GLenum mode,
-                                GLint first,
-                                GLsizei count,
-                                GLsizei instances);
+    angle::Result genericDrawArrays(const gl::Context *context,
+                                    gl::PrimitiveMode mode,
+                                    GLint first,
+                                    GLsizei count,
+                                    GLsizei instances);
 
-    gl::Error genericDrawElements(const gl::Context *context,
-                                  GLenum mode,
-                                  GLsizei count,
-                                  GLenum type,
-                                  const void *indices,
-                                  GLsizei instances);
+    angle::Result genericDrawElements(const gl::Context *context,
+                                      gl::PrimitiveMode mode,
+                                      GLsizei count,
+                                      GLenum type,
+                                      const void *indices,
+                                      GLsizei instances);
 
     // Necessary hack for default framebuffers in D3D.
     FramebufferImpl *createDefaultFramebuffer(const gl::FramebufferState &state) override;
@@ -381,30 +394,37 @@ class Renderer9 : public RendererD3D
 
     gl::Version getMaxSupportedESVersion() const override;
 
-    gl::Error clearRenderTarget(RenderTargetD3D *renderTarget,
-                                const gl::ColorF &clearColorValue,
-                                const float clearDepthValue,
-                                const unsigned int clearStencilValue) override;
+    angle::Result clearRenderTarget(const gl::Context *context,
+                                    RenderTargetD3D *renderTarget,
+                                    const gl::ColorF &clearColorValue,
+                                    const float clearDepthValue,
+                                    const unsigned int clearStencilValue) override;
 
     bool canSelectViewInVertexShader() const override;
 
+    angle::Result getIncompleteTexture(const gl::Context *context,
+                                       gl::TextureType type,
+                                       gl::Texture **textureOut) override;
+
+    angle::Result ensureVertexDataManagerInitialized(const gl::Context *context);
+
   private:
-    gl::Error drawArraysImpl(const gl::Context *context,
-                             GLenum mode,
-                             GLint startVertex,
-                             GLsizei count,
-                             GLsizei instances);
-    gl::Error drawElementsImpl(const gl::Context *context,
-                               GLenum mode,
-                               GLsizei count,
-                               GLenum type,
-                               const void *indices,
-                               GLsizei instances);
+    angle::Result drawArraysImpl(const gl::Context *context,
+                                 gl::PrimitiveMode mode,
+                                 GLint startVertex,
+                                 GLsizei count,
+                                 GLsizei instances);
+    angle::Result drawElementsImpl(const gl::Context *context,
+                                   gl::PrimitiveMode mode,
+                                   GLsizei count,
+                                   GLenum type,
+                                   const void *indices,
+                                   GLsizei instances);
 
-    gl::Error applyShaders(const gl::Context *context, GLenum drawMode);
+    angle::Result applyShaders(const gl::Context *context, gl::PrimitiveMode drawMode);
 
-    gl::Error applyTextures(const gl::Context *context);
-    gl::Error applyTextures(const gl::Context *context, gl::ShaderType shaderType);
+    angle::Result applyTextures(const gl::Context *context);
+    angle::Result applyTextures(const gl::Context *context, gl::ShaderType shaderType);
 
     void generateCaps(gl::Caps *outCaps,
                       gl::TextureCapsMap *outTextureCaps,
@@ -413,7 +433,7 @@ class Renderer9 : public RendererD3D
 
     angle::WorkaroundsD3D generateWorkarounds() const override;
 
-    gl::Error setBlendDepthRasterStates(const gl::Context *context, GLenum drawMode);
+    angle::Result setBlendDepthRasterStates(const gl::Context *context, gl::PrimitiveMode drawMode);
 
     void release();
 
@@ -421,24 +441,26 @@ class Renderer9 : public RendererD3D
     void applyUniformniv(const D3DUniform *targetUniform, const GLint *v);
     void applyUniformnbv(const D3DUniform *targetUniform, const GLint *v);
 
-    gl::Error drawLineLoop(const gl::Context *context,
-                           GLsizei count,
-                           GLenum type,
-                           const void *indices,
-                           int minIndex,
-                           gl::Buffer *elementArrayBuffer);
-    gl::Error drawIndexedPoints(const gl::Context *context,
-                                GLsizei count,
-                                GLenum type,
-                                const void *indices,
-                                int minIndex,
-                                gl::Buffer *elementArrayBuffer);
+    angle::Result drawLineLoop(const gl::Context *context,
+                               GLsizei count,
+                               GLenum type,
+                               const void *indices,
+                               int minIndex,
+                               gl::Buffer *elementArrayBuffer);
+    angle::Result drawIndexedPoints(const gl::Context *context,
+                                    GLsizei count,
+                                    GLenum type,
+                                    const void *indices,
+                                    int minIndex,
+                                    gl::Buffer *elementArrayBuffer);
 
-    gl::Error getCountingIB(size_t count, StaticIndexBufferInterface **outIB);
+    angle::Result getCountingIB(const gl::Context *context,
+                                size_t count,
+                                StaticIndexBufferInterface **outIB);
 
-    gl::Error getNullColorRenderTarget(const gl::Context *context,
-                                       const RenderTarget9 *depthRenderTarget,
-                                       const RenderTarget9 **outColorRenderTarget);
+    angle::Result getNullColorRenderTarget(const gl::Context *context,
+                                           const RenderTarget9 *depthRenderTarget,
+                                           const RenderTarget9 **outColorRenderTarget);
 
     D3DPOOL getBufferPool(DWORD usage) const;
 

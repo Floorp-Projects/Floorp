@@ -9,7 +9,9 @@
 #ifndef LIBANGLE_VALIDATIONEGL_H_
 #define LIBANGLE_VALIDATIONEGL_H_
 
+#include "common/PackedEnums.h"
 #include "libANGLE/Error.h"
+#include "libANGLE/Texture.h"
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -30,6 +32,8 @@ class Display;
 class Image;
 class Stream;
 class Surface;
+class Thread;
+class LabeledObject;
 
 // Object validation
 Error ValidateDisplay(const Display *display);
@@ -37,17 +41,44 @@ Error ValidateSurface(const Display *display, const Surface *surface);
 Error ValidateConfig(const Display *display, const Config *config);
 Error ValidateContext(const Display *display, const gl::Context *context);
 Error ValidateImage(const Display *display, const Image *image);
+Error ValidateDevice(const Device *device);
+
+// Return the requested object only if it is valid (otherwise nullptr)
+const Thread *GetThreadIfValid(const Thread *thread);
+const Display *GetDisplayIfValid(const Display *display);
+const Surface *GetSurfaceIfValid(const Display *display, const Surface *surface);
+const Image *GetImageIfValid(const Display *display, const Image *image);
+const Stream *GetStreamIfValid(const Display *display, const Stream *stream);
+const gl::Context *GetContextIfValid(const Display *display, const gl::Context *context);
+const Device *GetDeviceIfValid(const Device *device);
+LabeledObject *GetLabeledObjectIfValid(Thread *thread,
+                                       const Display *display,
+                                       ObjectType objectType,
+                                       EGLObjectKHR object);
 
 // Entry point validation
-Error ValidateCreateContext(Display *display, Config *configuration, gl::Context *shareContext,
-                            const AttributeMap& attributes);
+Error ValidateInitialize(const Display *display);
 
-Error ValidateCreateWindowSurface(Display *display, Config *config, EGLNativeWindowType window,
-                                  const AttributeMap& attributes);
+Error ValidateTerminate(const Display *display);
 
-Error ValidateCreatePbufferSurface(Display *display, Config *config, const AttributeMap& attributes);
-Error ValidateCreatePbufferFromClientBuffer(Display *display, EGLenum buftype, EGLClientBuffer buffer,
-                                            Config *config, const AttributeMap& attributes);
+Error ValidateCreateContext(Display *display,
+                            Config *configuration,
+                            gl::Context *shareContext,
+                            const AttributeMap &attributes);
+
+Error ValidateCreateWindowSurface(Display *display,
+                                  Config *config,
+                                  EGLNativeWindowType window,
+                                  const AttributeMap &attributes);
+
+Error ValidateCreatePbufferSurface(Display *display,
+                                   Config *config,
+                                   const AttributeMap &attributes);
+Error ValidateCreatePbufferFromClientBuffer(Display *display,
+                                            EGLenum buftype,
+                                            EGLClientBuffer buffer,
+                                            Config *config,
+                                            const AttributeMap &attributes);
 
 Error ValidateMakeCurrent(Display *display, Surface *draw, Surface *read, gl::Context *context);
 
@@ -104,10 +135,44 @@ Error ValidateGetSyncValuesCHROMIUM(const Display *display,
                                     const EGLuint64KHR *msc,
                                     const EGLuint64KHR *sbc);
 
-Error ValidateSwapBuffersWithDamageEXT(const Display *display,
+Error ValidateDestroySurface(const Display *display,
+                             const Surface *surface,
+                             const EGLSurface eglSurface);
+
+Error ValidateDestroyContext(const Display *display,
+                             const gl::Context *glCtx,
+                             const EGLContext eglCtx);
+
+Error ValidateSwapBuffers(Thread *thread, const Display *display, const Surface *surface);
+
+Error ValidateWaitNative(const Display *display, const EGLint engine);
+
+Error ValidateCopyBuffers(Display *display, const Surface *surface);
+
+Error ValidateSwapBuffersWithDamageKHR(const Display *display,
                                        const Surface *surface,
                                        EGLint *rects,
                                        EGLint n_rects);
+
+Error ValidateBindTexImage(const Display *display,
+                           const Surface *surface,
+                           const EGLSurface eglSurface,
+                           const EGLint buffer,
+                           const gl::Context *context,
+                           gl::Texture **textureObject);
+
+Error ValidateReleaseTexImage(const Display *display,
+                              const Surface *surface,
+                              const EGLSurface eglSurface,
+                              const EGLint buffer);
+
+Error ValidateSwapInterval(const Display *display, const Surface *draw_surface);
+
+Error ValidateBindAPI(const EGLenum api);
+
+Error ValidatePresentationTimeANDROID(const Display *display,
+                                      const Surface *surface,
+                                      EGLnsecsANDROID time);
 
 Error ValidateGetConfigAttrib(const Display *display, const Config *config, EGLint attribute);
 Error ValidateChooseConfig(const Display *display,
@@ -129,6 +194,14 @@ Error ValidateGetPlatformDisplay(EGLenum platform,
 Error ValidateGetPlatformDisplayEXT(EGLenum platform,
                                     void *native_display,
                                     const EGLint *attrib_list);
+Error ValidateCreatePlatformWindowSurfaceEXT(const Display *display,
+                                             const Config *configuration,
+                                             void *nativeWindow,
+                                             const AttributeMap &attributes);
+Error ValidateCreatePlatformPixmapSurfaceEXT(const Display *display,
+                                             const Config *configuration,
+                                             void *nativePixmap,
+                                             const AttributeMap &attributes);
 
 Error ValidateProgramCacheGetAttribANGLE(const Display *display, EGLenum attrib);
 
@@ -160,23 +233,34 @@ Error ValidateQueryContext(const Display *display,
                            EGLint attribute,
                            EGLint *value);
 
+// EGL_KHR_debug
+Error ValidateDebugMessageControlKHR(EGLDEBUGPROCKHR callback, const AttributeMap &attribs);
+
+Error ValidateQueryDebugKHR(EGLint attribute, EGLAttrib *value);
+
+Error ValidateLabelObjectKHR(Thread *thread,
+                             const Display *display,
+                             ObjectType objectType,
+                             EGLObjectKHR object,
+                             EGLLabelKHR label);
+
 }  // namespace egl
 
-#define ANGLE_EGL_TRY(THREAD, EXPR)                   \
-    {                                                 \
-        auto ANGLE_LOCAL_VAR = (EXPR);                \
-        if (ANGLE_LOCAL_VAR.isError())                \
-            return THREAD->setError(ANGLE_LOCAL_VAR); \
+#define ANGLE_EGL_TRY(THREAD, EXPR, FUNCNAME, LABELOBJECT)                               \
+    {                                                                                    \
+        auto ANGLE_LOCAL_VAR = (EXPR);                                                   \
+        if (ANGLE_LOCAL_VAR.isError())                                                   \
+            return THREAD->setError(ANGLE_LOCAL_VAR, GetDebug(), FUNCNAME, LABELOBJECT); \
     }
 
-#define ANGLE_EGL_TRY_RETURN(THREAD, EXPR, RETVAL) \
-    {                                              \
-        auto ANGLE_LOCAL_VAR = (EXPR);             \
-        if (ANGLE_LOCAL_VAR.isError())             \
-        {                                          \
-            THREAD->setError(ANGLE_LOCAL_VAR);     \
-            return RETVAL;                         \
-        }                                          \
+#define ANGLE_EGL_TRY_RETURN(THREAD, EXPR, FUNCNAME, LABELOBJECT, RETVAL)         \
+    {                                                                             \
+        auto ANGLE_LOCAL_VAR = (EXPR);                                            \
+        if (ANGLE_LOCAL_VAR.isError())                                            \
+        {                                                                         \
+            THREAD->setError(ANGLE_LOCAL_VAR, GetDebug(), FUNCNAME, LABELOBJECT); \
+            return RETVAL;                                                        \
+        }                                                                         \
     }
 
-#endif // LIBANGLE_VALIDATIONEGL_H_
+#endif  // LIBANGLE_VALIDATIONEGL_H_

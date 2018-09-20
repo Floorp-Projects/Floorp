@@ -14,11 +14,14 @@ namespace sh
 
 class TIntermBlock;
 class TVariable;
+class TIntermTyped;
 
 void ReplaceVariable(TIntermBlock *root,
                      const TVariable *toBeReplaced,
                      const TVariable *replacement);
-
+void ReplaceVariableWithTyped(TIntermBlock *root,
+                              const TVariable *toBeReplaced,
+                              const TIntermTyped *replacement);
 }  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TREEUTIL_REPLACEVARIABLE_H_

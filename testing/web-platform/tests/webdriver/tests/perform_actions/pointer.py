@@ -2,8 +2,8 @@ import pytest
 
 from webdriver.error import NoSuchWindowException
 
-from tests.actions.support.mouse import get_inview_center, get_viewport_rect
-from tests.actions.support.refine import get_events, filter_dict
+from tests.perform_actions.support.mouse import get_inview_center, get_viewport_rect
+from tests.perform_actions.support.refine import filter_dict, get_events
 from tests.support.asserts import assert_move_to_coordinates
 from tests.support.inline import inline
 from tests.support.wait import wait
@@ -16,9 +16,6 @@ def link_doc(dest):
 
 def test_null_response_value(session, mouse_chain):
     value = mouse_chain.click().perform()
-    assert value is None
-
-    value = session.actions.release()
     assert value is None
 
 
@@ -91,7 +88,7 @@ def test_click_element_center(session, test_actions_page, mouse_chain):
             assert e["target"] == "outer"
 
 
-def test_click_navigation(session, url, release_actions):
+def test_click_navigation(session, url):
     destination = url("/webdriver/tests/actions/support/test_actions_wdspec.html")
     start = link_doc(destination)
 

@@ -20,19 +20,19 @@ class Program;
 
 namespace rx
 {
-
 class VertexDeclarationCache
 {
   public:
     VertexDeclarationCache();
     ~VertexDeclarationCache();
 
-    gl::Error applyDeclaration(IDirect3DDevice9 *device,
-                               const std::vector<TranslatedAttribute> &attributes,
-                               gl::Program *program,
-                               GLint start,
-                               GLsizei instances,
-                               GLsizei *repeatDraw);
+    angle::Result applyDeclaration(const gl::Context *context,
+                                   IDirect3DDevice9 *device,
+                                   const std::vector<TranslatedAttribute> &attributes,
+                                   gl::Program *program,
+                                   GLint start,
+                                   GLsizei instances,
+                                   GLsizei *repeatDraw);
 
     void markStateDirty();
 

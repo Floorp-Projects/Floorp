@@ -176,11 +176,12 @@ void GL_APIENTRY DrawArraysIndirect(GLenum mode, const void *indirect)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawArraysIndirect>(mode, indirect);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawArraysIndirect>(modePacked, indirect);
 
-        if (context->skipValidation() || ValidateDrawArraysIndirect(context, mode, indirect))
+        if (context->skipValidation() || ValidateDrawArraysIndirect(context, modePacked, indirect))
         {
-            context->drawArraysIndirect(mode, indirect);
+            context->drawArraysIndirect(modePacked, indirect);
         }
     }
 }
@@ -193,12 +194,13 @@ void GL_APIENTRY DrawElementsIndirect(GLenum mode, GLenum type, const void *indi
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawElementsIndirect>(mode, type, indirect);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawElementsIndirect>(modePacked, type, indirect);
 
         if (context->skipValidation() ||
-            ValidateDrawElementsIndirect(context, mode, type, indirect))
+            ValidateDrawElementsIndirect(context, modePacked, type, indirect))
         {
-            context->drawElementsIndirect(mode, type, indirect);
+            context->drawElementsIndirect(modePacked, type, indirect);
         }
     }
 }

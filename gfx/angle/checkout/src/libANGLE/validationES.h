@@ -9,10 +9,10 @@
 #ifndef LIBANGLE_VALIDATION_ES_H_
 #define LIBANGLE_VALIDATION_ES_H_
 
+#include "common/PackedEnums.h"
 #include "common/mathutil.h"
 #include "libANGLE/Context.h"
 #include "libANGLE/Framebuffer.h"
-#include "libANGLE/PackedEnums.h"
 
 #include <GLES2/gl2.h>
 #include <GLES3/gl3.h>
@@ -272,39 +272,39 @@ bool ValidateCopyTexImageParametersBase(Context *context,
                                         GLint border,
                                         Format *textureFormatOut);
 
-bool ValidateDrawBase(Context *context, GLenum mode, GLsizei count);
+bool ValidateDrawBase(Context *context, PrimitiveMode mode, GLsizei count);
 bool ValidateDrawArraysCommon(Context *context,
-                              GLenum mode,
+                              PrimitiveMode mode,
                               GLint first,
                               GLsizei count,
                               GLsizei primcount);
 bool ValidateDrawArraysInstancedBase(Context *context,
-                                     GLenum mode,
+                                     PrimitiveMode mode,
                                      GLint first,
                                      GLsizei count,
                                      GLsizei primcount);
 bool ValidateDrawArraysInstancedANGLE(Context *context,
-                                      GLenum mode,
+                                      PrimitiveMode mode,
                                       GLint first,
                                       GLsizei count,
                                       GLsizei primcount);
 
-bool ValidateDrawElementsBase(Context *context, GLenum mode, GLenum type);
+bool ValidateDrawElementsBase(Context *context, PrimitiveMode mode, GLenum type);
 bool ValidateDrawElementsCommon(Context *context,
-                                GLenum mode,
+                                PrimitiveMode mode,
                                 GLsizei count,
                                 GLenum type,
                                 const void *indices,
                                 GLsizei primcount);
 
 bool ValidateDrawElementsInstancedCommon(Context *context,
-                                         GLenum mode,
+                                         PrimitiveMode mode,
                                          GLsizei count,
                                          GLenum type,
                                          const void *indices,
                                          GLsizei primcount);
 bool ValidateDrawElementsInstancedANGLE(Context *context,
-                                        GLenum mode,
+                                        PrimitiveMode mode,
                                         GLsizei count,
                                         GLenum type,
                                         const void *indices,
@@ -680,8 +680,16 @@ bool ValidateFramebufferNotMultisampled(Context *context, Framebuffer *framebuff
 bool ValidateMultitextureUnit(Context *context, GLenum texture);
 
 bool ValidateTransformFeedbackPrimitiveMode(const Context *context,
-                                            GLenum transformFeedbackPrimitiveMode,
-                                            GLenum renderPrimitiveMode);
+                                            PrimitiveMode transformFeedbackPrimitiveMode,
+                                            PrimitiveMode renderPrimitiveMode);
+
+// Common validation for 2D and 3D variants of TexStorage*Multisample.
+bool ValidateTexStorageMultisample(Context *context,
+                                   TextureType target,
+                                   GLsizei samples,
+                                   GLint internalFormat,
+                                   GLsizei width,
+                                   GLsizei height);
 
 // Utility macro for handling implementation methods inside Validation.
 #define ANGLE_HANDLE_VALIDATION_ERR(X) \
@@ -704,6 +712,12 @@ ANGLE_INLINE bool ValidateFramebufferComplete(Context *context, Framebuffer *fra
 
     return true;
 }
+
+struct ErrorAndMessage
+{
+    GLenum errorType;
+    const char *message;
+};
 }  // namespace gl
 
 #endif  // LIBANGLE_VALIDATION_ES_H_

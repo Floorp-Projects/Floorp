@@ -13,7 +13,7 @@
 
 #include "secoidt.h"
 #include "certt.h"
-#include "keyt.h"
+#include "keythi.h"
 #include "hasht.h"
 #include "pkcs7t.h"
 

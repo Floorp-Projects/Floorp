@@ -82,6 +82,11 @@
 #define EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE 0x3450
 #endif /* EGL_ANGLE_platform_angle_vulkan */
 
+#ifndef EGL_ANGLE_platform_angle_context_virtualization
+#define EGL_ANGLE_platform_angle_context_virtualization 1
+#define EGL_PLATFORM_ANGLE_CONTEXT_VIRTUALIZATION_ANGLE 0x3481
+#endif /* EGL_ANGLE_platform_angle_context_virtualization */
+
 #ifndef EGL_ANGLE_x11_visual
 #define EGL_ANGLE_x11_visual
 #define EGL_X11_VISUAL_ID_ANGLE 0x33A3

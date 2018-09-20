@@ -31,14 +31,12 @@ class SwapChain11 final : public SwapChainD3D
                 EGLint samples);
     ~SwapChain11() override;
 
-    EGLint resize(const gl::Context *context,
-                  EGLint backbufferWidth,
-                  EGLint backbufferHeight) override;
-    EGLint reset(const gl::Context *context,
+    EGLint resize(DisplayD3D *displayD3D, EGLint backbufferWidth, EGLint backbufferHeight) override;
+    EGLint reset(DisplayD3D *displayD3D,
                  EGLint backbufferWidth,
                  EGLint backbufferHeight,
                  EGLint swapInterval) override;
-    EGLint swapRect(const gl::Context *context,
+    EGLint swapRect(DisplayD3D *displayD3D,
                     EGLint x,
                     EGLint y,
                     EGLint width,
@@ -50,7 +48,7 @@ class SwapChain11 final : public SwapChainD3D
 
     const TextureHelper11 &getOffscreenTexture();
     const d3d11::RenderTargetView &getRenderTarget();
-    const d3d11::SharedSRV &getRenderTargetShaderResource();
+    const d3d11::SharedSRV &getRenderTargetShaderResource(d3d::Context *context);
 
     const TextureHelper11 &getDepthStencilTexture();
     const d3d11::DepthStencilView &getDepthStencil();
@@ -65,26 +63,26 @@ class SwapChain11 final : public SwapChainD3D
 
   private:
     void release();
-    void initPassThroughResources();
+    angle::Result initPassThroughResources(DisplayD3D *displayD3D);
 
     void releaseOffscreenColorBuffer();
     void releaseOffscreenDepthBuffer();
-    EGLint resetOffscreenBuffers(const gl::Context *context,
-                                 int backbufferWidth,
-                                 int backbufferHeight);
-    EGLint resetOffscreenColorBuffer(const gl::Context *context,
+    EGLint resetOffscreenBuffers(DisplayD3D *displayD3D, int backbufferWidth, int backbufferHeight);
+    EGLint resetOffscreenColorBuffer(DisplayD3D *displayD3D,
                                      int backbufferWidth,
                                      int backbufferHeight);
-    EGLint resetOffscreenDepthBuffer(int backbufferWidth, int backbufferHeight);
+    EGLint resetOffscreenDepthBuffer(DisplayD3D *displayD3D,
+                                     int backbufferWidth,
+                                     int backbufferHeight);
 
     DXGI_FORMAT getSwapChainNativeFormat() const;
 
-    EGLint copyOffscreenToBackbuffer(const gl::Context *context,
+    EGLint copyOffscreenToBackbuffer(DisplayD3D *displayD3D,
                                      EGLint x,
                                      EGLint y,
                                      EGLint width,
                                      EGLint height);
-    EGLint present(const gl::Context *context, EGLint x, EGLint y, EGLint width, EGLint height);
+    EGLint present(DisplayD3D *displayD3D, EGLint x, EGLint y, EGLint width, EGLint height);
     UINT getD3DSamples() const;
 
     Renderer11 *mRenderer;

@@ -318,14 +318,13 @@ bool VaryingPacking::collectAndPackUserVaryings(gl::InfoLog &infoLog,
                     for (const auto &field : varying->fields)
                     {
                         ASSERT(!field.isStruct() && !field.isArray());
-                        mPackedVaryings.push_back(
-                            PackedVarying(field, interpolation, varying->name));
+                        mPackedVaryings.emplace_back(field, interpolation, varying->name);
                         uniqueFullNames.insert(mPackedVaryings.back().fullName());
                     }
                 }
                 else
                 {
-                    mPackedVaryings.push_back(PackedVarying(*varying, interpolation));
+                    mPackedVaryings.emplace_back(*varying, interpolation);
                     uniqueFullNames.insert(mPackedVaryings.back().fullName());
                 }
                 continue;
@@ -395,13 +394,12 @@ bool VaryingPacking::collectAndPackUserVaryings(gl::InfoLog &infoLog,
 
     std::sort(mPackedVaryings.begin(), mPackedVaryings.end(), ComparePackedVarying);
 
-    return packUserVaryings(infoLog, mPackedVaryings, tfVaryings);
+    return packUserVaryings(infoLog, mPackedVaryings);
 }
 
 // See comment on packVarying.
 bool VaryingPacking::packUserVaryings(gl::InfoLog &infoLog,
-                                      const std::vector<PackedVarying> &packedVaryings,
-                                      const std::vector<std::string> &transformFeedbackVaryings)
+                                      const std::vector<PackedVarying> &packedVaryings)
 {
 
     // "Variables are packed into the registers one at a time so that they each occupy a contiguous
@@ -425,13 +423,6 @@ bool VaryingPacking::packUserVaryings(gl::InfoLog &infoLog,
 
     // Sort the packed register list
     std::sort(mRegisterList.begin(), mRegisterList.end());
-
-    // Assign semantic indices
-    for (unsigned int semanticIndex = 0;
-         semanticIndex < static_cast<unsigned int>(mRegisterList.size()); ++semanticIndex)
-    {
-        mRegisterList[semanticIndex].semanticIndex = semanticIndex;
-    }
 
     return true;
 }

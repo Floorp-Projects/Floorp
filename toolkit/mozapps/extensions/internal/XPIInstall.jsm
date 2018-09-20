@@ -339,7 +339,7 @@ XPIPackage = class XPIPackage extends Package {
   }
 
   async iterFiles(callback) {
-    for (let path of XPCOMUtils.IterStringEnumerator(this.zipReader.findEntries("*"))) {
+    for (let path of this.zipReader.findEntries("*")) {
       let entry = this.zipReader.getEntry(path);
       callback({
         path,

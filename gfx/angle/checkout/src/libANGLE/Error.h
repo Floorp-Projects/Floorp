@@ -106,6 +106,8 @@ class ANGLE_NO_DISCARD Error final
     bool operator==(const Error &other) const;
     bool operator!=(const Error &other) const;
 
+    static inline Error NoError();
+
   private:
     void createMessageString() const;
 
@@ -140,7 +142,7 @@ using InvalidFramebufferOperation = priv::ErrorStream<GL_INVALID_FRAMEBUFFER_OPE
 
 inline Error NoError()
 {
-    return Error(GL_NO_ERROR);
+    return Error::NoError();
 }
 
 using LinkResult = ErrorOrResult<bool>;
@@ -172,6 +174,8 @@ class ANGLE_NO_DISCARD Error final
     inline bool isError() const;
 
     const std::string &getMessage() const;
+
+    static inline Error NoError();
 
   private:
     void createMessageString() const;
@@ -214,7 +218,7 @@ using EglBadDevice         = priv::ErrorStream<EGL_BAD_DEVICE_EXT>;
 
 inline Error NoError()
 {
-    return Error(EGL_SUCCESS);
+    return Error::NoError();
 }
 
 }  // namespace egl
@@ -236,6 +240,19 @@ inline Error NoError()
 #define ANGLE_RETURN(X) return X;
 #define ANGLE_TRY(EXPR) ANGLE_TRY_TEMPLATE(EXPR, ANGLE_RETURN);
 
+// TODO(jmadill): Remove this once refactor is complete. http://anglebug.com/2491
+#define ANGLE_TRY_HANDLE(CONTEXT, EXPR)                \
+    \
+{                                               \
+        auto ANGLE_LOCAL_VAR = (EXPR);                 \
+        if (ANGLE_UNLIKELY(ANGLE_LOCAL_VAR.isError())) \
+        {                                              \
+            CONTEXT->handleError(ANGLE_LOCAL_VAR);     \
+            return angle::Result::Stop();              \
+        }                                              \
+    \
+}
+
 #define ANGLE_TRY_RESULT(EXPR, RESULT)                 \
     {                                                  \
         auto ANGLE_LOCAL_VAR = EXPR;                   \
@@ -247,7 +264,7 @@ inline Error NoError()
     }                                                  \
     ANGLE_EMPTY_STATEMENT
 
-// TODO(jmadill): Introduce way to store errors to a const Context.
+// TODO(jmadill): Introduce way to store errors to a const Context. http://anglebug.com/2491
 #define ANGLE_SWALLOW_ERR(EXPR)                                       \
     {                                                                 \
         auto ANGLE_LOCAL_VAR = EXPR;                                  \
@@ -261,6 +278,39 @@ inline Error NoError()
 #undef ANGLE_LOCAL_VAR
 #undef ANGLE_CONCAT2
 #undef ANGLE_CONCAT1
+
+namespace angle
+{
+// Result signals if calling code should continue running or early exit. A value of Stop() can
+// either indicate and Error or a non-Error early exit condition such as a detected no-op.
+class ANGLE_NO_DISCARD Result
+{
+  public:
+    // TODO(jmadill): Rename when refactor is complete. http://anglebug.com/2491
+    bool isError() const { return mStop; }
+
+    static Result Stop() { return Result(true); }
+    static Result Continue() { return Result(false); }
+
+    // TODO(jmadill): Remove when refactor is complete. http://anglebug.com/2491
+    operator gl::Error() const;
+
+    // TODO(jmadill): Remove when refactor is complete. http://anglebug.com/2491
+    template <typename T>
+    operator gl::ErrorOrResult<T>() const
+    {
+        return operator gl::Error();
+    }
+
+    bool operator==(Result other) const { return mStop == other.mStop; }
+
+    bool operator!=(Result other) const { return mStop != other.mStop; }
+
+  private:
+    Result(bool stop) : mStop(stop) {}
+    bool mStop;
+};
+}  // namespace angle
 
 #include "Error.inl"
 

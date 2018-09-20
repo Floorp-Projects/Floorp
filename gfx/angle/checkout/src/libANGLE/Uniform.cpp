@@ -43,7 +43,7 @@ void ActiveVariable::unionReferencesWith(const ActiveVariable &other)
 
 ShaderType ActiveVariable::getFirstShaderTypeWhereActive() const
 {
-    return static_cast<ShaderType>(gl::ScanForward(mActiveUseBits.bits()));
+    return static_cast<ShaderType>(ScanForward(mActiveUseBits.bits()));
 }
 
 GLuint ActiveVariable::activeShaderCount() const
@@ -67,13 +67,13 @@ LinkedUniform::LinkedUniform(GLenum typeIn,
                              const sh::BlockMemberInfo &blockInfoIn)
     : typeInfo(&GetUniformTypeInfo(typeIn)), bufferIndex(bufferIndexIn), blockInfo(blockInfoIn)
 {
-    type      = typeIn;
-    precision = precisionIn;
-    name      = nameIn;
+    type       = typeIn;
+    precision  = precisionIn;
+    name       = nameIn;
     arraySizes = arraySizesIn;
-    binding   = bindingIn;
-    offset    = offsetIn;
-    location  = locationIn;
+    binding    = bindingIn;
+    offset     = offsetIn;
+    location   = locationIn;
     ASSERT(!isArrayOfArrays());
     ASSERT(!isArray() || !isStruct());
 }
@@ -99,11 +99,11 @@ LinkedUniform::LinkedUniform(const LinkedUniform &uniform)
 
 LinkedUniform &LinkedUniform::operator=(const LinkedUniform &uniform)
 {
-    sh::Uniform::operator=(uniform);
+    sh::Uniform::operator   =(uniform);
     ActiveVariable::operator=(uniform);
-    typeInfo             = uniform.typeInfo;
-    bufferIndex          = uniform.bufferIndex;
-    blockInfo            = uniform.blockInfo;
+    typeInfo                = uniform.typeInfo;
+    bufferIndex             = uniform.bufferIndex;
+    blockInfo               = uniform.blockInfo;
     return *this;
 }
 
@@ -159,9 +159,9 @@ BufferVariable::BufferVariable(GLenum typeIn,
                                const sh::BlockMemberInfo &blockInfoIn)
     : bufferIndex(bufferIndexIn), blockInfo(blockInfoIn), topLevelArraySize(-1)
 {
-    type      = typeIn;
-    precision = precisionIn;
-    name      = nameIn;
+    type       = typeIn;
+    precision  = precisionIn;
+    name       = nameIn;
     arraySizes = arraySizesIn;
 }
 

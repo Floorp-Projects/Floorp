@@ -1,58 +1,29 @@
-commit ae3b5a6552ee26164b9a95ebb6f8e51db9494815
-Author: Jacek Caban <cjacek@gmail.com>
-Date:   Wed Jun 27 17:35:19 2018 +0200
-
-    Fix PMurHash.cpp mingw clang 64-bit compilation.
-    
-    Tested with Firefox build, upstream bug:
-    https://bugzilla.mozilla.org/show_bug.cgi?id=1471632
-    
-    Change-Id: I4b44847dfc69ee26cf2215b0a0b7573becfd369d
-    Reviewed-on: https://chromium-review.googlesource.com/1117187
-    Commit-Queue: Jamie Madill <jmadill@chromium.org>
-    Reviewed-by: Jamie Madill <jmadill@chromium.org>
-
-commit fc96a1a98357cfa17510bcf701e99a59ab474ce0
+commit b46b71ba277b13a7b72075766676a9698a665efd
 Author: Jeff Gilbert <jgilbert@mozilla.com>
-Date:   Fri Jun 29 19:06:56 2018 -0700
+Date:   Tue Sep 18 17:03:59 2018 -0700
 
-    More includes missing from sources.
+    Remove unused include global_state.h from validationEGL.cpp.
     
-    Bug: angleproject:2699
-
-commit e30a1e0b967b42a5e17c4335361762ec1153e900
-Author: Jeff Gilbert <jgilbert@mozilla.com>
-Date:   Tue May 29 19:19:54 2018 -0700
-
-    Use stringstream with locale override.
-    
-    Add test for compiling float literals in locales with comma decimal separators.
-    
-    Handle inexplicable test setlocale failure on Android,Linux. (Require success on other platforms)
-    
-    Skip setting the locale on Android, which is always C locale in C++, but for some
-    reason std::locale::classic isn't implemented as a no-op.
-    
-    Bug: angleproject:2607
-    Test: angle_unittests
-    Change-Id: I7c97cb56c01335db46f532fb8af3f9a4f2a30564
+    Bug: angleproject:2825
+    Change-Id: I34a7c520d31cf0a9321d5599046159ef9bf58be5
 
 Cherries picked
 ================================================================================
-Merge base from: origin/chromium/3440
+Merge base from: origin/chromium/3538
 
-commit ba16270867793da817417c722abe3a5d98d50fc0
-Author: Brandon Jones <brandon1.jones@intel.com>
-Date:   Thu May 24 12:47:50 2018 -0700
+commit 05c729f336efb544e224444c2485a412bd3a66b3
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Fri Sep 7 17:43:32 2018 -0400
 
-    Fix entry point generation on non-Windows
+    Pass unpack buffer as explicit parameter to texSubImage.
     
-    In "Implement EGL_ANGLE_explicit_context", backslashes were introduced in
-    a file path, which broke generation on non-Windows machines. This fixes
-    the issue.
+    This allows us to override it in the incomplete texture init. Any
+    back-end that used incomplete textures was vulnerable to a bug where
+    the unpack buffer would be used to initialize the incomplete texture.
     
-    Bug:angleproject:1395
-    Change-Id: I188c42c2a92afec37d7cb7dac5bffd7e855a0d2b
-    Reviewed-on: https://chromium-review.googlesource.com/1072509
-    Reviewed-by: Geoff Lang <geofflang@chromium.org>
-    Commit-Queue: Geoff Lang <geofflang@chromium.org>
+    Cherry-picked to the chromium/3538 branch cleanly.
+    
+    Bug: chromium:880906
+    Change-Id: Iead2a8c57674e8962915902d6d5896f44fe8ca88
+    Reviewed-on: https://chromium-review.googlesource.com/1227033
+    Reviewed-by: Jamie Madill <jmadill@chromium.org>

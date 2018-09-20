@@ -7,7 +7,7 @@
 #include "nsString.h"
 #include "nsIURI.h"
 #include "nsTArray.h"
-#include "nsIStringEnumerator.h"
+#include "nsStringEnumerator.h"
 #include "nsAutoPtr.h"
 #include "nsIMIMEInfo.h"
 #include "nsComponentManagerUtils.h"
@@ -266,7 +266,7 @@ nsGIOMimeApp::LaunchWithURI(nsIURI* aUri, nsIInterfaceRequestor* aRequestor)
   return NS_OK;
 }
 
-class GIOUTF8StringEnumerator final : public nsIUTF8StringEnumerator
+class GIOUTF8StringEnumerator final : public nsStringEnumeratorBase
 {
   ~GIOUTF8StringEnumerator() = default;
 
@@ -276,11 +276,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUTF8STRINGENUMERATOR
 
+  using nsStringEnumeratorBase::GetNext;
+
   nsTArray<nsCString> mStrings;
   uint32_t            mIndex;
 };
 
-NS_IMPL_ISUPPORTS(GIOUTF8StringEnumerator, nsIUTF8StringEnumerator)
+NS_IMPL_ISUPPORTS(GIOUTF8StringEnumerator, nsIUTF8StringEnumerator,
+                  nsIStringEnumerator)
 
 NS_IMETHODIMP
 GIOUTF8StringEnumerator::HasMore(bool* aResult)

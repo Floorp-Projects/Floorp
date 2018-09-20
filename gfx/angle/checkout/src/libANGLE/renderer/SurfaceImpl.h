@@ -24,6 +24,7 @@ struct Format;
 
 namespace gl
 {
+class Context;
 class FramebufferState;
 }
 
@@ -47,7 +48,8 @@ class SurfaceImpl : public FramebufferAttachmentObjectImpl
     virtual void destroy(const egl::Display *display) {}
 
     virtual egl::Error initialize(const egl::Display *display)                           = 0;
-    virtual FramebufferImpl *createDefaultFramebuffer(const gl::FramebufferState &state) = 0;
+    virtual FramebufferImpl *createDefaultFramebuffer(const gl::Context *context,
+                                                      const gl::FramebufferState &state) = 0;
     virtual egl::Error swap(const gl::Context *context)                                  = 0;
     virtual egl::Error swapWithDamage(const gl::Context *context, EGLint *rects, EGLint n_rects);
     virtual egl::Error postSubBuffer(const gl::Context *context,
@@ -55,6 +57,7 @@ class SurfaceImpl : public FramebufferAttachmentObjectImpl
                                      EGLint y,
                                      EGLint width,
                                      EGLint height) = 0;
+    virtual egl::Error setPresentationTime(EGLnsecsANDROID time);
     virtual egl::Error querySurfacePointerANGLE(EGLint attribute, void **value) = 0;
     virtual egl::Error bindTexImage(const gl::Context *context,
                                     gl::Texture *texture,
@@ -62,6 +65,8 @@ class SurfaceImpl : public FramebufferAttachmentObjectImpl
     virtual egl::Error releaseTexImage(const gl::Context *context, EGLint buffer)             = 0;
     virtual egl::Error getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc) = 0;
     virtual void setSwapInterval(EGLint interval) = 0;
+    virtual void setFixedWidth(EGLint width);
+    virtual void setFixedHeight(EGLint height);
 
     // width and height can change with client window resizing
     virtual EGLint getWidth() const = 0;

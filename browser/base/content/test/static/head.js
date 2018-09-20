@@ -108,11 +108,9 @@ function getURLForFile(file) {
  */
 function* generateEntriesFromJarFile(jarFile, extension) {
   let zr = new ZipReader(jarFile);
-  let entryEnumerator = zr.findEntries("*" + extension + "$");
-
   const kURIStart = getURLForFile(jarFile);
-  while (entryEnumerator.hasMore()) {
-    let entry = entryEnumerator.getNext();
+
+  for (let entry of zr.findEntries("*" + extension + "$")) {
     // Ignore the JS cache which is stored in omni.ja
     if (entry.startsWith("jsloader") || entry.startsWith("jssubloader")) {
       continue;

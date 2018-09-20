@@ -4,6 +4,8 @@
 // found in the LICENSE file.
 //
 
+// copyvertex.inc: Implementation of vertex buffer copying and conversion functions
+
 namespace rx
 {
 
