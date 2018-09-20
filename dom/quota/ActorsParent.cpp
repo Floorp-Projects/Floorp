@@ -1267,8 +1267,12 @@ void AssertNoUnderflow(T aDest, U aArg) {
   MOZ_ASSERT(uint64_t(aDest) >= uint64_t(aArg));
 }
 
-bool IsOSMetadata(const nsAString& aFileName) {
-  return aFileName.EqualsLiteral(DSSTORE_FILE_NAME);
+inline bool IsDotFile(const nsAString& aFileName) {
+  return QuotaManager::IsDotFile(aFileName);
+}
+
+inline bool IsOSMetadata(const nsAString& aFileName) {
+  return QuotaManager::IsOSMetadata(aFileName);
 }
 
 bool IsOriginMetadata(const nsAString& aFileName) {
@@ -1668,7 +1672,8 @@ int64_t GetLastModifiedTime(nsIFile* aFile, bool aPersistent) {
           return rv;
         }
 
-        if (IsOriginMetadata(leafName) || IsTempMetadata(leafName)) {
+        if (IsOriginMetadata(leafName) || IsTempMetadata(leafName) ||
+            IsDotFile(leafName)) {
           return NS_OK;
         }
 
@@ -2869,6 +2874,19 @@ QuotaManager* QuotaManager::Get() {
 // static
 bool QuotaManager::IsShuttingDown() { return gShutdown; }
 
+// static
+bool QuotaManager::IsOSMetadata(const nsAString& aFileName) {
+  return aFileName.EqualsLiteral(DSSTORE_FILE_NAME) ||
+         aFileName.EqualsLiteral(DESKTOP_FILE_NAME) ||
+         aFileName.LowerCaseEqualsLiteral(DESKTOP_INI_FILE_NAME) ||
+         aFileName.EqualsLiteral(THUMBS_DB_FILE_NAME);
+}
+
+// static
+bool QuotaManager::IsDotFile(const nsAString& aFileName) {
+  return aFileName.First() == char16_t('.');
+}
+
 auto QuotaManager::CreateDirectoryLock(
     const Nullable<PersistenceType>& aPersistenceType, const nsACString& aGroup,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
@@ -3763,7 +3781,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
         CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
       }
 
-      if (IsOSMetadata(leafName)) {
+      if (IsOSMetadata(leafName) || IsDotFile(leafName)) {
         continue;
       }
 
@@ -3877,6 +3895,10 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
           CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
         }
 
+        continue;
+      }
+
+      if (IsOSMetadata(leafName) || IsDotFile(leafName)) {
         continue;
       }
 
@@ -6616,6 +6638,10 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
           continue;
         }
 
+        if (IsOSMetadata(leafName) || IsDotFile(leafName)) {
+          continue;
+        }
+
         UNKNOWN_FILE_WARNING(leafName);
         if (!initialized) {
           return NS_ERROR_UNEXPECTED;
@@ -6743,6 +6769,8 @@ nsresult GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
         return rv;
       }
 
+      // Unknown files during getting usages are allowed. Just warn if we find
+      // them.
       if (!IsOSMetadata(leafName)) {
         UNKNOWN_FILE_WARNING(leafName);
       }
