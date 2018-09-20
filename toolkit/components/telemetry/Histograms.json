@@ -12917,6 +12917,16 @@
     "n_buckets": 50,
     "description": "The time, in percentage of a vsync interval, spent from beginning a paint in the content process until that frame is presented in the compositor."
   },
+  "CONTENT_FRAME_TIME_WITH_SVG": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
+    "bug_numbers": [1483549],
+    "expires_in_version": "66",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 50,
+    "description": "The time, in percentage of a vsync interval, spent from beginning a paint in the content process until that frame is presented in the compositor, for frames that contained an SVG to be drawn by WebRender"
+  },
   "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],

@@ -752,6 +752,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           nsTArray<RefCountedShmem>&& aSmallShmems,
                                           nsTArray<ipc::Shmem>&& aLargeShmems,
                                           const wr::IdNamespace& aIdNamespace,
+                                          const bool& aContainsSVGGroup,
                                           const TimeStamp& aRefreshStartTime,
                                           const TimeStamp& aTxnStartTime,
                                           const TimeStamp& aFwdTime)
@@ -823,7 +824,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     // build is done, so we don't need to do it here.
   }
 
-  HoldPendingTransactionId(wrEpoch, aTransactionId, aRefreshStartTime, aTxnStartTime, aFwdTime);
+  HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup,
+                           aRefreshStartTime, aTxnStartTime, aFwdTime);
 
   if (!validTransaction) {
     // Pretend we composited since someone is wating for this event,
@@ -911,6 +913,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
   // something. It is for consistency with disabling WebRender.
   HoldPendingTransactionId(mWrEpoch,
                            aTransactionId,
+                           false,
                            aRefreshStartTime,
                            aTxnStartTime,
                            aFwdTime,
@@ -1538,6 +1541,9 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 void
 WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame)
 {
+  // This function should only get called in the root WRBP
+  MOZ_ASSERT(IsRootWebRenderBridgeParent());
+
   TimeStamp start = TimeStamp::Now();
   mAsyncImageManager->SetCompositionTime(start);
 
@@ -1549,7 +1555,6 @@ WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame)
 
   // Handle transaction that is related to DisplayList.
   wr::TransactionBuilder sceneBuilderTxn;
-  sceneBuilderTxn.SetLowPriority(!IsRootWebRenderBridgeParent());
   wr::AutoTransactionSender sender(mApi, &sceneBuilderTxn);
 
   // Adding and updating wr::ImageKeys of ImageHosts that uses ImageBridge are
@@ -1599,6 +1604,7 @@ WebRenderBridgeParent::MaybeGenerateFrame(bool aForceGenerateFrame)
 void
 WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                                 TransactionId aTransactionId,
+                                                bool aContainsSVGGroup,
                                                 const TimeStamp& aRefreshStartTime,
                                                 const TimeStamp& aTxnStartTime,
                                                 const TimeStamp& aFwdTime,
@@ -1607,6 +1613,7 @@ WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
   mPendingTransactionIds.push(PendingTransactionId(aWrEpoch,
                                                    aTransactionId,
+                                                   aContainsSVGGroup,
                                                    aRefreshStartTime,
                                                    aTxnStartTime,
                                                    aFwdTime,
@@ -1639,6 +1646,9 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
       double latencyNorm = latencyMs / mVsyncRate.ToMilliseconds();
       int32_t fracLatencyNorm = lround(latencyNorm * 100.0);
       Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
+      if (transactionId.mContainsSVGGroup) {
+        Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME_WITH_SVG, fracLatencyNorm);
+      }
     }
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)

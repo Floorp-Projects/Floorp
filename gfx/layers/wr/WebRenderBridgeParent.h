@@ -89,6 +89,7 @@ public:
                                              nsTArray<RefCountedShmem>&& aSmallShmems,
                                              nsTArray<ipc::Shmem>&& aLargeShmems,
                                              const wr::IdNamespace& aIdNamespace,
+                                             const bool& aContainsSVGGroup,
                                              const TimeStamp& aRefreshStartTime,
                                              const TimeStamp& aTxnStartTime,
                                              const TimeStamp& aFwdTime) override;
@@ -151,6 +152,7 @@ public:
 
   void HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                 TransactionId aTransactionId,
+                                bool aContainsSVGGroup,
                                 const TimeStamp& aRefreshStartTime,
                                 const TimeStamp& aTxnStartTime,
                                 const TimeStamp& aFwdTime,
@@ -260,6 +262,7 @@ private:
   struct PendingTransactionId {
     PendingTransactionId(const wr::Epoch& aEpoch,
                          TransactionId aId,
+                         bool aContainsSVGGroup,
                          const TimeStamp& aRefreshStartTime,
                          const TimeStamp& aTxnStartTime,
                          const TimeStamp& aFwdTime,
@@ -269,6 +272,7 @@ private:
       , mRefreshStartTime(aRefreshStartTime)
       , mTxnStartTime(aTxnStartTime)
       , mFwdTime(aFwdTime)
+      , mContainsSVGGroup(aContainsSVGGroup)
       , mUseForTelemetry(aUseForTelemetry)
     {}
     wr::Epoch mEpoch;
@@ -276,6 +280,7 @@ private:
     TimeStamp mRefreshStartTime;
     TimeStamp mTxnStartTime;
     TimeStamp mFwdTime;
+    bool mContainsSVGGroup;
     bool mUseForTelemetry;
   };
 
