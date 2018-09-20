@@ -1,0 +1,30 @@
+[winasan] Reduce hotpatch prefix check to 8 bytes
+
+Same idea as r310419: The 8 byte nop is a suffix of the 9 byte nop, and we need at most 6 bytes.
+
+Differential Revision: https://reviews.llvm.org/D51788
+
+--- a/compiler-rt/lib/interception/interception_win.cc	(revision 342648)
++++ b/compiler-rt/lib/interception/interception_win.cc	(revision 342649)
+@@ -223,8 +223,8 @@
+   return true;
+ }
+ 
+-static const u8 kHintNop9Bytes[] = {
+-  0x66, 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00
++static const u8 kHintNop8Bytes[] = {
++  0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00
+ };
+ 
+ template<class T>
+@@ -239,8 +239,8 @@
+ static bool FunctionHasPadding(uptr address, uptr size) {
+   if (IsMemoryPadding(address - size, size))
+     return true;
+-  if (size <= sizeof(kHintNop9Bytes) &&
+-      FunctionHasPrefix(address, kHintNop9Bytes))
++  if (size <= sizeof(kHintNop8Bytes) &&
++      FunctionHasPrefix(address, kHintNop8Bytes))
+     return true;
+   return false;
+ }
