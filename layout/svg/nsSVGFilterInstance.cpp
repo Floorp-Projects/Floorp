@@ -356,8 +356,9 @@ nsSVGFilterInstance::GetSourceIndices(nsSVGFE* aPrimitiveElement,
       sourceIndex = GetLastResultIndex(aPrimitiveDescrs);
     } else {
       bool inputExists = aImageTable.Get(str, &sourceIndex);
-      if (!inputExists)
-        return NS_ERROR_FAILURE;
+      if (!inputExists) {
+        sourceIndex = GetLastResultIndex(aPrimitiveDescrs);
+      }
     }
 
     aSourceIndices.AppendElement(sourceIndex);
