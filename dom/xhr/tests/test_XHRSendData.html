@@ -23,7 +23,7 @@ SimpleTest.waitForExplicitFinish();
 var testData = "blahblahblahblahblahblahblaaaaaaaah. blah.";
 var extensions = [".txt",".png",".jpg",".gif",".xml", "noext"];
 var fileTypes = ["text/plain", "image/png", "image/jpeg", "image/gif", "text/xml", null];
-var gen = runTests();
+var gen;
 var testDOMFiles;
 
 function createFiles() {
@@ -111,12 +111,12 @@ tests = [{ body: null,
          { body: "hi",
            contentType: "foo/bar; charset=ascii; baz=bin",
            resBody: "hi",
-           resContentType: "foo/bar; charset=UTF-8; baz=bin",
+           resContentType: "foo/bar;charset=UTF-8;baz=bin",
          },
          { body: "hi",
            contentType: "foo/bar; charset=uTf-8",
            resBody: "hi",
-           resContentType: "foo/bar; charset=uTf-8",
+           resContentType: "foo/bar;charset=UTF-8",
          },
          { body: testDoc1,
            resBody: "<!-- comment -->\n<out>hi</out>",
@@ -130,12 +130,12 @@ tests = [{ body: null,
          { body: testDoc1,
            contentType: "foo/bar; charset=ascii; baz=bin",
            resBody: "<!-- comment -->\n<out>hi</out>",
-           resContentType: "foo/bar; charset=UTF-8; baz=bin",
+           resContentType: "foo/bar;charset=UTF-8;baz=bin",
          },
          { body: testDoc1,
            contentType: "foo/bar; charset=wIndows-1252",
            resBody: "<!-- comment -->\n<out>hi</out>",
-           resContentType: "foo/bar; charset=UTF-8",
+           resContentType: "foo/bar;charset=UTF-8",
          },
          { body: testDoc2,
            resBody: "<!-- doc 2 -->\n<res>text</res>",
@@ -149,12 +149,12 @@ tests = [{ body: null,
          { body: testDoc2,
            contentType: "foo/bar; charset=ascii; baz=bin",
            resBody: "<!-- doc 2 -->\n<res>text</res>",
-           resContentType: "foo/bar; charset=UTF-8; baz=bin",
+           resContentType: "foo/bar;charset=UTF-8;baz=bin",
          },
          { body: testDoc2,
            contentType: "foo/bar; charset=uTf-8",
            resBody: "<!-- doc 2 -->\n<res>text</res>",
-           resContentType: "foo/bar; charset=uTf-8",
+           resContentType: "foo/bar;charset=UTF-8",
          },
          { //will trigger a redirect test server-side
            body: ("TEST_REDIRECT_STR&url=" + window.location.host + window.location.pathname),
@@ -260,6 +260,10 @@ function is_identical_arraybuffer(ab1, ab2) {
 SimpleTest.finish();
 } /* runTests */
 
+SpecialPowers.pushPrefEnv({set: [["dom.xhr.standard_content_type_normalization", true]]},
+function() {
+  gen = runTests();
+});
 </script>
 </pre>
 </body>
