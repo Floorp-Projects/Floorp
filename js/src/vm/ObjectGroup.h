@@ -478,7 +478,7 @@ class ObjectGroup : public gc::TenuredCell
     void traceChildren(JSTracer* trc);
 
     inline bool needsSweep();
-    void sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStateOnOOM* oom);
+    void sweep(const AutoSweepObjectGroup& sweep);
 
   private:
     uint32_t generation() {
