@@ -92,7 +92,19 @@ let REQUEST_2 = {
   topLevelPrincipal: {URI: {displayHost: "example.com"}},
   requestId: "3797081f-a96b-c34b-a58b-1083c6e66e25",
   completeStatus: "",
-  paymentMethods: [],
+  paymentMethods: [
+    {
+      "supportedMethods": "basic-card",
+      "data": {
+        "supportedNetworks": [
+          "amex",
+          "discover",
+          "mastercard",
+          "visa",
+        ],
+      },
+    },
+  ],
   paymentDetails: {
     id: "",
     totalItem: {label: "", amount: {currency: "CAD", value: "25.75"}, pending: false},
@@ -343,7 +355,6 @@ let BASIC_CARDS_1 = {
     "cc-exp-month": 8,
     "cc-exp-year": 2024,
     "cc-exp": "2024-08",
-    "cc-type": "amex",
   },
 };
 

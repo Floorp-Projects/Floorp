@@ -3,13 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 basic-card-option {
-  grid-column-gap: 1ch;
-  grid-template-areas: "type cc-number cc-exp cc-name";
+  grid-column-gap: 1em;
+  grid-template-areas: "cc-type cc-number cc-exp cc-name";
+  /* Need to set a minimum width for the cc-type svg in the <img> to fill */
+  grid-template-columns: minmax(1em, auto);
   justify-content: start;
+}
+
+basic-card-option > .cc-number,
+basic-card-option > .cc-name,
+basic-card-option > .cc-exp,
+basic-card-option > .cc-type {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 basic-card-option > .cc-number {
   grid-area: cc-number;
+  /* Don't truncate the card number */
+  overflow: visible;
 }
 
 basic-card-option > .cc-name {
@@ -20,14 +33,8 @@ basic-card-option > .cc-exp {
   grid-area: cc-exp;
 }
 
-basic-card-option > .type {
-  grid-area: type;
-  display: none;
-}
-
-basic-card-option > .cc-number,
-basic-card-option > .cc-name,
-basic-card-option > .cc-exp,
-basic-card-option > .type {
-  white-space: nowrap;
+basic-card-option > .cc-type {
+  grid-area: cc-type;
+  height: 100%;
+  text-transform: capitalize;
 }
