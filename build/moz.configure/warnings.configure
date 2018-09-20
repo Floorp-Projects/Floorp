@@ -121,6 +121,10 @@ check_and_add_gcc_warning('-Wno-error=return-std-move')
 # tail of issues to fix
 check_and_add_gcc_warning('-Wno-error=class-memaccess')
 
+# -Watomic-alignment is a new warning in clang 7 that seems way too broad.
+# https://bugs.llvm.org/show_bug.cgi?id=38593
+check_and_add_gcc_warning('-Wno-error=atomic-alignment')
+
 # catches format/argument mismatches with printf
 c_format_warning, cxx_format_warning = check_and_add_gcc_warning(
     '-Wformat', when=depends(target)(lambda t: t.kernel != 'WINNT'))
