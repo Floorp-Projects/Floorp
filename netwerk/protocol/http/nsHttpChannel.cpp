@@ -8778,6 +8778,14 @@ nsHttpChannel::OnLookupComplete(nsICancelable *request,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::OnLookupByTypeComplete(nsICancelable      *aRequest,
+                                      nsIDNSByTypeRecord *aRes,
+                                      nsresult            aStatus)
+{
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel internal functions
 //-----------------------------------------------------------------------------

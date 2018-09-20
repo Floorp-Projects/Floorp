@@ -155,6 +155,12 @@ public:
     // Returns true when origin/proxy is an RFC1918 literal.
     bool HostIsLocalIPLiteral() const;
 
+    bool GetLessThanTls13() const { return mLessThanTls13; }
+    void SetLessThanTls13(bool aLessThanTls13)
+    {
+      mLessThanTls13 = aLessThanTls13;
+    }
+
 private:
     void Init(const nsACString &host,
               int32_t port,
@@ -183,6 +189,10 @@ private:
     uint32_t               mTlsFlags;
     uint16_t               mTrrUsed : 1;
     uint16_t               mTrrDisabled : 1;
+
+    bool mLessThanTls13; // This will be set to true if we negotiate less than
+                         // tls1.3. If the tls version is till not know or it
+                         // is 1.3 or greater the value will be false.
 
 // for RefPtr
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHttpConnectionInfo, override)
