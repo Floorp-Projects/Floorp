@@ -140,6 +140,10 @@
 
           XPCOMUtils.defineLazyPreferenceGetter(this, "_closeTabByDblclick",
             "browser.tabs.closeTabByDblclick", false);
+
+          if (gMultiProcessBrowser) {
+            this.tabbox.tabpanels.setAttribute("async", "true");
+          }
         ]]>
       </constructor>
 
