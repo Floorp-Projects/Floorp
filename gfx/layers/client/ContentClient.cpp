@@ -195,7 +195,6 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
           newParameters.SetUnrotated();
           mBuffer->SetParameters(newParameters);
         } else {
-          MOZ_ASSERT(!result.mAsyncPaint);
           MOZ_ASSERT(GetFrontBuffer());
           mBuffer->Unlock();
           dest.mBufferRect = ComputeBufferRect(dest.mNeededRegion.GetBounds());
