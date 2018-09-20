@@ -7,10 +7,10 @@
 // security state after navigating an iframe in various contexts.
 // See bug 1490982.
 
-const SECURE_TEST_URI =
-  "https://example.com/browser/browser/base/content/test/siteIdentity/iframe_navigation.html";
-const INSECURE_TEST_URI =
-  "http://example.com/browser/browser/base/content/test/siteIdentity/iframe_navigation.html";
+const ROOT_URI = getRootDirectory(gTestPath).replace("chrome://mochitests/content",
+                                                     "https://example.com");
+const SECURE_TEST_URI = ROOT_URI + "iframe_navigation.html";
+const INSECURE_TEST_URI = SECURE_TEST_URI.replace("https://", "http://");
 
 // From a secure URI, navigate the iframe to about:blank (should still be
 // secure).

@@ -218,18 +218,28 @@ nsSecureBrowserUIImpl::UpdateStateAndSecurityInfo(nsIChannel* channel,
   NS_ENSURE_ARG(channel);
   NS_ENSURE_ARG(uri);
 
+  mState = STATE_IS_INSECURE;
+  mTopLevelSecurityInfo = nullptr;
+
   nsCOMPtr<nsITransportSecurityInfo> securityInfo;
   GetSecurityInfoFromChannel(channel, getter_AddRefs(securityInfo));
   if (securityInfo) {
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
             ("  we have a security info %p", securityInfo.get()));
-    mTopLevelSecurityInfo = securityInfo;
-    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-            ("  set mTopLevelSecurityInfo"));
-    nsresult rv = mTopLevelSecurityInfo->GetSecurityState(&mState);
+
+    nsresult rv = securityInfo->GetSecurityState(&mState);
     if (NS_FAILED(rv)) {
       return rv;
     }
+    // If the security state is STATE_IS_INSECURE, the TLS handshake never
+    // completed. Don't set any further state.
+    if (mState == STATE_IS_INSECURE) {
+      return NS_OK;
+    }
+
+    mTopLevelSecurityInfo = securityInfo;
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+            ("  set mTopLevelSecurityInfo"));
     bool isEV;
     rv = mTopLevelSecurityInfo->GetIsExtendedValidation(&isEV);
     if (NS_FAILED(rv)) {
@@ -239,9 +249,6 @@ nsSecureBrowserUIImpl::UpdateStateAndSecurityInfo(nsIChannel* channel,
       MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  is EV"));
       mState |= STATE_IDENTITY_EV_TOPLEVEL;
     }
-  } else {
-    mState = STATE_IS_INSECURE;
-    mTopLevelSecurityInfo = nullptr;
   }
   return NS_OK;
 }
@@ -295,13 +302,13 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
             ("  we have a channel %p", channel.get()));
     nsresult rv = UpdateStateAndSecurityInfo(channel, aLocation);
-    if (NS_FAILED(rv)) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     nsCOMPtr<nsISecurityEventSink> eventSink;
     NS_QueryNotificationCallbacks(channel, eventSink);
-    if (!eventSink) {
+    if (NS_WARN_IF(!eventSink)) {
       return NS_ERROR_INVALID_ARG;
     }
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
