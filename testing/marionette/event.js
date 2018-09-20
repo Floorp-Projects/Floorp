@@ -455,6 +455,7 @@ function createKeyboardEventDictionary_(key, keyEvent, win) {
     (keyCodeIsDefined && keyEvent.keyCode >= 0 && keyEvent.keyCode <= 255) ?
       keyEvent.keyCode : 0;
   let keyName = "Unidentified";
+
   if (key.indexOf("KEY_") == 0) {
     keyName = key.substr("KEY_".length);
     result.flags |= Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
@@ -480,17 +481,25 @@ function createKeyboardEventDictionary_(key, keyEvent, win) {
       result.flags |= Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
     }
   }
+
   let locationIsDefined = "location" in keyEvent;
   if (locationIsDefined && keyEvent.location === 0) {
     result.flags |= Ci.nsITextInputProcessor.KEY_KEEP_KEY_LOCATION_STANDARD;
   }
+
+  let resultKey = "key" in keyEvent ? keyEvent.key : keyName;
+  if (!MODIFIER_KEYCODES_LOOKUP[key] && keyEvent.shiftKey) {
+    resultKey = resultKey.toUpperCase();
+  }
+
   result.dictionary = {
-    key: "key" in keyEvent ? keyEvent.key : keyName,
+    key: resultKey,
     code: "code" in keyEvent ? keyEvent.code : "",
     location: locationIsDefined ? keyEvent.location : 0,
     repeat: "repeat" in keyEvent ? keyEvent.repeat === true : false,
     keyCode,
   };
+
   return result;
 }
 
@@ -825,7 +834,7 @@ event.synthesizeMouseExpectEvent = function(
       testName);
 };
 
-const KEYCODES_LOOKUP = {
+const MODIFIER_KEYCODES_LOOKUP = {
   "VK_SHIFT": "shiftKey",
   "VK_CONTROL": "ctrlKey",
   "VK_ALT": "altKey",
@@ -1011,17 +1020,16 @@ event.sendKeyUp = function(keyToSend, modifiers, win) {
  *     Window object.
  */
 event.sendSingleKey = function(keyToSend, modifiers, win) {
-  let keyName = getKeyCode(keyToSend);
-  if (keyName in KEYCODES_LOOKUP) {
-    // We assume that if |keyToSend| is a raw code point (like "\uE009")
-    // then |modifiers| does not already have correct value for corresponding
-    // |modName| attribute (like ctrlKey), so that value needs to be flipped.
-    let modName = KEYCODES_LOOKUP[keyName];
+  let keyCode = getKeyCode(keyToSend);
+  if (keyCode in MODIFIER_KEYCODES_LOOKUP) {
+    // For |sendKeysToElement| and legacy actions we assume that if
+    // |keyToSend| is a raw code point (like "\uE009") then |modifiers| does
+    // not already have correct value for corresponding |modName| attribute
+    // (like ctrlKey), so that value needs to be flipped.
+    let modName = MODIFIER_KEYCODES_LOOKUP[keyCode];
     modifiers[modName] = !modifiers[modName];
-  } else if (modifiers.shiftKey && keyName != "Shift") {
-    keyName = keyName.toUpperCase();
   }
-  event.synthesizeKey(keyName, modifiers, win);
+  event.synthesizeKey(keyCode, modifiers, win);
 };
 
 /**
