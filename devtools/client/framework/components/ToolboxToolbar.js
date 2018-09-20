@@ -7,9 +7,12 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {div, button} = dom;
+const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 
 const MeatballMenu = createFactory(require("devtools/client/framework/components/MeatballMenu"));
 const MenuButton = createFactory(require("devtools/client/shared/components/menu/MenuButton"));
+const MenuItem = createFactory(require("devtools/client/shared/components/menu/MenuItem"));
+const MenuList = createFactory(require("devtools/client/shared/components/menu/MenuList"));
 const ToolboxTabs = createFactory(require("devtools/client/framework/components/ToolboxTabs"));
 
 /**
@@ -87,6 +90,9 @@ class ToolboxToolbar extends Component {
     super(props);
 
     this.hideMenu = this.hideMenu.bind(this);
+    this.createFrameList = this.createFrameList.bind(this);
+    this.highlightFrame = this.highlightFrame.bind(this);
+    this.clickFrameButton = this.clickFrameButton.bind(this);
   }
 
   componentDidMount() {
@@ -100,6 +106,10 @@ class ToolboxToolbar extends Component {
   hideMenu() {
     if (this.refs.meatballMenuButton) {
       this.refs.meatballMenuButton.hideMenu();
+    }
+
+    if (this.refs.frameMenuButton) {
+      this.refs.frameMenuButton.hideMenu();
     }
   }
 
@@ -165,6 +175,13 @@ class ToolboxToolbar extends Component {
           className: buttonClass,
           onKeyDown
         } = command;
+
+        // If button is frame button, create menu button in order to
+        // use the doorhanger menu.
+        if (id === "command-button-frames") {
+          return this.renderFrameButton(command);
+        }
+
         return button({
           id,
           title: description,
@@ -202,6 +219,72 @@ class ToolboxToolbar extends Component {
     }
 
     return div({id: `toolbox-buttons-${isStart ? "start" : "end"}`}, ...children);
+  }
+
+  renderFrameButton(command) {
+    const {
+      id,
+      disabled,
+      description
+    } = command;
+
+    const { toolbox } = this.props;
+
+    return MenuButton(
+      {
+        id,
+        disabled,
+        menuId: id + "-panel",
+        doc: toolbox.doc,
+        className: "command-button devtools-button ",
+        ref: "frameMenuButton",
+        title: description,
+        onCloseButton: toolbox.highlighterUtils.unhighlight,
+      },
+      this.createFrameList
+    );
+  }
+
+  clickFrameButton(event) {
+    const { toolbox } = this.props;
+    toolbox.onSelectFrame(event.target.id);
+  }
+
+  highlightFrame(id) {
+    if (!id) {
+      return;
+    }
+
+    const { toolbox } = this.props;
+    toolbox.onHighlightFrame(id);
+  }
+
+  createFrameList() {
+    const { toolbox } = this.props;
+    if (toolbox.frameMap.size < 1) {
+      return null;
+    }
+
+    const items = [];
+    toolbox.frameMap.forEach((frame, index) => {
+      const label = toolbox.target.isWebExtension
+                    ? toolbox.target.getExtensionPathName(frame.url)
+                    : getUnicodeUrl(frame.url);
+      items.push(MenuItem({
+        id: frame.id.toString(),
+        key: "toolbox-frame-key-" + frame.id,
+        label,
+        checked: frame.id === toolbox.selectedFrameId,
+        onClick: this.clickFrameButton
+      }));
+    });
+
+    return MenuList(
+      {
+        id: "toolbox-frame-menu",
+        onHighlightedChildChange: this.highlightFrame
+      },
+      items);
   }
 
   /**
