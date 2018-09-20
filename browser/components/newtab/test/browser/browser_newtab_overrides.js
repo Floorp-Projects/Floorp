@@ -25,7 +25,7 @@ function nextChangeNotificationPromise(aNewURL, testMessage) {
 add_task(async function redirector_ignores_override() {
   let overrides = [
     "chrome://browser/content/aboutRobots.xhtml",
-    "about:home",
+    "about:home"
   ];
 
   for (let overrideURL of overrides) {
@@ -37,7 +37,7 @@ add_task(async function redirector_ignores_override() {
 
     let tabOptions = {
       gBrowser,
-      url: "about:newtab",
+      url: "about:newtab"
     };
 
     /*
@@ -66,7 +66,7 @@ add_task(async function override_loads_in_browser() {
   let overrides = [
     "chrome://browser/content/aboutRobots.xhtml",
     "about:home",
-    " about:home",
+    " about:home"
   ];
 
   for (let overrideURL of overrides) {
@@ -98,7 +98,7 @@ add_task(async function override_blank_loads_in_browser() {
     "",
     " ",
     "\n\t",
-    " about:blank",
+    " about:blank"
   ];
 
   for (let overrideURL of overrides) {

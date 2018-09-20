@@ -65,7 +65,7 @@ this.SnippetsFeed = class SnippetsFeed {
     const resetDate = await profileAge.reset;
     return {
       createdWeeksAgo:  Math.floor((Date.now() - createdDate) / ONE_WEEK),
-      resetWeeksAgo: resetDate ? Math.floor((Date.now() - resetDate) / ONE_WEEK) : null,
+      resetWeeksAgo: resetDate ? Math.floor((Date.now() - resetDate) / ONE_WEEK) : null
     };
   }
 
@@ -80,7 +80,7 @@ this.SnippetsFeed = class SnippetsFeed {
             searchEngineIdentifier: Services.search.defaultEngine.identifier,
             engines: engines
               .filter(engine => engine.identifier)
-              .map(engine => `${TARGET_SEARCHENGINE_PREFIX}${engine.identifier}`),
+              .map(engine => `${TARGET_SEARCHENGINE_PREFIX}${engine.identifier}`)
           });
         } else {
           resolve({engines: [], searchEngineIdentifier: ""});
@@ -97,13 +97,13 @@ this.SnippetsFeed = class SnippetsFeed {
         version: addon.version,
         type: addon.type,
         isSystem: addon.isSystem,
-        isWebExtension: addon.isWebExtension,
+        isWebExtension: addon.isWebExtension
       };
       if (fullData) {
         Object.assign(info[addon.id], {
           name: addon.name,
           userDisabled: addon.userDisabled,
-          installDate: addon.installDate,
+          installDate: addon.installDate
         });
       }
     }
@@ -154,7 +154,7 @@ this.SnippetsFeed = class SnippetsFeed {
       defaultBrowser: this.isDefaultBrowser(),
       isDevtoolsUser: this.isDevtoolsUser(),
       blockList: await this._getBlockList() || [],
-      previousSessionEnd: this._previousSessionEnd,
+      previousSessionEnd: this._previousSessionEnd
     };
     this._dispatchChanges(data);
   }

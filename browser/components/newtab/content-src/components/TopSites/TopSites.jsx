@@ -46,7 +46,7 @@ function countTopSitesIconsTypes(topSites) {
     "screenshot": 0,
     "tippytop": 0,
     "rich_icon": 0,
-    "no_image": 0,
+    "no_image": 0
   });
 }
 
@@ -71,8 +71,8 @@ export class _TopSites extends React.PureComponent {
       data: {
         topsites_icon_stats: topSitesIconsStats,
         topsites_pinned: topSitesPinned,
-        topsites_search_shortcuts: searchShortcuts,
-      },
+        topsites_search_shortcuts: searchShortcuts
+      }
     }));
   }
 
@@ -100,7 +100,7 @@ export class _TopSites extends React.PureComponent {
   onEditFormClose() {
     this.props.dispatch(ac.UserEvent({
       source: TOP_SITES_SOURCE,
-      event: "TOP_SITES_EDIT_CLOSE",
+      event: "TOP_SITES_EDIT_CLOSE"
     }));
     this.props.dispatch({type: at.TOP_SITES_CANCEL_EDIT});
   }
@@ -108,7 +108,7 @@ export class _TopSites extends React.PureComponent {
   onSearchShortcutsFormClose() {
     this.props.dispatch(ac.UserEvent({
       source: TOP_SITES_SOURCE,
-      event: "SEARCH_EDIT_CLOSE",
+      event: "SEARCH_EDIT_CLOSE"
     }));
     this.props.dispatch({type: at.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL});
   }
@@ -169,5 +169,5 @@ export class _TopSites extends React.PureComponent {
 export const TopSites = connect(state => ({
   TopSites: state.TopSites,
   Prefs: state.Prefs,
-  TopSitesRows: state.Prefs.values.topSitesRows,
+  TopSitesRows: state.Prefs.values.topSitesRows
 }))(injectIntl(_TopSites));
