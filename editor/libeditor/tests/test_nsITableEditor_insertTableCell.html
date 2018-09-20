@@ -1,0 +1,232 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsITableEditor.insertTableCell()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div id="display">
+</div>
+<div id="content" contenteditable>out of table<table><tr><td>default content</td></tr></table></div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let editor = document.getElementById("content");
+  let selection = document.getSelection();
+
+  selection.collapse(editor.firstChild, 0);
+  getTableEditor().insertTableCell(1, false);
+  is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
+     "nsITableEditor.insertTableCell(1, false) should do nothing if selection is not in <table>");
+  getTableEditor().insertTableCell(1, true);
+  is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
+     "nsITableEditor.insertTableCell(1, true) should do nothing if selection is not in <table>");
+
+  selection.removeAllRanges();
+  try {
+    getTableEditor().insertTableCell(1, false);
+    ok(false, "getTableEditor().insertTableCell(1, false) without selection ranges should throw exception");
+  } catch (e) {
+    ok(true, "getTableEditor().insertTableCell(1, false) without selection ranges should throw exception");
+  }
+  try {
+    getTableEditor().insertTableCell(1, true);
+    ok(false, "getTableEditor().insertTableCell(1, true) without selection ranges should throw exception");
+  } catch (e) {
+    ok(true, "getTableEditor().insertTableCell(1, true) without selection ranges should throw exception");
+  }
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                       '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableCell(1, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                         '<tr><td valign="top"><br></td><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(1, false) should insert a cell before the cell containing selection");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                       '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableCell(1, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                         '<tr><td id="select">cell2-1</td><td valign="top"><br></td><td>cell2-2</td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(1, true) should insert a cell after the cell containing selection");
+
+  // with rowspan.
+
+  // Odd case. This puts the cell containing selection moves right of row-spanning cell.
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td rowspan="2">cell1-2</td></tr>' +
+                       '<tr><td id="select">cell2-1</td></tr>' +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableCell(1, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td rowspan="2">cell1-2</td></tr>' +
+                         '<tr><td valign="top"><br></td><td id="select">cell2-1</td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(1, false) should insert a cell before the cell containing selection and moves the cell to right of the row-spanning cell element");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td rowspan="3">cell1-2</td></tr>' +
+                       '<tr><td id="select">cell2-1</td></tr>' +
+                       "<tr><td>cell3-1</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableCell(1, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td rowspan="3">cell1-2</td></tr>' +
+                         '<tr><td id="select">cell2-1</td><td valign="top"><br></td></tr>' +
+                         "<tr><td>cell3-1</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(1, true) should insert a cell after the cell containing selection and moves the cell to right of the row-spanning cell element");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td id="select" rowspan="2">cell1-2</td></tr>' +
+                       "<tr><td>cell2-1</td></tr>" +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 1);
+  getTableEditor().insertTableCell(2, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td valign="top"><br></td><td valign="top"><br></td><td id="select" rowspan="2">cell1-2</td></tr>' +
+                         "<tr><td>cell2-1</td></tr>" +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(2, false) should insert 2 cells before the row-spanning cell containing selection");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td id="select" rowspan="2">cell1-2</td></tr>' +
+                       "<tr><td>cell2-1</td></tr>" +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 1);
+  getTableEditor().insertTableCell(2, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td id="select" rowspan="2">cell1-2</td><td valign="top"><br></td><td valign="top"><br></td></tr>' +
+                         "<tr><td>cell2-1</td></tr>" +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(2, false) should insert 2 cells after the row-spanning cell containing selection");
+
+  // with colspan
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td id="select">cell1-2</td><td>cell1-3</td></tr>' +
+                       '<tr><td colspan="2">cell2-1</td><td>cell2-3</td></tr>' +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableCell(1, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td valign="top"><br></td><td id="select">cell1-2</td><td>cell1-3</td></tr>' +
+                         '<tr><td colspan="2">cell2-1</td><td>cell2-3</td></tr>' +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(1, false) should insert a cell before the cell containing selection but do not modify col-spanning cell");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       '<tr><td>cell1-1</td><td id="select">cell1-2</td><td>cell1-3</td></tr>' +
+                       '<tr><td colspan="3">cell2-1</td></tr>' +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableCell(1, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         '<tr><td>cell1-1</td><td id="select">cell1-2</td><td valign="top"><br></td><td>cell1-3</td></tr>' +
+                         '<tr><td colspan="3">cell2-1</td></tr>' +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(1, true) should insert a cell after the cell containing selection but do not modify col-spanning cell");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr>" +
+                       '<tr><td id="select" colspan="2">cell2-1</td><td>cell2-3</td></tr>' +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 1);
+  getTableEditor().insertTableCell(2, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         "<tr><td>cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr>" +
+                         '<tr><td valign="top"><br></td><td valign="top"><br></td><td id="select" colspan="2">cell2-1</td><td>cell2-3</td></tr>' +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(2, false) should insert 2 cells before the col-spanning cell containing selection");
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr>" +
+                       '<tr><td id="select" colspan="2">cell2-1</td><td>cell2-3</td></tr>' +
+                     "</table>";
+  editor.focus();
+  editor.scrollTop; // layout information required.
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 1);
+  getTableEditor().insertTableCell(2, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         "<tr><td>cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr>" +
+                         '<tr><td id="select" colspan="2">cell2-1</td><td valign="top"><br></td><td valign="top"><br></td><td>cell2-3</td></tr>' +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(2, false) should insert 2 cells after the col-spanning cell containing selection");
+
+  SimpleTest.finish();
+});
+
+function getTableEditor() {
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window).QueryInterface(SpecialPowers.Ci.nsITableEditor);
+}
+
+</script>
+</body>
+
+</html>
