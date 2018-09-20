@@ -27,7 +27,9 @@ class JSStringEnumerator final : public nsIJSEnumerator
 
   explicit JSStringEnumerator(nsIStringEnumerator* aEnumerator)
     : mEnumerator(do_QueryInterface(aEnumerator))
-  {}
+  {
+    MOZ_ASSERT(mEnumerator);
+  }
 
 private:
   ~JSStringEnumerator() = default;
