@@ -462,8 +462,8 @@ HTMLEditor::UpdateRootElement()
   }
 }
 
-already_AddRefed<nsIContent>
-HTMLEditor::FindSelectionRoot(nsINode* aNode)
+Element*
+HTMLEditor::FindSelectionRoot(nsINode* aNode) const
 {
   if (NS_WARN_IF(!aNode)) {
     return nullptr;
@@ -472,42 +472,38 @@ HTMLEditor::FindSelectionRoot(nsINode* aNode)
   MOZ_ASSERT(aNode->IsDocument() || aNode->IsContent(),
              "aNode must be content or document node");
 
-  nsCOMPtr<nsIDocument> doc = aNode->GetComposedDoc();
+  nsIDocument* doc = aNode->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> content;
   if (aNode->IsInUncomposedDoc() &&
       (doc->HasFlag(NODE_IS_EDITABLE) || !aNode->IsContent())) {
-    content = doc->GetRootElement();
-    return content.forget();
+    return doc->GetRootElement();
   }
-  content = aNode->AsContent();
 
   // XXX If we have readonly flag, shouldn't return the element which has
   // contenteditable="true"?  However, such case isn't there without chrome
   // permission script.
   if (IsReadonly()) {
     // We still want to allow selection in a readonly editor.
-    content = GetRoot();
-    return content.forget();
+    return GetRoot();
   }
 
+  nsIContent* content = aNode->AsContent();
   if (!content->HasFlag(NODE_IS_EDITABLE)) {
     // If the content is in read-write state but is not editable itself,
     // return it as the selection root.
     if (content->IsElement() &&
         content->AsElement()->State().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
-      return content.forget();
+      return content->AsElement();
     }
     return nullptr;
   }
 
   // For non-readonly editors we want to find the root of the editable subtree
   // containing aContent.
-  content = content->GetEditingHost();
-  return content.forget();
+  return content->GetEditingHost();
 }
 
 void
