@@ -146,6 +146,13 @@ if test -n "$LIBFUZZER"; then
     fi
 fi
 
+dnl =======================================================
+dnl = Required for stand-alone (sanitizer-less) libFuzzer.
+dnl =======================================================
+if test -n "$LIBFUZZER"; then
+   LDFLAGS="$LIBFUZZER_FLAGS -rdynamic $LDFLAGS"
+fi
+
 # The LLVM symbolizer is used by all sanitizers
 AC_SUBST(LLVM_SYMBOLIZER)
 
