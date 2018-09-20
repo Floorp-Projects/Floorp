@@ -70,18 +70,9 @@ class WorkletImpl
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkletImpl);
 
-  enum WorkletType {
-    eAudioWorklet,
-    ePaintWorklet,
-  };
-
   // Methods for parent thread only:
 
-  static already_AddRefed<dom::Worklet>
-  CreateWorklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
-                WorkletType aWorkletType);
-
-  JSObject*
+  virtual JSObject*
   WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
               JS::Handle<JSObject*> aGivenProto);
 
@@ -98,15 +89,15 @@ public:
   // Use DispatchRunnable only when the thread is known to already exist.
   nsresult DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
-private:
-  WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
-              WorkletType aWorkletType);
-  ~WorkletImpl();
+protected:
+  WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
+  virtual ~WorkletImpl();
+
+  virtual already_AddRefed<dom::WorkletGlobalScope> ConstructGlobalScope() = 0;
 
   // The only WorkletLoadInfo member modified is mPrincipal which is accessed
   // on only the parent thread.
   WorkletLoadInfo mWorkletLoadInfo;
-  const WorkletType mWorkletType;
 
   // Parent thread only.
   RefPtr<dom::WorkletThread> mWorkletThread;
