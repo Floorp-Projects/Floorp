@@ -9,6 +9,7 @@
 #include "AndroidColors.h"
 #include "nsCSSRendering.h"
 #include "PathHelpers.h"
+#include "mozilla/ClearOnShutdown.h"
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeAndroid, nsNativeTheme, nsITheme)
 
@@ -312,4 +313,17 @@ nsITheme::Transparency
 nsNativeThemeAndroid::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetType)
 {
   return eUnknownTransparency;
+}
+
+already_AddRefed<nsITheme>
+do_GetNativeTheme()
+{
+  static nsCOMPtr<nsITheme> inst;
+
+  if (!inst) {
+    inst = new nsNativeThemeAndroid();
+    ClearOnShutdown(&inst);
+  }
+
+  return do_AddRef(inst);
 }

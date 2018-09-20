@@ -173,7 +173,7 @@ typedef struct {
 
   // Auto frame-scaling variables.
   int rf_level_maxq[RATE_FACTOR_LEVELS];
-  float_t arf_boost_factor;
+  float arf_boost_factor;
   // Q index used for ALT frame
   int arf_q;
 } RATE_CONTROL;

@@ -219,13 +219,25 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
   bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
 
   if (anonclass.EqualsLiteral("mozTableAddColumnBefore")) {
-    InsertTableColumn(1, false);
+    DebugOnly<nsresult> rv =
+      InsertTableColumnsWithTransaction(1, InsertPosition::eBeforeSelectedCell);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to insert a column before the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableAddColumnAfter")) {
-    InsertTableColumn(1, true);
+    DebugOnly<nsresult> rv =
+      InsertTableColumnsWithTransaction(1, InsertPosition::eAfterSelectedCell);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to insert a column after the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableAddRowBefore")) {
-    InsertTableRow(1, false);
+    DebugOnly<nsresult> rv =
+      InsertTableRowsWithTransaction(1, InsertPosition::eBeforeSelectedCell);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to insert a row before the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableAddRowAfter")) {
-    InsertTableRow(1, true);
+    DebugOnly<nsresult> rv =
+      InsertTableRowsWithTransaction(1, InsertPosition::eAfterSelectedCell);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to insert a row after the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableRemoveColumn")) {
     DebugOnly<nsresult> rv = DeleteSelectedTableColumnsWithTransaction(1);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -242,7 +254,7 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
 
   ++mInlineTableEditorUsedCount;
 
-  // InsertTableRow might causes reframe
+  // InsertTableRowsWithTransaction() might causes reframe.
   if (Destroyed()) {
     return NS_OK;
   }

@@ -29,6 +29,7 @@
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Range.h"
 #include "mozilla/RelativeLuminanceUtils.h"
@@ -4970,4 +4971,17 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetTy
   default:
     return eUnknownTransparency;
   }
+}
+
+already_AddRefed<nsITheme>
+do_GetNativeTheme()
+{
+  static nsCOMPtr<nsITheme> inst;
+
+  if (!inst) {
+    inst = new nsNativeThemeCocoa();
+    ClearOnShutdown(&inst);
+  }
+
+  return do_AddRef(inst);
 }
