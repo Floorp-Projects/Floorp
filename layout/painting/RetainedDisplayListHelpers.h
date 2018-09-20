@@ -30,7 +30,7 @@ public:
     : mKey(*aKey)
   {
   }
-  explicit DisplayItemHashEntry(const DisplayItemHashEntry& aCopy) = default;
+  DisplayItemHashEntry(DisplayItemHashEntry&&) = default;
 
   ~DisplayItemHashEntry() = default;
 
