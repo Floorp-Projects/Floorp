@@ -234,6 +234,17 @@ bool nsView::IsEffectivelyVisible()
   return true;
 }
 
+uint32_t nsView::GetParentWindowScaleFactor()
+{
+  uint32_t scaleFactor = 1;
+  nsIWidget* parentWidget =
+    GetParent() ? GetParent()->GetNearestWidget(nullptr) : nullptr;
+  if (parentWidget) {
+    scaleFactor = parentWidget->RoundsWidgetCoordinatesTo();
+  }
+  return scaleFactor;
+}
+
 LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType)
 {
   int32_t p2a = mViewManager->AppUnitsPerDevPixel();
@@ -320,7 +331,9 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // Stash a copy of these and use them so we can handle this being deleted (say
   // from sync painting/flushing from Show/Move/Resize on the widget).
   LayoutDeviceIntRect newBounds;
+#if !defined(MOZ_WIDGET_GTK)
   RefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
+#endif
 
   nsWindowType type = widget->WindowType();
 
@@ -360,7 +373,15 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // because of the potential for device-pixel coordinate spaces for mixed
   // hidpi/lodpi screens to overlap each other and result in bad placement
   // (bug 814434).
+#if defined(MOZ_WIDGET_GTK)
+  // The GetDesktopToDeviceScale does not work under Wayland because we
+  // don't know the absolute position of the window in Wayland. We can
+  // use the same for X11, because it always returns 1 for both calls.
+  DesktopToLayoutDeviceScale scale = mozilla::DesktopToLayoutDeviceScale(
+    GetParentWindowScaleFactor());
+#else
   DesktopToLayoutDeviceScale scale = dx->GetDesktopToDeviceScale();
+#endif
 
   DesktopRect deskRect = newBounds / scale;
   if (changedPos) {
