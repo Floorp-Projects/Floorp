@@ -418,15 +418,8 @@ var BrowserApp = {
     });
 
     window.addEventListener("fullscreenchange", (e) => {
-      // This event gets fired on the document and its entire ancestor chain
-      // of documents. When enabling fullscreen, it is fired on the top-level
-      // document first and goes down; when disabling the order is reversed
-      // (per spec). This means the last event on enabling will be for the innermost
-      // document, which will have fullscreenElement set correctly.
-      let doc = e.target;
       WindowEventDispatcher.sendRequest({
-        type: doc.fullscreenElement ? "DOMFullScreen:Start" : "DOMFullScreen:Stop",
-        rootElement: doc.fullscreenElement == doc.documentElement
+        type: document.fullscreenElement ? "DOMFullScreen:Start" : "DOMFullScreen:Stop"
       });
 
       if (this.fullscreenTransitionTab) {
