@@ -60,7 +60,10 @@ Linker::newCode(JSContext* cx, CodeKind kind)
     if (masm.oom()) {
         return fail(cx);
     }
-    awjc.emplace(result, bytesNeeded);
+    awjcf.emplace(result, bytesNeeded);
+    if (!awjcf->makeWritable()) {
+        return fail(cx);
+    }
     code->copyFrom(masm);
     masm.link(code);
     if (masm.embedsNurseryPointers()) {
