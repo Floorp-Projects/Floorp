@@ -13,7 +13,10 @@
             "type": "object",
             "optional": true,
             "properties": {
-              "api_script": { "$ref": "manifest.ExtensionURL"}
+              "api_script": {
+                "optional": true,
+                "$ref": "manifest.ExtensionURL"
+              }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }
           }
@@ -23,6 +26,7 @@
   },
   {
     "namespace": "userScripts",
+    "permissions": ["manifest:user_scripts"],
     "allowedContexts": ["content"],
     "types": [
       {
