@@ -16,6 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIdentifierMapEntry.h"
+#include "nsIRadioGroupContainer.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashtable.h"
 
@@ -35,10 +36,12 @@ class Rule;
 namespace dom {
 
 class Element;
+class HTMLInputElement;
 
 class ShadowRoot final : public DocumentFragment,
                          public DocumentOrShadowRoot,
-                         public nsStubMutationObserver
+                         public nsStubMutationObserver,
+                         public nsIRadioGroupContainer
 {
 public:
   NS_IMPL_FROMNODE_HELPER(ShadowRoot, IsShadowRoot());
@@ -206,6 +209,61 @@ public:
   }
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
+
+  // nsIRadioGroupContainer
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
+                            nsIRadioVisitor* aVisitor,
+                            bool aFlushContent) override
+  {
+    return DocumentOrShadowRoot::WalkRadioGroup(aName, aVisitor, aFlushContent);
+  }
+  virtual void
+  SetCurrentRadioButton(const nsAString& aName,
+                        HTMLInputElement* aRadio) override
+  {
+    DocumentOrShadowRoot::SetCurrentRadioButton(aName, aRadio);
+  }
+  virtual HTMLInputElement*
+  GetCurrentRadioButton(const nsAString& aName) override
+  {
+    return DocumentOrShadowRoot::GetCurrentRadioButton(aName);
+  }
+  NS_IMETHOD
+  GetNextRadioButton(const nsAString& aName,
+                     const bool aPrevious,
+                     HTMLInputElement* aFocusedRadio,
+                     HTMLInputElement** aRadioOut) override
+  {
+    return DocumentOrShadowRoot::GetNextRadioButton(aName, aPrevious,
+                                                    aFocusedRadio, aRadioOut);
+  }
+  virtual void AddToRadioGroup(const nsAString& aName,
+                               HTMLInputElement* aRadio) override
+  {
+    DocumentOrShadowRoot::AddToRadioGroup(aName, aRadio);
+  }
+  virtual void RemoveFromRadioGroup(const nsAString& aName,
+                                    HTMLInputElement* aRadio) override
+  {
+    DocumentOrShadowRoot::RemoveFromRadioGroup(aName, aRadio);
+  }
+  virtual uint32_t GetRequiredRadioCount(const nsAString& aName) const override
+  {
+    return DocumentOrShadowRoot::GetRequiredRadioCount(aName);
+  }
+  virtual void RadioRequiredWillChange(const nsAString& aName,
+                                       bool aRequiredAdded) override
+  {
+    DocumentOrShadowRoot::RadioRequiredWillChange(aName, aRequiredAdded);
+  }
+  virtual bool GetValueMissingState(const nsAString& aName) const override
+  {
+    return DocumentOrShadowRoot::GetValueMissingState(aName);
+  }
+  virtual void SetValueMissingState(const nsAString& aName, bool aValue) override
+  {
+    return DocumentOrShadowRoot::SetValueMissingState(aName, aValue);
+  }
 
 protected:
   // FIXME(emilio): This will need to become more fine-grained.
