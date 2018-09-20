@@ -12873,7 +12873,7 @@ nsIDocument::MaybeAllowStorageForOpener()
 {
   if (StaticPrefs::network_cookie_cookieBehavior() !=
         nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      !AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()) {
+      !StaticPrefs::browser_contentblocking_enabled()) {
     return;
   }
 
@@ -13605,7 +13605,7 @@ nsIDocument::HasStorageAccess(mozilla::ErrorResult& aRv)
     return promise.forget();
   }
 
-  if (AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions() &&
+  if (StaticPrefs::browser_contentblocking_enabled() &&
       StaticPrefs::network_cookie_cookieBehavior() ==
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     // If we need to abide by Content Blocking cookie restrictions, ensure to
@@ -13726,7 +13726,7 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
 
   bool granted = true;
   bool isTrackingWindow = false;
-  if (AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions() &&
+  if (StaticPrefs::browser_contentblocking_enabled() &&
       StaticPrefs::network_cookie_cookieBehavior() ==
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     // Only do something special for third-party tracking content.
