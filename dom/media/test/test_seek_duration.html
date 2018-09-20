@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/**
+ * This test is used to make sure video's duration won't be changed when it
+ * reachs to the end after seeking to position where the time is very close to
+ * video's end time.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+(async function startTest()
+{
+  const video = document.createElement('video');
+  video.src = "bunny.webm";
+  document.body.appendChild(video);
+
+  const loadedMetadata = once(video, "loadedmetadata");
+  const canplay = once(video, "canplay");
+  const end = once(video, "ended");
+
+  info(`- wait for video loading metadata -`);
+  await loadedMetadata;
+  const originalDuration = video.duration;
+
+  info(`- seek video to the position which is close to end time -`);
+  // video's duration is 2.1 and the last key frame is in 2.0, we want to seek
+  // to that keyframe.
+  video.currentTime = originalDuration - 0.1;
+
+  info(`- play video until it ends -`);
+  await canplay;
+  await video.play();
+  await end;
+
+  ok(video.duration === originalDuration, `Duration shouldn't change`);
+  removeNodeAndSource(video);
+
+  SimpleTest.finish();
+})();
+
+</script>
+</pre>
+</body>
+</html>
