@@ -55,6 +55,10 @@ struct nr_ice_media_stream_ {
   Data r2l_pass;   /* The password for incoming requests */
   Data l2r_pass;   /* The password for outcoming requests */
   int ice_state;
+  /* The stream is being replaced by another, so it will not continue any ICE
+   * processing. If this stream is connected already, traffic can continue to
+   * flow for a limited time while the new stream gets ready. */
+  int obsolete;
 
 #define NR_ICE_MEDIA_STREAM_UNPAIRED           1
 #define NR_ICE_MEDIA_STREAM_CHECKS_FROZEN      2
@@ -78,7 +82,7 @@ struct nr_ice_media_stream_ {
 
 typedef STAILQ_HEAD(nr_ice_media_stream_head_,nr_ice_media_stream_) nr_ice_media_stream_head;
 
-int nr_ice_media_stream_create(struct nr_ice_ctx_ *ctx,char *label, int components, nr_ice_media_stream **streamp);
+int nr_ice_media_stream_create(struct nr_ice_ctx_ *ctx,const char *label,const char *ufrag,const char *pwd,int components, nr_ice_media_stream **streamp);
 int nr_ice_media_stream_destroy(nr_ice_media_stream **streamp);
 int nr_ice_media_stream_finalize(nr_ice_media_stream *lstr,nr_ice_media_stream *rstr);
 int nr_ice_media_stream_initialize(struct nr_ice_ctx_ *ctx, nr_ice_media_stream *stream);
@@ -90,13 +94,15 @@ int nr_ice_media_stream_service_pre_answer_requests(nr_ice_peer_ctx *pctx,nr_ice
 int nr_ice_media_stream_unfreeze_pairs(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);
 int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, char *foundation);
 int nr_ice_media_stream_dump_state(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream,FILE *out);
-int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_component *component);
-int nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_component *component);
+void nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_component *component);
+void nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_component *component);
 void nr_ice_media_stream_refresh_consent_all(nr_ice_media_stream *stream);
 void nr_ice_media_stream_disconnect_all_components(nr_ice_media_stream *stream);
 void nr_ice_media_stream_set_disconnected(nr_ice_media_stream *stream, int disconnected);
 int nr_ice_media_stream_check_if_connected(nr_ice_media_stream *stream);
 int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state);
+void nr_ice_media_stream_stop_checking(nr_ice_media_stream *str);
+void nr_ice_media_stream_set_obsolete(nr_ice_media_stream *str);
 int nr_ice_media_stream_get_best_candidate(nr_ice_media_stream *str, int component, nr_ice_candidate **candp);
 int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, UCHAR *data, int len);
 int nr_ice_media_stream_get_active(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, nr_ice_candidate **local, nr_ice_candidate **remote);

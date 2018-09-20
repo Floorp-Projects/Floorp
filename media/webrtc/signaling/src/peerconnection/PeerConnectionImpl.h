@@ -687,12 +687,6 @@ private:
       dom::MediaStreamTrack* aSendTrack,
       ErrorResult& aRv);
 
-  nsresult SetupIceRestartCredentials();
-  void BeginIceRestart();
-  nsresult ResetIceCredentials();
-  nsresult RollbackIceRestart();
-  void FinalizeIceRestart();
-
   static void GetStatsForPCObserver_s(
       const std::string& pcHandle,
       nsAutoPtr<RTCStatsQuery> query);
@@ -709,6 +703,8 @@ private:
   // an RTCStatsReport somewhere so it can be inspected after the call is over,
   // or other things.
   void RecordLongtermICEStatistics();
+
+  void RecordIceRestartStatistics(JsepSdpType type);
 
   // Timecard used to measure processing time. This should be the first class
   // attribute so that we accurately measure the time required to instantiate
@@ -773,8 +769,6 @@ private:
   // The JSEP negotiation session.
   mozilla::UniquePtr<PCUuidGenerator> mUuidGen;
   mozilla::UniquePtr<mozilla::JsepSession> mJsepSession;
-  std::string mPreviousIceUfrag; // used during rollback of ice restart
-  std::string mPreviousIcePwd; // used during rollback of ice restart
   unsigned long mIceRestartCount;
   unsigned long mIceRollbackCount;
 

@@ -657,11 +657,11 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 
     /* Note: we need to recompute these because
        we have not yet computed the values in the peer media stream.*/
-    lufrag=component->stream->ufrag ? component->stream->ufrag : ctx->ufrag;
+    lufrag=component->stream->ufrag;
     assert(lufrag);
     if (!lufrag)
       ABORT(R_INTERNAL);
-    lpwd=component->stream->pwd ? component->stream->pwd :ctx->pwd;
+    lpwd=component->stream->pwd;
     assert(lpwd);
     if (!lpwd)
       ABORT(R_INTERNAL);
@@ -697,6 +697,14 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     _status=0;
  abort:
     return(_status);
+  }
+
+void nr_ice_component_stop_gathering(nr_ice_component *component)
+  {
+    nr_ice_candidate *c1,*c2;
+    TAILQ_FOREACH_SAFE(c1, &component->candidates, entry_comp, c2){
+      nr_ice_candidate_stop_gathering(c1);
+    }
   }
 
 static int nr_ice_any_peer_paired(nr_ice_candidate* cand) {
@@ -1254,9 +1262,7 @@ static void nr_ice_component_consent_failed(nr_ice_component *comp)
     }
     /* We are turning the consent failure into a ICE component failure to
      * alert the browser via ICE connection state change about this event. */
-    if (nr_ice_media_stream_component_failed(comp->stream, comp))
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s)/STREAM(%s)/COMP(%d): failed to mark component as failed",
-        comp->ctx->label, comp->stream->label, comp->component_id);
+    nr_ice_media_stream_component_failed(comp->stream, comp);
   }
 
 static void nr_ice_component_consent_timeout_cb(NR_SOCKET s, int how, void *cb_arg)
@@ -1515,8 +1521,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
                p2->state == NR_ICE_PAIR_STATE_CANCELLED);
         r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling FROZEN/WAITING pair %s in trigger check queue because CAND-PAIR(%s) was nominated.",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->codeword,p2->as_string,pair->codeword);
 
-        if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2,0))
-          ABORT(r);
+        nr_ice_candidate_pair_cancel(pair->pctx,p2,0);
       }
 
       p2=TAILQ_NEXT(p2,triggered_check_queue_entry);
@@ -1529,8 +1534,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
           (p2->state == NR_ICE_PAIR_STATE_WAITING))) {
         r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling FROZEN/WAITING pair %s because CAND-PAIR(%s) was nominated.",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->codeword,p2->as_string,pair->codeword);
 
-        if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2,0))
-          ABORT(r);
+        nr_ice_candidate_pair_cancel(pair->pctx,p2,0);
       }
 
       p2=TAILQ_NEXT(p2,check_queue_entry);
@@ -1540,8 +1544,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
     if(r=nr_ice_component_setup_consent(comp))
       ABORT(r);
 
-    if(r=nr_ice_media_stream_component_nominated(comp->stream,comp))
-      ABORT(r);
+    nr_ice_media_stream_component_nominated(comp->stream,comp);
 
     _status=0;
   abort:
@@ -1577,12 +1580,12 @@ static int nr_ice_component_have_all_pairs_failed(nr_ice_component *comp)
     return(1);
   }
 
-int nr_ice_component_failed_pair(nr_ice_component *comp, nr_ice_cand_pair *pair)
+void nr_ice_component_failed_pair(nr_ice_component *comp, nr_ice_cand_pair *pair)
   {
-    return nr_ice_component_check_if_failed(comp);
+    nr_ice_component_check_if_failed(comp);
   }
 
-int nr_ice_component_check_if_failed(nr_ice_component *comp)
+void nr_ice_component_check_if_failed(nr_ice_component *comp)
   {
     if (comp->state == NR_ICE_COMPONENT_RUNNING) {
       /* Don't do anything to streams that aren't currently running */
@@ -1591,11 +1594,9 @@ int nr_ice_component_check_if_failed(nr_ice_component *comp)
       if (!comp->stream->pctx->trickle_grace_period_timer &&
           nr_ice_component_have_all_pairs_failed(comp)) {
         r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d): All pairs are failed, and grace period has elapsed. Marking component as failed.",comp->stream->pctx->label,comp->stream->label,comp->component_id);
-        return nr_ice_media_stream_component_failed(comp->stream,comp);
+        nr_ice_media_stream_component_failed(comp->stream,comp);
       }
     }
-
-    return(0);
   }
 
 int nr_ice_component_select_pair(nr_ice_peer_ctx *pctx, nr_ice_component *comp)
