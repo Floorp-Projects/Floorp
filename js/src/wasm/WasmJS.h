@@ -40,10 +40,21 @@ namespace wasm {
 bool
 HasCompilerSupport(JSContext* cx);
 
-// Return whether WebAssembly is enabled on this platform.
+// Return whether WebAssembly is supported on this platform. This determines
+// whether the WebAssembly object is exposed to JS and takes into account
+// configuration options that disable various modes.
 
 bool
 HasSupport(JSContext* cx);
+
+// Return whether WebAssembly streaming/caching is supported on this platform.
+// This takes into account prefs and necessary embedding callbacks.
+
+bool
+HasStreamingSupport(JSContext* cx);
+
+bool
+HasCachingSupport(JSContext* cx);
 
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.

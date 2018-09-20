@@ -87,11 +87,11 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  if (IsSecureContextOrObjectIsFromSecureContext(aCx, aGlobal)) {
+  if (IsSecureContextOrObjectIsFromSecureContext(aCx, global)) {
     return true;
   }
 
-  const bool isTestingEnabledInWindow = IsServiceWorkersTestingEnabledInWindow(aGlobal);
+  const bool isTestingEnabledInWindow = IsServiceWorkersTestingEnabledInWindow(global);
   const bool isTestingEnabledByPref = StaticPrefs::dom_serviceWorkers_testing_enabled();
   const bool isTestingEnabled = isTestingEnabledByPref || isTestingEnabledInWindow;
 

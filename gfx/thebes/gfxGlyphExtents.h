@@ -94,12 +94,12 @@ private:
           , y(0.0)
           , width(0.0)
           , height(0.0) {}
-        HashEntry(const HashEntry& toCopy)
-          : nsUint32HashKey(toCopy) {
-            x = toCopy.x;
-            y = toCopy.y;
-            width = toCopy.width;
-            height = toCopy.height;
+        HashEntry(HashEntry&& aOther)
+            : nsUint32HashKey(std::move(aOther))
+            , x(aOther.x)
+            , y(aOther.y)
+            , width(aOther.width)
+            , height(aOther.height) {
         }
 
         float x, y, width, height;

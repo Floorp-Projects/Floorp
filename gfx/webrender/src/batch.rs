@@ -5,7 +5,7 @@
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
 use api::{YuvColorSpace, YuvFormat, WorldPixel, WorldRect};
-use clip::{ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
+use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use euclid::vec3;
 use glyph_rasterizer::GlyphFormat;
@@ -1775,12 +1775,14 @@ impl ClipBatcher {
         clip_store: &ClipStore,
         clip_scroll_tree: &ClipScrollTree,
         transforms: &mut TransformPalette,
+        clip_data_store: &ClipDataStore,
     ) {
         for i in 0 .. clip_node_range.count {
-            let (clip_node, flags, spatial_node_index) = clip_store.get_node_from_range(&clip_node_range, i);
+            let clip_instance = clip_store.get_instance_from_range(&clip_node_range, i);
+            let clip_node = &clip_data_store[clip_instance.handle];
 
             let clip_transform_id = transforms.get_id(
-                spatial_node_index,
+                clip_instance.spatial_node_index,
                 ROOT_SPATIAL_NODE_INDEX,
                 clip_scroll_tree,
             );
@@ -1852,7 +1854,7 @@ impl ClipBatcher {
                         });
                 }
                 ClipItem::Rectangle(_, mode) => {
-                    if !flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) ||
+                    if !clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) ||
                         mode == ClipMode::ClipOut {
                         self.rectangles.push(ClipMaskInstance {
                             clip_data_address: gpu_address,

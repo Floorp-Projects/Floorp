@@ -101,26 +101,36 @@ CompileTier2(const CompileArgs& args, const Bytes& bytecode, const Module& modul
 //    copied in from the stream.
 //  - codeBytes is pre-sized to hold the complete code section when the stream
 //    completes.
-//  - The range [codeBytes.begin(), codeStreamEnd) contains the bytes currently
-//    read from the stream and codeStreamEnd will advance until either
-//    the stream is cancelled or codeStreamEnd == codeBytes.end().
-//  - tailBytesPtr is null until the module has finished streaming at which
-//    point tailBytesPtr will point to the complete tail bytes.
+//  - The range [codeBytes.begin(), codeBytesEnd) contains the bytes currently
+//    read from the stream and codeBytesEnd will advance until either
+//    the stream is cancelled or codeBytesEnd == codeBytes.end().
+//  - streamEnd contains the final information received after the code section:
+//    the remaining module bytecodes and maybe a JS::OptimizedEncodingListener.
+//    When the stream is successfully closed, streamEnd.reached is set.
 // The ExclusiveWaitableData are notified when CompileStreaming() can make
-// progress (i.e., codeStreamEnd advances or tailBytes is set to non-null).
+// progress (i.e., codeBytesEnd advances or streamEnd.reached is set).
 // If cancelled is set to true, compilation aborts and returns null. After
 // cancellation is set, both ExclusiveWaitableData will be notified and so every
 // wait() loop must check cancelled.
 
-typedef ExclusiveWaitableData<const uint8_t*> ExclusiveStreamEnd;
-typedef ExclusiveWaitableData<const Bytes*> ExclusiveTailBytesPtr;
+typedef ExclusiveWaitableData<const uint8_t*> ExclusiveBytesPtr;
+
+struct StreamEndData
+{
+    bool reached;
+    const Bytes* tailBytes;
+    Tier2Listener tier2Listener;
+
+    StreamEndData() : reached(false) {}
+};
+typedef ExclusiveWaitableData<StreamEndData> ExclusiveStreamEndData;
 
 SharedModule
 CompileStreaming(const CompileArgs& args,
                  const Bytes& envBytes,
                  const Bytes& codeBytes,
-                 const ExclusiveStreamEnd& codeStreamEnd,
-                 const ExclusiveTailBytesPtr& tailBytesPtr,
+                 const ExclusiveBytesPtr& codeBytesEnd,
+                 const ExclusiveStreamEndData& streamEnd,
                  const Atomic<bool>& cancelled,
                  UniqueChars* error,
                  UniqueCharsVector* warnings);

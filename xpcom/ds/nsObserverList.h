@@ -51,6 +51,12 @@ public:
     MOZ_COUNT_CTOR(nsObserverList);
   }
 
+  nsObserverList(nsObserverList&& aOther)
+    : nsCharPtrHashKey(std::move(aOther))
+    , mObservers(std::move(aOther.mObservers))
+  {
+  }
+
   ~nsObserverList()
   {
     MOZ_COUNT_DTOR(nsObserverList);

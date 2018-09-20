@@ -112,7 +112,10 @@ private:
         typedef const FeatureValueHashKey *KeyTypePointer;
 
         explicit FeatureValueHashEntry(KeyTypePointer aKey) { }
-        FeatureValueHashEntry(const FeatureValueHashEntry& toCopy)
+        FeatureValueHashEntry(FeatureValueHashEntry&& other)
+            : PLDHashEntryHdr(std::move(other))
+            , mKey(std::move(other.mKey))
+            , mValues(std::move(other.mValues))
         {
             NS_ERROR("Should not be called");
         }
