@@ -66,6 +66,10 @@
 using namespace mozilla::tasktracer;
 #endif
 
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerMarkerPayload.h"
+#endif
+
 namespace mozilla {
 
 using namespace dom;
@@ -1109,8 +1113,49 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
         EventChainPostVisitor postVisitor(preVisitor);
         MOZ_RELEASE_ASSERT(!aEvent->mPath);
         aEvent->mPath = &chain;
-        EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
-                                                     aCallback, cd);
+
+#ifdef MOZ_GECKO_PROFILER
+        if (profiler_is_active()) {
+          // Add a profiler label and a profiler marker for the actual
+          // dispatch of the event.
+          // This is a very hot code path, so we need to make sure not to
+          // do this extra work when we're not profiling.
+          if (!postVisitor.mDOMEvent) {
+            // This is tiny bit slow, but happens only once per event.
+            // Similar code also in EventListenerManager.
+            nsCOMPtr<EventTarget> et = aEvent->mOriginalTarget;
+            RefPtr<Event> event = EventDispatcher::CreateEvent(et, aPresContext,
+                                                               aEvent,
+                                                               EmptyString());
+            event.swap(postVisitor.mDOMEvent);
+          }
+          nsAutoString typeStr;
+          postVisitor.mDOMEvent->GetType(typeStr);
+          AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
+            "EventDispatcher::Dispatch", OTHER, typeStr);
+
+          profiler_add_marker(
+            "DOMEvent",
+            MakeUnique<DOMEventMarkerPayload>(typeStr,
+                                              aEvent->mTimeStamp,
+                                              "DOMEvent",
+                                              TRACING_INTERVAL_START));
+
+          EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
+                                                       aCallback, cd);
+
+          profiler_add_marker(
+            "DOMEvent",
+            MakeUnique<DOMEventMarkerPayload>(typeStr,
+                                              aEvent->mTimeStamp,
+                                              "DOMEvent",
+                                              TRACING_INTERVAL_END));
+        } else
+#endif
+        {
+          EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
+                                                       aCallback, cd);
+        }
         aEvent->mPath = nullptr;
 
         preVisitor.mEventStatus = postVisitor.mEventStatus;

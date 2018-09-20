@@ -125,13 +125,12 @@ private:
 class DOMEventMarkerPayload : public TracingMarkerPayload
 {
 public:
-  DOMEventMarkerPayload(const nsAString& aEventType, uint16_t aPhase,
+  DOMEventMarkerPayload(const nsAString& aEventType,
                         const mozilla::TimeStamp& aTimeStamp,
                         const char* aCategory, TracingKind aKind)
     : TracingMarkerPayload(aCategory, aKind)
     , mTimeStamp(aTimeStamp)
     , mEventType(aEventType)
-    , mPhase(aPhase)
   {}
 
   DECL_STREAM_PAYLOAD
@@ -139,7 +138,6 @@ public:
 private:
   mozilla::TimeStamp mTimeStamp;
   nsString mEventType;
-  uint16_t mPhase;
 };
 
 class UserTimingMarkerPayload : public ProfilerMarkerPayload
