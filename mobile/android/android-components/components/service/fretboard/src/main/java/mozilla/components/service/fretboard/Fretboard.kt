@@ -106,6 +106,20 @@ class Fretboard(
     }
 
     /**
+     * Provides a map of active/inactive experiments
+     *
+     * @param context context
+     *
+     * @return map of experiments to A/B state
+     */
+    fun getExperimentsMap(context: Context): Map<String, Boolean> {
+        return experiments.associate {
+            it.name to
+                    isInExperiment(context, ExperimentDescriptor(it.name))
+        }
+    }
+
+    /**
      * Overrides a specified experiment asynchronously
      *
      * @param context context
