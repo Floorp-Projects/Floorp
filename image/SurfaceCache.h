@@ -443,11 +443,6 @@ struct SurfaceCache
    */
   static size_t MaximumCapacity();
 
-  /**
-   * @return true if the given size is valid.
-   */
-  static bool IsLegalSize(const IntSize& aSize);
-
 private:
   virtual ~SurfaceCache() = 0;  // Forbid instantiation.
 };
