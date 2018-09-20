@@ -40,6 +40,6 @@ export function prerender(locale, strings,
   return {
     html,
     state: store.getState(),
-    store
+    store,
   };
 }
