@@ -7,7 +7,7 @@
 "use strict";
 
 const Services = require("Services");
-const { Cr, Ci } = require("chrome");
+const { Cr } = require("chrome");
 const { ActorPool, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { longStringGrip } = require("devtools/server/actors/object/long-string");
@@ -64,7 +64,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._parentClosed = false;
     this._scripts = null;
     this._pauseOnDOMEvents = null;
-    this._xhrBreakpoints = [];
 
     this._options = {
       useSourceMaps: false,
@@ -93,17 +92,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.objectGrip = this.objectGrip.bind(this);
     this.pauseObjectGrip = this.pauseObjectGrip.bind(this);
     this._onWindowReady = this._onWindowReady.bind(this);
-    this._onOpeningRequest = this._onOpeningRequest.bind(this);
     EventEmitter.on(this._parent, "window-ready", this._onWindowReady);
-
-    // Workers don't have access to `Services` and even if they did, network
-    // requests are all dispatched to the main thread, so there would be
-    // nothing here to listen for. We'll need to revisit implementing
-    // XHR breakpoints for workers.
-    if (!isWorker) {
-      Services.obs.addObserver(this._onOpeningRequest, "http-on-opening-request");
-    }
-
     // Set a wrappedJSObject property so |this| can be sent via the observer svc
     // for the xpcshell harness.
     this.wrappedJSObject = this;
@@ -325,81 +314,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     } catch (e) {
       reportError(e);
       return { error: "notAttached", message: e.toString() };
-    }
-  },
-
-  _findXHRBreakpointIndex(p, m) {
-    return this._xhrBreakpoints.findIndex(
-      ({ path, method }) => path === p && method === m);
-  },
-
-  removeXHRBreakpoint: function(path, method) {
-    const index = this._findXHRBreakpointIndex(path, method);
-
-    if (index >= 0) {
-      this._xhrBreakpoints.splice(index, 1);
-    }
-
-    return true;
-  },
-
-  setXHRBreakpoint: function(path, method) {
-    // request.path is a string,
-    // If requested url contains the path, then we pause.
-    const index = this._findXHRBreakpointIndex(path, method);
-
-    if (index === -1) {
-      this._xhrBreakpoints.push({ path, method });
-    }
-    return true;
-  },
-
-  _onOpeningRequest: function(subject) {
-    if (this.skipBreakpoints) {
-      return;
-    }
-
-    const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-    const url = channel.URI.asciiSpec;
-    const requestMethod = channel.requestMethod;
-
-    let causeType = Ci.nsIContentPolicy.TYPE_OTHER;
-    if (channel.loadInfo) {
-      causeType = channel.loadInfo.externalContentPolicyType;
-    }
-
-    const isXHR = (
-      causeType === Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST ||
-      causeType === Ci.nsIContentPolicy.TYPE_FETCH
-    );
-
-    if (!isXHR) {
-      // We currently break only if the request is either fetch or xhr
-      return;
-    }
-
-    let shouldPause = false;
-    for (const { path, method } of this._xhrBreakpoints) {
-      if (method !== "ANY" && method !== requestMethod) {
-        continue;
-      }
-      if (url.includes(path)) {
-        shouldPause = true;
-        break;
-      }
-    }
-
-    if (shouldPause) {
-      const frame = this.dbg.getNewestFrame();
-
-      // If there is no frame, this request was dispatched by logic that isn't
-      // primarily JS, so pausing the event loop wouldn't make sense.
-      // This covers background requests like loading the initial page document,
-      // or loading favicons. This also includes requests dispatched indirectly
-      // from workers. We'll need to handle them separately in the future.
-      if (frame) {
-        this._pauseAndRespond(frame, { type: "XHR" });
-      }
     }
   },
 
