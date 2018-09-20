@@ -1776,11 +1776,11 @@ MacroAssemblerMIPSCompat::loadValue(Address src, ValueOperand val)
 void
 MacroAssemblerMIPSCompat::tagValue(JSValueType type, Register payload, ValueOperand dest)
 {
-    MOZ_ASSERT(payload != dest.typeReg());
-    ma_li(dest.typeReg(), ImmType(type));
+    MOZ_ASSERT(dest.typeReg() != dest.payloadReg());
     if (payload != dest.payloadReg()) {
         ma_move(dest.payloadReg(), payload);
     }
+    ma_li(dest.typeReg(), ImmType(type));
 }
 
 void
