@@ -15,8 +15,8 @@
 #include "common/angleutils.h"
 #include "common/platform.h"
 #include "libANGLE/renderer/Format.h"
-#include "libANGLE/renderer/renderer_utils.h"
 #include "libANGLE/renderer/d3d/formatutilsD3D.h"
+#include "libANGLE/renderer/renderer_utils.h"
 
 namespace rx
 {
@@ -34,7 +34,7 @@ struct Format final : private angle::NonCopyable
 {
     constexpr Format();
     constexpr Format(GLenum internalFormat,
-                     angle::Format::ID formatID,
+                     angle::FormatID formatID,
                      DXGI_FORMAT texFormat,
                      DXGI_FORMAT srvFormat,
                      DXGI_FORMAT uavFormat,
@@ -51,7 +51,7 @@ struct Format final : private angle::NonCopyable
     const angle::Format &format() const;
 
     GLenum internalFormat;
-    angle::Format::ID formatID;
+    angle::FormatID formatID;
 
     DXGI_FORMAT texFormat;
     DXGI_FORMAT srvFormat;
@@ -68,7 +68,7 @@ struct Format final : private angle::NonCopyable
 
 constexpr Format::Format()
     : internalFormat(GL_NONE),
-      formatID(angle::Format::ID::NONE),
+      formatID(angle::FormatID::NONE),
       texFormat(DXGI_FORMAT_UNKNOWN),
       srvFormat(DXGI_FORMAT_UNKNOWN),
       uavFormat(DXGI_FORMAT_UNKNOWN),
@@ -81,7 +81,7 @@ constexpr Format::Format()
 }
 
 constexpr Format::Format(GLenum internalFormat,
-                         angle::Format::ID formatID,
+                         angle::FormatID formatID,
                          DXGI_FORMAT texFormat,
                          DXGI_FORMAT srvFormat,
                          DXGI_FORMAT uavFormat,

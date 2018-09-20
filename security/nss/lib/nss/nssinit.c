@@ -12,7 +12,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "cert.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secmod.h"
 #include "secoid.h"
 #include "nss.h"

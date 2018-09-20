@@ -43,6 +43,8 @@ class VertexArrayImpl : angle::NonCopyable
     virtual void destroy(const gl::Context *context) {}
     virtual ~VertexArrayImpl() {}
 
+    const gl::VertexArrayState &getState() const { return mState; }
+
   protected:
     const gl::VertexArrayState &mState;
 };

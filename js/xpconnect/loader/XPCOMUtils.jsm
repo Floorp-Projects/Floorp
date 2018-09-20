@@ -409,17 +409,6 @@ var XPCOMUtils = {
   },
 
   /**
-   * Helper which iterates over a string enumerator.
-   * @param e The string enumerator (nsIUTF8StringEnumerator or
-   *          nsIStringEnumerator) over which to iterate.
-   */
-  IterStringEnumerator: function* XPCU_IterStringEnumerator(e)
-  {
-    while (e.hasMore())
-      yield e.getNext();
-  },
-
-  /**
    * Returns an nsIFactory for |component|.
    */
   _getFactory: function XPCOMUtils__getFactory(component) {

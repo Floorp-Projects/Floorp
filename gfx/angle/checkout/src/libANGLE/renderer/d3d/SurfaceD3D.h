@@ -19,6 +19,7 @@ class Surface;
 
 namespace rx
 {
+class DisplayD3D;
 class SwapChainD3D;
 class RendererD3D;
 
@@ -29,7 +30,8 @@ class SurfaceD3D : public SurfaceImpl
     void releaseSwapChain();
 
     egl::Error initialize(const egl::Display *display) override;
-    FramebufferImpl *createDefaultFramebuffer(const gl::FramebufferState &state) override;
+    FramebufferImpl *createDefaultFramebuffer(const gl::Context *context,
+                                              const gl::FramebufferState &state) override;
 
     egl::Error swap(const gl::Context *context) override;
     egl::Error postSubBuffer(const gl::Context *context,
@@ -44,6 +46,8 @@ class SurfaceD3D : public SurfaceImpl
     egl::Error releaseTexImage(const gl::Context *context, EGLint buffer) override;
     egl::Error getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc) override;
     void setSwapInterval(EGLint interval) override;
+    void setFixedWidth(EGLint width) override;
+    void setFixedHeight(EGLint height) override;
 
     EGLint getWidth() const override;
     EGLint getHeight() const override;
@@ -56,7 +60,7 @@ class SurfaceD3D : public SurfaceImpl
 
     egl::Error resetSwapChain(const egl::Display *display);
 
-    egl::Error checkForOutOfDateSwapChain(const gl::Context *context);
+    egl::Error checkForOutOfDateSwapChain(DisplayD3D *displayD3D);
 
     gl::Error getAttachmentRenderTarget(const gl::Context *context,
                                         GLenum binding,
@@ -76,22 +80,16 @@ class SurfaceD3D : public SurfaceImpl
                EGLClientBuffer clientBuffer,
                const egl::AttributeMap &attribs);
 
-    egl::Error swapRect(const gl::Context *context,
-                        EGLint x,
-                        EGLint y,
-                        EGLint width,
-                        EGLint height);
-    egl::Error resetSwapChain(const gl::Context *context,
-                              int backbufferWidth,
-                              int backbufferHeight);
-    egl::Error resizeSwapChain(const gl::Context *context,
-                               int backbufferWidth,
-                               int backbufferHeight);
+    egl::Error swapRect(DisplayD3D *displayD3D, EGLint x, EGLint y, EGLint width, EGLint height);
+    egl::Error resetSwapChain(DisplayD3D *displayD3D, int backbufferWidth, int backbufferHeight);
+    egl::Error resizeSwapChain(DisplayD3D *displayD3D, int backbufferWidth, int backbufferHeight);
 
     RendererD3D *mRenderer;
     egl::Display *mDisplay;
 
     bool mFixedSize;
+    GLint mFixedWidth;
+    GLint mFixedHeight;
     GLint mOrientation;
 
     GLenum mRenderTargetFormat;

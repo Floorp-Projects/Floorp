@@ -25,7 +25,7 @@
 
 // Version number for shader translation API.
 // It is incremented every time the API changes.
-#define ANGLE_SH_VERSION 197
+#define ANGLE_SH_VERSION 198
 
 enum ShShaderSpec
 {
@@ -71,13 +71,13 @@ enum ShShaderOutput
 // The Compile options type is defined in ShaderVars.h, to allow ANGLE to import the ShaderVars
 // header without needing the ShaderLang header. This avoids some conflicts with glslang.
 
-const ShCompileOptions SH_VALIDATE                           = 0;
-const ShCompileOptions SH_VALIDATE_LOOP_INDEXING             = UINT64_C(1) << 0;
-const ShCompileOptions SH_INTERMEDIATE_TREE                  = UINT64_C(1) << 1;
-const ShCompileOptions SH_OBJECT_CODE                        = UINT64_C(1) << 2;
-const ShCompileOptions SH_VARIABLES                          = UINT64_C(1) << 3;
-const ShCompileOptions SH_LINE_DIRECTIVES                    = UINT64_C(1) << 4;
-const ShCompileOptions SH_SOURCE_PATH                        = UINT64_C(1) << 5;
+const ShCompileOptions SH_VALIDATE               = 0;
+const ShCompileOptions SH_VALIDATE_LOOP_INDEXING = UINT64_C(1) << 0;
+const ShCompileOptions SH_INTERMEDIATE_TREE      = UINT64_C(1) << 1;
+const ShCompileOptions SH_OBJECT_CODE            = UINT64_C(1) << 2;
+const ShCompileOptions SH_VARIABLES              = UINT64_C(1) << 3;
+const ShCompileOptions SH_LINE_DIRECTIVES        = UINT64_C(1) << 4;
+const ShCompileOptions SH_SOURCE_PATH            = UINT64_C(1) << 5;
 
 // This flag will keep invariant declaration for input in fragment shader for GLSL >=4.20 on AMD.
 // From GLSL >= 4.20, it's optional to add invariant for fragment input, but GPU vendors have
@@ -313,6 +313,7 @@ struct ShBuiltInResources
     int OVR_multiview;
     int EXT_YUV_target;
     int EXT_geometry_shader;
+    int OES_texture_storage_multisample_2d_array;
 
     // Set to 1 to enable replacing GL_EXT_draw_buffers #extension directives
     // with GL_NV_draw_buffers in ESSL output. This flag can be used to emulate
@@ -616,4 +617,4 @@ int GetGeometryShaderMaxVertices(const ShHandle handle);
 
 }  // namespace sh
 
-#endif // GLSLANG_SHADERLANG_H_
+#endif  // GLSLANG_SHADERLANG_H_

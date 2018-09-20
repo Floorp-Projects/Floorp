@@ -8,7 +8,7 @@
 #include "seccomon.h"
 #include "secoid.h"
 #include "cert.h"
-#include "key.h"
+#include "keythi.h"
 #include "plarena.h"
 #include "secpkcs7.h"
 #include "secdig.h" /* for SGNDigestInfo */

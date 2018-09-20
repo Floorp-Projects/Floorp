@@ -5,6 +5,10 @@
 #ifndef _KEYT_H_
 #define _KEYT_H_
 
+#if defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__)
+#pragma message("keyt.h is deprecated. Please include keythi.h instead.")
+#endif
+
 #include "keythi.h"
 
 #endif /* _KEYT_H_ */

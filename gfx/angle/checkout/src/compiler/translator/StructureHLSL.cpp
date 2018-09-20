@@ -53,7 +53,7 @@ TString Define(const TStructure &structure,
             }
 
             string += "    " + fieldTypeString + " " + DecorateField(field->name(), structure) +
-                      ArrayString(fieldType) + ";\n";
+                      ArrayString(fieldType).data() + ";\n";
 
             if (padHelper)
             {
@@ -76,7 +76,8 @@ TString WriteParameterList(const std::vector<TType> &parameters)
     {
         const TType &paramType = parameters[parameter];
 
-        parameterList += TypeString(paramType) + " x" + str(parameter) + ArrayString(paramType);
+        parameterList +=
+            TypeString(paramType) + " x" + str(parameter) + ArrayString(paramType).data();
 
         if (parameter < parameters.size() - 1u)
         {

@@ -7,6 +7,7 @@
 #include "compiler/translator/InfoSink.h"
 
 #include "compiler/translator/ImmutableString.h"
+#include "compiler/translator/Types.h"
 
 namespace sh
 {
@@ -30,6 +31,39 @@ void TInfoSinkBase::prefix(Severity severity)
 TInfoSinkBase &TInfoSinkBase::operator<<(const ImmutableString &str)
 {
     sink.append(str.data());
+    return *this;
+}
+
+TInfoSinkBase &TInfoSinkBase::operator<<(const TType &type)
+{
+    if (type.isInvariant())
+        sink.append("invariant ");
+    if (type.getQualifier() != EvqTemporary && type.getQualifier() != EvqGlobal)
+    {
+        sink.append(type.getQualifierString());
+        sink.append(" ");
+    }
+    if (type.getPrecision() != EbpUndefined)
+    {
+        sink.append(type.getPrecisionString());
+        sink.append(" ");
+    }
+    if (type.isArray())
+    {
+        for (auto arraySizeIter = type.getArraySizes()->rbegin();
+             arraySizeIter != type.getArraySizes()->rend(); ++arraySizeIter)
+        {
+            *this << "array[" << (*arraySizeIter) << "] of ";
+        }
+    }
+    if (type.isMatrix())
+    {
+        *this << type.getCols() << "X" << type.getRows() << " matrix of ";
+    }
+    else if (type.isVector())
+        *this << type.getNominalSize() << "-component vector of ";
+
+    sink.append(type.getBasicString());
     return *this;
 }
 

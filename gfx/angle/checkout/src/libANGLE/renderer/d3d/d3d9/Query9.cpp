@@ -29,7 +29,7 @@ Query9::~Query9()
     SafeRelease(mQuery);
 }
 
-gl::Error Query9::begin()
+gl::Error Query9::begin(const gl::Context *context)
 {
     D3DQUERYTYPE d3dQueryType = gl_d3d9::ConvertQueryType(getType());
     if (mQuery == nullptr)
@@ -54,7 +54,7 @@ gl::Error Query9::begin()
     return gl::NoError();
 }
 
-gl::Error Query9::end()
+gl::Error Query9::end(const gl::Context *context)
 {
     ASSERT(mQuery);
 
@@ -71,7 +71,7 @@ gl::Error Query9::end()
     return gl::NoError();
 }
 
-gl::Error Query9::queryCounter()
+gl::Error Query9::queryCounter(const gl::Context *context)
 {
     UNIMPLEMENTED();
     return gl::InternalError() << "Unimplemented";
@@ -99,27 +99,27 @@ gl::Error Query9::getResultBase(T *params)
     return gl::NoError();
 }
 
-gl::Error Query9::getResult(GLint *params)
+gl::Error Query9::getResult(const gl::Context *context, GLint *params)
 {
     return getResultBase(params);
 }
 
-gl::Error Query9::getResult(GLuint *params)
+gl::Error Query9::getResult(const gl::Context *context, GLuint *params)
 {
     return getResultBase(params);
 }
 
-gl::Error Query9::getResult(GLint64 *params)
+gl::Error Query9::getResult(const gl::Context *context, GLint64 *params)
 {
     return getResultBase(params);
 }
 
-gl::Error Query9::getResult(GLuint64 *params)
+gl::Error Query9::getResult(const gl::Context *context, GLuint64 *params)
 {
     return getResultBase(params);
 }
 
-gl::Error Query9::isResultAvailable(bool *available)
+gl::Error Query9::isResultAvailable(const gl::Context *context, bool *available)
 {
     gl::Error error = testQuery();
     if (error.isError())

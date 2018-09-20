@@ -135,9 +135,8 @@ function extractJarToTmp(jar) {
   /* Create dir structure first, no guarantee about ordering of directories and
    * files returned from findEntries.
    */
-  var dirs = zReader.findEntries(filepath + "*/");
-  while (dirs.hasMore()) {
-    var targetDir = buildRelativePath(dirs.getNext(), tmpdir, filepath);
+  for (let dir of zReader.findEntries(filepath + "*/")) {
+    var targetDir = buildRelativePath(dir, tmpdir, filepath);
     // parseInt is used because octal escape sequences cause deprecation warnings
     // in strict mode (which is turned on in debug builds)
     if (!targetDir.exists()) {
@@ -146,9 +145,7 @@ function extractJarToTmp(jar) {
   }
 
   // now do the files
-  var files = zReader.findEntries(filepath + "*");
-  while (files.hasMore()) {
-    var fname = files.getNext();
+  for (var fname of zReader.findEntries(filepath + "*")) {
     if (fname.substr(-1) != "/") {
       var targetFile = buildRelativePath(fname, tmpdir, filepath);
       zReader.extract(fname, targetFile);

@@ -740,7 +740,7 @@ impl RenderTask {
         // so the shader doesn't need to shift by the origin.
         if let RenderTaskLocation::Fixed(_) = self.location {
             target_rect.origin = DeviceIntPoint::origin();
-        };
+        }
 
         RenderTaskData {
             data: [
