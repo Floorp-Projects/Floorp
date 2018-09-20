@@ -82,6 +82,14 @@ function is_visible(element, message) {
   ok(!isHidden(element), message);
 }
 
+add_task(async function test_clickable_area() {
+  ok(select1, "select1 exists");
+  isnot(document.activeElement, select1.popupBox, "<select> shouldn't have focus");
+  synthesizeMouseAtCenter(select1, {});
+  is(document.activeElement, select1.popupBox, "<select> should have focus when clicked");
+  document.activeElement.blur();
+});
+
 add_task(async function test_closed_state_on_selection() {
   ok(select1, "select1 exists");
   select1.popupBox.focus();
