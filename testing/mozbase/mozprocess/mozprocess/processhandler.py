@@ -316,12 +316,19 @@ class ProcessHandlerMixin(object):
                             sizeof(joacp)
                         )
 
-                        # Allow subprocesses to break away from us - necessary for
-                        # flash with protected mode
+                        # Allow subprocesses to break away from us - necessary when
+                        # Firefox restarts, or flash with protected mode
+                        limit_flags = winprocess.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+                        if not can_nest_jobs:
+                            # This allows sandbox processes to create their own job,
+                            # and is necessary to set for older versions of Windows
+                            # without nested job support.
+                            limit_flags |= winprocess.JOB_OBJECT_LIMIT_BREAKAWAY_OK
+
                         jbli = JOBOBJECT_BASIC_LIMIT_INFORMATION(
                             c_longlong(0),  # per process time limit (ignored)
                             c_longlong(0),  # per job user time limit (ignored)
-                            winprocess.JOB_OBJECT_LIMIT_BREAKAWAY_OK,
+                            limit_flags,
                             0,  # min working set (ignored)
                             0,  # max working set (ignored)
                             0,  # active process limit (ignored)
