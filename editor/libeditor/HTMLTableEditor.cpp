@@ -509,8 +509,22 @@ HTMLEditor::InsertTableColumn(int32_t aNumber,
 }
 
 NS_IMETHODIMP
-HTMLEditor::InsertTableRow(int32_t aNumber,
-                           bool aAfter)
+HTMLEditor::InsertTableRow(int32_t aNumberOfRowsToInsert,
+                           bool aInsertAfterSelectedCell)
+{
+  nsresult rv =
+    InsertTableRowsWithTransaction(aNumberOfRowsToInsert,
+      aInsertAfterSelectedCell ? InsertPosition::eAfterSelectedCell :
+                                 InsertPosition::eBeforeSelectedCell);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditor::InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
+                                           InsertPosition aInsertPosition)
 {
   RefPtr<Element> table;
   RefPtr<Element> curCell;
@@ -521,26 +535,39 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
                                getter_AddRefs(curCell),
                                nullptr, nullptr,
                                &startRowIndex, &startColIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Don't fail if no cell found
-  NS_ENSURE_TRUE(curCell, NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!curCell)) {
+    // Don't fail if no cell found.
+    return NS_OK;
+  }
 
-  // Get more data for current cell in row we are inserting at (we need COLSPAN)
-  int32_t curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
-  bool    isSelected;
+  // Get more data for current cell in row we are inserting at because we need
+  // colspan.
+  int32_t curStartRowIndex = 0, curStartColIndex = 0;
+  int32_t rowSpan = 0, colSpan = 0;
+  int32_t actualRowSpan = 0, actualColSpan = 0;
+  bool isSelected = false;
   rv = GetCellDataAt(table, startRowIndex, startColIndex,
                      getter_AddRefs(curCell),
                      &curStartRowIndex, &curStartColIndex,
                      &rowSpan, &colSpan,
                      &actualRowSpan, &actualColSpan, &isSelected);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(curCell, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!curCell)) {
+    return NS_ERROR_FAILURE;
+  }
 
   ErrorResult error;
   TableSize tableSize(*this, *table, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
+  // Should not be empty since we've already found a cell.
+  MOZ_ASSERT(!tableSize.IsEmpty());
 
   AutoPlaceholderBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
@@ -548,154 +575,167 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
                                       *this, EditSubAction::eInsertNode,
                                       nsIEditor::eNext);
 
-  if (aAfter) {
-    // Use row after current cell
-    startRowIndex += actualRowSpan;
+  switch (aInsertPosition) {
+    case InsertPosition::eBeforeSelectedCell:
+      break;
+    case InsertPosition::eAfterSelectedCell:
+      // Use row after current cell.
+      startRowIndex += actualRowSpan;
 
-    //Detect when user is adding after a ROWSPAN=0 case
-    // Assume they want to stop the "0" behavior and
-    // really add a new row. Thus we set the
-    // rowspan to its true value
-    if (!rowSpan) {
-      SetRowSpan(curCell, actualRowSpan);
-    }
+      // Detect when user is adding after a rowspan=0 case.
+      // Assume they want to stop the "0" behavior and really add a new row.
+      // Thus we set the rowspan to its true value.
+      if (!rowSpan) {
+        SetRowSpan(curCell, actualRowSpan);
+      }
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid InsertPosition");
   }
 
-  //We control selection resetting after the insert...
+  // We control selection resetting after the insert.
   AutoSelectionSetterAfterTableEdit setCaret(*this, table, startRowIndex,
                                              startColIndex, ePreviousColumn,
                                              false);
-  //...so suppress Rules System selection munging
+  // Suppress Rules System selection munging.
   AutoTransactionsConserveSelection dontChangeSelection(*this);
 
   RefPtr<Element> cellForRowParent;
   int32_t cellsInRow = 0;
   if (startRowIndex < tableSize.mRowCount) {
-    // We are inserting above an existing row
-    // Get each cell in the insert row to adjust for COLSPAN effects while we
-    //   count how many cells are needed
-    int32_t colIndex = 0;
-    while (NS_SUCCEEDED(GetCellDataAt(table, startRowIndex, colIndex,
-                                      getter_AddRefs(curCell),
-                                      &curStartRowIndex, &curStartColIndex,
-                                      &rowSpan, &colSpan,
-                                      &actualRowSpan, &actualColSpan,
-                                      &isSelected))) {
-      if (curCell) {
-        if (curStartRowIndex < startRowIndex) {
-          // We have a cell spanning this location
-          // Simply increase its rowspan
-          //Note that if rowSpan == 0, we do nothing,
-          //  since that cell should automatically extend into the new row
-          if (rowSpan > 0) {
-            SetRowSpan(curCell, rowSpan+aNumber);
-          }
-        } else {
-          // We have a cell in the insert row
+    // We are inserting above an existing row.  Get each cell in the insert
+    // row to adjust for colspan effects while we count how many cells are
+    // needed.
+    for (int32_t colIndex = 0, actualColSpan = 0;; colIndex += actualColSpan) {
+      RefPtr<Element> cellElement;
+      int32_t curStartRowIndex = 0, curStartColIndex = 0;
+      int32_t rowSpan = 0, colSpan = 0;
+      int32_t actualRowSpan = 0;
+      nsresult rv = GetCellDataAt(table, startRowIndex, colIndex,
+                                  getter_AddRefs(cellElement),
+                                  &curStartRowIndex, &curStartColIndex,
+                                  &rowSpan, &colSpan,
+                                  &actualRowSpan, &actualColSpan,
+                                  &isSelected);
+      if (NS_FAILED(rv)) {
+        break; // Perhaps, we reach end of the row.
+      }
 
-          // Count the number of cells we need to add to the new row
-          cellsInRow += actualColSpan;
+      if (NS_WARN_IF(!cellElement)) {
+        // XXX What's this case?
+        actualColSpan = 1;
+        continue;
+      }
 
-          // Save cell we will use below
-          if (!cellForRowParent) {
-            cellForRowParent = curCell;
-          }
+      if (curStartRowIndex < startRowIndex) {
+        // We have a cell spanning this location.  Increase its rowspan.
+        // Note that if rowspan is 0, we do nothing since that cell should
+        // automatically extend into the new row.
+        if (rowSpan > 0) {
+          SetRowSpan(cellElement, rowSpan + aNumberOfRowsToInsert);
         }
-        // Next cell in row
-        colIndex += actualColSpan;
-      } else {
-        colIndex++;
+        continue;
+      }
+
+      cellsInRow += actualColSpan;
+      if (!cellForRowParent) {
+        cellForRowParent = std::move(cellElement);
       }
     }
   } else {
-    // We are adding a new row after all others
-    // If it weren't for colspan=0 effect,
-    // we could simply use tableSize.mColumnCount for number of new cells...
-    // XXX colspan=0 support has now been removed in table layout so maybe this can be cleaned up now? (bug 1243183)
+    // We are adding a new row after all others.  If it weren't for colspan=0
+    // effect,  we could simply use tableSize.mColumnCount for number of new
+    // cells...
+    // XXX colspan=0 support has now been removed in table layout so maybe this
+    //     can be cleaned up now? (bug 1243183)
     cellsInRow = tableSize.mColumnCount;
 
-    // ...but we must compensate for all cells with rowSpan = 0 in the last row
-    int32_t lastRow = tableSize.mRowCount - 1;
-    int32_t tempColIndex = 0;
-    while (NS_SUCCEEDED(GetCellDataAt(table, lastRow, tempColIndex,
-                                      getter_AddRefs(curCell),
-                                      &curStartRowIndex, &curStartColIndex,
-                                      &rowSpan, &colSpan,
-                                      &actualRowSpan, &actualColSpan,
-                                      &isSelected))) {
+    // but we must compensate for all cells with rowspan = 0 in the last row.
+    const int32_t kLastRowIndex = tableSize.mRowCount - 1;
+    for (int32_t colIndex = 0, actualColSpan = 0;; colIndex += actualColSpan) {
+      RefPtr<Element> cellElement;
+      int32_t curStartRowIndex = 0, curStartColIndex = 0;
+      int32_t rowSpan = 0, colSpan = 0;
+      int32_t actualRowSpan = 0;
+      nsresult rv = GetCellDataAt(table, kLastRowIndex, colIndex,
+                                  getter_AddRefs(cellElement),
+                                  &curStartRowIndex, &curStartColIndex,
+                                  &rowSpan, &colSpan,
+                                  &actualRowSpan, &actualColSpan,
+                                  &isSelected);
+      if (NS_FAILED(rv)) {
+        break; // Perhaps, we reach end of the row.
+      }
+
       if (!rowSpan) {
+        MOZ_ASSERT(cellsInRow >= actualColSpan);
         cellsInRow -= actualColSpan;
       }
 
-      tempColIndex += actualColSpan;
-
       // Save cell from the last row that we will use below
-      if (!cellForRowParent && curStartRowIndex == lastRow) {
-        cellForRowParent = curCell;
+      if (!cellForRowParent && curStartRowIndex == kLastRowIndex) {
+        cellForRowParent = std::move(cellElement);
       }
     }
   }
 
-  if (cellsInRow > 0) {
-    if (NS_WARN_IF(!cellForRowParent)) {
-      return NS_ERROR_FAILURE;
-    }
-    Element* parentRow =
-      GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cellForRowParent);
-    if (NS_WARN_IF(!parentRow)) {
+  if (NS_WARN_IF(!cellsInRow)) {
+    // There is no cell element in the last row??
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(!cellForRowParent)) {
+    return NS_ERROR_FAILURE;
+  }
+  Element* parentRow =
+    GetElementOrParentByTagNameInternal(*nsGkAtoms::tr, *cellForRowParent);
+  if (NS_WARN_IF(!parentRow)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // The row parent and offset where we will insert new row.
+  EditorDOMPoint pointToInsert(parentRow);
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  // Adjust for when adding past the end.
+  if (aInsertPosition == InsertPosition::eAfterSelectedCell &&
+      startRowIndex >= tableSize.mRowCount) {
+    DebugOnly<bool> advanced = pointToInsert.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced, "Failed to advance offset");
+  }
+
+  for (int32_t row = 0; row < aNumberOfRowsToInsert; row++) {
+    // Create a new row
+    RefPtr<Element> newRow = CreateElementWithDefaults(*nsGkAtoms::tr);
+    if (NS_WARN_IF(!newRow)) {
       return NS_ERROR_FAILURE;
     }
 
-    // The row parent and offset where we will insert new row
-    nsCOMPtr<nsINode> parentOfRow = parentRow->GetParentNode();
-    if (NS_WARN_IF(!parentOfRow)) {
-      return NS_ERROR_FAILURE;
-    }
-    int32_t newRowOffset = parentOfRow->ComputeIndexOf(parentRow);
-
-    // Adjust for when adding past the end
-    if (aAfter && startRowIndex >= tableSize.mRowCount) {
-      newRowOffset++;
-    }
-
-    for (int32_t row = 0; row < aNumber; row++) {
-      // Create a new row
-      RefPtr<Element> newRow = CreateElementWithDefaults(*nsGkAtoms::tr);
-      if (NS_WARN_IF(!newRow)) {
+    for (int32_t i = 0; i < cellsInRow; i++) {
+      RefPtr<Element> newCell = CreateElementWithDefaults(*nsGkAtoms::td);
+      if (NS_WARN_IF(!newCell)) {
         return NS_ERROR_FAILURE;
       }
-
-      for (int32_t i = 0; i < cellsInRow; i++) {
-        RefPtr<Element> newCell = CreateElementWithDefaults(*nsGkAtoms::td);
-        if (NS_WARN_IF(!newCell)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        // Don't use transaction system yet! (not until entire row is
-        // inserted)
-        newRow->AppendChild(*newCell, error);
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
+      newRow->AppendChild(*newCell, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
       }
+    }
 
-      // Use transaction system to insert the entire row+cells
-      // (Note that rows are inserted at same childoffset each time)
-      rv = InsertNodeWithTransaction(*newRow,
-                                     EditorRawDOMPoint(parentOfRow,
-                                                       newRowOffset));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
+    rv = InsertNodeWithTransaction(*newRow, pointToInsert);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
   // SetSelectionAfterTableEdit from AutoSelectionSetterAfterTableEdit will
   // access frame selection, so we need reframe.
   // Because GetTableCellElementAt() depends on frame.
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  if (ps) {
-    ps->FlushPendingNotifications(FlushType::Frames);
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  if (presShell) {
+    presShell->FlushPendingNotifications(FlushType::Frames);
   }
 
   return NS_OK;

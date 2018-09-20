@@ -1558,6 +1558,32 @@ protected: // Shouldn't be used by friend classes
   nsresult TabInTable(bool inIsShift, bool* outHandled);
 
   /**
+   * InsertPosition is an enum to indicate where the method should insert to.
+   */
+  enum class InsertPosition
+  {
+    // Before selected cell or a cell containing first selection range.
+    eBeforeSelectedCell,
+    // After selected cell or a cell containing first selection range.
+    eAfterSelectedCell,
+  };
+
+  /**
+   * InsertTableRowsWithTransaction() inserts <tr> elements before or after
+   * a cell element containing first selection range.  I.e., if the cell
+   * spans rows and aInsertPosition is eAfterSelectedCell, new rows will be
+   * inserted after the most-bottom row which contains the cell.  If first
+   * selection range is not in table cell element, this does nothing but
+   * does not return error.
+   *
+   * @param aNumberOfRowsToInsert       Number of rows to insert.
+   * @param aInsertPosition             Before or after the target cell which
+   *                                    contains first selection range.
+   */
+  nsresult InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
+                                          InsertPosition aInsertPosition);
+
+  /**
    * Insert a new cell after or before supplied aCell.
    * Optional: If aNewCell supplied, returns the newly-created cell (addref'd,
    * of course)
