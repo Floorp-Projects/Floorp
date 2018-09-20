@@ -12,6 +12,7 @@ use ron;
 use serde;
 
 
+#[derive(Clone)]
 pub struct CaptureConfig {
     pub root: PathBuf,
     pub bits: CaptureBits,
