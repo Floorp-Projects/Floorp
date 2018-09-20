@@ -50,15 +50,17 @@ def create_parser():
     parser.add_argument("--yes", "-y", dest="prompt", action="store_false", default=True,
                         help="Don't prompt before installing components")
     parser.add_argument("--install-browser", action="store_true",
-                        help="Install the browser")
+                        help="Install the browser from the release channel specified by --channel "
+                        "(or the nightly channel by default).")
     parser.add_argument("--channel", action="store",
                         choices=install.channel_by_name.keys(),
-                        default=None, help='Name of browser release channel.'
-                        '"stable" and "release" are synonyms for the latest browser stable release,'
-                        '"nightly", "dev", "experimental", and "preview" are all synonyms for '
-                        'the latest available development release. For WebDriver installs, '
-                        'we attempt to select an appropriate, compatible, version for the '
-                        'latest browser release on the selected channel.')
+                        default=None, help='Name of browser release channel. '
+                        '"stable" and "release" are synonyms for the latest browser stable '
+                        'release, "nightly", "dev", "experimental", and "preview" are all '
+                        'synonyms for the latest available development release. (For WebDriver '
+                        'installs, we attempt to select an appropriate, compatible version for '
+                        'the latest browser release on the selected channel.) '
+                        'This flag overrides --browser-channel.')
     parser._add_container_actions(wptcommandline.create_parser())
     return parser
 
@@ -252,6 +254,9 @@ class Chrome(BrowserSetup):
                 kwargs["webdriver_binary"] = webdriver_binary
             else:
                 raise WptrunError("Unable to locate or install chromedriver binary")
+        if kwargs["browser_channel"] == "dev":
+            logger.info("Automatically turning on experimental features for Chrome Dev")
+            kwargs["binary_args"].append("--enable-experimental-web-platform-features")
 
 
 class ChromeAndroid(BrowserSetup):
@@ -275,6 +280,7 @@ class ChromeAndroid(BrowserSetup):
                 kwargs["webdriver_binary"] = webdriver_binary
             else:
                 raise WptrunError("Unable to locate or install chromedriver binary")
+
 
 class ChromeWebDriver(Chrome):
     name = "chrome_webdriver"
@@ -470,6 +476,7 @@ def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
     setup_cls.install_requirements()
 
     if install_browser and not kwargs["channel"]:
+        logger.info("--install-browser is given but --channel is not set, default to nightly channel")
         kwargs["channel"] = "nightly"
 
     if kwargs["channel"]:
@@ -497,7 +504,7 @@ def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
 
 
 def run(venv, **kwargs):
-    #Remove arguments that aren't passed to wptrunner
+    # Remove arguments that aren't passed to wptrunner
     prompt = kwargs.pop("prompt", True)
     install_browser = kwargs.pop("install_browser", False)
 

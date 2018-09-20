@@ -4,7 +4,7 @@
 
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, DeviceIntSize, LayoutPrimitiveInfo};
 use api::{LayoutRect, LayoutSize, LayoutVector2D};
-use clip::ClipItem;
+use clip::ClipItemKey;
 use display_list_flattener::DisplayListFlattener;
 use gpu_cache::GpuCacheHandle;
 use gpu_types::BoxShadowStretchMode;
@@ -13,7 +13,9 @@ use prim_store::ScrollNodeAndClipChain;
 use render_task::RenderTaskCacheEntryHandle;
 use util::RectHelpers;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BoxShadowClipSource {
     // Parameters that define the shadow and are constant.
     pub shadow_radius: BorderRadius,
@@ -122,7 +124,7 @@ impl<'a> DisplayListFlattener<'a> {
                     }
 
                     // TODO(gw): Add a fast path for ClipOut + zero border radius!
-                    clips.push(ClipItem::new_rounded_rect(
+                    clips.push(ClipItemKey::rounded_rect(
                         prim_info.rect,
                         border_radius,
                         ClipMode::ClipOut
@@ -132,7 +134,7 @@ impl<'a> DisplayListFlattener<'a> {
                 }
                 BoxShadowClipMode::Inset => {
                     if shadow_rect.is_well_formed_and_nonempty() {
-                        clips.push(ClipItem::new_rounded_rect(
+                        clips.push(ClipItemKey::rounded_rect(
                             shadow_rect,
                             shadow_radius,
                             ClipMode::ClipOut
@@ -143,7 +145,11 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             };
 
-            clips.push(ClipItem::new_rounded_rect(final_prim_rect, clip_radius, ClipMode::Clip));
+            clips.push(ClipItemKey::rounded_rect(
+                final_prim_rect,
+                clip_radius,
+                ClipMode::Clip,
+            ));
 
             self.add_primitive(
                 clip_and_scroll,
@@ -163,7 +169,7 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Add a normal clip mask to clip out the contents
             // of the surrounding primitive.
-            extra_clips.push(ClipItem::new_rounded_rect(
+            extra_clips.push(ClipItemKey::rounded_rect(
                 prim_info.rect,
                 border_radius,
                 prim_clip_mode,
@@ -181,7 +187,7 @@ impl<'a> DisplayListFlattener<'a> {
             );
 
             // Create the box-shadow clip item.
-            let shadow_clip_source = ClipItem::new_box_shadow(
+            let shadow_clip_source = ClipItemKey::box_shadow(
                 shadow_rect,
                 shadow_radius,
                 dest_rect,

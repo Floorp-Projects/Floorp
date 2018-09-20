@@ -1017,7 +1017,9 @@ ModuleGenerator::finishMetadata(const Bytes& bytecode)
 }
 
 SharedModule
-ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* linkData)
+ModuleGenerator::finishModule(const ShareableBytes& bytecode,
+                              JS::OptimizedEncodingListener* maybeTier2Listener,
+                              UniqueLinkData* maybeLinkDataOut)
 {
     MOZ_ASSERT(mode() == CompileMode::Once || mode() == CompileMode::Tier1);
 
@@ -1128,13 +1130,15 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode, UniqueLinkData* li
     }
 
     if (mode() == CompileMode::Tier1) {
-        module->startTier2(*compileArgs_, bytecode);
+        module->startTier2(*compileArgs_, bytecode, maybeTier2Listener);
+    } else if (tier() == Tier::Serialized && maybeTier2Listener) {
+        module->serialize(*linkData_, *maybeTier2Listener);
     }
 
-    if (linkData) {
+    if (maybeLinkDataOut) {
         MOZ_ASSERT(isAsmJS());
         MOZ_ASSERT(!env_->debugEnabled());
-        *linkData = std::move(linkData_);
+        *maybeLinkDataOut = std::move(linkData_);
     }
 
     return module;

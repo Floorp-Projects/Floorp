@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsHashKeys.h"
+#include "mozilla/Move.h"
 #include "mozilla/Unused.h"
 
 /**
@@ -22,8 +23,12 @@ public:
 
     explicit nsURIHashKey(const nsIURI* aKey) :
         mKey(const_cast<nsIURI*>(aKey)) { MOZ_COUNT_CTOR(nsURIHashKey); }
-    nsURIHashKey(const nsURIHashKey& toCopy) :
-        mKey(toCopy.mKey) { MOZ_COUNT_CTOR(nsURIHashKey); }
+    nsURIHashKey(nsURIHashKey&& toMove)
+        : PLDHashEntryHdr(std::move(toMove))
+        , mKey(std::move(toMove.mKey))
+    {
+        MOZ_COUNT_CTOR(nsURIHashKey);
+    }
     ~nsURIHashKey() { MOZ_COUNT_DTOR(nsURIHashKey); }
 
     nsIURI* GetKey() const { return mKey; }

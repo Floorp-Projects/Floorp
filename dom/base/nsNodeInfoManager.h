@@ -148,6 +148,7 @@ private:
   {
   public:
     explicit NodeInfoInnerKey(KeyTypePointer aKey) : nsPtrHashKey(aKey) {}
+    NodeInfoInnerKey(NodeInfoInnerKey&&) = default;
     ~NodeInfoInnerKey() = default;
     bool KeyEquals(KeyTypePointer aKey) const { return *mKey == *aKey; }
     static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->Hash(); }

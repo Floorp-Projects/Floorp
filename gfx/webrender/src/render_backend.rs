@@ -16,6 +16,9 @@ use api::channel::{MsgReceiver, Payload};
 use api::CaptureBits;
 #[cfg(feature = "replay")]
 use api::CapturedDocument;
+#[cfg(feature = "replay")]
+use clip::ClipDataInterner;
+use clip::{ClipDataUpdateList, ClipDataStore};
 use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
 #[cfg(feature = "debugger")]
 use debug_server;
@@ -114,6 +117,10 @@ struct Document {
     /// before rendering again.
     frame_is_valid: bool,
     hit_tester_is_valid: bool,
+
+    // The store of currently active / available clip nodes. This is kept
+    // in sync with the clip interner in the scene builder for each document.
+    clip_data_store: ClipDataStore,
 }
 
 impl Document {
@@ -142,6 +149,7 @@ impl Document {
             dynamic_properties: SceneProperties::new(),
             frame_is_valid: false,
             hit_tester_is_valid: false,
+            clip_data_store: ClipDataStore::new(),
         }
     }
 
@@ -267,8 +275,12 @@ impl Document {
                 &mut resource_profile.texture_cache,
                 &mut resource_profile.gpu_cache,
                 &self.dynamic_properties,
+                &mut self.clip_data_store,
             );
-            self.hit_tester = Some(frame_builder.create_hit_tester(&self.clip_scroll_tree));
+            self.hit_tester = Some(frame_builder.create_hit_tester(
+                &self.clip_scroll_tree,
+                &self.clip_data_store,
+            ));
             frame
         };
 
@@ -600,6 +612,7 @@ impl RenderBackend {
                         self.update_document(
                             txn.document_id,
                             replace(&mut txn.resource_updates, Vec::new()),
+                            txn.clip_updates.take(),
                             replace(&mut txn.frame_ops, Vec::new()),
                             replace(&mut txn.notifications, Vec::new()),
                             txn.build_frame,
@@ -905,6 +918,7 @@ impl RenderBackend {
             self.update_document(
                 txn.document_id,
                 replace(&mut txn.resource_updates, Vec::new()),
+                None,
                 replace(&mut txn.frame_ops, Vec::new()),
                 replace(&mut txn.notifications, Vec::new()),
                 txn.build_frame,
@@ -942,6 +956,7 @@ impl RenderBackend {
         &mut self,
         document_id: DocumentId,
         resource_updates: Vec<ResourceUpdate>,
+        clip_updates: Option<ClipDataUpdateList>,
         mut frame_ops: Vec<FrameMsg>,
         mut notifications: Vec<NotificationRequest>,
         mut build_frame: bool,
@@ -964,6 +979,12 @@ impl RenderBackend {
         }
 
         let doc = self.documents.get_mut(&document_id).unwrap();
+
+        // If there are any additions or removals of clip modes
+        // during the scene build, apply them to the data store now.
+        if let Some(clip_updates) = clip_updates {
+            doc.clip_data_store.apply_updates(clip_updates);
+        }
 
         // TODO: this scroll variable doesn't necessarily mean we scrolled. It is only used
         // for something wrench specific and we should remove it.
@@ -1280,7 +1301,13 @@ impl RenderBackend {
                 let file_name = format!("frame-{}-{}", (id.0).0, id.1);
                 config.serialize(&rendered_document.frame, file_name);
             }
+
+            let clip_data_name = format!("clip-data-{}-{}", (id.0).0, id.1);
+            config.serialize(&doc.clip_data_store, clip_data_name);
         }
+
+        debug!("\tscene builder");
+        self.scene_tx.send(SceneBuilderRequest::SaveScene(config.clone())).unwrap();
 
         debug!("\tresource cache");
         let (resources, deferred) = self.resource_cache.save_capture(&config.root);
@@ -1362,6 +1389,14 @@ impl RenderBackend {
             let scene = CaptureConfig::deserialize::<Scene, _>(root, &scene_name)
                 .expect(&format!("Unable to open {}.ron", scene_name));
 
+            let clip_interner_name = format!("clip-interner-{}-{}", (id.0).0, id.1);
+            let clip_interner = CaptureConfig::deserialize::<ClipDataInterner, _>(root, &clip_interner_name)
+                .expect(&format!("Unable to open {}.ron", clip_interner_name));
+
+            let clip_data_name = format!("clip-data-{}-{}", (id.0).0, id.1);
+            let clip_data_store = CaptureConfig::deserialize::<ClipDataStore, _>(root, &clip_data_name)
+                .expect(&format!("Unable to open {}.ron", clip_data_name));
+
             let mut doc = Document {
                 scene: scene.clone(),
                 removed_pipelines: Vec::new(),
@@ -1374,6 +1409,7 @@ impl RenderBackend {
                 hit_tester: None,
                 frame_is_valid: false,
                 hit_tester_is_valid: false,
+                clip_data_store,
             };
 
             let frame_name = format!("frame-{}-{}", (id.0).0, id.1);
@@ -1414,6 +1450,7 @@ impl RenderBackend {
                 font_instances: self.resource_cache.get_font_instances(),
                 scene_id: last_scene_id,
                 build_frame,
+                clip_interner,
             });
 
             self.documents.insert(id, doc);
