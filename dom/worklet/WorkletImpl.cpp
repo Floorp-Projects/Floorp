@@ -6,13 +6,10 @@
 
 #include "WorkletImpl.h"
 
-#include "AudioWorkletGlobalScope.h"
-#include "PaintWorkletGlobalScope.h"
 #include "Worklet.h"
 #include "WorkletThread.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/dom/AudioWorkletBinding.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/WorkletBinding.h"
@@ -45,22 +42,9 @@ WorkletLoadInfo::~WorkletLoadInfo()
 // ---------------------------------------------------------------------------
 // WorkletImpl
 
-/* static */ already_AddRefed<dom::Worklet>
-WorkletImpl::CreateWorklet(nsPIDOMWindowInner* aWindow,
-                           nsIPrincipal* aPrincipal,
-                           WorkletType aWorkletType)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<WorkletImpl> impl = new WorkletImpl(aWindow, aPrincipal, aWorkletType);
-  return MakeAndAddRef<dom::Worklet>(aWindow, std::move(impl));
-}
-
 WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow,
-                         nsIPrincipal* aPrincipal,
-                         WorkletType aWorkletType)
+                         nsIPrincipal* aPrincipal)
   : mWorkletLoadInfo(aWindow, aPrincipal)
-  , mWorkletType(aWorkletType)
 {
 }
 
@@ -71,11 +55,7 @@ WorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
                          JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mWorkletType == eAudioWorklet) {
-    return dom::AudioWorklet_Binding::Wrap(aCx, aWorklet, aGivenProto);
-  } else {
-    return dom::Worklet_Binding::Wrap(aCx, aWorklet, aGivenProto);
-  }
+  return dom::Worklet_Binding::Wrap(aCx, aWorklet, aGivenProto);
 }
 
 already_AddRefed<dom::WorkletGlobalScope>
@@ -83,16 +63,7 @@ WorkletImpl::CreateGlobalScope(JSContext* aCx)
 {
   dom::WorkletThread::AssertIsOnWorkletThread();
 
-  RefPtr<dom::WorkletGlobalScope> scope;
-
-  switch (mWorkletType) {
-    case eAudioWorklet:
-      scope = new dom::AudioWorkletGlobalScope(this);
-      break;
-    case ePaintWorklet:
-      scope = new dom::PaintWorkletGlobalScope(this);
-      break;
-  }
+  RefPtr<dom::WorkletGlobalScope> scope = ConstructGlobalScope();
 
   JS::Rooted<JSObject*> global(aCx);
   NS_ENSURE_TRUE(scope->WrapGlobalObject(aCx, &global), nullptr);
