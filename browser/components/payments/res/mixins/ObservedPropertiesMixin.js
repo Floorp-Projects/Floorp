@@ -10,6 +10,10 @@
 
 export default function ObservedPropertiesMixin(superClass) {
   return class ObservedProperties extends superClass {
+    static kebabToCamelCase(name) {
+      return name.replace(/-([a-z])/g, ($0, $1) => $1.toUpperCase());
+    }
+
     constructor() {
       super();
 
@@ -24,7 +28,7 @@ export default function ObservedPropertiesMixin(superClass) {
           continue;
         }
         // Convert attribute names from kebab-case to camelCase properties
-        Object.defineProperty(this, name.replace(/-([a-z])/g, ($0, $1) => $1.toUpperCase()), {
+        Object.defineProperty(this, ObservedProperties.kebabToCamelCase(name), {
           configurable: true,
           get() {
             return this.getAttribute(name);

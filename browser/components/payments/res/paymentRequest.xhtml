@@ -23,6 +23,7 @@
   <!ENTITY deliveryGenericError       "Can’t deliver to this address. Select a different address.">
   <!ENTITY pickupGenericError         "Can’t pick up from this address. Select a different address.">
   <!ENTITY paymentMethodsLabel        "Payment Method">
+  <!ENTITY address.fieldSeparator     ", ">
   <!ENTITY address.addLink.label      "Add">
   <!ENTITY address.editLink.label     "Edit">
   <!ENTITY basicCard.addLink.label    "Add">
@@ -132,6 +133,7 @@
           <address-picker class="shipping-related"
                           data-add-link-label="&address.addLink.label;"
                           data-edit-link-label="&address.editLink.label;"
+                          data-field-separator="&address.fieldSeparator;"
                           data-shipping-address-label="&shippingAddressLabel;"
                           data-delivery-address-label="&deliveryAddressLabel;"
                           data-pickup-address-label="&pickupAddressLabel;"
@@ -155,6 +157,7 @@
                           label="&payerLabel;"
                           data-add-link-label="&payer.addLink.label;"
                           data-edit-link-label="&payer.editLink.label;"
+                          data-field-separator="&address.fieldSeparator;"
                           data-invalid-label="&invalidOption.label;"
                           selected-state-key="selectedPayerAddress"></address-picker>
         </div>
