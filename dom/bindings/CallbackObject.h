@@ -34,6 +34,9 @@
 #include "js/TracingAPI.h"
 
 namespace mozilla {
+
+class PromiseJobRunnable;
+
 namespace dom {
 
 #define DOM_CALLBACKOBJECT_IID \
@@ -83,8 +86,9 @@ public:
 
   // This is guaranteed to be non-null from the time the CallbackObject is
   // created until JavaScript has had a chance to run. It will only return null
-  // after a JavaScript caller has called nukeSandbox on a Sandbox object, and
-  // the cycle collector has had a chance to run.
+  // after a JavaScript caller has called nukeSandbox on a Sandbox object and
+  // the cycle collector has had a chance to run, unless Reset() is explicitly
+  // called (see below).
   //
   // This means that any native callee which receives a CallbackObject as an
   // argument can safely rely on the callback being non-null so long as it
@@ -236,6 +240,16 @@ private:
     InitNoHold(aCallback, aCallbackGlobal, aCreationStack, aIncumbentGlobal);
     mozilla::HoldJSObjects(this);
   }
+
+  // Provide a way to clear this object's pointers to GC things after the
+  // callback has been run. Note that CallbackOrNull() will return null after
+  // this point. This should only be called if the object is known not to be
+  // used again.
+  void Reset()
+  {
+    ClearJSReferences();
+  }
+  friend class mozilla::PromiseJobRunnable;
 
   inline void ClearJSReferences()
   {
