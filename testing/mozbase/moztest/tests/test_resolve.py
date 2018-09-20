@@ -178,7 +178,9 @@ class Base(unittest.TestCase):
         test_defaults.flush()
         self._temp_files.append(test_defaults)
 
-        return TestMetadata(all_tests.name, test_defaults=test_defaults.name)
+        rv = TestMetadata(all_tests.name, "/firefox/", test_defaults=test_defaults.name)
+        rv._wpt_loaded = True  # Don't try to load the wpt manifest
+        return rv
 
 
 class TestTestMetadata(Base):
