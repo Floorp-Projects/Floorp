@@ -18,7 +18,7 @@ test_newtab({
   test: function test_render_no_topsites() {
     let topSites = content.document.querySelector(".top-sites-list");
     ok(!topSites, "No top sites section");
-  },
+  }
 });
 
 // This next test runs immediately after test_render_no_topsites to make sure

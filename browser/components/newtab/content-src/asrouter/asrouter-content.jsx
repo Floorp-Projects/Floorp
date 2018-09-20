@@ -31,7 +31,7 @@ export const ASRouterUtils = {
   executeAction(button_action) {
     ASRouterUtils.sendMessage({
       type: "USER_ACTION",
-      data: button_action,
+      data: button_action
     });
   },
   unblockById(id) {
@@ -57,13 +57,13 @@ export const ASRouterUtils = {
         const endpoint = new URL(params.get("endpoint"));
         return {
           url: endpoint.href,
-          snippetId: params.get("snippetId"),
+          snippetId: params.get("snippetId")
         };
       } catch (e) {}
     }
 
     return null;
-  },
+  }
 };
 
 // Note: nextProps/prevProps refer to props passed to <ImpressionsWrapper />, not <ASRouterUISurface />
@@ -84,7 +84,7 @@ const ALLOWED_TAGS = {
   u: <u />,
   strong: <strong />,
   em: <em />,
-  br: <br />,
+  br: <br />
 };
 
 /**
@@ -133,7 +133,7 @@ export class ASRouterUISurface extends React.PureComponent {
       message_id: message.id || extraProps.message_id,
       source: extraProps.id,
       action: eventType,
-      ...extraProps,
+      ...extraProps
     });
   }
 
@@ -150,12 +150,9 @@ export class ASRouterUISurface extends React.PureComponent {
       value: event.target.dataset.metric,
       // Used for the `source` of the event. Needed to differentiate
       // from other snippet or onboarding events that may occur.
-      id: "NEWTAB_FOOTER_BAR_CONTENT",
+      id: "NEWTAB_FOOTER_BAR_CONTENT"
     };
     this.sendUserActionTelemetry({event: "CLICK_BUTTON", ...metric});
-    if (!this.state.message.content.do_not_autoblock) {
-      ASRouterUtils.blockById(this.state.message.id);
-    }
   }
 
   onBlockById(id) {
@@ -245,28 +242,11 @@ export class ASRouterUISurface extends React.PureComponent {
         sendUserActionTelemetry={this.sendUserActionTelemetry} />);
   }
 
-  renderPreviewBanner() {
-    if (this.state.message.provider !== "preview") {
-      return null;
-    }
-
-    return (
-      <div className="snippets-preview-banner">
-        <span className="icon icon-small-spacer icon-info" />
-        <span>Preview Purposes Only</span>
-      </div>
-    );
-  }
-
   render() {
     const {message, bundle} = this.state;
     if (!message.id && !bundle.template) { return null; }
-    return (
-      <div>
-        {this.renderPreviewBanner()}
-        {bundle.template === "onboarding" ? this.renderOnboarding() : this.renderSnippets()}
-      </div>
-    );
+    if (bundle.template === "onboarding") { return this.renderOnboarding(); }
+    return this.renderSnippets();
   }
 }
 

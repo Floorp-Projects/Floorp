@@ -15,9 +15,9 @@ describe("PersistentCache", () => {
       File: {
         exists: async () => true,
         read: async () => ({}),
-        writeAtomic: sinon.stub().returns(Promise.resolve()),
+        writeAtomic: sinon.stub().returns(Promise.resolve())
       },
-      Path: {join: () => filename},
+      Path: {join: () => filename}
     };
     fakeTextDecoder = {decode: () => "{\"foo\": \"bar\"}"};
     globals.set("OS", fakeOS);

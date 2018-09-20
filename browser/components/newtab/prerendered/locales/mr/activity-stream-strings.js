@@ -45,7 +45,7 @@ window.gActivityStreamStrings = {
   "prefs_topsites_description": "आपण सर्वाधिक भेट देता त्या साइट",
   "prefs_topstories_description2": "आपल्यासाठी वैयक्तिकीकृत केलेल्या वेबवरील छान सामग्री",
   "prefs_topstories_options_sponsored_label": "प्रायोजित कथा",
-  "prefs_topstories_sponsored_learn_more": "अधिक जाणा",
+  "prefs_topstories_sponsored_learn_more": "अधिक जाणून घ्या",
   "prefs_highlights_description": "आपण जतन केलेल्या किंवा भेट दिलेल्या साइट्सचा एक निवडक साठा",
   "prefs_highlights_options_visited_label": "भेट दिलेली पृष्ठे",
   "prefs_highlights_options_download_label": "अलीकडचे डाउनलोड",

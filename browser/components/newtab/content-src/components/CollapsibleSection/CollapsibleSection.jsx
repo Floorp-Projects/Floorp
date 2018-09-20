@@ -69,13 +69,13 @@ export class _CollapsibleSection extends React.PureComponent {
     // Get the current height of the body so max-height transitions can work
     this.setState({
       isAnimating: true,
-      maxHeight: `${this.sectionBody.scrollHeight}px`,
+      maxHeight: `${this.sectionBody.scrollHeight}px`
     });
     const {action, userEvent} = SectionMenuOptions.CheckCollapsed(this.props);
     this.props.dispatch(action);
     this.props.dispatch(ac.UserEvent({
       event: userEvent,
-      source: this.props.source,
+      source: this.props.source
     }));
   }
 
@@ -186,9 +186,9 @@ _CollapsibleSection.defaultProps = {
   document: global.document || {
     addEventListener: () => {},
     removeEventListener: () => {},
-    visibilityState: "hidden",
+    visibilityState: "hidden"
   },
-  Prefs: {values: {}},
+  Prefs: {values: {}}
 };
 
 export const CollapsibleSection = injectIntl(_CollapsibleSection);

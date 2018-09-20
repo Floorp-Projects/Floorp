@@ -7,7 +7,7 @@ import {shallow} from "enzyme";
 
 const perfSvc = {
   mark() {},
-  getMostRecentAbsMarkStartByName() {},
+  getMostRecentAbsMarkStartByName() {}
 };
 
 let DEFAULT_PROPS = {
@@ -16,7 +16,7 @@ let DEFAULT_PROPS = {
   id: "highlights",
   dispatch() {},
   intl: {formatMessage: x => x},
-  perfSvc,
+  perfSvc
 };
 
 describe("<ComponentPerfTimer>", () => {
@@ -273,7 +273,7 @@ describe("<ComponentPerfTimer>", () => {
       assert.calledOnce(dispatch);
       assert.calledWithExactly(dispatch, ac.OnlyToMain({
         type: at.SAVE_SESSION_PERF_DATA,
-        data: {[`${DEFAULT_PROPS.id}_data_late_by_ms`]: 2},
+        data: {[`${DEFAULT_PROPS.id}_data_late_by_ms`]: 2}
       }));
     });
   });
@@ -334,7 +334,7 @@ describe("<ComponentPerfTimer>", () => {
       assert.calledOnce(dispatch);
       assert.calledWithExactly(dispatch, ac.OnlyToMain({
         type: at.SAVE_SESSION_PERF_DATA,
-        data: {"topsites_first_painted_ts": 42},
+        data: {"topsites_first_painted_ts": 42}
       }));
     });
   });

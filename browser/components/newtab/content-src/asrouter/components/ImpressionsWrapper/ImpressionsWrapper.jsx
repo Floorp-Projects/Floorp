@@ -56,5 +56,5 @@ export class ImpressionsWrapper extends React.PureComponent {
 
 ImpressionsWrapper.defaultProps = {
   document: global.document,
-  sendOnMount: true,
+  sendOnMount: true
 };

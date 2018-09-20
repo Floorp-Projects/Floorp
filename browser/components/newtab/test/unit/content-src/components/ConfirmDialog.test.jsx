@@ -16,8 +16,8 @@ describe("<ConfirmDialog>", () => {
         onConfirm: [],
         cancel_button_string_id: "manual_migration_cancel_button",
         confirm_button_string_id: "manual_migration_import_button",
-        eventSource: "HIGHLIGHTS",
-      },
+        eventSource: "HIGHLIGHTS"
+      }
     };
     wrapper = shallowWithIntl(<ConfirmDialog dispatch={dispatch} {...ConfirmDialogProps} />);
   });
@@ -113,8 +113,8 @@ describe("<ConfirmDialog>", () => {
         body_string_id: ["foo", "bar"],
         onConfirm: [
           ac.AlsoToMain({type: at.DELETE_URL, data: "foo.bar"}),
-          ac.UserEvent({event: "DELETE"}),
-        ],
+          ac.UserEvent({event: "DELETE"})
+        ]
       });
       wrapper = shallowWithIntl(<ConfirmDialog dispatch={dispatch} {...ConfirmDialogProps} />);
       let doneButton = wrapper.find(".actions").childAt(1);
@@ -133,8 +133,8 @@ describe("<ConfirmDialog>", () => {
         body_string_id: ["foo", "bar"],
         onConfirm: [
           ac.AlsoToMain({type: at.DELETE_URL, data: "foo.bar"}),
-          ac.UserEvent({event: "DELETE"}),
-        ],
+          ac.UserEvent({event: "DELETE"})
+        ]
       });
       wrapper = shallowWithIntl(<ConfirmDialog dispatch={dispatch} {...ConfirmDialogProps} />);
       let doneButton = wrapper.find(".actions").childAt(1);
