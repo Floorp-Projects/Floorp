@@ -1615,8 +1615,12 @@ PendingLookup::OnStopRequest(nsIRequest *aRequest,
 
   bool shouldBlock = false;
   uint32_t verdict = nsIApplicationReputationService::VERDICT_SAFE;
-  Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT,
-    false);
+
+  if (aResult != NS_ERROR_NET_TIMEOUT) {
+    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT,
+      false);
+  }
+
 
   nsresult rv = OnStopRequestInternal(aRequest, aContext, aResult,
                                       &shouldBlock, &verdict);
