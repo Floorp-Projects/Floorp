@@ -7,7 +7,7 @@
 #include "seccomon.h"
 #include "secoidt.h"
 #include "secdert.h"
-#include "keyt.h"
+#include "keythi.h"
 #include "certt.h"
 #include "pkcs11t.h"
 #include "secmodt.h"

@@ -87,7 +87,6 @@ struct Token
     // Returns false if the parsed value cannot fit into an int or float.
     bool iValue(int *value) const;
     bool uValue(unsigned int *value) const;
-    bool fValue(float *value) const;
 
     int type;
     unsigned int flags;

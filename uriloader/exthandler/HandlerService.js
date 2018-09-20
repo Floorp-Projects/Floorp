@@ -277,10 +277,9 @@ HandlerService.prototype = {
     }
 
     if (this._isMIMEInfo(handlerInfo)) {
-      let extEnumerator = handlerInfo.getFileExtensions();
       let extensions = storedHandlerInfo.extensions || [];
-      while (extEnumerator.hasMore()) {
-        let extension = extEnumerator.getNext().toLowerCase();
+      for (let extension of handlerInfo.getFileExtensions()) {
+        extension = extension.toLowerCase();
         // If the caller stored duplicate extensions, we save them only once.
         if (!extensions.includes(extension)) {
           extensions.push(extension);

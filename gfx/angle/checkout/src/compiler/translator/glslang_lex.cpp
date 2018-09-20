@@ -110,10 +110,10 @@
 /* First, we deal with  platform-specific or compiler-specific issues. */
 
 /* begin standard C headers. */
-#include <stdio.h>
-#include <string.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* end standard C headers. */
 
@@ -573,58 +573,58 @@ static const flex_int16_t yy_accept[891] =
       169,  170,  184,  184,  184,   26,  166,  184,  184,  184,
 
       184,  184,   52,   53,   54,  184,  184,  184,  184,  184,
-      184,  184,  184,  184,  184,  184,  109,  184,  184,  184,
+      184,  184,  184,  184,  184,  184,  112,  184,  184,  184,
       184,  184,  184,  184,  184,  160,  184,  184,  184,  184,
       184,  184,  184,  184,  184,  184,  184,  146,  184,  184,
       183,   58,   59,   60,  184,  184,   15,  184,  184,  184,
-      114,  184,  184,    9,  184,  184,  112,  184,  184,  184,
-      161,  156,  115,  184,  184,  184,  184,  184,  184,  152,
-      184,  184,  184,  184,  184,   84,   40,   43,   45,   44,
+      117,  184,  184,    9,  184,  184,  115,  184,  184,  184,
+      161,  156,  118,  184,  184,  184,  184,  184,  184,  152,
+      184,  184,  184,  184,  184,   87,   40,   43,   45,   44,
        41,   47,   46,   48,   42,  184,  184,  184,  184,  167,
-      143,  184,  184,  154,  184,  184,  184,   36,  110,   27,
+      143,  184,  184,  154,  184,  184,  184,   36,  113,   27,
 
-      180,   23,  155,   83,  184,  165,   18,  184,  184,  184,
+      180,   23,  155,   86,  184,  165,   18,  184,  184,  184,
       184,  184,  184,  184,  184,  184,  184,  184,  184,  184,
       184,  184,  184,   20,   35,  184,  184,  184,  184,  184,
-      184,  116,   89,   95,  184,  184,  184,  184,  184,   86,
-       88,    3,  184,  184,  184,  184,  184,  184,  184,  184,
+      184,  119,   92,   98,  184,  184,  184,  184,  184,   89,
+       91,    3,  184,  184,  184,  184,  184,  184,  184,  184,
       184,  184,  184,  148,  184,  184,  184,  184,  184,    8,
       184,  184,   10,  184,  184,  184,  184,  184,  184,   21,
-      103,   12,  157,  117,   90,   97,  184,  184,  184,  184,
+      106,   12,  157,  120,   93,  100,  184,  184,  184,  184,
       184,  184,  184,  184,  184,  184,  184,  184,  184,  153,
-      184,  184,  184,  101,  107,  104,  184,  184,  184,  184,
+      184,  184,  184,  104,  110,  107,  184,  184,  184,  184,
 
-      184,  184,  184,  149,  118,   91,   96,  184,  184,  164,
-      184,  105,  184,  184,  184,  184,    6,  184,  184,  184,
-      184,  184,  184,  184,  184,  184,  100,  158,    1,  184,
-      184,  184,  184,  184,  184,  182,  184,  113,    5,  177,
+      184,  184,  184,  149,  121,   94,   99,  184,  184,  164,
+      184,  108,  184,  184,  184,  184,    6,  184,  184,  184,
+      184,  184,  184,  184,  184,  184,  103,  158,    1,  184,
+      184,  184,  184,  184,  184,  182,  184,  116,    5,  177,
        61,   64,  184,  184,  184,  184,  184,  184,  184,  184,
-      184,  184,  184,  184,  184,  102,  184,  184,  184,  184,
-      184,  184,   98,  184,  184,  184,  184,  184,  131,   69,
+      184,  184,  184,  184,  184,  105,  184,  184,  184,  184,
+      184,  184,  101,  184,  184,  184,  184,  184,  134,   69,
        70,  184,  184,  184,  184,  184,  184,  184,  184,  184,
-      184,  184,  184,  184,  184,  111,  184,  184,  184,   99,
-      133,   74,   75,  184,  184,  184,  184,  106,  184,  184,
+      184,  184,  184,  184,  184,  114,  184,  184,  184,  102,
+      136,   74,   75,  184,  184,  184,  184,  109,  184,  184,
 
-      184,  184,  184,  184,  184,  126,  184,  184,  184,  184,
+      184,  184,  184,  184,  184,  129,  184,  184,  184,  184,
       184,  184,  184,  184,  184,  184,  184,   68,  184,  184,
       184,  184,   62,  184,  184,  184,  184,  184,  184,  184,
-      184,  184,  184,  184,  184,  184,  184,  127,  119,  184,
-       92,  184,  184,  184,   73,  184,  184,   71,  184,  184,
+      184,  184,  184,  184,  184,  184,  184,  130,  122,  184,
+       95,  184,  184,  184,   73,  184,  184,   71,  184,  184,
       184,  184,  184,  184,  184,  184,  184,  184,  184,  184,
-      184,  184,  128,  184,  184,   78,  184,  184,   76,  184,
-      184,  120,   93,  184,  122,  184,  123,  184,  184,  184,
-      184,  184,  184,  108,  184,  184,  184,  184,   66,  184,
-       65,  137,  184,  184,  121,   94,  184,  184,  184,  184,
+      184,  184,  131,  184,  184,   78,  184,  184,   76,  184,
+      184,  123,   96,  184,  125,  184,  126,  184,  184,  184,
+      184,  184,  184,  111,  184,  184,  184,  184,   66,  184,
+       65,  140,  184,  184,  124,   97,  184,  184,  184,  184,
 
-      184,  184,  184,  184,  184,  184,  184,  184,  135,  138,
-      184,  129,  184,   67,  184,  184,  184,  184,  184,  184,
-      184,  184,  136,  139,  184,  184,  184,  184,  132,   72,
+      184,  184,  184,  184,  184,  184,  184,  184,  138,  141,
+      184,  132,  184,   67,  184,  184,  184,  184,  184,  184,
+      184,  184,  139,  142,  184,  184,  184,  184,  135,   72,
       184,  184,  184,  178,  184,  184,  184,   79,  184,  184,
-      134,   77,  184,  184,  184,  184,  184,  184,  184,  184,
-      184,  140,  184,  184,  184,  184,  184,  184,  184,  184,
-      141,  184,  184,  184,  184,   80,  184,  142,   85,  184,
-      124,  125,   87,  184,  184,  184,   63,  184,  184,  184,
-      179,  184,  130,   81,  184,  184,  184,  184,   82,    0
+      137,   77,  184,  184,  184,  184,  184,  184,  184,  184,
+      184,   83,  184,  184,  184,  184,  184,  184,  184,  184,
+       84,  184,  184,  184,  184,   80,  184,   85,   88,  184,
+      127,  128,   90,  184,  184,  184,   63,  184,  184,  184,
+      179,  184,  133,   81,  184,  184,  184,  184,   82,    0
     } ;
 
 static const YY_CHAR yy_ec[256] =
@@ -1183,11 +1183,11 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh,
 WHICH GENERATES THE GLSL ES LEXER (glslang_lex.cpp).
 */
 
-#include "compiler/translator/glslang.h"
-#include "compiler/translator/ParseContext.h"
 #include "compiler/preprocessor/Token.h"
-#include "compiler/translator/util.h"
+#include "compiler/translator/ParseContext.h"
+#include "compiler/translator/glslang.h"
 #include "compiler/translator/length_limits.h"
+#include "compiler/translator/util.h"
 
 using namespace sh;
 
@@ -1224,6 +1224,7 @@ static int ES2_ident_ES3_reserved_ES3_1_keyword(TParseContext *context, int toke
 static int ES2_and_ES3_reserved_ES3_1_keyword(TParseContext *context, int token);
 static int ES2_and_ES3_ident_ES3_1_keyword(TParseContext *context, int token);
 static int ES3_extension_keyword_else_ident(TParseContext *context, TExtension extension, int token);
+static int ES2_ident_ES3_reserved_ES3_1_extension_keyword(TParseContext *context, TExtension extension, int token);
 static int uint_constant(TParseContext *context);
 static int int_constant(TParseContext *context);
 static int float_constant(yyscan_t yyscanner);
@@ -2027,104 +2028,113 @@ YY_RULE_SETUP
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-{ return STRUCT; }
+{ return ES2_ident_ES3_reserved_ES3_1_extension_keyword(context, TExtension::OES_texture_storage_multisample_2d_array, SAMPLER2DMSARRAY); }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_keyword_multiview_keyword(context, LAYOUT); }
+{ return ES2_ident_ES3_reserved_ES3_1_extension_keyword(context, TExtension::OES_texture_storage_multisample_2d_array, ISAMPLER2DMSARRAY); }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-{ return ES3_extension_keyword_else_ident(context, TExtension::EXT_YUV_target, YUVCSCSTANDARDEXT); }
+{ return ES2_ident_ES3_reserved_ES3_1_extension_keyword(context, TExtension::OES_texture_storage_multisample_2d_array, USAMPLER2DMSARRAY); }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-{ return yuvcscstandardext_constant(context); }
+{ return STRUCT; }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-{ return yuvcscstandardext_constant(context); }
+{ return ES2_ident_ES3_keyword_multiview_keyword(context, LAYOUT); }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-{ return yuvcscstandardext_constant(context); }
+{ return ES3_extension_keyword_else_ident(context, TExtension::EXT_YUV_target, YUVCSCSTANDARDEXT); }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGE2D); }
+{ return yuvcscstandardext_constant(context); }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGE2D); }
+{ return yuvcscstandardext_constant(context); }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, UIMAGE2D); }
+{ return yuvcscstandardext_constant(context); }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGE2DARRAY); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGE2D); }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGE2DARRAY); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGE2D); }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, UIMAGE2DARRAY); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, UIMAGE2D); }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGE3D); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGE2DARRAY); }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, UIMAGE3D); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGE2DARRAY); }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGE3D); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, UIMAGE2DARRAY); }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGECUBE); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGE3D); }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, UIMAGECUBE); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, UIMAGE3D); }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGECUBE); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGE3D); }
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, READONLY); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IIMAGECUBE); }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, WRITEONLY); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, UIMAGECUBE); }
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, COHERENT); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, IMAGECUBE); }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, RESTRICT); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, READONLY); }
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-{ return ES2_and_ES3_reserved_ES3_1_keyword(context, VOLATILE); }
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, WRITEONLY); }
 	YY_BREAK
 case 106:
+YY_RULE_SETUP
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, COHERENT); }
+	YY_BREAK
+case 107:
+YY_RULE_SETUP
+{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, RESTRICT); }
+	YY_BREAK
+case 108:
+YY_RULE_SETUP
+{ return ES2_and_ES3_reserved_ES3_1_keyword(context, VOLATILE); }
+	YY_BREAK
+case 109:
 YY_RULE_SETUP
 { return ES2_ident_ES3_reserved_ES3_1_keyword(context, ATOMICUINT); }
 	YY_BREAK
 /* Reserved keywords for GLSL ES 3.00 that are not reserved for GLSL ES 1.00 */
-case 107:
-case 108:
-case 109:
 case 110:
 case 111:
 case 112:
@@ -2159,7 +2169,7 @@ case 140:
 case 141:
 case 142:
 YY_RULE_SETUP
-{ 
+{
     if (context->getShaderVersion() < 300) {
         yylval->lex.string = AllocatePoolCharArray(yytext, yyleng);
         return check_type(yyscanner);
@@ -3929,6 +3939,27 @@ int ES3_extension_keyword_else_ident(TParseContext *context, TExtension extensio
         return token;
     }
 
+    yylval->lex.string = AllocatePoolCharArray(yytext, yyleng);
+    return check_type(yyscanner);
+}
+
+int ES2_ident_ES3_reserved_ES3_1_extension_keyword(TParseContext *context, TExtension extension, int token)
+{
+    struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
+    yyscan_t yyscanner = (yyscan_t) context->getScanner();
+
+    // a keyword in GLSL ES 3.10 with enabled extension
+    if (context->getShaderVersion() >= 310 && context->isExtensionEnabled(extension))
+    {
+        return token;
+    }
+    // a reserved word in GLSL ES 3.00+
+    if (context->getShaderVersion() >= 300)
+    {
+        return reserved_word(yyscanner);
+    }
+
+    // Otherwise can be used as an identifier/type name
     yylval->lex.string = AllocatePoolCharArray(yytext, yyleng);
     return check_type(yyscanner);
 }

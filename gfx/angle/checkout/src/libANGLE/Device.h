@@ -11,8 +11,8 @@
 #define LIBANGLE_DEVICE_H_
 
 #include "common/angleutils.h"
-#include "libANGLE/Error.h"
 #include "libANGLE/Display.h"
+#include "libANGLE/Error.h"
 
 #include <memory>
 
@@ -23,11 +23,14 @@ class DeviceImpl;
 
 namespace egl
 {
-class Device final : angle::NonCopyable
+class Device final : public LabeledObject, angle::NonCopyable
 {
   public:
     Device(Display *owningDisplay, rx::DeviceImpl *impl);
     virtual ~Device();
+
+    void setLabel(EGLLabelKHR label) override;
+    EGLLabelKHR getLabel() const override;
 
     Error getDevice(EGLAttrib *value);
     Display *getOwningDisplay() { return mOwningDisplay; };
@@ -39,10 +42,12 @@ class Device final : angle::NonCopyable
     rx::DeviceImpl *getImplementation() { return mImplementation.get(); }
 
     static egl::Error CreateDevice(EGLint deviceType, void *nativeDevice, Device **outDevice);
-    static bool IsValidDevice(Device *device);
+    static bool IsValidDevice(const Device *device);
 
   private:
     void initDeviceExtensions();
+
+    EGLLabelKHR mLabel;
 
     Display *mOwningDisplay;
     std::unique_ptr<rx::DeviceImpl> mImplementation;
@@ -50,7 +55,6 @@ class Device final : angle::NonCopyable
     DeviceExtensions mDeviceExtensions;
     std::string mDeviceExtensionString;
 };
-
 }
 
-#endif   // LIBANGLE_DEVICE_H_
+#endif  // LIBANGLE_DEVICE_H_

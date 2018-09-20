@@ -7,6 +7,8 @@
 // Buffer9.cpp Defines the Buffer9 class.
 
 #include "libANGLE/renderer/d3d/d3d9/Buffer9.h"
+
+#include "libANGLE/Context.h"
 #include "libANGLE/renderer/d3d/d3d9/Renderer9.h"
 
 namespace rx
@@ -59,10 +61,10 @@ gl::Error Buffer9::setData(const gl::Context *context,
     return gl::NoError();
 }
 
-gl::Error Buffer9::getData(const gl::Context *context, const uint8_t **outData)
+angle::Result Buffer9::getData(const gl::Context *context, const uint8_t **outData)
 {
     *outData = mMemory.data();
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 gl::Error Buffer9::setSubData(const gl::Context *context,
@@ -130,10 +132,10 @@ gl::Error Buffer9::unmap(const gl::Context *context, GLboolean *result)
     return gl::InternalError();
 }
 
-gl::Error Buffer9::markTransformFeedbackUsage(const gl::Context *context)
+angle::Result Buffer9::markTransformFeedbackUsage(const gl::Context *context)
 {
-    UNREACHABLE();
-    return gl::InternalError();
+    ANGLE_HR_UNREACHABLE(GetImplAs<Context9>(context));
+    return angle::Result::Stop();
 }
 
 }  // namespace rx

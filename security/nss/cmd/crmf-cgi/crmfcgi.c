@@ -4,7 +4,7 @@
 
 #include "seccomon.h"
 #include "nss.h"
-#include "key.h"
+#include "keyhi.h"
 #include "cert.h"
 #include "pk11func.h"
 #include "secmod.h"

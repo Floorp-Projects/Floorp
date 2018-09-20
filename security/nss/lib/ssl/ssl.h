@@ -13,7 +13,7 @@
 #include "prio.h"
 #include "seccomon.h"
 #include "cert.h"
-#include "keyt.h"
+#include "keythi.h"
 
 #include "sslt.h" /* public ssl data types */
 

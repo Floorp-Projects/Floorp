@@ -7,7 +7,7 @@
 #ifndef LIBANGLE_ATTRIBUTEMAP_H_
 #define LIBANGLE_ATTRIBUTEMAP_H_
 
-#include "libANGLE/PackedEnums.h"
+#include "common/PackedEnums.h"
 
 #include <EGL/egl.h>
 
@@ -61,7 +61,6 @@ class AttributeMap final
   private:
     std::map<EGLAttrib, EGLAttrib> mAttributes;
 };
-
 }
 
-#endif   // LIBANGLE_ATTRIBUTEMAP_H_
+#endif  // LIBANGLE_ATTRIBUTEMAP_H_

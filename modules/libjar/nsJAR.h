@@ -133,11 +133,13 @@ private:
  * Enumerates a list of files in a zip archive
  * (based on a pattern match in its member nsZipFind).
  */
-class nsJAREnumerator final : public nsIUTF8StringEnumerator
+class nsJAREnumerator final : public nsStringEnumeratorBase
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIUTF8STRINGENUMERATOR
+
+    using nsStringEnumeratorBase::GetNext;
 
     explicit nsJAREnumerator(nsZipFind *aFind)
       : mFind(aFind), mName(nullptr), mNameLen(0) {

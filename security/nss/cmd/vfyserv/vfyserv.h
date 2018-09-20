@@ -24,7 +24,7 @@
 #include "certt.h"
 #include "nss.h"
 #include "secder.h"
-#include "key.h"
+#include "keyhi.h"
 #include "sslproto.h"
 
 /* Custom header files */
