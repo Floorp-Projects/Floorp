@@ -18,6 +18,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Variant.h"
 
 #include <chrono>
 #ifdef JS_POSIX_NSPR
@@ -139,6 +140,7 @@ using js::shell::RCFile;
 
 using mozilla::ArrayEqual;
 using mozilla::ArrayLength;
+using mozilla::AsVariant;
 using mozilla::Atomic;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
@@ -146,6 +148,7 @@ using mozilla::Nothing;
 using mozilla::NumberEqualsInt32;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
+using mozilla::Variant;
 
 // Avoid an unnecessary NSPR dependency on Linux and OS X just for the shell.
 #ifdef JS_POSIX_NSPR
@@ -6819,14 +6822,186 @@ SetSharedObject(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+typedef Vector<uint8_t, 0, SystemAllocPolicy> Uint8Vector;
+
+class StreamCacheEntry : public AtomicRefCounted<StreamCacheEntry>,
+                         public JS::OptimizedEncodingListener
+{
+    typedef AtomicRefCounted<StreamCacheEntry> AtomicBase;
+
+    Uint8Vector bytes_;
+    ExclusiveData<Uint8Vector> optimized_;
+
+  public:
+    explicit StreamCacheEntry(Uint8Vector&& original)
+      : bytes_(std::move(original)),
+        optimized_(mutexid::ShellStreamCacheEntryState)
+    {}
+
+    // Implement JS::OptimizedEncodingListener:
+
+    MozExternalRefCountType MOZ_XPCOM_ABI AddRef() override {
+        AtomicBase::AddRef();
+        return 1;  // unused
+    }
+    MozExternalRefCountType MOZ_XPCOM_ABI Release() override {
+        AtomicBase::Release();
+        return 0;  // unused
+    }
+
+    const Uint8Vector& bytes() const {
+        return bytes_;
+    }
+
+    void storeOptimizedEncoding(const uint8_t* srcBytes, size_t srcLength) override {
+        MOZ_ASSERT(srcLength > 0);
+
+        // Tolerate races since a single StreamCacheEntry object can be used as
+        // the source of multiple streaming compilations.
+        auto dstBytes = optimized_.lock();
+        if (dstBytes->length() > 0) {
+            return;
+        }
+
+        if (!dstBytes->resize(srcLength)) {
+            return;
+        }
+        memcpy(dstBytes->begin(), srcBytes, srcLength);
+    }
+
+    bool hasOptimizedEncoding() const {
+        return !optimized_.lock()->empty();
+    }
+    const Uint8Vector& optimizedEncoding() const {
+        return optimized_.lock().get();
+    }
+};
+
+typedef RefPtr<StreamCacheEntry> StreamCacheEntryPtr;
+
+class StreamCacheEntryObject : public NativeObject
+{
+    static const unsigned CACHE_ENTRY_SLOT = 0;
+    static const ClassOps classOps_;
+    static const JSPropertySpec properties_;
+
+    static void finalize(FreeOp*, JSObject* obj) {
+        obj->as<StreamCacheEntryObject>().cache().Release();
+    }
+
+    static bool cachedGetter(JSContext* cx, unsigned argc, Value* vp) {
+        CallArgs args = CallArgsFromVp(argc, vp);
+        if (!args.thisv().isObject() || !args.thisv().toObject().is<StreamCacheEntryObject>()) {
+            return false;
+        }
+
+        StreamCacheEntryObject& obj = args.thisv().toObject().as<StreamCacheEntryObject>();
+        args.rval().setBoolean(obj.cache().hasOptimizedEncoding());
+        return true;
+    }
+    static bool getBuffer(JSContext* cx, unsigned argc, Value* vp) {
+        CallArgs args = CallArgsFromVp(argc, vp);
+        if (!args.thisv().isObject() || !args.thisv().toObject().is<StreamCacheEntryObject>()) {
+            return false;
+        }
+
+        auto& bytes = args.thisv().toObject().as<StreamCacheEntryObject>().cache().bytes();
+        RootedArrayBufferObject buffer(cx, ArrayBufferObject::create(cx, bytes.length()));
+        if (!buffer) {
+            return false;
+        }
+
+        memcpy(buffer->dataPointer(), bytes.begin(), bytes.length());
+
+        args.rval().setObject(*buffer);
+        return true;
+    }
+
+  public:
+    static const unsigned RESERVED_SLOTS = 1;
+    static const Class class_;
+    static const JSPropertySpec properties[];
+
+    static bool construct(JSContext* cx, unsigned argc, Value* vp) {
+        CallArgs args = CallArgsFromVp(argc, vp);
+        if (!args.requireAtLeast(cx, "streamCacheEntry", 1)) {
+            return false;
+        }
+
+        SharedMem<uint8_t*> ptr;
+        size_t numBytes;
+        if (!args[0].isObject() || !IsBufferSource(&args[0].toObject(), &ptr, &numBytes)) {
+            RootedObject callee(cx, &args.callee());
+            ReportUsageErrorASCII(cx, callee, "Argument must be an ArrayBuffer");
+            return false;
+        }
+
+        Uint8Vector bytes;
+        if (!bytes.resize(numBytes)) {
+            return false;
+        }
+
+        memcpy(bytes.begin(), ptr.unwrap(), numBytes);
+
+        RefPtr<StreamCacheEntry> cache = cx->new_<StreamCacheEntry>(std::move(bytes));
+        if (!cache) {
+            return false;
+        }
+
+        RootedNativeObject obj(cx, NewObjectWithGivenProto<StreamCacheEntryObject>(cx, nullptr));
+        if (!obj) {
+            return false;
+        }
+        obj->initReservedSlot(CACHE_ENTRY_SLOT, PrivateValue(cache.forget().take()));
+
+        if (!JS_DefineProperty(cx, obj, "cached", cachedGetter, nullptr, 0)) {
+            return false;
+        }
+        if (!JS_DefineFunction(cx, obj, "getBuffer", getBuffer, 0, 0)) {
+            return false;
+        }
+
+        args.rval().setObject(*obj);
+        return true;
+    }
+
+    StreamCacheEntry& cache() const {
+        return *(StreamCacheEntry*)getReservedSlot(CACHE_ENTRY_SLOT).toPrivate();
+    }
+};
+
+const ClassOps StreamCacheEntryObject::classOps_ =
+{
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    StreamCacheEntryObject::finalize
+};
+
+const Class StreamCacheEntryObject::class_ =
+{
+    "StreamCacheEntryObject",
+    JSCLASS_HAS_RESERVED_SLOTS(StreamCacheEntryObject::RESERVED_SLOTS) |
+    JSCLASS_BACKGROUND_FINALIZE,
+    &StreamCacheEntryObject::classOps_
+};
+
 struct BufferStreamJob
 {
-    Vector<uint8_t, 0, SystemAllocPolicy> bytes;
+    Variant<Uint8Vector, StreamCacheEntryPtr> source;
     Thread thread;
     JS::StreamConsumer* consumer;
 
-    explicit BufferStreamJob(JS::StreamConsumer* consumer)
-      : consumer(consumer)
+    BufferStreamJob(Uint8Vector&& source, JS::StreamConsumer* consumer)
+      : source(AsVariant<Uint8Vector>(std::move(source))),
+        consumer(consumer)
+    {}
+    BufferStreamJob(StreamCacheEntry& source, JS::StreamConsumer* consumer)
+      : source(AsVariant<StreamCacheEntryPtr>(&source)),
+        consumer(consumer)
     {}
 };
 
@@ -6854,12 +7029,31 @@ static ExclusiveWaitableData<BufferStreamState>* bufferStreamState;
 static void
 BufferStreamMain(BufferStreamJob* job)
 {
-    const uint8_t* const bytes = job->bytes.begin();
+    const uint8_t* bytes;
+    size_t byteLength;
+    JS::OptimizedEncodingListener* listener;
+    if (job->source.is<StreamCacheEntryPtr>()) {
+        StreamCacheEntry& cache = *job->source.as<StreamCacheEntryPtr>();
+        if (cache.hasOptimizedEncoding()) {
+            const Uint8Vector& optimized = cache.optimizedEncoding();
+            job->consumer->consumeOptimizedEncoding(optimized.begin(), optimized.length());
+            goto done;
+        }
 
-    size_t byteOffset = 0;
+        bytes = cache.bytes().begin();
+        byteLength = cache.bytes().length();
+        listener = &cache;
+    } else {
+        bytes = job->source.as<Uint8Vector>().begin();
+        byteLength = job->source.as<Uint8Vector>().length();
+        listener = nullptr;
+    }
+
+    size_t byteOffset;
+    byteOffset = 0;
     while (true) {
-        if (byteOffset == job->bytes.length()) {
-            job->consumer->streamClosed(JS::StreamConsumer::EndOfFile);
+        if (byteOffset == byteLength) {
+            job->consumer->streamClosed(JS::StreamConsumer::EndOfFile, listener);
             break;
         }
 
@@ -6880,7 +7074,7 @@ BufferStreamMain(BufferStreamJob* job)
 
         std::this_thread::sleep_for(std::chrono::milliseconds(delayMillis));
 
-        chunkSize = Min(chunkSize, job->bytes.length() - byteOffset);
+        chunkSize = Min(chunkSize, byteLength - byteOffset);
 
         if (!job->consumer->consumeChunk(bytes + byteOffset, chunkSize)) {
             break;
@@ -6889,6 +7083,7 @@ BufferStreamMain(BufferStreamJob* job)
         byteOffset += chunkSize;
     }
 
+  done:
     auto state = bufferStreamState->lock();
     size_t jobIndex = 0;
     while (state->jobs[jobIndex].get() != job) {
@@ -6949,24 +7144,29 @@ ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::Strea
                                    : nullptr);
     }
 
+    UniquePtr<BufferStreamJob> job;
+
     SharedMem<uint8_t*> dataPointer;
     size_t byteLength;
-    if (!IsBufferSource(obj, &dataPointer, &byteLength)) {
-        JS_ReportErrorASCII(cx, "shell streaming consumes a buffer source (buffer or view)");
+    if (IsBufferSource(obj, &dataPointer, &byteLength)) {
+        Uint8Vector bytes;
+        if (!bytes.resize(byteLength)) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
+
+        memcpy(bytes.begin(), dataPointer.unwrap(), byteLength);
+        job = cx->make_unique<BufferStreamJob>(std::move(bytes), consumer);
+    } else if (obj->is<StreamCacheEntryObject>()) {
+        job = cx->make_unique<BufferStreamJob>(obj->as<StreamCacheEntryObject>().cache(), consumer);
+    } else {
+        JS_ReportErrorASCII(cx, "shell streaming consumes a buffer source (buffer or view) "
+                                "or StreamCacheEntryObject");
         return false;
     }
-
-    auto job = cx->make_unique<BufferStreamJob>(consumer);
     if (!job) {
         return false;
     }
-
-    if (!job->bytes.resize(byteLength)) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    memcpy(job->bytes.begin(), dataPointer.unwrap(), byteLength);
 
     BufferStreamJob* jobPtr = job.get();
 
@@ -8282,6 +8482,12 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "  object encapsulates the code and its cached content. The cache entry is filled\n"
 "  and read by the \"evaluate\" function by using it in place of the source, and\n"
 "  by setting \"saveBytecode\" and \"loadBytecode\" options."),
+
+    JS_FN_HELP("streamCacheEntry", StreamCacheEntryObject::construct, 1, 0,
+"streamCacheEntry(buffer)",
+"  Create a shell-only object that holds wasm bytecode and can be streaming-\n"
+"  compiled and cached by WebAssembly.{compile,instantiate}Streaming(). On a\n"
+"  second compilation of the same cache entry, the cached code will be used."),
 
     JS_FN_HELP("printProfilerEvents", PrintProfilerEvents, 0, 0,
 "printProfilerEvents()",

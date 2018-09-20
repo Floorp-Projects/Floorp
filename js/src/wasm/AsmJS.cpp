@@ -2220,7 +2220,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
             return nullptr;
         }
 
-        return mg.finishModule(*bytes, linkData);
+        return mg.finishModule(*bytes, nullptr, linkData);
     }
 };
 

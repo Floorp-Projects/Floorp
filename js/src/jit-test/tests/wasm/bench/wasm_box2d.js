@@ -1,3 +1,17 @@
+const build = getBuildConfiguration();
+const isSimulator = build['arm-simulator'] ||
+                    build['arm64-simulator'] ||
+                    build['mips32-simulator'] ||
+                    build['mips64-simulator'];
+
+// This test often times out on debug simulators due to the extreme slowdown.
+if (build['debug'] && isSimulator)
+  quit();
+
+// All the glue code is wrapped in a function so it can be executed uncached and
+// cached (via the shared cacheEntry argument).
+function runBox2d(cacheEntry) {
+
 // The Module object: Our interface to the outside world. We import
 // and export values on it, and do the work to get that through
 // closure compiler if necessary. There are various ways Module can be used:
@@ -28,173 +42,21 @@ for (var key in Module) {
   }
 }
 
-// The environment setup code below is customized to use Module.
-// *** Environment setup code ***
-var ENVIRONMENT_IS_WEB = false;
-var ENVIRONMENT_IS_WORKER = false;
-var ENVIRONMENT_IS_NODE = false;
-var ENVIRONMENT_IS_SHELL = false;
+if (!Module['print']) Module['print'] = print;
+if (typeof printErr != 'undefined') Module['printErr'] = print;
 
-// Three configurations we can be running in:
-// 1) We could be the application main() thread running in the main JS UI thread. (ENVIRONMENT_IS_WORKER == false and ENVIRONMENT_IS_PTHREAD == false)
-// 2) We could be the application main() thread proxied to worker. (with Emscripten -s PROXY_TO_WORKER=1) (ENVIRONMENT_IS_WORKER == true, ENVIRONMENT_IS_PTHREAD == false)
-// 3) We could be an application pthread running in a worker. (ENVIRONMENT_IS_WORKER == true and ENVIRONMENT_IS_PTHREAD == true)
-
-if (Module['ENVIRONMENT']) {
-  if (Module['ENVIRONMENT'] === 'WEB') {
-    ENVIRONMENT_IS_WEB = true;
-  } else if (Module['ENVIRONMENT'] === 'WORKER') {
-    ENVIRONMENT_IS_WORKER = true;
-  } else if (Module['ENVIRONMENT'] === 'NODE') {
-    ENVIRONMENT_IS_NODE = true;
-  } else if (Module['ENVIRONMENT'] === 'SHELL') {
-    ENVIRONMENT_IS_SHELL = true;
-  } else {
-    throw new Error('The provided Module[\'ENVIRONMENT\'] value is not valid. It must be one of: WEB|WORKER|NODE|SHELL.');
-  }
+if (typeof read != 'undefined') {
+Module['read'] = read;
 } else {
-  ENVIRONMENT_IS_WEB = typeof window === 'object';
-  ENVIRONMENT_IS_WORKER = typeof importScripts === 'function';
-  ENVIRONMENT_IS_NODE = typeof process === 'object' && typeof require === 'function' && !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_WORKER;
-  ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
+Module['read'] = function read() { throw 'no read() available' };
 }
 
-
-if (ENVIRONMENT_IS_NODE) {
-  // Expose functionality in the same simple way that the shells work
-  // Note that we pollute the global namespace here, otherwise we break in node
-  if (!Module['print']) Module['print'] = console.log;
-  if (!Module['printErr']) Module['printErr'] = console.warn;
-
-  var nodeFS;
-  var nodePath;
-
-  Module['read'] = function read(filename, binary) {
-    if (!nodeFS) nodeFS = require('fs');
-    if (!nodePath) nodePath = require('path');
-    filename = nodePath['normalize'](filename);
-    var ret = nodeFS['readFileSync'](filename);
-    return binary ? ret : ret.toString();
-  };
-
-  Module['readBinary'] = function readBinary(filename) {
-    var ret = Module['read'](filename, true);
-    if (!ret.buffer) {
-      ret = new Uint8Array(ret);
-    }
-    assert(ret.buffer);
-    return ret;
-  };
-
-  Module['load'] = function load(f) {
-    globalEval(read(f));
-  };
-
-  if (!Module['thisProgram']) {
-    if (process['argv'].length > 1) {
-      Module['thisProgram'] = process['argv'][1].replace(/\\/g, '/');
-    } else {
-      Module['thisProgram'] = 'unknown-program';
-    }
-  }
-
-  Module['arguments'] = process['argv'].slice(2);
-
-  if (typeof module !== 'undefined') {
-    module['exports'] = Module;
-  }
-
-  process['on']('uncaughtException', function(ex) {
-    // suppress ExitStatus exceptions from showing an error
-    if (!(ex instanceof ExitStatus)) {
-      throw ex;
-    }
-  });
-
-  Module['inspect'] = function () { return '[Emscripten Module object]'; };
+if (typeof scriptArgs != 'undefined') {
+Module['arguments'] = scriptArgs;
+} else if (typeof arguments != 'undefined') {
+Module['arguments'] = arguments;
 }
-else if (ENVIRONMENT_IS_SHELL) {
-  if (!Module['print']) Module['print'] = print;
-  if (typeof printErr != 'undefined') Module['printErr'] = printErr; // not present in v8 or older sm
 
-  if (typeof read != 'undefined') {
-    Module['read'] = read;
-  } else {
-    Module['read'] = function read() { throw 'no read() available' };
-  }
-
-  Module['readBinary'] = function readBinary(f) {
-    if (typeof readbuffer === 'function') {
-      return new Uint8Array(readbuffer(f));
-    }
-    var data = read(f, 'binary');
-    assert(typeof data === 'object');
-    return data;
-  };
-
-  if (typeof scriptArgs != 'undefined') {
-    Module['arguments'] = scriptArgs;
-  } else if (typeof arguments != 'undefined') {
-    Module['arguments'] = arguments;
-  }
-
-}
-else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
-  Module['read'] = function read(url) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, false);
-    xhr.send(null);
-    return xhr.responseText;
-  };
-
-  Module['readAsync'] = function readAsync(url, onload, onerror) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = function xhr_onload() {
-      if (xhr.status == 200 || (xhr.status == 0 && xhr.response)) { // file URLs can return 0
-        onload(xhr.response);
-      } else {
-        onerror();
-      }
-    };
-    xhr.onerror = onerror;
-    xhr.send(null);
-  };
-
-  if (typeof arguments != 'undefined') {
-    Module['arguments'] = arguments;
-  }
-
-  if (typeof console !== 'undefined') {
-    if (!Module['print']) Module['print'] = function print(x) {
-      console.log(x);
-    };
-    if (!Module['printErr']) Module['printErr'] = function printErr(x) {
-      console.warn(x);
-    };
-  } else {
-    // Probably a worker, and without console.log. We can do very little here...
-    var TRY_USE_DUMP = false;
-    if (!Module['print']) Module['print'] = (TRY_USE_DUMP && (typeof(dump) !== "undefined") ? (function(x) {
-      dump(x);
-    }) : (function(x) {
-      // self.postMessage(x); // enable this if you want stdout to be sent as messages
-    }));
-  }
-
-  if (ENVIRONMENT_IS_WORKER) {
-    Module['load'] = importScripts;
-  }
-
-  if (typeof Module['setWindowTitle'] === 'undefined') {
-    Module['setWindowTitle'] = function(title) { document.title = title };
-  }
-}
-else {
-  // Unreachable because SHELL is dependant on the others
-  throw 'Unknown runtime environment. Where are we?';
-}
 
 function globalEval(x) {
   eval.call(null, x);
@@ -1490,9 +1352,7 @@ function integrateWasmJS(Module) {
   var method = Module['wasmJSMethod'] || 'native-wasm';
   Module['wasmJSMethod'] = method;
 
-  var wasmTextFile = Module['wasmTextFile'] || 'wasm_box2d.wast';
   var wasmBinaryFile = Module['wasmBinaryFile'] || scriptdir + 'wasm_box2d.wasm';
-  var asmjsCodeFile = Module['asmjsCodeFile'] || 'wasm_box2d.temp.asm.js';
 
   // utilities
 
@@ -1590,18 +1450,6 @@ function integrateWasmJS(Module) {
     return ret;
   }
 
-  function getBinary() {
-    var binary;
-    if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
-      binary = Module['wasmBinary'];
-      assert(binary, "on the web, we need the wasm binary to be preloaded and set on Module['wasmBinary']. emcc.py will do that for you when generating HTML (but not JS)");
-      binary = new Uint8Array(binary);
-    } else {
-      binary = Module['readBinary'](wasmBinaryFile);
-    }
-    return binary;
-  }
-
   // do-method functions
 
   function doJustAsm(global, env, providedBuffer) {
@@ -1650,92 +1498,22 @@ function integrateWasmJS(Module) {
     }
     Module['printErr']('asynchronously preparing wasm');
     addRunDependency('wasm-instantiate'); // we can't run yet
-    WebAssembly.instantiate(getBinary(), info).then(function(output) {
+
+    (wasmStreamingIsSupported()
+     ? WebAssembly.instantiateStreaming(cacheEntry, info)
+     : WebAssembly.instantiate(cacheEntry.getBuffer(), info))
+    .then(function(output) {
+      if (!cacheEntry.module)
+        cacheEntry.module = output.module;
+
       // receiveInstance() will swap in the exports (to Module.asm) so they can be called
       receiveInstance(output.instance);
       removeRunDependency('wasm-instantiate');
-    }).catch(function(reason) {
+    })
+    .catch(function(reason) {
       Module['printErr']('failed to asynchronously prepare wasm:\n  ' + reason);
     });
     return {}; // no exports yet; we'll fill them in later
-    var instance;
-    try {
-      instance = new WebAssembly.Instance(new WebAssembly.Module(getBinary()), info)
-    } catch (e) {
-      Module['printErr']('failed to compile wasm module: ' + e);
-      if (e.toString().indexOf('imported Memory with incompatible size') >= 0) {
-        Module['printErr']('Memory size incompatibility issues may be due to changing TOTAL_MEMORY at runtime to something too large. Use ALLOW_MEMORY_GROWTH to allow any size memory (and also make sure not to set TOTAL_MEMORY at runtime to something smaller than it was at compile time).');
-      }
-      return false;
-    }
-    receiveInstance(instance);
-    return exports;
-  }
-
-  function doWasmPolyfill(global, env, providedBuffer, method) {
-    if (typeof WasmJS !== 'function') {
-      Module['printErr']('WasmJS not detected - polyfill not bundled?');
-      return false;
-    }
-
-    // Use wasm.js to polyfill and execute code in a wasm interpreter.
-    var wasmJS = WasmJS({});
-
-    // XXX don't be confused. Module here is in the outside program. wasmJS is the inner wasm-js.cpp.
-    wasmJS['outside'] = Module; // Inside wasm-js.cpp, Module['outside'] reaches the outside module.
-
-    // Information for the instance of the module.
-    wasmJS['info'] = info;
-
-    wasmJS['lookupImport'] = lookupImport;
-
-    assert(providedBuffer === Module['buffer']); // we should not even need to pass it as a 3rd arg for wasm, but that's the asm.js way.
-
-    info.global = global;
-    info.env = env;
-
-    // polyfill interpreter expects an ArrayBuffer
-    assert(providedBuffer === Module['buffer']);
-    env['memory'] = providedBuffer;
-    assert(env['memory'] instanceof ArrayBuffer);
-
-    wasmJS['providedTotalMemory'] = Module['buffer'].byteLength;
-
-    // Prepare to generate wasm, using either asm2wasm or s-exprs
-    var code;
-    if (method === 'interpret-binary') {
-      code = getBinary();
-    } else {
-      code = Module['read'](method == 'interpret-asm2wasm' ? asmjsCodeFile : wasmTextFile);
-    }
-    var temp;
-    if (method == 'interpret-asm2wasm') {
-      temp = wasmJS['_malloc'](code.length + 1);
-      wasmJS['writeAsciiToMemory'](code, temp);
-      wasmJS['_load_asm2wasm'](temp);
-    } else if (method === 'interpret-s-expr') {
-      temp = wasmJS['_malloc'](code.length + 1);
-      wasmJS['writeAsciiToMemory'](code, temp);
-      wasmJS['_load_s_expr2wasm'](temp);
-    } else if (method === 'interpret-binary') {
-      temp = wasmJS['_malloc'](code.length);
-      wasmJS['HEAPU8'].set(code, temp);
-      wasmJS['_load_binary2wasm'](temp, code.length);
-    } else {
-      throw 'what? ' + method;
-    }
-    wasmJS['_free'](temp);
-
-    wasmJS['_instantiate'](temp);
-
-    if (Module['newBuffer']) {
-      mergeMemory(Module['newBuffer']);
-      Module['newBuffer'] = null;
-    }
-
-    exports = wasmJS['asmExports'];
-
-    return exports;
   }
 
   // We may have a preloaded value in Module.asm, save it
@@ -1798,32 +1576,7 @@ function integrateWasmJS(Module) {
       env['tableBase'] = 0; // table starts at 0 by default, in dynamic linking this will change
     }
 
-    // try the methods. each should return the exports if it succeeded
-
-    var exports;
-    var methods = method.split(',');
-
-    for (var i = 0; i < methods.length; i++) {
-      var curr = methods[i];
-
-      Module['printErr']('trying binaryen method: ' + curr);
-
-      if (curr === 'native-wasm') {
-        if (exports = doNativeWasm(global, env, providedBuffer)) break;
-      } else if (curr === 'asmjs') {
-        if (exports = doJustAsm(global, env, providedBuffer)) break;
-      } else if (curr === 'interpret-asm2wasm' || curr === 'interpret-s-expr' || curr === 'interpret-binary') {
-        if (exports = doWasmPolyfill(global, env, providedBuffer, curr)) break;
-      } else {
-        throw 'bad method: ' + curr;
-      }
-    }
-
-    if (!exports) throw 'no binaryen method succeeded. consider enabling more options, like interpreting, if you want that: https://github.com/kripken/emscripten/wiki/WebAssembly#binaryen-methods';
-
-    Module['printErr']('binaryen method succeeded.');
-
-    return exports;
+    return doNativeWasm(global, env, providedBuffer);
   };
 
   var methodHandler = Module['asm']; // note our method handler, as we may modify Module['asm'] later
@@ -2540,11 +2293,6 @@ function copyTempDouble(ptr) {
           window.addEventListener("message", Browser_setImmediate_messageHandler, true);
           window['setImmediate'] = function Browser_emulated_setImmediate(func) {
             setImmediates.push(func);
-            if (ENVIRONMENT_IS_WORKER) {
-              if (Module['setImmediates'] === undefined) Module['setImmediates'] = [];
-              Module['setImmediates'].push(func);
-              window.postMessage({target: emscriptenMainLoopMessageId}); // In --proxy-to-worker, route the message via proxyClient.js
-            } else window.postMessage(emscriptenMainLoopMessageId, "*"); // On the main thread, can just send the message to itself.
           }
         }
         Browser.mainLoop.scheduler = function Browser_mainLoop_scheduler_setImmediate() {
@@ -2925,12 +2673,7 @@ Module["requestFullScreen"] = function Module_requestFullScreen(lockPointer, res
   Module["resumeMainLoop"] = function Module_resumeMainLoop() { Browser.mainLoop.resume() };
   Module["getUserMedia"] = function Module_getUserMedia() { Browser.getUserMedia() }
   Module["createContext"] = function Module_createContext(canvas, useWebGL, setInModule, webGLContextAttributes) { return Browser.createContext(canvas, useWebGL, setInModule, webGLContextAttributes) };
-if (ENVIRONMENT_IS_NODE) {
-    _emscripten_get_now = function _emscripten_get_now_actual() {
-      var t = process['hrtime']();
-      return t[0] * 1e3 + t[1] / 1e6;
-    };
-  } else if (typeof dateNow !== 'undefined') {
+  if (typeof dateNow !== 'undefined') {
     _emscripten_get_now = dateNow;
   } else if (typeof self === 'object' && self['performance'] && typeof self['performance']['now'] === 'function') {
     _emscripten_get_now = function() { return self['performance']['now'](); };
@@ -3129,51 +2872,9 @@ if (memoryInitializer) {
   } else if (Module['memoryInitializerPrefixURL']) {
     memoryInitializer = Module['memoryInitializerPrefixURL'] + memoryInitializer;
   }
-  if (ENVIRONMENT_IS_NODE || ENVIRONMENT_IS_SHELL) {
-    var data = Module['readBinary'](memoryInitializer);
-    HEAPU8.set(data, Runtime.GLOBAL_BASE);
-  } else {
-    addRunDependency('memory initializer');
-    var applyMemoryInitializer = function(data) {
-      if (data.byteLength) data = new Uint8Array(data);
-      HEAPU8.set(data, Runtime.GLOBAL_BASE);
-      // Delete the typed array that contains the large blob of the memory initializer request response so that
-      // we won't keep unnecessary memory lying around. However, keep the XHR object itself alive so that e.g.
-      // its .status field can still be accessed later.
-      if (Module['memoryInitializerRequest']) delete Module['memoryInitializerRequest'].response;
-      removeRunDependency('memory initializer');
-    }
-    function doBrowserLoad() {
-      Module['readAsync'](memoryInitializer, applyMemoryInitializer, function() {
-        throw 'could not load memory initializer ' + memoryInitializer;
-      });
-    }
-    if (Module['memoryInitializerRequest']) {
-      // a network request has already been created, just use that
-      function useRequest() {
-        var request = Module['memoryInitializerRequest'];
-        if (request.status !== 200 && request.status !== 0) {
-          // If you see this warning, the issue may be that you are using locateFile or memoryInitializerPrefixURL, and defining them in JS. That
-          // means that the HTML file doesn't know about them, and when it tries to create the mem init request early, does it to the wrong place.
-          // Look in your browser's devtools network console to see what's going on.
-          console.warn('a problem seems to have happened with Module.memoryInitializerRequest, status: ' + request.status + ', retrying ' + memoryInitializer);
-          doBrowserLoad();
-          return;
-        }
-        applyMemoryInitializer(request.response);
-      }
-      if (Module['memoryInitializerRequest'].response) {
-        setTimeout(useRequest, 0); // it's already here; but, apply it asynchronously
-      } else {
-        Module['memoryInitializerRequest'].addEventListener('load', useRequest); // wait for it
-      }
-    } else {
-      // fetch it from the network ourselves
-      doBrowserLoad();
-    }
-  }
+  var data = Module['readBinary'](memoryInitializer);
+  HEAPU8.set(data, Runtime.GLOBAL_BASE);
 }
-
 
 function ExitStatus(status) {
   this.name = "ExitStatus";
@@ -3292,28 +2993,6 @@ function run(args) {
 Module['run'] = Module.run = run;
 
 function exit(status, implicit) {
-  if (implicit && Module['noExitRuntime']) {
-    return;
-  }
-
-  if (Module['noExitRuntime']) {
-  } else {
-
-    ABORT = true;
-    EXITSTATUS = status;
-    STACKTOP = initialStackTop;
-
-    exitRuntime();
-
-    if (Module['onExit']) Module['onExit'](status);
-  }
-
-  if (ENVIRONMENT_IS_NODE) {
-    process['exit'](status);
-  } else if (ENVIRONMENT_IS_SHELL && typeof quit === 'function') {
-    quit(status);
-  }
-  // if we reach here, we must throw an exception to halt the current execution
   throw new ExitStatus(status);
 }
 Module['exit'] = Module.exit = exit;
@@ -3361,15 +3040,16 @@ if (Module['noInitialRun']) {
 
 
 run();
+drainJobQueue();
 
-// {{POST_RUN_ADDITIONS}}
+};  // End of function wrapping the whole top-level Emscripten glue code
 
+setBufferStreamParams(/* delayMillis = */ 1, /* chunkSize = */ 1000);
+const cacheEntry = streamCacheEntry(os.file.readFile(scriptdir + 'wasm_box2d.wasm', 'binary'));
 
+runBox2d(cacheEntry);
 
+while (!wasmHasTier2CompilationCompleted(cacheEntry.module)) sleep(1);
+assertEq(cacheEntry.cached, wasmCachingIsSupported());
 
-
-// {{MODULE_ADDITIONS}}
-
-
-
-//# sourceMappingURL=wasm_box2d.js.map
+runBox2d(cacheEntry);

@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU, DeviceRect, DeviceSize};
-use api::{LayoutSizeAu, LayoutSideOffsets, LayoutPrimitiveInfo, LayoutToDeviceScale};
+use api::{LayoutSideOffsets, LayoutSizeAu, LayoutPrimitiveInfo, LayoutToDeviceScale};
 use api::{DeviceVector2D, DevicePoint, DeviceIntSize, LayoutRect, LayoutSize, NormalBorder};
+use api::{AuHelpers};
 use app_units::Au;
 use ellipse::Ellipse;
 use display_list_flattener::DisplayListFlattener;
@@ -26,19 +27,6 @@ pub const MAX_BORDER_RESOLUTION: u32 = 2048;
 /// a list of per-dot information in the first place.
 pub const MAX_DASH_COUNT: u32 = 2048;
 
-trait AuSizeConverter {
-    fn to_au(&self) -> LayoutSizeAu;
-}
-
-impl AuSizeConverter for LayoutSize {
-    fn to_au(&self) -> LayoutSizeAu {
-        LayoutSizeAu::new(
-            Au::from_f32_px(self.width),
-            Au::from_f32_px(self.height),
-        )
-    }
-}
-
 // TODO(gw): Perhaps there is a better way to store
 //           the border cache key than duplicating
 //           all the border structs with hashable
@@ -54,6 +42,17 @@ pub struct BorderRadiusAu {
     pub bottom_right: LayoutSizeAu,
 }
 
+impl BorderRadiusAu {
+    pub fn zero() -> Self {
+        BorderRadiusAu {
+            top_left: LayoutSizeAu::zero(),
+            top_right: LayoutSizeAu::zero(),
+            bottom_left: LayoutSizeAu::zero(),
+            bottom_right: LayoutSizeAu::zero(),
+        }
+    }
+}
+
 impl From<BorderRadius> for BorderRadiusAu {
     fn from(radius: BorderRadius) -> BorderRadiusAu {
         BorderRadiusAu {
@@ -61,6 +60,17 @@ impl From<BorderRadius> for BorderRadiusAu {
             top_right: radius.top_right.to_au(),
             bottom_right: radius.bottom_right.to_au(),
             bottom_left: radius.bottom_left.to_au(),
+        }
+    }
+}
+
+impl From<BorderRadiusAu> for BorderRadius {
+    fn from(radius: BorderRadiusAu) -> Self {
+        BorderRadius {
+            top_left: LayoutSize::from_au(radius.top_left),
+            top_right: LayoutSize::from_au(radius.top_right),
+            bottom_right: LayoutSize::from_au(radius.bottom_right),
+            bottom_left: LayoutSize::from_au(radius.bottom_left),
         }
     }
 }

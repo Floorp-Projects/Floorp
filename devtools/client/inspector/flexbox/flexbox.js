@@ -30,6 +30,7 @@ class FlexboxInspector {
 
     this.onHighlighterShown = this.onHighlighterShown.bind(this);
     this.onHighlighterHidden = this.onHighlighterHidden.bind(this);
+    this.onNavigate = this.onNavigate.bind(this);
     this.onReflow = throttle(this.onReflow, 500, this);
     this.onSetFlexboxOverlayColor = this.onSetFlexboxOverlayColor.bind(this);
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
@@ -88,11 +89,13 @@ class FlexboxInspector {
 
     this.selection.off("new-node-front", this.onUpdatePanel);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
-    this.inspector.off("new-root", this.onUpdatePanel);
+    this.inspector.off("new-root", this.onNavigate);
 
     this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
 
+    this._customHostColors = null;
     this._highlighters = null;
+    this._overlayColor = null;
     this.document = null;
     this.hasGetCurrentFlexbox = null;
     this.inspector = null;
@@ -111,12 +114,40 @@ class FlexboxInspector {
   }
 
   /**
+   * Returns the custom overlay color for the current host or the default flexbox color.
+   *
+   * @return {String} overlay color.
+   */
+  async getOverlayColor() {
+    if (this._overlayColor) {
+      return this._overlayColor;
+    }
+
+    // Cache the overlay color for the current host to avoid repeatably parsing the host
+    // and fetching the custom color from async storage.
+    const customColors = await this.getCustomHostColors();
+    const currentUrl = this.inspector.target.url;
+    // Get the hostname, if there is no hostname, fall back on protocol
+    // ex: `data:` uri, and `about:` pages
+    const hostName = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
+    this._overlayColor = customColors[hostName] ? customColors[hostName] : FLEXBOX_COLOR;
+    return this._overlayColor;
+  }
+
+  /**
    * Returns an object containing the custom flexbox colors for different hosts.
    *
    * @return {Object} that maps a host name to a custom flexbox color for a given host.
    */
-  async getCustomFlexboxColors() {
-    return await asyncStorage.getItem("flexboxInspectorHostColors") || {};
+  async getCustomHostColors() {
+    if (this._customHostColors) {
+      return this._customHostColors;
+    }
+
+    // Cache the custom host colors to avoid refetching from async storage.
+    this._customHostColors = await asyncStorage.getItem("flexboxInspectorHostColors")
+      || {};
+    return this._customHostColors;
   }
 
   /**
@@ -172,6 +203,15 @@ class FlexboxInspector {
     if (flexbox.nodeFront === nodeFront && flexbox.highlighted !== highlighted) {
       this.store.dispatch(updateFlexboxHighlighted(highlighted));
     }
+  }
+
+  /**
+   * Handler for the "new-root" event fired by the inspector. Clears the cached overlay
+   * color for the flexbox highlighter and updates the panel.
+   */
+  onNavigate() {
+    this._overlayColor = null;
+    this.onUpdatePanel();
   }
 
   /**
@@ -231,11 +271,11 @@ class FlexboxInspector {
     const currentUrl = this.inspector.target.url;
     // Get the hostname, if there is no hostname, fall back on protocol
     // ex: `data:` uri, and `about:` pages
-    const hostname = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
-    const customFlexboxColors = await this.getCustomFlexboxColors();
-
-    customFlexboxColors[hostname] = color;
-    await asyncStorage.setItem("flexboxInspectorHostColors", customFlexboxColors);
+    const hostName = parseURL(currentUrl).hostName || parseURL(currentUrl).protocol;
+    const customColors = await this.getCustomHostColors();
+    customColors[hostName] = color;
+    this._customHostColors = customColors;
+    await asyncStorage.setItem("flexboxInspectorHostColors", customColors);
   }
 
   /**
@@ -245,13 +285,13 @@ class FlexboxInspector {
   onSidebarSelect() {
     if (!this.isPanelVisible()) {
       this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
-      this.inspector.off("new-root", this.onUpdatePanel);
+      this.inspector.off("new-root", this.onNavigate);
       this.selection.off("new-node-front", this.onUpdatePanel);
       return;
     }
 
     this.inspector.reflowTracker.trackReflows(this, this.onReflow);
-    this.inspector.on("new-root", this.onUpdatePanel);
+    this.inspector.on("new-root", this.onNavigate);
     this.selection.on("new-node-front", this.onUpdatePanel);
 
     this.update();
@@ -371,12 +411,7 @@ class FlexboxInspector {
 
       const highlighted = this._highlighters &&
         containerNodeFront == this.highlighters.flexboxHighlighterShown;
-      const currentUrl = this.inspector.target.url;
-      // Get the hostname, if there is no hostname, fall back on protocol
-      // ex: `data:` uri, and `about:` pages
-      const hostname = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
-      const customColors = await this.getCustomFlexboxColors();
-      const color = customColors[hostname] ? customColors[hostname] : FLEXBOX_COLOR;
+      const color = await this.getOverlayColor();
 
       this.store.dispatch(updateFlexbox({
         actorID: flexboxFront.actorID,

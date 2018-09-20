@@ -5,7 +5,7 @@
 use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel, RasterPixel};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode, PictureRect};
 use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, WorldPoint, WorldRect, WorldPixel};
-use clip::ClipStore;
+use clip::{ClipDataStore, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
@@ -32,6 +32,7 @@ use util;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ChasePrimitive {
     Nothing,
+    Index(PrimitiveIndex),
     LocalRect(LayoutRect),
 }
 
@@ -83,6 +84,7 @@ pub struct FrameBuildingState<'a> {
     pub gpu_cache: &'a mut GpuCache,
     pub special_render_passes: &'a mut SpecialRenderPasses,
     pub transforms: &'a mut TransformPalette,
+    pub clip_data_store: &'a mut ClipDataStore,
 }
 
 pub struct PictureContext {
@@ -182,6 +184,7 @@ impl FrameBuilder {
         device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
         transform_palette: &mut TransformPalette,
+        clip_data_store: &mut ClipDataStore,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -219,6 +222,7 @@ impl FrameBuilder {
             gpu_cache,
             special_render_passes,
             transforms: transform_palette,
+            clip_data_store,
         };
 
         let prim_context = PrimitiveContext::new(
@@ -323,6 +327,7 @@ impl FrameBuilder {
         texture_cache_profile: &mut TextureCacheProfileCounters,
         gpu_cache_profile: &mut GpuCacheProfileCounters,
         scene_properties: &SceneProperties,
+        clip_data_store: &mut ClipDataStore,
     ) -> Frame {
         profile_scope!("build");
         debug_assert!(
@@ -361,6 +366,7 @@ impl FrameBuilder {
             device_pixel_scale,
             scene_properties,
             &mut transform_palette,
+            clip_data_store,
         );
 
         resource_cache.block_until_all_resources_added(gpu_cache,
@@ -404,6 +410,7 @@ impl FrameBuilder {
                 resource_cache,
                 use_dual_source_blending,
                 clip_scroll_tree,
+                clip_data_store,
             };
 
             pass.build(
@@ -445,11 +452,16 @@ impl FrameBuilder {
         }
     }
 
-    pub fn create_hit_tester(&mut self, clip_scroll_tree: &ClipScrollTree) -> HitTester {
+    pub fn create_hit_tester(
+        &mut self,
+        clip_scroll_tree: &ClipScrollTree,
+        clip_data_store: &ClipDataStore,
+    ) -> HitTester {
         HitTester::new(
             &self.hit_testing_runs,
             clip_scroll_tree,
-            &self.clip_store
+            &self.clip_store,
+            clip_data_store,
         )
     }
 }

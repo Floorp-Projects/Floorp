@@ -4927,6 +4927,12 @@ JS::ShutdownAsyncTasks(JSContext* cx)
     cx->runtime()->offThreadPromiseState.ref().shutdown(cx);
 }
 
+JS_PUBLIC_API(bool)
+JS::GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId)
+{
+    return wasm::GetOptimizedEncodingBuildId(buildId);
+}
+
 JS_PUBLIC_API(void)
 JS::InitConsumeStreamCallback(JSContext* cx, ConsumeStreamCallback callback)
 {

@@ -789,6 +789,17 @@ WebrtcGmpVideoDecoder::GmpInitDone(GMPVideoDecoderProxy* aGMP,
     }
   }
 
+  // This is an ugly solution to asynchronous decoding errors
+  // from Decode_g() not being returned to the synchronous Decode() method.
+  // If we don't return an error code at this point, our caller ultimately won't know to request
+  // a PLI and the video stream will remain frozen unless an IDR happens to arrive for other reasons.
+  // Bug 1492852 tracks implementing a proper solution.
+  if(mDecoderStatus != GMPNoErr){
+    LOG(LogLevel::Error, ("%s: Decoder status is bad (%u)!",
+          __PRETTY_FUNCTION__, static_cast<unsigned>(mDecoderStatus)));
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -819,6 +830,11 @@ WebrtcGmpVideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  // This is an ugly solution to asynchronous decoding errors
+  // from Decode_g() not being returned to the synchronous Decode() method.
+  // If we don't return an error code at this point, our caller ultimately won't know to request
+  // a PLI and the video stream will remain frozen unless an IDR happens to arrive for other reasons.
+  // Bug 1492852 tracks implementing a proper solution.
   nsAutoPtr<GMPDecodeData> decodeData(new GMPDecodeData(aInputImage,
                                                         aMissingFrames,
                                                         aRenderTimeMs));
@@ -827,6 +843,12 @@ WebrtcGmpVideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
                                       RefPtr<WebrtcGmpVideoDecoder>(this),
                                       decodeData),
                        NS_DISPATCH_NORMAL);
+
+  if(mDecoderStatus != GMPNoErr){
+    LOG(LogLevel::Error, ("%s: Decoder status is bad (%u)!",
+          __PRETTY_FUNCTION__, static_cast<unsigned>(mDecoderStatus)));
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -845,6 +867,8 @@ WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
     }
     // destroyed via Terminate(), failed to init, or just not initted yet
     LOGD(("GMP Decode: not initted yet"));
+
+    aThis->mDecoderStatus = GMPDecodeErr;
     return;
   }
 
@@ -856,6 +880,7 @@ WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
   if (err != GMPNoErr) {
     LOG(LogLevel::Error, ("%s: CreateFrame failed (%u)!",
         __PRETTY_FUNCTION__, static_cast<unsigned>(err)));
+    aThis->mDecoderStatus = err;
     return;
   }
 
@@ -864,6 +889,7 @@ WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
   if (err != GMPNoErr) {
     LOG(LogLevel::Error, ("%s: CreateEmptyFrame failed (%u)!",
         __PRETTY_FUNCTION__, static_cast<unsigned>(err)));
+    aThis->mDecoderStatus = err;
     return;
   }
 
@@ -885,6 +911,7 @@ WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
   if (ret != WEBRTC_VIDEO_CODEC_OK) {
     LOG(LogLevel::Error, ("%s: WebrtcFrameTypeToGmpFrameType failed (%u)!",
         __PRETTY_FUNCTION__, static_cast<unsigned>(ret)));
+    aThis->mDecoderStatus = GMPDecodeErr;
     return;
   }
 
@@ -906,13 +933,11 @@ WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
   if (NS_FAILED(rv)) {
     LOG(LogLevel::Error, ("%s: Decode failed (rv=%u)!",
         __PRETTY_FUNCTION__, static_cast<unsigned>(rv)));
+    aThis->mDecoderStatus = GMPDecodeErr;
+    return;
   }
 
-  if(aThis->mDecoderStatus != GMPNoErr){
-    aThis->mDecoderStatus = GMPNoErr;
-    LOG(LogLevel::Error, ("%s: Decoder status is bad (%u)!",
-        __PRETTY_FUNCTION__, static_cast<unsigned>(aThis->mDecoderStatus)));
-  }
+  aThis->mDecoderStatus = GMPNoErr;
 }
 
 int32_t

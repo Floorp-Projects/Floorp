@@ -182,8 +182,9 @@ public:
 
     explicit ChangeCallbackEntry(const ChangeCallback* aKey) :
       mKey(*aKey) { }
-    ChangeCallbackEntry(const ChangeCallbackEntry& toCopy) :
-      mKey(toCopy.mKey) { }
+    ChangeCallbackEntry(ChangeCallbackEntry&& aOther) :
+      PLDHashEntryHdr(std::move(aOther)),
+      mKey(std::move(aOther.mKey)) { }
 
     KeyType GetKey() const { return mKey; }
     bool KeyEquals(KeyTypePointer aKey) const {

@@ -1,9 +1,5 @@
-try {
-    WebAssembly.compileStreaming();
-} catch (err) {
-    assertEq(String(err).indexOf("not supported with --no-threads") !== -1, true);
+if (!wasmStreamingIsSupported())
     quit();
-}
 
 function testInstantiate(source, importObj, exportName, expectedValue) {
     var result;
