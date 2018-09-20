@@ -746,6 +746,11 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
   }
 #endif
 
+  if (doc && NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
+    // Create our XUL key listener and hook it up.
+    nsXBLService::AttachGlobalKeyHandler(this);
+  }
+
   if (doc && NeedTooltipSupport(*this)) {
       AddTooltipSupport();
   }
@@ -756,6 +761,10 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
 void
 nsXULElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
+    if (NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
+        nsXBLService::DetachGlobalKeyHandler(this);
+    }
+
     if (NeedTooltipSupport(*this)) {
         RemoveTooltipSupport();
     }
