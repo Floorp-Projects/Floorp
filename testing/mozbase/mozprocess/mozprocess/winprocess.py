@@ -238,6 +238,7 @@ COMPKEY_JOBOBJECT = c_ulong(1)
 # see http://msdn.microsoft.com/en-us/library/ms684147%28VS.85%29.aspx
 JOB_OBJECT_LIMIT_BREAKAWAY_OK = 0x00000800
 JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK = 0x00001000
+JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
 
 # Flags for Job Object Completion Port Message IDs from winnt.h
 # See also: http://msdn.microsoft.com/en-us/library/ms684141%28v=vs.85%29.aspx
