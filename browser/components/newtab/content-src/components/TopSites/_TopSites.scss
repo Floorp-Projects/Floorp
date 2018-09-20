@@ -567,16 +567,15 @@ $hover-transition-duration: 150ms;
   // checkmark
   [type='checkbox']:not(:checked) + label::after,
   [type='checkbox']:checked + label::after {
-    background: url('chrome://global/skin/in-content/check.svg') no-repeat center center; // sass-lint:disable-line no-url-domains
+    background: url('chrome://global/skin/icons/check.svg') no-repeat center center; // sass-lint:disable-line no-url-domains
     content: '';
     height: 21px;
     left: $checkbox-offset;
     position: absolute;
     top: $checkbox-offset;
     width: 21px;
-    -moz-context-properties: fill, stroke;
+    -moz-context-properties: fill;
     fill: var(--newtab-link-primary-color);
-    stroke: none;
     z-index: 2;
 
     [dir='rtl'] & {

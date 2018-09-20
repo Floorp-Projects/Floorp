@@ -35,10 +35,9 @@ treechildren::-moz-tree-image(container, noicon) {
 }
 
 treechildren::-moz-tree-image(checked) {
-  list-style-image: url("chrome://global/skin/in-content/check.svg");
+  list-style-image: url("chrome://global/skin/icons/check.svg");
   -moz-context-properties: fill, stroke;
   fill: #2292d0;
-  stroke: none;
 }
 treechildren::-moz-tree-image(checked, selected) {
   fill: white;
@@ -49,7 +48,6 @@ treechildren::-moz-tree-image(partial) {
   list-style-image: url("chrome://global/skin/in-content/check-partial.svg");
   -moz-context-properties: fill, stroke;
   fill: #2292d0;
-  stroke: none;
 }
 treechildren::-moz-tree-image(partial, selected) {
   fill: white;
