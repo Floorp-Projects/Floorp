@@ -9,9 +9,6 @@ var EXPORTED_SYMBOLS = ["UrlbarInput"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  QueryContext: "resource:///modules/UrlbarController.jsm",
-  UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
@@ -21,24 +18,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  */
 class UrlbarInput {
   /**
-   * @param {object} options
-   *   The initial options for UrlbarInput.
-   * @param {object} options.textbox
+   * @param {object} textbox
    *   The <textbox> element.
-   * @param {object} options.panel
+   * @param {object} panel
    *   The <panel> element.
-   * @param {UrlbarController} [options.controller]
-   *   Optional fake controller to override the built-in UrlbarController.
-   *   Intended for use in unit tests only.
    */
-  constructor(options = {}) {
-    this.textbox = options.textbox;
-    this.panel = options.panel;
-    this.controller = options.controller || new UrlbarController();
+  constructor(textbox, panel) {
+    this.textbox = textbox;
+    this.panel = panel;
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;
     this.userInitiatedFocus = false;
-    this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.panel.ownerGlobal);
 
     const METHODS = ["addEventListener", "removeEventListener",
       "setAttribute", "hasAttribute", "removeAttribute", "getAttribute",
@@ -103,14 +93,9 @@ class UrlbarInput {
   }
 
   // Private methods below.
+  /* eslint-disable require-jsdoc */
 
   _oninput(event) {
-    // XXX Fill in lastKey & maxResults, and add anything else we need.
-    this.controller.handleQuery(new QueryContext({
-      searchString: event.target.value,
-      lastKey: "",
-      maxResults: 12,
-      isPrivate: this.isPrivate,
-    }));
+    this.openResults();
   }
 }
