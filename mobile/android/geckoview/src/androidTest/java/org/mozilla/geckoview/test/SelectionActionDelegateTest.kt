@@ -8,7 +8,6 @@ import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
@@ -157,31 +156,6 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     @Test fun collapseToEnd() = assumingEditable(true) {
         testThat(selectedContent, withResponse(ACTION_COLLAPSE_TO_END),
                  hasSelectionAt(selectedContent.initialContent.length))
-    }
-
-    @Test fun pagehide() {
-        // Navigating to another page should hide selection action.
-        testThat(selectedContent, { mainSession.loadTestPath(HELLO_HTML_PATH) }, clearsSelection())
-    }
-
-    @Test fun deactivate() {
-        // Blurring the window should hide selection action.
-        testThat(selectedContent, { mainSession.setFocused(false) }, clearsSelection())
-        mainSession.setFocused(true)
-    }
-
-    @NullDelegate(GeckoSession.SelectionActionDelegate::class)
-    @Test fun clearDelegate() {
-        var counter = 0
-        mainSession.selectionActionDelegate = object : Callbacks.SelectionActionDelegate {
-            override fun onHideAction(session: GeckoSession, reason: Int) {
-                counter++
-            }
-        }
-
-        mainSession.selectionActionDelegate = null
-        assertThat("Hide action should be called when clearing delegate",
-                   counter, equalTo(1))
     }
 
 
