@@ -25,6 +25,7 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
+
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
  */

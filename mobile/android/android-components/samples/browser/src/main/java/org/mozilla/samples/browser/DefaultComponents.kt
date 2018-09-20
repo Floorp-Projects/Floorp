@@ -26,7 +26,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 open class DefaultComponents(private val applicationContext: Context) {
 
     // Engine
-   open val engine: Engine by lazy {
+    open val engine: Engine by lazy {
         SystemEngine()
     }
 
