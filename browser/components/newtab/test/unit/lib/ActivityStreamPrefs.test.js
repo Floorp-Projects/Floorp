@@ -5,7 +5,7 @@ const TEST_PREF_CONFIG = new Map([
   ["foo", {value: true}],
   ["bar", {value: "BAR"}],
   ["baz", {value: 1}],
-  ["qux", {value: "foo", value_local_dev: "foofoo"}]
+  ["qux", {value: "foo", value_local_dev: "foofoo"}],
 ]);
 
 describe("ActivityStreamPrefs", () => {
@@ -54,7 +54,7 @@ describe("ActivityStreamPrefs", () => {
       beforeEach(() => {
         p._prefBranch = {
           addObserver: sinon.stub(),
-          removeObserver: sinon.stub()
+          removeObserver: sinon.stub(),
         };
         listener = {};
         p.observeBranch(listener);

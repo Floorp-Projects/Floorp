@@ -2164,7 +2164,8 @@ nsDocument::Init()
 
   // Set this when document is initialized and value stays the same for the
   // lifetime of the document.
-  mIsShadowDOMEnabled = nsContentUtils::IsShadowDOMEnabled();
+  mIsShadowDOMEnabled = nsContentUtils::IsShadowDOMEnabled() ||
+    (XRE_IsParentProcess() && AllowXULXBL());
 
   // If after creation the owner js global is not set for a document
   // we use the default compartment for this document, instead of creating

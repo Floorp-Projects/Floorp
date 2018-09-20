@@ -21,7 +21,8 @@ var { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUID
 
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { DebuggerServer } = require("devtools/server/main");
-var { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
+var { METHOD_FUNCTION } = require("devtools/shared/fronts/function-call");
+var { CallWatcherFront } = require("chrome://mochitests/content/browser/devtools/client/canvasdebugger/test/call-watcher-front");
 var { CanvasFront } = require("devtools/shared/fronts/canvas");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
@@ -127,6 +128,11 @@ function initCallWatcherBackend(aUrl) {
   return (async function() {
     const tab = await addTab(aUrl);
     const target = TargetFactory.forTab(tab);
+    await registerActorInContentProcess("chrome://mochitests/content/browser/devtools/client/canvasdebugger/test/call-watcher-actor.js", {
+      prefix: "callWatcher",
+      constructor: "CallWatcherActor",
+      type: { target: true }
+    });
 
     await target.makeRemote();
 

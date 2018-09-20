@@ -31,7 +31,7 @@ async function ifTestingSupported() {
   ok(functionCalls.length > 0,
     "There's at least one function call actor available.");
 
-  is(functionCalls[0].type, CallWatcherFront.METHOD_FUNCTION,
+  is(functionCalls[0].type, METHOD_FUNCTION,
     "The called function is correctly identified as a method.");
   is(functionCalls[0].name, "clearRect",
     "The called function's name is correct.");

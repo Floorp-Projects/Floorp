@@ -1042,11 +1042,7 @@ XULDocument::AddElementToDocumentPost(Element* aElement)
         ResetDocumentDirection();
     }
 
-    // We need to pay special attention to the keyset tag to set up a listener
-    if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
-        // Create our XUL key listener and hook it up.
-        nsXBLService::AttachGlobalKeyHandler(aElement);
-    } else if (aElement->IsXULElement(nsGkAtoms::link)) {
+    if (aElement->IsXULElement(nsGkAtoms::link)) {
         LocalizationLinkAdded(aElement);
     } else if (aElement->IsXULElement(nsGkAtoms::linkset)) {
         OnL10nResourceContainerParsed();
@@ -1095,10 +1091,6 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     // Do a bunch of cleanup to remove an element from the XUL
     // document.
     nsresult rv;
-
-    if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
-        nsXBLService::DetachGlobalKeyHandler(aElement);
-    }
 
     // Remove any children from the document.
     for (nsIContent* child = aElement->GetLastChild();

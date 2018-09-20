@@ -7,7 +7,7 @@ import {
   MERGE_STORE_ACTION,
   OUTGOING_MESSAGE_NAME,
   queueEarlyMessageMiddleware,
-  rehydrationMiddleware
+  rehydrationMiddleware,
 } from "content-src/lib/init-store";
 
 describe("initStore", () => {

@@ -6,6 +6,7 @@
 
 const Services = require("Services");
 const promise = require("devtools/shared/deprecated-sync-thenables");
+const {AppConstants} = require("resource://gre/modules/AppConstants.jsm");
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getStack, callFunctionWithAsyncStack } = require("devtools/shared/platform/stack");
@@ -28,10 +29,15 @@ loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-cl
 loader.lazyRequireGetter(this, "WorkerClient", "devtools/shared/client/worker-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 
+// Retrieve the major platform version, i.e. if we are on Firefox 64.0a1, it will be 64.
+const PLATFORM_MAJOR_VERSION = AppConstants.MOZ_APP_VERSION.match(/\d+/)[0];
+
 // Define the minimum officially supported version of Firefox when connecting to a remote
 // runtime. (Use ".0a1" to support the very first nightly version)
-// This is usually the current ESR version.
-const MIN_SUPPORTED_PLATFORM_VERSION = "52.0a1";
+// This matches the release channel's version when we are on nightly,
+// or 2 versions before when we are on other channels.
+const MIN_SUPPORTED_PLATFORM_VERSION = (PLATFORM_MAJOR_VERSION - 2) + ".0a1";
+
 const MS_PER_DAY = 86400000;
 
 /**

@@ -10,9 +10,3 @@ with Files('**'):
 DIRS += [
     'webcompat',
 ]
-
-# Only include the following system add-ons if building Nightly
-if CONFIG['NIGHTLY_BUILD']:
-    DIRS += [
-        'gws-and-facebook-chrome-spoof',
-    ]

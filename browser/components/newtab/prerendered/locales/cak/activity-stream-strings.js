@@ -1,8 +1,8 @@
 // Note - this is a generated cak file.
 window.gActivityStreamStrings = {
   "newtab_page_title": "K'ak'a' ruwi'",
-  "header_top_sites": "Utziläj taq Ruxaq K'amaya'l",
-  "header_highlights": "Taq k'ewachinïk",
+  "header_top_sites": "Jeb'ël Taq Ruxaq",
+  "header_highlights": "Ya'on kiq'ij",
   "header_recommended_by": "Chilab'en ruma {provider}",
   "context_menu_button_sr": "Tijar ri ruk'utsamaj k'ojlem richin {title}",
   "section_context_menu_button_sr": "Tijaq ruperaj rokem k'utsamaj",
@@ -52,8 +52,8 @@ window.gActivityStreamStrings = {
   "prefs_highlights_options_pocket_label": "Taq Ruxaq Eyakon pa Pocket",
   "prefs_snippets_description": "Kik'exoj Mozilla chuqa' Firefox",
   "settings_pane_button_label": "Tawichinaj ri ruxaq richin K'ak'a' Ruwi'",
-  "settings_pane_topsites_header": "Utziläj taq ruxaq K'amaya'l",
-  "settings_pane_highlights_header": "Taq k'ewachinïk",
+  "settings_pane_topsites_header": "Jeb'ël Taq Ruxaq",
+  "settings_pane_highlights_header": "Ya'on kiq'ij",
   "settings_pane_highlights_options_bookmarks": "Yaketal",
   "settings_pane_snippets_header": "Taq pir",
   "edit_topsites_button_text": "Tinuk'",

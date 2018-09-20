@@ -90,9 +90,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         getSupportedNetworks: PaymentDialogUtils.getCreditCardNetworks,
       });
 
-      // The EditCreditCard constructor adds `input` event listeners on the same element,
-      // which update field validity. By adding our event listeners after this constructor,
-      // validity will be updated before our handlers get the event
+      // The EditCreditCard constructor adds `change` and `input` event listeners on the same
+      // element, which update field validity. By adding our event listeners after this
+      // constructor, validity will be updated before our handlers get the event
+      form.addEventListener("change", this);
       form.addEventListener("input", this);
       form.addEventListener("invalid", this);
 
@@ -208,6 +209,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
 
   handleEvent(event) {
     switch (event.type) {
+      case "change": {
+        this.onChange(event);
+        break;
+      }
       case "click": {
         this.onClick(event);
         break;
@@ -221,6 +226,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         break;
       }
     }
+  }
+
+  onChange(evt) {
+    this.updateSaveButtonState();
   }
 
   onClick(evt) {
