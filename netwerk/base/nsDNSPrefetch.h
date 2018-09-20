@@ -13,6 +13,7 @@
 #include "mozilla/BasePrincipal.h"
 
 #include "nsIDNSListener.h"
+#include "nsIDNSRecord.h"
 
 class nsIURI;
 class nsIDNSService;
@@ -44,13 +45,20 @@ public:
 
 private:
     nsCString mHostname;
+    bool mIsHttps;
     mozilla::OriginAttributes mOriginAttributes;
     bool mStoreTiming;
     mozilla::TimeStamp mStartTimestamp;
     mozilla::TimeStamp mEndTimestamp;
     nsWeakPtr mListener;
+    bool mARequestInProgress;
+    bool mEsniKeysRequestInProgress;
+    nsCOMPtr<nsICancelable> mARequest;
+    nsCOMPtr<nsIDNSRecord>  mARecord;
+    nsresult      mAStatus;
 
     nsresult Prefetch(uint16_t flags);
+    void FinishPrefetch();
 };
 
 #endif
