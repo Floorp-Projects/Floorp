@@ -12,6 +12,8 @@
 #include "common/utilities.h"
 
 #include "libANGLE/GLES1Renderer.h"
+#include "libANGLE/queryconversions.h"
+#include "libANGLE/queryutils.h"
 
 namespace
 {
@@ -57,16 +59,22 @@ void Context::clearDepthx(GLfixed depth)
 void Context::clientActiveTexture(GLenum texture)
 {
     mGLState.gles1().setClientTextureUnit(texture - GL_TEXTURE0);
+    mStateCache.onGLES1ClientStateChange(this);
 }
 
 void Context::clipPlanef(GLenum p, const GLfloat *eqn)
 {
-    UNIMPLEMENTED();
+    mGLState.gles1().setClipPlane(p - GL_CLIP_PLANE0, eqn);
 }
 
 void Context::clipPlanex(GLenum plane, const GLfixed *equation)
 {
-    UNIMPLEMENTED();
+    const GLfloat equationf[4] = {
+        FixedToFloat(equation[0]), FixedToFloat(equation[1]), FixedToFloat(equation[2]),
+        FixedToFloat(equation[3]),
+    };
+
+    mGLState.gles1().setClipPlane(plane - GL_CLIP_PLANE0, equationf);
 }
 
 void Context::color4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
@@ -102,32 +110,57 @@ void Context::disableClientState(ClientVertexArrayType clientState)
 {
     mGLState.gles1().setClientStateEnabled(clientState, false);
     disableVertexAttribArray(vertexArrayIndex(clientState));
+    mStateCache.onGLES1ClientStateChange(this);
 }
 
 void Context::enableClientState(ClientVertexArrayType clientState)
 {
     mGLState.gles1().setClientStateEnabled(clientState, true);
     enableVertexAttribArray(vertexArrayIndex(clientState));
+    mStateCache.onGLES1ClientStateChange(this);
 }
 
 void Context::fogf(GLenum pname, GLfloat param)
 {
-    UNIMPLEMENTED();
+    SetFogParameters(&mGLState.gles1(), pname, &param);
 }
 
 void Context::fogfv(GLenum pname, const GLfloat *params)
 {
-    UNIMPLEMENTED();
+    SetFogParameters(&mGLState.gles1(), pname, params);
 }
 
 void Context::fogx(GLenum pname, GLfixed param)
 {
-    UNIMPLEMENTED();
+    if (GetFogParameterCount(pname) == 1)
+    {
+        GLfloat paramf = pname == GL_FOG_MODE ? ConvertToGLenum(param) : FixedToFloat(param);
+        fogf(pname, paramf);
+    }
+    else
+    {
+        UNREACHABLE();
+    }
 }
 
-void Context::fogxv(GLenum pname, const GLfixed *param)
+void Context::fogxv(GLenum pname, const GLfixed *params)
 {
-    UNIMPLEMENTED();
+    int paramCount = GetFogParameterCount(pname);
+
+    if (paramCount > 0)
+    {
+        GLfloat paramsf[4];
+        for (int i = 0; i < paramCount; i++)
+        {
+            paramsf[i] =
+                pname == GL_FOG_MODE ? ConvertToGLenum(params[i]) : FixedToFloat(params[i]);
+        }
+        fogfv(pname, paramsf);
+    }
+    else
+    {
+        UNREACHABLE();
+    }
 }
 
 void Context::frustumf(GLfloat l, GLfloat r, GLfloat b, GLfloat t, GLfloat n, GLfloat f)
@@ -144,12 +177,19 @@ void Context::frustumx(GLfixed l, GLfixed r, GLfixed b, GLfixed t, GLfixed n, GL
 
 void Context::getClipPlanef(GLenum plane, GLfloat *equation)
 {
-    UNIMPLEMENTED();
+    mGLState.gles1().getClipPlane(plane - GL_CLIP_PLANE0, equation);
 }
 
 void Context::getClipPlanex(GLenum plane, GLfixed *equation)
 {
-    UNIMPLEMENTED();
+    GLfloat equationf[4] = {};
+
+    mGLState.gles1().getClipPlane(plane - GL_CLIP_PLANE0, equationf);
+
+    for (int i = 0; i < 4; i++)
+    {
+        equation[i] = FloatToFixed(equationf[i]);
+    }
 }
 
 void Context::getFixedv(GLenum pname, GLfixed *params)
@@ -157,39 +197,55 @@ void Context::getFixedv(GLenum pname, GLfixed *params)
     UNIMPLEMENTED();
 }
 
-void Context::getLightfv(GLenum light, GLenum pname, GLfloat *params)
+void Context::getLightfv(GLenum light, LightParameter pname, GLfloat *params)
 {
-    UNIMPLEMENTED();
+    GetLightParameters(&mGLState.gles1(), light, pname, params);
 }
 
-void Context::getLightxv(GLenum light, GLenum pname, GLfixed *params)
+void Context::getLightxv(GLenum light, LightParameter pname, GLfixed *params)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4];
+    getLightfv(light, pname, paramsf);
+
+    for (unsigned int i = 0; i < GetLightParameterCount(pname); i++)
+    {
+        params[i] = FloatToFixed(paramsf[i]);
+    }
 }
 
-void Context::getMaterialfv(GLenum face, GLenum pname, GLfloat *params)
+void Context::getMaterialfv(GLenum face, MaterialParameter pname, GLfloat *params)
 {
-    UNIMPLEMENTED();
+    GetMaterialParameters(&mGLState.gles1(), face, pname, params);
 }
 
-void Context::getMaterialxv(GLenum face, GLenum pname, GLfixed *params)
+void Context::getMaterialxv(GLenum face, MaterialParameter pname, GLfixed *params)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4];
+    getMaterialfv(face, pname, paramsf);
+
+    for (unsigned int i = 0; i < GetMaterialParameterCount(pname); i++)
+    {
+        params[i] = FloatToFixed(paramsf[i]);
+    }
 }
 
-void Context::getTexEnvfv(GLenum env, GLenum pname, GLfloat *params)
+void Context::getTexEnvfv(TextureEnvTarget target, TextureEnvParameter pname, GLfloat *params)
 {
-    UNIMPLEMENTED();
+    GetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, params);
 }
 
-void Context::getTexEnviv(GLenum env, GLenum pname, GLint *params)
+void Context::getTexEnviv(TextureEnvTarget target, TextureEnvParameter pname, GLint *params)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4];
+    GetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, paramsf);
+    ConvertTextureEnvToInt(pname, paramsf, params);
 }
 
-void Context::getTexEnvxv(GLenum target, GLenum pname, GLfixed *params)
+void Context::getTexEnvxv(TextureEnvTarget target, TextureEnvParameter pname, GLfixed *params)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4];
+    GetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, paramsf);
+    ConvertTextureEnvToFixed(pname, paramsf, params);
 }
 
 void Context::getTexParameterxv(TextureType target, GLenum pname, GLfixed *params)
@@ -199,42 +255,56 @@ void Context::getTexParameterxv(TextureType target, GLenum pname, GLfixed *param
 
 void Context::lightModelf(GLenum pname, GLfloat param)
 {
-    UNIMPLEMENTED();
+    SetLightModelParameters(&mGLState.gles1(), pname, &param);
 }
 
 void Context::lightModelfv(GLenum pname, const GLfloat *params)
 {
-    UNIMPLEMENTED();
+    SetLightModelParameters(&mGLState.gles1(), pname, params);
 }
 
 void Context::lightModelx(GLenum pname, GLfixed param)
 {
-    UNIMPLEMENTED();
+    lightModelf(pname, FixedToFloat(param));
 }
 
 void Context::lightModelxv(GLenum pname, const GLfixed *param)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4];
+
+    for (unsigned int i = 0; i < GetLightModelParameterCount(pname); i++)
+    {
+        paramsf[i] = FixedToFloat(param[i]);
+    }
+
+    lightModelfv(pname, paramsf);
 }
 
-void Context::lightf(GLenum light, GLenum pname, GLfloat param)
+void Context::lightf(GLenum light, LightParameter pname, GLfloat param)
 {
-    UNIMPLEMENTED();
+    SetLightParameters(&mGLState.gles1(), light, pname, &param);
 }
 
-void Context::lightfv(GLenum light, GLenum pname, const GLfloat *params)
+void Context::lightfv(GLenum light, LightParameter pname, const GLfloat *params)
 {
-    UNIMPLEMENTED();
+    SetLightParameters(&mGLState.gles1(), light, pname, params);
 }
 
-void Context::lightx(GLenum light, GLenum pname, GLfixed param)
+void Context::lightx(GLenum light, LightParameter pname, GLfixed param)
 {
-    UNIMPLEMENTED();
+    lightf(light, pname, FixedToFloat(param));
 }
 
-void Context::lightxv(GLenum light, GLenum pname, const GLfixed *params)
+void Context::lightxv(GLenum light, LightParameter pname, const GLfixed *params)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4];
+
+    for (unsigned int i = 0; i < GetLightParameterCount(pname); i++)
+    {
+        paramsf[i] = FixedToFloat(params[i]);
+    }
+
+    lightfv(light, pname, paramsf);
 }
 
 void Context::lineWidthx(GLfixed width)
@@ -257,29 +327,36 @@ void Context::loadMatrixx(const GLfixed *m)
     mGLState.gles1().loadMatrix(FixedMatrixToMat4(m));
 }
 
-void Context::logicOp(GLenum opcode)
+void Context::logicOp(LogicalOperation opcodePacked)
 {
-    UNIMPLEMENTED();
+    mGLState.gles1().setLogicOp(opcodePacked);
 }
 
-void Context::materialf(GLenum face, GLenum pname, GLfloat param)
+void Context::materialf(GLenum face, MaterialParameter pname, GLfloat param)
 {
-    UNIMPLEMENTED();
+    SetMaterialParameters(&mGLState.gles1(), face, pname, &param);
 }
 
-void Context::materialfv(GLenum face, GLenum pname, const GLfloat *params)
+void Context::materialfv(GLenum face, MaterialParameter pname, const GLfloat *params)
 {
-    UNIMPLEMENTED();
+    SetMaterialParameters(&mGLState.gles1(), face, pname, params);
 }
 
-void Context::materialx(GLenum face, GLenum pname, GLfixed param)
+void Context::materialx(GLenum face, MaterialParameter pname, GLfixed param)
 {
-    UNIMPLEMENTED();
+    materialf(face, pname, FixedToFloat(param));
 }
 
-void Context::materialxv(GLenum face, GLenum pname, const GLfixed *param)
+void Context::materialxv(GLenum face, MaterialParameter pname, const GLfixed *param)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4];
+
+    for (unsigned int i = 0; i < GetMaterialParameterCount(pname); i++)
+    {
+        paramsf[i] = FixedToFloat(param[i]);
+    }
+
+    materialfv(face, pname, paramsf);
 }
 
 void Context::matrixMode(MatrixType mode)
@@ -345,34 +422,40 @@ void Context::orthox(GLfixed l, GLfixed r, GLfixed b, GLfixed t, GLfixed n, GLfi
                                                    FixedToFloat(n), FixedToFloat(f)));
 }
 
-void Context::pointParameterf(GLenum pname, GLfloat param)
+void Context::pointParameterf(PointParameter pname, GLfloat param)
 {
-    UNIMPLEMENTED();
+    SetPointParameter(&mGLState.gles1(), pname, &param);
 }
 
-void Context::pointParameterfv(GLenum pname, const GLfloat *params)
+void Context::pointParameterfv(PointParameter pname, const GLfloat *params)
 {
-    UNIMPLEMENTED();
+    SetPointParameter(&mGLState.gles1(), pname, params);
 }
 
-void Context::pointParameterx(GLenum pname, GLfixed param)
+void Context::pointParameterx(PointParameter pname, GLfixed param)
 {
-    UNIMPLEMENTED();
+    GLfloat paramf = FixedToFloat(param);
+    SetPointParameter(&mGLState.gles1(), pname, &paramf);
 }
 
-void Context::pointParameterxv(GLenum pname, const GLfixed *params)
+void Context::pointParameterxv(PointParameter pname, const GLfixed *params)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4] = {};
+    for (unsigned int i = 0; i < GetPointParameterCount(pname); i++)
+    {
+        paramsf[i] = FixedToFloat(params[i]);
+    }
+    SetPointParameter(&mGLState.gles1(), pname, paramsf);
 }
 
 void Context::pointSize(GLfloat size)
 {
-    UNIMPLEMENTED();
+    SetPointSize(&mGLState.gles1(), size);
 }
 
 void Context::pointSizex(GLfixed size)
 {
-    UNIMPLEMENTED();
+    SetPointSize(&mGLState.gles1(), FixedToFloat(size));
 }
 
 void Context::polygonOffsetx(GLfixed factor, GLfixed units)
@@ -417,9 +500,9 @@ void Context::scalex(GLfixed x, GLfixed y, GLfixed z)
         angle::Mat4::Scale(angle::Vector3(FixedToFloat(x), FixedToFloat(y), FixedToFloat(z))));
 }
 
-void Context::shadeModel(GLenum mode)
+void Context::shadeModel(ShadingModel model)
 {
-    UNIMPLEMENTED();
+    mGLState.gles1().setShadeModel(model);
 }
 
 void Context::texCoordPointer(GLint size, GLenum type, GLsizei stride, const void *ptr)
@@ -428,34 +511,42 @@ void Context::texCoordPointer(GLint size, GLenum type, GLsizei stride, const voi
                         stride, ptr);
 }
 
-void Context::texEnvf(GLenum target, GLenum pname, GLfloat param)
+void Context::texEnvf(TextureEnvTarget target, TextureEnvParameter pname, GLfloat param)
 {
-    UNIMPLEMENTED();
+    SetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, &param);
 }
 
-void Context::texEnvfv(GLenum target, GLenum pname, const GLfloat *params)
+void Context::texEnvfv(TextureEnvTarget target, TextureEnvParameter pname, const GLfloat *params)
 {
-    UNIMPLEMENTED();
+    SetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, params);
 }
 
-void Context::texEnvi(GLenum target, GLenum pname, GLint param)
+void Context::texEnvi(TextureEnvTarget target, TextureEnvParameter pname, GLint param)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4] = {};
+    ConvertTextureEnvFromInt(pname, &param, paramsf);
+    SetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, paramsf);
 }
 
-void Context::texEnviv(GLenum target, GLenum pname, const GLint *params)
+void Context::texEnviv(TextureEnvTarget target, TextureEnvParameter pname, const GLint *params)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4] = {};
+    ConvertTextureEnvFromInt(pname, params, paramsf);
+    SetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, paramsf);
 }
 
-void Context::texEnvx(GLenum target, GLenum pname, GLfixed param)
+void Context::texEnvx(TextureEnvTarget target, TextureEnvParameter pname, GLfixed param)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4] = {};
+    ConvertTextureEnvFromFixed(pname, &param, paramsf);
+    SetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, paramsf);
 }
 
-void Context::texEnvxv(GLenum target, GLenum pname, const GLfixed *params)
+void Context::texEnvxv(TextureEnvTarget target, TextureEnvParameter pname, const GLfixed *params)
 {
-    UNIMPLEMENTED();
+    GLfloat paramsf[4] = {};
+    ConvertTextureEnvFromFixed(pname, params, paramsf);
+    SetTextureEnv(mGLState.getActiveSampler(), &mGLState.gles1(), target, pname, paramsf);
 }
 
 void Context::texParameterx(TextureType target, GLenum pname, GLfixed param)
@@ -488,42 +579,54 @@ void Context::vertexPointer(GLint size, GLenum type, GLsizei stride, const void 
 // GL_OES_draw_texture
 void Context::drawTexf(float x, float y, float z, float width, float height)
 {
-    UNIMPLEMENTED();
+    mGLES1Renderer->drawTexture(this, &mGLState, x, y, z, width, height);
 }
 
 void Context::drawTexfv(const GLfloat *coords)
 {
-    UNIMPLEMENTED();
+    mGLES1Renderer->drawTexture(this, &mGLState, coords[0], coords[1], coords[2], coords[3],
+                                coords[4]);
 }
 
 void Context::drawTexi(GLint x, GLint y, GLint z, GLint width, GLint height)
 {
-    UNIMPLEMENTED();
+    mGLES1Renderer->drawTexture(this, &mGLState, static_cast<GLfloat>(x), static_cast<GLfloat>(y),
+                                static_cast<GLfloat>(z), static_cast<GLfloat>(width),
+                                static_cast<GLfloat>(height));
 }
 
 void Context::drawTexiv(const GLint *coords)
 {
-    UNIMPLEMENTED();
+    mGLES1Renderer->drawTexture(this, &mGLState, static_cast<GLfloat>(coords[0]),
+                                static_cast<GLfloat>(coords[1]), static_cast<GLfloat>(coords[2]),
+                                static_cast<GLfloat>(coords[3]), static_cast<GLfloat>(coords[4]));
 }
 
 void Context::drawTexs(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height)
 {
-    UNIMPLEMENTED();
+    mGLES1Renderer->drawTexture(this, &mGLState, static_cast<GLfloat>(x), static_cast<GLfloat>(y),
+                                static_cast<GLfloat>(z), static_cast<GLfloat>(width),
+                                static_cast<GLfloat>(height));
 }
 
 void Context::drawTexsv(const GLshort *coords)
 {
-    UNIMPLEMENTED();
+    mGLES1Renderer->drawTexture(this, &mGLState, static_cast<GLfloat>(coords[0]),
+                                static_cast<GLfloat>(coords[1]), static_cast<GLfloat>(coords[2]),
+                                static_cast<GLfloat>(coords[3]), static_cast<GLfloat>(coords[4]));
 }
 
 void Context::drawTexx(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height)
 {
-    UNIMPLEMENTED();
+    mGLES1Renderer->drawTexture(this, &mGLState, FixedToFloat(x), FixedToFloat(y), FixedToFloat(z),
+                                FixedToFloat(width), FixedToFloat(height));
 }
 
 void Context::drawTexxv(const GLfixed *coords)
 {
-    UNIMPLEMENTED();
+    mGLES1Renderer->drawTexture(this, &mGLState, FixedToFloat(coords[0]), FixedToFloat(coords[1]),
+                                FixedToFloat(coords[2]), FixedToFloat(coords[3]),
+                                FixedToFloat(coords[4]));
 }
 
 // GL_OES_matrix_palette
@@ -609,7 +712,7 @@ void Context::texGenxv(GLenum coord, GLenum pname, const GLint *params)
 
 int Context::vertexArrayIndex(ClientVertexArrayType type) const
 {
-    return mGLES1Renderer->vertexArrayIndex(type, &mGLState);
+    return GLES1Renderer::VertexArrayIndex(type, mGLState.gles1());
 }
 
 // static
@@ -617,11 +720,4 @@ int Context::TexCoordArrayIndex(unsigned int unit)
 {
     return GLES1Renderer::TexCoordArrayIndex(unit);
 }
-
-AttributesMask Context::getVertexArraysAttributeMask() const
-{
-    return mGLES1Renderer->getVertexArraysAttributeMask(&mGLState);
-}
-
-// static
 }  // namespace gl

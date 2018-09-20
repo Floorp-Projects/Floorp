@@ -79,13 +79,13 @@ static DWORD convertInterval(EGLint interval)
 #endif
 }
 
-EGLint SwapChain9::resize(const gl::Context *context, int backbufferWidth, int backbufferHeight)
+EGLint SwapChain9::resize(DisplayD3D *displayD3D, int backbufferWidth, int backbufferHeight)
 {
     // D3D9 does not support resizing swap chains without recreating them
-    return reset(context, backbufferWidth, backbufferHeight, mSwapInterval);
+    return reset(displayD3D, backbufferWidth, backbufferHeight, mSwapInterval);
 }
 
-EGLint SwapChain9::reset(const gl::Context *context,
+EGLint SwapChain9::reset(DisplayD3D *displayD3D,
                          int backbufferWidth,
                          int backbufferHeight,
                          EGLint swapInterval)
@@ -268,11 +268,7 @@ EGLint SwapChain9::reset(const gl::Context *context,
 }
 
 // parameters should be validated/clamped by caller
-EGLint SwapChain9::swapRect(const gl::Context *context,
-                            EGLint x,
-                            EGLint y,
-                            EGLint width,
-                            EGLint height)
+EGLint SwapChain9::swapRect(DisplayD3D *displayD3D, EGLint x, EGLint y, EGLint width, EGLint height)
 {
     if (!mSwapChain)
     {

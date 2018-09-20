@@ -10,8 +10,8 @@
 #define LIBANGLE_QUERYUTILS_H_
 
 #include "angle_gl.h"
+#include "common/PackedEnums.h"
 #include "common/angleutils.h"
-#include "libANGLE/PackedEnums.h"
 
 #include <EGL/egl.h>
 
@@ -22,6 +22,7 @@ class Context;
 class Error;
 class Sync;
 class Framebuffer;
+class GLES1State;
 class Program;
 class Renderbuffer;
 class Sampler;
@@ -46,7 +47,7 @@ void QueryRenderbufferiv(const Context *context,
                          const Renderbuffer *renderbuffer,
                          GLenum pname,
                          GLint *params);
-void QueryShaderiv(const Context *context, Shader *shader, GLenum pname, GLint *params);
+void QueryShaderiv(Shader *shader, GLenum pname, GLint *params);
 void QueryTexLevelParameterfv(const Texture *texture,
                               TextureTarget target,
                               GLint level,
@@ -99,7 +100,12 @@ void QueryInternalFormativ(const TextureCaps &format, GLenum pname, GLsizei bufS
 
 void QueryFramebufferParameteriv(const Framebuffer *framebuffer, GLenum pname, GLint *params);
 
-Error QuerySynciv(const Sync *sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values);
+Error QuerySynciv(const Context *context,
+                  const Sync *sync,
+                  GLenum pname,
+                  GLsizei bufSize,
+                  GLsizei *length,
+                  GLint *values);
 
 void SetTexParameterf(Context *context, Texture *texture, GLenum pname, GLfloat param);
 void SetTexParameterfv(Context *context, Texture *texture, GLenum pname, const GLfloat *params);
@@ -111,7 +117,10 @@ void SetSamplerParameterfv(Sampler *sampler, GLenum pname, const GLfloat *params
 void SetSamplerParameteri(Sampler *sampler, GLenum pname, GLint param);
 void SetSamplerParameteriv(Sampler *sampler, GLenum pname, const GLint *params);
 
-void SetFramebufferParameteri(Framebuffer *framebuffer, GLenum pname, GLint param);
+void SetFramebufferParameteri(const Context *context,
+                              Framebuffer *framebuffer,
+                              GLenum pname,
+                              GLint param);
 
 void SetProgramParameteri(Program *program, GLenum pname, GLint value);
 
@@ -144,8 +153,67 @@ void QueryProgramInterfaceiv(const Program *program,
                              GLenum programInterface,
                              GLenum pname,
                              GLint *params);
+// GLES1 emulation
 
 ClientVertexArrayType ParamToVertexArrayType(GLenum param);
+
+void SetLightParameters(GLES1State *state,
+                        GLenum light,
+                        LightParameter pname,
+                        const GLfloat *params);
+void GetLightParameters(const GLES1State *state,
+                        GLenum light,
+                        LightParameter pname,
+                        GLfloat *params);
+
+void SetLightModelParameters(GLES1State *state, GLenum pname, const GLfloat *params);
+void GetLightModelParameters(const GLES1State *state, GLenum pname, GLfloat *params);
+bool IsLightModelTwoSided(const GLES1State *state);
+
+void SetMaterialParameters(GLES1State *state,
+                           GLenum face,
+                           MaterialParameter pname,
+                           const GLfloat *params);
+void GetMaterialParameters(const GLES1State *state,
+                           GLenum face,
+                           MaterialParameter pname,
+                           GLfloat *params);
+
+unsigned int GetLightModelParameterCount(GLenum pname);
+unsigned int GetLightParameterCount(LightParameter pname);
+unsigned int GetMaterialParameterCount(MaterialParameter pname);
+
+void SetFogParameters(GLES1State *state, GLenum pname, const GLfloat *params);
+void GetFogParameters(const GLES1State *state, GLenum pname, GLfloat *params);
+unsigned int GetFogParameterCount(GLenum pname);
+
+unsigned int GetTextureEnvParameterCount(TextureEnvParameter pname);
+
+void ConvertTextureEnvFromInt(TextureEnvParameter pname, const GLint *input, GLfloat *output);
+void ConvertTextureEnvFromFixed(TextureEnvParameter pname, const GLfixed *input, GLfloat *output);
+void ConvertTextureEnvToInt(TextureEnvParameter pname, const GLfloat *input, GLint *output);
+void ConvertTextureEnvToFixed(TextureEnvParameter pname, const GLfloat *input, GLfixed *output);
+
+void SetTextureEnv(unsigned int unit,
+                   GLES1State *state,
+                   TextureEnvTarget target,
+                   TextureEnvParameter pname,
+                   const GLfloat *params);
+void GetTextureEnv(unsigned int unit,
+                   const GLES1State *state,
+                   TextureEnvTarget target,
+                   TextureEnvParameter pname,
+                   GLfloat *params);
+
+unsigned int GetPointParameterCount(PointParameter pname);
+
+void SetPointParameter(GLES1State *state, PointParameter pname, const GLfloat *params);
+void GetPointParameter(const GLES1State *state, PointParameter pname, GLfloat *params);
+
+void SetPointSize(GLES1State *state, GLfloat size);
+void GetPointSize(GLES1State *state, GLfloat *sizeOut);
+
+unsigned int GetTexParameterCount(GLenum pname);
 
 }  // namespace gl
 

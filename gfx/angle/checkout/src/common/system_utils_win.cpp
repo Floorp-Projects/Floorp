@@ -71,6 +71,11 @@ bool SetCWD(const char *dirName)
     return (SetCurrentDirectoryA(dirName) == TRUE);
 }
 
+bool UnsetEnvironmentVar(const char *variableName)
+{
+    return (SetEnvironmentVariableA(variableName, nullptr) == TRUE);
+}
+
 bool SetEnvironmentVar(const char *variableName, const char *value)
 {
     return (SetEnvironmentVariableA(variableName, value) == TRUE);

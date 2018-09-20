@@ -9,9 +9,9 @@
 #ifndef LIBANGLE_RENDERER_D3D9_STATEMANAGER9_H_
 #define LIBANGLE_RENDERER_D3D9_STATEMANAGER9_H_
 
-#include "libANGLE/angletypes.h"
 #include "libANGLE/ContextState.h"
 #include "libANGLE/State.h"
+#include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"
 
 namespace rx
@@ -43,12 +43,12 @@ class StateManager9 final : angle::NonCopyable
 
     void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits);
 
-    gl::Error setBlendDepthRasterStates(const gl::State &glState, unsigned int sampleMask);
+    void setBlendDepthRasterStates(const gl::State &glState, unsigned int sampleMask);
     void setScissorState(const gl::Rectangle &scissor, bool enabled);
     void setViewportState(const gl::Rectangle &viewport,
                           float zNear,
                           float zFar,
-                          GLenum drawMode,
+                          gl::PrimitiveMode drawMode,
                           GLenum frontFace,
                           bool ignoreViewport);
 

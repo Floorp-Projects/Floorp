@@ -3,12 +3,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
-// UniformHLSL.h:
-//   Methods for GLSL to HLSL translation for uniforms and uniform blocks.
+// ResourcesHLSL.h:
+//   Methods for GLSL to HLSL translation for uniforms and interface blocks.
 //
 
-#ifndef COMPILER_TRANSLATOR_UNIFORMHLSL_H_
-#define COMPILER_TRANSLATOR_UNIFORMHLSL_H_
+#ifndef COMPILER_TRANSLATOR_RESOURCESHLSL_H_
+#define COMPILER_TRANSLATOR_RESOURCESHLSL_H_
 
 #include "compiler/translator/OutputHLSL.h"
 #include "compiler/translator/UtilsHLSL.h"
@@ -19,14 +19,13 @@ class ImmutableString;
 class StructureHLSL;
 class TSymbolTable;
 
-class UniformHLSL : angle::NonCopyable
+class ResourcesHLSL : angle::NonCopyable
 {
   public:
-    UniformHLSL(sh::GLenum shaderType,
-                StructureHLSL *structureHLSL,
-                ShShaderOutput outputType,
-                const std::vector<Uniform> &uniforms,
-                unsigned int firstUniformRegister);
+    ResourcesHLSL(StructureHLSL *structureHLSL,
+                  ShShaderOutput outputType,
+                  const std::vector<Uniform> &uniforms,
+                  unsigned int firstUniformRegister);
 
     void reserveUniformRegisters(unsigned int registerCount);
     void reserveUniformBlockRegisters(unsigned int registerCount);
@@ -67,14 +66,6 @@ class UniformHLSL : angle::NonCopyable
                                     const TType &type,
                                     const TVariable &variable,
                                     const unsigned int registerIndex);
-    void outputHLSL4_1_FL11Texture(TInfoSinkBase &out,
-                                   const TType &type,
-                                   const TVariable &variable,
-                                   const unsigned int registerIndex);
-    void outputHLSL4_1_FL11RWTexture(TInfoSinkBase &out,
-                                     const TType &type,
-                                     const TVariable &variable,
-                                     const unsigned int registerIndex);
     void outputUniform(TInfoSinkBase &out,
                        const TType &type,
                        const TVariable &variable,
@@ -95,12 +86,26 @@ class UniformHLSL : angle::NonCopyable
         const TMap<const TVariable *, TString> &samplerInStructSymbolsToAPINames,
         unsigned int *groupTextureRegisterIndex);
 
+    void outputHLSLImageUniformIndices(TInfoSinkBase &out,
+                                       const TVector<const TVariable *> &group,
+                                       unsigned int imageArrayIndex,
+                                       unsigned int *groupRegisterCount);
+    void outputHLSLReadonlyImageUniformGroup(TInfoSinkBase &out,
+                                             const HLSLTextureGroup textureGroup,
+                                             const TVector<const TVariable *> &group,
+                                             unsigned int *groupTextureRegisterIndex,
+                                             unsigned int *imageUniformGroupIndex);
+    void outputHLSLImageUniformGroup(TInfoSinkBase &out,
+                                     const HLSLRWTextureGroup textureGroup,
+                                     const TVector<const TVariable *> &group,
+                                     unsigned int *groupTextureRegisterIndex,
+                                     unsigned int *imageUniformGroupIndex);
+
     unsigned int mUniformRegister;
     unsigned int mUniformBlockRegister;
     unsigned int mTextureRegister;
     unsigned int mRWTextureRegister;
     unsigned int mSamplerCount;
-    sh::GLenum mShaderType;
     StructureHLSL *mStructureHLSL;
     ShShaderOutput mOutputType;
 
@@ -110,4 +115,4 @@ class UniformHLSL : angle::NonCopyable
 };
 }
 
-#endif  // COMPILER_TRANSLATOR_UNIFORMHLSL_H_
+#endif  // COMPILER_TRANSLATOR_RESOURCESHLSL_H_

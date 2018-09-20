@@ -1,5 +1,5 @@
-from tests.actions.support.keys import Keys, MODIFIER_KEY
-from tests.actions.support.refine import get_keys
+from tests.perform_actions.support.keys import Keys, MODIFIER_KEY
+from tests.perform_actions.support.refine import get_keys
 
 
 def test_mod_a_and_backspace_deletes_all_text(session, key_reporter, key_chain):

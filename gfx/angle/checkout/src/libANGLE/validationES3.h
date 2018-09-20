@@ -9,7 +9,7 @@
 #ifndef LIBANGLE_VALIDATION_ES3_H_
 #define LIBANGLE_VALIDATION_ES3_H_
 
-#include "libANGLE/PackedEnums.h"
+#include "common/PackedEnums.h"
 
 #include <GLES3/gl3.h>
 
@@ -178,7 +178,7 @@ bool ValidateInvalidateSubFramebuffer(Context *context,
 bool ValidateClearBuffer(Context *context);
 
 bool ValidateDrawRangeElements(Context *context,
-                               GLenum mode,
+                               PrimitiveMode mode,
                                GLuint start,
                                GLuint end,
                                GLsizei count,
@@ -347,7 +347,7 @@ bool ValidateDeleteTransformFeedbacks(Context *context, GLint n, const GLuint *i
 bool ValidateGenVertexArrays(Context *context, GLint n, GLuint *arrays);
 bool ValidateDeleteVertexArrays(Context *context, GLint n, const GLuint *arrays);
 
-bool ValidateBeginTransformFeedback(Context *context, GLenum primitiveMode);
+bool ValidateBeginTransformFeedback(Context *context, PrimitiveMode primitiveMode);
 
 bool ValidateGetBufferPointerv(Context *context, BufferBinding target, GLenum pname, void **params);
 bool ValidateGetBufferPointervRobustANGLE(Context *context,
@@ -413,7 +413,7 @@ bool ValidateGetSynciv(Context *context,
                        GLint *values);
 
 bool ValidateDrawElementsInstanced(Context *context,
-                                   GLenum mode,
+                                   PrimitiveMode mode,
                                    GLsizei count,
                                    GLenum type,
                                    const void *indices,
@@ -539,7 +539,7 @@ bool ValidateUniformBlockBinding(Context *context,
                                  GLuint uniformBlockIndex,
                                  GLuint uniformBlockBinding);
 bool ValidateDrawArraysInstanced(Context *context,
-                                 GLenum mode,
+                                 PrimitiveMode mode,
                                  GLint first,
                                  GLsizei count,
                                  GLsizei primcount);

@@ -24,14 +24,14 @@
 #include "common/angleutils.h"
 #include "compiler/translator/Common.h"
 #include "compiler/translator/ConstantUnion.h"
+#include "compiler/translator/ImmutableString.h"
 #include "compiler/translator/Operator.h"
 #include "compiler/translator/SymbolUniqueId.h"
 #include "compiler/translator/Types.h"
+#include "compiler/translator/tree_util/Visit.h"
 
 namespace sh
 {
-
-class ImmutableString;
 
 class TDiagnostics;
 
@@ -55,8 +55,8 @@ class TIntermSymbol;
 class TIntermLoop;
 class TInfoSink;
 class TInfoSinkBase;
-class TIntermRaw;
 class TIntermBranch;
+class TIntermPreprocessorDirective;
 
 class TSymbolTable;
 class TFunction;
@@ -81,27 +81,31 @@ class TIntermNode : angle::NonCopyable
     const TSourceLoc &getLine() const { return mLine; }
     void setLine(const TSourceLoc &l) { mLine = l; }
 
-    virtual void traverse(TIntermTraverser *) = 0;
-    virtual TIntermTyped *getAsTyped() { return 0; }
-    virtual TIntermConstantUnion *getAsConstantUnion() { return 0; }
+    virtual void traverse(TIntermTraverser *it);
+    virtual bool visit(Visit visit, TIntermTraverser *it) = 0;
+
+    virtual TIntermTyped *getAsTyped() { return nullptr; }
+    virtual TIntermConstantUnion *getAsConstantUnion() { return nullptr; }
     virtual TIntermFunctionDefinition *getAsFunctionDefinition() { return nullptr; }
-    virtual TIntermAggregate *getAsAggregate() { return 0; }
+    virtual TIntermAggregate *getAsAggregate() { return nullptr; }
     virtual TIntermBlock *getAsBlock() { return nullptr; }
     virtual TIntermFunctionPrototype *getAsFunctionPrototypeNode() { return nullptr; }
     virtual TIntermInvariantDeclaration *getAsInvariantDeclarationNode() { return nullptr; }
     virtual TIntermDeclaration *getAsDeclarationNode() { return nullptr; }
     virtual TIntermSwizzle *getAsSwizzleNode() { return nullptr; }
-    virtual TIntermBinary *getAsBinaryNode() { return 0; }
-    virtual TIntermUnary *getAsUnaryNode() { return 0; }
+    virtual TIntermBinary *getAsBinaryNode() { return nullptr; }
+    virtual TIntermUnary *getAsUnaryNode() { return nullptr; }
     virtual TIntermTernary *getAsTernaryNode() { return nullptr; }
     virtual TIntermIfElse *getAsIfElseNode() { return nullptr; }
-    virtual TIntermSwitch *getAsSwitchNode() { return 0; }
-    virtual TIntermCase *getAsCaseNode() { return 0; }
-    virtual TIntermSymbol *getAsSymbolNode() { return 0; }
-    virtual TIntermLoop *getAsLoopNode() { return 0; }
-    virtual TIntermRaw *getAsRawNode() { return 0; }
-    virtual TIntermBranch *getAsBranchNode() { return 0; }
+    virtual TIntermSwitch *getAsSwitchNode() { return nullptr; }
+    virtual TIntermCase *getAsCaseNode() { return nullptr; }
+    virtual TIntermSymbol *getAsSymbolNode() { return nullptr; }
+    virtual TIntermLoop *getAsLoopNode() { return nullptr; }
+    virtual TIntermBranch *getAsBranchNode() { return nullptr; }
+    virtual TIntermPreprocessorDirective *getAsPreprocessorDirective() { return nullptr; }
 
+    virtual size_t getChildCount() const                  = 0;
+    virtual TIntermNode *getChildNode(size_t index) const = 0;
     // Replace a child node. Return true if |original| is a child
     // node and it is replaced; otherwise, return false.
     virtual bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) = 0;
@@ -162,7 +166,6 @@ class TIntermTyped : public TIntermNode
     bool isScalar() const { return getType().isScalar(); }
     bool isScalarInt() const { return getType().isScalarInt(); }
     const char *getBasicString() const { return getType().getBasicString(); }
-    TString getCompleteString() const { return getType().getCompleteString(); }
 
     unsigned int getOutermostArraySize() const { return getType().getOutermostArraySize(); }
 
@@ -190,7 +193,11 @@ class TIntermLoop : public TIntermNode
                 TIntermBlock *body);
 
     TIntermLoop *getAsLoopNode() override { return this; }
-    void traverse(TIntermTraverser *it) override;
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     TLoopType getType() const { return mType; }
@@ -220,8 +227,11 @@ class TIntermBranch : public TIntermNode
   public:
     TIntermBranch(TOperator op, TIntermTyped *e) : mFlowOp(op), mExpression(e) {}
 
-    void traverse(TIntermTraverser *it) override;
     TIntermBranch *getAsBranchNode() override { return this; }
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     TOperator getFlowOp() { return mFlowOp; }
@@ -253,8 +263,12 @@ class TIntermSymbol : public TIntermTyped
     ImmutableString getName() const;
     const TVariable &variable() const { return *mVariable; }
 
-    void traverse(TIntermTraverser *it) override;
     TIntermSymbol *getAsSymbolNode() override { return this; }
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *, TIntermNode *) override { return false; }
 
   private:
@@ -279,37 +293,6 @@ class TIntermExpression : public TIntermTyped
     TIntermExpression(const TIntermExpression &node) = default;
 
     TType mType;
-};
-
-// A Raw node stores raw code, that the translator will insert verbatim
-// into the output stream. Useful for transformation operations that make
-// complex code that might not fit naturally into the GLSL model.
-class TIntermRaw : public TIntermExpression
-{
-  public:
-    TIntermRaw(const TType &type, const ImmutableString &rawText)
-        : TIntermExpression(type), mRawText(rawText)
-    {
-    }
-    TIntermRaw(const TIntermRaw &) = delete;
-
-    TIntermTyped *deepCopy() const override
-    {
-        UNREACHABLE();
-        return nullptr;
-    }
-
-    bool hasSideEffects() const override { return false; }
-
-    const ImmutableString &getRawText() const { return mRawText; }
-
-    void traverse(TIntermTraverser *it) override;
-
-    TIntermRaw *getAsRawNode() override { return this; }
-    bool replaceChildNode(TIntermNode *, TIntermNode *) override { return false; }
-
-  protected:
-    ImmutableString mRawText;
 };
 
 // Constant folded node.
@@ -352,7 +335,11 @@ class TIntermConstantUnion : public TIntermExpression
     }
 
     TIntermConstantUnion *getAsConstantUnion() override { return this; }
-    void traverse(TIntermTraverser *it) override;
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *, TIntermNode *) override { return false; }
 
     TConstantUnion *foldUnaryNonComponentWise(TOperator op);
@@ -422,7 +409,10 @@ class TIntermSwizzle : public TIntermExpression
     TIntermTyped *deepCopy() const override { return new TIntermSwizzle(*this); }
 
     TIntermSwizzle *getAsSwizzleNode() override { return this; };
-    void traverse(TIntermTraverser *it) override;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     bool hasSideEffects() const override { return mOperand->hasSideEffects(); }
@@ -467,7 +457,11 @@ class TIntermBinary : public TIntermOperator
     static TOperator GetMulAssignOpBasedOnOperands(const TType &left, const TType &right);
 
     TIntermBinary *getAsBinaryNode() override { return this; };
-    void traverse(TIntermTraverser *it) override;
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     bool hasSideEffects() const override
@@ -480,7 +474,10 @@ class TIntermBinary : public TIntermOperator
     TIntermTyped *fold(TDiagnostics *diagnostics) override;
 
     void setAddIndexClamp() { mAddIndexClamp = true; }
-    bool getAddIndexClamp() { return mAddIndexClamp; }
+    bool getAddIndexClamp() const { return mAddIndexClamp; }
+
+    // This method is only valid for EOpIndexDirectStruct. It returns the name of the field.
+    const ImmutableString &getIndexStructFieldName() const;
 
   protected:
     TIntermTyped *mLeft;
@@ -509,8 +506,12 @@ class TIntermUnary : public TIntermOperator
 
     TIntermTyped *deepCopy() const override { return new TIntermUnary(*this); }
 
-    void traverse(TIntermTraverser *it) override;
     TIntermUnary *getAsUnaryNode() override { return this; }
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     bool hasSideEffects() const override { return isAssignment() || mOperand->hasSideEffects(); }
@@ -586,7 +587,11 @@ class TIntermAggregate : public TIntermOperator, public TIntermAggregateBase
     const TConstantUnion *getConstantValue() const override;
 
     TIntermAggregate *getAsAggregate() override { return this; }
-    void traverse(TIntermTraverser *it) override;
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     bool hasSideEffects() const override;
@@ -651,7 +656,11 @@ class TIntermBlock : public TIntermNode, public TIntermAggregateBase
     ~TIntermBlock() {}
 
     TIntermBlock *getAsBlock() override { return this; }
-    void traverse(TIntermTraverser *it) override;
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     // Only intended for initially building the block.
@@ -673,7 +682,11 @@ class TIntermFunctionPrototype : public TIntermTyped
     ~TIntermFunctionPrototype() {}
 
     TIntermFunctionPrototype *getAsFunctionPrototypeNode() override { return this; }
-    void traverse(TIntermTraverser *it) override;
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     const TType &getType() const override;
@@ -708,7 +721,11 @@ class TIntermFunctionDefinition : public TIntermNode
     }
 
     TIntermFunctionDefinition *getAsFunctionDefinition() override { return this; }
-    void traverse(TIntermTraverser *it) override;
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     TIntermFunctionPrototype *getFunctionPrototype() const { return mPrototype; }
@@ -729,7 +746,10 @@ class TIntermDeclaration : public TIntermNode, public TIntermAggregateBase
     ~TIntermDeclaration() {}
 
     TIntermDeclaration *getAsDeclarationNode() override { return this; }
-    void traverse(TIntermTraverser *it) override;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     // Only intended for initially building the declaration.
@@ -750,10 +770,12 @@ class TIntermInvariantDeclaration : public TIntermNode
     TIntermInvariantDeclaration(TIntermSymbol *symbol, const TSourceLoc &line);
 
     virtual TIntermInvariantDeclaration *getAsInvariantDeclarationNode() override { return this; }
+    bool visit(Visit visit, TIntermTraverser *it) final;
 
     TIntermSymbol *getSymbol() { return mSymbol; }
 
-    void traverse(TIntermTraverser *it) override;
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
   private:
@@ -766,13 +788,16 @@ class TIntermTernary : public TIntermExpression
   public:
     TIntermTernary(TIntermTyped *cond, TIntermTyped *trueExpression, TIntermTyped *falseExpression);
 
-    void traverse(TIntermTraverser *it) override;
+    TIntermTernary *getAsTernaryNode() override { return this; }
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     TIntermTyped *getCondition() const { return mCondition; }
     TIntermTyped *getTrueExpression() const { return mTrueExpression; }
     TIntermTyped *getFalseExpression() const { return mFalseExpression; }
-    TIntermTernary *getAsTernaryNode() override { return this; }
 
     TIntermTyped *deepCopy() const override { return new TIntermTernary(*this); }
 
@@ -801,13 +826,16 @@ class TIntermIfElse : public TIntermNode
   public:
     TIntermIfElse(TIntermTyped *cond, TIntermBlock *trueB, TIntermBlock *falseB);
 
-    void traverse(TIntermTraverser *it) override;
+    TIntermIfElse *getAsIfElseNode() override { return this; }
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     TIntermTyped *getCondition() const { return mCondition; }
     TIntermBlock *getTrueBlock() const { return mTrueBlock; }
     TIntermBlock *getFalseBlock() const { return mFalseBlock; }
-    TIntermIfElse *getAsIfElseNode() override { return this; }
 
   protected:
     TIntermTyped *mCondition;
@@ -823,10 +851,12 @@ class TIntermSwitch : public TIntermNode
   public:
     TIntermSwitch(TIntermTyped *init, TIntermBlock *statementList);
 
-    void traverse(TIntermTraverser *it) override;
-    bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
-
     TIntermSwitch *getAsSwitchNode() override { return this; }
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
+    bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     TIntermTyped *getInit() { return mInit; }
     TIntermBlock *getStatementList() { return mStatementList; }
@@ -847,16 +877,54 @@ class TIntermCase : public TIntermNode
   public:
     TIntermCase(TIntermTyped *condition) : TIntermNode(), mCondition(condition) {}
 
-    void traverse(TIntermTraverser *it) override;
-    bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
-
     TIntermCase *getAsCaseNode() override { return this; }
+    bool visit(Visit visit, TIntermTraverser *it) final;
+
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
+    bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     bool hasCondition() const { return mCondition != nullptr; }
     TIntermTyped *getCondition() const { return mCondition; }
 
   protected:
     TIntermTyped *mCondition;
+};
+
+//
+// Preprocessor Directive.
+//  #ifdef, #define, #if, #endif, etc.
+//
+
+enum class PreprocessorDirective
+{
+    Define,
+    Ifdef,
+    If,
+    Endif,
+};
+
+class TIntermPreprocessorDirective : public TIntermNode
+{
+  public:
+    // This could also take an ImmutbleString as an argument.
+    TIntermPreprocessorDirective(PreprocessorDirective directive, ImmutableString command);
+    ~TIntermPreprocessorDirective() final;
+
+    void traverse(TIntermTraverser *it) final;
+    bool visit(Visit visit, TIntermTraverser *it) final;
+    bool replaceChildNode(TIntermNode *, TIntermNode *) final { return false; }
+
+    TIntermPreprocessorDirective *getAsPreprocessorDirective() final { return this; }
+    size_t getChildCount() const final;
+    TIntermNode *getChildNode(size_t index) const final;
+
+    PreprocessorDirective getDirective() const { return mDirective; }
+    const ImmutableString &getCommand() const { return mCommand; }
+
+  private:
+    PreprocessorDirective mDirective;
+    ImmutableString mCommand;
 };
 
 }  // namespace sh

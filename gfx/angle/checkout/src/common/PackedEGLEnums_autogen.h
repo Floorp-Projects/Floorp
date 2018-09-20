@@ -9,8 +9,8 @@
 //   Declares ANGLE-specific enums classes for EGLenums and functions operating
 //   on them.
 
-#ifndef LIBANGLE_PACKEDEGLENUMS_AUTOGEN_H_
-#define LIBANGLE_PACKEDEGLENUMS_AUTOGEN_H_
+#ifndef COMMON_PACKEDEGLENUMS_AUTOGEN_H_
+#define COMMON_PACKEDEGLENUMS_AUTOGEN_H_
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -23,6 +23,39 @@ namespace egl
 
 template <typename Enum>
 Enum FromEGLenum(EGLenum from);
+
+enum class MessageType : uint8_t
+{
+    Critical = 0,
+    Error    = 1,
+    Warn     = 2,
+    Info     = 3,
+
+    InvalidEnum = 4,
+    EnumCount   = 4,
+};
+
+template <>
+MessageType FromEGLenum<MessageType>(EGLenum from);
+EGLenum ToEGLenum(MessageType from);
+
+enum class ObjectType : uint8_t
+{
+    Thread  = 0,
+    Display = 1,
+    Context = 2,
+    Surface = 3,
+    Image   = 4,
+    Sync    = 5,
+    Stream  = 6,
+
+    InvalidEnum = 7,
+    EnumCount   = 7,
+};
+
+template <>
+ObjectType FromEGLenum<ObjectType>(EGLenum from);
+EGLenum ToEGLenum(ObjectType from);
 
 enum class TextureFormat : uint8_t
 {
@@ -40,4 +73,4 @@ EGLenum ToEGLenum(TextureFormat from);
 
 }  // namespace egl
 
-#endif  // LIBANGLE_PACKEDEGLENUMS_AUTOGEN_H_
+#endif  // COMMON_PACKEDEGLENUMS_AUTOGEN_H_

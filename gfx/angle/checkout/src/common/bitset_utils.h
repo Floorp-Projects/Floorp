@@ -54,7 +54,7 @@ class BitSetT final
 
         bool operator==(const Iterator &other) const;
         bool operator!=(const Iterator &other) const;
-        std::size_t operator*() const;
+        ParamT operator*() const;
 
       private:
         std::size_t getNextBit();
@@ -423,7 +423,7 @@ template <size_t N, typename BitsT, typename ParamT>
 typename BitSetT<N, BitsT, ParamT>::Iterator &BitSetT<N, BitsT, ParamT>::Iterator::operator++()
 {
     ASSERT(mBitsCopy.any());
-    mBitsCopy.reset(mCurrentBit);
+    mBitsCopy.reset(static_cast<ParamT>(mCurrentBit));
     mCurrentBit = getNextBit();
     return *this;
 }
@@ -441,9 +441,9 @@ bool BitSetT<N, BitsT, ParamT>::Iterator::operator!=(const Iterator &other) cons
 }
 
 template <size_t N, typename BitsT, typename ParamT>
-std::size_t BitSetT<N, BitsT, ParamT>::Iterator::operator*() const
+ParamT BitSetT<N, BitsT, ParamT>::Iterator::operator*() const
 {
-    return mCurrentBit;
+    return static_cast<ParamT>(mCurrentBit);
 }
 
 template <size_t N, typename BitsT, typename ParamT>

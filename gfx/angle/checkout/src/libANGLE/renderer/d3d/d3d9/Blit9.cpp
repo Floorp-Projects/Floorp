@@ -8,15 +8,16 @@
 
 #include "libANGLE/renderer/d3d/d3d9/Blit9.h"
 
-#include "libANGLE/renderer/d3d/TextureD3D.h"
-#include "libANGLE/renderer/d3d/d3d9/renderer9_utils.h"
-#include "libANGLE/renderer/d3d/d3d9/formatutils9.h"
-#include "libANGLE/renderer/d3d/d3d9/TextureStorage9.h"
-#include "libANGLE/renderer/d3d/d3d9/RenderTarget9.h"
-#include "libANGLE/renderer/d3d/d3d9/Renderer9.h"
-#include "libANGLE/angletypes.h"
+#include "libANGLE/Context.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
+#include "libANGLE/angletypes.h"
+#include "libANGLE/renderer/d3d/TextureD3D.h"
+#include "libANGLE/renderer/d3d/d3d9/RenderTarget9.h"
+#include "libANGLE/renderer/d3d/d3d9/Renderer9.h"
+#include "libANGLE/renderer/d3d/d3d9/TextureStorage9.h"
+#include "libANGLE/renderer/d3d/d3d9/formatutils9.h"
+#include "libANGLE/renderer/d3d/d3d9/renderer9_utils.h"
 
 namespace
 {
@@ -80,11 +81,11 @@ Blit9::~Blit9()
     }
 }
 
-gl::Error Blit9::initialize()
+angle::Result Blit9::initialize(Context9 *context9)
 {
     if (mGeometryLoaded)
     {
-        return gl::NoError();
+        return angle::Result::Continue();
     }
 
     static const float quad[] =
@@ -100,23 +101,13 @@ gl::Error Blit9::initialize()
     HRESULT result = device->CreateVertexBuffer(sizeof(quad), D3DUSAGE_WRITEONLY, 0,
                                                 D3DPOOL_DEFAULT, &mQuadVertexBuffer, nullptr);
 
-    if (FAILED(result))
-    {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-        return gl::OutOfMemory() << "Failed to create internal blit vertex shader, "
-                                 << gl::FmtHR(result);
-    }
+    ANGLE_TRY_HR(context9, result, "Failed to create internal blit vertex shader");
 
     void *lockPtr = nullptr;
     result = mQuadVertexBuffer->Lock(0, 0, &lockPtr, 0);
 
-    if (FAILED(result) || lockPtr == nullptr)
-    {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-        SafeRelease(mQuadVertexBuffer);
-        return gl::OutOfMemory() << "Failed to lock internal blit vertex shader, "
-                                 << gl::FmtHR(result);
-    }
+    ANGLE_TRY_HR(context9, result, "Failed to lock internal blit vertex shader");
+    ASSERT(lockPtr);
 
     memcpy(lockPtr, quad, sizeof(quad));
     mQuadVertexBuffer->Unlock();
@@ -128,23 +119,21 @@ gl::Error Blit9::initialize()
     };
 
     result = device->CreateVertexDeclaration(elements, &mQuadVertexDeclaration);
-
-    if (FAILED(result))
-    {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-        SafeRelease(mQuadVertexBuffer);
-        return gl::OutOfMemory() << "Failed to lock internal blit vertex declaration, "
-                                 << gl::FmtHR(result);
-    }
+    ANGLE_TRY_HR(context9, result, "Failed to create internal blit vertex shader declaration");
 
     mGeometryLoaded = true;
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 template <class D3DShaderType>
-gl::Error Blit9::setShader(ShaderId source, const char *profile,
-                           gl::Error (Renderer9::*createShader)(const DWORD *, size_t length, D3DShaderType **outShader),
-                           HRESULT (WINAPI IDirect3DDevice9::*setShader)(D3DShaderType*))
+angle::Result Blit9::setShader(Context9 *context9,
+                               ShaderId source,
+                               const char *profile,
+                               angle::Result (Renderer9::*createShader)(Context9 *,
+                                                                        const DWORD *,
+                                                                        size_t length,
+                                                                        D3DShaderType **outShader),
+                               HRESULT (WINAPI IDirect3DDevice9::*setShader)(D3DShaderType *))
 {
     IDirect3DDevice9 *device = mRenderer->getDevice();
 
@@ -158,27 +147,28 @@ gl::Error Blit9::setShader(ShaderId source, const char *profile,
     {
         const BYTE* shaderCode = g_shaderCode[source];
         size_t shaderSize = g_shaderSize[source];
-        ANGLE_TRY((mRenderer->*createShader)(reinterpret_cast<const DWORD*>(shaderCode), shaderSize, &shader));
+        ANGLE_TRY((mRenderer->*createShader)(context9, reinterpret_cast<const DWORD *>(shaderCode),
+                                             shaderSize, &shader));
         mCompiledShaders[source] = shader;
     }
 
     HRESULT hr = (device->*setShader)(shader);
-    if (FAILED(hr))
-    {
-        return gl::OutOfMemory() << "Failed to set shader for blit operation, " << gl::FmtHR(hr);
-    }
-
-    return gl::NoError();
+    ANGLE_TRY_HR(context9, hr, "Failed to set shader for blit operation");
+    return angle::Result::Continue();
 }
 
-gl::Error Blit9::setVertexShader(ShaderId shader)
+angle::Result Blit9::setVertexShader(Context9 *context9, ShaderId shader)
 {
-    return setShader<IDirect3DVertexShader9>(shader, "vs_2_0", &Renderer9::createVertexShader, &IDirect3DDevice9::SetVertexShader);
+    return setShader<IDirect3DVertexShader9>(context9, shader, "vs_2_0",
+                                             &Renderer9::createVertexShader,
+                                             &IDirect3DDevice9::SetVertexShader);
 }
 
-gl::Error Blit9::setPixelShader(ShaderId shader)
+angle::Result Blit9::setPixelShader(Context9 *context9, ShaderId shader)
 {
-    return setShader<IDirect3DPixelShader9>(shader, "ps_2_0", &Renderer9::createPixelShader, &IDirect3DDevice9::SetPixelShader);
+    return setShader<IDirect3DPixelShader9>(context9, shader, "ps_2_0",
+                                            &Renderer9::createPixelShader,
+                                            &IDirect3DDevice9::SetPixelShader);
 }
 
 RECT Blit9::getSurfaceRect(IDirect3DSurface9 *surface) const
@@ -203,22 +193,24 @@ gl::Extents Blit9::getSurfaceSize(IDirect3DSurface9 *surface) const
     return gl::Extents(desc.Width, desc.Height, 1);
 }
 
-gl::Error Blit9::boxFilter(IDirect3DSurface9 *source, IDirect3DSurface9 *dest)
+angle::Result Blit9::boxFilter(Context9 *context9,
+                               IDirect3DSurface9 *source,
+                               IDirect3DSurface9 *dest)
 {
-    ANGLE_TRY(initialize());
+    ANGLE_TRY(initialize(context9));
 
-    IDirect3DBaseTexture9 *texture = nullptr;
-    ANGLE_TRY(copySurfaceToTexture(source, getSurfaceRect(source), &texture));
+    angle::ComPtr<IDirect3DBaseTexture9> texture = nullptr;
+    ANGLE_TRY(copySurfaceToTexture(context9, source, getSurfaceRect(source), &texture));
 
     IDirect3DDevice9 *device = mRenderer->getDevice();
 
     saveState();
 
-    device->SetTexture(0, texture);
+    device->SetTexture(0, texture.Get());
     device->SetRenderTarget(0, dest);
 
-    ANGLE_TRY(setVertexShader(SHADER_VS_STANDARD));
-    ANGLE_TRY(setPixelShader(SHADER_PS_PASSTHROUGH));
+    ANGLE_TRY(setVertexShader(context9, SHADER_VS_STANDARD));
+    ANGLE_TRY(setPixelShader(context9, SHADER_PS_PASSTHROUGH));
 
     setCommonBlitState();
     device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -229,120 +221,96 @@ gl::Error Blit9::boxFilter(IDirect3DSurface9 *source, IDirect3DSurface9 *dest)
 
     render();
 
-    SafeRelease(texture);
-
     restoreState();
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error Blit9::copy2D(const gl::Context *context,
-                        const gl::Framebuffer *framebuffer,
-                        const RECT &sourceRect,
-                        GLenum destFormat,
-                        const gl::Offset &destOffset,
-                        TextureStorage *storage,
-                        GLint level)
+angle::Result Blit9::copy2D(const gl::Context *context,
+                            const gl::Framebuffer *framebuffer,
+                            const RECT &sourceRect,
+                            GLenum destFormat,
+                            const gl::Offset &destOffset,
+                            TextureStorage *storage,
+                            GLint level)
 {
-    ANGLE_TRY(initialize());
+    Context9 *context9 = GetImplAs<Context9>(context);
+
+    ANGLE_TRY(initialize(context9));
 
     const gl::FramebufferAttachment *colorbuffer = framebuffer->getColorbuffer(0);
     ASSERT(colorbuffer);
 
     RenderTarget9 *renderTarget9 = nullptr;
-    ANGLE_TRY(colorbuffer->getRenderTarget(context, &renderTarget9));
+    ANGLE_TRY_HANDLE(context, colorbuffer->getRenderTarget(context, &renderTarget9));
     ASSERT(renderTarget9);
 
-    IDirect3DSurface9 *source = renderTarget9->getSurface();
+    angle::ComPtr<IDirect3DSurface9> source = renderTarget9->getSurface();
     ASSERT(source);
 
-    IDirect3DSurface9 *destSurface = nullptr;
+    angle::ComPtr<IDirect3DSurface9> destSurface = nullptr;
     TextureStorage9 *storage9      = GetAs<TextureStorage9>(storage);
-    gl::Error error =
-        storage9->getSurfaceLevel(context, gl::TextureTarget::_2D, level, true, &destSurface);
-    if (error.isError())
-    {
-        SafeRelease(source);
-        return error;
-    }
+    ANGLE_TRY(
+        storage9->getSurfaceLevel(context, gl::TextureTarget::_2D, level, true, &destSurface));
     ASSERT(destSurface);
 
-    gl::Error result =
-        copy(source, nullptr, sourceRect, destFormat, destOffset, destSurface, false, false, false);
-
-    SafeRelease(destSurface);
-    SafeRelease(source);
-
-    return result;
+    ANGLE_TRY(copy(context9, source.Get(), nullptr, sourceRect, destFormat, destOffset,
+                   destSurface.Get(), false, false, false));
+    return angle::Result::Continue();
 }
 
-gl::Error Blit9::copyCube(const gl::Context *context,
-                          const gl::Framebuffer *framebuffer,
-                          const RECT &sourceRect,
-                          GLenum destFormat,
-                          const gl::Offset &destOffset,
-                          TextureStorage *storage,
-                          gl::TextureTarget target,
-                          GLint level)
+angle::Result Blit9::copyCube(const gl::Context *context,
+                              const gl::Framebuffer *framebuffer,
+                              const RECT &sourceRect,
+                              GLenum destFormat,
+                              const gl::Offset &destOffset,
+                              TextureStorage *storage,
+                              gl::TextureTarget target,
+                              GLint level)
 {
-    gl::Error error = initialize();
-    if (error.isError())
-    {
-        return error;
-    }
+    Context9 *context9 = GetImplAs<Context9>(context);
+
+    ANGLE_TRY(initialize(context9));
 
     const gl::FramebufferAttachment *colorbuffer = framebuffer->getColorbuffer(0);
     ASSERT(colorbuffer);
 
     RenderTarget9 *renderTarget9 = nullptr;
-    error                        = colorbuffer->getRenderTarget(context, &renderTarget9);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY_HANDLE(context, colorbuffer->getRenderTarget(context, &renderTarget9));
     ASSERT(renderTarget9);
 
-    IDirect3DSurface9 *source = renderTarget9->getSurface();
+    angle::ComPtr<IDirect3DSurface9> source = renderTarget9->getSurface();
     ASSERT(source);
 
-    IDirect3DSurface9 *destSurface = nullptr;
+    angle::ComPtr<IDirect3DSurface9> destSurface = nullptr;
     TextureStorage9 *storage9      = GetAs<TextureStorage9>(storage);
-    error = storage9->getSurfaceLevel(context, target, level, true, &destSurface);
-    if (error.isError())
-    {
-        SafeRelease(source);
-        return error;
-    }
+    ANGLE_TRY(storage9->getSurfaceLevel(context, target, level, true, &destSurface));
     ASSERT(destSurface);
 
-    gl::Error result =
-        copy(source, nullptr, sourceRect, destFormat, destOffset, destSurface, false, false, false);
-
-    SafeRelease(destSurface);
-    SafeRelease(source);
-
-    return result;
+    return copy(context9, source.Get(), nullptr, sourceRect, destFormat, destOffset,
+                destSurface.Get(), false, false, false);
 }
 
-gl::Error Blit9::copyTexture(const gl::Context *context,
-                             const gl::Texture *source,
-                             GLint sourceLevel,
-                             const RECT &sourceRect,
-                             GLenum destFormat,
-                             const gl::Offset &destOffset,
-                             TextureStorage *storage,
-                             gl::TextureTarget destTarget,
-                             GLint destLevel,
-                             bool flipY,
-                             bool premultiplyAlpha,
-                             bool unmultiplyAlpha)
+angle::Result Blit9::copyTexture(const gl::Context *context,
+                                 const gl::Texture *source,
+                                 GLint sourceLevel,
+                                 const RECT &sourceRect,
+                                 GLenum destFormat,
+                                 const gl::Offset &destOffset,
+                                 TextureStorage *storage,
+                                 gl::TextureTarget destTarget,
+                                 GLint destLevel,
+                                 bool flipY,
+                                 bool premultiplyAlpha,
+                                 bool unmultiplyAlpha)
 {
-    ANGLE_TRY(initialize());
+    Context9 *context9 = GetImplAs<Context9>(context);
+    ANGLE_TRY(initialize(context9));
 
-    const TextureD3D *sourceD3D = GetImplAs<TextureD3D>(source);
+    TextureD3D *sourceD3D = GetImplAs<TextureD3D>(source);
 
     TextureStorage *sourceStorage = nullptr;
-    ANGLE_TRY(const_cast<TextureD3D *>(sourceD3D)->getNativeTexture(context, &sourceStorage));
+    ANGLE_TRY(sourceD3D->getNativeTexture(context, &sourceStorage));
 
     TextureStorage9_2D *sourceStorage9 = GetAs<TextureStorage9_2D>(sourceStorage);
     ASSERT(sourceStorage9);
@@ -354,37 +322,27 @@ gl::Error Blit9::copyTexture(const gl::Context *context,
     IDirect3DBaseTexture9 *sourceTexture = nullptr;
     ANGLE_TRY(sourceStorage9->getBaseTexture(context, &sourceTexture));
 
-    IDirect3DSurface9 *sourceSurface = nullptr;
+    angle::ComPtr<IDirect3DSurface9> sourceSurface = nullptr;
     ANGLE_TRY(sourceStorage9->getSurfaceLevel(context, gl::TextureTarget::_2D, sourceLevel, true,
                                               &sourceSurface));
 
-    IDirect3DSurface9 *destSurface = nullptr;
-    gl::Error error =
-        destStorage9->getSurfaceLevel(context, destTarget, destLevel, true, &destSurface);
-    if (error.isError())
-    {
-        SafeRelease(sourceSurface);
-        return error;
-    }
+    angle::ComPtr<IDirect3DSurface9> destSurface = nullptr;
+    ANGLE_TRY(destStorage9->getSurfaceLevel(context, destTarget, destLevel, true, &destSurface));
 
-    error = copy(sourceSurface, sourceTexture, sourceRect, destFormat, destOffset, destSurface,
-                 flipY, premultiplyAlpha, unmultiplyAlpha);
-
-    SafeRelease(sourceSurface);
-    SafeRelease(destSurface);
-
-    return error;
+    return copy(context9, sourceSurface.Get(), sourceTexture, sourceRect, destFormat, destOffset,
+                destSurface.Get(), flipY, premultiplyAlpha, unmultiplyAlpha);
 }
 
-gl::Error Blit9::copy(IDirect3DSurface9 *source,
-                      IDirect3DBaseTexture9 *sourceTexture,
-                      const RECT &sourceRect,
-                      GLenum destFormat,
-                      const gl::Offset &destOffset,
-                      IDirect3DSurface9 *dest,
-                      bool flipY,
-                      bool premultiplyAlpha,
-                      bool unmultiplyAlpha)
+angle::Result Blit9::copy(Context9 *context9,
+                          IDirect3DSurface9 *source,
+                          IDirect3DBaseTexture9 *sourceTexture,
+                          const RECT &sourceRect,
+                          GLenum destFormat,
+                          const gl::Offset &destOffset,
+                          IDirect3DSurface9 *dest,
+                          bool flipY,
+                          bool premultiplyAlpha,
+                          bool unmultiplyAlpha)
 {
     ASSERT(source != nullptr && dest != nullptr);
 
@@ -402,61 +360,46 @@ gl::Error Blit9::copy(IDirect3DSurface9 *source,
     {
         RECT destRect = { destOffset.x, destOffset.y, destOffset.x + (sourceRect.right - sourceRect.left), destOffset.y + (sourceRect.bottom - sourceRect.top)};
         HRESULT result = device->StretchRect(source, &sourceRect, dest, &destRect, D3DTEXF_POINT);
-
-        if (FAILED(result))
-        {
-            ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-            return gl::OutOfMemory()
-                   << "Failed to blit between textures, StretchRect " << gl::FmtHR(result);
-        }
-
-        return gl::NoError();
+        ANGLE_TRY_HR(context9, result, "StretchRect failed to blit between textures");
+        return angle::Result::Continue();
     }
-    else
+
+    angle::ComPtr<IDirect3DBaseTexture9> texture = sourceTexture;
+    RECT adjustedSourceRect                      = sourceRect;
+    gl::Extents sourceSize(sourceDesc.Width, sourceDesc.Height, 1);
+
+    if (texture == nullptr)
     {
-        IDirect3DBaseTexture9 *texture = sourceTexture;
-        RECT adjustedSourceRect        = sourceRect;
-        gl::Extents sourceSize(sourceDesc.Width, sourceDesc.Height, 1);
+        ANGLE_TRY(copySurfaceToTexture(context9, source, sourceRect, &texture));
 
-        if (texture == nullptr)
-        {
-            ANGLE_TRY(copySurfaceToTexture(source, sourceRect, &texture));
+        // copySurfaceToTexture only copies in the sourceRect area of the source surface.
+        // Adjust sourceRect so that it is now covering the entire source texture
+        adjustedSourceRect.left   = 0;
+        adjustedSourceRect.right  = sourceRect.right - sourceRect.left;
+        adjustedSourceRect.top    = 0;
+        adjustedSourceRect.bottom = sourceRect.bottom - sourceRect.top;
 
-            // copySurfaceToTexture only copies in the sourceRect area of the source surface.
-            // Adjust sourceRect so that it is now covering the entire source texture
-            adjustedSourceRect.left   = 0;
-            adjustedSourceRect.right  = sourceRect.right - sourceRect.left;
-            adjustedSourceRect.top    = 0;
-            adjustedSourceRect.bottom = sourceRect.bottom - sourceRect.top;
-
-            sourceSize.width  = sourceRect.right - sourceRect.left;
-            sourceSize.height = sourceRect.bottom - sourceRect.top;
-        }
-        else
-        {
-            texture->AddRef();
-        }
-
-        gl::Error error = formatConvert(texture, adjustedSourceRect, sourceSize, destFormat,
-                                        destOffset, dest, flipY, premultiplyAlpha, unmultiplyAlpha);
-
-        SafeRelease(texture);
-
-        return error;
+        sourceSize.width  = sourceRect.right - sourceRect.left;
+        sourceSize.height = sourceRect.bottom - sourceRect.top;
     }
+
+    ANGLE_TRY(formatConvert(context9, texture.Get(), adjustedSourceRect, sourceSize, destFormat,
+                            destOffset, dest, flipY, premultiplyAlpha, unmultiplyAlpha));
+    return angle::Result::Continue();
 }
 
-gl::Error Blit9::formatConvert(IDirect3DBaseTexture9 *source,
-                               const RECT &sourceRect,
-                               const gl::Extents &sourceSize,
-                               GLenum destFormat,
-                               const gl::Offset &destOffset,
-                               IDirect3DSurface9 *dest,
-                               bool flipY,
-                               bool premultiplyAlpha,
-                               bool unmultiplyAlpha)
+angle::Result Blit9::formatConvert(Context9 *context9,
+                                   IDirect3DBaseTexture9 *source,
+                                   const RECT &sourceRect,
+                                   const gl::Extents &sourceSize,
+                                   GLenum destFormat,
+                                   const gl::Offset &destOffset,
+                                   IDirect3DSurface9 *dest,
+                                   bool flipY,
+                                   bool premultiplyAlpha,
+                                   bool unmultiplyAlpha)
 {
-    ANGLE_TRY(initialize());
+    ANGLE_TRY(initialize(context9));
 
     IDirect3DDevice9 *device = mRenderer->getDevice();
 
@@ -475,23 +418,25 @@ gl::Error Blit9::formatConvert(IDirect3DBaseTexture9 *source,
 
     setCommonBlitState();
 
-    gl::Error error = setFormatConvertShaders(destFormat, flipY, premultiplyAlpha, unmultiplyAlpha);
-    if (!error.isError())
+    angle::Result result =
+        setFormatConvertShaders(context9, destFormat, flipY, premultiplyAlpha, unmultiplyAlpha);
+    if (result == angle::Result::Continue())
     {
         render();
     }
 
     restoreState();
 
-    return error;
+    return result;
 }
 
-gl::Error Blit9::setFormatConvertShaders(GLenum destFormat,
-                                         bool flipY,
-                                         bool premultiplyAlpha,
-                                         bool unmultiplyAlpha)
+angle::Result Blit9::setFormatConvertShaders(Context9 *context9,
+                                             GLenum destFormat,
+                                             bool flipY,
+                                             bool premultiplyAlpha,
+                                             bool unmultiplyAlpha)
 {
-    ANGLE_TRY(setVertexShader(SHADER_VS_STANDARD));
+    ANGLE_TRY(setVertexShader(context9, SHADER_VS_STANDARD));
 
     switch (destFormat)
     {
@@ -503,16 +448,16 @@ gl::Error Blit9::setFormatConvertShaders(GLenum destFormat,
       case GL_ALPHA:
           if (premultiplyAlpha == unmultiplyAlpha)
           {
-              ANGLE_TRY(setPixelShader(SHADER_PS_COMPONENTMASK));
+              ANGLE_TRY(setPixelShader(context9, SHADER_PS_COMPONENTMASK));
           }
           else if (premultiplyAlpha)
           {
-              ANGLE_TRY(setPixelShader(SHADER_PS_COMPONENTMASK_PREMULTIPLY_ALPHA));
+              ANGLE_TRY(setPixelShader(context9, SHADER_PS_COMPONENTMASK_PREMULTIPLY_ALPHA));
           }
           else
           {
               ASSERT(unmultiplyAlpha);
-              ANGLE_TRY(setPixelShader(SHADER_PS_COMPONENTMASK_UNMULTIPLY_ALPHA));
+              ANGLE_TRY(setPixelShader(context9, SHADER_PS_COMPONENTMASK_UNMULTIPLY_ALPHA));
           }
           break;
 
@@ -520,16 +465,16 @@ gl::Error Blit9::setFormatConvertShaders(GLenum destFormat,
       case GL_LUMINANCE_ALPHA:
           if (premultiplyAlpha == unmultiplyAlpha)
           {
-              ANGLE_TRY(setPixelShader(SHADER_PS_LUMINANCE));
+              ANGLE_TRY(setPixelShader(context9, SHADER_PS_LUMINANCE));
           }
           else if (premultiplyAlpha)
           {
-              ANGLE_TRY(setPixelShader(SHADER_PS_LUMINANCE_PREMULTIPLY_ALPHA));
+              ANGLE_TRY(setPixelShader(context9, SHADER_PS_LUMINANCE_PREMULTIPLY_ALPHA));
           }
           else
           {
               ASSERT(unmultiplyAlpha);
-              ANGLE_TRY(setPixelShader(SHADER_PS_LUMINANCE_UNMULTIPLY_ALPHA));
+              ANGLE_TRY(setPixelShader(context9, SHADER_PS_LUMINANCE_UNMULTIPLY_ALPHA));
           }
           break;
 
@@ -631,12 +576,13 @@ gl::Error Blit9::setFormatConvertShaders(GLenum destFormat,
 
     mRenderer->getDevice()->SetPixelShaderConstantF(0, psConst, 2);
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error Blit9::copySurfaceToTexture(IDirect3DSurface9 *surface,
-                                      const RECT &sourceRect,
-                                      IDirect3DBaseTexture9 **outTexture)
+angle::Result Blit9::copySurfaceToTexture(Context9 *context9,
+                                          IDirect3DSurface9 *surface,
+                                          const RECT &sourceRect,
+                                          angle::ComPtr<IDirect3DBaseTexture9> *outTexture)
 {
     ASSERT(surface);
 
@@ -646,44 +592,22 @@ gl::Error Blit9::copySurfaceToTexture(IDirect3DSurface9 *surface,
     surface->GetDesc(&sourceDesc);
 
     // Copy the render target into a texture
-    IDirect3DTexture9 *texture;
+    angle::ComPtr<IDirect3DTexture9> texture;
     HRESULT result = device->CreateTexture(
         sourceRect.right - sourceRect.left, sourceRect.bottom - sourceRect.top, 1,
         D3DUSAGE_RENDERTARGET, sourceDesc.Format, D3DPOOL_DEFAULT, &texture, nullptr);
+    ANGLE_TRY_HR(context9, result, "Failed to allocate internal texture for blit");
 
-    if (FAILED(result))
-    {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-        return gl::OutOfMemory() << "Failed to allocate internal texture for blit, "
-                                 << gl::FmtHR(result);
-    }
-
-    IDirect3DSurface9 *textureSurface;
+    angle::ComPtr<IDirect3DSurface9> textureSurface;
     result = texture->GetSurfaceLevel(0, &textureSurface);
-
-    if (FAILED(result))
-    {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-        SafeRelease(texture);
-        return gl::OutOfMemory() << "Failed to query surface of internal blit texture, "
-                                 << gl::FmtHR(result);
-    }
+    ANGLE_TRY_HR(context9, result, "Failed to query surface of internal blit texture");
 
     mRenderer->endScene();
-    result = device->StretchRect(surface, &sourceRect, textureSurface, nullptr, D3DTEXF_NONE);
-
-    SafeRelease(textureSurface);
-
-    if (FAILED(result))
-    {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-        SafeRelease(texture);
-        return gl::OutOfMemory() << "Failed to copy between internal blit textures, "
-                                 << gl::FmtHR(result);
-    }
-
+    result = device->StretchRect(surface, &sourceRect, textureSurface.Get(), nullptr, D3DTEXF_NONE);
+    ANGLE_TRY_HR(context9, result, "Failed to copy between internal blit textures");
     *outTexture = texture;
-    return gl::NoError();
+
+    return angle::Result::Continue();
 }
 
 void Blit9::setViewportAndShaderConstants(const RECT &sourceRect,

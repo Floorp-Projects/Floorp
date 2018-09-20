@@ -8,37 +8,12 @@
 
 #include "libANGLE/angletypes.h"
 #include "libANGLE/Program.h"
-#include "libANGLE/VertexAttribute.h"
 #include "libANGLE/State.h"
 #include "libANGLE/VertexArray.h"
+#include "libANGLE/VertexAttribute.h"
 
 namespace gl
 {
-
-PrimitiveType GetPrimitiveType(GLenum drawMode)
-{
-    switch (drawMode)
-    {
-        case GL_POINTS:
-            return PRIMITIVE_POINTS;
-        case GL_LINES:
-            return PRIMITIVE_LINES;
-        case GL_LINE_STRIP:
-            return PRIMITIVE_LINE_STRIP;
-        case GL_LINE_LOOP:
-            return PRIMITIVE_LINE_LOOP;
-        case GL_TRIANGLES:
-            return PRIMITIVE_TRIANGLES;
-        case GL_TRIANGLE_STRIP:
-            return PRIMITIVE_TRIANGLE_STRIP;
-        case GL_TRIANGLE_FAN:
-            return PRIMITIVE_TRIANGLE_FAN;
-        default:
-            UNREACHABLE();
-            return PRIMITIVE_TYPE_MAX;
-    }
-}
-
 RasterizerState::RasterizerState()
 {
     memset(this, 0, sizeof(RasterizerState));
@@ -216,14 +191,15 @@ bool ClipRectangle(const Rectangle &source, const Rectangle &clip, Rectangle *in
     MinMax(clip.x, clip.x + clip.width, &minClipX, &maxClipX);
     MinMax(clip.y, clip.y + clip.height, &minClipY, &maxClipY);
 
-    if (minSourceX >= maxClipX || maxSourceX <= minClipX || minSourceY >= maxClipY || maxSourceY <= minClipY)
+    if (minSourceX >= maxClipX || maxSourceX <= minClipX || minSourceY >= maxClipY ||
+        maxSourceY <= minClipY)
     {
         return false;
     }
     if (intersection)
     {
-        intersection->x = std::max(minSourceX, minClipX);
-        intersection->y = std::max(minSourceY, minClipY);
+        intersection->x      = std::max(minSourceX, minClipX);
+        intersection->y      = std::max(minSourceY, minClipY);
         intersection->width  = std::min(maxSourceX, maxClipX) - std::max(minSourceX, minClipX);
         intersection->height = std::min(maxSourceY, maxClipY) - std::max(minSourceY, minClipY);
     }
@@ -232,8 +208,8 @@ bool ClipRectangle(const Rectangle &source, const Rectangle &clip, Rectangle *in
 
 bool Box::operator==(const Box &other) const
 {
-    return (x == other.x && y == other.y && z == other.z &&
-            width == other.width && height == other.height && depth == other.depth);
+    return (x == other.x && y == other.y && z == other.z && width == other.width &&
+            height == other.height && depth == other.depth);
 }
 
 bool Box::operator!=(const Box &other) const
