@@ -254,6 +254,13 @@ TMimeType<char_type>::GetFullType(nsTSubstring<char_type>& aOutput) const
 
 template<typename char_type>
 bool
+TMimeType<char_type>::HasParameter(const nsTSubstring<char_type>& aName) const
+{
+  return mParameters.Get(aName, nullptr);
+}
+
+template<typename char_type>
+bool
 TMimeType<char_type>::GetParameterValue(const nsTSubstring<char_type>& aName,
                                         nsTSubstring<char_type>& aOutput,
                                         bool aAppend) const
@@ -286,15 +293,34 @@ TMimeType<char_type>::GetParameterValue(const nsTSubstring<char_type>& aName,
   return true;
 }
 
+template<typename char_type>
+void
+TMimeType<char_type>::SetParameterValue(const nsTSubstring<char_type>& aName,
+                                        const nsTSubstring<char_type>& aValue)
+{
+  if (!mParameters.Get(aName, nullptr)) {
+    mParameterNames.AppendElement(aName);
+  }
+  ParameterValue value;
+  value.Append(aValue);
+  mParameters.Put(aName, value);
+}
+
 template mozilla::UniquePtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(const nsTSubstring<char16_t>& aMimeType);
 template mozilla::UniquePtr<TMimeType<char>> TMimeType<char>::Parse(const nsTSubstring<char>& aMimeType);
 template void TMimeType<char16_t>::Serialize(nsTSubstring<char16_t>& aOutput) const;
 template void TMimeType<char>::Serialize(nsTSubstring<char>& aOutput) const;
 template void TMimeType<char16_t>::GetFullType(nsTSubstring<char16_t>& aOutput) const;
 template void TMimeType<char>::GetFullType(nsTSubstring<char>& aOutput) const;
+template bool TMimeType<char16_t>::HasParameter(const nsTSubstring<char16_t>& aName) const;
+template bool TMimeType<char>::HasParameter(const nsTSubstring<char>& aName) const;
 template bool TMimeType<char16_t>::GetParameterValue(const nsTSubstring<char16_t>& aName,
                                                      nsTSubstring<char16_t>& aOutput,
                                                      bool aAppend) const;
 template bool TMimeType<char>::GetParameterValue(const nsTSubstring<char>& aName,
                                                  nsTSubstring<char>& aOutput,
                                                  bool aAppend) const;
+template void TMimeType<char16_t>::SetParameterValue(const nsTSubstring<char16_t>& aName,
+                                                     const nsTSubstring<char16_t>& aValue);
+template void TMimeType<char>::SetParameterValue(const nsTSubstring<char>& aName,
+                                                 const nsTSubstring<char>& aValue);
