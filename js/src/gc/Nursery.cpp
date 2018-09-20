@@ -1235,7 +1235,7 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
         // The GC nursery is an optimization and so if we fail to allocate
         // nursery chunks we do not report an error.
         growAllocableSpace();
-    } else if (promotionRate < ShrinkThreshold) {
+    } else if (maxChunkCount() > 1 && promotionRate < ShrinkThreshold) {
         shrinkAllocableSpace(maxChunkCount() - 1);
     }
 }
@@ -1268,9 +1268,11 @@ js::Nursery::shrinkAllocableSpace(unsigned newCount)
     }
 #endif
 
-    // Don't shrink the nursery to zero (use Nursery::disable() instead) and
-    // don't attempt to shrink it to the same size.
-    if ((newCount == 0) || (newCount == maxChunkCount())) {
+    // Don't shrink the nursery to zero (use Nursery::disable() instead)
+    MOZ_ASSERT(newCount != 0);
+
+    // Don't attempt to shrink it to the same size.
+    if (newCount == maxChunkCount()) {
         return;
     }
 
