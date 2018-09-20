@@ -23,7 +23,7 @@ private object Versions {
 
     const val jna = "4.5.2"
 
-    const val fxa = "0.2.4"
+    const val fxa = "0.5.0"
     const val sync_logins = "0.4.3"
 }
 
@@ -57,7 +57,7 @@ object Deps {
     const val tools_lintapi = "com.android.tools.lint:lint-api:${Versions.lint}"
     const val tools_linttests = "com.android.tools.lint:lint-tests:${Versions.lint}"
 
-    const val mozilla_fxa = "mozilla:fxa_client_android:${Versions.fxa}@zip"
+    const val mozilla_fxa = "org.mozilla.fxa_client:fxa_client:${Versions.fxa}@aar"
     const val mozilla_sync_logins = "org.mozilla.sync15:logins:${Versions.sync_logins}"
 
     const val jna = "net.java.dev.jna:jna:${Versions.jna}@aar"
