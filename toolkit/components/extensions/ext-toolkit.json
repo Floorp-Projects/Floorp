@@ -192,9 +192,16 @@
   "userScripts": {
     "url": "chrome://extensions/content/parent/ext-userScripts.js",
     "schema": "chrome://extensions/content/schemas/user_scripts.json",
-    "scopes": ["addon_parent", "content_parent"],
+    "scopes": ["addon_parent"],
     "paths": [
       ["userScripts"]
+    ]
+  },
+  "userScriptsContent": {
+    "schema": "chrome://extensions/content/schemas/user_scripts_content.json",
+    "scopes": ["content_child"],
+    "paths": [
+      ["userScripts", "setScriptAPIs"]
     ]
   },
   "webNavigation": {
