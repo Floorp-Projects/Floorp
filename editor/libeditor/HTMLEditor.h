@@ -1569,6 +1569,21 @@ protected: // Shouldn't be used by friend classes
   };
 
   /**
+   * InsertTableColumnsWithTransaction() inserts columns before or after
+   * a cell element containing first selection range.  I.e., if the cell
+   * spans columns and aInsertPosition is eAfterSelectedCell, new columns
+   * will be inserted after the right-most row which contains the cell.
+   * If first selection range is not in table cell element, this does nothing
+   * but does not return error.
+   *
+   * @param aNumberOfColumnsToInsert    Number of columns to insert.
+   * @param aInsertPosition             Before or after the target cell which
+   *                                    contains first selection range.
+   */
+  nsresult InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
+                                             InsertPosition aInsertPosition);
+
+  /**
    * InsertTableRowsWithTransaction() inserts <tr> elements before or after
    * a cell element containing first selection range.  I.e., if the cell
    * spans rows and aInsertPosition is eAfterSelectedCell, new rows will be

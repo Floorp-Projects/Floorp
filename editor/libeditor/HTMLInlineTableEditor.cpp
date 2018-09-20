@@ -219,9 +219,15 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
   bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
 
   if (anonclass.EqualsLiteral("mozTableAddColumnBefore")) {
-    InsertTableColumn(1, false);
+    DebugOnly<nsresult> rv =
+      InsertTableColumnsWithTransaction(1, InsertPosition::eBeforeSelectedCell);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to insert a column before the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableAddColumnAfter")) {
-    InsertTableColumn(1, true);
+    DebugOnly<nsresult> rv =
+      InsertTableColumnsWithTransaction(1, InsertPosition::eAfterSelectedCell);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to insert a column after the selected cell");
   } else if (anonclass.EqualsLiteral("mozTableAddRowBefore")) {
     DebugOnly<nsresult> rv =
       InsertTableRowsWithTransaction(1, InsertPosition::eBeforeSelectedCell);
