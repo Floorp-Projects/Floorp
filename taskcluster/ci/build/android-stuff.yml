@@ -81,9 +81,10 @@ android-test-ccov/opt:
         - android-gradle-dependencies
         - android-sdk-linux
         - linux64-node
+        - linux64-grcov
     fetches:
-        fetch:
-            - grcov-linux-x86_64
+        toolchain-linux64-grcov:
+            - grcov.tar.xz
 
 android-lint/opt:
     description: "Android lint"
