@@ -41,6 +41,7 @@ const DEFAULT_SITES = new Map([
 ]);
 const GEO_PREF = "browser.search.region";
 const SPOCS_GEOS = ["US"];
+const IS_NIGHTLY_OR_UNBRANDED_BUILD = ["nightly", "default"].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
@@ -222,8 +223,8 @@ const PREFS_CONFIG = new Map([
       id: "cfr",
       type: "local",
       localProvider: "CFRMessageProvider",
-      enabled: AppConstants.MOZ_UPDATE_CHANNEL !== "release",
-      cohort: 0,
+      enabled: IS_NIGHTLY_OR_UNBRANDED_BUILD,
+      cohort: IS_NIGHTLY_OR_UNBRANDED_BUILD ? "nightly" : "",
     }]),
   }],
 ]);
