@@ -11,8 +11,8 @@
 #define LIBANGLE_COMPILER_H_
 
 #include "GLSLANG/ShaderLang.h"
+#include "common/PackedEnums.h"
 #include "libANGLE/Error.h"
-#include "libANGLE/PackedEnums.h"
 #include "libANGLE/RefCountObject.h"
 
 namespace rx
@@ -46,4 +46,4 @@ class Compiler final : public RefCountObjectNoID
 
 }  // namespace gl
 
-#endif // LIBANGLE_COMPILER_H_
+#endif  // LIBANGLE_COMPILER_H_

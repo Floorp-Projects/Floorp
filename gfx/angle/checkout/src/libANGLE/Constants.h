@@ -37,6 +37,9 @@ enum
         IMPLEMENTATION_MAX_VERTEX_SHADER_UNIFORM_BUFFERS +
         IMPLEMENTATION_MAX_FRAGMENT_SHADER_UNIFORM_BUFFERS,
 
+    // GL_EXT_geometry_shader increases the minimum value of GL_MAX_UNIFORM_BUFFER_BINDINGS to 48.
+    IMPLEMENTATION_MAX_UNIFORM_BUFFER_BINDINGS = 48,
+
     IMPLEMENTATION_MAX_TRANSFORM_FEEDBACK_BUFFERS = 4,
 
     // Maximum number of views which are supported by the implementation of ANGLE_multiview.

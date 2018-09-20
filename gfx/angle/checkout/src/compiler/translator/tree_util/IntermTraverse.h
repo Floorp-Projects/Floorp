@@ -10,19 +10,13 @@
 #define COMPILER_TRANSLATOR_TREEUTIL_INTERMTRAVERSE_H_
 
 #include "compiler/translator/IntermNode.h"
+#include "compiler/translator/tree_util/Visit.h"
 
 namespace sh
 {
 
 class TSymbolTable;
 class TSymbolUniqueId;
-
-enum Visit
-{
-    PreVisit,
-    InVisit,
-    PostVisit
-};
 
 // For traversing the tree.  User should derive from this class overriding the visit functions,
 // and then pass an object of the subclass to a traverse method of a node.
@@ -47,7 +41,6 @@ class TIntermTraverser : angle::NonCopyable
     virtual ~TIntermTraverser();
 
     virtual void visitSymbol(TIntermSymbol *node) {}
-    virtual void visitRaw(TIntermRaw *node) {}
     virtual void visitConstantUnion(TIntermConstantUnion *node) {}
     virtual bool visitSwizzle(Visit visit, TIntermSwizzle *node) { return true; }
     virtual bool visitBinary(Visit visit, TIntermBinary *node) { return true; }
@@ -70,28 +63,26 @@ class TIntermTraverser : angle::NonCopyable
     virtual bool visitDeclaration(Visit visit, TIntermDeclaration *node) { return true; }
     virtual bool visitLoop(Visit visit, TIntermLoop *node) { return true; }
     virtual bool visitBranch(Visit visit, TIntermBranch *node) { return true; }
+    virtual void visitPreprocessorDirective(TIntermPreprocessorDirective *node) {}
 
     // The traverse functions contain logic for iterating over the children of the node
     // and calling the visit functions in the appropriate places. They also track some
     // context that may be used by the visit functions.
-    virtual void traverseSymbol(TIntermSymbol *node);
-    virtual void traverseRaw(TIntermRaw *node);
-    virtual void traverseConstantUnion(TIntermConstantUnion *node);
-    virtual void traverseSwizzle(TIntermSwizzle *node);
+
+    // The generic traverse() function is used for nodes that don't need special handling.
+    // It's templated in order to avoid virtual function calls, this gains around 2% compiler
+    // performance.
+    template <typename T>
+    void traverse(T *node);
+
+    // Specialized traverse functions are implemented for node types where traversal logic may need
+    // to be overridden or where some special bookkeeping needs to be done.
     virtual void traverseBinary(TIntermBinary *node);
     virtual void traverseUnary(TIntermUnary *node);
-    virtual void traverseTernary(TIntermTernary *node);
-    virtual void traverseIfElse(TIntermIfElse *node);
-    virtual void traverseSwitch(TIntermSwitch *node);
-    virtual void traverseCase(TIntermCase *node);
-    virtual void traverseFunctionPrototype(TIntermFunctionPrototype *node);
     virtual void traverseFunctionDefinition(TIntermFunctionDefinition *node);
     virtual void traverseAggregate(TIntermAggregate *node);
     virtual void traverseBlock(TIntermBlock *node);
-    virtual void traverseInvariantDeclaration(TIntermInvariantDeclaration *node);
-    virtual void traverseDeclaration(TIntermDeclaration *node);
     virtual void traverseLoop(TIntermLoop *node);
-    virtual void traverseBranch(TIntermBranch *node);
 
     int getMaxDepth() const { return mMaxDepth; }
 
@@ -136,6 +127,10 @@ class TIntermTraverser : angle::NonCopyable
         TIntermTraverser *mTraverser;
         bool mWithinDepthLimit;
     };
+    // Optimized traversal functions for leaf nodes directly access ScopedNodeInTraversalPath.
+    friend void TIntermSymbol::traverse(TIntermTraverser *);
+    friend void TIntermConstantUnion::traverse(TIntermTraverser *);
+    friend void TIntermFunctionPrototype::traverse(TIntermTraverser *);
 
     TIntermNode *getParentNode() { return mPath.size() <= 1 ? nullptr : mPath[mPath.size() - 2u]; }
 
@@ -159,10 +154,10 @@ class TIntermTraverser : angle::NonCopyable
     // but also with other nodes like declarations.
     struct NodeReplaceWithMultipleEntry
     {
-        NodeReplaceWithMultipleEntry(TIntermAggregateBase *_parent,
-                                     TIntermNode *_original,
-                                     TIntermSequence _replacements)
-            : parent(_parent), original(_original), replacements(_replacements)
+        NodeReplaceWithMultipleEntry(TIntermAggregateBase *parentIn,
+                                     TIntermNode *originalIn,
+                                     TIntermSequence replacementsIn)
+            : parent(parentIn), original(originalIn), replacements(std::move(replacementsIn))
         {
         }
 

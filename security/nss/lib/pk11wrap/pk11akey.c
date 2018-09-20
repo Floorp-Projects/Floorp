@@ -13,7 +13,7 @@
 #include "pkcs11t.h"
 #include "pk11func.h"
 #include "cert.h"
-#include "key.h"
+#include "keyhi.h"
 #include "keyi.h"
 #include "secitem.h"
 #include "secasn1.h"

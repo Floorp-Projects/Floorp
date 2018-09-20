@@ -27,6 +27,7 @@ vec2 clamp_rect(vec2 pt, RectWithSize rect) {
 
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
+flat varying vec4 vClipMaskUvSampleBounds;
 // XY and W are homogeneous coordinates, Z is the layer index
 varying vec4 vClipMaskUv;
 
@@ -222,14 +223,21 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     return vi;
 }
 
-void write_clip(vec4 world_pos, ClipArea area) {
+void write_clip(vec4 world_pos, vec2 snap_offset, ClipArea area) {
     vec2 uv = world_pos.xy * uDevicePixelRatio +
-        world_pos.w * (area.common_data.task_rect.p0 - area.screen_origin);
+        world_pos.w * (snap_offset + area.common_data.task_rect.p0 - area.screen_origin);
     vClipMaskUvBounds = vec4(
         area.common_data.task_rect.p0,
         area.common_data.task_rect.p0 + area.common_data.task_rect.size
     );
+    vClipMaskUvSampleBounds.xy = vClipMaskUvBounds.xy + vec2(0.5);
+    vClipMaskUvSampleBounds.zw = vClipMaskUvBounds.zw - vec2(0.5);
     vClipMaskUv = vec4(uv, area.common_data.texture_layer_index, world_pos.w);
+
+    vec2 texture_size = vec2(textureSize(sCacheA8, 0).xy);
+    vClipMaskUv.xy /= texture_size;
+    vClipMaskUvBounds /= texture_size.xyxy;
+    vClipMaskUvSampleBounds /= texture_size.xyxy;
 }
 #endif //WR_VERTEX_SHADER
 
@@ -250,9 +258,14 @@ float do_clip() {
     if (!all(inside)) {
         return 0.0;
     }
+
     // finally, the slow path - fetch the mask value from an image
-    ivec3 tc = ivec3(mask_uv, vClipMaskUv.z);
-    return texelFetch(sCacheA8, tc, 0).r;
+
+    // TODO(gw): texelFetch here fails on some nVidia hardware in
+    //           some cases. For now, just use texture()
+    //           unconditionally.
+    mask_uv = clamp(mask_uv, vClipMaskUvSampleBounds.xy, vClipMaskUvSampleBounds.zw);
+    return texture(sCacheA8, vec3(mask_uv, vClipMaskUv.z)).r;
 }
 
 #ifdef WR_FEATURE_DITHERING

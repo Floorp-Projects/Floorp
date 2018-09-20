@@ -105,10 +105,7 @@ var ZipUtils = {
     return (async function() {
       // Get all of the entries in the zip and sort them so we create directories
       // before files
-      let entries = zipReader.findEntries(null);
-      let names = [];
-      while (entries.hasMore())
-        names.push(entries.getNext());
+      let names = Array.from(zipReader.findEntries(null));
       names.sort();
 
       for (let name of names) {
@@ -168,9 +165,7 @@ var ZipUtils = {
 
     try {
       // create directories first
-      let entries = zipReader.findEntries("*/");
-      while (entries.hasMore()) {
-        let entryName = entries.getNext();
+      for (let entryName of zipReader.findEntries("*/")) {
         let target = getTargetFile(aDir, entryName);
         if (!target.exists()) {
           try {
@@ -182,9 +177,7 @@ var ZipUtils = {
         }
       }
 
-      entries = zipReader.findEntries(null);
-      while (entries.hasMore()) {
-        let entryName = entries.getNext();
+      for (let entryName of zipReader.findEntries(null)) {
         let target = getTargetFile(aDir, entryName);
         if (target.exists())
           continue;

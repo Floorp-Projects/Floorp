@@ -25,7 +25,7 @@ namespace egl
 {
 
 SurfaceState::SurfaceState(const egl::Config *configIn, const AttributeMap &attributesIn)
-    : defaultFramebuffer(nullptr), config(configIn), attributes(attributesIn)
+    : label(nullptr), config(configIn), attributes(attributesIn)
 {
 }
 
@@ -36,7 +36,7 @@ Surface::Surface(EGLint surfaceType,
     : FramebufferAttachmentObject(),
       mState(config, attributes),
       mImplementation(nullptr),
-      mCurrentCount(0),
+      mRefCount(0),
       mDestroyed(false),
       mType(surfaceType),
       mBuftype(buftype),
@@ -60,12 +60,13 @@ Surface::Surface(EGLint surfaceType,
       mRenderBuffer(EGL_BACK_BUFFER),
       mSwapBehavior(EGL_NONE),
       mOrientation(0),
-      mTexture(),
+      mTexture(nullptr),
       mColorFormat(config->renderTargetFormat),
       mDSFormat(config->depthStencilFormat),
       mInitState(gl::InitState::Initialized)
 {
-    mPostSubBufferRequested = (attributes.get(EGL_POST_SUB_BUFFER_SUPPORTED_NV, EGL_FALSE) == EGL_TRUE);
+    mPostSubBufferRequested =
+        (attributes.get(EGL_POST_SUB_BUFFER_SUPPORTED_NV, EGL_FALSE) == EGL_TRUE);
     mFlexibleSurfaceCompatibilityRequested =
         (attributes.get(EGL_FLEXIBLE_SURFACE_COMPATIBILITY_SUPPORTED_ANGLE, EGL_FALSE) == EGL_TRUE);
 
@@ -117,35 +118,13 @@ rx::FramebufferAttachmentObjectImpl *Surface::getAttachmentImpl() const
 
 Error Surface::destroyImpl(const Display *display)
 {
-    if (mState.defaultFramebuffer)
-    {
-        mState.defaultFramebuffer->onDestroy(display->getProxyContext());
-    }
     if (mImplementation)
     {
         mImplementation->destroy(display);
     }
 
-    if (mTexture.get())
-    {
-        if (mImplementation)
-        {
-            ANGLE_TRY(
-                mImplementation->releaseTexImage(display->getProxyContext(), EGL_BACK_BUFFER));
-        }
-        auto glErr = mTexture->releaseTexImageFromSurface(display->getProxyContext());
-        if (glErr.isError())
-        {
-            return Error(EGL_BAD_SURFACE);
-        }
-        mTexture.set(display->getProxyContext(), nullptr);
-    }
+    ASSERT(!mTexture);
 
-    if (mState.defaultFramebuffer)
-    {
-        mState.defaultFramebuffer->onDestroy(display->getProxyContext());
-    }
-    SafeDelete(mState.defaultFramebuffer);
     SafeDelete(mImplementation);
 
     delete this;
@@ -168,10 +147,6 @@ Error Surface::initialize(const Display *display)
     // Initialized here since impl is nullptr in the constructor.
     // Must happen after implementation initialize for Android.
     mSwapBehavior = mImplementation->getSwapBehavior();
-
-    // Must happen after implementation initialize for OSX.
-    mState.defaultFramebuffer = createDefaultFramebuffer(display);
-    ASSERT(mState.defaultFramebuffer != nullptr);
 
     if (mBuftype == EGL_IOSURFACE_ANGLE)
     {
@@ -200,28 +175,44 @@ Error Surface::setIsCurrent(const gl::Context *context, bool isCurrent)
 {
     if (isCurrent)
     {
-        mCurrentCount++;
+        mRefCount++;
         return NoError();
     }
 
-    ASSERT(mCurrentCount > 0);
-    mCurrentCount--;
-    if (mCurrentCount == 0 && mDestroyed)
+    return releaseRef(context->getCurrentDisplay());
+}
+
+Error Surface::releaseRef(const Display *display)
+{
+    ASSERT(mRefCount > 0);
+    mRefCount--;
+    if (mRefCount == 0 && mDestroyed)
     {
-        ASSERT(context);
-        return destroyImpl(context->getCurrentDisplay());
+        ASSERT(display);
+        return destroyImpl(display);
     }
+
     return NoError();
 }
 
 Error Surface::onDestroy(const Display *display)
 {
     mDestroyed = true;
-    if (mCurrentCount == 0)
+    if (mRefCount == 0)
     {
         return destroyImpl(display);
     }
     return NoError();
+}
+
+void Surface::setLabel(EGLLabelKHR label)
+{
+    mState.label = label;
+}
+
+EGLLabelKHR Surface::getLabel() const
+{
+    return mState.label;
 }
 
 EGLint Surface::getType() const
@@ -255,6 +246,11 @@ Error Surface::postSubBuffer(const gl::Context *context,
     }
 
     return mImplementation->postSubBuffer(context, x, y, width, height);
+}
+
+Error Surface::setPresentationTime(EGLnsecsANDROID time)
+{
+    return mImplementation->setPresentationTime(time);
 }
 
 Error Surface::querySurfacePointerANGLE(EGLint attribute, void **value)
@@ -291,6 +287,18 @@ void Surface::setSwapBehavior(EGLenum behavior)
     // Behaviour is set but ignored
     UNIMPLEMENTED();
     mSwapBehavior = behavior;
+}
+
+void Surface::setFixedWidth(EGLint width)
+{
+    mFixedWidth = width;
+    mImplementation->setFixedWidth(width);
+}
+
+void Surface::setFixedHeight(EGLint height)
+{
+    mFixedHeight = height;
+    mImplementation->setFixedHeight(height);
 }
 
 const Config *Surface::getConfig() const
@@ -385,7 +393,7 @@ EGLint Surface::getHeight() const
 
 Error Surface::bindTexImage(const gl::Context *context, gl::Texture *texture, EGLint buffer)
 {
-    ASSERT(!mTexture.get());
+    ASSERT(!mTexture);
     ANGLE_TRY(mImplementation->bindTexImage(context, texture, buffer));
 
     auto glErr = texture->bindTexImageFromSurface(context, this);
@@ -393,7 +401,8 @@ Error Surface::bindTexImage(const gl::Context *context, gl::Texture *texture, EG
     {
         return Error(EGL_BAD_SURFACE);
     }
-    mTexture.set(context, texture);
+    mTexture = texture;
+    mRefCount++;
 
     return NoError();
 }
@@ -404,15 +413,14 @@ Error Surface::releaseTexImage(const gl::Context *context, EGLint buffer)
 
     ANGLE_TRY(mImplementation->releaseTexImage(context, buffer));
 
-    ASSERT(mTexture.get());
+    ASSERT(mTexture);
     auto glErr = mTexture->releaseTexImageFromSurface(context);
     if (glErr.isError())
     {
         return Error(EGL_BAD_SURFACE);
     }
-    mTexture.set(context, nullptr);
 
-    return NoError();
+    return releaseTexImageFromTexture(context);
 }
 
 Error Surface::getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc)
@@ -420,10 +428,11 @@ Error Surface::getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR 
     return mImplementation->getSyncValues(ust, msc, sbc);
 }
 
-void Surface::releaseTexImageFromTexture(const gl::Context *context)
+Error Surface::releaseTexImageFromTexture(const gl::Context *context)
 {
-    ASSERT(mTexture.get());
-    mTexture.set(context, nullptr);
+    ASSERT(mTexture);
+    mTexture = nullptr;
+    return releaseRef(context->getCurrentDisplay());
 }
 
 gl::Extents Surface::getAttachmentSize(const gl::ImageIndex & /*target*/) const
@@ -431,7 +440,7 @@ gl::Extents Surface::getAttachmentSize(const gl::ImageIndex & /*target*/) const
     return gl::Extents(getWidth(), getHeight(), 1);
 }
 
-const gl::Format &Surface::getAttachmentFormat(GLenum binding, const gl::ImageIndex &target) const
+gl::Format Surface::getAttachmentFormat(GLenum binding, const gl::ImageIndex &target) const
 {
     return (binding == GL_BACK ? mColorFormat : mDSFormat);
 }
@@ -447,9 +456,9 @@ GLuint Surface::getId() const
     return 0;
 }
 
-gl::Framebuffer *Surface::createDefaultFramebuffer(const Display *display)
+gl::Framebuffer *Surface::createDefaultFramebuffer(const gl::Context *context)
 {
-    return new gl::Framebuffer(display, this);
+    return new gl::Framebuffer(context, this);
 }
 
 gl::InitState Surface::initState(const gl::ImageIndex & /*imageIndex*/) const

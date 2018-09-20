@@ -69,8 +69,9 @@ void WrapMainAndAppend(TIntermBlock *root,
                        TSymbolTable *symbolTable)
 {
     // Replace main() with main0() with the same body.
-    TFunction *oldMain = new TFunction(symbolTable, ImmutableString(""), SymbolType::AngleInternal,
-                                       StaticType::GetBasic<EbtVoid>(), false);
+    TFunction *oldMain =
+        new TFunction(symbolTable, kEmptyImmutableString, SymbolType::AngleInternal,
+                      StaticType::GetBasic<EbtVoid>(), false);
     TIntermFunctionDefinition *oldMainDefinition =
         CreateInternalFunctionDefinitionNode(*oldMain, main->getBody());
 

@@ -11,6 +11,7 @@
 #include "libANGLE/renderer/d3d/d3d9/TextureStorage9.h"
 
 #include "common/utilities.h"
+#include "libANGLE/Context.h"
 #include "libANGLE/Texture.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/d3d/EGLImageD3D.h"
@@ -94,16 +95,16 @@ int TextureStorage9::getLevelCount() const
     return static_cast<int>(mMipLevels) - mTopLevel;
 }
 
-gl::Error TextureStorage9::setData(const gl::Context *context,
-                                   const gl::ImageIndex &index,
-                                   ImageD3D *image,
-                                   const gl::Box *destBox,
-                                   GLenum type,
-                                   const gl::PixelUnpackState &unpack,
-                                   const uint8_t *pixelData)
+angle::Result TextureStorage9::setData(const gl::Context *context,
+                                       const gl::ImageIndex &index,
+                                       ImageD3D *image,
+                                       const gl::Box *destBox,
+                                       GLenum type,
+                                       const gl::PixelUnpackState &unpack,
+                                       const uint8_t *pixelData)
 {
-    UNREACHABLE();
-    return gl::InternalError();
+    ANGLE_HR_UNREACHABLE(GetImplAs<Context9>(context));
+    return angle::Result::Stop();
 }
 
 TextureStorage9_2D::TextureStorage9_2D(Renderer9 *renderer, SwapChain9 *swapchain)
@@ -153,31 +154,21 @@ TextureStorage9_2D::~TextureStorage9_2D()
 
 // Increments refcount on surface.
 // caller must Release() the returned surface
-gl::Error TextureStorage9_2D::getSurfaceLevel(const gl::Context *context,
-                                              gl::TextureTarget target,
-                                              int level,
-                                              bool dirty,
-                                              IDirect3DSurface9 **outSurface)
+angle::Result TextureStorage9_2D::getSurfaceLevel(const gl::Context *context,
+                                                  gl::TextureTarget target,
+                                                  int level,
+                                                  bool dirty,
+                                                  IDirect3DSurface9 **outSurface)
 {
     ASSERT(target == gl::TextureTarget::_2D);
 
     IDirect3DBaseTexture9 *baseTexture = nullptr;
-    gl::Error error                    = getBaseTexture(context, &baseTexture);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(getBaseTexture(context, &baseTexture));
 
     IDirect3DTexture9 *texture = static_cast<IDirect3DTexture9*>(baseTexture);
 
     HRESULT result = texture->GetSurfaceLevel(level + mTopLevel, outSurface);
-
-    ASSERT(SUCCEEDED(result));
-    if (FAILED(result))
-    {
-        return gl::OutOfMemory() << "Failed to get the surface from a texture, "
-                                 << gl::FmtHR(result);
-    }
+    ANGLE_TRY_HR(GetImplAs<Context9>(context), result, "Failed to get the surface from a texture");
 
     // With managed textures the driver needs to be informed of updates to the lower mipmap levels
     if (level + mTopLevel != 0 && isManaged() && dirty)
@@ -185,31 +176,23 @@ gl::Error TextureStorage9_2D::getSurfaceLevel(const gl::Context *context,
         texture->AddDirtyRect(nullptr);
     }
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error TextureStorage9_2D::getRenderTarget(const gl::Context *context,
-                                              const gl::ImageIndex &index,
-                                              RenderTargetD3D **outRT)
+angle::Result TextureStorage9_2D::getRenderTarget(const gl::Context *context,
+                                                  const gl::ImageIndex &index,
+                                                  RenderTargetD3D **outRT)
 {
     ASSERT(index.getLevelIndex() < getLevelCount());
 
     if (!mRenderTargets[index.getLevelIndex()] && isRenderTarget())
     {
         IDirect3DBaseTexture9 *baseTexture = nullptr;
-        gl::Error error                    = getBaseTexture(context, &baseTexture);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(getBaseTexture(context, &baseTexture));
 
         IDirect3DSurface9 *surface = nullptr;
-        error = getSurfaceLevel(context, gl::TextureTarget::_2D, index.getLevelIndex(), false,
-                                &surface);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(getSurfaceLevel(context, gl::TextureTarget::_2D, index.getLevelIndex(), false,
+                                  &surface));
 
         size_t textureMipLevel = mTopLevel + index.getLevelIndex();
         size_t mipWidth        = std::max<size_t>(mTextureWidth >> textureMipLevel, 1u);
@@ -223,41 +206,27 @@ gl::Error TextureStorage9_2D::getRenderTarget(const gl::Context *context,
 
     ASSERT(outRT);
     *outRT = mRenderTargets[index.getLevelIndex()];
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error TextureStorage9_2D::generateMipmap(const gl::Context *context,
-                                             const gl::ImageIndex &sourceIndex,
-                                             const gl::ImageIndex &destIndex)
+angle::Result TextureStorage9_2D::generateMipmap(const gl::Context *context,
+                                                 const gl::ImageIndex &sourceIndex,
+                                                 const gl::ImageIndex &destIndex)
 {
-    IDirect3DSurface9 *upper = nullptr;
-    gl::Error error = getSurfaceLevel(context, gl::TextureTarget::_2D, sourceIndex.getLevelIndex(),
-                                      false, &upper);
-    if (error.isError())
-    {
-        return error;
-    }
+    angle::ComPtr<IDirect3DSurface9> upper = nullptr;
+    ANGLE_TRY(getSurfaceLevel(context, gl::TextureTarget::_2D, sourceIndex.getLevelIndex(), false,
+                              &upper));
 
-    IDirect3DSurface9 *lower = nullptr;
-    error =
-        getSurfaceLevel(context, gl::TextureTarget::_2D, destIndex.getLevelIndex(), true, &lower);
-    if (error.isError())
-    {
-        SafeRelease(upper);
-        return error;
-    }
+    angle::ComPtr<IDirect3DSurface9> lower = nullptr;
+    ANGLE_TRY(
+        getSurfaceLevel(context, gl::TextureTarget::_2D, destIndex.getLevelIndex(), true, &lower));
 
     ASSERT(upper && lower);
-    error = mRenderer->boxFilter(upper, lower);
-
-    SafeRelease(upper);
-    SafeRelease(lower);
-
-    return error;
+    return mRenderer->boxFilter(GetImplAs<Context9>(context), upper.Get(), lower.Get());
 }
 
-gl::Error TextureStorage9_2D::getBaseTexture(const gl::Context *context,
-                                             IDirect3DBaseTexture9 **outTexture)
+angle::Result TextureStorage9_2D::getBaseTexture(const gl::Context *context,
+                                                 IDirect3DBaseTexture9 **outTexture)
 {
     // if the width or height is not positive this should be treated as an incomplete texture
     // we handle that here by skipping the d3d texture creation
@@ -270,20 +239,15 @@ gl::Error TextureStorage9_2D::getBaseTexture(const gl::Context *context,
                                                static_cast<unsigned int>(mTextureHeight),
                                                static_cast<unsigned int>(mMipLevels), getUsage(),
                                                mTextureFormat, getPool(), &mTexture, nullptr);
-
-        if (FAILED(result))
-        {
-            ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-            return gl::OutOfMemory()
-                   << "Failed to create 2D storage texture, " << gl::FmtHR(result);
-        }
+        ANGLE_TRY_HR(GetImplAs<Context9>(context), result, "Failed to create 2D storage texture");
     }
 
     *outTexture = mTexture;
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error TextureStorage9_2D::copyToStorage(const gl::Context *context, TextureStorage *destStorage)
+angle::Result TextureStorage9_2D::copyToStorage(const gl::Context *context,
+                                                TextureStorage *destStorage)
 {
     ASSERT(destStorage);
 
@@ -292,33 +256,17 @@ gl::Error TextureStorage9_2D::copyToStorage(const gl::Context *context, TextureS
     int levels = getLevelCount();
     for (int i = 0; i < levels; ++i)
     {
-        IDirect3DSurface9 *srcSurf = nullptr;
-        gl::Error error = getSurfaceLevel(context, gl::TextureTarget::_2D, i, false, &srcSurf);
-        if (error.isError())
-        {
-            return error;
-        }
+        angle::ComPtr<IDirect3DSurface9> srcSurf = nullptr;
+        ANGLE_TRY(getSurfaceLevel(context, gl::TextureTarget::_2D, i, false, &srcSurf));
 
-        IDirect3DSurface9 *dstSurf = nullptr;
-        error = dest9->getSurfaceLevel(context, gl::TextureTarget::_2D, i, true, &dstSurf);
-        if (error.isError())
-        {
-            SafeRelease(srcSurf);
-            return error;
-        }
+        angle::ComPtr<IDirect3DSurface9> dstSurf = nullptr;
+        ANGLE_TRY(dest9->getSurfaceLevel(context, gl::TextureTarget::_2D, i, true, &dstSurf));
 
-        error = mRenderer->copyToRenderTarget(dstSurf, srcSurf, isManaged());
-
-        SafeRelease(srcSurf);
-        SafeRelease(dstSurf);
-
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(
+            mRenderer->copyToRenderTarget(context, dstSurf.Get(), srcSurf.Get(), isManaged()));
     }
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 TextureStorage9_EGLImage::TextureStorage9_EGLImage(Renderer9 *renderer,
@@ -338,31 +286,27 @@ TextureStorage9_EGLImage::~TextureStorage9_EGLImage()
 {
 }
 
-gl::Error TextureStorage9_EGLImage::getSurfaceLevel(const gl::Context *context,
-                                                    gl::TextureTarget target,
-                                                    int level,
-                                                    bool,
-                                                    IDirect3DSurface9 **outSurface)
+angle::Result TextureStorage9_EGLImage::getSurfaceLevel(const gl::Context *context,
+                                                        gl::TextureTarget target,
+                                                        int level,
+                                                        bool,
+                                                        IDirect3DSurface9 **outSurface)
 {
     ASSERT(target == gl::TextureTarget::_2D);
     ASSERT(level == 0);
 
     RenderTargetD3D *renderTargetD3D = nullptr;
-    gl::Error error                  = mImage->getRenderTarget(context, &renderTargetD3D);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mImage->getRenderTarget(context, &renderTargetD3D));
 
     RenderTarget9 *renderTarget9 = GetAs<RenderTarget9>(renderTargetD3D);
 
     *outSurface = renderTarget9->getSurface();
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error TextureStorage9_EGLImage::getRenderTarget(const gl::Context *context,
-                                                    const gl::ImageIndex &index,
-                                                    RenderTargetD3D **outRT)
+angle::Result TextureStorage9_EGLImage::getRenderTarget(const gl::Context *context,
+                                                        const gl::ImageIndex &index,
+                                                        RenderTargetD3D **outRT)
 {
     ASSERT(!index.hasLayer());
     ASSERT(index.getLevelIndex() == 0);
@@ -370,33 +314,29 @@ gl::Error TextureStorage9_EGLImage::getRenderTarget(const gl::Context *context,
     return mImage->getRenderTarget(context, outRT);
 }
 
-gl::Error TextureStorage9_EGLImage::getBaseTexture(const gl::Context *context,
-                                                   IDirect3DBaseTexture9 **outTexture)
+angle::Result TextureStorage9_EGLImage::getBaseTexture(const gl::Context *context,
+                                                       IDirect3DBaseTexture9 **outTexture)
 {
     RenderTargetD3D *renderTargetD3D = nullptr;
-    gl::Error error                  = mImage->getRenderTarget(context, &renderTargetD3D);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mImage->getRenderTarget(context, &renderTargetD3D));
 
     RenderTarget9 *renderTarget9 = GetAs<RenderTarget9>(renderTargetD3D);
     *outTexture = renderTarget9->getTexture();
     ASSERT(*outTexture != nullptr);
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error TextureStorage9_EGLImage::generateMipmap(const gl::Context *context,
-                                                   const gl::ImageIndex &,
-                                                   const gl::ImageIndex &)
+angle::Result TextureStorage9_EGLImage::generateMipmap(const gl::Context *context,
+                                                       const gl::ImageIndex &,
+                                                       const gl::ImageIndex &)
 {
-    UNREACHABLE();
-    return gl::InternalError();
+    ANGLE_HR_UNREACHABLE(GetImplAs<Context9>(context));
+    return angle::Result::Stop();
 }
 
-gl::Error TextureStorage9_EGLImage::copyToStorage(const gl::Context *context,
-                                                  TextureStorage *destStorage)
+angle::Result TextureStorage9_EGLImage::copyToStorage(const gl::Context *context,
+                                                      TextureStorage *destStorage)
 {
     ASSERT(destStorage);
     ASSERT(getLevelCount() == 1);
@@ -404,46 +344,27 @@ gl::Error TextureStorage9_EGLImage::copyToStorage(const gl::Context *context,
     TextureStorage9 *dest9 = GetAs<TextureStorage9>(destStorage);
 
     IDirect3DBaseTexture9 *destBaseTexture9 = nullptr;
-    gl::Error error                         = dest9->getBaseTexture(context, &destBaseTexture9);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(dest9->getBaseTexture(context, &destBaseTexture9));
 
     IDirect3DTexture9 *destTexture9 = static_cast<IDirect3DTexture9 *>(destBaseTexture9);
 
-    IDirect3DSurface9 *destSurface = nullptr;
+    angle::ComPtr<IDirect3DSurface9> destSurface = nullptr;
     HRESULT result = destTexture9->GetSurfaceLevel(destStorage->getTopLevel(), &destSurface);
-    if (FAILED(result))
-    {
-        return gl::OutOfMemory() << "Failed to get the surface from a texture, "
-                                 << gl::FmtHR(result);
-    }
+    ANGLE_TRY_HR(GetImplAs<Context9>(context), result, "Failed to get the surface from a texture");
 
     RenderTargetD3D *sourceRenderTarget = nullptr;
-    error                               = mImage->getRenderTarget(context, &sourceRenderTarget);
-    if (error.isError())
-    {
-        SafeRelease(destSurface);
-        return error;
-    }
+    ANGLE_TRY(mImage->getRenderTarget(context, &sourceRenderTarget));
 
     RenderTarget9 *sourceRenderTarget9 = GetAs<RenderTarget9>(sourceRenderTarget);
-    error =
-        mRenderer->copyToRenderTarget(destSurface, sourceRenderTarget9->getSurface(), isManaged());
-    if (error.isError())
-    {
-        SafeRelease(destSurface);
-        return error;
-    }
+    ANGLE_TRY(mRenderer->copyToRenderTarget(context, destSurface.Get(),
+                                            sourceRenderTarget9->getSurface(), isManaged()));
 
     if (destStorage->getTopLevel() != 0)
     {
         destTexture9->AddDirtyRect(nullptr);
     }
 
-    SafeRelease(destSurface);
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
 TextureStorage9_Cube::TextureStorage9_Cube(Renderer9 *renderer, GLenum internalformat, bool renderTarget, int size, int levels, bool hintLevelZeroOnly)
@@ -479,30 +400,20 @@ TextureStorage9_Cube::~TextureStorage9_Cube()
 
 // Increments refcount on surface.
 // caller must Release() the returned surface
-gl::Error TextureStorage9_Cube::getSurfaceLevel(const gl::Context *context,
-                                                gl::TextureTarget target,
-                                                int level,
-                                                bool dirty,
-                                                IDirect3DSurface9 **outSurface)
+angle::Result TextureStorage9_Cube::getSurfaceLevel(const gl::Context *context,
+                                                    gl::TextureTarget target,
+                                                    int level,
+                                                    bool dirty,
+                                                    IDirect3DSurface9 **outSurface)
 {
     IDirect3DBaseTexture9 *baseTexture = nullptr;
-    gl::Error error                    = getBaseTexture(context, &baseTexture);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(getBaseTexture(context, &baseTexture));
 
     IDirect3DCubeTexture9 *texture = static_cast<IDirect3DCubeTexture9*>(baseTexture);
 
     D3DCUBEMAP_FACES face = gl_d3d9::ConvertCubeFace(target);
     HRESULT result        = texture->GetCubeMapSurface(face, level, outSurface);
-
-    ASSERT(SUCCEEDED(result));
-    if (FAILED(result))
-    {
-        return gl::OutOfMemory() << "Failed to get the surface from a texture, "
-                                 << gl::FmtHR(result);
-    }
+    ANGLE_TRY_HR(GetImplAs<Context9>(context), result, "Failed to get the surface from a texture");
 
     // With managed textures the driver needs to be informed of updates to the lower mipmap levels
     if (level != 0 && isManaged() && dirty)
@@ -510,36 +421,28 @@ gl::Error TextureStorage9_Cube::getSurfaceLevel(const gl::Context *context,
         texture->AddDirtyRect(face, nullptr);
     }
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error TextureStorage9_Cube::getRenderTarget(const gl::Context *context,
-                                                const gl::ImageIndex &index,
-                                                RenderTargetD3D **outRT)
+angle::Result TextureStorage9_Cube::getRenderTarget(const gl::Context *context,
+                                                    const gl::ImageIndex &index,
+                                                    RenderTargetD3D **outRT)
 {
     ASSERT(outRT);
     ASSERT(index.getLevelIndex() == 0);
 
     ASSERT(index.getType() == gl::TextureType::CubeMap &&
-           gl::TextureTargetToType(index.getTarget()) == gl::TextureType::CubeMap);
+           gl::IsCubeMapFaceTarget(index.getTarget()));
     const size_t renderTargetIndex = index.cubeMapFaceIndex();
 
     if (mRenderTarget[renderTargetIndex] == nullptr && isRenderTarget())
     {
         IDirect3DBaseTexture9 *baseTexture = nullptr;
-        gl::Error error                    = getBaseTexture(context, &baseTexture);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(getBaseTexture(context, &baseTexture));
 
         IDirect3DSurface9 *surface = nullptr;
-        error = getSurfaceLevel(context, index.getTarget(), mTopLevel + index.getLevelIndex(),
-                                false, &surface);
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(getSurfaceLevel(context, index.getTarget(), mTopLevel + index.getLevelIndex(),
+                                  false, &surface));
 
         baseTexture->AddRef();
         mRenderTarget[renderTargetIndex] = new TextureRenderTarget9(
@@ -548,41 +451,27 @@ gl::Error TextureStorage9_Cube::getRenderTarget(const gl::Context *context,
     }
 
     *outRT = mRenderTarget[renderTargetIndex];
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error TextureStorage9_Cube::generateMipmap(const gl::Context *context,
-                                               const gl::ImageIndex &sourceIndex,
-                                               const gl::ImageIndex &destIndex)
+angle::Result TextureStorage9_Cube::generateMipmap(const gl::Context *context,
+                                                   const gl::ImageIndex &sourceIndex,
+                                                   const gl::ImageIndex &destIndex)
 {
-    IDirect3DSurface9 *upper = nullptr;
-    gl::Error error = getSurfaceLevel(context, sourceIndex.getTarget(), sourceIndex.getLevelIndex(),
-                                      false, &upper);
-    if (error.isError())
-    {
-        return error;
-    }
+    angle::ComPtr<IDirect3DSurface9> upper = nullptr;
+    ANGLE_TRY(getSurfaceLevel(context, sourceIndex.getTarget(), sourceIndex.getLevelIndex(), false,
+                              &upper));
 
-    IDirect3DSurface9 *lower = nullptr;
-    error =
-        getSurfaceLevel(context, destIndex.getTarget(), destIndex.getLevelIndex(), true, &lower);
-    if (error.isError())
-    {
-        SafeRelease(upper);
-        return error;
-    }
+    angle::ComPtr<IDirect3DSurface9> lower = nullptr;
+    ANGLE_TRY(
+        getSurfaceLevel(context, destIndex.getTarget(), destIndex.getLevelIndex(), true, &lower));
 
     ASSERT(upper && lower);
-    error = mRenderer->boxFilter(upper, lower);
-
-    SafeRelease(upper);
-    SafeRelease(lower);
-
-    return error;
+    return mRenderer->boxFilter(GetImplAs<Context9>(context), upper.Get(), lower.Get());
 }
 
-gl::Error TextureStorage9_Cube::getBaseTexture(const gl::Context *context,
-                                               IDirect3DBaseTexture9 **outTexture)
+angle::Result TextureStorage9_Cube::getBaseTexture(const gl::Context *context,
+                                                   IDirect3DBaseTexture9 **outTexture)
 {
     // if the size is not positive this should be treated as an incomplete texture
     // we handle that here by skipping the d3d texture creation
@@ -595,21 +484,15 @@ gl::Error TextureStorage9_Cube::getBaseTexture(const gl::Context *context,
         HRESULT result           = device->CreateCubeTexture(
             static_cast<unsigned int>(mTextureWidth), static_cast<unsigned int>(mMipLevels),
             getUsage(), mTextureFormat, getPool(), &mTexture, nullptr);
-
-        if (FAILED(result))
-        {
-            ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-            return gl::OutOfMemory()
-                   << "Failed to create cube storage texture, " << gl::FmtHR(result);
-        }
+        ANGLE_TRY_HR(GetImplAs<Context9>(context), result, "Failed to create cube storage texture");
     }
 
     *outTexture = mTexture;
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-gl::Error TextureStorage9_Cube::copyToStorage(const gl::Context *context,
-                                              TextureStorage *destStorage)
+angle::Result TextureStorage9_Cube::copyToStorage(const gl::Context *context,
+                                                  TextureStorage *destStorage)
 {
     ASSERT(destStorage);
 
@@ -620,34 +503,17 @@ gl::Error TextureStorage9_Cube::copyToStorage(const gl::Context *context,
     {
         for (int i = 0; i < levels; i++)
         {
-            IDirect3DSurface9 *srcSurf = nullptr;
-            gl::Error error            = getSurfaceLevel(context, face, i, false, &srcSurf);
-            if (error.isError())
-            {
-                return error;
-            }
+            angle::ComPtr<IDirect3DSurface9> srcSurf = nullptr;
+            ANGLE_TRY(getSurfaceLevel(context, face, i, false, &srcSurf));
 
-            IDirect3DSurface9 *dstSurf = nullptr;
-            error                      = dest9->getSurfaceLevel(context, face, i, true, &dstSurf);
-            if (error.isError())
-            {
-                SafeRelease(srcSurf);
-                return error;
-            }
+            angle::ComPtr<IDirect3DSurface9> dstSurf = nullptr;
+            ANGLE_TRY(dest9->getSurfaceLevel(context, face, i, true, &dstSurf));
 
-            error = mRenderer->copyToRenderTarget(dstSurf, srcSurf, isManaged());
-
-            SafeRelease(srcSurf);
-            SafeRelease(dstSurf);
-
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(
+                mRenderer->copyToRenderTarget(context, dstSurf.Get(), srcSurf.Get(), isManaged()));
         }
     }
 
-    return gl::NoError();
+    return angle::Result::Continue();
 }
-
-}
+}  // namespace rx

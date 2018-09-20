@@ -105,25 +105,26 @@ class FramebufferD3D : public FramebufferImpl
     void destroy(const gl::Context *context) override;
 
   private:
-    virtual gl::Error clearImpl(const gl::Context *context, const ClearParameters &clearParams) = 0;
+    virtual angle::Result clearImpl(const gl::Context *context,
+                                    const ClearParameters &clearParams) = 0;
 
-    virtual gl::Error readPixelsImpl(const gl::Context *context,
-                                     const gl::Rectangle &area,
-                                     GLenum format,
-                                     GLenum type,
-                                     size_t outputPitch,
-                                     const gl::PixelPackState &pack,
-                                     uint8_t *pixels) = 0;
+    virtual angle::Result readPixelsImpl(const gl::Context *context,
+                                         const gl::Rectangle &area,
+                                         GLenum format,
+                                         GLenum type,
+                                         size_t outputPitch,
+                                         const gl::PixelPackState &pack,
+                                         uint8_t *pixels) = 0;
 
-    virtual gl::Error blitImpl(const gl::Context *context,
-                               const gl::Rectangle &sourceArea,
-                               const gl::Rectangle &destArea,
-                               const gl::Rectangle *scissor,
-                               bool blitRenderTarget,
-                               bool blitDepth,
-                               bool blitStencil,
-                               GLenum filter,
-                               const gl::Framebuffer *sourceFramebuffer) = 0;
+    virtual angle::Result blitImpl(const gl::Context *context,
+                                   const gl::Rectangle &sourceArea,
+                                   const gl::Rectangle &destArea,
+                                   const gl::Rectangle *scissor,
+                                   bool blitRenderTarget,
+                                   bool blitDepth,
+                                   bool blitStencil,
+                                   GLenum filter,
+                                   const gl::Framebuffer *sourceFramebuffer) = 0;
 
     virtual GLenum getRenderTargetImplementationFormat(RenderTargetD3D *renderTarget) const = 0;
 
@@ -133,6 +134,6 @@ class FramebufferD3D : public FramebufferImpl
 
     gl::FramebufferAttachment mDummyAttachment;
 };
-}
+}  // namespace rx
 
 #endif  // LIBANGLE_RENDERER_D3D_FRAMBUFFERD3D_H_

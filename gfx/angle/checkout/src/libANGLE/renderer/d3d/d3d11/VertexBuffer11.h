@@ -23,22 +23,25 @@ class VertexBuffer11 : public VertexBuffer
   public:
     explicit VertexBuffer11(Renderer11 *const renderer);
 
-    gl::Error initialize(unsigned int size, bool dynamicUsage) override;
+    angle::Result initialize(const gl::Context *context,
+                             unsigned int size,
+                             bool dynamicUsage) override;
 
     // Warning: you should ensure binding really matches attrib.bindingIndex before using this
     // function.
-    gl::Error storeVertexAttributes(const gl::VertexAttribute &attrib,
-                                    const gl::VertexBinding &binding,
-                                    GLenum currentValueType,
-                                    GLint start,
-                                    size_t count,
-                                    GLsizei instances,
-                                    unsigned int offset,
-                                    const uint8_t *sourceData) override;
+    angle::Result storeVertexAttributes(const gl::Context *context,
+                                        const gl::VertexAttribute &attrib,
+                                        const gl::VertexBinding &binding,
+                                        GLenum currentValueType,
+                                        GLint start,
+                                        size_t count,
+                                        GLsizei instances,
+                                        unsigned int offset,
+                                        const uint8_t *sourceData) override;
 
     unsigned int getBufferSize() const override;
-    gl::Error setBufferSize(unsigned int size) override;
-    gl::Error discard() override;
+    angle::Result setBufferSize(const gl::Context *context, unsigned int size) override;
+    angle::Result discard(const gl::Context *context) override;
 
     void hintUnmapResource() override;
 
@@ -46,7 +49,7 @@ class VertexBuffer11 : public VertexBuffer
 
   private:
     ~VertexBuffer11() override;
-    gl::Error mapResource();
+    angle::Result mapResource(const gl::Context *context);
 
     Renderer11 *const mRenderer;
 

@@ -28,9 +28,7 @@ function parseINIStrings(path) {
                 getService(Ci.nsIINIParserFactory);
   let parser = factory.createINIParser(file);
   let obj = {};
-  let en = parser.getKeys("Strings");
-  while (en.hasMore()) {
-    let key = en.getNext();
+  for (let key of parser.getKeys("Strings")) {
     obj[key] = parser.getString("Strings", key);
   }
   return obj;

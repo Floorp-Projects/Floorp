@@ -21,10 +21,11 @@
 
 namespace gl
 {
+class Context;
 struct VertexAttribute;
 class VertexBinding;
 struct VertexAttribCurrentValueData;
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -37,22 +38,25 @@ class VertexBuffer : angle::NonCopyable
   public:
     VertexBuffer();
 
-    virtual gl::Error initialize(unsigned int size, bool dynamicUsage) = 0;
+    virtual angle::Result initialize(const gl::Context *context,
+                                     unsigned int size,
+                                     bool dynamicUsage) = 0;
 
     // Warning: you should ensure binding really matches attrib.bindingIndex before using this
     // function.
-    virtual gl::Error storeVertexAttributes(const gl::VertexAttribute &attrib,
-                                            const gl::VertexBinding &binding,
-                                            GLenum currentValueType,
-                                            GLint start,
-                                            size_t count,
-                                            GLsizei instances,
-                                            unsigned int offset,
-                                            const uint8_t *sourceData) = 0;
+    virtual angle::Result storeVertexAttributes(const gl::Context *context,
+                                                const gl::VertexAttribute &attrib,
+                                                const gl::VertexBinding &binding,
+                                                GLenum currentValueType,
+                                                GLint start,
+                                                size_t count,
+                                                GLsizei instances,
+                                                unsigned int offset,
+                                                const uint8_t *sourceData) = 0;
 
     virtual unsigned int getBufferSize() const = 0;
-    virtual gl::Error setBufferSize(unsigned int size) = 0;
-    virtual gl::Error discard() = 0;
+    virtual angle::Result setBufferSize(const gl::Context *context, unsigned int size) = 0;
+    virtual angle::Result discard(const gl::Context *context)                          = 0;
 
     unsigned int getSerial() const;
 
@@ -87,14 +91,16 @@ class VertexBufferInterface : angle::NonCopyable
     VertexBuffer *getVertexBuffer() const;
 
   protected:
-    gl::Error discard();
+    angle::Result discard(const gl::Context *context);
 
-    gl::Error setBufferSize(unsigned int size);
+    angle::Result setBufferSize(const gl::Context *context, unsigned int size);
 
-    gl::ErrorOrResult<unsigned int> getSpaceRequired(const gl::VertexAttribute &attrib,
-                                                     const gl::VertexBinding &binding,
-                                                     size_t count,
-                                                     GLsizei instances) const;
+    angle::Result getSpaceRequired(const gl::Context *context,
+                                   const gl::VertexAttribute &attrib,
+                                   const gl::VertexBinding &binding,
+                                   size_t count,
+                                   GLsizei instances,
+                                   unsigned int *spaceInBytesOut) const;
     BufferFactoryD3D *const mFactory;
     VertexBuffer *mVertexBuffer;
     bool mDynamic;
@@ -103,25 +109,30 @@ class VertexBufferInterface : angle::NonCopyable
 class StreamingVertexBufferInterface : public VertexBufferInterface
 {
   public:
-    StreamingVertexBufferInterface(BufferFactoryD3D *factory, std::size_t initialSize);
+    StreamingVertexBufferInterface(BufferFactoryD3D *factory);
     ~StreamingVertexBufferInterface() override;
 
-    gl::Error storeDynamicAttribute(const gl::VertexAttribute &attrib,
-                                    const gl::VertexBinding &binding,
-                                    GLenum currentValueType,
-                                    GLint start,
-                                    size_t count,
-                                    GLsizei instances,
-                                    unsigned int *outStreamOffset,
-                                    const uint8_t *sourceData);
+    angle::Result initialize(const gl::Context *context, std::size_t initialSize);
+    void reset();
 
-    gl::Error reserveVertexSpace(const gl::VertexAttribute &attribute,
-                                 const gl::VertexBinding &binding,
-                                 size_t count,
-                                 GLsizei instances);
+    angle::Result storeDynamicAttribute(const gl::Context *context,
+                                        const gl::VertexAttribute &attrib,
+                                        const gl::VertexBinding &binding,
+                                        GLenum currentValueType,
+                                        GLint start,
+                                        size_t count,
+                                        GLsizei instances,
+                                        unsigned int *outStreamOffset,
+                                        const uint8_t *sourceData);
+
+    angle::Result reserveVertexSpace(const gl::Context *context,
+                                     const gl::VertexAttribute &attribute,
+                                     const gl::VertexBinding &binding,
+                                     size_t count,
+                                     GLsizei instances);
 
   private:
-    gl::Error reserveSpace(unsigned int size);
+    angle::Result reserveSpace(const gl::Context *context, unsigned int size);
 
     unsigned int mWritePosition;
     unsigned int mReservedSpace;
@@ -135,12 +146,13 @@ class StaticVertexBufferInterface : public VertexBufferInterface
 
     // Warning: you should ensure binding really matches attrib.bindingIndex before using these
     // functions.
-    gl::Error storeStaticAttribute(const gl::VertexAttribute &attrib,
-                                   const gl::VertexBinding &binding,
-                                   GLint start,
-                                   GLsizei count,
-                                   GLsizei instances,
-                                   const uint8_t *sourceData);
+    angle::Result storeStaticAttribute(const gl::Context *context,
+                                       const gl::VertexAttribute &attrib,
+                                       const gl::VertexBinding &binding,
+                                       GLint start,
+                                       GLsizei count,
+                                       GLsizei instances,
+                                       const uint8_t *sourceData);
 
     bool matchesAttribute(const gl::VertexAttribute &attribute,
                           const gl::VertexBinding &binding) const;

@@ -21,6 +21,7 @@
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/d3d/BufferD3D.h"
 #include "libANGLE/renderer/d3d/FramebufferD3D.h"
+#include "libANGLE/renderer/d3d/d3d11/Context11.h"
 #include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 #include "libANGLE/renderer/d3d/d3d11/dxgi_support_table.h"
@@ -119,9 +120,10 @@ gl::TextureCaps GenerateTextureFormatCaps(gl::Version maxClientVersion,
     textureCaps.texturable = support.query(formatInfo.texFormat, texSupportMask);
     textureCaps.filterable =
         support.query(formatInfo.srvFormat, D3D11_FORMAT_SUPPORT_SHADER_SAMPLE);
-    textureCaps.renderable =
+    textureCaps.textureAttachment =
         (support.query(formatInfo.rtvFormat, D3D11_FORMAT_SUPPORT_RENDER_TARGET)) ||
         (support.query(formatInfo.dsvFormat, D3D11_FORMAT_SUPPORT_DEPTH_STENCIL));
+    textureCaps.renderbuffer = textureCaps.textureAttachment;
 
     DXGI_FORMAT renderFormat = DXGI_FORMAT_UNKNOWN;
     if (formatInfo.dsvFormat != DXGI_FORMAT_UNKNOWN)
@@ -929,45 +931,74 @@ size_t GetMaximumComputeTextureUnits(D3D_FEATURE_LEVEL featureLevel)
     }
 }
 
-size_t GetMaximumImageUnits(D3D_FEATURE_LEVEL featureLevel)
+void SetUAVRelatedResourceLimits(D3D_FEATURE_LEVEL featureLevel, gl::Caps *caps)
 {
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            // TODO(xinghua.cao@intel.com): Get a more accurate limit. For now using
-            // the minimum requirement for GLES 3.1.
-            return 4;
-        default:
-            return 0;
-    }
-}
+    ASSERT(caps);
 
-size_t GetMaximumComputeImageUniforms(D3D_FEATURE_LEVEL featureLevel)
-{
-    switch (featureLevel)
-    {
-        case D3D_FEATURE_LEVEL_11_1:
-        case D3D_FEATURE_LEVEL_11_0:
-            // TODO(xinghua.cao@intel.com): Get a more accurate limit. For now using
-            // the minimum requirement for GLES 3.1.
-            return 4;
-        default:
-            return 0;
-    }
-}
+    GLuint reservedUAVsForAtomicCounterBuffers = 0u;
 
-size_t GetMaximumCombinedShaderOutputResources(D3D_FEATURE_LEVEL featureLevel)
-{
+    // For pixel shaders, the render targets and unordered access views share the same resource
+    // slots when being written out.
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/ff476465(v=vs.85).aspx
+    GLuint maxNumRTVsAndUAVs = 0u;
+
     switch (featureLevel)
     {
-        // TODO(jiawei.shao@intel.com): Get a more accurate limit. For now using the minimum
-        // requirement for GLES 3.1.
         case D3D_FEATURE_LEVEL_11_1:
+            // Currently we allocate 4 UAV slots for atomic counter buffers on feature level 11_1.
+            reservedUAVsForAtomicCounterBuffers = 4u;
+            maxNumRTVsAndUAVs                   = D3D11_1_UAV_SLOT_COUNT;
+            break;
         case D3D_FEATURE_LEVEL_11_0:
-            return 4;
+            // Currently we allocate 1 UAV slot for atomic counter buffers on feature level 11_0.
+            reservedUAVsForAtomicCounterBuffers = 1u;
+            maxNumRTVsAndUAVs                   = D3D11_PS_CS_UAV_REGISTER_COUNT;
+            break;
         default:
-            return 0;
+            return;
+    }
+
+    // Set limits on atomic counter buffers in fragment shaders and compute shaders.
+    caps->maxCombinedAtomicCounterBuffers = reservedUAVsForAtomicCounterBuffers;
+    caps->maxShaderAtomicCounterBuffers[gl::ShaderType::Compute] =
+        reservedUAVsForAtomicCounterBuffers;
+    caps->maxShaderAtomicCounterBuffers[gl::ShaderType::Fragment] =
+        reservedUAVsForAtomicCounterBuffers;
+    caps->maxAtomicCounterBufferBindings  = reservedUAVsForAtomicCounterBuffers;
+
+    // Allocate the remaining slots for images and shader storage blocks.
+    // The maximum number of fragment shader outputs depends on the current context version, so we
+    // will not set it here. See comments in Context11::initialize().
+    caps->maxCombinedShaderOutputResources =
+        maxNumRTVsAndUAVs - reservedUAVsForAtomicCounterBuffers;
+
+    // Set limits on images and shader storage blocks in fragment shaders and compute shaders.
+    caps->maxCombinedShaderStorageBlocks                   = caps->maxCombinedShaderOutputResources;
+    caps->maxShaderStorageBlocks[gl::ShaderType::Compute]  = caps->maxCombinedShaderOutputResources;
+    caps->maxShaderStorageBlocks[gl::ShaderType::Fragment] = caps->maxCombinedShaderOutputResources;
+    caps->maxShaderStorageBufferBindings                   = caps->maxCombinedShaderOutputResources;
+
+    caps->maxImageUnits            = caps->maxCombinedShaderOutputResources;
+    caps->maxCombinedImageUniforms = caps->maxCombinedShaderOutputResources;
+    caps->maxShaderImageUniforms[gl::ShaderType::Compute]  = caps->maxCombinedShaderOutputResources;
+    caps->maxShaderImageUniforms[gl::ShaderType::Fragment] = caps->maxCombinedShaderOutputResources;
+
+    // On feature level 11_1, UAVs are also available in vertex shaders and geometry shaders.
+    if (featureLevel == D3D_FEATURE_LEVEL_11_1)
+    {
+        caps->maxShaderAtomicCounterBuffers[gl::ShaderType::Vertex] =
+            caps->maxCombinedAtomicCounterBuffers;
+        caps->maxShaderAtomicCounterBuffers[gl::ShaderType::Geometry] =
+            caps->maxCombinedAtomicCounterBuffers;
+
+        caps->maxShaderImageUniforms[gl::ShaderType::Vertex] =
+            caps->maxCombinedShaderOutputResources;
+        caps->maxShaderStorageBlocks[gl::ShaderType::Vertex] =
+            caps->maxCombinedShaderOutputResources;
+        caps->maxShaderImageUniforms[gl::ShaderType::Geometry] =
+            caps->maxCombinedShaderOutputResources;
+        caps->maxShaderStorageBlocks[gl::ShaderType::Geometry] =
+            caps->maxCombinedShaderOutputResources;
     }
 }
 
@@ -1369,7 +1400,7 @@ void GenerateCaps(ID3D11Device *device,
     {
         caps->maxVertexUniformVectors -= 1;
     }
-    caps->maxVertexUniformComponents = caps->maxVertexUniformVectors * 4;
+    caps->maxShaderUniformComponents[gl::ShaderType::Vertex] = caps->maxVertexUniformVectors * 4;
     caps->maxShaderUniformBlocks[gl::ShaderType::Vertex] =
         static_cast<GLuint>(GetMaximumVertexUniformBlocks(featureLevel));
     caps->maxVertexOutputComponents =
@@ -1388,7 +1419,8 @@ void GenerateCaps(ID3D11Device *device,
     // Fragment shader limits
     caps->maxFragmentUniformVectors =
         static_cast<GLuint>(GetMaximumPixelUniformVectors(featureLevel));
-    caps->maxFragmentUniformComponents = caps->maxFragmentUniformVectors * 4;
+    caps->maxShaderUniformComponents[gl::ShaderType::Fragment] =
+        caps->maxFragmentUniformVectors * 4;
     caps->maxShaderUniformBlocks[gl::ShaderType::Fragment] =
         static_cast<GLuint>(GetMaximumPixelUniformBlocks(featureLevel));
     caps->maxFragmentInputComponents =
@@ -1403,17 +1435,14 @@ void GenerateCaps(ID3D11Device *device,
     caps->maxComputeWorkGroupSize  = GetMaxComputeWorkGroupSize(featureLevel);
     caps->maxComputeWorkGroupInvocations =
         static_cast<GLuint>(GetMaxComputeWorkGroupInvocations(featureLevel));
-    caps->maxComputeUniformComponents =
+    caps->maxShaderUniformComponents[gl::ShaderType::Compute] =
         static_cast<GLuint>(GetMaximumComputeUniformVectors(featureLevel)) * 4;
     caps->maxShaderUniformBlocks[gl::ShaderType::Compute] =
         static_cast<GLuint>(GetMaximumComputeUniformBlocks(featureLevel));
     caps->maxShaderTextureImageUnits[gl::ShaderType::Compute] =
         static_cast<GLuint>(GetMaximumComputeTextureUnits(featureLevel));
-    caps->maxImageUnits = static_cast<GLuint>(GetMaximumImageUnits(featureLevel));
-    caps->maxComputeImageUniforms =
-        static_cast<GLuint>(GetMaximumComputeImageUniforms(featureLevel));
-    caps->maxCombinedShaderOutputResources =
-        static_cast<GLuint>(GetMaximumCombinedShaderOutputResources(featureLevel));
+
+    SetUAVRelatedResourceLimits(featureLevel, caps);
 
     // Aggregate shader limits
     caps->maxUniformBufferBindings = caps->maxShaderUniformBlocks[gl::ShaderType::Vertex] +
@@ -1431,17 +1460,22 @@ void GenerateCaps(ID3D11Device *device,
 
     caps->maxCombinedUniformBlocks = caps->maxShaderUniformBlocks[gl::ShaderType::Vertex] +
                                      caps->maxShaderUniformBlocks[gl::ShaderType::Fragment];
-    caps->maxCombinedVertexUniformComponents =
-        (static_cast<GLint64>(caps->maxShaderUniformBlocks[gl::ShaderType::Vertex]) *
-         static_cast<GLint64>(caps->maxUniformBlockSize / 4)) +
-        static_cast<GLint64>(caps->maxVertexUniformComponents);
-    caps->maxCombinedFragmentUniformComponents =
-        (static_cast<GLint64>(caps->maxShaderUniformBlocks[gl::ShaderType::Fragment]) *
-         static_cast<GLint64>(caps->maxUniformBlockSize / 4)) +
-        static_cast<GLint64>(caps->maxFragmentUniformComponents);
-    caps->maxCombinedComputeUniformComponents = static_cast<GLuint>(
-        caps->maxShaderUniformBlocks[gl::ShaderType::Compute] * (caps->maxUniformBlockSize / 4) +
-        caps->maxComputeUniformComponents);
+
+    // A shader storage block will be translated to a structure in HLSL. So We reference the HLSL
+    // structure packing rules
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/bb509632(v=vs.85).aspx. The
+    // resulting size of any structure will always be evenly divisible by sizeof(four-component
+    // vector).
+    caps->shaderStorageBufferOffsetAlignment = 16;
+
+    for (gl::ShaderType shaderType : gl::AllShaderTypes())
+    {
+        caps->maxCombinedShaderUniformComponents[shaderType] =
+            static_cast<GLint64>(caps->maxShaderUniformBlocks[shaderType]) *
+                static_cast<GLint64>(caps->maxUniformBlockSize / 4) +
+            static_cast<GLint64>(caps->maxShaderUniformComponents[shaderType]);
+    }
+
     caps->maxVaryingComponents =
         static_cast<GLuint>(GetMaximumVertexOutputVectors(featureLevel)) * 4;
     caps->maxVaryingVectors            = static_cast<GLuint>(GetMaximumVertexOutputVectors(featureLevel));
@@ -1997,14 +2031,15 @@ void MakeValidSize(bool isImage, DXGI_FORMAT format, GLsizei *requestWidth, GLsi
     }
 }
 
-void GenerateInitialTextureData(GLint internalFormat,
-                                const Renderer11DeviceCaps &renderer11DeviceCaps,
-                                GLuint width,
-                                GLuint height,
-                                GLuint depth,
-                                GLuint mipLevels,
-                                std::vector<D3D11_SUBRESOURCE_DATA> *outSubresourceData,
-                                std::vector<std::vector<BYTE>> *outData)
+angle::Result GenerateInitialTextureData(
+    const gl::Context *context,
+    GLint internalFormat,
+    const Renderer11DeviceCaps &renderer11DeviceCaps,
+    GLuint width,
+    GLuint height,
+    GLuint depth,
+    GLuint mipLevels,
+    gl::TexLevelArray<D3D11_SUBRESOURCE_DATA> *outSubresourceData)
 {
     const d3d11::Format &d3dFormatInfo = d3d11::Format::Get(internalFormat, renderer11DeviceCaps);
     ASSERT(d3dFormatInfo.dataInitializerFunction != nullptr);
@@ -2012,25 +2047,31 @@ void GenerateInitialTextureData(GLint internalFormat,
     const d3d11::DXGIFormatSize &dxgiFormatInfo =
         d3d11::GetDXGIFormatSizeInfo(d3dFormatInfo.texFormat);
 
-    outSubresourceData->resize(mipLevels);
-    outData->resize(mipLevels);
+    unsigned int rowPitch     = dxgiFormatInfo.pixelBytes * width;
+    unsigned int depthPitch   = rowPitch * height;
+    unsigned int maxImageSize = depthPitch * depth;
+
+    angle::MemoryBuffer *scratchBuffer = nullptr;
+    ANGLE_CHECK_HR_ALLOC(GetImplAs<Context11>(context),
+                         context->getScratchBuffer(maxImageSize, &scratchBuffer));
+
+    d3dFormatInfo.dataInitializerFunction(width, height, depth, scratchBuffer->data(), rowPitch,
+                                          depthPitch);
 
     for (unsigned int i = 0; i < mipLevels; i++)
     {
         unsigned int mipWidth = std::max(width >> i, 1U);
         unsigned int mipHeight = std::max(height >> i, 1U);
-        unsigned int mipDepth = std::max(depth >> i, 1U);
 
-        unsigned int rowWidth = dxgiFormatInfo.pixelBytes * mipWidth;
-        unsigned int imageSize = rowWidth * height;
+        unsigned int mipRowPitch   = dxgiFormatInfo.pixelBytes * mipWidth;
+        unsigned int mipDepthPitch = mipRowPitch * mipHeight;
 
-        outData->at(i).resize(rowWidth * mipHeight * mipDepth);
-        d3dFormatInfo.dataInitializerFunction(mipWidth, mipHeight, mipDepth, outData->at(i).data(), rowWidth, imageSize);
-
-        outSubresourceData->at(i).pSysMem = outData->at(i).data();
-        outSubresourceData->at(i).SysMemPitch = rowWidth;
-        outSubresourceData->at(i).SysMemSlicePitch = imageSize;
+        outSubresourceData->at(i).pSysMem          = scratchBuffer->data();
+        outSubresourceData->at(i).SysMemPitch      = mipRowPitch;
+        outSubresourceData->at(i).SysMemSlicePitch = mipDepthPitch;
     }
+
+    return angle::Result::Continue();
 }
 
 UINT GetPrimitiveRestartIndex()
@@ -2129,45 +2170,54 @@ HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name)
 // allocateResource is only compatible with Clang and MSVS, which support calling a
 // method on a forward declared class in a template.
 template <ResourceType ResourceT>
-gl::Error LazyResource<ResourceT>::resolveImpl(Renderer11 *renderer,
-                                               const GetDescType<ResourceT> &desc,
-                                               GetInitDataType<ResourceT> *initData,
-                                               const char *name)
+angle::Result LazyResource<ResourceT>::resolveImpl(d3d::Context *context,
+                                                   Renderer11 *renderer,
+                                                   const GetDescType<ResourceT> &desc,
+                                                   GetInitDataType<ResourceT> *initData,
+                                                   const char *name)
 {
     if (!mResource.valid())
     {
-        ANGLE_TRY(renderer->allocateResource(desc, initData, &mResource));
+        ANGLE_TRY(renderer->allocateResource(context, desc, initData, &mResource));
         mResource.setDebugName(name);
     }
-    return gl::NoError();
+    return angle::Result::Continue();
 }
 
-template gl::Error LazyResource<ResourceType::BlendState>::resolveImpl(Renderer11 *renderer,
-                                                                       const D3D11_BLEND_DESC &desc,
-                                                                       void *initData,
-                                                                       const char *name);
-template gl::Error LazyResource<ResourceType::ComputeShader>::resolveImpl(Renderer11 *renderer,
-                                                                          const ShaderData &desc,
-                                                                          void *initData,
-                                                                          const char *name);
-template gl::Error LazyResource<ResourceType::GeometryShader>::resolveImpl(
+template angle::Result LazyResource<ResourceType::BlendState>::resolveImpl(
+    d3d::Context *context,
+    Renderer11 *renderer,
+    const D3D11_BLEND_DESC &desc,
+    void *initData,
+    const char *name);
+template angle::Result LazyResource<ResourceType::ComputeShader>::resolveImpl(
+    d3d::Context *context,
+    Renderer11 *renderer,
+    const ShaderData &desc,
+    void *initData,
+    const char *name);
+template angle::Result LazyResource<ResourceType::GeometryShader>::resolveImpl(
+    d3d::Context *context,
     Renderer11 *renderer,
     const ShaderData &desc,
     const std::vector<D3D11_SO_DECLARATION_ENTRY> *initData,
     const char *name);
-template gl::Error LazyResource<ResourceType::InputLayout>::resolveImpl(
+template angle::Result LazyResource<ResourceType::InputLayout>::resolveImpl(
+    d3d::Context *context,
     Renderer11 *renderer,
     const InputElementArray &desc,
     const ShaderData *initData,
     const char *name);
-template gl::Error LazyResource<ResourceType::PixelShader>::resolveImpl(Renderer11 *renderer,
-                                                                        const ShaderData &desc,
-                                                                        void *initData,
-                                                                        const char *name);
-template gl::Error LazyResource<ResourceType::VertexShader>::resolveImpl(Renderer11 *renderer,
-                                                                         const ShaderData &desc,
-                                                                         void *initData,
-                                                                         const char *name);
+template angle::Result LazyResource<ResourceType::PixelShader>::resolveImpl(d3d::Context *context,
+                                                                            Renderer11 *renderer,
+                                                                            const ShaderData &desc,
+                                                                            void *initData,
+                                                                            const char *name);
+template angle::Result LazyResource<ResourceType::VertexShader>::resolveImpl(d3d::Context *context,
+                                                                             Renderer11 *renderer,
+                                                                             const ShaderData &desc,
+                                                                             void *initData,
+                                                                             const char *name);
 
 LazyInputLayout::LazyInputLayout(const D3D11_INPUT_ELEMENT_DESC *inputDesc,
                                  size_t inputDescLen,
@@ -2182,9 +2232,9 @@ LazyInputLayout::~LazyInputLayout()
 {
 }
 
-gl::Error LazyInputLayout::resolve(Renderer11 *renderer)
+angle::Result LazyInputLayout::resolve(d3d::Context *context, Renderer11 *renderer)
 {
-    return resolveImpl(renderer, mInputDesc, &mByteCode, mDebugName);
+    return resolveImpl(context, renderer, mInputDesc, &mByteCode, mDebugName);
 }
 
 LazyBlendState::LazyBlendState(const D3D11_BLEND_DESC &desc, const char *debugName)
@@ -2192,9 +2242,9 @@ LazyBlendState::LazyBlendState(const D3D11_BLEND_DESC &desc, const char *debugNa
 {
 }
 
-gl::Error LazyBlendState::resolve(Renderer11 *renderer)
+angle::Result LazyBlendState::resolve(d3d::Context *context, Renderer11 *renderer)
 {
-    return resolveImpl(renderer, mDesc, nullptr, mDebugName);
+    return resolveImpl(context, renderer, mDesc, nullptr, mDebugName);
 }
 
 angle::WorkaroundsD3D GenerateWorkarounds(const Renderer11DeviceCaps &deviceCaps,

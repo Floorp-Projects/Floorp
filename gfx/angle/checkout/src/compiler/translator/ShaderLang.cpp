@@ -17,8 +17,8 @@
 #ifdef ANGLE_ENABLE_HLSL
 #include "compiler/translator/TranslatorHLSL.h"
 #endif  // ANGLE_ENABLE_HLSL
-#include "compiler/translator/VariablePacker.h"
 #include "angle_gl.h"
+#include "compiler/translator/VariablePacker.h"
 
 namespace sh
 {
@@ -186,22 +186,23 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->MaxDrawBuffers               = 1;
 
     // Extensions.
-    resources->OES_standard_derivatives        = 0;
-    resources->OES_EGL_image_external          = 0;
-    resources->OES_EGL_image_external_essl3    = 0;
-    resources->NV_EGL_stream_consumer_external = 0;
-    resources->ARB_texture_rectangle           = 0;
-    resources->EXT_blend_func_extended         = 0;
-    resources->EXT_draw_buffers                = 0;
-    resources->EXT_frag_depth                  = 0;
-    resources->EXT_shader_texture_lod          = 0;
-    resources->WEBGL_debug_shader_precision    = 0;
-    resources->EXT_shader_framebuffer_fetch    = 0;
-    resources->NV_shader_framebuffer_fetch     = 0;
-    resources->ARM_shader_framebuffer_fetch    = 0;
-    resources->OVR_multiview                   = 0;
-    resources->EXT_YUV_target                  = 0;
-    resources->EXT_geometry_shader             = 0;
+    resources->OES_standard_derivatives                 = 0;
+    resources->OES_EGL_image_external                   = 0;
+    resources->OES_EGL_image_external_essl3             = 0;
+    resources->NV_EGL_stream_consumer_external          = 0;
+    resources->ARB_texture_rectangle                    = 0;
+    resources->EXT_blend_func_extended                  = 0;
+    resources->EXT_draw_buffers                         = 0;
+    resources->EXT_frag_depth                           = 0;
+    resources->EXT_shader_texture_lod                   = 0;
+    resources->WEBGL_debug_shader_precision             = 0;
+    resources->EXT_shader_framebuffer_fetch             = 0;
+    resources->NV_shader_framebuffer_fetch              = 0;
+    resources->ARM_shader_framebuffer_fetch             = 0;
+    resources->OVR_multiview                            = 0;
+    resources->EXT_YUV_target                           = 0;
+    resources->EXT_geometry_shader                      = 0;
+    resources->OES_texture_storage_multisample_2d_array = 0;
 
     resources->NV_draw_buffers = 0;
 
@@ -269,7 +270,7 @@ void InitBuiltInResources(ShBuiltInResources *resources)
     resources->MaxCombinedAtomicCounterBuffers = 1;
     resources->MaxAtomicCounterBufferSize      = 32;
 
-    resources->MaxUniformBufferBindings = 32;
+    resources->MaxUniformBufferBindings       = 32;
     resources->MaxShaderStorageBufferBindings = 4;
 
     resources->MaxGeometryUniformComponents     = 1024;
@@ -313,7 +314,7 @@ ShHandle ConstructCompiler(sh::GLenum type,
         return 0;
     }
 
-    return reinterpret_cast<void *>(base);
+    return base;
 }
 
 void Destruct(ShHandle handle)

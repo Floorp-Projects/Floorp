@@ -171,12 +171,7 @@ function installPackage(packageName)
                   .createInstance(Ci.nsIZipReader);
   zipReader.open(packageFile);
 
-  let entryNames = [];
-  let entries = zipReader.findEntries(null);
-  while (entries.hasMore()) {
-    let entry = entries.getNext();
-    entryNames.push(entry);
-  }
+  let entryNames = Array.from(zipReader.findEntries(null));
   entryNames.sort();
 
   for (let entryName of entryNames) {

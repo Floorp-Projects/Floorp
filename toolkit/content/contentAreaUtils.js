@@ -848,11 +848,8 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
     var mimeInfo = getMIMEInfoForType(aContentType, aFileExtension);
     if (mimeInfo) {
 
-      var extEnumerator = mimeInfo.getFileExtensions();
-
       var extString = "";
-      while (extEnumerator.hasMore()) {
-        var extension = extEnumerator.getNext();
+      for (var extension of mimeInfo.getFileExtensions()) {
         if (extString)
           extString += "; "; // If adding more than one extension,
                                 // separate by semi-colon

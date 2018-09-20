@@ -19,12 +19,7 @@ var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
 chromeReg.checkForNewChrome();
 
 function enum_to_array(strings) {
-  let rv = [];
-  while (strings.hasMore()) {
-    rv.push(strings.getNext());
-  }
-  rv.sort();
-  return rv;
+  return Array.from(strings).sort();
 }
 
 function run_test() {

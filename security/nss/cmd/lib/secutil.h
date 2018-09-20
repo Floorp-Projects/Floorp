@@ -9,7 +9,7 @@
 #include "secport.h"
 #include "prerror.h"
 #include "base64.h"
-#include "key.h"
+#include "keyhi.h"
 #include "secpkcs7.h"
 #include "secasn1.h"
 #include "secder.h"

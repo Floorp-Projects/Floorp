@@ -14,6 +14,21 @@
 namespace sh
 {
 
+size_t FindMainIndex(TIntermBlock *root)
+{
+    const TIntermSequence &sequence = *root->getSequence();
+    for (size_t index = 0; index < sequence.size(); ++index)
+    {
+        TIntermNode *node                       = sequence[index];
+        TIntermFunctionDefinition *nodeFunction = node->getAsFunctionDefinition();
+        if (nodeFunction != nullptr && nodeFunction->getFunction()->isMain())
+        {
+            return index;
+        }
+    }
+    return std::numeric_limits<size_t>::max();
+}
+
 TIntermFunctionDefinition *FindMain(TIntermBlock *root)
 {
     for (TIntermNode *node : *root->getSequence())

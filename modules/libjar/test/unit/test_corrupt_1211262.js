@@ -11,11 +11,8 @@ function run_test() {
                   createInstance(Ci.nsIZipReader);
   zipreader.open(file);
 
-  var entries = zipreader.findEntries('*');
   var failed = false;
-
-  while (entries.hasMore()) {
-    let entryPath = entries.getNext();
+  for (let entryPath of zipreader.findEntries('*')) {
     let entry = zipreader.getEntry(entryPath);
     if (!entry.isDirectory) {
       try {

@@ -40,11 +40,13 @@ void GL_APIENTRY BeginTransformFeedback(GLenum primitiveMode)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::BeginTransformFeedback>(primitiveMode);
+        PrimitiveMode primitiveModePacked = FromGLenum<PrimitiveMode>(primitiveMode);
+        context->gatherParams<EntryPoint::BeginTransformFeedback>(primitiveModePacked);
 
-        if (context->skipValidation() || ValidateBeginTransformFeedback(context, primitiveMode))
+        if (context->skipValidation() ||
+            ValidateBeginTransformFeedback(context, primitiveModePacked))
         {
-            context->beginTransformFeedback(primitiveMode);
+            context->beginTransformFeedback(primitiveModePacked);
         }
     }
 }
@@ -477,12 +479,14 @@ void GL_APIENTRY DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GL
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawArraysInstanced>(mode, first, count, instancecount);
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawArraysInstanced>(modePacked, first, count,
+                                                               instancecount);
 
         if (context->skipValidation() ||
-            ValidateDrawArraysInstanced(context, mode, first, count, instancecount))
+            ValidateDrawArraysInstanced(context, modePacked, first, count, instancecount))
         {
-            context->drawArraysInstanced(mode, first, count, instancecount);
+            context->drawArraysInstanced(modePacked, first, count, instancecount);
         }
     }
 }
@@ -517,13 +521,14 @@ void GL_APIENTRY DrawElementsInstanced(GLenum mode,
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawElementsInstanced>(mode, count, type, indices,
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawElementsInstanced>(modePacked, count, type, indices,
                                                                  instancecount);
 
         if (context->skipValidation() ||
-            ValidateDrawElementsInstanced(context, mode, count, type, indices, instancecount))
+            ValidateDrawElementsInstanced(context, modePacked, count, type, indices, instancecount))
         {
-            context->drawElementsInstanced(mode, count, type, indices, instancecount);
+            context->drawElementsInstanced(modePacked, count, type, indices, instancecount);
         }
     }
 }
@@ -543,13 +548,14 @@ void GL_APIENTRY DrawRangeElements(GLenum mode,
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        context->gatherParams<EntryPoint::DrawRangeElements>(mode, start, end, count, type,
+        PrimitiveMode modePacked = FromGLenum<PrimitiveMode>(mode);
+        context->gatherParams<EntryPoint::DrawRangeElements>(modePacked, start, end, count, type,
                                                              indices);
 
         if (context->skipValidation() ||
-            ValidateDrawRangeElements(context, mode, start, end, count, type, indices))
+            ValidateDrawRangeElements(context, modePacked, start, end, count, type, indices))
         {
-            context->drawRangeElements(mode, start, end, count, type, indices);
+            context->drawRangeElements(modePacked, start, end, count, type, indices);
         }
     }
 }

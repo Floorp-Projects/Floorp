@@ -25,10 +25,10 @@ class ImageFunctionHLSL final : angle::NonCopyable
   public:
     // Returns the name of the image function implementation to caller.
     // The name that's passed in is the name of the GLSL image function that it should implement.
-    TString useImageFunction(const ImmutableString &name,
-                             const TBasicType &type,
-                             TLayoutImageInternalFormat imageInternalFormat,
-                             bool readonly);
+    ImmutableString useImageFunction(const ImmutableString &name,
+                                     const TBasicType &type,
+                                     TLayoutImageInternalFormat imageInternalFormat,
+                                     bool readonly);
 
     void imageFunctionHeader(TInfoSinkBase &out);
 
@@ -43,9 +43,21 @@ class ImageFunctionHLSL final : angle::NonCopyable
             STORE
         };
 
-        TString name() const;
+        enum class DataType
+        {
+            NONE,
+            FLOAT4,
+            UINT4,
+            INT4,
+            UNORM_FLOAT4,
+            SNORM_FLOAT4
+        };
+
+        ImmutableString name() const;
 
         bool operator<(const ImageFunction &rhs) const;
+
+        DataType getDataType(TLayoutImageInternalFormat format) const;
 
         const char *getReturnType() const;
 
@@ -53,20 +65,23 @@ class ImageFunctionHLSL final : angle::NonCopyable
         TLayoutImageInternalFormat imageInternalFormat;
         bool readonly;
         Method method;
+        DataType type;
     };
 
+    static ImmutableString GetImageReference(TInfoSinkBase &out,
+                                             const ImageFunctionHLSL::ImageFunction &imageFunction);
     static void OutputImageFunctionArgumentList(
         TInfoSinkBase &out,
         const ImageFunctionHLSL::ImageFunction &imageFunction);
     static void OutputImageSizeFunctionBody(TInfoSinkBase &out,
                                             const ImageFunctionHLSL::ImageFunction &imageFunction,
-                                            const TString &imageReference);
+                                            const ImmutableString &imageReference);
     static void OutputImageLoadFunctionBody(TInfoSinkBase &out,
                                             const ImageFunctionHLSL::ImageFunction &imageFunction,
-                                            const TString &imageReference);
+                                            const ImmutableString &imageReference);
     static void OutputImageStoreFunctionBody(TInfoSinkBase &out,
                                              const ImageFunctionHLSL::ImageFunction &imageFunction,
-                                             const TString &imageReference);
+                                             const ImmutableString &imageReference);
     using ImageFunctionSet = std::set<ImageFunction>;
     ImageFunctionSet mUsesImage;
 };

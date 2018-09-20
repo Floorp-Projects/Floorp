@@ -9,7 +9,7 @@
 #ifndef LIBANGLE_VALIDATION_ES31_H_
 #define LIBANGLE_VALIDATION_ES31_H_
 
-#include "libANGLE/PackedEnums.h"
+#include "common/PackedEnums.h"
 
 #include <GLES3/gl31.h>
 
@@ -65,9 +65,12 @@ bool ValidateGetMultisamplefvRobustANGLE(Context *context,
                                          GLsizei *length,
                                          GLfloat *val);
 
-bool ValidateDrawIndirectBase(Context *context, GLenum mode, const void *indirect);
-bool ValidateDrawArraysIndirect(Context *context, GLenum mode, const void *indirect);
-bool ValidateDrawElementsIndirect(Context *context, GLenum mode, GLenum type, const void *indirect);
+bool ValidateDrawIndirectBase(Context *context, PrimitiveMode mode, const void *indirect);
+bool ValidateDrawArraysIndirect(Context *context, PrimitiveMode mode, const void *indirect);
+bool ValidateDrawElementsIndirect(Context *context,
+                                  PrimitiveMode mode,
+                                  GLenum type,
+                                  const void *indirect);
 
 bool ValidateProgramUniform1i(Context *context, GLuint program, GLint location, GLint v0);
 bool ValidateProgramUniform2i(Context *context, GLuint program, GLint location, GLint v0, GLint v1);
@@ -351,6 +354,23 @@ bool ValidateMemoryBarrier(Context *context, GLbitfield barriers);
 bool ValidateMemoryBarrierByRegion(Context *context, GLbitfield barriers);
 
 bool ValidateSampleMaski(Context *context, GLuint maskNumber, GLbitfield mask);
+
+// GL_EXT_geometry_shader
+bool ValidateFramebufferTextureEXT(Context *context,
+                                   GLenum target,
+                                   GLenum attachment,
+                                   GLuint texture,
+                                   GLint level);
+
+// GL_ANGLE_texture_multisample_array
+bool ValidateTexStorage3DMultisampleANGLE(Context *context,
+                                          TextureType target,
+                                          GLsizei samples,
+                                          GLint sizedinternalformat,
+                                          GLsizei width,
+                                          GLsizei height,
+                                          GLsizei depth,
+                                          GLboolean fixedsamplelocations);
 
 }  // namespace gl
 

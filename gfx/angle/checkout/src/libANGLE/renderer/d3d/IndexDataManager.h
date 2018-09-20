@@ -69,23 +69,25 @@ class IndexDataManager : angle::NonCopyable
 
     void deinitialize();
 
-    gl::Error prepareIndexData(const gl::Context *context,
-                               GLenum srcType,
-                               GLenum dstType,
-                               GLsizei count,
-                               gl::Buffer *glBuffer,
-                               const void *indices,
-                               TranslatedIndexData *translated);
+    angle::Result prepareIndexData(const gl::Context *context,
+                                   GLenum srcType,
+                                   GLenum dstType,
+                                   GLsizei count,
+                                   gl::Buffer *glBuffer,
+                                   const void *indices,
+                                   TranslatedIndexData *translated);
 
   private:
-    gl::Error streamIndexData(const void *data,
-                              unsigned int count,
-                              GLenum srcType,
-                              GLenum dstType,
-                              bool usePrimitiveRestartFixedIndex,
-                              TranslatedIndexData *translated);
-    gl::Error getStreamingIndexBuffer(GLenum destinationIndexType,
-                                      IndexBufferInterface **outBuffer);
+    angle::Result streamIndexData(const gl::Context *context,
+                                  const void *data,
+                                  unsigned int count,
+                                  GLenum srcType,
+                                  GLenum dstType,
+                                  bool usePrimitiveRestartFixedIndex,
+                                  TranslatedIndexData *translated);
+    angle::Result getStreamingIndexBuffer(const gl::Context *context,
+                                          GLenum destinationIndexType,
+                                          IndexBufferInterface **outBuffer);
 
     using StreamingBuffer = std::unique_ptr<StreamingIndexBufferInterface>;
 
@@ -94,10 +96,10 @@ class IndexDataManager : angle::NonCopyable
     std::unique_ptr<StreamingIndexBufferInterface> mStreamingBufferInt;
 };
 
-gl::Error GetIndexTranslationDestType(const gl::Context *context,
-                                      const gl::DrawCallParams &drawCallParams,
-                                      bool usePrimitiveRestartWorkaround,
-                                      GLenum *destTypeOut);
+angle::Result GetIndexTranslationDestType(const gl::Context *context,
+                                          const gl::DrawCallParams &drawCallParams,
+                                          bool usePrimitiveRestartWorkaround,
+                                          GLenum *destTypeOut);
 
 bool IsOffsetAligned(GLenum elementType, unsigned int offset);
 

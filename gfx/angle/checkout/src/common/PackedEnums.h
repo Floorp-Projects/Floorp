@@ -6,11 +6,11 @@
 //   Declares ANGLE-specific enums classes for GLEnum and functions operating
 //   on them.
 
-#ifndef LIBANGLE_PACKEDGLENUMS_H_
-#define LIBANGLE_PACKEDGLENUMS_H_
+#ifndef COMMON_PACKEDGLENUMS_H_
+#define COMMON_PACKEDGLENUMS_H_
 
-#include "libANGLE/PackedEGLEnums_autogen.h"
-#include "libANGLE/PackedGLEnums_autogen.h"
+#include "common/PackedEGLEnums_autogen.h"
+#include "common/PackedGLEnums_autogen.h"
 
 #include <array>
 #include <bitset>
@@ -70,11 +70,8 @@ struct AllEnums
 template <typename E, typename T>
 class PackedEnumMap
 {
-  private:
     using UnderlyingType = typename std::underlying_type<E>::type;
     using Storage        = std::array<T, EnumSize<E>()>;
-
-    Storage mData;
 
   public:
     // types:
@@ -93,44 +90,47 @@ class PackedEnumMap
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     // No explicit construct/copy/destroy for aggregate type
-    void fill(const T &u) { mData.fill(u); }
-    void swap(PackedEnumMap<E, T> &a) noexcept { mData.swap(a.mData); }
+    void fill(const T &u) { mPrivateData.fill(u); }
+    void swap(PackedEnumMap<E, T> &a) noexcept { mPrivateData.swap(a.mPrivateData); }
 
     // iterators:
-    iterator begin() noexcept { return mData.begin(); }
-    const_iterator begin() const noexcept { return mData.begin(); }
-    iterator end() noexcept { return mData.end(); }
-    const_iterator end() const noexcept { return mData.end(); }
+    iterator begin() noexcept { return mPrivateData.begin(); }
+    const_iterator begin() const noexcept { return mPrivateData.begin(); }
+    iterator end() noexcept { return mPrivateData.end(); }
+    const_iterator end() const noexcept { return mPrivateData.end(); }
 
-    reverse_iterator rbegin() noexcept { return mData.rbegin(); }
-    const_reverse_iterator rbegin() const noexcept { return mData.rbegin(); }
-    reverse_iterator rend() noexcept { return mData.rend(); }
-    const_reverse_iterator rend() const noexcept { return mData.rend(); }
+    reverse_iterator rbegin() noexcept { return mPrivateData.rbegin(); }
+    const_reverse_iterator rbegin() const noexcept { return mPrivateData.rbegin(); }
+    reverse_iterator rend() noexcept { return mPrivateData.rend(); }
+    const_reverse_iterator rend() const noexcept { return mPrivateData.rend(); }
 
     // capacity:
-    constexpr size_type size() const noexcept { return mData.size(); }
-    constexpr size_type max_size() const noexcept { return mData.max_size(); }
-    constexpr bool empty() const noexcept { return mData.empty(); }
+    constexpr size_type size() const noexcept { return mPrivateData.size(); }
+    constexpr size_type max_size() const noexcept { return mPrivateData.max_size(); }
+    constexpr bool empty() const noexcept { return mPrivateData.empty(); }
 
     // element access:
-    reference operator[](E n) { return mData[static_cast<UnderlyingType>(n)]; }
-    const_reference operator[](E n) const { return mData[static_cast<UnderlyingType>(n)]; }
-    const_reference at(E n) const { return mData.at(static_cast<UnderlyingType>(n)); }
-    reference at(E n) { return mData.at(static_cast<UnderlyingType>(n)); }
+    reference operator[](E n) { return mPrivateData[static_cast<UnderlyingType>(n)]; }
+    const_reference operator[](E n) const { return mPrivateData[static_cast<UnderlyingType>(n)]; }
+    const_reference at(E n) const { return mPrivateData.at(static_cast<UnderlyingType>(n)); }
+    reference at(E n) { return mPrivateData.at(static_cast<UnderlyingType>(n)); }
 
-    reference front() { return mData.front(); }
-    const_reference front() const { return mData.front(); }
-    reference back() { return mData.back(); }
-    const_reference back() const { return mData.back(); }
+    reference front() { return mPrivateData.front(); }
+    const_reference front() const { return mPrivateData.front(); }
+    reference back() { return mPrivateData.back(); }
+    const_reference back() const { return mPrivateData.back(); }
 
-    T *data() noexcept { return mData.data(); }
-    const T *data() const noexcept { return mData.data(); }
+    T *data() noexcept { return mPrivateData.data(); }
+    const T *data() const noexcept { return mPrivateData.data(); }
+
+    // Do not access this variable directly. It unfortunately must be public to use aggregate init.
+    /* private: */ Storage mPrivateData;
 };
 
 // PackedEnumBitSetE> is like an std::bitset<E::EnumCount> but is indexed with enum values. It
 // implements the std::bitset interface except with enum values instead of indices.
-template <typename E>
-using PackedEnumBitSet = BitSetT<EnumSize<E>(), uint32_t, E>;
+template <typename E, typename DataT = uint32_t>
+using PackedEnumBitSet = BitSetT<EnumSize<E>(), DataT, E>;
 
 }  // namespace angle
 
@@ -142,6 +142,7 @@ TextureTarget NonCubeTextureTypeToTarget(TextureType type);
 
 TextureTarget CubeFaceIndexToTextureTarget(size_t face);
 size_t CubeMapTextureTargetToFaceIndex(TextureTarget target);
+bool IsCubeMapFaceTarget(TextureTarget target);
 
 constexpr TextureTarget kCubeMapTextureTargetMin = TextureTarget::CubeMapPositiveX;
 constexpr TextureTarget kCubeMapTextureTargetMax = TextureTarget::CubeMapNegativeZ;
@@ -178,7 +179,8 @@ constexpr size_t kGraphicsShaderCount = static_cast<size_t>(ShaderType::EnumCoun
 constexpr std::array<ShaderType, kGraphicsShaderCount> kAllGraphicsShaderTypes = {
     ShaderType::Vertex, ShaderType::Geometry, ShaderType::Fragment};
 
-using ShaderBitSet = angle::PackedEnumBitSet<ShaderType>;
+using ShaderBitSet = angle::PackedEnumBitSet<ShaderType, uint8_t>;
+static_assert(sizeof(ShaderBitSet) == sizeof(uint8_t), "Unexpected size");
 
 template <typename T>
 using ShaderMap = angle::PackedEnumMap<ShaderType, T>;
@@ -187,6 +189,11 @@ TextureType SamplerTypeToTextureType(GLenum samplerType);
 
 }  // namespace gl
 
+namespace egl
+{
+MessageType ErrorCodeToMessageType(EGLint errorCode);
+}  // namespace egl
+
 namespace egl_gl
 {
 gl::TextureTarget EGLCubeMapTargetToCubeMapTarget(EGLenum eglTarget);
@@ -194,4 +201,4 @@ gl::TextureTarget EGLImageTargetToTextureTarget(EGLenum eglTarget);
 gl::TextureType EGLTextureTargetToTextureType(EGLenum eglTarget);
 }  // namespace egl_gl
 
-#endif  // LIBANGLE_PACKEDGLENUMS_H_
+#endif  // COMMON_PACKEDGLENUMS_H_

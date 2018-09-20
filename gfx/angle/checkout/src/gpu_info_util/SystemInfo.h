@@ -19,6 +19,14 @@ namespace angle
 using VendorID = uint32_t;
 using DeviceID = uint32_t;
 
+struct VersionInfo
+{
+    uint32_t major    = 0;
+    uint32_t minor    = 0;
+    uint32_t subMinor = 0;
+    uint32_t patch    = 0;
+};
+
 struct GPUDeviceInfo
 {
     GPUDeviceInfo();
@@ -32,6 +40,9 @@ struct GPUDeviceInfo
     std::string driverVendor;
     std::string driverVersion;
     std::string driverDate;
+
+    // Only available on Android
+    VersionInfo detailedDriverVersion;
 };
 
 struct SystemInfo
@@ -68,15 +79,27 @@ bool GetSystemInfo(SystemInfo *info);
 
 // Known PCI vendor IDs
 constexpr VendorID kVendorID_AMD      = 0x1002;
+constexpr VendorID kVendorID_ARM      = 0x13B5;
+constexpr VendorID kVendorID_ImgTec   = 0x1010;
 constexpr VendorID kVendorID_Intel    = 0x8086;
 constexpr VendorID kVendorID_Nvidia   = 0x10DE;
 constexpr VendorID kVendorID_Qualcomm = 0x5143;
 
+// Known non-PCI (i.e. Khronos-registered) vendor IDs
+constexpr VendorID kVendorID_Vivante     = 0x10001;
+constexpr VendorID kVendorID_VeriSilicon = 0x10002;
+constexpr VendorID kVendorID_Kazan       = 0x10003;
+
 // Predicates on vendor IDs
 bool IsAMD(VendorID vendorId);
+bool IsARM(VendorID vendorId);
+bool IsImgTec(VendorID vendorId);
 bool IsIntel(VendorID vendorId);
+bool IsKazan(VendorID vendorId);
 bool IsNvidia(VendorID vendorId);
 bool IsQualcomm(VendorID vendorId);
+bool IsVeriSilicon(VendorID vendorId);
+bool IsVivante(VendorID vendorId);
 
 }  // namespace angle
 

@@ -17,6 +17,7 @@
 #include "libANGLE/AttributeMap.h"
 #include "libANGLE/Caps.h"
 #include "libANGLE/Config.h"
+#include "libANGLE/Debug.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/LoggingAnnotator.h"
 #include "libANGLE/MemoryProgramCache.h"
@@ -48,19 +49,23 @@ struct DisplayState final : private angle::NonCopyable
     DisplayState();
     ~DisplayState();
 
+    EGLLabelKHR label;
     SurfaceSet surfaceSet;
 };
 
 // Constant coded here as a sanity limit.
 constexpr EGLAttrib kProgramCacheSizeAbsoluteMax = 0x4000000;
 
-class Display final : angle::NonCopyable
+class Display final : public LabeledObject, angle::NonCopyable
 {
   public:
     ~Display();
 
+    void setLabel(EGLLabelKHR label) override;
+    EGLLabelKHR getLabel() const override;
+
     Error initialize();
-    Error terminate();
+    Error terminate(const Thread *thread);
 
     static Display *GetDisplayFromDevice(Device *device, const AttributeMap &attribMap);
     static Display *GetDisplayFromNativeDisplay(EGLNativeDisplayType nativeDisplay,
@@ -97,7 +102,7 @@ class Display final : angle::NonCopyable
     Error createStream(const AttributeMap &attribs, Stream **outStream);
 
     Error createContext(const Config *configuration,
-                        gl::Context *shareContext,
+                        const gl::Context *shareContext,
                         const AttributeMap &attribs,
                         gl::Context **outContext);
 
@@ -106,7 +111,7 @@ class Display final : angle::NonCopyable
     Error destroySurface(Surface *surface);
     void destroyImage(Image *image);
     void destroyStream(Stream *stream);
-    Error destroyContext(gl::Context *context);
+    Error destroyContext(const Thread *thread, gl::Context *context);
 
     bool isInitialized() const;
     bool isValidConfig(const Config *config) const;
@@ -129,8 +134,8 @@ class Display final : angle::NonCopyable
     bool testDeviceLost();
     void notifyDeviceLost();
 
-    Error waitClient(const gl::Context *context) const;
-    Error waitNative(const gl::Context *context, EGLint engine) const;
+    Error waitClient(const gl::Context *context);
+    Error waitNative(const gl::Context *context, EGLint engine);
 
     const Caps &getCaps() const;
 
@@ -161,8 +166,6 @@ class Display final : angle::NonCopyable
 
     const DisplayState &getState() const { return mState; }
 
-    gl::Context *getProxyContext() const { return mProxyContext.get(); }
-
   private:
     Display(EGLenum platform, EGLNativeDisplayType displayId, Device *eglDevice);
 
@@ -181,7 +184,7 @@ class Display final : angle::NonCopyable
 
     ConfigSet mConfigSet;
 
-    typedef std::set<gl::Context*> ContextSet;
+    typedef std::set<gl::Context *> ContextSet;
     ContextSet mContextSet;
 
     typedef std::set<Image *> ImageSet;
@@ -207,12 +210,8 @@ class Display final : angle::NonCopyable
     gl::TextureManager *mTextureManager;
     gl::MemoryProgramCache mMemoryProgramCache;
     size_t mGlobalTextureShareGroupUsers;
-
-    // This gl::Context is a simple proxy to the Display for the GL back-end entry points
-    // that need access to implementation-specific data, like a Renderer object.
-    angle::UniqueObjectPointer<gl::Context, Display> mProxyContext;
 };
 
 }  // namespace egl
 
-#endif   // LIBANGLE_DISPLAY_H_
+#endif  // LIBANGLE_DISPLAY_H_

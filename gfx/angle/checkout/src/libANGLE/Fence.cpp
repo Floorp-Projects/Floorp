@@ -31,13 +31,9 @@ FenceNV::~FenceNV()
     SafeDelete(mFence);
 }
 
-Error FenceNV::set(GLenum condition)
+Error FenceNV::set(const Context *context, GLenum condition)
 {
-    Error error = mFence->set(condition);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mFence->set(context, condition));
 
     mCondition = condition;
     mStatus = GL_FALSE;
@@ -46,28 +42,20 @@ Error FenceNV::set(GLenum condition)
     return NoError();
 }
 
-Error FenceNV::test(GLboolean *outResult)
+Error FenceNV::test(const Context *context, GLboolean *outResult)
 {
     // Flush the command buffer by default
-    Error error = mFence->test(&mStatus);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mFence->test(context, &mStatus));
 
     *outResult = mStatus;
     return NoError();
 }
 
-Error FenceNV::finish()
+Error FenceNV::finish(const Context *context)
 {
     ASSERT(mIsSet);
 
-    gl::Error error = mFence->finish();
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mFence->finish(context));
 
     mStatus = GL_TRUE;
 
@@ -103,33 +91,32 @@ const std::string &Sync::getLabel() const
     return mLabel;
 }
 
-Error Sync::set(GLenum condition, GLbitfield flags)
+Error Sync::set(const Context *context, GLenum condition, GLbitfield flags)
 {
-    Error error = mFence->set(condition, flags);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mFence->set(context, condition, flags));
 
     mCondition = condition;
     mFlags = flags;
     return NoError();
 }
 
-Error Sync::clientWait(GLbitfield flags, GLuint64 timeout, GLenum *outResult)
+Error Sync::clientWait(const Context *context,
+                       GLbitfield flags,
+                       GLuint64 timeout,
+                       GLenum *outResult)
 {
     ASSERT(mCondition != GL_NONE);
-    return mFence->clientWait(flags, timeout, outResult);
+    return mFence->clientWait(context, flags, timeout, outResult);
 }
 
-Error Sync::serverWait(GLbitfield flags, GLuint64 timeout)
+Error Sync::serverWait(const Context *context, GLbitfield flags, GLuint64 timeout)
 {
-    return mFence->serverWait(flags, timeout);
+    return mFence->serverWait(context, flags, timeout);
 }
 
-Error Sync::getStatus(GLint *outResult) const
+Error Sync::getStatus(const Context *context, GLint *outResult) const
 {
-    return mFence->getStatus(outResult);
+    return mFence->getStatus(context, outResult);
 }
 
 }  // namespace gl

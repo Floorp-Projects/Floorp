@@ -39,24 +39,17 @@ RendererD3D::RendererD3D(egl::Display *display)
       mCapsInitialized(false),
       mWorkaroundsInitialized(false),
       mDisjoint(false),
-      mDeviceLost(false),
-      mWorkerThreadPool(4)
+      mDeviceLost(false)
 {
 }
 
 RendererD3D::~RendererD3D()
 {
-    cleanup();
 }
 
-void RendererD3D::cleanup()
+bool RendererD3D::skipDraw(const gl::State &glState, gl::PrimitiveMode drawMode)
 {
-    mIncompleteTextures.onDestroy(mDisplay->getProxyContext());
-}
-
-bool RendererD3D::skipDraw(const gl::State &glState, GLenum drawMode)
-{
-    if (drawMode == GL_POINTS)
+    if (drawMode == gl::PrimitiveMode::Points)
     {
         bool usesPointSize = GetImplAs<ProgramD3D>(glState.getProgram())->usesPointSize();
 
@@ -80,13 +73,6 @@ bool RendererD3D::skipDraw(const gl::State &glState, GLenum drawMode)
     }
 
     return false;
-}
-
-gl::Error RendererD3D::getIncompleteTexture(const gl::Context *context,
-                                            gl::TextureType type,
-                                            gl::Texture **textureOut)
-{
-    return mIncompleteTextures.getIncompleteTexture(context, type, this, textureOut);
 }
 
 GLenum RendererD3D::getResetStatus()
@@ -184,46 +170,26 @@ const gl::Limitations &RendererD3D::getNativeLimitations() const
     return mNativeLimitations;
 }
 
-angle::WorkerThreadPool *RendererD3D::getWorkerThreadPool()
-{
-    return &mWorkerThreadPool;
-}
-
 Serial RendererD3D::generateSerial()
 {
     return mSerialFactory.generate();
 }
 
-bool InstancedPointSpritesActive(ProgramD3D *programD3D, GLenum mode)
+bool InstancedPointSpritesActive(ProgramD3D *programD3D, gl::PrimitiveMode mode)
 {
     return programD3D->usesPointSize() && programD3D->usesInstancedPointSpriteEmulation() &&
-           mode == GL_POINTS;
+           mode == gl::PrimitiveMode::Points;
 }
 
-gl::Error RendererD3D::initRenderTarget(RenderTargetD3D *renderTarget)
+angle::Result RendererD3D::initRenderTarget(const gl::Context *context,
+                                            RenderTargetD3D *renderTarget)
 {
-    return clearRenderTarget(renderTarget, gl::ColorF(0, 0, 0, 0), 1, 0);
-}
-
-gl::Error RendererD3D::initializeMultisampleTextureToBlack(const gl::Context *context,
-                                                           gl::Texture *glTexture)
-{
-    ASSERT(glTexture->getType() == gl::TextureType::_2DMultisample);
-    TextureD3D *textureD3D        = GetImplAs<TextureD3D>(glTexture);
-    gl::ImageIndex index          = gl::ImageIndex::Make2DMultisample();
-    RenderTargetD3D *renderTarget = nullptr;
-    ANGLE_TRY(textureD3D->getRenderTarget(context, index, &renderTarget));
-    return clearRenderTarget(renderTarget, gl::ColorF(0.0f, 0.0f, 0.0f, 1.0f), 1.0f, 0);
-}
-
-void RendererD3D::onDirtyUniformBlockBinding(GLuint /*uniformBlockIndex*/)
-{
-    // No-op by default. Only implemented in D3D11.
+    return clearRenderTarget(context, renderTarget, gl::ColorF(0, 0, 0, 0), 1, 0);
 }
 
 unsigned int GetBlendSampleMask(const gl::State &glState, int samples)
 {
-    unsigned int mask   = 0;
+    unsigned int mask = 0;
     if (glState.isSampleCoverageEnabled())
     {
         GLfloat coverageValue = glState.getSampleCoverageValue();
@@ -262,4 +228,15 @@ unsigned int GetBlendSampleMask(const gl::State &glState, int samples)
     return mask;
 }
 
+GLenum DefaultGLErrorCode(HRESULT hr)
+{
+    switch (hr)
+    {
+        case D3DERR_OUTOFVIDEOMEMORY:
+        case E_OUTOFMEMORY:
+            return GL_OUT_OF_MEMORY;
+        default:
+            return GL_INVALID_OPERATION;
+    }
+}
 }  // namespace rx

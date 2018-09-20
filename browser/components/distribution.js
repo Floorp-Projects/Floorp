@@ -94,7 +94,7 @@ DistributionCustomizer.prototype = {
   },
 
   async _parseBookmarksSection(parentGuid, section) {
-    let keys = Array.from(enumerate(this._ini.getKeys(section))).sort();
+    let keys = Array.from(this._ini.getKeys(section)).sort();
     let re = /^item\.(\d+)\.(\w+)\.?(\w*)/;
     let items = {};
     let defaultIndex = -1;
@@ -317,7 +317,7 @@ DistributionCustomizer.prototype = {
     var usedPreferences = [];
 
     if (sections["Preferences-" + this._locale]) {
-      for (let key of enumerate(this._ini.getKeys("Preferences-" + this._locale))) {
+      for (let key of this._ini.getKeys("Preferences-" + this._locale)) {
         try {
           let value = this._ini.getString("Preferences-" + this._locale, key);
           if (value) {
@@ -329,7 +329,7 @@ DistributionCustomizer.prototype = {
     }
 
     if (sections["Preferences-" + this._language]) {
-      for (let key of enumerate(this._ini.getKeys("Preferences-" + this._language))) {
+      for (let key of this._ini.getKeys("Preferences-" + this._language)) {
         if (usedPreferences.indexOf(key) > -1) {
           continue;
         }
@@ -344,7 +344,7 @@ DistributionCustomizer.prototype = {
     }
 
     if (sections.Preferences) {
-      for (let key of enumerate(this._ini.getKeys("Preferences"))) {
+      for (let key of this._ini.getKeys("Preferences")) {
         if (usedPreferences.indexOf(key) > -1) {
           continue;
         }
@@ -369,7 +369,7 @@ DistributionCustomizer.prototype = {
     var usedLocalizablePreferences = [];
 
     if (sections["LocalizablePreferences-" + this._locale]) {
-      for (let key of enumerate(this._ini.getKeys("LocalizablePreferences-" + this._locale))) {
+      for (let key of this._ini.getKeys("LocalizablePreferences-" + this._locale)) {
         try {
           let value = this._ini.getString("LocalizablePreferences-" + this._locale, key);
           if (value) {
@@ -383,7 +383,7 @@ DistributionCustomizer.prototype = {
     }
 
     if (sections["LocalizablePreferences-" + this._language]) {
-      for (let key of enumerate(this._ini.getKeys("LocalizablePreferences-" + this._language))) {
+      for (let key of this._ini.getKeys("LocalizablePreferences-" + this._language)) {
         if (usedLocalizablePreferences.indexOf(key) > -1) {
           continue;
         }
@@ -400,7 +400,7 @@ DistributionCustomizer.prototype = {
     }
 
     if (sections.LocalizablePreferences) {
-      for (let key of enumerate(this._ini.getKeys("LocalizablePreferences"))) {
+      for (let key of this._ini.getKeys("LocalizablePreferences")) {
         if (usedLocalizablePreferences.indexOf(key) > -1) {
           continue;
         }
@@ -461,14 +461,9 @@ function parseValue(value) {
   return value;
 }
 
-function* enumerate(UTF8Enumerator) {
-  while (UTF8Enumerator.hasMore())
-    yield UTF8Enumerator.getNext();
-}
-
 function enumToObject(UTF8Enumerator) {
   let ret = {};
-  for (let i of enumerate(UTF8Enumerator))
+  for (let i of UTF8Enumerator)
     ret[i] = 1;
   return ret;
 }

@@ -97,6 +97,12 @@ bool Error::isError() const
     return (mCode != GL_NO_ERROR);
 }
 
+// static
+Error Error::NoError()
+{
+    return Error(GL_NO_ERROR);
+}
+
 }  // namespace gl
 
 namespace egl
@@ -184,6 +190,12 @@ EGLint Error::getID() const
 bool Error::isError() const
 {
     return (mCode != EGL_SUCCESS);
+}
+
+// Static
+Error Error::NoError()
+{
+    return Error(EGL_SUCCESS);
 }
 
 }

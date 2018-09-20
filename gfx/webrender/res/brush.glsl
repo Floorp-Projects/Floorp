@@ -91,6 +91,7 @@ void main(void) {
 #ifdef WR_FEATURE_ALPHA_PASS
     write_clip(
         vi.world_pos,
+        vi.snap_offset,
         clip_area
     );
 #endif

@@ -1,7 +1,7 @@
 import pytest
 
-from tests.actions.support.refine import filter_dict, get_events
-from tests.actions.support.keys import Keys
+from tests.perform_actions.support.keys import Keys
+from tests.perform_actions.support.refine import filter_dict, get_events
 
 
 @pytest.mark.parametrize("modifier, prop", [
