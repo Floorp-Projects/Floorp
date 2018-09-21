@@ -27,7 +27,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   friend class HTMLPictureElement;
   friend class ImageLoadTask;
 public:
-  explicit HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   static already_AddRefed<HTMLImageElement>
     Image(const GlobalObject& aGlobal,

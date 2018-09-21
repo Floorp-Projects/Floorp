@@ -28,8 +28,8 @@ typedef SVGFEUnstyledElement SVGComponentTransferFunctionElementBase;
 class SVGComponentTransferFunctionElement : public SVGComponentTransferFunctionElementBase
 {
 protected:
-  explicit SVGComponentTransferFunctionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGComponentTransferFunctionElementBase(aNodeInfo)
+  explicit SVGComponentTransferFunctionElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGComponentTransferFunctionElementBase(std::move(aNodeInfo))
   {
   }
 
@@ -95,8 +95,8 @@ class SVGFEFuncRElement : public SVGComponentTransferFunctionElement
   friend nsresult (::NS_NewSVGFEFuncRElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEFuncRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGComponentTransferFunctionElement(aNodeInfo) {}
+  explicit SVGFEFuncRElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGComponentTransferFunctionElement(std::move(aNodeInfo)) {}
 
 public:
   virtual int32_t GetChannel() override { return 0; }
@@ -120,8 +120,8 @@ class SVGFEFuncGElement : public SVGComponentTransferFunctionElement
   friend nsresult (::NS_NewSVGFEFuncGElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEFuncGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGComponentTransferFunctionElement(aNodeInfo) {}
+  explicit SVGFEFuncGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGComponentTransferFunctionElement(std::move(aNodeInfo)) {}
 
 public:
   virtual int32_t GetChannel() override { return 1; }
@@ -145,8 +145,8 @@ class SVGFEFuncBElement : public SVGComponentTransferFunctionElement
   friend nsresult (::NS_NewSVGFEFuncBElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEFuncBElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGComponentTransferFunctionElement(aNodeInfo) {}
+  explicit SVGFEFuncBElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGComponentTransferFunctionElement(std::move(aNodeInfo)) {}
 
 public:
   virtual int32_t GetChannel() override { return 2; }
@@ -170,8 +170,8 @@ class SVGFEFuncAElement : public SVGComponentTransferFunctionElement
   friend nsresult (::NS_NewSVGFEFuncAElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEFuncAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGComponentTransferFunctionElement(aNodeInfo) {}
+  explicit SVGFEFuncAElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGComponentTransferFunctionElement(std::move(aNodeInfo)) {}
 
 public:
   virtual int32_t GetChannel() override { return 3; }

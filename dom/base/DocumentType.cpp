@@ -27,13 +27,14 @@ NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
 {
   MOZ_ASSERT(aName, "Must have a name");
 
-  already_AddRefed<mozilla::dom::NodeInfo> ni =
+  RefPtr<mozilla::dom::NodeInfo> ni =
     aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nullptr,
                                   kNameSpaceID_None,
                                   nsINode::DOCUMENT_TYPE_NODE, aName);
 
   RefPtr<mozilla::dom::DocumentType> docType =
-    new mozilla::dom::DocumentType(ni, aPublicId, aSystemId, aInternalSubset);
+    new mozilla::dom::DocumentType(ni.forget(), aPublicId, aSystemId,
+                                   aInternalSubset);
   return docType.forget();
 }
 
@@ -46,11 +47,11 @@ DocumentType::WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
   return DocumentType_Binding::Wrap(cx, this, aGivenProto);
 }
 
-DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                            const nsAString& aPublicId,
                            const nsAString& aSystemId,
                            const nsAString& aInternalSubset) :
-  CharacterData(aNodeInfo),
+  CharacterData(std::move(aNodeInfo)),
   mPublicId(aPublicId),
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
@@ -101,8 +102,8 @@ DocumentType::GetInternalSubset(nsAString& aInternalSubset) const
 already_AddRefed<CharacterData>
 DocumentType::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  return do_AddRef(new DocumentType(ni, mPublicId, mSystemId, mInternalSubset));
+  return do_AddRef(new DocumentType(do_AddRef(aNodeInfo), mPublicId, mSystemId,
+                                    mInternalSubset));
 }
 
 } // namespace dom

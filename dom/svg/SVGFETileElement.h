@@ -22,8 +22,8 @@ class SVGFETileElement : public SVGFETileElementBase
   friend nsresult (::NS_NewSVGFETileElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFETileElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFETileElementBase(aNodeInfo)
+  explicit SVGFETileElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFETileElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;

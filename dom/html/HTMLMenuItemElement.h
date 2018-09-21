@@ -23,7 +23,7 @@ class HTMLMenuItemElement final : public nsGenericHTMLElement
 public:
   using mozilla::dom::Element::GetText;
 
-  HTMLMenuItemElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+  HTMLMenuItemElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                       mozilla::dom::FromParser aFromParser);
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLMenuItemElement, menuitem)

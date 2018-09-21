@@ -15,8 +15,8 @@ namespace dom {
 class HTMLTableCaptionElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLTableCaptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo)
+  explicit HTMLTableCaptionElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo))
   {
     SetHasWeirdParserInsertionMode();
   }

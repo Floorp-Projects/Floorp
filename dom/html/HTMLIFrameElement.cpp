@@ -27,9 +27,9 @@ const DOMTokenListSupportedToken HTMLIFrameElement::sSupportedSandboxTokens[] = 
   nullptr
 };
 
-HTMLIFrameElement::HTMLIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+HTMLIFrameElement::HTMLIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                      FromParser aFromParser)
-  : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)
+  : nsGenericHTMLFrameElement(std::move(aNodeInfo), aFromParser)
 {
 }
 

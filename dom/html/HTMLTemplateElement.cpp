@@ -17,8 +17,8 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Template)
 namespace mozilla {
 namespace dom {
 
-HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
 {
   SetHasWeirdParserInsertionMode();
 

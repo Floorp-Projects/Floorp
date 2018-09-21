@@ -51,8 +51,8 @@ nsSVGElement::EnumInfo SVGMaskElement::sEnumInfo[2] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGMaskElement::SVGMaskElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGMaskElementBase(aNodeInfo)
+SVGMaskElement::SVGMaskElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGMaskElementBase(std::move(aNodeInfo))
 {
 }
 

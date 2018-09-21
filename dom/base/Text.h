@@ -18,12 +18,8 @@ class Text : public CharacterData
 public:
   NS_IMPL_FROMNODE_HELPER(Text, IsText())
 
-  explicit Text(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : CharacterData(aNodeInfo)
-  {}
-
   explicit Text(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : CharacterData(aNodeInfo)
+  : CharacterData(std::move(aNodeInfo))
   {}
 
   // WebIDL API

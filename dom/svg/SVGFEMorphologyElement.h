@@ -25,8 +25,8 @@ class SVGFEMorphologyElement : public SVGFEMorphologyElementBase
   friend nsresult (::NS_NewSVGFEMorphologyElement(nsIContent **aResult,
                                                   already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEMorphologyElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEMorphologyElementBase(aNodeInfo)
+  explicit SVGFEMorphologyElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEMorphologyElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

@@ -23,8 +23,8 @@ class SVGFEPointLightElement : public SVGFEPointLightElementBase
   friend nsresult (::NS_NewSVGFEPointLightElement(nsIContent **aResult,
                                                   already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEPointLightElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEPointLightElementBase(aNodeInfo)
+  explicit SVGFEPointLightElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEPointLightElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;

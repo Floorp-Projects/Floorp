@@ -24,7 +24,7 @@ namespace dom {
 nsXULElement*
 NS_NewXULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
-  return new XULPopupElement(aNodeInfo);
+  return new XULPopupElement(std::move(aNodeInfo));
 }
 
 JSObject*

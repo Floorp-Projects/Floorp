@@ -77,14 +77,14 @@ ReportParseErrorNoTag(const nsString& aValue,
 }
 
 nsMathMLElement::nsMathMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-: nsMathMLElementBase(aNodeInfo),
+: nsMathMLElementBase(std::move(aNodeInfo)),
   ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
   mIncrementScriptLevel(false)
 {
 }
 
 nsMathMLElement::nsMathMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-: nsMathMLElementBase(aNodeInfo),
+ : nsMathMLElementBase(std::move(aNodeInfo)),
   ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
   mIncrementScriptLevel(false)
 {

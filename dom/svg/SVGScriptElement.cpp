@@ -38,9 +38,9 @@ NS_IMPL_ISUPPORTS_INHERITED(SVGScriptElement, SVGScriptElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGScriptElement::SVGScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+SVGScriptElement::SVGScriptElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                    FromParser aFromParser)
-  : SVGScriptElementBase(aNodeInfo)
+  : SVGScriptElementBase(std::move(aNodeInfo))
   , ScriptElement(aFromParser)
 {
   AddMutationObserver(this);
@@ -58,8 +58,8 @@ SVGScriptElement::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
   *aResult = nullptr;
 
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  SVGScriptElement* it = new SVGScriptElement(ni, NOT_FROM_PARSER);
+  SVGScriptElement* it =
+    new SVGScriptElement(do_AddRef(aNodeInfo), NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
   nsresult rv1 = it->Init();

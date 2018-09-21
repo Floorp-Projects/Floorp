@@ -14,8 +14,8 @@
 class nsXMLElement : public mozilla::dom::Element
 {
 public:
-  explicit nsXMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : mozilla::dom::Element(aNodeInfo)
+  explicit nsXMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : mozilla::dom::Element(std::move(aNodeInfo))
   {
   }
 

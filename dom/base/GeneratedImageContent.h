@@ -26,8 +26,8 @@ public:
   static already_AddRefed<GeneratedImageContent>
     Create(nsIDocument&, uint32_t aContentIndex);
 
-  explicit GeneratedImageContent(already_AddRefed<dom::NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo)
+  explicit GeneratedImageContent(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo))
   {
     MOZ_ASSERT(IsInNamespace(kNameSpaceID_XHTML), "Someone messed up our nodeinfo");
   }

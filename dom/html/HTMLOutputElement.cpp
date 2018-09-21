@@ -19,9 +19,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Output)
 namespace mozilla {
 namespace dom {
 
-HTMLOutputElement::HTMLOutputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+HTMLOutputElement::HTMLOutputElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                      FromParser aFromParser)
-  : nsGenericHTMLFormElement(aNodeInfo, NS_FORM_OUTPUT)
+  : nsGenericHTMLFormElement(std::move(aNodeInfo), NS_FORM_OUTPUT)
   , mValueModeFlag(eModeDefault)
   , mIsDoneAddingChildren(!aFromParser)
 {

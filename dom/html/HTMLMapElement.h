@@ -19,7 +19,7 @@ namespace dom {
 class HTMLMapElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLMapElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLMapElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
