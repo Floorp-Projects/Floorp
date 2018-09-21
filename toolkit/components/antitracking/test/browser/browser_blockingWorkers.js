@@ -128,7 +128,8 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
 
     await navigator.serviceWorker.register("empty.js").then(
       _ => { ok(false, "ServiceWorker cannot be used!"); },
-      _ => { ok(true, "ServiceWorker cannot be used!"); });
+      _ => { ok(true, "ServiceWorker cannot be used!"); }).
+      catch(e => ok(false, "Promise rejected: " + e));
 
     let dwu = SpecialPowers.getDOMWindowUtils(window);
     let helper = dwu.setHandlingUserInput(true);
@@ -148,7 +149,8 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
       reg => { ok(true, "ServiceWorker can be used!"); return reg; },
       _ => { ok(false, "ServiceWorker cannot be used! " + _); }).then(
       reg => reg.unregister(),
-      _ => { ok(false, "unregister failed"); });
+      _ => { ok(false, "unregister failed"); }).
+      catch(e => ok(false, "Promise rejected: " + e));
   },
   async _ => {
     await SpecialPowers.pushPrefEnv({"set": [
@@ -164,7 +166,8 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
       reg => { ok(true, "ServiceWorker can be used!"); return reg; },
       _ => { ok(false, "ServiceWorker cannot be used!"); }).then(
       reg => reg.unregister(),
-      _ => { ok(false, "unregister failed"); });
+      _ => { ok(false, "unregister failed"); }).
+      catch(e => ok(false, "Promise rejected: " + e));
 
     let dwu = SpecialPowers.getDOMWindowUtils(window);
     let helper = dwu.setHandlingUserInput(true);
@@ -185,7 +188,8 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
       reg => { ok(true, "ServiceWorker can be used!"); return reg; },
       _ => { ok(false, "ServiceWorker cannot be used!"); }).then(
       reg => reg.unregister(),
-      _ => { ok(false, "unregister failed"); });
+      _ => { ok(false, "unregister failed"); }).
+      catch(e => ok(false, "Promise rejected: " + e));
   },
   async _ => {
     await new Promise(resolve => {
