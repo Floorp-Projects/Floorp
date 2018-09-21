@@ -18,6 +18,7 @@ const SidebarItem = createFactory(require("./SidebarItem"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
+const USB_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 
 class Sidebar extends PureComponent {
   static get propTypes() {
@@ -30,40 +31,51 @@ class Sidebar extends PureComponent {
 
   renderDevices() {
     const { dispatch, runtimes, selectedPage } = this.props;
-    if (!runtimes.networkRuntimes.length) {
+    if (!runtimes.networkRuntimes.length && !runtimes.usbRuntimes.length) {
       return Localized(
         {
           id: "about-debugging-sidebar-no-devices"
         }, dom.span(
           {
-            className: "sidebar__devices__no-devices-message"
+            className: "sidebar__devices__no-devices-message js-sidebar-no-devices"
           },
           "No devices discovered"
         )
       );
     }
 
-    return runtimes.networkRuntimes.map(runtime => {
-      const pageId = "networklocation-" + runtime.id;
-      const runtimeHasClient = !!runtime.client;
+    return [
+      ...runtimes.networkRuntimes.map(runtime => {
+        const pageId = "networklocation-" + runtime.id;
+        const runtimeHasClient = !!runtime.client;
 
-      const connectComponent = DeviceSidebarItemAction({
-        connected: runtimeHasClient,
-        dispatch,
-        runtimeId: runtime.id,
-      });
+        const connectComponent = DeviceSidebarItemAction({
+          connected: runtimeHasClient,
+          dispatch,
+          runtimeId: runtime.id,
+        });
 
-      return SidebarItem({
-        connectComponent,
-        id: pageId,
-        dispatch,
-        icon: GLOBE_ICON,
-        isSelected: selectedPage === pageId,
-        name: runtime.id,
-        runtimeId: runtime.id,
-        selectable: runtimeHasClient,
-      });
-    });
+        return SidebarItem({
+          connectComponent,
+          id: pageId,
+          dispatch,
+          icon: GLOBE_ICON,
+          isSelected: selectedPage === pageId,
+          name: runtime.id,
+          runtimeId: runtime.id,
+          selectable: runtimeHasClient,
+        });
+      }),
+      ...runtimes.usbRuntimes.map(runtime =>
+        SidebarItem({
+          id: `usb-${ runtime.id }`,
+          dispatch,
+          icon: USB_ICON,
+          isSelected: false,
+          name: runtime.name,
+          selectable: false,
+        })),
+    ];
   }
 
   render() {

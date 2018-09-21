@@ -46,12 +46,6 @@ function getDebugTargetPane(title, document) {
 
 // eslint-disable-next-line no-unused-vars
 function prepareCollapsibilitiesTest() {
-  registerCleanupFunction(() => {
-    for (const { pref } of TARGET_PANES) {
-      Services.prefs.clearUserPref(pref);
-    }
-  });
-
   // Make all collapsibilities to be expanded.
   for (const { pref } of TARGET_PANES) {
     Services.prefs.setBoolPref(pref, false);
@@ -65,3 +59,9 @@ async function toggleCollapsibility(debugTargetPane) {
   const animations = debugTargetPane.ownerDocument.getAnimations();
   await Promise.all(animations.map(animation => animation.finished));
 }
+
+registerCleanupFunction(() => {
+  for (const { pref } of TARGET_PANES) {
+    Services.prefs.clearUserPref(pref);
+  }
+});

@@ -11,7 +11,7 @@ const Actions = require("./index");
 
 const {
   findRuntimeById,
-} = require("devtools/client/aboutdebugging-new/src/modules/runtimes-state-helper");
+} = require("../modules/runtimes-state-helper");
 
 const {
   CONNECT_RUNTIME_FAILURE,
@@ -24,6 +24,7 @@ const {
   UNWATCH_RUNTIME_FAILURE,
   UNWATCH_RUNTIME_START,
   UNWATCH_RUNTIME_SUCCESS,
+  USB_RUNTIMES_UPDATED,
   WATCH_RUNTIME_FAILURE,
   WATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
@@ -141,9 +142,14 @@ function unwatchRuntime(id) {
   };
 }
 
+function updateUSBRuntimes(runtimes) {
+  return { type: USB_RUNTIMES_UPDATED, runtimes };
+}
+
 module.exports = {
   connectRuntime,
   disconnectRuntime,
   unwatchRuntime,
+  updateUSBRuntimes,
   watchRuntime,
 };

@@ -98,7 +98,7 @@ TEST_CASES = (
 
 
 @pytest.mark.parametrize('test', TEST_CASES)
-def test_include_exclude(filterpaths, test):
+def test_filterpaths(filterpaths, test):
     expected = test.pop('expected')
 
     paths = filterpaths(**test)

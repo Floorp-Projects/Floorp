@@ -247,6 +247,30 @@ add_task(async function test_privacy_other_prefs() {
     },
   };
 
+  let defaultPrefs = new Preferences({defaultBranch: true});
+  let defaultCookieBehavior = defaultPrefs.get("network.cookie.cookieBehavior");
+  let defaultBehavior;
+  switch (defaultCookieBehavior) {
+    case cookieSvc.BEHAVIOR_ACCEPT:
+      defaultBehavior = "allow_all";
+      break;
+    case cookieSvc.BEHAVIOR_REJECT_FOREIGN:
+      defaultBehavior = "reject_third_party";
+      break;
+    case cookieSvc.BEHAVIOR_REJECT:
+      defaultBehavior = "reject_all";
+      break;
+    case cookieSvc.BEHAVIOR_LIMIT_FOREIGN:
+      defaultBehavior = "allow_visited";
+      break;
+    case cookieSvc.BEHAVIOR_REJECT_TRACKER:
+      defaultBehavior = "reject_trackers";
+      break;
+    default:
+      ok(false, `Unexpected cookie behavior encountered: ${defaultCookieBehavior}`);
+      break;
+  }
+
   async function background() {
     browser.test.onMessage.addListener(async (msg, ...args) => {
       let data = args[0];
@@ -427,10 +451,10 @@ add_task(async function test_privacy_other_prefs() {
     "websites.cookieConfig",
     {nonPersistentCookies: true},
     {
-      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
+      "network.cookie.cookieBehavior": defaultCookieBehavior,
       "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_SESSION,
     },
-    {behavior: "allow_all", nonPersistentCookies: true},
+    {behavior: defaultBehavior, nonPersistentCookies: true},
   );
   await testSetting(
     "websites.cookieConfig",
@@ -463,20 +487,30 @@ add_task(async function test_privacy_other_prefs() {
     "websites.cookieConfig",
     {nonPersistentCookies: true},
     {
-      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
+      "network.cookie.cookieBehavior": defaultCookieBehavior,
       "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_SESSION,
     },
-    {behavior: "allow_all", nonPersistentCookies: true},
+    {behavior: defaultBehavior, nonPersistentCookies: true},
   );
   await testSetting(
     "websites.cookieConfig",
     {nonPersistentCookies: false},
     {
-      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
+      "network.cookie.cookieBehavior": defaultCookieBehavior,
       "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
-    {behavior: "allow_all", nonPersistentCookies: false},
+    {behavior: defaultBehavior, nonPersistentCookies: false},
   );
+  await testSetting(
+    "websites.cookieConfig",
+    {behavior: "reject_trackers"},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT_TRACKER,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
+    },
+    {behavior: "reject_trackers", nonPersistentCookies: false},
+  );
+
 
   await extension.unload();
 
