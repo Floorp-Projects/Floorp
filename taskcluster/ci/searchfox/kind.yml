@@ -64,7 +64,7 @@ jobs:
                 PERFHERDER_EXTRA_OPTIONS: searchfox
         run:
             using: mozharness
-            actions: [get-secrets build update]
+            actions: [get-secrets build]
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_base_mac_64_cross_builds.py
