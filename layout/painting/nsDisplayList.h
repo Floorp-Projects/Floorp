@@ -6784,6 +6784,8 @@ public:
   void PrintEffects(nsACString& aTo);
 #endif
 
+  bool IsValidMask();
+
   void PaintAsLayer(nsDisplayListBuilder* aBuilder,
                     gfxContext* aCtx,
                     LayerManager* aManager);
