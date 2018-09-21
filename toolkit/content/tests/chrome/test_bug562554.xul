@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <!--
   XUL Widget Test for bug 562554
@@ -47,12 +46,15 @@ function test() {
 let tests = [
   // Click on the toolbarbutton itself - should call popupshowing
   () => synthesizeMouse($("toolbarmenu"), 10, 50, {}, window),
+  () => is(eventCount.popupshowing, 1, "Got first popupshowing event"),
 
   // Click on button1 which has allowevents="true" - should call clickbutton1
   () => synthesizeMouse($("toolbarmenu"), 10, 15, {}, window),
+  () => is(eventCount.clickbutton1, 1, "Button 1 clicked"),
 
   // Click on button2 where it intersects with button1 - should call popupshowing
   () => synthesizeMouse($("toolbarmenu"), 85, 15, {}, window),
+  () => is(eventCount.popupshowing, 2, "Got second popupshowing event"),
 
   // Click on button2 outside of intersection - should call popupshowing
   () => synthesizeMouse($("toolbarmenu"), 150, 15, {}, window)
