@@ -22,7 +22,7 @@ const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 const FAKE_PROVIDERS = [FAKE_LOCAL_PROVIDER, FAKE_REMOTE_PROVIDER, FAKE_REMOTE_SETTINGS_PROVIDER];
 const ALL_MESSAGE_IDS = [...FAKE_LOCAL_MESSAGES, ...FAKE_REMOTE_MESSAGES].map(message => message.id);
 const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
-const ONE_DAY = 24 * 60 * 60 * 1000;
+const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 // Creates a message object that looks like messages returned by
 // RemotePageManager listeners
@@ -874,6 +874,23 @@ describe("ASRouter", () => {
       });
     }
 
+    describe("frequency normalisation", () => {
+      beforeEach(async () => {
+        const messages = [{frequency: {custom: [{period: "daily", cap: 10}]}}];
+        const provider = {id: "foo", frequency: {custom: [{period: "daily", cap: 100}]}, messages, enabled: true};
+        await createRouterAndInit([provider]);
+      });
+
+      it("period aliases in provider frequency caps should be normalised", () => {
+        const [provider] = Router.state.providers;
+        assert.equal(provider.frequency.custom[0].period, ONE_DAY_IN_MS);
+      });
+      it("period aliases in message frequency caps should be normalised", async () => {
+        const [message] = Router.state.messages;
+        assert.equal(message.frequency.custom[0].period, ONE_DAY_IN_MS);
+      });
+    });
+
     describe("#addImpression", () => {
       it("should add a message impression and update _storage with the current time if the message has frequency caps", async () => {
         clock.tick(42);
@@ -962,7 +979,7 @@ describe("ASRouter", () => {
           assert.isTrue(result);
         });
         it("should return true if there are no impressions", () => {
-          const item = {id: "foo", frequency: {lifetime: 10, custom: [{period: ONE_DAY, cap: 2}]}};
+          const item = {id: "foo", frequency: {lifetime: 10, custom: [{period: ONE_DAY_IN_MS, cap: 2}]}};
           const impressions = [];
           const result = Router._isBelowItemFrequencyCap(item, impressions);
           assert.isTrue(result);
@@ -989,9 +1006,9 @@ describe("ASRouter", () => {
 
       describe("custom frequency caps", () => {
         it("should return true if impressions in the time period < the cap and total impressions < the lifetime cap", () => {
-          clock.tick(ONE_DAY + 10);
-          const item = {id: "foo", frequency: {custom: [{period: ONE_DAY, cap: 2}], lifetime: 3}};
-          const impressions = [0, ONE_DAY + 1];
+          clock.tick(ONE_DAY_IN_MS + 10);
+          const item = {id: "foo", frequency: {custom: [{period: ONE_DAY_IN_MS, cap: 2}], lifetime: 3}};
+          const impressions = [0, ONE_DAY_IN_MS + 1];
           const result = Router._isBelowItemFrequencyCap(item, impressions);
           assert.isTrue(result);
         });
@@ -1003,39 +1020,33 @@ describe("ASRouter", () => {
           assert.isFalse(result);
         });
         it("should return false if impressions in one of the time periods > the cap and total impressions < the lifetime cap", () => {
-          clock.tick(ONE_DAY + 200);
+          clock.tick(ONE_DAY_IN_MS + 200);
           const itemTrue = {id: "msg2", frequency: {custom: [{period: 100, cap: 2}]}};
-          const itemFalse = {id: "msg1", frequency: {custom: [{period: 100, cap: 2}, {period: ONE_DAY, cap: 3}]}};
-          const impressions = [0, ONE_DAY + 160, ONE_DAY - 100, ONE_DAY - 200];
+          const itemFalse = {id: "msg1", frequency: {custom: [{period: 100, cap: 2}, {period: ONE_DAY_IN_MS, cap: 3}]}};
+          const impressions = [0, ONE_DAY_IN_MS + 160, ONE_DAY_IN_MS - 100, ONE_DAY_IN_MS - 200];
           assert.isTrue(Router._isBelowItemFrequencyCap(itemTrue, impressions));
           assert.isFalse(Router._isBelowItemFrequencyCap(itemFalse, impressions));
         });
         it("should return false if impressions in the time period < the cap and total impressions > the lifetime cap", () => {
-          clock.tick(ONE_DAY + 10);
-          const item = {id: "msg1", frequency: {custom: [{period: ONE_DAY, cap: 2}], lifetime: 3}};
-          const impressions = [0, 1, 2, 3, ONE_DAY + 1];
+          clock.tick(ONE_DAY_IN_MS + 10);
+          const item = {id: "msg1", frequency: {custom: [{period: ONE_DAY_IN_MS, cap: 2}], lifetime: 3}};
+          const impressions = [0, 1, 2, 3, ONE_DAY_IN_MS + 1];
           const result = Router._isBelowItemFrequencyCap(item, impressions);
           assert.isFalse(result);
         });
         it("should return true if daily impressions < the daily cap and there is no lifetime cap", () => {
-          clock.tick(ONE_DAY + 10);
-          const item = {id: "msg1", frequency: {custom: [{period: ONE_DAY, cap: 2}]}};
-          const impressions = [0, 1, 2, 3, ONE_DAY + 1];
+          clock.tick(ONE_DAY_IN_MS + 10);
+          const item = {id: "msg1", frequency: {custom: [{period: ONE_DAY_IN_MS, cap: 2}]}};
+          const impressions = [0, 1, 2, 3, ONE_DAY_IN_MS + 1];
           const result = Router._isBelowItemFrequencyCap(item, impressions);
           assert.isTrue(result);
         });
         it("should return false if daily impressions > the daily cap and there is no lifetime cap", () => {
-          clock.tick(ONE_DAY + 10);
-          const item = {id: "msg1", frequency: {custom: [{period: ONE_DAY, cap: 2}]}};
-          const impressions = [0, 1, 2, 3, ONE_DAY + 1, ONE_DAY + 2, ONE_DAY + 3];
+          clock.tick(ONE_DAY_IN_MS + 10);
+          const item = {id: "msg1", frequency: {custom: [{period: ONE_DAY_IN_MS, cap: 2}]}};
+          const impressions = [0, 1, 2, 3, ONE_DAY_IN_MS + 1, ONE_DAY_IN_MS + 2, ONE_DAY_IN_MS + 3];
           const result = Router._isBelowItemFrequencyCap(item, impressions);
           assert.isFalse(result);
-        });
-        it("should allow the 'daily' alias for period", () => {
-          clock.tick(ONE_DAY + 10);
-          const item = {id: "msg1", frequency: {custom: [{period: "daily", cap: 2}]}};
-          assert.isFalse(Router._isBelowItemFrequencyCap(item, [0, 1, 2, 3, ONE_DAY + 1, ONE_DAY + 2, ONE_DAY + 3]));
-          assert.isTrue(Router._isBelowItemFrequencyCap(item, [0, 1, 2, 3, ONE_DAY + 1]));
         });
       });
     });
@@ -1046,8 +1057,8 @@ describe("ASRouter", () => {
         assert.equal(Router.getLongestPeriod(message), 200);
       });
       it("should return the longest period if there are more than one definitions", () => {
-        const message = {id: "foo", frequency: {custom: [{period: 1000, cap: 3}, {period: ONE_DAY, cap: 5}, {period: 100, cap: 2}]}};
-        assert.equal(Router.getLongestPeriod(message), ONE_DAY);
+        const message = {id: "foo", frequency: {custom: [{period: 1000, cap: 3}, {period: ONE_DAY_IN_MS, cap: 5}, {period: 100, cap: 2}]}};
+        assert.equal(Router.getLongestPeriod(message), ONE_DAY_IN_MS);
       });
       it("should return null if there are is no .frequency", () => {
         const message = {id: "foo"};
@@ -1071,9 +1082,9 @@ describe("ASRouter", () => {
         assert.deepEqual(Router.state.messageImpressions, result);
       });
       it("should clear messageImpressions older than the period if no lifetime impression cap is included", async () => {
-        const CURRENT_TIME = ONE_DAY * 2;
+        const CURRENT_TIME = ONE_DAY_IN_MS * 2;
         clock.tick(CURRENT_TIME);
-        const messages = [{id: "foo", frequency: {custom: [{period: ONE_DAY, cap: 5}]}}];
+        const messages = [{id: "foo", frequency: {custom: [{period: ONE_DAY_IN_MS, cap: 5}]}}];
         messageImpressions = {foo: [0, 1, CURRENT_TIME - 10]};
         // Only 0 and 1 are more than 24 hours before CURRENT_TIME
         const result = {foo: [CURRENT_TIME - 10]};
@@ -1083,9 +1094,9 @@ describe("ASRouter", () => {
         assert.deepEqual(Router.state.messageImpressions, result);
       });
       it("should clear messageImpressions older than the longest period if no lifetime impression cap is included", async () => {
-        const CURRENT_TIME = ONE_DAY * 2;
+        const CURRENT_TIME = ONE_DAY_IN_MS * 2;
         clock.tick(CURRENT_TIME);
-        const messages = [{id: "foo", frequency: {custom: [{period: ONE_DAY, cap: 5}, {period: 100, cap: 2}]}}];
+        const messages = [{id: "foo", frequency: {custom: [{period: ONE_DAY_IN_MS, cap: 5}, {period: 100, cap: 2}]}}];
         messageImpressions = {foo: [0, 1, CURRENT_TIME - 10]};
         // Only 0 and 1 are more than 24 hours before CURRENT_TIME
         const result = {foo: [CURRENT_TIME - 10]};
