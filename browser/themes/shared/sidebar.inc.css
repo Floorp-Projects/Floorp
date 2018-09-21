@@ -110,7 +110,7 @@ toolbarseparator + #sidebar-extensions-separator {
 
 #sidebarMenu-popup > .subviewbutton[checked="true"] {
   list-style-image: none;
-  background: url(chrome://global/skin/icons/check.svg) no-repeat transparent;
+  background: url(chrome://browser/skin/check.svg) no-repeat transparent;
   background-size: 11px 11px;
 }
 
