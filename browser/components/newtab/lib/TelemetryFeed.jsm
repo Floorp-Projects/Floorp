@@ -328,7 +328,7 @@ this.TelemetryFeed = class TelemetryFeed {
   createPing(portID) {
     const ping = {
       addon_version: Services.appinfo.appBuildID,
-      locale: Services.locale.getAppLocaleAsLangTag(),
+      locale: Services.locale.appLocaleAsLangTag,
       user_prefs: this.userPreferences,
     };
 
@@ -412,7 +412,7 @@ this.TelemetryFeed = class TelemetryFeed {
     const ping = {
       client_id: "n/a",
       addon_version: Services.appinfo.appBuildID,
-      locale: Services.locale.getAppLocaleAsLangTag(),
+      locale: Services.locale.appLocaleAsLangTag,
       impression_id: this._impressionId,
     };
     if (action.data.includeClientID) {

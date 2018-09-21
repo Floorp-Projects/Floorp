@@ -8,10 +8,10 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  const originalAvailable = Services.locale.getAvailableLocales();
-  const originalRequested = Services.locale.getRequestedLocales();
-  Services.locale.setAvailableLocales(["ko-KR"]);
-  Services.locale.setRequestedLocales(["ko-KR"]);
+  const originalAvailable = Services.locale.availableLocales;
+  const originalRequested = Services.locale.requestedLocales;
+  Services.locale.availableLocales = ["ko-KR"];
+  Services.locale.requestedLocales = ["ko-KR"];
 
   // First be sure we have a non-UTC timezone and a non en-US locale.
   var setTimeZone = SpecialPowers.Cu.getJSTestingFunctions().setTimeZone;
@@ -58,8 +58,8 @@
     SimpleTest.is(options.timeZoneName, "long", "Resist Fingerprinting Intl.DateTimeFormat.format.timeZoneName");
 
     // Cleanup
-    Services.locale.setRequestedLocales(originalRequested);
-    Services.locale.setAvailableLocales(originalAvailable);
+    Services.locale.requestedLocales = originalRequested;
+    Services.locale.availableLocales = originalAvailable;
     SimpleTest.finish();
   });
 </script>

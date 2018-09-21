@@ -347,7 +347,7 @@ class AddonInternal {
      */
     const locales = [].concat(...this.locales.map(loc => loc.locales));
 
-    let requestedLocales = Services.locale.getRequestedLocales();
+    let requestedLocales = Services.locale.requestedLocales;
 
     /**
      * If en-US is not in the list, add it as the last fallback.

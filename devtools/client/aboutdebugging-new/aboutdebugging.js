@@ -80,7 +80,7 @@ const AboutDebugging = {
       L10nRegistry.registerSource(temporarySource);
     }
 
-    const locales = Services.locale.getAppLocalesAsBCP47();
+    const locales = Services.locale.appLocalesAsBCP47;
     const generator =
       L10nRegistry.generateContexts(locales, ["aboutdebugging.ftl"]);
 

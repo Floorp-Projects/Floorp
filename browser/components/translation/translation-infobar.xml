@@ -270,7 +270,7 @@
                      "C\u1EA3m \u01A1n"],
               };
 
-              let locale = Services.locale.getAppLocaleAsLangTag();
+              let locale = Services.locale.appLocaleAsLangTag;
               if (!(locale in localizedStrings))
                 locale = "en";
               let strings = localizedStrings[locale];

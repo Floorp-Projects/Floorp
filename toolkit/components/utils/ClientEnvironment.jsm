@@ -118,7 +118,7 @@ class ClientEnvironmentBase {
   }
 
   static get locale() {
-    return Services.locale.getAppLocaleAsLangTag();
+    return Services.locale.appLocaleAsLangTag;
   }
 
   static get doNotTrack() {
