@@ -252,6 +252,20 @@ browser.engagement.navigation:
     record_in_processes:
       - 'main'
 
+  webextension:
+    bug_numbers:
+      - 1492233
+    description: >
+      The count URI loads triggered in a subsession from a webextension.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - mkaply@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains (RSS/Atom) feed usage
 browser.feeds:
   preview_loaded:

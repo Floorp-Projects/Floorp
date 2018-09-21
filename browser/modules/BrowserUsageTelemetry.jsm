@@ -42,6 +42,7 @@ const KNOWN_SEARCH_SOURCES = [
   "newtab",
   "searchbar",
   "urlbar",
+  "webextension",
 ];
 
 const KNOWN_ONEOFF_SOURCES = [
@@ -467,7 +468,8 @@ let BrowserUsageTelemetry = {
         this._recordSearch(engine, "about_newtab", "enter");
         break;
       case "contextmenu":
-        this._recordSearch(engine, "contextmenu");
+      case "webextension":
+        this._recordSearch(engine, source);
         break;
     }
   },
