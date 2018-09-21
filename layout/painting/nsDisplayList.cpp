@@ -9703,17 +9703,14 @@ nsDisplayMask::CanMerge(const nsDisplayItem* aItem) const
          CanMergeDisplayMaskFrame(aItem->Frame());
 }
 
-already_AddRefed<Layer>
-nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
-                          LayerManager* aManager,
-                          const ContainerLayerParameters& aContainerParameters)
-{
+bool
+nsDisplayMask::IsValidMask() {
   if (!ValidateSVGFrame()) {
-    return nullptr;
+    return false;
   }
 
   if (mFrame->StyleEffects()->mOpacity == 0.0f && mHandleOpacity) {
-    return nullptr;
+    return false;
   }
 
   nsIFrame* firstFrame =
@@ -9723,6 +9720,20 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   if (effectProperties.HasInvalidClipPath() ||
       effectProperties.HasInvalidMask()) {
+    return false;
+  }
+
+  return true;
+}
+
+
+
+already_AddRefed<Layer>
+nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
+                          LayerManager* aManager,
+                          const ContainerLayerParameters& aContainerParameters)
+{
+  if (!IsValidMask()) {
     return nullptr;
   }
 
