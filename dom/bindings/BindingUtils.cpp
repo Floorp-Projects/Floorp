@@ -1148,7 +1148,7 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
 }
 
 bool
-TryPreserveWrapper(JSObject* obj)
+TryPreserveWrapper(JS::Handle<JSObject*> obj)
 {
   MOZ_ASSERT(IsDOMObject(obj));
 
