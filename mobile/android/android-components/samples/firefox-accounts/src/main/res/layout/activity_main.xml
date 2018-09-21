@@ -33,6 +33,12 @@
             android:text="@string/sign_in_webview" />
 
         <Button
+            android:id="@+id/buttonPair"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sign_in_pair" />
+
+        <Button
             android:id="@+id/buttonLogout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -53,5 +59,14 @@
         android:layout_below="@+id/checkboxKeys"
         android:layout_gravity="center"
         android:text="@string/log_out" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/scanresult"
+        android:textColor="#000"
+        android:layout_marginTop="10dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text=""/>
 
 </RelativeLayout>

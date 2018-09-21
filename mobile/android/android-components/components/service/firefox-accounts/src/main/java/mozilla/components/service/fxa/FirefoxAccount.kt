@@ -36,6 +36,14 @@ class FirefoxAccount(override var rawPointer: RawFxAccount?) : RustObject<RawFxA
         }
     }
 
+    fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): FxaResult<String> {
+        return safeAsync { e ->
+            val scope = scopes.joinToString(" ")
+            val p = FxaClient.INSTANCE.fxa_begin_pairing_flow(validPointer(), pairingUrl, scope, e)
+            getAndConsumeString(p) ?: ""
+        }
+    }
+
     /**
      * Fetches the profile object for the current client either from the existing cached account,
      * or from the server (requires the client to have access to the profile scope).
@@ -58,19 +66,6 @@ class FirefoxAccount(override var rawPointer: RawFxAccount?) : RustObject<RawFxA
      */
     fun getProfile(): FxaResult<Profile> {
         return getProfile(false)
-    }
-
-    /**
-     * Creates a new SAML assertion from the account state, which can be posted to the token server
-     * endpoint fetched from [getTokenServerEndpointURL] in order to get an access token.
-     *
-     * @return String representing the SAML assertion
-     */
-    fun newAssertion(audience: String): String? {
-        return safeSync { e ->
-            val p = FxaClient.INSTANCE.fxa_assertion_new(this.validPointer(), audience, e)
-            getAndConsumeString(p)
-        }
     }
 
     /**

@@ -60,6 +60,13 @@ internal interface FxaClient : Library {
         e: Error.ByReference
     ): Pointer
 
+    fun fxa_begin_pairing_flow(
+        fxa: RawFxAccount,
+        pairingUrl: String,
+        scopes: String,
+        e: Error.ByReference
+    ): Pointer
+
     fun fxa_profile(fxa: RawFxAccount, ignoreCache: Boolean, e: Error.ByReference): Profile.Raw
     fun fxa_assertion_new(fxa: RawFxAccount, audience: String, e: Error.ByReference): Pointer
     fun fxa_get_token_server_endpoint_url(fxa: RawFxAccount, e: Error.ByReference): Pointer

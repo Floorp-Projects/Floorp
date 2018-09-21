@@ -29,6 +29,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         const val CLIENT_ID = "12cc4070a481bc73"
         const val REDIRECT_URL = "fxaclient://android.redirect"
         const val CONFIG_URL = "https://latest.dev.lcip.org"
+        const val CONFIG_URL_PAIRING = "https://pairsona.dev.lcip.org"
         const val FXA_STATE_PREFS_KEY = "fxaAppState"
         const val FXA_STATE_KEY = "fxaState"
     }
@@ -42,10 +43,25 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                 this.account = it
                 account?.getProfile()
             }, {
-                Config.custom(CONFIG_URL).then { value: Config ->
-                    val acct = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
-                    account = acct
-                    acct.getProfile()
+                getIntent().getExtras()?.getString("pairingUrl")?.let {
+                    Config.custom(CONFIG_URL_PAIRING).then { value: Config ->
+                        val acct = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
+                        account = acct
+
+                        account?.beginPairingFlow(it, scopes)?.whenComplete {
+                            openWebView(it)
+                        }
+
+                        acct.getProfile()
+                    }
+                } ?: run {
+                    Config.custom(CONFIG_URL).then { value: Config ->
+                        val acct = FirefoxAccount(value, CLIENT_ID, REDIRECT_URL)
+                        account = acct
+
+                        acct.getProfile()
+                }
+
                 }
             }).whenComplete {
                 val txtView: TextView = findViewById(R.id.txtView)
@@ -61,6 +77,11 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             account?.beginOAuthFlow(scopes, wantsKeys)?.whenComplete { openWebView(it) }
+        }
+
+        findViewById<View>(R.id.buttonPair).setOnClickListener {
+            val intent = Intent(this@MainActivity, ScanActivity::class.java)
+            startActivity(intent)
         }
 
         findViewById<View>(R.id.buttonLogout).setOnClickListener {
