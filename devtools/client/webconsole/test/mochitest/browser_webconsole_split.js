@@ -247,7 +247,7 @@ async function performTests() {
   }
 
   async function openPanel(toolId) {
-    const target = TargetFactory.forTab(gBrowser.selectedTab);
+    const target = await TargetFactory.forTab(gBrowser.selectedTab);
     toolbox = await gDevTools.showToolbox(target, toolId);
   }
 

@@ -127,7 +127,7 @@ function initCallWatcherBackend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
     await registerActorInContentProcess("chrome://mochitests/content/browser/devtools/client/canvasdebugger/test/call-watcher-actor.js", {
       prefix: "callWatcher",
       constructor: "CallWatcherActor",
@@ -147,7 +147,7 @@ function initCanvasDebuggerBackend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
@@ -161,7 +161,7 @@ function initCanvasDebuggerFrontend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
 
     await target.makeRemote();
 
