@@ -3511,7 +3511,7 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
 
 /* Pretend we can always preserve wrappers for dummy DOM objects. */
 static bool
-DummyPreserveWrapperCallback(JSContext* cx, JSObject* obj)
+DummyPreserveWrapperCallback(JSContext* cx, HandleObject obj)
 {
     return true;
 }

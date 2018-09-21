@@ -464,7 +464,7 @@ extern JS_FRIEND_API(JS::Zone*)
 GetRealmZone(JS::Realm* realm);
 
 typedef bool
-(* PreserveWrapperCallback)(JSContext* cx, JSObject* obj);
+(* PreserveWrapperCallback)(JSContext* cx, JS::HandleObject obj);
 
 typedef enum  {
     CollectNurseryBeforeDump,
