@@ -10,21 +10,21 @@ use core_foundation::base::TCFType;
 use core_foundation::dictionary::CFDictionary;
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::string::{CFString, CFStringRef};
-use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGBitmapByteOrder32Little};
-#[cfg(not(feature = "pathfinder"))]
-use core_graphics::base::kCGImageAlphaPremultipliedFirst;
+use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultipliedFirst};
+use core_graphics::base::{kCGBitmapByteOrder32Little};
 use core_graphics::color_space::CGColorSpace;
 use core_graphics::context::CGContext;
 #[cfg(not(feature = "pathfinder"))]
-use core_graphics::context::CGTextDrawingMode;
+use core_graphics::context::{CGBlendMode, CGTextDrawingMode};
 use core_graphics::data_provider::CGDataProvider;
 use core_graphics::font::{CGFont, CGGlyph};
 use core_graphics::geometry::{CGAffineTransform, CGPoint, CGSize};
 #[cfg(not(feature = "pathfinder"))]
-use core_graphics::geometry::CGRect;
+use core_graphics::geometry::{CG_AFFINE_TRANSFORM_IDENTITY, CGRect};
 use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
+use euclid::Size2D;
 use gamma_lut::{ColorLut, GammaLut};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
 #[cfg(feature = "pathfinder")]
@@ -35,9 +35,13 @@ use internal_types::{FastHashMap, ResourceCacheError};
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
+const INITIAL_CG_CONTEXT_SIDE_LENGTH: u32 = 32;
+
 pub struct FontContext {
     cg_fonts: FastHashMap<FontKey, CGFont>,
     ct_fonts: FastHashMap<(FontKey, Au, Vec<FontVariation>), CTFont>,
+    #[allow(dead_code)]
+    graphics_context: GraphicsContext,
     #[allow(dead_code)]
     gamma_lut: GammaLut,
 }
@@ -116,7 +120,9 @@ fn get_glyph_metrics(
     }
 
     let mut advance = CGSize { width: 0.0, height: 0.0 };
-    ct_font.get_advances_for_glyphs(kCTFontDefaultOrientation, &glyph, &mut advance, 1);
+    unsafe {
+        ct_font.get_advances_for_glyphs(kCTFontDefaultOrientation, &glyph, &mut advance, 1);
+    }
 
     if bounds.size.width > 0.0 {
         bounds.size.width += extra_width;
@@ -281,6 +287,7 @@ impl FontContext {
         Ok(FontContext {
             cg_fonts: FastHashMap::default(),
             ct_fonts: FastHashMap::default(),
+            graphics_context: GraphicsContext::new(),
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
         })
     }
@@ -344,12 +351,14 @@ impl FontContext {
 
         self.get_ct_font(font_key, Au::from_px(16), &[])
             .and_then(|ref ct_font| {
-                let result = ct_font.get_glyphs_for_characters(&character, &mut glyph, 1);
+                unsafe {
+                    let result = ct_font.get_glyphs_for_characters(&character, &mut glyph, 1);
 
-                if result {
-                    Some(glyph as u32)
-                } else {
-                    None
+                    if result {
+                        Some(glyph as u32)
+                    } else {
+                        None
+                    }
                 }
             })
     }
@@ -494,11 +503,17 @@ impl FontContext {
             None => return GlyphRasterResult::LoadFailed,
         };
 
-        let bitmap = is_bitmap_font(&ct_font);
-        let (mut shape, (x_offset, y_offset)) = if bitmap {
-            (FontTransform::identity(), (0.0, 0.0))
+        let glyph_type = if is_bitmap_font(&ct_font) {
+            GlyphType::Bitmap
         } else {
-            (font.transform.invert_scale(y_scale, y_scale), font.get_subpx_offset(key))
+            GlyphType::Vector
+        };
+
+        let (mut shape, (x_offset, y_offset)) = match glyph_type {
+            GlyphType::Bitmap => (FontTransform::identity(), (0.0, 0.0)),
+            GlyphType::Vector => {
+                (font.transform.invert_scale(y_scale, y_scale), font.get_subpx_offset(key))
+            }
         };
         if font.flags.contains(FontInstanceFlags::FLIP_X) {
             shape = shape.flip_x();
@@ -526,7 +541,12 @@ impl FontContext {
         };
 
         let glyph = key.index() as CGGlyph;
-        let (strike_scale, pixel_step) = if bitmap { (y_scale, 1.0) } else { (x_scale, y_scale / x_scale) };
+        let (strike_scale, pixel_step) = if glyph_type == GlyphType::Bitmap {
+            (y_scale, 1.0)
+        } else {
+            (x_scale, y_scale / x_scale)
+        };
+
         let extra_strikes = font.get_extra_strikes(strike_scale / scale);
         let metrics = get_glyph_metrics(
             &ct_font,
@@ -540,43 +560,7 @@ impl FontContext {
             return GlyphRasterResult::LoadFailed
         }
 
-        // The result of this function, in all render modes, is going to be a
-        // BGRA surface with white text on transparency using premultiplied
-        // alpha. For subpixel text, the RGB values will be the mask value for
-        // the individual components. For bitmap glyphs, the RGB values will be
-        // the (premultiplied) color of the pixel. For Alpha and Mono, each
-        // pixel will have R==G==B==A at the end of this function.
-        // We access the color channels in little-endian order.
-        // The CGContext will create and own our pixel buffer.
-        // In the non-Bitmap cases, we will ask CoreGraphics to draw text onto
-        // an opaque background. In order to hit the most efficient path in CG
-        // for this, we will tell CG that the CGContext is opaque, by passing
-        // an "[...]AlphaNone[...]" context flag. This creates a slight
-        // contradiction to the way we use the buffer after CG is done with it,
-        // because we will convert it into text-on-transparency. But that's ok;
-        // we still get four bytes per pixel and CG won't mess with the alpha
-        // channel after we've stopped calling CG functions. We just need to
-        // make sure that we don't look at the alpha values of the pixels that
-        // we get from CG, and compute our own alpha value only from RGB.
-        // Note that CG requires kCGBitmapByteOrder32Little in order to do
-        // subpixel AA at all (which we need it to do in both Subpixel and
-        // Alpha+smoothing mode). But little-endian is what we want anyway, so
-        // this works out nicely.
-        let context_flags = if bitmap {
-            kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst
-        } else {
-            kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst
-        };
-
-        let mut cg_context = CGContext::create_bitmap_context(
-            None,
-            metrics.rasterized_width as usize,
-            metrics.rasterized_height as usize,
-            8,
-            metrics.rasterized_width as usize * 4,
-            &CGColorSpace::create_device_rgb(),
-            context_flags,
-        );
+        let raster_size = Size2D::new(metrics.rasterized_width, metrics.rasterized_height);
 
         // If the font render mode is Alpha, we support two different ways to
         // compute the grayscale mask, depending on the value of the platform
@@ -603,74 +587,92 @@ impl FontContext {
         // the "Alpha without smoothing" and Mono modes.
         let use_white_on_black = should_use_white_on_black(font.color);
         let use_font_smoothing = font.flags.contains(FontInstanceFlags::FONT_SMOOTHING);
-        let (antialias, smooth, text_color, bg_color, bg_alpha, invert) = if bitmap {
-            (true, false, 0.0, 0.0, 0.0, false)
-        } else {
-            match (font.render_mode, use_font_smoothing) {
-                (FontRenderMode::Subpixel, _) |
-                (FontRenderMode::Alpha, true) => if use_white_on_black {
-                    (true, true, 1.0, 0.0, 1.0, false)
-                } else {
-                    (true, true, 0.0, 1.0, 1.0, true)
-                },
-                (FontRenderMode::Alpha, false) => (true, false, 0.0, 1.0, 1.0, true),
-                (FontRenderMode::Mono, _) => (false, false, 0.0, 1.0, 1.0, true),
+        let (antialias, smooth, text_color, bg_color, bg_alpha, invert) = match glyph_type {
+            GlyphType::Bitmap => (true, false, 0.0, 0.0, 0.0, false),
+            GlyphType::Vector => {
+                match (font.render_mode, use_font_smoothing) {
+                    (FontRenderMode::Subpixel, _) |
+                    (FontRenderMode::Alpha, true) => if use_white_on_black {
+                        (true, true, 1.0, 0.0, 1.0, false)
+                    } else {
+                        (true, true, 0.0, 1.0, 1.0, true)
+                    },
+                    (FontRenderMode::Alpha, false) => (true, false, 0.0, 1.0, 1.0, true),
+                    (FontRenderMode::Mono, _) => (false, false, 0.0, 1.0, 1.0, true),
+                }
             }
         };
 
-        // These are always true in Gecko, even for non-AA fonts
-        cg_context.set_allows_font_subpixel_positioning(true);
-        cg_context.set_should_subpixel_position_fonts(true);
+        {
+            let cg_context = self.graphics_context.get_context(&raster_size, glyph_type);
 
-        // Don't quantize because we're doing it already.
-        cg_context.set_allows_font_subpixel_quantization(false);
-        cg_context.set_should_subpixel_quantize_fonts(false);
+            // These are always true in Gecko, even for non-AA fonts
+            cg_context.set_allows_font_subpixel_positioning(true);
+            cg_context.set_should_subpixel_position_fonts(true);
 
-        cg_context.set_should_smooth_fonts(smooth);
-        cg_context.set_should_antialias(antialias);
+            // Don't quantize because we're doing it already.
+            cg_context.set_allows_font_subpixel_quantization(false);
+            cg_context.set_should_subpixel_quantize_fonts(false);
 
-        // Fill the background. This could be opaque white, opaque black, or
-        // transparency.
-        cg_context.set_rgb_fill_color(bg_color, bg_color, bg_color, bg_alpha);
-        let rect = CGRect {
-            origin: CGPoint { x: 0.0, y: 0.0 },
-            size: CGSize {
-                width: metrics.rasterized_width as f64,
-                height: metrics.rasterized_height as f64,
-            },
-        };
-        cg_context.fill_rect(rect);
+            cg_context.set_should_smooth_fonts(smooth);
+            cg_context.set_should_antialias(antialias);
 
-        // Set the text color and draw the glyphs.
-        cg_context.set_rgb_fill_color(text_color, text_color, text_color, 1.0);
-        cg_context.set_text_drawing_mode(CGTextDrawingMode::CGTextFill);
+            // Fill the background. This could be opaque white, opaque black, or
+            // transparency.
+            cg_context.set_rgb_fill_color(bg_color, bg_color, bg_color, bg_alpha);
+            let rect = CGRect {
+                origin: CGPoint { x: 0.0, y: 0.0 },
+                size: CGSize {
+                    width: metrics.rasterized_width as f64,
+                    height: metrics.rasterized_height as f64,
+                },
+            };
 
-        // CG Origin is bottom left, WR is top left. Need -y offset
-        let mut draw_origin = CGPoint {
-            x: -metrics.rasterized_left as f64 + x_offset,
-            y: metrics.rasterized_descent as f64 - y_offset,
-        };
+            // Make sure we use the Copy blend mode, or else we'll get the Porter-Duff OVER
+            // operator, which can't clear to the transparent color!
+            cg_context.set_blend_mode(CGBlendMode::Copy);
+            cg_context.fill_rect(rect);
+            cg_context.set_blend_mode(CGBlendMode::Normal);
 
-        if let Some(transform) = transform {
-            cg_context.set_text_matrix(&transform);
+            // Set the text color and draw the glyphs.
+            cg_context.set_rgb_fill_color(text_color, text_color, text_color, 1.0);
+            cg_context.set_text_drawing_mode(CGTextDrawingMode::CGTextFill);
 
-            draw_origin = draw_origin.apply_transform(&transform.invert());
+            // CG Origin is bottom left, WR is top left. Need -y offset
+            let mut draw_origin = CGPoint {
+                x: -metrics.rasterized_left as f64 + x_offset,
+                y: metrics.rasterized_descent as f64 - y_offset,
+            };
+
+            if let Some(transform) = transform {
+                cg_context.set_text_matrix(&transform);
+
+                draw_origin = draw_origin.apply_transform(&transform.invert());
+            } else {
+                // Make sure to reset this because some previous glyph rasterization might have
+                // changed it.
+                cg_context.set_text_matrix(&CG_AFFINE_TRANSFORM_IDENTITY);
+            }
+
+            if extra_strikes > 0 {
+                let strikes = 1 + extra_strikes;
+                let glyphs = vec![glyph; strikes];
+                let origins = (0..strikes).map(|i| {
+                    CGPoint {
+                        x: draw_origin.x + i as f64 * pixel_step,
+                        y: draw_origin.y,
+                    }
+                }).collect::<Vec<_>>();
+                ct_font.draw_glyphs(&glyphs, &origins, cg_context.clone());
+            } else {
+                ct_font.draw_glyphs(&[glyph], &[draw_origin], cg_context.clone());
+            }
         }
 
-        if extra_strikes > 0 {
-            let strikes = 1 + extra_strikes;
-            let glyphs = vec![glyph; strikes];
-            let origins = (0..strikes)
-                .map(|i| CGPoint { x: draw_origin.x + i as f64 * pixel_step, y: draw_origin.y })
-                .collect::<Vec<_>>();
-            ct_font.draw_glyphs(&glyphs, &origins, cg_context.clone());
-        } else {
-            ct_font.draw_glyphs(&[glyph], &[draw_origin], cg_context.clone());
-        }
+        let mut rasterized_pixels = self.graphics_context
+                                        .get_rasterized_pixels(&raster_size, glyph_type);
 
-        let mut rasterized_pixels = cg_context.data().to_vec();
-
-        if !bitmap {
+        if glyph_type == GlyphType::Vector {
             // We rendered text into an opaque surface. The code below needs to
             // ignore the current value of each pixel's alpha channel. But it's
             // allowed to write to the alpha channel, because we're done calling
@@ -722,8 +724,14 @@ impl FontContext {
             top: metrics.rasterized_ascent as f32,
             width: metrics.rasterized_width,
             height: metrics.rasterized_height,
-            scale: (if bitmap { scale / y_scale } else { scale }) as f32,
-            format: if bitmap { GlyphFormat::ColorBitmap } else { font.get_glyph_format() },
+            scale: match glyph_type {
+                GlyphType::Bitmap => (scale / y_scale) as f32,
+                GlyphType::Vector => scale as f32,
+            },
+            format: match glyph_type {
+                GlyphType::Bitmap => GlyphFormat::ColorBitmap,
+                GlyphType::Vector => font.get_glyph_format(),
+            },
             bytes: rasterized_pixels,
         })
     }
@@ -734,4 +742,110 @@ impl<'a> Into<CGFont> for NativeFontHandleWrapper<'a> {
     fn into(self) -> CGFont {
         (self.0).0.clone()
     }
+}
+
+// Avoids taking locks by recycling Core Graphics contexts.
+#[allow(dead_code)]
+struct GraphicsContext {
+    vector_context: CGContext,
+    vector_context_size: Size2D<u32>,
+    bitmap_context: CGContext,
+    bitmap_context_size: Size2D<u32>,
+}
+
+impl GraphicsContext {
+    fn new() -> GraphicsContext {
+        let size = Size2D::new(INITIAL_CG_CONTEXT_SIDE_LENGTH, INITIAL_CG_CONTEXT_SIDE_LENGTH);
+        GraphicsContext {
+            vector_context: GraphicsContext::create_cg_context(&size, GlyphType::Vector),
+            vector_context_size: size,
+            bitmap_context: GraphicsContext::create_cg_context(&size, GlyphType::Bitmap),
+            bitmap_context_size: size,
+        }
+    }
+
+    #[allow(dead_code)]
+    fn get_context(&mut self, size: &Size2D<u32>, glyph_type: GlyphType)
+                   -> &mut CGContext {
+        let (cached_context, cached_size) = match glyph_type {
+            GlyphType::Vector => {
+                (&mut self.vector_context, &mut self.vector_context_size)
+            }
+            GlyphType::Bitmap => {
+                (&mut self.bitmap_context, &mut self.bitmap_context_size)
+            }
+        };
+        let rounded_size = Size2D::new(size.width.next_power_of_two(),
+                                       size.height.next_power_of_two());
+        if rounded_size.width > cached_size.width || rounded_size.height > cached_size.height {
+            *cached_size = Size2D::new(u32::max(cached_size.width, rounded_size.width),
+                                       u32::max(cached_size.height, rounded_size.height));
+            *cached_context = GraphicsContext::create_cg_context(cached_size, glyph_type);
+        }
+        cached_context
+    }
+
+    #[allow(dead_code)]
+    fn get_rasterized_pixels(&mut self, size: &Size2D<u32>, glyph_type: GlyphType)
+                             -> Vec<u8> {
+        let (cached_context, cached_size) = match glyph_type {
+            GlyphType::Vector => (&mut self.vector_context, &self.vector_context_size),
+            GlyphType::Bitmap => (&mut self.bitmap_context, &self.bitmap_context_size),
+        };
+        let cached_data = cached_context.data();
+        let cached_stride = cached_size.width as usize * 4;
+
+        let result_len = size.width as usize * size.height as usize * 4;
+        let mut result = Vec::with_capacity(result_len);
+        for y in (cached_size.height - size.height)..cached_size.height {
+            let cached_start = y as usize * cached_stride;
+            let cached_end = cached_start + size.width as usize * 4;
+            result.extend_from_slice(&cached_data[cached_start..cached_end]);
+        }
+        debug_assert_eq!(result.len(), result_len);
+        result
+    }
+
+    fn create_cg_context(size: &Size2D<u32>, glyph_type: GlyphType) -> CGContext {
+        // The result of rasterization, in all render modes, is going to be a
+        // BGRA surface with white text on transparency using premultiplied
+        // alpha. For subpixel text, the RGB values will be the mask value for
+        // the individual components. For bitmap glyphs, the RGB values will be
+        // the (premultiplied) color of the pixel. For Alpha and Mono, each
+        // pixel will have R==G==B==A at the end of this function.
+        // We access the color channels in little-endian order.
+        // The CGContext will create and own our pixel buffer.
+        // In the non-Bitmap cases, we will ask CoreGraphics to draw text onto
+        // an opaque background. In order to hit the most efficient path in CG
+        // for this, we will tell CG that the CGContext is opaque, by passing
+        // an "[...]AlphaNone[...]" context flag. This creates a slight
+        // contradiction to the way we use the buffer after CG is done with it,
+        // because we will convert it into text-on-transparency. But that's ok;
+        // we still get four bytes per pixel and CG won't mess with the alpha
+        // channel after we've stopped calling CG functions. We just need to
+        // make sure that we don't look at the alpha values of the pixels that
+        // we get from CG, and compute our own alpha value only from RGB.
+        // Note that CG requires kCGBitmapByteOrder32Little in order to do
+        // subpixel AA at all (which we need it to do in both Subpixel and
+        // Alpha+smoothing mode). But little-endian is what we want anyway, so
+        // this works out nicely.
+        let color_type = match glyph_type {
+            GlyphType::Vector => kCGImageAlphaNoneSkipFirst,
+            GlyphType::Bitmap => kCGImageAlphaPremultipliedFirst,
+        };
+
+        CGContext::create_bitmap_context(None,
+                                         size.width as usize,
+                                         size.height as usize,
+                                         8,
+                                         size.width as usize * 4,
+                                         &CGColorSpace::create_device_rgb(),
+                                         kCGBitmapByteOrder32Little | color_type)
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+enum GlyphType {
+    Vector,
+    Bitmap,
 }

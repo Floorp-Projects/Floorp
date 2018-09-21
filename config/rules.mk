@@ -912,6 +912,7 @@ ifndef MOZ_ASAN
 ifndef MOZ_TSAN
 ifndef MOZ_UBSAN
 ifndef MOZ_CODE_COVERAGE
+ifndef FUZZING_INTERFACES
 # Pass the compilers and flags in use to cargo for use in build scripts.
 # * Don't do this for ASAN/TSAN builds because we don't pass our custom linker (see below)
 #   which will muck things up.
@@ -943,6 +944,7 @@ cargo_c_compiler_envs := \
  AR_$(rust_cc_env_name)="$(AR)" \
  $(NULL)
 endif # WINNT
+endif # FUZZING_INTERFACES
 endif # MOZ_CODE_COVERAGE
 endif # MOZ_UBSAN
 endif # MOZ_TSAN
@@ -1008,6 +1010,7 @@ ifneq (WINNT,$(OS_ARCH))
 ifndef MOZ_ASAN
 ifndef MOZ_TSAN
 ifndef MOZ_UBSAN
+ifndef FUZZING_INTERFACES
 # Cargo needs the same linker flags as the C/C++ compiler,
 # but not the final libraries. Filter those out because they
 # cause problems on macOS 10.7; see bug 1365993 for details.
@@ -1016,6 +1019,7 @@ target_cargo_env_vars := \
 	MOZ_CARGO_WRAP_LDFLAGS="$(filter-out -fsanitize=cfi% -framework Cocoa -lobjc AudioToolbox ExceptionHandling -fprofile-%,$(LDFLAGS))" \
 	MOZ_CARGO_WRAP_LD="$(CC)" \
 	$(cargo_linker_env_var)=$(topsrcdir)/build/cargo-linker
+endif # FUZZING_INTERFACES
 endif # MOZ_UBSAN
 endif # MOZ_TSAN
 endif # MOZ_ASAN
