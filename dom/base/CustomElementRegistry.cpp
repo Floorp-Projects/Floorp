@@ -229,12 +229,6 @@ CustomElementData::GetCustomElementDefinition()
   return mCustomElementDefinition;
 }
 
-nsAtom*
-CustomElementData::GetCustomElementType()
-{
-  return mType;
-}
-
 void
 CustomElementData::Traverse(nsCycleCollectionTraversalCallback& aCb) const
 {
@@ -428,7 +422,7 @@ CustomElementRegistry::LookupCustomElementDefinition(nsAtom* aNameAtom,
       mElementCreationCallbacksUpgradeCandidatesMap.LookupOrAdd(aTypeAtom);
       RefPtr<Runnable> runnable =
         new RunCustomElementCreationCallback(this, aTypeAtom, callback);
-      nsContentUtils::AddScriptRunner(runnable);
+      nsContentUtils::AddScriptRunner(runnable.forget());
       data = mCustomDefinitions.GetWeak(aTypeAtom);
     }
   }

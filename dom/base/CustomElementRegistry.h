@@ -129,13 +129,16 @@ struct CustomElementData
 
   void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
   CustomElementDefinition* GetCustomElementDefinition();
-  nsAtom* GetCustomElementType();
+  nsAtom* GetCustomElementType() const
+  {
+    return mType;
+  }
 
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
   void Unlink();
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  nsAtom* GetIs(Element* aElement)
+  nsAtom* GetIs(const Element* aElement) const
   {
     // If mType isn't the same as name atom, this is a customized built-in
     // element, which has 'is' value set.
@@ -415,6 +418,17 @@ private:
   };
 
 public:
+  /**
+   * Returns whether there's a definition that is likely to match this type
+   * atom. This is not exact, so should only be used for optimization, but it's
+   * good enough to prove that the chrome code doesn't need an XBL binding.
+   */
+  bool IsLikelyToBeCustomElement(nsAtom* aTypeAtom) const
+  {
+    return mCustomDefinitions.GetWeak(aTypeAtom) ||
+      mElementCreationCallbacks.GetWeak(aTypeAtom);
+  }
+
   /**
    * Looking up a custom element definition.
    * https://html.spec.whatwg.org/#look-up-a-custom-element-definition
