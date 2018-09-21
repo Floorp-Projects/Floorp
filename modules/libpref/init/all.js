@@ -5542,17 +5542,6 @@ pref("plugins.flashBlock.enabled", false);
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
 
-// Debug-only pref to force enable the AccessibleCaret. If you want to
-// control AccessibleCaret by mouse, you'll need to set
-// "layout.accessiblecaret.hide_carets_for_mouse_input" to false.
-pref("layout.accessiblecaret.enabled", false);
-
-// Enable the accessible caret on platforms/devices
-// that we detect have touch support. Note that this pref is an
-// additional way to enable the accessible carets, rather than
-// overriding the layout.accessiblecaret.enabled pref.
-pref("layout.accessiblecaret.enabled_on_touch", true);
-
 // Show the caret when long tapping on an empty content.
 pref("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", false);
 
