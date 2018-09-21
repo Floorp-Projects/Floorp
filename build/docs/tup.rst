@@ -83,6 +83,26 @@ the future according to developer demand and build team availability.
 
 * Tests in automation - Requires packaging
 
+Multiple object directories and object directories outside of the source tree
+=============================================================================
+
+Common workflows involving multiple object directories which may be outside of
+the source directory are supported by Tup, however there are some things to
+consider when using these configurations.
+
+* Using multiple object directories works as expected, however you may find
+  pulling and attempting to build will fail due to tup attempting to
+  parse a Tupfile in an object directory other than the active object
+  directory. As a workaround, activate the object directory containing the
+  failing file and run configure before proceeding.
+* If the currently active object directory is located outside of the source
+  directory, the tup backend will prompt the user to run ``tup init --no-sync``
+  in a common ancestor directory of the source directory and object directory.
+  If this ancestor contains too many files (it's the home directory, for
+  instance), this will slow down tup's initial file scan. Anecdotally multiple
+  object directories will only incur marginal scanning overhead, but care
+  should be exercised when choosing a directory layout.
+
 Tup builds in automation
 ========================
 
