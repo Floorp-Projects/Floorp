@@ -913,7 +913,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSContext* aWorkerCx)
 }
 
 static bool
-PreserveWrapper(JSContext *cx, JSObject *obj)
+PreserveWrapper(JSContext *cx, JS::HandleObject obj)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(obj);

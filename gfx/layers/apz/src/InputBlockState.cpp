@@ -57,8 +57,8 @@ InputBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aT
   // a different target than the main thread. If this happens for a drag
   // block created for a scrollbar drag, the consequences can be fairly
   // user-unfriendly, such as the scrollbar not being draggable at all,
-  // or it scrolling the contents of the wrong scrollframe. In Nightly
-  // builds, we issue a diagnostic assert in this situation, so that the
+  // or it scrolling the contents of the wrong scrollframe. In debug
+  // builds, we assert in this situation, so that the
   // underlying compositor hit testing bug can be fixed. In release builds,
   // however, we just silently accept the main thread's confirmed target,
   // which will produce the expected behaviour (apart from drag events
@@ -68,9 +68,7 @@ InputBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aT
       aState == TargetConfirmationState::eConfirmed &&
       mTargetApzc && aTargetApzc &&
       mTargetApzc->GetGuid() != aTargetApzc->GetGuid()) {
-#ifdef NIGHTLY_BUILD
-    MOZ_RELEASE_ASSERT(false, "APZ and main thread confirmed scrollbar drag block with different targets");
-#endif
+    MOZ_ASSERT(false, "APZ and main thread confirmed scrollbar drag block with different targets");
     UpdateTargetApzc(aTargetApzc);
     return true;
   }

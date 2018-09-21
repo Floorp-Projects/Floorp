@@ -2119,6 +2119,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   nsCOMPtr<nsIFile> profD, profLD;
   char16_t* profileNamePtr;
   nsAutoCString profileName;
+  bool offline = false;
 
   {
     ScopedXPCOMStartup xpcom;
@@ -2172,6 +2173,10 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
       rv = ioParamBlock->GetInt(0, &dialogConfirmed);
       if (NS_FAILED(rv) || dialogConfirmed == 0) return NS_ERROR_ABORT;
 
+      int32_t startOffline;
+      rv = ioParamBlock->GetInt(1, &startOffline);
+      offline = NS_SUCCEEDED(rv) && startOffline == 1;
+
       nsCOMPtr<nsIProfileLock> lock;
       rv = dlgArray->QueryElementAt(0, NS_GET_IID(nsIProfileLock),
                                     getter_AddRefs(lock));
@@ -2197,8 +2202,6 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", profLD);
   SaveWordToEnv("XRE_PROFILE_NAME", profileName);
 
-  bool offline = false;
-  aProfileSvc->GetStartOffline(&offline);
   if (offline) {
     SaveToEnv("XRE_START_OFFLINE=1");
   }

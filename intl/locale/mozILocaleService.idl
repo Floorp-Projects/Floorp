@@ -80,13 +80,9 @@ interface mozILocaleService : nsISupports
    * use the BCP47 form.
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
-   *
-   * (See LocaleService.h for a more C++-friendly version of this.)
    */
-  void getAppLocalesAsLangTags([optional] out unsigned long aCount,
-                               [retval, array, size_is(aCount)] out string aLocales);
-  void getAppLocalesAsBCP47([optional] out unsigned long aCount,
-                            [retval, array, size_is(aCount)] out string aLocales);
+  readonly attribute Array<ACString> appLocalesAsLangTags;
+  readonly attribute Array<ACString> appLocalesAsBCP47;
 
   /**
    * Returns a list of locales to use for any regional specific operations
@@ -98,11 +94,8 @@ interface mozILocaleService : nsISupports
    * This API always returns at least one locale.
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
-   *
-   * (See LocaleService.h for a more C++-friendly version of this.)
    */
-  void getRegionalPrefsLocales([optional] out unsigned long aCount,
-                        [retval, array, size_is(aCount)] out string aOutArray);
+  readonly attribute Array<ACString> regionalPrefsLocales;
 
   /**
    * Negotiates the best locales out of a ordered list of requested locales and
@@ -124,14 +117,10 @@ interface mozILocaleService : nsISupports
    *
    * (See LocaleService.h for a more C++-friendly version of this.)
    */
-  void negotiateLanguages([array, size_is(aRequestedCount)] in string aRequested,
-                          [array, size_is(aAvailableCount)] in string aAvailable,
-                          [optional] in string aDefaultLocale,
-                          [optional] in long langNegStrategy,
-                          [optional] in unsigned long aRequestedCount,
-                          [optional] in unsigned long aAvailableCount,
-                          [optional] out unsigned long aCount,
-                          [retval, array, size_is(aCount)] out string aLocales);
+  Array<ACString> negotiateLanguages(in Array<ACString> aRequested,
+                                     in Array<ACString> aAvailable,
+                                     [optional] in ACString aDefaultLocale,
+                                     [optional] in long langNegStrategy);
 
   /**
    * Returns the best locale that the application should be localized to.
@@ -144,15 +133,15 @@ interface mozILocaleService : nsISupports
    * When retrieving the locales for Intl API or ICU locale settings,
    * use the BCP47 form.
    *
-   * Where possible, getAppLocales*() should be preferred over this API and
+   * Where possible, appLocales* should be preferred over this API and
    * all callsites should handle some form of "best effort" language
    * negotiation to respect user preferences in case the use case does
    * not have data for the first locale in the list.
    *
    * Example: "zh-Hans-HK"
    */
-  ACString getAppLocaleAsLangTag();
-  ACString getAppLocaleAsBCP47();
+  readonly attribute ACString appLocaleAsLangTag;
+  readonly attribute ACString appLocaleAsBCP47;
 
   /**
    * Returns a list of locales that the user requested the app to be
@@ -163,32 +152,12 @@ interface mozILocaleService : nsISupports
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
    */
-  void getRequestedLocales([optional] out unsigned long aCount,
-                           [retval, array, size_is(aCount)] out string aLocales);
+  attribute Array<ACString> requestedLocales;
 
   /**
    * Returns the top-requested locale from the user, or an empty string if none is set.
    */
-  ACString getRequestedLocale();
-
-  /**
-   * Sets a list of locales that the user requested the app to be
-   * localized to.
-   *
-   * The argument is an ordered list of locale IDs which should be
-   * used as a requestedLocales input list for language negotiation.
-   *
-   * The current implementation is limited to handle at most one
-   * locale passed to the API. In the future we'll transition to support
-   * whole fallback chain.
-   *
-   * If an empty list is passed, the list of requested locales will
-   * be picked from the operating system.
-   *
-   * Example: ["de"]
-   */
-  void setRequestedLocales([array, size_is(aRequestedCount)] in string aRequested,
-                           [optional] in unsigned long aRequestedCount);
+  readonly attribute ACString requestedLocale;
 
   /**
    * Returns a list of locales that the app can be localized to.
@@ -198,8 +167,7 @@ interface mozILocaleService : nsISupports
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
    */
-  void getAvailableLocales([optional] out unsigned long aCount,
-                           [retval, array, size_is(aCount)] out string aLocales);
+  attribute Array<ACString> availableLocales;
 
   /**
    * Returns whether the current app locale is RTL.
@@ -207,28 +175,9 @@ interface mozILocaleService : nsISupports
   readonly attribute boolean isAppLocaleRTL;
 
   /**
-   * Sets a list of locales the application has resources to be localized into.
-   *
-   * The primary use of this function is to let L10nRegistry communicate all
-   * locale updates.
-   *
-   * The secondary use case is for testing purposes in scenarios in which the
-   * actual resources don't have to be available.
-   * It is recommended for tests to create a mock FileSource and register it in
-   * the L10nRegistry rather than using this call, in order to emulate full
-   * resource availability cycle.
-   *
-   */
-  void setAvailableLocales([array, size_is(aAvailableCount)] in string aAvailable,
-                           [optional] in unsigned long aAvailableCount);
-
-  /**
    * Returns a list of locales packaged into the app bundle.
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
-   *
-   * (See LocaleService.h for a more C++-friendly version of this.)
    */
-  void getPackagedLocales([optional] out unsigned long aCount,
-                          [retval, array, size_is(aCount)] out string aOutArray);
+  readonly attribute Array<ACString> packagedLocales;
 };

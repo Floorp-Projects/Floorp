@@ -37,7 +37,7 @@ var NormandyDriver = function(sandboxManager) {
 
     get locale() {
       if (Services.locale.getAppLocaleAsLangTag) {
-        return Services.locale.getAppLocaleAsLangTag();
+        return Services.locale.getAppLocaleAsLangTag;
       }
 
       return Cc["@mozilla.org/chrome/chrome-registry;1"]

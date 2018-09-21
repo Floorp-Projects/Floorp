@@ -82,23 +82,9 @@ const data = {
       [["ja-JP-mac", "de-DE"], ["ja-JP-mac", "de-DE"], ["ja-JP-mac", "de-DE"]],
     ],
     "should not crash on invalid input": [
-      [null, ["fr-FR"], []],
-      [[null], [], []],
-      [[undefined], [], []],
-      [[undefined], [null], []],
-      [[undefined], [undefined], []],
-      [[null], [null], null, null, []],
-      [undefined, ["fr-FR"], []],
-      [2, ["fr-FR"], []],
-      ["fr-FR", ["fr-FR"], []],
       [["fą-FŻ"], ["ór_Fń"], []],
-      [["fr-FR"], null, []],
-      [["fr-FR"], undefined, []],
-      [["fr-FR"], 2, []],
-      [["fr-FR"], "fr-FR", []],
       [["2"], ["ąóżł"], []],
-      [[[]], ["fr-FR"], []],
-      [[[]], [[2]], []],
+      [[[""]], ["fr-FR"], []],
     ],
   },
   "matching": {
@@ -142,5 +128,27 @@ function run_test()
   `\nExpected ${json(requested)} * ${json(available)} = ${json(supported)}.\n`);
       }
     }
+  }
+
+  // Verify that we error out when requested or available is not an array.
+  for ([req, avail] in [
+    [null, ["fr-FR"]],
+		[undefined, ["fr-FR"]],
+		[2, ["fr-FR"]],
+		["fr-FR", ["fr-FR"]],
+		[["fr-FR"], null],
+		[["fr-FR"], undefined],
+		[["fr-FR"], 2],
+		[["fr-FR"], "fr-FR"],
+    [[null], []],
+    [[undefined], []],
+    [[undefined], [null]],
+    [[undefined], [undefined]],
+    [[null], [null]],
+    [[[]], [[2]]],
+  ]) {
+    Assert.throws(() => {
+      nl(req, avail);
+    }, err => err.result == Cr.NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY);
   }
 }

@@ -151,7 +151,7 @@ const MessageLoaderUtils = {
   },
 
   _getRemoteSettingsMessages(bucket) {
-    return RemoteSettings(bucket).get({filters: {locale: Services.locale.getAppLocaleAsLangTag()}});
+    return RemoteSettings(bucket).get({filters: {locale: Services.locale.appLocaleAsLangTag}});
   },
 
   /**
