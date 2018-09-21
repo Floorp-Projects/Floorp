@@ -8752,7 +8752,7 @@ nsDisplayTransform::CreateWebRenderCommands(
 
   // If it looks like we're animated, we should rasterize in local space
   // (disabling subpixel-aa and global pixel snapping)
-  bool rasterizeLocally =
+  bool animated =
     ActiveLayerTracker::IsStyleMaybeAnimated(Frame(), eCSSProperty_transform);
 
   StackingContextHelper sc(aSc,
@@ -8769,7 +8769,7 @@ nsDisplayTransform::CreateWebRenderCommands(
                            mFrame->Extend3DContext() && !mNoExtendContext,
                            deferredTransformItem,
                            nullptr,
-                           rasterizeLocally);
+                           animated);
 
   return mStoredList.CreateWebRenderCommands(
     aBuilder, aResources, sc, aManager, aDisplayListBuilder);
