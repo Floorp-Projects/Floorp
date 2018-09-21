@@ -185,7 +185,7 @@ body {
     .icon.icon-pin-small:dir(rtl) {
       transform: scaleX(-1); }
   .icon.icon-check {
-    background-image: url("chrome://global/skin/icons/check.svg"); }
+    background-image: url("chrome://browser/skin/check.svg"); }
   .icon.icon-download {
     background-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar"); }
   .icon.icon-copy {
@@ -814,7 +814,7 @@ main {
 
 .topsite-form [type='checkbox']:not(:checked) + label::after,
 .topsite-form [type='checkbox']:checked + label::after {
-  background: url("chrome://global/skin/icons/check.svg") no-repeat center center;
+  background: url("chrome://global/skin/in-content/check.svg") no-repeat center center;
   content: '';
   height: 21px;
   left: -8px;
@@ -823,6 +823,7 @@ main {
   width: 21px;
   -moz-context-properties: fill, stroke;
   fill: var(--newtab-link-primary-color);
+  stroke: none;
   z-index: 2; }
   [dir='rtl'] .topsite-form [type='checkbox']:not(:checked) + label::after, [dir='rtl']
   .topsite-form [type='checkbox']:checked + label::after {

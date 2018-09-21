@@ -43,10 +43,20 @@ xul|*.menulist-dropmarker {
   margin-bottom: 6px;
 }
 
-xul|*.checkbox-check[checked],
+xul|*.checkbox-check,
+xul|*.radio-check {
+  background-image: none;
+}
+
+xul|*.checkbox-check[checked] {
+  fill: -moz-dialogText;
+  stroke: none;
+  background-color: -moz-dialog;
+}
+
 xul|*.radio-check[selected] {
-  background-color: -moz-field;
-  fill: -moz-fieldText;
+  background-color: -moz-dialog;
+  fill: -moz-dialogText;
 }
 
 xul|*.radio-label-box {

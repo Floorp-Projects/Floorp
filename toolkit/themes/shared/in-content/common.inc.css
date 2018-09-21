@@ -489,16 +489,17 @@ xul|checkbox {
 xul|*.checkbox-check,
 html|input[type="checkbox"] {
   -moz-appearance: none;
-  width: 20px;
-  height: 20px;
-  padding: 1px;
+  width: 23px;
+  height: 23px;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   margin: 0;
   margin-inline-end: 10px;
-  background-color: var(--in-content-box-background);
-  background-position: center;
+  background-color: #f1f1f1;
+  background-image: linear-gradient(#fff, rgba(255,255,255,0.8));
+  background-position: center center;
   background-repeat: no-repeat;
+  box-shadow: 0 1px 1px 0 #fff, inset 0 2px 0 0 rgba(0,0,0,0.03);
 }
 
 xul|checkbox:not([disabled="true"]):hover > xul|*.checkbox-check,
@@ -507,15 +508,17 @@ html|input[type="checkbox"]:not(:disabled):hover {
 }
 
 xul|*.checkbox-check[checked] {
-  list-style-image: url("chrome://global/skin/icons/check.svg");
-  -moz-context-properties: fill;
+  list-style-image: url("chrome://global/skin/in-content/check.svg");
+  -moz-context-properties: fill, stroke;
   fill: #2292d0;
+  stroke: none;
 }
 
 html|input[type="checkbox"]:checked {
-  background-image: url("chrome://global/skin/icons/check.svg");
-  -moz-context-properties: fill;
+  background-image: url("chrome://global/skin/in-content/check.svg"), linear-gradient(#fff, rgba(255,255,255,0.8));
+  -moz-context-properties: fill, stroke;
   fill: #2292d0;
+  stroke: none;
 }
 
 xul|checkbox[disabled="true"] > xul|*.checkbox-check,
@@ -545,7 +548,9 @@ xul|*.radio-check {
   border-radius: 50%;
   margin: 0;
   margin-inline-end: 10px;
-  background-color: var(--in-content-box-background);
+  background-color: #f1f1f1;
+  background-image: linear-gradient(#fff, rgba(255,255,255,0.80));
+  box-shadow: 0 1px 1px 0 #fff, inset 0 2px 0 0 rgba(0,0,0,0.03);
 }
 
 xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
