@@ -1518,7 +1518,7 @@ UpdateWrapper(T* p, void*, JSObject* obj, const JSObject* old)
 // This operation will return false only for non-nsISupports cycle-collected
 // objects, because we cannot determine if they are wrappercached or not.
 bool
-TryPreserveWrapper(JSObject* obj);
+TryPreserveWrapper(JS::Handle<JSObject*> obj);
 
 // Can only be called with a DOM JSClass.
 bool
