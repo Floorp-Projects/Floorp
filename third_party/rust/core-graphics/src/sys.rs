@@ -1,5 +1,12 @@
+use std::os::raw::c_void;
+
 pub enum CGImage {}
 pub type CGImageRef = *mut CGImage;
+
+#[repr(C)]
+pub struct __CGColor(c_void);
+
+pub type CGColorRef = *const __CGColor;
 
 pub enum CGColorSpace {}
 pub type CGColorSpaceRef = *mut CGColorSpace;

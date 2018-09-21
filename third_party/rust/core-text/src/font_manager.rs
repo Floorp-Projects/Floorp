@@ -7,8 +7,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core_foundation::array::CFArrayRef;
+use core_foundation::array::{CFArray, CFArrayRef};
+use core_foundation::base::TCFType;
+use core_foundation::string::CFString;
 use core_foundation::url::CFURLRef;
+
+pub fn copy_available_font_family_names() -> CFArray<CFString> {
+    unsafe {
+        TCFType::wrap_under_create_rule(CTFontManagerCopyAvailableFontFamilyNames())
+    }
+}
 
 extern {
     /*
