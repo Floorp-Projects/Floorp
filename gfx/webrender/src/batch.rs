@@ -703,9 +703,11 @@ impl AlphaBatchBuilder {
                             if let Some(local_rect) = local_rect {
                                 match transform.transform_kind() {
                                     TransformedRectKind::AxisAligned => {
-                                        let polygon = Polygon::from_transformed_rect(
+                                        let inv_transform = transforms.get_world_inv_transform(prim_metadata.spatial_node_index);
+                                        let polygon = Polygon::from_transformed_rect_with_inverse(
                                             local_rect.cast(),
-                                            transform.cast(),
+                                            &transform.cast(),
+                                            &inv_transform.cast(),
                                             prim_index.0,
                                         ).unwrap();
                                         splitter.add(polygon);
