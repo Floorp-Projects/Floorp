@@ -143,7 +143,7 @@ class PingCentre {
     }
 
     let clientID = data.client_id || await this.telemetryClientId;
-    let locale = data.locale || Services.locale.getAppLocalesAsLangTags().pop();
+    let locale = data.locale || Services.locale.appLocaleAsLangTag;
     let profileCreationDate = TelemetryEnvironment.currentEnvironment.profile.resetDate ||
       TelemetryEnvironment.currentEnvironment.profile.creationDate;
     const payload = Object.assign({

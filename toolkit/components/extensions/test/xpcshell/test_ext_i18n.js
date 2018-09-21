@@ -11,11 +11,11 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
-var originalReqLocales = Services.locale.getRequestedLocales();
+var originalReqLocales = Services.locale.requestedLocales;
 
 registerCleanupFunction(() => {
   Preferences.reset("intl.accept_languages");
-  Services.locale.setRequestedLocales(originalReqLocales);
+  Services.locale.requestedLocales = originalReqLocales;
 });
 
 
@@ -221,12 +221,12 @@ add_task(async function test_i18n_negotiation() {
   //
   // In the future, we should provide some way for tests to decouple their
   // language selection from that of Firefox.
-  Services.locale.setAvailableLocales(["en-US", "fr", "jp"]);
+  Services.locale.availableLocales = ["en-US", "fr", "jp"];
 
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
   for (let [lang, msg] of [["en-US", "English."], ["jp", "\u65e5\u672c\u8a9e"]]) {
-    Services.locale.setRequestedLocales([lang]);
+    Services.locale.requestedLocales = [lang];
 
     let extension = ExtensionTestUtils.loadExtension(extensionData);
     await extension.startup();
@@ -238,7 +238,7 @@ add_task(async function test_i18n_negotiation() {
 
     await extension.unload();
   }
-  Services.locale.setRequestedLocales(originalReqLocales);
+  Services.locale.requestedLocales = originalReqLocales;
 
   await contentPage.close();
 });
@@ -383,7 +383,7 @@ add_task(async function test_get_ui_language() {
 
   // We don't currently have a good way to mock this.
   if (false) {
-    Services.locale.setRequestedLocales(["he"]);
+    Services.locale.requestedLocales = ["he"];
 
     extension.sendMessage(["expect-results", "he"]);
 

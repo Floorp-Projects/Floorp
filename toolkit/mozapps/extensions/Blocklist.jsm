@@ -273,7 +273,7 @@ function matchesOSABI(blocklistElement) {
  * @returns {string} The current requested locale.
  */
 function getLocale() {
-  return Services.locale.getRequestedLocale();
+  return Services.locale.requestedLocale;
 }
 
 /* Get the distribution pref values, from defaults only */
