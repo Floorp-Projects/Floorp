@@ -145,7 +145,7 @@ payment-dialog #pay::before {
   content: url(chrome://browser/skin/connection-secure.svg);
   fill: currentColor;
   height: 16px;
-  margin-right: 0.5em;
+  margin-inline-end: 0.5em;
   vertical-align: text-bottom;
   width: 16px;
 }
