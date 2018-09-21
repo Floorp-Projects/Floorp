@@ -301,6 +301,19 @@ class TupBackend(CommonBackend):
     def build(self, config, output, jobs, verbose, what=None):
         if not what:
             what = ['%s/<default>' % config.topobjdir]
+        else:
+            # Translate relsrcdir paths to the objdir when possible.
+            translated = []
+            topsrcdir = mozpath.normpath(config.topsrcdir)
+            for path in what:
+                path = mozpath.abspath(path)
+                if path.startswith(topsrcdir):
+                    objdir_path = path.replace(topsrcdir, config.topobjdir)
+                    if os.path.exists(objdir_path):
+                        path = objdir_path
+                translated.append(path)
+            what = translated
+
         args = [self.environment.substs['TUP'], 'upd'] + what
         if self.environment.substs.get('MOZ_AUTOMATION'):
             args += ['--quiet']
