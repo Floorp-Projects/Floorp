@@ -10,7 +10,6 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.graphics.Typeface
 import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
 import android.preference.PreferenceManager
@@ -20,7 +19,6 @@ import android.text.TextUtils
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
-import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -88,8 +86,6 @@ class UrlInputFragment :
         private val ARGUMENT_SESSION_UUID = "sesssion_uuid"
 
         private val ANIMATION_BROWSER_SCREEN = "browser_screen"
-
-        private val PLACEHOLDER = "5981086f-9d45-4f64-be99-7d2ffa03befb"
 
         private val ANIMATION_DURATION = 200
         private val TIPS_ALPHA = 0.65f
@@ -793,15 +789,6 @@ class UrlInputFragment :
                 playVisibilityAnimation(false)
                 dismissView?.visibility = View.VISIBLE
             }
-
-            // LTR languages sometimes have grammar where the search terms are displayed to the left
-            // of the hint string. To take care of LTR, RTL, and special LTR cases, we use a
-            // placeholder to know the start and end indices of where we should bold the search text
-            val hint = getString(R.string.search_hint, PLACEHOLDER)
-            val start = hint.indexOf(PLACEHOLDER)
-
-            val content = SpannableString(hint.replace(PLACEHOLDER, searchText))
-            content.setSpan(StyleSpan(Typeface.BOLD), start, start + searchText.length, 0)
 
             searchViewContainer?.visibility = View.VISIBLE
             addToAutocompelte?.visibility = View.GONE
