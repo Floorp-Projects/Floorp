@@ -2,6 +2,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 async function setup(addresses = [], cards = []) {
   await setupFormAutofillStorage();
   await cleanupFormAutofillStorage();
