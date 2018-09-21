@@ -22,6 +22,8 @@
 
 #include "pk11pub.h"
 
+#include "api/video_codecs/sdp_video_format.h"
+#include "media/engine/vp8_encoder_simulcast_proxy.h"
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -1751,34 +1753,7 @@ WebrtcVideoConduit::CreateEncoder(webrtc::VideoCodecType aType,
       break;
 
     case webrtc::VideoCodecType::kVideoCodecVP8:
-#ifdef MOZ_WEBRTC_MEDIACODEC
-      // attempt to get a encoder
-      enabled = mozilla::Preferences::GetBool(
-        "media.navigator.hardware.vp8_encode.acceleration_enabled", false);
-      if (enabled) {
-        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-        if (gfxInfo) {
-          int32_t status;
-          nsCString discardFailureId;
-
-          if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(
-                           nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE,
-                           discardFailureId, &status))) {
-
-            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-              NS_WARNING("VP8 encoder hardware is not whitelisted: disabling.\n");
-            } else {
-              encoder = MediaCodecVideoCodec::CreateEncoder(
-                                          MediaCodecVideoCodec::CodecType::CODEC_VP8);
-            }
-          }
-        }
-      }
-#endif
-      // Use a software VP8 encoder as a fallback.
-      if (!encoder) {
-        encoder = webrtc::VP8Encoder::Create();
-      }
+        encoder.reset(new webrtc::VP8EncoderSimulcastProxy(this));
       break;
 
     case webrtc::VideoCodecType::kVideoCodecVP9:
@@ -1788,6 +1763,59 @@ WebrtcVideoConduit::CreateEncoder(webrtc::VideoCodecType aType,
     default:
       break;
   }
+  return encoder;
+}
+
+std::vector<webrtc::SdpVideoFormat>
+WebrtcVideoConduit::GetSupportedFormats() const
+{
+  MOZ_ASSERT_UNREACHABLE("Unexpected call");
+  CSFLogError(LOGTAG, "Unexpected call to GetSupportedFormats()");
+  return {webrtc::SdpVideoFormat("VP8")};
+}
+
+WebrtcVideoConduit::CodecInfo
+WebrtcVideoConduit::QueryVideoEncoder(const webrtc::SdpVideoFormat& format) const
+{
+  MOZ_ASSERT_UNREACHABLE("Unexpected call");
+  CSFLogError(LOGTAG, "Unexpected call to QueryVideoEncoder()");
+  CodecInfo info;
+  info.is_hardware_accelerated = false;
+  info.has_internal_source = false;
+  return info;
+}
+
+std::unique_ptr<webrtc::VideoEncoder>
+WebrtcVideoConduit::CreateVideoEncoder(const webrtc::SdpVideoFormat& format)
+{
+  MOZ_ASSERT(format.name == "VP8");
+  std::unique_ptr<webrtc::VideoEncoder> encoder = nullptr;
+#ifdef MOZ_WEBRTC_MEDIACODEC
+  // attempt to get a encoder
+  enabled = mozilla::Preferences::GetBool(
+    "media.navigator.hardware.vp8_encode.acceleration_enabled", false);
+  if (enabled) {
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+      int32_t status;
+      nsCString discardFailureId;
+
+      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(
+                       nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE,
+                       discardFailureId, &status))) {
+
+        if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+          NS_WARNING("VP8 encoder hardware is not whitelisted: disabling.\n");
+        } else {
+          encoder = MediaCodecVideoCodec::CreateEncoder(
+                                      MediaCodecVideoCodec::CodecType::CODEC_VP8);
+        }
+      }
+    }
+  }
+#endif
+  // Use a software VP8 encoder as a fallback.
+  encoder = webrtc::VP8Encoder::Create();
   return encoder;
 }
 
