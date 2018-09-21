@@ -337,6 +337,24 @@ protected:
   bool                          mAnimating:1;   // Are we currently animating?
   bool                          mError:1;       // Error handling
 
+  /**
+   * Attempt to find a matching cached surface in the SurfaceCache, and if not
+   * available, request the production of such a surface (either synchronously
+   * or asynchronously).
+   *
+   * If the draw result is BAD_IMAGE, BAD_ARGS or NOT_READY, the size will be
+   * the same as aSize. If it is TEMPORARY_ERROR, INCOMPLETE, or SUCCESS, the
+   * size is a hint as to what we expect the surface size to be, once the best
+   * fitting size is available. It may or may not match the size of the surface
+   * returned at this moment. This is useful for choosing how to store the final
+   * result (e.g. if going into an ImageContainer, ideally we would share the
+   * same container for many requested sizes, if they all end up with the same
+   * best fit size in the end).
+   *
+   * A valid surface should only be returned for SUCCESS and INCOMPLETE.
+   *
+   * Any other draw result is invalid.
+   */
   virtual Tuple<ImgDrawResult, gfx::IntSize, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(const gfx::IntSize& aSize,
                      const Maybe<SVGImageContext>& aSVGContext,
