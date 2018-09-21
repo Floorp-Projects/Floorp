@@ -76,4 +76,5 @@ jobs:
             - win64-rust
             - win64-sccache
             - win64-cbindgen
+            - win64-clang-tidy
             - win64-node
