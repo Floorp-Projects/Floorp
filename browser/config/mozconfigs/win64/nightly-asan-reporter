@@ -35,8 +35,4 @@ ac_add_options --disable-sandbox
 # while the build otherwise identifies as "nightly" to receive its updates.
 export MOZ_TELEMETRY_REPORTING=1
 
-# Disable stack instrumentation until we can tackle bug 1477490
-export CFLAGS="-mllvm -asan-stack=0"
-export CXXFLAGS="-mllvm -asan-stack=0"
-
 . "$topsrcdir/build/mozconfig.common.override"
