@@ -88,11 +88,20 @@ enum class FontRenderMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+// Specifies the format of a series of pixels, in driver terms.
 enum class ImageFormat : uint32_t {
+  // One-channel, byte storage. The "red" doesn't map to the color
+  // red per se, and is just the way that OpenGL has historically referred
+  // to single-channel buffers.
   R8 = 1,
+  // Four channels, byte storage.
   BGRA8 = 3,
+  // Four channels, float storage.
   RGBAF32 = 4,
+  // Two-channels, byte storage. Similar to `R8`, this just means
+  // "two channels" rather than "red and green".
   RG8 = 5,
+  // Four channels, signed integer storage.
   RGBAI32 = 6,
 
   Sentinel /* this must be last for serialization purposes. */
@@ -600,6 +609,9 @@ struct ComplexClipRegion {
   }
 };
 
+// An opaque identifier describing an image registered with WebRender.
+// This is used as a handle to reference images, and is used as the
+// hash map key for the actual image storage in the `ResourceCache`.
 struct ImageKey {
   IdNamespace mNamespace;
   uint32_t mHandle;

@@ -16,6 +16,9 @@
 #include "mozilla/ipc/FileDescriptorShuffle.h"
 #include "mozilla/UniquePtr.h"
 
+// WARNING: despite the name, this file is also used on the BSDs and
+// Solaris (basically, Unixes that aren't Mac OS), not just Linux.
+
 namespace {
 
 static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
@@ -36,12 +39,16 @@ bool LaunchApp(const std::vector<std::string>& argv,
     return false;
   }
 
+#ifdef OS_LINUX
   pid_t pid = options.fork_delegate ? options.fork_delegate->Fork() : fork();
   // WARNING: if pid == 0, only async signal safe operations are permitted from
   // here until exec or _exit.
   //
   // Specifically, heap allocation is not safe: the sandbox's fork substitute
   // won't run the pthread_atfork handlers that fix up the malloc locks.
+#else
+  pid_t pid = fork();
+#endif
 
   if (pid < 0)
     return false;

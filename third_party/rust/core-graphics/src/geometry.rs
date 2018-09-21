@@ -140,6 +140,15 @@ impl CGRect {
     }
 }
 
+impl PartialEq for CGRect {
+    #[inline]
+    fn eq(&self, other: &CGRect) -> bool {
+        unsafe {
+            ffi::CGRectEqualToRect(*self, *other) != 0
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct CGAffineTransform {
@@ -184,6 +193,7 @@ mod ffi {
                                                       rect: *mut CGRect) -> boolean_t;
         pub fn CGRectIsEmpty(rect: CGRect) -> boolean_t;
         pub fn CGRectIntersectsRect(rect1: CGRect, rect2: CGRect) -> boolean_t;
+        pub fn CGRectEqualToRect(rect1: CGRect, rect2: CGRect) -> boolean_t;
 
         pub fn CGAffineTransformInvert(t: CGAffineTransform) -> CGAffineTransform;
 

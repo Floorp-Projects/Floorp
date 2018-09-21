@@ -7,13 +7,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+pub use sys::CGPathRef as SysCGPathRef;
+
 use core_foundation::base::{CFRelease, CFRetain, CFTypeID};
 use foreign_types::ForeignType;
-use geometry::CGPoint;
-use std::os::raw::c_void;
+use geometry::{CGAffineTransform, CGPoint, CGRect};
+use libc::c_void;
 use std::fmt::{self, Debug, Formatter};
 use std::marker::PhantomData;
 use std::ops::Deref;
+use std::ptr;
 use std::slice;
 
 foreign_type! {
@@ -26,6 +29,16 @@ foreign_type! {
 }
 
 impl CGPath {
+    pub fn from_rect(rect: CGRect, transform: Option<&CGAffineTransform>) -> CGPath {
+        unsafe {
+            let transform = match transform {
+                None => ptr::null(),
+                Some(transform) => transform as *const CGAffineTransform,
+            };
+            CGPath(CGPathCreateWithRect(rect, transform))
+        }
+    }
+
     pub fn type_id() -> CFTypeID {
         unsafe {
             CGPathGetTypeID()
@@ -110,6 +123,7 @@ type CGPathApplierFunction = unsafe extern "C" fn(info: *mut c_void,
 
 #[link(name = "CoreGraphics", kind = "framework")]
 extern {
+    fn CGPathCreateWithRect(rect: CGRect, transform: *const CGAffineTransform) -> ::sys::CGPathRef;
     fn CGPathApply(path: ::sys::CGPathRef, info: *mut c_void, function: CGPathApplierFunction);
     fn CGPathGetTypeID() -> CFTypeID;
 }
