@@ -66,7 +66,7 @@ user_pref("identity.fxaccounts.auth.uri", "https://127.0.0.1/fxa-dummy/");
 user_pref("identity.fxaccounts.migrateToDevEdition", false);
 // Make tests run consistently on DevEdition (which has a lightweight theme
 // selected by default).
-user_pref("lightweightThemes.selectedThemeID", "");
+user_pref("lightweightThemes.selectedThemeID", "default-theme@mozilla.org");
 user_pref("media.capturestream_hints.enabled", true);
 user_pref("media.gmp-manager.url", "http://127.0.0.1/gmpmanager-dummy/update.xml");
 // Don't block old libavcodec libraries when testing, because our test systems
