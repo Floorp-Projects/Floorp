@@ -135,3 +135,9 @@ test(() => {
   const memory = new WebAssembly.Memory(argument);
   assert_Memory(memory, { "size": 4 });
 }, "Non-zero initial");
+
+test(() => {
+  const argument = { "initial": 0 };
+  const memory = new WebAssembly.Memory(argument, {});
+  assert_Memory(memory, { "size": 0 });
+}, "Stray argument");
