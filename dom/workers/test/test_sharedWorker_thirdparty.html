@@ -47,9 +47,6 @@
 
   add_task(async function blocked() {
     await SpecialPowers.pushPrefEnv({ set: [
-      ["browser.contentblocking.enabled", true],
-      ["browser.contentblocking.ui.enabled", true],
-      ["browser.contentblocking.rejecttrackers.ui.enabled", true],
       ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECTFOREIGN]
     ]});
     let result = await testThirdPartyFrame('blocked');
