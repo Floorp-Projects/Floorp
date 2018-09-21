@@ -334,6 +334,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -1020,6 +1021,8 @@ Search.prototype = {
     // may be really slow and we may end up showing old results for too long.
     this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.GENERAL);
 
+    this._matchAboutPages();
+
     // If we do not have enough results, and our match type is
     // MATCH_BOUNDARY_ANYWHERE, search again with MATCH_ANYWHERE to get more
     // results.
@@ -1041,6 +1044,46 @@ Search.prototype = {
     // Ensure to fill any remaining space.
     await searchSuggestionsCompletePromise;
     await extensionsCompletePromise;
+  },
+
+  _shouldMatchAboutPages() {
+    // Only autocomplete input that starts with 'about:' and has at least 1 more
+    // character.
+    return (this._strippedPrefix == "about:" &&
+            this._searchString);
+  },
+
+  _matchAboutPages() {
+    if (!this._shouldMatchAboutPages()) {
+      return;
+    }
+    for (const url of AboutPagesUtils.visibleAboutUrls) {
+      if (url.startsWith(`about:${this._searchString}`)) {
+        this._addMatch({
+          value: url,
+          comment: url,
+          frecency: FRECENCY_DEFAULT,
+        });
+      }
+    }
+  },
+
+  _matchAboutPageForAutofill() {
+    if (!this._shouldMatchAboutPages()) {
+      return false;
+    }
+    for (const url of AboutPagesUtils.visibleAboutUrls) {
+      if (url.startsWith(`about:${this._searchString}`)) {
+        this._addAutofillMatch(
+          url.replace(/^about:/, ""),
+          url,
+          Infinity,
+          []
+        );
+        return true;
+      }
+    }
+    return false;
   },
 
   async _checkPreloadedSitesExpiry() {
@@ -1138,6 +1181,15 @@ Search.prototype = {
     }
 
     let shouldAutofill = this._shouldAutofill;
+
+    if (this.pending && shouldAutofill) {
+      // It may also look like an about: link.
+      let matched = await this._matchAboutPageForAutofill();
+      if (matched) {
+        return true;
+      }
+    }
+
     if (this.pending && shouldAutofill) {
       // It may also look like a URL we know from the database.
       let matched = await this._matchKnownUrl(conn);
@@ -2154,7 +2206,7 @@ Search.prototype = {
     if (this._searchTokens.length != 1)
       return false;
 
-    // autoFill can only cope with history or bookmarks entries.
+    // autoFill can only cope with history, bookmarks, and about: entries.
     if (!this.hasBehavior("history") &&
         !this.hasBehavior("bookmark"))
       return false;
