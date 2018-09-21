@@ -416,6 +416,8 @@ class EngineSessionTest {
         defaultObserver.onNavigationStateChange()
         defaultObserver.onProgress(123)
         defaultObserver.onLoadingStateChange(true)
+        defaultObserver.onThumbnailChange(spy(Bitmap::class.java))
+        defaultObserver.onFullScreenChange(true)
     }
 
     @Test

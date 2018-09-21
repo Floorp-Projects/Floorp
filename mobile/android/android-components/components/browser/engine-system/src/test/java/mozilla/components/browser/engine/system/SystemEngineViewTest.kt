@@ -71,8 +71,9 @@ class SystemEngineViewTest {
             }
         })
 
-        engineView.currentWebView.webViewClient.onPageStarted(null, "http://mozilla.org", null)
+        engineView.currentWebView.webViewClient.onPageStarted(null, "https://wiki.mozilla.org/", null)
         assertEquals(true, observedLoadingState)
+        assertEquals(observedUrl, "https://wiki.mozilla.org/")
 
         observedLoadingState = true
         engineView.currentWebView.webViewClient.onPageFinished(null, "http://mozilla.org")

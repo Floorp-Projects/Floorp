@@ -533,4 +533,27 @@ class SessionTest {
         session.thumbnail = emptyThumbnail
         verify(observer, never()).onThumbnailChanged(session, emptyThumbnail)
     }
+
+    @Test
+    fun `session observer has default methods`() {
+        val session = Session("")
+        val defaultObserver = object : Session.Observer {}
+
+        defaultObserver.onUrlChanged(session, "")
+        defaultObserver.onTitleChanged(session, "")
+        defaultObserver.onProgress(session, 0)
+        defaultObserver.onLoadingStateChanged(session, true)
+        defaultObserver.onNavigationStateChanged(session, true, true)
+        defaultObserver.onSearch(session, "")
+        defaultObserver.onSecurityChanged(session, Session.SecurityInfo())
+        defaultObserver.onCustomTabConfigChanged(session, null)
+        defaultObserver.onDownload(session, mock(Download::class.java))
+        defaultObserver.onTrackerBlockingEnabledChanged(session, true)
+        defaultObserver.onTrackerBlocked(session, "", emptyList())
+        defaultObserver.onLongPress(session, mock(HitResult::class.java))
+        defaultObserver.onFindResult(session, mock(Session.FindResult::class.java))
+        defaultObserver.onDesktopModeChanged(session, true)
+        defaultObserver.onFullScreenChanged(session, true)
+        defaultObserver.onThumbnailChanged(session, spy(Bitmap::class.java))
+    }
 }
