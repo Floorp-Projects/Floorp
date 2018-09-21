@@ -7,6 +7,7 @@
 #include "imgFrame.h"
 #include "ImageRegion.h"
 #include "ShutdownTracker.h"
+#include "SurfaceCache.h"
 
 #include "prenv.h"
 
@@ -157,38 +158,13 @@ ClearSurface(DataSourceSurface* aSurface, const IntSize& aSize, SurfaceFormat aF
   return true;
 }
 
-// Returns true if an image of aWidth x aHeight is allowed and legal.
-static bool
-AllowedImageSize(int32_t aWidth, int32_t aHeight)
-{
-  // reject over-wide or over-tall images
-  const int32_t k64KLimit = 0x0000FFFF;
-  if (MOZ_UNLIKELY(aWidth > k64KLimit || aHeight > k64KLimit )) {
-    NS_WARNING("image too big");
-    return false;
-  }
-
-  // protect against invalid sizes
-  if (MOZ_UNLIKELY(aHeight <= 0 || aWidth <= 0)) {
-    return false;
-  }
-
-  // check to make sure we don't overflow a 32-bit
-  CheckedInt32 requiredBytes = CheckedInt32(aWidth) * CheckedInt32(aHeight) * 4;
-  if (MOZ_UNLIKELY(!requiredBytes.isValid())) {
-    NS_WARNING("width or height too large");
-    return false;
-  }
-  return true;
-}
-
 static bool AllowedImageAndFrameDimensions(const nsIntSize& aImageSize,
                                            const nsIntRect& aFrameRect)
 {
-  if (!AllowedImageSize(aImageSize.width, aImageSize.height)) {
+  if (!SurfaceCache::IsLegalSize(aImageSize)) {
     return false;
   }
-  if (!AllowedImageSize(aFrameRect.Width(), aFrameRect.Height())) {
+  if (!SurfaceCache::IsLegalSize(aFrameRect.Size())) {
     return false;
   }
   nsIntRect imageRect(0, 0, aImageSize.width, aImageSize.height);
@@ -337,7 +313,7 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
 {
   // Assert for properties that should be verified by decoders,
   // warn for properties related to bad content.
-  if (!AllowedImageSize(aSize.width, aSize.height)) {
+  if (!SurfaceCache::IsLegalSize(aSize)) {
     NS_WARNING("Should have legal image size");
     mAborted = true;
     return NS_ERROR_FAILURE;
