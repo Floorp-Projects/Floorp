@@ -487,15 +487,15 @@ description#identity-popup-content-verifier,
  * trackers (except if the user added an exception, in which case they might
  * still (especially!) want to report the breakage). */
 #identity-popup-content-blocking-content:not([enabled]) #identity-popup-content-blocking-report-breakage,
-#identity-popup-content-blocking-content:not([detected]):not([hasException]) #identity-popup-content-blocking-report-breakage {
+#identity-popup-content-blocking-content:not([active]):not([hasException]) #identity-popup-content-blocking-report-breakage {
   display: none;
 }
 
 /* Show the right action buttons depending on content state */
 /* Offer to temporarily add an exception in private mode. */
-#main-window:not([privatebrowsingmode]) #identity-popup-content-blocking-content[enabled][detected]:not([hasException]) > #tracking-action-unblock,
+#main-window:not([privatebrowsingmode]) #identity-popup-content-blocking-content[active]:not([hasException]) > #tracking-action-unblock,
 /* Offer to permanently add an exception in normal mode. */
-#main-window[privatebrowsingmode] #identity-popup-content-blocking-content[enabled][detected]:not([hasException]) > #tracking-action-unblock-private,
+#main-window[privatebrowsingmode] #identity-popup-content-blocking-content[active]:not([hasException]) > #tracking-action-unblock-private,
 /* If there's an exception just offer to remove the exception again. */
 #identity-popup-content-blocking-content[enabled][hasException] > #tracking-action-block {
   display: -moz-box;
