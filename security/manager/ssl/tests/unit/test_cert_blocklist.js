@@ -162,10 +162,6 @@ var addonManager = Cc["@mozilla.org/addons/integration;1"]
                      .QueryInterface(Ci.nsITimerCallback);
 addonManager.observe(null, "addons-startup", null);
 
-var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                  .createInstance(Ci.nsIScriptableUnicodeConverter);
-converter.charset = "UTF-8";
-
 function verify_cert(file, expectedError) {
   let ee = constructCertFromFile(file);
   return checkCertErrorGeneric(certDB, ee, expectedError,
@@ -190,19 +186,8 @@ function load_cert(cert, trust) {
 
 function test_is_revoked(certList, issuerString, serialString, subjectString,
                          pubKeyString) {
-  let issuer = converter.convertToByteArray(issuerString || "", {});
-  let serial = converter.convertToByteArray(serialString || "", {});
-  let subject = converter.convertToByteArray(subjectString || "", {});
-  let pubKey = converter.convertToByteArray(pubKeyString || "", {});
-
-  return certList.isCertRevoked(issuer,
-                                issuerString ? issuerString.length : 0,
-                                serial,
-                                serialString ? serialString.length : 0,
-                                subject,
-                                subjectString ? subjectString.length : 0,
-                                pubKey,
-                                pubKeyString ? pubKeyString.length : 0);
+  return certList.isCertRevoked(btoa(issuerString), btoa(serialString),
+                                btoa(subjectString), btoa(pubKeyString));
 }
 
 function fetch_blocklist() {
