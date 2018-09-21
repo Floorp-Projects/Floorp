@@ -19,12 +19,8 @@ namespace dom {
 class XBLChildrenElement : public nsXMLElement
 {
 public:
-  explicit XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsXMLElement(aNodeInfo)
-  {
-  }
   explicit XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsXMLElement(aNodeInfo)
+    : nsXMLElement(std::move(aNodeInfo))
   {
   }
 

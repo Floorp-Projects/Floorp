@@ -23,8 +23,8 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Source)
 namespace mozilla {
 namespace dom {
 
-HTMLSourceElement::HTMLSourceElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLSourceElement::HTMLSourceElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
 {
 }
 

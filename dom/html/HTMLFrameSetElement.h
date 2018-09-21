@@ -46,8 +46,8 @@ class OnBeforeUnloadEventHandlerNonNull;
 class HTMLFrameSetElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLFrameSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo),
+  explicit HTMLFrameSetElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)),
       mNumRows(0),
       mNumCols(0),
       mCurrentRowColHint(NS_STYLE_HINT_REFLOW)

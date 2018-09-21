@@ -28,7 +28,7 @@ class SVGAnimationElement : public SVGAnimationElementBase,
                             public SVGTests
 {
 protected:
-  explicit SVGAnimationElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGAnimationElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   nsresult Init();
   virtual ~SVGAnimationElement();
 

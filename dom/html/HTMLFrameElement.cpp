@@ -12,9 +12,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Frame)
 namespace mozilla {
 namespace dom {
 
-HTMLFrameElement::HTMLFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+HTMLFrameElement::HTMLFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                    FromParser aFromParser)
-  : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)
+  : nsGenericHTMLFrameElement(std::move(aNodeInfo), aFromParser)
 {
 }
 

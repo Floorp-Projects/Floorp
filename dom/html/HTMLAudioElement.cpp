@@ -27,8 +27,8 @@ namespace dom {
 
 NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 
-HTMLAudioElement::HTMLAudioElement(already_AddRefed<NodeInfo>& aNodeInfo)
-  : HTMLMediaElement(aNodeInfo)
+HTMLAudioElement::HTMLAudioElement(already_AddRefed<NodeInfo>&& aNodeInfo)
+: HTMLMediaElement(std::move(aNodeInfo))
 {
   DecoderDoctorLogger::LogConstruction(this);
 }
@@ -57,12 +57,12 @@ HTMLAudioElement::Audio(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  already_AddRefed<mozilla::dom::NodeInfo> nodeInfo =
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::audio, nullptr,
                                         kNameSpaceID_XHTML,
                                         ELEMENT_NODE);
 
-  RefPtr<HTMLAudioElement> audio = new HTMLAudioElement(nodeInfo);
+  RefPtr<HTMLAudioElement> audio = new HTMLAudioElement(nodeInfo.forget());
   audio->SetHTMLAttr(nsGkAtoms::preload, NS_LITERAL_STRING("auto"), aRv);
   if (aRv.Failed()) {
     return nullptr;

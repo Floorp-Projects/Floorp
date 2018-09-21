@@ -27,9 +27,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Embed)
 namespace mozilla {
 namespace dom {
 
-HTMLEmbedElement::HTMLEmbedElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+HTMLEmbedElement::HTMLEmbedElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                    FromParser aFromParser)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
 {
   RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);

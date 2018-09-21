@@ -67,7 +67,7 @@ typedef nsStyledElement nsSVGElementBase;
 class nsSVGElement : public nsSVGElementBase    // nsIContent
 {
 protected:
-  explicit nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   friend nsresult NS_NewSVGElement(mozilla::dom::Element **aResult,
                                    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   nsresult Init();
@@ -641,8 +641,8 @@ nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)  \
 {                                                                            \
-  RefPtr<nsSVG##_elementName##Element> it =                                \
-    new nsSVG##_elementName##Element(aNodeInfo);                             \
+  RefPtr<nsSVG##_elementName##Element> it =                                  \
+    new nsSVG##_elementName##Element(std::move(aNodeInfo));                  \
                                                                              \
   nsresult rv = it->Init();                                                  \
                                                                              \
@@ -660,8 +660,8 @@ nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)  \
 {                                                                            \
-  RefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
-    new mozilla::dom::SVG##_elementName##Element(aNodeInfo);                 \
+  RefPtr<mozilla::dom::SVG##_elementName##Element> it =                      \
+    new mozilla::dom::SVG##_elementName##Element(std::move(aNodeInfo));      \
                                                                              \
   nsresult rv = it->Init();                                                  \
                                                                              \
@@ -680,8 +680,9 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,  \
                                  mozilla::dom::FromParser aFromParser)       \
 {                                                                            \
-  RefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
-    new mozilla::dom::SVG##_elementName##Element(aNodeInfo, aFromParser);    \
+  RefPtr<mozilla::dom::SVG##_elementName##Element> it =                      \
+    new mozilla::dom::SVG##_elementName##Element(std::move(aNodeInfo),       \
+                                                 aFromParser);               \
                                                                              \
   nsresult rv = it->Init();                                                  \
                                                                              \

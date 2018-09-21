@@ -53,9 +53,9 @@ static const nsAttrValue::EnumTable* kButtonDefaultType = &kButtonTypeTable[2];
 
 
 // Construction, destruction
-HTMLButtonElement::HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+HTMLButtonElement::HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                      FromParser aFromParser)
-  : nsGenericHTMLFormElementWithState(aNodeInfo, kButtonDefaultType->value),
+  : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), kButtonDefaultType->value),
     mDisabledChanged(false),
     mInInternalActivate(false),
     mInhibitStateRestoration(!!(aFromParser & FROM_PARSER_FRAGMENT))

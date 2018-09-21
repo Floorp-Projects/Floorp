@@ -23,7 +23,7 @@ class SVGMetadataElement final : public SVGMetadataElementBase
 protected:
   friend nsresult (::NS_NewSVGMetadataElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGMetadataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGMetadataElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
   nsresult Init();

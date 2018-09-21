@@ -20,7 +20,7 @@ namespace dom {
 class HTMLMeterElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLMeterElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLMeterElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   virtual EventStates IntrinsicState() const override;
 

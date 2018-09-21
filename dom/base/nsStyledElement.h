@@ -33,8 +33,8 @@ class nsStyledElement : public nsStyledElementBase
 
 protected:
 
-  inline explicit nsStyledElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsStyledElementBase(aNodeInfo)
+  inline explicit nsStyledElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsStyledElementBase(std::move(aNodeInfo))
   {}
 
 public:

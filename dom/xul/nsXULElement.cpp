@@ -103,8 +103,8 @@ uint32_t             nsXULPrototypeAttribute::gNumCacheFills;
 // nsXULElement
 //
 
-nsXULElement::nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsStyledElement(aNodeInfo),
+nsXULElement::nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsStyledElement(std::move(aNodeInfo)),
       mBindingParent(nullptr)
 {
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
@@ -139,7 +139,7 @@ nsXULElement::MaybeUpdatePrivateLifetime()
 /* static */
 nsXULElement* NS_NewBasicXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
-  return new nsXULElement(aNodeInfo);
+    return new nsXULElement(std::move(aNodeInfo));
 }
 
  /* static */
@@ -156,19 +156,16 @@ nsXULElement* nsXULElement::Construct(already_AddRefed<mozilla::dom::NodeInfo>&&
   if (nodeInfo->Equals(nsGkAtoms::iframe) ||
       nodeInfo->Equals(nsGkAtoms::browser) ||
       nodeInfo->Equals(nsGkAtoms::editor)) {
-    already_AddRefed<mozilla::dom::NodeInfo> frameni = nodeInfo.forget();
-    return new XULFrameElement(frameni);
+    return new XULFrameElement(nodeInfo.forget());
   }
 
   if (nodeInfo->Equals(nsGkAtoms::menu) ||
       nodeInfo->Equals(nsGkAtoms::menulist)) {
-    already_AddRefed<mozilla::dom::NodeInfo> menuni = nodeInfo.forget();
-    return new XULMenuElement(menuni);
+    return new XULMenuElement(nodeInfo.forget());
   }
 
   if (nodeInfo->Equals(nsGkAtoms::scrollbox)) {
-    already_AddRefed<mozilla::dom::NodeInfo> scrollni = nodeInfo.forget();
-    return new XULScrollElement(scrollni);
+    return new XULScrollElement(nodeInfo.forget());
   }
 
   return NS_NewBasicXULElement(nodeInfo.forget());

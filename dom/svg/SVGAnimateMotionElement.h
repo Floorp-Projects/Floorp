@@ -20,7 +20,7 @@ namespace dom {
 class SVGAnimateMotionElement final : public SVGAnimationElement
 {
 protected:
-  explicit SVGAnimateMotionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGAnimateMotionElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   SVGMotionSMILAnimationFunction mAnimationFunction;
   friend nsresult

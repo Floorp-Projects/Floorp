@@ -24,8 +24,8 @@ class SVGFEOffsetElement : public SVGFEOffsetElementBase
   friend nsresult (::NS_NewSVGFEOffsetElement(nsIContent **aResult,
                                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEOffsetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEOffsetElementBase(aNodeInfo)
+  explicit SVGFEOffsetElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEOffsetElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

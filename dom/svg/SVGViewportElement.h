@@ -53,7 +53,7 @@ class SVGViewportElement : public SVGGraphicsElement
 
 protected:
 
-  SVGViewportElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  SVGViewportElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   ~SVGViewportElement();
 
 public:

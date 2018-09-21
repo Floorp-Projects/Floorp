@@ -23,8 +23,8 @@ class SVGFEDistantLightElement : public SVGFEDistantLightElementBase
   friend nsresult (::NS_NewSVGFEDistantLightElement(nsIContent **aResult,
                                                     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEDistantLightElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEDistantLightElementBase(aNodeInfo)
+  explicit SVGFEDistantLightElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEDistantLightElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
