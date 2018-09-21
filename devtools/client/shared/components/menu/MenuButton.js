@@ -48,6 +48,9 @@ class MenuButton extends PureComponent {
 
       // Callback function to be invoked when the button is clicked.
       onClick: PropTypes.func,
+
+      // Callback function to be invoked when the child panel is closed.
+      onCloseButton: PropTypes.func,
     };
   }
 
@@ -97,6 +100,15 @@ class MenuButton extends PureComponent {
       this.setState({ win });
       this.resetTooltip();
       this.initializeTooltip();
+    }
+  }
+
+  componentDidUpdate() {
+    // The MenuButton creates the child panel when initializing the MenuButton.
+    // If the children function is called during the rendering process,
+    // this child list size might change. So we need to adjust content size here.
+    if (typeof this.props.children === "function") {
+      this.resizeContent();
     }
   }
 
@@ -193,6 +205,10 @@ class MenuButton extends PureComponent {
         this.buttonRef.style.pointerEvents = "auto";
       }
     }, 0);
+
+    if (this.props.onCloseButton) {
+      this.props.onCloseButton();
+    }
   }
 
   async onClick(e) {
@@ -223,6 +239,12 @@ class MenuButton extends PureComponent {
         // If the menu was activated by keyboard, focus the first item.
         if (wasKeyboardEvent && this.tooltip) {
           this.tooltip.focus();
+        }
+
+        // MenuButton creates the children dynamically when clicking the button,
+        // so execute the goggle menu after updating the children panel.
+        if (typeof this.props.children === "function") {
+          this.forceUpdate();
         }
       }
     // If we clicked one of the menu items, then, by default, we should
@@ -274,7 +296,9 @@ class MenuButton extends PureComponent {
     //
     // Bug 1472942: Do this for all users of HTMLTooltip.
     const menu = ReactDOM.createPortal(
-      this.props.children,
+      typeof this.props.children === "function"
+        ? this.props.children()
+        : this.props.children,
       this.tooltip.panel
     );
 

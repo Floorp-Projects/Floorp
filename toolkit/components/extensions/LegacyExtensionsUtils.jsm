@@ -123,8 +123,9 @@ class EmbeddedExtension {
   /**
    * Start the embedded webextension.
    *
-   * @param {number} reason
-   *   The add-on startup bootstrap reason received from the XPIProvider.
+   * @param {string} reason
+   *   The add-on startup bootstrap reason received from the XPIProvider, one of
+   *   the keys in BOOTSTRAP_REASONS.
    * @param {object} [addonData]
    *   Additional data to pass to the Extension constructor.
    *
@@ -150,7 +151,7 @@ class EmbeddedExtension {
         id: this.addonId,
         resourceURI: embeddedExtensionURI,
         version: this.version,
-      });
+      }, reason);
 
       this.extension.isEmbedded = true;
 
@@ -188,9 +189,9 @@ class EmbeddedExtension {
 
       this.extension.on("startup", onBeforeStarted);
 
-      // Run ambedded extension startup and catch any error during embedded extension
+      // Run embedded extension startup and catch any error during embedded extension
       // startup.
-      this.extension.startup(reason).catch((err) => {
+      this.extension.startup().catch((err) => {
         this.started = false;
         this.startupPromise = null;
         this.extension.off("startup", onBeforeStarted);
@@ -205,8 +206,9 @@ class EmbeddedExtension {
   /**
    * Shuts down the embedded webextension.
    *
-   * @param {number} reason
-   *   The add-on shutdown bootstrap reason received from the XPIProvider.
+   * @param {string} reason
+   *   The add-on shutdown bootstrap reason received from the XPIProvider, one
+   *   of the keys in BOOTSTRAP_REASONS.
    *
    * @returns {Promise<void>} a promise that is resolved when the shutdown has been done
    */

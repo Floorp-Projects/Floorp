@@ -215,7 +215,7 @@ mod tests {
     use rand::{thread_rng, Rng};
 
     use super::{init_device, send_apdu, sendrecv, U2FDevice};
-    use consts::{U2FHID_INIT, U2FHID_MSG, U2FHID_PING, CID_BROADCAST, SW_NO_ERROR};
+    use consts::{CID_BROADCAST, SW_NO_ERROR, U2FHID_INIT, U2FHID_MSG, U2FHID_PING};
 
     mod platform {
         use std::io;

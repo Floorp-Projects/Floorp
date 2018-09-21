@@ -597,45 +597,41 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
   // the timestamp of the next packet for this track.  If we've reached the
   // end of the resource, use the file's duration as the end time of this
   // video frame.
+  RefPtr<NesteggPacketHolder> next_holder;
+  rv = NextPacket(aType, next_holder);
+  if (NS_FAILED(rv) && rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+    return rv;
+  }
+
   int64_t next_tstamp = INT64_MIN;
-  if (aType == TrackInfo::kAudioTrack) {
-    RefPtr<NesteggPacketHolder> next_holder;
-    rv = NextPacket(aType, next_holder);
-    if (NS_FAILED(rv) && rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-      return rv;
-    }
-    if (next_holder) {
-      next_tstamp = next_holder->Timestamp();
-      PushAudioPacket(next_holder);
-    } else if (duration >= 0) {
-      next_tstamp = tstamp + duration;
-    } else if (!mIsMediaSource ||
-               (mIsMediaSource && mLastAudioFrameTime.isSome())) {
-      next_tstamp = tstamp;
-      next_tstamp += tstamp - mLastAudioFrameTime.refOr(0);
-    } else {
-      PushAudioPacket(holder);
-    }
-    mLastAudioFrameTime = Some(tstamp);
-  } else if (aType == TrackInfo::kVideoTrack) {
-    RefPtr<NesteggPacketHolder> next_holder;
-    rv = NextPacket(aType, next_holder);
-    if (NS_FAILED(rv) && rv != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-      return rv;
-    }
-    if (next_holder) {
-      next_tstamp = next_holder->Timestamp();
-      PushVideoPacket(next_holder);
-    } else if (duration >= 0) {
-      next_tstamp = tstamp + duration;
-    } else if (!mIsMediaSource ||
-               (mIsMediaSource && mLastVideoFrameTime.isSome())) {
-      next_tstamp = tstamp;
-      next_tstamp += tstamp - mLastVideoFrameTime.refOr(0);
-    } else {
-      PushVideoPacket(holder);
-    }
-    mLastVideoFrameTime = Some(tstamp);
+  auto calculateNextTimestamp =
+    [&] (auto&& pushPacket, auto&& lastFrameTime, auto&& trackEndTime) {
+      if (next_holder) {
+        next_tstamp = next_holder->Timestamp();
+        (this->*pushPacket)(next_holder);
+      } else if (duration >= 0) {
+        next_tstamp = tstamp + duration;
+      } else if (lastFrameTime.isSome()) {
+        next_tstamp = tstamp + (tstamp - lastFrameTime.ref());
+      } else if (mIsMediaSource) {
+        (this->*pushPacket)(holder);
+      } else {
+        // If we can't get frame's duration, it means either we need to wait for
+        // more data for MSE case or this is the last frame for file resource case.
+        MOZ_ASSERT(trackEndTime >= tstamp);
+        next_tstamp = trackEndTime;
+      }
+      lastFrameTime = Some(tstamp);
+  };
+
+  if (aType == TrackInfo::kAudioTrack)  {
+    calculateNextTimestamp(&WebMDemuxer::PushAudioPacket,
+                           mLastAudioFrameTime,
+                           mInfo.mAudio.mDuration.ToMicroseconds());
+  } else {
+    calculateNextTimestamp(&WebMDemuxer::PushVideoPacket,
+                           mLastVideoFrameTime,
+                           mInfo.mVideo.mDuration.ToMicroseconds());
   }
 
   if (mIsMediaSource && next_tstamp == INT64_MIN) {
@@ -1154,7 +1150,7 @@ WebMTrackDemuxer::Seek(const TimeUnit& aTime)
 nsresult
 WebMTrackDemuxer::NextSample(RefPtr<MediaRawData>& aData)
 {
-  nsresult rv = NS_ERROR_DOM_MEDIA_END_OF_STREAM;;
+  nsresult rv = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
   while (mSamples.GetSize() < 1 &&
          NS_SUCCEEDED((rv = mParent->GetNextPacket(mType, &mSamples)))) {
   }

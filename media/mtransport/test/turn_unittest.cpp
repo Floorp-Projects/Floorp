@@ -74,8 +74,7 @@ extern "C" {
 }
 
 #include "nricemediastream.h"
-#include "nricectxhandler.h"
-
+#include "nricectx.h"
 
 using namespace mozilla;
 

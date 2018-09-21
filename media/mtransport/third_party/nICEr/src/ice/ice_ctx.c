@@ -339,28 +339,6 @@ int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out)
 #define MAXADDRS 100 /* Ridiculously high */
 int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
   {
-    int r,_status;
-    char *ufrag = 0;
-    char *pwd = 0;
-
-    if (r=nr_ice_get_new_ice_ufrag(&ufrag))
-      ABORT(r);
-    if (r=nr_ice_get_new_ice_pwd(&pwd))
-      ABORT(r);
-
-    if (r=nr_ice_ctx_create_with_credentials(label, flags, ufrag, pwd, ctxp))
-      ABORT(r);
-
-    _status=0;
-  abort:
-    RFREE(ufrag);
-    RFREE(pwd);
-
-    return(_status);
-  }
-
-int nr_ice_ctx_create_with_credentials(char *label, UINT4 flags, char *ufrag, char *pwd, nr_ice_ctx **ctxp)
-  {
     nr_ice_ctx *ctx=0;
     int r,_status;
 
@@ -374,11 +352,6 @@ int nr_ice_ctx_create_with_credentials(char *label, UINT4 flags, char *ufrag, ch
 
     if(!(ctx->label=r_strdup(label)))
       ABORT(R_NO_MEMORY);
-
-    if(!(ctx->ufrag=r_strdup(ufrag)))
-      ABORT(r);
-    if(!(ctx->pwd=r_strdup(pwd)))
-      ABORT(r);
 
     /* Get the STUN servers */
     if(r=NR_reg_get_child_count(NR_ICE_REG_STUN_SRV_PRFX,
@@ -494,8 +467,6 @@ static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
       RFREE(f1);
       f1=f2;
     }
-    RFREE(ctx->pwd);
-    RFREE(ctx->ufrag);
 
     STAILQ_FOREACH_SAFE(id1, &ctx->ids, entry, id2){
       STAILQ_REMOVE(&ctx->ids,id1,nr_ice_stun_id_,entry);
@@ -832,11 +803,11 @@ int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
     return(_status);
   }
 
-int nr_ice_add_media_stream(nr_ice_ctx *ctx,char *label,int components, nr_ice_media_stream **streamp)
+int nr_ice_add_media_stream(nr_ice_ctx *ctx,const char *label,const char *ufrag,const char *pwd,int components, nr_ice_media_stream **streamp)
   {
     int r,_status;
 
-    if(r=nr_ice_media_stream_create(ctx,label,components,streamp))
+    if(r=nr_ice_media_stream_create(ctx,label,ufrag,pwd,components,streamp))
       ABORT(r);
 
     STAILQ_INSERT_TAIL(&ctx->streams,*streamp,entry);
@@ -875,36 +846,9 @@ int nr_ice_remove_media_stream(nr_ice_ctx *ctx,nr_ice_media_stream **streamp)
 
 int nr_ice_get_global_attributes(nr_ice_ctx *ctx,char ***attrsp, int *attrctp)
   {
-    char **attrs=0;
-    int _status;
-    char *tmp=0;
-
-    if(!(attrs=RCALLOC(sizeof(char *)*2)))
-      ABORT(R_NO_MEMORY);
-
-    if(!(tmp=RMALLOC(100)))
-      ABORT(R_NO_MEMORY);
-    snprintf(tmp,100,"ice-ufrag:%s",ctx->ufrag);
-    attrs[0]=tmp;
-
-    if(!(tmp=RMALLOC(100)))
-      ABORT(R_NO_MEMORY);
-    snprintf(tmp,100,"ice-pwd:%s",ctx->pwd);
-    attrs[1]=tmp;
-
-    *attrctp=2;
-    *attrsp=attrs;
-
-    _status=0;
-  abort:
-    if (_status){
-      if (attrs){
-        RFREE(attrs[0]);
-        RFREE(attrs[1]);
-      }
-      RFREE(attrs);
-    }
-    return(_status);
+    *attrctp=0;
+    *attrsp=0;
+    return(0);
   }
 
 static int nr_ice_random_string(char *str, int len)

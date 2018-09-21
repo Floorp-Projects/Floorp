@@ -347,6 +347,18 @@
   background-position: left 2px top 14px;
 }
 
+/* Tooltip of frames menu  */
+
+#command-button-frames-panel > .tooltip-panel {
+  max-width: 500px;
+  overflow-y: auto;
+}
+
+#toolbox-frame-menu span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Toolbox panels */
 
 .toolbox-panel {

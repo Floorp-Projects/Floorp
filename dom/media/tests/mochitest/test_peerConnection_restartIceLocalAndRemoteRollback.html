@@ -64,12 +64,12 @@
               STABLE);
         },
 
-        // Rolling back should shut down gathering
+        // Rolling back should shut down gathering for the offerer,
+        // but because the answerer never set a local description, no ICE
+        // gathering has happened yet, so there's no changes to ICE gathering
+        // state
         function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
           return test.pcLocal.endOfTrickleIce;
-        },
-        function PC_REMOTE_WAIT_FOR_END_OF_TRICKLE(test) {
-          return test.pcRemote.endOfTrickleIce;
         },
 
         function PC_LOCAL_EXPECT_ICE_CHECKING(test) {

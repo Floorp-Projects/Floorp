@@ -99,7 +99,7 @@ int nr_ice_peer_ctx_parse_stream_attributes(nr_ice_peer_ctx *pctx, nr_ice_media_
     /*
       Note: use component_ct from our own stream since components other
       than this offered by the other side are unusable */
-    if(r=nr_ice_media_stream_create(pctx->ctx,stream->label,stream->component_ct,&pstream))
+    if(r=nr_ice_media_stream_create(pctx->ctx,stream->label,"","",stream->component_ct,&pstream))
       ABORT(r);
 
     /* Match up the local and remote components */
@@ -120,12 +120,12 @@ int nr_ice_peer_ctx_parse_stream_attributes(nr_ice_peer_ctx *pctx, nr_ice_media_
 
     /* Now that we have the ufrag and password, compute all the username/password
        pairs */
-    lufrag=stream->ufrag?stream->ufrag:pctx->ctx->ufrag;
-    lpwd=stream->pwd?stream->pwd:pctx->ctx->pwd;
+    lufrag=stream->ufrag;
+    lpwd=stream->pwd;
     assert(lufrag);
     assert(lpwd);
-    rufrag=pstream->ufrag?pstream->ufrag:pctx->peer_ufrag;
-    rpwd=pstream->pwd?pstream->pwd:pctx->peer_pwd;
+    rufrag=pstream->ufrag;
+    rpwd=pstream->pwd;
     if (!rufrag || !rpwd)
       ABORT(R_BAD_DATA);
 
@@ -470,8 +470,6 @@ static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
 
     NR_async_timer_cancel(pctx->connected_cb_timer);
     RFREE(pctx->label);
-    RFREE(pctx->peer_ufrag);
-    RFREE(pctx->peer_pwd);
 
     STAILQ_FOREACH_SAFE(str1, &pctx->peer_streams, entry, str2){
       STAILQ_REMOVE(&pctx->peer_streams,str1,nr_ice_media_stream_,entry);
@@ -534,10 +532,7 @@ int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first)
     pctx->connected_cb_timer = 0;
     pctx->checks_started = 0;
 
-    if((r=nr_ice_peer_ctx_check_if_connected(pctx))) {
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) initial connected check failed",pctx->ctx->label,pctx->label);
-      ABORT(r);
-    }
+    nr_ice_peer_ctx_check_if_connected(pctx);
 
     if (pctx->reported_connected) {
       r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) in %s all streams were done",pctx->ctx->label,pctx->label,__FUNCTION__);
@@ -717,29 +712,30 @@ static void nr_ice_peer_ctx_fire_connected(NR_SOCKET s, int how, void *cb_arg)
 
 /* Examine all the streams to see if we're
    maybe miraculously connected */
-int nr_ice_peer_ctx_check_if_connected(nr_ice_peer_ctx *pctx)
+void nr_ice_peer_ctx_check_if_connected(nr_ice_peer_ctx *pctx)
   {
-    int _status;
     nr_ice_media_stream *str;
     int failed=0;
     int succeeded=0;
 
     str=STAILQ_FIRST(&pctx->peer_streams);
     while(str){
-      if(str->ice_state==NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED){
-        succeeded++;
-      }
-      else if(str->ice_state==NR_ICE_MEDIA_STREAM_CHECKS_FAILED){
-        failed++;
-      }
-      else{
-        break;
+      if (!str->local_stream->obsolete){
+        if(str->ice_state==NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED){
+          succeeded++;
+        }
+        else if(str->ice_state==NR_ICE_MEDIA_STREAM_CHECKS_FAILED){
+          failed++;
+        }
+        else{
+          break;
+        }
       }
       str=STAILQ_NEXT(str,entry);
     }
 
     if(str)
-      goto done;  /* Something isn't done */
+      return;  /* Something isn't done */
 
     /* OK, we're finished, one way or another */
     r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): all checks completed success=%d fail=%d",pctx->label,succeeded,failed);
@@ -752,10 +748,6 @@ int nr_ice_peer_ctx_check_if_connected(nr_ice_peer_ctx *pctx)
       assert(!pctx->connected_cb_timer);
       NR_ASYNC_TIMER_SET(0,nr_ice_peer_ctx_fire_connected,pctx,&pctx->connected_cb_timer);
     }
-
-  done:
-    _status=0;
-    return(_status);
   }
 
 

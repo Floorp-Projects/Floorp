@@ -29,19 +29,24 @@ add_task(async function() {
   ok(!btn.firstChild, "The frame list button doesn't have any children");
 
   // Open frame menu and wait till it's available on the screen.
-  const menu = await toolbox.showFramesMenu({target: btn});
-  await once(menu, "open");
+  const panel = toolbox.doc.getElementById("command-button-frames-panel");
+  btn.click();
+  ok(panel, "popup panel has created.");
+  await waitUntil(() => panel.classList.contains("tooltip-visible"));
 
   // Verify that the menu is popuplated.
-  const frames = menu.items.slice();
+  const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
+  const frames = Array.prototype.slice.call(menuList.querySelectorAll(".command"));
   is(frames.length, 2, "We have both frames in the menu");
 
   frames.sort(function(a, b) {
-    return a.label.localeCompare(b.label);
+    return a.children[0].innerHTML.localeCompare(b.children[0].innerHTML);
   });
 
-  is(frames[0].label, FrameURL, "Got top level document in the list");
-  is(frames[1].label, URL, "Got iframe document in the list");
+  is(frames[0].querySelector(".label").textContent, FrameURL,
+     "Got top level document in the list");
+  is(frames[1].querySelector(".label").textContent, URL,
+     "Got iframe document in the list");
 
   // Listen to will-navigate to check if the view is empty
   const willNavigate = toolbox.target.once("will-navigate").then(() => {
