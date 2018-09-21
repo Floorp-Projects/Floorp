@@ -1004,7 +1004,7 @@ panelview .toolbarbutton-1,
 }
 
 .subviewbutton[checked="true"] {
-  list-style-image: url(chrome://global/skin/icons/check.svg);
+  list-style-image: url(chrome://browser/skin/check.svg);
   -moz-context-properties: fill;
   fill: currentColor;
   color: inherit;
