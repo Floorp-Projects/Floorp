@@ -56,8 +56,8 @@ let REQUEST_1 = {
     shippingAddressErrors: {},
     shippingOptions: [
       {
-        id: "123",
-        label: "Fast",
+        id: "std",
+        label: "Standard (3-5 business days)",
         amount: {
           currency: "USD",
           value: 10,
@@ -65,11 +65,12 @@ let REQUEST_1 = {
         selected: false,
       },
       {
-        id: "456",
-        label: "Faster (default)",
+        id: "super-slow",
+        // Long to test truncation
+        label: "Ssssssssuuuuuuuuupppppeeeeeeerrrrr sssssllllllloooooowwwwww",
         amount: {
           currency: "USD",
-          value: 20,
+          value: 1.50,
         },
         selected: true,
       },
@@ -92,7 +93,19 @@ let REQUEST_2 = {
   topLevelPrincipal: {URI: {displayHost: "example.com"}},
   requestId: "3797081f-a96b-c34b-a58b-1083c6e66e25",
   completeStatus: "",
-  paymentMethods: [],
+  paymentMethods: [
+    {
+      "supportedMethods": "basic-card",
+      "data": {
+        "supportedNetworks": [
+          "amex",
+          "discover",
+          "mastercard",
+          "visa",
+        ],
+      },
+    },
+  ],
   paymentDetails: {
     id: "",
     totalItem: {label: "", amount: {currency: "CAD", value: "25.75"}, pending: false},
@@ -208,8 +221,25 @@ let ADDRESSES_1 = {
   "abcde12345": {
     "address-level2": "Mountain View",
     "country": "US",
+    "family-name": "Fields",
+    "given-name": "Mrs.",
     "guid": "abcde12345",
     "name": "Mrs. Fields",
+  },
+  "german1": {
+    "additional-name": "Y.",
+    "address-level1": "",
+    "address-level2": "Berlin",
+    "country": "DE",
+    "email": "de@example.com",
+    "family-name": "Mouse",
+    "given-name": "Anon",
+    "guid": "german1",
+    "name": "Anon Y. Mouse",
+    "organization": "Mozilla",
+    "postal-code": "10997",
+    "street-address": "Schlesische Str. 27",
+    "tel": "+49 30 983333002",
   },
   "missing-country": {
     "address-level1": "ON",
@@ -343,7 +373,6 @@ let BASIC_CARDS_1 = {
     "cc-exp-month": 8,
     "cc-exp-year": 2024,
     "cc-exp": "2024-08",
-    "cc-type": "amex",
   },
 };
 

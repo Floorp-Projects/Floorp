@@ -306,11 +306,7 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
 
     cand=*candp;
 
-    if (cand->state == NR_ICE_CAND_STATE_INITIALIZING) {
-      /* Make sure the ICE ctx isn't still waiting around for this candidate
-       * to init. */
-      nr_ice_candidate_mark_done(cand, NR_ICE_CAND_STATE_FAILED);
-    }
+    nr_ice_candidate_stop_gathering(cand);
 
     switch(cand->type){
       case HOST:
@@ -350,17 +346,30 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
         break;
     }
 
-    NR_async_timer_cancel(cand->delay_timer);
-    NR_async_timer_cancel(cand->ready_cb_timer);
-    if(cand->resolver_handle){
-      nr_resolver_cancel(cand->ctx->resolver,cand->resolver_handle);
-    }
-
     RFREE(cand->foundation);
     RFREE(cand->label);
     RFREE(cand);
 
     return(0);
+  }
+
+void nr_ice_candidate_stop_gathering(nr_ice_candidate *cand)
+  {
+    if (cand->state == NR_ICE_CAND_STATE_INITIALIZING) {
+      /* Make sure the ICE ctx isn't still waiting around for this candidate
+       * to init. */
+      nr_ice_candidate_mark_done(cand, NR_ICE_CAND_STATE_FAILED);
+    }
+
+    NR_async_timer_cancel(cand->delay_timer);
+    cand->delay_timer=0;
+    NR_async_timer_cancel(cand->ready_cb_timer);
+    cand->ready_cb_timer=0;
+
+    if(cand->resolver_handle){
+      nr_resolver_cancel(cand->ctx->resolver,cand->resolver_handle);
+      cand->resolver_handle=0;
+    }
   }
 
 /* This algorithm is not super-fast, but I don't think we need a hash

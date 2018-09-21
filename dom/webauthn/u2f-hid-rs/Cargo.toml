@@ -1,6 +1,6 @@
 [package]
 name = "u2fhid"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Kyle Machulis <kyle@nonpolynomial.com>", "J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
@@ -13,8 +13,15 @@ devd-rs = "0.2.1"
 core-foundation-sys = "0.6.0"
 core-foundation = "0.6.0"
 
-[target.'cfg(target_os = "windows")'.dependencies]
-winapi = "0.2.8"
+[target.'cfg(target_os = "windows")'.dependencies.winapi]
+version = "0.3"
+features = [
+    "handleapi",
+    "hidclass",
+    "hidpi",
+    "hidusage",
+    "setupapi",
+]
 
 [dependencies]
 rand = "0.3"

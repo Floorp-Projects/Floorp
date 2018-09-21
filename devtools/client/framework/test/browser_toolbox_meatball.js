@@ -60,7 +60,7 @@ async function openMeatballMenuWithClick(toolbox) {
 
 async function closeMeatballMenuWithClick(toolbox) {
   const meatballButton = toolbox.doc.getElementById("toolbox-meatball-menu-button");
-  await waitUntil(() => meatballButton.style.pointerEvents === "none");
+  await waitUntil(() => toolbox.win.getComputedStyle(meatballButton).pointerEvents === "none");
   meatballButton.click();
 
   const menuPanel = toolbox.doc.getElementById("toolbox-meatball-menu-button-panel");

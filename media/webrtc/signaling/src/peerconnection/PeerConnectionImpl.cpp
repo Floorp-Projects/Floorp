@@ -692,15 +692,6 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
-  res = mJsepSession->SetIceCredentials(mMedia->ice_ctx()->ufrag(),
-                                        mMedia->ice_ctx()->pwd());
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "%s: Couldn't set ICE credentials, res=%u",
-                         __FUNCTION__,
-                         static_cast<unsigned>(res));
-    return res;
-  }
-
   res = mJsepSession->SetBundlePolicy(aConfiguration.getBundlePolicy());
   if (NS_FAILED(res)) {
     CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
@@ -1481,13 +1472,6 @@ NS_IMETHODIMP
 PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
 {
   PC_AUTO_ENTER_API_CALL(true);
-  bool restartIce = aOptions.mIceRestart.isSome() && *(aOptions.mIceRestart);
-  if (!restartIce &&
-      mMedia->GetIceRestartState() ==
-          PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
-    RollbackIceRestart();
-  }
-
   RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return NS_OK;
@@ -1503,36 +1487,7 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
 
   CSFLogDebug(LOGTAG, "CreateOffer()");
 
-  bool iceRestartPrimed = false;
-  nsresult nrv;
-  if (restartIce &&
-      !mJsepSession->GetLocalDescription(kJsepDescriptionCurrent).empty()) {
-    // If restart is requested and a restart is already in progress, we
-    // need to make room for the restart request so we either rollback
-    // or finalize to "clear" the previous restart.
-    if (mMedia->GetIceRestartState() ==
-            PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
-      // we're mid-restart and can rollback
-      RollbackIceRestart();
-    } else if (mMedia->GetIceRestartState() ==
-                   PeerConnectionMedia::ICE_RESTART_COMMITTED) {
-      // we're mid-restart and can't rollback, finalize restart even
-      // though we're not really ready yet
-      FinalizeIceRestart();
-    }
-
-    CSFLogInfo(LOGTAG, "Offerer restarting ice");
-    nrv = SetupIceRestartCredentials();
-    if (NS_FAILED(nrv)) {
-      CSFLogError(LOGTAG, "%s: SetupIceRestart failed, res=%u",
-                           __FUNCTION__,
-                           static_cast<unsigned>(nrv));
-      return nrv;
-    }
-    iceRestartPrimed = true;
-  }
-
-  nrv = ConfigureJsepSessionCodecs();
+  nsresult nrv = ConfigureJsepSessionCodecs();
   if (NS_FAILED(nrv)) {
     CSFLogError(LOGTAG, "Failed to configure codecs");
     return nrv;
@@ -1558,19 +1513,8 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s",
                 __FUNCTION__, mHandle.c_str(), errorString.c_str());
 
-    if (iceRestartPrimed) {
-      // reset the ice credentials because CreateOffer failed
-      ResetIceCredentials();
-    }
-
     pco->OnCreateOfferError(error, ObString(errorString.c_str()), rv);
   } else {
-    // wait until we know CreateOffer succeeds before we actually start
-    // the ice restart gears turning.
-    if (iceRestartPrimed) {
-      BeginIceRestart();
-    }
-
     UpdateSignalingState();
     pco->OnCreateOfferSuccess(ObString(offer.c_str()), rv);
   }
@@ -1590,32 +1534,13 @@ PeerConnectionImpl::CreateAnswer()
 
   CSFLogDebug(LOGTAG, "CreateAnswer()");
 
-  bool iceRestartPrimed = false;
-  nsresult nrv;
-  if (mJsepSession->RemoteIceIsRestarting()) {
-    if (mMedia->GetIceRestartState() ==
-            PeerConnectionMedia::ICE_RESTART_COMMITTED) {
-      FinalizeIceRestart();
-    } else if (!mMedia->IsIceRestarting()) {
-      CSFLogInfo(LOGTAG, "Answerer restarting ice");
-      nrv = SetupIceRestartCredentials();
-      if (NS_FAILED(nrv)) {
-        CSFLogError(LOGTAG, "%s: SetupIceRestart failed, res=%u",
-                             __FUNCTION__,
-                             static_cast<unsigned>(nrv));
-        return nrv;
-      }
-      iceRestartPrimed = true;
-    }
-  }
-
   STAMP_TIMECARD(mTimeCard, "Create Answer");
   // TODO(bug 1098015): Once RTCAnswerOptions is standardized, we'll need to
   // add it as a param to CreateAnswer, and convert it here.
   JsepAnswerOptions options;
   std::string answer;
 
-  nrv = mJsepSession->CreateAnswer(options, &answer);
+  nsresult nrv = mJsepSession->CreateAnswer(options, &answer);
   JSErrorResult rv;
   if (NS_FAILED(nrv)) {
     Error error;
@@ -1631,100 +1556,13 @@ PeerConnectionImpl::CreateAnswer()
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s",
                 __FUNCTION__, mHandle.c_str(), errorString.c_str());
 
-    if (iceRestartPrimed) {
-      // reset the ice credentials because CreateAnswer failed
-      ResetIceCredentials();
-    }
-
     pco->OnCreateAnswerError(error, ObString(errorString.c_str()), rv);
   } else {
-    // wait until we know CreateAnswer succeeds before we actually start
-    // the ice restart gears turning.
-    if (iceRestartPrimed) {
-      BeginIceRestart();
-    }
-
     UpdateSignalingState();
     pco->OnCreateAnswerSuccess(ObString(answer.c_str()), rv);
   }
 
   return NS_OK;
-}
-
-nsresult
-PeerConnectionImpl::SetupIceRestartCredentials()
-{
-  if (mMedia->IsIceRestarting()) {
-    CSFLogError(LOGTAG, "%s: ICE already restarting",
-                         __FUNCTION__);
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  std::string ufrag = mMedia->ice_ctx()->GetNewUfrag();
-  std::string pwd = mMedia->ice_ctx()->GetNewPwd();
-  if (ufrag.empty() || pwd.empty()) {
-    CSFLogError(LOGTAG, "%s: Bad ICE credentials (ufrag:'%s'/pwd:'%s')",
-                         __FUNCTION__,
-                         ufrag.c_str(), pwd.c_str());
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // hold on to the current ice creds in case of rollback
-  mPreviousIceUfrag = mJsepSession->GetUfrag();
-  mPreviousIcePwd = mJsepSession->GetPwd();
-
-  nsresult nrv = mJsepSession->SetIceCredentials(ufrag, pwd);
-  if (NS_FAILED(nrv)) {
-    CSFLogError(LOGTAG, "%s: Couldn't set ICE credentials, res=%u",
-                         __FUNCTION__,
-                         static_cast<unsigned>(nrv));
-    return nrv;
-  }
-
-  return NS_OK;
-}
-
-void
-PeerConnectionImpl::BeginIceRestart()
-{
-  mMedia->BeginIceRestart(mJsepSession->GetUfrag(), mJsepSession->GetPwd());
-}
-
-nsresult
-PeerConnectionImpl::ResetIceCredentials()
-{
-  nsresult nrv = mJsepSession->SetIceCredentials(mPreviousIceUfrag, mPreviousIcePwd);
-  mPreviousIceUfrag = "";
-  mPreviousIcePwd = "";
-
-  if (NS_FAILED(nrv)) {
-    CSFLogError(LOGTAG, "%s: Couldn't reset ICE credentials, res=%u",
-                         __FUNCTION__,
-                         static_cast<unsigned>(nrv));
-    return nrv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-PeerConnectionImpl::RollbackIceRestart()
-{
-  mMedia->RollbackIceRestart();
-  ++mIceRollbackCount;
-
-  // put back the previous ice creds
-  return ResetIceCredentials();
-}
-
-void
-PeerConnectionImpl::FinalizeIceRestart()
-{
-  mMedia->FinalizeIceRestart();
-  // clear the previous ice creds since they are no longer needed
-  mPreviousIceUfrag = "";
-  mPreviousIcePwd = "";
-  ++mIceRestartCount;
 }
 
 NS_IMETHODIMP
@@ -1750,6 +1588,7 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP)
 
   mLocalRequestedSDP = aSDP;
 
+  bool wasRestartingIce = mJsepSession->IsIceRestarting();
   JsepSdpType sdpType;
   switch (aAction) {
     case IPeerConnection::kActionOffer:
@@ -1789,6 +1628,9 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP)
                 __FUNCTION__, mHandle.c_str(), errorString.c_str());
     pco->OnSetLocalDescriptionError(error, ObString(errorString.c_str()), rv);
   } else {
+    if (wasRestartingIce) {
+      RecordIceRestartStatistics(sdpType);
+    }
     UpdateSignalingState(sdpType == mozilla::kJsepSdpRollback);
     pco->OnSetLocalDescriptionSuccess(rv);
   }
@@ -1849,6 +1691,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
   STAMP_TIMECARD(mTimeCard, "Set Remote Description");
 
   mRemoteRequestedSDP = aSDP;
+  bool wasRestartingIce = mJsepSession->IsIceRestarting();
   JsepSdpType sdpType;
   switch (action) {
     case IPeerConnection::kActionOffer:
@@ -1934,6 +1777,9 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
       }
     }
 
+    if (wasRestartingIce) {
+      RecordIceRestartStatistics(sdpType);
+    }
     UpdateSignalingState(sdpType == mozilla::kJsepSdpRollback);
 
     pco->OnSetRemoteDescriptionSuccess(jrv);
@@ -2836,15 +2682,6 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
   mSignalingState = aSignalingState;
 
   if (mSignalingState == PCImplSignalingState::SignalingStable) {
-    if (mMedia->GetIceRestartState() ==
-            PeerConnectionMedia::ICE_RESTART_PROVISIONAL) {
-      if (rollback) {
-        RollbackIceRestart();
-      } else {
-        mMedia->CommitIceRestart();
-      }
-    }
-
     // If we're rolling back a local offer, we might need to remove some
     // transports, and stomp some MediaPipeline setup, but nothing further
     // needs to be done.
@@ -3124,14 +2961,6 @@ void PeerConnectionImpl::IceConnectionStateChange(
   }
 
   mIceConnectionState = domState;
-
-  if (mIceConnectionState == PCImplIceConnectionState::Connected ||
-      mIceConnectionState == PCImplIceConnectionState::Completed ||
-      mIceConnectionState == PCImplIceConnectionState::Failed) {
-    if (mMedia->IsIceRestarting()) {
-      FinalizeIceRestart();
-    }
-  }
 
   // Uncount this connection as active on the inner window upon close.
   if (mWindow && mActiveOnWindow && mIceConnectionState == PCImplIceConnectionState::Closed) {
@@ -3724,6 +3553,22 @@ void PeerConnectionImpl::DeliverStatsReportToPCObserver_m(
 void
 PeerConnectionImpl::RecordLongtermICEStatistics() {
   WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
+}
+
+void
+PeerConnectionImpl::RecordIceRestartStatistics(JsepSdpType type)
+{
+  switch (type) {
+    case mozilla::kJsepSdpOffer:
+    case mozilla::kJsepSdpPranswer:
+      break;
+    case mozilla::kJsepSdpAnswer:
+      ++mIceRestartCount;
+      break;
+    case mozilla::kJsepSdpRollback:
+      ++mIceRollbackCount;
+      break;
+  }
 }
 
 void

@@ -42,19 +42,27 @@ add_task(async function() {
   await testShortcutToOpenFrames(btn, toolbox);
 
   // Open frame menu and wait till it's available on the screen.
-  // Also check 'open' attribute on the command button.
-  ok(!btn.classList.contains("checked"), "The checked class must not be present");
-  const menu = await toolbox.showFramesMenu({target: btn});
-  await once(menu, "open");
+  // Also check 'aria-expanded' attribute on the command button.
+  is(btn.getAttribute("aria-expanded"), "false",
+     "The aria-expanded attribute must be set to false");
+  btn.click();
 
-  ok(btn.classList.contains("checked"), "The checked class must be set");
+  const panel = toolbox.doc.getElementById("command-button-frames-panel");
+  ok(panel, "popup panel has created.");
+  await waitUntil(() => panel.classList.contains("tooltip-visible"));
+
+  is(btn.getAttribute("aria-expanded"), "true",
+     "The aria-expanded attribute must be set to true");
 
   // Verify that the frame list menu is populated
-  const frames = menu.items;
+  const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
+  const frames = Array.from(menuList.querySelectorAll(".command"));
   is(frames.length, 2, "We have both frames in the list");
 
-  const topFrameBtn = frames.filter(b => b.label == URL)[0];
-  const iframeBtn = frames.filter(b => b.label == IFRAME_URL)[0];
+  const topFrameBtn =
+        frames.filter(b => b.querySelector(".label").textContent == URL)[0];
+  const iframeBtn =
+        frames.filter(b => b.querySelector(".label").textContent == IFRAME_URL)[0];
   ok(topFrameBtn, "Got top level document in the list");
   ok(iframeBtn, "Got iframe document in the list");
 
@@ -100,16 +108,17 @@ async function testShortcutToOpenFrames(btn, toolbox) {
   const shortcut = L10N.getStr("toolbox.showFrames.key");
   synthesizeKeyShortcut(shortcut, toolbox.win);
 
-  // wait for 200 ms for UI to render
-  await wait(200);
+  const panel = toolbox.doc.getElementById("command-button-frames-panel");
+  ok(panel, "popup panel has created.");
+  await waitUntil(() => panel.classList.contains("tooltip-visible"));
 
-  // btn should now have the checked class set
-  ok(btn.classList.contains("checked"), "The checked class must be set");
+  is(btn.getAttribute("aria-expanded"), "true",
+     "The aria-expanded attribute must be set to true");
 
   // pressing Esc should hide the menu again
-  synthesizeKeyShortcut("Esc", toolbox.win);
-  await wait(200);
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await waitUntil(() => !panel.classList.contains("tooltip-visible"));
 
-  // btn shouldn't have the checked class set
-  ok(!btn.classList.contains("checked"), "The checked class must not be set");
+  is(btn.getAttribute("aria-expanded"), "false",
+     "The aria-expanded attribute must be set to false");
 }

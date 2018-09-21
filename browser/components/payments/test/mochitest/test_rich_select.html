@@ -11,6 +11,8 @@ Test the rich-select component
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script src="payments_common.js"></script>
   <script src="../../res/vendor/custom-elements.min.js"></script>
+  <script src="../../res/unprivileged-fallbacks.js"></script>
+  <script src="autofillEditForms.js"></script>
 
   <link rel="stylesheet" type="text/css" href="../../res/components/rich-select.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/components/address-option.css"/>
@@ -61,6 +63,7 @@ for (let address of Object.values(addresses)) {
   let option = document.createElement("option");
   option.textContent = address.name + " " + address["street-address"];
   option.setAttribute("value", address.guid);
+  option.dataset.fieldSeparator = ", ";
   for (let field of Object.keys(address)) {
     option.setAttribute(field, address[field]);
   }
@@ -81,6 +84,14 @@ function get_selected_clone() {
 function is_visible(element, message) {
   ok(!isHidden(element), message);
 }
+
+add_task(async function test_clickable_area() {
+  ok(select1, "select1 exists");
+  isnot(document.activeElement, select1.popupBox, "<select> shouldn't have focus");
+  synthesizeMouseAtCenter(select1, {});
+  is(document.activeElement, select1.popupBox, "<select> should have focus when clicked");
+  document.activeElement.blur();
+});
 
 add_task(async function test_closed_state_on_selection() {
   ok(select1, "select1 exists");

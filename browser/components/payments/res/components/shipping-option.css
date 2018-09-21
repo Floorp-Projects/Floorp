@@ -4,6 +4,10 @@
 
 shipping-option.rich-option {
   display: block;
+  /* Below properties are to support truncating with an ellipsis for long options */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 shipping-option > .label,

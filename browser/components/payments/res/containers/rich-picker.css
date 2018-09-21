@@ -35,8 +35,8 @@
   grid-area: dropdown;
 }
 
-.invalid-selected-option > rich-select {
-  outline: 1px solid #c70011;
+.invalid-selected-option > rich-select > select {
+  border: 1px solid #c70011;
 }
 
 .rich-picker > .invalid-label {
