@@ -124,6 +124,20 @@ come up.
   file.
 
 
+Partial tree builds in tup
+==========================
+
+Partial tree builds are possible in tup by invoking
+``./mach build <relative srcdir path>``, however the behavior differs from the
+make backend. A partial tree build will result in running the commands in
+Tupfiles in the specified subtree, building ``.o`` files and other outputs, but
+unlike make it will take changed dependencies into account and build everything
+necessary to update those outputs as well. Also unlike make it will not
+attempt to find downstream commands that depend on these files, i.e.
+programs and libraries from other parts of the tree will not be linked. A
+top level incremental build should be performed to run all commands that depend
+on changes to the local tree.
+
 How to Contribute
 =================
 
