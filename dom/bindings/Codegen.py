@@ -102,6 +102,9 @@ def idlTypeNeedsCycleCollection(type):
         raise CycleCollectionUnsupported("Don't know whether to cycle-collect type %s" % type)
 
 
+# TryPreserveWrapper uses the addProperty hook to preserve the wrapper of
+# non-nsISupports cycle collected objects, so if wantsAddProperty is changed
+# to not cover that case then TryPreserveWrapper will need to be changed.
 def wantsAddProperty(desc):
     return (desc.concrete and desc.wrapperCache and not desc.isGlobal())
 
@@ -1683,6 +1686,10 @@ class CGAddPropertyHook(CGAbstractClassHook):
 
     def generate_code(self):
         assert self.descriptor.wrapperCache
+        # This hook is also called by TryPreserveWrapper on non-nsISupports
+        # cycle collected objects, so if addProperty is ever changed to do
+        # anything more or less than preserve the wrapper, TryPreserveWrapper
+        # will need to be changed.
         return dedent("""
             // We don't want to preserve if we don't have a wrapper, and we
             // obviously can't preserve if we're not initialized.
