@@ -798,7 +798,7 @@ private:
     XBLBindingLoadInfo(nsIContent&, ComputedStyle&);
 
     // For the case we actually load an XBL binding.
-    XBLBindingLoadInfo(already_AddRefed<ComputedStyle> aStyle,
+    XBLBindingLoadInfo(already_AddRefed<ComputedStyle>&& aStyle,
                        mozilla::UniquePtr<PendingBinding> aPendingBinding,
                        nsAtom* aTag);
 
@@ -901,7 +901,7 @@ private:
     {
       FrameConstructionItem* item =
         new (aFCtor) FrameConstructionItem(aFCData, aContent,
-                                           aPendingBinding, aComputedStyle,
+                                           aPendingBinding, std::move(aComputedStyle),
                                            aSuppressWhiteSpaceOptimizations);
       mItems.insertBack(item);
       ++mItemCount;
@@ -919,7 +919,7 @@ private:
     {
       FrameConstructionItem* item =
         new (aFCtor) FrameConstructionItem(aFCData, aContent,
-                                           aPendingBinding, aComputedStyle,
+                                           aPendingBinding, std::move(aComputedStyle),
                                            aSuppressWhiteSpaceOptimizations);
       mItems.insertFront(item);
       ++mItemCount;
@@ -1147,10 +1147,10 @@ private:
     FrameConstructionItem(const FrameConstructionData* aFCData,
                           nsIContent* aContent,
                           PendingBinding* aPendingBinding,
-                          already_AddRefed<ComputedStyle>& aComputedStyle,
+                          already_AddRefed<ComputedStyle>&& aComputedStyle,
                           bool aSuppressWhiteSpaceOptimizations)
     : mFCData(aFCData), mContent(aContent),
-      mPendingBinding(aPendingBinding), mComputedStyle(aComputedStyle),
+      mPendingBinding(aPendingBinding), mComputedStyle(std::move(aComputedStyle)),
       mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
       mIsText(false), mIsGeneratedContent(false),
       mIsAnonymousContentCreatorContent(false),

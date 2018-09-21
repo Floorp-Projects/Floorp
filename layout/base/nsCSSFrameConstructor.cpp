@@ -2505,10 +2505,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     // function in general.
     // Use a null PendingBinding, since our binding is not in fact pending.
     static const FrameConstructionData rootSVGData = FCDATA_DECL(0, nullptr);
-    already_AddRefed<ComputedStyle> extraRef =
-      RefPtr<ComputedStyle>(computedStyle).forget();
     AutoFrameConstructionItem item(this, &rootSVGData, aDocElement,
-                                   nullptr, extraRef, true);
+                                   nullptr, do_AddRef(computedStyle), true);
 
     nsFrameItems frameItems;
     contentFrame = static_cast<nsContainerFrame*>(
@@ -2555,10 +2553,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     // function in general.
     // Use a null PendingBinding, since our binding is not in fact pending.
     static const FrameConstructionData rootTableData = FCDATA_DECL(0, nullptr);
-    already_AddRefed<ComputedStyle> extraRef =
-      RefPtr<ComputedStyle>(computedStyle).forget();
     AutoFrameConstructionItem item(this, &rootTableData, aDocElement,
-                                   nullptr, extraRef, true);
+                                   nullptr, do_AddRef(computedStyle), true);
 
     nsFrameItems frameItems;
     // if the document is a table then just populate it.
@@ -5527,10 +5523,10 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
 }
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
-  already_AddRefed<ComputedStyle> aStyle,
+  already_AddRefed<ComputedStyle>&& aStyle,
   mozilla::UniquePtr<PendingBinding> aPendingBinding,
   nsAtom* aTag)
-  : mStyle(aStyle)
+  : mStyle(std::move(aStyle))
   , mPendingBinding(std::move(aPendingBinding))
   , mTag(aTag)
 {
@@ -9284,7 +9280,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
                             : nsCSSAnonBoxes::anonymousGridItem();
     ComputedStyle* parentStyle = aParentFrame->Style();
     nsIContent* parentContent = aParentFrame->GetContent();
-    already_AddRefed<ComputedStyle> wrapperStyle =
+    RefPtr<ComputedStyle> wrapperStyle =
       mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(pseudoType,
                                                                  parentStyle);
 
@@ -9300,7 +9296,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
                                 parentContent,
                                 // no pending binding
                                 nullptr,
-                                wrapperStyle,
+                                wrapperStyle.forget(),
                                 true);
 
     newItem->mIsAllInline =
@@ -9786,7 +9782,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
     pseudoType = nsCSSAnonBoxes::inlineTable();
   }
 
-  already_AddRefed<ComputedStyle> wrapperStyle;
+  RefPtr<ComputedStyle> wrapperStyle;
   if (pseudoData.mFCData.mBits & FCDATA_IS_WRAPPER_ANON_BOX) {
     wrapperStyle =
       mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(pseudoType,
@@ -9802,7 +9798,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
                               aParentContent,
                               // no pending binding
                               nullptr,
-                              wrapperStyle,
+                              wrapperStyle.forget(),
                               true);
 
   const nsStyleDisplay* disp = newItem->mComputedStyle->StyleDisplay();
@@ -9857,7 +9853,7 @@ nsCSSFrameConstructor::CreateNeededPseudoSiblings(
 
   const PseudoParentData& pseudoData =
     sPseudoParentData[eTypeRubyBaseContainer];
-  already_AddRefed<ComputedStyle> pseudoStyle = mPresShell->StyleSet()->
+  RefPtr<ComputedStyle> pseudoStyle = mPresShell->StyleSet()->
     ResolveInheritingAnonymousBoxStyle(*pseudoData.mPseudoType,
                                        aParentFrame->Style());
   FrameConstructionItem* newItem =
@@ -9866,7 +9862,7 @@ nsCSSFrameConstructor::CreateNeededPseudoSiblings(
                                      aParentFrame->GetContent(),
                                      // no pending binding
                                      nullptr,
-                                     pseudoStyle,
+                                     pseudoStyle.forget(),
                                      true);
   newItem->mIsAllInline = true;
   newItem->mChildItems.SetParentHasNoXBLChildren(true);
