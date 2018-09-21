@@ -223,7 +223,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .enabled(true));
         UiObject openNewTabTitle = device.findObject(new UiSelector()
                 .resourceId(TestHelper.getAppName() + ":id/design_menu_item_text")
-                .index(0)
+                .index(1)
                 .enabled(true));
         UiObject multiTabBtn = device.findObject(new UiSelector()
                 .resourceId(TestHelper.getAppName() + ":id/tabs")

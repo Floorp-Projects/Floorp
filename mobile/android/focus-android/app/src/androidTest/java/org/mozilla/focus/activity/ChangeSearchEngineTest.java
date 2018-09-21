@@ -13,8 +13,6 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import static android.support.test.espresso.Espresso.onView;
-
 import android.widget.RadioButton;
 
 import org.junit.After;
@@ -28,6 +26,7 @@ import org.mozilla.focus.utils.AppConstants;
 
 import java.util.Arrays;
 
+import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -104,11 +103,10 @@ public class ChangeSearchEngineTest {
         searchEngineSelectorLabel.waitForExists(waitingTime);
         searchEngineSelectorLabel.click();
 
-        // Open [settings menu] > [search engine menu] and click "Default" label
-        // note: we don't click on default search engine itself cause this will change
-        UiObject defaultSearchEngineLabel = TestHelper.mDevice.findObject(new UiSelector()
-                .text("Default")
-                .resourceId("android:id/summary"));
+        // Open [settings menu] > [search engine menu] and click "Search engine" label
+        UiObject defaultSearchEngineLabel = TestHelper.settingsMenu.getChild(new UiSelector()
+                .className("android.widget.LinearLayout")
+                .instance(0));
         defaultSearchEngineLabel.waitForExists(waitingTime);
         defaultSearchEngineLabel.click();
 
@@ -125,7 +123,7 @@ public class ChangeSearchEngineTest {
         TestHelper.settingsHeading.waitForExists(waitingTime);
         UiObject defaultSearchEngine = TestHelper.mDevice.findObject(new UiSelector()
                 .text(mSearchEngine)
-                .resourceId("android:id/title"));
+                .resourceId("android:id/summary"));
         assertTrue(defaultSearchEngine.getText().equals(mSearchEngine));
         TestHelper.pressBackKey();
         TestHelper.pressBackKey();
@@ -152,9 +150,12 @@ public class ChangeSearchEngineTest {
         TestHelper.suggestionList.waitForExists(waitingTime);
         assertTrue(TestHelper.suggestionList.getChildCount() >= 1);
 
+        onView(allOf(withText(containsString("mozilla")),
+                withId(R.id.searchView)))
+                .check(matches(isDisplayed()));
         // we expect min=1, max=5
         int count = 0;
-        int maxCount = 5;
+        int maxCount = 3;
         //while (count <= maxCount) {
         while (count < maxCount) {
             onView(allOf(withText(containsString("mozilla")),
