@@ -331,20 +331,6 @@ protected:
   // AppUnit.h.
   static const int32_t kBoundaryAppUnits = 61;
 
-  // Preference to allow smarter selection of phone numbers,
-  // when user long presses text to start.
-  static bool sExtendSelectionForPhoneNumber;
-
-  // Preference to show caret in cursor mode when long tapping on an empty
-  // content. This also changes the default update behavior in cursor mode,
-  // which is based on the emptiness of the content, into something more
-  // heuristic. See UpdateCaretsForCursorMode() for the details.
-  static bool sCaretShownWhenLongTappingOnEmptyContent;
-
-  // Preference to make carets always tilt in selection mode. By default, the
-  // carets become tilt only when they are overlapping.
-  static bool sCaretsAlwaysTilt;
-
   enum ScriptUpdateMode : int32_t {
     // By default, always hide carets for selection changes due to JS calls.
     kScriptAlwaysHide,
@@ -354,22 +340,6 @@ protected:
     // Always show carets for selection changes due to JS calls.
     kScriptAlwaysShow
   };
-
-  // Preference to indicate how to update carets for selection changes due to
-  // JS calls, as one of the ScriptUpdateMode constants.
-  static int32_t sCaretsScriptUpdates;
-
-  // Preference to allow one caret to be dragged across the other caret without
-  // any limitation. When set to false, one caret cannot be dragged across the
-  // other one.
-  static bool sCaretsAllowDraggingAcrossOtherCaret;
-
-  // AccessibleCaret pref for haptic feedback behaviour on longPress.
-  static bool sHapticFeedback;
-
-  // Preference to keep carets hidden when the selection is being manipulated
-  // by mouse input (as opposed to touch/pen/etc.).
-  static bool sHideCaretsForMouseInput;
 };
 
 std::ostream& operator<<(std::ostream& aStream,
