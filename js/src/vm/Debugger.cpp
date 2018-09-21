@@ -1734,7 +1734,7 @@ Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success, const Value& 
     return leaveDebugger(ar, frame, maybeThisv, CallUncaughtExceptionHook::Yes, resumeMode, vp);
 }
 
-
+
 /*** Debuggee completion values ******************************************************************/
 
 /* static */ void
@@ -10460,6 +10460,42 @@ DebuggerObject::callMethod(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* static */ bool
+DebuggerObject::getPropertyMethod(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "getProperty", args, object)
+
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, args.get(0), &id)) {
+        return false;
+    }
+
+    if (!DebuggerObject::getProperty(cx, object, id, args.rval())) {
+        return false;
+    }
+
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::setPropertyMethod(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "setProperty", args, object)
+
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, args.get(0), &id)) {
+        return false;
+    }
+
+    RootedValue value(cx, args.get(1));
+
+    if (!DebuggerObject::setProperty(cx, object, id, value, args.rval())) {
+        return false;
+    }
+
+    return true;
+}
+
+/* static */ bool
 DebuggerObject::applyMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "apply", callArgs, object);
@@ -10706,6 +10742,8 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("isExtensible", DebuggerObject::isExtensibleMethod, 0, 0),
     JS_FN("isSealed", DebuggerObject::isSealedMethod, 0, 0),
     JS_FN("isFrozen", DebuggerObject::isFrozenMethod, 0, 0),
+    JS_FN("getProperty", DebuggerObject::getPropertyMethod, 0, 0),
+    JS_FN("setProperty", DebuggerObject::setPropertyMethod, 0, 0),
     JS_FN("getOwnPropertyNames", DebuggerObject::getOwnPropertyNamesMethod, 0, 0),
     JS_FN("getOwnPropertySymbols", DebuggerObject::getOwnPropertySymbolsMethod, 0, 0),
     JS_FN("getOwnPropertyDescriptor", DebuggerObject::getOwnPropertyDescriptorMethod, 1, 0),
@@ -11434,6 +11472,65 @@ DebuggerObject::deleteProperty(JSContext* cx, HandleDebuggerObject object, Handl
 
     ErrorCopier ec(ar);
     return DeleteProperty(cx, referent, id, result);
+}
+
+/* static */ bool
+DebuggerObject::getProperty(JSContext* cx, HandleDebuggerObject object,
+                            HandleId id, MutableHandleValue result)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* dbg = object->owner();
+
+    // Enter the debuggee compartment and rewrap all input value for that
+    // compartment. (Rewrapping always takes place in the destination
+    // compartment.)
+    Maybe<AutoRealm> ar;
+    EnterDebuggeeObjectRealm(cx, ar, referent);
+    if (!cx->compartment()->wrap(cx, &referent)) {
+        return false;
+    }
+    cx->markId(id);
+
+    LeaveDebuggeeNoExecute nnx(cx);
+
+    bool ok = GetProperty(cx, referent, referent, id, result);
+
+    return dbg->receiveCompletionValue(ar, ok, result, result);
+}
+
+/* static */ bool
+DebuggerObject::setProperty(JSContext* cx, HandleDebuggerObject object,
+                            HandleId id, HandleValue value_,
+                            MutableHandleValue result)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* dbg = object->owner();
+
+    // Unwrap Debugger.Objects. This happens in the debugger's compartment since
+    // that is where any exceptions must be reported.
+    RootedValue value(cx, value_);
+    if (!dbg->unwrapDebuggeeValue(cx, &value)) {
+        return false;
+    }
+
+    // Enter the debuggee compartment and rewrap all input value for that
+    // compartment. (Rewrapping always takes place in the destination
+    // compartment.)
+    Maybe<AutoRealm> ar;
+    EnterDebuggeeObjectRealm(cx, ar, referent);
+    if (!cx->compartment()->wrap(cx, &referent) || !cx->compartment()->wrap(cx, &value)) {
+        return false;
+    }
+    cx->markId(id);
+
+    LeaveDebuggeeNoExecute nnx(cx);
+
+    RootedValue receiver(cx, ObjectValue(*referent));
+    ObjectOpResult opResult;
+    bool ok = SetProperty(cx, referent, id, value, receiver, opResult);
+
+    result.setBoolean(ok && opResult.reallyOk());
+    return dbg->receiveCompletionValue(ar, ok, result, result);
 }
 
 /* static */ bool

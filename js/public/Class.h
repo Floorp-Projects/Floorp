@@ -109,7 +109,7 @@ IsArray(JSContext* cx, HandleObject obj, IsArrayAnswer* answer);
  *
  * Users don't have to call `result.report()`; another possible ending is:
  *
- *     argv.rval().setBoolean(bool(result));
+ *     argv.rval().setBoolean(result.reallyOk());
  *     return true;
  */
 class ObjectOpResult
