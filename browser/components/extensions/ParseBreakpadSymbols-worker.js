@@ -15,7 +15,7 @@ function parse(text) {
   // PUBLIC 3fc74 0 test_public_symbol
   //
   // FUNC 40330 8e 0 test_func_symbol
-  const symbolRegex = /\nPUBLIC ([0-9a-f]+) [0-9a-f]+ (.*)|\nFUNC ([0-9a-f]+) [0-9a-f]+ [0-9a-f]+ (.*)/g;
+  const symbolRegex = /\nPUBLIC ([0-9a-f]+)(?: m)? [0-9a-f]+ (.*)|\nFUNC ([0-9a-f]+)(?: m)? [0-9a-f]+ [0-9a-f]+ (.*)/g;
 
   let match;
   let approximateLength = 0;
