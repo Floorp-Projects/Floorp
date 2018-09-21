@@ -161,17 +161,5 @@ interface nsISSLSocketControl : nsISupports {
      * or are using acceptable exceptions will all return false.
      */
     [infallible] readonly attribute boolean failedVerification;
-
-    /*
-     * esniTxt is a string that consists of the concatenated _esni. TXT records.
-     * This is a base64 encoded ESNIKeys structure.
-     */
-    attribute ACString esniTxt;
-
-    /**
-     * If the server certificate is present, serverCertIsBuiltInRoot is true if
-     * the root certificate for the server certificate is built in.
-     */
-    readonly attribute boolean serverRootCertIsBuiltInRoot;
 };
 

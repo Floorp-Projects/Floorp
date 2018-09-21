@@ -904,61 +904,59 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   if (isIPv4Address(asciiHost) || /^(?:\d+|0x[a-f0-9]+)$/i.test(asciiHost))
     return;
 
-  let onLookupCompleteListener = {
-    onLookupComplete(request, record, status) {
-      let browserRef = weakBrowser.get();
-      if (!Components.isSuccessCode(status) || !browserRef)
-        return;
+  let onLookupComplete = (request, record, status) => {
+    let browserRef = weakBrowser.get();
+    if (!Components.isSuccessCode(status) || !browserRef)
+      return;
 
-      let currentURI = browserRef.currentURI;
-      // If we're in case (3) (see above), don't show an info bar.
-      if (!currentURI.equals(previousURI) &&
-          !currentURI.equals(preferredURI)) {
-        return;
-      }
+    let currentURI = browserRef.currentURI;
+    // If we're in case (3) (see above), don't show an info bar.
+    if (!currentURI.equals(previousURI) &&
+        !currentURI.equals(preferredURI)) {
+      return;
+    }
 
-      // show infobar offering to visit the host
-      let notificationBox = gBrowser.getNotificationBox(browserRef);
-      if (notificationBox.getNotificationWithValue("keyword-uri-fixup"))
-        return;
+    // show infobar offering to visit the host
+    let notificationBox = gBrowser.getNotificationBox(browserRef);
+    if (notificationBox.getNotificationWithValue("keyword-uri-fixup"))
+      return;
 
-      let message = gNavigatorBundle.getFormattedString(
-        "keywordURIFixup.message", [hostName]);
-      let yesMessage = gNavigatorBundle.getFormattedString(
-        "keywordURIFixup.goTo", [hostName]);
+    let message = gNavigatorBundle.getFormattedString(
+      "keywordURIFixup.message", [hostName]);
+    let yesMessage = gNavigatorBundle.getFormattedString(
+      "keywordURIFixup.goTo", [hostName]);
 
-      let buttons = [
-        {
-          label: yesMessage,
-          accessKey: gNavigatorBundle.getString("keywordURIFixup.goTo.accesskey"),
-          callback() {
-            // Do not set this preference while in private browsing.
-            if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
-              let pref = "browser.fixup.domainwhitelist." + asciiHost;
-              Services.prefs.setBoolPref(pref, true);
-            }
-            openTrustedLinkIn(alternativeURI.spec, "current");
-          },
+    let buttons = [
+      {
+        label: yesMessage,
+        accessKey: gNavigatorBundle.getString("keywordURIFixup.goTo.accesskey"),
+        callback() {
+          // Do not set this preference while in private browsing.
+          if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+            let pref = "browser.fixup.domainwhitelist." + asciiHost;
+            Services.prefs.setBoolPref(pref, true);
+          }
+          openTrustedLinkIn(alternativeURI.spec, "current");
         },
-        {
-          label: gNavigatorBundle.getString("keywordURIFixup.dismiss"),
-          accessKey: gNavigatorBundle.getString("keywordURIFixup.dismiss.accesskey"),
-          callback() {
-            let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
-            notificationBox.removeNotification(notification, true);
-          },
+      },
+      {
+        label: gNavigatorBundle.getString("keywordURIFixup.dismiss"),
+        accessKey: gNavigatorBundle.getString("keywordURIFixup.dismiss.accesskey"),
+        callback() {
+          let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
+          notificationBox.removeNotification(notification, true);
         },
-      ];
-      let notification =
-        notificationBox.appendNotification(message, "keyword-uri-fixup", null,
-                                           notificationBox.PRIORITY_INFO_HIGH,
-                                           buttons);
-      notification.persistence = 1;
-    },
+      },
+    ];
+    let notification =
+      notificationBox.appendNotification(message, "keyword-uri-fixup", null,
+                                         notificationBox.PRIORITY_INFO_HIGH,
+                                         buttons);
+    notification.persistence = 1;
   };
 
   try {
-    gDNSService.asyncResolve(hostName, 0, onLookupCompleteListener, Services.tm.mainThread,
+    gDNSService.asyncResolve(hostName, 0, onLookupComplete, Services.tm.mainThread,
                              contentPrincipal.originAttributes);
   } catch (ex) {
     // Do nothing if the URL is invalid (we don't want to show a notification in that case).
