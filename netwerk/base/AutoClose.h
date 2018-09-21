@@ -38,8 +38,7 @@ public:
 
   void takeOver(nsCOMPtr<T> & rhs)
   {
-    already_AddRefed<T> other = rhs.forget();
-    TakeOverInternal(&other);
+    TakeOverInternal(rhs.forget());
   }
 
   void CloseAndRelease()
@@ -48,15 +47,12 @@ public:
   }
 
 private:
-  void TakeOverInternal(already_AddRefed<T> *aOther)
+  void TakeOverInternal(already_AddRefed<T>&& aOther)
   {
-    nsCOMPtr<T> ptr;
+    nsCOMPtr<T> ptr(std::move(aOther));
     {
       MutexAutoLock lock(mMutex);
       ptr.swap(mPtr);
-      if (aOther) {
-        mPtr = *aOther;
-      }
     }
 
     if (ptr) {
