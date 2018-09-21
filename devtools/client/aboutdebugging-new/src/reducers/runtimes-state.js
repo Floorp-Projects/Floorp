@@ -10,12 +10,13 @@ const {
   NETWORK_LOCATIONS_UPDATED,
   RUNTIMES,
   UNWATCH_RUNTIME_SUCCESS,
+  USB_RUNTIMES_UPDATED,
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
 const {
   findRuntimeById,
-} = require("devtools/client/aboutdebugging-new/src/modules/runtimes-state-helper");
+} = require("../modules/runtimes-state-helper");
 
 // Map between known runtime types and nodes in the runtimes state.
 const TYPE_TO_RUNTIMES_KEY = {
@@ -30,7 +31,8 @@ function RuntimesState(networkRuntimes = []) {
     thisFirefoxRuntimes: [{
       id: RUNTIMES.THIS_FIREFOX,
       type: RUNTIMES.THIS_FIREFOX,
-    }]
+    }],
+    usbRuntimes: [],
   };
 }
 
@@ -85,6 +87,11 @@ function runtimesReducer(state = RuntimesState(), action) {
 
     case UNWATCH_RUNTIME_SUCCESS: {
       return Object.assign({}, state, { selectedRuntimeId: null });
+    }
+
+    case USB_RUNTIMES_UPDATED: {
+      const { runtimes } = action;
+      return Object.assign({}, state, { usbRuntimes: runtimes });
     }
 
     case WATCH_RUNTIME_SUCCESS: {

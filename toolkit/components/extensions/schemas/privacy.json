@@ -82,7 +82,8 @@
               "allow_all",
               "reject_all",
               "reject_third_party",
-              "allow_visited"
+              "allow_visited",
+              "reject_trackers"
             ],
             "description": "The type of cookies to allow."
           },
