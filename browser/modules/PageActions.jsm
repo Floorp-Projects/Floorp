@@ -223,9 +223,10 @@ var PageActions = {
     } else if (action.__transient) {
       // A transient action.
       this._transientActions.push(action);
-    } else if (gBuiltInActions.find(a => a.id == action.id)) {
-      // A built-in action.  These are always added on init before all other
-      // actions, one after the other, so just push onto the array.
+    } else if (action._isBuiltIn) {
+      // A built-in action. These are mostly added on init before all other
+      // actions, one after the other. Extension actions load later and should
+      // be at the end, so just push onto the array.
       this._builtInActions.push(action);
     } else {
       // A non-built-in action, like a non-bundled extension potentially.
@@ -330,7 +331,7 @@ var PageActions = {
     let histogramID = "FX_PAGE_ACTION_" + type.toUpperCase();
     try {
       let histogram = Services.telemetry.getHistogramById(histogramID);
-      if (action._isBuiltIn) {
+      if (action._isMozillaAction) {
         histogram.add(action.labelForHistogram);
       } else {
         histogram.add("other");
@@ -1039,9 +1040,12 @@ Action.prototype = {
     let builtInIDs = [
       "pocket",
       "screenshots_mozilla_org",
-      "webcompat-reporter-button",
     ].concat(gBuiltInActions.filter(a => !a.__isSeparator).map(a => a.id));
     return builtInIDs.includes(this.id);
+  },
+
+  get _isMozillaAction() {
+    return this._isBuiltIn || this.id == "webcompat-reporter-button";
   },
 };
 
