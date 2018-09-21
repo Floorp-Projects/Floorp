@@ -10,6 +10,7 @@ const {
   NETWORK_LOCATIONS_UPDATED,
   RUNTIMES,
   UNWATCH_RUNTIME_SUCCESS,
+  USB_RUNTIMES_UPDATED,
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
@@ -30,7 +31,8 @@ function RuntimesState(networkRuntimes = []) {
     thisFirefoxRuntimes: [{
       id: RUNTIMES.THIS_FIREFOX,
       type: RUNTIMES.THIS_FIREFOX,
-    }]
+    }],
+    usbRuntimes: [],
   };
 }
 
@@ -85,6 +87,11 @@ function runtimesReducer(state = RuntimesState(), action) {
 
     case UNWATCH_RUNTIME_SUCCESS: {
       return Object.assign({}, state, { selectedRuntimeId: null });
+    }
+
+    case USB_RUNTIMES_UPDATED: {
+      const { runtimes } = action;
+      return Object.assign({}, state, { usbRuntimes: runtimes });
     }
 
     case WATCH_RUNTIME_SUCCESS: {

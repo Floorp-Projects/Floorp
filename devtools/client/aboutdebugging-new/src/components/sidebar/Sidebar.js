@@ -30,7 +30,7 @@ class Sidebar extends PureComponent {
 
   renderDevices() {
     const { dispatch, runtimes, selectedPage } = this.props;
-    if (!runtimes.networkRuntimes.length) {
+    if (!runtimes.networkRuntimes.length && !runtimes.usbRuntimes.length) {
       return Localized(
         {
           id: "about-debugging-sidebar-no-devices"
@@ -43,27 +43,30 @@ class Sidebar extends PureComponent {
       );
     }
 
-    return runtimes.networkRuntimes.map(runtime => {
-      const pageId = "networklocation-" + runtime.id;
-      const runtimeHasClient = !!runtime.client;
+    return [
+      ...runtimes.networkRuntimes.map(runtime => {
+        const pageId = "networklocation-" + runtime.id;
+        const runtimeHasClient = !!runtime.client;
 
-      const connectComponent = DeviceSidebarItemAction({
-        connected: runtimeHasClient,
-        dispatch,
-        runtimeId: runtime.id,
-      });
+        const connectComponent = DeviceSidebarItemAction({
+          connected: runtimeHasClient,
+          dispatch,
+          runtimeId: runtime.id,
+        });
 
-      return SidebarItem({
-        connectComponent,
-        id: pageId,
-        dispatch,
-        icon: GLOBE_ICON,
-        isSelected: selectedPage === pageId,
-        name: runtime.id,
-        runtimeId: runtime.id,
-        selectable: runtimeHasClient,
-      });
-    });
+        return SidebarItem({
+          connectComponent,
+          id: pageId,
+          dispatch,
+          icon: GLOBE_ICON,
+          isSelected: selectedPage === pageId,
+          name: runtime.id,
+          runtimeId: runtime.id,
+          selectable: runtimeHasClient,
+        });
+      }),
+      ...runtimes.usbRuntimes.map(runtime => dom.li({}, runtime.name)),
+    ];
   }
 
   render() {
