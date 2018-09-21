@@ -23,7 +23,7 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
   info("Opening the toolbox");
 
   let toolbox;
-  let target = TargetFactory.forTab(tab);
+  let target = await TargetFactory.forTab(tab);
   await target.makeRemote();
 
   // Check if the toolbox is already loaded.

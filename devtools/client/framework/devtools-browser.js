@@ -481,8 +481,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     const debugService = Cc["@mozilla.org/dom/slow-script-debug;1"]
                          .getService(Ci.nsISlowScriptDebug);
 
-    function slowScriptDebugHandler(tab, callback) {
-      const target = TargetFactory.forTab(tab);
+    async function slowScriptDebugHandler(tab, callback) {
+      const target = await TargetFactory.forTab(tab);
 
       gDevTools.showToolbox(target, "jsdebugger").then(toolbox => {
         const threadClient = toolbox.threadClient;
@@ -544,7 +544,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
       slowScriptDebugHandler(tab, function() {
         callback.finishDebuggerStartup();
-      });
+      }).catch(console.error);
     };
   },
 
