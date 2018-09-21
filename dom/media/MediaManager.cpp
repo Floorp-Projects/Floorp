@@ -2986,9 +2986,10 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
     auto devices = MakeRefPtr<Refcountable<UniquePtr<MediaDeviceSet>>>(aDevices);
 
     // Ensure that our windowID is still good.
-    if (!nsGlobalWindowInner::GetInnerWindowWithId(windowID)) {
-      LOG(("GetUserMedia: bad windowID found in post enumeration pledge "
-           " success callback! Bailing out!"));
+    if (!nsGlobalWindowInner::GetInnerWindowWithId(windowID) ||
+        !self->IsWindowListenerStillActive(windowListener)) {
+      LOG(("GetUserMedia: bad window (%" PRIu64 ") in post enumeration "
+           "success callback!", windowID));
       return;
     }
 
@@ -3003,11 +3004,13 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       LOG(("GetUserMedia: starting post enumeration pledge2 success "
            "callback!"));
 
-      // Ensure that the captured 'this' pointer and our windowID are still good.
+      // Ensure that the window is still good.
       auto* globalWindow = nsGlobalWindowInner::GetInnerWindowWithId(windowID);
       RefPtr<nsPIDOMWindowInner> window = globalWindow ? globalWindow->AsInner()
                                                        : nullptr;
-      if (!MediaManager::Exists() || !window) {
+      if (!window || !self->IsWindowListenerStillActive(windowListener)) {
+        LOG(("GetUserMedia: bad window (%" PRIu64 ") in post enumeration "
+             "success callback 2!", windowID));
         return;
       }
 
