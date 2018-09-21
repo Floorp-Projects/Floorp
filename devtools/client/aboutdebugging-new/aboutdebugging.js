@@ -26,6 +26,13 @@ const {
   getNetworkLocations,
   removeNetworkLocationsObserver,
 } = require("./src/modules/network-locations");
+const {
+  addUSBRuntimesObserver,
+  disableUSBRuntimes,
+  enableUSBRuntimes,
+  getUSBRuntimes,
+  removeUSBRuntimesObserver,
+} = require("./src/modules/usb-runtimes");
 
 const App = createFactory(require("./src/components/App"));
 
@@ -40,6 +47,7 @@ const AboutDebugging = {
     }
 
     this.onNetworkLocationsUpdated = this.onNetworkLocationsUpdated.bind(this);
+    this.onUSBRuntimesUpdated = this.onUSBRuntimesUpdated.bind(this);
 
     this.store = configureStore();
     this.actions = bindActionCreators(actions, this.store.dispatch);
@@ -55,6 +63,8 @@ const AboutDebugging = {
     this.actions.updateNetworkLocations(getNetworkLocations());
 
     addNetworkLocationsObserver(this.onNetworkLocationsUpdated);
+    addUSBRuntimesObserver(this.onUSBRuntimesUpdated);
+    await enableUSBRuntimes();
   },
 
   async createMessageContexts() {
@@ -86,6 +96,10 @@ const AboutDebugging = {
     this.actions.updateNetworkLocations(getNetworkLocations());
   },
 
+  onUSBRuntimesUpdated() {
+    this.actions.updateUSBRuntimes(getUSBRuntimes());
+  },
+
   async destroy() {
     const state = this.store.getState();
 
@@ -97,6 +111,8 @@ const AboutDebugging = {
     }
 
     removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
+    removeUSBRuntimesObserver(this.onUSBRuntimesUpdated);
+    disableUSBRuntimes();
     setDebugTargetCollapsibilities(state.ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);
   },
