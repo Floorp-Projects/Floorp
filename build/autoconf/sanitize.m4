@@ -134,25 +134,6 @@ AC_SUBST(MOZ_SIGNED_OVERFLOW_SANITIZE)
 AC_SUBST(MOZ_UNSIGNED_OVERFLOW_SANITIZE)
 AC_SUBST(MOZ_UBSAN)
 
-dnl =======================================================
-dnl = Required for stand-alone (sanitizer-less) libFuzzer.
-dnl =======================================================
-if test -n "$LIBFUZZER"; then
-    # must match tools/fuzzing/libfuzzer-flags.mozbuild
-    if test -n "$HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK"; then
-        LDFLAGS="-fsanitize=fuzzer-no-link -rdynamic $LDFLAGS"
-    else
-        LDFLAGS="-fsanitize-coverage=trace-pc-guard,trace-cmp -rdynamic $LDFLAGS"
-    fi
-fi
-
-dnl =======================================================
-dnl = Required for stand-alone (sanitizer-less) libFuzzer.
-dnl =======================================================
-if test -n "$LIBFUZZER"; then
-   LDFLAGS="$LIBFUZZER_FLAGS -rdynamic $LDFLAGS"
-fi
-
 # The LLVM symbolizer is used by all sanitizers
 AC_SUBST(LLVM_SYMBOLIZER)
 
