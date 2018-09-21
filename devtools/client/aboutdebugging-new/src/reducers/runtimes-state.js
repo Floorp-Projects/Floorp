@@ -16,7 +16,7 @@ const {
 
 const {
   findRuntimeById,
-} = require("devtools/client/aboutdebugging-new/src/modules/runtimes-state-helper");
+} = require("../modules/runtimes-state-helper");
 
 // Map between known runtime types and nodes in the runtimes state.
 const TYPE_TO_RUNTIMES_KEY = {
