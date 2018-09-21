@@ -835,11 +835,6 @@ const pathFunctionTests = [
     end: "path('M 0 0 H 500')",
     expected: ["path", '"M 0 0 H 500"']
   },
-  {
-    start: "path('M 10 10 A 10 20 30 1 0 140 450')",
-    end: "path('M 10 10 A 50 60 70 0 1 380 290')",
-    expected: ["path", '"M 10 10 A 50 60 70 0 1 380 290"']
-  },
   // match
   {
     start: "path('M 100 100')",
@@ -885,6 +880,11 @@ const pathFunctionTests = [
     start: "path('M 10 10 A 10 20 30 0 1 140 450')",
     end: "path('M 10 10 A 50 60 70 0 1 380 290')",
     expected: ["path", '"M 10 10 A 20 30 40 0 1 200 410"']
+  },
+  {
+    start: "path('M 10 10 A 10 20 30 1 0 140 450')",
+    end: "path('M 10 10 A 50 60 70 0 1 380 290')",
+    expected: ["path", '"M 10 10 A 20 30 40 1 0 200 410"']
   },
   // mix relative and absolute coordinates
   {

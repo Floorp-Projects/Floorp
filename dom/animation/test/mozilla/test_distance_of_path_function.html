@@ -111,11 +111,12 @@ test(function(t) {
 test(function(t) {
   var target = addDiv(t);
   var dist = getDistance(target, 'offset-path',
-                         'path("M 0 0 A 5 5 10 0 0 30 30")',
+                         'path("M 0 0 A 5 5 10 0 1 30 30")',
                          'path("M 0 0 A 4 4 5 0 0 20 20")');
   assert_equals(dist,
                 Math.sqrt(1 * 1 * 2 + // radii
                           5 * 5 +     // angle
+                          1 * 1 +     // flag
                           10 * 10 * 2),
                 'path("M 0 0 A 5 5 10 0 1 30 30") and ' +
                 'path("M 0 0 A 4 4 5 0 0 20 20")');
