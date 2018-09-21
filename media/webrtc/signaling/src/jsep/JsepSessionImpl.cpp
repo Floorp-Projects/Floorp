@@ -55,18 +55,21 @@ static std::bitset<128> GetForbiddenSdpPayloadTypes() {
   return forbidden;
 }
 
-static std::string GetRandomHex()
+static std::string GetRandomHex(size_t words)
 {
-  uint32_t rand;
-  SECStatus rv =
-    PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&rand), sizeof(rand));
-  if (rv != SECSuccess) {
-    MOZ_CRASH();
-    return "";
-  }
-
   std::ostringstream os;
-  os << std::hex << std::setfill('0') << std::setw(8) << rand;
+
+  for (size_t i = 0; i < words; ++i) {
+    uint32_t rand;
+    SECStatus rv =
+      PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&rand), sizeof(rand));
+    if (rv != SECSuccess) {
+      MOZ_CRASH();
+      return "";
+    }
+
+    os << std::hex << std::setfill('0') << std::setw(8) << rand;
+  }
   return os.str();
 }
 
@@ -88,8 +91,8 @@ JsepSessionImpl::Init()
   mRunSdpComparer = Preferences::GetBool("media.peerconnection.sdp.rust.compare",
                                          false);
 
-  mIceUfrag = GetRandomHex();
-  mIcePwd = GetRandomHex();
+  mIceUfrag = GetRandomHex(1);
+  mIcePwd = GetRandomHex(4);
   return NS_OK;
 }
 
@@ -2390,8 +2393,8 @@ JsepSessionImpl::SetIceRestarting(bool restarting)
       mOldIceUfrag = mIceUfrag;
       mOldIcePwd = mIcePwd;
     }
-    mIceUfrag = GetRandomHex();
-    mIcePwd = GetRandomHex();
+    mIceUfrag = GetRandomHex(1);
+    mIcePwd = GetRandomHex(4);
   } else if (IsIceRestarting()) {
     // restarting -> not restarting, restore old ufrag/pwd
     mIceUfrag = mOldIceUfrag;
