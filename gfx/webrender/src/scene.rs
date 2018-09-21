@@ -58,8 +58,8 @@ impl SceneProperties {
     pub fn flush_pending_updates(&mut self) -> bool {
         let mut properties_changed = false;
 
-        if let Some(pending_properties) = self.pending_properties.take() {
-            if pending_properties != self.current_properties {
+        if let Some(ref pending_properties) = self.pending_properties {
+            if *pending_properties != self.current_properties {
                 self.transform_properties.clear();
                 self.float_properties.clear();
 
@@ -73,7 +73,7 @@ impl SceneProperties {
                         .insert(property.key.id, property.value);
                 }
 
-                self.current_properties = pending_properties;
+                self.current_properties = pending_properties.clone();
                 properties_changed = true;
             }
         }

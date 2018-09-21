@@ -121,7 +121,7 @@ struct LaunchOptions {
   file_handle_mapping_vector fds_to_remap;
 #endif
 
-#if defined(OS_LINUX) || defined(OS_SOLARIS)
+#if defined(OS_LINUX)
   struct ForkDelegate {
     virtual ~ForkDelegate() { }
     virtual pid_t Fork() = 0;
