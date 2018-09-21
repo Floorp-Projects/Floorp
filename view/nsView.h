@@ -462,9 +462,6 @@ private:
 
   // Update the cached RootViewManager for all view manager descendents.
   void InvalidateHierarchy();
-  // Return current scale factor of the monitor where the parent window of the popup
-  // is mostly located.
-  uint32_t GetParentWindowScaleFactor();
 
   nsViewManager    *mViewManager;
   nsView           *mParent;
