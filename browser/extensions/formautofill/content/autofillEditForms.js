@@ -160,10 +160,10 @@ class EditAddress extends EditAutofillForm {
    * `mailing-address` is a special attribute token to indicate mailing fields + country.
    *
    * @param {object[]} mailingFieldsOrder - `fieldsOrder` from `getFormFormat`
+   * @param {string} addressFields - white-space-separated string of requested address fields to show
    * @returns {object[]} in the same structure as `mailingFieldsOrder` but including non-mail fields
    */
-  computeVisibleFields(mailingFieldsOrder) {
-    let addressFields = this._elements.form.dataset.addressFields;
+  static computeVisibleFields(mailingFieldsOrder, addressFields) {
     if (addressFields) {
       let requestedFieldClasses = addressFields.trim().split(/\s+/);
       let fieldClasses = [];
@@ -212,7 +212,8 @@ class EditAddress extends EditAutofillForm {
     } = this.getFormFormat(country);
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
-    let fieldClasses = this.computeVisibleFields(mailingFieldsOrder);
+    let addressFields = this._elements.form.dataset.addressFields;
+    let fieldClasses = EditAddress.computeVisibleFields(mailingFieldsOrder, addressFields);
     this.arrangeFields(fieldClasses);
     this.updatePostalCodeValidation(postalCodePattern);
   }

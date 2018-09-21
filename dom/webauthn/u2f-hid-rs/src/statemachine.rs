@@ -90,9 +90,12 @@ impl StateMachine {
             // If so, we'll keep polling the device anyway to test for user
             // consent, to be consistent with CTAP2 device behavior.
             let excluded = key_handles.iter().any(|key_handle| {
-                is_valid_transport(key_handle.transports)
-                    && u2f_is_keyhandle_valid(dev, &challenge, &application, &key_handle.credential)
-                        .unwrap_or(false) /* no match on failure */
+                is_valid_transport(key_handle.transports) && u2f_is_keyhandle_valid(
+                    dev,
+                    &challenge,
+                    &application,
+                    &key_handle.credential,
+                ).unwrap_or(false) /* no match on failure */
             });
 
             while alive() {

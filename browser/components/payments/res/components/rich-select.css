@@ -3,16 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 rich-select {
-  border: 1px solid #0C0C0D33;
+  /* Include the padding in the max-width calculation so that we truncate rather
+     than grow wider than 100% of the parent. */
+  box-sizing: border-box;
   display: block;
   margin: 14px 0;
+  /* Padding for the dropmarker (copied from common.css) */
+  padding-inline-end: 24px;
   position: relative;
+  /* Don't allow the <rich-select> to grow wider than the container so that we
+     truncate with text-overflow for long options instead. */
+  max-width: 100%;
 }
 
 /* Focusing on the underlying select element outlines the outer
-rich-select wrapper making it appear like rich-select is focused. */
-rich-select:focus-within {
-  outline: 1px dotted;
+   rich-select wrapper making it appear like rich-select is focused. */
+rich-select:focus-within > select {
+  outline: 1px dotted var(--in-content-text-color);
 }
 
 /*
@@ -20,7 +27,9 @@ rich-select:focus-within {
  * element to make it look like clicking on the rich-option element
  * in the closed state opens the HTML select dropdown. */
 rich-select > select {
-  opacity: 0;
+  /* Hide the text from the closed state so that the text/layout from
+     <rich-option> won't overlap it. */
+  color: transparent;
   position: absolute;
   top: 0;
   left: 0;
@@ -29,8 +38,20 @@ rich-select > select {
   margin: 0;
 }
 
+rich-select > select > option {
+  /* Reset the text color in the popup/open state */
+  color: var(--in-content-text-color);
+}
+
 .rich-option {
   display: grid;
-  background: #fff; /* TODO: system colors */
   padding: 8px;
+}
+
+.rich-select-selected-option {
+  /* Clicks on the selected rich option should go to the <select> below to open the popup */
+  pointer-events: none;
+  /* Use position:relative so this is positioned on top of the <select> which
+     also has position:relative. */
+  position: relative;
 }

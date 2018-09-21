@@ -12,6 +12,7 @@ Test the address-picker component
   <script src="payments_common.js"></script>
   <script src="../../res/vendor/custom-elements.min.js"></script>
   <script src="../../res/unprivileged-fallbacks.js"></script>
+  <script src="autofillEditForms.js"></script>
 
   <link rel="stylesheet" type="text/css" href="../../res/containers/rich-picker.css"/>
   <link rel="stylesheet" type="text/css" href="../../res/components/rich-select.css"/>
@@ -21,6 +22,7 @@ Test the address-picker component
 <body>
   <p id="display">
     <address-picker id="picker1"
+                    data-field-separator=", "
                     selected-state-key="selectedShippingAddress"></address-picker>
   </p>
 <div id="content" style="display: none">
@@ -162,13 +164,13 @@ add_task(async function test_change_selected_address() {
   ok(isHidden(picker1.invalidLabel), "The invalid label should be hidden");
 });
 
-add_task(async function test_streetAddress_combines_street_level2_level1_postalCode_country() {
+add_task(async function test_address_combines_name_street_level2_level1_postalCode_country() {
   let options = picker1.dropdown.popupBox.children;
   let richoption1 = picker1.dropdown.querySelector(".rich-select-selected-option");
-  let streetAddress = richoption1.querySelector(".street-address");
   /* eslint-disable max-len */
-  is(streetAddress.textContent,
-     `${options[1].getAttribute("street-address")} ${options[1].getAttribute("address-level2")} ${options[1].getAttribute("address-level1")} ${options[1].getAttribute("postal-code")} ${options[1].getAttribute("country")}`,
+  is(richoption1.innerText,
+     `${options[1].getAttribute("name")}, ${options[1].getAttribute("street-address")}
+${options[1].getAttribute("address-level2")}, ${options[1].getAttribute("address-level1")}, ${options[1].getAttribute("postal-code")}, ${options[1].getAttribute("country")}`,
      "The address shown should be human readable and include all fields");
   /* eslint-enable max-len */
 
@@ -177,8 +179,8 @@ add_task(async function test_streetAddress_combines_street_level2_level1_postalC
   await asyncElementRendered();
 
   richoption1 = picker1.dropdown.querySelector(".rich-select-selected-option");
-  streetAddress = richoption1.querySelector(".street-address");
-  is(streetAddress.textContent, " Mountain View   US",
+  // "Missing …" text is rendered via a pseudo element content and isn't included in innerText
+  is(richoption1.innerText, "Mrs. Fields, \nMountain View, , US",
      "The address shown should be human readable and include all fields");
 
   picker1.dropdown.popupBox.focus();

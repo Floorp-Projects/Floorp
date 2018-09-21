@@ -44,13 +44,17 @@ add_task(async function() {
 async function switchToFrameContext(frameIndex, toolbox, inspector) {
   // Open frame menu and wait till it's available on the screen.
   const btn = toolbox.doc.getElementById("command-button-frames");
-  const menu = await toolbox.showFramesMenu({target: btn});
-  await once(menu, "open");
+  const panel = toolbox.doc.getElementById("command-button-frames-panel");
+  btn.click();
+  ok(panel, "popup panel has created.");
+  await waitUntil(() => panel.classList.contains("tooltip-visible"));
 
   info("Select the iframe in the frame list.");
+  const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
+  const firstButton = menuList.querySelectorAll(".command")[frameIndex];
   const newRoot = inspector.once("new-root");
 
-  menu.items[frameIndex].click();
+  firstButton.click();
 
   await newRoot;
   await inspector.once("inspector-updated");

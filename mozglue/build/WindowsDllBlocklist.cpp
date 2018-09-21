@@ -652,7 +652,7 @@ continue_loading:
 #endif
 
   NTSTATUS ret = stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
-  CallDllLoadHook(true, ret, handle ? *handle : 0, moduleFileName);
+  CallDllLoadHook(NT_SUCCESS(ret), ret, handle ? *handle : 0, moduleFileName);
   return ret;
 }
 

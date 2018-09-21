@@ -9,6 +9,8 @@ const HISTORY_ENABLED_PREF = "places.history.enabled";
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
+                               "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
@@ -95,8 +97,6 @@ const LibraryButton = {
   },
 };
 
-const APP_STARTUP = 1;
-const APP_SHUTDOWN = 2;
 let addonData, startupReason;
 
 function startup(data, reason) { // eslint-disable-line no-unused-vars
@@ -114,7 +114,7 @@ function startup(data, reason) { // eslint-disable-line no-unused-vars
 
   addonData = data;
   startupReason = reason;
-  if (reason === APP_STARTUP) {
+  if (reason === AddonManagerPrivate.BOOTSTRAP_REASONS.APP_STARTUP) {
     appStartupObserver.register();
   } else {
     appStartupDone();
@@ -129,7 +129,7 @@ function shutdown(data, reason) { // eslint-disable-line no-unused-vars
     resourceURI: addonResourceURI
   });
   // Immediately exit if Firefox is exiting, #3323
-  if (reason === APP_SHUTDOWN) {
+  if (reason === AddonManagerPrivate.BOOTSTRAP_REASONS.APP_SHUTDOWN) {
     stop(webExtension, reason);
     return;
   }
@@ -157,7 +157,8 @@ function handleStartup() {
 }
 
 function start(webExtension) {
-  return webExtension.startup(startupReason, addonData).then((api) => {
+  let reasonStr = stringReasonFromNumericReason(startupReason);
+  return webExtension.startup(reasonStr, addonData).then((api) => {
     api.browser.runtime.onMessage.addListener(handleMessage);
     LibraryButton.init(webExtension);
   }).catch((err) => {
@@ -172,10 +173,18 @@ function start(webExtension) {
 }
 
 function stop(webExtension, reason) {
-  if (reason !== APP_SHUTDOWN) {
+  if (reason !== AddonManagerPrivate.BOOTSTRAP_REASONS.APP_SHUTDOWN) {
     LibraryButton.uninit();
   }
-  return Promise.resolve(webExtension.shutdown(reason));
+  let reasonStr = stringReasonFromNumericReason(reason);
+  return Promise.resolve(webExtension.shutdown(reasonStr));
+}
+
+function stringReasonFromNumericReason(numericReason) {
+  let { BOOTSTRAP_REASONS } = AddonManagerPrivate;
+  return Object.keys(BOOTSTRAP_REASONS).find(
+    key => BOOTSTRAP_REASONS[key] == numericReason
+  );
 }
 
 function handleMessage(msg, sender, sendReply) {

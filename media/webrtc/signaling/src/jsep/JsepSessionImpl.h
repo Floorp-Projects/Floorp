@@ -36,9 +36,7 @@ public:
         mIsOfferer(false),
         mWasOffererLastTime(false),
         mIceControlling(false),
-        mLocalIceIsRestarting(false),
         mRemoteIsIceLite(false),
-        mRemoteIceIsRestarting(false),
         mBundlePolicy(kBundleBalanced),
         mSessionId(0),
         mSessionVersion(0),
@@ -54,22 +52,12 @@ public:
   // Implement JsepSession methods.
   virtual nsresult Init() override;
 
-  virtual nsresult SetIceCredentials(const std::string& ufrag,
-                                     const std::string& pwd) override;
-  virtual const std::string& GetUfrag() const override { return mIceUfrag; }
-  virtual const std::string& GetPwd() const override { return mIcePwd; }
   nsresult SetBundlePolicy(JsepBundlePolicy policy) override;
 
   virtual bool
   RemoteIsIceLite() const override
   {
     return mRemoteIsIceLite;
-  }
-
-  virtual bool
-  RemoteIceIsRestarting() const override
-  {
-    return mRemoteIceIsRestarting;
   }
 
   virtual std::vector<std::string>
@@ -158,6 +146,12 @@ public:
   IsOfferer() const override
   {
     return mIsOfferer;
+  }
+
+  virtual bool
+  IsIceRestarting() const override
+  {
+    return !mOldIceUfrag.empty();
   }
 
   virtual const std::vector<RefPtr<JsepTransceiver>>&
@@ -262,6 +256,7 @@ private:
   mozilla::Sdp* GetParsedRemoteDescription(JsepDescriptionPendingOrCurrent type)
                                            const;
   const Sdp* GetAnswer() const;
+  void SetIceRestarting(bool restarting);
 
   // !!!NOT INDEXED BY LEVEL!!! These are in the order they were created in. The
   // level mapping is done with JsepTransceiver::mLevel.
@@ -274,9 +269,9 @@ private:
   bool mIceControlling;
   std::string mIceUfrag;
   std::string mIcePwd;
-  bool mLocalIceIsRestarting;
+  std::string mOldIceUfrag;
+  std::string mOldIcePwd;
   bool mRemoteIsIceLite;
-  bool mRemoteIceIsRestarting;
   std::vector<std::string> mIceOptions;
   JsepBundlePolicy mBundlePolicy;
   std::vector<JsepDtlsFingerprint> mDtlsFingerprints;

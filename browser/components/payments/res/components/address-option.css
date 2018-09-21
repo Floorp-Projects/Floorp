@@ -2,67 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-address-option {
+address-option.rich-option {
   grid-row-gap: 5px;
-  grid-column-gap: 10px;
-  grid-template-areas:
-    "name          "
-    "street-address";
 }
 
-rich-select[open] > .rich-select-popup-box > address-option {
-  grid-template-areas:
-    "name           name          "
-    "street-address street-address"
-    "email          tel           ";
-}
-
-address-picker.payer-related > rich-select address-option {
-  grid-template-areas:
-    "name name"
-    "tel email";
-}
-
-address-option > .name {
-  grid-area: name;
-}
-
-address-option > .street-address {
-  grid-area: street-address;
-}
-
-address-option > .email {
-  grid-area: email;
-}
-
-address-option > .tel {
-  grid-area: tel;
-}
-
-address-option > .name,
-address-option > .street-address,
-address-option > .email,
-address-option > .tel {
+address-option > .line {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-address-picker.shipping-related address-option > .email,
-address-picker.shipping-related address-option.rich-select-selected-option > .tel {
+address-option > .line:empty {
+  /* Hide the 2nd line in cases where it's empty
+     (e.g. payer field with one or two fields requested) */
   display: none;
 }
 
-/* for payer contact details:
- * display fields selectively based on the contents of the address-fields attribute
- */
-address-picker.payer-related address-option > .name,
-address-picker.payer-related address-option > .street-address,
-address-picker.payer-related address-option > .email,
-address-picker.payer-related address-option > .tel {
-  display: none;
+address-option > .line > span {
+  white-space: nowrap;
 }
 
-address-picker[address-fields~='name'].payer-related address-option  > .name,
-address-picker[address-fields~='email'].payer-related address-option  > .email,
-address-picker[address-fields~='tel'].payer-related address-option  > .tel {
-  display: inline-block;
+address-option > .line > span:empty::before {
+  /* Show the string for missing fields in grey when the field is empty */
+  color: GrayText;
+  content: attr(data-missing-string);
 }

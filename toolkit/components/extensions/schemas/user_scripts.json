@@ -13,7 +13,10 @@
             "type": "object",
             "optional": true,
             "properties": {
-              "api_script": { "$ref": "manifest.ExtensionURL"}
+              "api_script": {
+                "optional": true,
+                "$ref": "manifest.ExtensionURL"
+              }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }
           }
@@ -23,14 +26,8 @@
   },
   {
     "namespace": "userScripts",
-    "allowedContexts": ["content"],
+    "permissions": ["manifest:user_scripts"],
     "types": [
-      {
-        "id": "ExportedAPIMethods",
-        "type": "object",
-        "description": "A set of API methods provided by the extensions to its userScripts",
-        "additionalProperties": { "type": "function" }
-      },
       {
         "id": "UserScriptOptions",
         "type": "object",
@@ -115,18 +112,6 @@
           {
             "name": "userScriptOptions",
             "$ref": "UserScriptOptions"
-          }
-        ]
-      },
-      {
-        "name": "setScriptAPIs",
-        "allowedContexts": ["content", "content_only"],
-        "type": "function",
-        "description": "Provides a set of custom API methods available to the registered userScripts",
-        "parameters": [
-          {
-            "name": "exportedAPIMethods",
-            "$ref": "ExportedAPIMethods"
           }
         ]
       }

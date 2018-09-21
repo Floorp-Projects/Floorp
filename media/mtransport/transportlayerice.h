@@ -58,9 +58,6 @@ class TransportLayerIce : public TransportLayer {
 
   RefPtr<NrIceMediaStream> stream_;
   int component_;
-
-  // used to hold the old stream
-  RefPtr<NrIceMediaStream> old_stream_;
 };
 
 }  // close namespace

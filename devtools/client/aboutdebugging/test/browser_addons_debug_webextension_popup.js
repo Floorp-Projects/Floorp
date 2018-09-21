@@ -97,7 +97,7 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
             toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
             toolbox.doc.addEventListener("popupshown", () => {
               const menuItem =
-                toolbox.doc.getElementById("toolbox-meatball-menu-noautohide");
+                    toolbox.doc.getElementById("toolbox-meatball-menu-noautohide");
               menuItem.click();
               resolve();
             }, { once: true });
@@ -132,19 +132,31 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
 
         dump(`Clicking the frame list button\n`);
         const btn = toolbox.doc.getElementById("command-button-frames");
-        const frameMenu = await toolbox.showFramesMenu({target: btn});
+        btn.click();
+
+        // This is webextension toolbox process. So we can't access mochitest framework.
+        const waitUntil = function(predicate, interval = 10) {
+          if (predicate()) {
+            return Promise.resolve(true);
+          }
+          return new Promise(resolve => {
+            toolbox.win.setTimeout(function() {
+              waitUntil(predicate, interval).then(() => resolve(true));
+            }, interval);
+          });
+        };
+        await waitUntil(() => btn.style.pointerEvents === "none");
         dump(`Clicked the frame list button\n`);
 
-        await frameMenu.once("open");
-
-        const frames = frameMenu.items;
+        const menuList = toolbox.doc.getElementById("toolbox-frame-menu");
+        const frames = Array.from(menuList.querySelectorAll(".command"));
 
         if (frames.length != 2) {
           throw Error(`Number of frames found is wrong: ${frames.length} != 2`);
         }
 
         const popupFrameBtn = frames.filter((frame) => {
-          return frame.label.endsWith("popup.html");
+          return frame.querySelector(".label").textContent.endsWith("popup.html");
         }).pop();
 
         if (!popupFrameBtn) {

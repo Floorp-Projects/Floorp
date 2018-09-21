@@ -98,7 +98,7 @@ PeerConnectionMedia::ProtocolProxyQueryHandler::SetProxyOnPcm(
     return;
   }
 
-  if (pcm_->mIceCtxHdlr.get()) {
+  if (pcm_->mIceCtx.get()) {
     assert(httpsProxyPort >= 0 && httpsProxyPort < (1 << 16));
     // Note that this could check if PrivacyRequested() is set on the PC and
     // remove "webrtc" from the ALPN list.  But that would only work if the PC
@@ -131,7 +131,7 @@ PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     // If parent process returns 0 STUN addresses, change ICE connection
     // state to failed.
     if (!pcm_->mStunAddrs.Length()) {
-      pcm_->SignalIceConnectionStateChange(pcm_->mIceCtxHdlr->ctx().get(),
+      pcm_->SignalIceConnectionStateChange(pcm_->mIceCtx.get(),
                                            NrIceCtx::ICE_CTX_FAILED);
     }
 
@@ -143,13 +143,12 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
     : mParent(parent),
       mParentHandle(parent->GetHandle()),
       mParentName(parent->GetName()),
-      mIceCtxHdlr(nullptr),
+      mIceCtx(nullptr),
       mDNSResolver(new NrIceResolver()),
       mUuidGen(MakeUnique<PCUuidGenerator>()),
       mMainThread(mParent->GetMainThread()),
       mSTSThread(mParent->GetSTSThread()),
       mProxyResolveCompleted(false),
-      mIceRestartState(ICE_RESTART_NONE),
       mLocalAddrsCompleted(false) {
 }
 
@@ -253,26 +252,26 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   // setup the stun local addresses IPC async call
   InitLocalAddrs();
 
+  NrIceCtx::InitializeGlobals(mParent->GetAllowIceLoopback(),
+                              ice_tcp,
+                              mParent->GetAllowIceLinkLocal());
+
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
-  mIceCtxHdlr = NrIceCtxHandler::Create("PC:" + mParentName,
-                                        mParent->GetAllowIceLoopback(),
-                                        ice_tcp,
-                                        mParent->GetAllowIceLinkLocal(),
-                                        policy);
-  if(!mIceCtxHdlr) {
+  mIceCtx = NrIceCtx::Create("PC:" + mParentName, policy);
+  if(!mIceCtx) {
     CSFLogError(LOGTAG, "%s: Failed to create Ice Context", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_FAILED(rv = mIceCtxHdlr->ctx()->SetStunServers(stun_servers))) {
+  if (NS_FAILED(rv = mIceCtx->SetStunServers(stun_servers))) {
     CSFLogError(LOGTAG, "%s: Failed to set stun servers", __FUNCTION__);
     return rv;
   }
   // Give us a way to globally turn off TURN support
   bool disabled = Preferences::GetBool("media.peerconnection.turn.disable", false);
   if (!disabled) {
-    if (NS_FAILED(rv = mIceCtxHdlr->ctx()->SetTurnServers(turn_servers))) {
+    if (NS_FAILED(rv = mIceCtx->SetTurnServers(turn_servers))) {
       CSFLogError(LOGTAG, "%s: Failed to set turn servers", __FUNCTION__);
       return rv;
     }
@@ -284,11 +283,11 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     return rv;
   }
   if (NS_FAILED(rv =
-      mIceCtxHdlr->ctx()->SetResolver(mDNSResolver->AllocateResolver()))) {
+      mIceCtx->SetResolver(mDNSResolver->AllocateResolver()))) {
     CSFLogError(LOGTAG, "%s: Failed to get dns resolver", __FUNCTION__);
     return rv;
   }
-  ConnectSignals(mIceCtxHdlr->ctx().get());
+  ConnectSignals(mIceCtx.get());
 
   return NS_OK;
 }
@@ -303,6 +302,8 @@ PeerConnectionMedia::EnsureTransports(const JsepSession& aSession)
           WrapRunnable(RefPtr<PeerConnectionMedia>(this),
                        &PeerConnectionMedia::EnsureTransport_s,
                        transceiver->mTransport.mTransportId,
+                       transceiver->mTransport.mLocalUfrag,
+                       transceiver->mTransport.mLocalPwd,
                        transceiver->mTransport.mComponents),
           NS_DISPATCH_NORMAL);
     }
@@ -313,9 +314,11 @@ PeerConnectionMedia::EnsureTransports(const JsepSession& aSession)
 
 void
 PeerConnectionMedia::EnsureTransport_s(const std::string& aTransportId,
+                                       const std::string& aUfrag,
+                                       const std::string& aPwd,
                                        size_t aComponentCount)
 {
-  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aTransportId));
+  RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
   if (!stream) {
     CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%s components=%u",
                 mParentHandle.c_str(),
@@ -324,21 +327,21 @@ PeerConnectionMedia::EnsureTransport_s(const std::string& aTransportId,
 
     std::ostringstream os;
     os << mParentName << " transport-id=" << aTransportId;
-    RefPtr<NrIceMediaStream> stream =
-      mIceCtxHdlr->CreateStream(os.str(),
-                                aComponentCount);
+    stream = mIceCtx->CreateStream(aTransportId,
+                                   os.str(),
+                                   aComponentCount);
 
     if (!stream) {
       CSFLogError(LOGTAG, "Failed to create ICE stream.");
       return;
     }
 
-    stream->SetId(aTransportId);
     stream->SignalReady.connect(this, &PeerConnectionMedia::IceStreamReady_s);
     stream->SignalCandidate.connect(this,
                                     &PeerConnectionMedia::OnCandidateFound_s);
-    mIceCtxHdlr->ctx()->SetStream(aTransportId, stream);
   }
+  // This might begin an ICE restart
+  stream->SetIceCredentials(aUfrag, aPwd);
 }
 
 nsresult
@@ -406,6 +409,8 @@ PeerConnectionMedia::UpdateTransport(const JsepTransceiver& aTransceiver,
       WrapRunnable(RefPtr<PeerConnectionMedia>(this),
                    &PeerConnectionMedia::ActivateTransport_s,
                    transport.mTransportId,
+                   transport.mLocalUfrag,
+                   transport.mLocalPwd,
                    components,
                    ufrag,
                    pwd,
@@ -418,6 +423,8 @@ PeerConnectionMedia::UpdateTransport(const JsepTransceiver& aTransceiver,
 void
 PeerConnectionMedia::ActivateTransport_s(
     const std::string& aTransportId,
+    const std::string& aLocalUfrag,
+    const std::string& aLocalPwd,
     size_t aComponentCount,
     const std::string& aUfrag,
     const std::string& aPassword,
@@ -425,36 +432,34 @@ PeerConnectionMedia::ActivateTransport_s(
 
   MOZ_ASSERT(aComponentCount);
 
-  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aTransportId));
+  RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
   if (!stream) {
     MOZ_ASSERT(false);
     return;
   }
 
-  if (!stream->HasParsedAttributes()) {
-    CSFLogDebug(LOGTAG, "%s: Activating ICE media stream=%s components=%u",
-                mParentHandle.c_str(),
-                aTransportId.c_str(),
-                static_cast<unsigned>(aComponentCount));
+  CSFLogDebug(LOGTAG, "%s: Activating ICE media stream=%s components=%u",
+              mParentHandle.c_str(),
+              aTransportId.c_str(),
+              static_cast<unsigned>(aComponentCount));
 
-    std::vector<std::string> attrs;
-    attrs.reserve(aCandidateList.size() + 2 /* ufrag + pwd */);
-    for (const auto& candidate : aCandidateList) {
-      attrs.push_back("candidate:" + candidate);
-    }
-    attrs.push_back("ice-ufrag:" + aUfrag);
-    attrs.push_back("ice-pwd:" + aPassword);
+  std::vector<std::string> attrs;
+  attrs.reserve(aCandidateList.size() + 2 /* ufrag + pwd */);
+  for (const auto& candidate : aCandidateList) {
+    attrs.push_back("candidate:" + candidate);
+  }
+  attrs.push_back("ice-ufrag:" + aUfrag);
+  attrs.push_back("ice-pwd:" + aPassword);
 
-    nsresult rv = stream->ParseAttributes(attrs);
-    if (NS_FAILED(rv)) {
-      CSFLogError(LOGTAG, "Couldn't parse ICE attributes, rv=%u",
-                          static_cast<unsigned>(rv));
-    }
+  nsresult rv = stream->ConnectToPeer(aLocalUfrag, aLocalPwd, attrs);
+  if (NS_FAILED(rv)) {
+    CSFLogError(LOGTAG, "Couldn't parse ICE attributes, rv=%u",
+                        static_cast<unsigned>(rv));
+  }
 
-    for (size_t c = aComponentCount; c < stream->components(); ++c) {
-      // components are 1-indexed
-      stream->DisableComponent(c + 1);
-    }
+  for (size_t c = aComponentCount; c < stream->components(); ++c) {
+    // components are 1-indexed
+    stream->DisableComponent(c + 1);
   }
 }
 
@@ -462,9 +467,9 @@ void
 PeerConnectionMedia::RemoveTransportsExcept_s(
     const std::set<std::string>& aIds)
 {
-  for (const auto& stream : mIceCtxHdlr->ctx()->GetStreams()) {
+  for (const auto& stream : mIceCtx->GetStreams()) {
     if (!aIds.count(stream->GetId())) {
-      mIceCtxHdlr->ctx()->SetStream(stream->GetId(), nullptr);
+      mIceCtx->DestroyStream(stream->GetId());
     }
   }
 }
@@ -540,18 +545,6 @@ FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
   aFlow->PushLayer(aSrtpLayer);
 }
 
-static void
-AddNewIceStreamForRestart_s(RefPtr<PeerConnectionMedia> aPCMedia,
-                            RefPtr<TransportFlow> aFlow,
-                            const std::string& aTransportId,
-                            bool aIsRtcp)
-{
-  TransportLayerIce* ice =
-      static_cast<TransportLayerIce*>(aFlow->GetLayer("ice"));
-  ice->SetParameters(aPCMedia->ice_media_stream(aTransportId),
-                     aIsRtcp ? 2 : 1);
-}
-
 nsresult
 PeerConnectionMedia::UpdateTransportFlow(bool aIsRtcp,
                                          const JsepTransport& aTransport)
@@ -572,21 +565,6 @@ PeerConnectionMedia::UpdateTransportFlow(bool aIsRtcp,
 
   RefPtr<TransportFlow> flow = GetTransportFlow(aTransport.mTransportId, aIsRtcp);
   if (flow) {
-    if (IsIceRestarting()) {
-      CSFLogInfo(LOGTAG, "Flow[%s]: detected ICE restart - id: %s rtcp: %d",
-                 flow->id().c_str(), aTransport.mTransportId.c_str(), aIsRtcp);
-
-      RefPtr<PeerConnectionMedia> pcMedia(this);
-      rv = GetSTSThread()->Dispatch(
-          WrapRunnableNM(AddNewIceStreamForRestart_s,
-                         pcMedia, flow, aTransport.mTransportId, aIsRtcp),
-          NS_DISPATCH_NORMAL);
-      if (NS_FAILED(rv)) {
-        CSFLogError(LOGTAG, "Failed to dispatch AddNewIceStreamForRestart_s");
-        return rv;
-      }
-    }
-
     return NS_OK;
   }
 
@@ -707,154 +685,16 @@ PeerConnectionMedia::StartIceChecks_s(
     }
   }
 
-  nsresult rv = mIceCtxHdlr->ctx()->ParseGlobalAttributes(attributes);
+  nsresult rv = mIceCtx->ParseGlobalAttributes(attributes);
   if (NS_FAILED(rv)) {
     CSFLogError(LOGTAG, "%s: couldn't parse global parameters", __FUNCTION__ );
   }
 
-  mIceCtxHdlr->ctx()->SetControlling(aIsControlling ?
+  mIceCtx->SetControlling(aIsControlling ?
                                      NrIceCtx::ICE_CONTROLLING :
                                      NrIceCtx::ICE_CONTROLLED);
 
-  mIceCtxHdlr->ctx()->StartChecks(aIsOfferer);
-}
-
-bool
-PeerConnectionMedia::IsIceRestarting() const
-{
-  ASSERT_ON_THREAD(mMainThread);
-
-  return (mIceRestartState != ICE_RESTART_NONE);
-}
-
-PeerConnectionMedia::IceRestartState
-PeerConnectionMedia::GetIceRestartState() const
-{
-  ASSERT_ON_THREAD(mMainThread);
-
-  return mIceRestartState;
-}
-
-void
-PeerConnectionMedia::BeginIceRestart(const std::string& ufrag,
-                                     const std::string& pwd)
-{
-  ASSERT_ON_THREAD(mMainThread);
-  if (IsIceRestarting()) {
-    return;
-  }
-
-  RefPtr<NrIceCtx> new_ctx = mIceCtxHdlr->CreateCtx(ufrag, pwd);
-
-  RUN_ON_THREAD(GetSTSThread(),
-                WrapRunnable(
-                    RefPtr<PeerConnectionMedia>(this),
-                    &PeerConnectionMedia::BeginIceRestart_s,
-                    new_ctx),
-                NS_DISPATCH_NORMAL);
-
-  mIceRestartState = ICE_RESTART_PROVISIONAL;
-}
-
-void
-PeerConnectionMedia::BeginIceRestart_s(RefPtr<NrIceCtx> new_ctx)
-{
-  ASSERT_ON_THREAD(mSTSThread);
-
-  // hold the original context so we can disconnect signals if needed
-  RefPtr<NrIceCtx> originalCtx = mIceCtxHdlr->ctx();
-
-  if (mIceCtxHdlr->BeginIceRestart(new_ctx)) {
-    ConnectSignals(mIceCtxHdlr->ctx().get(), originalCtx.get());
-  }
-}
-
-void
-PeerConnectionMedia::CommitIceRestart()
-{
-  ASSERT_ON_THREAD(mMainThread);
-  if (mIceRestartState != ICE_RESTART_PROVISIONAL) {
-    return;
-  }
-
-  mIceRestartState = ICE_RESTART_COMMITTED;
-}
-
-void
-PeerConnectionMedia::FinalizeIceRestart()
-{
-  ASSERT_ON_THREAD(mMainThread);
-  if (!IsIceRestarting()) {
-    return;
-  }
-
-  RUN_ON_THREAD(GetSTSThread(),
-                WrapRunnable(
-                    RefPtr<PeerConnectionMedia>(this),
-                    &PeerConnectionMedia::FinalizeIceRestart_s),
-                NS_DISPATCH_NORMAL);
-
-  mIceRestartState = ICE_RESTART_NONE;
-}
-
-void
-PeerConnectionMedia::FinalizeIceRestart_s()
-{
-  ASSERT_ON_THREAD(mSTSThread);
-
-  // reset old streams since we don't need them anymore
-  for (auto& transportFlow : mTransportFlows) {
-    RefPtr<TransportFlow> aFlow = transportFlow.second;
-    if (!aFlow) continue;
-    TransportLayerIce* ice =
-      static_cast<TransportLayerIce*>(aFlow->GetLayer(TransportLayerIce::ID()));
-    ice->ResetOldStream();
-  }
-
-  mIceCtxHdlr->FinalizeIceRestart();
-}
-
-void
-PeerConnectionMedia::RollbackIceRestart()
-{
-  ASSERT_ON_THREAD(mMainThread);
-  if (mIceRestartState != ICE_RESTART_PROVISIONAL) {
-    return;
-  }
-
-  RUN_ON_THREAD(GetSTSThread(),
-                WrapRunnable(
-                    RefPtr<PeerConnectionMedia>(this),
-                    &PeerConnectionMedia::RollbackIceRestart_s),
-                NS_DISPATCH_NORMAL);
-
-  mIceRestartState = ICE_RESTART_NONE;
-}
-
-void
-PeerConnectionMedia::RollbackIceRestart_s()
-{
-  ASSERT_ON_THREAD(mSTSThread);
-
-  // hold the restart context so we can disconnect signals
-  RefPtr<NrIceCtx> restartCtx = mIceCtxHdlr->ctx();
-
-  // restore old streams since we're rolling back
-  for (auto& transportFlow : mTransportFlows) {
-    RefPtr<TransportFlow> aFlow = transportFlow.second;
-    if (!aFlow) continue;
-    TransportLayerIce* ice =
-      static_cast<TransportLayerIce*>(aFlow->GetLayer(TransportLayerIce::ID()));
-    ice->RestoreOldStream();
-  }
-
-  mIceCtxHdlr->RollbackIceRestart();
-  ConnectSignals(mIceCtxHdlr->ctx().get(), restartCtx.get());
-
-  // Fixup the telemetry by transferring abandoned ctx stats to current ctx.
-  NrIceStats stats = restartCtx->Destroy();
-  restartCtx = nullptr;
-  mIceCtxHdlr->ctx()->AccumulateStats(stats);
+  mIceCtx->StartChecks(aIsOfferer);
 }
 
 bool
@@ -926,7 +766,7 @@ PeerConnectionMedia::AddIceCandidate(const std::string& candidate,
 void
 PeerConnectionMedia::AddIceCandidate_s(const std::string& aCandidate,
                                        const std::string& aTransportId) {
-  RefPtr<NrIceMediaStream> stream(mIceCtxHdlr->ctx()->GetStream(aTransportId));
+  RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
   if (!stream) {
     CSFLogError(LOGTAG, "No ICE stream for candidate with transport id %s: %s",
                         aTransportId.c_str(), aCandidate.c_str());
@@ -954,7 +794,7 @@ PeerConnectionMedia::UpdateNetworkState(bool online) {
 
 void
 PeerConnectionMedia::UpdateNetworkState_s(bool online) {
-  mIceCtxHdlr->ctx()->UpdateNetworkState(online);
+  mIceCtx->UpdateNetworkState(online);
 }
 
 void
@@ -999,9 +839,9 @@ void
 PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly,
                                           bool aProxyOnly) {
   if (mProxyServer) {
-    mIceCtxHdlr->ctx()->SetProxyServer(*mProxyServer);
+    mIceCtx->SetProxyServer(*mProxyServer);
   } else if (aProxyOnly) {
-    IceGatheringStateChange_s(mIceCtxHdlr->ctx().get(),
+    IceGatheringStateChange_s(mIceCtx.get(),
                               NrIceCtx::ICE_CTX_GATHER_COMPLETE);
     return;
   }
@@ -1022,15 +862,15 @@ PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly,
   // needs to have the proper flags set on ice ctx.  For non-e10s,
   // setting those flags happens in StartGathering.  We could probably
   // just set them here, and only do it here.
-  mIceCtxHdlr->ctx()->SetCtxFlags(aDefaultRouteOnly, aProxyOnly);
+  mIceCtx->SetCtxFlags(aDefaultRouteOnly, aProxyOnly);
 
   if (mStunAddrs.Length()) {
-    mIceCtxHdlr->ctx()->SetStunAddrs(mStunAddrs);
+    mIceCtx->SetStunAddrs(mStunAddrs);
   }
 
   // Start gathering, but only if there are streams
-  if (!mIceCtxHdlr->ctx()->GetStreams().empty()) {
-    mIceCtxHdlr->ctx()->StartGathering(aDefaultRouteOnly, aProxyOnly);
+  if (!mIceCtx->GetStreams().empty()) {
+    mIceCtx->StartGathering(aDefaultRouteOnly, aProxyOnly);
     return;
   }
 
@@ -1040,7 +880,7 @@ PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly,
   // If there are no streams, we're probably in a situation where we've rolled
   // back while still waiting for our proxy configuration to come back. Make
   // sure content knows that the rollback has stuck wrt gathering.
-  IceGatheringStateChange_s(mIceCtxHdlr->ctx().get(),
+  IceGatheringStateChange_s(mIceCtx.get(),
                             NrIceCtx::ICE_CTX_GATHER_COMPLETE);
 }
 
@@ -1103,7 +943,7 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
   mTransportFlows.clear();
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  NrIceStats stats = mIceCtxHdlr->Destroy();
+  NrIceStats stats = mIceCtx->Destroy();
 
   CSFLogDebug(LOGTAG, "Ice Telemetry: stun (retransmits: %d)"
                       "   turn (401s: %d   403s: %d   438s: %d)",
@@ -1120,7 +960,7 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
                        stats.turn_438s);
 #endif
 
-  mIceCtxHdlr = nullptr;
+  mIceCtx = nullptr;
 
   // we're holding a ref to 'this' that's released by SelfDestruct_m
   mMainThread->Dispatch(WrapRunnable(this, &PeerConnectionMedia::SelfDestruct_m),
@@ -1293,7 +1133,7 @@ PeerConnectionMedia::OnCandidateFound_s(NrIceMediaStream *aStream,
   ASSERT_ON_THREAD(mSTSThread);
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(!aStream->GetId().empty());
-  MOZ_RELEASE_ASSERT(mIceCtxHdlr);
+  MOZ_RELEASE_ASSERT(mIceCtx);
 
   CSFLogDebug(LOGTAG, "%s: %s", __FUNCTION__, aStream->name().c_str());
 
