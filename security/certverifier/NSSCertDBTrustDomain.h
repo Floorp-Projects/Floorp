@@ -58,6 +58,30 @@ void UnloadLoadableRoots();
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                               /*out*/ nsCString& nickname);
 
+/**
+ * Build strings of base64 encoded issuer, serial, subject and public key data
+ * from the supplied certificate for use in revocation checks.
+ *
+ * @param cert
+ *        The CERTCertificate* from which to extract the data.
+ * @param out encIssuer
+ *        The string to populate with base64 encoded issuer data.
+ * @param out encSerial
+ *        The string to populate with base64 encoded serial number data.
+ * @param out encSubject
+ *        The string to populate with base64 encoded subject data.
+ * @param out encPubKey
+ *        The string to populate with base64 encoded public key data.
+ * @return
+ *        NS_OK, unless there's a Base64 encoding problem, in which case
+ *        NS_ERROR_FAILURE.
+ */
+nsresult BuildRevocationCheckStrings(const CERTCertificate* cert,
+                              /*out*/ nsCString& encIssuer,
+                              /*out*/ nsCString& encSerial,
+                              /*out*/ nsCString& encSubject,
+                              /*out*/ nsCString& encPubKey);
+
 void SaveIntermediateCerts(const UniqueCERTCertList& certList);
 
 class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain
