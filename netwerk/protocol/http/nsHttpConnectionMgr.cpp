@@ -4076,10 +4076,6 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     if (ci->GetPrivate())
         tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
 
-    if (ci->GetLessThanTls13()) {
-        tmpFlags |= nsISocketTransport::DONT_TRY_ESNI;
-    }
-
     if ((mCaps & NS_HTTP_BE_CONSERVATIVE) || ci->GetBeConservative()) {
         LOG(("Setting Socket to BE_CONSERVATIVE"));
         tmpFlags |= nsISocketTransport::BE_CONSERVATIVE;
