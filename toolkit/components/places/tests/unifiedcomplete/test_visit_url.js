@@ -49,9 +49,9 @@ add_task(async function() {
 
   info("visit url, about: protocol (no host)");
   await check_autocomplete({
-    search: "about:config",
+    search: "about:nonexistent",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "about:config", input: "about:config"}), title: "about:config", style: [ "action", "visiturl", "heuristic" ] } ],
+    matches: [ { uri: makeActionURI("visiturl", {url: "about:nonexistent", input: "about:nonexistent"}), title: "about:nonexistent", style: [ "action", "visiturl", "heuristic" ] } ],
   });
 
   info("visit url, with non-standard whitespace");
