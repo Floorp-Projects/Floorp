@@ -4620,6 +4620,10 @@ pref("image.animated.resume-from-last-displayed", true);
 // same data at different sizes.
 pref("image.cache.factor2.threshold-surfaces", 4);
 
+// Maximum number of pixels in either dimension that we are willing to upscale
+// an SVG to when we are in "factor of 2" mode.
+pref("image.cache.max-rasterized-svg-threshold-kb", 92160);
+
 // The maximum size, in bytes, of the decoded images we cache
 pref("image.cache.size", 5242880);
 
