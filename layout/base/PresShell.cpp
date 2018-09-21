@@ -10606,6 +10606,16 @@ nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight)
   }
 }
 
+nsPoint
+nsIPresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const
+{
+   nsPoint result;
+   if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
+     result = GetVisualViewportOffset() - sf->GetScrollPosition();
+   }
+   return result;
+}
+
 void
 nsIPresShell::RecomputeFontSizeInflationEnabled()
 {
