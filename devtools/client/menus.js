@@ -101,7 +101,7 @@ exports.menuitems = [
     l10nKey: "eyedropper",
     async oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
-      const target = TargetFactory.forTab(window.gBrowser.selectedTab);
+      const target = await TargetFactory.forTab(window.gBrowser.selectedTab);
       await target.makeRemote();
       const inspectorFront = await target.getFront("inspector");
       inspectorFront.pickColorFromPage({copyOnSelect: true, fromMenu: true});
