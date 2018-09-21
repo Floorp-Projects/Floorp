@@ -26,6 +26,32 @@
 
 using namespace mozilla::dom;
 
+static already_AddRefed<URLAndReferrerInfo>
+ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
+{
+  MOZ_ASSERT(aFrame);
+
+  if (!aURL) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> uri = aURL->GetURI();
+
+  if (aURL->IsLocalRef()) {
+    uri = SVGObserverUtils::GetBaseURLForLocalRef(aFrame->GetContent(), uri);
+    uri = aURL->ResolveLocalRef(uri);
+  }
+
+  if (!uri) {
+    return nullptr;
+  }
+
+  return do_AddRef(new URLAndReferrerInfo(uri,
+                                          aURL->mExtraData->GetReferrer(),
+                                          aURL->mExtraData->GetReferrerPolicy()));
+}
+
+
 namespace mozilla {
 
 void
@@ -456,8 +482,9 @@ SVGMaskObserverList::SVGMaskObserverList(nsIFrame* aFrame)
   const nsStyleSVGReset *svgReset = aFrame->StyleSVGReset();
 
   for (uint32_t i = 0; i < svgReset->mMask.mImageCount; i++) {
-    RefPtr<URLAndReferrerInfo> maskUri =
-      SVGObserverUtils::GetMaskURI(aFrame, i);
+    css::URLValueData* data = svgReset->mMask.mLayers[i].mImage.GetURLValue();
+    RefPtr<URLAndReferrerInfo> maskUri = ResolveURLUsingLocalRef(aFrame, data);
+
     bool hasRef = false;
     if (maskUri) {
       maskUri->GetURI()->GetHasRef(&hasRef);
@@ -541,15 +568,6 @@ SVGTextPathObserver::OnRenderingChange()
     frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
-static void
-InvalidateAllContinuations(nsIFrame* aFrame)
-{
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
-    f->InvalidateFrame();
-  }
-}
-
 void
 nsSVGPaintingProperty::OnRenderingChange()
 {
@@ -562,45 +580,11 @@ nsSVGPaintingProperty::OnRenderingChange()
   if (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
     frame->InvalidateFrameSubtree();
   } else {
-    InvalidateAllContinuations(frame);
-  }
-}
-
-static already_AddRefed<URLAndReferrerInfo>
-ResolveURLUsingLocalRef(nsIFrame* aFrame, const css::URLValueData* aURL)
-{
-  MOZ_ASSERT(aFrame);
-
-  if (!aURL) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> uri = aURL->GetURI();
-  RefPtr<URLAndReferrerInfo> result;
-
-  // Non-local-reference URL.
-  if (!aURL->IsLocalRef()) {
-    if (!uri) {
-      return nullptr;
+    for (nsIFrame* f = frame; f;
+         f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
+      f->InvalidateFrame();
     }
-    result = new URLAndReferrerInfo(uri,
-                                    aURL->mExtraData->GetReferrer(),
-                                    aURL->mExtraData->GetReferrerPolicy());
-    return result.forget();
   }
-
-  nsCOMPtr<nsIURI> baseURI =
-    SVGObserverUtils::GetBaseURLForLocalRef(aFrame->GetContent(), uri);
-
-  nsCOMPtr<nsIURI> resolvedURI = aURL->ResolveLocalRef(baseURI);
-  if (!resolvedURI) {
-    return nullptr;
-  }
-
-  result = new URLAndReferrerInfo(resolvedURI,
-                                  aURL->mExtraData->GetReferrer(),
-                                  aURL->mExtraData->GetReferrerPolicy());
-  return result.forget();
 }
 
 template<class T>
@@ -1008,7 +992,9 @@ SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
     return nullptr;
 
   RefPtr<URLAndReferrerInfo> paintServerURL =
-    SVGObserverUtils::GetPaintURI(frame, aPaint);
+    ResolveURLUsingLocalRef(frame,
+                            (svgStyle->*aPaint).GetPaintServer());
+
   MOZ_ASSERT(aPaint == &nsStyleSVG::mFill || aPaint == &nsStyleSVG::mStroke);
   PaintingPropertyDescriptor propDesc = (aPaint == &nsStyleSVG::mFill) ?
                                         SVGObserverUtils::FillProperty() :
@@ -1305,29 +1291,6 @@ SVGObserverUtils::GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter)
   MOZ_ASSERT(aFilter.GetType() == NS_STYLE_FILTER_URL);
 
   return ResolveURLUsingLocalRef(aFrame, aFilter.GetURL());
-}
-
-already_AddRefed<URLAndReferrerInfo>
-SVGObserverUtils::GetPaintURI(nsIFrame* aFrame,
-                              nsStyleSVGPaint nsStyleSVG::* aPaint)
-{
-  const nsStyleSVG* svgStyle = aFrame->StyleSVG();
-  MOZ_ASSERT((svgStyle->*aPaint).Type() ==
-             nsStyleSVGPaintType::eStyleSVGPaintType_Server);
-
-  return ResolveURLUsingLocalRef(aFrame,
-                                 (svgStyle->*aPaint).GetPaintServer());
-}
-
-already_AddRefed<URLAndReferrerInfo>
-SVGObserverUtils::GetMaskURI(nsIFrame* aFrame, uint32_t aIndex)
-{
-  const nsStyleSVGReset* svgReset = aFrame->StyleSVGReset();
-  MOZ_ASSERT(svgReset->mMask.mLayers.Length() > aIndex);
-
-  css::URLValueData* data =
-    svgReset->mMask.mLayers[aIndex].mImage.GetURLValue();
-  return ResolveURLUsingLocalRef(aFrame, data);
 }
 
 } // namespace mozilla
