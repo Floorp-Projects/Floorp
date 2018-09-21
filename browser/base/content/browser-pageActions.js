@@ -833,7 +833,7 @@ var BrowserPageActions = {
     }
 
     let state;
-    if (this._contextAction._isBuiltIn) {
+    if (this._contextAction._isMozillaAction) {
       state =
         this._contextAction.pinnedToUrlbar ?
         "builtInPinned" :
