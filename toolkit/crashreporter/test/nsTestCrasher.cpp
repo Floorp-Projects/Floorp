@@ -176,7 +176,7 @@ void Crash(int16_t how)
     auto pfnTest = m[how];
     auto pfnLauncher = m[CRASH_X64CFI_LAUNCHER];
     ReserveStack();
-    pfnLauncher(0, reinterpret_cast<void*>(pfnTest));
+    pfnLauncher(0, pfnTest);
     break;
   }
 #endif // XP_WIN && HAVE_64BIT_BUILD && !defined(__MINGW32__)
