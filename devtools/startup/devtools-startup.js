@@ -582,18 +582,22 @@ DevToolsStartup.prototype = {
     mainKeyset.parentNode.insertBefore(keyset, mainKeyset);
   },
 
-  onKey(window, key) {
-    if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
-      const id = key.toolId || key.id;
-      this.openInstallPage("KeyShortcut", id);
-    } else {
-      // Record the timing at which this event started in order to compute later in
-      // gDevTools.showToolbox, the complete time it takes to open the toolbox.
-      // i.e. especially take `initDevTools` into account.
-      const startTime = Cu.now();
-      const require = this.initDevTools("KeyShortcut", key);
-      const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
-      gDevToolsBrowser.onKeyShortcut(window, key, startTime);
+  async onKey(window, key) {
+    try {
+      if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
+        const id = key.toolId || key.id;
+        this.openInstallPage("KeyShortcut", id);
+      } else {
+        // Record the timing at which this event started in order to compute later in
+        // gDevTools.showToolbox, the complete time it takes to open the toolbox.
+        // i.e. especially take `initDevTools` into account.
+        const startTime = Cu.now();
+        const require = this.initDevTools("KeyShortcut", key);
+        const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+        await gDevToolsBrowser.onKeyShortcut(window, key, startTime);
+      }
+    } catch (e) {
+      console.error(`Exception while trigerring key ${key}: ${e}\n${e.stack}`);
     }
   },
 
