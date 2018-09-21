@@ -95,16 +95,9 @@ if os_macosx:
 if os_bsd:
     SOURCES += [
         'src/base/atomicops_internals_x86_gcc.cc',
+        'src/base/process_util_linux.cc',
         'src/base/time_posix.cc',
     ]
-    if CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
-        SOURCES += [
-            'src/base/process_util_linux.cc'
-        ]
-    else:
-        SOURCES += [
-            'src/base/process_util_bsd.cc'
-        ]
 
 if os_linux:
     SOURCES += [
