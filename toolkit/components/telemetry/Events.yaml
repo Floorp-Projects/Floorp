@@ -98,13 +98,14 @@ extensions.data:
 navigation:
   search:
     objects: ["about_home", "about_newtab", "contextmenu", "oneoff",
-              "suggestion", "alias", "enter", "searchbar", "urlbar"]
+              "suggestion", "alias", "enter", "searchbar", "urlbar",
+              "webextension"]
     release_channel_collection: opt-out
     record_in_processes: ["main"]
     description: >
       This is recorded on each search navigation.
       The value field records the action used to trigger the search:
-        "enter", "oneoff", "suggestion", "alias", null (for contextmenu)
+        "enter", "oneoff", "suggestion", "alias", null (for contextmenu and webextension)
     bug_numbers: [1316281]
     notification_emails:
       - "past@mozilla.com"
