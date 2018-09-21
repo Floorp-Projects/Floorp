@@ -21,7 +21,7 @@ subtitle = Welcome to Fluent
 `,
   };
   const originalLoad = L10nRegistry.load;
-  const originalRequested = Services.locale.getRequestedLocales();
+  const originalRequested = Services.locale.requestedLocales;
 
   L10nRegistry.load = async function(url) {
     return fs.hasOwnProperty(url) ? fs[url] : false;
@@ -46,7 +46,7 @@ subtitle = Welcome to Fluent
     // Cleanup
     L10nRegistry.removeSource(source.name);
     L10nRegistry.load = originalLoad;
-    Services.locale.setRequestedLocales(originalRequested);
+    Services.locale.requestedLocales = originalRequested;
 
     SimpleTest.finish();
   };

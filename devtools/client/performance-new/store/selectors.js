@@ -30,7 +30,6 @@ const getInitializedValues = state => {
 };
 
 const getPerfFront = state => getInitializedValues(state).perfFront;
-const getToolbox = state => getInitializedValues(state).toolbox;
 const getReceiveProfileFn = state => getInitializedValues(state).receiveProfile;
 const getSetRecordingPreferencesFn =
   state => getInitializedValues(state).setRecordingPreferences;
@@ -47,7 +46,6 @@ module.exports = {
   getRecordingSettings,
   getInitializedValues,
   getPerfFront,
-  getToolbox,
   getReceiveProfileFn,
   getSetRecordingPreferencesFn
 };

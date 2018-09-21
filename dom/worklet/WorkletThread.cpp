@@ -30,7 +30,7 @@ const uint32_t kWorkletStackSize = 256 * sizeof(size_t) * 1024;
 // Helper functions
 
 bool
-PreserveWrapper(JSContext* aCx, JSObject* aObj)
+PreserveWrapper(JSContext* aCx, JS::HandleObject aObj)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aObj);

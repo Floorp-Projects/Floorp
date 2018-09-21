@@ -396,7 +396,7 @@ var BrowserApp = {
     ]);
 
     // Initialize the default l10n resource sources for L10nRegistry.
-    let locales = Services.locale.getPackagedLocales();
+    let locales = Services.locale.packagedLocales;
     const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
     L10nRegistry.registerSource(greSource);
 
@@ -1698,7 +1698,7 @@ var BrowserApp = {
   },
 
   getUALocalePref: function () {
-    return Services.locale.getRequestedLocale() || undefined;
+    return Services.locale.requestedLocale || undefined;
   },
 
   getOSLocalePref: function () {
@@ -1775,9 +1775,9 @@ var BrowserApp = {
 
       case "Locale:Changed": {
         if (data) {
-          Services.locale.setRequestedLocales([data.languageTag]);
+          Services.locale.requestedLocales = [data.languageTag];
         } else {
-          Services.locale.setRequestedLocales([]);
+          Services.locale.requestedLocales = [];
         }
 
         console.log("Gecko display locale: " + this.getUALocalePref());

@@ -10781,7 +10781,7 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
   // frame tree.
   if (!aChildFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     childHint = NS_RemoveSubsumedHints(
-      childHint, aRestyleState.ChangesHandledFor(*aChildFrame));
+      childHint, aRestyleState.ChangesHandledFor(aChildFrame));
   }
   if (childHint) {
     if (childHint & nsChangeHint_ReconstructFrame) {

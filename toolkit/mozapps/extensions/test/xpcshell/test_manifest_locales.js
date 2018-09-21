@@ -62,7 +62,7 @@ const ADDON = {
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1");
-  Services.locale.setRequestedLocales(["fr-FR"]);
+  Services.locale.requestedLocales = ["fr-FR"];
 
   await promiseStartupManager();
   await promiseInstallXPI(ADDON);
