@@ -27,7 +27,7 @@ except ImportError:
 
 PUBLIC_ARTIFACT_URL = ('https://queue.taskcluster.net/v1/task/{task}/artifacts/'
                        '{artifact}')
-PRIVATE_ARTIFACT_URL = ('https://taskcluster/queue/v1/task/{task}/artifacts/'
+PRIVATE_ARTIFACT_URL = ('http://taskcluster/queue/v1/task/{task}/artifacts/'
                         '{artifact}')
 
 CONCURRENCY = multiprocessing.cpu_count()
