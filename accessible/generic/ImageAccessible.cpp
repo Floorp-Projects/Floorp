@@ -61,7 +61,7 @@ ImageAccessible::NativeState() const
     imageRequest->GetImage(getter_AddRefs(imgContainer));
 
   if (imgContainer) {
-    bool animated;
+    bool animated = false;
     imgContainer->GetAnimated(&animated);
     if (animated)
       state |= states::ANIMATED;
