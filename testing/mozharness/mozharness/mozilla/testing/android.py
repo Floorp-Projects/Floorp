@@ -5,12 +5,10 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 
-import datetime
 import glob
 import os
 import subprocess
 import tempfile
-import time
 from mozharness.mozilla.automation import TBPL_RETRY, EXIT_STATUS_DICT
 
 
@@ -24,7 +22,6 @@ class AndroidMixin(object):
         self.logcat_file = None
 
         self._adb_path = None
-        self.sdk_level = None
         self.device_name = os.environ.get('DEVICE_NAME', None)
         self.device_serial = os.environ.get('DEVICE_SERIAL', None)
         self.device_ip = os.environ.get('DEVICE_IP', None)
@@ -49,85 +46,6 @@ class AndroidMixin(object):
                 # is completed.
                 pass
         return self._adb_path
-
-    def _retry(self, max_attempts, interval, func, description, max_time=0):
-        '''
-        Execute func until it returns True, up to max_attempts times, waiting for
-        interval seconds between each attempt. description is logged on each attempt.
-        If max_time is specified, no further attempts will be made once max_time
-        seconds have elapsed; this provides some protection for the case where
-        the run-time for func is long or highly variable.
-        '''
-        status = False
-        attempts = 0
-        if max_time > 0:
-            end_time = datetime.datetime.now() + datetime.timedelta(seconds=max_time)
-        else:
-            end_time = None
-        while attempts < max_attempts and not status:
-            if (end_time is not None) and (datetime.datetime.now() > end_time):
-                self.info("Maximum retry run-time of %d seconds exceeded; "
-                          "remaining attempts abandoned" % max_time)
-                break
-            if attempts != 0:
-                self.info("Sleeping %d seconds" % interval)
-                time.sleep(interval)
-            attempts += 1
-            self.info(">> %s: Attempt #%d of %d" % (description, attempts, max_attempts))
-            status = func()
-        return status
-
-    def _run_proc(self, cmd, quiet=False):
-        self.info('Running %s' % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
-        out, err = p.communicate()
-        if out and not quiet:
-            self.info('%s' % str(out.strip()))
-        if err and not quiet:
-            self.info('stderr: %s' % str(err.strip()))
-        return out, err
-
-    def _run_with_timeout(self, timeout, cmd, quiet=False):
-        timeout_cmd = ['timeout', '%s' % timeout] + cmd
-        return self._run_proc(timeout_cmd, quiet=quiet)
-
-    def _run_adb_with_timeout(self, timeout, cmd, quiet=False):
-        cmd = [self.adb_path, '-s', self.device_serial] + cmd
-        return self._run_with_timeout(timeout, cmd, quiet)
-
-    def _verify_adb(self):
-        self.info('Verifying adb connectivity')
-        self._run_with_timeout(180, [self.adb_path,
-                                     '-s',
-                                     self.device_serial,
-                                     'wait-for-device'])
-        return True
-
-    def _verify_adb_device(self):
-        out, _ = self._run_with_timeout(30, [self.adb_path, 'devices'])
-        if (self.device_serial in out) and ("device" in out):
-            return True
-        return False
-
-    def _is_boot_completed(self):
-        boot_cmd = ['shell', 'getprop', 'sys.boot_completed']
-        out, _ = self._run_adb_with_timeout(30, boot_cmd)
-        if out.strip() == '1':
-            return True
-        return False
-
-    def _install_apk(self):
-        install_ok = False
-        if int(self.sdk_level) >= 23:
-            cmd = ['install', '-r', '-g', self.installer_path]
-        else:
-            cmd = ['install', '-r', self.installer_path]
-            self.warning("Installing apk with default run-time permissions (sdk %s)" %
-                         str(self.sdk_level))
-        out, err = self._run_adb_with_timeout(300, cmd, True)
-        if 'Success' in out or 'Success' in err:
-            install_ok = True
-        return install_ok
 
     def _get_repo_url(self, path):
         """
@@ -201,16 +119,14 @@ class AndroidMixin(object):
         """
            Install the specified apk.
         """
-        cmd = [self.adb_path, '-s', self.device_serial, 'shell',
-               'getprop', 'ro.build.version.sdk']
-        self.sdk_level, _ = self._run_with_timeout(30, cmd)
-
-        install_ok = self._retry(3, 30, self._install_apk, "Install app APK")
-        if not install_ok:
+        import mozdevice
+        try:
+            device = mozdevice.ADBAndroid(adb=self.adb_path, device=self.device_serial)
+            device.install_app(apk)
+        except mozdevice.ADBError:
             self.fatal('INFRA-ERROR: Failed to install %s on %s' %
                        (self.installer_path, self.device_name),
                        EXIT_STATUS_DICT[TBPL_RETRY])
-        return install_ok
 
     def screenshot(self, prefix):
         """
