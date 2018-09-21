@@ -829,7 +829,7 @@ xmlns="http://www.w3.org/1999/xhtml"
                        ondrop="homeButtonObserver.onDrop(event)"
                        ondragexit="homeButtonObserver.onDragExit(event)"
                        key="goHome"
-                       onclick="BrowserGoHome(event);"
+                       onclick="BrowserHome(event);"
                        cui-areatype="toolbar"
                        tooltiptext="&homeButton.defaultPage.tooltip;"/>
         <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
