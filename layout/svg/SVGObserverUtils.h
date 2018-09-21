@@ -829,18 +829,6 @@ public:
   GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter);
 
   /**
-   * A helper function to resolve paint-server URL.
-   */
-  static already_AddRefed<URLAndReferrerInfo>
-  GetPaintURI(nsIFrame* aFrame, nsStyleSVGPaint nsStyleSVG::* aPaint);
-
-  /**
-   * A helper function to resolve SVG mask URL.
-   */
-  static already_AddRefed<URLAndReferrerInfo>
-  GetMaskURI(nsIFrame* aFrame, uint32_t aIndex);
-
-  /**
    * Return a baseURL for resolving a local-ref URL.
    *
    * @param aContent an element which uses a local-ref property. Here are some
