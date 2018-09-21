@@ -303,7 +303,7 @@ CookieServiceChild::PrefChanged(nsIPrefBranch *aPrefBranch)
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookieBehavior, &val)))
     mCookieBehavior =
       val >= nsICookieService::BEHAVIOR_ACCEPT &&
-      val <= nsICookieService::BEHAVIOR_LIMIT_FOREIGN
+      val <= nsICookieService::BEHAVIOR_LAST
         ? val : nsICookieService::BEHAVIOR_ACCEPT;
 
   bool boolval;
