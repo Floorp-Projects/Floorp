@@ -126,6 +126,11 @@
         <service android:name=".session.SessionNotificationService"
             android:exported="false" />
 
+        <service
+            android:name=".utils.ExperimentsSyncService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <meta-data android:name="android.webkit.WebView.MetricsOptOut"
                    android:value="true" />
     </application>

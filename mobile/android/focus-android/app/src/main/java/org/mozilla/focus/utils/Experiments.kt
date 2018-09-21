@@ -24,4 +24,5 @@ fun Context.isInExperiment(descriptor: ExperimentDescriptor): Boolean =
         app.fretboard.isInExperiment(this, descriptor)
 
 val Context.activeExperimentNames: List<String>
-    get() = app.fretboard.getActiveExperiments(this).map { it.name }
+    get() = app.fretboard.getExperimentsMap(this)
+            .map { it.key + if (it.value) "-B" else "-A" }

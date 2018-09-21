@@ -16,7 +16,7 @@ import android.preference.PreferenceManager
 import android.support.annotation.CheckResult
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.experimental.runBlocking
-import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.json.JSONObject
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.Components
@@ -44,6 +44,7 @@ import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.collections.HashSet
 
 @Suppress(
         // Yes, this a large class with a lot of functions. But it's very simple and still easy to read.
@@ -246,13 +247,14 @@ object TelemetryWrapper {
                             resources.getString(R.string.pref_key_remote_debugging),
                             resources.getString(R.string.pref_key_homescreen_tips),
                             resources.getString(R.string.pref_key_open_new_tab),
-                            resources.getString(R.string.pref_key_show_search_suggestions))
+                            resources.getString(R.string.pref_key_show_search_suggestions),
+                            resources.getString(R.string.pref_key_fretboard_bucket_number))
                     .setSettingsProvider(TelemetrySettingsProvider(context))
                     .setCollectionEnabled(telemetryEnabled)
                     .setUploadEnabled(telemetryEnabled)
                     .setBuildId(TelemetryConfiguration(context).buildId +
                     (if (AppConstants.isGeckoBuild)
-                        ("-" + TELEMETRY_APP_ENGINE_GECKOVIEW) else ""))
+                        ("-$TELEMETRY_APP_ENGINE_GECKOVIEW") else ""))
 
             val serializer = JSONPingSerializer()
             val storage = FileTelemetryStorage(configuration, serializer)
@@ -368,7 +370,7 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun urlBarEvent(isUrl: Boolean, autocompleteResult: AutocompleteResult) {
+    fun urlBarEvent(isUrl: Boolean, autocompleteResult: InlineAutocompleteEditText.AutocompleteResult) {
         if (isUrl) {
             TelemetryWrapper.browseEvent(autocompleteResult)
         } else {
@@ -376,7 +378,7 @@ object TelemetryWrapper {
         }
     }
 
-    private fun browseEvent(autocompleteResult: AutocompleteResult) {
+    private fun browseEvent(autocompleteResult: InlineAutocompleteEditText.AutocompleteResult) {
         val event = TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR)
                 .extra(Extra.AUTOCOMPLETE, (!autocompleteResult.isEmpty).toString())
 
