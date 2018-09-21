@@ -130,7 +130,6 @@ js::Nursery::Nursery(JSRuntime* rt)
   , maxChunkCount_(0)
   , chunkCountLimit_(0)
   , timeInChunkAlloc_(0)
-  , previousPromotionRate_(0)
   , profileThreshold_(0)
   , enableProfiling_(false)
   , canAllocateStrings_(false)
@@ -1213,6 +1212,17 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
     }
 #endif
 
+    newMaxNurseryChunks = runtime()->gc.tunables.gcMaxNurseryBytes() >> ChunkShift;
+    if (newMaxNurseryChunks != chunkCountLimit_) {
+        chunkCountLimit_ = newMaxNurseryChunks;
+        /* The configured maximum nursery size is changing */
+        if (maxChunkCount() > newMaxNurseryChunks) {
+            /* We need to shrink the nursery */
+            shrinkAllocableSpace(newMaxNurseryChunks);
+            return;
+        }
+    }
+
     /*
      * This incorrect promotion rate results in better nursery sizing
      * decisions, however we should to better tuning based on the real
@@ -1221,28 +1231,13 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
     const float promotionRate =
         float(previousGC.tenuredBytes) / float(previousGC.nurseryCapacity);
 
-    newMaxNurseryChunks = runtime()->gc.tunables.gcMaxNurseryBytes() >> ChunkShift;
-    if (newMaxNurseryChunks != chunkCountLimit_) {
-        chunkCountLimit_ = newMaxNurseryChunks;
-        /* The configured maximum nursery size is changing */
-        if (maxChunkCount() > newMaxNurseryChunks) {
-            /* We need to shrink the nursery */
-            shrinkAllocableSpace(newMaxNurseryChunks);
-
-            previousPromotionRate_ = promotionRate;
-            return;
-        }
-    }
-
     if (promotionRate > GrowThreshold) {
         // The GC nursery is an optimization and so if we fail to allocate
         // nursery chunks we do not report an error.
         growAllocableSpace();
-    } else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold) {
+    } else if (promotionRate < ShrinkThreshold) {
         shrinkAllocableSpace(maxChunkCount() - 1);
     }
-
-    previousPromotionRate_ = promotionRate;
 }
 
 void
