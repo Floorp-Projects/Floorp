@@ -35,7 +35,7 @@ function getDevToolsPrefBranchName(extensionId) {
  */
 global.getDevToolsTargetForContext = async (context) => {
   if (context.devToolsTarget) {
-    await context.devToolsTarget.attach();
+    await context.devToolsTarget.makeRemote();
     return context.devToolsTarget;
   }
 
@@ -48,8 +48,9 @@ global.getDevToolsTargetForContext = async (context) => {
   }
 
   const tab = context.devToolsToolbox.target.tab;
-  context.devToolsTarget = await DevToolsShim.createTargetForTab(tab);
-  await context.devToolsTarget.attach();
+  context.devToolsTarget = DevToolsShim.createTargetForTab(tab);
+
+  await context.devToolsTarget.makeRemote();
 
   return context.devToolsTarget;
 };

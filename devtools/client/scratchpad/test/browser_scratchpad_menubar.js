@@ -28,7 +28,7 @@ add_task(async function() {
   });
 
   info("Open devtools on the Scratchpad.");
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = await gDevTools.showToolbox(target, "scratchpad");
 
   const menuToolbar = toolbox.doc.getElementById("sp-menu-toolbar");

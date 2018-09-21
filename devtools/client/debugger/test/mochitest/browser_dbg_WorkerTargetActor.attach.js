@@ -18,7 +18,7 @@ function test() {
 
     let tab = yield addTab(TAB1_URL);
     let { tabs } = yield listTabs(client);
-    let [, tabClient] = yield attachTarget(client, findTab(tabs, TAB1_URL));
+    let [, tabClient] = yield attachTab(client, findTab(tabs, TAB1_URL));
     yield listWorkers(tabClient);
 
     // If a page still has pending network requests, it will not be moved into

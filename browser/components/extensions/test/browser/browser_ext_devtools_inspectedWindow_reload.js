@@ -37,7 +37,7 @@ async function runReloadTestCase({urlParams, background, devtoolsPage, testCase}
 
   await extension.startup();
 
-  let target = await gDevTools.getTargetForTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");

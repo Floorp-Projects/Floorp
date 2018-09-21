@@ -79,7 +79,7 @@ var _attachConsole = async function(
 
   if (!attachToTab) {
     response = await state.dbgClient.getProcess();
-    await state.dbgClient.attachTarget(response.form.actor);
+    await state.dbgClient.attachTab(response.form.actor);
     const consoleActor = response.form.consoleActor;
     state.actor = consoleActor;
     state.dbgClient.attachConsole(consoleActor, listeners)
@@ -94,7 +94,7 @@ var _attachConsole = async function(
     return;
   }
   const tab = response.tabs[response.selected];
-  const [, tabClient] = await state.dbgClient.attachTarget(tab.actor);
+  const [, tabClient] = await state.dbgClient.attachTab(tab.actor);
   if (attachToWorker) {
     const workerName = "console-test-worker.js#" + new Date().getTime();
     const worker = new Worker(workerName);

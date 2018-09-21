@@ -95,7 +95,7 @@ NetMonitorAPI.prototype = {
   async connectBackend(connector, connection, actions, getState) {
     // The connection might happen during Toolbox initialization
     // so make sure the target is ready.
-    await connection.tabConnection.tabTarget.attach();
+    await connection.tabConnection.tabTarget.makeRemote();
     return connector.connectFirefox(connection, actions, getState);
   },
 

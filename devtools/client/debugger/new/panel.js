@@ -22,7 +22,7 @@ function DebuggerPanel(iframeWindow, toolbox) {
 DebuggerPanel.prototype = {
   open: async function() {
     if (!this.toolbox.target.isRemote) {
-      await this.toolbox.target.attach();
+      await this.toolbox.target.makeRemote();
     }
 
     const {
