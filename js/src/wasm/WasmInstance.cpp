@@ -696,12 +696,85 @@ Instance::postBarrier(Instance* instance, gc::Cell** location)
 }
 #endif // ENABLE_WASM_GC
 
+// The typeIndex is an index into the structTypeDescrs_ table in the instance.
+// That table holds TypeDescr objects.
+//
+// When we fail to allocate we return a nullptr; the wasm side must check this
+// and propagate it as an error.
+
+/* static */ void*
+Instance::structNew(Instance* instance, uint32_t typeIndex)
+{
+    JSContext* cx = TlsContext.get();
+    Rooted<TypeDescr*> typeDescr(cx, instance->structTypeDescrs_[typeIndex]);
+    return TypedObject::createZeroed(cx, typeDescr);
+}
+
+/* static */ void*
+Instance::structNarrow(Instance* instance, uint32_t mustUnboxAnyref, uint32_t outputTypeIndex,
+                       void* nonnullPtr)
+{
+    JSContext* cx = TlsContext.get();
+
+    Rooted<TypedObject*> obj(cx);
+    Rooted<StructTypeDescr*> typeDescr(cx);
+
+    if (mustUnboxAnyref) {
+        Rooted<NativeObject*> no(cx, static_cast<NativeObject*>(nonnullPtr));
+        if (!no->is<TypedObject>()) {
+            return nullptr;
+        }
+        obj = &no->as<TypedObject>();
+        Rooted<TypeDescr*> td(cx, &obj->typeDescr());
+        if (td->kind() != type::Struct) {
+            return nullptr;
+        }
+        typeDescr = &td->as<StructTypeDescr>();
+    } else {
+        obj = static_cast<TypedObject*>(nonnullPtr);
+        typeDescr = &obj->typeDescr().as<StructTypeDescr>();
+    }
+
+    // Optimization opportunity: instead of this loop we could perhaps load an
+    // index from `typeDescr` and use that to index into the structTypes table
+    // of the instance.  If the index is in bounds and the desc at that index is
+    // the desc we have then we know the index is good, and we can use that for
+    // the prefix check.
+
+    uint32_t found = UINT32_MAX;
+    for (uint32_t i = 0; i < instance->structTypeDescrs_.length(); i++) {
+        if (instance->structTypeDescrs_[i] == typeDescr) {
+            found = i;
+            break;
+        }
+    }
+
+    if (found == UINT32_MAX) {
+        return nullptr;
+    }
+
+    // Also asserted in constructor; let's just be double sure.
+
+    MOZ_ASSERT(instance->structTypeDescrs_.length() == instance->structTypes().length());
+
+    // Now we know that the object was created by the instance, and we know its
+    // concrete type.  We need to check that its type is an extension of the
+    // type of outputTypeIndex.
+
+    if (!instance->structTypes()[found].hasPrefix(instance->structTypes()[outputTypeIndex])) {
+        return nullptr;
+    }
+
+    return nonnullPtr;
+}
+
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
                    SharedCode code,
                    UniqueTlsData tlsDataIn,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
+                   StructTypeDescrVector&& structTypeDescrs,
                    Handle<FunctionVector> funcImports,
                    HandleValVector globalImportValues,
                    const WasmGlobalObjectVector& globalObjs,
@@ -712,9 +785,11 @@ Instance::Instance(JSContext* cx,
     tlsData_(std::move(tlsDataIn)),
     memory_(memory),
     tables_(std::move(tables)),
-    maybeDebug_(std::move(maybeDebug))
+    maybeDebug_(std::move(maybeDebug)),
+    structTypeDescrs_(std::move(structTypeDescrs))
 {
     MOZ_ASSERT(!!maybeDebug_ == metadata().debugEnabled);
+    MOZ_ASSERT(structTypeDescrs_.length() == structTypes().length());
 
 #ifdef DEBUG
     for (auto t : code_->tiers()) {
@@ -970,6 +1045,7 @@ Instance::tracePrivate(JSTracer* trc)
 #endif
 
     TraceNullableEdge(trc, &memory_, "wasm buffer");
+    structTypeDescrs_.trace(trc);
 }
 
 void

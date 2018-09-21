@@ -3613,6 +3613,14 @@ EmitBodyExprs(FunctionCompiler& f)
               case uint16_t(MiscOp::TableInit):
                 CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
 #endif
+#ifdef ENABLE_WASM_GC
+              case uint16_t(MiscOp::StructNew):
+              case uint16_t(MiscOp::StructGet):
+              case uint16_t(MiscOp::StructSet):
+              case uint16_t(MiscOp::StructNarrow):
+                // Not yet supported
+                return f.iter().unrecognizedOpcode(&op);
+#endif
               default:
                 return f.iter().unrecognizedOpcode(&op);
             }

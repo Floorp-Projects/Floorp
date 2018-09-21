@@ -207,9 +207,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
-    def add_failure(self, locale, message, **kwargs):
-        AutomationMixin.add_failure(self, locale, message=message, **kwargs)
-
     # Actions {{{2
     def clone_locales(self):
         self.pull_locale_source()
