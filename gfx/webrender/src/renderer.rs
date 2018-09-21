@@ -1307,6 +1307,11 @@ impl LazyInitializedDebugRenderer {
         self.debug_renderer.as_mut()
     }
 
+    /// Returns mut ref to `DebugRenderer` if one already exists, otherwise returns `None`.
+    pub fn try_get_mut<'a>(&'a mut self) -> Option<&'a mut DebugRenderer> {
+        self.debug_renderer.as_mut()
+    }
+
     pub fn deinit(self, device: &mut Device) {
         if let Some(debug_renderer) = self.debug_renderer {
             debug_renderer.deinit(device);
@@ -2466,7 +2471,7 @@ impl Renderer {
             self.gpu_profile.end_frame();
             #[cfg(feature = "debug_renderer")]
             {
-                if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                if let Some(debug_renderer) = self.debug.try_get_mut() {
                     debug_renderer.render(&mut self.device, framebuffer_size);
                 }
             }
