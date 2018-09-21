@@ -12,6 +12,7 @@
 #include <algorithm>
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
@@ -251,10 +252,11 @@ class ImageSurfaceCache
 {
   ~ImageSurfaceCache() { }
 public:
-  ImageSurfaceCache()
+  explicit ImageSurfaceCache(const ImageKey aImageKey)
     : mLocked(false)
     , mFactor2Mode(false)
     , mFactor2Pruned(false)
+    , mIsVectorImage(aImageKey->GetType() == imgIContainer::TYPE_VECTOR)
   { }
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(ImageSurfaceCache)
@@ -330,7 +332,7 @@ public:
 
     // Try for a best match second, if using compact.
     IntSize suggestedSize = SuggestedSize(aIdealKey.Size());
-    if (mFactor2Mode) {
+    if (suggestedSize != aIdealKey.Size()) {
       if (!exactMatch) {
         SurfaceKey compactKey = aIdealKey.CloneWithSize(suggestedSize);
         mSurfaces.Get(compactKey, getter_AddRefs(exactMatch));
@@ -401,7 +403,7 @@ public:
       } else if (aIdealKey.Size() != bestMatch->GetSurfaceKey().Size()) {
         // The best factor of 2 match is still decoding, but the best we've got.
         MOZ_ASSERT(suggestedSize != aIdealKey.Size());
-        MOZ_ASSERT(mFactor2Mode);
+        MOZ_ASSERT(mFactor2Mode || mIsVectorImage);
         matchType = MatchType::SUBSTITUTE_BECAUSE_BEST;
       } else {
         // The exact match is still decoding, but it's the best we've got.
@@ -433,20 +435,18 @@ public:
       return;
     }
 
-    // Determine how many native surfaces this image has. Zero means we either
-    // don't know yet (in which case do nothing), or we don't want to limit the
-    // number of surfaces for this image.
-    //
-    // XXX(aosmond): Vector images have zero native sizes. This is because they
-    // are regenerated at the given size. There isn't an equivalent concept to
-    // the native size (and w/h ratio) to provide a frame of reference to what
-    // are "good" sizes. While it is desirable to have a similar mechanism as
-    // that for raster images, it will need a different approach.
+    // Determine how many native surfaces this image has. If it is zero, and it
+    // is a vector image, then we should impute a single native size. Otherwise,
+    // it may be zero because we don't know yet, or the image has an error, or
+    // it isn't supported.
     auto first = ConstIter();
     NotNull<CachedSurface*> current = WrapNotNull(first.UserData());
     Image* image = static_cast<Image*>(current->GetImageKey());
     size_t nativeSizes = image->GetNativeSizesLength();
-    if (nativeSizes == 0) {
+    if (mIsVectorImage) {
+      MOZ_ASSERT(nativeSizes == 0);
+      nativeSizes = 1;
+    } else if (nativeSizes == 0) {
       return;
     }
 
@@ -531,6 +531,33 @@ public:
 
   IntSize SuggestedSize(const IntSize& aSize) const
   {
+    IntSize suggestedSize = SuggestedSizeInternal(aSize);
+    if (mIsVectorImage) {
+      // Whether or not we are in factor of 2 mode, vector image rasterization is
+      // clamped at a configured maximum if the caller is willing to accept
+      // substitutes.
+      MOZ_ASSERT(SurfaceCache::IsLegalSize(suggestedSize));
+
+      // If we exceed the maximum, we need to scale the size downwards to fit.
+      // It shouldn't get here if it is significantly larger because
+      // VectorImage::UseSurfaceCacheForSize should prevent us from requesting
+      // a rasterized version of a surface greater than 4x the maximum.
+      int32_t maxSizeKB = gfxPrefs::ImageCacheMaxRasterizedSVGThresholdKB();
+      int32_t proposedKB = suggestedSize.width * suggestedSize.height / 256;
+      if (maxSizeKB >= proposedKB) {
+        return suggestedSize;
+      }
+
+      double scale = sqrt(double(maxSizeKB) / proposedKB);
+      suggestedSize.width = int32_t(scale * suggestedSize.width);
+      suggestedSize.height = int32_t(scale * suggestedSize.height);
+    }
+
+    return suggestedSize;
+  }
+
+  IntSize SuggestedSizeInternal(const IntSize& aSize) const
+  {
     // When not in factor of 2 mode, we can always decode at the given size.
     if (!mFactor2Mode) {
       return aSize;
@@ -552,9 +579,46 @@ public:
         NS_FAILED(image->GetHeight(&factorSize.height)) ||
         factorSize.IsEmpty()) {
       // We should not have entered factor of 2 mode without a valid size, and
-      // several successfully decoded surfaces.
+      // several successfully decoded surfaces. Note that valid vector images
+      // may have a default size of 0x0, and those are not yet supported.
       MOZ_ASSERT_UNREACHABLE("Expected valid native size!");
       return aSize;
+    }
+
+    if (mIsVectorImage) {
+      // Ensure the aspect ratio matches the native size before forcing the
+      // caller to accept a factor of 2 size. The difference between the aspect
+      // ratios is:
+      //
+      //     delta = nativeWidth/nativeHeight - desiredWidth/desiredHeight
+      //
+      //     delta*nativeHeight*desiredHeight = nativeWidth*desiredHeight
+      //                                      - desiredWidth*nativeHeight
+      //
+      // Using the maximum accepted delta as a constant, we can avoid the
+      // floating point division and just compare after some integer ops.
+      int32_t delta = factorSize.width * aSize.height - aSize.width * factorSize.height;
+      int32_t maxDelta = (factorSize.height * aSize.height) >> 4;
+      if (delta > maxDelta || delta < -maxDelta) {
+        return aSize;
+      }
+
+      // If the requested size is bigger than the native size, we actually need
+      // to grow the native size instead of shrinking it.
+      if (factorSize.width < aSize.width) {
+        do {
+          IntSize candidate(factorSize.width * 2, factorSize.height * 2);
+          if (!SurfaceCache::IsLegalSize(candidate)) {
+            break;
+          }
+
+          factorSize = candidate;
+        } while (factorSize.width < aSize.width);
+
+        return factorSize;
+      }
+
+      // Otherwise we can find the best fit as normal.
     }
 
     // Start with the native size as the best first guess.
@@ -674,6 +738,10 @@ private:
   // True if all non-factor of 2 surfaces have been removed from the cache. Note
   // that this excludes unsubstitutable sizes.
   bool              mFactor2Pruned;
+
+  // True if the surfaces are produced from a vector image. If so, it must match
+  // the aspect ratio when using factor of 2 mode.
+  bool              mIsVectorImage;
 };
 
 /**
@@ -760,9 +828,10 @@ public:
 
     // Locate the appropriate per-image cache. If there's not an existing cache
     // for this image, create it.
-    RefPtr<ImageSurfaceCache> cache = GetImageCache(aProvider->GetImageKey());
+    const ImageKey imageKey = aProvider->GetImageKey();
+    RefPtr<ImageSurfaceCache> cache = GetImageCache(imageKey);
     if (!cache) {
-      cache = new ImageSurfaceCache;
+      cache = new ImageSurfaceCache(imageKey);
       mImageCaches.Put(aProvider->GetImageKey(), cache);
     }
 
@@ -1014,7 +1083,7 @@ public:
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
-      cache = new ImageSurfaceCache;
+      cache = new ImageSurfaceCache(aImageKey);
       mImageCaches.Put(aImageKey, cache);
     }
 
