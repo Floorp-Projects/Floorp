@@ -128,7 +128,7 @@ OffscreenCanvas::GetContext(JSContext* aCx,
     return nullptr;
   }
 
-  already_AddRefed<nsISupports> result =
+  RefPtr<nsISupports> result =
     CanvasRenderingContextHelper::GetContext(aCx,
                                              aContextId,
                                              aContextOptions,
@@ -166,7 +166,7 @@ OffscreenCanvas::GetContext(JSContext* aCx,
     }
   }
 
-  return result;
+  return result.forget();
 }
 
 already_AddRefed<nsICanvasRenderingContextInternal>
