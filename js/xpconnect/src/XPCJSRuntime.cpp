@@ -606,6 +606,16 @@ CompartmentOriginInfo::Subsumes(JS::Compartment* aCompA, JS::Compartment* aCompB
     return apriv->originInfo.mOrigin->FastSubsumes(bpriv->originInfo.mOrigin);
 }
 
+/* static */ bool
+CompartmentOriginInfo::SubsumesIgnoringFPD(JS::Compartment* aCompA, JS::Compartment* aCompB)
+{
+    CompartmentPrivate* apriv = CompartmentPrivate::Get(aCompA);
+    CompartmentPrivate* bpriv = CompartmentPrivate::Get(aCompB);
+    MOZ_ASSERT(apriv);
+    MOZ_ASSERT(bpriv);
+    return apriv->originInfo.mOrigin->FastSubsumesIgnoringFPD(bpriv->originInfo.mOrigin);
+}
+
 void
 SetCompartmentChangedDocumentDomain(JS::Compartment* compartment)
 {
