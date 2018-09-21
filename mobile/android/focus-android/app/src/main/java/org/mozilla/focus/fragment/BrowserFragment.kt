@@ -1300,6 +1300,17 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         ViewUtils.hideKeyboard(findInPageQuery!!)
     }
 
+    override fun applyLocale() {
+        activity?.supportFragmentManager
+            ?.beginTransaction()
+            ?.replace(
+                R.id.container,
+                BrowserFragment.createForSession(requireNotNull(session)),
+                BrowserFragment.FRAGMENT_TAG
+            )
+            ?.commit()
+    }
+
     @Suppress("DEPRECATION", "MagicNumber")
     private fun updateFindInPageResult(activeMatchOrdinal: Int, numberOfMatches: Int) {
         var actualActiveMatchOrdinal = activeMatchOrdinal
