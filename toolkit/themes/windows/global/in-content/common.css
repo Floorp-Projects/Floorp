@@ -23,20 +23,10 @@ xul|radio {
 }
 
 @media (-moz-windows-default-theme: 0) {
-  xul|*.checkbox-check,
-  xul|*.radio-check {
-    background-image: none;
-  }
-
-  xul|*.checkbox-check[checked] {
-    fill: -moz-dialogText;
-    stroke: none;
-    background-color: -moz-dialog;
-  }
-
+  xul|*.checkbox-check[checked],
   xul|*.radio-check[selected] {
-    background-color: -moz-dialog;
-    fill: -moz-dialogText;
+    fill: -moz-fieldText;
+    background-color: -moz-field;
   }
 }
 
