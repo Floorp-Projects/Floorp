@@ -37,7 +37,9 @@ def prettyFileName(name):
 class SymbolFile:
     def __init__(self, fn):
         addrs = []  # list of addresses, which will be sorted once we're done initializing
-        funcs = {}  # hash: address --> (function name + possible file/line)
+        funcs = {}  # hash: address --> (function name, function size)
+        pubaddrs = []  # list of addresses for public symbols, sorted
+        pubs = {}  # hash: address --> public symbol name
         # hash: filenum (string) --> prettified filename ready to have a line number appended
         files = {}
         with open(fn) as f:
@@ -52,7 +54,7 @@ class SymbolFile:
                         bits.append('unnamed_function')
                     (junk, rva, size, ss, name) = bits
                     rva = int(rva, 16)
-                    funcs[rva] = name
+                    funcs[rva] = {'name': name, 'size': int(size, 16)}
                     addrs.append(rva)
                     lastFuncName = name
                 elif line.startswith("PUBLIC "):
@@ -60,8 +62,8 @@ class SymbolFile:
                     line = line.replace("PUBLIC m ", "PUBLIC ")  # Ignore the multiple marker
                     (junk, rva, ss, name) = line.split(None, 3)
                     rva = int(rva, 16)
-                    funcs[rva] = name
-                    addrs.append(rva)
+                    pubs[rva] = name
+                    pubaddrs.append(rva)
                 elif line.startswith("FILE "):
                     # FILE <number> <name>
                     (junk, filenum, name) = line.split(None, 2)
@@ -73,20 +75,45 @@ class SymbolFile:
                     rva = int(rva, 16)
                     file = files[filenum]
                     name = lastFuncName + " [" + file + line + "]"
-                    funcs[rva] = name
+                    funcs[rva] = {'name': name, 'size': int(size, 16)}
                     addrs.append(rva)
                 # skip everything else
-        # print "Loaded %d functions from symbol file %s" % (len(funcs), os.path.basename(fn))
         self.addrs = sorted(addrs)
         self.funcs = funcs
+        self.pubaddrs = sorted(pubaddrs)
+        self.pubs = pubs
+
+    def __find_matching_func(self, address):
+        # Look for a FUNC entry that contains the given address
+        i = bisect.bisect(self.addrs, address)
+        if i > 0:
+            func_addr = self.addrs[i - 1]
+            func = self.funcs[func_addr]
+            if address >= func_addr and address < func_addr + func['size']:
+                return func['name']
+
+        return None
+
+    def __find_closest_public_symbol(self, address):
+        # Find the closest PUBLIC entry that's lower than the given address
+        i = bisect.bisect(self.pubaddrs, address)
+        if i > 0:
+            return self.pubs[self.pubaddrs[i - 1]]
+        else:
+            return None
 
     def addrToSymbol(self, address):
-        i = bisect.bisect(self.addrs, address) - 1
-        if i > 0:
-            # offset = address - self.addrs[i]
-            return self.funcs[self.addrs[i]]
-        else:
-            return ""
+        entry = self.__find_matching_func(address)
+
+        if entry is not None:
+            return entry
+
+        entry = self.__find_closest_public_symbol(address)
+
+        if entry is not None:
+            return entry
+
+        return ""
 
 
 def findIdForPath(path):
@@ -174,4 +201,4 @@ def fixSymbols(line, symbolsDir):
 if __name__ == "__main__":
     symbolsDir = sys.argv[1]
     for line in iter(sys.stdin.readline, ''):
-        print fixSymbols(line, symbolsDir),
+        sys.stdout.write(fixSymbols(line, symbolsDir))
