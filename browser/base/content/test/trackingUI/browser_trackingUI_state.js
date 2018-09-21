@@ -66,6 +66,7 @@ function testBenignPage() {
   info("Non-tracking content must not be blocked");
   ok(!ContentBlocking.content.hasAttribute("detected"), "no trackers are detected");
   ok(!ContentBlocking.content.hasAttribute("hasException"), "content shows no exception");
+  ok(!ContentBlocking.content.hasAttribute("active"), "content is not active");
 
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
   ok(!ContentBlocking.iconBox.hasAttribute("hasException"), "icon box shows no exception");
@@ -89,6 +90,7 @@ function testBenignPageWithException() {
   info("Non-tracking content must not be blocked");
   ok(!ContentBlocking.content.hasAttribute("detected"), "no trackers are detected");
   ok(ContentBlocking.content.hasAttribute("hasException"), "content shows exception");
+  ok(!ContentBlocking.content.hasAttribute("active"), "content is not active");
 
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
   is(ContentBlocking.iconBox.hasAttribute("hasException"), ContentBlocking.enabled,
@@ -134,6 +136,8 @@ function testTrackingPage(window) {
   let blockedByTP = areTrackersBlocked(isPrivateBrowsing);
   is(BrowserTestUtils.is_visible(ContentBlocking.iconBox), blockedByTP,
      "icon box is" + (blockedByTP ? "" : " not") + " visible");
+  is(ContentBlocking.content.hasAttribute("active"), blockedByTP,
+      "content is" + (blockedByTP ? "" : " not") + " active");
   is(ContentBlocking.iconBox.hasAttribute("active"), blockedByTP,
       "shield is" + (blockedByTP ? "" : " not") + " active");
   ok(!ContentBlocking.iconBox.hasAttribute("hasException"), "icon box shows no exception");
@@ -145,16 +149,14 @@ function testTrackingPage(window) {
 
   let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
   let cbUIEnabled = Services.prefs.getBoolPref(CB_UI_PREF);
-  let tpEnabled = isWindowPrivate ? Services.prefs.getBoolPref(TP_PB_PREF) : Services.prefs.getBoolPref(TP_PREF);
-  let blockingEnabled = cbUIEnabled ? Services.prefs.getBoolPref(CB_PREF) : tpEnabled;
   if (isWindowPrivate) {
     ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
-    is(!hidden("#tracking-action-unblock-private"), blockingEnabled,
-       "unblockButtonPrivate is" + (blockingEnabled ? "" : " not") + " visible");
+    is(!hidden("#tracking-action-unblock-private"), blockedByTP,
+       "unblockButtonPrivate is" + (blockedByTP ? "" : " not") + " visible");
   } else {
     ok(hidden("#tracking-action-unblock-private"), "unblockButtonPrivate is hidden");
-    is(!hidden("#tracking-action-unblock"), blockingEnabled,
-       "unblockButton is" + (blockingEnabled ? "" : " not") + " hidden");
+    is(!hidden("#tracking-action-unblock"), blockedByTP,
+       "unblockButton is" + (blockedByTP ? "" : " not") + " visible");
   }
 
   ok(hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is hidden");
@@ -186,7 +188,8 @@ function testTrackingPageUnblocked(blockedByTP, window) {
   let cbUIEnabled = Services.prefs.getBoolPref(CB_UI_PREF);
   let tpEnabled = isWindowPrivate ? Services.prefs.getBoolPref(TP_PB_PREF) : Services.prefs.getBoolPref(TP_PREF);
   let blockingEnabled = cbUIEnabled ? Services.prefs.getBoolPref(CB_PREF) : tpEnabled;
-  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+  ok(!ContentBlocking.content.hasAttribute("active"), "content is not active");
+  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
   is(ContentBlocking.iconBox.hasAttribute("hasException"), blockingEnabled,
      "shield" + (blockingEnabled ? " shows" : " doesn't show") + " exception");
   is(ContentBlocking.iconBox.getAttribute("tooltiptext"),
@@ -224,6 +227,7 @@ function testTrackingPageWithCBDisabled() {
   info("Tracking content must be white-listed and not blocked");
   ok(ContentBlocking.content.hasAttribute("detected"), "trackers are detected");
   ok(!ContentBlocking.content.hasAttribute("hasException"), "content shows no exception");
+  ok(!ContentBlocking.content.hasAttribute("active"), "content is not active");
 
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
   ok(!ContentBlocking.iconBox.hasAttribute("hasException"), "shield shows no exception");

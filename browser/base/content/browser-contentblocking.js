@@ -472,6 +472,7 @@ var ContentBlocking = {
 
     this.content.toggleAttribute("detected", detected);
     this.content.toggleAttribute("hasException", hasException);
+    this.content.toggleAttribute("active", active);
 
     this.iconBox.toggleAttribute("active", active);
     this.iconBox.toggleAttribute("hasException", this.enabled && hasException);
