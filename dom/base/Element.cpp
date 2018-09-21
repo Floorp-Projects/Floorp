@@ -527,6 +527,23 @@ Element::ClearStyleStateLocks()
 }
 
 static bool
+IsLikelyCustomElement(const nsXULElement& aElement)
+{
+  const CustomElementData* data = aElement.GetCustomElementData();
+  if (!data) {
+    return false;
+  }
+
+  const CustomElementRegistry* registry =
+    nsContentUtils::GetCustomElementRegistry(aElement.OwnerDoc());
+  if (!registry) {
+    return false;
+  }
+
+  return registry->IsLikelyToBeCustomElement(data->GetCustomElementType());
+}
+
+static bool
 MayNeedToLoadXBLBinding(const nsIDocument& aDocument, const Element& aElement)
 {
   // If we have a frame, the frame has already loaded the binding.
@@ -537,11 +554,8 @@ MayNeedToLoadXBLBinding(const nsIDocument& aDocument, const Element& aElement)
     return false;
   }
 
-  if (aElement.IsXULElement()) {
-    // We know dropmarkers don't have XBL bindings, and they get
-    // accessed while hidden when opening new windows. So skip
-    // looking up -moz-binding for performance reasons (bug 1478999).
-    return !aElement.IsXULElement(nsGkAtoms::dropMarker);
+  if (auto* xulElem = nsXULElement::FromNode(aElement)) {
+    return !IsLikelyCustomElement(*xulElem);
   }
 
   return aElement.IsAnyOfHTMLElements(nsGkAtoms::object, nsGkAtoms::embed);

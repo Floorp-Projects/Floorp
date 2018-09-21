@@ -3070,6 +3070,9 @@ public:
                                       mozilla::dom::FromParser aFromParser, nsAtom* aIsAtom,
                                       mozilla::dom::CustomElementDefinition* aDefinition);
 
+  static mozilla::dom::CustomElementRegistry*
+    GetCustomElementRegistry(nsIDocument*);
+
   /**
    * Looking up a custom element definition.
    * https://html.spec.whatwg.org/#look-up-a-custom-element-definition

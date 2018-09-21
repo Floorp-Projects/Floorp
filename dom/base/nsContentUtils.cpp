@@ -10184,7 +10184,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
 }
 
 CustomElementRegistry*
-GetCustomElementRegistry(nsIDocument* aDoc)
+nsContentUtils::GetCustomElementRegistry(nsIDocument* aDoc)
 {
   MOZ_ASSERT(aDoc);
 
@@ -10211,7 +10211,7 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
     return nullptr;
   }
 
-  RefPtr<CustomElementRegistry> registry(GetCustomElementRegistry(aDoc));
+  RefPtr<CustomElementRegistry> registry = GetCustomElementRegistry(aDoc);
   if (!registry) {
     return nullptr;
   }
