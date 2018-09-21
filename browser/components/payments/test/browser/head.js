@@ -584,12 +584,22 @@ async function fillInCardForm(frame, aCard, aOptions = {}) {
         ok(false, `${key} field not found`);
       }
       ok(!field.disabled, `Field #${key} shouldn't be disabled`);
+      // Reset the value first so that we properly handle typing the value
+      // already selected which may select another option with the same prefix.
       field.value = "";
+      ok(!field.value, "Field value should be reset before typing");
+      field.blur();
       field.focus();
+      // Using waitForEvent here causes the test to hang, but
+      // waitForCondition and checking activeElement does the trick. The root cause
+      // of this should be investigated further.
+      await ContentTaskUtils.waitForCondition(() => field == content.document.activeElement,
+                                              `Waiting for field #${key} to get focus`);
       // cc-exp-* fields are numbers so convert to strings and pad left with 0
       let fillValue = val.toString().padStart(2, "0");
-      EventUtils.synthesizeKey(fillValue, {}, content.window);
-      ok(field.value, fillValue, `${key} value is correct after synthesizeKey`);
+      EventUtils.synthesizeKey(fillValue, {}, Cu.waiveXrays(content.window));
+      // cc-exp-* field values are not padded, so compare with unpadded string.
+      is(field.value, val.toString(), `${key} value is correct after sendString`);
     }
 
     info([...content.document.getElementById("cc-exp-year").options].map(op => op.label).join(","));
