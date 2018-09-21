@@ -82,7 +82,7 @@ DistributionCustomizer.prototype = {
   },
 
   get _locale() {
-    const locale = Services.locale.getRequestedLocale() || "en-US";
+    const locale = Services.locale.requestedLocale || "en-US";
     this.__defineGetter__("_locale", () => locale);
     return this._locale;
   },

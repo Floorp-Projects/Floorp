@@ -53,7 +53,7 @@ function isAvailable() {
   if (availablePref == "on") {
     return true;
   } else if (availablePref == "detect") {
-    let locale = Services.locale.getRequestedLocale();
+    let locale = Services.locale.requestedLocale;
     let region = Services.prefs.getCharPref("browser.search.region", "");
     let supportedCountries = Services.prefs.getCharPref("extensions.formautofill.supportedCountries")
                                            .split(",");

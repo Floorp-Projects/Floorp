@@ -1061,7 +1061,7 @@ BrowserGlue.prototype = {
     Normandy.init();
 
     // Initialize the default l10n resource sources for L10nRegistry.
-    let locales = Services.locale.getPackagedLocales();
+    let locales = Services.locale.packagedLocales;
     const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
     L10nRegistry.registerSource(greSource);
 
@@ -2345,13 +2345,13 @@ BrowserGlue.prototype = {
       if (Services.prefs.prefHasUserValue(MATCHOS_LOCALE_PREF) ||
           Services.prefs.prefHasUserValue(SELECTED_LOCALE_PREF)) {
         if (Services.prefs.getBoolPref(MATCHOS_LOCALE_PREF, false)) {
-          Services.locale.setRequestedLocales([]);
+          Services.locale.requestedLocales = [];
         } else {
           let locale = Services.prefs.getComplexValue(SELECTED_LOCALE_PREF,
             Ci.nsIPrefLocalizedString);
           if (locale) {
             try {
-              Services.locale.setRequestedLocales([locale.data]);
+              Services.locale.requestedLocales = [locale.data];
             } catch (e) { /* Don't panic if the value is not a valid locale code. */ }
           }
         }

@@ -32,7 +32,7 @@ var gStringBundle;
 W3CTest.runner.requestLongerTimeout(2);
 
 const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
-Services.locale.setRequestedLocales(["en-US"]);
+Services.locale.requestedLocales = ["en-US"];
 
 SpecialPowers.pushPrefEnv({ "set": [
                             // Need to set devPixelsPerPx explicitly to gain
