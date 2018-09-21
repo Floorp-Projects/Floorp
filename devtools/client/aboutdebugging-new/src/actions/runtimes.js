@@ -11,7 +11,7 @@ const Actions = require("./index");
 
 const {
   findRuntimeById,
-} = require("devtools/client/aboutdebugging-new/src/modules/runtimes-state-helper");
+} = require("../modules/runtimes-state-helper");
 
 const {
   CONNECT_RUNTIME_FAILURE,

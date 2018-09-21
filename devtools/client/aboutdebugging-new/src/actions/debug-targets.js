@@ -13,12 +13,12 @@ const {
   getAddonForm,
   openTemporaryExtension,
   uninstallAddon,
-} = require("devtools/client/aboutdebugging-new/src/modules/extensions-helper");
+} = require("../modules/extensions-helper");
 
 const {
   getCurrentClient,
   getCurrentRuntime
-} = require("devtools/client/aboutdebugging-new/src/modules/runtimes-state-helper");
+} = require("../modules/runtimes-state-helper");
 
 const {
   DEBUG_TARGETS,
