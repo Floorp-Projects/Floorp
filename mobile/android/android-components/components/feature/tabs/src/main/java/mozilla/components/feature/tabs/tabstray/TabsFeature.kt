@@ -15,14 +15,12 @@ class TabsFeature(
     tabsTray: TabsTray,
     sessionManager: SessionManager,
     tabsUseCases: TabsUseCases,
-    closeTabsTray: () -> Unit,
-    onTabsTrayEmpty: (() -> Unit)? = null
+    closeTabsTray: () -> Unit
 ) {
     private val presenter = TabsTrayPresenter(
         tabsTray,
         sessionManager,
-        closeTabsTray,
-        onTabsTrayEmpty)
+        closeTabsTray)
 
     private val interactor = TabsTrayInteractor(
         tabsTray,
