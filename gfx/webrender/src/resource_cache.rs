@@ -10,6 +10,7 @@ use api::{ExternalImageData, ExternalImageType, BlobImageResult, BlobImageParams
 use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
 use api::{GlyphDimensions, IdNamespace};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering};
+use api::{MemoryReport, VoidPtrToSizeFn};
 use api::{TileOffset, TileSize, TileRange, NormalizedRect, BlobImageData};
 use app_units::Au;
 #[cfg(feature = "capture")]
@@ -34,10 +35,11 @@ use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
 use render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskTree};
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
-use std::collections::hash_map::ValuesMut;
+use std::collections::hash_map::IterMut;
 use std::{cmp, mem};
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::os::raw::c_void;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
@@ -245,8 +247,8 @@ where
         self.resources.entry(key)
     }
 
-    pub fn values_mut(&mut self) -> ValuesMut<K, V> {
-        self.resources.values_mut()
+    pub fn iter_mut(&mut self) -> IterMut<K, V> {
+        self.resources.iter_mut()
     }
 
     pub fn clear(&mut self) {
@@ -379,6 +381,11 @@ impl BlobImageResources for Resources {
 
 pub type GlyphDimensionsCache = FastHashMap<(FontInstance, GlyphIndex), Option<GlyphDimensions>>;
 
+/// High-level container for resources managed by the `RenderBackend`.
+///
+/// This includes a variety of things, including images, fonts, and glyphs,
+/// which may be stored as memory buffers, GPU textures, or handles to resources
+/// managed by the OS or other parts of WebRender.
 pub struct ResourceCache {
     cached_glyphs: GlyphCache,
     cached_images: ImageCache,
@@ -753,8 +760,21 @@ impl ResourceCache {
                 entry.dirty_rect = merge_dirty_rect(&entry.dirty_rect, &dirty_rect, &descriptor);
             }
             Some(&mut ImageResult::Multi(ref mut entries)) => {
-                for entry in entries.values_mut() {
-                    entry.dirty_rect = merge_dirty_rect(&entry.dirty_rect, &dirty_rect, &descriptor);
+                for (key, entry) in entries.iter_mut() {
+                    let merged_rect = merge_dirty_rect(&entry.dirty_rect, &dirty_rect, &descriptor);
+
+                    entry.dirty_rect = match (key.tile, merged_rect) {
+                        (Some(tile), Some(rect)) => {
+                            let tile_size = image.tiling.unwrap();
+                            let clipped_tile_size = compute_tile_size(&descriptor, tile_size, tile);
+
+                            rect.intersection(&DeviceUintRect::new(
+                                DeviceUintPoint::new(tile.x as u32, tile.y as u32) * tile_size as u32,
+                                clipped_tile_size,
+                            ))
+                        }
+                        _ => merged_rect,
+                    };
                 }
             }
             _ => {}
@@ -1627,6 +1647,41 @@ impl ResourceCache {
         if let Some(ref mut r) = self.blob_image_handler {
             r.clear_namespace(namespace);
         }
+    }
+
+    /// Reports the CPU heap usage of this ResourceCache.
+    pub fn report_memory(&self, op: VoidPtrToSizeFn) -> MemoryReport {
+        let mut report = MemoryReport::default();
+
+        // Measure fonts. We only need the templates here, because the instances
+        // don't have big buffers.
+        for (_, font) in self.resources.font_templates.iter() {
+            if let FontTemplate::Raw(ref raw, _) = font {
+                report.fonts += unsafe { op(raw.as_ptr() as *const c_void) };
+            }
+        }
+
+        // Measure images.
+        for (_, image) in self.resources.image_templates.images.iter() {
+            report.images += match image.data {
+                ImageData::Raw(ref v) => unsafe { op(v.as_ptr() as *const c_void) },
+                ImageData::Blob(ref v) => unsafe { op(v.as_ptr() as *const c_void) },
+                ImageData::External(..) => 0,
+            }
+        }
+
+        // Mesure rasterized blobs.
+        for (_, image) in self.rasterized_blob_images.iter() {
+            let mut accumulate = |b: &RasterizedBlobImage| {
+                report.rasterized_blobs += unsafe { op(b.data.as_ptr() as *const c_void) };
+            };
+            match image {
+                RasterizedBlob::Tiled(map) => map.values().for_each(&mut accumulate),
+                RasterizedBlob::NonTiled(vec) => vec.iter().for_each(&mut accumulate),
+            };
+        }
+
+        report
     }
 }
 

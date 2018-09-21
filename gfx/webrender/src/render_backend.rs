@@ -1190,16 +1190,18 @@ impl RenderBackend {
 
     fn report_memory(&self) -> MemoryReport {
         let mut report = MemoryReport::default();
-        let op = self.size_of_op.as_ref().unwrap();
-        report.gpu_cache_metadata = self.gpu_cache.malloc_size_of(*op);
+        let op = self.size_of_op.unwrap();
+        report.gpu_cache_metadata = self.gpu_cache.malloc_size_of(op);
         for (_id, doc) in &self.documents {
             if let Some(ref fb) = doc.frame_builder {
                 report.primitive_stores += self.size_of(fb.prim_store.primitives.as_ptr());
-                report.clip_stores += fb.clip_store.malloc_size_of(*op);
+                report.clip_stores += fb.clip_store.malloc_size_of(op);
             }
             report.hit_testers +=
-                doc.hit_tester.as_ref().map_or(0, |ht| ht.malloc_size_of(*op));
+                doc.hit_tester.as_ref().map_or(0, |ht| ht.malloc_size_of(op));
         }
+
+        report += self.resource_cache.report_memory(op);
 
         report
     }

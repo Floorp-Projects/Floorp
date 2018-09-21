@@ -80,7 +80,13 @@ impl FontKey {
     }
 }
 
-
+/// Container for the raw data describing a font. This might be a stream of
+/// bytes corresponding to a downloaded font, or a handle to a native font from
+/// the operating system.
+///
+/// Note that fonts need to be instantiated before being used, which involves
+/// assigning size and various other options. The word 'template' here is
+/// intended to distinguish this data from instance-specific data.
 #[derive(Clone)]
 pub enum FontTemplate {
     Raw(Arc<Vec<u8>>, u32),
@@ -348,6 +354,10 @@ impl FontInstanceKey {
     }
 }
 
+/// Data corresponding to an instantiation of a font, with size and
+/// other options specified.
+///
+/// Note that the actual font is stored out-of-band in `FontTemplate`.
 #[derive(Clone)]
 pub struct FontInstanceData {
     pub font_key: FontKey,
