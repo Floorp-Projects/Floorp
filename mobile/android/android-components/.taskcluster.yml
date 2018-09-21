@@ -55,7 +55,7 @@ tasks:
     scopes:
       - "secrets:get:project/android-components/publish"
     payload:
-      maxRunTime: 3600
+      maxRunTime: 7200
       deadline: "{{ '2 hours' | $fromNow }}"
       image: 'mozillamobile/android-components:1.4'
       command:
