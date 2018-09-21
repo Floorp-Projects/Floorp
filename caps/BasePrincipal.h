@@ -162,6 +162,7 @@ public:
   inline bool FastEqualsConsideringDomain(nsIPrincipal* aOther);
   inline bool FastSubsumes(nsIPrincipal* aOther);
   inline bool FastSubsumesConsideringDomain(nsIPrincipal* aOther);
+  inline bool FastSubsumesIgnoringFPD(nsIPrincipal* aOther);
   inline bool FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther);
 
   // Returns the principal to inherit when a caller with this principal loads
@@ -233,6 +234,9 @@ private:
   static already_AddRefed<BasePrincipal>
   CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs,
                           const nsACString& aOriginNoSuffix);
+
+  inline bool FastSubsumesIgnoringFPD(nsIPrincipal* aOther,
+                                      DocumentDomainConsideration aConsideration);
 
   RefPtr<nsAtom> mOriginNoSuffix;
   RefPtr<nsAtom> mOriginSuffix;
@@ -317,7 +321,8 @@ BasePrincipal::FastSubsumesConsideringDomain(nsIPrincipal* aOther)
 }
 
 inline bool
-BasePrincipal::FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther)
+BasePrincipal::FastSubsumesIgnoringFPD(nsIPrincipal* aOther,
+                                       DocumentDomainConsideration aConsideration)
 {
   if (Kind() == eCodebasePrincipal &&
       !dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
@@ -325,7 +330,19 @@ BasePrincipal::FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther)
     return false;
   }
 
- return SubsumesInternal(aOther, ConsiderDocumentDomain);
+  return SubsumesInternal(aOther, aConsideration);
+}
+
+inline bool
+BasePrincipal::FastSubsumesIgnoringFPD(nsIPrincipal* aOther)
+{
+  return FastSubsumesIgnoringFPD(aOther, DontConsiderDocumentDomain);
+}
+
+inline bool
+BasePrincipal::FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther)
+{
+  return FastSubsumesIgnoringFPD(aOther, ConsiderDocumentDomain);
 }
 
 } // namespace mozilla
