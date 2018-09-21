@@ -225,6 +225,18 @@ class _ASRouter {
     this.dispatchToAS(ac.BroadcastToContent({type: at.AS_ROUTER_PREF_CHANGED, data: ASRouterPreferences.specialConditions}));
   }
 
+  // Replace all frequency time period aliases with their millisecond values
+  // This allows us to avoid accounting for special cases later on
+  normalizeItemFrequency({frequency}) {
+    if (frequency && frequency.custom) {
+      for (const setting of frequency.custom) {
+        if (setting.period === "daily") {
+          setting.period = ONE_DAY_IN_MS;
+        }
+      }
+    }
+  }
+
   // Fetch and decode the message provider pref JSON, and update the message providers
   _updateMessageProviders() {
     const providers = [
@@ -244,6 +256,7 @@ class _ASRouter {
         provider.url = provider.url.replace(/%STARTPAGE_VERSION%/g, STARTPAGE_VERSION);
         provider.url = Services.urlFormatter.formatURL(provider.url);
       }
+      this.normalizeItemFrequency(provider);
       // Reset provider update timestamp to force message refresh
       provider.lastUpdated = undefined;
       return provider;
@@ -304,6 +317,10 @@ class _ASRouter {
           newState.providers.push(provider);
           newState.messages = [...newState.messages, ...messages];
         }
+      }
+
+      for (const message of newState.messages) {
+        this.normalizeItemFrequency(message);
       }
 
       // Some messages have triggers that require us to initalise trigger listeners
@@ -451,9 +468,6 @@ class _ASRouter {
         const now = Date.now();
         for (const setting of item.frequency.custom) {
           let {period} = setting;
-          if (period === "daily") {
-            period = ONE_DAY_IN_MS;
-          }
           const impressionsInPeriod = impressions.filter(t => (now - t) < period);
           if (impressionsInPeriod.length >= setting.cap) {
             return false;
@@ -573,16 +587,16 @@ class _ASRouter {
   /**
    * getLongestPeriod
    *
-   * @param {obj} message An ASRouter message
-   * @returns {int|null} if the message has custom frequency caps, the longest period found in the list of caps.
-                         if the message has no custom frequency caps, null
+   * @param {obj} item Either an ASRouter message or an ASRouter provider
+   * @returns {int|null} if the item has custom frequency caps, the longest period found in the list of caps.
+                         if the item has no custom frequency caps, null
    * @memberof _ASRouter
    */
-  getLongestPeriod(message) {
-    if (!message.frequency || !message.frequency.custom) {
+  getLongestPeriod(item) {
+    if (!item.frequency || !item.frequency.custom) {
       return null;
     }
-    return message.frequency.custom.sort((a, b) => b.period - a.period)[0].period;
+    return item.frequency.custom.sort((a, b) => b.period - a.period)[0].period;
   }
 
   /**
