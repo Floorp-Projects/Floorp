@@ -149,6 +149,7 @@ wasm::Classify(OpBytes op)
       case Op::F64Le:
       case Op::F64Gt:
       case Op::F64Ge:
+      case Op::RefEq:
         return OpKind::Comparison;
       case Op::I32Eqz:
       case Op::I32WrapI64:
