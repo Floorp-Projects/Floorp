@@ -18,10 +18,6 @@
   </binding>
 
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <resources>
-      <stylesheet src="chrome://global/skin/scrollbox.css"/>
-    </resources>
-
     <content>
       <xul:toolbarbutton class="scrollbutton-up"
                          anonid="scrollbutton-up"
