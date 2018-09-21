@@ -1,0 +1,380 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>TelemetryConfiguration - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">org.mozilla.telemetry.config</a>&nbsp;/&nbsp;<a href="./index.html">TelemetryConfiguration</a><br/>
+<br/>
+<h1>TelemetryConfiguration</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">TelemetryConfiguration</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/telemetry/src/main/java/org/mozilla/telemetry/config/TelemetryConfiguration.java#L25">(source)</a>
+<p>The TelemetryConfiguration class collects the information describing the telemetry setup of an app. There are some parts that every app needs to configure: Where should measurements store data? What servers are we actually uploading pings to? This class should provide good defaults so that in the best case it is not needed to modify the configuration.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">TelemetryConfiguration</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$<init>(android.content.Context)/context">context</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-app-name.html">getAppName</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getAppName</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Get the name of the app. This value is used as one dimension when uploading telemetry to the HTTP Edge server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-app-version.html">getAppVersion</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getAppVersion</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Get the version of the app (e.g. 45.0.1). This value is used as one dimension when uploading telemetry to the HTTP Edge server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-build-id.html">getBuildId</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getBuildId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Get the build id of the app (e.g. 20150125030202). This value is used as one dimension when uploading telemetry to the HTTP Edge server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-class-load-timestamp-millis.html">getClassLoadTimestampMillis</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getClassLoadTimestampMillis</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-connect-timeout.html">getConnectTimeout</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getConnectTimeout</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns setting for connect timeout (milliseconds). A value of 0 implies that the option is disabled (i.e., timeout of infinity).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-context.html">getContext</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getContext</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/content/Context.html"><span class="identifier">Context</span></a></code>
+<p>Application context this library is running in.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-data-directory.html">getDataDirectory</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getDataDirectory</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/java/io/File.html"><span class="identifier">File</span></a></code>
+<p>Get the root directory where telemetry components should store data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-initial-backoff-for-upload.html">getInitialBackoffForUpload</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getInitialBackoffForUpload</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a></code>
+<p>Get the interval (in milliseconds) to wait initially after a ping upload has failed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-maximum-number-of-events-per-ping.html">getMaximumNumberOfEventsPerPing</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getMaximumNumberOfEventsPerPing</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Get the maximum number of events per ping.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-maximum-number-of-ping-uploads-per-day.html">getMaximumNumberOfPingUploadsPerDay</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getMaximumNumberOfPingUploadsPerDay</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Get the maximum number of pings that should be uploaded per day.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-maximum-number-of-pings-per-type.html">getMaximumNumberOfPingsPerType</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getMaximumNumberOfPingsPerType</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Get the maximum number of pings that will be stored (for upload).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-minimum-events-for-upload.html">getMinimumEventsForUpload</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getMinimumEventsForUpload</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Get the minimum number of telemetry events that need to be fired before even trying to upload an event ping.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-preferences-important-for-telemetry.html">getPreferencesImportantForTelemetry</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getPreferencesImportantForTelemetry</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-set/index.html"><span class="identifier">MutableSet</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code>
+<p>Get a list of preference keys that are important for telemetry.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-read-timeout.html">getReadTimeout</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getReadTimeout</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns setting for read timeout. 0 return implies that the option is disabled (i.e., timeout of infinity).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-server-endpoint.html">getServerEndpoint</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getServerEndpoint</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Set the server endpoint to upload telemetry pings to.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-settings-provider.html">getSettingsProvider</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getSettingsProvider</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../org.mozilla.telemetry.measurement/-settings-measurement/-settings-provider/index.html"><span class="identifier">SettingsProvider</span></a></code>
+<p>Get the provider for reading app settings.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-shared-preferences.html">getSharedPreferences</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getSharedPreferences</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/content/SharedPreferences.html"><span class="identifier">SharedPreferences</span></a></code>
+<p>Get shared preference for storing telemetry related data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-update-channel.html">getUpdateChannel</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getUpdateChannel</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Get the update channel of the app (e.g. beta, release). This value is used as one dimension when uploading telemetry to the HTTP Edge server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-user-agent.html">getUserAgent</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">getUserAgent</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Get the user agent used when communicating with the telemetry endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-collection-enabled.html">isCollectionEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">isCollectionEnabled</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is collecting telemetry data enabled?</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="is-upload-enabled.html">isUploadEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">isUploadEnabled</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Is uploading collected telemetry data enable?</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-app-name.html">setAppName</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setAppName</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setAppName(kotlin.String)/appName">appName</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the name of the app. This value is used as one dimension when uploading telemetry to the HTTP Edge server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-app-version.html">setAppVersion</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setAppVersion</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setAppVersion(kotlin.String)/appVersion">appVersion</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the version of the app (e.g. 45.0.1). This value is used as one dimension when uploading telemetry to the HTTP Edge server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-build-id.html">setBuildId</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setBuildId</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setBuildId(kotlin.String)/buildId">buildId</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Get the build id of the app (e.g. 20150125030202). This value is used as one dimension when uploading telemetry to the HTTP Edge server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-collection-enabled.html">setCollectionEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setCollectionEnabled</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setCollectionEnabled(kotlin.Boolean)/collectionEnabled">collectionEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Enable or disable collection of telemetry data. Local dev builds should disable this to avoid collecting and sending any data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-connect-timeout.html">setConnectTimeout</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setConnectTimeout</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setConnectTimeout(kotlin.Int)/connectTimeout">connectTimeout</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Sets a specified timeout value, in milliseconds, to be used when opening a communications link to the telemetry endpoint. If the timeout expires before the connection can be established, the ping upload will be retried at a later time. A timeout of zero is interpreted as an infinite timeout.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-data-directory.html">setDataDirectory</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setDataDirectory</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setDataDirectory(java.io.File)/dataDirectory">dataDirectory</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/File.html"><span class="identifier">File</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the root directory where telemetry components should store data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-initial-backoff-for-upload.html">setInitialBackoffForUpload</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setInitialBackoffForUpload</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setInitialBackoffForUpload(kotlin.Long)/initialBackoffForUpload">initialBackoffForUpload</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the interval (in milliseconds) to wait initially after a ping upload has failed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-maximum-number-of-events-per-ping.html">setMaximumNumberOfEventsPerPing</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setMaximumNumberOfEventsPerPing</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setMaximumNumberOfEventsPerPing(kotlin.Int)/maximumNumberOfEventsPerPing">maximumNumberOfEventsPerPing</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the maximum number of events per ping. If this limit is reached a ping will built and stored automatically. The number of stored and uploaded pings might be limited too.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-maximum-number-of-ping-uploads-per-day.html">setMaximumNumberOfPingUploadsPerDay</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setMaximumNumberOfPingUploadsPerDay</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setMaximumNumberOfPingUploadsPerDay(kotlin.Int)/maximumNumberOfPingUploadsPerDay">maximumNumberOfPingUploadsPerDay</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the maximum number of pings uploaded per day. This limit is enforced for every type. If you have 2 ping types and set a limit of 100 pings per day then in total 200 pings per day could be uploaded.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-maximum-number-of-pings-per-type.html">setMaximumNumberOfPingsPerType</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setMaximumNumberOfPingsPerType</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setMaximumNumberOfPingsPerType(kotlin.Int)/maximumNumberOfPingsPerType">maximumNumberOfPingsPerType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the maximum number of pings that will be stored for a given ping type. If more types are in the local store then pings will be removed (oldest first). For this to happen the maximum needs to be reached without any successful upload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-minimum-events-for-upload.html">setMinimumEventsForUpload</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setMinimumEventsForUpload</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setMinimumEventsForUpload(kotlin.Int)/minimumEventsForUpload">minimumEventsForUpload</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the minimum number of telemetry events that need to be fired before even trying to upload an event ping. The default value is 3. The minimum needs to be &gt;= 1.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-preferences-important-for-telemetry.html">setPreferencesImportantForTelemetry</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setPreferencesImportantForTelemetry</span><span class="symbol">(</span><span class="keyword">vararg</span> <span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setPreferencesImportantForTelemetry(kotlin.Array((kotlin.String)))/preferences">preferences</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set a list of preference keys that are important for telemetry. Some measurements and pings might use this to determine what preferences should be reported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-read-timeout.html">setReadTimeout</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setReadTimeout</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setReadTimeout(kotlin.Int)/readTimeout">readTimeout</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Sets the read timeout to a specified timeout, in milliseconds. A non-zero value specifies the timeout when reading from the telemetry endpoint. If the timeout expires before there is data available for read, the ping upload will be retried later. A timeout of zero is interpreted as an infinite timeout.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-server-endpoint.html">setServerEndpoint</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setServerEndpoint</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setServerEndpoint(kotlin.String)/endpoint">endpoint</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the server endpoint to upload telemetry pings to. And endpoint value should include the schema and no trailing slash, e.g.: https://telemetry.example.org</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-settings-provider.html">setSettingsProvider</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setSettingsProvider</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setSettingsProvider(org.mozilla.telemetry.measurement.SettingsMeasurement.SettingsProvider)/settingsProvider">settingsProvider</span><span class="symbol">:</span>&nbsp;<a href="../../org.mozilla.telemetry.measurement/-settings-measurement/-settings-provider/index.html"><span class="identifier">SettingsProvider</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set a provider for reading app settings.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-update-channel.html">setUpdateChannel</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setUpdateChannel</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setUpdateChannel(kotlin.String)/updateChannel">updateChannel</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the update channel of the app (e.g. beta, release). This value is used as one dimension when uploading telemetry to the HTTP Edge server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-upload-enabled.html">setUploadEnabled</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setUploadEnabled</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setUploadEnabled(kotlin.Boolean)/uploadEnabled">uploadEnabled</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Enable or disable the upload of collected telemetry data. This is usually set based on a user visible preference.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="set-user-agent.html">setUserAgent</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">setUserAgent</span><span class="symbol">(</span><span class="identifier" id="org.mozilla.telemetry.config.TelemetryConfiguration$setUserAgent(kotlin.String)/userAgent">userAgent</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">TelemetryConfiguration</span></a></code>
+<p>Set the user agent used when communicating with the telemetry endpoint.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

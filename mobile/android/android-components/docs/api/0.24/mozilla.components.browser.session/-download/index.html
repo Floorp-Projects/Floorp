@@ -1,0 +1,87 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Download - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.session</a>&nbsp;/&nbsp;<a href="./index.html">Download</a><br/>
+<br/>
+<h1>Download</h1>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Download</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Download.kt#L19">(source)</a>
+<p>Value type that represents a Download.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Download</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.session.Download$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Long, kotlin.String, kotlin.String)/url">url</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Download$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Long, kotlin.String, kotlin.String)/fileName">fileName</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Download$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Long, kotlin.String, kotlin.String)/contentType">contentType</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Download$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Long, kotlin.String, kotlin.String)/contentLength">contentLength</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Download$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Long, kotlin.String, kotlin.String)/userAgent">userAgent</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.session.Download$<init>(kotlin.String, kotlin.String, kotlin.String, kotlin.Long, kotlin.String, kotlin.String)/destinationDirectory">destinationDirectory</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a>&nbsp;<span class="symbol">=</span>&nbsp;Environment.DIRECTORY_DOWNLOADS<span class="symbol">)</span></code>
+<p>Value type that represents a Download.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="content-length.html">contentLength</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">contentLength</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a><span class="symbol">?</span></code>
+<p>The file size reported by the server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="content-type.html">contentType</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">contentType</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Content type (MIME type) to indicate the media type of the download.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="destination-directory.html">destinationDirectory</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">destinationDirectory</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The matching destination directory for this type of download.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="file-name.html">fileName</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">fileName</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>A canonical filename for this download.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="url.html">url</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">url</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The full url to the content that should be downloaded.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="user-agent.html">userAgent</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">userAgent</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>The user agent to be used for the download.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

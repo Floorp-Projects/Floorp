@@ -1,0 +1,23 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>FirefoxAccount.getOAuthToken - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fxa</a>&nbsp;/&nbsp;<a href="index.html">FirefoxAccount</a>&nbsp;/&nbsp;<a href="./get-o-auth-token.html">getOAuthToken</a><br/>
+<br/>
+<h1>getOAuthToken</h1>
+<a name="mozilla.components.service.fxa.FirefoxAccount$getOAuthToken(kotlin.Array((kotlin.String)))"></a>
+<code><span class="keyword">fun </span><span class="identifier">getOAuthToken</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.service.fxa.FirefoxAccount$getOAuthToken(kotlin.Array((kotlin.String)))/scopes">scopes</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html"><span class="identifier">Array</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-fxa-result/index.html"><span class="identifier">FxaResult</span></a><span class="symbol">&lt;</span><a href="../-o-auth-info/index.html"><span class="identifier">OAuthInfo</span></a><span class="symbol">&gt;</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L116">(source)</a>
+<p>Fetches a new access token for the desired scopes using an internally stored refresh token.</p>
+<h3>Parameters</h3>
+<p><a name="scopes"></a>
+<code>scopes</code> - List of OAuth scopes for which the client wants access</p>
+<h3>Exceptions</h3>
+<p><a name="FxaException.Unauthorized"></a>
+<code>FxaException.Unauthorized</code> - if the token could not be retrieved (eg. expired refresh token)</p>
+<p><strong>Return</strong><br/>
+FxaResult&lt;<a href="../-o-auth-info/index.html">OAuthInfo</a>&gt; that stores the token, along with its scopes and keys when complete</p>
+</BODY>
+</HTML>

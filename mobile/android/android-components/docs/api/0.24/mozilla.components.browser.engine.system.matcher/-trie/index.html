@@ -1,0 +1,90 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Trie - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.engine.system.matcher</a>&nbsp;/&nbsp;<a href="./index.html">Trie</a><br/>
+<br/>
+<h1>Trie</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">Trie</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/matcher/Trie.kt#L12">(source)</a>
+<p>Simple implementation of a Trie, used for indexing URLs.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Trie</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$<init>(kotlin.Char, mozilla.components.browser.engine.system.matcher.Trie)/character">character</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char/index.html"><span class="identifier">Char</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$<init>(kotlin.Char, mozilla.components.browser.engine.system.matcher.Trie)/parent">parent</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Trie</span></a><span class="symbol">?</span><span class="symbol">)</span></code>
+<p>Simple implementation of a Trie, used for indexing URLs.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="children.html">children</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">children</span><span class="symbol">: </span><a href="https://developer.android.com/reference/android/util/SparseArray.html"><span class="identifier">SparseArray</span></a><span class="symbol">&lt;</span><a href="./index.html"><span class="identifier">Trie</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create-node.html">createNode</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">createNode</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$createNode(kotlin.Char, mozilla.components.browser.engine.system.matcher.Trie)/character">character</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char/index.html"><span class="identifier">Char</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$createNode(kotlin.Char, mozilla.components.browser.engine.system.matcher.Trie)/parent">parent</span><span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">Trie</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Trie</span></a></code>
+<p>Creates a new node for the provided character and parent node.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="find-node.html">findNode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">findNode</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$findNode(kotlin.String)/string">string</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Trie</span></a><span class="symbol">?</span></code><br/>
+<code><span class="keyword">fun </span><span class="identifier">findNode</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$findNode(mozilla.components.browser.engine.system.matcher.ReversibleString)/string">string</span><span class="symbol">:</span>&nbsp;<a href="../-reversible-string/index.html"><span class="identifier">ReversibleString</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Trie</span></a><span class="symbol">?</span></code>
+<p>Finds the node corresponding to the provided string.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="put.html">put</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">put</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$put(kotlin.String)/string">string</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Trie</span></a></code><br/>
+<code><span class="keyword">fun </span><span class="identifier">put</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$put(mozilla.components.browser.engine.system.matcher.ReversibleString)/string">string</span><span class="symbol">:</span>&nbsp;<a href="../-reversible-string/index.html"><span class="identifier">ReversibleString</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Trie</span></a></code>
+<p>Adds new nodes (recursively) for all chars in the provided string.</p>
+<code><span class="keyword">fun </span><span class="identifier">put</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.engine.system.matcher.Trie$put(kotlin.Char)/character">character</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char/index.html"><span class="identifier">Char</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Trie</span></a></code>
+<p>Adds a new node for the provided character if none exists.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="create-root-node.html">createRootNode</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">createRootNode</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="./index.html"><span class="identifier">Trie</span></a></code>
+<p>Creates a new root node.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

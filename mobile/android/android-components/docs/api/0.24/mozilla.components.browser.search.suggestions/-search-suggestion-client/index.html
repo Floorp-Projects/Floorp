@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SearchSuggestionClient - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.search.suggestions</a>&nbsp;/&nbsp;<a href="./index.html">SearchSuggestionClient</a><br/>
+<br/>
+<h1>SearchSuggestionClient</h1>
+<code><span class="keyword">class </span><span class="identifier">SearchSuggestionClient</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/suggestions/SearchSuggestionClient.kt#L19">(source)</a>
+<p>Provides an interface to get search suggestions from a given SearchEngine.</p>
+<h3>Exceptions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-fetch-exception/index.html">FetchException</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">FetchException</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a></code>
+<p>Exception types for errors caught while getting a list of suggestions</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-response-parser-exception/index.html">ResponseParserException</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">ResponseParserException</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html"><span class="identifier">Exception</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SearchSuggestionClient</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.search.suggestions.SearchSuggestionClient$<init>(mozilla.components.browser.search.SearchEngine, kotlin.SuspendFunction1((kotlin.String, kotlin.String)))/searchEngine">searchEngine</span><span class="symbol">:</span>&nbsp;<a href="../../mozilla.components.browser.search/-search-engine/index.html"><span class="identifier">SearchEngine</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.search.suggestions.SearchSuggestionClient$<init>(mozilla.components.browser.search.SearchEngine, kotlin.SuspendFunction1((kotlin.String, kotlin.String)))/fetcher">fetcher</span><span class="symbol">:</span>&nbsp;<a href="../-search-suggestion-fetcher.html"><span class="identifier">SearchSuggestionFetcher</span></a><span class="symbol">)</span></code>
+<p>Provides an interface to get search suggestions from a given SearchEngine.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-suggestions.html">getSuggestions</a></p>
+</td>
+<td>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">getSuggestions</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.search.suggestions.SearchSuggestionClient$getSuggestions(kotlin.String)/query">query</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html"><span class="identifier">List</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span><span class="symbol">?</span></code>
+<p>Gets search suggestions for a given query</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
