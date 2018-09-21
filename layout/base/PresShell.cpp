@@ -3438,9 +3438,15 @@ ComputeWhereToScroll(int16_t aWhereToScroll,
  * This function takes a scrollable frame, a rect in the coordinate system
  * of the scrolled frame, and a desired percentage-based scroll
  * position and attempts to scroll the rect to that position in the
- * scrollport.
+ * visual viewport.
  *
  * This needs to work even if aRect has a width or height of zero.
+ *
+ * Note that, since we are performing a layout scroll, it's possible that
+ * this fnction will sometimes be unsuccessful; the content will move as
+ * fast as it can on the screen using layout viewport scrolling, and then
+ * stop there, even if it could get closer to the desired position by
+ * moving the visual viewport within the layout viewport.
  */
 static void ScrollToShowRect(nsIScrollableFrame*      aFrameAsScrollable,
                              const nsRect&            aRect,
@@ -3448,7 +3454,7 @@ static void ScrollToShowRect(nsIScrollableFrame*      aFrameAsScrollable,
                              nsIPresShell::ScrollAxis aHorizontal,
                              uint32_t                 aFlags)
 {
-  nsPoint scrollPt = aFrameAsScrollable->GetScrollPosition();
+  nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
   nsRect visibleRect(scrollPt,
                      aFrameAsScrollable->GetVisualViewportSize());
 
