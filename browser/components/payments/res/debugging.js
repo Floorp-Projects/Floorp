@@ -514,11 +514,6 @@ let buttonActions = {
       request: Object.assign({}, request, { completeStatus }),
     });
   },
-
-  toggleDirectionality() {
-    let body = paymentDialog.ownerDocument.body;
-    body.dir = body.dir == "rtl" ? "ltr" : "rtl";
-  },
 };
 
 window.addEventListener("click", function onButtonClick(evt) {
