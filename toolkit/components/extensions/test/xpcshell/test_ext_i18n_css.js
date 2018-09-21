@@ -129,14 +129,14 @@ async function test_i18n_css(options = {}) {
     // We don't wind up actually switching the chrome registry locale, since we
     // don't have a chrome package for Hebrew. So just override it, and force
     // RTL directionality.
-    const origReqLocales = Services.locale.getRequestedLocales();
-    Services.locale.setRequestedLocales(["he"]);
+    const origReqLocales = Services.locale.requestedLocales;
+    Services.locale.requestedLocales = ["he"];
     Preferences.set(DIR, 1);
 
     css = await fetch(baseURL + "locale.css");
     equal(css, '* { content: "he rtl ltr right left" }', "CSS file localized in mochitest scope");
 
-    Services.locale.setRequestedLocales(origReqLocales);
+    Services.locale.requestedLocales = origReqLocales;
     Preferences.reset(DIR);
   }
 

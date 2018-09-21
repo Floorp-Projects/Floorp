@@ -119,8 +119,7 @@ private:
     friend nsresult NS_NewToolkitProfileService(nsIToolkitProfileService**);
 
     nsToolkitProfileService() :
-        mStartWithLast(true),
-        mStartOffline(false)
+        mStartWithLast(true)
     {
         gService = this;
     }
@@ -140,7 +139,6 @@ private:
     nsCOMPtr<nsIFile>           mTempData;
     nsCOMPtr<nsIFile>           mListFile;
     bool mStartWithLast;
-    bool mStartOffline;
 
     static nsToolkitProfileService *gService;
 
@@ -570,20 +568,6 @@ NS_IMETHODIMP
 nsToolkitProfileService::GetStartWithLastProfile(bool *aResult)
 {
     *aResult = mStartWithLast;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::GetStartOffline(bool *aResult)
-{
-    *aResult = mStartOffline;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsToolkitProfileService::SetStartOffline(bool aValue)
-{
-    mStartOffline = aValue;
     return NS_OK;
 }
 

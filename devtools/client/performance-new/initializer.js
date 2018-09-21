@@ -28,16 +28,15 @@ const {
 /**
  * Initialize the panel by creating a redux store, and render the root component.
  *
- * @param toolbox - The toolbox
  * @param perfFront - The Perf actor's front. Used to start and stop recordings.
+ * @param preferenceFront - Used to get the recording preferences from the device.
  */
-async function gInit(toolbox, perfFront, preferenceFront) {
+async function gInit(perfFront, preferenceFront) {
   const store = createStore(reducers);
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
   store.dispatch(actions.initializeStore({
-    toolbox,
     perfFront,
     receiveProfile,
     // Pull the default recording settings from the reducer, and update them according

@@ -43,18 +43,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
 
   make_live_map();
 
-  // DOMPoint is a non-nsISupports refCounted class using WebIDL bindings.
 
-  // non-nsISupports cycle-collected classes should fail as weak map keys.
-  let context = new DOMPoint(1, 2, 3);
-  let contextFail = false;
-  try {
-    live_map.set(context, 2);
-  } catch (e) {
-    contextFail = true;
+  // CanvasGradient is a non-nsISupports wrapper cached class using WebIDL
+  // bindings. If we used it as a key in a weak map, then it should not be
+  // removed from the weak map as long as it remains alive.
+  let doc = new DOMParser().parseFromString("", "text/html");
+  let canv = doc.createElement("canvas");
+  let ctx = canv.getContext("2d");
+
+  let add_non_isupports2 = function () {
+    let grad = ctx.createLinearGradient(0, 0, 0, 0);
+    ctx.strokeStyle = grad;
+
+    let gradFail = false;
+    try {
+      live_map.set(grad, 23456);
+    } catch (e) {
+      gradFail = true;
+    }
+
+    ok(!gradFail, "Using a wrapper cached non-nsISupports class as a weak map key should not produce an exception.");
+
+    is(live_map.get(grad), 23456, "Live map should have live DOMPoint with right value before GC.");
   }
 
-  ok(contextFail, "Cycle collected non-nsISupports classes aren't allowed as weak map keys.");
+  add_non_isupports2();
+
 
   /* Set up for running precise GC/CC then check the results. */
 
@@ -65,10 +79,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
     SpecialPowers.DOMWindowUtils.garbageCollect();
     SpecialPowers.DOMWindowUtils.garbageCollect();
 
-    is(ChromeUtils.nondeterministicGetWeakMapKeys(live_map).length, 1,
+    is(ChromeUtils.nondeterministicGetWeakMapKeys(live_map).length, 2,
        "Live nsISupports new DOM bindings wrappercached native weak map key should not be removed.");
 
     is(live_map.get(get_div_style()), 12345, "Live map should have live style with right value after GC.");
+    is(live_map.get(ctx.strokeStyle), 23456, "Live map should have live gradient with right value after GC.");
 
     SimpleTest.finish();
   });

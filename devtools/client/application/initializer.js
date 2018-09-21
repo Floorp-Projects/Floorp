@@ -65,7 +65,7 @@ window.Application = {
    * MessageContext elements.
    */
   async createMessageContexts() {
-    const locales = Services.locale.getAppLocalesAsBCP47();
+    const locales = Services.locale.appLocalesAsBCP47;
     const generator =
       L10nRegistry.generateContexts(locales, ["devtools/application.ftl"]);
 

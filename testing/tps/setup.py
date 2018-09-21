@@ -15,7 +15,7 @@ deps = ['httplib2 == 0.9.2',
         'mozinstall == 1.16',
         'mozprocess == 0.26',
         'mozprofile == 2.0.0',
-        'mozrunner == 7.0.1',
+        'mozrunner == 7.0.2',
         'mozversion == 1.5',
        ]
 

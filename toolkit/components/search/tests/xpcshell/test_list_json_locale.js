@@ -19,8 +19,8 @@ add_task(async function test_listJSONlocale() {
                         .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-plugins", Services.io.newURI(url));
 
-  Services.locale.setAvailableLocales(["de"]);
-  Services.locale.setRequestedLocales(["de"]);
+  Services.locale.availableLocales = ["de"];
+  Services.locale.requestedLocales = ["de"];
 
   await asyncInit();
 
@@ -35,8 +35,8 @@ add_task(async function test_listJSONlocale() {
 add_task(async function test_listJSONlocaleSwitch() {
   let promise = waitForSearchNotification("reinit-complete");
 
-  Services.locale.setAvailableLocales(["fr"]);
-  Services.locale.setRequestedLocales(["fr"]);
+  Services.locale.availableLocales = ["fr"];
+  Services.locale.requestedLocales = ["fr"];
 
   await promise;
 

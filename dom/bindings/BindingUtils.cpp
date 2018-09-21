@@ -1148,10 +1148,13 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
 }
 
 bool
-TryPreserveWrapper(JSObject* obj)
+TryPreserveWrapper(JS::Handle<JSObject*> obj)
 {
   MOZ_ASSERT(IsDOMObject(obj));
 
+  // nsISupports objects are special cased because DOM proxies are nsISupports
+  // and have addProperty hooks that do more than wrapper preservation (so we
+  // don't want to call them).
   if (nsISupports* native = UnwrapDOMObjectToISupports(obj)) {
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(native, &cache);
@@ -1161,11 +1164,25 @@ TryPreserveWrapper(JSObject* obj)
     return true;
   }
 
-  // If this DOMClass is not cycle collected, then it isn't wrappercached,
-  // so it does not need to be preserved. If it is cycle collected, then
-  // we can't tell if it is wrappercached or not, so we just return false.
+  // The addProperty hook for WebIDL classes does wrapper preservation, and
+  // nothing else, so call it, if present.
   const DOMJSClass* domClass = GetDOMClass(obj);
-  return domClass && !domClass->mParticipant;
+  const JSClass* clasp = domClass->ToJSClass();
+  JSAddPropertyOp addProperty = clasp->getAddProperty();
+
+  // We expect all proxies to be nsISupports.
+  MOZ_RELEASE_ASSERT(!js::Valueify(clasp)->isProxy(), "Should not call addProperty for proxies.");
+
+  // The class should have an addProperty hook iff it is a CC participant.
+  MOZ_RELEASE_ASSERT(bool(domClass->mParticipant) == bool(addProperty));
+
+  if (!addProperty) {
+    return true;
+  }
+
+  JS::Rooted<jsid> dummyId(RootingCx());
+  JS::Rooted<JS::Value> dummyValue(RootingCx());
+  return addProperty(nullptr, obj, dummyId, dummyValue);
 }
 
 // Can only be called with a DOM JSClass.

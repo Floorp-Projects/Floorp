@@ -234,7 +234,7 @@ function getDefaultEngineName(isUS) {
   let defaultEngineName = searchSettings.default.searchDefault;
 
   if (isUS === undefined)
-    isUS = Services.locale.getRequestedLocale() == "en-US" && isUSTimezone();
+    isUS = Services.locale.requestedLocale == "en-US" && isUSTimezone();
 
   if (isUS && ("US" in searchSettings &&
                "searchDefault" in searchSettings.US)) {
@@ -253,7 +253,7 @@ function getDefaultEngineList(isUS) {
   let visibleDefaultEngines = json.default.visibleDefaultEngines;
 
   if (isUS === undefined)
-    isUS = Services.locale.getRequestedLocale() == "en-US" && isUSTimezone();
+    isUS = Services.locale.requestedLocale == "en-US" && isUSTimezone();
 
   if (isUS) {
     let searchSettings = json.locales["en-US"];

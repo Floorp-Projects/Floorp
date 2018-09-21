@@ -129,7 +129,6 @@ function initializedValues(state = null, action) {
   switch (action.type) {
     case "INITIALIZE_STORE":
       return {
-        toolbox: action.toolbox,
         perfFront: action.perfFront,
         receiveProfile: action.receiveProfile,
         setRecordingPreferences: action.setRecordingPreferences
