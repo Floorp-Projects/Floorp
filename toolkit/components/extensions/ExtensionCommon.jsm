@@ -1929,7 +1929,7 @@ LocaleData.prototype = {
 
 
   get uiLocale() {
-    return Services.locale.getAppLocaleAsBCP47();
+    return Services.locale.appLocaleAsBCP47;
   },
 };
 

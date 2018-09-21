@@ -34,8 +34,8 @@ add_task(async function test_paramSubstitution() {
   check("{unknownOptional?}", "");
   check("{unknownRequired}", "{unknownRequired}");
 
-  check("{language}", Services.locale.getRequestedLocale());
-  check("{language?}", Services.locale.getRequestedLocale());
+  check("{language}", Services.locale.requestedLocale);
+  check("{language?}", Services.locale.requestedLocale);
 
   engine.wrappedJSObject._queryCharset = "UTF-8";
   check("{inputEncoding}", "UTF-8");
@@ -63,5 +63,5 @@ add_task(async function test_paramSubstitution() {
   check("{moz:official}", "official");
   Services.prefs.setBoolPref("browser.search.official", false);
   check("{moz:official}", "unofficial");
-  check("{moz:locale}", Services.locale.getRequestedLocale());
+  check("{moz:locale}", Services.locale.requestedLocale);
 });

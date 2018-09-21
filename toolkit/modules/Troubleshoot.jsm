@@ -618,10 +618,10 @@ var dataProviders = {
       Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
     done({
       localeService: {
-        requested: Services.locale.getRequestedLocales(),
-        available: Services.locale.getAvailableLocales(),
-        supported: Services.locale.getAppLocalesAsBCP47(),
-        regionalPrefs: Services.locale.getRegionalPrefsLocales(),
+        requested: Services.locale.requestedLocales,
+        available: Services.locale.availableLocales,
+        supported: Services.locale.appLocalesAsBCP47,
+        regionalPrefs: Services.locale.regionalPrefsLocales,
         defaultLocale: Services.locale.defaultLocale,
       },
       osPrefs: {

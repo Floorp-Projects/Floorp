@@ -22,7 +22,7 @@ const languageTagMatch = /^([a-z]{2,3}|[a-z]{4}|[a-z]{5,8})(?:[-_]([a-z]{4}))?(?
  */
 function getLocales(locales) {
   if (!locales) {
-    return Services.locale.getRegionalPrefsLocales();
+    return Services.locale.regionalPrefsLocales;
   }
   return locales;
 }

@@ -110,7 +110,7 @@
         <body><![CDATA[
           // TODO: When bug 1376616 lands, replace this.setGregorian with
           //       mozIntl.Locale for setting calendar to Gregorian
-          const locale = this.setGregorian(Services.locale.getAppLocaleAsBCP47());
+          const locale = this.setGregorian(Services.locale.appLocaleAsBCP47);
           const dir = this.mozIntl.getLocaleInfo(locale).direction;
 
           switch (this.type) {

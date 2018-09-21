@@ -800,7 +800,7 @@ function getDir(aKey, aIFace) {
  * exists in nsHttpHandler.cpp when building the UA string.
  */
 function getLocale() {
-  return Services.locale.getRequestedLocale();
+  return Services.locale.requestedLocale;
 }
 
 /**
@@ -3441,7 +3441,7 @@ SearchService.prototype = {
     }
 
     let searchSettings;
-    let locale = Services.locale.getAppLocaleAsBCP47();
+    let locale = Services.locale.appLocaleAsBCP47;
     if ("locales" in json &&
         locale in json.locales) {
       searchSettings = json.locales[locale];

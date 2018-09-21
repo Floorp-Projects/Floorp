@@ -197,7 +197,7 @@ class SortedItemSelectList {
 }
 
 function getLocaleDisplayInfo(localeCodes) {
-  let packagedLocales = new Set(Services.locale.getPackagedLocales());
+  let packagedLocales = new Set(Services.locale.packagedLocales);
   let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
   return localeCodes.map((code, i) => {
     return {
@@ -223,9 +223,9 @@ var gBrowserLanguagesDialog = {
     // Maintain the previously requested locales even if we cancel out.
     this.requestedLocales = window.arguments[0];
 
-    let requested = this.requestedLocales || Services.locale.getRequestedLocales();
+    let requested = this.requestedLocales || Services.locale.requestedLocales;
     let requestedSet = new Set(requested);
-    let available = Services.locale.getAvailableLocales()
+    let available = Services.locale.availableLocales
       .filter(locale => !requestedSet.has(locale));
 
     this.initRequestedLocales(requested);

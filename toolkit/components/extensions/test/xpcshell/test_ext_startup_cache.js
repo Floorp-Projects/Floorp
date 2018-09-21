@@ -69,7 +69,7 @@ add_task(async function() {
   //
   // In the future, we should provide some way for tests to decouple their
   // language selection from that of Firefox.
-  Services.locale.setAvailableLocales(["en-US", "fr", "jp"]);
+  Services.locale.availableLocales = ["en-US", "fr", "jp"];
 
   await extension.startup();
 
@@ -88,7 +88,7 @@ add_task(async function() {
 
 
   info("Change locale to 'fr' and restart");
-  Services.locale.setRequestedLocales(["fr"]);
+  Services.locale.requestedLocales = ["fr"];
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();
 
@@ -106,7 +106,7 @@ add_task(async function() {
 
 
   info("Change locale to 'en-US' and restart");
-  Services.locale.setRequestedLocales(["en-US"]);
+  Services.locale.requestedLocales = ["en-US"];
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();
 
