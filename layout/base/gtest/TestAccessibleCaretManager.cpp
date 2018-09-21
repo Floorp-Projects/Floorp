@@ -11,7 +11,8 @@
 
 #include "AccessibleCaret.h"
 #include "AccessibleCaretManager.h"
-#include "mozilla/AutoRestore.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 
 using ::testing::DefaultValue;
 using ::testing::Eq;
@@ -53,8 +54,6 @@ public:
     using CaretMode = AccessibleCaretManager::CaretMode;
     using AccessibleCaretManager::UpdateCarets;
     using AccessibleCaretManager::HideCarets;
-    using AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent;
-    using AccessibleCaretManager::sCaretsAlwaysTilt;
 
     MockAccessibleCaretManager()
       : AccessibleCaretManager(nullptr)
@@ -434,9 +433,8 @@ TEST_F(AccessibleCaretManagerTester,
 MOZ_CAN_RUN_SCRIPT
 {
   // Simulate Firefox Android preference.
-  AutoRestore<bool> saveCaretsAlwaysTilt(
-    MockAccessibleCaretManager::sCaretsAlwaysTilt);
-  MockAccessibleCaretManager::sCaretsAlwaysTilt = true;
+  bool oldPref = StaticPrefs::layout_accessiblecaret_always_tilt();
+  Preferences::SetBool("layout.accessiblecaret.always_tilt", true);
 
   EXPECT_CALL(mManager, GetCaretMode())
     .WillRepeatedly(Return(CaretMode::Selection));
@@ -534,6 +532,8 @@ MOZ_CAN_RUN_SCRIPT
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Left);
   EXPECT_EQ(SecondCaretAppearance(), Appearance::Right);
   check.Call("scrollend2");
+
+  Preferences::SetBool("layout.accessiblecaret.always_tilt", oldPref);
 }
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeWhenLogicallyVisible)
@@ -728,9 +728,8 @@ TEST_F(AccessibleCaretManagerTester,
 MOZ_CAN_RUN_SCRIPT
 {
   // Simulate Firefox Android preference.
-  AutoRestore<bool> savesCaretShownWhenLongTappingOnEmptyContent(
-    MockAccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent);
-  MockAccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = true;
+  bool oldPref = StaticPrefs::layout_accessiblecaret_caret_shown_when_long_tapping_on_empty_content();
+  Preferences::SetBool("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", true);
 
   EXPECT_CALL(mManager, GetCaretMode())
     .WillRepeatedly(Return(CaretMode::Cursor));
@@ -816,6 +815,8 @@ MOZ_CAN_RUN_SCRIPT
   mManager.OnScrollEnd();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   check.Call("longtap scrollend3");
+
+  Preferences::SetBool("layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content", oldPref);
 }
 
 } // namespace mozilla
