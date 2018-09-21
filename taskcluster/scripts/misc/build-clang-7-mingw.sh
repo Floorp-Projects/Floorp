@@ -31,7 +31,7 @@ SRC_DIR=$TOOLCHAIN_DIR/src
 CLANG_VERSION=7.0.0
 make_flags="-j$(nproc)"
 
-mingw_version=cb090affef8ebcd8c13ffc271b4500dea3b52f33
+mingw_version=cfd85ebed773810429bf2164c3a985895b7dbfe3
 libunwind_version=86ab23972978242b6f9e27cebc239f3e8428b1af
 
 binutils_version=2.27
