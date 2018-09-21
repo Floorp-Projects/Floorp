@@ -8,7 +8,7 @@
 
 #include "AccessibleCaretLogger.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/ToString.h"
 #include "nsCanvasFrame.h"
 #include "nsCaret.h"
@@ -29,10 +29,6 @@ using namespace dom;
   AC_LOGV_BASE("AccessibleCaret (%p): " message, this, ##__VA_ARGS__);
 
 NS_IMPL_ISUPPORTS(AccessibleCaret::DummyTouchListener, nsIDOMEventListener)
-
-float AccessibleCaret::sWidth = 0.0f;
-float AccessibleCaret::sHeight = 0.0f;
-float AccessibleCaret::sMarginLeft = 0.0f;
 
 NS_NAMED_LITERAL_STRING(AccessibleCaret::sTextOverlayElementId, "text-overlay");
 NS_NAMED_LITERAL_STRING(AccessibleCaret::sCaretImageElementId, "image");
@@ -77,14 +73,6 @@ AccessibleCaret::AccessibleCaret(nsIPresShell* aPresShell)
     MOZ_ASSERT(RootFrame());
     MOZ_ASSERT(mPresShell->GetDocument());
     InjectCaretElement(mPresShell->GetDocument());
-  }
-
-  static bool prefsAdded = false;
-  if (!prefsAdded) {
-    Preferences::AddFloatVarCache(&sWidth, "layout.accessiblecaret.width");
-    Preferences::AddFloatVarCache(&sHeight, "layout.accessiblecaret.height");
-    Preferences::AddFloatVarCache(&sMarginLeft, "layout.accessiblecaret.margin-left");
-    prefsAdded = true;
   }
 }
 
@@ -316,11 +304,12 @@ AccessibleCaret::SetCaretElementStyle(const nsRect& aRect, float aZoomLevel)
                         nsPresContext::AppUnitsToIntCSSPixels(position.y));
   // We can't use AppendPrintf here, because it does locale-specific
   // formatting of floating-point values.
-  styleStr.AppendFloat(sWidth/aZoomLevel);
+  styleStr.AppendFloat(StaticPrefs::layout_accessiblecaret_width() / aZoomLevel);
   styleStr.AppendLiteral("px; height: ");
-  styleStr.AppendFloat(sHeight/aZoomLevel);
+  styleStr.AppendFloat(StaticPrefs::layout_accessiblecaret_height() / aZoomLevel);
   styleStr.AppendLiteral("px; margin-left: ");
-  styleStr.AppendFloat(sMarginLeft/aZoomLevel);
+  styleStr.AppendFloat(
+    StaticPrefs::layout_accessiblecaret_margin_left() / aZoomLevel);
   styleStr.AppendLiteral("px");
 
   CaretElement().SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr, true);
