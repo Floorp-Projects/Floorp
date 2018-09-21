@@ -21,6 +21,7 @@
 #include <chrono>
 #include <thread>
 
+#include "builtin/TypedObject.h"
 #include "jit/JitOptions.h"
 #include "threading/LockGuard.h"
 #include "util/NSPR.h"
@@ -196,7 +197,6 @@ Module::serializedSize(const LinkData& linkData) const
            linkData.serializedSize() +
            SerializedVectorSize(imports_) +
            SerializedVectorSize(exports_) +
-           SerializedVectorSize(structTypes_) +
            SerializedVectorSize(dataSegments_) +
            SerializedVectorSize(elemSegments_) +
            SerializedVectorSize(customSections_) +
@@ -218,7 +218,6 @@ Module::serialize(const LinkData& linkData, uint8_t* begin, size_t size) const
     cursor = linkData.serialize(cursor);
     cursor = SerializeVector(cursor, imports_);
     cursor = SerializeVector(cursor, exports_);
-    cursor = SerializeVector(cursor, structTypes_);
     cursor = SerializeVector(cursor, dataSegments_);
     cursor = SerializeVector(cursor, elemSegments_);
     cursor = SerializeVector(cursor, customSections_);
@@ -268,12 +267,6 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
         return nullptr;
     }
 
-    StructTypeVector structTypes;
-    cursor = DeserializeVector(cursor, &structTypes);
-    if (!cursor) {
-        return nullptr;
-    }
-
     DataSegmentVector dataSegments;
     cursor = DeserializeVector(cursor, &dataSegments);
     if (!cursor) {
@@ -311,7 +304,6 @@ Module::deserialize(const uint8_t* begin, size_t size, Metadata* maybeMetadata)
     return js_new<Module>(*code,
                           std::move(imports),
                           std::move(exports),
-                          std::move(structTypes),
                           std::move(dataSegments),
                           std::move(elemSegments),
                           std::move(customSections));
@@ -459,7 +451,6 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
     *data += mallocSizeOf(this) +
              SizeOfVectorExcludingThis(imports_, mallocSizeOf) +
              SizeOfVectorExcludingThis(exports_, mallocSizeOf) +
-             SizeOfVectorExcludingThis(structTypes_, mallocSizeOf) +
              SizeOfVectorExcludingThis(dataSegments_, mallocSizeOf) +
              SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
              SizeOfVectorExcludingThis(customSections_, mallocSizeOf);
@@ -979,7 +970,17 @@ Module::getDebugEnabledCode() const
         return nullptr;
     }
 
-    MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables));
+    StructTypeVector structTypes;
+    if (!structTypes.resize(code_->structTypes().length())) {
+        return nullptr;
+    }
+    for (uint32_t i = 0; i < code_->structTypes().length(); i++) {
+        if (!structTypes[i].copyFrom(code_->structTypes()[i])) {
+            return nullptr;
+        }
+    }
+    MutableCode debugCode = js_new<Code>(std::move(codeTier), metadata(), std::move(jumpTables),
+                                         std::move(structTypes));
     if (!debugCode || !debugCode->initialize(*debugLinkData_)) {
         return nullptr;
     }
@@ -1081,6 +1082,150 @@ CreateExportObject(JSContext* cx,
     return true;
 }
 
+static bool
+MakeStructField(JSContext* cx, const ValType& v, bool isMutable, const char* format,
+                uint32_t fieldNo, AutoIdVector* ids, AutoValueVector* fieldTypeObjs,
+                Vector<StructFieldProps>* fieldProps)
+{
+    char buf[20];
+    sprintf(buf, format, fieldNo);
+    RootedString str(cx, JS_AtomizeAndPinString(cx, buf));
+    if (!str) {
+        return false;
+    }
+
+    StructFieldProps props;
+    props.isMutable = isMutable;
+
+    Rooted<TypeDescr*> t(cx);
+    switch (v.code()) {
+      case ValType::I32:
+        t = GlobalObject::getOrCreateScalarTypeDescr(cx, cx->global(), Scalar::Int32);
+        break;
+      case ValType::I64:
+        // Align for int64 but allocate only an int32, another int32 allocation
+        // will follow immediately.  JS will see two immutable int32 values but
+        // wasm knows it's a single int64.  See makeStructTypeDescrs(), below.
+        props.alignAsInt64 = true;
+        t = GlobalObject::getOrCreateScalarTypeDescr(cx, cx->global(), Scalar::Int32);
+        break;
+      case ValType::F32:
+        t = GlobalObject::getOrCreateScalarTypeDescr(cx, cx->global(), Scalar::Float32);
+        break;
+      case ValType::F64:
+        t = GlobalObject::getOrCreateScalarTypeDescr(cx, cx->global(), Scalar::Float64);
+        break;
+      case ValType::Ref:
+      case ValType::AnyRef:
+        t = GlobalObject::getOrCreateReferenceTypeDescr(cx, cx->global(),
+                                                        ReferenceType::TYPE_OBJECT);
+        break;
+      default:
+        MOZ_CRASH("Bad field type");
+    }
+    MOZ_ASSERT(t != nullptr);
+
+    if (!ids->append(INTERNED_STRING_TO_JSID(cx, str))) {
+        return false;
+    }
+
+    if (!fieldTypeObjs->append(ObjectValue(*t))) {
+        return false;
+    }
+
+    if (!fieldProps->append(props)) {
+        return false;
+    }
+
+    return true;
+}
+
+
+bool
+Module::makeStructTypeDescrs(JSContext* cx,
+                             MutableHandle<StructTypeDescrVector> structTypeDescrs) const
+{
+    // Not just any prototype object will do, we must have the actual StructTypePrototype.
+    RootedObject typedObjectModule(cx, GlobalObject::getOrCreateTypedObjectModule(cx,
+                                                                                  cx->global()));
+    if (!typedObjectModule) {
+       return false;
+    }
+
+    RootedNativeObject toModule(cx, &typedObjectModule->as<NativeObject>());
+    RootedObject prototype(cx, &toModule->getReservedSlot(
+                                   TypedObjectModuleObject::StructTypePrototype).toObject());
+
+    for (const StructType& structType : structTypes()) {
+        AutoIdVector ids(cx);
+        AutoValueVector fieldTypeObjs(cx);
+        Vector<StructFieldProps> fieldProps(cx);
+        bool allowConstruct = true;
+
+        uint32_t k = 0;
+        for (StructField sf : structType.fields_) {
+            const ValType& v = sf.type;
+            if (v.code() == ValType::I64) {
+                // TypedObjects don't yet have a notion of int64 fields.  Thus
+                // we handle int64 by allocating two adjacent int32 fields, the
+                // first of them aligned as for int64.  We mark these fields as
+                // immutable for JS and render the object non-constructible
+                // from JS.  Wasm however sees one i64 field with appropriate
+                // mutability.
+                sf.isMutable = false;
+                allowConstruct = false;
+
+                if (!MakeStructField(cx, ValType::I64, sf.isMutable, "_%d_low", k, &ids,
+                                     &fieldTypeObjs, &fieldProps))
+                {
+                    return false;
+                }
+                if (!MakeStructField(cx, ValType::I32, sf.isMutable, "_%d_high", k++, &ids,
+                                     &fieldTypeObjs, &fieldProps))
+                {
+                    return false;
+                }
+            } else {
+                // TypedObjects don't yet have a sufficient notion of type
+                // constraints on TypedObject properties.  Thus we handle fields
+                // of type (ref T) by marking them as immutable for JS and by
+                // rendering the objects non-constructible from JS.  Wasm
+                // however sees properly-typed (ref T) fields with appropriate
+                // mutability.
+                if (v.isRef()) {
+                    sf.isMutable = false;
+                    allowConstruct = false;
+                }
+
+                if (!MakeStructField(cx, v, sf.isMutable, "_%d", k++, &ids, &fieldTypeObjs,
+                                     &fieldProps))
+                {
+                    return false;
+                }
+            }
+        }
+
+        // Types must be opaque, which we ensure here, and sealed, which is true
+        // for every TypedObject.  If they contain fields of type Ref T then we
+        // prevent JS from constructing instances of them.
+
+        Rooted<StructTypeDescr*>
+            structTypeDescr(cx, StructMetaTypeDescr::createFromArrays(cx,
+                                                                      prototype,
+                                                                      /* opaque= */ true,
+                                                                      allowConstruct,
+                                                                      ids,
+                                                                      fieldTypeObjs,
+                                                                      fieldProps));
+
+        if (!structTypeDescr || !structTypeDescrs.append(structTypeDescr)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool
 Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
@@ -1134,6 +1279,13 @@ Module::instantiate(JSContext* cx,
         code = code_;
     }
 
+    // Create type descriptors for any struct types that the module has.
+
+    Rooted<StructTypeDescrVector> structTypeDescrs(cx);
+    if (!makeStructTypeDescrs(cx, &structTypeDescrs)) {
+        return false;
+    }
+
     instance.set(WasmInstanceObject::create(cx,
                                             code,
                                             dataSegments_,
@@ -1141,6 +1293,7 @@ Module::instantiate(JSContext* cx,
                                             std::move(tlsData),
                                             memory,
                                             std::move(tables),
+                                            std::move(structTypeDescrs.get()),
                                             funcImports,
                                             metadata().globals,
                                             globalImportValues,

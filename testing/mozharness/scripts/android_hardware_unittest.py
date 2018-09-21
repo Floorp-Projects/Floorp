@@ -169,12 +169,13 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
     def _pre_create_virtualenv(self, action):
         dirs = self.query_abs_dirs()
         requirements = None
-        if self.test_suite == 'mochitest-media':
+        suites = self._query_suites()
+        if ('mochitest-media', 'mochitest-media') in suites:
             # mochitest-media is the only thing that needs this
             requirements = os.path.join(dirs['abs_mochitest_dir'],
                                         'websocketprocessbridge',
                                         'websocketprocessbridge_requirements.txt')
-        elif self.test_suite == 'marionette':
+        elif ('marionette', 'marionette') in suites:
             requirements = os.path.join(dirs['abs_test_install_dir'],
                                         'config', 'marionette_requirements.txt')
         if requirements:

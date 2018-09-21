@@ -76,8 +76,10 @@ add_task(function setup() {
   sandbox.stub(fakeController, "handleQuery");
   sandbox.stub(PrivateBrowsingUtils, "isWindowPrivate").returns(false);
 
+  let textbox = createFakeElement();
+  textbox.inputField = createFakeElement();
   inputOptions = {
-    textbox: createFakeElement(),
+    textbox,
     panel: {
       ownerDocument: {},
       querySelector() {

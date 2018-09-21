@@ -58,7 +58,6 @@ class Module : public JS::WasmModule
     const SharedCode          code_;
     const ImportVector        imports_;
     const ExportVector        exports_;
-    const StructTypeVector    structTypes_;
     const DataSegmentVector   dataSegments_;
     const ElemSegmentVector   elemSegments_;
     const CustomSectionVector customSections_;
@@ -100,6 +99,8 @@ class Module : public JS::WasmModule
                       HandleWasmMemoryObject memory,
                       HandleValVector globalImportValues) const;
     SharedCode getDebugEnabledCode() const;
+    bool makeStructTypeDescrs(JSContext* cx,
+                              MutableHandle<StructTypeDescrVector> structTypeDescrs) const;
 
     class Tier2GeneratorTaskImpl;
 
@@ -107,7 +108,6 @@ class Module : public JS::WasmModule
     Module(const Code& code,
            ImportVector&& imports,
            ExportVector&& exports,
-           StructTypeVector&& structTypes,
            DataSegmentVector&& dataSegments,
            ElemSegmentVector&& elemSegments,
            CustomSectionVector&& customSections,
@@ -117,7 +117,6 @@ class Module : public JS::WasmModule
       : code_(&code),
         imports_(std::move(imports)),
         exports_(std::move(exports)),
-        structTypes_(std::move(structTypes)),
         dataSegments_(std::move(dataSegments)),
         elemSegments_(std::move(elemSegments)),
         customSections_(std::move(customSections)),
@@ -140,6 +139,7 @@ class Module : public JS::WasmModule
     const CustomSectionVector& customSections() const { return customSections_; }
     const Bytes& debugBytecode() const { return debugBytecode_->bytes; }
     uint32_t codeLength(Tier t) const { return code_->segment(t).length(); }
+    const StructTypeVector& structTypes() const { return code_->structTypes(); }
 
     // Instantiate this module with the given imports:
 

@@ -1037,16 +1037,17 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode,
         return nullptr;
     }
 
-    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_, std::move(jumpTables));
-    if (!code || !code->initialize(*linkData_)) {
-        return nullptr;
-    }
-
     StructTypeVector structTypes;
     for (TypeDef& td : env_->types) {
         if (td.isStructType() && !structTypes.append(std::move(td.structType()))) {
             return nullptr;
         }
+    }
+
+    MutableCode code = js_new<Code>(std::move(codeTier), *metadata_, std::move(jumpTables),
+                                    std::move(structTypes));
+    if (!code || !code->initialize(*linkData_)) {
+        return nullptr;
     }
 
     // Copy over data from the Bytecode, which is going away at the end of
@@ -1118,7 +1119,6 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode,
     MutableModule module = js_new<Module>(*code,
                                           std::move(env_->imports),
                                           std::move(env_->exports),
-                                          std::move(structTypes),
                                           std::move(dataSegments),
                                           std::move(env_->elemSegments),
                                           std::move(customSections),
