@@ -152,8 +152,8 @@ public:
       return false;
     }
 
-    return mPatchedFns.append(
-      reinterpret_cast<void*>(readOnlyTargetFn.GetBaseAddress()));
+    mPatchedFns.append(reinterpret_cast<void*>(readOnlyTargetFn.GetBaseAddress()));
+    return true;
   }
 
   bool WriteHook(const ReadOnlyTargetFunction<MMPolicyT>& aFn,
@@ -169,7 +169,7 @@ public:
 
     // Check that the 5 bytes before the function are NOP's or INT 3's,
     const uint8_t nopOrBp[] = { 0x90, 0xCC };
-    if (!writableFn.template VerifyValuesAreOneOf<uint8_t, 5>(nopOrBp)) {
+    if (!writableFn.VerifyValuesAreOneOf<uint8_t, 5>(nopOrBp)) {
       return false;
     }
 
@@ -184,8 +184,7 @@ public:
 
     // (These look backwards because little-endian)
     const uint16_t possibleEncodings[] = { 0xFF8B, 0xFF89 };
-    if (!writableFn.template VerifyValuesAreOneOf<uint16_t, 1>(
-            possibleEncodings, 5)) {
+    if (!writableFn.VerifyValuesAreOneOf<uint16_t, 1>(possibleEncodings, 5)) {
       return false;
     }
 
