@@ -45,8 +45,7 @@ class TabsTrayFragment : Fragment(), BackHandler {
             tabsTray,
             components.sessionManager,
             components.tabsUseCases,
-            ::closeTabsTray,
-            onTabsTrayEmpty = ::createNewTab)
+            ::closeTabsTray)
     }
 
     override fun onStart() {
@@ -64,10 +63,6 @@ class TabsTrayFragment : Fragment(), BackHandler {
     override fun onBackPressed(): Boolean {
         closeTabsTray()
         return true
-    }
-
-    private fun createNewTab() {
-        components.tabsUseCases.addSession.invoke("about:blank")
     }
 
     private fun closeTabsTray() {

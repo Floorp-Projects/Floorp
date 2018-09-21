@@ -16,6 +16,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 @Suppress("TooManyFunctions")
 class SessionManager(
     val engine: Engine,
+    val defaultSession: (() -> Session)? = null,
     delegate: Observable<SessionManager.Observer> = ObserverRegistry()
 ) : Observable<SessionManager.Observer> by delegate {
     private val values = mutableListOf<Session>()
@@ -158,6 +159,13 @@ class SessionManager(
 
         notifyObservers { onSessionRemoved(session) }
 
+        // NB: we're not explicitly calling notifyObservers here, since adding a session when none
+        // are present will notify observers with onSessionSelected.
+        if (selectedIndex == NO_SELECTION && defaultSession != null) {
+            add(defaultSession.invoke())
+            return
+        }
+
         if (selectionUpdated && selectedIndex != NO_SELECTION) {
             notifyObservers { onSessionSelected(selectedSessionOrThrow) }
         }
@@ -173,18 +181,35 @@ class SessionManager(
         }
 
         selectedIndex = NO_SELECTION
+
+        // NB: This callback indicates to observers that either removeSessions or removeAll were
+        // invoked, not that the manager is now empty.
         notifyObservers { onAllSessionsRemoved() }
+
+        if (defaultSession != null) {
+            add(defaultSession.invoke())
+        }
     }
 
     /**
      * Removes all sessions including CustomTab sessions.
      */
     fun removeAll() = synchronized(values) {
+        val onlyCustomTabSessionsPresent = values.isNotEmpty() && sessions.isEmpty()
+
         values.forEach { unlink(it) }
         values.clear()
 
         selectedIndex = NO_SELECTION
+
+        // NB: This callback indicates to observers that either removeSessions or removeAll were
+        // invoked, not that the manager is now empty.
         notifyObservers { onAllSessionsRemoved() }
+
+        // Don't create a default session if we only had CustomTab sessions to begin with.
+        if (!onlyCustomTabSessionsPresent && defaultSession != null) {
+            add(defaultSession.invoke())
+        }
     }
 
     /**
