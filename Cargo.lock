@@ -359,7 +359,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "core-graphics"
-version = "0.16.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -370,11 +370,11 @@ dependencies = [
 
 [[package]]
 name = "core-text"
-version = "11.0.0"
+version = "13.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "core-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "core-graphics 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "foreign-types 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -2641,8 +2641,8 @@ dependencies = [
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "core-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "core-text 11.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "core-graphics 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "core-text 13.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "freetype 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2670,7 +2670,7 @@ dependencies = [
  "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "core-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "core-graphics 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.66 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2686,7 +2686,7 @@ dependencies = [
  "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "core-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "core-graphics 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "foreign-types 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2855,8 +2855,8 @@ dependencies = [
 "checksum cookie 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1465f8134efa296b4c19db34d909637cb2bf0f7aaf21299e23e18fa29ac557cf"
 "checksum core-foundation 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c7caa6cb9e76ddddbea09a03266d6b3bc98cd41e9fb9b017c473e7cca593ec25"
 "checksum core-foundation-sys 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b2a53cce0ddcf7e7e1f998738d757d5a3bf08bf799a180e50ebe50d298f52f5a"
-"checksum core-graphics 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)" = "92801c908ea6301ae619ed842a72e01098085fc321b9c2f3f833dad555bba055"
-"checksum core-text 11.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "157ff38a92496dc676ce36d9124554e9ac66f1c1039f952690ac64f71cfa5968"
+"checksum core-graphics 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)" = "62ceafe1622ffc9a332199096841d0ff9912ec8cf8f9cde01e254a7d5217cd10"
+"checksum core-text 13.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f3f46450d6f2397261af420b4ccce23807add2e45fa206410a03d66fb7f050ae"
 "checksum cose 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "72fa26cb151d3ae4b70f63d67d0fed57ce04220feafafbae7f503bef7aae590d"
 "checksum cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "49726015ab0ca765144fcca61e4a7a543a16b795a777fa53f554da2fffff9a94"
 "checksum crc 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bd5d02c0aac6bd68393ed69e00bbc2457f3e89075c6349db7189618dc4ddc1d7"
