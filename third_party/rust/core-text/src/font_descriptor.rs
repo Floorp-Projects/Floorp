@@ -53,6 +53,7 @@ pub trait SymbolicTraitAccessors {
     fn is_expanded(&self) -> bool;
     fn is_condensed(&self) -> bool;
     fn is_monospace(&self) -> bool;
+    fn is_vertical(&self) -> bool;
 }
 
 impl SymbolicTraitAccessors for CTFontSymbolicTraits {
@@ -61,6 +62,7 @@ impl SymbolicTraitAccessors for CTFontSymbolicTraits {
     fn is_expanded(&self) -> bool { (*self & kCTFontExpandedTrait) != 0 }
     fn is_condensed(&self) -> bool { (*self & kCTFontCondensedTrait) != 0 }
     fn is_monospace(&self) -> bool { (*self & kCTFontMonoSpaceTrait) != 0 }
+    fn is_vertical(&self) -> bool { (*self & kCTFontVerticalTrait) != 0 }
 }
 
 pub type CTFontStylisticClass = u32;
