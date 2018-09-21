@@ -10,16 +10,16 @@ const DEFAULT_URL = "resource://activity-stream/prerendered/en-US/activity-strea
  * Temporarily change the app locale to get the localized activity stream url
  */
 async function getUrlForLocale(locale) {
-  const origAvailable = Services.locale.getAvailableLocales();
-  const origRequested = Services.locale.getRequestedLocales();
+  const origAvailable = Services.locale.availableLocales;
+  const origRequested = Services.locale.requestedLocales;
   try {
-    Services.locale.setAvailableLocales([locale]);
-    Services.locale.setRequestedLocales([locale]);
+    Services.locale.availableLocales = [locale];
+    Services.locale.requestedLocales = [locale];
     return aboutNewTabService.defaultURL;
   } finally {
     // Always clean up after returning the url
-    Services.locale.setAvailableLocales(origAvailable);
-    Services.locale.setRequestedLocales(origRequested);
+    Services.locale.availableLocales = origAvailable;
+    Services.locale.requestedLocales = origRequested;
   }
 }
 

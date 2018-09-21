@@ -13,11 +13,11 @@
   //
   // In the future, we should provide some way for tests to decouple their
   // language selection from that of Firefox.
-  const avLocales = Services.locale.getAvailableLocales();
+  const avLocales = Services.locale.availableLocales;
 
-  Services.locale.setAvailableLocales(["en-US", "es-ES"]);
+  Services.locale.availableLocales = ["en-US", "es-ES"];
   registerCleanupFunction(() => {
-    Services.locale.setAvailableLocales(avLocales);
+    Services.locale.availableLocales = avLocales;
   });
 }
 
@@ -152,8 +152,8 @@ async function runTests(options) {
     });
   });
 
-  let reqLoc = Services.locale.getRequestedLocales();
-  Services.locale.setRequestedLocales(["es-ES"]);
+  let reqLoc = Services.locale.requestedLocales;
+  Services.locale.requestedLocales = ["es-ES"];
 
   await extension.startup();
 
@@ -161,7 +161,7 @@ async function runTests(options) {
 
   await extension.unload();
 
-  Services.locale.setRequestedLocales(reqLoc);
+  Services.locale.requestedLocales = reqLoc;
 
   let node = document.getElementById(pageActionId);
   is(node, null, "pageAction image removed from document");

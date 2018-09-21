@@ -119,13 +119,13 @@ GeckoViewStartup.prototype = {
         GeckoViewTelemetryController.setup();
 
         // Initialize the default l10n resource sources for L10nRegistry.
-        let locales = Services.locale.getPackagedLocales();
+        let locales = Services.locale.packagedLocales;
         const greSource = new FileSource("toolkit", locales, "resource://gre/localization/{locale}/");
         L10nRegistry.registerSource(greSource);
 
         // Listen for global EventDispatcher messages
         EventDispatcher.instance.registerListener(
-          (aEvent, aData, aCallback) => Services.locale.setRequestedLocales([aData.languageTag]),
+          (aEvent, aData, aCallback) => Services.locale.requestedLocales = [aData.languageTag],
           "GeckoView:SetLocale");
         break;
       }

@@ -1188,22 +1188,22 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
     GP("Property change. Deleting blob\n");
 
     if (group.mAppUnitsPerDevPixel != appUnitsPerDevPixel) {
-      GP(" app unit change%d %d\n", group.mAppUnitsPerDevPixel, appUnitsPerDevPixel);
+      GP(" App unit change %d -> %d\n", group.mAppUnitsPerDevPixel, appUnitsPerDevPixel);
     }
     // The bounds have changed so we need to discard the old image and add all
     // the commands again.
     auto p = group.mGroupBounds;
     auto q = groupBounds;
     if (!group.mGroupBounds.IsEqualEdges(groupBounds)) {
-      GP(" Bounds change: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x, q.y, q.width, q.height);
+      GP(" Bounds change: %d %d %d %d -> %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x, q.y, q.width, q.height);
     }
 
     if (group.mScale != scale) {
-      GP(" Scale %f %f vs %f %f\n", group.mScale.width, group.mScale.height, scale.width, scale.height);
+      GP(" Scale %f %f -> %f %f\n", group.mScale.width, group.mScale.height, scale.width, scale.height);
     }
 
     if (group.mResidualOffset != residualOffset) {
-      GP(" Residual Offset %f %f vs %f %f\n", group.mResidualOffset.x, group.mResidualOffset.y, residualOffset.x, residualOffset.y);
+      GP(" Residual Offset %f %f -> %f %f\n", group.mResidualOffset.x, group.mResidualOffset.y, residualOffset.x, residualOffset.y);
     }
 
     group.ClearItems();

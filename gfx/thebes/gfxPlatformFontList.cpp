@@ -1288,7 +1288,7 @@ gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aL
         if (OSPreferences::GetInstance()->GetSystemLocales(sysLocales)) {
             LocaleService::GetInstance()->NegotiateLanguages(
                 sysLocales, prefLocales, NS_LITERAL_CSTRING(""),
-                LocaleService::LangNegStrategy::Filtering, negLocales);
+                LocaleService::kLangNegStrategyFiltering, negLocales);
             for (const auto& localeStr : negLocales) {
                 Locale locale(localeStr);
 

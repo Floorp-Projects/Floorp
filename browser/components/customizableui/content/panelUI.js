@@ -865,7 +865,7 @@ XPCOMUtils.defineConstant(this, "PanelUI", PanelUI);
  * @return  the selected locale
  */
 function getLocale() {
-  return Services.locale.getAppLocaleAsLangTag();
+  return Services.locale.appLocaleAsLangTag;
 }
 
 function getNotificationFromElement(aElement) {

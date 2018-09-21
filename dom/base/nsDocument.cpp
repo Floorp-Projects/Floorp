@@ -7299,6 +7299,12 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     mValidWidth = (!widthStr.IsEmpty() && NS_SUCCEEDED(widthErrorCode) && mViewportSize.width > 0);
     mValidHeight = (!heightStr.IsEmpty() && NS_SUCCEEDED(heightErrorCode) && mViewportSize.height > 0);
 
+    // If the width is set to some unrecognized value, and there is no
+    // height set, treat it as if device-width were specified.
+    if ((!mValidWidth && !widthStr.IsEmpty()) && !mValidHeight) {
+      mAutoSize = true;
+    }
+
     mAllowZoom = true;
     nsAutoString userScalable;
     GetHeaderData(nsGkAtoms::viewport_user_scalable, userScalable);

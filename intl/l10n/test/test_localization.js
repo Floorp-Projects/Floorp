@@ -20,7 +20,7 @@ add_task(async function test_methods_calling() {
     "/localization/en-US/browser/menu.ftl": "key = [en] Value2\nkey2 = [en] Value3",
   };
   const originalLoad = L10nRegistry.load;
-  const originalRequested = Services.locale.getRequestedLocales();
+  const originalRequested = Services.locale.requestedLocales;
 
   L10nRegistry.load = async function(url) {
     return fs[url];
@@ -44,7 +44,7 @@ add_task(async function test_methods_calling() {
 
   L10nRegistry.sources.clear();
   L10nRegistry.load = originalLoad;
-  Services.locale.setRequestedLocales(originalRequested);
+  Services.locale.requestedLocales = originalRequested;
 });
 
 add_task(async function test_builtins() {
@@ -101,7 +101,7 @@ add_task(async function test_add_remove_resourceIds() {
     "/localization/en-US/toolkit/menu.ftl": "key2 = Value2",
   };
   const originalLoad = L10nRegistry.load;
-  const originalRequested = Services.locale.getRequestedLocales();
+  const originalRequested = Services.locale.requestedLocales;
 
   L10nRegistry.load = async function(url) {
     return fs[url];
@@ -137,5 +137,5 @@ add_task(async function test_add_remove_resourceIds() {
 
   L10nRegistry.sources.clear();
   L10nRegistry.load = originalLoad;
-  Services.locale.setRequestedLocales(originalRequested);
+  Services.locale.requestedLocales = originalRequested;
 });
