@@ -676,11 +676,16 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     if (aType == TrackInfo::kAudioTrack) {
       isKeyframe = true;
     } else if (aType == TrackInfo::kVideoTrack) {
-      if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED) {
+      if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED ||
+          packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED) {
         // Packet is encrypted, can't peek, use packet info
         isKeyframe = nestegg_packet_has_keyframe(holder->Packet())
                      == NESTEGG_PACKET_HAS_KEYFRAME_TRUE;
       } else {
+        MOZ_ASSERT(packetEncryption ==
+                       NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED ||
+                     packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_FALSE,
+                   "Unencrypted packet expected");
         auto sample = MakeSpan(data, length);
         auto alphaSample = MakeSpan(alphaData, alphaLength);
 
