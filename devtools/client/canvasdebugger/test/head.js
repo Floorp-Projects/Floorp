@@ -134,7 +134,7 @@ function initCallWatcherBackend(aUrl) {
       type: { target: true }
     });
 
-    await target.makeRemote();
+    await target.attach();
 
     const front = new CallWatcherFront(target.client, target.form);
     return { target, front };
@@ -149,7 +149,7 @@ function initCanvasDebuggerBackend(aUrl) {
     const tab = await addTab(aUrl);
     const target = await TargetFactory.forTab(tab);
 
-    await target.makeRemote();
+    await target.attach();
 
     const front = new CanvasFront(target.client, target.form);
     return { target, front };
@@ -163,7 +163,7 @@ function initCanvasDebuggerFrontend(aUrl) {
     const tab = await addTab(aUrl);
     const target = await TargetFactory.forTab(tab);
 
-    await target.makeRemote();
+    await target.attach();
 
     Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);
     const toolbox = await gDevTools.showToolbox(target, "canvasdebugger");

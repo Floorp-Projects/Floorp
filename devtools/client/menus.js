@@ -102,7 +102,7 @@ exports.menuitems = [
     async oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
       const target = await TargetFactory.forTab(window.gBrowser.selectedTab);
-      await target.makeRemote();
+      await target.attach();
       const inspectorFront = await target.getFront("inspector");
       inspectorFront.pickColorFromPage({copyOnSelect: true, fromMenu: true});
     },

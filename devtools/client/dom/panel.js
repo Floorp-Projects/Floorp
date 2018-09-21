@@ -46,7 +46,7 @@ DomPanel.prototype = {
 
     // Local monitoring needs to make the target remote.
     if (!this.target.isRemote) {
-      await this.target.makeRemote();
+      await this.target.attach();
     }
 
     this.initialize();

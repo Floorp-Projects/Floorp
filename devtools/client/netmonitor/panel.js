@@ -12,7 +12,7 @@ function NetMonitorPanel(iframeWindow, toolbox) {
 NetMonitorPanel.prototype = {
   async open() {
     if (!this.toolbox.target.isRemote) {
-      await this.toolbox.target.makeRemote();
+      await this.toolbox.target.attach();
     }
 
     // Reuse an existing Network monitor API object if available.

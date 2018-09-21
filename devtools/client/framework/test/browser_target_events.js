@@ -6,7 +6,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  await target.makeRemote();
+  await target.attach();
   is(target.tab, gBrowser.selectedTab, "Target linked to the right tab.");
 
   const willNavigate = once(target, "will-navigate");
