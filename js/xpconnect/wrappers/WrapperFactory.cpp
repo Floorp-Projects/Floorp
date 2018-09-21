@@ -147,12 +147,12 @@ ShouldWaiveXray(JSContext* cx, JSObject* originalObj)
     bool sameOrigin = false;
     if (OriginAttributes::IsRestrictOpenerAccessForFPI()) {
         sameOrigin =
-            AccessCheck::subsumesConsideringDomain(oldCompartment, newCompartment) &&
-            AccessCheck::subsumesConsideringDomain(newCompartment, oldCompartment);
+            CompartmentOriginInfo::Subsumes(oldCompartment, newCompartment) &&
+            CompartmentOriginInfo::Subsumes(newCompartment, oldCompartment);
     } else {
         sameOrigin =
-            AccessCheck::subsumesConsideringDomainIgnoringFPD(oldCompartment, newCompartment) &&
-            AccessCheck::subsumesConsideringDomainIgnoringFPD(newCompartment, oldCompartment);
+            CompartmentOriginInfo::SubsumesIgnoringFPD(oldCompartment, newCompartment) &&
+            CompartmentOriginInfo::SubsumesIgnoringFPD(newCompartment, oldCompartment);
     }
     return sameOrigin;
 }

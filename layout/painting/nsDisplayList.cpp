@@ -7772,8 +7772,11 @@ nsDisplayStickyPosition::CreateWebRenderCommands(
     aManager->CommandBuilder().PushOverrideForASR(mContainerASR, Some(id));
   }
 
-  nsDisplayOwnLayer::CreateWebRenderCommands(
-    aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
+  {
+    StackingContextHelper sc(aSc, aBuilder);
+    nsDisplayWrapList::CreateWebRenderCommands(
+      aBuilder, aResources, sc, aManager, aDisplayListBuilder);
+  }
 
   if (stickyScrollContainer) {
     aManager->CommandBuilder().PopOverrideForASR(mContainerASR);

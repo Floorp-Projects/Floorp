@@ -929,11 +929,11 @@ GetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* v
 
 template <bool HandleMissing>
 bool
-GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp);
+GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj, Value* vp);
 
 template <bool HasOwn>
 bool
-HasNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp);
+HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp);
 
 bool
 HasNativeElement(JSContext* cx, NativeObject* obj, int32_t index, Value* vp);
