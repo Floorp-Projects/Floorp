@@ -15,8 +15,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.view.View;
-import android.webkit.MimeTypeMap;
-import android.webkit.URLUtil;
+
+import mozilla.components.support.utils.DownloadUtils;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
@@ -61,11 +61,20 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
                     String uriString = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
 
                     final String localUri = uriString.startsWith(FILE_SCHEME) ? uriString.substring(FILE_SCHEME.length()) : uriString;
-                    final String fileExtension = MimeTypeMap.getFileExtensionFromUrl(localUri);
-                    final String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
-                    final String fileName = URLUtil.guessFileName(Uri.decode(localUri), null, mimeType);
+                    final String decoded = Uri.decode(localUri);
+                    File file = new File(decoded);
+                    final String mimeType = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_MEDIA_TYPE));
+                    String fileName = DownloadUtils.guessFileName(null, decoded, null);
+                    final String fileName2 = DownloadUtils.guessFileName(null, decoded, mimeType);
+                    // Rename the file extension if it lacks a known MIME type and the server provided a Content-Type header.
+                    if (!fileName.equals(fileName2)) {
+                        final File file2 = new File(file.getParent(), fileName2);
+                        if (file.renameTo(file2)) {
+                            file = file2;
+                            fileName = fileName2;
+                        }
+                    }
 
-                    final File file = new File(Uri.decode(localUri));
                     final Uri uriForFile = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + FILE_PROVIDER_EXTENSION, file);
                     final Intent openFileIntent = IntentUtils.INSTANCE.createOpenFileIntent(uriForFile, mimeType);
                     showSnackbarForFilename(openFileIntent, context, fileName);
