@@ -18,6 +18,7 @@ const cookieBehaviorValues = new Map([
   ["reject_third_party", cookieSvc.BEHAVIOR_REJECT_FOREIGN],
   ["reject_all", cookieSvc.BEHAVIOR_REJECT],
   ["allow_visited", cookieSvc.BEHAVIOR_LIMIT_FOREIGN],
+  ["reject_trackers", cookieSvc.BEHAVIOR_REJECT_TRACKER],
 ]);
 
 const checkScope = scope => {
