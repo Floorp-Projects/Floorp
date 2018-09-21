@@ -2828,7 +2828,7 @@ DestroyRealm(JSFreeOp* fop, JS::Realm* realm)
 }
 
 static bool
-PreserveWrapper(JSContext* cx, JSObject* obj)
+PreserveWrapper(JSContext* cx, JS::Handle<JSObject*> obj)
 {
     MOZ_ASSERT(cx);
     MOZ_ASSERT(obj);

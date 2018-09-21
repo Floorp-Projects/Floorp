@@ -624,7 +624,7 @@ var pktUI = (function() {
     }
 
     function getUILocale() {
-        return Services.locale.getAppLocaleAsLangTag();
+        return Services.locale.appLocaleAsLangTag;
     }
 
     /**

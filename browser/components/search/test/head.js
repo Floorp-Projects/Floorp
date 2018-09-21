@@ -22,7 +22,7 @@ function isSubObjectOf(expectedObj, actualObj, name) {
 }
 
 function getLocale() {
-  return Services.locale.getRequestedLocale() || undefined;
+  return Services.locale.requestedLocale || undefined;
 }
 
 function promiseEvent(aTarget, aEventName, aPreventDefault) {

@@ -306,7 +306,7 @@ class ChromeActions {
   }
 
   getLocale() {
-    return Services.locale.getRequestedLocale() || "en-US";
+    return Services.locale.requestedLocale || "en-US";
   }
 
   getStrings(data) {

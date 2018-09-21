@@ -106,7 +106,7 @@ DirectoryProvider.prototype = {
       return;
 
     let curLocale = "";
-    let reqLocales = Services.locale.getRequestedLocales();
+    let reqLocales = Services.locale.requestedLocales;
     if (reqLocales.length > 0) {
       curLocale = reqLocales[0];
     }

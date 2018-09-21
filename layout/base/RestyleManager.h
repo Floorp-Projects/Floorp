@@ -105,10 +105,10 @@ public:
 
 #ifdef DEBUG
   void AssertOwner(const ServoRestyleState& aParentState) const;
-  nsChangeHint ChangesHandledFor(const nsIFrame&) const;
+  nsChangeHint ChangesHandledFor(const nsIFrame*) const;
 #else
   void AssertOwner(const ServoRestyleState&) const {}
-  nsChangeHint ChangesHandledFor(const nsIFrame&) const
+  nsChangeHint ChangesHandledFor(const nsIFrame*) const
   {
     return mChangesHandled;
   }

@@ -74,14 +74,14 @@ add_task(function test_setup() {
   Services.prefs.setCharPref("urlclassifier.downloadBlockTable",
                              "goog-badbinurl-shavar");
   // SendRemoteQueryInternal needs locale preference.
-  let originalReqLocales = Services.locale.getRequestedLocales();
-  Services.locale.setRequestedLocales(["en-US"]);
+  let originalReqLocales = Services.locale.requestedLocales;
+  Services.locale.requestedLocales = ["en-US"];
 
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.safebrowsing.malware.enabled");
     Services.prefs.clearUserPref("browser.safebrowsing.downloads.enabled");
     Services.prefs.clearUserPref("urlclassifier.downloadBlockTable");
-    Services.locale.setRequestedLocales(originalReqLocales);
+    Services.locale.requestedLocales = originalReqLocales;
   });
 
   gHttpServer = new HttpServer();

@@ -35,7 +35,7 @@ class PerformancePanel {
 
     this.isReady = true;
     this.emit("ready");
-    this.panelWin.gInit(this.toolbox, perfFront, preferenceFront);
+    this.panelWin.gInit(perfFront, preferenceFront);
     return this;
   }
 

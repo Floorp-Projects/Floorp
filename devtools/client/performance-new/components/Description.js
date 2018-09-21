@@ -6,9 +6,6 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const { div, button, p } = require("devtools/client/shared/vendor/react-dom-factories");
 const { openDocLink } = require("devtools/client/shared/link");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const selectors = require("devtools/client/performance-new/store/selectors");
 
 /**
  * This component provides a helpful description for what is going on in the component
@@ -16,10 +13,7 @@ const selectors = require("devtools/client/performance-new/store/selectors");
  */
 class Description extends PureComponent {
   static get propTypes() {
-    return {
-      // StateProps:
-      toolbox: PropTypes.object.isRequired
-    };
+    return {};
   }
 
   constructor(props) {
@@ -71,8 +65,4 @@ class Description extends PureComponent {
   }
 }
 
-const mapStateToProps = state => ({
-  toolbox: selectors.getToolbox(state)
-});
-
-module.exports = connect(mapStateToProps)(Description);
+module.exports = Description;
