@@ -518,6 +518,47 @@ add_task(async function test_field_validation() {
 
   form.remove();
 });
+
+add_task(async function test_field_validation_dom_errors() {
+  let form = new AddressForm();
+  await form.promiseReady;
+  const state = {
+    page: {
+      id: "address-page",
+    },
+    "address-page": {
+      title: "Sample page title",
+    },
+  };
+  await form.requestStore.setState(state);
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  const BAD_POSTAL_CODE = "hi mom";
+  let postalCode = document.getElementById("postal-code");
+  postalCode.focus();
+  sendString(BAD_POSTAL_CODE, window);
+  postalCode.blur();
+  let errorTextSpan = postalCode.parentNode.querySelector(".error-text");
+  is(errorTextSpan.textContent, "Please match the requested format.",
+     "DOM validation messages should be reflected in the error-text #1");
+
+  postalCode.focus();
+  while (postalCode.value) {
+    sendKey("BACK_SPACE", window);
+  }
+  postalCode.blur();
+  is(errorTextSpan.textContent, "Please fill out this field.",
+     "DOM validation messages should be reflected in the error-text #2");
+
+  postalCode.focus();
+  sendString("12345", window);
+  is(errorTextSpan.innerText, "", "DOM validation message should be removed when no error");
+  postalCode.blur();
+
+  form.remove();
+});
+
 </script>
 
 </body>

@@ -20,7 +20,9 @@ Test the basic-card-form element
   <link rel="stylesheet" type="text/css" href="../../res/components/accepted-cards.css"/>
 </head>
 <body>
-  <p id="display">
+  <p id="display" style="height: 100vh; margin: 0;">
+    <iframe id="templateFrame" src="../../res/paymentRequest.xhtml" width="0" height="0"
+            style="float: left;"></iframe>
   </p>
 <div id="content" style="display: none">
 
@@ -52,6 +54,13 @@ function checkCCForm(customEl, expectedCard) {
        `Check ${propName}`);
   }
 }
+
+add_task(async function setup_once() {
+  let templateFrame = document.getElementById("templateFrame");
+  await SimpleTest.promiseFocus(templateFrame.contentWindow);
+  let displayEl = document.getElementById("display");
+  importDialogDependencies(templateFrame, displayEl);
+});
 
 add_task(async function test_initialState() {
   let form = new BasicCardForm();
@@ -143,6 +152,7 @@ add_task(async function test_saveButton() {
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
   is(form.saveButton.textContent, "Add", "Check label");
+  form.saveButton.scrollIntoView();
   synthesizeMouseAtCenter(form.saveButton, {});
 
   let details = await messagePromise;
