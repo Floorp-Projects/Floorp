@@ -702,7 +702,7 @@
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  list-style-image: url(chrome://browser/skin/arrow-left.svg) !important;
+  list-style-image: url(chrome://browser/skin/arrow-left.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
