@@ -33,7 +33,6 @@ skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3-ref.h
 skip-if(!asyncPan) == sticky-pos-scrollable-4.html sticky-pos-scrollable-4-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-5.html sticky-pos-scrollable-5-ref.html
 skip-if(!asyncPan) == sticky-pos-scrollable-6.html sticky-pos-scrollable-6-ref.html
-skip-if(!asyncPan||Android) == sticky-pos-scrollable-7.html sticky-pos-scrollable-7-ref.html // Bug 1430787 for the Android failure
 skip-if(!asyncPan) == fixed-pos-scrollable-1.html fixed-pos-scrollable-1-ref.html
 skip-if(!asyncPan) == culling-1.html culling-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
