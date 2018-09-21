@@ -90,6 +90,18 @@ SVGTextPathElement::SVGTextPathElement(already_AddRefed<mozilla::dom::NodeInfo>&
 {
 }
 
+void
+SVGTextPathElement::HrefAsString(nsAString& aHref)
+{
+  if (mStringAttributes[SVGTextPathElement::HREF].IsExplicitlySet()) {
+    mStringAttributes[SVGTextPathElement::HREF]
+      .GetAnimValue(aHref, this);
+  } else {
+    mStringAttributes[SVGTextPathElement::XLINK_HREF]
+      .GetAnimValue(aHref, this);
+  }
+}
+
 //----------------------------------------------------------------------
 // nsINode methods
 

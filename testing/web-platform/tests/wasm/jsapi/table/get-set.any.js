@@ -131,7 +131,9 @@ test(() => {
 
   const {fn} = functions;
 
-  assert_throws(new RangeError(), () => table.set(-1, fn));
+  // -1 is the wrong type hence the type check on entry gets this
+  // before the range check does.
+  assert_throws(new TypeError(), () => table.set(-1, fn));
   assert_throws(new RangeError(), () => table.set(5, fn));
   assert_equal_to_array(table, [null, null, null, null, null]);
 }, "Setting out-of-bounds");
@@ -218,3 +220,11 @@ test(() => {
   assert_equals(called, 1);
 }, "Order of argument conversion");
 
+test(() => {
+  const {fn} = functions;
+  const argument = { "element": "anyfunc", "initial": 1 };
+  const table = new WebAssembly.Table(argument);
+
+  assert_equals(table.get(0, {}), null);
+  assert_equals(table.set(0, fn, {}), undefined);
+}, "Stray argument");

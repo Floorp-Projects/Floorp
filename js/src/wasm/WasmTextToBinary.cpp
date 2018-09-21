@@ -2054,6 +2054,9 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::Return, begin, cur_);
         }
         if (consume(u"ref")) {
+            if (consume(u".eq")) {
+                return WasmToken(WasmToken::ComparisonOpcode, Op::RefEq, begin, cur_);
+            }
             if (consume(u".null")) {
                 return WasmToken(WasmToken::RefNull, begin, cur_);
             }

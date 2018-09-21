@@ -366,7 +366,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
     def install(self):
         if self.app == "geckoview":
-            self.install_apk(os.path.basename(self.installer_url))
+            self.install_apk(self.installer_path)
         else:
             super(Raptor, self).install()
 

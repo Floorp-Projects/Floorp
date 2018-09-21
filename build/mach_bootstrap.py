@@ -190,7 +190,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     def telemetry_handler(context, data):
         # We have not opted-in to telemetry
-        if 'BUILD_SYSTEM_TELEMETRY' not in os.environ:
+        if not context.settings.build.telemetry:
             return
 
         telemetry_dir = os.path.join(get_state_dir()[0], 'telemetry')
@@ -206,35 +206,16 @@ def bootstrap(topsrcdir, mozilla_dir=None):
             if e.errno != errno.EEXIST:
                 raise
 
-        # Add common metadata to help submit sorted data later on.
-        data['argv'] = sys.argv
-        data.setdefault('system', {}).update(dict(
-            architecture=list(platform.architecture()),
-            machine=platform.machine(),
-            python_version=platform.python_version(),
-            release=platform.release(),
-            system=platform.system(),
-            version=platform.version(),
-        ))
-
-        if platform.system() == 'Linux':
-            dist = list(platform.linux_distribution())
-            data['system']['linux_distribution'] = dist
-        elif platform.system() == 'Windows':
-            win32_ver = list((platform.win32_ver())),
-            data['system']['win32_ver'] = win32_ver
-        elif platform.system() == 'Darwin':
-            # mac version is a special Cupertino snowflake
-            r, v, m = platform.mac_ver()
-            data['system']['mac_ver'] = [r, list(v), m]
-
         with open(os.path.join(outgoing_dir, str(uuid.uuid4()) + '.json'),
                   'w') as f:
             json.dump(data, f, sort_keys=True)
 
     def should_skip_dispatch(context, handler):
         # The user is performing a maintenance command.
-        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'vcs-setup'):
+        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'vcs-setup',
+                            # We call mach environment in client.mk which would cause the
+                            # data submission to block the forward progress of make.
+                            'environment'):
             return True
 
         # We are running in automation.
@@ -257,13 +238,8 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if should_skip_dispatch(context, handler):
             return
 
-        # We call mach environment in client.mk which would cause the
-        # data submission below to block the forward progress of make.
-        if handler.name in ('environment'):
-            return
-
         # We have not opted-in to telemetry
-        if 'BUILD_SYSTEM_TELEMETRY' not in os.environ:
+        if not context.settings.build.telemetry:
             return
 
         # Every n-th operation
