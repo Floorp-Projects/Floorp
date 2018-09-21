@@ -37,7 +37,7 @@ var tabs = [
 
 async function initTab(tabX, startToolbox) {
   tabX.tab = await addTab(TEST_URI);
-  tabX.target = await TargetFactory.forTab(tabX.tab);
+  tabX.target = TargetFactory.forTab(tabX.tab);
 
   if (startToolbox) {
     tabX.toolbox = await gDevTools.showToolbox(tabX.target, "options");

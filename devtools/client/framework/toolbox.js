@@ -447,7 +447,7 @@ Toolbox.prototype = {
       // the iframe being ready (makes startup faster)
 
       // Load the toolbox-level actor fronts and utilities now
-      await this._target.attach();
+      await this._target.makeRemote();
 
       // Start tracking network activity on toolbox open for targets such as tabs.
       // (Workers and potentially others don't manage the console client in the target.)

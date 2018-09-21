@@ -22,7 +22,7 @@ add_task(async function() {
   await checkFlexboxHighlighter();
 
   info("Close the toolbox before reloading the tab.");
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   await gDevTools.closeToolbox(target);
 
   await refreshTab();

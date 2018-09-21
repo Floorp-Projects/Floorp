@@ -14,7 +14,7 @@ add_task(async function task() {
   await openNewTabAndToolbox(TEST_URI, "netmonitor");
 
   const currentTab = gBrowser.selectedTab;
-  const target = await TargetFactory.forTab(currentTab);
+  const target = TargetFactory.forTab(currentTab);
   const toolbox = gDevTools.getToolbox(target);
 
   const monitor = toolbox.getCurrentPanel();
