@@ -169,7 +169,6 @@ function createPerfComponent() {
   const selectors = require("devtools/client/performance-new/store/selectors");
 
   const perfFrontMock = new MockPerfFront();
-  const toolboxMock = {};
   const store = createStore(reducers);
   const container = document.querySelector("#container");
   const receiveProfileCalls = [];
@@ -185,7 +184,6 @@ function createPerfComponent() {
 
   function mountComponent() {
     store.dispatch(actions.initializeStore({
-      toolbox: toolboxMock,
       perfFront: perfFrontMock,
       receiveProfile: receiveProfileMock,
       recordingSettingsFromPreferences: selectors.getRecordingSettings(store.getState()),
