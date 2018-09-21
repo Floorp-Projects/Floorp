@@ -21,6 +21,7 @@
 // conflicts with #include of scoped_ptr.h
 #undef FF
 // Video Engine Includes
+#include "api/video_codecs/video_encoder_factory.h"
 #include "webrtc/call/call.h"
 #include "webrtc/common_types.h"
 #ifdef FF
@@ -28,6 +29,7 @@
 #endif
 #include "webrtc/api/video_codecs/video_decoder.h"
 #include "webrtc/api/video_codecs/video_encoder.h"
+#include "webrtc/api/video_codecs/sdp_video_format.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
 #include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/media/base/videoadapter.h"
@@ -72,6 +74,7 @@ class WebrtcVideoDecoder : public VideoDecoder
  */
 class WebrtcVideoConduit : public VideoSessionConduit
                          , public webrtc::Transport
+                         , public webrtc::VideoEncoderFactory
                          , public rtc::VideoSinkInterface<webrtc::VideoFrame>
                          , public rtc::VideoSourceInterface<webrtc::VideoFrame>
 {
@@ -461,6 +464,14 @@ private:
   std::unique_ptr<webrtc::VideoDecoder> CreateDecoder(webrtc::VideoCodecType aType);
   std::unique_ptr<webrtc::VideoEncoder> CreateEncoder(webrtc::VideoCodecType aType,
                                                       bool enable_simulcast);
+
+  // webrtc::VideoEncoderFactory
+  std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
+
+  CodecInfo QueryVideoEncoder(const webrtc::SdpVideoFormat& format) const override;
+
+  std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
+      const webrtc::SdpVideoFormat& format) override;
 
   MediaConduitErrorCode DeliverPacket(const void *data, int len) override;
 
