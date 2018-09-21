@@ -7,6 +7,8 @@ const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {GetAvailableAddons, ForgetAddonsList} = require("devtools/client/webide/modules/addons");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+const {ADBScanner} = require("devtools/shared/adb/adb-scanner");
+const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 
 window.addEventListener("load", function() {
   document.querySelector("#aboutaddons").onclick = function() {
@@ -36,6 +38,11 @@ function BuildItem(addon, type) {
     progress.removeAttribute("value");
     li.setAttribute("status", addon.status);
     status.textContent = Strings.GetStringFromName("addons_status_" + addon.status);
+    if (addon.status == "installed") {
+      RuntimeScanners.add(ADBScanner);
+    } else if (addon.status == "uninstalled") {
+      RuntimeScanners.remove(ADBScanner);
+    }
   }
 
   function onAddonFailure(arg) {
