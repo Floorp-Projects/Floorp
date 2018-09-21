@@ -2939,6 +2939,18 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsAtom* aOrig
   mLastSmoothScrollOrigin = nullptr;
   mScrollGeneration = ++sScrollGenerationCounter;
 
+  // If the new scroll offset is going to clobber APZ's scroll offset, for
+  // the RCD-RSF this will have the effect of resetting the visual viewport
+  // offset to be the same as the new scroll (= layout viewport) offset.
+  // The APZ callback transform, which reflects the difference between these
+  // offsets, will subsequently be cleared. However, it we wait for APZ to
+  // clear it, the main thread could end up using the old value and get
+  // incorrect results, so just clear it now.
+  if (mIsRoot && nsLayoutUtils::CanScrollOriginClobberApz(mLastScrollOrigin)) {
+    content->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(),
+                         nsINode::DeleteProperty<CSSPoint>);
+  }
+
   ScrollVisual();
 
   bool schedulePaint = true;
