@@ -148,11 +148,6 @@ public:
     return mIncumbentGlobal;
   }
 
-  void Reset()
-  {
-    ClearJSReferences();
-  }
-
   enum ExceptionHandling {
     // Report any exception and don't throw it to the caller code.
     eReportExceptions,
