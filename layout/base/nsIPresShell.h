@@ -1677,6 +1677,8 @@ public:
     return mVisualViewportOffset;
   }
 
+  nsPoint GetVisualViewportOffsetRelativeToLayoutViewport() const;
+
   virtual void WindowSizeMoveDone() = 0;
   virtual void SysColorChanged() = 0;
   virtual void ThemeChanged() = 0;
