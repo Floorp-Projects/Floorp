@@ -94,9 +94,9 @@ permalink: /changelog/
     * Standard library: 1.2.61
     * Coroutines: 0.23.4
   * GeckoView
-    * Nightly: **64.0.20180905100117** 🔺
-    * Beta: **63.0b3** (0269319281578bff4e01d77a21350bf91ba08620) 🔺
-    * Release: **62.0** (9cbae12a3fff404ed2c12070ad475424d0ae869f) 🔺
+    * Nightly: 64.0.20180905100117
+    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
+    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
 
 * Added initial documentation for the browser-session component: https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/README.md
 * **sync-logins**: New component for integrating with Firefox Sync (for Logins). A sample app showcasing this new functionality can be found at: https://github.com/mozilla-mobile/android-components/tree/master/samples/sync-logins
