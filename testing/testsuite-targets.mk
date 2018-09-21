@@ -125,6 +125,7 @@ TEST_PKGS_TARGZ := \
   awsy \
   xpcshell \
   web-platform \
+  updater-dep \
   $(NULL)
 
 ifdef LINK_GTEST_DURING_COMPILE
