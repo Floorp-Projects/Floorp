@@ -319,7 +319,7 @@ add_task(async function test_doorhanger_homepage_button() {
   await ext2.startup();
 
   let popupShown = promisePopupShown(panel);
-  BrowserGoHome();
+  BrowserHome();
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await popupShown;
 
