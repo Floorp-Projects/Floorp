@@ -183,8 +183,8 @@ var openInspectorForURL = async function(url, hostType) {
   return { tab, inspector, toolbox, testActor };
 };
 
-async function getActiveInspector() {
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+function getActiveInspector() {
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   return gDevTools.getToolbox(target).getPanel("inspector");
 }
 

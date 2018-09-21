@@ -35,7 +35,7 @@ add_task(async function() {
 });
 
 async function testToolboxInitialization(testActor, tab) {
-  const target = await TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
 
   info("Opening inspector with gDevTools.");
   const toolbox = await gDevTools.showToolbox(target, "inspector");
@@ -75,7 +75,7 @@ async function testContextMenuInitialization(testActor) {
 async function testContextMenuInspectorAlreadyOpen(testActor) {
   info("Changing node by clicking on 'Inspect Element' context menu item");
 
-  const inspector = await getActiveInspector();
+  const inspector = getActiveInspector();
   ok(inspector, "Inspector is active");
 
   await clickOnInspectMenuItem(testActor, "#closing");
@@ -86,9 +86,7 @@ async function testContextMenuInspectorAlreadyOpen(testActor) {
 }
 
 async function testMarkupView(selector, inspector) {
-  if (!inspector) {
-    inspector = await getActiveInspector();
-  }
+  inspector = inspector || getActiveInspector();
   const nodeFront = await getNodeFront(selector, inspector);
   try {
     is(inspector.selection.nodeFront, nodeFront,
@@ -100,9 +98,7 @@ async function testMarkupView(selector, inspector) {
 }
 
 async function testBreadcrumbs(selector, inspector) {
-  if (!inspector) {
-    inspector = await getActiveInspector();
-  }
+  inspector = inspector || getActiveInspector();
   const nodeFront = await getNodeFront(selector, inspector);
 
   const b = inspector.breadcrumbs;

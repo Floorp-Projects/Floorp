@@ -20,7 +20,7 @@ add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const currentTab = gBrowser.selectedTab;
-  const target = await TargetFactory.forTab(currentTab);
+  const target = TargetFactory.forTab(currentTab);
   const toolbox = gDevTools.getToolbox(target);
   const {ui} = toolbox.getCurrentPanel().hud;
   const onNetworkMessageUpdate = ui.jsterm.hud.once("network-message-updated");

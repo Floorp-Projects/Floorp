@@ -87,56 +87,42 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    */
   async openIfNeeded(window, tab, options = {}) {
     if (!tab.linkedBrowser.isRemoteBrowser) {
-      await this.showRemoteOnlyNotification(window, tab, options);
+      this.showRemoteOnlyNotification(window, tab, options);
       return promise.reject(new Error("RDM only available for remote tabs."));
     }
     if (!this.isActiveForTab(tab)) {
       this.initMenuCheckListenerFor(window);
 
+      // Track whether a toolbox was opened before RDM was opened.
+      const toolbox = gDevTools.getToolbox(TargetFactory.forTab(tab));
+      const hostType = toolbox ? toolbox.hostType : "none";
+      const hasToolbox = !!toolbox;
+      const tel = this._telemetry;
+      if (hasToolbox) {
+        tel.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
+      }
+
+      tel.recordEvent("devtools.main", "activate", "responsive_design", null, {
+        "host": hostType,
+        "width": Math.ceil(window.outerWidth / 50) * 50,
+        "session_id": toolbox ? toolbox.sessionId : -1
+      });
+
+      // Track opens keyed by the UI entry point used.
+      let { trigger } = options;
+      if (!trigger) {
+        trigger = "unknown";
+      }
+      tel.keyedScalarAdd("devtools.responsive.open_trigger", trigger, 1);
+
       const ui = new ResponsiveUI(window, tab);
       this.activeTabs.set(tab, ui);
-
-      // Explicitly not await on telemetry to avoid delaying RDM opening
-      this.recordTelemetryOpen(window, tab, options);
-
       await this.setMenuCheckFor(tab, window);
       await ui.inited;
       this.emit("on", { tab });
     }
 
     return this.getResponsiveUIForTab(tab);
-  },
-
-  /**
-   * Record all telemetry probes related to RDM opening.
-   */
-  async recordTelemetryOpen(window, tab, options) {
-    // Track whether a toolbox was opened before RDM was opened.
-    const isKnownTab = TargetFactory.isKnownTab(tab);
-    let toolbox;
-    if (isKnownTab) {
-      const target = await TargetFactory.forTab(tab);
-      toolbox = gDevTools.getToolbox(target);
-    }
-    const hostType = toolbox ? toolbox.hostType : "none";
-    const hasToolbox = !!toolbox;
-    const tel = this._telemetry;
-    if (hasToolbox) {
-      tel.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
-    }
-
-    tel.recordEvent("devtools.main", "activate", "responsive_design", null, {
-      "host": hostType,
-      "width": Math.ceil(window.outerWidth / 50) * 50,
-      "session_id": toolbox ? toolbox.sessionId : -1
-    });
-
-    // Track opens keyed by the UI entry point used.
-    let { trigger } = options;
-    if (!trigger) {
-      trigger = "unknown";
-    }
-    tel.keyedScalarAdd("devtools.responsive.open_trigger", trigger, 1);
   },
 
   /**
@@ -158,12 +144,29 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    */
   async closeIfNeeded(window, tab, options = {}) {
     if (this.isActiveForTab(tab)) {
+      const isKnownTab = TargetFactory.isKnownTab(tab);
+      const target = TargetFactory.forTab(tab);
+      const toolbox = gDevTools.getToolbox(target);
+
+      if (!toolbox && !isKnownTab) {
+        // Destroy the tabTarget to avoid a memory leak.
+        target.destroy();
+      }
+
       const ui = this.activeTabs.get(tab);
       const destroyed = await ui.destroy(options);
       if (!destroyed) {
         // Already in the process of destroying, abort.
         return;
       }
+
+      const hostType = toolbox ? toolbox.hostType : "none";
+      const t = this._telemetry;
+      t.recordEvent("devtools.main", "deactivate", "responsive_design", null, {
+        "host": hostType,
+        "width": Math.ceil(window.outerWidth / 50) * 50,
+        "session_id": toolbox ? toolbox.sessionId : -1
+      });
 
       this.activeTabs.delete(tab);
 
@@ -172,27 +175,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       }
       this.emit("off", { tab });
       await this.setMenuCheckFor(tab, window);
-
-      // Explicitly not await on telemetry to avoid delaying RDM closing
-      this.recordTelemetryClose(window, tab);
     }
-  },
-
-  async recordTelemetryClose(window, tab) {
-    const isKnownTab = TargetFactory.isKnownTab(tab);
-    let toolbox;
-    if (isKnownTab) {
-      const target = await TargetFactory.forTab(tab);
-      toolbox = gDevTools.getToolbox(target);
-    }
-
-    const hostType = toolbox ? toolbox.hostType : "none";
-    const t = this._telemetry;
-    t.recordEvent("devtools.main", "deactivate", "responsive_design", null, {
-      "host": hostType,
-      "width": Math.ceil(window.outerWidth / 50) * 50,
-      "session_id": toolbox ? toolbox.sessionId : -1
-    });
   },
 
   /**
@@ -255,7 +238,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
   },
 
   showRemoteOnlyNotification(window, tab, { trigger } = {}) {
-    return showNotification(window, tab, {
+    showNotification(window, tab, {
       toolboxButton: trigger == "toolbox",
       msg: l10n.getStr("responsive.remoteOnly"),
       priority: PriorityLevels.PRIORITY_CRITICAL_MEDIUM,
@@ -391,8 +374,7 @@ ResponsiveUI.prototype = {
     // If our tab is about to be closed, there's not enough time to exit
     // gracefully, but that shouldn't be a problem since the tab will go away.
     // So, skip any waiting when we're about to close the tab.
-    const isTabDestroyed = !this.tab.linkedBrowser;
-    const isWindowClosing = (options && options.reason === "unload") || isTabDestroyed;
+    const isWindowClosing = options && options.reason === "unload";
     const isTabContentDestroying =
       isWindowClosing || (options && (options.reason === "TabClose" ||
                                       options.reason === "BeforeTabRemotenessChange"));

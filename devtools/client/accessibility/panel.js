@@ -61,7 +61,7 @@ AccessibilityPanel.prototype = {
 
     // Local monitoring needs to make the target remote.
     if (!this.target.isRemote) {
-      await this.target.attach();
+      await this.target.makeRemote();
     }
 
     this._telemetry = new Telemetry();
