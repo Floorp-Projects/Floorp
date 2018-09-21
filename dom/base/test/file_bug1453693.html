@@ -125,6 +125,10 @@
         shadowInput.onfocus = focusLogger;
         sr.appendChild(shadowInput);
 
+        var hiddenShadowButton = document.createElement("button");
+        hiddenShadowButton.setAttribute("style", "display: none;");
+        sr.appendChild(hiddenShadowButton);
+
         var input = document.createElement("input");
         input.onfocus = focusLogger;
         document.body.appendChild(input);

@@ -3288,9 +3288,6 @@ nsFocusManager::GetNextTabbableContentInScope(nsIContent* aOwner,
         break;
       }
 
-      // Get the tab index of the next element. For NAC we rely on frames.
-      //XXXsmaug we should probably use frames also for Shadow DOM and special
-      //         case only display:contents elements.
       int32_t tabIndex = 0;
       if (iterContent->IsInNativeAnonymousSubtree() &&
           iterContent->GetPrimaryFrame()) {
@@ -3298,7 +3295,11 @@ nsFocusManager::GetNextTabbableContentInScope(nsIContent* aOwner,
       } else if (IsHostOrSlot(iterContent)) {
         tabIndex = HostOrSlotTabIndexValue(iterContent);
       } else {
-        iterContent->IsFocusable(&tabIndex);
+        nsIFrame* frame = iterContent->GetPrimaryFrame();
+        if (!frame) {
+          continue;
+        }
+        frame->IsFocusable(&tabIndex, 0);
       }
       if (tabIndex < 0 || !(aIgnoreTabIndex || tabIndex == aCurrentTabIndex)) {
         // If the element has native anonymous content, we may need to
