@@ -34,9 +34,18 @@ impl CGColorSpace {
         }
     }
 
+    #[inline]
     pub fn create_device_rgb() -> CGColorSpace {
         unsafe {
             let result = CGColorSpaceCreateDeviceRGB();
+            CGColorSpace::from_ptr(result)
+        }
+    }
+
+    #[inline]
+    pub fn create_device_gray() -> CGColorSpace {
+        unsafe {
+            let result = CGColorSpaceCreateDeviceGray();
             CGColorSpace::from_ptr(result)
         }
     }
@@ -53,6 +62,7 @@ extern {
     pub static kCGColorSpaceGenericGrayGamma2_2: CFStringRef;
 
     fn CGColorSpaceCreateDeviceRGB() -> ::sys::CGColorSpaceRef;
+    fn CGColorSpaceCreateDeviceGray() -> ::sys::CGColorSpaceRef;
     fn CGColorSpaceCreateWithName(name: CFStringRef) -> ::sys::CGColorSpaceRef;
     fn CGColorSpaceGetTypeID() -> CFTypeID;
 }
