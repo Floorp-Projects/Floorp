@@ -691,10 +691,8 @@ SUPERSEDER_URL = 'https://coalesce.mozilla-releng.net/v1/list/{age}/{size}/{key}
 DEFAULT_BRANCH_PRIORITY = 'low'
 BRANCH_PRIORITIES = {
     'mozilla-release': 'highest',
-    'comm-esr45': 'highest',
-    'comm-esr52': 'highest',
-    'mozilla-esr45': 'very-high',
-    'mozilla-esr52': 'very-high',
+    'comm-esr60': 'highest',
+    'mozilla-esr60': 'very-high',
     'mozilla-beta': 'high',
     'comm-beta': 'high',
     'mozilla-central': 'medium',

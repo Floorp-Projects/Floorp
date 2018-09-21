@@ -3694,9 +3694,9 @@ CacheIRCompiler::emitMegamorphicLoadSlotByValueResult()
     masm.passABIArg(obj);
     masm.passABIArg(idVal.scratchReg());
     if (handleMissing) {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValue<true>)));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValuePure<true>)));
     } else {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValue<false>)));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValuePure<false>)));
     }
     masm.mov(ReturnReg, scratch);
     masm.PopRegsInMask(volatileRegs);
@@ -3751,9 +3751,9 @@ CacheIRCompiler::emitMegamorphicHasPropResult()
     masm.passABIArg(obj);
     masm.passABIArg(idVal.scratchReg());
     if (hasOwn) {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasNativeDataProperty<true>));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<true>));
     } else {
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasNativeDataProperty<false>));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasNativeDataPropertyPure<false>));
     }
     masm.mov(ReturnReg, scratch);
     masm.PopRegsInMask(volatileRegs);
