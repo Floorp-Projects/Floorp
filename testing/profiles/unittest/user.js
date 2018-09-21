@@ -189,7 +189,7 @@ user_pref("layout.css.shape-outside.enabled", true);
 user_pref("layout.spammy_warnings.enabled", false);
 // Make tests run consistently on DevEdition (which has a lightweight theme
 // selected by default).
-user_pref("lightweightThemes.selectedThemeID", "");
+user_pref("lightweightThemes.selectedThemeID", "default-theme@mozilla.org");
 // Disable all recommended Marionette preferences for Gecko tests.
 // The prefs recommended by Marionette are typically geared towards
 // consumer automation; not vendor testing.
