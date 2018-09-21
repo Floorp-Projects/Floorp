@@ -599,7 +599,7 @@ var Scratchpad = {
     target.once("navigate", () => {
       this.run().then(results => deferred.resolve(results));
     });
-    target.makeRemote().then(() => target.activeTab.reload());
+    target.attach().then(() => target.activeTab.reload());
 
     return deferred.promise;
   },
@@ -2099,7 +2099,7 @@ ScratchpadTab.prototype = {
         scratchpadTargets.delete(aSubject);
       }
     });
-    return target.makeRemote().then(() => target);
+    return target.attach().then(() => target);
   },
 };
 
@@ -2143,7 +2143,7 @@ ScratchpadTarget.prototype = extend(ScratchpadTab.prototype, {
     if (this._target.isRemote) {
       return promise.resolve(this._target);
     }
-    return this._target.makeRemote().then(() => this._target);
+    return this._target.attach().then(() => this._target);
   }
 });
 
