@@ -448,8 +448,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
 //    ConvertToInt(v, 32, 'unsigned')
 // defined in Web IDL Section 3.2.4.9.
 static bool
-EnforceRangeU32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, const char* noun,
-                uint32_t* u32)
+EnforceRangeU32(JSContext* cx, HandleValue v, const char* kind, const char* noun, uint32_t* u32)
 {
     // Step 4.
     double x;
@@ -471,8 +470,8 @@ EnforceRangeU32(JSContext* cx, HandleValue v, uint32_t max, const char* kind, co
     // Step 6.2.
     x = JS::ToInteger(x);
 
-    // Step 6.3, allowing caller to supply a more restrictive uint32_t max.
-    if (x < 0 || x > double(max)) {
+    // Step 6.3.
+    if (x < 0 || x > double(UINT32_MAX)) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
         return false;
     }
@@ -497,7 +496,13 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
         return false;
     }
 
-    if (!EnforceRangeU32(cx, initialVal, maxInitial, kind, "initial size", &limits->initial)) {
+    if (!EnforceRangeU32(cx, initialVal, kind, "initial size", &limits->initial)) {
+        return false;
+    }
+
+    if (limits->initial > maxInitial) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
+                                 kind, "initial size");
         return false;
     }
 
@@ -507,24 +512,20 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
     }
     RootedId maximumId(cx, AtomToId(maximumAtom));
 
-    bool foundMaximum;
-    if (!HasProperty(cx, obj, maximumId, &foundMaximum)) {
+    RootedValue maxVal(cx);
+    if (!GetProperty(cx, obj, obj, maximumId, &maxVal)) {
         return false;
     }
 
-    if (foundMaximum) {
-        RootedValue maxVal(cx);
-        if (!GetProperty(cx, obj, obj, maximumId, &maxVal)) {
-            return false;
-        }
-
+    // maxVal does not have a default value.
+    if (!maxVal.isUndefined()) {
         limits->maximum.emplace();
-        if (!EnforceRangeU32(cx, maxVal, maxMaximum, kind, "maximum size", limits->maximum.ptr())) {
+        if (!EnforceRangeU32(cx, maxVal, kind, "maximum size", limits->maximum.ptr())) {
             return false;
         }
 
-        if (limits->initial > *limits->maximum) {
-            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
+        if (*limits->maximum > maxMaximum || limits->initial > *limits->maximum) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE,
                                      kind, "maximum size");
             return false;
         }
@@ -540,21 +541,17 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
         }
         RootedId sharedId(cx, AtomToId(sharedAtom));
 
-        bool foundShared;
-        if (!HasProperty(cx, obj, sharedId, &foundShared)) {
+        RootedValue sharedVal(cx);
+        if (!GetProperty(cx, obj, obj, sharedId, &sharedVal)) {
             return false;
         }
 
-        if (foundShared) {
-            RootedValue sharedVal(cx);
-            if (!GetProperty(cx, obj, obj, sharedId, &sharedVal)) {
-                return false;
-            }
-
+        // shared's default value is false, which is already the value set above.
+        if (!sharedVal.isUndefined()) {
             limits->shared = ToBoolean(sharedVal) ? Shareable::True : Shareable::False;
 
             if (limits->shared == Shareable::True) {
-                if (!foundMaximum) {
+                if (maxVal.isUndefined()) {
                     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_MISSING_MAXIMUM,
                                               kind);
                     return false;
@@ -604,9 +601,9 @@ const JSFunctionSpec WasmModuleObject::methods[] =
 
 const JSFunctionSpec WasmModuleObject::static_methods[] =
 {
-    JS_FN("imports", WasmModuleObject::imports, 1, 0),
-    JS_FN("exports", WasmModuleObject::exports, 1, 0),
-    JS_FN("customSections", WasmModuleObject::customSections, 2, 0),
+    JS_FN("imports", WasmModuleObject::imports, 1, JSPROP_ENUMERATE),
+    JS_FN("exports", WasmModuleObject::exports, 1, JSPROP_ENUMERATE),
+    JS_FN("customSections", WasmModuleObject::customSections, 2, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
@@ -629,9 +626,9 @@ IsModuleObject(JSObject* obj, const Module** module)
 }
 
 static bool
-GetModuleArg(JSContext* cx, CallArgs args, const char* name, const Module** module)
+GetModuleArg(JSContext* cx, CallArgs args, uint32_t numRequired, const char* name, const Module** module)
 {
-    if (!args.requireAtLeast(cx, name, 1)) {
+    if (!args.requireAtLeast(cx, name, numRequired)) {
         return false;
     }
 
@@ -752,7 +749,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     const Module* module;
-    if (!GetModuleArg(cx, args, "WebAssembly.Module.imports", &module)) {
+    if (!GetModuleArg(cx, args, 1, "WebAssembly.Module.imports", &module)) {
         return false;
     }
 
@@ -826,7 +823,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     const Module* module;
-    if (!GetModuleArg(cx, args, "WebAssembly.Module.exports", &module)) {
+    if (!GetModuleArg(cx, args, 1, "WebAssembly.Module.exports", &module)) {
         return false;
     }
 
@@ -894,7 +891,7 @@ WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     const Module* module;
-    if (!GetModuleArg(cx, args, "WebAssembly.Module.customSections", &module)) {
+    if (!GetModuleArg(cx, args, 2, "WebAssembly.Module.customSections", &module)) {
         return false;
     }
 
@@ -1132,7 +1129,7 @@ WasmInstanceObject::exportsGetter(JSContext* cx, unsigned argc, Value* vp)
 
 const JSPropertySpec WasmInstanceObject::properties[] =
 {
-    JS_PSG("exports", WasmInstanceObject::exportsGetter, 0),
+    JS_PSG("exports", WasmInstanceObject::exportsGetter, JSPROP_ENUMERATE),
     JS_PS_END
 };
 
@@ -1742,7 +1739,7 @@ WasmMemoryObject::bufferGetter(JSContext* cx, unsigned argc, Value* vp)
 
 const JSPropertySpec WasmMemoryObject::properties[] =
 {
-    JS_PSG("buffer", WasmMemoryObject::bufferGetter, 0),
+    JS_PSG("buffer", WasmMemoryObject::bufferGetter, JSPROP_ENUMERATE),
     JS_PS_END
 };
 
@@ -1751,8 +1748,12 @@ WasmMemoryObject::growImpl(JSContext* cx, const CallArgs& args)
 {
     RootedWasmMemoryObject memory(cx, &args.thisv().toObject().as<WasmMemoryObject>());
 
+    if (!args.requireAtLeast(cx, "WebAssembly.Memory.grow", 1)) {
+        return false;
+    }
+
     uint32_t delta;
-    if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Memory", "grow delta", &delta)) {
+    if (!EnforceRangeU32(cx, args.get(0), "Memory", "grow delta", &delta)) {
         return false;
     }
 
@@ -1776,7 +1777,7 @@ WasmMemoryObject::grow(JSContext* cx, unsigned argc, Value* vp)
 
 const JSFunctionSpec WasmMemoryObject::methods[] =
 {
-    JS_FN("grow", WasmMemoryObject::grow, 1, 0),
+    JS_FN("grow", WasmMemoryObject::grow, 1, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
@@ -2077,17 +2078,17 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!elementVal.isString()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
-        return false;
-    }
-
-    JSLinearString* elementStr = elementVal.toString()->ensureLinear(cx);
+    RootedString elementStr(cx, ToString(cx, elementVal));
     if (!elementStr) {
         return false;
     }
 
-    if (!StringEqualsAscii(elementStr, "anyfunc")) {
+    RootedLinearString elementLinearStr(cx, elementStr->ensureLinear(cx));
+    if (!elementLinearStr) {
+        return false;
+    }
+
+    if (!StringEqualsAscii(elementLinearStr, "anyfunc")) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
         return false;
     }
@@ -2130,19 +2131,19 @@ WasmTableObject::lengthGetter(JSContext* cx, unsigned argc, Value* vp)
 
 const JSPropertySpec WasmTableObject::properties[] =
 {
-    JS_PSG("length", WasmTableObject::lengthGetter, 0),
+    JS_PSG("length", WasmTableObject::lengthGetter, JSPROP_ENUMERATE),
     JS_PS_END
 };
 
 static bool
 ToTableIndex(JSContext* cx, HandleValue v, const Table& table, const char* noun, uint32_t* index)
 {
-    if (!EnforceRangeU32(cx, v, UINT32_MAX, "Table", noun, index)) {
+    if (!EnforceRangeU32(cx, v, "Table", noun, index)) {
         return false;
     }
 
     if (*index >= table.length()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, "Table", noun);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_RANGE, "Table", noun);
         return false;
     }
 
@@ -2154,6 +2155,10 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
 {
     RootedWasmTableObject tableObj(cx, &args.thisv().toObject().as<WasmTableObject>());
     const Table& table = tableObj->table();
+
+    if (!args.requireAtLeast(cx, "WebAssembly.Table.get", 1)) {
+        return false;
+    }
 
     uint32_t index;
     if (!ToTableIndex(cx, args.get(0), table, "get index", &index)) {
@@ -2192,7 +2197,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
     RootedWasmTableObject tableObj(cx, &args.thisv().toObject().as<WasmTableObject>());
     Table& table = tableObj->table();
 
-    if (!args.requireAtLeast(cx, "set", 2)) {
+    if (!args.requireAtLeast(cx, "WebAssembly.Table.set", 2)) {
         return false;
     }
 
@@ -2243,8 +2248,12 @@ WasmTableObject::growImpl(JSContext* cx, const CallArgs& args)
 {
     RootedWasmTableObject table(cx, &args.thisv().toObject().as<WasmTableObject>());
 
+    if (!args.requireAtLeast(cx, "WebAssembly.Table.grow", 1)) {
+        return false;
+    }
+
     uint32_t delta;
-    if (!EnforceRangeU32(cx, args.get(0), UINT32_MAX, "Table", "grow delta", &delta)) {
+    if (!EnforceRangeU32(cx, args.get(0), "Table", "grow delta", &delta)) {
         return false;
     }
 
@@ -2268,9 +2277,9 @@ WasmTableObject::grow(JSContext* cx, unsigned argc, Value* vp)
 
 const JSFunctionSpec WasmTableObject::methods[] =
 {
-    JS_FN("get", WasmTableObject::get, 1, 0),
-    JS_FN("set", WasmTableObject::set, 2, 0),
-    JS_FN("grow", WasmTableObject::grow, 1, 0),
+    JS_FN("get", WasmTableObject::get, 1, JSPROP_ENUMERATE),
+    JS_FN("set", WasmTableObject::set, 2, JSPROP_ENUMERATE),
+    JS_FN("grow", WasmTableObject::grow, 1, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
@@ -2421,6 +2430,13 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject obj(cx, &args[0].toObject());
 
+    // Extract properties in lexicographic order per spec.
+
+    RootedValue mutableVal(cx);
+    if (!JS_GetProperty(cx, obj, "mutable", &mutableVal)) {
+        return false;
+    }
+
     RootedValue typeVal(cx);
     if (!JS_GetProperty(cx, obj, "value", &typeVal)) {
         return false;
@@ -2456,28 +2472,26 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedValue mutableVal(cx);
-    if (!JS_GetProperty(cx, obj, "mutable", &mutableVal)) {
-        return false;
-    }
-
     bool isMutable = ToBoolean(mutableVal);
 
     // Extract the initial value, or provide a suitable default.
     RootedVal globalVal(cx);
-    if (args.length() >= 2) {
-        RootedValue valueVal(cx, args.get(1));
+
+    // Initialize with default value.
+    switch (globalType.code()) {
+      case ValType::I32:    globalVal = Val(uint32_t(0)); break;
+      case ValType::I64:    globalVal = Val(uint64_t(0)); break;
+      case ValType::F32:    globalVal = Val(float(0.0));  break;
+      case ValType::F64:    globalVal = Val(double(0.0)); break;
+      case ValType::AnyRef: globalVal = Val(nullptr);     break;
+      case ValType::Ref:    MOZ_CRASH("Ref NYI");
+    }
+
+    // Override with non-undefined value, if provided.
+    RootedValue valueVal(cx, args.get(1));
+    if (!valueVal.isUndefined()) {
         if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal)) {
             return false;
-        }
-    } else {
-        switch (globalType.code()) {
-          case ValType::I32:    globalVal = Val(uint32_t(0)); break;
-          case ValType::I64:    globalVal = Val(uint64_t(0)); break;
-          case ValType::F32:    globalVal = Val(float(0.0));  break;
-          case ValType::F64:    globalVal = Val(double(0.0)); break;
-          case ValType::AnyRef: globalVal = Val(nullptr);     break;
-          case ValType::Ref:    MOZ_CRASH("Ref NYI");
         }
     }
 
@@ -2525,6 +2539,10 @@ WasmGlobalObject::valueGetter(JSContext* cx, unsigned argc, Value* vp)
 /* static */ bool
 WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args)
 {
+    if (!args.requireAtLeast(cx, "WebAssembly.Global setter", 1)) {
+        return false;
+    }
+
     RootedWasmGlobalObject global(cx, &args.thisv().toObject().as<WasmGlobalObject>());
     if (!global->isMutable()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_GLOBAL_IMMUTABLE);
@@ -2587,7 +2605,7 @@ const JSPropertySpec WasmGlobalObject::properties[] =
 
 const JSFunctionSpec WasmGlobalObject::methods[] =
 {
-    JS_FN(js_valueOf_str, WasmGlobalObject::valueGetter, 0, 0),
+    JS_FN(js_valueOf_str, WasmGlobalObject::valueGetter, 0, JSPROP_ENUMERATE),
     JS_FS_END
 };
 
@@ -3474,11 +3492,11 @@ WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc, Value* vp)
 static const JSFunctionSpec WebAssembly_static_methods[] =
 {
     JS_FN(js_toSource_str, WebAssembly_toSource, 0, 0),
-    JS_FN("compile", WebAssembly_compile, 1, 0),
-    JS_FN("instantiate", WebAssembly_instantiate, 1, 0),
-    JS_FN("validate", WebAssembly_validate, 1, 0),
-    JS_FN("compileStreaming", WebAssembly_compileStreaming, 1, 0),
-    JS_FN("instantiateStreaming", WebAssembly_instantiateStreaming, 1, 0),
+    JS_FN("compile", WebAssembly_compile, 1, JSPROP_ENUMERATE),
+    JS_FN("instantiate", WebAssembly_instantiate, 1, JSPROP_ENUMERATE),
+    JS_FN("validate", WebAssembly_validate, 1, JSPROP_ENUMERATE),
+    JS_FN("compileStreaming", WebAssembly_compileStreaming, 1, JSPROP_ENUMERATE),
+    JS_FN("instantiateStreaming", WebAssembly_instantiateStreaming, 1, JSPROP_ENUMERATE),
     JS_FS_END
 };
 

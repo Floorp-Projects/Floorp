@@ -59,6 +59,8 @@ public:
   already_AddRefed<SVGAnimatedEnumeration> Side();
   already_AddRefed<SVGAnimatedString> Href();
 
+  void HrefAsString(nsAString& aHref);
+
  protected:
 
   virtual LengthAttributesInfo GetLengthInfo() override;

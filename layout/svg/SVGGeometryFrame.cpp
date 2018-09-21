@@ -641,34 +641,23 @@ SVGGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
 
   // Account for markers:
   if ((aFlags & nsSVGUtils::eBBoxIncludeMarkers) != 0 &&
-      static_cast<SVGGeometryElement*>(GetContent())->IsMarkable()) {
-
-    float strokeWidth = nsSVGUtils::GetStrokeWidth(this);
-    MarkerProperties properties = GetMarkerProperties(this);
-
-    if (properties.MarkersExist()) {
+      element->IsMarkable()) {
+    nsSVGMarkerFrame* markerFrames[nsSVGMark::eTypeCount];
+    if (SVGObserverUtils::GetMarkerFrames(this, &markerFrames)) {
       nsTArray<nsSVGMark> marks;
-      static_cast<SVGGeometryElement*>(GetContent())->GetMarkPoints(&marks);
-      uint32_t num = marks.Length();
-
-      // These are in the same order as the nsSVGMark::Type constants.
-      nsSVGMarkerFrame* markerFrames[] = {
-        properties.GetMarkerStartFrame(),
-        properties.GetMarkerMidFrame(),
-        properties.GetMarkerEndFrame(),
-      };
-      static_assert(MOZ_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount,
-                    "Number of Marker frames should be equal to eTypeCount");
-
-      for (uint32_t i = 0; i < num; i++) {
-        const nsSVGMark& mark = marks[i];
-        nsSVGMarkerFrame* frame = markerFrames[mark.type];
-        if (frame) {
-          SVGBBox mbbox =
-            frame->GetMarkBBoxContribution(aToBBoxUserspace, aFlags, this,
-                                           mark, strokeWidth);
-          MOZ_ASSERT(mbbox.IsFinite(), "bbox is about to go bad");
-          bbox.UnionEdges(mbbox);
+      element->GetMarkPoints(&marks);
+      if (uint32_t num = marks.Length()) {
+        float strokeWidth = nsSVGUtils::GetStrokeWidth(this);
+        for (uint32_t i = 0; i < num; i++) {
+          const nsSVGMark& mark = marks[i];
+          nsSVGMarkerFrame* frame = markerFrames[mark.type];
+          if (frame) {
+            SVGBBox mbbox =
+              frame->GetMarkBBoxContribution(aToBBoxUserspace, aFlags, this,
+                                             mark, strokeWidth);
+            MOZ_ASSERT(mbbox.IsFinite(), "bbox is about to go bad");
+            bbox.UnionEdges(mbbox);
+          }
         }
       }
     }
@@ -689,57 +678,6 @@ SVGGeometryFrame::GetCanvasTM()
   SVGGraphicsElement *content = static_cast<SVGGraphicsElement*>(GetContent());
 
   return content->PrependLocalTransformsTo(parent->GetCanvasTM());
-}
-
-SVGGeometryFrame::MarkerProperties
-SVGGeometryFrame::GetMarkerProperties(SVGGeometryFrame *aFrame)
-{
-  NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
-
-  MarkerProperties result;
-  RefPtr<URLAndReferrerInfo> markerURL =
-    SVGObserverUtils::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
-  result.mMarkerStart =
-    SVGObserverUtils::GetMarkerProperty(markerURL, aFrame,
-                                        SVGObserverUtils::MarkerBeginProperty());
-
-  markerURL = SVGObserverUtils::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
-  result.mMarkerMid =
-    SVGObserverUtils::GetMarkerProperty(markerURL, aFrame,
-                                        SVGObserverUtils::MarkerMiddleProperty());
-
-  markerURL = SVGObserverUtils::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
-  result.mMarkerEnd =
-    SVGObserverUtils::GetMarkerProperty(markerURL, aFrame,
-                                        SVGObserverUtils::MarkerEndProperty());
-  return result;
-}
-
-nsSVGMarkerFrame *
-SVGGeometryFrame::MarkerProperties::GetMarkerStartFrame()
-{
-  if (!mMarkerStart)
-    return nullptr;
-  return static_cast<nsSVGMarkerFrame*>(
-    mMarkerStart->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr));
-}
-
-nsSVGMarkerFrame *
-SVGGeometryFrame::MarkerProperties::GetMarkerMidFrame()
-{
-  if (!mMarkerMid)
-    return nullptr;
-  return static_cast<nsSVGMarkerFrame*>(
-    mMarkerMid->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr));
-}
-
-nsSVGMarkerFrame *
-SVGGeometryFrame::MarkerProperties::GetMarkerEndFrame()
-{
-  if (!mMarkerEnd)
-    return nullptr;
-  return static_cast<nsSVGMarkerFrame*>(
-    mMarkerEnd->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr));
 }
 
 void
@@ -866,28 +804,17 @@ SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
                                const gfxMatrix& aTransform,
                                imgDrawingParams& aImgParams)
 {
-  SVGContextPaint* contextPaint = SVGContextPaint::GetContextPaint(GetContent());
-  if (static_cast<SVGGeometryElement*>(GetContent())->IsMarkable()) {
-    MarkerProperties properties = GetMarkerProperties(this);
+  auto element = static_cast<SVGGeometryElement*>(GetContent());
 
-    if (properties.MarkersExist()) {
-      float strokeWidth = nsSVGUtils::GetStrokeWidth(this, contextPaint);
-
+  if (element->IsMarkable()) {
+    nsSVGMarkerFrame* markerFrames[nsSVGMark::eTypeCount];
+    if (SVGObserverUtils::GetMarkerFrames(this, &markerFrames)) {
       nsTArray<nsSVGMark> marks;
-      static_cast<SVGGeometryElement*>
-                 (GetContent())->GetMarkPoints(&marks);
-
-      uint32_t num = marks.Length();
-      if (num) {
-        // These are in the same order as the nsSVGMark::Type constants.
-        nsSVGMarkerFrame* markerFrames[] = {
-          properties.GetMarkerStartFrame(),
-          properties.GetMarkerMidFrame(),
-          properties.GetMarkerEndFrame(),
-        };
-        static_assert(MOZ_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount,
-                      "Number of Marker frames should be equal to eTypeCount");
-
+      element->GetMarkPoints(&marks);
+      if (uint32_t num = marks.Length()) {
+        SVGContextPaint* contextPaint =
+          SVGContextPaint::GetContextPaint(GetContent());
+        float strokeWidth = nsSVGUtils::GetStrokeWidth(this, contextPaint);
         for (uint32_t i = 0; i < num; i++) {
           const nsSVGMark& mark = marks[i];
           nsSVGMarkerFrame* frame = markerFrames[mark.type];

@@ -18,6 +18,7 @@
 #include "nsIReflowCallback.h"
 #include "nsCycleCollectionParticipant.h"
 #include "SVGGeometryElement.h"
+#include "SVGTextPathElement.h"
 #include "SVGUseElement.h"
 #include "ImageLoader.h"
 #include "mozilla/net/ReferrerPolicy.h"
@@ -223,6 +224,26 @@ nsSVGFrameReferenceFromProperty::Get()
   return mFrame;
 }
 
+
+NS_IMPL_ISUPPORTS(SVGTemplateElementObserver, nsIMutationObserver)
+
+void
+SVGTemplateElementObserver::OnRenderingChange()
+{
+  SVGIDRenderingObserver::OnRenderingChange();
+
+  if (nsIFrame* frame = mFrameReference.Get()) {
+    // We know that we don't need to walk the parent chain notifying rendering
+    // observers since changes to a gradient etc. do not affect ancestor
+    // elements.  So we only invalidate *direct* rendering observers here.
+    // Since we don't need to walk the parent chain, we don't need to worry
+    // about coalescing multiple invalidations by using a change hint as we do
+    // in nsSVGRenderingObserverProperty::OnRenderingChange.
+    SVGObserverUtils::InvalidateDirectRenderingObservers(frame);
+  }
+}
+
+
 NS_IMPL_ISUPPORTS(nsSVGRenderingObserverProperty, nsIMutationObserver)
 
 void
@@ -233,8 +254,11 @@ nsSVGRenderingObserverProperty::OnRenderingChange()
   nsIFrame* frame = mFrameReference.Get();
 
   if (frame && frame->HasAllStateBits(NS_FRAME_SVG_LAYOUT)) {
-    // Changes should propagate out to things that might be observing
-    // the referencing frame or its ancestors.
+    // We need to notify anything that is observing the referencing frame or
+    // any of its ancestors that the referencing frame has been invalidated.
+    // Since walking the parent chain checking for observers is expensive we
+    // do that using a change hint (multiple change hints of the same type are
+    // coalesced).
     nsLayoutUtils::PostRestyleEvent(
       frame->GetContent()->AsElement(), nsRestyleHint(0),
       nsChangeHint_InvalidateRenderingObservers);
@@ -571,19 +595,87 @@ GetEffectProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
   return prop;
 }
 
-SVGMarkerObserver*
-SVGObserverUtils::GetMarkerProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-  const mozilla::FramePropertyDescriptor<SVGMarkerObserver>* aProperty)
+bool
+SVGObserverUtils::GetMarkerFrames(nsIFrame* aMarkedFrame,
+                                  nsSVGMarkerFrame*(*aFrames)[3])
 {
-  MOZ_ASSERT(aFrame->IsSVGGeometryFrame() &&
-             static_cast<SVGGeometryElement*>(aFrame->GetContent())->IsMarkable(),
+  MOZ_ASSERT(!aMarkedFrame->GetPrevContinuation() &&
+             aMarkedFrame->IsSVGGeometryFrame() &&
+             static_cast<SVGGeometryElement*>(aMarkedFrame->GetContent())->IsMarkable(),
              "Bad frame");
-  return GetEffectProperty(aURI, aFrame, aProperty);
+
+  bool foundMarker = false;
+  RefPtr<URLAndReferrerInfo> markerURL;
+  SVGMarkerObserver* observer;
+  nsIFrame* marker;
+
+#define GET_MARKER(type)                                                      \
+  markerURL = GetMarkerURI(aMarkedFrame, &nsStyleSVG::mMarker##type);         \
+  observer = GetEffectProperty(markerURL, aMarkedFrame,                       \
+                               SVGObserverUtils::Marker##type##Property());   \
+  marker = observer ?                                                         \
+           observer->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr) :\
+           nullptr;                                                           \
+  foundMarker = foundMarker || bool(marker);                                  \
+  (*aFrames)[nsSVGMark::e##type] = static_cast<nsSVGMarkerFrame*>(marker);
+
+  GET_MARKER(Start)
+  GET_MARKER(Mid)
+  GET_MARKER(End)
+
+#undef GET_MARKER
+
+  return foundMarker;
 }
 
-SVGTextPathObserver*
-SVGObserverUtils::GetTextPathProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-  const mozilla::FramePropertyDescriptor<SVGTextPathObserver>* aProperty)
+SVGGeometryElement*
+SVGObserverUtils::GetTextPathsReferencedPath(nsIFrame* aTextPathFrame)
+{
+  SVGTextPathObserver* property =
+    aTextPathFrame->GetProperty(SVGObserverUtils::HrefAsTextPathProperty());
+
+  if (!property) {
+    nsIContent* content = aTextPathFrame->GetContent();
+    nsAutoString href;
+    static_cast<SVGTextPathElement*>(content)->HrefAsString(href);
+    if (href.IsEmpty()) {
+      return nullptr; // no URL
+    }
+
+    nsCOMPtr<nsIURI> targetURI;
+    nsCOMPtr<nsIURI> base = content->GetBaseURI();
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
+                                              content->GetUncomposedDoc(), base);
+
+    // There's no clear refererer policy spec about non-CSS SVG resource references
+    // Bug 1415044 to investigate which referrer we should use
+    RefPtr<URLAndReferrerInfo> target =
+      new URLAndReferrerInfo(targetURI,
+                             content->OwnerDoc()->GetDocumentURI(),
+                             content->OwnerDoc()->GetReferrerPolicy());
+
+    property = GetEffectProperty(target, aTextPathFrame,
+                                 HrefAsTextPathProperty());
+    if (!property) {
+      return nullptr;
+    }
+  }
+
+  Element* element = property->GetReferencedElement();
+  return (element && element->IsNodeOfType(nsINode::eSHAPE)) ?
+    static_cast<SVGGeometryElement*>(element) : nullptr;
+}
+
+void
+SVGObserverUtils::RemoveTextPathObserver(nsIFrame* aTextPathFrame)
+{
+  aTextPathFrame->DeleteProperty(HrefAsTextPathProperty());
+}
+
+SVGTemplateElementObserver*
+SVGObserverUtils::GetTemplateElementObserver(URLAndReferrerInfo* aURI,
+  nsIFrame* aFrame,
+  const mozilla::FramePropertyDescriptor<SVGTemplateElementObserver>* aProperty)
 {
   return GetEffectProperty(aURI, aFrame, aProperty);
 }
@@ -646,8 +738,7 @@ SVGObserverUtils::GetEffectProperties(nsIFrame* aFrame)
 
 nsSVGPaintServerFrame *
 SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
-                                 nsStyleSVGPaint nsStyleSVG::* aPaint,
-                                 PaintingPropertyDescriptor aType)
+                                 nsStyleSVGPaint nsStyleSVG::* aPaint)
 {
   // If we're looking at a frame within SVG text, then we need to look up
   // to find the right frame to get the painting property off.  We should at
@@ -668,8 +759,12 @@ SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
 
   RefPtr<URLAndReferrerInfo> paintServerURL =
     SVGObserverUtils::GetPaintURI(frame, aPaint);
+  MOZ_ASSERT(aPaint == &nsStyleSVG::mFill || aPaint == &nsStyleSVG::mStroke);
+  PaintingPropertyDescriptor propDesc = (aPaint == &nsStyleSVG::mFill) ?
+                                        SVGObserverUtils::FillProperty() :
+                                        SVGObserverUtils::StrokeProperty();
   nsSVGPaintingProperty *property =
-    SVGObserverUtils::GetPaintingProperty(paintServerURL, frame, aType);
+    SVGObserverUtils::GetPaintingProperty(paintServerURL, frame, propDesc);
   if (!property)
     return nullptr;
   nsIFrame* result = property->GetReferencedFrame();
@@ -775,8 +870,8 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
   aFrame->DeleteProperty(FilterProperty());
   aFrame->DeleteProperty(MaskProperty());
   aFrame->DeleteProperty(ClipPathProperty());
-  aFrame->DeleteProperty(MarkerBeginProperty());
-  aFrame->DeleteProperty(MarkerMiddleProperty());
+  aFrame->DeleteProperty(MarkerStartProperty());
+  aFrame->DeleteProperty(MarkerMidProperty());
   aFrame->DeleteProperty(MarkerEndProperty());
   aFrame->DeleteProperty(FillProperty());
   aFrame->DeleteProperty(StrokeProperty());
@@ -792,11 +887,11 @@ SVGObserverUtils::UpdateEffects(nsIFrame* aFrame)
     // Set marker properties here to avoid reference loops
     RefPtr<URLAndReferrerInfo> markerURL =
       GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
-    GetMarkerProperty(markerURL, aFrame, MarkerBeginProperty());
+    GetEffectProperty(markerURL, aFrame, MarkerStartProperty());
     markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
-    GetMarkerProperty(markerURL, aFrame, MarkerMiddleProperty());
+    GetEffectProperty(markerURL, aFrame, MarkerMidProperty());
     markerURL = GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
-    GetMarkerProperty(markerURL, aFrame, MarkerEndProperty());
+    GetEffectProperty(markerURL, aFrame, MarkerEndProperty());
   }
 }
 

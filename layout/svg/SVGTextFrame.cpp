@@ -3397,8 +3397,7 @@ SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
       // Blow away our reference, if any
       nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
       if (childElementFrame) {
-        childElementFrame->DeleteProperty(
-          SVGObserverUtils::HrefAsTextPathProperty());
+        SVGObserverUtils::RemoveTextPathObserver(childElementFrame);
         NotifyGlyphMetricsChange();
       }
     }
@@ -4983,53 +4982,6 @@ SVGTextFrame::AdjustPositionsForClusters()
   }
 }
 
-SVGGeometryElement*
-SVGTextFrame::GetTextPathGeometryElement(nsIFrame* aTextPathFrame)
-{
-  SVGTextPathObserver *property =
-    aTextPathFrame->GetProperty(SVGObserverUtils::HrefAsTextPathProperty());
-
-  if (!property) {
-    nsIContent* content = aTextPathFrame->GetContent();
-    SVGTextPathElement* tp = static_cast<SVGTextPathElement*>(content);
-    nsAutoString href;
-    if (tp->mStringAttributes[SVGTextPathElement::HREF].IsExplicitlySet()) {
-      tp->mStringAttributes[SVGTextPathElement::HREF]
-        .GetAnimValue(href, tp);
-    } else {
-      tp->mStringAttributes[SVGTextPathElement::XLINK_HREF]
-        .GetAnimValue(href, tp);
-    }
-
-    if (href.IsEmpty()) {
-      return nullptr; // no URL
-    }
-
-    nsCOMPtr<nsIURI> targetURI;
-    nsCOMPtr<nsIURI> base = content->GetBaseURI();
-    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
-                                              content->GetUncomposedDoc(), base);
-
-    // There's no clear refererer policy spec about non-CSS SVG resource references
-    // Bug 1415044 to investigate which referrer we should use
-    RefPtr<URLAndReferrerInfo> target =
-      new URLAndReferrerInfo(targetURI,
-                             mContent->OwnerDoc()->GetDocumentURI(),
-                             mContent->OwnerDoc()->GetReferrerPolicy());
-
-    property = SVGObserverUtils::GetTextPathProperty(
-      target,
-      aTextPathFrame,
-      SVGObserverUtils::HrefAsTextPathProperty());
-    if (!property)
-      return nullptr;
-  }
-
-  Element* element = property->GetReferencedElement();
-  return (element && element->IsNodeOfType(nsINode::eSHAPE)) ?
-    static_cast<SVGGeometryElement*>(element) : nullptr;
-}
-
 already_AddRefed<Path>
 SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
 {
@@ -5041,7 +4993,8 @@ SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
     return tp->mPath.GetAnimValue().BuildPathForMeasuring();
   }
 
-  SVGGeometryElement* geomElement = GetTextPathGeometryElement(aTextPathFrame);
+  SVGGeometryElement* geomElement =
+    SVGObserverUtils::GetTextPathsReferencedPath(aTextPathFrame);
   if (!geomElement) {
     return nullptr;
   }
@@ -5073,7 +5026,8 @@ SVGTextFrame::GetOffsetScale(nsIFrame* aTextPathFrame)
     return 1.0;
   }
 
-  SVGGeometryElement* geomElement = GetTextPathGeometryElement(aTextPathFrame);
+  SVGGeometryElement* geomElement =
+    SVGObserverUtils::GetTextPathsReferencedPath(aTextPathFrame);
   if (!geomElement)
     return 1.0;
 
