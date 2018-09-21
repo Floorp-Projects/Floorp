@@ -1620,9 +1620,9 @@ nsGenericHTMLElement::TouchEventsEnabled(JSContext* aCx, JSObject* aGlobal)
 
 //----------------------------------------------------------------------
 
-nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                                    uint8_t aType)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
   , nsIFormControl(aType)
   , mForm(nullptr)
   , mFieldSet(nullptr)
@@ -2700,9 +2700,9 @@ nsGenericHTMLElement::ChangeEditableState(int32_t aChange)
 //----------------------------------------------------------------------
 
 nsGenericHTMLFormElementWithState::nsGenericHTMLFormElementWithState(
-    already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo, uint8_t aType
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, uint8_t aType
   )
-  : nsGenericHTMLFormElement(aNodeInfo, aType)
+  : nsGenericHTMLFormElement(std::move(aNodeInfo), aType)
 {
   mStateKey.SetIsVoid(true);
 }
@@ -3007,10 +3007,10 @@ nsGenericHTMLElement::SetInnerText(const nsAString& aValue)
         break;
       }
       str.Truncate();
-      already_AddRefed<mozilla::dom::NodeInfo> ni =
+      RefPtr<mozilla::dom::NodeInfo> ni =
         NodeInfo()->NodeInfoManager()->GetNodeInfo(nsGkAtoms::br,
           nullptr, kNameSpaceID_XHTML, ELEMENT_NODE);
-      RefPtr<HTMLBRElement> br = new HTMLBRElement(ni);
+      RefPtr<HTMLBRElement> br = new HTMLBRElement(ni.forget());
       AppendChildTo(br, true);
     } else {
       str.Append(*s);

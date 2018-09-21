@@ -27,9 +27,9 @@
 namespace mozilla {
 namespace dom {
 
-HTMLObjectElement::HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+HTMLObjectElement::HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                      FromParser aFromParser)
-  : nsGenericHTMLFormElement(aNodeInfo, NS_FORM_OBJECT),
+  : nsGenericHTMLFormElement(std::move(aNodeInfo), NS_FORM_OBJECT),
     mIsDoneAddingChildren(!aFromParser)
 {
   RegisterActivityObserver();

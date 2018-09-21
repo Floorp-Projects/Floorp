@@ -393,8 +393,8 @@ NS_IMPL_ISUPPORTS(HTMLCanvasElementObserver, nsIObserver)
 
 // ---------------------------------------------------------------------------
 
-HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
+HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo)),
     mResetLayer(true) ,
     mWriteOnly(false)
 {}

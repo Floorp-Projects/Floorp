@@ -35,8 +35,8 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(SVGAnimationElement,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGAnimationElement::SVGAnimationElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGAnimationElementBase(aNodeInfo),
+SVGAnimationElement::SVGAnimationElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGAnimationElementBase(std::move(aNodeInfo)),
     mHrefTarget(this)
 {
 }

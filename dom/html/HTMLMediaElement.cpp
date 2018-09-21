@@ -3870,8 +3870,8 @@ private:
 NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
 
 HTMLMediaElement::HTMLMediaElement(
-  already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
   , mWatchManager(this, OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other))
   , mMainThreadEventTarget(OwnerDoc()->EventTargetFor(TaskCategory::Other))
   , mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other))

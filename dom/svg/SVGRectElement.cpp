@@ -42,8 +42,8 @@ nsSVGElement::LengthInfo SVGRectElement::sLengthInfo[6] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGRectElement::SVGRectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGRectElementBase(aNodeInfo)
+SVGRectElement::SVGRectElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGRectElementBase(std::move(aNodeInfo))
 {
 }
 

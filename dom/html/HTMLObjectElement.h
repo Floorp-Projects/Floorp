@@ -22,7 +22,7 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement
                               , public nsIConstraintValidation
 {
 public:
-  explicit HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+  explicit HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                              FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports

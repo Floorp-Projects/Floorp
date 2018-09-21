@@ -23,8 +23,8 @@ class HTMLSummaryElement final : public nsGenericHTMLElement
 public:
   using NodeInfo = mozilla::dom::NodeInfo;
 
-  explicit HTMLSummaryElement(already_AddRefed<NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo)
+  explicit HTMLSummaryElement(already_AddRefed<NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo))
   {
   }
 

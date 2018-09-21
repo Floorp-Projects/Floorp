@@ -41,19 +41,8 @@
 namespace mozilla {
 namespace dom {
 
-CharacterData::CharacterData(already_AddRefed<dom::NodeInfo>& aNodeInfo)
-  : nsIContent(aNodeInfo)
-{
-  MOZ_ASSERT(mNodeInfo->NodeType() == TEXT_NODE ||
-             mNodeInfo->NodeType() == CDATA_SECTION_NODE ||
-             mNodeInfo->NodeType() == COMMENT_NODE ||
-             mNodeInfo->NodeType() == PROCESSING_INSTRUCTION_NODE ||
-             mNodeInfo->NodeType() == DOCUMENT_TYPE_NODE,
-             "Bad NodeType in aNodeInfo");
-}
-
 CharacterData::CharacterData(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
-  : nsIContent(aNodeInfo)
+  : nsIContent(std::move(aNodeInfo))
 {
   MOZ_ASSERT(mNodeInfo->NodeType() == TEXT_NODE ||
              mNodeInfo->NodeType() == CDATA_SECTION_NODE ||

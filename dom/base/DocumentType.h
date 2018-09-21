@@ -28,7 +28,7 @@ namespace dom {
 class DocumentType final : public CharacterData
 {
 public:
-  DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+  DocumentType(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                const nsAString& aPublicId,
                const nsAString& aSystemId,
                const nsAString& aInternalSubset);

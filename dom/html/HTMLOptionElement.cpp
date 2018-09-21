@@ -32,8 +32,8 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Option)
 namespace mozilla {
 namespace dom {
 
-HTMLOptionElement::HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
+HTMLOptionElement::HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo)),
     mSelectedChanged(false),
     mIsSelected(false),
     mIsInSetDefaultSelected(false)
@@ -341,12 +341,12 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  already_AddRefed<mozilla::dom::NodeInfo> nodeInfo =
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
                                         kNameSpaceID_XHTML,
                                         ELEMENT_NODE);
 
-  RefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo);
+  RefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo.forget());
 
   if (!aText.IsEmpty()) {
     // Create a new text node and append it to the option

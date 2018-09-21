@@ -22,8 +22,8 @@ class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase
   friend nsresult (::NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
                                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEComponentTransferElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEComponentTransferElementBase(aNodeInfo)
+  explicit SVGFEComponentTransferElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEComponentTransferElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

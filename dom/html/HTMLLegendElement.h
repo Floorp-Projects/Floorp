@@ -17,8 +17,8 @@ namespace dom {
 class HTMLLegendElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLLegendElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo)
+  explicit HTMLLegendElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo))
   {
   }
 

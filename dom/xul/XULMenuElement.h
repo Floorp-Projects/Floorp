@@ -18,8 +18,8 @@ class XULMenuElement final : public nsXULElement
 {
 public:
 
-  explicit XULMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsXULElement(aNodeInfo)
+  explicit XULMenuElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsXULElement(std::move(aNodeInfo))
   {
   }
 

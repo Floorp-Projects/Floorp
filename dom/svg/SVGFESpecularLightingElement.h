@@ -24,8 +24,8 @@ class SVGFESpecularLightingElement : public SVGFESpecularLightingElementBase
   friend nsresult (::NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
                                                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFESpecularLightingElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFESpecularLightingElementBase(aNodeInfo)
+  explicit SVGFESpecularLightingElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFESpecularLightingElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

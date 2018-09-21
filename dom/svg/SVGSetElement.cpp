@@ -21,8 +21,8 @@ SVGSetElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGSetElement::SVGSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGAnimationElement(aNodeInfo)
+SVGSetElement::SVGSetElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGAnimationElement(std::move(aNodeInfo))
 {
 }
 

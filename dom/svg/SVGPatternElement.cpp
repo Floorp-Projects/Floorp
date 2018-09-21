@@ -58,8 +58,8 @@ nsSVGElement::StringInfo SVGPatternElement::sStringInfo[2] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGPatternElement::SVGPatternElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGPatternElementBase(aNodeInfo)
+SVGPatternElement::SVGPatternElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGPatternElementBase(std::move(aNodeInfo))
 {
 }
 

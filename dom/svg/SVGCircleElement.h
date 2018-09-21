@@ -21,7 +21,7 @@ typedef SVGGeometryElement SVGCircleElementBase;
 class SVGCircleElement final : public SVGCircleElementBase
 {
 protected:
-  explicit SVGCircleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGCircleElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult (::NS_NewSVGCircleElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

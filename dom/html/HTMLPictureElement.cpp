@@ -13,14 +13,14 @@ nsGenericHTMLElement*
 NS_NewHTMLPictureElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                          mozilla::dom::FromParser aFromParser)
 {
-  return new mozilla::dom::HTMLPictureElement(aNodeInfo);
+  return new mozilla::dom::HTMLPictureElement(std::move(aNodeInfo));
 }
 
 namespace mozilla {
 namespace dom {
 
-HTMLPictureElement::HTMLPictureElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLPictureElement::HTMLPictureElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
 {
 }
 

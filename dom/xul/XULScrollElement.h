@@ -17,7 +17,8 @@ namespace dom {
 class XULScrollElement final : public nsXULElement
 {
 public:
-  explicit XULScrollElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo): nsXULElement(aNodeInfo)
+  explicit XULScrollElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsXULElement(std::move(aNodeInfo))
   {
   }
 

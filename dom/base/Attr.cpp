@@ -37,7 +37,7 @@ bool Attr::sInitialized;
 Attr::Attr(nsDOMAttributeMap *aAttrMap,
            already_AddRefed<dom::NodeInfo>&& aNodeInfo,
            const nsAString& aValue)
-  : nsINode(aNodeInfo), mAttrMap(aAttrMap), mValue(aValue)
+  : nsINode(std::move(aNodeInfo)), mAttrMap(aAttrMap), mValue(aValue)
 {
   MOZ_ASSERT(mNodeInfo, "We must get a nodeinfo here!");
   MOZ_ASSERT(mNodeInfo->NodeType() == ATTRIBUTE_NODE,

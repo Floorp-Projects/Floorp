@@ -857,13 +857,8 @@ FragmentOrElement::nsExtendedDOMSlots::SizeOfExcludingThis(MallocSizeOf aMallocS
   return n;
 }
 
-FragmentOrElement::FragmentOrElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsIContent(aNodeInfo)
-{
-}
-
 FragmentOrElement::FragmentOrElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-  : nsIContent(aNodeInfo)
+  : nsIContent(std::move(aNodeInfo))
 {
 }
 

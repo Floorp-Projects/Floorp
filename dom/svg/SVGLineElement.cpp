@@ -33,8 +33,8 @@ nsSVGElement::LengthInfo SVGLineElement::sLengthInfo[4] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGLineElement::SVGLineElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGLineElementBase(aNodeInfo)
+SVGLineElement::SVGLineElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGLineElementBase(std::move(aNodeInfo))
 {
 }
 

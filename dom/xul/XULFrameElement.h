@@ -25,8 +25,8 @@ class XULFrameElement final : public nsXULElement,
                               public nsIFrameLoaderOwner
 {
 public:
-  explicit XULFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsXULElement(aNodeInfo)
+  explicit XULFrameElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsXULElement(std::move(aNodeInfo))
   {
   }
 
