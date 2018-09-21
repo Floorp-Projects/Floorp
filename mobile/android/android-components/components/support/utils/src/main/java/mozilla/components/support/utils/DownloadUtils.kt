@@ -125,10 +125,10 @@ object DownloadUtils {
                 val lastDotIndex = filename.lastIndexOf('.')
                 val typeFromExt = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
                         filename.substring(lastDotIndex + 1))
-                if (typeFromExt != null && !typeFromExt.equals(mimeType, ignoreCase = true)) {
+                if (typeFromExt == null || !typeFromExt.equals(mimeType, ignoreCase = true)) {
                     extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
                     if (extension != null) {
-                        extension = "" + extension
+                        extension = "." + extension
                     }
                 }
             }

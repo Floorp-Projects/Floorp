@@ -4,10 +4,13 @@
 
 package mozilla.components.support.utils
 
+import android.webkit.MimeTypeMap
+
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 
 private val CONTENT_DISPOSITION_TYPES = listOf("attachment", "inline")
 
@@ -65,5 +68,13 @@ class DownloadUtilsTest {
         assertUrl("downloadfile.bin", "http://example.com/filename/")
         assertUrl("filename.jpg", "http://example.com/filename.jpg")
         assertUrl("filename.jpg", "http://example.com/foo/bar/filename.jpg")
+    }
+
+    @Test
+    fun testGuessFileName_mimeType() {
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("jpg", "image/jpeg")
+
+        assertEquals("file.jpg", DownloadUtils.guessFileName(null, "http://example.com/file.jpg", "image/jpeg"))
+        assertEquals("file.jpg", DownloadUtils.guessFileName(null, "http://example.com/file.bin", "image/jpeg"))
     }
 }
