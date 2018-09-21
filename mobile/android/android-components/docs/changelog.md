@@ -4,6 +4,82 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 0.24 (2018-09-21)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.23...v0.24),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/24?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.24/index)
+
+* Compiled against:
+  * Android
+    * SDK: 27
+    * Support Libraries: 27.1.1
+  * Kotlin
+    * Standard library: 1.2.61
+    * Coroutines: 0.23.4
+  * GeckoView
+    * Nightly: 64.0.20180905100117
+    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
+    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
+
+* **dataprotect**: 
+  * Added a component using AndroidKeyStore to protect user data.
+  ```kotlin
+  // Create a Keystore and generate a key
+  val keystore: Keystore = Keystore("samples-dataprotect")
+  keystore.generateKey()
+  
+  // Encrypt data
+  val plainText = "plain text data".toByteArray(StandardCharsets.UTF_8)
+  val encrypted = keystore.encryptBytes(plain)
+  
+  // Decrypt data
+  val samePlainText = keystore.decryptBytes(encrypted)
+  ```
+* **concept-engine**: Enhanced settings to cover most common WebView settings.
+* **browser-engine-system**:
+  * `SystemEngineSession` now provides a way to capture a screenshot of the actual content of the web page just by calling `captureThumbnail`
+* **browser-session**:
+  * `Session` exposes a new property called `thumbnail` and its internal observer also exposes a new listener `onThumbnailChanged`.
+    
+  ```Kotlin
+  session.register(object : Session.Observer {
+      fun onThumbnailChanged(session: Session, bitmap: Bitmap?) {
+              // Do Something
+      }
+  })
+  ```
+  
+  * `SessionManager` lets you notify it when the OS is under low memory condition by calling to its new function `onLowMemory`.
+
+* **browser-tabstray**:
+
+   * Now on `BrowserTabsTray` every tab gets is own thumbnail :) 
+
+* **support-ktx**:
+
+   * Now you can easily query if the OS is under low memory conditions, just by using `isOSOnLowMemory()` extention function on `Context`.
+
+  ```Kotlin
+  val shouldReduceMemoryUsage = context.isOSOnLowMemory()
+  
+  if (shouldReduceMemoryUsage) {
+      //Deallocate some heavy objects
+  }
+  ```
+  
+  * `View.dp` is now`Resource.pxtoDp`.
+
+  ```Kotlin
+  // Before
+  toolbar.dp(104)
+  
+  // Now
+  toolbar.resources.pxToDp(104)
+  ```
+* **samples-browser**:
+   * Updated to show the new features related to tab thumbnails. Be aware that this feature is only available for `systemEngine` and you have to switch to the build variant `systemEngine*`.
+
 # 0.23 (2018-09-13)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.22...v0.23),
@@ -41,8 +117,8 @@ permalink: /changelog/
   ```Kotlin
   val interceptor = object : RequestInterceptor {
     override fun onErrorRequest(
-      session: EngineSession, 
-      errorCode: Int, 
+      session: EngineSession,
+      errorCode: Int,
       uri: String?
     ) {
       engineSession.loadData("<html><body>Couldn't load $uri!</body></html>")
@@ -55,20 +131,20 @@ permalink: /changelog/
     * Added functionality to clear all browsing data
     ```Kotlin
     sessionManager.getEngineSession().clearData()
-    ``` 
+    ```
     * `onNavigationStateChange` is now called earlier (when the title of a web page is available) to allow for faster toolbar updates.
-* **feature-session**: Added support for processing `ACTION_SEND` intents (`ACTION_VIEW` was already supported)   
-   
+* **feature-session**: Added support for processing `ACTION_SEND` intents (`ACTION_VIEW` was already supported)
+
   ```Kotlin
   // Triggering a search if the provided EXTRA_TEXT is not a URL
   val searchHandler: TextSearchHandler = { searchTerm, session ->
        searchUseCases.defaultSearch.invoke(searchTerm, session)
   }
-      
+
   // Handles both ACTION_VIEW and ACTION_SEND intents
   val intentProcessor = SessionIntentProcessor(
       sessionUseCases, sessionManager, textSearchHandler = searchHandler
-  )    
+  )
   intentProcessor.process(intent)
   ```
 * Replaced some miscellaneous uses of Java 8 `forEach` with Kotlin's for consistency and backward-compatibility.
@@ -97,7 +173,7 @@ permalink: /changelog/
   * EngineView now exposes lifecycle methods with default implementations. A `LifecycleObserver` implementation is provided which forwards events to EngineView instances.
   ```Kotlin
   lifecycle.addObserver(EngineView.LifecycleObserver(view))
-   ```
+  ```
   * Added engine setting for blocking web fonts:
   ```Kotlin
   GeckoEngine(runtime, DefaultSettings(webFontsEnabled = false))
