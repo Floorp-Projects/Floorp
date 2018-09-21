@@ -26,6 +26,8 @@ class TypedObjectModuleObject;
 class LexicalEnvironmentObject;
 class RegExpStatics;
 
+enum class ReferenceType;
+
 /*
  * Global object slots are reserved as follows:
  *
@@ -471,6 +473,14 @@ class GlobalObject : public NativeObject
         return getOrCreateObject(cx, global, APPLICATION_SLOTS + JSProto_TypedObject,
                                  initTypedObjectModule);
     }
+
+    static TypeDescr*
+    getOrCreateScalarTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
+                               Scalar::Type scalarType);
+
+    static TypeDescr*
+    getOrCreateReferenceTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
+                                  ReferenceType type);
 
     TypedObjectModuleObject& getTypedObjectModule() const;
 
