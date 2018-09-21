@@ -31,11 +31,11 @@
 }
 
 /* Position the arrow */
-body[dir=ltr] .error-text::before {
+.error-text:dir(ltr)::before {
   left: 12px
 }
 
-body[dir=rtl] .error-text::before {
+.error-text:dir(rtl)::before {
   right: 12px
 }
 
