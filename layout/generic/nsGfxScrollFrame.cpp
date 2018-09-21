@@ -4115,6 +4115,16 @@ ScrollFrameHelper::GetVisualViewportSize() const
   return mScrollPort.Size();
 }
 
+nsPoint
+ScrollFrameHelper::GetVisualViewportOffset() const
+{
+  nsIPresShell* presShell = mOuter->PresShell();
+  if (mIsRoot && presShell->IsVisualViewportSizeSet()) {
+    return presShell->GetVisualViewportOffset();
+  }
+  return GetScrollPosition();
+}
+
 static void
 AdjustForWholeDelta(int32_t aDelta, nscoord* aCoord)
 {
