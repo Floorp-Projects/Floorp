@@ -2934,6 +2934,7 @@ public:
 
     // Does the principal of compartment a subsume the principal of compartment b?
     static bool Subsumes(JS::Compartment* aCompA, JS::Compartment* aCompB);
+    static bool SubsumesIgnoringFPD(JS::Compartment* aCompA, JS::Compartment* aCompB);
 
     bool MightBeWebContent() const;
 

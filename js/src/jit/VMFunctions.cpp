@@ -1739,10 +1739,8 @@ template bool
 GetNativeDataProperty<false>(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
 
 static MOZ_ALWAYS_INLINE bool
-ValueToAtomOrSymbol(JSContext* cx, Value& idVal, jsid* id)
+ValueToAtomOrSymbolPure(JSContext* cx, Value& idVal, jsid* id)
 {
-    AutoUnsafeCallWithABI unsafe;
-
     if (MOZ_LIKELY(idVal.isString())) {
         JSString* s = idVal.toString();
         JSAtom* atom;
@@ -1751,6 +1749,7 @@ ValueToAtomOrSymbol(JSContext* cx, Value& idVal, jsid* id)
         } else {
             atom = AtomizeString(cx, s);
             if (!atom) {
+                cx->recoverFromOutOfMemory();
                 return false;
             }
         }
@@ -1775,7 +1774,7 @@ ValueToAtomOrSymbol(JSContext* cx, Value& idVal, jsid* id)
 
 template <bool HandleMissing>
 bool
-GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp)
+GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj, Value* vp)
 {
     AutoUnsafeCallWithABI unsafe;
 
@@ -1785,7 +1784,7 @@ GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp)
     // vp[0] contains the id, result will be stored in vp[1].
     Value idVal = vp[0];
     jsid id;
-    if (!ValueToAtomOrSymbol(cx, idVal, &id)) {
+    if (!ValueToAtomOrSymbolPure(cx, idVal, &id)) {
         return false;
     }
 
@@ -1794,10 +1793,10 @@ GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp)
 }
 
 template bool
-GetNativeDataPropertyByValue<true>(JSContext* cx, JSObject* obj, Value* vp);
+GetNativeDataPropertyByValuePure<true>(JSContext* cx, JSObject* obj, Value* vp);
 
 template bool
-GetNativeDataPropertyByValue<false>(JSContext* cx, JSObject* obj, Value* vp);
+GetNativeDataPropertyByValuePure<false>(JSContext* cx, JSObject* obj, Value* vp);
 
 template <bool NeedsTypeBarrier>
 bool
@@ -1882,14 +1881,14 @@ ObjectHasGetterSetter(JSContext* cx, JSObject* objArg, Shape* propShape)
 
 template <bool HasOwn>
 bool
-HasNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp)
+HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp)
 {
     AutoUnsafeCallWithABI unsafe;
 
     // vp[0] contains the id, result will be stored in vp[1].
     Value idVal = vp[0];
     jsid id;
-    if (!ValueToAtomOrSymbol(cx, idVal, &id)) {
+    if (!ValueToAtomOrSymbolPure(cx, idVal, &id)) {
         return false;
     }
 
@@ -1935,10 +1934,10 @@ HasNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp)
 }
 
 template bool
-HasNativeDataProperty<true>(JSContext* cx, JSObject* obj, Value* vp);
+HasNativeDataPropertyPure<true>(JSContext* cx, JSObject* obj, Value* vp);
 
 template bool
-HasNativeDataProperty<false>(JSContext* cx, JSObject* obj, Value* vp);
+HasNativeDataPropertyPure<false>(JSContext* cx, JSObject* obj, Value* vp);
 
 
 bool

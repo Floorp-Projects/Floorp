@@ -166,6 +166,7 @@ with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
 EXTRA_JS_MODULES += [
+    'AboutPagesUtils.jsm',
     'ActorChild.jsm',
     'ActorManagerChild.jsm',
     'ActorManagerParent.jsm',
