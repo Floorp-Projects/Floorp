@@ -92,6 +92,34 @@ clang_checkers:
   - name: readability-redundant-string-init
   - name: readability-static-accessed-through-instance
   - name: readability-uniqueptr-delete-release
+  # We don't publish the google checkers since we are interested in only having
+  # a general idea how our code complies with the rules added by these checkers.
+  - name: google-build-explicit-make-pair
+    publish: !!bool no
+  - name: google-build-namespaces
+    publish: !!bool no
+  - name: google-build-using-namespace
+    publish: !!bool no
+  - name: google-default-arguments
+    publish: !!bool no
+  - name: google-explicit-constructor
+    publish: !!bool no
+  - name: google-global-names-in-headers
+    publish: !!bool no
+  - name: google-readability-casting
+    publish: !!bool no
+  - name: google-readability-function-size
+    publish: !!bool no
+  - name: google-readability-namespace-comments
+    publish: !!bool no
+  - name: google-readability-todo
+    publish: !!bool no
+  - name: google-runtime-int
+    publish: !!bool no
+  - name: google-runtime-operator
+    publish: !!bool no
+  - name: google-runtime-references
+    publish: !!bool no
 
 # Third party files from mozilla-central
 third_party: tools/rewriting/ThirdPartyPaths.txt

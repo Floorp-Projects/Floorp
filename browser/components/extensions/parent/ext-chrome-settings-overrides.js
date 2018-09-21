@@ -43,7 +43,7 @@ XPCOMUtils.defineLazyGetter(this, "homepagePopup", () => {
       Services.prefs.addObserver(HOMEPAGE_PREF, async function prefObserver() {
         Services.prefs.removeObserver(HOMEPAGE_PREF, prefObserver);
         let loaded = waitForTabLoaded(tab);
-        win.BrowserGoHome();
+        win.BrowserHome();
         await loaded;
         // Manually trigger an event in case this is controlled again.
         popup.open();

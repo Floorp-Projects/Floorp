@@ -7,4 +7,5 @@ DevToolsModules(
     'extensions-helper.js',
     'network-locations.js',
     'runtimes-state-helper.js',
+    'usb-runtimes.js',
 )

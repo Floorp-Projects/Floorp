@@ -72,8 +72,6 @@ button > hbox > label {
 
 .checkbox-check {
   margin-inline-end: 8px;
-  width: 20px;
-  height: 20px;
 }
 
 .tail-with-learn-more {
@@ -354,12 +352,9 @@ button > hbox > label {
 
 #engineList > treechildren::-moz-tree-image(engineShown, checked),
 #blocklistsTree > treechildren::-moz-tree-image(selectionCol, checked) {
-  list-style-image: url("chrome://global/skin/in-content/check.svg");
+  list-style-image: url("chrome://global/skin/icons/check.svg");
   -moz-context-properties: fill, stroke;
   fill: #2292d0;
-  stroke: none;
-  width: 21px;
-  height: 21px;
 }
 
 #engineList > treechildren::-moz-tree-image(engineShown, checked, selected),

@@ -8,7 +8,6 @@ const Services = require("Services");
 const {DebuggerServer} = require("devtools/server/main");
 const discovery = require("devtools/shared/discovery/discovery");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {ADBScanner} = require("devtools/shared/adb/adb-scanner");
 const {RuntimeTypes} = require("devtools/client/webide/modules/runtime-types");
 const promise = require("promise");
 loader.lazyRequireGetter(this, "AuthenticationResult",
@@ -192,8 +191,6 @@ EventEmitter.decorate(RuntimeScanners);
 exports.RuntimeScanners = RuntimeScanners;
 
 /* SCANNERS */
-
-RuntimeScanners.add(ADBScanner);
 
 var WiFiScanner = {
 
