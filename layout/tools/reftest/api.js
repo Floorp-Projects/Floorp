@@ -66,6 +66,11 @@ this.reftest = class extends ExtensionAPI {
     // focus (see bug 859339 for details), then tests are launched in a new
     // top-level window.
     let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!win) {
+      // There is no navigator:browser in the geckoview TestRunnerActivity;
+      // try navigator.geckoview instead.
+      win = Services.wm.getMostRecentWindow("navigator:geckoview");
+    }
 
     if (Services.appinfo.OS == "Android") {
       ChromeUtils.import("resource://reftest/reftest.jsm");

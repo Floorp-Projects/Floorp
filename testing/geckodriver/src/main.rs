@@ -180,7 +180,7 @@ fn run() -> ProgramResult {
         }
     };
     if let Some(ref level) = log_level {
-        logging::init_with_level(level.clone()).unwrap();
+        logging::init_with_level(*level).unwrap();
     } else {
         logging::init().unwrap();
     }
