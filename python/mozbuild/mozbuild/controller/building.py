@@ -41,7 +41,6 @@ from .clobber import (
     Clobberer,
 )
 from ..base import (
-    BuildEnvironmentNotFoundException,
     MozbuildObject,
 )
 from ..backend import (
@@ -56,6 +55,9 @@ from ..compilation.warnings import (
 )
 from ..shellutil import (
     quote as shell_quote,
+)
+from ..telemetry import (
+    gather_telemetry,
 )
 from ..util import (
     FileAvoidWrite,
@@ -1285,15 +1287,12 @@ class BuildDriver(MozbuildObject):
             # Display a notification when the build completes.
             self.notify('Build complete' if not status else 'Build failed')
 
+        gather_telemetry(command='build', success=(status == 0), monitor=monitor,
+                         mach_context=mach_context, substs=self.substs,
+                         paths=[self.topsrcdir, self.topobjdir])
+
         if status:
             return status
-
-        long_build = monitor.elapsed > 600
-
-        if long_build:
-            output.on_line('We know it took a while, but your build finally finished successfully!')
-        else:
-            output.on_line('Your build was successful!')
 
         if monitor.have_resource_usage:
             excessive, swap_in, swap_out = monitor.have_excessive_swapping()
@@ -1301,36 +1300,14 @@ class BuildDriver(MozbuildObject):
             #    print(EXCESSIVE_SWAP_MESSAGE)
 
             print('To view resource usage of the build, run |mach '
-                'resource-usage|.')
+                  'resource-usage|.')
 
-            telemetry_handler = getattr(mach_context,
-                                        'telemetry_handler', None)
-            telemetry_data = monitor.get_resource_usage()
+        long_build = monitor.elapsed > 600
 
-            # Record build configuration data. For now, we cherry pick
-            # items we need rather than grabbing everything, in order
-            # to avoid accidentally disclosing PII.
-            telemetry_data['substs'] = {}
-            try:
-                for key in ['MOZ_ARTIFACT_BUILDS', 'MOZ_USING_CCACHE', 'MOZ_USING_SCCACHE']:
-                    value = self.substs.get(key, False)
-                    telemetry_data['substs'][key] = value
-            except BuildEnvironmentNotFoundException:
-                pass
-
-            # Grab ccache stats if available. We need to be careful not
-            # to capture information that can potentially identify the
-            # user (such as the cache location)
-            if ccache_diff:
-                telemetry_data['ccache'] = {}
-                for key in [key[0] for key in ccache_diff.STATS_KEYS]:
-                    try:
-                        telemetry_data['ccache'][key] = ccache_diff._values[key]
-                    except KeyError:
-                        pass
-
-            if telemetry_handler:
-                telemetry_handler(mach_context, telemetry_data)
+        if long_build:
+            output.on_line('We know it took a while, but your build finally finished successfully!')
+        else:
+            output.on_line('Your build was successful!')
 
         # Only for full builds because incremental builders likely don't
         # need to be burdened with this.

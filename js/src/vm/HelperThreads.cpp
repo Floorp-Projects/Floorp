@@ -1237,6 +1237,18 @@ GlobalHelperThreadState::checkTaskThreadLimit(size_t maxThreads, bool isMaster) 
     return true;
 }
 
+void
+GlobalHelperThreadState::triggerFreeUnusedMemory()
+{
+    if (!CanUseExtraThreads())
+        return;
+
+    AutoLockHelperThreadState lock;
+    for (auto& thread : *threads)
+        thread.shouldFreeUnusedMemory = true;
+    notifyAll(PRODUCER, lock);
+}
+
 struct MOZ_RAII AutoSetContextRuntime
 {
     explicit AutoSetContextRuntime(JSRuntime* rt) {
@@ -2566,6 +2578,8 @@ HelperThread::threadLoop()
             mozilla::recordreplay::NotifyUnrecordedWait(WakeupAll);
         }
 
+        maybeFreeUnusedMemory(&cx);
+
         // The selectors may depend on the HelperThreadState not changing
         // between task selection and task execution, in particular, on new
         // tasks not being added (because of the lifo structure of the work
@@ -2599,4 +2613,17 @@ HelperThread::findHighestPriorityTask(const AutoLockHelperThreadState& locked)
     }
 
     return nullptr;
+}
+
+void
+HelperThread::maybeFreeUnusedMemory(JSContext* cx)
+{
+    MOZ_ASSERT(idle());
+
+    cx->tempLifoAlloc().releaseAll();
+
+    if (shouldFreeUnusedMemory) {
+        cx->tempLifoAlloc().freeAll();
+        shouldFreeUnusedMemory = false;
+    }
 }

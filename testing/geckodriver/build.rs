@@ -111,6 +111,10 @@ impl BuildInfo for Git {
     fn hash(&self) -> Option<String> {
         self.exec(&["rev-parse", "HEAD"])
             .and_then(|sha| self.to_hg_sha(sha))
+            .map(|mut s| {
+              s.truncate(12);
+              s
+            })
     }
 
     fn date(&self) -> Option<String> {

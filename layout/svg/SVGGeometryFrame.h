@@ -129,25 +129,6 @@ private:
    */
   void PaintMarkers(gfxContext& aContext, const gfxMatrix& aMatrix,
                     imgDrawingParams& aImgParams);
-
-  struct MarkerProperties {
-    SVGMarkerObserver* mMarkerStart;
-    SVGMarkerObserver* mMarkerMid;
-    SVGMarkerObserver* mMarkerEnd;
-
-    bool MarkersExist() const {
-      return mMarkerStart || mMarkerMid || mMarkerEnd;
-    }
-
-    nsSVGMarkerFrame *GetMarkerStartFrame();
-    nsSVGMarkerFrame *GetMarkerMidFrame();
-    nsSVGMarkerFrame *GetMarkerEndFrame();
-  };
-
-  /**
-   * @param aFrame should be the first continuation
-   */
-  static MarkerProperties GetMarkerProperties(SVGGeometryFrame *aFrame);
 };
 } // namespace mozilla
 
