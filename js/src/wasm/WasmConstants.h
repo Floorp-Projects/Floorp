@@ -104,6 +104,8 @@ enum class Trap
     IndirectCallToNull,
     // call_indirect signature mismatch.
     IndirectCallBadSig,
+    // Dereference null pointer in operation on (Ref T)
+    NullPointerDereference,
 
     // The internal stack space was exhausted. For compatibility, this throws
     // the same over-recursed error as JS.
@@ -398,6 +400,12 @@ enum class MiscOp
     TableInit                            = 0x0c,
     TableDrop                            = 0x0d,
     TableCopy                            = 0x0e,
+
+    // Structure operations.  Note, these are unofficial.
+    StructNew                            = 0x50,
+    StructGet                            = 0x51,
+    StructSet                            = 0x52,
+    StructNarrow                         = 0x53,
 
     Limit
 };

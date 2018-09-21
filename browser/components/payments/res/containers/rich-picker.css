@@ -28,7 +28,7 @@
 
 .rich-picker > .edit-link {
   grid-area: edit;
-  border-right: 1px solid #0C0C0D33;
+  border-inline-end: 1px solid #0C0C0D33;
 }
 
 .rich-picker > rich-select {
@@ -60,8 +60,10 @@ payment-method-picker.rich-picker {
 
 payment-method-picker > input {
   border: 1px solid #0C0C0D33;
-  border-left: none;
+  border-inline-start: none;
   grid-area: cvv;
   margin: 14px 0; /* Has to be same as rich-select */
   padding: 8px;
+  /* So the error outline appears above the adjacent dropdown */
+  z-index: 1;
 }
