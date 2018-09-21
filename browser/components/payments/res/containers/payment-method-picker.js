@@ -20,6 +20,9 @@ export default class PaymentMethodPicker extends RichPicker {
     this.securityCodeInput.autocomplete = "off";
     this.securityCodeInput.placeholder = this.dataset.cvvPlaceholder;
     this.securityCodeInput.size = 3;
+    this.securityCodeInput.required = true;
+    // 3 or more digits
+    this.securityCodeInput.pattern = "[0-9]{3,}";
     this.securityCodeInput.classList.add("security-code");
     this.securityCodeInput.addEventListener("change", this);
   }

@@ -74,6 +74,9 @@ class WasmGlobalObject;
 typedef GCVector<WasmGlobalObject*, 0, SystemAllocPolicy> WasmGlobalObjectVector;
 typedef Rooted<WasmGlobalObject*> RootedWasmGlobalObject;
 
+class StructTypeDescr;
+typedef GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy> StructTypeDescrVector;
+
 namespace wasm {
 
 using mozilla::ArrayEqual;
@@ -830,9 +833,9 @@ struct FuncTypeHashPolicy
 
 // Structure type.
 //
-// The Module owns a dense array of Struct values that represent the structure
-// types that the module knows about.  It is created from the sparse array of
-// types in the ModuleEnvironment when the Module is created.
+// The Module owns a dense array of StructType values that represent the
+// structure types that the module knows about.  It is created from the sparse
+// array of types in the ModuleEnvironment when the Module is created.
 
 struct StructField
 {
@@ -846,14 +849,30 @@ typedef Vector<StructField, 0, SystemAllocPolicy> StructFieldVector;
 class StructType
 {
   public:
-    StructFieldVector fields_;
-
+    StructFieldVector fields_; // Field type, offset, and mutability
+    uint32_t moduleIndex_;     // Index in a dense array of structs in the module
+    bool isInline_;            // True if this is an InlineTypedObject and we
+                               //   interpret the offsets from the object pointer;
+                               //   if false this is an OutlineTypedObject and we
+                               //   interpret everything relative to the pointer to
+                               //   the attached storage.
   public:
-    StructType() : fields_() {}
+    StructType() : fields_(), moduleIndex_(0), isInline_(true) {}
 
-    explicit StructType(StructFieldVector&& fields)
-      : fields_(std::move(fields))
+    StructType(StructFieldVector&& fields, uint32_t index, bool isInline)
+      : fields_(std::move(fields)),
+        moduleIndex_(index),
+        isInline_(isInline)
     {}
+
+    bool copyFrom(const StructType& src) {
+        if (!fields_.appendAll(src.fields_)) {
+            return false;
+        }
+        moduleIndex_ = src.moduleIndex_;
+        isInline_ = src.isInline_;
+        return true;
+    }
 
     bool hasPrefix(const StructType& other) const;
 
@@ -1876,6 +1895,8 @@ enum class SymbolicAddress
 #ifdef ENABLE_WASM_GC
     PostBarrier,
 #endif
+    StructNew,
+    StructNarrow,
 #if defined(JS_CODEGEN_MIPS32)
     js_jit_gAtomic64Lock,
 #endif

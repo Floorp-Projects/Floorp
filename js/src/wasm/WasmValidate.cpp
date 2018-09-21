@@ -22,6 +22,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"
 
+#include "builtin/TypedObject.h"
 #include "jit/JitOptions.h"
 #include "js/Printf.h"
 #include "vm/JSContext.h"
@@ -34,6 +35,7 @@ using namespace js::wasm;
 
 using mozilla::CheckedInt;
 using mozilla::IsValidUtf8;
+using mozilla::CheckedInt32;
 using mozilla::Unused;
 
 // Decoder implementation.
@@ -931,6 +933,37 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
                                               &unusedSegIndex, &nothing, &nothing, &nothing));
               }
 #endif
+#ifdef ENABLE_WASM_GC
+              case uint16_t(MiscOp::StructNew): {
+                if (env.gcTypesEnabled() == HasGcTypes::False) {
+                    return iter.unrecognizedOpcode(&op);
+                }
+                uint32_t unusedUint;
+                ValidatingOpIter::ValueVector unusedArgs;
+                CHECK(iter.readStructNew(&unusedUint, &unusedArgs));
+              }
+              case uint16_t(MiscOp::StructGet): {
+                if (env.gcTypesEnabled() == HasGcTypes::False) {
+                    return iter.unrecognizedOpcode(&op);
+                }
+                uint32_t unusedUint1, unusedUint2;
+                CHECK(iter.readStructGet(&unusedUint1, &unusedUint2, &nothing));
+              }
+              case uint16_t(MiscOp::StructSet): {
+                if (env.gcTypesEnabled() == HasGcTypes::False) {
+                    return iter.unrecognizedOpcode(&op);
+                }
+                uint32_t unusedUint1, unusedUint2;
+                CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing, &nothing));
+              }
+              case uint16_t(MiscOp::StructNarrow): {
+                if (env.gcTypesEnabled() == HasGcTypes::False) {
+                    return iter.unrecognizedOpcode(&op);
+                }
+                ValType unusedTy, unusedTy2;
+                CHECK(iter.readStructNarrow(&unusedTy, &unusedTy2, &nothing));
+              }
+#endif
               default:
                 return iter.unrecognizedOpcode(&op);
             }
@@ -1310,8 +1343,7 @@ DecodeStructType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState,
         return false;
     }
 
-    // TODO (subsequent patch): lay out the fields.
-
+    StructMetaTypeDescr::Layout layout;
     for (uint32_t i = 0; i < numFields; i++) {
         uint8_t flags;
         if (!d.readFixedU8(&flags)) {
@@ -1327,14 +1359,54 @@ DecodeStructType(Decoder& d, ModuleEnvironment* env, TypeStateVector* typeState,
         if (!ValidateRefType(d, typeState, fields[i].type)) {
             return false;
         }
+
+        CheckedInt32 offset;
+        switch (fields[i].type.code()) {
+          case ValType::I32:
+            offset = layout.addScalar(Scalar::Int32);
+            break;
+          case ValType::I64:
+            offset = layout.addScalar(Scalar::Int64);
+            break;
+          case ValType::F32:
+            offset = layout.addScalar(Scalar::Float32);
+            break;
+          case ValType::F64:
+            offset = layout.addScalar(Scalar::Float64);
+            break;
+          case ValType::Ref:
+          case ValType::AnyRef:
+            offset = layout.addReference(ReferenceType::TYPE_OBJECT);
+            break;
+          default:
+            MOZ_CRASH("Unknown type");
+        }
+        if (!offset.isValid()) {
+            return d.fail("Object too large");
+        }
+
+        fields[i].offset = offset.value();
+    }
+
+    CheckedInt32 totalSize = layout.close();
+    if (!totalSize.isValid()) {
+        return d.fail("Object too large");
+    }
+
+    bool isInline = InlineTypedObject::canAccommodateSize(totalSize.value());
+    uint32_t offsetBy = isInline ? InlineTypedObject::offsetOfDataStart() : 0;
+
+    for (StructField& f : fields) {
+        f.offset += offsetBy;
     }
 
     if ((*typeState)[typeIndex] != TypeState::None && (*typeState)[typeIndex] != TypeState::ForwardStruct) {
         return d.fail("struct type entry referenced as function");
     }
 
-    env->types[typeIndex] = TypeDef(StructType(std::move(fields)));
+    env->types[typeIndex] = TypeDef(StructType(std::move(fields), env->numStructTypes, isInline));
     (*typeState)[typeIndex] = TypeState::Struct;
+    env->numStructTypes++;
 
     return true;
 }

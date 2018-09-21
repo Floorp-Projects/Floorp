@@ -63,7 +63,7 @@ toolbar[brighttext] {
 }
 
 .toolbarbutton-1 > .toolbarbutton-icon {
-  margin-inline-end: 0;
+  margin-inline-end: 0 !important;
 }
 
 .toolbarbutton-1 > .toolbarbutton-icon,
@@ -74,13 +74,13 @@ toolbar[brighttext] {
 #TabsToolbar .toolbarbutton-1,
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  margin: 0 0 @navbarTabsShadowSize@;
+  margin: 0 0 @navbarTabsShadowSize@ !important;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: none;
-  padding: 0 var(--toolbarbutton-inner-padding);
+  padding: 0 var(--toolbarbutton-inner-padding) !important;
 }
 
 #navigator-toolbox:not(:hover) > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-down:not([highlight]) {
@@ -100,13 +100,13 @@ toolbar[brighttext] {
 toolbar .toolbarbutton-1 {
   -moz-appearance: none;
   margin: 0;
-  padding: 0 var(--toolbarbutton-outer-padding);
+  padding: 0 var(--toolbarbutton-outer-padding) !important;
   -moz-box-pack: center;
 }
 
 :root:not([uidensity=compact]) #PanelUI-menu-button {
-  padding-inline-start: 5px;
-  padding-inline-end: 5px;
+  padding-inline-start: 5px !important;
+  padding-inline-end: 5px !important;
 }
 
 toolbar .toolbarbutton-1 > menupopup {
@@ -149,8 +149,8 @@ toolbar .toolbaritem-combined-buttons {
 }
 
 toolbar .toolbaritem-combined-buttons > .toolbarbutton-1 {
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 toolbar .toolbaritem-combined-buttons:not(:hover) > separator {
@@ -199,9 +199,9 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 }
 
 :root:not([uidensity=compact]) #back-button {
-  padding-top: 3px;
-  padding-bottom: 3px;
-  padding-inline-start: 3px;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  padding-inline-start: 3px !important;
   padding-inline-end: 0 !important;
   position: relative !important;
   z-index: 1 !important;
@@ -230,9 +230,9 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 }
 
 :root[uidensity=touch] #back-button {
-  padding-top: 1px;
-  padding-bottom: 1px;
-  padding-inline-start: 1px;
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+  padding-inline-start: 1px !important;
 }
 
 :root[uidensity=touch] #back-button > .toolbarbutton-icon {
@@ -343,6 +343,6 @@ toolbarbutton.bookmark-item {
 }
 
 #PersonalToolbar .toolbarbutton-1 {
-  padding: 1px var(--toolbarbutton-inner-padding);
+  padding: 1px var(--toolbarbutton-inner-padding) !important;
   border-radius: var(--toolbarbutton-border-radius);
 }

@@ -34,11 +34,12 @@ class UrlbarInput {
   constructor(options = {}) {
     this.textbox = options.textbox;
     this.panel = options.panel;
+    this.window = this.textbox.ownerGlobal;
     this.controller = options.controller || new UrlbarController();
     this.view = new UrlbarView(this);
     this.valueIsTyped = false;
     this.userInitiatedFocus = false;
-    this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.panel.ownerGlobal);
+    this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.window);
 
     const METHODS = ["addEventListener", "removeEventListener",
       "setAttribute", "hasAttribute", "removeAttribute", "getAttribute",
@@ -75,6 +76,9 @@ class UrlbarInput {
     }
 
     this.addEventListener("input", this);
+    this.inputField.addEventListener("overflow", this);
+    this.inputField.addEventListener("underflow", this);
+    this.inputField.addEventListener("scrollend", this);
   }
 
   formatValue() {
@@ -104,6 +108,25 @@ class UrlbarInput {
 
   // Private methods below.
 
+  _updateTextOverflow() {
+    if (!this._inOverflow) {
+      this.removeAttribute("textoverflow");
+      return;
+    }
+
+    this.window.promiseDocumentFlushed(() => {
+      // Check overflow again to ensure it didn't change in the meantime.
+      let input = this.inputField;
+      if (input && this._inOverflow) {
+        let side = input.scrollLeft &&
+                   input.scrollLeft == input.scrollLeftMax ? "start" : "end";
+        this.setAttribute("textoverflow", side);
+      }
+    });
+  }
+
+  // Event handlers below.
+
   _oninput(event) {
     // XXX Fill in lastKey & maxResults, and add anything else we need.
     this.controller.handleQuery(new QueryContext({
@@ -112,5 +135,33 @@ class UrlbarInput {
       maxResults: 12,
       isPrivate: this.isPrivate,
     }));
+  }
+
+  _onoverflow(event) {
+    const targetIsPlaceholder =
+      !event.originalTarget.classList.contains("anonymous-div");
+    // We only care about the non-placeholder text.
+    // This shouldn't be needed, see bug 1487036.
+    if (targetIsPlaceholder) {
+      return;
+    }
+    this._inOverflow = true;
+    this._updateTextOverflow();
+  }
+
+  _onunderflow(event) {
+    const targetIsPlaceholder =
+      !event.originalTarget.classList.contains("anonymous-div");
+    // We only care about the non-placeholder text.
+    // This shouldn't be needed, see bug 1487036.
+    if (targetIsPlaceholder) {
+      return;
+    }
+    this._inOverflow = false;
+    this._updateTextOverflow();
+  }
+
+  _onscrollend(event) {
+    this._updateTextOverflow();
   }
 }

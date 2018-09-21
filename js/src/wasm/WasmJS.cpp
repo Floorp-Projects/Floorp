@@ -24,6 +24,7 @@
 #include "mozilla/RangedPtr.h"
 
 #include "builtin/Promise.h"
+#include "builtin/TypedObject.h"
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/JitOptions.h"
@@ -1176,6 +1177,7 @@ WasmInstanceObject::create(JSContext* cx,
                            UniqueTlsData tlsData,
                            HandleWasmMemoryObject memory,
                            SharedTableVector&& tables,
+                           StructTypeDescrVector&& structTypeDescrs,
                            Handle<FunctionVector> funcImports,
                            const GlobalDescVector& globals,
                            HandleValVector globalImportValues,
@@ -1244,6 +1246,7 @@ WasmInstanceObject::create(JSContext* cx,
                                         std::move(tlsData),
                                         memory,
                                         std::move(tables),
+                                        std::move(structTypeDescrs),
                                         funcImports,
                                         globalImportValues,
                                         globalObjs,

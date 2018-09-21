@@ -165,6 +165,7 @@ struct ModuleEnvironment
     MemoryUsage               memoryUsage;
     uint32_t                  minMemoryLength;
     Maybe<uint32_t>           maxMemoryLength;
+    uint32_t                  numStructTypes;
     TypeDefVector             types;
     FuncTypeWithIdPtrVector   funcTypes;
     Uint32Vector              funcImportGlobalDataOffsets;
@@ -196,7 +197,8 @@ struct ModuleEnvironment
         gcFeatureOptIn(HasGcTypes::False),
 #endif
         memoryUsage(MemoryUsage::None),
-        minMemoryLength(0)
+        minMemoryLength(0),
+        numStructTypes(0)
     {}
 
     Tier tier() const {
@@ -699,6 +701,9 @@ class Decoder
         }
         if (*code == uint8_t(TypeCode::Ref)) {
             if (!readVarU32(refTypeIndex)) {
+                return false;
+            }
+            if (*refTypeIndex > MaxTypes) {
                 return false;
             }
         } else {
