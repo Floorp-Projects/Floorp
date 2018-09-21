@@ -488,6 +488,9 @@ struct MemoryReport {
   uintptr_t gpu_cache_cpu_mirror;
   uintptr_t render_tasks;
   uintptr_t hit_testers;
+  uintptr_t fonts;
+  uintptr_t images;
+  uintptr_t rasterized_blobs;
 
   bool operator==(const MemoryReport& aOther) const {
     return primitive_stores == aOther.primitive_stores &&
@@ -495,7 +498,10 @@ struct MemoryReport {
            gpu_cache_metadata == aOther.gpu_cache_metadata &&
            gpu_cache_cpu_mirror == aOther.gpu_cache_cpu_mirror &&
            render_tasks == aOther.render_tasks &&
-           hit_testers == aOther.hit_testers;
+           hit_testers == aOther.hit_testers &&
+           fonts == aOther.fonts &&
+           images == aOther.images &&
+           rasterized_blobs == aOther.rasterized_blobs;
   }
 };
 
