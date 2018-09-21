@@ -37,6 +37,8 @@
   <string name="preference_category_general">Kaajayil</string>
   <string name="preference_category_data_collection_use">Imolpu tachul as ib\'anb\'ele\'</string>
   <string name="preference_category_search">Chukb\'al</string>
+  <string name="preference_show_search_suggestions">La k\'ul ka\'taj txumb\'al ti\' achukata\'</string>
+  <string name="preference_show_search_suggestions_summary">%1$s tuk aq\'on b\'en unq\'a vee\' natz\'ib\'a tu k\'uchb\'al tetze\'</string>
   <string name="preference_search_engine_default">B\'ek\'</string>
   <string name="preference_state_on">Oypisa\'m</string>
   <string name="preference_state_off">Tzaanale</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Ye\'le</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Maj ivatz unq\'a cookies tetz va\'len xaaol</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Kanoj</string>
+  <string name="preference_security_biometric">B\'anb\'e u vi\' aq\'ab\'e\' aq\'al uva\' la jaj u aplicacione\'</string>
+  <string name="preference_security_biometric_summary">U vi\' aq\'ab\'e\' la uch ijajat u %1$se\' asoj jajle\'l ve\'t u URL tu aplicacione\'. La kuxh oypik ve\'t kan kuxh ye\' la tiini.</string>
   <string name="preference_privacy_secure_mode">Ye\'xh kam na\'l</string>
   <string name="preference_privacy_stealth_summary">Muj ivatz unq\'a web tul uva\' ni jalpu unq\'a aplicaciones.</string>
+  <string name="preference_category_security">Tiib\'isal tetz</string>
   <string name="preference_category_performance">Taq\'onve\'</string>
   <string name="preference_performance_block_webfonts">Maj ivatz unq\'a itzaaeb\'al web</string>
   <string name="preference_performance_block_webfonts_summary">La ib\'ane\' uva\' la sojsa unq\'a texhlale\' moj unq\'a vatzib\'ale\' q\'a</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">+ Aq\'o\'k uma\'t taq\'onb\'al chukb\'al tetz</string>
   <string name="preference_search_remove_title">Sojsa unq\'a taq\'onb\'ale\' uve\' nichukube\'</string>
   <string name="preference_search_remove">Sojsa</string>
+  <string name="preference_homescreen_tips">La k\'uch txumb\'al tu b\'axa ivatze\'</string>
   <string name="action_option_add_search_engine">Aq\'o\'k uma\'t aq\'onb\'al tetz chukb\'al tetz</string>
   <string name="search_add_manually_name_hint">Ib\'ii u taq\'onb\'al chukul tetze\'</string>
   <string name="search_add_manually_string">Chuk qinib tetz ti\' iba\'nb\'ele\'</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Q\'aaven tu vee\' ni tiinsal kat</string>
   <string name="content_description_stop">Aaq\'kan kuxh u webe\' aq\'al la teq\'o ku\'tzan</string>
   <string name="content_description_customtab_exit">La q\'aav axh tu aplicación atik ti\' iqul</string>
+  <string name="content_description_trackers_blocked">Tachul unq\'a vee\' majel ve\'t ivatz</string>
   <string name="content_description_blocking_switch">Maj ivatz unq\'a tiinsan tetze\'</string>
   <string name="your_rights">Unq\'a vee\' la uch ab\'anata\'</string>
   <string name="external_app_prompt_title">La jaj u vaa\' tu uma\'t aplicación</string>
@@ -200,6 +207,15 @@
   <string name="http_auth_dialog_password">Exhlal axh kuxh la ootzin</string>
   <string name="preference_performance_request_desktop_site">Jaj aq\'al uva\' la eeq\'otzan svatz</string>
   <string name="custom_tab_copy_url_action">URL eq\'omal ve\'t kan ivatz</string>
+  <string name="preference_advanced_summary">Aq\'onb\'al ti\' ib\'anax tuche\'</string>
+  <string name="preference_category_advanced">Tii ve\'t tuche\'</string>
+  <string name="preference_remote_debugging">Eesamal ve\'t el ta\'n USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Q\'alpu u %1$s</string>
+  <string name="biometric_auth_description">Kan u vee\' uve\' naaq\' kat ku\' vi\' aq\'ab\' aq\'al uva\' la yakeb\' axh.</string>
+  <string name="biometric_auth_new_session">Xe\'tisa uma\'t ak\'</string>
+  <string name="biometric_auth_image_description">Texhlal u vi\' q\'ab\'e\'</string>
+  <string name="biometric_auth_not_recognized_error">Ye\' ni texhla u vi\' aq\'ab\'e\'. B\'an unpajte.</string>
+  <string name="biometric_auth_moved_too_quickly">Oora kuxh kat atiinsa u vi\' aq\'ab\'e\'. B\'an unpajte.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Chus nimate</string>
   <string name="enable_search_suggestions_no">Ye\'le</string>
   <string name="enable_search_suggestions_yes">Kanoj</string>
