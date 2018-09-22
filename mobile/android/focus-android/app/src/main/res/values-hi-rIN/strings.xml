@@ -14,7 +14,7 @@
   <string name="menu_add_to_home_screen">मुख्य स्क्रीन में जोड़ें</string>
   <string name="menu_whats_new">क्या नया है</string>
   <string name="menu_settings">सेटिंग</string>
-  <string name="menu_about">के बारे में</string>
+  <string name="menu_about">परिचय</string>
   <string name="menu_help">सहायता</string>
   <string name="menu_rights">आपके अधिकार</string>
   <string name="menu_trackers_blocked_title">ट्रैकर्स अवरुद्ध</string>
@@ -29,8 +29,8 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2310;&#2346;&#2325;&#2379; &#2344;&#2367;&#2351;&#2306;&#2340;&#2381;&#2352;&#2339; &#2350;&#2375;&#2306; &#2352;&#2326;&#2340;&#2366; &#2361;&#2376;&#2404;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2311;&#2360;&#2375; &#2319;&#2325; &#2344;&#2367;&#2332;&#2368; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2364;&#2352; &#2325;&#2375; &#2352;&#2370;&#2346; &#2350;&#2375;&#2306; &#2346;&#2381;&#2352;&#2351;&#2379;&#2327; &#2325;&#2352;&#2375;&#2306;:\n  "<ul>"\n    "<li>&#2320;&#2346; &#2350;&#2375;&#2306; &#2342;&#2366;&#2361;&#2367;&#2344;&#2368; &#2323;&#2352; &#2326;&#2379;&#2332;&#2375;&#2306; &#2324;&#2352; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332; &#2325;&#2352;&#2375;&#2306;</li>"\n    "<li>&#2335;&#2381;&#2352;&#2376;&#2325;&#2352;&#2381;&#2360; &#2309;&#2357;&#2352;&#2369;&#2342;&#2381;&#2343; &#2325;&#2352;&#2375;&#2306; (&#2351;&#2366; &#2335;&#2381;&#2352;&#2376;&#2325;&#2352;&#2381;&#2360; &#2325;&#2379; &#2309;&#2344;&#2369;&#2350;&#2340;&#2367; &#2342;&#2375;&#2344;&#2375; &#2325;&#2375; &#2354;&#2367;&#2319; &#2360;&#2375;&#2335;&#2367;&#2306;&#2327; &#2309;&#2346;&#2337;&#2375;&#2335; &#2325;&#2352;&#2375;&#2306;)</li>"\n    "<li>&#2325;&#2369;&#2325;&#2368;&#2332;&#2364; &#2325;&#2375; &#2360;&#2366;&#2341; &#2326;&#2379;&#2332; &#2324;&#2352; &#2348;&#2381;&#2352;&#2366;&#2313;&#2332;&#2364;&#2367;&#2306;&#2327; &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2361;&#2335;&#2366;&#2344;&#2375; &#2325;&#2375; &#2354;&#2367;&#2319; &#2350;&#2367;&#2335;&#2366;&#2319;&#2305;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#2342;&#2381;&#2357;&#2366;&#2352;&#2366; &#2344;&#2367;&#2352;&#2381;&#2350;&#2367;&#2340; &#2361;&#2376;&#2404; &#2361;&#2350;&#2366;&#2352;&#2366; &#2350;&#2367;&#2358;&#2344; &#2319;&#2325; &#2360;&#2381;&#2357;&#2360;&#2381;&#2341;, &#2313;&#2344;&#2381;&#2350;&#2369;&#2325;&#2381;&#2340; &#2311;&#2306;&#2335;&#2352;&#2344;&#2375;&#2335; &#2325;&#2379; &#2348;&#2338;&#2364;&#2366;&#2357;&#2366; &#2342;&#2375;&#2344;&#2366; &#2361;&#2376;&#2404;<br/>\n<a href="%2$s">&#2324;&#2352; &#2332;&#2366;&#2344;&#2375;&#2306;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">गोपनीयता और सुरक्षा</string>
   <string name="preference_privacy_and_security_summary">ट्रैकिंग, कुकीज़, डेटा विकल्प</string>
-  <string name="preference_search_summary">तयशुदा, स्वत: पूर्ण सेट करें</string>
-  <string name="preference_mozilla_summary">%1$s के बारे में, सहायता</string>
+  <string name="preference_search_summary">तयशुदा बनायें, स्वत: पूर्ण</string>
+  <string name="preference_mozilla_summary">%1$s परिचय, सहायता</string>
   <string name="preference_category_tracking_protection">ट्रैकिंग सुरक्षा</string>
   <string name="preference_category_web_content">वेब सामग्री</string>
   <string name="preference_category_switching_apps">ऐप्स बदलना</string>
@@ -65,7 +65,7 @@
   <string name="preference_autocomplete_action_remove_content_description">हटाएँ</string>
   <string name="preference_autocomplete_add_error">आपके द्वारा दर्ज URL की दोहरी जाँच करें।</string>
   <string name="preference_language">भाषा</string>
-  <string name="preference_language_systemdefault">प्रणाली तयशुदा</string>
+  <string name="preference_language_systemdefault">सिस्टम डिफ़ॉल्ट</string>
   <string name="preference_category_privacy">गोपनीयता</string>
   <string name="preference_privacy_block_ads">विज्ञापन ट्रैकर्स को अवरुद्ध करें</string>
   <string name="preference_privacy_block_ads_summary">कुछ विज्ञापन साइट पर जाने को ट्रैक करते हैं, भले ही आप उन्हें क्लिक न करें</string>
@@ -81,7 +81,7 @@
   <string name="preference_privacy_should_block_cookies_yes_option">हाँ</string>
   <string name="preference_security_biometric">ऐप्प को अनलॉक करने के लिए फिंगरप्रिंट का इस्तेमाल करें</string>
   <string name="preference_security_biometric_summary">यदि ऐप्प में पहले ही कोई URL खुली हो तो आपकी फिंगरप्रिंट %1$s को अनलॉक कर सकती है. गोपनीयता चालू हो जायेगी।</string>
-  <string name="preference_privacy_secure_mode">तरक़ीब</string>
+  <string name="preference_privacy_secure_mode">गुप्तता</string>
   <string name="preference_privacy_stealth_summary">एक ऐप्प से दुसरे ऐप्प पर जाते समय वेबपृष्ठों को छिपाएं तथा स्क्रीनशॉट लेना ब्लॉक करें।</string>
   <string name="preference_category_security">सुरक्षा</string>
   <string name="preference_category_performance">प्रदर्शन</string>
@@ -91,11 +91,11 @@
   <string name="preference_performance_block_javascript_summary">पृष्ठ तेजी से लोड हो सकते हैं, लेकिन अप्रत्याशित रूप से भी व्यवहार कर सकते हैं</string>
   <string name="preference_default_browser2">%1$s को डिफ़ॉल्ट ब्राउज़र बनाएँ</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">उपयोग डेटा भेजें</string>
+  <string name="preference_mozilla_telemetry2">उपयोगित डेटा भेजें</string>
   <string name="preference_mozilla_telemetry_summary">और अधिक जानें</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla मात्र वही एकत्रित करने का प्रयास करता है जिसकी हमें %1$s को बेहतर बनाने और सबको उपलब्ध कराने के लिए आवश्यकता है।</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla मात्र वही एकत्र करने का प्रयास करता है जिसकी हमें %1$s को बेहतर बनाने और सबको उपलब्ध कराने के लिए आवश्यकता है।</string>
   <string name="preference_privacy_notice">गोपनीयता सूचना</string>
-  <string name="preference_about">%1$s के बारे में</string>
+  <string name="preference_about">%1$s परिचय</string>
   <string name="preference_search_installed_search_engines">संस्थापित खोज इंजन</string>
   <string name="preference_search_restore">तयशुदा खोज इंजिन पुनर्बहाल करें</string>
   <string name="preference_search_add2">+ अन्य खोज इंजन जोड़ें</string>
@@ -203,7 +203,7 @@
   <string name="accessibility_previous_result">पिछला परिणाम पाएँ</string>
   <string name="accessibility_dismiss_find_in_page">पृष्ठ में ढूंढें ख़ारिज करें</string>
   <string name="http_auth_dialog_title">सत्यापन आवश्यक</string>
-  <string name="http_auth_dialog_username">उपयोगकर्तानाम</string>
+  <string name="http_auth_dialog_username">उपयोगकर्ता नाम</string>
   <string name="http_auth_dialog_password">कूटशब्द</string>
   <string name="preference_performance_request_desktop_site">डेस्कटॉप साइट के लिए आग्रह करें</string>
   <string name="custom_tab_copy_url_action">URL की नकल की गई</string>
