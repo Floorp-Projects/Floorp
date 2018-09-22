@@ -19,7 +19,7 @@ using namespace mozilla::intl;
  */
 TEST(Intl_Locale_OSPreferences, GetSystemLocales) {
   nsTArray<nsCString> systemLocales;
-  ASSERT_TRUE(OSPreferences::GetInstance()->GetSystemLocales(systemLocales));
+  ASSERT_TRUE(NS_SUCCEEDED(OSPreferences::GetInstance()->GetSystemLocales(systemLocales)));
 
   ASSERT_FALSE(systemLocales.IsEmpty());
 }
@@ -34,7 +34,7 @@ TEST(Intl_Locale_OSPreferences, GetSystemLocales) {
  */
 TEST(Intl_Locale_OSPreferences, GetRegionalPrefsLocales) {
   nsTArray<nsCString> rgLocales;
-  ASSERT_TRUE(OSPreferences::GetInstance()->GetRegionalPrefsLocales(rgLocales));
+  ASSERT_TRUE(NS_SUCCEEDED(OSPreferences::GetInstance()->GetRegionalPrefsLocales(rgLocales)));
 
   ASSERT_FALSE(rgLocales.IsEmpty());
 }
