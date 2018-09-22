@@ -40,7 +40,6 @@ static const char kPrefThirdPartySession[] =
   "network.cookie.thirdparty.sessionOnly";
 static const char kPrefThirdPartyNonsecureSession[] =
   "network.cookie.thirdparty.nonsecureSessionOnly";
-static const char kPrefCookieIPCSync[] = "network.cookie.ipc.sync";
 static const char kCookieLeaveSecurityAlone[] = "network.cookie.leave-secure-alone";
 static const char kCookieMoveIntervalSecs[] = "network.cookie.move.interval_sec";
 
@@ -69,7 +68,6 @@ CookieServiceChild::CookieServiceChild()
   , mThirdPartySession(false)
   , mThirdPartyNonsecureSession(false)
   , mLeaveSecureAlone(true)
-  , mIPCSync(false)
   , mIPCOpen(false)
 {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
@@ -101,7 +99,6 @@ CookieServiceChild::CookieServiceChild()
     prefBranch->AddObserver(kPrefCookieBehavior, this, true);
     prefBranch->AddObserver(kPrefThirdPartySession, this, true);
     prefBranch->AddObserver(kPrefThirdPartyNonsecureSession, this, true);
-    prefBranch->AddObserver(kPrefCookieIPCSync, this, true);
     prefBranch->AddObserver(kCookieLeaveSecurityAlone, this, true);
     prefBranch->AddObserver(kCookieMoveIntervalSecs, this, true);
     PrefChanged(prefBranch);
@@ -314,9 +311,6 @@ CookieServiceChild::PrefChanged(nsIPrefBranch *aPrefBranch)
                                             &boolval)))
     mThirdPartyNonsecureSession = boolval;
 
-  if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefCookieIPCSync, &boolval)))
-    mIPCSync = !!boolval;
-
   if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kCookieLeaveSecurityAlone, &boolval)))
     mLeaveSecureAlone = !!boolval;
 
@@ -438,24 +432,6 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
       }
     }
   }
-}
-
-void
-CookieServiceChild::GetCookieStringSyncIPC(nsIURI                 *aHostURI,
-                                           bool                   aIsForeign,
-                                           bool                   aIsTrackingResource,
-                                           bool                   aFirstPartyStorageAccessGranted,
-                                           bool                   aIsSafeTopLevelNav,
-                                           bool                   aIsSameSiteForeign,
-                                           const OriginAttributes &aAttrs,
-                                           nsAutoCString          &aCookieString)
-{
-  URIParams uriParams;
-  SerializeURI(aHostURI, uriParams);
-
-  SendGetCookieString(uriParams, aIsForeign, aIsTrackingResource,
-                      aFirstPartyStorageAccessGranted, aIsSafeTopLevelNav,
-                      aIsSameSiteForeign, aAttrs, &aCookieString);
 }
 
 uint32_t
@@ -601,18 +577,9 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
 
   nsAutoCString result;
-  if (!mIPCSync) {
-    GetCookieStringFromCookieHashTable(aHostURI, isForeign, isTrackingResource,
-                                       firstPartyStorageAccessGranted, isSafeTopLevelNav,
-                                       isSameSiteForeign, attrs, result);
-  } else {
-    if (!mIPCOpen) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    GetCookieStringSyncIPC(aHostURI, isForeign, isTrackingResource,
-                           firstPartyStorageAccessGranted, isSafeTopLevelNav,
-                           isSameSiteForeign, attrs, result);
-  }
+  GetCookieStringFromCookieHashTable(aHostURI, isForeign, isTrackingResource,
+                                     firstPartyStorageAccessGranted, isSafeTopLevelNav,
+                                     isSameSiteForeign, attrs, result);
 
   if (!result.IsEmpty())
     *aCookieString = ToNewCString(result);
@@ -687,10 +654,6 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
                         isForeign, isTrackingResource,
                         firstPartyStorageAccessGranted, cookieString,
                         stringServerTime, attrs, aFromHttp);
-  }
-
-  if (mIPCSync) {
-    return NS_OK;
   }
 
   bool requireHostMatch;
