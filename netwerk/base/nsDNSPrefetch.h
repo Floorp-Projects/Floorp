@@ -44,6 +44,7 @@ public:
 
 private:
     nsCString mHostname;
+    bool mIsHttps;
     mozilla::OriginAttributes mOriginAttributes;
     bool mStoreTiming;
     mozilla::TimeStamp mStartTimestamp;
