@@ -11,13 +11,13 @@ function run_test()
   const systemLocale = osprefs.systemLocale;
   Assert.ok(systemLocale != "", "systemLocale is non-empty");
 
-  const systemLocales = osprefs.getSystemLocales();
+  const systemLocales = osprefs.systemLocales;
   Assert.ok(Array.isArray(systemLocales), "systemLocales returns an array");
 
   Assert.ok(systemLocale == systemLocales[0],
     "systemLocale matches first entry in systemLocales");
 
-  const rgLocales = osprefs.getRegionalPrefsLocales();
+  const rgLocales = osprefs.regionalPrefsLocales;
   Assert.ok(Array.isArray(rgLocales), "regionalPrefsLocales returns an array");
 
   const getDateTimePatternTests = [
