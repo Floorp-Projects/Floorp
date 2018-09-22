@@ -199,10 +199,10 @@ CheckContentBlockingAllowList(nsIHttpChannel* aChannel)
 }
 
 void
-ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
+ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
                         uint32_t aRejectedReason)
 {
-  MOZ_ASSERT(aWindow && aChannel);
+  MOZ_ASSERT(aWindow && aURI);
   MOZ_ASSERT(aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
@@ -251,9 +251,7 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
 
   MOZ_ASSERT(message);
 
-  nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
-  NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
+  NS_ConvertUTF8toUTF16 spec(aURI->GetSpecOrDefault());
   const char16_t* params[] = { spec.get() };
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -1058,8 +1056,7 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
              aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
+  if (!aChannel) {
     return;
   }
 
@@ -1079,7 +1076,7 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
   }
 
   nsCOMPtr<mozIDOMWindowProxy> win;
-  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(httpChannel,
+  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel,
                                                        getter_AddRefs(win));
   NS_ENSURE_SUCCESS_VOID(rv);
 
@@ -1088,9 +1085,12 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
     return;
   }
 
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+
   pwin->NotifyContentBlockingState(aRejectedReason, aChannel);
 
-  ReportBlockingToConsole(pwin, httpChannel, aRejectedReason);
+  ReportBlockingToConsole(pwin, uri, aRejectedReason);
 }
 
 /* static */ void
@@ -1109,9 +1109,8 @@ AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow,
     return;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel =
-    do_QueryInterface(document->GetChannel());
-  if (!httpChannel) {
+  nsIChannel* channel = document->GetChannel();
+  if (!channel) {
     return;
   }
 
@@ -1125,9 +1124,12 @@ AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow,
     return;
   }
 
-  pwin->NotifyContentBlockingState(aRejectedReason, httpChannel);
+  nsCOMPtr<nsIURI> uri;
+  channel->GetURI(getter_AddRefs(uri));
 
-  ReportBlockingToConsole(pwin, httpChannel, aRejectedReason);
+  pwin->NotifyContentBlockingState(aRejectedReason, channel);
+
+  ReportBlockingToConsole(pwin, uri, aRejectedReason);
 }
 
 /* static */ void
