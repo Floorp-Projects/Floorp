@@ -152,9 +152,9 @@ function initBackend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = await TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
-    await target.attach();
+    await target.makeRemote();
 
     const front = new WebGLFront(target.client, target.form);
     return { target, front };
@@ -166,9 +166,9 @@ function initShaderEditor(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = await TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
-    await target.attach();
+    await target.makeRemote();
 
     Services.prefs.setBoolPref("devtools.shadereditor.enabled", true);
     const toolbox = await gDevTools.showToolbox(target, "shadereditor");

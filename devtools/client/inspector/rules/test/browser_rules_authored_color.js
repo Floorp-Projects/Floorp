@@ -61,7 +61,7 @@ add_task(async function() {
        "changing the color preserved the unit for " + color.name);
   }
 
-  const target = await TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
   await gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });

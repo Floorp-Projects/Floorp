@@ -172,7 +172,7 @@ Inspector.prototype = {
     localizeMarkup(this.panelDoc);
 
     this._cssProperties = await initCssProperties(this.toolbox);
-    await this.target.attach();
+    await this.target.makeRemote();
     await this._getPageStyle();
 
     // This may throw if the document is still loading and we are

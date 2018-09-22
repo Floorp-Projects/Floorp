@@ -14,7 +14,7 @@ const URL = "data:text/html;charset=utf8,test for opening toolbox in different h
 add_task(async function runTest() {
   info("Create a test tab and open the toolbox");
   const tab = await addTab(URL);
-  target = await TargetFactory.forTab(tab);
+  target = TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target, "webconsole");
 
   await testBottomHost();
@@ -95,7 +95,7 @@ async function testToolSelect() {
 
 async function testDestroy() {
   await toolbox.destroy();
-  target = await TargetFactory.forTab(gBrowser.selectedTab);
+  target = TargetFactory.forTab(gBrowser.selectedTab);
   toolbox = await gDevTools.showToolbox(target);
 }
 

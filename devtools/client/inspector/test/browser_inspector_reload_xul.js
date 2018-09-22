@@ -18,7 +18,7 @@ add_task(async function() {
 });
 
 async function testToolboxInitialization(tab, inspector, toolbox) {
-  const target = await TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
 
   ok(true, "Inspector started, and notification received.");
   ok(inspector, "Inspector instance is accessible.");

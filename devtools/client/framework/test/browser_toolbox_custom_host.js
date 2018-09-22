@@ -30,7 +30,7 @@ add_task(async function() {
   document.documentElement.appendChild(iframe);
 
   const tab = await addTab(TEST_URL);
-  let target = await TargetFactory.forTab(tab);
+  let target = TargetFactory.forTab(tab);
   const options = { customIframe: iframe };
   let toolbox = await gDevTools.showToolbox(target, null, Toolbox.HostType.CUSTOM, options);
 
