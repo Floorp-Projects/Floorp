@@ -22,7 +22,7 @@ li ul, li ol, li dir, li menu {
   ol ul,   ol ol,   ol dir,   ol menu,   ol li,
  dir ul,  dir ol,  dir dir,  dir menu,  dir li,
 menu ul, menu ol, menu dir, menu menu, menu li {
-  list-style-position: inherit;
+  list-style-position: unset;
 }
 
 
