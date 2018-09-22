@@ -980,6 +980,14 @@ public:
   }
 
   /**
+   * Get the content blocking log.
+   */
+  mozilla::dom::ContentBlockingLog* GetContentBlockingLog()
+  {
+    return &mContentBlockingLog;
+  }
+
+  /**
    * Get tracking content blocked flag for this document.
    */
   bool GetHasTrackingContentBlocked()
