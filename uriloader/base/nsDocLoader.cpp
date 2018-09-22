@@ -35,6 +35,7 @@
 #include "nsPresContext.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
+using mozilla::dom::ContentBlockingLog;
 using mozilla::DebugOnly;
 using mozilla::LogLevel;
 
@@ -1462,7 +1463,9 @@ NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
  */
 
 NS_IMETHODIMP nsDocLoader::OnSecurityChange(nsISupports * aContext,
-                                            uint32_t aState)
+                                            uint32_t aOldState,
+                                            uint32_t aState,
+                                            ContentBlockingLog* aContentBlockingLog)
 {
   //
   // Fire progress notifications out to any registered nsIWebProgressListeners.
@@ -1477,7 +1480,7 @@ NS_IMETHODIMP nsDocLoader::OnSecurityChange(nsISupports * aContext,
 
   // Pass the notification up to the parent...
   if (mParent) {
-    mParent->OnSecurityChange(aContext, aState);
+    mParent->OnSecurityChange(aContext, aOldState, aState, aContentBlockingLog);
   }
   return NS_OK;
 }
