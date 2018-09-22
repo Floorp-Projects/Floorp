@@ -81,6 +81,7 @@ var snapshotFormatters = {
 
     if (Services.policies) {
       let policiesText = "";
+      let aboutPolicies = "about:policies";
       switch (data.policiesStatus) {
         case Services.policies.INACTIVE:
           policiesText = strings.GetStringFromName("policies.inactive");
@@ -88,15 +89,17 @@ var snapshotFormatters = {
 
         case Services.policies.ACTIVE:
           policiesText = strings.GetStringFromName("policies.active");
+          aboutPolicies += "#active";
           break;
 
         default:
           policiesText = strings.GetStringFromName("policies.error");
+          aboutPolicies += "#errors";
           break;
       }
 
       if (data.policiesStatus != Services.policies.INACTIVE) {
-        let activePolicies = $.new("a", policiesText, null, {href: "about:policies"});
+        let activePolicies = $.new("a", policiesText, null, {href: aboutPolicies});
         $("policies-status").appendChild(activePolicies);
       } else {
         $("policies-status").textContent = policiesText;
