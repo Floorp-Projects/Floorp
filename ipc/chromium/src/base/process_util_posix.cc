@@ -206,40 +206,6 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int))
   }
 }
 
-// Sets all file descriptors to close on exec except for stdin, stdout
-// and stderr.
-// TODO(agl): Remove this function. It's fundamentally broken for multithreaded
-// apps.
-void SetAllFDsToCloseOnExec() {
-#if defined(OS_LINUX) || defined(OS_SOLARIS)
-  const char fd_dir[] = "/proc/self/fd";
-#elif defined(OS_MACOSX) || defined(OS_BSD)
-  const char fd_dir[] = "/dev/fd";
-#endif
-  ScopedDIR dir_closer(opendir(fd_dir));
-  DIR *dir = dir_closer.get();
-  if (NULL == dir) {
-    DLOG(ERROR) << "Unable to open " << fd_dir;
-    return;
-  }
-
-  struct dirent *ent;
-  while ((ent = readdir(dir))) {
-    // Skip . and .. entries.
-    if (ent->d_name[0] == '.')
-      continue;
-    int i = atoi(ent->d_name);
-    // We don't close stdin, stdout or stderr.
-    if (i <= STDERR_FILENO)
-      continue;
-
-    int flags = fcntl(i, F_GETFD);
-    if ((flags == -1) || (fcntl(i, F_SETFD, flags | FD_CLOEXEC) == -1)) {
-      DLOG(ERROR) << "fcntl failure.";
-    }
-  }
-}
-
 bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   int status;
   const int result = HANDLE_EINTR(waitpid(handle, &status, WNOHANG));
