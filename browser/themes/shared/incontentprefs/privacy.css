@@ -132,8 +132,7 @@
   margin-top: 0.75em;
 }
 
-#blockCookiesCBDeck:not([selectedIndex]),
-#blockCookiesCBDeck:not([selectedIndex="0"]) {
+#blockCookiesCBDeck[selectedIndex]:not([selectedIndex="0"]) {
   max-width: 444px;
 }
 
