@@ -81,17 +81,13 @@ window.dialog {
 }
 
 .question-icon {
-  list-style-image: url("chrome://global/skin/icons/Question.png");
+  list-style-image: url("chrome://global/skin/icons/help.svg");
 }
 
 @media (min-resolution: 1.1dppx) {
   .alert-dialog #info\.icon,
   .alert-icon {
     list-style-image: url("chrome://global/skin/icons/warning-64.png");
-  }
-
-  .question-icon {
-    list-style-image: url("chrome://global/skin/icons/question-64.png");
   }
 }
 
