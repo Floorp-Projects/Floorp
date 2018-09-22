@@ -863,7 +863,7 @@ panelview .toolbarbutton-1,
   -moz-appearance: none;
   margin: 0;
   min-height: 24px;
-  padding: 4px 12px;
+  padding: 4px 12px !important;
   background-color: transparent;
 }
 
@@ -1038,7 +1038,7 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   height: auto;
   margin-inline-start: 18px;
   min-width: auto;
-  padding: 4px 5px;
+  padding: 4px 5px !important;
 }
 
 #appMenu-zoom-controls > .subviewbutton {
@@ -1050,7 +1050,7 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   min-height: unset;
   border: 1px solid var(--panel-separator-color);
   border-radius: 10000px;
-  padding: 1px 8px;
+  padding: 1px 8px !important;
   background-color: var(--arrowpanel-dimmed);
 }
 
@@ -1165,7 +1165,7 @@ menuitem.panel-subview-footer@menuStateActive@,
 
 /* Disabled (empty) item is always alone and never has an icon, so fix its left padding */
 #BMB_bookmarksPopup menupopup[emptyplacesresult] .bookmark-item.subviewbutton {
-  padding-left: 6px;
+  padding-left: 6px !important;
 }
 
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
@@ -1258,8 +1258,8 @@ toolbarpaletteitem[place="palette"] > #search-container {
   border: 0;
   margin: 0;
   -moz-box-flex: 1;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
   -moz-box-orient: horizontal;
 }
 
