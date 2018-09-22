@@ -829,7 +829,8 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
     }
   }
 
-  await addon.updateBlocklistState({oldAddon: aOldAddon});
+  addon.propagateDisabledState(aOldAddon);
+  await addon.updateBlocklistState();
   addon.appDisabled = !XPIDatabase.isUsableAddon(addon);
 
   defineSyncGUID(addon);
@@ -1705,7 +1706,7 @@ class AddonInstall {
   /**
    * Installs the add-on into the install location.
    */
-  startInstall() {
+  async startInstall() {
     this.state = AddonManager.STATE_INSTALLING;
     if (!this._callInstallListeners("onInstallStarted")) {
       this.state = AddonManager.STATE_DOWNLOADED;
@@ -1726,6 +1727,19 @@ class AddonInstall {
       }
     }
 
+    // Reinstall existing user-disabled addon (of the same installed version).
+    // If addon is marked to be uninstalled - don't reinstall it.
+    if (this.existingAddon &&
+        this.existingAddon.location === this.location &&
+        this.existingAddon.version === this.addon.version &&
+        this.existingAddon.userDisabled &&
+        !this.existingAddon.pendingUninstall) {
+      await XPIDatabase.updateAddonDisabledState(this.existingAddon, false);
+      this.state = AddonManager.STATE_INSTALLED;
+      this._callInstallListeners("onInstallEnded", this.existingAddon.wrapper);
+      return;
+    }
+
     let isUpgrade = this.existingAddon &&
                     this.existingAddon.location == this.location;
 
@@ -1736,7 +1750,7 @@ class AddonInstall {
 
     let stagedAddon = this.location.installer.getStagingDir();
 
-    (async () => {
+    try {
       await this.location.installer.requestStagingDir();
 
       // remove any previously staged files
@@ -1767,8 +1781,7 @@ class AddonInstall {
         this.addon.visible = true;
 
         if (isUpgrade) {
-          this.addon =  XPIDatabase.updateAddonMetadata(this.existingAddon, this.addon,
-                                                        file.path);
+          this.addon = XPIDatabase.updateAddonMetadata(this.existingAddon, this.addon, file.path);
           let state = this.location.get(this.addon.id);
           if (state) {
             state.syncWithDB(this.addon, true);
@@ -1813,7 +1826,7 @@ class AddonInstall {
       })();
 
       await this._startupPromise;
-    })().catch((e) => {
+    } catch (e) {
       logger.warn(`Failed to install ${this.file.path} from ${this.sourceURI.spec} to ${stagedAddon.path}`, e);
 
       if (stagedAddon.exists())
@@ -1824,10 +1837,10 @@ class AddonInstall {
       AddonManagerPrivate.callAddonListeners("onOperationCancelled",
                                              this.addon.wrapper);
       this._callInstallListeners("onInstallFailed");
-    }).then(() => {
+    } finally {
       this.removeTemporaryFile();
-      return this.location.installer.releaseStagingDir();
-    });
+      this.location.installer.releaseStagingDir();
+    }
   }
 
   /**
@@ -2003,7 +2016,8 @@ var LocalAddonInstall = class extends AddonInstall {
     let addon = await XPIDatabase.getVisibleAddonForID(this.addon.id);
 
     this.existingAddon = addon;
-    await this.addon.updateBlocklistState({oldAddon: this.existingAddon});
+    this.addon.propagateDisabledState(this.existingAddon);
+    await this.addon.updateBlocklistState();
     this.addon.updateDate = Date.now();
     this.addon.installDate = addon ? addon.installDate : this.addon.updateDate;
 
@@ -2398,7 +2412,8 @@ var DownloadAddonInstall = class extends AddonInstall {
     } else {
       this.addon.installDate = this.addon.updateDate;
     }
-    await this.addon.updateBlocklistState({oldAddon: this.existingAddon});
+    this.addon.propagateDisabledState(this.existingAddon);
+    await this.addon.updateBlocklistState();
 
     if (this._callInstallListeners("onDownloadEnded")) {
       // If a listener changed our state then do not proceed with the install
