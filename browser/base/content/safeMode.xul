@@ -37,7 +37,7 @@
   <vbox id="safeMode">
     <label>&safeModeDescription3.label;</label>
     <separator class="thin"/>
-    <label>&safeModeDescription4.label;</label>
+    <label>&safeModeDescription5.label;</label>
     <separator class="thin"/>
     <label id="resetProfileInstead">&refreshProfileInstead.label;</label>
   </vbox>

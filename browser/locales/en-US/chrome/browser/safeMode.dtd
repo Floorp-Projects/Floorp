@@ -9,7 +9,7 @@
 <!ENTITY refreshProfile.label         "Refresh &brandShortName;">
 
 <!ENTITY safeModeDescription3.label   "Safe Mode is a special mode of &brandShortName; that can be used to troubleshoot issues.">
-<!ENTITY safeModeDescription4.label   "Your add-ons and custom settings will be temporarily disabled.">
+<!ENTITY safeModeDescription5.label   "Your add-ons and custom settings will be temporarily disabled, and &brandShortName; features may not perform as they currently do.">
 
 <!ENTITY refreshProfileInstead.label  "You can also skip troubleshooting and try refreshing &brandShortName;.">
 
