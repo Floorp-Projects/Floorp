@@ -246,7 +246,7 @@ nsThebesFontEnumerator::GetDefaultFont(const char *aLangGroup,
         GetDefaultFontName(nsDependentCString(aLangGroup),
                            nsDependentCString(aGeneric)));
     if (!defaultFontName.IsEmpty()) {
-        *aResult = ToNewUnicode(defaultFontName);
+        *aResult = UTF8ToNewUnicode(defaultFontName);
     }
     return NS_OK;
 }
@@ -279,6 +279,6 @@ nsThebesFontEnumerator::GetStandardFamilyName(const char16_t *aName,
         *aResult = nullptr;
         return NS_OK;
     }
-    *aResult = ToNewUnicode(family);
+    *aResult = UTF8ToNewUnicode(family);
     return NS_OK;
 }
