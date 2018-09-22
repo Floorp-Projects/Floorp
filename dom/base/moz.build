@@ -153,6 +153,7 @@ EXPORTS.mozilla.dom += [
     'ChromeNodeList.h',
     'ChromeUtils.h',
     'Comment.h',
+    'ContentBlockingLog.h',
     'ContentFrameMessageManager.h',
     'ContentProcessMessageManager.h',
     'CustomElementRegistry.h',
