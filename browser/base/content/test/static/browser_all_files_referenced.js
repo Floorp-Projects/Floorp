@@ -133,8 +133,6 @@ var whitelist = [
    platforms: ["linux", "macosx"]},
   // Bug 1356031 (only used by devtools)
   {file: "chrome://global/skin/icons/error-16.png"},
-  // Bug 1348362
-  {file: "chrome://global/skin/icons/warning-64.png", platforms: ["linux"]},
   // Bug 1348526
   {file: "chrome://global/skin/tree/sort-asc-classic.png", platforms: ["linux"]},
   {file: "chrome://global/skin/tree/sort-asc.png", platforms: ["linux"]},
