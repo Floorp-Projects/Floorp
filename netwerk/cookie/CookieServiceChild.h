@@ -72,16 +72,6 @@ protected:
                                           const OriginAttributes &aAttrs,
                                           nsCString &aCookieString);
 
-  void
-  GetCookieStringSyncIPC(nsIURI                 *aHostURI,
-                         bool                    aIsForeign,
-                         bool                    aIsTrackingResource,
-                         bool                    aFirstPartyStorageAccessGranted,
-                         bool                    aIsSafeTopLevelNav,
-                         bool                    aIsSameSiteForeign,
-                         const OriginAttributes &aAttrs,
-                         nsAutoCString          &aCookieString);
-
   nsresult SetCookieStringInternal(nsIURI *aHostURI,
                                    nsIChannel *aChannel,
                                    const char *aCookieString,
@@ -136,7 +126,6 @@ protected:
   bool mThirdPartySession;
   bool mThirdPartyNonsecureSession;
   bool mLeaveSecureAlone;
-  bool mIPCSync;
   bool mIPCOpen;
 };
 
