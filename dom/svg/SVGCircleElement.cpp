@@ -33,8 +33,8 @@ nsSVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGCircleElement::SVGCircleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGCircleElementBase(aNodeInfo)
+SVGCircleElement::SVGCircleElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGCircleElementBase(std::move(aNodeInfo))
 {
 }
 

@@ -117,8 +117,8 @@ private:
   bool mUseUrgentStartForChannel;
 };
 
-HTMLImageElement::HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLImageElement::HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
   , mForm(nullptr)
   , mInDocResponsiveContent(false)
   , mCurrentDensity(1.0)
@@ -734,12 +734,12 @@ HTMLImageElement::Image(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  already_AddRefed<mozilla::dom::NodeInfo> nodeInfo =
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nullptr,
                                         kNameSpaceID_XHTML,
                                         ELEMENT_NODE);
 
-  RefPtr<HTMLImageElement> img = new HTMLImageElement(nodeInfo);
+  RefPtr<HTMLImageElement> img = new HTMLImageElement(nodeInfo.forget());
 
   if (aWidth.WasPassed()) {
     img->SetWidth(aWidth.Value(), aError);

@@ -30,7 +30,7 @@ class SVGAElement final : public SVGAElementBase,
 protected:
   using Element::GetText;
 
-  explicit SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   friend nsresult (::NS_NewSVGAElement(nsIContent **aResult,
                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;

@@ -30,7 +30,7 @@ protected:
   friend nsresult (::NS_NewSVGScriptElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                             mozilla::dom::FromParser aFromParser));
-  SVGScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+  SVGScriptElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                    FromParser aFromParser);
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;

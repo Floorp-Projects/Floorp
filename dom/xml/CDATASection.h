@@ -25,8 +25,8 @@ private:
   virtual ~CDATASection();
 
 public:
-  explicit CDATASection(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo)
-    : Text(aNodeInfo)
+  explicit CDATASection(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : Text(std::move(aNodeInfo))
   {
     Init();
   }

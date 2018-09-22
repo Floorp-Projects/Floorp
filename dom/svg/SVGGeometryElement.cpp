@@ -25,8 +25,8 @@ nsSVGElement::NumberInfo SVGGeometryElement::sNumberInfo =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGGeometryElement::SVGGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGGeometryElementBase(aNodeInfo)
+SVGGeometryElement::SVGGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGGeometryElementBase(std::move(aNodeInfo))
 {
 }
 

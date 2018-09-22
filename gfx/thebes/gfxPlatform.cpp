@@ -713,6 +713,9 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       helper.Report(aReport.gpu_cache_cpu_mirror, "gpu-cache/cpu-mirror");
       helper.Report(aReport.render_tasks, "render-tasks");
       helper.Report(aReport.hit_testers, "hit-testers");
+      helper.Report(aReport.fonts, "resource-cache/font");
+      helper.Report(aReport.images, "resource-cache/images");
+      helper.Report(aReport.rasterized_blobs, "resource-cache/rasterized-blobs");
       FinishAsyncMemoryReport();
     },
     [](mozilla::ipc::ResponseRejectReason aReason) {

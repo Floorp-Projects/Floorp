@@ -27,7 +27,7 @@ class WindowDestroyObserver;
 class HTMLTrackElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

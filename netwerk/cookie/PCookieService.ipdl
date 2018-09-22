@@ -34,52 +34,6 @@ nested(upto inside_cpow) sync protocol PCookieService
 parent:
 
   /*
-   * Get the complete cookie string associated with the URI. This is a sync
-   * call in order to avoid race conditions -- for instance, an HTTP response
-   * on the parent and script access on the child.
-   *
-   * @param host
-   *        Same as the 'aURI' argument to nsICookieService.getCookieString.
-   * @param isForeign
-   *        True if the the request is third party, for purposes of allowing
-   *        access to cookies. This should be obtained from
-   *        mozIThirdPartyUtil.isThirdPartyChannel. Third party requests may be
-   *        rejected depending on user preferences; if those checks are
-   *        disabled, this parameter is ignored.
-   * @param isTrackingResource
-   *        True if the request has been marked as tracking.
-   * @param firstPartyStorageAccessGranted
-   *        True if host has storage access granted. Note that the storage
-   *        access is automatically granted also if the channel is not marked as
-   *        tracking resource, or if it's not a 3rd party context.
-   * @param isSafeTopLevelNav
-   *        True for safe methods like e.g. GET.
-   * @param isSameSiteForeign
-   *        True if the same-site cookie originates from a cross-site context.
-   * @param fromHttp
-   *        Whether the result is for an HTTP request header. This should be
-   *        true for nsICookieService.getCookieStringFromHttp calls, false
-   *        otherwise.
-   * @param attrs
-   *        The origin attributes from the HTTP channel or document that the
-   *        cookie is being set on.
-   *
-   * @see nsICookieService.getCookieString
-   * @see nsICookieService.getCookieStringFromHttp
-   * @see mozIThirdPartyUtil.isThirdPartyChannel
-   *
-   * @return the resulting cookie string.
-   */
-  nested(inside_cpow) sync GetCookieString(URIParams host,
-                                           bool isForeign,
-                                           bool isTrackingResource,
-                                           bool firstPartyStorageAccessGranted,
-                                           bool isSafeTopLevelNav,
-                                           bool isSameSiteForeign,
-                                           OriginAttributes attrs)
-       returns (nsCString result);
-
-  /*
    * Set a cookie string.
    *
    * @param host

@@ -24,7 +24,7 @@ class SVGTitleElement final : public SVGTitleElementBase,
 protected:
   friend nsresult (::NS_NewSVGTitleElement(nsIContent **aResult,
                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGTitleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGTitleElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   ~SVGTitleElement();
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;

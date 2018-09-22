@@ -21,8 +21,8 @@ SVGDescElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGDescElement::SVGDescElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGDescElementBase(aNodeInfo)
+SVGDescElement::SVGDescElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGDescElementBase(std::move(aNodeInfo))
 {
 }
 

@@ -70,6 +70,11 @@ public:
   static Accessible* FirstItemOf(const Accessible* aContainer);
 
   /**
+   * Return total number of items in container, and if it is has nested collections.
+   */
+  static uint32_t TotalItemCount(Accessible* aContainer, bool* aIsHierarchical);
+
+  /**
    * Return next item of the same group to the given item.
    */
   static Accessible* NextItemTo(Accessible* aItem);

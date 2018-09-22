@@ -21,8 +21,8 @@ SVGAnimateTransformElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGive
 //----------------------------------------------------------------------
 // Implementation
 
-SVGAnimateTransformElement::SVGAnimateTransformElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGAnimationElement(aNodeInfo)
+SVGAnimateTransformElement::SVGAnimateTransformElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGAnimationElement(std::move(aNodeInfo))
 {
 }
 

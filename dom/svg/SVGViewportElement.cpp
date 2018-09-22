@@ -49,8 +49,8 @@ nsSVGElement::LengthInfo SVGViewportElement::sLengthInfo[4] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGViewportElement::SVGViewportElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGGraphicsElement(aNodeInfo),
+SVGViewportElement::SVGViewportElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGGraphicsElement(std::move(aNodeInfo)),
     mViewportWidth(0),
     mViewportHeight(0),
     mHasChildrenOnlyTransform(false)

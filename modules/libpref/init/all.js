@@ -2266,7 +2266,6 @@ pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.thirdparty.nonsecureSessionOnly", false);
 pref("network.cookie.leave-secure-alone",   true);
 pref("network.cookie.same-site.enabled",    true); // Honor the SameSite cookie attribute
-pref("network.cookie.ipc.sync",             false);
 
 // Cookie lifetime policy. Possible values:
 // 0 - accept all cookies

@@ -2384,8 +2384,7 @@ Gecko_CSSValue_SetFontWeight(nsCSSValueBorrowedMut aCSSValue,
 void
 Gecko_nsStyleFont_SetLang(nsStyleFont* aFont, nsAtom* aAtom)
 {
-  already_AddRefed<nsAtom> atom = already_AddRefed<nsAtom>(aAtom);
-  aFont->mLanguage = atom;
+  aFont->mLanguage = dont_AddRef(aAtom);
   aFont->mExplicitLanguage = true;
 }
 

@@ -18,7 +18,8 @@ namespace dom {
 class HTMLDialogElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLDialogElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo) : nsGenericHTMLElement(aNodeInfo)
+  explicit HTMLDialogElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo))
   {
   }
 

@@ -17,6 +17,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/WheelHandlingHelper.h"    // for WheelDeltaAdjustmentStrategy
 
+#include "mozilla/a11y/SessionAccessibility.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -285,6 +286,7 @@ public:
                      jni::Object::Param aQueue,
                      jni::Object::Param aCompositor,
                      jni::Object::Param aDispatcher,
+                     jni::Object::Param aSessionAccessibility,
                      jni::Object::Param aInitData,
                      jni::String::Param aId,
                      jni::String::Param aChromeURI,
@@ -299,11 +301,15 @@ public:
                   jni::Object::Param aQueue,
                   jni::Object::Param aCompositor,
                   jni::Object::Param aDispatcher,
+                  jni::Object::Param aSessionAccessibility,
                   jni::Object::Param aInitData);
 
     void AttachEditable(const GeckoSession::Window::LocalRef& inst,
                         jni::Object::Param aEditableParent,
                         jni::Object::Param aEditableChild);
+
+    void AttachAccessibility(const GeckoSession::Window::LocalRef& inst,
+                             jni::Object::Param aSessionAccessibility);
 
     void OnReady(jni::Object::Param aQueue = nullptr);
 };
@@ -1135,6 +1141,10 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
     if (window.mLayerViewSupport) {
         window.mLayerViewSupport.Detach();
     }
+
+    if (window.mSessionAccessibility) {
+        window.mSessionAccessibility.Detach();
+    }
 }
 
 /* static */ void
@@ -1143,6 +1153,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  jni::Object::Param aQueue,
                                  jni::Object::Param aCompositor,
                                  jni::Object::Param aDispatcher,
+                                 jni::Object::Param aSessionAccessibility,
                                  jni::Object::Param aInitData,
                                  jni::String::Param aId,
                                  jni::String::Param aChromeURI,
@@ -1198,7 +1209,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 
     // Attach other session support objects.
     window->mGeckoViewSupport->Transfer(
-            sessionWindow, aQueue, aCompositor, aDispatcher, aInitData);
+            sessionWindow, aQueue, aCompositor, aDispatcher, aSessionAccessibility, aInitData);
 
     if (window->mWidgetListener) {
         nsCOMPtr<nsIXULWindow> xulWindow(
@@ -1232,6 +1243,7 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
                                      jni::Object::Param aQueue,
                                      jni::Object::Param aCompositor,
                                      jni::Object::Param aDispatcher,
+                                     jni::Object::Param aSessionAccessibility,
                                      jni::Object::Param aInitData)
 {
     if (window.mNPZCSupport) {
@@ -1252,6 +1264,13 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
     MOZ_ASSERT(window.mAndroidView);
     window.mAndroidView->mEventDispatcher->Attach(
             java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
+
+    if (window.mSessionAccessibility) {
+        window.mSessionAccessibility.Detach();
+    }
+    if (aSessionAccessibility) {
+        AttachAccessibility(inst, aSessionAccessibility);
+    }
 
     if (mIsReady) {
         // We're in a transfer; update init-data and notify JS code.
@@ -1286,6 +1305,24 @@ nsWindow::GeckoViewSupport::AttachEditable(const GeckoSession::Window::LocalRef&
 }
 
 void
+nsWindow::GeckoViewSupport::AttachAccessibility(const GeckoSession::Window::LocalRef& inst,
+                                                jni::Object::Param aSessionAccessibility)
+{
+    MOZ_ASSERT(!window.mSessionAccessibility);
+    java::SessionAccessibility::NativeProvider::LocalRef sessionAccessibility(
+      inst.Env());
+    sessionAccessibility = java::SessionAccessibility::NativeProvider::Ref::From(
+      aSessionAccessibility);
+
+    if (window.mSessionAccessibility) {
+        window.mSessionAccessibility.Detach();
+    }
+
+    window.mSessionAccessibility.Attach(
+      sessionAccessibility, &window, sessionAccessibility);
+}
+
+void
 nsWindow::InitNatives()
 {
     nsWindow::GeckoViewSupport::Base::Init();
@@ -1293,6 +1330,7 @@ nsWindow::InitNatives()
     nsWindow::NPZCSupport::Init();
 
     GeckoEditableSupport::Init();
+    a11y::SessionAccessibility::Init();
 }
 
 nsWindow*
@@ -2342,4 +2380,3 @@ nsIWidget::CreateChildWindow()
   nsCOMPtr<nsIWidget> window = new nsWindow();
   return window.forget();
 }
-

@@ -19,8 +19,8 @@ namespace dom {
 class HTMLSpanElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLSpanElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo)
+  explicit HTMLSpanElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo))
   {
   }
 

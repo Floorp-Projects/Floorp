@@ -989,9 +989,9 @@ HTMLInputElement::Shutdown()
 // construction, destruction
 //
 
-HTMLInputElement::HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+HTMLInputElement::HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                    FromParser aFromParser, FromClone aFromClone)
-  : nsGenericHTMLFormElementWithState(aNodeInfo, kInputDefaultType->value)
+  : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), kInputDefaultType->value)
   , mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown)
   , mAutocompleteInfoState(nsContentUtils::eAutocompleteAttrState_Unknown)
   , mDisabledChanged(false)
@@ -1131,8 +1131,8 @@ HTMLInputElement::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
   *aResult = nullptr;
 
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  RefPtr<HTMLInputElement> it = new HTMLInputElement(ni, NOT_FROM_PARSER,
+  RefPtr<HTMLInputElement> it = new HTMLInputElement(do_AddRef(aNodeInfo),
+                                                     NOT_FROM_PARSER,
                                                      FromClone::yes);
 
   nsresult rv = const_cast<HTMLInputElement*>(this)->CopyInnerTo(it);

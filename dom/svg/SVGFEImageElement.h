@@ -28,7 +28,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
 protected:
   friend nsresult (::NS_NewSVGFEImageElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGFEImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGFEImageElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   virtual ~SVGFEImageElement();
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 

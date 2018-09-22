@@ -22,8 +22,8 @@ class SVGFEFloodElement : public SVGFEFloodElementBase
   friend nsresult (::NS_NewSVGFEFloodElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEFloodElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEFloodElementBase(aNodeInfo)
+  explicit SVGFEFloodElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEFloodElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;

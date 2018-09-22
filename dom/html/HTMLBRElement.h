@@ -17,7 +17,7 @@ namespace dom {
 class HTMLBRElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLBRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLBRElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsAtom* aAttribute,

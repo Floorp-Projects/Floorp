@@ -137,7 +137,7 @@ public:
 
   enum class FromClone { no, yes };
 
-  HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+  HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                    mozilla::dom::FromParser aFromParser,
                    FromClone aFromClone = FromClone::no);
 

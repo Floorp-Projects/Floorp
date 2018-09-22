@@ -58,8 +58,8 @@ nsSVGElement::StringInfo SVGFilterElement::sStringInfo[2] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGFilterElement::SVGFilterElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGFilterElementBase(aNodeInfo)
+SVGFilterElement::SVGFilterElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGFilterElementBase(std::move(aNodeInfo))
 {
 }
 

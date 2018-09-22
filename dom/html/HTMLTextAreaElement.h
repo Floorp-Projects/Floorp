@@ -44,7 +44,7 @@ class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  explicit HTMLTextAreaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+  explicit HTMLTextAreaElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports

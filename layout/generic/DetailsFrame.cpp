@@ -101,10 +101,10 @@ DetailsFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsNodeInfoManager* nodeInfoManager =
     GetContent()->NodeInfo()->NodeInfoManager();
 
-  already_AddRefed<NodeInfo> nodeInfo =
+  RefPtr<NodeInfo> nodeInfo =
     nodeInfoManager->GetNodeInfo(nsGkAtoms::summary, nullptr, kNameSpaceID_XHTML,
                                  nsINode::ELEMENT_NODE);
-  mDefaultSummary = new HTMLSummaryElement(nodeInfo);
+  mDefaultSummary = new HTMLSummaryElement(nodeInfo.forget());
 
   nsAutoString defaultSummaryText;
   nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,

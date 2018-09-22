@@ -20,8 +20,8 @@ namespace dom {
 class HTMLLabelElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLLabelElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo),
+  explicit HTMLLabelElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)),
       mHandlingEvent(false)
   {
   }

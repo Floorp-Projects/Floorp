@@ -19,7 +19,7 @@ class HTMLSelectElement;
 class HTMLOptionElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   static already_AddRefed<HTMLOptionElement>
     Option(const GlobalObject& aGlobal,

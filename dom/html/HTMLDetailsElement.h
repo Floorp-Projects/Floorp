@@ -24,8 +24,8 @@ class HTMLDetailsElement final : public nsGenericHTMLElement
 public:
   using NodeInfo = mozilla::dom::NodeInfo;
 
-  explicit HTMLDetailsElement(already_AddRefed<NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo)
+  explicit HTMLDetailsElement(already_AddRefed<NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo))
   {
   }
 

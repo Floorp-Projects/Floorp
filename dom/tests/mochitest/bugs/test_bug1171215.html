@@ -27,12 +27,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
         "http://example.org/tests/dom/tests/mochitest/bugs/file_prime_cookie.html";
     waitForLoad().then(function() {
         // Cookies are set up, disallow third-party cookies and start the test.
-        SpecialPowers.pushPrefEnv({ set: [
-            ["browser.contentblocking.enabled", true],
-            ["browser.contentblocking.ui.enabled", true],
-            ["browser.contentblocking.rejecttrackers.ui.enabled", true],
-            ["network.cookie.cookieBehavior", 1],
-          ]}, () => { continueTest(); });
+        SpecialPowers.pushPrefEnv({ set: [[ 'network.cookie.cookieBehavior', 1 ]] },
+                                  () => { continueTest(); });
     }).catch((e) => { ok(false, `Got exception: ${e}`) });
   }
 

@@ -18,8 +18,8 @@ const double HTMLProgressElement::kDefaultValue          =  0.0;
 const double HTMLProgressElement::kDefaultMax            =  1.0;
 
 
-HTMLProgressElement::HTMLProgressElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLProgressElement::HTMLProgressElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
 {
   // We start out indeterminate
   AddStatesSilently(NS_EVENT_STATE_INDETERMINATE);
