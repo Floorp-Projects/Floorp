@@ -84,13 +84,6 @@ window.dialog {
   list-style-image: url("chrome://global/skin/icons/help.svg");
 }
 
-@media (min-resolution: 1.1dppx) {
-  .alert-dialog #info\.icon,
-  .alert-icon {
-    list-style-image: url("chrome://global/skin/icons/warning-64.png");
-  }
-}
-
 /* ::::: iframe ::::: */
 
 iframe {
