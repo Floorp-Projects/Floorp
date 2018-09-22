@@ -67,7 +67,6 @@ from ..frontend.context import (
 )
 from .cargo_build_defs import (
     cargo_extra_outputs,
-    cargo_extra_flags,
 )
 
 
@@ -803,6 +802,9 @@ class TupBackend(CommonBackend):
         invocations = build_plan['invocations']
         processed = set()
 
+        rust_build_home = mozpath.join(self.environment.topobjdir,
+                                       'toolkit/library/rust')
+
         def get_libloading_outdir():
             for invocation in invocations:
                 if (invocation['package_name'] == 'libloading' and
@@ -848,7 +850,6 @@ class TupBackend(CommonBackend):
                 inputs.update(depmod['full-deps'])
 
             command = [
-                'cd %s &&' % invocation['cwd'],
                 'env',
             ]
             envvars = invocation.get('env')
@@ -859,17 +860,71 @@ class TupBackend(CommonBackend):
             command.extend(cargo_quote(a.replace('dep-info,', ''))
                            for a in invocation['args'])
             outputs = invocation['outputs']
+
+            invocation['full-deps'] = set()
+
             if os.path.basename(invocation['program']) == 'build-script-build':
                 for output in cargo_extra_outputs.get(shortname, []):
                     outputs.append(os.path.join(invocation['env']['OUT_DIR'], output))
 
+                script_stdout = mozpath.join(rust_build_home,
+                                             '%s_%s_build_out.txt' % (shortname,
+                                                                      invocation['kind']))
+                command.extend(['>', script_stdout])
+                outputs.append(script_stdout)
+                invocation['full-deps'].add(script_stdout)
+
             if os.path.basename(invocation['program']) == 'rustc':
-                flags = cargo_extra_flags.get(invocation['target_kind'][0], {}).get(shortname, [])
-                for flag in flags:
-                    command.append(flag % {
-                        'libloading_outdir': get_libloading_outdir(),
-                        'lmdb-sys_outdir': get_lmdb_sys_outdir(),
-                    })
+                all_dep_build_outputs = set(p for p in inputs
+                                            if p.endswith('%s_build_out.txt' %
+                                                          invocation['kind']))
+                crate_output = [p for p in all_dep_build_outputs
+                                if p.endswith('%s_%s_build_out.txt' %
+                                              (shortname, invocation['kind']))]
+
+                dep_build_outputs = []
+                seen_dep_outputs = set()
+
+                def is_lib(inv):
+                    return any(t not in ('bin', 'example', 'test', 'custom-build',
+                                         'bench')
+                               for t in inv['target_kind'])
+
+                def get_output_files(inv):
+                    candidate_file = mozpath.join(rust_build_home,
+                                                  '%s_%s_build_out.txt' %
+                                                  (inv['package_name'],
+                                                   inv['kind']))
+                    if (candidate_file in all_dep_build_outputs and
+                        candidate_file not in seen_dep_outputs):
+                        dep_build_outputs.append(candidate_file)
+                        seen_dep_outputs.add(candidate_file)
+
+                    for dep in inv['deps']:
+                        dep_inv = invocations[dep]
+                        if shortname == inv['package_name'] or is_lib(dep_inv):
+                            get_output_files(dep_inv)
+
+                get_output_files(invocation)
+
+                # If this is a lib, or a binary without an accompanying
+                # lib, pass -l. When we see a binary here, the corresponding
+                # lib for that package will appear in its dependencies.
+                deps = (invocations[d] for d in invocation['deps']
+                        if invocations[d]['package_name'] == shortname)
+                pass_l_flag = is_lib(invocation) or not any(is_lib(d) for d in deps)
+
+                if dep_build_outputs:
+                    command = (self._py_action('wrap_rustc') +
+                               ['--crate-out'] + crate_output +
+                               ['--deps-out'] + dep_build_outputs +
+                               ['--cwd', invocation['cwd']] +
+                               (['--pass-l-flag'] if pass_l_flag else []) +
+                               ['--cmd'] + command)
+                else:
+                    command = ['cd', invocation['cwd'], '&&'] + command
+            else:
+                command = ['cd', invocation['cwd'], '&&'] + command
 
             if 'rustc' in invocation['program']:
                 header = 'RUSTC'
@@ -877,7 +932,7 @@ class TupBackend(CommonBackend):
                 inputs.add(invocation['program'])
                 header = 'RUN'
 
-            invocation['full-deps'] = set(inputs)
+            invocation['full-deps'].update(inputs)
             invocation['full-deps'].update(invocation['outputs'])
 
             cmd_key = ' '.join(command)
