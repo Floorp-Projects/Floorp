@@ -5331,9 +5331,10 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   } else {
     // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
+  const uint32_t oldState = state;
   state |= aState;
 
-  eventSink->OnSecurityChange(aChannel, state);
+  eventSink->OnSecurityChange(aChannel, oldState, state, doc->GetContentBlockingLog());
 }
 
 //static
