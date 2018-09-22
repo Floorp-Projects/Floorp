@@ -19,86 +19,27 @@
 #define INTENSITY_FACTOR      25
 #define LUMINOSITY_FACTOR     75
 
-#define MAX_COLOR             255
-#define COLOR_DARK_THRESHOLD  51
-#define COLOR_LIGHT_THRESHOLD 204
-
-#define COLOR_LITE_BS_FACTOR 45
-#define COLOR_LITE_TS_FACTOR 70
-
-#define COLOR_DARK_BS_FACTOR 30
-#define COLOR_DARK_TS_FACTOR 50
-
-#define LIGHT_GRAY NS_RGB(192, 192, 192)
-#define DARK_GRAY  NS_RGB(96, 96, 96)
-
-#define MAX_BRIGHTNESS  254
-#define MAX_DARKNESS     0
-
-void NS_GetSpecial3DColors(nscolor aResult[2],
-                           nscolor aBackgroundColor,
-                           nscolor aBorderColor)
+void NS_GetSpecial3DColors(nscolor aResult[2], nscolor aBorderColor)
 {
+  const float kDarkerScale = 2.0 / 3.0;
 
-  uint8_t f0, f1;
-  uint8_t r, g, b;
-
-  uint8_t rb = NS_GET_R(aBorderColor);
-  uint8_t gb = NS_GET_G(aBorderColor);
-  uint8_t bb = NS_GET_B(aBorderColor);
-
+  uint8_t r = NS_GET_R(aBorderColor);
+  uint8_t g = NS_GET_G(aBorderColor);
+  uint8_t b = NS_GET_B(aBorderColor);
   uint8_t a = NS_GET_A(aBorderColor);
-
-  // This needs to be optimized.
-  // Calculating background brightness again and again is
-  // a waste of time!!!. Just calculate it only once.
-  // .....somehow!!!
-
-  uint8_t red = NS_GET_R(aBackgroundColor);
-  uint8_t green = NS_GET_G(aBackgroundColor);
-  uint8_t blue = NS_GET_B(aBackgroundColor);
-
-  uint8_t elementBrightness = NS_GetBrightness(rb,gb,bb);
-  uint8_t backgroundBrightness = NS_GetBrightness(red, green, blue);
-
-
-  if (backgroundBrightness < COLOR_DARK_THRESHOLD) {
-    f0 = COLOR_DARK_BS_FACTOR;
-    f1 = COLOR_DARK_TS_FACTOR;
-	if(elementBrightness == MAX_DARKNESS)
-	{
-       rb = NS_GET_R(DARK_GRAY);
-       gb = NS_GET_G(DARK_GRAY);
-       bb = NS_GET_B(DARK_GRAY);
-	}
-  }else if (backgroundBrightness > COLOR_LIGHT_THRESHOLD) {
-    f0 = COLOR_LITE_BS_FACTOR;
-    f1 = COLOR_LITE_TS_FACTOR;
-	if(elementBrightness == MAX_BRIGHTNESS)
-	{
-       rb = NS_GET_R(LIGHT_GRAY);
-       gb = NS_GET_G(LIGHT_GRAY);
-       bb = NS_GET_B(LIGHT_GRAY);
-	}
-  }else {
-    f0 = COLOR_DARK_BS_FACTOR +
-      (backgroundBrightness *
-       (COLOR_LITE_BS_FACTOR - COLOR_DARK_BS_FACTOR) / MAX_COLOR);
-    f1 = COLOR_DARK_TS_FACTOR +
-      (backgroundBrightness *
-       (COLOR_LITE_TS_FACTOR - COLOR_DARK_TS_FACTOR) / MAX_COLOR);
+  if (r == 0 && g == 0 && b == 0) {
+    // 0.3 * black
+    aResult[0] = NS_RGBA(76, 76, 76, a);
+    // 0.7 * black
+    aResult[1] = NS_RGBA(178, 178, 178, a);
+    return;
   }
 
-
-  r = rb - (f0 * rb / 100);
-  g = gb - (f0 * gb / 100);
-  b = bb - (f0 * bb / 100);
-  aResult[0] = NS_RGBA(r, g, b, a);
-
-  r = rb + (f1 * (MAX_COLOR - rb) / 100);
-  g = gb + (f1 * (MAX_COLOR - gb) / 100);
-  b = bb + (f1 * (MAX_COLOR - bb) / 100);
-  aResult[1] = NS_RGBA(r, g, b, a);
+  aResult[0] = NS_RGBA(uint8_t(r * kDarkerScale),
+                       uint8_t(g * kDarkerScale),
+                       uint8_t(b * kDarkerScale),
+                       a);
+  aResult[1] = aBorderColor;
 }
 
 int NS_GetBrightness(uint8_t aRed, uint8_t aGreen, uint8_t aBlue)
@@ -242,19 +183,3 @@ void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
 #undef BLUE_LUMINOSITY
 #undef INTENSITY_FACTOR
 #undef LUMINOSITY_FACTOR
-
-#undef MAX_COLOR
-#undef COLOR_DARK_THRESHOLD
-#undef COLOR_LIGHT_THRESHOLD
-
-#undef COLOR_LITE_BS_FACTOR
-#undef COLOR_LITE_TS_FACTOR
-
-#undef COLOR_DARK_BS_FACTOR
-#undef COLOR_DARK_TS_FACTOR
-
-#undef LIGHT_GRAY
-#undef DARK_GRAY
-
-#undef MAX_BRIGHTNESS
-#undef MAX_DARKNESS
