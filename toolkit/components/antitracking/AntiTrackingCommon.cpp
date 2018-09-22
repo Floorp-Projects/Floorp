@@ -1089,7 +1089,7 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
 
-  pwin->NotifyContentBlockingState(aRejectedReason, aChannel);
+  pwin->NotifyContentBlockingState(aRejectedReason, aChannel, uri);
 
   ReportBlockingToConsole(pwin, uri, aRejectedReason);
 }
@@ -1128,7 +1128,7 @@ AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow,
   nsCOMPtr<nsIURI> uri;
   channel->GetURI(getter_AddRefs(uri));
 
-  pwin->NotifyContentBlockingState(aRejectedReason, channel);
+  pwin->NotifyContentBlockingState(aRejectedReason, channel, uri);
 
   ReportBlockingToConsole(pwin, uri, aRejectedReason);
 }
