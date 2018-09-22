@@ -1538,6 +1538,13 @@ SocketTransportShim::GetFirstRetryError(nsresult *aFirstRetryError)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+SocketTransportShim::GetEsniUsed(bool *aEsniUsed)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 #define FWD_TS_PTR(fx, ts) NS_IMETHODIMP \
 SocketTransportShim::fx(ts *arg) { return mWrapped->fx(arg); }
 

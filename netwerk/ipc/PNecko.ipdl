@@ -94,9 +94,10 @@ parent:
   async PredReset();
 
   async SpeculativeConnect(URIParams uri, Principal principal, bool anonymous);
-  async HTMLDNSPrefetch(nsString hostname, OriginAttributes originAttributes,
-                        uint16_t flags);
-  async CancelHTMLDNSPrefetch(nsString hostname, OriginAttributes originAttributes,
+  async HTMLDNSPrefetch(nsString hostname, bool isHttps,
+                        OriginAttributes originAttributes, uint16_t flags);
+  async CancelHTMLDNSPrefetch(nsString hostname, bool isHttps,
+                              OriginAttributes originAttributes,
                               uint16_t flags, nsresult reason);
 
   /**
