@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 interface nsIURI;
 
-[scriptable, uuid(a71aee68-dd38-4736-bd79-035fea1a1ec6)]
+[builtinclass, uuid(a71aee68-dd38-4736-bd79-035fea1a1ec6)]
 interface nsISecurityEventSink : nsISupports
 {
 
