@@ -106,7 +106,7 @@ add_task(async function test_devtools_inspectedWindow_tabId() {
 
   let backgroundPageCurrentTabId = await extension.awaitMessage("current-tab-id");
 
-  let target = await gDevTools.getTargetForTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");
@@ -174,7 +174,7 @@ add_task(async function test_devtools_inspectedWindow_eval() {
 
   await extension.startup();
 
-  let target = await gDevTools.getTargetForTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");
@@ -336,7 +336,7 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
 
   await extension.startup();
 
-  const target = await gDevTools.getTargetForTab(tab);
+  const target = gDevTools.getTargetForTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
   info("developer toolbox opened");
 

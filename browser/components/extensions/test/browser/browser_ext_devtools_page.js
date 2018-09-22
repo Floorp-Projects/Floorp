@@ -119,7 +119,7 @@ add_task(async function test_devtools_page_runtime_api_messaging() {
   info("Wait the content script load");
   await extension.awaitMessage("content_script_loaded");
 
-  let target = await gDevTools.getTargetForTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   info("Open the developer toolbox");
   await gDevTools.showToolbox(target, "webconsole");
@@ -247,7 +247,7 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
   info("Wait the extension tab page load");
   await extension.awaitMessage("extension_tab_loaded");
 
-  let target = await gDevTools.getTargetForTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   info("Open the developer toolbox");
   await gDevTools.showToolbox(target, "webconsole");

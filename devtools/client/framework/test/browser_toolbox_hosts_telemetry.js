@@ -15,7 +15,7 @@ add_task(async function() {
 
   info("Create a test tab and open the toolbox");
   const tab = await addTab(URL);
-  const target = await TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
 
   await changeToolboxHost(toolbox);

@@ -9,7 +9,7 @@ function test() {
   addTab("about:blank").then(runTests);
 }
 
-async function runTests(aTab) {
+function runTests(aTab) {
   const toolDefinition = {
     id: "testTool",
     visibilityswitch: "devtools.testTool.enabled",
@@ -34,7 +34,7 @@ async function runTests(aTab) {
 
   const collectedEvents = [];
 
-  const target = await TargetFactory.forTab(aTab);
+  const target = TargetFactory.forTab(aTab);
   gDevTools.showToolbox(target, toolDefinition.id).then(function(toolbox) {
     const panel = toolbox.getPanel(toolDefinition.id);
     ok(panel, "Tool open");

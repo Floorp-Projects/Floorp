@@ -134,7 +134,7 @@ add_task(async function test_devtools_network_on_navigated() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  let target = await gDevTools.getTargetForTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   await gDevTools.showToolbox(target, "webconsole");
   info("Developer toolbox opened.");
@@ -172,7 +172,7 @@ add_task(async function test_devtools_network_get_har() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  let target = await gDevTools.getTargetForTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   // Open the Toolbox
   let toolbox = await gDevTools.showToolbox(target, "webconsole");
@@ -223,7 +223,7 @@ add_task(async function test_devtools_network_on_request_finished() {
 
   await extension.startup();
   await extension.awaitMessage("ready");
-  let target = await gDevTools.getTargetForTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   // Open the Toolbox
   let toolbox = await gDevTools.showToolbox(target, "webconsole");

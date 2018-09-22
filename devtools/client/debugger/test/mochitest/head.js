@@ -43,7 +43,7 @@ registerCleanupFunction(async function() {
 
   while (gBrowser && gBrowser.tabs && gBrowser.tabs.length > 1) {
     info("Destroying toolbox.");
-    let target = await TargetFactory.forTab(gBrowser.selectedTab);
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
     await gDevTools.closeToolbox(target);
 
     info("Removing tab.");
@@ -179,7 +179,7 @@ function getAddonActorForId(aClient, aAddonId) {
 
 async function attachTargetActorForUrl(aClient, aUrl) {
   let grip = await getTargetActorForUrl(aClient, aUrl);
-  let [ response ] = await aClient.attachTarget(grip.actor);
+  let [ response ] = await aClient.attachTab(grip.actor);
   return [grip, response];
 }
 
@@ -553,7 +553,7 @@ let initDebugger = Task.async(function*(urlOrTab, options) {
   info("Debugee tab added successfully: " + urlOrTab);
 
   let debuggee = tab.linkedBrowser.contentWindowAsCPOW.wrappedJSObject;
-  let target = yield TargetFactory.forTab(tab);
+  let target = TargetFactory.forTab(tab);
 
   let toolbox = yield gDevTools.showToolbox(target, "jsdebugger");
   info("Debugger panel shown successfully.");
@@ -639,7 +639,7 @@ AddonDebugger.prototype = {
       customIframe: this.frame
     };
 
-    this.target = yield TargetFactory.forRemoteTab(targetOptions);
+    this.target = TargetFactory.forTab(targetOptions);
     let toolbox = yield gDevTools.showToolbox(this.target, "jsdebugger", Toolbox.HostType.CUSTOM, toolboxOptions);
 
     info("Addon debugger panel shown successfully.");
@@ -1085,9 +1085,9 @@ function findTab(tabs, url) {
   return null;
 }
 
-function attachTarget(client, tab) {
+function attachTab(client, tab) {
   info("Attaching to tab with url '" + tab.url + "'.");
-  return client.attachTarget(tab.actor);
+  return client.attachTab(tab.actor);
 }
 
 function listWorkers(tabClient) {
@@ -1297,7 +1297,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
 
   let tab = await addTab(TAB_URL);
   let { tabs } = await listTabs(client);
-  let [, tabClient] = await attachTarget(client, findTab(tabs, TAB_URL));
+  let [, tabClient] = await attachTab(client, findTab(tabs, TAB_URL));
 
   await createWorkerInTab(tab, WORKER_URL);
 

@@ -78,15 +78,11 @@ function createToolMenuElements(toolDefinition, doc) {
     return;
   }
 
-  const oncommand = (async function(id, event) {
-    try {
-      const window = event.target.ownerDocument.defaultView;
-      await gDevToolsBrowser.selectToolCommand(window.gBrowser, id, Cu.now());
-      sendEntryPointTelemetry();
-    } catch (e) {
-      console.error(`Exception while opening ${id}: ${e}\n${e.stack}`);
-    }
-  }).bind(null, id);
+  const oncommand = function(id, event) {
+    const window = event.target.ownerDocument.defaultView;
+    gDevToolsBrowser.selectToolCommand(window.gBrowser, id, Cu.now());
+    sendEntryPointTelemetry();
+  }.bind(null, id);
 
   const menuitem = createMenuItem({
     doc,

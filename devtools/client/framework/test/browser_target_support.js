@@ -10,7 +10,7 @@ var { WebAudioFront } =
   require("devtools/shared/fronts/webaudio");
 
 async function testTarget(client, target) {
-  await target.attach();
+  await target.makeRemote();
 
   is(target.hasActor("timeline"), true, "target.hasActor() true when actor exists.");
   is(target.hasActor("webaudio"), true, "target.hasActor() true when actor exists.");

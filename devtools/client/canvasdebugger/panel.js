@@ -32,7 +32,7 @@ CanvasDebuggerPanel.prototype = {
 
     // Local debugging needs to make the target remote.
     if (!this.target.isRemote) {
-      targetPromise = this.target.attach();
+      targetPromise = this.target.makeRemote();
     } else {
       targetPromise = Promise.resolve(this.target);
     }

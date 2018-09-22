@@ -29,8 +29,8 @@ function test() {
 }
 
 function init() {
-  addTab(TEST_URI).then(async tab => {
-    const target = await TargetFactory.forTab(tab);
+  addTab(TEST_URI).then(tab => {
+    const target = TargetFactory.forTab(tab);
     const linkedBrowser = tab.linkedBrowser;
 
     loadFrameScriptUtils(linkedBrowser);

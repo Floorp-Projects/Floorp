@@ -32,7 +32,7 @@ async function performTests() {
     autocompletePopup: popup,
   } = jsterm;
 
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
   const jstermComplete = value => setInputValueForAutocompletion(jsterm, value);
