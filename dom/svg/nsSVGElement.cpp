@@ -70,7 +70,7 @@ static_assert(sizeof(void*) == sizeof(nullptr),
 nsresult
 NS_NewSVGElement(Element **aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
-  RefPtr<nsSVGElement> it = new nsSVGElement(aNodeInfo);
+  RefPtr<nsSVGElement> it = new nsSVGElement(std::move(aNodeInfo));
   nsresult rv = it->Init();
 
   if (NS_FAILED(rv)) {
@@ -89,8 +89,8 @@ nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
   {nullptr, 0}
 };
 
-nsSVGElement::nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsSVGElementBase(aNodeInfo)
+nsSVGElement::nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsSVGElementBase(std::move(aNodeInfo))
 {
 }
 

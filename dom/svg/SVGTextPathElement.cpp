@@ -85,8 +85,8 @@ nsSVGElement::StringInfo SVGTextPathElement::sStringInfo[2] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGTextPathElement::SVGTextPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGTextPathElementBase(aNodeInfo)
+SVGTextPathElement::SVGTextPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGTextPathElementBase(std::move(aNodeInfo))
 {
 }
 

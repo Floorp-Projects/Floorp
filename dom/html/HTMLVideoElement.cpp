@@ -44,8 +44,8 @@ static bool sVideoStatsEnabled;
 
 NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
 
-HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>& aNodeInfo)
-  : HTMLMediaElement(aNodeInfo)
+HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
+  : HTMLMediaElement(std::move(aNodeInfo))
   , mIsOrientationLocked(false)
 {
   DecoderDoctorLogger::LogConstruction(this);

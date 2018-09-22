@@ -35,9 +35,9 @@ HTMLScriptElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLScriptElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-HTMLScriptElement::HTMLScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+HTMLScriptElement::HTMLScriptElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                      FromParser aFromParser)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
   , ScriptElement(aFromParser)
 {
   AddMutationObserver(this);
@@ -95,8 +95,8 @@ HTMLScriptElement::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
   *aResult = nullptr;
 
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  HTMLScriptElement* it = new HTMLScriptElement(ni, NOT_FROM_PARSER);
+  HTMLScriptElement* it = new HTMLScriptElement(do_AddRef(aNodeInfo),
+                                                NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
   nsresult rv = const_cast<HTMLScriptElement*>(this)->CopyInnerTo(it);

@@ -20,7 +20,7 @@ namespace dom {
 class SVGSetElement final : public SVGAnimationElement
 {
 protected:
-  explicit SVGSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGSetElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   nsSMILSetAnimationFunction mAnimationFunction;
 

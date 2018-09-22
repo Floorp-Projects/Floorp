@@ -26,6 +26,26 @@ function testAbsentAttrs(aAccOrElmOrID, aAbsentAttrs) {
 }
 
 /**
+ * Test object attributes that aren't right, but should be (todo)
+ *
+ * @param aAccOrElmOrID         [in] the accessible identifier
+ * @param aKey                  [in] attribute name
+ * @param aExpectedValue        [in] expected attribute value
+ */
+function todoAttr(aAccOrElmOrID, aKey, aExpectedValue) {
+  var accessible = getAccessible(aAccOrElmOrID);
+  if (!accessible)
+    return;
+
+  var attrs = null;
+  try {
+    attrs = accessible.attributes;
+  } catch (e) { }
+
+  todo_is(attrs.getStringProperty(aKey), aExpectedValue, "attributes match");
+}
+
+/**
  * Test CSS based object attributes.
  */
 function testCSSAttrs(aID) {
@@ -93,6 +113,16 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel) {
 
     let attrs = { "level": String(aLevel) };
     testAttrs(aAccOrElmOrID, attrs, true);
+  }
+}
+
+function testGroupParentAttrs(aAccOrElmOrID, aChildItemCount, aIsHierarchical) {
+  testAttrs(aAccOrElmOrID, { "child-item-count": String(aChildItemCount) }, true);
+
+  if (aIsHierarchical) {
+    testAttrs(aAccOrElmOrID, { "hierarchical": "true" }, true);
+  } else {
+    testAbsentAttrs(aAccOrElmOrID, { "hierarchical": "true" });
   }
 }
 

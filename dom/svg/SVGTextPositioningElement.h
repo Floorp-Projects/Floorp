@@ -31,8 +31,8 @@ public:
 
 protected:
 
-  explicit SVGTextPositioningElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGTextPositioningElementBase(aNodeInfo)
+  explicit SVGTextPositioningElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGTextPositioningElementBase(std::move(aNodeInfo))
   {}
 
   virtual LengthListAttributesInfo GetLengthListInfo() override;

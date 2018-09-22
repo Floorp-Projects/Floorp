@@ -6,11 +6,13 @@
 
 EXPORTS.mozilla.a11y += ['AccessibleWrap.h',
     'HyperTextAccessibleWrap.h',
+    'SessionAccessibility.h',
 ]
 
 SOURCES += [
     'AccessibleWrap.cpp',
     'Platform.cpp',
+    'SessionAccessibility.cpp',
 ]
 
 LOCAL_INCLUDES += [

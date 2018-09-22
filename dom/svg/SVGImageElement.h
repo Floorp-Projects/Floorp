@@ -30,7 +30,7 @@ class SVGImageElement : public SVGImageElementBase,
   friend class ::nsSVGImageFrame;
 
 protected:
-  explicit SVGImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGImageElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   virtual ~SVGImageElement();
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
   friend nsresult (::NS_NewSVGImageElement(nsIContent **aResult,

@@ -19,7 +19,7 @@ class TableRowsCollection;
 class HTMLTableElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLTableElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLTableElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLTableElement, table)
 

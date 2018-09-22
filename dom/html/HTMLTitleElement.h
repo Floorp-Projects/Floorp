@@ -22,7 +22,7 @@ class HTMLTitleElement final : public nsGenericHTMLElement,
 public:
   using Element::GetText;
 
-  explicit HTMLTitleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLTitleElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

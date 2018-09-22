@@ -78,8 +78,14 @@ fn from_transformed_rect() {
     let transform: TypedTransform3D<f32, (), ()> =
         TypedTransform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
         .pre_translate(vec3(0.0, 0.0, 10.0));
-    let poly = Polygon::from_transformed_rect(rect, transform, 0);
-    assert!(poly.is_some() && poly.unwrap().is_valid());
+    let poly = Polygon::from_transformed_rect(rect, transform, 0).unwrap();
+    assert!(poly.is_valid());
+
+    let inv_transform = transform.inverse().unwrap();
+    let poly2 = Polygon::from_transformed_rect_with_inverse(rect, &transform, &inv_transform, 0).unwrap();
+    assert_eq!(poly.points, poly2.points);
+    assert!(poly.plane.offset.approx_eq(&poly2.plane.offset));
+    assert!(poly.plane.normal.dot(poly2.plane.normal).approx_eq(&1.0));
 }
 
 #[test]

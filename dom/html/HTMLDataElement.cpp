@@ -13,8 +13,8 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Data)
 namespace mozilla {
 namespace dom {
 
-HTMLDataElement::HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLDataElement::HTMLDataElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
 {
 }
 

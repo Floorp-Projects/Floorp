@@ -757,6 +757,9 @@ pub struct MemoryReport {
     pub gpu_cache_cpu_mirror: usize,
     pub render_tasks: usize,
     pub hit_testers: usize,
+    pub fonts: usize,
+    pub images: usize,
+    pub rasterized_blobs: usize,
 }
 
 impl ::std::ops::AddAssign for MemoryReport {
@@ -767,6 +770,9 @@ impl ::std::ops::AddAssign for MemoryReport {
         self.gpu_cache_cpu_mirror += other.gpu_cache_cpu_mirror;
         self.render_tasks += other.render_tasks;
         self.hit_testers += other.hit_testers;
+        self.fonts += other.fonts;
+        self.images += other.images;
+        self.rasterized_blobs += other.rasterized_blobs;
     }
 }
 

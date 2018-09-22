@@ -33,8 +33,8 @@ private:
   nsIFrame* GetFrame(bool aFlushLayout);
 
 public:
-  explicit XULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsXULElement(aNodeInfo)
+  explicit XULPopupElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsXULElement(std::move(aNodeInfo))
   {
   }
 

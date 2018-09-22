@@ -855,15 +855,25 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
       auto transformItem = static_cast<nsDisplayTransform*>(aItem);
       Matrix4x4Flagged trans = transformItem->GetTransform();
       Matrix trans2d;
-      MOZ_RELEASE_ASSERT(trans.Is2D(&trans2d));
-      aContext->Multiply(ThebesMatrix(trans2d));
-      aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext, aRecorder);
-
-      if (currentClip.HasClip()) {
-        aContext->Restore();
-        aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      if (!trans.Is2D(&trans2d)) {
+        // We don't currently support doing invalidation inside 3d transforms.
+        // For now just paint it as a single item.
+        BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
+        if (data->mLayerManager->GetRoot()) {
+          data->mLayerManager->BeginTransaction();
+          data->mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, mDisplayListBuilder);
+          aContext->GetDrawTarget()->FlushItem(aItemBounds);
+        }
       } else {
-        aContext->SetMatrix(matrix);
+        aContext->Multiply(ThebesMatrix(trans2d));
+        aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext, aRecorder);
+
+        if (currentClip.HasClip()) {
+          aContext->Restore();
+          aContext->GetDrawTarget()->FlushItem(aItemBounds);
+        } else {
+          aContext->SetMatrix(matrix);
+        }
       }
       break;
     }
@@ -897,16 +907,15 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
     }
     case DisplayItemType::TYPE_MASK: {
       GP("Paint Mask\n");
-      // We don't currently support doing invalidation inside nsDisplayMask
-      // for now just paint it as a single item
-      BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
-      if (data->mLayerManager->GetRoot()) {
-        data->mLayerManager->BeginTransaction();
-        static_cast<nsDisplayMask*>(aItem)->PaintAsLayer(mDisplayListBuilder,
-                                                       aContext, data->mLayerManager);
-        if (data->mLayerManager->InTransaction()) {
-          data->mLayerManager->AbortTransaction();
-        }
+      auto maskItem = static_cast<nsDisplayMask*>(aItem);
+      maskItem->SetPaintRect(maskItem->GetClippedBounds(mDisplayListBuilder));
+      if (maskItem->IsValidMask()) {
+        maskItem->PaintWithContentsPaintCallback(mDisplayListBuilder, aContext, [&] {
+          GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(), aItem->GetPerFrameKey());
+          aContext->GetDrawTarget()->FlushItem(aItemBounds);
+          aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext, aRecorder);
+          GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(), aItem->GetPerFrameKey());
+          });
         aContext->GetDrawTarget()->FlushItem(aItemBounds);
       }
       break;
@@ -1100,8 +1109,7 @@ Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
   nsDisplayList* children = aItem->GetChildren();
   BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
 
-  if (aItem->GetType() == DisplayItemType::TYPE_FILTER ||
-      aItem->GetType() == DisplayItemType::TYPE_MASK) {
+  if (aItem->GetType() == DisplayItemType::TYPE_FILTER) {
     gfx::Size scale(1, 1);
     // If ComputeDifferences finds any change, we invalidate the entire container item.
     // This is needed because blob merging requires the entire item to be within the invalid region.
@@ -1111,16 +1119,22 @@ Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
     const Matrix4x4Flagged& t = transformItem->GetTransform();
     Matrix t2d;
     bool is2D = t.Is2D(&t2d);
-    MOZ_RELEASE_ASSERT(is2D, "Non-2D transforms should be treated as active");
+    if (!is2D) {
+      // We'll use BasicLayerManager to handle 3d transforms.
+      gfx::Size scale(1, 1);
+      // If ComputeDifferences finds any change, we invalidate the entire container item.
+      // This is needed because blob merging requires the entire item to be within the invalid region.
+      data->mInvalid = BuildLayer(aItem, data, mDisplayListBuilder, scale);
+    } else {
+      Matrix m = mTransform;
 
-    Matrix m = mTransform;
+      GP("t2d: %f %f\n", t2d._31, t2d._32);
+      mTransform.PreMultiply(t2d);
+      GP("mTransform: %f %f\n", mTransform._31, mTransform._32);
+      ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, aGroup, children, aSc);
 
-    GP("t2d: %f %f\n", t2d._31, t2d._32);
-    mTransform.PreMultiply(t2d);
-    GP("mTransform: %f %f\n", mTransform._31, mTransform._32);
-    ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, aGroup, children, aSc);
-
-    mTransform = m;
+      mTransform = m;
+    }
   } else if (children) {
     sIndent++;
     ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources, aGroup, children, aSc);

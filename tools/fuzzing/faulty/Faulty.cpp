@@ -752,8 +752,6 @@ Faulty::ReadFile(const char* aPathname, nsTArray<nsCString> &aArray)
     aArray.AppendElement(line);
   } while (more);
 
-  file.forget();
-
   return NS_OK;
 }
 

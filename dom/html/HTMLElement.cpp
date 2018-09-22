@@ -14,7 +14,7 @@ namespace dom {
 class HTMLElement final : public nsGenericHTMLElement
 {
 public:
-  explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   virtual ~HTMLElement();
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
@@ -23,8 +23,8 @@ protected:
   JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 };
 
-HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo))
 {
   if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
     AddStatesSilently(NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO);
@@ -52,7 +52,7 @@ nsGenericHTMLElement*
 NS_NewHTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                   mozilla::dom::FromParser aFromParser)
 {
-  return new mozilla::dom::HTMLElement(aNodeInfo);
+  return new mozilla::dom::HTMLElement(std::move(aNodeInfo));
 }
 
 // Distinct from the above in order to have function pointer that compared unequal
@@ -61,5 +61,5 @@ nsGenericHTMLElement*
 NS_NewCustomElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                     mozilla::dom::FromParser aFromParser)
 {
-  return new mozilla::dom::HTMLElement(aNodeInfo);
+  return new mozilla::dom::HTMLElement(std::move(aNodeInfo));
 }

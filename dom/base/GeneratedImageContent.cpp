@@ -28,14 +28,7 @@ GeneratedImageContent::Create(nsIDocument& aDocument, uint32_t aContentIndex)
                   kNameSpaceID_XHTML,
                   nsINode::ELEMENT_NODE);
 
-  // Work around not being able to bind a non-const lvalue reference
-  // to an rvalue of non-reference type by just creating an rvalue
-  // reference.  And we can't change the constructor signature,
-  // because then the macro-generated Clone() method fails to compile.
-  already_AddRefed<dom::NodeInfo>&& rvalue = nodeInfo.forget();
-
-  auto image =
-    MakeRefPtr<GeneratedImageContent>(rvalue);
+  auto image = MakeRefPtr<GeneratedImageContent>(nodeInfo.forget());
   image->mIndex = aContentIndex;
   return image.forget();
 }

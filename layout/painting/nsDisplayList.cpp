@@ -8752,7 +8752,7 @@ nsDisplayTransform::CreateWebRenderCommands(
 
   // If it looks like we're animated, we should rasterize in local space
   // (disabling subpixel-aa and global pixel snapping)
-  bool rasterizeLocally =
+  bool animated =
     ActiveLayerTracker::IsStyleMaybeAnimated(Frame(), eCSSProperty_transform);
 
   StackingContextHelper sc(aSc,
@@ -8769,7 +8769,7 @@ nsDisplayTransform::CreateWebRenderCommands(
                            mFrame->Extend3DContext() && !mNoExtendContext,
                            deferredTransformItem,
                            nullptr,
-                           rasterizeLocally);
+                           animated);
 
   return mStoredList.CreateWebRenderCommands(
     aBuilder, aResources, sc, aManager, aDisplayListBuilder);
@@ -9703,17 +9703,14 @@ nsDisplayMask::CanMerge(const nsDisplayItem* aItem) const
          CanMergeDisplayMaskFrame(aItem->Frame());
 }
 
-already_AddRefed<Layer>
-nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
-                          LayerManager* aManager,
-                          const ContainerLayerParameters& aContainerParameters)
-{
+bool
+nsDisplayMask::IsValidMask() {
   if (!ValidateSVGFrame()) {
-    return nullptr;
+    return false;
   }
 
   if (mFrame->StyleEffects()->mOpacity == 0.0f && mHandleOpacity) {
-    return nullptr;
+    return false;
   }
 
   nsIFrame* firstFrame =
@@ -9723,6 +9720,20 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   if (effectProperties.HasInvalidClipPath() ||
       effectProperties.HasInvalidMask()) {
+    return false;
+  }
+
+  return true;
+}
+
+
+
+already_AddRefed<Layer>
+nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
+                          LayerManager* aManager,
+                          const ContainerLayerParameters& aContainerParameters)
+{
+  if (!IsValidMask()) {
     return nullptr;
   }
 
@@ -9892,6 +9903,43 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
 
   nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
 }
+
+void
+nsDisplayMask::PaintWithContentsPaintCallback(nsDisplayListBuilder* aBuilder,
+                                              gfxContext* aCtx,
+                                              const std::function<void()>& aPaintChildren)
+{
+  // Clip the drawing target by mVisibleRect, which contains the visible
+  // region of the target frame and its out-of-flow and inflow descendants.
+  gfxContext* context = aCtx;
+
+  Rect bounds =
+    NSRectToRect(GetPaintRect(), mFrame->PresContext()->AppUnitsPerDevPixel());
+  bounds.RoundOut();
+  context->Clip(bounds);
+
+  imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
+                               ? imgIContainer::FLAG_SYNC_DECODE
+                               : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
+  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  nsSVGIntegrationUtils::PaintFramesParams params(*aCtx,
+                                                  mFrame,
+                                                  GetPaintRect(),
+                                                  borderArea,
+                                                  aBuilder,
+                                                  nullptr,
+                                                  mHandleOpacity,
+                                                  imgParams);
+
+  ComputeMaskGeometry(params);
+
+  nsSVGIntegrationUtils::PaintMaskAndClipPath(params, aPaintChildren);
+
+  context->PopClip();
+
+  nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
+}
+
 
 bool
 nsDisplayMask::CreateWebRenderCommands(

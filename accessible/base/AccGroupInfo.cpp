@@ -4,6 +4,7 @@
 
 #include "AccGroupInfo.h"
 #include "nsAccUtils.h"
+#include "TableAccessible.h"
 
 #include "Role.h"
 #include "States.h"
@@ -183,6 +184,75 @@ AccGroupInfo::FirstItemOf(const Accessible* aContainer)
     return item;
 
   return nullptr;
+}
+
+uint32_t
+AccGroupInfo::TotalItemCount(Accessible* aContainer, bool* aIsHierarchical)
+{
+  uint32_t itemCount = 0;
+  switch (aContainer->Role()) {
+    case roles::TABLE:
+      if (nsCoreUtils::GetUIntAttr(aContainer->GetContent(),
+                                   nsGkAtoms::aria_rowcount,
+                                   (int32_t*)&itemCount)) {
+        break;
+      }
+
+      if (TableAccessible* tableAcc = aContainer->AsTable()) {
+        return tableAcc->RowCount();
+      }
+
+      break;
+    case roles::ROW:
+      if (Accessible* table = nsAccUtils::TableFor(aContainer)) {
+        if (nsCoreUtils::GetUIntAttr(table->GetContent(),
+                                     nsGkAtoms::aria_colcount,
+                                     (int32_t*)&itemCount)) {
+          break;
+        }
+
+        if (TableAccessible* tableAcc = table->AsTable()) {
+          return tableAcc->ColCount();
+        }
+      }
+
+      break;
+    case roles::OUTLINE:
+    case roles::LIST:
+    case roles::MENUBAR:
+    case roles::MENUPOPUP:
+    case roles::COMBOBOX:
+    case roles::GROUPING:
+    case roles::TREE_TABLE:
+    case roles::COMBOBOX_LIST:
+    case roles::LISTBOX:
+    case roles::DEFINITION_LIST:
+    case roles::EDITCOMBOBOX:
+    case roles::RADIO_GROUP:
+    case roles::PAGETABLIST: {
+      Accessible* childItem = AccGroupInfo::FirstItemOf(aContainer);
+      if (!childItem) {
+        childItem = aContainer->FirstChild();
+        if (childItem->IsTextLeaf()) {
+          // First child can be a text leaf, check its sibling for an item.
+          childItem = childItem->NextSibling();
+        }
+      }
+
+      if (childItem) {
+        GroupPos groupPos = childItem->GroupPosition();
+        itemCount = groupPos.setSize;
+        if (groupPos.level && aIsHierarchical) {
+          *aIsHierarchical = true;
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return itemCount;
 }
 
 Accessible*

@@ -48,8 +48,8 @@ NS_IMPL_ISUPPORTS_INHERITED(SVGFEImageElement, SVGFEImageElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGFEImageElement::SVGFEImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGFEImageElementBase(aNodeInfo)
+SVGFEImageElement::SVGFEImageElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGFEImageElementBase(std::move(aNodeInfo))
 {
   // We start out broken
   AddStatesSilently(NS_EVENT_STATE_BROKEN);

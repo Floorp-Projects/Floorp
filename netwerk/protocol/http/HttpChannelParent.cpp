@@ -734,10 +734,10 @@ HttpChannelParent::WaitForBgParent()
   registrar->LinkHttpChannel(mChannel->ChannelId(), this);
 
   if (mBgParent) {
-    already_AddRefed<GenericPromise> promise = mPromise.Ensure(__func__);
+    RefPtr<GenericPromise> promise = mPromise.Ensure(__func__);
     // resolve promise immediatedly if bg channel is ready.
     mPromise.Resolve(true, __func__);
-    return promise;
+    return promise.forget();
   }
 
   return mPromise.Ensure(__func__);;
