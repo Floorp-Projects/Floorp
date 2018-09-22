@@ -22,8 +22,8 @@ class SVGFEMergeNodeElement : public SVGFEMergeNodeElementBase
   friend nsresult (::NS_NewSVGFEMergeNodeElement(nsIContent **aResult,
                                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEMergeNodeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEMergeNodeElementBase(aNodeInfo)
+  explicit SVGFEMergeNodeElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEMergeNodeElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

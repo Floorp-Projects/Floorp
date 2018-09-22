@@ -26,7 +26,7 @@ private:
 
 public:
   explicit Comment(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : CharacterData(aNodeInfo)
+    : CharacterData(std::move(aNodeInfo))
   {
     Init();
   }

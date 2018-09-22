@@ -37,8 +37,8 @@ nsSVGElement::EnumInfo SVGViewElement::sEnumInfo[1] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGViewElement::SVGViewElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGViewElementBase(aNodeInfo)
+SVGViewElement::SVGViewElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGViewElementBase(std::move(aNodeInfo))
 {
 }
 

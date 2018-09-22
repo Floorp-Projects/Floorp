@@ -27,7 +27,7 @@ class SVGMPathElement final : public SVGMPathElementBase,
 protected:
   friend nsresult (::NS_NewSVGMPathElement(nsIContent **aResult,
                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGMPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGMPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   ~SVGMPathElement();
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;

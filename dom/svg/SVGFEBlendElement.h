@@ -22,8 +22,8 @@ class SVGFEBlendElement : public SVGFEBlendElementBase
   friend nsresult (::NS_NewSVGFEBlendElement(nsIContent **aResult,
                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEBlendElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEBlendElementBase(aNodeInfo)
+  explicit SVGFEBlendElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEBlendElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;

@@ -44,7 +44,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 public:
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLFormElement, form)
 
-  explicit HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   enum {
     FORM_CONTROL_LIST_HASHTABLE_LENGTH = 8

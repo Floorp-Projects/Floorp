@@ -20,7 +20,7 @@ typedef SVGTextPositioningElement SVGTextElementBase;
 class SVGTextElement final : public SVGTextElementBase
 {
 protected:
-  explicit SVGTextElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGTextElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
   friend nsresult (::NS_NewSVGTextElement(nsIContent **aResult,

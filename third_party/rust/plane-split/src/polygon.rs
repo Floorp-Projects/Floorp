@@ -161,15 +161,19 @@ impl<T, U> Polygon<T, U> where
 
     /// Construct a polygon from a non-transformed rectangle.
     pub fn from_rect(rect: TypedRect<T, U>, anchor: usize) -> Self {
-        Self::from_points(
-            [
+        Polygon {
+            points: [
                 rect.origin.to_3d(),
                 rect.top_right().to_3d(),
                 rect.bottom_right().to_3d(),
                 rect.bottom_left().to_3d(),
             ],
+            plane: Plane {
+                normal: TypedVector3D::new(T::zero(), T::zero(), T::one()),
+                offset: T::zero(),
+            },
             anchor,
-        ).unwrap()
+        }
     }
 
     /// Construct a polygon from a rectangle with 3D transform.
@@ -187,11 +191,46 @@ impl<T, U> Polygon<T, U> where
             transform.transform_point3d(&rect.bottom_right().to_3d())?,
             transform.transform_point3d(&rect.bottom_left().to_3d())?,
         ];
-
-        //Note: this code path could be more efficient if we had inverse-transpose
-        //let n4 = transform.transform_point4d(&TypedPoint4D::new(T::zero(), T::zero(), T::one(), T::zero()));
-        //let normal = TypedPoint3D::new(n4.x, n4.y, n4.z);
         Self::from_points(points, anchor)
+    }
+
+    /// Construct a polygon from a rectangle with an invertible 3D transform.
+    pub fn from_transformed_rect_with_inverse<V>(
+        rect: TypedRect<T, V>,
+        transform: &TypedTransform3D<T, V, U>,
+        inv_transform: &TypedTransform3D<T, U, V>,
+        anchor: usize,
+    ) -> Option<Self>
+    where
+        T: Trig + ops::Neg<Output=T>,
+    {
+        let points = [
+            transform.transform_point3d(&rect.origin.to_3d())?,
+            transform.transform_point3d(&rect.top_right().to_3d())?,
+            transform.transform_point3d(&rect.bottom_right().to_3d())?,
+            transform.transform_point3d(&rect.bottom_left().to_3d())?,
+        ];
+
+        // Compute the normal directly from the transformation. This guarantees consistent polygons
+        // generated from various local rectanges on the same geometry plane.
+        let normal_raw = TypedVector3D::new(inv_transform.m13, inv_transform.m23, inv_transform.m33);
+        let normal_sql = normal_raw.square_length();
+        if normal_sql.approx_eq(&T::zero()) {
+            None
+        } else {
+            let normal = normal_raw / normal_sql.sqrt();
+            let offset = -TypedVector3D::new(transform.m41, transform.m42, transform.m43)
+                .dot(normal) * transform.m44;
+
+            Some(Polygon {
+                points,
+                plane: Plane {
+                    normal,
+                    offset,
+                },
+                anchor,
+            })
+        }
     }
 
     /// Bring a point into the local coordinate space, returning

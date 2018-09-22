@@ -22,8 +22,8 @@ class SVGFEDiffuseLightingElement : public SVGFEDiffuseLightingElementBase
   friend nsresult (::NS_NewSVGFEDiffuseLightingElement(nsIContent **aResult,
                                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  explicit SVGFEDiffuseLightingElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEDiffuseLightingElementBase(aNodeInfo)
+  explicit SVGFEDiffuseLightingElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEDiffuseLightingElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

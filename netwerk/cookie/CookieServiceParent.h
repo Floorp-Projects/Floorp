@@ -40,15 +40,6 @@ public:
 protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual mozilla::ipc::IPCResult RecvGetCookieString(const URIParams& aHost,
-                                                      const bool& aIsForeign,
-                                                      const bool& aIsTrackingResource,
-                                                      const bool& aFirstPartyStorageAccessGranted,
-                                                      const bool& aIsSafeTopLevelNav,
-                                                      const bool& aIsSameSiteForeign,
-                                                      const OriginAttributes& aAttrs,
-                                                      nsCString* aResult) override;
-
   virtual mozilla::ipc::IPCResult RecvSetCookieString(const URIParams& aHost,
                                                       const OptionalURIParams& aChannelURI,
                                                       const bool& aIsForeign,

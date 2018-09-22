@@ -8,6 +8,7 @@ use api::{DeviceVector2D, DevicePoint, DeviceIntSize, LayoutRect, LayoutSize, No
 use api::{AuHelpers};
 use app_units::Au;
 use ellipse::Ellipse;
+use euclid::SideOffsets2D;
 use display_list_flattener::DisplayListFlattener;
 use gpu_types::{BorderInstance, BorderSegment, BrushFlags};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegment};
@@ -78,27 +79,6 @@ impl From<BorderRadiusAu> for BorderRadius {
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct BorderWidthsAu {
-    pub left: Au,
-    pub top: Au,
-    pub right: Au,
-    pub bottom: Au,
-}
-
-impl From<LayoutSideOffsets> for BorderWidthsAu {
-    fn from(widths: LayoutSideOffsets) -> Self {
-        BorderWidthsAu {
-            left: Au::from_f32_px(widths.left),
-            top: Au::from_f32_px(widths.top),
-            right: Au::from_f32_px(widths.right),
-            bottom: Au::from_f32_px(widths.bottom),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BorderSideAu {
     pub color: ColorU,
     pub style: BorderStyle,
@@ -122,7 +102,7 @@ pub struct BorderCacheKey {
     pub top: BorderSideAu,
     pub bottom: BorderSideAu,
     pub radius: BorderRadiusAu,
-    pub widths: BorderWidthsAu,
+    pub widths: SideOffsets2D<Au>,
     pub scale: Au,
 }
 
@@ -133,7 +113,12 @@ impl BorderCacheKey {
             top: border.top.into(),
             right: border.right.into(),
             bottom: border.bottom.into(),
-            widths: (*widths).into(),
+            widths: SideOffsets2D::new(
+                Au::from_f32_px(widths.top),
+                Au::from_f32_px(widths.right),
+                Au::from_f32_px(widths.bottom),
+                Au::from_f32_px(widths.left),
+            ),
             radius: border.radius.into(),
             scale: Au(0),
         }

@@ -46,8 +46,8 @@ enum SeparatorType
 
 
 
-HTMLMenuElement::HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo), mType(MENU_TYPE_TOOLBAR)
+HTMLMenuElement::HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : nsGenericHTMLElement(std::move(aNodeInfo)), mType(MENU_TYPE_TOOLBAR)
 {
 }
 

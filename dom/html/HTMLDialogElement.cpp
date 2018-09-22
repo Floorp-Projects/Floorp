@@ -15,10 +15,10 @@ NS_NewHTMLDialogElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                          mozilla::dom::FromParser aFromParser)
 {
   if (!mozilla::dom::HTMLDialogElement::IsDialogEnabled()) {
-    return new mozilla::dom::HTMLUnknownElement(aNodeInfo);
+    return new mozilla::dom::HTMLUnknownElement(std::move(aNodeInfo));
   }
 
-  return new mozilla::dom::HTMLDialogElement(aNodeInfo);
+  return new mozilla::dom::HTMLDialogElement(std::move(aNodeInfo));
 }
 
 namespace mozilla {

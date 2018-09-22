@@ -131,7 +131,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   typedef layers::WebRenderCanvasData WebRenderCanvasData;
 
 public:
-  explicit HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLCanvasElement, canvas)
 

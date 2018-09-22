@@ -148,8 +148,8 @@ class Element : public FragmentOrElement
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
-  explicit Element(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo) :
-    FragmentOrElement(aNodeInfo),
+  explicit Element(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) :
+    FragmentOrElement(std::move(aNodeInfo)),
     mState(NS_EVENT_STATE_MOZ_READONLY | NS_EVENT_STATE_DEFINED)
   {
     MOZ_ASSERT(mNodeInfo->NodeType() == ELEMENT_NODE,
@@ -2101,9 +2101,8 @@ nsresult                                                                    \
 _elementName::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const \
 {                                                                           \
   *aResult = nullptr;                                                       \
-  already_AddRefed<mozilla::dom::NodeInfo> ni =                             \
-    RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();                     \
-  _elementName *it = new _elementName(ni);                                  \
+  RefPtr<mozilla::dom::NodeInfo> ni(aNodeInfo);                             \
+  _elementName *it = new _elementName(ni.forget());                         \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
@@ -2124,9 +2123,8 @@ _elementName::Clone(mozilla::dom::NodeInfo* aNodeInfo,                      \
                     nsINode** aResult) const                                \
 {                                                                           \
   *aResult = nullptr;                                                       \
-  already_AddRefed<mozilla::dom::NodeInfo> ni =                             \
-    RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();                     \
-  _elementName *it = new _elementName(ni EXPAND extra_args_);               \
+  RefPtr<mozilla::dom::NodeInfo> ni(aNodeInfo);                             \
+  _elementName *it = new _elementName(ni.forget() EXPAND extra_args_);      \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \

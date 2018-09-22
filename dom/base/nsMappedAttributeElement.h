@@ -32,8 +32,8 @@ class nsMappedAttributeElement : public nsMappedAttributeElementBase
 
 protected:
 
-  explicit nsMappedAttributeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsMappedAttributeElementBase(aNodeInfo)
+  explicit nsMappedAttributeElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsMappedAttributeElementBase(std::move(aNodeInfo))
   {}
 
 public:

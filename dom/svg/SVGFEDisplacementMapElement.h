@@ -23,8 +23,8 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase
 protected:
   friend nsresult (::NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
                                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
-  explicit SVGFEDisplacementMapElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : SVGFEDisplacementMapElementBase(aNodeInfo)
+  explicit SVGFEDisplacementMapElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : SVGFEDisplacementMapElementBase(std::move(aNodeInfo))
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

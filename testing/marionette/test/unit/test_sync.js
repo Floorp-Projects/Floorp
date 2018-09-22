@@ -145,12 +145,12 @@ add_task(async function test_Sleep() {
 
 add_task(async function test_IdlePromise() {
   let called = false;
-  let window = {
+  let win = {
     requestAnimationFrame(callback) {
       called = true;
       callback();
     },
   };
-  await IdlePromise(window);
+  await IdlePromise(win);
   ok(called);
 });

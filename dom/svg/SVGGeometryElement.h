@@ -49,7 +49,7 @@ protected:
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
 
 public:
-  explicit SVGGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+  explicit SVGGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,

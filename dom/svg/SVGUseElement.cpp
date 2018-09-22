@@ -74,8 +74,8 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(SVGUseElement,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGUseElement::SVGUseElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGUseElementBase(aNodeInfo)
+SVGUseElement::SVGUseElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGUseElementBase(std::move(aNodeInfo))
   , mReferencedElementTracker(this)
 {
 }
@@ -96,8 +96,7 @@ nsresult
 SVGUseElement::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 {
   *aResult = nullptr;
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  SVGUseElement *it = new SVGUseElement(ni);
+  SVGUseElement *it = new SVGUseElement(do_AddRef(aNodeInfo));
 
   nsCOMPtr<nsINode> kungFuDeathGrip(it);
   nsresult rv1 = it->Init();

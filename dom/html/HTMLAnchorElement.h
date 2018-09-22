@@ -23,8 +23,8 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
 public:
   using Element::GetText;
 
-  explicit HTMLAnchorElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElement(aNodeInfo)
+  explicit HTMLAnchorElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo))
     , Link(this)
   {
   }

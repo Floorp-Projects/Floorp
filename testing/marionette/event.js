@@ -22,15 +22,6 @@ this.EXPORTED_SYMBOLS = ["event"];
 // TODO(ato): Document!
 let seenEvent = false;
 
-function getDOMWindowUtils(win) {
-  if (!win) {
-    win = window;
-  }
-
-  // this assumes we are operating in chrome space
-  return win.windowUtils;
-}
-
 event.MouseEvents = {
   click: 0,
   dblclick: 1,
@@ -83,119 +74,6 @@ event.DoubleClickTracker = {
   },
 };
 
-/**
- * Sends a mouse event to given target.
- *
- * @param {MouseEvent} mouseEvent
- *     Event to send.
- * @param {(DOMElement|string)} target
- *     Target of event.  Can either be an element or the ID of an element.
- * @param {Window=} window
- *     Window object.  Defaults to the current window.
- *
- * @throws {TypeError}
- *     If the event is unsupported.
- */
-event.sendMouseEvent = function(mouseEvent, target, window = undefined) {
-  if (!event.MouseEvents.hasOwnProperty(mouseEvent.type)) {
-    throw new TypeError("Unsupported event type: " + mouseEvent.type);
-  }
-
-  if (!target.nodeType && typeof target != "string") {
-    throw new TypeError(
-        "Target can only be a DOM element or a string: " + target);
-  }
-
-  if (!target.nodeType) {
-    target = window.document.getElementById(target);
-  } else {
-    window = window || target.ownerGlobal;
-  }
-
-  let ev = window.document.createEvent("MouseEvent");
-
-  let view = window;
-
-  let detail = mouseEvent.detail;
-  if (!detail) {
-    if (mouseEvent.type in ["click", "mousedown", "mouseup"]) {
-      detail = 1;
-    } else if (mouseEvent.type == "dblclick") {
-      detail = 2;
-    } else {
-      detail = 0;
-    }
-  }
-
-  let screenX = mouseEvent.screenX || 0;
-  let screenY = mouseEvent.screenY || 0;
-  let clientX = mouseEvent.clientX || 0;
-  let clientY = mouseEvent.clientY || 0;
-  let ctrlKey = mouseEvent.ctrlKey || false;
-  let altKey = mouseEvent.altKey || false;
-  let shiftKey = mouseEvent.shiftKey || false;
-  let metaKey = mouseEvent.metaKey || false;
-  let button = mouseEvent.button || 0;
-  let relatedTarget = mouseEvent.relatedTarget || null;
-
-  ev.initMouseEvent(
-      mouseEvent.type,
-      /* canBubble */ true,
-      /* cancelable */ true,
-      view,
-      detail,
-      screenX,
-      screenY,
-      clientX,
-      clientY,
-      ctrlKey,
-      altKey,
-      shiftKey,
-      metaKey,
-      button,
-      relatedTarget);
-};
-
-/**
- * Send character to the currently focused element.
- *
- * This function handles casing of characters (sends the right charcode,
- * and sends a shift key for uppercase chars).  No other modifiers are
- * handled at this point.
- *
- * For now this method only works for English letters (lower and upper
- * case) and the digits 0-9.
- */
-event.sendChar = function(char, window = undefined) {
-  // DOM event charcodes match ASCII (JS charcodes) for a-zA-Z0-9
-  let hasShift = (char == char.toUpperCase());
-  event.synthesizeKey(char, {shiftKey: hasShift}, window);
-};
-
-/**
- * Send string to the focused element.
- *
- * For now this method only works for English letters (lower and upper
- * case) and the digits 0-9.
- */
-event.sendString = function(string, window = undefined) {
-  for (let i = 0; i < string.length; ++i) {
-    event.sendChar(string.charAt(i), window);
-  }
-};
-
-/**
- * Send the non-character key to the focused element.
- *
- * The name of the key should be the part that comes after "DOM_VK_"
- * in the KeyboardEvent constant name for this key.  No modifiers are
- * handled at this point.
- */
-event.sendKey = function(key, window = undefined) {
-  let keyName = "VK_" + key.toUpperCase();
-  event.synthesizeKey(keyName, {shiftKey: false}, window);
-};
-
 // TODO(ato): Unexpose this when action.Chain#emitMouseEvent
 // no longer emits its own events
 event.parseModifiers_ = function(modifiers) {
@@ -242,14 +120,13 @@ event.parseModifiers_ = function(modifiers) {
  *     Object which may contain the properties "shiftKey", "ctrlKey",
  *     "altKey", "metaKey", "accessKey", "clickCount", "button", and
  *     "type".
- * @param {Window=} window
- *     Window object.  Defaults to the current window.
+ * @param {Window} win
+ *     Window object.
  */
-event.synthesizeMouse = function(
-    element, offsetX, offsetY, opts, window = undefined) {
+event.synthesizeMouse = function(element, offsetX, offsetY, opts, win) {
   let rect = element.getBoundingClientRect();
   event.synthesizeMouseAtPoint(
-      rect.left + offsetX, rect.top + offsetY, opts, window);
+      rect.left + offsetX, rect.top + offsetY, opts, win);
 };
 
 /*
@@ -266,13 +143,11 @@ event.synthesizeMouse = function(
  *     Object which may contain the properties "shiftKey", "ctrlKey",
  *     "altKey", "metaKey", "accessKey", "clickCount", "button", and
  *     "type".
- * @param {Window=} win
- *     Window object.  Defaults to the current window.
+ * @param {Window} win
+ *     Window object.
  */
-event.synthesizeMouseAtPoint = function(
-    left, top, opts, win = window) {
-
-  let domutils = getDOMWindowUtils(win);
+event.synthesizeMouseAtPoint = function(left, top, opts, win) {
+  let domutils = win.windowUtils;
 
   let button = opts.button || 0;
   let clickCount = opts.clickCount || 1;
@@ -339,22 +214,8 @@ event.synthesizeMouseAtPoint = function(
   }
 };
 
-/**
- * Call event.synthesizeMouse with coordinates at the centre of the
- * target.
- */
-event.synthesizeMouseAtCenter = function(element, event, window) {
-  let rect = element.getBoundingClientRect();
-  event.synthesizeMouse(
-      element,
-      rect.width / 2,
-      rect.height / 2,
-      event,
-      window);
-};
-
 /* eslint-disable */
-function computeKeyCodeFromChar_(char, win = window) {
+function computeKeyCodeFromChar_(char, win) {
   if (char.length != 1) {
     return 0;
   }
@@ -467,8 +328,8 @@ function computeKeyCodeFromChar_(char, win = window) {
  * The key code should be one of consts of KeyboardEvent.DOM_VK_*,
  * or a key name begins with "VK_", or a character.
  */
-event.isKeypressFiredKey = function(key) {
-  let KeyboardEvent = getKeyboardEvent_();
+event.isKeypressFiredKey = function(key, win) {
+  let KeyboardEvent = getKeyboardEvent_(win);
 
   if (typeof key == "string") {
     if (key.indexOf("VK_") === 0) {
@@ -512,13 +373,13 @@ event.isKeypressFiredKey = function(key) {
  *     metaKey, accessKey, type.  If the type is specified (keydown or keyup),
  *     a key event of that type is fired.  Otherwise, a keydown, a keypress,
  *     and then a keyup event are fired in sequence.
- * @param {Window=} window
- *     Window object.  Defaults to the current window.
+ * @param {Window} win
+ *     Window object.
  *
  * @throws {TypeError}
  *     If unknown key.
  */
-event.synthesizeKey = function(key, event, win = undefined) {
+event.synthesizeKey = function(key, event, win) {
   let TIP = getTIP_(win);
   if (!TIP) {
     return;
@@ -554,10 +415,8 @@ event.synthesizeKey = function(key, event, win = undefined) {
 const TIPMap = new WeakMap();
 
 function getTIP_(win, callback) {
-  if (!win) {
-    win = window;
-  }
   let tip;
+
   if (TIPMap.has(win)) {
     tip = TIPMap.get(win);
   } else {
@@ -572,7 +431,7 @@ function getTIP_(win, callback) {
   return tip;
 }
 
-function getKeyboardEvent_(win = window) {
+function getKeyboardEvent_(win) {
   if (typeof KeyboardEvent != "undefined") {
     try {
       // See if the object can be instantiated; sometimes this yields
@@ -588,7 +447,7 @@ function getKeyboardEvent_(win = window) {
   return win.KeyboardEvent;
 }
 
-function createKeyboardEventDictionary_(key, keyEvent, win = window) {
+function createKeyboardEventDictionary_(key, keyEvent, win) {
   let result = {dictionary: null, flags: 0};
   let keyCodeIsDefined = "keyCode" in keyEvent &&
       keyEvent.keyCode != undefined;
@@ -596,6 +455,7 @@ function createKeyboardEventDictionary_(key, keyEvent, win = window) {
     (keyCodeIsDefined && keyEvent.keyCode >= 0 && keyEvent.keyCode <= 255) ?
       keyEvent.keyCode : 0;
   let keyName = "Unidentified";
+
   if (key.indexOf("KEY_") == 0) {
     keyName = key.substr("KEY_".length);
     result.flags |= Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
@@ -621,21 +481,29 @@ function createKeyboardEventDictionary_(key, keyEvent, win = window) {
       result.flags |= Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
     }
   }
+
   let locationIsDefined = "location" in keyEvent;
   if (locationIsDefined && keyEvent.location === 0) {
     result.flags |= Ci.nsITextInputProcessor.KEY_KEEP_KEY_LOCATION_STANDARD;
   }
+
+  let resultKey = "key" in keyEvent ? keyEvent.key : keyName;
+  if (!MODIFIER_KEYCODES_LOOKUP[key] && keyEvent.shiftKey) {
+    resultKey = resultKey.toUpperCase();
+  }
+
   result.dictionary = {
-    key: "key" in keyEvent ? keyEvent.key : keyName,
+    key: resultKey,
     code: "code" in keyEvent ? keyEvent.code : "",
     location: locationIsDefined ? keyEvent.location : 0,
     repeat: "repeat" in keyEvent ? keyEvent.repeat === true : false,
     keyCode,
   };
+
   return result;
 }
 
-function emulateToActivateModifiers_(TIP, keyEvent, win = window) {
+function emulateToActivateModifiers_(TIP, keyEvent, win) {
   if (!keyEvent) {
     return null;
   }
@@ -693,7 +561,7 @@ function emulateToActivateModifiers_(TIP, keyEvent, win = window) {
   return modifiers;
 }
 
-function emulateToInactivateModifiers_(TIP, modifiers, win = window) {
+function emulateToInactivateModifiers_(TIP, modifiers, win) {
   if (!modifiers) {
     return;
   }
@@ -722,7 +590,7 @@ function emulateToInactivateModifiers_(TIP, modifiers, win = window) {
 }
 
 /* eslint-disable */
-function guessKeyNameFromKeyCode_(aKeyCode, win = window) {
+function guessKeyNameFromKeyCode_(aKeyCode, win) {
   let KeyboardEvent = getKeyboardEvent_(win);
   switch (aKeyCode) {
     case KeyboardEvent.DOM_VK_CANCEL:
@@ -947,18 +815,18 @@ function checkExpectedEvent_(
  *     Expected type of the event, such as "select".
  * @param {string} testName
  *     Test name when outputing results.
- * @param {Window=} window
- *     Window object.  Defaults to the current window.
+ * @param {Window} win
+ *     Window object.
  */
 event.synthesizeMouseExpectEvent = function(
     target, offsetX, offsetY, ev, expectedTarget, expectedEvent,
-    testName, window = undefined) {
+    testName, win) {
 
   let eventHandler = expectEvent_(
       expectedTarget,
       expectedEvent,
       testName);
-  event.synthesizeMouse(target, offsetX, offsetY, ev, window);
+  event.synthesizeMouse(target, offsetX, offsetY, ev, win);
   checkExpectedEvent_(
       expectedTarget,
       expectedEvent,
@@ -966,84 +834,7 @@ event.synthesizeMouseExpectEvent = function(
       testName);
 };
 
-/**
- * Similar to synthesizeKey except that a test is performed to see if
- * an event is fired at the right target as a result.
- *
- * @param {string} key
- *     Key to synthesise.
- * @param {Object.<string, ?>} ev
- *     Object which may contain the properties shiftKey, ctrlKey, altKey,
- *     metaKey, accessKey, type.
- * @param {Element} expectedTarget
- *     Expected originalTarget of the event.
- * @param {DOMEvent} expectedEvent
- *     Expected type of the event, such as "select".
- * @param {string} testName
- *     Test name when outputing results
- * @param {Window=} window
- *     Window object.  Defaults to the current window.
- *
- * To test that an event is not fired, use an expected type preceded by an
- * exclamation mark, such as "!select".
- *
- * aWindow is optional, and defaults to the current window object.
- */
-event.synthesizeKeyExpectEvent = function(
-    key, ev, expectedTarget, expectedEvent, testName,
-    window = undefined) {
-
-  let eventHandler = expectEvent_(
-      expectedTarget,
-      expectedEvent,
-      testName);
-  event.synthesizeKey(key, ev, window);
-  checkExpectedEvent_(
-      expectedTarget,
-      expectedEvent,
-      eventHandler,
-      testName);
-};
-
-/**
- * Synthesize a query selected text event.
- *
- * @param {Window=}
- *     Window object.  Defaults to the current window.
- *
- * @return {(nsIQueryContentEventResult|null)}
- *     Event's result, or null if it failed.
- */
-event.synthesizeQuerySelectedText = function(window = undefined) {
-  let domutils = getDOMWindowUtils(window);
-  return domutils.sendQueryContentEvent(
-      domutils.QUERY_SELECTED_TEXT, 0, 0, 0, 0);
-};
-
-/**
- * Synthesize a selection set event.
- *
- * @param {number} offset
- *     Character offset.  0 means the first character in the selection
- *     root.
- * @param {number} length
- *     Length of the text.  If the length is too long, the extra length
- *     is ignored.
- * @param {boolean} reverse
- *     If true, the selection is from |aOffset + aLength| to |aOffset|.
- *     Otherwise, from |aOffset| to |aOffset + aLength|.
- * @param {Window=} window
- *     Window object.  Defaults to the current window.
- *
- * @return         True, if succeeded.  Otherwise false.
- */
-event.synthesizeSelectionSet = function(
-    offset, length, reverse, window = undefined) {
-  let domutils = getDOMWindowUtils(window);
-  return domutils.sendSelectionSetEvent(offset, length, reverse);
-};
-
-const KEYCODES_LOOKUP = {
+const MODIFIER_KEYCODES_LOOKUP = {
   "VK_SHIFT": "shiftKey",
   "VK_CONTROL": "ctrlKey",
   "VK_ALT": "altKey",
@@ -1061,7 +852,6 @@ const VIRTUAL_KEYCODE_LOOKUP = {
   "\uE008": "VK_SHIFT",
   "\uE009": "VK_CONTROL",
   "\uE00A": "VK_ALT",
-  "\uE03D": "VK_META",
   "\uE00B": "VK_PAUSE",
   "\uE00C": "VK_ESCAPE",
   "\uE00D": "VK_SPACE",  // printable
@@ -1105,6 +895,21 @@ const VIRTUAL_KEYCODE_LOOKUP = {
   "\uE03A": "VK_F10",
   "\uE03B": "VK_F11",
   "\uE03C": "VK_F12",
+  "\uE03D": "VK_META",
+  "\uE050": "VK_SHIFT",
+  "\uE051": "VK_CONTROL",
+  "\uE052": "VK_ALT",
+  "\uE053": "VK_META",
+  "\uE054": "VK_PAGE_UP",
+  "\uE055": "VK_PAGE_DOWN",
+  "\uE056": "VK_END",
+  "\uE057": "VK_HOME",
+  "\uE058": "VK_LEFT",
+  "\uE059": "VK_UP",
+  "\uE05A": "VK_RIGHT",
+  "\uE05B": "VK_DOWN",
+  "\uE05C": "VK_INSERT",
+  "\uE05D": "VK_DELETE",
 };
 
 function getKeyCode(c) {
@@ -1114,7 +919,7 @@ function getKeyCode(c) {
   return c;
 }
 
-function isPrintable(c, win = window) {
+function isPrintable(c, win) {
   let KeyboardEvent = getKeyboardEvent_(win);
   let NON_PRINT_KEYS = [
     KeyboardEvent.DOM_VK_CANCEL,
@@ -1190,23 +995,15 @@ function isPrintable(c, win = window) {
   return !(NON_PRINT_KEYS.includes(c));
 }
 
-event.sendKeyDown = function(keyToSend, modifiers, document) {
+event.sendKeyDown = function(keyToSend, modifiers, win) {
   modifiers.type = "keydown";
-  event.sendSingleKey(keyToSend, modifiers, document);
-  // TODO: This doesn't do anything since |synthesizeKeyEvent| ignores
-  // explicit keypress request, and instead figures out itself when to
-  // send keypress.
-  if (!["VK_SHIFT", "VK_CONTROL", "VK_ALT", "VK_META"]
-      .includes(getKeyCode(keyToSend))) {
-    modifiers.type = "keypress";
-    event.sendSingleKey(keyToSend, modifiers, document);
-  }
+  event.sendSingleKey(keyToSend, modifiers, win);
   delete modifiers.type;
 };
 
-event.sendKeyUp = function(keyToSend, modifiers, window = undefined) {
+event.sendKeyUp = function(keyToSend, modifiers, win) {
   modifiers.type = "keyup";
-  event.sendSingleKey(keyToSend, modifiers, window);
+  event.sendSingleKey(keyToSend, modifiers, win);
   delete modifiers.type;
 };
 
@@ -1219,30 +1016,28 @@ event.sendKeyUp = function(keyToSend, modifiers, window = undefined) {
  *     Object with properties used in KeyboardEvent (shiftkey, repeat, ...)
  *     as well as, the event |type| such as keydown. All properties
  *     are optional.
- * @param {Window=} window
- *     Window object.  If |window| is undefined, the event is synthesized
- *     in current window.
+ * @param {Window} win
+ *     Window object.
  */
-event.sendSingleKey = function(keyToSend, modifiers, window = undefined) {
-  let keyName = getKeyCode(keyToSend);
-  if (keyName in KEYCODES_LOOKUP) {
-    // We assume that if |keyToSend| is a raw code point (like "\uE009")
-    // then |modifiers| does not already have correct value for corresponding
-    // |modName| attribute (like ctrlKey), so that value needs to be flipped.
-    let modName = KEYCODES_LOOKUP[keyName];
+event.sendSingleKey = function(keyToSend, modifiers, win) {
+  let keyCode = getKeyCode(keyToSend);
+  if (keyCode in MODIFIER_KEYCODES_LOOKUP) {
+    // For |sendKeysToElement| and legacy actions we assume that if
+    // |keyToSend| is a raw code point (like "\uE009") then |modifiers| does
+    // not already have correct value for corresponding |modName| attribute
+    // (like ctrlKey), so that value needs to be flipped.
+    let modName = MODIFIER_KEYCODES_LOOKUP[keyCode];
     modifiers[modName] = !modifiers[modName];
-  } else if (modifiers.shiftKey && keyName != "Shift") {
-    keyName = keyName.toUpperCase();
   }
-  event.synthesizeKey(keyName, modifiers, window);
+  event.synthesizeKey(keyCode, modifiers, win);
 };
 
 /**
  * @param {string} keyString
  * @param {Element} element
- * @param {Window=} window
+ * @param {Window} win
  */
-event.sendKeysToElement = function(keyString, el, window = undefined) {
+event.sendKeysToElement = function(keyString, el, win) {
   // make Object.<modifier, false> map
   let modifiers = Object.create(event.Modifiers);
   for (let modifier in event.Modifiers) {
@@ -1251,7 +1046,7 @@ event.sendKeysToElement = function(keyString, el, window = undefined) {
 
   for (let i = 0; i < keyString.length; i++) {
     let c = keyString.charAt(i);
-    event.sendSingleKey(c, modifiers, window);
+    event.sendSingleKey(c, modifiers, win);
   }
 };
 

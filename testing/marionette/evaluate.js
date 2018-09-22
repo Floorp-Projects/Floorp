@@ -151,7 +151,7 @@ evaluate.sandbox = function(sb, script, args = [],
  * @param {element.Store=} seenEls
  *     Known element store to look up web elements from.  If undefined,
  *     the web element references are returned instead.
- * @param {WindowProxy=} window
+ * @param {WindowProxy=} win
  *     Current browsing context, if `seenEls` is provided.
  *
  * @return {Object}
@@ -166,7 +166,7 @@ evaluate.sandbox = function(sb, script, args = [],
  *     it is no longer attached to the DOM, or its node document
  *     is no longer the active document.
  */
-evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
+evaluate.fromJSON = function(obj, seenEls = undefined, win = undefined) {
   switch (typeof obj) {
     case "boolean":
     case "number":
@@ -180,13 +180,13 @@ evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
 
       // arrays
       } else if (Array.isArray(obj)) {
-        return obj.map(e => evaluate.fromJSON(e, seenEls, window));
+        return obj.map(e => evaluate.fromJSON(e, seenEls, win));
 
       // web elements
       } else if (WebElement.isReference(obj)) {
         let webEl = WebElement.fromJSON(obj);
         if (seenEls) {
-          return seenEls.get(webEl, window);
+          return seenEls.get(webEl, win);
         }
         return webEl;
       }
@@ -194,7 +194,7 @@ evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
       // arbitrary objects
       let rv = {};
       for (let prop in obj) {
-        rv[prop] = evaluate.fromJSON(obj[prop], seenEls, window);
+        rv[prop] = evaluate.fromJSON(obj[prop], seenEls, win);
       }
       return rv;
   }
@@ -418,7 +418,7 @@ sandbox.augment = function(sb, adapter) {
 /**
  * Creates a sandbox.
  *
- * @param {Window} window
+ * @param {Window} win
  *     The DOM Window object.
  * @param {nsIPrincipal=} principal
  *     An optional, custom principal to prefer over the Window.  Useful if
@@ -427,11 +427,11 @@ sandbox.augment = function(sb, adapter) {
  * @return {Sandbox}
  *     The created sandbox.
  */
-sandbox.create = function(window, principal = null, opts = {}) {
-  let p = principal || window;
+sandbox.create = function(win, principal = null, opts = {}) {
+  let p = principal || win;
   opts = Object.assign({
-    sameZoneAs: window,
-    sandboxPrototype: window,
+    sameZoneAs: win,
+    sandboxPrototype: win,
     wantComponents: true,
     wantXrays: true,
   }, opts);
@@ -442,29 +442,29 @@ sandbox.create = function(window, principal = null, opts = {}) {
  * Creates a mutable sandbox, where changes to the global scope
  * will have lasting side-effects.
  *
- * @param {Window} window
+ * @param {Window} win
  *     The DOM Window object.
  *
  * @return {Sandbox}
  *     The created sandbox.
  */
-sandbox.createMutable = function(window) {
+sandbox.createMutable = function(win) {
   let opts = {
     wantComponents: false,
     wantXrays: false,
   };
   // Note: We waive Xrays here to match potentially-accidental old behavior.
-  return Cu.waiveXrays(sandbox.create(window, null, opts));
+  return Cu.waiveXrays(sandbox.create(win, null, opts));
 };
 
-sandbox.createSystemPrincipal = function(window) {
+sandbox.createSystemPrincipal = function(win) {
   let principal = Cc["@mozilla.org/systemprincipal;1"]
       .createInstance(Ci.nsIPrincipal);
-  return sandbox.create(window, principal);
+  return sandbox.create(win, principal);
 };
 
-sandbox.createSimpleTest = function(window, harness) {
-  let sb = sandbox.create(window);
+sandbox.createSimpleTest = function(win, harness) {
+  let sb = sandbox.create(win);
   sb = sandbox.augment(sb, harness);
   sb[FINISH] = () => sb[COMPLETE](harness.generate_results());
   return sb;

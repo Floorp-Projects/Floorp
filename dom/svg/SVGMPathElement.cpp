@@ -52,8 +52,8 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(SVGMPathElement,
                                              nsIMutationObserver)
 
 // Constructor
-SVGMPathElement::SVGMPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGMPathElementBase(aNodeInfo)
+SVGMPathElement::SVGMPathElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGMPathElementBase(std::move(aNodeInfo))
   , mPathTracker(this)
 {
 }

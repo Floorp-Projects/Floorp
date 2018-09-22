@@ -23,7 +23,7 @@ public:
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLAudioElement, audio)
 
-  explicit HTMLAudioElement(already_AddRefed<NodeInfo>& aNodeInfo);
+  explicit HTMLAudioElement(already_AddRefed<NodeInfo>&& aNodeInfo);
 
   // Element
   virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;

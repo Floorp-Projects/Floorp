@@ -39,8 +39,8 @@ NS_INTERFACE_MAP_END_INHERITING(SVGSwitchElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGSwitchElement::SVGSwitchElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGSwitchElementBase(aNodeInfo)
+SVGSwitchElement::SVGSwitchElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+: SVGSwitchElementBase(std::move(aNodeInfo))
 {
 }
 

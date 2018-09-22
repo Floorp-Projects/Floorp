@@ -93,8 +93,8 @@ nsSVGOrientType::ToDOMAnimatedEnum(nsSVGElement *aSVGElement)
   return toReturn.forget();
 }
 
-SVGMarkerElement::SVGMarkerElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : SVGMarkerElementBase(aNodeInfo), mCoordCtx(nullptr)
+SVGMarkerElement::SVGMarkerElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+  : SVGMarkerElementBase(std::move(aNodeInfo)), mCoordCtx(nullptr)
 {
 }
 
