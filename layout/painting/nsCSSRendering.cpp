@@ -433,13 +433,6 @@ protected:
   }
 };
 
-/* Local functions */
-static nscolor
-MakeBevelColor(mozilla::Side whichSide,
-               uint8_t style,
-               nscolor aBackgroundColor,
-               nscolor aBorderColor);
-
 static InlineBackgroundData* gInlineBGData = nullptr;
 
 // Initialize any static variables used by nsCSSRendering.
@@ -464,7 +457,6 @@ nsCSSRendering::Shutdown()
 static nscolor
 MakeBevelColor(mozilla::Side whichSide,
                uint8_t style,
-               nscolor aBackgroundColor,
                nscolor aBorderColor)
 {
 
@@ -473,7 +465,7 @@ MakeBevelColor(mozilla::Side whichSide,
 
   // Given a background color and a border color
   // calculate the color used for the shading
-  NS_GetSpecial3DColors(colors, aBackgroundColor, aBorderColor);
+  NS_GetSpecial3DColors(colors, aBorderColor);
 
   if ((style == NS_STYLE_BORDER_STYLE_OUTSET) ||
       (style == NS_STYLE_BORDER_STYLE_RIDGE)) {
@@ -855,15 +847,6 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
 {
   nsMargin border = aStyleBorder.GetComputedBorder();
 
-  // In NavQuirks mode we want to use the parent's context as a starting point
-  // for determining the background color.
-  bool quirks = aPresContext->CompatibilityMode() == eCompatibility_NavQuirks;
-  nsIFrame* bgFrame =
-    nsCSSRendering::FindNonTransparentBackgroundFrame(aForFrame, quirks);
-  ComputedStyle* bgContext = bgFrame->Style();
-  nscolor bgColor =
-    bgContext->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
-
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea & aBGClipRect.
   nsRect joinedBorderArea = nsCSSRendering::BoxDecorationRectForBorder(
@@ -943,7 +926,6 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
     borderWidths,
     bgRadii,
     borderColors,
-    bgColor,
     !aForFrame->BackfaceIsHidden(),
     *aNeedsClip ? Some(NSRectToRect(aBorderArea, oneDevPixel)) : Nothing());
 }
@@ -1126,12 +1108,6 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
     return Nothing();
   }
 
-  nsIFrame* bgFrame =
-    nsCSSRendering::FindNonTransparentBackgroundFrame(aForFrame, false);
-  ComputedStyle* bgContext = bgFrame->Style();
-  nscolor bgColor =
-    bgContext->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
-
   nsRect innerRect;
   if (
 #ifdef MOZ_XUL
@@ -1235,7 +1211,6 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
                          outlineWidths,
                          outlineRadii,
                          outlineColors,
-                         bgColor,
                          !aForFrame->BackfaceIsHidden(),
                          Nothing());
 
@@ -1312,7 +1287,6 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
                          focusWidths,
                          focusRadii,
                          focusColors,
-                         NS_RGB(255, 0, 0),
                          true,
                          Nothing());
   br.DrawBorders();
@@ -3787,7 +3761,6 @@ void
 nsCSSRendering::DrawTableBorderSegment(DrawTarget& aDrawTarget,
                                        uint8_t aBorderStyle,
                                        nscolor aBorderColor,
-                                       nscolor aBGColor,
                                        const nsRect& aBorder,
                                        int32_t aAppUnitsPerDevPixel,
                                        mozilla::Side aStartBevelSide,
@@ -3886,7 +3859,6 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget& aDrawTarget,
     GetTableBorderSolidSegments(segments,
                                 aBorderStyle,
                                 aBorderColor,
-                                aBGColor,
                                 aBorder,
                                 aAppUnitsPerDevPixel,
                                 aStartBevelSide,
@@ -3912,7 +3884,6 @@ nsCSSRendering::GetTableBorderSolidSegments(
     nsTArray<SolidBeveledBorderSegment>& aSegments,
     uint8_t       aBorderStyle,
     nscolor       aBorderColor,
-    nscolor       aBGColor,
     const nsRect& aBorder,
     int32_t       aAppUnitsPerDevPixel,
     mozilla::Side aStartBevelSide,
@@ -3952,7 +3923,7 @@ nsCSSRendering::GetTableBorderSolidSegments(
       // FIXME: In theory, this should use the visited-dependent
       // background color, but I don't care.
       nscolor bevelColor = MakeBevelColor(ridgeGrooveSide, aBorderStyle,
-                                          aBGColor, aBorderColor);
+                                          aBorderColor);
       nsRect rect(aBorder);
       nscoord half;
       if (horizontal) { // top, bottom
@@ -3996,7 +3967,7 @@ nsCSSRendering::GetTableBorderSolidSegments(
       // FIXME: In theory, this should use the visited-dependent
       // background color, but I don't care.
       bevelColor = MakeBevelColor(ridgeGrooveSide, aBorderStyle,
-                                  aBGColor, aBorderColor);
+                                  aBorderColor);
       if (horizontal) {
         rect.y = rect.y + half;
         rect.height = aBorder.height - half;
