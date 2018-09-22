@@ -47,8 +47,8 @@ function navigate(target, url, waitForTargetEvent = "navigate") {
 
 async function openNewTabAndApplicationPanel(url) {
   const tab = await addTab(url);
-  const target = await TargetFactory.forTab(tab);
-  await target.attach();
+  const target = TargetFactory.forTab(tab);
+  await target.makeRemote();
 
   const toolbox = await gDevTools.showToolbox(target, "application");
   const panel = toolbox.getCurrentPanel();

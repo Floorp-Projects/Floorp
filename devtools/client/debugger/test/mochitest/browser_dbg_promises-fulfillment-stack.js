@@ -47,7 +47,7 @@ function test() {
 
     let { tabs } = yield listTabs(client);
     let targetTab = findTab(tabs, TAB_URL);
-    yield attachTarget(client, targetTab);
+    yield attachTab(client, targetTab);
 
     yield testGetFulfillmentStack(client, targetTab, tab);
 

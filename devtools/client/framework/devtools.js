@@ -10,6 +10,7 @@ const Services = require("Services");
 const {DevToolsShim} = require("chrome://devtools-startup/content/DevToolsShim.jsm");
 
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "TabTarget", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "ToolboxHostManager", "devtools/client/framework/toolbox-host-manager", true);
 loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
@@ -619,7 +620,7 @@ DevTools.prototype = {
    * cached instances managed by DevTools target factory.
    */
   createTargetForTab: function(tab) {
-    return TargetFactory.createTargetForTab(tab);
+    return new TabTarget(tab);
   },
 
   /**
@@ -691,7 +692,7 @@ DevTools.prototype = {
    *         markup view.
    */
   async inspectNode(tab, nodeSelectors, startTime) {
-    const target = await TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
     const toolbox = await gDevTools.showToolbox(target, "inspector", null, null,
                                                 startTime, "inspect_dom");
@@ -731,7 +732,7 @@ DevTools.prototype = {
    *         selected in the accessibility inspector.
    */
   async inspectA11Y(tab, nodeSelectors, startTime) {
-    const target = await TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
     const toolbox = await gDevTools.showToolbox(
       target, "accessibility", null, null, startTime);

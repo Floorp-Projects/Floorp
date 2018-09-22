@@ -69,7 +69,7 @@ async function takeScreenshot(dbg) {
 // Attach a debugger to a tab, returning a promise that resolves with the
 // debugger's toolbox.
 async function attachDebugger(tab) {
-  let target = await TargetFactory.forTab(tab);
+  let target = TargetFactory.forTab(tab);
   let toolbox = await gDevTools.showToolbox(target, "jsdebugger");
   return toolbox;
 }

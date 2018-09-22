@@ -44,7 +44,7 @@ async function testContextMenuWithinIframe(testActor, nodeFrontGetter) {
   await clickOnInspectMenuItem(testActor, selector);
 
   info("Checking inspector state.");
-  const inspector = await getActiveInspector();
+  const inspector = getActiveInspector();
   const nodeFront = await nodeFrontGetter(inspector);
 
   is(inspector.selection.nodeFront, nodeFront,
@@ -52,7 +52,7 @@ async function testContextMenuWithinIframe(testActor, nodeFrontGetter) {
 }
 
 async function changeToolboxToInnerFrame() {
-  const { toolbox } = await getActiveInspector();
+  const { toolbox } = getActiveInspector();
 
   const btn = toolbox.doc.getElementById("command-button-frames");
   const panel = toolbox.doc.getElementById("command-button-frames-panel");

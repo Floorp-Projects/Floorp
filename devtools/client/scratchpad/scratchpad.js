@@ -586,7 +586,7 @@ var Scratchpad = {
    * @return Promise
    *         The promise for the script evaluation result.
    */
-  reloadAndRun: async function SP_reloadAndRun() {
+  reloadAndRun: function SP_reloadAndRun() {
     const deferred = defer();
 
     if (this.executionContext !== SCRATCHPAD_CONTEXT_CONTENT) {
@@ -595,11 +595,11 @@ var Scratchpad = {
       return;
     }
 
-    const target = await TargetFactory.forTab(this.gBrowser.selectedTab);
+    const target = TargetFactory.forTab(this.gBrowser.selectedTab);
     target.once("navigate", () => {
       this.run().then(results => deferred.resolve(results));
     });
-    target.attach().then(() => target.activeTab.reload());
+    target.makeRemote().then(() => target.activeTab.reload());
 
     return deferred.promise;
   },
@@ -1543,8 +1543,8 @@ var Scratchpad = {
   /**
    * Open the Web Console.
    */
-  openWebConsole: async function SP_openWebConsole() {
-    const target = await TargetFactory.forTab(this.gBrowser.selectedTab);
+  openWebConsole: function SP_openWebConsole() {
+    const target = TargetFactory.forTab(this.gBrowser.selectedTab);
     gDevTools.showToolbox(target, "webconsole");
     this.browserWindow.focus();
   },
@@ -2092,14 +2092,14 @@ ScratchpadTab.prototype = {
    * @return Promise
    *         The promise for the TabTarget for this tab.
    */
-  _attach: async function ST__attach(aSubject) {
-    const target = await TargetFactory.forTab(this._tab);
+  _attach: function ST__attach(aSubject) {
+    const target = TargetFactory.forTab(this._tab);
     target.once("close", () => {
       if (scratchpadTargets) {
         scratchpadTargets.delete(aSubject);
       }
     });
-    return target.attach().then(() => target);
+    return target.makeRemote().then(() => target);
   },
 };
 
@@ -2143,7 +2143,7 @@ ScratchpadTarget.prototype = extend(ScratchpadTab.prototype, {
     if (this._target.isRemote) {
       return promise.resolve(this._target);
     }
-    return this._target.attach().then(() => this._target);
+    return this._target.makeRemote().then(() => this._target);
   }
 });
 

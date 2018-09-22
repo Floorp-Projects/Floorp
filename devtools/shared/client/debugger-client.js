@@ -327,20 +327,20 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to a target actor.
+   * Attach to a tab's target actor.
    *
    * @param string targetActor
    *        The target actor ID for the tab to attach.
    */
-  attachTarget: function(targetActor) {
+  attachTab: function(targetActor) {
     if (this._clients.has(targetActor)) {
-      const cachedTarget = this._clients.get(targetActor);
+      const cachedTab = this._clients.get(targetActor);
       const cachedResponse = {
-        cacheDisabled: cachedTarget.cacheDisabled,
-        javascriptEnabled: cachedTarget.javascriptEnabled,
-        traits: cachedTarget.traits,
+        cacheDisabled: cachedTab.cacheDisabled,
+        javascriptEnabled: cachedTab.javascriptEnabled,
+        traits: cachedTab.traits,
       };
-      return promise.resolve([cachedResponse, cachedTarget]);
+      return promise.resolve([cachedResponse, cachedTab]);
     }
 
     const packet = {
@@ -348,12 +348,9 @@ DebuggerClient.prototype = {
       type: "attach"
     };
     return this.request(packet).then(response => {
-      // TabClient can actually represent targets other than a tab.
-      // It is planned to be renamed while being converted to a front
-      // in bug 1485660.
-      const targetClient = new TabClient(this, response);
-      this.registerClient(targetClient);
-      return [response, targetClient];
+      const tabClient = new TabClient(this, response);
+      this.registerClient(tabClient);
+      return [response, tabClient];
     });
   },
 

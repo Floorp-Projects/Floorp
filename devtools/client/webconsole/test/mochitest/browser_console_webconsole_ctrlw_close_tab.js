@@ -21,7 +21,7 @@ add_task(async function() {
   const toolboxDestroyed = defer();
   const tabSelected = defer();
 
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
   gBrowser.tabContainer.addEventListener("TabClose", function() {

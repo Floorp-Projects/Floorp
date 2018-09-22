@@ -15,8 +15,8 @@ TEST_URL += "<iframe src=\"data:text/plain,iframe\"></iframe>";
 var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 
 function test() {
-  addTab(TEST_URL).then(async (tab) => {
-    const target = await TargetFactory.forTab(tab);
+  addTab(TEST_URL).then(tab => {
+    const target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target)
       .then(testSelectTool)
       .then(testToggleToolboxButtons)
@@ -25,13 +25,13 @@ function test() {
   });
 }
 
-async function testPrefsAreRespectedWhenReopeningToolbox() {
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+function testPrefsAreRespectedWhenReopeningToolbox() {
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
 
   return new Promise(resolve => {
     info("Closing toolbox to test after reopening");
-    gDevTools.closeToolbox(target).then(async () => {
-      const tabTarget = await TargetFactory.forTab(gBrowser.selectedTab);
+    gDevTools.closeToolbox(target).then(() => {
+      const tabTarget = TargetFactory.forTab(gBrowser.selectedTab);
       gDevTools.showToolbox(tabTarget)
         .then(testSelectTool)
         .then(() => {

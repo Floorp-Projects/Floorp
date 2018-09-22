@@ -25,8 +25,8 @@ function test() {
       const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
       const {TargetFactory} = require("devtools/client/framework/target");
 
-      openScratchpad(async function() {
-        const target = await TargetFactory.forTab(gBrowser.selectedTab);
+      openScratchpad(function() {
+        const target = TargetFactory.forTab(gBrowser.selectedTab);
         gDevTools.showToolbox(target, "webconsole").then((toolbox) => {
           const hud = toolbox.getCurrentPanel().hud;
           hud.ui.clearOutput(true);
