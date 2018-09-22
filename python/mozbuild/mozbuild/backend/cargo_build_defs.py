@@ -96,18 +96,3 @@ cargo_extra_outputs = {
         'shaders.rs',
     ],
 }
-
-cargo_extra_flags = {
-    'custom-build': {
-        'style': [
-            '-l', 'static=global_static',
-            '-L', 'native=%(libloading_outdir)s',
-        ],
-    },
-    'lib': {
-        'lmdb-sys': [
-            '-l', 'static=lmdb',
-            '-L', 'native=%(lmdb-sys_outdir)s'
-        ]
-    }
-}
