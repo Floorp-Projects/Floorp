@@ -6497,7 +6497,6 @@ struct BCBorderParameters
 {
   uint8_t mBorderStyle;
   nscolor mBorderColor;
-  nscolor mBGColor;
   nsRect mBorderRect;
   int32_t mAppUnitsPerDevPixel;
   mozilla::Side mStartBevelSide;
@@ -6717,7 +6716,6 @@ public:
   nsTableCellMap*       mTableCellMap;
   nsCellMap*            mCellMap;
   WritingMode           mTableWM;
-  nscolor               mTableBgColor;
   nsTableFrame::RowGroupArray mRowGroups;
 
   nsTableRowGroupFrame* mPrevRg;
@@ -6857,10 +6855,6 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
   mTable->OrderRowGroups(mRowGroups);
   // initialize to a non existing index
   mRepeatedHeaderRowIndex = -99;
-
-  nsIFrame* bgFrame =
-    nsCSSRendering::FindNonTransparentBackgroundFrame(aTable);
-  mTableBgColor = bgFrame->StyleBackground()->BackgroundColor(bgFrame);
 }
 
 bool
@@ -7384,7 +7378,6 @@ BCBlockDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter,
   nsIFrame* owner = nullptr;
   result.mBorderStyle = NS_STYLE_BORDER_STYLE_SOLID;
   result.mBorderColor = 0xFFFFFFFF;
-  result.mBGColor = aIter.mTableBgColor;
   result.mBackfaceIsVisible = true;
 
   // All the tables frames have the same presContext, so we just use any one
@@ -7503,7 +7496,7 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
   }
 
   nsCSSRendering::DrawTableBorderSegment(aDrawTarget, param->mBorderStyle, param->mBorderColor,
-                                         param->mBGColor, param->mBorderRect,
+                                         param->mBorderRect,
                                          param->mAppUnitsPerDevPixel,
                                          param->mStartBevelSide, param->mStartBevelOffset,
                                          param->mEndBevelSide, param->mEndBevelOffset);
@@ -7616,7 +7609,6 @@ CreateWRCommandsForBeveledBorder(const BCBorderParameters& aBorderParams,
   nsCSSRendering::GetTableBorderSolidSegments(segments,
                                               aBorderParams.mBorderStyle,
                                               aBorderParams.mBorderColor,
-                                              aBorderParams.mBGColor,
                                               aBorderParams.mBorderRect,
                                               aBorderParams.mAppUnitsPerDevPixel,
                                               aBorderParams.mStartBevelSide,
@@ -7835,7 +7827,6 @@ BCInlineDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter)
 
   result.mBorderStyle = NS_STYLE_BORDER_STYLE_SOLID;
   result.mBorderColor = 0xFFFFFFFF;
-  result.mBGColor = aIter.mTableBgColor;
 
   switch (mOwner) {
     case eTableOwner:
@@ -7935,7 +7926,7 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter, DrawTarget& aDrawTarget)
   }
 
   nsCSSRendering::DrawTableBorderSegment(aDrawTarget, param->mBorderStyle, param->mBorderColor,
-                                         param->mBGColor, param->mBorderRect,
+                                         param->mBorderRect,
                                          param->mAppUnitsPerDevPixel,
                                          param->mStartBevelSide, param->mStartBevelOffset,
                                          param->mEndBevelSide, param->mEndBevelOffset);
