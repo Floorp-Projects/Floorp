@@ -2060,6 +2060,36 @@
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1296288]
   },
+  "ESNI_KEYS_RECORD_FETCH_DELAYS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "70",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "Added delays caused the esni keys fetching.(ms)",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1473736],
+    "releaseChannelCollection": "opt-out"
+  },
+  "ESNI_KEYS_RECORDS_FOUND": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "70",
+    "kind": "boolean",
+    "description": "ESNI Keys found rate.",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1473736],
+    "releaseChannelCollection": "opt-out"
+  },
+  "ESNI_NOESNI_TLS_SUCCESS_RATE": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "70",
+    "kind": "categorical",
+    "labels": ["EsniTLSSucceeded", "EsniTLSFailed", "NoEsniTLSSucceeded", "NoEsniTLSFailed"],
+    "description": "TLS handshake with and without esni success rate.",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1473736],
+    "releaseChannelCollection": "opt-out"
+  },
   "SSL_HANDSHAKE_VERSION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],

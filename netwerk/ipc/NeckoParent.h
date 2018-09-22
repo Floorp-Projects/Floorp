@@ -163,9 +163,11 @@ protected:
                                                          const Principal& aPrincipal,
                                                          const bool& aAnonymous) override;
   virtual mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(const nsString& hostname,
+                                                      const bool& isHttps,
                                                       const OriginAttributes& aOriginAttributes,
                                                       const uint16_t& flags) override;
   virtual mozilla::ipc::IPCResult RecvCancelHTMLDNSPrefetch(const nsString& hostname,
+                                                            const bool& isHttps,
                                                             const OriginAttributes& aOriginAttributes,
                                                             const uint16_t& flags,
                                                             const nsresult& reason) override;

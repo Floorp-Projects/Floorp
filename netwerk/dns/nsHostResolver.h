@@ -53,11 +53,12 @@ extern mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
 struct nsHostKey
 {
     const nsCString host;
+    uint16_t type;
     uint16_t flags;
     uint16_t af;
     bool     pb;
     const nsCString originSuffix;
-    explicit nsHostKey(const nsACString& host, uint16_t flags,
+    explicit nsHostKey(const nsACString& host, uint16_t  type, uint16_t flags,
                        uint16_t af, bool pb, const nsACString& originSuffix);
     bool operator==(const nsHostKey& other) const;
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -161,6 +162,9 @@ public:
 
     mozilla::net::ResolverMode mResolverMode;
 
+    nsTArray<nsCString> mRequestByTypeResult;
+    Mutex mRequestByTypeResultLock;
+
 private:
     friend class nsHostResolver;
 
@@ -195,6 +199,7 @@ private:
     Mutex mTrrLock; // lock when accessing the mTrrA[AAA] pointers
     RefPtr<mozilla::net::TRR> mTrrA;
     RefPtr<mozilla::net::TRR> mTrrAAAA;
+    RefPtr<mozilla::net::TRR> mTrrTxt;
 
     // The number of times ReportUnusable() has been called in the record's
     // lifetime.
@@ -271,6 +276,9 @@ public:
     };
 
     virtual LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) = 0;
+    virtual LookupStatus CompleteLookupByType(nsHostRecord *, nsresult,
+                                              const nsTArray<nsCString> *aResult,
+                                              uint32_t aTtl, bool pb) = 0;
     virtual nsresult GetHostRecord(const nsACString &host,
                                    uint16_t flags, uint16_t af, bool pb,
                                    const nsCString &originSuffix,
@@ -324,6 +332,7 @@ public:
      * having the callback implementation return without doing anything).
      */
     nsresult ResolveHost(const nsACString &hostname,
+                         uint16_t                         type,
                          const mozilla::OriginAttributes &aOriginAttributes,
                          uint16_t                         flags,
                          uint16_t                         af,
@@ -336,6 +345,7 @@ public:
      * executes the callback if the callback is still pending with the given status.
      */
     void DetachCallback(const nsACString &hostname,
+                        uint16_t                         type,
                         const mozilla::OriginAttributes &aOriginAttributes,
                         uint16_t                         flags,
                         uint16_t                         af,
@@ -350,6 +360,7 @@ public:
      * host record, it is removed from any request queues it might be on.
      */
     void CancelAsyncRequest(const nsACString &host,
+                            uint16_t                         type,
                             const mozilla::OriginAttributes &aOriginAttributes,
                             uint16_t                         flags,
                             uint16_t                         af,
@@ -384,6 +395,9 @@ public:
     void FlushCache();
 
     LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) override;
+    LookupStatus CompleteLookupByType(nsHostRecord *, nsresult,
+                                      const nsTArray<nsCString> *aResult,
+                                      uint32_t aTtl, bool pb) override;
     nsresult GetHostRecord(const nsACString &host,
                            uint16_t flags, uint16_t af, bool pb,
                            const nsCString &originSuffix,
@@ -420,6 +434,8 @@ private:
      * period with a failed connect or all cached entries are negative.
      */
     nsresult ConditionallyRefreshRecord(nsHostRecord *rec, const nsACString &host);
+
+    void AddToEvictionQ(nsHostRecord* rec);
 
     void ThreadFunc();
 
