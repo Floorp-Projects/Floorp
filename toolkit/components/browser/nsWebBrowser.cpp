@@ -833,10 +833,13 @@ nsWebBrowser::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsWebBrowser::OnSecurityChange(nsIWebProgress* aWebProgress,
                                nsIRequest* aRequest,
-                               uint32_t aState)
+                               uint32_t aOldState,
+                               uint32_t aState,
+                               const nsAString& aContentBlockingLogJSON)
 {
   if (mProgressListener) {
-    return mProgressListener->OnSecurityChange(aWebProgress, aRequest, aState);
+    return mProgressListener->OnSecurityChange(aWebProgress, aRequest, aOldState,
+                                               aState, aContentBlockingLogJSON);
   }
   return NS_OK;
 }
