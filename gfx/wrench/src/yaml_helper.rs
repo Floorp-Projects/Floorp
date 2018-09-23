@@ -31,7 +31,7 @@ pub trait YamlHelper {
     fn as_border_radius_component(&self) -> LayoutSize;
     fn as_border_radius(&self) -> Option<BorderRadius>;
     fn as_transform_style(&self) -> Option<TransformStyle>;
-    fn as_glyph_raster_space(&self) -> Option<GlyphRasterSpace>;
+    fn as_raster_space(&self) -> Option<RasterSpace>;
     fn as_clip_mode(&self) -> Option<ClipMode>;
     fn as_mix_blend_mode(&self) -> Option<MixBlendMode>;
     fn as_filter_op(&self) -> Option<FilterOp>;
@@ -517,17 +517,17 @@ impl YamlHelper for Yaml {
         self.as_str().and_then(|x| StringEnum::from_str(x))
     }
 
-    fn as_glyph_raster_space(&self) -> Option<GlyphRasterSpace> {
+    fn as_raster_space(&self) -> Option<RasterSpace> {
         self.as_str().and_then(|s| {
             match parse_function(s) {
                 ("screen", _, _) => {
-                    Some(GlyphRasterSpace::Screen)
+                    Some(RasterSpace::Screen)
                 }
                 ("local", ref args, _) if args.len() == 1 => {
-                    Some(GlyphRasterSpace::Local(args[0].parse().unwrap()))
+                    Some(RasterSpace::Local(args[0].parse().unwrap()))
                 }
                 f => {
-                    panic!("error parsing glyph raster space {:?}", f);
+                    panic!("error parsing raster space {:?}", f);
                 }
             }
         })

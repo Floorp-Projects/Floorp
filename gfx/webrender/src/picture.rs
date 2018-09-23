@@ -4,7 +4,7 @@
 
 use api::{DeviceRect, FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint};
 use api::{DeviceIntRect, DeviceIntSize, DevicePoint, LayoutRect, PictureToRasterTransform};
-use api::{DevicePixelScale, PictureIntPoint, PictureIntRect, PictureIntSize, RasterRect};
+use api::{DevicePixelScale, PictureIntPoint, PictureIntRect, PictureIntSize, RasterRect, RasterSpace};
 use api::{PicturePixel, RasterPixel, WorldPixel};
 use box_shadow::{BLUR_SAMPLE_SCALE};
 use clip::ClipNodeCollector;
@@ -177,6 +177,10 @@ pub struct PicturePrimitive {
     /// How this picture should be composited.
     /// If None, don't composite - just draw directly on parent surface.
     pub requested_composite_mode: Option<PictureCompositeMode>,
+    /// Requested rasterization space for this picture. It is
+    /// a performance hint only.
+    pub requested_raster_space: RasterSpace,
+
     pub raster_config: Option<RasterConfig>,
     // If true, this picture is part of a 3D context.
     pub is_in_3d_context: bool,
@@ -217,6 +221,7 @@ impl PicturePrimitive {
         pipeline_id: PipelineId,
         frame_output_pipeline_id: Option<PipelineId>,
         apply_local_clip_rect: bool,
+        requested_raster_space: RasterSpace,
     ) -> Self {
         PicturePrimitive {
             runs: Vec::new(),
@@ -230,6 +235,7 @@ impl PicturePrimitive {
             apply_local_clip_rect,
             pipeline_id,
             id,
+            requested_raster_space,
         }
     }
 
@@ -269,7 +275,16 @@ impl PicturePrimitive {
             surface_spatial_node_index,
         ).expect("todo");
 
-        let establishes_raster_root = has_surface && xf.has_perspective_component();
+        // Establish a new rasterization root if we have
+        // a surface, and we have perspective or local raster
+        // space request.
+        let raster_space = self.requested_raster_space;
+        let local_scale = raster_space.local_scale();
+
+        let wants_raster_root = xf.has_perspective_component() ||
+                                local_scale.is_some();
+
+        let establishes_raster_root = has_surface && wants_raster_root;
 
         let raster_spatial_node_index = if establishes_raster_root {
             surface_spatial_node_index
@@ -348,6 +363,7 @@ impl PicturePrimitive {
             allow_subpixel_aa,
             is_passthrough: self.raster_config.is_none(),
             establishes_raster_root,
+            raster_space,
         };
 
         Some((context, state))
