@@ -63,6 +63,20 @@ nsSecureBrowserUIImpl::Init(nsIDocShell* aDocShell)
 }
 
 NS_IMETHODIMP
+nsSecureBrowserUIImpl::GetOldState(uint32_t* aOldState)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(aOldState);
+
+  MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("GetOldState %p", this));
+  // Only sync our state with the docshell in GetState().
+  MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  mOldState: %x", mOldState));
+
+  *aOldState = mOldState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetState(uint32_t* aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -76,6 +90,26 @@ nsSecureBrowserUIImpl::GetState(uint32_t* aState)
   MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  mState: %x", mState));
 
   *aState = mState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::GetContentBlockingLogJSON(nsAString& aContentBlockingLogJSON)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("GetContentBlockingLogJSON %p", this));
+  aContentBlockingLogJSON.Truncate();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  if (docShell) {
+    nsIDocument* doc = docShell->GetDocument();
+    if (doc) {
+      aContentBlockingLogJSON = doc->GetContentBlockingLog()->Stringify();
+    }
+  }
+  MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+          ("  ContentBlockingLogJSON: %s", NS_ConvertUTF16toUTF8(aContentBlockingLogJSON).get()));
+
   return NS_OK;
 }
 
@@ -303,7 +337,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     if (NS_WARN_IF(!eventSink)) {
       return NS_ERROR_INVALID_ARG;
     }
-    ContentBlockingLog* contentBlockingLog = nullptr;
+    mozilla::dom::ContentBlockingLog* contentBlockingLog = nullptr;
     nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
     if (docShell) {
       nsIDocument* doc = docShell->GetDocument();
@@ -353,7 +387,8 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress*,
 }
 
 nsresult
-nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress*, nsIRequest*, uint32_t)
+nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress*, nsIRequest*, uint32_t,
+                                        uint32_t, const nsAString&)
 {
   MOZ_ASSERT_UNREACHABLE("Should have been excluded in AddProgressListener()");
   return NS_OK;

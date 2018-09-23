@@ -7,19 +7,25 @@ var EXPORTED_SYMBOLS = ["RemoteSecurityUI"];
 
 function RemoteSecurityUI() {
     this._secInfo = null;
+    this._oldState = 0;
     this._state = 0;
+    this._contentBlockingLogJSON = "";
 }
 
 RemoteSecurityUI.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsISecureBrowserUI]),
 
   // nsISecureBrowserUI
+  get oldState() { return this._oldState; },
   get state() { return this._state; },
+  get contentBlockingLogJSON() { return this._contentBlockingLogJSON; },
   get tooltipText() { return ""; },
   get secInfo() { return this._secInfo; },
 
-  _update(aSecInfo, aState) {
+  _update(aSecInfo, aOldState, aState, aContentBlockingLogJSON) {
     this._secInfo = aSecInfo;
+    this._oldState = aOldState;
     this._state = aState;
+    this._contentBlockingLogJSON = aContentBlockingLogJSON;
   },
 };
