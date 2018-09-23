@@ -91,7 +91,8 @@ adapted from test_bug607584.xul by Kent James <kent@caspia.com>
       {
       },
   
-    onSecurityChange : function(aWebProgress, aRequest, aState)
+    onSecurityChange : function(aWebProgress, aRequest, aOldState, aState,
+                                aContentBlockingLogJSON)
       {
       },
   

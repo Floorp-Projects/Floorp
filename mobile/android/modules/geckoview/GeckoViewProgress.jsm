@@ -252,7 +252,8 @@ class GeckoViewProgress extends GeckoViewModule {
     }
   }
 
-  onSecurityChange(aWebProgress, aRequest, aState) {
+  onSecurityChange(aWebProgress, aRequest, aOldState, aState,
+                   aContentBlockingLogJSON) {
     debug `onSecurityChange`;
 
     // Don't need to do anything if the data we use to update the UI hasn't changed
