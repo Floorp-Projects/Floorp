@@ -4,7 +4,12 @@
 
 #![no_std]
 
-//! A simple least-recently-used (LRU) cache.
+//! A simple, fast, least-recently-used (LRU) cache.
+//!
+//! `LRUCache` uses a fixed-capacity array for storage. It provides `O(1)` insertion, and `O(n)`
+//! lookup.  It does not require an allocator and can be used in `no_std` crates.
+//!
+//! See the [`LRUCache`](LRUCache) docs for details.
 
 extern crate arrayvec;
 
@@ -20,6 +25,37 @@ use arrayvec::{Array, ArrayVec};
 /// All items are stored inline within the `LRUCache`, so it does not impose any heap allocation or
 /// indirection.  A linked list is used to record the cache order, so the items themselves do not
 /// need to be moved when the order changes.  (This is important for speed if the items are large.)
+///
+/// # Example
+///
+/// ```
+/// use uluru::{LRUCache, Entry};
+///
+/// struct MyValue {
+///     id: u32,
+///     name: &'static str,
+/// }
+///
+/// // A cache with a capacity of three.
+/// type MyCache = LRUCache<[Entry<MyValue>; 3]>;
+///
+/// // Create an empty cache, then insert some items.
+/// let mut cache = MyCache::default();
+/// cache.insert(MyValue { id: 1, name: "Mercury" });
+/// cache.insert(MyValue { id: 2, name: "Venus" });
+/// cache.insert(MyValue { id: 3, name: "Earth" });
+///
+/// {
+///     // Use the `find` method to retrieve an item from the cache.
+///     // This also "touches" the item, marking it most-recently-used.
+///     let item = cache.find(|x| x.id == 1);
+///     assert_eq!(item.unwrap().name, "Mercury");
+/// }
+///
+/// // If the cache is full, inserting a new item evicts the least-recently-used item:
+/// cache.insert(MyValue { id: 4, name: "Mars" });
+/// assert!(cache.find(|x| x.id == 2).is_none());
+/// ```
 pub struct LRUCache<A: Array> {
     /// The most-recently-used entry is at index `head`. The entries form a linked list, linked to
     /// each other by indices within the `entries` array.  After an entry is added to the array,
@@ -30,9 +66,6 @@ pub struct LRUCache<A: Array> {
     /// Index of the last entry. If the cache is empty, ignore this field.
     tail: u16,
 }
-
-/// An opaque token used as an index into an LRUCache.
-pub struct CacheIndex(u16);
 
 /// An entry in an LRUCache.
 pub struct Entry<T> {
@@ -63,10 +96,10 @@ impl<T, A: Array<Item=Entry<T>>> LRUCache<A> {
 
     #[inline]
     /// Touch a given entry, putting it first in the list.
-    pub fn touch(&mut self, idx: CacheIndex) {
-        if idx.0 != self.head {
-            self.remove(idx.0);
-            self.push_front(idx.0);
+    fn touch(&mut self, idx: u16) {
+        if idx != self.head {
+            self.remove(idx);
+            self.push_front(idx);
         }
     }
 
@@ -80,18 +113,8 @@ impl<T, A: Array<Item=Entry<T>>> LRUCache<A> {
         self.entries.get_mut(self.head as usize).map(|e| &mut e.val)
     }
 
-    /// Iterate over the contents of this cache, from more to less recently
-    /// used.
-    pub fn iter(&self) -> LRUCacheIterator<A> {
-        LRUCacheIterator {
-            pos: self.head,
-            done: self.entries.len() == 0,
-            cache: self,
-        }
-    }
-
     /// Iterate mutably over the contents of this cache.
-    pub fn iter_mut(&mut self) -> LRUCacheMutIterator<A> {
+    fn iter_mut(&mut self) -> LRUCacheMutIterator<A> {
         LRUCacheMutIterator {
             pos: self.head,
             done: self.entries.len() == 0,
@@ -204,36 +227,8 @@ impl<T, A: Array<Item=Entry<T>>> LRUCache<A> {
     }
 }
 
-/// Immutable iterator over values in an LRUCache, from most-recently-used to least-recently-used.
-pub struct LRUCacheIterator<'a, A: 'a + Array> {
-    cache: &'a LRUCache<A>,
-    pos: u16,
-    done: bool,
-}
-
-impl<'a, T, A> Iterator for LRUCacheIterator<'a, A>
-where T: 'a,
-      A: 'a + Array<Item=Entry<T>>
-{
-    type Item = (CacheIndex, &'a T);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.done { return None }
-
-        let entry = &self.cache.entries[self.pos as usize];
-
-        let index = CacheIndex(self.pos);
-        if self.pos == self.cache.tail {
-            self.done = true;
-        }
-        self.pos = entry.next;
-
-        Some((index, &entry.val))
-    }
-}
-
 /// Mutable iterator over values in an LRUCache, from most-recently-used to least-recently-used.
-pub struct LRUCacheMutIterator<'a, A: 'a + Array> {
+struct LRUCacheMutIterator<'a, A: 'a + Array> {
     cache: &'a mut LRUCache<A>,
     pos: u16,
     done: bool,
@@ -243,7 +238,7 @@ impl<'a, T, A> Iterator for LRUCacheMutIterator<'a, A>
 where T: 'a,
       A: 'a + Array<Item=Entry<T>>
 {
-    type Item = (CacheIndex, &'a mut T);
+    type Item = (u16, &'a mut T);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.done { return None }
@@ -253,7 +248,7 @@ where T: 'a,
             &mut *(&mut self.cache.entries[self.pos as usize] as *mut Entry<T>)
         };
 
-        let index = CacheIndex(self.pos);
+        let index = self.pos;
         if self.pos == self.cache.tail {
             self.done = true;
         }
