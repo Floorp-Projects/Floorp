@@ -209,6 +209,7 @@ pref(dom.webcomponents.shadowdom.enabled,true) load 1421807-2.html
 load 1422226.html
 load 1443092.html
 load 1467552-1.html
+load 1474982.html
 load conditional-outer-svg-nondirty-reflow-assert.xhtml
 load extref-test-1.xhtml
 load blob-merging-and-retained-display-list.html
