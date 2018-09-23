@@ -472,7 +472,7 @@ table > tr {
 td { 
   display: table-cell;
   vertical-align: inherit;
-  text-align: inherit; 
+  text-align: unset; 
   padding: 1px;
 }
 
@@ -729,7 +729,7 @@ area {
 iframe:fullscreen {
   /* iframes in full-screen mode don't show a border. */
   border: none !important;
-  padding: 0 !important;
+  padding: unset !important;
 }
 
 /* media elements */
@@ -899,7 +899,7 @@ rtc:lang(zh-TW), rt:lang(zh-TW) {
   -moz-min-font-size-ratio: 30%;
 }
 rtc > rt {
-  font-size: inherit;
+  font-size: unset;
 }
 ruby, rb, rt, rtc {
   unicode-bidi: isolate;
