@@ -32,7 +32,7 @@ image = { optional = true, version = "0.19" }
 lazy_static = "1"
 log = "0.4"
 num-traits = "0.2"
-plane-split = "0.13.1"
+plane-split = "0.13.2"
 png = { optional = true, version = "0.12" }
 rayon = "1"
 ron = { optional = true, version = "0.1.7" }

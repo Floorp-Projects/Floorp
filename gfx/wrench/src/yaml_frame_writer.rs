@@ -206,15 +206,15 @@ fn write_stacking_context(
 ) {
     enum_node(parent, "transform-style", sc.transform_style);
 
-    let glyph_raster_space = match sc.glyph_raster_space {
-        GlyphRasterSpace::Local(scale) => {
+    let raster_space = match sc.raster_space {
+        RasterSpace::Local(scale) => {
             format!("local({})", scale)
         }
-        GlyphRasterSpace::Screen => {
+        RasterSpace::Screen => {
             "screen".to_owned()
         }
     };
-    str_node(parent, "glyph-raster-space", &glyph_raster_space);
+    str_node(parent, "raster-space", &raster_space);
 
     if let Some(clip_node_id) = sc.clip_node_id {
         yaml_node(parent, "clip-node", clip_id_mapper.map_id(&clip_node_id));

@@ -1601,9 +1601,9 @@ impl YamlFrameReader {
         let mix_blend_mode = yaml["mix-blend-mode"]
             .as_mix_blend_mode()
             .unwrap_or(MixBlendMode::Normal);
-        let glyph_raster_space = yaml["glyph-raster-space"]
-            .as_glyph_raster_space()
-            .unwrap_or(GlyphRasterSpace::Screen);
+        let raster_space = yaml["raster-space"]
+            .as_raster_space()
+            .unwrap_or(RasterSpace::Screen);
 
         if is_root {
             if let Some(size) = yaml["scroll-offset"].as_point() {
@@ -1624,7 +1624,7 @@ impl YamlFrameReader {
             transform_style,
             mix_blend_mode,
             filters,
-            glyph_raster_space,
+            raster_space,
         );
 
         if !yaml["items"].is_badvalue() {

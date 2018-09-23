@@ -511,7 +511,7 @@ pub struct StackingContext {
     pub transform_style: TransformStyle,
     pub mix_blend_mode: MixBlendMode,
     pub clip_node_id: Option<ClipId>,
-    pub glyph_raster_space: GlyphRasterSpace,
+    pub raster_space: RasterSpace,
 } // IMPLICIT: filters: Vec<FilterOp>
 
 
@@ -522,21 +522,33 @@ pub enum TransformStyle {
     Preserve3D = 1,
 }
 
-// TODO(gw): In the future, we may modify this to apply to all elements
-//           within a stacking context, rather than just the glyphs. If
-//           this change occurs, we'll update the naming of this.
+/// Configure whether the contents of a stacking context
+/// should be rasterized in local space or screen space.
+/// Local space rasterized pictures are typically used
+/// when we want to cache the output, and performance is
+/// important. Note that this is a performance hint only,
+/// which WR may choose to ignore.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 #[repr(u32)]
-pub enum GlyphRasterSpace {
-    // Rasterize glyphs in local-space, applying supplied scale to glyph sizes.
+pub enum RasterSpace {
+    // Rasterize in local-space, applying supplied scale to primitives.
     // Best performance, but lower quality.
     Local(f32),
 
-    // Rasterize the glyphs in screen-space, including rotation / skew etc in
-    // the rasterized glyph. Best quality, but slower performance. Note that
+    // Rasterize the picture in screen-space, including rotation / skew etc in
+    // the rasterized element. Best quality, but slower performance. Note that
     // any stacking context with a perspective transform will be rasterized
     // in local-space, even if this is set.
     Screen,
+}
+
+impl RasterSpace {
+    pub fn local_scale(&self) -> Option<f32> {
+        match *self {
+            RasterSpace::Local(scale) => Some(scale),
+            RasterSpace::Screen => None,
+        }
+    }
 }
 
 #[repr(u32)]
