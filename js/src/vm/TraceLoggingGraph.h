@@ -104,8 +104,16 @@ class TraceLoggerGraphState
     }
 };
 
+namespace js {
+class TraceLoggerThread;
+} //namespace js
+
 class TraceLoggerGraph
 {
+  // This is needed so that we can write the data to the JSON writer from the TL thread class.
+  friend class js::TraceLoggerThread;
+
+  private:
     // The layout of the tree in memory and in the log file. Readable by JS
     // using TypedArrays.
     struct TreeEntry {
@@ -219,6 +227,9 @@ class TraceLoggerGraph
 
     // Link a textId with a particular text.
     void addTextId(uint32_t id, const char* text);
+    void addTextId(uint32_t id, const char* text,
+                   mozilla::Maybe<uint32_t>& line,
+                   mozilla::Maybe<uint32_t>& column);
 
     // Create a tree out of all the given events.
     void log(ContinuousSpace<EventEntry>& events);
