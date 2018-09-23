@@ -1220,6 +1220,7 @@ pub trait RenderNotifier: Send {
     fn shut_down(&self) {}
 }
 
+#[repr(u32)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Checkpoint {
     SceneBuilt,
