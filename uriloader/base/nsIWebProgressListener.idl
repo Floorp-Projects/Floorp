@@ -487,10 +487,12 @@ interface nsIWebProgressListener : nsISupports
    *        events happened so far.  This will be a JSON object containing keys
    *        representing origins that content blocking has acted on, with values
    *        being an array of items, each representing one action.  Each action
-   *        itself is an an array containing two elements, the first element
+   *        itself is an an array containing three elements, the first element
    *        being a blocking code from one of the Security State Flags above, and
    *        the second element being a boolean representing whether the origin
-   *        was blocked (if true) or unblocked (if false) in that category.
+   *        was blocked (if true) or unblocked (if false) in that category, and
+   *        the third element being the number of times that combination has been
+   *        repeated consecutively.
    *
    * NOTE: These notifications will only occur if a security package is
    * installed.
