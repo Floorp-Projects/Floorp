@@ -8,7 +8,7 @@
 #define mozilla_dom_ContentBlockingLog_h
 
 #include "mozilla/JSONWriter.h"
-#include "mozilla/Pair.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -20,9 +20,15 @@ namespace dom {
 
 class ContentBlockingLog final
 {
-  // Each element is a pair of (type, blocked). The type values come from the
-  // blocking types defined in nsIWebProgressListener.
-  typedef nsTArray<mozilla::Pair<uint32_t, bool>> OriginLog;
+  struct LogEntry {
+    uint32_t mType;
+    uint32_t mRepeatCount;
+    bool mBlocked;
+  };
+
+  // Each element is a tuple of (type, blocked, repeatCount). The type values
+  // come from the blocking types defined in nsIWebProgressListener.
+  typedef nsTArray<LogEntry> OriginLog;
 
   struct StringWriteFunc : public JSONWriteFunc
   {
@@ -48,11 +54,26 @@ public:
     }
     auto entry = mLog.LookupForAdd(aOrigin);
     if (entry) {
-      entry.Data()->AppendElement(mozilla::MakePair(aType, aBlocked));
+      auto& log = entry.Data();
+      if (!log->IsEmpty()) {
+        auto& last = log->LastElement();
+        if (last.mType == aType &&
+            last.mBlocked == aBlocked) {
+          ++last.mRepeatCount;
+          // Don't record recorded events.  This helps compress our log.
+          return;
+        }
+      }
+      if (log->Length() ==
+            std::max(1u, StaticPrefs::browser_contentblocking_originlog_length())) {
+        // Cap the size at the maximum length adjustable by the pref
+        log->RemoveElementAt(0);
+      }
+      log->AppendElement(LogEntry{aType, 1u, aBlocked});
     } else {
       entry.OrInsert([=] {
         auto log(MakeUnique<OriginLog>());
-        log->AppendElement(mozilla::MakePair(aType, aBlocked));
+        log->AppendElement(LogEntry{aType, 1u, aBlocked});
         return log.release();
       });
     }
@@ -76,8 +97,9 @@ public:
       for (auto& item: *iter.UserData()) {
         w.StartArrayElement(w.SingleLineStyle);
         {
-          w.IntElement(item.first());
-          w.BoolElement(item.second());
+          w.IntElement(item.mType);
+          w.BoolElement(item.mBlocked);
+          w.IntElement(item.mRepeatCount);
         }
         w.EndArray();
       }
