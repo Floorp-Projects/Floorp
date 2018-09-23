@@ -13,6 +13,7 @@
 #include "mozilla/AutoplayPermissionManager.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIAutoplay.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
@@ -62,17 +63,30 @@ ApproverDocOf(const nsIDocument& aDocument)
 }
 
 static bool
+IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow)
+{
+  // Pages which have been granted permission to capture WebRTC camera or
+  // microphone or screen are assumed to be trusted, and are allowed to autoplay.
+  if (MediaManager::GetIfExists()) {
+    return MediaManager::GetIfExists()->IsActivelyCapturingOrHasAPermission(aWindow->WindowID());
+  }
+
+  auto principal = nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
+  return (nsContentUtils::IsExactSitePermAllow(principal, "camera") ||
+          nsContentUtils::IsExactSitePermAllow(principal, "microphone") ||
+          nsContentUtils::IsExactSitePermAllow(principal, "screen"));
+}
+
+static bool
 IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
 {
   if (!aWindow) {
     return false;
   }
 
-  // Pages which have been granted permission to capture WebRTC camera or
-  // microphone are assumed to be trusted, and are allowed to autoplay.
-  MediaManager* manager = MediaManager::GetIfExists();
-  if (manager &&
-      manager->IsActivelyCapturingOrHasAPermission(aWindow->WindowID())) {
+  if (IsActivelyCapturingOrHasAPermission(aWindow)) {
+    AUTOPLAY_LOG("Allow autoplay as document has camera or microphone or screen"
+                 " permission.");
     return true;
   }
 
