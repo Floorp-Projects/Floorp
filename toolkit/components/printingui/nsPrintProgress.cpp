@@ -244,7 +244,11 @@ NS_IMETHODIMP nsPrintProgress::OnStatusChange(nsIWebProgress *aWebProgress, nsIR
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintProgress::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t state)
+NS_IMETHODIMP nsPrintProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                                nsIRequest *aRequest,
+                                                uint32_t aOldState,
+                                                uint32_t aState,
+                                                const nsAString& aContentBlockingLogJSON)
 {
     return NS_OK;
 }
