@@ -219,15 +219,18 @@ CTR_Update_HW_AES(CTRContext *ctr, unsigned char *outbuf,
         PORT_Assert(ctr->bufPtr == blocksize);
     }
 
-    intel_aes_ctr_worker(((AESContext *)(ctr->context))->Nr)(
-        ctr, outbuf, outlen, maxout, inbuf, inlen, blocksize);
-    /* XXX intel_aes_ctr_worker should set *outlen. */
-    PORT_Assert(*outlen == 0);
-    fullblocks = (inlen / blocksize) * blocksize;
-    *outlen += fullblocks;
-    outbuf += fullblocks;
-    inbuf += fullblocks;
-    inlen -= fullblocks;
+    if (inlen >= blocksize) {
+        rv = intel_aes_ctr_worker(((AESContext *)(ctr->context))->Nr)(
+                 ctr, outbuf, outlen, maxout, inbuf, inlen, blocksize);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        fullblocks = (inlen / blocksize) * blocksize;
+        *outlen += fullblocks;
+        outbuf += fullblocks;
+        inbuf += fullblocks;
+        inlen -= fullblocks;
+    }
 
     if (inlen == 0) {
         return SECSuccess;
