@@ -5282,6 +5282,7 @@ nsGlobalWindowOuter::FirePopupBlockedEvent(nsIDocument* aDoc,
 void
 nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
                                                 nsIChannel* aChannel,
+                                                bool aBlocked,
                                                 nsIURI* aURIHint)
 {
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
@@ -5317,23 +5318,46 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   if (aURIHint) {
     nsContentUtils::GetUTFOrigin(aURIHint, origin);
   }
+  bool unblocked = false;
   if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
-    doc->SetHasTrackingContentBlocked(true, origin);
+    doc->SetHasTrackingContentBlocked(aBlocked, origin);
+    if (!aBlocked) {
+      unblocked = !doc->GetHasTrackingContentBlocked();
+    }
   } else if (aState == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
-    doc->SetHasSlowTrackingContentBlocked(true, origin);
+    doc->SetHasSlowTrackingContentBlocked(aBlocked, origin);
+    if (!aBlocked) {
+      unblocked = !doc->GetHasSlowTrackingContentBlocked();
+    }
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) {
-    doc->SetHasCookiesBlockedByPermission(true, origin);
+    doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
+    if (!aBlocked) {
+      unblocked = !doc->GetHasCookiesBlockedByPermission();
+    }
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
-    doc->SetHasTrackingCookiesBlocked(true, origin);
+    doc->SetHasTrackingCookiesBlocked(aBlocked, origin);
+    if (!aBlocked) {
+      unblocked = !doc->GetHasTrackingCookiesBlocked();
+    }
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {
-    doc->SetHasAllCookiesBlocked(true, origin);
+    doc->SetHasAllCookiesBlocked(aBlocked, origin);
+    if (!aBlocked) {
+      unblocked = !doc->GetHasAllCookiesBlocked();
+    }
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
-    doc->SetHasForeignCookiesBlocked(true, origin);
+    doc->SetHasForeignCookiesBlocked(aBlocked, origin);
+    if (!aBlocked) {
+      unblocked = !doc->GetHasForeignCookiesBlocked();
+    }
   } else {
     // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
   const uint32_t oldState = state;
-  state |= aState;
+  if (aBlocked) {
+    state |= aState;
+  } else if (unblocked) {
+    state &= ~aState;
+  }
 
   eventSink->OnSecurityChange(aChannel, oldState, state, doc->GetContentBlockingLog());
 }
