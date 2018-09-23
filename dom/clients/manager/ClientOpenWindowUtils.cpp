@@ -133,7 +133,9 @@ public:
   NS_IMETHOD
   OnSecurityChange(nsIWebProgress* aWebProgress,
                    nsIRequest* aRequest,
-                   uint32_t aState) override
+                   uint32_t aOldState,
+                   uint32_t aState,
+                   const nsAString& aContentBlockingLogJSON) override
   {
     MOZ_ASSERT(false, "Unexpected notification.");
     return NS_OK;
