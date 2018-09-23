@@ -183,7 +183,7 @@ class MozharnessRunner(MozbuildObject):
 class MozharnessCommands(MachCommandBase):
     @Command('mozharness', category='testing',
              description='Run tests using mozharness.',
-             conditions=[conditions.is_firefox],
+             conditions=[conditions.is_firefox_or_android],
              parser=get_parser)
     def mozharness(self, **kwargs):
         runner = self._spawn(MozharnessRunner)
