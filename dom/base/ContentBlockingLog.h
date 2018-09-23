@@ -113,6 +113,22 @@ public:
     return buffer;
   }
 
+  bool HasBlockedAnyOfType(uint32_t aType)
+  {
+    for (auto iter = mLog.Iter(); !iter.Done(); iter.Next()) {
+      if (!iter.UserData()) {
+        continue;
+      }
+
+      for (auto& item: *iter.UserData()) {
+        if ((item.mType & aType) != 0) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   void AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
   {
     aSizes.mDOMOtherSize += mLog.ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
