@@ -310,7 +310,7 @@ public:
           const wr::MixBlendMode& aMixBlendMode,
           const nsTArray<wr::WrFilterOp>& aFilters,
           bool aIsBackfaceVisible,
-          const wr::GlyphRasterSpace& aRasterSpace);
+          const wr::RasterSpace& aRasterSpace);
   void PopStackingContext(bool aIsReferenceFrame);
 
   wr::WrClipChainId DefineClipChain(const Maybe<wr::WrClipChainId>& aParent,

@@ -62,8 +62,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   }
 
   auto rasterSpace = mRasterizeLocally
-    ? wr::GlyphRasterSpace::Local(std::max(mScale.width, mScale.height))
-    : wr::GlyphRasterSpace::Screen();
+    ? wr::RasterSpace::Local(std::max(mScale.width, mScale.height))
+    : wr::RasterSpace::Screen();
 
   mReferenceFrameId = mBuilder->PushStackingContext(
           wr::ToLayoutRect(aBounds),

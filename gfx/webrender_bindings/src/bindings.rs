@@ -1679,7 +1679,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               filters: *const WrFilterOp,
                                               filter_count: usize,
                                               is_backface_visible: bool,
-                                              glyph_raster_space: GlyphRasterSpace,
+                                              glyph_raster_space: RasterSpace,
                                               out_is_reference_frame: &mut bool,
                                               out_reference_frame_id: &mut usize) {
     debug_assert!(unsafe { !is_in_render_thread() });
