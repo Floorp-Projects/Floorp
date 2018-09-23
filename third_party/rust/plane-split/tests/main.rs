@@ -72,12 +72,7 @@ fn empty() {
     assert_eq!(None, poly);
 }
 
-#[test]
-fn from_transformed_rect() {
-    let rect: TypedRect<f32, ()> = TypedRect::new(point2(10.0, 10.0), TypedSize2D::new(20.0, 30.0));
-    let transform: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
-        .pre_translate(vec3(0.0, 0.0, 10.0));
+fn test_trasnformed(rect: TypedRect<f32, ()>, transform: TypedTransform3D<f32, (), ()>) {
     let poly = Polygon::from_transformed_rect(rect, transform, 0).unwrap();
     assert!(poly.is_valid());
 
@@ -86,6 +81,25 @@ fn from_transformed_rect() {
     assert_eq!(poly.points, poly2.points);
     assert!(poly.plane.offset.approx_eq(&poly2.plane.offset));
     assert!(poly.plane.normal.dot(poly2.plane.normal).approx_eq(&1.0));
+}
+
+#[test]
+fn from_transformed_rect() {
+    let rect = TypedRect::new(point2(10.0, 10.0), TypedSize2D::new(20.0, 30.0));
+    let transform =
+        TypedTransform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
+        .pre_translate(vec3(0.0, 0.0, 10.0));
+    test_trasnformed(rect, transform);
+}
+
+#[test]
+fn from_transformed_rect_perspective() {
+    let rect = TypedRect::new(point2(-10.0, -5.0), TypedSize2D::new(20.0, 30.0));
+    let mut transform =
+        TypedTransform3D::create_perspective(400.0)
+        .pre_translate(vec3(0.0, 0.0, 100.0));
+    transform.m44 = 0.7; //for fun
+    test_trasnformed(rect, transform);
 }
 
 #[test]
