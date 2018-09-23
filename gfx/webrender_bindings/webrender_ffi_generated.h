@@ -820,7 +820,13 @@ struct WrFilterOp {
   float matrix[20];
 };
 
-union GlyphRasterSpace {
+// Configure whether the contents of a stacking context
+// should be rasterized in local space or screen space.
+// Local space rasterized pictures are typically used
+// when we want to cache the output, and performance is
+// important. Note that this is a performance hint only,
+// which WR may choose to ignore.
+union RasterSpace {
   enum class Tag : uint32_t {
     Local,
     Screen,
@@ -842,15 +848,15 @@ union GlyphRasterSpace {
   };
   Local_Body local;
 
-  static GlyphRasterSpace Local(float const& a0) {
-    GlyphRasterSpace result;
+  static RasterSpace Local(float const& a0) {
+    RasterSpace result;
     result.local._0 = a0;
     result.tag = Tag::Local;
     return result;
   }
 
-  static GlyphRasterSpace Screen() {
-    GlyphRasterSpace result;
+  static RasterSpace Screen() {
+    RasterSpace result;
     result.tag = Tag::Screen;
     return result;
   }
@@ -863,7 +869,7 @@ union GlyphRasterSpace {
     return tag == Tag::Screen;
   }
 
-  bool operator==(const GlyphRasterSpace& aOther) const {
+  bool operator==(const RasterSpace& aOther) const {
     if (tag != aOther.tag) {
       return false;
     }
@@ -1427,7 +1433,7 @@ void wr_dp_push_stacking_context(WrState *aState,
                                  const WrFilterOp *aFilters,
                                  uintptr_t aFilterCount,
                                  bool aIsBackfaceVisible,
-                                 GlyphRasterSpace aGlyphRasterSpace,
+                                 RasterSpace aGlyphRasterSpace,
                                  bool *aOutIsReferenceFrame,
                                  uintptr_t *aOutReferenceFrameId)
 WR_FUNC;
