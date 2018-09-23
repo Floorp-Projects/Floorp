@@ -117,7 +117,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "f53f3cd498dc"
+        "revision": "c17cbaebdaa8"
     },
     "bg": {
         "platforms": [
@@ -147,7 +147,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "fd0c4eb9075b"
+        "revision": "930c97c6a6f0"
     },
     "bn-IN": {
         "platforms": [
