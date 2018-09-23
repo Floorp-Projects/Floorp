@@ -4,32 +4,28 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 
-<!DOCTYPE html [
-<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
-<!ENTITY % profilesDTD SYSTEM "chrome://global/locale/aboutProfiles.dtd"> %profilesDTD;
-]>
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <title>&aboutProfiles.title;</title>
-    <link rel="icon" type="image/png" id="favicon" href="chrome://branding/content/icon32.png"/>
+<head>
+    <title data-l10n-id="profiles-title"></title>
+    <link rel="icon" type="image/png" id="favicon" href="chrome://branding/content/icon32.png" />
     <link rel="stylesheet" href="chrome://mozapps/skin/aboutProfiles.css" type="text/css" />
     <script type="application/javascript" src="chrome://global/content/aboutProfiles.js" />
-  </head>
-  <body id="body" dir="&locale.dir;" class="wide-container">
+    <link rel="localization" href="toolkit/about/aboutProfiles.ftl" />
+</head>
+  <body id="body" class="wide-container">
     <div id="action-box" class="notice-box">
-      <h3>&aboutProfiles.restart.title;</h3>
-      <button id="restart-in-safe-mode-button">&aboutProfiles.restart.inSafeMode;</button>
-      <button id="restart-button">&aboutProfiles.restart.normal;</button>
+      <h3 data-l10n-id="profiles-restart-title"></h3>
+      <button id="restart-in-safe-mode-button" data-l10n-id="profiles-restart-in-safe-mode"></button>
+      <button id="restart-button" data-l10n-id="profiles-restart-normal"></button>
     </div>
 
-    <h1>&aboutProfiles.title;</h1>
-    <div class="page-subtitle">&aboutProfiles.subtitle;</div>
+    <h1 data-l10n-id="profiles-title"></h1>
+    <div data-l10n-id="profiles-subtitle"></div>
 
     <div>
-      <button id="create-button">&aboutProfiles.create;</button>
+      <button id="create-button" data-l10n-id="profiles-create"></button>
     </div>
 
     <div id="profiles" class="tab"></div>
