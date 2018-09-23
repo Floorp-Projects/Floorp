@@ -486,7 +486,7 @@ struct JSContext : public JS::RootingContext,
 #endif
 
 #ifdef JS_TRACE_LOGGING
-    js::ThreadData<js::TraceLoggerThread*> traceLogger;
+    js::UnprotectedData<js::TraceLoggerThread*> traceLogger;
 #endif
 
   private:
