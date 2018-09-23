@@ -228,12 +228,15 @@ nsPrintingPromptService::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsPrintingPromptService::OnSecurityChange(nsIWebProgress* aWebProgress,
                                           nsIRequest* aRequest,
-                                          uint32_t state)
+                                          uint32_t aOldState,
+                                          uint32_t aState,
+                                          const nsAString& aContentBlockingLogJSON)
 {
 #if !defined(XP_MACOSX)
   if (mWebProgressListener) {
     return mWebProgressListener->OnSecurityChange(
-      aWebProgress, aRequest, state);
+      aWebProgress, aRequest, aOldState, aState,
+      aContentBlockingLogJSON);
   }
 #endif
   return NS_OK;

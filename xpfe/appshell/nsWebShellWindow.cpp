@@ -676,7 +676,9 @@ nsWebShellWindow::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsWebShellWindow::OnSecurityChange(nsIWebProgress *aWebProgress,
                                    nsIRequest *aRequest,
-                                   uint32_t state)
+                                   uint32_t aOldState,
+                                   uint32_t aState,
+                                   const nsAString& aContentBlockingLogJSON)
 {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;

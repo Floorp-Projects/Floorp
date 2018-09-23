@@ -1539,7 +1539,8 @@ BrowserElementChild.prototype = {
       }
     },
 
-    onSecurityChange: function(webProgress, request, state) {
+    onSecurityChange: function(webProgress, request, oldState, state,
+                               contentBlockingLogJSON) {
       if (webProgress != docShell) {
         return;
       }
