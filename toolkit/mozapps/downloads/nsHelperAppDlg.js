@@ -70,7 +70,8 @@ nsUnknownContentTypeDialogProgressListener.prototype = {
   onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
   },
 
-  onSecurityChange(aWebProgress, aRequest, state) {
+  onSecurityChange(aWebProgress, aRequest, aOldState, aState,
+                   aContentBlockingLogJSON) {
   },
 
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
