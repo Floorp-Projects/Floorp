@@ -14,6 +14,7 @@
 #include "nsHashKeys.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
+#include "nsWindowSizes.h"
 
 namespace mozilla {
 namespace dom {
@@ -29,6 +30,7 @@ class ContentBlockingLog final
   // Each element is a tuple of (type, blocked, repeatCount). The type values
   // come from the blocking types defined in nsIWebProgressListener.
   typedef nsTArray<LogEntry> OriginLog;
+  typedef nsClassHashtable<nsStringHashKey, OriginLog> OriginLogHashTable;
 
   struct StringWriteFunc : public JSONWriteFunc
   {
@@ -111,8 +113,24 @@ public:
     return buffer;
   }
 
+  void AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
+  {
+    aSizes.mDOMOtherSize += mLog.ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+
+    // Now add the sizes of each origin log queue.
+    // The const_cast is needed because the nsTHashtable::Iterator interface is
+    // not const-safe.  :-(
+    for (auto iter = const_cast<OriginLogHashTable&>(mLog).Iter();
+         !iter.Done(); iter.Next()) {
+      if (iter.UserData()) {
+        aSizes.mDOMOtherSize +=
+          iter.UserData()->ShallowSizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
+      }
+    }
+  }
+
 private:
-  nsClassHashtable<nsStringHashKey, OriginLog> mLog;
+  OriginLogHashTable mLog;
 };
 
 } // namespace dom
