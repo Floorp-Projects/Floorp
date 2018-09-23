@@ -215,12 +215,12 @@ impl<T, U> Polygon<T, U> where
         // generated from various local rectanges on the same geometry plane.
         let normal_raw = TypedVector3D::new(inv_transform.m13, inv_transform.m23, inv_transform.m33);
         let normal_sql = normal_raw.square_length();
-        if normal_sql.approx_eq(&T::zero()) {
+        if normal_sql.approx_eq(&T::zero()) || transform.m44.approx_eq(&T::zero()) {
             None
         } else {
             let normal = normal_raw / normal_sql.sqrt();
             let offset = -TypedVector3D::new(transform.m41, transform.m42, transform.m43)
-                .dot(normal) * transform.m44;
+                .dot(normal) / transform.m44;
 
             Some(Polygon {
                 points,
