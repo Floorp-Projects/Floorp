@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for no error reporting for unknown external protocols</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="testFrame"></iframe>
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = () => {
+  let testFrame = document.getElementById("testFrame");
+
+  try {
+    testFrame.contentWindow.location.href = "unknownextproto:";
+    ok(true, "There is no error reporting for unknown external protocol navigation.");
+  } catch (e) {
+    ok(false, "There should be no error reporting for unknown external protocol navigation.");
+  }
+
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>
