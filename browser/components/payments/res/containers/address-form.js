@@ -88,7 +88,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
       }, record, {
         DEFAULT_REGION: PaymentDialogUtils.DEFAULT_REGION,
         getFormFormat: PaymentDialogUtils.getFormFormat,
-        supportedCountries: PaymentDialogUtils.supportedCountries,
+        countries: PaymentDialogUtils.countries,
       });
 
       // The EditAddress constructor adds `input` event listeners on the same element,

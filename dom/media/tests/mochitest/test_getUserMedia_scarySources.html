@@ -29,12 +29,6 @@ let getDevices = async constraints => {
 };
 
 runTest(async () => {
-  const isWinXP = navigator.userAgent.includes("Windows NT 5.1");
-  if (IsMacOSX10_6orOlder() || isWinXP) {
-    ok(true, "Screensharing disabled for OSX10.6 and WinXP");
-    return;
-  }
-
   await pushPrefs(["media.navigator.permission.disabled", true],
                   ["media.navigator.permission.fake", true],
                   ["media.navigator.permission.force", true]);

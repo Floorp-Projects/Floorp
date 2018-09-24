@@ -555,6 +555,13 @@ class FormAutofillAddressSection extends FormAutofillSection {
   }
 
   isRecordCreatable(record) {
+    if (record.country && !FormAutofill.supportedCountries.includes(record.country)) {
+      // We don't want to save data in the wrong fields due to not having proper
+      // heuristic regexes in countries we don't yet support.
+      log.warn("isRecordCreatable: Country not supported:", record.country);
+      return false;
+    }
+
     let hasName = 0;
     let length = 0;
     for (let key of Object.keys(record)) {

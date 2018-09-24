@@ -22,6 +22,7 @@
  *       family-name,
  *       organization,         // Company
  *       street-address,       // (Multiline)
+ *       address-level3,       // Suburb/Sublocality
  *       address-level2,       // City/Town
  *       address-level1,       // Province (Standardized code if possible)
  *       postal-code,
@@ -165,6 +166,7 @@ const VALID_ADDRESS_FIELDS = [
   "family-name",
   "organization",
   "street-address",
+  "address-level3",
   "address-level2",
   "address-level1",
   "postal-code",
@@ -1297,7 +1299,7 @@ class Addresses extends AutofillRecords {
   }
 
   _recordReadProcessor(address) {
-    if (address.country && !FormAutofill.supportedCountries.includes(address.country)) {
+    if (address.country && !FormAutofill.countries.has(address.country)) {
       delete address.country;
       delete address["country-name"];
     }

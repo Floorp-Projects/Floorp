@@ -23,11 +23,6 @@ from mach.decorators import (
 from mach_commands_base import WebPlatformTestsRunner, create_parser_wpt
 
 
-def is_firefox_or_android(cls):
-    """Must have Firefox build or Android build."""
-    return conditions.is_firefox(cls) or conditions.is_android(cls)
-
-
 class WebPlatformTestsRunnerSetup(MozbuildObject):
     default_log_type = "mach"
 
@@ -358,7 +353,7 @@ class MachCommands(MachCommandBase):
 
     @Command("web-platform-tests",
              category="testing",
-             conditions=[is_firefox_or_android],
+             conditions=[conditions.is_firefox_or_android],
              parser=create_parser_wpt)
     def run_web_platform_tests(self, **params):
         self.setup()
@@ -380,7 +375,7 @@ class MachCommands(MachCommandBase):
 
     @Command("wpt",
              category="testing",
-             conditions=[is_firefox_or_android],
+             conditions=[conditions.is_firefox_or_android],
              parser=create_parser_wpt)
     def run_wpt(self, **params):
         return self.run_web_platform_tests(**params)
