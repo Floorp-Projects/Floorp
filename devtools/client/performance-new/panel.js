@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { PerfFront } = require("devtools/shared/fronts/perf");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 class PerformancePanel {
@@ -29,9 +28,10 @@ class PerformancePanel {
     this.panelWin.gToolbox = this.toolbox;
     this.panelWin.gTarget = this.target;
 
-    const rootForm = await this.target.root;
-    const perfFront = new PerfFront(this.target.client, rootForm);
-    const preferenceFront = this.target.client.mainRoot.getFront("preference");
+    const [perfFront, preferenceFront] = await Promise.all([
+      this.target.client.mainRoot.getFront("perf"),
+      this.target.client.mainRoot.getFront("preference")
+    ]);
 
     this.isReady = true;
     this.emit("ready");
