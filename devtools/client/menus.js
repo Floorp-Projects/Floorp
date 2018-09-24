@@ -41,13 +41,9 @@ loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scrat
 exports.menuitems = [
   { id: "menu_devToolbox",
     l10nKey: "devToolboxMenuItem",
-    async oncommand(event) {
-      try {
-        const window = event.target.ownerDocument.defaultView;
-        await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, Cu.now());
-      } catch (e) {
-        console.error(`Exception while opening the toolbox: ${e}\n${e.stack}`);
-      }
+    oncommand(event) {
+      const window = event.target.ownerDocument.defaultView;
+      gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, Cu.now());
     },
     keyId: "toggleToolbox",
     checkbox: true
@@ -101,8 +97,8 @@ exports.menuitems = [
     l10nKey: "eyedropper",
     async oncommand(event) {
       const window = event.target.ownerDocument.defaultView;
-      const target = await TargetFactory.forTab(window.gBrowser.selectedTab);
-      await target.attach();
+      const target = TargetFactory.forTab(window.gBrowser.selectedTab);
+      await target.makeRemote();
       const inspectorFront = await target.getFront("inspector");
       inspectorFront.pickColorFromPage({copyOnSelect: true, fromMenu: true});
     },

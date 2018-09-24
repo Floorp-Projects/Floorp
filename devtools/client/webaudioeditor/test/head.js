@@ -64,9 +64,9 @@ function initBackend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = await TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
-    await target.attach();
+    await target.makeRemote();
 
     const front = new WebAudioFront(target.client, target.form);
     return { target, front };
@@ -83,9 +83,9 @@ function initWebAudioEditor(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = await TargetFactory.forTab(tab);
+    const target = TargetFactory.forTab(tab);
 
-    await target.attach();
+    await target.makeRemote();
 
     Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
     const toolbox = await gDevTools.showToolbox(target, "webaudioeditor");
