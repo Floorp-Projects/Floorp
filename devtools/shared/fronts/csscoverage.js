@@ -110,11 +110,11 @@ const knownFronts = new WeakMap();
 
 /**
  * Create a CSSUsageFront only when needed (returns a promise)
- * For notes on target.attach(), see
+ * For notes on target.makeRemote(), see
  * https://bugzilla.mozilla.org/show_bug.cgi?id=1016330#c7
  */
 exports.getUsage = function(trgt) {
-  return trgt.attach().then(() => {
+  return trgt.makeRemote().then(() => {
     let front = knownFronts.get(trgt.client);
     if (front == null && trgt.form.cssUsageActor != null) {
       front = new CSSUsageFront(trgt.client, trgt.form);

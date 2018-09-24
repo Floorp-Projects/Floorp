@@ -84,8 +84,8 @@ add_task(async function test() {
 });
 
 async function runTests() {
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
-  await target.attach();
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  await target.makeRemote();
   inspector = InspectorFront(target.client, target.form);
   const walker = await inspector.getWalker();
   completer = new CSSCompleter({walker: walker,

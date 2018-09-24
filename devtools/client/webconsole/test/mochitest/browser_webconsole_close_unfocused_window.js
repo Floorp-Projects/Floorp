@@ -38,7 +38,7 @@ add_task(async function() {
   ok(true, "No error was triggered during the test");
 });
 
-async function closeToolboxForTab(tab) {
-  const target = await TargetFactory.forTab(tab);
+function closeToolboxForTab(tab) {
+  const target = TargetFactory.forTab(tab);
   return gDevTools.closeToolbox(target);
 }

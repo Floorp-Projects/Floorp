@@ -23,8 +23,8 @@ const { getToolbox, runTest } = require("../head");
  *   period.
  * @returns a promise that resolves when the wait is done.
  */
-async function waitForAllRequestsFinished(expectedRequests) {
-  let toolbox = await getToolbox();
+function waitForAllRequestsFinished(expectedRequests) {
+  let toolbox = getToolbox();
   let window = toolbox.getCurrentPanel().panelWin;
 
   return new Promise(resolve => {

@@ -54,7 +54,7 @@ WebConsolePanel.prototype = {
 
       // Local debugging needs to make the target remote.
       if (!this.target.isRemote) {
-        await this.target.attach();
+        await this.target.makeRemote();
       }
 
       const webConsoleUIWindow = iframe.contentWindow.wrappedJSObject;

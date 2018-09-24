@@ -14,7 +14,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
 add_task(async function() {
   const client = await startTestDebuggerServer("test-promises-dependentpromises");
   const parentProcessActors = await getParentProcessActors(client);
-  await attachTarget(client, parentProcessActors);
+  await attachTab(client, parentProcessActors);
 
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
@@ -32,7 +32,7 @@ add_task(async function() {
   const response = await listTabs(client);
   const targetTab = findTab(response.tabs, "test-promises-dependentpromises");
   ok(targetTab, "Found our target tab.");
-  await attachTarget(client, targetTab);
+  await attachTab(client, targetTab);
 
   await testGetDependentPromises(client, targetTab, () => {
     const debuggee =
