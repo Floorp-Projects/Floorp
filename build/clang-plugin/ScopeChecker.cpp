@@ -8,7 +8,10 @@
 void ScopeChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(varDecl().bind("node"), this);
   AstMatcher->addMatcher(cxxNewExpr().bind("node"), this);
-  AstMatcher->addMatcher(materializeTemporaryExpr().bind("node"), this);
+  AstMatcher->addMatcher(
+      materializeTemporaryExpr(
+          unless(hasDescendant(cxxConstructExpr(allowsTemporary())))
+      ).bind("node"), this);
   AstMatcher->addMatcher(
       callExpr(callee(functionDecl(heapAllocator()))).bind("node"), this);
 }
