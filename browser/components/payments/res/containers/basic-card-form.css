@@ -2,6 +2,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+basic-card-form .editCreditCardForm {
+  /* Add the persist-checkbox row to the grid */
+  grid-template-areas:
+    "cc-number cc-exp-month cc-exp-year"
+    "cc-name   cc-type      cc-csc"
+    "accepted  accepted     accepted"
+    "persist-checkbox persist-checkbox persist-checkbox"
+    "billingAddressGUID billingAddressGUID billingAddressGUID";
+}
+
+basic-card-form .editCreditCardForm > accepted-cards {
+  grid-area: accepted;
+  margin: 0;
+}
+
+basic-card-form .editCreditCardForm .persist-checkbox {
+  display: flex;
+  grid-area: persist-checkbox;
+}
+
+#billingAddressGUID-container {
+  display: grid;
+}
+
+#billingAddressGUID {
+  /* XXX: temporary until converted to a rich-picker in bug 1482689 */
+  margin: 14px 0;
+}
+
 basic-card-form > footer > .cancel-button {
   /* When cancel is shown (during onboarding), it should always be on the left with a space after it */
   margin-right: auto;

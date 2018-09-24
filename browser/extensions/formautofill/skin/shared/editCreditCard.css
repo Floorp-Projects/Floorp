@@ -8,6 +8,7 @@
     "cc-number          cc-exp-month       cc-exp-year"
     "cc-name            cc-type            cc-csc"
     "billingAddressGUID billingAddressGUID billingAddressGUID";
+  grid-template-columns: 4fr 2fr 2fr;
   grid-row-gap: var(--grid-column-row-gap);
   grid-column-gap: var(--grid-column-row-gap);
 }
@@ -45,4 +46,8 @@
 
 #billingAddressGUID-container {
   grid-area: billingAddressGUID;
+}
+
+#billingAddressGUID {
+  grid-area: dropdown;
 }
