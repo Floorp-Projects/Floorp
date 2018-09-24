@@ -77,6 +77,10 @@ tasks:
                 - "index.gecko.v2.${repository.project}.pushlog-id.${_pushId}.decision"
                 - "notify.email.${ownerEmail}.on-failed"
                 - "notify.email.${ownerEmail}.on-exception"
+                # Send a notification email if the push comes from try
+                - $if: 'repository.project == "try"'
+                  then:
+                    "notify.email.${ownerEmail}.on-completed"
                 # These are the old index routes for the decision task.
                 # They are still here so external tools that referenced them continue to work.
                 - "index.gecko.v2.${repository.project}.latest.firefox.decision"
@@ -229,3 +233,14 @@ tasks:
               then:
                 cron: {$json: {$eval: 'cron'}}
             - tasks_for: '${tasks_for}'
+            # Email format for try pushes
+            - $if: 'tasks_for == "hg-push" && repository.project == "try"'
+              then:
+                notify:
+                  email:
+                    subject: "Thank you for your try submission of ${push.revision}. It's the best!"
+                    content: "Your try push has been submitted. Use the link to view the status of your jobs."
+                    link:
+                      text: "Treeherder Jobs"
+                      href: "https://treeherder.mozilla.org/#/jobs?repo=${repository.project}&revision=${push.revision}"
+          
