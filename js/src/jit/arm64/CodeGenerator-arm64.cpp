@@ -389,8 +389,84 @@ CodeGenerator::visitMulI(LMulI* ins)
 void
 CodeGenerator::visitDivI(LDivI* ins)
 {
-    MOZ_CRASH("visitDivI");
+    const Register lhs = ToRegister(ins->lhs());
+    const Register rhs = ToRegister(ins->rhs());
+    const Register output = ToRegister(ins->output());
 
+    const ARMRegister lhs32 = toWRegister(ins->lhs());
+    const ARMRegister rhs32 = toWRegister(ins->rhs());
+    const ARMRegister temp32 = toWRegister(ins->getTemp(0));
+    const ARMRegister output32 = toWRegister(ins->output());
+
+    MDiv* mir = ins->mir();
+
+    Label done;
+
+    // Handle division by zero.
+    if (mir->canBeDivideByZero()) {
+        masm.test32(rhs, rhs);
+        // TODO: x64 has an additional mir->canTruncateInfinities() handler
+        // TODO: to avoid taking a bailout.
+        if (mir->trapOnError()) {
+            Label nonZero;
+            masm.j(Assembler::NonZero, &nonZero);
+            masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->bytecodeOffset());
+            masm.bind(&nonZero);
+        } else {
+            MOZ_ASSERT(mir->fallible());
+            bailoutIf(Assembler::Zero, ins->snapshot());
+        }
+    }
+
+    // Handle an integer overflow from (INT32_MIN / -1).
+    // The integer division gives INT32_MIN, but should be -(double)INT32_MIN.
+    if (mir->canBeNegativeOverflow()) {
+        Label notOverflow;
+
+        // Branch to handle the non-overflow cases.
+        masm.branch32(Assembler::NotEqual, lhs, Imm32(INT32_MIN), &notOverflow);
+        masm.branch32(Assembler::NotEqual, rhs, Imm32(-1), &notOverflow);
+
+        // Handle overflow.
+        if (mir->trapOnError()) {
+            masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
+        } else if (mir->canTruncateOverflow()) {
+            // (-INT32_MIN)|0 == INT32_MIN, which is already in lhs.
+            masm.move32(lhs, output);
+            masm.jump(&done);
+        } else {
+            MOZ_ASSERT(mir->fallible());
+            bailout(ins->snapshot());
+        }
+        masm.bind(&notOverflow);
+    }
+
+    // Handle negative zero: lhs == 0 && rhs < 0.
+    if (!mir->canTruncateNegativeZero() && mir->canBeNegativeZero()) {
+        Label nonZero;
+        masm.branch32(Assembler::NotEqual, lhs, Imm32(0), &nonZero);
+        masm.cmp32(rhs, Imm32(0));
+        bailoutIf(Assembler::LessThan, ins->snapshot());
+        masm.bind(&nonZero);
+    }
+
+    // Perform integer division.
+    if (mir->canTruncateRemainder()) {
+        masm.Sdiv(output32, lhs32, rhs32);
+    } else {
+        vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+        ARMRegister scratch32 = temps.AcquireW();
+
+        // ARM does not automatically calculate the remainder.
+        // The ISR suggests multiplication to determine whether a remainder exists.
+        masm.Sdiv(scratch32, lhs32, rhs32);
+        masm.Mul(temp32, scratch32, rhs32);
+        masm.Cmp(lhs32, temp32);
+        bailoutIf(Assembler::NotEqual, ins->snapshot());
+        masm.Mov(output32, scratch32);
+    }
+
+    masm.bind(&done);
 }
 
 void
