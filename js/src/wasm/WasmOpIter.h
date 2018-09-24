@@ -1719,14 +1719,14 @@ OpIter<Policy>::readReferenceType(ValType* type, const char* context)
         return fail_ctx("invalid reference type for %s", context);
     }
 
-    if (code == uint8_t(TypeCode::Ref)) {
+    if (code == uint8_t(ValType::Code::Ref)) {
         if (refTypeIndex >= env_.types.length()) {
             return fail_ctx("invalid reference type for %s", context);
         }
         if (!env_.types[refTypeIndex].isStructType()) {
             return fail_ctx("reference to struct required for %s", context);
         }
-    } else if (code != uint8_t(TypeCode::AnyRef)) {
+    } else if (code != uint8_t(ValType::Code::AnyRef)) {
         return fail_ctx("invalid reference type for %s", context);
     }
 
