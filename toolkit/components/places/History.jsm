@@ -1501,20 +1501,28 @@ var insertMany = function(db, pageInfos, onResult, onError) {
 
 // Inner implementation of History.update.
 var update = async function(db, pageInfo) {
-  let updateFragments = [];
-  let whereClauseFragment = "";
-  let baseParams = {};
-  let params = {};
-
-  // Prefer GUID over url if it's present
+  // Check for page existence first; we can skip most of the work if it doesn't
+  // exist and anyway we'll need the place id multiple times later.
+  // Prefer GUID over url if it's present.
+  let id;
   if (typeof pageInfo.guid === "string") {
-    whereClauseFragment = "guid = :guid";
-    baseParams.guid = pageInfo.guid;
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_places WHERE guid = :guid",
+      {guid: pageInfo.guid}
+    );
+    id = rows.length ? rows[0].getResultByName("id") : null;
   } else {
-    whereClauseFragment = "url_hash = hash(:url) AND url = :url";
-    baseParams.url = pageInfo.url.href;
+    let rows = await db.executeCached(
+      "SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url",
+    {url: pageInfo.url.href});
+    id = rows.length ? rows[0].getResultByName("id") : null;
+  }
+  if (!id) {
+    return;
   }
 
+  let updateFragments = [];
+  let params = {};
   if ("description" in pageInfo) {
     updateFragments.push("description");
     params.description = pageInfo.description;
@@ -1529,9 +1537,9 @@ var update = async function(db, pageInfo) {
     await db.execute(`
       UPDATE moz_places
       SET ${updateFragments.map(v => `${v} = :${v}`).join(", ")}
-      WHERE ${whereClauseFragment}
+      WHERE id = :id
         AND (${updateFragments.map(v => `IFNULL(${v}, "") <> IFNULL(:${v}, "")`).join(" OR ")})
-    `, {...baseParams, ...params});
+    `, {id, ...params});
   }
 
   if (pageInfo.annotations) {
@@ -1563,12 +1571,12 @@ var update = async function(db, pageInfo) {
             INSERT OR REPLACE INTO moz_annos
               (place_id, anno_attribute_id, content, flags,
                expiration, type, dateAdded, lastModified)
-            VALUES ((SELECT id FROM moz_places WHERE ${whereClauseFragment}),
+            VALUES (:id,
                     (SELECT id FROM moz_anno_attributes WHERE name = :anno_name),
                     :content, 0, :expiration, :type, :date_added,
                     :last_modified)
           `, {
-            ...baseParams,
+            id,
             anno_name: anno,
             content,
             expiration: PlacesUtils.annotations.EXPIRE_NEVER,
@@ -1586,10 +1594,10 @@ var update = async function(db, pageInfo) {
         // It will be cleaned up by expiration.
         await db.execute(`
           DELETE FROM moz_annos
-          WHERE place_id = (SELECT id FROM moz_places WHERE ${whereClauseFragment})
+          WHERE place_id = :id
           AND anno_attribute_id =
             (SELECT id FROM moz_anno_attributes WHERE name = :anno_name)
-        `, { ...baseParams, anno_name: anno });
+        `, { id, anno_name: anno });
       }
     });
   }
