@@ -114,6 +114,52 @@ class FlexboxInspector {
   }
 
   /**
+   * Returns an object containing the custom flexbox colors for different hosts.
+   *
+   * @return {Object} that maps a host name to a custom flexbox color for a given host.
+   */
+  async getCustomHostColors() {
+    if (this._customHostColors) {
+      return this._customHostColors;
+    }
+
+    // Cache the custom host colors to avoid refetching from async storage.
+    this._customHostColors = await asyncStorage.getItem("flexboxInspectorHostColors")
+      || {};
+    return this._customHostColors;
+  }
+
+  /**
+   * Returns an array of flex items object for the given flex container front.
+   *
+   * @param  {FlexboxFront} flexboxFront
+   *         A flex container FlexboxFront.
+   * @return {Array} of objects containing the flex item front properties.
+   */
+  async getFlexItems(flexboxFront) {
+    const flexItemFronts = await flexboxFront.getFlexItems();
+    const flexItems = [];
+
+    for (const flexItemFront of flexItemFronts) {
+      // Fetch the NodeFront of the flex items.
+      let itemNodeFront = flexItemFront.nodeFront;
+      if (!itemNodeFront) {
+        itemNodeFront = await this.walker.getNodeFromActor(flexItemFront.actorID,
+          ["element"]);
+      }
+
+      flexItems.push({
+        actorID: flexItemFront.actorID,
+        flexItemSizing: flexItemFront.flexItemSizing,
+        nodeFront: itemNodeFront,
+        properties: flexItemFront.properties,
+      });
+    }
+
+    return flexItems;
+  }
+
+  /**
    * Returns the custom overlay color for the current host or the default flexbox color.
    *
    * @return {String} overlay color.
@@ -132,22 +178,6 @@ class FlexboxInspector {
     const hostName = parseURL(currentUrl).hostname || parseURL(currentUrl).protocol;
     this._overlayColor = customColors[hostName] ? customColors[hostName] : FLEXBOX_COLOR;
     return this._overlayColor;
-  }
-
-  /**
-   * Returns an object containing the custom flexbox colors for different hosts.
-   *
-   * @return {Object} that maps a host name to a custom flexbox color for a given host.
-   */
-  async getCustomHostColors() {
-    if (this._customHostColors) {
-      return this._customHostColors;
-    }
-
-    // Cache the custom host colors to avoid refetching from async storage.
-    this._customHostColors = await asyncStorage.getItem("flexboxInspectorHostColors")
-      || {};
-    return this._customHostColors;
   }
 
   /**
@@ -382,33 +412,11 @@ class FlexboxInspector {
           ["containerEl"]);
       }
 
-      // Fetch the flex items for the given flex container.
-      const flexItemFronts = await flexboxFront.getFlexItems();
-      const flexItems = [];
-      let flexItemShown = null;
-
-      for (const flexItemFront of flexItemFronts) {
-        // Fetch the NodeFront of the flex items.
-        let itemNodeFront = flexItemFront.nodeFront;
-        if (!itemNodeFront) {
-          itemNodeFront = await this.walker.getNodeFromActor(flexItemFront.actorID,
-            ["element"]);
-        }
-
-        // If the current selected node is a flex item, display its flex item sizing
-        // properties.
-        if (!flexItemShown && itemNodeFront === this.selection.nodeFront) {
-          flexItemShown = itemNodeFront.actorID;
-        }
-
-        flexItems.push({
-          actorID: flexItemFront.actorID,
-          flexItemSizing: flexItemFront.flexItemSizing,
-          nodeFront: itemNodeFront,
-          properties: flexItemFront.properties,
-        });
-      }
-
+      const flexItems = await this.getFlexItems(flexboxFront);
+      // If the current selected node is a flex item, display its flex item sizing
+      // properties.
+      const flexItemShown = flexItems.find(item =>
+        item.nodeFront === this.selection.nodeFront);
       const highlighted = this._highlighters &&
         containerNodeFront == this.highlighters.flexboxHighlighterShown;
       const color = await this.getOverlayColor();
@@ -417,7 +425,7 @@ class FlexboxInspector {
         actorID: flexboxFront.actorID,
         color,
         flexItems,
-        flexItemShown,
+        flexItemShown: flexItemShown ? flexItemShown.nodeFront.actorID : null,
         highlighted,
         nodeFront: containerNodeFront,
         properties: flexboxFront.properties,

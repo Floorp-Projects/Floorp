@@ -30,7 +30,8 @@ function createCookie(userContextId) {
                        COOKIE.isHttpOnly,
                        COOKIE.isSession,
                        COOKIE.expiry,
-                       {userContextId});
+                       {userContextId},
+                       Ci.nsICookie2.SAMESITE_UNSET);
 }
 
 function hasCookie(userContextId) {

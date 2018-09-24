@@ -40,15 +40,6 @@ toolbarbutton:-moz-focusring {
   outline-offset: -2px;
 }
 
-toolbarbutton:hover:active:not([disabled="true"]),
-toolbarbutton[open="true"]:hover,
-toolbarbutton[open="true"] {
-  padding-top: 4px;
-  padding-bottom: 2px;
-  padding-inline-start: 4px;
-  padding-inline-end: 2px;
-}
-
 toolbarbutton[disabled="true"] {
   color: GrayText;
   text-shadow: none;
@@ -59,13 +50,6 @@ toolbarbutton[disabled="true"] {
     color: ThreeDShadow;
     text-shadow: 1px 1px ThreeDHighlight;
   }
-}
-
-toolbarbutton[checked="true"]:not([disabled="true"]) {
-  padding-top: 4px;
-  padding-bottom: 2px;
-  padding-inline-start: 4px;
-  padding-inline-end: 2px;
 }
 
 @media (-moz-windows-default-theme) {

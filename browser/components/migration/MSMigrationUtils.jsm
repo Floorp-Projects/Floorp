@@ -639,7 +639,8 @@ Cookies.prototype = {
                            false, // httpOnly
                            false, // session
                            expireTime,
-                           {});
+                           {},
+                           Ci.nsICookie2.SAMESITE_UNSET);
     }
   },
 };

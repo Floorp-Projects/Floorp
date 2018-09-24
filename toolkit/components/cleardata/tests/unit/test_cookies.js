@@ -13,7 +13,7 @@ add_task(async function test_all_cookies() {
   const expiry = Date.now() + 24 * 60 * 60;
   Services.cookies.add("example.net", "path", "name", "value", true /* secure */,
                        true /* http only */, false /* session */,
-                       expiry, {});
+                       expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
   Assert.equal(Services.cookies.countCookiesFromHost("example.net"), 1);
 
   await new Promise(aResolve => {
@@ -30,7 +30,7 @@ add_task(async function test_range_cookies() {
   const expiry = Date.now() + 24 * 60 * 60;
   Services.cookies.add("example.net", "path", "name", "value", true /* secure */,
                        true /* http only */, false /* session */,
-                       expiry, {});
+                       expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
   Assert.equal(Services.cookies.countCookiesFromHost("example.net"), 1);
 
   // The cookie is out of time range here.
@@ -62,7 +62,7 @@ add_task(async function test_principal_cookies() {
   const expiry = Date.now() + 24 * 60 * 60;
   Services.cookies.add("example.net", "path", "name", "value", true /* secure */,
                        true /* http only */, false /* session */,
-                       expiry, {});
+                       expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
   Assert.equal(Services.cookies.countCookiesFromHost("example.net"), 1);
 
   let uri = Services.io.newURI("http://example.com");

@@ -158,7 +158,8 @@ function* run_test_1(generator)
 
   // Attempt to insert a cookie with the same (name, host, path) triplet.
   Services.cookiemgr.add(cookie.host, cookie.path, cookie.name, "hallo",
-    cookie.isSecure, cookie.isHttpOnly, cookie.isSession, cookie.expiry, {});
+    cookie.isSecure, cookie.isHttpOnly, cookie.isSession, cookie.expiry, {},
+    Ci.nsICookie2.SAMESITE_UNSET);
 
   // Check that the cookie service accepted the new cookie.
   Assert.equal(Services.cookiemgr.countCookiesFromHost(cookie.host), 1);
