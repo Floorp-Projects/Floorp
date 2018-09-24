@@ -371,3 +371,13 @@ add_task(async function test_change_multiple_annotations() {
   Assert.equal(pageInfo.annotations.size, 0,
     "Should have no annotations left");
 });
+
+add_task(async function test_annotations_nonexisting_page() {
+  info("Adding annotations to a non existing page should be silent");
+  await PlacesUtils.history.update({
+    url: "http://nonexisting.moz/",
+    annotations: new Map([
+      ["test/annotation", null],
+    ]),
+  });
+});
