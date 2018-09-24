@@ -1628,6 +1628,13 @@ VARCACHE_PREF(
   uint32_t, 2592000 // 30 days (in seconds)
 )
 
+// Anti-tracking user-interaction document interval
+VARCACHE_PREF(
+  "privacy.userInteraction.document.interval",
+   privacy_userInteraction_document_interval,
+  uint32_t, 1800 // 30 minutes (in seconds)
+)
+
 // Anti-fingerprinting, disabled by default
 VARCACHE_PREF(
   "privacy.resistFingerprinting",
