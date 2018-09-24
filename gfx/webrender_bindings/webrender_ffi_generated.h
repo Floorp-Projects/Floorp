@@ -43,6 +43,16 @@ enum class BoxShadowClipMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class Checkpoint : uint32_t {
+  SceneBuilt,
+  FrameBuilt,
+  // NotificationRequests get notified with this if they get dropped without having been
+  // notified. This provides the guarantee that if a request is created it will get notified.
+  TransactionDropped,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class ClipMode {
   Clip,
   ClipOut,
@@ -1750,6 +1760,15 @@ WR_FUNC;
 
 WR_INLINE
 Transaction *wr_transaction_new(bool aDoAsync)
+WR_FUNC;
+
+extern void wr_transaction_notification_notified(uintptr_t aHandler,
+                                                 Checkpoint aWhen);
+
+WR_INLINE
+void wr_transaction_notify(Transaction *aTxn,
+                           Checkpoint aWhen,
+                           uintptr_t aEvent)
 WR_FUNC;
 
 WR_INLINE

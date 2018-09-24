@@ -50,6 +50,18 @@ struct Line {
   wr::LineStyle style;
 };
 
+/// A handler that can be bundled into a transaction and notified at specific
+/// points in the rendering pipeline, such as after scene building or after
+/// frame building.
+///
+/// If for any reason the handler is dropped before reaching the requested
+/// point, it is notified with the value Checkpoint::TransactionDropped.
+/// So it is safe to assume that the handler will be notified "at some point".
+class NotificationHandler {
+public:
+  virtual void Notify(wr::Checkpoint aCheckpoint) = 0;
+  virtual ~NotificationHandler() = default;
+};
 
 class TransactionBuilder {
 public:
@@ -147,6 +159,8 @@ public:
                        wr::Vec<uint8_t>& aVariations);
 
   void DeleteFontInstance(wr::FontInstanceKey aKey);
+
+  void Notify(wr::Checkpoint aWhen, UniquePtr<NotificationHandler> aHandler);
 
   void Clear();
 
