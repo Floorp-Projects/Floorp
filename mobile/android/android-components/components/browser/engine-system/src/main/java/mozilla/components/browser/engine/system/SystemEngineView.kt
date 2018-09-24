@@ -300,12 +300,14 @@ class SystemEngineView @JvmOverloads constructor(
 
     internal fun addFullScreenView(view: View, callback: WebChromeClient.CustomViewCallback) {
         val webView = findViewWithTag<WebView>("mosac_system_engine_webview")
-        webView?.apply { this.visibility = View.GONE }
+        val layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        webView?.apply { this.visibility = View.INVISIBLE }
 
         fullScreenCallback = callback
 
         view.tag = "mosac_system_engine_fullscreen"
-        addView(view)
+        addView(view, layoutParams)
     }
 
     internal fun removeFullScreenView() {
