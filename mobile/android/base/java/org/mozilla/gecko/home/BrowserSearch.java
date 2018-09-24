@@ -14,6 +14,8 @@ import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.content.SharedPreferences;
 
@@ -1209,29 +1211,24 @@ public class BrowserSearch extends HomeFragment
     private TwoLinePageRow.TitleFormatter mTwoLinePageRowTitleFormatter = new TwoLinePageRow.TitleFormatter() {
         @Override
         public CharSequence format(@NonNull CharSequence title) {
-            // Don't try to search for an empty string - String.indexOf will return 0, which would result
-            // in us iterating with lastIndexOfMatch = 0, which eventually results in an OOM.
+            // Don't try to search for an empty string, we would get a match for every character in the title
             if (TextUtils.isEmpty(mSearchTerm)) {
                 return title;
             }
 
-            // Find matching substrings in title field in TwoLinePageRow, ignoring cases.
-            final String titleInLowerCase = title.toString().toLowerCase();
-            final String pattern = mSearchTerm.toLowerCase();
-            final int patternLength = pattern.length();
-
             final SpannableStringBuilder sb = new SpannableStringBuilder(title);
 
-            int indexOfMatch = 0;
-            int lastIndexOfMatch = 0;
-            while (indexOfMatch != -1) {
-                indexOfMatch = titleInLowerCase.indexOf(pattern, lastIndexOfMatch);
-                lastIndexOfMatch = indexOfMatch + patternLength;
-                if (indexOfMatch != -1) {
-                    final StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
-                    sb.setSpan(boldSpan, indexOfMatch, lastIndexOfMatch, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                }
+            // Find matching substrings in title field in TwoLinePageRow, ignoring cases. This needs
+            // to be done indirectly through a case-insensitive matcher because the lower-case
+            // version of a string might have a different number of characters than the original.
+            Pattern pattern = Pattern.compile(mSearchTerm, Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(title.toString());
+
+            while (matcher.find()) {
+                final StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+                sb.setSpan(boldSpan, matcher.start(), matcher.end(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
             }
+
             return sb;
         }
     };
