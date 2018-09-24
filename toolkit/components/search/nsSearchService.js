@@ -4495,7 +4495,7 @@ SearchService.prototype = {
         let secondaryCode = queries.get("form");
         // This code is used for all Bing follow-on searches.
         if (secondaryCode == "QBRE") {
-          for (let cookie of Services.cookies.getCookiesFromHost("www.bing.com")) {
+          for (let cookie of Services.cookies.getCookiesFromHost("www.bing.com", {})) {
             if (cookie.name == "SRCHS") {
               // If this cookie is present, it's probably an SAP follow-on.
               // This might be an organic follow-on in the same session,
