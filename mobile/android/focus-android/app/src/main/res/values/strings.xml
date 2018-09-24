@@ -198,9 +198,8 @@
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">Add custom URL</string>
 
-    <!-- Label for the button to quick add the current URL to the custom autocomplete list
-        The first parameter is the URL to add to the custom autocomplete list -->
-    <string name="add_custom_autocomplete_label">Autocomplete: %1$s</string>
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Add link to autocomplete</string>
 
     <!-- Preference category for settings about cookies and site data -->
     <string name="preference_category_cookies">Cookies and Site Data</string>
