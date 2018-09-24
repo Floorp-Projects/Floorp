@@ -674,7 +674,7 @@ struct DIGroup
     PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder);
 
     // XXX: set this correctly perhaps using aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);?
-    bool isOpaque = false;
+    wr::OpacityType opacity = wr::OpacityType::HasAlphaChannel;
 
     TakeExternalSurfaces(recorder, mExternalSurfaces, aWrManager, aResources);
     bool hasItems = recorder->Finish();
@@ -685,14 +685,14 @@ struct DIGroup
         return;
       wr::ImageKey key = aWrManager->WrBridge()->GetNextImageKey();
       GP("No previous key making new one %d\n", key.mHandle);
-      wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), isOpaque);
+      wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), opacity);
       MOZ_RELEASE_ASSERT(bytes.length() > sizeof(size_t));
       if (!aResources.AddBlobImage(key, descriptor, bytes)) {
         return;
       }
       mKey = Some(key);
     } else {
-      wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), isOpaque);
+      wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), opacity);
       auto bottomRight = mInvalidRect.BottomRight();
       GP("check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y, dtSize.width, dtSize.height);
       MOZ_RELEASE_ASSERT(bottomRight.x <= dtSize.width && bottomRight.y <= dtSize.height);
@@ -1891,7 +1891,11 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
                                                       gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
     if (useBlobImage) {
       bool snapped;
-      bool isOpaque = aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);
+      wr::OpacityType opacity =
+        aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped)
+            .Contains(paintBounds)
+          ? wr::OpacityType::Opaque
+          : wr::OpacityType::HasAlphaChannel;
       std::vector<RefPtr<ScaledFont>> fonts;
 
       RefPtr<WebRenderDrawEventRecorder> recorder =
@@ -1922,7 +1926,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       if (isInvalidated) {
         Range<uint8_t> bytes((uint8_t *)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
         wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
-        wr::ImageDescriptor descriptor(dtSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
+        wr::ImageDescriptor descriptor(dtSize.ToUnknownSize(), 0, dt->GetFormat(), opacity);
         if (!aResources.AddBlobImage(key, descriptor, bytes)) {
           return nullptr;
         }
