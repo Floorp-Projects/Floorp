@@ -32,7 +32,6 @@ public:
 
   uint64_t OuterWindowID() const { return mOuterWindowID; }
   uint64_t InnerWindowID() const { return mInnerWindowID; }
-  bool DumpEnabled() const { return mDumpEnabled; }
 
   const OriginAttributes& OriginAttributesRef() const
   {
@@ -49,7 +48,6 @@ private:
   // Modified only in constructor.
   uint64_t mOuterWindowID;
   const uint64_t mInnerWindowID;
-  const bool mDumpEnabled;
   const OriginAttributes mOriginAttributes;
   // Accessed on only worklet parent thread.
   nsCOMPtr<nsIPrincipal> mPrincipal;
