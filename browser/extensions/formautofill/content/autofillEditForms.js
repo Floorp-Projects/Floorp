@@ -122,16 +122,19 @@ class EditAddress extends EditAutofillForm {
    * @param {object} config
    * @param {string[]} config.DEFAULT_REGION
    * @param {function} config.getFormFormat Function to return form layout info for a given country.
-   * @param {string[]} config.supportedCountries
+   * @param {string[]} config.countries
    */
   constructor(elements, record, config) {
     super(elements);
 
     Object.assign(this, config);
+    let {form} = this._elements;
     Object.assign(this._elements, {
-      addressLevel1Label: this._elements.form.querySelector("#address-level1-container > span"),
-      postalCodeLabel: this._elements.form.querySelector("#postal-code-container > span"),
-      country: this._elements.form.querySelector("#country"),
+      addressLevel3Label: form.querySelector("#address-level3-container > .label-text"),
+      addressLevel2Label: form.querySelector("#address-level2-container > .label-text"),
+      addressLevel1Label: form.querySelector("#address-level1-container > .label-text"),
+      postalCodeLabel: form.querySelector("#postal-code-container > .label-text"),
+      country: form.querySelector("#country"),
     });
 
     this.populateCountries();
@@ -149,7 +152,7 @@ class EditAddress extends EditAutofillForm {
     this._record = record;
     if (!record) {
       record = {
-        country: this.supportedCountries.find(supported => supported == this.DEFAULT_REGION),
+        country: this.DEFAULT_REGION,
       };
     }
     super.loadRecord(record);
@@ -205,11 +208,15 @@ class EditAddress extends EditAutofillForm {
    */
   formatForm(country) {
     const {
+      addressLevel3Label,
+      addressLevel2Label,
       addressLevel1Label,
       postalCodeLabel,
       fieldsOrder: mailingFieldsOrder,
       postalCodePattern,
     } = this.getFormFormat(country);
+    this._elements.addressLevel3Label.dataset.localization = addressLevel3Label;
+    this._elements.addressLevel2Label.dataset.localization = addressLevel2Label;
     this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
     this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
     let addressFields = this._elements.form.dataset.addressFields;
@@ -228,6 +235,7 @@ class EditAddress extends EditAutofillForm {
       "name",
       "organization",
       "street-address",
+      "address-level3",
       "address-level2",
       "address-level1",
       "postal-code",
@@ -273,10 +281,12 @@ class EditAddress extends EditAutofillForm {
 
   populateCountries() {
     let fragment = document.createDocumentFragment();
-    for (let country of this.supportedCountries) {
+    // Sort countries by their visible names.
+    let countries = [...this.countries.entries()].sort((e1, e2) => e1[1].localeCompare(e2[1]));
+    for (let country of countries) {
       let option = new Option();
-      option.value = country;
-      option.dataset.localizationRegion = country.toLowerCase();
+      option.value = country[0];
+      option.dataset.localizationRegion = country[0].toLowerCase();
       fragment.appendChild(option);
     }
     this._elements.country.appendChild(fragment);

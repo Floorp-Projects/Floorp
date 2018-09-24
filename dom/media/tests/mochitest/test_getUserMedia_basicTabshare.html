@@ -17,11 +17,6 @@
    * Additionally, exercise applyConstraints code for tabshare viewport offset.
    */
   runTest(function () {
-    const isWinXP = navigator.userAgent.includes("Windows NT 5.1");
-    if (IsMacOSX10_6orOlder() || isWinXP) {
-        ok(true, "Screensharing disabled for OSX10.6 and WinXP");
-        return;
-    }
     var testVideo = createMediaElement('video', 'testVideo');
 
     return Promise.resolve()
