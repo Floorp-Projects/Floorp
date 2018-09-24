@@ -48,9 +48,7 @@ class Instance
     ReadBarrieredWasmInstanceObject object_;
     jit::TrampolinePtr              jsJitArgsRectifier_;
     jit::TrampolinePtr              jsJitExceptionHandler_;
-#ifdef ENABLE_WASM_GC
     jit::TrampolinePtr              preBarrierCode_;
-#endif
     const SharedCode                code_;
     const UniqueTlsData             tlsData_;
     GCPtrWasmMemoryObject           memory_;
@@ -118,11 +116,9 @@ class Instance
     static constexpr size_t offsetOfJSJitExceptionHandler() {
         return offsetof(Instance, jsJitExceptionHandler_);
     }
-#ifdef ENABLE_WASM_GC
     static constexpr size_t offsetOfPreBarrierCode() {
         return offsetof(Instance, preBarrierCode_);
     }
-#endif
 
     // This method returns a pointer to the GC object that owns this Instance.
     // Instances may be reached via weak edges (e.g., Realm::instances_)
@@ -196,9 +192,7 @@ class Instance
     static int32_t tableDrop(Instance* instance, uint32_t segIndex);
     static int32_t tableInit(Instance* instance, uint32_t dstOffset,
                              uint32_t srcOffset, uint32_t len, uint32_t segIndex);
-#ifdef ENABLE_WASM_GC
     static void postBarrier(Instance* instance, gc::Cell** location);
-#endif
     static void* structNew(Instance* instance, uint32_t typeIndex);
     static void* structNarrow(Instance* instance, uint32_t mustUnboxAnyref, uint32_t outputTypeIndex, void* ptr);
 };
