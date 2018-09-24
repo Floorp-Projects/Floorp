@@ -28,8 +28,6 @@ android {
 }
 
 configurations {
-    fxa
-
     // There's an interaction between Gradle's resolution of dependencies with different types
     // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
     // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
@@ -49,7 +47,7 @@ configurations {
 dependencies {
     jnaForTest Deps.jnaForTest
 
-    fxa Deps.mozilla_fxa
+    api Deps.mozilla_fxa
 
     implementation Deps.kotlin_stdlib
     implementation Deps.jna
