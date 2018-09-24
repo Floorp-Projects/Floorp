@@ -15,7 +15,6 @@
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptError.h"
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
 #include "nsINestedURI.h"
@@ -30,7 +29,6 @@
 #include "nsCRTGlue.h"
 #include "nsDocShell.h"
 #include "nsError.h"
-#include "nsGlobalWindowInner.h"
 #include "nsDOMCID.h"
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
@@ -543,16 +541,13 @@ nsScriptSecurityManager::JSPrincipalsSubsume(JSPrincipals *first,
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
                                             nsIURI* aTargetURI,
-                                            bool reportError,
-                                            bool aFromPrivateWindow)
+                                            bool reportError)
 {
-  // Please note that aFromPrivateWindow is only 100% accurate if
-  // reportError is true.
     if (!SecurityCompareURIs(aSourceURI, aTargetURI))
     {
          if (reportError) {
-            ReportError("CheckSameOriginError",
-                        aSourceURI, aTargetURI, aFromPrivateWindow);
+            ReportError(nullptr, "CheckSameOriginError",
+                        aSourceURI, aTargetURI);
          }
          return NS_ERROR_DOM_BAD_URI;
     }
@@ -737,8 +732,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         // check nothing else in the URI chain has flags that prevent
         // access:
         rv = CheckLoadURIFlags(sourceURI, aTargetURI, sourceBaseURI,
-                               targetBaseURI, aFlags,
-                               aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0);
+                               targetBaseURI, aFlags);
         NS_ENSURE_SUCCESS(rv, rv);
         // Check the principal is allowed to load the target.
         return aPrincipal->CheckMayLoad(targetBaseURI, true, false);
@@ -867,8 +861,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         // The policy is specified by the protocol flags on both URIs.
         if (!schemesMatch || (denySameSchemeLinks && !isSamePage)) {
             return CheckLoadURIFlags(currentURI, currentOtherURI,
-                                     sourceBaseURI, targetBaseURI, aFlags,
-                                     aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0);
+                                     sourceBaseURI, targetBaseURI, aFlags);
         }
         // Otherwise... check if we can nest another level:
         nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(currentURI);
@@ -905,8 +898,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
                                            nsIURI *aTargetURI,
                                            nsIURI *aSourceBaseURI,
                                            nsIURI *aTargetBaseURI,
-                                           uint32_t aFlags,
-                                           bool aFromPrivateWindow)
+                                           uint32_t aFlags)
 {
     // Note that the order of policy checks here is very important!
     // We start from most restrictive and work our way down.
@@ -923,7 +915,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
     if (NS_FAILED(rv)) {
         // Deny access, since the origin principal is not system
         if (reportErrors) {
-            ReportError(errorTag, aSourceURI, aTargetURI, aFromPrivateWindow);
+            ReportError(nullptr, errorTag, aSourceURI, aTargetURI);
         }
         return rv;
     }
@@ -1002,7 +994,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
         }
 
         if (reportErrors) {
-            ReportError(errorTag, aSourceURI, aTargetURI, aFromPrivateWindow);
+            ReportError(nullptr, errorTag, aSourceURI, aTargetURI);
         }
         return NS_ERROR_DOM_BAD_URI;
     }
@@ -1029,7 +1021,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
 
         // Nothing else.
         if (reportErrors) {
-            ReportError(errorTag, aSourceURI, aTargetURI, aFromPrivateWindow);
+            ReportError(nullptr, errorTag, aSourceURI, aTargetURI);
         }
         return NS_ERROR_DOM_BAD_URI;
     }
@@ -1074,8 +1066,8 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
 }
 
 nsresult
-nsScriptSecurityManager::ReportError(const char* aMessageTag, nsIURI* aSource,
-                                     nsIURI* aTarget, bool aFromPrivateWindow)
+nsScriptSecurityManager::ReportError(JSContext* cx, const char* aMessageTag,
+                                     nsIURI* aSource, nsIURI* aTarget)
 {
     nsresult rv;
     NS_ENSURE_TRUE(aSource && aTarget, NS_ERROR_NULL_POINTER);
@@ -1106,18 +1098,21 @@ nsScriptSecurityManager::ReportError(const char* aMessageTag, nsIURI* aSource,
                                       message);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-    NS_ENSURE_TRUE(console, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-    NS_ENSURE_TRUE(error, NS_ERROR_FAILURE);
+    // If a JS context was passed in, set a JS exception.
+    // Otherwise, print the error message directly to the JS console
+    // and to standard output
+    if (cx)
+    {
+        SetPendingException(cx, message.get());
+    }
+    else // Print directly to the console
+    {
+        nsCOMPtr<nsIConsoleService> console(
+            do_GetService("@mozilla.org/consoleservice;1"));
+        NS_ENSURE_TRUE(console, NS_ERROR_FAILURE);
 
-    // using category of "SOP" so we can link to MDN
-    rv = error->Init(message, EmptyString(), 
-                     EmptyString(), 0, 0,
-                     nsIScriptError::errorFlag,
-                    "SOP", aFromPrivateWindow);
-    NS_ENSURE_SUCCESS(rv, rv);
-    console->LogMessage(error);
+        console->LogStringMessage(message.get());
+    }
     return NS_OK;
 }
 
