@@ -18,13 +18,14 @@ accepted-cards {
 
 .accepted-cards-list > .accepted-cards-item {
   display: inline-block;
-  width: 47px;
-  height: 30px;
+  width: 50px;
+  height: 22px;
   padding: 0;
   text-align: center;
   margin-inline-end: 8px;
   background-repeat: no-repeat;
   background-position: center;
+  vertical-align: middle;
 }
 
 /* placeholders for specific card icons we don't yet have assets for */
@@ -32,11 +33,12 @@ accepted-cards {
   background-image: url("./card-icon.svg");
 }
 .accepted-cards-item[data-network-id]::after {
+  box-sizing: border-box;
   content: attr(data-network-id);
   padding: 4px;
   text-align: center;
   font-size: 0.7rem;
   display: block;
   overflow: hidden;
-  width: 36px;
+  width: 100%;
 }
