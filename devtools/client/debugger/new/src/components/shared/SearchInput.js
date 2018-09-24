@@ -66,8 +66,52 @@ class SearchInput extends _react.Component {
       }
     };
 
+    this.onKeyDown = e => {
+      const {
+        onHistoryScroll,
+        onKeyDown
+      } = this.props;
+
+      if (!onHistoryScroll) {
+        return onKeyDown(e);
+      }
+
+      const inputValue = e.target.value;
+      const {
+        history
+      } = this.state;
+      const currentHistoryIndex = history.indexOf(inputValue);
+
+      if (e.key === "Enter") {
+        this.saveEnteredTerm(inputValue);
+        return onKeyDown(e);
+      }
+
+      if (e.key === "ArrowUp") {
+        const previous = currentHistoryIndex > -1 ? currentHistoryIndex - 1 : history.length - 1;
+        const previousInHistory = history[previous];
+
+        if (previousInHistory) {
+          e.preventDefault();
+          onHistoryScroll(previousInHistory);
+        }
+
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        const next = currentHistoryIndex + 1;
+        const nextInHistory = history[next];
+
+        if (nextInHistory) {
+          onHistoryScroll(nextInHistory);
+        }
+      }
+    };
+
     this.state = {
-      inputFocused: false
+      inputFocused: false,
+      history: []
     };
   }
 
@@ -111,6 +155,22 @@ class SearchInput extends _react.Component {
     return [arrowBtn(handlePrev, "arrow-up", (0, _classnames2.default)("nav-btn", "prev"), L10N.getFormatStr("editor.searchResults.prevResult")), arrowBtn(handleNext, "arrow-down", (0, _classnames2.default)("nav-btn", "next"), L10N.getFormatStr("editor.searchResults.nextResult"))];
   }
 
+  saveEnteredTerm(query) {
+    const {
+      history
+    } = this.state;
+    const previousIndex = history.indexOf(query);
+
+    if (previousIndex !== -1) {
+      history.splice(previousIndex, 1);
+    }
+
+    history.push(query);
+    this.setState({
+      history
+    });
+  }
+
   renderSummaryMsg() {
     const {
       summaryMsg
@@ -146,7 +206,6 @@ class SearchInput extends _react.Component {
       expanded,
       handleClose,
       onChange,
-      onKeyDown,
       onKeyUp,
       placeholder,
       query,
@@ -160,7 +219,7 @@ class SearchInput extends _react.Component {
         empty: showErrorEmoji
       }),
       onChange,
-      onKeyDown,
+      onKeyDown: e => this.onKeyDown(e),
       onKeyUp,
       onFocus: e => this.onFocus(e),
       onBlur: e => this.onBlur(e),

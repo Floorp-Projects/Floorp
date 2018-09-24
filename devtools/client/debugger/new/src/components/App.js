@@ -166,7 +166,8 @@ class App extends _react.Component {
         startPanelSize: startPanelSize,
         endPanelSize: endPanelSize
       }), !this.props.selectedSource ? _react2.default.createElement(_WelcomeBox2.default, {
-        horizontal: horizontal
+        horizontal: horizontal,
+        toggleShortcutsModal: () => this.toggleShortcutsModal()
       }) : null, _react2.default.createElement(_ProjectSearch2.default, null)));
     };
 
