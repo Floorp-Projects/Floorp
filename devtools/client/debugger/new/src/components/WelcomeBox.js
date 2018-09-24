@@ -49,11 +49,14 @@ class WelcomeBox extends _react.Component {
   render() {
     const searchSourcesShortcut = (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2"));
     const searchProjectShortcut = (0, _text.formatKeyShortcut)(L10N.getStr("projectTextSearch.key"));
+    const allShortcutsShortcut = (0, _text.formatKeyShortcut)(L10N.getStr("allShortcut.key"));
+    const allShortcutsLabel = L10N.getStr("welcome.allShortcuts");
     const searchSourcesLabel = L10N.getStr("welcome.search2").substring(2);
     const searchProjectLabel = L10N.getStr("welcome.findInFiles2").substring(2);
     const {
       setActiveSearch,
-      openQuickOpen
+      openQuickOpen,
+      toggleShortcutsModal
     } = this.props;
     return _react2.default.createElement("div", {
       className: "welcomebox"
@@ -79,7 +82,16 @@ class WelcomeBox extends _react.Component {
       className: "shortcutKey"
     }, searchProjectShortcut), _react2.default.createElement("span", {
       className: "shortcutLabel"
-    }, searchProjectLabel))), this.renderToggleButton()));
+    }, searchProjectLabel)), _react2.default.createElement("p", {
+      className: "welcomebox__allShortcuts",
+      role: "button",
+      tabIndex: "0",
+      onClick: () => toggleShortcutsModal()
+    }, _react2.default.createElement("span", {
+      className: "shortcutKey"
+    }, allShortcutsShortcut), _react2.default.createElement("span", {
+      className: "shortcutLabel"
+    }, allShortcutsLabel))), this.renderToggleButton()));
   }
 
 }
