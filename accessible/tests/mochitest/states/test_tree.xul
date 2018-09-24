@@ -95,13 +95,8 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
-    if (MAC && (navigator.userAgent.includes("Mac OS X 10.6"))) {
-      todo(false,
-           "Re-enable on Mac OS 10.6 after fixing bug 845095 - intermittent orange");
-    } else {
     SimpleTest.waitForExplicitFinish();
     addA11yLoadEvent(doTest);
-    }
   ]]>
   </script>
 

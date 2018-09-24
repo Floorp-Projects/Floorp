@@ -886,6 +886,11 @@ class MachCommandConditions(object):
         return False
 
     @staticmethod
+    def is_firefox_or_android(cls):
+        """Must have a Firefox or Android build."""
+        return MachCommandConditions.is_firefox(cls) or MachCommandConditions.is_android(cls)
+
+    @staticmethod
     def is_hg(cls):
         """Must have a mercurial source checkout."""
         return getattr(cls, 'substs', {}).get('VCS_CHECKOUT_TYPE') == 'hg'
