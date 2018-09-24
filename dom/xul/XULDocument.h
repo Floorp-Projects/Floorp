@@ -13,7 +13,6 @@
 
 #include "mozilla/dom/XMLDocument.h"
 #include "mozilla/StyleSheet.h"
-#include "nsForwardReference.h"
 #include "nsIContent.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
@@ -293,61 +292,6 @@ protected:
 
 
 protected:
-    /* Declarations related to forward references.
-     *
-     * Forward references are declarations which are added to the temporary
-     * list (mForwardReferences) during the document (or overlay) load and
-     * are resolved later, when the document loading is almost complete.
-     */
-
-    /**
-     * The list of different types of forward references to resolve. After
-     * a reference is resolved, it is removed from this array (and
-     * automatically deleted)
-     */
-    nsTArray<nsAutoPtr<nsForwardReference> > mForwardReferences;
-
-    /** Indicates what kind of forward references are still to be processed. */
-    nsForwardReference::Phase mResolutionPhase;
-
-    /**
-     * Adds aRef to the mForwardReferences array. Takes the ownership of aRef.
-     */
-    nsresult AddForwardReference(nsForwardReference* aRef);
-
-    /**
-     * Resolve all of the document's forward references.
-     */
-    nsresult ResolveForwardReferences();
-
-    /**
-     * Used to resolve broadcaster references
-     */
-    class BroadcasterHookup : public nsForwardReference
-    {
-    protected:
-        XULDocument* mDocument;              // [WEAK]
-        RefPtr<Element> mObservesElement; // [OWNER]
-        bool mResolved;
-
-    public:
-        BroadcasterHookup(XULDocument* aDocument,
-                          Element* aObservesElement)
-            : mDocument(aDocument),
-              mObservesElement(aObservesElement),
-              mResolved(false)
-        {
-        }
-
-        virtual ~BroadcasterHookup();
-
-        virtual Phase GetPhase() override { return eHookup; }
-        virtual Result Resolve() override;
-    };
-
-    friend class BroadcasterHookup;
-
-
     // The out params of FindBroadcaster only have values that make sense when
     // the method returns NS_FINDBROADCASTER_FOUND.  In all other cases, the
     // values of the out params should not be relied on (though *aListener and
@@ -360,9 +304,7 @@ protected:
                     Element** aBroadcaster);
 
     nsresult
-    CheckBroadcasterHookup(Element* aElement,
-                           bool* aNeedsHookup,
-                           bool* aDidResolve);
+    CheckBroadcasterHookup(Element* aElement);
 
     void
     SynchronizeBroadcastListener(Element *aBroadcaster,

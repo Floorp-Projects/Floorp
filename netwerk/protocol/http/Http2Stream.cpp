@@ -1368,7 +1368,9 @@ Http2Stream::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
           "depends on stream 0x%X\n", this, mPriorityDependency));
   }
 
-  mSession->SendPriorityFrame(mStreamID, mPriorityDependency, mPriorityWeight);
+  if (mStreamID) {
+    mSession->SendPriorityFrame(mStreamID, mPriorityDependency, mPriorityWeight);
+  }
 }
 
 void
