@@ -8,6 +8,9 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 const InspectAction = createFactory(require("./InspectAction"));
 
 const Actions = require("../../actions/index");
@@ -39,19 +42,29 @@ class TemporaryExtensionAction extends PureComponent {
     return dom.div(
       {},
       InspectAction({ dispatch, target }),
-      dom.button(
+      Localized(
         {
-          className: "aboutdebugging-button",
-          onClick: e => this.reload()
+          id: "about-debugging-tmp-extension-reload-button"
         },
-        "Reload",
+        dom.button(
+          {
+            className: "aboutdebugging-button",
+            onClick: e => this.reload()
+          },
+          "Reload",
+        )
       ),
-      dom.button(
+      Localized(
         {
-          className: "aboutdebugging-button",
-          onClick: e => this.remove()
+          id: "about-debugging-tmp-extension-remove-button"
         },
-        "Remove",
+        dom.button(
+          {
+            className: "aboutdebugging-button",
+            onClick: e => this.remove()
+          },
+          "Remove",
+        )
       ),
     );
   }

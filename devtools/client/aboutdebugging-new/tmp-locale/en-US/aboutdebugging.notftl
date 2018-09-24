@@ -30,3 +30,55 @@ about-debugging-runtime-service-workers = Service Workers
 about-debugging-runtime-shared-workers = Shared Workers
 # Title of the other workers category.
 about-debugging-runtime-other-workers = Other Workers
+
+# Displayed in the categories of "runtime" pages that don't have any debug target to
+# show. Debug targets depend on the category (extensions, tabs, workers...).
+about-debugging-debug-target-list-empty = Nothing yet.
+
+# Text of a button displayed next to debug targets of "runtime" pages. Clicking on this
+# button will open a DevTools toolbox that will allow inspecting the target.
+# A target can be an addon, a tab, a worker...
+about-debugging-debug-target-inspect-button = Inspect
+
+# Text of a button displayed in the "This Firefox" page, in the Temporary Extension
+# section. Clicking on the button will open a file picker to load a temporary extension
+about-debugging-tmp-extension-install-button = Load Temporary Add-on…
+
+# Text of a button displayed for a temporary extension loaded in the "This Firefox" page.
+# Clicking on the button will reload the extension.
+about-debugging-tmp-extension-reload-button = Reload
+
+# Text of a button displayed for a temporary extension loaded in the "This Firefox" page.
+# Clicking on the button will uninstall the extension and remove it from the page.
+about-debugging-tmp-extension-remove-button = Remove
+
+# Message displayed in the file picker that opens to select a temporary extension to load
+# (triggered by the button using "about-debugging-tmp-extension-install-button")
+# manifest.json .xpi and .zip should not be localized.
+# Note: this message is only displayed in Windows and Linux platforms.
+about-debugging-tmp-extension-install-message = Select manifest.json file or .xpi/.zip archive
+
+# Text of a link displayed for extensions in "runtime" pages.
+# Clicking on the link should open the manifest file in a new tab.
+about-debugging-extension-manifest-link = Manifest URL
+
+# Text displayed for extensions in "runtime" pages, before displaying the extension's uuid.
+# UUIDs look like b293e463-481e-5148-a487-5aaf7a130429
+about-debugging-extension-uuid = Internal UUID
+
+# Text displayed for extensions (temporary extensions only) in "runtime" pages, before
+# displaying the location of the temporary extension.
+about-debugging-extension-location = Location
+
+# Text displayed for extensions in "runtime" pages, before displaying the extension's ID.
+# For instance "geckoprofiler@mozilla.com" or "{ed26ddcb-5611-4512-a89a-51b8db81cfb2}".
+about-debugging-extension-id = Extension ID
+
+# This string is displayed as a label of the button that pushes a test payload
+# to a service worker.
+# Notes, this relates to the "Push" API, which is normally not localized so it is
+# probably better to not localize it.
+about-debugging-worker-action-push = Push
+
+# This string is displayed as a label of the button that starts a service worker.
+about-debugging-worker-action-start = Start
