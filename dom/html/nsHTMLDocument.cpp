@@ -3418,7 +3418,5 @@ nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
 void
 nsHTMLDocument::UserInteractionForTesting()
 {
-  if (!UserHasInteracted()) {
-    SetUserHasInteracted(true);
-  }
+  SetUserHasInteracted();
 }

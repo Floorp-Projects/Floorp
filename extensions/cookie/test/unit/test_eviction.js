@@ -199,7 +199,7 @@ function set_cookies(begin, end, expiry)
   for (let i = begin; i < end; ++i) {
     let host = "eviction." + i + ".tests";
     Services.cookiemgr.add(host, "", "test", "eviction", false, false, false,
-      expiry, {});
+      expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
 
     if (i == begin)
       beginTime = get_creationTime(i);

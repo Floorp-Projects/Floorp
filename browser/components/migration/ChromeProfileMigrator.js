@@ -347,7 +347,8 @@ async function GetCookiesResource(aProfileFolder) {
                                row.getResultByName("httponly"),
                                false,
                                parseInt(expiresUtc),
-                               {});
+                               {},
+                               Ci.nsICookie2.SAMESITE_UNSET);
         } catch (e) {
           Cu.reportError(e);
         }

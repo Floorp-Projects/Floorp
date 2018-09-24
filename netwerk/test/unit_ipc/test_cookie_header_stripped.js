@@ -59,7 +59,7 @@ function run_test() {
   // Sets a cookie for the test domain
   do_await_remote_message("set-cookie").then(() => {
     const expiry = Date.now() + 24 * 60 * 60;
-    Services.cookies.add(TEST_DOMAIN, "/", "cookieName", "cookieValue", false, false, false, expiry, {});
+    Services.cookies.add(TEST_DOMAIN, "/", "cookieName", "cookieValue", false, false, false, expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
     do_send_remote_message("set-cookie-done");
   });
 
