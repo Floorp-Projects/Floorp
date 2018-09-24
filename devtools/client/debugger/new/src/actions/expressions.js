@@ -191,7 +191,10 @@ function evaluateExpression(expression) {
       const selectedSource = (0, _selectors.getSelectedSource)(getState());
 
       if (selectedSource && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) && !(0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id)) {
-        input = await dispatch(getMappedExpression(input));
+        const mapResult = await dispatch(getMappedExpression(input));
+        if (mapResult !== null) {
+          input = mapResult.expression;
+        }
       }
     }
 
@@ -226,7 +229,7 @@ function getMappedExpression(expression) {
     // 3. does not contain `=` - we do not need to map assignments
 
     if (!mappings && !expression.match(/(await|=)/)) {
-      return expression;
+      return null;
     }
 
     return parser.mapExpression(expression, mappings, bindings || [], _prefs.features.mapExpressionBindings, _prefs.features.mapAwaitExpression);
