@@ -44,9 +44,13 @@
       <textarea id="street-address" rows="3" required="required"/>
       <span data-localization="streetAddress" class="label-text"/>
     </label>
+    <label id="address-level3-container" class="container">
+      <input id="address-level3" type="text" required="required"/>
+      <span class="label-text"/>
+    </label>
     <label id="address-level2-container" class="container">
       <input id="address-level2" type="text" required="required"/>
-      <span data-localization="city" class="label-text"/>
+      <span class="label-text"/>
     </label>
     <label id="address-level1-container" class="container">
       <input id="address-level1" type="text" required="required"/>
@@ -81,7 +85,7 @@
 
     let {
       DEFAULT_REGION,
-      supportedCountries,
+      countries,
     } = FormAutofill;
     let {
       getFormFormat,
@@ -90,12 +94,12 @@
     let novalidate = window.arguments && window.arguments[1] == "novalidate";
 
     /* import-globals-from autofillEditForms.js */
-    let fieldContainer = new EditAddress({
+    var fieldContainer = new EditAddress({
       form: document.getElementById("form"),
     }, record, {
       DEFAULT_REGION,
       getFormFormat: getFormFormat.bind(FormAutofillUtils),
-      supportedCountries,
+      countries,
       novalidate,
     });
 

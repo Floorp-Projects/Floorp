@@ -50,10 +50,12 @@ var PaymentDialogUtils = {
     return !!str.replace(/[-\s]/g, "").match(/^\d{9,}$/);
   },
   DEFAULT_REGION: "US",
-  supportedCountries: ["US", "CA", "DE"],
+  countries: new Map([["US", "United States"], ["CA", "Canada"], ["DE", "Germany"]]),
   getFormFormat(country) {
     if (country == "DE") {
       return {
+        addressLevel3Label: "",
+        addressLevel2Label: "city",
         addressLevel1Label: "province",
         postalCodeLabel: "postalCode",
         fieldsOrder: [
@@ -77,9 +79,11 @@ var PaymentDialogUtils = {
     }
 
     return {
-      "addressLevel1Label": country == "US" ? "state" : "province",
-      "postalCodeLabel": country == "US" ? "zip" : "postalCode",
-      "fieldsOrder": [
+      addressLevel3Label: "",
+      addressLevel2Label: "city",
+      addressLevel1Label: country == "US" ? "state" : "province",
+      postalCodeLabel: country == "US" ? "zip" : "postalCode",
+      fieldsOrder: [
         {fieldId: "name", newLine: true},
         {fieldId: "street-address", newLine: true},
         {fieldId: "address-level2"},
@@ -89,7 +93,7 @@ var PaymentDialogUtils = {
       ],
       // The following values come from addressReferences.js and should not be changed.
       /* eslint-disable-next-line max-len */
-      "postalCodePattern": country == "US" ? "(\\d{5})(?:[ \\-](\\d{4}))?" : "[ABCEGHJKLMNPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z] ?\\d[ABCEGHJ-NPRSTV-Z]\\d",
+      postalCodePattern: country == "US" ? "(\\d{5})(?:[ \\-](\\d{4}))?" : "[ABCEGHJKLMNPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z] ?\\d[ABCEGHJ-NPRSTV-Z]\\d",
     };
   },
   getDefaultPreferences() {

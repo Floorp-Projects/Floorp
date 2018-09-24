@@ -69,11 +69,8 @@ const TESTCASES = [
       "country": "United States",
     },
     expectedRecord: {
-      address: [{
-        "given-name": "John",
-        "organization": "Mozilla",
-        "country": "United States",
-      }],
+      // "United States" is not a valid country, only country-name. See isRecordCreatable.
+      address: [],
       creditCard: [],
     },
   },
@@ -132,14 +129,14 @@ const TESTCASES = [
     formValue: {
       "given-name": "John",
       "organization": "Mozilla",
-      "country": "United States",
+      "country": "US",
       "tel": "1234",
     },
     expectedRecord: {
       address: [{
         "given-name": "John",
         "organization": "Mozilla",
-        "country": "United States",
+        "country": "US",
         "tel": "",
       }],
       creditCard: [],
@@ -156,14 +153,14 @@ const TESTCASES = [
     formValue: {
       "given-name": "John",
       "organization": "Mozilla",
-      "country": "United States",
+      "country": "US",
       "tel": "1234567890123456",
     },
     expectedRecord: {
       address: [{
         "given-name": "John",
         "organization": "Mozilla",
-        "country": "United States",
+        "country": "US",
         "tel": "",
       }],
       creditCard: [],
@@ -180,14 +177,14 @@ const TESTCASES = [
     formValue: {
       "given-name": "John",
       "organization": "Mozilla",
-      "country": "United States",
+      "country": "US",
       "tel": "12345###!!!",
     },
     expectedRecord: {
       address: [{
         "given-name": "John",
         "organization": "Mozilla",
-        "country": "United States",
+        "country": "US",
         "tel": "",
       }],
       creditCard: [],

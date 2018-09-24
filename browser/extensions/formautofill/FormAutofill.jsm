@@ -7,6 +7,7 @@
 var EXPORTED_SYMBOLS = ["FormAutofill"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ADDRESSES_FIRST_TIME_USE_PREF = "extensions.formautofill.firstTimeUse";
 const AUTOFILL_CREDITCARDS_AVAILABLE_PREF = "extensions.formautofill.creditCards.available";
@@ -73,3 +74,7 @@ XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
 XPCOMUtils.defineLazyPreferenceGetter(FormAutofill,
                                       "supportedCountries", SUPPORTED_COUNTRIES_PREF, null, null,
                                       val => val.split(","));
+
+XPCOMUtils.defineLazyGetter(FormAutofill, "countries", () => {
+  return Services.intl.getRegions(undefined);
+});

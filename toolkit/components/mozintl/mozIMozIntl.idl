@@ -51,10 +51,19 @@ interface mozIMozIntl : nsISupports
   jsval getLanguageDisplayNames(in jsval locales, in jsval langCodes);
 
   /**
+   * Returns a list of region codes.
+   *
+   * Example:
+   *   let regs = getRegions(undefined);
+   *   regs === new Map([["US", "United States"], ["CA", "Canada"], ["MX", "Mexico"]])
+   */
+  jsval getRegions(in jsval locales);
+
+  /**
    * Returns a list of region names formatted for display.
    *
    * Example:
-   *   let regs = getLanguageDisplayNames(["pl"], ["US", "CA", "MX"]);
+   *   let regs = getRegionDisplayNames(["pl"], ["US", "CA", "MX"]);
    *   regs === ["Stany Zjednoczone", "Kanada", "Meksyk"]
    */
   jsval getRegionDisplayNames(in jsval locales, in jsval regionCodes);
@@ -63,7 +72,7 @@ interface mozIMozIntl : nsISupports
    * Returns a list of locale names formatted for display.
    *
    * Example:
-   *   let locs = getLanguageDisplayNames(["pl"], ["sr-RU", "es-MX", "fr-CA"]);
+   *   let locs = getLocaleDisplayNames(["pl"], ["sr-RU", "es-MX", "fr-CA"]);
    *   locs === ["Serbski (Rosja)", "Hiszpański (Meksyk)", "Francuski (Kanada)"]
    */
   jsval getLocaleDisplayNames(in jsval locales, in jsval localeCodes);
