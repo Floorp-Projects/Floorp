@@ -19,6 +19,10 @@ TASK_ID = os.environ.get('TASK_ID')
 REPO_URL = os.environ.get('GITHUB_HEAD_REPO_URL')
 BRANCH = os.environ.get('GITHUB_HEAD_BRANCH')
 COMMIT = os.environ.get('GITHUB_HEAD_SHA')
+PR_TITLE = os.environ.get('GITHUB_PULL_TITLE')
+
+# If we see this text inside a pull request title then we will not execute any tasks for this PR.
+SKIP_TASKS_TRIGGER = '[ci skip]'
 
 def fetch_module_names():
     process = subprocess.Popen(["./gradlew", "--no-daemon", "printModules"], stdout=subprocess.PIPE)
@@ -104,6 +108,11 @@ def create_ktlint_task():
 
 
 if __name__ == "__main__":
+    if SKIP_TASKS_TRIGGER in PR_TITLE:
+        print "Pull request title contains", SKIP_TASKS_TRIGGER
+        print "Exit"
+        exit(0)
+
     queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
     modules = fetch_module_names()
