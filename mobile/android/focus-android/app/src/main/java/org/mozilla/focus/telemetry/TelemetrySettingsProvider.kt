@@ -32,16 +32,17 @@ internal class TelemetrySettingsProvider(
         prefKeyFretboardBucketNumber = resources.getString(R.string.pref_key_fretboard_bucket_number)
     }
 
-    override fun containsKey(key: String): Boolean {
-        if (key == prefKeyDefaultBrowser) {
-            // Not actually a setting - but we want to report this like a setting.
-            return true
-        }
+    override fun containsKey(key: String): Boolean = when (key) {
+        // Not actually a setting - but we want to report this like a setting.
+        prefKeyDefaultBrowser -> true
 
-        return if (key == prefKeySearchEngine) {
-            // We always want to report the current search engine - even if it's not in settings yet.
-            true
-        } else super.containsKey(key)
+        // We always want to report the current search engine - even if it's not in settings yet.
+        prefKeySearchEngine -> true
+
+        // Not actually a setting - but we want to report this like a setting.
+        prefKeyFretboardBucketNumber -> true
+
+        else -> super.containsKey(key)
     }
 
     override fun getValue(key: String): Any {
