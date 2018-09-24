@@ -2115,10 +2115,5 @@ const VMFunction ProxyHasInfo = FunctionInfo<ProxyHasFn>(ProxyHas, "ProxyHas");
 typedef bool (*ProxyHasOwnFn)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
 const VMFunction ProxyHasOwnInfo = FunctionInfo<ProxyHasOwnFn>(ProxyHasOwn, "ProxyHasOwn");
 
-typedef bool (*NativeGetElementFn)(JSContext*, HandleNativeObject, HandleValue, int32_t,
-                                   MutableHandleValue);
-const VMFunction NativeGetElementInfo =
-    FunctionInfo<NativeGetElementFn>(NativeGetElement, "NativeGetProperty");
-
 } // namespace jit
 } // namespace js

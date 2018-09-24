@@ -1610,10 +1610,6 @@ NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, MutableHan
     return NativeGetProperty(cx, obj, receiver, id, vp);
 }
 
-extern bool
-NativeGetElement(JSContext* cx, HandleNativeObject obj, HandleValue reciever, int32_t index,
-                 MutableHandleValue vp);
-
 bool
 SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue receiver,
                       ObjectOpResult& result);
