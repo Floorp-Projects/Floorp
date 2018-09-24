@@ -316,7 +316,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
     def checkCookie(self):
         cookieInfo = self.runCode("""
           try {
-            let cookieEnum = Services.cookies.getCookiesFromHost(arguments[0]);
+            let cookieEnum = Services.cookies.getCookiesFromHost(arguments[0], {});
             let cookie = null;
             while (cookieEnum.hasMoreElements()) {
               let hostCookie = cookieEnum.getNext();
