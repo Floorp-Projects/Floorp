@@ -1058,6 +1058,7 @@ Http2Session::CreatePriorityFrame(uint32_t streamID,
                                   uint32_t dependsOn,
                                   uint8_t weight)
 {
+  MOZ_ASSERT(streamID, "Priority on stream 0");
   char *packet = EnsureOutputBuffer(kFrameHeaderBytes + 5);
   CreateFrameHeader(packet, 5, FRAME_TYPE_PRIORITY, 0, streamID);
   mOutputQueueUsed += kFrameHeaderBytes + 5;
