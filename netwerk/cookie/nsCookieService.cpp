@@ -2773,19 +2773,14 @@ nsCookieService::Remove(const nsACString &aHost,
                         const nsACString &aPath,
                         bool             aBlocked,
                         JS::HandleValue  aOriginAttributes,
-                        JSContext*       aCx,
-                        uint8_t          aArgc)
+                        JSContext*       aCx)
 {
-  MOZ_ASSERT(aArgc == 0 || aArgc == 1);
-
   OriginAttributes attrs;
-  nsresult rv = InitializeOriginAttributes(&attrs,
-                                           aOriginAttributes,
-                                           aCx,
-                                           aArgc,
-                                           u"nsICookieManager.remove()",
-                                           u"");
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aOriginAttributes.isObject() ||
+      !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   return RemoveNative(aHost, aName, aPath, aBlocked, &attrs);
 }
