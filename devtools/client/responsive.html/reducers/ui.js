@@ -10,11 +10,15 @@ const {
   CHANGE_DISPLAY_PIXEL_RATIO,
   CHANGE_USER_AGENT,
   TOGGLE_LEFT_ALIGNMENT,
+  TOGGLE_RELOAD_ON_TOUCH_SIMULATION,
+  TOGGLE_RELOAD_ON_USER_AGENT,
   TOGGLE_TOUCH_SIMULATION,
   TOGGLE_USER_AGENT_INPUT,
 } = require("../actions/index");
 
 const LEFT_ALIGNMENT_ENABLED = "devtools.responsive.leftAlignViewport.enabled";
+const RELOAD_ON_TOUCH_SIMULATION = "devtools.responsive.reloadConditions.touchSimulation";
+const RELOAD_ON_USER_AGENT = "devtools.responsive.reloadConditions.userAgent";
 const SHOW_USER_AGENT_INPUT = "devtools.responsive.showUserAgentInput";
 
 const INITIAL_UI = {
@@ -22,6 +26,10 @@ const INITIAL_UI = {
   displayPixelRatio: 0,
   // Whether or not the viewports are left aligned.
   leftAlignmentEnabled: Services.prefs.getBoolPref(LEFT_ALIGNMENT_ENABLED),
+  // Whether or not to reload when touch simulation is toggled.
+  reloadOnTouchSimulation: Services.prefs.getBoolPref(RELOAD_ON_TOUCH_SIMULATION),
+  // Whether or not to reload when user agent is changed.
+  reloadOnUserAgent: Services.prefs.getBoolPref(RELOAD_ON_USER_AGENT),
   // Whether or not to show the user agent input in the toolbar.
   showUserAgentInput: Services.prefs.getBoolPref(SHOW_USER_AGENT_INPUT),
   // Whether or not touch simulation is enabled.
@@ -33,15 +41,17 @@ const INITIAL_UI = {
 const reducers = {
 
   [CHANGE_DISPLAY_PIXEL_RATIO](ui, { displayPixelRatio }) {
-    return Object.assign({}, ui, {
+    return {
+      ...ui,
       displayPixelRatio,
-    });
+    };
   },
 
   [CHANGE_USER_AGENT](ui, { userAgent }) {
-    return Object.assign({}, ui, {
+    return {
+      ...ui,
       userAgent,
-    });
+    };
   },
 
   [TOGGLE_LEFT_ALIGNMENT](ui, { enabled }) {
@@ -50,15 +60,41 @@ const reducers = {
 
     Services.prefs.setBoolPref(LEFT_ALIGNMENT_ENABLED, leftAlignmentEnabled);
 
-    return Object.assign({}, ui, {
+    return {
+      ...ui,
       leftAlignmentEnabled,
-    });
+    };
+  },
+
+  [TOGGLE_RELOAD_ON_TOUCH_SIMULATION](ui, { enabled }) {
+    const reloadOnTouchSimulation = enabled !== undefined ?
+      enabled : !ui.reloadOnTouchSimulation;
+
+    Services.prefs.setBoolPref(RELOAD_ON_TOUCH_SIMULATION, reloadOnTouchSimulation);
+
+    return {
+      ...ui,
+      reloadOnTouchSimulation,
+    };
+  },
+
+  [TOGGLE_RELOAD_ON_USER_AGENT](ui, { enabled }) {
+    const reloadOnUserAgent = enabled !== undefined ?
+      enabled : !ui.reloadOnUserAgent;
+
+    Services.prefs.setBoolPref(RELOAD_ON_USER_AGENT, reloadOnUserAgent);
+
+    return {
+      ...ui,
+      reloadOnUserAgent,
+    };
   },
 
   [TOGGLE_TOUCH_SIMULATION](ui, { enabled }) {
-    return Object.assign({}, ui, {
+    return {
+      ...ui,
       touchSimulationEnabled: enabled,
-    });
+    };
   },
 
   [TOGGLE_USER_AGENT_INPUT](ui, { enabled }) {
@@ -67,9 +103,10 @@ const reducers = {
 
     Services.prefs.setBoolPref(SHOW_USER_AGENT_INPUT, showUserAgentInput);
 
-    return Object.assign({}, ui, {
+    return {
+      ...ui,
       showUserAgentInput,
-    });
+    };
   },
 
 };
