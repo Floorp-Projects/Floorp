@@ -29,6 +29,10 @@ AST_MATCHER(CXXRecordDecl, hasTrivialCtorDtor) {
   return hasCustomAttribute<moz_trivial_ctor_dtor>(&Node);
 }
 
+AST_MATCHER(CXXConstructExpr, allowsTemporary) {
+  return hasCustomAttribute<moz_allow_temporary>(Node.getConstructor());
+}
+
 /// This matcher will match lvalue-ref-qualified methods.
 AST_MATCHER(CXXMethodDecl, isLValueRefQualified) {
   return Node.getRefQualifier() == RQ_LValue;
