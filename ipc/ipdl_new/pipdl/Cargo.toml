@@ -1,0 +1,7 @@
+[package]
+name = "pipdl"
+version = "0.1.0"
+authors = ["Nika Layzell <nika@thelayzells.com>"]
+license = "MPL-2.0"
+
+[dependencies]

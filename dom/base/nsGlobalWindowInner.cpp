@@ -7422,6 +7422,16 @@ nsGlobalWindowInner::MessageManager()
   return mChromeFields.mMessageManager;
 }
 
+IPDL*
+nsGlobalWindowInner::IPDL()
+{
+  MOZ_ASSERT(IsChromeWindow());
+  if (!mChromeFields.mIPDL) {
+    mChromeFields.mIPDL = new class IPDL(this);
+  }
+  return mChromeFields.mIPDL;
+}
+
 ChromeMessageBroadcaster*
 nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup)
 {
