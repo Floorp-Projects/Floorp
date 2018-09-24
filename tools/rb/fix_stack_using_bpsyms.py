@@ -10,13 +10,15 @@
 
 from __future__ import with_statement
 
-import sys
+import bisect
+import collections
 import os
 import re
 import subprocess
-import bisect
+import sys
 
 here = os.path.dirname(__file__)
+FunctionSymbol = collections.namedtuple('FunctionSymbol', ['name', 'size'])
 
 
 def prettyFileName(name):
@@ -54,7 +56,7 @@ class SymbolFile:
                         bits.append('unnamed_function')
                     (junk, rva, size, ss, name) = bits
                     rva = int(rva, 16)
-                    funcs[rva] = {'name': name, 'size': int(size, 16)}
+                    funcs[rva] = FunctionSymbol(name, int(size, 16))
                     addrs.append(rva)
                     lastFuncName = name
                 elif line.startswith("PUBLIC "):
@@ -75,7 +77,7 @@ class SymbolFile:
                     rva = int(rva, 16)
                     file = files[filenum]
                     name = lastFuncName + " [" + file + line + "]"
-                    funcs[rva] = {'name': name, 'size': int(size, 16)}
+                    funcs[rva] = FunctionSymbol(name, int(size, 16))
                     addrs.append(rva)
                 # skip everything else
         self.addrs = sorted(addrs)
@@ -89,8 +91,8 @@ class SymbolFile:
         if i > 0:
             func_addr = self.addrs[i - 1]
             func = self.funcs[func_addr]
-            if address >= func_addr and address < func_addr + func['size']:
-                return func['name']
+            if address >= func_addr and address < func_addr + func.size:
+                return func.name
 
         return None
 
