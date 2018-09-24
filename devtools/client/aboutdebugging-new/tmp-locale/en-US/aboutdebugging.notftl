@@ -30,3 +30,13 @@ about-debugging-runtime-service-workers = Service Workers
 about-debugging-runtime-shared-workers = Shared Workers
 # Title of the other workers category.
 about-debugging-runtime-other-workers = Other Workers
+
+# Text of a button displayed in the "This Firefox" page, in the Temporary Extension
+# section. Clicking on the button will open a file picker to load a temporary extension
+about-debugging-tmp-extension-install-button = Load Temporary Add-on…
+
+# Message displayed in the file picker that opens to select a temporary extension to load
+# (triggered by the button using "about-debugging-tmp-extension-install-button")
+# manifest.json .xpi and .zip should not be localized.
+# Note: this message is only displayed in Windows and Linux platforms.
+about-debugging-tmp-extension-install-message = Select manifest.json file or .xpi/.zip archive
