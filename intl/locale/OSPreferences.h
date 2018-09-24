@@ -81,54 +81,6 @@ public:
   }
 
 
-  /**
-   * Returns a list of locales used by the host environment for UI
-   * localization.
-   *
-   * The result is a sorted list and we expect that the OS attempts to
-   * use the top locale from the list for which it has data.
-   *
-   * Each element of the list is a valid locale ID that can be passed to ICU
-   * and ECMA402 Intl APIs,
-   * At the same time each element is a valid BCP47 language tag that can be
-   * used for language negotiation.
-   *
-   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
-   *
-   * The return bool value indicates whether the function successfully
-   * resolved at least one locale.
-   *
-   * Usage:
-   *   nsTArray<nsCString> systemLocales;
-   *   OSPreferences::GetInstance()->GetSystemLocales(systemLocales);
-   *
-   * (See mozIOSPreferences.idl for a JS-callable version of this.)
-   */
-  bool GetSystemLocales(nsTArray<nsCString>& aRetVal);
-
-  /**
-   * Returns a list of locales used by host environment for regional
-   * preferences internationalization.
-   *
-   * The result is a sorted list and we expect that the OS attempts to
-   * use the top locale from the list for which it has data.
-   *
-   * Each element of the list is a valid locale ID that can be passed to ICU
-   * and ECMA402 Intl APIs,
-   *
-   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
-   *
-   * The return bool value indicates whether the function successfully
-   * resolved at least one locale.
-   *
-   * Usage:
-   *   nsTArray<nsCString> systemLocales;
-   *   OSPreferences::GetInstance()->GetRegionalPrefsLocales(regionalPrefsLocales);
-   *
-   * (See mozIOSPreferences.idl for a JS-callable version of this.)
-   */
-  bool GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal);
-
   static bool GetDateTimeConnectorPattern(const nsACString& aLocale,
                                           nsAString& aRetVal);
 
