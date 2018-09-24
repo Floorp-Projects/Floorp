@@ -8,6 +8,7 @@
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/Console.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -72,7 +73,7 @@ WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
 {
   WorkletThread::AssertIsOnWorkletThread();
 
-  if (!mImpl->LoadInfo().DumpEnabled()) {
+  if (!StaticPrefs::browser_dom_window_dump_enabled()) {
     return;
   }
 
