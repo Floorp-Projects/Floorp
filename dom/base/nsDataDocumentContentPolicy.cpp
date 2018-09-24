@@ -102,7 +102,8 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
           requestingPrincipal->GetURI(getter_AddRefs(principalURI));
         if (NS_SUCCEEDED(rv) && principalURI) {
           nsScriptSecurityManager::ReportError(
-            nullptr, "ExternalDataError", principalURI, aContentLocation);
+            "ExternalDataError", principalURI, aContentLocation,
+            requestingPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0);
         }
       }
     } else if ((contentType == nsIContentPolicy::TYPE_IMAGE ||

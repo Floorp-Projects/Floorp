@@ -63,8 +63,8 @@ public:
     static uint32_t SecurityHashURI(nsIURI* aURI);
 
     static nsresult
-    ReportError(JSContext* cx, const char* aMessageTag,
-                nsIURI* aSource, nsIURI* aTarget);
+    ReportError(const char* aMessageTag, nsIURI* aSource,
+                nsIURI* aTarget, bool aFromPrivateWindow);
 
     static uint32_t
     HashPrincipalByOrigin(nsIPrincipal* aPrincipal);
@@ -108,7 +108,7 @@ private:
 
     nsresult
     CheckLoadURIFlags(nsIURI* aSourceURI, nsIURI* aTargetURI, nsIURI* aSourceBaseURI,
-                      nsIURI* aTargetBaseURI, uint32_t aFlags);
+                      nsIURI* aTargetBaseURI, uint32_t aFlags, bool aFromPrivateWindow);
 
     // Returns the file URI whitelist, initializing it if it has not been
     // initialized.
