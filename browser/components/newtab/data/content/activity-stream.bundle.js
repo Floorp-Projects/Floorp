@@ -211,7 +211,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "FILL_SEARCH_TERM", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -885,26 +885,40 @@ function addSnippetsSubscriber(store) {
 
   store.subscribe(_asyncToGenerator(function* () {
     const state = store.getState();
-    let snippetsEnabled = false;
-    try {
-      snippetsEnabled = JSON.parse(state.Prefs.values["asrouter.messageProviders"]).find(function (i) {
-        return i.id === "snippets";
-      }).enabled;
-    } catch (e) {}
-    const isASRouterEnabled = state.Prefs.values.asrouterExperimentEnabled && snippetsEnabled;
-    // state.Prefs.values["feeds.snippets"]:  Should snippets be shown?
-    // state.Snippets.initialized             Is the snippets data initialized?
-    // snippets.initialized:                  Is SnippetsProvider currently initialised?
-    if (state.Prefs.values["feeds.snippets"] &&
-    // If the message center experiment is enabled, don't show snippets
-    !isASRouterEnabled && !state.Prefs.values.disableSnippets && state.Snippets.initialized && !snippets.initialized &&
+
+    /**
+     * Sorry this code is so complicated. It will be removed soon.
+     * This is what the different values actually mean:
+     *
+     * ASRouter.initialized                   Is ASRouter.jsm initialised?
+     * ASRouter.allowLegacySnippets           Are ASRouter snippets turned OFF (i.e. legacy snippets are allowed)
+     * state.Prefs.values["feeds.snippets"]   User preference for snippets
+     * state.Snippets.initialized             Is SnippetsFeed.jsm initialised?
+     * snippets.initialized                   Is in-content snippets currently initialised?
+     * state.Prefs.values.disableSnippets     This pref is used to disable legacy snippets in an emergency
+     *                                        in a way that is not user-editable (true = disabled)
+     */
+
+    /** If we should initialize snippets... */
+    if (state.Prefs.values["feeds.snippets"] && state.ASRouter.initialized && state.ASRouter.allowLegacySnippets && !state.Prefs.values.disableSnippets && state.Snippets.initialized && !snippets.initialized &&
     // Don't call init multiple times
     !initializing && location.href !== "about:welcome") {
       initializing = true;
       yield snippets.init({ appData: state.Snippets });
+      // istanbul ignore if
+      if (state.Prefs.values["asrouter.devtoolsEnabled"]) {
+        console.log("Legacy snippets initialized"); // eslint-disable-line no-console
+      }
       initializing = false;
-    } else if ((state.Prefs.values["feeds.snippets"] === false || state.Prefs.values.disableSnippets === true) && snippets.initialized) {
+
+      /** If we should remove snippets... */
+    } else if ((state.Prefs.values["feeds.snippets"] === false || state.Prefs.values.disableSnippets === true || state.ASRouter.initialized && !state.ASRouter.allowLegacySnippets) && snippets.initialized) {
+      // Remove snippets
       snippets.uninit();
+      // istanbul ignore if
+      if (state.Prefs.values["asrouter.devtoolsEnabled"]) {
+        console.log("Legacy snippets removed"); // eslint-disable-line no-console
+      }
     }
   }));
 
@@ -1637,23 +1651,12 @@ class _Base extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent {
     const { initialized } = App;
 
     const prefs = props.Prefs.values;
-    if (prefs.asrouterExperimentEnabled && window.location.hash === "#asrouter") {
+    if (prefs["asrouter.devtoolsEnabled"] && window.location.hash === "#asrouter") {
       return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_ASRouterAdmin_ASRouterAdmin__WEBPACK_IMPORTED_MODULE_2__["ASRouterAdmin"], null);
     }
 
     if (!props.isPrerendered && !initialized) {
       return null;
-    }
-
-    // Until we can delete the existing onboarding tour, just hide the onboarding button when users are in
-    // the new simplified onboarding experiment. CSS hacks ftw
-    let isOnboardingEnabled = false;
-    try {
-      isOnboardingEnabled = JSON.parse(prefs["asrouter.messageProviders"]).find(i => i.id === "onboarding").enabled;
-    } catch (e) {}
-
-    if (isOnboardingEnabled) {
-      global.document.body.classList.add("hide-onboarding");
     }
 
     return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
@@ -5307,20 +5310,35 @@ class DetectUserSessionStart {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "enableASRouterContent", function() { return enableASRouterContent; });
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "enableASRouterContent", function() { return enableASRouterContent; });
 function enableASRouterContent(store, asrouterContent) {
+  let didHideOnboarding = false;
+
   // Enable asrouter content
   store.subscribe(() => {
     const state = store.getState();
-    if (state.Prefs.values.asrouterExperimentEnabled && !asrouterContent.initialized) {
+    if (!state.ASRouter.initialized) {
+      return;
+    }
+
+    if (!asrouterContent.initialized) {
       asrouterContent.init();
-    } else if (!state.Prefs.values.asrouterExperimentEnabled && asrouterContent.initialized) {
-      asrouterContent.uninit();
+    }
+
+    // Until we can delete the existing onboarding tour, just hide the onboarding button when users are in
+    // the new simplified onboarding experiment. CSS hacks ftw
+    if (state.ASRouter.allowLegacyOnboarding === false && !didHideOnboarding) {
+      global.document.body.classList.add("hide-onboarding");
+      didHideOnboarding = true;
+    } else if (state.ASRouter.allowLegacyOnboarding === true && didHideOnboarding) {
+      global.document.body.classList.remove("hide-onboarding");
+      didHideOnboarding = false;
     }
   });
   // Return this for testing purposes
   return { asrouterContent };
 }
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
 /* 42 */
@@ -8156,6 +8174,11 @@ const INITIAL_STATE = {
     // Have we received real data from the app yet?
     initialized: false
   },
+  ASRouter: {
+    initialized: false,
+    allowLegacyOnboarding: null,
+    allowLegacySnippets: null
+  },
   Snippets: { initialized: false },
   TopSites: {
     // Have we received real data from history yet?
@@ -8190,6 +8213,17 @@ function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
     case Actions["actionTypes"].INIT:
       return Object.assign({}, prevState, action.data || {}, { initialized: true });
+    default:
+      return prevState;
+  }
+}
+
+function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
+  switch (action.type) {
+    case Actions["actionTypes"].AS_ROUTER_INITIALIZED:
+      return Object.assign({}, action.data, { initialized: true });
+    case Actions["actionTypes"].AS_ROUTER_PREF_CHANGED:
+      return Object.assign({}, prevState, action.data);
     default:
       return prevState;
   }
@@ -8548,7 +8582,7 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   }
 }
 
-var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket };
+var reducers = { TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Pocket };
 
 /***/ }),
 /* 46 */

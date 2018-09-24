@@ -16,6 +16,11 @@ const INITIAL_STATE = {
     // Have we received real data from the app yet?
     initialized: false
   },
+  ASRouter: {
+    initialized: false,
+    allowLegacyOnboarding: null,
+    allowLegacySnippets: null
+  },
   Snippets: {initialized: false},
   TopSites: {
     // Have we received real data from history yet?
@@ -49,6 +54,17 @@ function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
     case at.INIT:
       return Object.assign({}, prevState, action.data || {}, {initialized: true});
+    default:
+      return prevState;
+  }
+}
+
+function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
+  switch (action.type) {
+    case at.AS_ROUTER_INITIALIZED:
+      return {...action.data, initialized: true};
+    case at.AS_ROUTER_PREF_CHANGED:
+      return {...prevState, ...action.data};
     default:
       return prevState;
   }
@@ -411,6 +427,6 @@ this.INITIAL_STATE = INITIAL_STATE;
 this.TOP_SITES_DEFAULT_ROWS = TOP_SITES_DEFAULT_ROWS;
 this.TOP_SITES_MAX_SITES_PER_ROW = TOP_SITES_MAX_SITES_PER_ROW;
 
-this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket};
+this.reducers = {TopSites, App, ASRouter, Snippets, Prefs, Dialog, Sections, Pocket};
 
 const EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_ROWS", "TOP_SITES_MAX_SITES_PER_ROW"];

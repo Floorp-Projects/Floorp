@@ -10,12 +10,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   UITour: "resource:///modules/UITour.jsm"
 });
-const {ASRouterActions: ra, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
+const {ASRouterActions: ra, actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {CFRMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/CFRMessageProvider.jsm", {});
 const {OnboardingMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/OnboardingMessageProvider.jsm", {});
 const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
 const {CFRPageActions} = ChromeUtils.import("resource://activity-stream/lib/CFRPageActions.jsm", {});
 
+ChromeUtils.defineModuleGetter(this, "ASRouterPreferences",
+  "resource://activity-stream/lib/ASRouterPreferences.jsm");
 ChromeUtils.defineModuleGetter(this, "ASRouterTargeting",
   "resource://activity-stream/lib/ASRouterTargeting.jsm");
 ChromeUtils.defineModuleGetter(this, "ASRouterTriggerListeners",
@@ -23,7 +25,6 @@ ChromeUtils.defineModuleGetter(this, "ASRouterTriggerListeners",
 
 const INCOMING_MESSAGE_NAME = "ASRouter:child-to-parent";
 const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
-const MESSAGE_PROVIDER_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 // List of hosts for endpoints that serve router messages.
 // Key is allowed host, value is a name for the endpoint host.
@@ -31,6 +32,7 @@ const DEFAULT_WHITELIST_HOSTS = {
   "activity-stream-icons.services.mozilla.com": "production",
   "snippets-admin.mozilla.org": "preview"
 };
+const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 const SNIPPETS_ENDPOINT_WHITELIST = "browser.newtab.activity-stream.asrouter.whitelistHosts";
 // Max possible impressions cap for any message
 const MAX_MESSAGE_LIFETIME_CAP = 100;
@@ -140,10 +142,15 @@ const MessageLoaderUtils = {
    * @returns {obj} Returns an object with .messages (an array of messages) and .lastUpdated (the time the messages were updated)
    */
   async loadMessagesForProvider(provider) {
-    const messages = (await this._getMessageLoader(provider)(provider))
-        .map(msg => ({...msg, provider: provider.id}));
+    const loader = this._getMessageLoader(provider);
+    let messages = await loader(provider);
+    // istanbul ignore if
+    if (!messages) {
+      messages = [];
+      Cu.reportError(new Error(`Tried to load messages for ${provider.id} but the result was not an Array.`));
+    }
     const lastUpdated = Date.now();
-    return {messages, lastUpdated};
+    return {messages: messages.map(msg => ({...msg, provider: provider.id})), lastUpdated};
   },
 
   async installAddonFromURL(browser, url) {
@@ -168,7 +175,7 @@ this.MessageLoaderUtils = MessageLoaderUtils;
  * so that it can be more easily unit tested.
  */
 class _ASRouter {
-  constructor(messageProviderPref = MESSAGE_PROVIDER_PREF, localProviders = LOCAL_MESSAGE_PROVIDERS) {
+  constructor(localProviders = LOCAL_MESSAGE_PROVIDERS) {
     this.initialized = false;
     this.messageChannel = null;
     this.dispatchToAS = null;
@@ -184,38 +191,50 @@ class _ASRouter {
       messages: []
     };
     this._triggerHandler = this._triggerHandler.bind(this);
-    this._messageProviderPref = messageProviderPref;
     this._localProviders = localProviders;
     this.onMessage = this.onMessage.bind(this);
     this._handleTargetingError = this._handleTargetingError.bind(this);
+    this.onPrefChange = this.onPrefChange.bind(this);
+  }
+
+  /**
+   * Turns legacy onboarding off or on using the ONBOARDING_FINISHED_PREF.
+   * This is required since ASRouter also shows snippets and onboarding, which
+   * interferes with legacy onboarding.
+   *
+   * Note that when this pref is true, legacy onboarding does NOT show up;
+   * when it is false, iegacy onboarding may show up if the profile age etc.
+   * is appropriate for the user to see it.
+   */
+  overrideOrEnableLegacyOnboarding() {
+    const {allowLegacyOnboarding} = ASRouterPreferences.specialConditions;
+    const onboardingFinished = Services.prefs.getBoolPref(ONBOARDING_FINISHED_PREF, true);
+
+    if (!allowLegacyOnboarding && onboardingFinished === false) {
+      Services.prefs.setBoolPref(ONBOARDING_FINISHED_PREF, true);
+    } else if (allowLegacyOnboarding && onboardingFinished === true) {
+      Services.prefs.setBoolPref(ONBOARDING_FINISHED_PREF, false);
+    }
   }
 
   // Update message providers and fetch new messages on pref change
-  async observe(aSubject, aTopic, aPrefName) {
-    if (aPrefName === this._messageProviderPref) {
-      this._updateMessageProviders();
-    }
-
+  async onPrefChange() {
+    this._updateMessageProviders();
+    this.overrideOrEnableLegacyOnboarding();
     await this.loadMessagesFromAllProviders();
+    this.dispatchToAS(ac.BroadcastToContent({type: at.AS_ROUTER_PREF_CHANGED, data: ASRouterPreferences.specialConditions}));
   }
 
   // Fetch and decode the message provider pref JSON, and update the message providers
   _updateMessageProviders() {
-    // If we have added a `preview` provider, hold onto it
-    const existingPreviewProvider = this.state.providers.find(p => p.id === "preview");
-    const providers = existingPreviewProvider ? [existingPreviewProvider] : [];
-    const providersJSON = Services.prefs.getStringPref(this._messageProviderPref, "");
-    try {
-      JSON.parse(providersJSON).forEach(provider => {
-        if (provider.enabled) {
-          providers.push(provider);
-        }
-      });
-    } catch (e) {
-      Cu.reportError("Problem parsing JSON message provider pref for ASRouter");
-    }
+    const providers = [
+      // If we have added a `preview` provider, hold onto it
+      ...this.state.providers.filter(p => p.id === "preview"),
+      ...ASRouterPreferences.providers.filter(p => p.enabled)
+    ].map(_provider => {
+      // make a copy so we don't modify the source of the pref
+      const provider = {..._provider};
 
-    providers.forEach(provider => {
       if (provider.type === "local" && !provider.messages) {
         // Get the messages from the local message provider
         const localProvider = this._localProviders[provider.localProvider];
@@ -227,6 +246,7 @@ class _ASRouter {
       }
       // Reset provider update timestamp to force message refresh
       provider.lastUpdated = undefined;
+      return provider;
     });
 
     const providerIDs = providers.map(p => p.id);
@@ -318,11 +338,13 @@ class _ASRouter {
   async init(channel, storage, dispatchToAS) {
     this.messageChannel = channel;
     this.messageChannel.addMessageListener(INCOMING_MESSAGE_NAME, this.onMessage);
-    Services.prefs.addObserver(this._messageProviderPref, this);
     this._storage = storage;
     this.WHITELIST_HOSTS = this._loadSnippetsWhitelistHosts();
     this.dispatchToAS = dispatchToAS;
     this.dispatch = this.dispatch.bind(this);
+
+    ASRouterPreferences.init();
+    ASRouterPreferences.addListener(this.onPrefChange);
 
     const messageBlockList = await this._storage.get("messageBlockList") || [];
     const providerBlockList = await this._storage.get("providerBlockList") || [];
@@ -330,7 +352,11 @@ class _ASRouter {
     const providerImpressions = await this._storage.get("providerImpressions") || {};
     await this.setState({messageBlockList, providerBlockList, messageImpressions, providerImpressions});
     this._updateMessageProviders();
+    this.overrideOrEnableLegacyOnboarding();
     await this.loadMessagesFromAllProviders();
+
+    // set necessary state in the rest of AS
+    this.dispatchToAS(ac.BroadcastToContent({type: at.AS_ROUTER_INITIALIZED, data: ASRouterPreferences.specialConditions}));
 
     // sets .initialized to true and resolves .waitForInitialized promise
     this._finishInitializing();
@@ -341,7 +367,12 @@ class _ASRouter {
     this.messageChannel.removeMessageListener(INCOMING_MESSAGE_NAME, this.onMessage);
     this.messageChannel = null;
     this.dispatchToAS = null;
-    Services.prefs.removeObserver(this._messageProviderPref, this);
+
+    this.overrideOrEnableLegacyOnboarding();
+
+    ASRouterPreferences.removeListener(this.onPrefChange);
+    ASRouterPreferences.uninit();
+
     // Uninitialise all trigger listeners
     for (const listener of ASRouterTriggerListeners.values()) {
       listener.uninit();
@@ -365,7 +396,9 @@ class _ASRouter {
   }
 
   _onStateChanged(state) {
-    this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: state});
+    if (ASRouterPreferences.devtoolsEnabled) {
+      this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: this.state});
+    }
   }
 
   _handleTargetingError(type, error, message) {

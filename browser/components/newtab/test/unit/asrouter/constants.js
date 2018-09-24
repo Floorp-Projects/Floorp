@@ -1,6 +1,5 @@
 export const CHILD_TO_PARENT_MESSAGE_NAME = "ASRouter:child-to-parent";
 export const PARENT_TO_CHILD_MESSAGE_NAME = "ASRouter:parent-to-child";
-export const EXPERIMENT_PREF = "asrouterExperimentEnabled";
 
 export const FAKE_LOCAL_MESSAGES = [
   {id: "foo", template: "simple_template", content: {title: "Foo", body: "Foo123"}},
