@@ -13,7 +13,7 @@
   <string name="menu_open_with_a_browser2">Atverti per…</string>
   <string name="menu_add_to_home_screen">Įtraukti į pradžios ekraną</string>
   <string name="menu_whats_new">Kas naujo</string>
-  <string name="menu_settings">Nuostatos</string>
+  <string name="menu_settings">Nustatymai</string>
   <string name="menu_about">Apie</string>
   <string name="menu_help">Žinynas</string>
   <string name="menu_rights">Jūsų teisės</string>
@@ -26,7 +26,7 @@
   <string name="shortcut_erase_short_label">Valyti</string>
   <string name="shortcut_erase_long_label">Valyti naršymo žurnalą</string>
   <string name="text_selection_search_action">Ieškoti privačiai</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8222;%1$s&#8220; suteikia jums kontrol&#281;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Naudokite j&#261; kaip priva&#269;i&#261; nar&#353;ykl&#281;:\n  "<ul>"\n    "<li>Ie&#353;kokite ir nar&#353;ykite pa&#269;ioje programoje</li>"\n    "<li>Blokuoti steb&#279;jimo elementus (arba atnaujinkite nuostatas, nor&#279;dami juos leisti)</li>"\n    "<li>I&#353;trinkite, nor&#279;dami pa&#353;alinti slapukus, paie&#353;kos ir nar&#353;ymo &#382;urnalus</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8222;%1$s&#8220; yra &#8222;Mozillos&#8220; k&#363;rinys. M&#363;s&#371; misija yra skatinti sveik&#261;, atvir&#261; internet&#261;.<br/>\n<a href="%2$s">Su&#382;inoti daugiau</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8222;%1$s&#8220; suteikia jums kontrol&#281;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Naudokite j&#261; kaip priva&#269;i&#261; nar&#353;ykl&#281;:\n  "<ul>"\n    "<li>Ie&#353;kokite ir nar&#353;ykite pa&#269;ioje programoje</li>"\n    "<li>Blokuokite steb&#279;jimo elementus (arba atnaujinkite nustatymus, jeigu norite juos leisti)</li>"\n    "<li>I&#353;valykite, nor&#279;dami pa&#353;alinti slapukus, paie&#353;kos ir nar&#353;ymo &#382;urnalus</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8222;%1$s&#8220; yra &#8222;Mozillos&#8220; k&#363;rinys. M&#363;s&#371; misija yra skatinti sveik&#261;, atvir&#261; internet&#261;.<br/>\n<a href="%2$s">Su&#382;inoti daugiau</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privatumas ir saugumas</string>
   <string name="preference_privacy_and_security_summary">Stebėjimas, slapukai, duomenų siuntimas</string>
   <string name="preference_search_summary">Parinkite numatytąją, automatinio užbaigimo</string>
@@ -45,7 +45,7 @@
   <string name="preference_subitem_autocomplete">Automatinis URL užbaigimas</string>
   <string name="preference_switch_autocomplete">Automatinis užbaigimas</string>
   <string name="preference_category_autocomplete_preinstalled">Numatytasis URL sąrašas</string>
-  <string name="preference_autocomplete_preinstalled_summary">Įjungus, „%1$s“ automatiškai užbaigs virš 450 populiarių URL adreso lauke</string>
+  <string name="preference_autocomplete_preinstalled_summary">Įjungus, „%1$s“ adreso lauke automatiškai užbaigs virš 450 populiarių URL adresų.</string>
   <string name="preference_category_autocomplete_custom_urls">Pasirinktiniai URL</string>
   <string name="preference_autocomplete_subitem_customlist">Pasirinktiniai URL</string>
   <string name="preference_autocomplete_action_add">+ Pridėti savo URL</string>
@@ -58,7 +58,7 @@
   <string name="preference_autocomplete_custom_summary">Pridėkite ir valdykite savo automatinio užbaigimo adresus.</string>
   <string name="preference_autocomplete_add_title">Pridedamas URL</string>
   <string name="preference_autocomplete_add_hint">Įdėkite arba įrašykite URL</string>
-  <string name="preference_autocomplete_add_example2">Pvz., mozilla.org</string>
+  <string name="preference_autocomplete_add_example2">Pavyzdys: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Pvz., example.com</string>
   <string name="preference_autocomplete_add_confirmation">Pridėtas naujas URL.</string>
   <string name="preference_autocomplete_menu_remove">Pašalinti</string>
@@ -89,12 +89,12 @@
   <string name="preference_performance_block_webfonts_summary">Galite nematyti kai kurių piktogramų arba paveikslų</string>
   <string name="preference_performance_block_javascript">Blokuoti „JavaScript“</string>
   <string name="preference_performance_block_javascript_summary">Tinklalapiai bus įkeliami greičiau, tačiau gali sutrikti jų veikimas</string>
-  <string name="preference_default_browser2">Padaryti „%1$s“ numatytąja naršykle</string>
+  <string name="preference_default_browser2">Paskirti „%1$s“ numatytąja naršykle</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Siųsti naudojimo duomenis</string>
   <string name="preference_mozilla_telemetry_summary">Sužinoti daugiau</string>
   <string name="preference_mozilla_telemetry_summary2">„Mozilla“ siekia rinkti tik tai, ko reikia norint pagerinti „%1$s“ visiems.</string>
-  <string name="preference_privacy_notice">Privatumo nuostatai</string>
+  <string name="preference_privacy_notice">Privatumo pranešimas</string>
   <string name="preference_about">Apie „%1$s“</string>
   <string name="preference_search_installed_search_engines">Įdiegtos ieškyklės</string>
   <string name="preference_search_restore">Atkurti numatytąsias ieškykles</string>
@@ -123,7 +123,7 @@
   <string name="content_description_forward">Eiti pirmyn</string>
   <string name="content_description_reload">Įkelti svetainę iš naujo</string>
   <string name="content_description_back">Grįžti atgal</string>
-  <string name="content_description_stop">Nebeįkėlinėti svetainės</string>
+  <string name="content_description_stop">Nutraukti svetainės įkėlimą</string>
   <string name="content_description_customtab_exit">Grįžti į ankstesnę programą</string>
   <string name="content_description_trackers_blocked">Viso užblokuotų elementų</string>
   <string name="content_description_blocking_switch">Blokuokite stebėjimo elementus</string>
@@ -153,7 +153,7 @@
   <string name="error_unsupportedprotocol_title">Neatpažintas adresas</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Gali b&#363;ti, kad &#353;iam adresui atverti reikia &#303;diegti papildom&#261; programin&#281; &#303;rang&#261;.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Saugaus ryšio užmegzti nepavyko</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#352;i problema gali kilti d&#279;l blogai parinkt&#371; serverio nuostat&#371; arba d&#279;l bandymo apsimesti kitu serveriu.</li>"\n  "<li>Jei prie &#353;io serverio s&#279;kmingai jung&#279;t&#279;s anks&#269;iau, &#353;is nesklandumas gali b&#363;ti laikinas. Bandykite prisijungti v&#279;liau.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#352;i problema gali kilti d&#279;l blogai parinkt&#371; serverio parametr&#371; arba d&#279;l bandymo apsimesti kitu serveriu.</li>"\n  "<li>Jei prie &#353;io serverio s&#279;kmingai jung&#279;t&#279;s anks&#269;iau, &#353;is nesklandumas gali b&#363;ti laikinas. Bandykite prisijungti v&#279;liau.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Mums nepavyko įkelti šio tinklalapio dėl nežinomos priežasties.</string>
   <string name="contextmenu_link_share">Dalintis saitu</string>
@@ -164,13 +164,13 @@
   <string name="contextmenu_open_in_new_tab">Atverti naujoje kortelėje</string>
   <string name="contextmenu_image_warning"><![CDATA["Įrašyti ir pasidalinti paveikslai "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebus pa&#353;alinti</b>" jums išvalius „%1$s“ naršymo žurnalą."]]></string>
   <string name="firstrun_defaultbrowser_title">Pagerinkite savo privatumą</string>
-  <string name="firstrun_defaultbrowser_text2">Pereikite į aukštesnį privačiojo naršymo lygį. Blokuokite reklamas ir kitą jūsų naršymą galintį stebėti turinį, tuo pačiu sumažindami svetainių įkėlimo laiką.</string>
-  <string name="firstrun_search_title">Jūsų paieška, jūsų būdu</string>
-  <string name="firstrun_search_text">Ieškote kažko kito? Pasirinkite kitą numatytąją ieškyklę nuostatose.</string>
+  <string name="firstrun_defaultbrowser_text2">Pereikite į aukštesnį privačiojo naršymo lygį. Blokuokite reklamas ir kitą jūsų naršymą galintį stebėti turinį, tuo pačiu sutrumpindami svetainių įkėlimo laiką.</string>
+  <string name="firstrun_search_title">Jūsų paieška, jūsų skoniui</string>
+  <string name="firstrun_search_text">Ieškote kažko kito? Pasirinkite kitą numatytąją ieškyklę nustatymuose.</string>
   <string name="firstrun_shortcut_title">Pridėkite leistukų į savo pradžios ekraną</string>
   <string name="firstrun_shortcut_text">Greitai grįžkite į savo mėgstamiausias svetaines per „%1$s“. Tiesiog pasirinkite „Įtraukti į pradžios ekraną“ iš „%1$s“ meniu.</string>
   <string name="firstrun_privacy_title">Įpraskite prie privatumo</string>
-  <string name="firstrun_privacy_text">Paskirkite „%1$s“ savo numatytąją naršykle ir naudokitės privačiojo naršymo privalumais atverdami svetaines iš kitų programų.</string>
+  <string name="firstrun_privacy_text">Paskirkite „%1$s“ savo numatytąja naršykle ir naudokitės privačiojo naršymo privalumais atverdami svetaines iš kitų programų.</string>
   <string name="firstrun_close_button">Gerai, supratau!</string>
   <string name="firstrun_skip_button">Praleisti</string>
   <string name="firstrun_next_button">Toliau</string>
