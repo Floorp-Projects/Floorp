@@ -121,7 +121,7 @@ public:
   // When a SVGRenderingObserver list gets forcibly cleared, it uses this
   // callback to notify every observer that's cleared from it, so they can
   // react.
-  void NotifyEvictedFromRenderingObserverList();
+  void NotifyEvictedFromRenderingObserverSet();
 
   nsIFrame* GetAndObserveReferencedFrame();
   /**
