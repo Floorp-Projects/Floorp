@@ -13,9 +13,9 @@ function test() {
 
     let tab = yield addTab(TAB_URL);
     let { tabs: tabs1 } = yield listTabs(client1);
-    let [, tabClient1] = yield attachTarget(client1, findTab(tabs1, TAB_URL));
+    let [, tabClient1] = yield attachTab(client1, findTab(tabs1, TAB_URL));
     let { tabs: tabs2 } = yield listTabs(client2);
-    let [, tabClient2] = yield attachTarget(client2, findTab(tabs2, TAB_URL));
+    let [, tabClient2] = yield attachTab(client2, findTab(tabs2, TAB_URL));
 
     yield listWorkers(tabClient1);
     yield listWorkers(tabClient2);

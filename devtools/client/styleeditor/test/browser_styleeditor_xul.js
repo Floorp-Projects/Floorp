@@ -12,7 +12,7 @@ const TEST_URL = TEST_BASE + "doc_xulpage.xul";
 
 add_task(async function() {
   const tab = await addTab(TEST_URL);
-  const target = await TargetFactory.forTab(tab);
+  const target = TargetFactory.forTab(tab);
 
   const toolbox = await gDevTools.showToolbox(target, "styleeditor");
   const panel = toolbox.getCurrentPanel();

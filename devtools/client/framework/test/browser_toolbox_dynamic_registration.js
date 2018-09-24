@@ -8,8 +8,8 @@ const TEST_URL = "data:text/html,test for dynamically registering and unregister
 var toolbox;
 
 function test() {
-  addTab(TEST_URL).then(async tab => {
-    const target = await TargetFactory.forTab(tab);
+  addTab(TEST_URL).then(tab => {
+    const target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target).then(testRegister);
   });
 }

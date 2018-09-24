@@ -135,7 +135,7 @@ async function openTabAndSetupStorage(url, options = {}) {
  */
 var openStoragePanel = async function(cb) {
   info("Opening the storage inspector");
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
 
   let storage, toolbox;
 

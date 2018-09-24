@@ -12,7 +12,7 @@ function test() {
 
     let tab = yield addTab(TAB_URL);
     let { tabs } = yield listTabs(client);
-    let [, tabClient] = yield attachTarget(client, findTab(tabs, TAB_URL));
+    let [, tabClient] = yield attachTab(client, findTab(tabs, TAB_URL));
 
     let { workers } = yield listWorkers(tabClient);
     is(workers.length, 0);

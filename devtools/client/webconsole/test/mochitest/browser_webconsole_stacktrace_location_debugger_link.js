@@ -25,7 +25,7 @@ add_task(async function() {
   });
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const target = TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
 
   await testOpenInDebugger(hud, toolbox, "console.trace()");
