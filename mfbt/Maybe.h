@@ -182,12 +182,12 @@ class MOZ_NON_PARAM MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
 public:
   using ValueType = T;
 
-  Maybe() : mIsSome(false)
+  MOZ_ALLOW_TEMPORARY Maybe() : mIsSome(false)
   {
   }
   ~Maybe() { reset(); }
 
-  MOZ_IMPLICIT Maybe(Nothing) : mIsSome(false)
+  MOZ_ALLOW_TEMPORARY MOZ_IMPLICIT Maybe(Nothing) : mIsSome(false)
   {
   }
 

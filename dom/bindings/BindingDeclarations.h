@@ -221,7 +221,7 @@ template<typename T>
 class Optional : public Optional_base<T, T>
 {
 public:
-  Optional() :
+  MOZ_ALLOW_TEMPORARY Optional() :
     Optional_base<T, T>()
   {}
 
@@ -235,7 +235,7 @@ class Optional<JS::Handle<T> > :
   public Optional_base<JS::Handle<T>, JS::Rooted<T> >
 {
 public:
-  Optional() :
+  MOZ_ALLOW_TEMPORARY Optional() :
     Optional_base<JS::Handle<T>, JS::Rooted<T> >()
   {}
 
