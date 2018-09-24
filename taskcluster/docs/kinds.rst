@@ -307,8 +307,8 @@ release-bouncer-aliases
 -----------------------
 Update Bouncer's (download.mozilla.org) "latest" aliases.
 
-bouncer-check
--------------
+cron-bouncer-check
+------------------
 Checks Bouncer (download.mozilla.org) uptake.
 
 bouncer-locations
