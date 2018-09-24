@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var FastBlock = {
+  reportBreakageLabel: "fastblock",
   PREF_ENABLED: "browser.fastblock.enabled",
   PREF_UI_ENABLED: "browser.contentblocking.fastblock.control-center.ui.enabled",
 
@@ -22,6 +23,7 @@ var FastBlock = {
 };
 
 var TrackingProtection = {
+  reportBreakageLabel: "trackingprotection",
   PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
   PREF_UI_ENABLED: "browser.contentblocking.trackingprotection.control-center.ui.enabled",
@@ -139,6 +141,7 @@ var TrackingProtection = {
 };
 
 var ThirdPartyCookies = {
+  reportBreakageLabel: "cookierestrictions",
   PREF_ENABLED: "network.cookie.cookieBehavior",
   PREF_ENABLED_VALUES: [
     // These values match the ones exposed under the Content Blocking section
@@ -416,6 +419,17 @@ var ContentBlocking = {
 
     formData.set("body", body);
 
+    let activatedBlockers = [];
+    for (let blocker of this.blockers) {
+      if (blocker.activated) {
+        activatedBlockers.push(blocker.reportBreakageLabel);
+      }
+    }
+
+    if (activatedBlockers.length) {
+      formData.set("labels", activatedBlockers.join(","));
+    }
+
     fetch(reportEndpoint, {
       method: "POST",
       credentials: "omit",
@@ -471,9 +485,14 @@ var ContentBlocking = {
     let anyBlockerActivated = false;
 
     for (let blocker of this.blockers) {
+      // Store data on whether the blocker is activated in the current document for
+      // reporting it using the "report breakage" dialog. Under normal circumstances this
+      // dialog should only be able to open in the currently selected tab and onSecurityChange
+      // runs on tab switch, so we can avoid associating the data with the document directly.
+      blocker.activated = blocker.isBlockerActivated(state);
       blocker.categoryItem.classList.toggle("blocked", this.enabled && blocker.enabled);
       blocker.categoryItem.hidden = !blocker.visible;
-      anyBlockerActivated = anyBlockerActivated || blocker.isBlockerActivated(state);
+      anyBlockerActivated = anyBlockerActivated || blocker.activated;
     }
 
     // We consider the shield state "active" when some kind of blocking activity

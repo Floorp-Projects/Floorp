@@ -210,6 +210,8 @@ add_task(async function testReportBreakage() {
           `${prefsBody}\r\n` +
           "**Comments**\r\n" +
           "This is a comment\r\n",
+          "Content-Disposition: form-data; name=\"labels\"\r\n\r\n" +
+          "trackingprotection\r\n",
           "",
         ], "Should send the correct form data");
 
