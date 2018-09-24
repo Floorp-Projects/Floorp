@@ -106,7 +106,7 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: Rel
-          target-tasks-method: bouncer_check
+          target-tasks-method: cron_bouncer_check
       run-on-projects:
           - mozilla-beta
           - mozilla-release
