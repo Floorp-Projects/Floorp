@@ -497,7 +497,8 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   }
 }
 
-.tabbrowser-tab:focus > .tab-stack > .tab-content {
+.keyboard-focused-tab > .tab-stack > .tab-content,
+.tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-content {
   outline: 1px dotted;
   outline-offset: -6px;
 }
