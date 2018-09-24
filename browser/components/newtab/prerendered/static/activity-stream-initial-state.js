@@ -10,6 +10,11 @@ window.gActivityStreamPrerenderedState = {
   "App": {
     "initialized": false
   },
+  "ASRouter": {
+    "initialized": false,
+    "allowLegacyOnboarding": null,
+    "allowLegacySnippets": null
+  },
   "Snippets": {
     "initialized": false
   },

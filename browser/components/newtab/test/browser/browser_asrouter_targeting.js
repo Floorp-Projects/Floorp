@@ -111,11 +111,11 @@ add_task(async function checkProfileAgeReset() {
 });
 
 add_task(async function checkCurrentDate() {
-  let message = {id: "foo", targeting: `currentDate < '${new Date(Date.now() + 1000)}'|date`};
+  let message = {id: "foo", targeting: `currentDate < '${new Date(Date.now() + 5000)}'|date`};
   is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
     "should select message based on currentDate < timestamp");
 
-  message = {id: "foo", targeting: `currentDate > '${new Date(Date.now() - 1000)}'|date`};
+  message = {id: "foo", targeting: `currentDate > '${new Date(Date.now() - 5000)}'|date`};
   is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
     "should select message based on currentDate > timestamp");
 });
@@ -303,16 +303,16 @@ add_task(async function check_sync() {
 });
 
 add_task(async function check_onboarding_cohort() {
-  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: 1}]));
+  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: 1}])]);
   is(await ASRouterTargeting.Environment.isInExperimentCohort, 1);
-  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify(17));
+  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify(17)]);
   is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
-  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: "hello"}]));
+  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: "hello"}])]);
   is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
 });
 
 add_task(async function check_provider_cohorts() {
-  Services.prefs.setStringPref("browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", enabled: true, cohort: "foo"}, {id: "cfr", cohort: "bar"}]));
+  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: "foo"}, {id: "cfr", messages: [], cohort: "bar"}])]);
   is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo");
   is(await ASRouterTargeting.Environment.providerCohorts.cfr, "bar");
 });

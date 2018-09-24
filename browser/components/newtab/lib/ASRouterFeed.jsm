@@ -2,8 +2,6 @@ const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/
 const {ASRouter} = ChromeUtils.import("resource://activity-stream/lib/ASRouter.jsm", {});
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
-
 /**
  * @class ASRouterFeed - Connects ASRouter singleton (see above) to Activity Stream's
  * store so that it can use the RemotePageManager.
@@ -14,47 +12,25 @@ class ASRouterFeed {
   }
 
   async enable() {
-    await this.router.init(
-      this.store._messageChannel.channel,
-      this.store.dbStorage.getDbTable("snippets"),
-      this.store.dispatch
-    );
-    // Disable onboarding
-    Services.prefs.setBoolPref(ONBOARDING_FINISHED_PREF, true);
+    if (!this.router.initialized) {
+      await this.router.init(
+        this.store._messageChannel.channel,
+        this.store.dbStorage.getDbTable("snippets"),
+        this.store.dispatch
+      );
+    }
   }
 
   disable() {
     if (this.router.initialized) {
       this.router.uninit();
-      // Re-enable onboarding
-      Services.prefs.setBoolPref(ONBOARDING_FINISHED_PREF, false);
-    }
-  }
-
-  /**
-   * enableOrDisableBasedOnPref - Check the experiment pref
-   * (asrouterExperimentEnabled) and enable or disable ASRouter based on
-   * its value.
-   */
-  enableOrDisableBasedOnPref() {
-    const prefs = this.store.getState().Prefs.values;
-    const isExperimentEnabled = prefs.asrouterExperimentEnabled;
-    if (!this.router.initialized && isExperimentEnabled) {
-      this.enable();
-    } else if (!isExperimentEnabled && this.router.initialized) {
-      this.disable();
     }
   }
 
   onAction(action) {
     switch (action.type) {
       case at.INIT:
-        this.enableOrDisableBasedOnPref();
-        break;
-      case at.PREF_CHANGED:
-        if (action.data.name === "asrouterExperimentEnabled") {
-          this.enableOrDisableBasedOnPref();
-        }
+        this.enable();
         break;
       case at.UNINIT:
         this.disable();
