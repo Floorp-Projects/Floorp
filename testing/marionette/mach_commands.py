@@ -21,11 +21,6 @@ from mozbuild.base import (
 )
 
 
-def is_firefox_or_android(cls):
-    """Must have Firefox build or Android build."""
-    return conditions.is_firefox(cls) or conditions.is_android(cls)
-
-
 def create_parser_tests():
     from marionette_harness.runtests import MarionetteArguments
     from mozlog.structured import commandline
@@ -74,7 +69,7 @@ class MarionetteTest(MachCommandBase):
     @Command("marionette-test",
              category="testing",
              description="Remote control protocol to Gecko, used for functional UI tests and browser automation.",
-             conditions=[is_firefox_or_android],
+             conditions=[conditions.is_firefox_or_android],
              parser=create_parser_tests,
              )
     def marionette_test(self, tests, **kwargs):
@@ -99,7 +94,7 @@ class Marionette(MachCommandBase):
     @Command("marionette",
              category="misc",
              description="Remote control protocol to Gecko, used for functional UI tests and browser automation.",
-             conditions=[is_firefox_or_android],
+             conditions=[conditions.is_firefox_or_android],
              )
     def marionette(self):
         self.parser.print_usage()
