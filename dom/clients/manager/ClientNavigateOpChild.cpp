@@ -15,6 +15,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
+#include "nsURLHelper.h"
 
 namespace mozilla {
 namespace dom {
@@ -185,8 +186,24 @@ ClientNavigateOpChild::DoNavigate(const ClientNavigateOpConstructorArgs& aArgs)
     return ref.forget();
   }
 
+  // There is an edge case for view-source url here. According to the wpt test
+  // windowclient-navigate.https.html, a view-source URL with a relative inner
+  // URL should be treated as an invalid URL. However, we will still resolve it
+  // into a valid view-source URL since the baseURL is involved while creating
+  // the URI. So, an invalid view-source URL will be treated as a valid URL
+  // in this case. To address this, we should not take the baseURL into account
+  // for the view-source URL.
+  bool shouldUseBaseURL = true;
+  nsAutoCString scheme;
+  if (NS_SUCCEEDED(net_ExtractURLScheme(aArgs.url(), scheme)) &&
+      scheme.LowerCaseEqualsLiteral("view-source")) {
+    shouldUseBaseURL = false;
+  }
+
   nsCOMPtr<nsIURI> url;
-  rv = NS_NewURI(getter_AddRefs(url), aArgs.url(), nullptr, baseURL);
+  rv = NS_NewURI(getter_AddRefs(url), aArgs.url(),
+                 nullptr, shouldUseBaseURL ? baseURL.get()
+                                           : nullptr);
   if (NS_FAILED(rv)) {
     ref = ClientOpPromise::CreateAndReject(rv, __func__);
     return ref.forget();
