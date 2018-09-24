@@ -226,18 +226,37 @@ WebConsole.prototype = {
     return panel.getFrames();
   },
 
-  async getMappedExpression(expression) {
+  /**
+   * Given an expression, returns an object containing a new expression, mapped by the
+   * parser worker to provide additional feature for the user (top-level await,
+   * original languages mapping, …).
+   *
+   * @param {String} expression: The input to maybe map.
+   * @returns {Object|null}
+   *          Returns null if the input can't be mapped.
+   *          If it can, returns an object containing the following:
+   *            - {String} expression: The mapped expression
+   *            - {Object} mapped: An object containing the different mapping that could
+   *                               be done and if they were applied on the input.
+   *                               At the moment, contains `await`, `bindings` and
+   *                               `originalExpression`.
+   */
+  getMappedExpression(expression) {
     const toolbox = gDevTools.getToolbox(this.target);
     if (!toolbox) {
-      return expression;
+      return null;
     }
+
     const panel = toolbox.getPanel("jsdebugger");
-
-    if (!panel) {
-      return expression;
+    if (panel) {
+      return panel.getMappedExpression(expression);
     }
 
-    return panel.getMappedExpression(expression);
+    if (toolbox.parserService && expression.includes("await ")) {
+      return toolbox.parserService.mapExpression(expression);
+    }
+
+    return null;
   },
 
   /**
