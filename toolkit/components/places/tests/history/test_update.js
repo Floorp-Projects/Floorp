@@ -10,26 +10,26 @@
 add_task(async function test_error_cases() {
   Assert.throws(
     () => PlacesUtils.history.update("not an object"),
-    /TypeError: pageInfo must be/,
-    "passing a string as pageInfo should throw a TypeError"
+    /Error: PageInfo: Input should be a valid object/,
+    "passing a string as pageInfo should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update(null),
-    /TypeError: pageInfo must be/,
-    "passing a null as pageInfo should throw a TypeError"
+    /Error: PageInfo: Input should be/,
+    "passing a null as pageInfo should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({url: "not a valid url string"}),
-    /TypeError: not a valid url string is/,
-    "passing an invalid url should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing an invalid url should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({
       url: "http://valid.uri.com",
       description: 123,
     }),
-    /TypeError: description property of/,
-    "passing a non-string description in pageInfo should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing a non-string description in pageInfo should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({
@@ -37,16 +37,16 @@ add_task(async function test_error_cases() {
       guid: "invalid guid",
       description: "Test description",
     }),
-    /TypeError: guid property of/,
-    "passing a invalid guid in pageInfo should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing a invalid guid in pageInfo should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({
       url: "http://valid.uri.com",
       previewImageURL: "not a valid url string",
     }),
-    /TypeError: not a valid url string is/,
-    "passing an invlid preview image url in pageInfo should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing an invlid preview image url in pageInfo should throw an Error"
   );
   Assert.throws(
     () => {
@@ -57,8 +57,8 @@ add_task(async function test_error_cases() {
         previewImageURL,
       });
     },
-    /TypeError: previewImageURL property of/,
-    "passing an oversized previewImageURL in pageInfo should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing an oversized previewImageURL in pageInfo should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({ url: "http://valid.uri.com" }),
@@ -67,37 +67,37 @@ add_task(async function test_error_cases() {
   );
   Assert.throws(
     () => PlacesUtils.history.update({ url: "http://valid.uri.com", annotations: "asd" }),
-    /TypeError: annotations must be a Map/,
-    "passing a pageInfo with incorrect annotations type should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing a pageInfo with incorrect annotations type should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({ url: "http://valid.uri.com", annotations: new Map() }),
-    /TypeError: there must be at least one annotation/,
-    "passing a pageInfo with an empty annotations type should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing a pageInfo with an empty annotations type should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({
       url: "http://valid.uri.com",
       annotations: new Map([[1234, "value"]]),
     }),
-    /TypeError: all annotation keys must be strings/,
-    "passing a pageInfo with an invalid key type should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing a pageInfo with an invalid key type should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({
       url: "http://valid.uri.com",
       annotations: new Map([["test", ["myarray"]]]),
     }),
-    /TypeError: all annotation values must be Boolean, Numbers or Strings/,
-    "passing a pageInfo with an invalid key type should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing a pageInfo with an invalid key type should throw an Error"
   );
   Assert.throws(
     () => PlacesUtils.history.update({
       url: "http://valid.uri.com",
       annotations: new Map([["test", {anno: "value"}]]),
     }),
-    /TypeError: all annotation values must be Boolean, Numbers or Strings/,
-    "passing a pageInfo with an invalid key type should throw a TypeError"
+    /Error: PageInfo: Invalid value for property/,
+    "passing a pageInfo with an invalid key type should throw an Error"
   );
 });
 
