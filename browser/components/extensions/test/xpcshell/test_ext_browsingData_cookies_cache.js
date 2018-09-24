@@ -25,7 +25,7 @@ let since, oldCookie;
 
 function addCookie(cookie) {
   Services.cookies.add(cookie.host, cookie.path, cookie.name, "test", false, false, false, Date.now() / 1000 + 10000, {}, Ci.nsICookie2.SAMESITE_UNSET);
-  ok(Services.cookies.cookieExists(cookie), `Cookie ${cookie.name} was created.`);
+  ok(Services.cookies.cookieExists(cookie.host, cookie.path, cookie.name, {}), `Cookie ${cookie.name} was created.`);
 }
 
 async function setUpCookies() {
@@ -121,8 +121,8 @@ add_task(async function testCookies() {
     extension.sendMessage(method, {since});
     await extension.awaitMessage("cookiesRemoved");
 
-    ok(Services.cookies.cookieExists(oldCookie), "Old cookie was not removed.");
-    ok(!Services.cookies.cookieExists(COOKIE), "Recent cookie was removed.");
+    ok(Services.cookies.cookieExists(oldCookie.host, oldCookie.path, oldCookie.name, {}), "Old cookie was not removed.");
+    ok(!Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), "Recent cookie was removed.");
 
     // Clear cookies with an old since value.
     await setUpCookies();
@@ -130,8 +130,8 @@ add_task(async function testCookies() {
     extension.sendMessage(method, {since: since - 100000});
     await extension.awaitMessage("cookiesRemoved");
 
-    ok(!Services.cookies.cookieExists(oldCookie), "Old cookie was removed.");
-    ok(!Services.cookies.cookieExists(COOKIE), "Recent cookie was removed.");
+    ok(!Services.cookies.cookieExists(oldCookie.host, oldCookie.path, oldCookie.name, {}), "Old cookie was removed.");
+    ok(!Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), "Recent cookie was removed.");
 
     // Clear cookies with no since value and valid originTypes.
     await setUpCookies();
@@ -140,8 +140,8 @@ add_task(async function testCookies() {
       {originTypes: {unprotectedWeb: true, protectedWeb: false}});
     await extension.awaitMessage("cookiesRemoved");
 
-    ok(!Services.cookies.cookieExists(COOKIE), `Cookie ${COOKIE.name}  was removed.`);
-    ok(!Services.cookies.cookieExists(oldCookie), `Cookie ${oldCookie.name}  was removed.`);
+    ok(!Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), `Cookie ${COOKIE.name}  was removed.`);
+    ok(!Services.cookies.cookieExists(oldCookie.host, oldCookie.path, oldCookie.name, {}), `Cookie ${oldCookie.name}  was removed.`);
   }
 
   await extension.startup();
@@ -176,8 +176,8 @@ add_task(async function testCacheAndCookies() {
   await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
-  ok(Services.cookies.cookieExists(oldCookie), "Old cookie was not removed.");
-  ok(!Services.cookies.cookieExists(COOKIE), "Recent cookie was removed.");
+  ok(Services.cookies.cookieExists(oldCookie.host, oldCookie.path, oldCookie.name, {}), "Old cookie was not removed.");
+  ok(!Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), "Recent cookie was removed.");
 
   // Clear cache and cookies with an old since value.
   await setUpCookies();
@@ -186,8 +186,8 @@ add_task(async function testCacheAndCookies() {
   await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
-  ok(!Services.cookies.cookieExists(oldCookie), "Old cookie was removed.");
-  ok(!Services.cookies.cookieExists(COOKIE), "Recent cookie was removed.");
+  ok(!Services.cookies.cookieExists(oldCookie.host, oldCookie.path, oldCookie.name, {}), "Old cookie was removed.");
+  ok(!Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), "Recent cookie was removed.");
 
   // Clear cache and cookies with hostnames value.
   await setUpCookies();
@@ -196,9 +196,9 @@ add_task(async function testCacheAndCookies() {
   await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
-  ok(Services.cookies.cookieExists(COOKIE), `Cookie ${COOKIE.name}  was not removed.`);
-  ok(!Services.cookies.cookieExists(COOKIE_NET), `Cookie ${COOKIE_NET.name}  was removed.`);
-  ok(!Services.cookies.cookieExists(COOKIE_ORG), `Cookie ${COOKIE_ORG.name}  was removed.`);
+  ok(Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), `Cookie ${COOKIE.name}  was not removed.`);
+  ok(!Services.cookies.cookieExists(COOKIE_NET.host, COOKIE_NET.path, COOKIE_NET.name, {}), `Cookie ${COOKIE_NET.name}  was removed.`);
+  ok(!Services.cookies.cookieExists(COOKIE_ORG.host, COOKIE_ORG.path, COOKIE_ORG.name, {}), `Cookie ${COOKIE_ORG.name}  was removed.`);
 
   // Clear cache and cookies with (empty) hostnames value.
   await setUpCookies();
@@ -207,9 +207,9 @@ add_task(async function testCacheAndCookies() {
   await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
-  ok(Services.cookies.cookieExists(COOKIE), `Cookie ${COOKIE.name}  was not removed.`);
-  ok(Services.cookies.cookieExists(COOKIE_NET), `Cookie ${COOKIE_NET.name}  was not removed.`);
-  ok(Services.cookies.cookieExists(COOKIE_ORG), `Cookie ${COOKIE_ORG.name}  was not removed.`);
+  ok(Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), `Cookie ${COOKIE.name}  was not removed.`);
+  ok(Services.cookies.cookieExists(COOKIE_NET.host, COOKIE_NET.path, COOKIE_NET.name, {}), `Cookie ${COOKIE_NET.name}  was not removed.`);
+  ok(Services.cookies.cookieExists(COOKIE_ORG.host, COOKIE_ORG.path, COOKIE_ORG.name, {}), `Cookie ${COOKIE_ORG.name}  was not removed.`);
 
   // Clear cache and cookies with both hostnames and since values.
   await setUpCookies();
@@ -218,10 +218,10 @@ add_task(async function testCacheAndCookies() {
   await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
-  ok(Services.cookies.cookieExists(oldCookie), "Old cookie was not removed.");
-  ok(!Services.cookies.cookieExists(COOKIE), "Recent cookie was removed.");
-  ok(Services.cookies.cookieExists(COOKIE_NET), "Cookie with different hostname was not removed");
-  ok(Services.cookies.cookieExists(COOKIE_ORG), "Cookie with different hostname was not removed");
+  ok(Services.cookies.cookieExists(oldCookie.host, oldCookie.path, oldCookie.name, {}), "Old cookie was not removed.");
+  ok(!Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), "Recent cookie was removed.");
+  ok(Services.cookies.cookieExists(COOKIE_NET.host, COOKIE_NET.path, COOKIE_NET.name, {}), "Cookie with different hostname was not removed");
+  ok(Services.cookies.cookieExists(COOKIE_ORG.host, COOKIE_ORG.path, COOKIE_ORG.name, {}), "Cookie with different hostname was not removed");
 
   // Clear cache and cookies with no since or hostnames value.
   await setUpCookies();
@@ -230,10 +230,10 @@ add_task(async function testCacheAndCookies() {
   await awaitNotification;
   await extension.awaitMessage("cacheAndCookiesRemoved");
 
-  ok(!Services.cookies.cookieExists(COOKIE), `Cookie ${COOKIE.name}  was removed.`);
-  ok(!Services.cookies.cookieExists(oldCookie), `Cookie ${oldCookie.name}  was removed.`);
-  ok(!Services.cookies.cookieExists(COOKIE_NET), `Cookie ${COOKIE_NET.name}  was removed.`);
-  ok(!Services.cookies.cookieExists(COOKIE_ORG), `Cookie ${COOKIE_ORG.name}  was removed.`);
+  ok(!Services.cookies.cookieExists(COOKIE.host, COOKIE.path, COOKIE.name, {}), `Cookie ${COOKIE.name}  was removed.`);
+  ok(!Services.cookies.cookieExists(oldCookie.host, oldCookie.path, oldCookie.name, {}), `Cookie ${oldCookie.name}  was removed.`);
+  ok(!Services.cookies.cookieExists(COOKIE_NET.host, COOKIE_NET.path, COOKIE_NET.name, {}), `Cookie ${COOKIE_NET.name}  was removed.`);
+  ok(!Services.cookies.cookieExists(COOKIE_ORG.host, COOKIE_ORG.path, COOKIE_ORG.name, {}), `Cookie ${COOKIE_ORG.name}  was removed.`);
 
   await extension.unload();
 });

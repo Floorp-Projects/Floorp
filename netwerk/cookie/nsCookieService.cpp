@@ -4736,35 +4736,31 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
 // find whether a given cookie has been previously set. this is provided by the
 // nsICookieManager interface.
 NS_IMETHODIMP
-nsCookieService::CookieExists(nsICookie2* aCookie,
+nsCookieService::CookieExists(const nsACString& aHost,
+                              const nsACString& aPath,
+                              const nsACString& aName,
                               JS::HandleValue aOriginAttributes,
                               JSContext* aCx,
-                              uint8_t aArgc,
                               bool* aFoundCookie)
 {
-  NS_ENSURE_ARG_POINTER(aCookie);
   NS_ENSURE_ARG_POINTER(aCx);
   NS_ENSURE_ARG_POINTER(aFoundCookie);
-  MOZ_ASSERT(aArgc == 0 || aArgc == 1);
 
   OriginAttributes attrs;
-  nsresult rv = InitializeOriginAttributes(&attrs,
-                                           aOriginAttributes,
-                                           aCx,
-                                           aArgc,
-                                           u"nsICookieManager.cookieExists()",
-                                           u"2");
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CookieExistsNative(aCookie, &attrs, aFoundCookie);
+  if (!aOriginAttributes.isObject() ||
+      !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return CookieExistsNative(aHost, aPath, aName, &attrs, aFoundCookie);
 }
 
 NS_IMETHODIMP_(nsresult)
-nsCookieService::CookieExistsNative(nsICookie2* aCookie,
+nsCookieService::CookieExistsNative(const nsACString& aHost,
+                                    const nsACString& aPath,
+                                    const nsACString& aName,
                                     OriginAttributes* aOriginAttributes,
                                     bool* aFoundCookie)
 {
-  NS_ENSURE_ARG_POINTER(aCookie);
   NS_ENSURE_ARG_POINTER(aOriginAttributes);
   NS_ENSURE_ARG_POINTER(aFoundCookie);
 
@@ -4778,21 +4774,15 @@ nsCookieService::CookieExistsNative(nsICookie2* aCookie,
   AutoRestore<DBState*> savePrevDBState(mDBState);
   mDBState = (aOriginAttributes->mPrivateBrowsingId > 0) ? mPrivateDBState : mDefaultDBState;
 
-  nsAutoCString host, name, path;
-  nsresult rv = aCookie->GetHost(host);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aCookie->GetName(name);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aCookie->GetPath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsAutoCString baseDomain;
-  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+  nsresult rv = GetBaseDomainFromHost(mTLDService, aHost, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsListIter iter;
   *aFoundCookie = FindCookie(nsCookieKey(baseDomain, *aOriginAttributes),
-                             host, name, path, iter);
+                             PromiseFlatCString(aHost),
+                             PromiseFlatCString(aName),
+                             PromiseFlatCString(aPath), iter);
   return NS_OK;
 }
 

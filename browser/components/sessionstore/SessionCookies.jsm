@@ -49,16 +49,12 @@ var SessionCookiesInternal = {
   restore(cookies) {
     for (let cookie of cookies) {
       let expiry = "expiry" in cookie ? cookie.expiry : MAX_EXPIRY;
-      let cookieObj = {
-        host: cookie.host,
-        path: cookie.path || "",
-        name: cookie.name || "",
-      };
-
-      let originAttributes = cookie.originAttributes || {};
       let exists = false;
       try {
-        exists = Services.cookies.cookieExists(cookieObj, originAttributes);
+        exists = Services.cookies.cookieExists(cookie.host,
+                                               cookie.path || "",
+                                               cookie.name || "",
+                                               cookie.originAttributes || {});
       } catch (ex) {
         Cu.reportError(`nsCookieService::CookieExists failed with error '${ex}' for '${JSON.stringify(cookie)}'.`);
       }
@@ -66,7 +62,8 @@ var SessionCookiesInternal = {
         try {
           Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
                                cookie.value, !!cookie.secure, !!cookie.httponly,
-                               /* isSession = */ true, expiry, originAttributes,
+                               /* isSession = */ true, expiry,
+                               cookie.originAttributes || {},
                                Ci.nsICookie2.SAMESITE_UNSET);
         } catch (ex) {
           Cu.reportError(`nsCookieService::Add failed with error '${ex}' for cookie ${JSON.stringify(cookie)}.`);
