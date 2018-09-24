@@ -2582,45 +2582,6 @@ nsCookieService::GetSessionEnumerator(nsISimpleEnumerator **aEnumerator)
   return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie2));
 }
 
-static nsresult
-InitializeOriginAttributes(OriginAttributes* aAttrs,
-                           JS::HandleValue aOriginAttributes,
-                           JSContext* aCx,
-                           uint8_t aArgc,
-                           const char16_t* aAPI,
-                           const char16_t* aInterfaceSuffix)
-{
-  MOZ_ASSERT(aAttrs);
-  MOZ_ASSERT(aCx);
-  MOZ_ASSERT(aAPI);
-  MOZ_ASSERT(aInterfaceSuffix);
-
-  if (aArgc == 0) {
-    const char16_t* params[] = {
-      aAPI,
-      aInterfaceSuffix
-    };
-
-    // This is supposed to be temporary and in 1 or 2 releases we want to
-    // have originAttributes param as mandatory. But for now, we don't want to
-    // break existing addons, so we write a console message to inform the addon
-    // developers about it.
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    NS_LITERAL_CSTRING("Cookie Manager"),
-                                    nullptr,
-                                    nsContentUtils::eNECKO_PROPERTIES,
-                                    "nsICookieManagerAPIDeprecated",
-                                    params, ArrayLength(params));
-  } else if (aArgc == 1) {
-    if (!aOriginAttributes.isObject() ||
-        !aAttrs->Init(aCx, aOriginAttributes)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsCookieService::Add(const nsACString &aHost,
                      const nsACString &aPath,
