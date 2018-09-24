@@ -40,6 +40,7 @@ EXPORTS.mozilla.dom += [
     'ContentProcessManager.h',
     'CPOWManagerGetter.h',
     'FilePickerParent.h',
+    'IPDL.h',
     'MemoryReportRequest.h',
     'nsIContentChild.h',
     'nsIContentParent.h',
@@ -90,6 +91,7 @@ UNIFIED_SOURCES += [
 # ContentChild.cpp cannot be compiled in unified mode on  linux due to Time conflict
 SOURCES += [
     'ContentChild.cpp',
+    'IPDL.cpp',
     'ProcessHangMonitor.cpp',
 ]
 

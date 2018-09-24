@@ -1,0 +1,14 @@
+include protocol PSubTest;
+
+sync protocol PTest {
+manages PSubTest;
+
+both:
+  async AsyncMessage(int inNumber) returns(int outNumber);
+
+parent:
+  sync SyncMessage(int inNumber) returns(int outNumber);
+
+child:
+  async PSubTest();
+};

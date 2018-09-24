@@ -1,0 +1,12 @@
+[package]
+name = "ipdl"
+version = "0.1.0"
+authors = ["Tristan Bourvon <tristanbourvon@gmail.com>", "Andrew McCreight <continuation@gmail.com>"]
+license = "MPL-2.0"
+
+[dependencies]
+pipdl = { path = "../pipdl" }
+
+[lib]
+name = "ipdl"
+path = "src/lib.rs"

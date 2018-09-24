@@ -1,0 +1,7 @@
+[package]
+name = "mfbt-maybe"
+version = "0.1.0"
+authors = ["Tristan Bourvon <tristanbourvon@gmail.com>"]
+
+[lib]
+name = "mfbt_maybe"
