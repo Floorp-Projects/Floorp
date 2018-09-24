@@ -24,7 +24,7 @@ let since, oldCookie;
 
 function addCookie(cookie) {
   let expiry =  Date.now() / 1000 + 10000;
-  Services.cookies.add(cookie.host, cookie.path, cookie.name, "test", false, false, false, expiry);
+  Services.cookies.add(cookie.host, cookie.path, cookie.name, "test", false, false, false, expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
   ok(Services.cookies.cookieExists(cookie), `Cookie ${cookie.name} was created.`);
 }
 
