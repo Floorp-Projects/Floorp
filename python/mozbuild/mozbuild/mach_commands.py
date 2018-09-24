@@ -618,6 +618,10 @@ class GTestCommands(MachCommandBase):
         app_path = self.get_binary_path('app')
         args = [app_path, '-unittest', '--gtest_death_test_style=threadsafe'];
 
+        if sys.platform.startswith('win') and \
+            'MOZ_LAUNCHER_PROCESS' in self.defines:
+            args.append('--wait-for-browser')
+
         if debug or debugger or debugger_args:
             args = self.prepend_debugger_args(args, debugger, debugger_args)
 
