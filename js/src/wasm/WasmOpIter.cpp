@@ -240,10 +240,15 @@ wasm::Classify(OpBytes op)
         return OpKind::CurrentMemory;
       case Op::GrowMemory:
         return OpKind::GrowMemory;
+#ifdef ENABLE_WASM_GC
       case Op::RefNull:
         return OpKind::RefNull;
+#endif
       case Op::MiscPrefix: {
           switch (MiscOp(op.b1)) {
+            case MiscOp::Limit:
+              // Reject Limit for MiscPrefix encoding
+              break;
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
             case MiscOp::I32TruncSSatF32:
             case MiscOp::I32TruncUSatF32:
@@ -278,8 +283,6 @@ wasm::Classify(OpBytes op)
             case MiscOp::StructNarrow:
               return OpKind::StructNarrow;
 #endif
-            default:
-              break;
           }
           break;
       }
