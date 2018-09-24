@@ -290,9 +290,6 @@ GetPropIRGenerator::tryAttachStub()
             if (tryAttachArgumentsObjectArg(obj, objId, indexId)) {
                 return true;
             }
-            if (tryAttachGenericElement(obj, objId, index, indexId)) {
-                return true;
-            }
 
             trackAttached(IRGenerator::NotAttached);
             return false;
@@ -2344,31 +2341,6 @@ GetPropIRGenerator::tryAttachUnboxedElementHole(HandleObject obj, ObjOperandId o
     trackAttached("UnboxedElementHole");
     return true;
 }
-
-bool
-GetPropIRGenerator::tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
-                                            uint32_t index, Int32OperandId indexId)
-{
-    if (!obj->isNative()) {
-        return false;
-    }
-
-    // To allow other types to attach in the non-megamorphic case we test the specific
-    // matching native reciever; however, once megamorphic we can attach for any native
-    if (mode_ == ICState::Mode::Megamorphic) {
-        writer.guardIsNativeObject(objId);
-    } else {
-        NativeObject* nobj = &obj->as<NativeObject>();
-        TestMatchingNativeReceiver(writer, nobj, objId);
-    }
-    writer.callNativeGetElementResult(objId, indexId);
-    writer.typeMonitorResult();
-
-    trackAttached(mode_ == ICState::Mode::Megamorphic
-                  ? "GenericElementMegamorphic": "GenericElement");
-    return true;
-}
-
 
 bool
 GetPropIRGenerator::tryAttachProxyElement(HandleObject obj, ObjOperandId objId)
