@@ -108,6 +108,9 @@ public:
                                        nsPIDOMWindowInner* aParentWindow,
                                        StorageAccessGrantedReason aReason);
 
+  static void
+  StoreUserInteractionFor(nsIPrincipal* aPrincipal);
+
   // For IPC only.
   static void
   SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(nsIPrincipal* aPrincipal,

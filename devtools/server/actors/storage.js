@@ -920,7 +920,8 @@ var cookieHelpers = {
       cookie.isHttpOnly,
       cookie.isSession,
       cookie.isSession ? MAX_COOKIE_EXPIRY : cookie.expires,
-      cookie.originAttributes
+      cookie.originAttributes,
+      cookie.sameSite
     );
   },
 

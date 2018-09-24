@@ -100,13 +100,13 @@ toolbar[brighttext] {
 toolbar .toolbarbutton-1 {
   -moz-appearance: none;
   margin: 0;
-  padding: 0 var(--toolbarbutton-outer-padding) !important;
+  padding: 0 var(--toolbarbutton-outer-padding);
   -moz-box-pack: center;
 }
 
 :root:not([uidensity=compact]) #PanelUI-menu-button {
-  padding-inline-start: 5px !important;
-  padding-inline-end: 5px !important;
+  padding-inline-start: 5px;
+  padding-inline-end: 5px;
 }
 
 toolbar .toolbarbutton-1 > menupopup {
@@ -149,8 +149,8 @@ toolbar .toolbaritem-combined-buttons {
 }
 
 toolbar .toolbaritem-combined-buttons > .toolbarbutton-1 {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 toolbar .toolbaritem-combined-buttons:not(:hover) > separator {
@@ -199,10 +199,10 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 }
 
 :root:not([uidensity=compact]) #back-button {
-  padding-top: 3px !important;
-  padding-bottom: 3px !important;
-  padding-inline-start: 3px !important;
-  padding-inline-end: 0 !important;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-inline-start: 3px;
+  padding-inline-end: 0;
   position: relative !important;
   z-index: 1 !important;
   border-radius: 0 10000px 10000px 0;
@@ -230,9 +230,9 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 }
 
 :root[uidensity=touch] #back-button {
-  padding-top: 1px !important;
-  padding-bottom: 1px !important;
-  padding-inline-start: 1px !important;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-inline-start: 1px;
 }
 
 :root[uidensity=touch] #back-button > .toolbarbutton-icon {
@@ -343,6 +343,6 @@ toolbarbutton.bookmark-item {
 }
 
 #PersonalToolbar .toolbarbutton-1 {
-  padding: 1px var(--toolbarbutton-inner-padding) !important;
+  padding: 1px var(--toolbarbutton-inner-padding);
   border-radius: var(--toolbarbutton-border-radius);
 }

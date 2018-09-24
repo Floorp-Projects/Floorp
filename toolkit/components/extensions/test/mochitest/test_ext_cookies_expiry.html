@@ -46,7 +46,7 @@ add_task(async function test_cookies_expiry() {
 
   let chromeScript = loadChromeScript(() => {
     const {sendAsyncMessage} = this;
-    Services.cookies.add(".example.com", "/", "first", "one", false, false, false, Date.now() / 1000 + 1);
+    Services.cookies.add(".example.com", "/", "first", "one", false, false, false, Date.now() / 1000 + 1, {}, Ci.nsICookie2.SAMESITE_UNSET);
     sendAsyncMessage("done");
   });
   await chromeScript.promiseOneMessage("done");
@@ -57,7 +57,7 @@ add_task(async function test_cookies_expiry() {
 
   chromeScript = loadChromeScript(() => {
     const {sendAsyncMessage} = this;
-    Services.cookies.add(".example.com", "/", "first", "one-again", false, false, false, Date.now() / 1000 + 10);
+    Services.cookies.add(".example.com", "/", "first", "one-again", false, false, false, Date.now() / 1000 + 10, {}, Ci.nsICookie2.SAMESITE_UNSET);
     sendAsyncMessage("done");
   });
   await chromeScript.promiseOneMessage("done");

@@ -68,13 +68,13 @@ function* do_run_test()
   let shortExpiry = Math.floor(Date.now() / 1000 + 2);
   setCookies("captchart.com", 49, futureExpiry);
   Services.cookiemgr.add("captchart.com", "", "test100", "eviction",
-    false, false, false, shortExpiry, {});
+    false, false, false, shortExpiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
   do_timeout(2100, continue_test);
   yield;
 
   Assert.equal(countCookies("captchart.com", "captchart.com"), 50);
   Services.cookiemgr.add("captchart.com", "", "test200", "eviction",
-    false, false, false, futureExpiry, {});
+    false, false, false, futureExpiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
   Assert.equal(countCookies("captchart.com", "captchart.com"), 50);
 
   for (let cookie of Services.cookiemgr.getCookiesFromHost("captchart.com", {})) {
@@ -90,7 +90,7 @@ setCookies(aHost, aNumber, aExpiry)
 {
   for (let i = 0; i < aNumber; ++i)
     Services.cookiemgr.add(aHost, "", "test" + i, "eviction",
-      false, false, false, aExpiry, {});
+      false, false, false, aExpiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
 }
 
 // count how many cookies are within domain 'aBaseDomain', using three

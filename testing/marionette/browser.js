@@ -244,17 +244,20 @@ browser.Context = class {
   }
 
   /**
-   * Gets the position and dimensions of the top-level browsing context.
+   * Gets the position, dimensions, and state of the top-level
+   * browsing context.
    *
    * @return {Map.<string, number>}
-   *     Object with |x|, |y|, |width|, and |height| properties.
+   *     Object with `height`, `width`, `x`, `y`, and `state` properties.
    */
   get rect() {
     return {
+      height: this.window.outerHeight,
+      width: this.window.outerWidth,
       x: this.window.screenX,
       y: this.window.screenY,
-      width: this.window.outerWidth,
-      height: this.window.outerHeight,
+
+      // proprietary
       state: WindowState.from(this.window.windowState),
     };
   }
