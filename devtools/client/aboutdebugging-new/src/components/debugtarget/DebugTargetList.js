@@ -9,6 +9,9 @@ const { createFactory, createRef, PureComponent } =
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 const DebugTargetItem = createFactory(require("./DebugTargetItem"));
 
 /**
@@ -48,6 +51,18 @@ class DebugTargetList extends PureComponent {
     return null;
   }
 
+  renderEmptyList() {
+    return Localized(
+      {
+        id: "about-debugging-debug-target-list-empty"
+      },
+      dom.span(
+        {},
+        "Nothing yet."
+      )
+    );
+  }
+
   render() {
     const {
       actionComponent,
@@ -64,7 +79,7 @@ class DebugTargetList extends PureComponent {
         ref: this.listRef,
       },
       targets.length === 0
-        ? "Nothing yet."
+        ? this.renderEmptyList()
         : targets.map((target, key) =>
             DebugTargetItem({ actionComponent, detailComponent, dispatch, key, target })),
     );
