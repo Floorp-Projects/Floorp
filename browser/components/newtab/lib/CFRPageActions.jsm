@@ -107,8 +107,10 @@ class PageAction {
     this.container.hidden = true;
     this._clearScheduledStateChanges();
     this.urlbar.removeAttribute("cfr-recommendation-state");
-    // This is safe even if this.currentNotification is invalid/undefined
-    this.window.PopupNotifications.remove(this.currentNotification);
+    if (this.currentNotification) {
+      this.window.PopupNotifications.remove(this.currentNotification);
+      this.currentNotification = null;
+    }
   }
 
   dispatchUserAction(action) {
@@ -158,8 +160,10 @@ class PageAction {
   _popupStateChange(state) {
     if (["dismissed", "removed"].includes(state)) {
       this._collapse();
-      // This is safe even if this.currentNotification is invalid/undefined
-      this.window.PopupNotifications.remove(this.currentNotification);
+      if (this.currentNotification) {
+        this.window.PopupNotifications.remove(this.currentNotification);
+        this.currentNotification = null;
+      }
     }
   }
 
