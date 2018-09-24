@@ -31,7 +31,6 @@ extern crate u2fhid;
 extern crate log;
 extern crate cosec;
 extern crate rsdparsa_capi;
-extern crate ipdl_bindings;
 
 use std::boxed::Box;
 use std::env;

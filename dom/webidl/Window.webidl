@@ -440,9 +440,6 @@ partial interface Window {
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   readonly attribute ChromeMessageBroadcaster messageManager;
 
-  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  readonly attribute IPDL IPDL;
-
   /**
    * Returns the message manager identified by the given group name that
    * manages all frame loaders belonging to that group.

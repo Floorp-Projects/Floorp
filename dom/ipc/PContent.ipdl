@@ -826,14 +826,6 @@ parent:
                      CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
-    /**
-     * Send an IPDL sync message with args packed as a JS array in the input
-     * and the output ClonedMessageData.
-     */
-    sync SyncMessageIPDL(nsCString aProtocolName, uint32_t aChannelId,
-                         nsCString aMessage, ClonedMessageData aData)
-      returns (StructuredCloneData[] retval);
-
     nested(inside_sync) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
                                         CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
@@ -1206,16 +1198,8 @@ parent:
     async DetachBrowsingContext(BrowsingContextId aContextId,
                                 bool aMoveToBFCache);
 both:
-    async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
+     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
-
-    /**
-     * Send an IPDL async message with args packed as a JS array in the input
-     * and the output ClonedMessageData.
-     */
-    async AsyncMessageIPDL(nsCString aProtocol, uint32_t aChannelId,
-                           nsCString aMessage, ClonedMessageData aData)
-      returns (StructuredCloneData[] retval);
 
     /**
      * Notify `push-subscription-modified` observers in the parent and child.

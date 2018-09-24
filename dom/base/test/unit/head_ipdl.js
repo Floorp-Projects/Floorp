@@ -1,1 +1,0 @@
-var IPDLGlob = new IPDL();
