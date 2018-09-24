@@ -116,13 +116,11 @@ interface nsICookieManager : nsISupports
    *        1970 UTC. note that expiry time will also be honored for session cookies;
    *        in this way, the more restrictive of the two will take effect.
    * @param aOriginAttributes
-   *        the originAttributes of this cookie. This attribute is optional to
-   *        avoid breaking add-ons.
+   *        the originAttributes of this cookie.
    * @param aSameSite
-   *        the SameSite attribute. This attribute is optional to avoid breaking
-   *        addons
+   *        the SameSite attribute.
    */
-  [implicit_jscontext, optional_argc]
+  [implicit_jscontext]
   void add(in AUTF8String aHost,
            in AUTF8String aPath,
            in ACString    aName,
@@ -131,8 +129,8 @@ interface nsICookieManager : nsISupports
            in boolean     aIsHttpOnly,
            in boolean     aIsSession,
            in int64_t     aExpiry,
-           [optional] in jsval aOriginAttributes,
-           [optional] in int32_t aSameSite);
+           in jsval aOriginAttributes,
+           in int32_t aSameSite);
 
   [notxpcom]
   nsresult addNative(in AUTF8String aHost,

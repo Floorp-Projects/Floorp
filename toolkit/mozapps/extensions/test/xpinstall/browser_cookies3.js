@@ -8,7 +8,8 @@ function test() {
   Harness.setup();
 
   Services.cookies.add("example.com", "/browser/" + RELATIVE_DIR, "xpinstall",
-    "true", false, false, true, (Date.now() / 1000) + 60, {});
+    "true", false, false, true, (Date.now() / 1000) + 60, {},
+    Ci.nsICookie2.SAMESITE_UNSET);
 
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);

@@ -5,7 +5,7 @@ function run_test() {
     Assert.notEqual(cm, null, "Retrieving the cookie manager failed");
 
     const time = (new Date("Jan 1, 2030")).getTime() / 1000;
-    cm.add("example.com", "/", "C", "V", false, true, false, time, {});
+    cm.add("example.com", "/", "C", "V", false, true, false, time, {}, Ci.nsICookie2.SAMESITE_UNSET);
     const now = Math.floor((new Date()).getTime() / 1000);
 
     var found = false;

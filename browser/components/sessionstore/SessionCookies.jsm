@@ -66,7 +66,8 @@ var SessionCookiesInternal = {
         try {
           Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
                                cookie.value, !!cookie.secure, !!cookie.httponly,
-                               /* isSession = */ true, expiry, originAttributes);
+                               /* isSession = */ true, expiry, originAttributes,
+                               Ci.nsICookie2.SAMESITE_UNSET);
         } catch (ex) {
           Cu.reportError(`nsCookieService::Add failed with error '${ex}' for cookie ${JSON.stringify(cookie)}.`);
         }
