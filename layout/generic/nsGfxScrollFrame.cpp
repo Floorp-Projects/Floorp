@@ -2120,7 +2120,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mLastSmoothScrollOrigin(nullptr)
   , mScrollGeneration(++sScrollGenerationCounter)
   , mDestination(0, 0)
-  , mScrollPosAtLastPaint(0, 0)
   , mRestorePos(-1, -1)
   , mLastPos(-1, -1)
   , mScrollPosForLayerPixelAlignment(-1, -1)
@@ -3395,10 +3394,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (aBuilder->IsPaintingToWindow()) {
-    mScrollPosAtLastPaint = GetScrollPosition();
     if (IsMaybeScrollingActive()) {
       if (mScrollPosForLayerPixelAlignment == nsPoint(-1,-1)) {
-        mScrollPosForLayerPixelAlignment = mScrollPosAtLastPaint;
+        mScrollPosForLayerPixelAlignment = GetScrollPosition();
       }
     } else {
       mScrollPosForLayerPixelAlignment = nsPoint(-1,-1);

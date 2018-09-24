@@ -536,7 +536,6 @@ public:
   // just the current scroll position. ScrollBy will choose its
   // destination based on this value.
   nsPoint mDestination;
-  nsPoint mScrollPosAtLastPaint;
 
   // A goal position to try to scroll to as content loads. As long as mLastPos
   // matches the current logical scroll position, we try to scroll to mRestorePos
