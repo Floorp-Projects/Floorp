@@ -505,7 +505,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
          aEvent->mMessage == ePointerUp)) {
       nsIDocument* doc = node->OwnerDoc();
       while (doc && !doc->UserHasInteracted()) {
-        doc->SetUserHasInteracted(true);
+        doc->SetUserHasInteracted();
         doc = nsContentUtils::IsChildOfSameType(doc) ?
           doc->GetParentDocument() : nullptr;
       }
