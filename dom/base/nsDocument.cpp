@@ -12622,20 +12622,22 @@ nsIDocument::ReportHasScrollLinkedEffect()
 }
 
 void
-nsIDocument::SetUserHasInteracted(bool aUserHasInteracted)
+nsIDocument::SetUserHasInteracted()
 {
   MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug,
           ("Document %p has been interacted by user.", this));
-  mUserHasInteracted = aUserHasInteracted;
+  if (mUserHasInteracted) {
+    return;
+  }
+
+  mUserHasInteracted = true;
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel ? mChannel->GetLoadInfo() : nullptr;
   if (loadInfo) {
-    loadInfo->SetDocumentHasUserInteracted(aUserHasInteracted);
+    loadInfo->SetDocumentHasUserInteracted(true);
   }
 
-  if (aUserHasInteracted) {
-    MaybeAllowStorageForOpener();
-  }
+  MaybeAllowStorageForOpener();
 }
 
 void

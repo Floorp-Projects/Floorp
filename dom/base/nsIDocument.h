@@ -3500,7 +3500,7 @@ public:
 
   // Called to track whether this document has had any interaction.
   // This is used to track whether we should permit "beforeunload".
-  void SetUserHasInteracted(bool aUserHasInteracted);
+  void SetUserHasInteracted();
   bool UserHasInteracted()
   {
     return mUserHasInteracted;
