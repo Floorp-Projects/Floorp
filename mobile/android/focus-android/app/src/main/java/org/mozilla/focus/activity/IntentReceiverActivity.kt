@@ -7,21 +7,26 @@ package org.mozilla.focus.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import mozilla.components.browser.session.Session
 import mozilla.components.support.utils.SafeIntent
-import org.mozilla.focus.customtabs.CustomTabConfig
-import java.util.UUID
+import org.mozilla.focus.ext.components
+import org.mozilla.focus.session.IntentProcessor
 
 /**
  * This activity receives VIEW intents and either forwards them to MainActivity or CustomTabActivity.
  */
 class IntentReceiverActivity : Activity() {
+    private val intentProcessor by lazy { IntentProcessor(components.sessionManager) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val intent = SafeIntent(intent)
 
-        if (CustomTabConfig.isCustomTabIntent(intent)) {
-            dispatchCustomTabsIntent()
+        val session = intentProcessor.handleIntent(this, intent, savedInstanceState)
+
+        if (session?.isCustomTabSession() == true) {
+            dispatchCustomTabsIntent(session)
         } else {
             dispatchNormalIntent()
         }
@@ -29,14 +34,14 @@ class IntentReceiverActivity : Activity() {
         finish()
     }
 
-    private fun dispatchCustomTabsIntent() {
+    private fun dispatchCustomTabsIntent(session: Session) {
         val intent = Intent(intent)
 
         intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
 
         // We are adding a generated custom tab ID to the intent here. CustomTabActivity will
         // use this ID to later decide what session to display once it is created.
-        intent.putExtra(CustomTabConfig.EXTRA_CUSTOM_TAB_ID, UUID.randomUUID().toString())
+        intent.putExtra(CustomTabActivity.CUSTOM_TAB_ID, session.id)
 
         startActivity(intent)
     }

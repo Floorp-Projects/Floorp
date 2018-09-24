@@ -1,10 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.observer
 
 import android.os.SystemClock
 import android.support.v4.app.Fragment
 import android.util.Log
-import org.mozilla.focus.architecture.NonNullObserver
-import org.mozilla.focus.session.Session
+import mozilla.components.browser.session.Session
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.UrlUtils
 
@@ -18,19 +21,28 @@ object LoadTimeObserver {
         var startLoadTime: Long = 0
         var urlLoading: String? = null
 
-        session.loading.observe(fragment, object : NonNullObserver<Boolean>() {
-            public override fun onValueChanged(t: Boolean) {
-                if (t) {
-                    if ((urlLoading != null && urlLoading != session.url.value) || urlLoading == null) {
-                        urlLoading = session.url.value
+        session.register(object : Session.Observer {
+            override fun onUrlChanged(session: Session, url: String) {
+                if ((urlLoading != null && urlLoading != url) || urlLoading == null) {
+                    startLoadTime = SystemClock.elapsedRealtime()
+                    Log.i(LOG_TAG, "zerdatime $startLoadTime - url changed to $url, new page load start")
+                    urlLoading = url
+                }
+            }
+
+            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+                if (loading) {
+                    if ((urlLoading != null && urlLoading != session.url) || urlLoading == null) {
+                        urlLoading = session.url
                         startLoadTime = SystemClock.elapsedRealtime()
                         Log.i(LOG_TAG, "zerdatime $startLoadTime - page load start")
                     }
                 } else {
                     // Progress of 99 means the page completed loading and wasn't interrupted.
                     if (urlLoading != null &&
-                            session.url.value == urlLoading &&
-                            session.progress.value == MAX_PROGRESS) {
+                        session.url == urlLoading &&
+                        session.progress == MAX_PROGRESS) {
+                        Log.i(LOG_TAG, "Loaded page at $session.url.value")
                         val endTime = SystemClock.elapsedRealtime()
                         Log.i(LOG_TAG, "zerdatime $endTime - page load stop")
                         val elapsedLoad = endTime - startLoadTime
@@ -38,20 +50,11 @@ object LoadTimeObserver {
                         // Even internal pages take longer than 40 ms to load, let's not send any loads faster than this
                         if (elapsedLoad > MIN_LOAD_TIME && !UrlUtils.isLocalizedContent(urlLoading)) {
                             Log.i(LOG_TAG, "Sent load to histogram")
-                            TelemetryWrapper.addLoadToHistogram(session.url.value, elapsedLoad)
+                            TelemetryWrapper.addLoadToHistogram(session.url, elapsedLoad)
                         }
                     }
                 }
             }
-        })
-        session.url.observe(fragment, object : NonNullObserver<String>() {
-            public override fun onValueChanged(t: String) {
-                if ((urlLoading != null && urlLoading != t) || urlLoading == null) {
-                    startLoadTime = SystemClock.elapsedRealtime()
-                    Log.i(LOG_TAG, "zerdatime $startLoadTime - url changed to $t, new page load start")
-                    urlLoading = t
-                }
-            }
-        })
+        }, owner = fragment)
     }
 }

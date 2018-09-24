@@ -28,7 +28,7 @@ import mozilla.components.support.utils.ThreadUtils;
         this.fragment = fragment;
 
         final Switch switchView = itemView.findViewById(R.id.blocking_switch);
-        switchView.setChecked(fragment.getSession().isBlockingEnabled());
+        switchView.setChecked(fragment.getSession().getTrackerBlockingEnabled());
         switchView.setOnCheckedChangeListener(this);
 
         final View helpView = itemView.findViewById(R.id.help_trackers);
@@ -43,11 +43,11 @@ import mozilla.components.support.utils.ThreadUtils;
 
         trackerCounter = itemView.findViewById(R.id.trackers_count);
 
-        updateTrackers(fragment.getSession().getBlockedTrackers().getValue());
+        updateTrackers(fragment.getSession().getTrackersBlocked().size());
     }
 
     /* package */ void updateTrackers(int trackers) {
-        if (fragment.getSession().isBlockingEnabled()) {
+        if (fragment.getSession().getTrackerBlockingEnabled()) {
             updateTrackingCount(trackerCounter, trackers);
         } else {
             disableTrackingCount(trackerCounter);

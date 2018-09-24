@@ -14,9 +14,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import mozilla.components.browser.session.Session
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.Locales
-import org.mozilla.focus.session.SessionManager
-import org.mozilla.focus.session.Source
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.Locale
@@ -73,7 +73,8 @@ object SupportUtils {
     }
 
     fun openDefaultBrowserSumoPage(context: Context) {
-        SessionManager.getInstance().createSession(Source.MENU, SupportUtils.DEFAULT_BROWSER_URL)
+        val session = Session(SupportUtils.DEFAULT_BROWSER_URL, source = Session.Source.MENU)
+        context.components.sessionManager.add(session, selected = true)
 
         if (context is Activity) {
             context.finish()

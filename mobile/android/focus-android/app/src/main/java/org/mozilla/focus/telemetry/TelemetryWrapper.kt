@@ -19,10 +19,9 @@ import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.json.JSONObject
 import org.mozilla.focus.BuildConfig
-import org.mozilla.focus.Components
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.search.CustomSearchEngineStore
-import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
@@ -286,10 +285,16 @@ object TelemetryWrapper {
      */
     @CheckResult
     private fun withSessionCounts(event: TelemetryEvent): TelemetryEvent {
-        val sessionManager = SessionManager.getInstance()
+        val context = TelemetryHolder.get().configuration.context
 
-        event.extra(Extra.SELECTED, sessionManager.positionOfCurrentSession.toString())
-        event.extra(Extra.TOTAL, sessionManager.numberOfSessions.toString())
+        val sessionManager = context.components.sessionManager
+        val sessions = sessionManager.sessions
+        val selectedSession = sessionManager.selectedSession
+
+        val positionOfSelectedSession = sessions.indexOf(selectedSession)
+
+        event.extra(Extra.SELECTED, positionOfSelectedSession.toString())
+        event.extra(Extra.TOTAL, sessions.size.toString())
 
         return event
     }
@@ -480,9 +485,9 @@ object TelemetryWrapper {
     }
 
     private fun getDefaultSearchEngineIdentifierForTelemetry(context: Context): String {
-        val searchEngine = Components.searchEngineManager.getDefaultSearchEngine(
-                context,
-                Settings.getInstance(context).defaultSearchEngineName
+        val searchEngine = context.components.searchEngineManager.getDefaultSearchEngine(
+            context,
+            Settings.getInstance(context).defaultSearchEngineName
         ).identifier
 
         return if (CustomSearchEngineStore.isCustomSearchEngine(searchEngine, context)) {

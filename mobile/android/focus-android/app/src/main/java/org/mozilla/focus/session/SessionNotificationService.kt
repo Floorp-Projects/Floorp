@@ -18,6 +18,7 @@ import android.support.v4.content.ContextCompat
 
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 /**
@@ -36,7 +37,7 @@ class SessionNotificationService : Service() {
             ACTION_ERASE -> {
                 TelemetryWrapper.eraseNotificationEvent()
 
-                SessionManager.getInstance().removeAllSessions()
+                components.sessionManager.removeSessions()
 
                 VisibilityLifeCycleCallback.finishAndRemoveTaskIfInBackground(this)
             }
@@ -50,7 +51,7 @@ class SessionNotificationService : Service() {
     override fun onTaskRemoved(rootIntent: Intent) {
         TelemetryWrapper.eraseTaskRemoved()
 
-        SessionManager.getInstance().removeAllSessions()
+        components.sessionManager.removeSessions()
 
         stopForeground(true)
         stopSelf()

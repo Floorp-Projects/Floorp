@@ -25,10 +25,10 @@ import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
+import mozilla.components.browser.session.Session
 import org.mozilla.focus.R
 import org.mozilla.focus.open.OpenWithFragment
-import org.mozilla.focus.session.SessionManager
-import org.mozilla.focus.session.Source
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper.BrowserContextMenuValue
 import org.mozilla.focus.utils.Browsers
@@ -170,19 +170,20 @@ object WebContextMenu {
                     true
                 }
                 R.id.menu_new_tab -> {
-                    SessionManager.getInstance()
-                            .createNewTabSession(Source.MENU, hitTarget.linkURL, context).also { session ->
-                                if (!Settings.getInstance(context).shouldOpenNewTabs()) {
-                                    // Show Snackbar to allow users to switch to tab they just opened
-                                    val snackbar = ViewUtils.getBrandedSnackbar(
-                                            (context as Activity).findViewById(android.R.id.content),
-                                            R.string.new_tab_opened_snackbar)
-                                    snackbar.setAction(R.string.open_new_tab_snackbar) {
-                                        SessionManager.getInstance().selectSession(session)
-                                    }
-                                    snackbar.show()
-                                }
-                            }
+                    val session = Session(hitTarget.linkURL, source = Session.Source.MENU)
+                    context.components.sessionManager.add(session, selected = false)
+
+                    if (!Settings.getInstance(context).shouldOpenNewTabs()) {
+                        // Show Snackbar to allow users to switch to tab they just opened
+                        val snackbar = ViewUtils.getBrandedSnackbar(
+                                (context as Activity).findViewById(android.R.id.content),
+                                R.string.new_tab_opened_snackbar)
+                        snackbar.setAction(R.string.open_new_tab_snackbar) {
+                            context.components.sessionManager.select(session)
+                        }
+                        snackbar.show()
+                    }
+
                     TelemetryWrapper.openLinkInNewTabEvent()
                     PreferenceManager.getDefaultSharedPreferences(context).edit()
                             .putBoolean(

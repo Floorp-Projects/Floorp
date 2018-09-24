@@ -17,7 +17,6 @@ import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import org.mozilla.focus.locale.LocaleAwareApplication
 import org.mozilla.focus.session.NotificationSessionObserver
-import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetrySessionObserver
@@ -45,6 +44,8 @@ class FocusApplication : LocaleAwareApplication() {
         private const val FRETBOARD_BLOCKING_NETWORK_READ_TIMEOUT = 10000
     }
 
+    val components: Components by lazy { Components() }
+
     var visibilityLifeCycleCallback: VisibilityLifeCycleCallback? = null
         private set
 
@@ -61,7 +62,7 @@ class FocusApplication : LocaleAwareApplication() {
 
             enableStrictMode()
 
-            Components.searchEngineManager.apply {
+            components.searchEngineManager.apply {
                 launch(IO) {
                     load(this@FocusApplication)
                 }
@@ -75,18 +76,12 @@ class FocusApplication : LocaleAwareApplication() {
             visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this@FocusApplication)
             registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
 
-            setupSessions()
+            components.sessionManager.apply {
+                register(NotificationSessionObserver(this@FocusApplication))
+                register(TelemetrySessionObserver())
+                register(CleanupSessionObserver(this@FocusApplication))
+            }
         }
-    }
-
-    private fun setupSessions() {
-        val sessions = SessionManager.getInstance().sessions
-        sessions.observeForever(NotificationSessionObserver(this@FocusApplication))
-        sessions.observeForever(TelemetrySessionObserver())
-        sessions.observeForever(CleanupSessionObserver(this@FocusApplication))
-
-        val customTabSessions = SessionManager.getInstance().customTabSessions
-        customTabSessions.observeForever(TelemetrySessionObserver())
     }
 
     private suspend fun loadExperiments() {

@@ -14,15 +14,16 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.Until;
 
+import mozilla.components.browser.session.SessionManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
+import org.mozilla.focus.ext.ContextKt;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
 import org.mozilla.focus.helpers.TestHelper;
-import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.web.IWebView;
 
@@ -43,7 +44,6 @@ import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertFalse;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.navigateToMockWebServer;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingEraseButton;
@@ -172,7 +172,10 @@ public class MultitaskingTest {
 
             // Now on main view
             assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(TestHelper.waitingTime));
-            assertFalse(SessionManager.getInstance().hasSession());
+
+            final SessionManager sessionManager = ContextKt.getComponents(
+                    InstrumentationRegistry.getTargetContext().getApplicationContext()).getSessionManager();
+            assertTrue(sessionManager.getSessions().isEmpty());
         }
     }
 

@@ -4,21 +4,20 @@
 
 package org.mozilla.focus.session.ui
 
-import android.arch.lifecycle.Observer
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
-
-import org.mozilla.focus.session.Session
-
-import java.util.ArrayList
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
+import org.mozilla.focus.ext.requireComponents
 
 /**
  * Adapter implementation to show a list of active browsing sessions and an "erase" button at the end.
  */
-class SessionsAdapter/* package */ internal constructor(private val fragment: SessionsSheetFragment) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>(), Observer<List<Session>> {
+class SessionsAdapter internal constructor(
+    private val fragment: SessionsSheetFragment
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), SessionManager.Observer {
     private var sessions: List<Session>? = null
 
     init {
@@ -65,8 +64,24 @@ class SessionsAdapter/* package */ internal constructor(private val fragment: Se
         return sessions!!.size + 1
     }
 
-    override fun onChanged(sessions: List<Session>?) {
-        this.sessions = ArrayList(sessions!!)
+    override fun onSessionAdded(session: Session) {
+        onUpdate(fragment.requireComponents.sessionManager.sessions)
+    }
+
+    override fun onSessionRemoved(session: Session) {
+        onUpdate(fragment.requireComponents.sessionManager.sessions)
+    }
+
+    override fun onSessionSelected(session: Session) {
+        onUpdate(fragment.requireComponents.sessionManager.sessions)
+    }
+
+    override fun onAllSessionsRemoved() {
+        onUpdate(fragment.requireComponents.sessionManager.sessions)
+    }
+
+    private fun onUpdate(sessions: List<Session>) {
+        this.sessions = sessions
         notifyDataSetChanged()
     }
 }

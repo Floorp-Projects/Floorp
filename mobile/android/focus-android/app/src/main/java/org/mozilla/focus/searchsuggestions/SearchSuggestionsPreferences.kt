@@ -8,7 +8,7 @@ import android.content.Context
 import android.preference.PreferenceManager
 import org.mozilla.focus.R
 import mozilla.components.browser.search.SearchEngine
-import org.mozilla.focus.Components
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Settings
 
@@ -21,7 +21,7 @@ class SearchSuggestionsPreferences(private val context: Context) {
     fun userHasDismissedNoSuggestionsMessage(): Boolean = settings.userHasDismissedNoSuggestionsMessage()
 
     fun getSearchEngine(): SearchEngine {
-        return Components.searchEngineManager.getDefaultSearchEngine(
+        return context.components.searchEngineManager.getDefaultSearchEngine(
                 context, settings.defaultSearchEngineName)
     }
 

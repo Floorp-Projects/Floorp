@@ -10,10 +10,11 @@ import android.support.annotation.CallSuper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 
+import mozilla.components.browser.session.SessionManager;
 import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.session.SessionManager;
 
 import mozilla.components.support.utils.ThreadUtils;
+import org.mozilla.focus.ext.ContextKt;
 
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
@@ -47,10 +48,13 @@ public class MainActivityFirstrunTestRule extends ActivityTestRule<MainActivity>
 
         getActivity().finishAndRemoveTask();
 
+        final SessionManager sessionManager = ContextKt.getComponents(
+                InstrumentationRegistry.getTargetContext().getApplicationContext()).getSessionManager();
+
         ThreadUtils.INSTANCE.postToMainThread(new Runnable() {
             @Override
             public void run() {
-                SessionManager.getInstance().removeAllSessions();
+                sessionManager.removeAll();
             }
         });
     }

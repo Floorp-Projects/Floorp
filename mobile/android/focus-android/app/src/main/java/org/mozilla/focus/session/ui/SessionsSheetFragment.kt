@@ -17,8 +17,8 @@ import android.view.animation.AccelerateInterpolator
 
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.locale.LocaleAwareFragment
-import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 
@@ -42,7 +42,8 @@ class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
         })
 
         val sessionsAdapter = SessionsAdapter(this)
-        SessionManager.getInstance().sessions.observe(this, sessionsAdapter)
+
+        requireComponents.sessionManager.register(sessionsAdapter, owner = this)
 
         view.findViewById<RecyclerView>(R.id.sessions).let {
             it.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)

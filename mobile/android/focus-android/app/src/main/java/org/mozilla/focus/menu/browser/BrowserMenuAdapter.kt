@@ -10,9 +10,9 @@ import android.content.Context
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import mozilla.components.browser.session.tab.CustomTabConfig
 
 import org.mozilla.focus.R
-import org.mozilla.focus.customtabs.CustomTabConfig
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Browsers

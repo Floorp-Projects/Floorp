@@ -50,6 +50,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.browser_display_toolbar.*
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.utils.ColorUtils
 import mozilla.components.support.utils.DownloadUtils
 import mozilla.components.support.utils.DrawableUtils
@@ -57,11 +59,12 @@ import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.animation.TransitionDrawableGroup
-import org.mozilla.focus.architecture.NonNullObserver
 import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
 import org.mozilla.focus.biometrics.BiometricAuthenticationHandler
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.findinpage.FindInPageCoordinator
 import org.mozilla.focus.gecko.NestedGeckoView
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
@@ -70,11 +73,7 @@ import org.mozilla.focus.menu.context.WebContextMenu
 import org.mozilla.focus.observer.LoadTimeObserver
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
-import org.mozilla.focus.session.NullSession
-import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionCallbackProxy
-import org.mozilla.focus.session.SessionManager
-import org.mozilla.focus.session.Source
 import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
@@ -145,7 +144,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     private var downloadBroadcastReceiver: DownloadBroadcastReceiver? = null
 
-    private val sessionManager: SessionManager = SessionManager.getInstance()
     private val findInPageCoordinator = FindInPageCoordinator()
 
     private var biometricController: BiometricAuthenticationHandler? = null
@@ -157,10 +155,11 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     val url: String
         get() = urlView!!.text.toString()
 
-    override var session: Session? = null
+    override lateinit var session: Session
+        private set
 
     override val initialUrl: String?
-        get() = session!!.url.value
+        get() = session.url
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -174,20 +173,17 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
         val sessionUUID = arguments!!.getString(ARGUMENT_SESSION_UUID) ?: throw IllegalAccessError("No session exists")
 
-        session = if (sessionManager.hasSessionWithUUID(sessionUUID))
-            sessionManager.getSessionByUUID(sessionUUID)
-        else
-            NullSession()
+        session = requireComponents.sessionManager.findSessionById(sessionUUID) ?: Session("about:blank")
 
-        session!!.blockedTrackers.observe(this, Observer { blockedTrackers ->
-            if (menuWeakReference == null) {
-                return@Observer
+        session.register(object : Session.Observer {
+            override fun onTrackerBlocked(session: Session, blocked: String, all: List<String>) {
+                menuWeakReference?.let {
+                    val menu = it.get()
+
+                    menu?.updateTrackers(all.size)
+                }
             }
-
-            val menu = menuWeakReference!!.get()
-
-            menu?.updateTrackers(blockedTrackers!!)
-        })
+        }, owner = this)
 
         findInPageCoordinator.matches.observe(
             this,
@@ -252,7 +248,14 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             TelemetryWrapper.swipeReloadEvent()
         }
 
-        session!!.url.observe(this, Observer { url -> urlView!!.text = UrlUtils.stripUserInfo(url) })
+        // We need to set the initial value here and then update the view from the observer. That's needlessly verbose.
+        // We want to change that in Android Components: https://github.com/mozilla-mobile/android-components/issues/665
+        urlView!!.text = UrlUtils.stripUserInfo(session.url)
+        session.register(object : Session.Observer {
+            override fun onUrlChanged(session: Session, url: String) {
+                urlView?.text = UrlUtils.stripUserInfo(url)
+            }
+        }, owner = this)
 
         findInPageView = view.findViewById(R.id.find_in_page)
 
@@ -290,18 +293,17 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         closeFindInPage = view.findViewById(R.id.close_find_in_page)
         closeFindInPage!!.setOnClickListener(this)
 
-        setBlockingEnabled(session!!.isBlockingEnabled)
-        setShouldRequestDesktop(session!!.shouldRequestDesktopSite())
+        setBlockingEnabled(session.trackerBlockingEnabled)
+        setShouldRequestDesktop(session.shouldRequestDesktopSite)
 
-        LoadTimeObserver.addObservers(session!!, this)
+        LoadTimeObserver.addObservers(session, this)
 
-        session!!.loading.observe(this, object : NonNullObserver<Boolean>() {
-            public override fun onValueChanged(t: Boolean) {
-                val loading = t
+        session.register(object : Session.Observer {
+            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
                 if (loading) {
                     backgroundTransitionGroup!!.resetTransition()
 
-                    progressView!!.progress = BrowserFragment.INITIAL_PROGRESS
+                    progressView!!.progress = INITIAL_PROGRESS
                     progressView!!.visibility = View.VISIBLE
                 } else {
                     if (progressView!!.visibility == View.VISIBLE) {
@@ -313,7 +315,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                     swipeRefresh!!.isRefreshing = false
                 }
 
-                updateBlockingBadging(loading || session!!.isBlockingEnabled)
+                updateBlockingBadging(loading || session.trackerBlockingEnabled)
 
                 updateToolbarButtonStates(loading)
 
@@ -322,7 +324,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
                 hideFindInPage()
             }
-        })
+        }, owner = this)
 
         refreshButton = view.findViewById(R.id.refresh)
         refreshButton?.let { it.setOnClickListener(this) }
@@ -342,31 +344,40 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         blockView = view.findViewById<View>(R.id.block) as FrameLayout
 
         securityView = view.findViewById(R.id.security_info)
-        session!!.secure.observe(this, Observer { secure ->
-            if (!session!!.loading.value) {
-                if (secure!!) {
-                    securityView!!.setImageResource(R.drawable.ic_lock)
-                } else {
-                    if (URLUtil.isHttpUrl(url)) {
-                        // HTTP site
-                        securityView!!.setImageResource(R.drawable.ic_internet)
+
+        securityView!!.setImageResource(R.drawable.ic_internet)
+        session.register(object : Session.Observer {
+            override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
+                if (!session.loading) {
+                    if (securityInfo.secure) {
+                        securityView!!.setImageResource(R.drawable.ic_lock)
                     } else {
-                        // Certificate is bad
-                        securityView!!.setImageResource(R.drawable.ic_warning)
+                        if (URLUtil.isHttpUrl(url)) {
+                            // HTTP site
+                            securityView!!.setImageResource(R.drawable.ic_internet)
+                        } else {
+                            // Certificate is bad
+                            securityView!!.setImageResource(R.drawable.ic_warning)
+                        }
                     }
+                } else {
+                    securityView!!.setImageResource(R.drawable.ic_internet)
                 }
-            } else {
-                securityView!!.setImageResource(R.drawable.ic_internet)
             }
-        })
+        }, owner = this)
+
         securityView!!.setOnClickListener(this)
 
-        session!!.progress.observe(this, Observer { progress -> progressView!!.progress = progress!! })
+        session.register(object : Session.Observer {
+            override fun onProgress(session: Session, progress: Int) {
+                progressView?.progress = progress
+            }
+        })
 
         menuView = view.findViewById<View>(R.id.menuView) as ImageButton
         menuView!!.setOnClickListener(this)
 
-        if (session!!.isCustomTab) {
+        if (session.isCustomTabSession()) {
             initialiseCustomTabUi(view)
         } else {
             initialiseNormalBrowserUi(view)
@@ -389,17 +400,27 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         val tabsButton = view.findViewById<FloatingSessionsButton>(R.id.tabs)
         tabsButton.setOnClickListener(this)
 
-        sessionManager.sessions.observe(this, object : NonNullObserver<List<Session>>() {
-            override fun onValueChanged(t: List<Session>) {
-                val sessions = t
-                tabsButton.updateSessionsCount(sessions.size)
-                eraseButton.updateSessionsCount(sessions.size)
+        val sessionManager = requireComponents.sessionManager
+        sessionManager.register(object : SessionManager.Observer {
+            override fun onSessionAdded(session: Session) {
+                tabsButton.updateSessionsCount(sessionManager.sessions.size)
+                eraseButton.updateSessionsCount(sessionManager.sessions.size)
+            }
+
+            override fun onSessionRemoved(session: Session) {
+                tabsButton.updateSessionsCount(sessionManager.sessions.size)
+                eraseButton.updateSessionsCount(sessionManager.sessions.size)
+            }
+
+            override fun onAllSessionsRemoved() {
+                tabsButton.updateSessionsCount(sessionManager.sessions.size)
+                eraseButton.updateSessionsCount(sessionManager.sessions.size)
             }
         })
     }
 
     private fun initialiseCustomTabUi(view: View) {
-        val customTabConfig = session!!.customTabConfig
+        val customTabConfig = session.customTabConfig!!
 
         // Unfortunately there's no simpler way to have the FAB only in normal-browser mode.
         // - ViewStub: requires splitting attributes for the FAB between the ViewStub, and actual FAB layout file.
@@ -417,9 +438,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         val textColor: Int
 
         if (customTabConfig.toolbarColor != null) {
-            urlBar!!.setBackgroundColor(customTabConfig.toolbarColor)
+            urlBar!!.setBackgroundColor(customTabConfig.toolbarColor!!)
 
-            textColor = ColorUtils.getReadableTextColor(customTabConfig.toolbarColor)
+            textColor = ColorUtils.getReadableTextColor(customTabConfig.toolbarColor!!)
             urlView!!.setTextColor(textColor)
         } else {
             textColor = Color.WHITE
@@ -448,10 +469,10 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             val actionButton = view.findViewById<View>(R.id.customtab_actionbutton) as ImageButton
             actionButton.visibility = View.VISIBLE
 
-            actionButton.setImageBitmap(customTabConfig.actionButtonConfig.icon)
-            actionButton.contentDescription = customTabConfig.actionButtonConfig.description
+            actionButton.setImageBitmap(customTabConfig.actionButtonConfig!!.icon)
+            actionButton.contentDescription = customTabConfig.actionButtonConfig!!.description
 
-            val pendingIntent = customTabConfig.actionButtonConfig.pendingIntent
+            val pendingIntent = customTabConfig.actionButtonConfig!!.pendingIntent
 
             actionButton.setOnClickListener {
                 try {
@@ -725,8 +746,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         val addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(
             url,
             title,
-            session!!.isBlockingEnabled,
-            session!!.shouldRequestDesktopSite()
+            session.trackerBlockingEnabled,
+            session.shouldRequestDesktopSite
         )
         addToHomescreenDialogFragment.setTargetFragment(
             this@BrowserFragment,
@@ -877,7 +898,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             // Go back in web history
             goBack()
         } else {
-            if (session!!.source == Source.VIEW || session!!.source == Source.CUSTOM_TAB) {
+            if (session.source == Session.Source.ACTION_VIEW || session.source == Session.Source.CUSTOM_TAB) {
                 TelemetryWrapper.eraseBackToAppEvent()
 
                 // This session has been started from a VIEW intent. Go back to the previous app
@@ -886,12 +907,11 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
                 // If there are no other sessions then we remove the whole task because otherwise
                 // the old session might still be partially visible in the app switcher.
-                if (!SessionManager.getInstance().hasSession()) {
+                if (requireComponents.sessionManager.sessions.isEmpty()) {
                     requireActivity().finishAndRemoveTask()
                 } else {
                     requireActivity().finish()
                 }
-
                 // We can't show a snackbar outside of the app. So let's show a toast instead.
                 Toast.makeText(context, R.string.feedback_erase_custom_tab, Toast.LENGTH_SHORT).show()
             } else {
@@ -923,10 +943,10 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
         webView?.cleanup()
 
-        if (session!!.isCustomTab) {
-            SessionManager.getInstance().removeCustomTabSession(session!!.uuid)
+        if (session.isCustomTabSession()) {
+            requireComponents.sessionManager.remove(session)
         } else {
-            SessionManager.getInstance().removeCurrentSession()
+            requireComponents.sessionManager.remove()
         }
     }
 
@@ -956,15 +976,15 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     override fun onClick(view: View) {
         when (view.id) {
             R.id.menuView -> {
-                val menu = BrowserMenu(activity, this, session!!.customTabConfig)
+                val menu = BrowserMenu(activity, this, session.customTabConfig)
                 menu.show(menuView)
 
                 menuWeakReference = WeakReference(menu)
             }
 
-            R.id.display_url -> if (SessionManager.getInstance().hasSessionWithUUID(session!!.uuid)) {
+            R.id.display_url -> if (requireComponents.sessionManager.findSessionById(session.id) != null) {
                 val urlFragment = UrlInputFragment
-                    .createWithSession(session!!, urlView!!)
+                    .createWithSession(session, urlView!!)
 
                 requireActivity().supportFragmentManager
                     .beginTransaction()
@@ -1008,10 +1028,12 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             }
 
             R.id.open_in_firefox_focus -> {
-                sessionManager.moveCustomTabToRegularSessions(session)
+                session.customTabConfig = null
+
+                requireComponents.sessionManager.select(session)
 
                 val webView = getWebView()
-                webView?.saveWebViewState(session!!)
+                webView?.saveWebViewState(session)
 
                 val intent = Intent(context, MainActivity::class.java)
                 intent.action = Intent.ACTION_MAIN
@@ -1075,12 +1097,17 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 TelemetryWrapper.closeCustomTabEvent()
             }
 
-            R.id.help -> SessionManager.getInstance().createSession(Source.MENU, SupportUtils.HELP_URL)
+            R.id.help -> {
+                val session = Session(SupportUtils.HELP_URL, source = Session.Source.MENU)
+                requireComponents.sessionManager.add(session, selected = true)
+            }
 
-            R.id.help_trackers -> SessionManager.getInstance().createSession(
-                Source.MENU,
-                SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.TRACKERS)
-            )
+            R.id.help_trackers -> {
+                val url = SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.TRACKERS)
+                val session = Session(url, source = Session.Source.MENU)
+
+                requireComponents.sessionManager.add(session, selected = true)
+            }
 
             R.id.add_to_homescreen -> {
                 val webView = getWebView() ?: return
@@ -1093,11 +1120,10 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             R.id.security_info -> showSecurityPopUp()
 
             R.id.report_site_issue -> {
-                SessionManager.getInstance()
-                    .createSession(
-                        Source.MENU,
-                        String.format(SupportUtils.REPORT_SITE_ISSUE_URL, url)
-                    )
+                val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, url)
+                val session = Session(reportUrl, source = Session.Source.MENU)
+                requireComponents.sessionManager.add(session, selected = true)
+
                 TelemetryWrapper.reportSiteIssueEvent()
             }
 
@@ -1177,7 +1203,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 R.drawable.animated_background_disabled
         )
 
-        backgroundTransitionGroup = if (!session!!.isCustomTab) {
+        backgroundTransitionGroup = if (!session.isCustomTabSession()) {
             // Only update the toolbar background if this is not a custom tab. Custom tabs set their
             // own color and we do not want to override this here.
             urlBar!!.setBackgroundResource(if (enabled)
@@ -1210,10 +1236,10 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     private fun showSecurityPopUp() {
         // Don't show Security Popup if the page is loading
-        if (session!!.loading.value!!) {
+        if (session.loading) {
             return
         }
-        val securityPopup = PopupUtils.createSecurityPopup(requireContext(), session!!)
+        val securityPopup = PopupUtils.createSecurityPopup(requireContext(), session)
         if (securityPopup != null) {
             securityPopup.setOnDismissListener { popupTint!!.visibility = View.GONE }
             securityPopup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -1237,7 +1263,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         if (view.id == R.id.display_url) {
             val context = activity ?: return false
 
-            if (session!!.isCustomTab) {
+            if (session.isCustomTabSession()) {
                 val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val uri = Uri.parse(url)
                 clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
@@ -1338,7 +1364,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         @JvmStatic
         fun createForSession(session: Session): BrowserFragment {
             val arguments = Bundle()
-            arguments.putString(ARGUMENT_SESSION_UUID, session.uuid)
+            arguments.putString(ARGUMENT_SESSION_UUID, session.id)
 
             val fragment = BrowserFragment()
             fragment.arguments = arguments

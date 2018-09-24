@@ -18,8 +18,8 @@ import android.widget.RadioGroup
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.search.SearchEngine
-import org.mozilla.focus.Components
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.utils.Settings
 
 abstract class SearchEngineListPreference : Preference {
@@ -41,7 +41,7 @@ abstract class SearchEngineListPreference : Preference {
         searchEngineGroup = holder!!.itemView.findViewById(R.id.search_engine_group)
         val context = searchEngineGroup!!.context
 
-        searchEngines = Components.searchEngineManager.getSearchEngines(context)
+        searchEngines = context.components.searchEngineManager.getSearchEngines(context)
             .sortedBy { it.name }
 
         refreshSearchEngineViews(context)
@@ -51,7 +51,7 @@ abstract class SearchEngineListPreference : Preference {
 
     fun refetchSearchEngines() {
         launch (UI) {
-            searchEngines = Components.searchEngineManager
+            searchEngines = context.components.searchEngineManager
                     .load(this@SearchEngineListPreference.context)
                     .await()
                     .sortedBy { it.name }
@@ -67,7 +67,7 @@ abstract class SearchEngineListPreference : Preference {
             return
         }
 
-        val defaultSearchEngine = Components.searchEngineManager.getDefaultSearchEngine(
+        val defaultSearchEngine = context.components.searchEngineManager.getDefaultSearchEngine(
                 context,
                 Settings.getInstance(context).defaultSearchEngineName
         ).identifier

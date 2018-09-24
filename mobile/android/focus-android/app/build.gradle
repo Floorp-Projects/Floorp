@@ -184,6 +184,8 @@ dependencies {
     compileOnly 'net.jcip:jcip-annotations:1.0'
     compileOnly "com.github.spotbugs:spotbugs-annotations:$spotbugs_version"
 
+    implementation "org.mozilla.components:session:$mozilla_components_version"
+    implementation "org.mozilla.components:engine:$mozilla_components_version"
     implementation "org.mozilla.components:telemetry:$mozilla_components_version"
     implementation "org.mozilla.components:ktx:$mozilla_components_version"
     implementation "org.mozilla.components:utils:$mozilla_components_version"

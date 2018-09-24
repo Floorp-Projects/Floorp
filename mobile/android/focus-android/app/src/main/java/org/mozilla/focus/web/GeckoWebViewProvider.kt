@@ -18,12 +18,13 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.webkit.WebSettings
+import mozilla.components.browser.session.Session
 import org.json.JSONException
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
+import org.mozilla.focus.ext.savedWebViewState
 import org.mozilla.focus.gecko.GeckoViewPrompt
 import org.mozilla.focus.gecko.NestedGeckoView
-import org.mozilla.focus.session.Session
 import org.mozilla.focus.telemetry.SentryWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
@@ -522,7 +523,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun restoreWebViewState(session: Session) {
-            val stateData = session.webViewState
+            val stateData = session.savedWebViewState!!
             val savedSession = stateData.getParcelable<GeckoSession>(GECKO_SESSION)!!
 
             if (geckoSession != savedSession) {
@@ -568,7 +569,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             sessionBundle.putBoolean(IS_SECURE, isSecure)
             sessionBundle.putString(WEBVIEW_TITLE, webViewTitle)
             sessionBundle.putString(CURRENT_URL, currentUrl)
-            session.saveWebViewState(sessionBundle)
+            session.savedWebViewState = sessionBundle
         }
 
         override fun getTitle(): String? {

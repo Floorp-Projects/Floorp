@@ -11,14 +11,15 @@ import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
 import org.mozilla.focus.R
-import org.mozilla.focus.session.SessionManager
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
-class EraseViewHolder(private val fragment: SessionsSheetFragment, itemView: View) : RecyclerView.ViewHolder(itemView),
-    View.OnClickListener {
+class EraseViewHolder(
+    private val fragment: SessionsSheetFragment,
+    itemView: View
+) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
 
     init {
-
         val textView = itemView as TextView
         val leftDrawable = AppCompatResources.getDrawable(itemView.getContext(), R.drawable.ic_delete)
         textView.setCompoundDrawablesWithIntrinsicBounds(leftDrawable, null, null, null)
@@ -30,7 +31,7 @@ class EraseViewHolder(private val fragment: SessionsSheetFragment, itemView: Vie
 
         fragment.animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                SessionManager.getInstance().removeAllSessions()
+                fragment.requireComponents.sessionManager.removeSessions()
             }
         })
     }

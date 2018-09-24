@@ -25,9 +25,10 @@ import android.webkit.WebChromeClient
 import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewDatabase
+import mozilla.components.browser.session.Session
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.BuildConfig
-import org.mozilla.focus.session.Session
+import org.mozilla.focus.ext.savedWebViewState
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.FileUtils
@@ -110,14 +111,14 @@ class SystemWebView(context: Context, attrs: AttributeSet) : NestedWebView(conte
     }
 
     override fun restoreWebViewState(session: Session) {
-        val stateData = session.webViewState
+        val stateData = session.savedWebViewState
 
         val backForwardList = if (stateData != null)
             super.restoreState(stateData)
         else
             null
 
-        val desiredURL = session.url.value
+        val desiredURL = session.url
 
         client.restoreState(stateData)
         client.notifyCurrentURL(desiredURL)
@@ -149,7 +150,7 @@ class SystemWebView(context: Context, attrs: AttributeSet) : NestedWebView(conte
         super.saveState(stateData)
         client.saveState(this, stateData)
 
-        session.saveWebViewState(stateData)
+        session.savedWebViewState = stateData
     }
 
     override fun setBlockingEnabled(enabled: Boolean) {

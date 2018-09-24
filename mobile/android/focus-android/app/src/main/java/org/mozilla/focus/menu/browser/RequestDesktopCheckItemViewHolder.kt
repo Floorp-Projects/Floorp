@@ -14,6 +14,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.UrlUtils
 
 import mozilla.components.support.utils.ThreadUtils
+import org.mozilla.focus.ext.shouldRequestDesktopSite
 
 internal class RequestDesktopCheckItemViewHolder/* package */(
     itemView: View,
@@ -22,7 +23,7 @@ internal class RequestDesktopCheckItemViewHolder/* package */(
     private val checkbox: CheckBox = itemView.findViewById(R.id.check_menu_item_checkbox)
 
     init {
-        checkbox.isChecked = fragment.session!!.shouldRequestDesktopSite()
+        checkbox.isChecked = fragment.session.shouldRequestDesktopSite
         checkbox.setOnCheckedChangeListener(this)
     }
 

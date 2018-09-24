@@ -7,14 +7,13 @@ package org.mozilla.focus.session.ui
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.support.v7.widget.RecyclerView
-import android.text.TextUtils
 import android.view.View
 import android.widget.TextView
+import mozilla.components.browser.session.Session
 import org.mozilla.focus.R
-import org.mozilla.focus.session.Session
-import org.mozilla.focus.session.SessionManager
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.ext.beautifyUrl
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.lang.ref.WeakReference
 
 class SessionViewHolder internal constructor(
@@ -38,7 +37,7 @@ class SessionViewHolder internal constructor(
 
         updateTitle(session)
 
-        val isCurrentSession = SessionManager.getInstance().isCurrentSession(session)
+        val isCurrentSession = fragment.requireComponents.sessionManager.selectedSession == session
 
         updateTextBackgroundColor(isCurrentSession)
     }
@@ -54,8 +53,8 @@ class SessionViewHolder internal constructor(
 
     private fun updateTitle(session: Session) {
         textView.text =
-                if (TextUtils.isEmpty(session.pageTitle.value)) session.url.value.beautifyUrl()
-                else session.pageTitle.value
+            if (session.title.isEmpty()) session.url.beautifyUrl()
+            else session.title
     }
 
     override fun onClick(view: View) {
@@ -66,7 +65,7 @@ class SessionViewHolder internal constructor(
     private fun selectSession(session: Session) {
         fragment.animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                SessionManager.getInstance().selectSession(session)
+                fragment.requireComponents.sessionManager.select(session)
 
                 TelemetryWrapper.switchTabInTabsTrayEvent()
             }

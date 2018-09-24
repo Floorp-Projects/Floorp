@@ -25,7 +25,7 @@ public class NavigationItemViewHolder extends BrowserMenuViewHolder {
         stopButton = itemView.findViewById(R.id.stop);
         stopButton.setOnClickListener(this);
 
-        updateLoading(fragment.getSession().getLoading().getValue());
+        updateLoading(fragment.getSession().getLoading());
 
         final View forwardView = itemView.findViewById(R.id.forward);
         if (!fragment.canGoForward()) {

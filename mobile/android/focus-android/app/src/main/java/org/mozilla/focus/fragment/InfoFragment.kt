@@ -8,9 +8,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import mozilla.components.browser.session.Session
 
 import org.mozilla.focus.R
-import org.mozilla.focus.session.Session
 import org.mozilla.focus.web.Download
 import org.mozilla.focus.web.IWebView
 

@@ -14,16 +14,17 @@ import android.preference.PreferenceManager
 import android.util.AttributeSet
 import android.view.View
 import android.view.WindowManager
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
-import org.mozilla.focus.architecture.NonNullObserver
 import org.mozilla.focus.biometrics.Biometrics
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
-import org.mozilla.focus.session.Session
-import org.mozilla.focus.session.SessionManager
+import org.mozilla.focus.session.IntentProcessor
 import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.settings.ExperimentsSettingsFragment
 import org.mozilla.focus.telemetry.SentryWrapper
@@ -39,13 +40,13 @@ import org.mozilla.focus.web.WebViewProvider
 
 @Suppress("TooManyFunctions")
 open class MainActivity : LocaleAwareAppCompatActivity() {
-    private val sessionManager: SessionManager = SessionManager.getInstance()
-
     protected open val isCustomTabMode: Boolean
         get() = false
 
     protected open val currentSessionForActivity: Session
-        get() = sessionManager.currentSession
+        get() = components.sessionManager.selectedSessionOrThrow
+
+    private val intentProcessor by lazy { IntentProcessor(components.sessionManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,8 +70,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         if (intent.isLauncherIntent) {
             TelemetryWrapper.openFromIconEvent()
         }
-
-        sessionManager.handleIntent(this, intent, savedInstanceState)
 
         registerSessionObserver()
 
@@ -98,45 +97,37 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     private fun registerSessionObserver() {
-        (if (isCustomTabMode)
-            sessionManager.customTabSessions
-        else
-            sessionManager.sessions).observe(this, createSessionObserver())
-    }
+        components.sessionManager.register(object : SessionManager.Observer {
+            override fun onSessionSelected(session: Session) {
+                showBrowserScreenForCurrentSession()
+            }
 
-    private fun createSessionObserver() = object : NonNullObserver<List<Session>>() {
-        private var wasSessionsEmpty = false
+            override fun onAllSessionsRemoved() {
+                showUrlInputScreen()
 
-        public override fun onValueChanged(t: List<Session>) {
-            // If needed show the first run tour on top of the browser or url input fragment.
-            val showFirstrun = Settings.getInstance(this@MainActivity).shouldShowFirstrun()
+                WebViewProvider.performNewBrowserSessionCleanup()
+            }
 
-            if (t.isEmpty()) {
-                if (!isCustomTabMode) {
-                    // There's no active session. Show the URL input screen so that the user can
-                    // start a new session.
-                    if (showFirstrun) {
-                        showFirstrun()
-                    } else {
-                        showUrlInputScreen()
-                    }
-                }
+            override fun onSessionRemoved(session: Session) {
+                if (!isCustomTabMode && components.sessionManager.sessions.isEmpty()) {
+                    showUrlInputScreen()
 
-                wasSessionsEmpty = true
-            } else {
-                // This happens when we move from 0 to 1 sessions: either on startup or after an erase.
-                if (wasSessionsEmpty) {
                     WebViewProvider.performNewBrowserSessionCleanup()
-                    wasSessionsEmpty = false
-                }
-
-                if (showFirstrun) {
-                    showFirstrun(currentSessionForActivity)
-                } else {
-                    // We have at least one session. Show a fragment for the current session.
-                    showBrowserScreenForCurrentSession()
                 }
             }
+        })
+
+        if (!isCustomTabMode && components.sessionManager.sessions.isEmpty()) {
+            showUrlInputScreen()
+
+            WebViewProvider.performNewBrowserSessionCleanup()
+        } else {
+            showBrowserScreenForCurrentSession()
+        }
+
+        // If needed show the first run tour on top of the browser or url input fragment.
+        if (Settings.getInstance(this@MainActivity).shouldShowFirstrun() && !isCustomTabMode) {
+            showFirstrun()
         }
     }
 
@@ -191,7 +182,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             return
         }
 
-        sessionManager.handleNewIntent(this, intent)
+        intentProcessor.handleNewIntent(this, intent)
 
         val action = intent.action
 
@@ -212,7 +203,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val fromShortcut = intent.getBooleanExtra(EXTRA_SHORTCUT, false)
         val fromNotification = intent.getBooleanExtra(EXTRA_NOTIFICATION, false)
 
-        SessionManager.getInstance().removeAllSessions()
+        components.sessionManager.removeSessions()
 
         if (fromShortcut) {
             TelemetryWrapper.eraseShortcutEvent()
@@ -277,7 +268,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         fragmentManager
                 .beginTransaction()
                 .replace(R.id.container, BrowserFragment.createForSession(currentSession), BrowserFragment.FRAGMENT_TAG)
-                .commit()
+            .commitAllowingStateLoss()
     }
 
     override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {

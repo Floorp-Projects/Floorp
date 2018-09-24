@@ -11,11 +11,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
+import mozilla.components.browser.session.Session
 
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.savedWebViewState
+import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.locale.LocaleManager
-import org.mozilla.focus.session.Session
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.web.IWebView
 
@@ -58,11 +60,9 @@ abstract class WebFragment : LocaleAwareFragment() {
         isWebViewAvailable = true
         webViewInstance!!.setCallback(createCallback())
 
-        val session = session
-
-        if (session != null) {
-            webViewInstance!!.setBlockingEnabled(session.isBlockingEnabled)
-            webViewInstance!!.setRequestDesktop(session.shouldRequestDesktopSite())
+        session?.let {
+            webViewInstance!!.setBlockingEnabled(it.trackerBlockingEnabled)
+            webViewInstance!!.setRequestDesktop(it.shouldRequestDesktopSite)
         }
 
         if (!AppConstants.isGeckoBuild) {
@@ -135,7 +135,7 @@ abstract class WebFragment : LocaleAwareFragment() {
 
     private fun restoreStateOrLoadUrl() {
         val session = session
-        if (session == null || !session.hasWebViewState()) {
+        if (session == null || session.savedWebViewState == null) {
             val url = initialUrl
             if (!TextUtils.isEmpty(url)) {
                 webViewInstance!!.loadUrl(url)
