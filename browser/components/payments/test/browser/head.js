@@ -387,7 +387,7 @@ async function navigateToAddAddressPage(frame, aOptions = {
       PaymentTestUtils,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    info("navigateToAddAddressPage: check were on the expected page first");
+    info("navigateToAddAddressPage: check we're on the expected page first");
     await PaymentTestUtils.DialogContentUtils.waitForState(content, (state) => {
       info("current page state: " + state.page.id + " waiting for: " + options.initialPageId);
       return state.page.id == options.initialPageId;

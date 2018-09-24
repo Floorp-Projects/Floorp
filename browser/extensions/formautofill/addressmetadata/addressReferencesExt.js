@@ -7,7 +7,7 @@
 
 "use strict";
 
-// "addressDataExt" uses the same key as "addressData" in "addressReferences.js" and contains
+// "addressDataExt" uses the same key as "addressData" in "addressReferences.js" and
 //  contains the information we need but absent in "libaddressinput" such as alternative names.
 
 // TODO: We only support the alternative name of US in MVP. We are going to support more countries in
