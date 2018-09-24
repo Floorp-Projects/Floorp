@@ -10,7 +10,7 @@ function run_test() {
 
   // Test our handling of host names with a single character at the beginning
   // followed by a dot.
-  cm.add("e.mail.com", "/", "foo", "bar", false, false, true, expiry, {});
+  cm.add("e.mail.com", "/", "foo", "bar", false, false, true, expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
   Assert.equal(cm.countCookiesFromHost("e.mail.com"), 1);
   Assert.equal(cs.getCookieString(NetUtil.newURI("http://e.mail.com"), null), "foo=bar");
 }

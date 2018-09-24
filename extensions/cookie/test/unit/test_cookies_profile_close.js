@@ -32,7 +32,7 @@ function* do_run_test() {
   Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
   let enumerator = Services.cookiemgr.enumerator;
   Assert.ok(enumerator.hasMoreElements());
-  let cookie = enumerator.getNext();
+  let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
   Assert.ok(!enumerator.hasMoreElements());
 
   // Fire 'profile-before-change'.
@@ -54,7 +54,8 @@ function* do_run_test() {
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.add("foo.com", "", "oh4", "hai", false, false, false, 0, {});
+    Services.cookiemgr.add("foo.com", "", "oh4", "hai", false, false, false, 0, {},
+                           Ci.nsICookie2.SAMESITE_UNSET);
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
@@ -68,7 +69,7 @@ function* do_run_test() {
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.cookieExists(cookie);
+    Services.cookiemgr.cookieExists(cookie.host, cookie.path, cookie.name, {});
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
@@ -85,7 +86,7 @@ function* do_run_test() {
 
   // Load the profile and check that the API is available.
   do_load_profile();
-  Assert.ok(Services.cookiemgr.cookieExists(cookie));
+  Assert.ok(Services.cookiemgr.cookieExists(cookie.host, cookie.path, cookie.name, {}));
 
   finish_test();
 }

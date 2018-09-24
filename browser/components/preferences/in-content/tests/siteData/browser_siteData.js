@@ -136,22 +136,26 @@ add_task(async function() {
   let uri = Services.io.newURI("https://example.com");
   let uri2 = Services.io.newURI("https://example.org");
   Services.cookies.add(uri.host, uri.pathQueryRef, "test1", "1",
-    false, false, false, Date.now() + 1000 * 60 * 60);
+    false, false, false, Date.now() + 1000 * 60 * 60, {},
+    Ci.nsICookie2.SAMESITE_UNSET);
   Services.cookies.add(uri.host, uri.pathQueryRef, "test2", "2",
-    false, false, false, Date.now() + 1000 * 60 * 60);
+    false, false, false, Date.now() + 1000 * 60 * 60, {},
+    Ci.nsICookie2.SAMESITE_UNSET);
   Services.cookies.add(uri2.host, uri2.pathQueryRef, "test1", "1",
-    false, false, false, Date.now() + 1000 * 60 * 60);
+    false, false, false, Date.now() + 1000 * 60 * 60, {},
+    Ci.nsICookie2.SAMESITE_UNSET);
 
   // Ensure that private browsing cookies are ignored.
   Services.cookies.add(uri.host, uri.pathQueryRef, "test3", "3",
-    false, false, false, Date.now() + 1000 * 60 * 60, { privateBrowsingId: 1 });
+    false, false, false, Date.now() + 1000 * 60 * 60, { privateBrowsingId: 1 },
+    Ci.nsICookie2.SAMESITE_UNSET);
 
   // Get the exact creation date from the cookies (to avoid intermittents
   // from minimal time differences, since we round up to minutes).
-  let cookiesEnum1 = Services.cookies.getCookiesFromHost(uri.host);
+  let cookiesEnum1 = Services.cookies.getCookiesFromHost(uri.host, {});
   // We made two valid cookies for example.com.
   cookiesEnum1.getNext();
-  let cookiesEnum2 = Services.cookies.getCookiesFromHost(uri2.host);
+  let cookiesEnum2 = Services.cookies.getCookiesFromHost(uri2.host, {});
   let cookie1 = cookiesEnum1.getNext().QueryInterface(Ci.nsICookie2);
   let cookie2 = cookiesEnum2.getNext().QueryInterface(Ci.nsICookie2);
 
