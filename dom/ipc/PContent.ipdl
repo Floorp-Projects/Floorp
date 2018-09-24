@@ -1168,6 +1168,8 @@ parent:
                                                   nsCString aGrantedOrigin)
           returns (bool unused);
 
+    async StoreUserInteractionAsPermission(Principal aPrincipal);
+
     /**
      * Sync the BrowsingContext with id 'aContextId' and name 'aName'
      * to the parent, and attach it to the BrowsingContext with id

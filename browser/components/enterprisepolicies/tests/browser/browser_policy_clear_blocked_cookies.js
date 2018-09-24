@@ -7,11 +7,11 @@ const ORIGIN_DOMAIN = "browser_policy_clear_blocked_cookies.org";
 
 add_task(async function setup() {
   const expiry = Date.now() + 24 * 60 * 60;
-  Services.cookies.add(HOSTNAME_DOMAIN, "/", "secure", "true", true, false, false, expiry, {});
-  Services.cookies.add(HOSTNAME_DOMAIN, "/", "insecure", "true", false, false, false, expiry, {});
-  Services.cookies.add(ORIGIN_DOMAIN, "/", "secure", "true", true, false, false, expiry, {});
-  Services.cookies.add(ORIGIN_DOMAIN, "/", "insecure", "true", false, false, false, expiry, {});
-  Services.cookies.add("example.net", "/", "secure", "true", true, false, false, expiry, {});
+  Services.cookies.add(HOSTNAME_DOMAIN, "/", "secure", "true", true, false, false, expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
+  Services.cookies.add(HOSTNAME_DOMAIN, "/", "insecure", "true", false, false, false, expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
+  Services.cookies.add(ORIGIN_DOMAIN, "/", "secure", "true", true, false, false, expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
+  Services.cookies.add(ORIGIN_DOMAIN, "/", "insecure", "true", false, false, false, expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
+  Services.cookies.add("example.net", "/", "secure", "true", true, false, false, expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {

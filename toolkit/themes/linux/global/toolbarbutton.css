@@ -42,10 +42,6 @@ toolbarbutton:hover {
 
 toolbarbutton:hover:active:not([disabled="true"]),
 toolbarbutton[open="true"] {
-  padding-top: 4px;
-  padding-bottom: 2px;
-  padding-inline-start: 4px;
-  padding-inline-end: 2px;
   color: ButtonText;
 }
 
