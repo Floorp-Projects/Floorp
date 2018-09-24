@@ -3505,6 +3505,7 @@ public:
   {
     return mUserHasInteracted;
   }
+  void ResetUserInteractionTimer();
 
   // This should be called when this document receives events which are likely
   // to be user interaction with the document, rather than the byproduct of
@@ -4496,6 +4497,11 @@ protected:
 
   // Whether the user has interacted with the document or not:
   bool mUserHasInteracted;
+
+  // We constantly update the user-interaction anti-tracking permission at any
+  // user-interaction using a timer. This boolean value is set to true when this
+  // timer is scheduled.
+  bool mHasUserInteractionTimerScheduled;
 
   // Whether the user has interacted with the document via a restricted
   // set of gestures which are likely to be interaction with the document,
