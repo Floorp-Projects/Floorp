@@ -118,7 +118,12 @@ class MOZ_NON_PARAM InlineCharBuffer
             MOZ_ASSERT(!heapStorage,
                        "expected only inline storage when length fits in inline string");
 
-            return NewStringCopyNDontDeflate<CanGC>(cx, inlineStorage, length);
+            if (JSString* str = TryEmptyOrStaticString(cx, inlineStorage, length)) {
+                return str;
+            }
+
+            mozilla::Range<const CharT> range(inlineStorage, length);
+            return NewInlineString<CanGC>(cx, range);
         }
 
         MOZ_ASSERT(heapStorage, "heap storage was not allocated for non-inline string");
