@@ -736,6 +736,7 @@ struct BaseOfTester<Type, const Type> : TrueType {};
  *   class B : public A {};
  *   class C {};
  *
+ * mozilla::IsBaseOf<A, A>::value is true;
  * mozilla::IsBaseOf<A, B>::value is true;
  * mozilla::IsBaseOf<A, C>::value is false;
  */
