@@ -3921,6 +3921,8 @@ protected:
 
   void MaybeAllowStorageForOpener();
 
+  void MaybeStoreUserInteractionAsPermission();
+
   // Helpers for GetElementsByName.
   static bool MatchNameAttribute(mozilla::dom::Element* aElement,
                                  int32_t aNamespaceID,
