@@ -625,8 +625,8 @@ var dataProviders = {
         defaultLocale: Services.locale.defaultLocale,
       },
       osPrefs: {
-        systemLocales: osPrefs.getSystemLocales(),
-        regionalPrefsLocales: osPrefs.getRegionalPrefsLocales(),
+        systemLocales: osPrefs.systemLocales,
+        regionalPrefsLocales: osPrefs.regionalPrefsLocales,
       },
     });
   },

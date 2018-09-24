@@ -628,7 +628,7 @@ LocaleService::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal)
   // If the user specified that they want to use OS Regional Preferences locales,
   // try to retrieve them and use.
   if (useOSLocales) {
-    if (OSPreferences::GetInstance()->GetRegionalPrefsLocales(aRetVal)) {
+    if (NS_SUCCEEDED(OSPreferences::GetInstance()->GetRegionalPrefsLocales(aRetVal))) {
       return NS_OK;
     }
 
@@ -647,7 +647,7 @@ LocaleService::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal)
   AutoTArray<nsCString, 10> regionalPrefsLocales;
   LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocale);
 
-  if (!OSPreferences::GetInstance()->GetRegionalPrefsLocales(regionalPrefsLocales)) {
+  if (NS_FAILED(OSPreferences::GetInstance()->GetRegionalPrefsLocales(regionalPrefsLocales))) {
     GetAppLocalesAsBCP47(aRetVal);
     return NS_OK;
   }
