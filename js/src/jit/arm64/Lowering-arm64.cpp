@@ -205,7 +205,20 @@ LIRGeneratorARM64::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
 void
 LIRGeneratorARM64::lowerDivI(MDiv* div)
 {
-    MOZ_CRASH("lowerDivI");
+    if (div->isUnsigned()) {
+        lowerUDiv(div);
+        return;
+    }
+
+    // TODO: Implement the division-avoidance paths when rhs is constant.
+
+    LDivI* lir = new(alloc()) LDivI(useRegister(div->lhs()),
+                                    useRegister(div->rhs()),
+                                    temp());
+    if (div->fallible()) {
+        assignSnapshot(lir, Bailout_DoubleOutput);
+    }
+    define(lir, div);
 }
 
 void
