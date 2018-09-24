@@ -9988,7 +9988,6 @@ BaseCompiler::emitStructSet()
     RegF64 rd;
     RegPtr rr;
 
-#ifdef ENABLE_WASM_GC
     // Reserve this register early if we will need it so that it is not taken by
     // rr or rp.
     RegPtr valueAddr;
@@ -9996,7 +9995,6 @@ BaseCompiler::emitStructSet()
         valueAddr = RegPtr(PreBarrierReg);
         needRef(valueAddr);
     }
-#endif
 
     switch (structType.fields_[fieldIndex].type.code()) {
       case ValType::I32:
@@ -10052,14 +10050,12 @@ BaseCompiler::emitStructSet()
         freeF64(rd);
         break;
       }
-#ifdef ENABLE_WASM_GC
       case ValType::Ref:
       case ValType::AnyRef:
         masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
         emitBarrieredStore(Some(rp), valueAddr, rr);// Consumes valueAddr
         freeRef(rr);
         break;
-#endif
       default: {
         MOZ_CRASH("Unexpected field type");
       }
@@ -10119,7 +10115,7 @@ BaseCompiler::emitStructNarrow()
 
     return true;
 }
-#endif
+#endif  // ENABLE_WASM_GC
 
 bool
 BaseCompiler::emitBody()
