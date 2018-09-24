@@ -54,12 +54,6 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
   SECStatus prio_rv = SECSuccess;
 
   if (!sSingleton) {
-    sSingleton = new PrioEncoder();
-
-    ClearOnShutdown(&sSingleton);
-
-    Prio_init();
-
     nsresult rv;
 
     nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyA;
@@ -84,6 +78,13 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
       return;
     }
 
+    prio_rv = Prio_init();
+
+    if (prio_rv != SECSuccess) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return;
+    }
+
     prio_rv = PublicKey_import_hex(&sPublicKeyA,
                                    reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()),
                                    CURVE25519_KEY_LEN_HEX);
@@ -99,6 +100,9 @@ PrioEncoder::Encode(GlobalObject& aGlobal,
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
     }
+
+    sSingleton = new PrioEncoder();
+    ClearOnShutdown(&sSingleton);
   }
 
   bool dataItems[] = {
