@@ -111,6 +111,10 @@ SpecialPowers.registerConsoleListener(function onConsoleMessage(msg) {
     // Ignore unknown CSP error.
     return;
   }
+  if (msg.message.includes("icon-credit-card-generic.svg")) {
+    // Ignoring SOP error
+    return;
+  }
   if (msg.message == "SENTINEL") {
     filterFunction = null;
   }

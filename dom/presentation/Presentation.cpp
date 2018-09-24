@@ -168,10 +168,18 @@ Presentation::HasReceiverSupport() const
     return false;
   }
 
+  bool isPrivateWin = false;
+  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  if (doc) {
+    isPrivateWin =
+      doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
+  }
+
   nsCOMPtr<nsIURI> docURI = mWindow->GetDocumentURI();
   return NS_SUCCEEDED(securityManager->CheckSameOriginURI(presentationURI,
                                                           docURI,
-                                                          false));
+                                                          false,
+                                                          isPrivateWin));
 }
 
 bool
