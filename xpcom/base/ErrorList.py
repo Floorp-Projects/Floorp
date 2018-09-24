@@ -863,7 +863,6 @@ with modules["CONTENT"]:
     # Error codes for FindBroadcaster in XULDocument.cpp
     errors["NS_FINDBROADCASTER_NOT_FOUND"] = SUCCESS(12)
     errors["NS_FINDBROADCASTER_FOUND"] = SUCCESS(13)
-    errors["NS_FINDBROADCASTER_AWAIT_OVERLAYS"] = SUCCESS(14)
 
 
 # =======================================================================
