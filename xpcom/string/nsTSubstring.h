@@ -416,13 +416,13 @@ public:
   void NS_FASTCALL Assign(char_type aChar);
   MOZ_MUST_USE bool NS_FASTCALL Assign(char_type aChar, const fallible_t&);
 
-  void NS_FASTCALL Assign(const char_type* aData);
+  void NS_FASTCALL Assign(const char_type* aData,
+                          size_type aLength = size_type(-1));
   MOZ_MUST_USE bool NS_FASTCALL Assign(const char_type* aData,
                                        const fallible_t&);
-
-  void NS_FASTCALL Assign(const char_type* aData, size_type aLength);
   MOZ_MUST_USE bool NS_FASTCALL Assign(const char_type* aData,
-                                       size_type aLength, const fallible_t&);
+                                       size_type aLength,
+                                       const fallible_t&);
 
   void NS_FASTCALL Assign(const self_type&);
   MOZ_MUST_USE bool NS_FASTCALL Assign(const self_type&, const fallible_t&);
@@ -602,23 +602,15 @@ public:
     ReplaceLiteral(aCutStart, aCutLength, aStr, N - 1);
   }
 
-  void Append(char_type aChar)
-  {
-    Replace(base_string_type::mLength, 0, aChar);
-  }
-  MOZ_MUST_USE bool Append(char_type aChar, const fallible_t& aFallible)
-  {
-    return Replace(base_string_type::mLength, 0, aChar, aFallible);
-  }
-  void Append(const char_type* aData, size_type aLength = size_type(-1))
-  {
-    Replace(base_string_type::mLength, 0, aData, aLength);
-  }
-  MOZ_MUST_USE bool Append(const char_type* aData, size_type aLength,
-                           const fallible_t& aFallible)
-  {
-    return Replace(base_string_type::mLength, 0, aData, aLength, aFallible);
-  }
+  void Append(char_type aChar);
+
+  MOZ_MUST_USE bool Append(char_type aChar, const fallible_t& aFallible);
+
+  void Append(const char_type* aData, size_type aLength = size_type(-1));
+
+  MOZ_MUST_USE bool Append(const char_type* aData,
+                           size_type aLength,
+                           const fallible_t& aFallible);
 
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
@@ -628,32 +620,71 @@ public:
   }
 #endif
 
-  void Append(const self_type& aStr)
+  void Append(const self_type& aStr);
+
+  MOZ_MUST_USE bool Append(const self_type& aStr, const fallible_t& aFallible);
+
+  void Append(const substring_tuple_type& aTuple);
+
+  MOZ_MUST_USE bool Append(const substring_tuple_type& aTuple, const fallible_t& aFallible);
+
+  void AppendASCII(const char* aData, size_type aLength = size_type(-1));
+
+  MOZ_MUST_USE bool AppendASCII(const char* aData,
+                                const fallible_t& aFallible);
+
+  MOZ_MUST_USE bool AppendASCII(const char* aData,
+                                size_type aLength,
+                                const fallible_t& aFallible);
+
+  // Appends a literal string ("" literal in the 8-bit case and u"" literal
+  // in the 16-bit case) to the string.
+  //
+  // AppendLiteral must ONLY be applied to an actual literal string.
+  // Do not attempt to use it with a regular character pointer, or with a
+  // character array variable. Use Append or AppendASCII for those.
+  template<int N>
+  void AppendLiteral(const char_type (&aStr)[N])
   {
-    Replace(base_string_type::mLength, 0, aStr);
-  }
-  MOZ_MUST_USE bool Append(const self_type& aStr, const fallible_t& aFallible)
-  {
-    return Replace(base_string_type::mLength, 0, aStr, aFallible);
-  }
-  void Append(const substring_tuple_type& aTuple)
-  {
-    Replace(base_string_type::mLength, 0, aTuple);
+    // The case where base_string_type::mLength is zero is intentionally
+    // left unoptimized (could be optimized as call to AssignLiteral),
+    // because it's rare/nonexistent. If you add that optimization,
+    // please be sure to also check that
+    // !(base_string_type::mDataFlags & DataFlags::REFCOUNTED)
+    // to avoid undoing the effects of SetCapacity().
+    Append(aStr, N - 1);
   }
 
-  void AppendASCII(const char* aData, size_type aLength = size_type(-1))
+  template<int N>
+  void AppendLiteral(const char_type (&aStr)[N], const fallible_t& aFallible)
   {
-    ReplaceASCII(base_string_type::mLength, 0, aData, aLength);
+    // The case where base_string_type::mLength is zero is intentionally
+    // left unoptimized (could be optimized as call to AssignLiteral),
+    // because it's rare/nonexistent. If you add that optimization,
+    // please be sure to also check that
+    // !(base_string_type::mDataFlags & DataFlags::REFCOUNTED)
+    // to avoid undoing the effects of SetCapacity().
+    return Append(aStr, N - 1, aFallible);
   }
 
-  MOZ_MUST_USE bool AppendASCII(const char* aData, const fallible_t& aFallible)
+  // Only enable for T = char16_t
+  //
+  // Appends an 8-bit literal string ("" literal) to a 16-bit string by
+  // expanding it. The literal must only contain ASCII.
+  //
+  // Using u"" literals with 16-bit strings is generally preferred.
+  template <int N, typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
+  void AppendLiteral(const incompatible_char_type (&aStr)[N])
   {
-    return ReplaceASCII(base_string_type::mLength, 0, aData, size_type(-1), aFallible);
+    AppendASCII(aStr, N - 1);
   }
 
-  MOZ_MUST_USE bool AppendASCII(const char* aData, size_type aLength, const fallible_t& aFallible)
+  // Only enable for T = char16_t
+  template <int N, typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
+  MOZ_MUST_USE bool
+  AppendLiteral(const incompatible_char_type (&aStr)[N], const fallible_t& aFallible)
   {
-    return ReplaceASCII(base_string_type::mLength, 0, aData, aLength, aFallible);
+    return AppendASCII(aStr, N - 1, aFallible);
   }
 
   /**
@@ -714,39 +745,6 @@ public:
    */
   void NS_FASTCALL AppendFloat(float aFloat);
   void NS_FASTCALL AppendFloat(double aFloat);
-public:
-
-  // Appends a literal string ("" literal in the 8-bit case and u"" literal
-  // in the 16-bit case) to the string.
-  //
-  // AppendLiteral must ONLY be applied to an actual literal string.
-  // Do not attempt to use it with a regular character pointer, or with a
-  // character array variable. Use Append or AppendASCII for those.
-  template<int N>
-  void AppendLiteral(const char_type (&aStr)[N])
-  {
-    ReplaceLiteral(base_string_type::mLength, 0, aStr, N - 1);
-  }
-
-  // Only enable for T = char16_t
-  //
-  // Appends an 8-bit literal string ("" literal) to a 16-bit string by
-  // expanding it. The literal must only contain ASCII.
-  //
-  // Using u"" literals with 16-bit strings is generally preferred.
-  template <int N, typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  void AppendLiteral(const incompatible_char_type (&aStr)[N])
-  {
-    AppendASCII(aStr, N - 1);
-  }
-
-  // Only enable for T = char16_t
-  template <int N, typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  MOZ_MUST_USE bool
-  AppendLiteral(const incompatible_char_type (&aStr)[N], const fallible_t& aFallible)
-  {
-    return AppendASCII(aStr, N - 1, aFallible);
-  }
 
   self_type& operator+=(char_type aChar)
   {
