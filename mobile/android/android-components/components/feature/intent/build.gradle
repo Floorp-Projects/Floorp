@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion Config.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion Config.minSdkVersion
+        targetSdkVersion Config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+
+dependencies {
+    implementation project(':concept-engine')
+    implementation project(':browser-session')
+    implementation project(':feature-search')
+    implementation project(':feature-session')
+    implementation project(':support-utils')
+    implementation project(':support-ktx')
+    implementation Deps.kotlin_stdlib
+
+    testImplementation project(':browser-search')
+    testImplementation project(':support-test')
+    testImplementation Deps.testing_junit
+    testImplementation Deps.testing_robolectric
+    testImplementation Deps.testing_mockito
+    testImplementation Deps.support_customtabs
+    testImplementation Deps.kotlin_coroutines
+}
+
+archivesBaseName = "feature-intent"
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(
+        'org.mozilla.components',
+        'feature-intent',
+        'Combining various feature components for intent processing.')

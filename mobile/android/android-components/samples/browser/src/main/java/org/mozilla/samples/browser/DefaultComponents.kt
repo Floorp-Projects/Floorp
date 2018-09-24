@@ -17,10 +17,9 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.DefaultSessionStorage
 import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.feature.session.TextSearchHandler
 import mozilla.components.feature.tabs.TabsUseCases
 
 open class DefaultComponents(private val applicationContext: Context) {
@@ -45,19 +44,6 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val sessionUseCases by lazy { SessionUseCases(sessionManager) }
-    val sessionIntentProcessor by lazy {
-        SessionIntentProcessor(
-                sessionUseCases, sessionManager,
-                textSearchHandler = textSearchHandler
-        )
-    }
-
-    private val textSearchHandler by lazy {
-        val handler: TextSearchHandler = { searchTerm, session ->
-            searchUseCases.defaultSearch.invoke(searchTerm, session)
-        }
-        handler
-    }
 
     // Search
     private val searchEngineManager by lazy {
@@ -65,9 +51,11 @@ open class DefaultComponents(private val applicationContext: Context) {
             async { load(applicationContext) }
         }
     }
-
     private val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }
     val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
+
+    // Intent
+    val sessionIntentProcessor by lazy { IntentProcessor(sessionUseCases, sessionManager, searchUseCases) }
 
     // Menu
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }

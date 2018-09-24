@@ -4,24 +4,9 @@
 package org.mozilla.samples.browser
 
 import android.content.Context
-import android.widget.Toast
-import kotlinx.coroutines.experimental.async
 import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.browser.menu.BrowserMenuBuilder
-import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
-import mozilla.components.browser.menu.item.SimpleBrowserMenuCheckbox
-import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.storage.DefaultSessionStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
-import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.feature.session.SessionIntentProcessor
-import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.feature.session.TextSearchHandler
-import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 

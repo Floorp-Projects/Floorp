@@ -2,15 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.session
+package mozilla.components.feature.intent
 
 import android.content.Intent
 import android.support.customtabs.CustomTabsIntent
+import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -18,7 +23,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
@@ -28,13 +32,16 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
-class SessionIntentProcessorTest {
+class IntentProcessorTest {
     private val sessionManager = mock(SessionManager::class.java)
     private val session = mock(Session::class.java)
     private val engineSession = mock(EngineSession::class.java)
-    private val useCases = SessionUseCases(sessionManager)
+    private val sessionUseCases = SessionUseCases(sessionManager)
+    private val searchEngineManager = mock(SearchEngineManager::class.java)
+    private val searchUseCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionManager)
 
     @Before
     fun setup() {
@@ -47,7 +54,7 @@ class SessionIntentProcessorTest {
         val engine = mock(Engine::class.java)
         val sessionManager = spy(SessionManager(engine))
         val useCases = SessionUseCases(sessionManager)
-        val handler = SessionIntentProcessor(useCases, sessionManager)
+        val handler = IntentProcessor(useCases, sessionManager, searchUseCases)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
 
@@ -70,7 +77,7 @@ class SessionIntentProcessorTest {
 
     @Test
     fun testProcessWithDefaultHandlersUsingSelectedSession() {
-        val handler = SessionIntentProcessor(useCases, sessionManager, true, false)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, true, false)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
         `when`(intent.dataString).thenReturn("http://mozilla.org")
@@ -84,7 +91,7 @@ class SessionIntentProcessorTest {
         `when`(sessionManager.selectedSession).thenReturn(null)
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
-        val handler = SessionIntentProcessor(useCases, sessionManager, true, false)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, true, false)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
         `when`(intent.dataString).thenReturn("http://mozilla.org")
@@ -95,7 +102,7 @@ class SessionIntentProcessorTest {
 
     @Test
     fun testProcessWithoutDefaultHandlers() {
-        val handler = SessionIntentProcessor(useCases, sessionManager, useDefaultHandlers = false)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, useDefaultHandlers = false)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
         `when`(intent.dataString).thenReturn("http://mozilla.org")
@@ -106,7 +113,7 @@ class SessionIntentProcessorTest {
 
     @Test
     fun testProcessWithCustomHandlers() {
-        val handler = SessionIntentProcessor(useCases, sessionManager, useDefaultHandlers = false)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, useDefaultHandlers = false)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
 
@@ -133,7 +140,7 @@ class SessionIntentProcessorTest {
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
         val useCases = SessionUseCases(sessionManager)
 
-        val handler = SessionIntentProcessor(useCases, sessionManager)
+        val handler = IntentProcessor(useCases, sessionManager, searchUseCases)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
@@ -152,10 +159,10 @@ class SessionIntentProcessorTest {
     }
 
     @Test
-    fun `load url when action send with a valid url`() {
+    fun `load URL on ACTION_SEND if valid URL provided`() {
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
-        val handler = SessionIntentProcessor(useCases, sessionManager)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
@@ -167,36 +174,35 @@ class SessionIntentProcessorTest {
     }
 
     @Test
-    fun `perform search when action send with text`() {
-        var searchHandlerCalled = false
+    fun `perform search on ACTION_SEND if text (no URL) provided`() {
+        val searchTerms = "mozilla android"
+        val searchUrl = "http://search-url.com?$searchTerms"
 
-        val textSearchHandler = object : TextSearchHandler {
-            override fun invoke(text: String, session: Session) {
-                searchHandlerCalled = true
-            }
-        }
-
-        val handler = SessionIntentProcessor(useCases, sessionManager, textSearchHandler = textSearchHandler)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
-        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("mozilla android")
+        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn(searchTerms)
+
+        val searchEngine = mock(SearchEngine::class.java)
+        `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
+        `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
+        `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
 
         handler.process(intent)
 
-        assertTrue(searchHandlerCalled)
+        verify(engineSession).loadUrl(searchUrl)
     }
 
     @Test
-    fun `perform search when action send with empty text`() {
-        val handler = SessionIntentProcessor(useCases, sessionManager)
+    fun `processor handles ACTION_SEND with empty text`() {
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
         `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn(" ")
 
         val processed = handler.process(intent)
-
         assertFalse(processed)
     }
 

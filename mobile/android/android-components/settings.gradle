@@ -19,6 +19,9 @@ project(':concept-engine').projectDir = new File(rootDir, 'components/concept/en
 // Features
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+include ':feature-intent'
+project(':feature-intent').projectDir = new File(rootDir, 'components/feature/intent')
+
 include ':feature-search'
 project(':feature-search').projectDir = new File(rootDir, 'components/feature/search')
 

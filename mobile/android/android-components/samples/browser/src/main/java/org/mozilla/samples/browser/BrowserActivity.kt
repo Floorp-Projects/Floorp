@@ -13,7 +13,7 @@ import android.view.View
 import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.feature.session.SessionIntentProcessor
+import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.samples.browser.ext.components
 
@@ -23,7 +23,7 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
         setContentView(R.layout.activity_main)
 
         if (savedInstanceState == null) {
-            val sessionId = SafeIntent(intent).getStringExtra(SessionIntentProcessor.ACTIVE_SESSION_ID)
+            val sessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
             supportFragmentManager?.beginTransaction()?.apply {
                 replace(R.id.container, BrowserFragment.create(sessionId))
                 commit()

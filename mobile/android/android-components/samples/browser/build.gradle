@@ -93,6 +93,7 @@ dependencies {
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')
 
+    implementation project(':feature-intent')
     implementation project(':feature-search')
     implementation project(':feature-session')
     implementation project(':feature-toolbar')

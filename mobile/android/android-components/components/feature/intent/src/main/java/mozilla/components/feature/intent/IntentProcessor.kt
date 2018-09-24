@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.session
+package mozilla.components.feature.intent
 
 import android.content.Intent
 import android.text.TextUtils
@@ -10,29 +10,30 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.utils.SafeIntent
 
 typealias IntentHandler = (Intent) -> Boolean
 
-typealias TextSearchHandler = (String, Session) -> Unit
-
 /**
  * Processor for intents which should trigger session-related actions.
  *
- * @param openNewTab Whether a processed Intent should open a new tab or open URLs in the currently
- *                   selected tab.
- *
- * @param textSearchHandler Will be invoked for ACTION_SEND intents when the provided EXTRA_TEXT is not a URL,
- *                          or a empty string. A behavior must provided to handle the search,
- *                          otherwise by default it will do nothing.
+ * @property sessionUseCases A reference to [SessionUseCases] used to load URLs.
+ * @property sessionManager The application's [SessionManager].
+ * @property searchUseCases A reference to [SearchUseCases] to be used for ACTION_SEND
+ * intents if the provided text is not a URL.
+ * @property useDefaultHandlers Whether or not the built-in handlers should be used.
+ * @property openNewTab Whether a processed intent should open a new tab or
+ * open URLs in the currently selected tab.
  */
-class SessionIntentProcessor(
+class IntentProcessor(
     private val sessionUseCases: SessionUseCases,
     private val sessionManager: SessionManager,
-    useDefaultHandlers: Boolean = true,
-    private val openNewTab: Boolean = true,
-    private val textSearchHandler: TextSearchHandler = { _, _ -> }
+    private val searchUseCases: SearchUseCases,
+    private val useDefaultHandlers: Boolean = true,
+    private val openNewTab: Boolean = true
 ) {
     private val defaultActionViewHandler = { intent: Intent ->
         val safeIntent = SafeIntent(intent)
@@ -73,7 +74,7 @@ class SessionIntentProcessor(
             }
             else -> {
                 val session = createSession(extraText, source = Source.ACTION_SEND)
-                textSearchHandler(extraText, session)
+                searchUseCases.defaultSearch.invoke(extraText, session)
                 true
             }
         }
