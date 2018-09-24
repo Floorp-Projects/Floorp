@@ -792,8 +792,12 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
   (allow file-read*
       (literal "/Library/Preferences/com.apple.security.plist")
       (subpath "/private/var/db/mds"))
-  ; Tests revealed file-write-{data,create,flags} required for some encrypted
-  ; video playback. Allowing file-write* to match system profiles.
+
+  ; Additional read/write paths needed for encrypted video playback.
+  ; Tests revealed file-write-{data,create,flags} are required for the
+  ; accesses to the mds files. file-write-{data,create,mode,unlink}
+  ; required for CertStore.dat access. Allow file-write* to match system
+  ; profiles and for better compatibilty.
   (allow file-read* file-write*
       (require-all
           (vnode-type REGULAR-FILE)
@@ -802,7 +806,8 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
               (cache-literal "/mds/mdsDirectory.db")
               (cache-literal "/mds/mdsDirectory.db_")
               (cache-literal "/mds/mdsObject.db")
-              (cache-literal "/mds/mdsObject.db_"))))
+              (cache-literal "/mds/mdsObject.db_")
+              (tempDir-regex "/TemporaryItems/[^/]+/CertStore.dat"))))
 
   (allow network-bind (local ip))
 
