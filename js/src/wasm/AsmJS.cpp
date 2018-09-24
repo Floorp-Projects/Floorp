@@ -7626,10 +7626,10 @@ js::AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool isToSource)
         if (!out.append("function ")) {
             return nullptr;
         }
-         if (fun->explicitName() && !out.append(fun->explicitName())) {
-             return nullptr;
-         }
-        if (!out.append("() {\n    [sourceless code]\n}")) {
+        if (fun->explicitName() && !out.append(fun->explicitName())) {
+            return nullptr;
+        }
+        if (!out.append("() {\n    [native code]\n}")) {
             return nullptr;
         }
     } else {
@@ -7679,7 +7679,7 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
         if (!out.append(fun->explicitName())) {
             return nullptr;
         }
-        if (!out.append("() {\n    [sourceless code]\n}")) {
+        if (!out.append("() {\n    [native code]\n}")) {
             return nullptr;
         }
     } else {
