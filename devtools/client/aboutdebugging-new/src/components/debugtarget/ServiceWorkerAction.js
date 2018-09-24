@@ -8,6 +8,8 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+
 const InspectAction = createFactory(require("./InspectAction"));
 
 const Actions = require("../../actions/index");
@@ -19,6 +21,8 @@ class ServiceWorkerAction extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
+      // Provided by wrapping the component with FluentReact.withLocalization.
+      getString: PropTypes.func.isRequired,
       target: PropTypes.object.isRequired,
     };
   }
@@ -38,7 +42,8 @@ class ServiceWorkerAction extends PureComponent {
     const { isActive, isRunning } = target.details;
 
     if (!isRunning) {
-      return this._renderButton("Start", this.start.bind(this));
+      const startLabel = this.props.getString("about-debugging-worker-action-start");
+      return this._renderButton(startLabel, this.start.bind(this));
     }
 
     if (!isActive) {
@@ -46,8 +51,9 @@ class ServiceWorkerAction extends PureComponent {
       return InspectAction({ dispatch, target });
     }
 
+    const pushLabel = this.props.getString("about-debugging-worker-action-push");
     return [
-      this._renderButton("Push", this.push.bind(this)),
+      this._renderButton(pushLabel, this.push.bind(this)),
       InspectAction({ dispatch, target }),
     ];
   }
@@ -67,4 +73,4 @@ class ServiceWorkerAction extends PureComponent {
   }
 }
 
-module.exports = ServiceWorkerAction;
+module.exports = FluentReact.withLocalization(ServiceWorkerAction);
