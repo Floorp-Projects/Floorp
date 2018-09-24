@@ -2632,19 +2632,14 @@ nsCookieService::Add(const nsACString &aHost,
                      int64_t           aExpiry,
                      JS::HandleValue   aOriginAttributes,
                      int32_t           aSameSite,
-                     JSContext*        aCx,
-                     uint8_t           aArgc)
+                     JSContext*        aCx)
 {
-  MOZ_ASSERT(aArgc == 0 || aArgc == 1 || aArgc == 2);
-
   OriginAttributes attrs;
-  nsresult rv = InitializeOriginAttributes(&attrs,
-                                           aOriginAttributes,
-                                           aCx,
-                                           aArgc == 0 ? 0 : 1,
-                                           u"nsICookieManager.add()",
-                                           u"2");
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aOriginAttributes.isObject() ||
+      !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   return AddNative(aHost, aPath, aName, aValue, aIsSecure, aIsHttpOnly,
                    aIsSession, aExpiry, &attrs, aSameSite);

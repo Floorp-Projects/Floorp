@@ -168,7 +168,8 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
         newCookie.httpOnly,
         newCookie.session,
         newCookie.expiry,
-        {} /* origin attributes */);
+        {} /* origin attributes */,
+        Ci.nsICookie2.SAMESITE_UNSET);
   } catch (e) {
     throw new UnableToSetCookieError(e);
   }

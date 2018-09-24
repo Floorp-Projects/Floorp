@@ -63,7 +63,8 @@ var SiteDataTestUtils = {
   addToCookies(origin, name = "foo", value = "bar") {
     let uri = Services.io.newURI(origin);
     Services.cookies.add(uri.host, uri.pathQueryRef, name, value,
-      false, false, false, Date.now() + 24000 * 60 * 60);
+      false, false, false, Date.now() + 24000 * 60 * 60, {},
+      Ci.nsICookie2.SAMESITE_UNSET);
   },
 
   /**

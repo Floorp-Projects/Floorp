@@ -54,7 +54,8 @@ function* do_run_test() {
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    Services.cookiemgr.add("foo.com", "", "oh4", "hai", false, false, false, 0, {});
+    Services.cookiemgr.add("foo.com", "", "oh4", "hai", false, false, false, 0, {},
+                           Ci.nsICookie2.SAMESITE_UNSET);
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
