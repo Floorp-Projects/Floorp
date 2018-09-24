@@ -75,9 +75,8 @@ function inspectDebugTarget(type, id) {
   };
 }
 
-function installTemporaryExtension() {
+function installTemporaryExtension(message) {
   return async (dispatch, getState) => {
-    const message = "Select Manifest File or Package (.xpi)";
     const file = await openTemporaryExtension(window, message);
     try {
       await AddonManager.installTemporaryAddon(file);
