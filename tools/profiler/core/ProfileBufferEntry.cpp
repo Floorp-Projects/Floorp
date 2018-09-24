@@ -269,15 +269,16 @@ UniqueJSONStrings::GetOrAddIndex(const char* aStr)
 {
   nsDependentCString str(aStr);
 
-  uint32_t index;
-  if (mStringToIndexMap.Get(str, &index)) {
-    return index;
+  uint32_t count = mStringToIndexMap.Count();
+  auto entry = mStringToIndexMap.LookupForAdd(str);
+  if (entry) {
+    MOZ_ASSERT(entry.Data() < count);
+    return entry.Data();
   }
 
-  index = mStringToIndexMap.Count();
-  mStringToIndexMap.Put(str, index);
+  entry.OrInsert([&]{ return count; });
   mStringTableWriter.StringElement(aStr);
-  return index;
+  return count;
 }
 
 UniqueStacks::StackKey
@@ -396,16 +397,16 @@ UniqueStacks::UniqueStacks(JITFrameInfo&& aJITFrameInfo)
 
 uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
 {
-  uint32_t index;
-  if (mStackToIndexMap.Get(aStack, &index)) {
-    MOZ_ASSERT(index < mStackToIndexMap.Count());
-    return index;
+  uint32_t count = mStackToIndexMap.Count();
+  auto entry = mStackToIndexMap.LookupForAdd(aStack);
+  if (entry) {
+    MOZ_ASSERT(entry.Data() < count);
+    return entry.Data();
   }
 
-  index = mStackToIndexMap.Count();
-  mStackToIndexMap.Put(aStack, index);
+  entry.OrInsert([&]{ return count; });
   StreamStack(aStack);
-  return index;
+  return count;
 }
 
 template<typename RangeT, typename PosT>
@@ -445,16 +446,17 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
   nsTArray<FrameKey> frameKeys;
   for (const JITFrameKey& jitFrameKey : *jitFrameKeys) {
     FrameKey frameKey(jitFrameKey.mCanonicalAddress, jitFrameKey.mDepth, rangeIndex);
-    if (!mFrameToIndexMap.Contains(frameKey)) {
+    uint32_t index = mFrameToIndexMap.Count();
+    auto entry = mFrameToIndexMap.LookupForAdd(frameKey);
+    if (!entry) {
       // We need to add this frame to our frame table. The JSON for this frame
       // already exists in jitFrameInfoRange, we just need to splice it into
       // the frame table and give it an index.
-      uint32_t index = mFrameToIndexMap.Count();
       const nsCString* frameJSON =
         jitFrameInfoRange.mJITFrameToFrameJSONMap.Get(jitFrameKey);
       MOZ_RELEASE_ASSERT(frameJSON, "Should have cached JSON for this frame");
       mFrameTableWriter.Splice(frameJSON->get());
-      mFrameToIndexMap.Put(frameKey, index);
+      entry.OrInsert([&] { return index; });
     }
     frameKeys.AppendElement(std::move(frameKey));
   }
@@ -464,16 +466,16 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
 uint32_t
 UniqueStacks::GetOrAddFrameIndex(const FrameKey& aFrame)
 {
-  uint32_t index;
-  if (mFrameToIndexMap.Get(aFrame, &index)) {
-    MOZ_ASSERT(index < mFrameToIndexMap.Count());
-    return index;
+  uint32_t count = mFrameToIndexMap.Count();
+  auto entry = mFrameToIndexMap.LookupForAdd(aFrame);
+  if (entry) {
+    MOZ_ASSERT(entry.Data() < count);
+    return entry.Data();
   }
 
-  index = mFrameToIndexMap.Count();
-  mFrameToIndexMap.Put(aFrame, index);
+  entry.OrInsert([&]{ return count; });
   StreamNonJITFrame(aFrame);
-  return index;
+  return count;
 }
 
 void UniqueStacks::SpliceFrameTableElements(SpliceableJSONWriter& aWriter)
