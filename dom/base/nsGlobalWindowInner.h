@@ -37,7 +37,6 @@
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
-#include "mozilla/dom/IPDL.h"
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
@@ -939,7 +938,6 @@ public:
   void NotifyDefaultButtonLoaded(mozilla::dom::Element& aDefaultButton,
                                  mozilla::ErrorResult& aError);
   mozilla::dom::ChromeMessageBroadcaster* MessageManager();
-  mozilla::dom::IPDL* IPDL();
   mozilla::dom::ChromeMessageBroadcaster* GetGroupMessageManager(const nsAString& aGroup);
   void BeginWindowMove(mozilla::dom::Event& aMouseDownEvent,
                        mozilla::ErrorResult& aError);
@@ -1491,8 +1489,6 @@ protected:
     RefPtr<mozilla::dom::ChromeMessageBroadcaster> mMessageManager;
     nsRefPtrHashtable<nsStringHashKey,
                       mozilla::dom::ChromeMessageBroadcaster> mGroupMessageManagers;
-
-    RefPtr<mozilla::dom::IPDL> mIPDL;
   } mChromeFields;
 
   // These fields are used by the inner and outer windows to prevent

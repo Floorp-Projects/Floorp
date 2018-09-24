@@ -900,7 +900,6 @@ dependencies = [
  "encoding_glue 0.1.0",
  "env_logger 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "geckoservo 0.0.1",
- "ipdl_bindings 0.1.0",
  "log 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozurl 0.0.1",
  "mp4parse_capi 0.10.1",
@@ -1038,23 +1037,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "ipdl"
-version = "0.1.0"
-dependencies = [
- "pipdl 0.1.0",
-]
-
-[[package]]
-name = "ipdl_bindings"
-version = "0.1.0"
-dependencies = [
- "ipdl 0.1.0",
- "mfbt-maybe 0.1.0",
- "nsstring 0.1.0",
- "thin-vec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1322,10 +1304,6 @@ dependencies = [
 name = "memoffset"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "mfbt-maybe"
-version = "0.1.0"
 
 [[package]]
 name = "miniz_oxide"
@@ -1676,10 +1654,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "siphasher 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "pipdl"
-version = "0.1.0"
 
 [[package]]
 name = "pkg-config"
@@ -2315,14 +2289,6 @@ dependencies = [
 name = "thin-slice"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "thin-vec"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "thread_local"
@@ -3069,7 +3035,6 @@ dependencies = [
 "checksum termion 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "689a3bdfaab439fd92bc87df5c4c78417d3cbe537487274e9b0b2dce76e92096"
 "checksum textwrap 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c0b59b6b4b44d867f1370ef1bd91bfb262bf07bf0ae65c202ea2fbc16153b693"
 "checksum thin-slice 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8eaa81235c7058867fa8c0e7314f33dcce9c215f535d1913822a2b3f5e289f3c"
-"checksum thin-vec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "73fdf4b84c65a85168477b7fb6c498e0716bc9487fba24623389ea7f51708044"
 "checksum thread_local 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "279ef31c19ededf577bfd12dfae728040a21f635b06a24cd670ff510edd38963"
 "checksum thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cf947d192a9be60ef5131cc7a4648886ba89d712f16700ebbf80c8a69d05d48f"
 "checksum time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)" = "d825be0eb33fda1a7e68012d51e9c7f451dc1a69391e7fdc197060bb8c56667b"
