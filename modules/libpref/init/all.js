@@ -5817,7 +5817,7 @@ pref("layers.mlgpu.enable-on-windows7", true);
 #endif
 
 // Enable lowercased response header name
-pref("dom.xhr.lowercase_header.enabled", true);
+pref("dom.xhr.lowercase_header.enabled", false);
 
 // Control whether clients.openWindow() opens windows in the same process
 // that called the API vs following our normal multi-process selection
