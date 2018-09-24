@@ -57,7 +57,11 @@ private:
     if (!mTextureClient) {
       return nullptr;
     }
-    return mTextureClient->GetInternalData()->AsGPUVideoTextureData();
+    TextureData* data = mTextureClient->GetInternalData();
+    if (!data) {
+      return nullptr;
+    }
+    return data->AsGPUVideoTextureData();
   }
 
 public:
