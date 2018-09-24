@@ -334,9 +334,7 @@ mozilla::TimeStamp
 nsDOMNavigationTiming::GetUnloadEventStartTimeStamp() const
 {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  // todo: if you intend to update CheckSameOriginURI to log the error to the
-  // console you also need to update the 'aFromPrivateWindow' argument.
-  nsresult rv = ssm->CheckSameOriginURI(mLoadedURI, mUnloadedURI, false, false);
+  nsresult rv = ssm->CheckSameOriginURI(mLoadedURI, mUnloadedURI, false);
   if (NS_SUCCEEDED(rv)) {
     return mUnloadStart;
   }
@@ -347,9 +345,7 @@ mozilla::TimeStamp
 nsDOMNavigationTiming::GetUnloadEventEndTimeStamp() const
 {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  // todo: if you intend to update CheckSameOriginURI to log the error to the
-  // console you also need to update the 'aFromPrivateWindow' argument.
-  nsresult rv = ssm->CheckSameOriginURI(mLoadedURI, mUnloadedURI, false, false);
+  nsresult rv = ssm->CheckSameOriginURI(mLoadedURI, mUnloadedURI, false);
   if (NS_SUCCEEDED(rv)) {
     return mUnloadEnd;
   }

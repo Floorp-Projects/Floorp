@@ -168,14 +168,8 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     // Default to sending less data if NS_URIChainHasFlags() fails.
     referrerIsSecure = NS_FAILED(rv) || referrerIsSecure;
 
-    bool isPrivateWin = false;
-    if (doc) {
-      isPrivateWin =
-        doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
-    }
-
     bool sameOrigin =
-      NS_SUCCEEDED(sm->CheckSameOriginURI(info->referrer, aURI, false, isPrivateWin));
+      NS_SUCCEEDED(sm->CheckSameOriginURI(info->referrer, aURI, false));
 
     // If both the address of the document containing the hyperlink being
     // audited and "ping URL" have the same origin or the document containing
