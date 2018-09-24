@@ -18,9 +18,22 @@ template <typename T>
 static T extractUnbarriered(const WriteBarrieredBase<T>& v) {
   return v.get();
 }
+
 template <typename T>
 static T* extractUnbarriered(T* v) {
   return v;
+}
+
+inline /* static */ JSObject* WeakMapBase::getDelegate(JSObject* key) {
+  return UncheckedUnwrapWithoutExpose(key);
+}
+
+inline /* static */ JSObject* WeakMapBase::getDelegate(JSScript* script) {
+  return nullptr;
+}
+
+inline /* static */ JSObject* WeakMapBase::getDelegate(LazyScript* script) {
+  return nullptr;
 }
 
 template <class K, class V>
@@ -167,21 +180,6 @@ bool WeakMap<K, V>::markIteratively(GCMarker* marker) {
 }
 
 template <class K, class V>
-inline JSObject* WeakMap<K, V>::getDelegate(JSObject* key) const {
-  return UncheckedUnwrapWithoutExpose(key);
-}
-
-template <class K, class V>
-inline JSObject* WeakMap<K, V>::getDelegate(JSScript* script) const {
-  return nullptr;
-}
-
-template <class K, class V>
-inline JSObject* WeakMap<K, V>::getDelegate(LazyScript* script) const {
-  return nullptr;
-}
-
-template <class K, class V>
 inline bool WeakMap<K, V>::keyNeedsMark(GCMarker* marker, JSObject* key) const {
   JSObject* delegate = getDelegate(key);
   /*
@@ -238,6 +236,11 @@ void WeakMap<K, V>::assertEntriesNotAboutToBeFinalized() {
   for (Range r = Base::all(); !r.empty(); r.popFront()) {
     K k(r.front().key());
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&k));
+    JSObject* delegate = getDelegate(k);
+    if (delegate) {
+      MOZ_ASSERT(!gc::IsAboutToBeFinalizedUnbarriered(&delegate),
+                 "weakmap marking depends on a key tracing its delegate");
+    }
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&r.front().value()));
     MOZ_ASSERT(k == r.front().key());
   }
