@@ -5947,6 +5947,13 @@ ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aPar
 }
 
 mozilla::ipc::IPCResult
+ContentParent::RecvStoreUserInteractionAsPermission(const Principal& aPrincipal)
+{
+  AntiTrackingCommon::StoreUserInteractionFor(aPrincipal);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentParent::RecvAttachBrowsingContext(
   const BrowsingContextId& aParentId,
   const BrowsingContextId& aChildId,

@@ -1621,6 +1621,13 @@ VARCACHE_PREF(
   uint32_t, 2592000 // 30 days (in seconds)
 )
 
+// Anti-tracking user-interaction expiration
+VARCACHE_PREF(
+  "privacy.userInteraction.expiration",
+   privacy_userInteraction_expiration,
+  uint32_t, 2592000 // 30 days (in seconds)
+)
+
 // Anti-fingerprinting, disabled by default
 VARCACHE_PREF(
   "privacy.resistFingerprinting",
