@@ -802,6 +802,9 @@ ShellInterruptCallback(JSContext* cx)
     }
 
     if (!result && sc->exitCode == 0) {
+        static const char msg[] = "Script terminated by interrupt handler.\n";
+        fputs(msg, stderr);
+
         sc->exitCode = EXITCODE_TIMEOUT;
     }
 
@@ -4243,11 +4246,6 @@ CancelExecution(JSContext* cx)
     ShellContext* sc = GetShellContext(cx);
     sc->serviceInterrupt = true;
     JS_RequestInterruptCallback(cx);
-
-    if (sc->haveInterruptFunc) {
-        static const char msg[] = "Script runs for too long, terminating.\n";
-        fputs(msg, stderr);
-    }
 }
 
 static bool
@@ -8343,9 +8341,12 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
     JS_FN_HELP("timeout", Timeout, 1, 0,
 "timeout([seconds], [func])",
 "  Get/Set the limit in seconds for the execution time for the current context.\n"
-"  A negative value (default) means that the execution time is unlimited.\n"
-"  If a second argument is provided, it will be invoked when the timer elapses.\n"
-"  Calling this function will replace any callback set by |setInterruptCallback|.\n"),
+"  When the timeout expires the current interrupt callback is invoked.\n"
+"  The timeout is used just once.  If the callback returns a falsy value, the\n"
+"  script is aborted.  A negative value for seconds (this is the default) cancels\n"
+"  any pending timeout.\n"
+"  If a second argument is provided, it is installed as the interrupt handler,\n"
+"  exactly as if by |setInterruptCallback|.\n"),
 
     JS_FN_HELP("interruptIf", InterruptIf, 1, 0,
 "interruptIf(cond)",
@@ -8362,7 +8363,8 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
     JS_FN_HELP("setInterruptCallback", SetInterruptCallback, 1, 0,
 "setInterruptCallback(func)",
 "  Sets func as the interrupt callback function.\n"
-"  Calling this function will replace any callback set by |timeout|.\n"),
+"  Calling this function will replace any callback set by |timeout|.\n"
+"  If the callback returns a falsy value, the script is aborted.\n"),
 
     JS_FN_HELP("setJitCompilerOption", SetJitCompilerOption, 2, 0,
 "setJitCompilerOption(<option>, <number>)",
