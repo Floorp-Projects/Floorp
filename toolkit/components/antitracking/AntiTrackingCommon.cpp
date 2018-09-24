@@ -65,7 +65,9 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
                                     nsIPrincipal** aTopLevelStoragePrincipal,
                                     nsACString& aTrackingOrigin)
 {
-  MOZ_ASSERT(nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow));
+  if (!nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow)) {
+    return false;
+  }
 
   nsIDocument* doc = a3rdPartyTrackingWindow->GetDocument();
   // Make sure storage access isn't disabled
