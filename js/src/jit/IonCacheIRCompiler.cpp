@@ -1189,33 +1189,6 @@ IonCacheIRCompiler::emitCallProxyHasPropResult()
     return true;
 }
 
-
-bool
-IonCacheIRCompiler::emitCallNativeGetElementResult()
-{
-    AutoSaveLiveRegisters save(*this);
-    AutoOutputRegister output(*this);
-
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Register index = allocator.useRegister(masm, reader.int32OperandId());
-
-    allocator.discardStack(masm);
-
-    prepareVMCall(masm, save);
-
-    masm.Push(index);
-    masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
-    masm.Push(obj);
-
-    if (!callVM(masm, NativeGetElementInfo)) {
-        return false;
-    }
-
-    masm.storeCallResultValue(output);
-    return true;
-}
-
-
 bool
 IonCacheIRCompiler::emitLoadUnboxedPropertyResult()
 {

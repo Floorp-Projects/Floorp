@@ -8998,17 +8998,6 @@ IonBuilder::getElemAddCache(MDefinition* obj, MDefinition* index)
         } else {
             barrier = BarrierKind::TypeSet;
         }
-
-        // Caches can read values from prototypes, so update the barrier to
-        // reflect such possible values.
-        if (barrier != BarrierKind::TypeSet) {
-            BarrierKind protoBarrier;
-            MOZ_TRY_VAR(protoBarrier, PropertyReadOnPrototypeNeedsTypeBarrier(this, obj, nullptr, types));
-            if (protoBarrier != BarrierKind::NoBarrier) {
-                MOZ_ASSERT(barrier <= protoBarrier);
-                barrier = protoBarrier;
-            }
-        }
     } else {
         // PropertyReadNeedsTypeBarrier only accounts for object types, so for
         // now always insert a barrier if the input is not known to be an
