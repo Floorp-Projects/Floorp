@@ -198,6 +198,24 @@ class UpdateVerifyConfigCreator(BaseScript):
             pattern, override_str = override.split(",", 1)
             self.config["mar_channel_id_overrides"][pattern] = override_str
 
+    def _get_branch_url(self, category, branch_prefix, version):
+        branch = None
+        if category == "dev":
+            branch = "releases/{}-beta".format(branch_prefix)
+        elif category == "esr":
+            branch = "releases/{}-esr{}".format(branch_prefix, version[:2])
+        elif category in ("major", "stability"):
+            if branch_prefix == "comm":
+                # Thunderbird does not have ESR releases, regular releases
+                # go in an ESR branch
+                branch = "releases/{}-esr{}".format(branch_prefix, version[:2])
+            else:
+                branch = "releases/{}-release".format(branch_prefix)
+        if not branch:
+            raise Exception("Cannot determine branch, cannot continue!")
+
+        return branch
+
     def _get_update_paths(self):
         from mozrelease.l10n import getPlatformLocales
         from mozrelease.paths import getCandidatesDir
@@ -214,22 +232,19 @@ class UpdateVerifyConfigCreator(BaseScript):
             "WARNING",
         )
         releases = json.load(ret)["releases"]
-        for release_name, release_info in reversed(sorted(releases.items())):
-            product, version = release_name.split("-", 1)
+        for release_name, release_info in \
+            reversed(sorted(releases.items(),
+                            key=lambda x: MozillaVersion(x[1]['version']))):
+            product = release_info['product']
+            version = release_info['version']
+            category = release_info['category']
             tag = "{}_{}_RELEASE".format(product.upper(), version.replace(".", "_"))
             # Product details has a "category" for releases that we can use to
             # determine the repo path. This will fail if any previous releases
             # were built from a project branch - but that's not something we do
             # at the time of writing.
-            branch = None
-            if release_info["category"] == "dev":
-                branch = "releases/{}-beta".format(self.config['branch_prefix'])
-            elif release_info["category"] == "esr":
-                branch = "releases/{}-esr{}".format(self.config['branch_prefix'], version[:2])
-            elif release_info["category"] in ("major", "stability"):
-                branch = "releases/{}-release".format(self.config['branch_prefix'])
-            if not branch:
-                raise Exception("Cannot determine branch, cannot continue!")
+            branch = self._get_branch_url(category, self.config["branch_prefix"],
+                                          version)
 
             # Exclude any releases that don't match one of our include version
             # regexes. This is generally to avoid including versions from other
