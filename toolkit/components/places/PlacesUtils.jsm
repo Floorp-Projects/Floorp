@@ -304,6 +304,88 @@ const SYNC_CHANGE_RECORD_VALIDATORS = Object.freeze({
   tombstone: simpleValidateFunc(v => v === true || v === false),
   synced: simpleValidateFunc(v => v === true || v === false),
 });
+/**
+ * List PageInfo bookmark object validators.
+ */
+const PAGEINFO_VALIDATORS = Object.freeze({
+  guid: BOOKMARK_VALIDATORS.guid,
+  url: BOOKMARK_VALIDATORS.url,
+  title: v => {
+    if (v == null || v == undefined) {
+      return undefined;
+    } else if (typeof v === "string") {
+      return v;
+    }
+    throw new TypeError(`title property of PageInfo object: ${v} must be a string if provided`);
+  },
+  previewImageURL: v => {
+    if (!v) {
+      return null;
+    }
+    return BOOKMARK_VALIDATORS.url(v);
+  },
+  description: v => {
+    if (typeof v === "string" || v === null) {
+      return v ? v.slice(0, DB_DESCRIPTION_LENGTH_MAX) : null;
+    }
+    throw new TypeError(`description property of pageInfo object: ${v} must be either a string or null if provided`);
+  },
+  annotations: v => {
+    if (typeof v != "object" ||
+        v.constructor.name != "Map") {
+        throw new TypeError("annotations must be a Map");
+      }
+
+      if (v.size == 0) {
+        throw new TypeError("there must be at least one annotation");
+      }
+
+      for (let [key, value] of v.entries()) {
+        if (typeof key != "string") {
+          throw new TypeError("all annotation keys must be strings");
+        }
+        if (typeof value != "string" &&
+            typeof value != "number" &&
+            typeof value != "boolean" &&
+            value !== null &&
+            value !== undefined) {
+          throw new TypeError("all annotation values must be Boolean, Numbers or Strings");
+        }
+      }
+      return v;
+  },
+  visits: v => {
+    if (!Array.isArray(v) || !v.length) {
+      throw new TypeError("PageInfo object must have an array of visits");
+    }
+    let visits = [];
+    for (let inVisit of v) {
+      let visit = {
+        date: new Date(),
+        transition: inVisit.transition || History.TRANSITIONS.LINK,
+      };
+
+      if (!PlacesUtils.history.isValidTransition(visit.transition)) {
+        throw new TypeError(`transition: ${visit.transition} is not a valid transition type`);
+      }
+
+      if (inVisit.date) {
+        PlacesUtils.history.ensureDate(inVisit.date);
+        if (inVisit.date > (Date.now() + TIMERS_RESOLUTION_SKEW_MS)) {
+          throw new TypeError(`date: ${inVisit.date} cannot be a future date`);
+        }
+        visit.date = inVisit.date;
+      }
+
+      if (inVisit.referrer) {
+        visit.referrer = PlacesUtils.normalizeToURLOrGUID(inVisit.referrer);
+      }
+      visits.push(visit);
+    }
+    return visits;
+  },
+});
+
 
 var PlacesUtils = {
   // Place entries that are containers, e.g. bookmark folders or queries.
@@ -633,7 +715,7 @@ var PlacesUtils = {
    * @note any unknown properties are pass-through.
    */
   validateItemProperties(name, validators, props, behavior = {}) {
-    if (!props)
+    if (typeof props != "object" || !props)
       throw new Error(`${name}: Input should be a valid object`);
     // Make a shallow copy of `props` to avoid mutating the original object
     // when filling in defaults.
@@ -1036,114 +1118,12 @@ var PlacesUtils = {
    * @return (PageInfo)
    */
   validatePageInfo(pageInfo, validateVisits = true) {
-    let info = {
-      visits: [],
-    };
-
-    if (typeof pageInfo != "object" || !pageInfo) {
-      throw new TypeError("pageInfo must be an object");
-    }
-
-    if (!pageInfo.url) {
-      throw new TypeError("PageInfo object must have a url property");
-    }
-
-    info.url = this.normalizeToURLOrGUID(pageInfo.url);
-
-    if (typeof pageInfo.guid === "string" && this.isValidGuid(pageInfo.guid)) {
-      info.guid = pageInfo.guid;
-    } else if (pageInfo.guid) {
-      throw new TypeError(`guid property of PageInfo object: ${pageInfo.guid} is invalid`);
-    }
-
-    if (typeof pageInfo.title === "string") {
-      info.title = pageInfo.title;
-    } else if (pageInfo.title != null && pageInfo.title != undefined) {
-      throw new TypeError(`title property of PageInfo object: ${pageInfo.title} must be a string if provided`);
-    }
-
-    if ("description" in pageInfo && (typeof pageInfo.description === "string" || pageInfo.description === null)) {
-      info.description = pageInfo.description ? pageInfo.description.slice(0, DB_DESCRIPTION_LENGTH_MAX) : null;
-    } else if (pageInfo.description !== undefined) {
-      throw new TypeError(`description property of pageInfo object: ${pageInfo.description} must be either a string or null if provided`);
-    }
-
-    if ("previewImageURL" in pageInfo) {
-      let previewImageURL = pageInfo.previewImageURL;
-
-      if (!previewImageURL) {
-        info.previewImageURL = null;
-      } else if (typeof(previewImageURL) === "string" && previewImageURL.length <= DB_URL_LENGTH_MAX) {
-        info.previewImageURL = new URL(previewImageURL);
-      } else if (previewImageURL instanceof Ci.nsIURI && previewImageURL.spec.length <= DB_URL_LENGTH_MAX) {
-        info.previewImageURL = new URL(previewImageURL.spec);
-      } else if (previewImageURL instanceof URL && previewImageURL.href.length <= DB_URL_LENGTH_MAX) {
-        info.previewImageURL = previewImageURL;
-      } else {
-        throw new TypeError("previewImageURL property of pageInfo object: ${previewImageURL} is invalid");
-      }
-    }
-
-    if (pageInfo.annotations) {
-      if (typeof pageInfo.annotations != "object" ||
-          pageInfo.annotations.constructor.name != "Map") {
-        throw new TypeError("annotations must be a Map");
-      }
-
-      if (pageInfo.annotations.size == 0) {
-        throw new TypeError("there must be at least one annotation");
-      }
-
-      for (let [key, value] of pageInfo.annotations.entries()) {
-        if (typeof key != "string") {
-          throw new TypeError("all annotation keys must be strings");
-        }
-        if (typeof value != "string" &&
-            typeof value != "number" &&
-            typeof value != "boolean" &&
-            value !== null &&
-            value !== undefined) {
-          throw new TypeError("all annotation values must be Boolean, Numbers or Strings");
-        }
-      }
-
-      info.annotations = pageInfo.annotations;
-    }
-
-    if (!validateVisits) {
-      return info;
-    }
-
-    if (!pageInfo.visits || !Array.isArray(pageInfo.visits) || !pageInfo.visits.length) {
-      throw new TypeError("PageInfo object must have an array of visits");
-    }
-
-    for (let inVisit of pageInfo.visits) {
-      let visit = {
-        date: new Date(),
-        transition: inVisit.transition || History.TRANSITIONS.LINK,
-      };
-
-      if (!PlacesUtils.history.isValidTransition(visit.transition)) {
-        throw new TypeError(`transition: ${visit.transition} is not a valid transition type`);
-      }
-
-      if (inVisit.date) {
-        PlacesUtils.history.ensureDate(inVisit.date);
-        if (inVisit.date > (Date.now() + TIMERS_RESOLUTION_SKEW_MS)) {
-          throw new TypeError(`date: ${inVisit.date} cannot be a future date`);
-        }
-        visit.date = inVisit.date;
-      }
-
-      if (inVisit.referrer) {
-        visit.referrer = this.normalizeToURLOrGUID(inVisit.referrer);
-      }
-      info.visits.push(visit);
-    }
-    return info;
+    return this.validateItemProperties("PageInfo", PAGEINFO_VALIDATORS, pageInfo,
+      { url: { requiredIf: b => { typeof b.guid != "string"; } },
+        guid: { requiredIf: b => { typeof b.url != "string"; } },
+        visits: { requiredIf: b => validateVisits  },
+      });
   },
-
   /**
    * Normalize a key to either a string (if it is a valid GUID) or an
    * instance of `URL` (if it is a `URL`, `nsIURI`, or a string
