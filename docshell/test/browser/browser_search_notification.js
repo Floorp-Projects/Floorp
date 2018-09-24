@@ -1,9 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  waitForExplicitFinish();
-
+add_task(async function () {
   const kSearchEngineID = "test_urifixup_search_engine";
   const kSearchEngineURL = "http://localhost/?search={searchTerms}";
   Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
@@ -13,7 +11,7 @@ function test() {
   Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
 
   let selectedName = Services.search.defaultEngine.name;
-  is(selectedName, kSearchEngineID, "Check fake search engine is selected");
+  Assert.equal(selectedName, kSearchEngineID, "Check fake search engine is selected");
 
   registerCleanupFunction(function() {
     if (oldDefaultEngine) {
@@ -25,27 +23,18 @@ function test() {
     }
   });
 
-  let tab = BrowserTestUtils.addTab(gBrowser);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   gBrowser.selectedTab = tab;
-
-  function observer(subject, topic, data) {
-    Services.obs.removeObserver(observer, "keyword-search");
-    is(topic, "keyword-search", "Got keyword-search notification");
-
-    let engine = Services.search.defaultEngine;
-    ok(engine, "Have default search engine.");
-    is(engine, subject, "Notification subject is engine.");
-    is("firefox health report", data, "Notification data is search term.");
-
-    executeSoon(function cleanup() {
-      gBrowser.removeTab(tab);
-      finish();
-    });
-  }
-
-  Services.obs.addObserver(observer, "keyword-search");
 
   gURLBar.value = "firefox health report";
   gURLBar.handleCommand();
-}
 
+  let [subject, data] = await TestUtils.topicObserved("keyword-search");
+
+  let engine = Services.search.defaultEngine;
+  Assert.ok(engine, "Have default search engine.");
+  Assert.equal(engine, subject, "Notification subject is engine.");
+  Assert.equal(data, "firefox health report", "Notification data is search term.");
+
+  gBrowser.removeTab(tab);
+});
