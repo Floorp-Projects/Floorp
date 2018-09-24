@@ -10,7 +10,6 @@
 #include "WorkletThread.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/WorkletBinding.h"
 
@@ -21,7 +20,6 @@ namespace mozilla {
 
 WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
   : mInnerWindowID(aWindow->WindowID())
-  , mDumpEnabled(dom::DOMPrefs::DumpEnabled())
   , mOriginAttributes(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef())
   , mPrincipal(aPrincipal)
 {
