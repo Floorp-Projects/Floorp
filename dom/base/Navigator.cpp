@@ -573,10 +573,33 @@ Navigator::GetBuildID(nsAString& aBuildID, CallerType aCallerType,
       aBuildID.AssignLiteral(LEGACY_BUILD_ID);
       return;
     }
+
     nsAutoString override;
     nsresult rv = Preferences::GetString("general.buildID.override", override);
     if (NS_SUCCEEDED(rv)) {
       aBuildID = override;
+      return;
+    }
+
+    nsAutoCString host;
+    bool isHTTPS = false;
+    if (mWindow) {
+      nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+      if (doc) {
+        nsIURI* uri = doc->GetDocumentURI();
+        if (uri) {
+          MOZ_ALWAYS_SUCCEEDS(uri->SchemeIs("https", &isHTTPS));
+          if (isHTTPS) {
+            MOZ_ALWAYS_SUCCEEDS(uri->GetHost(host));
+          }
+        }
+      }
+    }
+
+    // Spoof the buildID on pages not loaded from "https://*.mozilla.org".
+    if (!isHTTPS ||
+        !StringEndsWith(host, NS_LITERAL_CSTRING(".mozilla.org"))) {
+      aBuildID.AssignLiteral(LEGACY_BUILD_ID);
       return;
     }
   }
