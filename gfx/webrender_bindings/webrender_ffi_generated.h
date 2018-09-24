@@ -162,6 +162,14 @@ enum class MixBlendMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+// Used to indicate if an image is opaque, or has an alpha channel.
+enum class OpacityType : uint8_t {
+  Opaque = 0,
+  HasAlphaChannel = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class RepeatMode : uint32_t {
   Stretch,
   Repeat,
@@ -997,14 +1005,14 @@ struct WrImageDescriptor {
   uint32_t width;
   uint32_t height;
   uint32_t stride;
-  bool is_opaque;
+  OpacityType opacity;
 
   bool operator==(const WrImageDescriptor& aOther) const {
     return format == aOther.format &&
            width == aOther.width &&
            height == aOther.height &&
            stride == aOther.stride &&
-           is_opaque == aOther.is_opaque;
+           opacity == aOther.opacity;
   }
 };
 
