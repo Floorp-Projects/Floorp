@@ -199,10 +199,9 @@ def get_build_opts(substs):
     Translate selected items from `substs` into `build_opts` keys in the schema.
     '''
     try:
-        return {
+        opts = {
             k: ty(substs.get(s, None)) for (k, s, ty) in (
                 # Selected substitutions.
-                ('compiler', 'CC_TYPE', str),
                 ('artifact', 'MOZ_ARTIFACT_BUILDS', bool),
                 ('debug', 'MOZ_DEBUG', bool),
                 ('opt', 'MOZ_OPTIMIZE', bool),
@@ -211,6 +210,10 @@ def get_build_opts(substs):
                 # TODO: detect icecream: https://bugzilla.mozilla.org/show_bug.cgi?id=1481614
             )
         }
+        compiler = substs.get('CC_TYPE', None)
+        if compiler:
+            opts['compiler'] = str(compiler)
+        return opts
     except BuildEnvironmentNotFoundException:
         return {}
 
