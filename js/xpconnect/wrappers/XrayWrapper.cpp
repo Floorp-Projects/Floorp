@@ -1131,9 +1131,15 @@ static inline void
 SetCachedXrayExpando(JSObject* holder, JSObject* expandoWrapper);
 
 static nsIPrincipal*
-ObjectPrincipal(JSObject* obj)
+WrapperPrincipal(JSObject* obj)
 {
-    return GetCompartmentPrincipal(js::GetObjectCompartment(obj));
+    // Use the principal stored in CompartmentOriginInfo. That works because
+    // consumers are only interested in the origin-ignoring-document.domain.
+    // See expandoObjectMatchesConsumer.
+    MOZ_ASSERT(IsXrayWrapper(obj));
+    JS::Compartment* comp = js::GetObjectCompartment(obj);
+    CompartmentPrivate* priv = CompartmentPrivate::Get(comp);
+    return priv->originInfo.GetPrincipalIgnoringDocumentDomain();
 }
 
 static nsIPrincipal*
@@ -1245,7 +1251,7 @@ XrayTraits::getExpandoObject(JSContext* cx, HandleObject target, HandleObject co
 
     bool isExclusive = CompartmentHasExclusiveExpandos(consumer);
     return getExpandoObjectInternal(cx, chain, isExclusive ? consumer : nullptr,
-                                    ObjectPrincipal(consumer), expandoObject);
+                                    WrapperPrincipal(consumer), expandoObject);
 }
 
 // Wrappers which have exclusive access to the expando on their target object
@@ -1368,7 +1374,7 @@ XrayTraits::ensureExpandoObject(JSContext* cx, HandleObject wrapper,
         bool isExclusive = CompartmentHasExclusiveExpandos(wrapper);
         expandoObject = attachExpandoObject(cx, target, isExclusive ? wrapper : nullptr,
                                             wrapperGlobal,
-                                            ObjectPrincipal(wrapper));
+                                            WrapperPrincipal(wrapper));
     }
     return expandoObject;
 }
@@ -1414,7 +1420,7 @@ XrayTraits::cloneExpandoChain(JSContext* cx, HandleObject dst, HandleObject srcC
         } else {
             JSAutoRealm ar(cx, oldHead);
             movingIntoXrayCompartment =
-                expandoObjectMatchesConsumer(cx, oldHead, ObjectPrincipal(dst));
+                expandoObjectMatchesConsumer(cx, oldHead, GetObjectPrincipal(dst));
         }
 
         if (movingIntoXrayCompartment) {
