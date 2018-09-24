@@ -193,16 +193,15 @@ interface nsICookieManager : nsISupports
    *        of only the host portion of a URI. see @add for a description of
    *        acceptable host strings.
    * @param aOriginAttributes The originAttributes of cookies that would be
-   *                          retrived. This attribute is optional to avoid
-   *                          breaking add-ons.
+   *                          retrived.
    *
    * @return an nsISimpleEnumerator of nsICookie2 objects.
    *
    * @see countCookiesFromHost
    */
-  [implicit_jscontext, optional_argc]
+  [implicit_jscontext]
   nsISimpleEnumerator getCookiesFromHost(in AUTF8String aHost,
-                                         [optional] in jsval aOriginAttributes);
+                                         in jsval aOriginAttributes);
 
   /**
    * Import an old-style cookie file. Imported cookies will be added to the

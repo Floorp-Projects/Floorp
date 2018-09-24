@@ -4922,11 +4922,8 @@ NS_IMETHODIMP
 nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
                                     JS::HandleValue       aOriginAttributes,
                                     JSContext*            aCx,
-                                    uint8_t               aArgc,
                                     nsISimpleEnumerator **aEnumerator)
 {
-  MOZ_ASSERT(aArgc == 0 || aArgc == 1);
-
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
@@ -4944,13 +4941,10 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
   NS_ENSURE_SUCCESS(rv, rv);
 
   OriginAttributes attrs;
-  rv = InitializeOriginAttributes(&attrs,
-                                  aOriginAttributes,
-                                  aCx,
-                                  aArgc,
-                                  u"nsICookieManager.getCookiesFromHost()",
-                                  u"2");
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!aOriginAttributes.isObject() ||
+      !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   AutoRestore<DBState*> savePrevDBState(mDBState);
   mDBState = (attrs.mPrivateBrowsingId > 0) ? mPrivateDBState : mDefaultDBState;
