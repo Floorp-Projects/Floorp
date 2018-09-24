@@ -136,6 +136,7 @@ var paymentDialogWrapper = {
       addressLines: addressData["street-address"].split("\n"),
       region: addressData["address-level1"],
       city: addressData["address-level2"],
+      dependentLocality: addressData["address-level3"],
       postalCode: addressData["postal-code"],
       organization: addressData.organization,
       recipient: addressData.name,

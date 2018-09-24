@@ -74,7 +74,7 @@ let PaymentFrameScript = {
     let waivedContent = Cu.waiveXrays(content);
     let PaymentDialogUtils = {
       DEFAULT_REGION: FormAutofill.DEFAULT_REGION,
-      supportedCountries: FormAutofill.supportedCountries,
+      countries: FormAutofill.countries,
 
       getAddressLabel(address, addressFields = null) {
         return FormAutofillUtils.getAddressLabel(address, addressFields);

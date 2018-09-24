@@ -27,6 +27,8 @@
      other fields which are <input>. */
   flex-basis: calc(50% - var(--grid-column-row-gap));
   flex-grow: 0;
+  /* Country names can be longer than 50% which ruins the symmetry in the grid. */
+  max-width: calc(50% - var(--grid-column-row-gap));
 }
 
 

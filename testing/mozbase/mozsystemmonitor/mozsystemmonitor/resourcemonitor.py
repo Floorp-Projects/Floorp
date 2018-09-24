@@ -74,6 +74,26 @@ def get_disk_io_counters():
     return io_counters
 
 
+def _poll(pipe, poll_interval=0.1):
+    """Wrap multiprocessing.Pipe.poll to hide POLLERR and POLLIN
+    exceptions.
+
+    multiprocessing.Pipe is not actually a pipe on at least Linux.
+    That has an effect on the expected outcome of reading from it when
+    the other end of the pipe dies, leading to possibly hanging on revc()
+    below.
+    """
+    try:
+        return pipe.poll(poll_interval)
+    except Exception:
+        # Poll might throw an exception even though there's still
+        # data to read. That happens when the underlying system call
+        # returns both POLLERR and POLLIN, but python doesn't tell us
+        # about it. So assume there is something to read, and we'll
+        # get an exception when trying to read the data.
+        return True
+
+
 def _collect(pipe, poll_interval):
     """Collects system metrics.
 
@@ -98,7 +118,7 @@ def _collect(pipe, poll_interval):
 
     sleep_interval = poll_interval
 
-    while not pipe.poll(sleep_interval):
+    while not _poll(pipe, poll_interval=sleep_interval):
         io = get_disk_io_counters()
         cpu_times = psutil.cpu_times(True)
         cpu_percent = psutil.cpu_percent(None, True)
@@ -258,7 +278,7 @@ class SystemResourceMonitor(object):
 
         self._pipe, child_pipe = multiprocessing.Pipe(True)
 
-        self._process = multiprocessing.Process(None, _collect,
+        self._process = multiprocessing.Process(target=_collect,
                                                 args=(child_pipe, poll_interval))
 
     def __del__(self):
@@ -308,21 +328,7 @@ class SystemResourceMonitor(object):
         # samples, it sends a special "done" message to indicate it
         # is finished.
 
-        # multiprocessing.Pipe is not actually a pipe on at least Linux.  that
-        # has an effect on the expected outcome of reading from it when the
-        # other end of the pipe dies, leading to possibly hanging on revc()
-        # below. So we must poll().
-        def poll():
-            try:
-                return self._pipe.poll(0.1)
-            except Exception:
-                # Poll might throw an exception even though there's still
-                # data to read. That happens when the underlying system call
-                # returns both POLLERR and POLLIN, but python doesn't tell us
-                # about it. So assume there is something to read, and we'll
-                # get an exception when trying to read the data.
-                return True
-        while poll():
+        while _poll(self._pipe, poll_interval=0.1):
             try:
                 start_time, end_time, io_diff, cpu_diff, cpu_percent, virt_mem, \
                     swap_mem = self._pipe.recv()
