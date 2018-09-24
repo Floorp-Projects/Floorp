@@ -2624,15 +2624,20 @@ static bool
 FrameParticipatesIn3DContext(nsIFrame* aAncestor, nsIFrame* aDescendant) {
   MOZ_ASSERT(aAncestor != aDescendant);
   MOZ_ASSERT(aAncestor->Extend3DContext());
+
+  nsIFrame* ancestor = aAncestor->FirstContinuation();
+  MOZ_ASSERT(ancestor->IsPrimaryFrame());
+
   nsIFrame* frame;
   for (frame = aDescendant->GetClosestFlattenedTreeAncestorPrimaryFrame();
-       frame && aAncestor != frame;
+       frame && ancestor != frame;
        frame = frame->GetClosestFlattenedTreeAncestorPrimaryFrame()) {
     if (!frame->Extend3DContext()) {
       return false;
     }
   }
-  MOZ_ASSERT(frame == aAncestor);
+
+  MOZ_ASSERT(frame == ancestor);
   return true;
 }
 
