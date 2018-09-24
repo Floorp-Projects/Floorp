@@ -595,81 +595,82 @@ private:
   uint8_t const * const           mBase;
 };
 
-template <typename TargetMMPolicy> class TargetBytesPtr;
-
-template<>
-class TargetBytesPtr<MMPolicyInProcess>
-{
-public:
-  typedef TargetBytesPtr<MMPolicyInProcess> Type;
-
-  static Type Make(const MMPolicyInProcess& aMMPolicy, const void* aFunc)
-  {
-    return TargetBytesPtr(aMMPolicy, aFunc);
-  }
-
-  static Type CopyFromOffset(const TargetBytesPtr& aOther,
-                             const uint32_t aOffsetFromOther)
-  {
-    return TargetBytesPtr(aOther, aOffsetFromOther);
-  }
-
-  ReadOnlyTargetBytes<MMPolicyInProcess>* operator->()
-  {
-    return &mTargetBytes;
-  }
-
-  TargetBytesPtr(TargetBytesPtr&& aOther)
-    : mTargetBytes(std::move(aOther.mTargetBytes))
-  {
-  }
-
-  TargetBytesPtr(const TargetBytesPtr& aOther)
-    : mTargetBytes(aOther.mTargetBytes)
-  {
-  }
-
-  TargetBytesPtr& operator=(const TargetBytesPtr&) = delete;
-  TargetBytesPtr& operator=(TargetBytesPtr&&) = delete;
-
-private:
-  TargetBytesPtr(const MMPolicyInProcess& aMMPolicy, const void* aFunc)
-    : mTargetBytes(aMMPolicy, aFunc)
-  {
-  }
-
-  TargetBytesPtr(const TargetBytesPtr& aOther,
-                 const uint32_t aOffsetFromOther)
-    : mTargetBytes(aOther.mTargetBytes, aOffsetFromOther)
-  {
-  }
-
-  ReadOnlyTargetBytes<MMPolicyInProcess> mTargetBytes;
-};
-
-template <>
-class TargetBytesPtr<MMPolicyOutOfProcess>
-{
-public:
-  typedef std::shared_ptr<ReadOnlyTargetBytes<MMPolicyOutOfProcess>> Type;
-
-  static Type Make(const MMPolicyOutOfProcess& aMMPolicy, const void* aFunc)
-  {
-    return std::make_shared<ReadOnlyTargetBytes<MMPolicyOutOfProcess>>(
-                  aMMPolicy, aFunc);
-  }
-
-  static Type CopyFromOffset(const Type& aOther,
-                             const uint32_t aOffsetFromOther)
-  {
-    return std::make_shared<ReadOnlyTargetBytes<MMPolicyOutOfProcess>>(
-                  *aOther, aOffsetFromOther);
-  }
-};
-
 template <typename MMPolicy>
 class MOZ_STACK_CLASS ReadOnlyTargetFunction final
 {
+  template <typename TargetMMPolicy>
+  class TargetBytesPtr;
+
+  template<>
+  class TargetBytesPtr<MMPolicyInProcess>
+  {
+  public:
+    typedef TargetBytesPtr<MMPolicyInProcess> Type;
+
+    static Type Make(const MMPolicyInProcess& aMMPolicy, const void* aFunc)
+    {
+      return std::move(TargetBytesPtr(aMMPolicy, aFunc));
+    }
+
+    static Type CopyFromOffset(const TargetBytesPtr& aOther,
+                               const uint32_t aOffsetFromOther)
+    {
+      return std::move(TargetBytesPtr(aOther, aOffsetFromOther));
+    }
+
+    ReadOnlyTargetBytes<MMPolicyInProcess>* operator->()
+    {
+      return &mTargetBytes;
+    }
+
+    TargetBytesPtr(TargetBytesPtr&& aOther)
+      : mTargetBytes(std::move(aOther.mTargetBytes))
+    {
+    }
+
+    TargetBytesPtr(const TargetBytesPtr& aOther)
+      : mTargetBytes(aOther.mTargetBytes)
+    {
+    }
+
+    TargetBytesPtr& operator=(const TargetBytesPtr&) = delete;
+    TargetBytesPtr& operator=(TargetBytesPtr&&) = delete;
+
+  private:
+    TargetBytesPtr(const MMPolicyInProcess& aMMPolicy, const void* aFunc)
+      : mTargetBytes(aMMPolicy, aFunc)
+    {
+    }
+
+    TargetBytesPtr(const TargetBytesPtr& aOther,
+                   const uint32_t aOffsetFromOther)
+      : mTargetBytes(aOther.mTargetBytes, aOffsetFromOther)
+    {
+    }
+
+    ReadOnlyTargetBytes<MMPolicyInProcess> mTargetBytes;
+  };
+
+  template <>
+  class TargetBytesPtr<MMPolicyOutOfProcess>
+  {
+  public:
+    typedef std::shared_ptr<ReadOnlyTargetBytes<MMPolicyOutOfProcess>> Type;
+
+    static Type Make(const MMPolicyOutOfProcess& aMMPolicy, const void* aFunc)
+    {
+      return std::move(std::make_shared<ReadOnlyTargetBytes<MMPolicyOutOfProcess>>(
+                    aMMPolicy, aFunc));
+    }
+
+    static Type CopyFromOffset(const Type& aOther,
+                               const uint32_t aOffsetFromOther)
+    {
+      return std::move(std::make_shared<ReadOnlyTargetBytes<MMPolicyOutOfProcess>>(
+                    *aOther, aOffsetFromOther));
+    }
+  };
+
 public:
   ReadOnlyTargetFunction(const MMPolicy& aMMPolicy, const void* aFunc)
     : mTargetBytes(TargetBytesPtr<MMPolicy>::Make(aMMPolicy, aFunc))
