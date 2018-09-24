@@ -67,7 +67,7 @@ RemoteController.prototype = {
 
   onEvent() {},
 
-  // This is intended to be called from the remote-browser binding to update
+  // This is intended to be called from the browser binding to update
   // the enabled and disabled commands.
   enableDisableCommands(aAction,
                                   aEnabledLength, aEnabledCommands,

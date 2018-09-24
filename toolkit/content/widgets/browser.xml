@@ -154,17 +154,30 @@
       <method name="_setCurrentURI">
         <parameter name="aURI"/>
         <body><![CDATA[
-          this.docShell.setCurrentURI(aURI);
+          if (this.isRemoteBrowser) {
+            this._remoteWebProgressManager.setCurrentURI(aURI);
+          } else {
+            this.docShell.setCurrentURI(aURI);
+          }
         ]]></body>
       </method>
 
+      <field name="_documentURI">null</field>
       <property name="documentURI"
-                onget="return this.contentDocument.documentURIObject;"
+                onget="return this.isRemoteBrowser ? this._documentURI : this.contentDocument.documentURIObject;"
                 readonly="true"/>
 
+
+      <field name="_documentContentType">null</field>
       <property name="documentContentType"
-                onget="return this.contentDocument ? this.contentDocument.contentType : null;"
-                readonly="true"/>
+                readonly="true">
+        <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this._documentContentType;
+          }
+          return this.contentDocument ? this.contentDocument.contentType : null;
+        ]]></getter>
+      </property>
 
       <!--
         Weak reference to an optional frame loader that can be used to influence
@@ -207,11 +220,18 @@
       <property name="docShellIsActive">
         <getter>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              return this.frameLoader.tabParent.docShellIsActive;
+            }
             return this.docShell && this.docShell.isActive;
           ]]>
         </getter>
         <setter>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              this.frameLoader.tabParent.docShellIsActive = val;
+              return val;
+            }
             if (this.docShell)
               return this.docShell.isActive = val;
             return false;
@@ -221,19 +241,40 @@
 
       <method name="preserveLayers">
         <parameter name="preserve"/>
-        <body>
-          // Only useful for remote browsers.
-        </body>
+        <body><![CDATA[
+          if (!this.isRemoteBrowser) {
+            return;
+          }
+          let {frameLoader} = this;
+          if (frameLoader.tabParent) {
+            frameLoader.tabParent.preserveLayers(preserve);
+          }
+        ]]></body>
       </method>
+
 
       <property name="renderLayers">
         <getter>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              let {frameLoader} = this;
+              if (frameLoader && frameLoader.tabParent) {
+                return frameLoader.tabParent.renderLayers;
+              }
+              return false;
+            }
             return this.docShellIsActive;
           ]]>
         </getter>
         <setter>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              let {frameLoader} = this;
+              if (frameLoader && frameLoader.tabParent) {
+                return frameLoader.tabParent.renderLayers = val;
+              }
+              return false;
+            }
             return this.docShellIsActive = val;
           ]]>
         </setter>
@@ -242,15 +283,41 @@
       <property name="hasLayers" readonly="true">
         <getter>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              let {frameLoader} = this;
+              if (frameLoader.tabParent) {
+                return frameLoader.tabParent.hasLayers;
+              }
+              return false;
+            }
+
             return this.docShellIsActive;
           ]]>
         </getter>
       </property>
 
+      <method name="forceRepaint">
+        <body>
+          <![CDATA[
+            if (!this.isRemoteBrowser) {
+              return;
+            }
+            let {frameLoader} = this;
+            if (frameLoader && frameLoader.tabParent) {
+              frameLoader.tabParent.forceRepaint();
+            }
+          ]]>
+        </body>
+      </method>
+
+      <field name="_imageDocument">null</field>
       <property name="imageDocument"
                 readonly="true">
         <getter>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              return this._imageDocument;
+            }
             var document = this.contentDocument;
             if (!document || !(document instanceof Ci.nsIImageDocument))
               return null;
@@ -326,9 +393,22 @@
       </method>
 
       <field name="_finder">null</field>
-
+      <field name="_remoteFinder">null</field>
       <property name="finder" readonly="true">
         <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            if (!this._remoteFinder) {
+              // Don't attempt to create the remote finder if the
+              // messageManager has already gone away
+              if (!this.messageManager)
+                return null;
+
+              let jsm = "resource://gre/modules/FinderParent.jsm";
+              let { FinderParent } = ChromeUtils.import(jsm, {});
+              this._remoteFinder = new FinderParent(this);
+            }
+            return this._remoteFinder;
+          }
           if (!this._finder) {
             if (!this.docShell)
               return null;
@@ -362,14 +442,22 @@
         ]]></getter>
       </property>
 
+      <field name="_outerWindowID">null</field>
       <property name="outerWindowID" readonly="true">
         <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this._outerWindowID;
+          }
           return this.contentWindow.windowUtils.outerWindowID;
         ]]></getter>
       </property>
 
+      <field name="_innerWindowID">null</field>
       <property name="innerWindowID" readonly="true">
         <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this._innerWindowID;
+          }
           try {
             return this.contentWindow.windowUtils.currentInnerWindowID;
           } catch (e) {
@@ -383,13 +471,26 @@
 
       <field name="_lastSearchString">null</field>
 
+
+      <field name="_controller">null</field>
+
+      <field name="_selectParentHelper">null</field>
+
+      <field name="_remoteWebNavigation">null</field>
+      <!-- Note that this overrides webNavigation on XULFrameElement, and duplicates the return value for the non-remote case -->
+      <property name="webNavigation"
+                readonly="true"
+                onget="return this.isRemoteBrowser ? this._remoteWebNavigation : this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"/>
+
+      <field name="_remoteWebProgress">null</field>
       <property name="webProgress"
                 readonly="true"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
+                onget="return this.isRemoteBrowser ? this._remoteWebProgress : this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
 
+      <field name="_contentWindow">null</field>
       <property name="contentWindowAsCPOW"
                 readonly="true"
-                onget="return this.contentWindow;"/>
+                onget="return this.isRemoteBrowser ? this._contentWindow : this.contentWindow;"/>
 
       <property name="sessionHistory"
                 onget="return this.webNavigation.sessionHistory;"
@@ -399,32 +500,46 @@
                 onget="return this.docShell.contentViewer;"
                 readonly="true"/>
 
+      <field name="_contentDocument">null</field>
       <property name="contentDocumentAsCPOW"
-                onget="return this.contentDocument;"
+                onget="return this.isRemoteBrowser ? this._contentDocument : this.contentDocument;"
                 readonly="true"/>
 
+      <field name="_contentTitle">""</field>
       <property name="contentTitle"
-                onget="return this.contentDocument.title;"
+                onget="return this.isRemoteBrowser ? this._contentTitle : this.contentDocument.title;"
                 readonly="true"/>
 
+      <field name="_characterSet">""</field>
       <property name="characterSet"
-                onget="return this.docShell.charset;">
+                onget="return this.isRemoteBrowser ? this._characterSet : this.docShell.charset;">
         <setter><![CDATA[
-          this.docShell.charset = val;
-          this.docShell.gatherCharsetMenuTelemetry();
+          if (this.isRemoteBrowser) {
+            this.messageManager.sendAsyncMessage("UpdateCharacterSet", {value: val});
+            this._characterSet = val;
+          } else {
+            this.docShell.charset = val;
+            this.docShell.gatherCharsetMenuTelemetry();
+          }
         ]]></setter>
       </property>
 
+      <field name="_mayEnableCharacterEncodingMenu">null</field>
       <property name="mayEnableCharacterEncodingMenu"
-                onget="return this.docShell.mayEnableCharacterEncodingMenu;"
+                onget="return this.isRemoteBrowser ? this._mayEnableCharacterEncodingMenu : this.docShell.mayEnableCharacterEncodingMenu;"
                 readonly="true"/>
 
+      <field name="_contentPrincipal">null</field>
       <property name="contentPrincipal"
-                onget="return this.contentDocument.nodePrincipal;"
+                onget="return this.isRemoteBrowser ? this._contentPrincipal : this.contentDocument.nodePrincipal;"
                 readonly="true"/>
 
+      <field name="_contentRequestContextID">null</field>
       <property name="contentRequestContextID" readonly="true">
         <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this._contentRequestContextID;
+          }
           try {
             return this.contentDocument.documentLoadGroup
                        .requestContextID;
@@ -440,32 +555,78 @@
                        return val;"
                 onget="return this.getAttribute('showresizer') == 'true';"/>
 
+      <field name="_fullZoom">1</field>
       <property name="fullZoom">
         <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this._fullZoom;
+          }
           return this.markupDocumentViewer.fullZoom;
         ]]></getter>
         <setter><![CDATA[
-          this.markupDocumentViewer.fullZoom = val;
+          if (this.isRemoteBrowser) {
+            let changed = val.toFixed(2) != this._fullZoom.toFixed(2);
+
+            if (changed) {
+              this._fullZoom = val;
+              try {
+                this.messageManager.sendAsyncMessage("FullZoom", {value: val});
+              } catch (ex) {}
+
+              let event = new Event("FullZoomChange", {bubbles: true});
+              this.dispatchEvent(event);
+            }
+          } else {
+            this.markupDocumentViewer.fullZoom = val;
+          }
         ]]></setter>
       </property>
 
+      <field name="_textZoom">1</field>
       <property name="textZoom">
         <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this._textZoom;
+          }
           return this.markupDocumentViewer.textZoom;
         ]]></getter>
         <setter><![CDATA[
-          this.markupDocumentViewer.textZoom = val;
+          if (this.isRemoteBrowser) {
+            let changed = val.toFixed(2) != this._textZoom.toFixed(2);
+
+            if (changed) {
+              this._textZoom = val;
+              try {
+                this.messageManager.sendAsyncMessage("TextZoom", {value: val});
+              } catch (ex) {}
+
+              let event = new Event("TextZoomChange", {bubbles: true});
+              this.dispatchEvent(event);
+            }
+          } else {
+            this.markupDocumentViewer.textZoom = val;
+          }
+
+        ]]></setter>
+        <setter><![CDATA[
         ]]></setter>
       </property>
 
+      <field name="_isSyntheticDocument">false</field>
       <property name="isSyntheticDocument">
         <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this._isSyntheticDocument;
+          }
           return this.contentDocument.mozSyntheticDocument;
         ]]></getter>
       </property>
 
       <property name="hasContentOpener">
         <getter><![CDATA[
+          if (this.isRemoteBrowser) {
+            return this.frameLoader.tabParent.hasContentOpener;
+          }
           return !!this.contentWindow.opener;
         ]]></getter>
       </property>
@@ -727,9 +888,30 @@
         </body>
       </method>
 
-      <property name="securityUI">
+      <field name="_securityUI">null</field>
+      <property name="securityUI"
+                readonly="true">
         <getter>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              if (!this._securityUI) {
+                // Don't attempt to create the remote web progress if the
+                // messageManager has already gone away
+                if (!this.messageManager)
+                  return null;
+
+                let jsm = "resource://gre/modules/RemoteSecurityUI.jsm";
+                let RemoteSecurityUI = ChromeUtils.import(jsm, {}).RemoteSecurityUI;
+                this._securityUI = new RemoteSecurityUI();
+              }
+
+              // We want to double-wrap the JS implemented interface, so that QI and instanceof works.
+              var ptr = Cc["@mozilla.org/supports-interface-pointer;1"]
+                          .createInstance(Ci.nsISupportsInterfacePointer);
+              ptr.data = this._securityUI;
+              return ptr.data.QueryInterface(Ci.nsISecureBrowserUI);
+            }
+
             if (!this.docShell.securityUI) {
               const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
               if (!this.hasAttribute("disablesecurity") &&
@@ -743,11 +925,6 @@
             return this.docShell.securityUI;
           ]]>
         </getter>
-        <setter>
-          <![CDATA[
-            this.docShell.securityUI = val;
-          ]]>
-        </setter>
       </property>
 
       <field name="urlbarChangeTracker">
@@ -799,6 +976,62 @@
 
       <constructor>
         <![CDATA[
+        this.construct();
+        ]]>
+      </constructor>
+
+      <method name="construct">
+        <body><![CDATA[
+          if (this.isRemoteBrowser) {
+            /*
+            * Don't try to send messages from this function. The message manager for
+            * the <browser> element may not be initialized yet.
+            */
+
+            this._remoteWebNavigation = Cc["@mozilla.org/remote-web-navigation;1"]
+                                          .createInstance(Ci.nsIWebNavigation);
+            this._remoteWebNavigationImpl = this._remoteWebNavigation.wrappedJSObject;
+            this._remoteWebNavigationImpl.swapBrowser(this);
+
+            // Initialize contentPrincipal to the about:blank principal for this loadcontext
+            let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+            let aboutBlank = Services.io.newURI("about:blank");
+            let ssm = Services.scriptSecurityManager;
+            this._contentPrincipal = ssm.getLoadContextCodebasePrincipal(aboutBlank, this.loadContext);
+
+            this.messageManager.addMessageListener("Browser:Init", this);
+            this.messageManager.addMessageListener("DOMTitleChanged", this);
+            this.messageManager.addMessageListener("ImageDocumentLoaded", this);
+            this.messageManager.addMessageListener("FullZoomChange", this);
+            this.messageManager.addMessageListener("TextZoomChange", this);
+            this.messageManager.addMessageListener("ZoomChangeUsingMouseWheel", this);
+
+            // browser-child messages, such as Content:LocationChange, are handled in
+            // RemoteWebProgress, ensure it is loaded and ready.
+            let jsm = "resource://gre/modules/RemoteWebProgress.jsm";
+            let { RemoteWebProgressManager } = ChromeUtils.import(jsm, {});
+            this._remoteWebProgressManager = new RemoteWebProgressManager(this);
+            this._remoteWebProgress = this._remoteWebProgressManager.topLevelWebProgress;
+
+            this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
+
+            if (this.hasAttribute("selectmenulist")) {
+              this.messageManager.addMessageListener("Forms:ShowDropDown", this);
+              this.messageManager.addMessageListener("Forms:HideDropDown", this);
+            }
+
+            if (!this.hasAttribute("disablehistory")) {
+              Services.obs.addObserver(this, "browser:purge-session-history", true);
+            }
+
+            let rc_js = "resource://gre/modules/RemoteController.js";
+            let scope = {};
+            Services.scriptloader.loadSubScript(rc_js, scope);
+            let RemoteController = scope.RemoteController;
+            this._controller = new RemoteController(this);
+            this.controllers.appendController(this._controller);
+          }
+
           try {
             // |webNavigation.sessionHistory| will have been set by the frame
             // loader when creating the docShell as long as this xul:browser
@@ -858,8 +1091,8 @@
             }
 
           }
-        ]]>
-      </constructor>
+        ]]></body>
+      </method>
 
       <destructor>
         <![CDATA[
@@ -868,13 +1101,9 @@
       </destructor>
 
       <!-- This is necessary because the destructor doesn't always get called when
-           we are removed from a tabbrowser. This will be explicitly called by tabbrowser.
-
-           Note: this function is overriden in remote-browser.xml, so any clean-up that
-           also applies to browser.isRemoteBrowser = true must be duplicated there. -->
+           we are removed from a tabbrowser. This will be explicitly called by tabbrowser.-->
       <method name="destroy">
-        <body>
-          <![CDATA[
+        <body><![CDATA[
           // Make sure that any open select is closed.
           if (this._selectParentHelper) {
             let menulist = document.getElementById(this.getAttribute("selectmenulist"));
@@ -883,6 +1112,26 @@
           if (this.mDestroyed)
             return;
           this.mDestroyed = true;
+
+          if (this.isRemoteBrowser) {
+            try {
+              this.controllers.removeController(this._controller);
+            } catch (ex) {
+              // This can fail when this browser element is not attached to a
+              // BrowserDOMWindow.
+            }
+
+            if (!this.hasAttribute("disablehistory")) {
+              let Services = ChromeUtils.import("resource://gre/modules/Services.jsm", {}).Services;
+              try {
+                Services.obs.removeObserver(this, "browser:purge-session-history");
+              } catch (ex) {
+                // It's not clear why this sometimes throws an exception.
+              }
+            }
+
+            return;
+          }
 
           if (this.docShell && this.webNavigation.sessionHistory) {
             var os = Cc["@mozilla.org/observer-service;1"]
@@ -907,9 +1156,9 @@
             // we polluted the global scope, so clean it up
             this._autoScrollPopup.remove();
           }
-          ]]>
-        </body>
+        ]]></body>
       </method>
+
 
       <!--
         We call this _receiveMessage (and alias receiveMessage to it) so that
@@ -1011,8 +1260,90 @@
       <method name="receiveMessage">
         <parameter name="aMessage"/>
         <body><![CDATA[
-          return this._receiveMessage(aMessage);
+          if (!this.isRemoteBrowser) {
+            return this._receiveMessage(aMessage);
+          }
+
+          let data = aMessage.data;
+          switch (aMessage.name) {
+            case "Browser:Init":
+              this._outerWindowID = data.outerWindowID;
+              break;
+            case "DOMTitleChanged":
+              this._contentTitle = data.title;
+              break;
+            case "ImageDocumentLoaded":
+              this._imageDocument = {
+                width: data.width,
+                height: data.height,
+              };
+              break;
+
+            case "Forms:ShowDropDown": {
+              if (!this._selectParentHelper) {
+                this._selectParentHelper =
+                  ChromeUtils.import("resource://gre/modules/SelectParentHelper.jsm", {}).SelectParentHelper;
+              }
+
+              let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+              menulist.menupopup.style.direction = data.direction;
+
+              let zoom = Services.prefs.getBoolPref("browser.zoom.full") ||
+                         this.isSyntheticDocument ? this._fullZoom : this._textZoom;
+              this._selectParentHelper.populate(menulist, data.options, data.selectedIndex,
+                                                zoom, data.uaBackgroundColor, data.uaColor,
+                                                data.uaSelectBackgroundColor, data.uaSelectColor,
+                                                data.selectBackgroundColor, data.selectColor, data.selectTextShadow);
+              this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
+              break;
+            }
+
+            case "FullZoomChange": {
+              this._fullZoom = data.value;
+              let event = document.createEvent("Events");
+              event.initEvent("FullZoomChange", true, false);
+              this.dispatchEvent(event);
+              break;
+            }
+
+            case "TextZoomChange": {
+              this._textZoom = data.value;
+              let event = document.createEvent("Events");
+              event.initEvent("TextZoomChange", true, false);
+              this.dispatchEvent(event);
+              break;
+            }
+
+            case "ZoomChangeUsingMouseWheel": {
+              let event = document.createEvent("Events");
+              event.initEvent("ZoomChangeUsingMouseWheel", true, false);
+              this.dispatchEvent(event);
+              break;
+            }
+
+            default:
+              return this._receiveMessage(aMessage);
+          }
+          return undefined;
+
         ]]></body>
+      </method>
+
+      <method name="enableDisableCommandsRemoteOnly">
+        <parameter name="aAction"/>
+        <parameter name="aEnabledLength"/>
+        <parameter name="aEnabledCommands"/>
+        <parameter name="aDisabledLength"/>
+        <parameter name="aDisabledCommands"/>
+        <body>
+          <![CDATA[
+          if (this._controller) {
+            this._controller.enableDisableCommands(aAction,
+                                                   aEnabledLength, aEnabledCommands,
+                                                   aDisabledLength, aDisabledCommands);
+          }
+          ]]>
+        </body>
       </method>
 
       <method name="observe">
@@ -1041,6 +1372,19 @@
       <method name="purgeSessionHistory">
         <body>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              try {
+                this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
+              } catch (ex) {
+                // This can throw if the browser has started to go away.
+                if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
+                  throw ex;
+                }
+              }
+              this._remoteWebNavigationImpl.canGoBack = false;
+              this._remoteWebNavigationImpl.canGoForward = false;
+              return;
+            }
             this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
           ]]>
         </body>
@@ -1050,6 +1394,17 @@
         <parameter name="aPrincipal"/>
         <body>
           <![CDATA[
+            if (this.isRemoteBrowser) {
+              // Ensure that the content process has the permissions which are
+              // needed to create a document with the given principal.
+              let permissionPrincipal =
+                BrowserUtils.principalWithMatchingOA(aPrincipal, this.contentPrincipal);
+              this.frameLoader.tabParent.transmitPermissionsForPrincipal(permissionPrincipal);
+
+              // Create the about blank content viewer in the content process
+              this.messageManager.sendAsyncMessage("Browser:CreateAboutBlank", aPrincipal);
+              return;
+            }
             let principal = BrowserUtils.principalWithMatchingOA(aPrincipal, this.contentPrincipal);
             this.docShell.createAboutBlankContentViewer(principal);
           ]]>
@@ -1407,10 +1762,24 @@
         </body>
       </method>
 
+      <field name="_permitUnloadId">0</field>
       <method name="getInPermitUnload">
         <parameter name="aCallback"/>
         <body>
         <![CDATA[
+          if (this.isRemoteBrowser) {
+            let id = this._permitUnloadId++;
+            let mm = this.messageManager;
+            mm.sendAsyncMessage("InPermitUnload", {id});
+            mm.addMessageListener("InPermitUnload", function listener(msg) {
+              if (msg.data.id != id) {
+                return;
+              }
+              aCallback(msg.data.inPermitUnload);
+            });
+            return;
+          }
+
           if (!this.docShell || !this.docShell.contentViewer) {
             aCallback(false);
             return;
@@ -1432,6 +1801,70 @@
         <parameter name="aPermitUnloadFlags"/>
         <body>
         <![CDATA[
+          if (this.isRemoteBrowser) {
+            let {tabParent} = this.frameLoader;
+
+            if (!tabParent.hasBeforeUnload) {
+              return { permitUnload: true, timedOut: false };
+            }
+
+            const kTimeout = 1000;
+
+            let finished = false;
+            let responded = false;
+            let permitUnload;
+            let id = this._permitUnloadId++;
+            let mm = this.messageManager;
+            let Services = ChromeUtils.import("resource://gre/modules/Services.jsm", {}).Services;
+
+            let msgListener = msg => {
+              if (msg.data.id != id) {
+                return;
+              }
+              if (msg.data.kind == "start") {
+                responded = true;
+                return;
+              }
+              done(msg.data.permitUnload);
+            };
+
+            let observer = subject => {
+              if (subject == mm) {
+                done(true);
+              }
+            };
+
+            function done(result) {
+              finished = true;
+              permitUnload = result;
+              mm.removeMessageListener("PermitUnload", msgListener);
+              Services.obs.removeObserver(observer, "message-manager-close");
+            }
+
+            mm.sendAsyncMessage("PermitUnload", {id, aPermitUnloadFlags});
+            mm.addMessageListener("PermitUnload", msgListener);
+            Services.obs.addObserver(observer, "message-manager-close");
+
+            let timedOut = false;
+            function timeout() {
+              if (!responded) {
+                timedOut = true;
+              }
+
+              // Dispatch something to ensure that the main thread wakes up.
+              Services.tm.dispatchToMainThread(function() {});
+            }
+
+            let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+            timer.initWithCallback(timeout, kTimeout, timer.TYPE_ONE_SHOT);
+
+            while (!finished && !timedOut) {
+              Services.tm.currentThread.processNextEvent(true);
+            }
+
+            return {permitUnload, timedOut};
+          }
+
           if (!this.docShell || !this.docShell.contentViewer) {
             return {permitUnload: true, timedOut: false};
           }
@@ -1578,6 +2011,16 @@
         if (links.length) {
           let triggeringPrincipal = linkHandler.getTriggeringPrincipal(event);
           this.droppedLinkHandler(event, links, triggeringPrincipal);
+        }
+      ]]>
+      </handler>
+      <handler event="dragstart">
+      <![CDATA[
+        // If we're a remote browser dealing with a dragstart, stop it
+        // from propagating up, since our content process should be dealing
+        // with the mouse movement.
+        if (this.isRemoteBrowser) {
+          event.stopPropagation();
         }
       ]]>
       </handler>
