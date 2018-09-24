@@ -558,6 +558,7 @@ StorageDBThread::ThreadFunc()
         SetDefaultPriority(); // urgent preload unscheduled
       }
     } else if (MOZ_UNLIKELY(!mStopIOThread)) {
+      AUTO_PROFILER_LABEL("StorageDBThread::ThreadFunc::Wait", IDLE);
       lockMonitor.Wait(timeUntilFlush);
     }
   } // thread loop
