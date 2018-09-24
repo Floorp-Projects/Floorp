@@ -2938,6 +2938,12 @@ public:
 
     bool MightBeWebContent() const;
 
+    // Note: this principal must not be used for subsumes/equality checks
+    // considering document.domain. See mOrigin.
+    mozilla::BasePrincipal* GetPrincipalIgnoringDocumentDomain() const {
+        return mOrigin;
+    }
+
     const mozilla::SiteIdentifier& SiteRef() const {
         return mSite;
     }
