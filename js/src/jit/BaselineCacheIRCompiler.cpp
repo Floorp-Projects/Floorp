@@ -687,6 +687,31 @@ BaselineCacheIRCompiler::emitCallProxyHasPropResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitCallNativeGetElementResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(index);
+    masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
+    masm.Push(obj);
+
+    if (!callVM(masm, NativeGetElementInfo)) {
+        return false;
+    }
+
+    stubFrame.leave(masm);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitLoadUnboxedPropertyResult()
 {
     AutoOutputRegister output(*this);
