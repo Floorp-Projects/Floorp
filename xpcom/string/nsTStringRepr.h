@@ -293,13 +293,23 @@ public:
   // Returns true if this string overlaps with the given string fragment.
   bool IsDependentOn(const char_type* aStart, const char_type* aEnd) const
   {
-     // If it _isn't_ the case that one fragment starts after the other ends,
-     // or ends before the other starts, then, they conflict:
-     //
-     //   !(f2.begin >= f1.aEnd || f2.aEnd <= f1.begin)
-     //
-     // Simplified, that gives us:
-    return (aStart < (mData + mLength) && aEnd > mData);
+    // If it _isn't_ the case that one fragment starts after the other ends,
+    // or ends before the other starts, then, they conflict:
+    //
+    //   !(f2.begin >= f1.aEnd || f2.aEnd <= f1.begin)
+    //
+    // Simplified, that gives us (To avoid relying on Undefined Behavior
+    // from comparing pointers from different allocations (which in
+    // principle gives the optimizer the permission to assume elsewhere
+    // that the pointers are from the same allocation), the comparisons
+    // are done on integers, which merely relies on implementation-defined
+    // behavior of converting pointers to integers. std::less and
+    // std::greater implementations don't actually provide the guarantees
+    // that they should.):
+    return (reinterpret_cast<uintptr_t>(aStart) <
+              reinterpret_cast<uintptr_t>(mData + mLength) &&
+            reinterpret_cast<uintptr_t>(aEnd) >
+              reinterpret_cast<uintptr_t>(mData));
   }
 
 protected:

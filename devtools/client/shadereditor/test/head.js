@@ -83,15 +83,12 @@ function createCanvas() {
 
 function observe(aNotificationName, aOwnsWeak = false) {
   info("Waiting for observer notification: '" + aNotificationName + ".");
-
-  const deferred = defer();
-
-  Services.obs.addObserver(function onNotification(...aArgs) {
-    Services.obs.removeObserver(onNotification, aNotificationName);
-    deferred.resolve.apply(deferred, aArgs);
-  }, aNotificationName, aOwnsWeak);
-
-  return deferred.promise;
+  return new Promise(resolve =>{
+    Services.obs.addObserver(function onNotification(...aArgs) {
+      Services.obs.removeObserver(onNotification, aNotificationName);
+      resolve.apply(deferred, aArgs);
+    }, aNotificationName, aOwnsWeak);
+  });
 }
 
 function isApprox(aFirst, aSecond, aMargin = 1) {
@@ -195,19 +192,19 @@ function teardown(aPanel) {
 // programs that should be listened to and waited on, and an optional
 // `onAdd` function that calls with the entire actors array on program link
 function getPrograms(front, count, onAdd) {
-  const actors = [];
-  const deferred = defer();
-  front.on("program-linked", function onLink(actor) {
-    if (actors.length !== count) {
-      actors.push(actor);
-      if (typeof onAdd === "function") {
-        onAdd(actors);
+  return new Promise(resolve => {
+    const actors = [];
+    front.on("program-linked", function onLink(actor) {
+      if (actors.length !== count) {
+        actors.push(actor);
+        if (typeof onAdd === "function") {
+          onAdd(actors);
+        }
       }
-    }
-    if (actors.length === count) {
-      front.off("program-linked", onLink);
-      deferred.resolve(actors);
-    }
+      if (actors.length === count) {
+        front.off("program-linked", onLink);
+        resolve(actors);
+      }
+    });
   });
-  return deferred.promise;
 }

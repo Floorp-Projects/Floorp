@@ -35,11 +35,8 @@ interface mozIOSPreferences : nsISupports
    * used for language negotiation.
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
-   *
-   * (See OSPreferences.h for a more C++-friendly version of this.)
    */
-  void getSystemLocales([optional] out unsigned long aCount,
-                        [retval, array, size_is(aCount)] out string aOutArray);
+  readonly attribute Array<ACString> systemLocales;
 
   /**
    * Returns a list of locales used by host environment for regional
@@ -52,11 +49,8 @@ interface mozIOSPreferences : nsISupports
    * and ECMA402 Intl APIs,
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
-   *
-   * (See OSPreferences.h for a more C++-friendly version of this.)
    */
-  void getRegionalPrefsLocales([optional] out unsigned long aCount,
-                               [retval, array, size_is(aCount)] out string aOutArray);
+  readonly attribute Array<ACString> regionalPrefsLocales;
 
   /**
    * Returns the best locale that the host environment is localized to.
@@ -64,7 +58,7 @@ interface mozIOSPreferences : nsISupports
    * The result is a valid locale ID and it should be
    * used for all APIs that do not handle language negotiation.
    *
-   * In any scenario involving language negotiation, GetSystemLocales should
+   * In any scenario involving language negotiation, systemLocales should
    * be preferred over the single value.
    *
    * Example: "zh-Hans-HK"

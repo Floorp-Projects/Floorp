@@ -12,6 +12,40 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ScriptSettings.h"
 
+TEST(PrioEncoder, BadPublicKeys)
+{
+  mozilla::dom::AutoJSAPI jsAPI;
+  ASSERT_TRUE(jsAPI.Init(xpc::PrivilegedJunkScope()));
+  JSContext* cx = jsAPI.cx();
+
+  mozilla::Preferences::SetCString("prio.publicKeyA",
+    nsCString(NS_LITERAL_CSTRING("badA")));
+  mozilla::Preferences::SetCString("prio.publicKeyB",
+    nsCString(NS_LITERAL_CSTRING("badB")));
+
+  mozilla::dom::GlobalObject global(cx, xpc::PrivilegedJunkScope());
+
+  nsCString batchID = NS_LITERAL_CSTRING("abc123");
+
+  mozilla::dom::PrioParams prioParams;
+  prioParams.mBrowserIsUserDefault = true;
+  prioParams.mNewTabPageEnabled = true;
+  prioParams.mPdfViewerUsed = false;
+
+  mozilla::dom::RootedDictionary<mozilla::dom::PrioEncodedData> prioEncodedData(cx);
+  mozilla::ErrorResult rv;
+
+  mozilla::dom::PrioEncoder::Encode(global, batchID, prioParams, prioEncodedData, rv);
+  ASSERT_TRUE(rv.Failed());
+
+  // Call again to ensure that the singleton state is consistent.
+  mozilla::dom::PrioEncoder::Encode(global, batchID, prioParams, prioEncodedData, rv);
+  ASSERT_TRUE(rv.Failed());
+
+  // Reset error result so test runner does not fail.
+  rv = mozilla::ErrorResult();
+}
+
 TEST(PrioEncoder, VerifyFull)
 {
   SECStatus prioRv = SECSuccess;

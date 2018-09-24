@@ -65,8 +65,8 @@ nsLanguageAtomService::GetLocaleLanguage()
   do {
     if (!mLocaleLanguage) {
       AutoTArray<nsCString, 10> regionalPrefsLocales;
-      if (OSPreferences::GetInstance()->GetRegionalPrefsLocales(
-                                          regionalPrefsLocales)) {
+      if (NS_SUCCEEDED(OSPreferences::GetInstance()->GetRegionalPrefsLocales(
+            regionalPrefsLocales))) {
         // use lowercase for all language atoms
         ToLowerCase(regionalPrefsLocales[0]);
         mLocaleLanguage = NS_Atomize(regionalPrefsLocales[0]);
