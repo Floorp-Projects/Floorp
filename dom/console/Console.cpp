@@ -1118,7 +1118,7 @@ Console::Initialize(ErrorResult& aRv)
       return;
     }
 
-    if (mGlobal) {
+    if (mInnerID) {
       aRv = obs->AddObserver(this, "inner-window-destroyed", true);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
@@ -1670,7 +1670,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   }
 
   if (NS_IsMainThread()) {
-    if (mGlobal) {
+    if (mInnerID) {
       callData->SetIDs(mOuterID, mInnerID);
     } else if (!mPassedInnerID.IsEmpty()) {
       callData->SetIDs(NS_LITERAL_STRING("jsm"), mPassedInnerID);
