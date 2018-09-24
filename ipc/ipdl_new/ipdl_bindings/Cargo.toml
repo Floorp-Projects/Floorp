@@ -1,0 +1,15 @@
+[package]
+name = "ipdl_bindings"
+version = "0.1.0"
+authors = ["Tristan Bourvon <tristanbourvon@gmail.com>"]
+license = "MPL-2.0"
+
+[dependencies]
+ipdl = { path = "../ipdl" }
+thin-vec = { version = "*", features = ["gecko-ffi"] }
+nsstring = { path = "../../../servo/support/gecko/nsstring" }
+mfbt-maybe = { path = "../../../xpcom/rust/mfbt-maybe" }
+
+[lib]
+name = "ipdl_bindings"
+path = "src/lib.rs"

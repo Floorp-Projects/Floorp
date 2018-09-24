@@ -77,6 +77,7 @@
 #include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/ipdl/ipc/PContentParentIPCInterface.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/PAPZParent.h"
@@ -2325,6 +2326,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mIsRemoteInputEventQueueEnabled(false)
   , mIsInputPriorityEventEnabled(false)
   , mHangMonitorActor(nullptr)
+  , mIPDLIPCInterface(nullptr)
 {
   // Insert ourselves into the global linked list of ContentParent objects.
   if (!sContentParents) {
@@ -4007,6 +4009,23 @@ ContentParent::RecvSyncMessage(const nsString& aMsg,
 }
 
 mozilla::ipc::IPCResult
+ContentParent::RecvSyncMessageIPDL(const nsCString& aProtocolName,
+                                    const uint32_t& aChannelId,
+                                    const nsCString& aMessage,
+                                   const ClonedMessageData& aData,
+                                   nsTArray<StructuredCloneData>* returnData)
+{
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+    "ContentParent::RecvSyncMessageIPDL", OTHER, aMessage);
+
+  if (mIPDLIPCInterface) {
+    return mIPDLIPCInterface->RecvMessage(aProtocolName, aChannelId, aMessage, aData, returnData);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentParent::RecvRpcMessage(const nsString& aMsg,
                               const ClonedMessageData& aData,
                               InfallibleTArray<CpowEntry>&& aCpows,
@@ -4025,6 +4044,26 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
 {
   return nsIContentParent::RecvAsyncMessage(aMsg, std::move(aCpows), aPrincipal,
                                             aData);
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvAsyncMessageIPDL(const nsCString& aProtocolName,
+                                    const uint32_t& aChannelId,
+                                    const nsCString& aMessage,
+                                      const ClonedMessageData& aData,
+                                      AsyncMessageIPDLResolver&& aResolve)
+{
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+    "ContentParent::RecvAsyncMessageIPDL", OTHER, aMessage);
+
+  if (mIPDLIPCInterface) {
+    nsTArray<StructuredCloneData> returnData;
+    auto res = mIPDLIPCInterface->RecvMessage(aProtocolName, aChannelId, aMessage, aData, &returnData);
+    aResolve(std::move(returnData));
+    return res;
+  }
+
+  return IPC_OK();
 }
 
 static int32_t
@@ -6055,4 +6094,11 @@ ContentParent::RecvDetachBrowsingContext(const BrowsingContextId& aContextId,
   }
 
   return IPC_OK();
+}
+
+void
+ContentParent::RegisterIPDLIPCInterface(
+  mozilla::ipdl::ipc::PContentParentIPCInterface* aIPDLIPCInterface)
+{
+  mIPDLIPCInterface = aIPDLIPCInterface;
 }

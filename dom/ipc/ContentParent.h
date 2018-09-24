@@ -84,6 +84,12 @@ class ProtocolFuzzerHelper;
 #endif
 } // namespace ipc
 
+namespace ipdl {
+namespace ipc {
+class PContentParentIPCInterface;
+} // namespace ipc
+} // namespace ipdl
+
 namespace jsipc {
 class PJavaScriptParent;
 } // namespace jsipc
@@ -1073,6 +1079,13 @@ private:
                                                   const IPC::Principal& aPrincipal,
                                                   nsTArray<StructuredCloneData>* aRetvals) override;
 
+  // See PContent.ipdl for doc.
+  virtual mozilla::ipc::IPCResult RecvSyncMessageIPDL(const nsCString& aProtocol,
+                                                      const uint32_t& aChannelId,
+                                                      const nsCString& aMessage,
+                                                         const ClonedMessageData& aData,
+                                                         nsTArray<StructuredCloneData>* returnData) override;
+
   virtual mozilla::ipc::IPCResult RecvRpcMessage(const nsString& aMsg,
                                                  const ClonedMessageData& aData,
                                                  InfallibleTArray<CpowEntry>&& aCpows,
@@ -1083,6 +1096,13 @@ private:
                                                    InfallibleTArray<CpowEntry>&& aCpows,
                                                    const IPC::Principal& aPrincipal,
                                                    const ClonedMessageData& aData) override;
+
+  // See PContent.ipdl for doc.
+  virtual mozilla::ipc::IPCResult RecvAsyncMessageIPDL(const nsCString& aProtocol,
+                                                        const uint32_t& aChannelId,
+                                                        const nsCString& aMessage,
+                                                         const ClonedMessageData& aData,
+                                                         AsyncMessageIPDLResolver&& aResolve) override;
 
   virtual mozilla::ipc::IPCResult RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
                                                              const bool& aHighAccuracy) override;
@@ -1271,6 +1291,10 @@ public:
 
   bool CanCommunicateWith(ContentParentId aOtherProcess);
 
+  void RegisterIPDLIPCInterface(
+    mozilla::ipdl::ipc::PContentParentIPCInterface* aIPDLIPCInterface);
+
+
   nsresult SaveRecording(nsIFile* aFile, bool* aRetval);
 
   bool IsRecordingOrReplaying() const {
@@ -1382,6 +1406,8 @@ private:
   nsTArray<nsCString> mBlobURLs;
 
   UniquePtr<mozilla::ipc::CrashReporterHost> mCrashReporter;
+
+  mozilla::ipdl::ipc::PContentParentIPCInterface* mIPDLIPCInterface;
 
   static uint64_t sNextTabParentId;
   static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;

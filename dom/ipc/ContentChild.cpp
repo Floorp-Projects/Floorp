@@ -62,6 +62,7 @@
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/TestShellChild.h"
+#include "mozilla/ipdl/ipc/PContentChildIPCInterface.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/jsipc/PJavaScript.h"
 #include "mozilla/layers/APZChild.h"
@@ -2628,6 +2629,26 @@ ContentChild::RecvUpdateSharedData(const FileDescriptor& aMapFile,
 }
 
 mozilla::ipc::IPCResult
+ContentChild::RecvAsyncMessageIPDL(const nsCString& aProtocolName,
+                                   const uint32_t& aChannelId,
+                                    const nsCString& aMessage,
+                                     const ClonedMessageData& aData,
+                                     AsyncMessageIPDLResolver&& aResolve)
+{
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
+    "ContentChild::RecvAsyncMessageIPDL", OTHER, aMessage);
+
+  if (mIPDLIPCInterface) {
+    nsTArray<StructuredCloneData> returnData;
+    auto res = mIPDLIPCInterface->RecvMessage(aProtocolName, aChannelId, aMessage, aData, &returnData);
+    aResolve(std::move(returnData));
+    return res;
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentChild::RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition)
 {
   RefPtr<nsGeolocationService> gs =
@@ -3898,6 +3919,13 @@ ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
     default:
       return nullptr;
   }
+}
+
+void
+ContentChild::RegisterIPDLIPCInterface(
+  mozilla::ipdl::ipc::PContentChildIPCInterface* aIPDLIPCInterface)
+{
+  mIPDLIPCInterface = aIPDLIPCInterface;
 }
 
 #ifdef NIGHTLY_BUILD
