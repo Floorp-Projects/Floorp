@@ -10,6 +10,8 @@ user_pref("extensions.autoDisableScopes", 10);
 user_pref("extensions.update.notifyUser", false);
 // Enable test mode to run multiple tests in parallel
 user_pref("focusmanager.testmode", true);
+// Enable fake media streams for getUserMedia
+user_pref("media.navigator.streams.fake", true);
 // Enable pre-fetching of resources
 user_pref("network.preload", true);
 // Enable direct connection
