@@ -83,12 +83,6 @@ void CloseProcessHandle(ProcessHandle process);
 ProcessId GetProcId(ProcessHandle process);
 
 #if defined(OS_POSIX)
-// Sets all file descriptors to close on exec except for stdin, stdout
-// and stderr.
-// TODO(agl): remove this function
-// WARNING: do not use. It's inherently race-prone in the face of
-// multi-threading.
-void SetAllFDsToCloseOnExec();
 // Close all file descriptors, except for std{in,out,err} and those
 // for which the given function returns true.  Only call this function
 // in a child process where you know that there aren't any other

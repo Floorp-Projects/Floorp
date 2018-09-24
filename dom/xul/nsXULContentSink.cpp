@@ -17,7 +17,6 @@
 #include "jsfriendapi.h"
 
 #include "nsCOMPtr.h"
-#include "nsForwardReference.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIContentSink.h"
 #include "nsIDocument.h"

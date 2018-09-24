@@ -70,7 +70,7 @@ def handle_keyed_by(config, jobs):
         for cfg in job["run"]["config"]:
             job["run"]["command"].extend(["--config", cfg])
 
-        if config.kind == "bouncer-check":
+        if config.kind == "cron-bouncer-check":
             job["run"]["command"].extend([
                 "--product-field={}".format(job["run"]["product-field"]),
                 "--products-url={}".format(job["run"]["products-url"]),
