@@ -4112,7 +4112,7 @@ window._gBrowser = {
   createTooltip(event) {
     event.stopPropagation();
     var tab = document.tooltipNode;
-    if (tab.localName != "tab") {
+    if (!tab || tab.localName != "tab") {
       event.preventDefault();
       return;
     }
