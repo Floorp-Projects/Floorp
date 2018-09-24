@@ -56,12 +56,7 @@ function add_cookie(aDomain) {
  *        True if the cookie should exist, false otherwise.
  */
 function check_cookie_exists(aDomain, aExists) {
-  let cookie = {
-    host: aDomain,
-    name: COOKIE_NAME,
-    path: COOKIE_PATH,
-  };
-  Assert.equal(aExists, Services.cookies.cookieExists(cookie));
+  Assert.equal(aExists, Services.cookies.cookieExists(aDomain, COOKIE_PATH, COOKIE_NAME, {}));
 }
 
 /**

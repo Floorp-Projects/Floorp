@@ -147,23 +147,28 @@ interface nsICookieManager : nsISupports
   /**
    * Find whether a given cookie already exists.
    *
-   * @param aCookie
-   *        the cookie to look for
+   * @param aHost
+   *        the cookie's host to look for
+   * @param aPath
+   *        the cookie's path to look for
+   * @param aName
+   *        the cookie's name to look for
    * @param aOriginAttributes
-   *        nsICookie2 contains an originAttributes but if nsICookie2 is
-   *        implemented in JS, we can't retrieve its originAttributes because
-   *        the getter is marked [implicit_jscontext]. This optional parameter
-   *        is a workaround.
+   *        the cookie's originAttributes to look for
    *
-   * @return true if a cookie was found which matches the host, path, and name
-   *         fields of aCookie
+   * @return true if a cookie was found which matches the host, path, name and
+   *         originAttributes fields of aCookie
    */
-  [implicit_jscontext, optional_argc]
-  boolean cookieExists(in nsICookie2 aCookie,
-                       [optional] in jsval aOriginAttributes);
+  [implicit_jscontext]
+  boolean cookieExists(in AUTF8String aHost,
+                       in AUTF8String aPath,
+                       in ACString    aName,
+                       in jsval aOriginAttributes);
 
   [notxpcom]
-  nsresult cookieExistsNative(in nsICookie2 aCookie,
+  nsresult cookieExistsNative(in AUTF8String aHost,
+                              in AUTF8String aPath,
+                              in ACString    aName,
                               in OriginAttributesPtr aOriginAttributes,
                               out boolean aExists);
 
