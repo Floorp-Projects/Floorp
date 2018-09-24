@@ -2570,6 +2570,25 @@ js::NativeGetPropertyNoGC(JSContext* cx, NativeObject* obj, const Value& receive
 }
 
 bool
+js::NativeGetElement(JSContext* cx, HandleNativeObject obj, HandleValue receiver,
+                     int32_t index, MutableHandleValue vp)
+{
+    RootedId id(cx);
+
+    if (MOZ_LIKELY(index >=0)) {
+        if (!IndexToId(cx, index, &id)) {
+            return false;
+        }
+    } else {
+        RootedValue indexVal(cx, Int32Value(index));
+        if (!ValueToId<CanGC>(cx, indexVal, &id)) {
+            return false;
+        }
+    }
+    return NativeGetProperty(cx, obj, receiver, id, vp);
+}
+
+bool
 js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg, HandleId id, MutableHandleValue vp)
 {
     // Manually unwrap 'with' environments to prevent looking up @@unscopables
