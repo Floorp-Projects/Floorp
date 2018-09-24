@@ -773,12 +773,6 @@ CustomElementRegistry::Define(JSContext* aCx,
   // before we access it.
   JS::Rooted<JSObject*> constructor(aCx, aFunctionConstructor.CallableOrNull());
 
-  /**
-   * 1. If IsConstructor(constructor) is false, then throw a TypeError and abort
-   *    these steps.
-   */
-  // For now, all wrappers are constructable if they are callable. So we need to
-  // unwrap constructor to check it is really constructable.
   JS::Rooted<JSObject*> constructorUnwrapped(aCx, js::CheckedUnwrap(constructor));
   if (!constructorUnwrapped) {
     // If the caller's compartment does not have permission to access the
@@ -787,6 +781,10 @@ CustomElementRegistry::Define(JSContext* aCx,
     return;
   }
 
+  /**
+   * 1. If IsConstructor(constructor) is false, then throw a TypeError and abort
+   *    these steps.
+   */
   if (!JS::IsConstructor(constructorUnwrapped)) {
     aRv.ThrowTypeError<MSG_NOT_CONSTRUCTOR>(NS_LITERAL_STRING("Argument 2 of CustomElementRegistry.define"));
     return;
