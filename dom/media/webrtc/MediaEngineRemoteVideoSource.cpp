@@ -187,8 +187,12 @@ MediaEngineRemoteVideoSource::Allocate(
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(mInitDone);
   MOZ_ASSERT(mState == kReleased);
+
+  if (!mInitDone) {
+    LOG(("Init not done"));
+    return NS_ERROR_FAILURE;
+  }
 
   NormalizedConstraints constraints(aConstraints);
   webrtc::CaptureCapability newCapability;
@@ -292,8 +296,8 @@ MediaEngineRemoteVideoSource::Start(const RefPtr<const AllocationHandle>& aHandl
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(mInitDone);
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+  MOZ_ASSERT(mInitDone);
   MOZ_ASSERT(mStream);
   MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 

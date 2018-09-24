@@ -428,13 +428,26 @@ class JSTerm extends Component {
    * The JavaScript evaluation response handler.
    *
    * @private
-   * @param object response
+   * @param {Object} response
    *        The message received from the server.
+   * @param {Object} options
+   *        On options object that can contain the following properties:
+   *          - {Object} mapped: An object indicating if the input was modified by the
+   *                             parser worker.
    */
-  async _executeResultCallback(response) {
+  async _executeResultCallback(response, options = {}) {
     if (!this.hud) {
       return null;
     }
+
+    // If the expression was a top-level await that the parser-worker transformed, we
+    // don't want to show the result returned by the server as it's a Promise that was
+    // created on our end by wrapping the input in an instantly called async function
+    // (e.g. `await 42` -> `(async () => {return await 42})()`).
+    if (options && options.mapped && options.mapped.await) {
+      return null;
+    }
+
     if (response.error) {
       console.error("Evaluation error " + response.error + ": " + response.message);
       return null;
@@ -546,18 +559,28 @@ class JSTerm extends Component {
     });
     this.hud.proxy.dispatchMessageAdd(cmdMessage);
 
+    let mappedExpressionRes = null;
+    try {
+      mappedExpressionRes = await this.hud.owner.getMappedExpression(executeString);
+    } catch (e) {
+      console.warn("Error when calling getMappedExpression", e);
+    }
+
+    executeString = mappedExpressionRes ? mappedExpressionRes.expression : executeString;
+
     const options = {
       frame: this.SELECTED_FRAME,
       selectedNodeActor,
     };
 
-    const mappedString = await this.hud.owner.getMappedExpression(executeString);
     // Even if requestEvaluation rejects (because of webConsoleClient.evaluateJSAsync),
     // we still need to pass the error response to executeResultCallback.
-    const onEvaluated = this.requestEvaluation(mappedString, options)
+    const onEvaluated = this.requestEvaluation(executeString, options)
       .then(res => res, res => res);
     const response = await onEvaluated;
-    return this._executeResultCallback(response);
+    return this._executeResultCallback(response, {
+      mapped: mappedExpressionRes ? mappedExpressionRes.mapped : null
+    });
   }
 
   /**
