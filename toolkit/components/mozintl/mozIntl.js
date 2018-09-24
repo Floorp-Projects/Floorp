@@ -199,19 +199,44 @@ class MozIntl {
     });
   }
 
+  getRegions(locales) {
+    if (locales !== undefined) {
+      throw new Error("First argument support not implemented yet");
+    }
+
+    if (!this._cache.hasOwnProperty("regionBundle")) {
+      const regionBundle = Services.strings.createBundle(
+        "chrome://global/locale/regionNames.properties");
+      this._cache.regionBundle = regionBundle;
+    }
+
+    if (!this._cache.hasOwnProperty("regionMap")) {
+      this._cache.regionMap = new Map([...this._cache.regionBundle.getSimpleEnumeration()].map(prop => {
+        prop.QueryInterface(Ci.nsIPropertyElement);
+        return [prop.key.toUpperCase(), prop.value];
+      }));
+    }
+
+    return this._cache.regionMap;
+  }
+
   getRegionDisplayNames(locales, regionCodes) {
     if (locales !== undefined) {
       throw new Error("First argument support not implemented yet");
     }
-    const regionBundle = Services.strings.createBundle(
-          "chrome://global/locale/regionNames.properties");
+
+    if (!this._cache.hasOwnProperty("regionBundle")) {
+      const regionBundle = Services.strings.createBundle(
+        "chrome://global/locale/regionNames.properties");
+      this._cache.regionBundle = regionBundle;
+    }
 
     return regionCodes.map(regionCode => {
       if (typeof regionCode !== "string") {
         throw new TypeError("All region codes must be strings.");
       }
       try {
-        return regionBundle.GetStringFromName(regionCode.toLowerCase());
+        return this._cache.regionBundle.GetStringFromName(regionCode.toLowerCase());
       } catch (e) {
         return regionCode.toUpperCase(); // Fall back to raw region subtag.
       }

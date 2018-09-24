@@ -5,6 +5,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 
 const gLangDN = Services.intl.getLanguageDisplayNames.bind(Services.intl, undefined);
+const gReg = Services.intl.getRegions.bind(Services.intl, undefined);
 const gRegDN = Services.intl.getRegionDisplayNames.bind(Services.intl, undefined);
 const gLocDN = Services.intl.getLocaleDisplayNames.bind(Services.intl, undefined);
 
@@ -79,5 +80,12 @@ add_test(function test_invalid_regions() {
   Assert.throws(() => gRegDN([2]), /All region codes must be strings/);
   Assert.throws(() => gRegDN([{}]), /All region codes must be strings/);
   Assert.throws(() => gRegDN([true]), /All region codes must be strings/);
+  run_next_test();
+});
+
+add_test(function test_region() {
+  let regions = gReg(undefined);
+  equal(regions[Symbol.toStringTag], "Map", "Check type is Map");
+  equal(regions.get("US"), "United States", "Check US name");
   run_next_test();
 });

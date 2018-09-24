@@ -220,6 +220,7 @@ class AddressResult extends ProfileAutoCompleteResult {
     const secondaryLabelOrder = [
       "street-address",  // Street address
       "name",            // Full name
+      "address-level3",  // Townland / Neighborhood / Village
       "address-level2",  // City/Town
       "organization",    // Company or organization name
       "address-level1",  // Province/State (Standardized code if possible)

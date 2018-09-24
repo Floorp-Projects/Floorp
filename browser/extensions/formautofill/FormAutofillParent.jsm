@@ -54,6 +54,7 @@ const {
 } = FormAutofill;
 
 const {
+  ADDRESSES_COLLECTION_NAME,
   CREDITCARDS_COLLECTION_NAME,
 } = FormAutofillUtils;
 
@@ -345,9 +346,17 @@ FormAutofillParent.prototype = {
         fieldValue = record["cc-number-decrypted"];
       }
 
-      if (!lcSearchString || String(fieldValue).toLowerCase().startsWith(lcSearchString)) {
-        records.push(record);
+      if (collectionName == ADDRESSES_COLLECTION_NAME && record.country
+          && !FormAutofill.supportedCountries.includes(record.country)) {
+        // Address autofill isn't supported for the record's country so we don't
+        // want to attempt to potentially incorrectly fill the address fields.
+        continue;
       }
+
+      if (lcSearchString && !String(fieldValue).toLowerCase().startsWith(lcSearchString)) {
+        continue;
+      }
+      records.push(record);
     }
 
     target.sendAsyncMessage("FormAutofill:Records", records);

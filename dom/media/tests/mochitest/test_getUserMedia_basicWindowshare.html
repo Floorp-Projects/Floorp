@@ -15,11 +15,6 @@
    * cycle for an screenshare LocalMediaStream on a video HTMLMediaElement.
    */
   runTest(function () {
-    const isWinXP = navigator.userAgent.includes("Windows NT 5.1");
-    if (IsMacOSX10_6orOlder() || isWinXP) {
-        ok(true, "Screensharing disabled for OSX10.6 and WinXP");
-        return;
-    }
     var testVideo = createMediaElement('video', 'testVideo');
     var constraints = {
       video: {
