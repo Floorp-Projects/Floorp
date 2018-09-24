@@ -39,7 +39,7 @@ function run_test()
 
 	var equal;
 	try {
-	    secman.checkSameOriginURI(uri1, uri2, false, false);
+	    secman.checkSameOriginURI(uri1, uri2, false);
 	    equal = true;
 	} catch (e) {
 	    equal = false

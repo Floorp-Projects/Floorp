@@ -73,9 +73,7 @@ public:
     // If the resulting window is not same origin, then resolve immediately
     // without returning any information about the new Client.  This is
     // step 6.10 in the Client.navigate(url) spec.
-    // todo: if you intend to update CheckSameOriginURI to log the error to the
-    // console you also need to update the 'aFromPrivateWindow' argument.
-    rv = ssm->CheckSameOriginURI(mBaseURL, channelURL, false, false);
+    rv = ssm->CheckSameOriginURI(mBaseURL, channelURL, false);
     if (NS_FAILED(rv)) {
       mPromise->Resolve(NS_OK, __func__);
       return NS_OK;

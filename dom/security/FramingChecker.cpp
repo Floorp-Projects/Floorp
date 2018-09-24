@@ -107,9 +107,7 @@ FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
 
       if (checkSameOrigin) {
         topDoc->NodePrincipal()->GetURI(getter_AddRefs(topUri));
-        bool isPrivateWin =
-          topDoc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
-        rv = ssm->CheckSameOriginURI(uri, topUri, true, isPrivateWin);
+        rv = ssm->CheckSameOriginURI(uri, topUri, true);
 
         // one of the ancestors is not same origin as this document
         if (NS_FAILED(rv)) {
@@ -153,9 +151,8 @@ FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
     if (NS_FAILED(rv)) {
       return false;
     }
-    bool isPrivateWin =
-      topDoc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
-    rv = ssm->CheckSameOriginURI(uri, topUri, true, isPrivateWin);
+
+    rv = ssm->CheckSameOriginURI(uri, topUri, true);
     if (NS_FAILED(rv)) {
       ReportXFOViolation(curDocShellItem, uri, eALLOWFROM);
       return false;

@@ -73,10 +73,8 @@ public:
     // Check same origin.
     nsCOMPtr<nsIScriptSecurityManager> securityManager =
       nsContentUtils::GetSecurityManager();
-    bool isPrivateWin =
-      doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
     nsresult rv = securityManager->CheckSameOriginURI(doc->GetOriginalURI(),
-                                                      mBaseURI, false, isPrivateWin);
+                                                      mBaseURI, false);
     if (NS_FAILED(rv)) {
       mPromise->Resolve(NS_OK, __func__);
       mPromise = nullptr;
