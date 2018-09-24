@@ -16,6 +16,7 @@ XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 XPIDL_SOURCES += [
     'nsINativeAppSupport.idl',
+    'nsIXREDirProvider.idl',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
