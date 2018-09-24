@@ -7,6 +7,7 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const { getStr } = require("../utils/l10n");
@@ -86,4 +87,10 @@ class UserAgentInput extends PureComponent {
   }
 }
 
-module.exports = UserAgentInput;
+const mapStateToProps = state => {
+  return {
+    userAgent: state.ui.userAgent,
+  };
+};
+
+module.exports = connect(mapStateToProps)(UserAgentInput);

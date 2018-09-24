@@ -25,12 +25,13 @@ const {
   updateDeviceModal,
   updatePreferredDevices,
 } = require("../actions/devices");
-const { changeReloadCondition } = require("../actions/reload-conditions");
 const { takeScreenshot } = require("../actions/screenshot");
 const {
   changeUserAgent,
-  toggleTouchSimulation,
   toggleLeftAlignment,
+  toggleReloadOnTouchSimulation,
+  toggleReloadOnUserAgent,
+  toggleTouchSimulation,
   toggleUserAgentInput,
 } = require("../actions/ui");
 const {
@@ -49,7 +50,6 @@ class App extends PureComponent {
       devices: PropTypes.shape(Types.devices).isRequired,
       dispatch: PropTypes.func.isRequired,
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
-      reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
     };
@@ -63,7 +63,6 @@ class App extends PureComponent {
     this.onChangeDevice = this.onChangeDevice.bind(this);
     this.onChangeNetworkThrottling = this.onChangeNetworkThrottling.bind(this);
     this.onChangePixelRatio = this.onChangePixelRatio.bind(this);
-    this.onChangeReloadCondition = this.onChangeReloadCondition.bind(this);
     this.onChangeTouchSimulation = this.onChangeTouchSimulation.bind(this);
     this.onChangeUserAgent = this.onChangeUserAgent.bind(this);
     this.onContentResize = this.onContentResize.bind(this);
@@ -75,6 +74,9 @@ class App extends PureComponent {
     this.onRotateViewport = this.onRotateViewport.bind(this);
     this.onScreenshot = this.onScreenshot.bind(this);
     this.onToggleLeftAlignment = this.onToggleLeftAlignment.bind(this);
+    this.onToggleReloadOnTouchSimulation =
+      this.onToggleReloadOnTouchSimulation.bind(this);
+    this.onToggleReloadOnUserAgent = this.onToggleReloadOnUserAgent.bind(this);
     this.onToggleUserAgentInput = this.onToggleUserAgentInput.bind(this);
     this.onUpdateDeviceDisplayed = this.onUpdateDeviceDisplayed.bind(this);
     this.onUpdateDeviceModal = this.onUpdateDeviceModal.bind(this);
@@ -117,10 +119,6 @@ class App extends PureComponent {
       pixelRatio,
     }, "*");
     this.props.dispatch(changePixelRatio(0, pixelRatio));
-  }
-
-  onChangeReloadCondition(id, value) {
-    this.props.dispatch(changeReloadCondition(id, value));
   }
 
   onChangeTouchSimulation(enabled) {
@@ -192,6 +190,14 @@ class App extends PureComponent {
     this.props.dispatch(toggleLeftAlignment());
   }
 
+  onToggleReloadOnTouchSimulation() {
+    this.props.dispatch(toggleReloadOnTouchSimulation());
+  }
+
+  onToggleReloadOnUserAgent() {
+    this.props.dispatch(toggleReloadOnUserAgent());
+  }
+
   onToggleUserAgentInput() {
     this.props.dispatch(toggleUserAgentInput());
   }
@@ -208,7 +214,6 @@ class App extends PureComponent {
     const {
       devices,
       networkThrottling,
-      reloadConditions,
       screenshot,
       viewports,
     } = this.props;
@@ -219,7 +224,6 @@ class App extends PureComponent {
       onChangeDevice,
       onChangeNetworkThrottling,
       onChangePixelRatio,
-      onChangeReloadCondition,
       onChangeTouchSimulation,
       onChangeUserAgent,
       onContentResize,
@@ -231,6 +235,8 @@ class App extends PureComponent {
       onRotateViewport,
       onScreenshot,
       onToggleLeftAlignment,
+      onToggleReloadOnTouchSimulation,
+      onToggleReloadOnUserAgent,
       onToggleUserAgentInput,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModal,
@@ -253,7 +259,6 @@ class App extends PureComponent {
         Toolbar({
           devices,
           networkThrottling,
-          reloadConditions,
           screenshot,
           selectedDevice,
           selectedPixelRatio,
@@ -261,7 +266,6 @@ class App extends PureComponent {
           onChangeDevice,
           onChangeNetworkThrottling,
           onChangePixelRatio,
-          onChangeReloadCondition,
           onChangeTouchSimulation,
           onChangeUserAgent,
           onExit,
@@ -270,6 +274,8 @@ class App extends PureComponent {
           onRotateViewport,
           onScreenshot,
           onToggleLeftAlignment,
+          onToggleReloadOnTouchSimulation,
+          onToggleReloadOnUserAgent,
           onToggleUserAgentInput,
           onUpdateDeviceModal,
         }),
