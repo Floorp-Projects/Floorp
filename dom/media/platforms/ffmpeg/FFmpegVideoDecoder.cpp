@@ -246,7 +246,9 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       (!mImageAllocator || (mImageAllocator->GetCompositorBackendType()
                             != layers::LayersBackend::LAYERS_BASIC &&
                             mImageAllocator->GetCompositorBackendType()
-                            != layers::LayersBackend::LAYERS_OPENGL))) {
+                            != layers::LayersBackend::LAYERS_OPENGL &&
+                            mImageAllocator->GetCompositorBackendType()
+                            != layers::LayersBackend::LAYERS_D3D11))) {
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("unsupported format type (hdr)"));
   }
