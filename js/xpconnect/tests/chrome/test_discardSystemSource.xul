@@ -28,11 +28,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990353
   function frameLoaded() {
     switch (++gLoadCount) {
       case 1:
-        ok(/sourceless/.test(window[0].canary.toSource()), "System function should be sourceless: " + window[0].canary.toSource());
-        ok(/sourceless/.test(window[0].onload.toSource()), "System event handler should be sourceless: " + window[0].onload.toSource());
+        ok(/native code/.test(window[0].canary.toSource()), "System function should be sourceless: " + window[0].canary.toSource());
+        ok(/native code/.test(window[0].onload.toSource()), "System event handler should be sourceless: " + window[0].onload.toSource());
         var sb = new Cu.Sandbox('http://www.example.com', { discardSource: true });
         Cu.evalInSandbox('function canary() { var someBitOfSource = 42; }', sb);
-        ok(/sourceless/.test(sb.canary.toSource()), "Function from sandbox with explicit discarding should be sourceless");
+        ok(/native code/.test(sb.canary.toSource()), "Function from sandbox with explicit discarding should be sourceless");
         try {
           window[0].throwSomething();
           ok(false, "should have thrown");
@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990353
       ok(/someBitOfSource/.test(evt.data), "Non-chrome worker should have source: " + evt.data);
       var chromeWorker = new Worker('worker_discardSystemSource.js');
       chromeWorker.onmessage = function(evt) {
-        ok(/sourceless/.test(evt.data), "Chrome worker should not have source: " + evt.data);
+        ok(/native code/.test(evt.data), "Chrome worker should not have source: " + evt.data);
         SimpleTest.finish();
       }
     }
