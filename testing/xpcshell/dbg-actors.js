@@ -10,7 +10,7 @@ const { DebuggerServer } = require("devtools/server/main");
 const { RootActor } = require("devtools/server/actors/root");
 const { BrowserTabList } = require("devtools/server/actors/webbrowser");
 const Services = require("Services");
-const { ActorRegistry } = require("devtools/server/actor-registry");
+const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 
 /**
  * xpcshell-test (XPCST) specific actors.
