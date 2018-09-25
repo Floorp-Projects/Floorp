@@ -33,6 +33,7 @@ const PREF_SYS_ADDON_UPDATE_ENABLED   = "extensions.systemAddon.update.enabled";
 const PREF_MIN_WEBEXT_PLATFORM_VERSION = "extensions.webExtensionsMinPlatformVersion";
 const PREF_WEBAPI_TESTING             = "extensions.webapi.testing";
 const PREF_WEBEXT_PERM_PROMPTS        = "extensions.webextPermissionPrompts";
+const PREF_XPINSTALL_DIALOG           = "extensions.xpinstall.confirm.dialog";
 
 const UPDATE_REQUEST_VERSION          = 2;
 
@@ -58,8 +59,6 @@ const WEBAPI_TEST_INSTALL_HOSTS = [
   "testpilot.stage.mozaws.net", "testpilot.dev.mozaws.net",
   "example.com",
 ];
-
-const URI_XPINSTALL_DIALOG = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -2604,7 +2603,8 @@ var AddonManagerInternal = {
           reject = () => {
             cancelled = true;
           };
-          Services.ww.openWindow(parentWindow, URI_XPINSTALL_DIALOG,
+          Services.ww.openWindow(parentWindow,
+                                 Services.prefs.getStringPref(PREF_XPINSTALL_DIALOG),
                                  null, "chrome,modal,centerscreen", args);
           if (cancelled) {
             reallyReject();
