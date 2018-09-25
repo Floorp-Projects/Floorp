@@ -29,6 +29,7 @@ class SourceSurfaceSharedDataWrapper;
 namespace layers {
 
 class SharedSurfacesChild;
+class SharedSurfacesMemoryReport;
 
 class SharedSurfacesParent final
 {
@@ -44,7 +45,8 @@ public:
   static already_AddRefed<gfx::DataSourceSurface>
   Acquire(const wr::ExternalImageId& aId);
 
-  static bool Release(const wr::ExternalImageId& aId);
+  static bool Release(const wr::ExternalImageId& aId,
+                      bool aForCreator = false);
 
   static void Add(const wr::ExternalImageId& aId,
                   const SurfaceDescriptorShared& aDesc,
@@ -53,6 +55,11 @@ public:
   static void Remove(const wr::ExternalImageId& aId);
 
   static void DestroyProcess(base::ProcessId aPid);
+
+  static void AccumulateMemoryReport(base::ProcessId aPid,
+                                     SharedSurfacesMemoryReport& aReport);
+
+  static bool AccumulateMemoryReport(SharedSurfacesMemoryReport& aReport);
 
   ~SharedSurfacesParent();
 

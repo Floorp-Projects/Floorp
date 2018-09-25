@@ -18,6 +18,7 @@ using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasi
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MemoryReport from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::layers::SharedSurfacesMemoryReport from "mozilla/layers/SharedSurfacesMemoryReport.h";
 
 namespace mozilla {
 namespace layers {
@@ -76,6 +77,7 @@ parent:
 
   async AddSharedSurface(ExternalImageId aId, SurfaceDescriptorShared aDesc);
   async RemoveSharedSurface(ExternalImageId aId);
+  async ReportSharedSurfacesMemory() returns (SharedSurfacesMemoryReport aReport);
 
   async NotifyMemoryPressure();
 

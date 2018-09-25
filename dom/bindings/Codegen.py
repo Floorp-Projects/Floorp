@@ -3496,7 +3496,7 @@ class CGConstructorEnabled(CGAbstractMethod):
         return body.define()
 
 
-def CreateBindingJSObject(descriptor, properties):
+def CreateBindingJSObject(descriptor, properties, failureCode = ""):
     objDecl = "BindingJSObjectCreator<%s> creator(aCx);\n" % descriptor.nativeType
 
     # We don't always need to root obj, but there are a variety
@@ -3521,12 +3521,14 @@ def CreateBindingJSObject(descriptor, properties):
             """
             creator.CreateObject(aCx, sClass.ToJSClass(), proto, aObject, aReflector);
             """)
-    return objDecl + create + dedent(
+    return objDecl + create + fill(
         """
         if (!aReflector) {
+          $*{failureCode}
           return false;
         }
-        """)
+        """,
+        failureCode=failureCode)
 
 
 def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode,
@@ -3696,14 +3698,15 @@ def SetImmutablePrototype(descriptor, failureCode):
         failureCode=failureCode)
 
 
-def DeclareProto():
+def DeclareProto(noProto = "", wrapFail = ""):
     """
     Declare the canonicalProto and proto we have for our wrapping operation.
     """
-    return dedent(
+    return fill(
         """
         JS::Handle<JSObject*> canonicalProto = GetProtoObjectHandle(aCx);
         if (!canonicalProto) {
+          $*{noProto}
           return false;
         }
         JS::Rooted<JSObject*> proto(aCx);
@@ -3714,13 +3717,16 @@ def DeclareProto():
           // to wrap the proto here.
           if (js::GetContextCompartment(aCx) != js::GetObjectCompartment(proto)) {
             if (!JS_WrapObject(aCx, &proto)) {
+              $*{wrapFail}
               return false;
             }
           }
         } else {
           proto = canonicalProto;
         }
-        """)
+        """,
+        noProto=noProto,
+        wrapFail=wrapFail)
 
 
 class CGWrapWithCacheMethod(CGAbstractMethod):
@@ -3747,6 +3753,47 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             return false;
             """)
 
+        isDocument = False
+        iface = self.descriptor.interface
+        while iface:
+            if iface.identifier.name == "Document":
+                isDocument = True
+                break
+            iface = iface.parent
+
+        if isDocument:
+            noGlobal = fill(
+                """
+                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} not having a global");
+                """,
+                name = self.descriptor.name)
+            noProto = fill(
+                """
+                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} not having a proto");
+                """,
+                name = self.descriptor.name)
+            protoWrapFail = fill(
+                """
+                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} failing to wrap a custom proto");
+                """,
+                name = self.descriptor.name)
+            createObjectFailed = fill(
+                """
+                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} failing to CreateObject/CreateProxyObject");
+                """,
+                name = self.descriptor.name)
+            expandoAllocFail = fill(
+                """
+                MOZ_CRASH("Looks like bug 1488480/1405521, with ${name} failing to EnsureExpandoObject or JS_InitializePropertiesFromCompatibleNativeObject");
+                """,
+                name = self.descriptor.name)
+        else:
+            noGlobal = ""
+            noProto = ""
+            protoWrapFail = ""
+            createObjectFailed = ""
+            expandoAllocFail = ""
+
         return fill(
             """
             static_assert(!IsBaseOf<NonRefcountedDOMObject, ${nativeType}>::value,
@@ -3762,6 +3809,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             JS::Rooted<JSObject*> global(aCx, FindAssociatedGlobal(aCx, aObject->GetParentObject()));
             if (!global) {
+              $*{noGlobal}
               return false;
             }
             MOZ_ASSERT(JS_IsGlobalObject(global));
@@ -3802,11 +3850,14 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             return true;
             """,
+            noGlobal=noGlobal,
             nativeType=self.descriptor.nativeType,
             assertInheritance=AssertInheritanceChain(self.descriptor),
-            declareProto=DeclareProto(),
-            createObject=CreateBindingJSObject(self.descriptor, self.properties),
+            declareProto=DeclareProto(noProto, protoWrapFail),
+            createObject=CreateBindingJSObject(self.descriptor, self.properties,
+                                               createObjectFailed),
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor,
+                                                            expandoAllocFail +
                                                             failureCode),
             slots=InitMemberSlots(self.descriptor, failureCode),
             setImmutablePrototype=SetImmutablePrototype(self.descriptor,
@@ -4022,14 +4073,6 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             saveMember = (
                 "JS::Rooted<JS::Value> oldValue(aCx, js::GetReservedSlot(obj, %s));\n" %
                 slotIndex)
-            if self.descriptor.name == "Document" or self.descriptor.name == "Location":
-                maybeCrash = dedent(
-                    """
-                    MOZ_CRASH("Looks like bug 1488480/1405521, with the getter failing");
-                    """)
-            else:
-                maybeCrash = ""
-
             regetMember = fill(
                 """
                 JS::Rooted<JS::Value> temp(aCx);
@@ -4037,14 +4080,12 @@ class CGClearCachedValueMethod(CGAbstractMethod):
                 JSAutoRealm ar(aCx, obj);
                 if (!get_${name}(aCx, obj, aObject, args)) {
                   js::SetReservedSlot(obj, ${slotIndex}, oldValue);
-                  $*{maybeCrash}
                   return false;
                 }
                 return true;
                 """,
                 name=self.member.identifier.name,
-                slotIndex=slotIndex,
-                maybeCrash=maybeCrash)
+                slotIndex=slotIndex)
         else:
             declObj = "JSObject* obj;\n"
             noopRetval = ""
@@ -6698,11 +6739,6 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             # threw an exception.
             failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                       exceptionCode)
-
-            if descriptor.name == "Document" or descriptor.name == "Location":
-                failed = (
-                    'MOZ_CRASH("Looks like bug 1488480/1405521, with getting the reflector failing");\n' +
-                    failed)
         else:
             if descriptor.notflattened:
                 getIID = "&NS_GET_IID(%s), " % descriptor.nativeType
@@ -7858,14 +7894,6 @@ class CGPerSignatureCall(CGThing):
                                               "args.rval().isObject()")
                 postConversionSteps += freezeValue.define()
 
-            if self.descriptor.name == "Window":
-                maybeCrash = dedent(
-                    """
-                    MOZ_CRASH("Looks like bug 1488480/1405521, with the other MaybeWrap failing");
-                    """)
-            else:
-                maybeCrash = ""
-
             # slotStorageSteps are steps that run once we have entered the
             # slotStorage compartment.
             slotStorageSteps= fill(
@@ -7873,13 +7901,11 @@ class CGPerSignatureCall(CGThing):
                 // Make a copy so that we don't do unnecessary wrapping on args.rval().
                 JS::Rooted<JS::Value> storedVal(cx, args.rval());
                 if (!${maybeWrap}(cx, &storedVal)) {
-                  $*{maybeCrash}
                   return false;
                 }
                 js::SetReservedSlot(slotStorage, slotIndex, storedVal);
                 """,
-                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type),
-                maybeCrash=maybeCrash)
+                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type))
 
             checkForXray = mayUseXrayExpandoSlots(self.descriptor, self.idlNode)
 
@@ -7917,14 +7943,6 @@ class CGPerSignatureCall(CGThing):
             else:
                 conversionScope = "slotStorage"
 
-            if self.descriptor.name == "Window":
-                maybeCrash = dedent(
-                    """
-                    MOZ_CRASH("Looks like bug 1488480/1405521, with the third MaybeWrap failing");
-                    """)
-            else:
-                maybeCrash = ""
-
             wrapCode = fill(
                 """
                 {
@@ -7940,18 +7958,13 @@ class CGPerSignatureCall(CGThing):
                   $*{slotStorageSteps}
                 }
                 // And now make sure args.rval() is in the caller realm.
-                if (${maybeWrap}(cx, args.rval())) {
-                  return true;
-                }
-                $*{maybeCrash}
-                return false;
+                return ${maybeWrap}(cx, args.rval());
                 """,
                 conversionScope=conversionScope,
                 wrapCode=wrapCode,
                 postConversionSteps=postConversionSteps,
                 slotStorageSteps=slotStorageSteps,
-                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type),
-                maybeCrash=maybeCrash)
+                maybeWrap=getMaybeWrapValueFuncForType(self.idlNode.type))
         return wrapCode
 
     def define(self):
@@ -8983,14 +8996,6 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                     """,
                     slotIndex=memberReservedSlot(self.attr, self.descriptor))
 
-            if self.descriptor.name == "Window":
-                maybeCrash = dedent(
-                    """
-                    MOZ_CRASH("Looks like bug 1488480/1405521, with cached value wrapping failing");
-                    """)
-            else:
-                maybeCrash = ""
-                
             prefix += fill(
                 """
                 MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(js::GetObjectClass(slotStorage)) > slotIndex);
@@ -9001,17 +9006,12 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                     args.rval().set(cachedVal);
                     // The cached value is in the compartment of slotStorage,
                     // so wrap into the caller compartment as needed.
-                    if (${maybeWrap}(cx, args.rval())) {
-                      return true;
-                    }
-                    $*{maybeCrash}
-                    return false;
+                    return ${maybeWrap}(cx, args.rval());
                   }
                 }
 
                 """,
-                maybeWrap=getMaybeWrapValueFuncForType(self.attr.type),
-                maybeCrash=maybeCrash)
+                maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
         else:
             prefix = ""
 

@@ -4,6 +4,10 @@
 
 #include shared,ellipse
 
+#define DONT_MIX 0
+#define MIX_AA 1
+#define MIX_NO_AA 2
+
 // For edges, the colors are the same. For corners, these
 // are the colors of each edge making up the corner.
 flat varying vec4 vColor0;
@@ -70,6 +74,7 @@ vec2 get_outer_corner_scale(int segment) {
 
 void main(void) {
     int segment = aFlags & 0xff;
+    bool do_aa = ((aFlags >> 24) & 0xf0) != 0;
 
     vec2 outer_scale = get_outer_corner_scale(segment);
     vec2 outer = outer_scale * aRect.zw;
@@ -81,10 +86,10 @@ void main(void) {
         case SEGMENT_TOP_RIGHT:
         case SEGMENT_BOTTOM_RIGHT:
         case SEGMENT_BOTTOM_LEFT:
-            mix_colors = 1;
+            mix_colors = do_aa ? MIX_AA : MIX_NO_AA;
             break;
         default:
-            mix_colors = 0;
+            mix_colors = DONT_MIX;
             break;
     }
 
@@ -104,11 +109,16 @@ void main(void) {
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
     float aa_range = compute_aa_range(vPos);
+    bool do_aa = vMixColors != MIX_NO_AA;
 
     float mix_factor = 0.0;
-    if (vMixColors != 0) {
+    if (vMixColors != DONT_MIX) {
         float d_line = distance_to_line(vColorLine.xy, vColorLine.zw, vPos);
-        mix_factor = distance_aa(aa_range, -d_line);
+        if (do_aa) {
+            mix_factor = distance_aa(aa_range, -d_line);
+        } else {
+            mix_factor = d_line + EPSILON >= 0. ? 1.0 : 0.0;
+        }
     }
 
     // Check if inside corner clip-region
@@ -122,7 +132,7 @@ void main(void) {
         d = max(d_radii_a, -d_radii_b);
     }
 
-    float alpha = distance_aa(aa_range, d);
+    float alpha = do_aa ? distance_aa(aa_range, d) : 1.0;
     vec4 color = mix(vColor0, vColor1, mix_factor);
     oFragColor = color * alpha;
 }

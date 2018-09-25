@@ -40,6 +40,7 @@
 #include "nsProperties.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizeOfState.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;

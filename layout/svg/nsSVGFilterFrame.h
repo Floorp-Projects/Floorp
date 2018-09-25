@@ -58,10 +58,12 @@ public:
 #endif
 
 private:
-  // Parse our xlink:href and set up our nsSVGPaintingProperty if we
-  // reference another filter and we don't have a property. Return
-  // the referenced filter's frame if available, null otherwise.
   friend class nsSVGFilterInstance;
+
+  /**
+   * Parses this frame's href and - if it references another filter - returns
+   * it.  It also makes this frame a rendering observer of the specified ID.
+   */
   nsSVGFilterFrame* GetReferencedFilter();
 
   // Accessors to lookup filter attributes

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { check } = require("devtools/shared/adb/adb-running-checker");
 const { ADBScanner } = require("devtools/shared/adb/adb-scanner");
 const { GetAvailableAddons } = require("devtools/client/webide/modules/addons");
 
@@ -24,7 +23,7 @@ exports.disableUSBRuntimes = disableUSBRuntimes;
 
 async function enableUSBRuntimes() {
   const { adb } = GetAvailableAddons();
-  if (adb.status === "uninstalled" || !(await check())) {
+  if (adb.status !== "installed") {
     console.error("ADB extension is not installed");
     return;
   }
