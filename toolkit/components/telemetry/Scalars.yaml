@@ -1010,6 +1010,22 @@ dom.contentprocess:
     record_in_processes:
       - 'main'
 
+# The following section contains parent process base counters.
+dom.parentprocess:
+  private_window_used:
+    bug_numbers:
+      - 1491047
+    description: >
+      Whether a private browsing window has been used in the session.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - ehsan+telemetry@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.toolbar.eyedropper:
   opened:
     bug_numbers:
