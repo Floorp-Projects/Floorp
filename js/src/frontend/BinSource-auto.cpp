@@ -1848,10 +1848,12 @@ BinASTParser<Tok>::parseSumParameter(const size_t start, const BinKind kind, con
         break;
       case BinKind::BindingIdentifier:
         MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(start, kind, fields));
-        if (!parseContext_->positionalFormalParameterNames().append(result->template as<NameNode>().atom()))
+        if (!parseContext_->positionalFormalParameterNames().append(result->template as<NameNode>().atom())) {
             return raiseOOM();
-        if (parseContext_->isFunctionBox())
+        }
+        if (parseContext_->isFunctionBox()) {
             parseContext_->functionBox()->length++;
+        }
         break;
       case BinKind::BindingWithInitializer:
         MOZ_TRY_VAR(result, parseInterfaceBindingWithInitializer(start, kind, fields));
@@ -3041,10 +3043,12 @@ BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(const size_t st
     // FIXME: The following checks should be performed inside
     // checkPositionalParameterIndices to match the spec's order
     // (bug 1490976).
-    if (index >= positionalParams.get().length())
+    if (index >= positionalParams.get().length()) {
         return raiseError("AssertedPositionalParameterName.length out of range");
-    if (positionalParams.get()[index])
+    }
+    if (positionalParams.get()[index]) {
         return raiseError("AssertedPositionalParameterName has duplicate entry for the same index");
+    }
     positionalParams.get()[index] = name;
     BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool());
     ParseContext::Scope* scope;
@@ -3298,8 +3302,9 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(const size_t start, 
     RootedAtom name(cx_);
     MOZ_TRY_VAR(name, tokenizer_->readAtom());
 
-    if (!IsIdentifier(name))
+    if (!IsIdentifier(name)) {
         return raiseError("Invalid identifier");
+    }
     BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
     BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
     return result;
@@ -3605,8 +3610,9 @@ BinASTParser<Tok>::parseInterfaceBindingIdentifier(const size_t start, const Bin
     RootedAtom name(cx_);
     MOZ_TRY_VAR(name, tokenizer_->readAtom());
 
-    if (!IsIdentifier(name))
+    if (!IsIdentifier(name)) {
         return raiseError("Invalid identifier");
+    }
     BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
     return result;
 }
@@ -3791,8 +3797,9 @@ BinASTParser<Tok>::parseInterfaceBreakStatement(const size_t start, const BinKin
     MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
 
     if (label) {
-        if (!IsIdentifier(label))
+        if (!IsIdentifier(label)) {
             return raiseError("Invalid identifier");
+        }
 
         auto validity = parseContext_->checkBreakStatement(label->asPropertyName());
 
@@ -3855,8 +3862,9 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
         if (!parseContext_->varScope().lookupDeclaredNameForAdd(callee->name())
          && !parseContext_->innermostScope()->lookupDeclaredNameForAdd(callee->name())) {
             // This is a direct call to `eval`.
-            if (!parseContext_->sc()->hasDirectEval())
+            if (!parseContext_->sc()->hasDirectEval()) {
                 return raiseMissingDirectEvalInAssertedScope();
+            }
 
             op = parseContext_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
         }
@@ -4303,8 +4311,9 @@ BinASTParser<Tok>::parseInterfaceContinueStatement(const size_t start, const Bin
     MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
 
     if (label) {
-        if (!IsIdentifier(label))
+        if (!IsIdentifier(label)) {
             return raiseError("ContinueStatement - Label MUST be an identifier");
+        }
 
         auto validity = parseContext_->checkContinueStatement(label ? label->asPropertyName() : nullptr);
         if (validity.isErr()) {
@@ -4361,8 +4370,9 @@ BinASTParser<Tok>::parseInterfaceDataProperty(const size_t start, const BinKind 
 
     BINJS_MOZ_TRY_DECL(expression, parseExpression());
 
-    if (!factory_.isUsableAsObjectPropertyName(name))
+    if (!factory_.isUsableAsObjectPropertyName(name)) {
         return raiseError("DataProperty key kind");
+    }
 
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
     return result;
@@ -5719,8 +5729,9 @@ BinASTParser<Tok>::parseInterfaceIdentifierExpression(const size_t start, const 
     RootedAtom name(cx_);
     MOZ_TRY_VAR(name, tokenizer_->readAtom());
 
-    if (!IsIdentifier(name))
+    if (!IsIdentifier(name)) {
         return raiseError("Invalid identifier");
+    }
     BINJS_TRY(usedNames_.noteUse(cx_, name, parseContext_->scriptId(), parseContext_->innermostScope()->id()));
     BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
     return result;
@@ -5906,8 +5917,9 @@ BinASTParser<Tok>::parseInterfaceLabelledStatement(const size_t start, const Bin
 
     RootedAtom label(cx_);
     MOZ_TRY_VAR(label, tokenizer_->readAtom());
-    if (!IsIdentifier(label))
+    if (!IsIdentifier(label)) {
         return raiseError("Invalid identifier");
+    }
     ParseContext::LabelStatement stmt(parseContext_, label);
     BINJS_MOZ_TRY_DECL(body, parseStatement());
 
@@ -6335,10 +6347,11 @@ BinASTParser<Tok>::parseInterfaceLiteralPropertyName(const size_t start, const B
 
     ParseNode* result;
     uint32_t index;
-    if (value->isIndex(&index))
+    if (value->isIndex(&index)) {
         BINJS_TRY_VAR(result, factory_.newNumber(index, NoDecimal, TokenPos(start, tokenizer_->offset())));
-    else
+    } else {
         BINJS_TRY_VAR(result, factory_.newObjectLiteralPropertyName(value, tokenizer_->pos(start)));
+    }
     return result;
 }
 
@@ -6385,18 +6398,19 @@ BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(const size_t start, con
 
     RegExpFlag reflags = NoFlags;
     for (auto c : flags) {
-        if (c == 'g' && !(reflags & GlobalFlag))
+        if (c == 'g' && !(reflags & GlobalFlag)) {
             reflags = RegExpFlag(reflags | GlobalFlag);
-        else if (c == 'i' && !(reflags & IgnoreCaseFlag))
+        } else if (c == 'i' && !(reflags & IgnoreCaseFlag)) {
             reflags = RegExpFlag(reflags | IgnoreCaseFlag);
-        else if (c == 'm' && !(reflags & MultilineFlag))
+        } else if (c == 'm' && !(reflags & MultilineFlag)) {
             reflags = RegExpFlag(reflags | MultilineFlag);
-        else if (c == 'y' && !(reflags & StickyFlag))
+        } else if (c == 'y' && !(reflags & StickyFlag)) {
             reflags = RegExpFlag(reflags | StickyFlag);
-        else if (c == 'u' && !(reflags & UnicodeFlag))
+        } else if (c == 'u' && !(reflags & UnicodeFlag)) {
             reflags = RegExpFlag(reflags | UnicodeFlag);
-        else
+        } else {
             return raiseError("Invalid regexp flags");
+        }
     }
 
 
@@ -6857,8 +6871,9 @@ BinASTParser<Tok>::parseInterfaceShorthandProperty(const size_t start, const Bin
 
     BINJS_MOZ_TRY_DECL(name, parseIdentifierExpression());
 
-    if (!factory_.isUsableAsObjectPropertyName(name))
+    if (!factory_.isUsableAsObjectPropertyName(name)) {
         BINJS_TRY_VAR(name, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
+    }
 
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, name, AccessorType::None));
     return result;
@@ -7304,8 +7319,9 @@ BinASTParser<Tok>::parseInterfaceThisExpression(const size_t start, const BinKin
     BINJS_TRY(CheckRecursionLimit(cx_));
 MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
-    if (parseContext_->isFunctionBox())
+    if (parseContext_->isFunctionBox()) {
         parseContext_->functionBox()->usesThis = true;
+    }
 
     TokenPos pos = tokenizer_->pos(start);
     ParseNode* thisName(nullptr);
@@ -7524,10 +7540,11 @@ BinASTParser<Tok>::parseInterfaceUnaryExpression(const size_t start, const BinKi
         pnk = ParseNodeKind::BitNot;
         break;
       case UnaryOperator::Typeof: {
-        if (operand->isKind(ParseNodeKind::Name))
+        if (operand->isKind(ParseNodeKind::Name)) {
             pnk = ParseNodeKind::TypeOfName;
-        else
+        } else {
             pnk = ParseNodeKind::TypeOfExpr;
+        }
         break;
       }
       case UnaryOperator::Void:
@@ -7656,8 +7673,9 @@ BinASTParser<Tok>::parseInterfaceVariableDeclaration(const size_t start, const B
     BINJS_MOZ_TRY_DECL(declarators, parseListOfVariableDeclarator());
 
     // By specification, the list may not be empty.
-    if (declarators->empty())
+    if (declarators->empty()) {
         return raiseEmpty("VariableDeclaration");
+    }
 
     ParseNodeKind pnk;
     switch (kind_) {
@@ -7722,8 +7740,9 @@ BinASTParser<Tok>::parseInterfaceVariableDeclarator(const size_t start, const Bi
         MOZ_TRY(checkBinding(binding->template as<NameNode>().atom()->asPropertyName()));
 
         BINJS_TRY_VAR(result, factory_.newName(binding->template as<NameNode>().atom()->asPropertyName(), tokenizer_->pos(start), cx_));
-        if (init)
+        if (init) {
             result->as<NameNode>().setInitializer(init);
+        }
     } else {
         // `var pattern = bar`
         if (!init) {
@@ -8234,8 +8253,9 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
     (void) start;
     auto result = Ok();
     BINJS_TRY(positionalParams.get().resize(length));
-    for (uint32_t i = 0; i < length; i++)
+    for (uint32_t i = 0; i < length; i++) {
         positionalParams.get()[i] = nullptr;
+    }
 
     for (uint32_t i = 0; i < length; ++i) {
         MOZ_TRY(parseAssertedMaybePositionalParameterName(
@@ -8357,10 +8377,11 @@ BinASTParser<Tok>::parseListOfOptionalSpreadElementOrExpression()
 
     for (uint32_t i = 0; i < length; ++i) {
         BINJS_MOZ_TRY_DECL(item, parseOptionalSpreadElementOrExpression());
-        if (item)
+        if (item) {
             factory_.addArrayElement(result, item); // Infallible.
-        else
+        } else {
             BINJS_TRY(factory_.addElision(result, tokenizer_->pos(start)));
+        }
     }
 
     MOZ_TRY(guard.done());

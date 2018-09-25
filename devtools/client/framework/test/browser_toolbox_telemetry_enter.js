@@ -96,7 +96,7 @@ add_task(async function() {
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   const tab = await addTab(URL);
-  const target = TargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
 
   // Set up some cached messages for the web console.
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {

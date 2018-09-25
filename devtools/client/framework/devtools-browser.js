@@ -58,8 +58,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * of there
    */
   // used by browser-sets.inc, command
-  toggleToolboxCommand(gBrowser, startTime) {
-    const target = TargetFactory.forTab(gBrowser.selectedTab);
+  async toggleToolboxCommand(gBrowser, startTime) {
+    const target = await TargetFactory.forTab(gBrowser.selectedTab);
     const toolbox = gDevTools.getToolbox(target);
 
     // If a toolbox exists, using toggle from the Main window :
@@ -202,8 +202,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
   // Used when: - registering a new tool
   //            - new xul window, to add menu items
-  selectToolCommand(gBrowser, toolId, startTime) {
-    const target = TargetFactory.forTab(gBrowser.selectedTab);
+  async selectToolCommand(gBrowser, toolId, startTime) {
+    const target = await TargetFactory.forTab(gBrowser.selectedTab);
     const toolbox = gDevTools.getToolbox(target);
     const toolDefinition = gDevTools.getToolDefinition(toolId);
 
@@ -243,17 +243,17 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    *        Optional, indicates the time at which the key event fired. This is a
    *        `Cu.now()` timing.
    */
-  onKeyShortcut(window, key, startTime) {
+  async onKeyShortcut(window, key, startTime) {
     // If this is a toolbox's panel key shortcut, delegate to selectToolCommand
     if (key.toolId) {
-      gDevToolsBrowser.selectToolCommand(window.gBrowser, key.toolId, startTime);
+      await gDevToolsBrowser.selectToolCommand(window.gBrowser, key.toolId, startTime);
       return;
     }
     // Otherwise implement all other key shortcuts individually here
     switch (key.id) {
       case "toggleToolbox":
       case "toggleToolboxF12":
-        gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
+        await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
         break;
       case "webide":
         gDevToolsBrowser.openWebIDE();
@@ -274,7 +274,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         ScratchpadManager.openScratchpad();
         break;
       case "inspectorMac":
-        gDevToolsBrowser.selectToolCommand(window.gBrowser, "inspector", startTime);
+        await gDevToolsBrowser.selectToolCommand(window.gBrowser, "inspector", startTime);
         break;
     }
   },
@@ -481,8 +481,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     const debugService = Cc["@mozilla.org/dom/slow-script-debug;1"]
                          .getService(Ci.nsISlowScriptDebug);
 
-    function slowScriptDebugHandler(tab, callback) {
-      const target = TargetFactory.forTab(tab);
+    async function slowScriptDebugHandler(tab, callback) {
+      const target = await TargetFactory.forTab(tab);
 
       gDevTools.showToolbox(target, "jsdebugger").then(toolbox => {
         const threadClient = toolbox.threadClient;
@@ -544,7 +544,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
       slowScriptDebugHandler(tab, function() {
         callback.finishDebuggerStartup();
-      });
+      }).catch(console.error);
     };
   },
 

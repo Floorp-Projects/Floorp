@@ -589,6 +589,11 @@ TransactionBuilder::Clear()
 }
 
 void
+TransactionBuilder::Notify(wr::Checkpoint aWhen, UniquePtr<NotificationHandler> aEvent) {
+  wr_transaction_notify(mTxn, aWhen, reinterpret_cast<uintptr_t>(aEvent.release()));
+}
+
+void
 TransactionBuilder::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
                              wr::Vec<uint8_t>& aBytes)
 {
@@ -1359,3 +1364,15 @@ DisplayListBuilder::FixedPosScrollTargetTracker::GetScrollTargetForASR(const Act
 
 } // namespace wr
 } // namespace mozilla
+
+extern "C" {
+
+void wr_transaction_notification_notified(uintptr_t aHandler, mozilla::wr::Checkpoint aWhen) {
+  auto handler = reinterpret_cast<mozilla::wr::NotificationHandler*>(aHandler);
+  handler->Notify(aWhen);
+  // TODO: it would be better to get a callback when the object is destroyed on the
+  // rust side and delete then.
+  delete handler;
+}
+
+} // extern C

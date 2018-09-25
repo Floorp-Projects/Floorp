@@ -21,8 +21,8 @@ function test() {
 
   let toolbox;
 
-  addTab(URL_1).then(function() {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
+  addTab(URL_1).then(async function() {
+    let target = await TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, null, Toolbox.HostType.BOTTOM)
       .then(function(aToolbox) {
         toolbox = aToolbox;
@@ -69,9 +69,9 @@ function test() {
         // destroying the toolbox.
         executeSoon(function() {
           toolbox.destroy()
-            .then(function() {
+            .then(async function() {
               // After destroying the toolbox, a fresh target is required.
-              target = TargetFactory.forTab(gBrowser.selectedTab);
+              target = await TargetFactory.forTab(gBrowser.selectedTab);
               return gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
             })
             .then(function(aToolbox) {

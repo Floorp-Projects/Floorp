@@ -524,7 +524,7 @@ async function openDebugger(options = {}) {
     options.tab = gBrowser.selectedTab;
   }
 
-  const target = TargetFactory.forTab(options.tab);
+  const target = await TargetFactory.forTab(options.tab);
   let toolbox = gDevTools.getToolbox(target);
   const dbgPanelAlreadyOpen = toolbox && toolbox.getPanel("jsdebugger");
   if (dbgPanelAlreadyOpen) {
@@ -560,7 +560,7 @@ async function openInspector(options = {}) {
     options.tab = gBrowser.selectedTab;
   }
 
-  const target = TargetFactory.forTab(options.tab);
+  const target = await TargetFactory.forTab(options.tab);
   const toolbox = await gDevTools.showToolbox(target, "inspector");
 
   return toolbox.getCurrentPanel();
@@ -576,7 +576,7 @@ async function openInspector(options = {}) {
  *         A promise that is resolved with the console hud once the web console is open.
  */
 async function openConsole(tab) {
-  const target = TargetFactory.forTab(tab || gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(tab || gBrowser.selectedTab);
   const toolbox = await gDevTools.showToolbox(target, "webconsole");
   return toolbox.getCurrentPanel().hud;
 }
@@ -591,7 +591,7 @@ async function openConsole(tab) {
  *         A promise that is resolved once the web console is closed.
  */
 async function closeConsole(tab = gBrowser.selectedTab) {
-  const target = TargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
   const toolbox = gDevTools.getToolbox(target);
   if (toolbox) {
     await toolbox.destroy();

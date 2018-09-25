@@ -627,36 +627,68 @@ void FinishInvalidation(FreeOp* fop, JSScript* script);
 const unsigned WINDOWS_BIG_FRAME_TOUCH_INCREMENT = 4096 - 1;
 #endif
 
-// If NON_WRITABLE_JIT_CODE is enabled, this class will ensure
-// JIT code is writable (has RW permissions) in its scope.
-// Otherwise it's a no-op.
-class MOZ_STACK_CLASS AutoWritableJitCode
+// This class ensures JIT code is executable on its destruction. Creators
+// must call makeWritable(), and not attempt to write to the buffer if it fails.
+//
+// AutoWritableJitCodeFallible may only fail to make code writable; it cannot fail to
+// make JIT code executable (because the creating code has no chance to
+// recover from a failed destructor).
+class MOZ_RAII AutoWritableJitCodeFallible
 {
     JSRuntime* rt_;
     void* addr_;
     size_t size_;
+    bool madeWritable_;
 
   public:
-    AutoWritableJitCode(JSRuntime* rt, void* addr, size_t size)
-      : rt_(rt), addr_(addr), size_(size)
+    AutoWritableJitCodeFallible(JSRuntime* rt, void* addr, size_t size)
+      : rt_(rt), addr_(addr), size_(size), madeWritable_(false)
     {
         rt_->toggleAutoWritableJitCodeActive(true);
-        if (!ExecutableAllocator::makeWritable(addr_, size_)) {
-            MOZ_CRASH();
-        }
     }
-    AutoWritableJitCode(void* addr, size_t size)
-      : AutoWritableJitCode(TlsContext.get()->runtime(), addr, size)
+
+    AutoWritableJitCodeFallible(void* addr, size_t size)
+      : AutoWritableJitCodeFallible(TlsContext.get()->runtime(), addr, size)
+    {
+    }
+
+    explicit AutoWritableJitCodeFallible(JitCode* code)
+      : AutoWritableJitCodeFallible(code->runtimeFromMainThread(), code->raw(), code->bufferSize())
     {}
-    explicit AutoWritableJitCode(JitCode* code)
-      : AutoWritableJitCode(code->runtimeFromMainThread(), code->raw(), code->bufferSize())
-    {}
-    ~AutoWritableJitCode() {
-        if (!ExecutableAllocator::makeExecutable(addr_, size_)) {
-            MOZ_CRASH();
+
+    MOZ_MUST_USE bool makeWritable() {
+        madeWritable_ = ExecutableAllocator::makeWritable(addr_, size_);
+        return madeWritable_;
+    }
+
+    ~AutoWritableJitCodeFallible() {
+        if (madeWritable_) {
+            if (!ExecutableAllocator::makeExecutable(addr_, size_)) {
+                MOZ_CRASH();
+            }
         }
         rt_->toggleAutoWritableJitCodeActive(false);
     }
+
+};
+
+// Infallible variant of AutoWritableJitCodeFallible, ensures writable during construction
+class MOZ_RAII AutoWritableJitCode : private AutoWritableJitCodeFallible
+{
+  public:
+    AutoWritableJitCode(JSRuntime* rt, void* addr, size_t size)
+      : AutoWritableJitCodeFallible(rt, addr, size)
+    {
+        MOZ_RELEASE_ASSERT(makeWritable());
+    }
+
+    AutoWritableJitCode(void* addr, size_t size)
+      : AutoWritableJitCode(TlsContext.get()->runtime(), addr, size)
+    {}
+
+    explicit AutoWritableJitCode(JitCode* code)
+      : AutoWritableJitCode(code->runtimeFromMainThread(), code->raw(), code->bufferSize())
+    {}
 };
 
 class MOZ_STACK_CLASS MaybeAutoWritableJitCode

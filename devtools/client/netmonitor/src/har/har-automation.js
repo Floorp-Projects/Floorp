@@ -45,7 +45,7 @@ HarAutomation.prototype = {
     this.toolbox = toolbox;
 
     const target = toolbox.target;
-    target.makeRemote().then(() => {
+    target.attach().then(() => {
       this.startMonitoring(target.client, target.form);
     });
   },

@@ -504,6 +504,8 @@ extern "C" {
     fn wr_notifier_external_event(window_id: WrWindowId,
                                   raw_event: usize);
     fn wr_schedule_render(window_id: WrWindowId);
+
+    fn wr_transaction_notification_notified(handler: usize, when: Checkpoint);
 }
 
 impl RenderNotifier for CppNotifier {
@@ -1095,6 +1097,21 @@ pub extern "C" fn wr_transaction_set_low_priority(txn: &mut Transaction, low_pri
 #[no_mangle]
 pub extern "C" fn wr_transaction_is_empty(txn: &Transaction) -> bool {
     txn.is_empty()
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_notify(txn: &mut Transaction, when: Checkpoint, event: usize) {
+    struct GeckoNotification(usize);
+    impl NotificationHandler for GeckoNotification {
+        fn notify(&self, when: Checkpoint) {
+            unsafe {
+                wr_transaction_notification_notified(self.0, when);
+            }
+        }
+    }
+
+    let handler = Arc::new(GeckoNotification(event));
+    txn.notify(NotificationRequest::new(when, handler));
 }
 
 #[no_mangle]

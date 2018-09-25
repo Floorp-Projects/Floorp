@@ -1524,7 +1524,8 @@ EnsureMIMEOfScript(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo*
     aLoadInfo->LoadingPrincipal()->GetURI(getter_AddRefs(requestURI));
 
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-    nsresult rv = ssm->CheckSameOriginURI(requestURI, aURI, false);
+    bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+    nsresult rv = ssm->CheckSameOriginURI(requestURI, aURI, false, isPrivateWin);
     if (NS_SUCCEEDED(rv)) {
         //same origin
         AccumulateCategorical(Telemetry::LABELS_SCRIPT_BLOCK_INCORRECT_MIME_2::same_origin);
@@ -1539,7 +1540,8 @@ EnsureMIMEOfScript(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo*
                 nsCOMPtr<nsIURI> corsOriginURI;
                 rv = NS_NewURI(getter_AddRefs(corsOriginURI), corsOrigin);
                 if (NS_SUCCEEDED(rv)) {
-                    rv = ssm->CheckSameOriginURI(requestURI, corsOriginURI, false);
+                    bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+                    rv = ssm->CheckSameOriginURI(requestURI, corsOriginURI, false, isPrivateWin);
                     if (NS_SUCCEEDED(rv)) {
                         cors = true;
                     }

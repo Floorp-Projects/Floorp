@@ -584,13 +584,13 @@ ENUM!{enum SPCATEGORYTYPE {
     SPCT_SUB_COMMAND,
     SPCT_SUB_DICTATION,
 }}
-RIDL!(#[uuid(0xda0cd0f9, 0x14a2, 0x4f09, 0x8c, 0x2a, 0x85, 0xcc, 0x48, 0x97, 0x93, 0x45)]
+RIDL!{#[uuid(0xda0cd0f9, 0x14a2, 0x4f09, 0x8c, 0x2a, 0x85, 0xcc, 0x48, 0x97, 0x93, 0x45)]
 interface ISpRecoCategory(ISpRecoCategoryVtbl): IUnknown(IUnknownVtbl) {
     fn GetType(
         peCategoryType: *mut SPCATEGORYTYPE,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xdf1b943c, 0x5838, 0x4aa2, 0x87, 0x06, 0xd7, 0xcd, 0x5b, 0x33, 0x34, 0x99)]
+}}
+RIDL!{#[uuid(0xdf1b943c, 0x5838, 0x4aa2, 0x87, 0x06, 0xd7, 0xcd, 0x5b, 0x33, 0x34, 0x99)]
 interface ISpRecognizer3(ISpRecognizer3Vtbl): IUnknown(IUnknownVtbl) {
     fn GetCategory(
         categoryType: SPCATEGORYTYPE,
@@ -602,7 +602,7 @@ interface ISpRecognizer3(ISpRecognizer3Vtbl): IUnknown(IUnknownVtbl) {
     fn GetActiveCategory(
         ppCategory: *mut *mut ISpRecoCategory,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi53::{
     SPNORMALIZATIONLIST,
     ISpEnginePronunciation, ISpEnginePronunciationVtbl,

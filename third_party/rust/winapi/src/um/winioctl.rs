@@ -5,9 +5,13 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! This module defines the 32-Bit Windows Device I/O control codes.
+use shared::basetsd::DWORD64;
 use shared::devpropdef::DEVPROPKEY;
+use shared::guiddef::GUID;
 use shared::minwindef::{BYTE, DWORD, WORD};
-use um::winnt::{ANYSIZE_ARRAY, FILE_READ_DATA, FILE_WRITE_DATA, HANDLE, LARGE_INTEGER, WCHAR};
+use um::winnt::{
+    ANYSIZE_ARRAY, BOOLEAN, FILE_READ_DATA, FILE_WRITE_DATA, HANDLE, LARGE_INTEGER, WCHAR,
+};
 DEFINE_GUID!{GUID_DEVINTERFACE_DISK,
     0x53f56307, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b}
 DEFINE_GUID!{GUID_DEVINTERFACE_CDROM,
@@ -367,6 +371,59 @@ ENUM!{enum MEDIA_TYPE {
     F3_32M_512,
 }}
 pub type PMEDIA_TYPE = *mut MEDIA_TYPE;
+ENUM!{enum STORAGE_PROPERTY_ID {
+    StorageDeviceProperty = 0,
+    StorageAdapterProperty,
+    StorageDeviceIdProperty,
+    StorageDeviceUniqueIdProperty,
+    StorageDeviceWriteCacheProperty,
+    StorageMiniportProperty,
+    StorageAccessAlignmentProperty,
+    StorageDeviceSeekPenaltyProperty,
+    StorageDeviceTrimProperty,
+    StorageDeviceWriteAggregationProperty,
+    StorageDeviceDeviceTelemetryProperty,
+    StorageDeviceLBProvisioningProperty,
+    StorageDevicePowerProperty,
+    StorageDeviceCopyOffloadProperty,
+    StorageDeviceResiliencyProperty,
+    StorageDeviceMediumProductType,
+    StorageAdapterCryptoProperty,
+    StorageDeviceIoCapabilityProperty = 48,
+    StorageAdapterProtocolSpecificProperty,
+    StorageDeviceProtocolSpecificProperty,
+    StorageAdapterTemperatureProperty,
+    StorageDeviceTemperatureProperty,
+    StorageAdapterPhysicalTopologyProperty,
+    StorageDevicePhysicalTopologyProperty,
+    StorageDeviceAttributesProperty,
+    StorageDeviceManagementStatus,
+    StorageAdapterSerialNumberProperty,
+    StorageDeviceLocationProperty,
+    StorageDeviceNumaProperty,
+    StorageDeviceZonedDeviceProperty,
+    StorageDeviceUnsafeShutdownCount,
+}}
+pub type PSTORAGE_PROPERTY_ID = *mut STORAGE_PROPERTY_ID;
+ENUM!{enum STORAGE_QUERY_TYPE {
+    PropertyStandardQuery = 0,
+    PropertyExistsQuery,
+    PropertyMaskQuery,
+    PropertyQueryMaxDefined,
+}}
+pub type PSTORAGE_QUERY_TYPE = *mut STORAGE_QUERY_TYPE;
+STRUCT!{struct STORAGE_PROPERTY_QUERY {
+    PropertyId: STORAGE_PROPERTY_ID,
+    QueryType: STORAGE_QUERY_TYPE,
+    AdditionalParameters: [BYTE; 1],
+}}
+pub type PSTORAGE_PROPERTY_QUERY = *mut STORAGE_PROPERTY_QUERY;
+STRUCT!{struct DEVICE_TRIM_DESCRIPTOR {
+    Version: DWORD,
+    Size: DWORD,
+    TrimEnabled: BOOLEAN,
+}}
+pub type PDEVICE_TRIM_DESCRIPTOR = *mut DEVICE_TRIM_DESCRIPTOR;
 //2953
 STRUCT!{struct DISK_GEOMETRY {
     Cylinders: LARGE_INTEGER,
@@ -376,6 +433,136 @@ STRUCT!{struct DISK_GEOMETRY {
     BytesPerSector: DWORD,
 }}
 pub type PDISK_GEOMETRY = *mut DISK_GEOMETRY;
+STRUCT!{struct PARTITION_INFORMATION {
+    StartingOffset: LARGE_INTEGER,
+    PartitionLength: LARGE_INTEGER,
+    HiddenSectors: DWORD,
+    PartitionNumber: DWORD,
+    PartitionType: BYTE,
+    BootIndicator: BOOLEAN,
+    RecognizedPartition: BOOLEAN,
+    RewritePartition: BOOLEAN,
+}}
+pub type PPARTITION_INFORMATION = *mut PARTITION_INFORMATION;
+STRUCT!{struct SET_PARTITION_INFORMATION {
+    PartitionType: BYTE,
+}}
+pub type PSET_PARTITION_INFORMATION = *mut SET_PARTITION_INFORMATION;
+STRUCT!{struct DRIVE_LAYOUT_INFORMATION {
+    PartitionCount: DWORD,
+    Signature: DWORD,
+    PartitionEntry: [PARTITION_INFORMATION; 1],
+}}
+pub type PDRIVE_LAYOUT_INFORMATION = *mut DRIVE_LAYOUT_INFORMATION;
+STRUCT!{struct VERIFY_INFORMATION {
+    StartingOffset: LARGE_INTEGER,
+    Length: DWORD,
+}}
+pub type PVERIFY_INFORMATION = *mut VERIFY_INFORMATION;
+STRUCT!{struct REASSIGN_BLOCKS {
+    Reserved: WORD,
+    Count: WORD,
+    BlockNumber: [DWORD; 1],
+}}
+pub type PREASSIGN_BLOCKS = *mut REASSIGN_BLOCKS;
+STRUCT!{#[repr(packed)] struct REASSIGN_BLOCKS_EX {
+    Reserved: WORD,
+    Count: WORD,
+    BlockNumber: [LARGE_INTEGER; 1],
+}}
+pub type PREASSIGN_BLOCKS_EX = *mut REASSIGN_BLOCKS_EX;
+ENUM!{enum PARTITION_STYLE {
+    PARTITION_STYLE_MBR,
+    PARTITION_STYLE_GPT,
+    PARTITION_STYLE_RAW,
+}}
+STRUCT!{struct PARTITION_INFORMATION_GPT {
+    PartitionType: GUID,
+    PartitionId: GUID,
+    Attributes: DWORD64,
+    Name: [WCHAR; 36],
+}}
+pub type PPARTITION_INFORMATION_GPT = *mut PARTITION_INFORMATION_GPT;
+STRUCT!{struct PARTITION_INFORMATION_MBR {
+    PartitionType: BYTE,
+    BootIndicator: BOOLEAN,
+    RecognizedPartition: BOOLEAN,
+    HiddenSectors: DWORD,
+    PartitionId: GUID,
+}}
+pub type PPARTITION_INFORMATION_MBR = *mut PARTITION_INFORMATION_MBR;
+pub type SET_PARTITION_INFORMATION_MBR = SET_PARTITION_INFORMATION;
+pub type SET_PARTITION_INFORMATION_GPT = PARTITION_INFORMATION_GPT;
+STRUCT!{struct SET_PARTITION_INFORMATION_EX {
+    PartitionStyle: PARTITION_STYLE,
+    u: SET_PARTITION_INFORMATION_EX_u,
+}}
+UNION!{union SET_PARTITION_INFORMATION_EX_u {
+    [u64; 14],
+    Mbr Mbr_mut: SET_PARTITION_INFORMATION_MBR,
+    Gpt Gpt_mut: SET_PARTITION_INFORMATION_GPT,
+}}
+STRUCT!{struct CREATE_DISK_GPT {
+    DiskId: GUID,
+    MaxPartitionCount: DWORD,
+}}
+pub type PCREATE_DISK_GPT = *mut CREATE_DISK_GPT;
+STRUCT!{struct CREATE_DISK_MBR {
+    Signature: DWORD,
+}}
+pub type PCREATE_DISK_MBR = *mut CREATE_DISK_MBR;
+STRUCT!{struct CREATE_DISK {
+    PartitionStyle: PARTITION_STYLE,
+    u: CREATE_DISK_u,
+}}
+pub type PCREATE_DISK = *mut CREATE_DISK;
+UNION!{union CREATE_DISK_u {
+    [u32; 5],
+    Mbr Mbr_mut: CREATE_DISK_MBR,
+    Gpt Gpt_mut: CREATE_DISK_GPT,
+}}
+STRUCT!{struct GET_LENGTH_INFORMATION {
+    Length: LARGE_INTEGER,
+}}
+pub type PGET_LENGTH_INFORMATION = *mut GET_LENGTH_INFORMATION;
+STRUCT!{struct PARTITION_INFORMATION_EX {
+    PartitionStyle: PARTITION_STYLE,
+    StartingOffset: LARGE_INTEGER,
+    PartitionLength: LARGE_INTEGER,
+    PartitionNumber: DWORD,
+    RewritePartition: BOOLEAN,
+    u: PARTITION_INFORMATION_EX_u,
+}}
+pub type PPARTITION_INFORMATION_EX = *mut PARTITION_INFORMATION_EX;
+UNION!{union PARTITION_INFORMATION_EX_u {
+    [u64; 14],
+    Mbr Mbr_mut: PARTITION_INFORMATION_MBR,
+    Gpt Gpt_mut: PARTITION_INFORMATION_GPT,
+}}
+STRUCT!{struct DRIVE_LAYOUT_INFORMATION_GPT {
+    DiskId: GUID,
+    StartingUsableOffset: LARGE_INTEGER,
+    UsableLength: LARGE_INTEGER,
+    MaxPartitionCount: DWORD,
+}}
+pub type PDRIVE_LAYOUT_INFORMATION_GPT = *mut DRIVE_LAYOUT_INFORMATION_GPT;
+STRUCT!{struct DRIVE_LAYOUT_INFORMATION_MBR {
+    Signature: DWORD,
+    CheckSum: DWORD,
+}}
+pub type PDRIVE_LAYOUT_INFORMATION_MBR = *mut DRIVE_LAYOUT_INFORMATION_MBR;
+STRUCT!{struct DRIVE_LAYOUT_INFORMATION_EX {
+    PartitionStyle: DWORD,
+    PartitionCount: DWORD,
+    u: DRIVE_LAYOUT_INFORMATION_EX_u,
+    PartitionEntry: [PARTITION_INFORMATION_EX; 1],
+}}
+pub type PDRIVE_LAYOUT_INFORMATION_EX = *mut DRIVE_LAYOUT_INFORMATION_EX;
+UNION! {union DRIVE_LAYOUT_INFORMATION_EX_u {
+    [u64; 5],
+    Mbr Mbr_mut: DRIVE_LAYOUT_INFORMATION_MBR,
+    Gpt Gpt_mut: DRIVE_LAYOUT_INFORMATION_GPT,
+}}
 //3907
 pub const IOCTL_CHANGER_BASE: DWORD = FILE_DEVICE_CHANGER;
 pub const IOCTL_CHANGER_GET_PARAMETERS: DWORD = CTL_CODE!(IOCTL_CHANGER_BASE, 0x0000,
@@ -756,6 +943,10 @@ STRUCT!{struct NTFS_EXTENDED_VOLUME_DATA {
     BytesPerPhysicalSector: DWORD,
     LfsMajorVersion: WORD,
     LfsMinorVersion: WORD,
+    MaxDeviceTrimExtentCount: DWORD,
+    MaxDeviceTrimByteCount: DWORD,
+    MaxVolumeTrimExtentCount: DWORD,
+    MaxVolumeTrimByteCount: DWORD,
 }}
 pub type PNTFS_EXTENDED_VOLUME_DATA = *mut NTFS_EXTENDED_VOLUME_DATA;
 STRUCT!{struct REFS_VOLUME_DATA_BUFFER {

@@ -33,8 +33,8 @@ function test() {
 
   gDevTools.registerTool(toolDefinition);
 
-  addTab("about:blank").then(function(aTab) {
-    const target = TargetFactory.forTab(aTab);
+  addTab("about:blank").then(async function(aTab) {
+    const target = await TargetFactory.forTab(aTab);
     gDevTools.showToolbox(target, toolDefinition.id).then(function(toolbox) {
       const panel = toolbox.getPanel(toolDefinition.id);
       ok(true, "Tool open");

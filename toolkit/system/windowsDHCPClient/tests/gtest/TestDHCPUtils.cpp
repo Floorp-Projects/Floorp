@@ -84,7 +84,7 @@ class WindowsNetworkFunctionsMock : public WindowsNetworkFunctionsWrapper {
     }
 
     void
-    SetDHCPOption(uint8_t option, char* value)
+    SetDHCPOption(uint8_t option, const char* value)
     {
       mOptions[option] = value;
     }
@@ -97,7 +97,7 @@ class WindowsNetworkFunctionsMock : public WindowsNetworkFunctionsWrapper {
 
   private:
     IP_ADAPTER_ADDRESSES* mAddressesToReturn = nullptr;
-    char* mOptions[256];
+    const char* mOptions[256];
     nsString mLastRequestedNetworkAdapterName;
 };
 
@@ -114,7 +114,7 @@ class TestDHCPUtils : public ::testing::Test {
     }
 
     void
-    Given_DHCP_Option_Is(uint8_t option, char* value)
+    Given_DHCP_Option_Is(uint8_t option, const char* value)
     {
       mMockWindowsFunctions.get()->SetDHCPOption(option, value);
     }
@@ -122,9 +122,9 @@ class TestDHCPUtils : public ::testing::Test {
     void
     Given_Network_Adapter_Called(
       IP_ADAPTER_ADDRESSES& adapterAddresses,
-      char* adapterName)
+      const char* adapterName)
     {
-      adapterAddresses.AdapterName = adapterName;
+      adapterAddresses.AdapterName = const_cast<char*>(adapterName);
       adapterAddresses.Next = nullptr;
       adapterAddresses.Dhcpv4Server.iSockaddrLength = 0;
       adapterAddresses.Dhcpv6Server.iSockaddrLength = 0;
@@ -226,7 +226,7 @@ TEST_F(TestDHCPUtils, TestGetAdaptersAddressesSecondNetworkIsAvailable)
 TEST_F(TestDHCPUtils, TestGetOption)
 {
 
-  char* pacURL = "http://pac.com";
+  const char* pacURL = "http://pac.com";
   Given_DHCP_Option_Is(1, "My network option");
   Given_DHCP_Option_Is(252, pacURL);
 

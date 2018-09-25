@@ -6,7 +6,6 @@
 
 exports.devices = require("./reducers/devices");
 exports.networkThrottling = require("devtools/client/shared/components/throttling/reducer");
-exports.reloadConditions = require("./reducers/reload-conditions");
 exports.screenshot = require("./reducers/screenshot");
 exports.ui = require("./reducers/ui");
 exports.viewports = require("./reducers/viewports");

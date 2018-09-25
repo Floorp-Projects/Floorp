@@ -4,7 +4,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms
-use shared::guiddef::{IsEqualIID};
+use shared::guiddef::IsEqualIID;
 use shared::wtypes::{PROPERTYKEY, PROPID};
 pub const PID_FIRST_USABLE: PROPID = 2;
 pub type REFPROPERTYKEY = *const PROPERTYKEY;

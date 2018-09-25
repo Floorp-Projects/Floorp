@@ -62,14 +62,11 @@ function addTestTab(url) {
  *        The default tab is taken from the global variable |tab|.
  * @return a promise that is resolved once the web console is open.
  */
-function initDOMPanel(tab) {
-  return new Promise(resolve => {
-    const target = TargetFactory.forTab(tab || gBrowser.selectedTab);
-    gDevTools.showToolbox(target, "dom").then(toolbox => {
-      const panel = toolbox.getCurrentPanel();
-      resolve(panel);
-    });
-  });
+async function initDOMPanel(tab) {
+  const target = await TargetFactory.forTab(tab || gBrowser.selectedTab);
+  const toolbox = await gDevTools.showToolbox(target, "dom");
+  const panel = toolbox.getCurrentPanel();
+  return panel;
 }
 
 /**

@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test toggling the multiple grid highlighters in the grid inspector panel.
+// Test toggling multiple grid highlighters in the grid inspector panel.
 
 const TEST_URI = `
   <style type='text/css'>

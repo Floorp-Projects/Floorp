@@ -110,9 +110,12 @@ nsDOMOfflineResourceList::Init()
   }
 
   mManifestURI->GetAsciiSpec(mManifestSpec);
+  bool isPrivateWin = mLoadingPrincipal
+    ? mLoadingPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0
+    : false;
 
   nsresult rv = nsContentUtils::GetSecurityManager()->
-                   CheckSameOriginURI(mManifestURI, mDocumentURI, true);
+                   CheckSameOriginURI(mManifestURI, mDocumentURI, true, isPrivateWin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Dynamically-managed resources are stored as a separate ownership list

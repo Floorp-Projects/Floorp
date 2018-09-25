@@ -72,9 +72,9 @@ add_task(async function() {
   checkResults();
 });
 
-function openToolbox(tab) {
+async function openToolbox(tab) {
   info("Opening webconsole.");
-  const target = TargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
   return gDevTools.showToolbox(target, "webconsole");
 }
 

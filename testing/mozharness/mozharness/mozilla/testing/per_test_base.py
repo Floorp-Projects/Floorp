@@ -50,6 +50,7 @@ class SingleTestMixin(FetchesMixin):
             (os.path.join(dirs['abs_xpcshell_dir'], 'tests', 'xpcshell.ini'), 'xpcshell'),
         ]
         tests_by_path = {}
+        all_disabled = []
         for (path, suite) in manifests:
             if os.path.exists(path):
                 man = TestManifest([path], strict=False)
@@ -59,11 +60,13 @@ class SingleTestMixin(FetchesMixin):
                 # specifies tests by path (it cannot distinguish between two or more
                 # tests with the same path specified in multiple manifests).
                 disabled = [t['relpath'] for t in active if 'disabled' in t]
+                all_disabled += disabled
                 new_by_path = {t['relpath']: (suite, t.get('subsuite'))
                                for t in active if 'disabled' not in t and
                                t['relpath'] not in disabled}
                 tests_by_path.update(new_by_path)
-                self.info("Per-test run updated with manifest %s" % path)
+                self.info("Per-test run updated with manifest %s (%d active, %d skipped)" %
+                          (path, len(new_by_path), len(disabled)))
 
         ref_manifests = [
             (os.path.join(dirs['abs_reftest_dir'], 'tests', 'layout',
@@ -82,7 +85,8 @@ class SingleTestMixin(FetchesMixin):
                     relpath = os.path.relpath(t, self.reftest_test_dir)
                     tests_by_path[relpath] = (suite, subsuite)
                     self._map_test_path_to_source(t, relpath)
-                self.info("Per-test run updated with manifest %s" % path)
+                self.info("Per-test run updated with manifest %s (%d tests)" %
+                          (path, len(man.files)))
 
         suite = 'jsreftest'
         self.jsreftest_test_dir = os.path.join(dirs['abs_test_install_dir'], 'jsreftest', 'tests')
@@ -104,7 +108,8 @@ class SingleTestMixin(FetchesMixin):
                     tests_by_path.update({relpath: (suite, None)})
                 else:
                     self.warning("unexpected jsreftest test format: %s" % str(t))
-            self.info("Per-test run updated with manifest %s" % path)
+            self.info("Per-test run updated with manifest %s (%d tests)" %
+                      (path, len(man.files)))
 
         # for each changed file, determine if it is a test file, and what suite it is in
         for file in changed_files:
@@ -113,6 +118,8 @@ class SingleTestMixin(FetchesMixin):
             file = file.replace(posixpath.sep, os.sep)
             entry = tests_by_path.get(file)
             if not entry:
+                if file in all_disabled:
+                    self.info("'%s' has been skipped on this platform." % file)
                 if os.environ.get('MOZHARNESS_TEST_PATHS', None) is not None:
                     self.fatal("Per-test run could not find requested test '%s'" % file)
                 continue

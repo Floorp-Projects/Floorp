@@ -20,7 +20,7 @@ namespace jit {
 class Linker
 {
     MacroAssembler& masm;
-    mozilla::Maybe<AutoWritableJitCode> awjc;
+    mozilla::Maybe<AutoWritableJitCodeFallible> awjcf;
 
     JitCode* fail(JSContext* cx) {
         ReportOutOfMemory(cx);
