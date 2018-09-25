@@ -96,11 +96,15 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // end up with a different content prototype, but we'll already have a property
   // holder called |foo| in the XBL scope. Check for that to avoid wasteful and
   // weird property holder duplication.
-  const char16_t* className = aPrototypeBinding->ClassName().get();
+  const nsString& className = aPrototypeBinding->ClassName();
+  const char16_t* classNameChars = className.get();
+  const size_t classNameLen = className.Length();
+
   JS::Rooted<JSObject*> propertyHolder(cx);
   JS::Rooted<JS::PropertyDescriptor> existingHolder(cx);
   if (scopeObject != globalObject &&
-      !JS_GetOwnUCPropertyDescriptor(cx, scopeObject, className, &existingHolder)) {
+      !JS_GetOwnUCPropertyDescriptor(cx, scopeObject, classNameChars,
+                                     classNameLen, &existingHolder)) {
     return NS_ERROR_FAILURE;
   }
   bool propertyHolderIsNew = !existingHolder.object() || !existingHolder.value().isObject();
@@ -115,8 +119,9 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
 
     // Define it as a property on the scopeObject, using the same name used on
     // the content side.
-    bool ok = JS_DefineUCProperty(cx, scopeObject, className, -1, propertyHolder,
-                                  JSPROP_PERMANENT | JSPROP_READONLY);
+    bool ok =
+      JS_DefineUCProperty(cx, scopeObject, classNameChars, classNameLen,
+                          propertyHolder, JSPROP_PERMANENT | JSPROP_READONLY);
     NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
   } else {
     propertyHolder = targetClassObject;
