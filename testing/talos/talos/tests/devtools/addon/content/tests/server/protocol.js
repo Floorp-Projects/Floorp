@@ -34,7 +34,7 @@ module.exports = async function() {
     `function () {
       const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
-      const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+      const { ActorRegistry } = require("devtools/server/actor-registry");
       ActorRegistry.registerModule("chrome://damp/content/tests/server/actor.js", {
         prefix: "dampTest",
         constructor: "DampTestActor",

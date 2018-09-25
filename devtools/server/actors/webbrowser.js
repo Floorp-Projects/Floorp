@@ -9,7 +9,7 @@
 var { Ci } = require("chrome");
 var Services = require("Services");
 var { DebuggerServer } = require("devtools/server/main");
-var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+var { ActorRegistry } = require("devtools/server/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
