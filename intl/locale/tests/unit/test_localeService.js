@@ -142,6 +142,31 @@ add_test(function test_isAppLocaleRTL() {
   run_next_test();
 });
 
+add_test(function test_isAppLocaleRTL_pseudo() {
+  let avLocales = localeService.availableLocales;
+  let reqLocales = localeService.requestedLocales;
+
+  localeService.availableLocales = ["en-US"];
+  localeService.requestedLocales = ["en-US"];
+  Services.prefs.setIntPref("intl.uidirection", -1);
+  Services.prefs.setCharPref("intl.l10n.pseudo", "");
+
+  Assert.ok(localeService.isAppLocaleRTL === false);
+
+  Services.prefs.setCharPref("intl.l10n.pseudo", "bidi");
+  Assert.ok(localeService.isAppLocaleRTL === true);
+
+  Services.prefs.setCharPref("intl.l10n.pseudo", "accented");
+  Assert.ok(localeService.isAppLocaleRTL === false);
+
+  // Clean up
+  localeService.availableLocales = avLocales;
+  localeService.requestedLocales = reqLocales;
+  Services.prefs.clearUserPref("intl.l10n.pseudo");
+
+  run_next_test();
+});
+
 add_test(function test_packagedLocales() {
   const locales = localeService.packagedLocales;
   Assert.ok(locales.length !== 0, "Packaged locales are empty");

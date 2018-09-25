@@ -416,13 +416,27 @@ LocaleService::FilterMatches(const nsTArray<nsCString>& aRequested,
 bool
 LocaleService::IsAppLocaleRTL()
 {
-  nsAutoCString locale;
-  GetAppLocaleAsBCP47(locale);
-
+  // First, let's check if there's a manual override
+  // preference for directionality set.
   int pref = Preferences::GetInt("intl.uidirection", -1);
   if (pref >= 0) {
     return (pref > 0);
   }
+
+  // If not, check if there is a pseudo locale `bidi`
+  // set.
+  nsAutoCString locale;
+  if (NS_SUCCEEDED(Preferences::GetCString("intl.l10n.pseudo", locale))) {
+    if (locale.EqualsLiteral("bidi")) {
+      return true;
+    }
+    if (locale.EqualsLiteral("accented")) {
+      return false;
+    }
+  }
+
+  GetAppLocaleAsBCP47(locale);
+
   return uloc_isRightToLeft(locale.get());
 }
 
