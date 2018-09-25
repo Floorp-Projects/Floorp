@@ -6141,7 +6141,8 @@ function handleLinkClick(event, href, linkNode) {
     const sm = Services.scriptSecurityManager;
     try {
       var targetURI = makeURI(href);
-      sm.checkSameOriginURI(referrerURI, targetURI, false);
+      let isPrivateWin = doc.nodePrincipal.originAttributes.privateBrowsingId > 0;
+      sm.checkSameOriginURI(referrerURI, targetURI, false, isPrivateWin);
       persistAllowMixedContentInChildTab = true;
     } catch (e) { }
   }

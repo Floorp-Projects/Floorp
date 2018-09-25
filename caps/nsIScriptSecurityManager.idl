@@ -182,10 +182,13 @@ interface nsIScriptSecurityManager : nsISupports
      * (scheme, host, and port).
      * ReportError flag suppresses error reports for functions that
      * don't need reporting.
+     * FromPrivateWindow indicates whether the error occurs in a private
+     * window or not.
      */
     void checkSameOriginURI(in nsIURI aSourceURI,
                             in nsIURI aTargetURI,
-                            in boolean reportError);
+                            in boolean reportError,
+                            in boolean fromPrivateWindow);
     /**
      * Get the principal for the given channel.  This will typically be the
      * channel owner if there is one, and the codebase principal for the
