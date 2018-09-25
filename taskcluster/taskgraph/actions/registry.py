@@ -22,7 +22,7 @@ from mozbuild.util import memoize
 actions = []
 callbacks = {}
 
-Action = namedtuple('Action', ['order', 'cb_name', 'generic', 'action_builder'])
+Action = namedtuple('Action', ['order', 'kind', 'cb_name', 'generic', 'action_builder'])
 
 
 def is_json(data):
@@ -268,7 +268,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
 
             return rv
 
-        actions.append(Action(order, cb_name, generic, action_builder))
+        actions.append(Action(order, kind, cb_name, generic, action_builder))
 
         mem['registered'] = True
         callbacks[cb_name] = cb
@@ -317,6 +317,9 @@ def sanity_check_task_scope(callback, parameters, graph_config):
             break
     else:
         raise Exception('No action with cb_name {}'.format(callback))
+
+    if action.kind == 'task':
+        return  # task kinds don't have sane scopes, so bail out
 
     actionPerm = 'generic' if action.generic else action.cb_name
 
