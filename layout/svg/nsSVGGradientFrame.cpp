@@ -357,7 +357,7 @@ nsSVGGradientFrame::GetReferencedGradient()
     this->mNoHRefURI = aHref.IsEmpty();
   };
 
-  nsIFrame* tframe = SVGObserverUtils::GetTemplateFrame(this, GetHref);
+  nsIFrame* tframe = SVGObserverUtils::GetAndObserveTemplate(this, GetHref);
   if (tframe) {
     LayoutFrameType frameType = tframe->Type();
     if (frameType == LayoutFrameType::SVGLinearGradient ||

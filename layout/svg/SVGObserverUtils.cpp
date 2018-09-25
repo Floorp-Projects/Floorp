@@ -1121,8 +1121,8 @@ GetMarkerURI(nsIFrame* aFrame, RefPtr<css::URLValue> nsStyleSVG::* aMarker)
 }
 
 bool
-SVGObserverUtils::GetMarkerFrames(nsIFrame* aMarkedFrame,
-                                  nsSVGMarkerFrame*(*aFrames)[3])
+SVGObserverUtils::GetAndObserveMarkers(nsIFrame* aMarkedFrame,
+                                       nsSVGMarkerFrame*(*aFrames)[3])
 {
   MOZ_ASSERT(!aMarkedFrame->GetPrevContinuation() &&
              aMarkedFrame->IsSVGGeometryFrame() &&
@@ -1348,7 +1348,7 @@ SVGObserverUtils::GetAndObserveMasks(nsIFrame* aMaskedFrame,
 }
 
 SVGGeometryElement*
-SVGObserverUtils::GetTextPathsReferencedPath(nsIFrame* aTextPathFrame)
+SVGObserverUtils::GetAndObserveTextPathsPath(nsIFrame* aTextPathFrame)
 {
   SVGTextPathObserver* property =
     aTextPathFrame->GetProperty(HrefAsTextPathProperty());
@@ -1402,8 +1402,8 @@ SVGObserverUtils::RemoveTextPathObserver(nsIFrame* aTextPathFrame)
 }
 
 nsIFrame*
-SVGObserverUtils::GetTemplateFrame(nsIFrame* aFrame,
-                                   HrefToTemplateCallback aGetHref)
+SVGObserverUtils::GetAndObserveTemplate(nsIFrame* aFrame,
+                                        HrefToTemplateCallback aGetHref)
 {
   SVGTemplateElementObserver* observer =
     aFrame->GetProperty(HrefToTemplateProperty());
@@ -1478,8 +1478,8 @@ SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
 }
 
 nsSVGPaintServerFrame *
-SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
-                                 nsStyleSVGPaint nsStyleSVG::* aPaint)
+SVGObserverUtils::GetAndObservePaintServer(nsIFrame* aTargetFrame,
+                                           nsStyleSVGPaint nsStyleSVG::* aPaint)
 {
   // If we're looking at a frame within SVG text, then we need to look up
   // to find the right frame to get the painting property off.  We should at
