@@ -780,8 +780,11 @@ bool xpc::ExtraWarningsForSystemJS() { return false; }
 
 static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 
-bool
-xpc::SharedMemoryEnabled() { return sSharedMemoryEnabled; }
+void
+xpc::SetPrefableRealmOptions(JS::RealmOptions &options)
+{
+    options.creationOptions().setSharedMemoryAndAtomicsEnabled(sSharedMemoryEnabled);
+}
 
 static void
 ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx)
