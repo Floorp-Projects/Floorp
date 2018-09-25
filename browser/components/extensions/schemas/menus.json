@@ -403,6 +403,25 @@
         ]
       },
       {
+        "name": "overrideContext",
+        "type": "function",
+        "description": "Show the matching menu items from this extension instead of the default menu. This should be called during a 'contextmenu' DOM event handler, and only applies to the menu that opens after this event.",
+        "parameters": [
+          {
+            "name": "contextOptions",
+            "type": "object",
+            "properties": {
+              "showDefaults": {
+                "type": "boolean",
+                "optional": true,
+                "default": false,
+                "description": "Whether to also include default menu items in the menu."
+              }
+            }
+          }
+        ]
+      },
+      {
         "name": "refresh",
         "type": "function",
         "description": "Updates the extension items in the shown menu, including changes that have been made since the menu was shown. Has no effect if the menu is hidden. Rebuilding a shown menu is an expensive operation, only invoke this method when necessary.",

@@ -2,9 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
+
 var {
   withHandlingUserInput,
 } = ExtensionCommon;
+
+var {
+  ExtensionError,
+} = ExtensionUtils;
 
 // If id is not specified for an item we use an integer.
 // This ID need only be unique within a single addon. Since all addon code that
@@ -108,6 +115,7 @@ class ContextMenusClickPropHandler {
 this.menusInternal = class extends ExtensionAPI {
   getAPI(context) {
     let onClickedProp = new ContextMenusClickPropHandler(context);
+    let pendingMenuEvent;
 
     let api = {
       menus: {
@@ -163,6 +171,43 @@ this.menusInternal = class extends ExtensionAPI {
           onClickedProp.deleteAllListenersFromExtension();
 
           return context.childManager.callParentAsyncFunction("menusInternal.removeAll", []);
+        },
+
+        overrideContext(contextOptions) {
+          let {event} = context.contentWindow;
+          if (!event || event.type !== "contextmenu" || !event.isTrusted) {
+            throw new ExtensionError("overrideContext must be called during a \"contextmenu\" event");
+          }
+
+          let webExtContextData = {
+            extensionId: context.extension.id,
+            showDefaults: contextOptions.showDefaults,
+          };
+
+          if (pendingMenuEvent) {
+            // overrideContext is called more than once during the same event.
+            pendingMenuEvent.webExtContextData = webExtContextData;
+            return;
+          }
+          pendingMenuEvent = {
+            webExtContextData,
+            observe(subject, topic, data) {
+              pendingMenuEvent = null;
+              Services.obs.removeObserver(this, "on-prepare-contextmenu");
+              subject.wrappedJSObject.webExtContextData = this.webExtContextData;
+            },
+            run() {
+              // "on-prepare-contextmenu" is expected to be observed before the
+              // end of the "contextmenu" event dispatch. This task is queued
+              // in case that does not happen, e.g. when the menu is not shown.
+              if (pendingMenuEvent === this) {
+                pendingMenuEvent = null;
+                Services.obs.removeObserver(this, "on-prepare-contextmenu");
+              }
+            },
+          };
+          Services.obs.addObserver(pendingMenuEvent, "on-prepare-contextmenu");
+          Services.tm.dispatchToMainThread(pendingMenuEvent);
         },
 
         onClicked: new EventManager({

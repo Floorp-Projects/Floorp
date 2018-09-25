@@ -54,6 +54,12 @@ var gMenuBuilder = {
       this.createAndInsertTopLevelElements(root, contextData, null);
     }
     this.afterBuildingMenu(contextData);
+
+    if (contextData.webExtContextData && !contextData.webExtContextData.showDefaults) {
+      // Wait until nsContextMenu.js has toggled the visibility of the default
+      // menu items before hiding the default items.
+      Promise.resolve().then(() => this.hideDefaultMenuItems());
+    }
   },
 
   createAndInsertTopLevelElements(root, contextData, nextSibling) {
@@ -69,7 +75,26 @@ var gMenuBuilder = {
       if (rootElements.length && !this.itemsToCleanUp.has(nextSibling)) {
         rootElements.push(this.xulMenu.ownerDocument.createXULElement("menuseparator"));
       }
-    } else {
+    } else if (contextData.webExtContextData) {
+      let {
+        extensionId,
+        showDefaults,
+      } = contextData.webExtContextData;
+      if (extensionId === root.extension.id) {
+        rootElements = this.buildTopLevelElements(root, contextData, Infinity, false);
+        // The extension menu should be rendered at the top, but after the navigation buttons.
+        nextSibling = nextSibling || this.xulMenu.querySelector(":scope > #context-sep-navigation + *");
+        if (rootElements.length && showDefaults && !this.itemsToCleanUp.has(nextSibling)) {
+          rootElements.push(this.xulMenu.ownerDocument.createXULElement("menuseparator"));
+        }
+      } else if (!showDefaults) {
+        // When the default menu items should be hidden, menu items from other
+        // extensions should be hidden too.
+        return;
+      }
+      // Fall through to show default extension menu items.
+    }
+    if (!rootElements) {
       rootElements = this.buildTopLevelElements(root, contextData, 1, true);
       if (rootElements.length && !this.itemsToCleanUp.has(this.xulMenu.lastElementChild)) {
         // All extension menu items are appended at the end.
@@ -414,6 +439,14 @@ var gMenuBuilder = {
     }
 
     this.contextData = contextData;
+  },
+
+  hideDefaultMenuItems() {
+    for (let item of this.xulMenu.children) {
+      if (!this.itemsToCleanUp.has(item)) {
+        item.hidden = true;
+      }
+    }
   },
 
   handleEvent(event) {
