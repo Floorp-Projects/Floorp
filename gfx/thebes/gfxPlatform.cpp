@@ -664,6 +664,20 @@ struct WebRenderMemoryReporterHelper {
 
   void Report(size_t aBytes, const char* aName) const
   {
+    nsPrintfCString path("explicit/gfx/webrender/%s", aName);
+    nsCString desc(NS_LITERAL_CSTRING("CPU heap memory used by WebRender"));
+    ReportInternal(aBytes, path, desc, nsIMemoryReporter::KIND_HEAP);
+  }
+
+  void ReportTexture(size_t aBytes, const char* aName) const
+  {
+    nsPrintfCString path("gfx/webrender/textures/%s", aName);
+    nsCString desc(NS_LITERAL_CSTRING("GPU texture memory used by WebRender"));
+    ReportInternal(aBytes, path, desc, nsIMemoryReporter::KIND_OTHER);
+  }
+
+  void ReportInternal(size_t aBytes, nsACString& aPath, nsACString& aDesc, int32_t aKind) const
+  {
     // Generally, memory reporters pass the empty string as the process name to
     // indicate "current process". However, if we're using a GPU process, the
     // measurements will actually take place in that process, and it's easier to
@@ -674,10 +688,9 @@ struct WebRenderMemoryReporterHelper {
       GPUParent::GetGPUProcessName(processName);
     }
 
-    nsPrintfCString path("explicit/gfx/webrender/%s", aName);
-    mCallback->Callback(processName, path,
-                        nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-                        aBytes, EmptyCString(), mData);
+    mCallback->Callback(processName, aPath,
+                        aKind, nsIMemoryReporter::UNITS_BYTES,
+                        aBytes, aDesc, mData);
   }
 };
 
@@ -708,15 +721,23 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   WebRenderMemoryReporterHelper helper(aHandleReport, aData);
   manager->SendReportMemory(
     [=](wr::MemoryReport aReport) {
+      // CPU Memory.
       helper.Report(aReport.primitive_stores, "primitive-stores");
       helper.Report(aReport.clip_stores, "clip-stores");
       helper.Report(aReport.gpu_cache_metadata, "gpu-cache/metadata");
       helper.Report(aReport.gpu_cache_cpu_mirror, "gpu-cache/cpu-mirror");
       helper.Report(aReport.render_tasks, "render-tasks");
       helper.Report(aReport.hit_testers, "hit-testers");
-      helper.Report(aReport.fonts, "resource-cache/font");
+      helper.Report(aReport.fonts, "resource-cache/fonts");
       helper.Report(aReport.images, "resource-cache/images");
       helper.Report(aReport.rasterized_blobs, "resource-cache/rasterized-blobs");
+
+      // GPU Memory.
+      helper.ReportTexture(aReport.gpu_cache_textures, "gpu-cache");
+      helper.ReportTexture(aReport.vertex_data_textures, "vertex-data");
+      helper.ReportTexture(aReport.render_target_textures, "render-targets");
+      helper.ReportTexture(aReport.texture_cache_textures, "texture-cache");
+
       FinishAsyncMemoryReport();
     },
     [](mozilla::ipc::ResponseRejectReason aReason) {
