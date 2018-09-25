@@ -49,6 +49,9 @@ private:
   bool
   CanMakePayment(const nsAString& aRequestId);
 
+  nsresult
+  ShowPayment(const nsAString& aRequestId);
+
   bool
   IsBasicCardPayment(const nsAString& aRequestId);
 

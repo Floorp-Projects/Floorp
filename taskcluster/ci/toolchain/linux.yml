@@ -665,6 +665,26 @@ linux64-rust-size:
     toolchains:
         - linux64-rust-1.28
 
+linux64-grcov:
+    description: "grcov toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(grcov)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-grcov.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/grcov.tar.xz
+    toolchains:
+        - linux64-rust-1.28
+        - linux64-clang-6
+
 linux64-gn:
     description: "gn toolchain build"
     treeherder:

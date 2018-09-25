@@ -262,7 +262,7 @@ function testBound(fun)
 testBound(strict);
 testBound(nonstrict);
 
-assertEq((function unbound(){"body"}).bind().toString(), `function bound unbound() {
+assertEq((function unbound(){"body"}).bind().toString(), `function() {
     [native code]
 }`);
 

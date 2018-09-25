@@ -139,7 +139,6 @@ backgroundFetchTest(async (test, backgroundFetch) => {
   assert_equals(results.length, 1);
 
   assert_equals(eventRegistration.id, registration.id);
-  assert_equals(eventRegistration.state, 'success');
   assert_equals(eventRegistration.failureReason, '');
 
   for (const result of results) {

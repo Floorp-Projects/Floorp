@@ -645,7 +645,7 @@ STRUCT!{struct WICJpegScanHeader {
     SuccessiveApproximationHigh: BYTE,
     SuccessiveApproximationLow: BYTE,
 }}
-RIDL!(#[uuid(0x00000040, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
+RIDL!{#[uuid(0x00000040, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
 interface IWICPalette(IWICPaletteVtbl): IUnknown(IUnknownVtbl) {
     fn InitializePredefined(
         ePaletteType: WICBitmapPaletteType,
@@ -683,8 +683,8 @@ interface IWICPalette(IWICPaletteVtbl): IUnknown(IUnknownVtbl) {
     fn HasAlpha(
         pfHasAlpha: *mut BOOL,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x00000120, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
+}}
+RIDL!{#[uuid(0x00000120, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
 interface IWICBitmapSource(IWICBitmapSourceVtbl): IUnknown(IUnknownVtbl) {
     fn GetSize(
         puiWidth: *mut UINT,
@@ -706,8 +706,8 @@ interface IWICBitmapSource(IWICBitmapSourceVtbl): IUnknown(IUnknownVtbl) {
         cbBufferSize: UINT,
         pbBuffer: *mut BYTE,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x00000301, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
+}}
+RIDL!{#[uuid(0x00000301, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
 interface IWICFormatConverter(IWICFormatConverterVtbl): IWICBitmapSource(IWICBitmapSourceVtbl) {
     fn Initialize(
         pISource: *const IWICBitmapSource,
@@ -722,8 +722,8 @@ interface IWICFormatConverter(IWICFormatConverterVtbl): IWICBitmapSource(IWICBit
         dstPixelFormat: REFWICPixelFormatGUID,
         pfCanConvert: *mut BOOL,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xbebee9cb, 0x83b0, 0x4dcc, 0x81, 0x32, 0xb0, 0xaa, 0xa5, 0x5e, 0xac, 0x96)]
+}}
+RIDL!{#[uuid(0xbebee9cb, 0x83b0, 0x4dcc, 0x81, 0x32, 0xb0, 0xaa, 0xa5, 0x5e, 0xac, 0x96)]
 interface IWICPlanarFormatConverter(IWICPlanarFormatConverterVtbl):
     IWICBitmapSource(IWICBitmapSourceVtbl) {
     fn Initialize(
@@ -741,8 +741,8 @@ interface IWICPlanarFormatConverter(IWICPlanarFormatConverterVtbl):
         dstPixelFormat: REFWICPixelFormatGUID,
         pfCanConvert: *mut BOOL,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x00000302, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
+}}
+RIDL!{#[uuid(0x00000302, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
 interface IWICBitmapScaler(IWICBitmapScalerVtbl): IWICBitmapSource(IWICBitmapSourceVtbl) {
     fn Initialize(
         pISource: *const IWICBitmapSource,
@@ -750,23 +750,23 @@ interface IWICBitmapScaler(IWICBitmapScalerVtbl): IWICBitmapSource(IWICBitmapSou
         uiHeight: UINT,
         mode: WICBitmapInterpolationMode,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xe4fbcf03, 0x223d, 0x4e81, 0x93, 0x33, 0xd6, 0x35, 0x55, 0x6d, 0xd1, 0xb5)]
+}}
+RIDL!{#[uuid(0xe4fbcf03, 0x223d, 0x4e81, 0x93, 0x33, 0xd6, 0x35, 0x55, 0x6d, 0xd1, 0xb5)]
 interface IWICBitmapClipper(IWICBitmapClipperVtbl): IWICBitmapSource(IWICBitmapSourceVtbl) {
     fn Initialize(
         pISource: *const IWICBitmapSource,
         prc: *const WICRect,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x5009834f, 0x2d6a, 0x41ce, 0x9e, 0x1b, 0x17, 0xc5, 0xaf, 0xf7, 0xa7, 0x82)]
+}}
+RIDL!{#[uuid(0x5009834f, 0x2d6a, 0x41ce, 0x9e, 0x1b, 0x17, 0xc5, 0xaf, 0xf7, 0xa7, 0x82)]
 interface IWICBitmapFlipRotator(IWICBitmapFlipRotatorVtbl):
     IWICBitmapSource(IWICBitmapSourceVtbl) {
     fn Initialize(
         pISource: *const IWICBitmapSource,
         options: WICBitmapTransformOptions,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x00000123, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
+}}
+RIDL!{#[uuid(0x00000123, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
 interface IWICBitmapLock(IWICBitmapLockVtbl): IUnknown(IUnknownVtbl) {
     fn GetSize(
         puiWidth: *mut UINT,
@@ -782,8 +782,8 @@ interface IWICBitmapLock(IWICBitmapLockVtbl): IUnknown(IUnknownVtbl) {
     fn GetPixelFormat(
         pPixelFormat: *mut WICPixelFormatGUID,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x00000121, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
+}}
+RIDL!{#[uuid(0x00000121, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
 interface IWICBitmap(IWICBitmapVtbl): IWICBitmapSource(IWICBitmapSourceVtbl) {
     fn Lock(
         prcLock: *const WICRect,
@@ -797,8 +797,8 @@ interface IWICBitmap(IWICBitmapVtbl): IWICBitmapSource(IWICBitmapSourceVtbl) {
         dpiX: c_double,
         dpiY: c_double,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x3c613a02, 0x34b2, 0x44ea, 0x9a, 0x7c, 0x45, 0xae, 0xa9, 0xc6, 0xfd, 0x6d)]
+}}
+RIDL!{#[uuid(0x3c613a02, 0x34b2, 0x44ea, 0x9a, 0x7c, 0x45, 0xae, 0xa9, 0xc6, 0xfd, 0x6d)]
 interface IWICColorContext(IWICColorContextVtbl): IUnknown(IUnknownVtbl) {
     fn InitializeFromFilename(
         wzFilename: LPCWSTR,
@@ -821,8 +821,8 @@ interface IWICColorContext(IWICColorContextVtbl): IUnknown(IUnknownVtbl) {
     fn GetExifColorSpace(
         pValue: *mut UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xb66f034f, 0xd0e2, 0x40ab, 0xb4, 0x36, 0x6d, 0xe3, 0x9e, 0x32, 0x1a, 0x94)]
+}}
+RIDL!{#[uuid(0xb66f034f, 0xd0e2, 0x40ab, 0xb4, 0x36, 0x6d, 0xe3, 0x9e, 0x32, 0x1a, 0x94)]
 interface IWICColorTransform(IWICColorTransformVtbl): IWICBitmapSource(IWICBitmapSourceVtbl) {
     fn Initialize(
         pIBitmapSource: *const IWICBitmapSource,
@@ -830,16 +830,16 @@ interface IWICColorTransform(IWICColorTransformVtbl): IWICBitmapSource(IWICBitma
         pIContextDest: *const IWICColorContext,
         pixelFmtDest: REFWICPixelFormatGUID,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xb84e2c09, 0x78c9, 0x4ac4, 0x8b, 0xd3, 0x52, 0x4a, 0xe1, 0x66, 0x3a, 0x2f)]
+}}
+RIDL!{#[uuid(0xb84e2c09, 0x78c9, 0x4ac4, 0x8b, 0xd3, 0x52, 0x4a, 0xe1, 0x66, 0x3a, 0x2f)]
 interface IWICFastMetadataEncoder(IWICFastMetadataEncoderVtbl): IUnknown(IUnknownVtbl) {
     fn Commit(
     ) -> HRESULT,
     fn GetMetadataQueryWriter(
         ppIMetadataQueryWriter: *mut *mut IWICMetadataQueryWriter,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x135ff860, 0x22b7, 0x4ddf, 0xb0, 0xf6, 0x21, 0x8f, 0x4f, 0x29, 0x9a, 0x43)]
+}}
+RIDL!{#[uuid(0x135ff860, 0x22b7, 0x4ddf, 0xb0, 0xf6, 0x21, 0x8f, 0x4f, 0x29, 0x9a, 0x43)]
 interface IWICStream(IWICStreamVtbl): IStream(IStreamVtbl) {
     fn InitializeFromIStream(
         pIStream: *const IStream,
@@ -857,8 +857,8 @@ interface IWICStream(IWICStreamVtbl): IStream(IStreamVtbl) {
         ulOffset: ULARGE_INTEGER,
         ulMaxSize: ULARGE_INTEGER,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xdc2bb46d, 0x3f07, 0x481e, 0x86, 0x25, 0x22, 0x0c, 0x4a, 0xed, 0xbb, 0x33)]
+}}
+RIDL!{#[uuid(0xdc2bb46d, 0x3f07, 0x481e, 0x86, 0x25, 0x22, 0x0c, 0x4a, 0xed, 0xbb, 0x33)]
 interface IWICEnumMetadataItem(IWICEnumMetadataItemVtbl): IUnknown(IUnknownVtbl) {
     fn Next(
         celt: ULONG,
@@ -874,8 +874,8 @@ interface IWICEnumMetadataItem(IWICEnumMetadataItemVtbl): IUnknown(IUnknownVtbl)
     fn Clone(
         ppIEnumMetadataItem: *mut *mut IWICEnumMetadataItem,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x30989668, 0xe1c9, 0x4597, 0xb3, 0x95, 0x45, 0x8e, 0xed, 0xb8, 0x08, 0xdf)]
+}}
+RIDL!{#[uuid(0x30989668, 0xe1c9, 0x4597, 0xb3, 0x95, 0x45, 0x8e, 0xed, 0xb8, 0x08, 0xdf)]
 interface IWICMetadataQueryReader(IWICMetadataQueryReaderVtbl): IUnknown(IUnknownVtbl) {
     fn GetContainerFormat(
         pguidContainerFormat: *mut GUID,
@@ -892,8 +892,8 @@ interface IWICMetadataQueryReader(IWICMetadataQueryReaderVtbl): IUnknown(IUnknow
     fn GetEnumerator(
         ppIEnumString: *mut *mut IEnumString,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xa721791a, 0x0def, 0x4d06, 0xbd, 0x91, 0x21, 0x18, 0xbf, 0x1d, 0xb1, 0x0b)]
+}}
+RIDL!{#[uuid(0xa721791a, 0x0def, 0x4d06, 0xbd, 0x91, 0x21, 0x18, 0xbf, 0x1d, 0xb1, 0x0b)]
 interface IWICMetadataQueryWriter(IWICMetadataQueryWriterVtbl):
     IWICMetadataQueryReader(IWICMetadataQueryReaderVtbl) {
     fn SetMetadataByName(
@@ -903,8 +903,8 @@ interface IWICMetadataQueryWriter(IWICMetadataQueryWriterVtbl):
     fn RemoveMetadataByName(
         wzName: LPCWSTR,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x00000103, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
+}}
+RIDL!{#[uuid(0x00000103, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
 interface IWICBitmapEncoder(IWICBitmapEncoderVtbl): IUnknown(IUnknownVtbl) {
     fn Initialize(
         pIStream: *const IStream,
@@ -938,8 +938,8 @@ interface IWICBitmapEncoder(IWICBitmapEncoderVtbl): IUnknown(IUnknownVtbl) {
     fn GetMetadataQueryWriter(
         ppIMetadataQueryWriter: *mut *mut IWICMetadataQueryWriter,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x00000105, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
+}}
+RIDL!{#[uuid(0x00000105, 0xa8f2, 0x4877, 0xba, 0x0a, 0xfd, 0x2b, 0x66, 0x45, 0xfb, 0x94)]
 interface IWICBitmapFrameEncode(IWICBitmapFrameEncodeVtbl): IUnknown(IUnknownVtbl) {
     fn Initialize(
         pIEncoderOptions: *const IPropertyBag2,
@@ -980,8 +980,8 @@ interface IWICBitmapFrameEncode(IWICBitmapFrameEncodeVtbl): IUnknown(IUnknownVtb
     fn GetMetadataQueryWriter(
         ppIMetadataQueryWriter: *mut *mut IWICMetadataQueryWriter,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xf928b7b8, 0x2221, 0x40c1, 0xb7, 0x2e, 0x7e, 0x82, 0xf1, 0x97, 0x4d, 0x1a)]
+}}
+RIDL!{#[uuid(0xf928b7b8, 0x2221, 0x40c1, 0xb7, 0x2e, 0x7e, 0x82, 0xf1, 0x97, 0x4d, 0x1a)]
 interface IWICPlanarBitmapFrameEncode(IWICPlanarBitmapFrameEncodeVtbl): IUnknown(IUnknownVtbl) {
     fn WritePixels(
         lineCount: UINT,
@@ -993,8 +993,8 @@ interface IWICPlanarBitmapFrameEncode(IWICPlanarBitmapFrameEncodeVtbl): IUnknown
         cPlanes: UINT,
         prcSource: *const WICRect,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x04c75bf8, 0x3ce1, 0x473b, 0xac, 0xc5, 0x3c, 0xc4, 0xf5, 0xe9, 0x49, 0x99)]
+}}
+RIDL!{#[uuid(0x04c75bf8, 0x3ce1, 0x473b, 0xac, 0xc5, 0x3c, 0xc4, 0xf5, 0xe9, 0x49, 0x99)]
 interface IWICImageEncoder(IWICImageEncoderVtbl): IUnknown(IUnknownVtbl) {
     fn WriteFrame(
         pImage: *const ID2D1Image,
@@ -1011,8 +1011,8 @@ interface IWICImageEncoder(IWICImageEncoderVtbl): IUnknown(IUnknownVtbl) {
         pEncoder: *const IWICBitmapEncoder,
         pImageParameters: *const WICImageParameters,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x9edde9e7, 0x8dee, 0x47ea, 0x99, 0xdf, 0xe6, 0xfa, 0xf2, 0xed, 0x44, 0xbf)]
+}}
+RIDL!{#[uuid(0x9edde9e7, 0x8dee, 0x47ea, 0x99, 0xdf, 0xe6, 0xfa, 0xf2, 0xed, 0x44, 0xbf)]
 interface IWICBitmapDecoder(IWICBitmapDecoderVtbl): IUnknown(IUnknownVtbl) {
     fn QueryCapability(
         pIStream: *const IStream,
@@ -1052,8 +1052,8 @@ interface IWICBitmapDecoder(IWICBitmapDecoderVtbl): IUnknown(IUnknownVtbl) {
         index: UINT,
         ppIBitmapFrame: *mut *mut IWICBitmapFrameDecode,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x3b16811b, 0x6a43, 0x4ec9, 0xb7, 0x13, 0x3d, 0x5a, 0x0c, 0x13, 0xb9, 0x40)]
+}}
+RIDL!{#[uuid(0x3b16811b, 0x6a43, 0x4ec9, 0xb7, 0x13, 0x3d, 0x5a, 0x0c, 0x13, 0xb9, 0x40)]
 interface IWICBitmapSourceTransform(IWICBitmapSourceTransformVtbl): IUnknown(IUnknownVtbl) {
     fn CopyPixels(
         prc: *const WICRect,
@@ -1076,8 +1076,8 @@ interface IWICBitmapSourceTransform(IWICBitmapSourceTransformVtbl): IUnknown(IUn
         dstTransform: WICBitmapTransformOptions,
         pfIsSupported: *mut BOOL,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x3aff9cce, 0xbe95, 0x4303, 0xb9, 0x27, 0xe7, 0xd1, 0x6f, 0xf4, 0xa6, 0x13)]
+}}
+RIDL!{#[uuid(0x3aff9cce, 0xbe95, 0x4303, 0xb9, 0x27, 0xe7, 0xd1, 0x6f, 0xf4, 0xa6, 0x13)]
 interface IWICPlanarBitmapSourceTransform(IWICPlanarBitmapSourceTransformVtbl):
     IUnknown(IUnknownVtbl) {
     fn DoesSupportTransform(
@@ -1099,8 +1099,8 @@ interface IWICPlanarBitmapSourceTransform(IWICPlanarBitmapSourceTransformVtbl):
         pDstPlanes: *const WICBitmapPlane,
         cPlanes: UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x3b16811b, 0x6a43, 0x4ec9, 0xa8, 0x13, 0x3d, 0x93, 0x0c, 0x13, 0xb9, 0x40)]
+}}
+RIDL!{#[uuid(0x3b16811b, 0x6a43, 0x4ec9, 0xa8, 0x13, 0x3d, 0x93, 0x0c, 0x13, 0xb9, 0x40)]
 interface IWICBitmapFrameDecode(IWICBitmapFrameDecodeVtbl):
     IWICBitmapSource(IWICBitmapSourceVtbl) {
     fn GetMetadataQueryReader(
@@ -1114,8 +1114,8 @@ interface IWICBitmapFrameDecode(IWICBitmapFrameDecodeVtbl):
     fn GetThumbnail(
         ppIThumbnail: *mut *mut IWICBitmapSource,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xdaac296f, 0x7aa5, 0x4dbf, 0x8d, 0x15, 0x22, 0x5c, 0x59, 0x76, 0xf8, 0x91)]
+}}
+RIDL!{#[uuid(0xdaac296f, 0x7aa5, 0x4dbf, 0x8d, 0x15, 0x22, 0x5c, 0x59, 0x76, 0xf8, 0x91)]
 interface IWICProgressiveLevelControl(IWICProgressiveLevelControlVtbl): IUnknown(IUnknownVtbl) {
     fn GetLevelCount(
         pcLevels: *mut UINT,
@@ -1126,22 +1126,22 @@ interface IWICProgressiveLevelControl(IWICProgressiveLevelControlVtbl): IUnknown
     fn SetCurrentLevel(
         nLevel: UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x4776f9cd, 0x9517, 0x45fa, 0xbf, 0x24, 0xe8, 0x9c, 0x5e, 0xc5, 0xc6, 0x0c)]
+}}
+RIDL!{#[uuid(0x4776f9cd, 0x9517, 0x45fa, 0xbf, 0x24, 0xe8, 0x9c, 0x5e, 0xc5, 0xc6, 0x0c)]
 interface IWICProgressCallback(IWICProgressCallbackVtbl): IUnknown(IUnknownVtbl) {
     fn Notify(
         uFrameNum: ULONG,
         operation: WICProgressOperation,
         dblProgress: c_double,
     ) -> HRESULT,
-});
+}}
 FN!{stdcall PFNProgressNotification(
     pvData: LPVOID,
     uFrameNum: ULONG,
     operation: WICProgressOperation,
     dblProgress: c_double,
 ) -> HRESULT}
-RIDL!(#[uuid(0x64c1024e, 0xc3cf, 0x4462, 0x80, 0x78, 0x88, 0xc2, 0xb1, 0x1c, 0x46, 0xd9)]
+RIDL!{#[uuid(0x64c1024e, 0xc3cf, 0x4462, 0x80, 0x78, 0x88, 0xc2, 0xb1, 0x1c, 0x46, 0xd9)]
 interface IWICBitmapCodecProgressNotification(IWICBitmapCodecProgressNotificationVtbl):
     IUnknown(IUnknownVtbl) {
     fn RegisterProgressNotification(
@@ -1149,8 +1149,8 @@ interface IWICBitmapCodecProgressNotification(IWICBitmapCodecProgressNotificatio
         pvData: LPVOID,
         dwProgressFlags: DWORD,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x23bc3f0a, 0x698b, 0x4357, 0x88, 0x6b, 0xf2, 0x4d, 0x50, 0x67, 0x13, 0x34)]
+}}
+RIDL!{#[uuid(0x23bc3f0a, 0x698b, 0x4357, 0x88, 0x6b, 0xf2, 0x4d, 0x50, 0x67, 0x13, 0x34)]
 interface IWICComponentInfo(IWICComponentInfoVtbl): IUnknown(IUnknownVtbl) {
     fn GetComponentType(
         pType: *mut WICComponentType,
@@ -1184,8 +1184,8 @@ interface IWICComponentInfo(IWICComponentInfoVtbl): IUnknown(IUnknownVtbl) {
         wzFriendlyName: *mut WCHAR,
         pcchActual: *mut UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x9f34fb65, 0x13f4, 0x4f15, 0xbc, 0x57, 0x37, 0x26, 0xb5, 0xe5, 0x3d, 0x9f)]
+}}
+RIDL!{#[uuid(0x9f34fb65, 0x13f4, 0x4f15, 0xbc, 0x57, 0x37, 0x26, 0xb5, 0xe5, 0x3d, 0x9f)]
 interface IWICFormatConverterInfo(IWICFormatConverterInfoVtbl):
     IWICComponentInfo(IWICComponentInfoVtbl) {
     fn GetPixelFormats(
@@ -1196,8 +1196,8 @@ interface IWICFormatConverterInfo(IWICFormatConverterInfoVtbl):
     fn CreateInstance(
         ppIConverter: *mut *mut IWICFormatConverter,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xe87a44c4, 0xb76e, 0x4c47, 0x8b, 0x09, 0x29, 0x8e, 0xb1, 0x2a, 0x27, 0x14)]
+}}
+RIDL!{#[uuid(0xe87a44c4, 0xb76e, 0x4c47, 0x8b, 0x09, 0x29, 0x8e, 0xb1, 0x2a, 0x27, 0x14)]
 interface IWICBitmapCodecInfo(IWICBitmapCodecInfoVtbl): IWICComponentInfo(IWICComponentInfoVtbl) {
     fn GetContainerFormat(
         pguidContainerFormat: *mut GUID,
@@ -1248,15 +1248,15 @@ interface IWICBitmapCodecInfo(IWICBitmapCodecInfoVtbl): IWICComponentInfo(IWICCo
         wzMimeType: LPCWSTR,
         pfMatches: *mut BOOL,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x94c9b4ee, 0xa09f, 0x4f92, 0x8a, 0x1e, 0x4a, 0x9b, 0xce, 0x7e, 0x76, 0xfb)]
+}}
+RIDL!{#[uuid(0x94c9b4ee, 0xa09f, 0x4f92, 0x8a, 0x1e, 0x4a, 0x9b, 0xce, 0x7e, 0x76, 0xfb)]
 interface IWICBitmapEncoderInfo(IWICBitmapEncoderInfoVtbl):
     IWICBitmapCodecInfo(IWICBitmapCodecInfoVtbl) {
     fn CreateInstance(
         ppIBitmapEncoder: *mut *mut IWICBitmapEncoder,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xd8cd007f, 0xd08f, 0x4191, 0x9b, 0xfc, 0x23, 0x6e, 0xa7, 0xf0, 0xe4, 0xb5)]
+}}
+RIDL!{#[uuid(0xd8cd007f, 0xd08f, 0x4191, 0x9b, 0xfc, 0x23, 0x6e, 0xa7, 0xf0, 0xe4, 0xb5)]
 interface IWICBitmapDecoderInfo(IWICBitmapDecoderInfoVtbl):
     IWICBitmapCodecInfo(IWICBitmapCodecInfoVtbl) {
     fn GetPatterns(
@@ -1272,8 +1272,8 @@ interface IWICBitmapDecoderInfo(IWICBitmapDecoderInfoVtbl):
     fn CreateInstance(
         ppIBitmapDecoder: *mut *mut IWICBitmapDecoder,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xe8eda601, 0x3d48, 0x431a, 0xab, 0x44, 0x69, 0x05, 0x9b, 0xe8, 0x8b, 0xbe)]
+}}
+RIDL!{#[uuid(0xe8eda601, 0x3d48, 0x431a, 0xab, 0x44, 0x69, 0x05, 0x9b, 0xe8, 0x8b, 0xbe)]
 interface IWICPixelFormatInfo(IWICPixelFormatInfoVtbl): IWICComponentInfo(IWICComponentInfoVtbl) {
     fn GetFormatGUID(
         pFormat: *mut GUID,
@@ -1293,8 +1293,8 @@ interface IWICPixelFormatInfo(IWICPixelFormatInfoVtbl): IWICComponentInfo(IWICCo
         pbMaskBuffer: *mut BYTE,
         pcbActual: *mut UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xa9db33a2, 0xaf5f, 0x43c7, 0xb6, 0x79, 0x74, 0xf5, 0x98, 0x4b, 0x5a, 0xa4)]
+}}
+RIDL!{#[uuid(0xa9db33a2, 0xaf5f, 0x43c7, 0xb6, 0x79, 0x74, 0xf5, 0x98, 0x4b, 0x5a, 0xa4)]
 interface IWICPixelFormatInfo2(IWICPixelFormatInfo2Vtbl):
     IWICPixelFormatInfo(IWICPixelFormatInfoVtbl) {
     fn SupportsTransparency(
@@ -1303,8 +1303,8 @@ interface IWICPixelFormatInfo2(IWICPixelFormatInfo2Vtbl):
     fn GetNumericRepresentation(
         pNumericRepresentation: *mut WICPixelFormatNumericRepresentation,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xec5ec8a9, 0xc395, 0x4314, 0x9c, 0x77, 0x54, 0xd7, 0xa9, 0x35, 0xff, 0x70)]
+}}
+RIDL!{#[uuid(0xec5ec8a9, 0xc395, 0x4314, 0x9c, 0x77, 0x54, 0xd7, 0xa9, 0x35, 0xff, 0x70)]
 interface IWICImagingFactory(IWICImagingFactoryVtbl): IUnknown(IUnknownVtbl) {
     fn CreateDecoderFromFilename(
         wzFilename: LPCWSTR,
@@ -1425,15 +1425,15 @@ interface IWICImagingFactory(IWICImagingFactoryVtbl): IUnknown(IUnknownVtbl) {
         pguidVendor: *const GUID,
         ppIQueryWriter: *mut *mut IWICMetadataQueryWriter,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x7b816b45, 0x1996, 0x4476, 0xb1, 0x32, 0xde, 0x9e, 0x24, 0x7c, 0x8a, 0xf0)]
+}}
+RIDL!{#[uuid(0x7b816b45, 0x1996, 0x4476, 0xb1, 0x32, 0xde, 0x9e, 0x24, 0x7c, 0x8a, 0xf0)]
 interface IWICImagingFactory2(IWICImagingFactory2Vtbl):
     IWICImagingFactory(IWICImagingFactoryVtbl) {
     fn CreateImageEncoder(
         pD2DDevice: *const ID2D1Device,
         ppWICImageEncoder: *mut *mut IWICImageEncoder,
     ) -> HRESULT,
-});
+}}
 extern "system" {
     pub fn WICConvertBitmapSource(
         dstFormat: REFWICPixelFormatGUID,
@@ -1590,7 +1590,7 @@ STRUCT!{struct WICRawToneCurvePoint {
 }}
 STRUCT!{struct WICRawToneCurve {
     cPoints: UINT,
-    aPoints: [WICRawToneCurvePoint; 0],
+    aPoints: [WICRawToneCurvePoint; 1],
 }}
 pub const WICRawChangeNotification_ExposureCompensation: UINT = 0x00000001;
 pub const WICRawChangeNotification_NamedWhitePoint: UINT = 0x00000002;
@@ -1606,14 +1606,14 @@ pub const WICRawChangeNotification_DestinationColorContext: UINT = 0x00000400;
 pub const WICRawChangeNotification_ToneCurve: UINT = 0x00000800;
 pub const WICRawChangeNotification_Rotation: UINT = 0x00001000;
 pub const WICRawChangeNotification_RenderMode: UINT = 0x00002000;
-RIDL!(#[uuid(0x95c75a6e, 0x3e8c, 0x4ec2, 0x85, 0xa8, 0xae, 0xbc, 0xc5, 0x51, 0xe5, 0x9b)]
+RIDL!{#[uuid(0x95c75a6e, 0x3e8c, 0x4ec2, 0x85, 0xa8, 0xae, 0xbc, 0xc5, 0x51, 0xe5, 0x9b)]
 interface IWICDevelopRawNotificationCallback(IWICDevelopRawNotificationCallbackVtbl):
     IUnknown(IUnknownVtbl) {
     fn Notify(
         NotificationMask: UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xfbec5e44, 0xf7be, 0x4b65, 0xb7, 0xf8, 0xc0, 0xc8, 0x1f, 0xef, 0x02, 0x6d)]
+}}
+RIDL!{#[uuid(0xfbec5e44, 0xf7be, 0x4b65, 0xb7, 0xf8, 0xc0, 0xc8, 0x1f, 0xef, 0x02, 0x6d)]
 interface IWICDevelopRaw(IWICDevelopRawVtbl): IWICBitmapFrameDecode(IWICBitmapFrameDecodeVtbl) {
     fn QueryRawCapabilitiesInfo(
         pInfo: *mut WICRawCapabilitiesInfo,
@@ -1720,7 +1720,7 @@ interface IWICDevelopRaw(IWICDevelopRawVtbl): IWICBitmapFrameDecode(IWICBitmapFr
     fn SetNotificationCallback(
         pCallback: *const IWICDevelopRawNotificationCallback,
     ) -> HRESULT,
-});
+}}
 ENUM!{enum WICDdsDimension {
     WICDdsTexture1D = 0x00000000,
     WICDdsTexture2D = 0x00000001,
@@ -1746,7 +1746,7 @@ STRUCT!{struct WICDdsParameters {
     Dimension: WICDdsDimension,
     AlphaMode: WICDdsAlphaMode,
 }}
-RIDL!(#[uuid(0x409cd537, 0x8532, 0x40cb, 0x97, 0x74, 0xe2, 0xfe, 0xb2, 0xdf, 0x4e, 0x9c)]
+RIDL!{#[uuid(0x409cd537, 0x8532, 0x40cb, 0x97, 0x74, 0xe2, 0xfe, 0xb2, 0xdf, 0x4e, 0x9c)]
 interface IWICDdsDecoder(IWICDdsDecoderVtbl): IUnknown(IUnknownVtbl) {
     fn GetParameters(
         pParameters: *mut WICDdsParameters,
@@ -1757,8 +1757,8 @@ interface IWICDdsDecoder(IWICDdsDecoderVtbl): IUnknown(IUnknownVtbl) {
         sliceIndex: UINT,
         ppIBitmapFrame: *mut *mut IWICBitmapFrameDecode,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x5cacdb4c, 0x407e, 0x41b3, 0xb9, 0x36, 0xd0, 0xf0, 0x10, 0xcd, 0x67, 0x32)]
+}}
+RIDL!{#[uuid(0x5cacdb4c, 0x407e, 0x41b3, 0xb9, 0x36, 0xd0, 0xf0, 0x10, 0xcd, 0x67, 0x32)]
 interface IWICDdsEncoder(IWICDdsEncoderVtbl): IUnknown(IUnknownVtbl) {
     fn SetParameters(
         pParameters: *const WICDdsParameters,
@@ -1772,14 +1772,14 @@ interface IWICDdsEncoder(IWICDdsEncoderVtbl): IUnknown(IUnknownVtbl) {
         pMipLevel: *mut UINT,
         pSliceIndex: *mut UINT,
     ) -> HRESULT,
-});
+}}
 STRUCT!{struct WICDdsFormatInfo {
     DxgiFormat: DXGI_FORMAT,
     BytesPerBlock: UINT,
     BlockWidth: UINT,
     BlockHeight: UINT,
 }}
-RIDL!(#[uuid(0x3d4c0c61, 0x18a4, 0x41e4, 0xbd, 0x80, 0x48, 0x1a, 0x4f, 0xc9, 0xf4, 0x64)]
+RIDL!{#[uuid(0x3d4c0c61, 0x18a4, 0x41e4, 0xbd, 0x80, 0x48, 0x1a, 0x4f, 0xc9, 0xf4, 0x64)]
 interface IWICDdsFrameDecode(IWICDdsFrameDecodeVtbl): IUnknown(IUnknownVtbl) {
     fn GetSizeInBlocks(
         pWidthInBlocks: *mut UINT,
@@ -1794,8 +1794,8 @@ interface IWICDdsFrameDecode(IWICDdsFrameDecodeVtbl): IUnknown(IUnknownVtbl) {
         cbBufferSize: UINT,
         pbBuffer: *mut BYTE,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x8939f66e, 0xc46a, 0x4c21, 0xa9, 0xd1, 0x98, 0xb3, 0x27, 0xce, 0x16, 0x79)]
+}}
+RIDL!{#[uuid(0x8939f66e, 0xc46a, 0x4c21, 0xa9, 0xd1, 0x98, 0xb3, 0x27, 0xce, 0x16, 0x79)]
 interface IWICJpegFrameDecode(IWICJpegFrameDecodeVtbl): IUnknown(IUnknownVtbl) {
     fn DoesSupportIndexing(
         pfIndexingSupported: *mut BOOL,
@@ -1840,8 +1840,8 @@ interface IWICJpegFrameDecode(IWICJpegFrameDecodeVtbl): IUnknown(IUnknownVtbl) {
         pbStreamData: *mut BYTE,
         pcbStreamDataActual: *mut UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x2f0c601f, 0xd2c6, 0x468c, 0xab, 0xfa, 0x49, 0x49, 0x5d, 0x98, 0x3e, 0xd1)]
+}}
+RIDL!{#[uuid(0x2f0c601f, 0xd2c6, 0x468c, 0xab, 0xfa, 0x49, 0x49, 0x5d, 0x98, 0x3e, 0xd1)]
 interface IWICJpegFrameEncode(IWICJpegFrameEncodeVtbl): IUnknown(IUnknownVtbl) {
     fn GetAcHuffmanTable(
         scanIndex: UINT,
@@ -1862,4 +1862,4 @@ interface IWICJpegFrameEncode(IWICJpegFrameEncodeVtbl): IUnknown(IUnknownVtbl) {
         cbScanData: UINT,
         pbScanData: *const BYTE,
     ) -> HRESULT,
-});
+}}

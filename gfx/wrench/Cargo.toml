@@ -39,7 +39,7 @@ headless = [ "osmesa-sys", "osmesa-src" ]
 pathfinder = [ "webrender/pathfinder" ]
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.4.1"
+dwrote = "0.5.1"
 mozangle = {version = "0.1.5", features = ["egl"]}
 
 [target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]

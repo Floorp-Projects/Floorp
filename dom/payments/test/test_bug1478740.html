@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1478740
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for retry PaymentRequest</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="DefaultData.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  const gUrl = SimpleTest.getTestFileURL('Bug1478740ChromeScript.js');
+  const gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  function testPassHandler(message) {
+    ok(true, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+  gScript.addMessageListener("test-pass", testPassHandler);
+
+  async function requestChromeAction(action, params) {
+    gScript.sendAsyncMessage(action, params);
+    await new Promise(resolve => {
+      gScript.addMessageListener(`${action}-complete`, function completeListener() {
+        gScript.removeMessageListener(`${action}-complete`, completeListener);
+        resolve();
+      });
+    });
+  }
+  function unexpectedErrMsg(testName, errName, timing) {
+    return `${testName}: Unexpected error(${errName}) when ${timing} the PaymentRequest.`;
+  }
+
+  function testMultipleShows() {
+    return new Promise(async (resolve) => {
+      const testName = "testMultipleShows";
+      await requestChromeAction("start-test", testName);
+      let expectedResults = ["successful",
+                             "successful",
+                             "successful",
+                             "AbortError",
+                             "AbortError",
+                             "AbortError"];
+      let nextStatus = ["creating first page",
+                        "creating second page",
+                        "showing first payment",
+                        "showing second payment",
+                        "showing third payment",
+                        "aborting first payment"];
+      let currStatus = nextStatus.shift();
+      let ifr1 = document.createElement('iframe');
+      let ifr2 = document.createElement('iframe');
+      let listener = async function(event) {
+        let expected = expectedResults.shift();
+        is(event.data, expected,
+           `${testName}: Expected '${expected}' when ${currStatus}, but got '${event.data}'`);
+        switch (currStatus) {
+          case "creating first page":
+            ifr2.src = "bug1478740.html";
+            document.body.appendChild(ifr2);
+            break;
+          case "creating second page":
+            ifr1.contentWindow.postMessage("Show Payment", "*");
+            break;
+          case "showing first payment":
+            ifr2.contentWindow.postMessage("Show Payment", "*");
+            break;
+          case "showing second payment":
+            ifr2.contentWindow.postMessage("Show Payment", "*");
+            break;
+          case "showing third payment":
+            await requestChromeAction("reject-payment");
+            break;
+          case "aborting first payment":
+            window.removeEventListener("message", listener);
+            gScript.removeMessageListener("showing-payment", listener);
+            document.body.removeChild(ifr1);
+            document.body.removeChild(ifr2);
+            resolve();
+            break;
+          default:
+            ok(false, `unknown status ${currStatus}`);
+        }
+        currStatus = nextStatus.shift();
+      }
+      window.addEventListener("message", listener);
+      gScript.addMessageListener("showing-payment", listener);
+      ifr1.src = "bug1478740.html";
+      document.body.appendChild(ifr1);
+      await requestChromeAction("finish-test");
+    });
+  }
+
+  function teardown() {
+    return new Promise((resolve, reject) => {
+      gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+        gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+        gScript.removeMessageListener("test-fail", testFailHandler);
+        gScript.removeMessageListener("test-pass", testPassHandler);
+        gScript.destroy();
+        SimpleTest.finish();
+        resolve();
+      });
+      gScript.sendAsyncMessage("teardown");
+    });
+  }
+
+  async function runTests() {
+    try {
+      await testMultipleShows();
+      await teardown();
+    } catch(e) {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    }
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+        ['dom.payments.request.user_interaction_required', false],
+      ]
+    }, runTests);
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1478740">Mozilla Bug 1478740</a>
+</body>
+</html>

@@ -107,7 +107,7 @@ async function connectAndAttachTab() {
   });
   const form = await connectDebuggerClient(client);
   const actorID = form.actor;
-  await client.attachTab(actorID);
+  await client.attachTarget(actorID);
   return { client, actorID };
 }
 

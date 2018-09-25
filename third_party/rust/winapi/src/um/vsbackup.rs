@@ -20,14 +20,14 @@ use um::vswriter::{
     VSS_WRITERRESTORE_ENUM
 };
 use um::winnt::{HRESULT, LONG, LPCWSTR};
-DEFINE_GUID!(IID_IVssExamineWriterMetadata,
-    0x902fcf7f, 0xb7fd, 0x42f8, 0x81, 0xf1, 0xb2, 0xe4, 0x00, 0xb1, 0xe5, 0xbd);
-DEFINE_GUID!(IID_IVssExamineWriterMetadataEx,
-    0x0c0e5ec0, 0xca44, 0x472b, 0xb7, 0x02, 0xe6, 0x52, 0xdb, 0x1c, 0x04, 0x51);
-DEFINE_GUID!(IID_IVssBackupComponents,
-    0x665c1d5f, 0xc218, 0x414d, 0xa0, 0x5d, 0x7f, 0xef, 0x5f, 0x9d, 0x5c, 0x86);
-DEFINE_GUID!(IID_IVssBackupComponentsEx,
-    0x963f03ad, 0x9e4c, 0x4a34, 0xac, 0x15, 0xe4, 0xb6, 0x17, 0x4e, 0x50, 0x36);
+DEFINE_GUID!{IID_IVssExamineWriterMetadata,
+    0x902fcf7f, 0xb7fd, 0x42f8, 0x81, 0xf1, 0xb2, 0xe4, 0x00, 0xb1, 0xe5, 0xbd}
+DEFINE_GUID!{IID_IVssExamineWriterMetadataEx,
+    0x0c0e5ec0, 0xca44, 0x472b, 0xb7, 0x02, 0xe6, 0x52, 0xdb, 0x1c, 0x04, 0x51}
+DEFINE_GUID!{IID_IVssBackupComponents,
+    0x665c1d5f, 0xc218, 0x414d, 0xa0, 0x5d, 0x7f, 0xef, 0x5f, 0x9d, 0x5c, 0x86}
+DEFINE_GUID!{IID_IVssBackupComponentsEx,
+    0x963f03ad, 0x9e4c, 0x4a34, 0xac, 0x15, 0xe4, 0xb6, 0x17, 0x4e, 0x50, 0x36}
 STRUCT!{struct VSS_COMPONENTINFO {
     type_: VSS_COMPONENT_TYPE, // type is a keyword in rust
     bstrLogicalPath: BSTR,
@@ -46,8 +46,7 @@ STRUCT!{struct VSS_COMPONENTINFO {
     cDependencies: UINT,
 }}
 pub type PVSSCOMPONENTINFO = *const VSS_COMPONENTINFO;
-RIDL!(
-#[uuid(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)]
+RIDL!{#[uuid(0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)]
 interface IVssWMComponent(IVssWMComponentVtbl): IUnknown(IUnknownVtbl) {
     fn GetComponentInfo(
         ppInfo: *mut PVSSCOMPONENTINFO,
@@ -71,10 +70,8 @@ interface IVssWMComponent(IVssWMComponentVtbl): IUnknown(IUnknownVtbl) {
         iDependency: UINT,
         ppDependency: *mut *mut IVssWMDependency,
     ) -> HRESULT,
-}
-);
-RIDL!(
-#[uuid(0x902fcf7f, 0xb7fd, 0x42f8, 0x81, 0xf1, 0xb2, 0xe4, 0x00, 0xb1, 0xe5, 0xbd)]
+}}
+RIDL!{#[uuid(0x902fcf7f, 0xb7fd, 0x42f8, 0x81, 0xf1, 0xb2, 0xe4, 0x00, 0xb1, 0xe5, 0xbd)]
 interface IVssExamineWriterMetadata(IVssExamineWriterMetadataVtbl): IUnknown(IUnknownVtbl) {
     fn GetIdentity(
         pidInstance: *mut VSS_ID,
@@ -124,10 +121,8 @@ interface IVssExamineWriterMetadata(IVssExamineWriterMetadataVtbl): IUnknown(IUn
     fn LoadFromXML(
         pbstrXML: *mut BSTR,
     ) -> HRESULT,
-}
-);
-RIDL!(
-#[uuid(0x0c0e5ec0, 0xca44, 0x472b, 0xb7, 0x02, 0xe6, 0x52, 0xdb, 0x1c, 0x04, 0x51)]
+}}
+RIDL!{#[uuid(0x0c0e5ec0, 0xca44, 0x472b, 0xb7, 0x02, 0xe6, 0x52, 0xdb, 0x1c, 0x04, 0x51)]
 interface IVssExamineWriterMetadataEx(IVssExamineWriterMetadataExVtbl):
     IVssExamineWriterMetadata(IVssExamineWriterMetadataVtbl) {
     fn GetIdentityEx(
@@ -138,10 +133,8 @@ interface IVssExamineWriterMetadataEx(IVssExamineWriterMetadataExVtbl):
         pUsage: *mut VSS_USAGE_TYPE,
         pSource: *mut VSS_SOURCE_TYPE,
     ) -> HRESULT,
-}
-);
-RIDL!(
-#[uuid(0xce115780, 0xa611, 0x431b, 0xb5, 0x7f, 0xc3, 0x83, 0x03, 0xab, 0x6a, 0xee)]
+}}
+RIDL!{#[uuid(0xce115780, 0xa611, 0x431b, 0xb5, 0x7f, 0xc3, 0x83, 0x03, 0xab, 0x6a, 0xee)]
 interface IVssExamineWriterMetadataEx2(IVssExamineWriterMetadataEx2Vtbl):
     IVssExamineWriterMetadataEx(IVssExamineWriterMetadataExVtbl) {
     fn GetVersion(
@@ -155,8 +148,7 @@ interface IVssExamineWriterMetadataEx2(IVssExamineWriterMetadataEx2Vtbl):
         iFile: UINT,
         ppFiledesc: *mut *mut IVssWMFiledesc,
     ) -> HRESULT,
-}
-);
+}}
 #[repr(C)]
 pub struct IVssWriterComponentsExt {
     pub lpVtbl: *const IVssWriterComponentsExtVtbl,
@@ -166,8 +158,7 @@ pub struct IVssWriterComponentsExtVtbl {
     pub parent1: IVssWriterComponentsVtbl,
     pub parent2: IUnknownVtbl,
 }
-RIDL!(
-#[uuid(0x665c1d5f, 0xc218, 0x414d, 0xa0, 0x5d, 0x7f, 0xef, 0x5f, 0x9d, 0x5c, 0x86)]
+RIDL!{#[uuid(0x665c1d5f, 0xc218, 0x414d, 0xa0, 0x5d, 0x7f, 0xef, 0x5f, 0x9d, 0x5c, 0x86)]
 interface IVssBackupComponents(IVssBackupComponentsVtbl): IUnknown(IUnknownVtbl) {
     fn GetWriterComponentsCount(
         pcComponents: *mut UINT,
@@ -397,10 +388,8 @@ interface IVssBackupComponents(IVssBackupComponentsVtbl): IUnknown(IUnknownVtbl)
         pwszVolume: VSS_PWSZ,
         ppAsync: *mut *mut IVssAsync,
     ) -> HRESULT,
-}
-);
-RIDL!(
-#[uuid(0x963f03ad, 0x9e4c, 0x4a34, 0xac, 0x15, 0xe4, 0xb6, 0x17, 0x4e, 0x50, 0x36)]
+}}
+RIDL!{#[uuid(0x963f03ad, 0x9e4c, 0x4a34, 0xac, 0x15, 0xe4, 0xb6, 0x17, 0x4e, 0x50, 0x36)]
 interface IVssBackupComponentsEx(IVssBackupComponentsExVtbl):
     IVssBackupComponents(IVssBackupComponentsVtbl) {
     fn GetWriterMetadataEx(
@@ -416,10 +405,8 @@ interface IVssBackupComponentsEx(IVssBackupComponentsExVtbl):
         bSelectedForRestore: bool,
         instanceId: VSS_ID,
     ) -> HRESULT,
-}
-);
-RIDL!(
-#[uuid(0xacfe2b3a, 0x22c9, 0x4ef8, 0xbd, 0x03, 0x2f, 0x9c, 0xa2, 0x30, 0x08, 0x4e)]
+}}
+RIDL!{#[uuid(0xacfe2b3a, 0x22c9, 0x4ef8, 0xbd, 0x03, 0x2f, 0x9c, 0xa2, 0x30, 0x08, 0x4e)]
 interface IVssBackupComponentsEx2(IVssBackupComponentsEx2Vtbl):
     IVssBackupComponentsEx(IVssBackupComponentsExVtbl) {
     fn UnexposeSnapshot(
@@ -462,10 +449,8 @@ interface IVssBackupComponentsEx2(IVssBackupComponentsEx2Vtbl):
         dwFastRecoveryFlags: DWORD,
         ppAsync: *mut *mut IVssAsync,
     ) -> HRESULT,
-}
-);
-RIDL!(
-#[uuid(0xc191bfbc, 0xb602, 0x4675, 0x8b, 0xd1, 0x67, 0xd6, 0x42, 0xf5, 0x29, 0xd5)]
+}}
+RIDL!{#[uuid(0xc191bfbc, 0xb602, 0x4675, 0x8b, 0xd1, 0x67, 0xd6, 0x42, 0xf5, 0x29, 0xd5)]
 interface IVssBackupComponentsEx3(IVssBackupComponentsEx3Vtbl):
     IVssBackupComponentsEx2(IVssBackupComponentsEx2Vtbl) {
     fn GetWriterStatusEx(
@@ -490,10 +475,8 @@ interface IVssBackupComponentsEx3(IVssBackupComponentsEx3Vtbl):
     fn GetSessionId(
         idSession: *mut VSS_ID,
     ) -> HRESULT,
-}
-);
-RIDL!(
-#[uuid(0xf434c2fd, 0xb553, 0x4961, 0xa9, 0xf9, 0xa8, 0xe9, 0x0b, 0x67, 0x3e, 0x53)]
+}}
+RIDL!{#[uuid(0xf434c2fd, 0xb553, 0x4961, 0xa9, 0xf9, 0xa8, 0xe9, 0x0b, 0x67, 0x3e, 0x53)]
 interface IVssBackupComponentsEx4(IVssBackupComponentsEx4Vtbl):
     IVssBackupComponentsEx3(IVssBackupComponentsEx3Vtbl) {
     fn GetRootAndLogicalPrefixPaths(
@@ -502,8 +485,7 @@ interface IVssBackupComponentsEx4(IVssBackupComponentsEx4Vtbl):
         ppwszLogicalPrefix: *mut VSS_PWSZ,
         bNormalizeFQDNforRootPath: BOOL,
     ) -> HRESULT,
-}
-);
+}}
 pub const VSS_SW_BOOTABLE_STATE: DWORD = 1;
 extern "system" {
     #[link_name="CreateVssBackupComponentsInternal"]

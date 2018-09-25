@@ -1,0 +1,26 @@
+<html>
+<head>
+  <style id="id_3">
+    * {
+      position: absolute !important
+  </style>
+  <script>
+    function start() {
+      window.CustomElement0 = class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({
+            mode: 'open'
+          })
+        }
+      }
+      customElements.define('custom-element-0', CustomElement0)
+      o1 = document.createElement('input')
+      o2 = document.createElement('custom-element-0')
+      document.documentElement.appendChild(o2)
+      o2.shadowRoot.prepend('', undefined, o1, '', undefined, document.getElementById('id_3'))
+    }
+    document.addEventListener('DOMContentLoaded', start)
+  </script>
+</head>
+</html>

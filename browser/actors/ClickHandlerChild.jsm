@@ -80,7 +80,8 @@ class ClickHandlerChild extends ActorChild {
         const sm = Services.scriptSecurityManager;
         try {
           let targetURI = Services.io.newURI(href);
-          sm.checkSameOriginURI(docshell.mixedContentChannel.URI, targetURI, false);
+          let isPrivateWin = ownerDoc.nodePrincipal.originAttributes.privateBrowsingId > 0;
+          sm.checkSameOriginURI(docshell.mixedContentChannel.URI, targetURI, false, isPrivateWin);
           json.allowMixedContent = true;
         } catch (e) {}
       }

@@ -28,8 +28,8 @@ window.onload = function() {
     const chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
     const selectedTab = chromeWin.gBrowser.selectedTab;
 
-    const target = TargetFactory.forTab(selectedTab);
-    await target.makeRemote();
+    const target = await TargetFactory.forTab(selectedTab);
+    await target.attach();
     const front = FramerateFront(client, form);
 
     front.startRecording().then(() => {

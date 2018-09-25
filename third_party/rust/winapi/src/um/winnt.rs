@@ -1,4 +1,4 @@
-// Copyright © 2016-2017 winapi-rs developers
+// Copyright © 2016-2018 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -11,7 +11,7 @@ use shared::basetsd::{
     DWORD64, KAFFINITY, LONG64, LONG_PTR, PDWORD64, PLONG64, SIZE_T, ULONG64, ULONG_PTR,
 };
 use shared::guiddef::{CLSID, GUID};
-use shared::ktmtypes::{UOW};
+use shared::ktmtypes::UOW;
 use shared::minwindef::{BYTE, DWORD, FALSE, PDWORD, TRUE, ULONG, USHORT, WORD};
 use vc::excpt::EXCEPTION_DISPOSITION;
 use vc::vcruntime::size_t;
@@ -1137,6 +1137,7 @@ STRUCT!{struct DISPATCHER_CONTEXT {
     ImageBase: DWORD64,
     FunctionEntry: PRUNTIME_FUNCTION,
     EstablisherFrame: DWORD64,
+    TargetIp: DWORD64,
     ContextRecord: PCONTEXT,
     LanguageHandler: PEXCEPTION_ROUTINE,
     HandlerData: PVOID,
@@ -1167,6 +1168,7 @@ STRUCT!{struct KNONVOLATILE_CONTEXT_POINTERS_u1_s {
     Xmm10: PM128A,
     Xmm11: PM128A,
     Xmm12: PM128A,
+    Xmm13: PM128A,
     Xmm14: PM128A,
     Xmm15: PM128A,
 }}
@@ -1267,6 +1269,7 @@ STRUCT!{struct CONTEXT {
     ExtendedRegisters: [BYTE; MAXIMUM_SUPPORTED_EXTENSION],
 }}
 pub type PCONTEXT = *mut CONTEXT;
+} // IFDEF(x86)
 STRUCT!{struct LDT_ENTRY_Bytes {
     BaseMid: BYTE,
     Flags1: BYTE,
@@ -1299,7 +1302,6 @@ STRUCT!{struct LDT_ENTRY {
     HighWord: LDT_ENTRY_HighWord,
 }}
 pub type PLDT_ENTRY = *mut LDT_ENTRY;
-} // IFDEF(x86)
 pub const WOW64_CONTEXT_i386: DWORD = 0x00010000;
 pub const WOW64_CONTEXT_i486: DWORD = 0x00010000;
 pub const WOW64_CONTEXT_CONTROL: DWORD = WOW64_CONTEXT_i386 | 0x00000001;
@@ -1338,8 +1340,6 @@ STRUCT!{struct WOW64_CONTEXT {
     Dr1: DWORD,
     Dr2: DWORD,
     Dr3: DWORD,
-    Dr4: DWORD,
-    Dr5: DWORD,
     Dr6: DWORD,
     Dr7: DWORD,
     FloatSave: WOW64_FLOATING_SAVE_AREA,
@@ -1371,7 +1371,7 @@ STRUCT!{struct WOW64_LDT_ENTRY_Bytes {
 STRUCT!{struct WOW64_LDT_ENTRY_Bits {
     BitFields: DWORD,
 }}
-BITFIELD!(WOW64_LDT_ENTRY_Bits BitFields: DWORD [
+BITFIELD!{WOW64_LDT_ENTRY_Bits BitFields: DWORD [
     BaseMid set_BaseMid[0..8],
     Type set_Type[8..13],
     Dpl set_Dpl[13..15],
@@ -1382,7 +1382,7 @@ BITFIELD!(WOW64_LDT_ENTRY_Bits BitFields: DWORD [
     Default_Big set_Default_Big[22..23],
     Granularity set_Granularity[23..24],
     BaseHi set_BaseHi[24..32],
-]);
+]}
 UNION!{union WOW64_LDT_ENTRY_HighWord {
     [u32; 1],
     Bytes Bytes_mut: WOW64_LDT_ENTRY_Bytes,
@@ -2159,10 +2159,10 @@ STRUCT!{struct SECURITY_DESCRIPTOR {
     Revision: BYTE,
     Sbz1: BYTE,
     Control: SECURITY_DESCRIPTOR_CONTROL,
-    Owner: DWORD,
-    Group: DWORD,
-    Sacl: DWORD,
-    Dacl: DWORD,
+    Owner: PSID,
+    Group: PSID,
+    Sacl: PACL,
+    Dacl: PACL,
 }}
 pub type PISECURITY_DESCRIPTOR = *mut SECURITY_DESCRIPTOR;
 STRUCT!{struct SECURITY_OBJECT_AI_PARAMS {
@@ -2819,14 +2819,14 @@ STRUCT!{struct WOW64_ARCHITECTURE_INFORMATION {
     BitFields: DWORD,
 }}
 pub type PWOW64_ARCHITECTURE_INFORMATION = *mut WOW64_ARCHITECTURE_INFORMATION;
-BITFIELD!(WOW64_ARCHITECTURE_INFORMATION BitFields: DWORD [
+BITFIELD!{WOW64_ARCHITECTURE_INFORMATION BitFields: DWORD [
     Machine set_Machine[0..16],
     KernelMode set_KernelMode[16..17],
     UserMode set_UserMode[17..18],
     Native set_Native[18..19],
     Process set_Process[19..20],
     ReservedZero0 set_ReservedZero0[20..32],
-]);
+]}
 pub const MEMORY_PRIORITY_LOWEST: ULONG = 0;
 pub const MEMORY_PRIORITY_VERY_LOW: ULONG = 1;
 pub const MEMORY_PRIORITY_LOW: ULONG = 2;
@@ -2849,12 +2849,11 @@ pub const QUOTA_LIMITS_HARDWS_MAX_DISABLE: DWORD = 0x00000008;
 pub const QUOTA_LIMITS_USE_DEFAULT_LIMITS: DWORD = 0x00000010;
 STRUCT!{struct RATE_QUOTA_LIMIT {
     RateData: DWORD,
-    BitFields: DWORD,
 }}
-BITFIELD!(RATE_QUOTA_LIMIT BitFields: DWORD [
+BITFIELD!{RATE_QUOTA_LIMIT RateData: DWORD [
     RatePercent set_RatePercent[0..7],
     Reserved0 set_Reserved0[7..32],
-]);
+]}
 pub type PRATE_QUOTA_LIMIT = *mut RATE_QUOTA_LIMIT;
 STRUCT!{struct QUOTA_LIMITS_EX {
     PagedPoolLimit: SIZE_T,
@@ -2905,103 +2904,142 @@ pub type PPROCESS_MITIGATION_POLICY = *mut PROCESS_MITIGATION_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_ASLR_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_ASLR_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_ASLR_POLICY Flags: DWORD [
     EnableBottomUpRandomization set_EnableBottomUpRandomization[0..1],
     EnableForceRelocateImages set_EnableForceRelocateImages[1..2],
     EnableHighEntropy set_EnableHighEntropy[2..3],
     DisallowStrippedImages set_DisallowStrippedImages[3..4],
     ReservedFlags set_ReservedFlags[4..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_ASLR_POLICY = *mut PROCESS_MITIGATION_ASLR_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_DEP_POLICY {
     Flags: DWORD,
     Permanent: BOOLEAN,
 }}
-BITFIELD!(PROCESS_MITIGATION_DEP_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_DEP_POLICY Flags: DWORD [
     Enable set_Enable[0..1],
     DisableAtlThunkEmulation set_DisableAtlThunkEmulation[1..2],
     ReservedFlags set_ReservedFlags[2..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_DEP_POLICY = *mut PROCESS_MITIGATION_DEP_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY Flags: DWORD [
     RaiseExceptionOnInvalidHandleReference set_RaiseExceptionOnInvalidHandleReference[0..1],
     HandleExceptionsPermanentlyEnabled set_HandleExceptionsPermanentlyEnabled[1..2],
     ReservedFlags set_ReservedFlags[2..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY
     = *mut PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY Flags: DWORD [
     DisallowWin32kSystemCalls set_DisallowWin32kSystemCalls[0..1],
     ReservedFlags set_ReservedFlags[1..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY
     = *mut PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY Flags: DWORD [
     DisableExtensionPoints set_DisableExtensionPoints[0..1],
     ReservedFlags set_ReservedFlags[1..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY
     = *mut PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_DYNAMIC_CODE_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_DYNAMIC_CODE_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_DYNAMIC_CODE_POLICY Flags: DWORD [
     ProhibitDynamicCode set_ProhibitDynamicCode[0..1],
     AllowThreadOptOut set_AllowThreadOptOut[1..2],
     AllowRemoteDowngrade set_AllowRemoteDowngrade[2..3],
     ReservedFlags set_ReservedFlags[3..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_DYNAMIC_CODE_POLICY = *mut PROCESS_MITIGATION_DYNAMIC_CODE_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_CONTROL_FLOW_GUARD_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_CONTROL_FLOW_GUARD_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_CONTROL_FLOW_GUARD_POLICY Flags: DWORD [
     EnableControlFlowGuard set_EnableControlFlowGuard[0..1],
     EnableExportSuppression set_EnableExportSuppression[1..2],
     StrictMode set_StrictMode[2..3],
     ReservedFlags set_ReservedFlags[3..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_CONTROL_FLOW_GUARD_POLICY
     = *mut PROCESS_MITIGATION_CONTROL_FLOW_GUARD_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY Flags: DWORD [
     MicrosoftSignedOnly set_MicrosoftSignedOnly[0..1],
     StoreSignedOnly set_StoreSignedOnly[1..2],
     MitigationOptIn set_MitigationOptIn[2..3],
     ReservedFlags set_ReservedFlags[3..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_BINARY_SIGNATURE_POLICY
     = *mut PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_FONT_DISABLE_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_FONT_DISABLE_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_FONT_DISABLE_POLICY Flags: DWORD [
     DisableNonSystemFonts set_DisableNonSystemFonts[0..1],
     AuditNonSystemFontLoading set_AuditNonSystemFontLoading[1..2],
     ReservedFlags set_ReservedFlags[2..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_FONT_DISABLE_POLICY = *mut PROCESS_MITIGATION_FONT_DISABLE_POLICY;
 STRUCT!{struct PROCESS_MITIGATION_IMAGE_LOAD_POLICY {
     Flags: DWORD,
 }}
-BITFIELD!(PROCESS_MITIGATION_IMAGE_LOAD_POLICY Flags: DWORD [
+BITFIELD!{PROCESS_MITIGATION_IMAGE_LOAD_POLICY Flags: DWORD [
     NoRemoteImages set_NoRemoteImages[0..1],
     NoLowMandatoryLabelImages set_NoLowMandatoryLabelImages[1..2],
     PreferSystem32Images set_PreferSystem32Images[2..3],
     ReservedFlags set_ReservedFlags[3..32],
-]);
+]}
 pub type PPROCESS_MITIGATION_IMAGE_LOAD_POLICY = *mut PROCESS_MITIGATION_IMAGE_LOAD_POLICY;
+STRUCT!{struct PROCESS_MITIGATION_SYSTEM_CALL_FILTER_POLICY {
+    Flags: DWORD,
+}}
+pub type PPPROCESS_MITIGATION_SYSTEM_CALL_FILTER_POLICY =
+    *mut PROCESS_MITIGATION_SYSTEM_CALL_FILTER_POLICY;
+BITFIELD!{PROCESS_MITIGATION_SYSTEM_CALL_FILTER_POLICY Flags: DWORD [
+    FilterId set_FilterId[0..4],
+    ReservedFlags set_ReservedFlags[4..32],
+]}
+STRUCT!{struct PROCESS_MITIGATION_PAYLOAD_RESTRICTION_POLICY {
+    Flags: DWORD,
+}}
+pub type PPROCESS_MITIGATION_PAYLOAD_RESTRICTION_POLICY =
+    *mut PROCESS_MITIGATION_PAYLOAD_RESTRICTION_POLICY;
+BITFIELD!{PROCESS_MITIGATION_PAYLOAD_RESTRICTION_POLICY Flags: DWORD [
+    EnableExportAddressFilter set_EnableExportAddressFilter[0..1],
+    AuditExportAddressFilter set_AuditExportAddressFilter[1..2],
+    EnableExportAddressFilterPlus set_EnableExportAddressFilterPlus[2..3],
+    AuditExportAddressFilterPlus set_AuditExportAddressFilterPlus[3..4],
+    EnableImportAddressFilter set_EnableImportAddressFilter[4..5],
+    AuditImportAddressFilter set_AuditImportAddressFilter[5..6],
+    EnableRopStackPivot set_EnableRopStackPivot[6..7],
+    AuditRopStackPivot set_AuditRopStackPivot[7..8],
+    EnableRopCallerCheck set_EnableRopCallerCheck[8..9],
+    AuditRopCallerCheck set_AuditRopCallerCheck[9..10],
+    EnableRopSimExec set_EnableRopSimExec[10..11],
+    AuditRopSimExec set_AuditRopSimExec[11..12],
+    ReservedFlags set_ReservedFlags[12..32],
+]}
+STRUCT!{struct PROCESS_MITIGATION_CHILD_PROCESS_POLICY {
+    Flags: DWORD,
+}}
+pub type PPROCESS_MITIGATION_CHILD_PROCESS_POLICY = *mut PROCESS_MITIGATION_CHILD_PROCESS_POLICY;
+BITFIELD!{PROCESS_MITIGATION_CHILD_PROCESS_POLICY Flags: DWORD [
+    NoChildProcessCreation set_NoChildProcessCreation[0..1],
+    AuditNoChildProcessCreation set_AuditNoChildProcessCreation[1..2],
+    AllowSecureProcessCreation set_AllowSecureProcessCreation[2..3],
+    ReservedFlags set_ReservedFlags[3..32],
+]}
 STRUCT!{struct JOBOBJECT_BASIC_ACCOUNTING_INFORMATION {
     TotalUserTime: LARGE_INTEGER,
     TotalKernelTime: LARGE_INTEGER,
@@ -3550,13 +3588,13 @@ STRUCT!{struct SYSTEM_CPU_SET_INFORMATION_CpuSet {
     Reserved: DWORD,
     AllocationTag: DWORD64,
 }}
-BITFIELD!(SYSTEM_CPU_SET_INFORMATION_CpuSet AllFlags: BYTE [
+BITFIELD!{SYSTEM_CPU_SET_INFORMATION_CpuSet AllFlags: BYTE [
     Parked set_Parked[0..1],
     Allocated set_Allocated[1..2],
     AllocatedToTargetProcess set_AllocatedToTargetProcess[2..3],
     RealTime set_RealTime[3..4],
     ReservedFlags set_ReservedFlags[4..8],
-]);
+]}
 STRUCT!{struct SYSTEM_CPU_SET_INFORMATION {
     Size: DWORD,
     Type: CPU_SET_INFORMATION_TYPE,
@@ -3688,10 +3726,10 @@ STRUCT!{struct XSTATE_CONFIGURATION {
     AllFeatureSize: DWORD,
     AllFeatures: [DWORD; MAXIMUM_XSTATE_FEATURES],
 }}
-BITFIELD!(XSTATE_CONFIGURATION ControlFlags: DWORD [
+BITFIELD!{XSTATE_CONFIGURATION ControlFlags: DWORD [
     OptimizedSave set_OptimizedSave[0..1],
     CompactionEnabled set_CompactionEnabled[1..2],
-]);
+]}
 pub type PXSTATE_CONFIGURATION = *mut XSTATE_CONFIGURATION;
 STRUCT!{struct MEMORY_BASIC_INFORMATION {
     BaseAddress: PVOID,
@@ -3904,9 +3942,10 @@ STRUCT!{struct FILE_NOTIFY_INFORMATION {
     FileNameLength: DWORD,
     FileName: [WCHAR; 1],
 }}
-STRUCT!{struct FILE_SEGMENT_ELEMENT {
-    Buffer: PVOID64,
-    Alignment: ULONGLONG,
+UNION!{union FILE_SEGMENT_ELEMENT {
+    [u64; 1],
+    Buffer Buffer_mut: PVOID64,
+    Alignment Alignment_mut: ULONGLONG,
 }}
 pub type PFILE_SEGMENT_ELEMENT = *mut FILE_SEGMENT_ELEMENT;
 pub const FLUSH_FLAGS_FILE_DATA_ONLY: ULONG = 0x00000001;
@@ -4413,7 +4452,7 @@ pub const POWER_DISCONNECTED_STANDBY_MODE_AGGRESSIVE: DWORD = 1;
 DEFINE_GUID!{GUID_ACDC_POWER_SOURCE,
     0x5d3e9a59, 0xe9d5, 0x4b00, 0xa6, 0xbd, 0xff, 0x34, 0xff, 0x51, 0x65, 0x48}
 DEFINE_GUID!{GUID_LIDSWITCH_STATE_CHANGE,
-     0xba3e0f4d, 0xb817, 0x4094, 0xa2, 0xd1, 0xd5, 0x63, 0x79, 0xe6, 0xa0, 0xf3}
+    0xba3e0f4d, 0xb817, 0x4094, 0xa2, 0xd1, 0xd5, 0x63, 0x79, 0xe6, 0xa0, 0xf3}
 DEFINE_GUID!{GUID_BATTERY_PERCENTAGE_REMAINING,
     0xa7ad8041, 0xb45a, 0x4cae, 0x87, 0xa3, 0xee, 0xcb, 0xb4, 0x68, 0xa9, 0xe1}
 DEFINE_GUID!{GUID_BATTERY_COUNT,
@@ -5085,11 +5124,11 @@ pub type PPROCESSOR_IDLESTATE_INFO = *mut PROCESSOR_IDLESTATE_INFO;
 STRUCT!{struct PROCESSOR_IDLESTATE_POLICY_Flags {
     AsWORD: WORD,
 }}
-BITFIELD!(PROCESSOR_IDLESTATE_POLICY_Flags AsWORD: WORD [
+BITFIELD!{PROCESSOR_IDLESTATE_POLICY_Flags AsWORD: WORD [
     AllowScaling set_AllowScaling[0..1],
     Disabled set_Disabled[1..2],
     Reserved set_Reserved[2..16],
-]);
+]}
 STRUCT!{struct PROCESSOR_IDLESTATE_POLICY {
     Revision: WORD,
     Flags: PROCESSOR_IDLESTATE_POLICY_Flags,
@@ -5111,11 +5150,11 @@ STRUCT!{struct PROCESSOR_POWER_POLICY_INFO {
     Spare: [BYTE; 2],
     Reserved: DWORD,
 }}
-BITFIELD!(PROCESSOR_POWER_POLICY_INFO Reserved: DWORD [
+BITFIELD!{PROCESSOR_POWER_POLICY_INFO Reserved: DWORD [
     AllowDemotion set_AllowDemotion[0..1],
     AllowPromotion set_AllowPromotion[1..2],
     Reserved set_Reserved[2..32],
-]);
+]}
 pub type PPROCESSOR_POWER_POLICY_INFO = *mut PROCESSOR_POWER_POLICY_INFO;
 STRUCT!{struct PROCESSOR_POWER_POLICY {
     Revision: DWORD,
@@ -5125,20 +5164,20 @@ STRUCT!{struct PROCESSOR_POWER_POLICY {
     PolicyCount: DWORD,
     Policy: [PROCESSOR_POWER_POLICY_INFO; 3],
 }}
-BITFIELD!(PROCESSOR_POWER_POLICY BitFields: DWORD [
+BITFIELD!{PROCESSOR_POWER_POLICY BitFields: DWORD [
     DisableCStates set_DisableCStates[0..1],
     Reserved set_Reserved[1..32],
-]);
+]}
 pub type PPROCESSOR_POWER_POLICY = *mut PROCESSOR_POWER_POLICY;
 STRUCT!{struct PROCESSOR_PERFSTATE_POLICY_u_Flags {
     AsBYTE: BYTE,
 }}
-BITFIELD!(PROCESSOR_PERFSTATE_POLICY_u_Flags AsBYTE: BYTE [
+BITFIELD!{PROCESSOR_PERFSTATE_POLICY_u_Flags AsBYTE: BYTE [
     NoDomainAccounting set_NoDomainAccounting[0..1],
     IncreasePolicy set_IncreasePolicy[1..3],
     DecreasePolicy set_DecreasePolicy[3..5],
     Reserved set_Reserved[5..8],
-]);
+]}
 UNION!{union PROCESSOR_PERFSTATE_POLICY_u {
     [u8; 1],
     Spare Spare_mut: BYTE,
@@ -6275,11 +6314,11 @@ STRUCT!{struct IMAGE_TLS_DIRECTORY64 {
     SizeOfZeroFill: DWORD,
     Characteristics: DWORD,
 }}
-BITFIELD!(IMAGE_TLS_DIRECTORY64 Characteristics: DWORD [
+BITFIELD!{IMAGE_TLS_DIRECTORY64 Characteristics: DWORD [
     Reserved0 set_Reserved0[0..20],
     Alignment set_Alignment[20..24],
     Reserved1 set_Reserved1[24..32],
-]);
+]}
 pub type PIMAGE_TLS_DIRECTORY64 = *mut IMAGE_TLS_DIRECTORY64;
 STRUCT!{struct IMAGE_TLS_DIRECTORY32 {
     StartAddressOfRawData: DWORD,
@@ -6289,11 +6328,11 @@ STRUCT!{struct IMAGE_TLS_DIRECTORY32 {
     SizeOfZeroFill: DWORD,
     Characteristics: DWORD,
 }}
-BITFIELD!(IMAGE_TLS_DIRECTORY32 Characteristics: DWORD [
+BITFIELD!{IMAGE_TLS_DIRECTORY32 Characteristics: DWORD [
     Reserved0 set_Reserved0[0..20],
     Alignment set_Alignment[20..24],
     Reserved1 set_Reserved1[24..32],
-]);
+]}
 pub type PIMAGE_TLS_DIRECTORY32 = *mut IMAGE_TLS_DIRECTORY32;
 #[cfg(target_arch = "x86_64")]
 IFDEF!{
@@ -6355,10 +6394,10 @@ pub type PIMAGE_BOUND_FORWARDER_REF = *mut IMAGE_BOUND_FORWARDER_REF;
 STRUCT!{struct IMAGE_DELAYLOAD_DESCRIPTOR_Attributes {
     AllAttributes: DWORD,
 }}
-BITFIELD!(IMAGE_DELAYLOAD_DESCRIPTOR_Attributes AllAttributes: DWORD [
+BITFIELD!{IMAGE_DELAYLOAD_DESCRIPTOR_Attributes AllAttributes: DWORD [
     RvaBased set_RvaBased[0..1],
     ReservedAttributes set_ReservedAttributes[1..32],
-]);
+]}
 STRUCT!{struct IMAGE_DELAYLOAD_DESCRIPTOR {
     Attributes: IMAGE_DELAYLOAD_DESCRIPTOR_Attributes,
     DllNameRVA: DWORD,
@@ -6385,10 +6424,10 @@ pub const IMAGE_RESOURCE_DATA_IS_DIRECTORY: DWORD = 0x80000000;
 STRUCT!{struct IMAGE_RESOURCE_DIRECTORY_ENTRY_u_s {
     BitFields: DWORD,
 }}
-BITFIELD!(IMAGE_RESOURCE_DIRECTORY_ENTRY_u_s BitFields: DWORD [
+BITFIELD!{IMAGE_RESOURCE_DIRECTORY_ENTRY_u_s BitFields: DWORD [
     NameOffset set_NameOffset[0..31],
     NameIsString set_NameIsString[31..32],
-]);
+]}
 UNION!{union IMAGE_RESOURCE_DIRECTORY_ENTRY_u {
     [u32; 1],
     s s_mut: IMAGE_RESOURCE_DIRECTORY_ENTRY_u_s,
@@ -6399,10 +6438,10 @@ STRUCT!{struct IMAGE_RESOURCE_DIRECTORY_ENTRY {
     u: IMAGE_RESOURCE_DIRECTORY_ENTRY_u,
     OffsetToData: DWORD,
 }}
-BITFIELD!(IMAGE_RESOURCE_DIRECTORY_ENTRY OffsetToData: DWORD [
+BITFIELD!{IMAGE_RESOURCE_DIRECTORY_ENTRY OffsetToData: DWORD [
     OffsetToDirectory set_OffsetToDirectory[0..31],
     DataIsDirectory set_DataIsDirectory[31..32],
-]);
+]}
 pub type PIMAGE_RESOURCE_DIRECTORY_ENTRY = *mut IMAGE_RESOURCE_DIRECTORY_ENTRY;
 STRUCT!{struct IMAGE_RESOURCE_DIRECTORY_STRING {
     Length: WORD,
@@ -6433,17 +6472,17 @@ STRUCT!{struct IMAGE_DYNAMIC_RELOCATION_TABLE {
     Size: DWORD,
 }}
 pub type PIMAGE_DYNAMIC_RELOCATION_TABLE = *mut IMAGE_DYNAMIC_RELOCATION_TABLE;
-STRUCT!{struct IMAGE_DYNAMIC_RELOCATION32 {
+STRUCT!{#[repr(packed)] struct IMAGE_DYNAMIC_RELOCATION32 {
     Symbol: DWORD,
     BaseRelocSize: DWORD,
 }}
 pub type PIMAGE_DYNAMIC_RELOCATION32 = *mut IMAGE_DYNAMIC_RELOCATION32;
-STRUCT!{struct IMAGE_DYNAMIC_RELOCATION64 {
+STRUCT!{#[repr(packed)] struct IMAGE_DYNAMIC_RELOCATION64 {
     Symbol: ULONGLONG,
     BaseRelocSize: DWORD,
 }}
 pub type PIMAGE_DYNAMIC_RELOCATION64 = *mut IMAGE_DYNAMIC_RELOCATION64;
-STRUCT!{struct IMAGE_DYNAMIC_RELOCATION32_V2 {
+STRUCT!{#[repr(packed)] struct IMAGE_DYNAMIC_RELOCATION32_V2 {
     HeaderSize: DWORD,
     FixupInfoSize: DWORD,
     Symbol: DWORD,
@@ -6451,7 +6490,7 @@ STRUCT!{struct IMAGE_DYNAMIC_RELOCATION32_V2 {
     Flags: DWORD,
 }}
 pub type PIMAGE_DYNAMIC_RELOCATION32_V2 = *mut IMAGE_DYNAMIC_RELOCATION32_V2;
-STRUCT!{struct IMAGE_DYNAMIC_RELOCATION64_V2 {
+STRUCT!{#[repr(packed)] struct IMAGE_DYNAMIC_RELOCATION64_V2 {
     HeaderSize: DWORD,
     FixupInfoSize: DWORD,
     Symbol: ULONGLONG,
@@ -6475,11 +6514,11 @@ pub type PIMAGE_DYNAMIC_RELOCATION_V2 = PIMAGE_DYNAMIC_RELOCATION32_V2;
 }
 pub const IMAGE_DYNAMIC_RELOCATION_GUARD_RF_PROLOGUE: DWORD = 0x00000001;
 pub const IMAGE_DYNAMIC_RELOCATION_GUARD_RF_EPILOGUE: DWORD = 0x00000002;
-STRUCT!{struct IMAGE_PROLOGUE_DYNAMIC_RELOCATION_HEADER {
+STRUCT!{#[repr(packed)] struct IMAGE_PROLOGUE_DYNAMIC_RELOCATION_HEADER {
     PrologueByteCount: BYTE,
 }}
 pub type PIMAGE_PROLOGUE_DYNAMIC_RELOCATION_HEADER = *mut IMAGE_PROLOGUE_DYNAMIC_RELOCATION_HEADER;
-STRUCT!{struct IMAGE_EPILOGUE_DYNAMIC_RELOCATION_HEADER {
+STRUCT!{#[repr(packed)] struct IMAGE_EPILOGUE_DYNAMIC_RELOCATION_HEADER {
     EpilogueCount: DWORD,
     EpilogueByteCount: BYTE,
     BranchDescriptorElementSize: BYTE,
@@ -6526,6 +6565,8 @@ STRUCT!{struct IMAGE_LOAD_CONFIG_DIRECTORY32 {
     Reserved2: WORD,
     GuardRFVerifyStackPointerFunctionPointer: DWORD,
     HotPatchTableOffset: DWORD,
+    Reserved3: DWORD,
+    EnclaveConfigurationPointer: DWORD,
 }}
 pub type PIMAGE_LOAD_CONFIG_DIRECTORY32 = *mut IMAGE_LOAD_CONFIG_DIRECTORY32;
 STRUCT!{struct IMAGE_LOAD_CONFIG_DIRECTORY64 {
@@ -6568,6 +6609,8 @@ STRUCT!{struct IMAGE_LOAD_CONFIG_DIRECTORY64 {
     Reserved2: WORD,
     GuardRFVerifyStackPointerFunctionPointer: ULONGLONG,
     HotPatchTableOffset: DWORD,
+    Reserved3: DWORD,
+    EnclaveConfigurationPointer: ULONGLONG,
 }}
 pub type PIMAGE_LOAD_CONFIG_DIRECTORY64 = *mut IMAGE_LOAD_CONFIG_DIRECTORY64;
 #[cfg(target_arch = "x86_64")]
@@ -6586,6 +6629,7 @@ STRUCT!{struct IMAGE_HOT_PATCH_INFO {
     SequenceNumber: DWORD,
     BaseImageList: DWORD,
     BaseImageCount: DWORD,
+    BufferOffset: DWORD,
 }}
 pub type PIMAGE_HOT_PATCH_INFO = *mut IMAGE_HOT_PATCH_INFO;
 STRUCT!{struct IMAGE_HOT_PATCH_BASE {
@@ -6596,6 +6640,7 @@ STRUCT!{struct IMAGE_HOT_PATCH_BASE {
     CodeIntegrityInfo: DWORD,
     CodeIntegritySize: DWORD,
     PatchTable: DWORD,
+    BufferOffset: DWORD,
 }}
 pub type PIMAGE_HOT_PATCH_BASE = *mut IMAGE_HOT_PATCH_BASE;
 STRUCT!{struct IMAGE_HOT_PATCH_HASHES {
@@ -6639,18 +6684,18 @@ STRUCT!{struct IMAGE_CE_RUNTIME_FUNCTION_ENTRY {
     FuncStart: DWORD,
     BitFields: DWORD,
 }}
-BITFIELD!(IMAGE_CE_RUNTIME_FUNCTION_ENTRY BitFields: DWORD [
+BITFIELD!{IMAGE_CE_RUNTIME_FUNCTION_ENTRY BitFields: DWORD [
     PrologLen set_PrologLen[0..8],
     FuncLen set_FuncLen[8..30],
     ThirtyTwoBit set_ThirtyTwoBit[30..31],
     ExceptionFlag set_ExceptionFlag[31..32],
-]);
+]}
 pub type PIMAGE_CE_RUNTIME_FUNCTION_ENTRY = *mut IMAGE_CE_RUNTIME_FUNCTION_ENTRY;
 STRUCT!{struct IMAGE_ARM_RUNTIME_FUNCTION_ENTRY {
     BeginAddress: DWORD,
     UnwindData: DWORD,
 }}
-BITFIELD!(IMAGE_ARM_RUNTIME_FUNCTION_ENTRY UnwindData: DWORD [
+BITFIELD!{IMAGE_ARM_RUNTIME_FUNCTION_ENTRY UnwindData: DWORD [
     Flag set_Flag[0..2],
     FunctionLength set_FunctionLength[2..13],
     Ret set_Ret[13..15],
@@ -6660,13 +6705,13 @@ BITFIELD!(IMAGE_ARM_RUNTIME_FUNCTION_ENTRY UnwindData: DWORD [
     L set_L[20..21],
     C set_c[21..22],
     StackAdjust set_StackAdjust[22..32],
-]);
+]}
 pub type PIMAGE_ARM_RUNTIME_FUNCTION_ENTRY = *mut IMAGE_ARM_RUNTIME_FUNCTION_ENTRY;
 STRUCT!{struct IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY {
     BeginAddress: DWORD,
     UnwindData: DWORD,
 }}
-BITFIELD!(IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY UnwindData: DWORD [
+BITFIELD!{IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY UnwindData: DWORD [
     Flag set_Flag[0..2],
     FunctionLength set_FunctionLength[2..13],
     RegF set_RegF[13..16],
@@ -6674,7 +6719,7 @@ BITFIELD!(IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY UnwindData: DWORD [
     H set_H[20..21],
     CR set_cR[21..23],
     FrameSize set_FrameSize[23..32],
-]);
+]}
 pub type PIMAGE_ARM64_RUNTIME_FUNCTION_ENTRY = *mut IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY;
 STRUCT!{struct IMAGE_ALPHA64_RUNTIME_FUNCTION_ENTRY {
     BeginAddress: ULONGLONG,
@@ -6755,14 +6800,14 @@ STRUCT!{struct FPO_DATA {
     cdwParams: WORD,
     BitFields: WORD,
 }}
-BITFIELD!(FPO_DATA BitFields: WORD [
+BITFIELD!{FPO_DATA BitFields: WORD [
     cbProlog set_cbProlog[0..8],
     cbRegs set_cbRegs[8..11],
     fHasSEH set_fHasSEH[11..12],
     fUseBP set_fUseBP[12..13],
     reserved set_reserved[13..14],
     cbFrame set_cbFrame[14..16],
-]);
+]}
 pub type PFPO_DATA = *mut FPO_DATA;
 pub const SIZEOF_RFPO_DATA: usize = 16;
 pub const IMAGE_DEBUG_MISC_EXENAME: DWORD = 1;
@@ -6827,12 +6872,12 @@ STRUCT!{struct IMAGE_ARCHITECTURE_HEADER {
     BitFields: c_uint,
     FirstEntryRVA: DWORD,
 }}
-BITFIELD!(IMAGE_ARCHITECTURE_HEADER BitFields: c_uint [
+BITFIELD!{IMAGE_ARCHITECTURE_HEADER BitFields: c_uint [
     AmaskValue set_AmaskValue[0..1],
     unused1 set_unused1[1..8],
     AmaskShift set_AmaskShift[8..16],
     unused2 set_unused2[8..32],
-]);
+]}
 pub type PIMAGE_ARCHITECTURE_HEADER = *mut IMAGE_ARCHITECTURE_HEADER;
 STRUCT!{struct IMAGE_ARCHITECTURE_ENTRY {
     FixupInstRVA: DWORD,
@@ -6855,11 +6900,11 @@ STRUCT!{struct IMPORT_OBJECT_HEADER {
     u: IMPORT_OBJECT_HEADER_u,
     BitFields: WORD,
 }}
-BITFIELD!(IMPORT_OBJECT_HEADER BitFields: WORD [
+BITFIELD!{IMPORT_OBJECT_HEADER BitFields: WORD [
     Type set_Type[0..2],
     NameType set_NameType[2..5],
     Reserved set_Reserved[5..16],
-]);
+]}
 ENUM!{enum IMPORT_OBJECT_TYPE {
     IMPORT_OBJECT_CODE = 0,
     IMPORT_OBJECT_DATA = 1,
@@ -7021,26 +7066,26 @@ STRUCT!{struct SLIST_ENTRY {
 pub type PSLIST_ENTRY = *mut SLIST_ENTRY;
 #[cfg(target_arch = "x86_64")]
 IFDEF!{
-UNION!{union SLIST_HEADER_u {
-    [u64; 1],
-    Alignment Alignment_mut: ULONGLONG,
-    Region Region_mut: ULONGLONG,
+STRUCT!{struct SLIST_HEADER_s {
+    Alignment: ULONGLONG,
+    Region: ULONGLONG,
 }}
 STRUCT!{struct SLIST_HEADER_HeaderX64 {
     BitFields1: ULONGLONG,
     BitFields2: ULONGLONG,
 }}
-BITFIELD!(SLIST_HEADER_HeaderX64 BitFields1: ULONGLONG [
+BITFIELD!{SLIST_HEADER_HeaderX64 BitFields1: ULONGLONG [
     Depth set_Depth[0..16],
     Sequence set_Sequence[16..64],
-]);
-BITFIELD!(SLIST_HEADER_HeaderX64 BitFields2: ULONGLONG [
+]}
+BITFIELD!{SLIST_HEADER_HeaderX64 BitFields2: ULONGLONG [
     Reserved set_Reserved[0..4],
     NextEntry set_NextEntry[4..64],
-]);
-STRUCT!{struct SLIST_HEADER {
-    u: SLIST_HEADER_u,
-    HeaderX64: SLIST_HEADER_HeaderX64,
+]}
+UNION!{union SLIST_HEADER {
+    [u64; 2],
+    s s_mut: SLIST_HEADER_s,
+    HeaderX64 HeaderX64_mut: SLIST_HEADER_HeaderX64,
 }}
 pub type PSLIST_HEADER = *mut SLIST_HEADER;
 }
@@ -7051,9 +7096,10 @@ STRUCT!{struct SLIST_HEADER_s {
     Depth: WORD,
     Reserved: WORD,
 }}
-STRUCT!{struct SLIST_HEADER {
-    Alignment: ULONGLONG,
-    s: SLIST_HEADER_s,
+UNION!{union SLIST_HEADER {
+    [u64; 1],
+    Alignment Alignment_mut: ULONGLONG,
+    s s_mut: SLIST_HEADER_s,
 }}
 pub type PSLIST_HEADER = *mut SLIST_HEADER;
 }
@@ -7388,6 +7434,8 @@ extern "system" {
         Flags: DWORD,
     ) -> OS_DEPLOYEMENT_STATE_VALUES;
 }
+#[cfg(target_arch = "x86_64")]
+IFDEF!{
 STRUCT!{struct NV_MEMORY_RANGE {
     BaseAddress: *mut VOID,
     Length: SIZE_T,
@@ -7395,6 +7443,7 @@ STRUCT!{struct NV_MEMORY_RANGE {
 pub type PNV_MEMORY_RANGE = *mut NV_MEMORY_RANGE;
 pub const FLUSH_NV_MEMORY_IN_FLAG_NO_DRAIN: ULONG = 0x00000001;
 pub const FLUSH_NV_MEMORY_DEFAULT_TOKEN: ULONG_PTR = -1isize as usize;
+}
 STRUCT!{struct RTL_CRITICAL_SECTION_DEBUG {
     Type: WORD,
     CreatorBackTraceIndex: WORD,
@@ -8307,11 +8356,11 @@ FN!{stdcall PTP_CLEANUP_GROUP_CANCEL_CALLBACK(
 STRUCT!{struct TP_CALLBACK_ENVIRON_V3_u_s {
     BitFields: DWORD,
 }}
-BITFIELD!(TP_CALLBACK_ENVIRON_V3_u_s BitFields: DWORD [
+BITFIELD!{TP_CALLBACK_ENVIRON_V3_u_s BitFields: DWORD [
     LongFunction set_LongFunction[0..1],
     Persistent set_Persistent[1..2],
     Private set_Private[2..32],
-]);
+]}
 UNION!{union TP_CALLBACK_ENVIRON_V3_u {
     [u32; 1],
     Flags Flags_mut: DWORD,

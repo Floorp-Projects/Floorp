@@ -432,9 +432,9 @@ ul.children + .tag-line::before {
 /* Markup badges that are interactive/clickable */
 .markup-badge[data-custom],
 .markup-badge[data-display="flex"].interactive,
-.markup-badge[data-display="grid"],
-.markup-badge[data-display="inline-flex"],
-.markup-badge[data-display="inline-grid"],
+.markup-badge[data-display="grid"].interactive,
+.markup-badge[data-display="inline-flex"].interactive,
+.markup-badge[data-display="inline-grid"].interactive,
 .markup-badge[data-event] {
   background-color: var(--markup-badge-interactive-background-color);
   color: var(--markup-badge-interactive-color);
@@ -443,12 +443,12 @@ ul.children + .tag-line::before {
 
 .markup-badge[data-display="flex"]:not(.active).interactive:focus,
 .markup-badge[data-display="flex"]:not(.active).interactive:hover,
-.markup-badge[data-display="grid"]:not(.active):focus,
-.markup-badge[data-display="grid"]:not(.active):hover,
+.markup-badge[data-display="grid"]:not(.active).interactive:focus,
+.markup-badge[data-display="grid"]:not(.active).interactive:hover,
 .markup-badge[data-display="inline-flex"]:not(.active).interactive:focus,
 .markup-badge[data-display="inline-flex"]:not(.active).interactive:hover,
-.markup-badge[data-display="inline-grid"]:not(.active):focus,
-.markup-badge[data-display="inline-grid"]:not(.active):hover,
+.markup-badge[data-display="inline-grid"]:not(.active).interactive:focus,
+.markup-badge[data-display="inline-grid"]:not(.active).interactive:hover,
 .markup-badge[data-event]:focus,
 .markup-badge[data-event]:hover,
 .expandable.collapsed .markup-expand-badge:focus::before,

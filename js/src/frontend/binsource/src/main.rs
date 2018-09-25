@@ -1108,7 +1108,11 @@ impl CPPExporter {
                 if parser.supports_empty {
                     "".to_string()
                 } else {
-                    format!("\n    if (length == 0)\n         return raiseEmpty(\"{kind}\");\n",
+                    format!("
+    if (length == 0) {{
+        return raiseEmpty(\"{kind}\");
+    }}
+",
                         kind = kind)
                 },
             call = self.get_method_call("item",

@@ -6,9 +6,11 @@
 // except according to those terms.
 #![cfg(windows)]
 #![deny(unused, unused_qualifications)]
+#![warn(unused_attributes)]
 #![allow(bad_style, overflowing_literals, unused_macros)]
-#![recursion_limit = "128"]
+#![recursion_limit = "2563"]
 #![no_std]
+#![cfg_attr(feature = "cargo-clippy", allow(absurd_extreme_comparisons, cast_lossless, cast_ptr_alignment, const_static_lifetime, erasing_op, excessive_precision, identity_op, many_single_char_names, module_inception, too_many_arguments, transmute_int_to_float, unreadable_literal, unseparated_literal_suffix))]
 
 #[cfg(feature = "std")]
 extern crate std;
@@ -54,6 +56,13 @@ pub mod ctypes {
     pub type __uint64 = u64;
     pub type wchar_t = u16;
 }
+// This trait should be implemented for all COM interfaces
 pub trait Interface {
+    // Returns the IID of the Interface
+    fn uuidof() -> shared::guiddef::GUID;
+}
+// This trait should be implemented for all COM classes
+pub trait Class {
+    // Returns the CLSID of the Class
     fn uuidof() -> shared::guiddef::GUID;
 }

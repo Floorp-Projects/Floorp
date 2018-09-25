@@ -11,7 +11,7 @@ use shared::minwindef::{BYTE, DWORD, FLOAT, UINT, ULONG, USHORT, WORD};
 use shared::wtypes::{BSTR, DATE, DECIMAL, LPBSTR, LPDECIMAL, VARTYPE};
 use shared::wtypesbase::{DOUBLE, LPCOLESTR, LPOLESTR, OLECHAR};
 use um::minwinbase::LPSYSTEMTIME;
-use um::oaidl::{DISPID_UNKNOWN, ITypeLib, VARIANT, VARIANTARG};
+use um::oaidl::{DISPID_UNKNOWN, ITypeLib, SAFEARRAY, VARIANT, VARIANTARG};
 use um::winnt::{CHAR, HRESULT, INT, LCID, LONG, LPCSTR, SHORT};
 extern "system" {
     pub fn SysAllocString(
@@ -61,6 +61,18 @@ extern "system" {
         vtime: DOUBLE,
         lpSystemTime: LPSYSTEMTIME,
     ) -> INT;
+    pub fn SafeArrayAccessData(
+        psa: *mut SAFEARRAY,
+        ppvData: *mut *mut c_void,
+    ) -> HRESULT;
+    pub fn SafeArrayUnaccessData(
+        psa: *mut SAFEARRAY,
+    ) -> HRESULT;
+    pub fn SafeArrayCreateVector(
+        vt: VARTYPE,
+        lLbound: LONG,
+        cElements: ULONG,
+    ) -> *mut SAFEARRAY;
     pub fn VariantInit(
         pvarg: *mut VARIANTARG,
     );

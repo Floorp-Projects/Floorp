@@ -11,7 +11,7 @@ const TEST_URL = TEST_BASE_HTTP + "doc_fetch_from_netmonitor.html";
 add_task(async function() {
   info("Opening netmonitor");
   const tab = await addTab("about:blank");
-  const target = TargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "netmonitor");
   const monitor = toolbox.getPanel("netmonitor");
   const { store, windowRequire } = monitor.panelWin;

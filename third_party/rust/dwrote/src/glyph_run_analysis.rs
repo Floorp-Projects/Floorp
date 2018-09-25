@@ -6,27 +6,31 @@ use std::ptr;
 use std::cell::UnsafeCell;
 
 use comptr::ComPtr;
-use winapi;
+use winapi::um::dcommon::DWRITE_MEASURING_MODE;
+use winapi::um::dwrite::{DWRITE_RENDERING_MODE, DWRITE_MATRIX};
+use winapi::um::dwrite::{DWRITE_GLYPH_RUN, DWRITE_TEXTURE_ALIASED_1x1, DWRITE_TEXTURE_TYPE};
+use winapi::um::dwrite::DWRITE_TEXTURE_CLEARTYPE_3x1;
+use winapi::shared::windef::RECT;
+use winapi::um::dwrite::IDWriteGlyphRunAnalysis;
 use std::mem;
 use super::DWriteFactory;
 
-#[derive(Debug)]
 pub struct GlyphRunAnalysis {
-    native: UnsafeCell<ComPtr<winapi::IDWriteGlyphRunAnalysis>>,
+    native: UnsafeCell<ComPtr<IDWriteGlyphRunAnalysis>>,
 }
 
 impl GlyphRunAnalysis {
-    pub fn create(glyph_run: &winapi::DWRITE_GLYPH_RUN,
+    pub fn create(glyph_run: &DWRITE_GLYPH_RUN,
                   pixels_per_dip: f32,
-                  transform: Option<winapi::DWRITE_MATRIX>,
-                  rendering_mode: winapi::DWRITE_RENDERING_MODE,
-                  measuring_mode: winapi::DWRITE_MEASURING_MODE,
+                  transform: Option<DWRITE_MATRIX>,
+                  rendering_mode: DWRITE_RENDERING_MODE,
+                  measuring_mode: DWRITE_MEASURING_MODE,
                   baseline_x: f32,
                   baseline_y: f32) -> GlyphRunAnalysis
     {
         unsafe {
-            let mut native: ComPtr<winapi::IDWriteGlyphRunAnalysis> = ComPtr::new();
-            let hr = (*DWriteFactory()).CreateGlyphRunAnalysis(glyph_run as *const winapi::DWRITE_GLYPH_RUN,
+            let mut native: ComPtr<IDWriteGlyphRunAnalysis> = ComPtr::new();
+            let hr = (*DWriteFactory()).CreateGlyphRunAnalysis(glyph_run as *const DWRITE_GLYPH_RUN,
                                                                pixels_per_dip,
                                                                transform.as_ref().map(|x| x as *const _).unwrap_or(ptr::null()),
                                                                rendering_mode, measuring_mode,
@@ -37,15 +41,15 @@ impl GlyphRunAnalysis {
         }
     }
 
-    pub fn take(native: ComPtr<winapi::IDWriteGlyphRunAnalysis>) -> GlyphRunAnalysis {
+    pub fn take(native: ComPtr<IDWriteGlyphRunAnalysis>) -> GlyphRunAnalysis {
         GlyphRunAnalysis {
             native: UnsafeCell::new(native),
         }
     }
 
-    pub fn get_alpha_texture_bounds(&self, texture_type: winapi::DWRITE_TEXTURE_TYPE) -> winapi::RECT {
+    pub fn get_alpha_texture_bounds(&self, texture_type: DWRITE_TEXTURE_TYPE) -> RECT {
         unsafe {
-            let mut rect: winapi::RECT = mem::zeroed();
+            let mut rect: RECT = mem::zeroed();
             rect.left = 1234;
             rect.top = 1234;
             let hr = (*self.native.get()).GetAlphaTextureBounds(texture_type, &mut rect);
@@ -54,12 +58,12 @@ impl GlyphRunAnalysis {
         }
     }
 
-    pub fn create_alpha_texture(&self, texture_type: winapi::DWRITE_TEXTURE_TYPE, rect: winapi::RECT) -> Vec<u8> {
+    pub fn create_alpha_texture(&self, texture_type: DWRITE_TEXTURE_TYPE, rect: RECT) -> Vec<u8> {
         unsafe {
             let rect_pixels = (rect.right - rect.left) * (rect.bottom - rect.top);
             let rect_bytes = rect_pixels * match texture_type {
-                winapi::DWRITE_TEXTURE_ALIASED_1x1 => 1,
-                winapi::DWRITE_TEXTURE_CLEARTYPE_3x1 => 3,
+                DWRITE_TEXTURE_ALIASED_1x1 => 1,
+                DWRITE_TEXTURE_CLEARTYPE_3x1 => 3,
                 _ => panic!("bad texture type specified"),
             };
 

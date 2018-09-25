@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{FontInstanceFlags, FontKey, FontRenderMode};
+use api::{FontInstanceFlags, FontKey, FontRenderMode, FontVariation};
 use api::{ColorU, GlyphDimensions};
 use dwrote;
 use gamma_lut::ColorLut;
@@ -32,7 +32,7 @@ lazy_static! {
 
 pub struct FontContext {
     fonts: FastHashMap<FontKey, dwrote::FontFace>,
-    simulations: FastHashMap<(FontKey, dwrote::DWRITE_FONT_SIMULATIONS), dwrote::FontFace>,
+    variations: FastHashMap<(FontKey, dwrote::DWRITE_FONT_SIMULATIONS, Vec<FontVariation>), dwrote::FontFace>,
     #[cfg(not(feature = "pathfinder"))]
     gamma_luts: FastHashMap<(u16, u16), GammaLut>,
 }
@@ -100,7 +100,7 @@ impl FontContext {
     pub fn new() -> Result<FontContext, ResourceCacheError> {
         Ok(FontContext {
             fonts: FastHashMap::default(),
-            simulations: FastHashMap::default(),
+            variations: FastHashMap::default(),
             #[cfg(not(feature = "pathfinder"))]
             gamma_luts: FastHashMap::default(),
         })
@@ -141,7 +141,7 @@ impl FontContext {
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
         if let Some(_) = self.fonts.remove(font_key) {
-            self.simulations.retain(|k, _| k.0 != *font_key);
+            self.variations.retain(|k, _| k.0 != *font_key);
         }
     }
 
@@ -167,14 +167,32 @@ impl FontContext {
         &mut self,
         font: &FontInstance,
     ) -> &dwrote::FontFace {
-        if !font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
+        if !font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) &&
+           font.variations.is_empty() {
             return self.fonts.get(&font.font_key).unwrap();
         }
-        let sims = dwrote::DWRITE_FONT_SIMULATIONS_BOLD;
-        match self.simulations.entry((font.font_key, sims)) {
+        let sims = if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
+            dwrote::DWRITE_FONT_SIMULATIONS_BOLD
+        } else {
+            dwrote::DWRITE_FONT_SIMULATIONS_NONE
+        };
+        match self.variations.entry((font.font_key, sims, font.variations.clone())) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
                 let normal_face = self.fonts.get(&font.font_key).unwrap();
+                if !font.variations.is_empty() {
+                    if let Some(var_face) = normal_face.create_font_face_with_variations(
+                        sims,
+                        &font.variations.iter().map(|var| {
+                            dwrote::DWRITE_FONT_AXIS_VALUE {
+                                axisTag: var.tag,
+                                value: var.value,
+                            }
+                        }).collect::<Vec<_>>(),
+                    ) {
+                        return entry.insert(var_face);
+                    }
+                }
                 entry.insert(normal_face.create_font_face_with_simulations(sims))
             }
         }

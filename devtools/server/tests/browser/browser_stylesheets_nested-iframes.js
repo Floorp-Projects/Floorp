@@ -18,7 +18,7 @@ add_task(async function() {
   const form = await connectDebuggerClient(client);
 
   info("Attaching to the active tab.");
-  await client.attachTab(form.actor);
+  await client.attachTarget(form.actor);
 
   const front = StyleSheetsFront(client, form);
   ok(front, "The StyleSheetsFront was created.");

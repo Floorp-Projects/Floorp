@@ -132,3 +132,23 @@ macosx64-node:
         script: repack-node.sh
         arguments: ['macosx64']
         toolchain-artifact: public/build/node.tar.xz
+
+macosx64-grcov:
+    description: "grcov toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TM(grcov)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-grcov.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/grcov.tar.xz
+    toolchains:
+        - linux64-rust-1.28
+        - linux64-clang-6

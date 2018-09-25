@@ -2,20 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use winapi::IDWriteLocalizedStrings;
-use winapi::wchar_t;
+use winapi::um::dwrite::IDWriteLocalizedStrings;
+use winapi::ctypes::wchar_t;
 use comptr::ComPtr;
-use winapi::winerror::S_OK;
-use winapi::minwindef::{BOOL, FALSE};
-use kernel32;
+use winapi::shared::winerror::S_OK;
+use winapi::shared::minwindef::{BOOL, FALSE};
+use winapi::um::winnls::GetUserDefaultLocaleName;
 use std::ffi::{OsStr};
 use std::os::windows::ffi::{OsStrExt};
+
 
 lazy_static! {
     static ref SYSTEM_LOCALE: Vec<wchar_t> = {
         unsafe {
             let mut locale: Vec<wchar_t> = vec![0; 85];
-            kernel32::GetUserDefaultLocaleName(locale.as_mut_ptr(), locale.len() as i32 - 1);
+            GetUserDefaultLocaleName(locale.as_mut_ptr(), locale.len() as i32 - 1);
             locale
         }
     };

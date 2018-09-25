@@ -56,7 +56,7 @@ ENUM!{enum CorSymAddrKind {
 ENUM!{enum CorSymVarFlag {
     VAR_IS_COMP_GEN = 1,
 }}
-RIDL!(#[uuid(0xaa544d42, 0x28cb, 0x11d3, 0xbd, 0x22, 0x00, 0x00, 0xf8, 0x08, 0x49, 0xbd)]
+RIDL!{#[uuid(0xaa544d42, 0x28cb, 0x11d3, 0xbd, 0x22, 0x00, 0x00, 0xf8, 0x08, 0x49, 0xbd)]
 interface ISymUnmanagedBinder(ISymUnmanagedBinderVtbl): IUnknown(IUnknownVtbl) {
     fn GetReaderForFile(
         importer: *mut IUnknown,
@@ -69,15 +69,14 @@ interface ISymUnmanagedBinder(ISymUnmanagedBinderVtbl): IUnknown(IUnknownVtbl) {
         pstream: *mut IStream,
         pRetVal: *mut *mut ISymUnmanagedReader,
     ) -> HRESULT,
-}
-);
+}}
 ENUM!{enum CorSymSearchPolicyAttributes {
     AllowRegistryAccess = 0x1,
     AllowSymbolServerAccess = 0x2,
     AllowOriginalPathAccess = 0x4,
     AllowReferencePathAccess = 0x8,
 }}
-RIDL!(#[uuid(0xaccee350, 0x89af, 0x4ccb, 0x8b, 0x40, 0x1c, 0x2c, 0x4c, 0x6f, 0x94, 0x34)]
+RIDL!{#[uuid(0xaccee350, 0x89af, 0x4ccb, 0x8b, 0x40, 0x1c, 0x2c, 0x4c, 0x6f, 0x94, 0x34)]
 interface ISymUnmanagedBinder2(ISymUnmanagedBinder2Vtbl):
     ISymUnmanagedBinder(ISymUnmanagedBinderVtbl) {
     fn GetReaderForFile2(
@@ -87,6 +86,5 @@ interface ISymUnmanagedBinder2(ISymUnmanagedBinder2Vtbl):
         searchPolicy: ULONG32,
         pRetVal: *mut *mut ISymUnmanagedReader,
     ) -> HRESULT,
-}
-);
+}}
 pub enum ISymUnmanagedReader {} // TODO

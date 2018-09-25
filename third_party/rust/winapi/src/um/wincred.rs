@@ -5,14 +5,12 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! Authentication API Prototypes and Definitions
-
 use shared::minwindef::{
     BOOL, DWORD, FILETIME, LPBYTE, LPCVOID, LPDWORD, LPVOID, PBOOL, PBYTE, UCHAR, ULONG
 };
 use shared::windef::{HBITMAP, HWND};
 use um::sspi::PCtxtHandle;
 use um::winnt::{CHAR, LPCSTR, LPCWSTR, LPSTR, LPWSTR, PCSTR, PCWSTR, PSTR, PVOID, PWSTR, WCHAR};
-
 // STATUS_*
 pub const NERR_BASE: DWORD = 2100;
 pub const NERR_PasswordExpired: DWORD = NERR_BASE + 142;
@@ -241,15 +239,43 @@ extern "system" {
 }
 pub const CRED_ENUMERATE_ALL_CREDENTIALS: DWORD = 0x1;
 extern "system" {
-    // pub fn CredEnumerateW();
-    // pub fn CredEnumerateA();
-    // pub fn CredWriteDomainCredentialsW();
-    // pub fn CredWriteDomainCredentialsA();
+    pub fn CredEnumerateW(
+        Filter: LPCWSTR,
+        Flags: DWORD,
+        Count: *mut DWORD,
+        Credential: *mut *mut PCREDENTIALW,
+    ) -> BOOL;
+    pub fn CredEnumerateA(
+        Filter: LPCSTR,
+        Flags: DWORD,
+        Count: *mut DWORD,
+        Credential: *mut *mut PCREDENTIALA,
+    ) -> BOOL;
+    pub fn CredWriteDomainCredentialsW(
+        TargetInfo: PCREDENTIAL_TARGET_INFORMATIONW,
+        Credential: PCREDENTIALW,
+        Flags: DWORD,
+    ) -> BOOL;
+    pub fn CredWriteDomainCredentialsA(
+        TargetInfo: PCREDENTIAL_TARGET_INFORMATIONA,
+        Credential: PCREDENTIALA,
+        Flags: DWORD,
+    ) -> BOOL;
 }
 pub const CRED_CACHE_TARGET_INFORMATION: DWORD = 0x1;
 extern "system" {
-    // pub fn CredReadDomainCredentialsW();
-    // pub fn CredReadDomainCredentialsA();
+    pub fn CredReadDomainCredentialsW(
+        TargetInfo: PCREDENTIAL_TARGET_INFORMATIONW,
+        Flags: DWORD,
+        Count: *mut DWORD,
+        Credential: *mut *mut PCREDENTIALW,
+    ) -> BOOL;
+    pub fn CredReadDomainCredentialsA(
+        TargetInfo: PCREDENTIAL_TARGET_INFORMATIONA,
+        Flags: DWORD,
+        Count: *mut DWORD,
+        Credential: *mut *mut PCREDENTIALA,
+    ) -> BOOL;
     pub fn CredDeleteW(
         TargetName: LPCWSTR,
         Type: DWORD,
@@ -260,19 +286,57 @@ extern "system" {
         Type: DWORD,
         Flags: DWORD,
     ) -> BOOL;
-    // pub fn CredRenameW();
-    // pub fn CredRenameA();
+    pub fn CredRenameW(
+        OldTargetName: LPCWSTR,
+        NewTargetName: LPCWSTR,
+        Type: DWORD,
+        Flags: DWORD,
+    ) -> BOOL;
+    pub fn CredRenameA(
+        OldTargetName: LPCSTR,
+        NewTargetName: LPCSTR,
+        Type: DWORD,
+        Flags: DWORD,
+    ) -> BOOL;
 }
 pub const CRED_ALLOW_NAME_RESOLUTION: DWORD = 0x1;
 extern "system" {
-    // pub fn CredGetTargetInfoW();
-    // pub fn CredGetTargetInfoA();
-    // pub fn CredMarshalCredentialW();
-    // pub fn CredMarshalCredentialA();
-    // pub fn CredUnmarshalCredentialW();
-    // pub fn CredUnmarshalCredentialA();
-    // pub fn CredIsMarshaledCredentialW();
-    // pub fn CredIsMarshaledCredentialA();
+    pub fn CredGetTargetInfoW(
+        TargetName: LPCWSTR,
+        Flags: DWORD,
+        TargetInfo: *mut PCREDENTIAL_TARGET_INFORMATIONW,
+    ) -> BOOL;
+    pub fn CredGetTargetInfoA(
+        TargetName: LPCSTR,
+        Flags: DWORD,
+        TargetInfo: *mut PCREDENTIAL_TARGET_INFORMATIONA,
+    ) -> BOOL;
+    pub fn CredMarshalCredentialW(
+        CredType: CRED_MARSHAL_TYPE,
+        Credential: PVOID,
+        MarhaledCredential: *mut LPWSTR,
+    ) -> BOOL;
+    pub fn CredMarshalCredentialA(
+        CredType: CRED_MARSHAL_TYPE,
+        Credential: PVOID,
+        MarhaledCredential: *mut LPSTR,
+    ) -> BOOL;
+    pub fn CredUnmarshalCredentialW(
+        MarshaledCredential: LPCWSTR,
+        CredType: PCRED_MARSHAL_TYPE,
+        Credential: *mut PVOID,
+    ) -> BOOL;
+    pub fn CredUnmarshalCredentialA(
+        MarshaledCredential: LPCSTR,
+        CredType: PCRED_MARSHAL_TYPE,
+        Credential: *mut PVOID,
+    ) -> BOOL;
+    pub fn CredIsMarshaledCredentialW(
+        MarshaledCredential: LPCWSTR,
+    ) -> BOOL;
+    pub fn CredIsMarshaledCredentialA(
+        MarshaledCredential: LPCSTR,
+    ) -> BOOL;
     pub fn CredUnPackAuthenticationBufferW(
         dwFlags: DWORD,
         pAuthBuffer: PVOID,
@@ -309,15 +373,60 @@ extern "system" {
         pPackedCredentials: PBYTE,
         pcbPackedCredentials: *mut DWORD,
     ) -> BOOL;
-    // pub fn CredProtectW();
-    // pub fn CredProtectA();
-    // pub fn CredUnprotectW();
-    // pub fn CredUnprotectA();
-    // pub fn CredIsProtectedW();
-    // pub fn CredIsProtectedA();
-    // pub fn CredFindBestCredentialW();
-    // pub fn CredFindBestCredentialA();
-    // pub fn CredGetSessionTypes();
+    pub fn CredProtectW(
+        fAsSelf: BOOL,
+        pszCredentials: LPWSTR,
+        cchCredentials: DWORD,
+        pszProtectedCredentials: LPWSTR,
+        pcchMaxChars: *mut DWORD,
+        ProtectionType: *mut CRED_PROTECTION_TYPE,
+    ) -> BOOL;
+    pub fn CredProtectA(
+        fAsSelf: BOOL,
+        pszCredentials: LPSTR,
+        cchCredentials: DWORD,
+        pszProtectedCredentials: LPSTR,
+        pcchMaxChars: *mut DWORD,
+        ProtectionType: *mut CRED_PROTECTION_TYPE,
+    ) -> BOOL;
+    pub fn CredUnprotectW(
+        fAsSelf: BOOL,
+        pszProtectedCredentials: LPWSTR,
+        cchCredentials: DWORD,
+        pszCredentials: LPWSTR,
+        pcchMaxChars: *mut DWORD,
+    ) -> BOOL;
+    pub fn CredUnprotectA(
+        fAsSelf: BOOL,
+        pszProtectedCredentials: LPSTR,
+        cchCredentials: DWORD,
+        pszCredentials: LPSTR,
+        pcchMaxChars: *mut DWORD,
+    ) -> BOOL;
+    pub fn CredIsProtectedW(
+        pszProtectedCredentials: LPWSTR,
+        pProtectionType: *mut CRED_PROTECTION_TYPE,
+    ) -> BOOL;
+    pub fn CredIsProtectedA(
+        pszProtectedCredentials: LPSTR,
+        pProtectionType: *mut CRED_PROTECTION_TYPE,
+    ) -> BOOL;
+    pub fn CredFindBestCredentialW(
+        TargetName: LPCWSTR,
+        Type: DWORD,
+        Flags: DWORD,
+        Credential: *mut PCREDENTIALW,
+    ) -> BOOL;
+    pub fn CredFindBestCredentialA(
+        TargetName: LPCSTR,
+        Type: DWORD,
+        Flags: DWORD,
+        Credential: *mut PCREDENTIALA,
+    ) -> BOOL;
+    pub fn CredGetSessionTypes(
+        MaximumPersistCount: DWORD,
+        MaximumPersist: LPDWORD,
+    ) -> BOOL;
     pub fn CredFree(
         Buffer: PVOID,
     );

@@ -401,7 +401,7 @@ STRUCT!{struct BITMAP {
 pub type PBITMAP = *mut BITMAP;
 pub type NPBITMAP = *mut BITMAP;
 pub type LPBITMAP = *mut BITMAP;
-STRUCT!{struct RGBTRIPLE {
+STRUCT!{#[debug] struct RGBTRIPLE {
     rgbtBlue: BYTE,
     rgbtGreen: BYTE,
     rgbtRed: BYTE,
@@ -409,7 +409,7 @@ STRUCT!{struct RGBTRIPLE {
 pub type PRGBTRIPLE = *mut RGBTRIPLE;
 pub type NPRGBTRIPLE = *mut RGBTRIPLE;
 pub type LPRGBTRIPLE = *mut RGBTRIPLE;
-STRUCT!{struct RGBQUAD {
+STRUCT!{#[debug] struct RGBQUAD {
     rgbBlue: BYTE,
     rgbGreen: BYTE,
     rgbRed: BYTE,
@@ -462,13 +462,13 @@ pub type FXPT16DOT16 = c_long;
 pub type LPFXPT16DOT16 = *mut c_long;
 pub type FXPT2DOT30 = c_long;
 pub type LPFXPT2DOT30 = *mut c_long;
-STRUCT!{struct CIEXYZ {
+STRUCT!{#[debug] struct CIEXYZ {
     ciexyzX: FXPT2DOT30,
     ciexyzY: FXPT2DOT30,
     ciexyzZ: FXPT2DOT30,
 }}
 pub type LPCIEXYZ = *mut CIEXYZ;
-STRUCT!{struct CIEXYZTRIPLE {
+STRUCT!{#[debug] struct CIEXYZTRIPLE {
     ciexyzRed: CIEXYZ,
     ciexyzGreen: CIEXYZ,
     ciexyzBlue: CIEXYZ,
@@ -500,7 +500,7 @@ STRUCT!{struct LOGCOLORSPACEW {
     lcsFilename: [WCHAR; MAX_PATH],
 }}
 pub type LPLOGCOLORSPACEW = *mut LOGCOLORSPACEW;
-STRUCT!{struct BITMAPCOREHEADER {
+STRUCT!{#[debug] struct BITMAPCOREHEADER {
     bcSize: DWORD,
     bcWidth: WORD,
     bcHeight: WORD,
@@ -509,7 +509,7 @@ STRUCT!{struct BITMAPCOREHEADER {
 }}
 pub type LPBITMAPCOREHEADER = *mut BITMAPCOREHEADER;
 pub type PBITMAPCOREHEADER = *mut BITMAPCOREHEADER;
-STRUCT!{struct BITMAPINFOHEADER {
+STRUCT!{#[debug] struct BITMAPINFOHEADER {
     biSize: DWORD,
     biWidth: LONG,
     biHeight: LONG,
@@ -524,7 +524,7 @@ STRUCT!{struct BITMAPINFOHEADER {
 }}
 pub type LPBITMAPINFOHEADER = *mut BITMAPINFOHEADER;
 pub type PBITMAPINFOHEADER = *mut BITMAPINFOHEADER;
-STRUCT!{struct BITMAPV4HEADER {
+STRUCT!{#[debug] struct BITMAPV4HEADER {
     bV4Size: DWORD,
     bV4Width: LONG,
     bV4Height: LONG,
@@ -548,7 +548,7 @@ STRUCT!{struct BITMAPV4HEADER {
 }}
 pub type LPBITMAPV4HEADER = *mut BITMAPV4HEADER;
 pub type PBITMAPV4HEADER = *mut BITMAPV4HEADER;
-STRUCT!{struct BITMAPV5HEADER {
+STRUCT!{#[debug] struct BITMAPV5HEADER {
     bV5Size: DWORD,
     bV5Width: LONG,
     bV5Height: LONG,
@@ -584,19 +584,19 @@ pub const BI_RLE4: DWORD = 2;
 pub const BI_BITFIELDS: DWORD = 3;
 pub const BI_JPEG: DWORD = 4;
 pub const BI_PNG: DWORD = 5;
-STRUCT!{struct BITMAPINFO {
+STRUCT!{#[debug] struct BITMAPINFO {
     bmiHeader: BITMAPINFOHEADER,
-    bmiColors: [RGBQUAD; 0],
+    bmiColors: [RGBQUAD; 1],
 }}
 pub type LPBITMAPINFO = *mut BITMAPINFO;
 pub type PBITMAPINFO = *mut BITMAPINFO;
-STRUCT!{struct BITMAPCOREINFO {
+STRUCT!{#[debug] struct BITMAPCOREINFO {
     bmciHeader: BITMAPCOREHEADER,
-    bmciColors: [RGBTRIPLE; 0],
+    bmciColors: [RGBTRIPLE; 1],
 }}
 pub type LPBITMAPCOREINFO = *mut BITMAPCOREINFO;
 pub type PBITMAPCOREINFO = *mut BITMAPCOREINFO;
-STRUCT!{struct BITMAPFILEHEADER {
+STRUCT!{ #[debug] #[repr(packed)] struct BITMAPFILEHEADER {
     bfType: WORD,
     bfSize: DWORD,
     bfReserved1: WORD,
@@ -609,13 +609,13 @@ pub type PBITMAPFILEHEADER = *mut BITMAPFILEHEADER;
 pub fn MAKEPOINTS(l: DWORD) -> POINTS {
     unsafe { ::core::mem::transmute::<DWORD, POINTS>(l) }
 }
-STRUCT!{struct FONTSIGNATURE {
+STRUCT!{#[debug] struct FONTSIGNATURE {
     fsUsb: [DWORD; 4],
     fsCsb: [DWORD; 2],
 }}
 pub type LPFONTSIGNATURE = *mut FONTSIGNATURE;
 pub type PFONTSIGNATURE = *mut FONTSIGNATURE;
-STRUCT!{struct CHARSETINFO {
+STRUCT!{#[debug] struct CHARSETINFO {
     ciCharset: UINT,
     ciACP: UINT,
     fs: FONTSIGNATURE,
@@ -627,7 +627,7 @@ pub const TCI_SRCCHARSET: c_int = 1;
 pub const TCI_SRCCODEPAGE: c_int = 2;
 pub const TCI_SRCFONTSIG: c_int = 3;
 pub const TCI_SRCLOCALE: c_int = 0x1000;
-STRUCT!{struct LOCALESIGNATURE {
+STRUCT!{#[debug] struct LOCALESIGNATURE {
     lsUsb: [DWORD; 4],
     lsCsbDefault: [DWORD; 2],
     lsCsbSupported: [DWORD; 2],
@@ -881,7 +881,7 @@ STRUCT!{struct EXTLOGPEN32 {
     elpColor: COLORREF,
     elpHatch: ULONG,
     elpNumEntries: DWORD,
-    elpStyleEntry: [DWORD; 0],
+    elpStyleEntry: [DWORD; 1],
 }}
 pub type PEXTLOGPEN32 = *mut EXTLOGPEN32;
 pub type NPEXTLOGPEN32 = *mut EXTLOGPEN32;
@@ -1903,16 +1903,22 @@ STRUCT!{struct DISPLAYCONFIG_SOURCE_MODE {
 STRUCT!{struct DISPLAYCONFIG_TARGET_MODE {
     targetVideoSignalInfo: DISPLAYCONFIG_VIDEO_SIGNAL_INFO,
 }}
+STRUCT!{struct DISPLAYCONFIG_DESKTOP_IMAGE_INFO {
+    PathSourceSize: POINTL,
+    DesktopImageRegion: RECTL,
+    DesktopImageClip: RECTL,
+}}
 UNION!{union DISPLAYCONFIG_MODE_INFO_u {
     [u64; 6],
     targetMode targetMode_mut: DISPLAYCONFIG_TARGET_MODE,
     sourceMode sourceMode_mut: DISPLAYCONFIG_SOURCE_MODE,
     desktopImageInfo desktopImageInfo_mut: DISPLAYCONFIG_DESKTOP_IMAGE_INFO,
 }}
-STRUCT!{struct DISPLAYCONFIG_DESKTOP_IMAGE_INFO {
+STRUCT!{struct DISPLAYCONFIG_MODE_INFO {
     infoType: DISPLAYCONFIG_MODE_INFO_TYPE,
     id: UINT32,
     adapterId: LUID,
+    u: DISPLAYCONFIG_MODE_INFO_u,
 }}
 pub const DISPLAYCONFIG_PATH_MODE_IDX_INVALID: DWORD = 0xffffffff;
 pub const DISPLAYCONFIG_PATH_TARGET_MODE_IDX_INVALID: DWORD = 0xffff;
@@ -2097,7 +2103,7 @@ STRUCT!{struct RGNDATAHEADER {
 pub type PRGNDATAHEADER = *mut RGNDATAHEADER;
 STRUCT!{struct RGNDATA {
     rdh: RGNDATAHEADER,
-    Buffer: [c_char; 0],
+    Buffer: [c_char; 1],
 }}
 pub type PRGNDATA = *mut RGNDATA;
 pub type NPRGNDATA = *mut RGNDATA;
@@ -2257,7 +2263,7 @@ pub type LPPOINTFX = *mut POINTFX;
 STRUCT!{struct TTPOLYCURVE {
     wType: WORD,
     cpfx: WORD,
-    apfx: [POINTFX; 0],
+    apfx: [POINTFX; 1],
 }}
 pub type LPTTPOLYCURVE = *mut TTPOLYCURVE;
 STRUCT!{struct TTPOLYGONHEADER {
@@ -2949,7 +2955,7 @@ extern "system" {
         lpBuffer: PFLOAT,
     ) -> BOOL;
     pub fn GetCharABCWidthsA(
-         hdc: HDC,
+        hdc: HDC,
         wFirst: UINT,
         wLast: UINT,
         lpABC: LPABC,
@@ -4033,7 +4039,7 @@ pub fn GDI__DIBSIZE(bi: &BITMAPINFOHEADER) -> DWORD {
 #[inline]
 pub fn GDI_DIBSIZE(bi: &BITMAPINFOHEADER) -> DWORD {
     if bi.biHeight < 0 {
-        GDI__DIBSIZE(bi) * -1i32 as DWORD
+        GDI__DIBSIZE(bi) * -1i32 as u32
     } else {
         GDI__DIBSIZE(bi)
     }
@@ -4076,7 +4082,7 @@ pub const ILLUMINANT_TUNGSTEN: WORD = ILLUMINANT_A;
 pub const ILLUMINANT_DAYLIGHT: WORD = ILLUMINANT_C;
 pub const ILLUMINANT_FLUORESCENT: WORD = ILLUMINANT_F2;
 pub const ILLUMINANT_NTSC: WORD = ILLUMINANT_C;
-pub const RGB_GAMMA_MIN: WORD = 02500;
+pub const RGB_GAMMA_MIN: WORD = 0o2500; // FIXME It is octal in the headers but are the headers actually right?
 pub const RGB_GAMMA_MAX: WORD = 65000;
 pub const REFERENCE_WHITE_MIN: WORD = 6000;
 pub const REFERENCE_WHITE_MAX: WORD = 10000;
@@ -4941,7 +4947,7 @@ STRUCT!{struct EMRPOLYLINE16 {
     emr: EMR,
     rclBounds: RECTL,
     cpts: DWORD,
-    apts: [POINTL; 1],
+    apts: [POINTS; 1],
 }}
 pub type PEMRPOLYLINE16 = *mut EMRPOLYLINE16;
 pub type EMRPOLYBEZIER16 = EMRPOLYLINE16;
@@ -4964,7 +4970,7 @@ STRUCT!{struct EMRPOLYDRAW16 {
     emr: EMR,
     rclBounds: RECTL,
     cpts: DWORD,
-    apts: [POINTL; 1],
+    apts: [POINTS; 1],
     abTypes: [BYTE; 1],
 }}
 pub type PEMRPOLYDRAW16 = *mut EMRPOLYDRAW16;
@@ -4985,7 +4991,7 @@ STRUCT!{struct EMRPOLYPOLYLINE16 {
     nPolys: DWORD,
     cpts: DWORD,
     aPolyCounts: [DWORD; 1],
-    apts: [POINTL; 1],
+    apts: [POINTS; 1],
 }}
 pub type PEMRPOLYPOLYLINE16 = *mut EMRPOLYPOLYLINE16;
 pub type EMRPOLYPOLYGON16 = EMRPOLYPOLYLINE16;
