@@ -27,8 +27,6 @@ from voluptuous import (
     Schema,
 )
 
-ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
-
 job_description_schema = {str(k): v for k, v in job_description_schema.schema.iteritems()}
 
 source_test_description_schema = Schema({
