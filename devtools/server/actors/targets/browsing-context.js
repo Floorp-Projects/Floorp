@@ -495,8 +495,8 @@ const browsingContextTargetPrototype = {
    * Called when the actor is removed from the connection.
    */
   destroy() {
-    this.exit();
     Actor.prototype.destroy.call(this);
+    this.exit();
   },
 
   /**
