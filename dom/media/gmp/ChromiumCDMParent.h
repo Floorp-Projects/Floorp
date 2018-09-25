@@ -34,17 +34,18 @@ class ChromiumCDMParent final
   , public GMPCrashHelperHolder
 {
 public:
+  typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> InitPromise;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMParent)
 
   ChromiumCDMParent(GMPContentParent* aContentParent, uint32_t aPluginId);
 
   uint32_t PluginId() const { return mPluginId; }
 
-  bool Init(ChromiumCDMCallback* aCDMCallback,
-            bool aAllowDistinctiveIdentifier,
-            bool aAllowPersistentState,
-            nsIEventTarget* aMainThread,
-            nsCString& aOutFailureReason);
+  RefPtr<InitPromise> Init(ChromiumCDMCallback* aCDMCallback,
+                           bool aAllowDistinctiveIdentifier,
+                           bool aAllowPersistentState,
+                           nsIEventTarget* aMainThread);
 
   void CreateSession(uint32_t aCreateSessionToken,
                      uint32_t aSessionType,
@@ -158,6 +159,8 @@ protected:
   ChromiumCDMCallback* mCDMCallback = nullptr;
   nsDataHashtable<nsUint32HashKey, uint32_t> mPromiseToCreateSessionToken;
   nsTArray<RefPtr<DecryptJob>> mDecrypts;
+
+  MozPromiseHolder<InitPromise> mInitPromise;
 
   MozPromiseHolder<MediaDataDecoder::InitPromise> mInitVideoDecoderPromise;
   MozPromiseHolder<MediaDataDecoder::DecodePromise> mDecodePromise;
