@@ -16,6 +16,42 @@ about-debugging-sidebar-connect =
 # Text displayed in the about:debugging sidebar when no device was found.
 about-debugging-sidebar-no-devices = No devices discovered
 
+# Title of the Connect page.
+about-debugging-connect-title = Connect a Device
+
+# WiFi section of the Connect page
+about-debugging-connect-wifi
+  .title = Via WiFi (Recommended)
+
+# WiFi section step by step guide
+about-debugging-connect-wifi-step-same-network = Ensure that your browser and device are on the same network
+
+# WiFi section step by step guide
+about-debugging-connect-wifi-step-open-firefox = Open Firefox for Android
+
+# WiFi section step by step guide
+about-debugging-connect-wifi-step-open-options = Go to Options -> Settings -> Advanced
+
+# WiFi section step by step guide
+about-debugging-connect-wifi-step-enable-debug = Enable Remote Debugging via WiFi in the Developer Tools section
+
+# USB section of the Connect page
+about-debugging-connect-usb
+  .title = Via USB
+
+# USB section step by step guide
+about-debugging-connect-usb-step-enable-dev-menu = Enable Developer menu on your Android device
+
+# USB section step by step guide
+about-debugging-connect-usb-step-enable-debug = Enable USB Debugging on the Android Developer Menu
+
+# USB section step by step guide
+about-debugging-connect-usb-step-plug-device = Connect the USB Device to your computer
+
+# Network section of the Connect page
+about-debugging-connect-network
+  .title = Via Network Location
+
 # Below are the titles for the various categories of debug targets that can be found
 # on "runtime" pages of about:debugging.
 # Title of the temporary extensions category (only available for "This Firefox" runtime).
