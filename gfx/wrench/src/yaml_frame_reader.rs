@@ -870,12 +870,14 @@ impl YamlFrameReader {
                         color: colors[3],
                         style: styles[3],
                     };
+                    let do_aa = item["do_aa"].as_bool().unwrap_or(true);
                     Some(BorderDetails::Normal(NormalBorder {
                         top,
                         left,
                         bottom,
                         right,
                         radius,
+                        do_aa,
                     }))
                 }
                 "image" | "gradient" | "radial-gradient" => {

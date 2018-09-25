@@ -103,6 +103,7 @@ pub struct BorderCacheKey {
     pub bottom: BorderSideAu,
     pub radius: BorderRadiusAu,
     pub widths: SideOffsets2D<Au>,
+    pub do_aa: bool,
     pub scale: Au,
 }
 
@@ -120,6 +121,7 @@ impl BorderCacheKey {
                 Au::from_f32_px(widths.left),
             ),
             radius: border.radius.into(),
+            do_aa: border.do_aa,
             scale: Au(0),
         }
     }
@@ -574,6 +576,7 @@ pub struct BorderRenderTaskInfo {
     pub border_segments: Vec<BorderSegmentInfo>,
     pub size: DeviceIntSize,
     pub available_size_dependence: AvailableSizeDependence,
+    do_aa: bool,
 }
 
 #[derive(PartialEq, Eq)]
@@ -961,6 +964,7 @@ impl BorderRenderTaskInfo {
             border_segments,
             size: size.to_i32(),
             available_size_dependence: size_dependence,
+            do_aa: border.do_aa,
         })
     }
 
@@ -1026,6 +1030,7 @@ impl BorderRenderTaskInfo {
                 &mut instances,
                 info.widths,
                 info.radius,
+                self.do_aa,
             );
         }
 
@@ -1094,10 +1099,12 @@ fn add_segment(
     instances: &mut Vec<BorderInstance>,
     widths: DeviceSize,
     radius: DeviceSize,
+    do_aa: bool,
 ) {
     let base_flags = (segment as i32) |
                      ((style0 as i32) << 8) |
-                     ((style1 as i32) << 16);
+                     ((style1 as i32) << 16) |
+                     ((do_aa as i32) << 28);
 
     let base_instance = BorderInstance {
         task_origin: DevicePoint::zero(),
