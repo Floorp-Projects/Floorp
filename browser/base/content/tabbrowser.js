@@ -1106,9 +1106,7 @@ window._gBrowser = {
         newBrowser._urlbarFocused &&
         gURLBar &&
         gURLBar.focused;
-      // In an HTML document (built with MOZ_BROWSER_XHTML), the activeElement
-      // can be null, so check before attempting to blur it (Bug 1485157).
-      if (!keepFocusOnUrlBar && document.activeElement) {
+      if (!keepFocusOnUrlBar) {
         // Clear focus so that _adjustFocusAfterTabSwitch can detect if
         // some element has been focused and respect that.
         document.activeElement.blur();
