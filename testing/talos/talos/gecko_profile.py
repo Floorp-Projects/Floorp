@@ -140,8 +140,7 @@ class GeckoProfile(object):
             # mapping of app or platform names to directories
             # Note: App & OS names from requests are converted
             # to all-uppercase internally
-            "symbolPaths": self.symbol_paths,
-            "platformsRequiringSymbols": ["Windows", "Microsoft"]
+            "symbolPaths": self.symbol_paths
         })
 
         if self.browser_config['symbols_path']:
