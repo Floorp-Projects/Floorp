@@ -52,7 +52,7 @@ this.DevToolsShim = {
   get telemetry() {
     if (!this._telemetry) {
       this._telemetry = new Telemetry();
-      this._telemetry.setEventRecordingEnabled("devtools.main", true);
+      this._telemetry.setEventRecordingEnabled(true);
     }
     return this._telemetry;
   },
@@ -263,11 +263,13 @@ this.DevToolsShim = {
     }
 
     if (reason) {
+      const window = Services.wm.getMostRecentWindow("navigator:browser");
+
       this.telemetry.addEventProperty(
-        "devtools.main", "open", "tools", null, "shortcut", ""
+        window, "open", "tools", null, "shortcut", ""
       );
       this.telemetry.addEventProperty(
-        "devtools.main", "open", "tools", null, "entrypoint", reason
+        window, "open", "tools", null, "entrypoint", reason
       );
     }
 
