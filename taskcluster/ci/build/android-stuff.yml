@@ -83,8 +83,11 @@ android-test-ccov/opt:
         - linux64-node
         - linux64-grcov
     fetches:
-        toolchain-linux64-grcov:
-            - grcov.tar.xz
+        # We use a fetch instead of toolchains here, because mozharness expects
+        # it there (since the code is shared with tests that don't support
+        # `toolchains`.
+        toolchain:
+            - linux64-grcov
 
 android-lint/opt:
     description: "Android lint"
