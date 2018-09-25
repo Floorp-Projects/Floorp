@@ -18,7 +18,6 @@
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
 #include "jit/JSJitFrameIter.h"
-#include "js/TraceLoggerAPI.h"
 #include "util/StringBuffer.h"
 #include "vm/JSScript.h"
 
@@ -110,9 +109,6 @@ GeckoProfilerRuntime::enable(bool enabled)
         cx->jitActivation->setLastProfilingFrame(nullptr);
         cx->jitActivation->setLastProfilingCallSite(nullptr);
     }
-
-    // Reset the tracelogger, if toggled on
-    JS::ResetTraceLogger();
 
     enabled_ = enabled;
 

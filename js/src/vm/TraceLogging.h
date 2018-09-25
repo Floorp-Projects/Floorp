@@ -9,9 +9,7 @@
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Vector.h"
 
 #include <utility>
 
@@ -19,7 +17,6 @@
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
-#include "threading/LockGuard.h"
 #include "vm/MutexIDs.h"
 #include "vm/TraceLoggingGraph.h"
 #include "vm/TraceLoggingTypes.h"
@@ -107,7 +104,6 @@ class TraceLoggerEvent {
             return (TraceLoggerEventPayload*) payload_;
         }
         void setEventPayload(TraceLoggerEventPayload* payload) {
-            MOZ_ASSERT(payload);
             payload_ = (uintptr_t)payload;
             MOZ_ASSERT((payload_ & 1) == 0);
         }
@@ -172,26 +168,23 @@ bool CurrentThreadOwnsTraceLoggerThreadStateLock();
 
 /**
  * An internal class holding the string information to report, together with an
- * unique id, and an useCount. Whenever this useCount reaches 0, this event
+ * unique id, a useCount and a pointerCount. Whenever this useCount reaches 0, this event
  * cannot get started/stopped anymore. Consumers may still request the
  * string information through maybeEventText below, but this may not succeed:
  * when the use count becomes zero, a payload may be deleted by any thread
  * holding the TraceLoggerThreadState lock, after that the pointers have been
- * cleared out of the dictionaryVector.
+ * cleared out of the pointerMap. That means pointerCount needs to be zero.
  */
 class TraceLoggerEventPayload {
     uint32_t textId_;
-    uint32_t dictionaryId_;
-    mozilla::Maybe<uint32_t> line_;
-    mozilla::Maybe<uint32_t> col_;
+    UniqueChars string_;
     mozilla::Atomic<uint32_t> uses_;
+    mozilla::Atomic<uint32_t> pointerCount_;
 
   public:
-    TraceLoggerEventPayload(uint32_t textId, uint32_t dictionaryId)
+    TraceLoggerEventPayload(uint32_t textId, UniqueChars string)
       : textId_(textId),
-        dictionaryId_(dictionaryId),
-        line_(mozilla::Nothing()),
-        col_(mozilla::Nothing()),
+        string_(std::move(string)),
         uses_(0)
     { }
 
@@ -199,27 +192,17 @@ class TraceLoggerEventPayload {
         MOZ_ASSERT(uses_ == 0);
     }
 
-    void setLine(uint32_t line) {
-        line_ = mozilla::Some(line);
-    }
-    void setColumn(uint32_t col) {
-        col_ = mozilla::Some(col);
-    }
-
-    mozilla::Maybe<uint32_t> line() {
-        return line_;
-    }
-    mozilla::Maybe<uint32_t> column() {
-        return col_;
-    }
     uint32_t textId() {
         return textId_;
     }
-    uint32_t dictionaryId() {
-        return dictionaryId_;
+    const char* string() {
+        return string_.get();
     }
     uint32_t uses() {
         return uses_;
+    }
+    uint32_t pointerCount() {
+        return pointerCount_;
     }
 
     // Payloads may have their use count change at any time, *except* the count
@@ -233,8 +216,19 @@ class TraceLoggerEventPayload {
     void release() {
         uses_--;
     }
+    void incPointerCount() {
+        MOZ_ASSERT(CurrentThreadOwnsTraceLoggerThreadStateLock());
+        pointerCount_++;
+    }
+    void decPointerCount() {
+        MOZ_ASSERT(CurrentThreadOwnsTraceLoggerThreadStateLock());
+        pointerCount_--;
+    }
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(string_.get());
+    }
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return mallocSizeOf(this);
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
 };
 
@@ -277,8 +271,6 @@ class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread>
     bool init(uint32_t loggerId);
     void initGraph();
 
-    void clear();
-
     bool enable();
     bool enable(JSContext* cx);
     bool disable(bool force = false, const char* = "");
@@ -316,6 +308,12 @@ class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread>
         *size = events.size();
     }
 
+    // Extract the details filename, lineNumber and columnNumber out of a event
+    // containing script information.
+    void extractScriptDetails(uint32_t textId, const char** filename, size_t* filename_len,
+                              const char** lineno, size_t* lineno_len, const char** colno,
+                              size_t* colno_len);
+
     bool lostEvents(uint32_t lastIteration, uint32_t lastSize) {
         // If still logging in the same iteration, there are no lost events.
         if (lastIteration == iteration_) {
@@ -341,6 +339,7 @@ class TraceLoggerThread : public mozilla::LinkedListElement<TraceLoggerThread>
         MOZ_ASSERT(text);
         return text;
     };
+    bool textIdIsScriptEvent(uint32_t id);
 
   public:
     // Log an event (no start/stop, only the timestamp is recorded).
@@ -384,42 +383,20 @@ class TraceLoggerThreadState
     bool spewErrors;
     mozilla::LinkedList<TraceLoggerThread> threadLoggers;
 
-    // Any events that carry a payload are saved in this hash map.
-    // The key is the event textId, and the value is a pointer to
-    // the payload object.
+    typedef HashMap<const void*,
+                    TraceLoggerEventPayload*,
+                    PointerHasher<const void*>,
+                    SystemAllocPolicy> PointerHashMap;
     typedef HashMap<uint32_t,
                     TraceLoggerEventPayload*,
                     DefaultHasher<uint32_t>,
-                    SystemAllocPolicy> TextIdToPayloadMap;
-
-    // The dictionary vector is used to store all of the custom event strings
-    // that are referenced by the payload objects.
-    typedef mozilla::Vector<UniqueChars,
-                            0,
-                            SystemAllocPolicy> DictionaryVector;
-
-
-    // All payload strings are hashed and saved as a key in the payloadDictionary
-    // hash table.  The values are indices to the dictionaryData vector where the
-    // actual string is stored.  The major benefit of having this hash map is for
-    // de-duplication of JS script filenames.
-    typedef HashMap<const char*,
-                    uint32_t,
-                    mozilla::CStringHasher,
-                    SystemAllocPolicy> StringHashToDictionaryMap;
-
-    TextIdToPayloadMap textIdPayloads;
-    StringHashToDictionaryMap payloadDictionary;
-    DictionaryVector dictionaryData;
-
+                    SystemAllocPolicy> TextIdHashMap;
+    PointerHashMap pointerMap;
+    TextIdHashMap textIdPayloads;
     uint32_t nextTextId;
-    uint32_t nextDictionaryId;
 
   public:
     uint64_t startupTime;
-
-    // Mutex to guard the data structures used to hold the payload data:
-    // textIdPayloads, payloadDictionary & dictionaryData.
     Mutex lock;
 
     TraceLoggerThreadState()
@@ -433,19 +410,12 @@ class TraceLoggerThreadState
         graphFileEnabled(false),
         spewErrors(false),
         nextTextId(TraceLogger_Last),
-        nextDictionaryId(0),
         startupTime(0),
         lock(js::mutexid::TraceLoggerThreadState)
     { }
 
     bool init();
     ~TraceLoggerThreadState();
-
-    void enableDefaultLogging();
-    void enableIonLogging();
-    void enableFrontendLogging();
-
-    void clear();
 
     TraceLoggerThread* forCurrentThread(JSContext* cx);
     void destroyLogger(TraceLoggerThread* logger);
@@ -465,7 +435,6 @@ class TraceLoggerThreadState
     }
 
     const char* maybeEventText(uint32_t id);
-    const char* maybeEventText(TraceLoggerEventPayload *p);
 
     void purgeUnusedPayloads();
 
@@ -475,26 +444,20 @@ class TraceLoggerThreadState
     // Note: it is not allowed to use them in logTimestamp.
     TraceLoggerEventPayload* getOrCreateEventPayload(const char* text);
     TraceLoggerEventPayload* getOrCreateEventPayload(JSScript* script);
-    TraceLoggerEventPayload* getOrCreateEventPayload(const char* filename,
-                                                     uint32_t lineno, uint32_t colno);
-    TraceLoggerEventPayload* getPayload (uint32_t id);
+    TraceLoggerEventPayload* getOrCreateEventPayload(const char* filename, uint32_t lineno,
+                                                     uint32_t colno, const void* p);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
         return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
 
-    bool isGraphFileEnabled()  { return graphFileEnabled; }
-    bool isGraphEnabled()      { return graphEnabled;  }
-
-    void enableTextIdsForProfiler();
-    void disableTextIdsForProfiler();
-    void disableAllTextIds();
+    bool IsGraphFileEnabled()  { return graphFileEnabled; }
+    bool IsGraphEnabled()      { return graphEnabled;  }
 #endif
 };
 
 #ifdef JS_TRACE_LOGGING
-void ResetTraceLogger();
 void DestroyTraceLoggerThreadState();
 void DestroyTraceLogger(TraceLoggerThread* logger);
 

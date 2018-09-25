@@ -75,9 +75,6 @@ struct DefaultJitOptions
     bool osr;
     bool wasmFoldOffsets;
     bool wasmDelayTier2;
-#ifdef JS_TRACE_LOGGING
-    bool enableTraceLogger;
-#endif
     uint32_t baselineWarmUpThreshold;
     uint32_t exceptionBailoutThreshold;
     uint32_t frequentBailoutThreshold;
