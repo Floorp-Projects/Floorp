@@ -484,9 +484,7 @@ public:
 
   virtual void
   NotifyContentBlockingState(unsigned aState,
-                             nsIChannel* aChannel,
-                             bool aBlocked,
-                             nsIURI* aURIHint) override;
+                             nsIChannel* aChannel) override;
 
   virtual uint32_t GetSerial() override {
     return mSerial;
