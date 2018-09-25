@@ -208,9 +208,11 @@ VRDisplayHost::StartFrame()
 {
   AUTO_PROFILER_TRACING("VR", "GetSensorState");
 
+  TimeStamp now = TimeStamp::Now();
 #if defined(MOZ_WIDGET_ANDROID)
+  const TimeStamp lastFrameStart = mDisplayInfo.mLastFrameStart[mDisplayInfo.mFrameId % kVRMaxLatencyFrames];
   const bool isPresenting = mLastUpdateDisplayInfo.GetPresentingGroups() != 0;
-  double duration = mLastFrameStart.IsNull() ? 0.0 : (TimeStamp::Now() - mLastFrameStart).ToMilliseconds();
+  double duration = lastFrameStart.IsNull() ? 0.0 : (now - lastFrameStart).ToMilliseconds();
   /**
    * Do not start more VR frames until the last submitted frame is already processed.
    */
@@ -219,9 +221,10 @@ VRDisplayHost::StartFrame()
   }
 #endif // !defined(MOZ_WIDGET_ANDROID)
 
-  mLastFrameStart = TimeStamp::Now();
   ++mDisplayInfo.mFrameId;
-  mDisplayInfo.mLastSensorState[mDisplayInfo.mFrameId % kVRMaxLatencyFrames] = GetSensorState();
+  size_t bufferIndex = mDisplayInfo.mFrameId % kVRMaxLatencyFrames;
+  mDisplayInfo.mLastSensorState[bufferIndex] = GetSensorState();
+  mDisplayInfo.mLastFrameStart[bufferIndex] = now;
   mFrameStarted = true;
 #if defined(MOZ_WIDGET_ANDROID)
   mLastStartedFrame = mDisplayInfo.mFrameId;
@@ -230,6 +233,20 @@ VRDisplayHost::StartFrame()
 
 void
 VRDisplayHost::NotifyVSync()
+{
+  /**
+   * If this display isn't presenting, refresh the sensors and trigger
+   * VRDisplay.requestAnimationFrame at the normal 2d display refresh rate.
+   */
+  if (mDisplayInfo.mPresentingGroups == 0) {
+    VRManager *vm = VRManager::Get();
+    MOZ_ASSERT(vm);
+    vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
+  }
+}
+
+void
+VRDisplayHost::CheckWatchDog()
 {
   /**
    * We will trigger a new frame immediately after a successful frame texture
@@ -260,20 +277,15 @@ VRDisplayHost::NotifyVSync()
    */
   bool bShouldStartFrame = false;
 
-  if (mDisplayInfo.mPresentingGroups == 0) {
-    // If this display isn't presenting, refresh the sensors and trigger
-    // VRDisplay.requestAnimationFrame at the normal 2d display refresh rate.
+  // If content fails to call VRDisplay.submitFrame, we must eventually
+  // time-out and trigger a new frame.
+  TimeStamp lastFrameStart = mDisplayInfo.mLastFrameStart[mDisplayInfo.mFrameId % kVRMaxLatencyFrames];
+  if (lastFrameStart.IsNull()) {
     bShouldStartFrame = true;
   } else {
-    // If content fails to call VRDisplay.submitFrame, we must eventually
-    // time-out and trigger a new frame.
-    if (mLastFrameStart.IsNull()) {
+    TimeDuration duration = TimeStamp::Now() - lastFrameStart;
+    if (duration.ToMilliseconds() > gfxPrefs::VRDisplayRafMaxDuration()) {
       bShouldStartFrame = true;
-    } else {
-      TimeDuration duration = TimeStamp::Now() - mLastFrameStart;
-      if (duration.ToMilliseconds() > gfxPrefs::VRDisplayRafMaxDuration()) {
-        bShouldStartFrame = true;
-      }
     }
   }
 
@@ -282,6 +294,24 @@ VRDisplayHost::NotifyVSync()
     MOZ_ASSERT(vm);
     vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
   }
+}
+
+void
+VRDisplayHost::Run1msTasks(double aDeltaTime)
+{
+ // To override in children
+}
+
+void
+VRDisplayHost::Run10msTasks()
+{
+  CheckWatchDog();
+}
+
+void
+VRDisplayHost::Run100msTasks()
+{
+  // to override in children
 }
 
 void

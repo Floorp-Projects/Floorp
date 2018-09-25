@@ -8,6 +8,7 @@
 #include "OpenVRSession.h"
 #include "gfxPrefs.h"
 #include "base/thread.h"                // for Thread
+#include <cstring>                      // for memcmp
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -57,10 +58,13 @@ VRService::Create()
 VRService::VRService()
  : mSystemState{}
  , mBrowserState{}
+ , mBrowserGeneration(0)
  , mServiceThread(nullptr)
  , mShutdownRequested(false)
  , mAPIShmem(nullptr)
  , mTargetShmemFile(0)
+ , mLastHapticState{}
+ , mFrameStartTime{}
 {
   // When we have the VR process, we map the memory
   // of mAPIShmem from GPU process.
@@ -290,6 +294,7 @@ VRService::ServiceImmersiveMode()
   MOZ_ASSERT(mSession);
 
   mSession->ProcessEvents(mSystemState);
+  UpdateHaptics();
   PushState(mSystemState);
   PullState(mBrowserState);
 
@@ -302,6 +307,7 @@ VRService::ServiceImmersiveMode()
     return;
   } else if (!IsImmersiveContentActive(mBrowserState)) {
     // Exit immersive mode
+    mSession->StopAllHaptics();
     mSession->StopPresentation();
     MessageLoop::current()->PostTask(NewRunnableMethod(
       "gfx::VRService::ServiceWaitForImmersive",
@@ -318,6 +324,8 @@ VRService::ServiceImmersiveMode()
     for (int iLayer=0; iLayer < kVRLayerMaxCount; iLayer++) {
       const VRLayerState& layer = mBrowserState.layerState[iLayer];
       if (layer.type == VRLayerType::LayerType_Stereo_Immersive) {
+        // SubmitFrame may block in order to control the timing for
+        // the next frame start
         success = mSession->SubmitFrame(layer.layer_stereo_immersive);
         break;
       }
@@ -329,7 +337,12 @@ VRService::ServiceImmersiveMode()
     // atomically to the browser.
     mSystemState.displayState.mLastSubmittedFrameId = newFrameId;
     mSystemState.displayState.mLastSubmittedFrameSuccessful = success;
+
+    // StartFrame may block to control the timing for the next frame start
     mSession->StartFrame(mSystemState);
+    mSystemState.sensorState.inputFrameID++;
+    size_t historyIndex = mSystemState.sensorState.inputFrameID % ArrayLength(mFrameStartTime);
+    mFrameStartTime[historyIndex] = TimeStamp::Now();
     PushState(mSystemState);
   }
 
@@ -338,6 +351,46 @@ VRService::ServiceImmersiveMode()
     "gfx::VRService::ServiceImmersiveMode",
     this, &VRService::ServiceImmersiveMode
   ));
+}
+
+void
+VRService::UpdateHaptics()
+{
+  MOZ_ASSERT(IsInServiceThread());
+  MOZ_ASSERT(mSession);
+  
+  for (size_t i = 0; i < ArrayLength(mBrowserState.hapticState); i++) {
+    VRHapticState& state = mBrowserState.hapticState[i];
+    VRHapticState& lastState = mLastHapticState[i];
+    // Note that VRHapticState is asserted to be a POD type, thus memcmp is safe
+    if (memcmp(&state, &lastState, sizeof(VRHapticState)) == 0) {
+      // No change since the last update
+      continue;
+    }
+    if (state.inputFrameID == 0) {
+      // The haptic feedback was stopped
+      mSession->StopVibrateHaptic(state.controllerIndex);
+    } else {
+      TimeStamp now;
+      if (now.IsNull()) {
+        // TimeStamp::Now() is expensive, so we
+        // must call it only when needed and save the
+        // output for further loop iterations.
+        now = TimeStamp::Now();
+      }
+      // This is a new haptic pulse, or we are overriding a prior one
+      size_t historyIndex = state.inputFrameID % ArrayLength(mFrameStartTime);
+      float startOffset = (float)(now - mFrameStartTime[historyIndex]).ToSeconds();
+
+      // state.pulseStart is guaranteed never to be in the future
+      mSession->VibrateHaptic(state.controllerIndex,
+                              state.hapticIndex,
+                              state.pulseIntensity,
+                              state.pulseDuration + state.pulseStart - startOffset);
+    }
+    // Record the state for comparison in the next run
+    memcpy(&lastState, &state, sizeof(VRHapticState));
+  }
 }
 
 void
@@ -385,9 +438,12 @@ VRService::PullState(mozilla::gfx::VRBrowserState& aState)
     }
 #else
   VRExternalShmem tmp;
-  memcpy(&tmp, mAPIShmem, sizeof(VRExternalShmem));
-  if (tmp.browserGenerationA == tmp.browserGenerationB && tmp.browserGenerationA != 0 && tmp.browserGenerationA != -1) {
-    memcpy(&aState, &tmp.browserState, sizeof(VRBrowserState));
+  if (mAPIShmem->browserGenerationA != mBrowserGeneration) {
+    memcpy(&tmp, mAPIShmem, sizeof(VRExternalShmem));
+    if (tmp.browserGenerationA == tmp.browserGenerationB && tmp.browserGenerationA != 0 && tmp.browserGenerationA != -1) {
+      memcpy(&aState, &tmp.browserState, sizeof(VRBrowserState));
+      mBrowserGeneration = tmp.browserGenerationA;
+    }
   }
 #endif
 }

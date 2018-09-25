@@ -45,6 +45,21 @@ namespace gfx {
 
 static StaticRefPtr<VRManager> sVRManagerSingleton;
 
+ /**
+  * When VR content is active, we run the tasks at 1ms
+  * intervals, enabling multiple events to be processed
+  * per frame, such as haptic feedback pulses.
+  */
+const uint32_t kVRActiveTaskInterval = 1; // milliseconds
+
+ /**
+  * When VR content is inactive, we run the tasks at 100ms
+  * intervals, enabling VR display enumeration and
+  * presentation startup to be relatively responsive
+  * while not consuming unnecessary resources.
+  */
+const uint32_t kVRIdleTaskInterval = 100; // milliseconds
+
 /*static*/ void
 VRManager::ManagerInit()
 {
@@ -60,9 +75,11 @@ VRManager::ManagerInit()
 
 VRManager::VRManager()
   : mInitialized(false)
+  , mAccumulator100ms(0.0f)
   , mVRDisplaysRequested(false)
   , mVRControllersRequested(false)
   , mVRServiceStarted(false)
+  , mTaskInterval(0)
 {
   MOZ_COUNT_CTOR(VRManager);
   MOZ_ASSERT(sVRManagerSingleton == nullptr);
@@ -151,6 +168,7 @@ VRManager::~VRManager()
 void
 VRManager::Destroy()
 {
+  StopTasks();
   mVRDisplays.Clear();
   mVRControllers.Clear();
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
@@ -195,6 +213,7 @@ VRManager::Shutdown()
 void
 VRManager::Init()
 {
+  StartTasks();
   mInitialized = true;
 }
 
@@ -252,11 +271,181 @@ void
 VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 {
   MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
-  UpdateRequestedDevices();
 
   for (const auto& manager : mManagers) {
     manager->NotifyVSync();
   }
+}
+
+void
+VRManager::StartTasks()
+{
+  MOZ_ASSERT(VRListenerThread());
+  if (!mTaskTimer) {
+    mTaskInterval = GetOptimalTaskInterval();
+    mTaskTimer = NS_NewTimer();
+    mTaskTimer->SetTarget(VRListenerThreadHolder::Loop()->SerialEventTarget());
+    mTaskTimer->InitWithNamedFuncCallback(
+      TaskTimerCallback,
+      this,
+      mTaskInterval,
+      nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
+      "VRManager::TaskTimerCallback");
+  }
+}
+
+void
+VRManager::StopTasks()
+{
+  if (mTaskTimer) {
+    MOZ_ASSERT(VRListenerThread());
+    mTaskTimer->Cancel();
+    mTaskTimer = nullptr;
+  }
+}
+
+/*static*/ void
+VRManager::StopVRListenerThreadTasks()
+{
+  if (sVRManagerSingleton) {
+    sVRManagerSingleton->StopTasks();
+  }
+}
+
+/*static*/ void
+VRManager::TaskTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  /**
+   * It is safe to use the pointer passed in aClosure to reference the
+   * VRManager object as the timer is canceled in VRManager::Destroy.
+   * VRManager::Destroy set mInitialized to false, which is asserted
+   * in the VRManager destructor, guaranteeing that this functions
+   * runs if and only if the VRManager object is valid.
+   */
+  VRManager* self = static_cast<VRManager*>(aClosure);
+  self->RunTasks();
+}
+
+void
+VRManager::RunTasks()
+{
+  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
+
+  // Will be called once every 1ms when a VR presentation
+  // is active or once per vsync when a VR presentation is
+  // not active.
+
+  TimeStamp now = TimeStamp::Now();
+  double lastTickMs = mAccumulator100ms;
+  double deltaTime = 0.0f;
+  if (!mLastTickTime.IsNull()) {
+    deltaTime = (now - mLastTickTime).ToMilliseconds();
+  }
+  mAccumulator100ms += deltaTime;
+  mLastTickTime = now;
+
+  if (deltaTime > 0.0f && floor(mAccumulator100ms) != floor(lastTickMs)) {
+    // Even if more than 1 ms has passed, we will only
+    // execute Run1msTasks() once.
+    Run1msTasks(deltaTime);
+  }
+
+  if (floor(mAccumulator100ms * 0.1f) != floor(lastTickMs * 0.1f)) {
+    // Even if more than 10 ms has passed, we will only
+    // execute Run10msTasks() once.
+     Run10msTasks();
+  }
+
+  if (mAccumulator100ms >= 100.0f) {
+    // Even if more than 100 ms has passed, we will only
+    // execute Run100msTasks() once.
+    Run100msTasks();
+    mAccumulator100ms = fmod(mAccumulator100ms, 100.0f);
+  }
+
+  uint32_t optimalTaskInterval = GetOptimalTaskInterval();
+  if (mTaskTimer && optimalTaskInterval != mTaskInterval) {
+    mTaskTimer->SetDelay(optimalTaskInterval);
+    mTaskInterval = optimalTaskInterval;
+  }
+}
+
+uint32_t
+VRManager::GetOptimalTaskInterval()
+{
+  /**
+   * When either VR content is detected or VR hardware
+   * has already been activated, we schedule tasks more
+   * frequently.
+   */
+  bool wantGranularTasks = mVRDisplaysRequested ||
+                           mVRControllersRequested ||
+                           mVRDisplays.Count() ||
+                           mVRControllers.Count();
+  if (wantGranularTasks) {
+    return kVRActiveTaskInterval;
+  }
+
+  return kVRIdleTaskInterval;
+}
+
+/**
+ * Run1msTasks() is guaranteed not to be
+ * called more than once within 1ms.
+ * When VR is not active, this will be
+ * called once per VSync if it wasn't
+ * called within the last 1ms.
+ */
+void
+VRManager::Run1msTasks(double aDeltaTime)
+{
+  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
+
+  for (const auto& manager : mManagers) {
+    manager->Run1msTasks(aDeltaTime);
+  }
+
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
+    gfx::VRDisplayHost* display = iter.UserData();
+    display->Run1msTasks(aDeltaTime);
+  }
+}
+
+/**
+ * Run10msTasks() is guaranteed not to be
+ * called more than once within 10ms.
+ * When VR is not active, this will be
+ * called once per VSync if it wasn't
+ * called within the last 10ms.
+ */
+void
+VRManager::Run10msTasks()
+{
+  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
+
+  UpdateRequestedDevices();
+
+  for (const auto& manager : mManagers) {
+    manager->Run10msTasks();
+  }
+
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
+    gfx::VRDisplayHost* display = iter.UserData();
+    display->Run10msTasks();
+  }
+}
+
+/**
+ * Run100msTasks() is guaranteed not to be
+ * called more than once within 100ms.
+ * When VR is not active, this will be
+ * called once per VSync if it wasn't
+ * called within the last 100ms.
+ */
+void
+VRManager::Run100msTasks()
+{
+  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
 
   // We must continually refresh the VR display enumeration to check
   // for events that we must fire such as Window.onvrdisplayconnect
@@ -269,6 +458,15 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   RefreshVRControllers();
 
   CheckForInactiveTimeout();
+
+  for (const auto& manager : mManagers) {
+    manager->Run100msTasks();
+  }
+
+  for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
+    gfx::VRDisplayHost* display = iter.UserData();
+    display->Run100msTasks();
+  }
 }
 
 void
@@ -311,7 +509,7 @@ VRManager::NotifyVRVsync(const uint32_t& aDisplayID)
     display->StartFrame();
   }
 
-  RefreshVRDisplays();
+  DispatchVRDisplayInfoUpdate();
 }
 
 void
