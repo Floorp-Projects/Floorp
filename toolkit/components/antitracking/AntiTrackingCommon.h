@@ -108,10 +108,17 @@ public:
                                                              const nsCString& aGrantedOrigin,
                                                              FirstPartyStorageAccessGrantedForOriginResolver&& aResolver);
 
+  enum ContentBlockingAllowListPurpose {
+    eStorageChecks,
+    eTrackingProtection,
+    eTrackingAnnotations,
+  };
 
   // Check whether a top window URI is on the content blocking allow list.
   static nsresult
-  IsOnContentBlockingAllowList(nsIURI* aTopWinURI, bool& aIsAllowListed);
+  IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
+                               ContentBlockingAllowListPurpose aPurpose,
+                               bool& aIsAllowListed);
 
   // This method can be called on the parent process or on the content process.
   // The notification is propagated to the child channel if aChannel is a parent
