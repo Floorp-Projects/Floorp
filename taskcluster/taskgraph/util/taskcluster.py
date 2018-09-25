@@ -12,6 +12,7 @@ import functools
 import yaml
 import requests
 import logging
+import taskcluster_urls as liburls
 from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
@@ -79,17 +80,21 @@ def _handle_artifact(path, response):
 
 
 def get_artifact_url(task_id, path, use_proxy=False):
-    ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
+    artifact_tmpl = liburls.api(get_root_url(), 'queue', 'v1',
+                                'task/{}/artifacts/{}')
+    data = artifact_tmpl.format(task_id, path)
     if use_proxy:
         # Until Bug 1405889 is deployed, we can't download directly
         # from the taskcluster-proxy.  Work around by using the /bewit
         # endpoint instead.
-        data = ARTIFACT_URL.format(task_id, path)
         # The bewit URL is the body of a 303 redirect, which we don't
         # want to follow (which fetches a potentially large resource).
-        response = _do_request('http://taskcluster/bewit', data=data, allow_redirects=False)
+        response = _do_request(
+            os.environ['TASKCLUSTER_PROXY_URL'] + '/bewit',
+            data=data,
+            allow_redirects=False)
         return response.text
-    return ARTIFACT_URL.format(task_id, path)
+    return data
 
 
 def get_artifact(task_id, path, use_proxy=False):
@@ -125,10 +130,11 @@ def get_artifact_path(task, path):
 
 def get_index_url(index_path, use_proxy=False, multiple=False):
     if use_proxy:
-        INDEX_URL = 'http://taskcluster/index/v1/task{}/{}'
+        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
+        index_tmpl = os.environ['TASKCLUSTER_PROXY_URL'] + '/index/v1/task{}/{}'
     else:
-        INDEX_URL = 'https://index.taskcluster.net/v1/task{}/{}'
-    return INDEX_URL.format('s' if multiple else '', index_path)
+        index_tmpl = liburls.api(get_root_url(), 'index', 'v1', 'task{}/{}')
+    return index_tmpl.format('s' if multiple else '', index_path)
 
 
 def find_task_id(index_path, use_proxy=False):
@@ -178,10 +184,11 @@ def parse_time(timestamp):
 
 def get_task_url(task_id, use_proxy=False):
     if use_proxy:
-        TASK_URL = 'http://taskcluster/queue/v1/task/{}'
+        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
+        task_tmpl = os.environ['TASKCLUSTER_PROXY_URL'] + '/queue/v1/task/{}'
     else:
-        TASK_URL = 'https://queue.taskcluster.net/v1/task/{}'
-    return TASK_URL.format(task_id)
+        task_tmpl = liburls.api(get_root_url(), 'queue', 'v1', 'task/{}')
+    return task_tmpl.format(task_id)
 
 
 def get_task_definition(task_id, use_proxy=False):
@@ -221,16 +228,18 @@ def rerun_task(task_id):
 def get_current_scopes():
     """Get the current scopes.  This only makes sense in a task with the Taskcluster
     proxy enabled, where it returns the actual scopes accorded to the task."""
-    resp = _do_request('http://taskcluster/auth/v1/scopes/current')
+    # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
+    resp = _do_request(os.environ['TASKCLUSTER_PROXY_URL'] + '/auth/v1/scopes/current')
     return resp.json().get("scopes", [])
 
 
 def get_purge_cache_url(provisioner_id, worker_type, use_proxy=False):
     if use_proxy:
-        TASK_URL = 'http://taskcluster/purge-cache/v1/purge-cache/{}/{}'
+        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
+        url_tmpl = os.environ['TASKCLUSTER_PROXY_URL'] + '/purge-cache/v1/purge-cache/{}/{}'
     else:
-        TASK_URL = 'https://purge-cache.taskcluster.net/v1/purge-cache/{}/{}'
-    return TASK_URL.format(provisioner_id, worker_type)
+        url_tmpl = liburls.api(get_root_url(), 'purge-cache', 'v1', 'purge-cache/{}/{}')
+    return url_tmpl.format(provisioner_id, worker_type)
 
 
 def purge_cache(provisioner_id, worker_type, cache_name, use_proxy=False):
@@ -247,9 +256,10 @@ def send_email(address, subject, content, link, use_proxy=False):
     """Sends an email using the notify service"""
     logger.info('Sending email to {}.'.format(address))
     if use_proxy:
-        url = 'http://taskcluster/notify/v1/email'
+        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
+        url = os.environ['TASKCLUSTER_PROXY_URL'] + '/notify/v1/email'
     else:
-        url = 'https://notify.taskcluster.net/v1/email'
+        url = liburls.api(os.environ['TASKCLUSTER_ROOT_URL'], 'notify', 'v1', 'email')
     _do_request(url, json={
         'address': address,
         'subject': subject,
