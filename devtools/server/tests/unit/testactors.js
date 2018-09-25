@@ -3,7 +3,8 @@
 
 "use strict";
 
-const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/server/actors/common");
+const { appendExtraActors } = require("devtools/server/actors/common");
+const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { DebuggerServer } = require("devtools/server/main");
@@ -40,19 +41,17 @@ function TestTabList(connection) {
   this._targetActors = [];
 
   // A pool mapping those actors' names to the actors.
-  this._targetActorPool = new ActorPool(connection);
+  this._targetActorPool = new LazyPool(connection);
 
   for (const global of gTestGlobals) {
     const actor = new TestTargetActor(connection, global);
     actor.selected = false;
     this._targetActors.push(actor);
-    this._targetActorPool.addActor(actor);
+    this._targetActorPool.manage(actor);
   }
   if (this._targetActors.length > 0) {
     this._targetActors[0].selected = true;
   }
-
-  connection.addActorPool(this._targetActorPool);
 }
 
 TestTabList.prototype = {
@@ -111,26 +110,25 @@ TestTargetActor.prototype = {
   form: function() {
     const response = { actor: this.actorID, title: this._global.__name };
 
-    // Walk over target-scoped actors and add them to a new ActorPool.
-    const actorPool = new ActorPool(this.conn);
-    this._createExtraActors(DebuggerServer.targetScopedActorFactories, actorPool);
+    // Walk over target-scoped actors and add them to a new LazyPool.
+    const actorPool = new LazyPool(this.conn);
+    const actors = createExtraActors(
+      DebuggerServer.targetScopedActorFactories,
+      actorPool,
+      this
+    );
     if (!actorPool.isEmpty()) {
       this._targetActorPool = actorPool;
       this.conn.addActorPool(this._targetActorPool);
     }
 
-    this._appendExtraActors(response);
-
-    return response;
+    return { ...response, ...actors };
   },
 
   onAttach: function(request) {
     this._attached = true;
 
-    const response = { type: "tabAttached", threadActor: this.threadActor.actorID };
-    this._appendExtraActors(response);
-
-    return response;
+    return { type: "tabAttached", threadActor: this.threadActor.actorID };
   },
 
   onDetach: function(request) {
@@ -156,7 +154,6 @@ TestTargetActor.prototype = {
   },
 
   /* Support for DebuggerServer.addTargetScopedActor. */
-  _createExtraActors: createExtraActors,
   _appendExtraActors: appendExtraActors
 };
 
