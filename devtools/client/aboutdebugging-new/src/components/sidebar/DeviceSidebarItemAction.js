@@ -4,9 +4,12 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
 
 const Actions = require("../../actions/index");
 
@@ -25,18 +28,28 @@ class DeviceSidebarItemAction extends PureComponent {
   render() {
     const { connected } = this.props;
     if (connected) {
-      return "Connected";
+      return Localized(
+        {
+          id: "about-debugging-sidebar-item-connected-label"
+        },
+        dom.span({}, "Connected")
+      );
     }
 
-    return dom.button(
+    return Localized(
       {
-        className: "sidebar-item__connect-button",
-        onClick: () => {
-          const { dispatch, runtimeId } = this.props;
-          dispatch(Actions.connectRuntime(runtimeId));
-        }
+        id: "about-debugging-sidebar-item-connect-button"
       },
-      "Connect"
+      dom.button(
+        {
+          className: "sidebar-item__connect-button",
+          onClick: () => {
+            const { dispatch, runtimeId } = this.props;
+            dispatch(Actions.connectRuntime(runtimeId));
+          }
+        },
+        "Connect"
+      )
     );
   }
 }
