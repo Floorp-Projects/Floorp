@@ -43,6 +43,7 @@ public:
   mozilla::ipc::IPCResult RecvAddSharedSurface(const wr::ExternalImageId& aId,
                                                const SurfaceDescriptorShared& aDesc) override;
   mozilla::ipc::IPCResult RecvRemoveSharedSurface(const wr::ExternalImageId& aId) override;
+  mozilla::ipc::IPCResult RecvReportSharedSurfacesMemory(ReportSharedSurfacesMemoryResolver&&) override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyMemoryPressure() override;
 
