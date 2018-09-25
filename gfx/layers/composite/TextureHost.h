@@ -451,9 +451,9 @@ public:
   virtual YUVColorSpace GetYUVColorSpace() const { return YUVColorSpace::UNKNOWN; }
 
   /**
-   * Return the bit depth of the image. Used with YUV textures.
+   * Return the color depth of the image. Used with YUV textures.
    */
-  virtual uint32_t GetBitDepth() const { return 8; }
+  virtual gfx::ColorDepth GetColorDepth() const { return gfx::ColorDepth::COLOR_8; }
 
   /**
    * Called during the transaction. The TextureSource may or may not be composited.
@@ -757,7 +757,7 @@ public:
 
   virtual YUVColorSpace GetYUVColorSpace() const override;
 
-  virtual uint32_t GetBitDepth() const override;
+  virtual gfx::ColorDepth GetColorDepth() const override;
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 

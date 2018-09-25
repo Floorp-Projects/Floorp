@@ -105,8 +105,8 @@ ImageClient::CreateTextureClientForImage(Image* aImage, KnowsCompositor* aForwar
                                             data->mYSize, data->mYStride,
                                             data->mCbCrSize, data->mCbCrStride,
                                             data->mStereoMode,
+                                            data->mColorDepth,
                                             data->mYUVColorSpace,
-                                            data->mBitDepth,
                                             TextureFlags::DEFAULT);
     if (!texture) {
       return nullptr;

@@ -9,6 +9,7 @@ using mozilla::StereoMode from "ImageTypes.h";
 using mozilla::YUVColorSpace from "ImageTypes.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::gfx::ColorDepth from "mozilla/gfx/Types.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
@@ -52,7 +53,7 @@ struct SurfaceDescriptorDXGIYCbCr {
   IntSize size;
   IntSize sizeY;
   IntSize sizeCbCr;
-  uint32_t bitDepth;
+  ColorDepth colorDepth;
   YUVColorSpace yUVColorSpace;
 };
 
@@ -112,8 +113,8 @@ struct YCbCrDescriptor {
   uint32_t cbOffset;
   uint32_t crOffset;
   StereoMode stereoMode;
+  ColorDepth colorDepth;
   YUVColorSpace yUVColorSpace;
-  uint32_t bitDepth;
   bool hasIntermediateBuffer;
 };
 

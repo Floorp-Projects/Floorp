@@ -705,6 +705,14 @@ struct ParamTraits<mozilla::gfx::SurfaceFormat>
 {};
 
 template <>
+struct ParamTraits<mozilla::gfx::ColorDepth>
+  : public ContiguousEnumSerializer<
+             mozilla::gfx::ColorDepth,
+             mozilla::gfx::ColorDepth::COLOR_8,
+             mozilla::gfx::ColorDepth::UNKNOWN>
+{};
+
+template <>
 struct ParamTraits<mozilla::StereoMode>
   : public ContiguousEnumSerializer<
              mozilla::StereoMode,
