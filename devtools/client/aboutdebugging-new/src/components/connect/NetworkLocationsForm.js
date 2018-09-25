@@ -4,9 +4,12 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
 
 const Actions = require("../../actions/index");
 
@@ -37,7 +40,12 @@ class NetworkLocationsForm extends PureComponent {
           e.preventDefault();
         }
       },
-      dom.span({}, "Host:port"),
+      Localized(
+        {
+          id: "about-debugging-network-locations-host-input-label"
+        },
+        dom.span({}, "Host")
+      ),
       dom.input({
         className: "connect-page__network-form__input js-network-form-input",
         placeholder: "localhost:6080",
@@ -48,9 +56,17 @@ class NetworkLocationsForm extends PureComponent {
           this.setState({ value });
         }
       }),
-      dom.button({
-        className: "aboutdebugging-button js-network-form-submit-button"
-      }, "Add")
+      Localized(
+        {
+          id: "about-debugging-network-locations-add-button"
+        },
+        dom.button(
+          {
+            className: "aboutdebugging-button js-network-form-submit-button"
+          },
+          "Add"
+        )
+      )
     );
   }
 }
