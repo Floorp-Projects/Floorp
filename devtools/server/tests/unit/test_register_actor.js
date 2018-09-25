@@ -14,7 +14,7 @@ function run_test() {
   run_next_test();
 }
 
-// Bug 988237: Test the new lazy actor actor-register
+// Bug 988237: Test the new lazy actor loading
 function test_lazy_api() {
   let isActorLoaded = false;
   let isActorInstantiated = false;
@@ -26,14 +26,14 @@ function test_lazy_api() {
     }
   }
   Services.obs.addObserver(onActorEvent, "actor");
-  ActorRegistry.registerModule("xpcshell-test/registertestactors-lazy", {
+  DebuggerServer.registerModule("xpcshell-test/registertestactors-lazy", {
     prefix: "lazy",
     constructor: "LazyActor",
     type: { global: true, target: true }
   });
   // The actor is immediatly registered, but not loaded
-  Assert.ok(ActorRegistry.targetScopedActorFactories.hasOwnProperty("lazyActor"));
-  Assert.ok(ActorRegistry.globalActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(DebuggerServer.targetScopedActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
   Assert.ok(!isActorLoaded);
   Assert.ok(!isActorInstantiated);
 
@@ -65,9 +65,9 @@ function test_lazy_api() {
 }
 
 function manual_remove() {
-  Assert.ok(ActorRegistry.globalActorFactories.hasOwnProperty("lazyActor"));
-  ActorRegistry.removeGlobalActor("lazyActor");
-  Assert.ok(!ActorRegistry.globalActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
+  DebuggerServer.removeGlobalActor("lazyActor");
+  Assert.ok(!DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
 
   run_next_test();
 }
@@ -76,8 +76,8 @@ function cleanup() {
   DebuggerServer.destroy();
 
   // Check that all actors are unregistered on server destruction
-  Assert.ok(!ActorRegistry.targetScopedActorFactories.hasOwnProperty("lazyActor"));
-  Assert.ok(!ActorRegistry.globalActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(!DebuggerServer.targetScopedActorFactories.hasOwnProperty("lazyActor"));
+  Assert.ok(!DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
 
   run_next_test();
 }

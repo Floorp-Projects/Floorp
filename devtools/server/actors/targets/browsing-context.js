@@ -23,7 +23,7 @@
 var { Ci, Cu, Cr, Cc } = require("chrome");
 var Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
-var { ActorRegistry } = require("devtools/server/actor-registry");
+var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
 var { TabSources } = require("devtools/server/actors/utils/TabSources");
@@ -103,7 +103,7 @@ const browsingContextTargetPrototype = {
    * is a `docShell`.
    *
    * The main goal of this class is to expose the target-scoped actors being registered
-   * via `ActorRegistry.registerModule` and manage their lifetimes. In addition, this
+   * via `DebuggerServer.registerModule` and manage their lifetimes. In addition, this
    * class also tracks the lifetime of the targeted browsing context.
    *
    * ### Main requests:
@@ -481,13 +481,13 @@ const browsingContextTargetPrototype = {
 
     // Walk over target-scoped actor factories and make sure they are all
     // instantiated and added into the ActorPool.
-    const actors = createExtraActors(
-      ActorRegistry.targetScopedActorFactories,
+    const addedActors = createExtraActors(
+      DebuggerServer.targetScopedActorFactories,
       this._targetScopedActorPool,
       this
     );
 
-    Object.assign(response, actors);
+    Object.assign(response, addedActors);
     return response;
   },
 

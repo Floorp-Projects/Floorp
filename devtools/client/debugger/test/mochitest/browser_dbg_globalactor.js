@@ -13,7 +13,7 @@ add_task(async function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  ActorRegistry.registerModule(ACTORS_URL, {
+  DebuggerServer.registerModule(ACTORS_URL, {
     prefix: "testOne",
     constructor: "TestActor1",
     type: { global: true },
