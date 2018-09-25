@@ -26,13 +26,11 @@ interface CredentialsContainer {
 };
 
 dictionary CredentialRequestOptions {
-  // FIXME: bug 1493860: should this "= null" be here?
-  PublicKeyCredentialRequestOptions publicKey = null;
+  PublicKeyCredentialRequestOptions publicKey;
   AbortSignal signal;
 };
 
 dictionary CredentialCreationOptions {
-  // FIXME: bug 1493860: should this "= null" be here?
-  PublicKeyCredentialCreationOptions publicKey = null;
+  PublicKeyCredentialCreationOptions publicKey;
   AbortSignal signal;
 };
