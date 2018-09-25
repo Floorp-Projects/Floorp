@@ -4,9 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This script installs Node v8.
+# XXX For now, this should match the version installed in
+# taskcluster/scripts/misc/repack-node.sh. Later we'll get the ESLint builder
+# to use the linux64-node toolchain directly.
 
-wget --progress=dot:mega https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.gz
-echo '21fb4690e349f82d708ae766def01d7fec1b085ce1f5ab30d9bda8ee126ca8fc  node-v8.9.4-linux-x64.tar.gz' | sha256sum -c
-tar -C /usr/local -xz --strip-components 1 < node-v8.9.4-linux-x64.tar.gz
+wget --progress=dot:mega https://nodejs.org/dist/v8.11.3/node-v8.11.3-linux-x64.tar.xz
+echo '08e2fcfea66746bd966ea3a89f26851f1238d96f86c33eaf6274f67fce58421a  node-v8.11.3-linux-x64.tar.xz' | sha256sum -c
+tar -C /usr/local -xJ --strip-components 1 < node-v8.11.3-linux-x64.tar.xz
 node -v  # verify
 npm -v
