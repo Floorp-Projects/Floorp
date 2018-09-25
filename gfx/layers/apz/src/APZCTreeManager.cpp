@@ -248,7 +248,6 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
       mUpdater(nullptr),
       mTreeLock("APZCTreeLock"),
       mMapLock("APZCMapLock"),
-      mHitResultForInputBlock(CompositorHitTestInfo::eInvisibleToHitTest),
       mRetainedTouchIdentifier(-1),
       mInScrollbarTouchDrag(false),
       mApzcTreeLog("apzctree"),
@@ -1186,7 +1185,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
     *aOutInputBlockId = InputBlockState::NO_BLOCK_ID;
   }
   nsEventStatus result = nsEventStatus_eIgnore;
-  CompositorHitTestInfo hitResult = CompositorHitTestInfo::eInvisibleToHitTest;
+  CompositorHitTestInfo hitResult = CompositorHitTestInvisibleToHit;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
@@ -1293,7 +1292,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(wheelInput.mOrigin,
                                                             &hitResult);
       if (apzc) {
-        MOZ_ASSERT(hitResult != CompositorHitTestInfo::eInvisibleToHitTest);
+        MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
 
         if (wheelInput.mAPZAction == APZWheelAction::PinchZoom) {
           // The mousewheel may have hit a subframe, but we want to send the
@@ -1358,7 +1357,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(panInput.mPanStartPoint,
                                                             &hitResult);
       if (apzc) {
-        MOZ_ASSERT(hitResult != CompositorHitTestInfo::eInvisibleToHitTest);
+        MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
 
         // For pan gesture events, the call to ReceiveInputEvent below may result in
         // scrolling, which changes the async transform. However, the event we
@@ -1397,7 +1396,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(pinchInput.mFocusPoint,
                                                             &hitResult);
       if (apzc) {
-        MOZ_ASSERT(hitResult != CompositorHitTestInfo::eInvisibleToHitTest);
+        MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
 
         ScreenToScreenMatrix4x4 outTransform = GetScreenToApzcTransform(apzc)
                                              * GetApzcToGeckoTransform(apzc);
@@ -1423,7 +1422,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(tapInput.mPoint,
                                                             &hitResult);
       if (apzc) {
-        MOZ_ASSERT(hitResult != CompositorHitTestInfo::eInvisibleToHitTest);
+        MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
 
         ScreenToScreenMatrix4x4 outTransform = GetScreenToApzcTransform(apzc)
                                              * GetApzcToGeckoTransform(apzc);
@@ -1538,28 +1537,28 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 }
 
 static TouchBehaviorFlags
-ConvertToTouchBehavior(CompositorHitTestInfo info)
+ConvertToTouchBehavior(const CompositorHitTestInfo& info)
 {
   TouchBehaviorFlags result = AllowedTouchBehavior::UNKNOWN;
-  if (info == CompositorHitTestInfo::eInvisibleToHitTest) {
+  if (info == CompositorHitTestInvisibleToHit) {
     result = AllowedTouchBehavior::NONE;
-  } else if (info & CompositorHitTestInfo::eDispatchToContent) {
+  } else if (info.contains(CompositorHitTestFlags::eDispatchToContent)) {
     result = AllowedTouchBehavior::UNKNOWN;
   } else {
     result = AllowedTouchBehavior::VERTICAL_PAN
            | AllowedTouchBehavior::HORIZONTAL_PAN
            | AllowedTouchBehavior::PINCH_ZOOM
            | AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
-    if (info & CompositorHitTestInfo::eTouchActionPanXDisabled) {
+    if (info.contains(CompositorHitTestFlags::eTouchActionPanXDisabled)) {
       result &= ~AllowedTouchBehavior::HORIZONTAL_PAN;
     }
-    if (info & CompositorHitTestInfo::eTouchActionPanYDisabled) {
+    if (info.contains(CompositorHitTestFlags::eTouchActionPanYDisabled)) {
       result &= ~AllowedTouchBehavior::VERTICAL_PAN;
     }
-    if (info & CompositorHitTestInfo::eTouchActionPinchZoomDisabled) {
+    if (info.contains(CompositorHitTestFlags::eTouchActionPinchZoomDisabled)) {
       result &= ~AllowedTouchBehavior::PINCH_ZOOM;
     }
-    if (info & CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled) {
+    if (info.contains(CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled)) {
       result &= ~AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
     }
   }
@@ -1630,7 +1629,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
       return nsEventStatus_eConsumeNoDefault;
     }
 
-    mHitResultForInputBlock = CompositorHitTestInfo::eInvisibleToHitTest;
+    mHitResultForInputBlock = CompositorHitTestInvisibleToHit;
     mApzcForInputBlock = GetTouchInputBlockAPZC(aInput, &touchBehaviors,
         &mHitResultForInputBlock, &hitScrollbarNode);
 
@@ -1689,7 +1688,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     }
 
     if (mApzcForInputBlock) {
-      MOZ_ASSERT(mHitResultForInputBlock != CompositorHitTestInfo::eInvisibleToHitTest);
+      MOZ_ASSERT(mHitResultForInputBlock != CompositorHitTestInvisibleToHit);
 
       mApzcForInputBlock->GetGuid(aOutTargetGuid);
       uint64_t inputBlockId = 0;
@@ -1728,7 +1727,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
   // don't keep dangling references and leak things.
   if (mTouchCounter.GetActiveTouchCount() == 0) {
     mApzcForInputBlock = nullptr;
-    mHitResultForInputBlock = CompositorHitTestInfo::eInvisibleToHitTest;
+    mHitResultForInputBlock = CompositorHitTestInvisibleToHit;
     mRetainedTouchIdentifier = -1;
     mInScrollbarTouchDrag = false;
   }
@@ -1982,13 +1981,13 @@ APZCTreeManager::ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
 
   // Transform the aRefPoint.
   // If the event hits an overscrolled APZC, instruct the caller to ignore it.
-  CompositorHitTestInfo hitResult = CompositorHitTestInfo::eInvisibleToHitTest;
+  CompositorHitTestInfo hitResult = CompositorHitTestInvisibleToHit;
   PixelCastJustification LDIsScreen = PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent;
   ScreenIntPoint refPointAsScreen =
     ViewAs<ScreenPixel>(*aRefPoint, LDIsScreen);
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(refPointAsScreen, &hitResult);
   if (apzc) {
-    MOZ_ASSERT(hitResult != CompositorHitTestInfo::eInvisibleToHitTest);
+    MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
     apzc->GetGuid(aOutTargetGuid);
     ScreenToParentLayerMatrix4x4 transformToApzc = GetScreenToApzcTransform(apzc);
     ParentLayerToScreenMatrix4x4 transformToGecko = GetApzcToGeckoTransform(apzc);
@@ -2478,7 +2477,7 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
 {
   RecursiveMutexAutoLock lock(mTreeLock);
 
-  CompositorHitTestInfo hitResult = CompositorHitTestInfo::eInvisibleToHitTest;
+  CompositorHitTestInfo hitResult;
   HitTestingTreeNode* scrollbarNode = nullptr;
   RefPtr<AsyncPanZoomController> target;
   if (gfx::gfxVars::UseWebRender()) {
@@ -2514,7 +2513,7 @@ APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
     // here allows those tests which are not specifically
     // testing the hit-test algorithm to still work.
     result = FindRootApzcForLayersId(mRootLayersId);
-    *aOutHitResult = CompositorHitTestInfo::eVisibleToHitTest;
+    *aOutHitResult = CompositorHitTestFlags::eVisibleToHitTest;
     return result.forget();
   }
 
@@ -2536,9 +2535,9 @@ APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
     MOZ_ASSERT(result);
   }
 
-  bool isScrollbar = bool(hitInfo & gfx::CompositorHitTestInfo::eScrollbar);
-  bool isScrollbarThumb = bool(hitInfo & gfx::CompositorHitTestInfo::eScrollbarThumb);
-  ScrollDirection direction = (hitInfo & gfx::CompositorHitTestInfo::eScrollbarVertical)
+  const bool isScrollbar = hitInfo.contains(gfx::CompositorHitTestFlags::eScrollbar);
+  const bool isScrollbarThumb = hitInfo.contains(gfx::CompositorHitTestFlags::eScrollbarThumb);
+  const ScrollDirection direction = hitInfo.contains(gfx::CompositorHitTestFlags::eScrollbarVertical)
                             ? ScrollDirection::eVertical
                             : ScrollDirection::eHorizontal;
   if (isScrollbar || isScrollbarThumb) {
@@ -2708,7 +2707,7 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
         hitTestPoints.pop();
         APZCTM_LOG("Testing Layer point %s against node %p\n",
                 Stringify(hitTestPoints.top()).c_str(), aNode);
-        if (hitResult != CompositorHitTestInfo::eInvisibleToHitTest) {
+        if (hitResult != CompositorHitTestInvisibleToHit) {
           resultNode = aNode;
           *aOutHitResult = hitResult;
           return TraversalFlag::Abort;
@@ -2717,17 +2716,17 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
       }
   );
 
-  if (*aOutHitResult != CompositorHitTestInfo::eInvisibleToHitTest) {
+  if (*aOutHitResult != CompositorHitTestInvisibleToHit) {
     MOZ_ASSERT(resultNode);
     for (HitTestingTreeNode* n = resultNode; n; n = n->GetParent()) {
       if (n->IsScrollbarNode()) {
         *aOutScrollbarNode = n;
-        *aOutHitResult |= CompositorHitTestInfo::eScrollbar;
+        *aOutHitResult += CompositorHitTestFlags::eScrollbar;
         if (n->IsScrollThumbNode()) {
-          *aOutHitResult |= CompositorHitTestInfo::eScrollbarThumb;
+          *aOutHitResult += CompositorHitTestFlags::eScrollbarThumb;
         }
         if (n->GetScrollbarDirection() == ScrollDirection::eVertical) {
-          *aOutHitResult |= CompositorHitTestInfo::eScrollbarVertical;
+          *aOutHitResult += CompositorHitTestFlags::eScrollbarVertical;
         }
 
         // If we hit a scrollbar, target the APZC for the content scrolled
