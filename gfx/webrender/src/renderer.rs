@@ -12,7 +12,7 @@
 use api::{BlobImageHandler, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, FrameMsg, ImageFormat, PipelineId};
-use api::{ImageRendering};
+use api::{ImageRendering, Checkpoint, NotificationRequest};
 use api::{MemoryReport, VoidPtrToSizeFn};
 use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
 use api::{channel};
@@ -53,6 +53,7 @@ use scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use shade::Shaders;
 use render_task::{RenderTask, RenderTaskKind, RenderTaskTree};
 use resource_cache::ResourceCache;
+use util::drain_filter;
 
 use std;
 use std::cmp;
@@ -1406,6 +1407,9 @@ pub struct Renderer {
     cpu_profiles: VecDeque<CpuProfile>,
     gpu_profiles: VecDeque<GpuProfile>,
 
+    /// Notification requests to be fulfilled after rendering.
+    notifications: Vec<NotificationRequest>,
+
     #[cfg(feature = "capture")]
     read_fbo: FBOId,
     #[cfg(feature = "replay")]
@@ -1839,6 +1843,7 @@ impl Renderer {
             read_fbo,
             #[cfg(feature = "replay")]
             owned_external_images: FastHashMap::default(),
+            notifications: Vec::new(),
         };
 
         renderer.set_debug_flags(options.debug_flags);
@@ -1950,6 +1955,9 @@ impl Renderer {
                     if cancel_rendering {
                         self.active_documents.clear();
                     }
+                }
+                ResultMsg::AppendNotificationRequests(mut notifications) => {
+                    self.notifications.append(&mut notifications);
                 }
                 ResultMsg::RefreshShader(path) => {
                     self.pending_shader_updates.push(path);
@@ -2277,7 +2285,20 @@ impl Renderer {
         &mut self,
         framebuffer_size: DeviceUintSize,
     ) -> Result<RendererStats, Vec<RendererError>> {
-        self.render_impl(Some(framebuffer_size))
+        let result = self.render_impl(Some(framebuffer_size));
+
+        drain_filter(
+            &mut self.notifications,
+            |n| { n.when() == Checkpoint::FrameRendered },
+            |n| { n.notify(); },
+        );
+
+        // This is the end of the rendering pipeline. If some notifications are is still there,
+        // just clear them and they will autimatically fire the Checkpoint::TransactionDropped
+        // event. Otherwise they would just pile up in this vector forever.
+        self.notifications.clear();
+
+        result
     }
 
     // If framebuffer_size is None, don't render

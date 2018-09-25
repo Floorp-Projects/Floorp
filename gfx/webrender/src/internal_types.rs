@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{DebugCommand, DeviceUintRect, DocumentId, ExternalImageData, ExternalImageId};
-use api::ImageFormat;
+use api::{ImageFormat, NotificationRequest};
 use device::TextureFilter;
 use renderer::PipelineInfo;
 use gpu_cache::GpuCacheUpdateList;
@@ -160,6 +160,7 @@ pub enum ResultMsg {
         TextureUpdateList,
         BackendProfileCounters,
     ),
+    AppendNotificationRequests(Vec<NotificationRequest>),
 }
 
 #[derive(Clone, Debug)]
