@@ -38,10 +38,3 @@ add_task(async function() {
 
   await removeTab(tab);
 });
-
-function findSidebarItemByText(text, document) {
-  const sidebarItems = document.querySelectorAll(".js-sidebar-item");
-  return [...sidebarItems].find(element => {
-    return element.textContent.includes(text);
-  });
-}

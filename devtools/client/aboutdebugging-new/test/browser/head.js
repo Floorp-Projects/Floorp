@@ -4,6 +4,7 @@
 /* eslint-env browser */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../../shared/test/shared-head.js */
+/* import-globals-from debug-target-pane_collapsibilities_head.js */
 
 "use strict";
 
@@ -11,6 +12,10 @@
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
   this);
+
+// Load collapsibilities helpers
+Services.scriptloader.loadSubScript(
+  CHROME_URL_ROOT + "debug-target-pane_collapsibilities_head.js", this);
 
 /**
  * Enable the new about:debugging panel.
@@ -35,4 +40,11 @@ async function openAboutDebugging(page, win) {
   await waitUntil(() => document.querySelector(".js-runtime-page"));
 
   return { tab, document, window };
+}
+
+function findSidebarItemByText(text, document) {
+  const sidebarItems = document.querySelectorAll(".js-sidebar-item");
+  return [...sidebarItems].find(element => {
+    return element.textContent.includes(text);
+  });
 }
