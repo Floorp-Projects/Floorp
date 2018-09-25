@@ -248,8 +248,6 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     this.actorID = "root";
     this._children = {};
     protocol.Actor.prototype.initialize.call(this, conn);
-    // Root actor owns itself.
-    this.manage(this);
   },
 
   sayHello: simpleHello,
@@ -354,7 +352,7 @@ function run_test() {
     let childFront = null;
 
     const expectRootChildren = size => {
-      Assert.equal(rootActor._poolMap.size, size + 1);
+      Assert.equal(rootActor._poolMap.size, size);
       Assert.equal(rootFront._poolMap.size, size + 1);
       if (childFront) {
         Assert.equal(childFront._poolMap.size, 0);
