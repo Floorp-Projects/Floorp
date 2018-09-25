@@ -32,7 +32,6 @@ namespace layers {
 static already_AddRefed<TextureClient>
 CreateYCbCrTextureClientWithBackend(LayersBackend aLayersBackend)
 {
-
   TextureData* data = nullptr;
   IntSize size = IntSize(200, 150);
   IntSize ySize = IntSize(400, 300);

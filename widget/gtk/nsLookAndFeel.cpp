@@ -727,6 +727,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         EnsureInit();
         aResult = mCSDCloseButton;
         break;
+    case eIntID_GTKCSDTransparentBackground:
+        aResult = nsWindow::TopLevelWindowUseARGBVisual();
+        break;
     case eIntID_PrefersReducedMotion: {
         GtkSettings *settings;
         gboolean enableAnimations;

@@ -571,8 +571,8 @@ class MOZ_RAII AutoScriptActivity
 bool
 ShouldDiscardSystemSource();
 
-bool
-SharedMemoryEnabled();
+void
+SetPrefableRealmOptions(JS::RealmOptions &options);
 
 bool
 ExtraWarningsForSystemJS();

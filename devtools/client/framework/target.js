@@ -466,6 +466,10 @@ TabTarget.prototype = {
    *
    * This method will mainly call `attach` request on the target actor as well
    * as the console actor.
+   * See DebuggerClient.attachTarget and DebuggerClient.attachConsole for more info.
+   * It also starts listenings to events the target actor will start emitting
+   * after being attached, like `tabDetached` and `frameUpdate`
+   *
    * For webextension, it also preliminary converts addonTargetActor to a
    * WebExtensionTargetActor.
    */

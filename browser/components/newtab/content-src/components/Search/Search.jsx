@@ -64,6 +64,12 @@ export class _Search extends React.PureComponent {
    */
   render() {
     return (<div className="search-wrapper">
+      {this.props.showLogo &&
+        <div className="logo-and-wordmark">
+          <div className="logo" />
+          <div className="wordmark" />
+        </div>
+      }
       <div className="search-inner-wrapper">
         <label htmlFor="newtab-search-text" className="search-label">
           <span className="sr-only"><FormattedMessage id="search_web_placeholder" /></span>

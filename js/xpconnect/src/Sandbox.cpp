@@ -1132,10 +1132,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         creationOptions.setClampAndJitterTime(false);
     }
 
-    if (xpc::SharedMemoryEnabled()) {
-        creationOptions.setSharedMemoryAndAtomicsEnabled(true);
-    }
-
+    xpc::SetPrefableRealmOptions(realmOptions);
     if (options.sameZoneAs) {
         creationOptions.setNewCompartmentInExistingZone(js::UncheckedUnwrap(options.sameZoneAs));
     } else if (options.freshZone) {

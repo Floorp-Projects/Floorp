@@ -294,6 +294,27 @@ MLGDevice::GetBufferForColorSpace(YUVColorSpace aColorSpace)
   return resource;
 }
 
+RefPtr<MLGBuffer>
+MLGDevice::GetBufferForBitDepthCoefficient(uint8_t aBitDepth)
+{
+  ColorDepth depth = ColorDepthForAlphaBitDepth(aBitDepth);
+  if (mColorDepthBuffers[depth]) {
+    return mColorDepthBuffers[depth];
+  }
+
+  YCbCrBitDepthConstants buffer;
+  buffer.coefficient = gfx::RescalingFactorForAlphaBitDepth(aBitDepth);
+
+  RefPtr<MLGBuffer> resource = CreateBuffer(
+    MLGBufferType::Constant, sizeof(buffer), MLGUsage::Immutable, &buffer);
+  if (!resource) {
+    return nullptr;
+  }
+
+  mColorDepthBuffers[depth] = resource;
+  return resource;
+}
+
 bool
 MLGDevice::Synchronize()
 {

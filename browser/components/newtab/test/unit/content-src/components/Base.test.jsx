@@ -6,7 +6,7 @@ import {shallow} from "enzyme";
 import {StartupOverlay} from "content-src/components/StartupOverlay/StartupOverlay";
 
 describe("<Base>", () => {
-  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, dispatch: () => {}};
+  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, Sections: [], dispatch: () => {}};
 
   it("should render Base component", () => {
     const wrapper = shallow(<Base {...DEFAULT_PROPS} />);
@@ -28,7 +28,7 @@ describe("<Base>", () => {
 });
 
 describe("<BaseContent>", () => {
-  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, dispatch: () => {}};
+  let DEFAULT_PROPS = {store: {getState: () => {}}, App: {initialized: true}, Prefs: {values: {}}, Sections: [], dispatch: () => {}};
 
   it("should render an ErrorBoundary with a Search child", () => {
     const searchEnabledProps =

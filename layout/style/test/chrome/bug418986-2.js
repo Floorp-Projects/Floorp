@@ -54,6 +54,7 @@ var suppressed_toggles = [
   "-moz-windows-default-theme",
   "-moz-windows-glass",
   "-moz-gtk-csd-available",
+  "-moz-gtk-csd-transparent-background",
   "-moz-gtk-csd-minimize-button",
   "-moz-gtk-csd-maximize-button",
   "-moz-gtk-csd-close-button",
