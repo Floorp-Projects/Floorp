@@ -283,9 +283,7 @@ impl NormalBorder {
         fn renders_small_border_solid(style: BorderStyle) -> bool {
             match style {
                 BorderStyle::Groove |
-                BorderStyle::Ridge |
-                BorderStyle::Inset |
-                BorderStyle::Outset => true,
+                BorderStyle::Ridge => true,
                 _ => false,
             }
         }
