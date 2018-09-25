@@ -131,7 +131,8 @@ public:
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                               size_t& aHeapSizeOut,
                               size_t& aNonHeapSizeOut,
-                              size_t& aExtHandlesOut) const override;
+                              size_t& aExtHandlesOut,
+                              uint64_t& aExtIdOut) const override;
 
   virtual bool Map(MapType, MappedSurface *aMappedSurface) override
   {
