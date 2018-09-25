@@ -110,7 +110,7 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
       case JSProto_ReadableStreamBYOBRequest:
       case JSProto_ByteLengthQueuingStrategy:
       case JSProto_CountQueuingStrategy:
-        return !cx->options().streams();
+        return !cx->realm()->creationOptions().getStreamsEnabled();
 
       // Return true if the given constructor has been disabled at run-time.
       case JSProto_Atomics:

@@ -85,6 +85,7 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals)
     /* Create the global object. */
     JS::RootedObject newGlobal(cx);
     JS::RealmOptions options;
+    options.creationOptions().setStreamsEnabled(true);
     newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals, JS::FireOnNewGlobalHook,
                                    options);
     if (!newGlobal) {
