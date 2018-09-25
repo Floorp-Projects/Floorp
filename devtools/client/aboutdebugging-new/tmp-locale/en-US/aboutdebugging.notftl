@@ -16,6 +16,14 @@ about-debugging-sidebar-connect =
 # Text displayed in the about:debugging sidebar when no device was found.
 about-debugging-sidebar-no-devices = No devices discovered
 
+# Text displayed in buttons found in sidebar items representing remote runtimes.
+# Clicking on the button will attempt to connect to the runtime.
+about-debugging-sidebar-item-connect-button = Connect
+
+# Temporary text displayed in sidebar items representing remote runtimes after
+# successfully connecting to them. Temporary UI, do not localize.
+about-debugging-sidebar-item-connected-label = Connected
+
 # Title of the Connect page.
 about-debugging-connect-title = Connect a Device
 
