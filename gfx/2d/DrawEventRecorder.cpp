@@ -114,7 +114,7 @@ DrawEventRecorderMemory::DrawEventRecorderMemory()
 DrawEventRecorderMemory::DrawEventRecorderMemory(const SerializeResourcesFn &aFn) :
   mSerializeCallback(aFn)
 {
-  mExternalFonts = true;
+  mExternalFonts = !!mSerializeCallback;
   WriteHeader(mOutputStream);
 }
 
