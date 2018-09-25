@@ -424,7 +424,7 @@ SOURCES += [
     'nsDOMWindowUtils.cpp',
     # Conflicts with windows.h's definition of SendMessage.
     'nsFrameMessageManager.cpp',
-    # These files have a #error "Never include windows.h in this file!"
+    # These files have a #error "Never include unwrapped windows.h in this file!"
     'nsGlobalWindowInner.cpp',
     'nsGlobalWindowOuter.cpp',
     # Conflicts with windows.h's definition of LoadImage.
