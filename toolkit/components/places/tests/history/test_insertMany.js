@@ -25,8 +25,8 @@ add_task(async function test_error_cases() {
   );
   Assert.throws(
     () => PlacesUtils.history.insertMany([validPageInfo, {}]),
-    /Error: PageInfo: The following properties were expected/,
-    "passing a second invalid PageInfo object to History.insertMany should throw an Error"
+    /TypeError: PageInfo object must have a url property/,
+    "passing a second invalid PageInfo object to History.insertMany should throw a TypeError"
   );
 });
 
