@@ -14,39 +14,39 @@ import subprocess
 import sys
 import shutil
 import tempfile
-from distutils.version import LooseVersion
+from distutils.version import LooseVersion, StrictVersion
+from mozbuild.nodeutil import (find_node_executable, find_npm_executable,
+                               NPM_MIN_VERSION, NODE_MIN_VERSION)
 sys.path.append(os.path.join(
     os.path.dirname(__file__), "..", "..", "..", "third_party", "python", "which"))
-import which
-
-NODE_MIN_VERSION = "8.9.1"
-NPM_MIN_VERSION = "5.5.1"
 
 NODE_MACHING_VERSION_NOT_FOUND_MESSAGE = """
-nodejs is out of date. You currently have node v%s but v%s is required.
-Please update nodejs from https://nodejs.org and try again.
+Could not find Node.js executable later than %s.
+
+Executing `mach bootstrap --no-system-changes` should
+install a compatible version in ~/.mozbuild on most platforms.
 """.strip()
 
 NPM_MACHING_VERSION_NOT_FOUND_MESSAGE = """
-npm is out of date. You currently have npm v%s but v%s is required.
-You can usually update npm with:
+Could not find npm executable later than %s.
 
-npm i -g npm
+Executing `mach bootstrap --no-system-changes` should
+install a compatible version in ~/.mozbuild on most platforms.
 """.strip()
 
 NODE_NOT_FOUND_MESSAGE = """
 nodejs is either not installed or is installed to a non-standard path.
-Please install nodejs from https://nodejs.org and try again.
 
-Valid installation paths:
+Executing `mach bootstrap --no-system-changes` should
+install a compatible version in ~/.mozbuild on most platforms.
 """.strip()
 
 NPM_NOT_FOUND_MESSAGE = """
 Node Package Manager (npm) is either not installed or installed to a
-non-standard path. Please install npm from https://nodejs.org (it comes as an
-option in the node installation) and try again.
+non-standard path.
 
-Valid installation paths:
+Executing `mach bootstrap --no-system-changes` should
+install a compatible version in ~/.mozbuild on most platforms.
 """.strip()
 
 
@@ -88,7 +88,7 @@ def eslint_setup(should_clobber=False):
         else:
             mozfileremove(node_modules_path)
 
-    npm_path, version = get_node_or_npm_path("npm")
+    npm_path, version = find_npm_executable()
     if not npm_path:
         return 1
 
@@ -99,7 +99,7 @@ def eslint_setup(should_clobber=False):
 
     # If we have an npm version newer than 5.8.0, just use 'ci', as that's much
     # simpler and does exactly what we want.
-    npm_is_older_version = version < LooseVersion("5.8.0")
+    npm_is_older_version = version < StrictVersion("5.8.0").version
 
     if npm_is_older_version:
         cmd = [npm_path, "install"]
@@ -272,74 +272,6 @@ def get_possible_node_paths_win():
     })
 
 
-def simple_which(filename, path=None):
-    exts = [".cmd", ".exe", ""] if platform.system() == "Windows" else [""]
-
-    for ext in exts:
-        try:
-            return which.which(filename + ext, path)
-        except which.WhichError:
-            pass
-
-    # If we got this far, we didn't find it with any of the extensions, so
-    # just return.
-    return None
-
-
-def which_path(filename):
-    """
-    Return the nodejs or npm path.
-    """
-    # Look in the system path first.
-    path = simple_which(filename)
-    if path is not None:
-        return path
-
-    if platform.system() == "Windows":
-        # If we didn't find it fallback to the non-system paths.
-        path = simple_which(filename, get_possible_node_paths_win())
-    elif filename == "node":
-        path = simple_which("nodejs")
-
-    return path
-
-
-def get_node_or_npm_path(filename, minversion=None):
-    node_or_npm_path = which_path(filename)
-
-    if not node_or_npm_path:
-        if filename in ('node', 'nodejs'):
-            print(NODE_NOT_FOUND_MESSAGE)
-        elif filename == "npm":
-            print(NPM_NOT_FOUND_MESSAGE)
-
-        if platform.system() == "Windows":
-            app_paths = get_possible_node_paths_win()
-
-            for p in app_paths:
-                print("  - %s" % p)
-        elif platform.system() == "Darwin":
-            print("  - /usr/local/bin/{}".format(filename))
-        elif platform.system() == "Linux":
-            print("  - /usr/bin/{}".format(filename))
-
-        return None, None
-
-    version_str = get_version(node_or_npm_path).lstrip('v')
-
-    version = LooseVersion(version_str)
-
-    if not minversion or version > minversion:
-        return node_or_npm_path, version
-
-    if filename == "npm":
-        print(NPM_MACHING_VERSION_NOT_FOUND_MESSAGE % (version_str.strip(), minversion))
-    else:
-        print(NODE_MACHING_VERSION_NOT_FOUND_MESSAGE % (version_str.strip(), minversion))
-
-    return None, None
-
-
 def get_version(path):
     try:
         version_str = subprocess.check_output([path, "--version"],
@@ -393,13 +325,20 @@ def get_eslint_module_path():
 
 
 def check_node_executables_valid():
-    # eslint requires at least node 6.9.1
-    node_path = get_node_or_npm_path("node", LooseVersion(NODE_MIN_VERSION))
+    node_path, version = find_node_executable()
     if not node_path:
+        print(NODE_NOT_FOUND_MESSAGE)
+        return False
+    if not version:
+        print(NODE_MACHING_VERSION_NOT_FOUND_MESSAGE % NODE_MIN_VERSION)
         return False
 
-    npm_path = get_node_or_npm_path("npm", LooseVersion(NPM_MIN_VERSION))
+    npm_path, version = find_npm_executable()
     if not npm_path:
+        print(NPM_NOT_FOUND_MESSAGE)
+        return False
+    if not version:
+        print(NPM_MACHING_VERSION_NOT_FOUND_MESSAGE % NPM_MIN_VERSION)
         return False
 
     return True
