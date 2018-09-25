@@ -627,11 +627,16 @@ XMLDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
 JSObject*
 XMLDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
+  JSObject* obj;
   if (mIsPlainDocument) {
-    return Document_Binding::Wrap(aCx, this, aGivenProto);
+    obj = Document_Binding::Wrap(aCx, this, aGivenProto);
+  } else {
+    obj = XMLDocument_Binding::Wrap(aCx, this, aGivenProto);
   }
-
-  return XMLDocument_Binding::Wrap(aCx, this, aGivenProto);
+  if (!obj) {
+      MOZ_CRASH("Looks like bug 1488480/1405521, with XMLDocument::WrapNode failing");
+  }
+  return obj;
 }
 
 } // namespace dom
