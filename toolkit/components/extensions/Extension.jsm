@@ -41,7 +41,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
@@ -112,11 +111,9 @@ XPCOMUtils.defineLazyGetter(this, "LocaleData", () => ExtensionCommon.LocaleData
 const {sharedData} = Services.ppmm;
 
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
-// storage used by the browser.storage.local API is not directly accessible from the extension code).
-XPCOMUtils.defineLazyGetter(this, "WEBEXT_STORAGE_USER_CONTEXT_ID", () => {
-  return ContextualIdentityService.getDefaultPrivateIdentity(
-    "userContextIdInternal.webextStorageLocal").userContextId;
-});
+// storage used by the browser.storage.local API is not directly accessible from the extension code,
+// it is defined and reserved as "userContextIdInternal.webextStorageLocal" in ContextualIdentityService.jsm).
+const WEBEXT_STORAGE_USER_CONTEXT_ID = -1 >>> 0;
 
 // The maximum time to wait for extension child shutdown blockers to complete.
 const CHILD_SHUTDOWN_TIMEOUT_MS = 8000;
@@ -1834,15 +1831,6 @@ class Extension extends ExtensionData {
         } else if (ExtensionStorageIDB.isMigratedExtension(this)) {
           this.setSharedData("storageIDBBackend", true);
           this.setSharedData("storageIDBPrincipal", ExtensionStorageIDB.getStoragePrincipal(this));
-        } else {
-          // If the extension has to migrate backend, ensure that the data migration
-          // starts once Firefox is idle after the extension has been started.
-          this.once("ready", () => ChromeUtils.idleDispatch(() => {
-            if (this.hasShutdown) {
-              return;
-            }
-            ExtensionStorageIDB.selectBackend({extension: this});
-          }));
         }
       }
 

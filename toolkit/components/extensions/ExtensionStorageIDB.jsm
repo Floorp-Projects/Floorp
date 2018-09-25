@@ -10,7 +10,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/IndexedDB.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   getTrimmedString: "resource://gre/modules/ExtensionTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -18,11 +17,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
-// storage used by the browser.storage.local API is not directly accessible from the extension code).
-XPCOMUtils.defineLazyGetter(this, "WEBEXT_STORAGE_USER_CONTEXT_ID", () => {
-  return ContextualIdentityService.getDefaultPrivateIdentity(
-    "userContextIdInternal.webextStorageLocal").userContextId;
-});
+// storage used by the browser.storage.local API is not directly accessible from the extension code,
+// it is defined and reserved as "userContextIdInternal.webextStorageLocal" in ContextualIdentityService.jsm).
+const WEBEXT_STORAGE_USER_CONTEXT_ID = -1 >>> 0;
 
 const IDB_NAME = "webExtensions-storage-local";
 const IDB_DATA_STORENAME = "storage-local-data";
