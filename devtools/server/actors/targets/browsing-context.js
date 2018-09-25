@@ -41,7 +41,7 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/shared/locales/browsing-context.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { ActorClassWithSpec, Actor, Pool } = require("devtools/shared/protocol");
 const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
 
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/thread", true);
@@ -651,15 +651,18 @@ const browsingContextTargetPrototype = {
     }
 
     return this._workerTargetActorList.getList().then((actors) => {
-      const pool = new ActorPool(this.conn);
+      const pool = new Pool(this.conn);
       for (const actor of actors) {
-        pool.addActor(actor);
+        pool.manage(actor);
       }
 
-      this.conn.removeActorPool(this._workerTargetActorPool);
-      this._workerTargetActorPool = pool;
-      this.conn.addActorPool(this._workerTargetActorPool);
+      // Do not destroy the pool before transfering ownership to the newly created
+      // pool, so that we do not accidently destroy actors that are still in use.
+      if (this._workerTargetActorPool) {
+        this._workerTargetActorPool.destroy();
+      }
 
+      this._workerTargetActorPool = pool;
       this._workerTargetActorList.onListChanged = this._onWorkerTargetActorListChanged;
 
       return {
@@ -899,7 +902,7 @@ const browsingContextTargetPrototype = {
     }
 
     if (this._workerTargetActorPool !== null) {
-      this.conn.removeActorPool(this._workerTargetActorPool);
+      this._workerTargetActorPool.destroy();
       this._workerTargetActorPool = null;
     }
 
