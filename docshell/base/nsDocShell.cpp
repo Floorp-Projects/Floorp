@@ -11605,7 +11605,9 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
       NS_ENSURE_SUCCESS(currentURI->GetUserPass(currentUserPass),
                         NS_ERROR_FAILURE);
       NS_ENSURE_SUCCESS(newURI->GetUserPass(newUserPass), NS_ERROR_FAILURE);
-      if (NS_FAILED(secMan->CheckSameOriginURI(currentURI, newURI, true)) ||
+      bool isPrivateWin =
+        document->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
+      if (NS_FAILED(secMan->CheckSameOriginURI(currentURI, newURI, true, isPrivateWin)) ||
           !currentUserPass.Equals(newUserPass)) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }
@@ -12970,10 +12972,18 @@ nsDocShell::IsOKToLoadURI(nsIURI* aURI)
     return false;
   }
 
+
+  bool isPrivateWin = false;
+  nsIDocument *doc = GetDocument();
+  if (doc) {
+    isPrivateWin =
+      doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
+  }
+
   nsCOMPtr<nsIScriptSecurityManager> secMan =
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
   return secMan &&
-         NS_SUCCEEDED(secMan->CheckSameOriginURI(aURI, mLoadingURI, false));
+         NS_SUCCEEDED(secMan->CheckSameOriginURI(aURI, mLoadingURI, false, isPrivateWin));
 }
 
 //

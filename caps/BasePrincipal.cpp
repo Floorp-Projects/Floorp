@@ -166,8 +166,8 @@ BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPri
     nsCOMPtr<nsIURI> prinURI;
     rv = GetURI(getter_AddRefs(prinURI));
     if (NS_SUCCEEDED(rv) && prinURI) {
-      nsScriptSecurityManager::ReportError(nullptr, "CheckSameOriginError",
-                                           prinURI, aURI);
+      nsScriptSecurityManager::ReportError("CheckSameOriginError", prinURI, aURI,
+                                           mOriginAttributes.mPrivateBrowsingId > 0);
     }
   }
 
