@@ -6,7 +6,7 @@
   -moz-appearance: none;
   -moz-context-properties: fill, fill-opacity;
   list-style-image: url(chrome://global/skin/icons/close.svg);
-  color: inherit;
+  color: inherit !important;
   fill: currentColor;
   fill-opacity: 0;
 }
