@@ -1,5 +1,7 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+let counter = 0;
+
 AntiTracking.runTest("Storage Access API called in a sandboxed iframe",
   // blocking callback
   async _ => {
@@ -62,7 +64,21 @@ AntiTracking.runTest("Storage Access API called in a sandboxed iframe with" +
   },
 
   null, // non-blocking callback
-  null, // cleanup function
+  // cleanup function
+  async _ => {
+    // The test harness calls this function twice.  Our cleanup function is set
+    // up so that the first time that it's called, it would do the cleanup, but
+    // the second time it would bail out early.  This ensures that after the
+    // first time, a re-run of this test still sees the blocking notifications,
+    // but also that the permission set here will be visible to the next steps
+    // of the test.
+    if (++counter % 2 == 0) {
+      return;
+    }
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    });
+  },
   [["dom.storage_access.enabled", true]], // extra prefs
   false, // no window open test
   false, // no user-interaction test
@@ -157,6 +173,9 @@ AntiTracking.runTest("Verify that non-sandboxed contexts get the" +
   null, // non-blocking callback
   // cleanup function
   async _ => {
+    if (++counter % 2 == 1) {
+      return;
+    }
     await new Promise(resolve => {
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
