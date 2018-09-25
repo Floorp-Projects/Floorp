@@ -35,8 +35,7 @@ STRUCT!{struct STATURL {
     dwFlags: DWORD,
 }}
 pub type LPSTATURL = *mut STATURL;
-RIDL!{
-#[uuid(0x3c374a42, 0xbae4, 0x11cf, 0xbf, 0x7d, 0x00, 0xaa, 0x00, 0x69, 0x46, 0xee)]
+RIDL!{#[uuid(0x3c374a42, 0xbae4, 0x11cf, 0xbf, 0x7d, 0x00, 0xaa, 0x00, 0x69, 0x46, 0xee)]
 interface IEnumSTATURL(IEnumSTATURLVtbl): IUnknown(IUnknownVtbl) {
     fn Next(
         celt: ULONG,
@@ -56,8 +55,7 @@ interface IEnumSTATURL(IEnumSTATURLVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
 }}
 pub type LPURLHISTORYSTG = *mut IUrlHistoryStg;
-RIDL!{
-#[uuid(0x3c374a41, 0xbae4, 0x11cf, 0xbf, 0x7d, 0x00, 0xaa, 0x00, 0x69, 0x46, 0xee)]
+RIDL!{#[uuid(0x3c374a41, 0xbae4, 0x11cf, 0xbf, 0x7d, 0x00, 0xaa, 0x00, 0x69, 0x46, 0xee)]
 interface IUrlHistoryStg(IUrlHistoryStgVtbl): IUnknown(IUnknownVtbl) {
     fn AddUrl(
         pocsUrl: LPCOLESTR,
@@ -81,8 +79,7 @@ interface IUrlHistoryStg(IUrlHistoryStgVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
 }}
 pub type LPURLHISTORYSTG2 = *mut IUrlHistoryStg2;
-RIDL!{
-#[uuid(0xafa0dc11, 0xc313, 0x11d0, 0x83, 0x1a, 0x00, 0xc0, 0x4f, 0xd5, 0xae, 0x38)]
+RIDL!{#[uuid(0xafa0dc11, 0xc313, 0x11d0, 0x83, 0x1a, 0x00, 0xc0, 0x4f, 0xd5, 0xae, 0x38)]
 interface IUrlHistoryStg2(IUrlHistoryStg2Vtbl): IUrlHistoryStg(IUrlHistoryStgVtbl) {
     fn AddUrlAndNotify(
         pocsUrl: LPCOLESTR,
@@ -95,8 +92,7 @@ interface IUrlHistoryStg2(IUrlHistoryStg2Vtbl): IUrlHistoryStg(IUrlHistoryStgVtb
     fn ClearHistory() -> HRESULT,
 }}
 pub type LPURLHISTORYNOTIFY = *mut IUrlHistoryNotify;
-RIDL!{
-#[uuid(0xbc40bec1, 0xc493, 0x11d0, 0x83, 0x1b, 0x00, 0xc0, 0x4f, 0xd5, 0xae, 0x38)]
+RIDL!{#[uuid(0xbc40bec1, 0xc493, 0x11d0, 0x83, 0x1b, 0x00, 0xc0, 0x4f, 0xd5, 0xae, 0x38)]
 interface IUrlHistoryNotify(IUrlHistoryNotifyVtbl):
     IOleCommandTarget(IOleCommandTargetVtbl) {}
 }

@@ -5,8 +5,9 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! LSA Policy Lookup API
-use shared::guiddef::{GUID};
+use shared::guiddef::GUID;
 use shared::minwindef::{ULONG, USHORT};
+use shared::ntdef::NTSTATUS;
 use um::winnt::{ACCESS_MASK, HANDLE, LONG, PCHAR, PSID, PVOID, PWSTR, SID_NAME_USE};
 STRUCT!{struct LSA_UNICODE_STRING {
     Length: USHORT,
@@ -74,3 +75,36 @@ ENUM!{enum LSA_LOOKUP_DOMAIN_INFO_CLASS {
 pub type PLSA_LOOKUP_DOMAIN_INFO_CLASS = *mut LSA_LOOKUP_DOMAIN_INFO_CLASS;
 pub type LSA_LOOKUP_HANDLE = PVOID;
 pub type PLSA_LOOKUP_HANDLE = *mut PVOID;
+extern "C" {
+    pub fn LsaLookupOpenLocalPolicy(
+        ObjectAttributes: PLSA_OBJECT_ATTRIBUTES,
+        AccessMask: ACCESS_MASK,
+        PolicyHandle: PLSA_LOOKUP_HANDLE,
+    ) -> NTSTATUS;
+    pub fn LsaLookupClose(
+        ObjectHandle: LSA_LOOKUP_HANDLE,
+    ) -> NTSTATUS;
+    pub fn LsaLookupTranslateSids(
+        PolicyHandle: LSA_LOOKUP_HANDLE,
+        Count: ULONG,
+        Sids: *mut PSID,
+        ReferencedDomains: *mut PLSA_REFERENCED_DOMAIN_LIST,
+        Names: *mut PLSA_TRANSLATED_NAME,
+    ) -> NTSTATUS;
+    pub fn LsaLookupTranslateNames(
+        PolicyHandle: LSA_LOOKUP_HANDLE,
+        Flags: ULONG,
+        Count: ULONG,
+        Names: PLSA_UNICODE_STRING,
+        ReferencedDomains: *mut PLSA_REFERENCED_DOMAIN_LIST,
+        Sids: *mut PLSA_TRANSLATED_SID2,
+    ) -> NTSTATUS;
+    pub fn LsaLookupGetDomainInfo(
+        PolicyHandle: LSA_LOOKUP_HANDLE,
+        DomainInfoClass: LSA_LOOKUP_DOMAIN_INFO_CLASS,
+        DomainInfo: *mut PVOID,
+    ) -> NTSTATUS;
+    pub fn LsaLookupFreeMemory(
+        Buffer: PVOID,
+    ) -> NTSTATUS;
+}

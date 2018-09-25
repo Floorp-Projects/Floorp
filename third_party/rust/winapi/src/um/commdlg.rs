@@ -22,7 +22,7 @@ FN!{stdcall LPOFNHOOKPROC(
     WPARAM,
     LPARAM,
 ) -> UINT_PTR}
-STRUCT!{struct OPENFILENAME_NT4A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct OPENFILENAME_NT4A {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hInstance: HINSTANCE,
@@ -45,7 +45,7 @@ STRUCT!{struct OPENFILENAME_NT4A {
     lpTemplateName: LPCSTR,
 }}
 pub type LPOPENFILENAME_NT4A = *mut OPENFILENAME_NT4A;
-STRUCT!{struct OPENFILENAME_NT4W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct OPENFILENAME_NT4W {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hInstance: HINSTANCE,
@@ -68,7 +68,7 @@ STRUCT!{struct OPENFILENAME_NT4W {
     lpTemplateName: LPCWSTR,
 }}
 pub type LPOPENFILENAME_NT4W = *mut OPENFILENAME_NT4W;
-STRUCT!{struct OPENFILENAMEA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct OPENFILENAMEA {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hInstance: HINSTANCE,
@@ -94,7 +94,7 @@ STRUCT!{struct OPENFILENAMEA {
     FlagsEx: DWORD,
 }}
 pub type LPOPENFILENAMEA = *mut OPENFILENAMEA;
-STRUCT!{struct OPENFILENAMEW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct OPENFILENAMEW {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hInstance: HINSTANCE,
@@ -180,26 +180,26 @@ FN!{stdcall LPCCHOOKPROC(
     WPARAM,
     LPARAM,
 ) -> UINT_PTR}
-STRUCT!{struct OFNOTIFYA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct OFNOTIFYA {
     hdr: NMHDR,
     lpOFN: LPOPENFILENAMEA,
     pszFile: LPSTR,
 }}
 pub type LPOFNOTIFYA = *mut OFNOTIFYA;
-STRUCT!{struct OFNOTIFYW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct OFNOTIFYW {
     hdr: NMHDR,
     lpOFN: LPOPENFILENAMEW,
     pszFile: LPWSTR,
 }}
 pub type LPOFNOTIFYW = *mut OFNOTIFYW;
-STRUCT!{struct OFNOTIFYEXA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct OFNOTIFYEXA {
     hdr: NMHDR,
     lpOFN: LPOPENFILENAMEA,
     psf: LPVOID,
     pidl: LPVOID,
 }}
 pub type LPOFNOTIFYEXA = *mut OFNOTIFYEXA;
-STRUCT!{struct OFNOTIFYEXW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct OFNOTIFYEXW {
     hdr: NMHDR,
     lpOFN: LPOPENFILENAMEW,
     psf: LPVOID,
@@ -225,7 +225,7 @@ pub const CDM_GETFOLDERIDLIST: UINT = CDM_FIRST + 0x0003;
 pub const CDM_SETCONTROLTEXT: UINT = CDM_FIRST + 0x0004;
 pub const CDM_HIDECONTROL: UINT = CDM_FIRST + 0x0005;
 pub const CDM_SETDEFEXT: UINT = CDM_FIRST + 0x0006;
-STRUCT!{struct CHOOSECOLORA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct CHOOSECOLORA {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hInstance: HWND,
@@ -237,7 +237,7 @@ STRUCT!{struct CHOOSECOLORA {
     lpTemplateName: LPCSTR,
 }}
 pub type LPCHOOSECOLORA = *mut CHOOSECOLORA;
-STRUCT!{struct CHOOSECOLORW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct CHOOSECOLORW {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hInstance: HWND,
@@ -272,7 +272,7 @@ FN!{stdcall LPFRHOOKPROC(
     WPARAM,
     LPARAM,
 ) -> UINT_PTR}
-STRUCT!{struct FINDREPLACEA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct FINDREPLACEA {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hInstance: HINSTANCE,
@@ -286,7 +286,7 @@ STRUCT!{struct FINDREPLACEA {
     lpTemplateName: LPCSTR,
 }}
 pub type LPFINDREPLACEA = *mut FINDREPLACEA;
-STRUCT!{struct FINDREPLACEW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct FINDREPLACEW {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hInstance: HINSTANCE,
@@ -341,7 +341,7 @@ FN!{stdcall LPCFHOOKPROC(
     WPARAM,
     LPARAM,
 ) -> UINT_PTR}
-STRUCT!{struct CHOOSEFONTA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct CHOOSEFONTA {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hDC: HDC,
@@ -360,7 +360,7 @@ STRUCT!{struct CHOOSEFONTA {
     nSizeMax: INT,
 }}
 pub type LPCHOOSEFONTA = *mut CHOOSEFONTA;
-STRUCT!{struct CHOOSEFONTW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct CHOOSEFONTW {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hDC: HDC,
@@ -445,7 +445,7 @@ FN!{stdcall LPSETUPHOOKPROC(
     WPARAM,
     LPARAM,
 ) -> UINT_PTR}
-STRUCT!{struct PRINTDLGA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct PRINTDLGA {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hDevMode: HGLOBAL,
@@ -467,7 +467,7 @@ STRUCT!{struct PRINTDLGA {
     hSetupTemplate: HGLOBAL,
 }}
 pub type LPPRINTDLGA = *mut PRINTDLGA;
-STRUCT!{struct PRINTDLGW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct PRINTDLGW {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hDevMode: HGLOBAL,
@@ -497,7 +497,7 @@ extern "system" {
         pPD: LPPRINTDLGW,
     ) -> BOOL;
 }
-RIDL!(#[uuid(0x5852a2c3, 0x6530, 0x11d1, 0xb6, 0xa3, 0x0, 0x0, 0xf8, 0x75, 0x7b, 0xf9)]
+RIDL!{#[uuid(0x5852a2c3, 0x6530, 0x11d1, 0xb6, 0xa3, 0x0, 0x0, 0xf8, 0x75, 0x7b, 0xf9)]
 interface IPrintDialogCallback(IPrintDialogCallbackVtbl): IUnknown(IUnknownVtbl) {
     fn InitDone() -> HRESULT,
     fn SelectionChange() -> HRESULT,
@@ -508,9 +508,8 @@ interface IPrintDialogCallback(IPrintDialogCallbackVtbl): IUnknown(IUnknownVtbl)
         lParam: LPARAM,
         pResult: *mut LRESULT,
     ) -> HRESULT,
-}
-);
-RIDL!(#[uuid(0x509aaeda, 0x5639, 0x11d1, 0xb6, 0xa1, 0x0, 0x0, 0xf8, 0x75, 0x7b, 0xf9)]
+}}
+RIDL!{#[uuid(0x509aaeda, 0x5639, 0x11d1, 0xb6, 0xa1, 0x0, 0x0, 0xf8, 0x75, 0x7b, 0xf9)]
 interface IPrintDialogServices(IPrintDialogServicesVtbl): IUnknown(IUnknownVtbl) {
     fn GetCurrentDevMode(
         pDevMode: LPDEVMODEW,
@@ -524,15 +523,14 @@ interface IPrintDialogServices(IPrintDialogServicesVtbl): IUnknown(IUnknownVtbl)
         pPortName: LPWSTR,
         pcchSize: *mut UINT,
     ) -> HRESULT,
-}
-);
-STRUCT!{struct PRINTPAGERANGE {
+}}
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct PRINTPAGERANGE {
     nFromPage: DWORD,
     nToPage: DWORD,
 }}
 pub type LPPRINTPAGERANGE = *mut PRINTPAGERANGE;
 pub type PCPRINTPAGERANGE = *const PRINTPAGERANGE;
-STRUCT!{struct PRINTDLGEXA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct PRINTDLGEXA {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hDevMode: HGLOBAL,
@@ -556,7 +554,7 @@ STRUCT!{struct PRINTDLGEXA {
     dwResultAction: DWORD,
 }}
 pub type LPPRINTDLGEXA = *mut PRINTDLGEXA;
-STRUCT!{struct PRINTDLGEXW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct PRINTDLGEXW {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hDevMode: HGLOBAL,
@@ -621,7 +619,7 @@ pub const START_PAGE_GENERAL: DWORD = 0xffffffff;
 pub const PD_RESULT_CANCEL: DWORD = 0;
 pub const PD_RESULT_PRINT: DWORD = 1;
 pub const PD_RESULT_APPLY: DWORD = 2;
-STRUCT!{struct DEVNAMES {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct DEVNAMES {
     wDriverOffset: WORD,
     wDeviceOffset: WORD,
     wOutputOffset: WORD,
@@ -652,7 +650,7 @@ FN!{stdcall LPPAGESETUPHOOK(
     WPARAM,
     LPARAM,
 ) -> UINT_PTR}
-STRUCT!{struct PAGESETUPDLGA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct PAGESETUPDLGA {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hDevMode: HGLOBAL,
@@ -669,7 +667,7 @@ STRUCT!{struct PAGESETUPDLGA {
     hPageSetupTemplate: HGLOBAL,
 }}
 pub type LPPAGESETUPDLGA = *mut PAGESETUPDLGA;
-STRUCT!{struct PAGESETUPDLGW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct PAGESETUPDLGW {
     lStructSize: DWORD,
     hwndOwner: HWND,
     hDevMode: HGLOBAL,

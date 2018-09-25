@@ -1157,8 +1157,8 @@ pub const NETLOGON_VERIFY_STATUS_RETURNED: DWORD = 0x80;
 pub const SERVICE_ACCOUNT_PASSWORD: &'static str = "_SA_{262E99C9-6160-4871-ACEC-4E61736B6F21}";
 pub const SERVICE_ACCOUNT_SECRET_PREFIX: &'static str
     = "_SC_{262E99C9-6160-4871-ACEC-4E61736B6F21}_";
-DEFINE_GUID!(ServiceAccountPasswordGUID,
-    0x262E99C9, 0x6160, 0x4871, 0xAC, 0xEC, 0x4E, 0x61, 0x73, 0x6B, 0x6F, 0x21);
+DEFINE_GUID!{ServiceAccountPasswordGUID,
+    0x262E99C9, 0x6160, 0x4871, 0xAC, 0xEC, 0x4E, 0x61, 0x73, 0x6B, 0x6F, 0x21}
 extern "system" {
     pub fn NetAddServiceAccount(
         ServerName: LPWSTR,

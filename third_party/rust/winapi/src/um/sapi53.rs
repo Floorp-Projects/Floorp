@@ -281,14 +281,14 @@ pub use um::sapi51::{
     SPEVENTSOURCEINFO,
     ISpEventSource, ISpEventSourceVtbl,
 };
-RIDL!(#[uuid(0x2373a435, 0x6a4b, 0x429e, 0xa6, 0xac, 0xd4, 0x23, 0x1a, 0x61, 0x97, 0x5b)]
+RIDL!{#[uuid(0x2373a435, 0x6a4b, 0x429e, 0xa6, 0xac, 0xd4, 0x23, 0x1a, 0x61, 0x97, 0x5b)]
 interface ISpEventSource2(ISpEventSource2Vtbl): ISpEventSource(ISpEventSourceVtbl) {
     fn GetEventsEx(
         ulCount: ULONG,
         pEventArray: *mut SPEVENTEX,
         pulFetched: *mut ULONG,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     ISpEventSink, ISpEventSinkVtbl,
     ISpStreamFormat, ISpStreamFormatVtbl,
@@ -483,7 +483,7 @@ STRUCT!{struct SPSHORTCUTPAIRLIST {
     pvBuffer: *mut BYTE,
     pFirstShortcutPair: *mut SPSHORTCUTPAIR,
 }}
-RIDL!(#[uuid(0x3df681e2, 0xea56, 0x11d9, 0x8b, 0xde, 0xf6, 0x6b, 0xad, 0x1e, 0x3f, 0x3a)]
+RIDL!{#[uuid(0x3df681e2, 0xea56, 0x11d9, 0x8b, 0xde, 0xf6, 0x6b, 0xad, 0x1e, 0x3f, 0x3a)]
 interface ISpShortcut(ISpShortcutVtbl): IUnknown(IUnknownVtbl) {
     fn AddShortcut(
         pszDisplay: LPCWSTR,
@@ -522,9 +522,9 @@ interface ISpShortcut(ISpShortcutVtbl): IUnknown(IUnknownVtbl) {
         pdwGeneration: *mut DWORD,
         pShortcutpairList: *mut SPSHORTCUTPAIRLIST,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{ISpPhoneConverter, ISpPhoneConverterVtbl};
-RIDL!(#[uuid(0x133adcd4, 0x19b4, 0x4020, 0x9f, 0xdc, 0x84, 0x2e, 0x78, 0x25, 0x3b, 0x17)]
+RIDL!{#[uuid(0x133adcd4, 0x19b4, 0x4020, 0x9f, 0xdc, 0x84, 0x2e, 0x78, 0x25, 0x3b, 0x17)]
 interface ISpPhoneticAlphabetConverter(ISpPhoneticAlphabetConverterVtbl): IUnknown(IUnknownVtbl) {
     fn GetLangId(
         pLangID: *mut WORD,
@@ -547,8 +547,8 @@ interface ISpPhoneticAlphabetConverter(ISpPhoneticAlphabetConverterVtbl): IUnkno
         bSAPI2UPS: BOOL,
         pcMaxDestLength: *mut DWORD,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xb2745efd, 0x42ce, 0x48ca, 0x81, 0xf1, 0xa9, 0x6e, 0x02, 0x53, 0x8a, 0x90)]
+}}
+RIDL!{#[uuid(0xb2745efd, 0x42ce, 0x48ca, 0x81, 0xf1, 0xa9, 0x6e, 0x02, 0x53, 0x8a, 0x90)]
 interface ISpPhoneticAlphabetSelection(ISpPhoneticAlphabetSelectionVtbl): IUnknown(IUnknownVtbl) {
     fn IsAlphabetUPS(
         pfIsUPS: *mut BOOL,
@@ -556,7 +556,7 @@ interface ISpPhoneticAlphabetSelection(ISpPhoneticAlphabetSelectionVtbl): IUnkno
     fn SetAlphabetToUPS(
         fForceUPS: BOOL,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     SPVPITCH,
     SPVACTIONS,
@@ -608,7 +608,7 @@ ENUM!{enum SPXMLRESULTOPTIONS {
     SPXRO_SML = 0,
     SPXRO_Alternates_SML = 1,
 }}
-RIDL!(#[uuid(0xf264da52, 0xe457, 0x4696, 0xb8, 0x56, 0xa7, 0x37, 0xb7, 0x17, 0xaf, 0x79)]
+RIDL!{#[uuid(0xf264da52, 0xe457, 0x4696, 0xb8, 0x56, 0xa7, 0x37, 0xb7, 0x17, 0xaf, 0x79)]
 interface ISpPhrase2(ISpPhrase2Vtbl): ISpPhrase(ISpPhraseVtbl) {
     fn GetXMLResult(
         ppszCoMemXMLResult: *mut LPWSTR,
@@ -622,7 +622,7 @@ interface ISpPhrase2(ISpPhrase2Vtbl): ISpPhrase(ISpPhraseVtbl) {
         cElements: ULONG,
         ppStream: *mut *mut ISpStreamFormat,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     SPRECORESULTTIMES,
     SPSERIALIZEDRESULT,
@@ -633,7 +633,7 @@ ENUM!{enum SPCOMMITFLAGS {
     SPCF_ADD_TO_USER_LEXICON = 1 << 0,
     SPCF_DEFINITE_CORRECTION = 1 << 1,
 }}
-RIDL!(#[uuid(0x27cac6c4, 0x88f2, 0x41f2, 0x88, 0x17, 0x0c, 0x95, 0xe5, 0x9f, 0x1e, 0x6e)]
+RIDL!{#[uuid(0x27cac6c4, 0x88f2, 0x41f2, 0x88, 0x17, 0x0c, 0x95, 0xe5, 0x9f, 0x1e, 0x6e)]
 interface ISpRecoResult2(ISpRecoResult2Vtbl): ISpRecoResult(ISpRecoResultVtbl) {
     fn CommitAlternate(
         pPhraseAlt: *mut ISpPhraseAlt,
@@ -649,8 +649,8 @@ interface ISpRecoResult2(ISpRecoResult2Vtbl): ISpRecoResult(ISpRecoResultVtbl) {
         pszFeedback: LPCWSTR,
         fSuccessful: BOOL,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xae39362b, 0x45a8, 0x4074, 0x9b, 0x9e, 0xcc, 0xf4, 0x9a, 0xa2, 0xd0, 0xb6)]
+}}
+RIDL!{#[uuid(0xae39362b, 0x45a8, 0x4074, 0x9b, 0x9e, 0xcc, 0xf4, 0x9a, 0xa2, 0xd0, 0xb6)]
 interface ISpXMLRecoResult(ISpXMLRecoResultVtbl): ISpRecoResult(ISpRecoResultVtbl) {
     fn GetXMLResult(
         ppszCoMemXMLResult: *mut LPWSTR,
@@ -659,7 +659,7 @@ interface ISpXMLRecoResult(ISpXMLRecoResultVtbl): ISpRecoResult(ISpRecoResultVtb
     fn GetXMLErrorInfo(
         pSemanticErrorInfo: *mut SPSEMANTICERRORINFO,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     SPTEXTSELECTIONINFO,
     SPWORDPRONOUNCEABLE,
@@ -723,7 +723,7 @@ ENUM!{enum PHONETICALPHABET {
     PA_Ups = 1,
     PA_Sapi = 2,
 }}
-RIDL!(#[uuid(0x8ab10026, 0x20cc, 0x4b20, 0x8c, 0x22, 0xa4, 0x9c, 0x9b, 0xa7, 0x8f, 0x60)]
+RIDL!{#[uuid(0x8ab10026, 0x20cc, 0x4b20, 0x8c, 0x22, 0xa4, 0x9c, 0x9b, 0xa7, 0x8f, 0x60)]
 interface ISpGrammarBuilder2(ISpGrammarBuilder2Vtbl): IUnknown(IUnknownVtbl) {
     fn AddTextSubset(
         hFromState: SPSTATEHANDLE,
@@ -734,9 +734,9 @@ interface ISpGrammarBuilder2(ISpGrammarBuilder2Vtbl): IUnknown(IUnknownVtbl) {
     fn SetPhoneticAlphabet(
         phoneticALphabet: PHONETICALPHABET,
     ) -> HRESULT,
-});
+}}
 pub const SPRP_NORMAL: i32 = 0; // TODO: Unknown purpose and type
-RIDL!(#[uuid(0x4b37bc9e, 0x9ed6, 0x44a3, 0x93, 0xd3, 0x18, 0xf0, 0x22, 0xb7, 0x9e, 0xc3)]
+RIDL!{#[uuid(0x4b37bc9e, 0x9ed6, 0x44a3, 0x93, 0xd3, 0x18, 0xf0, 0x22, 0xb7, 0x9e, 0xc3)]
 interface ISpRecoGrammar2(ISpRecoGrammar2Vtbl): IUnknown(IUnknownVtbl) {
     fn GetRules(
         ppCoMemRules: *mut *mut SPRULE,
@@ -773,8 +773,8 @@ interface ISpRecoGrammar2(ISpRecoGrammar2Vtbl): IUnknown(IUnknownVtbl) {
     fn SetSMLSecurityManager(
         pSMLSecurityManager: *mut IInternetSecurityManager,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xb9ac5783, 0xfcd0, 0x4b21, 0xb1, 0x19, 0xb4, 0xf8, 0xda, 0x8f, 0xd2, 0xc3)]
+}}
+RIDL!{#[uuid(0xb9ac5783, 0xfcd0, 0x4b21, 0xb1, 0x19, 0xb4, 0xf8, 0xda, 0x8f, 0xd2, 0xc3)]
 interface ISpeechResourceLoader(ISpeechResourceLoaderVtbl): IDispatch(IDispatchVtbl) {
     fn LoadResource(
         bstrResourceUri: BSTR,
@@ -793,7 +793,7 @@ interface ISpeechResourceLoader(ISpeechResourceLoaderVtbl): IDispatch(IDispatchV
     fn ReleaseLocalCopy(
         pbstrLocalPath: BSTR,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     SPRECOCONTEXTSTATUS,
     SPBOOKMARKOPTIONS,
@@ -838,7 +838,7 @@ ENUM!{enum SPADAPTATIONRELEVANCE {
     SPAR_Medium = 2,
     SPAR_High = 3,
 }}
-RIDL!(#[uuid(0xbead311c, 0x52ff, 0x437f, 0x94, 0x64, 0x6b, 0x21, 0x05, 0x4c, 0xa7, 0x3d)]
+RIDL!{#[uuid(0xbead311c, 0x52ff, 0x437f, 0x94, 0x64, 0x6b, 0x21, 0x05, 0x4c, 0xa7, 0x3d)]
 interface ISpRecoContext2(ISpRecoContext2Vtbl): IUnknown(IUnknownVtbl) {
     fn SetGrammarOptions(
         eGrammarOptions: DWORD,
@@ -853,7 +853,7 @@ interface ISpRecoContext2(ISpRecoContext2Vtbl): IUnknown(IUnknownVtbl) {
         eAdaptationSettings: DWORD,
         eRelevance: SPADAPTATIONRELEVANCE,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     ISpProperties, ISpPropertiesVtbl,
     SP_MAX_LANGIDS,
@@ -870,7 +870,7 @@ pub use um::sapi51::{
     SPRST_NUM_STATES,
     ISpRecognizer, ISpRecognizerVtbl,
 };
-RIDL!(#[uuid(0x21b501a0, 0x0ec7, 0x46c9, 0x92, 0xc3, 0xa2, 0xbc, 0x78, 0x4c, 0x54, 0xb9)]
+RIDL!{#[uuid(0x21b501a0, 0x0ec7, 0x46c9, 0x92, 0xc3, 0xa2, 0xbc, 0x78, 0x4c, 0x54, 0xb9)]
 interface ISpSerializeState(ISpSerializeStateVtbl): IUnknown(IUnknownVtbl) {
     fn GetSerializedState(
         ppbData: *mut *mut BYTE,
@@ -882,8 +882,8 @@ interface ISpSerializeState(ISpSerializeStateVtbl): IUnknown(IUnknownVtbl) {
         ulSize: ULONG,
         dwReserved: DWORD,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x8fc6d974, 0xc81e, 0x4098, 0x93, 0xc5, 0x01, 0x47, 0xf6, 0x1e, 0xd4, 0xd3)]
+}}
+RIDL!{#[uuid(0x8fc6d974, 0xc81e, 0x4098, 0x93, 0xc5, 0x01, 0x47, 0xf6, 0x1e, 0xd4, 0xd3)]
 interface ISpRecognizer2(ISpRecognizer2Vtbl): IUnknown(IUnknownVtbl) {
     fn EmulateRecognitionEx(
         pPhrase: *mut ISpPhrase,
@@ -894,12 +894,12 @@ interface ISpRecognizer2(ISpRecognizer2Vtbl): IUnknown(IUnknownVtbl) {
         fAdaptFromTrainingData: BOOL,
     ) -> HRESULT,
     fn ResetAcousticModelAdaptation() -> HRESULT,
-});
+}}
 STRUCT!{struct SPNORMALIZATIONLIST {
     ulSize: ULONG,
     ppszzNormalizedList: *mut *mut WCHAR,
 }}
-RIDL!(#[uuid(0xc360ce4b, 0x76d1, 0x4214, 0xad, 0x68, 0x52, 0x65, 0x7d, 0x50, 0x83, 0xda)]
+RIDL!{#[uuid(0xc360ce4b, 0x76d1, 0x4214, 0xad, 0x68, 0x52, 0x65, 0x7d, 0x50, 0x83, 0xda)]
 interface ISpEnginePronunciation(ISpEnginePronunciationVtbl): IUnknown(IUnknownVtbl) {
     fn Normalize(
         pszWord: LPCWSTR,
@@ -915,7 +915,7 @@ interface ISpEnginePronunciation(ISpEnginePronunciationVtbl): IUnknown(IUnknownV
         LangID: WORD,
         pEnginePronunciationList: *mut SPWORDPRONUNCIATIONLIST,
     ) -> HRESULT,
-});
+}}
 STRUCT!{struct SPDISPLAYTOKEN {
     pszLexical: *const WCHAR,
     pszDisplay: *const WCHAR,
@@ -925,7 +925,7 @@ STRUCT!{struct SPDISPLAYPHRASE {
     ulNumTokens: ULONG,
     pTokens: *mut SPDISPLAYTOKEN,
 }}
-RIDL!(#[uuid(0xc8d7c7e2, 0x0dde, 0x44b7, 0xaf, 0xe3, 0xb0, 0xc9, 0x91, 0xfb, 0xeb, 0x5e)]
+RIDL!{#[uuid(0xc8d7c7e2, 0x0dde, 0x44b7, 0xaf, 0xe3, 0xb0, 0xc9, 0x91, 0xfb, 0xeb, 0x5e)]
 interface ISpDisplayAlternates(ISpDisplayAlternatesVtbl): IUnknown(IUnknownVtbl) {
     fn GetDisplayAlternates(
         pPhrase: *const SPDISPLAYPHRASE,
@@ -936,7 +936,7 @@ interface ISpDisplayAlternates(ISpDisplayAlternatesVtbl): IUnknown(IUnknownVtbl)
     fn SetFullStopTrailSpace(
         ulTrailSpace: ULONG,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     SpeechLanguageId,
     DISPID_SpeechDataKey,
@@ -1679,13 +1679,13 @@ pub use um::sapi51::{
     ISpeechTextSelectionInformation, ISpeechTextSelectionInformationVtbl,
     ISpeechRecoResult, ISpeechRecoResultVtbl,
 };
-RIDL!(#[uuid(0x8e0a246d, 0xd3c8, 0x45de, 0x86, 0x57, 0x04, 0x29, 0x0c, 0x45, 0x8c, 0x3c)]
+RIDL!{#[uuid(0x8e0a246d, 0xd3c8, 0x45de, 0x86, 0x57, 0x04, 0x29, 0x0c, 0x45, 0x8c, 0x3c)]
 interface ISpeechRecoResult2(ISpeechRecoResult2Vtbl): ISpeechRecoResult(ISpeechRecoResultVtbl) {
     fn SetTextFeedback(
         Feedback: BSTR,
         WasSuccessful: VARIANT_BOOL,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     ISpeechRecoResultTimes, ISpeechRecoResultTimesVtbl,
     ISpeechPhraseAlternate, ISpeechPhraseAlternateVtbl,
@@ -1711,7 +1711,7 @@ pub use um::sapi51::{
     Speech_StreamPos_RealTime,
     SpeechAllElements,
 };
-RIDL!(#[uuid(0xaaec54af, 0x8f85, 0x4924, 0x94, 0x4d, 0xb7, 0x9d, 0x39, 0xd7, 0x2e, 0x19)]
+RIDL!{#[uuid(0xaaec54af, 0x8f85, 0x4924, 0x94, 0x4d, 0xb7, 0x9d, 0x39, 0xd7, 0x2e, 0x19)]
 interface ISpeechXMLRecoResult(ISpeechXMLRecoResultVtbl):
     ISpeechRecoResult(ISpeechRecoResultVtbl) {
     fn GetXMLResult(
@@ -1726,8 +1726,8 @@ interface ISpeechXMLRecoResult(ISpeechXMLRecoResultVtbl):
         ResultCode: *mut c_long,
         IsError: *mut VARIANT_BOOL,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x6d60eb64, 0xaced, 0x40a6, 0xbb, 0xf3, 0x4e, 0x55, 0x7f, 0x71, 0xde, 0xe2)]
+}}
+RIDL!{#[uuid(0x6d60eb64, 0xaced, 0x40a6, 0xbb, 0xf3, 0x4e, 0x55, 0x7f, 0x71, 0xde, 0xe2)]
 interface ISpeechRecoResultDispatch(ISpeechRecoResultDispatchVtbl): IDispatch(IDispatchVtbl) {
     fn get_RecoContext(
         RecoContext: *mut ISpeechRecoContext,
@@ -1783,7 +1783,7 @@ interface ISpeechRecoResultDispatch(ISpeechRecoResultDispatchVtbl): IDispatch(ID
         Feedback: BSTR,
         WasSuccessful: VARIANT_BOOL,
     ) -> HRESULT,
-});
+}}
 pub use um::sapi51::{
     ISpeechPhraseInfoBuilder, ISpeechPhraseInfoBuilderVtbl,
     ISpeechPhoneConverter, ISpeechPhoneConverterVtbl,

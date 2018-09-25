@@ -108,7 +108,7 @@ extern "system" {
         pServerInformation: PServerInformation,
     ) -> HRESULT;
 }
-DECLARE_HANDLE!(CO_MTA_USAGE_COOKIE, CO_MTA_USAGE_COOKIE__);
+DECLARE_HANDLE!{CO_MTA_USAGE_COOKIE, CO_MTA_USAGE_COOKIE__}
 extern "system" {
     pub fn CoIncrementMTAUsage(
         pCookie: *mut CO_MTA_USAGE_COOKIE,

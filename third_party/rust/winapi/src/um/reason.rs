@@ -4,9 +4,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
-
 use shared::minwindef::DWORD;
-
 pub const SHTDN_REASON_FLAG_COMMENT_REQUIRED: DWORD = 0x01000000;
 pub const SHTDN_REASON_FLAG_DIRTY_PROBLEM_ID_REQUIRED: DWORD = 0x02000000;
 pub const SHTDN_REASON_FLAG_CLEAN_UI: DWORD = 0x04000000;

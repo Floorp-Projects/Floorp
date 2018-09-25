@@ -4,7 +4,9 @@
 
 use std::ops::{Deref, DerefMut};
 use std::ptr;
-use winapi::{IUnknown, REFIID, S_OK, E_NOINTERFACE};
+use winapi::um::unknwnbase::IUnknown;
+use winapi::shared::guiddef::REFIID;
+use winapi::shared::winerror::{S_OK, E_NOINTERFACE};
 
 #[derive(Debug)]
 pub struct ComPtr<T> {
@@ -25,11 +27,11 @@ impl<T> ComPtr<T> {
         ComPtr { ptr: ptr }
     }
 
-    pub fn already_addrefed(ptr: *mut T) -> Self {
+    pub unsafe fn already_addrefed(ptr: *mut T) -> Self {
         ComPtr { ptr: ptr }
     }
 
-    pub fn getter_addrefs<Q>(&mut self) -> *mut *mut Q {
+    pub unsafe fn getter_addrefs<Q>(&mut self) -> *mut *mut Q {
         self.release();
         return &mut self.ptr as *mut *mut _ as *mut *mut Q;
     }
@@ -61,11 +63,9 @@ impl<T> ComPtr<T> {
         }
     }
 
-    pub fn release(&self) {
-        unsafe {
-            if !self.ptr.is_null() {
-                (*(self.ptr as *mut IUnknown)).Release();
-            }
+    pub unsafe fn release(&self) {
+        if !self.ptr.is_null() {
+            (*(self.ptr as *mut IUnknown)).Release();
         }
     }
 
@@ -73,6 +73,10 @@ impl<T> ComPtr<T> {
         let ptr = self.ptr;
         self.ptr = ptr::null_mut();
         ptr
+    }
+
+    pub fn is_null(&self) -> bool {
+        self.ptr.is_null()
     }
 }
 
@@ -108,7 +112,9 @@ impl<T> PartialEq for ComPtr<T> {
 
 impl<T> Drop for ComPtr<T> {
     fn drop(&mut self) {
-        self.release();
+        unsafe {
+            self.release();
+        }
     }
 }
 

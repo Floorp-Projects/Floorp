@@ -626,7 +626,69 @@ interface IDispatch(IDispatchVtbl): IUnknown(IUnknownVtbl) {
 // IEnumVARIANT
 // IEnumVARIANT_RemoteNext_Proxy
 // IEnumVARIANT_RemoteNext_Stub
-pub enum IRecordInfo {} // FIXME
+RIDL!{#[uuid(0x0000002F, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
+interface IRecordInfo(IRecordInfoVtbl): IUnknown(IUnknownVtbl){
+    fn RecordInit(
+        pvNew: PVOID, 
+    ) -> HRESULT,
+    fn RecordClear(
+        pvExisting: PVOID,
+    ) -> HRESULT,
+    fn RecordCopy(
+        pvExisting: PVOID, 
+        pvNew: PVOID,
+    ) -> HRESULT,
+    fn GetGuid(
+        pguid: *mut GUID, 
+    ) -> HRESULT, 
+    fn GetName(
+        pbstrName: *mut BSTR,
+    ) -> HRESULT,
+    fn GetSize(
+        pcbSize: *mut ULONG,
+    ) -> HRESULT,
+    fn GetTypeInfo(
+        ppTypeInfo: *mut *mut ITypeInfo,
+    ) -> HRESULT,
+    fn GetField(
+        pvData: PVOID, 
+        szFieldName: LPCOLESTR, 
+        pvarField: *mut VARIANT,
+    ) -> HRESULT,
+    fn GetFieldNoCopy(
+        pvData: PVOID, 
+        szFieldName: LPCOLESTR, 
+        pvarField: *mut VARIANT, 
+        ppvDataCArray: *mut PVOID, 
+    ) -> HRESULT,
+    fn PutField(
+        wFlags: ULONG, 
+        pvData: PVOID, 
+        szFieldName: LPCOLESTR, 
+        pvarField: *mut VARIANT,
+    ) -> HRESULT,
+    fn PutFieldNoCopy(
+        wFlags: ULONG, 
+        pvData: PVOID, 
+        szFieldName: LPCOLESTR, 
+        pvarField: *mut VARIANT,
+    ) -> HRESULT,
+    fn GetFieldNames(
+        pcNames: *mut ULONG,
+        rgBstrNames: *mut BSTR,
+    ) -> HRESULT,
+    fn IsMatchingType(
+        pRecordInfo: *mut IRecordInfo, 
+    ) -> BOOL,
+    fn RecordCreate() -> PVOID,
+    fn RecordCreateCopy(
+        pvSource: PVOID, 
+        ppvDest: *mut PVOID,
+    ) -> HRESULT, 
+    fn RecordDestroy(
+        pvRecord: PVOID,
+    ) -> HRESULT,
+}}
 pub enum ITypeComp {} // FIXME
 ENUM!{enum SYSKIND {
     SYS_WIN16 = 0,
@@ -686,7 +748,7 @@ interface ITypeLib(ITypeLibVtbl): IUnknown(IUnknownVtbl) {
         pTLibAttr: *const TLIBATTR,
     ) -> HRESULT,
 }}
-RIDL!(#[uuid(0x00020401, 0x0000, 0x0000, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
+RIDL!{#[uuid(0x00020401, 0x0000, 0x0000, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
 interface ITypeInfo(ITypeInfoVtbl): IUnknown(IUnknownVtbl) {
     fn GetTypeAttr(
         ppTypeAttr: *mut *mut TYPEATTR,
@@ -775,13 +837,12 @@ interface ITypeInfo(ITypeInfoVtbl): IUnknown(IUnknownVtbl) {
     fn ReleaseVarDesc(
         pVarDesc: *mut VARDESC,
     ) -> (),
-}
-);
-RIDL!(#[uuid(0x3127ca40, 0x446e, 0x11ce, 0x81, 0x35, 0x00, 0xaa, 0x00, 0x4b, 0xb8, 0x51)]
+}}
+RIDL!{#[uuid(0x3127ca40, 0x446e, 0x11ce, 0x81, 0x35, 0x00, 0xaa, 0x00, 0x4b, 0xb8, 0x51)]
 interface IErrorLog(IErrorLogVtbl): IUnknown(IUnknownVtbl) {
     fn AddError(
         pszPropName: LPCOLESTR,
         pExcepInfo: *const EXCEPINFO,
     ) -> HRESULT,
-});
+}}
 pub type LPERRORLOG = *mut IErrorLog;
