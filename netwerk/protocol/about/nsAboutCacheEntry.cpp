@@ -333,7 +333,10 @@ nsresult
 nsAboutCacheEntry::Channel::WriteCacheEntryDescription(nsICacheEntry *entry)
 {
     nsresult rv;
-    nsCString buffer;
+    // This method appears to run in a situation where the run-time stack
+    // should have plenty of space, so allocating a large string on the
+    // stack is OK.
+    nsAutoCStringN<4097> buffer;
     uint32_t n;
 
     nsAutoCString str;
@@ -341,7 +344,6 @@ nsAboutCacheEntry::Channel::WriteCacheEntryDescription(nsICacheEntry *entry)
     rv = entry->GetKey(str);
     if (NS_FAILED(rv)) return rv;
 
-    buffer.SetCapacity(4096);
     buffer.AssignLiteral("<table>\n"
                          "  <tr>\n"
                          "    <th>key:</th>\n"

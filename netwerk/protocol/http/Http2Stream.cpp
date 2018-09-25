@@ -556,7 +556,7 @@ Http2Stream::GenerateOpen()
   // Now we need to convert the flat http headers into a set
   // of HTTP/2 headers by writing to mTxInlineFrame{sz}
 
-  nsCString compressedData;
+  nsAutoCStringN<1025> compressedData;
   nsAutoCString authorityHeader;
   nsresult rv = head->GetHeader(nsHttp::Host, authorityHeader);
   if (NS_FAILED(rv)) {

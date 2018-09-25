@@ -1655,10 +1655,6 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
   uint32_t toRead = std::min<uint32_t>(aCount, kCopyChunkSize);
 
   nsCString data;
-  if (!data.SetCapacity(toRead, fallible)) {
-    LOG(("  out of memory!"));
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   int32_t count = static_cast<int32_t>(aCount);
 
