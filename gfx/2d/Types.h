@@ -102,6 +102,13 @@ inline bool IsOpaque(SurfaceFormat aFormat)
   }
 }
 
+enum class ColorDepth : uint8_t {
+  COLOR_8,
+  COLOR_10,
+  COLOR_12,
+  MAX
+};
+
 enum class FilterType : int8_t {
   BLEND = 0,
   TRANSFORM,
