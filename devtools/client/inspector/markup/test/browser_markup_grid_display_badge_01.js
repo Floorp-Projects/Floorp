@@ -24,6 +24,8 @@ add_task(async function() {
   const gridContainer = await getContainerForSelector("#grid", inspector);
   const gridDisplayBadge = gridContainer.elt.querySelector(".markup-badge[data-display]");
   ok(!gridDisplayBadge.classList.contains("active"), "grid display badge is not active.");
+  ok(gridDisplayBadge.classList.contains("interactive"),
+    "grid display badge is interactive.");
 
   info("Check the initial state of the grid highlighter.");
   ok(!highlighters.gridHighlighters.size,
@@ -42,6 +44,8 @@ add_task(async function() {
   is(highlighters.gridHighlighters.size, 1,
     "CSS grid highlighter is created in the highlighters overlay.");
   ok(gridDisplayBadge.classList.contains("active"), "grid display badge is active.");
+  ok(gridDisplayBadge.classList.contains("interactive"),
+   "grid display badge is interactive.");
 
   info("Toggling OFF the CSS grid highlighter from the grid display badge.");
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
@@ -53,4 +57,6 @@ add_task(async function() {
   await onCheckboxChange;
 
   ok(!gridDisplayBadge.classList.contains("active"), "grid display badge is not active.");
+  ok(gridDisplayBadge.classList.contains("interactive"),
+    "grid display badge is interactive.");
 });
