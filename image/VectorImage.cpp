@@ -82,10 +82,12 @@ public:
 protected:
   virtual ~SVGRootRenderingObserver()
   {
+    // This needs to call our GetReferencedElementWithoutObserving override,
+    // so must be called here rather than in our base class's dtor.
     StopObserving();
   }
 
-  Element* GetReferencedElementWithoutObserving() override
+  Element* GetReferencedElementWithoutObserving() final
   {
     return mDocWrapper->GetRootSVGElem();
   }
