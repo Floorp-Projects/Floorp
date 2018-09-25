@@ -485,13 +485,19 @@ set_config('JS_BUILD_BINAST', enable_build_binast)
 
 # Experimental support for wasm code generation with Cranelift
 # ==============================================================
+
+@depends('--enable-clang-plugin', '--enable-release',
+         debug_rust, target, milestone.is_nightly, when='--enable-compile-environment')
+def default_cranelift(static_analysis, release, debug_rust, target, is_nightly):
+    # LLVM runs out of memory on win32 static analysis optimized builds when
+    # linking gkrust, so do not compile Cranelift there.
+    if static_analysis and target.kernel == 'WINNT' and target.cpu == 'x86' and release and not debug_rust:
+        return False
+    return is_nightly
+
 js_option('--enable-cranelift',
+          default=default_cranelift,
           help='Enable Cranelift code generator for wasm')
 
-@depends('--enable-cranelift')
-def enable_cranelift(value):
-    if value:
-        return True
-
-set_config('ENABLE_WASM_CRANELIFT', enable_cranelift)
-set_define('ENABLE_WASM_CRANELIFT', enable_cranelift)
+set_config('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: True))
+set_define('ENABLE_WASM_CRANELIFT', depends_if('--enable-cranelift')(lambda x: True))
