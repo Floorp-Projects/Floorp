@@ -7510,12 +7510,10 @@ class Telemetry {
    * Event telemetry is disabled by default. Use this method to enable it for
    * a particular category.
    *
-   * @param {String} category
-   *        The telemetry event category e.g. "devtools.main"
    * @param {Boolean} enabled
    *        Enabled: true or false.
    */
-  setEventRecordingEnabled(category, enabled) {
+  setEventRecordingEnabled(enabled) {
     return enabled;
   }
 
@@ -7529,9 +7527,10 @@ class Telemetry {
    * properties have been received. Once they have all been received we send the
    * telemetry event.
    *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
    * @param {String} method
    *        The telemetry event method (describes the type of event that
    *        occurred e.g. "open")
@@ -7549,16 +7548,17 @@ class Telemetry {
    *          "width"
    *        ]
    */
-  preparePendingEvent(category, method, object, value, expected = []) {}
+  preparePendingEvent(obj, method, object, value, expected = []) {}
 
   /**
    * Adds an expected property for either a current or future pending event.
    * This means that if preparePendingEvent() is called before or after sending
    * the event properties they will automatically added to the event.
    *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
    * @param {String} method
    *        The telemetry event method (describes the type of event that
    *        occurred e.g. "open")
@@ -7573,16 +7573,17 @@ class Telemetry {
    * @param {String} pendingPropValue
    *        The pending property value
    */
-  addEventProperty(category, method, object, value, pendingPropName, pendingPropValue) {}
+  addEventProperty(obj, method, object, value, pendingPropName, pendingPropValue) {}
 
   /**
    * Adds expected properties for either a current or future pending event.
    * This means that if preparePendingEvent() is called before or after sending
    * the event properties they will automatically added to the event.
    *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
    * @param {String} method
    *        The telemetry event method (describes the type of event that
    *        occurred e.g. "open")
@@ -7596,16 +7597,17 @@ class Telemetry {
    *        An object containing key, value pairs that should be added to the
    *        event as properties.
    */
-  addEventProperties(category, method, object, value, pendingObject) {}
+  addEventProperties(obj, method, object, value, pendingObject) {}
 
   /**
    * A private method that is not to be used externally. This method is used to
    * prepare a pending telemetry event for sending and then send it via
    * recordEvent().
    *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
    * @param {String} method
    *        The telemetry event method (describes the type of event that
    *        occurred e.g. "open")
@@ -7616,14 +7618,11 @@ class Telemetry {
    *        The telemetry event value (a user defined value, providing context
    *        for the event) e.g. "console"
    */
-  _sendPendingEvent(category, method, object, value) {}
+  _sendPendingEvent(obj, method, object, value) {}
 
   /**
    * Send a telemetry event.
    *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
    * @param {String} method
    *        The telemetry event method (describes the type of event that
    *        occurred e.g. "open")
@@ -7641,15 +7640,22 @@ class Telemetry {
    *          width: "1024"
    *        }
    */
-  recordEvent(category, method, object, value, extra) {}
+  recordEvent(method, object, value, extra) {}
 
   /**
    * Sends telemetry pings to indicate that a tool has been opened.
    *
    * @param {String} id
    *        The ID of the tool opened.
+   * @param {String} sessionId
+   *        Toolbox session id used when we need to ensure a tool really has a
+   *        timer before calculating a delta.
+   * @param {Object} obj
+   *        The telemetry event or ping is associated with this object, meaning
+   *        that multiple events or pings for the same histogram may be run
+   *        concurrently, as long as they are associated with different objects.
    */
-  toolOpened(id) {}
+  toolOpened(id, sessionId, obj) {}
 
   /**
    * Sends telemetry pings to indicate that a tool has been closed.
@@ -7657,7 +7663,7 @@ class Telemetry {
    * @param {String} id
    *        The ID of the tool opened.
    */
-  toolClosed(id) {}
+  toolClosed(id, sessionId, obj) {}
 }
 
 module.exports = Telemetry;
