@@ -9,6 +9,7 @@
 
 #include "mozilla/EndianUtils.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Utf8.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -489,6 +490,8 @@ class XDRState : public XDRCoderBase
     }
 
     XDRResult codeChars(const JS::Latin1Char* chars, size_t nchars);
+    XDRResult codeChars(mozilla::Utf8Unit* units, size_t nchars);
+
     XDRResult codeChars(char16_t* chars, size_t nchars);
 
     XDRResult codeFunction(JS::MutableHandleFunction objp,
