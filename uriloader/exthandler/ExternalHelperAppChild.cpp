@@ -47,9 +47,6 @@ ExternalHelperAppChild::OnDataAvailable(nsIRequest *request,
   uint32_t toRead = std::min<uint32_t>(count, kCopyChunkSize);
 
   nsCString data;
-  if (NS_WARN_IF(!data.SetCapacity(toRead, fallible))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   while (count) {
     nsresult rv = NS_ReadInputStreamToString(input, data, toRead);
