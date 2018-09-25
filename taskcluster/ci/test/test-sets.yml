@@ -38,8 +38,6 @@ common-tests:
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
-    - test-coverage
-    - test-coverage-wpt
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
@@ -175,6 +173,10 @@ jsdcov-code-coverage-tests:
     - mochitest-devtools-chrome
     - xpcshell
 
+ccov-code-coverage-tests:
+    - test-coverage
+    - test-coverage-wpt
+
 windows-reftest-gpu:
     - reftest-gpu
 
@@ -202,8 +204,6 @@ windows-tests:
     - mochitest-webgl2-ext
     - reftest
     - reftest-no-accel
-    - test-coverage
-    - test-coverage-wpt
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
