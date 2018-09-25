@@ -420,7 +420,7 @@ public:
   void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
     mUserData.Add(key, userData, destroy);
   }
-  void *GetUserData(UserDataKey *key) {
+  void *GetUserData(UserDataKey *key) const {
     return mUserData.Get(key);
   }
   void RemoveUserData(UserDataKey *key) {
@@ -587,7 +587,8 @@ public:
   virtual void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                       size_t& aHeapSizeOut,
                                       size_t& aNonHeapSizeOut,
-                                      size_t& aExtHandlesOut) const
+                                      size_t& aExtHandlesOut,
+                                      uint64_t& aExtIdOut) const
   {
   }
 
