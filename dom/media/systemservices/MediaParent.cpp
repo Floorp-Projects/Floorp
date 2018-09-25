@@ -420,29 +420,15 @@ public:
 
 NS_IMPL_ISUPPORTS0(OriginKeyStore)
 
-bool NonE10s::SendGetPrincipalKeyResponse(const uint32_t& aRequestId,
-                                          nsCString aKey) {
-  MediaManager* mgr = MediaManager::GetIfExists();
-  if (!mgr) {
-    return false;
-  }
-  RefPtr<Pledge<nsCString>> pledge = mgr->mGetPrincipalKeyPledges.Remove(aRequestId);
-  if (pledge) {
-    pledge->Resolve(aKey);
-  }
-  return true;
-}
-
 template<class Super> mozilla::ipc::IPCResult
-Parent<Super>::RecvGetPrincipalKey(const uint32_t& aRequestId,
-                                   const ipc::PrincipalInfo& aPrincipalInfo,
-                                   const bool& aPersist)
+Parent<Super>::RecvGetPrincipalKey(const ipc::PrincipalInfo& aPrincipalInfo,
+                                   const bool& aPersist,
+                                   PMediaParent::GetPrincipalKeyResolver&& aResolve)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // First, get profile dir.
 
-  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIFile> profileDir;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(profileDir));
@@ -450,67 +436,55 @@ Parent<Super>::RecvGetPrincipalKey(const uint32_t& aRequestId,
     return IPCResult(this, false);
   }
 
-  // Then over to stream-transport thread (a thread pool) to do the actual
-  // file io. Stash a pledge to hold the answer and get an id for this request.
+  // Resolver has to be called in MainThread but the key is discovered
+  // in a different thread. We wrap the resolver around a MozPromise to make
+  // it more flexible and pass it to the new task. When this is done the
+  // resolver is resolved in MainThread.
 
-  RefPtr<Pledge<nsCString>> p = new Pledge<nsCString>();
-  uint32_t id = mOutstandingPledges.Append(*p);
+  // Then over to stream-transport thread (a thread pool) to do the actual
+  // file io. Stash a promise to hold the answer and get an id for this request.
 
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(sts);
+  auto taskQueue = MakeRefPtr<TaskQueue>(sts.forget(), "RecvGetPrincipalKey");
   RefPtr<Parent<Super>> that(this);
 
-  rv = sts->Dispatch(NewRunnableFrom([this, that, id, profileDir,
-                                      aPrincipalInfo, aPersist]() -> nsresult {
-    MOZ_ASSERT(!NS_IsMainThread());
-    StaticMutexAutoLock lock(sOriginKeyStoreMutex);
-    if (!sOriginKeyStore) {
-      return NS_ERROR_FAILURE;
-    }
-    sOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
+  InvokeAsync(
+    taskQueue, __func__,
+    [that, profileDir, aPrincipalInfo, aPersist]() {
+      MOZ_ASSERT(!NS_IsMainThread());
 
-    nsresult rv;
-    nsAutoCString result;
-    if (IsPincipalInfoPrivate(aPrincipalInfo)) {
-      rv = sOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(aPrincipalInfo, result);
-    } else {
-      rv = sOriginKeyStore->mOriginKeys.GetPrincipalKey(aPrincipalInfo, result, aPersist);
-    }
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // Pass result back to main thread.
-    rv = NS_DispatchToMainThread(NewRunnableFrom([this, that, id,
-                                                  result]() -> nsresult {
-      if (mDestroyed) {
-        return NS_OK;
+      StaticMutexAutoLock lock(sOriginKeyStoreMutex);
+      if (!sOriginKeyStore) {
+        return PrincipalKeyPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       }
-      RefPtr<Pledge<nsCString>> p = mOutstandingPledges.Remove(id);
-      if (!p) {
-        return NS_ERROR_UNEXPECTED;
+      sOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
+
+      nsresult rv;
+      nsAutoCString result;
+      if (IsPincipalInfoPrivate(aPrincipalInfo)) {
+        rv = sOriginKeyStore->mPrivateBrowsingOriginKeys.
+          GetPrincipalKey(aPrincipalInfo, result);
+      } else {
+        rv = sOriginKeyStore->mOriginKeys.
+          GetPrincipalKey(aPrincipalInfo, result, aPersist);
       }
-      p->Resolve(result);
-      return NS_OK;
-    }), NS_DISPATCH_NORMAL);
 
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return PrincipalKeyPromise::CreateAndReject(rv, __func__);
+      }
+      return PrincipalKeyPromise::CreateAndResolve(result, __func__);
     }
-    return NS_OK;
-  }), NS_DISPATCH_NORMAL);
+  )->Then(GetCurrentThreadSerialEventTarget(), __func__,
+    [aResolve](const PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
+      if (aValue.IsReject()) {
+        aResolve(NS_LITERAL_CSTRING(""));
+      } else {
+        aResolve(aValue.ResolveValue());
+      }
+    }
+  );
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPCResult(this, false);
-  }
-  p->Then([this, that, aRequestId](const nsCString& aKey) mutable {
-    if (mDestroyed) {
-      return NS_OK;
-    }
-    Unused << this->SendGetPrincipalKeyResponse(aRequestId, aKey);
-    return NS_OK;
-  });
   return IPC_OK();
 }
 
