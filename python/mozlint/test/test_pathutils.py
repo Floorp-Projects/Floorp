@@ -57,18 +57,6 @@ def test_no_filter(filterpaths):
     assert_paths(paths, args['paths'])
 
 
-def test_extensions(filterpaths):
-    args = {
-        'paths': ['a.py', 'a.js', 'subdir2'],
-        'include': ['**'],
-        'exclude': [],
-        'extensions': ['py'],
-    }
-
-    paths = filterpaths(**args)
-    assert_paths(paths, ['a.py', 'subdir2/c.py'])
-
-
 TEST_CASES = (
     {
         'paths': ['a.js', 'subdir1/subdir3/d.js'],
@@ -84,15 +72,24 @@ TEST_CASES = (
     },
     {
         'paths': ['.'],
-        'include': ['**/*.py'],
+        'include': ['.'],
         'exclude': ['**/c.py', 'subdir1/subdir3'],
-        'expected': ['a.py', 'subdir1/b.py'],
+        'extensions': ['py'],
+        'expected': ['.'],
     },
     {
         'paths': ['a.py', 'a.js', 'subdir1/b.py', 'subdir2/c.py', 'subdir1/subdir3/d.py'],
-        'include': ['**/*.py'],
+        'include': ['.'],
         'exclude': ['**/c.py', 'subdir1/subdir3'],
+        'extensions': ['py'],
         'expected': ['a.py', 'subdir1/b.py'],
+    },
+    {
+        'paths': ['a.py', 'a.js', 'subdir2'],
+        'include': ['.'],
+        'exclude': [],
+        'extensions': ['py'],
+        'expected': ['a.py', 'subdir2'],
     },
 )
 

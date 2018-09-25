@@ -53,6 +53,9 @@ class Parser(object):
             invalid_paths = set()
             for path in linter[attr]:
                 if '*' in path:
+                    if attr == 'include':
+                        raise LinterParseError(relpath, "Paths in the include directive cannot "
+                                                        "contain globs:\n  {}".format(path))
                     continue
 
                 abspath = path
@@ -101,5 +104,6 @@ class Parser(object):
             linter['path'] = path
             self._validate(linter)
             linter.setdefault('support-files', []).append(path)
+            linter.setdefault('include', ['.'])
             linters.append(linter)
         return linters

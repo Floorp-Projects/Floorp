@@ -26,8 +26,7 @@ no-eval.yml
 
     EvalLinter:
         description: Ensures the string eval doesn't show up.
-        include:
-            - "**/*.js"
+        extensions: ['js']
         type: string
         payload: eval
 
@@ -75,8 +74,8 @@ Each ``.yml`` file must have at least one linter defined in it. Here are the sup
 * description - A brief description of the linter's purpose (required)
 * type - One of 'string', 'regex' or 'external' (required)
 * payload - The actual linting logic, depends on the type (required)
-* include - A list of glob patterns that must be matched (optional)
-* exclude - A list of glob patterns that must not be matched (optional)
+* include - A list of file paths that will be considered (optional)
+* exclude - A list of file paths or glob patterns that must not be matched (optional)
 * extensions - A list of file extensions to be considered (optional)
 * setup - A function that sets up external dependencies (optional)
 * support-files - A list of glob patterns matching configuration files (optional)
@@ -165,8 +164,8 @@ Now here is the linter definition that would call it:
 
     flake8:
         description: Python linter
-        include:
-            - '**/*.py'
+        include: ['.']
+        extensions: ['py']
         type: external
         payload: py.flake8:lint
         support-files:
@@ -200,8 +199,8 @@ path object format as an external payload. For example:
 
     flake8:
         description: Python linter
-        include:
-            - '**/*.py'
+        include: ['.']
+        extensions: ['py']
         type: external
         payload: py.flake8:lint
         setup: py.flake8:setup
