@@ -89,6 +89,24 @@ class HighlightersOverlay {
   }
 
   /**
+   * Returns true if the grid highlighter can be toggled on/off for the given node, and
+   * false otherwise. A grid container can be toggled on if the max grid highlighters
+   * is only 1 or less than the maximum grid highlighters that can be displayed or if
+   * the grid highlighter already highlights the given node.
+   *
+   * @param  {NodeFront} node
+   *         Grid container NodeFront.
+   * @return {Boolean}
+   */
+  canGridHighlighterToggle(node) {
+    const maxGridHighlighters =
+      Services.prefs.getIntPref("devtools.gridinspector.maxHighlighters");
+    return maxGridHighlighters === 1 ||
+           this.gridHighlighters.size < maxGridHighlighters ||
+           this.gridHighlighters.has(node);
+  }
+
+  /**
    * Returns whether `node` is somewhere inside the DOM of the rule view.
    *
    * @param {DOMNode} node
