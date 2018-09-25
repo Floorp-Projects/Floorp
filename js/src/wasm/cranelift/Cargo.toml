@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["The Spidermonkey and Cranelift developers"]
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["rlib"]
 name = "baldrdash"
 
 [dependencies]

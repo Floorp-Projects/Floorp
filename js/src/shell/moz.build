@@ -9,6 +9,10 @@ if CONFIG['JS_SHELL_NAME']:
     if CONFIG['JS_BUNDLED_EDITLINE']:
         USE_LIBS += ['editline']
     USE_LIBS += ['static:js']
+    if CONFIG['ENABLE_WASM_CRANELIFT']:
+        USE_LIBS += [
+            'jsrust'
+        ]
 
 include('../js-config.mozbuild')
 include('../js-cxxflags.mozbuild')

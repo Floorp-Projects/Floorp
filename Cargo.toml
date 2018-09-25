@@ -6,6 +6,8 @@
 # into `third_party/rust` by `mach vendor rust`.
 members = [
   "js/src",
+  "js/src/rust",
+  "js/src/wasm/cranelift",
   "js/rust",
   "js/src/frontend/binsource", # Code generator.
   "testing/geckodriver",

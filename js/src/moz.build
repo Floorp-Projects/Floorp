@@ -43,7 +43,6 @@ for stlfile in ['jsdate.*', 'jsnum.*']:
 with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
 
-
 if CONFIG['JS_BUNDLED_EDITLINE']:
     DIRS += ['editline']
 
@@ -701,6 +700,12 @@ DIRS += [
 ]
 
 FINAL_LIBRARY = 'js'
+
+if CONFIG['ENABLE_WASM_CRANELIFT']:
+    DIRS += ['rust']
+    UNIFIED_SOURCES += [
+        'wasm/WasmCraneliftCompile.cpp',
+    ]
 
 if CONFIG['JS_BUILD_BINAST']:
     # Using SOURCES, as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.

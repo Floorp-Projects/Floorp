@@ -1472,6 +1472,9 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write('RUST_STATIC_LIB := %s\n' %
                            pretty_relpath(direct_linked, direct_linked.import_name))
 
+        for lib in direct_linked.linked_system_libs:
+            backend_file.write_once('OS_LIBS += %s\n' % lib)
+
     def _process_final_target_files(self, obj, files, backend_file):
         target = obj.install_target
         path = mozpath.basedir(target, (
