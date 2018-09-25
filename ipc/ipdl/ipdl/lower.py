@@ -598,6 +598,9 @@ def _cxxConstRefType(ipdltype, side):
         t.const = inner.const or not inner.ref
         t.ref = 1
         return t
+    if ipdltype.isCxx() and ipdltype.isMoveonly():
+        t.ref = 1
+        return t
     if ipdltype.isCxx() and ipdltype.isRefcounted():
         # Use T* instead of const RefPtr<T>&
         t = t.T
@@ -609,10 +612,11 @@ def _cxxConstRefType(ipdltype, side):
 
 
 def _cxxTypeNeedsMove(ipdltype):
-    return ipdltype.isIPDL() and (ipdltype.isArray() or
-                                  ipdltype.isShmem() or
-                                  ipdltype.isByteBuf() or
-                                  ipdltype.isEndpoint())
+    return ((ipdltype.isIPDL() and (ipdltype.isArray() or
+                                    ipdltype.isShmem() or
+                                    ipdltype.isByteBuf() or
+                                    ipdltype.isEndpoint())) or
+            (ipdltype.isCxx() and ipdltype.isMoveonly()))
 
 
 def _cxxTypeCanMove(ipdltype):
