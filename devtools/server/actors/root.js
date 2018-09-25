@@ -8,9 +8,8 @@
 
 const { Cu } = require("chrome");
 const Services = require("Services");
-const { ActorPool, appendExtraActors } = require("devtools/server/actors/common");
+const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/server/actors/common");
 const { Pool } = require("devtools/shared/protocol");
-const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
 const { DebuggerServer } = require("devtools/server/main");
 
 loader.lazyRequireGetter(this, "ChromeWindowTargetActor",
@@ -101,7 +100,8 @@ function RootActor(connection, parameters) {
   this._onProcessListChanged = this.onProcessListChanged.bind(this);
   this._extraActors = {};
 
-  this._globalActorPool = new LazyPool(this.conn);
+  this._globalActorPool = new ActorPool(this.conn);
+  this.conn.addActorPool(this._globalActorPool);
 
   this._parentProcessTargetActor = null;
   this._processActors = new Map();
@@ -240,9 +240,10 @@ RootActor.prototype = {
 
     // Create global actors
     if (!this._globalActorPool) {
-      this._globalActorPool = new LazyPool(this.conn);
+      this._globalActorPool = new ActorPool(this.conn);
+      this.conn.addActorPool(this._globalActorPool);
     }
-    createExtraActors(this._parameters.globalActorFactories, this._globalActorPool, this);
+    this._createExtraActors(this._parameters.globalActorFactories, this._globalActorPool);
 
     // List the global actors
     this._appendExtraActors(reply);
@@ -518,7 +519,7 @@ RootActor.prototype = {
     if ((!("id" in request)) || request.id === 0) {
       if (this._parentProcessTargetActor && (!this._parentProcessTargetActor.docShell ||
           this._parentProcessTargetActor.docShell.isBeingDestroyed)) {
-        this._parentProcessTargetActor.destroy();
+        this._globalActorPool.removeActor(this._parentProcessTargetActor);
         this._parentProcessTargetActor = null;
       }
       if (!this._parentProcessTargetActor) {
@@ -526,7 +527,7 @@ RootActor.prototype = {
         const { ParentProcessTargetActor } =
           require("devtools/server/actors/targets/parent-process");
         this._parentProcessTargetActor = new ParentProcessTargetActor(this.conn);
-        this._globalActorPool.manage(this._parentProcessTargetActor);
+        this._globalActorPool.addActor(this._parentProcessTargetActor);
       }
 
       return { form: this._parentProcessTargetActor.form() };
@@ -564,6 +565,7 @@ RootActor.prototype = {
   },
 
   /* Support for DebuggerServer.addGlobalActor. */
+  _createExtraActors: createExtraActors,
   _appendExtraActors: appendExtraActors,
 
   /**
@@ -573,8 +575,8 @@ RootActor.prototype = {
   removeActorByName: function(name) {
     if (name in this._extraActors) {
       const actor = this._extraActors[name];
-      if (this._globalActorPool.has(actor.actorID)) {
-        actor.destroy();
+      if (this._globalActorPool.has(actor)) {
+        this._globalActorPool.removeActor(actor);
       }
       if (this._tabTargetActorPool) {
         // Iterate over BrowsingContextTargetActor instances to also remove target-scoped

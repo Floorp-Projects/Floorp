@@ -9,6 +9,161 @@
 const { method } = require("devtools/shared/protocol");
 
 /**
+ * Creates "registered" actors factory meant for creating another kind of
+ * factories, ObservedActorFactory, during the call to listTabs.
+ * These factories live in DebuggerServer.{tab|global}ActorFactories.
+ *
+ * These actors only exposes:
+ * - `name` string attribute used to match actors by constructor name
+ *   in DebuggerServer.remove{Global,Tab}Actor.
+ * - `createObservedActorFactory` function to create "observed" actors factory
+ *
+ * @param options object
+ *        - constructorName: (required)
+ *          name of actor constructor, which is also used when removing the actor.
+ *        One of the following:
+ *          - id:
+ *            module ID that contains the actor
+ *          - constructorFun:
+ *            a function to construct the actor
+ */
+function RegisteredActorFactory(options, prefix) {
+  // By default the actor name will also be used for the actorID prefix.
+  this._prefix = prefix;
+  if (options.constructorFun) {
+    // Actor definition registered by ActorRegistryActor or testing helpers
+    this._getConstructor = () => options.constructorFun;
+  } else {
+    // Lazy actor definition, where options contains all the information
+    // required to load the actor lazily.
+    this._getConstructor = function() {
+      // Load the module
+      let mod;
+      try {
+        mod = require(options.id);
+      } catch (e) {
+        throw new Error("Unable to load actor module '" + options.id + "'.\n" +
+                        e.message + "\n" + e.stack + "\n");
+      }
+      // Fetch the actor constructor
+      const c = mod[options.constructorName];
+      if (!c) {
+        throw new Error("Unable to find actor constructor named '" +
+                        options.constructorName + "'. (Is it exported?)");
+      }
+      return c;
+    };
+  }
+  // Exposes `name` attribute in order to allow removeXXXActor to match
+  // the actor by its actor constructor name.
+  this.name = options.constructorName;
+}
+RegisteredActorFactory.prototype.createObservedActorFactory = function(conn,
+  parentActor) {
+  return new ObservedActorFactory(this._getConstructor, this._prefix, conn, parentActor);
+};
+exports.RegisteredActorFactory = RegisteredActorFactory;
+
+/**
+ * Creates "observed" actors factory meant for creating real actor instances.
+ * These factories lives in actor pools and fake various actor attributes.
+ * They will be replaced in actor pools by final actor instances during
+ * the first request for the same actorID from DebuggerServer._getOrCreateActor.
+ *
+ * ObservedActorFactory fakes the following actors attributes:
+ *   actorPrefix (string) Used by ActorPool.addActor to compute the actor id
+ *   actorID (string) Set by ActorPool.addActor just after being instantiated
+ *   registeredPool (object) Set by ActorPool.addActor just after being
+ *                           instantiated
+ * And exposes the following method:
+ *   createActor (function) Instantiate an actor that is going to replace
+ *                          this factory in the actor pool.
+ */
+function ObservedActorFactory(getConstructor, prefix, conn, parentActor) {
+  this._getConstructor = getConstructor;
+  this._conn = conn;
+  this._parentActor = parentActor;
+
+  this.actorPrefix = prefix;
+
+  this.actorID = null;
+  this.registeredPool = null;
+}
+ObservedActorFactory.prototype.createActor = function() {
+  // Fetch the actor constructor
+  const C = this._getConstructor();
+  // Instantiate a new actor instance
+  const instance = new C(this._conn, this._parentActor);
+  instance.conn = this._conn;
+  instance.parentID = this._parentActor.actorID;
+  // We want the newly-constructed actor to completely replace the factory
+  // actor. Reusing the existing actor ID will make sure ActorPool.addActor
+  // does the right thing.
+  instance.actorID = this.actorID;
+  this.registeredPool.addActor(instance);
+  return instance;
+};
+exports.ObservedActorFactory = ObservedActorFactory;
+
+/*
+ * Methods shared between RootActor and BrowsingContextTargetActor.
+ */
+
+/**
+ * Populate |this._extraActors| as specified by |factories|, reusing whatever
+ * actors are already there. Add all actors in the final extra actors table to
+ * |pool|.
+ *
+ * The root actor and the target actor use this to instantiate actors that other
+ * parts of the browser have specified with DebuggerServer.addTargetScopedActor and
+ * DebuggerServer.addGlobalActor.
+ *
+ * @param factories
+ *     An object whose own property names are the names of properties to add to
+ *     some reply packet (say, a target actor grip or the "listTabs" response
+ *     form), and whose own property values are actor constructor functions, as
+ *     documented for addTargetScopedActor and addGlobalActor.
+ *
+ * @param this
+ *     The RootActor or BrowsingContextTargetActor with which the new actors
+ *     will be associated. It should support whatever API the |factories|
+ *     constructor functions might be interested in, as it is passed to them.
+ *     For the sake of CommonCreateExtraActors itself, it should have at least
+ *     the following properties:
+ *
+ *     - _extraActors
+ *        An object whose own property names are factory table (and packet)
+ *        property names, and whose values are no-argument actor constructors,
+ *        of the sort that one can add to an ActorPool.
+ *
+ *     - conn
+ *        The DebuggerServerConnection in which the new actors will participate.
+ *
+ *     - actorID
+ *        The actor's name, for use as the new actors' parentID.
+ */
+exports.createExtraActors = function createExtraActors(factories, pool) {
+  // Walk over global actors added by extensions.
+  for (const name in factories) {
+    let actor = this._extraActors[name];
+    if (!actor) {
+      // Register another factory, but this time specific to this connection.
+      // It creates a fake actor that looks like an regular actor in the pool,
+      // but without actually instantiating the actor.
+      // It will only be instantiated on the first request made to the actor.
+      actor = factories[name].createObservedActorFactory(this.conn, this);
+      this._extraActors[name] = actor;
+    }
+
+    // If the actor already exists in the pool, it may have been instantiated,
+    // so make sure not to overwrite it by a non-instantiated version.
+    if (!pool.has(actor.actorID)) {
+      pool.addActor(actor);
+    }
+  }
+};
+
+/**
  * Append the extra actors in |this._extraActors|, constructed by a prior call
  * to CommonCreateExtraActors, to |object|.
  *

@@ -826,10 +826,6 @@ Pool.prototype = extend(EventEmitter.prototype, {
     return this.conn.poolFor(this.actorID);
   },
 
-  poolFor: function(actorID) {
-    return this.conn.poolFor(actorID);
-  },
-
   /**
    * Override this if you want actors returned by this actor
    * to belong to a different actor by default.
@@ -862,9 +858,7 @@ Pool.prototype = extend(EventEmitter.prototype, {
     }
 
     // If the actor is already in a pool, remove it without destroying it.
-    // TODO: not all actors have been moved to protocol.js, so they do not all have
-    // a parent field. Remove the check for the parent once the conversion is finished
-    const parent = this.poolFor(actor.actorID);
+    const parent = actor.parent();
     if (parent) {
       parent.unmanage(actor);
     }
@@ -887,19 +881,13 @@ Pool.prototype = extend(EventEmitter.prototype, {
 
   // The actor for a given actor id stored in this pool
   actor: function(actorID) {
-    if (this.__poolMap) {
-      return this._poolMap.get(actorID);
-    }
-    return null;
+    return this.__poolMap ? this._poolMap.get(actorID) : null;
   },
 
   // Same as actor, should update debugger connection to use 'actor'
   // and then remove this.
   get: function(actorID) {
-    if (this.__poolMap) {
-      return this._poolMap.get(actorID);
-    }
-    return null;
+    return this.__poolMap ? this._poolMap.get(actorID) : null;
   },
 
   // True if this pool has no children.
