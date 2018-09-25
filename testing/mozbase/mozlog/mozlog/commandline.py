@@ -90,20 +90,23 @@ fmt_options = {
     # "action" is used by the commandline parser in use.
     'verbose': (verbose_wrapper,
                 "Enables verbose mode for the given formatter.",
-                ["mach"], "store_true"),
+                {"mach"}, "store_true"),
     'compact': (compact_wrapper,
                 "Enables compact mode for the given formatter.",
-                ["tbpl"], "store_true"),
+                {"tbpl"}, "store_true"),
     'level': (level_filter_wrapper,
               "A least log level to subscribe to for the given formatter "
               "(debug, info, error, etc.)",
-              ["mach", "raw", "tbpl"], "store"),
+              {"mach", "raw", "tbpl"}, "store"),
     'buffer': (buffer_handler_wrapper,
                "If specified, enables message buffering at the given buffer size limit.",
                ["mach", "tbpl"], "store"),
     'screenshot': (screenshot_wrapper,
                    "Enable logging reftest-analyzer compatible screenshot data.",
-                   ["mach"], "store_true"),
+                   {"mach"}, "store_true"),
+    'no-screenshot': (screenshot_wrapper,
+                      "Disable logging reftest-analyzer compatible screenshot data.",
+                      {"mach"}, "store_false"),
 }
 
 
@@ -164,12 +167,17 @@ def add_logging_group(parser, include_formatters=None):
             group_add("--log-" + name, action="append", type=opt_log_type,
                       help=help_str)
 
-    for optname, (cls, help_str, formatters_, action) in six.iteritems(fmt_options):
-        for fmt in formatters_:
-            # make sure fmt is in log_formatters and is accepted
-            if fmt in log_formatters and fmt in include_formatters:
-                group_add("--log-%s-%s" % (fmt, optname), action=action,
-                          help=help_str, default=None)
+    for fmt in include_formatters:
+        for optname, (cls, help_str, formatters_, action) in six.iteritems(fmt_options):
+            if fmt not in formatters_:
+                continue
+            if optname.startswith("no-") and action == "store_false":
+                dest = optname.split("-", 1)[1]
+            else:
+                dest = optname
+            dest = dest.replace("-", "_")
+            group_add("--log-%s-%s" % (fmt, optname), action=action,
+                      help=help_str, default=None, dest="log_%s_%s" % (fmt, dest))
 
 
 def setup_handlers(logger, formatters, formatter_options, allow_unused_options=False):
