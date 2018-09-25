@@ -365,6 +365,7 @@ def set_from_config(kwargs):
 
     check_paths(kwargs)
 
+
 def get_test_paths(config):
     # Set up test_paths
     test_paths = OrderedDict()

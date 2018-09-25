@@ -26,14 +26,17 @@ def create_parser():
     return p
 
 
-def update(logger, wpt_dir, rebuild=False, config_dir=None,):
+def update(logger, wpt_dir, rebuild=False, config_dir=None):
     localpaths = imp.load_source("localpaths",
                                  os.path.join(wpt_dir, "tests", "tools", "localpaths.py"))
 
-    if not config_dir or not os.path.exists(os.path.join(config_dir, 'wptrunner.local.ini')):
+    if not config_dir:
         config_dir = wpt_dir
         config_name = "wptrunner.ini"
     else:
+        if not os.path.exists(os.path.join(config_dir, 'wptrunner.local.ini')):
+            from manifestdownload import generate_config
+            generate_config(config_dir)
         config_name = "wptrunner.local.ini"
 
     kwargs = {"config": os.path.join(config_dir, config_name),
@@ -41,16 +44,17 @@ def update(logger, wpt_dir, rebuild=False, config_dir=None,):
               "metadata_root": None}
 
     set_from_config(kwargs)
-    config = kwargs["config"]
-    test_paths = get_test_paths(config)
     do_delayed_imports(wpt_dir)
 
-    return _update(logger, test_paths, rebuild)
+    return _update(logger, kwargs["test_paths"], rebuild)
 
 
 def _update(logger, test_paths, rebuild):
     for url_base, paths in test_paths.iteritems():
-        manifest_path = os.path.join(paths["metadata_path"], "MANIFEST.json")
+        if "manifest_path" in paths:
+            manifest_path = paths["manifest_path"]
+        else:
+            manifest_path = os.path.join(paths["metadata_path"], "MANIFEST.json")
         m = None
         if not rebuild and os.path.exists(manifest_path):
             try:

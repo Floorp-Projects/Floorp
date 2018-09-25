@@ -202,7 +202,11 @@ const MessageLoaderUtils = {
       Cu.reportError(new Error(`Tried to load messages for ${provider.id} but the result was not an Array.`));
     }
     const lastUpdated = Date.now();
-    return {messages: messages.map(msg => ({...msg, provider: provider.id})), lastUpdated};
+    return {
+      messages: messages.map(msg => ({weight: 100, ...msg, provider: provider.id}))
+                        .filter(message => message.weight > 0),
+      lastUpdated,
+    };
   },
 
   async installAddonFromURL(browser, url) {
@@ -605,7 +609,26 @@ class _ASRouter {
       return null;
     }
 
-    return {bundle: this._orderBundle(result), provider: originalMessage.provider, template: originalMessage.template};
+    // The bundle may have some extra attributes, like a header, or a dismiss button, so attempt to get those strings now
+    // This is a temporary solution until we can use Fluent strings in the content process, in which case the content can
+    // handle finding these strings on its own. See bug 1488973
+    const extraTemplateStrings = await this._extraTemplateStrings(originalMessage);
+
+    return {bundle: this._orderBundle(result), ...(extraTemplateStrings && {extraTemplateStrings}), provider: originalMessage.provider, template: originalMessage.template};
+  }
+
+  async _extraTemplateStrings(originalMessage) {
+    let extraTemplateStrings;
+    let localProvider = this._findProvider(originalMessage.provider);
+    if (localProvider && localProvider.getExtraAttributes) {
+      extraTemplateStrings = await localProvider.getExtraAttributes();
+    }
+
+    return extraTemplateStrings;
+  }
+
+  _findProvider(providerID) {
+    return this._localProviders[this.state.providers.find(i => i.id === providerID).localProvider];
   }
 
   _getUnblockedMessages() {

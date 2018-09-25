@@ -436,8 +436,7 @@ XPCShellEnvironment::Init()
 
     JS::RealmOptions options;
     options.creationOptions().setNewCompartmentInSystemZone();
-    if (xpc::SharedMemoryEnabled())
-        options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
+    xpc::SetPrefableRealmOptions(options);
 
     JS::Rooted<JSObject*> globalObj(cx);
     rv = xpc::InitClassesWithNewWrappedGlobal(cx,

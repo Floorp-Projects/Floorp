@@ -27,8 +27,8 @@ class App extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       messageContexts: PropTypes.arrayOf(PropTypes.object).isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
-      runtimes: PropTypes.array.isRequired,
-      selectedPage: PropTypes.string.isRequired,
+      runtimes: PropTypes.object.isRequired,
+      selectedPage: PropTypes.string,
     };
   }
 

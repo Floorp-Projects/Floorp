@@ -135,12 +135,6 @@ if CONFIG['ENABLE_ION']:
         'testJitRValueAlloc.cpp',
     ]
 
-if CONFIG['ENABLE_STREAMS']:
-    UNIFIED_SOURCES += [
-        'testReadableStream.cpp',
-    ]
-
-
 if CONFIG['NIGHTLY_BUILD']:
     # The Error interceptor only exists on Nightly.
     UNIFIED_SOURCES += [

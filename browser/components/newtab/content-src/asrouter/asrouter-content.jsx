@@ -138,6 +138,10 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   sendImpression(extraProps) {
+    if (this.state.message.provider === "preview") {
+      return;
+    }
+
     ASRouterUtils.sendMessage({type: "IMPRESSION", data: this.state.message});
     this.sendUserActionTelemetry({event: "IMPRESSION", ...extraProps});
   }
@@ -146,6 +150,10 @@ export class ASRouterUISurface extends React.PureComponent {
   // telemetry field which can have arbitrary values.
   // Used for router messages with links as part of the content.
   sendClick(event) {
+    if (this.state.message.provider === "preview") {
+      return;
+    }
+
     const metric = {
       value: event.target.dataset.metric,
       // Used for the `source` of the event. Needed to differentiate

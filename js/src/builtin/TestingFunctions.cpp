@@ -2323,7 +2323,7 @@ static bool
 StreamsAreEnabled(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(cx->options().streams());
+    args.rval().setBoolean(cx->realm()->creationOptions().getStreamsEnabled());
     return true;
 }
 
@@ -5707,7 +5707,7 @@ JS_FN_HELP("rejectPromise", RejectPromise, 2, 0,
 
 JS_FN_HELP("streamsAreEnabled", StreamsAreEnabled, 0, 0,
 "streamsAreEnabled()",
-"  Returns a boolean indicating whether WHATWG Streams are enabled for the current compartment."),
+"  Returns a boolean indicating whether WHATWG Streams are enabled for the current realm."),
 
     JS_FN_HELP("makeFinalizeObserver", MakeFinalizeObserver, 0, 0,
 "makeFinalizeObserver()",

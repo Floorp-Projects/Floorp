@@ -22,7 +22,8 @@ class ConnectSteps extends PureComponent {
       },
       this.props.steps.map(step => dom.li(
         {
-          className: "connect-page__step"
+          className: "connect-page__step",
+          key: step,
         },
         step)
       )
