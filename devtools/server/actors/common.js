@@ -9,6 +9,26 @@
 const { method } = require("devtools/shared/protocol");
 
 /**
+ * Append the extra actors in |this._extraActors|, constructed by a prior call
+ * to CommonCreateExtraActors, to |object|.
+ *
+ * @param object
+ *     The object to which the extra actors should be added, under the
+ *     property names given in the |factories| table passed to
+ *     CommonCreateExtraActors.
+ *
+ * @param this
+ *     The RootActor or BrowsingContextTargetActor whose |_extraActors| table we
+ *     should use; see above.
+ */
+exports.appendExtraActors = function appendExtraActors(object) {
+  for (const name in this._extraActors) {
+    const actor = this._extraActors[name];
+    object[name] = actor.actorID;
+  }
+};
+
+/**
  * Construct an ActorPool.
  *
  * ActorPools are actorID -> actor mapping and storage.  These are
