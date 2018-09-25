@@ -38,7 +38,6 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.ktx.android.content.isOSOnLowMemory
 import mozilla.components.support.utils.DownloadUtils
 import java.lang.ref.WeakReference
-import java.net.URI
 
 /**
  * WebView-based implementation of EngineView.
@@ -129,7 +128,10 @@ class SystemEngineView @JvmOverloads constructor(
                 session?.internalNotifyObservers {
                     onLocationChange(it)
                     onLoadingStateChange(false)
-                    onSecurityChange(cert != null, cert?.let { URI(url).host }, cert?.issuedBy?.oName)
+                    onSecurityChange(
+                            secure = cert != null,
+                            host = cert?.let { Uri.parse(url).host },
+                            issuer = cert?.issuedBy?.oName)
 
                     if (!isLowOnMemory()) {
                         val thumbnail = session?.captureThumbnail()

@@ -78,7 +78,7 @@ class SystemEngineViewTest {
         observedLoadingState = true
         engineView.currentWebView.webViewClient.onPageFinished(null, "http://mozilla.org")
         assertEquals("http://mozilla.org", observedUrl)
-        assertEquals(false, observedLoadingState)
+        assertFalse(observedLoadingState)
         assertEquals(Triple(false, null, null), observedSecurityChange)
 
         val view = mock(WebView::class.java)
@@ -87,6 +87,10 @@ class SystemEngineViewTest {
 
         val certificate = mock(SslCertificate::class.java)
         val dName = mock(SslCertificate.DName::class.java)
+        doReturn("testCA").`when`(dName).oName
+        doReturn(certificate).`when`(view).certificate
+        engineView.currentWebView.webViewClient.onPageFinished(view, "http://mozilla.org")
+
         doReturn("testCA").`when`(dName).oName
         doReturn(dName).`when`(certificate).issuedBy
         doReturn(certificate).`when`(view).certificate
@@ -580,5 +584,37 @@ class SystemEngineViewTest {
         })
         engineView.currentWebView.webViewClient.onPageFinished(null, "http://mozilla.org")
         assertFalse(thumbnailChanged)
+    }
+
+    @Test
+    fun `onPageFinished handles invalid URL`() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        engineView.render(engineSession)
+
+        var observedUrl = ""
+        var observedLoadingState = true
+        var observedSecurityChange: Triple<Boolean, String?, String?> = Triple(false, null, null)
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
+            override fun onLocationChange(url: String) { observedUrl = url }
+            override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
+                observedSecurityChange = Triple(secure, host, issuer)
+            }
+        })
+
+        // We need a certificate to trigger parsing the potentially invalid URL for
+        // the host parameter in onSecurityChange
+        val view = mock(WebView::class.java)
+        val certificate = mock(SslCertificate::class.java)
+        val dName = mock(SslCertificate.DName::class.java)
+        doReturn("testCA").`when`(dName).oName
+        doReturn(dName).`when`(certificate).issuedBy
+        doReturn(certificate).`when`(view).certificate
+
+        engineView.currentWebView.webViewClient.onPageFinished(view, "invalid:")
+        assertEquals("invalid:", observedUrl)
+        assertFalse(observedLoadingState)
+        assertEquals(Triple(true, null, "testCA"), observedSecurityChange)
     }
 }
