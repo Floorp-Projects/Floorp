@@ -98,6 +98,10 @@ XDRState<mode>::codeChars(char16_t* chars, size_t nchars)
     if (nchars == 0) {
         return Ok();
     }
+
+    // Align the buffer to avoid unaligned loads.
+    MOZ_TRY(codeAlign(sizeof(char16_t)));
+
     size_t nbytes = nchars * sizeof(char16_t);
     if (mode == XDR_ENCODE) {
         uint8_t* ptr = buf.write(nbytes);
