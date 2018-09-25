@@ -20,7 +20,6 @@
 #include "gfxTelemetry.h"
 #include "gfxTypes.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsRect.h"
 #include "nsRegion.h"
@@ -1278,13 +1277,6 @@ struct ParamTraits<mozilla::Array<T, Length>>
     }
     return true;
   }
-};
-
-template <>
-struct ParamTraits<mozilla::gfx::CompositorHitTestInfo>
-  : public BitFlagsEnumSerializer<mozilla::gfx::CompositorHitTestInfo,
-                                  mozilla::gfx::CompositorHitTestInfo::ALL_BITS>
-{
 };
 
 } /* namespace IPC */
