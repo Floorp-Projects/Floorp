@@ -1579,7 +1579,7 @@ PresentationPresentingInfo::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface((nsIFrameLoaderOwner*) frame);
+  nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(frame);
   if (NS_WARN_IF(!owner)) {
     ReplyError(NS_ERROR_DOM_OPERATION_ERR);
     return;
