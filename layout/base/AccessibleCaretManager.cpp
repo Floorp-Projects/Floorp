@@ -1421,12 +1421,19 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
     nsRect clampedRect = nsLayoutUtils::ClampRectToScrollFrames(commonAncestorFrame,
                                                                 rect);
     nsLayoutUtils::TransformRect(commonAncestorFrame, rootFrame, clampedRect);
-    domRect->SetLayoutRect(clampedRect);
+    rect = clampedRect;
     init.mSelectionVisible = !clampedRect.IsEmpty();
   } else {
-    domRect->SetLayoutRect(rect);
     init.mSelectionVisible = true;
   }
+
+  // The rect computed above is relative to rootFrame, which is the (layout)
+  // viewport frame. However, the consumers of this event expect the bounds
+  // of the selection relative to the screen (visual viewport origin), so
+  // translate between the two.
+  rect -= mPresShell->GetVisualViewportOffsetRelativeToLayoutViewport();
+
+  domRect->SetLayoutRect(rect);
 
   // Send isEditable info w/ event detail. This info can help determine
   // whether to show cut command on selection dialog or not.

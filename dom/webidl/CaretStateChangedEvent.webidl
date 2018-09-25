@@ -29,6 +29,7 @@ dictionary CaretStateChangedEventInit : EventInit {
  ChromeOnly]
 interface CaretStateChangedEvent : Event {
   readonly attribute boolean collapsed;
+  /* The bounding client rect is relative to the visual viewport. */
   readonly attribute DOMRectReadOnly? boundingClientRect;
   readonly attribute CaretChangedReason reason;
   readonly attribute boolean caretVisible;
