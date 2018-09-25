@@ -28,7 +28,7 @@ function test() {
     BrowserTestUtils.addTab(newWin.gBrowser).linkedBrowser.stop();
 
     // Mark the window with some unique data to be restored later on.
-    ss.setWindowValue(newWin, uniqueKey, uniqueValue);
+    ss.setCustomWindowValue(newWin, uniqueKey, uniqueValue);
     let [txt] = newWin.content.document.querySelectorAll("#txt");
     txt.value = uniqueText;
 
@@ -77,7 +77,7 @@ function test() {
           [txt, chk] = newWin2.content.document.querySelectorAll("#txt, #chk");
           ok(txt.value == uniqueText && chk.checked,
              "The window correctly restored the form");
-          is(ss.getWindowValue(newWin2, uniqueKey), uniqueValue,
+          is(ss.getCustomWindowValue(newWin2, uniqueKey), uniqueValue,
              "The window correctly restored the data associated with it");
 
           // Clean up.
