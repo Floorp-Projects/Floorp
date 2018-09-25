@@ -5,13 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BufferTexture.h"
-#include "mozilla/layers/ImageDataSerializer.h"
-#include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/gfx/Logging.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/fallible.h"
 #include "libyuv.h"
+#include "mozilla/Move.h"
+#include "mozilla/fallible.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 
 #ifdef MOZ_WIDGET_GTK
 #include "gfxPlatformGtk.h"
@@ -435,11 +436,11 @@ BufferTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 }
 
 void
-BufferTextureData::SetDesciptor(const BufferDescriptor& aDescriptor)
+BufferTextureData::SetDescriptor(BufferDescriptor&& aDescriptor)
 {
   MOZ_ASSERT(mDescriptor.type() == BufferDescriptor::TYCbCrDescriptor);
   MOZ_ASSERT(mDescriptor.get_YCbCrDescriptor().ySize() == gfx::IntSize());
-  mDescriptor = aDescriptor;
+  mDescriptor = std::move(aDescriptor);
 }
 
 bool

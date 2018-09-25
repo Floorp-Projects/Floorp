@@ -124,17 +124,17 @@ SharedPlanarYCbCrImage::AdoptData(const Data& aData)
     supportsTextureDirectMapping);
 
   static_cast<BufferTextureData*>(mTextureClient->GetInternalData())
-    ->SetDesciptor(YCbCrDescriptor(aData.mYSize,
-                                   aData.mYStride,
-                                   aData.mCbCrSize,
-                                   aData.mCbCrStride,
-                                   yOffset,
-                                   cbOffset,
-                                   crOffset,
-                                   aData.mStereoMode,
-                                   aData.mColorDepth,
-                                   aData.mYUVColorSpace,
-                                   hasIntermediateBuffer));
+    ->SetDescriptor(YCbCrDescriptor(aData.mYSize,
+                                    aData.mYStride,
+                                    aData.mCbCrSize,
+                                    aData.mCbCrStride,
+                                    yOffset,
+                                    cbOffset,
+                                    crOffset,
+                                    aData.mStereoMode,
+                                    aData.mColorDepth,
+                                    aData.mYUVColorSpace,
+                                    hasIntermediateBuffer));
 
   return true;
 }
