@@ -17,8 +17,8 @@ ChromeUtils.defineModuleGetter(this, "PingCentre",
   "resource:///modules/PingCentre.jsm");
 ChromeUtils.defineModuleGetter(this, "UTEventReporting",
   "resource://activity-stream/lib/UTEventReporting.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
   "@mozilla.org/uuid-generator;1",
@@ -435,7 +435,7 @@ this.TelemetryFeed = class TelemetryFeed {
    * 3). In shield experiments conducted in release, it collects client_id and message_id
    */
   applyCFRPolicy(ping) {
-    if (AppConstants.MOZ_UPDATE_CHANNEL === "release" && !this.isInCFRCohort) {
+    if (UpdateUtils.getUpdateChannel(true) === "release" && !this.isInCFRCohort) {
       ping.message_id = ping.bucket_id || "n/a";
       ping.client_id = "n/a";
       ping.impression_id = this._impressionId;

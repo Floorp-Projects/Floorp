@@ -481,6 +481,13 @@ var paymentDialogWrapper = {
     });
   },
 
+  onOpenPreferences() {
+    let prefsURL = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    prefsURL.data = "about:preferences#privacy-address-autofill";
+    Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no",
+                           prefsURL);
+  },
+
   onPaymentCancel() {
     const showResponse = this.createShowResponse({
       acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
@@ -658,6 +665,10 @@ var paymentDialogWrapper = {
       }
       case "closeDialog": {
         this.onCloseDialogMessage();
+        break;
+      }
+      case "openPreferences": {
+        this.onOpenPreferences();
         break;
       }
       case "paymentCancel": {

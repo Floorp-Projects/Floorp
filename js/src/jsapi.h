@@ -503,8 +503,7 @@ class JS_PUBLIC_API(ContextOptions) {
         dumpStackOnDebuggeeWouldRun_(false),
         werror_(false),
         strictMode_(false),
-        extraWarnings_(false),
-        streams_(false)
+        extraWarnings_(false)
 #ifdef FUZZING
         , fuzzing_(false)
 #endif
@@ -548,16 +547,6 @@ class JS_PUBLIC_API(ContextOptions) {
     }
     ContextOptions& toggleWasm() {
         wasm_ = !wasm_;
-        return *this;
-    }
-
-    bool streams() const { return streams_; }
-    ContextOptions& setStreams(bool flag) {
-        streams_ = flag;
-        return *this;
-    }
-    ContextOptions& toggleStreams() {
-        streams_ = !streams_;
         return *this;
     }
 
@@ -718,7 +707,6 @@ class JS_PUBLIC_API(ContextOptions) {
     bool werror_ : 1;
     bool strictMode_ : 1;
     bool extraWarnings_ : 1;
-    bool streams_: 1;
 #ifdef FUZZING
     bool fuzzing_ : 1;
 #endif
@@ -1501,6 +1489,7 @@ class JS_PUBLIC_API(RealmCreationOptions)
         preserveJitCode_(false),
         cloneSingletons_(false),
         sharedMemoryAndAtomics_(false),
+        streams_(false),
         secureContext_(false),
         clampAndJitterTime_(true)
     {}
@@ -1566,6 +1555,12 @@ class JS_PUBLIC_API(RealmCreationOptions)
     bool getSharedMemoryAndAtomicsEnabled() const;
     RealmCreationOptions& setSharedMemoryAndAtomicsEnabled(bool flag);
 
+    bool getStreamsEnabled() const { return streams_; }
+    RealmCreationOptions& setStreamsEnabled(bool flag) {
+        streams_ = flag;
+        return *this;
+    }
+
     // This flag doesn't affect JS engine behavior.  It is used by Gecko to
     // mark whether content windows and workers are "Secure Context"s. See
     // https://w3c.github.io/webappsec-secure-contexts/
@@ -1594,6 +1589,7 @@ class JS_PUBLIC_API(RealmCreationOptions)
     bool preserveJitCode_;
     bool cloneSingletons_;
     bool sharedMemoryAndAtomics_;
+    bool streams_;
     bool secureContext_;
     bool clampAndJitterTime_;
 };

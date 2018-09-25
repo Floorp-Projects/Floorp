@@ -301,13 +301,6 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-// Streams API
-VARCACHE_PREF(
-  "dom.streams.enabled",
-   dom_streams_enabled,
-  RelaxedAtomicBool, false
-)
-
 #if !defined(MOZ_WIDGET_ANDROID)
 # define PREF_VALUE true
 #else
@@ -830,6 +823,14 @@ VARCACHE_PREF(
    javascript_options_mem_notify,
   bool, false
 )
+
+// Streams API
+VARCACHE_PREF(
+  "javascript.options.streams",
+   javascript_options_streams,
+  RelaxedAtomicBool, false
+)
+
 
 //---------------------------------------------------------------------------
 // Media prefs

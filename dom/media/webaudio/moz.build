@@ -89,7 +89,6 @@ UNIFIED_SOURCES += [
     'AudioParamMap.cpp',
     'AudioProcessingEvent.cpp',
     'AudioScheduledSourceNode.cpp',
-    'AudioWorkletImpl.cpp',
     'AudioWorkletNode.cpp',
     'AudioWorkletProcessor.cpp',
     'BiquadFilterNode.cpp',

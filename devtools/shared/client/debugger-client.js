@@ -327,7 +327,13 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to a target actor.
+   * Attach to a target actor:
+   *
+   *  - start watching for new documents (emits `tabNativated` messages)
+   *  - start watching for inner iframe updates (emits `frameUpdate` messages)
+   *  - retrieve the thread actor:
+   *    Instantiates a new ThreadActor that can be later attached to in order to
+   *    debug JS sources in the document.
    *
    * @param string targetActor
    *        The target actor ID for the tab to attach.
@@ -395,7 +401,24 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to a Web Console actor.
+   * Attach to a Web Console actor. Depending on the listeners being passed as second
+   * arguments, starts listening for:
+   * - PageError:
+   *   Javascript error happening in the debugged context
+   * - ConsoleAPI:
+   *   Calls made to console.* API
+   * - NetworkActivity:
+   *   Http requests made in the debugged context
+   * - FileActivity:
+   *   Any requests made for a file:// or ftp:// URL. It can be the document or any of
+   *   its resources, like images.
+   * - ReflowActivity:
+   *   Any reflow made by the document being debugged.
+   * - ContentProcessMessages:
+   *   When the console actor runs in the parent process, also fetch calls made to
+   *   console.* API in all the content processes.
+   * - DocumentEvents:
+   *   Listen for DOMContentLoaded and load events.
    *
    * @param string consoleActor
    *        The ID for the console actor to attach to.

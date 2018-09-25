@@ -628,10 +628,7 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   behaviors.setDiscardSource(discardSource)
            .extraWarningsOverride().set(extraWarnings);
 
-  const bool sharedMemoryEnabled = xpc::SharedMemoryEnabled();
-
-  JS::RealmCreationOptions& creationOptions = options.creationOptions();
-  creationOptions.setSharedMemoryAndAtomicsEnabled(sharedMemoryEnabled);
+  xpc::SetPrefableRealmOptions(options);
 
   return DedicatedWorkerGlobalScope_Binding::Wrap(aCx, this, this,
                                                  options,

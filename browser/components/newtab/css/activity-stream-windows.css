@@ -57,6 +57,7 @@ body {
   --newtab-search-dropdown-header-color: #F9F9FA;
   --newtab-search-header-background-color: rgba(249, 249, 250, 0.95);
   --newtab-search-icon-color: rgba(12, 12, 13, 0.4);
+  --newtab-search-wordmark-color: #363959;
   --newtab-topsites-background-color: #FFF;
   --newtab-topsites-icon-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color);
   --newtab-topsites-label-color: inherit;
@@ -99,6 +100,7 @@ body {
     --newtab-search-dropdown-header-color: #4A4A4F;
     --newtab-search-header-background-color: rgba(42, 42, 46, 0.95);
     --newtab-search-icon-color: rgba(249, 249, 250, 0.6);
+    --newtab-search-wordmark-color: #FFF;
     --newtab-topsites-background-color: #38383D;
     --newtab-topsites-icon-shadow: none;
     --newtab-topsites-label-color: rgba(249, 249, 250, 0.8);
@@ -331,6 +333,9 @@ input[type='text'], input[type='search'] {
   padding: 30px 32px 32px; }
   .outer-wrapper.fixed-to-top {
     display: block; }
+  .outer-wrapper.only-search {
+    display: block;
+    padding-top: 134px; }
   .outer-wrapper a {
     color: var(--newtab-link-primary-color); }
 
@@ -1211,6 +1216,37 @@ a.firstrun-link {
   @media (max-height: 700px) {
     .search-wrapper {
       padding: 0 0 30px; } }
+  .only-search .search-wrapper {
+    padding: 0 0 64px; }
+  .search-wrapper .logo-and-wordmark {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 49px; }
+    .search-wrapper .logo-and-wordmark .logo {
+      background: url("chrome://branding/content/icon128.png") no-repeat center center;
+      background-size: 97px;
+      display: inline-block;
+      height: 97px;
+      width: 97px; }
+    .search-wrapper .logo-and-wordmark .wordmark {
+      background: url("../data/content/assets/firefox-wordmark.svg") no-repeat center center;
+      background-size: 142px;
+      -moz-context-properties: fill;
+      display: inline-block;
+      fill: var(--newtab-search-wordmark-color);
+      height: 97px;
+      margin-inline-start: 15px;
+      width: 142px; }
+    @media (max-width: 481px) {
+      .search-wrapper .logo-and-wordmark .logo {
+        background-size: 64px;
+        height: 64px;
+        width: 64px; }
+      .search-wrapper .logo-and-wordmark .wordmark {
+        background-size: 100px;
+        height: 64px;
+        width: 100px; } }
   .search-wrapper .search-inner-wrapper {
     cursor: default;
     display: flex;

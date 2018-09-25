@@ -32,7 +32,7 @@ public:
 private:
   virtual ~AltDataOutputStreamChild() = default;
   // Sends data to the parent process in 256k chunks.
-  bool WriteDataInChunks(const nsCString& data);
+  bool WriteDataInChunks(const nsDependentCSubstring& data);
 
   bool mIPCOpen;
   // If there was an error opening the output stream or writing to it on the

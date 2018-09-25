@@ -44,6 +44,8 @@
   <!ENTITY payer.addPage.title        "Add Payer Contact">
   <!ENTITY payer.editPage.title       "Edit Payer Contact">
   <!ENTITY payerLabel                 "Contact Information">
+  <!ENTITY manageInPreferences        "Manage saved address and credit card information in <a>&brandShortName; Preferences</a>.">
+  <!ENTITY manageInOptions            "Manage saved address and credit card information in <a>&brandShortName; Options</a>.">
   <!ENTITY cancelPaymentButton.label   "Cancel">
   <!ENTITY approvePaymentButton.label  "Pay">
   <!ENTITY processingPaymentButton.label "Processing">
@@ -160,6 +162,11 @@
                           data-field-separator="&address.fieldSeparator;"
                           data-invalid-label="&invalidOption.label;"
                           selected-state-key="selectedPayerAddress"></address-picker>
+
+          <p class="manage-text">
+            <span hidden="hidden" data-os="mac">&manageInPreferences;</span>
+            <span hidden="hidden">&manageInOptions;</span>
+          </p>
         </div>
 
         <footer>

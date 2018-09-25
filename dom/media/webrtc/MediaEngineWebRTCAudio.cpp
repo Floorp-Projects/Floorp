@@ -36,6 +36,10 @@ using namespace webrtc;
 #define MAX_AEC_FIFO_DEPTH 200 // ms - multiple of 10
 static_assert(!(MAX_AEC_FIFO_DEPTH % 10), "Invalid MAX_AEC_FIFO_DEPTH");
 
+#ifdef MOZ_PULSEAUDIO
+static uint32_t sInputStreamsOpen = 0;
+#endif
+
 namespace mozilla {
 
 #ifdef LOG
@@ -761,6 +765,22 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
     return NS_ERROR_FAILURE;
   }
 
+  // On Linux with PulseAudio, we still only allow a certain number of audio
+  // input stream in each content process, because of issues related to audio
+  // remoting and PulseAudio.
+#ifdef MOZ_PULSEAUDIO
+  // When remoting, cubeb reports it's using the "remote" backend instead of the
+  // backend on the other side of the IPC.
+  const char* backend = cubeb_get_backend_id(CubebUtils::GetCubebContext());
+  if (strstr(backend, "remote") &&
+      sInputStreamsOpen == CubebUtils::GetMaxInputStreams()) {
+    LOG(("%p Already capturing audio in this process, aborting", this));
+    return NS_ERROR_FAILURE;
+  }
+
+  sInputStreamsOpen++;
+#endif
+
   MOZ_ASSERT(!allocation.mEnabled, "Source already started");
   {
     // This spans setting both the enabled state and mState.
@@ -820,6 +840,10 @@ MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aH
     Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
     allocation.mStream->CloseAudioInput(id, mListener);
     mListener = nullptr;
+#ifdef MOZ_PULSEAUDIO
+    MOZ_ASSERT(sInputStreamsOpen > 0);
+    sInputStreamsOpen--;
+#endif
 
     if (HasEnabledTrack()) {
       // Another track is keeping us from stopping

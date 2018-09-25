@@ -38,6 +38,8 @@
 #define PREF_CUBEB_OUTPUT_DEVICE "media.cubeb.output_device"
 #define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
 #define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
+// This only works when audio remoting is active, and pulseaudio is the backend.
+#define PREF_CUBEB_MAX_INPUT_STREAMS "media.cubeb_max_input_streams"
 // Allows to get something non-default for the preferred sample-rate, to allow
 // troubleshooting in the field and testing.
 #define PREF_CUBEB_FORCE_SAMPLE_RATE "media.cubeb.force_sample_rate"
@@ -127,6 +129,9 @@ cubeb* sCubebContext;
 double sVolumeScale = 1.0;
 uint32_t sCubebPlaybackLatencyInMilliseconds = 100;
 uint32_t sCubebMSGLatencyInFrames = 512;
+// Maximum number of audio input streams that can be open at once. This pref is
+// only used when remoting is on, and we're using PulseAudio as a backend.
+uint32_t sCubebMaxInputStreams = 1;
 // If sCubebForcedSampleRate is zero, PreferredSampleRate will return the
 // preferred sample-rate for the audio backend in use. Otherwise, it will be
 // used as the preferred sample-rate.
@@ -231,6 +236,9 @@ void PrefChanged(const char* aPref, void* aClosure)
     // We don't want to limit the upper limit too much, so that people can
     // experiment.
     sCubebMSGLatencyInFrames = std::min<uint32_t>(std::max<uint32_t>(value, 128), 1e6);
+  } else if (strcmp(aPref, PREF_CUBEB_MAX_INPUT_STREAMS) == 0) {
+    StaticMutexAutoLock lock(sMutex);
+    sCubebMaxInputStreams = Preferences::GetUint(aPref);
   } else if (strcmp(aPref, PREF_CUBEB_FORCE_SAMPLE_RATE) == 0) {
     StaticMutexAutoLock lock(sMutex);
     sCubebForcedSampleRate = Preferences::GetUint(aPref);
@@ -551,12 +559,19 @@ uint32_t GetCubebMSGLatencyInFrames(cubeb_stream_params * params)
 #endif
 }
 
+uint32_t GetMaxInputStreams()
+{
+  StaticMutexAutoLock lock(sMutex);
+  return sCubebMaxInputStreams;
+}
+
 static const char* gInitCallbackPrefs[] = {
   PREF_VOLUME_SCALE,           PREF_CUBEB_OUTPUT_DEVICE,
   PREF_CUBEB_LATENCY_PLAYBACK, PREF_CUBEB_LATENCY_MSG,
   PREF_CUBEB_BACKEND,          PREF_CUBEB_FORCE_NULL_CONTEXT,
   PREF_CUBEB_SANDBOX,          PREF_AUDIOIPC_POOL_SIZE,
-  PREF_AUDIOIPC_STACK_SIZE,    nullptr,
+  PREF_CUBEB_MAX_INPUT_STREAMS, PREF_AUDIOIPC_STACK_SIZE,
+  nullptr,
 };
 static const char* gCallbackPrefs[] = {
   PREF_CUBEB_FORCE_SAMPLE_RATE,

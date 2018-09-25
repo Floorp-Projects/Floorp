@@ -31,8 +31,7 @@ parent:
    * true, a different key for this origin is returned from a secondary pool
    * that is never persisted to disk, and aPersist is ignored.
    */
-  async GetPrincipalKey(uint32_t aRequestId, PrincipalInfo aPrincipal,
-                        bool aPersist);
+  async GetPrincipalKey(PrincipalInfo aPrincipal, bool aPersist) returns(nsCString aKey);
 
   /**
    * Clear per-orgin list of persistent deviceIds stored for enumerateDevices
@@ -46,7 +45,6 @@ parent:
   async SanitizeOriginKeys(uint64_t aSinceWhen, bool aOnlyPrivateBrowsing);
 
 child:
-  async GetPrincipalKeyResponse(uint32_t aRequestId, nsCString key);
   async __delete__();
 };
 

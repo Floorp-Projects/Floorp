@@ -6,9 +6,7 @@
 
 #include "WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
-#include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/Console.h"
-#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -36,12 +34,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
   NS_INTERFACE_MAP_ENTRY(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
-WorkletGlobalScope::WorkletGlobalScope(WorkletImpl* aImpl)
-  : mImpl(aImpl)
-{
-}
-
-WorkletGlobalScope::~WorkletGlobalScope() = default;
+WorkletGlobalScope::WorkletGlobalScope() = default;
 
 JSObject*
 WorkletGlobalScope::WrapObject(JSContext* aCx,
@@ -54,11 +47,15 @@ WorkletGlobalScope::WrapObject(JSContext* aCx,
 already_AddRefed<Console>
 WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 {
+  RefPtr<WorkletThread> thread = WorkletThread::Get();
+  MOZ_ASSERT(thread);
+
   if (!mConsole) {
-    const WorkletLoadInfo& loadInfo = mImpl->LoadInfo();
-    mConsole = Console::CreateForWorklet(aCx, this,
-                                         loadInfo.OuterWindowID(),
-                                         loadInfo.InnerWindowID(), aRv);
+    mConsole =
+      Console::CreateForWorklet(aCx,
+                                thread->GetWorkletLoadInfo().OuterWindowID(),
+                                thread->GetWorkletLoadInfo().InnerWindowID(),
+                                aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -73,7 +70,10 @@ WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
 {
   WorkletThread::AssertIsOnWorkletThread();
 
-  if (!StaticPrefs::browser_dom_window_dump_enabled()) {
+  WorkletThread* workletThread = WorkletThread::Get();
+  MOZ_ASSERT(workletThread);
+
+  if (!workletThread->GetWorkletLoadInfo().DumpEnabled()) {
     return;
   }
 

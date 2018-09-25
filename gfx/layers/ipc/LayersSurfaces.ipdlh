@@ -52,6 +52,7 @@ struct SurfaceDescriptorDXGIYCbCr {
   IntSize size;
   IntSize sizeY;
   IntSize sizeCbCr;
+  uint32_t bitDepth;
   YUVColorSpace yUVColorSpace;
 };
 

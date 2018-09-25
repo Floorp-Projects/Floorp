@@ -3709,7 +3709,9 @@ static const JSClass sandbox_class = {
 static void
 SetStandardRealmOptions(JS::RealmOptions& options)
 {
-    options.creationOptions().setSharedMemoryAndAtomicsEnabled(enableSharedMemory);
+    options.creationOptions().setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
+                             .setStreamsEnabled(enableStreams);
+
 }
 
 static JSObject*
@@ -10082,8 +10084,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
 #endif
                              .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
                              .setNativeRegExp(enableNativeRegExp)
-                             .setAsyncStack(enableAsyncStacks)
-                             .setStreams(enableStreams);
+                             .setAsyncStack(enableAsyncStacks);
 
     if (op.getBoolOption("no-unboxed-objects")) {
         jit::JitOptions.disableUnboxedObjects = true;
@@ -10410,8 +10411,7 @@ SetWorkerContextOptions(JSContext* cx)
                              .setWasmGc(enableWasmGc)
 #endif
                              .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
-                             .setNativeRegExp(enableNativeRegExp)
-                             .setStreams(enableStreams);
+                             .setNativeRegExp(enableNativeRegExp);
 
     cx->runtime()->setOffthreadIonCompilationEnabled(offthreadCompilation);
     cx->runtime()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;

@@ -24,7 +24,6 @@ class SidebarItem extends PureComponent {
       name: PropTypes.string.isRequired,
       runtimeId: PropTypes.string,
       selectable: PropTypes.bool.isRequired,
-      type: PropTypes.string.isRequired,
     };
   }
 

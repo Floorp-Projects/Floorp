@@ -48,7 +48,6 @@
 #include "AudioListener.h"
 #include "AudioNodeStream.h"
 #include "AudioStream.h"
-#include "AudioWorkletImpl.h"
 #include "AutoplayPolicy.h"
 #include "BiquadFilterNode.h"
 #include "ChannelMergerNode.h"
@@ -64,6 +63,7 @@
 #include "MediaStreamAudioSourceNode.h"
 #include "MediaStreamGraph.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -591,7 +591,19 @@ Worklet*
 AudioContext::GetAudioWorklet(ErrorResult& aRv)
 {
   if (!mWorklet) {
-    mWorklet = AudioWorkletImpl::CreateWorklet(this, aRv);
+    nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+    if (NS_WARN_IF(!window)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+    nsCOMPtr<nsIPrincipal> principal =
+        nsGlobalWindowInner::Cast(window)->GetPrincipal();
+    if (NS_WARN_IF(!principal)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    mWorklet = new Worklet(window, principal, Worklet::eAudioWorklet);
   }
 
   return mWorklet;
