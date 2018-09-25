@@ -35,9 +35,9 @@ pub type PHTTP_SERVER_PROPERTY = *mut HTTP_SERVER_PROPERTY;
 STRUCT!{struct HTTP_PROPERTY_FLAGS {
     BitFields: ULONG,
 }}
-BITFIELD!(HTTP_PROPERTY_FLAGS BitFields: ULONG [
+BITFIELD!{HTTP_PROPERTY_FLAGS BitFields: ULONG [
     Present set_Present[0..1],
-]);
+]}
 pub type PHTTP_PROPERTY_FLAGS = *mut HTTP_PROPERTY_FLAGS;
 ENUM!{enum HTTP_ENABLED_STATE {
     HttpEnabledStateActive,

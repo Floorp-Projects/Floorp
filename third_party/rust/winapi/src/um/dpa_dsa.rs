@@ -265,9 +265,9 @@ pub unsafe fn DPA_SortedInsertPtr(
     DPA_InsertPtr(
         hdpa,
         DPA_Search(
-            hdpa, pFind, iStart, pfnCompare, lParam, DPAS_SORTED | options
+            hdpa, pFind, iStart, pfnCompare, lParam, DPAS_SORTED | options,
         ),
-        pitem
+        pitem,
     )
 }
 pub const DPA_APPEND: c_int = DA_LAST;

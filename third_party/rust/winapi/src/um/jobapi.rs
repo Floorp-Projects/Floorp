@@ -13,4 +13,3 @@ extern "system" {
         Result: PBOOL,
     ) -> BOOL;
 }
-

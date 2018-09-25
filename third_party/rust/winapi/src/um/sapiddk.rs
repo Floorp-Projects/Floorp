@@ -105,7 +105,7 @@ pub use um::sapiddk51::{
     SPPARSEINFO,
     ISpSREngineSite, ISpSREngineSiteVtbl,
 };
-RIDL!(#[uuid(0x7bc6e012, 0x684a, 0x493e, 0xbd, 0xd4, 0x2b, 0xf5, 0xfb, 0xf4, 0x8c, 0xfe)]
+RIDL!{#[uuid(0x7bc6e012, 0x684a, 0x493e, 0xbd, 0xd4, 0x2b, 0xf5, 0xfb, 0xf4, 0x8c, 0xfe)]
 interface ISpSREngineSite2(ISpSREngineSite2Vtbl): ISpSREngineSite(ISpSREngineSiteVtbl) {
     fn AddEventEx(
         pEvent: *const SPEVENTEX,
@@ -123,7 +123,7 @@ interface ISpSREngineSite2(ISpSREngineSite2Vtbl): ISpSREngineSite(ISpSREngineSit
     fn RecognitionEx(
         pResultInfo: *const SPRECORESULTINFOEX,
     ) -> HRESULT,
-});
+}}
 pub use um::sapiddk51::{
     SPPROPSRC,
     SPPROPSRC_RECO_INST,
@@ -131,7 +131,7 @@ pub use um::sapiddk51::{
     SPPROPSRC_RECO_GRAMMAR,
     ISpSREngine, ISpSREngineVtbl,
 };
-RIDL!(#[uuid(0x7ba627d8, 0x33f9, 0x4375, 0x90, 0xc5, 0x99, 0x85, 0xae, 0xe5, 0xed, 0xe5)]
+RIDL!{#[uuid(0x7ba627d8, 0x33f9, 0x4375, 0x90, 0xc5, 0x99, 0x85, 0xae, 0xe5, 0xed, 0xe5)]
 interface ISpSREngine2(ISpSREngine2Vtbl): ISpSREngine(ISpSREngineVtbl) {
     fn PrivateCallImmediate(
         pvEngineContext: *mut c_void,
@@ -185,9 +185,9 @@ interface ISpSREngine2(ISpSREngine2Vtbl): ISpSREngine(ISpSREngineVtbl) {
         pvEngineGrammar: *mut c_void,
         ulGrammarID: ULONG,
     ) -> HRESULT,
-});
+}}
 pub use um::sapiddk51::SPPHRASEALTREQUEST;
-RIDL!(#[uuid(0xfece8294, 0x2be1, 0x408f, 0x8e, 0x68, 0x2d, 0xe3, 0x77, 0x09, 0x2f, 0x0e)]
+RIDL!{#[uuid(0xfece8294, 0x2be1, 0x408f, 0x8e, 0x68, 0x2d, 0xe3, 0x77, 0x09, 0x2f, 0x0e)]
 interface ISpSRAlternates(ISpSRAlternatesVtbl): IUnknown(IUnknownVtbl) {
     fn GetAlternates(
         pAltRequest: *mut SPPHRASEALTREQUEST,
@@ -200,17 +200,17 @@ interface ISpSRAlternates(ISpSRAlternatesVtbl): IUnknown(IUnknownVtbl) {
         ppvResultExtra: *mut c_void,
         pcbResultExtra: *mut ULONG,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xf338f437, 0xcb33, 0x4020, 0x9c, 0xab, 0xc7, 0x1f, 0xf9, 0xce, 0x12, 0xd3)]
+}}
+RIDL!{#[uuid(0xf338f437, 0xcb33, 0x4020, 0x9c, 0xab, 0xc7, 0x1f, 0xf9, 0xce, 0x12, 0xd3)]
 interface ISpSRAlternates2(ISpSRAlternates2Vtbl): ISpSRAlternates(ISpSRAlternatesVtbl) {
     fn CommitText(
         pAltRequest: *mut SPPHRASEALTREQUEST,
         pcszNewText: LPCWSTR,
         commitFlags: SPCOMMITFLAGS,
     ) -> HRESULT,
-});
+}}
 pub use um::sapiddk51::{_ISpPrivateEngineCall, _ISpPrivateEngineCallVtbl};
-RIDL!(#[uuid(0xdefd682a, 0xfe0a, 0x42b9, 0xbf, 0xa1, 0x56, 0xd3, 0xd6, 0xce, 0xcf, 0xaf)]
+RIDL!{#[uuid(0xdefd682a, 0xfe0a, 0x42b9, 0xbf, 0xa1, 0x56, 0xd3, 0xd6, 0xce, 0xcf, 0xaf)]
 interface ISpPrivateEngineCallEx(ISpPrivateEngineCallExVtbl): IUnknown(IUnknownVtbl) {
     fn CallEngineSynchronize(
         pInFrame: *const c_void,
@@ -224,7 +224,7 @@ interface ISpPrivateEngineCallEx(ISpPrivateEngineCallExVtbl): IUnknown(IUnknownV
         ppCoMemOutFrame: *mut *mut c_void,
         pulOutFrameSize: *mut ULONG,
     ) -> HRESULT,
-});
+}}
 pub use um::sapiddk51::{
     LIBID_SpeechDDKLib,
     CLSID_SpDataKey,

@@ -20,20 +20,82 @@ const promiseTargets = new WeakMap();
  * Functions for creating Targets
  */
 const TargetFactory = exports.TargetFactory = {
+
   /**
-   * Construct a Target
+   * Construct a Target. The target will be cached for each Tab so that we create only
+   * one per tab.
+   *
    * @param {XULTab} tab
    *        The tab to use in creating a new target.
    *
    * @return A target object
    */
-  forTab: function(tab) {
+  forTab: async function(tab) {
     let target = targets.get(tab);
-    if (target == null) {
-      target = new TabTarget(tab);
-      targets.set(tab, target);
+    if (target) {
+      return target;
     }
+    const promise = this.createTargetForTab(tab);
+    // Immediately set the target's promise in cache to prevent race
+    targets.set(tab, promise);
+    target = await promise;
+    // Then replace the promise with the target object
+    targets.set(tab, target);
     return target;
+  },
+
+  /**
+   * Instantiate a target for the given tab.
+   *
+   * This will automatically:
+   * - spawn a DebuggerServer in the parent process,
+   * - create a DebuggerClient and connect it to this local DebuggerServer,
+   * - call RootActor's `getTab` request to retrieve the FrameTargetActor's form,
+   * - instantiate a TabTarget instance.
+   *
+   * @param {XULTab} tab
+   *        The tab to use in creating a new target.
+   *
+   * @return A target object
+   */
+  async createTargetForTab(tab) {
+    function createLocalServer() {
+      // Since a remote protocol connection will be made, let's start the
+      // DebuggerServer here, once and for all tools.
+      DebuggerServer.init();
+
+      // When connecting to a local tab, we only need the root actor.
+      // Then we are going to call DebuggerServer.connectToFrame and talk
+      // directly with actors living in the child process.
+      // We also need browser actors for actor registry which enabled addons
+      // to register custom actors.
+      // TODO: the comment and implementation are out of sync here. See Bug 1420134.
+      DebuggerServer.registerAllActors();
+      // Enable being able to get child process actors
+      DebuggerServer.allowChromeProcess = true;
+    }
+
+    function createLocalClient() {
+      return new DebuggerClient(DebuggerServer.connectPipe());
+    }
+
+    createLocalServer();
+    const client = createLocalClient();
+
+    // Connect the local client to the local server
+    await client.connect();
+
+    // Fetch the FrameTargetActor form
+    const response = await client.getTab({ tab });
+
+    return new TabTarget({
+      client,
+      form: response.tab,
+      // A local TabTarget will never perform chrome debugging.
+      chrome: false,
+      isBrowsingContext: true,
+      tab,
+    });
   },
 
   /**
@@ -53,7 +115,7 @@ const TargetFactory = exports.TargetFactory = {
     let targetPromise = promiseTargets.get(options);
     if (targetPromise == null) {
       const target = new TabTarget(options);
-      targetPromise = target.makeRemote().then(() => target);
+      targetPromise = target.attach().then(() => target);
       promiseTargets.set(options, targetPromise);
     }
     return targetPromise;
@@ -111,32 +173,52 @@ const TargetFactory = exports.TargetFactory = {
  */
 
 /**
- * A TabTarget represents a page living in a browser tab. Generally these will
- * be web pages served over http(s), but they don't have to be.
+ * A TabTarget represents a debuggable context. It can be a browser tab, a tab on
+ * a remote device, like a tab on Firefox for Android. But it can also be an add-on,
+ * as well as firefox parent process, or just one of its content process.
+ * A TabTarget is related to a given TargetActor, for which we pass the form as
+ * argument.
+ *
+ * For now, only workers are having a distinct Target class called WorkerTarget.
+ *
+ * @param {Object} form
+ *                 The TargetActor's form to be connected to.
+ * @param {DebuggerClient} client
+ *                 The DebuggerClient instance to be used to debug this target.
+ * @param {Boolean} chrome
+ *                  True, if we allow to see privileged resources like JSM, xpcom,
+ *                  frame scripts...
+ * @param {Boolean} isBrowsingContext (optional)
+ *                  To be set to True if the Target actor inherits from BrowsingContextActor.
+ *                  This argument is considered to be True is not passed.
+ * @param {xul:tab} tab (optional)
+ *                  If the target is a local Firefox tab, a reference to the firefox
+ *                  frontend tab object.
  */
-function TabTarget(tab) {
+function TabTarget({ form, client, chrome, isBrowsingContext = true, tab = null }) {
   EventEmitter.decorate(this);
   this.destroy = this.destroy.bind(this);
   this.activeTab = this.activeConsole = null;
-  // Only real tabs need initialization here. Placeholder objects for remote
-  // targets will be initialized after a makeRemote method call.
-  if (tab && !["client", "form", "chrome"].every(tab.hasOwnProperty, tab)) {
+
+  this._form = form;
+  this._url = form.url;
+  this._title = form.title;
+
+  this._client = client;
+  this._chrome = chrome;
+
+  // When debugging local tabs, we also have a reference to the Firefox tab
+  // This is used to:
+  // * distinguish local tabs from remote (see target.isLocalTab)
+  // * being able to hookup into Firefox UI (see Hosts)
+  if (tab) {
     this._tab = tab;
     this._setupListeners();
-  } else {
-    this._form = tab.form;
-    this._url = this._form.url;
-    this._title = this._form.title;
+  }
 
-    this._client = tab.client;
-    this._chrome = tab.chrome;
-  }
   // Default isBrowsingContext to true if not explicitly specified
-  if (typeof tab.isBrowsingContext == "boolean") {
-    this._isBrowsingContext = tab.isBrowsingContext;
-  } else {
-    this._isBrowsingContext = true;
-  }
+  this._isBrowsingContext = isBrowsingContext;
+
   // Cache of already created targed-scoped fronts
   // [typeName:string => Front instance]
   this.fronts = new Map();
@@ -380,105 +462,68 @@ TabTarget.prototype = {
   },
 
   /**
-   * Adds remote protocol capabilities to the target, so that it can be used
-   * for tools that support the Remote Debugging Protocol even for local
-   * connections.
+   * Attach the target and its console actor.
+   *
+   * This method will mainly call `attach` request on the target actor as well
+   * as the console actor.
+   * For webextension, it also preliminary converts addonTargetActor to a
+   * WebExtensionTargetActor.
    */
-  makeRemote: async function() {
-    if (this._remote) {
-      return this._remote;
+  attach() {
+    if (this._attach) {
+      return this._attach;
     }
 
-    if (this.isLocalTab) {
-      // Since a remote protocol connection will be made, let's start the
-      // DebuggerServer here, once and for all tools.
-      DebuggerServer.init();
+    // Attach the target actor
+    const attachTarget = async () => {
+      const [response, tabClient] = await this._client.attachTarget(this._form.actor);
+      this.activeTab = tabClient;
+      this.threadActor = response.threadActor;
+    };
 
-      // When connecting to a local tab, we only need the root actor.
-      // Then we are going to call DebuggerServer.connectToFrame and talk
-      // directly with actors living in the child process.
-      // We also need browser actors for actor registry which enabled addons
-      // to register custom actors.
-      // TODO: the comment and implementation are out of sync here. See Bug 1420134.
-      DebuggerServer.registerAllActors();
-      // Enable being able to get child process actors
-      DebuggerServer.allowChromeProcess = true;
+    // Attach the console actor
+    const attachConsole = async () => {
+      const [, consoleClient] = await this._client.attachConsole(
+        this._form.consoleActor, []);
+      this.activeConsole = consoleClient;
 
-      this._client = new DebuggerClient(DebuggerServer.connectPipe());
-      // A local TabTarget will never perform chrome debugging.
-      this._chrome = false;
-    } else if (this._form.isWebExtension &&
+      this._onInspectObject = packet => this.emit("inspect-object", packet);
+      this.activeConsole.on("inspectObject", this._onInspectObject);
+    };
+
+    this._attach = (async () => {
+      if (this._form.isWebExtension &&
           this.client.mainRoot.traits.webExtensionAddonConnect) {
-      // The addonTargetActor form is related to a WebExtensionActor instance,
-      // which isn't a target actor on its own, it is an actor living in the parent
-      // process with access to the addon metadata, it can control the addon (e.g.
-      // reloading it) and listen to the AddonManager events related to the lifecycle of
-      // the addon (e.g. when the addon is disabled or uninstalled).
-      // To retrieve the target actor instance, we call its "connect" method, (which
-      // fetches the target actor form from a WebExtensionTargetActor instance).
-      const {form} = await this._client.request({
-        to: this._form.actor, type: "connect",
-      });
+        // The addonTargetActor form is related to a WebExtensionActor instance,
+        // which isn't a target actor on its own, it is an actor living in the parent
+        // process with access to the addon metadata, it can control the addon (e.g.
+        // reloading it) and listen to the AddonManager events related to the lifecycle of
+        // the addon (e.g. when the addon is disabled or uninstalled).
+        // To retrieve the target actor instance, we call its "connect" method, (which
+        // fetches the target actor form from a WebExtensionTargetActor instance).
+        const {form} = await this._client.request({
+          to: this._form.actor, type: "connect",
+        });
 
-      this._form = form;
-      this._url = form.url;
-      this._title = form.title;
-    }
-
-    this._setupRemoteListeners();
-
-    this._remote = new Promise((resolve, reject) => {
-      const attachTab = async () => {
-        try {
-          const [response, tabClient] = await this._client.attachTab(this._form.actor);
-          this.activeTab = tabClient;
-          this.threadActor = response.threadActor;
-        } catch (e) {
-          reject("Unable to attach to the tab: " + e);
-          return;
-        }
-        attachConsole();
-      };
-
-      const onConsoleAttached = ([response, consoleClient]) => {
-        this.activeConsole = consoleClient;
-
-        this._onInspectObject = packet => this.emit("inspect-object", packet);
-        this.activeConsole.on("inspectObject", this._onInspectObject);
-
-        resolve(null);
-      };
-
-      const attachConsole = () => {
-        this._client.attachConsole(this._form.consoleActor, [])
-          .then(onConsoleAttached, response => {
-            reject(
-              `Unable to attach to the console [${response.error}]: ${response.message}`);
-          });
-      };
-
-      if (this.isLocalTab) {
-        this._client.connect()
-          .then(() => this._client.getTab({tab: this.tab}))
-          .then(response => {
-            this._form = response.tab;
-            this._url = this._form.url;
-            this._title = this._form.title;
-
-            attachTab();
-          }, e => reject(e));
-      } else if (this.isBrowsingContext) {
-        // In the remote debugging case, the protocol connection will have been
-        // already initialized in the connection screen code.
-        attachTab();
-      } else {
-        // AddonActor and chrome debugging on RootActor doesn't inherit from
-        // BrowsingContextTargetActor and doesn't need to be attached.
-        attachConsole();
+        this._form = form;
+        this._url = form.url;
+        this._title = form.title;
       }
-    });
 
-    return this._remote;
+      this._setupRemoteListeners();
+
+      // AddonActor and chrome debugging on RootActor don't inherit from
+      // BrowsingContextTargetActor (i.e. this.isBrowsingContext=false) and don't need
+      // to be attached.
+      if (this.isBrowsingContext) {
+        await attachTarget();
+      }
+
+      // But all target actor have a console actor to attach
+      return attachConsole();
+    })();
+
+    return this._attach;
   },
 
   /**
@@ -494,7 +539,9 @@ TabTarget.prototype = {
    * Teardown event listeners.
    */
   _teardownListeners: function() {
-    this._tab.ownerDocument.defaultView.removeEventListener("unload", this);
+    if (this._tab.ownerDocument.defaultView) {
+      this._tab.ownerDocument.defaultView.removeEventListener("unload", this);
+    }
     this._tab.removeEventListener("TabClose", this);
     this._tab.removeEventListener("TabRemotenessChange", this);
   },
@@ -598,14 +645,14 @@ TabTarget.prototype = {
 
     // Save a reference to the tab as it will be nullified on destroy
     const tab = this._tab;
-    const onToolboxDestroyed = target => {
+    const onToolboxDestroyed = async (target) => {
       if (target != this) {
         return;
       }
       gDevTools.off("toolbox-destroyed", target);
 
       // Recreate a fresh target instance as the current one is now destroyed
-      const newTarget = TargetFactory.forTab(tab);
+      const newTarget = await TargetFactory.forTab(tab);
       gDevTools.showToolbox(newTarget);
     };
     gDevTools.on("toolbox-destroyed", onToolboxDestroyed);
@@ -681,7 +728,7 @@ TabTarget.prototype = {
     this._client = null;
     this._tab = null;
     this._form = null;
-    this._remote = null;
+    this._attach = null;
     this._root = null;
     this._title = null;
     this._url = null;
@@ -795,7 +842,7 @@ WorkerTarget.prototype = {
     return undefined;
   },
 
-  makeRemote: function() {
+  attach: function() {
     return Promise.resolve();
   },
 

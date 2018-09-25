@@ -19,7 +19,7 @@ use um::winnt::{
     PZZSTR, PZZWSTR, ULARGE_INTEGER, WCHAR,
 };
 use um::winuser::WM_USER;
-DECLARE_HANDLE!(HDROP, HDROP__);
+DECLARE_HANDLE!{HDROP, HDROP__}
 extern "system" {
     pub fn DragQueryFileA(
         hDrop: HDROP,
@@ -119,7 +119,7 @@ extern "system" {
     ) -> HICON;
     pub fn ExtractIconW(
         hInst: HINSTANCE,
-        pszExeFileName: LPCSTR,
+        pszExeFileName: LPCWSTR,
         nIconIndex: UINT,
     ) -> HICON;
 }
@@ -452,7 +452,7 @@ extern "system" {
         ppv: *mut *mut c_void,
     ) -> HRESULT;
 }
-UNION!{union NOTIFYICONDATAA_u {
+UNION!{#[cfg_attr(target_arch = "x86", repr(packed))] union NOTIFYICONDATAA_u {
     [u32; 1],
     uTimeout uTimeout_mut: UINT,
     uVersion uVersion_mut: UINT,
@@ -475,7 +475,7 @@ STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct NOTIFYICONDATAA {
     hBalloonIcon: HICON,
 }}
 pub type PNOTIFYICONDATAA = *mut NOTIFYICONDATAA;
-UNION!{union NOTIFYICONDATAW_u {
+UNION!{#[cfg_attr(target_arch = "x86", repr(packed))] union NOTIFYICONDATAW_u {
     [u32; 1],
     uTimeout uTimeout_mut: UINT,
     uVersion uVersion_mut: UINT,

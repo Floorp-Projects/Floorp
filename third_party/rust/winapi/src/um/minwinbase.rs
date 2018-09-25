@@ -331,4 +331,4 @@ pub const NONZEROLPTR: UINT = LMEM_FIXED;
 //LocalDiscard
 pub const LMEM_DISCARDED: UINT = 0x4000;
 pub const LMEM_LOCKCOUNT: UINT = 0x00FF;
-pub const NUMA_NO_PREFERRED_NODE: DWORD = -1i32 as DWORD;
+pub const NUMA_NO_PREFERRED_NODE: DWORD = -1i32 as u32;

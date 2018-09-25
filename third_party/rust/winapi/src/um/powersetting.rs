@@ -6,7 +6,7 @@
 // except according to those terms.
 use shared::guiddef::{GUID, LPCGUID};
 use shared::minwindef::{DWORD, HKEY, LPBYTE, LPDWORD, PUCHAR, PULONG};
-use um::winnt::{HANDLE};
+use um::winnt::HANDLE;
 use um::winuser::{HPOWERNOTIFY, PHPOWERNOTIFY};
 extern "system" {
     pub fn PowerReadACValue(

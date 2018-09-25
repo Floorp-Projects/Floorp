@@ -108,7 +108,7 @@ pub const fMD_NonCacheable: DWORD = 0x0;
 pub const fMD_Cacheable: DWORD = 0x20;
 pub const fMD_WINDOW_DECODE: DWORD = 0x40;
 pub const fMD_MEMORY_BAR: DWORD = 0x80;
-STRUCT!{struct MEM_RANGE {
+STRUCT!{#[repr(packed)] struct MEM_RANGE {
     MR_Align: DWORDLONG,
     MR_nBytes: ULONG,
     MR_Min: DWORDLONG,
@@ -117,7 +117,7 @@ STRUCT!{struct MEM_RANGE {
     MR_Reserved: DWORD,
 }}
 pub type PMEM_RANGE = *mut MEM_RANGE;
-STRUCT!{struct MEM_DES {
+STRUCT!{#[repr(packed)] struct MEM_DES {
     MD_Count: DWORD,
     MD_Type: DWORD,
     MD_Alloc_Base: DWORDLONG,
@@ -126,12 +126,12 @@ STRUCT!{struct MEM_DES {
     MD_Reserved: DWORD,
 }}
 pub type PMEM_DES = *mut MEM_DES;
-STRUCT!{struct MEM_RESOURCE {
+STRUCT!{#[repr(packed)] struct MEM_RESOURCE {
     MEM_Header: MEM_DES,
     MEM_Data: [MEM_RANGE; ANYSIZE_ARRAY],
 }}
 pub type PMEM_RESOURCE = *mut MEM_RESOURCE;
-STRUCT!{struct MEM_LARGE_RANGE {
+STRUCT!{#[repr(packed)] struct MEM_LARGE_RANGE {
     MLR_Align: DWORDLONG,
     MLR_nBytes: ULONGLONG,
     MLR_Min: DWORDLONG,
@@ -140,7 +140,7 @@ STRUCT!{struct MEM_LARGE_RANGE {
     MLR_Reserved: DWORD,
 }}
 pub type PMEM_LARGE_RANGE = *mut MEM_LARGE_RANGE;
-STRUCT!{struct MEM_LARGE_DES {
+STRUCT!{#[repr(packed)] struct MEM_LARGE_DES {
     MLD_Count: DWORD,
     MLD_Type: DWORD,
     MLD_Alloc_Base: DWORDLONG,
@@ -149,7 +149,7 @@ STRUCT!{struct MEM_LARGE_DES {
     MLD_Reserved: DWORD,
 }}
 pub type PMEM_LARGE_DES = *mut MEM_LARGE_DES;
-STRUCT!{struct MEM_LARGE_RESOURCE {
+STRUCT!{#[repr(packed)] struct MEM_LARGE_RESOURCE {
     MEM_LARGE_Header: MEM_LARGE_DES,
     MEM_LARGE_Data: [MEM_LARGE_RANGE; ANYSIZE_ARRAY],
 }}
@@ -169,7 +169,7 @@ pub const IO_ALIAS_10_BIT_DECODE: DWORDLONG = 0x00000004;
 pub const IO_ALIAS_12_BIT_DECODE: DWORDLONG = 0x00000010;
 pub const IO_ALIAS_16_BIT_DECODE: DWORDLONG = 0x00000000;
 pub const IO_ALIAS_POSITIVE_DECODE: DWORDLONG = 0x000000FF;
-STRUCT!{struct IO_RANGE {
+STRUCT!{#[repr(packed)] struct IO_RANGE {
     IOR_Align: DWORDLONG,
     IOR_nPorts: DWORD,
     IOR_Min: DWORDLONG,
@@ -178,7 +178,7 @@ STRUCT!{struct IO_RANGE {
     IOR_Alias: DWORDLONG,
 }}
 pub type PIO_RANGE = *mut IO_RANGE;
-STRUCT!{struct IO_DES {
+STRUCT!{#[repr(packed)] struct IO_DES {
     IOD_Count: DWORD,
     IOD_Type: DWORD,
     IOD_Alloc_Base: DWORDLONG,
@@ -186,7 +186,7 @@ STRUCT!{struct IO_DES {
     IOD_DesFlags: DWORD,
 }}
 pub type PIO_DES = *mut IO_DES;
-STRUCT!{struct IO_RESOURCE {
+STRUCT!{#[repr(packed)] struct IO_RESOURCE {
     IO_Header: IO_DES,
     IO_Data: [IO_RANGE; ANYSIZE_ARRAY],
 }}
@@ -204,20 +204,20 @@ pub const fDD_TypeStandard: ULONG = 0x00;
 pub const fDD_TypeA: ULONG = 0x08;
 pub const fDD_TypeB: ULONG = 0x10;
 pub const fDD_TypeF: ULONG = 0x18;
-STRUCT!{struct DMA_RANGE {
+STRUCT!{#[repr(packed)] struct DMA_RANGE {
     DR_Min: ULONG,
     DR_Max: ULONG,
     DR_Flags: ULONG,
 }}
 pub type PDMA_RANGE = *mut DMA_RANGE;
-STRUCT!{struct DMA_DES {
+STRUCT!{#[repr(packed)] struct DMA_DES {
     DD_Count: DWORD,
     DD_Type: DWORD,
     DD_Flags: DWORD,
     DD_Alloc_Chan: ULONG,
 }}
 pub type PDMA_DES = *mut DMA_DES;
-STRUCT!{struct DMA_RESOURCE {
+STRUCT!{#[repr(packed)] struct DMA_RESOURCE {
     DMA_Header: DMA_DES,
     DMA_Data: [DMA_RANGE; ANYSIZE_ARRAY],
 }}
@@ -230,13 +230,13 @@ pub const fIRQD_Level_Bit: ULONG = 1;
 pub const mIRQD_Edge_Level: ULONG = 0x2;
 pub const fIRQD_Level: ULONG = 0x0;
 pub const fIRQD_Edge: ULONG = 0x2;
-STRUCT!{struct IRQ_RANGE {
+STRUCT!{#[repr(packed)] struct IRQ_RANGE {
     IRQR_Min: ULONG,
     IRQR_Max: ULONG,
     IRQR_Flags: ULONG,
 }}
 pub type PIRQ_RANGE = *mut IRQ_RANGE;
-STRUCT!{struct IRQ_DES_32 {
+STRUCT!{#[repr(packed)] struct IRQ_DES_32 {
     IRQD_Count: DWORD,
     IRQD_Type: DWORD,
     IRQD_Flags: DWORD,
@@ -244,7 +244,7 @@ STRUCT!{struct IRQ_DES_32 {
     IRQD_Affinity: ULONG32,
 }}
 pub type PIRQ_DES_32 = *mut IRQ_DES_32;
-STRUCT!{struct IRQ_DES_64 {
+STRUCT!{#[repr(packed)] struct IRQ_DES_64 {
     IRQD_Count: DWORD,
     IRQD_Type: DWORD,
     IRQD_Flags: DWORD,
@@ -252,23 +252,23 @@ STRUCT!{struct IRQ_DES_64 {
     IRQD_Affinity: ULONG64,
 }}
 pub type PIRQ_DES_64 = *mut IRQ_DES_64;
-STRUCT!{struct IRQ_RESOURCE_32 {
+STRUCT!{#[repr(packed)] struct IRQ_RESOURCE_32 {
     IRQ_Header: IRQ_DES_32,
     IRQ_Data: [IRQ_RANGE; ANYSIZE_ARRAY],
 }}
 pub type PIRQ_RESOURCE_32 = *mut IRQ_RESOURCE_32;
-STRUCT!{struct IRQ_RESOURCE_64 {
+STRUCT!{#[repr(packed)] struct IRQ_RESOURCE_64 {
     IRQ_Header: IRQ_DES_64,
     IRQ_Data: [IRQ_RANGE; ANYSIZE_ARRAY],
 }}
 pub type PIRQ_RESOURCE_64 = *mut IRQ_RESOURCE_64;
-STRUCT!{struct DEVPRIVATE_RANGE {
+STRUCT!{#[repr(packed)] struct DEVPRIVATE_RANGE {
     PR_Data1: DWORD,
     PR_Data2: DWORD,
     PR_Data3: DWORD,
 }}
 pub type PDEVPRIVATE_RANGE = *mut DEVPRIVATE_RANGE;
-STRUCT!{struct DEVPRIVATE_DES {
+STRUCT!{#[repr(packed)] struct DEVPRIVATE_DES {
     PD_Count: DWORD,
     PD_Type: DWORD,
     PD_Data1: DWORD,
@@ -277,12 +277,12 @@ STRUCT!{struct DEVPRIVATE_DES {
     PD_Flags: DWORD,
 }}
 pub type PDEVPRIVATE_DES = *mut DEVPRIVATE_DES;
-STRUCT!{struct DEVPRIVATE_RESOURCE {
+STRUCT!{#[repr(packed)] struct DEVPRIVATE_RESOURCE {
     PRV_Header: DEVPRIVATE_DES,
     PRV_Data: [DEVPRIVATE_RANGE; ANYSIZE_ARRAY],
 }}
 pub type PDEVPRIVATE_RESOURCE = *mut DEVPRIVATE_RESOURCE;
-STRUCT!{struct CS_DES {
+STRUCT!{#[repr(packed)] struct CS_DES {
     CSD_SignatureLength: DWORD,
     CSD_LegacyDataOffset: DWORD,
     CSD_LegacyDataSize: DWORD,
@@ -291,7 +291,7 @@ STRUCT!{struct CS_DES {
     CSD_Signature: [BYTE; ANYSIZE_ARRAY],
 }}
 pub type PCS_DES = *mut CS_DES;
-STRUCT!{struct CS_RESOURCE {
+STRUCT!{#[repr(packed)] struct CS_RESOURCE {
     CS_Header: CS_DES,
 }}
 pub type PCS_RESOURCE = *mut CS_RESOURCE;
@@ -332,7 +332,7 @@ pub const fPCD_MEM2_WS_THREE: DWORD = 0x30000000;
 pub const fPCD_MEM2_16: DWORD = 0x40000000;
 pub const PCD_MAX_MEMORY: usize = 2;
 pub const PCD_MAX_IO: usize = 2;
-STRUCT!{struct PCCARD_DES {
+STRUCT!{#[repr(packed)] struct PCCARD_DES {
     PCD_Count: DWORD,
     PCD_Type: DWORD,
     PCD_Flags: DWORD,
@@ -345,13 +345,13 @@ STRUCT!{struct PCCARD_DES {
     PCD_IoFlags: [BYTE; PCD_MAX_IO],
 }}
 pub type PPCCARD_DES = *mut PCCARD_DES;
-STRUCT!{struct PCCARD_RESOURCE {
+STRUCT!{#[repr(packed)] struct PCCARD_RESOURCE {
     PcCard_Header: PCCARD_DES,
 }}
 pub type PPCCARD_RESOURCE = *mut PCCARD_RESOURCE;
 pub const mPMF_AUDIO_ENABLE: DWORD = 0x8;
 pub const fPMF_AUDIO_ENABLE: DWORD = 0x8;
-STRUCT!{struct MFCARD_DES {
+STRUCT!{#[repr(packed)] struct MFCARD_DES {
     PMF_Count: DWORD,
     PMF_Type: DWORD,
     PMF_Flags: DWORD,
@@ -361,18 +361,18 @@ STRUCT!{struct MFCARD_DES {
     PMF_ConfigRegisterBase: DWORD,
 }}
 pub type PMFCARD_DES = *mut MFCARD_DES;
-STRUCT!{struct MFCARD_RESOURCE {
+STRUCT!{#[repr(packed)] struct MFCARD_RESOURCE {
     MfCard_Header: MFCARD_DES,
 }}
 pub type PMFCARD_RESOURCE = *mut MFCARD_RESOURCE;
-STRUCT!{struct BUSNUMBER_RANGE {
+STRUCT!{#[repr(packed)] struct BUSNUMBER_RANGE {
     BUSR_Min: ULONG,
     BUSR_Max: ULONG,
     BUSR_nBusNumbers: ULONG,
     BUSR_Flags: ULONG,
 }}
 pub type PBUSNUMBER_RANGE = *mut BUSNUMBER_RANGE;
-STRUCT!{struct BUSNUMBER_DES {
+STRUCT!{#[repr(packed)] struct BUSNUMBER_DES {
     BUSD_Count: DWORD,
     BUSD_Type: DWORD,
     BUSD_Flags: DWORD,
@@ -380,12 +380,12 @@ STRUCT!{struct BUSNUMBER_DES {
     BUSD_Alloc_End: ULONG,
 }}
 pub type PBUSNUMBER_DES = *mut BUSNUMBER_DES;
-STRUCT!{struct BUSNUMBER_RESOURCE {
+STRUCT!{#[repr(packed)] struct BUSNUMBER_RESOURCE {
     BusNumber_Header: BUSNUMBER_DES,
     BusNumber_Data: [BUSNUMBER_RANGE; ANYSIZE_ARRAY],
 }}
 pub type PBUSNUMBER_RESOURCE = *mut BUSNUMBER_RESOURCE;
-STRUCT!{struct CONNECTION_DES {
+STRUCT!{#[repr(packed)] struct CONNECTION_DES {
     COND_Type: DWORD,
     COND_Flags: DWORD,
     COND_Class: BYTE,
@@ -395,20 +395,20 @@ STRUCT!{struct CONNECTION_DES {
     COND_Id: LARGE_INTEGER,
 }}
 pub type PCONNECTION_DES = *mut CONNECTION_DES;
-STRUCT!{struct CONNECTION_RESOURCE {
+STRUCT!{#[repr(packed)] struct CONNECTION_RESOURCE {
     Connection_Header: CONNECTION_DES,
 }}
 pub type PCONNECTION_RESOURCE = *mut CONNECTION_RESOURCE;
 pub const CM_HWPI_NOT_DOCKABLE: DWORD = 0x00000000;
 pub const CM_HWPI_UNDOCKED: DWORD = 0x00000001;
 pub const CM_HWPI_DOCKED: DWORD = 0x00000002;
-STRUCT!{struct HWPROFILEINFO_A {
+STRUCT!{#[repr(packed)] struct HWPROFILEINFO_A {
     HWPI_ulHWProfile: ULONG,
     HWPI_szFriendlyName: [CHAR; MAX_PROFILE_LEN],
     HWPI_dwFlags: DWORD,
 }}
 pub type PHWPROFILEINFO_A = *mut HWPROFILEINFO_A;
-STRUCT!{struct HWPROFILEINFO_W {
+STRUCT!{#[repr(packed)] struct HWPROFILEINFO_W {
     HWPI_ulHWProfile: ULONG,
     HWPI_szFriendlyName: [WCHAR; MAX_PROFILE_LEN],
     HWPI_dwFlags: DWORD,
@@ -626,7 +626,7 @@ pub const CM_NAME_ATTRIBUTE_USER_ASSIGNED_NAME: ULONG = 0x2;
 pub const CM_CLASS_PROPERTY_INSTALLER: ULONG = 0x00000000;
 pub const CM_CLASS_PROPERTY_INTERFACE: ULONG = 0x00000001;
 pub const CM_CLASS_PROPERTY_BITS: ULONG = 0x00000001;
-DECLARE_HANDLE!(HCMNOTIFICATION, HCMNOTIFICATION__);
+DECLARE_HANDLE!{HCMNOTIFICATION, HCMNOTIFICATION__}
 pub type PHCMNOTIFICATION = *mut HCMNOTIFICATION;
 pub const CM_NOTIFY_FILTER_FLAG_ALL_INTERFACE_CLASSES: ULONG = 0x00000001;
 pub const CM_NOTIFY_FILTER_FLAG_ALL_DEVICE_INSTANCES: ULONG = 0x00000002;

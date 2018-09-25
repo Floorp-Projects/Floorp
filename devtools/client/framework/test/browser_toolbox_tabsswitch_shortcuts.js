@@ -14,8 +14,8 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
 
 add_task(async function() {
   const tab = await addTab("about:blank");
-  const target = TargetFactory.forTab(tab);
-  await target.makeRemote();
+  const target = await TargetFactory.forTab(tab);
+  await target.attach();
 
   const toolIDs = gDevTools.getToolDefinitionArray()
                          .filter(

@@ -49,9 +49,10 @@ namespace recordreplay {
 //    function is *not* called, but rather the event and outputs are read from
 //    the recording and sent back to the caller.
 //
-// Macros are provided below to streamline this process. Redirections do not
-// need to adhere to this protocol, however, and can have whatever behaviors
-// that are necessary for reliable record/replay.
+// Redirections do not need to adhere to this protocol, however, and can have
+// whatever behaviors that are necessary for reliable record/replay.
+// Controlling how a redirected function behaves and which outputs it saves is
+// done through a set of hooks associated with each redirection.
 //
 // Some platforms need additional redirection techniques for handling different
 // features of that platform. See the individual ProcessRedirect*.cpp files for
@@ -73,6 +74,96 @@ namespace recordreplay {
 // Function Redirections
 ///////////////////////////////////////////////////////////////////////////////
 
+// Capture the arguments that can be passed to a redirection, and provide
+// storage to specify the redirection's return value. We only need to capture
+// enough argument data here for calls made directly from Gecko code,
+// i.e. where events are not passed through. Calls made while events are passed
+// through are performed with the same stack and register state as when they
+// were initially invoked.
+//
+// Arguments and return value indexes refer to the register contents as passed
+// to the function originally. For functions with complex or floating point
+// arguments and return values, the right index to use might be different than
+// expected, per the requirements of the System V x64 ABI.
+struct CallArguments
+{
+protected:
+  size_t arg0;      // 0
+  size_t arg1;      // 8
+  size_t arg2;      // 16
+  size_t arg3;      // 24
+  size_t arg4;      // 32
+  size_t arg5;      // 40
+  double floatarg0; // 48
+  double floatarg1; // 56
+  double floatarg2; // 64
+  size_t rval0;     // 72
+  size_t rval1;     // 80
+  double floatrval0; // 88
+  double floatrval1; // 96
+  size_t stack[64]; // 104
+                    // Size: 616
+
+public:
+  template <size_t Index, typename T>
+  T& Arg() {
+    static_assert(sizeof(T) == sizeof(size_t), "Size must match");
+    static_assert(IsFloatingPoint<T>::value == false, "FloatArg NYI");
+    static_assert(Index < 70, "Bad index");
+    switch (Index) {
+    case 0: return (T&)arg0;
+    case 1: return (T&)arg1;
+    case 2: return (T&)arg2;
+    case 3: return (T&)arg3;
+    case 4: return (T&)arg4;
+    case 5: return (T&)arg5;
+    default: return (T&)stack[Index - 6];
+    }
+  }
+
+  template <typename T, size_t Index = 0>
+  T& Rval() {
+    static_assert(sizeof(T) == sizeof(size_t), "Size must match");
+    static_assert(IsFloatingPoint<T>::value == false, "Use FloatRval instead");
+    static_assert(Index == 0 || Index == 1, "Bad index");
+    switch (Index) {
+    case 0: return (T&)rval0;
+    case 1: return (T&)rval1;
+    }
+  }
+
+  template <size_t Index = 0>
+  double& FloatRval() {
+    static_assert(Index == 0 || Index == 1, "Bad index");
+    switch (Index) {
+    case 0: return floatrval0;
+    case 1: return floatrval1;
+    }
+  }
+};
+
+// Generic type for a system error code.
+typedef ssize_t ErrorType;
+
+// Signature for a function that saves some output produced by a redirection
+// while recording, and restores that output while replaying. aEvents is the
+// event stream for the current thread, aArguments specifies the arguments to
+// the called function, and aError specifies any system error which the call
+// produces.
+typedef void (*SaveOutputFn)(Stream& aEvents, CallArguments* aArguments, ErrorType* aError);
+
+// Possible results for the redirection preamble hook.
+enum class PreambleResult {
+  // Do not perform any further processing.
+  Veto,
+
+  // Perform a function redirection as normal if events are not passed through.
+  Redirect,
+
+  // Do not add an event for the call, as if events were passed through.
+  PassThrough
+};
+
 // Information about a system library API function which is being redirected.
 struct Redirection
 {
@@ -81,16 +172,22 @@ struct Redirection
 
   // Address of the function which is being redirected. The code for this
   // function is modified so that attempts to call this function will instead
-  // call mNewFunction.
+  // call into RecordReplayInterceptCall.
   uint8_t* mBaseFunction;
-
-  // Function with the same signature as mBaseFunction, which may have
-  // different behavior for recording/replaying the call.
-  uint8_t* mNewFunction;
 
   // Function with the same signature and original behavior as
   // mBaseFunction.
   uint8_t* mOriginalFunction;
+
+  // Redirection hooks are used to control the behavior of the redirected
+  // function.
+
+  // If specified, will be called at the end of the redirection when events are
+  // not being passed through to record/replay any outputs from the call.
+  SaveOutputFn mSaveOutput;
+
+  // If specified, will be called upon entry to the redirected call.
+  PreambleResult (*mPreamble)(CallArguments* aArguments);
 };
 
 // All platform specific redirections, indexed by the call event.
@@ -104,9 +201,6 @@ void EarlyInitializeRedirections();
 // Set up all platform specific redirections, or fail and set
 // gInitializationFailureMessage.
 bool InitializeRedirections();
-
-// Generic type for a system error code.
-typedef ssize_t ErrorType;
 
 // Functions for saving or restoring system error codes.
 static inline ErrorType SaveError() { return errno; }
@@ -143,510 +237,8 @@ CallIdToThreadEvent(size_t aCallId)
   return (ThreadEvent)((uint32_t)ThreadEvent::CallStart + aCallId);
 }
 
-// State for a function redirection which performs the standard steps (see the
-// comment at the start of this file). This should not be created directly, but
-// rather through one of the macros below.
-struct AutoRecordReplayFunctionVoid
-{
-  // The current thread, or null if events are being passed through.
-  Thread* mThread;
-
-  // Any system error generated by the call which was redirected.
-  ErrorType mError;
-
-protected:
-  // Information about the call being recorded.
-  size_t mCallId;
-
-public:
-  explicit AutoRecordReplayFunctionVoid(size_t aCallId)
-    : mThread(Thread::Current()), mError(0), mCallId(aCallId)
-  {
-    if (mThread && mThread->PassThroughEvents()) {
-      mThread = nullptr;
-    } else if (mThread) {
-      // Calling any redirection which performs the standard steps will cause
-      // debugger operations that have diverged from the recording to fail.
-      EnsureNotDivergedFromRecording();
-
-      MOZ_RELEASE_ASSERT(mThread->CanAccessRecording());
-
-      // Pass through events in case we are calling the original function.
-      mThread->SetPassThrough(true);
-    }
-  }
-
-  ~AutoRecordReplayFunctionVoid()
-  {
-    if (mThread) {
-      // Restore any error saved or replayed earlier to the system.
-      RestoreError(mError);
-    }
-  }
-
-  // Begin recording or replaying data for the call. This must be called before
-  // destruction if mThread is non-null.
-  inline void StartRecordReplay() {
-    MOZ_ASSERT(mThread);
-
-    // Save any system error in case we want to record/replay it.
-    mError = SaveError();
-
-    // Stop the event passing through that was initiated in the constructor.
-    mThread->SetPassThrough(false);
-
-    // Add an event for the thread.
-    mThread->Events().RecordOrReplayThreadEvent(CallIdToThreadEvent(mCallId));
-  }
-};
-
-// State for a function redirection that performs the standard steps and also
-// returns a value.
-template <typename ReturnType>
-struct AutoRecordReplayFunction : AutoRecordReplayFunctionVoid
-{
-  // The value which this function call should return.
-  ReturnType mRval;
-
-  explicit AutoRecordReplayFunction(size_t aCallId)
-    : AutoRecordReplayFunctionVoid(aCallId)
-  {}
-};
-
-// Macros for recording or replaying a function that performs the standard
-// steps. These macros should be used near the start of the body of a
-// redirection function, and will fall through only if events are not
-// passed through and the outputs of the function need to be recorded or
-// replayed.
-//
-// These macros define an AutoRecordReplayFunction local |rrf| with state for
-// the redirection, and additional locals |events| and (if the function has a
-// return value) |rval| for convenient access.
-
-// Record/replay a function that returns a value and has a particular ABI.
-#define RecordReplayFunctionABI(aName, aReturnType, aABI, ...)          \
-  AutoRecordReplayFunction<aReturnType> rrf(CallEvent_ ##aName);        \
-  if (!rrf.mThread) {                                                   \
-    return OriginalCallABI(aName, aReturnType, aABI, ##__VA_ARGS__);    \
-  }                                                                     \
-  if (IsRecording()) {                                                  \
-    rrf.mRval = OriginalCallABI(aName, aReturnType, aABI, ##__VA_ARGS__); \
-  }                                                                     \
-  rrf.StartRecordReplay();                                              \
-  Stream& events = rrf.mThread->Events();                               \
-  (void) events;                                                        \
-  aReturnType& rval = rrf.mRval
-
-// Record/replay a function that returns a value and has the default ABI.
-#define RecordReplayFunction(aName, aReturnType, ...)                   \
-  RecordReplayFunctionABI(aName, aReturnType, DEFAULTABI, ##__VA_ARGS__)
-
-// Record/replay a function that has no return value and has a particular ABI.
-#define RecordReplayFunctionVoidABI(aName, aABI, ...)                   \
-  AutoRecordReplayFunctionVoid rrf(CallEvent_ ##aName);                 \
-  if (!rrf.mThread) {                                                   \
-    OriginalCallABI(aName, void, aABI, ##__VA_ARGS__);                  \
-    return;                                                             \
-  }                                                                     \
-  if (IsRecording()) {                                                  \
-    OriginalCallABI(aName, void, aABI, ##__VA_ARGS__);                  \
-  }                                                                     \
-  rrf.StartRecordReplay();                                              \
-  Stream& events = rrf.mThread->Events();                               \
-  (void) events
-
-// Record/replay a function that has no return value and has the default ABI.
-#define RecordReplayFunctionVoid(aName, ...)                    \
-  RecordReplayFunctionVoidABI(aName, DEFAULTABI, ##__VA_ARGS__)
-
-// The following macros are used for functions that do not record an error and
-// take or return values of specified types.
-//
-// aAT == aArgumentType
-// aRT == aReturnType
-
-#define RRFunctionTypes0(aName, aRT)                             \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName ()                                                 \
-  {                                                              \
-    RecordReplayFunction(aName, aRT);                            \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes1(aName, aRT, aAT0)                       \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0)                                          \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0);                        \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes2(aName, aRT, aAT0, aAT1)                 \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1)                                 \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1);                    \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes3(aName, aRT, aAT0, aAT1, aAT2)           \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2)                        \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1, a2);                \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes4(aName, aRT, aAT0, aAT1, aAT2, aAT3)     \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3)               \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1, a2, a3);            \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes5(aName, aRT, aAT0, aAT1, aAT2, aAT3,     \
-                         aAT4)                                   \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3, aAT4 a4)      \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1, a2, a3, a4);        \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes6(aName, aRT, aAT0, aAT1, aAT2, aAT3,     \
-                         aAT4, aAT5)                             \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3, aAT4 a4,      \
-               aAT5 a5)                                          \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1, a2, a3, a4, a5);    \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes7(aName, aRT, aAT0, aAT1, aAT2, aAT3,     \
-                         aAT4, aAT5, aAT6)                       \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3, aAT4 a4,      \
-               aAT5 a5, aAT6 a6)                                 \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1, a2, a3, a4, a5, a6); \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes8(aName, aRT, aAT0, aAT1, aAT2, aAT3,     \
-                         aAT4, aAT5, aAT6, aAT7)                 \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3, aAT4 a4,      \
-               aAT5 a5, aAT6 a6, aAT7 a7)                        \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1, a2, a3, a4, a5, a6, a7); \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes9(aName, aRT, aAT0, aAT1, aAT2, aAT3,     \
-                         aAT4, aAT5, aAT6, aAT7, aAT8)           \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3, aAT4 a4,      \
-               aAT5 a5, aAT6 a6, aAT7 a7, aAT8 a8)               \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1, a2, a3, a4, a5, a6, a7, a8); \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypes10(aName, aRT, aAT0, aAT1, aAT2, aAT3,    \
-                          aAT4, aAT5, aAT6, aAT7, aAT8, aAT9)    \
-  static aRT DEFAULTABI                                          \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3, aAT4 a4,      \
-               aAT5 a5, aAT6 a6, aAT7 a7, aAT8 a8, aAT9 a9)      \
-  {                                                              \
-    RecordReplayFunction(aName, aRT, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9); \
-    events.RecordOrReplayValue(&rval);                           \
-    return rval;                                                 \
-  }
-
-#define RRFunctionTypesVoid1(aName, aAT0)                        \
-  static void DEFAULTABI                                         \
-  RR_ ##aName (aAT0 a0)                                          \
-  {                                                              \
-    RecordReplayFunctionVoid(aName, a0);                         \
-  }
-
-#define RRFunctionTypesVoid2(aName, aAT0, aAT1)                  \
-  static void DEFAULTABI                                         \
-  RR_ ##aName (aAT0 a0, aAT1 a1)                                 \
-  {                                                              \
-    RecordReplayFunctionVoid(aName, a0, a1);                     \
-  }
-
-#define RRFunctionTypesVoid3(aName, aAT0, aAT1, aAT2)            \
-  static void DEFAULTABI                                         \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2)                        \
-  {                                                              \
-    RecordReplayFunctionVoid(aName, a0, a1, a2);                 \
-  }
-
-#define RRFunctionTypesVoid4(aName, aAT0, aAT1, aAT2, aAT3)      \
-  static void DEFAULTABI                                         \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3)               \
-  {                                                              \
-    RecordReplayFunctionVoid(aName, a0, a1, a2, a3);             \
-  }
-
-#define RRFunctionTypesVoid5(aName, aAT0, aAT1, aAT2, aAT3, aAT4) \
-  static void DEFAULTABI                                         \
-  RR_ ##aName (aAT0 a0, aAT1 a1, aAT2 a2, aAT3 a3, aAT4 a4)      \
-  {                                                              \
-    RecordReplayFunctionVoid(aName, a0, a1, a2, a3, a4);         \
-  }
-
-// The following macros are used for functions that take and return scalar
-// values (not a struct or a floating point) and do not record an error
-// anywhere.
-
-#define RRFunction0(aName) \
-  RRFunctionTypes0(aName, size_t)
-
-#define RRFunction1(aName) \
-  RRFunctionTypes1(aName, size_t, size_t)
-
-#define RRFunction2(aName) \
-  RRFunctionTypes2(aName, size_t, size_t, size_t)
-
-#define RRFunction3(aName) \
-  RRFunctionTypes3(aName, size_t, size_t, size_t, size_t)
-
-#define RRFunction4(aName) \
-  RRFunctionTypes4(aName, size_t, size_t, size_t, size_t, size_t)
-
-#define RRFunction5(aName) \
-  RRFunctionTypes5(aName, size_t, size_t, size_t, size_t, size_t, size_t)
-
-#define RRFunction6(aName) \
-  RRFunctionTypes6(aName, size_t, size_t, size_t, size_t, size_t, size_t, size_t)
-
-#define RRFunction7(aName) \
-  RRFunctionTypes7(aName, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t)
-
-#define RRFunction8(aName) \
-  RRFunctionTypes8(aName, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, \
-                   size_t)
-
-#define RRFunction9(aName) \
-  RRFunctionTypes9(aName, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, \
-                   size_t, size_t)
-
-#define RRFunction10(aName) \
-  RRFunctionTypes10(aName, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, \
-                    size_t, size_t, size_t)
-
-// The following macros are used for functions that take scalar arguments and
-// do not return a value or record an error anywhere.
-
-#define RRFunctionVoid0(aName)                                   \
-  static void DEFAULTABI                                         \
-  RR_ ##aName ()                                                 \
-  {                                                              \
-    RecordReplayFunctionVoid(aName);                             \
-  }
-
-#define RRFunctionVoid1(aName) \
-  RRFunctionTypesVoid1(aName, size_t)
-
-#define RRFunctionVoid2(aName) \
-  RRFunctionTypesVoid2(aName, size_t, size_t)
-
-#define RRFunctionVoid3(aName) \
-  RRFunctionTypesVoid3(aName, size_t, size_t, size_t)
-
-#define RRFunctionVoid4(aName) \
-  RRFunctionTypesVoid4(aName, size_t, size_t, size_t, size_t)
-
-#define RRFunctionVoid5(aName) \
-  RRFunctionTypesVoid5(aName, size_t, size_t, size_t, size_t, size_t)
-
-// The following macros are used for functions that return a signed integer
-// value and record an error if the return value is negative.
-
-#define RRFunctionNegError0(aName)                               \
-  static ssize_t DEFAULTABI                                      \
-  RR_ ##aName ()                                                 \
-  {                                                              \
-    RecordReplayFunction(aName, ssize_t);                        \
-    RecordOrReplayHadErrorNegative(rrf);                         \
-    return rval;                                                 \
-  }
-
-#define RRFunctionNegError1(aName)                               \
-  static ssize_t DEFAULTABI                                      \
-  RR_ ##aName (size_t a0)                                        \
-  {                                                              \
-    RecordReplayFunction(aName, ssize_t, a0);                    \
-    RecordOrReplayHadErrorNegative(rrf);                         \
-    return rval;                                                 \
-  }
-
-#define RRFunctionNegError2(aName)                               \
-  static ssize_t DEFAULTABI                                      \
-  RR_ ##aName (size_t a0, size_t a1)                             \
-  {                                                              \
-    RecordReplayFunction(aName, ssize_t, a0, a1);                \
-    RecordOrReplayHadErrorNegative(rrf);                         \
-    return rval;                                                 \
-  }
-
-#define RRFunctionNegError3(aName)                               \
-  static ssize_t DEFAULTABI                                      \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2)                  \
-  {                                                              \
-    RecordReplayFunction(aName, ssize_t, a0, a1, a2);            \
-    RecordOrReplayHadErrorNegative(rrf);                         \
-    return rval;                                                 \
-  }
-
-#define RRFunctionNegError4(aName)                               \
-  static ssize_t DEFAULTABI                                      \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2, size_t a3)       \
-  {                                                              \
-    RecordReplayFunction(aName, ssize_t, a0, a1, a2, a3);        \
-    RecordOrReplayHadErrorNegative(rrf);                         \
-    return rval;                                                 \
-  }
-
-#define RRFunctionNegError5(aName)                               \
-  static ssize_t DEFAULTABI                                      \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2, size_t a3,       \
-               size_t a4)                                        \
-  {                                                              \
-    RecordReplayFunction(aName, ssize_t, a0, a1, a2, a3, a4);    \
-    RecordOrReplayHadErrorNegative(rrf);                         \
-    return rval;                                                 \
-  }
-
-#define RRFunctionNegError6(aName)                               \
-  static ssize_t DEFAULTABI                                      \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2, size_t a3,       \
-               size_t a4, size_t a5)                             \
-  {                                                              \
-    RecordReplayFunction(aName, ssize_t, a0, a1, a2, a3, a4, a5); \
-    RecordOrReplayHadErrorNegative(rrf);                         \
-    return rval;                                                 \
-  }
-
-// The following macros are used for functions that return an integer
-// value and record an error if the return value is zero.
-
-#define RRFunctionZeroError0(aName)                              \
-  static size_t __stdcall                                        \
-  RR_ ##aName ()                                                 \
-  {                                                              \
-    RecordReplayFunction(aName, size_t);                         \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-
-#define RRFunctionZeroError1(aName)                              \
-  static size_t __stdcall                                        \
-  RR_ ##aName (size_t a0)                                        \
-  {                                                              \
-    RecordReplayFunction(aName, size_t, a0);                     \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-
-#define RRFunctionZeroErrorABI2(aName, aABI)                     \
-  static size_t aABI                                             \
-  RR_ ##aName (size_t a0, size_t a1)                             \
-  {                                                              \
-    RecordReplayFunctionABI(aName, size_t, aABI, a0, a1);        \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-#define RRFunctionZeroError2(aName) RRFunctionZeroErrorABI2(aName, DEFAULTABI)
-
-#define RRFunctionZeroError3(aName)                              \
-  static size_t __stdcall                                        \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2)                  \
-  {                                                              \
-    RecordReplayFunction(aName, size_t, a0, a1, a2);             \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-
-#define RRFunctionZeroError4(aName)                              \
-  static size_t __stdcall                                        \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2, size_t a3)       \
-  {                                                              \
-    RecordReplayFunction(aName, size_t, a0, a1, a2, a3);         \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-
-#define RRFunctionZeroError5(aName)                              \
-  static size_t __stdcall                                        \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2, size_t a3,       \
-               size_t a4)                                        \
-  {                                                              \
-    RecordReplayFunction(aName, size_t, a0, a1, a2, a3, a4);     \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-
-#define RRFunctionZeroError6(aName)                              \
-  static size_t __stdcall                                        \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2, size_t a3,       \
-               size_t a4, size_t a5)                             \
-  {                                                              \
-    RecordReplayFunction(aName, size_t, a0, a1, a2, a3, a4, a5); \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-
-#define RRFunctionZeroError7(aName)                              \
-  static size_t __stdcall                                        \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2, size_t a3,       \
-               size_t a4, size_t a5, size_t a6)                  \
-  {                                                              \
-    RecordReplayFunction(aName, size_t, a0, a1, a2, a3, a4, a5, a6); \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-
-#define RRFunctionZeroError8(aName)                              \
-  static size_t __stdcall                                        \
-  RR_ ##aName (size_t a0, size_t a1, size_t a2, size_t a3,       \
-               size_t a4, size_t a5, size_t a6, size_t a7)       \
-  {                                                              \
-    RecordReplayFunction(aName, size_t, a0, a1, a2, a3, a4, a5, a6, a7); \
-    RecordOrReplayHadErrorZero(rrf);                             \
-    return rval;                                                 \
-  }
-
-// Recording template for functions which are used for inter-thread
-// synchronization and must be replayed in the original order they executed in.
-#define RecordReplayOrderedFunction(aName, aReturnType, aFailureRval, aFormals, ...) \
-  static aReturnType DEFAULTABI                                  \
-  RR_ ## aName aFormals                                          \
-  {                                                              \
-    BeginOrderedEvent(); /* This is a noop if !mThread */        \
-    RecordReplayFunction(aName, aReturnType, __VA_ARGS__);       \
-    EndOrderedEvent();                                           \
-    events.RecordOrReplayValue(&rval);                           \
-    if (rval == aFailureRval) {                                  \
-      events.RecordOrReplayValue(&rrf.mError);                   \
-    }                                                            \
-    return rval;                                                 \
-  }
+void
+RecordReplayInvokeCall(size_t aCallId, CallArguments* aArguments);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Callback Redirections
@@ -711,32 +303,6 @@ struct AutoRecordReplayCallback
 // Redirection Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// Read/write a success code (where zero is failure) and errno value on failure.
-template <typename T>
-static inline bool
-RecordOrReplayHadErrorZero(AutoRecordReplayFunction<T>& aRrf)
-{
-  aRrf.mThread->Events().RecordOrReplayValue(&aRrf.mRval);
-  if (aRrf.mRval == 0) {
-    aRrf.mThread->Events().RecordOrReplayValue(&aRrf.mError);
-    return true;
-  }
-  return false;
-}
-
-// Read/write a success code (where negative values are failure) and errno value on failure.
-template <typename T>
-static inline bool
-RecordOrReplayHadErrorNegative(AutoRecordReplayFunction<T>& aRrf)
-{
-  aRrf.mThread->Events().RecordOrReplayValue(&aRrf.mRval);
-  if (aRrf.mRval < 0) {
-    aRrf.mThread->Events().RecordOrReplayValue(&aRrf.mError);
-    return true;
-  }
-  return false;
-}
-
 extern Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve> gMemoryLeakBytes;
 
 // For allocating memory in redirections that will never be reclaimed. This is
@@ -749,6 +315,228 @@ NewLeakyArray(size_t aSize)
 {
   gMemoryLeakBytes += aSize * sizeof(T);
   return new T[aSize];
+}
+
+// Record/replay a string rval.
+static inline void
+RR_CStringRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& rval = aArguments->Rval<char*>();
+  size_t len = (IsRecording() && rval) ? strlen(rval) + 1 : 0;
+  aEvents.RecordOrReplayValue(&len);
+  if (IsReplaying()) {
+    rval = len ? NewLeakyArray<char>(len) : nullptr;
+  }
+  if (len) {
+    aEvents.RecordOrReplayBytes(rval, len);
+  }
+}
+
+// Ensure that the return value matches the specified argument.
+template <size_t Argument>
+static inline void
+RR_RvalIsArgument(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& rval = aArguments->Rval<size_t>();
+  auto& arg = aArguments->Arg<Argument, size_t>();
+  if (IsRecording()) {
+    MOZ_RELEASE_ASSERT(rval == arg);
+  } else {
+    rval = arg;
+  }
+}
+
+// No-op record/replay output method.
+static inline void
+RR_NoOp(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+}
+
+// Record/replay multiple SaveOutput functions sequentially.
+template <SaveOutputFn Fn0,
+          SaveOutputFn Fn1,
+          SaveOutputFn Fn2 = RR_NoOp,
+          SaveOutputFn Fn3 = RR_NoOp,
+          SaveOutputFn Fn4 = RR_NoOp>
+static inline void
+RR_Compose(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  Fn0(aEvents, aArguments, aError);
+  Fn1(aEvents, aArguments, aError);
+  Fn2(aEvents, aArguments, aError);
+  Fn3(aEvents, aArguments, aError);
+  Fn4(aEvents, aArguments, aError);
+}
+
+// Record/replay a success code rval (where negative values are failure) and
+// errno value on failure. SuccessFn does any further processing in non-error
+// cases.
+template <SaveOutputFn SuccessFn = RR_NoOp>
+static inline void
+RR_SaveRvalHadErrorNegative(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& rval = aArguments->Rval<ssize_t>();
+  aEvents.RecordOrReplayValue(&rval);
+  if (rval < 0) {
+    aEvents.RecordOrReplayValue(aError);
+  } else {
+    SuccessFn(aEvents, aArguments, aError);
+  }
+}
+
+// Record/replay a success code rval (where zero is a failure) and errno value
+// on failure. SuccessFn does any further processing in non-error cases.
+template <SaveOutputFn SuccessFn = RR_NoOp>
+static inline void
+RR_SaveRvalHadErrorZero(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& rval = aArguments->Rval<ssize_t>();
+  aEvents.RecordOrReplayValue(&rval);
+  if (rval == 0) {
+    aEvents.RecordOrReplayValue(aError);
+  } else {
+    SuccessFn(aEvents, aArguments, aError);
+  }
+}
+
+// Record/replay the contents of a buffer at argument BufferArg with element
+// count at CountArg.
+template <size_t BufferArg, size_t CountArg, typename ElemType = char>
+static inline void
+RR_WriteBuffer(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& buf = aArguments->Arg<BufferArg, ElemType*>();
+  auto& count = aArguments->Arg<CountArg, size_t>();
+  aEvents.CheckInput(count);
+  aEvents.RecordOrReplayBytes(buf, count * sizeof(ElemType));
+}
+
+// Record/replay the contents of a buffer at argument BufferArg with element
+// count at CountArg, and which may be null.
+template <size_t BufferArg, size_t CountArg, typename ElemType = char>
+static inline void
+RR_WriteOptionalBuffer(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& buf = aArguments->Arg<BufferArg, ElemType*>();
+  auto& count = aArguments->Arg<CountArg, size_t>();
+  aEvents.CheckInput(!!buf);
+  if (buf) {
+    aEvents.CheckInput(count);
+    aEvents.RecordOrReplayBytes(buf, count * sizeof(ElemType));
+  }
+}
+
+// Record/replay the contents of a buffer at argument BufferArg with fixed
+// size ByteCount.
+template <size_t BufferArg, size_t ByteCount>
+static inline void
+RR_WriteBufferFixedSize(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& buf = aArguments->Arg<BufferArg, void*>();
+  aEvents.RecordOrReplayBytes(buf, ByteCount);
+}
+
+// Record/replay the contents of a buffer at argument BufferArg with fixed
+// size ByteCount, and which may be null.
+template <size_t BufferArg, size_t ByteCount>
+static inline void
+RR_WriteOptionalBufferFixedSize(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& buf = aArguments->Arg<BufferArg, void*>();
+  aEvents.CheckInput(!!buf);
+  if (buf) {
+    aEvents.RecordOrReplayBytes(buf, ByteCount);
+  }
+}
+
+// Record/replay the contents of a buffer at argument BufferArg with byte size
+// CountArg, where the call return value plus Offset indicates the amount of
+// data written to the buffer by the call. The return value must already have
+// been recorded/replayed.
+template <size_t BufferArg, size_t CountArg, size_t Offset = 0>
+static inline void
+RR_WriteBufferViaRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  auto& buf = aArguments->Arg<BufferArg, void*>();
+  auto& count = aArguments->Arg<CountArg, size_t>();
+  aEvents.CheckInput(count);
+
+  auto& rval = aArguments->Rval<size_t>();
+  MOZ_RELEASE_ASSERT(rval + Offset <= count);
+  aEvents.RecordOrReplayBytes(buf, rval + Offset);
+}
+
+// Insert an atomic access while recording/replaying so that calls to this
+// function replay in the same order they occurred in while recording. This is
+// used for functions that are used in inter-thread synchronization.
+static inline void
+RR_OrderCall(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  AutoOrderedAtomicAccess();
+}
+
+// Record/replay a scalar return value.
+static inline void
+RR_ScalarRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  aEvents.RecordOrReplayValue(&aArguments->Rval<size_t>());
+}
+
+// Record/replay a complex scalar return value that fits in two registers.
+static inline void
+RR_ComplexScalarRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  aEvents.RecordOrReplayValue(&aArguments->Rval<size_t>());
+  aEvents.RecordOrReplayValue(&aArguments->Rval<size_t, 1>());
+}
+
+// Record/replay a floating point return value.
+static inline void
+RR_FloatRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  aEvents.RecordOrReplayValue(&aArguments->FloatRval());
+}
+
+// Record/replay a complex floating point return value that fits in two registers.
+static inline void
+RR_ComplexFloatRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  aEvents.RecordOrReplayValue(&aArguments->FloatRval());
+  aEvents.RecordOrReplayValue(&aArguments->FloatRval<1>());
+}
+
+// Record/replay a return value that does not fit in the return registers,
+// and whose storage is pointed to by the first argument register.
+template <size_t ByteCount>
+static inline void
+RR_OversizeRval(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
+{
+  RR_WriteBufferFixedSize<0, ByteCount>(aEvents, aArguments, aError);
+}
+
+template <size_t ReturnValue>
+static inline PreambleResult
+Preamble_Veto(CallArguments* aArguments)
+{
+  aArguments->Rval<size_t>() = 0;
+  return PreambleResult::Veto;
+}
+
+template <size_t ReturnValue>
+static inline PreambleResult
+Preamble_VetoIfNotPassedThrough(CallArguments* aArguments)
+{
+  if (AreThreadEventsPassedThrough()) {
+    return PreambleResult::PassThrough;
+  }
+  aArguments->Rval<size_t>() = 0;
+  return PreambleResult::Veto;
+}
+
+static inline PreambleResult
+Preamble_PassThrough(CallArguments* aArguments)
+{
+  return PreambleResult::PassThrough;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

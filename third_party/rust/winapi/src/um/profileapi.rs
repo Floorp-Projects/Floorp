@@ -14,4 +14,3 @@ extern "system" {
         lpFrequency: *mut LARGE_INTEGER,
     ) -> BOOL;
 }
-

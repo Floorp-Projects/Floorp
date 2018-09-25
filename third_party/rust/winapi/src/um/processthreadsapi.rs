@@ -5,7 +5,6 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms
 //! ApiSet Contract for api-ms-win-core-processthreads-l1
-
 use ctypes::{c_int, c_void};
 use shared::basetsd::{DWORD_PTR, PSIZE_T, PULONG_PTR, SIZE_T, ULONG_PTR};
 use shared::guiddef::LPCGUID;
@@ -17,7 +16,6 @@ use um::winnt::{
     CONTEXT, HANDLE, LPCSTR, LPCWSTR, LPSTR, LPWSTR, PAPCFUNC, PHANDLE, PPROCESSOR_NUMBER,
     PROCESS_MITIGATION_POLICY, PVOID
 };
-
 STRUCT!{struct PROCESS_INFORMATION {
     hProcess: HANDLE,
     hThread: HANDLE,
@@ -199,17 +197,37 @@ extern "system" {
     pub fn GetStartupInfoW(
         lpStartupInfo: LPSTARTUPINFOW,
     );
-    // pub fn CreateProcessAsUserW();
+    pub fn CreateProcessAsUserW(
+        hToken: HANDLE,
+        lpApplicationName: LPCWSTR,
+        lpCommandLine: LPWSTR,
+        lpProcessAttributes: LPSECURITY_ATTRIBUTES,
+        lpThreadAttributes: LPSECURITY_ATTRIBUTES,
+        bInheritHandles: BOOL,
+        dwCreationFlags: DWORD,
+        lpEnvironment: LPVOID,
+        lpCurrentDirectory: LPCWSTR,
+        lpStartupInfo: LPSTARTUPINFOW,
+        lpProcessInformation: LPPROCESS_INFORMATION,
+    ) -> BOOL;
     // pub fn GetCurrentProcessToken();
     // pub fn GetCurrentThreadToken();
     // pub fn GetCurrentThreadEffectiveToken();
-    // pub fn SetThreadToken();
+    pub fn SetThreadToken(
+        Thread: PHANDLE,
+        Token: HANDLE,
+    ) -> BOOL;
     pub fn OpenProcessToken(
         ProcessHandle: HANDLE,
         DesiredAccess: DWORD,
         TokenHandle: PHANDLE,
     ) -> BOOL;
-    // pub fn OpenThreadToken();
+    pub fn OpenThreadToken(
+        ThreadHandle: HANDLE,
+        DesiredAccess: DWORD,
+        OpenAsSelf: BOOL,
+        TokenHandle: PHANDLE,
+    ) -> BOOL;
     pub fn SetPriorityClass(
         hProcess: HANDLE,
         dwPriorityClass: DWORD,
@@ -373,7 +391,7 @@ extern "system" {
         ThreadInformationClass: THREAD_INFORMATION_CLASS,
         ThreadInformation: LPVOID,
         ThreadInformationSize: DWORD,
-    );
+    ) -> BOOL;
     pub fn IsProcessCritical(
         hProcess: HANDLE,
         Critical: PBOOL,

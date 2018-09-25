@@ -151,6 +151,34 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
+class ScheduleObserveLayersUpdate: public wr::NotificationHandler {
+public:
+  ScheduleObserveLayersUpdate(RefPtr<CompositorBridgeParentBase> aBridge,
+                              LayersId aLayersId,
+                              LayersObserverEpoch aEpoch,
+                              bool aIsActive)
+  : mBridge(aBridge)
+  , mLayersId(aLayersId)
+  , mObserverEpoch(aEpoch)
+  , mIsActive(aIsActive)
+  {}
+
+  virtual void Notify(wr::Checkpoint) override {
+    CompositorThreadHolder::Loop()->PostTask(
+      NewRunnableMethod<LayersId, LayersObserverEpoch, int>(
+        "ObserveLayersUpdate",
+        mBridge, &CompositorBridgeParentBase::ObserveLayersUpdate,
+        mLayersId, mObserverEpoch, mIsActive
+      )
+    );
+  }
+protected:
+  RefPtr<CompositorBridgeParentBase> mBridge;
+  LayersId mLayersId;
+  LayersObserverEpoch mObserverEpoch;
+  bool mIsActive;
+};
+
 class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender
 {
 public:
@@ -807,6 +835,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 
   wr::Vec<uint8_t> dlData(std::move(dl));
 
+  bool observeLayersUpdate = ShouldParentObserveEpoch();
+
   if (validTransaction) {
     if (IsRootWebRenderBridgeParent()) {
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
@@ -818,10 +848,24 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                        mPipelineId, aContentSize,
                        dlDesc, dlData);
 
+    if (observeLayersUpdate) {
+      txn.Notify(
+        wr::Checkpoint::SceneBuilt,
+        MakeUnique<ScheduleObserveLayersUpdate>(
+          mCompositorBridge,
+          GetLayersId(),
+          mChildLayersObserverEpoch,
+          true
+        )
+      );
+    }
+
     mApi->SendTransaction(txn);
 
     // We will schedule generating a frame after the scene
     // build is done, so we don't need to do it here.
+  } else if (observeLayersUpdate) {
+    mCompositorBridge->ObserveLayersUpdate(GetLayersId(), mChildLayersObserverEpoch, true);
   }
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup,
@@ -834,10 +878,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
       TimeStamp now = TimeStamp::Now();
       cbp->NotifyPipelineRendered(mPipelineId, wrEpoch, now, now);
     }
-  }
-
-  if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayersUpdate(GetLayersId(), mChildLayersObserverEpoch, true);
   }
 
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
@@ -893,6 +933,18 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     if (!ProcessWebRenderParentCommands(aCommands, txn)) {
       return IPC_FAIL(this, "Invalid parent command found");
     }
+    if (ShouldParentObserveEpoch()) {
+      txn.Notify(
+        wr::Checkpoint::SceneBuilt,
+        MakeUnique<ScheduleObserveLayersUpdate>(
+          mCompositorBridge,
+          GetLayersId(),
+          mChildLayersObserverEpoch,
+          true
+        )
+      );
+    }
+
     mApi->SendTransaction(txn);
     scheduleComposite = true;
   }
@@ -929,10 +981,6 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
       TimeStamp now = TimeStamp::Now();
       cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, now, now);
     }
-  }
-
-  if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayersUpdate(GetLayersId(), mChildLayersObserverEpoch, true);
   }
 
   return IPC_OK();
@@ -1267,12 +1315,21 @@ WebRenderBridgeParent::RecvClearCachedResources()
   if (mDestroyed) {
     return IPC_OK();
   }
-  mCompositorBridge->ObserveLayersUpdate(GetLayersId(), mChildLayersObserverEpoch, false);
 
   // Clear resources
   wr::TransactionBuilder txn;
   txn.SetLowPriority(true);
   txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
+  txn.Notify(
+    wr::Checkpoint::SceneBuilt,
+    MakeUnique<ScheduleObserveLayersUpdate>(
+      mCompositorBridge,
+      GetLayersId(),
+      mChildLayersObserverEpoch,
+      false
+    )
+  );
+
   mApi->SendTransaction(txn);
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();

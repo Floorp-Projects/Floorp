@@ -13,10 +13,10 @@ use um::winioctl::{
     FILE_WRITE_ACCESS, METHOD_BUFFERED
 };
 use um::winnt::{ANYSIZE_ARRAY, BOOLEAN, PBOOLEAN};
-DEFINE_GUID!(ScsiRawInterfaceGuid,
-    0x53f56309, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
-DEFINE_GUID!(WmiScsiAddressGuid,
-    0x53f5630f, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
+DEFINE_GUID!{ScsiRawInterfaceGuid,
+    0x53f56309, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b}
+DEFINE_GUID!{WmiScsiAddressGuid,
+    0x53f5630f, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b}
 pub const IOCTL_SCSI_BASE: DEVICE_TYPE = FILE_DEVICE_CONTROLLER;
 pub const FILE_DEVICE_SCSI: ULONG = 0x0000001;
 pub const DD_SCSI_DEVICE_NAME: &'static str = "\\Device\\ScsiPort";
@@ -110,6 +110,8 @@ STRUCT!{struct SCSI_PASS_THROUGH32 {
     SenseInfoOffset: ULONG,
     Cdb: [UCHAR; 16],
 }}
+#[cfg(target_arch = "x86_64")]
+IFDEF!{
 pub type PSCSI_PASS_THROUGH32 = *mut SCSI_PASS_THROUGH32;
 STRUCT!{struct SCSI_PASS_THROUGH_DIRECT32 {
     Length: USHORT,
@@ -127,6 +129,7 @@ STRUCT!{struct SCSI_PASS_THROUGH_DIRECT32 {
     Cdb: [UCHAR; 16],
 }}
 pub type PSCSI_PASS_THROUGH_DIRECT32 = *mut SCSI_PASS_THROUGH_DIRECT32;
+}
 STRUCT!{struct SCSI_PASS_THROUGH_EX {
     Version: ULONG,
     Length: ULONG,
@@ -165,6 +168,8 @@ STRUCT!{struct SCSI_PASS_THROUGH_DIRECT_EX {
     Cdb: [UCHAR; ANYSIZE_ARRAY],
 }}
 pub type PSCSI_PASS_THROUGH_DIRECT_EX = *mut SCSI_PASS_THROUGH_DIRECT_EX;
+#[cfg(target_arch = "x86_64")]
+IFDEF!{
 STRUCT!{struct SCSI_PASS_THROUGH32_EX {
     Version: ULONG,
     Length: ULONG,
@@ -203,6 +208,7 @@ STRUCT!{struct SCSI_PASS_THROUGH_DIRECT32_EX {
     Cdb: [UCHAR; ANYSIZE_ARRAY],
 }}
 pub type PSCSI_PASS_THROUGH_DIRECT32_EX = *mut SCSI_PASS_THROUGH_DIRECT32_EX;
+}
 STRUCT!{struct ATA_PASS_THROUGH_EX {
     Length: USHORT,
     AtaFlags: USHORT,
@@ -233,6 +239,8 @@ STRUCT!{struct ATA_PASS_THROUGH_DIRECT {
     CurrentTaskFile: [UCHAR; 8],
 }}
 pub type PATA_PASS_THROUGH_DIRECT = *mut ATA_PASS_THROUGH_DIRECT;
+#[cfg(target_arch = "x86_64")]
+IFDEF!{
 STRUCT!{struct ATA_PASS_THROUGH_EX32 {
     Length: USHORT,
     AtaFlags: USHORT,
@@ -263,6 +271,7 @@ STRUCT!{struct ATA_PASS_THROUGH_DIRECT32 {
     CurrentTaskFile: [UCHAR; 8],
 }}
 pub type PATA_PASS_THROUGH_DIRECT32 = *mut ATA_PASS_THROUGH_DIRECT32;
+}
 pub const ATA_FLAGS_DRDY_REQUIRED: USHORT = 1 << 0;
 pub const ATA_FLAGS_DATA_IN: USHORT = 1 << 1;
 pub const ATA_FLAGS_DATA_OUT: USHORT = 1 << 2;
@@ -314,6 +323,8 @@ STRUCT!{struct MPIO_PASS_THROUGH_PATH_DIRECT_EX {
     MpioPathId: ULONGLONG,
 }}
 pub type PMPIO_PASS_THROUGH_PATH_DIRECT_EX = *mut MPIO_PASS_THROUGH_PATH_DIRECT_EX;
+#[cfg(target_arch = "x86_64")]
+IFDEF!{
 STRUCT!{struct MPIO_PASS_THROUGH_PATH32 {
     PassThrough: SCSI_PASS_THROUGH32,
     Version: ULONG,
@@ -350,6 +361,7 @@ STRUCT!{struct MPIO_PASS_THROUGH_PATH_DIRECT32_EX {
     MpioPathId: ULONGLONG,
 }}
 pub type PMPIO_PASS_THROUGH_PATH_DIRECT32_EX = *mut MPIO_PASS_THROUGH_PATH_DIRECT32_EX;
+}
 STRUCT!{struct SCSI_BUS_DATA {
     NumberOfLogicalUnits: UCHAR,
     InitiatorBusId: UCHAR,
@@ -470,16 +482,16 @@ UNION!{union NV_SEP_CACHE_PARAMETER_Flags {
 STRUCT!{struct NV_SEP_CACHE_PARAMETER_Flags_CacheFlags {
     Bitfield: UCHAR,
 }}
-BITFIELD!(NV_SEP_CACHE_PARAMETER_Flags_CacheFlags Bitfield: UCHAR [
+BITFIELD!{NV_SEP_CACHE_PARAMETER_Flags_CacheFlags Bitfield: UCHAR [
     WriteCacheEnabled set_WriteCacheEnabled[0..1],
     WriteCacheChangeable set_WriteCacheChangeable[1..2],
     WriteThroughIOSupported set_WriteThroughIOSupported[2..3],
     FlushCacheSupported set_FlushCacheSupported[3..4],
     ReservedBits set_ReservedBits[4..8],
-]);
+]}
 pub const NV_SEP_CACHE_PARAMETER_VERSION_1: ULONG = 1;
 pub const NV_SEP_CACHE_PARAMETER_VERSION: ULONG = NV_SEP_CACHE_PARAMETER_VERSION_1;
-ENUM!{enum NV_SEP_WRITE_CACHE_TYPE    {
+ENUM!{enum NV_SEP_WRITE_CACHE_TYPE {
     NVSEPWriteCacheTypeUnknown = 0,
     NVSEPWriteCacheTypeNone = 1,
     NVSEPWriteCacheTypeWriteBack = 2,
@@ -568,13 +580,13 @@ pub type PHYBRID_INFORMATION = *mut HYBRID_INFORMATION;
 STRUCT!{struct HYBRID_INFORMATION_Attributes {
     Bitfield: ULONG,
 }}
-BITFIELD!(HYBRID_INFORMATION_Attributes Bitfield: ULONG [
+BITFIELD!{HYBRID_INFORMATION_Attributes Bitfield: ULONG [
     WriteCacheChangeable set_WriteCacheChangeable[0..1],
     WriteThroughIoSupported set_WriteThroughIoSupported[1..2],
     FlushCacheSupported set_FlushCacheSupported[2..3],
     Removable set_Removable[3..4],
     ReservedBits set_ReservedBits[4..32],
-]);
+]}
 STRUCT!{struct HYBRID_INFORMATION_Priorities {
     PriorityLevelCount: UCHAR,
     MaxPriorityBehavior: BOOLEAN,
@@ -591,14 +603,14 @@ STRUCT!{struct HYBRID_INFORMATION_Priorities_SupportedCommands {
     MaxLbaRangeCountForEvict: ULONG,
     MaxLbaRangeCountForChangeLba: ULONG,
 }}
-BITFIELD!(HYBRID_INFORMATION_Priorities_SupportedCommands Bitfield: ULONG [
+BITFIELD!{HYBRID_INFORMATION_Priorities_SupportedCommands Bitfield: ULONG [
     CacheDisable set_CacheDisable[0..1],
     SetDirtyThreshold set_SetDirtyThreshold[1..2],
     PriorityDemoteBySize set_PriorityDemoteBySize[2..3],
     PriorityChangeByLbaRange set_PriorityChangeByLbaRange[3..4],
     Evict set_Evict[4..5],
     ReservedBits set_ReservedBits[5..32],
-]);
+]}
 STRUCT!{struct HYBRID_DIRTY_THRESHOLDS {
     Version: ULONG,
     Size: ULONG,

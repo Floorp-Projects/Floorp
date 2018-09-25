@@ -34,8 +34,8 @@ function test() {
   (async function() {
     toggleAllTools(true);
     const tab = await addTab("about:blank");
-    const target = TargetFactory.forTab(tab);
-    await target.makeRemote();
+    const target = await TargetFactory.forTab(tab);
+    await target.attach();
     await performChecks(target);
     gBrowser.removeCurrentTab();
     toggleAllTools(false);

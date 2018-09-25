@@ -336,8 +336,7 @@ struct ReflowInput : public SizeComputationInput {
 
   // The appropriate reflow state for the containing block (for
   // percentage widths, etc.) of this reflow state's frame.
-  MOZ_INIT_OUTSIDE_CTOR
-  const ReflowInput *mCBReflowInput;
+  const ReflowInput* mCBReflowInput;
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.

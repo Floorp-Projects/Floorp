@@ -1,4 +1,13 @@
-# winapi-rs [![Build status](https://ci.appveyor.com/api/projects/status/i47oonf5e7qm5utq/branch/master?svg=true)](https://ci.appveyor.com/project/retep998/winapi-rs/branch/master) [![Build Status](https://travis-ci.org/retep998/winapi-rs.svg?branch=master)](https://travis-ci.org/retep998/winapi-rs) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/retep998/winapi-rs) [![Crates.io](https://img.shields.io/crates/v/winapi.svg)](https://crates.io/crates/winapi) ![Lines of Code](https://tokei.rs/b1/github/retep998/winapi-rs) ![100% unsafe](https://img.shields.io/badge/unsafe-100%25-blue.svg) #
+# winapi-rs
+[![Build status](https://ci.appveyor.com/api/projects/status/i47oonf5e7qm5utq/branch/0.3?svg=true)](https://ci.appveyor.com/project/retep998/winapi-rs/branch/0.3)
+[![Build Status](https://travis-ci.org/retep998/winapi-rs.svg?branch=0.3)](https://travis-ci.org/retep998/winapi-rs)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/retep998/winapi-rs)
+[![Crates.io](https://img.shields.io/crates/v/winapi.svg)](https://crates.io/crates/winapi)
+![Lines of Code](https://tokei.rs/b1/github/retep998/winapi-rs)
+![100% unsafe](https://img.shields.io/badge/unsafe-100%25-blue.svg)
+[![Open issues](https://img.shields.io/github/issues-raw/retep998/winapi-rs.svg)](https://github.com/retep998/winapi-rs/issues)
+[![License](https://img.shields.io/crates/l/winapi.svg)](https://github.com/retep998/winapi-rs)
+
 
 [Documentation](https://docs.rs/winapi/*/x86_64-pc-windows-msvc/winapi/)
 
@@ -27,6 +36,14 @@ You can use the search functionality in the [documentation](https://docs.rs/wina
 ### Why is there no documentation on how to use anything?
 
 This crate is nothing more than raw bindings to Windows API. If you wish to know how to use the various functionality in Windows API, you can look up the various items on [MSDN](https://msdn.microsoft.com/en-us/library/windows/desktop/aa906039) which is full of detailed documentation.
+
+### Can I use this library in `no_std` projects?
+
+Yes, absolutely! By default the `std` feature of `winapi` is disabled, allowing you to write Windows applications using nothing but `core` and `winapi`.
+
+### Why is `winapi`'s `HANDLE` incompatible with `std`'s `HANDLE`?
+
+Because `winapi` does not depend on `std` by default, it has to define `c_void` itself instead of using `std::os::raw::c_void`. However, if you enable the `std` feature of `winapi` then it will re-export `c_void` from `std` and cause `winapi`'s `HANDLE` to be the same type as `std`'s `HANDLE`.
 
 ## Example ##
 
