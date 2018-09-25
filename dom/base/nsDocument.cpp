@@ -13626,7 +13626,9 @@ nsIDocument::HasStorageAccess(mozilla::ErrorResult& aRv)
       // treatment here.
       bool isOnAllowList = false;
       if (NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
-                         topLevelDoc->GetDocumentURI(), isOnAllowList)) &&
+                         topLevelDoc->GetDocumentURI(),
+                         AntiTrackingCommon::eStorageChecks,
+                         isOnAllowList)) &&
           !isOnAllowList) {
         promise->MaybeResolve(true);
         return promise.forget();
@@ -13741,7 +13743,9 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
       // to not be on the Content Blocking allow list.
       DebugOnly<bool> isOnAllowList = false;
       MOZ_ASSERT_IF(NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
-                                   parent->GetDocumentURI(), isOnAllowList)),
+                                   parent->GetDocumentURI(),
+                                   AntiTrackingCommon::eStorageChecks,
+                                   isOnAllowList)),
                     !isOnAllowList);
 
       isTrackingWindow = true;

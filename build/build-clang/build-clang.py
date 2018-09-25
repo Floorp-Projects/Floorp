@@ -351,7 +351,7 @@ def get_tool(config, key):
 #       clang-format-diff.py
 #       clang-tidy-diff.py
 #       run-clang-tidy.py
-def prune_final_dir_for_clang_tidy(final_dir):
+def prune_final_dir_for_clang_tidy(final_dir, osx_cross_compile):
     # Make sure we only have what we expect.
     dirs = ("bin", "include", "lib", "lib32", "libexec", "msbuild-bin", "share", "tools")
     for f in glob.glob("%s/*" % final_dir):
@@ -376,7 +376,7 @@ def prune_final_dir_for_clang_tidy(final_dir):
         name = os.path.basename(f)
         if name == "clang":
             continue
-        if is_darwin() and name == 'libLLVM.dylib':
+        if osx_cross_compile and name == 'libLLVM.dylib':
             continue
         if is_linux() and fnmatch.fnmatch(name, 'libLLVM*.so'):
             continue
@@ -700,7 +700,7 @@ if __name__ == "__main__":
 
     package_name = "clang"
     if build_clang_tidy:
-        prune_final_dir_for_clang_tidy(os.path.join(final_stage_dir, "clang"))
+        prune_final_dir_for_clang_tidy(os.path.join(final_stage_dir, "clang"), osx_cross_compile)
         package_name = "clang-tidy"
 
     if not args.skip_tar:

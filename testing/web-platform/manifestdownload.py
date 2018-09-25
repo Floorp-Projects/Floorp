@@ -62,6 +62,8 @@ def taskcluster_url(logger, commits):
               'revision.{changeset}.source.manifest-upload')
 
     for revision in commits:
+        req = None
+
         if revision == 40 * "0":
             continue
         try:
@@ -71,7 +73,7 @@ def taskcluster_url(logger, commits):
                                headers=req_headers)
             req.raise_for_status()
         except requests.exceptions.RequestException:
-            if req.status_code == 404:
+            if req and req.status_code == 404:
                 # The API returns a 404 if it can't find a changeset for the revision.
                 continue
             else:
