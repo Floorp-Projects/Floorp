@@ -454,7 +454,8 @@ ChromiumCDMChild::RecvPurgeShmems()
 
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvInit(const bool& aAllowDistinctiveIdentifier,
-                           const bool& aAllowPersistentState)
+                           const bool& aAllowPersistentState,
+                           InitResolver&& aResolver)
 {
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG("ChromiumCDMChild::RecvInit(distinctiveId=%s, persistentState=%s)",
@@ -467,6 +468,7 @@ ChromiumCDMChild::RecvInit(const bool& aAllowDistinctiveIdentifier,
                      // We do not yet support hardware secure codecs
                      false);
   }
+  aResolver(true /* unused */);
   return IPC_OK();
 }
 
