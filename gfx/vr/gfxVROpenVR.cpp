@@ -962,6 +962,13 @@ VRSystemManagerOpenVR::HandleButtonPress(uint32_t aControllerIdx,
     // diff & (aButtonPressed, aButtonTouched) would be true while a new button pressed or
     // touched event, otherwise it is an old event and needs to notify
     // the button has been released.
+    if (MOZ_UNLIKELY(aButton >= controller->GetControllerInfo().GetNumButtons())) {
+      // FIXME: Removing crash log for Bug 1488573 to investigate unmatched count.
+      MOZ_CRASH_UNSAFE_PRINTF("OpenVR handleButton(aButton = %d, length = %d, controller: %s.)",
+                              aButton,
+                              controller->GetControllerInfo().GetNumButtons(),
+                              controller->GetControllerInfo().GetControllerName());
+    }
     NewButtonEvent(aControllerIdx, aButton, aButtonMask & aButtonPressed,
                    aButtonMask & aButtonTouched,
                    (aButtonMask & aButtonPressed) ? 1.0L : 0.0L);
@@ -985,6 +992,13 @@ VRSystemManagerOpenVR::HandleTriggerPress(uint32_t aControllerIdx,
 
   // Avoid sending duplicated events in IPC channels.
   if (oldValue != aValue) {
+    if (MOZ_UNLIKELY(aButton >= controller->GetControllerInfo().GetNumButtons())) {
+      // FIXME: Removing crash log for Bug 1488573 to investigate unmatched count.
+      MOZ_CRASH_UNSAFE_PRINTF("OpenVR handleTrigger(aButton = %d, length = %d, controller: %s.)",
+                              aButton,
+                              controller->GetControllerInfo().GetNumButtons(),
+                              controller->GetControllerInfo().GetControllerName());
+    }
     NewButtonEvent(aControllerIdx, aButton, aValue > threshold,
                    aValue > threshold, aValue);
     controller->SetTrigger(aTrigger, aValue);
@@ -999,6 +1013,13 @@ VRSystemManagerOpenVR::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
   MOZ_ASSERT(controller);
 
   if (controller->GetAxisMove(aAxis) != aValue) {
+    if (MOZ_UNLIKELY(aAxis >= controller->GetControllerInfo().GetNumAxes())) {
+      // FIXME: Removing crash log for Bug 1488573 to investigate unmatched count.
+      MOZ_CRASH_UNSAFE_PRINTF("OpenVR handleAxis(aAxis = %d, length = %d, controller: %s.)",
+                              aAxis,
+                              controller->GetControllerInfo().GetNumAxes(),
+                              controller->GetControllerInfo().GetControllerName());
+    }
     NewAxisMove(aControllerIdx, aAxis, aValue);
     controller->SetAxisMove(aAxis, aValue);
   }
