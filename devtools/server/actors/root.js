@@ -9,6 +9,7 @@
 const { Cu } = require("chrome");
 const Services = require("Services");
 const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/server/actors/common");
+const { Pool } = require("devtools/shared/protocol");
 const { DebuggerServer } = require("devtools/server/main");
 
 loader.lazyRequireGetter(this, "ChromeWindowTargetActor",
@@ -430,14 +431,18 @@ RootActor.prototype = {
     workerList.onListChanged = this._onWorkerListChanged;
 
     return workerList.getList().then(actors => {
-      const pool = new ActorPool(this.conn);
+      const pool = new Pool(this.conn);
       for (const actor of actors) {
-        pool.addActor(actor);
+        pool.manage(actor);
       }
 
-      this.conn.removeActorPool(this._workerTargetActorPool);
+      // Do not destroy the pool before transfering ownership to the newly created
+      // pool, so that we do not accidently destroy actors that are still in use.
+      if (this._workerTargetActorPool) {
+        this._workerTargetActorPool.destroy();
+      }
+
       this._workerTargetActorPool = pool;
-      this.conn.addActorPool(this._workerTargetActorPool);
 
       return {
         "from": this.actorID,
