@@ -24,7 +24,7 @@ private object Versions {
 
     const val jna = "4.5.2"
 
-    const val fxa = "0.5.0"
+    const val fxa = "0.5.1"
     const val sync_logins = "0.4.3"
 }
 
