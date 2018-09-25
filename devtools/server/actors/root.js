@@ -8,6 +8,7 @@
 
 const { Cu } = require("chrome");
 const Services = require("Services");
+const { ActorPool, appendExtraActors } = require("devtools/server/actors/common");
 const { Pool } = require("devtools/shared/protocol");
 const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
 const { DebuggerServer } = require("devtools/server/main");
@@ -233,17 +234,20 @@ RootActor.prototype = {
    * and didn't actually care about tabs.
    */
   onGetRoot: function() {
+    const reply = {
+      from: this.actorID,
+    };
+
     // Create global actors
     if (!this._globalActorPool) {
       this._globalActorPool = new LazyPool(this.conn);
     }
-    const actors = createExtraActors(
-      this._parameters.globalActorFactories,
-      this._globalActorPool,
-      this
-    );
+    createExtraActors(this._parameters.globalActorFactories, this._globalActorPool, this);
 
-    return actors;
+    // List the global actors
+    this._appendExtraActors(reply);
+
+    return reply;
   },
 
   /* The 'listTabs' request and the 'tabListChanged' notification. */
@@ -270,10 +274,10 @@ RootActor.prototype = {
     tabList.onListChanged = this._onTabListChanged;
 
     // Walk the tab list, accumulating the array of target actors for the reply, and
-    // moving all the actors to a new Pool. We'll replace the old tab target actor
+    // moving all the actors to a new ActorPool. We'll replace the old tab target actor
     // pool with the one we build here, thus retiring any actors that didn't get listed
     // again, and preparing any new actors to receive packets.
-    const newActorPool = new Pool(this.conn);
+    const newActorPool = new ActorPool(this.conn);
     const targetActorList = [];
     let selected;
 
@@ -288,7 +292,7 @@ RootActor.prototype = {
         selected = targetActorList.length;
       }
       targetActor.parentID = this.actorID;
-      newActorPool.manage(targetActor);
+      newActorPool.addActor(targetActor);
       targetActorList.push(targetActor);
     }
 
@@ -298,9 +302,10 @@ RootActor.prototype = {
     // Drop the old actorID -> actor map. Actors that still mattered were added to the
     // new map; others will go away.
     if (this._tabTargetActorPool) {
-      this._tabTargetActorPool.destroy();
+      this.conn.removeActorPool(this._tabTargetActorPool);
     }
     this._tabTargetActorPool = newActorPool;
+    this.conn.addActorPool(this._tabTargetActorPool);
 
     // We'll extend the reply here to also mention all the tabs.
     Object.assign(reply, {
@@ -318,7 +323,8 @@ RootActor.prototype = {
                message: "This root actor has no browser tabs." };
     }
     if (!this._tabTargetActorPool) {
-      this._tabTargetActorPool = new Pool(this.conn);
+      this._tabTargetActorPool = new ActorPool(this.conn);
+      this.conn.addActorPool(this._tabTargetActorPool);
     }
 
     let targetActor;
@@ -336,7 +342,7 @@ RootActor.prototype = {
     }
 
     targetActor.parentID = this.actorID;
-    this._tabTargetActorPool.manage(targetActor);
+    this._tabTargetActorPool.addActor(targetActor);
 
     return { tab: targetActor.form() };
   },
@@ -359,12 +365,13 @@ RootActor.prototype = {
     }
 
     if (!this._chromeWindowActorPool) {
-      this._chromeWindowActorPool = new Pool(this.conn);
+      this._chromeWindowActorPool = new ActorPool(this.conn);
+      this.conn.addActorPool(this._chromeWindowActorPool);
     }
 
     const actor = new ChromeWindowTargetActor(this.conn, window);
     actor.parentID = this.actorID;
-    this._chromeWindowActorPool.manage(actor);
+    this._chromeWindowActorPool.addActor(actor);
 
     return {
       from: this.actorID,
@@ -389,15 +396,16 @@ RootActor.prototype = {
     addonList.onListChanged = this._onAddonListChanged;
 
     return addonList.getList().then((addonTargetActors) => {
-      const addonTargetActorPool = new Pool(this.conn);
+      const addonTargetActorPool = new ActorPool(this.conn);
       for (const addonTargetActor of addonTargetActors) {
-        addonTargetActorPool.manage(addonTargetActor);
+        addonTargetActorPool.addActor(addonTargetActor);
       }
 
       if (this._addonTargetActorPool) {
-        this._addonTargetActorPool.destroy();
+        this.conn.removeActorPool(this._addonTargetActorPool);
       }
       this._addonTargetActorPool = addonTargetActorPool;
+      this.conn.addActorPool(this._addonTargetActorPool);
 
       return {
         "from": this.actorID,
@@ -458,15 +466,14 @@ RootActor.prototype = {
     registrationList.onListChanged = this._onServiceWorkerRegistrationListChanged;
 
     return registrationList.getList().then(actors => {
-      const pool = new Pool(this.conn);
+      const pool = new ActorPool(this.conn);
       for (const actor of actors) {
-        pool.manage(actor);
+        pool.addActor(actor);
       }
 
-      if (this._serviceWorkerRegistrationActorPool) {
-        this._serviceWorkerRegistrationActorPool.destroy();
-      }
+      this.conn.removeActorPool(this._serviceWorkerRegistrationActorPool);
       this._serviceWorkerRegistrationActorPool = pool;
+      this.conn.addActorPool(this._serviceWorkerRegistrationActorPool);
 
       return {
         "from": this.actorID,
@@ -556,6 +563,9 @@ RootActor.prototype = {
     return require("devtools/shared/protocol").dumpProtocolSpec();
   },
 
+  /* Support for DebuggerServer.addGlobalActor. */
+  _appendExtraActors: appendExtraActors,
+
   /**
    * Remove the extra actor (added by DebuggerServer.addGlobalActor or
    * DebuggerServer.addTargetScopedActor) name |name|.
@@ -569,9 +579,9 @@ RootActor.prototype = {
       if (this._tabTargetActorPool) {
         // Iterate over BrowsingContextTargetActor instances to also remove target-scoped
         // actors created during listTabs for each document.
-        for (const tab in this._tabTargetActorPool.poolChildren()) {
+        this._tabTargetActorPool.forEach(tab => {
           tab.removeActorByName(name);
-        }
+        });
       }
       delete this._extraActors[name];
     }

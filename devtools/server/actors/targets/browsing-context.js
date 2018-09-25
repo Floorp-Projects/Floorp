@@ -23,6 +23,7 @@
 var { Ci, Cu, Cr, Cc } = require("chrome");
 var Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
+var { appendExtraActors } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
@@ -560,6 +561,9 @@ const browsingContextTargetPrototype = {
 
     return false;
   },
+
+  /* Support for DebuggerServer.addTargetScopedActor. */
+  _appendExtraActors: appendExtraActors,
 
   /**
    * Does the actual work of attaching to a browsing context.
