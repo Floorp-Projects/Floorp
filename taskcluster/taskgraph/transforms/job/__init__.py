@@ -150,14 +150,14 @@ def get_attribute(dict, key, attributes, attribute_name):
 
 @transforms.add
 def use_fetches(config, jobs):
-    all_fetches = {}
+    artifact_names = {}
 
     for task in config.kind_dependencies_tasks:
-        if task.kind != 'fetch':
-            continue
-
-        name = task.label.replace('%s-' % task.kind, '')
-        get_attribute(all_fetches, name, task.attributes, 'fetch-artifact')
+        if task.kind in ('fetch', 'toolchain'):
+            get_attribute(
+                artifact_names, task.label, task.attributes,
+                '{kind}-artifact'.format(kind=task.kind),
+            )
 
     for job in jobs:
         fetches = job.pop('fetches', None)
@@ -175,25 +175,25 @@ def use_fetches(config, jobs):
         dependencies = job.setdefault('dependencies', {})
         prefix = get_artifact_prefix(job)
         for kind, artifacts in fetches.items():
-            if kind == 'fetch':
-                for fetch in artifacts:
-                    if fetch not in all_fetches:
+            if kind in ('fetch', 'toolchain'):
+                for fetch_name in artifacts:
+                    label = '{kind}-{name}'.format(kind=kind, name=fetch_name)
+                    if label not in artifact_names:
                         raise Exception('Missing fetch job for {kind}-{name}: {fetch}'.format(
-                            kind=config.kind, name=name, fetch=fetch))
+                            kind=config.kind, name=name, fetch=fetch_name))
 
-                    path = all_fetches[fetch]
+                    path = artifact_names[label]
                     if not path.startswith('public/'):
-                        raise Exception('Non-public artifacts not supported for {kind}-{name}: '
-                                        '{fetch}'.format(kind=config.kind, name=name, fetch=fetch))
+                        raise Exception(
+                            'Non-public artifacts not supported for {kind}-{name}: '
+                            '{fetch}'.format(kind=config.kind, name=name, fetch=fetch_name))
 
-                    dep = 'fetch-{}'.format(fetch)
-                    dependencies[dep] = dep
+                    dependencies[label] = label
                     job_fetches.append({
                         'artifact': path,
-                        'task': '<{dep}>'.format(dep=dep),
+                        'task': '<{label}>'.format(label=label),
                         'extract': True,
                     })
-
             else:
                 if kind not in dependencies:
                     raise Exception("{name} can't fetch {kind} artifacts because "
