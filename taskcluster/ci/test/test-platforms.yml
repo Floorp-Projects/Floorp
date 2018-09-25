@@ -118,6 +118,7 @@ linux64-ccov/debug:
         - web-platform-tests
         - awsy
         - talos
+        - ccov-code-coverage-tests
 linux64-jsdcov/opt:
     build-platform: linux64-jsdcov/opt
     test-sets:
@@ -193,6 +194,7 @@ windows10-64-ccov/debug:
         - windows-reftest-gpu
         - windows-talos
         - windows-tests
+        - ccov-code-coverage-tests
 
 windows10-64/debug:
     build-platform: win64/debug
