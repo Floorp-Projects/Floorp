@@ -182,14 +182,14 @@ this.sessions = class extends ExtensionAPI {
           let {win, encodedKey} =
             getWindowParams(extension.id, key, windowId, context);
 
-          SessionStore.setWindowValue(win, encodedKey, JSON.stringify(value));
+          SessionStore.setCustomWindowValue(win, encodedKey, JSON.stringify(value));
         },
 
         async getWindowValue(windowId, key) {
           let {win, encodedKey} =
             getWindowParams(extension.id, key, windowId, context);
 
-          let value = SessionStore.getWindowValue(win, encodedKey);
+          let value = SessionStore.getCustomWindowValue(win, encodedKey);
           if (value) {
             return JSON.parse(value);
           }
@@ -201,7 +201,7 @@ this.sessions = class extends ExtensionAPI {
           let {win, encodedKey} =
             getWindowParams(extension.id, key, windowId, context);
 
-          SessionStore.deleteWindowValue(win, encodedKey);
+          SessionStore.deleteCustomWindowValue(win, encodedKey);
         },
 
         onChanged: new EventManager({
