@@ -42,6 +42,7 @@ const TEST_GLOBAL = {
     },
   },
   AppConstants: {MOZILLA_OFFICIAL: true},
+  UpdateUtils: {getUpdateChannel() {}},
   ChromeUtils: {
     defineModuleGetter() {},
     generateQI() { return {}; },
@@ -106,8 +107,7 @@ const TEST_GLOBAL = {
   DownloadsViewUI: {DownloadElementShell},
   Services: {
     locale: {
-      appLocaleAsLangTag: "en-US",
-      appLocalesAsLangtags: [],
+      get appLocaleAsLangTag() { return "en-US"; },
       negotiateLanguages() {},
     },
     urlFormatter: {formatURL: str => str, formatURLPref: str => str},
@@ -202,6 +202,7 @@ const TEST_GLOBAL = {
   ShellService: {isDefaultBrowser: () => true},
   FilterExpressions: {eval() { return Promise.resolve(false); }},
   RemoteSettings() { return {get() { return Promise.resolve([]); }}; },
+  Localization: class {},
 };
 overrider.set(TEST_GLOBAL);
 

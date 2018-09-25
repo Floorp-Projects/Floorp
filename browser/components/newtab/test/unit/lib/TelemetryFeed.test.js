@@ -502,7 +502,7 @@ describe("TelemetryFeed", () => {
   });
   describe("#applyCFRPolicy", () => {
     it("should use client_id and message_id in prerelease", () => {
-      globals.set("AppConstants", {MOZ_UPDATE_CHANNEL: "nightly"});
+      globals.set("UpdateUtils", {getUpdateChannel() { return "nightly"; }});
       const data = {
         action: "cfr_user_event",
         source: "CFR",
@@ -520,7 +520,7 @@ describe("TelemetryFeed", () => {
       assert.isUndefined(ping.bucket_id);
     });
     it("should use impression_id and bucket_id in release", () => {
-      globals.set("AppConstants", {MOZ_UPDATE_CHANNEL: "release"});
+      globals.set("UpdateUtils", {getUpdateChannel() { return "release"; }});
       const data = {
         action: "cfr_user_event",
         source: "CFR",
@@ -538,7 +538,7 @@ describe("TelemetryFeed", () => {
       assert.isUndefined(ping.bucket_id);
     });
     it("should use client_id and message_id in the experiment cohort in release", () => {
-      globals.set("AppConstants", {MOZ_UPDATE_CHANNEL: "release"});
+      globals.set("UpdateUtils", {getUpdateChannel() { return "release"; }});
       FakePrefs.prototype.prefs[ROUTER_MESSAGE_PROVIDER_PREF] = FAKE_ROUTER_MESSAGE_PROVIDER_COHORT;
       const data = {
         action: "cfr_user_event",

@@ -62,6 +62,8 @@ $aw-extra-blue-2: #0080FF;
 $aw-extra-blue-3: #00C7FF;
 $about-welcome-gradient: linear-gradient(to bottom, $blue-70 40%, $aw-extra-blue-1 60%, $blue-60 80%, $aw-extra-blue-2 90%, $aw-extra-blue-3 100%);
 $about-welcome-extra-links: #676F7E;
+$firefox-wordmark-default-color: #363959;
+$firefox-wordmark-darktheme-color: $white;
 
 // Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
 $photon-easing: cubic-bezier(0.07, 0.95, 0, 1);

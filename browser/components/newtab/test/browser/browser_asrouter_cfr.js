@@ -43,7 +43,7 @@ function trigger_cfr_panel(browser, trigger, cb) {
 add_task(async function test_cfr_notification_show() {
   // addRecommendation checks that scheme starts with http and host matches
   let browser = gBrowser.selectedBrowser;
-  browser.loadURI("http://example.com");
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
   const response = await trigger_cfr_panel(browser, "example.com", () => {});
