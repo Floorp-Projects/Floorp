@@ -734,7 +734,7 @@ async function enableWebComponents() {
 /*
  * Register an actor in the content process of the current tab.
  *
- * Calling ActorRegistry.registerModule only registers the actor in the current process.
+ * Calling DebuggerServer.registerModule only registers the actor in the current process.
  * As all test scripts are ran in the parent process, it is only registered here.
  * This function helps register them in the content process used for the current tab.
  *
@@ -755,7 +755,7 @@ async function registerActorInContentProcess(url, options) {
   return ContentTask.spawn(gBrowser.selectedBrowser, { url, options }, args => {
     // eslint-disable-next-line no-shadow
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-    const { ActorRegistry } = require("devtools/server/actor-registry");
-    ActorRegistry.registerModule(args.url, args.options);
+    const { DebuggerServer } = require("devtools/server/main");
+    DebuggerServer.registerModule(args.url, args.options);
   });
 }
