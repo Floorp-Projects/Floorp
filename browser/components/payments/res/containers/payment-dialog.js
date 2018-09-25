@@ -54,6 +54,8 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     this._payerAddressPicker = contents.querySelector("address-picker.payer-related");
     this._paymentMethodPicker = contents.querySelector("payment-method-picker");
     this._acceptedCardsList = contents.querySelector("accepted-cards");
+    this._manageText = contents.querySelector(".manage-text");
+    this._manageText.addEventListener("click", this);
 
     this._header = contents.querySelector("header");
 
@@ -75,7 +77,7 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
   handleEvent(event) {
     if (event.type == "click") {
-      switch (event.target) {
+      switch (event.currentTarget) {
         case this._viewAllButton:
           let orderDetailsShowing = !this.requestStore.getState().orderDetailsShowing;
           this.requestStore.setState({ orderDetailsShowing });
@@ -83,8 +85,18 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
         case this._payButton:
           this.pay();
           break;
+        case this._manageText:
+          if (event.target instanceof HTMLAnchorElement) {
+            this.openPreferences(event);
+          }
+          break;
       }
     }
+  }
+
+  openPreferences(event) {
+    paymentRequest.openPreferences();
+    event.preventDefault();
   }
 
   cancelRequest() {
@@ -367,6 +379,15 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     let merchantNetworks = basicCardMethod && basicCardMethod.data &&
                            basicCardMethod.data.supportedNetworks;
     this._acceptedCardsList.hidden = !(merchantNetworks && merchantNetworks.length);
+
+    let isMac = /mac/i.test(navigator.platform);
+    for (let manageTextEl of this._manageText.children) {
+      manageTextEl.hidden = manageTextEl.dataset.os == "mac" ? !isMac : isMac;
+      let link = manageTextEl.querySelector("a");
+      // The href is only set to be exposed to accessibility tools so users know what will open.
+      // The actual opening happens from the click event listener.
+      link.href = "about:preferences#privacy-address-autofill";
+    }
 
     this._renderPayButton(state);
 
