@@ -517,7 +517,11 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = AntiTrackingCommon::IsOnContentBlockingAllowList(topWinURI, mIsAllowListed);
+    rv = AntiTrackingCommon::IsOnContentBlockingAllowList(topWinURI,
+                                                          aAnnotationsOnly ?
+                                                            AntiTrackingCommon::eTrackingAnnotations :
+                                                            AntiTrackingCommon::eTrackingProtection,
+                                                          mIsAllowListed);
     if (NS_FAILED(rv)) {
       return rv; // normal for some loads, no need to print a warning
     }
