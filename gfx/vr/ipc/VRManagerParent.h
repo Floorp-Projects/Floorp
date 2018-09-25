@@ -111,6 +111,10 @@ public:
   ~VRManagerPromise() {
     mParent = nullptr;
   }
+  bool operator==(const VRManagerPromise& aOther) const
+  {
+    return mParent == aOther.mParent && mPromiseID == aOther.mPromiseID;
+  }
 
 private:
   RefPtr<VRManagerParent> mParent;
