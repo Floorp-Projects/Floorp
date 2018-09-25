@@ -319,10 +319,21 @@ DirectMapTextureSource::DirectMapTextureSource(TextureSourceProvider* aProvider,
                     LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                     aSurface->GetSize(),
                     aSurface->GetFormat())
+  , mSync(0)
 {
   MOZ_ASSERT(aSurface);
 
   UpdateInternal(aSurface, nullptr, nullptr, true);
+}
+
+DirectMapTextureSource::~DirectMapTextureSource()
+{
+  if (!mSync || !gl() || !gl()->MakeCurrent() || gl()->IsDestroyed()) {
+    return;
+  }
+
+  gl()->fDeleteSync(mSync);
+  mSync = 0;
 }
 
 bool
@@ -337,10 +348,26 @@ DirectMapTextureSource::Update(gfx::DataSourceSurface* aSurface,
   return UpdateInternal(aSurface, aDestRegion, aSrcOffset, false);
 }
 
+void
+DirectMapTextureSource::MaybeFenceTexture()
+{
+  if (!gl() ||
+      !gl()->MakeCurrent() ||
+      gl()->IsDestroyed()) {
+    return;
+  }
+
+  if (mSync) {
+    gl()->fDeleteSync(mSync);
+  }
+  mSync = gl()->fFenceSync(LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+}
+
+
 bool
 DirectMapTextureSource::Sync(bool aBlocking)
 {
-  if (!gl() || !gl()->MakeCurrent()) {
+  if (!gl() || !gl()->MakeCurrent() || gl()->IsDestroyed()) {
     // We use this function to decide whether we can unlock the texture
     // and clean it up. If we return false here and for whatever reason
     // the context is absent or invalid, the compositor will keep a
@@ -348,14 +375,15 @@ DirectMapTextureSource::Sync(bool aBlocking)
     return true;
   }
 
-  if (!gl()->IsDestroyed()) {
-    if (aBlocking) {
-      gl()->fFinishObjectAPPLE(LOCAL_GL_TEXTURE, mTextureHandle);
-    } else {
-      return gl()->fTestObjectAPPLE(LOCAL_GL_TEXTURE, mTextureHandle);
-    }
+  if (!mSync) {
+    return false;
   }
-  return true;
+
+  GLenum waitResult = gl()->fClientWaitSync(mSync,
+                                            LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT,
+                                            aBlocking ? LOCAL_GL_TIMEOUT_IGNORED : 0);
+  return waitResult == LOCAL_GL_ALREADY_SIGNALED ||
+         waitResult == LOCAL_GL_CONDITION_SATISFIED; 
 }
 
 bool
@@ -408,6 +436,11 @@ DirectMapTextureSource::UpdateInternal(gfx::DataSourceSurface* aSurface,
                                        srcPoint,
                                        LOCAL_GL_TEXTURE0,
                                        LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+
+  if (mSync) {
+    gl()->fDeleteSync(mSync);
+    mSync = 0;
+  }
 
   gl()->fPixelStorei(LOCAL_GL_UNPACK_CLIENT_STORAGE_APPLE, LOCAL_GL_FALSE);
   return true;
