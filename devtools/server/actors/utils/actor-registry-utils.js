@@ -7,7 +7,7 @@
 const { Cu, CC } = require("chrome");
 
 const { DebuggerServer } = require("devtools/server/main");
-const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+const { ActorRegistry } = require("devtools/server/actor-registry");
 
 /**
  * Support for actor registration. Main used by ActorRegistryActor

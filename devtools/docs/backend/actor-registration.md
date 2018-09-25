@@ -30,7 +30,7 @@ ActorRegistry.registerModule("devtools/server/actors/addon/addons", {
 });
 ```
 
-If you are adding a new built-in actor, you should be registering it using `ActorRegistry.registerModule` in `addBrowserActors` or `addTargetScopedActors` in `/devtools/server/actors/utils/actor-registry.js`.
+If you are adding a new built-in actor, you should be registering it using `ActorRegistry.registerModule` in `addBrowserActors` or `addTargetScopedActors` in `/devtools/server/actor-registry.js`.
 
 ## A note about lazy registration
 

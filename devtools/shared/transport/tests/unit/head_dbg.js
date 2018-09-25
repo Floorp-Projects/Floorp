@@ -25,7 +25,7 @@ const Services = require("Services");
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
-const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+const { ActorRegistry } = require("devtools/server/actor-registry");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
