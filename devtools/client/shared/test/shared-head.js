@@ -755,7 +755,7 @@ async function registerActorInContentProcess(url, options) {
   return ContentTask.spawn(gBrowser.selectedBrowser, { url, options }, args => {
     // eslint-disable-next-line no-shadow
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-    const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+    const { ActorRegistry } = require("devtools/server/actor-registry");
     ActorRegistry.registerModule(args.url, args.options);
   });
 }

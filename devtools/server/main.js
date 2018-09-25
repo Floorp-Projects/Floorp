@@ -11,7 +11,7 @@
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
 var { Pool } = require("devtools/shared/protocol");
-var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+var { ActorRegistry } = require("devtools/server/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 

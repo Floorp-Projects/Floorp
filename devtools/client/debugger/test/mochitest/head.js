@@ -16,7 +16,7 @@ Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 var { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 var { DebuggerServer } = require("devtools/server/main");
-var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
+var { ActorRegistry } = require("devtools/server/actor-registry");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var ObjectClient = require("devtools/shared/client/object-client");
 var { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
