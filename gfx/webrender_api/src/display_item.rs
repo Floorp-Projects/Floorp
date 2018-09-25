@@ -262,6 +262,11 @@ pub struct NormalBorder {
     pub top: BorderSide,
     pub bottom: BorderSide,
     pub radius: BorderRadius,
+    /// Whether to apply anti-aliasing on the border corners.
+    ///
+    /// Note that for this to be `false` and work, this requires the borders to
+    /// be solid, and no border-radius.
+    pub do_aa: bool,
 }
 
 impl NormalBorder {
@@ -275,10 +280,27 @@ impl NormalBorder {
         b
     }
 
+    fn can_disable_antialiasing(&self) -> bool {
+        fn is_valid(style: BorderStyle) -> bool {
+            style == BorderStyle::Solid || style == BorderStyle::None
+        }
+
+        self.radius.is_zero() &&
+            is_valid(self.top.style) &&
+            is_valid(self.left.style) &&
+            is_valid(self.bottom.style) &&
+            is_valid(self.right.style)
+    }
+
     /// Normalizes a border so that we don't render disallowed stuff, like inset
     /// borders that are less than two pixels wide.
     #[inline]
     pub fn normalize(&mut self, widths: &LayoutSideOffsets) {
+        debug_assert!(
+            self.do_aa || self.can_disable_antialiasing(),
+            "Unexpected disabled-antialising in a border, likely won't work or will be ignored"
+        );
+
         #[inline]
         fn renders_small_border_solid(style: BorderStyle) -> bool {
             match style {

@@ -22,7 +22,6 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
-#include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/WorkletThread.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs.h"
@@ -542,12 +541,10 @@ protected:
   explicit ConsoleWorkletRunnable(Console* aConsole)
     : Runnable("dom::console::ConsoleWorkletRunnable")
     , mConsole(aConsole)
+    , mWorkletThread(WorkletThread::Get())
   {
     WorkletThread::AssertIsOnWorkletThread();
-    nsCOMPtr<WorkletGlobalScope> global = do_QueryInterface(mConsole->mGlobal);
-    MOZ_ASSERT(global);
-    mWorkletImpl = global->Impl();
-    MOZ_ASSERT(mWorkletImpl);
+    MOZ_ASSERT(mWorkletThread);
   }
 
   ~ConsoleWorkletRunnable() override = default;
@@ -560,7 +557,7 @@ protected:
     if (NS_IsMainThread()) {
       RunOnMainThread();
       RefPtr<ConsoleWorkletRunnable> runnable(this);
-      return mWorkletImpl->DispatchRunnable(runnable.forget());
+      return mWorkletThread->DispatchRunnable(runnable.forget());
     }
 
     WorkletThread::AssertIsOnWorkletThread();
@@ -582,7 +579,7 @@ protected:
   // This must be released on the worker thread.
   RefPtr<Console> mConsole;
 
-  RefPtr<WorkletImpl> mWorkletImpl;
+  RefPtr<WorkletThread> mWorkletThread;
 };
 
 // This runnable appends a CallData object into the Console queue running on
@@ -594,6 +591,12 @@ public:
   Create(Console* aConsole, ConsoleCallData* aConsoleData)
   {
     WorkletThread::AssertIsOnWorkletThread();
+
+    RefPtr<WorkletThread> workletThread = WorkletThread::Get();
+    MOZ_ASSERT(workletThread);
+
+    aConsoleData->SetIDs(workletThread->GetWorkletLoadInfo().OuterWindowID(),
+                         workletThread->GetWorkletLoadInfo().InnerWindowID());
 
     RefPtr<ConsoleCallDataWorkletRunnable> runnable =
       new ConsoleCallDataWorkletRunnable(aConsole, aConsoleData);
@@ -616,9 +619,6 @@ private:
     MOZ_ASSERT(aCallData);
     aCallData->AssertIsOnOwningThread();
 
-    const WorkletLoadInfo& loadInfo = mWorkletImpl->LoadInfo();
-    mCallData->SetIDs(loadInfo.OuterWindowID(), loadInfo.InnerWindowID());
-
     // Marking this CallData as in use.
     mCallData->mStatus = ConsoleCallData::eInUse;
   }
@@ -634,7 +634,8 @@ private:
     AutoSafeJSContext cx;
 
     JSObject* sandbox =
-      mConsole->GetOrCreateSandbox(cx, mWorkletImpl->LoadInfo().Principal());
+      mConsole->GetOrCreateSandbox(cx,
+                                   mWorkletThread->GetWorkletLoadInfo().Principal());
     JS::Rooted<JSObject*> global(cx, sandbox);
     if (NS_WARN_IF(!global)) {
       return;
@@ -917,7 +918,8 @@ private:
     AutoSafeJSContext cx;
 
     JSObject* sandbox =
-      mConsole->GetOrCreateSandbox(cx, mWorkletImpl->LoadInfo().Principal());
+      mConsole->GetOrCreateSandbox(cx,
+                                   mWorkletThread->GetWorkletLoadInfo().Principal());
     JS::Rooted<JSObject*> global(cx, sandbox);
     if (NS_WARN_IF(!global)) {
       return;
@@ -1000,14 +1002,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
 // Console object is used on workers.
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Console)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsoleEventNotifier)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDumpFunction)
   tmp->Shutdown();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Console)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsoleEventNotifier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDumpFunction)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -1052,8 +1054,7 @@ Console::Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
     }
   }
 
-  RefPtr<Console> console =
-    new Console(aCx, aWindow->AsGlobal(), outerWindowID, innerWindowID);
+  RefPtr<Console> console = new Console(aCx, aWindow, outerWindowID, innerWindowID);
   console->Initialize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -1063,14 +1064,13 @@ Console::Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 }
 
 /* static */ already_AddRefed<Console>
-Console::CreateForWorklet(JSContext* aCx, nsIGlobalObject* aGlobal,
-                          uint64_t aOuterWindowID, uint64_t aInnerWindowID,
-                          ErrorResult& aRv)
+Console::CreateForWorklet(JSContext* aCx, uint64_t aOuterWindowID,
+                          uint64_t aInnerWindowID, ErrorResult& aRv)
 {
   WorkletThread::AssertIsOnWorkletThread();
 
   RefPtr<Console> console =
-    new Console(aCx, aGlobal, aOuterWindowID, aInnerWindowID);
+    new Console(aCx, nullptr, aOuterWindowID, aInnerWindowID);
   console->Initialize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -1079,9 +1079,9 @@ Console::CreateForWorklet(JSContext* aCx, nsIGlobalObject* aGlobal,
   return console.forget();
 }
 
-Console::Console(JSContext* aCx, nsIGlobalObject* aGlobal,
+Console::Console(JSContext* aCx, nsPIDOMWindowInner* aWindow,
                  uint64_t aOuterWindowID, uint64_t aInnerWindowID)
-  : mGlobal(aGlobal)
+  : mWindow(aWindow)
   , mOuterID(aOuterWindowID)
   , mInnerID(aInnerWindowID)
   , mDumpToStdout(false)
@@ -1118,7 +1118,7 @@ Console::Initialize(ErrorResult& aRv)
       return;
     }
 
-    if (mInnerID) {
+    if (mWindow) {
       aRv = obs->AddObserver(this, "inner-window-destroyed", true);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
@@ -1546,10 +1546,10 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   OriginAttributes oa;
 
   if (NS_IsMainThread()) {
-    if (mGlobal) {
+    if (mWindow) {
       // Save the principal's OriginAttributes in the console event data
       // so that we will be able to filter messages by origin attributes.
-      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mGlobal);
+      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mWindow);
       if (NS_WARN_IF(!sop)) {
         return;
       }
@@ -1564,7 +1564,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
 #ifdef DEBUG
       if (!nsContentUtils::IsSystemPrincipal(principal)) {
-        nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mGlobal);
+        nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
         if (webNav) {
           nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
           MOZ_ASSERT(loadContext);
@@ -1578,9 +1578,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 #endif
     }
   } else if (WorkletThread::IsOnWorkletThread()) {
-    nsCOMPtr<WorkletGlobalScope> global = do_QueryInterface(mGlobal);
-    MOZ_ASSERT(global);
-    oa = global->Impl()->LoadInfo().OriginAttributesRef();
+    oa = WorkletThread::Get()->GetWorkletLoadInfo().OriginAttributesRef();
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -1670,7 +1668,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   }
 
   if (NS_IsMainThread()) {
-    if (mInnerID) {
+    if (mWindow) {
       callData->SetIDs(mOuterID, mInnerID);
     } else if (!mPassedInnerID.IsEmpty()) {
       callData->SetIDs(NS_LITERAL_STRING("jsm"), mPassedInnerID);
@@ -2867,8 +2865,8 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
                         const Sequence<JS::Value>& aData,
                         DOMHighResTimeStamp* aTimeStamp)
 {
-  if (nsCOMPtr<nsPIDOMWindowInner> innerWindow = do_QueryInterface(mGlobal)) {
-    nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(innerWindow);
+  if (mWindow) {
+    nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(mWindow);
     MOZ_ASSERT(win);
 
     RefPtr<Performance> performance = win->GetPerformance();
@@ -2878,7 +2876,7 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
 
     *aTimeStamp = performance->Now();
 
-    nsDocShell* docShell = static_cast<nsDocShell*>(win->GetDocShell());
+    nsDocShell* docShell = static_cast<nsDocShell*>(mWindow->GetDocShell());
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
     bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
 

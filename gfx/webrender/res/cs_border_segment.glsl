@@ -152,7 +152,7 @@ void main(void) {
     int segment = aFlags & 0xff;
     int style0 = (aFlags >> 8) & 0xff;
     int style1 = (aFlags >> 16) & 0xff;
-    int clip_mode = (aFlags >> 24) & 0xff;
+    int clip_mode = (aFlags >> 24) & 0x0f;
 
     vec2 outer_scale = get_outer_corner_scale(segment);
     vec2 outer = outer_scale * aRect.zw;
