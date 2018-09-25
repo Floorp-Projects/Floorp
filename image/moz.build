@@ -53,6 +53,10 @@ EXPORTS += [
     'SurfaceCacheUtils.h',
 ]
 
+EXPORTS.mozilla.image += [
+    'ImageMemoryReporter.h',
+]
+
 UNIFIED_SOURCES += [
     'AnimationFrameBuffer.cpp',
     'AnimationSurfaceProvider.cpp',
@@ -68,6 +72,7 @@ UNIFIED_SOURCES += [
     'Image.cpp',
     'ImageCacheKey.cpp',
     'ImageFactory.cpp',
+    'ImageMemoryReporter.cpp',
     'ImageOps.cpp',
     'ImageWrapper.cpp',
     'imgFrame.cpp',
