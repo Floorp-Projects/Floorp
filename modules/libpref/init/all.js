@@ -4675,6 +4675,9 @@ pref("image.mem.animated.use_heap", true);
 pref("image.mem.animated.use_heap", false);
 #endif
 
+// Enable extra information for debugging in the image memory reports.
+pref("image.mem.debug-reporting", false);
+
 // Decodes images into shared memory to allow direct use in separate
 // rendering processes. Only applicable with WebRender.
 pref("image.mem.shared", true);
