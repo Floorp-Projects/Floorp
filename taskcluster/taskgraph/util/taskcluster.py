@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
 import datetime
 import functools
 import yaml
@@ -26,6 +27,27 @@ logger = logging.getLogger(__name__)
 
 # this is set to true for `mach taskgraph action-callback --test`
 testing = False
+
+# Default rootUrl to use if none is given in the environment; this should point
+# to the production Taskcluster deployment used for CI.
+PRODUCTION_TASKCLUSTER_ROOT_URL = 'https://taskcluster.net'
+
+
+@memoize
+def get_root_url():
+    """Get the current TASKCLUSTER_ROOT_URL.  When running in a task, this must
+    come from $TASKCLUSTER_ROOT_URL; when run on the command line, we apply a
+    defualt that points to the production deployment of Taskcluster."""
+    if 'TASKCLUSTER_ROOT_URL' not in os.environ:
+        if 'TASK_ID' in os.environ:
+            raise RuntimeError('$TASKCLUSTER_ROOT_URL must be set when running in a task')
+        else:
+            logger.debug('Using default TASKCLUSTER_ROOT_URL (Firefox CI production)')
+            return PRODUCTION_TASKCLUSTER_ROOT_URL
+    logger.debug('Running in Taskcluster instance {}{}'.format(
+        os.environ['TASKCLUSTER_ROOT_URL'],
+        ' with taskcluster-proxy' if 'TASKCLUSTER_PROXY_URL' in os.environ else ''))
+    return os.environ['TASKCLUSTER_ROOT_URL']
 
 
 @memoize
