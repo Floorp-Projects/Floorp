@@ -942,28 +942,26 @@ imgFrame::SetCompositingFailed(bool val)
 
 void
 imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                                 const AddSizeOfCb& aCallback) const
+                                 size_t& aHeapSizeOut,
+                                 size_t& aNonHeapSizeOut,
+                                 size_t& aExtHandlesOut) const
 {
   MonitorAutoLock lock(mMonitor);
 
-  AddSizeOfCbData metadata;
   if (mPalettedImageData) {
-    metadata.heap += aMallocSizeOf(mPalettedImageData);
+    aHeapSizeOut += aMallocSizeOf(mPalettedImageData);
   }
   if (mLockedSurface) {
-    metadata.heap += aMallocSizeOf(mLockedSurface);
+    aHeapSizeOut += aMallocSizeOf(mLockedSurface);
   }
   if (mOptSurface) {
-    metadata.heap += aMallocSizeOf(mOptSurface);
+    aHeapSizeOut += aMallocSizeOf(mOptSurface);
   }
   if (mRawSurface) {
-    metadata.heap += aMallocSizeOf(mRawSurface);
-    mRawSurface->AddSizeOfExcludingThis(aMallocSizeOf, metadata.heap,
-                                        metadata.nonHeap, metadata.handles,
-                                        metadata.externalId);
+    aHeapSizeOut += aMallocSizeOf(mRawSurface);
+    mRawSurface->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut,
+                                        aNonHeapSizeOut, aExtHandlesOut);
   }
-
-  aCallback(metadata);
 }
 
 } // namespace image

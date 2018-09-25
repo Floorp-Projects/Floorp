@@ -97,8 +97,7 @@ void
 SourceSurfaceSharedData::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                 size_t& aHeapSizeOut,
                                                 size_t& aNonHeapSizeOut,
-                                                size_t& aExtHandlesOut,
-                                                uint64_t& aExtIdOut) const
+                                                size_t& aExtHandlesOut) const
 {
   MutexAutoLock lock(mMutex);
   if (mBuf) {
@@ -106,10 +105,6 @@ SourceSurfaceSharedData::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   }
   if (!mClosed) {
     ++aExtHandlesOut;
-  }
-  Maybe<wr::ExternalImageId> extId = SharedSurfacesChild::GetExternalId(this);
-  if (extId) {
-    aExtIdOut = wr::AsUint64(extId.ref());
   }
 }
 

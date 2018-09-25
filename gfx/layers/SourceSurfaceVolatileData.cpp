@@ -42,8 +42,7 @@ void
 SourceSurfaceVolatileData::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                   size_t& aHeapSizeOut,
                                                   size_t& aNonHeapSizeOut,
-                                                  size_t& aExtHandlesOut,
-                                                  uint64_t& aExtIdOut) const
+                                                  size_t& aExtHandlesOut) const
 {
   if (mVBuf) {
     aHeapSizeOut += mVBuf->HeapSizeOfExcludingThis(aMallocSizeOf);
