@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Utf8.h"
 
 #include <string.h>
 
@@ -22,7 +23,9 @@
 #include "vm/TraceLogging.h"
 
 using namespace js;
+
 using mozilla::ArrayEqual;
+using mozilla::Utf8Unit;
 
 template<XDRMode mode>
 LifoAlloc&
@@ -60,6 +63,35 @@ XDRState<mode>::codeChars(const Latin1Char* chars, size_t nchars)
     }
 
     mozilla::PodCopy(ptr, chars, nchars);
+    return Ok();
+}
+
+template<XDRMode mode>
+XDRResult
+XDRState<mode>::codeChars(Utf8Unit* units, size_t count)
+{
+    if (count == 0) {
+        return Ok();
+    }
+
+    if (mode == XDR_ENCODE) {
+        uint8_t* ptr = buf.write(count);
+        if (!ptr) {
+            return fail(JS::TranscodeResult_Throw);
+        }
+
+        std::transform(units, units + count,
+                       ptr, [](const Utf8Unit& unit) { return unit.toUint8(); });
+    } else {
+        const uint8_t* ptr = buf.read(count);
+        if (!ptr) {
+            return fail(JS::TranscodeResult_Failure_BadDecode);
+        }
+
+        std::transform(ptr, ptr + count,
+                       units, [](const uint8_t& value) { return Utf8Unit(value); });
+    }
+
     return Ok();
 }
 
