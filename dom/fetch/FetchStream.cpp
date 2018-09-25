@@ -108,6 +108,7 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
                                    &FetchStream::FinalizeCallback);
   }
 
+  aRv.MightThrowJSException();
   JS::Rooted<JSObject*> body(aCx,
     JS::NewReadableExternalSourceStreamObject(aCx, stream, FETCH_STREAM_FLAG));
   if (!body) {

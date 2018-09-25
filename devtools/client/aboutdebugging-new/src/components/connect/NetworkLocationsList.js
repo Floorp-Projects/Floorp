@@ -17,7 +17,7 @@ class NetworkLocationsList extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      networkLocations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      networkLocations: PropTypes.arrayOf(PropTypes.string).isRequired,
     };
   }
 
@@ -27,7 +27,8 @@ class NetworkLocationsList extends PureComponent {
       this.props.networkLocations.map(location =>
         dom.li(
           {
-            className: "connect-page__network-location js-network-location"
+            className: "connect-page__network-location js-network-location",
+            key: location,
           },
           dom.span(
             {

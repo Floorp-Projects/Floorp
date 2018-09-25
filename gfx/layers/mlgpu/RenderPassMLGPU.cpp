@@ -818,6 +818,12 @@ VideoRenderPass::SetupPipeline()
     return;
   }
 
+  RefPtr<MLGBuffer> ps2 =
+    mDevice->GetBufferForBitDepthCoefficient(mHost->GetBitDepth());
+  if (!ps2) {
+    return;
+  }
+
   if (mGeometry == GeometryMode::UnitQuad) {
     mDevice->SetVertexShader(VertexShaderID::TexturedQuad);
   } else {
@@ -848,6 +854,7 @@ VideoRenderPass::SetupPipeline()
 
   mDevice->SetSamplerMode(kDefaultSamplerSlot, mSamplerMode);
   mDevice->SetPSConstantBuffer(1, ps1);
+  mDevice->SetPSConstantBuffer(2, ps2);
 }
 
 RenderViewPass::RenderViewPass(FrameBuilder* aBuilder, const ItemInfo& aItem)

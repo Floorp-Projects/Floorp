@@ -160,6 +160,27 @@ TEST_SUITES = {
         'task_regex': ['web-platform-tests(?:-reftests|-wdspec)?(?:-e10s)?(?:-1)?$',
                        'test-verify-wpt-e10s'],
     },
+    'web-platform-tests-testharness': {
+        'aliases': ('wpt',),
+        'mach_command': 'web-platform-tests',
+        'kwargs': {'include': []},
+        'task_regex': ['web-platform-tests(?:-e10s)?(?:-1)?$',
+                       'test-verify-wpt-e10s'],
+    },
+    'web-platform-tests-reftest': {
+        'aliases': ('wpt',),
+        'mach_command': 'web-platform-tests',
+        'kwargs': {'include': []},
+        'task_regex': ['web-platform-tests-reftests(?:-e10s)?(?:-1)?$',
+                       'test-verify-wpt-e10s'],
+    },
+    'web-platform-tests-wdspec': {
+        'aliases': ('wpt',),
+        'mach_command': 'web-platform-tests',
+        'kwargs': {'include': []},
+        'task_regex': ['web-platform-tests-wdspec(?:-e10s)?(?:-1)?$',
+                       'test-verify-wpt-e10s'],
+    },
     'valgrind': {
         'aliases': ('v',),
         'mach_command': 'valgrind-test',
@@ -219,6 +240,9 @@ _test_subsuites = {
     ('mochitest', 'webgl2-core'): 'mochitest-webgl2-core',
     ('mochitest', 'webgl2-ext'): 'mochitest-webgl2-ext',
     ('mochitest', 'webgl2-deqp'): 'mochitest-webgl2-deqp',
+    ('web-platform-tests', 'testharness'): 'web-platform-tests-testharness',
+    ('web-platform-tests', 'reftest'): 'web-platform-tests-reftest',
+    ('web-platform-tests', 'wdspec'): 'web-platform-tests-wdspec',
 }
 
 
@@ -447,12 +471,13 @@ class TestMetadata(object):
         for manifest, data in manifests.iteritems():
             tests_root = data["tests_path"]
             for test_type, path, tests in manifest:
-                path = os.path.join(tests_root, path)
+                full_path = os.path.join(tests_root, path)
+                src_path = os.path.relpath(full_path, self._srcdir)
                 if test_type not in ["testharness", "reftest", "wdspec"]:
                     continue
                 for test in tests:
-                    self._tests_by_path[path].append({
-                        "path": path,
+                    self._tests_by_path[src_path].append({
+                        "path": full_path,
                         "flavor": "web-platform-tests",
                         "here": os.path.dirname(path),
                         "manifest": data["manifest_path"],
@@ -461,7 +486,7 @@ class TestMetadata(object):
                         "head": "",
                         "support-files": "",
                         "subsuite": test_type,
-                        "dir_relpath": os.path.relpath(os.path.dirname(path), wpt_path)
+                        "dir_relpath": os.path.dirname(src_path),
                         })
 
         self._wpt_loaded = True
@@ -502,8 +527,6 @@ class TestResolver(MozbuildObject):
                                    'mochitest', 'chrome'),
             'mochitest': os.path.join(self.topobjdir, '_tests', 'testing',
                                       'mochitest', 'tests'),
-            'web-platform-tests': os.path.join(self.topobjdir, '_tests', 'testing',
-                                               'web-platform'),
             'xpcshell': os.path.join(self.topobjdir, '_tests', 'xpcshell'),
         }
         self._vcs = None

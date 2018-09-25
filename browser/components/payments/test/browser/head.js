@@ -18,6 +18,7 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
                      .getService().wrappedJSObject;
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const {formAutofillStorage} = ChromeUtils.import(
   "resource://formautofill/FormAutofillStorage.jsm", {});
 const {PaymentTestUtils: PTU} = ChromeUtils.import(
@@ -346,6 +347,9 @@ add_task(async function setup_head() {
     }
     if (msg.message && msg.message.match(/PrioEncoder is not defined/)) {
       // Bug 1492638 - Console spam from TelemetrySession.
+      return;
+    }
+    if (msg.message && msg.message.match(/devicePixelRatio.*FaviconLoader.jsm/)) {
       return;
     }
     if (msg.errorMessage == "AbortError: The operation was aborted. " &&

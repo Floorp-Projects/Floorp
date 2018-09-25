@@ -1345,9 +1345,8 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         // System Zone) to improve cross-zone test coverage.
         JS::RealmOptions options;
         options.creationOptions().setNewCompartmentAndZone();
-        if (xpc::SharedMemoryEnabled()) {
-            options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
-        }
+        xpc::SetPrefableRealmOptions(options);
+
         JS::Rooted<JSObject*> glob(cx);
         rv = xpc::InitClassesWithNewWrappedGlobal(cx,
                                                   static_cast<nsIGlobalObject*>(backstagePass),

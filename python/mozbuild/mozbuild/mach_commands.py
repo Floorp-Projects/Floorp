@@ -1912,6 +1912,7 @@ class StaticAnalysis(MachCommandBase):
         self.TOOLS_CHECKER_DIFF_FAILED = 6
         self.TOOLS_CHECKER_NOT_FOUND = 7
         self.TOOLS_CHECKER_FAILED_FILE = 8
+        self.TOOLS_CHECKER_LIST_EMPTY = 9
 
         # Configure the tree or download clang-tidy package, depending on the option that we choose
         if intree_tool:
@@ -1952,7 +1953,7 @@ class StaticAnalysis(MachCommandBase):
         if platform not in config['platforms']:
             self.log(logging.ERROR, 'static-analysis', {},
                      "RUNNING: clang-tidy autotest for platform {} not supported.".format(platform))
-            return TOOLS_UNSUPORTED_PLATFORM
+            return self.TOOLS_UNSUPORTED_PLATFORM
 
         import concurrent.futures
         import multiprocessing
@@ -2039,7 +2040,7 @@ class StaticAnalysis(MachCommandBase):
     def _run_analysis_batch(self, items):
         self.log(logging.INFO, 'static-analysis', {},"RUNNING: clang-tidy checker batch analysis.")
         if not len(items):
-            self.log(logging.ERROR, 'static-analysis', {}, "ERROR: clang-tidy checker list is empty!.")
+            self.log(logging.ERROR, 'static-analysis', {}, "ERROR: clang-tidy checker list is empty!")
             return self.TOOLS_CHECKER_LIST_EMPTY
 
         issues = self._run_analysis(
@@ -2189,7 +2190,7 @@ class StaticAnalysis(MachCommandBase):
                 logging.ERROR, 'static-analysis', {},
                 "ERROR: clang-tidy checker {0} did not find any issues in its associated test file.".
                 format(check))
-            return self.CHECKER_RETURNED_NO_ISSUES
+            return self.TOOLS_CHECKER_RETURNED_NO_ISSUES
 
         if self._dump_results:
             self._build_autotest_result(test_file_path_json, json.dumps(issues))
