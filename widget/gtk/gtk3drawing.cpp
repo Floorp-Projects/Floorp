@@ -38,6 +38,22 @@ static ToolbarGTKMetrics sToolbarMetrics;
 #define GTK_STATE_FLAG_CHECKED (1 << 11)
 #endif
 
+#if 0
+// It's used for debugging only to compare Gecko widget style with
+// the ones used by Gtk+ applications.
+static void
+style_path_print(GtkStyleContext *context)
+{
+    const GtkWidgetPath* path = gtk_style_context_get_path(context);
+
+    static auto sGtkWidgetPathToStringPtr =
+        (char * (*)(const GtkWidgetPath *))
+        dlsym(RTLD_DEFAULT, "gtk_widget_path_to_string");
+
+    fprintf(stderr, "Style path:\n%s\n\n", sGtkWidgetPathToStringPtr(path));
+}
+#endif
+
 static GtkBorder
 operator-(const GtkBorder& first, const GtkBorder& second)
 {
@@ -962,6 +978,7 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
                                GtkWidgetState* state,
                                GtkTextDirection direction)
 {
+    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GdkRectangle rect = *aRect;
     GtkStyleContext* style;
 
@@ -970,7 +987,7 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
             MOZ_GTK_SCROLLBAR_THUMB_VERTICAL :
             MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
         MozGtkSize thumbSize = GetMinMarginBox(GetStyleContext(thumb));
-        style = GetStyleContext(widget, direction);
+        style = GetStyleContext(widget, direction, state_flags);
         MozGtkSize trackSize = GetMinContentBox(style);
         trackSize.Include(thumbSize);
         trackSize += GetMarginBorderPadding(style);
@@ -985,7 +1002,7 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
             rect.height = trackSize.height;
         }
     } else {
-        style = GetStyleContext(widget, direction);
+        style = GetStyleContext(widget, direction, state_flags);
     }
 
     moz_gtk_draw_styled_frame(style, cr, &rect, state->focused);
@@ -999,7 +1016,9 @@ moz_gtk_scrollbar_paint(WidgetNodeType widget,
                         GtkWidgetState* state,
                         GtkTextDirection direction)
 {
-    GtkStyleContext* style = GetStyleContext(widget, direction);
+    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+    GtkStyleContext* style = GetStyleContext(widget, direction, state_flags);
+
     moz_gtk_update_scrollbar_style(style, widget, direction);
 
     moz_gtk_draw_styled_frame(style, cr, rect, state->focused);
@@ -1007,7 +1026,7 @@ moz_gtk_scrollbar_paint(WidgetNodeType widget,
     style = GetStyleContext((widget == MOZ_GTK_SCROLLBAR_HORIZONTAL) ?
                             MOZ_GTK_SCROLLBAR_CONTENTS_HORIZONTAL :
                             MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL,
-                            direction);
+                            direction, state_flags);
     moz_gtk_draw_styled_frame(style, cr, rect, state->focused);
 
     return MOZ_GTK_SUCCESS;
