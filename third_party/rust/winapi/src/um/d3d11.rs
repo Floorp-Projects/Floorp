@@ -7,7 +7,7 @@
 use ctypes::{c_float, c_int, c_long, c_void};
 use shared::basetsd::{SIZE_T, UINT64, UINT8};
 use shared::dxgi::{DXGI_SWAP_CHAIN_DESC, IDXGIAdapter, IDXGISwapChain};
-use shared::dxgiformat::{DXGI_FORMAT};
+use shared::dxgiformat::DXGI_FORMAT;
 use shared::dxgitype::{DXGI_RATIONAL, DXGI_SAMPLE_DESC};
 use shared::guiddef::{GUID, REFGUID, REFIID};
 use shared::minwindef::{BOOL, BYTE, DWORD, FLOAT, HMODULE, INT, UINT, USHORT};
@@ -340,7 +340,7 @@ pub const D3D11_SO_NO_RASTERIZED_STREAM: DWORD = 0xffffffff;
 pub const D3D11_SO_OUTPUT_COMPONENT_COUNT: DWORD = 128;
 pub const D3D11_SO_STREAM_COUNT: DWORD = 4;
 pub const D3D11_SPEC_DATE_DAY: DWORD = 16;
-pub const D3D11_SPEC_DATE_MONTH: DWORD = 05;
+pub const D3D11_SPEC_DATE_MONTH: DWORD = 0o5;
 pub const D3D11_SPEC_DATE_YEAR: DWORD = 2011;
 pub const D3D11_SPEC_VERSION: FLOAT = 1.07;
 pub const D3D11_SRGB_GAMMA: FLOAT = 2.2;
@@ -1742,6 +1742,7 @@ interface ID3D11DeviceContext(ID3D11DeviceContextVtbl): ID3D11DeviceChild(ID3D11
         StartSlot: UINT,
         NumUAVs: UINT,
         ppUnorderedAccessViews: *const *mut ID3D11UnorderedAccessView,
+        pUAVInitialCounts: *const UINT,
     ) -> (),
     fn CSSetShader(
         pComputeShader: *mut ID3D11ComputeShader,

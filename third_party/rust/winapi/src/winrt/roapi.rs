@@ -45,7 +45,7 @@ extern "system" {
         factory: *mut *mut VOID,
     ) -> HRESULT;
 }
-DECLARE_HANDLE!(APARTMENT_SHUTDOWN_REGISTRATION_COOKIE, APARTMENT_SHUTDOWN_REGISTRATION_COOKIE__);
+DECLARE_HANDLE!{APARTMENT_SHUTDOWN_REGISTRATION_COOKIE, APARTMENT_SHUTDOWN_REGISTRATION_COOKIE__}
 extern "system" {
     pub fn RoRegisterForApartmentShutdown(
         callbackObject: *const IApartmentShutdown,

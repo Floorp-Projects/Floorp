@@ -88,6 +88,11 @@ FN!{stdcall PFIND_EXE_FILE_CALLBACKW(
     FileName: PCWSTR,
     CallerData: PVOID,
 ) -> BOOL}
+FN!{stdcall PSYM_ENUMERATESYMBOLS_CALLBACKW(
+    pSymInfo: PSYMBOL_INFOW,
+    SymbolSize: ULONG,
+    CallerData: PVOID,
+) -> BOOL}
 #[cfg(target_arch = "x86")]
 STRUCT!{struct IMAGE_DEBUG_INFORMATION {
     List: LIST_ENTRY,
@@ -536,6 +541,13 @@ extern "system" {
     pub fn SymCleanup(
         hProcess: HANDLE
     ) -> BOOL;
+    pub fn SymEnumSymbolsW(
+        hProcess: HANDLE,
+        BaseOfDll: ULONG64,
+        Mask: PCWSTR,
+        EnumSymbolsCallback: PSYM_ENUMERATESYMBOLS_CALLBACKW,
+        CallerData: PVOID
+    ) -> BOOL;
     pub fn SymFindDebugInfoFile(
         hProcess: HANDLE,
         FileName: PCSTR,
@@ -594,6 +606,11 @@ extern "system" {
         Displacement: PDWORD64,
         Symbol: PSYMBOL_INFOW,
     ) -> BOOL;
+    pub fn SymFromNameW(
+        hProcess: HANDLE,
+        Name: PCWSTR,
+        Symbol: PSYMBOL_INFOW
+    ) -> BOOL;
     pub fn SymFunctionTableAccess64(
         hProcess: HANDLE,
         AddrBase: DWORD64,
@@ -618,6 +635,24 @@ extern "system" {
         hProcess: HANDLE,
         UserSearchPath: PCWSTR,
         fInvadeProcess: BOOL,
+    ) -> BOOL;
+    pub fn SymLoadModuleExW(
+        hProcess: HANDLE,
+        hFile: HANDLE,
+        ImageName: PCWSTR,
+        ModuleName: PCWSTR,
+        BaseOfDll: DWORD64,
+        SizeOfDll: DWORD,
+        Data: PMODLOAD_DATA,
+        Flags: DWORD
+    ) -> DWORD64;
+    pub fn SymUnloadModule(
+        hProcess: HANDLE,
+        BaseOfDll: DWORD
+    ) -> BOOL;
+    pub fn SymUnloadModule64(
+        hProcess: HANDLE,
+        BaseOfDll: DWORD64
     ) -> BOOL;
     #[cfg(any(target_arch = "x86", target_arch = "arm"))]
     pub fn MapDebugInformation(

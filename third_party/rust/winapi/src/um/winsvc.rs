@@ -5,10 +5,11 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! Header file for the Service Control Manager
-
 use shared::minwindef::{BOOL, DWORD, LPBYTE, LPDWORD, LPVOID};
-use um::winnt::{LPCSTR, LPCWSTR, LPSTR, LPWSTR, STANDARD_RIGHTS_REQUIRED};
-
+use um::winnt::{
+    HANDLE, LPCSTR, LPCWSTR, LPSTR, LPWSTR, PSECURITY_DESCRIPTOR, PVOID,
+    SECURITY_INFORMATION, STANDARD_RIGHTS_REQUIRED
+};
 pub const SERVICE_NO_CHANGE: DWORD = 0xffffffff;
 pub const SERVICE_ACTIVE: DWORD = 0x00000001;
 pub const SERVICE_INACTIVE: DWORD = 0x00000002;
@@ -185,13 +186,13 @@ DEFINE_GUID!{NAMED_PIPE_EVENT_GUID,
     0x1f81d131, 0x3fac, 0x4537, 0x9e, 0x0c, 0x7e, 0x7b, 0x0c, 0x2f, 0x4b, 0x55}
 DEFINE_GUID!{CUSTOM_SYSTEM_STATE_CHANGE_EVENT_GUID,
     0x2d7a2816, 0x0c5e, 0x45fc, 0x9c, 0xe7, 0x57, 0x0e, 0x5e, 0xcd, 0xe9, 0xc9}
-DECLARE_HANDLE!(SC_HANDLE, SC_HANDLE__);
+DECLARE_HANDLE!{SC_HANDLE, SC_HANDLE__}
 pub type LPSC_HANDLE = *mut SC_HANDLE;
-DECLARE_HANDLE!(SERVICE_STATUS_HANDLE, SERVICE_STATUS_HANDLE__);
+DECLARE_HANDLE!{SERVICE_STATUS_HANDLE, SERVICE_STATUS_HANDLE__}
 ENUM!{enum SC_STATUS_TYPE {
     SC_STATUS_PROCESS_INFO = 0,
 }}
-ENUM!{enum _SC_ENUM_TYPE {
+ENUM!{enum SC_ENUM_TYPE {
     SC_ENUM_PROCESS_INFO = 0,
 }}
 STRUCT!{struct SERVICE_STATUS {
@@ -204,6 +205,79 @@ STRUCT!{struct SERVICE_STATUS {
     dwWaitHint: DWORD,
 }}
 pub type LPSERVICE_STATUS = *mut SERVICE_STATUS;
+STRUCT!{struct SERVICE_STATUS_PROCESS {
+    dwServiceType: DWORD,
+    dwCurrentState: DWORD,
+    dwControlsAccepted: DWORD,
+    dwWin32ExitCode: DWORD,
+    dwServiceSpecificExitCode: DWORD,
+    dwCheckPoint: DWORD,
+    dwWaitHint: DWORD,
+    dwProcessId: DWORD,
+    dwServiceFlags: DWORD,
+}}
+pub type LPSERVICE_STATUS_PROCESS = *mut SERVICE_STATUS_PROCESS;
+STRUCT!{struct ENUM_SERVICE_STATUSA {
+    lpServiceName: LPSTR,
+    lpDisplayName: LPSTR,
+    ServiceStatus: SERVICE_STATUS,
+}}
+pub type LPENUM_SERVICE_STATUSA = *mut ENUM_SERVICE_STATUSA;
+STRUCT!{struct ENUM_SERVICE_STATUSW {
+    lpServiceName: LPWSTR,
+    lpDisplayName: LPWSTR,
+    ServiceStatus: SERVICE_STATUS,
+}}
+pub type LPENUM_SERVICE_STATUSW = *mut ENUM_SERVICE_STATUSW;
+STRUCT!{struct ENUM_SERVICE_STATUS_PROCESSA {
+    lpServiceName: LPSTR,
+    lpDisplayName: LPSTR,
+    ServiceStatusProcess: SERVICE_STATUS_PROCESS,
+}}
+pub type LPENUM_SERVICE_STATUS_PROCESSA = *mut ENUM_SERVICE_STATUS_PROCESSA;
+STRUCT!{struct ENUM_SERVICE_STATUS_PROCESSW {
+    lpServiceName: LPWSTR,
+    lpDisplayName: LPWSTR,
+    ServiceStatusProcess: SERVICE_STATUS_PROCESS,
+}}
+pub type LPENUM_SERVICE_STATUS_PROCESSW = *mut ENUM_SERVICE_STATUS_PROCESSW;
+pub type SC_LOCK = LPVOID;
+STRUCT!{struct QUERY_SERVICE_LOCK_STATUSA {
+    fIsLocked: DWORD,
+    lpLockOwner: LPSTR,
+    dwLockDuration: DWORD,
+}}
+pub type LPQUERY_SERVICE_LOCK_STATUSA = *mut QUERY_SERVICE_LOCK_STATUSA;
+STRUCT!{struct QUERY_SERVICE_LOCK_STATUSW {
+    fIsLocked: DWORD,
+    lpLockOwner: LPWSTR,
+    dwLockDuration: DWORD,
+}}
+pub type LPQUERY_SERVICE_LOCK_STATUSW = *mut QUERY_SERVICE_LOCK_STATUSW;
+STRUCT!{struct QUERY_SERVICE_CONFIGA {
+    dwServiceType: DWORD,
+    dwStartType: DWORD,
+    dwErrorControl: DWORD,
+    lpBinaryPathName: LPSTR,
+    lpLoadOrderGroup: LPSTR,
+    dwTagId: DWORD,
+    lpDependencies: LPSTR,
+    lpServiceStartName: LPSTR,
+    lpDisplayName: LPSTR,
+}}
+pub type LPQUERY_SERVICE_CONFIGA = *mut QUERY_SERVICE_CONFIGA;
+STRUCT!{struct QUERY_SERVICE_CONFIGW {
+    dwServiceType: DWORD,
+    dwStartType: DWORD,
+    dwErrorControl: DWORD,
+    lpBinaryPathName: LPWSTR,
+    lpLoadOrderGroup: LPWSTR,
+    dwTagId: DWORD,
+    lpDependencies: LPWSTR,
+    lpServiceStartName: LPWSTR,
+    lpDisplayName: LPWSTR,
+}}
+pub type LPQUERY_SERVICE_CONFIGW = *mut QUERY_SERVICE_CONFIGW;
 FN!{stdcall LPSERVICE_MAIN_FUNCTIONW(
     dwNumServicesArgs: DWORD,
     lpServiceArgVectors: *mut LPWSTR,
@@ -231,11 +305,78 @@ FN!{stdcall LPHANDLER_FUNCTION_EX(
     lpEventData: LPVOID,
     lpContext: LPVOID,
 ) -> DWORD}
+FN!{stdcall PFN_SC_NOTIFY_CALLBACK(
+    pParameter: PVOID,
+) -> ()}
+STRUCT!{struct SERVICE_NOTIFY_1 {
+    dwVersion: DWORD,
+    pfnNotifyCallback: PFN_SC_NOTIFY_CALLBACK,
+    pContext: PVOID,
+    dwNotificationStatus: DWORD,
+    ServiceStatus: SERVICE_STATUS_PROCESS,
+}}
+pub type PSERVICE_NOTIFY_1 = *mut SERVICE_NOTIFY_1;
+STRUCT!{struct SERVICE_NOTIFY_2A {
+    dwVersion: DWORD,
+    pfnNotifyCallback: PFN_SC_NOTIFY_CALLBACK,
+    pContext: PVOID,
+    dwNotificationStatus: DWORD,
+    ServiceStatus: SERVICE_STATUS_PROCESS,
+    dwNotificationTriggered: DWORD,
+    pszServiceNames: LPSTR,
+}}
+pub type PSERVICE_NOTIFY_2A = *mut SERVICE_NOTIFY_2A;
+STRUCT!{struct SERVICE_NOTIFY_2W {
+    dwVersion: DWORD,
+    pfnNotifyCallback: PFN_SC_NOTIFY_CALLBACK,
+    pContext: PVOID,
+    dwNotificationStatus: DWORD,
+    ServiceStatus: SERVICE_STATUS_PROCESS,
+    dwNotificationTriggered: DWORD,
+    pszServiceNames: LPWSTR,
+}}
+pub type PSERVICE_NOTIFY_2W = *mut SERVICE_NOTIFY_2W;
+pub type SERVICE_NOTIFYA = SERVICE_NOTIFY_2A;
+pub type PSERVICE_NOTIFYA = PSERVICE_NOTIFY_2A;
+pub type SERVICE_NOTIFYW = SERVICE_NOTIFY_2W;
+pub type PSERVICE_NOTIFYW = PSERVICE_NOTIFY_2W;
 extern "system" {
-    // pub fn ChangeServiceConfigA();
-    // pub fn ChangeServiceConfigW();
-    // pub fn ChangeServiceConfig2A();
-    // pub fn ChangeServiceConfig2W();
+    pub fn ChangeServiceConfigA(
+        hService: SC_HANDLE,
+        dwServiceType: DWORD,
+        dsStartType: DWORD,
+        dwErrorControl: DWORD,
+        lpBinaryPathName: LPCSTR,
+        lpLoadOrderGroup: LPCSTR,
+        lpdwTagId: LPDWORD,
+        lpDependencies: LPCSTR,
+        lpServiceStartName: LPCSTR,
+        lpPassword: LPCSTR,
+        lpDisplayName: LPCSTR,
+    ) -> BOOL;
+    pub fn ChangeServiceConfigW(
+        hService: SC_HANDLE,
+        dwServiceType: DWORD,
+        dsStartType: DWORD,
+        dwErrorControl: DWORD,
+        lpBinaryPathName: LPCWSTR,
+        lpLoadOrderGroup: LPCWSTR,
+        lpdwTagId: LPDWORD,
+        lpDependencies: LPCWSTR,
+        lpServiceStartName: LPCWSTR,
+        lpPassword: LPCWSTR,
+        lpDisplayName: LPCWSTR,
+    ) -> BOOL;
+    pub fn ChangeServiceConfig2A(
+        hService: SC_HANDLE,
+        dwInfoLevel: DWORD,
+        lpInfo: LPVOID,
+    ) -> BOOL;
+    pub fn ChangeServiceConfig2W(
+        hService: SC_HANDLE,
+        dwInfoLevel: DWORD,
+        lpInfo: LPVOID,
+    ) -> BOOL;
     pub fn CloseServiceHandle(
         hSCObject: SC_HANDLE,
     ) -> BOOL;
@@ -277,18 +418,96 @@ extern "system" {
     pub fn DeleteService(
         hService: SC_HANDLE,
     ) -> BOOL;
-    // pub fn EnumDependentServicesA();
-    // pub fn EnumDependentServicesW();
-    // pub fn EnumServicesStatusA();
-    // pub fn EnumServicesStatusW();
-    // pub fn EnumServicesStatusExA();
-    // pub fn EnumServicesStatusExW();
-    // pub fn GetServiceKeyNameA();
-    // pub fn GetServiceKeyNameW();
-    // pub fn GetServiceDisplayNameA();
-    // pub fn GetServiceDisplayNameW();
-    // pub fn LockServiceDatabase();
-    // pub fn NotifyBootConfigStatus();
+    pub fn EnumDependentServicesA(
+        hService: SC_HANDLE,
+        dwServiceState: DWORD,
+        lpServices: LPENUM_SERVICE_STATUSA,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+        lpServicesReturned: LPDWORD,
+    ) -> BOOL;
+    pub fn EnumDependentServicesW(
+        hService: SC_HANDLE,
+        dwServiceState: DWORD,
+        lpServices: LPENUM_SERVICE_STATUSW,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+        lpServicesReturned: LPDWORD,
+    ) -> BOOL;
+    pub fn EnumServicesStatusA(
+        hSCManager: SC_HANDLE,
+        dwServiceType: DWORD,
+        dwServiceState: DWORD,
+        lpServices: LPENUM_SERVICE_STATUSA,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+        lpServicesReturned: LPDWORD,
+        lpResumeHandle: LPDWORD,
+    ) -> BOOL;
+    pub fn EnumServicesStatusW(
+        hSCManager: SC_HANDLE,
+        dwServiceType: DWORD,
+        dwServiceState: DWORD,
+        lpServices: LPENUM_SERVICE_STATUSW,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+        lpServicesReturned: LPDWORD,
+        lpResumeHandle: LPDWORD,
+    ) -> BOOL;
+    pub fn EnumServicesStatusExA(
+        hSCManager: SC_HANDLE,
+        InfoLevel: SC_ENUM_TYPE,
+        dwServiceType: DWORD,
+        dwServiceState: DWORD,
+        lpServices: LPBYTE,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+        lpServicesReturned: LPDWORD,
+        lpResumeHandle: LPDWORD,
+        pszGroupName: LPCSTR,
+    ) -> BOOL;
+    pub fn EnumServicesStatusExW(
+        hSCManager: SC_HANDLE,
+        InfoLevel: SC_ENUM_TYPE,
+        dwServiceType: DWORD,
+        dwServiceState: DWORD,
+        lpServices: LPBYTE,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+        lpServicesReturned: LPDWORD,
+        lpResumeHandle: LPDWORD,
+        pszGroupName: LPCWSTR,
+    ) -> BOOL;
+    pub fn GetServiceKeyNameA(
+        hSCManager: SC_HANDLE,
+        lpDisplayName: LPCSTR,
+        lpServiceName: LPSTR,
+        lpcchBuffer: LPDWORD,
+    ) -> BOOL;
+    pub fn GetServiceKeyNameW(
+        hSCManager: SC_HANDLE,
+        lpDisplayName: LPCWSTR,
+        lpServiceName: LPWSTR,
+        lpcchBuffer: LPDWORD,
+    ) -> BOOL;
+    pub fn GetServiceDisplayNameA(
+        hSCManager: SC_HANDLE,
+        lpServiceName: LPCSTR,
+        lpDisplayName: LPSTR,
+        lpcchBuffer: LPDWORD,
+    ) -> BOOL;
+    pub fn GetServiceDisplayNameW(
+        hSCManager: SC_HANDLE,
+        lpServiceName: LPCWSTR,
+        lpDisplayName: LPWSTR,
+        lpcchBuffer: LPDWORD,
+    ) -> BOOL;
+    pub fn LockServiceDatabase(
+        hSCManager: SC_HANDLE,
+    ) -> SC_LOCK;
+    pub fn NotifyBootConfigStatus(
+        BootAcceptable: BOOL,
+    ) -> BOOL;
     pub fn OpenSCManagerA(
         lpMachineName: LPCSTR,
         lpDatabaseName: LPCSTR,
@@ -309,13 +528,51 @@ extern "system" {
         lpServiceName: LPCWSTR,
         dwDesiredAccess: DWORD,
     ) -> SC_HANDLE;
-    // pub fn QueryServiceConfigA();
-    // pub fn QueryServiceConfigW();
-    // pub fn QueryServiceConfig2A();
-    // pub fn QueryServiceConfig2W();
-    // pub fn QueryServiceLockStatusA();
-    // pub fn QueryServiceLockStatusW();
-    // pub fn QueryServiceObjectSecurity();
+    pub fn QueryServiceConfigA(
+        hService: SC_HANDLE,
+        lpServiceConfig: LPQUERY_SERVICE_CONFIGA,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+    ) -> BOOL;
+    pub fn QueryServiceConfigW(
+        hService: SC_HANDLE,
+        lpServiceConfig: LPQUERY_SERVICE_CONFIGW,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+    ) -> BOOL;
+    pub fn QueryServiceConfig2A(
+        hService: SC_HANDLE,
+        dwInfoLevel: DWORD,
+        lpBuffer: LPBYTE,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+    ) -> BOOL;
+    pub fn QueryServiceConfig2W(
+        hService: SC_HANDLE,
+        dwInfoLevel: DWORD,
+        lpBuffer: LPBYTE,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+    ) -> BOOL;
+    pub fn QueryServiceLockStatusA(
+        hSCManager: SC_HANDLE,
+        lpLockStatus: LPQUERY_SERVICE_LOCK_STATUSA,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+    ) -> BOOL;
+    pub fn QueryServiceLockStatusW(
+        hSCManager: SC_HANDLE,
+        lpLockStatus: LPQUERY_SERVICE_LOCK_STATUSW,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+    ) -> BOOL;
+    pub fn QueryServiceObjectSecurity(
+        hService: SC_HANDLE,
+        dwSecurityInformation: SECURITY_INFORMATION,
+        lpSecurityDescriptor: PSECURITY_DESCRIPTOR,
+        cbBufSize: DWORD,
+        pcbBytesNeeded: LPDWORD,
+    ) -> BOOL;
     pub fn QueryServiceStatus(
         hService: SC_HANDLE,
         lpServiceStatus: LPSERVICE_STATUS,
@@ -345,7 +602,11 @@ extern "system" {
         lpHandlerProc: LPHANDLER_FUNCTION_EX,
         lpContext: LPVOID,
     ) -> SERVICE_STATUS_HANDLE;
-    // pub fn SetServiceObjectSecurity();
+    pub fn SetServiceObjectSecurity(
+        hService: SC_HANDLE,
+        dwSecurityInformation: SECURITY_INFORMATION,
+        lpSecurityDescriptor: PSECURITY_DESCRIPTOR,
+    ) -> BOOL;
     pub fn SetServiceStatus(
         hServiceStatus: SERVICE_STATUS_HANDLE,
         lpServiceStatus: LPSERVICE_STATUS,
@@ -356,12 +617,50 @@ extern "system" {
     pub fn StartServiceCtrlDispatcherW(
         lpServiceStartTable: *const SERVICE_TABLE_ENTRYW,
     ) -> BOOL;
-    // pub fn StartServiceA();
-    // pub fn StartServiceW();
-    // pub fn UnlockServiceDatabase();
-    // pub fn NotifyServiceStatusChangeA();
-    // pub fn NotifyServiceStatusChangeW();
-    // pub fn ControlServiceExA();
-    // pub fn ControlServiceExW();
-    // pub fn QueryServiceDynamicInformation();
+    pub fn StartServiceA(
+        hService: SC_HANDLE,
+        dwNumServiceArgs: DWORD,
+        lpServiceArgVectors: *mut LPCSTR,
+    ) -> BOOL;
+    pub fn StartServiceW(
+        hService: SC_HANDLE,
+        dwNumServiceArgs: DWORD,
+        lpServiceArgVectors: *mut LPCWSTR,
+    ) -> BOOL;
+    pub fn UnlockServiceDatabase(
+        ScLock: SC_LOCK,
+    ) -> BOOL;
+    pub fn NotifyServiceStatusChangeA(
+        hService: SC_HANDLE,
+        dwNotifyMask: DWORD,
+        pNotifyBuffer: PSERVICE_NOTIFYA,
+    ) -> DWORD;
+    pub fn NotifyServiceStatusChangeW(
+        hService: SC_HANDLE,
+        dwNotifyMask: DWORD,
+        pNotifyBuffer: PSERVICE_NOTIFYW,
+    ) -> DWORD;
+    pub fn ControlServiceExA(
+        hService: SC_HANDLE,
+        dwControl: DWORD,
+        dwInfoLevel: DWORD,
+        pControlParams: PVOID,
+    ) -> BOOL;
+    pub fn ControlServiceExW(
+        hService: SC_HANDLE,
+        dwControl: DWORD,
+        dwInfoLevel: DWORD,
+        pControlParams: PVOID,
+    ) -> BOOL;
+    pub fn QueryServiceDynamicInformation(
+        hServiceStatus: SERVICE_STATUS_HANDLE,
+        dwInfoLevel: DWORD,
+        ppDynamicInfo: *mut PVOID,
+    ) -> BOOL;
+    pub fn WaitServiceState (
+        hService: SC_HANDLE,
+        dwNotify: DWORD,
+        dwTimeout: DWORD,
+        hCancelEvent: HANDLE,
+    ) -> DWORD;
 }

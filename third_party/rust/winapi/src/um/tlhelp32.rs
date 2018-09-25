@@ -26,7 +26,7 @@ pub const TH32CS_INHERIT: DWORD = 0x80000000;
 STRUCT!{struct HEAPLIST32 {
     dwSize: SIZE_T,
     th32ProcessID: DWORD,
-    th32HeapID:  ULONG_PTR,
+    th32HeapID: ULONG_PTR,
     dwFlags: DWORD,
 }}
 pub type PHEAPLIST32 = *mut HEAPLIST32;
