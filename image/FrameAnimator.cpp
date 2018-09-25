@@ -561,20 +561,24 @@ DoCollectSizeOfCompositingSurfaces(const RawAccessFrameRef& aSurface,
                                     DefaultSurfaceFlags(),
                                     PlaybackType::eStatic);
 
-  // Create a counter for this surface.
-  SurfaceMemoryCounter counter(key, /* aIsLocked = */ true,
-                               /* aCannotSubstitute */ false,
-                               /* aIsFactor2 */ false, aType);
-
   // Extract the surface's memory usage information.
-  size_t heap = 0, nonHeap = 0, handles = 0;
-  aSurface->AddSizeOfExcludingThis(aMallocSizeOf, heap, nonHeap, handles);
-  counter.Values().SetDecodedHeap(heap);
-  counter.Values().SetDecodedNonHeap(nonHeap);
-  counter.Values().SetExternalHandles(handles);
+  aSurface->AddSizeOfExcludingThis(aMallocSizeOf,
+    [&](imgFrame::AddSizeOfCbData& aMetadata) {
+      // Create a counter for this surface.
+      SurfaceMemoryCounter counter(key, /* aIsLocked = */ true,
+                                   /* aCannotSubstitute */ false,
+                                   /* aIsFactor2 */ false, aType);
 
-  // Record it.
-  aCounters.AppendElement(counter);
+      // Record it.
+      counter.Values().SetDecodedHeap(aMetadata.heap);
+      counter.Values().SetDecodedNonHeap(aMetadata.nonHeap);
+      counter.Values().SetExternalHandles(aMetadata.handles);
+      counter.Values().SetFrameIndex(aMetadata.index);
+      counter.Values().SetExternalId(aMetadata.externalId);
+
+      aCounters.AppendElement(counter);
+    }
+  );
 }
 
 void
