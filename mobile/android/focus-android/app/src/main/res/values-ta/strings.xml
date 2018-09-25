@@ -78,7 +78,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">3 ஆம் தரப்பு நினைவிகளை மட்டும் முடக்கு</string>
   <string name="preference_privacy_should_block_cookies_yes_option">ஆம்</string>
   <string name="preference_privacy_secure_mode">போரியல்</string>
-  <string name="preference_privacy_stealth_summary">செயலிகளில் மாறும்பொழுது வலைப்பக்கங்களை மறை</string>
+  <string name="preference_privacy_stealth_summary">செயலிகள் மாறும்பொழுது வலைப்பக்கங்களை மறை மற்றும் திரைப்பிடிப்பு எடுப்பதைத் தடு.</string>
   <string name="preference_category_performance">செயல்திறன்</string>
   <string name="preference_performance_block_webfonts">இணைய எழுத்துருக்களைத் தடு</string>
   <string name="preference_performance_block_webfonts_summary">சின்னம் (அ) படங்கள் காணாமல் போகலாம்</string>

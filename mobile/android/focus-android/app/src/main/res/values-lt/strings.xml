@@ -5,12 +5,12 @@
   <string name="action_save">Įrašyti</string>
   <string name="urlbar_hint">Įveskite adresą arba paieškos žodžius</string>
   <string name="teaser">Automatinis privatusis naršymas.\nNaršykite. Išvalykite. Kartokite.</string>
-  <string name="feedback_erase">Jūsų naršymo žurnalas buvo išvalytas.</string>
+  <string name="feedback_erase">Jūsų naršymo žurnalas išvalytas.</string>
   <string name="search_hint">Ieškoti „%1$s“</string>
   <string name="menu_share">Dalintis…</string>
   <string name="menu_report_site_issue">Pranešti apie svetainės problemą</string>
-  <string name="menu_open_with_default_browser2">Atverti per „%1$s“</string>
-  <string name="menu_open_with_a_browser2">Atverti per…</string>
+  <string name="menu_open_with_default_browser2">Atverti naudojant „%1$s“</string>
+  <string name="menu_open_with_a_browser2">Atverti naudojant…</string>
   <string name="menu_add_to_home_screen">Įtraukti į pradžios ekraną</string>
   <string name="menu_whats_new">Kas naujo</string>
   <string name="menu_settings">Nustatymai</string>
@@ -19,7 +19,7 @@
   <string name="menu_rights">Jūsų teisės</string>
   <string name="menu_trackers_blocked_title">Užblokuoti sekimo elementai</string>
   <string name="menu_custom_tab_branding">Įgalino „%1$s“</string>
-  <string name="share_dialog_title">Dalintis per</string>
+  <string name="share_dialog_title">Dalintis naudojant</string>
   <string name="notification_erase_text">Valyti naršymo žurnalą</string>
   <string name="notification_action_open">Atverti</string>
   <string name="notification_action_erase_and_open">Išvalyti ir atverti</string>
@@ -42,28 +42,28 @@
   <string name="preference_search_engine_default">Numatytoji</string>
   <string name="preference_state_on">Taip</string>
   <string name="preference_state_off">Ne</string>
-  <string name="preference_subitem_autocomplete">Automatinis URL užbaigimas</string>
+  <string name="preference_subitem_autocomplete">Automatinis URL adresų užbaigimas</string>
   <string name="preference_switch_autocomplete">Automatinis užbaigimas</string>
-  <string name="preference_category_autocomplete_preinstalled">Numatytasis URL sąrašas</string>
+  <string name="preference_category_autocomplete_preinstalled">Numatytųjų adresų sąrašas</string>
   <string name="preference_autocomplete_preinstalled_summary">Įjungus, „%1$s“ adreso lauke automatiškai užbaigs virš 450 populiarių URL adresų.</string>
-  <string name="preference_category_autocomplete_custom_urls">Pasirinktiniai URL</string>
-  <string name="preference_autocomplete_subitem_customlist">Pasirinktiniai URL</string>
-  <string name="preference_autocomplete_action_add">+ Pridėti savo URL</string>
-  <string name="preference_autocomplete_title_add">Pridėti savo URL</string>
-  <string name="custom_autocomplete_quick_add">Pridėti savo URL</string>
+  <string name="preference_category_autocomplete_custom_urls">Pasirinktiniai adresai</string>
+  <string name="preference_autocomplete_subitem_customlist">Pasirinktiniai adresai</string>
+  <string name="preference_autocomplete_action_add">+ Pridėti savą adresą</string>
+  <string name="preference_autocomplete_title_add">Savo adreso pridėjimas</string>
+  <string name="custom_autocomplete_quick_add">Pridėti savą adresą</string>
   <string name="preference_category_cookies">Slapukai ir svetainių duomenys</string>
   <string name="preference_category_data_choices">Duomenų siuntimas</string>
-  <string name="preference_autocomplete_title_remove">Pašalinti savo URL</string>
+  <string name="preference_autocomplete_title_remove">Savų adresų šalinimas</string>
   <string name="preference_autocomplete_learn_more">Sužinoti daugiau</string>
   <string name="preference_autocomplete_custom_summary">Pridėkite ir valdykite savo automatinio užbaigimo adresus.</string>
-  <string name="preference_autocomplete_add_title">Pridedamas URL</string>
-  <string name="preference_autocomplete_add_hint">Įdėkite arba įrašykite URL</string>
+  <string name="preference_autocomplete_add_title">Pridedamas adresas</string>
+  <string name="preference_autocomplete_add_hint">Įdėkite arba įveskite URL adresą</string>
   <string name="preference_autocomplete_add_example2">Pavyzdys: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Pvz., example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Pridėtas naujas URL.</string>
+  <string name="preference_autocomplete_add_example">Pavyzdys: example.com</string>
+  <string name="preference_autocomplete_add_confirmation">Pridėtas naujas adresas.</string>
   <string name="preference_autocomplete_menu_remove">Pašalinti</string>
   <string name="preference_autocomplete_action_remove_content_description">Pašalinti</string>
-  <string name="preference_autocomplete_add_error">Patikrinkite savo įvestą URL.</string>
+  <string name="preference_autocomplete_add_error">Patikrinkite įvestą URL adresą.</string>
   <string name="preference_language">Kalba</string>
   <string name="preference_language_systemdefault">Sistemos numatytoji</string>
   <string name="preference_category_privacy">Privatumas</string>
@@ -80,7 +80,7 @@
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokuoti tik trečiųjų šalių slapukus</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Taip</string>
   <string name="preference_security_biometric">Atrakinti programą piršto atspaudu</string>
-  <string name="preference_security_biometric_summary">Jūsų piršto atspaudas gali atrakinti „%1$s“, jeigu programoje jau yra atvertas URL. Bus įjungtas slaptumas.</string>
+  <string name="preference_security_biometric_summary">Naudojant jūsų piršto antspaudą, galima atrakinti „%1$s“ programą, kai joje jau yra atvertas tinklalapis. Bus įjungtas slaptumas.</string>
   <string name="preference_privacy_secure_mode">Slaptumas</string>
   <string name="preference_privacy_stealth_summary">Slėpti tinklalapius pereinant tarp programų bei neleisti daryti ekrano nuotraukų.</string>
   <string name="preference_category_security">Saugumas</string>
@@ -106,13 +106,13 @@
   <string name="search_add_manually_name_hint">Ieškyklės pavadinimas</string>
   <string name="search_add_manually_string">Paieškos eilutės struktūra</string>
   <string name="search_add_manually_save">Įrašyti</string>
-  <string name="search_add_manually_example">Pvz.: example.com/search/?q=%s</string>
+  <string name="search_add_manually_example">Pavyzdys: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">Pridėta nauja ieškyklė.</string>
   <string name="search_add_error_empty_name">Įveskite ieškyklės pavadinimą</string>
   <string name="search_add_error_duplicate_name">Jau yra įdiegta ieškyklė su tokiu pavadinimu.</string>
   <string name="search_add_error_empty_search">Įveskite paieškos eilutę</string>
   <string name="search_add_error_format">Pasitikrinkite, ar paieškos eilutė atitinka formatą iš pavyzdžio</string>
-  <string name="content_description_clear_input">Išvalyti įvestį</string>
+  <string name="content_description_clear_input">Išvalyti įvestą tekstą</string>
   <string name="content_description_dismiss_input">Paslėpti</string>
   <string name="content_description_erase">Valyti naršymo žurnalą</string>
   <string name="content_description_tab_counter">Atverta kortelių: %1$s</string>
@@ -168,7 +168,7 @@
   <string name="firstrun_search_title">Jūsų paieška, jūsų skoniui</string>
   <string name="firstrun_search_text">Ieškote kažko kito? Pasirinkite kitą numatytąją ieškyklę nustatymuose.</string>
   <string name="firstrun_shortcut_title">Pridėkite leistukų į savo pradžios ekraną</string>
-  <string name="firstrun_shortcut_text">Greitai grįžkite į savo mėgstamiausias svetaines per „%1$s“. Tiesiog pasirinkite „Įtraukti į pradžios ekraną“ iš „%1$s“ meniu.</string>
+  <string name="firstrun_shortcut_text">Greitai grįžkite į savo mėgstamiausias svetaines „%1$s“ naršyklėje. Tiesiog pasirinkite „Įtraukti į pradžios ekraną“ iš „%1$s“ meniu.</string>
   <string name="firstrun_privacy_title">Įpraskite prie privatumo</string>
   <string name="firstrun_privacy_text">Paskirkite „%1$s“ savo numatytąja naršykle ir naudokitės privačiojo naršymo privalumais atverdami svetaines iš kitų programų.</string>
   <string name="firstrun_close_button">Gerai, supratau!</string>
@@ -183,7 +183,7 @@
   <string name="tabs_tray_action_erase">Valyti naršymo žurnalą</string>
   <string name="download_firefox">Parsisiųsti „Firefox“</string>
   <string name="your_rights_content1">„%1$s“ yra laisvoji atviroji programa, kuriama „Mozillos“ ir kitų bendradarbių.</string>
-  <string name="your_rights_content2"><![CDATA["Jums leidžiama naudotis „%1$s“ programa, vadovaujantis "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#8222;Mozilla&#8220; vie&#353;&#261;ja licencija</a>" ir kitomis atviromis licencijomis."]]></string>
+  <string name="your_rights_content2"><![CDATA["Jums leidžiama naudotis „%1$s“ programa, vadovaujantis "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#8222;Mozillos&#8220; vie&#353;&#261;ja licencija</a>" ir kitomis atviromis licencijomis."]]></string>
   <string name="your_rights_content3"><![CDATA["Jums nėra suteikta jokių teisių ar licencijų į „Mozilla Foundation“ prekinius ženklus, ar „Mozilla“, „Firefox“, „%1$s“ pavadinimus ir logotipus. Daugiau informacijos galite rasti "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#269;ia</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Dalis „%1$s“ pirminio teksto yra pateikiama su įvairiomis kitomis laisvomis atviromis "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencijomis</a>.]]></string>
   <string name="your_rights_content5"><![CDATA["„%1$s“ naudoja blokavimo sąrašus, kuriuos teikia „Disconnect, Inc.“, kaip atskirus ir nepriklausomus darbus vadovaujantis "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#8222;GNU General Public License v3&#8220;</a>" licencija, ir pasiekiamus "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#269;ia</a>.]]></string>
@@ -194,7 +194,7 @@
   <string name="security_popup_insecure_connection">Nesaugus ryšys</string>
   <string name="security_popup_security_verified">Tai liudija: %1$s</string>
   <string name="site_security_icon_content_description">Svetainės saugumas</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL jau egzistuoja</string>
+  <string name="preference_autocomplete_duplicate_url_error">Toks adresas jau pridėtas</string>
   <string name="find_in_page">Rasti tinklalapyje</string>
   <string name="find_in_page_input">Rasti tinklalapyje</string>
   <string name="find_in_page_result">%1$d/%2$d</string>
@@ -206,7 +206,7 @@
   <string name="http_auth_dialog_username">Naudotojo vardas</string>
   <string name="http_auth_dialog_password">Slaptažodis</string>
   <string name="preference_performance_request_desktop_site">Prašyti ne mob. svetainės</string>
-  <string name="custom_tab_copy_url_action">URL nukopijuotas</string>
+  <string name="custom_tab_copy_url_action">Adresas nukopijuotas</string>
   <string name="preference_advanced_summary">Programuotojo priemonės</string>
   <string name="preference_category_advanced">Kitkas</string>
   <string name="preference_remote_debugging">Nuotolinis derinimas per USB arba belaidį tinklą</string>
@@ -225,9 +225,9 @@
   <string name="dismiss_no_suggestions_prompt_button">Paslėpti</string>
   <string name="tip_disable_tracking_protection">Svetainė veikia netinkamai?\n Pabandykite išjungti apsaugą nuo stebėjimo</string>
   <string name="tip_add_to_homescreen">Pasiekite lankomiausias svetaines vienu spustelėjimu%1$s Meniu &gt; Įtraukti į pradžios ekraną</string>
-  <string name="tip_set_default_browser">Atverkite visus saitus per „%1$s“\n Paskirkite „%1$s“ numatytąja naršykle</string>
-  <string name="tip_autocomplete_url">Automatiškai užbaikite lankomiausių svetainių adresus\n Spustelėkite ir palaikykite bet kurį URL adreso lauke</string>
-  <string name="tip_open_in_new_tab">Atverkite saitą naujoje kortelėje\n Spustelėkite ir palaikykite bet kurį saitą puslapyje</string>
+  <string name="tip_set_default_browser">Atverkite visus saitus „%1$s“ programoje\n Paskirkite „%1$s“ numatytąja naršykle</string>
+  <string name="tip_autocomplete_url">Automatiškai užbaikite lankomiausių svetainių adresus\n Spustelėkite ir palaikykite bet kurį URL adresą adreso lauke</string>
+  <string name="tip_open_in_new_tab">Atverkite saitą naujoje kortelėje\n Spustelėkite ir palaikykite bet kurį saitą tinklalapyje</string>
   <string name="tip_request_desktop">Norite tradicinės svetainės versijos?%1$s Meniu &gt; Prašyti ne mob. svetainės</string>
   <string name="tip_disable_tips">Išjungti patarimus „%1$s“ pradžios ekrane</string>
 </resources>

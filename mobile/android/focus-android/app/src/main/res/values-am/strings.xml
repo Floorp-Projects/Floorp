@@ -1,6 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="action_cancel">ሰርዝ</string>
   <string name="action_ok">እሺ</string>
   <string name="action_save">ማስቀመጥ</string>
   <string name="urlbar_hint">ፍለጋ ወይም አድራሻ ያስገቡ</string>
@@ -54,7 +53,9 @@
   <string name="preference_privacy_block_social">ማህበራዊ ሚዲያ መከታተያዎችን አግድ\n</string>
   <string name="preference_privacy_block_social_summary">የእርስዎን ጉብኝቶች ለመከታተል እና እንደ የአጋራ አዝራሮች ያሉ ተግባሮችን ለማሳየት በጣቢያዎች ላይ የተካተተ</string>
   <string name="preference_privacy_block_content">ሌሎች የይዘት መከታተያዎችን ያግዱ\n</string>
-  <string name="preference_privacy_block_content_summary2">ማንቃት አንዳንድ ገፆችን ያልታሰበ ፀባይ እንዲፈጽሙ ሊያደርጋቸው ይችላል</string>
+  <string name="preference_privacy_block_content_summary2">ማስቻል አንዳንድ ገፆችን ያልታሰበ ፀባይ እንዲፈጽሙ ሊያደርጋቸው ይችላል</string>
+  <string name="preference_privacy_category_cookies">ኩኪዎችን አግድ</string>
+  <string name="preference_privacy_should_block_cookies_no_option">አይ</string>
   <string name="preference_privacy_secure_mode">ስውር</string>
   <string name="preference_privacy_stealth_summary">መተግበሪያዎችን በሚቀይሩበት ጊዜ ድረ-ገጾችን ደብቅ\n</string>
   <string name="preference_category_performance">አፈፃፀም</string>
@@ -150,4 +151,7 @@
   <string name="tabs_tray_action_erase">የማሰሻ ታሪክን አጥፋ</string>
   <string name="download_firefox">ፋየርፎክስ አውርድ</string>
   <string name="your_rights_content1">%1$s ሞዚላ እና ሌሎች አስተዋፅዖ አድራጊዎች የተሰሩ ነጻ እና ግልጽ ምንጭ ሶፍትዌሮች ናቸው</string>
+  <string name="gv_prompt_username_hint">የተጠቃሚ ስም</string>
+  <string name="gv_prompt_password_hint">የይለፍ ቃል</string>
+  <string name="gv_prompt_clear">አጽዳ</string>
 </resources>
