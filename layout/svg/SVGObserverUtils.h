@@ -18,6 +18,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
+#include "nsStringFwd.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGUtils.h"
 #include "nsTHashtable.h"
@@ -743,9 +744,25 @@ public:
   static void
   RemoveTextPathObserver(nsIFrame* aTextPathFrame);
 
-  static SVGTemplateElementObserver*
-  GetTemplateElementObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-      const mozilla::FramePropertyDescriptor<SVGTemplateElementObserver>* aProperty);
+  using HrefToTemplateCallback = const std::function<void(nsAString&)>&;
+  /**
+   * Gets the nsIFrame of a referenced SVG "template" element, if any, and
+   * makes aFrame start observing rendering changes to the template element.
+   *
+   * Template elements: some elements like gradients, pattern or filter can
+   * reference another element of the same type using their 'href' attribute,
+   * and use that element as a template that provides attributes or content
+   * that is missing from the referring element.
+   *
+   * The frames that this function is called for do not have a common base
+   * class, which is why it is necessary to pass in a function that can be
+   * used as a callback to lazily get the href value, if necessary.
+   */
+  static nsIFrame*
+  GetTemplateFrame(nsIFrame* aFrame, HrefToTemplateCallback aGetHref);
+
+  static void
+  RemoveTemplateObserver(nsIFrame* aFrame);
 
   /**
    * Get an nsSVGPaintingProperty for the frame, creating a fresh one if necessary

@@ -65,21 +65,21 @@ public:
   /// important that it be constant over the lifetime of this object.
   virtual size_t LogicalSizeInBytes() const = 0;
 
+  typedef imgFrame::AddSizeOfCbData AddSizeOfCbData;
+  typedef imgFrame::AddSizeOfCb AddSizeOfCb;
+
   /// @return the actual number of bytes of memory this ISurfaceProvider is
   /// using. May vary over the lifetime of the ISurfaceProvider. The default
   /// implementation is appropriate for static ISurfaceProviders.
   virtual void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                                      size_t& aHeapSizeOut,
-                                      size_t& aNonHeapSizeOut,
-                                      size_t& aExtHandlesOut)
+                                      const AddSizeOfCb& aCallback)
   {
     DrawableFrameRef ref = DrawableRef(/* aFrame = */ 0);
     if (!ref) {
       return;
     }
 
-    ref->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut,
-                                aNonHeapSizeOut, aExtHandlesOut);
+    ref->AddSizeOfExcludingThis(aMallocSizeOf, aCallback);
   }
 
   virtual void Reset() { }
