@@ -201,7 +201,7 @@ interface ID3D12FunctionReflection(ID3D12FunctionReflectionVtbl) {
         ParameterIndex: INT,
     ) -> *mut ID3D12FunctionParameterReflection,
 }}
-RIDL!(#[uuid(0x8e349d19, 0x54db, 0x4a56, 0x9d, 0xc9, 0x11, 0x9d, 0x87, 0xbd, 0xb8, 0x4)]
+RIDL!{#[uuid(0x8e349d19, 0x54db, 0x4a56, 0x9d, 0xc9, 0x11, 0x9d, 0x87, 0xbd, 0xb8, 0x4)]
 interface ID3D12LibraryReflection(ID3D12LibraryReflectionVtbl): IUnknown(IUnknownVtbl) {
     fn GetDesc(
         pDesc: *mut D3D12_LIBRARY_DESC,
@@ -209,7 +209,7 @@ interface ID3D12LibraryReflection(ID3D12LibraryReflectionVtbl): IUnknown(IUnknow
     fn GetFunctionByIndex(
         FunctionIndex: INT,
     ) -> *mut ID3D12FunctionReflection,
-});
+}}
 DEFINE_GUID!{IID_ID3D12ShaderReflectionConstantBuffer,
     0xc59598b4, 0x48b3, 0x4869, 0xb9, 0xb1, 0xb1, 0x61, 0x8b, 0x14, 0xa8, 0xb7}
 RIDL!{#[uuid(0xc59598b4, 0x48b3, 0x4869, 0xb9, 0xb1, 0xb1, 0x61, 0x8b, 0x14, 0xa8, 0xb7)]
@@ -271,7 +271,7 @@ interface ID3D12ShaderReflectionVariable(ID3D12ShaderReflectionVariableVtbl) {
 }}
 DEFINE_GUID!{IID_ID3D12ShaderReflection,
     0x5a58797d, 0xa72c, 0x478d, 0x8b, 0xa2, 0xef, 0xc6, 0xb0, 0xef, 0xe8, 0x8e}
-RIDL!(#[uuid(0x5a58797d, 0xa72c, 0x478d, 0x8b, 0xa2, 0xef, 0xc6, 0xb0, 0xef, 0xe8, 0x8e)]
+RIDL!{#[uuid(0x5a58797d, 0xa72c, 0x478d, 0x8b, 0xa2, 0xef, 0xc6, 0xb0, 0xef, 0xe8, 0x8e)]
 interface ID3D12ShaderReflection(ID3D12ShaderReflectionVtbl): IUnknown(IUnknownVtbl) {
     fn GetDesc(
         pDesc: *mut D3D12_SHADER_DESC,
@@ -321,7 +321,7 @@ interface ID3D12ShaderReflection(ID3D12ShaderReflectionVtbl): IUnknown(IUnknownV
         pSizeZ: *mut UINT,
     ) -> UINT,
     fn GetRequiresFlags() -> UINT64,
-});
+}}
 DEFINE_GUID!{IID_ID3D12LibraryReflection,
     0x8e349d19, 0x54db, 0x4a56, 0x9d, 0xc9, 0x11, 0x9d, 0x87, 0xbd, 0xb8, 0x04}
 DEFINE_GUID!{IID_ID3D12FunctionReflection,

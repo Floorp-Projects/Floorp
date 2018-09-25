@@ -11,8 +11,8 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 
 var toolbox, toolIDs, toolShortcuts = [], idIndex, modifiedPrefs = [];
 
-function test() {
-  addTab("about:blank").then(function() {
+async function test() {
+  addTab("about:blank").then(async function() {
     toolIDs = [];
     for (const [id, definition] of gDevTools._tools) {
       const shortcut = Startup.KeyShortcuts.filter(s => s.toolId == id)[0];
@@ -32,7 +32,7 @@ function test() {
         }
       }
     }
-    const target = TargetFactory.forTab(gBrowser.selectedTab);
+    const target = await TargetFactory.forTab(gBrowser.selectedTab);
     idIndex = 0;
     gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.WINDOW)
              .then(testShortcuts);

@@ -111,6 +111,16 @@ SpecialPowers.registerConsoleListener(function onConsoleMessage(msg) {
     // Ignore unknown CSP error.
     return;
   }
+  if (msg.message.includes("Security Error: Content at http://mochi.test:8888")) {
+    // Check for same-origin policy violations and ignore specific errors
+    if (msg.message.includes("icon-credit-card-generic.svg") ||
+        msg.message.includes("editDialog-shared.css") ||
+        msg.message.includes("editAddress.css") ||
+        msg.message.includes("editDialog.css") ||
+        msg.message.includes("editCreditCard.css")) {
+      return;
+    }
+  }
   if (msg.message == "SENTINEL") {
     filterFunction = null;
   }

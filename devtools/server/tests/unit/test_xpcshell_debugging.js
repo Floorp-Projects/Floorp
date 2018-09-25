@@ -29,7 +29,7 @@ add_task(async function() {
   const response = await client.getProcess();
 
   const actor = response.form.actor;
-  const [, tabClient] = await client.attachTab(actor);
+  const [, tabClient] = await client.attachTarget(actor);
   const [, threadClient] = await tabClient.attachThread(null);
   const onResumed = new Promise(resolve => {
     threadClient.addOneTimeListener("paused", (event, packet) => {

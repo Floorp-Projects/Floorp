@@ -5,12 +5,10 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! VSS header file
-
 use shared::guiddef::{CLSID, GUID};
 use shared::minwindef::{DWORD, INT, ULONG};
 use um::unknwnbase::{IUnknown, IUnknownVtbl};
 use um::winnt::{HRESULT, LONG, LONGLONG, WCHAR};
-
 ENUM!{enum VSS_OBJECT_TYPE {
     VSS_OBJECT_UNKNOWN = 0,
     VSS_OBJECT_NONE = 1,
@@ -259,8 +257,7 @@ STRUCT!{struct VSS_OBJECT_PROP {
     Obj: VSS_OBJECT_UNION,
 }}
 pub type PVSS_OBJECT_PROP = *mut VSS_OBJECT_PROP;
-RIDL!(
-#[uuid(0xae1c7110, 0x2f60, 0x11d3, 0x8a, 0x39, 0x00, 0xc0, 0x4f, 0x72, 0xd8, 0xe3)]
+RIDL!{#[uuid(0xae1c7110, 0x2f60, 0x11d3, 0x8a, 0x39, 0x00, 0xc0, 0x4f, 0x72, 0xd8, 0xe3)]
 interface IVssEnumObject(IVssEnumObjectVtbl): IUnknown(IUnknownVtbl) {
     fn Next(
         celt: ULONG,
@@ -274,10 +271,8 @@ interface IVssEnumObject(IVssEnumObjectVtbl): IUnknown(IUnknownVtbl) {
     fn Clone(
         ppenum: *mut *mut IVssEnumObject,
     ) -> HRESULT,
-}
-);
-RIDL!(
-#[uuid(0x507c37b4, 0xcf5b, 0x4e95, 0xb0, 0xaf, 0x14, 0xeb, 0x97, 0x67, 0x46, 0x7e)]
+}}
+RIDL!{#[uuid(0x507c37b4, 0xcf5b, 0x4e95, 0xb0, 0xaf, 0x14, 0xeb, 0x97, 0x67, 0x46, 0x7e)]
 interface IVssAsync(IVssAsyncVtbl): IUnknown(IUnknownVtbl) {
     fn Cancel() -> HRESULT,
     fn Wait(
@@ -287,5 +282,4 @@ interface IVssAsync(IVssAsyncVtbl): IUnknown(IUnknownVtbl) {
         pHrResult: *mut HRESULT,
         pReserved: *mut INT,
     ) -> HRESULT,
-}
-);
+}}

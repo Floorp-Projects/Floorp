@@ -4,13 +4,12 @@
 
 "use strict";
 
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const { getStr } = require("../utils/l10n");
-const Types = require("../types");
 
 loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
 
@@ -18,10 +17,12 @@ class SettingsMenu extends PureComponent {
   static get propTypes() {
     return {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
-      onChangeReloadCondition: PropTypes.func.isRequired,
       onToggleLeftAlignment: PropTypes.func.isRequired,
+      onToggleReloadOnTouchSimulation: PropTypes.func.isRequired,
+      onToggleReloadOnUserAgent: PropTypes.func.isRequired,
       onToggleUserAgentInput: PropTypes.func.isRequired,
-      reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
+      reloadOnTouchSimulation: PropTypes.bool.isRequired,
+      reloadOnUserAgent: PropTypes.bool.isRequired,
       showUserAgentInput: PropTypes.bool.isRequired,
     };
   }
@@ -34,10 +35,12 @@ class SettingsMenu extends PureComponent {
   onToggleSettingMenu(event) {
     const {
       leftAlignmentEnabled,
-      onChangeReloadCondition,
       onToggleLeftAlignment,
+      onToggleReloadOnTouchSimulation,
+      onToggleReloadOnUserAgent,
       onToggleUserAgentInput,
-      reloadConditions,
+      reloadOnTouchSimulation,
+      reloadOnUserAgent,
       showUserAgentInput,
     } = this.props;
 
@@ -64,20 +67,20 @@ class SettingsMenu extends PureComponent {
       "-",
       {
         id: "touchSimulation",
-        checked: reloadConditions.touchSimulation,
+        checked: reloadOnTouchSimulation,
         label: getStr("responsive.reloadConditions.touchSimulation"),
         type: "checkbox",
         click: () => {
-          onChangeReloadCondition("touchSimulation", !reloadConditions.touchSimulation);
+          onToggleReloadOnTouchSimulation();
         },
       },
       {
         id: "userAgent",
-        checked: reloadConditions.userAgent,
+        checked: reloadOnUserAgent,
         label: getStr("responsive.reloadConditions.userAgent"),
         type: "checkbox",
         click: () => {
-          onChangeReloadCondition("userAgent", !reloadConditions.userAgent);
+          onToggleReloadOnUserAgent();
         },
       },
     ];
@@ -102,6 +105,8 @@ class SettingsMenu extends PureComponent {
 const mapStateToProps = state => {
   return {
     leftAlignmentEnabled: state.ui.leftAlignmentEnabled,
+    reloadOnTouchSimulation: state.ui.reloadOnTouchSimulation,
+    reloadOnUserAgent: state.ui.reloadOnUserAgent,
     showUserAgentInput: state.ui.showUserAgentInput,
   };
 };

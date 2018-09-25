@@ -73,7 +73,7 @@ mozangle = "0.1"
 freetype = { version = "0.4", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.4.1"
+dwrote = "0.5.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"

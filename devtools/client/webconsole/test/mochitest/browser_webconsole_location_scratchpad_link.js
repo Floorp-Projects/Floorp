@@ -13,7 +13,7 @@ add_task(async function() {
 
   info("Opening toolbox with Scratchpad panel");
 
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = await gDevTools.showToolbox(target, "scratchpad", "window");
 
   const scratchpadPanel = toolbox.getPanel("scratchpad");

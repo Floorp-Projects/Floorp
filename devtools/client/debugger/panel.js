@@ -39,7 +39,7 @@ DebuggerPanel.prototype = {
 
     // Local debugging needs to make the target remote.
     if (!this.target.isRemote) {
-      targetPromise = this.target.makeRemote();
+      targetPromise = this.target.attach();
       // Listen for tab switching events to manage focus when the content window
       // is paused and events suppressed.
       this.target.tab.addEventListener("TabSelect", this);

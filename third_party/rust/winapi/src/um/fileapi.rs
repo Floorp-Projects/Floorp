@@ -82,16 +82,16 @@ STRUCT!{struct FILE_STANDARD_INFO {
 }}
 STRUCT!{struct FILE_NAME_INFO {
     FileNameLength: DWORD,
-    FileName: [WCHAR; 0],
+    FileName: [WCHAR; 1],
 }}
 STRUCT!{struct FILE_RENAME_INFO {
     ReplaceIfExists: BOOL,
     RootDirectory: HANDLE,
     FileNameLength: DWORD,
-    FileName: [WCHAR; 0],
+    FileName: [WCHAR; 1],
 }}
 STRUCT!{struct FILE_DISPOSITION_INFO {
-    DeleteFile: BOOL,
+    DeleteFile: BOOLEAN,
 }}
 STRUCT!{struct FILE_ALLOCATION_INFO {
     AllocationSize: LARGE_INTEGER,
@@ -102,9 +102,9 @@ STRUCT!{struct FILE_END_OF_FILE_INFO {
 STRUCT!{struct FILE_STREAM_INFO {
     NextEntryOffset: DWORD,
     StreamNameLength: DWORD,
-    StreamSize: DWORD,
-    StreamAllocationSize: DWORD,
-    StreamName: [WCHAR; 0],
+    StreamSize: LARGE_INTEGER,
+    StreamAllocationSize: LARGE_INTEGER,
+    StreamName: [WCHAR; 1],
 }}
 STRUCT!{struct FILE_COMPRESSION_INFO {
     CompressedFileSize: LARGE_INTEGER,
@@ -133,7 +133,7 @@ STRUCT!{struct FILE_ID_BOTH_DIR_INFO {
     ShortNameLength: CCHAR,
     ShortName: [WCHAR; 12],
     FileId: LARGE_INTEGER,
-    FileName: [WCHAR; 0],
+    FileName: [WCHAR; 1],
 }}
 STRUCT!{struct FILE_IO_PRIORITY_HINT_INFO {
     PriorityHint: PRIORITY_HINT,
@@ -150,7 +150,7 @@ STRUCT!{struct FILE_FULL_DIR_INFO {
     FileAttributes: ULONG,
     FileNameLength: ULONG,
     EaSize: ULONG,
-    FileName: [WCHAR; 0],
+    FileName: [WCHAR; 1],
 }}
 STRUCT!{struct FILE_STORAGE_INFO {
     LogicalBytesPerSector: ULONG,

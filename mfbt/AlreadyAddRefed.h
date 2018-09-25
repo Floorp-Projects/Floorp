@@ -37,7 +37,7 @@ struct unused_t;
  * Otherwise, use std::move(RefPtr/nsCOMPtr/etc).
  */
 template<class T>
-struct MOZ_TEMPORARY_CLASS MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
+struct MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
 {
   already_AddRefed() : mRawPtr(nullptr) {}
 

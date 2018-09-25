@@ -22,4 +22,3 @@ extern "system" {
     ) -> BOOL;
     pub fn IsThreadAFiber() -> BOOL;
 }
-

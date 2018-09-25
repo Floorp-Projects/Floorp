@@ -15,7 +15,7 @@ function test() {
 }
 
 // Test scenario 1: the tool definition build method returns a promise.
-function runTests1(tab) {
+async function runTests1(tab) {
   const toolDefinition = {
     id: toolId1,
     isTargetSupported: () => true,
@@ -36,7 +36,7 @@ function runTests1(tab) {
   ok(gDevTools.getToolDefinitionMap().has(toolId1),
     "The tool is registered");
 
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
 
   const events = {};
 
@@ -76,7 +76,7 @@ function runTests1(tab) {
 }
 
 // Test scenario 2: the tool definition build method returns panel instance.
-function runTests2() {
+async function runTests2() {
   const toolDefinition = {
     id: toolId2,
     isTargetSupported: () => true,
@@ -95,7 +95,7 @@ function runTests2() {
   ok(gDevTools.getToolDefinitionMap().has(toolId2),
     "The tool is registered");
 
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
 
   const events = {};
 
@@ -183,8 +183,8 @@ var continueTests = async function(toolbox, panel) {
 };
 
 function destroyToolbox(toolbox) {
-  toolbox.destroy().then(function() {
-    const target = TargetFactory.forTab(gBrowser.selectedTab);
+  toolbox.destroy().then(async function() {
+    const target = await TargetFactory.forTab(gBrowser.selectedTab);
     ok(gDevTools._toolboxes.get(target) == null, "gDevTools doesn't know about target");
     ok(toolbox.target == null, "toolbox doesn't know about target.");
     finishUp();

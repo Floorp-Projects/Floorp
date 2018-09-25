@@ -36,7 +36,7 @@ ShaderEditorPanel.prototype = {
   async open() {
     // Local debugging needs to make the target remote.
     if (!this.target.isRemote) {
-      await this.target.makeRemote();
+      await this.target.attach();
     }
 
     this.front = new WebGLFront(this.target.client, this.target.form);

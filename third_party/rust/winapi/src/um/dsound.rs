@@ -74,7 +74,7 @@ STRUCT!{struct DSBUFFERDESC {
     guid3DAlgorithm: GUID,
 }}
 pub type LPCDSBUFFERDESC = *const DSBUFFERDESC;
-RIDL!(#[uuid(0x279afa85, 0x4981, 0x11ce, 0xa5, 0x21, 0x00, 0x20, 0xaf, 0x0b, 0xe5, 0x60)]
+RIDL!{#[uuid(0x279afa85, 0x4981, 0x11ce, 0xa5, 0x21, 0x00, 0x20, 0xaf, 0x0b, 0xe5, 0x60)]
 interface IDirectSoundBuffer(IDirectSoundBufferVtbl): IUnknown(IUnknownVtbl) {
     fn GetCaps(
         pDSBufferCaps: LPDSBCAPS,
@@ -141,14 +141,13 @@ interface IDirectSoundBuffer(IDirectSoundBufferVtbl): IUnknown(IUnknownVtbl) {
         dwAudioBytes2: DWORD,
     ) -> HRESULT,
     fn Restore() -> HRESULT,
-}
-);
+}}
 pub type LPDIRECTSOUNDBUFFER = *mut IDirectSoundBuffer;
 DEFINE_GUID!{IID_IReferenceClock,
     0x56a86897, 0x0ad4, 0x11ce, 0xb0, 0x3a, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70}
 DEFINE_GUID!{IID_IDirectSound,
     0x279afa83, 0x4981, 0x11ce, 0xa5, 0x21, 0x00, 0x20, 0xaf, 0x0b, 0xe5, 0x60}
-RIDL!(#[uuid(0x279afa83, 0x4981, 0x11ce, 0xa5, 0x21, 0x00, 0x20, 0xaf, 0x0b, 0xe5, 0x60)]
+RIDL!{#[uuid(0x279afa83, 0x4981, 0x11ce, 0xa5, 0x21, 0x00, 0x20, 0xaf, 0x0b, 0xe5, 0x60)]
 interface IDirectSound(IDirectSoundVtbl): IUnknown(IUnknownVtbl) {
     fn CreateSoundBuffer(
         pcDSBufferDesc: LPCDSBUFFERDESC,
@@ -176,8 +175,7 @@ interface IDirectSound(IDirectSoundVtbl): IUnknown(IUnknownVtbl) {
     fn Initialize(
         pcGuidDevice: LPCGUID,
     ) -> HRESULT,
-}
-);
+}}
 pub type LPDIRECTSOUND = *mut IDirectSound;
 DEFINE_GUID!{IID_IDirectSound8,
     0xc50a7e93, 0xf395, 0x4834, 0x9e, 0xf6, 0x7f, 0xa9, 0x9d, 0xe5, 0x09, 0x66}

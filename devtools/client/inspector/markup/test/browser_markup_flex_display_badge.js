@@ -28,6 +28,8 @@ add_task(async function() {
   const flexContainer = await getContainerForSelector("#flex", inspector);
   const flexDisplayBadge = flexContainer.elt.querySelector(".markup-badge[data-display]");
   ok(!flexDisplayBadge.classList.contains("active"), "flex display badge is not active.");
+  ok(flexDisplayBadge.classList.contains("interactive"),
+    "flex display badge is interactive.");
 
   info("Check the initial state of the flex highlighter.");
   ok(!highlighters.highlighters[HIGHLIGHTER_TYPE],
@@ -46,6 +48,8 @@ add_task(async function() {
     "Flexbox highlighter is created in the highlighters overlay.");
   ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
   ok(flexDisplayBadge.classList.contains("active"), "flex display badge is active.");
+  ok(flexDisplayBadge.classList.contains("interactive"),
+    "flex display badge is interactive.");
 
   info("Toggling OFF the flexbox highlighter from the flex display badge.");
   const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
@@ -55,4 +59,6 @@ add_task(async function() {
   await onCheckboxChange;
 
   ok(!flexDisplayBadge.classList.contains("active"), "flex display badge is not active.");
+  ok(flexDisplayBadge.classList.contains("interactive"),
+    "flex display badge is interactive.");
 });

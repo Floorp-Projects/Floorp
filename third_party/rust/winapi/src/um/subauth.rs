@@ -5,10 +5,8 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! Types and macros for Subauthentication Packages.
-
 use shared::minwindef::{PUCHAR, ULONG, USHORT};
 use um::winnt::{BOOLEAN, CHAR, LARGE_INTEGER, LONG, PCHAR, PVOID, PWSTR};
-
 STRUCT!{struct UNICODE_STRING {
     Length: USHORT,
     MaximumLength: USHORT,

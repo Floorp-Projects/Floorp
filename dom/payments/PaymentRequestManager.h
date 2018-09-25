@@ -95,7 +95,6 @@ private:
 
   // Strong pointer to requests with ongoing IPC messages to the parent.
   nsDataHashtable<nsRefPtrHashKey<PaymentRequest>, uint32_t> mActivePayments;
-  RefPtr<PaymentRequest> mShowingRequest;
 };
 
 } // end of namespace dom

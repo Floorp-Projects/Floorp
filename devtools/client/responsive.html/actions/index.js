@@ -48,9 +48,6 @@ createEnum([
   // selected from the device pixel ratio dropdown.
   "CHANGE_PIXEL_RATIO",
 
-  // Change one of the reload conditions.
-  "CHANGE_RELOAD_CONDITION",
-
   // Indicates that the device list is being loaded.
   "LOAD_DEVICE_LIST_START",
 
@@ -59,9 +56,6 @@ createEnum([
 
   // Indicates that the device list has been loaded successfully.
   "LOAD_DEVICE_LIST_END",
-
-  // Indicates that the reload conditions have been loaded successfully.
-  "LOAD_RELOAD_CONDITIONS_END",
 
   // Remove a device.
   "REMOVE_DEVICE",
@@ -83,6 +77,12 @@ createEnum([
 
   // Toggles the left alignment of the viewports.
   "TOGGLE_LEFT_ALIGNMENT",
+
+  // Toggles the reload on touch simulation changes.
+  "TOGGLE_RELOAD_ON_TOUCH_SIMULATION",
+
+  // Toggles the reload on user agent changes.
+  "TOGGLE_RELOAD_ON_USER_AGENT",
 
   // Toggles the touch simulation state of the viewports.
   "TOGGLE_TOUCH_SIMULATION",

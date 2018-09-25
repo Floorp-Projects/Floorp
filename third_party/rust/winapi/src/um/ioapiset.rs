@@ -7,7 +7,7 @@
 use shared::basetsd::{PULONG_PTR, ULONG_PTR};
 use shared::minwindef::{BOOL, DWORD, LPDWORD, LPVOID, PULONG, ULONG};
 use um::minwinbase::{LPOVERLAPPED, LPOVERLAPPED_ENTRY};
-use um::winnt::{HANDLE};
+use um::winnt::HANDLE;
 extern "system" {
     pub fn CreateIoCompletionPort(
         FileHandle: HANDLE,

@@ -13,7 +13,7 @@ add_task(async function() {
   // opened *while* the page is still loading. The Style Editor should not
   // signal that it is loaded until the accompanying content page is loaded.
   const tabAdded = addTab(TESTCASE_URI);
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const styleEditorLoaded = gDevTools.showToolbox(target, "styleeditor");
 
   await Promise.all([tabAdded, styleEditorLoaded]);

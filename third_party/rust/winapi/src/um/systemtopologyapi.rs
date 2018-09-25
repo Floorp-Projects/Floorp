@@ -19,4 +19,3 @@ extern "system" {
         NodeNumber: PUSHORT,
     ) -> BOOL;
 }
-

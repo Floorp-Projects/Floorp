@@ -4,30 +4,61 @@
 
 /* this is include!()'d in lib.rs */
 use std::mem;
+use winapi::um::dwrite::{DWRITE_FONT_STYLE, DWRITE_FONT_WEIGHT, DWRITE_FONT_STRETCH};
 
 // mirrors DWRITE_FONT_WEIGHT
-#[repr(u32)]
 #[derive(Deserialize, Serialize, PartialEq, Debug, Clone, Copy)]
 pub enum FontWeight {
-    Thin = 100,
-    ExtraLight = 200,
-    Light = 300,
-    SemiLight = 350,
-    Regular = 400,
-    Medium = 500,
-    SemiBold = 600,
-    Bold = 700,
-    ExtraBold = 800,
-    Black = 900,
-    ExtraBlack = 950,
+    Thin,
+    ExtraLight,
+    Light,
+    SemiLight,
+    Regular,
+    Medium,
+    SemiBold,
+    Bold,
+    ExtraBold,
+    Black,
+    ExtraBlack,
+    Unknown(u32)
 }
 
 impl FontWeight {
-    fn t(&self) -> winapi::DWRITE_FONT_WEIGHT {
-        unsafe { mem::transmute::<FontWeight, winapi::DWRITE_FONT_WEIGHT>(*self) }
+    fn t(&self) -> DWRITE_FONT_WEIGHT {
+        unsafe { mem::transmute::<u32, DWRITE_FONT_WEIGHT>(self.to_u32()) }
     }
-    pub fn to_u32(&self) -> u32 { unsafe { mem::transmute::<FontWeight, u32>(*self) } }
-    pub fn from_u32(v: u32) -> FontWeight { unsafe { mem::transmute::<u32, FontWeight>(v) } }
+    pub fn to_u32(&self) -> u32 {
+        match self {
+            FontWeight::Thin=> 100,
+            FontWeight::ExtraLight=> 200,
+            FontWeight::Light=> 300,
+            FontWeight::SemiLight=> 350,
+            FontWeight::Regular=> 400,
+            FontWeight::Medium=> 500,
+            FontWeight::SemiBold=> 600,
+            FontWeight::Bold=> 700,
+            FontWeight::ExtraBold=> 800,
+            FontWeight::Black=> 900,
+            FontWeight::ExtraBlack=> 950,
+            FontWeight::Unknown(v) => *v as u32
+        }
+    }
+    pub fn from_u32(v: u32) -> FontWeight {
+        match v {
+                100 => FontWeight::Thin,
+                200 => FontWeight::ExtraLight,
+                300 => FontWeight::Light,
+                350 => FontWeight::SemiLight,
+                400 => FontWeight::Regular,
+                500 => FontWeight::Medium,
+                600 => FontWeight::SemiBold,
+                700 => FontWeight::Bold,
+                800 => FontWeight::ExtraBold,
+                900 => FontWeight::Black,
+                950 => FontWeight::ExtraBlack,
+                _ => FontWeight::Unknown(v)
+            }
+    }
 }
 
 // mirrors DWRITE_FONT_STRETCH
@@ -47,8 +78,8 @@ pub enum FontStretch {
 }
 
 impl FontStretch {
-    fn t(&self) -> winapi::DWRITE_FONT_STRETCH {
-        unsafe { mem::transmute::<FontStretch, winapi::DWRITE_FONT_STRETCH>(*self) }
+    fn t(&self) -> DWRITE_FONT_STRETCH {
+        unsafe { mem::transmute::<FontStretch, DWRITE_FONT_STRETCH>(*self) }
     }
     pub fn to_u32(&self) -> u32 { unsafe { mem::transmute::<FontStretch, u32>(*self) } }
     pub fn from_u32(v: u32) -> FontStretch { unsafe { mem::transmute::<u32, FontStretch>(v) } }
@@ -64,11 +95,22 @@ pub enum FontStyle {
 }
 
 impl FontStyle {
-    fn t(&self) -> winapi::DWRITE_FONT_STYLE {
-        unsafe { mem::transmute::<FontStyle, winapi::DWRITE_FONT_STYLE>(*self) }
+    fn t(&self) -> DWRITE_FONT_STYLE {
+        unsafe { mem::transmute::<FontStyle, DWRITE_FONT_STYLE>(*self) }
     }
     pub fn to_u32(&self) -> u32 { unsafe { mem::transmute::<FontStyle, u32>(*self) } }
     pub fn from_u32(v: u32) -> FontStyle { unsafe { mem::transmute::<u32, FontStyle>(v) } }
+}
+
+// mirrors DWRITE_FONT_SIMULATIONS
+#[repr(u32)]
+#[derive(PartialEq, Debug, Clone, Copy)]
+pub enum FontSimulations {
+    None = winapi::um::dwrite::DWRITE_FONT_SIMULATIONS_NONE,
+    Bold = winapi::um::dwrite::DWRITE_FONT_SIMULATIONS_BOLD,
+    Oblique = winapi::um::dwrite::DWRITE_FONT_SIMULATIONS_OBLIQUE,
+    BoldOblique = winapi::um::dwrite::DWRITE_FONT_SIMULATIONS_BOLD |
+        winapi::um::dwrite::DWRITE_FONT_SIMULATIONS_OBLIQUE,
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]

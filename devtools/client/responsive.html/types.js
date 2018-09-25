@@ -22,24 +22,6 @@ exports.loadableState = createEnum([
   "ERROR",
 ]);
 
-/* GLOBAL */
-
-/**
- * Whether to reload the page automatically when certain actions occur.
- */
-exports.reloadConditions = {
-
-  // Whether to reload when touch simulation is toggled
-  touchSimulation: PropTypes.bool,
-
-  // Whether to reload when user agent is changed
-  userAgent: PropTypes.bool,
-
-  // Loaded state of these conditions
-  state: PropTypes.oneOf(Object.keys(exports.loadableState)),
-
-};
-
 /* DEVICE */
 
 /**
@@ -122,16 +104,6 @@ exports.networkThrottling = {
 
   // Name of the selected throttling profile
   profile: PropTypes.string,
-
-};
-
-/**
- * Touch simulation state for a given viewport.
- */
-exports.touchSimulation = {
-
-  // Whether or not touch simulation is enabled
-  enabled: PropTypes.bool,
 
 };
 
