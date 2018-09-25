@@ -10,8 +10,10 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "mozilla/Attributes.h"         // for override
+#include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/RefPtr.h"             // for already_AddRefed
 #include "mozilla/StaticPtr.h"          // for StaticRefPtr
+#include "mozilla/gfx/UserData.h"       // for UserDataKey
 #include "mozilla/webrender/WebRenderTypes.h" // for wr::ImageKey
 
 namespace mozilla {
@@ -71,6 +73,13 @@ public:
                         wr::IpcResourceUpdateQueue& aResources,
                         wr::ImageKey& aKey);
 
+  /**
+   * Get the external ID, if any, bound to the shared surface. Used for memory
+   * reporting purposes.
+   */
+  static Maybe<wr::ExternalImageId>
+  GetExternalId(const gfx::SourceSurfaceSharedData* aSurface);
+
 private:
   SharedSurfacesChild() = delete;
   ~SharedSurfacesChild() = delete;
@@ -83,6 +92,8 @@ private:
 
   static void Unshare(const wr::ExternalImageId& aId, nsTArray<ImageKeyData>& aKeys);
   static void DestroySharedUserData(void* aClosure);
+
+  static gfx::UserDataKey sSharedKey;
 };
 
 } // namespace layers
