@@ -41,7 +41,8 @@ dictionary PaymentShippingOption {
 
 dictionary PaymentDetailsModifier {
   required DOMString             supportedMethods;
-           PaymentItem           total;
+  // FIXME: bug 1493860: should this "= null" be here?
+           PaymentItem           total = null;
            sequence<PaymentItem> additionalDisplayItems;
            object                data;
 };
@@ -86,10 +87,13 @@ dictionary PayerErrorFields {
 
 dictionary PaymentDetailsUpdate : PaymentDetailsBase {
   DOMString     error;
-  AddressErrors shippingAddressErrors;
-  PayerErrorFields payerErrors;
+  // FIXME: bug 1493860: should this "= null" be here?
+  AddressErrors shippingAddressErrors = null;
+  // FIXME: bug 1493860: should this "= null" be here?
+  PayerErrorFields payerErrors = null;
   object paymentMethodErrors;
-  PaymentItem   total;
+  // FIXME: bug 1493860: should this "= null" be here?
+  PaymentItem   total = null;
 };
 
 enum PaymentShippingType {
