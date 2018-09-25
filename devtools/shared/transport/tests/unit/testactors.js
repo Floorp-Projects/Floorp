@@ -6,7 +6,7 @@ const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-p
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { DebuggerServer } = require("devtools/server/main");
-const { ActorRegistry } = require("devtools/server/actor-registry");
+const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 
 var gTestGlobals = [];
 DebuggerServer.addTestGlobal = function(global) {
