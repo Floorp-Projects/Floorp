@@ -10,6 +10,7 @@ import signal
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "eslint"))
 import setup_helper
+from mozbuild.nodeutil import find_node_executable
 
 from mozprocess import ProcessHandler
 
@@ -52,12 +53,7 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
     #  - Those provided by |mach lint --setup|.
 
     if not binary:
-        binary = os.environ.get('ESLINT', None)
-
-        if not binary:
-            binary = os.path.join(module_path, "node_modules", ".bin", "eslint")
-            if not os.path.isfile(binary):
-                binary = None
+        binary, _ = find_node_executable()
 
     if not binary:
         print(ESLINT_NOT_FOUND_MESSAGE)
@@ -65,6 +61,7 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
 
     extra_args = lintargs.get('extra_args') or []
     cmd_args = [binary,
+                os.path.join(module_path, "node_modules", "eslint", "bin", "eslint.js"),
                 # Enable the HTML plugin.
                 # We can't currently enable this in the global config file
                 # because it has bad interactions with the SublimeText
