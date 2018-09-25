@@ -251,7 +251,7 @@ const ActorRegistry = {
       constructor: "AccessibilityActor",
       type: { target: true }
     });
-      this.registerModule("devtools/server/actors/screenshot", {
+    this.registerModule("devtools/server/actors/screenshot", {
       prefix: "screenshot",
       constructor: "ScreenshotActor",
       type: { target: true }

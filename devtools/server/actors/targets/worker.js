@@ -90,10 +90,10 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
   },
 
   destroy() {
-    protocol.Actor.prototype.destroy.call(this);
     if (this._attached) {
       this._detach();
     }
+    protocol.Actor.prototype.destroy.call(this);
   },
 
   connect(options) {
