@@ -16,7 +16,7 @@ async function test() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  ActorRegistry.registerModule(ACTORS_URL, {
+  DebuggerServer.registerModule(ACTORS_URL, {
     prefix: "error",
     constructor: "ErrorActor",
     type: { global: true },
