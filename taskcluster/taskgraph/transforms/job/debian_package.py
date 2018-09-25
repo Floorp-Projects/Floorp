@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
+import taskcluster_urls
 
 from taskgraph.util.schema import Schema
 from voluptuous import Any, Optional, Required
@@ -17,6 +18,7 @@ from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import add_artifacts
 
 from taskgraph.util.hash import hash_path
+from taskgraph.util.taskcluster import get_root_url
 from taskgraph import GECKO
 import taskgraph
 
@@ -152,6 +154,8 @@ def docker_worker_debian_package(config, job, taskdesc):
             dist=run['dist'],
         )
 
+    queue_url = taskcluster_urls.api(get_root_url(), 'queue', 'v1', '')
+
     # We can't depend on docker images (since docker images depend on packages),
     # so we inline the whole script here.
     worker['command'] = [
@@ -171,8 +175,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         # Add sources for packages coming from other package tasks.
         'apt-get install -yyq apt-transport-https ca-certificates && '
         'for task in $PACKAGES; do '
-        '  echo "deb [trusted=yes] https://queue.taskcluster.net/v1/task'
-        '/$task/artifacts/public/build/ debian/" '
+        '  echo "deb [trusted=yes] {queue_url}task/$task/artifacts/public/build/ debian/" '
         '>> /etc/apt/sources.list; '
         'done && '
         # Install the base utilities required to build debian packages.
@@ -198,6 +201,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         'apt-ftparchive sources debian | gzip -c9 > debian/Sources.gz && '
         'apt-ftparchive packages debian | gzip -c9 > debian/Packages.gz'
         .format(
+            queue_url=queue_url,
             package=package,
             snapshot=run['snapshot'],
             dist=run['dist'],
