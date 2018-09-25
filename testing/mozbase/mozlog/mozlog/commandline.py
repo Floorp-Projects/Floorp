@@ -60,6 +60,11 @@ def buffer_handler_wrapper(handler, buffer_limit):
     return handlers.BufferHandler(handler, buffer_limit)
 
 
+def screenshot_wrapper(formatter, enable_screenshot):
+    formatter.enable_screenshot = enable_screenshot
+    return formatter
+
+
 def valgrind_handler_wrapper(handler):
     return handlers.ValgrindHandler(handler)
 
@@ -96,6 +101,9 @@ fmt_options = {
     'buffer': (buffer_handler_wrapper,
                "If specified, enables message buffering at the given buffer size limit.",
                ["mach", "tbpl"], "store"),
+    'screenshot': (screenshot_wrapper,
+                   "Enable logging reftest-analyzer compatible screenshot data.",
+                   ["mach"], "store_true"),
 }
 
 

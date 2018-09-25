@@ -11,6 +11,7 @@ from mozterm import Terminal
 
 from . import base
 from .process import strstatus
+from .tbplformatter import TbplFormatter
 from ..handlers import SummaryHandler
 import six
 from functools import reduce
@@ -26,7 +27,7 @@ class MachFormatter(base.BaseFormatter):
 
     def __init__(self, start_time=None, write_interval=False, write_times=True,
                  terminal=None, disable_colors=False, summary_on_shutdown=False,
-                 verbose=False, **kwargs):
+                 verbose=False, enable_screenshot=False, **kwargs):
         super(MachFormatter, self).__init__(**kwargs)
 
         if start_time is None:
@@ -41,6 +42,8 @@ class MachFormatter(base.BaseFormatter):
         self.term = Terminal(disable_styling=disable_colors)
         self.verbose = verbose
         self._known_pids = set()
+        self.tbpl_formatter = None
+        self.enable_screenshot = enable_screenshot
 
         self.summary = SummaryHandler()
         self.summary_on_shutdown = summary_on_shutdown
@@ -183,6 +186,8 @@ class MachFormatter(base.BaseFormatter):
             parent_unexpected = False
             expected_str = ""
 
+        has_screenshots = "reftest_screenshots" in data.get("extra", {})
+
         test = self._get_test_id(data)
 
         # Reset the counts to 0
@@ -215,7 +220,13 @@ class MachFormatter(base.BaseFormatter):
             color = self.term.red
 
         action = color(data['action'].upper())
-        return "%s: %s" % (action, rv)
+        rv = "%s: %s" % (action, rv)
+        if has_screenshots and self.enable_screenshot:
+            if self.tbpl_formatter is None:
+                self.tbpl_formatter = TbplFormatter()
+            # Create TBPL-like output that can be pasted into the reftest analyser
+            rv = "\n".join((rv, self.tbpl_formatter.test_end(data)))
+        return rv
 
     def valgrind_error(self, data):
         rv = " " + data['primary'] + "\n"
