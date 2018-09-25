@@ -56,6 +56,9 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             if kwargs["host_cert_path"] is None:
                 kwargs["host_cert_path"] = os.path.join(cert_root, "web-platform.test.pem")
 
+        if kwargs["log_mach_screenshot"] is None:
+            kwargs["log_mach_screenshot"] = True
+
         kwargs["capture_stdio"] = True
 
         return kwargs
