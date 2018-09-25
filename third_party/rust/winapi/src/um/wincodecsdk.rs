@@ -262,7 +262,7 @@ ENUM!{enum WICPersistOptions {
     WICPersistOptionPreferUTF8 = 0x8,
     WICPersistOptionMask = 0xffff,
 }}
-RIDL!(#[uuid(0xfeaa2a8d, 0xb3f3, 0x43e4, 0xb2, 0x5c, 0xd1, 0xde, 0x99, 0x0a, 0x1a, 0xe1)]
+RIDL!{#[uuid(0xfeaa2a8d, 0xb3f3, 0x43e4, 0xb2, 0x5c, 0xd1, 0xde, 0x99, 0x0a, 0x1a, 0xe1)]
 interface IWICMetadataBlockReader(IWICMetadataBlockReaderVtbl): IUnknown(IUnknownVtbl) {
     fn GetContainerFormat(
         pguidContainerFormat: *mut GUID,
@@ -276,8 +276,8 @@ interface IWICMetadataBlockReader(IWICMetadataBlockReaderVtbl): IUnknown(IUnknow
     fn GetEnumerator(
         ppIEnumMetadata: *mut IEnumUnknown,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x08fb9676, 0xb444, 0x41e8, 0x8d, 0xbe, 0x6a, 0x53, 0xa5, 0x42, 0xbf, 0xf1)]
+}}
+RIDL!{#[uuid(0x08fb9676, 0xb444, 0x41e8, 0x8d, 0xbe, 0x6a, 0x53, 0xa5, 0x42, 0xbf, 0xf1)]
 interface IWICMetadataBlockWriter(IWICMetadataBlockWriterVtbl):
     IWICMetadataBlockReader(IWICMetadataBlockReaderVtbl) {
     fn InitializeFromBlockReader(
@@ -295,8 +295,8 @@ interface IWICMetadataBlockWriter(IWICMetadataBlockWriterVtbl):
     fn RemoveWriterByIndex(
         nIndex: UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x9204fe99, 0xd8fc, 0x4fd5, 0xa0, 0x01, 0x95, 0x36, 0xb0, 0x67, 0xa8, 0x99)]
+}}
+RIDL!{#[uuid(0x9204fe99, 0xd8fc, 0x4fd5, 0xa0, 0x01, 0x95, 0x36, 0xb0, 0x67, 0xa8, 0x99)]
 interface IWICMetadataReader(IWICMetadataReaderVtbl): IUnknown(IUnknownVtbl) {
     fn GetMetadataFormat(
         pguidMetadataFormat: *mut GUID,
@@ -321,8 +321,8 @@ interface IWICMetadataReader(IWICMetadataReaderVtbl): IUnknown(IUnknownVtbl) {
     fn GetEnumerator(
         ppIEnumMetadata: *mut *mut IWICEnumMetadataItem,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xf7836e16, 0x3be0, 0x470b, 0x86, 0xbb, 0x16, 0x0d, 0x0a, 0xec, 0xd7, 0xde)]
+}}
+RIDL!{#[uuid(0xf7836e16, 0x3be0, 0x470b, 0x86, 0xbb, 0x16, 0x0d, 0x0a, 0xec, 0xd7, 0xde)]
 interface IWICMetadataWriter(IWICMetadataWriterVtbl): IWICMetadataReader(IWICMetadataReaderVtbl) {
     fn SetValue(
         pvarSchema: *const PROPVARIANT,
@@ -342,8 +342,8 @@ interface IWICMetadataWriter(IWICMetadataWriterVtbl): IWICMetadataReader(IWICMet
     fn RemoveValueByIndex(
         nIndex: UINT,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x449494bc, 0xb468, 0x4927, 0x96, 0xd7, 0xba, 0x90, 0xd3, 0x1a, 0xb5, 0x05)]
+}}
+RIDL!{#[uuid(0x449494bc, 0xb468, 0x4927, 0x96, 0xd7, 0xba, 0x90, 0xd3, 0x1a, 0xb5, 0x05)]
 interface IWICStreamProvider(IWICStreamProviderVtbl): IUnknown(IUnknownVtbl) {
     fn GetStream(
         ppIStream: *mut *mut IStream,
@@ -355,8 +355,8 @@ interface IWICStreamProvider(IWICStreamProviderVtbl): IUnknown(IUnknownVtbl) {
         pguidPreferredVendor: *mut GUID,
     ) -> HRESULT,
     fn RefreshStream() -> HRESULT,
-});
-RIDL!(#[uuid(0x00675040, 0x6908, 0x45f8, 0x86, 0xa3, 0x49, 0xc7, 0xdf, 0xd6, 0xd9, 0xad)]
+}}
+RIDL!{#[uuid(0x00675040, 0x6908, 0x45f8, 0x86, 0xa3, 0x49, 0xc7, 0xdf, 0xd6, 0xd9, 0xad)]
 interface IWICPersistStream(IWICPersistStreamVtbl): IPersistStream(IPersistStreamVtbl) {
     fn LoadEx(
         pIStream: *mut IStream,
@@ -368,8 +368,8 @@ interface IWICPersistStream(IWICPersistStreamVtbl): IPersistStream(IPersistStrea
         dwPersistOptions: DWORD,
         fClearDirty: BOOL,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xaba958bf, 0xc672, 0x44d1, 0x8d, 0x61, 0xce, 0x6d, 0xf2, 0xe6, 0x82, 0xc2)]
+}}
+RIDL!{#[uuid(0xaba958bf, 0xc672, 0x44d1, 0x8d, 0x61, 0xce, 0x6d, 0xf2, 0xe6, 0x82, 0xc2)]
 interface IWICMetadataHandlerInfo(IWICMetadataHandlerInfoVtbl):
     IWICComponentInfo(IWICComponentInfoVtbl) {
     fn GetMetadataFormat(
@@ -399,7 +399,7 @@ interface IWICMetadataHandlerInfo(IWICMetadataHandlerInfoVtbl):
     fn DoesRequireFixedSize(
         pfFixedSize: *mut BOOL,
     ) -> HRESULT,
-});
+}}
 STRUCT!{struct WICMetadataPattern {
     Position: ULARGE_INTEGER,
     Length: ULONG,
@@ -407,7 +407,7 @@ STRUCT!{struct WICMetadataPattern {
     Mask: *mut BYTE,
     DataOffset: ULARGE_INTEGER,
 }}
-RIDL!(#[uuid(0xeebf1f5b, 0x07c1, 0x4447, 0xa3, 0xab, 0x22, 0xac, 0xaf, 0x78, 0xa8, 0x04)]
+RIDL!{#[uuid(0xeebf1f5b, 0x07c1, 0x4447, 0xa3, 0xab, 0x22, 0xac, 0xaf, 0x78, 0xa8, 0x04)]
 interface IWICMetadataReaderInfo(IWICMetadataReaderInfoVtbl):
     IWICMetadataHandlerInfo(IWICMetadataHandlerInfoVtbl) {
     fn GetPatterns(
@@ -425,14 +425,14 @@ interface IWICMetadataReaderInfo(IWICMetadataReaderInfoVtbl):
     fn CreateInstance(
         ppIReader: *mut *mut IWICMetadataReader,
     ) -> HRESULT,
-});
+}}
 STRUCT!{struct WICMetadataHeader {
     Position: ULARGE_INTEGER,
     Length: ULONG,
     Header: *mut BYTE,
     DataOffset: ULARGE_INTEGER,
 }}
-RIDL!(#[uuid(0xb22e3fba, 0x3925, 0x4323, 0xb5, 0xc1, 0x9e, 0xbf, 0xc4, 0x30, 0xf2, 0x36)]
+RIDL!{#[uuid(0xb22e3fba, 0x3925, 0x4323, 0xb5, 0xc1, 0x9e, 0xbf, 0xc4, 0x30, 0xf2, 0x36)]
 interface IWICMetadataWriterInfo(IWICMetadataWriterInfoVtbl):
     IWICMetadataHandlerInfo(IWICMetadataHandlerInfoVtbl) {
     fn GetHeader(
@@ -444,8 +444,8 @@ interface IWICMetadataWriterInfo(IWICMetadataWriterInfoVtbl):
     fn CreateInstance(
         ppIWriter: *mut *mut IWICMetadataWriter,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x412d0c3a, 0x9650, 0x44fa, 0xaf, 0x5b, 0xdd, 0x2a, 0x06, 0xc8, 0xe8, 0xfb)]
+}}
+RIDL!{#[uuid(0x412d0c3a, 0x9650, 0x44fa, 0xaf, 0x5b, 0xdd, 0x2a, 0x06, 0xc8, 0xe8, 0xfb)]
 interface IWICComponentFactory(IWICComponentFactoryVtbl):
     IWICImagingFactory(IWICImagingFactoryVtbl) {
     fn CreateMetadataReader(
@@ -486,7 +486,7 @@ interface IWICComponentFactory(IWICComponentFactoryVtbl):
         cCount: UINT,
         ppIPropertyBag: *mut *mut IPropertyBag2,
     ) -> HRESULT,
-});
+}}
 extern "system" {
     pub fn WICMatchMetadataContent(
         guidContainerFormat: REFGUID,

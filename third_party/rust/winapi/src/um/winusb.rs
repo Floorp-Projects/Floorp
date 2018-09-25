@@ -211,7 +211,6 @@ extern "system" {
         Overlapped: LPOVERLAPPED,
     ) -> BOOL;
 }
-
 STRUCT!{struct USB_INTERFACE_DESCRIPTOR {
     bLength: UCHAR,
     bDescriptorType: UCHAR,

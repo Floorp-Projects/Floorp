@@ -37,7 +37,7 @@ pub const SECPKG_ATTR_UI_INFO: DWORD = 0x68;
 pub const SECPKG_ATTR_EARLY_START: DWORD = 0x69;
 STRUCT!{struct SecPkgCred_SupportedAlgs {
     cSupportedAlgs: DWORD,
-    palgSupportedAlgs: ALG_ID,
+    palgSupportedAlgs: *mut ALG_ID,
 }}
 STRUCT!{struct SecPkgCred_CipherStrengths {
     dwMinimumCipherStrength: DWORD,

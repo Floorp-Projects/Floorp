@@ -27,16 +27,18 @@ const INITIAL_DEVICES = {
 const reducers = {
 
   [ADD_DEVICE](devices, { device, deviceType }) {
-    return Object.assign({}, devices, {
+    return {
+      ...devices,
       [deviceType]: [...devices[deviceType], device],
-    });
+    };
   },
 
   [ADD_DEVICE_TYPE](devices, { deviceType }) {
-    return Object.assign({}, devices, {
+    return {
+      ...devices,
       types: [...devices.types, deviceType],
       [deviceType]: [],
-    });
+    };
   },
 
   [UPDATE_DEVICE_DISPLAYED](devices, { device, deviceType, displayed }) {
@@ -48,27 +50,31 @@ const reducers = {
       return d;
     });
 
-    return Object.assign({}, devices, {
+    return {
+      ...devices,
       [deviceType]: newDevices,
-    });
+    };
   },
 
   [LOAD_DEVICE_LIST_START](devices, action) {
-    return Object.assign({}, devices, {
+    return {
+      ...devices,
       listState: Types.loadableState.LOADING,
-    });
+    };
   },
 
   [LOAD_DEVICE_LIST_ERROR](devices, action) {
-    return Object.assign({}, devices, {
+    return {
+      ...devices,
       listState: Types.loadableState.ERROR,
-    });
+    };
   },
 
   [LOAD_DEVICE_LIST_END](devices, action) {
-    return Object.assign({}, devices, {
+    return {
+      ...devices,
       listState: Types.loadableState.LOADED,
-    });
+    };
   },
 
   [REMOVE_DEVICE](devices, { device, deviceType }) {
@@ -79,16 +85,19 @@ const reducers = {
 
     const list = [...devices[deviceType]];
     list.splice(index, 1);
-    return Object.assign({}, devices, {
-      [deviceType]: list
-    });
+
+    return {
+      ...devices,
+      [deviceType]: list,
+    };
   },
 
   [UPDATE_DEVICE_MODAL](devices, { isOpen, modalOpenedFromViewport }) {
-    return Object.assign({}, devices, {
+    return {
+      ...devices,
       isModalOpen: isOpen,
       modalOpenedFromViewport,
-    });
+    };
   },
 
 };

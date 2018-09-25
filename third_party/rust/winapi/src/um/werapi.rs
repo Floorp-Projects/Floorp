@@ -5,7 +5,7 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! Function prototypes for Windows Error Reporting (WER)
-use shared::minwindef::{DWORD, PDWORD};
+use shared::minwindef::{BOOL, DWORD, PDWORD};
 use um::winnt::{HANDLE, HRESULT, PCWSTR, PVOID};
 ENUM!{enum WER_REGISTER_FILE_TYPE {
     WerRegFileTypeUserDocument = 1,
@@ -34,6 +34,14 @@ extern "system" {
     pub fn WerGetFlags(
         hProcess: HANDLE,
         pdwFlags: PDWORD
+    ) -> HRESULT;
+    pub fn WerAddExcludedApplication(
+        pwzExeName: PCWSTR,
+        bAllUsers: BOOL
+    ) -> HRESULT;
+    pub fn WerRemoveExcludedApplication(
+        pwzExeName: PCWSTR,
+        bAllUsers: BOOL
     ) -> HRESULT;
     pub fn WerRegisterRuntimeExceptionModule(
         pwszOutOfProcessCallbackDll: PCWSTR,

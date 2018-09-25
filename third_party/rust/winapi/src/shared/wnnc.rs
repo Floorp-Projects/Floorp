@@ -5,9 +5,7 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! Provides the Windows Networking WNNC_NET definitions to winnetwk.h and the IFS Kit.
-
 use shared::minwindef::DWORD;
-
 pub const WNNC_NET_MSNET: DWORD = 0x00010000;
 pub const WNNC_NET_SMB: DWORD = 0x00020000;
 pub const WNNC_NET_NETWARE: DWORD = 0x00030000;

@@ -32,7 +32,7 @@ async function performTests() {
   jsterm.execute(pauseExpression);
 
   // wait for the debugger to be opened and paused.
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
   const dbg = await waitFor(() => toolbox.getPanel("jsdebugger"));
   await waitFor(() => dbg._selectors.isPaused(dbg._getState()));

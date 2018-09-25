@@ -37,7 +37,6 @@ class Toolbar extends PureComponent {
       onChangeDevice: PropTypes.func.isRequired,
       onChangeNetworkThrottling: PropTypes.func.isRequired,
       onChangePixelRatio: PropTypes.func.isRequired,
-      onChangeReloadCondition: PropTypes.func.isRequired,
       onChangeTouchSimulation: PropTypes.func.isRequired,
       onChangeUserAgent: PropTypes.func.isRequired,
       onExit: PropTypes.func.isRequired,
@@ -46,15 +45,15 @@ class Toolbar extends PureComponent {
       onRotateViewport: PropTypes.func.isRequired,
       onScreenshot: PropTypes.func.isRequired,
       onToggleLeftAlignment: PropTypes.func.isRequired,
+      onToggleReloadOnTouchSimulation: PropTypes.func.isRequired,
+      onToggleReloadOnUserAgent: PropTypes.func.isRequired,
       onToggleUserAgentInput: PropTypes.func.isRequired,
       onUpdateDeviceModal: PropTypes.func.isRequired,
-      reloadConditions: PropTypes.shape(Types.reloadConditions).isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       selectedDevice: PropTypes.string.isRequired,
       selectedPixelRatio: PropTypes.number.isRequired,
       showUserAgentInput: PropTypes.bool.isRequired,
       touchSimulationEnabled: PropTypes.bool.isRequired,
-      userAgent: PropTypes.string.isRequired,
       viewport: PropTypes.shape(Types.viewport).isRequired,
     };
   }
@@ -63,7 +62,6 @@ class Toolbar extends PureComponent {
     const {
       onChangeUserAgent,
       showUserAgentInput,
-      userAgent,
     } = this.props;
 
     if (!showUserAgentInput) {
@@ -73,7 +71,6 @@ class Toolbar extends PureComponent {
     return createElement(Fragment, null,
       UserAgentInput({
         onChangeUserAgent,
-        userAgent,
       }),
       dom.div({ className: "devtools-separator" }),
     );
@@ -88,7 +85,6 @@ class Toolbar extends PureComponent {
       onChangeDevice,
       onChangeNetworkThrottling,
       onChangePixelRatio,
-      onChangeReloadCondition,
       onChangeTouchSimulation,
       onExit,
       onRemoveDeviceAssociation,
@@ -96,9 +92,10 @@ class Toolbar extends PureComponent {
       onRotateViewport,
       onScreenshot,
       onToggleLeftAlignment,
+      onToggleReloadOnTouchSimulation,
+      onToggleReloadOnUserAgent,
       onToggleUserAgentInput,
       onUpdateDeviceModal,
-      reloadConditions,
       screenshot,
       selectedDevice,
       selectedPixelRatio,
@@ -172,9 +169,9 @@ class Toolbar extends PureComponent {
             disabled: screenshot.isCapturing,
           }),
           SettingsMenu({
-            reloadConditions,
-            onChangeReloadCondition,
             onToggleLeftAlignment,
+            onToggleReloadOnTouchSimulation,
+            onToggleReloadOnUserAgent,
             onToggleUserAgentInput,
           }),
           dom.div({ className: "devtools-separator" }),
@@ -196,7 +193,6 @@ const mapStateToProps = state => {
     leftAlignmentEnabled: state.ui.leftAlignmentEnabled,
     showUserAgentInput: state.ui.showUserAgentInput,
     touchSimulationEnabled: state.ui.touchSimulationEnabled,
-    userAgent: state.ui.userAgent,
   };
 };
 

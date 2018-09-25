@@ -15,15 +15,16 @@ add_task(async function() {
   const parentProcessActors = await getParentProcessActors(client);
 
   // We have to attach the chrome target actor before playing with the PromiseActor
-  await attachTab(client, parentProcessActors);
+  await attachTarget(client, parentProcessActors);
   await testAttach(client, parentProcessActors);
 
   const response = await listTabs(client);
   const targetTab = findTab(response.tabs, "promises-actor-test");
   ok(targetTab, "Found our target tab.");
 
-  await attachTab(client, targetTab);
-  await testAttach(client, targetTab);
+  const [ tabResponse ] = await attachTarget(client, targetTab);
+
+  await testAttach(client, tabResponse);
 
   await close(client);
 });

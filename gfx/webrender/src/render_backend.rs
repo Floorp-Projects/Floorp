@@ -1090,6 +1090,10 @@ impl RenderBackend {
             |n| { n.notify(); },
         );
 
+        if !notifications.is_empty() {
+            self.result_tx.send(ResultMsg::AppendNotificationRequests(notifications)).unwrap();
+        }
+
         // Always forward the transaction to the renderer if a frame was requested,
         // otherwise gecko can get into a state where it waits (forever) for the
         // transaction to complete before sending new work.

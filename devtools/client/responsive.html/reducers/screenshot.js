@@ -16,11 +16,17 @@ const INITIAL_SCREENSHOT = {
 const reducers = {
 
   [TAKE_SCREENSHOT_END](screenshot, action) {
-    return Object.assign({}, screenshot, { isCapturing: false });
+    return {
+      ...screenshot,
+      isCapturing: false,
+    };
   },
 
   [TAKE_SCREENSHOT_START](screenshot, action) {
-    return Object.assign({}, screenshot, { isCapturing: true });
+    return {
+      ...screenshot,
+      isCapturing: true,
+    };
   },
 };
 

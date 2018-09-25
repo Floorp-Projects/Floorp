@@ -66,7 +66,9 @@ function validatedWebRemoteType(aPreferredRemoteType, aTargetUri, aCurrentUri) {
     if (aCurrentUri) {
       try {
         // checkSameOriginURI throws when not same origin.
-        sm.checkSameOriginURI(aCurrentUri, aTargetUri, false);
+        // todo: if you intend to update CheckSameOriginURI to log the error to the
+        // console you also need to update the 'aFromPrivateWindow' argument.
+        sm.checkSameOriginURI(aCurrentUri, aTargetUri, false, false);
         return FILE_REMOTE_TYPE;
       } catch (e) {
         return WEB_REMOTE_TYPE;

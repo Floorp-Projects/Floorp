@@ -814,5 +814,5 @@ extern "system" {
         cchLocaleScripts: c_int,
         lpTestScripts: LPCWSTR,
         cchTestScripts: c_int,
-    ) -> BOOL;   
+    ) -> BOOL;
 }

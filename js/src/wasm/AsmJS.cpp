@@ -22,6 +22,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compression.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 
 #include <new>
@@ -5889,8 +5890,12 @@ static bool
 CheckFunction(ModuleValidator& m)
 {
     // asm.js modules can be quite large when represented as parse trees so pop
-    // the backing LifoAlloc after parsing/compiling each function.
+    // the backing LifoAlloc after parsing/compiling each function. Release the
+    // parser's lifo memory after the last use of a parse node.
     AsmJSParser::Mark mark = m.parser().mark();
+    auto releaseMark = mozilla::MakeScopeExit([&] {
+        m.parser().release(mark);
+    });
 
     CodeNode* funNode = nullptr;
     unsigned line = 0;
@@ -5944,8 +5949,6 @@ CheckFunction(ModuleValidator& m)
 
     f.define(func, line);
 
-    // Release the parser's lifo memory only after the last use of a parse node.
-    m.parser().release(mark);
     return true;
 }
 
@@ -7623,10 +7626,10 @@ js::AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool isToSource)
         if (!out.append("function ")) {
             return nullptr;
         }
-         if (fun->explicitName() && !out.append(fun->explicitName())) {
-             return nullptr;
-         }
-        if (!out.append("() {\n    [sourceless code]\n}")) {
+        if (fun->explicitName() && !out.append(fun->explicitName())) {
+            return nullptr;
+        }
+        if (!out.append("() {\n    [native code]\n}")) {
             return nullptr;
         }
     } else {
@@ -7676,7 +7679,7 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
         if (!out.append(fun->explicitName())) {
             return nullptr;
         }
-        if (!out.append("() {\n    [sourceless code]\n}")) {
+        if (!out.append("() {\n    [native code]\n}")) {
             return nullptr;
         }
     } else {

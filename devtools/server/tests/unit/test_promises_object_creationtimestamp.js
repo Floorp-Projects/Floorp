@@ -28,7 +28,7 @@ add_task(async function() {
   ok(Promise.toString().includes("native code"), "Expect native DOM Promise.");
 
   // We have to attach the chrome target actor before playing with the PromiseActor
-  await attachTab(client, parentProcessActors);
+  await attachTarget(client, parentProcessActors);
   await testPromiseCreationTimestamp(client, parentProcessActors, v => {
     return new Promise(resolve => resolve(v));
   });

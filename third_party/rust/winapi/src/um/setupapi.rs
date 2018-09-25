@@ -32,25 +32,25 @@ pub const MAX_SERVICE_NAME_LEN: usize = 256;
 pub const MAX_SUBTITLE_LEN: usize = 256;
 pub const SP_MAX_MACHINENAME_LENGTH: usize = MAX_PATH + 3;
 pub type HINF = PVOID;
-STRUCT!{struct INFCONTEXT {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct INFCONTEXT {
     Inf: PVOID,
     CurrentInf: PVOID,
     Section: UINT,
     Line: UINT,
 }}
 pub type PINFCONTEXT = *mut INFCONTEXT;
-STRUCT!{struct SP_INF_INFORMATION {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_INF_INFORMATION {
     InfStyle: DWORD,
     InfCount: DWORD,
     VersionData: [BYTE; ANYSIZE_ARRAY],
 }}
 pub type PSP_INF_INFORMATION = *mut SP_INF_INFORMATION;
-UNION!{union SP_ALTPLATFORM_INFO_V3_u {
+UNION!{#[cfg_attr(target_arch = "x86", repr(packed))] union SP_ALTPLATFORM_INFO_V3_u {
     [u16; 1],
     Reserved Reserved_mut: WORD,
     Flags Flags_mut: WORD,
 }}
-STRUCT!{struct SP_ALTPLATFORM_INFO_V3 {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_ALTPLATFORM_INFO_V3 {
     cbSize: DWORD,
     Platform: DWORD,
     MajorVersion: DWORD,
@@ -64,12 +64,12 @@ STRUCT!{struct SP_ALTPLATFORM_INFO_V3 {
     BuildNumber: DWORD,
 }}
 pub type PSP_ALTPLATFORM_INFO_V3 = *mut SP_ALTPLATFORM_INFO_V3;
-UNION!{union SP_ALTPLATFORM_INFO_V2_u {
+UNION!{#[cfg_attr(target_arch = "x86", repr(packed))] union SP_ALTPLATFORM_INFO_V2_u {
     [u16; 1],
     Reserved Reserved_mut: WORD,
     Flags Flags_mut: WORD,
 }}
-STRUCT!{struct SP_ALTPLATFORM_INFO_V2 {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_ALTPLATFORM_INFO_V2 {
     cbSize: DWORD,
     Platform: DWORD,
     MajorVersion: DWORD,
@@ -80,7 +80,7 @@ STRUCT!{struct SP_ALTPLATFORM_INFO_V2 {
     FirstValidatedMinorVersion: DWORD,
 }}
 pub type PSP_ALTPLATFORM_INFO_V2 = *mut SP_ALTPLATFORM_INFO_V2;
-STRUCT!{struct SP_ALTPLATFORM_INFO_V1 {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_ALTPLATFORM_INFO_V1 {
     cbSize: DWORD,
     Platform: DWORD,
     MajorVersion: DWORD,
@@ -93,13 +93,13 @@ pub type SP_ALTPLATFORM_INFO = SP_ALTPLATFORM_INFO_V2;
 pub type PSP_ALTPLATFORM_INFO = PSP_ALTPLATFORM_INFO_V2;
 pub const SP_ALTPLATFORM_FLAGS_VERSION_RANGE: WORD = 0x0001;
 pub const SP_ALTPLATFORM_FLAGS_SUITE_MASK: WORD = 0x0002;
-STRUCT!{struct SP_ORIGINAL_FILE_INFO_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_ORIGINAL_FILE_INFO_A {
     cbSize: DWORD,
     OriginalInfName: [CHAR; MAX_PATH],
     OriginalCatalogName: [CHAR; MAX_PATH],
 }}
 pub type PSP_ORIGINAL_FILE_INFO_A = *mut SP_ORIGINAL_FILE_INFO_A;
-STRUCT!{struct SP_ORIGINAL_FILE_INFO_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_ORIGINAL_FILE_INFO_W {
     cbSize: DWORD,
     OriginalInfName: [WCHAR; MAX_PATH],
     OriginalCatalogName: [WCHAR; MAX_PATH],
@@ -215,21 +215,21 @@ pub const COPYFLG_NOPRUNE: UINT = 0x00002000;
 pub const COPYFLG_IN_USE_TRY_RENAME: UINT = 0x00004000;
 pub const DELFLG_IN_USE: UINT = 0x00000001;
 pub const DELFLG_IN_USE1: UINT = 0x00010000;
-STRUCT!{struct FILEPATHS_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct FILEPATHS_A {
     Target: PCSTR,
     Source: PCSTR,
     Win32Error: UINT,
     Flags: DWORD,
 }}
 pub type PFILEPATHS_A = *mut FILEPATHS_A;
-STRUCT!{struct FILEPATHS_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct FILEPATHS_W {
     Target: PCWSTR,
     Source: PCWSTR,
     Win32Error: UINT,
     Flags: DWORD,
 }}
 pub type PFILEPATHS_W = *mut FILEPATHS_W;
-STRUCT!{struct FILEPATHS_SIGNERINFO_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct FILEPATHS_SIGNERINFO_A {
     Target: PCSTR,
     Source: PCSTR,
     Win32Error: UINT,
@@ -239,7 +239,7 @@ STRUCT!{struct FILEPATHS_SIGNERINFO_A {
     CatalogFile: PCSTR,
 }}
 pub type PFILEPATHS_SIGNERINFO_A = *mut FILEPATHS_SIGNERINFO_A;
-STRUCT!{struct FILEPATHS_SIGNERINFO_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct FILEPATHS_SIGNERINFO_W {
     Target: PCWSTR,
     Source: PCWSTR,
     Win32Error: UINT,
@@ -249,7 +249,7 @@ STRUCT!{struct FILEPATHS_SIGNERINFO_W {
     CatalogFile: PCWSTR,
 }}
 pub type PFILEPATHS_SIGNERINFO_W = *mut FILEPATHS_SIGNERINFO_W;
-STRUCT!{struct SOURCE_MEDIA_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SOURCE_MEDIA_A {
     Reserved: PCSTR,
     Tagfile: PCSTR,
     Description: PCSTR,
@@ -258,7 +258,7 @@ STRUCT!{struct SOURCE_MEDIA_A {
     Flags: DWORD,
 }}
 pub type PSOURCE_MEDIA_A = *mut SOURCE_MEDIA_A;
-STRUCT!{struct SOURCE_MEDIA_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SOURCE_MEDIA_W {
     Reserved: PCWSTR,
     Tagfile: PCWSTR,
     Description: PCWSTR,
@@ -267,7 +267,7 @@ STRUCT!{struct SOURCE_MEDIA_W {
     Flags: DWORD,
 }}
 pub type PSOURCE_MEDIA_W = *mut SOURCE_MEDIA_W;
-STRUCT!{struct CABINET_INFO_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct CABINET_INFO_A {
     CabinetPath: PCSTR,
     CabinetFile: PCSTR,
     DiskName: PCSTR,
@@ -275,7 +275,7 @@ STRUCT!{struct CABINET_INFO_A {
     CabinetNumber: USHORT,
 }}
 pub type PCABINET_INFO_A = *mut CABINET_INFO_A;
-STRUCT!{struct CABINET_INFO_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct CABINET_INFO_W {
     CabinetPath: PCWSTR,
     CabinetFile: PCWSTR,
     DiskName: PCWSTR,
@@ -283,7 +283,7 @@ STRUCT!{struct CABINET_INFO_W {
     CabinetNumber: USHORT,
 }}
 pub type PCABINET_INFO_W = *mut CABINET_INFO_W;
-STRUCT!{struct FILE_IN_CABINET_INFO_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct FILE_IN_CABINET_INFO_A {
     NameInCabinet: PCSTR,
     FileSize: DWORD,
     Win32Error: DWORD,
@@ -293,7 +293,7 @@ STRUCT!{struct FILE_IN_CABINET_INFO_A {
     FullTargetName: [CHAR; MAX_PATH],
 }}
 pub type PFILE_IN_CABINET_INFO_A = *mut FILE_IN_CABINET_INFO_A;
-STRUCT!{struct FILE_IN_CABINET_INFO_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct FILE_IN_CABINET_INFO_W {
     NameInCabinet: PCWSTR,
     FileSize: DWORD,
     Win32Error: DWORD,
@@ -303,14 +303,14 @@ STRUCT!{struct FILE_IN_CABINET_INFO_W {
     FullTargetName: [WCHAR; MAX_PATH],
 }}
 pub type PFILE_IN_CABINET_INFO_W = *mut FILE_IN_CABINET_INFO_W;
-STRUCT!{struct SP_REGISTER_CONTROL_STATUSA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_REGISTER_CONTROL_STATUSA {
     cbSize: DWORD,
     FileName: PCSTR,
     Win32Error: DWORD,
     FailureCode: DWORD,
 }}
 pub type PSP_REGISTER_CONTROL_STATUSA = *mut SP_REGISTER_CONTROL_STATUSA;
-STRUCT!{struct SP_REGISTER_CONTROL_STATUSW {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_REGISTER_CONTROL_STATUSW {
     cbSize: DWORD,
     FileName: PCWSTR,
     Win32Error: DWORD,
@@ -325,7 +325,7 @@ pub const SPREG_DLLINSTALL: DWORD = 0x00000004;
 pub const SPREG_TIMEOUT: DWORD = 0x00000005;
 pub const SPREG_UNKNOWN: DWORD = 0xFFFFFFFF;
 pub type HSPFILEQ = PVOID;
-STRUCT!{struct SP_FILE_COPY_PARAMS_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_FILE_COPY_PARAMS_A {
     cbSize: DWORD,
     QueueHandle: HSPFILEQ,
     SourceRootPath: PCSTR,
@@ -340,7 +340,7 @@ STRUCT!{struct SP_FILE_COPY_PARAMS_A {
     SecurityDescriptor: PCSTR,
 }}
 pub type PSP_FILE_COPY_PARAMS_A = *mut SP_FILE_COPY_PARAMS_A;
-STRUCT!{struct SP_FILE_COPY_PARAMS_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_FILE_COPY_PARAMS_W {
     cbSize: DWORD,
     QueueHandle: HSPFILEQ,
     SourceRootPath: PCWSTR,
@@ -357,14 +357,14 @@ STRUCT!{struct SP_FILE_COPY_PARAMS_W {
 pub type PSP_FILE_COPY_PARAMS_W = *mut SP_FILE_COPY_PARAMS_W;
 pub type HDSKSPC = PVOID;
 pub type HDEVINFO = PVOID;
-STRUCT!{struct SP_DEVINFO_DATA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DEVINFO_DATA {
     cbSize: DWORD,
     ClassGuid: GUID,
     DevInst: DWORD,
     Reserved: ULONG_PTR,
 }}
 pub type PSP_DEVINFO_DATA = *mut SP_DEVINFO_DATA;
-STRUCT!{struct SP_DEVICE_INTERFACE_DATA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DEVICE_INTERFACE_DATA {
     cbSize: DWORD,
     InterfaceClassGuid: GUID,
     Flags: DWORD,
@@ -379,24 +379,24 @@ pub type PSP_INTERFACE_DEVICE_DATA = PSP_DEVICE_INTERFACE_DATA;
 pub const SPID_ACTIVE: DWORD = SPINT_ACTIVE;
 pub const SPID_DEFAULT: DWORD = SPINT_DEFAULT;
 pub const SPID_REMOVED: DWORD = SPINT_REMOVED;
-STRUCT!{struct SP_DEVICE_INTERFACE_DETAIL_DATA_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DEVICE_INTERFACE_DETAIL_DATA_A {
     cbSize: DWORD,
     DevicePath: [CHAR; ANYSIZE_ARRAY],
 }}
 pub type PSP_DEVICE_INTERFACE_DETAIL_DATA_A = *mut SP_DEVICE_INTERFACE_DETAIL_DATA_A;
-STRUCT!{struct SP_DEVICE_INTERFACE_DETAIL_DATA_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DEVICE_INTERFACE_DETAIL_DATA_W {
     cbSize: DWORD,
     DevicePath: [WCHAR; ANYSIZE_ARRAY],
 }}
 pub type PSP_DEVICE_INTERFACE_DETAIL_DATA_W = *mut SP_DEVICE_INTERFACE_DETAIL_DATA_W;
-STRUCT!{struct SP_DEVINFO_LIST_DETAIL_DATA_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DEVINFO_LIST_DETAIL_DATA_A {
     cbSize: DWORD,
     ClassGuid: GUID,
     RemoteMachineHandle: HANDLE,
     RemoteMachineName: [CHAR; SP_MAX_MACHINENAME_LENGTH],
 }}
 pub type PSP_DEVINFO_LIST_DETAIL_DATA_A = *mut SP_DEVINFO_LIST_DETAIL_DATA_A;
-STRUCT!{struct SP_DEVINFO_LIST_DETAIL_DATA_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DEVINFO_LIST_DETAIL_DATA_W {
     cbSize: DWORD,
     ClassGuid: GUID,
     RemoteMachineHandle: HANDLE,
@@ -447,7 +447,7 @@ pub const DIF_FINISHINSTALL_ACTION: DI_FUNCTION = 0x0000002A;
 pub const DIF_RESERVED2: DI_FUNCTION = 0x00000030;
 pub const DIF_MOVEDEVICE: DI_FUNCTION = 0x0000000E;
 pub type DI_FUNCTION = UINT;
-STRUCT!{struct SP_DEVINSTALL_PARAMS_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DEVINSTALL_PARAMS_A {
     cbSize: DWORD,
     Flags: DWORD,
     FlagsEx: DWORD,
@@ -460,7 +460,7 @@ STRUCT!{struct SP_DEVINSTALL_PARAMS_A {
     DriverPath: [CHAR; MAX_PATH],
 }}
 pub type PSP_DEVINSTALL_PARAMS_A = *mut SP_DEVINSTALL_PARAMS_A;
-STRUCT!{struct SP_DEVINSTALL_PARAMS_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DEVINSTALL_PARAMS_W {
     cbSize: DWORD,
     Flags: DWORD,
     FlagsEx: DWORD,
@@ -537,12 +537,12 @@ pub const DI_FLAGSEX_ALTPLATFORM_DRVSEARCH: DWORD = 0x10000000;
 pub const DI_FLAGSEX_RESTART_DEVICE_ONLY: DWORD = 0x20000000;
 pub const DI_FLAGSEX_RECURSIVESEARCH: DWORD = 0x40000000;
 pub const DI_FLAGSEX_SEARCH_PUBLISHED_INFS: DWORD = 0x80000000;
-STRUCT!{struct SP_CLASSINSTALL_HEADER {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_CLASSINSTALL_HEADER {
     cbSize: DWORD,
     InstallFunction: DI_FUNCTION,
 }}
 pub type PSP_CLASSINSTALL_HEADER = *mut SP_CLASSINSTALL_HEADER;
-STRUCT!{struct SP_ENABLECLASS_PARAMS {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_ENABLECLASS_PARAMS {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     ClassGuid: GUID,
     EnableMessage: DWORD,
@@ -559,14 +559,14 @@ pub const DICS_STOP: DWORD = 0x00000005;
 pub const DICS_FLAG_GLOBAL: DWORD = 0x00000001;
 pub const DICS_FLAG_CONFIGSPECIFIC: DWORD = 0x00000002;
 pub const DICS_FLAG_CONFIGGENERAL: DWORD = 0x00000004;
-STRUCT!{struct SP_PROPCHANGE_PARAMS {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_PROPCHANGE_PARAMS {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     StateChange: DWORD,
     Scope: DWORD,
     HwProfile: DWORD,
 }}
 pub type PSP_PROPCHANGE_PARAMS = *mut SP_PROPCHANGE_PARAMS;
-STRUCT!{struct SP_REMOVEDEVICE_PARAMS {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_REMOVEDEVICE_PARAMS {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     Scope: DWORD,
     HwProfile: DWORD,
@@ -574,14 +574,14 @@ STRUCT!{struct SP_REMOVEDEVICE_PARAMS {
 pub type PSP_REMOVEDEVICE_PARAMS = *mut SP_REMOVEDEVICE_PARAMS;
 pub const DI_REMOVEDEVICE_GLOBAL: DWORD = 0x00000001;
 pub const DI_REMOVEDEVICE_CONFIGSPECIFIC: DWORD = 0x00000002;
-STRUCT!{struct SP_UNREMOVEDEVICE_PARAMS {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_UNREMOVEDEVICE_PARAMS {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     Scope: DWORD,
     HwProfile: DWORD,
 }}
 pub type PSP_UNREMOVEDEVICE_PARAMS = *mut SP_UNREMOVEDEVICE_PARAMS;
 pub const DI_UNREMOVEDEVICE_CONFIGSPECIFIC: DWORD = 0x00000002;
-STRUCT!{struct SP_SELECTDEVICE_PARAMS_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_SELECTDEVICE_PARAMS_A {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     Title: [CHAR; MAX_TITLE_LEN],
     Instructions: [CHAR; MAX_INSTRUCTION_LEN],
@@ -590,7 +590,7 @@ STRUCT!{struct SP_SELECTDEVICE_PARAMS_A {
     Reserved: [BYTE; 2],
 }}
 pub type PSP_SELECTDEVICE_PARAMS_A = *mut SP_SELECTDEVICE_PARAMS_A;
-STRUCT!{struct SP_SELECTDEVICE_PARAMS_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_SELECTDEVICE_PARAMS_W {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     Title: [WCHAR; MAX_TITLE_LEN],
     Instructions: [WCHAR; MAX_INSTRUCTION_LEN],
@@ -602,14 +602,14 @@ FN!{stdcall PDETECT_PROGRESS_NOTIFY(
     ProgressNotifyParam: PVOID,
     DetectComplete: DWORD,
 ) -> BOOL}
-STRUCT!{struct SP_DETECTDEVICE_PARAMS {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DETECTDEVICE_PARAMS {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     DetectProgressNotify: PDETECT_PROGRESS_NOTIFY,
     ProgressNotifyParam: PVOID,
 }}
 pub type PSP_DETECTDEVICE_PARAMS = *mut SP_DETECTDEVICE_PARAMS;
 pub const MAX_INSTALLWIZARD_DYNAPAGES: usize = 20;
-STRUCT!{struct SP_INSTALLWIZARD_DATA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_INSTALLWIZARD_DATA {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     Flags: DWORD,
     DynamicPages: [HPROPSHEETPAGE; MAX_INSTALLWIZARD_DYNAPAGES],
@@ -653,7 +653,7 @@ pub const IDD_DYNAWIZ_SELECTCLASS_PAGE: c_int = 10012;
 pub const IDD_DYNAWIZ_INSTALLDETECTED_PREVPAGE: c_int = 10006;
 pub const IDD_DYNAWIZ_INSTALLDETECTED_NEXTPAGE: c_int = 10007;
 pub const IDD_DYNAWIZ_INSTALLDETECTED_NODEVS: c_int = 10008;
-STRUCT!{struct SP_NEWDEVICEWIZARD_DATA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_NEWDEVICEWIZARD_DATA {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     Flags: DWORD,
     DynamicPages: [HPROPSHEETPAGE; MAX_INSTALLWIZARD_DYNAPAGES],
@@ -663,29 +663,29 @@ STRUCT!{struct SP_NEWDEVICEWIZARD_DATA {
 pub type PSP_NEWDEVICEWIZARD_DATA = *mut SP_NEWDEVICEWIZARD_DATA;
 pub type SP_ADDPROPERTYPAGE_DATA = SP_NEWDEVICEWIZARD_DATA;
 pub type PSP_ADDPROPERTYPAGE_DATA = PSP_NEWDEVICEWIZARD_DATA;
-STRUCT!{struct SP_TROUBLESHOOTER_PARAMS_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_TROUBLESHOOTER_PARAMS_A {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     ChmFile: [CHAR; MAX_PATH],
     HtmlTroubleShooter: [CHAR; MAX_PATH],
 }}
 pub type PSP_TROUBLESHOOTER_PARAMS_A = *mut SP_TROUBLESHOOTER_PARAMS_A;
-STRUCT!{struct SP_TROUBLESHOOTER_PARAMS_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_TROUBLESHOOTER_PARAMS_W {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     ChmFile: [WCHAR; MAX_PATH],
     HtmlTroubleShooter: [WCHAR; MAX_PATH],
 }}
 pub type PSP_TROUBLESHOOTER_PARAMS_W = *mut SP_TROUBLESHOOTER_PARAMS_W;
-STRUCT!{struct SP_POWERMESSAGEWAKE_PARAMS_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_POWERMESSAGEWAKE_PARAMS_A {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     PowerMessageWake: [CHAR; LINE_LEN * 2],
 }}
 pub type PSP_POWERMESSAGEWAKE_PARAMS_A = *mut SP_POWERMESSAGEWAKE_PARAMS_A;
-STRUCT!{struct SP_POWERMESSAGEWAKE_PARAMS_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_POWERMESSAGEWAKE_PARAMS_W {
     ClassInstallHeader: SP_CLASSINSTALL_HEADER,
     PowerMessageWake: [WCHAR; LINE_LEN * 2],
 }}
 pub type PSP_POWERMESSAGEWAKE_PARAMS_W = *mut SP_POWERMESSAGEWAKE_PARAMS_W;
-STRUCT!{struct SP_DRVINFO_DATA_V2_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DRVINFO_DATA_V2_A {
     cbSize: DWORD,
     DriverType: DWORD,
     Reserved: ULONG_PTR,
@@ -696,7 +696,7 @@ STRUCT!{struct SP_DRVINFO_DATA_V2_A {
     DriverVersion: DWORDLONG,
 }}
 pub type PSP_DRVINFO_DATA_V2_A = *mut SP_DRVINFO_DATA_V2_A;
-STRUCT!{struct SP_DRVINFO_DATA_V2_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DRVINFO_DATA_V2_W {
     cbSize: DWORD,
     DriverType: DWORD,
     Reserved: ULONG_PTR,
@@ -707,7 +707,7 @@ STRUCT!{struct SP_DRVINFO_DATA_V2_W {
     DriverVersion: DWORDLONG,
 }}
 pub type PSP_DRVINFO_DATA_V2_W = *mut SP_DRVINFO_DATA_V2_W;
-STRUCT!{struct SP_DRVINFO_DATA_V1_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DRVINFO_DATA_V1_A {
     cbSize: DWORD,
     DriverType: DWORD,
     Reserved: ULONG_PTR,
@@ -716,7 +716,7 @@ STRUCT!{struct SP_DRVINFO_DATA_V1_A {
     ProviderName: [CHAR; LINE_LEN],
 }}
 pub type PSP_DRVINFO_DATA_V1_A = *mut SP_DRVINFO_DATA_V1_A;
-STRUCT!{struct SP_DRVINFO_DATA_V1_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DRVINFO_DATA_V1_W {
     cbSize: DWORD,
     DriverType: DWORD,
     Reserved: ULONG_PTR,
@@ -729,7 +729,7 @@ pub type SP_DRVINFO_DATA_A = SP_DRVINFO_DATA_V2_A;
 pub type PSP_DRVINFO_DATA_A = PSP_DRVINFO_DATA_V2_A;
 pub type SP_DRVINFO_DATA_W = SP_DRVINFO_DATA_V2_W;
 pub type PSP_DRVINFO_DATA_W = PSP_DRVINFO_DATA_V2_W;
-STRUCT!{struct SP_DRVINFO_DETAIL_DATA_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DRVINFO_DETAIL_DATA_A {
     cbSize: DWORD,
     InfDate: FILETIME,
     CompatIDsOffset: DWORD,
@@ -741,7 +741,7 @@ STRUCT!{struct SP_DRVINFO_DETAIL_DATA_A {
     HardwareID: [CHAR; ANYSIZE_ARRAY],
 }}
 pub type PSP_DRVINFO_DETAIL_DATA_A = *mut SP_DRVINFO_DETAIL_DATA_A;
-STRUCT!{struct SP_DRVINFO_DETAIL_DATA_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DRVINFO_DETAIL_DATA_W {
     cbSize: DWORD,
     InfDate: FILETIME,
     CompatIDsOffset: DWORD,
@@ -753,7 +753,7 @@ STRUCT!{struct SP_DRVINFO_DETAIL_DATA_W {
     HardwareID: [WCHAR; ANYSIZE_ARRAY],
 }}
 pub type PSP_DRVINFO_DETAIL_DATA_W = *mut SP_DRVINFO_DETAIL_DATA_W;
-STRUCT!{struct SP_DRVINSTALL_PARAMS {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_DRVINSTALL_PARAMS {
     cbSize: DWORD,
     Rank: DWORD,
     Flags: DWORD,
@@ -803,19 +803,19 @@ FN!{stdcall PSP_DETSIG_CMPPROC(
     ExistingDeviceData: PSP_DEVINFO_DATA,
     CompareContext: PVOID,
 ) -> DWORD}
-STRUCT!{struct COINSTALLER_CONTEXT_DATA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct COINSTALLER_CONTEXT_DATA {
     PostProcessing: BOOL,
     InstallResult: DWORD,
     PrivateData: PVOID,
 }}
 pub type PCOINSTALLER_CONTEXT_DATA = *mut COINSTALLER_CONTEXT_DATA;
-STRUCT!{struct SP_CLASSIMAGELIST_DATA {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_CLASSIMAGELIST_DATA {
     cbSize: DWORD,
     ImageList: HIMAGELIST,
     Reserved: ULONG_PTR,
 }}
 pub type PSP_CLASSIMAGELIST_DATA = *mut SP_CLASSIMAGELIST_DATA;
-STRUCT!{struct SP_PROPSHEETPAGE_REQUEST {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_PROPSHEETPAGE_REQUEST {
     cbSize: DWORD,
     PageRequested: DWORD,
     DeviceInfoSet: HDEVINFO,
@@ -825,27 +825,27 @@ pub type PSP_PROPSHEETPAGE_REQUEST = *mut SP_PROPSHEETPAGE_REQUEST;
 pub const SPPSR_SELECT_DEVICE_RESOURCES: DWORD = 1;
 pub const SPPSR_ENUM_BASIC_DEVICE_PROPERTIES: DWORD = 2;
 pub const SPPSR_ENUM_ADV_DEVICE_PROPERTIES: DWORD = 3;
-STRUCT!{struct SP_BACKUP_QUEUE_PARAMS_V2_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_BACKUP_QUEUE_PARAMS_V2_A {
     cbSize: DWORD,
     FullInfPath: [CHAR; MAX_PATH],
     FilenameOffset: INT,
     ReinstallInstance: [CHAR; MAX_PATH],
 }}
 pub type PSP_BACKUP_QUEUE_PARAMS_V2_A = *mut SP_BACKUP_QUEUE_PARAMS_V2_A;
-STRUCT!{struct SP_BACKUP_QUEUE_PARAMS_V2_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_BACKUP_QUEUE_PARAMS_V2_W {
     cbSize: DWORD,
     FullInfPath: [WCHAR; MAX_PATH],
     FilenameOffset: INT,
     ReinstallInstance: [WCHAR; MAX_PATH],
 }}
 pub type PSP_BACKUP_QUEUE_PARAMS_V2_W = *mut SP_BACKUP_QUEUE_PARAMS_V2_W;
-STRUCT!{struct SP_BACKUP_QUEUE_PARAMS_V1_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_BACKUP_QUEUE_PARAMS_V1_A {
     cbSize: DWORD,
     FullInfPath: [CHAR; MAX_PATH],
     FilenameOffset: INT,
 }}
 pub type PSP_BACKUP_QUEUE_PARAMS_V1_A = *mut SP_BACKUP_QUEUE_PARAMS_V1_A;
-STRUCT!{struct SP_BACKUP_QUEUE_PARAMS_V1_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_BACKUP_QUEUE_PARAMS_V1_W {
     cbSize: DWORD,
     FullInfPath: [WCHAR; MAX_PATH],
     FilenameOffset: INT,
@@ -3478,21 +3478,21 @@ extern "system" {
         SizeNeeded: *mut UINT,
     ) -> BOOL;
 }
-STRUCT!{struct SP_INF_SIGNER_INFO_V1_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_INF_SIGNER_INFO_V1_A {
     cbSize: DWORD,
     CatalogFile: [CHAR; MAX_PATH],
     DigitalSigner: [CHAR; MAX_PATH],
     DigitalSignerVersion: [CHAR; MAX_PATH],
 }}
 pub type PSP_INF_SIGNER_INFO_V1_A = *mut SP_INF_SIGNER_INFO_V1_A;
-STRUCT!{struct SP_INF_SIGNER_INFO_V1_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_INF_SIGNER_INFO_V1_W {
     cbSize: DWORD,
     CatalogFile: [WCHAR; MAX_PATH],
     DigitalSigner: [WCHAR; MAX_PATH],
     DigitalSignerVersion: [WCHAR; MAX_PATH],
 }}
 pub type PSP_INF_SIGNER_INFO_V1_W = *mut SP_INF_SIGNER_INFO_V1_W;
-STRUCT!{struct SP_INF_SIGNER_INFO_V2_A {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_INF_SIGNER_INFO_V2_A {
     cbSize: DWORD,
     CatalogFile: [CHAR; MAX_PATH],
     DigitalSigner: [CHAR; MAX_PATH],
@@ -3500,7 +3500,7 @@ STRUCT!{struct SP_INF_SIGNER_INFO_V2_A {
     SignerScore: DWORD,
 }}
 pub type PSP_INF_SIGNER_INFO_V2_A = *mut SP_INF_SIGNER_INFO_V2_A;
-STRUCT!{struct SP_INF_SIGNER_INFO_V2_W {
+STRUCT!{#[cfg_attr(target_arch = "x86", repr(packed))] struct SP_INF_SIGNER_INFO_V2_W {
     cbSize: DWORD,
     CatalogFile: [WCHAR; MAX_PATH],
     DigitalSigner: [WCHAR; MAX_PATH],

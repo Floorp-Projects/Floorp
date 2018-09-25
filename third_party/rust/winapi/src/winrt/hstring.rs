@@ -7,7 +7,7 @@
 //! This interface definition contains typedefs for Windows Runtime data types.
 use ctypes::c_char;
 use um::winnt::PVOID;
-DECLARE_HANDLE!(HSTRING, HSTRING__);
+DECLARE_HANDLE!{HSTRING, HSTRING__}
 #[cfg(target_arch = "x86")]
 UNION!{union HSTRING_HEADER_Reserved {
     [u32; 5],
@@ -23,4 +23,4 @@ UNION!{union HSTRING_HEADER_Reserved {
 STRUCT!{struct HSTRING_HEADER {
     Reserved: HSTRING_HEADER_Reserved,
 }}
-DECLARE_HANDLE!(HSTRING_BUFFER, HSTRING_BUFFER__);
+DECLARE_HANDLE!{HSTRING_BUFFER, HSTRING_BUFFER__}
