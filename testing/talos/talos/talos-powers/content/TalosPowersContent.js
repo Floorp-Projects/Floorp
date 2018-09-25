@@ -3,15 +3,44 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This file should be executed by the [possibly unprivileged] consumer, e.g.:
-// <script src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
+// <script src="/scripts/TalosPowersContent.js"></script>
 // and then e.g. TalosPowersParent.exec("sampleParentService", myArg, myCallback)
 // It marely sends a query event and possibly listens to a reply event, and does not
 // depend on any special privileges.
 
+var TalosPowers;
 var TalosPowersContent;
 var TalosPowersParent;
 
 (function() {
+  // The talos powers chrome event/message listeners are set up
+  // asynchronously during startup so attempts to use this code too early
+  // may race against the extension initialization.  Code that has might
+  // be vulnerable to that race can use `await TalosPowers.loadPromise;`
+  // which waits until it can successfully exchange a simple "ping" message
+  // with the extension.
+  async function tryPing() {
+    let pingPromise = new Promise(resolve => {
+      TalosPowersParent.exec("ping", null, resolve);
+    });
+    let timeoutPromise = new Promise((resolve, reject) => { setTimeout(reject, 500); });
+
+    try {
+      await Promise.race([pingPromise, timeoutPromise]);
+    } catch (e) {
+      return tryPing();
+    }
+
+    return null;
+  }
+
+  TalosPowers = {};
+  Object.defineProperty(TalosPowers, "loadPromise", {
+    get: () => tryPing(),
+    configurable: true,
+    enumerable: true,
+  });
+
   TalosPowersContent = {
     /**
      * Synchronously force CC and GC in this process, as well as in the

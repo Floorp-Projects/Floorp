@@ -280,5 +280,5 @@ contains many 'path' elements with fill and stroke.
     });
   });
  ]]></script>
- <script type="text/javascript" xlink:href="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
+ <script type="text/javascript" xlink:href="resource://talos-powers/TalosContentProfiler.js"></script>
 </svg>

@@ -6,13 +6,15 @@
 <!-- Pick off begin time as a cgi argument and print it out -->
 <!-- call this with an arg, e.g. file://foo/startup-test.html?begin=12345678 -->
 <!-- In-line this to avoid compilation. -->
-<script language="Javascript" type="text/javascript" src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
+<script language="Javascript" type="text/javascript" src="../talos-powers/content/TalosPowersContent.js"></script>
 <script language="Javascript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
-<script language="Javascript" type="text/javascript" src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
+<script language="Javascript" type="text/javascript" src="../talos-powers/content/TalosContentProfiler.js"></script>
 <script language="javascript" type="text/javascript">
 
 async function painted() {
   window.removeEventListener("MozAfterPaint", painted, true);
+
+  await TalosPowers.loadPromise;
 
   await TalosContentProfiler.pause();
   await TalosContentProfiler.initFromURLQueryParams(location.search);
