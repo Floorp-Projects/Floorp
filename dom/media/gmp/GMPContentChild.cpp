@@ -146,6 +146,9 @@ public:
   {
     // aUseHardwareSecureCodec is not used by CDM9
     mCDM->Initialize(aAllowDistinctiveIdentifier, aAllowPersistentState);
+    // CDM9 should init synchronously and does not call an OnInit callback, so
+    // we make sure it's called here.
+    mHost->OnInitialized(true);
   }
 
   void GetStatusForPolicy(uint32_t aPromiseId,
