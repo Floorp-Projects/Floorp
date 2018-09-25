@@ -6,6 +6,8 @@
 
 #include "SharedSurfacesParent.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/layers/SharedSurfacesMemoryReport.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/webrender/RenderSharedSurfaceTextureHost.h"
@@ -85,7 +87,7 @@ SharedSurfacesParent::Acquire(const wr::ExternalImageId& aId)
 }
 
 /* static */ bool
-SharedSurfacesParent::Release(const wr::ExternalImageId& aId)
+SharedSurfacesParent::Release(const wr::ExternalImageId& aId, bool aForCreator)
 {
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
@@ -99,7 +101,7 @@ SharedSurfacesParent::Release(const wr::ExternalImageId& aId)
     return false;
   }
 
-  if (surface->RemoveConsumer()) {
+  if (surface->RemoveConsumer(aForCreator)) {
     wr::RenderThread::Get()->UnregisterExternalImage(id);
     sInstance->mSurfaces.Remove(id);
   }
@@ -143,7 +145,7 @@ SharedSurfacesParent::RemoveSameProcess(const wr::ExternalImageId& aId)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
-  Release(aId);
+  Release(aId, /* aForCreator */ true);
 }
 
 /* static */ void
@@ -158,7 +160,9 @@ SharedSurfacesParent::DestroyProcess(base::ProcessId aPid)
   // lot of surfaces still bound that require unmapping.
   for (auto i = sInstance->mSurfaces.Iter(); !i.Done(); i.Next()) {
     SourceSurfaceSharedDataWrapper* surface = i.Data();
-    if (surface->GetCreatorPid() == aPid && surface->RemoveConsumer()) {
+    if (surface->GetCreatorPid() == aPid &&
+        surface->HasCreatorRef() &&
+        surface->RemoveConsumer(/* aForCreator */ true)) {
       wr::RenderThread::Get()->UnregisterExternalImage(i.Key());
       i.Remove();
     }
@@ -200,8 +204,56 @@ SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
 /* static */ void
 SharedSurfacesParent::Remove(const wr::ExternalImageId& aId)
 {
-  DebugOnly<bool> rv = Release(aId);
+  DebugOnly<bool> rv = Release(aId, /* aForCreator */ true);
   MOZ_ASSERT(rv);
+}
+
+/* static */ void
+SharedSurfacesParent::AccumulateMemoryReport(base::ProcessId aPid,
+                                             SharedSurfacesMemoryReport& aReport)
+{
+  StaticMutexAutoLock lock(sMutex);
+  if (!sInstance) {
+    return;
+  }
+
+  for (auto i = sInstance->mSurfaces.ConstIter(); !i.Done(); i.Next()) {
+    SourceSurfaceSharedDataWrapper* surface = i.Data();
+    if (surface->GetCreatorPid() == aPid) {
+      aReport.mSurfaces.insert(std::make_pair(i.Key(),
+        SharedSurfacesMemoryReport::SurfaceEntry {
+          aPid, surface->GetSize(), surface->Stride(),
+          surface->GetConsumers(), surface->HasCreatorRef() }));
+    }
+  }
+}
+
+/* static */ bool
+SharedSurfacesParent::AccumulateMemoryReport(SharedSurfacesMemoryReport& aReport)
+{
+  if (XRE_IsParentProcess()) {
+    GPUProcessManager* gpm = GPUProcessManager::Get();
+    if (!gpm || gpm->GPUProcessPid() != -1) {
+      return false;
+    }
+  } else if (!XRE_IsGPUProcess()) {
+    return false;
+  }
+
+  StaticMutexAutoLock lock(sMutex);
+  if (!sInstance) {
+    return true;
+  }
+
+  for (auto i = sInstance->mSurfaces.ConstIter(); !i.Done(); i.Next()) {
+    SourceSurfaceSharedDataWrapper* surface = i.Data();
+    aReport.mSurfaces.insert(std::make_pair(i.Key(),
+      SharedSurfacesMemoryReport::SurfaceEntry {
+        surface->GetCreatorPid(), surface->GetSize(), surface->Stride(),
+        surface->GetConsumers(), surface->HasCreatorRef() }));
+  }
+
+  return true;
 }
 
 } // namespace layers
