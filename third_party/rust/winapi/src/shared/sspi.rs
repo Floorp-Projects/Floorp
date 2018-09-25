@@ -5,17 +5,16 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! Security Support Provider Interface Prototypes and structure definitions
-
 use ctypes::{c_char, c_int, c_uchar, c_ulong, c_ushort, c_void};
-use shared::basetsd::{ULONG_PTR};
+use shared::basetsd::ULONG_PTR;
 use shared::guiddef::GUID;
 use shared::minwindef::{PUCHAR, ULONG, USHORT};
 use um::subauth::PUNICODE_STRING;
 use um::wincred::{PCREDUI_INFOA, PCREDUI_INFOW};
 use um::winnt::{
-    BOOLEAN, CHAR, HANDLE, LARGE_INTEGER, LONG, LPSTR, LPWSTR, LUID, PCSTR, PCWSTR, PVOID, WCHAR
+    ANYSIZE_ARRAY, BOOLEAN, CHAR, HANDLE, LARGE_INTEGER, LONG, LPSTR, LPWSTR, LUID, PCSTR, PCWSTR,
+    PVOID, WCHAR
 };
-
 pub type SEC_WCHAR = WCHAR;
 pub type SEC_CHAR = CHAR;
 pub type SECURITY_STATUS = LONG;
@@ -153,7 +152,7 @@ STRUCT!{struct SEC_APPLICATION_PROTOCOL_LIST {
 pub type PSEC_APPLICATION_PROTOCOL_LIST = *mut SEC_APPLICATION_PROTOCOL_LIST;
 STRUCT!{struct SEC_APPLICATION_PROTOCOLS {
     ProtocolListsSize: c_ulong,
-    ProtocolLists: [SEC_APPLICATION_PROTOCOL_LIST; 0],
+    ProtocolLists: [SEC_APPLICATION_PROTOCOL_LIST; ANYSIZE_ARRAY],
 }}
 pub type PSEC_APPLICATION_PROTOCOLS = *mut SEC_APPLICATION_PROTOCOLS;
 pub const SECURITY_NATIVE_DREP: c_ulong = 0x00000010;
@@ -505,13 +504,13 @@ pub const SECPKG_NEGOTIATION_IN_PROGRESS: c_ulong = 2;
 pub const SECPKG_NEGOTIATION_DIRECT: c_ulong = 3;
 pub const SECPKG_NEGOTIATION_TRY_MULTICRED: c_ulong = 4;
 STRUCT!{struct SecPkgContext_NativeNamesW {
-    sClientName: SEC_WCHAR,
-    sServerName: SEC_WCHAR,
+    sClientName: *mut SEC_WCHAR,
+    sServerName: *mut SEC_WCHAR,
 }}
 pub type PSecPkgContext_NativeNamesW = *mut SecPkgContext_NativeNamesW;
 STRUCT!{struct SecPkgContext_NativeNamesA {
-    sClientName: SEC_CHAR,
-    sServerName: SEC_CHAR,
+    sClientName: *mut SEC_CHAR,
+    sServerName: *mut SEC_CHAR,
 }}
 pub type PSecPkgContext_NativeNamesA = *mut SecPkgContext_NativeNamesA;
 STRUCT!{struct SecPkgContext_CredentialNameW {
@@ -979,16 +978,16 @@ STRUCT!{struct SEC_WINNT_AUTH_PACKED_CREDENTIALS {
     AuthData: SEC_WINNT_AUTH_DATA,
 }}
 pub type PSEC_WINNT_AUTH_PACKED_CREDENTIALS = *mut SEC_WINNT_AUTH_PACKED_CREDENTIALS;
-DEFINE_GUID!(SEC_WINNT_AUTH_DATA_TYPE_PASSWORD,
-    0x28bfc32f, 0x10f6, 0x4738, 0x98, 0xd1, 0x1a, 0xc0, 0x61, 0xdf, 0x71, 0x6a);
-DEFINE_GUID!(SEC_WINNT_AUTH_DATA_TYPE_CERT,
-    0x235f69ad, 0x73fb, 0x4dbc, 0x82, 0x3, 0x6, 0x29, 0xe7, 0x39, 0x33, 0x9b);
+DEFINE_GUID!{SEC_WINNT_AUTH_DATA_TYPE_PASSWORD,
+    0x28bfc32f, 0x10f6, 0x4738, 0x98, 0xd1, 0x1a, 0xc0, 0x61, 0xdf, 0x71, 0x6a}
+DEFINE_GUID!{SEC_WINNT_AUTH_DATA_TYPE_CERT,
+    0x235f69ad, 0x73fb, 0x4dbc, 0x82, 0x3, 0x6, 0x29, 0xe7, 0x39, 0x33, 0x9b}
 STRUCT!{struct SEC_WINNT_AUTH_DATA_PASSWORD {
     UnicodePassword: SEC_WINNT_AUTH_BYTE_VECTOR,
 }}
 pub type PSEC_WINNT_AUTH_DATA_PASSWORD = *mut SEC_WINNT_AUTH_DATA_PASSWORD;
-DEFINE_GUID!(SEC_WINNT_AUTH_DATA_TYPE_CSP_DATA,
-    0x68fd9879, 0x79c, 0x4dfe, 0x82, 0x81, 0x57, 0x8a, 0xad, 0xc1, 0xc1, 0x0);
+DEFINE_GUID!{SEC_WINNT_AUTH_DATA_TYPE_CSP_DATA,
+    0x68fd9879, 0x79c, 0x4dfe, 0x82, 0x81, 0x57, 0x8a, 0xad, 0xc1, 0xc1, 0x0}
 // GUID SEC_WINNT_AUTH_DATA_TYPE_SMARTCARD_CONTEXTS
 STRUCT!{struct SEC_WINNT_AUTH_CERTIFICATE_DATA {
     cbHeaderLength: c_ushort,

@@ -12,7 +12,7 @@
 
 [package]
 name = "dwrote"
-version = "0.4.2"
+version = "0.5.1"
 authors = ["Vladimir Vukicevic <vladimir@pobox.com>"]
 description = "Lightweight binding to DirectWrite."
 license = "MPL-2.0"
@@ -20,12 +20,6 @@ repository = "https://github.com/servo/dwrote-rs"
 
 [lib]
 name = "dwrote"
-[dependencies.gdi32-sys]
-version = "0.2"
-
-[dependencies.kernel32-sys]
-version = "0.2"
-
 [dependencies.lazy_static]
 version = "1"
 
@@ -39,4 +33,5 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.winapi]
-version = "0.2"
+version = "0.3.6"
+features = ["dwrite", "dwrite_1", "dwrite_3", "winnt", "unknwnbase", "libloaderapi", "winnls"]

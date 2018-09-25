@@ -274,15 +274,15 @@ STRUCT!{struct D2D1_CREATION_PROPERTIES {
     debugLevel: D2D1_DEBUG_LEVEL,
     options: D2D1_DEVICE_CONTEXT_OPTIONS,
 }}
-RIDL!(#[uuid(0x82237326, 0x8111, 0x4f7c, 0xbc, 0xf4, 0xb5, 0xc1, 0x17, 0x55, 0x64, 0xfe)]
+RIDL!{#[uuid(0x82237326, 0x8111, 0x4f7c, 0xbc, 0xf4, 0xb5, 0xc1, 0x17, 0x55, 0x64, 0xfe)]
 interface ID2D1GdiMetafileSink(ID2D1GdiMetafileSinkVtbl): IUnknown(IUnknownVtbl) {
     fn ProcessRecord(
         recordType: DWORD,
         recordData: *const c_void,
         recordDataSize: DWORD,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x2f543dc3, 0xcfc1, 0x4211, 0x86, 0x4f, 0xcf, 0xd9, 0x1c, 0x6f, 0x33, 0x95)]
+}}
+RIDL!{#[uuid(0x2f543dc3, 0xcfc1, 0x4211, 0x86, 0x4f, 0xcf, 0xd9, 0x1c, 0x6f, 0x33, 0x95)]
 interface ID2D1GdiMetafile(ID2D1GdiMetafileVtbl): ID2D1Resource(ID2D1ResourceVtbl) {
     fn Stream(
         sink: *const ID2D1GdiMetafileSink,
@@ -290,8 +290,8 @@ interface ID2D1GdiMetafile(ID2D1GdiMetafileVtbl): ID2D1Resource(ID2D1ResourceVtb
     fn GetBounds(
         bounds: *mut D2D1_RECT_F,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x54d7898a, 0xa061, 0x40a7, 0xbe, 0xc7, 0xe4, 0x65, 0xbc, 0xba, 0x2c, 0x4f)]
+}}
+RIDL!{#[uuid(0x54d7898a, 0xa061, 0x40a7, 0xbe, 0xc7, 0xe4, 0x65, 0xbc, 0xba, 0x2c, 0x4f)]
 interface ID2D1CommandSink(ID2D1CommandSinkVtbl): IUnknown(IUnknownVtbl) {
     fn BeginDraw() -> HRESULT,
     fn EndDraw() -> HRESULT,
@@ -394,15 +394,15 @@ interface ID2D1CommandSink(ID2D1CommandSinkVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
     fn PopAxisAlignedClip() -> HRESULT,
     fn PopLayer() -> HRESULT,
-});
-RIDL!(#[uuid(0xb4f34a19, 0x2383, 0x4d76, 0x94, 0xf6, 0xec, 0x34, 0x36, 0x57, 0xc3, 0xdc)]
+}}
+RIDL!{#[uuid(0xb4f34a19, 0x2383, 0x4d76, 0x94, 0xf6, 0xec, 0x34, 0x36, 0x57, 0xc3, 0xdc)]
 interface ID2D1CommandList(ID2D1CommandListVtbl): ID2D1Image(ID2D1ImageVtbl) {
     fn Stream(
         sink: *const ID2D1CommandSink,
     ) -> HRESULT,
     fn Close() -> HRESULT,
-});
-RIDL!(#[uuid(0x2c1d867d, 0xc290, 0x41c8, 0xae, 0x7e, 0x34, 0xa9, 0x87, 0x02, 0xe9, 0xa5)]
+}}
+RIDL!{#[uuid(0x2c1d867d, 0xc290, 0x41c8, 0xae, 0x7e, 0x34, 0xa9, 0x87, 0x02, 0xe9, 0xa5)]
 interface ID2D1PrintControl(ID2D1PrintControlVtbl): IUnknown(IUnknownVtbl) {
     fn AddPage(
         commandList: *const ID2D1CommandList,
@@ -412,8 +412,8 @@ interface ID2D1PrintControl(ID2D1PrintControlVtbl): IUnknown(IUnknownVtbl) {
         tag2: *mut D2D1_TAG,
     ) -> HRESULT,
     fn Close() -> HRESULT,
-});
-RIDL!(#[uuid(0xfe9e984d, 0x3f95, 0x407c, 0xb5, 0xdb, 0xcb, 0x94, 0xd4, 0xe8, 0xf8, 0x7c)]
+}}
+RIDL!{#[uuid(0xfe9e984d, 0x3f95, 0x407c, 0xb5, 0xdb, 0xcb, 0x94, 0xd4, 0xe8, 0xf8, 0x7c)]
 interface ID2D1ImageBrush(ID2D1ImageBrushVtbl): ID2D1Brush(ID2D1BrushVtbl) {
     fn SetImage(
         image: *const ID2D1Image,
@@ -439,19 +439,19 @@ interface ID2D1ImageBrush(ID2D1ImageBrushVtbl): ID2D1Brush(ID2D1BrushVtbl) {
     fn GetSourceRectangle(
         sourceRectangle: *mut D2D1_RECT_F,
     ) -> (),
-});
-RIDL!(#[uuid(0x41343a53, 0xe41a, 0x49a2, 0x91, 0xcd, 0x21, 0x79, 0x3b, 0xbb, 0x62, 0xe5)]
+}}
+RIDL!{#[uuid(0x41343a53, 0xe41a, 0x49a2, 0x91, 0xcd, 0x21, 0x79, 0x3b, 0xbb, 0x62, 0xe5)]
 interface ID2D1BitmapBrush1(ID2D1BitmapBrush1Vtbl): ID2D1BitmapBrush(ID2D1BitmapBrushVtbl) {
     fn SetInterpolationMode1(
         interpolationMode: D2D1_INTERPOLATION_MODE,
     ) -> (),
     fn GetInterpolationMode1() -> D2D1_INTERPOLATION_MODE,
-});
-RIDL!(#[uuid(0x10a72a66, 0xe91c, 0x43f4, 0x99, 0x3f, 0xdd, 0xf4, 0xb8, 0x2b, 0x0b, 0x4a)]
+}}
+RIDL!{#[uuid(0x10a72a66, 0xe91c, 0x43f4, 0x99, 0x3f, 0xdd, 0xf4, 0xb8, 0x2b, 0x0b, 0x4a)]
 interface ID2D1StrokeStyle1(ID2D1StrokeStyle1Vtbl): ID2D1StrokeStyle(ID2D1StrokeStyleVtbl) {
     fn GetStrokeTransformType() -> D2D1_STROKE_TRANSFORM_TYPE,
-});
-RIDL!(#[uuid(0x62baa2d2, 0xab54, 0x41b7, 0xb8, 0x72, 0x78, 0x7e, 0x01, 0x06, 0xa4, 0x21)]
+}}
+RIDL!{#[uuid(0x62baa2d2, 0xab54, 0x41b7, 0xb8, 0x72, 0x78, 0x7e, 0x01, 0x06, 0xa4, 0x21)]
 interface ID2D1PathGeometry1(ID2D1PathGeometry1Vtbl): ID2D1PathGeometry(ID2D1PathGeometryVtbl) {
     fn ComputePointAndSegmentAtLength(
         length: FLOAT,
@@ -460,8 +460,8 @@ interface ID2D1PathGeometry1(ID2D1PathGeometry1Vtbl): ID2D1PathGeometry(ID2D1Pat
         flatteningTolerance: FLOAT,
         pointDescription: *mut D2D1_POINT_DESCRIPTION,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x483473d7, 0xcd46, 0x4f9d, 0x9d, 0x3a, 0x31, 0x12, 0xaa, 0x80, 0x15, 0x9d)]
+}}
+RIDL!{#[uuid(0x483473d7, 0xcd46, 0x4f9d, 0x9d, 0x3a, 0x31, 0x12, 0xaa, 0x80, 0x15, 0x9d)]
 interface ID2D1Properties(ID2D1PropertiesVtbl): IUnknown(IUnknownVtbl) {
     fn GetPropertyCount() -> UINT32,
     fn GetPropertyName(
@@ -509,8 +509,8 @@ interface ID2D1Properties(ID2D1PropertiesVtbl): IUnknown(IUnknownVtbl) {
         index: UINT32,
         subProperties: *mut *mut ID2D1Properties,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x28211a43, 0x7d89, 0x476f, 0x81, 0x81, 0x2d, 0x61, 0x59, 0xb2, 0x20, 0xad)]
+}}
+RIDL!{#[uuid(0x28211a43, 0x7d89, 0x476f, 0x81, 0x81, 0x2d, 0x61, 0x59, 0xb2, 0x20, 0xad)]
 interface ID2D1Effect(ID2D1EffectVtbl): ID2D1Properties(ID2D1PropertiesVtbl) {
     fn SetInput(
         index: UINT32,
@@ -528,8 +528,8 @@ interface ID2D1Effect(ID2D1EffectVtbl): ID2D1Properties(ID2D1PropertiesVtbl) {
     fn GetOutput(
         outputImage: *mut *mut ID2D1Image,
     ) -> (),
-});
-RIDL!(#[uuid(0xa898a84c, 0x3873, 0x4588, 0xb0, 0x8b, 0xeb, 0xbf, 0x97, 0x8d, 0xf0, 0x41)]
+}}
+RIDL!{#[uuid(0xa898a84c, 0x3873, 0x4588, 0xb0, 0x8b, 0xeb, 0xbf, 0x97, 0x8d, 0xf0, 0x41)]
 interface ID2D1Bitmap1(ID2D1Bitmap1Vtbl): ID2D1Bitmap(ID2D1BitmapVtbl) {
     fn GetColorContext(
         colorContext: *mut *mut ID2D1ColorContext,
@@ -543,8 +543,8 @@ interface ID2D1Bitmap1(ID2D1Bitmap1Vtbl): ID2D1Bitmap(ID2D1BitmapVtbl) {
         mappedRect: *mut D2D1_MAPPED_RECT,
     ) -> HRESULT,
     fn Unmap() -> HRESULT,
-});
-RIDL!(#[uuid(0x1c4820bb, 0x5771, 0x4518, 0xa5, 0x81, 0x2f, 0xe4, 0xdd, 0x0e, 0xc6, 0x57)]
+}}
+RIDL!{#[uuid(0x1c4820bb, 0x5771, 0x4518, 0xa5, 0x81, 0x2f, 0xe4, 0xdd, 0x0e, 0xc6, 0x57)]
 interface ID2D1ColorContext(ID2D1ColorContextVtbl): ID2D1Resource(ID2D1ResourceVtbl) {
     fn GetColorSpace() -> D2D1_COLOR_SPACE,
     fn GetProfileSize() -> UINT32,
@@ -552,8 +552,8 @@ interface ID2D1ColorContext(ID2D1ColorContextVtbl): ID2D1Resource(ID2D1ResourceV
         profile: *mut BYTE,
         profileSize: UINT32,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0xae1572f4, 0x5dd0, 0x4777, 0x99, 0x8b, 0x92, 0x79, 0x47, 0x2a, 0xe6, 0x3b)]
+}}
+RIDL!{#[uuid(0xae1572f4, 0x5dd0, 0x4777, 0x99, 0x8b, 0x92, 0x79, 0x47, 0x2a, 0xe6, 0x3b)]
 interface ID2D1GradientStopCollection1(ID2D1GradientStopCollection1Vtbl):
     ID2D1GradientStopCollection(ID2D1GradientStopCollectionVtbl) {
     fn GetGradientStops1(
@@ -564,8 +564,8 @@ interface ID2D1GradientStopCollection1(ID2D1GradientStopCollection1Vtbl):
     fn GetPostInterpolationSpace() -> D2D1_COLOR_SPACE,
     fn GetBufferPrecision() -> D2D1_BUFFER_PRECISION,
     fn GetColorInterpolationMode() -> D2D1_COLOR_INTERPOLATION_MODE,
-});
-RIDL!(#[uuid(0x689f1f85, 0xc72e, 0x4e33, 0x8f, 0x19, 0x85, 0x75, 0x4e, 0xfd, 0x5a, 0xce)]
+}}
+RIDL!{#[uuid(0x689f1f85, 0xc72e, 0x4e33, 0x8f, 0x19, 0x85, 0x75, 0x4e, 0xfd, 0x5a, 0xce)]
 interface ID2D1DrawingStateBlock1(ID2D1DrawingStateBlock1Vtbl):
     ID2D1DrawingStateBlock(ID2D1DrawingStateBlockVtbl) {
     fn GetDescription(
@@ -574,8 +574,8 @@ interface ID2D1DrawingStateBlock1(ID2D1DrawingStateBlock1Vtbl):
     fn SetDescription(
         stateDescription: *const D2D1_DRAWING_STATE_DESCRIPTION1,
     ) -> (),
-});
-RIDL!(#[uuid(0xe8f7fe7a, 0x191c, 0x466d, 0xad, 0x95, 0x97, 0x56, 0x78, 0xbd, 0xa9, 0x98)]
+}}
+RIDL!{#[uuid(0xe8f7fe7a, 0x191c, 0x466d, 0xad, 0x95, 0x97, 0x56, 0x78, 0xbd, 0xa9, 0x98)]
 interface ID2D1DeviceContext(ID2D1DeviceContextVtbl): ID2D1RenderTarget(ID2D1RenderTargetVtbl) {
     fn CreateBitmap(
         size: D2D1_SIZE_U,
@@ -737,8 +737,8 @@ interface ID2D1DeviceContext(ID2D1DeviceContextVtbl): ID2D1RenderTarget(ID2D1Ren
         destinationRectangle: *const D2D1_RECT_F,
         sourceRectangle: *const D2D1_RECT_F,
     ) -> (),
-});
-RIDL!(#[uuid(0x47dd575d, 0xac05, 0x4cdd, 0x80, 0x49, 0x9b, 0x02, 0xcd, 0x16, 0xf4, 0x4c)]
+}}
+RIDL!{#[uuid(0x47dd575d, 0xac05, 0x4cdd, 0x80, 0x49, 0x9b, 0x02, 0xcd, 0x16, 0xf4, 0x4c)]
 interface ID2D1Device(ID2D1DeviceVtbl): ID2D1Resource(ID2D1ResourceVtbl) {
     fn CreateDeviceContext(
         options: D2D1_DEVICE_CONTEXT_OPTIONS,
@@ -757,8 +757,8 @@ interface ID2D1Device(ID2D1DeviceVtbl): ID2D1Resource(ID2D1ResourceVtbl) {
     fn ClearResources(
         millisecondsSinceUse: UINT32,
     ) -> (),
-});
-RIDL!(#[uuid(0xbb12d362, 0xdaee, 0x4b9a, 0xaa, 0x1d, 0x14, 0xba, 0x40, 0x1c, 0xfa, 0x1f)]
+}}
+RIDL!{#[uuid(0xbb12d362, 0xdaee, 0x4b9a, 0xaa, 0x1d, 0x14, 0xba, 0x40, 0x1c, 0xfa, 0x1f)]
 interface ID2D1Factory1(ID2D1Factory1Vtbl): ID2D1Factory(ID2D1FactoryVtbl) {
     fn CreateDevice(
         dxgiDevice: *const IDXGIDevice,
@@ -809,13 +809,13 @@ interface ID2D1Factory1(ID2D1Factory1Vtbl): ID2D1Factory(ID2D1FactoryVtbl) {
         effectId: REFCLSID,
         properties: *mut *mut ID2D1Properties,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x31e6e7bc, 0xe0ff, 0x4d46, 0x8c, 0x64, 0xa0, 0xa8, 0xc4, 0x1c, 0x15, 0xd3)]
+}}
+RIDL!{#[uuid(0x31e6e7bc, 0xe0ff, 0x4d46, 0x8c, 0x64, 0xa0, 0xa8, 0xc4, 0x1c, 0x15, 0xd3)]
 interface ID2D1Multithread(ID2D1MultithreadVtbl): IUnknown(IUnknownVtbl) {
     fn GetMultithreadProtected() -> BOOL,
     fn Enter() -> (),
     fn Leave() -> (),
-});
+}}
 extern "system" {
     pub fn D2D1CreateDevice(
         dxgiDevice: *const IDXGIDevice,
