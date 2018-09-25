@@ -368,17 +368,11 @@ VARCACHE_PREF(
 )
 
 // Is the '-webkit-appearance' alias for '-moz-appearance' enabled?
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "layout.css.webkit-appearance.enabled",
    layout_css_webkit_appearance_enabled,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 // Pref to control whether @-moz-document rules are enabled in content pages.
 VARCACHE_PREF(
