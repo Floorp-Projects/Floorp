@@ -15,15 +15,12 @@ class FilterPath(object):
     def __init__(self, path, exclude=None):
         self.path = os.path.normpath(path)
         self._finder = None
-        self.exclude = exclude
 
     @property
     def finder(self):
         if self._finder:
             return self._finder
-        self._finder = FileFinder(
-            mozpath.normsep(self.path),
-            ignore=[mozpath.normsep(e) for e in self.exclude])
+        self._finder = FileFinder(mozpath.normsep(self.path))
         return self._finder
 
     @property
@@ -94,16 +91,14 @@ def filterpaths(paths, linter, **lintargs):
             path = os.path.join(root, path)
         return FilterPath(path)
 
+    # Includes are always paths and should always exist.
     include = map(normalize, include)
-    exclude = map(normalize, exclude)
 
-    # Paths with and without globs will be handled separately,
+    # Exclude paths with and without globs will be handled separately,
     # pull them apart now.
-    includepaths = [p for p in include if p.exists]
+    exclude = map(normalize, exclude)
     excludepaths = [p for p in exclude if p.exists]
-
-    includeglobs = [p for p in include if not p.exists]
-    excludeglobs = [p for p in exclude if not p.exists]
+    excludeglobs = [p.path for p in exclude if not p.exists]
 
     extensions = linter.get('extensions')
     keep = set()
@@ -118,7 +113,7 @@ def filterpaths(paths, linter, **lintargs):
 
         # First handle include/exclude directives
         # that exist (i.e don't have globs)
-        for inc in includepaths:
+        for inc in include:
             # Only excludes that are subdirectories of the include
             # path matter.
             excs = [e for e in excludepaths if inc.contains(e)]
@@ -141,25 +136,11 @@ def filterpaths(paths, linter, **lintargs):
                 if not any(e.contains(path) for e in excs):
                     keep.add(path)
 
-        # Next handle include/exclude directives that
-        # contain globs.
-        if path.isfile:
-            # If the specified path is a file it must be both
-            # matched by an include directive and not matched
-            # by an exclude directive.
-            if not path.match(includeglobs) or any(e.contains(path) for e in excludepaths):
-                continue
-
-            keep.add(path)
-        elif path.isdir:
-            # If the specified path is a directory, use a
-            # FileFinder to resolve all relevant globs.
-            path.exclude = [os.path.relpath(e.path, root) for e in exclude]
-            for pattern in includeglobs:
-                for p, f in path.finder.find(pattern.path):
-                    if extensions and os.path.splitext(p)[1][1:] not in extensions:
-                        continue
-                    keep.add(path.join(p))
+        # Next expand excludes with globs in them so we can add them to
+        # the set of files to discard.
+        for pattern in excludeglobs:
+            for p, f in path.finder.find(pattern):
+                discard.add(path.join(p))
 
     # Only pass paths we couldn't exclude here to the underlying linter
     lintargs['exclude'] = [f.path for f in discard]
