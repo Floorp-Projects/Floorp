@@ -511,12 +511,8 @@ protected:
 
   /**
    * Helper function to create bullet frame.
-   * @param aCreateBulletList true to create bullet list; otherwise number list.
-   * @param aListStylePositionInside true to put the list position inside;
-   * otherwise outside.
    */
-  void CreateBulletFrameForListItem(bool aCreateBulletList,
-                                    bool aListStylePositionInside);
+  void CreateBulletFrameForListItem();
 
 public:
   /**
