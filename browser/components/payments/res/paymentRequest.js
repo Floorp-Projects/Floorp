@@ -171,6 +171,10 @@ var paymentRequest = {
     paymentDialog.setStateFromParent(state);
   },
 
+  openPreferences() {
+    this.sendMessageToChrome("openPreferences");
+  },
+
   cancel() {
     this.sendMessageToChrome("paymentCancel");
   },
