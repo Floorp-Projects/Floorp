@@ -18,15 +18,15 @@ add_task(async function test_sizemodeDefaults() {
   let uniqueKey = "bug 477657";
   let uniqueValue = "unik" + Date.now();
 
-  ss.setWindowValue(newWin, uniqueKey, uniqueValue);
-  is(ss.getWindowValue(newWin, uniqueKey), uniqueValue,
+  ss.setCustomWindowValue(newWin, uniqueKey, uniqueValue);
+  is(ss.getCustomWindowValue(newWin, uniqueKey), uniqueValue,
      "window value was set before the window was overwritten");
 
   await setWindowState(newWin, newState, true);
   // use newWin.setTimeout(..., 0) to mirror sss_restoreWindowFeatures
   await new Promise(resolve => newWin.setTimeout(resolve, 0));
 
-  is(ss.getWindowValue(newWin, uniqueKey), "",
+  is(ss.getCustomWindowValue(newWin, uniqueKey), "",
     "window value was implicitly cleared");
 
   is(newWin.windowState, newWin.STATE_MAXIMIZED,
