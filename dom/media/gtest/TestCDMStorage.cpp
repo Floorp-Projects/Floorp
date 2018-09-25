@@ -448,24 +448,27 @@ class CDMStorageTest
     RefPtr<gmp::GetCDMParentPromise> promise =
           service->GetCDM(aNodeId, std::move(tags), nullptr);
     auto thread = GetAbstractGMPThread();
-    promise->Then(thread,
-                  __func__,
-                  [self, aUpdates](RefPtr<gmp::ChromiumCDMParent> cdm) {
-                    self->mCDM = cdm;
-                    EXPECT_TRUE(!!self->mCDM);
-                    self->mCallback.reset(new CallbackProxy(self));
-                    nsCString failureReason;
-                    self->mCDM->Init(self->mCallback.get(),
-                                     false,
-                                     true,
-                                     GetMainThreadEventTarget(),
-                                     failureReason);
+    promise->Then(
+      thread,
+      __func__,
+      [self, aUpdates, thread](RefPtr<gmp::ChromiumCDMParent> cdm) {
+        self->mCDM = cdm;
+        EXPECT_TRUE(!!self->mCDM);
+        self->mCallback.reset(new CallbackProxy(self));
+        nsCString failureReason;
+        self->mCDM
+          ->Init(self->mCallback.get(), false, true, GetMainThreadEventTarget())
+          ->Then(thread,
+                 __func__,
+                 [self, aUpdates] {
+                   for (auto& update : aUpdates) {
+                     self->Update(update);
+                   }
+                 },
+                 [](MediaResult rv) { EXPECT_TRUE(false); });
 
-                    for (auto& update : aUpdates) {
-                      self->Update(update);
-                    }
-                  },
-                  [](MediaResult rv) { EXPECT_TRUE(false); });
+      },
+      [](MediaResult rv) { EXPECT_TRUE(false); });
   }
 
   void TestBasicStorage() {
