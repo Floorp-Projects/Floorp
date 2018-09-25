@@ -1,3 +1,0 @@
-
-# Ignore JNI libs downloaded as dependencies
-src/main/jniLibs/**/*.so
