@@ -165,13 +165,8 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(aFrame,
              "makes no sense to have a shadow tree without a frame");
-  MOZ_ASSERT(!mContainer ||
-             IsTempLayerManager(aManager) ||
-             mContainer->Manager() == aManager,
-             "retaining manager changed out from under us ... HELP!");
 
-  if (IsTempLayerManager(aManager) ||
-      (mContainer && mContainer->Manager() != aManager)) {
+  if (IsTempLayerManager(aManager)) {
     // This can happen if aManager is a "temporary" manager, or if the
     // widget's layer manager changed out from under us.  We need to
     // FIXME handle the former case somehow, probably with an API to
