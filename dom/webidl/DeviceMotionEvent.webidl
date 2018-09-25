@@ -2,8 +2,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
- *
- * https://w3c.github.io/deviceorientation/
  */
 
 [NoInterfaceObject]
@@ -41,12 +39,9 @@ dictionary DeviceRotationRateInit {
 };
 
 dictionary DeviceMotionEventInit : EventInit {
-  // FIXME: bug 1493860: should this "= null" be here?
-  DeviceAccelerationInit acceleration = null;
-  // FIXME: bug 1493860: should this "= null" be here?
-  DeviceAccelerationInit accelerationIncludingGravity = null;
-  // FIXME: bug 1493860: should this "= null" be here?
-  DeviceRotationRateInit rotationRate = null;
+  DeviceAccelerationInit acceleration;
+  DeviceAccelerationInit accelerationIncludingGravity;
+  DeviceRotationRateInit rotationRate;
   double? interval = null;
 };
 

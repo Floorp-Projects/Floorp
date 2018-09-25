@@ -5969,13 +5969,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         return handleJSObjectType(type, isMember, failureCode, exceptionCode, sourceDescription)
 
     if type.isDictionary():
-        # There are no nullable dictionary-typed arguments or dictionary-typed
-        # dictionary members.
+        # There are no nullable dictionary arguments or dictionary members
         assert(not type.nullable() or isCallbackReturnValue or
                (isMember and isMember != "Dictionary"))
-        # All optional dictionary-typed arguments always have default values,
-        # but dictionary-typed dictionary members can be optional.
-        assert not isOptional or isMember == "Dictionary"
+        # All optional dictionaries always have default values, so we
+        # should be able to assume not isOptional here.
+        assert not isOptional
         # In the callback return value case we never have to worry
         # about a default value; we always have a value.
         assert not isCallbackReturnValue or defaultValue is None
@@ -6056,8 +6055,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             declArgs = None
 
         return JSToNativeConversionInfo(template, declType=declType,
-                                        declArgs=declArgs,
-                                        dealWithOptional=isOptional)
+                                        declArgs=declArgs)
 
     if type.isVoid():
         assert not isOptional
