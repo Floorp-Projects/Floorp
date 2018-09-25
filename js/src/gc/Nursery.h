@@ -581,6 +581,13 @@ class Nursery
     void maybeClearProfileDurations();
     void startProfile(ProfileKey key);
     void endProfile(ProfileKey key);
+public:
+    mozilla::TimeDuration lastDuration()
+    {
+        return profileDurations_[ProfileKey::Total];
+    }
+
+private:
     static void printProfileDurations(const ProfileDurations& times);
 
     friend class TenuringTracer;
