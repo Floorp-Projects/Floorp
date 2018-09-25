@@ -57,27 +57,6 @@ interface nsICookie : nsISupports {
     readonly attribute uint64_t expires;
 
     /**
-     * @DEPRECATED status implementation will return STATUS_UNKNOWN in all cases.
-     */
-    const nsCookieStatus STATUS_UNKNOWN=0;
-    const nsCookieStatus STATUS_ACCEPTED=1;
-    const nsCookieStatus STATUS_DOWNGRADED=2;
-    const nsCookieStatus STATUS_FLAGGED=3;
-    const nsCookieStatus STATUS_REJECTED=4;
-    readonly attribute nsCookieStatus status;
-
-    /**
-     * @DEPRECATED policy implementation will return POLICY_UNKNOWN in all cases.
-     */
-    const nsCookiePolicy POLICY_UNKNOWN=0;
-    const nsCookiePolicy POLICY_NONE=1;
-    const nsCookiePolicy POLICY_NO_CONSENT=2;
-    const nsCookiePolicy POLICY_IMPLICIT_CONSENT=3;
-    const nsCookiePolicy POLICY_EXPLICIT_CONSENT=4;
-    const nsCookiePolicy POLICY_NO_II=5;
-    readonly attribute nsCookiePolicy policy;
-
-    /**
      * The origin attributes for this cookie
      */
     [implicit_jscontext]
