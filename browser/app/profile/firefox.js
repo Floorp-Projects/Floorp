@@ -1494,6 +1494,8 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
+pref("browser.contentblocking.allowlist.storage.enabled", true);
+
 pref("browser.contentblocking.global-toggle.enabled", true);
 
 // Define a set of default features for the Content Blocking UI
@@ -1501,6 +1503,7 @@ pref("browser.contentblocking.fastblock.ui.enabled", true);
 pref("browser.contentblocking.fastblock.control-center.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
+pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.ui.recommended", true);
 pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
 pref("browser.contentblocking.cookies-site-data.ui.reject-trackers.recommended", true);
