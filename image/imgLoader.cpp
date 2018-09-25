@@ -46,6 +46,8 @@
 #include "nsReadableUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/image/ImageMemoryReporter.h"
+#include "mozilla/layers/CompositorManagerChild.h"
 
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
@@ -81,6 +83,34 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    layers::CompositorManagerChild* manager = CompositorManagerChild::GetInstance();
+    if (!manager || !gfxPrefs::ImageMemDebugReporting()) {
+      layers::SharedSurfacesMemoryReport sharedSurfaces;
+      FinishCollectReports(aHandleReport, aData, aAnonymize, sharedSurfaces);
+      return NS_OK;
+    }
+
+    RefPtr<imgMemoryReporter> self(this);
+    nsCOMPtr<nsIHandleReportCallback> handleReport(aHandleReport);
+    nsCOMPtr<nsISupports> data(aData);
+    manager->SendReportSharedSurfacesMemory(
+      [=](layers::SharedSurfacesMemoryReport aReport) {
+        self->FinishCollectReports(handleReport, data, aAnonymize, aReport);
+      },
+      [=](mozilla::ipc::ResponseRejectReason aReason) {
+        layers::SharedSurfacesMemoryReport sharedSurfaces;
+        self->FinishCollectReports(handleReport, data, aAnonymize, sharedSurfaces);
+      }
+    );
+    return NS_OK;
+  }
+
+  void FinishCollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize,
+                            layers::SharedSurfacesMemoryReport& aSharedSurfaces)
+  {
     nsTArray<ImageMemoryCounter> chrome;
     nsTArray<ImageMemoryCounter> content;
     nsTArray<ImageMemoryCounter> uncached;
@@ -108,16 +138,25 @@ public:
 
     // Note that we only need to anonymize content image URIs.
 
-    ReportCounterArray(aHandleReport, aData, chrome, "images/chrome");
+    ReportCounterArray(aHandleReport, aData, chrome, "images/chrome",
+                       /* aAnonymize */ false, aSharedSurfaces);
 
     ReportCounterArray(aHandleReport, aData, content, "images/content",
-                       aAnonymize);
+                       aAnonymize, aSharedSurfaces);
 
     // Uncached images may be content or chrome, so anonymize them.
     ReportCounterArray(aHandleReport, aData, uncached, "images/uncached",
-                       aAnonymize);
+                       aAnonymize, aSharedSurfaces);
 
-    return NS_OK;
+    // Report any shared surfaces that were not merged with the surface cache.
+    ImageMemoryReporter::ReportSharedSurfaces(aHandleReport, aData,
+                                              aSharedSurfaces);
+
+    nsCOMPtr<nsIMemoryReporterManager> imgr =
+      do_GetService("@mozilla.org/memory-reporter-manager;1");
+    if (imgr) {
+      imgr->EndReport();
+    }
   }
 
   static int64_t ImagesContentUsedUncompressedDistinguishedAmount()
@@ -206,7 +245,8 @@ private:
                           nsISupports* aData,
                           nsTArray<ImageMemoryCounter>& aCounterArray,
                           const char* aPathPrefix,
-                          bool aAnonymize = false)
+                          bool aAnonymize,
+                          layers::SharedSurfacesMemoryReport& aSharedSurfaces)
   {
     MemoryTotal summaryTotal;
     MemoryTotal nonNotableTotal;
@@ -230,9 +270,11 @@ private:
 
       summaryTotal += counter;
 
-      if (counter.IsNotable()) {
-        ReportImage(aHandleReport, aData, aPathPrefix, counter);
+      if (counter.IsNotable() || gfxPrefs::ImageMemDebugReporting()) {
+        ReportImage(aHandleReport, aData, aPathPrefix,
+                    counter, aSharedSurfaces);
       } else {
+        ImageMemoryReporter::TrimSharedSurfaces(counter, aSharedSurfaces);
         nonNotableTotal += counter;
       }
     }
@@ -249,7 +291,8 @@ private:
   static void ReportImage(nsIHandleReportCallback* aHandleReport,
                           nsISupports* aData,
                           const char* aPathPrefix,
-                          const ImageMemoryCounter& aCounter)
+                          const ImageMemoryCounter& aCounter,
+                          layers::SharedSurfacesMemoryReport& aSharedSurfaces)
   {
     nsAutoCString pathPrefix(NS_LITERAL_CSTRING("explicit/"));
     pathPrefix.Append(aPathPrefix);
@@ -271,7 +314,7 @@ private:
 
     pathPrefix.AppendLiteral(")/");
 
-    ReportSurfaces(aHandleReport, aData, pathPrefix, aCounter);
+    ReportSurfaces(aHandleReport, aData, pathPrefix, aCounter, aSharedSurfaces);
 
     ReportSourceValue(aHandleReport, aData, pathPrefix, aCounter.Values());
   }
@@ -279,7 +322,8 @@ private:
   static void ReportSurfaces(nsIHandleReportCallback* aHandleReport,
                              nsISupports* aData,
                              const nsACString& aPathPrefix,
-                             const ImageMemoryCounter& aCounter)
+                             const ImageMemoryCounter& aCounter,
+                             layers::SharedSurfacesMemoryReport& aSharedSurfaces)
   {
     for (const SurfaceMemoryCounter& counter : aCounter.Surfaces()) {
       nsAutoCString surfacePathPrefix(aPathPrefix);
@@ -300,15 +344,23 @@ private:
       surfacePathPrefix.AppendInt(counter.Key().Size().height);
 
       if (counter.Values().ExternalHandles() > 0) {
-        surfacePathPrefix.AppendLiteral(", external:");
+        surfacePathPrefix.AppendLiteral(", handles:");
         surfacePathPrefix.AppendInt(uint32_t(counter.Values().ExternalHandles()));
       }
 
+      ImageMemoryReporter::AppendSharedSurfacePrefix(surfacePathPrefix, counter,
+                                                     aSharedSurfaces);
+
       if (counter.Type() == SurfaceMemoryCounterType::NORMAL) {
         PlaybackType playback = counter.Key().Playback();
-        surfacePathPrefix.Append(playback == PlaybackType::eAnimated
-                                 ? " (animation)"
-                                 : "");
+        if (playback == PlaybackType::eAnimated) {
+          if (gfxPrefs::ImageMemDebugReporting()) {
+            surfacePathPrefix.AppendPrintf(" (animation %4u)",
+                                           uint32_t(counter.Values().FrameIndex()));
+          } else {
+            surfacePathPrefix.AppendLiteral(" (animation)");
+          }
+        }
 
         if (counter.Key().Flags() != DefaultSurfaceFlags()) {
           surfacePathPrefix.AppendLiteral(", flags:");
@@ -1359,7 +1411,7 @@ void imgLoader::GlobalInit()
   sCacheMaxSize = cachesize > 0 ? cachesize : 0;
 
   sMemReporter = new imgMemoryReporter();
-  RegisterStrongMemoryReporter(sMemReporter);
+  RegisterStrongAsyncMemoryReporter(sMemReporter);
   RegisterImagesContentUsedUncompressedDistinguishedAmount(
     imgMemoryReporter::ImagesContentUsedUncompressedDistinguishedAmount);
 

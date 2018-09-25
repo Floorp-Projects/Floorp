@@ -1,15 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-/* import-globals-from debug-target-pane_collapsibilities_head.js */
 
 "use strict";
 
 /**
  * Test that collapsibilities of DebugTargetPane on RuntimePage by mouse clicking.
  */
-
-Services.scriptloader.loadSubScript(
-  CHROME_URL_ROOT + "debug-target-pane_collapsibilities_head.js", this);
 
 add_task(async function() {
   prepareCollapsibilitiesTest();

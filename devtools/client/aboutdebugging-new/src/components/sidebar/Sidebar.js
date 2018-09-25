@@ -37,7 +37,7 @@ class Sidebar extends PureComponent {
           id: "about-debugging-sidebar-no-devices"
         }, dom.span(
           {
-            className: "sidebar__devices__no-devices-message"
+            className: "sidebar__devices__no-devices-message js-sidebar-no-devices"
           },
           "No devices discovered"
         )

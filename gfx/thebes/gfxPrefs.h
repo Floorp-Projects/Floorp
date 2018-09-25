@@ -557,6 +557,7 @@ private:
   DECL_GFX_PREF(Live, "image.mem.discardable",                 ImageMemDiscardable, bool, false);
   DECL_GFX_PREF(Once, "image.mem.animated.discardable",        ImageMemAnimatedDiscardable, bool, false);
   DECL_GFX_PREF(Live, "image.mem.animated.use_heap",           ImageMemAnimatedUseHeap, bool, false);
+  DECL_GFX_PREF(Live, "image.mem.debug-reporting",             ImageMemDebugReporting, bool, false);
   DECL_GFX_PREF(Live, "image.mem.shared",                      ImageMemShared, bool, true);
   DECL_GFX_PREF(Once, "image.mem.surfacecache.discard_factor", ImageMemSurfaceCacheDiscardFactor, uint32_t, 1);
   DECL_GFX_PREF(Once, "image.mem.surfacecache.max_size_kb",    ImageMemSurfaceCacheMaxSizeKB, uint32_t, 100 * 1024);

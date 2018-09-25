@@ -48,9 +48,9 @@ impl<'a> FirefoxCapabilities<'a> {
             .get("moz:firefoxOptions")
             .and_then(|x| x.get("binary"))
             .and_then(|x| x.as_str())
-            .map(|x| PathBuf::from(x))
+            .map(PathBuf::from)
             .or_else(|| self.fallback_binary.map(|x| x.clone()))
-            .or_else(|| firefox_default_path())
+            .or_else(firefox_default_path)
     }
 
     fn version(&mut self) -> Option<String> {
