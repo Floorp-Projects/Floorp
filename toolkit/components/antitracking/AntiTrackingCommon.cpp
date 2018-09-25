@@ -711,6 +711,12 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
     return true;
   }
 
+  // Not a tracker.
+  if (!aChannel->GetIsTrackingResource()) {
+    LOG(("Our channel isn't a tracking channel"));
+    return true;
+  }
+
   nsIPrincipal* parentPrincipal = loadInfo->TopLevelStorageAreaPrincipal();
   if (!parentPrincipal) {
     LOG(("No top-level storage area principal at hand"));
@@ -728,12 +734,6 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
       // Why we are here?!?
       return true;
     }
-  }
-
-  // Not a tracker.
-  if (!aChannel->GetIsTrackingResource()) {
-    LOG(("Our channel isn't a tracking channel"));
-    return true;
   }
 
   // Let's see if we have to grant the access for this particular channel.
