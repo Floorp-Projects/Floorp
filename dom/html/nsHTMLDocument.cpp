@@ -202,7 +202,11 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHTMLDocument,
 JSObject*
 nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return HTMLDocument_Binding::Wrap(aCx, this, aGivenProto);
+  JSObject* obj = HTMLDocument_Binding::Wrap(aCx, this, aGivenProto);
+  if (!obj) {
+      MOZ_CRASH("Looks like bug 1488480/1405521, with nsHTMLDocument::WrapNode failing");
+  }
+  return obj;
 }
 
 nsresult

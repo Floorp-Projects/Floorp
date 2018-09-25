@@ -1401,10 +1401,8 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "call to native table.drop function";
       case SymbolicAddress::TableInit:
         return "call to native table.init function";
-#ifdef ENABLE_WASM_GC
       case SymbolicAddress::PostBarrier:
         return "call to native GC postbarrier (in wasm)";
-#endif
       case SymbolicAddress::StructNew:
         return "call to native struct.new (in wasm)";
       case SymbolicAddress::StructNarrow:

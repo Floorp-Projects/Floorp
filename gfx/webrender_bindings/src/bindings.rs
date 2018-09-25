@@ -2189,6 +2189,7 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                                    top: top.into(),
                                                    bottom: bottom.into(),
                                                    radius: radius.into(),
+                                                   do_aa: true,
                                                });
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
