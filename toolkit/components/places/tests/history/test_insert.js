@@ -10,38 +10,38 @@ add_task(async function test_insert_error_cases() {
 
   Assert.throws(
     () => PlacesUtils.history.insert(),
-    /Error: PageInfo: Input should be /,
-    "passing a null into History.insert should throw an Error"
+    /TypeError: pageInfo must be an object/,
+    "passing a null into History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert(1),
-    /Error: PageInfo: Input should be/,
-    "passing a non object into History.insert should throw an Error"
+    /TypeError: pageInfo must be an object/,
+    "passing a non object into History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert({}),
-    /Error: PageInfo: The following properties were expected/,
-    "passing an object without a url to History.insert should throw an Error"
+    /TypeError: PageInfo object must have a url property/,
+    "passing an object without a url to History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert({url: 123}),
-    /Error: PageInfo: Invalid value for property/,
-    "passing an object with an invalid url to History.insert should throw an Error"
+    /TypeError: Invalid url or guid: 123/,
+    "passing an object with an invalid url to History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert({url: TEST_URL}),
-    /Error: PageInfo: The following properties were expected/,
-    "passing an object without a visits property to History.insert should throw an Error"
+    /TypeError: PageInfo object must have an array of visits/,
+    "passing an object without a visits property to History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert({url: TEST_URL, visits: 1}),
-    /Error: PageInfo: Invalid value for property/,
-    "passing an object with a non-array visits property to History.insert should throw an Error"
+    /TypeError: PageInfo object must have an array of visits/,
+    "passing an object with a non-array visits property to History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert({url: TEST_URL, visits: []}),
-    /Error: PageInfo: Invalid value for property/,
-    "passing an object with an empty array as the visits property to History.insert should throw an Error"
+    /TypeError: PageInfo object must have an array of visits/,
+    "passing an object with an empty array as the visits property to History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert({
@@ -52,8 +52,8 @@ add_task(async function test_insert_error_cases() {
           date: "a",
         },
       ]}),
-    /PageInfo: Invalid value for property/,
-    "passing a visit object with an invalid date to History.insert should throw an Error"
+    /TypeError: Expected a Date, got a/,
+    "passing a visit object with an invalid date to History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert({
@@ -67,8 +67,8 @@ add_task(async function test_insert_error_cases() {
           date: "a",
         },
       ]}),
-    /PageInfo: Invalid value for property/,
-    "passing a second visit object with an invalid date to History.insert should throw an Error"
+    /TypeError: Expected a Date, got a/,
+    "passing a second visit object with an invalid date to History.insert should throw a TypeError"
   );
   let futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + 1000);
@@ -81,8 +81,8 @@ add_task(async function test_insert_error_cases() {
           date: futureDate,
         },
       ]}),
-    /PageInfo: Invalid value for property/,
-    "passing a visit object with a future date to History.insert should throw an Error"
+    /cannot be a future date/,
+    "passing a visit object with a future date to History.insert should throw a TypeError"
   );
   Assert.throws(
     () => PlacesUtils.history.insert({
@@ -90,8 +90,8 @@ add_task(async function test_insert_error_cases() {
       visits: [
         {transition: "a"},
       ]}),
-    /PageInfo: Invalid value for property/,
-    "passing a visit object with an invalid transition to History.insert should throw an Error"
+    /TypeError: transition: a is not a valid transition type/,
+    "passing a visit object with an invalid transition to History.insert should throw a TypeError"
   );
 });
 
