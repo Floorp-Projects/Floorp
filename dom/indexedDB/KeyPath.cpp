@@ -15,6 +15,7 @@
 #include "xpcpublic.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 
 namespace mozilla {
@@ -101,7 +102,6 @@ GetJSValFromKeyPathString(JSContext* aCx,
     const char16_t* keyPathChars = token.BeginReading();
     const size_t keyPathLen = token.Length();
 
-    bool hasProp;
     if (!targetObject) {
       // We're still walking the chain of existing objects
       // http://w3c.github.io/IndexedDB/#evaluate-a-key-path-on-a-value
@@ -117,16 +117,72 @@ GetJSValFromKeyPathString(JSContext* aCx,
       }
       obj = &currentVal.toObject();
 
-      bool ok = JS_HasUCProperty(aCx, obj, keyPathChars, keyPathLen,
-                                 &hasProp);
+      // We call JS_GetOwnUCPropertyDescriptor on purpose (as opposed to
+      // JS_GetUCPropertyDescriptor) to avoid searching the prototype chain.
+      JS::Rooted<JS::PropertyDescriptor> desc(aCx);
+      bool ok = JS_GetOwnUCPropertyDescriptor(aCx, obj, keyPathChars,
+                                              keyPathLen, &desc);
       IDB_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-      if (hasProp) {
-        // Get if the property exists...
-        JS::Rooted<JS::Value> intermediate(aCx);
-        bool ok = JS_GetUCProperty(aCx, obj, keyPathChars, keyPathLen, &intermediate);
-        IDB_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      JS::Rooted<JS::Value> intermediate(aCx);
+      bool hasProp = false;
 
+      if (desc.object()) {
+        intermediate = desc.value();
+        hasProp = true;
+      } else {
+        // If we get here it means the object doesn't have the property or the
+        // property is available throuch a getter. We don't want to call any
+        // getters to avoid potential re-entrancy.
+        // The blob object is special since its properties are available
+        // only through getters but we still want to support them for key
+        // extraction. So they need to be handled manually.
+        Blob* blob;
+        if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, &obj, blob))) {
+          if (token.EqualsLiteral("size")) {
+            ErrorResult rv;
+            uint64_t size = blob->GetSize(rv);
+            MOZ_ALWAYS_TRUE(!rv.Failed());
+
+            intermediate = JS_NumberValue(size);
+            hasProp = true;
+          } else if (token.EqualsLiteral("type")) {
+            nsString type;
+            blob->GetType(type);
+
+            JSString* string =
+              JS_NewUCStringCopyN(aCx, type.get(), type.Length());
+
+            intermediate = JS::StringValue(string);
+            hasProp = true;
+          } else {
+            RefPtr<File> file = blob->ToFile();
+            if (file) {
+              if (token.EqualsLiteral("name")) {
+                nsString name;
+                file->GetName(name);
+
+                JSString* string =
+                  JS_NewUCStringCopyN(aCx, name.get(), name.Length());
+
+                intermediate = JS::StringValue(string);
+                hasProp = true;
+              } else if (token.EqualsLiteral("lastModified")) {
+                ErrorResult rv;
+                int64_t lastModifiedDate = file->GetLastModified(rv);
+                MOZ_ALWAYS_TRUE(!rv.Failed());
+
+                intermediate = JS_NumberValue(lastModifiedDate);
+                hasProp = true;
+              }
+              // The spec also lists "lastModifiedDate", but we deprecated and
+              // removed support for it.
+            }
+          }
+        }
+      }
+
+      if (hasProp) {
         // Treat explicitly undefined as an error.
         if (intermediate.isUndefined()) {
           return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;

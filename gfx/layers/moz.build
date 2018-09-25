@@ -196,6 +196,7 @@ EXPORTS.mozilla.layers += [
     'ipc/SharedPlanarYCbCrImage.h',
     'ipc/SharedRGBImage.h',
     'ipc/SharedSurfacesChild.h',
+    'ipc/SharedSurfacesMemoryReport.h',
     'ipc/SharedSurfacesParent.h',
     'ipc/SynchronousTask.h',
     'ipc/TextureForwarder.h',

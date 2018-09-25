@@ -687,14 +687,12 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
     return -1;
 }
 
-#ifdef ENABLE_WASM_GC
 /* static */ void
 Instance::postBarrier(Instance* instance, gc::Cell** location)
 {
     MOZ_ASSERT(location);
     TlsContext.get()->runtime()->gc.storeBuffer().putCell(location);
 }
-#endif // ENABLE_WASM_GC
 
 // The typeIndex is an index into the structTypeDescrs_ table in the instance.
 // That table holds TypeDescr objects.
@@ -807,10 +805,8 @@ Instance::Instance(JSContext* cx,
     tlsData()->cx = cx;
     tlsData()->resetInterrupt(cx);
     tlsData()->jumpTable = code_->tieringJumpTable();
-#ifdef ENABLE_WASM_GC
     tlsData()->addressOfNeedsIncrementalBarrier =
         (uint8_t*)cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
-#endif
 
     Tier callerTier = code_->bestTier();
     for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
@@ -938,9 +934,7 @@ Instance::init(JSContext* cx,
     }
     jsJitArgsRectifier_ = jitRuntime->getArgumentsRectifier();
     jsJitExceptionHandler_ = jitRuntime->getExceptionTail();
-#ifdef ENABLE_WASM_GC
     preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object);
-#endif
 
     if (!passiveDataSegments_.resize(dataSegments.length())) {
         return false;
@@ -1033,7 +1027,6 @@ Instance::tracePrivate(JSTracer* trc)
         table->trace(trc);
     }
 
-#ifdef ENABLE_WASM_GC
     for (const GlobalDesc& global : code().metadata().globals) {
         // Indirect anyref global get traced by the owning WebAssembly.Global.
         if (!global.type().isRefOrAnyRef() || global.isConstant() || global.isIndirect()) {
@@ -1042,7 +1035,6 @@ Instance::tracePrivate(JSTracer* trc)
         GCPtrObject* obj = (GCPtrObject*)(globalData() + global.offset());
         TraceNullableEdge(trc, obj, "wasm ref/anyref global");
     }
-#endif
 
     TraceNullableEdge(trc, &memory_, "wasm buffer");
     structTypeDescrs_.trace(trc);

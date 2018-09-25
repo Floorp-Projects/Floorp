@@ -111,60 +111,37 @@ nsSVGFilterFrame::GetFilterContent(nsIContent *aDefault)
               : static_cast<SVGFilterElement*>(aDefault);
 }
 
-nsSVGFilterFrame *
+nsSVGFilterFrame*
 nsSVGFilterFrame::GetReferencedFilter()
 {
-  if (mNoHRefURI)
+  if (mNoHRefURI) {
     return nullptr;
-
-  SVGTemplateElementObserver* observer =
-    GetProperty(SVGObserverUtils::HrefToTemplateProperty());
-
-  if (!observer) {
-    // Fetch our Filter element's href or xlink:href attribute
-    SVGFilterElement *filter = static_cast<SVGFilterElement *>(GetContent());
-    nsAutoString href;
-    if (filter->mStringAttributes[SVGFilterElement::HREF].IsExplicitlySet()) {
-      filter->mStringAttributes[SVGFilterElement::HREF]
-        .GetAnimValue(href, filter);
-    } else {
-      filter->mStringAttributes[SVGFilterElement::XLINK_HREF]
-        .GetAnimValue(href, filter);
-    }
-
-    if (href.IsEmpty()) {
-      mNoHRefURI = true;
-      return nullptr; // no URL
-    }
-
-    // Convert href to an nsIURI
-    nsCOMPtr<nsIURI> targetURI;
-    nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
-    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
-                                              mContent->GetUncomposedDoc(), base);
-
-    // There's no clear refererer policy spec about non-CSS SVG resource references
-    // Bug 1415044 to investigate which referrer we should use
-    RefPtr<URLAndReferrerInfo> target =
-      new URLAndReferrerInfo(targetURI,
-                             mContent->OwnerDoc()->GetDocumentURI(),
-                             mContent->OwnerDoc()->GetReferrerPolicy());
-    observer = SVGObserverUtils::GetTemplateElementObserver(target, this,
-                 SVGObserverUtils::HrefToTemplateProperty());
-    if (!observer) {
-      return nullptr;
-    }
   }
 
-  nsIFrame* result = observer->GetReferencedFrame();
-  if (!result)
-    return nullptr;
+  auto GetHref = [this] (nsAString& aHref) {
+    SVGFilterElement* filter = static_cast<SVGFilterElement*>(GetContent());
+    if (filter->mStringAttributes[SVGFilterElement::HREF].IsExplicitlySet()) {
+      filter->mStringAttributes[SVGFilterElement::HREF]
+        .GetAnimValue(aHref, filter);
+    } else {
+      filter->mStringAttributes[SVGFilterElement::XLINK_HREF]
+        .GetAnimValue(aHref, filter);
+    }
+    this->mNoHRefURI = aHref.IsEmpty();
+  };
 
-  LayoutFrameType frameType = result->Type();
-  if (frameType != LayoutFrameType::SVGFilter)
-    return nullptr;
+  nsIFrame* tframe = SVGObserverUtils::GetTemplateFrame(this, GetHref);
+  if (tframe) {
+    LayoutFrameType frameType = tframe->Type();
+    if (frameType == LayoutFrameType::SVGFilter) {
+      return static_cast<nsSVGFilterFrame*>(tframe);
+    }
+    // We don't call SVGObserverUtils::RemoveTemplateObserver and set
+    // `mNoHRefURI = false` here since we want to be invalidated if the ID
+    // specified by our href starts resolving to a different/valid element.
+  }
 
-  return static_cast<nsSVGFilterFrame*>(result);
+  return nullptr;
 }
 
 nsresult
@@ -184,7 +161,7 @@ nsSVGFilterFrame::AttributeChanged(int32_t  aNameSpaceID,
               aNameSpaceID == kNameSpaceID_None) &&
              aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
-    DeleteProperty(SVGObserverUtils::HrefToTemplateProperty());
+    SVGObserverUtils::RemoveTemplateObserver(this);
     mNoHRefURI = false;
     // And update whoever references us
     SVGObserverUtils::InvalidateDirectRenderingObservers(this);

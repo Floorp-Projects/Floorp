@@ -1418,16 +1418,28 @@ GlobalObject::initTypedObjectModule(JSContext* cx, Handle<GlobalObject*> global)
 
     RootedValue typeDescr(cx);
 
-    MOZ_ALWAYS_TRUE(JS_GetProperty(cx, module, "int32", &typeDescr));
+    // The lookups should fail only from atomization-related OOM in
+    // JS_GetProperty().  The properties themselves will always exist on the
+    // object.
+
+    if (!JS_GetProperty(cx, module, "int32", &typeDescr)) {
+        return false;
+    }
     module->initReservedSlot(TypedObjectModuleObject::Int32Desc, typeDescr);
 
-    MOZ_ALWAYS_TRUE(JS_GetProperty(cx, module, "float32", &typeDescr));
+    if (!JS_GetProperty(cx, module, "float32", &typeDescr)) {
+        return false;
+    }
     module->initReservedSlot(TypedObjectModuleObject::Float32Desc, typeDescr);
 
-    MOZ_ALWAYS_TRUE(JS_GetProperty(cx, module, "float64", &typeDescr));
+    if (!JS_GetProperty(cx, module, "float64", &typeDescr)) {
+        return false;
+    }
     module->initReservedSlot(TypedObjectModuleObject::Float64Desc, typeDescr);
 
-    MOZ_ALWAYS_TRUE(JS_GetProperty(cx, module, "Object", &typeDescr));
+    if (!JS_GetProperty(cx, module, "Object", &typeDescr)) {
+        return false;
+    }
     module->initReservedSlot(TypedObjectModuleObject::ObjectDesc, typeDescr);
 
     // ArrayType.

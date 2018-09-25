@@ -869,6 +869,7 @@ impl YamlFrameWriter {
                             str_node(&mut v, "border-type", "normal");
                             yaml_node(&mut v, "color", string_vec_yaml(&colors, true));
                             yaml_node(&mut v, "style", string_vec_yaml(&styles, true));
+                            bool_node(&mut v, "do_aa", details.do_aa);
                             if let Some(radius_node) = maybe_radius_yaml(&details.radius) {
                                 yaml_node(&mut v, "radius", radius_node);
                             }
