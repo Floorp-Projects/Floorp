@@ -83,7 +83,8 @@ void
 SourceSurfaceAlignedRawData::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                     size_t& aHeapSizeOut,
                                                     size_t& aNonHeapSizeOut,
-                                                    size_t& aExtHandlesOut) const
+                                                    size_t& aExtHandlesOut,
+                                                    uint64_t& aExtIdOut) const
 {
   aHeapSizeOut += mArray.HeapSizeOfExcludingThis(aMallocSizeOf);
 }
