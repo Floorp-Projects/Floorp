@@ -36,7 +36,13 @@ static bool
 PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
                   const bool aIsSafeMode)
 {
+  // The launcher process's DLL blocking code is incompatible with ASAN because
+  // it is able to execute before ASAN itself has even initialized.
+#if defined(MOZ_ASAN)
+  return true;
+#else
   return mozilla::InitializeDllBlocklistOOP(aChildProcess);
+#endif // defiend(MOZ_ASAN)
 }
 
 #if !defined(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)
