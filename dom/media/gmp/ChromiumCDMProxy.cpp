@@ -98,33 +98,25 @@ ChromiumCDMProxy::Init(PromiseId aPromiseId,
       promise->Then(
         thread,
         __func__,
-        [self, aPromiseId, thread](RefPtr<gmp::ChromiumCDMParent> cdm) {
-          // service->GetCDM succeeded
+        [self, aPromiseId](RefPtr<gmp::ChromiumCDMParent> cdm) {
           self->mCallback =
             MakeUnique<ChromiumCDMCallbackProxy>(self, self->mMainThread);
-          cdm
-            ->Init(self->mCallback.get(),
-                   self->mDistinctiveIdentifierRequired,
-                   self->mPersistentStateRequired,
-                   self->mMainThread)
-            ->Then(thread,
-                   __func__,
-                   [self, aPromiseId, cdm](bool /* unused */) {
-                     // CDM init succeeded
-                     {
-                       MutexAutoLock lock(self->mCDMMutex);
-                       self->mCDM = cdm;
-                     }
-                     self->OnCDMCreated(aPromiseId);
-                   },
-                   [self, aPromiseId](MediaResult aResult) {
-                     // CDM init failed
-                     self->RejectPromise(
-                       aPromiseId, aResult.Code(), aResult.Message());
-                   });
+          nsCString failureReason;
+          if (!cdm->Init(self->mCallback.get(),
+                         self->mDistinctiveIdentifierRequired,
+                         self->mPersistentStateRequired,
+                         self->mMainThread,
+                         failureReason)) {
+            self->RejectPromise(aPromiseId, NS_ERROR_FAILURE, failureReason);
+            return;
+          }
+          {
+            MutexAutoLock lock(self->mCDMMutex);
+            self->mCDM = cdm;
+          }
+          self->OnCDMCreated(aPromiseId);
         },
         [self, aPromiseId](MediaResult rv) {
-          // service->GetCDM failed
           self->RejectPromise(
             aPromiseId, rv.Code(), rv.Description());
         });
