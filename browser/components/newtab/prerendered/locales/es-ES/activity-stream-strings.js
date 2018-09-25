@@ -77,7 +77,7 @@ window.gActivityStreamStrings = {
   "pocket_more_reccommendations": "Más recomendaciones",
   "pocket_learn_more": "Saber más",
   "pocket_cta_button": "Obtener Pocket",
-  "pocket_cta_text": "Guarda las historias que quieras en Pocket y llena tu mente con fascinantes lecturas.",
+  "pocket_cta_text": "Guarde en Pocket las historias que le gustan y alimente su mente con lecturas fascinantes.",
   "highlights_empty_state": "Empiece a navegar y nosotros le mostraremos aquí algunos de los mejores artículos, videos y otras páginas que haya visitado recientemente o agregado a marcadores.",
   "topstories_empty_state": "Ya está al día. Vuelva luego y busque más historias de {provider}. ¿No puede esperar? Seleccione un tema popular y encontrará más historias alucinantes por toda la web.",
   "manual_migration_explanation2": "Prueba Firefox con los marcadores, historial y contraseñas de otro navegador.",

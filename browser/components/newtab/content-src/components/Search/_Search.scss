@@ -14,6 +14,56 @@
     }
   }
 
+  .only-search & {
+    padding: 0 0 64px;
+  }
+
+  .logo-and-wordmark {
+    $logo-size: 97px;
+    $wordmark-size: 142px;
+
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 49px;
+
+    .logo {
+      background: url('chrome://branding/content/icon128.png') no-repeat center center;
+      background-size: $logo-size;
+      display: inline-block;
+      height: $logo-size;
+      width: $logo-size;
+    }
+
+    .wordmark {
+      background: url('#{$image-path}firefox-wordmark.svg') no-repeat center center;
+      background-size: $wordmark-size;
+      -moz-context-properties: fill;
+      display: inline-block;
+      fill: var(--newtab-search-wordmark-color);
+      height: $logo-size;
+      margin-inline-start: 15px;
+      width: $wordmark-size;
+    }
+
+    @media (max-width: $break-point-small - 1) {
+      $logo-size-small: 64px;
+      $wordmark-small-size: 100px;
+
+      .logo {
+        background-size: $logo-size-small;
+        height: $logo-size-small;
+        width: $logo-size-small;
+      }
+
+      .wordmark {
+        background-size: $wordmark-small-size;
+        height: $logo-size-small;
+        width: $wordmark-small-size;
+      }
+    }
+  }
+
   .search-inner-wrapper {
     cursor: default;
     display: flex;

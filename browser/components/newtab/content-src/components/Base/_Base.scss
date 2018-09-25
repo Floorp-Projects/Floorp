@@ -9,6 +9,11 @@
     display: block;
   }
 
+  &.only-search {
+    display: block;
+    padding-top: 134px;
+  }
+
   a {
     color: var(--newtab-link-primary-color);
   }

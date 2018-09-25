@@ -10,9 +10,6 @@
 #include "mozilla/dom/WorkletGlobalScope.h"
 
 namespace mozilla {
-
-class WorkletImpl;
-
 namespace dom {
 
 class VoidFunction;
@@ -20,7 +17,7 @@ class VoidFunction;
 class PaintWorkletGlobalScope final : public WorkletGlobalScope
 {
 public:
-  explicit PaintWorkletGlobalScope(WorkletImpl* aImpl);
+  PaintWorkletGlobalScope();
 
   bool
   WrapGlobalObject(JSContext* aCx,

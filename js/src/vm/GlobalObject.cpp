@@ -110,7 +110,7 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
       case JSProto_ReadableStreamBYOBRequest:
       case JSProto_ByteLengthQueuingStrategy:
       case JSProto_CountQueuingStrategy:
-        return !cx->options().streams();
+        return !cx->realm()->creationOptions().getStreamsEnabled();
 
       // Return true if the given constructor has been disabled at run-time.
       case JSProto_Atomics:
@@ -122,8 +122,12 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
 }
 
 /* static*/ bool
-GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
+GlobalObject::resolveConstructor(JSContext* cx,
+                                 Handle<GlobalObject*> global,
+                                 JSProtoKey key,
+                                 IfClassIsDisabled mode)
 {
+    MOZ_ASSERT(key != JSProto_Null);
     MOZ_ASSERT(!global->isStandardClassResolved(key));
 
     if (global->zone()->createdForHelperThread()) {
@@ -152,12 +156,15 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
         init = nullptr;
     }
 
+    // Some classes can be disabled at compile time, others at run time;
+    // if a feature is compile-time disabled, init and clasp are both null.
     const Class* clasp = ProtoKeyToClass(key);
-    if (!init && !clasp) {
-        return true;  // JSProto_Null or a compile-time-disabled feature.
-    }
-
-    if (skipDeselectedConstructor(cx, key)) {
+    if ((!init && !clasp) || skipDeselectedConstructor(cx, key)) {
+        if (mode == IfClassIsDisabled::Throw) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CONSTRUCTOR_DISABLED,
+                                      clasp ? clasp->name : "constructor");
+            return false;
+        }
         return true;
     }
 
@@ -165,7 +172,7 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // compile-time. We could try to enforce that callers never pass such keys
     // to resolveConstructor, but that would cramp the style of consumers like
     // GlobalObject::initStandardClasses that want to just carpet-bomb-call
-    // ensureConstructor with every JSProtoKey. So it's easier to just handle
+    // resolveConstructor with every JSProtoKey. So it's easier to just handle
     // it here.
     bool haveSpec = clasp && clasp->specDefined();
     if (!init && !haveSpec) {
@@ -197,7 +204,7 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // before Object.prototype exists, we just resolve Object instead, since we
     // know that Function will also be resolved before we return.
     if (key == JSProto_Function && global->getPrototype(JSProto_Object).isUndefined()) {
-        return resolveConstructor(cx, global, JSProto_Object);
+        return resolveConstructor(cx, global, JSProto_Object, IfClassIsDisabled::DoNothing);
     }
 
     // We don't always have a prototype (i.e. Math and JSON). If we don't,
@@ -604,8 +611,13 @@ GlobalObject::initStandardClasses(JSContext* cx, Handle<GlobalObject*> global)
     }
 
     for (size_t k = 0; k < JSProto_LIMIT; ++k) {
-        if (!ensureConstructor(cx, global, static_cast<JSProtoKey>(k))) {
-            return false;
+        JSProtoKey key = static_cast<JSProtoKey>(k);
+        if (key != JSProto_Null && !global->isStandardClassResolved(key)) {
+            if (!resolveConstructor(cx, global, static_cast<JSProtoKey>(k),
+                                    IfClassIsDisabled::DoNothing))
+            {
+                return false;
+            }
         }
     }
     return true;

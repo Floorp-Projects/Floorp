@@ -13,6 +13,10 @@ cbuffer YCbCrBuffer : register(b1) {
   row_major float3x3 YuvColorMatrix;
 };
 
+cbuffer vCoefficientBuffer : register(b2) {
+  float vCoefficient;
+}
+
 /* From Rec601:
 [R]   [1.1643835616438356,  0.0,                 1.5960267857142858]      [ Y -  16]
 [G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708]    x [Cb - 128]
@@ -50,14 +54,14 @@ float4 CalculateIMC4Color(const float2 aTexCoords)
     tY.Sample(sSampler, aTexCoords).r,
     tCb.Sample(sSampler, aTexCoords).r,
     tCr.Sample(sSampler, aTexCoords).r);
-  return CalculateYCbCrColor(yuv);
+  return CalculateYCbCrColor(yuv * vCoefficient);
 }
 
 float4 CalculateNV12Color(const float2 aTexCoords)
 {
   float y = tY.Sample(sSampler, aTexCoords).r;
   float2 cbcr = tCb.Sample(sSampler, aTexCoords).rg;
-  return CalculateYCbCrColor(float3(y, cbcr));
+  return CalculateYCbCrColor(float3(y, cbcr) * vCoefficient);
 }
 
 float4 TexturedQuadIMC4(const VS_SAMPLEOUTPUT_CLIPPED aInput) : SV_Target

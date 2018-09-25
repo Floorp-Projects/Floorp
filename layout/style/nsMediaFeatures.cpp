@@ -399,6 +399,12 @@ nsMediaFeatures::InitSystemMetrics()
     sSystemMetrics->AppendElement(nsGkAtoms::_moz_gtk_csd_available);
   }
 
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDTransparentBackground,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(nsGkAtoms::_moz_gtk_csd_transparent_background);
+  }
+
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMinimizeButton,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {

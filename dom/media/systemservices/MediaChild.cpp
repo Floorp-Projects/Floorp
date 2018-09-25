@@ -19,21 +19,29 @@ mozilla::LazyLogModule gMediaChildLog("MediaChild");
 namespace mozilla {
 namespace media {
 
-already_AddRefed<Pledge<nsCString>>
+RefPtr<PrincipalKeyPromise>
 GetPrincipalKey(const ipc::PrincipalInfo& aPrincipalInfo, bool aPersist)
 {
   RefPtr<MediaManager> mgr = MediaManager::GetInstance();
   MOZ_ASSERT(mgr);
 
-  RefPtr<Pledge<nsCString>> p = new Pledge<nsCString>();
-  uint32_t id = mgr->mGetPrincipalKeyPledges.Append(*p);
-
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    mgr->GetNonE10sParent()->RecvGetPrincipalKey(id, aPrincipalInfo, aPersist);
-  } else {
-    Child::Get()->SendGetPrincipalKey(id, aPrincipalInfo, aPersist);
+    auto p = MakeRefPtr<PrincipalKeyPromise::Private>(__func__);
+
+    mgr->GetNonE10sParent()->RecvGetPrincipalKey(aPrincipalInfo, aPersist,
+                                                 [p](const nsCString& aKey) {
+                                                   p->Resolve(aKey, __func__);
+                                                 });
+    return p;
   }
-  return p.forget();
+  return Child::Get()->SendGetPrincipalKey(aPrincipalInfo, aPersist)
+    ->Then(GetMainThreadSerialEventTarget(), __func__,
+           [](const Child::GetPrincipalKeyPromise::ResolveOrRejectValue& aValue) {
+             if (aValue.IsReject() || aValue.ResolveValue().IsEmpty()) {
+               return PrincipalKeyPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+             }
+             return PrincipalKeyPromise::CreateAndResolve(aValue.ResolveValue(), __func__);
+           });
 }
 
 void
@@ -81,22 +89,6 @@ Child::~Child()
 void Child::ActorDestroy(ActorDestroyReason aWhy)
 {
   mActorDestroyed = true;
-}
-
-mozilla::ipc::IPCResult
-Child::RecvGetPrincipalKeyResponse(const uint32_t& aRequestId,
-                                   const nsCString& aKey)
-{
-  RefPtr<MediaManager> mgr = MediaManager::GetInstance();
-  if (!mgr) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  RefPtr<Pledge<nsCString>> pledge =
-    mgr->mGetPrincipalKeyPledges.Remove(aRequestId);
-  if (pledge) {
-    pledge->Resolve(aKey);
-  }
-  return IPC_OK();
 }
 
 PMediaChild*
