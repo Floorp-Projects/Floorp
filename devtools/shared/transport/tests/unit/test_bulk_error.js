@@ -39,7 +39,7 @@ TestBulkActor.prototype.requestTypes = {
 };
 
 function add_test_bulk_actor() {
-  DebuggerServer.addGlobalActor({
+  ActorRegistry.addGlobalActor({
     constructorName: "TestBulkActor",
     constructorFun: TestBulkActor,
   }, "testBulk");
