@@ -8,6 +8,9 @@ platforms:
   - macosx64
   - win32
   - win64
+# Minimum clang-tidy version that is required for all the following checkers
+# to work properly.
+min_clang_tidy: "7.0.0"
 clang_checkers:
   - name: -*
     publish: !!bool no

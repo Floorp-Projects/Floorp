@@ -178,7 +178,6 @@ function OnRefTestLoad(win)
       g.browser.setAttribute("mozbrowser", "");
     } else {
       g.browser = g.containingWindow.document.createElementNS(XUL_NS, "xul:browser");
-      g.browser.setAttribute("class", "lightweight");
     }
     g.browser.setAttribute("id", "browser");
     g.browser.setAttribute("type", "content");

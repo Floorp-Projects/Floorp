@@ -10149,6 +10149,13 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         (aFlags & LOAD_FLAGS_ERROR_LOAD_CHANGES_RV) != 0) {
       return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
     }
+
+    // We won't report any error if this is an unknown protocol error. The reason
+    // behind this is that it will allow enumeration of external protocols if
+    // we report an error for each unknown protocol.
+    if (NS_ERROR_UNKNOWN_PROTOCOL == rv) {
+      return NS_OK;
+    }
   }
 
   return rv;

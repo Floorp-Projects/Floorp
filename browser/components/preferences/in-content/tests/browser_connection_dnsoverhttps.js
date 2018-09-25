@@ -16,12 +16,13 @@ function resetPrefs() {
   Services.prefs.clearUserPref(TRR_URI_PREF);
 }
 
-async function setup() {
-  await new Promise(res => {
-    resetPrefs();
-    open_preferences(res);
-  });
-}
+let preferencesOpen = new Promise(res => open_preferences(res));
+
+registerCleanupFunction(() => {
+  resetPrefs();
+  gBrowser.removeCurrentTab();
+});
+
 
 async function openConnectionsSubDialog() {
   /*
@@ -47,8 +48,8 @@ function waitForPrefObserver(name) {
   });
 }
 
-async function testWithProperties(props) {
-  info("testing with " + JSON.stringify(props));
+async function testWithProperties(props, startTime) {
+  info((Date.now() - startTime) + ": testWithProperties: testing with " + JSON.stringify(props));
   if (props.hasOwnProperty(TRR_MODE_PREF)) {
     Services.prefs.setIntPref(TRR_MODE_PREF, props[TRR_MODE_PREF]);
   }
@@ -57,6 +58,7 @@ async function testWithProperties(props) {
   }
 
   let dialog = await openConnectionsSubDialog();
+  info((Date.now() - startTime) + ": testWithProperties: connections dialog now open");
   let doc = dialog.document;
   let win = doc.ownerGlobal;
   let dialogClosingPromise = BrowserTestUtils.waitForEvent(doc.documentElement,
@@ -73,24 +75,34 @@ async function testWithProperties(props) {
     is(uriTextbox.value, props.expectedUriValue, "URI textbox has expected value");
   }
   if (props.clickMode) {
+    info((Date.now() - startTime) + ": testWithProperties: clickMode, waiting for the pref observer");
     modePrefChangedPromise = waitForPrefObserver(TRR_MODE_PREF);
+    info((Date.now() - startTime) + ": testWithProperties: clickMode, pref changed");
     modeCheckbox.scrollIntoView();
     EventUtils.synthesizeMouseAtCenter(modeCheckbox, {}, win);
+    info((Date.now() - startTime) + ": testWithProperties: clickMode, mouse click synthesized");
   }
   if (props.hasOwnProperty("inputUriKeys")) {
+    info((Date.now() - startTime) + ": testWithProperties: inputUriKeys, waiting for the pref observer");
     uriPrefChangedPromise = waitForPrefObserver(TRR_URI_PREF);
+    info((Date.now() - startTime) + ": testWithProperties: inputUriKeys, pref changed, now enter the new value");
     uriTextbox.focus();
     uriTextbox.value = props.inputUriKeys;
     uriTextbox.dispatchEvent(new win.Event("input", {bubbles: true}));
     uriTextbox.dispatchEvent(new win.Event("change", {bubbles: true}));
+    info((Date.now() - startTime) + ": testWithProperties: inputUriKeys, input and change events dispatched");
   }
 
+  info((Date.now() - startTime) + ": testWithProperties: calling acceptDialog");
   doc.documentElement.acceptDialog();
 
+  info((Date.now() - startTime) + ": testWithProperties: waiting for the dialogClosingPromise");
   let dialogClosingEvent = await dialogClosingPromise;
   ok(dialogClosingEvent, "connection window closed");
 
+  info((Date.now() - startTime) + ": testWithProperties: waiting for any of uri and mode prefs to change");
   await Promise.all([uriPrefChangedPromise, modePrefChangedPromise]);
+  info((Date.now() - startTime) + ": testWithProperties: prefs changed");
 
   if (props.hasOwnProperty("expectedFinalUriPref")) {
     let uriPref = Services.prefs.getStringPref(TRR_URI_PREF);
@@ -101,9 +113,8 @@ async function testWithProperties(props) {
     let modePref = Services.prefs.getIntPref(TRR_MODE_PREF);
     is(modePref, props.expectedModePref, "mode pref ended up with the expected value");
   }
+  info((Date.now() - startTime) + ": testWithProperties: fin");
 }
-
-registerCleanupFunction(resetPrefs);
 
 add_task(async function default_values() {
   let uriPref = Services.prefs.getStringPref(TRR_URI_PREF);
@@ -157,10 +168,10 @@ let testVariations = [
 ];
 
 for (let props of testVariations) {
-  add_task(async function() {
-    await setup();
-    await testWithProperties(props);
+  add_task(async function testVariation() {
+    await preferencesOpen;
+    let startTime = Date.now();
     resetPrefs();
-    gBrowser.removeCurrentTab();
+    await testWithProperties(props, startTime);
   });
 }

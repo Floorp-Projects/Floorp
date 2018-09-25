@@ -111,7 +111,22 @@ add_task(async function test_saveButton() {
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
   display.appendChild(form);
+
+  let address1 = deepClone(PTU.Addresses.TimBL);
+  address1.guid = "TimBLGUID";
+  let address2 = deepClone(PTU.Addresses.TimBL2);
+  address2.guid = "TimBL2GUID";
+
+  await form.requestStore.setState({
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
+      [address2.guid]: deepClone(address2),
+    },
+  });
+
   await asyncElementRendered();
+
+  ok(!form.acceptedCardsList.hidden, "Accepted card list should be visible when adding a card");
 
   ok(form.saveButton.disabled, "Save button should initially be disabled");
   fillField(form.form.querySelector("#cc-number"), "4111 1111-1111 1111");
@@ -123,6 +138,11 @@ add_task(async function test_saveButton() {
   let year = (new Date()).getFullYear().toString();
   fillField(form.form.querySelector("#cc-exp-year"), year);
   fillField(form.form.querySelector("#cc-type"), "visa");
+  isnot(form.form.querySelector("#billingAddressGUID").value, address2.guid,
+        "Check initial billing address");
+  fillField(form.form.querySelector("#billingAddressGUID"), address2.guid);
+  is(form.form.querySelector("#billingAddressGUID").value, address2.guid,
+     "Check selected billing address");
   form.saveButton.focus();
   ok(!form.saveButton.disabled,
      "Save button should be enabled since the required fields are filled");
@@ -169,7 +189,7 @@ add_task(async function test_saveButton() {
       "cc-name": "J. Smith",
       "cc-number": "4111 1111-1111 1111",
       "cc-type": "visa",
-      "billingAddressGUID": "",
+      "billingAddressGUID": address2.guid,
       "isTemporary": true,
     },
   }, "Check event details for the message to chrome");
@@ -183,8 +203,12 @@ add_task(async function test_requiredAttributePropagated() {
   await asyncElementRendered();
 
   let requiredElements = [...form.form.elements].filter(e => e.required && !e.disabled);
-  ok(requiredElements.length, "There should be at least one required element");
+  is(requiredElements.length, 6, "Number of required elements");
   for (let element of requiredElements) {
+    if (element.id == "billingAddressGUID") {
+      // The billing address has a different layout.
+      continue;
+    }
     let container = element.closest("label") || element.closest("div");
     ok(container.hasAttribute("required"), "Container should also be marked as required");
   }
@@ -314,10 +338,14 @@ add_task(async function test_edit() {
   display.appendChild(form);
   await asyncElementRendered();
 
+  let address1 = deepClone(PTU.Addresses.TimBL);
+  address1.guid = "TimBLGUID";
+
   info("test year before current");
   let card1 = deepClone(PTU.BasicCards.JohnDoe);
   card1.guid = "9864798564";
   card1["cc-exp-year"] = 2011;
+  card1.billingAddressGUID = address1.guid;
 
   await form.requestStore.setState({
     page: {
@@ -325,6 +353,9 @@ add_task(async function test_edit() {
     },
     "basic-card-page": {
       guid: card1.guid,
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
     },
     savedBasicCards: {
       [card1.guid]: deepClone(card1),
@@ -336,10 +367,17 @@ add_task(async function test_edit() {
      "Check no fields are visibly invalid on an 'edit' form with a complete card");
   checkCCForm(form, card1);
   ok(!form.saveButton.disabled, "Save button should be enabled upon edit for a valid card");
+  ok(form.acceptedCardsList.hidden, "Accepted card list should be hidden when editing a card");
 
   let requiredElements = [...form.form.elements].filter(e => e.required && !e.disabled);
   ok(requiredElements.length, "There should be at least one required element");
+  is(requiredElements.length, 5, "Number of required elements");
   for (let element of requiredElements) {
+    if (element.id == "billingAddressGUID") {
+      // The billing address has a different layout.
+      continue;
+    }
+
     let container = element.closest("label") || element.closest("div");
     ok(element.hasAttribute("required"), "Element should be marked as required");
     ok(container.hasAttribute("required"), "Container should also be marked as required");
@@ -390,7 +428,9 @@ add_task(async function test_edit() {
   await asyncElementRendered();
   is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
      "Check no fields are visibly invalid after converting to an 'add' form");
-  checkCCForm(form, {});
+  checkCCForm(form, {
+    billingAddressGUID: address1.guid, // Default selected
+  });
 
   form.remove();
 });
@@ -404,6 +444,7 @@ add_task(async function test_field_validity_updates() {
 
   let ccNumber = form.form.querySelector("#cc-number");
   let nameInput = form.form.querySelector("#cc-name");
+  let typeInput = form.form.querySelector("#cc-type");
   let monthInput = form.form.querySelector("#cc-exp-month");
   let yearInput = form.form.querySelector("#cc-exp-year");
 
@@ -418,10 +459,12 @@ add_task(async function test_field_validity_updates() {
   fillField(monthInput, "11");
   let year = (new Date()).getFullYear().toString();
   fillField(yearInput, year);
+  fillField(typeInput, "visa");
   ok(ccNumber.checkValidity(), "cc-number field is valid with good input");
   ok(nameInput.checkValidity(), "cc-name field is valid with a value");
   ok(monthInput.checkValidity(), "cc-exp-month field is valid with a value");
   ok(yearInput.checkValidity(), "cc-exp-year field is valid with a value");
+  ok(typeInput.checkValidity(), "cc-type field is valid with a value");
   ok(!form.saveButton.disabled, "Save button should not be disabled with good input");
 
   info("edit to make the cc-number invalid");

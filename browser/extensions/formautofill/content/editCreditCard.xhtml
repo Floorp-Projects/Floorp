@@ -56,15 +56,15 @@
       <span data-localization="nameOnCard" class="label-text"/>
     </label>
     <label id="cc-type-container" class="container">
-      <select id="cc-type">
+      <select id="cc-type" required="required">
       </select>
       <span data-localization="cardNetwork" class="label-text"/>
     </label>
-    <label id="billingAddressGUID-container" class="billingAddressRow container">
-      <select id="billingAddressGUID">
+    <div id="billingAddressGUID-container" class="billingAddressRow container rich-picker">
+      <select id="billingAddressGUID" required="required">
       </select>
-      <span data-localization="billingAddress" class="label-text"/>
-    </label>
+      <label for="billingAddressGUID" data-localization="billingAddress" class="label-text"/>
+    </div>
   </form>
   <div id="controls-container">
     <button id="cancel" data-localization="cancelBtnLabel"/>

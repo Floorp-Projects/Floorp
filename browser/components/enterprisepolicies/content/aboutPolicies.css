@@ -140,4 +140,5 @@ tbody.collapsible td {
 .schema {
   font-family: monospace;
   white-space: pre;
+  direction: ltr;
 }

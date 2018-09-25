@@ -4,9 +4,12 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
 
 const Actions = require("../../actions/index");
 
@@ -32,14 +35,19 @@ class NetworkLocationsList extends PureComponent {
             },
             location
           ),
-          dom.button(
+          Localized(
             {
-              className: "aboutdebugging-button js-network-location-remove-button",
-              onClick: () => {
-                this.props.dispatch(Actions.removeNetworkLocation(location));
-              }
+              id: "about-debugging-network-locations-remove-button"
             },
-            "Remove"
+            dom.button(
+              {
+                className: "aboutdebugging-button js-network-location-remove-button",
+                onClick: () => {
+                  this.props.dispatch(Actions.removeNetworkLocation(location));
+                }
+              },
+              "Remove"
+            )
           )
         )
       )

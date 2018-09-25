@@ -65,7 +65,9 @@ GetParentPrincipalAndTrackingOrigin(nsGlobalWindowInner* a3rdPartyTrackingWindow
                                     nsIPrincipal** aTopLevelStoragePrincipal,
                                     nsACString& aTrackingOrigin)
 {
-  MOZ_ASSERT(nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow));
+  if (!nsContentUtils::IsTrackingResourceWindow(a3rdPartyTrackingWindow)) {
+    return false;
+  }
 
   nsIDocument* doc = a3rdPartyTrackingWindow->GetDocument();
   // Make sure storage access isn't disabled
@@ -150,7 +152,9 @@ CheckContentBlockingAllowList(nsIURI* aTopWinURI)
 {
   bool isAllowed = false;
   nsresult rv =
-    AntiTrackingCommon::IsOnContentBlockingAllowList(aTopWinURI, isAllowed);
+    AntiTrackingCommon::IsOnContentBlockingAllowList(aTopWinURI,
+                                                     AntiTrackingCommon::eStorageChecks,
+                                                     isAllowed);
   if (NS_SUCCEEDED(rv) && isAllowed) {
     LOG_SPEC(("The top-level window (%s) is on the content blocking allow list, "
               "bail out early", _spec), aTopWinURI);
@@ -328,18 +332,8 @@ ReportUnblockingConsole(nsPIDOMWindowInner* aWindow,
 /* static */ bool
 AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()
 {
-#include "mozilla/ContentBlockingDefaultPrefValues.h"
-
-  return StaticPrefs::browser_contentblocking_enabled() ==
-           CONTENTBLOCKING_ENABLED &&
-         StaticPrefs::browser_contentblocking_ui_enabled() ==
-           CONTENTBLOCKING_UI_ENABLED &&
-         StaticPrefs::browser_contentblocking_rejecttrackers_ui_enabled() ==
-           CONTENTBLOCKING_REJECTTRACKERS_UI_ENABLED;
-
-#undef CONTENTBLOCKING_ENABLED
-#undef CONTENTBLOCKING_UI_ENABLED
-#undef CONTENTBLOCKING_REJECTTRACKERS_UI_ENABLED
+  return StaticPrefs::browser_contentblocking_enabled() &&
+         StaticPrefs::browser_contentblocking_ui_enabled();
 }
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
@@ -981,9 +975,22 @@ AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner*
 
 nsresult
 AntiTrackingCommon::IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
-                                                 bool& aIsAllowListed)
+  AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose,
+  bool& aIsAllowListed)
 {
   aIsAllowListed = false;
+
+  // For storage checks, check the storage pref, and for annotations checks,
+  // check the corresponding pref as well.  This allows each set of checks to
+  // be disabled individually if needed.
+  if ((aPurpose == eStorageChecks &&
+       !StaticPrefs::browser_contentblocking_allowlist_storage_enabled()) ||
+      (aPurpose == eTrackingAnnotations &&
+       !StaticPrefs::browser_contentblocking_allowlist_annotations_enabled())) {
+    LOG(("Attempting to check the content blocking allow list aborted because "
+         "the third-party cookies UI has been disabled."));
+    return NS_OK;
+  }
 
   LOG_SPEC(("Deciding whether the user has overridden content blocking for %s",
             _spec), aTopWinURI);

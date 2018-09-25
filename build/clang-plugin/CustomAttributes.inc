@@ -1,3 +1,4 @@
+ATTR(moz_allow_temporary)
 ATTR(moz_can_run_script)
 ATTR(moz_can_run_script_boundary)
 ATTR(moz_global_class)
