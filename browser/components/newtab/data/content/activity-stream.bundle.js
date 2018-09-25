@@ -1094,6 +1094,10 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
   }
 
   sendImpression(extraProps) {
+    if (this.state.message.provider === "preview") {
+      return;
+    }
+
     ASRouterUtils.sendMessage({ type: "IMPRESSION", data: this.state.message });
     this.sendUserActionTelemetry(Object.assign({ event: "IMPRESSION" }, extraProps));
   }
@@ -1102,6 +1106,10 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
   // telemetry field which can have arbitrary values.
   // Used for router messages with links as part of the content.
   sendClick(event) {
+    if (this.state.message.provider === "preview") {
+      return;
+    }
+
     const metric = {
       value: event.target.dataset.metric,
       // Used for the `source` of the event. Needed to differentiate
@@ -1698,8 +1706,9 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
     const prefs = props.Prefs.values;
 
     const shouldBeFixedToTop = common_PrerenderData_jsm__WEBPACK_IMPORTED_MODULE_7__["PrerenderData"].arePrefsValid(name => prefs[name]);
+    const noSectionsEnabled = !prefs["feeds.topsites"] && props.Sections.filter(section => section.enabled).length === 0;
 
-    const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top", prefs.showSearch && this.state.fixedSearch && "fixed-search"].filter(v => v).join(" ");
+    const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search"].filter(v => v).join(" ");
 
     return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
       "div",
@@ -1716,7 +1725,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureCompo
             react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
               content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_5__["ErrorBoundary"],
               null,
-              react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Search_Search__WEBPACK_IMPORTED_MODULE_9__["Search"], null)
+              react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Search_Search__WEBPACK_IMPORTED_MODULE_9__["Search"], { showLogo: noSectionsEnabled })
             )
           ),
           react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(
@@ -2446,6 +2455,12 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
       "div",
       { className: "search-wrapper" },
+      this.props.showLogo && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
+        "div",
+        { className: "logo-and-wordmark" },
+        react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "logo" }),
+        react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", { className: "wordmark" })
+      ),
       react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
         "div",
         { className: "search-inner-wrapper" },
@@ -3372,7 +3387,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
     // Get the current height of the body so max-height transitions can work
     this.setState({
       isAnimating: true,
-      maxHeight: `${this.sectionBody.scrollHeight}px`
+      maxHeight: `${this._getSectionBodyHeight()}px`
     });
     const { action, userEvent } = content_src_lib_section_menu_options__WEBPACK_IMPORTED_MODULE_5__["SectionMenuOptions"].CheckCollapsed(this.props);
     this.props.dispatch(action);
@@ -3380,6 +3395,17 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
       event: userEvent,
       source: this.props.source
     }));
+  }
+
+  _getSectionBodyHeight() {
+    const div = this.sectionBody;
+    if (div.style.display === "none") {
+      // If the div isn't displayed, we can't get it's height. So we display it
+      // to get the height (it doesn't show up because max-height is set to 0px
+      // in CSS). We don't undo this because we are about to expand the section.
+      div.style.display = "block";
+    }
+    return div.scrollHeight;
   }
 
   onTransitionEnd(event) {
@@ -3419,6 +3445,12 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
     const { enableAnimation, isAnimating, maxHeight, menuButtonHover, showContextMenu } = this.state;
     const { id, eventSource, collapsed, learnMore, title, extraMenuOptions, showPrefName, privacyNoticeURL, dispatch, isFirst, isLast, isWebExtension } = this.props;
     const active = menuButtonHover || showContextMenu;
+    let bodyStyle;
+    if (isAnimating && !collapsed) {
+      bodyStyle = { maxHeight };
+    } else if (!isAnimating && collapsed) {
+      bodyStyle = { display: "none" };
+    }
     return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
       "section",
       {
@@ -3499,7 +3531,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_3___default.a.P
             className: `section-body${isAnimating ? " animating" : ""}`,
             onTransitionEnd: this.onTransitionEnd,
             ref: this.onBodyMount,
-            style: isAnimating && !collapsed ? { maxHeight } : null },
+            style: bodyStyle },
           this.props.children
         )
       )
@@ -8053,7 +8085,10 @@ class SnippetBase_SnippetBase extends external_React_default.a.PureComponent {
   }
 
   onBlockClicked() {
-    this.props.sendUserActionTelemetry({ event: "BLOCK", id: this.props.UISurface });
+    if (this.props.provider !== "preview") {
+      this.props.sendUserActionTelemetry({ event: "BLOCK", id: this.props.UISurface });
+    }
+
     this.props.onBlock();
   }
 
@@ -8092,7 +8127,9 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
   }
 
   onButtonClick() {
-    this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", id: this.props.UISurface });
+    if (this.props.provider !== "preview") {
+      this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON", id: this.props.UISurface });
+    }
     this.props.onAction(this.props.content.button_action);
     if (!this.props.content.do_not_autoblock) {
       this.props.onBlock();
@@ -8766,9 +8803,10 @@ class OnboardingMessage_OnboardingCard extends external_React_default.a.PureComp
 class OnboardingMessage_OnboardingMessage extends external_React_default.a.PureComponent {
   render() {
     const { props } = this;
+    const { button_label, header } = props.extraTemplateStrings;
     return external_React_default.a.createElement(
       ModalOverlay_ModalOverlay,
-      _extends({}, props, { button_label: "Start Browsing", title: "Welcome to Firefox" }),
+      _extends({}, props, { button_label: button_label, title: header }),
       external_React_default.a.createElement(
         "div",
         { className: "onboardingMessageContainer" },

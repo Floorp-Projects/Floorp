@@ -7,6 +7,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm");
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
 // common case to avoid the overhead of wrapping and detecting lazy loading.
@@ -41,7 +43,7 @@ const DEFAULT_SITES = new Map([
 ]);
 const GEO_PREF = "browser.search.region";
 const SPOCS_GEOS = ["US"];
-const IS_NIGHTLY_OR_UNBRANDED_BUILD = ["nightly", "default"].includes(AppConstants.MOZ_UPDATE_CHANNEL);
+const IS_NIGHTLY_OR_UNBRANDED_BUILD = ["nightly", "default"].includes(UpdateUtils.getUpdateChannel(true));
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
@@ -167,7 +169,7 @@ const PREFS_CONFIG = new Map([
   }],
   ["improvesearch.topSiteSearchShortcuts", {
     title: "Experiment to show special top sites that perform keyword searches",
-    value: AppConstants.MOZ_UPDATE_CHANNEL !== "release",
+    value: UpdateUtils.getUpdateChannel(true) !== "release",
   }],
   ["improvesearch.topSiteSearchShortcuts.searchEngines", {
     title: "An ordered, comma-delimited list of search shortcuts that we should try and pin",
