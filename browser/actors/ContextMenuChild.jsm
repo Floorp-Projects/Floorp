@@ -604,6 +604,8 @@ class ContextMenuChild extends ActorChild {
       parentAllowsMixedContent,
     };
 
+    Services.obs.notifyObservers({wrappedJSObject: data}, "on-prepare-contextmenu");
+
     if (isRemote) {
       this.mm.sendAsyncMessage("contextmenu", data, {
         targetAsCPOW,

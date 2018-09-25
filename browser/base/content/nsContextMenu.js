@@ -65,6 +65,7 @@ function openContextMenu(aMessage) {
                               loginFillInfo: data.loginFillInfo,
                               parentAllowsMixedContent: data.parentAllowsMixedContent,
                               userContextId: data.userContextId,
+                              webExtContextData: data.webExtContextData,
                             };
 
   let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
@@ -128,6 +129,7 @@ nsContextMenu.prototype = {
         linkUrl: this.linkURL,
         selectionText: this.isTextSelected ? this.selectionInfo.fullText : undefined,
         frameId: this.frameOuterWindowID,
+        webExtContextData: gContextMenuContentData ? gContextMenuContentData.webExtContextData : undefined,
       };
       subject.wrappedJSObject = subject;
       Services.obs.notifyObservers(subject, "on-build-contextmenu");
@@ -167,7 +169,7 @@ nsContextMenu.prototype = {
     this.shouldDisplay = context.shouldDisplay;
     this.timeStamp = context.timeStamp;
 
-    // Assign what's _possibly_ needed from `context` sent by ContextMenu.jsm
+    // Assign what's _possibly_ needed from `context` sent by ContextMenuChild.jsm
     // Keep this consistent with the similar code in ContextMenu's _setContext
     this.bgImageURL          = context.bgImageURL;
     this.imageDescURL        = context.imageDescURL;
