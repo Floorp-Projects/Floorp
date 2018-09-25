@@ -89,7 +89,8 @@ protected:
   ipc::IPCResult RecvPurgeShmems() override;
   void PurgeShmems();
   ipc::IPCResult RecvInit(const bool& aAllowDistinctiveIdentifier,
-                          const bool& aAllowPersistentState) override;
+                          const bool& aAllowPersistentState,
+                          InitResolver&& aResolver) override;
   ipc::IPCResult RecvSetServerCertificate(
     const uint32_t& aPromiseId,
     nsTArray<uint8_t>&& aServerCert) override;
