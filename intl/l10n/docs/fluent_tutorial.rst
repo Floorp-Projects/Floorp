@@ -656,6 +656,7 @@ select the strategy to be used:
 
    This strategy replaces all Latin characters with their 180 degree rotated versions
    and enforces right to left text flow using Unicode UAX#9 `Explicit Directional Embeddings`__.
+   In this mode, the UI directionality will also be set to right-to-left.
 
 __ https://www.unicode.org/reports/tr9/#Explicit_Directional_Embeddings
 
