@@ -11,10 +11,9 @@ package mozilla.components.service.fretboard
  */
 data class Experiment(
     /**
-     * Unique identifier of the experiment
+     * Unique identifier of the experiment. Used internally by Kinto. Not exposed to library consumers.
      */
-    @Deprecated("This is an internal ID used by Kinto. Public access will be removed soon.")
-    val id: String,
+    internal val id: String,
     /**
      * Human-readable name of the experiment
      */
