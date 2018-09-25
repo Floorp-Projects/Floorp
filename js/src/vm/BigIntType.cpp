@@ -28,8 +28,6 @@
 using namespace js;
 
 using mozilla::Maybe;
-using mozilla::Some;
-using mozilla::Nothing;
 using mozilla::Range;
 using mozilla::RangedPtr;
 
@@ -730,82 +728,6 @@ BigInt::looselyEqual(JSContext* cx, HandleBigInt lhs, HandleValue rhs)
 
     // Step 13.
     return false;
-}
-
-// BigInt proposal section 1.1.12. BigInt::lessThan ( x, y )
-bool
-BigInt::lessThan(BigInt* x, BigInt* y)
-{
-    return mpz_cmp(x->num_, y->num_) < 0;
-}
-
-Maybe<bool>
-BigInt::lessThan(BigInt* lhs, double rhs)
-{
-    if (mozilla::IsNaN(rhs)) {
-        return Maybe<bool>(Nothing());
-    }
-    return Some(mpz_cmp_d(lhs->num_, rhs) < 0);
-}
-
-Maybe<bool>
-BigInt::lessThan(double lhs, BigInt* rhs)
-{
-    if (mozilla::IsNaN(lhs)) {
-        return Maybe<bool>(Nothing());
-    }
-    return Some(-mpz_cmp_d(rhs->num_, lhs) < 0);
-}
-
-JS::Result<Maybe<bool>>
-BigInt::lessThan(JSContext* cx, HandleBigInt lhs, HandleString rhs)
-{
-    RootedBigInt rhsBigInt(cx);
-    MOZ_TRY_VAR(rhsBigInt, StringToBigInt(cx, rhs, 0));
-    if (!rhsBigInt) {
-        return Maybe<bool>(Nothing());
-    }
-    return Some(lessThan(lhs, rhsBigInt));
-}
-
-JS::Result<Maybe<bool>>
-BigInt::lessThan(JSContext* cx, HandleString lhs, HandleBigInt rhs)
-{
-    RootedBigInt lhsBigInt(cx);
-    MOZ_TRY_VAR(lhsBigInt, StringToBigInt(cx, lhs, 0));
-    if (!lhsBigInt) {
-        return Maybe<bool>(Nothing());
-    }
-    return Some(lessThan(lhsBigInt, rhs));
-}
-
-JS::Result<Maybe<bool>>
-BigInt::lessThan(JSContext* cx, HandleValue lhs, HandleValue rhs)
-{
-    if (lhs.isBigInt()) {
-        if (rhs.isString()) {
-            RootedBigInt lhsBigInt(cx, lhs.toBigInt());
-            RootedString rhsString(cx, rhs.toString());
-            return lessThan(cx, lhsBigInt, rhsString);
-        }
-
-        if (rhs.isNumber()) {
-            return lessThan(lhs.toBigInt(), rhs.toNumber());
-        }
-
-        MOZ_ASSERT(rhs.isBigInt());
-        return Some(lessThan(lhs.toBigInt(), rhs.toBigInt()));
-    }
-
-    MOZ_ASSERT(rhs.isBigInt());
-    if (lhs.isString()) {
-        RootedString lhsString(cx, lhs.toString());
-        RootedBigInt rhsBigInt(cx, rhs.toBigInt());
-        return lessThan(cx, lhsString, rhsBigInt);
-    }
-
-    MOZ_ASSERT(lhs.isNumber());
-    return lessThan(lhs.toNumber(), rhs.toBigInt());
 }
 
 JSLinearString*
