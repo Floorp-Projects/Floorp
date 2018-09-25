@@ -644,6 +644,35 @@ private:
   DrawOptions mOptions;
 };
 
+class RecordedDrawDependentSurface : public RecordedDrawingEvent<RecordedDrawDependentSurface> {
+public:
+  RecordedDrawDependentSurface(DrawTarget *aDT, uint64_t aId, const Rect &aDest,
+                      const DrawSurfaceOptions &aDSOptions,
+                      const DrawOptions &aOptions)
+    : RecordedDrawingEvent(DRAWDEPENDENTSURFACE, aDT), mId(aId), mDest(aDest)
+    , mDSOptions(aDSOptions), mOptions(aOptions)
+  {
+  }
+
+  virtual bool PlayEvent(Translator *aTranslator) const override;
+
+  template<class S> void Record(S &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
+
+  virtual std::string GetName() const override { return "DrawDependentSurface"; }
+
+private:
+  friend class RecordedEvent;
+
+  template<class S>
+  MOZ_IMPLICIT RecordedDrawDependentSurface(S &aStream);
+
+  uint64_t mId;
+  Rect mDest;
+  DrawSurfaceOptions mDSOptions;
+  DrawOptions mOptions;
+};
+
 class RecordedDrawSurfaceWithShadow : public RecordedDrawingEvent<RecordedDrawSurfaceWithShadow> {
 public:
   RecordedDrawSurfaceWithShadow(DrawTarget *aDT, ReferencePtr aRefSource, const Point &aDest,
@@ -2432,6 +2461,43 @@ RecordedDrawSurface::OutputSimpleEventInfo(std::stringstream &aStringStream) con
 }
 
 inline bool
+RecordedDrawDependentSurface::PlayEvent(Translator *aTranslator) const
+{
+  RefPtr<SourceSurface> surface(aTranslator->LookupExternalSurface(mId));
+  aTranslator->LookupDrawTarget(mDT)->
+    DrawSurface(surface, mDest, Rect(Point(), Size(surface->GetSize())),
+                mDSOptions, mOptions);
+  return true;
+}
+
+template<class S>
+void
+RecordedDrawDependentSurface::Record(S &aStream) const
+{
+  RecordedDrawingEvent::Record(aStream);
+  WriteElement(aStream, mId);
+  WriteElement(aStream, mDest);
+  WriteElement(aStream, mDSOptions);
+  WriteElement(aStream, mOptions);
+}
+
+template<class S>
+RecordedDrawDependentSurface::RecordedDrawDependentSurface(S &aStream)
+  : RecordedDrawingEvent(DRAWDEPENDENTSURFACE, aStream)
+{
+  ReadElement(aStream, mId);
+  ReadElement(aStream, mDest);
+  ReadElement(aStream, mDSOptions);
+  ReadElement(aStream, mOptions);
+}
+
+inline void
+RecordedDrawDependentSurface::OutputSimpleEventInfo(std::stringstream &aStringStream) const
+{
+  aStringStream << "[" << mDT << "] DrawDependentSurface (" << mId << ")";
+}
+
+inline bool
 RecordedDrawFilter::PlayEvent(Translator *aTranslator) const
 {
   aTranslator->LookupDrawTarget(mDT)->
@@ -3443,6 +3509,7 @@ RecordedFilterNodeSetInput::OutputSimpleEventInfo(std::stringstream &aStringStre
     f(MASK, RecordedMask); \
     f(STROKE, RecordedStroke); \
     f(DRAWSURFACE, RecordedDrawSurface); \
+    f(DRAWDEPENDENTSURFACE, RecordedDrawDependentSurface); \
     f(DRAWSURFACEWITHSHADOW, RecordedDrawSurfaceWithShadow); \
     f(DRAWFILTER, RecordedDrawFilter); \
     f(PATHCREATION, RecordedPathCreation); \

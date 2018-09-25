@@ -66,6 +66,18 @@ DrawEventRecorderMemory::RecordEvent(const RecordedEvent &aEvent)
   aEvent.RecordToStream(mOutputStream);
 }
 
+void
+DrawEventRecorderMemory::AddDependentSurface(uint64_t aDependencyId)
+{
+  mDependentSurfaces.PutEntry(aDependencyId);
+}
+
+nsTHashtable<nsUint64HashKey>&&
+DrawEventRecorderMemory::TakeDependentSurfaces()
+{
+  return std::move(mDependentSurfaces);
+}
+
 DrawEventRecorderFile::DrawEventRecorderFile(const char_type* aFilename)
   : mOutputStream(aFilename, ofstream::binary)
 {
