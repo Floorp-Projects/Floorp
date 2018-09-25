@@ -9,6 +9,8 @@
 
 #include "vm/Interpreter.h"
 
+#include "mozilla/Maybe.h"
+
 #include "jsnum.h"
 
 #include "builtin/String.h"
@@ -755,51 +757,151 @@ ProcessCallSiteObjOperation(JSContext* cx, HandleObject cso, HandleObject raw)
     return true;
 }
 
-#define RELATIONAL_OP(OP)                                                     \
-    JS_BEGIN_MACRO                                                            \
-        /* Optimize for two int-tagged operands (typical loop control). */    \
-        if (lhs.isInt32() && rhs.isInt32()) {                                 \
-            *res = lhs.toInt32() OP rhs.toInt32();                            \
-        } else {                                                              \
-            if (!ToPrimitive(cx, JSTYPE_NUMBER, lhs))                         \
-                return false;                                                 \
-            if (!ToPrimitive(cx, JSTYPE_NUMBER, rhs))                         \
-                return false;                                                 \
-            if (lhs.isString() && rhs.isString()) {                           \
-                JSString* l = lhs.toString();                                 \
-                JSString* r = rhs.toString();                                 \
-                int32_t result;                                               \
-                if (!CompareStrings(cx, l, r, &result))                       \
-                    return false;                                             \
-                *res = result OP 0;                                           \
-            } else {                                                          \
-                double l, r;                                                  \
-                if (!ToNumber(cx, lhs, &l) || !ToNumber(cx, rhs, &r))         \
-                    return false;                                             \
-                *res = (l OP r);                                              \
-            }                                                                 \
-        }                                                                     \
-        return true;                                                          \
-    JS_END_MACRO
+// BigInt proposal 3.2.4 Abstract Relational Comparison
+// Returns Nothing when at least one operand is a NaN, or when
+// ToNumeric or StringToBigInt can't interpret a string as a numeric
+// value. (These cases correspond to a NaN result in the spec.)
+// Otherwise, return a boolean to indicate whether lhs is less than
+// rhs. The operands must be primitives; the caller is responsible for
+// evaluating them in the correct order.
+static MOZ_ALWAYS_INLINE JS::Result<mozilla::Maybe<bool>>
+LessThanImpl(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs)
+{
+    // Steps 1 and 2 are performed by the caller.
 
-static MOZ_ALWAYS_INLINE bool
-LessThanOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, bool* res) {
-    RELATIONAL_OP(<);
+    // Step 3.
+    if (lhs.isString() && rhs.isString()) {
+        JSString* l = lhs.toString();
+        JSString* r = rhs.toString();
+        int32_t result;
+        if (!CompareStrings(cx, l, r, &result)) {
+            return cx->alreadyReportedError();
+        }
+        return mozilla::Some(result < 0);
+    }
+
+#ifdef ENABLE_BIGINT
+    // Step 4a.
+    if (lhs.isBigInt() && rhs.isString()) {
+        return BigInt::lessThan(cx, lhs, rhs);
+    }
+
+    // Step 4b.
+    if (lhs.isString() && rhs.isBigInt()) {
+        return BigInt::lessThan(cx, lhs, rhs);
+    }
+#endif
+
+    // Steps 4c and 4d.
+    if (!ToNumeric(cx, lhs) || !ToNumeric(cx, rhs)) {
+        return cx->alreadyReportedError();
+    }
+
+#ifdef ENABLE_BIGINT
+    // Steps 4e-j.
+    if (lhs.isBigInt() || rhs.isBigInt()) {
+        return BigInt::lessThan(cx, lhs, rhs);
+    }
+#endif
+
+    // Step 4e for Number operands.
+    MOZ_ASSERT(lhs.isNumber() && rhs.isNumber());
+    double lhsNum = lhs.toNumber();
+    double rhsNum = rhs.toNumber();
+
+    if (mozilla::IsNaN(lhsNum) || mozilla::IsNaN(rhsNum)) {
+        return mozilla::Maybe<bool>(mozilla::Nothing());
+    }
+
+    return mozilla::Some(lhsNum < rhsNum);
 }
 
 static MOZ_ALWAYS_INLINE bool
-LessThanOrEqualOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, bool* res) {
-    RELATIONAL_OP(<=);
+LessThanOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, bool* res)
+{
+    if (lhs.isInt32() && rhs.isInt32()) {
+        *res = lhs.toInt32() < rhs.toInt32();
+        return true;
+    }
+
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, lhs)) {
+        return false;
+    }
+
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, rhs)) {
+        return false;
+    }
+
+    mozilla::Maybe<bool> tmpResult;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, tmpResult, LessThanImpl(cx, lhs, rhs));
+    *res = tmpResult.valueOr(false);
+    return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-GreaterThanOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, bool* res) {
-    RELATIONAL_OP(>);
+LessThanOrEqualOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, bool* res)
+{
+    if (lhs.isInt32() && rhs.isInt32()) {
+        *res = lhs.toInt32() <= rhs.toInt32();
+        return true;
+    }
+
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, lhs)) {
+        return false;
+    }
+
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, rhs)) {
+        return false;
+    }
+
+    mozilla::Maybe<bool> tmpResult;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, tmpResult, LessThanImpl(cx, rhs, lhs));
+    *res = !tmpResult.valueOr(true);
+    return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-GreaterThanOrEqualOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, bool* res) {
-    RELATIONAL_OP(>=);
+GreaterThanOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, bool* res)
+{
+    if (lhs.isInt32() && rhs.isInt32()) {
+        *res = lhs.toInt32() > rhs.toInt32();
+        return true;
+    }
+
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, lhs)) {
+        return false;
+    }
+
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, rhs)) {
+        return false;
+    }
+
+    mozilla::Maybe<bool> tmpResult;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, tmpResult, LessThanImpl(cx, rhs, lhs));
+    *res = tmpResult.valueOr(false);
+    return true;
+}
+
+static MOZ_ALWAYS_INLINE bool
+GreaterThanOrEqualOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, bool* res)
+{
+    if (lhs.isInt32() && rhs.isInt32()) {
+        *res = lhs.toInt32() >= rhs.toInt32();
+        return true;
+    }
+
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, lhs)) {
+        return false;
+    }
+
+    if (!ToPrimitive(cx, JSTYPE_NUMBER, rhs)) {
+        return false;
+    }
+
+    mozilla::Maybe<bool> tmpResult;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, tmpResult, LessThanImpl(cx, lhs, rhs));
+    *res = !tmpResult.valueOr(true);
+    return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
