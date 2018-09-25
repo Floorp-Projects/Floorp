@@ -6,15 +6,19 @@
 
 #include "Worklet.h"
 #include "WorkletThread.h"
+#include "AudioWorkletGlobalScope.h"
+#include "PaintWorkletGlobalScope.h"
 
 #include "mozilla/dom/WorkletBinding.h"
+#include "mozilla/dom/AudioWorkletBinding.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ScriptLoader.h"
-#include "mozilla/dom/WorkletImpl.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/SourceBufferHolder.h"
 #include "nsIInputStreamPump.h"
@@ -28,13 +32,14 @@ namespace dom {
 class ExecutionRunnable final : public Runnable
 {
 public:
-  ExecutionRunnable(WorkletFetchHandler* aHandler, WorkletImpl* aWorkletImpl,
-                    JS::UniqueTwoByteChars aScriptBuffer, size_t aScriptLength)
+  ExecutionRunnable(WorkletFetchHandler* aHandler, Worklet::WorkletType aType,
+                    JS::UniqueTwoByteChars aScriptBuffer, size_t aScriptLength,
+                    const WorkletLoadInfo& aWorkletLoadInfo)
     : Runnable("Worklet::ExecutionRunnable")
     , mHandler(aHandler)
-    , mWorkletImpl(aWorkletImpl)
     , mScriptBuffer(std::move(aScriptBuffer))
     , mScriptLength(aScriptLength)
+    , mWorkletType(aType)
     , mResult(NS_ERROR_FAILURE)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -51,9 +56,9 @@ private:
   RunOnMainThread();
 
   RefPtr<WorkletFetchHandler> mHandler;
-  RefPtr<WorkletImpl> mWorkletImpl;
   JS::UniqueTwoByteChars mScriptBuffer;
   size_t mScriptLength;
+  Worklet::WorkletType mWorkletType;
   nsresult mResult;
 };
 
@@ -224,10 +229,10 @@ public:
 
     // Moving the ownership of the buffer
     nsCOMPtr<nsIRunnable> runnable =
-      new ExecutionRunnable(this, mWorklet->mImpl, std::move(scriptTextBuf),
-                            scriptTextLength);
+      new ExecutionRunnable(this, mWorklet->Type(), std::move(scriptTextBuf),
+                            scriptTextLength, mWorklet->LoadInfo());
 
-    RefPtr<WorkletThread> thread = mWorklet->mImpl->GetOrCreateThread();
+    RefPtr<WorkletThread> thread = mWorklet->GetOrCreateThread();
     if (!thread) {
       RejectPromises(NS_ERROR_FAILURE);
       return NS_OK;
@@ -382,7 +387,7 @@ ExecutionRunnable::RunOnWorkletThread()
   jsapi.Init();
 
   RefPtr<WorkletGlobalScope> globalScope =
-    mWorkletImpl->CreateGlobalScope(jsapi.cx());
+    Worklet::CreateGlobalScope(jsapi.cx(), mWorkletType);
   MOZ_ASSERT(globalScope);
 
   AutoEntryScript aes(globalScope, "Worklet");
@@ -429,13 +434,36 @@ ExecutionRunnable::RunOnMainThread()
 }
 
 // ---------------------------------------------------------------------------
+// WorkletLoadInfo
+
+WorkletLoadInfo::WorkletLoadInfo(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
+  : mInnerWindowID(aWindow->WindowID())
+  , mDumpEnabled(DOMPrefs::DumpEnabled())
+  , mOriginAttributes(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef())
+  , mPrincipal(aPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsPIDOMWindowOuter* outerWindow = aWindow->GetOuterWindow();
+  if (outerWindow) {
+    mOuterWindowID = outerWindow->WindowID();
+  } else {
+    mOuterWindowID = 0;
+  }
+}
+
+WorkletLoadInfo::~WorkletLoadInfo()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+// ---------------------------------------------------------------------------
 // Worklet
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Worklet)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Worklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  tmp->mImpl->TerminateThread();
+  tmp->TerminateThread();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -453,12 +481,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Worklet)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Worklet::Worklet(nsPIDOMWindowInner* aWindow, RefPtr<WorkletImpl> aImpl)
+Worklet::Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+                 WorkletType aWorkletType)
   : mWindow(aWindow)
-  , mImpl(std::move(aImpl))
+  , mWorkletType(aWorkletType)
+  , mWorkletLoadInfo(aWindow, aPrincipal)
 {
   MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(mImpl);
+  MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
 
 #ifdef RELEASE_OR_BETA
@@ -468,13 +498,18 @@ Worklet::Worklet(nsPIDOMWindowInner* aWindow, RefPtr<WorkletImpl> aImpl)
 
 Worklet::~Worklet()
 {
-  mImpl->TerminateThread();
+  TerminateThread();
 }
 
 JSObject*
 Worklet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return mImpl->WrapWorklet(aCx, this, aGivenProto);
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mWorkletType == eAudioWorklet) {
+    return AudioWorklet_Binding::Wrap(aCx, this, aGivenProto);
+  } else {
+    return Worklet_Binding::Wrap(aCx, this, aGivenProto);
+  }
 }
 
 already_AddRefed<Promise>
@@ -485,6 +520,37 @@ Worklet::AddModule(const nsAString& aModuleURL,
 {
   MOZ_ASSERT(NS_IsMainThread());
   return WorkletFetchHandler::Fetch(this, aModuleURL, aOptions, aCallerType, aRv);
+}
+
+/* static */ already_AddRefed<WorkletGlobalScope>
+Worklet::CreateGlobalScope(JSContext* aCx, WorkletType aWorkletType)
+{
+  WorkletThread::AssertIsOnWorkletThread();
+
+  RefPtr<WorkletGlobalScope> scope;
+
+  switch (aWorkletType) {
+    case eAudioWorklet:
+      scope = new AudioWorkletGlobalScope();
+      break;
+    case ePaintWorklet:
+      scope = new PaintWorkletGlobalScope();
+      break;
+  }
+
+  JS::Rooted<JSObject*> global(aCx);
+  NS_ENSURE_TRUE(scope->WrapGlobalObject(aCx, &global), nullptr);
+
+  JSAutoRealm ar(aCx, global);
+
+  // Init Web IDL bindings
+  if (!RegisterWorkletBindings(aCx, global)) {
+    return nullptr;
+  }
+
+  JS_FireOnNewGlobalObject(aCx, global);
+
+  return scope.forget();
 }
 
 WorkletFetchHandler*
@@ -503,6 +569,32 @@ Worklet::AddImportFetchHandler(const nsACString& aURI,
   MOZ_ASSERT(NS_IsMainThread());
 
   mImportHandlers.Put(aURI, aHandler);
+}
+
+WorkletThread*
+Worklet::GetOrCreateThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mWorkletThread) {
+    // Thread creation. FIXME: this will change.
+    mWorkletThread = WorkletThread::Create(mWorkletLoadInfo);
+  }
+
+  return mWorkletThread;
+}
+
+void
+Worklet::TerminateThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mWorkletThread) {
+    return;
+  }
+
+  mWorkletThread->Terminate();
+  mWorkletThread = nullptr;
+  mWorkletLoadInfo.mPrincipal = nullptr;
 }
 
 } // dom namespace
