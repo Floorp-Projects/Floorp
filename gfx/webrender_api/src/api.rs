@@ -1225,6 +1225,7 @@ pub trait RenderNotifier: Send {
 pub enum Checkpoint {
     SceneBuilt,
     FrameBuilt,
+    FrameRendered,
     /// NotificationRequests get notified with this if they get dropped without having been
     /// notified. This provides the guarantee that if a request is created it will get notified.
     TransactionDropped,

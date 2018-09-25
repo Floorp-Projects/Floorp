@@ -129,7 +129,7 @@ async function(type = "bottom", src = CHROME_URL_ROOT + "dummy.html") {
 async function openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
   for (let i = 0; i < nbOfTimes; i++) {
     info("Opening toolbox " + (i + 1));
-    const target = TargetFactory.forTab(gBrowser.selectedTab);
+    const target = await TargetFactory.forTab(gBrowser.selectedTab);
     await gDevTools.showToolbox(target, toolId);
 
     // We use a timeout to check the toolbox's active time

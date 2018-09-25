@@ -12,6 +12,13 @@ use shared::wtypes::{CLIPFORMAT, VARTYPE};
 use shared::wtypesbase::{LPCOLESTR, LPOLESTR};
 use um::oaidl::{IErrorLog, VARIANT};
 use um::unknwnbase::{IUnknown, IUnknownVtbl};
+ENUM!{enum READYSTATE {
+    READYSTATE_UNINITIALIZED = 0,
+    READYSTATE_LOADING = 1,
+    READYSTATE_LOADED = 2,
+    READYSTATE_INTERACTIVE = 3,
+    READYSTATE_COMPLETE = 4,
+}}
 ENUM!{enum PROPBAG2_TYPE {
     PROPBAG2_TYPE_UNDEFINED = 0,
     PROPBAG2_TYPE_DATA = 1,
@@ -29,7 +36,7 @@ STRUCT!{struct PROPBAG2 {
     pstrName: LPOLESTR,
     clsid: CLSID,
 }}
-RIDL!(#[uuid(0x22f55882, 0x280b, 0x11d0, 0xa8, 0xa9, 0x00, 0xa0, 0xc9, 0x0c, 0x20, 0x04)]
+RIDL!{#[uuid(0x22f55882, 0x280b, 0x11d0, 0xa8, 0xa9, 0x00, 0xa0, 0xc9, 0x0c, 0x20, 0x04)]
 interface IPropertyBag2(IPropertyBag2Vtbl): IUnknown(IUnknownVtbl) {
     fn Read(
         cProperties: ULONG,
@@ -58,5 +65,5 @@ interface IPropertyBag2(IPropertyBag2Vtbl): IUnknown(IUnknownVtbl) {
         pUnkObject: *const IUnknown,
         pErrLog: *const IErrorLog,
     ) -> HRESULT,
-});
+}}
 pub type LPPROPERTYBAG2 = *mut IPropertyBag2;

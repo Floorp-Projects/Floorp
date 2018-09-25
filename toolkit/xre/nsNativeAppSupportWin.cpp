@@ -840,15 +840,6 @@ static nsCString hszValue( DWORD instance, HSZ hsz ) {
     result += "]";
     return result;
 }
-#else
-// These are purely a safety measure to avoid the infamous "won't
-// build non-debug" type Tinderbox flames.
-static nsCString uTypeDesc( UINT ) {
-    return nsCString( "?" );
-}
-static nsCString hszValue( DWORD, HSZ ) {
-    return nsCString( "?" );
-}
 #endif
 
 

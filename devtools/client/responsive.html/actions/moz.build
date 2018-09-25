@@ -7,7 +7,6 @@
 DevToolsModules(
     'devices.js',
     'index.js',
-    'reload-conditions.js',
     'screenshot.js',
     'ui.js',
     'viewports.js',

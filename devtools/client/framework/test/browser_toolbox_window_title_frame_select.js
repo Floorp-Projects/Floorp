@@ -21,7 +21,7 @@ add_task(async function() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
   await addTab(URL);
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = await gDevTools.showToolbox(target, null,
     Toolbox.HostType.BOTTOM);
 

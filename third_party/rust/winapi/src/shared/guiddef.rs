@@ -6,7 +6,7 @@
 // except according to those terms.
 //! GUID definition
 use ctypes::{c_uchar, c_ulong, c_ushort};
-STRUCT!{struct GUID {
+STRUCT!{#[debug] struct GUID {
     Data1: c_ulong,
     Data2: c_ushort,
     Data3: c_ushort,

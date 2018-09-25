@@ -5,9 +5,10 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! Mappings for the content of dwrite_3.h
+use ctypes::c_void;
 use shared::basetsd::{UINT16, UINT32, UINT64};
 use shared::minwindef::{BOOL, FILETIME, FLOAT};
-use um::dcommon::DWRITE_MEASURING_MODE;
+use um::dcommon::{DWRITE_GLYPH_IMAGE_DATA, DWRITE_GLYPH_IMAGE_FORMATS, DWRITE_MEASURING_MODE};
 use um::dwrite::{
     DWRITE_FONT_SIMULATIONS, DWRITE_FONT_STRETCH, DWRITE_FONT_STYLE, DWRITE_FONT_WEIGHT,
     DWRITE_GLYPH_RUN, DWRITE_INFORMATIONAL_STRING_ID, DWRITE_LINE_SPACING_METHOD, DWRITE_MATRIX,
@@ -461,5 +462,118 @@ interface IDWriteTextLayout3(IDWriteTextLayout3Vtbl):
         lineMetrics: *mut DWRITE_LINE_METRICS1,
         maxLineCount: UINT32,
         actualLineCount: *mut UINT32,
+    ) -> HRESULT,
+}}
+RIDL!{#[uuid(0x27f2a904, 0x4eb8, 0x441d, 0x96, 0x78, 0x05, 0x63, 0xf5, 0x3e, 0x3e, 0x2f)]
+interface IDWriteFontFace4(IDWriteFontFace4Vtbl): IDWriteFontFace3(IDWriteFontFace3Vtbl) {
+    fn GetGlyphImageFormats_2(
+        glyph: UINT16,
+        ppemFirst: UINT32,
+        ppemLast: UINT32,
+        formats: *mut DWRITE_GLYPH_IMAGE_FORMATS,
+    ) -> HRESULT,
+    fn GetGlyphImageFormats_1() -> DWRITE_GLYPH_IMAGE_FORMATS,
+    fn GetGlyphImageData(
+        glyph: UINT16,
+        ppem: UINT32,
+        format: DWRITE_GLYPH_IMAGE_FORMATS,
+        data: *mut DWRITE_GLYPH_IMAGE_DATA,
+        context: *mut *mut c_void,
+    ) -> HRESULT,
+    fn ReleaseGlyphImageData(
+        context: *mut c_void,
+    ) -> (),
+}}
+ENUM!{enum DWRITE_FONT_AXIS_TAG {
+    DWRITE_FONT_AXIS_TAG_WEIGHT = 0x74686777,
+    DWRITE_FONT_AXIS_TAG_WIDTH = 0x68746477,
+    DWRITE_FONT_AXIS_TAG_SLANT = 0x746e6c73,
+    DWRITE_FONT_AXIS_TAG_OPTICAL_SIZE = 0x7a73706f,
+    DWRITE_FONT_AXIS_TAG_ITALIC = 0x6c617469,
+}}
+STRUCT!{struct DWRITE_FONT_AXIS_VALUE {
+    axisTag: DWRITE_FONT_AXIS_TAG,
+    value: FLOAT,
+}}
+STRUCT!{struct DWRITE_FONT_AXIS_RANGE {
+    axisTag: DWRITE_FONT_AXIS_TAG,
+    minValue: FLOAT,
+    maxValue: FLOAT,
+}}
+ENUM!{enum DWRITE_FONT_AXIS_ATTRIBUTES {
+    DWRITE_FONT_AXIS_ATTRIBUTES_NONE,
+    DWRITE_FONT_AXIS_ATTRIBUTES_VARIABLE,
+    DWRITE_FONT_AXIS_ATTRIBUTES_HIDDEN,
+}}
+RIDL!{#[uuid(0x98eff3a5, 0xb667, 0x479a, 0xb1, 0x45, 0xe2, 0xfa, 0x5b, 0x9f, 0xdc, 0x29)]
+interface IDWriteFontFace5(IDWriteFontFace5Vtbl): IDWriteFontFace4(IDWriteFontFace4Vtbl) {
+    fn GetFontAxisValueCount() -> UINT32,
+    fn GetFontAxisValues(
+        values: *mut DWRITE_FONT_AXIS_VALUE,
+        valueCount: UINT32,
+    ) -> HRESULT,
+    fn HasVariations() -> BOOL,
+    fn GetFontResource(
+        resource: *mut *mut IDWriteFontResource,
+    ) -> HRESULT,
+    fn Equals(
+        fontFace: *mut IDWriteFontFace,
+    ) -> BOOL,
+}}
+RIDL!{#[uuid(0xc081fe77, 0x2fd1, 0x41ac, 0xa5, 0xa3, 0x34, 0x98, 0x3c, 0x4b, 0xa6, 0x1a)]
+interface IDWriteFontFaceReference1(IDWriteFontFaceReference1Vtbl):
+    IDWriteFontFaceReference(IDWriteFontFaceReferenceVtbl) {
+    fn CreateFontFace(
+        fontFace: *mut *mut IDWriteFontFace5,
+    ) -> HRESULT,
+    fn GetFontAxisValueCount() -> UINT32,
+    fn GetFontAxisValues(
+        values: *mut DWRITE_FONT_AXIS_VALUE,
+        numValues: UINT32,
+    ) -> HRESULT,
+}}
+RIDL!{#[uuid(0x1f803a76, 0x6871, 0x48e8, 0x98, 0x7f, 0xb9, 0x75, 0x55, 0x1c, 0x50, 0xf2)]
+interface IDWriteFontResource(IDWriteFontResourceVtbl): IUnknown(IUnknownVtbl) {
+    fn GetFontFile(
+        fontFile: *mut *mut IDWriteFontFile,
+    ) -> HRESULT,
+    fn GetFontFaceIndex() -> UINT32,
+    fn GetFontAxisCount() -> UINT32,
+    fn GetDefaultFontAxisValues(
+        values: *const DWRITE_FONT_AXIS_VALUE,
+        numValues: UINT32,
+    ) -> HRESULT,
+    fn GetFontAxisRanges(
+        ranges: *const DWRITE_FONT_AXIS_RANGE,
+        numRanges: UINT32,
+    ) -> HRESULT,
+    fn GetFontAxisAttributes(
+        axis: UINT32,
+    ) -> DWRITE_FONT_AXIS_ATTRIBUTES,
+    fn GetAxisNames(
+        axis: UINT32,
+        names: *mut *mut IDWriteLocalizedStrings,
+    ) -> HRESULT,
+    fn GetAxisValueNameCount(
+        axis: UINT32,
+    ) -> UINT32,
+    fn GetAxisValueNames(
+        axis: UINT32,
+        axisValue: UINT32,
+        axisRange: *mut DWRITE_FONT_AXIS_RANGE,
+        names: *mut *mut IDWriteLocalizedStrings,
+    ) -> HRESULT,
+    fn HasVariations() -> BOOL,
+    fn CreateFontFace(
+        simulations: DWRITE_FONT_SIMULATIONS,
+        axisValues: *const DWRITE_FONT_AXIS_VALUE,
+        numValues: UINT32,
+        fontFace: *mut *mut IDWriteFontFace5,
+    ) -> HRESULT,
+    fn CreateFontFaceReference(
+        simulations: DWRITE_FONT_SIMULATIONS,
+        axisValues: *const DWRITE_FONT_AXIS_VALUE,
+        numValues: UINT32,
+        reference: *mut *mut IDWriteFontFaceReference1,
     ) -> HRESULT,
 }}

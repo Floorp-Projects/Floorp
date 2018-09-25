@@ -17,7 +17,7 @@ add_task(async function() {
 
   await pushPref("devtools.command-button-paintflashing.enabled", true);
 
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = await gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 

@@ -5,31 +5,30 @@
 use std::cell::UnsafeCell;
 
 use comptr::ComPtr;
-use winapi;
+use winapi::um::dwrite::IDWriteRenderingParams;
 use super::DWriteFactory;
 
-#[derive(Debug)]
 pub struct RenderingParams {
-    native: UnsafeCell<ComPtr<winapi::IDWriteRenderingParams>>,
+    native: UnsafeCell<ComPtr<IDWriteRenderingParams>>,
 }
 
 impl RenderingParams {
     pub fn create_for_primary_monitor() -> RenderingParams {
         unsafe {
-            let mut native: ComPtr<winapi::IDWriteRenderingParams> = ComPtr::new();
+            let mut native: ComPtr<IDWriteRenderingParams> = ComPtr::new();
             let hr = (*DWriteFactory()).CreateRenderingParams(native.getter_addrefs());
             assert!(hr == 0);
             RenderingParams::take(native)
         }
     }
 
-    pub fn take(native: ComPtr<winapi::IDWriteRenderingParams>) -> RenderingParams {
+    pub fn take(native: ComPtr<IDWriteRenderingParams>) -> RenderingParams {
         RenderingParams {
             native: UnsafeCell::new(native),
         }
     }
 
-    pub unsafe fn as_ptr(&self) -> *mut winapi::IDWriteRenderingParams {
+    pub unsafe fn as_ptr(&self) -> *mut IDWriteRenderingParams {
         (*self.native.get()).as_ptr()
     }
 }

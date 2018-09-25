@@ -127,14 +127,15 @@ function initCallWatcherBackend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = TargetFactory.forTab(tab);
+
     await registerActorInContentProcess("chrome://mochitests/content/browser/devtools/client/canvasdebugger/test/call-watcher-actor.js", {
       prefix: "callWatcher",
       constructor: "CallWatcherActor",
       type: { target: true }
     });
 
-    await target.makeRemote();
+    const target = await TargetFactory.forTab(tab);
+    await target.attach();
 
     const front = new CallWatcherFront(target.client, target.form);
     return { target, front };
@@ -147,9 +148,9 @@ function initCanvasDebuggerBackend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
 
-    await target.makeRemote();
+    await target.attach();
 
     const front = new CanvasFront(target.client, target.form);
     return { target, front };
@@ -161,9 +162,9 @@ function initCanvasDebuggerFrontend(aUrl) {
 
   return (async function() {
     const tab = await addTab(aUrl);
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
 
-    await target.makeRemote();
+    await target.attach();
 
     Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);
     const toolbox = await gDevTools.showToolbox(target, "canvasdebugger");

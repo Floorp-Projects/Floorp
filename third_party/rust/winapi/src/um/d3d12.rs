@@ -1931,11 +1931,11 @@ interface ID3D12DeviceChild(ID3D12DeviceChildVtbl): ID3D12Object(ID3D12ObjectVtb
 }}
 RIDL!{#[uuid(0x63ee58fb, 0x1268, 0x4835, 0x86, 0xda, 0xf0, 0x08, 0xce, 0x62, 0xf0, 0xd6)]
 interface ID3D12Pageable(ID3D12PageableVtbl): ID3D12DeviceChild(ID3D12DeviceChildVtbl) {}}
-RIDL!(#[uuid(0x6b3b2502, 0x6e51, 0x45b3, 0x90, 0xee, 0x98, 0x84, 0x26, 0x5e, 0x8d, 0xf3)]
+RIDL!{#[uuid(0x6b3b2502, 0x6e51, 0x45b3, 0x90, 0xee, 0x98, 0x84, 0x26, 0x5e, 0x8d, 0xf3)]
 interface ID3D12Heap(ID3D12HeapVtbl): ID3D12Pageable(ID3D12PageableVtbl) {
     #[fixme] fn GetDesc() -> D3D12_HEAP_DESC,
-});
-RIDL!(#[uuid(0x696442be, 0xa72e, 0x4059, 0xbc, 0x79, 0x5b, 0x5c, 0x98, 0x04, 0x0f, 0xad)]
+}}
+RIDL!{#[uuid(0x696442be, 0xa72e, 0x4059, 0xbc, 0x79, 0x5b, 0x5c, 0x98, 0x04, 0x0f, 0xad)]
 interface ID3D12Resource(ID3D12ResourceVtbl): ID3D12Pageable(ID3D12PageableVtbl) {
     fn Map(
         Subresource: UINT,
@@ -1966,12 +1966,12 @@ interface ID3D12Resource(ID3D12ResourceVtbl): ID3D12Pageable(ID3D12PageableVtbl)
         pHeapProperties: *mut D3D12_HEAP_PROPERTIES,
         pHeapFlags: *mut D3D12_HEAP_FLAGS,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x6102dee4, 0xaf59, 0x4b09, 0xb9, 0x99, 0xb4, 0x4d, 0x73, 0xf0, 0x9b, 0x24)]
+}}
+RIDL!{#[uuid(0x6102dee4, 0xaf59, 0x4b09, 0xb9, 0x99, 0xb4, 0x4d, 0x73, 0xf0, 0x9b, 0x24)]
 interface ID3D12CommandAllocator(ID3D12CommandAllocatorVtbl): ID3D12Pageable(ID3D12PageableVtbl) {
     fn Reset() -> HRESULT,
-});
-RIDL!(#[uuid(0x0a753dcf, 0xc4d8, 0x4b91, 0xad, 0xf6, 0xbe, 0x5a, 0x60, 0xd9, 0x5a, 0x76)]
+}}
+RIDL!{#[uuid(0x0a753dcf, 0xc4d8, 0x4b91, 0xad, 0xf6, 0xbe, 0x5a, 0x60, 0xd9, 0x5a, 0x76)]
 interface ID3D12Fence(ID3D12FenceVtbl): ID3D12Pageable(ID3D12PageableVtbl) {
     fn GetCompletedValue() -> UINT64,
     fn SetEventOnCompletion(
@@ -1981,28 +1981,28 @@ interface ID3D12Fence(ID3D12FenceVtbl): ID3D12Pageable(ID3D12PageableVtbl) {
     fn Signal(
         Value: UINT64,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x765a30f3, 0xf624, 0x4c6f, 0xa8, 0x28, 0xac, 0xe9, 0x48, 0x62, 0x24, 0x45)]
+}}
+RIDL!{#[uuid(0x765a30f3, 0xf624, 0x4c6f, 0xa8, 0x28, 0xac, 0xe9, 0x48, 0x62, 0x24, 0x45)]
 interface ID3D12PipelineState(ID3D12PipelineStateVtbl): ID3D12Pageable(ID3D12PageableVtbl) {
     fn GetCachedBlob(
         ppBlob: *mut *mut ID3DBlob,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x8efb471d, 0x616c, 0x4f49, 0x90, 0xf7, 0x12, 0x7b, 0xb7, 0x63, 0xfa, 0x51)]
+}}
+RIDL!{#[uuid(0x8efb471d, 0x616c, 0x4f49, 0x90, 0xf7, 0x12, 0x7b, 0xb7, 0x63, 0xfa, 0x51)]
 interface ID3D12DescriptorHeap(ID3D12DescriptorHeapVtbl): ID3D12Pageable(ID3D12PageableVtbl) {
     #[fixme] fn GetDesc() -> D3D12_DESCRIPTOR_HEAP_DESC,
     #[fixme] fn GetCPUDescriptorHandleForHeapStart() -> D3D12_CPU_DESCRIPTOR_HANDLE,
     #[fixme] fn GetGPUDescriptorHandleForHeapStart() -> D3D12_GPU_DESCRIPTOR_HANDLE,
-});
+}}
 RIDL!{#[uuid(0x0d9658ae, 0xed45, 0x469e, 0xa6, 0x1d, 0x97, 0x0e, 0xc5, 0x83, 0xca, 0xb4)]
 interface ID3D12QueryHeap(ID3D12QueryHeapVtbl): ID3D12Pageable(ID3D12PageableVtbl) {}}
 RIDL!{#[uuid(0xc36a797c, 0xec80, 0x4f0a, 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x82, 0xd1)]
 interface ID3D12CommandSignature(ID3D12CommandSignatureVtbl):
     ID3D12Pageable(ID3D12PageableVtbl) {}}
-RIDL!(#[uuid(0x7116d91c, 0xe7e4, 0x47ce, 0xb8, 0xc6, 0xec, 0x81, 0x68, 0xf4, 0x37, 0xe5)]
+RIDL!{#[uuid(0x7116d91c, 0xe7e4, 0x47ce, 0xb8, 0xc6, 0xec, 0x81, 0x68, 0xf4, 0x37, 0xe5)]
 interface ID3D12CommandList(ID3D12CommandListVtbl): ID3D12DeviceChild(ID3D12DeviceChildVtbl) {
     fn GetType() -> D3D12_COMMAND_LIST_TYPE,
-});
+}}
 RIDL!{#[uuid(0x5b160d0f, 0xac1b, 0x4185, 0x8b, 0xa8, 0xb3, 0xae, 0x42, 0xa5, 0xa4, 0x55)]
 interface ID3D12GraphicsCommandList(ID3D12GraphicsCommandListVtbl):
     ID3D12CommandList(ID3D12CommandListVtbl) {
@@ -2295,7 +2295,7 @@ interface ID3D12GraphicsCommandList1(ID3D12GraphicsCommandList1Vtbl):
         ResolveMode: D3D12_RESOLVE_MODE,
     ) -> (),
 }}
-RIDL!(#[uuid(0x0ec870a6, 0x5d7e, 0x4c22, 0x8c, 0xfc, 0x5b, 0xaa, 0xe0, 0x76, 0x16, 0xed)]
+RIDL!{#[uuid(0x0ec870a6, 0x5d7e, 0x4c22, 0x8c, 0xfc, 0x5b, 0xaa, 0xe0, 0x76, 0x16, 0xed)]
 interface ID3D12CommandQueue(ID3D12CommandQueueVtbl): ID3D12Pageable(ID3D12PageableVtbl) {
     fn UpdateTileMappings(
         pResource: *mut ID3D12Resource,
@@ -2348,8 +2348,8 @@ interface ID3D12CommandQueue(ID3D12CommandQueueVtbl): ID3D12Pageable(ID3D12Pagea
         pCpuTimestamp: *mut UINT64,
     ) -> HRESULT,
     #[fixme] fn GetDesc() -> D3D12_COMMAND_QUEUE_DESC,
-});
-RIDL!(#[uuid(0x189819f1, 0x1db6, 0x4b57, 0xbe, 0x54, 0x18, 0x21, 0x33, 0x9b, 0x85, 0xf7)]
+}}
+RIDL!{#[uuid(0x189819f1, 0x1db6, 0x4b57, 0xbe, 0x54, 0x18, 0x21, 0x33, 0x9b, 0x85, 0xf7)]
 interface ID3D12Device(ID3D12DeviceVtbl): ID3D12Object(ID3D12ObjectVtbl) {
     fn GetNodeCount() -> UINT,
     fn CreateCommandQueue(
@@ -2549,8 +2549,8 @@ interface ID3D12Device(ID3D12DeviceVtbl): ID3D12Object(ID3D12ObjectVtbl) {
         pSubresourceTilingsForNonPackedMips: *mut D3D12_SUBRESOURCE_TILING,
     ) -> (),
     #[fixme] fn GetAdapterLuid() -> LUID,
-});
-RIDL!(#[uuid(0xc64226a8, 0x9201, 0x46af, 0xb4, 0xcc, 0x53, 0xfb, 0x9f, 0xf7, 0x41, 0x4f)]
+}}
+RIDL!{#[uuid(0xc64226a8, 0x9201, 0x46af, 0xb4, 0xcc, 0x53, 0xfb, 0x9f, 0xf7, 0x41, 0x4f)]
 interface ID3D12PipelineLibrary(ID3D12PipelineLibraryVtbl): ID3D12DeviceChild(ID3D12DeviceChildVtbl) {
     fn StorePipeline(
         pName: LPCWSTR,
@@ -2573,8 +2573,8 @@ interface ID3D12PipelineLibrary(ID3D12PipelineLibraryVtbl): ID3D12DeviceChild(ID
         pData: *mut c_void,
         DataSizeInBytes: SIZE_T,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x80eabf42, 0x2568, 0x4e5e, 0xbd, 0x82, 0xc3, 0x7f, 0x86, 0x96, 0x1d, 0xc3)]
+}}
+RIDL!{#[uuid(0x80eabf42, 0x2568, 0x4e5e, 0xbd, 0x82, 0xc3, 0x7f, 0x86, 0x96, 0x1d, 0xc3)]
 interface ID3D12PipelineLibrary1(ID3D12PipelineLibrary1Vtbl): ID3D12PipelineLibrary(ID3D12PipelineLibraryVtbl) {
     fn LoadPipeline(
         pName: LPCWSTR,
@@ -2582,7 +2582,7 @@ interface ID3D12PipelineLibrary1(ID3D12PipelineLibrary1Vtbl): ID3D12PipelineLibr
         riid: REFIID,
         ppPipelineState: *mut *mut c_void,
     ) -> HRESULT,
-});
+}}
 ENUM!{enum D3D12_MULTIPLE_FENCE_WAIT_FLAGS {
     D3D12_MULTIPLE_FENCE_WAIT_FLAG_NONE = 0,
     D3D12_MULTIPLE_FENCE_WAIT_FLAG_ANY = 0x1,
@@ -2595,7 +2595,7 @@ ENUM!{enum D3D12_RESIDENCY_PRIORITY {
     D3D12_RESIDENCY_PRIORITY_HIGH = 0xa0010000,
     D3D12_RESIDENCY_PRIORITY_MAXIMUM = 0xc8000000,
 }}
-RIDL!(#[uuid(0x77acce80, 0x638e, 0x4e65, 0x88, 0x95, 0xc1, 0xf2, 0x33, 0x86, 0x86, 0x3e)]
+RIDL!{#[uuid(0x77acce80, 0x638e, 0x4e65, 0x88, 0x95, 0xc1, 0xf2, 0x33, 0x86, 0x86, 0x3e)]
 interface ID3D12Device1(ID3D12Device1Vtbl): ID3D12Device(ID3D12DeviceVtbl) {
     fn CreatePipelineLibrary(
         pLibraryBlob: *const c_void,
@@ -2615,22 +2615,22 @@ interface ID3D12Device1(ID3D12Device1Vtbl): ID3D12Device(ID3D12DeviceVtbl) {
         ppObjects: *const *mut ID3D12Pageable,
         pPriorities: *const D3D12_RESIDENCY_PRIORITY,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x30baa41e, 0xb15b, 0x475c, 0xa0, 0xbb, 0x1a, 0xf5, 0xc5, 0xb6, 0x43, 0x28)]
+}}
+RIDL!{#[uuid(0x30baa41e, 0xb15b, 0x475c, 0xa0, 0xbb, 0x1a, 0xf5, 0xc5, 0xb6, 0x43, 0x28)]
 interface ID3D12Device2(ID3D12Device2Vtbl): ID3D12Device1(ID3D12Device1Vtbl) {
     fn CreatePipelineState(
         pDesc: *const D3D12_PIPELINE_STATE_STREAM_DESC,
         riid: REFIID,
         ppPipelineState: *mut *mut c_void,
     ) -> HRESULT,
-});
-RIDL!(#[uuid(0x7071e1f0, 0xe84b, 0x4b33, 0x97, 0x4f, 0x12, 0xfa, 0x49, 0xde, 0x65, 0xc5)]
+}}
+RIDL!{#[uuid(0x7071e1f0, 0xe84b, 0x4b33, 0x97, 0x4f, 0x12, 0xfa, 0x49, 0xde, 0x65, 0xc5)]
 interface ID3D12Tools(ID3D12ToolsVtbl): IUnknown(IUnknownVtbl) {
     fn EnableShaderInstrumentation(
         bEnable: BOOL,
     ) -> (),
     fn ShaderInstrumentationEnabled() -> BOOL,
-});
+}}
 STRUCT!{struct D3D12_SUBRESOURCE_DATA {
     pData: *const c_void,
     RowPitch: LONG_PTR,

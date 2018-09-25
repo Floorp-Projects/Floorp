@@ -289,9 +289,9 @@ function initNetMonitor(url, enableCache) {
     const tab = await addTab(url);
     info("Net tab added successfully: " + url);
 
-    const target = TargetFactory.forTab(tab);
+    const target = await TargetFactory.forTab(tab);
 
-    await target.makeRemote();
+    await target.attach();
     info("Target remoted.");
 
     const toolbox = await gDevTools.showToolbox(target, "netmonitor");

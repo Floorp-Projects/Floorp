@@ -20,8 +20,8 @@ const INITIAL_VIEWPORT = {
   id: nextViewportId++,
   device: "",
   deviceType: "",
-  width: 320,
   height: 480,
+  width: 320,
   pixelRatio: 0,
   userContextId: 0,
 };
@@ -33,9 +33,14 @@ const reducers = {
     if (viewports.length === 1) {
       return viewports;
     }
-    return [...viewports, Object.assign({}, INITIAL_VIEWPORT, {
-      userContextId,
-    })];
+
+    return [
+      ...viewports,
+      {
+        ...INITIAL_VIEWPORT,
+        userContextId,
+      },
+    ];
   },
 
   [CHANGE_DEVICE](viewports, { id, device, deviceType }) {
@@ -44,10 +49,11 @@ const reducers = {
         return viewport;
       }
 
-      return Object.assign({}, viewport, {
+      return {
+        ...viewport,
         device,
         deviceType,
-      });
+      };
     });
   },
 
@@ -57,9 +63,10 @@ const reducers = {
         return viewport;
       }
 
-      return Object.assign({}, viewport, {
+      return {
+        ...viewport,
         pixelRatio,
-      });
+      };
     });
   },
 
@@ -69,10 +76,11 @@ const reducers = {
         return viewport;
       }
 
-      return Object.assign({}, viewport, {
+      return {
+        ...viewport,
         device: "",
         deviceType: "",
-      });
+      };
     });
   },
 
@@ -82,17 +90,19 @@ const reducers = {
         return viewport;
       }
 
-      if (!width) {
-        width = viewport.width;
-      }
       if (!height) {
         height = viewport.height;
       }
 
-      return Object.assign({}, viewport, {
-        width,
+      if (!width) {
+        width = viewport.width;
+      }
+
+      return {
+        ...viewport,
         height,
-      });
+        width,
+      };
     });
   },
 
@@ -102,10 +112,11 @@ const reducers = {
         return viewport;
       }
 
-      return Object.assign({}, viewport, {
-        width: viewport.height,
+      return {
+        ...viewport,
         height: viewport.width,
-      });
+        width: viewport.height,
+      };
     });
   },
 

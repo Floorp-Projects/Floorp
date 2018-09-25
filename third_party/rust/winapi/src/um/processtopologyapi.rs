@@ -22,4 +22,3 @@ extern "system" {
         PreviousGroupAffinity: PGROUP_AFFINITY,
     ) -> BOOL;
 }
-

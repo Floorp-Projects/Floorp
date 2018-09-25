@@ -23,7 +23,6 @@ const message = require("./utils/message");
 const App = createFactory(require("./components/App"));
 const Store = require("./store");
 const { loadDevices } = require("./actions/devices");
-const { loadReloadConditions } = require("./actions/reload-conditions");
 const { addViewport, resizeViewport } = require("./actions/viewports");
 const { changeDisplayPixelRatio } = require("./actions/ui");
 
@@ -75,7 +74,6 @@ message.wait(window, "init").then(() => bootstrap.init());
 // startup work that shouldn't block initial load
 message.wait(window, "post-init").then(() => {
   bootstrap.dispatch(loadDevices());
-  bootstrap.dispatch(loadReloadConditions());
 });
 
 window.addEventListener("unload", function() {

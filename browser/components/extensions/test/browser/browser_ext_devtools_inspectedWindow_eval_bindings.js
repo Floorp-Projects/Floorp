@@ -54,7 +54,7 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
 
   await extension.startup();
 
-  const target = gDevTools.getTargetForTab(tab);
+  const target = await gDevTools.getTargetForTab(tab);
   // Open the toolbox on the styleeditor, so that the inspector and the
   // console panel have not been explicitly activated yet.
   const toolbox = await gDevTools.showToolbox(target, "styleeditor");

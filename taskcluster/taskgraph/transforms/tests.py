@@ -398,6 +398,9 @@ test_description_schema = Schema({
         Any(basestring, None),
     ),
 
+    # A list of artifacts to install from 'toolchain' tasks.
+    Optional('toolchains'): [basestring],
+
     # A list of artifacts to install from 'fetch' tasks.
     Optional('fetches'): {
         basestring: [basestring],
@@ -750,7 +753,10 @@ def enable_code_coverage(config, tests):
                 continue
             # Skip this transform for android code coverage builds.
             if 'android' in test['build-platform']:
-                test.setdefault('fetches', {}).setdefault('fetch', []).append('grcov-linux-x86_64')
+                test.setdefault('fetches', {})\
+                    .setdefault('toolchain-linux64-grcov', [])\
+                    .append('grcov.tar.xz')
+                test.setdefault('toolchains', []).append('linux64-grcov')
                 test['mozharness'].setdefault('extra-options', []).append('--java-code-coverage')
                 yield test
                 continue
@@ -767,15 +773,18 @@ def enable_code_coverage(config, tests):
             test.pop('when', None)
             test['optimization'] = None
 
-            # Add a fetch task for the grcov binary.
+            # Add a toolchain and a fetch task for the grcov binary.
             if any(p in test['build-platform'] for p in ('linux', 'osx', 'win')):
                 test.setdefault('fetches', {})
                 test['fetches'].setdefault('fetch', [])
+                test.setdefault('toolchains', [])
 
             if 'linux' in test['build-platform']:
-                test['fetches']['fetch'].append('grcov-linux-x86_64')
+                test['fetches']['toolchain-linux64-grcov'] = ['grcov.tar.xz']
+                test['toolchains'].append('linux64-grcov')
             elif 'osx' in test['build-platform']:
-                test['fetches']['fetch'].append('grcov-osx-x86_64')
+                test['fetches']['toolchain-macosx64-grcov'] = ['grcov.tar.xz']
+                test['toolchains'].append('macosx64-grcov')
             elif 'win' in test['build-platform']:
                 test['fetches']['fetch'].append('grcov-win-x86_64')
 
@@ -1059,6 +1068,9 @@ def make_job_description(config, tests):
 
         if test.get('fetches'):
             jobdesc['fetches'] = test['fetches']
+
+        if test.get('toolchains'):
+            jobdesc['toolchains'] = test.pop('toolchains')
 
         if test['mozharness']['requires-signed-builds'] is True:
             jobdesc['dependencies']['build-signing'] = test['build-signing-label']

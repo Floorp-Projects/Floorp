@@ -123,13 +123,15 @@ ChildDNSService::AsyncResolveInternal(const nsACString        &hostname,
     nsCString key;
     GetDNSRecordHashKey(hostname, type, aOriginAttributes, originalFlags,
                         originalListener, key);
-    nsTArray<RefPtr<DNSRequestChild>> *hashEntry;
-    if (mPendingRequests.Get(key, &hashEntry)) {
-      hashEntry->AppendElement(childReq);
+    auto entry = mPendingRequests.LookupForAdd(key);
+    if (entry) {
+      entry.Data()->AppendElement(childReq);
     } else {
-      hashEntry = new nsTArray<RefPtr<DNSRequestChild>>();
-      hashEntry->AppendElement(childReq);
-      mPendingRequests.Put(key, hashEntry);
+      entry.OrInsert([&]() {
+        auto* hashEntry = new nsTArray<RefPtr<DNSRequestChild>>();
+        hashEntry->AppendElement(childReq);
+        return hashEntry;
+      });
     }
   }
 

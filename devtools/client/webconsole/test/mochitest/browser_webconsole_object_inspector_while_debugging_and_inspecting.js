@@ -24,7 +24,7 @@ add_task(async function() {
   await openDebugger();
 
   info("Switch to the inspector");
-  const target = TargetFactory.forTab(gBrowser.selectedTab);
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
   await gDevTools.showToolbox(target, "inspector");
 
   info("Call firstCall() and wait for the debugger statement to be reached.");

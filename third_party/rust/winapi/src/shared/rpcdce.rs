@@ -5,12 +5,10 @@
 // All files in the project carrying such notice may not be copied, modified, or distributed
 // except according to those terms.
 //! This module contains the DCE RPC runtime APIs.
-
 use ctypes::{c_int, c_uchar, c_uint, c_ulong, c_ushort, c_void, wchar_t};
 use shared::guiddef::GUID;
 use shared::minwindef::DWORD;
 use shared::rpc::{I_RPC_HANDLE, RPC_STATUS};
-
 pub type RPC_CSTR = *mut c_uchar;
 pub type RPC_WSTR = *mut wchar_t;
 pub type RPC_CWSTR = *const wchar_t;

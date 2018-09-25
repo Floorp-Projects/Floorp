@@ -28,7 +28,7 @@ const testToolDefinition = {
 add_task(async function() {
   const tab = await addTab("about:blank");
 
-  const target = TargetFactory.forTab(tab);
+  const target = await TargetFactory.forTab(tab);
 
   gDevTools.registerTool(testToolDefinition);
   const toolbox = await gDevTools.showToolbox(target, testToolDefinition.id);
