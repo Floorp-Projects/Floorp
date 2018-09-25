@@ -298,8 +298,8 @@ add_task(async function test_add_url() {
 
   let failTestData = [
     [{transition: "generated"}, "an invalid transition", "|generated| is not a supported transition for history"],
-    [{visitTime: Date.now() + 1000000}, "a future date", "cannot be a future date"],
-    [{url: "about.config"}, "an invalid url", "about.config is not a valid URL"],
+    [{visitTime: Date.now() + 1000000}, "a future date", "Invalid value"],
+    [{url: "about.config"}, "an invalid url", "Invalid value"],
   ];
 
   async function checkUrl(results) {
