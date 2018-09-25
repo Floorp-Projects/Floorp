@@ -1929,8 +1929,16 @@ BacktrackingAllocator::resolveControlFlow()
 
                 if (!alloc().ensureBallast())
                     return false;
-                if (!moveAtExit(predecessor, from, to, def->type()))
-                    return false;
+                if (mSuccessor->numPredecessors() > 1) {
+                    MOZ_ASSERT(predecessor->mir()->numSuccessors() == 1);
+                    if (!moveAtExit(predecessor, from, to, def->type())) {
+                        return false;
+                    }
+                } else {
+                    if (!moveAtEntry(successor, from, to, def->type())) {
+                        return false;
+                    }
+                }
             }
         }
     }
