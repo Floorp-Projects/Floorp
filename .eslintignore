@@ -131,6 +131,8 @@ devtools/startup/preferences/devtools-startup.js
 
 # Ignore devtools generated code
 devtools/shared/css/generated/properties-db.js
+devtools/client/webconsole/test/fixtures/stubs/*.js
+!devtools/client/webconsole/test/fixtures/stubs/index.js
 
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*
