@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include <map>
 
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -64,9 +65,6 @@ public:
   bool IsInitted();
   void Destroy();
 
-  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                        nsSubDocumentFrame* aFrame,
-                        const nsDisplayListSet& aLists);
 
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame,
@@ -89,6 +87,11 @@ public:
   void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
 
   LayerManager* AttachLayerManager();
+
+  nsFrameLoader* FrameLoader() const
+  {
+    return mFrameLoader;
+  }
 
 protected:
   void ActorDestroy(ActorDestroyReason why) override;
@@ -155,14 +158,13 @@ public:
 
   LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                            LayerManager* aManager,
-                           const ContainerLayerParameters& aParameters) override
-  {
-    return mozilla::LAYER_ACTIVE_FORCE;
-  }
+                           const ContainerLayerParameters& aParameters) override;
 
   already_AddRefed<Layer>
   BuildLayer(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
              const ContainerLayerParameters& aContainerParameters) override;
+
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
   bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -178,6 +180,7 @@ private:
   mozilla::layers::LayersId GetRemoteLayersId() const;
   RenderFrameParent* GetRenderFrameParent() const;
 
+  mozilla::dom::TabId mTabId;
   mozilla::LayoutDeviceIntPoint mOffset;
   mozilla::layers::EventRegionsOverride mEventRegionsOverride;
 };
