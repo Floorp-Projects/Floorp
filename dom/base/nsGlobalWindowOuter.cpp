@@ -5281,9 +5281,7 @@ nsGlobalWindowOuter::FirePopupBlockedEvent(nsIDocument* aDoc,
 
 void
 nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
-                                                nsIChannel* aChannel,
-                                                bool aBlocked,
-                                                nsIURI* aURIHint)
+                                                nsIChannel* aChannel)
 {
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (!docShell) {
@@ -5296,8 +5294,7 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
   // To prevent showing the TrackingProtection UI on the wrong page, we need to
   // check that the loading URI for the channel is the same as the URI currently
   // loaded in the document.
-  if (!SameLoadingURI(doc, aChannel) &&
-      aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
+  if (!SameLoadingURI(doc, aChannel)) {
     return;
   }
 
@@ -5313,53 +5310,24 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     return;
   }
   securityUI->GetState(&state);
-  nsAutoString origin;
-  origin.SetIsVoid(true);
-  if (aURIHint) {
-    nsContentUtils::GetUTFOrigin(aURIHint, origin);
-  }
-  bool unblocked = false;
   if (aState == nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT) {
-    doc->SetHasTrackingContentBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasTrackingContentBlocked();
-    }
+    doc->SetHasTrackingContentBlocked(true);
   } else if (aState == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
-    doc->SetHasSlowTrackingContentBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasSlowTrackingContentBlocked();
-    }
+    doc->SetHasSlowTrackingContentBlocked(true);
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) {
-    doc->SetHasCookiesBlockedByPermission(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasCookiesBlockedByPermission();
-    }
+    doc->SetHasCookiesBlockedByPermission(true);
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
-    doc->SetHasTrackingCookiesBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasTrackingCookiesBlocked();
-    }
+    doc->SetHasTrackingCookiesBlocked(true);
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {
-    doc->SetHasAllCookiesBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasAllCookiesBlocked();
-    }
+    doc->SetHasAllCookiesBlocked(true);
   } else if (aState == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN) {
-    doc->SetHasForeignCookiesBlocked(aBlocked, origin);
-    if (!aBlocked) {
-      unblocked = !doc->GetHasForeignCookiesBlocked();
-    }
+    doc->SetHasForeignCookiesBlocked(true);
   } else {
     // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
-  const uint32_t oldState = state;
-  if (aBlocked) {
-    state |= aState;
-  } else if (unblocked) {
-    state &= ~aState;
-  }
+  state |= aState;
 
-  eventSink->OnSecurityChange(aChannel, oldState, state, doc->GetContentBlockingLog());
+  eventSink->OnSecurityChange(aChannel, state);
 }
 
 //static

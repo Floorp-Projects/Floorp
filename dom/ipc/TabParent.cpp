@@ -885,28 +885,11 @@ TabParent::Init(mozIDOMWindowProxy *window)
 }
 
 NS_IMETHODIMP
-TabParent::GetOldState(uint32_t *aOldState)
-{
-  NS_ENSURE_ARG(aOldState);
-  NS_WARNING("SecurityState not valid here");
-  *aOldState = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TabParent::GetState(uint32_t *aState)
 {
   NS_ENSURE_ARG(aState);
   NS_WARNING("SecurityState not valid here");
   *aState = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::GetContentBlockingLogJSON(nsAString& aContentBlockingLogJSON)
-{
-  NS_WARNING("ContentBlockingLog not valid here");
-  aContentBlockingLogJSON.SetIsVoid(true);
   return NS_OK;
 }
 

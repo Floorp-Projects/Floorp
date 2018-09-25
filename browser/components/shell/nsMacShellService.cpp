@@ -191,9 +191,7 @@ nsMacShellService::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsMacShellService::OnSecurityChange(nsIWebProgress* aWebProgress,
                                     nsIRequest* aRequest,
-                                    uint32_t aOldState,
-                                    uint32_t aState,
-                                    const nsAString& aContentBlockingLogJSON)
+                                    uint32_t aState)
 {
   return NS_OK;
 }
