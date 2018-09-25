@@ -16,9 +16,7 @@ let tests = [
     SpecialPowers.pushPrefEnv({
       "set": [["dom.caches.enabled", true],
               ["dom.caches.testing.enabled", true],
-              ["dom.quotaManager.testing", true],
-              ["dom.streams.enabled", true],
-              ["javascript.options.streams", true]]
+              ["dom.quotaManager.testing", true]]
     }, next);
   },
 

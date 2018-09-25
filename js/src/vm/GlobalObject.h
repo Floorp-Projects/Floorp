@@ -146,14 +146,22 @@ class GlobalObject : public NativeObject
                                        JSProtoKey key, HandleObject ctor, HandleObject proto);
 
   private:
-    static bool resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key);
+    enum class IfClassIsDisabled {
+        DoNothing,
+        Throw
+    };
+
+    static bool resolveConstructor(JSContext* cx,
+                                   Handle<GlobalObject*> global,
+                                   JSProtoKey key,
+                                   IfClassIsDisabled mode);
 
   public:
     static bool ensureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key) {
         if (global->isStandardClassResolved(key)) {
             return true;
         }
-        return resolveConstructor(cx, global, key);
+        return resolveConstructor(cx, global, key, IfClassIsDisabled::Throw);
     }
 
     static JSObject* getOrCreateConstructor(JSContext* cx, JSProtoKey key) {

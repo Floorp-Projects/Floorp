@@ -13,6 +13,7 @@ import lzma
 import multiprocessing
 import os
 import pathlib
+import random
 import subprocess
 import sys
 import tempfile
@@ -40,6 +41,81 @@ def log(msg):
 
 class IntegrityError(Exception):
     """Represents an integrity error when downloading a URL."""
+
+
+# The following is copied from
+# https://github.com/mozilla-releng/redo/blob/6d07678a014e0c525e54a860381a165d34db10ff/redo/__init__.py#L15-L85
+def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=1):
+    """
+    A generator function that sleeps between retries, handles exponential
+    backoff and jitter. The action you are retrying is meant to run after
+    retrier yields.
+
+    At each iteration, we sleep for sleeptime + random.randint(-jitter, jitter).
+    Afterwards sleeptime is multiplied by sleepscale for the next iteration.
+
+    Args:
+        attempts (int): maximum number of times to try; defaults to 5
+        sleeptime (float): how many seconds to sleep between tries; defaults to
+                           60s (one minute)
+        max_sleeptime (float): the longest we'll sleep, in seconds; defaults to
+                               300s (five minutes)
+        sleepscale (float): how much to multiply the sleep time by each
+                            iteration; defaults to 1.5
+        jitter (int): random jitter to introduce to sleep time each iteration.
+                      the amount is chosen at random between [-jitter, +jitter]
+                      defaults to 1
+
+    Yields:
+        None, a maximum of `attempts` number of times
+
+    Example:
+        >>> n = 0
+        >>> for _ in retrier(sleeptime=0, jitter=0):
+        ...     if n == 3:
+        ...         # We did the thing!
+        ...         break
+        ...     n += 1
+        >>> n
+        3
+
+        >>> n = 0
+        >>> for _ in retrier(sleeptime=0, jitter=0):
+        ...     if n == 6:
+        ...         # We did the thing!
+        ...         break
+        ...     n += 1
+        ... else:
+        ...     print("max tries hit")
+        max tries hit
+    """
+    jitter = jitter or 0  # py35 barfs on the next line if jitter is None
+    if jitter > sleeptime:
+        # To prevent negative sleep times
+        raise Exception('jitter ({}) must be less than sleep time ({})'.format(jitter, sleeptime))
+
+    sleeptime_real = sleeptime
+    for _ in range(attempts):
+        log("attempt %i/%i" % (_ + 1, attempts))
+
+        yield sleeptime_real
+
+        if jitter:
+            sleeptime_real = sleeptime + random.randint(-jitter, jitter)
+            # our jitter should scale along with the sleeptime
+            jitter = int(jitter * sleepscale)
+        else:
+            sleeptime_real = sleeptime
+
+        sleeptime *= sleepscale
+
+        if sleeptime_real > max_sleeptime:
+            sleeptime_real = max_sleeptime
+
+        # Don't need to sleep the last time
+        if _ < attempts - 1:
+            log("sleeping for %.2fs (attempt %i/%i)" % (sleeptime_real, _ + 1, attempts))
+            time.sleep(sleeptime_real)
 
 
 def stream_download(url, sha256=None, size=None):
@@ -107,20 +183,30 @@ def download_to_path(url, path, sha256=None, size=None):
     except FileNotFoundError:
         pass
 
-    tmp = path.with_name('%s.tmp' % path.name)
+    for _ in retrier(attempts=5, sleeptime=60):
+        try:
+            tmp = path.with_name('%s.tmp' % path.name)
 
-    log('Downloading %s to %s' % (url, tmp))
+            log('Downloading %s to %s' % (url, tmp))
 
-    try:
-        with tmp.open('wb') as fh:
-            for chunk in stream_download(url, sha256=sha256, size=size):
-                fh.write(chunk)
+            try:
+                with tmp.open('wb') as fh:
+                    for chunk in stream_download(url, sha256=sha256, size=size):
+                        fh.write(chunk)
+            except IntegrityError:
+                tmp.unlink()
+                raise
 
-        log('Renaming to %s' % path)
-        tmp.rename(path)
-    except IntegrityError:
-        tmp.unlink()
-        raise
+            log('Renaming to %s' % path)
+            tmp.rename(path)
+            return
+        except IntegrityError:
+            raise
+        except Exception as e:
+            log("Download failed: {}".format(e))
+            continue
+
+    raise Exception("Download failed, no more retries!")
 
 
 def gpg_verify_path(path: pathlib.Path, public_key_data: bytes,

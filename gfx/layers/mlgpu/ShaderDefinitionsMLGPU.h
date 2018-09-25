@@ -43,7 +43,7 @@ static const uint32_t kMaskSamplerSlot = 1;
 // happens above the max slot, since we try to clear buffer bindings at
 // the end of each frame.
 static const uint32_t kMaxVertexShaderConstantBuffers = 5;
-static const uint32_t kMaxPixelShaderConstantBuffers = 2;
+static const uint32_t kMaxPixelShaderConstantBuffers = 3;
 
 // Maximum depth in the depth buffer. This must match common-vs.hlsl.
 static const int32_t kDepthLimit = 1000000;
@@ -90,6 +90,11 @@ struct MaskInformation
 
 struct YCbCrShaderConstants {
   float yuvColorMatrix[3][4];
+};
+
+struct YCbCrBitDepthConstants {
+  float coefficient;
+  uint32_t padding[3];
 };
 
 struct BlendVertexShaderConstants {

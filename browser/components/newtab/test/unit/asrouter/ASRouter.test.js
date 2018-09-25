@@ -448,6 +448,7 @@ describe("ASRouter", () => {
     });
     it("should send a message back to the to the target if there is a bundle, too", async () => {
       // force the only message to be a bundled message so getRandomItemFromArray picks it
+      sandbox.stub(Router, "_findProvider").returns(null);
       await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 1, content: {title: "Foo1", body: "Foo123-1"}}]});
       const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
       await Router.onMessage(msg);
@@ -458,6 +459,7 @@ describe("ASRouter", () => {
     });
     it("should properly order the message's bundle if specified", async () => {
       // force the only messages to be a bundled messages so getRandomItemFromArray picks one of them
+      sandbox.stub(Router, "_findProvider").returns(null);
       const firstMessage = {id: "foo2", template: "simple_template", bundled: 2, order: 1, content: {title: "Foo2", body: "Foo123-2"}};
       const secondMessage = {id: "foo1", template: "simple_template", bundled: 2, order: 2, content: {title: "Foo1", body: "Foo123-1"}};
       await Router.setState({messages: [secondMessage, firstMessage]});
@@ -473,6 +475,12 @@ describe("ASRouter", () => {
       await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 2, content: {title: "Foo1", body: "Foo123-1"}}]});
       const bundle = await Router._getBundledMessages(Router.state.messages[0]);
       assert.equal(bundle, null);
+    });
+    it("should send down extra attributes in the bundle if they exist", async () => {
+      sandbox.stub(Router, "_findProvider").returns({getExtraAttributes() { return Promise.resolve({header: "header"}); }});
+      await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 1, content: {title: "Foo1", body: "Foo123-1"}}]});
+      const result = await Router._getBundledMessages(Router.state.messages[0]);
+      assert.equal(result.extraTemplateStrings.header, "header");
     });
     it("should send a CLEAR_ALL message if no bundle available", async () => {
       // force the only message to be a bundled message that needs 2 messages in the bundle
@@ -709,6 +717,7 @@ describe("ASRouter", () => {
         {id: "foo2", template: "simple_template", bundled: 2, trigger: {id: "bar"}, content: {title: "Foo2", body: "Foo123-2"}},
         {id: "foo3", template: "simple_template", bundled: 2, trigger: {id: "foo"}, content: {title: "Foo3", body: "Foo123-3"}},
       ];
+      sandbox.stub(Router, "_findProvider").returns(null);
       await Router.setState({messages});
       const {target} = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "foo"}}});
       let {bundle} = await Router._getBundledMessages(messages[0], target, {id: "foo"});

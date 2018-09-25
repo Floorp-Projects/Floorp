@@ -7,7 +7,7 @@ import React from "react";
 let [FAKE_MESSAGE] = FAKE_LOCAL_MESSAGES;
 
 FAKE_MESSAGE = Object.assign({}, FAKE_MESSAGE, {provider: "fakeprovider"});
-const FAKE_BUNDLED_MESSAGE = {bundle: [{id: "foo", template: "onboarding", content: {title: "Foo", body: "Foo123"}}], template: "onboarding"};
+const FAKE_BUNDLED_MESSAGE = {bundle: [{id: "foo", template: "onboarding", content: {title: "Foo", body: "Foo123"}}], extraTemplateStrings: {}, template: "onboarding"};
 
 describe("ASRouterUtils", () => {
   let global;
@@ -108,6 +108,13 @@ describe("ASRouterUISurface", () => {
       assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "event", "BLOCK");
       assert.propertyVal(ASRouterUtils.sendTelemetry.firstCall.args[0], "source", "NEWTAB_FOOTER_BAR");
     });
+
+    it("should not send telemetry when a preview snippet is blocked", () => {
+      wrapper.setState({message: {...FAKE_MESSAGE, provider: "preview"}});
+
+      wrapper.find(".blockButton").simulate("click");
+      assert.notCalled(ASRouterUtils.sendTelemetry);
+    });
   });
 
   describe("convertLinks", () => {
@@ -159,6 +166,14 @@ describe("ASRouterUISurface", () => {
       simulateVisibilityChange("hidden");
       wrapper.setState({message: FAKE_MESSAGE});
 
+      assert.notCalled(ASRouterUtils.sendTelemetry);
+    });
+
+    it("should not send an impression for a preview message", () => {
+      wrapper.setState({message: {...FAKE_MESSAGE, provider: "preview"}});
+      assert.notCalled(ASRouterUtils.sendTelemetry);
+
+      simulateVisibilityChange("visible");
       assert.notCalled(ASRouterUtils.sendTelemetry);
     });
 

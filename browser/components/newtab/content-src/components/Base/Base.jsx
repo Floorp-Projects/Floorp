@@ -135,11 +135,13 @@ export class BaseContent extends React.PureComponent {
     const prefs = props.Prefs.values;
 
     const shouldBeFixedToTop = PrerenderData.arePrefsValid(name => prefs[name]);
+    const noSectionsEnabled = !prefs["feeds.topsites"] && props.Sections.filter(section => section.enabled).length === 0;
 
     const outerClassName = [
       "outer-wrapper",
       shouldBeFixedToTop && "fixed-to-top",
-      prefs.showSearch && this.state.fixedSearch && "fixed-search",
+      prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search",
+      prefs.showSearch && noSectionsEnabled && "only-search",
     ].filter(v => v).join(" ");
 
     return (
@@ -149,7 +151,7 @@ export class BaseContent extends React.PureComponent {
             {prefs.showSearch &&
               <div className="non-collapsible-section">
                 <ErrorBoundary>
-                  <Search />
+                  <Search showLogo={noSectionsEnabled} />
                 </ErrorBoundary>
               </div>
             }

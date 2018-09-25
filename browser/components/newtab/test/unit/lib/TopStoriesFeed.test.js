@@ -195,22 +195,23 @@ describe("Top Stories Feed", () => {
 
       await instance.fetchStories();
 
-      assert.calledTwice(instance.cache.set);
+      assert.calledOnce(instance.cache.set);
       const {args} = instance.cache.set.firstCall;
-      assert.equal(args[0], "spocs");
-      assert.equal(args[1][0].guid, "spoc1");
+      assert.equal(args[0], "stories");
+      assert.equal(args[1].spocs[0].id, "spoc1");
     });
     it("should get spocs on cache load", async () => {
       instance.cache.get = () => ({
-        stories: {recommendations:  [{"id": "1"}, {"id": "2"}]},
-        spocs: [{"id": "spoc1"}],
+        stories: {
+          recommendations:  [{"id": "1"}, {"id": "2"}],
+          spocs: [{"id": "spoc1"}],
+        },
       });
       instance.storiesLastUpdated = 0;
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: () => {}}});
 
       await instance.loadCachedData();
-
-      assert.equal(instance.spocs[0].id, "spoc1");
+      assert.equal(instance.spocs[0].guid, "spoc1");
     });
   });
   describe("#fetch", () => {
@@ -1020,6 +1021,13 @@ describe("Top Stories Feed", () => {
       let [action] = instance.store.dispatch.firstCall.args;
       assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
       assert.equal(action.data.event, "topstories.domain.affinity.calculation.ms");
+    });
+    it("should add idle-daily observer right away, before waiting on init data", async () => {
+      const addObserver = globals.sandbox.stub();
+      globals.set("Services", {obs: {addObserver}});
+      const initPromise = instance.onInit();
+      assert.calledOnce(addObserver);
+      await initPromise;
     });
     it("should not call init and uninit if data doesn't match on options change ", () => {
       sinon.spy(instance, "init");

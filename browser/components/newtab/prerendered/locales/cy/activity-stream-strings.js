@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Iawn, deall",
   "prefs_home_header": "Cynnwys Cartref Firefox",
   "prefs_home_description": "Dewis pa gynnwys rydych eisiau ar eich sgrin Firefox Cartref.",
-  "prefs_section_rows_option": "{num} rhes;{num} rhes",
+  "prefs_section_rows_option": "{num} rhes;{num} rhes;{num} rhes;{num} rhes;{num} rhes;{num} rhes",
   "prefs_search_header": "Chwilio'r We",
   "prefs_topsites_description": "Y gwefannau rydych yn ymweld â nhw amlaf",
   "prefs_topstories_description2": "Cynnwys gwych o ar draws y we, wedi ei ddewis yn arbennig i chi",

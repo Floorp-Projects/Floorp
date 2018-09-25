@@ -8,6 +8,7 @@ const DEFAULT_CONTENT = {text: "foo"};
 describe("SimpleSnippet", () => {
   let sandbox;
   let onBlockStub;
+  let sendUserActionTelemetryStub;
 
   /**
    * mountAndCheckProps - Mounts a SimpleSnippet with DEFAULT_CONTENT extended with any props
@@ -15,11 +16,12 @@ describe("SimpleSnippet", () => {
    * @param {obj} content Object containing custom message content (e.g. {text, icon, title})
    * @returns enzyme wrapper for SimpleSnippet
    */
-  function mountAndCheckProps(content = {}) {
+  function mountAndCheckProps(content = {}, provider = "test-provider") {
     const props = {
       content: Object.assign({}, DEFAULT_CONTENT, content),
+      provider,
       onBlock: onBlockStub,
-      sendUserActionTelemetry: sandbox.stub(),
+      sendUserActionTelemetry: sendUserActionTelemetryStub,
       onAction: sandbox.stub(),
     };
     assert.jsonSchema(props.content, schema);
@@ -29,6 +31,7 @@ describe("SimpleSnippet", () => {
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     onBlockStub = sandbox.stub();
+    sendUserActionTelemetryStub = sandbox.stub();
   });
 
   afterEach(() => {
@@ -61,12 +64,13 @@ describe("SimpleSnippet", () => {
     assert.equal(button.text(), "Click here");
     assert.equal(button.prop("className"), "ASRouterButton");
   });
-  it("should call props.onBlock when CTA button is clicked", () => {
+  it("should call props.onBlock and sendUserActionTelemetry when CTA button is clicked", () => {
     const wrapper = mountAndCheckProps({text: "bar"});
 
     wrapper.instance().onButtonClick();
 
     assert.calledOnce(onBlockStub);
+    assert.calledOnce(sendUserActionTelemetryStub);
   });
 
   it("should not call props.onBlock if do_not_autoblock is true", () => {
@@ -75,5 +79,14 @@ describe("SimpleSnippet", () => {
     wrapper.instance().onButtonClick();
 
     assert.notCalled(onBlockStub);
+  });
+
+  it("should not call sendUserActionTelemetry for preview message when CTA button is clicked", () => {
+    const wrapper = mountAndCheckProps({text: "bar"}, "preview");
+
+    wrapper.instance().onButtonClick();
+
+    assert.calledOnce(onBlockStub);
+    assert.notCalled(sendUserActionTelemetryStub);
   });
 });

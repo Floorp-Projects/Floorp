@@ -622,6 +622,11 @@ pref("media.audioipc.stack_size", 262144);
 pref("media.cubeb.sandbox", false);
 #endif
 
+#ifdef XP_LINUX
+// Bug 1481152
+pref("media.cubeb_max_input_streams", 1);
+#endif
+
 #ifdef MOZ_AV1
 pref("media.av1.enabled", false);
 #endif

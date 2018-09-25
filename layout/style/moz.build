@@ -202,7 +202,6 @@ UNIFIED_SOURCES += [
     'nsStyleTransformMatrix.cpp',
     'nsStyleUtil.cpp',
     'nsTransitionManager.cpp',
-    'PaintWorkletImpl.cpp',
     'PostTraversalTask.cpp',
     'PreloadedStyleSheet.cpp',
     'Rule.cpp',

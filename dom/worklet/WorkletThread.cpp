@@ -259,10 +259,11 @@ private:
   RefPtr<WorkletThread> mWorkletThread;
 };
 
-WorkletThread::WorkletThread()
+WorkletThread::WorkletThread(const WorkletLoadInfo& aWorkletLoadInfo)
   : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
                MakeUnique<mozilla::EventQueue>()),
              nsThread::NOT_MAIN_THREAD, kWorkletStackSize)
+  , mWorkletLoadInfo(aWorkletLoadInfo)
   , mCreationTimeStamp(TimeStamp::Now())
   , mJSContext(nullptr)
   , mIsTerminating(false)
@@ -279,9 +280,10 @@ WorkletThread::~WorkletThread()
 
 // static
 already_AddRefed<WorkletThread>
-WorkletThread::Create()
+WorkletThread::Create(const WorkletLoadInfo& aWorkletLoadInfo)
 {
-  RefPtr<WorkletThread> thread = new WorkletThread();
+  RefPtr<WorkletThread> thread =
+    new WorkletThread(aWorkletLoadInfo);
   if (NS_WARN_IF(NS_FAILED(thread->Init()))) {
     return nullptr;
   }
@@ -404,6 +406,12 @@ WorkletThread::GetJSContext() const
   AssertIsOnWorkletThread();
   MOZ_ASSERT(mJSContext);
   return mJSContext;
+}
+
+const WorkletLoadInfo&
+WorkletThread::GetWorkletLoadInfo() const
+{
+  return mWorkletLoadInfo;
 }
 
 /* static */ bool

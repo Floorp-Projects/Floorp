@@ -163,12 +163,12 @@ def download_from_taskcluster(logger, wpt_dir, repo_root, force=False):
                              taskcluster_url, force)
 
 
-def generate_config(path):
+def generate_config(obj_base_path):
     """Generate the local wptrunner.ini file to use locally"""
     import ConfigParser
     here = os.path.split(os.path.abspath(__file__))[0]
     config_path = os.path.join(here, 'wptrunner.ini')
-    path = os.path.join(path, 'wptrunner.local.ini')
+    path = os.path.join(obj_base_path, 'wptrunner.local.ini')
 
     if os.path.exists(path):
         return True
@@ -177,12 +177,21 @@ def generate_config(path):
     success = parser.read(config_path)
     assert config_path in success, success
 
-    parser.set('manifest:upstream', 'tests', os.path.join(here, 'tests'))
-    parser.set('manifest:mozilla', 'tests', os.path.join(here, 'mozilla', 'tests'))
-    parser.set('paths', 'prefs', os.path.join(os.getcwd(), 'testing', 'profiles'))
+    for name, path_prefix in [("upstream", ""),
+                              ("mozilla", "mozilla")]:
+        obj_path = os.path.join(obj_base_path, path_prefix)
+        src_path = os.path.join(here, path_prefix)
+        parser.set('manifest:%s' % name, 'manifest',
+                   os.path.join(obj_path, 'meta', 'MANIFEST.json'))
+
+        for key, dir_path in [("tests", "tests"), ("metadata", "meta")]:
+            parser.set("manifest:%s" % name, key, os.path.join(src_path, dir_path))
+
+    parser.set('paths', 'prefs', os.path.abspath(os.path.join(here, "..", 'profiles')))
 
     with open(path, 'wb') as config_file:
         parser.write(config_file)
+
     return True
 
 

@@ -122,6 +122,31 @@ SurfaceFormatForAlphaBitDepth(uint32_t aBitDepth)
   return SurfaceFormat::UNKNOWN;
 }
 
+static inline ColorDepth
+ColorDepthForAlphaBitDepth(uint32_t aBitDepth)
+{
+  switch (aBitDepth) {
+  case 8: return ColorDepth::COLOR_8;
+  case 10: return ColorDepth::COLOR_10;
+  case 12: return ColorDepth::COLOR_12;
+  default:
+    MOZ_ASSERT_UNREACHABLE("Unsupported alpha bit depth");
+    return ColorDepth::COLOR_8;
+  }
+}
+
+// 10 and 12 bits color depth image are using 16 bits integers for storage
+// As such we need to rescale the value from 8,10 or 12 to 16.
+static inline uint32_t
+RescalingFactorForAlphaBitDepth(uint32_t aBitDepth)
+{
+  MOZ_ASSERT(aBitDepth == 8 || aBitDepth == 10 || aBitDepth == 12);
+  uint32_t pixelBits =
+    8 * BytesPerPixel(SurfaceFormatForAlphaBitDepth(aBitDepth));
+  uint32_t paddingBits = pixelBits - aBitDepth;
+  return pow(2, paddingBits);
+}
+
 static inline bool
 IsOpaqueFormat(SurfaceFormat aFormat) {
   switch (aFormat) {
