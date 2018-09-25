@@ -24,7 +24,10 @@ dictionary PushSubscriptionKeys
 dictionary PushSubscriptionJSON
 {
   USVString endpoint;
-  PushSubscriptionKeys keys;
+  // FIXME: bug 1493860: should this "= null" be here?  For that matter, this
+  // PushSubscriptionKeys thing is not even in the spec; "keys" is a record
+  // there.
+  PushSubscriptionKeys keys = null;
 };
 
 dictionary PushSubscriptionInit
