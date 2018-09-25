@@ -8,6 +8,9 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
+
 const ConnectSection = createFactory(require("./ConnectSection"));
 const ConnectSteps = createFactory(require("./ConnectSteps"));
 const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
@@ -21,54 +24,76 @@ class ConnectPage extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
+      // Provided by wrapping the component with FluentReact.withLocalization.
+      getString: PropTypes.func.isRequired,
       networkLocations: PropTypes.arrayOf(PropTypes.object).isRequired,
     };
   }
 
   renderWifi() {
-    return ConnectSection(
+    const { getString } = this.props;
+    return Localized(
       {
-        icon: WIFI_ICON_SRC,
-        title: "Via WiFi (Recommended)",
+        id: "about-debugging-connect-wifi",
+        attrs: { title: true }
       },
-      ConnectSteps({
-        steps: [
-          "Ensure that your browser and device are on the same network",
-          "Open Firefox for Android",
-          "Go to Options -> Settings -> Advanced",
-          "Enable Remote Debugging via WiFi in the Developer Tools section",
-        ]
-      })
+      ConnectSection(
+        {
+          icon: WIFI_ICON_SRC,
+          title: "Via WiFi (Recommended)",
+        },
+        ConnectSteps({
+          steps: [
+            getString("about-debugging-connect-wifi-step-same-network"),
+            getString("about-debugging-connect-wifi-step-open-firefox"),
+            getString("about-debugging-connect-wifi-step-open-options"),
+            getString("about-debugging-connect-wifi-step-enable-debug"),
+          ]
+        })
+      )
     );
   }
 
   renderUsb() {
-    return ConnectSection(
+    const { getString } = this.props;
+    return Localized(
       {
-        icon: USB_ICON_SRC,
-        title: "Via USB",
+        id: "about-debugging-connect-usb",
+        attrs: { title: true }
       },
-      ConnectSteps({
-        steps: [
-          "Enable Developer menu on your Android device",
-          "Enable USB Debugging on the Android Developer Menu",
-          "Connect the USB Device to your computer",
-        ]
-      })
+      ConnectSection(
+        {
+          icon: USB_ICON_SRC,
+          title: "Via USB",
+        },
+        ConnectSteps({
+          steps: [
+            getString("about-debugging-connect-usb-step-enable-dev-menu"),
+            getString("about-debugging-connect-usb-step-enable-debug"),
+            getString("about-debugging-connect-usb-step-plug-device"),
+          ]
+        })
+      )
     );
   }
 
   renderNetwork() {
     const { dispatch, networkLocations } = this.props;
-    return ConnectSection(
+    return Localized(
       {
-        className: "connect-page__network",
-        icon: GLOBE_ICON_SRC,
-        title: "Via Network Location",
+        id: "about-debugging-connect-network",
+        attrs: { title: true }
       },
-      NetworkLocationsList({ dispatch, networkLocations }),
-      dom.hr({ className: "connect-page__network__separator" }),
-      NetworkLocationsForm({ dispatch }),
+      ConnectSection(
+        {
+          className: "connect-page__network",
+          icon: GLOBE_ICON_SRC,
+          title: "Via Network Location",
+        },
+        NetworkLocationsList({ dispatch, networkLocations }),
+        dom.hr({ className: "connect-page__network__separator" }),
+        NetworkLocationsForm({ dispatch }),
+      )
     );
   }
 
@@ -77,11 +102,16 @@ class ConnectPage extends PureComponent {
       {
         className: "page connect-page js-connect-page",
       },
-      dom.h1(
+      Localized(
         {
-          className: "connect-page__title"
+          id: "about-debugging-connect-title"
         },
-        "Connect a Device"
+        dom.h1(
+          {
+            className: "connect-page__title"
+          },
+          "Connect a Device"
+        )
       ),
       this.renderWifi(),
       this.renderUsb(),
@@ -90,4 +120,4 @@ class ConnectPage extends PureComponent {
   }
 }
 
-module.exports = ConnectPage;
+module.exports = FluentReact.withLocalization(ConnectPage);
