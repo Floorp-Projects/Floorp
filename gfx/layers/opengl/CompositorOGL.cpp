@@ -1486,6 +1486,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
       BindAndDrawGeometryWithTextureRect(program, aGeometry,
                                          texturedEffect->mTextureCoords, source);
+      source->AsSourceOGL()->MaybeFenceTexture();
     }
     break;
   case EffectTypes::YCBCR: {
@@ -1526,6 +1527,9 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
                                          aGeometry,
                                          effectYCbCr->mTextureCoords,
                                          sourceYCbCr->GetSubSource(Y));
+      sourceY->MaybeFenceTexture();
+      sourceCb->MaybeFenceTexture();
+      sourceCr->MaybeFenceTexture();
     }
     break;
   case EffectTypes::NV12: {
@@ -1563,6 +1567,8 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
                                          aGeometry,
                                          effectNV12->mTextureCoords,
                                          sourceNV12->GetSubSource(Y));
+      sourceY->MaybeFenceTexture();
+      sourceCbCr->MaybeFenceTexture();
     }
     break;
   case EffectTypes::RENDER_TARGET: {
@@ -1645,6 +1651,9 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
       mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                                      LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
+
+      sourceOnBlack->MaybeFenceTexture();
+      sourceOnWhite->MaybeFenceTexture();
     }
     break;
   default:
