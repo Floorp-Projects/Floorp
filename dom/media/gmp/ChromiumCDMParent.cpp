@@ -77,7 +77,17 @@ ChromiumCDMParent::Init(ChromiumCDMCallback* aCDMCallback,
   SendInit(aAllowDistinctiveIdentifier, aAllowPersistentState)
     ->Then(AbstractThread::GetCurrent(),
            __func__,
-           [self](bool /* unused */) {
+           [self](bool aSuccess) {
+             if (!aSuccess) {
+               GMP_LOG("ChromiumCDMParent::Init() failed with callback from "
+                       "child indicating CDM failed init");
+               self->mInitPromise.RejectIfExists(
+                 MediaResult(NS_ERROR_FAILURE,
+                             "ChromiumCDMParent::Init() failed with callback "
+                             "from child indicating CDM failed init"),
+                 __func__);
+               return;
+             }
              GMP_LOG(
                "ChromiumCDMParent::Init() succeeded with callback from child");
              self->mInitPromise.ResolveIfExists(true /* unused */, __func__);
