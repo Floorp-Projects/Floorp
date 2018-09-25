@@ -181,6 +181,7 @@ ContentProcessManager::RegisterRemoteFrame(const TabId& aTabId,
   }
 
   iter->second.mRemoteFrames[aTabId] = info;
+  mTabProcessMap[aTabId] = aChildCpId;
   return true;
 }
 
@@ -199,6 +200,11 @@ ContentProcessManager::UnregisterRemoteFrame(const ContentParentId& aChildCpId,
   auto remoteFrameIter = iter->second.mRemoteFrames.find(aChildTabId);
   if (remoteFrameIter != iter->second.mRemoteFrames.end()) {
     iter->second.mRemoteFrames.erase(aChildTabId);
+  }
+
+  auto tabProcessIter = mTabProcessMap.find(aChildTabId);
+  if (tabProcessIter != mTabProcessMap.end()) {
+    mTabProcessMap.erase(tabProcessIter);
   }
 }
 
@@ -271,6 +277,17 @@ ContentProcessManager::GetRemoteFrameOpenerTabId(const ContentParentId& aChildCp
   *aOpenerTabId = remoteFrameIter->second.mOpenerTabId;
 
   return true;
+}
+
+ContentParentId
+ContentProcessManager::GetTabProcessId(const TabId& aTabId)
+{
+  auto tabProcessIter = mTabProcessMap.find(aTabId);
+  MOZ_ASSERT(tabProcessIter != mTabProcessMap.end());
+  if (tabProcessIter == mTabProcessMap.end()) {
+    return ContentParentId(0);
+  }
+  return tabProcessIter->second;
 }
 
 already_AddRefed<TabParent>
