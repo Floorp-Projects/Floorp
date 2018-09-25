@@ -20,7 +20,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
 import org.mozilla.focus.helpers.TestHelper;
-import org.mozilla.focus.utils.AppConstants;
 
 import java.io.IOException;
 
@@ -39,7 +38,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.not;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
-import static org.mozilla.focus.web.WebViewProviderKt.ENGINE_PREF_STRING_KEY;
 
 // This test toggles blocking within the browser view
 // mozilla.org site has one google analytics tracker - tests will see whether this gets blocked properly
@@ -65,12 +63,7 @@ public class ToggleBlockTest {
 
             // This test runs on both GV and WV.
             // Klar is used to test Geckoview. make sure it's set to Gecko
-            if (AppConstants.INSTANCE.isKlarBuild() && !AppConstants.INSTANCE.isGeckoBuild()) {
-                PreferenceManager.getDefaultSharedPreferences(appContext)
-                        .edit()
-                        .putBoolean(ENGINE_PREF_STRING_KEY, true)
-                        .apply();
-            }
+            TestHelper.selectGeckoForKlar();
 
             webServer = new MockWebServer();
 

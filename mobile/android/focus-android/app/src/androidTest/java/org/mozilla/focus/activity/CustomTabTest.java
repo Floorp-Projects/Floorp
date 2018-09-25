@@ -46,7 +46,6 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.findElemen
 import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
-import static org.mozilla.focus.web.WebViewProviderKt.ENGINE_PREF_STRING_KEY;
 
 
 @RunWith(AndroidJUnit4.class)
@@ -71,12 +70,8 @@ public class CustomTabTest {
 
         // This test runs on both GV and WV.
         // Klar is used to test Geckoview. make sure it's set to Gecko
-        if (AppConstants.INSTANCE.isKlarBuild() && !AppConstants.INSTANCE.isGeckoBuild()) {
-            PreferenceManager.getDefaultSharedPreferences(appContext)
-                    .edit()
-                    .putBoolean(ENGINE_PREF_STRING_KEY, true)
-                    .apply();
-        }
+        TestHelper.selectGeckoForKlar();
+
     }
 
     @After

@@ -5,11 +5,11 @@
 
 package org.mozilla.focus.helpers;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
-import static android.support.test.espresso.Espresso.onView;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -32,6 +32,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okio.Buffer;
 import okio.Okio;
 
+import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -319,5 +320,13 @@ public final class TestHelper {
 
     public static void waitForWebSiteTitleLoad() {
         onWebView(withText("focus test page"));
+    }
+
+    public static void selectGeckoForKlar() {
+        InstrumentationRegistry.getTargetContext().getSharedPreferences("mozilla.components.service.fretboard.overrides",
+                Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("use-gecko", AppConstants.INSTANCE.isKlarBuild())
+                .commit();
     }
 }

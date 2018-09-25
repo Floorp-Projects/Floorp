@@ -25,7 +25,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
-import org.mozilla.focus.utils.AppConstants;
 
 import java.util.Locale;
 
@@ -36,7 +35,6 @@ import static org.mozilla.focus.helpers.EspressoHelper.openMenu;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.helpers.TestHelper.mDevice;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
-import static org.mozilla.focus.web.WebViewProviderKt.ENGINE_PREF_STRING_KEY;
 
 // This test checks all the headings in the Settings menu are there
 // https://testrail.stage.mozaws.net/index.php?/cases/view/47587
@@ -62,12 +60,7 @@ public class SwitchLocaleTest {
 
             // This test runs on both GV and WV.
             // Klar is used to test Geckoview. make sure it's set to Gecko
-            if (AppConstants.INSTANCE.isKlarBuild() && !AppConstants.INSTANCE.isGeckoBuild()) {
-                PreferenceManager.getDefaultSharedPreferences(appContext)
-                        .edit()
-                        .putBoolean(ENGINE_PREF_STRING_KEY, true)
-                        .apply();
-            }
+            TestHelper.selectGeckoForKlar();
         }
     };
 
