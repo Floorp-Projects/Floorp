@@ -415,7 +415,7 @@ nsHttpDigestAuth::CalculateResponse(const char * ha1_digest,
   nsAutoCString contents;
   contents.SetCapacity(len);
 
-  contents.Assign(ha1_digest, EXPANDED_DIGEST_LENGTH);
+  contents.Append(ha1_digest, EXPANDED_DIGEST_LENGTH);
   contents.Append(':');
   contents.Append(nonce);
   contents.Append(':');
@@ -479,9 +479,9 @@ nsHttpDigestAuth::CalculateHA1(const nsCString& username,
   }
 
   nsAutoCString contents;
-  contents.SetCapacity(len + 1);
+  contents.SetCapacity(len);
 
-  contents.Assign(username);
+  contents.Append(username);
   contents.Append(':');
   contents.Append(realm);
   contents.Append(':');
