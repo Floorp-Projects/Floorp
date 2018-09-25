@@ -580,10 +580,7 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
 
     options.creationOptions()
            .setNewCompartmentInSystemZone();
-
-    if (xpc::SharedMemoryEnabled()) {
-        options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
-    }
+    xpc::SetPrefableRealmOptions(options);
 
     // Defer firing OnNewGlobalObject until after the __URI__ property has
     // been defined so the JS debugger can tell what module the global is
