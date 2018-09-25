@@ -28,6 +28,7 @@ log = {version = "0.4", features = ["release_max_level_info"]}
 env_logger = {version = "0.5", default-features = false} # disable `regex` to reduce code size
 cose-c = { version = "0.1.5" }
 rkv = "0.4"
+jsrust_shared = { path = "../../../../js/src/rust/shared", optional = true }
 
 [build-dependencies]
 # Use exactly version 0.2.1, which uses semver 0.6, which other crates
@@ -44,6 +45,7 @@ cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]
 moz_memory = ["mp4parse_capi/mp4parse_fallible"]
+spidermonkey_rust = ["jsrust_shared"]
 
 [lib]
 path = "lib.rs"
