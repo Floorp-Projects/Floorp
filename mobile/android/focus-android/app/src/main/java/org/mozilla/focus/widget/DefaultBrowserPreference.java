@@ -14,6 +14,7 @@ import android.util.AttributeSet;
 import android.widget.Switch;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.SupportUtils;
 
@@ -63,12 +64,12 @@ public class DefaultBrowserPreference extends Preference {
         final Browsers browsers = new Browsers(getContext(), Browsers.TRADITIONAL_BROWSER_URL);
 
         if (!browsers.hasDefaultBrowser(context)) {
-
-            // Open in method:
             Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL));
             getContext().startActivity(i);
+            TelemetryWrapper.makeDefaultBrowserOpenWith();
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             SupportUtils.INSTANCE.openDefaultAppsSettings(context);
+            TelemetryWrapper.makeDefaultBrowserSettings();
         } else {
             SupportUtils.INSTANCE.openDefaultBrowserSumoPage(context);
         }

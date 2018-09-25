@@ -134,6 +134,8 @@ object TelemetryWrapper {
         val GECKO_ENGINE = "gecko_engine"
         val TIP = "tip"
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
+        val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
+        val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"
     }
 
     private object Value {
@@ -859,6 +861,16 @@ object TelemetryWrapper {
         TelemetryEvent
                 .create(Category.ACTION, Method.CLICK, Object.SEARCH_SUGGESTION_PROMPT, "$enable")
                 .queue()
+    }
+
+    @JvmStatic
+    fun makeDefaultBrowserOpenWith() {
+        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.MAKE_DEFAULT_BROWSER_OPEN_WITH).queue()
+    }
+
+    @JvmStatic
+    fun makeDefaultBrowserSettings() {
+        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.MAKE_DEFAULT_BROWSER_SETTINGS).queue()
     }
 
     @JvmStatic
