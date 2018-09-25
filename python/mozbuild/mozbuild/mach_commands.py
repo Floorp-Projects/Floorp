@@ -287,6 +287,7 @@ class CargoProvider(MachCommandBase):
             'gkrust-gtest': 'toolkit/library/gtest/rust',
             'js': 'js/rust',
             'mozjs_sys': 'js/src',
+            'baldrdash': 'js/src/wasm/cranelift',
             'geckodriver': 'testing/geckodriver',
         }
 
