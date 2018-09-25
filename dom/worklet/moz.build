@@ -12,7 +12,6 @@ EXPORTS.mozilla.dom += [
     'PaintWorkletGlobalScope.h',
     'Worklet.h',
     'WorkletGlobalScope.h',
-    'WorkletImpl.h',
     'WorkletPrincipal.h',
     'WorkletThread.h',
 ]
@@ -22,7 +21,6 @@ UNIFIED_SOURCES += [
     'PaintWorkletGlobalScope.cpp',
     'Worklet.cpp',
     'WorkletGlobalScope.cpp',
-    'WorkletImpl.cpp',
     'WorkletPrincipal.cpp',
     'WorkletThread.cpp',
 ]
