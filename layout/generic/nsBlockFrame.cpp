@@ -7166,13 +7166,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
     if (mozilla::StyleDisplay::ListItem ==
           possibleListItem->StyleDisplay()->mDisplay &&
         !GetPrevInFlow()) {
-      // Resolve style for the bullet frame
-      const nsStyleList* styleList = StyleList();
-      CounterStyle* style = styleList->mCounterStyle;
-
-      CreateBulletFrameForListItem(
-        style->IsBullet(),
-        styleList->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE);
+      CreateBulletFrameForListItem();
     }
   } else {
     nsContainerFrame::SetInitialChildList(aListID, aChildList);
@@ -7180,14 +7174,15 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
 }
 
 void
-nsBlockFrame::CreateBulletFrameForListItem(bool aCreateBulletList,
-                                           bool aListStylePositionInside)
+nsBlockFrame::CreateBulletFrameForListItem()
 {
   nsIPresShell* shell = PresShell();
+  const nsStyleList* styleList = StyleList();
 
-  CSSPseudoElementType pseudoType = aCreateBulletList ?
-    CSSPseudoElementType::mozListBullet :
-    CSSPseudoElementType::mozListNumber;
+  CSSPseudoElementType pseudoType =
+    styleList->mCounterStyle->IsBullet()
+    ? CSSPseudoElementType::mozListBullet
+    : CSSPseudoElementType::mozListNumber;
 
   RefPtr<ComputedStyle> kidSC = ResolveBulletStyle(pseudoType,
                                                     shell->StyleSet());
@@ -7198,7 +7193,7 @@ nsBlockFrame::CreateBulletFrameForListItem(bool aCreateBulletList,
 
   // If the list bullet frame should be positioned inside then add
   // it to the flow now.
-  if (aListStylePositionInside) {
+  if (styleList->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
     nsFrameList bulletList(bullet, bullet);
     AddFrames(bulletList, nullptr);
     SetProperty(InsideBulletProperty(), bullet);
