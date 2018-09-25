@@ -6,7 +6,7 @@ Services.perms.add(uriObj, "cookie", Services.perms.ALLOW_ACTION);
 
 let cookieBehavior = BEHAVIOR_REJECT_TRACKER;
 let blockingByContentBlocking = true;
-let blockingByContentBlockingUI = true;
+let blockingByContentBlockingUI = false;
 let blockingByContentBlockingRTUI = false;
 let blockingByAllowList = false;
 let expectedBlockingNotifications = false;
