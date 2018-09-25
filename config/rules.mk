@@ -31,7 +31,7 @@ ifdef REBUILD_CHECK
 REPORT_BUILD = $(info $(shell $(PYTHON) $(MOZILLA_DIR)/config/rebuild_check.py $@ $^))
 REPORT_BUILD_VERBOSE = $(REPORT_BUILD)
 else
-REPORT_BUILD = $(info $(notdir $@))
+REPORT_BUILD = $(info $(relativesrcdir)/$(notdir $@))
 
 ifdef BUILD_VERBOSE_LOG
 REPORT_BUILD_VERBOSE = $(REPORT_BUILD)
