@@ -58,7 +58,7 @@ public:
   virtual BufferTextureData* AsBufferTextureData() override { return this; }
 
   // Don't use this.
-  void SetDesciptor(const BufferDescriptor& aDesc);
+  void SetDescriptor(BufferDescriptor&& aDesc);
 
   Maybe<gfx::IntSize> GetCbCrSize() const;
 
