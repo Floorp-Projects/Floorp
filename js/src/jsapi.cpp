@@ -2072,10 +2072,10 @@ JS_GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
 }
 
 JS_PUBLIC_API(bool)
-JS_GetOwnUCPropertyDescriptor(JSContext* cx, HandleObject obj, const char16_t* name,
+JS_GetOwnUCPropertyDescriptor(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
                               MutableHandle<PropertyDescriptor> desc)
 {
-    JSAtom* atom = AtomizeChars(cx, name, js_strlen(name));
+    JSAtom* atom = AtomizeChars(cx, name, namelen);
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
@@ -2098,7 +2098,19 @@ JS_GetPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
     if (!atom)
         return false;
     RootedId id(cx, AtomToId(atom));
-    return atom && JS_GetPropertyDescriptorById(cx, obj, id, desc);
+    return JS_GetPropertyDescriptorById(cx, obj, id, desc);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetUCPropertyDescriptor(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
+                           MutableHandle<PropertyDescriptor> desc)
+{
+    JSAtom* atom = AtomizeChars(cx, name, namelen);
+    if (!atom) {
+        return false;
+    }
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetPropertyDescriptorById(cx, obj, id, desc);
 }
 
 static bool
