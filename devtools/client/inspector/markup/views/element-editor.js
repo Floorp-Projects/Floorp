@@ -13,13 +13,10 @@ const {
   parseAttributeValues,
 } = require("devtools/client/inspector/markup/utils");
 const { truncateString } = require("devtools/shared/inspector/utils");
-const {editableField, InplaceEditor} =
-      require("devtools/client/shared/inplace-editor");
-const {parseAttribute} =
-      require("devtools/client/shared/node-attribute-parser");
-const {getCssProperties} = require("devtools/shared/fronts/css-properties");
+const { editableField, InplaceEditor } = require("devtools/client/shared/inplace-editor");
+const { parseAttribute } = require("devtools/client/shared/node-attribute-parser");
+const { getCssProperties } = require("devtools/shared/fronts/css-properties");
 
-// Global tooltip inspector
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
@@ -334,15 +331,21 @@ ElementEditor.prototype = {
   },
 
   _updateDisplayBadgeContent: function() {
-    this._displayBadge.textContent = this.node.displayType;
-    this._displayBadge.dataset.display = this.node.displayType;
-    this._displayBadge.title = DISPLAY_TYPES[this.node.displayType];
+    const displayType = this.node.displayType;
+    this._displayBadge.textContent = displayType;
+    this._displayBadge.dataset.display = displayType;
+    this._displayBadge.title = DISPLAY_TYPES[displayType];
     this._displayBadge.classList.toggle("active",
       this.highlighters.flexboxHighlighterShown === this.node ||
       this.highlighters.gridHighlighters.has(this.node));
-    this._displayBadge.classList.toggle("interactive",
-      Services.prefs.getBoolPref("devtools.inspector.flexboxHighlighter.enabled") &&
-      (this.node.displayType === "flex" || this.node.displayType === "inline-flex"));
+
+    if (displayType === "flex" || displayType === "inline-flex") {
+      this._displayBadge.classList.toggle("interactive",
+        Services.prefs.getBoolPref("devtools.inspector.flexboxHighlighter.enabled"));
+    } else if (displayType === "grid" || displayType === "inline-grid") {
+      this._displayBadge.classList.toggle("interactive",
+        this.highlighters.canGridHighlighterToggle(this.node));
+    }
   },
 
   /**
@@ -746,19 +749,23 @@ ElementEditor.prototype = {
       this.stopTrackingFlexboxHighlighterEvents();
 
       this._displayBadge.classList.toggle("active");
-      await this.highlighters.toggleFlexboxHighlighter(this.inspector.selection.nodeFront,
-        "markup");
+      await this.highlighters.toggleFlexboxHighlighter(this.node);
 
       this.startTrackingFlexboxHighlighterEvents();
     }
 
     if (target.dataset.display === "grid" || target.dataset.display === "inline-grid") {
+      // Don't toggle the grid highlighter if the max number of new grid highlighters
+      // allowed has been reached.
+      if (!this.highlighters.canGridHighlighterToggle(this.node)) {
+        return;
+      }
+
       // Stop tracking highlighter events to avoid flickering of the active class.
       this.stopTrackingGridHighlighterEvents();
 
       this._displayBadge.classList.toggle("active");
-      await this.highlighters.toggleGridHighlighter(this.inspector.selection.nodeFront,
-        "markup");
+      await this.highlighters.toggleGridHighlighter(this.node, "markup");
 
       this.startTrackingGridHighlighterEvents();
     }
@@ -782,6 +789,7 @@ ElementEditor.prototype = {
     if (!this._displayBadge) {
       return;
     }
+
     this._displayBadge.classList.toggle("active",
       this.highlighters.flexboxHighlighterShown === this.node);
   },
@@ -795,8 +803,11 @@ ElementEditor.prototype = {
     if (!this._displayBadge) {
       return;
     }
+
     this._displayBadge.classList.toggle("active",
       this.highlighters.gridHighlighters.has(this.node));
+
+    this._updateDisplayBadgeContent();
   },
 
   /**
