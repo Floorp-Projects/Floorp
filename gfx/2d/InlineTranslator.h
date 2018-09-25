@@ -34,6 +34,11 @@ public:
 
   bool TranslateRecording(char *, size_t len);
 
+  void SetExternalSurfaces(nsRefPtrHashtable<nsUint64HashKey, SourceSurface>* aExternalSurfaces)
+  {
+    mExternalSurfaces = aExternalSurfaces;
+  }
+
   DrawTarget* LookupDrawTarget(ReferencePtr aRefPtr) final
   {
     DrawTarget* result = mDrawTargets.GetWeak(aRefPtr);
@@ -88,6 +93,11 @@ public:
     NativeFontResource* result = mNativeFontResources.GetWeak(aKey);
     MOZ_ASSERT(result);
     return result;
+  }
+
+  already_AddRefed<SourceSurface> LookupExternalSurface(uint64_t aKey) override
+  {
+    return mExternalSurfaces->Get(aKey);
   }
 
   void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) final
@@ -187,6 +197,7 @@ private:
   nsRefPtrHashtable<nsPtrHashKey<void>, ScaledFont> mScaledFonts;
   nsRefPtrHashtable<nsPtrHashKey<void>, UnscaledFont> mUnscaledFonts;
   nsRefPtrHashtable<nsUint64HashKey, NativeFontResource> mNativeFontResources;
+  nsRefPtrHashtable<nsUint64HashKey, SourceSurface>* mExternalSurfaces;
 };
 
 } // namespace gfx
