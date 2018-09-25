@@ -1,0 +1,10 @@
+<!doctype html>
+<div id="host"></div>
+<script>
+  host.attachShadow({ mode: "open" }).innerHTML = `
+    <style>
+      input > *|* { color: red !important; }
+    </style>
+    <input type="text" value="Should not be red">
+  `;
+</script>
