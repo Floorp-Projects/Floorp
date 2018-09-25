@@ -1028,9 +1028,7 @@ nsPrefetchService::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP 
 nsPrefetchService::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                     nsIRequest *aRequest, 
-                                    uint32_t aOldState,
-                                    uint32_t aState,
-                                    const nsAString& aContentBlockingLogJSON)
+                                    uint32_t state)
 {
     MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
     return NS_OK;
