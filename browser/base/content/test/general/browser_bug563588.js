@@ -1,12 +1,12 @@
 function press(key, expectedPos) {
   var originalSelectedTab = gBrowser.selectedTab;
-  EventUtils.synthesizeKey("VK_" + key.toUpperCase(), { accelKey: true });
+  EventUtils.synthesizeKey("VK_" + key.toUpperCase(), { accelKey: true, shiftKey: true });
   is(gBrowser.selectedTab, originalSelectedTab,
-     "accel+" + key + " doesn't change which tab is selected");
+     "shift+accel+" + key + " doesn't change which tab is selected");
   is(gBrowser.tabContainer.selectedIndex, expectedPos,
-     "accel+" + key + " moves the tab to the expected position");
+     "shift+accel+" + key + " moves the tab to the expected position");
   is(document.activeElement, gBrowser.selectedTab,
-     "accel+" + key + " leaves the selected tab focused");
+     "shift+accel+" + key + " leaves the selected tab focused");
 }
 
 function test() {

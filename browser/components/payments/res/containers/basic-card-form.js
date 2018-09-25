@@ -37,6 +37,9 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     this.addressEditLink.addEventListener("click", this);
 
     this.persistCheckbox = new LabelledCheckbox();
+    // The persist checkbox shouldn't be part of the record which gets saved so
+    // exclude it from the form.
+    this.persistCheckbox.form = "";
     this.persistCheckbox.className = "persist-checkbox";
 
     this.acceptedCardsList = new AcceptedCards();
@@ -105,15 +108,20 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       }
 
       let fragment = document.createDocumentFragment();
-      fragment.append(this.addressAddLink);
       fragment.append(" ");
       fragment.append(this.addressEditLink);
+      fragment.append(this.addressAddLink);
       let billingAddressRow = this.form.querySelector(".billingAddressRow");
+
+      // XXX: Bug 1482689 - Remove the label-text class from the billing field
+      // which will be removed when switching to <rich-select>.
+      billingAddressRow.querySelector(".label-text").classList.remove("label-text");
+
       billingAddressRow.appendChild(fragment);
 
-      this.body.appendChild(this.persistCheckbox);
+      form.insertBefore(this.persistCheckbox, billingAddressRow);
+      form.insertBefore(this.acceptedCardsList, billingAddressRow);
       this.body.appendChild(this.genericErrorText);
-      this.body.appendChild(this.acceptedCardsList);
       // Only call the connected super callback(s) once our markup is fully
       // connected, including the shared form fetched asynchronously.
       super.connectedCallback();
@@ -145,6 +153,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     this.addressAddLink.textContent = this.dataset.addressAddLinkLabel;
     this.addressEditLink.textContent = this.dataset.addressEditLinkLabel;
     this.acceptedCardsList.label = this.dataset.acceptedCardsLabel;
+    this.acceptedCardsList.hidden = editing;
 
     // The next line needs an onboarding check since we don't set previousId
     // when navigating to add/edit directly from the summary page.
@@ -203,7 +212,12 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       if (paymentRequest.getAddresses(state)[selectedShippingAddress]) {
         billingAddressSelect.value = selectedShippingAddress;
       } else {
-        billingAddressSelect.value = Object.keys(addresses)[0];
+        let firstAddressGUID = Object.keys(addresses)[0];
+        if (firstAddressGUID) {
+          // Only set the value if we have a saved address to not mark the field
+          // dirty and invalid on an add form with no saved addresses.
+          billingAddressSelect.value = firstAddressGUID;
+        }
       }
     }
     // Need to recalculate the populated state since
@@ -358,6 +372,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     for (let field of this.form.elements) {
       let container = field.closest(".container");
       let span = container.querySelector(".label-text");
+      if (!span) {
+        // The billing address field doesn't use a label inside the field.
+        continue;
+      }
       span.setAttribute("fieldRequiredSymbol", this.dataset.fieldRequiredSymbol);
       let required = field.required && !field.disabled;
       if (required) {

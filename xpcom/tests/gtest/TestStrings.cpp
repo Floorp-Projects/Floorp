@@ -1309,6 +1309,9 @@ TEST_F(Strings, append_string_with_capacity)
   s.SetCapacity(8000);
   const char16_t* ptr = s.BeginReading();
   EXPECT_NE(origPtr, ptr);
+  nsAutoString empty;
+  s.Append(empty);
+  EXPECT_EQ(s.BeginReading(), ptr);
   for (int i = 0; i < 100; i++) {
     s.Append(aa);
     EXPECT_EQ(s.BeginReading(), ptr);
@@ -1323,6 +1326,8 @@ TEST_F(Strings, append_literal_with_capacity)
   s.SetCapacity(8000);
   const char16_t* ptr = s.BeginReading();
   EXPECT_NE(origPtr, ptr);
+  s.AppendLiteral(u"");
+  EXPECT_EQ(s.BeginReading(), ptr);
   for (int i = 0; i < 100; i++) {
     s.AppendLiteral(u"aa");
     EXPECT_EQ(s.BeginReading(), ptr);

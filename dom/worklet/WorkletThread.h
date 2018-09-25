@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/dom/Worklet.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/TimeStamp.h"
@@ -26,8 +25,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<WorkletThread>
-  Create(const WorkletLoadInfo& aWorkletLoadInfo);
+  static already_AddRefed<WorkletThread> Create();
 
   static WorkletThread*
   Get();
@@ -38,14 +36,8 @@ public:
   static void
   AssertIsOnWorkletThread();
 
-  static JSPrincipals*
-  GetWorkerPrincipal();
-
   JSContext*
   GetJSContext() const;
-
-  const WorkletLoadInfo&
-  GetWorkletLoadInfo() const;
 
   nsresult
   DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
@@ -62,7 +54,7 @@ public:
   }
 
 private:
-  explicit WorkletThread(const WorkletLoadInfo& aWorkletLoadInfo);
+  WorkletThread();
   ~WorkletThread();
 
   void
@@ -84,7 +76,6 @@ private:
   NS_IMETHOD
   DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
 
-  const WorkletLoadInfo mWorkletLoadInfo;
   TimeStamp mCreationTimeStamp;
 
   // Touched only on the worklet thread. This is a raw pointer because it's set

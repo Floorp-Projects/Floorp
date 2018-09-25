@@ -107,8 +107,7 @@ public:
    public:
 
     // Enter compartment in which the code would be executed.  The JSContext
-    // must come from an AutoEntryScript that has had
-    // TakeOwnershipOfErrorReporting() called on it.
+    // must come from an AutoEntryScript.
     ExecutionContext(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
     ExecutionContext(const ExecutionContext&) = delete;

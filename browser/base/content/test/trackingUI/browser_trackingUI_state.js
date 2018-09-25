@@ -337,6 +337,7 @@ add_task(async function testNormalBrowsing() {
      "TP.enabled is based on the original pref value");
 
   Services.prefs.setBoolPref(FB_PREF, false);
+  Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
 
   await testContentBlockingEnabled(tab);
 
@@ -370,6 +371,7 @@ add_task(async function testNormalBrowsing() {
   gBrowser.removeCurrentTab();
 
   Services.prefs.clearUserPref(FB_PREF);
+  Services.prefs.clearUserPref(TPC_PREF);
 });
 
 add_task(async function testPrivateBrowsing() {
@@ -381,6 +383,7 @@ add_task(async function testPrivateBrowsing() {
   Services.prefs.setBoolPref(TP_PREF, false);
 
   Services.prefs.setBoolPref(FB_PREF, false);
+  Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
 
   ContentBlocking = tabbrowser.ownerGlobal.ContentBlocking;
   ok(ContentBlocking, "CB is attached to the private window");
@@ -421,6 +424,7 @@ add_task(async function testPrivateBrowsing() {
   privateWin.close();
 
   Services.prefs.clearUserPref(FB_PREF);
+  Services.prefs.clearUserPref(TPC_PREF);
 });
 
 add_task(async function testFastBlock() {
@@ -435,6 +439,7 @@ add_task(async function testFastBlock() {
   let tab = tabbrowser.selectedTab = BrowserTestUtils.addTab(tabbrowser);
 
   Services.prefs.setBoolPref(FB_PREF, false);
+  Services.prefs.setIntPref(TPC_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
 
   ContentBlocking = gBrowser.ownerGlobal.ContentBlocking;
   ok(ContentBlocking, "CB is attached to the browser window");
@@ -471,6 +476,7 @@ add_task(async function testFastBlock() {
   Services.prefs.clearUserPref(FB_PREF);
   Services.prefs.clearUserPref(FB_TIMEOUT_PREF);
   Services.prefs.clearUserPref(FB_LIMIT_PREF);
+  Services.prefs.clearUserPref(TPC_PREF);
   gBrowser.removeCurrentTab();
 });
 

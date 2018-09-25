@@ -155,7 +155,7 @@ void
 MerchantValidationEvent::Complete(Promise& aPromise, ErrorResult& aRv)
 {
   if (!IsTrusted()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
