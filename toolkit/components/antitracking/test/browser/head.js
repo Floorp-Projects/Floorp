@@ -45,7 +45,7 @@ this.AntiTracking = {
       let runExtraTests = true;
       let options = {};
       if (typeof callbackNonTracking == "object") {
-        callbackNonTracking = callbackNonTracking.callback;
+        options.callback = callbackNonTracking.callback;
         runExtraTests = callbackNonTracking.runExtraTests;
         if ("cookieBehavior" in callbackNonTracking) {
           options.cookieBehavior = callbackNonTracking.cookieBehavior;
@@ -76,6 +76,7 @@ this.AntiTracking = {
         } else {
           options.blockingByAllowList = false;
         }
+        callbackNonTracking = options.callback;
       }
 
       // Phase 1: Here we want to test that a 3rd party context is not blocked if pref is off.
