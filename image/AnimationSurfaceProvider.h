@@ -49,7 +49,9 @@ public:
   bool IsFullyDecoded() const override;
   size_t LogicalSizeInBytes() const override;
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                              const AddSizeOfCb& aCallback) override;
+                              size_t& aHeapSizeOut,
+                              size_t& aNonHeapSizeOut,
+                              size_t& aExtHandlesOut) override;
   void Reset() override;
   void Advance(size_t aFrame) override;
 

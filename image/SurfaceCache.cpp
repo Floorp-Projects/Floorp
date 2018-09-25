@@ -188,6 +188,11 @@ public:
 
     void Add(NotNull<CachedSurface*> aCachedSurface, bool aIsFactor2)
     {
+      SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
+                                   aCachedSurface->IsLocked(),
+                                   aCachedSurface->CannotSubstitute(),
+                                   aIsFactor2);
+
       if (aCachedSurface->IsPlaceholder()) {
         return;
       }
@@ -196,22 +201,16 @@ public:
       // straightforward relationship to the size of the surface that
       // DrawableRef() returns if the surface is generated dynamically. (i.e.,
       // for surfaces with PlaybackType::eAnimated.)
-      aCachedSurface->mProvider->AddSizeOfExcludingThis(mMallocSizeOf,
-        [&](ISurfaceProvider::AddSizeOfCbData& aMetadata) {
-          SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
-                                       aCachedSurface->IsLocked(),
-                                       aCachedSurface->CannotSubstitute(),
-                                       aIsFactor2);
+      size_t heap = 0;
+      size_t nonHeap = 0;
+      size_t handles = 0;
+      aCachedSurface->mProvider
+        ->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap, handles);
+      counter.Values().SetDecodedHeap(heap);
+      counter.Values().SetDecodedNonHeap(nonHeap);
+      counter.Values().SetExternalHandles(handles);
 
-          counter.Values().SetDecodedHeap(aMetadata.heap);
-          counter.Values().SetDecodedNonHeap(aMetadata.nonHeap);
-          counter.Values().SetExternalHandles(aMetadata.handles);
-          counter.Values().SetFrameIndex(aMetadata.index);
-          counter.Values().SetExternalId(aMetadata.externalId);
-
-          mCounters.AppendElement(counter);
-        }
-      );
+      mCounters.AppendElement(counter);
     }
 
   private:

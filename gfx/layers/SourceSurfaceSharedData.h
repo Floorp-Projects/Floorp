@@ -43,7 +43,6 @@ public:
     , mConsumers(0)
     , mFormat(SurfaceFormat::UNKNOWN)
     , mCreatorPid(0)
-    , mCreatorRef(true)
   { }
 
   bool Init(const IntSize& aSize,
@@ -80,28 +79,10 @@ public:
     return ++mConsumers == 1;
   }
 
-  bool RemoveConsumer(bool aForCreator)
+  bool RemoveConsumer()
   {
     MOZ_ASSERT(mConsumers > 0);
-    if (aForCreator) {
-      if (!mCreatorRef) {
-        MOZ_ASSERT_UNREACHABLE("Already released creator reference!");
-        return false;
-      }
-      mCreatorRef = false;
-    }
     return --mConsumers == 0;
-  }
-
-  uint32_t GetConsumers() const
-  {
-    MOZ_ASSERT(mConsumers > 0);
-    return mConsumers;
-  }
-
-  bool HasCreatorRef() const
-  {
-    return mCreatorRef;
   }
 
 private:
@@ -121,7 +102,6 @@ private:
   RefPtr<SharedMemoryBasic> mBuf;
   SurfaceFormat mFormat;
   base::ProcessId mCreatorPid;
-  bool mCreatorRef;
 };
 
 /**
@@ -175,8 +155,7 @@ public:
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                               size_t& aHeapSizeOut,
                               size_t& aNonHeapSizeOut,
-                              size_t& aExtHandlesOut,
-                              uint64_t& aExtIdOut) const override;
+                              size_t& aExtHandlesOut) const override;
 
   bool OnHeap() const override
   {

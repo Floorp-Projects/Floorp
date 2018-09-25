@@ -290,15 +290,6 @@ CompositorManagerParent::RecvRemoveSharedSurface(const wr::ExternalImageId& aId)
 }
 
 mozilla::ipc::IPCResult
-CompositorManagerParent::RecvReportSharedSurfacesMemory(ReportSharedSurfacesMemoryResolver&& aResolver)
-{
-  SharedSurfacesMemoryReport report;
-  SharedSurfacesParent::AccumulateMemoryReport(OtherPid(), report);
-  aResolver(std::move(report));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 CompositorManagerParent::RecvNotifyMemoryPressure()
 {
   nsTArray<PCompositorBridgeParent*> compositorBridges;
