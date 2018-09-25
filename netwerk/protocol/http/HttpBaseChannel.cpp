@@ -1691,7 +1691,8 @@ HttpBaseChannel::IsCrossOriginWithReferrer()
       LOG(("triggeringURI=%s\n", triggeringURISpec.get()));
     }
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-    rv = ssm->CheckSameOriginURI(triggeringURI, mURI, false);
+    bool isPrivateWin = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+    rv = ssm->CheckSameOriginURI(triggeringURI, mURI, false, isPrivateWin);
     return (NS_FAILED(rv));
   }
 
@@ -3919,7 +3920,8 @@ bool
 HttpBaseChannel::SameOriginWithOriginalUri(nsIURI *aURI)
 {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  nsresult rv = ssm->CheckSameOriginURI(aURI, mOriginalURI, false);
+  bool isPrivateWin = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  nsresult rv = ssm->CheckSameOriginURI(aURI, mOriginalURI, false, isPrivateWin);
   return (NS_SUCCEEDED(rv));
 }
 

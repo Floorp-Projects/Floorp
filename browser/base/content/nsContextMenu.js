@@ -806,7 +806,8 @@ nsContextMenu.prototype = {
       const sm = Services.scriptSecurityManager;
       try {
         let targetURI = this.linkURI;
-        sm.checkSameOriginURI(referrerURI, targetURI, false);
+        let isPrivateWin = this.browser.contentPrincipal.originAttributes.privateBrowsingId > 0;
+        sm.checkSameOriginURI(referrerURI, targetURI, false, isPrivateWin);
         persistAllowMixedContentInChildTab = true;
       } catch (e) { }
     }
