@@ -171,6 +171,15 @@ public:
              nsIWebProgressListener* aProgressListener,
              mozilla::ErrorResult& aRv);
 
+  already_AddRefed<mozilla::dom::Promise>
+  DrawSnapshot(double aX,
+               double aY,
+               double aW,
+               double aH,
+               double aScale,
+               const nsAString& aBackgroundColor,
+               mozilla::ErrorResult& aRv);
+
   void StartPersistence(uint64_t aOuterWindowID,
                         nsIWebBrowserPersistDocumentReceiver* aRecv,
                         mozilla::ErrorResult& aRv);
