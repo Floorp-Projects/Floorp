@@ -115,6 +115,9 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     for (size_t i = 0; i < mozilla::ArrayLength(aParam.mLastSensorState); i++) {
       WriteParam(aMsg, aParam.mLastSensorState[i]);
     }
+    for (size_t i = 0; i < mozilla::ArrayLength(aParam.mLastFrameStart); i++) {
+      WriteParam(aMsg, aParam.mLastFrameStart[i]);
+    }
     for (size_t i = 0; i < mozilla::ArrayLength(aParam.mControllerState); i++) {
       WriteParam(aMsg, aParam.mControllerState[i]);
     }
@@ -132,6 +135,11 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     }
     for (size_t i = 0; i < mozilla::ArrayLength(aResult->mLastSensorState); i++) {
       if (!ReadParam(aMsg, aIter, &(aResult->mLastSensorState[i]))) {
+        return false;
+      }
+    }
+    for (size_t i = 0; i < mozilla::ArrayLength(aResult->mLastFrameStart); i++) {
+      if (!ReadParam(aMsg, aIter, &(aResult->mLastFrameStart[i]))) {
         return false;
       }
     }

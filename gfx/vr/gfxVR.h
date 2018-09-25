@@ -63,6 +63,7 @@ struct VRDisplayInfo
   VRControllerState mControllerState[kVRControllerMaxCount];
 
   VRHMDSensorState mLastSensorState[kVRMaxLatencyFrames];
+  TimeStamp mLastFrameStart[kVRMaxLatencyFrames];
   const VRHMDSensorState& GetSensorState() const
   {
     return mLastSensorState[mFrameId % kVRMaxLatencyFrames];
@@ -187,6 +188,9 @@ public:
   virtual void Shutdown() = 0;
   virtual void Enumerate() = 0;
   virtual void NotifyVSync();
+  virtual void Run1msTasks(double aDeltaTime);
+  virtual void Run10msTasks();
+  virtual void Run100msTasks();
   virtual bool ShouldInhibitEnumeration();
   virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) = 0;
   virtual bool GetIsPresenting() = 0;
