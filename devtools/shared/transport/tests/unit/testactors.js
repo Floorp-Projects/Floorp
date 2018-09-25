@@ -6,6 +6,8 @@ const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-p
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { DebuggerServer } = require("devtools/server/main");
+const { ActorRegistry } = require("devtools/server/actor-registry");
+const promise = require("promise");
 
 var gTestGlobals = [];
 DebuggerServer.addTestGlobal = function(global) {
@@ -50,7 +52,7 @@ TestTabList.prototype = {
 exports.createRootActor = function createRootActor(connection) {
   const root = new RootActor(connection, {
     tabList: new TestTabList(connection),
-    globalActorFactories: DebuggerServer.globalActorFactories
+    globalActorFactories: ActorRegistry.globalActorFactories
   });
   root.applicationType = "xpcshell-tests";
   return root;
@@ -83,13 +85,12 @@ TestTargetActor.prototype = {
     // Walk over target-scoped actors and add them to a new LazyPool.
     const actorPool = new LazyPool(this.conn);
     const actors = createExtraActors(
-      DebuggerServer.targetScopedActorFactories,
+      ActorRegistry.targetScopedActorFactories,
       actorPool,
       this
     );
     if (!actorPool.isEmpty()) {
       this._targetActorPool = actorPool;
-      this.conn.addActorPool(this._targetActorPool);
     }
 
     return { ...response, ...actors };
