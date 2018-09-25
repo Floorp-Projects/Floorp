@@ -392,6 +392,17 @@ ChromiumCDMChild::OnSessionClosed(const char* aSessionId,
                           nsCString(aSessionId, aSessionIdSize));
 }
 
+void
+ChromiumCDMChild::OnInitialized(bool aSuccess)
+{
+  MOZ_ASSERT(!mInitPromise.IsEmpty(),
+             "mInitPromise should exist during init callback!");
+  if (!aSuccess) {
+    mInitPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
+  }
+  mInitPromise.ResolveIfExists(true, __func__);
+}
+
 cdm::FileIO*
 ChromiumCDMChild::CreateFileIO(cdm::FileIOClient * aClient)
 {
@@ -462,13 +473,30 @@ ChromiumCDMChild::RecvInit(const bool& aAllowDistinctiveIdentifier,
           aAllowDistinctiveIdentifier ? "true" : "false",
           aAllowPersistentState ? "true" : "false");
   mPersistentStateAllowed = aAllowPersistentState;
+
+  RefPtr<ChromiumCDMChild::InitPromise> promise = mInitPromise.Ensure(__func__);
+  promise->Then(
+    mPlugin->GMPMessageLoop()->SerialEventTarget(),
+    __func__,
+    [aResolver](bool /* unused */) { aResolver(true); },
+    [aResolver](nsresult rv) {
+      GMP_LOG(
+        "ChromiumCDMChild::RecvInit() init promise rejected with rv=%" PRIu32,
+        static_cast<uint32_t>(rv));
+      aResolver(false);
+    });
+
   if (mCDM) {
+    // Once the CDM is initialized we expect it to resolve mInitPromise via
+    // ChromiumCDMChild::OnInitialized
     mCDM->Initialize(aAllowDistinctiveIdentifier,
                      aAllowPersistentState,
                      // We do not yet support hardware secure codecs
                      false);
+  } else {
+    GMP_LOG("ChromiumCDMChild::RecvInit() mCDM not set! Is GMP shutting down?");
+    mInitPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
   }
-  aResolver(true /* unused */);
   return IPC_OK();
 }
 
@@ -957,6 +985,8 @@ ChromiumCDMChild::RecvDestroy()
   GMP_LOG("ChromiumCDMChild::RecvDestroy()");
 
   MOZ_ASSERT(!mDecoderInitialized);
+
+  mInitPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
 
   if (mCDM) {
     mCDM->Destroy();

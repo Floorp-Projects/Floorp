@@ -72,7 +72,7 @@ public:
   cdm::FileIO* CreateFileIO(cdm::FileIOClient* aClient) override;
   // End shared cdm::Host_9 and cdm::Host10 implementation
   // cdm::Host_10 specific
-  void OnInitialized(bool success) override {}
+  void OnInitialized(bool aSuccess) override;
   // end cdm::Host_10 specific
 
   void GiveBuffer(ipc::Shmem&& aBuffer);
@@ -145,6 +145,11 @@ protected:
   bool mPersistentStateAllowed = false;
   bool mDestroyed = false;
   nsCString mStorageId;
+
+  typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> InitPromise;
+  // Created when we RecvInit, should be resolved once the CDM is initialized
+  // or rejected if init fails.
+  MozPromiseHolder<InitPromise> mInitPromise;
 };
 
 } // namespace gmp
