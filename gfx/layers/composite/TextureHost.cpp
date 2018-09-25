@@ -968,14 +968,14 @@ BufferTextureHost::GetYUVColorSpace() const
   return YUVColorSpace::UNKNOWN;
 }
 
-uint32_t
-BufferTextureHost::GetBitDepth() const
+gfx::ColorDepth
+BufferTextureHost::GetColorDepth() const
 {
   if (mFormat == gfx::SurfaceFormat::YUV) {
     const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
-    return desc.bitDepth();
+    return desc.colorDepth();
   }
-  return 8;
+  return gfx::ColorDepth::COLOR_8;
 }
 
 bool
@@ -1088,17 +1088,17 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetYChannel(buf, desc),
                                                     desc.yStride(),
                                                     desc.ySize(),
-                                                    SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+                                                    SurfaceFormatForColorDepth(desc.colorDepth()));
     RefPtr<gfx::DataSourceSurface> tempCb =
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCbChannel(buf, desc),
                                                     desc.cbCrStride(),
                                                     desc.cbCrSize(),
-                                                    SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+                                                    SurfaceFormatForColorDepth(desc.colorDepth()));
     RefPtr<gfx::DataSourceSurface> tempCr =
       gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCrChannel(buf, desc),
                                                     desc.cbCrStride(),
                                                     desc.cbCrSize(),
-                                                    SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+                                                    SurfaceFormatForColorDepth(desc.colorDepth()));
     // We don't support partial updates for Y U V textures
     NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
     if (!tempY ||

@@ -626,7 +626,7 @@ DXGIYCbCrTextureData::Create(IDirect3DTexture9* aTextureY,
                              const gfx::IntSize& aSize,
                              const gfx::IntSize& aSizeY,
                              const gfx::IntSize& aSizeCbCr,
-                             uint32_t aBitDepth,
+                             gfx::ColorDepth aColorDepth,
                              YUVColorSpace aYUVColorSpace)
 {
   if (!aHandleY || !aHandleCb || !aHandleCr ||
@@ -644,7 +644,7 @@ DXGIYCbCrTextureData::Create(IDirect3DTexture9* aTextureY,
   texture->mSize = aSize;
   texture->mSizeY = aSizeY;
   texture->mSizeCbCr = aSizeCbCr;
-  texture->mBitDepth = aBitDepth;
+  texture->mColorDepth = aColorDepth;
   texture->mYUVColorSpace = aYUVColorSpace;
 
   return texture;
@@ -657,7 +657,7 @@ DXGIYCbCrTextureData::Create(ID3D11Texture2D* aTextureY,
                              const gfx::IntSize& aSize,
                              const gfx::IntSize& aSizeY,
                              const gfx::IntSize& aSizeCbCr,
-                             uint32_t aBitDepth,
+                             gfx::ColorDepth aColorDepth,
                              YUVColorSpace aYUVColorSpace)
 {
   if (!aTextureY || !aTextureCb || !aTextureCr) {
@@ -706,7 +706,7 @@ DXGIYCbCrTextureData::Create(ID3D11Texture2D* aTextureY,
   texture->mSize = aSize;
   texture->mSizeY = aSizeY;
   texture->mSizeCbCr = aSizeCbCr;
-  texture->mBitDepth = aBitDepth;
+  texture->mColorDepth = aColorDepth;
   texture->mYUVColorSpace = aYUVColorSpace;
 
   return texture;
@@ -725,10 +725,14 @@ DXGIYCbCrTextureData::FillInfo(TextureData::Info& aInfo) const
 void
 DXGIYCbCrTextureData::SerializeSpecific(SurfaceDescriptorDXGIYCbCr* const aOutDesc)
 {
-  *aOutDesc = SurfaceDescriptorDXGIYCbCr(
-    (WindowsHandle)mHandles[0], (WindowsHandle)mHandles[1], (WindowsHandle)mHandles[2],
-    mSize, mSizeY, mSizeCbCr, mBitDepth, mYUVColorSpace
-  );
+  *aOutDesc = SurfaceDescriptorDXGIYCbCr((WindowsHandle)mHandles[0],
+                                         (WindowsHandle)mHandles[1],
+                                         (WindowsHandle)mHandles[2],
+                                         mSize,
+                                         mSizeY,
+                                         mSizeCbCr,
+                                         mColorDepth,
+                                         mYUVColorSpace);
 }
 
 bool
@@ -1176,7 +1180,7 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
   , mSize(aDescriptor.size())
   , mSizeCbCr(aDescriptor.sizeCbCr())
   , mIsLocked(false)
-  , mBitDepth(aDescriptor.bitDepth())
+  , mColorDepth(aDescriptor.colorDepth())
   , mYUVColorSpace(aDescriptor.yUVColorSpace())
 {
   mHandles[0] = aDescriptor.handleY();

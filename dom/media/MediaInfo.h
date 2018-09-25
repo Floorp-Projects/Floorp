@@ -18,6 +18,7 @@
 #include "TimeUnits.h"
 #include "mozilla/gfx/Point.h" // for gfx::IntSize
 #include "mozilla/gfx/Rect.h"  // for gfx::IntRect
+#include "mozilla/gfx/Types.h"  // for gfx::ColorDepth
 
 namespace mozilla {
 
@@ -227,7 +228,7 @@ public:
     , mCodecSpecificConfig(aOther.mCodecSpecificConfig)
     , mExtraData(aOther.mExtraData)
     , mRotation(aOther.mRotation)
-    , mBitDepth(aOther.mBitDepth)
+    , mColorDepth(aOther.mColorDepth)
     , mImageRect(aOther.mImageRect)
     , mAlphaPresent(aOther.mAlphaPresent)
   {
@@ -336,7 +337,7 @@ public:
   Rotation mRotation;
 
   // Should be 8, 10 or 12. Default value is 8.
-  uint8_t mBitDepth = 8;
+  gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
 
 private:
   // mImage may be cropped; currently only used with the WebM container.

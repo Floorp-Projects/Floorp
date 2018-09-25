@@ -168,8 +168,8 @@ BufferTextureData::CreateForYCbCr(KnowsCompositor* aAllocator,
                                   gfx::IntSize aCbCrSize,
                                   uint32_t aCbCrStride,
                                   StereoMode aStereoMode,
+                                  gfx::ColorDepth aColorDepth,
                                   YUVColorSpace aYUVColorSpace,
-                                  uint32_t aBitDepth,
                                   TextureFlags aTextureFlags)
 {
   uint32_t bufSize = ImageDataSerializer::ComputeYCbCrBufferSize(
@@ -200,8 +200,8 @@ BufferTextureData::CreateForYCbCr(KnowsCompositor* aAllocator,
                                                aCbCrSize, aCbCrStride,
                                                yOffset, cbOffset, crOffset,
                                                aStereoMode,
+                                               aColorDepth,
                                                aYUVColorSpace,
-                                               aBitDepth,
                                                hasIntermediateBuffer);
 
   return CreateInternal(aAllocator ? aAllocator->GetTextureForwarder()
@@ -254,10 +254,10 @@ BufferTextureData::GetYUVColorSpace() const
   return ImageDataSerializer::YUVColorSpaceFromBufferDescriptor(mDescriptor);
 }
 
-Maybe<uint32_t>
-BufferTextureData::GetBitDepth() const
+Maybe<gfx::ColorDepth>
+BufferTextureData::GetColorDepth() const
 {
-  return ImageDataSerializer::BitDepthFromBufferDescriptor(mDescriptor);
+  return ImageDataSerializer::ColorDepthFromBufferDescriptor(mDescriptor);
 }
 
 Maybe<StereoMode>
@@ -354,7 +354,8 @@ BufferTextureData::BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap)
 
   aMap.stereoMode = desc.stereoMode();
   aMap.metadata = nullptr;
-  uint32_t bytesPerPixel = desc.bitDepth() > 8 ? 2 : 1;
+  uint32_t bytesPerPixel =
+    BytesPerPixel(SurfaceFormatForColorDepth(desc.colorDepth()));
 
   aMap.y.data = data + desc.yOffset();
   aMap.y.size = ySize;

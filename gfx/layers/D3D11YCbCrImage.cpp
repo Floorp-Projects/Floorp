@@ -35,7 +35,7 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
     aData.mPicX, aData.mPicY, aData.mPicSize.width, aData.mPicSize.height);
   mYSize = aData.mYSize;
   mCbCrSize = aData.mCbCrSize;
-  mBitDepth = aData.mBitDepth;
+  mColorDepth = aData.mColorDepth;
   mColorSpace = aData.mYUVColorSpace;
 
   D3D11YCbCrRecycleAllocator* allocator =
@@ -250,7 +250,7 @@ D3D11YCbCrImage::GetAsSourceSurface()
   data.mPicY = mPictureRect.Y();
   data.mPicSize = mPictureRect.Size();
   data.mStereoMode = StereoMode::MONO;
-  data.mBitDepth = mBitDepth;
+  data.mColorDepth = mColorDepth;
   data.mYUVColorSpace = mColorSpace;
   data.mYSkip = data.mCbSkip = data.mCrSkip = 0;
   data.mYSize = mYSize;
@@ -355,7 +355,7 @@ DXGIYCbCrTextureAllocationHelper::IsCompatible(TextureClient* aTextureClient)
       aTextureClient->GetSize() != mData.mYSize ||
       dxgiData->GetYSize() != mData.mYSize ||
       dxgiData->GetCbCrSize() != mData.mCbCrSize ||
-      dxgiData->GetBitDepth() != mData.mBitDepth ||
+      dxgiData->GetColorDepth() != mData.mColorDepth ||
       dxgiData->GetYUVColorSpace() != mData.mYUVColorSpace) {
     return false;
   }
@@ -389,12 +389,13 @@ DXGIYCbCrTextureAllocationHelper::IsCompatible(TextureClient* aTextureClient)
 already_AddRefed<TextureClient>
 DXGIYCbCrTextureAllocationHelper::Allocate(KnowsCompositor* aAllocator)
 {
-  CD3D11_TEXTURE2D_DESC newDesc(
-    mData.mBitDepth == 8 ? DXGI_FORMAT_R8_UNORM : DXGI_FORMAT_R16_UNORM,
-    mData.mYSize.width,
-    mData.mYSize.height,
-    1,
-    1);
+  CD3D11_TEXTURE2D_DESC newDesc(mData.mColorDepth == gfx::ColorDepth::COLOR_8
+                                  ? DXGI_FORMAT_R8_UNORM
+                                  : DXGI_FORMAT_R16_UNORM,
+                                mData.mYSize.width,
+                                mData.mYSize.height,
+                                1,
+                                1);
   // WebRender requests keyed mutex
   if (mDevice == gfx::DeviceManagerDx::Get()->GetCompositorDevice() &&
       !gfxVars::UseWebRender()) {
@@ -444,7 +445,7 @@ DXGIYCbCrTextureAllocationHelper::Allocate(KnowsCompositor* aAllocator)
       mData.mYSize,
       mData.mYSize,
       mData.mCbCrSize,
-      mData.mBitDepth,
+      mData.mColorDepth,
       mData.mYUVColorSpace),
     mTextureFlags,
     forwarder);

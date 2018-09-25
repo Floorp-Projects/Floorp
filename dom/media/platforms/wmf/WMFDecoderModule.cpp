@@ -199,7 +199,7 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
                            DecoderDoctorDiagnostics* aDiagnostics) const
 {
   const auto videoInfo = aTrackInfo.GetAsVideoInfo();
-  if (videoInfo && !SupportsBitDepth(videoInfo->mBitDepth, aDiagnostics)) {
+  if (videoInfo && !SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics)) {
     return false;
   }
 

@@ -988,7 +988,7 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
     config.SetYCbCr(true);
     EffectYCbCr* effectYCbCr = static_cast<EffectYCbCr*>(aEffect);
     config.SetColorMultiplier(
-      RescalingFactorForAlphaBitDepth(effectYCbCr->mBitDepth));
+      RescalingFactorForColorDepth(effectYCbCr->mColorDepth));
     config.SetTextureTarget(
       effectYCbCr->mTexture->AsSourceOGL()->GetTextureTarget());
     break;
@@ -1937,7 +1937,7 @@ CompositorOGL::CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture)
     gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetYChannel(buf, desc),
                                                   desc.yStride(),
                                                   desc.ySize(),
-                                                  SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+                                                  SurfaceFormatForColorDepth(desc.colorDepth()));
   if (!tempY) {
     return nullptr;
   }
@@ -1945,7 +1945,7 @@ CompositorOGL::CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture)
     gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCbChannel(buf, desc),
                                                   desc.cbCrStride(),
                                                   desc.cbCrSize(),
-                                                  SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+                                                  SurfaceFormatForColorDepth(desc.colorDepth()));
   if (!tempCb) {
     return nullptr;
   }
@@ -1953,7 +1953,7 @@ CompositorOGL::CreateDataTextureSourceAroundYCbCr(TextureHost* aTexture)
     gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCrChannel(buf, desc),
                                                   desc.cbCrStride(),
                                                   desc.cbCrSize(),
-                                                  SurfaceFormatForAlphaBitDepth(desc.bitDepth()));
+                                                  SurfaceFormatForColorDepth(desc.colorDepth()));
   if (!tempCr) {
     return nullptr;
   }
