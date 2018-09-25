@@ -233,14 +233,11 @@ public:
   MediaEnginePrefs mPrefs;
 
   typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
+  typedef media::Refcountable<UniquePtr<MediaDeviceSet>> MediaDeviceSetRefCnt;
 
   virtual int AddDeviceChangeCallback(DeviceChangeCallback* aCallback) override;
   virtual void OnDeviceChange() override;
 private:
-  typedef media::Pledge<MediaDeviceSet*, dom::MediaStreamError*> PledgeMediaDeviceSet;
-  typedef media::Pledge<const char*, dom::MediaStreamError*> PledgeChar;
-  typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
-
   static nsresult GenerateUUID(nsAString& aResult);
   static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey);
 public: // TODO: make private once we upgrade to GCC 4.8+ on linux.
@@ -253,25 +250,31 @@ private:
     Loopback /* Enumeration should return loopback device(s) (possibly in
              addition to normal devices) */
   };
-  already_AddRefed<PledgeMediaDeviceSet>
+
+  typedef MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<dom::MediaStreamError>, true> MediaDeviceSetPromise;
+  typedef MozPromise<const char*, nsresult, false> BadConstraintsPromise;
+
+  RefPtr<MediaDeviceSetPromise>
   EnumerateRawDevices(uint64_t aWindowId,
                       dom::MediaSourceEnum      aVideoInputType,
                       dom::MediaSourceEnum      aAudioInputType,
                       MediaSinkEnum             aAudioOutputType,
                       DeviceEnumerationType     aVideoInputEnumType = DeviceEnumerationType::Normal,
                       DeviceEnumerationType     aAudioInputEnumType = DeviceEnumerationType::Normal);
-  already_AddRefed<PledgeMediaDeviceSet>
+
+  RefPtr<MediaDeviceSetPromise>
   EnumerateDevicesImpl(uint64_t aWindowId,
                        dom::MediaSourceEnum      aVideoInputType,
                        dom::MediaSourceEnum      aAudioInputType,
                        MediaSinkEnum             aAudioOutputType,
                        DeviceEnumerationType     aVideoInputEnumType,
                        DeviceEnumerationType     aAudioInputEnumType);
-  already_AddRefed<PledgeChar>
+
+  RefPtr<BadConstraintsPromise>
   SelectSettings(
       dom::MediaStreamConstraints& aConstraints,
       bool aIsChrome,
-      RefPtr<media::Refcountable<UniquePtr<MediaDeviceSet>>>& aSources);
+      const RefPtr<MediaDeviceSetRefCnt>& aSources);
 
   void GetPref(nsIPrefBranch *aBranch, const char *aPref,
                const char *aData, int32_t *aVal);
@@ -313,11 +316,8 @@ private:
 
   static StaticRefPtr<MediaManager> sSingleton;
 
-  media::CoatCheck<PledgeMediaDeviceSet> mOutstandingPledges;
-  media::CoatCheck<PledgeChar> mOutstandingCharPledges;
   nsTArray<nsString> mDeviceIDs;
 public:
-  media::CoatCheck<media::Pledge<nsCString>> mGetPrincipalKeyPledges;
   RefPtr<media::Parent<media::NonE10s>> mNonE10sParent;
 };
 
