@@ -82,3 +82,28 @@ about-debugging-worker-action-push = Push
 
 # This string is displayed as a label of the button that starts a service worker.
 about-debugging-worker-action-start = Start
+
+# Displayed for service workers in runtime pages,
+# "Fetch" is an event type and should not be localized.
+about-debugging-worker-fetch = Fetch
+
+# Displayed for service workers in runtime pages, after about-debugging-worker-fetch,
+# to indicate the service worker is currently listening to "fetch" events.
+# "Fetch" is an event type and should not be localized.
+about-debugging-worker-fetch-listening = Listening for fetch events
+
+# Displayed for service workers in runtime pages, after about-debugging-worker-fetch,
+# to indicate the service worker is not listening to "fetch" events.
+# "Fetch" is an event type and should not be localized.
+about-debugging-worker-fetch-not-listening = Not listening for fetch events
+
+# Displayed for service workers in runtime pages, for service workers in RUNNING state.
+about-debugging-worker-status-running = Running
+
+# Displayed for service workers in runtime pages, for service workers in STOPPED state.
+about-debugging-worker-status-stopped = Stopped
+
+# Displayed for service workers in runtime pages, for service workers for which no
+# registration could be found yet. Only active registrations are visible from
+# about:debugging, so such service workers are considered as registering.
+about-debugging-worker-status-registering = Registering
