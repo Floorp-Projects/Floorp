@@ -3586,9 +3586,22 @@ nsIDocument::GetActiveElement()
 
   // No focused element anywhere in this document.  Try to get the BODY.
   if (IsHTMLOrXHTML()) {
+    Element* bodyElement = AsHTMLDocument()->GetBody();
+    if (bodyElement) {
+      return bodyElement;
+    }
+    // Special case to handle the transition to browser.xhtml where there is
+    // currently not a body element, but we need to match the XUL behavior.
+    // This should be removed when bug 1492582 is resolved.
+    if (nsContentUtils::IsChromeDoc(this)) {
+      Element* docElement = GetDocumentElement();
+      if (docElement && docElement->IsXULElement()) {
+        return docElement;
+      }
+    }
     // Because of IE compatibility, return null when html document doesn't have
     // a body.
-    return AsHTMLDocument()->GetBody();
+    return nullptr;
   }
 
   // If we couldn't get a BODY, return the root element.
