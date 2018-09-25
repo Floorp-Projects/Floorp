@@ -23,9 +23,7 @@
 var { Ci, Cu, Cr, Cc } = require("chrome");
 var Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
-var {
-  ActorPool, createExtraActors, appendExtraActors
-} = require("devtools/server/actors/common");
+var { appendExtraActors } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
@@ -42,6 +40,7 @@ const STRINGS_URI = "devtools/shared/locales/browsing-context.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 const { ActorClassWithSpec, Actor, Pool } = require("devtools/shared/protocol");
+const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
 const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
 
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/thread", true);
@@ -478,16 +477,18 @@ const browsingContextTargetPrototype = {
     // Always use the same ActorPool, so existing actor instances
     // (created in createExtraActors) are not lost.
     if (!this._targetScopedActorPool) {
-      this._targetScopedActorPool = new ActorPool(this.conn);
-      this.conn.addActorPool(this._targetScopedActorPool);
+      this._targetScopedActorPool = new LazyPool(this.conn);
     }
 
     // Walk over target-scoped actor factories and make sure they are all
     // instantiated and added into the ActorPool.
-    this._createExtraActors(DebuggerServer.targetScopedActorFactories,
-      this._targetScopedActorPool);
+    const addedActors = createExtraActors(
+      DebuggerServer.targetScopedActorFactories,
+      this._targetScopedActorPool,
+      this
+    );
 
-    this._appendExtraActors(response);
+    Object.assign(response, addedActors);
     return response;
   },
 
@@ -562,7 +563,6 @@ const browsingContextTargetPrototype = {
   },
 
   /* Support for DebuggerServer.addTargetScopedActor. */
-  _createExtraActors: createExtraActors,
   _appendExtraActors: appendExtraActors,
 
   /**
@@ -891,7 +891,7 @@ const browsingContextTargetPrototype = {
     // Shut down actors that belong to this target's pool.
     this._styleSheetActors.clear();
     if (this._targetScopedActorPool) {
-      this.conn.removeActorPool(this._targetScopedActorPool);
+      this._targetScopedActorPool.destroy();
       this._targetScopedActorPool = null;
     }
 
@@ -1443,7 +1443,7 @@ const browsingContextTargetPrototype = {
     const actor = new StyleSheetActor(styleSheet, this);
     this._styleSheetActors.set(styleSheet, actor);
 
-    this._targetScopedActorPool.addActor(actor);
+    this._targetScopedActorPool.manage(actor);
     this.emit("stylesheet-added", actor);
 
     return actor;
@@ -1457,7 +1457,7 @@ const browsingContextTargetPrototype = {
       }
       delete this._extraActors[name];
     }
-  },
+  }
 };
 
 exports.browsingContextTargetPrototype = browsingContextTargetPrototype;

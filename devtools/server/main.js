@@ -10,8 +10,7 @@
  */
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
-var { ActorPool, RegisteredActorFactory,
-      ObservedActorFactory } = require("devtools/server/actors/common");
+var { ActorPool } = require("devtools/server/actors/common");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 
@@ -1170,7 +1169,7 @@ var DebuggerServer = {
    * existing protocol packet properties, like 'title', 'url' or 'actor', since that would
    * break the protocol.
    *
-   * @param actor object
+   * @param options object
    *        - constructorName: (required)
    *          name of actor constructor, which is also used when removing the actor.
    *        One of the following:
@@ -1181,7 +1180,7 @@ var DebuggerServer = {
    * @param name string
    *        The name of the new request type.
    */
-  addTargetScopedActor(actor, name) {
+  addTargetScopedActor(options, name) {
     if (!name) {
       throw Error("addTargetScopedActor requires the `name` argument");
     }
@@ -1191,8 +1190,7 @@ var DebuggerServer = {
     if (DebuggerServer.targetScopedActorFactories.hasOwnProperty(name)) {
       throw Error(name + " already exists");
     }
-    DebuggerServer.targetScopedActorFactories[name] =
-      new RegisteredActorFactory(actor, name);
+    DebuggerServer.targetScopedActorFactories[name] = { options, name };
   },
 
   /**
@@ -1215,8 +1213,8 @@ var DebuggerServer = {
       const actor = actorOrName;
       for (const factoryName in DebuggerServer.targetScopedActorFactories) {
         const handler = DebuggerServer.targetScopedActorFactories[factoryName];
-        if ((handler.name && handler.name == actor.name) ||
-            (handler.id && handler.id == actor.id)) {
+        if ((handler.options.constructorName == actor.name) ||
+            (handler.options.id == actor.id)) {
           name = factoryName;
           break;
         }
@@ -1241,7 +1239,7 @@ var DebuggerServer = {
    * existing protocol packet properties, like 'from', 'tabs' or 'selected', since that
    * would break the protocol.
    *
-   * @param actor object
+   * @param options object
    *        - constructorName: (required)
    *          name of actor constructor, which is also used when removing the actor.
    *        One of the following:
@@ -1252,7 +1250,7 @@ var DebuggerServer = {
    * @param name string
    *        The name of the new request type.
    */
-  addGlobalActor(actor, name) {
+  addGlobalActor(options, name) {
     if (!name) {
       throw Error("addGlobalActor requires the `name` argument");
     }
@@ -1262,7 +1260,7 @@ var DebuggerServer = {
     if (DebuggerServer.globalActorFactories.hasOwnProperty(name)) {
       throw Error(name + " already exists");
     }
-    DebuggerServer.globalActorFactories[name] = new RegisteredActorFactory(actor, name);
+    DebuggerServer.globalActorFactories[name] = { options, name };
   },
 
   /**
@@ -1285,8 +1283,8 @@ var DebuggerServer = {
       const actor = actorOrName;
       for (const factoryName in DebuggerServer.globalActorFactories) {
         const handler = DebuggerServer.globalActorFactories[factoryName];
-        if ((handler.name && handler.name == actor.name) ||
-            (handler.id && handler.id == actor.id)) {
+        if ((handler.options.constructorName == actor.name) ||
+            (handler.options.id == actor.id)) {
           name = factoryName;
           break;
         }
@@ -1526,30 +1524,27 @@ DebuggerServerConnection.prototype = {
   },
 
   _getOrCreateActor(actorID) {
-    let actor = this.getActor(actorID);
-    if (!actor) {
-      this.transport.send({ from: actorID ? actorID : "root",
-                            error: "noSuchActor",
-                            message: "No such actor for ID: " + actorID });
-      return null;
-    }
-
-    // Dynamically-loaded actors have to be created lazily.
-    if (actor instanceof ObservedActorFactory) {
-      try {
-        actor = actor.createActor();
-      } catch (error) {
-        const prefix = "Error occurred while creating actor '" + actor.name;
-        this.transport.send(this._unknownError(actorID, prefix, error));
+    try {
+      const actor = this.getActor(actorID);
+      if (!actor) {
+        this.transport.send({ from: actorID ? actorID : "root",
+                              error: "noSuchActor",
+                              message: "No such actor for ID: " + actorID });
+        return null;
       }
-    } else if (typeof (actor) !== "object") {
-      // ActorPools should now contain only actor instances (i.e. objects)
-      // or ObservedActorFactory instances.
-      throw new Error("Unexpected actor constructor/function in ActorPool " +
-                      "for actorID=" + actorID + ".");
-    }
 
-    return actor;
+      if (typeof (actor) !== "object") {
+        // ActorPools should now contain only actor instances (i.e. objects)
+        throw new Error("Unexpected actor constructor/function in ActorPool " +
+                        "for actorID=" + actorID + ".");
+      }
+
+      return actor;
+    } catch (error) {
+      const prefix = `Error occurred while creating actor' ${actorID}`;
+      this.transport.send(this._unknownError(actorID, prefix, error));
+    }
+    return null;
   },
 
   poolFor(actorID) {
