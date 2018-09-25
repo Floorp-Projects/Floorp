@@ -15,4 +15,3 @@ include datetime/reftest.list
 
 == selector-read-write-type-change-001.html selector-read-write-type-change-001-ref.html
 == selector-read-write-type-change-002.html selector-read-write-type-change-002-ref.html
-== shadow-rules.html shadow-rules-ref.html
