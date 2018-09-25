@@ -81,7 +81,7 @@ WebConsoleOutputWrapper.prototype = {
           }
         },
         recordTelemetryEvent: (eventName, extra = {}) => {
-          this.telemetry.recordEvent("devtools.main", eventName, "webconsole", null, {
+          this.telemetry.recordEvent(eventName, "webconsole", null, {
             ...extra,
             "session_id": this.toolbox && this.toolbox.sessionId || -1
           });
@@ -155,7 +155,7 @@ WebConsoleOutputWrapper.prototype = {
         Object.assign(serviceContainer, {
           onViewSourceInDebugger: frame => {
             this.toolbox.viewSourceInDebugger(frame.url, frame.line).then(() => {
-              this.telemetry.recordEvent("devtools.main", "jump_to_source", "webconsole",
+              this.telemetry.recordEvent("jump_to_source", "webconsole",
                                          null, { "session_id": this.toolbox.sessionId }
               );
               this.hud.emit("source-in-debugger-opened");
@@ -165,7 +165,7 @@ WebConsoleOutputWrapper.prototype = {
             frame.url,
             frame.line
           ).then(() => {
-            this.telemetry.recordEvent("devtools.main", "jump_to_source", "webconsole",
+            this.telemetry.recordEvent("jump_to_source", "webconsole",
                                        null, { "session_id": this.toolbox.sessionId }
             );
           }),
@@ -173,7 +173,7 @@ WebConsoleOutputWrapper.prototype = {
             frame.url,
             frame.line
           ).then(() => {
-            this.telemetry.recordEvent("devtools.main", "jump_to_source", "webconsole",
+            this.telemetry.recordEvent("jump_to_source", "webconsole",
                                        null, { "session_id": this.toolbox.sessionId }
             );
           }),
@@ -408,7 +408,7 @@ WebConsoleOutputWrapper.prototype = {
         // send it when we have one.
         if (this.toolbox) {
           this.telemetry.addEventProperty(
-            "devtools.main", "enter", "webconsole", null, "message_count", length);
+            this.toolbox, "enter", "webconsole", null, "message_count", length);
         }
 
         this.queuedMessageAdds = [];
