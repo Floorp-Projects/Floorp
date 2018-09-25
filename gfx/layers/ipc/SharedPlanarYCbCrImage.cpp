@@ -132,8 +132,8 @@ SharedPlanarYCbCrImage::AdoptData(const Data& aData)
                                    cbOffset,
                                    crOffset,
                                    aData.mStereoMode,
+                                   aData.mColorDepth,
                                    aData.mYUVColorSpace,
-                                   aData.mBitDepth,
                                    hasIntermediateBuffer));
 
   return true;
@@ -191,7 +191,7 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
   mData.mPicSize = aData.mPicSize;
   mData.mStereoMode = aData.mStereoMode;
   mData.mYUVColorSpace = aData.mYUVColorSpace;
-  mData.mBitDepth = aData.mBitDepth;
+  mData.mColorDepth = aData.mColorDepth;
   // those members are not always equal to aData's, due to potentially different
   // packing.
   mData.mYSkip = 0;

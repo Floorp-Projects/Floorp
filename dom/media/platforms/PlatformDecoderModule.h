@@ -194,7 +194,7 @@ public:
       return false;
     }
     const auto videoInfo = aTrackInfo.GetAsVideoInfo();
-    return !videoInfo || SupportsBitDepth(videoInfo->mBitDepth, aDiagnostics);
+    return !videoInfo || SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics);
   }
 
 protected:
@@ -206,12 +206,12 @@ protected:
   friend class dom::RemoteDecoderModule;
   friend class EMEDecoderModule;
 
-  // Indicates if the PlatformDecoderModule supports decoding of aBitDepth.
-  // Should override this method when the platform can support bitDepth != 8.
-  virtual bool SupportsBitDepth(const uint8_t aBitDepth,
-                                DecoderDoctorDiagnostics* aDiagnostics) const
+  // Indicates if the PlatformDecoderModule supports decoding of aColorDepth.
+  // Should override this method when the platform can support color depth != 8.
+  virtual bool SupportsColorDepth(gfx::ColorDepth aColorDepth,
+                                  DecoderDoctorDiagnostics* aDiagnostics) const
   {
-    return aBitDepth == 8;
+    return aColorDepth == gfx::ColorDepth::COLOR_8;
   }
 
   // Creates a Video decoder. The layers backend is passed in so that
