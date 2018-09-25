@@ -7,6 +7,7 @@ const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { DebuggerServer } = require("devtools/server/main");
 const { ActorRegistry } = require("devtools/server/actor-registry");
+const promise = require("promise");
 
 var gTestGlobals = [];
 DebuggerServer.addTestGlobal = function(global) {

@@ -50,8 +50,8 @@ const PushSubscriptionActor = protocol.ActorClassWithSpec(pushSubscriptionSpec, 
   },
 
   destroy() {
-    this._subscription = null;
     protocol.Actor.prototype.destroy.call(this);
+    this._subscription = null;
   },
 });
 
