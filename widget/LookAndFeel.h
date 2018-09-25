@@ -419,6 +419,12 @@ public:
 
      /*
       * A boolean value indicating whether client-side decorations should
+      * have transparent background.
+      */
+     eIntID_GTKCSDTransparentBackground,
+
+     /*
+      * A boolean value indicating whether client-side decorations should
       * contain a minimize button.
       */
      eIntID_GTKCSDMinimizeButton,
