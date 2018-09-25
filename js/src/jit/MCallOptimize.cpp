@@ -788,6 +788,12 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
         return InliningStatus_NotInlined;
     }
 
+    // XXX bug 1493903.
+    if (callInfo.argc() != 1) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
     MDefinition* obj = convertUnboxedObjects(callInfo.thisArg());
     for (uint32_t i = 0; i < callInfo.argc(); i++) {
         MDefinition* value = callInfo.getArg(i);
