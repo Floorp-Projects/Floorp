@@ -268,6 +268,13 @@ pref("dom.script_loader.bytecode_cache.strategy", 0);
 pref("dom.script_loader.binast_encoding.enabled", false);
 #endif
 
+// Whether window.event is enabled
+#ifdef NIGHTLY_BUILD
+pref("dom.window.event.enabled", true);
+#else
+pref("dom.window.event.enabled", false);
+#endif
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
