@@ -251,9 +251,11 @@ class FirefoxBrowser(Browser):
         if self.ca_certificate_path is not None:
             self.setup_ssl()
 
+        args = self.binary_args[:] if self.binary_args else []
+        args += [cmd_arg("marionette"), "about:blank"]
+
         debug_args, cmd = browser_command(self.binary,
-                                          self.binary_args if self.binary_args else [] +
-                                          [cmd_arg("marionette"), "about:blank"],
+                                          args,
                                           self.debug_info)
 
         self.runner = FirefoxRunner(profile=self.profile,
