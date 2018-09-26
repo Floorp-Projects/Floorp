@@ -28,16 +28,6 @@ interface nsIWebBrowserChrome : nsISupports
     void setStatus(in unsigned long statusType, in wstring status);
 
     /**
-     * The currently loaded WebBrowser.  The browser chrome may be
-     * told to set the WebBrowser object to a new object by setting this
-     * attribute.  In this case the implementer is responsible for taking the
-     * new WebBrowser object and doing any necessary initialization or setup
-     * as if it had created the WebBrowser itself.  This includes positioning
-     * setting up listeners etc.
-     */
-    attribute nsIWebBrowser webBrowser;
-
-    /**
      * Definitions for the chrome flags
      */
     const unsigned long CHROME_DEFAULT                = 0x00000001;
@@ -123,8 +113,6 @@ interface nsIWebBrowserChrome : nsISupports
 
     /**
      * Shows the window as a modal window.
-     * @return (the function error code) the status value specified by
-     *         in exitModalEventLoop.
      */
     void showAsModal();
 
@@ -133,11 +121,4 @@ interface nsIWebBrowserChrome : nsISupports
      * @return true if it's a modal window
      */
     boolean isWindowModal();
-
-    /**
-     * Exit a modal event loop if we're in one. The implementation
-     * should also exit out of the loop if the window is destroyed.
-     * @param aStatus - the result code to return from showAsModal
-     */
-    void exitModalEventLoop(in nsresult aStatus);
 };
