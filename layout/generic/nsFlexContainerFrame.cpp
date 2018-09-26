@@ -1763,24 +1763,24 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult
 {
   struct Key
   {
-    const LogicalSize mAvailableSize;
     const LogicalSize mComputedSize;
     const nscoord mComputedMinBSize;
     const nscoord mComputedMaxBSize;
+    const nscoord mAvailableBSize;
 
     explicit Key(const ReflowInput& aRI)
-      : mAvailableSize(aRI.AvailableSize())
-      , mComputedSize(aRI.ComputedSize())
+      : mComputedSize(aRI.ComputedSize())
       , mComputedMinBSize(aRI.ComputedMinBSize())
       , mComputedMaxBSize(aRI.ComputedMaxBSize())
+      , mAvailableBSize(aRI.AvailableBSize())
     { }
 
     bool operator==(const Key& aOther) const
     {
-      return mAvailableSize == aOther.mAvailableSize &&
-        mComputedSize == aOther.mComputedSize &&
+      return mComputedSize == aOther.mComputedSize &&
         mComputedMinBSize == aOther.mComputedMinBSize &&
-        mComputedMaxBSize == aOther.mComputedMaxBSize;
+        mComputedMaxBSize == aOther.mComputedMaxBSize &&
+        mAvailableBSize == aOther.mAvailableBSize;
     }
   };
 
