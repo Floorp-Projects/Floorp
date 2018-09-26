@@ -36,8 +36,9 @@ class BitArray
 
     void clear(bool value) {
         memset(map, value ? 0xFF : 0, sizeof(map));
-        if (value)
+        if (value) {
             map[numSlots - 1] &= paddingMask;
+        }
     }
 
     inline bool get(size_t offset) const {
@@ -63,8 +64,9 @@ class BitArray
 
     bool isAllClear() const {
         for (size_t i = 0; i < numSlots; i++) {
-            if (map[i])
+            if (map[i]) {
                 return false;
+            }
         }
         return true;
     }
