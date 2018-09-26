@@ -85,8 +85,6 @@ function initWebAudioEditor(aUrl) {
     const tab = await addTab(aUrl);
     const target = await TargetFactory.forTab(tab);
 
-    await target.attach();
-
     Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
     const toolbox = await gDevTools.showToolbox(target, "webaudioeditor");
     const panel = toolbox.getCurrentPanel();

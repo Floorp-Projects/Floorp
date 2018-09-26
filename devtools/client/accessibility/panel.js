@@ -59,11 +59,6 @@ AccessibilityPanel.prototype = {
       resolver = resolve;
     });
 
-    // Local monitoring needs to make the target remote.
-    if (!this.target.isRemote) {
-      await this.target.attach();
-    }
-
     this._telemetry = new Telemetry();
     this.panelWin.gTelemetry = this._telemetry;
 

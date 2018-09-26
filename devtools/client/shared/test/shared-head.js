@@ -409,7 +409,6 @@ var openToolboxForTab = async function(tab, toolId, hostType) {
 
   let toolbox;
   const target = await TargetFactory.forTab(tab);
-  await target.attach();
 
   // Check if the toolbox is already loaded.
   toolbox = gDevTools.getToolbox(target);
