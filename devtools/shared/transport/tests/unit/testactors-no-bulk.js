@@ -3,7 +3,7 @@
 "use strict";
 
 const { RootActor } = require("devtools/server/actors/root");
-const { ActorRegistry } = require("devtools/server/actor-registry");
+const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 
 /**
  * Root actor that doesn't have the bulk trait.

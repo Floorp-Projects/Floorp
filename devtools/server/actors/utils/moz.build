@@ -6,6 +6,7 @@
 
 DevToolsModules(
     'actor-registry-utils.js',
+    'actor-registry.js',
     'audionodes.json',
     'automation-timeline.js',
     'breakpoint-actor-map.js',
