@@ -33,12 +33,12 @@ async function performTests() {
   await onPopupOpen;
 
   ok(popup.isOpen, "popup is open");
-  is(popup.itemCount, jsterm._autocompleteCache.length, "popup.itemCount is correct");
-  ok(jsterm._autocompleteCache.includes("addEventListener"),
+  const cacheMatches = jsterm._autocompleteCache.matches;
+  is(popup.itemCount, cacheMatches.length, "popup.itemCount is correct");
+  ok(cacheMatches.includes("addEventListener"),
     "addEventListener is in the list of suggestions");
-  ok(jsterm._autocompleteCache.includes("bgColor"),
-    "bgColor is in the list of suggestions");
-  ok(jsterm._autocompleteCache.includes("ATTRIBUTE_NODE"),
+  ok(cacheMatches.includes("bgColor"), "bgColor is in the list of suggestions");
+  ok(cacheMatches.includes("ATTRIBUTE_NODE"),
     "ATTRIBUTE_NODE is in the list of suggestions");
 
   const onPopupClose = popup.once("popup-closed");

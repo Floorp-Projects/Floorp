@@ -124,8 +124,9 @@ class Fifo
     // |const T&| or a |T&&|.
     template <typename U>
     MOZ_MUST_USE bool pushBack(U&& u) {
-        if (!rear_.append(std::forward<U>(u)))
+        if (!rear_.append(std::forward<U>(u))) {
             return false;
+        }
         fixup();
         return true;
     }
@@ -133,8 +134,9 @@ class Fifo
     // Construct a T in-place at the back of the queue.
     template <typename... Args>
     MOZ_MUST_USE bool emplaceBack(Args&&... args) {
-        if (!rear_.emplaceBack(std::forward<Args>(args)...))
+        if (!rear_.emplaceBack(std::forward<Args>(args)...)) {
             return false;
+        }
         fixup();
         return true;
     }
