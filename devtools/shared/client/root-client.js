@@ -35,9 +35,6 @@ function RootClient(client, greeting) {
   this.traits = greeting.traits;
 
   // Cache root form as this will always be the same value.
-  //
-  // Note that rootForm is overloaded by DebuggerClient.checkRuntimeVersion
-  // in order to support <FF59 that doesn't support getRoot request.
   Object.defineProperty(this, "rootForm", {
     get() {
       delete this.rootForm;
