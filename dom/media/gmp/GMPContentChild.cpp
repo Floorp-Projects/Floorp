@@ -367,18 +367,22 @@ mozilla::ipc::IPCResult
 GMPContentChild::RecvPChromiumCDMConstructor(PChromiumCDMChild* aActor)
 {
   ChromiumCDMChild* child = static_cast<ChromiumCDMChild*>(aActor);
-  // TODO: Once we support CDM10, create one here, for now try and create CDM9
-  cdm::Host_9* host9 = child;
+  cdm::Host_10* host10 = child;
 
   void* cdm = nullptr;
-  GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API_BACKWARD_COMPAT, host9, &cdm);
+  GMPErr err = mGMPChild->GetAPI(CHROMIUM_CDM_API, host10, &cdm);
   if (err != GMPNoErr || !cdm) {
-    NS_WARNING("GMPGetAPI call failed trying to get CDM.");
-    return IPC_FAIL_NO_REASON(this);
+    // Try to create older version 9 CDM.
+    cdm::Host_9* host9 = child;
+    GMPErr err =
+      mGMPChild->GetAPI(CHROMIUM_CDM_API_BACKWARD_COMPAT, host9, &cdm);
+    if (err != GMPNoErr || !cdm) {
+      NS_WARNING("GMPGetAPI call failed trying to get CDM.");
+      return IPC_FAIL_NO_REASON(this);
+    }
+    cdm = new ChromiumCDM9BackwardsCompat(
+      host10, static_cast<cdm::ContentDecryptionModule_9*>(cdm));
   }
-  cdm::Host_10* host10 = child;
-  cdm = new ChromiumCDM9BackwardsCompat(
-    host10, static_cast<cdm::ContentDecryptionModule_9*>(cdm));
 
   child->Init(static_cast<cdm::ContentDecryptionModule_10*>(cdm),
               mGMPChild->mStorageId);
