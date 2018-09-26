@@ -50,7 +50,6 @@
 #endif // MOZ_XUL
 #include "nsContainerFrame.h"
 #include "nsNameSpaceManager.h"
-#include "nsIComboboxControlFrame.h"
 #include "nsComboboxControlFrame.h"
 #include "nsListControlFrame.h"
 #include "nsPlaceholderFrame.h"
