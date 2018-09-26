@@ -65,17 +65,103 @@ struct nsHostKey
     PLDHashNumber Hash() const;
 };
 
+// 9c29024a-e7ea-48b0-945e-058a8687247b
+#define NS_HOSTRECORD_IID \
+{ 0x9c29024a, 0xe7ea, 0x48b0, {0x94, 0x5e, 0x05, 0x8a, 0x86, 0x87, 0x24, 0x7b }}
+
 /**
  * nsHostRecord - ref counted object type stored in host resolver cache.
  */
 class nsHostRecord :
     public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
-    public nsHostKey
+    public nsHostKey,
+    public nsISupports
+{
+public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_HOSTRECORD_IID)
+
+    virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const = 0;
+
+protected:
+    friend class nsHostResolver;
+
+    explicit nsHostRecord(const nsHostKey& key);
+    virtual ~nsHostRecord();
+
+    // Mark hostrecord as not usable
+    void Invalidate();
+
+    enum ExpirationStatus {
+        EXP_VALID,
+        EXP_GRACE,
+        EXP_EXPIRED,
+    };
+
+    ExpirationStatus CheckExpiration(const mozilla::TimeStamp& now) const;
+
+    // Convenience function for setting the timestamps above (mValidStart,
+    // mValidEnd, and mGraceStart). valid and grace are durations in seconds.
+    void SetExpiration(const mozilla::TimeStamp& now, unsigned int valid,
+                       unsigned int grace);
+    void CopyExpirationTimesAndFlagsFrom(const nsHostRecord *aFromHostRecord);
+
+    // Checks if the record is usable (not expired and has a value)
+    bool HasUsableResult(const mozilla::TimeStamp& now, uint16_t queryFlags = 0) const;
+
+    enum DnsPriority {
+        DNS_PRIORITY_LOW,
+        DNS_PRIORITY_MEDIUM,
+        DNS_PRIORITY_HIGH,
+    };
+    static DnsPriority GetPriority(uint16_t aFlags);
+
+    virtual void Cancel() = 0;
+
+    virtual bool HasUsableResultInternal() const = 0;
+
+    mozilla::LinkedList<RefPtr<nsResolveHostCallback>> mCallbacks;
+
+    bool IsAddrRecord() const {
+        return type == nsIDNSService::RESOLVE_TYPE_DEFAULT;
+    }
+
+    // When the record began being valid. Used mainly for bookkeeping.
+    mozilla::TimeStamp mValidStart;
+
+    // When the record is no longer valid (it's time of expiration)
+    mozilla::TimeStamp mValidEnd;
+
+    // When the record enters its grace period. This must be before mValidEnd.
+    // If a record is in its grace period (and not expired), it will be used
+    // but a request to refresh it will be made.
+    mozilla::TimeStamp mGraceStart;
+
+    const nsCString mOriginSuffix;
+
+    mozilla::net::ResolverMode mResolverMode;
+
+    uint16_t  mResolving;  // counter of outstanding resolving calls
+
+    uint8_t negative : 1;   /* True if this record is a cache of a failed lookup.
+                               Negative cache entries are valid just like any other
+                               (though never for more than 60 seconds), but a use
+                               of that negative entry forces an asynchronous refresh. */
+    uint8_t mDoomed : 1;    // explicitly expired
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsHostRecord, NS_HOSTRECORD_IID)
+
+// b020e996-f6ab-45e5-9bf5-1da71dd0053a
+#define ADDRHOSTRECORD_IID \
+{ 0xb020e996, 0xf6ab, 0x45e5, {0x9b, 0xf5, 0x1d, 0xa7, 0x1d, 0xd0, 0x05, 0x3a }}
+
+class AddrHostRecord final : public nsHostRecord
 {
     typedef mozilla::Mutex Mutex;
 
 public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHostRecord)
+    NS_DECLARE_STATIC_IID_ACCESSOR(ADDRHOSTRECORD_IID)
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     /* a fully resolved host record has either a non-null |addr_info| or |addr|
      * field.  if |addr_info| is null, it implies that the |host| is an IP
@@ -98,54 +184,32 @@ public:
     int          addr_info_gencnt; /* generation count of |addr_info| */
     mozilla::net::AddrInfo *addr_info;
     mozilla::UniquePtr<mozilla::net::NetAddr> addr;
-    bool         negative;   /* True if this record is a cache of a failed lookup.
-                                Negative cache entries are valid just like any other
-                                (though never for more than 60 seconds), but a use
-                                of that negative entry forces an asynchronous refresh. */
-
-    enum ExpirationStatus {
-        EXP_VALID,
-        EXP_GRACE,
-        EXP_EXPIRED,
-    };
-
-    ExpirationStatus CheckExpiration(const mozilla::TimeStamp& now) const;
-
-    // When the record began being valid. Used mainly for bookkeeping.
-    mozilla::TimeStamp mValidStart;
-
-    // When the record is no longer valid (it's time of expiration)
-    mozilla::TimeStamp mValidEnd;
-
-    // When the record enters its grace period. This must be before mValidEnd.
-    // If a record is in its grace period (and not expired), it will be used
-    // but a request to refresh it will be made.
-    mozilla::TimeStamp mGraceStart;
-
-    // When the lookups of this record started and their durations
-    mozilla::TimeStamp mTrrStart;
-    mozilla::TimeStamp mNativeStart;
-    mozilla::TimeDuration mTrrDuration;
-    mozilla::TimeDuration mNativeDuration;
-
-    // Convenience function for setting the timestamps above (mValidStart,
-    // mValidEnd, and mGraceStart). valid and grace are durations in seconds.
-    void SetExpiration(const mozilla::TimeStamp& now, unsigned int valid,
-                       unsigned int grace);
-    void CopyExpirationTimesAndFlagsFrom(const nsHostRecord *aFromHostRecord);
-
-    // Checks if the record is usable (not expired and has a value)
-    bool HasUsableResult(const mozilla::TimeStamp& now, uint16_t queryFlags = 0) const;
-
-    // Mark hostrecord as not usable
-    void Invalidate();
 
     // hold addr_info_lock when calling the blacklist functions
     bool   Blacklisted(mozilla::net::NetAddr *query);
     void   ResetBlacklist();
     void   ReportUnusable(mozilla::net::NetAddr *addr);
 
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+
+    bool IsTRR() { return mTRRUsed; }
+
+private:
+    friend class nsHostResolver;
+
+    explicit AddrHostRecord(const nsHostKey& key);
+    ~AddrHostRecord();
+
+    // Checks if the record is usable (not expired and has a value)
+    bool HasUsableResultInternal() const override;
+
+    void Cancel() override;
+
+    bool RemoveOrRefresh(); // Mark records currently being resolved as needed
+                            // to resolve again.
+
+    void ResolveComplete();
 
     enum DnsPriority {
         DNS_PRIORITY_LOW,
@@ -154,26 +218,15 @@ public:
     };
     static DnsPriority GetPriority(uint16_t aFlags);
 
-    bool RemoveOrRefresh(); // Mark records currently being resolved as needed
-                            // to resolve again.
-    bool IsTRR() { return mTRRUsed; }
-    void ResolveComplete();
-    void Cancel();
+    // When the lookups of this record started and their durations
+    mozilla::TimeStamp mTrrStart;
+    mozilla::TimeStamp mNativeStart;
+    mozilla::TimeDuration mTrrDuration;
+    mozilla::TimeDuration mNativeDuration;
 
-    mozilla::net::ResolverMode mResolverMode;
-
-    nsTArray<nsCString> mRequestByTypeResult;
-    Mutex mRequestByTypeResultLock;
-
-private:
-    friend class nsHostResolver;
-
-    explicit nsHostRecord(const nsHostKey& key);
-    mozilla::LinkedList<RefPtr<nsResolveHostCallback>> mCallbacks;
     nsAutoPtr<mozilla::net::AddrInfo> mFirstTRR; // partial TRR storage
     nsresult mFirstTRRresult;
 
-    uint16_t  mResolving;  // counter of outstanding resolving calls
     uint8_t   mTRRSuccess; // number of successful TRR responses
     uint8_t   mNativeSuccess; // number of native lookup responses
 
@@ -184,7 +237,6 @@ private:
     uint16_t    mNativeUsed : 1;
     uint16_t    onQueue : 1;    // true if pending and on the queue (not yet given to getaddrinfo())
     uint16_t    usingAnyThread : 1; // true if off queue and contributing to mActiveAnyThreadCount
-    uint16_t    mDoomed : 1;    // explicitly expired
     uint16_t    mDidCallbacks : 1;
     uint16_t    mGetTtl : 1;
 
@@ -199,7 +251,6 @@ private:
     Mutex mTrrLock; // lock when accessing the mTrrA[AAA] pointers
     RefPtr<mozilla::net::TRR> mTrrA;
     RefPtr<mozilla::net::TRR> mTrrAAAA;
-    RefPtr<mozilla::net::TRR> mTrrTxt;
 
     // The number of times ReportUnusable() has been called in the record's
     // lifetime.
@@ -210,8 +261,50 @@ private:
     // of gencnt.
     nsTArray<nsCString> mBlacklistedItems;
 
-   ~nsHostRecord();
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(AddrHostRecord, ADDRHOSTRECORD_IID)
+
+// 77b786a7-04be-44f2-987c-ab8aa96676e0
+#define TYPEHOSTRECORD_IID \
+{ 0x77b786a7, 0x04be, 0x44f2, {0x98, 0x7c, 0xab, 0x8a, 0xa9, 0x66, 0x76, 0xe0 }}
+
+class TypeHostRecord final : public nsHostRecord
+{
+public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(TYPEHOSTRECORD_IID)
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    void GetRecords(nsTArray<nsCString> &aRecords);
+    void GetRecordsAsOneString(nsACString &aRecords);
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+private:
+    friend class nsHostResolver;
+
+    explicit TypeHostRecord(const nsHostKey& key);
+    ~TypeHostRecord();
+
+    // Checks if the record is usable (not expired and has a value)
+    bool HasUsableResultInternal() const override;
+
+    void Cancel() override;
+
+    bool HasUsableResult();
+
+    mozilla::Mutex mTrrLock; // lock when accessing the mTrr pointer
+    RefPtr<mozilla::net::TRR> mTrr;
+
+    nsTArray<nsCString> mResults;
+    mozilla::Mutex mResultsLock;
+
+    // When the lookups of this record started (for telemetry).
+    mozilla::TimeStamp mStart;
+
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(TypeHostRecord, TYPEHOSTRECORD_IID)
 
 /**
  * This class is used to notify listeners when a ResolveHost operation is
@@ -279,7 +372,7 @@ public:
     virtual LookupStatus CompleteLookupByType(nsHostRecord *, nsresult,
                                               const nsTArray<nsCString> *aResult,
                                               uint32_t aTtl, bool pb) = 0;
-    virtual nsresult GetHostRecord(const nsACString &host,
+    virtual nsresult GetHostRecord(const nsACString &host, uint16_t type,
                                    uint16_t flags, uint16_t af, bool pb,
                                    const nsCString &originSuffix,
                                    nsHostRecord **result)
@@ -398,7 +491,7 @@ public:
     LookupStatus CompleteLookupByType(nsHostRecord *, nsresult,
                                       const nsTArray<nsCString> *aResult,
                                       uint32_t aTtl, bool pb) override;
-    nsresult GetHostRecord(const nsACString &host,
+    nsresult GetHostRecord(const nsACString &host, uint16_t type,
                            uint16_t flags, uint16_t af, bool pb,
                            const nsCString &originSuffix,
                            nsHostRecord **result) override;
@@ -419,11 +512,11 @@ private:
 
     // Kick-off a name resolve operation, using native resolver and/or TRR
     nsresult NameLookup(nsHostRecord *);
-    bool     GetHostToLookup(nsHostRecord **m);
+    bool     GetHostToLookup(AddrHostRecord **m);
 
     // Removes the first element from the list and returns it AddRef-ed in aResult
     // Should not be called for an empty linked list.
-    void     DeQueue(mozilla::LinkedList<RefPtr<nsHostRecord>>& aQ, nsHostRecord **aResult);
+    void     DeQueue(mozilla::LinkedList<RefPtr<nsHostRecord>>& aQ, AddrHostRecord **aResult);
     // Cancels host records in the pending queue and also
     // calls CompleteLookup with the NS_ERROR_ABORT result code.
     void     ClearPendingQueue(mozilla::LinkedList<RefPtr<nsHostRecord>>& aPendingQ);
@@ -473,7 +566,7 @@ private:
     mozilla::Atomic<uint32_t> mPendingCount;
 
     // Set the expiration time stamps appropriately.
-    void PrepareRecordExpiration(nsHostRecord* rec) const;
+    void PrepareRecordExpirationAddrRecord(AddrHostRecord* rec) const;
 
 public:
     /*
