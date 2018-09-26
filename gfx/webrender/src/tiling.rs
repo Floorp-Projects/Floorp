@@ -12,14 +12,15 @@ use device::{FrameId, Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
 use gpu_cache::{GpuCache};
-use gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, TransformData, TransformPalette};
+use gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
+use gpu_types::{TransformData, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
 use prim_store::{PrimitiveIndex, PrimitiveStore, DeferredResolve};
 use profiler::FrameProfileCounters;
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
-use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree};
+use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
 use resource_cache::ResourceCache;
 use std::{cmp, usize, f32, i32, mem};
 use texture_allocator::GuillotineAllocator;
@@ -257,13 +258,6 @@ pub struct FrameOutput {
     pub pipeline_id: PipelineId,
 }
 
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct ScalingInfo {
-    pub src_task_id: RenderTaskId,
-    pub dest_task_id: RenderTaskId,
-}
-
 // Defines where the source data for a blit job can be found.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -306,7 +300,7 @@ pub struct ColorRenderTarget {
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
     pub readbacks: Vec<DeviceIntRect>,
-    pub scalings: Vec<ScalingInfo>,
+    pub scalings: Vec<ScalingInstance>,
     pub blits: Vec<BlitJob>,
     // List of frame buffer outputs for this render target.
     pub outputs: Vec<FrameOutput>,
@@ -447,9 +441,9 @@ impl RenderTarget for ColorRenderTarget {
                 self.readbacks.push(device_rect);
             }
             RenderTaskKind::Scaling(..) => {
-                self.scalings.push(ScalingInfo {
-                    src_task_id: task.children[0],
-                    dest_task_id: task_id,
+                self.scalings.push(ScalingInstance {
+                    task_address: render_tasks.get_task_address(task_id),
+                    src_task_address: render_tasks.get_task_address(task.children[0]),
                 });
             }
             RenderTaskKind::Blit(ref task_info) => {
@@ -519,7 +513,7 @@ pub struct AlphaRenderTarget {
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
-    pub scalings: Vec<ScalingInfo>,
+    pub scalings: Vec<ScalingInstance>,
     pub zero_clears: Vec<RenderTaskId>,
     allocator: TextureAllocator,
 }
@@ -610,11 +604,12 @@ impl RenderTarget for AlphaRenderTarget {
                     task.clip_data_address,
                 );
             }
-            RenderTaskKind::Scaling(..) => {
-                self.scalings.push(ScalingInfo {
-                    src_task_id: task.children[0],
-                    dest_task_id: task_id,
-                });
+            RenderTaskKind::Scaling(ref info) => {
+                info.add_instances(
+                    &mut self.scalings,
+                    render_tasks.get_task_address(task_id),
+                    render_tasks.get_task_address(task.children[0]),
+                );
             }
         }
     }
@@ -1036,6 +1031,22 @@ impl BlurTask {
             task_address,
             src_task_address,
             blur_direction,
+        };
+
+        instances.push(instance);
+    }
+}
+
+impl ScalingTask {
+    fn add_instances(
+        &self,
+        instances: &mut Vec<ScalingInstance>,
+        task_address: RenderTaskAddress,
+        src_task_address: RenderTaskAddress,
+    ) {
+        let instance = ScalingInstance {
+            task_address,
+            src_task_address,
         };
 
         instances.push(instance);

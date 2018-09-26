@@ -117,7 +117,6 @@ RenderCompositorANGLE::Initialize()
     return false;
   }
 
-  auto* egl = gl::GLLibraryEGL::Get();
   mDevice = GetDeviceOfEGLDisplay();
 
   if (!mDevice) {

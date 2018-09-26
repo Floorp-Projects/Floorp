@@ -14,7 +14,7 @@ use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState};
 use frame_builder::{PictureContext, PrimitiveContext};
 use gpu_cache::{GpuCacheHandle};
 use gpu_types::UvRectKind;
-use prim_store::{PrimitiveIndex, PrimitiveRun, SpaceMapper};
+use prim_store::{PrimitiveIndex, PrimitiveInstance, SpaceMapper};
 use prim_store::{PrimitiveMetadata, get_raster_rects};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
@@ -157,7 +157,7 @@ pub struct PictureCacheKey {
 #[derive(Debug)]
 pub struct PicturePrimitive {
     // List of primitive runs that make up this picture.
-    pub runs: Vec<PrimitiveRun>,
+    pub prim_instances: Vec<PrimitiveInstance>,
     pub state: Option<PictureState>,
 
     // The pipeline that the primitives on this picture belong to.
@@ -224,7 +224,7 @@ impl PicturePrimitive {
         requested_raster_space: RasterSpace,
     ) -> Self {
         PicturePrimitive {
-            runs: Vec::new(),
+            prim_instances: Vec::new(),
             state: None,
             secondary_render_task_id: None,
             requested_composite_mode,
@@ -248,7 +248,7 @@ impl PicturePrimitive {
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
         is_chased: bool,
-    ) -> Option<(PictureContext, PictureState)> {
+    ) -> Option<(PictureContext, PictureState, Vec<PrimitiveInstance>)> {
         if !self.resolve_scene_properties(frame_context.scene_properties) {
             if cfg!(debug_assertions) && is_chased {
                 println!("\tculled for carrying an invisible composite filter");
@@ -357,7 +357,6 @@ impl PicturePrimitive {
 
         let context = PictureContext {
             pipeline_id: self.pipeline_id,
-            prim_runs: mem::replace(&mut self.runs, Vec::new()),
             apply_local_clip_rect: self.apply_local_clip_rect,
             inflation_factor,
             allow_subpixel_aa,
@@ -366,34 +365,30 @@ impl PicturePrimitive {
             raster_space,
         };
 
-        Some((context, state))
+        let instances = mem::replace(&mut self.prim_instances, Vec::new());
+
+        Some((context, state, instances))
     }
 
     pub fn add_primitive(
         &mut self,
         prim_index: PrimitiveIndex,
     ) {
-        if let Some(ref mut run) = self.runs.last_mut() {
-            if run.base_prim_index.0 + run.count == prim_index.0 {
-                run.count += 1;
-                return;
-            }
-        }
-
-        self.runs.push(PrimitiveRun {
-            base_prim_index: prim_index,
-            count: 1,
+        self.prim_instances.push(PrimitiveInstance {
+            prim_index,
+            combined_local_clip_rect: LayoutRect::zero(),
         });
     }
 
     pub fn restore_context(
         &mut self,
+        prim_instances: Vec<PrimitiveInstance>,
         context: PictureContext,
         state: PictureState,
         local_rect: Option<PictureRect>,
         frame_state: &mut FrameBuildingState,
     ) -> (LayoutRect, Option<ClipNodeCollector>) {
-        self.runs = context.prim_runs;
+        self.prim_instances = prim_instances;
         self.state = Some(state);
 
         let local_rect = match local_rect {

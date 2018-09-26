@@ -230,6 +230,15 @@ impl BlurTask {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ScalingTask {
+    pub target_kind: RenderTargetKind,
+    pub uv_rect_handle: GpuCacheHandle,
+    uv_rect_kind: UvRectKind,
+}
+
+#[derive(Debug)]
 #[cfg(feature = "pathfinder")]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -295,7 +304,7 @@ pub enum RenderTaskKind {
     #[allow(dead_code)]
     Glyph(GlyphTask),
     Readback(DeviceIntRect),
-    Scaling(RenderTargetKind),
+    Scaling(ScalingTask),
     Blit(BlitTask),
     Border(BorderTask),
 }
@@ -569,8 +578,9 @@ impl RenderTask {
             scale_factor *= 2.0;
             adjusted_blur_target_size = (blur_target_size.to_f32() / scale_factor).to_i32();
             let downscaling_task = RenderTask::new_scaling(
-                target_kind,
                 downscaling_src_task_id,
+                render_tasks,
+                target_kind,
                 adjusted_blur_target_size,
             );
             downscaling_src_task_id = render_tasks.add(downscaling_task);
@@ -618,14 +628,21 @@ impl RenderTask {
     }
 
     pub fn new_scaling(
-        target_kind: RenderTargetKind,
         src_task_id: RenderTaskId,
+        render_tasks: &mut RenderTaskTree,
+        target_kind: RenderTargetKind,
         target_size: DeviceIntSize,
     ) -> Self {
+        let uv_rect_kind = render_tasks[src_task_id].uv_rect_kind();
+
         RenderTask::with_dynamic_location(
             target_size,
             vec![src_task_id],
-            RenderTaskKind::Scaling(target_kind),
+            RenderTaskKind::Scaling(ScalingTask {
+                target_kind,
+                uv_rect_handle: GpuCacheHandle::new(),
+                uv_rect_kind,
+            }),
             match target_kind {
                 RenderTargetKind::Color => ClearMode::Transparent,
                 RenderTargetKind::Alpha => ClearMode::One,
@@ -659,8 +676,7 @@ impl RenderTask {
     fn uv_rect_kind(&self) -> UvRectKind {
         match self.kind {
             RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::Readback(..) |
-            RenderTaskKind::Scaling(..) => {
+            RenderTaskKind::Readback(..) => {
                 unreachable!("bug: unexpected render task");
             }
 
@@ -670,6 +686,10 @@ impl RenderTask {
 
             RenderTaskKind::VerticalBlur(ref task) |
             RenderTaskKind::HorizontalBlur(ref task) => {
+                task.uv_rect_kind
+            }
+
+            RenderTaskKind::Scaling(ref task) => {
                 task.uv_rect_kind
             }
 
@@ -836,8 +856,8 @@ impl RenderTask {
                 RenderTargetKind::Color
             }
 
-            RenderTaskKind::Scaling(target_kind) => {
-                target_kind
+            RenderTaskKind::Scaling(ref task_info) => {
+                task_info.target_kind
             }
 
             RenderTaskKind::Border(..) |

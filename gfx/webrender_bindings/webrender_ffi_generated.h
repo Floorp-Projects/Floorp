@@ -46,6 +46,7 @@ enum class BoxShadowClipMode : uint32_t {
 enum class Checkpoint : uint32_t {
   SceneBuilt,
   FrameBuilt,
+  FrameRendered,
   // NotificationRequests get notified with this if they get dropped without having been
   // notified. This provides the guarantee that if a request is created it will get notified.
   TransactionDropped,
@@ -104,6 +105,8 @@ enum class ImageFormat : uint32_t {
   // red per se, and is just the way that OpenGL has historically referred
   // to single-channel buffers.
   R8 = 1,
+  // One-channel, short storage
+  R16 = 2,
   // Four channels, byte storage.
   BGRA8 = 3,
   // Four channels, float storage.
@@ -509,6 +512,10 @@ struct MemoryReport {
   uintptr_t fonts;
   uintptr_t images;
   uintptr_t rasterized_blobs;
+  uintptr_t gpu_cache_textures;
+  uintptr_t vertex_data_textures;
+  uintptr_t render_target_textures;
+  uintptr_t texture_cache_textures;
 
   bool operator==(const MemoryReport& aOther) const {
     return primitive_stores == aOther.primitive_stores &&
@@ -519,7 +526,11 @@ struct MemoryReport {
            hit_testers == aOther.hit_testers &&
            fonts == aOther.fonts &&
            images == aOther.images &&
-           rasterized_blobs == aOther.rasterized_blobs;
+           rasterized_blobs == aOther.rasterized_blobs &&
+           gpu_cache_textures == aOther.gpu_cache_textures &&
+           vertex_data_textures == aOther.vertex_data_textures &&
+           render_target_textures == aOther.render_target_textures &&
+           texture_cache_textures == aOther.texture_cache_textures;
   }
 };
 
@@ -553,13 +564,16 @@ struct BuiltDisplayListDescriptor {
   uintptr_t total_clip_nodes;
   // The amount of spatial nodes created while building this display list.
   uintptr_t total_spatial_nodes;
+  // An estimate of the number of primitives that will be created by this display list.
+  uintptr_t prim_count_estimate;
 
   bool operator==(const BuiltDisplayListDescriptor& aOther) const {
     return builder_start_time == aOther.builder_start_time &&
            builder_finish_time == aOther.builder_finish_time &&
            send_start_time == aOther.send_start_time &&
            total_clip_nodes == aOther.total_clip_nodes &&
-           total_spatial_nodes == aOther.total_spatial_nodes;
+           total_spatial_nodes == aOther.total_spatial_nodes &&
+           prim_count_estimate == aOther.prim_count_estimate;
   }
 };
 

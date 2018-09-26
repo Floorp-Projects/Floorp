@@ -238,6 +238,7 @@ pub struct TextureCache {
     // each format the texture cache supports.
     array_rgba8_nearest: TextureArray,
     array_a8_linear: TextureArray,
+    array_a16_linear: TextureArray,
     array_rgba8_linear: TextureArray,
 
     // Maximum texture size supported by hardware.
@@ -278,6 +279,11 @@ impl TextureCache {
             max_texture_size,
             array_a8_linear: TextureArray::new(
                 ImageFormat::R8,
+                TextureFilter::Linear,
+                TEXTURE_ARRAY_LAYERS_LINEAR,
+            ),
+            array_a16_linear: TextureArray::new(
+                ImageFormat::R16,
                 TextureFilter::Linear,
                 TEXTURE_ARRAY_LAYERS_LINEAR,
             ),
@@ -333,6 +339,14 @@ impl TextureCache {
             self.cache_textures.free(texture_id, self.array_a8_linear.format);
         }
 
+        if let Some(texture_id) = self.array_a16_linear.clear() {
+            self.pending_updates.push(TextureUpdate {
+                id: texture_id,
+                op: TextureUpdateOp::Free,
+            });
+            self.cache_textures.free(texture_id, self.array_a16_linear.format);
+        }
+
         if let Some(texture_id) = self.array_rgba8_linear.clear() {
             self.pending_updates.push(TextureUpdate {
                 id: texture_id,
@@ -359,6 +373,8 @@ impl TextureCache {
 
         self.array_a8_linear
             .update_profile(&mut texture_cache_profile.pages_a8_linear);
+        self.array_a16_linear
+            .update_profile(&mut texture_cache_profile.pages_a16_linear);
         self.array_rgba8_linear
             .update_profile(&mut texture_cache_profile.pages_rgba8_linear);
         self.array_rgba8_nearest
@@ -511,6 +527,7 @@ impl TextureCache {
     ) -> &mut TextureRegion {
         let texture_array = match (format, filter) {
             (ImageFormat::R8, TextureFilter::Linear) => &mut self.array_a8_linear,
+            (ImageFormat::R16, TextureFilter::Linear) => &mut self.array_a16_linear,
             (ImageFormat::BGRA8, TextureFilter::Linear) => &mut self.array_rgba8_linear,
             (ImageFormat::BGRA8, TextureFilter::Nearest) => &mut self.array_rgba8_nearest,
             (ImageFormat::RGBAF32, _) |
@@ -518,6 +535,8 @@ impl TextureCache {
             (ImageFormat::RGBAI32, _) |
             (ImageFormat::R8, TextureFilter::Nearest) |
             (ImageFormat::R8, TextureFilter::Trilinear) |
+            (ImageFormat::R16, TextureFilter::Nearest) |
+            (ImageFormat::R16, TextureFilter::Trilinear) |
             (ImageFormat::BGRA8, TextureFilter::Trilinear) => unreachable!(),
         };
 
@@ -660,7 +679,7 @@ impl TextureCache {
         // anything not used this frame).
         for handle in self.shared_entry_handles.drain(..) {
             let entry = self.entries.get(&handle);
-            if entry.last_access == self.frame_id {
+            if entry.eviction == Eviction::Manual || entry.last_access == self.frame_id {
                 retained_entries.push(handle);
             } else {
                 eviction_candidates.push(handle);
@@ -748,12 +767,15 @@ impl TextureCache {
         // Work out which cache it goes in, based on format.
         let texture_array = match (descriptor.format, filter) {
             (ImageFormat::R8, TextureFilter::Linear) => &mut self.array_a8_linear,
+            (ImageFormat::R16, TextureFilter::Linear) => &mut self.array_a16_linear,
             (ImageFormat::BGRA8, TextureFilter::Linear) => &mut self.array_rgba8_linear,
             (ImageFormat::BGRA8, TextureFilter::Nearest) => &mut self.array_rgba8_nearest,
             (ImageFormat::RGBAF32, _) |
             (ImageFormat::RGBAI32, _) |
             (ImageFormat::R8, TextureFilter::Nearest) |
             (ImageFormat::R8, TextureFilter::Trilinear) |
+            (ImageFormat::R16, TextureFilter::Nearest) |
+            (ImageFormat::R16, TextureFilter::Trilinear) |
             (ImageFormat::BGRA8, TextureFilter::Trilinear) |
             (ImageFormat::RG8, _) => unreachable!(),
         };

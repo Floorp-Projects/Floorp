@@ -36,7 +36,7 @@ namespace ChromeUtils {
    * @returns                 The path to the file the heap snapshot was written
    *                          to. This is guaranteed to be within the temp
    *                          directory and its file name will match the regexp
-   *                          `\d+(\-\d+)?\.fxsnapshot`.
+   *                          `\d+(\-\d+)?\.fxsnapshot.gz`.
    */
   [Throws]
   DOMString saveHeapSnapshot(optional HeapSnapshotBoundaries boundaries);
@@ -46,7 +46,7 @@ namespace ChromeUtils {
    *
    * @returns                 The snapshot ID of the file. This is the file name
    *                          without the temp directory or the trailing
-   *                          `.fxsnapshot`.
+   *                          `.fxsnapshot.gz`.
    */
   [Throws]
   DOMString saveHeapSnapshotGetId(optional HeapSnapshotBoundaries boundaries);
