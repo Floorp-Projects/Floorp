@@ -1158,10 +1158,36 @@ this.VideoControlsImplPageWidget = class {
         element.classList.toggle("fadein", fadeIn);
         let finishedPromise;
         if (!immediate) {
-          animation.playbackRate = fadeIn ? 1 : -1;
-          animation.play();
-          finishedPromise = animation.finished;
-        } else {
+          // At this point, if there is a pending animation, we just stop it to avoid it happening.
+          // If there is a running animation, we reverse it, to have it rewind to the beginning.
+          // If there is an idle/finished animation, we schedule a new one that reverses the finished one.
+          if (animation.pending) {
+            // Animation is running but pending.
+            // Just cancel the pending animation to stop its effect.
+            animation.cancel();
+            finishedPromise = Promise.resolve();
+          } else {
+            switch (animation.playState) {
+              case "idle":
+              case "finished":
+                // There is no animation currently playing.
+                // Schedule a new animation with the desired playback direction.
+                animation.updatePlaybackRate(fadeIn ? 1 : -1);
+                animation.play();
+                break;
+              case "running":
+                // Allow the animation to play from its current position in
+                // reverse to finish.
+                animation.reverse();
+                break;
+              case "pause":
+                throw new Error("Animation should never reach pause state.");
+              default:
+                throw new Error("Unknown Animation playState: " + animation.playState);
+            }
+            finishedPromise = animation.finished;
+          }
+        } else { // immediate
           animation.cancel();
           finishedPromise = Promise.resolve();
         }
