@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, DeviceIntSize, LayoutPrimitiveInfo};
-use api::{LayoutRect, LayoutSize, LayoutVector2D};
+use api::{LayoutRect, LayoutSize, LayoutVector2D, MAX_BLUR_RADIUS};
 use clip::ClipItemKey;
 use display_list_flattener::DisplayListFlattener;
 use gpu_cache::GpuCacheHandle;
@@ -44,10 +44,6 @@ pub struct BoxShadowClipSource {
 
 // The blur shader samples BLUR_SAMPLE_SCALE * blur_radius surrounding texels.
 pub const BLUR_SAMPLE_SCALE: f32 = 3.0;
-
-// Maximum blur radius.
-// Taken from https://searchfox.org/mozilla-central/rev/c633ffa4c4611f202ca11270dcddb7b29edddff8/layout/painting/nsCSSRendering.cpp#4412
-pub const MAX_BLUR_RADIUS : f32 = 300.;
 
 // A cache key that uniquely identifies a minimally sized
 // and blurred box-shadow rect that can be stored in the

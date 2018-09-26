@@ -27,7 +27,7 @@ byteorder = "1.0"
 cfg-if = "0.1.2"
 euclid = "0.19"
 fxhash = "0.2.1"
-gleam = "0.6"
+gleam = "0.6.2"
 image = { optional = true, version = "0.19" }
 lazy_static = "1"
 log = "0.4"

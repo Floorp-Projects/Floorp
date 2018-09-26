@@ -751,6 +751,9 @@ impl PipelineId {
 #[repr(C)]
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct MemoryReport {
+    //
+    // CPU Memory.
+    //
     pub primitive_stores: usize,
     pub clip_stores: usize,
     pub gpu_cache_metadata: usize,
@@ -760,6 +763,13 @@ pub struct MemoryReport {
     pub fonts: usize,
     pub images: usize,
     pub rasterized_blobs: usize,
+    //
+    // GPU memory.
+    //
+    pub gpu_cache_textures: usize,
+    pub vertex_data_textures: usize,
+    pub render_target_textures: usize,
+    pub texture_cache_textures: usize,
 }
 
 impl ::std::ops::AddAssign for MemoryReport {
@@ -773,6 +783,10 @@ impl ::std::ops::AddAssign for MemoryReport {
         self.fonts += other.fonts;
         self.images += other.images;
         self.rasterized_blobs += other.rasterized_blobs;
+        self.gpu_cache_textures += other.gpu_cache_textures;
+        self.vertex_data_textures += other.vertex_data_textures;
+        self.render_target_textures += other.render_target_textures;
+        self.texture_cache_textures += other.texture_cache_textures;
     }
 }
 
