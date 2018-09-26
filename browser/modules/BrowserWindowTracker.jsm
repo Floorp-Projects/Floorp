@@ -35,7 +35,8 @@ function debug(s) {
 
 function _updateCurrentContentOuterWindowID(browser) {
   if (!browser.outerWindowID ||
-      browser.outerWindowID === _lastTopLevelWindowID) {
+      browser.outerWindowID === _lastTopLevelWindowID ||
+      browser.ownerGlobal != _trackedWindows[0]) {
     return;
   }
 
