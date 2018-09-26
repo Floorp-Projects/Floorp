@@ -36,8 +36,13 @@
   <string name="preference_category_general">Awam</string>
   <string name="preference_category_data_collection_use">Peusapat Data &amp; Ngui</string>
   <string name="preference_category_search">Mita</string>
+  <string name="preference_show_search_suggestions">Peuleumah saran mita</string>
+  <string name="preference_search_engine_default">Teutap</string>
   <string name="preference_state_on">Udép</string>
   <string name="preference_state_off">Maté</string>
+  <string name="preference_subitem_autocomplete">Peuleungkap URL keudroe</string>
+  <string name="preference_switch_autocomplete">Peuleungkap keudroe</string>
+  <string name="preference_category_autocomplete_preinstalled">Dapeuta URL Teutap</string>
   <string name="preference_autocomplete_learn_more">Meurunoë lom</string>
   <string name="preference_mozilla_telemetry_summary">Meurunoë lom</string>
   <string name="download_dialog_action_cancel">Bateuë</string>

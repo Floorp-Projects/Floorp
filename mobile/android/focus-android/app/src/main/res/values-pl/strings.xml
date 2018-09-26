@@ -77,7 +77,7 @@
   <string name="preference_privacy_block_content_summary2">Włączenie może spowodować nieoczekiwane zachowanie niektórych stron</string>
   <string name="preference_privacy_category_cookies">Blokowanie ciasteczek</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nie</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokowanie tylko ciasteczek witryn zewnętrznych podmiotów</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokowanie tylko ciasteczek zewnętrznych witryn</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Tak</string>
   <string name="preference_security_biometric">Odblokowywanie aplikacji odciskiem palca</string>
   <string name="preference_security_biometric_summary">Można odblokować %1$s za pomocą odcisku palca, jeśli w aplikacji jest już otwarty adres. Tryb ukryty będzie włączony.</string>
