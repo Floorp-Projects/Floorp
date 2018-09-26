@@ -408,6 +408,7 @@ public:
                             wr::ImageKey aImageChannel0,
                             wr::ImageKey aImageChannel1,
                             wr::ImageKey aImageChannel2,
+                            wr::WrColorDepth aColorDepth,
                             wr::WrYuvColorSpace aColorSpace,
                             wr::ImageRendering aFilter);
 
@@ -416,6 +417,7 @@ public:
                      bool aIsBackfaceVisible,
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
+                     wr::WrColorDepth aColorDepth,
                      wr::WrYuvColorSpace aColorSpace,
                      wr::ImageRendering aFilter);
 
@@ -423,6 +425,7 @@ public:
                                  const wr::LayoutRect& aClip,
                                  bool aIsBackfaceVisible,
                                  wr::ImageKey aImageChannel0,
+                                 wr::WrColorDepth aColorDepth,
                                  wr::WrYuvColorSpace aColorSpace,
                                  wr::ImageRendering aFilter);
 
