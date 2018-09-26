@@ -56,10 +56,12 @@ class ProtectedRegionTree
         // included in a range, or if an address is already registered as a
         // protected region.
         static int compare(const Region& A, const Region& B) {
-            if (A.last < B.first)
+            if (A.last < B.first) {
                 return -1;
-            if (A.first > B.last)
+            }
+            if (A.first > B.last) {
                 return 1;
+            }
             return 0;
         }
     };
@@ -87,8 +89,9 @@ class ProtectedRegionTree
         MOZ_ASSERT(addr && size);
         LockGuard<Mutex> guard(lock);
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!tree.insert(Region(addr, size)))
+        if (!tree.insert(Region(addr, size))) {
             oomUnsafe.crash("Failed to store allocation ID.");
+        }
     }
 
     void remove(uintptr_t addr) {
@@ -98,8 +101,9 @@ class ProtectedRegionTree
     }
 
     bool isProtected(uintptr_t addr) {
-        if (!addr)
+        if (!addr) {
             return false;
+        }
         LockGuard<Mutex> guard(lock);
         return tree.maybeLookup(Region(addr, 1));
     }
@@ -131,15 +135,17 @@ MemoryProtectionExceptionHandler::isDisabled()
 void
 MemoryProtectionExceptionHandler::addRegion(void* addr, size_t size)
 {
-    if (sExceptionHandlerInstalled && sProtectedRegionsInit)
+    if (sExceptionHandlerInstalled && sProtectedRegionsInit) {
         sProtectedRegions.insert(uintptr_t(addr), size);
+    }
 }
 
 void
 MemoryProtectionExceptionHandler::removeRegion(void* addr)
 {
-    if (sExceptionHandlerInstalled && sProtectedRegionsInit)
+    if (sExceptionHandlerInstalled && sProtectedRegionsInit) {
         sProtectedRegions.remove(uintptr_t(addr));
+    }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -216,8 +222,9 @@ MemoryProtectionExceptionHandler::install()
     MOZ_ASSERT(!sExceptionHandlerInstalled);
 
     // If the exception handler is disabled, report success anyway.
-    if (MemoryProtectionExceptionHandler::isDisabled())
+    if (MemoryProtectionExceptionHandler::isDisabled()) {
         return true;
+    }
 
     // Install our new exception handler.
     sVectoredExceptionHandler = AddVectoredExceptionHandler(/* FirstHandler = */ true,
@@ -277,12 +284,13 @@ UnixExceptionHandler(int signum, siginfo_t* info, void* context)
 
     // Forward to the previous handler which may be a debugger,
     // the crash reporter or something else entirely.
-    if (sPrevSEGVHandler.sa_flags & SA_SIGINFO)
+    if (sPrevSEGVHandler.sa_flags & SA_SIGINFO) {
         sPrevSEGVHandler.sa_sigaction(signum, info, context);
-    else if (sPrevSEGVHandler.sa_handler == SIG_DFL || sPrevSEGVHandler.sa_handler == SIG_IGN)
+    } else if (sPrevSEGVHandler.sa_handler == SIG_DFL || sPrevSEGVHandler.sa_handler == SIG_IGN) {
         sigaction(SIGSEGV, &sPrevSEGVHandler, nullptr);
-    else
+    } else {
         sPrevSEGVHandler.sa_handler(signum);
+    }
 
     // If we reach here, we're returning to let the default signal handler deal
     // with the exception. This is technically undefined behavior, but
@@ -295,8 +303,9 @@ MemoryProtectionExceptionHandler::install()
     MOZ_ASSERT(!sExceptionHandlerInstalled);
 
     // If the exception handler is disabled, report success anyway.
-    if (MemoryProtectionExceptionHandler::isDisabled())
+    if (MemoryProtectionExceptionHandler::isDisabled()) {
         return true;
+    }
 
     // Install our new exception handler and save the previous one.
     struct sigaction faultHandler = {};
@@ -571,21 +580,25 @@ MachExceptionHandler()
                              previous.behavior, previous.flavor);
 
     // If we failed even receiving the message, just give up.
-    if (ret != MACH_MSG_SUCCESS)
+    if (ret != MACH_MSG_SUCCESS) {
         MOZ_CRASH("MachExceptionHandler: mach_msg failed to receive a message!");
+    }
 
     // Terminate the thread if we're shutting down.
-    if (request.header.msgh_id == sIDQuit)
+    if (request.header.msgh_id == sIDQuit) {
         return;
+    }
 
     // The only other valid message ID is the one associated with the
     // EXCEPTION_DEFAULT | MACH_EXCEPTION_CODES behavior we chose.
-    if (request.header.msgh_id != sIDRequest64)
+    if (request.header.msgh_id != sIDRequest64) {
         MOZ_CRASH("MachExceptionHandler: Unexpected Message ID!");
+    }
 
     // Make sure we can understand the exception we received.
-    if (request.exception != EXC_BAD_ACCESS || request.code_count != 2)
+    if (request.exception != EXC_BAD_ACCESS || request.code_count != 2) {
         MOZ_CRASH("MachExceptionHandler: Unexpected exception type!");
+    }
 
     // Get the address that the offending code tried to access.
     uintptr_t address = uintptr_t(request.code[1]);
@@ -606,8 +619,9 @@ MachExceptionHandler()
             // If the previous handler requested thread state, get it here.
             stateCount = THREAD_STATE_MAX;
             ret = thread_get_state(request.thread.name, previous.flavor, state, &stateCount);
-            if (ret != KERN_SUCCESS)
+            if (ret != KERN_SUCCESS) {
                 MOZ_CRASH("MachExceptionHandler: Could not get the thread state to forward!");
+            }
         }
 
         // Depending on the behavior of the previous handler, the forwarded
@@ -653,8 +667,9 @@ MachExceptionHandler()
         forward.header.msgh_remote_port = previous.port;
         ret = mach_msg(&forward.header, MACH_SEND_MSG, forward.header.msgh_size, 0,
                        MACH_PORT_NULL, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
-        if (ret != MACH_MSG_SUCCESS)
+        if (ret != MACH_MSG_SUCCESS) {
             MOZ_CRASH("MachExceptionHandler: Failed to forward to the previous handler!");
+        }
     } else {
         // There was no previous task-level exception handler, so defer to the
         // host level one instead. We set the return code to KERN_FAILURE to
@@ -671,8 +686,9 @@ MachExceptionHandler()
         reply.RetCode = KERN_FAILURE;
         ret = mach_msg(&reply.header, MACH_SEND_MSG, reply.header.msgh_size, 0,
                        MACH_PORT_NULL, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
-        if (ret != MACH_MSG_SUCCESS)
+        if (ret != MACH_MSG_SUCCESS) {
             MOZ_CRASH("MachExceptionHandler: Failed to forward to the host level!");
+        }
     }
 }
 
@@ -690,10 +706,11 @@ TerminateMachExceptionHandlerThread()
     kern_return_t ret = mach_msg(&msg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL,
                                  MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
 
-    if (ret == MACH_MSG_SUCCESS)
+    if (ret == MACH_MSG_SUCCESS) {
         sMachExceptionState->handlerThread.join();
-    else
+    } else {
         MOZ_CRASH("MachExceptionHandler: Handler thread failed to terminate!");
+    }
 }
 
 bool
@@ -703,12 +720,14 @@ MemoryProtectionExceptionHandler::install()
     MOZ_ASSERT(!sMachExceptionState);
 
     // If the exception handler is disabled, report success anyway.
-    if (MemoryProtectionExceptionHandler::isDisabled())
+    if (MemoryProtectionExceptionHandler::isDisabled()) {
         return true;
+    }
 
     sMachExceptionState = js_new<ExceptionHandlerState>();
-    if (!sMachExceptionState)
+    if (!sMachExceptionState) {
         return false;
+    }
 
     kern_return_t ret;
     mach_port_t task = mach_task_self();
@@ -717,8 +736,9 @@ MemoryProtectionExceptionHandler::install()
     sMachExceptionState->current = {};
     MachExceptionParameters& current = sMachExceptionState->current;
     ret = mach_port_allocate(task, MACH_PORT_RIGHT_RECEIVE, &current.port);
-    if (ret != KERN_SUCCESS)
+    if (ret != KERN_SUCCESS) {
         return false;
+    }
 
     // Give the new port send rights as well.
     ret = mach_port_insert_right(task, current.port, current.port, MACH_MSG_TYPE_MAKE_SEND);
