@@ -231,6 +231,7 @@ class GeckoEngineSession(
     /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
+    @Suppress("ComplexMethod")
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
         override fun onLocationChange(session: GeckoSession?, url: String) {
             // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
@@ -281,7 +282,9 @@ class GeckoEngineSession(
                 this@GeckoEngineSession,
                 error,
                 uri
-            )
+            )?.apply {
+                return GeckoResult.fromValue(data)
+            }
             return GeckoResult.fromValue(null)
         }
     }

@@ -193,25 +193,33 @@ class SystemEngineView @JvmOverloads constructor(
             handler.cancel()
 
             session?.let { session ->
-                session.settings.requestInterceptor?.onErrorRequest(session, error.primaryError, error.url)
+                session.settings.requestInterceptor?.onErrorRequest(session, error.primaryError, error.url)?.apply {
+                    view.loadDataWithBaseURL(error.url, data, mimeType, encoding, null)
+                }
             }
         }
 
-        override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+        override fun onReceivedError(view: WebView, errorCode: Int, description: String?, failingUrl: String?) {
             session?.let { session ->
-                session.settings.requestInterceptor?.onErrorRequest(session, errorCode, failingUrl)
+                session.settings.requestInterceptor?.onErrorRequest(session, errorCode, failingUrl)?.apply {
+                    view.loadDataWithBaseURL(failingUrl, data, mimeType, encoding, null)
+                }
             }
         }
 
         @TargetApi(Build.VERSION_CODES.M)
-        override fun onReceivedError(view: WebView?, request: WebResourceRequest, error: WebResourceError) {
+        override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             session?.let { session ->
-                if (request.isForMainFrame) {
-                    session.settings.requestInterceptor?.onErrorRequest(
-                        session,
-                        error.errorCode,
-                        request.url.toString()
-                    )
+                if (!request.isForMainFrame) {
+                    return
+                }
+
+                session.settings.requestInterceptor?.onErrorRequest(
+                    session,
+                    error.errorCode,
+                    request.url.toString()
+                )?.apply {
+                    view.loadDataWithBaseURL(url ?: request.url.toString(), data, mimeType, encoding, null)
                 }
             }
         }
