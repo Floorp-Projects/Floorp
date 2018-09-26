@@ -60,7 +60,7 @@ class TemporaryExtensionAction extends PureComponent {
         },
         dom.button(
           {
-            className: "aboutdebugging-button",
+            className: "aboutdebugging-button js-temporary-extension-remove-button",
             onClick: e => this.remove()
           },
           "Remove",
