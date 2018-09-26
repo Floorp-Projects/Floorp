@@ -5354,13 +5354,22 @@ WorkerPrivate::CreateDebuggerGlobalScope(JSContext* aCx)
 bool
 WorkerPrivate::IsOnWorkerThread() const
 {
-  // We can't use mThread because it must be protected by mMutex and sometimes
-  // this method is called when mMutex is already locked. This method should
-  // always work.
+  // This is much more complicated than it needs to be but we can't use mThread
+  // because it must be protected by mMutex and sometimes this method is called
+  // when mMutex is already locked. This method should always work.
   MOZ_ASSERT(mPRThread,
              "AssertIsOnWorkerThread() called before a thread was assigned!");
 
-  return mPRThread == PR_GetCurrentThread();
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv =
+    nsThreadManager::get().GetThreadFromPRThread(mPRThread,
+                                                 getter_AddRefs(thread));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_ASSERT(thread);
+
+  bool current;
+  rv = thread->IsOnCurrentThread(&current);
+  return NS_SUCCEEDED(rv) && current;
 }
 
 #ifdef DEBUG
