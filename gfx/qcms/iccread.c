@@ -929,6 +929,7 @@ qcms_profile* qcms_profile_create_rgb_with_gamma(
 	profile->class = DISPLAY_DEVICE_PROFILE;
 	profile->rendering_intent = QCMS_INTENT_PERCEPTUAL;
 	profile->color_space = RGB_SIGNATURE;
+        profile->pcs = XYZ_SIGNATURE;
 	return profile;
 }
 
@@ -958,6 +959,7 @@ qcms_profile* qcms_profile_create_rgb_with_table(
 	profile->class = DISPLAY_DEVICE_PROFILE;
 	profile->rendering_intent = QCMS_INTENT_PERCEPTUAL;
 	profile->color_space = RGB_SIGNATURE;
+        profile->pcs = XYZ_SIGNATURE;
 	return profile;
 }
 
