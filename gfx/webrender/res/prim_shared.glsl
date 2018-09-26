@@ -27,7 +27,6 @@ vec2 clamp_rect(vec2 pt, RectWithSize rect) {
 
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
-flat varying vec4 vClipMaskUvSampleBounds;
 // XY and W are homogeneous coordinates, Z is the layer index
 varying vec4 vClipMaskUv;
 
@@ -230,14 +229,7 @@ void write_clip(vec4 world_pos, vec2 snap_offset, ClipArea area) {
         area.common_data.task_rect.p0,
         area.common_data.task_rect.p0 + area.common_data.task_rect.size
     );
-    vClipMaskUvSampleBounds.xy = vClipMaskUvBounds.xy + vec2(0.5);
-    vClipMaskUvSampleBounds.zw = vClipMaskUvBounds.zw - vec2(0.5);
     vClipMaskUv = vec4(uv, area.common_data.texture_layer_index, world_pos.w);
-
-    vec2 texture_size = vec2(textureSize(sCacheA8, 0).xy);
-    vClipMaskUv.xy /= texture_size;
-    vClipMaskUvBounds /= texture_size.xyxy;
-    vClipMaskUvSampleBounds /= texture_size.xyxy;
 }
 #endif //WR_VERTEX_SHADER
 
@@ -251,21 +243,18 @@ float do_clip() {
     // anything outside of the mask is considered transparent
     //Note: we assume gl_FragCoord.w == interpolated(1 / vClipMaskUv.w)
     vec2 mask_uv = vClipMaskUv.xy * gl_FragCoord.w;
-    bvec4 inside = lessThanEqual(
-        vec4(vClipMaskUvBounds.xy, mask_uv),
-        vec4(mask_uv, vClipMaskUvBounds.zw));
+    bvec2 left = lessThanEqual(vClipMaskUvBounds.xy, mask_uv); // inclusive
+    bvec2 right = greaterThan(vClipMaskUvBounds.zw, mask_uv); // non-inclusive
     // bail out if the pixel is outside the valid bounds
-    if (!all(inside)) {
+    if (!all(bvec4(left, right))) {
         return 0.0;
     }
-
     // finally, the slow path - fetch the mask value from an image
-
-    // TODO(gw): texelFetch here fails on some nVidia hardware in
-    //           some cases. For now, just use texture()
-    //           unconditionally.
-    mask_uv = clamp(mask_uv, vClipMaskUvSampleBounds.xy, vClipMaskUvSampleBounds.zw);
-    return texture(sCacheA8, vec3(mask_uv, vClipMaskUv.z)).r;
+    // Note the Z getting rounded to the nearest integer because the variable
+    // is still interpolated and becomes a subject of precision-caused
+    // fluctuations, see https://bugzilla.mozilla.org/show_bug.cgi?id=1491911
+    ivec3 tc = ivec3(mask_uv, vClipMaskUv.z + 0.5);
+    return texelFetch(sCacheA8, tc, 0).r;
 }
 
 #ifdef WR_FEATURE_DITHERING

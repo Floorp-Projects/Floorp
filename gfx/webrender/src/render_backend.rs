@@ -747,7 +747,7 @@ impl RenderBackend {
                 let pending_update = self.resource_cache.pending_updates();
                 let msg = ResultMsg::UpdateResources {
                     updates: pending_update,
-                    cancel_rendering: true,
+                    memory_pressure: true,
                 };
                 self.result_tx.send(msg).unwrap();
                 self.notifier.wake_up();
@@ -1340,7 +1340,7 @@ impl RenderBackend {
             self.result_tx.send(msg_update_gpu_cache).unwrap();
             let msg_update_resources = ResultMsg::UpdateResources {
                 updates: self.resource_cache.pending_updates(),
-                cancel_rendering: false,
+                memory_pressure: false,
             };
             self.result_tx.send(msg_update_resources).unwrap();
             // Save the texture/glyph/image caches.

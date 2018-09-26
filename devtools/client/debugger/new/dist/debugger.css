@@ -3999,7 +3999,8 @@ html[dir="rtl"] .object-node {
 }
 
 .welcomebox__searchSources:hover,
-.welcomebox__searchProject:hover {
+.welcomebox__searchProject:hover,
+.welcomebox__allShortcuts:hover {
   color: var(--theme-body-color);
 }
 

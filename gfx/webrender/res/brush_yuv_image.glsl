@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 0
+#define VECS_PER_SPECIFIC_BRUSH 1
 
 #include shared,prim_shared,brush
 
@@ -47,6 +47,8 @@ varying vec2 vLocalPos;
     #define TEX_SIZE(sampler) vec2(textureSize(sampler, 0).xy)
 #endif
 
+flat varying float vCoefficient;
+
 #ifdef WR_VERTEX_SHADER
 void write_uv_rect(
     int resource_id,
@@ -70,6 +72,15 @@ void write_uv_rect(
     #endif
 }
 
+struct YuvPrimitive {
+    float coefficient;
+};
+
+YuvPrimitive fetch_yuv_primitive(int address) {
+    vec4 data = fetch_from_resource_cache_1(address);
+    return YuvPrimitive(data.x);
+}
+
 void brush_vs(
     VertexInfo vi,
     int prim_address,
@@ -82,6 +93,9 @@ void brush_vs(
     vec4 unused
 ) {
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
+
+    YuvPrimitive prim = fetch_yuv_primitive(prim_address);
+    vCoefficient = prim.coefficient;
 
 #ifdef WR_FEATURE_ALPHA_PASS
     vLocalPos = vi.local_pos;
@@ -164,7 +178,7 @@ Fragment brush_fs() {
 #endif
 
     // See the YuvColorMatrix definition for an explanation of where the constants come from.
-    vec3 rgb = YuvColorMatrix * (yuv_value - vec3(0.06275, 0.50196, 0.50196));
+    vec3 rgb = YuvColorMatrix * (yuv_value * vCoefficient - vec3(0.06275, 0.50196, 0.50196));
     vec4 color = vec4(rgb, 1.0);
 
 #ifdef WR_FEATURE_ALPHA_PASS

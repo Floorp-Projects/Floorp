@@ -8,7 +8,7 @@ use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemR
 use api::{RasterSpace, LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, LayoutToWorldTransform};
 use api::{LayoutVector2D, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat};
 use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, LayoutToWorldScale, NormalBorder, WorldRect};
-use api::{PicturePixel, RasterPixel};
+use api::{PicturePixel, RasterPixel, ColorDepth};
 use app_units::Au;
 use border::{BorderCacheKey, BorderRenderTaskInfo};
 use clip_scroll_tree::{ClipScrollTree, CoordinateSystemId, SpatialNodeIndex};
@@ -29,9 +29,9 @@ use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHand
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
-use segment::SegmentBuilder;
 use std::{cmp, fmt, mem, usize};
 use util::{ScaleOffset, MatrixHelpers, pack_as_float, project_rect, raster_rect_to_device_pixels};
+use smallvec::SmallVec;
 
 
 const MIN_BRUSH_SPLIT_AREA: f32 = 256.0 * 256.0;
@@ -51,23 +51,6 @@ impl ScrollNodeAndClipChain {
         ScrollNodeAndClipChain {
             spatial_node_index,
             clip_chain_id,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct PrimitiveRun {
-    pub base_prim_index: PrimitiveIndex,
-    pub count: usize,
-}
-
-impl PrimitiveRun {
-    pub fn is_chasing(&self, index: Option<PrimitiveIndex>) -> bool {
-        match index {
-            Some(id) if cfg!(debug_assertions) => {
-                self.base_prim_index <= id && id.0 < self.base_prim_index.0 + self.count
-            }
-            _ => false,
         }
     }
 }
@@ -248,7 +231,7 @@ impl GpuCacheHandle {
 impl GpuCacheAddress {
     pub fn as_int(&self) -> i32 {
         // TODO(gw): Temporarily encode GPU Cache addresses as a single int.
-        //           In the future, we can change the PrimitiveInstance struct
+        //           In the future, we can change the PrimitiveInstanceData struct
         //           to use 2x u16 for the vertex attribute instead of an i32.
         self.v as i32 * MAX_VERTEX_TEXTURE_WIDTH as i32 + self.u as i32
     }
@@ -268,10 +251,6 @@ pub struct PrimitiveMetadata {
     //           storing them here.
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
-
-    // The current combined local clip for this primitive, from
-    // the primitive local clip above and the current clip chain.
-    pub combined_local_clip_rect: LayoutRect,
 
     pub is_backface_visible: bool,
     pub clipped_world_rect: Option<WorldRect>,
@@ -377,6 +356,7 @@ pub enum BrushKind {
     YuvImage {
         yuv_key: [ImageKey; 3],
         format: YuvFormat,
+        color_depth: ColorDepth,
         color_space: YuvColorSpace,
         image_rendering: ImageRendering,
     },
@@ -541,9 +521,11 @@ impl BrushSegment {
     }
 }
 
+pub type BrushSegmentVec = SmallVec<[BrushSegment; 8]>;
+
 #[derive(Debug)]
 pub struct BrushSegmentDescriptor {
-    pub segments: Vec<BrushSegment>,
+    pub segments: BrushSegmentVec,
 }
 
 #[derive(Debug)]
@@ -601,7 +583,14 @@ impl BrushPrimitive {
                     0.0,
                 ]);
             }
-            BrushKind::YuvImage { .. } => {}
+            BrushKind::YuvImage { color_depth, .. } => {
+                request.push([
+                    color_depth.rescaling_factor(),
+                    0.0,
+                    0.0,
+                    0.0
+                ]);
+            }
             BrushKind::Picture { .. } => {
                 request.push(PremultipliedColorF::WHITE);
                 request.push(PremultipliedColorF::WHITE);
@@ -1372,6 +1361,15 @@ impl Primitive {
     }
 }
 
+#[derive(Debug)]
+pub struct PrimitiveInstance {
+    pub prim_index: PrimitiveIndex,
+
+    // The current combined local clip for this primitive, from
+    // the primitive local clip above and the current clip chain.
+    pub combined_local_clip_rect: LayoutRect,
+}
+
 pub struct PrimitiveStore {
     pub primitives: Vec<Primitive>,
 
@@ -1414,7 +1412,6 @@ impl PrimitiveStore {
             spatial_node_index,
             local_rect: *local_rect,
             local_clip_rect: *local_clip_rect,
-            combined_local_clip_rect: *local_clip_rect,
             is_backface_visible,
             clipped_world_rect: None,
             tag,
@@ -1481,22 +1478,18 @@ impl PrimitiveStore {
     // that can be the target for collapsing parent opacity filters into.
     fn get_opacity_collapse_prim(
         &self,
-        prim_index: PrimitiveIndex,
+        pic_prim_index: PrimitiveIndex,
     ) -> Option<PrimitiveIndex> {
-        let pic = self.get_pic(prim_index);
+        let pic = self.get_pic(pic_prim_index);
 
         // We can only collapse opacity if there is a single primitive, otherwise
         // the opacity needs to be applied to the primitives as a group.
-        if pic.runs.len() != 1 {
+        if pic.prim_instances.len() != 1 {
             return None;
         }
 
-        let run = &pic.runs[0];
-        if run.count != 1 {
-            return None;
-        }
-
-        let prim = &self.primitives[run.base_prim_index.0];
+        let prim_instance = &pic.prim_instances[0];
+        let prim = &self.primitives[prim_instance.prim_index.0];
 
         // For now, we only support opacity collapse on solid rects and images.
         // This covers the most common types of opacity filters that can be
@@ -1510,13 +1503,13 @@ impl PrimitiveStore {
                         // (i.e. no composite mode), then we can recurse into
                         // that to try and find a primitive to collapse to.
                         if pic.requested_composite_mode.is_none() {
-                            return self.get_opacity_collapse_prim(run.base_prim_index);
+                            return self.get_opacity_collapse_prim(prim_instance.prim_index);
                         }
                     }
                     // If we find a single rect or image, we can use that
                     // as the primitive to collapse the opacity into.
                     BrushKind::Solid { .. } | BrushKind::Image { .. } => {
-                        return Some(run.base_prim_index)
+                        return Some(prim_instance.prim_index)
                     }
                     BrushKind::Border { .. } |
                     BrushKind::YuvImage { .. } |
@@ -1597,7 +1590,7 @@ impl PrimitiveStore {
 
     pub fn prepare_prim_for_render(
         &mut self,
-        prim_index: PrimitiveIndex,
+        prim_instance: &mut PrimitiveInstance,
         prim_context: &PrimitiveContext,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
@@ -1613,7 +1606,7 @@ impl PrimitiveStore {
         // local space, which may force us to render this item on a larger
         // picture target, if being composited.
         let pic_info = {
-            match self.primitives[prim_index.0].details {
+            match self.primitives[prim_instance.prim_index.0].details {
                 PrimitiveDetails::Brush(BrushPrimitive { kind: BrushKind::Picture(ref mut pic), .. }) => {
                     match pic.take_context(
                         prim_context,
@@ -1636,14 +1629,15 @@ impl PrimitiveStore {
         };
 
         let (is_passthrough, clip_node_collector) = match pic_info {
-            Some((pic_context_for_children, mut pic_state_for_children)) => {
+            Some((pic_context_for_children, mut pic_state_for_children, mut prim_instances)) => {
                 // Mark whether this picture has a complex coordinate system.
                 let is_passthrough = pic_context_for_children.is_passthrough;
                 pic_state_for_children.has_non_root_coord_system |=
                     prim_context.spatial_node.coordinate_system_id != CoordinateSystemId::root();
 
                 let mut pic_rect = PictureRect::zero();
-                self.prepare_prim_runs(
+                self.prepare_primitives(
+                    &mut prim_instances,
                     &pic_context_for_children,
                     &mut pic_state_for_children,
                     frame_context,
@@ -1663,10 +1657,11 @@ impl PrimitiveStore {
                 }
 
                 // Restore the dependencies (borrow check dance)
-                let prim = &mut self.primitives[prim_index.0];
+                let prim = &mut self.primitives[prim_instance.prim_index.0];
                 let (new_local_rect, clip_node_collector) = prim
                     .as_pic_mut()
                     .restore_context(
+                        prim_instances,
                         pic_context_for_children,
                         pic_state_for_children,
                         pic_rect,
@@ -1686,7 +1681,7 @@ impl PrimitiveStore {
             }
         };
 
-        let prim = &mut self.primitives[prim_index.0];
+        let prim = &mut self.primitives[prim_instance.prim_index.0];
 
         if !prim.is_cacheable(frame_state.resource_cache) {
             pic_state.is_cacheable = false;
@@ -1758,7 +1753,7 @@ impl PrimitiveStore {
 
             pic_state.has_non_root_coord_system |= clip_chain.has_non_root_coord_system;
 
-            prim.metadata.combined_local_clip_rect = if pic_context.apply_local_clip_rect {
+            prim_instance.combined_local_clip_rect = if pic_context.apply_local_clip_rect {
                 clip_chain.local_clip_rect
             } else {
                 prim.metadata.local_clip_rect
@@ -1815,7 +1810,7 @@ impl PrimitiveStore {
         }
 
         prim.prepare_prim_for_render_inner(
-            prim_index,
+            prim_instance,
             prim_context,
             pic_context,
             pic_state,
@@ -1836,8 +1831,9 @@ impl PrimitiveStore {
         }
     }
 
-    pub fn prepare_prim_runs(
+    pub fn prepare_primitives(
         &mut self,
+        prim_instances: &mut Vec<PrimitiveInstance>,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
@@ -1850,75 +1846,73 @@ impl PrimitiveStore {
             .expect("No display list?")
             .display_list;
 
-        for run in &pic_context.prim_runs {
-            if run.is_chasing(self.chase_id) {
-                println!("\tpreparing a run of length {} in pipeline {:?}",
-                    run.count, pic_context.pipeline_id);
+        for prim_instance in prim_instances {
+            let prim_index = prim_instance.prim_index;
+            let is_chased = Some(prim_index) == self.chase_id;
+
+            if is_chased {
+                println!("\tpreparing prim {:?} in pipeline {:?}",
+                    prim_instance.prim_index, pic_context.pipeline_id);
             }
 
-            for i in 0 .. run.count {
-                let prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
-                let is_chased = Some(prim_index) == self.chase_id;
+            // TODO(gw): These workarounds for borrowck are unfortunate. We
+            //           should see if we can re-structure these to avoid so
+            //           many special borrow blocks.
+            let (spatial_node_index, is_backface_visible) = {
+                let prim = &self.primitives[prim_instance.prim_index.0];
+                (prim.metadata.spatial_node_index, prim.metadata.is_backface_visible)
+            };
 
-                // TODO(gw): These workarounds for borrowck are unfortunate. We
-                //           should see if we can re-structure these to avoid so
-                //           many special borrow blocks.
-                let (spatial_node_index, is_backface_visible) = {
-                    let prim = &self.primitives[prim_index.0];
-                    (prim.metadata.spatial_node_index, prim.metadata.is_backface_visible)
-                };
+            let spatial_node = &frame_context
+                .clip_scroll_tree
+                .spatial_nodes[spatial_node_index.0];
 
-                let spatial_node = &frame_context
-                    .clip_scroll_tree
-                    .spatial_nodes[spatial_node_index.0];
+            // TODO(gw): Although constructing these is cheap, they are often
+            //           the same for many consecutive primitives, so it may
+            //           be worth caching the most recent context.
+            let prim_context = PrimitiveContext::new(
+                spatial_node,
+                spatial_node_index,
+            );
 
-                // TODO(gw): Although constructing these is cheap, they are often
-                //           the same for many consecutive primitives, so it may
-                //           be worth caching the most recent context.
-                let prim_context = PrimitiveContext::new(
-                    spatial_node,
-                    spatial_node_index,
-                );
-
-                // Do some basic checks first, that can early out
-                // without even knowing the local rect.
-                if !is_backface_visible && spatial_node.world_content_transform.is_backface_visible() {
-                    if cfg!(debug_assertions) && is_chased {
-                        println!("\tculled for not having visible back faces");
-                    }
-                    continue;
+            // Do some basic checks first, that can early out
+            // without even knowing the local rect.
+            if !is_backface_visible && spatial_node.world_content_transform.is_backface_visible() {
+                if cfg!(debug_assertions) && is_chased {
+                    println!("\tculled for not having visible back faces");
                 }
+                continue;
+            }
 
-                if !spatial_node.invertible {
-                    if cfg!(debug_assertions) && is_chased {
-                        println!("\tculled for the scroll node transform being invertible");
-                    }
-                    continue;
+            if !spatial_node.invertible {
+                if cfg!(debug_assertions) && is_chased {
+                    println!("\tculled for the scroll node transform being invertible");
                 }
+                continue;
+            }
 
-                // Mark whether this picture contains any complex coordinate
-                // systems, due to either the scroll node or the clip-chain.
-                pic_state.has_non_root_coord_system |=
-                    spatial_node.coordinate_system_id != CoordinateSystemId::root();
+            // Mark whether this picture contains any complex coordinate
+            // systems, due to either the scroll node or the clip-chain.
+            pic_state.has_non_root_coord_system |=
+                spatial_node.coordinate_system_id != CoordinateSystemId::root();
 
-                pic_state.map_local_to_pic.set_target_spatial_node(
-                    spatial_node_index,
-                    frame_context.clip_scroll_tree,
-                );
+            pic_state.map_local_to_pic.set_target_spatial_node(
+                spatial_node_index,
+                frame_context.clip_scroll_tree,
+            );
 
-                if self.prepare_prim_for_render(
-                    prim_index,
-                    &prim_context,
-                    pic_context,
-                    pic_state,
-                    frame_context,
-                    frame_state,
-                    display_list,
-                    is_chased,
-                    current_pic_rect,
-                ) {
-                    frame_state.profile_counters.visible_primitives.inc();
-                }
+            if self.prepare_prim_for_render(
+                prim_instance,
+                &prim_context,
+                pic_context,
+                pic_state,
+                frame_context,
+                frame_state,
+                display_list,
+                is_chased,
+                current_pic_rect,
+            ) {
+                frame_state.profile_counters.visible_primitives.inc();
             }
         }
     }
@@ -1945,6 +1939,7 @@ fn build_gradient_stops_request(
 
 fn decompose_repeated_primitive(
     visible_tiles: &mut Vec<VisibleGradientTile>,
+    instance: &PrimitiveInstance,
     metadata: &mut PrimitiveMetadata,
     stretch_size: &LayoutSize,
     tile_spacing: &LayoutSize,
@@ -1957,7 +1952,7 @@ fn decompose_repeated_primitive(
     // Tighten the clip rect because decomposing the repeated image can
     // produce primitives that are partially covering the original image
     // rect and we want to clip these extra parts out.
-    let tight_clip_rect = metadata
+    let tight_clip_rect = instance
         .combined_local_clip_rect
         .intersection(&metadata.local_rect).unwrap();
 
@@ -2079,7 +2074,8 @@ fn write_brush_segment_description(
     //           the clip sources here.
     let mut rect_clips_only = true;
 
-    let mut segment_builder = SegmentBuilder::new(
+    let segment_builder = &mut frame_state.segment_builder;
+    segment_builder.initialize(
         metadata.local_rect,
         None,
         metadata.local_clip_rect
@@ -2188,7 +2184,7 @@ fn write_brush_segment_description(
                 //           patterns of this and the segment
                 //           builder significantly better, by
                 //           retaining it across primitives.
-                let mut segments = Vec::new();
+                let mut segments = BrushSegmentVec::new();
 
                 segment_builder.build(|segment| {
                     segments.push(
@@ -2329,7 +2325,7 @@ impl Primitive {
 
     fn prepare_prim_for_render_inner(
         &mut self,
-        prim_index: PrimitiveIndex,
+        prim_instance: &PrimitiveInstance,
         prim_context: &PrimitiveContext,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
@@ -2498,7 +2494,7 @@ impl Primitive {
                                 // Tighten the clip rect because decomposing the repeated image can
                                 // produce primitives that are partially covering the original image
                                 // rect and we want to clip these extra parts out.
-                                let tight_clip_rect = metadata
+                                let tight_clip_rect = prim_instance
                                     .combined_local_clip_rect
                                     .intersection(&metadata.local_rect).unwrap();
 
@@ -2639,6 +2635,7 @@ impl Primitive {
 
                             decompose_repeated_primitive(
                                 visible_tiles,
+                                prim_instance,
                                 metadata,
                                 &stretch_size,
                                 &tile_spacing,
@@ -2688,6 +2685,7 @@ impl Primitive {
 
                             decompose_repeated_primitive(
                                 visible_tiles,
+                                prim_instance,
                                 metadata,
                                 &stretch_size,
                                 &tile_spacing,
@@ -2713,7 +2711,7 @@ impl Primitive {
                     }
                     BrushKind::Picture(ref mut pic) => {
                         if !pic.prepare_for_render(
-                            prim_index,
+                            prim_instance.prim_index,
                             metadata,
                             pic_state,
                             frame_context,
@@ -2880,7 +2878,7 @@ impl Primitive {
             // size in cache_key.
             let needs_update = scale_au != cache_key.scale;
 
-            let mut new_segments = Vec::new();
+            let mut new_segments = BrushSegmentVec::new();
 
             let local_rect = &self.metadata.local_rect;
             if needs_update {

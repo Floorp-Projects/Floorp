@@ -1185,12 +1185,14 @@ ParseDate(const CharT* s, size_t length, ClippedTime* result)
         }
         if ('0' <= c && c <= '9') {
             size_t partStart = i - 1;
-            int n = c - '0';
+            uint32_t u = c - '0';
             while (i < length && '0' <= (c = s[i]) && c <= '9') {
-                n = n * 10 + c - '0';
+                u = u * 10 + (c - '0');
                 i++;
             }
             size_t partLength = i - partStart;
+
+            int n = int(u);
 
             /*
              * Allow TZA before the year, so 'Wed Nov 05 21:49:11 GMT-0800 1997'
