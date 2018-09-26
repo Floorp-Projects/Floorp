@@ -146,6 +146,7 @@ if CONFIG['MOZ_ENABLE_SKIA_PDF']:
   TEST_DIRS += ['gtest']
 
 LOCAL_INCLUDES += [
+    '/layout/forms',
     '/layout/generic',
     '/layout/xul',
     '/toolkit/xre',

@@ -44,7 +44,7 @@
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
-#include "nsIComboboxControlFrame.h"
+#include "nsComboboxControlFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMXULControlElement.h"
 #include "nsNameSpaceManager.h"
@@ -2684,7 +2684,7 @@ EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
     }
 
     // Comboboxes need special care.
-    nsIComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
+    nsComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
     if (comboBox) {
       if (comboBox->IsDroppedDown()) {
         // Don't propagate to parent when drop down menu is active.

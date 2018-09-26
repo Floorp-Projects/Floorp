@@ -176,6 +176,7 @@ add_task(async function() {
     const summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
     const { method, correctUri, details: { status, statusText } } = data;
     const statusCode = panel.querySelector(".status-code");
+    const statusTextInput = panel.querySelector(".status-text");
     EventUtils.sendMouseEvent({ type: "mouseover" }, statusCode);
     await waitUntil(() => statusCode.title);
 
@@ -186,6 +187,7 @@ add_task(async function() {
       "The status summary code is incorrect.");
     is(statusCode.getAttribute("title"), status + " " + statusText,
       "The status summary value is incorrect.");
+    is(statusTextInput.value, statusText, "The status text value is incorrect.");
   }
 
   /**
