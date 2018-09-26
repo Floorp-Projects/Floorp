@@ -38,6 +38,7 @@ use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use gpu_cache::GpuDebugChunk;
 #[cfg(feature = "pathfinder")]
 use gpu_glyph_renderer::GpuGlyphRenderer;
+use gpu_types::ScalingInstance;
 use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use internal_types::{CacheTextureId, DebugOutput, FastHashMap, RenderedDocument, ResultMsg};
 use internal_types::{TextureUpdateList, TextureUpdateOp, TextureUpdateSource};
@@ -51,6 +52,7 @@ use record::ApiRecordingReceiver;
 use render_backend::RenderBackend;
 use scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use shade::Shaders;
+use smallvec::SmallVec;
 use render_task::{RenderTask, RenderTaskKind, RenderTaskTree};
 use resource_cache::ResourceCache;
 use util::drain_filter;
@@ -71,7 +73,7 @@ use texture_cache::TextureCache;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use tiling::{AlphaRenderTarget, ColorRenderTarget};
 use tiling::{BlitJob, BlitJobSource, RenderPass, RenderPassKind, RenderTargetList};
-use tiling::{Frame, RenderTarget, RenderTargetKind, ScalingInfo, TextureCacheRenderTarget};
+use tiling::{Frame, RenderTarget, RenderTargetKind, TextureCacheRenderTarget};
 #[cfg(not(feature = "pathfinder"))]
 use tiling::GlyphJob;
 use time::precise_time_ns;
@@ -433,6 +435,28 @@ pub(crate) mod desc {
         ],
     };
 
+    pub const SCALE: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            VertexAttribute {
+                name: "aScaleRenderTaskAddress",
+                count: 1,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aScaleSourceTaskAddress",
+                count: 1,
+                kind: VertexAttributeKind::I32,
+            },
+        ],
+    };
+
     pub const CLIP: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[
             VertexAttribute {
@@ -579,6 +603,7 @@ pub(crate) enum VertexArrayKind {
     VectorStencil,
     VectorCover,
     Border,
+    Scale,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -762,13 +787,38 @@ impl SourceTextureResolver {
         assert!(self.saved_textures.is_empty());
     }
 
-    fn end_frame(&mut self) {
+    fn end_frame(&mut self, device: &mut Device, frame_id: FrameId) {
         // return the cached targets to the pool
         self.end_pass(None, None);
         // return the global alpha texture
         self.render_target_pool.extend(self.shared_alpha_texture.take());
         // return the saved targets as well
         self.render_target_pool.extend(self.saved_textures.drain(..));
+
+        // GC the render target pool.
+        //
+        // We use a simple scheme whereby we drop any texture that hasn't been used
+        // in the last 30 frames. This should generally prevent any sustained build-
+        // up of unused textures, unless we don't generate frames for a long period.
+        // This can happen when the window is minimized, and we probably want to
+        // flush all the WebRender caches in that case [1].
+        //
+        // [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1494099
+        self.retain_targets(device, |texture| texture.used_recently(frame_id, 30));
+    }
+
+    /// Drops all targets from the render target pool that do not satisfy the predicate.
+    pub fn retain_targets<F: Fn(&Texture) -> bool>(&mut self, device: &mut Device, f: F) {
+        // We can't just use retain() because `Texture` requires manual cleanup.
+        let mut tmp = SmallVec::<[Texture; 8]>::new();
+        for target in self.render_target_pool.drain(..) {
+            if f(&target) {
+                tmp.push(target);
+            } else {
+                device.delete_texture(target);
+            }
+        }
+        self.render_target_pool.extend(tmp);
     }
 
     fn end_pass(
@@ -871,6 +921,21 @@ impl SourceTextureResolver {
                 Some(&self.saved_textures[saved_index.0])
             }
         }
+    }
+
+    fn report_memory(&self) -> MemoryReport {
+        let mut report = MemoryReport::default();
+
+        // We're reporting GPU memory rather than heap-allocations, so we don't
+        // use size_of_op.
+        for t in self.cache_texture_map.iter() {
+            report.texture_cache_textures += t.size_in_bytes();
+        }
+        for t in self.render_target_pool.iter() {
+            report.render_target_textures += t.size_in_bytes();
+        }
+
+        report
     }
 }
 
@@ -1320,11 +1385,14 @@ impl LazyInitializedDebugRenderer {
     }
 }
 
+// NB: If you add more VAOs here, be sure to deinitialize them in
+// `Renderer::deinit()` below.
 pub struct RendererVAOs {
     prim_vao: VAO,
     blur_vao: VAO,
     clip_vao: VAO,
     border_vao: VAO,
+    scale_vao: VAO,
 }
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
@@ -1626,8 +1694,8 @@ impl Renderer {
 
         let blur_vao = device.create_vao_with_new_instances(&desc::BLUR, &prim_vao);
         let clip_vao = device.create_vao_with_new_instances(&desc::CLIP, &prim_vao);
-        let border_vao =
-            device.create_vao_with_new_instances(&desc::BORDER, &prim_vao);
+        let border_vao = device.create_vao_with_new_instances(&desc::BORDER, &prim_vao);
+        let scale_vao = device.create_vao_with_new_instances(&desc::SCALE, &prim_vao);
         let texture_cache_upload_pbo = device.create_pbo();
 
         let texture_resolver = SourceTextureResolver::new(&mut device);
@@ -1818,6 +1886,7 @@ impl Renderer {
                 blur_vao,
                 clip_vao,
                 border_vao,
+                scale_vao,
             },
             transforms_texture,
             prim_header_i_texture,
@@ -1942,17 +2011,27 @@ impl Renderer {
                 }
                 ResultMsg::UpdateResources {
                     updates,
-                    cancel_rendering,
+                    memory_pressure,
                 } => {
                     self.pending_texture_updates.push(updates);
                     self.device.begin_frame();
                     self.update_texture_cache();
+
+                    // Flush the render target pool on memory pressure.
+                    //
+                    // This needs to be separate from the block below because
+                    // the device module asserts if we delete textures while
+                    // not in a frame.
+                    if memory_pressure {
+                        self.texture_resolver.retain_targets(&mut self.device, |_| false);
+                    }
+
                     self.device.end_frame();
                     // If we receive a `PublishDocument` message followed by this one
                     // within the same update we need to cancel the frame because we
                     // might have deleted the resources in use in the frame due to a
                     // memory pressure event.
-                    if cancel_rendering {
+                    if memory_pressure {
                         self.active_documents.clear();
                     }
                 }
@@ -2847,26 +2926,35 @@ impl Renderer {
 
     fn handle_scaling(
         &mut self,
-        render_tasks: &RenderTaskTree,
-        scalings: &Vec<ScalingInfo>,
+        scalings: &[ScalingInstance],
         source: SourceTexture,
+        projection: &Transform3D<f32>,
+        stats: &mut RendererStats,
     ) {
-        let cache_texture = self.texture_resolver
-            .resolve(&source)
-            .unwrap();
-        for scaling in scalings {
-            let source = &render_tasks[scaling.src_task_id];
-            let dest = &render_tasks[scaling.dest_task_id];
-
-            let (source_rect, source_layer) = source.get_target_rect();
-            let (dest_rect, _) = dest.get_target_rect();
-
-            let cache_draw_target = (cache_texture, source_layer.0 as i32);
-            self.device
-                .bind_read_target(Some(cache_draw_target));
-
-            self.device.blit_render_target(source_rect, dest_rect);
+        if scalings.is_empty() {
+            return
         }
+
+        match source {
+            SourceTexture::CacheRGBA8 => {
+                self.shaders.cs_scale_rgba8.bind(&mut self.device,
+                                                 &projection,
+                                                 &mut self.renderer_errors);
+            }
+            SourceTexture::CacheA8 => {
+                self.shaders.cs_scale_a8.bind(&mut self.device,
+                                              &projection,
+                                              &mut self.renderer_errors);
+            }
+            _ => unreachable!(),
+        }
+
+        self.draw_instanced_batch(
+            &scalings,
+            VertexArrayKind::Scale,
+            &BatchTextures::no_texture(),
+            stats,
+        );
     }
 
     fn draw_color_target(
@@ -2975,7 +3063,7 @@ impl Renderer {
             }
         }
 
-        self.handle_scaling(render_tasks, &target.scalings, SourceTexture::CacheRGBA8);
+        self.handle_scaling(&target.scalings, SourceTexture::CacheRGBA8, projection, stats);
 
         //TODO: record the pixel count for cached primitives
 
@@ -3267,7 +3355,7 @@ impl Renderer {
             }
         }
 
-        self.handle_scaling(render_tasks, &target.scalings, SourceTexture::CacheA8);
+        self.handle_scaling(&target.scalings, SourceTexture::CacheA8, projection, stats);
 
         // Draw the clip items into the tiled alpha mask.
         {
@@ -3832,7 +3920,7 @@ impl Renderer {
             );
         }
 
-        self.texture_resolver.end_frame();
+        self.texture_resolver.end_frame(&mut self.device, frame_id);
 
         #[cfg(feature = "debug_renderer")]
         {
@@ -4111,6 +4199,7 @@ impl Renderer {
         self.device.delete_vao(self.vaos.clip_vao);
         self.device.delete_vao(self.vaos.blur_vao);
         self.device.delete_vao(self.vaos.border_vao);
+        self.device.delete_vao(self.vaos.scale_vao);
 
         #[cfg(feature = "debug_renderer")]
         {
@@ -4138,14 +4227,29 @@ impl Renderer {
     /// Collects a memory report.
     pub fn report_memory(&self) -> MemoryReport {
         let mut report = MemoryReport::default();
+
+        // GPU cache CPU memory.
         if let CacheBus::PixelBuffer{ref cpu_blocks, ..} = self.gpu_cache_texture.bus {
             report.gpu_cache_cpu_mirror += self.size_of(cpu_blocks.as_ptr());
         }
 
+        // GPU cache GPU memory.
+        report.gpu_cache_textures += self.gpu_cache_texture.texture.size_in_bytes();
+
+        // Render task CPU memory.
         for (_id, doc) in &self.active_documents {
             report.render_tasks += self.size_of(doc.frame.render_tasks.tasks.as_ptr());
             report.render_tasks += self.size_of(doc.frame.render_tasks.task_data.as_ptr());
         }
+
+        // Vertex data GPU memory.
+        report.vertex_data_textures += self.prim_header_f_texture.texture.size_in_bytes();
+        report.vertex_data_textures += self.prim_header_i_texture.texture.size_in_bytes();
+        report.vertex_data_textures += self.transforms_texture.texture.size_in_bytes();
+        report.vertex_data_textures += self.render_task_texture.texture.size_in_bytes();
+
+        // Texture cache and render target GPU memory.
+        report += self.texture_resolver.report_memory();
 
         report
     }
@@ -4781,6 +4885,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::VectorStencil => &gpu_glyph_renderer.vector_stencil_vao,
         VertexArrayKind::VectorCover => &gpu_glyph_renderer.vector_cover_vao,
         VertexArrayKind::Border => &vaos.border_vao,
+        VertexArrayKind::Scale => &vaos.scale_vao,
     }
 }
 
@@ -4795,6 +4900,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::Blur => &vaos.blur_vao,
         VertexArrayKind::VectorStencil | VertexArrayKind::VectorCover => unreachable!(),
         VertexArrayKind::Border => &vaos.border_vao,
+        VertexArrayKind::Scale => &vaos.scale_vao,
     }
 }
 

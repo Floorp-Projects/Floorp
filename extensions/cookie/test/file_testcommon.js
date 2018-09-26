@@ -13,7 +13,11 @@ function setupTest(uri, cookies, loads) {
   SimpleTest.waitForExplicitFinish();
 
   var prefSet = new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({ set: [["network.cookie.cookieBehavior", 1]] }, resolve);
+    SpecialPowers.pushPrefEnv({ set: [
+      ["browser.contentblocking.enabled", true],
+      ["browser.contentblocking.ui.enabled", true],
+      ["network.cookie.cookieBehavior", 1],
+    ]}, resolve);
   });
 
   gScript = SpecialPowers.loadChromeScript(SCRIPT_URL);

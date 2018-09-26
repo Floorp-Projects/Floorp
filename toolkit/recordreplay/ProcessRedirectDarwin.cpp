@@ -337,6 +337,7 @@ namespace recordreplay {
   MACRO(CGContextScaleCTM)                                       \
   MACRO(CGContextTranslateCTM)                                   \
   MACRO(CGDataProviderCreateWithData, RR_Compose<RR_ScalarRval, RR_CGDataProviderCreateWithData>) \
+  MACRO(CGDataProviderRelease)                                   \
   MACRO(CGDisplayCopyColorSpace, RR_ScalarRval)                  \
   MACRO(CGDisplayIOServicePort, RR_ScalarRval)                   \
   MACRO(CGEventSourceCounterForEventType, RR_ScalarRval)         \

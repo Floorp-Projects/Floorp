@@ -175,7 +175,7 @@ static const uint32_t kNumOculusButton = static_cast<uint32_t>
                                          (OculusLeftControllerButtonType::
                                          NumButtonType);
 static const uint32_t kNumOculusHaptcs = 1;
-
+/*
 ovrFovPort
 ToFovPort(const VRFieldOfView& aFOV)
 {
@@ -186,7 +186,7 @@ ToFovPort(const VRFieldOfView& aFOV)
   fovPort.DownTan = tan(aFOV.downDegrees * M_PI / 180.0);
   return fovPort;
 }
-
+*/
 VRFieldOfView
 FromFovPort(const ovrFovPort& aFOV)
 {
@@ -2030,7 +2030,11 @@ VRSystemManagerOculus::ScanForControllers()
           hand = GamepadHand::Right;
           break;
         default:
+<<<<<<< working copy
           continue;
+=======
+          break;
+>>>>>>> merge rev
       }
       RefPtr<VRControllerOculus> oculusController = new VRControllerOculus(hand,
                                                       mDisplay->GetDisplayInfo().GetDisplayID());
