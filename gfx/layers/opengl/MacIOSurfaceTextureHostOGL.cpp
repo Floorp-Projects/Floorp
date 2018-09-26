@@ -228,10 +228,13 @@ MacIOSurfaceTextureHostOGL::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
     case gfx::SurfaceFormat::YUV422: {
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
+      // Those images can only be generated at present by the Apple H264 decoder
+      // which only supports 8 bits color depth.
       aBuilder.PushYCbCrInterleavedImage(aBounds,
                                          aClip,
                                          true,
                                          aImageKeys[0],
+                                         wr::ColorDepth::Color8,
                                          wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
                                          aFilter);
       break;
@@ -239,11 +242,14 @@ MacIOSurfaceTextureHostOGL::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 2);
+      // Those images can only be generated at present by the Apple H264 decoder
+      // which only supports 8 bits color depth.
       aBuilder.PushNV12Image(aBounds,
                              aClip,
                              true,
                              aImageKeys[0],
                              aImageKeys[1],
+                             wr::ColorDepth::Color8,
                              wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
                              aFilter);
       break;
