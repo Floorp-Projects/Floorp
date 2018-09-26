@@ -32,7 +32,7 @@
 #include "nsIStatefulFrame.h"
 #include "nsThreadUtils.h"
 
-class nsIListControlFrame;
+class nsListControlFrame;
 class nsComboboxDisplayFrame;
 class nsIDOMEventListener;
 class nsIScrollableFrame;
@@ -291,7 +291,7 @@ protected:
   nsContainerFrame*        mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame
   nsIFrame*                mDropdownFrame;           // dropdown list frame
-  nsIListControlFrame *    mListControlFrame;        // ListControl Interface for the dropdown frame
+  nsListControlFrame*      mListControlFrame;        // ListControl for the dropdown frame
 
   // The inline size of our display area.  Used by that frame's reflow
   // to size to the full inline size except the drop-marker.

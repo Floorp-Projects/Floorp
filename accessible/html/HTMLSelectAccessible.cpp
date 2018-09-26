@@ -19,7 +19,7 @@
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsContainerFrame.h"
-#include "nsIListControlFrame.h"
+#include "nsListControlFrame.h"
 
 using namespace mozilla::a11y;
 using namespace mozilla::dom;
@@ -95,7 +95,7 @@ HTMLSelectListAccessible::AreItemsOperable() const
 Accessible*
 HTMLSelectListAccessible::CurrentItem() const
 {
-  nsIListControlFrame* listControlFrame = do_QueryFrame(GetFrame());
+  nsListControlFrame* listControlFrame = do_QueryFrame(GetFrame());
   if (listControlFrame) {
     nsCOMPtr<nsIContent> activeOptionNode = listControlFrame->GetCurrentOption();
     if (activeOptionNode) {
