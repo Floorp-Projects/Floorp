@@ -213,6 +213,19 @@ class TbplFormatter(BaseFormatter):
             time = data["time"] - start_time
             duration_msg = "took %ims" % time
 
+        screenshot_msg = ""
+        extra = data.get("extra", {})
+        if "reftest_screenshots" in extra:
+            screenshots = extra["reftest_screenshots"]
+            if len(screenshots) == 3:
+                screenshot_msg = ("\nREFTEST   IMAGE 1 (TEST): data:image/png;base64,%s\n"
+                                  "REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,%s") % (
+                                      screenshots[0]["screenshot"],
+                                      screenshots[2]["screenshot"])
+            elif len(screenshots) == 1:
+                screenshot_msg = ("\nREFTEST   IMAGE: data:image/png;base64,%s" %
+                                  screenshots[0]["screenshot"])
+
         if "expected" in data:
             message = data.get("message", "")
             if not message:
@@ -222,17 +235,7 @@ class TbplFormatter(BaseFormatter):
             if message and message[-1] == "\n":
                 message = message[:-1]
 
-            extra = data.get("extra", {})
-            if "reftest_screenshots" in extra:
-                screenshots = extra["reftest_screenshots"]
-                if len(screenshots) == 3:
-                    message += ("\nREFTEST   IMAGE 1 (TEST): data:image/png;base64,%s\n"
-                                "REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,%s") % (
-                                    screenshots[0]["screenshot"],
-                                    screenshots[2]["screenshot"])
-                elif len(screenshots) == 1:
-                    message += "\nREFTEST   IMAGE: data:image/png;base64,%s" \
-                               % screenshots[0]["screenshot"]
+            message += screenshot_msg
 
             failure_line = "TEST-UNEXPECTED-%s | %s | %s\n" % (
                 data["status"], test_id, message)
@@ -249,6 +252,8 @@ class TbplFormatter(BaseFormatter):
         if duration_msg:
             sections.append(duration_msg)
         rv.append(' | '.join(sections) + '\n')
+        if screenshot_msg:
+            rv.append(screenshot_msg[1:])
         return "".join(rv)
 
     def suite_end(self, data):

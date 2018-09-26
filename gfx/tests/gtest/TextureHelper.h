@@ -60,7 +60,7 @@ CreateYCbCrTextureClientWithBackend(LayersBackend aLayersBackend)
   clientData.mPicX = 0;
   clientData.mPicX = 0;
 
-  // Create YCbCrTexture for basice backend.
+  // Create YCbCrTexture for basic backend.
   if (aLayersBackend == LayersBackend::LAYERS_BASIC) {
     return TextureClient::CreateForYCbCr(nullptr,
                                          clientData.mYSize,
@@ -68,8 +68,8 @@ CreateYCbCrTextureClientWithBackend(LayersBackend aLayersBackend)
                                          clientData.mCbCrSize,
                                          clientData.mCbCrStride,
                                          StereoMode::MONO,
+                                         gfx::ColorDepth::COLOR_8,
                                          YUVColorSpace::BT601,
-                                         8,
                                          TextureFlags::DEALLOCATE_CLIENT);
   }
 

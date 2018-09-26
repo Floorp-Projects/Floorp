@@ -110,41 +110,79 @@ BytesPerPixel(SurfaceFormat aFormat)
 }
 
 static inline SurfaceFormat
-SurfaceFormatForAlphaBitDepth(uint32_t aBitDepth)
+SurfaceFormatForColorDepth(ColorDepth aColorDepth)
 {
-  if (aBitDepth == 8) {
-    return SurfaceFormat::A8;
-  } else if (aBitDepth == 10 ||
-             aBitDepth == 12) {
-    return SurfaceFormat::A16;
+  SurfaceFormat format = SurfaceFormat::A8;
+  switch (aColorDepth) {
+    case ColorDepth::COLOR_8:
+      break;
+    case ColorDepth::COLOR_10:
+    case ColorDepth::COLOR_12:
+      format = SurfaceFormat::A16;
+      break;
+    case ColorDepth::UNKNOWN:
+      MOZ_ASSERT_UNREACHABLE("invalid color depth value");
   }
-  MOZ_ASSERT_UNREACHABLE("Unsupported alpha bit depth");
-  return SurfaceFormat::UNKNOWN;
+  return format;
+}
+
+static inline uint32_t
+BitDepthForColorDepth(ColorDepth aColorDepth)
+{
+  uint32_t depth = 8;
+  switch (aColorDepth) {
+    case ColorDepth::COLOR_8:
+      break;
+    case ColorDepth::COLOR_10:
+      depth = 10;
+      break;
+    case ColorDepth::COLOR_12:
+      depth = 12;
+      break;
+    case ColorDepth::UNKNOWN:
+      MOZ_ASSERT_UNREACHABLE("invalid color depth value");
+  }
+  return depth;
 }
 
 static inline ColorDepth
-ColorDepthForAlphaBitDepth(uint32_t aBitDepth)
+ColorDepthForBitDepth(uint8_t aBitDepth)
 {
+  ColorDepth depth = ColorDepth::COLOR_8;
   switch (aBitDepth) {
-  case 8: return ColorDepth::COLOR_8;
-  case 10: return ColorDepth::COLOR_10;
-  case 12: return ColorDepth::COLOR_12;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unsupported alpha bit depth");
-    return ColorDepth::COLOR_8;
+    case 8:
+      break;
+    case 10:
+      depth = ColorDepth::COLOR_10;
+      break;
+    case 12:
+      depth = ColorDepth::COLOR_12;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("invalid color depth value");
   }
+  return depth;
 }
 
 // 10 and 12 bits color depth image are using 16 bits integers for storage
-// As such we need to rescale the value from 8,10 or 12 to 16.
+// As such we need to rescale the value from 10 or 12 bits to 16.
 static inline uint32_t
-RescalingFactorForAlphaBitDepth(uint32_t aBitDepth)
+RescalingFactorForColorDepth(ColorDepth aColorDepth)
 {
-  MOZ_ASSERT(aBitDepth == 8 || aBitDepth == 10 || aBitDepth == 12);
-  uint32_t pixelBits =
-    8 * BytesPerPixel(SurfaceFormatForAlphaBitDepth(aBitDepth));
-  uint32_t paddingBits = pixelBits - aBitDepth;
-  return pow(2, paddingBits);
+  uint32_t factor = 1;
+  switch (aColorDepth) {
+    case ColorDepth::COLOR_8:
+      break;
+    case ColorDepth::COLOR_10:
+      factor = 64;
+      break;
+    case ColorDepth::COLOR_12:
+      factor = 16;
+      break;
+    case ColorDepth::UNKNOWN:
+      MOZ_ASSERT_UNREACHABLE("invalid color depth value");
+  }
+  return factor;
 }
 
 static inline bool

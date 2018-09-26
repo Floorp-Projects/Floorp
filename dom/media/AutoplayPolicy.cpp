@@ -27,21 +27,6 @@ mozilla::LazyLogModule gAutoplayPermissionLog("Autoplay");
 #define AUTOPLAY_LOG(msg, ...)                                             \
   MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
-static const char*
-AllowAutoplayToStr(const uint32_t state)
-{
-  switch (state) {
-    case nsIAutoplay::ALLOWED:
-      return "allowed";
-    case nsIAutoplay::BLOCKED:
-      return "blocked";
-    case nsIAutoplay::PROMPT:
-      return "prompt";
-    default:
-      return "unknown";
-  }
-}
-
 namespace mozilla {
 namespace dom {
 
@@ -203,7 +188,7 @@ AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement)
     autoplayDefault == nsIAutoplay::ALLOWED;
 
   AUTOPLAY_LOG("IsAllowedToPlay, mediaElement=%p, isAllowToPlay=%s",
-                &aElement, AllowAutoplayToStr(result));
+                &aElement, result ? "allowed" : "blocked");
 
   return result;
 }

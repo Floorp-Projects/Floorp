@@ -898,7 +898,7 @@ CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
 
       // Adjust range according to the bit depth.
       mPSConstants.vCoefficient[0] =
-        RescalingFactorForAlphaBitDepth(ycbcrEffect->mBitDepth);
+        RescalingFactorForColorDepth(ycbcrEffect->mColorDepth);
 
       TextureSourceD3D11* sourceY = source->GetSubSource(Y)->AsSourceD3D11();
       TextureSourceD3D11* sourceCb = source->GetSubSource(Cb)->AsSourceD3D11();

@@ -92,7 +92,7 @@ struct YCbCrShaderConstants {
   float yuvColorMatrix[3][4];
 };
 
-struct YCbCrBitDepthConstants {
+struct YCbCrColorDepthConstants {
   float coefficient;
   uint32_t padding[3];
 };

@@ -570,9 +570,8 @@ bool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
     return false;
 
   nsAutoString alertMessage;
-  alertMessage.SetCapacity(32 + message.Length());
-  alertMessage += NS_LITERAL_STRING("PAC-alert: ");
-  alertMessage += message;
+  alertMessage.AssignLiteral(u"PAC-alert: ");
+  alertMessage.Append(message);
   PACLogToConsole(alertMessage);
 
   args.rval().setUndefined();  /* return undefined */

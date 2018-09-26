@@ -503,41 +503,28 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
                                 NS_TOKENDIALOGS_CONTRACTID);
   if (NS_SUCCEEDED(nsrv))
   {
-    nsProtectedAuthThread* protectedAuthRunnable = new nsProtectedAuthThread();
-    if (protectedAuthRunnable)
-    {
-      NS_ADDREF(protectedAuthRunnable);
+    RefPtr<nsProtectedAuthThread> protectedAuthRunnable = new nsProtectedAuthThread();
+    protectedAuthRunnable->SetParams(slot);
 
-      protectedAuthRunnable->SetParams(slot);
+    nsrv = dialogs->DisplayProtectedAuth(ir, protectedAuthRunnable);
 
-      nsCOMPtr<nsIProtectedAuthThread> runnable = do_QueryInterface(protectedAuthRunnable);
-      if (runnable)
-      {
-        nsrv = dialogs->DisplayProtectedAuth(ir, runnable);
+    // We call join on the thread,
+    // so we can be sure that no simultaneous access will happen.
+    protectedAuthRunnable->Join();
 
-        // We call join on the thread,
-        // so we can be sure that no simultaneous access will happen.
-        protectedAuthRunnable->Join();
-
-        if (NS_SUCCEEDED(nsrv))
-        {
-          SECStatus rv = protectedAuthRunnable->GetResult();
-          switch (rv)
-          {
-              case SECSuccess:
-                  protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_AUTHENTICATED));
-                  break;
-              case SECWouldBlock:
-                  protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_RETRY));
-                  break;
-              default:
-                  protAuthRetVal = nullptr;
-                  break;
-          }
-        }
+    if (NS_SUCCEEDED(nsrv)) {
+      SECStatus rv = protectedAuthRunnable->GetResult();
+      switch (rv) {
+        case SECSuccess:
+          protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_AUTHENTICATED));
+          break;
+        case SECWouldBlock:
+          protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_RETRY));
+          break;
+        default:
+          protAuthRetVal = nullptr;
+          break;
       }
-
-      NS_RELEASE(protectedAuthRunnable);
     }
   }
 

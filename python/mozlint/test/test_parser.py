@@ -40,6 +40,8 @@ def test_parse_valid_linter(parse):
     assert 'type' in lintobj
     assert 'payload' in lintobj
     assert 'extensions' in lintobj
+    assert 'include' in lintobj
+    assert lintobj['include'] == ['.']
     assert set(lintobj['extensions']) == set(['js', 'jsm'])
 
 
@@ -47,6 +49,7 @@ def test_parse_valid_linter(parse):
     'invalid_type.yml',
     'invalid_extension.ym',
     'invalid_include.yml',
+    'invalid_include_with_glob.yml',
     'invalid_exclude.yml',
     'invalid_support_files.yml',
     'missing_attrs.yml',

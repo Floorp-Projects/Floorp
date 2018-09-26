@@ -58,7 +58,8 @@ WebMDecoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
         uint8_t level = 0;
         uint8_t bitDepth = 0;
         if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
-          trackInfo->GetAsVideoInfo()->mBitDepth = bitDepth;
+          trackInfo->GetAsVideoInfo()->mColorDepth =
+            gfx::ColorDepthForBitDepth(bitDepth);
         }
         tracks.AppendElement(std::move(trackInfo));
         continue;
@@ -102,7 +103,7 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
   }
 
   // Verify that we have a PDM that supports the whitelisted types, include
-  // bitdepth
+  // color depth
   RefPtr<PDMFactory> platform = new PDMFactory();
   for (const auto& track : tracks) {
     if (!track || !platform->Supports(*track, nullptr /* diagnostic */)) {

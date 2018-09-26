@@ -92,6 +92,14 @@ public:
   virtual void BindTexture(GLenum aTextureUnit,
                            gfx::SamplingFilter aSamplingFilter) = 0;
 
+  // To be overridden in textures that need this. This method will be called
+  // when the compositor has used the texture to draw. This allows us to set
+  // a fence with glFenceSync which we can wait on later to ensure the GPU
+  // is done with the draw calls using that texture. We would like to be able
+  // to simply use glFinishObjectAPPLE, but this returns earlier than
+  // expected with nvidia drivers.
+  virtual void MaybeFenceTexture() {}
+
   virtual gfx::IntSize GetSize() const = 0;
 
   virtual GLenum GetTextureTarget() const { return LOCAL_GL_TEXTURE_2D; }
@@ -298,6 +306,7 @@ class DirectMapTextureSource : public GLTextureSource
 public:
   DirectMapTextureSource(TextureSourceProvider* aProvider,
                          gfx::DataSourceSurface* aSurface);
+  ~DirectMapTextureSource();
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
                       nsIntRegion* aDestRegion = nullptr,
@@ -310,11 +319,15 @@ public:
   // done with it.
   virtual bool Sync(bool aBlocking) override;
 
+  virtual void MaybeFenceTexture() override;
+
 private:
   bool UpdateInternal(gfx::DataSourceSurface* aSurface,
                       nsIntRegion* aDestRegion,
                       gfx::IntPoint* aSrcOffset,
                       bool aInit);
+
+  GLsync mSync;
 };
 
 class GLTextureHost : public TextureHost

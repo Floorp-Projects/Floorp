@@ -43,36 +43,7 @@ VRGPUChild::Get()
 VRGPUChild::ShutDown()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (sVRGPUChildSingleton) {
-    sVRGPUChildSingleton->Destroy();
-    sVRGPUChildSingleton = nullptr;
-  }
-}
-
-class DeferredDeleteVRGPUChild : public Runnable
-{
-public:
-  explicit DeferredDeleteVRGPUChild(RefPtr<VRGPUChild> aChild)
-    : Runnable("gfx::DeferredDeleteVRGPUChild")
-    , mChild(std::move(aChild))
-  {
-  }
-
-  NS_IMETHODIMP Run() override {
-    mChild->Close();
-    return NS_OK;
-  }
-
-private:
-  RefPtr<VRGPUChild> mChild;
-};
-
-void
-VRGPUChild::Destroy()
-{
-  // Keep ourselves alive until everything has been shut down
-  RefPtr<VRGPUChild> selfRef = this;
-  NS_DispatchToMainThread(new DeferredDeleteVRGPUChild(this));
+  sVRGPUChildSingleton = nullptr;
 }
 
 } // namespace gfx

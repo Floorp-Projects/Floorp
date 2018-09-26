@@ -258,6 +258,13 @@ pref("dom.script_loader.bytecode_cache.strategy", 0);
 pref("dom.script_loader.binast_encoding.enabled", false);
 #endif
 
+// Whether window.event is enabled
+#ifdef NIGHTLY_BUILD
+pref("dom.window.event.enabled", true);
+#else
+pref("dom.window.event.enabled", false);
+#endif
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
@@ -2948,10 +2955,10 @@ pref("layout.css.mix-blend-mode.enabled", true);
 pref("layout.css.isolation.enabled", true);
 
 // Is support for CSS Scrollbar color properties enabled?
-pref("layout.css.scrollbar-colors.enabled", false);
+pref("layout.css.scrollbar-colors.enabled", true);
 
 // Is support for scrollbar-width property enabled?
-pref("layout.css.scrollbar-width.enabled", false);
+pref("layout.css.scrollbar-width.enabled", true);
 
 // Set the threshold distance in CSS pixels below which scrolling will snap to
 // an edge, when scroll snapping is set to "proximity".
@@ -5023,7 +5030,7 @@ pref("extensions.webextensions.keepStorageOnUninstall", false);
 pref("extensions.webextensions.keepUuidOnUninstall", false);
 // Redirect basedomain used by identity api
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
-pref("extensions.webextensions.restrictedDomains", "accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,content.cdn.mozilla.net,discovery.addons.mozilla.org,input.mozilla.org,install.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com,testpilot.firefox.com");
+pref("extensions.webextensions.restrictedDomains", "accounts-static.cdn.mozilla.net,accounts.firefox.com,addons.cdn.mozilla.net,addons.mozilla.org,api.accounts.firefox.com,content.cdn.mozilla.net,discovery.addons.mozilla.org,input.mozilla.org,install.mozilla.org,oauth.accounts.firefox.com,profile.accounts.firefox.com,support.mozilla.org,sync.services.mozilla.com,testpilot.firefox.com");
 // Whether or not webextension icon theming is supported.
 pref("extensions.webextensions.themes.icons.enabled", false);
 pref("extensions.webextensions.remote", false);

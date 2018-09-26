@@ -5,9 +5,7 @@ WarningLinter:
         files because it is bad, but not too bad (just a warning)
     rule: no-foobar
     level: warning
-    include:
-        - '**/*.js'
-        - '**/*.jsm'
+    include: ['.']
     type: string
     extensions: ['.js', 'jsm']
     payload: foobar
