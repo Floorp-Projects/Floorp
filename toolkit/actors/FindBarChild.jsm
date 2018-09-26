@@ -14,8 +14,9 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
 
 class FindBarChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
+
     this._findKey = null;
 
     XPCOMUtils.defineLazyProxy(this, "FindBarContent", () => {

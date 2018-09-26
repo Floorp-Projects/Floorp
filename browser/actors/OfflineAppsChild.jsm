@@ -10,8 +10,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class OfflineAppsChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
 
     this._docId = 0;
     this._docIdMap = new Map();

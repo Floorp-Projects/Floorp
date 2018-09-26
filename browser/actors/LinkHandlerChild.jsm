@@ -13,8 +13,8 @@ ChromeUtils.defineModuleGetter(this, "FaviconLoader",
   "resource:///modules/FaviconLoader.jsm");
 
 class LinkHandlerChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
 
     this.seenTabIcon = false;
     this._iconLoader = null;

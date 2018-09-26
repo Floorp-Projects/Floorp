@@ -11,17 +11,30 @@ var EXPORTED_SYMBOLS = ["ActorChild"];
  * ActorManagerParent and implemented in the child process. It currently takes
  * care of setting the `mm`, `content`, and `docShell` properties based on the
  * message manager it's bound to, but may do more in the future.
+ *
+ * If Fission is being simulated, and the actor is registered as "allFrames",
+ * the `content` property of this class will be bound to a specific subframe.
+ * Otherwise, the `content` is always the top-level content tied to the `mm`.
  */
 class ActorChild {
-  constructor(mm) {
-    this.mm = mm;
+  constructor(dispatcher) {
+    this._dispatcher = dispatcher;
+    this.mm = dispatcher.mm;
   }
 
   get content() {
-    return this.mm.content;
+    return this._dispatcher.window || this.mm.content;
   }
 
   get docShell() {
     return this.mm.docShell;
+  }
+
+  addEventListener(event, listener, options) {
+    this._dispatcher.addEventListener(event, listener, options);
+  }
+
+  cleanup() {
+    this._dispatcher = null;
   }
 }

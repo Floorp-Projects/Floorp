@@ -15,8 +15,19 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
  * and also manually within the sidebar JS global (which has no message manager)
  */
 class LightweightThemeChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    if (dispatcher.mm) {
+      // This is being instantiated by the Actor mechanism.
+      super(dispatcher);
+    } else {
+      // Manually instantiated by the sidebar.
+      let fakeDispatcher = {
+        mm: dispatcher,
+        window: dispatcher.content,
+        addEventListener: dispatcher.content.addEventListener,
+      };
+      super(fakeDispatcher);
+    }
 
     this.init();
   }
@@ -42,6 +53,8 @@ class LightweightThemeChild extends ActorChild {
    * event for the page we're attached to.
    */
   cleanup() {
+    super.cleanup();
+
     Services.cpmm.sharedData.removeEventListener("change", this);
   }
 
