@@ -82,13 +82,13 @@ add_task(async function() {
 function testVal(originalValue, targetValue) {
   gURLBar.value = originalValue;
   gURLBar.valueIsTyped = false;
-  is(gURLBar.textValue, targetValue || originalValue, "url bar value set");
+  is(gURLBar.value, targetValue || originalValue, "url bar value set");
 }
 
 function testCopy(originalValue, targetValue) {
   return new Promise((resolve, reject) => {
     waitForClipboard(targetValue, function() {
-      is(gURLBar.textValue, originalValue, "url bar copy value set");
+      is(gURLBar.value, originalValue, "url bar copy value set");
 
       gURLBar.focus();
       gURLBar.select();
