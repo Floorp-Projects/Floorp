@@ -100,9 +100,7 @@ PrintProgressDialogChild::OnStatusChange(nsIWebProgress* aProgress,
 NS_IMETHODIMP
 PrintProgressDialogChild::OnSecurityChange(nsIWebProgress* aProgress,
                                            nsIRequest* aRequest,
-                                           uint32_t aOldState,
-                                           uint32_t aState,
-                                           const nsAString& aContentBlockingLogJSON)
+                                           uint32_t aState)
 {
   return NS_OK;
 }

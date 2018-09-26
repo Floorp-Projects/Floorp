@@ -1403,6 +1403,12 @@ nsIDocument::nsIDocument()
     mHasCSP(false),
     mHasUnsafeEvalCSP(false),
     mHasUnsafeInlineCSP(false),
+    mHasTrackingContentBlocked(false),
+    mHasSlowTrackingContentBlocked(false),
+    mHasAllCookiesBlocked(false),
+    mHasTrackingCookiesBlocked(false),
+    mHasForeignCookiesBlocked(false),
+    mHasCookiesBlockedByPermission(false),
     mHasTrackingContentLoaded(false),
     mBFCacheDisallowed(false),
     mHasHadDefaultView(false),
@@ -11782,8 +11788,6 @@ nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aSizes) const
     aSizes.mDOMMediaQueryLists +=
       mql->SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
   }
-
-  mContentBlockingLog.AddSizeOfExcludingThis(aSizes);
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
