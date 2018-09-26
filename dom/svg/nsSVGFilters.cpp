@@ -337,8 +337,10 @@ SVGComponentTransferFunctionElement::ComputeAttributes(int32_t aChannel,
     }
     case SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE:
     case SVG_FECOMPONENTTRANSFER_TYPE_TABLE: {
-      aAttributes.mValues[aChannel].AppendElements(&tableValues[0],
-                                                                      tableValues.Length());
+      if (!tableValues.IsEmpty()) {
+        aAttributes.mValues[aChannel].AppendElements(&tableValues[0],
+                                                     tableValues.Length());
+      }
       break;
     }
   }
