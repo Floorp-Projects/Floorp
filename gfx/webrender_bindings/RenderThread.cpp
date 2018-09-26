@@ -159,7 +159,13 @@ RenderThread::AccumulateMemoryReport(MemoryReport aInitial)
 {
   RefPtr<MemoryReportPromise::Private> p = new MemoryReportPromise::Private(__func__);
   MOZ_ASSERT(!IsInRenderThread());
-  MOZ_ASSERT(Get());
+  if (!Get() || !Get()->Loop()) {
+    // Seems to happen sometimes, see bug 1494430.
+    NS_WARNING("No render thread, returning empty memory report");
+    p->Resolve(aInitial, __func__);
+    return p;
+  }
+
   Get()->Loop()->PostTask(
     NewRunnableMethod<MemoryReport, RefPtr<MemoryReportPromise::Private>>(
       "wr::RenderThread::DoAccumulateMemoryReport",
