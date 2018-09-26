@@ -103,15 +103,13 @@ The debugger client will send event notifications for a number of events the app
 When the user navigates away from a page, a `tabNavigated` event will be fired. The proper way to handle this event is to detach from the previous thread and tab and attach to the new ones:
 
 ```javascript
-function onTab() {
+async function onTab() {
   // Detach from the previous thread.
-  client.activeThread.detach(() => {
-    // Detach from the previous tab.
-    client.activeTab.detach(() => {
-      // Start debugging the new tab.
-      start();
-    });
-  });
+  await client.activeThread.detach();
+  // Detach from the previous tab.
+  await client.activeTab.detach();
+  // Start debugging the new tab.
+  start();
 }
 ```
 
