@@ -224,6 +224,7 @@ AddBlobFont(WrFontInstanceKey aInstanceKey,
       font.mPlatformOptions = Some(*aPlatformOptions);
     }
     if (aNumVariations) {
+      font.mNumVariations = aNumVariations;
       font.mVariations.reset(new gfx::FontVariation[aNumVariations]);
       PodCopy(font.mVariations.get(), reinterpret_cast<const gfx::FontVariation*>(aVariations), aNumVariations);
     }
