@@ -32,29 +32,27 @@ NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(mozIDOMWindowProxy* aWindow)
+nsSecureBrowserUIImpl::Init(nsIDocShell* aDocShell)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG(aWindow);
+  NS_ENSURE_ARG(aDocShell);
 
-  auto* piwindow = nsPIDOMWindowOuter::From(aWindow);
-  nsIDocShell* docShell = piwindow->GetDocShell();
+  aDocShell->SetSecurityUI(this);
 
-  // The Docshell will own the SecureBrowserUI object
-  if (!docShell) {
-    return NS_ERROR_FAILURE;
+  // The Docshell will own the SecureBrowserUI object, we keep a weak ref.
+  nsresult rv;
+  mDocShell = do_GetWeakReference(aDocShell, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  docShell->SetSecurityUI(this);
-
   // hook up to the webprogress notifications.
-  nsCOMPtr<nsIWebProgress> wp(do_GetInterface(docShell));
+  nsCOMPtr<nsIWebProgress> wp(do_GetInterface(aDocShell));
   if (!wp) {
     return NS_ERROR_FAILURE;
   }
 
   // Save this so we can compare it to the web progress in OnLocationChange.
-  nsresult rv;
   mWebProgress = do_GetWeakReference(wp, &rv);
   if (NS_FAILED(rv)) {
     return rv;
@@ -90,16 +88,6 @@ nsSecureBrowserUIImpl::GetSecInfo(nsITransportSecurityInfo** result)
   NS_IF_ADDREF(*result);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSecureBrowserUIImpl::SetDocShell(nsIDocShell* aDocShell)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG(aDocShell);
-  nsresult rv;
-  mDocShell = do_GetWeakReference(aDocShell, &rv);
-  return rv;
 }
 
 // Ask the docShell if we've blocked or loaded any mixed or tracking content.

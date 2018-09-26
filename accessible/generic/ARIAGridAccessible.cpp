@@ -90,11 +90,11 @@ ARIAGridAccessible::RowCount()
 Accessible*
 ARIAGridAccessible::CellAt(uint32_t aRowIndex, uint32_t aColumnIndex)
 {
-  Accessible* row = GetRowAt(aRowIndex);
+  Accessible* row = RowAt(aRowIndex);
   if (!row)
     return nullptr;
 
-  return GetCellInRowAt(row, aColumnIndex);
+  return CellInRowAt(row, aColumnIndex);
 }
 
 bool
@@ -110,7 +110,7 @@ ARIAGridAccessible::IsColSelected(uint32_t aColIdx)
 
   do {
     if (!nsAccUtils::IsARIASelected(row)) {
-      Accessible* cell = GetCellInRowAt(row, aColIdx);
+      Accessible* cell = CellInRowAt(row, aColIdx);
       if (!cell || !nsAccUtils::IsARIASelected(cell))
         return false;
     }
@@ -125,7 +125,7 @@ ARIAGridAccessible::IsRowSelected(uint32_t aRowIdx)
   if (IsARIARole(nsGkAtoms::table))
     return false;
 
-  Accessible* row = GetRowAt(aRowIdx);
+  Accessible* row = RowAt(aRowIdx);
   if(!row)
     return false;
 
@@ -147,12 +147,12 @@ ARIAGridAccessible::IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx)
   if (IsARIARole(nsGkAtoms::table))
     return false;
 
-  Accessible* row = GetRowAt(aRowIdx);
+  Accessible* row = RowAt(aRowIdx);
   if(!row)
     return false;
 
   if (!nsAccUtils::IsARIASelected(row)) {
-    Accessible* cell = GetCellInRowAt(row, aColIdx);
+    Accessible* cell = CellInRowAt(row, aColIdx);
     if (!cell || !nsAccUtils::IsARIASelected(cell))
       return false;
   }
@@ -416,7 +416,7 @@ ARIAGridAccessible::SelectCol(uint32_t aColIdx)
     NS_ASSERTION(NS_SUCCEEDED(rv), "SetARIASelected() Shouldn't fail!");
 
     // Select cell at the column index.
-    Accessible* cell = GetCellInRowAt(row, aColIdx);
+    Accessible* cell = CellInRowAt(row, aColIdx);
     if (cell)
       SetARIASelected(cell, true);
   }
@@ -428,7 +428,7 @@ ARIAGridAccessible::UnselectRow(uint32_t aRowIdx)
   if (IsARIARole(nsGkAtoms::table))
     return;
 
-  Accessible* row = GetRowAt(aRowIdx);
+  Accessible* row = RowAt(aRowIdx);
   if (row)
     SetARIASelected(row, false);
 }
@@ -443,7 +443,7 @@ ARIAGridAccessible::UnselectCol(uint32_t aColIdx)
 
   Accessible* row = nullptr;
   while ((row = rowIter.Next())) {
-    Accessible* cell = GetCellInRowAt(row, aColIdx);
+    Accessible* cell = CellInRowAt(row, aColIdx);
     if (cell)
       SetARIASelected(cell, false);
   }
@@ -451,33 +451,6 @@ ARIAGridAccessible::UnselectCol(uint32_t aColIdx)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Protected
-
-Accessible*
-ARIAGridAccessible::GetRowAt(int32_t aRow)
-{
-  int32_t rowIdx = aRow;
-
-  AccIterator rowIter(this, filters::GetRow);
-
-  Accessible* row = rowIter.Next();
-  while (rowIdx != 0 && (row = rowIter.Next()))
-    rowIdx--;
-
-  return row;
-}
-
-Accessible*
-ARIAGridAccessible::GetCellInRowAt(Accessible* aRow, int32_t aColumn)
-{
-  int32_t colIdx = aColumn;
-
-  AccIterator cellIter(aRow, filters::GetCell);
-  Accessible* cell = cellIter.Next();
-  while (colIdx != 0 && (cell = cellIter.Next()))
-    colIdx--;
-
-  return cell;
-}
 
 nsresult
 ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,

@@ -30,8 +30,9 @@ BumpChunk::newWithCapacity(size_t size)
     MOZ_DIAGNOSTIC_ASSERT(RoundUpPow2(size) == size);
     MOZ_DIAGNOSTIC_ASSERT(size >= sizeof(BumpChunk));
     void* mem = js_malloc(size);
-    if (!mem)
+    if (!mem) {
         return nullptr;
+    }
 
     UniquePtr<BumpChunk> result(new (mem) BumpChunk(size));
 
@@ -110,10 +111,12 @@ LifoAlloc::reset(size_t defaultChunkSize)
 {
     MOZ_ASSERT(mozilla::IsPowerOfTwo(defaultChunkSize));
 
-    while (!chunks_.empty())
+    while (!chunks_.empty()) {
         chunks_.popFirst();
-    while (!unused_.empty())
+    }
+    while (!unused_.empty()) {
         unused_.popFirst();
+    }
     defaultChunkSize_ = defaultChunkSize;
     markCount = 0;
     curSize_ = 0;
@@ -157,8 +160,9 @@ LifoAlloc::newChunkWithCapacity(size_t n)
 
     // Create a new BumpChunk, and allocate space for it.
     UniqueBumpChunk result = detail::BumpChunk::newWithCapacity(chunkSize);
-    if (!result)
+    if (!result) {
         return nullptr;
+    }
     MOZ_ASSERT(result->computedSizeOfIncludingThis() == chunkSize);
     return result;
 }
@@ -190,8 +194,9 @@ LifoAlloc::getOrCreateChunk(size_t n)
 
     // Allocate a new BumpChunk with enough space for the next allocation.
     UniqueBumpChunk newChunk = newChunkWithCapacity(n);
-    if (!newChunk)
+    if (!newChunk) {
         return false;
+    }
     size_t size = newChunk->computedSizeOfIncludingThis();
     chunks_.append(std::move(newChunk));
     incrementCurSize(size);
@@ -216,8 +221,9 @@ LifoAlloc::transferUnusedFrom(LifoAlloc* other)
     MOZ_ASSERT(!markCount);
 
     size_t size = 0;
-    for (detail::BumpChunk& bc : other->unused_)
+    for (detail::BumpChunk& bc : other->unused_) {
         size += bc.computedSizeOfIncludingThis();
+    }
 
     appendUnused(std::move(other->unused_));
     incrementCurSize(size);

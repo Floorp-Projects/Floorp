@@ -28,8 +28,6 @@
   locale/@AB_CD@/global/charsetMenu.properties          (%chrome/global/charsetMenu.properties)
   locale/@AB_CD@/global/commonDialog.dtd                (%chrome/global/commonDialog.dtd)
   locale/@AB_CD@/global/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
-  locale/@AB_CD@/global/config.dtd                      (%chrome/global/config.dtd)
-  locale/@AB_CD@/global/config.properties               (%chrome/global/config.properties)
   locale/@AB_CD@/global/contentAreaCommands.properties  (%chrome/global/contentAreaCommands.properties)
   locale/@AB_CD@/global/datetimebox.dtd                 (%chrome/global/datetimebox.dtd)
   locale/@AB_CD@/global/dialogOverlay.dtd               (%chrome/global/dialogOverlay.dtd)

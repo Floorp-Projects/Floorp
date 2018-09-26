@@ -8,8 +8,22 @@
 add_task(async function aboutAb() {
   await check_autocomplete({
     search: "about:ab",
-    autofilled: "about:ab",
-    completed: "about:ab",
+    autofilled: "about:about",
+    completed: "about:about",
+    matches: [{
+      value: "about:about",
+      comment: "about:about",
+      style: ["autofill", "heuristic"],
+    }],
+  });
+});
+
+// "about:Ab" should match "about:about"
+add_task(async function aboutAb() {
+  await check_autocomplete({
+    search: "about:Ab",
+    autofilled: "about:About",
+    completed: "about:about",
     matches: [{
       value: "about:about",
       comment: "about:about",
@@ -36,8 +50,8 @@ add_task(async function aboutAbout() {
 add_task(async function aboutAboutAndAboutAddons() {
   await check_autocomplete({
     search: "about:a",
-    autofilled: "about:a",
-    completed: "about:a",
+    autofilled: "about:about",
+    completed: "about:about",
     matches: [{
       value: "about:about",
       comment: "about:about",

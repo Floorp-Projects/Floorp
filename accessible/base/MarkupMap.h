@@ -358,7 +358,10 @@ MARKUPMAP(
        // display style other than 'table', then create a generic table cell
        // accessible, because there's no underlying table layout and thus native
        // HTML table cell class doesn't work.
-       if (!aContext->IsHTMLTableRow()) {
+       // The same is true if the cell itself has CSS display:block;.
+       if (!aContext->IsHTMLTableRow() ||
+           (aElement->GetPrimaryFrame() &&
+            aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableCellType)) {
          return new ARIAGridCellAccessibleWrap(aElement, aContext->Document());
        }
        if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::scope)) {

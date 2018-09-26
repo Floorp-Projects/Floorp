@@ -170,7 +170,7 @@ Location::GetURI(nsIURI** aURI, bool aGetInnermostURI)
   *aURI = nullptr;
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-  if (!mDocShell) {
+  if (!docShell) {
     return NS_OK;
   }
 

@@ -2078,7 +2078,7 @@ var gDiscoverView = {
   },
 
   _loadURL(aURL, aKeepHistory, aCallback, aPrincipal) {
-    if (this._browser.currentURI.spec == aURL) {
+    if (this._browser.currentURI && this._browser.currentURI.spec == aURL) {
       if (aCallback)
         aCallback();
       return;

@@ -66,6 +66,15 @@
 
       testTableStruct("table4", cellsArray);
 
+      // ////////////////////////////////////////////////////////////////////////
+      // Table with a cell that has display: block; style
+
+      cellsArray = [
+        [kRowHeaderCell, kDataCell]
+      ];
+
+      testTableStruct("table5", cellsArray);
+
       SimpleTest.finish();
     }
 
@@ -196,6 +205,13 @@
         <td><br></td>
       </tr>
     </tbody>
+  </table>
+
+  <table id="table5">
+    <tr>
+      <th>a</th>
+      <td style="display: block;">b</td>
+    </tr>
   </table>
 
 </body>

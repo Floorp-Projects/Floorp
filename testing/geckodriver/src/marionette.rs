@@ -21,7 +21,7 @@ use webdriver::capabilities::CapabilitiesMatching;
 use webdriver::command::WebDriverCommand::{AcceptAlert, AddCookie, CloseWindow, DeleteCookie,
                                            DeleteCookies, DeleteSession, DismissAlert,
                                            ElementClear, ElementClick, ElementSendKeys,
-                                           ElementTap, ExecuteAsyncScript, ExecuteScript,
+                                           ExecuteAsyncScript, ExecuteScript,
                                            Extension, FindElement, FindElementElement,
                                            FindElementElements, FindElements, FullscreenWindow,
                                            Get, GetActiveElement, GetAlertText, GetCSSValue,
@@ -461,7 +461,6 @@ impl MarionetteSession {
             | AcceptAlert
             | SendAlertText(_)
             | ElementClick(_)
-            | ElementTap(_)
             | ElementClear(_)
             | ElementSendKeys(_, _)
             | PerformActions(_)
@@ -827,7 +826,6 @@ impl MarionetteCommand {
                 );
                 (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
             }
-            ElementTap(ref x) => (Some("singleTap"), Some(x.to_marionette())),
             ExecuteAsyncScript(ref x) => (
                 Some("WebDriver:ExecuteAsyncScript"),
                 Some(x.to_marionette()),

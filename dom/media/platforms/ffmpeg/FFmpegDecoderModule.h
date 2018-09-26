@@ -81,15 +81,10 @@ protected:
   bool SupportsColorDepth(gfx::ColorDepth aColorDepth,
                           DecoderDoctorDiagnostics* aDiagnostics) const override
   {
-    // We don't support bitDepth > 8 when compositor backend is D3D11.
-    // But we don't have KnowsCompositor or any object
-    // that we can ask for the layersbackend type.
-    // We should remove this restriction until
-    // we solve the D3D11 compositor backend issue.
-#if defined(XP_LINUX) || defined(XP_MACOSX)
-    return true;
-#endif
+#if defined(MOZ_WIDGET_ANDROID)
     return aColorDepth == gfx::ColorDepth::COLOR_8;
+#endif
+    return true;
   }
 
 private:

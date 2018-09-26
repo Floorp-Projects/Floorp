@@ -9,6 +9,7 @@
 #include "mozilla/Preferences.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
+#include "NSSCertDBTrustDomain.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "pkix/pkixnss.h"
@@ -44,17 +45,19 @@ CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     return MapPRErrorCodeToResult(PR_GetError());
   }
 
+  nsAutoCString encIssuer;
+  nsAutoCString encSerial;
+  nsAutoCString encSubject;
+  nsAutoCString encPubKey;
+
+  nsresult nsrv = BuildRevocationCheckStrings(candidateCert.get(), encIssuer, encSerial, encSubject, encPubKey);
+  if (NS_FAILED(nsrv)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
   bool isCertRevoked;
-  nsresult nsrv = mCertBlocklist->IsCertRevoked(
-                    candidateCert->derIssuer.data,
-                    candidateCert->derIssuer.len,
-                    candidateCert->serialNumber.data,
-                    candidateCert->serialNumber.len,
-                    candidateCert->derSubject.data,
-                    candidateCert->derSubject.len,
-                    candidateCert->derPublicKey.data,
-                    candidateCert->derPublicKey.len,
-                    &isCertRevoked);
+  nsrv = mCertBlocklist->IsCertRevoked(
+    encIssuer, encSerial, encSubject, encPubKey, &isCertRevoked);
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }

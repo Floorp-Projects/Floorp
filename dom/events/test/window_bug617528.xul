@@ -4,6 +4,6 @@
         width="640" height="480">
 
   <browser id="browser" type="content" primary="true" flex="1" src="about:blank"
-           disablehistory="true" disablesecurity="true"/>
+           disablehistory="true"/>
 
 </window>
