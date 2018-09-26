@@ -29,7 +29,7 @@ namespace dom {
 #endif //  MOZILLA_INTERNAL_API
 namespace gfx {
 
-static const int32_t kVRExternalVersion = 2;
+static const int32_t kVRExternalVersion = 3;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -48,6 +48,7 @@ static const int kVRControllerMaxCount = 16;
 static const int kVRControllerMaxButtons = 64;
 static const int kVRControllerMaxAxis = 16;
 static const int kVRLayerMaxCount = 8;
+static const int kVRHapticsMaxCount = 32;
 
 #if defined(__ANDROID__)
 typedef uint64_t VRLayerTextureHandle;
@@ -354,6 +355,25 @@ struct VRLayerState
   };
 };
 
+struct VRHapticState
+{
+  // Reference frame for timing.
+  // When 0, this does not represent an active haptic pulse.
+  uint64_t inputFrameID;
+  // Index within VRSystemState.controllerState identifying the controller
+  // to emit the haptic pulse
+  uint32_t controllerIndex;
+  // 0-based index indicating which haptic actuator within the controller
+  uint32_t hapticIndex;
+  // Start time of the haptic feedback pulse, relative to the start of
+  // inputFrameID, in seconds
+  float pulseStart;
+  // Duration of the haptic feedback pulse, in seconds
+  float pulseDuration;
+  // Intensity of the haptic feedback pulse, from 0.0f to 1.0f
+  float pulseIntensity;
+};
+
 struct VRBrowserState
 {
 #if defined(__ANDROID__)
@@ -362,6 +382,7 @@ struct VRBrowserState
   bool presentationActive;
   bool navigationTransitionActive;
   VRLayerState layerState[kVRLayerMaxCount];
+  VRHapticState hapticState[kVRHapticsMaxCount];
 };
 
 struct VRSystemState

@@ -58,6 +58,24 @@ VRSystemManager::NotifyVSync()
   }
 }
 
+void
+VRSystemManager::Run1msTasks(double aDeltaTime)
+{
+  // To be overridden by children
+}
+
+void
+VRSystemManager::Run10msTasks()
+{
+  // To be overridden by children
+}
+
+void
+VRSystemManager::Run100msTasks()
+{
+  // To be overridden by children
+}
+
 /**
  * VRSystemManager::GetHMDs must not be called unless
  * VRSystemManager::ShouldInhibitEnumeration is called

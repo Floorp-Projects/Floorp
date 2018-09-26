@@ -1305,8 +1305,8 @@ TextureClient::CreateForYCbCr(KnowsCompositor* aAllocator,
                               gfx::IntSize aCbCrSize,
                               uint32_t aCbCrStride,
                               StereoMode aStereoMode,
+                              gfx::ColorDepth aColorDepth,
                               YUVColorSpace aYUVColorSpace,
-                              uint32_t aBitDepth,
                               TextureFlags aTextureFlags)
 {
   if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
@@ -1317,12 +1317,15 @@ TextureClient::CreateForYCbCr(KnowsCompositor* aAllocator,
     return nullptr;
   }
 
-  TextureData* data =
-    BufferTextureData::CreateForYCbCr(aAllocator,
-                                      aYSize, aYStride,
-                                      aCbCrSize, aCbCrStride,
-                                      aStereoMode, aYUVColorSpace,
-                                      aBitDepth, aTextureFlags);
+  TextureData* data = BufferTextureData::CreateForYCbCr(aAllocator,
+                                                        aYSize,
+                                                        aYStride,
+                                                        aCbCrSize,
+                                                        aCbCrStride,
+                                                        aStereoMode,
+                                                        aColorDepth,
+                                                        aYUVColorSpace,
+                                                        aTextureFlags);
   if (!data) {
     return nullptr;
   }
@@ -1796,23 +1799,24 @@ UpdateYCbCrTextureClient(TextureClient* aTexture, const PlanarYCbCrData& aData)
     return false;
   }
 
+  uint32_t bytesPerPixel =
+    BytesPerPixel(SurfaceFormatForColorDepth(aData.mColorDepth));
   MappedYCbCrTextureData srcData;
   srcData.y.data = aData.mYChannel;
   srcData.y.size = aData.mYSize;
   srcData.y.stride = aData.mYStride;
   srcData.y.skip = aData.mYSkip;
-  MOZ_ASSERT(aData.mBitDepth == 8 || (aData.mBitDepth > 8 && aData.mBitDepth <= 16));
-  srcData.y.bytesPerPixel = (aData.mBitDepth > 8) ? 2 : 1;
+  srcData.y.bytesPerPixel = bytesPerPixel;
   srcData.cb.data = aData.mCbChannel;
   srcData.cb.size = aData.mCbCrSize;
   srcData.cb.stride = aData.mCbCrStride;
   srcData.cb.skip = aData.mCbSkip;
-  srcData.cb.bytesPerPixel = (aData.mBitDepth > 8) ? 2 : 1;
+  srcData.cb.bytesPerPixel = bytesPerPixel;
   srcData.cr.data = aData.mCrChannel;
   srcData.cr.size = aData.mCbCrSize;
   srcData.cr.stride = aData.mCbCrStride;
   srcData.cr.skip = aData.mCrSkip;
-  srcData.cr.bytesPerPixel = (aData.mBitDepth > 8) ? 2 : 1;
+  srcData.cr.bytesPerPixel = bytesPerPixel;
   srcData.metadata = nullptr;
 
   if (!srcData.CopyInto(mapped)) {

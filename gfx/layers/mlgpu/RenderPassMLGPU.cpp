@@ -819,7 +819,7 @@ VideoRenderPass::SetupPipeline()
   }
 
   RefPtr<MLGBuffer> ps2 =
-    mDevice->GetBufferForBitDepthCoefficient(mHost->GetBitDepth());
+    mDevice->GetBufferForColorDepthCoefficient(mHost->GetColorDepth());
   if (!ps2) {
     return;
   }

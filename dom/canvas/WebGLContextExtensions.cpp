@@ -184,7 +184,7 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         case WebGLExtensionID::EXT_frag_depth:
             return WebGLExtensionFragDepth::IsSupported(this);
         case WebGLExtensionID::EXT_shader_texture_lod:
-            return gl->IsSupported(gl::GLFeature::shader_texture_lod);
+            return WebGLExtensionShaderTextureLod::IsSupported(this);
         case WebGLExtensionID::EXT_sRGB:
             return WebGLExtensionSRGB::IsSupported(this);
 

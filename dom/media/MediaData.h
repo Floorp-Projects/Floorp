@@ -456,6 +456,7 @@ class VideoData : public MediaData
 public:
   typedef gfx::IntRect IntRect;
   typedef gfx::IntSize IntSize;
+  typedef gfx::ColorDepth ColorDepth;
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
   typedef layers::PlanarYCbCrImage PlanarYCbCrImage;
@@ -481,7 +482,7 @@ public:
 
     Plane mPlanes[3];
     YUVColorSpace mYUVColorSpace = YUVColorSpace::BT601;
-    uint32_t mBitDepth = 8;
+    ColorDepth mColorDepth = ColorDepth::COLOR_8;
   };
 
   class Listener

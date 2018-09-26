@@ -712,6 +712,21 @@ VRSystemManagerPuppet::Shutdown()
 }
 
 void
+VRSystemManagerPuppet::Run10msTasks()
+{
+  VRSystemManager::Run10msTasks();
+
+  /**
+   * When running headless mochitests on some of our automated test
+   * infrastructure, 2d display vsyncs are not always generated.
+   * To workaround, we produce a vsync manually.
+   */
+  VRManager *vm = VRManager::Get();
+  MOZ_ASSERT(vm);
+  vm->NotifyVsync(TimeStamp::Now());
+}
+
+void
 VRSystemManagerPuppet::NotifyVSync()
 {
   VRSystemManager::NotifyVSync();

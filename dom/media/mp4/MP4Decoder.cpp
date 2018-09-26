@@ -11,6 +11,7 @@
 #include "PDMFactory.h"
 #include "VideoUtils.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/gfx/Tools.h"
 #include "nsMimeTypes.h"
 
 namespace mozilla {
@@ -112,7 +113,8 @@ MP4Decoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
       uint8_t level = 0;
       uint8_t bitDepth = 0;
       if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
-        trackInfo->GetAsVideoInfo()->mBitDepth = bitDepth;
+        trackInfo->GetAsVideoInfo()->mColorDepth =
+          gfx::ColorDepthForBitDepth(bitDepth);
       }
       tracks.AppendElement(std::move(trackInfo));
       continue;

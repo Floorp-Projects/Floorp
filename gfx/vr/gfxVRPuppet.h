@@ -139,6 +139,7 @@ public:
                              const VRManagerPromise& aPromise) override;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
   virtual void NotifyVSync() override;
+  virtual void Run10msTasks() override;
 
 protected:
   VRSystemManagerPuppet();

@@ -1,0 +1,6 @@
+---
+BadIncludeLinterWithGlob:
+    description: Has an invalid include directive.
+    include: ['**/*.js']
+    type: string
+    payload: foobar

@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
+#include "VRThread.h"
 
 #if !defined(M_PI)
 #define M_PI 3.14159265358979323846264338327950288
@@ -16,7 +17,12 @@
 #define BTN_MASK_FROM_ID(_id) \
   ::vr::ButtonMaskFromId(vr::EVRButtonId::_id)
 
-static const uint32_t kNumOpenVRHaptcs = 1;
+// Haptic feedback is updated every 5ms, as this is
+// the minimum period between new haptic pulse requests.
+// Effectively, this results in a pulse width modulation
+// with an interval of 5ms.  Through experimentation, the
+// maximum duty cycle was found to be about 3.9ms
+const uint32_t kVRHapticUpdateInterval = 5;
 
 using namespace mozilla::gfx;
 
@@ -98,9 +104,12 @@ OpenVRSession::OpenVRSession()
   , mVRSystem(nullptr)
   , mVRChaperone(nullptr)
   , mVRCompositor(nullptr)
-  , mControllerDeviceIndex{0}
+  , mControllerDeviceIndex{}
+  , mHapticPulseRemaining{}
+  , mHapticPulseIntensity{}
   , mShouldQuit(false)
   , mIsWindowsMR(false)
+  , mControllerHapticStateMutex("OpenVRSession::mControllerHapticStateMutex")
 {
 }
 
@@ -162,6 +171,9 @@ OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
     return false;
   }
 
+  StartHapticThread();
+  StartHapticTimer();
+  
   // Succeeded
   return true;
 }
@@ -184,6 +196,8 @@ OpenVRSession::CreateD3DObjects()
 void
 OpenVRSession::Shutdown()
 {
+  StopHapticTimer();
+  StopHapticThread();
   if (mVRSystem || mVRCompositor || mVRSystem) {
     ::vr::VR_Shutdown();
     mVRCompositor = nullptr;
@@ -380,6 +394,8 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
 {
   MOZ_ASSERT(mVRSystem);
 
+  MutexAutoLock lock(mControllerHapticStateMutex);
+
   bool controllerPresent[kVRControllerMaxCount] = { false };
 
   // Basically, we would have HMDs in the tracked devices,
@@ -492,7 +508,7 @@ OpenVRSession::EnumerateControllers(VRSystemState& aState)
       strncpy(controllerState.controllerName, deviceId.BeginReading(), kVRControllerNameMaxLen);
       controllerState.numButtons = numButtons;
       controllerState.numAxes = numAxes;
-      controllerState.numHaptics = kNumOpenVRHaptcs;
+      controllerState.numHaptics = kNumOpenVRHaptics;
 
       // If the Windows MR controller doesn't has the amount
       // of buttons or axes as our expectation, switching off
@@ -760,7 +776,6 @@ OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState)
   EnumerateControllers(aSystemState);
   UpdateControllerButtons(aSystemState);
   UpdateControllerPoses(aSystemState);
-  aSystemState.sensorState.inputFrameID++;
 }
 
 bool
@@ -928,6 +943,154 @@ bool
 OpenVRSession::StartPresentation()
 {
   return true;
+}
+
+void
+OpenVRSession::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                             float aIntensity, float aDuration)
+{
+  MutexAutoLock lock(mControllerHapticStateMutex);
+  if (aHapticIndex >= kNumOpenVRHaptics ||
+      aControllerIdx >= kVRControllerMaxCount) {
+    return;
+  }
+
+  ::vr::TrackedDeviceIndex_t deviceIndex = mControllerDeviceIndex[aControllerIdx];
+  if (deviceIndex == 0) {
+    return;
+  }
+
+  mHapticPulseRemaining[aControllerIdx][aHapticIndex] = aDuration;
+  mHapticPulseIntensity[aControllerIdx][aHapticIndex] = aIntensity;
+
+  /**
+   *  TODO - The haptic feedback pulses will have latency of one frame and we
+   *         are simulating intensity with pulse-width modulation.
+   *         We should use of the OpenVR Input API to correct this
+   *         and replace the TriggerHapticPulse calls which have been
+   *         deprecated.
+   */
+}
+
+void
+OpenVRSession::StartHapticThread()
+{
+  if (!mHapticThread) {
+    mHapticThread = new VRThread(NS_LITERAL_CSTRING("VR_OpenVR_Haptics"));
+  }
+  mHapticThread->Start();
+}
+
+void
+OpenVRSession::StopHapticThread()
+{
+  if (mHapticThread) {
+    mHapticThread->Shutdown();
+    mHapticThread = nullptr;
+  }
+}
+
+void
+OpenVRSession::StartHapticTimer()
+{
+  if (!mHapticTimer && mHapticThread) {
+    mLastHapticUpdate = TimeStamp();
+    mHapticTimer = NS_NewTimer();
+    mHapticTimer->SetTarget(mHapticThread->GetThread()->EventTarget());
+    mHapticTimer->InitWithNamedFuncCallback(
+      HapticTimerCallback,
+      this,
+      kVRHapticUpdateInterval,
+      nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
+      "OpenVRSession::HapticTimerCallback");
+  }
+}
+
+void
+OpenVRSession::StopHapticTimer()
+{
+  if (mHapticTimer) {
+    mHapticTimer->Cancel();
+    mHapticTimer = nullptr;
+  }
+}
+
+/*static*/ void
+OpenVRSession::HapticTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  /**
+   * It is safe to use the pointer passed in aClosure to reference the
+   * OpenVRSession object as the timer is canceled in OpenVRSession::Shutdown,
+   * which is called by the OpenVRSession destructor, guaranteeing
+   * that this function runs if and only if the VRManager object is valid.
+   */
+  OpenVRSession* self = static_cast<OpenVRSession*>(aClosure);
+  self->UpdateHaptics();
+}
+
+void
+OpenVRSession::UpdateHaptics()
+{
+  MOZ_ASSERT(mHapticThread->GetThread() == NS_GetCurrentThread());
+  MOZ_ASSERT(mVRSystem);
+
+  MutexAutoLock lock(mControllerHapticStateMutex);
+
+  TimeStamp now = TimeStamp::Now();
+  if (mLastHapticUpdate.IsNull()) {
+    mLastHapticUpdate = now;
+    return;
+  }
+  float deltaTime = (float)(now - mLastHapticUpdate).ToSeconds();
+  mLastHapticUpdate = now;
+
+  for (int iController = 0; iController < kVRControllerMaxCount; iController++) {
+    for (int iHaptic = 0; iHaptic < kNumOpenVRHaptics; iHaptic++) {
+      ::vr::TrackedDeviceIndex_t deviceIndex = mControllerDeviceIndex[iController];
+      if (deviceIndex == 0) {
+        continue;
+      }
+      float intensity = mHapticPulseIntensity[iController][iHaptic];
+      float duration = mHapticPulseRemaining[iController][iHaptic];
+      if (duration <= 0.0f || intensity <= 0.0f) {
+        continue;
+      }
+      // We expect OpenVR to vibrate for 5 ms, but we found it only response the
+      // commend ~ 3.9 ms. For duration time longer than 3.9 ms, we separate them
+      // to a loop of 3.9 ms for make users feel that is a continuous events.
+      const float microSec = (duration < 0.0039f ? duration : 0.0039f) * 1000000.0f * intensity;
+      mVRSystem->TriggerHapticPulse(deviceIndex, iHaptic, (uint32_t)microSec);
+
+      duration -= deltaTime;
+      if (duration < 0.0f) {
+        duration = 0.0f;
+      }
+      mHapticPulseRemaining[iController][iHaptic] = duration;
+    }
+  }
+}
+
+void
+OpenVRSession::StopVibrateHaptic(uint32_t aControllerIdx)
+{
+  MutexAutoLock lock(mControllerHapticStateMutex);
+  if (aControllerIdx >= kVRControllerMaxCount) {
+    return;
+  }
+  for (int iHaptic = 0; iHaptic < kNumOpenVRHaptics; iHaptic++) {
+    mHapticPulseRemaining[aControllerIdx][iHaptic] = 0.0f;
+  }
+}
+
+void
+OpenVRSession::StopAllHaptics()
+{
+  MutexAutoLock lock(mControllerHapticStateMutex);
+  for (auto& controller : mHapticPulseRemaining) {
+    for (auto& haptic : controller) {
+      haptic = 0.0f;
+    }
+  }
 }
 
 } // namespace mozilla

@@ -330,8 +330,7 @@ nsOSHelperAppService::GetTypeAndDescriptionFromMimetypesFile(const nsAString& aF
   }
 
   nsAutoString extensions;
-  nsString entry;
-  entry.SetCapacity(100);
+  nsAutoStringN<101> entry;
   nsAString::const_iterator majorTypeStart, majorTypeEnd,
                             minorTypeStart, minorTypeEnd,
                             descriptionStart, descriptionEnd;
@@ -496,8 +495,7 @@ nsOSHelperAppService::GetExtensionsAndDescriptionFromMimetypesFile(const nsAStri
   }
 
   nsAutoString extensions;
-  nsString entry;
-  entry.SetCapacity(100);
+  nsAutoStringN<101> entry;
   nsAString::const_iterator majorTypeStart, majorTypeEnd,
                             minorTypeStart, minorTypeEnd,
                             descriptionStart, descriptionEnd;
@@ -947,10 +945,9 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
     return rv;
   }
 
-  nsString entry, buffer;
-  nsAutoCString cBuffer;
-  entry.SetCapacity(128);
-  cBuffer.SetCapacity(80);
+  nsAutoStringN<129> entry;
+  nsAutoStringN<81> buffer;
+  nsAutoCStringN<81> cBuffer;
   rv = mailcap->ReadLine(cBuffer, &more);
   if (NS_FAILED(rv)) {
     mailcapFile->Close();

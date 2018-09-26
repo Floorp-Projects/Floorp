@@ -61,10 +61,7 @@ def test_roll_from_subdir(lint, linters):
         # Path relative to root doesn't work
         result = lint.roll(os.path.join('files', 'no_foobar.js'))
         assert len(result.issues) == 0
-        # TODO Only the external linter is failing, the other two
-        # should be failing as well. Not using xfail so we don't
-        # lose coverage from the rest of the test.
-        assert len(result.failed) == 1
+        assert len(result.failed) == 3
         assert result.returncode == 1
 
         # Paths from vcs are always joined to root instead of cwd

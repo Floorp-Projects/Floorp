@@ -14,7 +14,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Unused.h"
-#include "nsIBackgroundChannelRegistrar.h"
+#include "mozilla/net/BackgroundChannelRegistrar.h"
 #include "nsNetCID.h"
 #include "nsQueryObject.h"
 #include "nsThreadUtils.h"
@@ -54,7 +54,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     nsCOMPtr<nsIBackgroundChannelRegistrar> registrar =
-      do_GetService(NS_BACKGROUNDCHANNELREGISTRAR_CONTRACTID);
+      BackgroundChannelRegistrar::GetOrCreate();
     MOZ_ASSERT(registrar);
 
     registrar->LinkBackgroundChannel(mChannelId, mActor);

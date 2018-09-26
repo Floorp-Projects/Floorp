@@ -145,7 +145,7 @@ public:
          const gfx::IntSize& aSize,
          const gfx::IntSize& aSizeY,
          const gfx::IntSize& aSizeCbCr,
-         uint32_t aBitDepth,
+         gfx::ColorDepth aColorDepth,
          YUVColorSpace aYUVColorSpace);
 
   static DXGIYCbCrTextureData*
@@ -155,7 +155,7 @@ public:
          const gfx::IntSize& aSize,
          const gfx::IntSize& aSizeY,
          const gfx::IntSize& aSizeCbCr,
-         uint32_t aBitDepth,
+         gfx::ColorDepth aColorDepth,
          YUVColorSpace aYUVColorSpace);
 
   virtual bool Lock(OpenMode) override { return true; }
@@ -193,9 +193,9 @@ public:
     return mSizeCbCr;
   }
 
-  uint32_t GetBitDepth() const
+  gfx::ColorDepth GetColorDepth() const
   {
-    return mBitDepth;
+    return mColorDepth;
   }
 
   YUVColorSpace GetYUVColorSpace() const
@@ -212,7 +212,7 @@ protected:
    gfx::IntSize mSize;
    gfx::IntSize mSizeY;
    gfx::IntSize mSizeCbCr;
-   uint32_t mBitDepth;
+   gfx::ColorDepth mColorDepth;
    YUVColorSpace mYUVColorSpace;
 };
 
@@ -415,9 +415,9 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const override{ return gfx::SurfaceFormat::YUV; }
 
-  virtual YUVColorSpace GetYUVColorSpace() const override { return mYUVColorSpace; }
+  virtual gfx::ColorDepth GetColorDepth() const override { return mColorDepth; }
 
-  virtual uint32_t GetBitDepth() const override { return mBitDepth; }
+  virtual YUVColorSpace GetYUVColorSpace() const override { return mYUVColorSpace; }
 
   virtual bool Lock() override;
 
@@ -462,7 +462,7 @@ protected:
   gfx::IntSize mSizeCbCr;
   WindowsHandle mHandles[3];
   bool mIsLocked;
-  uint32_t mBitDepth;
+  gfx::ColorDepth mColorDepth;
   YUVColorSpace mYUVColorSpace;
 };
 
