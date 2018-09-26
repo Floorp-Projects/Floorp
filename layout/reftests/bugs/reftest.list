@@ -1173,7 +1173,7 @@ fails-if(usesRepeatResampling) fails-if(webrender) == 446100-1e.html about:blank
 fails-if(usesRepeatResampling) fails-if(Android) fails-if(webrender) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 == 447749-1.html 447749-1-ref.html
-fuzzy(0-127,0-2) fails-if(webrender) == 448193.html 448193-ref.html # bug 1382896 for webrender
+fuzzy(0-127,0-2) == 448193.html 448193-ref.html
 # There isn't a way to load UA Widget in reftest yet.
 test-pref(dom.ua_widget.enabled,false) != 449149-1a.html about:blank
 test-pref(dom.ua_widget.enabled,false) != 449149-1b.html about:blank
@@ -1228,7 +1228,7 @@ fuzzy-if(skiaContent,0-1,0-5) == 459443-1.html 459443-1-ref.html
 == 459613-1.html 459613-1-ref.html
 == 460012-1.html 460012-1-ref.html
 == 461266-1.html 461266-1-ref.html
-fuzzy-if(skiaContent,0-1,0-12000) fails-if(webrender) == 461512-1.html 461512-1-ref.html # bug 1382896 for webrender
+fuzzy-if(skiaContent||webrender,0-1,0-31200) == 461512-1.html 461512-1-ref.html
 == 462844-1.html 462844-ref.html
 == 462844-2.html 462844-ref.html
 == 462844-3.html 462844-ref.html

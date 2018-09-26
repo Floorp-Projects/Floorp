@@ -1243,7 +1243,7 @@ nsDisplayTableItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
 // A display item that draws all collapsed borders for a table.
 // At some point, we may want to find a nicer partitioning for dividing
 // border-collapse segments into their own display items.
-class nsDisplayTableBorderCollapse : public nsDisplayTableItem {
+class nsDisplayTableBorderCollapse final : public nsDisplayTableItem {
 public:
   nsDisplayTableBorderCollapse(nsDisplayListBuilder* aBuilder,
                                nsTableFrame* aFrame)
@@ -1256,13 +1256,12 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override;
-  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                       wr::IpcResourceUpdateQueue& aResources,
-                                       const StackingContextHelper& aSc,
-                                       mozilla::layers::WebRenderLayerManager* aManager,
-                                       nsDisplayListBuilder* aDisplayListBuilder) override;
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  bool CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                               wr::IpcResourceUpdateQueue& aResources,
+                               const StackingContextHelper& aSc,
+                               layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder) override;
   NS_DISPLAY_DECL_NAME("TableBorderCollapse", TYPE_TABLE_BORDER_COLLAPSE)
 };
 
@@ -1286,16 +1285,17 @@ nsDisplayTableBorderCollapse::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 bool
-nsDisplayTableBorderCollapse::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+nsDisplayTableBorderCollapse::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                       wr::IpcResourceUpdateQueue& aResources,
                                                       const StackingContextHelper& aSc,
                                                       mozilla::layers::WebRenderLayerManager* aManager,
                                                       nsDisplayListBuilder* aDisplayListBuilder)
 {
-  static_cast<nsTableFrame *>(mFrame)->CreateWebRenderCommandsForBCBorders(aBuilder,
-                                                                          aSc,
-                                                                          GetPaintRect(),
-                                                                          ToReferenceFrame());
+  static_cast<nsTableFrame*>(mFrame)->
+    CreateWebRenderCommandsForBCBorders(aBuilder,
+                                        aSc,
+                                        GetPaintRect(),
+                                        ToReferenceFrame());
   return true;
 }
 
@@ -6497,7 +6497,6 @@ struct BCBorderParameters
 {
   uint8_t mBorderStyle;
   nscolor mBorderColor;
-  nscolor mBGColor;
   nsRect mBorderRect;
   int32_t mAppUnitsPerDevPixel;
   mozilla::Side mStartBevelSide;
@@ -6505,6 +6504,20 @@ struct BCBorderParameters
   mozilla::Side mEndBevelSide;
   nscoord mEndBevelOffset;
   bool mBackfaceIsVisible;
+
+  bool NeedToBevel() const
+  {
+    if (!mStartBevelOffset && !mEndBevelOffset) {
+      return false;
+    }
+
+    if (mBorderStyle == NS_STYLE_BORDER_STYLE_DASHED ||
+        mBorderStyle == NS_STYLE_BORDER_STYLE_DOTTED) {
+      return false;
+    }
+
+    return true;
+  }
 };
 
 struct BCBlockDirSeg
@@ -6529,8 +6542,7 @@ struct BCBlockDirSeg
                                BCPixelSize aInlineSegBSize,
                                wr::DisplayListBuilder& aBuilder,
                                const layers::StackingContextHelper& aSc,
-                               const nsPoint& aPt,
-                               Maybe<BCBorderParameters>* aBevelBorders);
+                               const nsPoint& aPt);
   void AdvanceOffsetB();
   void IncludeCurrentBorder(BCPaintBorderIterator& aIter);
 
@@ -6584,8 +6596,7 @@ struct BCInlineDirSeg
   void CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                wr::DisplayListBuilder& aBuilder,
                                const layers::StackingContextHelper& aSc,
-                               const nsPoint& aPt,
-                               Maybe<BCBorderParameters>* aBevelBorders);
+                               const nsPoint& aPt);
 
   nscoord            mOffsetI;       // i-offset with respect to the table edge
   nscoord            mOffsetB;       // b-offset with respect to the table edge
@@ -6632,7 +6643,6 @@ struct BCCreateWebRenderCommandsData
   wr::DisplayListBuilder& mBuilder;
   const layers::StackingContextHelper& mSc;
   const nsPoint& mOffsetToReferenceFrame;
-  Maybe<BCBorderParameters> mBevelBorders[4];
 };
 
 struct BCPaintBorderAction
@@ -6649,7 +6659,6 @@ struct BCPaintBorderAction
     : mMode(Mode::CREATE_WEBRENDER_COMMANDS)
     , mCreateWebRenderCommandsData(aBuilder, aSc, aOffsetToReferenceFrame)
   {
-    mMode = Mode::CREATE_WEBRENDER_COMMANDS;
   }
 
   ~BCPaintBorderAction()
@@ -6707,7 +6716,6 @@ public:
   nsTableCellMap*       mTableCellMap;
   nsCellMap*            mCellMap;
   WritingMode           mTableWM;
-  nscolor               mTableBgColor;
   nsTableFrame::RowGroupArray mRowGroups;
 
   nsTableRowGroupFrame* mPrevRg;
@@ -6847,10 +6855,6 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
   mTable->OrderRowGroups(mRowGroups);
   // initialize to a non existing index
   mRepeatedHeaderRowIndex = -99;
-
-  nsIFrame* bgFrame =
-    nsCSSRendering::FindNonTransparentBackgroundFrame(aTable);
-  mTableBgColor = bgFrame->StyleBackground()->BackgroundColor(bgFrame);
 }
 
 bool
@@ -7374,7 +7378,6 @@ BCBlockDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter,
   nsIFrame* owner = nullptr;
   result.mBorderStyle = NS_STYLE_BORDER_STYLE_SOLID;
   result.mBorderColor = 0xFFFFFFFF;
-  result.mBGColor = aIter.mTableBgColor;
   result.mBackfaceIsVisible = true;
 
   // All the tables frames have the same presContext, so we just use any one
@@ -7493,10 +7496,199 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
   }
 
   nsCSSRendering::DrawTableBorderSegment(aDrawTarget, param->mBorderStyle, param->mBorderColor,
-                                         param->mBGColor, param->mBorderRect,
+                                         param->mBorderRect,
                                          param->mAppUnitsPerDevPixel,
                                          param->mStartBevelSide, param->mStartBevelOffset,
                                          param->mEndBevelSide, param->mEndBevelOffset);
+}
+
+// Pushes a border bevel triangle and substracts the relevant rectangle from
+// aRect, which, after all the bevels, will end up being a solid segment rect.
+static void
+AdjustAndPushBevel(wr::DisplayListBuilder& aBuilder,
+                   wr::LayoutRect& aRect,
+                   nscolor aColor,
+                   const nsCSSRendering::Bevel& aBevel,
+                   int32_t aAppUnitsPerDevPixel,
+                   bool aBackfaceIsVisible,
+                   bool aIsStart)
+{
+  if (!aBevel.mOffset) {
+    return;
+  }
+
+  const auto kTransparent = wr::ToColorF(gfx::Color(0., 0., 0., 0.));
+  const bool horizontal =
+    aBevel.mSide == eSideTop || aBevel.mSide == eSideBottom;
+
+  // Crappy CSS triangle as known by every web developer ever :)
+  Float offset = NSAppUnitsToFloatPixels(aBevel.mOffset, aAppUnitsPerDevPixel);
+  wr::LayoutRect bevelRect = aRect;
+  wr::BorderSide bevelBorder[4];
+  NS_FOR_CSS_SIDES(i) {
+    bevelBorder[i] = wr::ToBorderSide(ToDeviceColor(aColor), NS_STYLE_BORDER_STYLE_SOLID);
+  }
+
+  // We're creating a half-transparent triangle using the border primitive.
+  //
+  // Classic web-dev trick, with a gotcha: we use a single corner to avoid
+  // seams and rounding errors.
+  //
+  // Classic web-dev trick :P
+  auto borderWidths = wr::ToBorderWidths(0, 0, 0, 0);
+  bevelBorder[aBevel.mSide].color = kTransparent;
+  if (aIsStart) {
+    if (horizontal) {
+      bevelBorder[eSideLeft].color = kTransparent;
+      borderWidths.left = offset;
+    } else {
+      bevelBorder[eSideTop].color = kTransparent;
+      borderWidths.top = offset;
+    }
+  } else {
+    if (horizontal) {
+      bevelBorder[eSideRight].color = kTransparent;
+      borderWidths.right = offset;
+    } else {
+      bevelBorder[eSideBottom].color = kTransparent;
+      borderWidths.bottom = offset;
+    }
+  }
+
+  if (horizontal) {
+    if (aIsStart) {
+      aRect.origin.x += offset;
+    } else {
+      bevelRect.origin.x += aRect.size.width - offset;
+    }
+    aRect.size.width -= offset;
+    bevelRect.size.height = aRect.size.height;
+    bevelRect.size.width = offset;
+    if (aBevel.mSide == eSideTop) {
+      borderWidths.bottom = aRect.size.height;
+    } else {
+      borderWidths.top = aRect.size.height;
+    }
+  } else {
+    if (aIsStart) {
+      aRect.origin.y += offset;
+    } else {
+      bevelRect.origin.y += aRect.size.height - offset;
+    }
+    aRect.size.height -= offset;
+    bevelRect.size.width = aRect.size.width;
+    bevelRect.size.height = offset;
+    if (aBevel.mSide == eSideLeft) {
+      borderWidths.right = aRect.size.width;
+    } else {
+      borderWidths.left = aRect.size.width;
+    }
+  }
+
+  Range<const wr::BorderSide> wrsides(bevelBorder, 4);
+  // It's important to _not_ anti-alias the bevel, because otherwise we wouldn't
+  // be able bevel to sides of the same color without bleeding in the middle.
+  aBuilder.PushBorder(bevelRect,
+                      bevelRect,
+                      aBackfaceIsVisible,
+                      borderWidths,
+                      wrsides,
+                      wr::EmptyBorderRadius(),
+                      wr::AntialiasBorder::No);
+}
+
+static void
+CreateWRCommandsForBeveledBorder(const BCBorderParameters& aBorderParams,
+                                 wr::DisplayListBuilder& aBuilder,
+                                 const layers::StackingContextHelper& aSc,
+                                 const nsPoint& aOffset)
+{
+  MOZ_ASSERT(aBorderParams.NeedToBevel());
+
+  AutoTArray<nsCSSRendering::SolidBeveledBorderSegment, 3> segments;
+  nsCSSRendering::GetTableBorderSolidSegments(segments,
+                                              aBorderParams.mBorderStyle,
+                                              aBorderParams.mBorderColor,
+                                              aBorderParams.mBorderRect,
+                                              aBorderParams.mAppUnitsPerDevPixel,
+                                              aBorderParams.mStartBevelSide,
+                                              aBorderParams.mStartBevelOffset,
+                                              aBorderParams.mEndBevelSide,
+                                              aBorderParams.mEndBevelOffset);
+
+  for (const auto& segment : segments) {
+    auto rect = LayoutDeviceRect::FromUnknownRect(
+      NSRectToRect(segment.mRect + aOffset, aBorderParams.mAppUnitsPerDevPixel));
+    auto roundedRect = wr::ToRoundedLayoutRect(rect);
+    auto color = wr::ToColorF(ToDeviceColor(segment.mColor));
+
+    // Adjust for the start bevel if needed.
+    AdjustAndPushBevel(aBuilder,
+                       roundedRect,
+                       segment.mColor,
+                       segment.mStartBevel,
+                       aBorderParams.mAppUnitsPerDevPixel,
+                       aBorderParams.mBackfaceIsVisible,
+                       true);
+
+    AdjustAndPushBevel(aBuilder,
+                       roundedRect,
+                       segment.mColor,
+                       segment.mEndBevel,
+                       aBorderParams.mAppUnitsPerDevPixel,
+                       aBorderParams.mBackfaceIsVisible,
+                       false);
+
+    aBuilder.PushRect(roundedRect, roundedRect, aBorderParams.mBackfaceIsVisible, color);
+  }
+}
+
+static void
+CreateWRCommandsForBorderSegment(const BCBorderParameters& aBorderParams,
+                                 wr::DisplayListBuilder& aBuilder,
+                                 const layers::StackingContextHelper& aSc,
+                                 const nsPoint& aOffset)
+{
+  if (aBorderParams.NeedToBevel()) {
+    CreateWRCommandsForBeveledBorder(aBorderParams, aBuilder, aSc, aOffset);
+    return;
+  }
+
+  auto borderRect = LayoutDeviceRect::FromUnknownRect(
+      NSRectToRect(aBorderParams.mBorderRect + aOffset,
+                   aBorderParams.mAppUnitsPerDevPixel));
+
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
+  wr::BorderSide wrSide[4];
+  NS_FOR_CSS_SIDES(i) {
+    wrSide[i] = wr::ToBorderSide(ToDeviceColor(aBorderParams.mBorderColor), NS_STYLE_BORDER_STYLE_NONE);
+  }
+  const bool horizontal = aBorderParams.mStartBevelSide == eSideTop ||
+                          aBorderParams.mStartBevelSide == eSideBottom;
+  auto borderWidth = horizontal ? roundedRect.size.height : roundedRect.size.width;
+
+  // All border style is set to none except left side. So setting the widths of
+  // each side to width of rect is fine.
+  auto borderWidths =
+    wr::ToBorderWidths(0, 0, 0, 0);
+
+  wrSide[horizontal ? eSideTop : eSideLeft] =
+    wr::ToBorderSide(ToDeviceColor(aBorderParams.mBorderColor),
+                     aBorderParams.mBorderStyle);
+
+  if (horizontal) {
+    borderWidths.top = borderWidth;
+  } else {
+    borderWidths.left = borderWidth;
+  }
+
+  Range<const wr::BorderSide> wrsides(wrSide, 4);
+  aBuilder.PushBorder(roundedRect,
+                      roundedRect,
+                      aBorderParams.mBackfaceIsVisible,
+                      borderWidths,
+                      wrsides,
+                      wr::EmptyBorderRadius());
 }
 
 void
@@ -7504,67 +7696,14 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                        BCPixelSize aInlineSegBSize,
                                        wr::DisplayListBuilder& aBuilder,
                                        const layers::StackingContextHelper& aSc,
-                                       const nsPoint& aOffset,
-                                       Maybe<BCBorderParameters>* aBevelBorders)
+                                       const nsPoint& aOffset)
 {
   Maybe<BCBorderParameters> param = BuildBorderParameters(aIter, aInlineSegBSize);
   if (param.isNothing()) {
     return;
   }
 
-  if (param->mStartBevelOffset != 0 || param->mEndBevelOffset != 0) {
-    // If both bevel offsets are non zero, the parameters of two bevels should
-    // be the same. So we choose start bevel side here.
-    mozilla::Side bevelSide = param->mStartBevelOffset != 0 ? param->mStartBevelSide : param->mEndBevelSide;
-
-    // The left border is going to be beveled on its right edge because that's
-    // the edge that intersects other borders (in this case the top and bottom borders).
-    // Correspondingly, if the bevel side is "right" that means we are operating on
-    // the left border, and so store the parameters for that entry in aBevelBorders.
-    // Same goes for the other directions.
-    switch (bevelSide) {
-      case eSideTop:
-        aBevelBorders[eSideBottom] = param;
-        break;
-      case eSideBottom:
-        aBevelBorders[eSideTop] = param;
-        break;
-      case eSideLeft:
-        aBevelBorders[eSideRight] = param;
-        break;
-      case eSideRight:
-        aBevelBorders[eSideLeft] = param;
-        break;
-    }
-
-    return;
-  }
-
-  LayoutDeviceRect borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aOffset,
-                                                                               param->mAppUnitsPerDevPixel));
-
-  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
-  wr::BorderSide wrSide[4];
-  NS_FOR_CSS_SIDES(i) {
-    wrSide[i] = wr::ToBorderSide(ToDeviceColor(param->mBorderColor), NS_STYLE_BORDER_STYLE_NONE);
-  }
-  wrSide[eSideLeft] = wr::ToBorderSide(ToDeviceColor(param->mBorderColor), param->mBorderStyle);
-
-  wr::BorderRadius borderRadii = wr::EmptyBorderRadius();
-
-  // All border style is set to none except left side. So setting the widths of
-  // each side to width of rect is fine.
-  wr::LayoutSideOffsets borderWidths = wr::ToBorderWidths(roundedRect.size.width,
-                                                     roundedRect.size.width,
-                                                     roundedRect.size.width,
-                                                     roundedRect.size.width);
-  Range<const wr::BorderSide> wrsides(wrSide, 4);
-  aBuilder.PushBorder(roundedRect,
-                      roundedRect,
-                      param->mBackfaceIsVisible,
-                      borderWidths,
-                      wrsides,
-                      borderRadii);
+  CreateWRCommandsForBorderSegment(*param, aBuilder, aSc, aOffset);
 }
 
 /**
@@ -7688,7 +7827,6 @@ BCInlineDirSeg::BuildBorderParameters(BCPaintBorderIterator& aIter)
 
   result.mBorderStyle = NS_STYLE_BORDER_STYLE_SOLID;
   result.mBorderColor = 0xFFFFFFFF;
-  result.mBGColor = aIter.mTableBgColor;
 
   switch (mOwner) {
     case eTableOwner:
@@ -7788,7 +7926,7 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter, DrawTarget& aDrawTarget)
   }
 
   nsCSSRendering::DrawTableBorderSegment(aDrawTarget, param->mBorderStyle, param->mBorderColor,
-                                         param->mBGColor, param->mBorderRect,
+                                         param->mBorderRect,
                                          param->mAppUnitsPerDevPixel,
                                          param->mStartBevelSide, param->mStartBevelOffset,
                                          param->mEndBevelSide, param->mEndBevelOffset);
@@ -7798,60 +7936,14 @@ void
 BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                         wr::DisplayListBuilder& aBuilder,
                                         const layers::StackingContextHelper& aSc,
-                                        const nsPoint& aPt,
-                                        Maybe<BCBorderParameters>* aBevelBorders)
+                                        const nsPoint& aPt)
 {
   Maybe<BCBorderParameters> param = BuildBorderParameters(aIter);
   if (param.isNothing()) {
     return;
   }
 
-  if (param->mStartBevelOffset != 0 || param->mEndBevelOffset != 0) {
-    mozilla::Side bevelSide = param->mStartBevelOffset != 0 ? param->mStartBevelSide : param->mEndBevelSide;
-
-    // See detailed comment on equivalent code in BCBlockDirSeg::CreateWebRenderCommands.
-    switch (bevelSide) {
-      case eSideTop:
-        aBevelBorders[eSideBottom] = param;
-        break;
-      case eSideBottom:
-        aBevelBorders[eSideTop] = param;
-        break;
-      case eSideLeft:
-        aBevelBorders[eSideRight] = param;
-        break;
-      case eSideRight:
-        aBevelBorders[eSideLeft] = param;
-        break;
-    }
-
-    return;
-  }
-
-  LayoutDeviceRect borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aPt,
-                                                                               param->mAppUnitsPerDevPixel));
-  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
-  wr::BorderSide wrSide[4];
-  NS_FOR_CSS_SIDES(i) {
-    wrSide[i] = wr::ToBorderSide(ToDeviceColor(param->mBorderColor), NS_STYLE_BORDER_STYLE_NONE);
-  }
-  wrSide[eSideTop] = wr::ToBorderSide(ToDeviceColor(param->mBorderColor), param->mBorderStyle);
-
-  wr::BorderRadius borderRadii = wr::EmptyBorderRadius();
-
-  // All border style is set to none except top side. So setting the widths of
-  // each side to height of rect is fine.
-  wr::LayoutSideOffsets borderWidths = wr::ToBorderWidths(roundedRect.size.height,
-                                                     roundedRect.size.height,
-                                                     roundedRect.size.height,
-                                                     roundedRect.size.height);
-  Range<const wr::BorderSide> wrsides(wrSide, 4);
-  aBuilder.PushBorder(roundedRect,
-                      roundedRect,
-                      param->mBackfaceIsVisible,
-                      borderWidths,
-                      wrsides,
-                      borderRadii);
+  CreateWRCommandsForBorderSegment(*param, aBuilder, aSc, aPt);
 }
 
 /**
@@ -7948,8 +8040,7 @@ BCPaintBorderIterator::AccumulateOrDoActionInlineDirSegment(BCPaintBorderAction&
           mInlineSeg.CreateWebRenderCommands(*this,
                                              aAction.mCreateWebRenderCommandsData.mBuilder,
                                              aAction.mCreateWebRenderCommandsData.mSc,
-                                             aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame,
-                                             aAction.mCreateWebRenderCommandsData.mBevelBorders);
+                                             aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame);
         }
       }
       mInlineSeg.AdvanceOffsetI();
@@ -8001,8 +8092,7 @@ BCPaintBorderIterator::AccumulateOrDoActionBlockDirSegment(BCPaintBorderAction& 
                                               inlineSegBSize,
                                               aAction.mCreateWebRenderCommandsData.mBuilder,
                                               aAction.mCreateWebRenderCommandsData.mSc,
-                                              aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame,
-                                              aAction.mCreateWebRenderCommandsData.mBevelBorders);
+                                              aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame);
         }
       }
       blockDirSeg.AdvanceOffsetB();
@@ -8083,54 +8173,6 @@ nsTableFrame::CreateWebRenderCommandsForBCBorders(wr::DisplayListBuilder& aBuild
   // We always draw whole table border for webrender. Passing the visible rect
   // dirty rect.
   IterateBCBorders(action, aVisibleRect - aOffsetToReferenceFrame);
-
-  LayoutDeviceRect allBorderRect;
-  wr::BorderSide wrSide[4];
-  wr::LayoutSideOffsets wrWidths;
-  wr::BorderRadius borderRadii = wr::EmptyBorderRadius();
-  bool backfaceIsVisible = false;
-  NS_FOR_CSS_SIDES(side) {
-    auto param = action.mCreateWebRenderCommandsData.mBevelBorders[side];
-    LayoutDeviceRect borderRect;
-    nscolor borderColor = NS_RGBA(0, 0, 0, 255);
-    uint8_t borderStyle = NS_STYLE_BORDER_STYLE_NONE;
-    if (param.isSome()) {
-      borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aOffsetToReferenceFrame,
-                                                                  param->mAppUnitsPerDevPixel));
-      borderColor = param->mBorderColor;
-      borderStyle = param->mBorderStyle;
-      backfaceIsVisible |= param->mBackfaceIsVisible;
-    }
-
-    wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
-    allBorderRect = allBorderRect.Union(borderRect);
-    wrSide[side] = wr::ToBorderSide(ToDeviceColor(borderColor), borderStyle);
-    switch (side) {
-      case eSideTop:
-        wrWidths.top = roundedRect.size.height;
-        break;
-      case eSideBottom:
-        wrWidths.bottom = roundedRect.size.height;
-        break;
-      case eSideLeft:
-        wrWidths.left = roundedRect.size.width;
-        break;
-      case eSideRight:
-        wrWidths.right = roundedRect.size.width;
-        break;
-    }
-  }
-
-  if (!allBorderRect.IsEmpty()) {
-    Range<const wr::BorderSide> wrsides(wrSide, 4);
-    wr::LayoutRect allRoundedRect = wr::ToRoundedLayoutRect(allBorderRect);
-    aBuilder.PushBorder(allRoundedRect,
-                        allRoundedRect,
-                        backfaceIsVisible,
-                        wrWidths,
-                        wrsides,
-                        borderRadii);
-  }
 }
 
 bool

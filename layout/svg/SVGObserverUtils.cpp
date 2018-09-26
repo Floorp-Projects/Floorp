@@ -367,17 +367,6 @@ SVGFilterObserverList::ReferencesValidResources()
   return true;
 }
 
-bool
-SVGFilterObserverList::IsInObserverLists() const
-{
-  for (uint32_t i = 0; i < mObservers.Length(); i++) {
-    if (!mObservers[i]->IsInObserverList()) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void
 SVGFilterObserverListForCSSProp::OnRenderingChange()
 {
