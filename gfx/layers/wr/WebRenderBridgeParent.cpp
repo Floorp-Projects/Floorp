@@ -990,6 +990,10 @@ bool
 WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
                                                       wr::TransactionBuilder& aTxn)
 {
+  // Transaction for async image pipeline that uses ImageBridge always need to be non low priority.
+  wr::TransactionBuilder txnForImageBridge;
+  wr::AutoTransactionSender sender(mApi, &txnForImageBridge);
+
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
@@ -998,7 +1002,8 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
         AddPipelineIdForCompositable(op.pipelineId(),
                                      op.handle(),
                                      op.isAsync(),
-                                     aTxn);
+                                     aTxn,
+                                     txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TOpRemovePipelineIdForCompositable: {
@@ -1024,12 +1029,12 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
                                                      op.scaleToSize(),
                                                      op.filter(),
                                                      op.mixBlendMode());
-        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn);
+        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn, txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TOpUpdatedAsyncImagePipeline: {
         const OpUpdatedAsyncImagePipeline& op = cmd.get_OpUpdatedAsyncImagePipeline();
-        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn);
+        mAsyncImageManager->ApplyAsyncImageForPipeline(op.pipelineId(), aTxn, txnForImageBridge);
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {
@@ -1174,7 +1179,8 @@ void
 WebRenderBridgeParent::AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                                     const CompositableHandle& aHandle,
                                                     const bool& aAsync,
-                                                    wr::TransactionBuilder& aTxn)
+                                                    wr::TransactionBuilder& aTxn,
+                                                    wr::TransactionBuilder& aTxnForImageBridge)
 {
   if (mDestroyed) {
     return;
@@ -1217,7 +1223,7 @@ WebRenderBridgeParent::AddPipelineIdForCompositable(const wr::PipelineId& aPipel
   // If we send the display list alone then WR will not yet have the content for
   // the pipelines and so it will emit errors; the SetEmptyDisplayList call
   // below ensure that we provide its content to WR as part of the same transaction.
-  mAsyncImageManager->SetEmptyDisplayList(aPipelineId, aTxn);
+  mAsyncImageManager->SetEmptyDisplayList(aPipelineId, aTxn, aTxnForImageBridge);
   return;
 }
 

@@ -83,7 +83,8 @@ public:
   }
 
   void AddAsyncImagePipeline(const wr::PipelineId& aPipelineId, WebRenderImageHost* aImageHost);
-  void RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn);
+  void RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId,
+                                wr::TransactionBuilder& aTxn);
 
   void UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
                                 const LayoutDeviceRect& aScBounds,
@@ -92,9 +93,11 @@ public:
                                 const wr::ImageRendering& aFilter,
                                 const wr::MixBlendMode& aMixBlendMode);
   void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aSceneBuilderTxn, wr::TransactionBuilder& aFastTxn);
-  void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aSceneBuilderTxn);
+  void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn, wr::TransactionBuilder& aTxnForImageBridge);
 
-  void SetEmptyDisplayList(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn);
+  void SetEmptyDisplayList(const wr::PipelineId& aPipelineId,
+                           wr::TransactionBuilder& aTxn,
+                           wr::TransactionBuilder& aTxnForImageBridge);
 
   void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
   {

@@ -433,7 +433,9 @@ AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
 }
 
 void
-AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aSceneBuilderTxn)
+AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId,
+                                                      wr::TransactionBuilder& aTxn,
+                                                      wr::TransactionBuilder& aTxnForImageBridge)
 {
   AsyncImagePipeline* pipeline = mAsyncImagePipelines.Get(wr::AsUint64(aPipelineId));
   if (!pipeline) {
@@ -442,25 +444,34 @@ AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::PipelineId& aPip
   wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
   wr::AutoTransactionSender sender(mApi, &fastTxn);
 
+  // Transaction for async image pipeline that uses ImageBridge always need to be non low priority.
+  auto& sceneBuilderTxn = pipeline->mImageHost->GetAsyncRef() ? aTxnForImageBridge : aTxn;
+
   // Use transaction of using non scene builder thread when ImageHost uses ImageBridge.
   // ApplyAsyncImagesOfImageBridge() handles transaction of adding and updating
   // wr::ImageKeys of ImageHosts that uses ImageBridge. Then AsyncImagePipelineManager
   // always needs to use non scene builder thread transaction for adding and updating
   // wr::ImageKeys of ImageHosts that uses ImageBridge. Otherwise, ordering of
   // wr::ImageKeys updating in webrender becomes inconsistent.
-  auto& txn = pipeline->mImageHost->GetAsyncRef() ? fastTxn : aSceneBuilderTxn;
+  auto& maybeFastTxn = pipeline->mImageHost->GetAsyncRef() ? fastTxn : aTxn;
 
   wr::Epoch epoch = GetNextImageEpoch();
-  ApplyAsyncImageForPipeline(epoch, aPipelineId, pipeline, aSceneBuilderTxn, txn);
+
+  ApplyAsyncImageForPipeline(epoch, aPipelineId, pipeline, sceneBuilderTxn, maybeFastTxn);
 }
 
 void
-AsyncImagePipelineManager::SetEmptyDisplayList(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn)
+AsyncImagePipelineManager::SetEmptyDisplayList(const wr::PipelineId& aPipelineId,
+                                               wr::TransactionBuilder& aTxn,
+                                               wr::TransactionBuilder& aTxnForImageBridge)
 {
   AsyncImagePipeline* pipeline = mAsyncImagePipelines.Get(wr::AsUint64(aPipelineId));
   if (!pipeline) {
     return;
   }
+
+  // Transaction for async image pipeline that uses ImageBridge always need to be non low priority.
+  auto& txn = pipeline->mImageHost->GetAsyncRef() ? aTxnForImageBridge : aTxn;
 
   wr::Epoch epoch = GetNextImageEpoch();
   wr::LayoutSize contentSize { pipeline->mScBounds.Width(), pipeline->mScBounds.Height() };
@@ -469,11 +480,11 @@ AsyncImagePipelineManager::SetEmptyDisplayList(const wr::PipelineId& aPipelineId
   wr::BuiltDisplayList dl;
   wr::LayoutSize builderContentSize;
   builder.Finalize(builderContentSize, dl);
-  aTxn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f),
-                      epoch,
-                      LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
-                      aPipelineId, builderContentSize,
-                      dl.dl_desc, dl.dl);
+  txn.SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f),
+                     epoch,
+                     LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
+                     aPipelineId, builderContentSize,
+                     dl.dl_desc, dl.dl);
 }
 
 void
