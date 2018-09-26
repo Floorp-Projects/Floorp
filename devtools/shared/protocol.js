@@ -857,6 +857,12 @@ Pool.prototype = extend(EventEmitter.prototype, {
       actor.actorID = this.conn.allocID(actor.actorPrefix || actor.typeName);
     }
 
+    // If the actor is already in a pool, remove it without destroying it.
+    const parent = actor.parent();
+    if (parent) {
+      parent.unmanage(actor);
+    }
+
     this._poolMap.set(actor.actorID, actor);
     return actor;
   },
