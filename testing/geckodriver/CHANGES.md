@@ -4,6 +4,15 @@ Change log
 All notable changes to this program is documented in this file.
 
 
+Unreleased
+----------
+
+### Removed
+
+- The `/session/{session id}/element/{element id}/tap` endpoint
+  was removed, thanks to Kerem Kat.
+
+
 0.22.0 (2018-09-15)
 -------------------
 
