@@ -9,7 +9,11 @@ use std::ops::Not;
 use {ColorF, FontInstanceKey, GlyphOptions, ImageKey, LayoutPixel, LayoutPoint};
 use {LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D, PipelineId, PropertyBinding};
 use LayoutSideOffsets;
+use image::ColorDepth;
 
+// Maximum blur radius.
+// Taken from nsCSSRendering.cpp in Gecko.
+pub const MAX_BLUR_RADIUS: f32 = 300.;
 
 // NOTE: some of these structs have an "IMPLICIT" comment.
 // This indicates that the BuiltDisplayList will have serialized
@@ -610,6 +614,24 @@ pub enum FilterOp {
     ColorMatrix([f32; 20]),
 }
 
+impl FilterOp {
+    /// Ensure that the parameters for a filter operation
+    /// are sensible.
+    pub fn sanitize(self) -> FilterOp {
+        match self {
+            FilterOp::Blur(radius) => {
+                let radius = radius.min(MAX_BLUR_RADIUS);
+                FilterOp::Blur(radius)
+            }
+            FilterOp::DropShadow(offset, radius, color) => {
+                let radius = radius.min(MAX_BLUR_RADIUS);
+                FilterOp::DropShadow(offset, radius, color)
+            }
+            filter => filter,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct IframeDisplayItem {
     pub clip_id: ClipId,
@@ -644,6 +666,7 @@ pub enum AlphaType {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct YuvImageDisplayItem {
     pub yuv_data: YuvData,
+    pub color_depth: ColorDepth,
     pub color_space: YuvColorSpace,
     pub image_rendering: ImageRendering,
 }
