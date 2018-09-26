@@ -2955,10 +2955,10 @@ pref("layout.css.mix-blend-mode.enabled", true);
 pref("layout.css.isolation.enabled", true);
 
 // Is support for CSS Scrollbar color properties enabled?
-pref("layout.css.scrollbar-colors.enabled", false);
+pref("layout.css.scrollbar-colors.enabled", true);
 
 // Is support for scrollbar-width property enabled?
-pref("layout.css.scrollbar-width.enabled", false);
+pref("layout.css.scrollbar-width.enabled", true);
 
 // Set the threshold distance in CSS pixels below which scrolling will snap to
 // an edge, when scroll snapping is set to "proximity".
