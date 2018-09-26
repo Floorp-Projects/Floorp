@@ -26,8 +26,7 @@ var gFrontProgressListener = {
   onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
   },
 
-  onSecurityChange(aWebProgress, aRequest, aOldState, aState,
-                   aContentBlockingLogJSON) {
+  onSecurityChange(aWebProgress, aRequest, aState) {
     var state = "onSecurityChange";
     info("FrontProgress: " + state + " 0x" + aState.toString(16));
     ok(gFrontNotificationsPos < gFrontNotifications.length, "Got an expected notification for the front notifications listener");
@@ -67,8 +66,7 @@ var gAllProgressListener = {
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
   },
 
-  onSecurityChange(aBrowser, aWebProgress, aRequest, aOldState, aState,
-                   aContentBlockingLogJSON) {
+  onSecurityChange(aBrowser, aWebProgress, aRequest, aState) {
     var state = "onSecurityChange";
     info("AllProgress: " + state + " 0x" + aState.toString(16));
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
