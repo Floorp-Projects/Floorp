@@ -21,6 +21,14 @@ static const uint32_t MAX_CACHED_PROGRAM_COUNT = 15;
 
 static const uint64_t MAX_LOAD_TIME_MS = 400;
 
+// Whether a border should be antialiased.
+enum class AntialiasBorder {
+  No = 0,
+  Yes,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class BorderStyle : uint32_t {
   None = 0,
   Solid = 1,
@@ -1299,6 +1307,7 @@ void wr_dp_push_border(WrState *aState,
                        LayoutRect aRect,
                        LayoutRect aClip,
                        bool aIsBackfaceVisible,
+                       AntialiasBorder aDoAa,
                        LayoutSideOffsets aWidths,
                        BorderSide aTop,
                        BorderSide aRight,

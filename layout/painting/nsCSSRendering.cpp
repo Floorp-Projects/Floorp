@@ -433,13 +433,6 @@ protected:
   }
 };
 
-/* Local functions */
-static nscolor
-MakeBevelColor(mozilla::Side whichSide,
-               uint8_t style,
-               nscolor aBackgroundColor,
-               nscolor aBorderColor);
-
 static InlineBackgroundData* gInlineBGData = nullptr;
 
 // Initialize any static variables used by nsCSSRendering.
@@ -464,7 +457,6 @@ nsCSSRendering::Shutdown()
 static nscolor
 MakeBevelColor(mozilla::Side whichSide,
                uint8_t style,
-               nscolor aBackgroundColor,
                nscolor aBorderColor)
 {
 
@@ -473,7 +465,7 @@ MakeBevelColor(mozilla::Side whichSide,
 
   // Given a background color and a border color
   // calculate the color used for the shading
-  NS_GetSpecial3DColors(colors, aBackgroundColor, aBorderColor);
+  NS_GetSpecial3DColors(colors, aBorderColor);
 
   if ((style == NS_STYLE_BORDER_STYLE_OUTSET) ||
       (style == NS_STYLE_BORDER_STYLE_RIDGE)) {
@@ -855,15 +847,6 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
 {
   nsMargin border = aStyleBorder.GetComputedBorder();
 
-  // In NavQuirks mode we want to use the parent's context as a starting point
-  // for determining the background color.
-  bool quirks = aPresContext->CompatibilityMode() == eCompatibility_NavQuirks;
-  nsIFrame* bgFrame =
-    nsCSSRendering::FindNonTransparentBackgroundFrame(aForFrame, quirks);
-  ComputedStyle* bgContext = bgFrame->Style();
-  nscolor bgColor =
-    bgContext->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
-
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea & aBGClipRect.
   nsRect joinedBorderArea = nsCSSRendering::BoxDecorationRectForBorder(
@@ -943,7 +926,6 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
     borderWidths,
     bgRadii,
     borderColors,
-    bgColor,
     !aForFrame->BackfaceIsHidden(),
     *aNeedsClip ? Some(NSRectToRect(aBorderArea, oneDevPixel)) : Nothing());
 }
@@ -1126,12 +1108,6 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
     return Nothing();
   }
 
-  nsIFrame* bgFrame =
-    nsCSSRendering::FindNonTransparentBackgroundFrame(aForFrame, false);
-  ComputedStyle* bgContext = bgFrame->Style();
-  nscolor bgColor =
-    bgContext->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
-
   nsRect innerRect;
   if (
 #ifdef MOZ_XUL
@@ -1235,7 +1211,6 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
                          outlineWidths,
                          outlineRadii,
                          outlineColors,
-                         bgColor,
                          !aForFrame->BackfaceIsHidden(),
                          Nothing());
 
@@ -1312,7 +1287,6 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
                          focusWidths,
                          focusRadii,
                          focusColors,
-                         NS_RGB(255, 0, 0),
                          true,
                          Nothing());
   br.DrawBorders();
@@ -3787,7 +3761,6 @@ void
 nsCSSRendering::DrawTableBorderSegment(DrawTarget& aDrawTarget,
                                        uint8_t aBorderStyle,
                                        nscolor aBorderColor,
-                                       nscolor aBGColor,
                                        const nsRect& aBorder,
                                        int32_t aAppUnitsPerDevPixel,
                                        mozilla::Side aStartBevelSide,
@@ -3798,7 +3771,6 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget& aDrawTarget,
   bool horizontal =
     ((eSideTop == aStartBevelSide) || (eSideBottom == aStartBevelSide));
   nscoord oneDevPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerDevPixel);
-  uint8_t ridgeGroove = NS_STYLE_BORDER_STYLE_RIDGE;
 
   if ((oneDevPixel >= aBorder.width) || (oneDevPixel >= aBorder.height) ||
       (NS_STYLE_BORDER_STYLE_DASHED == aBorderStyle) ||
@@ -3880,249 +3852,263 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget& aDrawTarget,
         DrawSolidBorderSegment(
           aDrawTarget, rect, aBorderColor, aAppUnitsPerDevPixel);
       }
-    } break;
-    case NS_STYLE_BORDER_STYLE_GROOVE:
-      ridgeGroove = NS_STYLE_BORDER_STYLE_GROOVE; // and fall through to ridge
-      MOZ_FALLTHROUGH;
-    case NS_STYLE_BORDER_STYLE_RIDGE:
-      if ((horizontal && (oneDevPixel >= aBorder.height)) ||
-          (!horizontal && (oneDevPixel >= aBorder.width))) {
-        // a one pixel border
-        DrawSolidBorderSegment(aDrawTarget,
-                               aBorder,
-                               aBorderColor,
-                               aAppUnitsPerDevPixel,
-                               aStartBevelSide,
-                               aStartBevelOffset,
-                               aEndBevelSide,
-                               aEndBevelOffset);
-      } else {
-        nscoord startBevel =
-          (aStartBevelOffset > 0)
-            ? RoundFloatToPixel(
-                0.5f * (float)aStartBevelOffset, aAppUnitsPerDevPixel, true)
-            : 0;
-        nscoord endBevel = (aEndBevelOffset > 0)
-                             ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset,
-                                                 aAppUnitsPerDevPixel,
-                                                 true)
-                             : 0;
-        mozilla::Side ridgeGrooveSide = (horizontal) ? eSideTop : eSideLeft;
-        // FIXME: In theory, this should use the visited-dependent
-        // background color, but I don't care.
-        nscolor bevelColor =
-          MakeBevelColor(ridgeGrooveSide, ridgeGroove, aBGColor, aBorderColor);
-        nsRect rect(aBorder);
-        nscoord half;
-        if (horizontal) { // top, bottom
-          half = RoundFloatToPixel(0.5f * (float)aBorder.height,
-                                   aAppUnitsPerDevPixel);
-          rect.height = half;
-          if (eSideTop == aStartBevelSide) {
-            rect.x += startBevel;
-            rect.width -= startBevel;
-          }
-          if (eSideTop == aEndBevelSide) {
-            rect.width -= endBevel;
-          }
-          DrawSolidBorderSegment(aDrawTarget,
-                                 rect,
-                                 bevelColor,
-                                 aAppUnitsPerDevPixel,
-                                 aStartBevelSide,
-                                 startBevel,
-                                 aEndBevelSide,
-                                 endBevel);
-        } else { // left, right
-          half = RoundFloatToPixel(0.5f * (float)aBorder.width,
-                                   aAppUnitsPerDevPixel);
-          rect.width = half;
-          if (eSideLeft == aStartBevelSide) {
-            rect.y += startBevel;
-            rect.height -= startBevel;
-          }
-          if (eSideLeft == aEndBevelSide) {
-            rect.height -= endBevel;
-          }
-          DrawSolidBorderSegment(aDrawTarget,
-                                 rect,
-                                 bevelColor,
-                                 aAppUnitsPerDevPixel,
-                                 aStartBevelSide,
-                                 startBevel,
-                                 aEndBevelSide,
-                                 endBevel);
-        }
-
-        rect = aBorder;
-        ridgeGrooveSide =
-          (eSideTop == ridgeGrooveSide) ? eSideBottom : eSideRight;
-        // FIXME: In theory, this should use the visited-dependent
-        // background color, but I don't care.
-        bevelColor =
-          MakeBevelColor(ridgeGrooveSide, ridgeGroove, aBGColor, aBorderColor);
-        if (horizontal) {
-          rect.y = rect.y + half;
-          rect.height = aBorder.height - half;
-          if (eSideBottom == aStartBevelSide) {
-            rect.x += startBevel;
-            rect.width -= startBevel;
-          }
-          if (eSideBottom == aEndBevelSide) {
-            rect.width -= endBevel;
-          }
-          DrawSolidBorderSegment(aDrawTarget,
-                                 rect,
-                                 bevelColor,
-                                 aAppUnitsPerDevPixel,
-                                 aStartBevelSide,
-                                 startBevel,
-                                 aEndBevelSide,
-                                 endBevel);
-        } else {
-          rect.x = rect.x + half;
-          rect.width = aBorder.width - half;
-          if (eSideRight == aStartBevelSide) {
-            rect.y += aStartBevelOffset - startBevel;
-            rect.height -= startBevel;
-          }
-          if (eSideRight == aEndBevelSide) {
-            rect.height -= endBevel;
-          }
-          DrawSolidBorderSegment(aDrawTarget,
-                                 rect,
-                                 bevelColor,
-                                 aAppUnitsPerDevPixel,
-                                 aStartBevelSide,
-                                 startBevel,
-                                 aEndBevelSide,
-                                 endBevel);
-        }
-      }
-      break;
-    case NS_STYLE_BORDER_STYLE_DOUBLE:
-      // We can only do "double" borders if the thickness of the border
-      // is more than 2px.  Otherwise, we fall through to painting a
-      // solid border.
-      if ((aBorder.width > 2 * oneDevPixel || horizontal) &&
-          (aBorder.height > 2 * oneDevPixel || !horizontal)) {
-        nscoord startBevel =
-          (aStartBevelOffset > 0)
-            ? RoundFloatToPixel(0.333333f * (float)aStartBevelOffset,
-                                aAppUnitsPerDevPixel)
-            : 0;
-        nscoord endBevel =
-          (aEndBevelOffset > 0)
-            ? RoundFloatToPixel(0.333333f * (float)aEndBevelOffset,
-                                aAppUnitsPerDevPixel)
-            : 0;
-        if (horizontal) { // top, bottom
-          nscoord thirdHeight = RoundFloatToPixel(
-            0.333333f * (float)aBorder.height, aAppUnitsPerDevPixel);
-
-          // draw the top line or rect
-          nsRect topRect(aBorder.x, aBorder.y, aBorder.width, thirdHeight);
-          if (eSideTop == aStartBevelSide) {
-            topRect.x += aStartBevelOffset - startBevel;
-            topRect.width -= aStartBevelOffset - startBevel;
-          }
-          if (eSideTop == aEndBevelSide) {
-            topRect.width -= aEndBevelOffset - endBevel;
-          }
-          DrawSolidBorderSegment(aDrawTarget,
-                                 topRect,
-                                 aBorderColor,
-                                 aAppUnitsPerDevPixel,
-                                 aStartBevelSide,
-                                 startBevel,
-                                 aEndBevelSide,
-                                 endBevel);
-
-          // draw the botom line or rect
-          nscoord heightOffset = aBorder.height - thirdHeight;
-          nsRect bottomRect(aBorder.x,
-                            aBorder.y + heightOffset,
-                            aBorder.width,
-                            aBorder.height - heightOffset);
-          if (eSideBottom == aStartBevelSide) {
-            bottomRect.x += aStartBevelOffset - startBevel;
-            bottomRect.width -= aStartBevelOffset - startBevel;
-          }
-          if (eSideBottom == aEndBevelSide) {
-            bottomRect.width -= aEndBevelOffset - endBevel;
-          }
-          DrawSolidBorderSegment(aDrawTarget,
-                                 bottomRect,
-                                 aBorderColor,
-                                 aAppUnitsPerDevPixel,
-                                 aStartBevelSide,
-                                 startBevel,
-                                 aEndBevelSide,
-                                 endBevel);
-        } else { // left, right
-          nscoord thirdWidth = RoundFloatToPixel(
-            0.333333f * (float)aBorder.width, aAppUnitsPerDevPixel);
-
-          nsRect leftRect(aBorder.x, aBorder.y, thirdWidth, aBorder.height);
-          if (eSideLeft == aStartBevelSide) {
-            leftRect.y += aStartBevelOffset - startBevel;
-            leftRect.height -= aStartBevelOffset - startBevel;
-          }
-          if (eSideLeft == aEndBevelSide) {
-            leftRect.height -= aEndBevelOffset - endBevel;
-          }
-          DrawSolidBorderSegment(aDrawTarget,
-                                 leftRect,
-                                 aBorderColor,
-                                 aAppUnitsPerDevPixel,
-                                 aStartBevelSide,
-                                 startBevel,
-                                 aEndBevelSide,
-                                 endBevel);
-
-          nscoord widthOffset = aBorder.width - thirdWidth;
-          nsRect rightRect(aBorder.x + widthOffset,
-                           aBorder.y,
-                           aBorder.width - widthOffset,
-                           aBorder.height);
-          if (eSideRight == aStartBevelSide) {
-            rightRect.y += aStartBevelOffset - startBevel;
-            rightRect.height -= aStartBevelOffset - startBevel;
-          }
-          if (eSideRight == aEndBevelSide) {
-            rightRect.height -= aEndBevelOffset - endBevel;
-          }
-          DrawSolidBorderSegment(aDrawTarget,
-                                 rightRect,
-                                 aBorderColor,
-                                 aAppUnitsPerDevPixel,
-                                 aStartBevelSide,
-                                 startBevel,
-                                 aEndBevelSide,
-                                 endBevel);
-        }
-        break;
-      }
-      // else fall through to solid
-      MOZ_FALLTHROUGH;
-    case NS_STYLE_BORDER_STYLE_SOLID:
+    }
+    break;
+  default:
+    AutoTArray<SolidBeveledBorderSegment, 3> segments;
+    GetTableBorderSolidSegments(segments,
+                                aBorderStyle,
+                                aBorderColor,
+                                aBorder,
+                                aAppUnitsPerDevPixel,
+                                aStartBevelSide,
+                                aStartBevelOffset,
+                                aEndBevelSide,
+                                aEndBevelOffset);
+    for (const auto& segment : segments) {
       DrawSolidBorderSegment(aDrawTarget,
-                             aBorder,
-                             aBorderColor,
+                             segment.mRect,
+                             segment.mColor,
                              aAppUnitsPerDevPixel,
-                             aStartBevelSide,
-                             aStartBevelOffset,
-                             aEndBevelSide,
-                             aEndBevelOffset);
-      break;
-    case NS_STYLE_BORDER_STYLE_OUTSET:
-    case NS_STYLE_BORDER_STYLE_INSET:
-      NS_ASSERTION(false,
-                   "inset, outset should have been converted to groove, ridge");
-      break;
-    case NS_STYLE_BORDER_STYLE_AUTO:
-      NS_ASSERTION(false, "Unexpected 'auto' table border");
-      break;
+                             segment.mStartBevel.mSide,
+                             segment.mStartBevel.mOffset,
+                             segment.mEndBevel.mSide,
+                             segment.mEndBevel.mOffset);
+    }
+    break;
+  }
+}
+
+void
+nsCSSRendering::GetTableBorderSolidSegments(
+    nsTArray<SolidBeveledBorderSegment>& aSegments,
+    uint8_t       aBorderStyle,
+    nscolor       aBorderColor,
+    const nsRect& aBorder,
+    int32_t       aAppUnitsPerDevPixel,
+    mozilla::Side aStartBevelSide,
+    nscoord       aStartBevelOffset,
+    mozilla::Side aEndBevelSide,
+    nscoord       aEndBevelOffset)
+{
+  const bool horizontal = eSideTop == aStartBevelSide || eSideBottom == aStartBevelSide;
+  const nscoord oneDevPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerDevPixel);
+
+  switch (aBorderStyle) {
+  case NS_STYLE_BORDER_STYLE_NONE:
+  case NS_STYLE_BORDER_STYLE_HIDDEN:
+    return;
+  case NS_STYLE_BORDER_STYLE_DOTTED:
+  case NS_STYLE_BORDER_STYLE_DASHED:
+    MOZ_ASSERT_UNREACHABLE("Caller should have checked");
+    return;
+  case NS_STYLE_BORDER_STYLE_GROOVE:
+  case NS_STYLE_BORDER_STYLE_RIDGE:
+    if ((horizontal && (oneDevPixel >= aBorder.height)) ||
+        (!horizontal && (oneDevPixel >= aBorder.width))) {
+      aSegments.AppendElement(SolidBeveledBorderSegment {
+        aBorder,
+        aBorderColor,
+        { aStartBevelSide, aStartBevelOffset },
+        { aEndBevelSide, aEndBevelOffset }
+      });
+    } else {
+      nscoord startBevel = (aStartBevelOffset > 0)
+                            ? RoundFloatToPixel(0.5f * (float)aStartBevelOffset,
+                                                aAppUnitsPerDevPixel, true) : 0;
+      nscoord endBevel =   (aEndBevelOffset > 0)
+                            ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset,
+                                                aAppUnitsPerDevPixel, true) : 0;
+      mozilla::Side ridgeGrooveSide = (horizontal) ? eSideTop : eSideLeft;
+      // FIXME: In theory, this should use the visited-dependent
+      // background color, but I don't care.
+      nscolor bevelColor = MakeBevelColor(ridgeGrooveSide, aBorderStyle,
+                                          aBorderColor);
+      nsRect rect(aBorder);
+      nscoord half;
+      if (horizontal) { // top, bottom
+        half = RoundFloatToPixel(0.5f * (float)aBorder.height,
+                                 aAppUnitsPerDevPixel);
+        rect.height = half;
+        if (eSideTop == aStartBevelSide) {
+          rect.x += startBevel;
+          rect.width -= startBevel;
+        }
+        if (eSideTop == aEndBevelSide) {
+          rect.width -= endBevel;
+        }
+        aSegments.AppendElement(SolidBeveledBorderSegment {
+          rect,
+          bevelColor,
+          { aStartBevelSide, startBevel },
+          { aEndBevelSide, endBevel }
+        });
+      } else { // left, right
+        half = RoundFloatToPixel(0.5f * (float)aBorder.width,
+                                 aAppUnitsPerDevPixel);
+        rect.width = half;
+        if (eSideLeft == aStartBevelSide) {
+          rect.y += startBevel;
+          rect.height -= startBevel;
+        }
+        if (eSideLeft == aEndBevelSide) {
+          rect.height -= endBevel;
+        }
+        aSegments.AppendElement(SolidBeveledBorderSegment {
+          rect,
+          bevelColor,
+          { aStartBevelSide, startBevel },
+          { aEndBevelSide, endBevel }
+        });
+      }
+
+      rect = aBorder;
+      ridgeGrooveSide = (eSideTop == ridgeGrooveSide) ? eSideBottom : eSideRight;
+      // FIXME: In theory, this should use the visited-dependent
+      // background color, but I don't care.
+      bevelColor = MakeBevelColor(ridgeGrooveSide, aBorderStyle,
+                                  aBorderColor);
+      if (horizontal) {
+        rect.y = rect.y + half;
+        rect.height = aBorder.height - half;
+        if (eSideBottom == aStartBevelSide) {
+          rect.x += startBevel;
+          rect.width -= startBevel;
+        }
+        if (eSideBottom == aEndBevelSide) {
+          rect.width -= endBevel;
+        }
+        aSegments.AppendElement(SolidBeveledBorderSegment {
+          rect,
+          bevelColor,
+          { aStartBevelSide, startBevel },
+          { aEndBevelSide, endBevel }
+        });
+      } else {
+        rect.x = rect.x + half;
+        rect.width = aBorder.width - half;
+        if (eSideRight == aStartBevelSide) {
+          rect.y += aStartBevelOffset - startBevel;
+          rect.height -= startBevel;
+        }
+        if (eSideRight == aEndBevelSide) {
+          rect.height -= endBevel;
+        }
+        aSegments.AppendElement(SolidBeveledBorderSegment {
+          rect,
+          bevelColor,
+          { aStartBevelSide, startBevel },
+          { aEndBevelSide, endBevel }
+        });
+      }
+    }
+    break;
+  case NS_STYLE_BORDER_STYLE_DOUBLE:
+    // We can only do "double" borders if the thickness of the border
+    // is more than 2px.  Otherwise, we fall through to painting a
+    // solid border.
+    if ((aBorder.width > 2 * oneDevPixel || horizontal) &&
+        (aBorder.height > 2 * oneDevPixel || !horizontal)) {
+      nscoord startBevel = (aStartBevelOffset > 0)
+                            ? RoundFloatToPixel(0.333333f *
+                                                (float)aStartBevelOffset,
+                                                 aAppUnitsPerDevPixel) : 0;
+      nscoord endBevel =   (aEndBevelOffset > 0)
+                            ? RoundFloatToPixel(0.333333f *
+                                                (float)aEndBevelOffset,
+                                                aAppUnitsPerDevPixel) : 0;
+      if (horizontal) { // top, bottom
+        nscoord thirdHeight = RoundFloatToPixel(0.333333f *
+                                                (float)aBorder.height,
+                                                aAppUnitsPerDevPixel);
+
+        // draw the top line or rect
+        nsRect topRect(aBorder.x, aBorder.y, aBorder.width, thirdHeight);
+        if (eSideTop == aStartBevelSide) {
+          topRect.x += aStartBevelOffset - startBevel;
+          topRect.width -= aStartBevelOffset - startBevel;
+        }
+        if (eSideTop == aEndBevelSide) {
+          topRect.width -= aEndBevelOffset - endBevel;
+        }
+
+        aSegments.AppendElement(SolidBeveledBorderSegment {
+          topRect,
+          aBorderColor,
+          { aStartBevelSide, startBevel },
+          { aEndBevelSide, endBevel }
+        });
+
+        // draw the botom line or rect
+        nscoord heightOffset = aBorder.height - thirdHeight;
+        nsRect bottomRect(aBorder.x, aBorder.y + heightOffset, aBorder.width, aBorder.height - heightOffset);
+        if (eSideBottom == aStartBevelSide) {
+          bottomRect.x += aStartBevelOffset - startBevel;
+          bottomRect.width -= aStartBevelOffset - startBevel;
+        }
+        if (eSideBottom == aEndBevelSide) {
+          bottomRect.width -= aEndBevelOffset - endBevel;
+        }
+        aSegments.AppendElement(SolidBeveledBorderSegment {
+          bottomRect,
+          aBorderColor,
+          { aStartBevelSide, startBevel },
+          { aEndBevelSide, endBevel }
+        });
+      } else { // left, right
+        nscoord thirdWidth = RoundFloatToPixel(0.333333f * (float)aBorder.width,
+                                               aAppUnitsPerDevPixel);
+
+        nsRect leftRect(aBorder.x, aBorder.y, thirdWidth, aBorder.height);
+        if (eSideLeft == aStartBevelSide) {
+          leftRect.y += aStartBevelOffset - startBevel;
+          leftRect.height -= aStartBevelOffset - startBevel;
+        }
+        if (eSideLeft == aEndBevelSide) {
+          leftRect.height -= aEndBevelOffset - endBevel;
+        }
+
+        aSegments.AppendElement(SolidBeveledBorderSegment {
+          leftRect,
+          aBorderColor,
+          { aStartBevelSide, startBevel },
+          { aEndBevelSide, endBevel }
+        });
+
+        nscoord widthOffset = aBorder.width - thirdWidth;
+        nsRect rightRect(aBorder.x + widthOffset, aBorder.y, aBorder.width - widthOffset, aBorder.height);
+        if (eSideRight == aStartBevelSide) {
+          rightRect.y += aStartBevelOffset - startBevel;
+          rightRect.height -= aStartBevelOffset - startBevel;
+        }
+        if (eSideRight == aEndBevelSide) {
+          rightRect.height -= aEndBevelOffset - endBevel;
+        }
+        aSegments.AppendElement(SolidBeveledBorderSegment {
+          rightRect,
+          aBorderColor,
+          { aStartBevelSide, startBevel },
+          { aEndBevelSide, endBevel }
+        });
+      }
+    }
+    // else fall through to solid
+    MOZ_FALLTHROUGH;
+  case NS_STYLE_BORDER_STYLE_SOLID:
+    aSegments.AppendElement(SolidBeveledBorderSegment {
+      aBorder,
+      aBorderColor,
+      { aStartBevelSide, aStartBevelOffset },
+      { aEndBevelSide, aEndBevelOffset }
+    });
+    break;
+  case NS_STYLE_BORDER_STYLE_OUTSET:
+  case NS_STYLE_BORDER_STYLE_INSET:
+    MOZ_ASSERT_UNREACHABLE("inset, outset should have been converted to groove, ridge");
+    break;
+  case NS_STYLE_BORDER_STYLE_AUTO:
+    MOZ_ASSERT_UNREACHABLE("Unexpected 'auto' table border");
+    break;
   }
 }
 

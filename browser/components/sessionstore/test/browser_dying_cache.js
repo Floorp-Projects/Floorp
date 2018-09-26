@@ -24,7 +24,7 @@ add_task(async function test() {
   // Make sure our window is still tracked by sessionstore
   // and the window state is as expected.
   ok("__SSi" in win, "window is being tracked by sessionstore");
-  ss.setWindowValue(win, "foo", "bar");
+  ss.setCustomWindowValue(win, "foo", "bar");
   checkWindowState(win);
 
   // Close our window.
@@ -39,7 +39,7 @@ add_task(async function test() {
   Assert.throws(() => ss.setWindowState(win, {}),
     /Window is not tracked/,
     "we're not allowed to modify state data anymore");
-  Assert.throws(() => ss.setWindowValue(win, "foo", "baz"),
+  Assert.throws(() => ss.setCustomWindowValue(win, "foo", "baz"),
     /Window is not tracked/,
     "we're not allowed to modify state data anymore");
 });
@@ -53,7 +53,7 @@ function checkWindowState(window) {
   let [{state: {entries: [{url}]}}] = JSON.parse(ss.getClosedTabData(window));
   is(url, "about:robots", "the closed tab is about:robots");
 
-  is(ss.getWindowValue(window, "foo"), "bar", "correct extData value");
+  is(ss.getCustomWindowValue(window, "foo"), "bar", "correct extData value");
 }
 
 function shouldThrow(f) {

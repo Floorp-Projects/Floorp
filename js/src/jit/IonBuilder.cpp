@@ -12955,43 +12955,6 @@ IonBuilder::jsop_setarg(uint32_t arg)
         return Ok();
     }
 
-    // If this assignment is at the start of the function and is coercing
-    // the original value for the argument which was passed in, loosen
-    // the type information for that original argument if it is currently
-    // empty due to originally executing in the interpreter.
-    if (graph().numBlocks() == 1 &&
-        (val->isBitOr() || val->isBitAnd() || val->isMul() /* for JSOP_POS */))
-     {
-         for (size_t i = 0; i < val->numOperands(); i++) {
-            MDefinition* op = val->getOperand(i);
-            if (op->isParameter() &&
-                op->toParameter()->index() == (int32_t)arg &&
-                op->resultTypeSet() &&
-                op->resultTypeSet()->empty())
-            {
-                bool otherUses = false;
-                for (MUseDefIterator iter(op); iter; iter++) {
-                    MDefinition* def = iter.def();
-                    if (def == val) {
-                        continue;
-                    }
-                    otherUses = true;
-                }
-                if (!otherUses) {
-                    MOZ_ASSERT(op->resultTypeSet() == &argTypes[arg]);
-                    argTypes[arg].addType(TypeSet::UnknownType(), alloc_->lifoAlloc());
-                    if (val->isMul()) {
-                        val->setResultType(MIRType::Double);
-                        val->toMul()->setSpecialization(MIRType::Double);
-                    } else {
-                        MOZ_ASSERT(val->type() == MIRType::Int32);
-                    }
-                    val->setResultTypeSet(nullptr);
-                }
-            }
-        }
-    }
-
     current->setArg(arg);
     return Ok();
 }
