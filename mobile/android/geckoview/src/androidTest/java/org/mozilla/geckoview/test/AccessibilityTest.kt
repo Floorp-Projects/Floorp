@@ -47,6 +47,7 @@ class AccessibilityTest : BaseSessionTest() {
     lateinit var view: View
     val screenRect = Rect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
     val provider: AccessibilityNodeProvider get() = view.accessibilityNodeProvider
+    private val nodeInfos = mutableListOf<AccessibilityNodeInfo>()
 
     // Given a child ID, return the virtual descendent ID.
     private fun getVirtualDescendantId(childId: Long): Int {
@@ -68,6 +69,12 @@ class AccessibilityTest : BaseSessionTest() {
         } catch (ex: Exception) {
             return 0
         }
+    }
+
+    private fun createNodeInfo(id: Int): AccessibilityNodeInfo {
+        val node = provider.createAccessibilityNodeInfo(id);
+        nodeInfos.add(node)
+        return node;
     }
 
     // Get a child ID by index.
@@ -130,6 +137,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @After fun teardown() {
         sessionRule.session.accessibility.view = null
+        nodeInfos.forEach { node -> node.recycle() }
     }
 
     private fun waitForInitialFocus() {
@@ -141,7 +149,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testRootNode() {
         assertThat("provider is not null", provider, notNullValue())
-        val node = provider.createAccessibilityNodeInfo(AccessibilityNodeProvider.HOST_VIEW_ID)
+        val node = createNodeInfo(AccessibilityNodeProvider.HOST_VIEW_ID)
         assertThat("Root node should have WebView class name",
             node.className.toString(), equalTo("android.webkit.WebView"))
     }
@@ -167,7 +175,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
+                val node = createNodeInfo(nodeId)
                 assertThat("Text node should not be focusable", node.isFocusable, equalTo(false))
             }
         })
@@ -179,7 +187,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
+                val node = createNodeInfo(nodeId)
                 assertThat("Entry node should be focusable", node.isFocusable, equalTo(true))
             }
         })
@@ -195,7 +203,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 val nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
+                val node = createNodeInfo(nodeId)
                 assertThat("Focused EditBox", node.className.toString(),
                         equalTo("android.widget.EditText"))
                 if (Build.VERSION.SDK_INT >= 19) {
@@ -235,7 +243,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onClicked(event: AccessibilityEvent) {
                 var nodeId = getSourceId(event)
-                var node = provider.createAccessibilityNodeInfo(nodeId)
+                var node = createNodeInfo(nodeId)
                 assertThat("Event's checked state matches", event.isChecked, equalTo(checked))
                 assertThat("Checkbox node has correct checked state", node.isChecked, equalTo(checked))
             }
@@ -247,7 +255,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onSelected(event: AccessibilityEvent) {
                 var nodeId = getSourceId(event)
-                var node = provider.createAccessibilityNodeInfo(nodeId)
+                var node = createNodeInfo(nodeId)
                 assertThat("Selectable node has correct selected state", node.isSelected, equalTo(selected))
             }
         })
@@ -278,7 +286,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
+                val node = createNodeInfo(nodeId)
                 assertThat("Focused EditBox", node.className.toString(),
                         equalTo("android.widget.EditText"))
             }
@@ -330,7 +338,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
+                val node = createNodeInfo(nodeId)
                 assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
             }
         })
@@ -363,7 +371,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
+                val node = createNodeInfo(nodeId)
                 assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
             }
         })
@@ -396,7 +404,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                val node = provider.createAccessibilityNodeInfo(nodeId)
+                val node = createNodeInfo(nodeId)
                 assertThat("Accessibility focus on first paragraph", node.text as String, startsWith("Lorem ipsum"))
             }
         })
@@ -427,7 +435,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                var node = provider.createAccessibilityNodeInfo(nodeId)
+                var node = createNodeInfo(nodeId)
                 assertThat("Checkbox node is checkable", node.isCheckable, equalTo(true))
                 assertThat("Checkbox node is clickable", node.isClickable, equalTo(true))
                 assertThat("Checkbox node is focusable", node.isFocusable, equalTo(true))
@@ -457,7 +465,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onAccessibilityFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                var node = provider.createAccessibilityNodeInfo(nodeId)
+                var node = createNodeInfo(nodeId)
                 assertThat("Selectable node is clickable", node.isClickable, equalTo(true))
                 assertThat("Selectable node is not selected", node.isSelected, equalTo(false))
                 assertThat("Selectable node has correct role", node.text.toString(), equalTo("1 option list box"))
@@ -478,7 +486,7 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     private fun screenContainsNode(nodeId: Int): Boolean {
-        var node = provider.createAccessibilityNodeInfo(nodeId)
+        var node = createNodeInfo(nodeId)
         var nodeBounds = Rect()
         node.getBoundsInScreen(nodeBounds)
         return screenRect.contains(nodeBounds)
@@ -500,7 +508,7 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
-                var node = provider.createAccessibilityNodeInfo(nodeId)
+                var node = createNodeInfo(nodeId)
                 var nodeBounds = Rect()
                 node.getBoundsInParent(nodeBounds)
                 assertThat("Default root node bounds are correct", nodeBounds, equalTo(screenRect))
@@ -614,7 +622,7 @@ class AccessibilityTest : BaseSessionTest() {
             if (child.childCount > 0) {
                 for (i in 0 until child.childCount) {
                     val childId = child.getChildId(i)
-                    autoFillChild(childId, provider.createAccessibilityNodeInfo(childId))
+                    autoFillChild(childId, createNodeInfo(childId))
                 }
             }
 
@@ -648,10 +656,9 @@ class AccessibilityTest : BaseSessionTest() {
                 assertThat("Can perform auto-fill",
                            provider.performAction(id, ACTION_SET_TEXT, args), equalTo(true))
             }
-            child.recycle()
         }
 
-        autoFillChild(View.NO_ID, provider.createAccessibilityNodeInfo(View.NO_ID))
+        autoFillChild(View.NO_ID, createNodeInfo(View.NO_ID))
 
         // Wait on the promises and check for correct values.
         for ((actual, expected) in promises.map { it.value.asJSList<String>() }) {
@@ -664,15 +671,11 @@ class AccessibilityTest : BaseSessionTest() {
         fun countAutoFillNodes(cond: (AccessibilityNodeInfo) -> Boolean =
                                        { it.className == "android.widget.EditText" },
                                id: Int = View.NO_ID): Int {
-            val info = provider.createAccessibilityNodeInfo(id)
-            try {
-                return (if (cond(info)) 1 else 0) + (if (info.childCount > 0)
-                    (0 until info.childCount).sumBy {
-                        countAutoFillNodes(cond, info.getChildId(it))
-                    } else 0)
-            } finally {
-                info.recycle()
-            }
+            val info = createNodeInfo(id)
+            return (if (cond(info)) 1 else 0) + (if (info.childCount > 0)
+                (0 until info.childCount).sumBy {
+                    countAutoFillNodes(cond, info.getChildId(it))
+                } else 0)
         }
 
         // Wait for the accessibility nodes to populate.
