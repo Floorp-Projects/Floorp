@@ -36,10 +36,10 @@ function test() {
   Assert.throws(() => ss.undoCloseTab(window, -1),
     /NS_ERROR_ILLEGAL_VALUE/,
     "Invalid index for undoCloseTab throws");
-  Assert.throws(() => ss.getWindowValue({}, ""),
+  Assert.throws(() => ss.getCustomWindowValue({}, ""),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for getWindowValue throws");
-  Assert.throws(() => ss.setWindowValue({}, "", ""),
+    "Invalid window for getCustomWindowValue throws");
+  Assert.throws(() => ss.setCustomWindowValue({}, "", ""),
     /NS_ERROR_ILLEGAL_VALUE/,
-    "Invalid window for setWindowValue throws");
+    "Invalid window for setCustomWindowValue throws");
 }

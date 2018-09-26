@@ -19,10 +19,7 @@ toolbarbutton {
   vertical-align: middle;
 }
 
-toolbarbutton[disabled="true"],
-toolbarbutton[disabled="true"]:hover,
-toolbarbutton[disabled="true"]:hover:active,
-toolbarbutton[disabled="true"][open="true"] {
+toolbarbutton[disabled="true"] {
   color: -moz-mac-disabledtoolbartext;
 }
 
