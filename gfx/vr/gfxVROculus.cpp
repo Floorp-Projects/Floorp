@@ -2030,11 +2030,7 @@ VRSystemManagerOculus::ScanForControllers()
           hand = GamepadHand::Right;
           break;
         default:
-<<<<<<< working copy
           continue;
-=======
-          break;
->>>>>>> merge rev
       }
       RefPtr<VRControllerOculus> oculusController = new VRControllerOculus(hand,
                                                       mDisplay->GetDisplayInfo().GetDisplayID());
