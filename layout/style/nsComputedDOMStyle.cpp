@@ -82,7 +82,7 @@ NS_NewComputedDOMStyle(dom::Element* aElement,
 static nsDOMCSSValueList*
 GetROCSSValueList(bool aCommaDelimited)
 {
-  return new nsDOMCSSValueList(aCommaDelimited, true);
+  return new nsDOMCSSValueList(aCommaDelimited);
 }
 
 template<typename T>
