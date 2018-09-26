@@ -217,6 +217,25 @@ RootActor.prototype = {
     if (typeof this._parameters.onShutdown === "function") {
       this._parameters.onShutdown();
     }
+    // Cleanup Actors on destroy
+    if (this._tabTargetActorPool) {
+      this._tabTargetActorPool.destroy();
+    }
+    if (this._globalActorPool) {
+      this._globalActorPool.destroy();
+    }
+    if (this._chromeWindowActorPool) {
+      this._chromeWindowActorPool.destroy();
+    }
+    if (this._addonTargetActorPool) {
+      this._addonTargetActorPool.destroy();
+    }
+    if (this._workerTargetActorPool) {
+      this._workerTargetActorPool.destroy();
+    }
+    if (this._serviceWorkerRegistrationActorPool) {
+      this._serviceWorkerRegistrationActorPool.destroy();
+    }
     this._extraActors = null;
     this.conn = null;
     this._tabTargetActorPool = null;
