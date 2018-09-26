@@ -10,11 +10,8 @@
 #include "base/thread_local.h"
 #include "base/waitable_event.h"
 #include "GeckoProfiler.h"
-#include "mozilla/EventQueue.h"
 #include "mozilla/IOInterposer.h"
-#include "mozilla/ThreadEventQueue.h"
 #include "nsThreadUtils.h"
-#include "nsThreadManager.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -157,24 +154,12 @@ void Thread::StopSoon() {
 }
 
 void Thread::ThreadMain() {
-  nsCOMPtr<nsIThread> xpcomThread;
-  if (startup_data_->options.message_loop_type == MessageLoop::TYPE_MOZILLA_NONMAINTHREAD) {
-    auto queue = mozilla::MakeRefPtr<mozilla::ThreadEventQueue<mozilla::EventQueue>>(
-      mozilla::MakeUnique<mozilla::EventQueue>());
-    xpcomThread =
-      nsThreadManager::get().CreateCurrentThread(queue, nsThread::NOT_MAIN_THREAD);
-  } else {
-    xpcomThread = NS_GetCurrentThread();
-  }
-
   AUTO_PROFILER_REGISTER_THREAD(name_.c_str());
   mozilla::IOInterposer::RegisterCurrentThread();
 
   // The message loop for this thread.
   MessageLoop message_loop(startup_data_->options.message_loop_type,
-                           xpcomThread);
-
-  xpcomThread = nullptr;
+                           NS_GetCurrentThread());
 
   // Complete the initialization of our Thread object.
   thread_id_ = PlatformThread::CurrentId();

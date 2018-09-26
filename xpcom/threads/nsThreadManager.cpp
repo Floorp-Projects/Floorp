@@ -109,6 +109,8 @@ nsThreadManager::ReleaseThread(void* aData)
 
   auto* thread = static_cast<nsThread*>(aData);
 
+  get().UnregisterCurrentThread(*thread, true);
+
   if (thread->mHasTLSEntry) {
     thread->mHasTLSEntry = false;
     thread->Release();
@@ -319,11 +321,14 @@ nsThreadManager::Shutdown()
 
   {
     // We gather the threads from the hashtable into a list, so that we avoid
-    // holding the enumerator lock while calling nsIThread::Shutdown.
-    nsTArray<RefPtr<nsThread>> threadsToShutdown;
-    for (auto* thread : nsThread::Enumerate()) {
-      if (thread->ShutdownRequired()) {
-        threadsToShutdown.AppendElement(thread);
+    // holding the hashtable lock while calling nsIThread::Shutdown.
+    nsThreadArray threads;
+    {
+      OffTheBooksMutexAutoLock lock(mLock);
+      for (auto iter = mThreadsByPRThread.Iter(); !iter.Done(); iter.Next()) {
+        RefPtr<nsThread>& thread = iter.Data();
+        threads.AppendElement(WrapNotNull(thread));
+        iter.Remove();
       }
     }
 
@@ -337,8 +342,11 @@ nsThreadManager::Shutdown()
     // world until such time as the threads exit.
 
     // Shutdown all threads that require it (join with threads that we created).
-    for (auto& thread : threadsToShutdown) {
-      thread->Shutdown();
+    for (uint32_t i = 0; i < threads.Length(); ++i) {
+      NotNull<nsThread*> thread = threads[i];
+      if (thread->ShutdownRequired()) {
+        thread->Shutdown();
+      }
     }
   }
 
@@ -352,6 +360,12 @@ nsThreadManager::Shutdown()
   NS_ProcessPendingEvents(mMainThread);
 
   // There are no more background threads at this point.
+
+  // Clear the table of threads.
+  {
+    OffTheBooksMutexAutoLock lock(mLock);
+    mThreadsByPRThread.Clear();
+  }
 
   // Normally thread shutdown clears the observer for the thread, but since the
   // main thread is special we do it manually here after we're sure all events
@@ -388,15 +402,35 @@ nsThreadManager::RegisterCurrentThread(nsThread& aThread)
 {
   MOZ_ASSERT(aThread.GetPRThread() == PR_GetCurrentThread(), "bad aThread");
 
+  OffTheBooksMutexAutoLock lock(mLock);
+
+  ++mCurrentNumberOfThreads;
+  if (mCurrentNumberOfThreads > mHighestNumberOfThreads) {
+    mHighestNumberOfThreads = mCurrentNumberOfThreads;
+  }
+
+  mThreadsByPRThread.Put(aThread.GetPRThread(), &aThread);  // XXX check OOM?
+
   aThread.AddRef();  // for TLS entry
   aThread.mHasTLSEntry = true;
   PR_SetThreadPrivate(mCurThreadIndex, &aThread);
 }
 
 void
-nsThreadManager::UnregisterCurrentThread(nsThread& aThread)
+nsThreadManager::UnregisterCurrentThread(nsThread& aThread, bool aIfExists)
 {
-  MOZ_ASSERT(aThread.GetPRThread() == PR_GetCurrentThread(), "bad aThread");
+  {
+    OffTheBooksMutexAutoLock lock(mLock);
+
+    if (aIfExists && !mThreadsByPRThread.GetWeak(aThread.GetPRThread())) {
+      return;
+    }
+
+    MOZ_ASSERT(aThread.GetPRThread() == PR_GetCurrentThread(), "bad aThread");
+
+    --mCurrentNumberOfThreads;
+    mThreadsByPRThread.Remove(aThread.GetPRThread());
+  }
 
   PR_SetThreadPrivate(mCurThreadIndex, nullptr);
   // Ref-count balanced via ReleaseThread
@@ -413,6 +447,7 @@ nsThreadManager::CreateCurrentThread(SynchronizedEventQueue* aQueue,
     return nullptr;
   }
 
+  // OK, that's fine.  We'll dynamically create one :-)
   RefPtr<nsThread> thread = new nsThread(WrapNotNull(aQueue), aMainThread, 0);
   if (!thread || NS_FAILED(thread->InitCurrentThread())) {
     return nullptr;
@@ -435,11 +470,9 @@ nsThreadManager::GetCurrentThread()
   }
 
   // OK, that's fine.  We'll dynamically create one :-)
-  //
-  // We assume that if we're implicitly creating a thread here that it doesn't
-  // want an event queue. Any thread which wants an event queue should
-  // explicitly create its nsThread wrapper.
-  RefPtr<nsThread> thread = new nsThread();
+  RefPtr<ThreadEventQueue<EventQueue>> queue =
+    new ThreadEventQueue<EventQueue>(MakeUnique<EventQueue>());
+  RefPtr<nsThread> thread = new nsThread(WrapNotNull(queue), nsThread::NOT_MAIN_THREAD, 0);
   if (!thread || NS_FAILED(thread->InitCurrentThread())) {
     return nullptr;
   }
@@ -454,7 +487,7 @@ nsThreadManager::IsNSThread() const
     return false;
   }
   if (auto* thread = (nsThread*)PR_GetThreadPrivate(mCurThreadIndex)) {
-    return thread->EventQueue();
+    return thread->mShutdownRequired;
   }
   return false;
 }
@@ -500,6 +533,27 @@ nsThreadManager::NewNamedThread(const nsACString& aName,
   }
 
   thr.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThreadManager::GetThreadFromPRThread(PRThread* aThread, nsIThread** aResult)
+{
+  // Keep this functioning during Shutdown
+  if (NS_WARN_IF(!mMainThread)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (NS_WARN_IF(!aThread)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<nsThread> temp;
+  {
+    OffTheBooksMutexAutoLock lock(mLock);
+    mThreadsByPRThread.Get(aThread, getter_AddRefs(temp));
+  }
+
+  NS_IF_ADDREF(*aResult = temp);
   return NS_OK;
 }
 
@@ -605,7 +659,8 @@ nsThreadManager::GetSystemGroupEventTarget(nsIEventTarget** aTarget)
 uint32_t
 nsThreadManager::GetHighestNumberOfThreads()
 {
-  return nsThread::MaxActiveThreads();
+  OffTheBooksMutexAutoLock lock(mLock);
+  return mHighestNumberOfThreads;
 }
 
 NS_IMETHODIMP
