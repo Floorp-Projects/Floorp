@@ -39,7 +39,7 @@ window.test_driver = {
     * Set Window Rect command}.
     *
     * @param {Integer} x - The x coordinate of the top left of the window
-    * @param {Integer} y - The x coordinate of the top left of the window
+    * @param {Integer} y - The y coordinate of the top left of the window
     * @param {Integer} width - The width of the window
     * @param {Integer} height - The width of the window
     * @returns {Promise} fulfilled after window rect is set occurs, or rejected in
@@ -67,7 +67,7 @@ window.test_driver_internal = {
      * @param {Integer} x - The x coordinate of the top left of the window
      * @param {Integer} y - The x coordinate of the top left of the window
      * @param {Integer} width - The width of the window
-     * @param {Integer} height - The width of the window
+     * @param {Integer} height - The height of the window
      * @returns {Promise} fulfilled after window rect is set occurs, or rejected in
      *                    the cases the WebDriver command errors
      */
