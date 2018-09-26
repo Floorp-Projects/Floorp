@@ -582,7 +582,7 @@ TabWindow.prototype = {
   },
 
   directRequestProtocols: new Set([
-    "file", "chrome", "resource", "about",
+    "file", "chrome", "resource", "about", "data",
   ]),
   onLinkIconAvailable(aBrowser, aIconURL) {
     let tab = this.win.gBrowser.getTabForBrowser(aBrowser);
