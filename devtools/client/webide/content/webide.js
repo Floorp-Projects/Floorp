@@ -718,7 +718,7 @@ var UI = {
   async checkRuntimeVersion() {
     if (AppManager.connected) {
       const { client } = AppManager.connection;
-      const report = await client.checkRuntimeVersion(AppManager.listTabsForm);
+      const report = await client.checkRuntimeVersion();
       if (report.incompatible == "too-recent") {
         this.reportError("error_runtimeVersionTooRecent", report.runtimeID,
           report.localID);
