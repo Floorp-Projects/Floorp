@@ -361,9 +361,6 @@ private:
   /* z-index */
   already_AddRefed<CSSValue> DoGetZIndex();
 
-  /* List properties */
-  already_AddRefed<CSSValue> DoGetImageRegion();
-
   /* Text Properties */
   already_AddRefed<CSSValue> DoGetInitialLetter();
   already_AddRefed<CSSValue> DoGetLineHeight();
@@ -389,7 +386,6 @@ private:
   already_AddRefed<CSSValue> DoGetBinding();
   already_AddRefed<CSSValue> DoGetDisplay();
   already_AddRefed<CSSValue> DoGetContain();
-  already_AddRefed<CSSValue> DoGetClip();
   already_AddRefed<CSSValue> DoGetWillChange();
   already_AddRefed<CSSValue> DoGetOverflow();
   already_AddRefed<CSSValue> DoGetOverflowY();
