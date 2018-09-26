@@ -15,7 +15,6 @@
 #include "nsCoord.h"
 
 class nsIURI;
-class nsDOMCSSRect;
 
 /**
  * Read-only CSS primitive value - a DOM object representing values in DOM
@@ -49,7 +48,6 @@ public:
     CSS_IDENT,
     CSS_ATTR,
     CSS_COUNTER,
-    CSS_RECT,
     CSS_RGBCOLOR,
     CSS_TURN,
     CSS_NUMBER_INT32,
@@ -70,7 +68,6 @@ public:
   void SetStringValue(uint16_t aUnitType, const nsAString& aString,
                       mozilla::ErrorResult& aRv);
   void GetCounterValue(mozilla::ErrorResult& aRv);
-  nsDOMCSSRect* GetRectValue(mozilla::ErrorResult& aRv);
 
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue();
@@ -92,7 +89,6 @@ public:
   // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
   void SetString(const nsAString& aString, uint16_t aType = CSS_STRING);
   void SetURI(nsIURI *aURI);
-  void SetRect(nsDOMCSSRect* aRect);
   void SetTime(float aValue);
   void Reset();
 
@@ -106,8 +102,6 @@ protected:
     float           mFloat;
     int32_t         mInt32;
     uint32_t        mUint32;
-    // These can't be nsCOMPtr/nsRefPtr's because they are used inside a union.
-    nsDOMCSSRect* MOZ_OWNING_REF mRect;
     char16_t*      mString;
     nsIURI* MOZ_OWNING_REF mURI;
     nsCSSKeyword    mKeyword;

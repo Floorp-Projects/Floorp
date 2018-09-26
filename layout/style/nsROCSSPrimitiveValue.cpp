@@ -10,7 +10,6 @@
 
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
-#include "nsDOMCSSRect.h"
 #include "nsIURI.h"
 #include "nsError.h"
 
@@ -126,34 +125,6 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
         tmpStr.AppendLiteral("turn");
-        break;
-      }
-    case CSS_RECT:
-      {
-        NS_ASSERTION(mValue.mRect, "mValue.mRect should never be null");
-        NS_NAMED_LITERAL_STRING(comma, ", ");
-        nsAutoString sideValue;
-        tmpStr.AssignLiteral("rect(");
-        // get the top
-        result = mValue.mRect->Top()->GetCssText(sideValue);
-        if (NS_FAILED(result))
-          break;
-        tmpStr.Append(sideValue + comma);
-        // get the right
-        result = mValue.mRect->Right()->GetCssText(sideValue);
-        if (NS_FAILED(result))
-          break;
-        tmpStr.Append(sideValue + comma);
-        // get the bottom
-        result = mValue.mRect->Bottom()->GetCssText(sideValue);
-        if (NS_FAILED(result))
-          break;
-        tmpStr.Append(sideValue + comma);
-        // get the left
-        result = mValue.mRect->Left()->GetCssText(sideValue);
-        if (NS_FAILED(result))
-          break;
-        tmpStr.Append(sideValue + NS_LITERAL_STRING(")"));
         break;
       }
     case CSS_S:
@@ -284,7 +255,6 @@ nsROCSSPrimitiveValue::GetFloatValue(uint16_t aUnitType, ErrorResult& aRv)
     case CSS_IDENT:
     case CSS_ATTR:
     case CSS_COUNTER:
-    case CSS_RECT:
     case CSS_RGBCOLOR:
       break;
   }
@@ -334,18 +304,6 @@ void
 nsROCSSPrimitiveValue::GetCounterValue(ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-nsDOMCSSRect*
-nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
-{
-  if (mType != CSS_RECT) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return nullptr;
-  }
-
-  NS_ASSERTION(mValue.mRect, "mValue.mRect should never be null");
-  return mValue.mRect;
 }
 
 void
@@ -475,22 +433,6 @@ nsROCSSPrimitiveValue::SetURI(nsIURI *aURI)
 }
 
 void
-nsROCSSPrimitiveValue::SetRect(nsDOMCSSRect* aRect)
-{
-  MOZ_ASSERT(aRect, "Null rect being set!");
-
-  Reset();
-  mValue.mRect = aRect;
-  if (mValue.mRect) {
-    NS_ADDREF(mValue.mRect);
-    mType = CSS_RECT;
-  }
-  else {
-    mType = CSS_UNKNOWN;
-  }
-}
-
-void
 nsROCSSPrimitiveValue::SetTime(float aValue)
 {
   Reset();
@@ -513,10 +455,6 @@ nsROCSSPrimitiveValue::Reset()
       break;
     case CSS_URI:
       NS_IF_RELEASE(mValue.mURI);
-      break;
-    case CSS_RECT:
-      NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
-      NS_RELEASE(mValue.mRect);
       break;
   }
 
