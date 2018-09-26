@@ -191,7 +191,9 @@ dependencies {
     implementation "org.mozilla.components:autocomplete:$mozilla_components_version"
     implementation "org.mozilla.components:search:$mozilla_components_version"
     implementation "org.mozilla.photon:colors:$mozilla_components_version"
-    implementation "org.mozilla.components:fretboard:$mozilla_components_version"
+    implementation "org.mozilla.components:fretboard:$mozilla_components_version", {
+        exclude group: 'android.arch.work', module: 'work-runtime'
+    }
 
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
 
