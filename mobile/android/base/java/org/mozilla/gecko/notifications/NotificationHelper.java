@@ -506,6 +506,8 @@ public final class NotificationHelper implements BundleEventListener {
         // them when geckoapp is destroyed.
         if (!persistent && !mClearableNotifications.containsKey(id)) {
             mClearableNotifications.put(id, message);
+        } else if (persistent && mClearableNotifications.containsKey(id)) {
+            mClearableNotifications.remove(id);
         }
     }
 
