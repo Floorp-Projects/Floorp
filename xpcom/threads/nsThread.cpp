@@ -115,9 +115,6 @@ NS_DECL_CI_INTERFACE_GETTER(nsThread)
 
 Array<char, nsThread::kRunnableNameBufSize> nsThread::sMainThreadRunnableName;
 
-uint32_t nsThread::sActiveThreads;
-uint32_t nsThread::sMaxActiveThreads;
-
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo
 // somewhat manually.
@@ -419,40 +416,6 @@ nsThread::Enumerate()
   return {};
 }
 
-/* static */ uint32_t
-nsThread::MaxActiveThreads()
-{
-  OffTheBooksMutexAutoLock mal(ThreadListMutex());
-  return sMaxActiveThreads;
-}
-
-void
-nsThread::AddToThreadList()
-{
-  OffTheBooksMutexAutoLock mal(ThreadListMutex());
-  MOZ_ASSERT(!isInList());
-
-  sActiveThreads++;
-  sMaxActiveThreads = std::max(sActiveThreads, sMaxActiveThreads);
-
-  ThreadList().insertBack(this);
-}
-
-void
-nsThread::MaybeRemoveFromThreadList()
-{
-  // We shouldn't need to lock before checking isInList at this point. We're
-  // destroying the last reference to this object, so there's no way for anyone
-  // else to remove it in the middle of our check. And the not-in-list state is
-  // determined the element's next and previous members pointing to itself, so a
-  // non-atomic update to an adjacent member won't affect the outcome either.
-  if (isInList()) {
-    OffTheBooksMutexAutoLock mal(ThreadListMutex());
-    sActiveThreads--;
-    removeFrom(ThreadList());
-  }
-}
-
 /*static*/ void
 nsThread::ThreadFunc(void* aArg)
 {
@@ -460,9 +423,6 @@ nsThread::ThreadFunc(void* aArg)
 
   ThreadInitData* initData = static_cast<ThreadInitData*>(aArg);
   nsThread* self = initData->thread;  // strong reference
-
-  MOZ_ASSERT(self->mEventTarget);
-  MOZ_ASSERT(self->mEvents);
 
   self->mThread = PR_GetCurrentThread();
   self->mVirtualThread = GetCurrentVirtualThread();
@@ -625,7 +585,8 @@ nsThread::InitCommon()
 #endif
   }
 
-  AddToThreadList();
+  OffTheBooksMutexAutoLock mal(ThreadListMutex());
+  ThreadList().insertBack(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -655,33 +616,20 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
 {
 }
 
-
-nsThread::nsThread()
-  : mEvents(nullptr)
-  , mEventTarget(nullptr)
-  , mShutdownContext(nullptr)
-  , mScriptObserver(nullptr)
-  , mThread(nullptr)
-  , mStackSize(0)
-  , mNestedEventLoopDepth(0)
-  , mCurrentEventLoopDepth(-1)
-  , mShutdownRequired(false)
-  , mPriority(PRIORITY_NORMAL)
-  , mIsMainThread(NOT_MAIN_THREAD)
-  , mCanInvokeJS(false)
-  , mCurrentEvent(nullptr)
-  , mCurrentEventStart(TimeStamp::Now())
-  , mCurrentPerformanceCounter(nullptr)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-}
-
 nsThread::~nsThread()
 {
   NS_ASSERTION(mRequestedShutdownContexts.IsEmpty(),
                "shouldn't be waiting on other threads to shutdown");
 
-  MaybeRemoveFromThreadList();
+  // We shouldn't need to lock before checking isInList at this point. We're
+  // destroying the last reference to this object, so there's no way for anyone
+  // else to remove it in the middle of our check. And the not-in-list state is
+  // determined the element's next and previous members pointing to itself, so a
+  // non-atomic update to an adjacent member won't affect the outcome either.
+  if (isInList()) {
+    OffTheBooksMutexAutoLock mal(ThreadListMutex());
+    removeFrom(ThreadList());
+  }
 
 #ifdef DEBUG
   // We deliberately leak these so they can be tracked by the leak checker.
@@ -699,9 +647,6 @@ nsThread::~nsThread()
 nsresult
 nsThread::Init(const nsACString& aName)
 {
-  MOZ_ASSERT(mEvents);
-  MOZ_ASSERT(mEventTarget);
-
   // spawn thread and wait until it is fully setup
   RefPtr<nsThreadStartupEvent> startup = new nsThreadStartupEvent();
 
@@ -750,9 +695,6 @@ nsThread::InitCurrentThread()
 NS_IMETHODIMP
 nsThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 {
-  MOZ_ASSERT(mEventTarget);
-  NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
-
   nsCOMPtr<nsIRunnable> event(aEvent);
   return mEventTarget->Dispatch(event.forget(), aFlags);
 }
@@ -760,9 +702,6 @@ nsThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 NS_IMETHODIMP
 nsThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
-  MOZ_ASSERT(mEventTarget);
-  NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
-
   LOG(("THRD(%p) Dispatch [%p %x]\n", this, /* XXX aEvent */nullptr, aFlags));
 
   return mEventTarget->Dispatch(std::move(aEvent), aFlags);
@@ -771,20 +710,13 @@ nsThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 NS_IMETHODIMP
 nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelayMs)
 {
-  MOZ_ASSERT(mEventTarget);
-  NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
-
   return mEventTarget->DelayedDispatch(std::move(aEvent), aDelayMs);
 }
 
 NS_IMETHODIMP
 nsThread::IsOnCurrentThread(bool* aResult)
 {
-  if (mEventTarget) {
-    return mEventTarget->IsOnCurrentThread(aResult);
-  }
-  *aResult = GetCurrentVirtualThread() == mVirtualThread;
-  return NS_OK;
+  return mEventTarget->IsOnCurrentThread(aResult);
 }
 
 NS_IMETHODIMP_(bool)
@@ -836,8 +768,6 @@ nsThread::AsyncShutdown()
 nsThreadShutdownContext*
 nsThread::ShutdownInternal(bool aSync)
 {
-  MOZ_ASSERT(mEvents);
-  MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mThread != PR_GetCurrentThread());
   if (NS_WARN_IF(mThread == PR_GetCurrentThread())) {
@@ -849,7 +779,12 @@ nsThread::ShutdownInternal(bool aSync)
     return nullptr;
   }
 
-  MaybeRemoveFromThreadList();
+  {
+    OffTheBooksMutexAutoLock mal(ThreadListMutex());
+    if (isInList()) {
+      removeFrom(ThreadList());
+    }
+  }
 
   NotNull<nsThread*> currentThread =
     WrapNotNull(nsThreadManager::get().GetCurrentThread());
@@ -874,12 +809,15 @@ nsThread::ShutdownInternal(bool aSync)
 void
 nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext)
 {
-  MOZ_ASSERT(mEvents);
-  MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(aContext->mTerminatingThread == this);
 
-  MaybeRemoveFromThreadList();
+  {
+    OffTheBooksMutexAutoLock mal(ThreadListMutex());
+    if (isInList()) {
+      removeFrom(ThreadList());
+    }
+  }
 
   if (aContext->mAwaitingShutdownAck) {
     // We're in a synchronous shutdown, so tell whatever is up the stack that
@@ -1094,9 +1032,6 @@ nsThread::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 NS_IMETHODIMP
 nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 {
-  MOZ_ASSERT(mEvents);
-  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
-
   LOG(("THRD(%p) ProcessNextEvent [%u %u]\n", this, aMayWait,
        mNestedEventLoopDepth));
 
@@ -1329,9 +1264,6 @@ nsThread::AdjustPriority(int32_t aDelta)
 NS_IMETHODIMP
 nsThread::GetObserver(nsIThreadObserver** aObs)
 {
-  MOZ_ASSERT(mEvents);
-  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
-
   nsCOMPtr<nsIThreadObserver> obs = mEvents->GetObserver();
   obs.forget(aObs);
   return NS_OK;
@@ -1340,9 +1272,6 @@ nsThread::GetObserver(nsIThreadObserver** aObs)
 NS_IMETHODIMP
 nsThread::SetObserver(nsIThreadObserver* aObs)
 {
-  MOZ_ASSERT(mEvents);
-  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
-
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
@@ -1361,9 +1290,6 @@ nsThread::RecursionDepth() const
 NS_IMETHODIMP
 nsThread::AddObserver(nsIThreadObserver* aObserver)
 {
-  MOZ_ASSERT(mEvents);
-  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
-
   if (NS_WARN_IF(!aObserver)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1379,9 +1305,6 @@ nsThread::AddObserver(nsIThreadObserver* aObserver)
 NS_IMETHODIMP
 nsThread::RemoveObserver(nsIThreadObserver* aObserver)
 {
-  MOZ_ASSERT(mEvents);
-  NS_ENSURE_TRUE(mEvents, NS_ERROR_NOT_IMPLEMENTED);
-
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
     return NS_ERROR_NOT_SAME_THREAD;
   }

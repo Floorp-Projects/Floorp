@@ -225,7 +225,7 @@ PRThread *watched_thread = nullptr;
  * When the thread a mutex is invoked on isn't watched_thread we save it to this
  * variable.
  */
-nsIThread* last_non_watched_thread = nullptr;
+PRThread *last_non_watched_thread = nullptr;
 
 /**
  * Set a flag if the mutex is used on the thread we are watching, but always
@@ -233,10 +233,11 @@ nsIThread* last_non_watched_thread = nullptr;
  */
 extern "C" void wrapped_MutexEnter(sqlite3_mutex *mutex)
 {
-  if (PR_GetCurrentThread() == watched_thread)
+  PRThread *curThread = ::PR_GetCurrentThread();
+  if (curThread == watched_thread)
     mutex_used_on_watched_thread = true;
   else
-    last_non_watched_thread = NS_GetCurrentThread();
+    last_non_watched_thread = curThread;
   orig_mutex_methods.xMutexEnter(mutex);
 }
 
@@ -350,13 +351,19 @@ get_conn_async_thread(mozIStorageConnection *db)
   blocking_async_execute(stmt);
   stmt->Finalize();
 
-  nsCOMPtr<nsIThread> asyncThread = last_non_watched_thread;
+  nsCOMPtr<nsIThreadManager> threadMan =
+    do_GetService("@mozilla.org/thread-manager;1");
+  nsCOMPtr<nsIThread> asyncThread;
+  threadMan->GetThreadFromPRThread(last_non_watched_thread,
+                                   getter_AddRefs(asyncThread));
 
   // Additionally, check that the thread we get as the background thread is the
   // same one as the one we report from getInterface.
   nsCOMPtr<nsIEventTarget> target = do_GetInterface(db);
   nsCOMPtr<nsIThread> allegedAsyncThread = do_QueryInterface(target);
-  do_check_eq(allegedAsyncThread, asyncThread);
+  PRThread *allegedPRThread;
+  (void)allegedAsyncThread->GetPRThread(&allegedPRThread);
+  do_check_eq(allegedPRThread, last_non_watched_thread);
   return asyncThread.forget();
 }
 
