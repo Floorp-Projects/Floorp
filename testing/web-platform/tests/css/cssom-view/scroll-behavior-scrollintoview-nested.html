@@ -51,7 +51,7 @@
   // The CSSOM-View spec and implementations follow different algorithms (scrolls performed in parallel, as inner-to-outer sequence or as outer-to-inner sequence).
   // See https://github.com/w3c/csswg-drafts/issues/3127
   promise_test(() => {
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
       var divs = document.querySelectorAll(".scrollable");
       divs.forEach((scrollableDiv) => {
         resetScroll(scrollableDiv);
@@ -68,16 +68,20 @@
       });
 
       observeScrolling(Array.from(divs), function(done) {
+        try {
+          divs.forEach((scrollableDiv) => {
+            assert_less_than_equal(scrollTop.get(scrollableDiv), scrollableDiv.scrollTop, "ScrollTop keeps increasing");
+            if (!isSmooth.get(scrollableDiv))
+              assert_any(assert_equals, scrollableDiv.scrollTop, [0, 500], "Element with instant behavior should jump to the final position");
+            if (done)
+              assert_equals(scrollableDiv.scrollTop, 500, "Final value of scrollTop");
+            scrollTop.set(scrollableDiv, scrollableDiv.scrollTop);
+          });
+        } catch(e) {
+          reject(e);
+        }
         if (done)
-          requestAnimationFrame(resolve);
-        divs.forEach((scrollableDiv) => {
-          assert_less_than_equal(scrollTop.get(scrollableDiv), scrollableDiv.scrollTop, "ScrollTop keeps increasing");
-          if (!isSmooth.get(scrollableDiv))
-            assert_any(assert_equals, scrollableDiv.scrollTop, [0, 500], "Element with instant behavior should jump to the final position");
-          if (done)
-            assert_equals(scrollableDiv.scrollTop, 500, "Final value of scrollTop");
-          scrollTop.set(scrollableDiv, scrollableDiv.scrollTop);
-        });
+          resolve();
       });
     });
   }, "scrollIntoView with nested elements with different scroll-behavior");
