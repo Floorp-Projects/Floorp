@@ -89,11 +89,6 @@ class JS_PUBLIC_API(SliceBudget)
     bool isTimeBudget() const { return !deadline.IsNull() && !isUnlimited(); }
     bool isUnlimited() const { return deadline == unlimitedDeadline; }
 
-    mozilla::TimeDuration toDuration() const {
-        MOZ_ASSERT(isTimeBudget());
-        return mozilla::TimeDuration::FromMilliseconds(timeBudget.budget);
-    }
-
     int describe(char* buffer, size_t maxlen) const;
 
     static void Init();
