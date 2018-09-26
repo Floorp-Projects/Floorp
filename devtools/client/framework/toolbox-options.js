@@ -514,7 +514,7 @@ OptionsPanel.prototype = {
             "javascriptEnabled": this._origJavascriptEnabled,
             "performReload": false
           };
-          this.target.activeTab.reconfigure(options, resolve);
+          this.target.activeTab.reconfigure(options).then(resolve);
         } else {
           resolve();
         }

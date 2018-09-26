@@ -495,7 +495,7 @@ Workers.prototype = {
       return;
     }
 
-    this._tabClient.listWorkers((response) => {
+    this._tabClient.listWorkers().then((response) => {
       let workerForms = Object.create(null);
       for (let worker of response.workers) {
         workerForms[worker.actor] = worker;
