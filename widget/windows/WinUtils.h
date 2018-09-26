@@ -103,6 +103,7 @@ AreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT, DPI_AWARENESS_CONTEXT);
 #endif /* WINVER < 0x0605 */
 typedef DPI_AWARENESS_CONTEXT(WINAPI * SetThreadDpiAwarenessContextProc)(DPI_AWARENESS_CONTEXT);
 typedef BOOL(WINAPI * EnableNonClientDpiScalingProc)(HWND);
+typedef int (WINAPI * GetSystemMetricsForDpiProc)(int, UINT);
 
 namespace mozilla {
 enum class PointerCapabilities : uint8_t;
@@ -163,6 +164,7 @@ class WinUtils
   // the Win10 update version -- will be set up in Initialize().
   static SetThreadDpiAwarenessContextProc sSetThreadDpiAwarenessContext;
   static EnableNonClientDpiScalingProc sEnableNonClientDpiScaling;
+  static GetSystemMetricsForDpiProc sGetSystemMetricsForDpi;
 
 public:
   class AutoSystemDpiAware
@@ -226,6 +228,9 @@ public:
   static int32_t LogToPhys(HMONITOR aMonitor, double aValue);
   static HMONITOR GetPrimaryMonitor();
   static HMONITOR MonitorFromRect(const gfx::Rect& rect);
+
+  static bool HasSystemMetricsForDpi();
+  static int GetSystemMetricsForDpi(int nIndex, UINT dpi);
 
   /**
    * Logging helpers that dump output to prlog module 'Widget', console, and

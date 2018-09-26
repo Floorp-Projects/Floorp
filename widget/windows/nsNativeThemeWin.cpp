@@ -2168,9 +2168,20 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     // XXX Maximized windows have an offscreen offset equal to
     // the border padding. This should be addressed in nsWindow,
     // but currently can't be, see UpdateNonClientMargins.
-    if (aWidgetType == StyleAppearance::MozWindowTitlebarMaximized)
-      aResult->top = GetSystemMetrics(SM_CXFRAME)
-                   + GetSystemMetrics(SM_CXPADDEDBORDER);
+    if (aWidgetType == StyleAppearance::MozWindowTitlebarMaximized) {
+      nsIWidget* rootWidget = nullptr;
+      if (WinUtils::HasSystemMetricsForDpi()) {
+        rootWidget = aFrame->PresContext()->GetRootWidget();
+      }
+      if (rootWidget) {
+        double dpi = rootWidget->GetDPI();
+        aResult->top = WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi)
+                     + WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+      } else {
+        aResult->top = GetSystemMetrics(SM_CXFRAME)
+                     + GetSystemMetrics(SM_CXPADDEDBORDER);
+      }
+    }
     return ok;
   }
 
