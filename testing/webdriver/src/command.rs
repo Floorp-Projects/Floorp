@@ -54,7 +54,6 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetTimeouts,
     SetTimeouts(TimeoutsParameters),
     ElementClick(WebElement),
-    ElementTap(WebElement),
     ElementClear(WebElement),
     ElementSendKeys(WebElement, SendKeysParameters),
     PerformActions(ActionsParameters),
@@ -263,15 +262,6 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 );
                 let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::ElementClick(element)
-            }
-            Route::ElementTap => {
-                let element_id = try_opt!(
-                    params.name("elementId"),
-                    ErrorStatus::InvalidArgument,
-                    "Missing elementId parameter"
-                );
-                let element = WebElement::new(element_id.as_str().into());
-                WebDriverCommand::ElementTap(element)
             }
             Route::ElementClear => {
                 let element_id = try_opt!(

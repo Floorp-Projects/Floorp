@@ -1610,7 +1610,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       getGripDepth: () => this._gripDepth,
       incrementGripDepth: () => this._gripDepth++,
       decrementGripDepth: () => this._gripDepth--,
-      createValueGrip: v => createValueGrip(v, this._pausePool, this.pauseObjectGrip),
+      createValueGrip: v => {
+        if (this._pausePool) {
+          return createValueGrip(v, this._pausePool, this.pauseObjectGrip);
+        }
+
+        return createValueGrip(v, this.threadLifetimePool, this.objectGrip);
+      },
       sources: () => this.sources,
       createEnvironmentActor: (e, p) => this.createEnvironmentActor(e, p),
       promote: () => this.threadObjectGrip(actor),

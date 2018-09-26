@@ -179,6 +179,18 @@ public:
    * Convert the table to an Accessible*.
    */
   virtual Accessible* AsAccessible() = 0;
+
+protected:
+
+  /**
+   * Return row accessible at the given row index.
+   */
+  Accessible* RowAt(int32_t aRow);
+
+  /**
+   * Return cell accessible at the given column index in the row.
+   */
+  Accessible* CellInRowAt(Accessible* aRow, int32_t aColumn);
 };
 
 } // namespace a11y

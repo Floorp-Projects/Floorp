@@ -61,6 +61,18 @@ enum class ClipMode {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+// Specifies the color depth of an image. Currently only used for YUV images.
+enum class ColorDepth : uint8_t {
+  // 8 bits image (most common)
+  Color8,
+  // 10 bits image
+  Color10,
+  // 12 bits image
+  Color12,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class ExtendMode : uint32_t {
   Clamp,
   Repeat,
@@ -934,6 +946,8 @@ struct GlyphOptions {
   }
 };
 
+using WrColorDepth = ColorDepth;
+
 using WrYuvColorSpace = YuvColorSpace;
 
 struct ByteSlice {
@@ -1490,6 +1504,7 @@ void wr_dp_push_yuv_NV12_image(WrState *aState,
                                bool aIsBackfaceVisible,
                                WrImageKey aImageKey0,
                                WrImageKey aImageKey1,
+                               WrColorDepth aColorDepth,
                                WrYuvColorSpace aColorSpace,
                                ImageRendering aImageRendering)
 WR_FUNC;
@@ -1501,6 +1516,7 @@ void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       LayoutRect aClip,
                                       bool aIsBackfaceVisible,
                                       WrImageKey aImageKey0,
+                                      WrColorDepth aColorDepth,
                                       WrYuvColorSpace aColorSpace,
                                       ImageRendering aImageRendering)
 WR_FUNC;
@@ -1514,6 +1530,7 @@ void wr_dp_push_yuv_planar_image(WrState *aState,
                                  WrImageKey aImageKey0,
                                  WrImageKey aImageKey1,
                                  WrImageKey aImageKey2,
+                                 WrColorDepth aColorDepth,
                                  WrYuvColorSpace aColorSpace,
                                  ImageRendering aImageRendering)
 WR_FUNC;
