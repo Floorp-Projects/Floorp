@@ -85,7 +85,7 @@ android-test-ccov/opt:
     fetches:
         # We use a fetch instead of toolchains here, because mozharness expects
         # it there (since the code is shared with tests that don't support
-        # `toolchains`.
+        # `toolchains`).
         toolchain:
             - linux64-grcov
 
