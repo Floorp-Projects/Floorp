@@ -111,7 +111,7 @@ class Settings private constructor(context: Context) {
     fun shouldAutocompleteFromCustomDomainList() =
             preferences.getBoolean(
                     getPreferenceKey(R.string.pref_key_autocomplete_custom),
-                    false)
+                    true)
 
     fun shouldBlockAdTrackers() =
             preferences.getBoolean(
