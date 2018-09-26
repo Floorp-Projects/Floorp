@@ -75,6 +75,13 @@ class TestMozinfo(unittest.TestCase):
         self.assertEqual(mozinfo.find_and_update_from_json(self.tempdir), j)
         self.assertEqual(mozinfo.info["foo"], "abcdefg")
 
+    def test_find_and_update_file_no_argument(self):
+        """Test that mozinfo.find_and_update_from_json can
+        handle not being given any arguments.
+        """
+        with self.assertRaises(EnvironmentError):
+            self.assertEqual(mozinfo.find_and_update_from_json())
+
     def test_find_and_update_file_invalid_json(self):
         """Test that mozinfo.find_and_update_from_json can
         handle invalid JSON"""
@@ -82,6 +89,42 @@ class TestMozinfo(unittest.TestCase):
         with open(j, 'w') as f:
             f.write('invalid{"json":')
         self.assertRaises(ValueError, mozinfo.find_and_update_from_json, self.tempdir)
+
+    def test_find_and_update_file_raise_exception(self):
+        """Test that mozinfo.find_and_update_from_json raises
+        an IOError exception if a True boolean value is
+        provided as the only argument.
+        """
+        with self.assertRaises(EnvironmentError):
+            mozinfo.find_and_update_from_json(raise_exception=True)
+
+    def test_find_and_update_file_raise_exception_multiple_arguments(self):
+        """Test that mozinfo.find_and_update_from_json raises
+        an IOError exception if a True boolean value is
+        provided as last positional argument.
+        """
+        with self.assertRaises(EnvironmentError):
+            mozinfo.find_and_update_from_json(self.tempdir, raise_exception=True)
+
+    def test_find_and_update_file_suppress_exception(self):
+        """Test that mozinfo.find_and_update_from_json suppresses
+        an IOError exception if a False boolean value is
+        provided as the only argument.
+        """
+        self.assertEqual(mozinfo.find_and_update_from_json(
+            raise_exception=False), None)
+
+    def test_find_and_update_file_suppress_exception_multiple_arguments(self):
+        """Test that mozinfo.find_and_update_from_json suppresses
+        an IOError exception if a False boolean value is
+        provided as last positional argument.
+        """
+        j = os.path.join(self.tempdir, "mozinfo.json")
+        with open(j, "w") as f:
+            f.write(json.dumps({"foo": "abcdefg"}))
+        self.assertEqual(mozinfo.find_and_update_from_json(
+            self.tempdir, raise_exception=False), j)
+        self.assertEqual(mozinfo.info["foo"], "abcdefg")
 
     def test_find_and_update_file_mozbuild(self):
         """Test that mozinfo.find_and_update_from_json can
