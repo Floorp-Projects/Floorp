@@ -508,6 +508,53 @@ const proto = {
   },
 
   /**
+   * Handle a protocol request to provide the value of the object's
+   * specified property.
+   *
+   * Note: Since this will evaluate getters, it can trigger execution of
+   * content code and may cause side effects. This endpoint should only be used
+   * when you are confident that the side-effects will be safe, or the user
+   * is expecting the effects.
+   *
+   * @param {string} name
+   *        The property we want the value of.
+   */
+  propertyValue: function(name) {
+    if (!name) {
+      return this.throwError("missingParameter", "no property name was specified");
+    }
+
+    const value = this.obj.getProperty(name);
+
+    return { value: this._buildCompletion(value) };
+  },
+
+  /**
+   * Converts a Debugger API completion value record into an eqivalent
+   * object grip for use by the API.
+   *
+   * See https://developer.mozilla.org/en-US/docs/Tools/Debugger-API/Conventions#completion-values
+   * for more specifics on the expected behavior.
+   */
+  _buildCompletion(value) {
+    let completionGrip = null;
+
+    // .apply result will be falsy if the script being executed is terminated
+    // via the "slow script" dialog.
+    if (value) {
+      completionGrip = {};
+      if ("return" in value) {
+        completionGrip.return = this.hooks.createValueGrip(value.return);
+      }
+      if ("throw" in value) {
+        completionGrip.throw = this.hooks.createValueGrip(value.throw);
+      }
+    }
+
+    return completionGrip;
+  },
+
+  /**
    * Handle a protocol request to provide the display string for the object.
    */
   displayString: function() {
