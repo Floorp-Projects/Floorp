@@ -119,8 +119,6 @@ public:
   // react.
   void NotifyEvictedFromRenderingObserverList();
 
-  bool IsInObserverList() const { return mInObserverList; }
-
   nsIFrame* GetReferencedFrame();
   /**
    * @param aOK this is only for the convenience of callers. We set *aOK to false
@@ -366,7 +364,6 @@ public:
                         nsIFrame* aFiltedFrame = nullptr);
 
   bool ReferencesValidResources();
-  bool IsInObserverLists() const;
   void Invalidate() { OnRenderingChange(); }
 
   // nsISupports

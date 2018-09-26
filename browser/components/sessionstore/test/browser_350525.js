@@ -17,25 +17,25 @@ add_task(async function() {
   }
 
   /**
-   * setWindowValue, et al.
+   * setCustomWindowValue, et al.
    */
   let key = "Unique name: " + Date.now();
   let value = "Unique value: " + Math.random();
 
   // test adding
-  ok(test(() => ss.setWindowValue(window, key, value)), "set a window value");
+  ok(test(() => ss.setCustomWindowValue(window, key, value)), "set a window value");
 
   // test retrieving
-  is(ss.getWindowValue(window, key), value, "stored window value matches original");
+  is(ss.getCustomWindowValue(window, key), value, "stored window value matches original");
 
   // test deleting
-  ok(test(() => ss.deleteWindowValue(window, key)), "delete the window value");
+  ok(test(() => ss.deleteCustomWindowValue(window, key)), "delete the window value");
 
   // value should not exist post-delete
-  is(ss.getWindowValue(window, key), "", "window value was deleted");
+  is(ss.getCustomWindowValue(window, key), "", "window value was deleted");
 
   // test deleting a non-existent value
-  ok(test(() => ss.deleteWindowValue(window, key)), "delete non-existent window value");
+  ok(test(() => ss.deleteCustomWindowValue(window, key)), "delete non-existent window value");
 
   /**
    * setCustomTabValue, et al.

@@ -18,7 +18,7 @@
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
 #include "nsNameSpaceManager.h"
-#include "nsIListControlFrame.h"
+#include "nsListControlFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "mozilla/PresState.h"
@@ -32,7 +32,6 @@
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
-#include "nsListControlFrame.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
@@ -252,7 +251,6 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
 
 NS_QUERYFRAME_HEAD(nsComboboxControlFrame)
   NS_QUERYFRAME_ENTRY(nsComboboxControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIComboboxControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
@@ -936,9 +934,6 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 
-//----------------------------------------------------------------------
-// nsIComboboxControlFrame
-//----------------------------------------------------------------------
 void
 nsComboboxControlFrame::ShowDropDown(bool aDoDropDown)
 {
@@ -991,7 +986,7 @@ nsComboboxControlFrame::GetDropDown()
 ///////////////////////////////////////////////////////////////
 
 
-NS_IMETHODIMP
+nsresult
 nsComboboxControlFrame::RedisplaySelectedText()
 {
   nsAutoScriptBlocker scriptBlocker;

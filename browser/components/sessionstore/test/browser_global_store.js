@@ -23,20 +23,20 @@ add_task(async function() {
   };
 
   function testRestoredState() {
-    is(ss.getGlobalValue(key1), value1, "restored state has global value");
+    is(ss.getCustomGlobalValue(key1), value1, "restored state has global value");
   }
 
   function testGlobalStore() {
-    is(ss.getGlobalValue(key2), "", "global value initially not set");
+    is(ss.getCustomGlobalValue(key2), "", "global value initially not set");
 
-    ss.setGlobalValue(key2, value1);
-    is(ss.getGlobalValue(key2), value1, "retreived value matches stored");
+    ss.setCustomGlobalValue(key2, value1);
+    is(ss.getCustomGlobalValue(key2), value1, "retreived value matches stored");
 
-    ss.setGlobalValue(key2, value2);
-    is(ss.getGlobalValue(key2), value2, "previously stored value was overwritten");
+    ss.setCustomGlobalValue(key2, value2);
+    is(ss.getCustomGlobalValue(key2), value2, "previously stored value was overwritten");
 
-    ss.deleteGlobalValue(key2);
-    is(ss.getGlobalValue(key2), "", "global value was deleted");
+    ss.deleteCustomGlobalValue(key2);
+    is(ss.getCustomGlobalValue(key2), "", "global value was deleted");
   }
 
   await promiseBrowserState(testState);

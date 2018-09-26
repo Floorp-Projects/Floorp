@@ -325,9 +325,6 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
   SVGFilterObserverListForCSSProp* observers =
     SVGObserverUtils::GetFilterObserverList(firstFrame);
-  if (!observers || !observers->IsInObserverLists()) {
-    return aInvalidRegion;
-  }
 
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
 
@@ -336,6 +333,10 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
     // perhaps because we're in the middle of tearing stuff down.
     // Be conservative, return our visual overflow rect relative
     // to the reference frame.
+    // XXX we may get here purely due to an SVG mask, in which case there is
+    // no need to do this it causes over-invalidation. See:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1494110
+    // Do we still even need this for filters? If so, why?
     nsRect overflow = aFrame->GetVisualOverflowRect() + aToReferenceFrame;
     return overflow.ToOutsidePixels(appUnitsPerDevPixel);
   }

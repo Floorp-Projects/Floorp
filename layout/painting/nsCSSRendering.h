@@ -591,19 +591,47 @@ struct nsCSSRendering
    */
   static void EndFrameTreesLocked();
 
-  // Draw a border segment in the table collapsing border model without
-  // beveling corners
+  // Draw a border segment in the table collapsing border model with beveling
+  // corners.
   static void DrawTableBorderSegment(
     DrawTarget& aDrawTarget,
     uint8_t aBorderStyle,
     nscolor aBorderColor,
-    nscolor aBGColor,
     const nsRect& aBorderRect,
     int32_t aAppUnitsPerDevPixel,
-    mozilla::Side aStartBevelSide = mozilla::eSideTop,
-    nscoord aStartBevelOffset = 0,
-    mozilla::Side aEndBevelSide = mozilla::eSideTop,
-    nscoord aEndBevelOffset = 0);
+    mozilla::Side aStartBevelSide,
+    nscoord aStartBevelOffset,
+    mozilla::Side aEndBevelSide,
+    nscoord aEndBevelOffset);
+
+  // A single border bevel.
+  struct Bevel
+  {
+    mozilla::Side mSide;
+    nscoord mOffset;
+  };
+
+  // A single solid beveled border segment.
+  struct SolidBeveledBorderSegment
+  {
+    nsRect mRect;
+    nscolor mColor;
+    Bevel mStartBevel;
+    Bevel mEndBevel;
+  };
+
+  // Collect the table border segments with beveling. Can't be called with
+  // dashed / dotted borders, since we don't support beveling those.
+  static void GetTableBorderSolidSegments(
+      nsTArray<SolidBeveledBorderSegment>& aSegments,
+      uint8_t aBorderStyle,
+      nscolor aBorderColor,
+      const nsRect& aBorderRect,
+      int32_t aAppUnitsPerDevPixel,
+      mozilla::Side aStartBevelSide,
+      nscoord aStartBevelOffset,
+      mozilla::Side aEndBevelSide,
+      nscoord aEndBevelOffset);
 
   // NOTE: pt, dirtyRect, lineSize, ascent, offset in the following
   //       structs are non-rounded device pixels, not app units.
