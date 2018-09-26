@@ -35,14 +35,16 @@ MergeArrayRuns(T* dst, const T* src, size_t run1, size_t run2, Comparator c)
     /* Copy runs already in sorted order. */
     const T* b = src + run1;
     bool lessOrEqual;
-    if (!c(b[-1],  b[0], &lessOrEqual))
+    if (!c(b[-1],  b[0], &lessOrEqual)) {
         return false;
+    }
 
     if (!lessOrEqual) {
         /* Runs are not already sorted, merge them. */
         for (const T* a = src;;) {
-            if (!c(*a, *b, &lessOrEqual))
+            if (!c(*a, *b, &lessOrEqual)) {
                 return false;
+            }
             if (lessOrEqual) {
                 *dst++ = *a++;
                 if (!--run1) {
@@ -83,8 +85,9 @@ MergeSort(T* array, size_t nelems, T* scratch, Comparator c)
 {
     const size_t INS_SORT_LIMIT = 3;
 
-    if (nelems <= 1)
+    if (nelems <= 1) {
         return true;
+    }
 
     /*
      * Apply insertion sort to small chunks to reduce the number of merge
@@ -92,20 +95,24 @@ MergeSort(T* array, size_t nelems, T* scratch, Comparator c)
      */
     for (size_t lo = 0; lo < nelems; lo += INS_SORT_LIMIT) {
         size_t hi = lo + INS_SORT_LIMIT;
-        if (hi >= nelems)
+        if (hi >= nelems) {
             hi = nelems;
+        }
         for (size_t i = lo + 1; i != hi; i++) {
             for (size_t j = i; ;) {
                 bool lessOrEqual;
-                if (!c(array[j - 1], array[j], &lessOrEqual))
+                if (!c(array[j - 1], array[j], &lessOrEqual)) {
                     return false;
-                if (lessOrEqual)
+                }
+                if (lessOrEqual) {
                     break;
+                }
                 T tmp = array[j - 1];
                 array[j - 1] = array[j];
                 array[j] = tmp;
-                if (--j == lo)
+                if (--j == lo) {
                     break;
+                }
             }
         }
     }
@@ -120,15 +127,17 @@ MergeSort(T* array, size_t nelems, T* scratch, Comparator c)
                 break;
             }
             size_t run2 = (run <= nelems - hi) ? run : nelems - hi;
-            if (!detail::MergeArrayRuns(vec2 + lo, vec1 + lo, run, run2, c))
+            if (!detail::MergeArrayRuns(vec2 + lo, vec1 + lo, run, run2, c)) {
                 return false;
+            }
         }
         T* swap = vec1;
         vec1 = vec2;
         vec2 = swap;
     }
-    if (vec1 == scratch)
+    if (vec1 == scratch) {
         detail::CopyNonEmptyArray(array, scratch, nelems);
+    }
     return true;
 }
 

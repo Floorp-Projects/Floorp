@@ -35,22 +35,25 @@ class MOZ_STACK_CLASS Nestable
 
     template <typename Predicate /* (Concrete*) -> bool */>
     static Concrete* findNearest(Concrete* it, Predicate predicate) {
-        while (it && !predicate(it))
+        while (it && !predicate(it)) {
             it = it->enclosing();
+        }
         return it;
     }
 
     template <typename T>
     static T* findNearest(Concrete* it) {
-        while (it && !it->template is<T>())
+        while (it && !it->template is<T>()) {
             it = it->enclosing();
+        }
         return it ? &it->template as<T>() : nullptr;
     }
 
     template <typename T, typename Predicate /* (T*) -> bool */>
     static T* findNearest(Concrete* it, Predicate predicate) {
-        while (it && (!it->template is<T>() || !predicate(&it->template as<T>())))
+        while (it && (!it->template is<T>() || !predicate(&it->template as<T>()))) {
             it = it->enclosing();
+        }
         return it ? &it->template as<T>() : nullptr;
     }
 
