@@ -91,7 +91,14 @@ function runtimesReducer(state = RuntimesState(), action) {
 
     case USB_RUNTIMES_UPDATED: {
       const { runtimes } = action;
-      return Object.assign({}, state, { usbRuntimes: runtimes });
+      const usbRuntimes = runtimes.map(runtime => {
+        return {
+          id: runtime.id,
+          name: runtime.name,
+          type: RUNTIMES.USB,
+        };
+      });
+      return Object.assign({}, state, { usbRuntimes });
     }
 
     case WATCH_RUNTIME_SUCCESS: {
