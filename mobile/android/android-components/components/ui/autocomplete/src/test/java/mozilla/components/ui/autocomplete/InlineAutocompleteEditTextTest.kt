@@ -24,12 +24,14 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.doReturn
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.Companion.AUTOCOMPLETE_SPAN
 import org.mockito.ArgumentMatchers.any
 
 @RunWith(RobolectricTestRunner::class)
+@Config(constants = BuildConfig::class)
 class InlineAutocompleteEditTextTest {
     private val context: Context = RuntimeEnvironment.application
     private val attributes: AttributeSet = mock(AttributeSet::class.java)

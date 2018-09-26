@@ -34,4 +34,4 @@ internal class BrowserMenuAdapter(
     }
 }
 
-class BrowserMenuItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+class BrowserMenuItemViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView)

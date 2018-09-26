@@ -50,7 +50,7 @@ class BrowserMenuTest {
         val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
         assertNotNull(recyclerView)
 
-        val recyclerAdapter = recyclerView.adapter!!
+        val recyclerAdapter = recyclerView.adapter
         assertNotNull(recyclerAdapter)
         assertEquals(2, recyclerAdapter.itemCount)
     }

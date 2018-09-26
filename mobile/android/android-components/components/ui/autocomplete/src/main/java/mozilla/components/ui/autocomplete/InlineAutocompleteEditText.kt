@@ -235,10 +235,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         resetAutocompleteState()
     }
 
-    override fun getText(): Editable {
-        return super.getText() as Editable
-    }
-
     override fun sendAccessibilityEventUnchecked(event: AccessibilityEvent) {
         // We need to bypass the isShown() check in the default implementation
         // for TYPE_VIEW_TEXT_SELECTION_CHANGED events so that accessibility
@@ -489,7 +485,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
                 return super.deleteSurroundingText(beforeLength, afterLength)
             }
 
-            @Suppress("ComplexCondition")
             private fun removeAutocompleteOnComposing(text: CharSequence): Boolean {
                 val editable = getText()
                 val composingStart = BaseInputConnection.getComposingSpanStart(editable)
