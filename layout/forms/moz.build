@@ -13,7 +13,6 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 EXPORTS += [
     'nsIComboboxControlFrame.h',
     'nsIFormControlFrame.h',
-    'nsIListControlFrame.h',
     'nsISelectControlFrame.h',
     'nsITextControlFrame.h',
 ]
