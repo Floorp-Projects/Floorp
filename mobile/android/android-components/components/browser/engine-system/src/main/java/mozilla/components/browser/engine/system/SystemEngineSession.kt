@@ -312,7 +312,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
 
         return webView?.let {
             it.buildDrawingCache()
-            val outBitmap = Bitmap.createBitmap(webView.drawingCache)
+            val outBitmap = it.drawingCache?.let { cache -> Bitmap.createBitmap(cache) }
             it.destroyDrawingCache()
             outBitmap
         }

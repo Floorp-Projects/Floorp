@@ -1,6 +1,7 @@
 package mozilla.components.browser.engine.system
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.WebResourceRequest
@@ -37,6 +38,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.shadows.ShadowBitmap
 import java.lang.reflect.Modifier
 
 @RunWith(RobolectricTestRunner::class)
@@ -577,5 +579,16 @@ class SystemEngineSessionTest {
         verify(webView).clearCache(true)
         verify(webStorage).deleteAllData()
         verify(webViewDatabase).clearHttpAuthUsernamePassword()
+    }
+
+    @Test
+    fun testCaptureThumbnail() {
+        val engineSession = spy(SystemEngineSession::class.java)
+        val webView = mock(WebView::class.java)
+        `when`(engineSession.currentView()).thenReturn(webView)
+        assertNull(engineSession.captureThumbnail())
+
+        `when`(webView.drawingCache).thenReturn(ShadowBitmap.createBitmap(10, 10, Bitmap.Config.RGB_565))
+        assertNotNull(engineSession.captureThumbnail())
     }
 }
