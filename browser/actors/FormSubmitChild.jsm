@@ -15,8 +15,8 @@ ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class FormSubmitChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
 
     this._validationMessage = "";
     this._element = null;

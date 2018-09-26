@@ -227,26 +227,26 @@ let contextMenus = new WeakMap();
 
 class ContextMenuChild extends ActorChild {
   // PUBLIC
-  constructor(global) {
-    super(global);
+  constructor(dispatcher) {
+    super(dispatcher);
 
-    contextMenus.set(global, this);
+    contextMenus.set(this.mm, this);
 
     this.target = null;
     this.context = null;
     this.lastMenuTarget = null;
 
     Object.keys(messageListeners).forEach(key =>
-      global.addMessageListener(key, messageListeners[key].bind(this))
+      this.mm.addMessageListener(key, messageListeners[key].bind(this))
     );
   }
 
-  static getTarget(global, message, key) {
-    return contextMenus.get(global).getTarget(message, key);
+  static getTarget(mm, message, key) {
+    return contextMenus.get(mm).getTarget(message, key);
   }
 
-  static getLastTarget(global) {
-    let contextMenu = contextMenus.get(global);
+  static getLastTarget(mm) {
+    let contextMenu = contextMenus.get(mm);
     return contextMenu && contextMenu.lastMenuTarget;
   }
 

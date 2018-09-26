@@ -16,8 +16,8 @@ ChromeUtils.defineModuleGetter(this, "Readerable",
                                "resource://gre/modules/Readerable.jsm");
 
 class AboutReaderChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
 
     this._articlePromise = null;
     this._isLeavingReaderableReaderMode = false;
