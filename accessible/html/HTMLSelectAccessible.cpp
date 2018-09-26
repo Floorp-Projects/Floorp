@@ -17,7 +17,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
-#include "nsIComboboxControlFrame.h"
+#include "nsComboboxControlFrame.h"
 #include "nsContainerFrame.h"
 #include "nsListControlFrame.h"
 
@@ -353,7 +353,7 @@ HTMLComboboxAccessible::
   mGenericTypes |= eCombobox;
   mStateFlags |= eNoKidsFromDOM;
 
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
+  nsComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
   if (comboFrame) {
     nsIFrame* listFrame = comboFrame->GetDropDown();
     if (listFrame) {
@@ -404,7 +404,7 @@ HTMLComboboxAccessible::NativeState() const
   // Get focus status from base class
   uint64_t state = Accessible::NativeState();
 
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
+  nsComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
   if (comboFrame && comboFrame->IsDroppedDown())
     state |= states::EXPANDED;
   else
@@ -461,7 +461,7 @@ HTMLComboboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
   if (aIndex != HTMLComboboxAccessible::eAction_Click)
     return;
 
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
+  nsComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
   if (!comboFrame)
     return;
 
@@ -495,7 +495,7 @@ HTMLComboboxAccessible::IsActiveWidget() const
 bool
 HTMLComboboxAccessible::AreItemsOperable() const
 {
-  nsIComboboxControlFrame* comboboxFrame = do_QueryFrame(GetFrame());
+  nsComboboxControlFrame* comboboxFrame = do_QueryFrame(GetFrame());
   return comboboxFrame && comboboxFrame->IsDroppedDown();
 }
 
@@ -553,7 +553,7 @@ nsIFrame*
 HTMLComboboxListAccessible::GetFrame() const
 {
   nsIFrame* frame = HTMLSelectListAccessible::GetFrame();
-  nsIComboboxControlFrame* comboBox = do_QueryFrame(frame);
+  nsComboboxControlFrame* comboBox = do_QueryFrame(frame);
   if (comboBox) {
     return comboBox->GetDropDown();
   }
@@ -575,7 +575,7 @@ HTMLComboboxListAccessible::NativeState() const
   // Get focus status from base class
   uint64_t state = Accessible::NativeState();
 
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(mParent->GetFrame());
+  nsComboboxControlFrame* comboFrame = do_QueryFrame(mParent->GetFrame());
   if (comboFrame && comboFrame->IsDroppedDown())
     state |= states::FLOATING;
   else

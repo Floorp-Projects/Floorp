@@ -28,7 +28,7 @@
 #undef KeyPress
 #endif
 
-class nsIComboboxControlFrame;
+class nsComboboxControlFrame;
 class nsPresContext;
 class nsListEventListener;
 
@@ -392,7 +392,7 @@ protected:
   int32_t      mStartSelectionIndex;
   int32_t      mEndSelectionIndex;
 
-  nsIComboboxControlFrame* mComboboxFrame;
+  nsComboboxControlFrame* mComboboxFrame;
 
   // The view is only created (& non-null) if IsInDropDownMode() is true.
   nsView* mView;

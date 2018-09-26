@@ -18,7 +18,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIFormControlFrame.h"
 #include "nsIForm.h"

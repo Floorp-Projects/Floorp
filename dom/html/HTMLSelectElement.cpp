@@ -22,7 +22,7 @@
 #include "nsContentList.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsIComboboxControlFrame.h"
+#include "nsComboboxControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIFormControlFrame.h"
 #include "nsIForm.h"
@@ -1600,7 +1600,7 @@ HTMLSelectElement::DispatchContentReset()
     // Only dispatch content reset notification if this is a list control
     // frame or combo box control frame.
     if (IsCombobox()) {
-      nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
+      nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
       if (comboFrame) {
         comboFrame->OnContentReset();
       }
@@ -1779,7 +1779,7 @@ bool
 HTMLSelectElement::OpenInParentProcess()
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
+  nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
   if (comboFrame) {
     return comboFrame->IsOpenInParentProcess();
   }
@@ -1791,7 +1791,7 @@ void
 HTMLSelectElement::SetOpenInParentProcess(bool aVal)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
+  nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
   if (comboFrame) {
     comboFrame->SetOpenInParentProcess(aVal);
   }
@@ -1803,7 +1803,7 @@ HTMLSelectElement::SetPreviewValue(const nsAString& aValue)
   mPreviewValue = aValue;
   nsContentUtils::RemoveNewlines(mPreviewValue);
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(false);
-  nsIComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
+  nsComboboxControlFrame* comboFrame = do_QueryFrame(formControlFrame);
   if (comboFrame) {
     comboFrame->RedisplaySelectedText();
   }
