@@ -11,14 +11,14 @@
  */
 
 const { RootActor } = require("devtools/server/actors/root");
-const { DebuggerServer } = require("devtools/server/main");
+const { ActorRegistry } = require("devtools/server/actor-registry");
 const { BrowserTabList, BrowserAddonList, sendShutdownEvent } =
   require("devtools/server/actors/webbrowser");
 
 /**
  * Construct a root actor appropriate for use in a server running in a
  * browser on Android. The returned root actor:
- * - respects the factories registered with DebuggerServer.addGlobalActor,
+ * - respects the factories registered with ActorRegistry.addGlobalActor,
  * - uses a MobileTabList to supply tab actors,
  * - sends all navigator:browser window documents a Debugger:Shutdown event
  *   when it exits.
@@ -30,7 +30,7 @@ exports.createRootActor = function createRootActor(aConnection) {
   let parameters = {
     tabList: new MobileTabList(aConnection),
     addonList: new BrowserAddonList(aConnection),
-    globalActorFactories: DebuggerServer.globalActorFactories,
+    globalActorFactories: ActorRegistry.globalActorFactories,
     onShutdown: sendShutdownEvent
   };
   return new RootActor(aConnection, parameters);

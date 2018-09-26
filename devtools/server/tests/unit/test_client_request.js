@@ -27,7 +27,7 @@ TestActor.prototype.requestTypes = {
 };
 
 function run_test() {
-  DebuggerServer.addGlobalActor({
+  ActorRegistry.addGlobalActor({
     constructorName: "TestActor",
     constructorFun: TestActor,
   }, "test");
