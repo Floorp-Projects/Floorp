@@ -14,7 +14,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.withTimeoutOrNull
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
-import org.mozilla.focus.fretboard.FocusFlatFileExperimentStorage
+import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import org.mozilla.focus.locale.LocaleAwareApplication
 import org.mozilla.focus.session.NotificationSessionObserver
 import org.mozilla.focus.session.SessionManager
@@ -93,7 +93,7 @@ class FocusApplication : LocaleAwareApplication() {
         val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
         val experimentSource = KintoExperimentSource(
                 EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME)
-        fretboard = Fretboard(experimentSource, FocusFlatFileExperimentStorage(experimentsFile))
+        fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
         fretboard.loadExperiments()
         WebViewProvider.determineEngine(this@FocusApplication)
         launch(IO) {
