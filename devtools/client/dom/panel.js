@@ -36,26 +36,13 @@ DomPanel.prototype = {
    * @return object
    *         A promise that is resolved when the DOM panel completes opening.
    */
-  async open() {
-    if (this._opening) {
-      return this._opening;
-    }
-
-    const deferred = defer();
-    this._opening = deferred.promise;
-
-    // Local monitoring needs to make the target remote.
-    if (!this.target.isRemote) {
-      await this.target.attach();
-    }
-
+  open() {
     this.initialize();
 
     this.isReady = true;
     this.emit("ready");
-    deferred.resolve(this);
 
-    return this._opening;
+    return this;
   },
 
   // Initialization
