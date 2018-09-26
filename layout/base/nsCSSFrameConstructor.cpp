@@ -10968,9 +10968,9 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
                                       PendingBinding*          aPendingBinding)
 {
   // Create column wrapper if necessary
-  nsContainerFrame* blockFrame = *aNewFrame;
-  NS_ASSERTION((blockFrame->IsBlockFrame() || blockFrame->IsDetailsFrame()),
-               "not a block frame nor a details frame?");
+  nsBlockFrame* blockFrame = do_QueryFrame(*aNewFrame);
+  MOZ_ASSERT(blockFrame->IsBlockFrame() || blockFrame->IsDetailsFrame(),
+             "not a block frame nor a details frame?");
 
   *aNewFrame =
     InitAndWrapInColumnSetFrameIfNeeded(aState, aContent, aParentFrame,
@@ -11013,6 +11013,36 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
 
   // Set the frame's initial child list
   blockFrame->SetInitialChildList(kPrincipalList, childItems);
+  CreateBulletFrameForListItemIfNeeded(blockFrame);
+}
+
+void
+nsCSSFrameConstructor::CreateBulletFrameForListItemIfNeeded(
+  nsBlockFrame* aBlockFrame)
+{
+  // Create a list bullet if this is a list-item. Note that this is
+  // done here so that RenumberList will work (it needs the bullets
+  // to store the bullet numbers).  Also note that due to various
+  // wrapper frames (scrollframes, columns) we want to use the
+  // outermost (primary, ideally, but it's not set yet when we get
+  // here) frame of our content for the display check.  On the other
+  // hand, we look at ourselves for the GetPrevInFlow() check, since
+  // for a columnset we don't want a bullet per column.  Note that
+  // the outermost frame for the content is the primary frame in
+  // most cases; the ones when it's not (like tables) can't be
+  // StyleDisplay::ListItem).
+  nsIFrame* possibleListItem = aBlockFrame;
+  while (true) {
+    nsIFrame* parent = possibleListItem->GetParent();
+    if (parent->GetContent() != aBlockFrame->GetContent()) {
+      break;
+    }
+    possibleListItem = parent;
+  }
+
+  if (possibleListItem->StyleDisplay()->mDisplay == StyleDisplay::ListItem) {
+    aBlockFrame->CreateBulletFrameForListItem();
+  }
 }
 
 nsIFrame*

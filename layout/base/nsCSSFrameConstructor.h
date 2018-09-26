@@ -1871,6 +1871,8 @@ private:
                       nsIFrame*                aPositionedFrameForAbsPosContainer,
                       PendingBinding*          aPendingBinding);
 
+  void CreateBulletFrameForListItemIfNeeded(nsBlockFrame* aBlockFrame);
+
   nsIFrame* ConstructInline(nsFrameConstructorState& aState,
                             FrameConstructionItem&   aItem,
                             nsContainerFrame*        aParentFrame,
