@@ -21,14 +21,16 @@ namespace mozilla {
 // Feel free to add more justifications to PixelCastJustification, along with
 // a comment that explains under what circumstances it is appropriate to use.
 
-enum class PixelCastJustification : uint8_t {
+enum class PixelCastJustification : uint8_t
+{
   // For the root layer, Screen Pixel = Parent Layer Pixel.
   ScreenIsParentLayerForRoot,
   // On the layout side, Screen Pixel = LayoutDevice at the outer-window level.
   LayoutDeviceIsScreenForBounds,
   // For the root layer, Render Target Pixel = Parent Layer Pixel.
   RenderTargetIsParentLayerForRoot,
-  // For the root composition size we want to view it as layer pixels in any layer
+  // For the root composition size we want to view it as layer pixels in any
+  // layer
   ParentLayerToLayerForRootComposition,
   // The Layer coordinate space for one layer is the ParentLayer coordinate
   // space for its children
@@ -55,7 +57,9 @@ enum class PixelCastJustification : uint8_t {
   MultipleAsyncTransforms,
   // We have reason to believe a layer doesn't have a local transform.
   // Should only be used if we've already checked or asserted this.
-  NoTransformOnLayer
+  NoTransformOnLayer,
+  // LayerPixels are ImagePixels
+  LayerIsImage,
 };
 
 template <class TargetUnits, class SourceUnits>

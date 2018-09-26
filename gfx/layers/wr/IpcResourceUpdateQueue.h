@@ -103,7 +103,7 @@ public:
                            ImageKey aKey,
                            ImageIntRect aDirtyRect);
 
-  void SetImageVisibleArea(ImageKey aKey, const gfx::Rect& aArea);
+  void SetImageVisibleArea(ImageKey aKey, const ImageIntRect& aArea);
 
   void DeleteImage(wr::ImageKey aKey);
 
