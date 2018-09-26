@@ -206,6 +206,19 @@ ObjectClient.prototype = {
   }),
 
   /**
+   * Evaluate a callable object with context and arguments.
+   *
+   * @param context any The value to use as the function context.
+   * @param arguments Array<any> An array of values to use as the function's arguments.
+   * @param onResponse function Called with the request's response.
+   */
+  apply: DebuggerClient.requester({
+    type: "apply",
+    context: arg(0),
+    arguments: arg(1),
+  }),
+
+  /**
    * Request the display string of the object.
    *
    * @param onResponse function Called with the request's response.
