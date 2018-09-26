@@ -314,7 +314,7 @@ promise_test(async t => {
 ```
 ### What about testdriver-vendor.js?
 
-The file [testdriver-vendor.js](resources/testdriver-vendor.js) is the equivalent to testdriver-extra.js above, except is
+The file [testdriver-vendor.js](resources/testdriver-vendor.js) is the equivalent to testdriver-extra.js above, except it is
 run instead of testdriver-extra.js in browser specific test environments. For example, in [Chromium LayoutTests](https://cs.chromium.org/chromium/src/third_party/WebKit/LayoutTests/?q=LayoutTests&sq=package:chromium&dr).
 
 ### What if I need to return a value from my testdriver API?
