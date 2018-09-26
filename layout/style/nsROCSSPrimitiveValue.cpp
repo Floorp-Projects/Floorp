@@ -10,7 +10,6 @@
 
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
-#include "nsDOMCSSRGBColor.h"
 #include "nsDOMCSSRect.h"
 #include "nsIURI.h"
 #include "nsError.h"
@@ -155,47 +154,6 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         if (NS_FAILED(result))
           break;
         tmpStr.Append(sideValue + NS_LITERAL_STRING(")"));
-        break;
-      }
-    case CSS_RGBCOLOR:
-      {
-        NS_ASSERTION(mValue.mColor, "mValue.mColor should never be null");
-        ErrorResult error;
-        NS_NAMED_LITERAL_STRING(comma, ", ");
-        nsAutoString colorValue;
-        if (mValue.mColor->HasAlpha())
-          tmpStr.AssignLiteral("rgba(");
-        else
-          tmpStr.AssignLiteral("rgb(");
-
-        // get the red component
-        mValue.mColor->Red()->GetCssText(colorValue, error);
-        if (error.Failed())
-          break;
-        tmpStr.Append(colorValue + comma);
-
-        // get the green component
-        mValue.mColor->Green()->GetCssText(colorValue, error);
-        if (error.Failed())
-          break;
-        tmpStr.Append(colorValue + comma);
-
-        // get the blue component
-        mValue.mColor->Blue()->GetCssText(colorValue, error);
-        if (error.Failed())
-          break;
-        tmpStr.Append(colorValue);
-
-        if (mValue.mColor->HasAlpha()) {
-          // get the alpha component
-          mValue.mColor->Alpha()->GetCssText(colorValue, error);
-          if (error.Failed())
-            break;
-          tmpStr.Append(comma + colorValue);
-        }
-
-        tmpStr.Append(')');
-
         break;
       }
     case CSS_S:
@@ -390,18 +348,6 @@ nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
   return mValue.mRect;
 }
 
-nsDOMCSSRGBColor*
-nsROCSSPrimitiveValue::GetRGBColorValue(ErrorResult& aRv)
-{
-  if (mType != CSS_RGBCOLOR) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return nullptr;
-  }
-
-  NS_ASSERTION(mValue.mColor, "mValue.mColor should never be null");
-  return mValue.mColor;
-}
-
 void
 nsROCSSPrimitiveValue::SetNumber(float aValue)
 {
@@ -529,22 +475,6 @@ nsROCSSPrimitiveValue::SetURI(nsIURI *aURI)
 }
 
 void
-nsROCSSPrimitiveValue::SetColor(nsDOMCSSRGBColor* aColor)
-{
-  MOZ_ASSERT(aColor, "Null RGBColor being set!");
-
-  Reset();
-  mValue.mColor = aColor;
-  if (mValue.mColor) {
-    NS_ADDREF(mValue.mColor);
-    mType = CSS_RGBCOLOR;
-  }
-  else {
-    mType = CSS_UNKNOWN;
-  }
-}
-
-void
 nsROCSSPrimitiveValue::SetRect(nsDOMCSSRect* aRect)
 {
   MOZ_ASSERT(aRect, "Null rect being set!");
@@ -587,10 +517,6 @@ nsROCSSPrimitiveValue::Reset()
     case CSS_RECT:
       NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
       NS_RELEASE(mValue.mRect);
-      break;
-    case CSS_RGBCOLOR:
-      NS_ASSERTION(mValue.mColor, "Null RGBColor should never happen");
-      NS_RELEASE(mValue.mColor);
       break;
   }
 
