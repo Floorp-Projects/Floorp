@@ -15,6 +15,7 @@ config = {
         "unpack": "True"
         }
         ] """,
+    "emulator_avd_name": "test-1",
     "emulator_process_name": "emulator64-x86",
     "emulator_extra_args": "-gpu swiftshader_indirect -skip-adb-auth -verbose -show-kernel -use-system-libs -ranchu -selinux permissive -memory 3072 -cores 4",
     "exes": {
@@ -25,10 +26,6 @@ config = {
         "PATH": "%(PATH)s:%(abs_work_dir)s/android-sdk-linux/emulator:%(abs_work_dir)s/android-sdk-linux/tools:%(abs_work_dir)s/android-sdk-linux/platform-tools",
         "MINIDUMP_SAVEPATH": "%(abs_work_dir)s/../minidumps",
         # "LIBGL_DEBUG": "verbose"
-    },
-    "emulator": {
-        "name": "test-1",
-        "device_id": "emulator-5554",
     },
     "marionette_extra": "--emulator",
 }
