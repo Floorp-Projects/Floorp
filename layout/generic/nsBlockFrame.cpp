@@ -7111,10 +7111,6 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
   if (kFloatList == aListID) {
     mFloats.SetFrames(aChildList);
   } else if (kPrincipalList == aListID) {
-    NS_ASSERTION((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
-                                    NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
-                 "how can we have a bullet already?");
-
 #ifdef DEBUG
     // The only times a block that is an anonymous box is allowed to have a
     // first-letter frame are when it's the block inside a non-anonymous cell,
@@ -7143,31 +7139,6 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
 #endif
 
     AddFrames(aChildList, nullptr);
-
-    // Create a list bullet if this is a list-item. Note that this is
-    // done here so that RenumberList will work (it needs the bullets
-    // to store the bullet numbers).  Also note that due to various
-    // wrapper frames (scrollframes, columns) we want to use the
-    // outermost (primary, ideally, but it's not set yet when we get
-    // here) frame of our content for the display check.  On the other
-    // hand, we look at ourselves for the GetPrevInFlow() check, since
-    // for a columnset we don't want a bullet per column.  Note that
-    // the outermost frame for the content is the primary frame in
-    // most cases; the ones when it's not (like tables) can't be
-    // StyleDisplay::ListItem).
-    nsIFrame* possibleListItem = this;
-    while (1) {
-      nsIFrame* parent = possibleListItem->GetParent();
-      if (parent->GetContent() != GetContent()) {
-        break;
-      }
-      possibleListItem = parent;
-    }
-    if (mozilla::StyleDisplay::ListItem ==
-          possibleListItem->StyleDisplay()->mDisplay &&
-        !GetPrevInFlow()) {
-      CreateBulletFrameForListItem();
-    }
   } else {
     nsContainerFrame::SetInitialChildList(aListID, aChildList);
   }
@@ -7176,6 +7147,10 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
 void
 nsBlockFrame::CreateBulletFrameForListItem()
 {
+  MOZ_ASSERT((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
+                                NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
+             "How can we have a bullet already?");
+
   nsIPresShell* shell = PresShell();
   const nsStyleList* styleList = StyleList();
 
