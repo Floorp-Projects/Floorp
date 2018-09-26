@@ -24,7 +24,6 @@
 #include "nsStyleConsts.h"
 
 #include "nsDOMCSSRect.h"
-#include "nsDOMCSSRGBColor.h"
 #include "nsDOMCSSValueList.h"
 #include "nsFlexContainerFrame.h"
 #include "nsGridContainerFrame.h"
@@ -1121,21 +1120,25 @@ void
 nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
                                    nscolor aColor)
 {
-  nsROCSSPrimitiveValue *red   = new nsROCSSPrimitiveValue;
-  nsROCSSPrimitiveValue *green = new nsROCSSPrimitiveValue;
-  nsROCSSPrimitiveValue *blue  = new nsROCSSPrimitiveValue;
-  nsROCSSPrimitiveValue *alpha  = new nsROCSSPrimitiveValue;
-
-  uint8_t a = NS_GET_A(aColor);
-  nsDOMCSSRGBColor *rgbColor =
-    new nsDOMCSSRGBColor(red, green, blue, alpha, a < 255);
-
-  red->SetNumber(NS_GET_R(aColor));
-  green->SetNumber(NS_GET_G(aColor));
-  blue->SetNumber(NS_GET_B(aColor));
-  alpha->SetNumber(nsStyleUtil::ColorComponentToFloat(a));
-
-  aValue->SetColor(rgbColor);
+  nsAutoString string;
+  const bool hasAlpha = NS_GET_A(aColor) != 255;
+  if (hasAlpha) {
+    string.AppendLiteral("rgba(");
+  } else {
+    string.AppendLiteral("rgb(");
+  }
+  string.AppendInt(NS_GET_R(aColor));
+  string.AppendLiteral(", ");
+  string.AppendInt(NS_GET_G(aColor));
+  string.AppendLiteral(", ");
+  string.AppendInt(NS_GET_B(aColor));
+  if (hasAlpha) {
+    string.AppendLiteral(", ");
+    float alpha = nsStyleUtil::ColorComponentToFloat(NS_GET_A(aColor));
+    nsStyleUtil::AppendCSSNumber(alpha, string);
+  }
+  string.AppendLiteral(")");
+  aValue->SetString(string);
 }
 
 void
