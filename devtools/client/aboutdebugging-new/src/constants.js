@@ -55,6 +55,7 @@ const PAGES = {
 const RUNTIMES = {
   NETWORK: "network",
   THIS_FIREFOX: "this-firefox",
+  USB: "usb",
 };
 
 const SERVICE_WORKER_FETCH_STATES = {
