@@ -9,6 +9,7 @@ import mozilla.components.service.fretboard.ExperimentStorage
 import mozilla.components.service.fretboard.ExperimentsSnapshot
 import java.io.FileNotFoundException
 import java.io.File
+import java.io.IOException
 
 /**
  * Class which uses a flat JSON file as an experiment storage mechanism
@@ -29,8 +30,16 @@ class FlatFileExperimentStorage(file: File) : ExperimentStorage {
 
     override fun save(snapshot: ExperimentsSnapshot) {
         val experimentsJson = ExperimentsSerializer().toJson(snapshot)
-        atomicFile.startWrite().writer().use {
-            it.append(experimentsJson)
+
+        val stream = atomicFile.startWrite()
+        try {
+            stream.writer().use {
+                it.append(experimentsJson)
+            }
+
+            atomicFile.finishWrite(stream)
+        } catch (e: IOException) {
+            atomicFile.failWrite(stream)
         }
     }
 }

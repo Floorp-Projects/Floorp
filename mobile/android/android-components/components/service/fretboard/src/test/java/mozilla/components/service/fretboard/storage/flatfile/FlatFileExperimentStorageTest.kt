@@ -40,6 +40,42 @@ class FlatFileExperimentStorageTest {
         file.delete()
     }
 
+    @Test
+    fun testReplacingContent() {
+        val file = File(RuntimeEnvironment.application.filesDir, "experiments.json")
+
+        FlatFileExperimentStorage(file).save(ExperimentsSnapshot(listOf(
+            Experiment("sample-id",
+                "sample-name",
+                "sample-description",
+                Experiment.Matcher(),
+                Experiment.Bucket(20, 0),
+                1526991669)
+        ), 1526991669))
+
+        FlatFileExperimentStorage(file).save(ExperimentsSnapshot(listOf(
+            Experiment("sample-id-updated",
+                "sample-name-updated",
+                "sample-description-updated",
+                Experiment.Matcher(),
+                Experiment.Bucket(100, 10),
+                1526991700)
+        ), 1526991700))
+
+        val loadedExperiments = FlatFileExperimentStorage(file).retrieve().experiments
+
+        assertEquals(1, loadedExperiments.size)
+
+        val loadedExperiment = loadedExperiments[0]
+
+        assertEquals("sample-id-updated", loadedExperiment.id)
+        assertEquals("sample-name-updated", loadedExperiment.name)
+        assertEquals("sample-description-updated", loadedExperiment.description)
+        assertEquals(10, loadedExperiment.bucket!!.min)
+        assertEquals(100, loadedExperiment.bucket!!.max)
+        assertEquals(1526991700L, loadedExperiment.lastModified)
+    }
+
     private fun checkSavedExperimentsJson(experimentsJson: JSONObject) {
         assertEquals(2, experimentsJson.length())
         val experimentsJsonArray = experimentsJson.getJSONArray("experiments")
