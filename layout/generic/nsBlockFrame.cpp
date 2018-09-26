@@ -7145,7 +7145,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
     AddFrames(aChildList, nullptr);
 
     // Create a list bullet if this is a list-item. Note that this is
-    // done here so that RenumberLists will work (it needs the bullets
+    // done here so that RenumberList will work (it needs the bullets
     // to store the bullet numbers).  Also note that due to various
     // wrapper frames (scrollframes, columns) we want to use the
     // outermost (primary, ideally, but it's not set yet when we get
@@ -7263,7 +7263,7 @@ nsBlockFrame::RenumberChildFrames(int32_t* aOrdinal,
   } while (bifLineIter.Next());
 
   // We need to set NS_FRAME_HAS_DIRTY_CHILDREN bits up the tree between
-  // the bullet and the caller of RenumberLists.  But the caller itself
+  // the bullet and the caller of RenumberList.  But the caller itself
   // has to be responsible for setting the bit itself, since that caller
   // might be making a FrameNeedsReflow call, which requires that the
   // bit not be set yet.
