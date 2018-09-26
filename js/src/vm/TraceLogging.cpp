@@ -79,7 +79,7 @@ rdtsc(void)
 
 #else
 
-static __inline__ uint64_t
+uint64_t inline
 rdtsc(void)
 {
     return 0;
