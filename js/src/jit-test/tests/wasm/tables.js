@@ -230,3 +230,41 @@ assertEq(tbl.get(0).foo, 42);
     for (var i = 0; i < 10; i++)
         assertEq(call(0), 11);
 })();
+
+
+// Test active segments with a table index.
+
+{
+    function makeIt(flag, tblindex) {
+        return new Uint8Array([0x00, 0x61, 0x73, 0x6d,
+                               0x01, 0x00, 0x00, 0x00,
+                               0x04,                   // Table section
+                               0x04,                   // Section size
+                               0x01,                   // One table
+                               0x70,                   // Type: Anyfunc
+                               0x00,                   // Limits: Min only
+                               0x01,                   // Limits: Min
+                               0x09,                   // Elements section
+                               0x07,                   // Section size
+                               0x01,                   // One element segment
+                               flag,                   // Flag should be 2, or > 2 if invalid
+                               tblindex,               // Table index must be 0, or > 0 if invalid
+                               0x41,                   // Init expr: i32.const
+                               0x00,                   // Init expr: zero (payload)
+                               0x0b,                   // Init expr: end
+                               0x00]);                 // Zero functions
+    }
+
+    // Should succeed because this is what an active segment with index looks like
+    new WebAssembly.Module(makeIt(0x02, 0x00));
+
+    // Should fail because the kind is unknown
+    assertErrorMessage(() => new WebAssembly.Module(makeIt(0x03, 0x00)),
+                       WebAssembly.CompileError,
+                       /invalid elem initializer-kind/);
+
+    // Should fail because the table index is invalid
+    assertErrorMessage(() => new WebAssembly.Module(makeIt(0x02, 0x01)),
+                       WebAssembly.CompileError,
+                       /table index must be zero/);
+}
