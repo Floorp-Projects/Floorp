@@ -118,10 +118,12 @@ class OrderedHashTable
 
         uint32_t buckets = initialBuckets();
         Data** tableAlloc = alloc.template pod_malloc<Data*>(buckets);
-        if (!tableAlloc)
+        if (!tableAlloc) {
             return false;
-        for (uint32_t i = 0; i < buckets; i++)
+        }
+        for (uint32_t i = 0; i < buckets; i++) {
             tableAlloc[i] = nullptr;
+        }
 
         uint32_t capacity = uint32_t(buckets * fillFactor());
         Data* dataAlloc = alloc.template pod_malloc<Data>(capacity);
@@ -187,8 +189,9 @@ class OrderedHashTable
             // If the hashTable is more than 1/4 deleted data, simply rehash in
             // place to free up some space. Otherwise, grow the table.
             uint32_t newHashShift = liveCount >= dataCapacity * 0.75 ? hashShift - 1 : hashShift;
-            if (!rehash(newHashShift))
+            if (!rehash(newHashShift)) {
                 return false;
+            }
         }
 
         h >>= hashShift;
@@ -230,8 +233,9 @@ class OrderedHashTable
 
         // If many entries have been removed, try to shrink the table.
         if (hashBuckets() > initialBuckets() && liveCount < dataLength * minDataFill()) {
-            if (!rehash(hashShift + 1))
+            if (!rehash(hashShift + 1)) {
                 return false;
+            }
         }
         return true;
     }
@@ -344,8 +348,9 @@ class OrderedHashTable
           : ht(ht), i(0), count(0), prevp(listp), next(*listp)
         {
             *prevp = this;
-            if (next)
+            if (next) {
                 next->prevp = &next;
+            }
             seek();
         }
 
@@ -354,14 +359,16 @@ class OrderedHashTable
             : ht(other.ht), i(other.i), count(other.count), prevp(&ht->ranges), next(ht->ranges)
         {
             *prevp = this;
-            if (next)
+            if (next) {
                 next->prevp = &next;
+            }
         }
 
         ~Range() {
             *prevp = next;
-            if (next)
+            if (next) {
                 next->prevp = prevp;
+            }
         }
 
       private:
@@ -369,8 +376,9 @@ class OrderedHashTable
         Range& operator=(const Range& other) = delete;
 
         void seek() {
-            while (i < ht->dataLength && Ops::isEmpty(Ops::getKey(ht->data[i].element)))
+            while (i < ht->dataLength && Ops::isEmpty(Ops::getKey(ht->data[i].element))) {
                 i++;
+            }
         }
 
         /*
@@ -379,10 +387,12 @@ class OrderedHashTable
          */
         void onRemove(uint32_t j) {
             MOZ_ASSERT(valid());
-            if (j < i)
+            if (j < i) {
                 count--;
-            if (j == i)
+            }
+            if (j == i) {
                 seek();
+            }
         }
 
         /*
@@ -470,8 +480,9 @@ class OrderedHashTable
                 // key's hash code changed since it was inserted, breaking the
                 // hash code invariant.)
                 Data** ep = &ht->hashTable[oldHash];
-                while (*ep != &entry)
+                while (*ep != &entry) {
                     ep = &(*ep)->chain;
+                }
                 *ep = entry.chain;
 
                 // Add it to the new hash chain. We could just insert it at the
@@ -481,8 +492,9 @@ class OrderedHashTable
                 // depends on this invariant, so it's fine to kill it if
                 // needed.
                 ep = &ht->hashTable[newHash];
-                while (*ep && *ep > &entry)
+                while (*ep && *ep > &entry) {
                     ep = &(*ep)->chain;
+                }
                 entry.chain = *ep;
                 *ep = &entry;
             }
@@ -545,12 +557,14 @@ class OrderedHashTable
      * when the entry was added to the table.
      */
     void rekeyOneEntry(const Key& current, const Key& newKey, const T& element) {
-        if (current == newKey)
+        if (current == newKey) {
             return;
+        }
 
         Data* entry = lookup(current, prepareHash(current));
-        if (!entry)
+        if (!entry) {
             return;
+        }
 
         HashNumber oldHash = prepareHash(current) >> hashShift;
         HashNumber newHash = prepareHash(newKey) >> hashShift;
@@ -563,8 +577,9 @@ class OrderedHashTable
         // key's hash code changed since it was inserted, breaking the
         // hash code invariant.)
         Data** ep = &hashTable[oldHash];
-        while (*ep != entry)
+        while (*ep != entry) {
             ep = &(*ep)->chain;
+        }
         *ep = entry->chain;
 
         // Add it to the new hash chain. We could just insert it at the
@@ -574,8 +589,9 @@ class OrderedHashTable
         // depends on this invariant, so it's fine to kill it if
         // needed.
         ep = &hashTable[newHash];
-        while (*ep && *ep > entry)
+        while (*ep && *ep > entry) {
             ep = &(*ep)->chain;
+        }
         entry->chain = *ep;
         *ep = entry;
     }
@@ -630,8 +646,9 @@ class OrderedHashTable
     }
 
     static void destroyData(Data* data, uint32_t length) {
-        for (Data* p = data + length; p != data; )
+        for (Data* p = data + length; p != data; ) {
             (--p)->~Data();
+        }
     }
 
     void freeData(Data* data, uint32_t length, uint32_t capacity) {
@@ -641,8 +658,9 @@ class OrderedHashTable
 
     Data* lookup(const Lookup& l, HashNumber h) {
         for (Data* e = hashTable[h >> hashShift]; e; e = e->chain) {
-            if (Ops::match(Ops::getKey(e->element), l))
+            if (Ops::match(Ops::getKey(e->element), l)) {
                 return e;
+            }
         }
         return nullptr;
     }
@@ -660,15 +678,17 @@ class OrderedHashTable
 
     /* Compact the entries in |data| and rehash them. */
     void rehashInPlace() {
-        for (uint32_t i = 0, N = hashBuckets(); i < N; i++)
+        for (uint32_t i = 0, N = hashBuckets(); i < N; i++) {
             hashTable[i] = nullptr;
+        }
         Data* wp = data;
         Data* end = data + dataLength;
         for (Data* rp = data; rp != end; rp++) {
             if (!Ops::isEmpty(Ops::getKey(rp->element))) {
                 HashNumber h = prepareHash(Ops::getKey(rp->element)) >> hashShift;
-                if (rp != wp)
+                if (rp != wp) {
                     wp->element = std::move(rp->element);
+                }
                 wp->chain = hashTable[h];
                 hashTable[h] = wp;
                 wp++;
@@ -676,8 +696,9 @@ class OrderedHashTable
         }
         MOZ_ASSERT(wp == data + liveCount);
 
-        while (wp != end)
+        while (wp != end) {
             (--end)->~Data();
+        }
         dataLength = liveCount;
         compacted();
     }
@@ -700,10 +721,12 @@ class OrderedHashTable
         size_t newHashBuckets =
             size_t(1) << (js::kHashNumberBits - newHashShift);
         Data** newHashTable = alloc.template pod_malloc<Data*>(newHashBuckets);
-        if (!newHashTable)
+        if (!newHashTable) {
             return false;
-        for (uint32_t i = 0; i < newHashBuckets; i++)
+        }
+        for (uint32_t i = 0; i < newHashBuckets; i++) {
             newHashTable[i] = nullptr;
+        }
 
         uint32_t newCapacity = uint32_t(newHashBuckets * fillFactor());
         Data* newData = alloc.template pod_malloc<Data>(newCapacity);
@@ -820,8 +843,9 @@ class OrderedHashMap
 
     void rekeyOneEntry(const Key& current, const Key& newKey) {
         const Entry* e = get(current);
-        if (!e)
+        if (!e) {
             return;
+        }
         return impl.rekeyOneEntry(current, newKey, Entry(newKey, e->value));
     }
 

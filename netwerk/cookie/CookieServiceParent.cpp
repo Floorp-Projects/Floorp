@@ -100,10 +100,12 @@ CookieServiceParent::RemoveBatchDeletedCookies(nsIArray *aCookieList) {
     auto cookie = static_cast<nsCookie*>(xpcCookie.get());
     attrs = cookie->OriginAttributesRef();
     GetInfoFromCookie(cookie, cookieStruct);
-    if (!cookie->IsHttpOnly()) {
-      cookieStructList.AppendElement(cookieStruct);
-      attrsList.AppendElement(attrs);
+    if (cookie->IsHttpOnly()) {
+      // Child only needs to exist if an HttpOnly cookie exists, not its value
+      cookieStruct.value() = "";
     }
+    cookieStructList.AppendElement(cookieStruct);
+    attrsList.AppendElement(attrs);
   }
   Unused << SendRemoveBatchDeletedCookies(cookieStructList, attrsList);
 }
@@ -121,9 +123,10 @@ CookieServiceParent::RemoveCookie(nsICookie *aCookie)
   OriginAttributes attrs = cookie->OriginAttributesRef();
   CookieStruct cookieStruct;
   GetInfoFromCookie(cookie, cookieStruct);
-  if (!cookie->IsHttpOnly()) {
-    Unused << SendRemoveCookie(cookieStruct, attrs);
+  if (cookie->IsHttpOnly()) {
+    cookieStruct.value() = "";
   }
+  Unused << SendRemoveCookie(cookieStruct, attrs);
 }
 
 void
@@ -133,6 +136,9 @@ CookieServiceParent::AddCookie(nsICookie *aCookie)
   OriginAttributes attrs = cookie->OriginAttributesRef();
   CookieStruct cookieStruct;
   GetInfoFromCookie(cookie, cookieStruct);
+  if (cookie->IsHttpOnly()) {
+    cookieStruct.value() = "";
+  }
   Unused << SendAddCookie(cookieStruct, attrs);
 }
 
@@ -191,7 +197,9 @@ CookieServiceParent::SerialializeCookieList(const nsTArray<nsCookie*> &aFoundCoo
     nsCookie *cookie = aFoundCookieList.ElementAt(i);
     CookieStruct* cookieStruct = aCookiesList.AppendElement();
     cookieStruct->name() = cookie->Name();
-    cookieStruct->value() = cookie->Value();
+    if (!cookie->IsHttpOnly()) {
+      cookieStruct->value() = cookie->Value();
+    }
     cookieStruct->host() = cookie->Host();
     cookieStruct->path() = cookie->Path();
     cookieStruct->expiry() = cookie->Expiry();

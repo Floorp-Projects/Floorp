@@ -12,16 +12,18 @@ using namespace js;
 
 SparseBitmap::~SparseBitmap()
 {
-    for (Data::Range r(data.all()); !r.empty(); r.popFront())
+    for (Data::Range r(data.all()); !r.empty(); r.popFront()) {
         js_delete(r.front().value());
+    }
 }
 
 size_t
 SparseBitmap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t size = data.shallowSizeOfExcludingThis(mallocSizeOf);
-    for (Data::Range r(data.all()); !r.empty(); r.popFront())
+    for (Data::Range r(data.all()); !r.empty(); r.popFront()) {
         size += mallocSizeOf(r.front().value());
+    }
     return size;
 }
 
@@ -30,8 +32,9 @@ SparseBitmap::createBlock(Data::AddPtr p, size_t blockId, AutoEnterOOMUnsafeRegi
 {
     MOZ_ASSERT(!p);
     BitBlock* block = js_new<BitBlock>();
-    if (!block || !data.add(p, blockId, block))
+    if (!block || !data.add(p, blockId, block)) {
         oomUnsafe.crash("Bitmap OOM");
+    }
     std::fill(block->begin(), block->end(), 0);
     return *block;
 }
@@ -43,8 +46,9 @@ SparseBitmap::getBit(size_t bit) const
     size_t blockWord = blockStartWord(word);
 
     BitBlock* block = getBlock(blockWord / WordsInBlock);
-    if (block)
+    if (block) {
         return (*block)[word - blockWord] & (uintptr_t(1) << (bit % JS_BITS_PER_WORD));
+    }
     return false;
 }
 
@@ -73,8 +77,9 @@ SparseBitmap::bitwiseOrWith(const SparseBitmap& other)
     for (Data::Range r(other.data.all()); !r.empty(); r.popFront()) {
         const BitBlock& otherBlock = *r.front().value();
         BitBlock& block = getOrCreateBlock(r.front().key());
-        for (size_t i = 0; i < WordsInBlock; i++)
+        for (size_t i = 0; i < WordsInBlock; i++) {
             block[i] |= otherBlock[i];
+        }
     }
 }
 
@@ -87,11 +92,13 @@ SparseBitmap::bitwiseOrInto(DenseBitmap& other) const
         size_t numWords = wordIntersectCount(blockWord, other);
 #ifdef DEBUG
         // Any words out of range in other should be zero in this bitmap.
-        for (size_t i = numWords; i < WordsInBlock; i++)
+        for (size_t i = numWords; i < WordsInBlock; i++) {
             MOZ_ASSERT(!block[i]);
+        }
 #endif
-        for (size_t i = 0; i < numWords; i++)
+        for (size_t i = 0; i < numWords; i++) {
             other.word(blockWord + i) |= block[i];
+        }
     }
 }
 
@@ -105,7 +112,8 @@ SparseBitmap::bitwiseOrRangeInto(size_t wordStart, size_t numWords, uintptr_t* t
 
     BitBlock* block = getBlock(blockWord / WordsInBlock);
     if (block) {
-        for (size_t i = 0; i < numWords; i++)
+        for (size_t i = 0; i < numWords; i++) {
             target[i] |= (*block)[wordStart - blockWord + i];
+        }
     }
 }

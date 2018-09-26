@@ -42,20 +42,16 @@ interface nsICertBlocklist : nsISupports {
 
   /**
    * Check if a certificate is blocked.
-   * issuer - issuer name, DER encoded
-   * serial - serial number, DER encoded
-   * subject - subject name, DER encoded
-   * pubkey - public key, DER encoded
+   * issuer - issuer name, DER, Base64 encoded
+   * serial - serial number, DER, BAse64 encoded
+   * subject - subject name, DER, Base64 encoded
+   * pubkey - public key, DER, Base64 encoded
    */
   [must_use]
-  boolean isCertRevoked([const, array, size_is(issuer_length)] in octet issuer,
-                        in unsigned long issuer_length,
-                        [const, array, size_is(serial_length)] in octet serial,
-                        in unsigned long serial_length,
-                        [const, array, size_is(subject_length)] in octet subject,
-                        in unsigned long subject_length,
-                        [const, array, size_is(pubkey_length)] in octet pubkey,
-                        in unsigned long pubkey_length);
+  boolean isCertRevoked(in ACString issuer,
+                        in ACString serial,
+                        in ACString subject,
+                        in ACString pubkey);
 
    /**
     * Check that the blocklist data is current. Specifically, that the current

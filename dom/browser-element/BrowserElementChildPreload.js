@@ -148,7 +148,7 @@ BrowserElementChild.prototype = {
     // This is necessary to get security web progress notifications.
     var securityUI = Cc['@mozilla.org/secure_browser_ui;1']
                        .createInstance(Ci.nsISecureBrowserUI);
-    securityUI.init(content);
+    securityUI.init(docShell);
 
     // A cache of the menuitem dom objects keyed by the id we generate
     // and pass to the embedder

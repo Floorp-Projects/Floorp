@@ -6,15 +6,13 @@
 
 #include "nsISupports.idl"
 
-interface mozIDOMWindowProxy;
 interface nsIDocShell;
 interface nsITransportSecurityInfo;
 
 [scriptable, uuid(718c662a-f810-4a80-a6c9-0b1810ecade2)]
 interface nsISecureBrowserUI : nsISupports
 {
-    void init(in mozIDOMWindowProxy window);
-    void setDocShell(in nsIDocShell docShell);
+    void init(in nsIDocShell docShell);
 
     readonly attribute unsigned long state;
     readonly attribute nsITransportSecurityInfo secInfo;
