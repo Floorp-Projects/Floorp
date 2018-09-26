@@ -2015,7 +2015,7 @@ function synthesizeComposition(aEvent, aWindow = window, aCallback)
  * Note that if you call this when there is no composition, compositionstart
  * event will be fired automatically.  This is better than you use
  * synthesizeComposition("compositionstart") in most cases.  See the
- * explanation of syntehszeComposition().
+ * explanation of synthesizeComposition().
  *
  * @param aEvent   The compositionchange event's information, this has
  *                 |composition| and |caret| members.  |composition| has
