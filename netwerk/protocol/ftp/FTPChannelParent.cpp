@@ -18,6 +18,7 @@
 #include "nsIAuthPromptProvider.h"
 #include "nsIEncodedChannel.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsISecureBrowserUI.h"
 #include "nsIForcePendingChannel.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
