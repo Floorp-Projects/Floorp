@@ -42,7 +42,7 @@ loader.lazyRequireGetter(this, "ChromeWindowTargetActor",
  *
  *     - globalActorFactories: an object |A| describing further actors to
  *       attach to the 'listTabs' reply. This is the type accumulated by
- *       DebuggerServer.addGlobalActor. For each own property |P| of |A|,
+ *       ActorRegistry.addGlobalActor. For each own property |P| of |A|,
  *       the root actor adds a property named |P| to the 'listTabs'
  *       reply whose value is the name of an actor constructed by
  *       |A[P]|.
@@ -576,8 +576,8 @@ RootActor.prototype = {
   },
 
   /**
-   * Remove the extra actor (added by DebuggerServer.addGlobalActor or
-   * DebuggerServer.addTargetScopedActor) name |name|.
+   * Remove the extra actor (added by ActorRegistry.addGlobalActor or
+   * ActorRegistry.addTargetScopedActor) name |name|.
    */
   removeActorByName: function(name) {
     if (name in this._extraActors) {
