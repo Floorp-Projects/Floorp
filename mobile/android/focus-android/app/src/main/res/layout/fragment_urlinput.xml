@@ -140,7 +140,7 @@
         android:contentDescription="@string/content_description_dismiss_input" />
 
     <TextView
-        android:id="@+id/addToAutocompelte"
+        android:id="@+id/addToAutoComplete"
         android:layout_width="match_parent"
         android:layout_height="54dp"
         android:background="@color/searchHintBackgroundColor"

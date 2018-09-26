@@ -265,8 +265,8 @@ class UrlInputFragment :
             marginParams.topMargin = (inputHeight + statusBarHeight).toInt()
         }
 
-        if (addToAutocompelte.layoutParams is ViewGroup.MarginLayoutParams) {
-            val marginParams = addToAutocompelte.layoutParams as ViewGroup.MarginLayoutParams
+        if (addToAutoComplete.layoutParams is ViewGroup.MarginLayoutParams) {
+            val marginParams = addToAutoComplete.layoutParams as ViewGroup.MarginLayoutParams
             marginParams.topMargin = (inputHeight + statusBarHeight).toInt()
         }
     }
@@ -324,10 +324,10 @@ class UrlInputFragment :
             )
             clearView?.visibility = View.VISIBLE
             searchViewContainer?.visibility = View.GONE
-            addToAutocompelte?.visibility = View.VISIBLE
+            addToAutoComplete?.visibility = View.VISIBLE
         }
 
-        addToAutocompelte.setOnClickListener {
+        addToAutoComplete.setOnClickListener {
             val url = urlView?.text.toString()
             addUrlToAutocomplete(url)
         }
@@ -776,7 +776,7 @@ class UrlInputFragment :
         if (searchText.trim { it <= ' ' }.isEmpty()) {
             clearView?.visibility = View.GONE
             searchViewContainer?.visibility = View.GONE
-            addToAutocompelte?.visibility = View.GONE
+            addToAutoComplete?.visibility = View.GONE
 
             if (!isOverlay) {
                 playVisibilityAnimation(true)
@@ -791,7 +791,7 @@ class UrlInputFragment :
             }
 
             searchViewContainer?.visibility = View.VISIBLE
-            addToAutocompelte?.visibility = View.GONE
+            addToAutoComplete?.visibility = View.GONE
         }
     }
 
