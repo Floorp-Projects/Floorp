@@ -12,11 +12,12 @@
 #include "CSSValue.h"
 #include "nsTArray.h"
 
-class nsDOMCSSValueList final : public mozilla::dom::CSSValue
+class nsDOMCSSValueList final
+  : public mozilla::dom::CSSValue
 {
 public:
   // nsDOMCSSValueList
-  nsDOMCSSValueList(bool aCommaDelimited, bool aReadonly);
+  explicit nsDOMCSSValueList(bool aCommaDelimited);
 
   /**
    * Adds a value to this list.
@@ -24,20 +25,9 @@ public:
   void AppendCSSValue(already_AddRefed<CSSValue> aValue);
 
   void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) final;
-  void SetCssText(const nsAString& aText, mozilla::ErrorResult& aRv) final;
-  uint16_t CssValueType() const final;
-
-  void GetCssText(nsAString& aText);
-
-  CSSValue* IndexedGetter(uint32_t aIdx, bool& aFound) const
+  uint16_t CssValueType() const final
   {
-    aFound = aIdx <= Length();
-    return Item(aIdx);
-  }
-
-  CSSValue* Item(uint32_t aIndex) const
-  {
-    return mCSSValues.SafeElementAt(aIndex);
+    return CSSValue::CSS_VALUE_LIST;
   }
 
   uint32_t Length() const
@@ -45,16 +35,15 @@ public:
     return mCSSValues.Length();
   }
 
+  void GetCssText(nsAString& aText);
+
 protected:
   virtual ~nsDOMCSSValueList();
 
-  bool                        mCommaDelimited;  // some value lists use a comma
-                                                // as the delimiter, some just use
-                                                // spaces.
+  bool mCommaDelimited; // some value lists use a comma as the delimiter, some
+                        // just use spaces.
 
-  bool                        mReadonly;    // Are we read-only?
-
-  InfallibleTArray<RefPtr<CSSValue> > mCSSValues;
+  nsTArray<RefPtr<CSSValue>> mCSSValues;
 };
 
 #endif /* nsDOMCSSValueList_h___ */
