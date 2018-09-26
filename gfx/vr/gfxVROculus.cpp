@@ -175,7 +175,7 @@ static const uint32_t kNumOculusButton = static_cast<uint32_t>
                                          (OculusLeftControllerButtonType::
                                          NumButtonType);
 static const uint32_t kNumOculusHaptcs = 1;
-
+/*
 ovrFovPort
 ToFovPort(const VRFieldOfView& aFOV)
 {
@@ -186,7 +186,7 @@ ToFovPort(const VRFieldOfView& aFOV)
   fovPort.DownTan = tan(aFOV.downDegrees * M_PI / 180.0);
   return fovPort;
 }
-
+*/
 VRFieldOfView
 FromFovPort(const ovrFovPort& aFOV)
 {
@@ -1321,7 +1321,7 @@ VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand, uint32_t aDisplay
 
   VRControllerState& state = mControllerInfo.mControllerState;
 
-  char* touchID = "";
+  const char* touchID = "";
   switch (aHand) {
     case dom::GamepadHand::Left:
       touchID = "Oculus Touch (Left)";
@@ -1993,6 +1993,8 @@ VRSystemManagerOculus::ScanForControllers()
           break;
         case ovrControllerType::ovrControllerType_RTouch:
           hand = GamepadHand::Right;
+          break;
+        default:
           break;
       }
       RefPtr<VRControllerOculus> oculusController = new VRControllerOculus(hand,
