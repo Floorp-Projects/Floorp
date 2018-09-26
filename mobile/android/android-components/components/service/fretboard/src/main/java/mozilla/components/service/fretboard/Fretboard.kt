@@ -20,7 +20,7 @@ class Fretboard(
     private val storage: ExperimentStorage,
     valuesProvider: ValuesProvider = ValuesProvider()
 ) {
-    private var experimentsResult: ExperimentsSnapshot = ExperimentsSnapshot(listOf(), null)
+    @Volatile private var experimentsResult: ExperimentsSnapshot = ExperimentsSnapshot(listOf(), null)
     private var experimentsLoaded: Boolean = false
     private val evaluator = ExperimentEvaluator(valuesProvider)
     private val logger = Logger(LOG_TAG)
