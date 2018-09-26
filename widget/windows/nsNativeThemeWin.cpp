@@ -29,7 +29,7 @@
 #include "nsGkAtoms.h"
 #include <malloc.h>
 #include "nsWindow.h"
-#include "nsIComboboxControlFrame.h"
+#include "nsComboboxControlFrame.h"
 #include "prinrval.h"
 #include "WinUtils.h"
 
@@ -1331,7 +1331,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, WidgetType aWidgetType,
       }
 
       if (isHTML) {
-        nsIComboboxControlFrame* ccf = do_QueryFrame(aFrame);
+        nsComboboxControlFrame* ccf = do_QueryFrame(aFrame);
         isOpen = (ccf && ccf->IsDroppedDownOrHasParentPopup());
       }
       else
@@ -3389,7 +3389,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, WidgetT
       }
 
       if (isHTML) {
-        nsIComboboxControlFrame* ccf = do_QueryFrame(aFrame);
+        nsComboboxControlFrame* ccf = do_QueryFrame(aFrame);
         isOpen = (ccf && ccf->IsDroppedDownOrHasParentPopup());
       }
       else

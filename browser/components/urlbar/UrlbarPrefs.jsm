@@ -95,6 +95,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Results will include search suggestions when this is true.
   ["suggest.searches", false],
 
+  // Remove redundant portions from URLs.
+  ["trimURLs", true],
+
   // Results will include a built-in set of popular domains when this is true.
   ["usepreloadedtopurls.enabled", true],
 
@@ -168,7 +171,7 @@ class Preferences {
    *
    * @param {string} pref
    *        The name of the preference to get.
-   * @returns {value} The preference value.
+   * @returns {*} The preference value.
    */
   get(pref) {
     if (!this._map.has(pref))
@@ -206,7 +209,7 @@ class Preferences {
    *
    * @param {string} pref
    *        The name of the preference to get.
-   * @returns {value} The raw preference value.
+   * @returns {*} The raw preference value.
    */
   _readPref(pref) {
     let prefs = Services.prefs.getBranch(PREF_URLBAR_BRANCH);
@@ -240,7 +243,7 @@ class Preferences {
    *
    * @param {string} pref
    *        The name of the preference to get.
-   * @returns {value} The validated and/or fixed-up preference value.
+   * @returns {*} The validated and/or fixed-up preference value.
    */
    _getPrefValue(pref) {
     switch (pref) {
