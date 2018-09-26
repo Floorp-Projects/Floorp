@@ -35,6 +35,10 @@ void InitThreading();
 #endif
 
 static void* ThreadFunc(void* closure) {
+  // Create a nsThread wrapper for the current platform thread, and register it
+  // with the thread manager.
+  (void) NS_GetCurrentThread();
+
   PlatformThread::Delegate* delegate =
       static_cast<PlatformThread::Delegate*>(closure);
   delegate->ThreadMain();
