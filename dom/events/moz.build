@@ -159,6 +159,7 @@ LOCAL_INCLUDES += [
     '/dom/xml',
     '/dom/xul',
     '/js/xpconnect/wrappers',
+    '/layout/forms',
     '/layout/generic',
     '/layout/xul',
     '/layout/xul/tree/',

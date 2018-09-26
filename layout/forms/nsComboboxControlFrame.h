@@ -25,7 +25,6 @@
 #include "mozilla/Attributes.h"
 #include "nsBlockFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIComboboxControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
 #include "nsIRollupListener.h"
@@ -46,7 +45,6 @@ class DrawTarget;
 
 class nsComboboxControlFrame final : public nsBlockFrame,
                                      public nsIFormControlFrame,
-                                     public nsIComboboxControlFrame,
                                      public nsIAnonymousContentCreator,
                                      public nsISelectControlFrame,
                                      public nsIRollupListener,
@@ -132,18 +130,17 @@ public:
    */
   virtual void SetFocus(bool aOn, bool aRepaint) override;
 
-  //nsIComboboxControlFrame
-  virtual bool IsDroppedDown() override { return mDroppedDown; }
+  bool IsDroppedDown() { return mDroppedDown; }
   /**
    * @note This method might destroy |this|.
    */
-  virtual void ShowDropDown(bool aDoDropDown) override;
-  virtual nsIFrame* GetDropDown() override;
-  virtual void SetDropDown(nsIFrame* aDropDownFrame) override;
+  void ShowDropDown(bool aDoDropDown);
+  nsIFrame* GetDropDown();
+  void SetDropDown(nsIFrame* aDropDownFrame);
   /**
    * @note This method might destroy |this|.
    */
-  virtual void RollupFromList() override;
+  void RollupFromList();
 
   /**
    * Return the available space before and after this frame for
@@ -155,24 +152,26 @@ public:
                                  nscoord* aBefore,
                                  nscoord* aAfter,
                                  mozilla::LogicalPoint* aTranslation);
-  virtual int32_t GetIndexOfDisplayArea() override;
+  int32_t GetIndexOfDisplayArea();
   /**
    * @note This method might destroy |this|.
    */
-  NS_IMETHOD RedisplaySelectedText() override;
-  virtual int32_t UpdateRecentIndex(int32_t aIndex) override;
-  virtual void OnContentReset() override;
+  nsresult RedisplaySelectedText();
+  int32_t UpdateRecentIndex(int32_t aIndex);
+  void OnContentReset();
 
 
-  bool IsOpenInParentProcess() override
+  bool IsOpenInParentProcess()
   {
     return mIsOpenInParentProcess;
   }
 
-  void SetOpenInParentProcess(bool aVal) override
+  void SetOpenInParentProcess(bool aVal)
   {
     mIsOpenInParentProcess = aVal;
   }
+
+  bool IsDroppedDownOrHasParentPopup() { return IsDroppedDown() || IsOpenInParentProcess(); }
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(int32_t index) override;
