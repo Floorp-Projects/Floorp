@@ -483,18 +483,6 @@ NS_IMETHODIMP nsContentTreeOwner::GetChromeFlags(uint32_t* aChromeFlags)
   return mXULWindow->GetChromeFlags(aChromeFlags);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::DestroyBrowserWindow()
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::SizeBrowserTo(int32_t aCX, int32_t aCY)
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
 {
    NS_ENSURE_STATE(mXULWindow);

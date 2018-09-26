@@ -98,20 +98,6 @@ interface nsIWebBrowserChrome : nsISupports
     attribute unsigned long chromeFlags;
 
     /**
-     * Asks the implementer to destroy the window associated with this
-     * WebBrowser object.
-     */
-    void destroyBrowserWindow();
-
-    /**
-     * Tells the chrome to size itself such that the browser will be the
-     * specified size.
-     * @param aCX new width of the browser
-     * @param aCY new height of the browser
-     */
-    void sizeBrowserTo(in long aCX, in long aCY);
-
-    /**
      * Shows the window as a modal window.
      */
     void showAsModal();
