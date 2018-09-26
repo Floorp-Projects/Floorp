@@ -3544,7 +3544,9 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
     COMPLEX_TAG_CREATE(fieldset,
                        &nsCSSFrameConstructor::ConstructFieldSetFrame),
     { &nsGkAtoms::legend,
-      FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES | FCDATA_MAY_NEED_SCROLLFRAME,
+      FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES |
+                  FCDATA_MAY_NEED_SCROLLFRAME |
+                  FCDATA_MAY_NEED_BULLET,
                   NS_NewLegendFrame) },
     SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
     SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
@@ -3981,6 +3983,13 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       // Note that MathML depends on this being called even if
       // childItems is empty!
       newFrameAsContainer->SetInitialChildList(kPrincipalList, childItems);
+
+      if (bits & FCDATA_MAY_NEED_BULLET) {
+        nsBlockFrame* block = nsLayoutUtils::GetAsBlock(newFrameAsContainer);
+        MOZ_ASSERT(block, "FCDATA_MAY_NEED_BULLET should not be set on "
+                          "non-block type!");
+        CreateBulletFrameForListItemIfNeeded(block);
+      }
     }
   }
 
