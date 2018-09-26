@@ -3,7 +3,7 @@ layout: post
 title:  "🚀 Release: Android Components 0.24"
 date:   2018-09-21 20:15:00 +0200
 categories: releases
-author: jonalmeida
+author: jonathan
 ---
 
 # 0.24 (2018-09-21)
