@@ -1077,7 +1077,9 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
       if (markupMap && markupMap->new_func) {
         RefPtr<Accessible> newAcc =
           markupMap->new_func(content->AsElement(), aContext);
-        document->BindToDocument(newAcc, aria::GetRoleMap(content->AsElement()));
+        if (newAcc) {
+          document->BindToDocument(newAcc, aria::GetRoleMap(content->AsElement()));
+        }
         return newAcc;
       }
       return nullptr;
