@@ -403,3 +403,42 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
 }
 
 setJitCompilerOption('wasm.fold-offsets', 1);
+
+// Test active segments with a memory index.
+
+{
+    function makeIt(flag, memindex) {
+        return new Uint8Array([0x00, 0x61, 0x73, 0x6d,
+                               0x01, 0x00, 0x00, 0x00,
+                               0x05,                   // Memory section
+                               0x03,                   // Section size
+                               0x01,                   // One memory
+                               0x00,                   // Unshared, min only
+                               0x01,                   // Min
+                               0x0b,                   // Data section
+                               0x0a,                   // Section size
+                               0x01,                   // One data segment
+                               flag,                   // Flag should be 2, or > 2 if invalid
+                               memindex,               // Memory index should be 0, or > 0 if invalid
+                               0x41,                   // Init expr: i32.const
+                               0x00,                   // Init expr: zero (payload)
+                               0x0b,                   // Init expr: end
+                               0x03,                   // Three bytes, because why not?
+                               0x01,
+                               0x02,
+                               0x03]);
+    }
+
+    // Should succeed because this is what an active segment with index looks like
+    new WebAssembly.Module(makeIt(0x02, 0x00));
+
+    // Should fail because the kind is unknown
+    assertErrorMessage(() => new WebAssembly.Module(makeIt(0x03, 0x00)),
+                       WebAssembly.CompileError,
+                       /invalid data initializer-kind/);
+
+    // Should fail because the memory index is bad
+    assertErrorMessage(() => new WebAssembly.Module(makeIt(0x02, 0x01)),
+                       WebAssembly.CompileError,
+                       /memory index must be zero/);
+}
