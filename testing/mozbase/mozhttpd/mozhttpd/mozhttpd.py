@@ -18,6 +18,7 @@ import re
 import moznetwork
 import time
 
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from six import iteritems
 from six.moves.socketserver import ThreadingMixIn
 from six.moves.BaseHTTPServer import HTTPServer
@@ -303,33 +304,30 @@ class MozHttpd(object):
 
 
 def main(args=sys.argv[1:]):
-
     # parse command line options
-    from optparse import OptionParser
-    parser = OptionParser()
-    parser.add_option('-p', '--port', dest='port',
-                      type="int", default=8888,
-                      help="port to run the server on [DEFAULT: %default]")
-    parser.add_option('-H', '--host', dest='host',
-                      default='127.0.0.1',
-                      help="host [DEFAULT: %default]")
-    parser.add_option('-i', '--external-ip', action="store_true",
-                      dest='external_ip', default=False,
-                      help="find and use external ip for host")
-    parser.add_option('-d', '--docroot', dest='docroot',
-                      default=os.getcwd(),
-                      help="directory to serve files from [DEFAULT: %default]")
-    options, args = parser.parse_args(args)
-    if args:
-        parser.error("mozhttpd does not take any arguments")
+    parser = ArgumentParser(description='Basic python webserver.',
+                            formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-p', '--port', dest='port',
+                        type=int, default=8888,
+                        help="port to run the server on")
+    parser.add_argument('-H', '--host', dest='host',
+                        default='127.0.0.1',
+                        help="host address")
+    parser.add_argument('-i', '--external-ip', action="store_true",
+                        dest='external_ip', default=False,
+                        help="find and use external ip for host")
+    parser.add_argument('-d', '--docroot', dest='docroot',
+                        default=os.getcwd(),
+                        help="directory to serve files from")
+    args = parser.parse_args()
 
-    if options.external_ip:
+    if args.external_ip:
         host = moznetwork.get_lan_ip()
     else:
-        host = options.host
+        host = args.host
 
     # create the server
-    server = MozHttpd(host=host, port=options.port, docroot=options.docroot)
+    server = MozHttpd(host=host, port=args.port, docroot=args.docroot)
 
     print("Serving '%s' at %s:%s" % (server.docroot, server.host, server.port))
     server.start(block=True)
