@@ -263,28 +263,6 @@ WebRenderBridgeParent::~WebRenderBridgeParent()
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
-{
-  if (mDestroyed) {
-    return IPC_OK();
-  }
-
-  MOZ_ASSERT(mApi);
-
-#ifdef MOZ_WIDGET_ANDROID
-  // XXX temporary hack.
-  // XXX Remove it when APZ is supported.
-  // XXX Broken by Dynamic Toolbar v3. See: Bug 1335895
-//  RefPtr<UiCompositorControllerParent> uiController = UiCompositorControllerParent::GetFromRootLayerTreeId(/* Root Layer Tree ID */);
-//  if (uiController) {
-//    uiController->ToolbarAnimatorMessageFromCompositor(/*FIRST_PAINT*/ 5);
-//  }
-#endif
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvShutdown()
 {
   return HandleShutdown();
