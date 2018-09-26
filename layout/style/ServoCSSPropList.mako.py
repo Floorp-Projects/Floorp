@@ -68,6 +68,7 @@ def method(prop):
 SERIALIZED_PREDEFINED_TYPES = [
     "Appearance",
     "Clear",
+    "ClipRectOrAuto",
     "Color",
     "Content",
     "CounterIncrement",
