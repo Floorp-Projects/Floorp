@@ -78,7 +78,6 @@ add_task(function setup() {
 
   let textbox = createFakeElement();
   textbox.inputField = createFakeElement();
-  textbox.inputField.controllers = { insertControllerAt() {} };
   inputOptions = {
     textbox,
     panel: {
