@@ -684,6 +684,32 @@ ConvertToCdmEncryptionScheme(const GMPEncryptionScheme& aEncryptionScheme)
   }
 }
 
+static cdm::EncryptionScheme
+ConvertToCdmEncryptionScheme(const GMPEncryptionScheme& aEncryptionScheme,
+                             uint64_t aNumCipherBytes)
+{
+  if (aNumCipherBytes == 0) {
+    // Starting at CDM10, if fed a sample marked as encrypted that has no
+    // encrypted bytes, the CDM will give a decryption error. So we mark these
+    // as unencrypted to attempt to avoid such errors -- though ideally our
+    // demuxers should not emit such data, so log it.
+    if (aEncryptionScheme != GMPEncryptionScheme::kGMPEncryptionNone) {
+      GMP_LOG(
+        "ChromiumCDMChild::ConvertToCdmEncryptionScheme() got scheme marked "
+        "as encrypted, but with no cipher bytes! This should be caught "
+        "earlier, preferably by the demuxer! Returning "
+        "cdm::EncryptionScheme::kUnencrypted");
+    }
+    return cdm::EncryptionScheme::kUnencrypted;
+  }
+  if (aEncryptionScheme == GMPEncryptionScheme::kGMPEncryptionNone) {
+    GMP_LOG("ChromiumCDMChild::ConvertToCdmEncryptionScheme() got scheme "
+            "marked as unecrypted but with > 0 cipher bytes! Something is "
+            "buggy to emit such data -- likey a demuxer");
+  }
+  return ConvertToCdmEncryptionScheme(aEncryptionScheme);
+}
+
 static void
 InitInputBuffer(const CDMInputBuffer& aBuffer,
                 nsTArray<cdm::SubsampleEntry>& aSubSamples,
@@ -703,15 +729,17 @@ InitInputBuffer(const CDMInputBuffer& aBuffer,
     aInputBuffer.iv = aBuffer.mIV().Elements();
     aInputBuffer.iv_size = aBuffer.mIV().Length();
 
+    uint64_t numCipherBytes = 0;
     aSubSamples.SetCapacity(aBuffer.mClearBytes().Length());
     for (size_t i = 0; i < aBuffer.mCipherBytes().Length(); i++) {
       aSubSamples.AppendElement(cdm::SubsampleEntry{
         aBuffer.mClearBytes()[i], aBuffer.mCipherBytes()[i] });
+      numCipherBytes += aBuffer.mCipherBytes()[i];
     }
     aInputBuffer.subsamples = aSubSamples.Elements();
     aInputBuffer.num_subsamples = aSubSamples.Length();
     aInputBuffer.encryption_scheme =
-      ConvertToCdmEncryptionScheme(aBuffer.mEncryptionScheme());
+      ConvertToCdmEncryptionScheme(aBuffer.mEncryptionScheme(), numCipherBytes);
   }
   aInputBuffer.timestamp = aBuffer.mTimestamp();
 }

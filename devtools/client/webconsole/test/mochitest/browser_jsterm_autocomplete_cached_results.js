@@ -94,6 +94,29 @@ async function performTests() {
 
   ok(!getPopupLabels(popup).includes("docfoobar"),
     "autocomplete cached results do not contain docfoobar. list has not been updated");
+
+  info("Ensure filtering from the cache does work");
+  await jsterm.execute(`
+    window.testObject = Object.create(null);
+    window.testObject.zz = "zz";
+    window.testObject.zzz = "zzz";
+    window.testObject.zzzz = "zzzz";
+  `);
+  await jstermComplete("window.testObject.");
+  await jstermComplete("window.testObject.z");
+  is(getPopupLabels(popup).join("-"), "zz-zzz-zzzz", "results are the expected ones");
+
+  onUpdated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString("z");
+  await onUpdated;
+  is(getPopupLabels(popup).join("-"), "zz-zzz-zzzz",
+    "filtering from the cache works - step 1");
+
+  onUpdated = jsterm.once("autocomplete-updated");
+  EventUtils.sendString("z");
+  await onUpdated;
+  is(getPopupLabels(popup).join("-"), "zzz-zzzz",
+    "filtering from the cache works - step 2");
 }
 
 function getPopupLabels(popup) {

@@ -1498,11 +1498,6 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
-// Enable blocking access to storage from tracking resources by default on Nightly
-#ifdef NIGHTLY_BUILD
-pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
-#endif
-
 pref("browser.contentblocking.allowlist.storage.enabled", true);
 
 pref("browser.contentblocking.global-toggle.enabled", true);

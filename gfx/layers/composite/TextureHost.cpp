@@ -656,8 +656,14 @@ BufferTextureHost::PushResourceUpdates(wr::TransactionBuilder& aResources,
     MOZ_ASSERT(aImageKeys.length() == 3);
 
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
-    wr::ImageDescriptor yDescriptor(desc.ySize(), desc.yStride(), gfx::SurfaceFormat::A8);
-    wr::ImageDescriptor cbcrDescriptor(desc.cbCrSize(), desc.cbCrStride(), gfx::SurfaceFormat::A8);
+    wr::ImageDescriptor yDescriptor(
+      desc.ySize(),
+      desc.yStride(),
+      SurfaceFormatForColorDepth(desc.colorDepth()));
+    wr::ImageDescriptor cbcrDescriptor(
+      desc.cbCrSize(),
+      desc.cbCrStride(),
+      SurfaceFormatForColorDepth(desc.colorDepth()));
     (aResources.*method)(aImageKeys[0], yDescriptor, aExtID, bufferType, 0);
     (aResources.*method)(aImageKeys[1], cbcrDescriptor, aExtID, bufferType, 1);
     (aResources.*method)(aImageKeys[2], cbcrDescriptor, aExtID, bufferType, 2);
@@ -683,6 +689,7 @@ BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
                                   aImageKeys[0],
                                   aImageKeys[1],
                                   aImageKeys[2],
+                                  wr::ToWrColorDepth(desc.colorDepth()),
                                   wr::ToWrYuvColorSpace(desc.yUVColorSpace()),
                                   aFilter);
   }

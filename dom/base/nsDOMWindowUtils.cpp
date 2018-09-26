@@ -1625,6 +1625,26 @@ nsDOMWindowUtils::GetScrollXYFloat(bool aFlushLayout, float* aScrollX, float* aS
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetVisualViewportOffsetRelativeToLayoutViewport(float* aOffsetX, float* aOffsetY)
+{
+  *aOffsetX = 0;
+  *aOffsetY = 0;
+
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  NS_ENSURE_STATE(doc);
+
+  nsIPresShell* presShell = doc->GetShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
+
+  nsPoint offset = presShell->GetVisualViewportOffsetRelativeToLayoutViewport();
+  *aOffsetX = nsPresContext::AppUnitsToFloatCSSPixels(offset.x);
+  *aOffsetY = nsPresContext::AppUnitsToFloatCSSPixels(offset.y);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
                                                       int32_t* aHeight)
 {

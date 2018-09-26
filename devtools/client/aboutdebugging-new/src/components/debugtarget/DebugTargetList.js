@@ -57,7 +57,9 @@ class DebugTargetList extends PureComponent {
         id: "about-debugging-debug-target-list-empty"
       },
       dom.span(
-        {},
+        {
+          className: "js-debug-target-list-empty"
+        },
         "Nothing yet."
       )
     );

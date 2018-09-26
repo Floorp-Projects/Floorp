@@ -1141,17 +1141,30 @@ class JSTerm extends Component {
 
     if (this._autocompleteQuery && input.startsWith(this._autocompleteQuery)) {
       let filterBy = input;
-      // Find the last non-alphanumeric other than "_", ":", or "$" if it exists.
-      const lastNonAlpha = input.match(/[^a-zA-Z0-9_$:][a-zA-Z0-9_$:]*$/);
-      // If input contains non-alphanumerics, use the part after the last one
-      // to filter the cache.
-      if (lastNonAlpha) {
-        filterBy = input.substring(input.lastIndexOf(lastNonAlpha) + 1);
+      if (this._autocompleteCache.isElementAccess) {
+        // if we're performing an element access, we can simply retrieve whatever comes
+        // after the last opening bracket.
+        filterBy = input.substring(input.lastIndexOf("[") + 1);
+      } else {
+        // Find the last non-alphanumeric other than "_", ":", or "$" if it exists.
+        const lastNonAlpha = input.match(/[^a-zA-Z0-9_$:][a-zA-Z0-9_$:]*$/);
+        // If input contains non-alphanumerics, use the part after the last one
+        // to filter the cache.
+        if (lastNonAlpha) {
+          filterBy = input.substring(input.lastIndexOf(lastNonAlpha) + 1);
+        }
       }
 
+      const stripWrappingQuotes = s => s.replace(/^['"`](.+(?=['"`]$))['"`]$/g, "$1");
       const filterByLc = filterBy.toLocaleLowerCase();
       const looseMatching = !filterBy || filterBy[0].toLocaleLowerCase() === filterBy[0];
-      const newList = this._autocompleteCache.filter(l => {
+      const needStripQuote = this._autocompleteCache.isElementAccess
+        && !/^[`"']/.test(filterBy);
+      const newList = this._autocompleteCache.matches.filter(l => {
+        if (needStripQuote) {
+          l = stripWrappingQuotes(l);
+        }
+
         if (looseMatching) {
           return l.toLocaleLowerCase().startsWith(filterByLc);
         }
@@ -1161,7 +1174,8 @@ class JSTerm extends Component {
 
       this._receiveAutocompleteProperties(null, {
         matches: newList,
-        matchProp: filterBy
+        matchProp: filterBy,
+        isElementAccess: this._autocompleteCache.isElementAccess,
       });
       return;
     }
@@ -1191,28 +1205,49 @@ class JSTerm extends Component {
     this.currentAutoCompletionRequestId = null;
 
     // Cache whatever came from the server if the last char is
-    // alphanumeric or '.'
+    // alphanumeric, '.' or '['.
     const inputUntilCursor = this.getInputValueBeforeCursor();
 
-    if (requestId != null && /[a-zA-Z0-9.]$/.test(inputUntilCursor)) {
-      this._autocompleteCache = message.matches;
+    if (requestId != null && /[a-zA-Z0-9.\[]$/.test(inputUntilCursor)) {
+      this._autocompleteCache = {
+        matches: message.matches,
+        matchProp: message.matchProp,
+        isElementAccess: message.isElementAccess,
+      };
       this._autocompleteQuery = inputUntilCursor;
     }
 
-    const {matches, matchProp} = message;
+    const {matches, matchProp, isElementAccess} = message;
     if (!matches.length) {
       this.clearCompletion();
       this.emit("autocomplete-updated");
       return;
     }
 
-    const items = matches.map(match => ({
-      preLabel: match.substring(0, matchProp.length),
-      label: match
-    }));
+    const items = matches.map(label => {
+      let preLabel = label.substring(0, matchProp.length);
+      // If the user is performing an element access, and if they did not typed a quote,
+      // then we need to adjust the preLabel to match the quote from the label + what
+      // the user entered.
+      if (isElementAccess && /^['"`]/.test(matchProp) === false) {
+        preLabel = label.substring(0, matchProp.length + 1);
+      }
+      return {preLabel, label, isElementAccess};
+    });
 
     if (items.length > 0) {
-      const suffix = items[0].label.substring(matchProp.length);
+      const {preLabel, label} = items[0];
+      let suffix = label.substring(preLabel.length);
+      if (isElementAccess) {
+        if (!matchProp) {
+          suffix = label;
+        }
+        const inputAfterCursor = this.getInputValue().substring(inputUntilCursor.length);
+        // If there's not a bracket after the cursor, add it to the completionText.
+        if (!inputAfterCursor.trimLeft().startsWith("]")) {
+          suffix = suffix + "]";
+        }
+      }
       this.setAutoCompletionText(suffix);
     }
 
@@ -1245,7 +1280,7 @@ class JSTerm extends Component {
 
       if (this.editor) {
         popupAlignElement = this.node.querySelector(".CodeMirror-cursor");
-        // We need to show the popup at the ".".
+        // We need to show the popup at the "." or "[".
         xOffset = -1 * matchProp.length * this._inputCharWidth;
         yOffset = 5;
       } else if (this.inputNode) {
@@ -1274,7 +1309,23 @@ class JSTerm extends Component {
   onAutocompleteSelect() {
     const {selectedItem} = this.autocompletePopup;
     if (selectedItem) {
-      const suffix = selectedItem.label.substring(selectedItem.preLabel.length);
+      const {preLabel, label, isElementAccess} = selectedItem;
+      let suffix = label.substring(preLabel.length);
+
+      // If the user is performing an element access, we need to check if we should add
+      // starting and ending quotes, as well as a closing bracket.
+      if (isElementAccess) {
+        const inputBeforeCursor = this.getInputValueBeforeCursor();
+        if (inputBeforeCursor.trim().endsWith("[")) {
+          suffix = label;
+        }
+
+        const inputAfterCursor = this.getInputValue().substring(inputBeforeCursor.length);
+        // If there's no closing bracket after the cursor, add it to the completionText.
+        if (!inputAfterCursor.trimLeft().startsWith("]")) {
+          suffix = suffix + "]";
+        }
+      }
       this.setAutoCompletionText(suffix);
     } else {
       this.setAutoCompletionText("");
@@ -1306,10 +1357,6 @@ class JSTerm extends Component {
 
   /**
    * Accept the proposed input completion.
-   *
-   * @return boolean
-   *         True if there was a selected completion item and the input value
-   *         was updated, false otherwise.
    */
   acceptProposedCompletion() {
     let completionText = this.getAutoCompletionText();
@@ -1320,8 +1367,27 @@ class JSTerm extends Component {
     // autocomplete to `document`, but the autocompletion text only shows `t`).
     if (this.autocompletePopup.isOpen && this.autocompletePopup.selectedItem) {
       const {selectedItem} = this.autocompletePopup;
-      completionText = selectedItem.label;
-      numberOfCharsToReplaceCharsBeforeCursor = selectedItem.preLabel.length;
+      const {label, preLabel, isElementAccess} = selectedItem;
+
+      completionText = label;
+      numberOfCharsToReplaceCharsBeforeCursor = preLabel.length;
+
+      // If the user is performing an element access, we need to check if we should add
+      // starting and ending quotes, as well as a closing bracket.
+      if (isElementAccess) {
+        const inputBeforeCursor = this.getInputValueBeforeCursor();
+        const lastOpeningBracketIndex = inputBeforeCursor.lastIndexOf("[");
+        if (lastOpeningBracketIndex > -1) {
+          numberOfCharsToReplaceCharsBeforeCursor =
+            inputBeforeCursor.substring(lastOpeningBracketIndex + 1).length;
+        }
+
+        const inputAfterCursor = this.getInputValue().substring(inputBeforeCursor.length);
+        // If there's not a bracket after the cursor, add it.
+        if (!inputAfterCursor.trimLeft().startsWith("]")) {
+          completionText = completionText + "]";
+        }
+      }
     }
 
     this.clearCompletion();

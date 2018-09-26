@@ -59,8 +59,9 @@ class DenseBitmap
     }
 
     void bitwiseOrRangeInto(size_t wordStart, size_t numWords, uintptr_t* target) const {
-        for (size_t i = 0; i < numWords; i++)
+        for (size_t i = 0; i < numWords; i++) {
             target[i] |= data[wordStart + i];
+        }
     }
 };
 
@@ -100,8 +101,9 @@ class SparseBitmap
         // the add() within createBlock().
         AutoEnterOOMUnsafeRegion oomUnsafe;
         Data::AddPtr p = data.lookupForAdd(blockId);
-        if (p)
+        if (p) {
             return *p->value();
+        }
         return createBlock(p, blockId, oomUnsafe);
     }
 

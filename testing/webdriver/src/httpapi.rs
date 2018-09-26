@@ -171,11 +171,6 @@ fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, R
         ),
         (
             Method::POST,
-            "/session/{sessionId}/element/{elementId}/tap",
-            Route::ElementTap,
-        ),
-        (
-            Method::POST,
             "/session/{sessionId}/element/{elementId}/clear",
             Route::ElementClear,
         ),
@@ -270,7 +265,6 @@ pub enum Route<U: WebDriverExtensionRoute> {
     GetTimeouts,
     SetTimeouts,
     ElementClick,
-    ElementTap,
     ElementClear,
     ElementSendKeys,
     PerformActions,

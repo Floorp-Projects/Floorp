@@ -75,8 +75,9 @@ class InlineTable : private AllocPolicy
 
         InlineEntry* end = inlineEnd();
         for (InlineEntry* it = inlineStart(); it != end; ++it) {
-            if (it->key && !it->moveTo(table_))
+            if (it->key && !it->moveTo(table_)) {
                 return false;
+            }
         }
 
         inlNext_ = InlineEntries + 1;
@@ -87,8 +88,9 @@ class InlineTable : private AllocPolicy
 
     MOZ_NEVER_INLINE
     MOZ_MUST_USE bool switchAndAdd(const InlineEntry& entry) {
-        if (!switchToTable())
+        if (!switchToTable()) {
             return false;
+        }
 
         return entry.putNew(table_);
     }
@@ -148,10 +150,12 @@ class InlineTable : private AllocPolicy
 
         bool operator==(const Ptr& other) const {
             MOZ_ASSERT(found() && other.found());
-            if (isInlinePtr_ != other.isInlinePtr_)
+            if (isInlinePtr_ != other.isInlinePtr_) {
                 return false;
-            if (isInlinePtr_)
+            }
+            if (isInlinePtr_) {
                 return inlPtr_ == other.inlPtr_;
+            }
             return tablePtr_ == other.tablePtr_;
         }
 
@@ -208,10 +212,12 @@ class InlineTable : private AllocPolicy
 
         bool operator==(const AddPtr& other) const {
             MOZ_ASSERT(found() && other.found());
-            if (isInlinePtr_ != other.isInlinePtr_)
+            if (isInlinePtr_ != other.isInlinePtr_) {
                 return false;
-            if (isInlinePtr_)
+            }
+            if (isInlinePtr_) {
                 return inlAddPtr_ == other.inlAddPtr_;
+            }
             return tableAddPtr_ == other.tableAddPtr_;
         }
 
@@ -247,13 +253,15 @@ class InlineTable : private AllocPolicy
     Ptr lookup(const Lookup& l) {
         MOZ_ASSERT(keyNonZero(l));
 
-        if (usingTable())
+        if (usingTable()) {
             return Ptr(table_.lookup(l));
+        }
 
         InlineEntry* end = inlineEnd();
         for (InlineEntry* it = inlineStart(); it != end; ++it) {
-            if (it->key && HashPolicy::match(it->key, l))
+            if (it->key && HashPolicy::match(it->key, l)) {
                 return Ptr(it);
+            }
         }
 
         return Ptr(nullptr);
@@ -263,13 +271,15 @@ class InlineTable : private AllocPolicy
     AddPtr lookupForAdd(const Lookup& l) {
         MOZ_ASSERT(keyNonZero(l));
 
-        if (usingTable())
+        if (usingTable()) {
             return AddPtr(table_.lookupForAdd(l));
+        }
 
         InlineEntry* end = inlineEnd();
         for (InlineEntry* it = inlineStart(); it != end; ++it) {
-            if (it->key && HashPolicy::match(it->key, l))
+            if (it->key && HashPolicy::match(it->key, l)) {
                 return AddPtr(it, true);
+            }
         }
 
         // The add pointer that's returned here may indicate the limit entry of
@@ -291,8 +301,9 @@ class InlineTable : private AllocPolicy
 
             // Switching to table mode before we add this pointer.
             if (addPtr == inlineStart() + InlineEntries) {
-                if (!switchToTable())
+                if (!switchToTable()) {
                     return false;
+                }
                 return table_.putNew(std::forward<KeyInput>(key),
                                      std::forward<Args>(args)...);
             }
@@ -300,8 +311,9 @@ class InlineTable : private AllocPolicy
             MOZ_ASSERT(!p.found());
             MOZ_ASSERT(uintptr_t(inlineEnd()) == uintptr_t(p.inlAddPtr_));
 
-            if (!this->checkSimulatedOOM())
+            if (!this->checkSimulatedOOM()) {
                 return false;
+            }
 
             addPtr->update(std::forward<KeyInput>(key),
                            std::forward<Args>(args)...);
@@ -329,8 +341,9 @@ class InlineTable : private AllocPolicy
     }
 
     void remove(const Lookup& l) {
-        if (Ptr p = lookup(l))
+        if (Ptr p = lookup(l)) {
             remove(p);
+        }
     }
 
     class Range
@@ -375,8 +388,9 @@ class InlineTable : private AllocPolicy
 
         void advancePastNulls(InlineEntry* begin) {
             InlineEntry* newCur = begin;
-            while (newCur < end_ && nullptr == newCur->key)
+            while (newCur < end_ && nullptr == newCur->key) {
                 ++newCur;
+            }
             MOZ_ASSERT(uintptr_t(newCur) <= uintptr_t(end_));
             cur_ = newCur;
         }
@@ -393,17 +407,19 @@ class InlineTable : private AllocPolicy
 
         Entry front() {
             MOZ_ASSERT(!empty());
-            if (isInlineRange())
+            if (isInlineRange()) {
                 return Entry(cur_);
+            }
             return Entry(&tableRange_->front());
         }
 
         void popFront() {
             MOZ_ASSERT(!empty());
-            if (isInlineRange())
+            if (isInlineRange()) {
                 bumpCurPtr();
-            else
+            } else {
                 tableRange_->popFront();
+            }
         }
     };
 
@@ -467,15 +483,17 @@ class InlineMap
 
         const Key& key() const {
             MOZ_ASSERT(!!mapEntry_ != !!inlineEntry_);
-            if (mapEntry_)
+            if (mapEntry_) {
                 return mapEntry_->key();
+            }
             return inlineEntry_->key;
         }
 
         Value& value() {
             MOZ_ASSERT(!!mapEntry_ != !!inlineEntry_);
-            if (mapEntry_)
+            if (mapEntry_) {
                 return mapEntry_->value();
+            }
             return inlineEntry_->value;
         }
     };
@@ -605,8 +623,9 @@ class InlineSet
 
         operator T() const {
             MOZ_ASSERT(!!setEntry_ != !!inlineEntry_);
-            if (setEntry_)
+            if (setEntry_) {
                 return *setEntry_;
+            }
             return inlineEntry_->key;
         }
     };

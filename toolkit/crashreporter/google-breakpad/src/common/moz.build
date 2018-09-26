@@ -70,9 +70,6 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 Library('breakpad_common_s')
 
-# We allow warnings for third-party code that can be updated from upstream.
-AllowCompilerWarnings()
-
 FINAL_LIBRARY = 'xul'
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')

@@ -133,7 +133,6 @@ TabParent::LayerToTabParentTable* TabParent::sLayerToTabParentTable = nullptr;
 NS_IMPL_ISUPPORTS(TabParent,
                   nsITabParent,
                   nsIAuthPromptProvider,
-                  nsISecureBrowserUI,
                   nsISupportsWeakReference)
 
 TabParent::TabParent(nsIContentParent* aManager,
@@ -876,38 +875,6 @@ TabParent::Deactivate()
   if (!mIsDestroyed) {
     Unused << Manager()->SendDeactivate(this);
   }
-}
-
-NS_IMETHODIMP
-TabParent::Init(mozIDOMWindowProxy *window)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::GetState(uint32_t *aState)
-{
-  NS_ENSURE_ARG(aState);
-  NS_WARNING("SecurityState not valid here");
-  *aState = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::GetSecInfo(nsITransportSecurityInfo** _result)
-{
-  NS_ENSURE_ARG_POINTER(_result);
-  NS_WARNING("TransportSecurityInfo not valid here");
-  *_result = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::SetDocShell(nsIDocShell *aDocShell)
-{
-  NS_ENSURE_ARG(aDocShell);
-  NS_WARNING("No mDocShell member in TabParent so there is no docShell to set");
-  return NS_OK;
 }
 
   a11y::PDocAccessibleParent*

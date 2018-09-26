@@ -391,6 +391,11 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
     if (!nsCookieService::DomainMatches(cookie, hostFromURI))
       continue;
 
+    // We don't show HttpOnly cookies in content processes.
+    if (cookie->IsHttpOnly()) {
+      continue;
+    }
+
     // if the cookie is secure and the host scheme isn't, we can't send it
     if (cookie->IsSecure() && !isSecure)
       continue;
@@ -521,9 +526,7 @@ CookieServiceChild::RecordDocumentCookie(nsCookie               *aCookie,
     return;
   }
 
-  if (!aCookie->IsHttpOnly()) {
-    cookiesList->AppendElement(aCookie);
-  }
+  cookiesList->AppendElement(aCookie);
 }
 
 nsresult
@@ -677,18 +680,37 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     return NS_OK;
   }
 
+  nsCookieKey key(baseDomain, attrs);
+  CookiesList *cookies = mCookiesMap.Get(key);
+
   nsCString serverTimeString(aServerTime);
   int64_t serverTime = nsCookieService::ParseServerTime(serverTimeString);
   bool moreCookies;
   do {
     nsCookieAttributes cookieAttributes;
     bool canSetCookie = false;
-    nsCookieKey key(baseDomain, attrs);
     moreCookies = nsCookieService::CanSetCookie(aHostURI, key, cookieAttributes,
                                                 requireHostMatch, cookieStatus,
                                                 cookieString, serverTime, aFromHttp,
                                                 aChannel, mLeaveSecureAlone,
                                                 canSetCookie, mThirdPartyUtil);
+
+    // We need to see if the cookie we're setting would overwrite an httponly
+    // one. This would not affect anything we send over the net (those come from
+    // the parent, which already checks this), but script could see an
+    // inconsistent view of things.
+    if (cookies && canSetCookie && !aFromHttp) {
+      for (uint32_t i = 0; i < cookies->Length(); ++i) {
+        RefPtr<nsCookie> cookie = cookies->ElementAt(i);
+        if (cookie->Name().Equals(cookieAttributes.name) &&
+            cookie->Host().Equals(cookieAttributes.host) &&
+            cookie->Path().Equals(cookieAttributes.path) &&
+            cookie->IsHttpOnly()) {
+          // Can't overwrite an httponly cookie from a script context.
+          canSetCookie = false;
+        }
+      }
+    }
 
     if (canSetCookie) {
       SetCookieInternal(cookieAttributes, attrs, aChannel,
