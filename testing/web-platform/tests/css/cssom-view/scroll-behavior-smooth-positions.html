@@ -27,7 +27,7 @@
   // This test relies on the minimal assumption that scroll position functions are monotonic.
   ["scroll", "scrollTo", "scrollBy", "scrollIntoView"].forEach(function(scrollFunction) {
     promise_test(() => {
-      return new Promise(function(resolve) {
+      return new Promise(function(resolve, reject) {
         resetScroll(overflowNode);
         var finalLeft = 500;
         var finalTop = 250;
@@ -37,25 +37,29 @@
         assert_equals(oldTop, 0);
         scrollNode(overflowNode, scrollFunction, "smooth", finalLeft, finalTop);
         observeScrolling(overflowNode, function(done) {
-          if (done)
-            requestAnimationFrame(resolve);
-          var newLeft = overflowNode.scrollLeft;
-          var newTop = overflowNode.scrollTop;
-          assert_less_than_equal(oldLeft, newLeft, "ScrollLeft keeps increasing");
-          assert_less_than_equal(oldTop, newTop, "ScrollTop keeps increasing");
-          if (done) {
-            assert_equals(newLeft, finalLeft, "ScrollLeft should reach final position");
-            assert_equals(newTop, finalTop, "ScrollTop should reach final position");
+          try {
+            var newLeft = overflowNode.scrollLeft;
+            var newTop = overflowNode.scrollTop;
+            assert_less_than_equal(oldLeft, newLeft, "ScrollLeft keeps increasing");
+            assert_less_than_equal(oldTop, newTop, "ScrollTop keeps increasing");
+            if (done) {
+              assert_equals(newLeft, finalLeft, "ScrollLeft should reach final position");
+              assert_equals(newTop, finalTop, "ScrollTop should reach final position");
+            }
+            oldLeft = newLeft;
+            oldTop = newTop;
+          } catch(e) {
+            reject(e);
           }
-          oldLeft = newLeft;
-          oldTop = newTop;
+          if (done)
+            resolve();
         });
       });
     }, `Scroll positions when performing smooth scrolling using ${scrollFunction}()`);
  });
 
   promise_test(() => {
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
       resetScroll(overflowNode);
       var initialScrollAborted = false;
       var scrollDirectionChanged = false;
@@ -65,33 +69,37 @@
       assert_equals(oldTop, 0);
       scrollNode(overflowNode, "scroll", "smooth", 1500, 750);
       observeScrolling(overflowNode, function(done) {
+        try {
+          var newLeft = overflowNode.scrollLeft;
+          var newTop = overflowNode.scrollTop;
+          if (initialScrollAborted) {
+            if (scrollDirectionChanged) {
+              assert_greater_than_equal(oldLeft, newLeft, "ScrollLeft keeps decreasing");
+              assert_greater_than_equal(oldTop, newTop, "ScrollTop keeps decreasing");
+            } else
+              scrollDirectionChanged = newLeft <= oldLeft && newTop <= oldTop;
+          } else {
+              assert_less_than_equal(oldLeft, newLeft, "ScrollLeft keeps increasing");
+              assert_less_than_equal(oldTop, newTop, "ScrollTop keeps increasing");
+              if (newLeft > 1000 && newTop > 500) {
+                // Abort the initial scroll.
+                initialScrollAborted = true;
+                scrollNode(overflowNode, "scroll", "smooth", 500, 250);
+                newLeft = overflowNode.scrollLeft;
+                newTop = overflowNode.scrollTop;
+              }
+          }
+          if (done) {
+            assert_equals(newLeft, 500, "ScrollLeft should reach final position");
+            assert_equals(newTop, 250, "ScrollTop should reach final position");
+          }
+          oldLeft = newLeft;
+          oldTop = newTop;
+        } catch(e) {
+          reject(e);
+        }
         if (done)
-          requestAnimationFrame(resolve);
-        var newLeft = overflowNode.scrollLeft;
-        var newTop = overflowNode.scrollTop;
-        if (initialScrollAborted) {
-          if (scrollDirectionChanged) {
-            assert_greater_than_equal(oldLeft, newLeft, "ScrollLeft keeps decreasing");
-            assert_greater_than_equal(oldTop, newTop, "ScrollTop keeps decreasing");
-          } else
-            scrollDirectionChanged = newLeft <= oldLeft && newTop <= oldTop;
-        } else {
-            assert_less_than_equal(oldLeft, newLeft, "ScrollLeft keeps increasing");
-            assert_less_than_equal(oldTop, newTop, "ScrollTop keeps increasing");
-            if (newLeft > 1000 && newTop > 500) {
-              // Abort the initial scroll.
-              initialScrollAborted = true;
-              scrollNode(overflowNode, "scroll", "smooth", 500, 250);
-              newLeft = overflowNode.scrollLeft;
-              newTop = overflowNode.scrollTop;
-            }
-        }
-        if (done) {
-          assert_equals(newLeft, 500, "ScrollLeft should reach final position");
-          assert_equals(newTop, 250, "ScrollTop should reach final position");
-        }
-        oldLeft = newLeft;
-        oldTop = newTop;
+          resolve();
       });
     });
   }, "Scroll positions when aborting a smooth scrolling with another smooth scrolling");
@@ -106,30 +114,33 @@
       assert_equals(oldTop, 0);
       scrollNode(overflowNode, "scroll", "smooth", 1500, 750);
       observeScrolling(overflowNode, function(done) {
+        try {
+          var newLeft = overflowNode.scrollLeft;
+          var newTop = overflowNode.scrollTop;
+          if (!initialScrollAborted) {
+              assert_less_than_equal(oldLeft, newLeft, "ScrollLeft keeps increasing");
+              assert_less_than_equal(oldTop, newTop, "ScrollTop keeps increasing");
+              if (newLeft > 1000 && newTop > 500) {
+                // Abort the initial scroll.
+                initialScrollAborted = true;
+                scrollNode(overflowNode, "scroll", "instant", 500, 250);
+                newLeft = overflowNode.scrollLeft;
+                newTop = overflowNode.scrollTop;
+                assert_equals(newLeft, 500, "ScrollLeft should reach final position");
+                assert_equals(newTop, 250, "ScrollTop should reach final position");
+              }
+          }
+          if (done) {
+            assert_equals(newLeft, 500, "ScrollLeft should stay at final position");
+            assert_equals(newTop, 250, "ScrollTop should stay at final position");
+          }
+          oldLeft = newLeft;
+          oldTop = newTop;
+        } catch(e) {
+          reject(e);
+        }
         if (done)
-          requestAnimationFrame(resolve);
-        var newLeft = overflowNode.scrollLeft;
-        var newTop = overflowNode.scrollTop;
-        if (!initialScrollAborted) {
-            assert_less_than_equal(oldLeft, newLeft, "ScrollLeft keeps increasing");
-            assert_less_than_equal(oldTop, newTop, "ScrollTop keeps increasing");
-
-            if (newLeft > 1000 && newTop > 500) {
-              // Abort the initial scroll.
-              initialScrollAborted = true;
-              scrollNode(overflowNode, "scroll", "instant", 500, 250);
-              newLeft = overflowNode.scrollLeft;
-              newTop = overflowNode.scrollTop;
-              assert_equals(newLeft, 500, "ScrollLeft should reach final position");
-              assert_equals(newTop, 250, "ScrollTop should reach final position");
-            }
-        }
-        if (done) {
-          assert_equals(newLeft, 500, "ScrollLeft should stay at final position");
-          assert_equals(newTop, 250, "ScrollTop should stay at final position");
-        }
-        oldLeft = newLeft;
-        oldTop = newTop;
+          resolve();
       });
     });
   }, "Scroll positions when aborting a smooth scrolling with an instant scrolling");
