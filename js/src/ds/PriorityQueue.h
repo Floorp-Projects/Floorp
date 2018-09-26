@@ -58,8 +58,9 @@ class PriorityQueue
     }
 
     MOZ_MUST_USE bool insert(const T& v) {
-        if (!heap.append(v))
+        if (!heap.append(v)) {
             return false;
+        }
         siftUp(heap.length() - 1);
         return true;
     }
@@ -115,8 +116,9 @@ class PriorityQueue
         while (n > 0) {
             size_t parent = (n - 1) / 2;
 
-            if (P::priority(heap[parent]) > P::priority(heap[n]))
+            if (P::priority(heap[parent]) > P::priority(heap[n])) {
                 break;
+            }
 
             swap(n, parent);
             n = parent;

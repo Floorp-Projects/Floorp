@@ -60,6 +60,7 @@
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/EnvironmentObject-inl.h"
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Realm-inl.h"
@@ -2374,6 +2375,7 @@ Compile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode*
     MOZ_ASSERT(jit::IsIonEnabled(cx));
     MOZ_ASSERT(jit::IsBaselineEnabled(cx));
     MOZ_ASSERT_IF(osrPc != nullptr, LoopEntryCanIonOsr(osrPc));
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Ion script compilation");
 
     if (!script->hasBaselineScript()) {
         return Method_Skipped;

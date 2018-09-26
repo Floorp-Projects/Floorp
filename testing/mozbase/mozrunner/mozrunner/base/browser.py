@@ -8,6 +8,7 @@ import mozinfo
 import os
 import sys
 
+from ..application import (DefaultContext, FirefoxContext)
 from .runner import BaseRunner
 
 
@@ -23,6 +24,13 @@ class GeckoRuntimeRunner(BaseRunner):
 
         self.binary = binary
         self.cmdargs = cmdargs or []
+
+        if mozinfo.isWin and (isinstance(self.app_ctx, FirefoxContext) or
+                              isinstance(self.app_ctx, DefaultContext)):
+            # The launcher process is present in this configuration. Always
+            # pass this flag so that we can wait for the browser to complete
+            # its execution.
+            self.cmdargs.append('--wait-for-browser')
 
         # allows you to run an instance of Firefox separately from any other instances
         self.env['MOZ_NO_REMOTE'] = '1'

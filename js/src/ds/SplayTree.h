@@ -70,16 +70,18 @@ class SplayTree
 
     T* maybeLookup(const T& v)
     {
-        if (!root)
+        if (!root) {
             return nullptr;
+        }
         Node* last = lookup(v);
         return (C::compare(v, last->item) == 0) ? &(last->item) : nullptr;
     }
 
     bool contains(const T& v, T* res)
     {
-        if (!root)
+        if (!root) {
             return false;
+        }
         Node* last = lookup(v);
         splay(last);
         checkCoherency();
@@ -93,8 +95,9 @@ class SplayTree
     MOZ_MUST_USE bool insert(const T& v)
     {
         Node* element = allocateNode(v);
-        if (!element)
+        if (!element) {
             return false;
+        }
 
         if (!root) {
             root = element;
@@ -131,13 +134,15 @@ class SplayTree
         Node* swapChild;
         if (root->left) {
             swap = root->left;
-            while (swap->right)
+            while (swap->right) {
                 swap = swap->right;
+            }
             swapChild = swap->left;
         } else if (root->right) {
             swap = root->right;
-            while (swap->left)
+            while (swap->left) {
                 swap = swap->left;
+            }
             swapChild = swap->right;
         } else {
             freeNode(root);
@@ -147,12 +152,14 @@ class SplayTree
 
         // The selected node has at most one child, in swapChild. Detach it
         // from the subtree by replacing it with that child.
-        if (swap == swap->parent->left)
+        if (swap == swap->parent->left) {
             swap->parent->left = swapChild;
-        else
+        } else {
             swap->parent->right = swapChild;
-        if (swapChild)
+        }
+        if (swapChild) {
             swapChild->parent = swap->parent;
+        }
 
         root->item = swap->item;
         freeNode(swap);
@@ -176,12 +183,13 @@ class SplayTree
         do {
             parent = node;
             int c = C::compare(v, node->item);
-            if (c == 0)
+            if (c == 0) {
                 return node;
-            else if (c < 0)
+            } else if (c < 0) {
                 node = node->left;
-            else
+            } else {
                 node = node->right;
+            }
         } while (node);
         return parent;
     }
@@ -240,8 +248,9 @@ class SplayTree
             //   y  c  ==>  a  x
             //  a b           b c
             parent->left = node->right;
-            if (node->right)
+            if (node->right) {
                 node->right->parent = parent;
+            }
             node->right = parent;
         } else {
             MOZ_ASSERT(parent->right == node);
@@ -249,17 +258,19 @@ class SplayTree
             //  a  y   ==>   x  c
             //    b c       a b
             parent->right = node->left;
-            if (node->left)
+            if (node->left) {
                 node->left->parent = parent;
+            }
             node->left = parent;
         }
         node->parent = parent->parent;
         parent->parent = node;
         if (Node* grandparent = node->parent) {
-            if (grandparent->left == parent)
+            if (grandparent->left == parent) {
                 grandparent->left = node;
-            else
+            } else {
                 grandparent->right = node;
+            }
         } else {
             root = node;
         }
@@ -268,8 +279,9 @@ class SplayTree
     template <class Op>
     void forEachInner(Op op, Node* node)
     {
-        if (!node)
+        if (!node) {
             return;
+        }
 
         forEachInner<Op>(op, node->left);
         op(node->item);
@@ -279,10 +291,12 @@ class SplayTree
     void checkCoherency() const
     {
 #ifdef DEBUG
-        if (!enableCheckCoherency)
+        if (!enableCheckCoherency) {
             return;
-        if (!root)
+        }
+        if (!root) {
             return;
+        }
         MOZ_ASSERT(root->parent == nullptr);
         const Node* node = root;
         const Node* minimum = nullptr;
@@ -328,8 +342,9 @@ class SplayTree
                         minimum = node;
                     }
 
-                    if (node->right != prev && node->right != nullptr)
+                    if (node->right != prev && node->right != nullptr) {
                         break;
+                    }
                 }
 
                 if (!node->parent) {
@@ -337,8 +352,9 @@ class SplayTree
                     // We reached the root node either because we came back from
                     // the right hand side, or because the root node had a
                     // single child.
-                    if (node->right == prev || node->right == nullptr)
+                    if (node->right == prev || node->right == nullptr) {
                         return;
+                    }
                 }
 
                 // Go to the right node which we have not visited yet.

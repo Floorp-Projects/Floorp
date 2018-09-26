@@ -1,0 +1,13 @@
+{
+  "manifest_version": 2,
+  "name": "test-temporary-extension",
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "test-temporary-extension@mozilla.org"
+    }
+  },
+  "background": {
+    "scripts": ["script.js"]
+  }
+}

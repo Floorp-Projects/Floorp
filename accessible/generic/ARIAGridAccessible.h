@@ -53,16 +53,6 @@ protected:
   virtual ~ARIAGridAccessible() {}
 
   /**
-   * Return row accessible at the given row index.
-   */
-  Accessible* GetRowAt(int32_t aRow);
-
-  /**
-   * Return cell accessible at the given column index in the row.
-   */
-  Accessible* GetCellInRowAt(Accessible* aRow, int32_t aColumn);
-
-  /**
    * Set aria-selected attribute value on DOM node of the given accessible.
    *
    * @param  aAccessible  [in] accessible

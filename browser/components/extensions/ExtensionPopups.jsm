@@ -281,6 +281,12 @@ class BasePopup {
 
     stack.appendChild(browser);
     viewNode.appendChild(stack);
+    if (!this.extension.remote) {
+      // FIXME: bug 1494029 - this code used to rely on the browser binding
+      // accessing browser.contentWindow. This is a stopgap to continue doing
+      // that, but we should get rid of it in the long term.
+      browser.contentWindow; // eslint-disable-line no-unused-expressions
+    }
 
     ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
 

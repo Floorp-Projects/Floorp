@@ -73,6 +73,8 @@ SurfaceFormatToImageFormat(gfx::SurfaceFormat aFormat) {
       return Some(wr::ImageFormat::BGRA8);
     case gfx::SurfaceFormat::A8:
       return Some(wr::ImageFormat::R8);
+    case gfx::SurfaceFormat::A16:
+      return Some(wr::ImageFormat::R16);
     case gfx::SurfaceFormat::R8G8:
       return Some(wr::ImageFormat::RG8);
     case gfx::SurfaceFormat::UNKNOWN:
@@ -88,6 +90,8 @@ ImageFormatToSurfaceFormat(ImageFormat aFormat) {
       return gfx::SurfaceFormat::B8G8R8A8;
     case ImageFormat::R8:
       return gfx::SurfaceFormat::A8;
+    case ImageFormat::R16:
+      return gfx::SurfaceFormat::A16;
     default:
       return gfx::SurfaceFormat::UNKNOWN;
   }
@@ -842,6 +846,20 @@ static inline wr::WrYuvColorSpace ToWrYuvColorSpace(YUVColorSpace aYUVColorSpace
       MOZ_ASSERT_UNREACHABLE("Tried to convert invalid YUVColorSpace.");
   }
   return wr::WrYuvColorSpace::Rec601;
+}
+
+static inline wr::WrColorDepth ToWrColorDepth(gfx::ColorDepth aColorDepth) {
+  switch (aColorDepth) {
+    case gfx::ColorDepth::COLOR_8:
+      return wr::WrColorDepth::Color8;
+    case gfx::ColorDepth::COLOR_10:
+      return wr::WrColorDepth::Color10;
+    case gfx::ColorDepth::COLOR_12:
+      return wr::WrColorDepth::Color12;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Tried to convert invalid color depth value.");
+  }
+  return wr::WrColorDepth::Color8;
 }
 
 static inline wr::SyntheticItalics DegreesToSyntheticItalics(float aDegrees) {
