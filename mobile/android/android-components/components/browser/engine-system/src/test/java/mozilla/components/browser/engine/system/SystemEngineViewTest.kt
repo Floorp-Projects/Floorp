@@ -339,6 +339,24 @@ class SystemEngineViewTest {
         engineSession.settings.requestInterceptor = requestInterceptor
         webViewClient.onReceivedError(engineView.currentWebView, -1, null, "http://failed.random")
         verify(requestInterceptor).onErrorRequest(engineSession, -1, "http://failed.random")
+
+        val webView = mock(WebView::class.java)
+        engineView.currentWebView = webView
+        val errorResponse = RequestInterceptor.ErrorResponse("foo", url = "about:fail")
+        webViewClient.onReceivedError(engineView.currentWebView, -1, null, "http://failed.random")
+        verify(webView, never()).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
+
+        `when`(requestInterceptor.onErrorRequest(engineSession, -1, "http://failed.random")).thenReturn(errorResponse)
+        webViewClient.onReceivedError(engineView.currentWebView, -1, null, "http://failed.random")
+        verify(webView).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
+
+        val errorResponse2 = RequestInterceptor.ErrorResponse("foo")
+        webViewClient.onReceivedError(engineView.currentWebView, -1, null, "http://failed.random")
+        verify(webView, never()).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
+
+        `when`(requestInterceptor.onErrorRequest(engineSession, -1, "http://failed.random")).thenReturn(errorResponse2)
+        webViewClient.onReceivedError(engineView.currentWebView, -1, null, "http://failed.random")
+        verify(webView).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
     }
 
     @Test
@@ -372,11 +390,17 @@ class SystemEngineViewTest {
         val webView = mock(WebView::class.java)
         engineView.currentWebView = webView
         val errorResponse = RequestInterceptor.ErrorResponse("foo", url = "about:fail")
+        webViewClient.onReceivedError(engineView.currentWebView, webRequest, webError)
+        verify(webView, never()).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
+
         `when`(requestInterceptor.onErrorRequest(engineSession, -1, "http://failed.random")).thenReturn(errorResponse)
         webViewClient.onReceivedError(engineView.currentWebView, webRequest, webError)
         verify(webView).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
 
         val errorResponse2 = RequestInterceptor.ErrorResponse("foo")
+        webViewClient.onReceivedError(engineView.currentWebView, webRequest, webError)
+        verify(webView, never()).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
+
         `when`(requestInterceptor.onErrorRequest(engineSession, -1, "http://failed.random")).thenReturn(errorResponse2)
         webViewClient.onReceivedError(engineView.currentWebView, webRequest, webError)
         verify(webView).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
@@ -404,6 +428,24 @@ class SystemEngineViewTest {
         webViewClient.onReceivedSslError(engineView.currentWebView, handler, error)
         verify(requestInterceptor).onErrorRequest(engineSession, -1, "http://failed.random")
         verify(handler, times(3)).cancel()
+
+        val webView = mock(WebView::class.java)
+        engineView.currentWebView = webView
+        val errorResponse = RequestInterceptor.ErrorResponse("foo", url = "about:fail")
+        webViewClient.onReceivedSslError(engineView.currentWebView, handler, error)
+        verify(webView, never()).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
+
+        `when`(requestInterceptor.onErrorRequest(engineSession, -1, "http://failed.random")).thenReturn(errorResponse)
+        webViewClient.onReceivedSslError(engineView.currentWebView, handler, error)
+        verify(webView).loadDataWithBaseURL("about:fail", "foo", "text/html", "UTF-8", null)
+
+        val errorResponse2 = RequestInterceptor.ErrorResponse("foo")
+        webViewClient.onReceivedSslError(engineView.currentWebView, handler, error)
+        verify(webView, never()).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
+
+        `when`(requestInterceptor.onErrorRequest(engineSession, -1, "http://failed.random")).thenReturn(errorResponse2)
+        webViewClient.onReceivedSslError(engineView.currentWebView, handler, error)
+        verify(webView).loadDataWithBaseURL("http://failed.random", "foo", "text/html", "UTF-8", null)
     }
 
     @Test

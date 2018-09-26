@@ -194,7 +194,7 @@ class SystemEngineView @JvmOverloads constructor(
 
             session?.let { session ->
                 session.settings.requestInterceptor?.onErrorRequest(session, error.primaryError, error.url)?.apply {
-                    view.loadDataWithBaseURL(error.url, data, mimeType, encoding, null)
+                    view.loadDataWithBaseURL(url ?: error.url, data, mimeType, encoding, null)
                 }
             }
         }
@@ -202,7 +202,7 @@ class SystemEngineView @JvmOverloads constructor(
         override fun onReceivedError(view: WebView, errorCode: Int, description: String?, failingUrl: String?) {
             session?.let { session ->
                 session.settings.requestInterceptor?.onErrorRequest(session, errorCode, failingUrl)?.apply {
-                    view.loadDataWithBaseURL(failingUrl, data, mimeType, encoding, null)
+                    view.loadDataWithBaseURL(url ?: failingUrl, data, mimeType, encoding, null)
                 }
             }
         }
