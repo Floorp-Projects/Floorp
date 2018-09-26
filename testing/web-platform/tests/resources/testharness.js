@@ -1255,24 +1255,12 @@ policies and contribution forms [3].
     expose(assert_class_string, "assert_class_string");
 
 
-    function _assert_own_property(name) {
-        return function(object, property_name, description)
-        {
-            assert(object.hasOwnProperty(property_name),
-                   name, description,
-                   "expected property ${p} missing", {p:property_name});
-        };
+    function assert_own_property(object, property_name, description) {
+        assert(object.hasOwnProperty(property_name),
+               "assert_own_property", description,
+               "expected property ${p} missing", {p:property_name});
     }
-    expose(_assert_own_property("assert_exists"), "assert_exists");
-    expose(_assert_own_property("assert_own_property"), "assert_own_property");
-
-    function assert_not_exists(object, property_name, description)
-    {
-        assert(!object.hasOwnProperty(property_name),
-               "assert_not_exists", description,
-               "unexpected property ${p} found", {p:property_name});
-    }
-    expose(assert_not_exists, "assert_not_exists");
+    expose(assert_own_property, "assert_own_property");
 
     function _assert_inherits(name) {
         return function (object, property_name, description)
