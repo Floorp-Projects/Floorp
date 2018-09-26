@@ -115,7 +115,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
                     WebViewProvider.performNewBrowserSessionCleanup()
                 }
             }
-        })
+        }, owner = this)
 
         if (!isCustomTabMode && components.sessionManager.sessions.isEmpty()) {
             showUrlInputScreen()
@@ -243,9 +243,14 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             }
         }
 
+        // Currently this callback can get invoked while the app is in the background. Therefore we are using
+        // commitAllowingStateLoss() here because we can't do a fragment transaction while the app is in the
+        // background - like we already do in showBrowserScreenForCurrentSession().
+        // Ideally we'd make it possible to pause observers while the app is in the background:
+        // https://github.com/mozilla-mobile/android-components/issues/876
         transaction
                 .replace(R.id.container, UrlInputFragment.createWithoutSession(), UrlInputFragment.FRAGMENT_TAG)
-                .commit()
+                .commitAllowingStateLoss()
     }
 
     private fun showFirstrun(currentSession: Session? = null) {
