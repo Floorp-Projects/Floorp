@@ -9,8 +9,6 @@ const {DebuggerClient} = require("devtools/shared/client/debugger-client");
 const {DebuggerServer} = require("devtools/server/main");
 
 const Services = require("Services");
-// promise is still used in tests using this helper
-const defer = require("devtools/shared/defer");
 const {DocumentWalker: _documentWalker} = require("devtools/server/actors/inspector/document-walker");
 
 // Always log packets when running tests.
@@ -87,15 +85,15 @@ function attachURL(url, callback) {
 }
 
 function promiseOnce(target, event) {
-  const deferred = defer();
-  target.on(event, (...args) => {
-    if (args.length === 1) {
-      deferred.resolve(args[0]);
-    } else {
-      deferred.resolve(args);
-    }
+  return new Promise(resolve => {
+    target.on(event, (...args) => {
+      if (args.length === 1) {
+        resolve(args[0]);
+      } else {
+        resolve(args);
+      }
+    });
   });
-  return deferred.promise;
 }
 
 function sortOwnershipChildren(children) {
@@ -171,37 +169,36 @@ function assertOwnershipTrees(walker) {
 
 // Verify that an actorID is inaccessible both from the client library and the server.
 function checkMissing(client, actorID) {
-  let deferred = defer();
-  const front = client.getActor(actorID);
-  ok(!front, "Front shouldn't be accessible from the client for actorID: " + actorID);
+  return new Promise(resolve => {
+    const front = client.getActor(actorID);
+    ok(!front, "Front shouldn't be accessible from the client for actorID: " + actorID);
 
-  deferred = defer();
-  client.request({
-    to: actorID,
-    type: "request",
-  }, response => {
-    is(response.error, "noSuchActor", "node list actor should no longer be contactable.");
-    deferred.resolve(undefined);
+    client.request({
+      to: actorID,
+      type: "request",
+    }, response => {
+      is(response.error, "noSuchActor",
+        "node list actor should no longer be contactable.");
+      resolve(undefined);
+    });
   });
-  return deferred.promise;
 }
 
 // Verify that an actorID is accessible both from the client library and the server.
 function checkAvailable(client, actorID) {
-  let deferred = defer();
-  const front = client.getActor(actorID);
-  ok(front, "Front should be accessible from the client for actorID: " + actorID);
+  return new Promise(resolve => {
+    const front = client.getActor(actorID);
+    ok(front, "Front should be accessible from the client for actorID: " + actorID);
 
-  deferred = defer();
-  client.request({
-    to: actorID,
-    type: "garbageAvailableTest",
-  }, response => {
-    is(response.error, "unrecognizedPacketType",
-       "node list actor should be contactable.");
-    deferred.resolve(undefined);
+    client.request({
+      to: actorID,
+      type: "garbageAvailableTest",
+    }, response => {
+      is(response.error, "unrecognizedPacketType",
+        "node list actor should be contactable.");
+      resolve(undefined);
+    });
   });
-  return deferred.promise;
 }
 
 function promiseDone(currentPromise) {
@@ -275,20 +272,20 @@ function assertChildList(mutations) {
 // Load mutations aren't predictable, so keep accumulating mutations until
 // the one we're looking for shows up.
 function waitForMutation(walker, test, mutations = []) {
-  const deferred = defer();
-  for (const change of mutations) {
-    if (test(change)) {
-      deferred.resolve(mutations);
+  return new Promise(resolve => {
+    for (const change of mutations) {
+      if (test(change)) {
+        resolve(mutations);
+      }
     }
-  }
 
-  walker.once("mutations", newMutations => {
-    waitForMutation(walker, test, mutations.concat(newMutations)).then(finalMutations => {
-      deferred.resolve(finalMutations);
+    walker.once("mutations", newMutations => {
+      waitForMutation(walker, test, mutations.concat(newMutations))
+        .then(finalMutations => {
+          resolve(finalMutations);
+        });
     });
   });
-
-  return deferred.promise;
 }
 
 var _tests = [];
