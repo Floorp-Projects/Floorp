@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=292789
 <p id="display"></p>
 <div id="content" style="display: none">
   <script src="chrome://global/content/treeUtils.js"></script>
-  <script type="application/javascript" src="chrome://mozapps/content/xpinstall/xpinstallConfirm.js"></script>
+  <script type="application/javascript" src="chrome://mozapps/content/extensions/eula.js"></script>
   <script id="resjs" type="application/javascript"></script>
 </div>
 <pre id="test">
@@ -29,11 +29,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=292789
 
 SimpleTest.waitForExplicitFinish();
 
+let ChromeUtils = {
+  import() {},
+};
+
 /** <script src=""> test **/
 function testScriptSrc(aCallback) {
     is(typeof gTreeUtils.sort, "function",
        "content can still load <script> from chrome://global");
-    is(typeof XPInstallConfirm, "undefined",
+    is(typeof Startup, "undefined",
        "content should not be able to load <script> from chrome://mozapps");
 
     /** make sure the last one didn't pass because someone
@@ -41,12 +45,12 @@ function testScriptSrc(aCallback) {
      **/
     var resjs = document.getElementById("resjs");
     resjs.onload = scriptOnload;
-    resjs.src = "resource://gre/chrome/toolkit/content/mozapps/xpinstall/xpinstallConfirm.js";
+    resjs.src = "resource://gre/chrome/toolkit/content/mozapps/extensions/eula.js";
     document.getElementById("content").appendChild(resjs);
 
     function scriptOnload() {
-      is(typeof XPInstallConfirm, "object",
-         "xpinstallConfirm.js has not moved unexpectedly");
+      is(typeof Startup, "function",
+         "extensions.js has not moved unexpectedly");
 
       // trigger the callback
       if (aCallback)

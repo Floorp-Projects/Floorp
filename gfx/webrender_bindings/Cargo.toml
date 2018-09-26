@@ -9,7 +9,7 @@ rayon = "1"
 thread_profiler = "0.1.1"
 euclid = { version = "0.19", features = ["serde"] }
 app_units = "0.7"
-gleam = "0.6"
+gleam = "0.6.2"
 log = "0.4"
 nsstring = { path = "../../servo/support/gecko/nsstring" }
 bincode = "1.0"

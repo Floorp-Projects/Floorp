@@ -119,8 +119,14 @@ class ProjectSearch extends _react.Component {
       const query = sanitizeQuery(this.state.inputValue);
 
       if (query) {
-        this.props.searchSources(query);
+        this.doSearch(query);
       }
+    };
+
+    this.onHistoryScroll = query => {
+      this.setState({
+        inputValue: query
+      });
     };
 
     this.onEnterPress = () => {
@@ -276,6 +282,10 @@ class ProjectSearch extends _react.Component {
     }
   }
 
+  doSearch(searchTerm) {
+    this.props.searchSources(searchTerm);
+  }
+
   shouldShowErrorEmoji() {
     return !this.getResultCount() && this.props.status === _projectTextSearch.statusType.done;
   }
@@ -296,6 +306,7 @@ class ProjectSearch extends _react.Component {
         inputFocused: false
       }),
       onKeyDown: this.onKeyDown,
+      onHistoryScroll: this.onHistoryScroll,
       handleClose: this.props.closeProjectSearch,
       ref: "searchInput"
     });

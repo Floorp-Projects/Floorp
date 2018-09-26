@@ -4,7 +4,7 @@
 
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
-use api::{YuvColorSpace, YuvFormat, WorldPixel, WorldRect};
+use api::{YuvColorSpace, YuvFormat, WorldPixel, WorldRect, ColorDepth};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use euclid::vec3;
@@ -12,14 +12,14 @@ use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheAddress};
 use gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders};
 use gpu_types::{ClipMaskInstance, SplitCompositeInstance};
-use gpu_types::{PrimitiveInstance, RasterizationSpace, GlyphInstance};
+use gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
 use plane_split::{BspSplitter, Clipper, Polygon, Splitter};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, DeferredResolve};
-use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveIndex};
-use prim_store::{PrimitiveMetadata, PrimitiveRun, VisibleGradientTile};
+use prim_store::{EdgeAaSegmentMask, ImageSource};
+use prim_store::{PrimitiveMetadata, VisibleGradientTile, PrimitiveInstance};
 use prim_store::{BorderSource, Primitive, PrimitiveDetails};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
@@ -46,7 +46,7 @@ pub enum BrushBatchKind {
         source_id: RenderTaskId,
         backdrop_id: RenderTaskId,
     },
-    YuvImage(ImageBufferKind, YuvFormat, YuvColorSpace),
+    YuvImage(ImageBufferKind, YuvFormat, ColorDepth, YuvColorSpace),
     RadialGradient,
     LinearGradient,
 }
@@ -141,7 +141,7 @@ impl AlphaBatchList {
         &mut self,
         key: BatchKey,
         bounding_rect: &WorldRect,
-    ) -> &mut Vec<PrimitiveInstance> {
+    ) -> &mut Vec<PrimitiveInstanceData> {
         let mut selected_batch_index = None;
 
         match key.blend_mode {
@@ -213,7 +213,7 @@ impl OpaqueBatchList {
         &mut self,
         key: BatchKey,
         bounding_rect: &WorldRect,
-    ) -> &mut Vec<PrimitiveInstance> {
+    ) -> &mut Vec<PrimitiveInstanceData> {
         let mut selected_batch_index = None;
         let item_area = bounding_rect.size.area();
 
@@ -282,7 +282,7 @@ impl BatchList {
         &mut self,
         key: BatchKey,
         bounding_rect: &WorldRect,
-    ) -> &mut Vec<PrimitiveInstance> {
+    ) -> &mut Vec<PrimitiveInstanceData> {
         match key.blend_mode {
             BlendMode::None => {
                 self.opaque_batch_list
@@ -327,7 +327,7 @@ impl BatchList {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveBatch {
     pub key: BatchKey,
-    pub instances: Vec<PrimitiveInstance>,
+    pub instances: Vec<PrimitiveInstanceData>,
 }
 
 impl PrimitiveBatch {
@@ -450,9 +450,9 @@ impl AlphaBatchBuilder {
         let mut splitter = BspSplitter::new();
 
         // Add each run in this picture to the batch.
-        for run in &pic.runs {
-            self.add_run_to_batch(
-                run,
+        for (plane_split_anchor, prim_instance) in pic.prim_instances.iter().enumerate() {
+            self.add_prim_to_batch(
+                prim_instance,
                 ctx,
                 gpu_cache,
                 render_tasks,
@@ -463,13 +463,15 @@ impl AlphaBatchBuilder {
                 prim_headers,
                 transforms,
                 root_spatial_node_index,
+                plane_split_anchor,
             );
         }
 
         // Flush the accumulated plane splits onto the task tree.
         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
-            let prim_index = PrimitiveIndex(poly.anchor);
+            let prim_instance = &pic.prim_instances[poly.anchor];
+            let prim_index = prim_instance.prim_index;
             let pic_metadata = &ctx.prim_store.primitives[prim_index.0].metadata;
             if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
                 println!("\t\tsplit polygon {:?}", poly.points);
@@ -487,7 +489,7 @@ impl AlphaBatchBuilder {
 
             let prim_header = PrimitiveHeader {
                 local_rect: pic_metadata.local_rect,
-                local_clip_rect: pic_metadata.combined_local_clip_rect,
+                local_clip_rect: prim_instance.combined_local_clip_rect,
                 task_address,
                 specific_prim_address: GpuCacheAddress::invalid(),
                 clip_task_address,
@@ -547,54 +549,7 @@ impl AlphaBatchBuilder {
                 prim_headers.z_generator.next(),
             );
 
-            batch.push(PrimitiveInstance::from(instance));
-        }
-    }
-
-    // Helper to add an entire primitive run to a batch list.
-    // TODO(gw): Restructure this so the param list isn't quite
-    //           so daunting!
-    fn add_run_to_batch(
-        &mut self,
-        run: &PrimitiveRun,
-        ctx: &RenderTargetContext,
-        gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskTree,
-        task_id: RenderTaskId,
-        task_address: RenderTaskAddress,
-        deferred_resolves: &mut Vec<DeferredResolve>,
-        splitter: &mut BspSplitter<f64, WorldPixel>,
-        prim_headers: &mut PrimitiveHeaders,
-        transforms: &mut TransformPalette,
-        root_spatial_node_index: SpatialNodeIndex,
-    ) {
-        for i in 0 .. run.count {
-            let prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
-            let metadata = &ctx.prim_store.primitives[prim_index.0].metadata;
-
-            if metadata.clipped_world_rect.is_some() {
-                let transform_id = transforms
-                    .get_id(
-                        metadata.spatial_node_index,
-                        root_spatial_node_index,
-                        ctx.clip_scroll_tree,
-                    );
-
-                self.add_prim_to_batch(
-                    transform_id,
-                    prim_index,
-                    ctx,
-                    gpu_cache,
-                    render_tasks,
-                    task_id,
-                    task_address,
-                    deferred_resolves,
-                    splitter,
-                    prim_headers,
-                    transforms,
-                    root_spatial_node_index,
-                );
-            }
+            batch.push(PrimitiveInstanceData::from(instance));
         }
     }
 
@@ -604,8 +559,7 @@ impl AlphaBatchBuilder {
     // in that picture are being drawn into the same target.
     fn add_prim_to_batch(
         &mut self,
-        transform_id: TransformPaletteId,
-        prim_index: PrimitiveIndex,
+        prim_instance: &PrimitiveInstance,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskTree,
@@ -616,11 +570,24 @@ impl AlphaBatchBuilder {
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         root_spatial_node_index: SpatialNodeIndex,
+        plane_split_anchor: usize,
     ) {
-        let prim = &ctx.prim_store.primitives[prim_index.0];
+        let prim = &ctx.prim_store.primitives[prim_instance.prim_index.0];
         let prim_metadata = &prim.metadata;
+
+        if prim_metadata.clipped_world_rect.is_none() {
+            return;
+        }
+
         #[cfg(debug_assertions)] //TODO: why is this needed?
         debug_assert_eq!(prim_metadata.prepared_frame_id, render_tasks.frame_id());
+
+        let transform_id = transforms
+            .get_id(
+                prim_metadata.spatial_node_index,
+                root_spatial_node_index,
+                ctx.clip_scroll_tree,
+            );
 
         // TODO(gw): Calculating this for every primitive is a bit
         //           wasteful. We should probably cache this in
@@ -667,14 +634,14 @@ impl AlphaBatchBuilder {
 
         let prim_header = PrimitiveHeader {
             local_rect: prim_metadata.local_rect,
-            local_clip_rect: prim_metadata.combined_local_clip_rect,
+            local_clip_rect: prim_instance.combined_local_clip_rect,
             task_address,
             specific_prim_address: prim_cache_address,
             clip_task_address,
             transform_id,
         };
 
-        if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
+        if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_instance.prim_index) {
             println!("\ttask target {:?}", self.target_rect);
             println!("\t{:?}", prim_header);
         }
@@ -698,7 +665,7 @@ impl AlphaBatchBuilder {
                             // since we determine the UVs by doing a bilerp with a factor
                             // from the original local rect.
                             let local_rect = prim_metadata.local_rect
-                                                          .intersection(&prim_metadata.combined_local_clip_rect);
+                                                          .intersection(&prim_instance.combined_local_clip_rect);
 
                             if let Some(local_rect) = local_rect {
                                 match transform.transform_kind() {
@@ -708,7 +675,7 @@ impl AlphaBatchBuilder {
                                             local_rect.cast(),
                                             &transform.cast(),
                                             &inv_transform.cast(),
-                                            prim_index.0,
+                                            plane_split_anchor,
                                         ).unwrap();
                                         splitter.add(polygon);
                                     }
@@ -716,7 +683,10 @@ impl AlphaBatchBuilder {
                                         let mut clipper = Clipper::new();
                                         let matrix = transform.cast();
                                         let results = clipper.clip_transformed(
-                                            Polygon::from_rect(local_rect.cast(), prim_index.0),
+                                            Polygon::from_rect(
+                                                local_rect.cast(),
+                                                plane_split_anchor,
+                                            ),
                                             &matrix,
                                             Some(bounding_rect.to_f64()),
                                         );
@@ -771,7 +741,7 @@ impl AlphaBatchBuilder {
                                                     brush_flags: BrushFlags::empty(),
                                                     clip_task_address,
                                                 };
-                                                batch.push(PrimitiveInstance::from(instance));
+                                                batch.push(PrimitiveInstanceData::from(instance));
                                             }
                                             FilterOp::DropShadow(offset, ..) => {
                                                 // Draw an instance of the shadow first, following by the content.
@@ -855,11 +825,11 @@ impl AlphaBatchBuilder {
 
                                                 self.batch_list
                                                     .get_suitable_batch(shadow_key, bounding_rect)
-                                                    .push(PrimitiveInstance::from(shadow_instance));
+                                                    .push(PrimitiveInstanceData::from(shadow_instance));
 
                                                 self.batch_list
                                                     .get_suitable_batch(content_key, bounding_rect)
-                                                    .push(PrimitiveInstance::from(content_instance));
+                                                    .push(PrimitiveInstanceData::from(content_instance));
                                             }
                                             _ => {
                                                 let filter_mode = match filter {
@@ -929,7 +899,7 @@ impl AlphaBatchBuilder {
                                                 };
 
                                                 let batch = self.batch_list.get_suitable_batch(key, bounding_rect);
-                                                batch.push(PrimitiveInstance::from(instance));
+                                                batch.push(PrimitiveInstanceData::from(instance));
                                             }
                                         }
                                     }
@@ -965,7 +935,7 @@ impl AlphaBatchBuilder {
                                             brush_flags: BrushFlags::empty(),
                                         };
 
-                                        batch.push(PrimitiveInstance::from(instance));
+                                        batch.push(PrimitiveInstanceData::from(instance));
                                     }
                                     PictureCompositeMode::Blit => {
                                         let cache_task_id = surface.resolve_render_task_id();
@@ -999,7 +969,7 @@ impl AlphaBatchBuilder {
                                             edge_flags: EdgeAaSegmentMask::empty(),
                                             brush_flags: BrushFlags::empty(),
                                         };
-                                        batch.push(PrimitiveInstance::from(instance));
+                                        batch.push(PrimitiveInstanceData::from(instance));
                                     }
                                 }
                             }
@@ -1082,10 +1052,10 @@ impl AlphaBatchBuilder {
                                 ctx.resource_cache,
                                 gpu_cache,
                                 deferred_resolves,
-                                ctx.prim_store.chase_id == Some(prim_index),
+                                ctx.prim_store.chase_id == Some(prim_instance.prim_index),
                         ) {
                             let prim_header_index = prim_headers.push(&prim_header, user_data);
-                            if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_index) {
+                            if cfg!(debug_assertions) && ctx.prim_store.chase_id == Some(prim_instance.prim_index) {
                                 println!("\t{:?} {:?}, task relative bounds {:?}",
                                     batch_kind, prim_header_index, bounding_rect);
                             }
@@ -1224,7 +1194,7 @@ impl AlphaBatchBuilder {
             textures,
         };
         let batch = self.batch_list.get_suitable_batch(batch_key, bounding_rect);
-        batch.push(PrimitiveInstance::from(base_instance));
+        batch.push(PrimitiveInstanceData::from(base_instance));
     }
 
     fn add_brush_to_batch(
@@ -1286,7 +1256,7 @@ impl AlphaBatchBuilder {
                         BrushSegmentTaskId::Empty => continue,
                     };
 
-                    let instance = PrimitiveInstance::from(BrushInstance {
+                    let instance = PrimitiveInstanceData::from(BrushInstance {
                         segment_index: i as i32,
                         edge_flags: segment.edge_flags,
                         clip_task_address,
@@ -1308,7 +1278,7 @@ impl AlphaBatchBuilder {
                     textures,
                 };
                 let batch = self.batch_list.get_suitable_batch(batch_key, bounding_rect);
-                batch.push(PrimitiveInstance::from(base_instance));
+                batch.push(PrimitiveInstanceData::from(base_instance));
             }
         }
 
@@ -1348,7 +1318,7 @@ fn add_gradient_tiles(
         };
         let prim_header_index = prim_headers.push(&prim_header, user_data);
 
-        batch.push(PrimitiveInstance::from(
+        batch.push(PrimitiveInstanceData::from(
             BrushInstance {
                 prim_header_index,
                 clip_task_address,
@@ -1517,7 +1487,7 @@ impl BrushPrimitive {
                     ],
                 ))
             }
-            BrushKind::YuvImage { format, yuv_key, image_rendering, color_space } => {
+            BrushKind::YuvImage { format, yuv_key, image_rendering, color_depth, color_space } => {
                 let mut textures = BatchTextures::no_texture();
                 let mut uv_rect_addresses = [0; 3];
 
@@ -1558,6 +1528,7 @@ impl BrushPrimitive {
                 let kind = BrushBatchKind::YuvImage(
                     buffer_kind,
                     format,
+                    color_depth,
                     color_space,
                 );
 

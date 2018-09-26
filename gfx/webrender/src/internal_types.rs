@@ -151,7 +151,7 @@ pub enum ResultMsg {
     UpdateGpuCache(GpuCacheUpdateList),
     UpdateResources {
         updates: TextureUpdateList,
-        cancel_rendering: bool,
+        memory_pressure: bool,
     },
     PublishPipelineInfo(PipelineInfo),
     PublishDocument(

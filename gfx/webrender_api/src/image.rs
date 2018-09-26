@@ -90,6 +90,8 @@ pub enum ImageFormat {
     /// red per se, and is just the way that OpenGL has historically referred
     /// to single-channel buffers.
     R8 = 1,
+    /// One-channel, short storage
+    R16 = 2,
     /// Four channels, byte storage.
     BGRA8 = 3,
     /// Four channels, float storage.
@@ -106,10 +108,43 @@ impl ImageFormat {
     pub fn bytes_per_pixel(self) -> u32 {
         match self {
             ImageFormat::R8 => 1,
+            ImageFormat::R16 => 2,
             ImageFormat::BGRA8 => 4,
             ImageFormat::RGBAF32 => 16,
             ImageFormat::RG8 => 2,
             ImageFormat::RGBAI32 => 16,
+        }
+    }
+}
+
+/// Specifies the color depth of an image. Currently only used for YUV images.
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum ColorDepth {
+    /// 8 bits image (most common)
+    Color8,
+    /// 10 bits image
+    Color10,
+    /// 12 bits image
+    Color12,
+}
+
+impl ColorDepth {
+    /// Return the numerical bit depth value for the type.
+    pub fn bit_depth(self) -> u32 {
+        match self {
+            ColorDepth::Color8 => 8,
+            ColorDepth::Color10 => 10,
+            ColorDepth::Color12 => 12,
+        }
+    }
+    /// 10 and 12 bits images are encoded using 16 bits integer, we need to
+    /// rescale the 10 or 12 bits value to extend to 16 bits.
+    pub fn rescaling_factor(self) -> f32 {
+        match self {
+            ColorDepth::Color8 => 1.0,
+            ColorDepth::Color10 => 64.0,
+            ColorDepth::Color12 => 16.0,
         }
     }
 }
