@@ -251,6 +251,8 @@ public:
     explicit WebGLExtensionShaderTextureLod(WebGLContext*);
     virtual ~WebGLExtensionShaderTextureLod();
 
+    static bool IsSupported(const WebGLContext* context);
+
     DECL_WEBGL_EXTENSION_GOOP
 };
 
