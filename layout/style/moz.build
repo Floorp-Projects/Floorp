@@ -186,7 +186,6 @@ UNIFIED_SOURCES += [
     'nsCSSValue.cpp',
     'nsDOMCSSAttrDeclaration.cpp',
     'nsDOMCSSDeclaration.cpp',
-    'nsDOMCSSRect.cpp',
     'nsDOMCSSValueList.cpp',
     'nsFontFaceLoader.cpp',
     'nsFontFaceUtils.cpp',

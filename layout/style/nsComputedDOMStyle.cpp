@@ -23,7 +23,6 @@
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
 
-#include "nsDOMCSSRect.h"
 #include "nsDOMCSSValueList.h"
 #include "nsFlexContainerFrame.h"
 #include "nsGridContainerFrame.h"
