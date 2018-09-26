@@ -68,6 +68,8 @@ add_task(async function() {
     const jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
     is(jsonView.textContent === L10N.getStr("jsonScopeName"), true,
       "The response json view has the intended visibility.");
+    is(tabpanel.querySelector(".editor-row-container").clientHeight !== 0, true,
+       "The source editor container has visible height.");
     is(tabpanel.querySelector(".CodeMirror-code") === null, false,
       "The response editor has the intended visibility.");
     is(tabpanel.querySelector(".response-image-box") === null, true,
