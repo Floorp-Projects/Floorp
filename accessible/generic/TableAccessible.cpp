@@ -7,6 +7,7 @@
 #include "TableAccessible.h"
 
 #include "Accessible-inl.h"
+#include "AccIterator.h"
 
 #include "nsTableCellFrame.h"
 #include "nsTableWrapperFrame.h"
@@ -237,4 +238,33 @@ TableAccessible::IsProbablyLayoutTable()
   RETURN_LAYOUT_ANSWER(
     false, "No layout factor strong enough, so will guess data"
   );
+}
+
+Accessible*
+TableAccessible::RowAt(int32_t aRow)
+{
+  int32_t rowIdx = aRow;
+
+  AccIterator rowIter(this->AsAccessible(), filters::GetRow);
+
+  Accessible* row = rowIter.Next();
+  while (rowIdx != 0 && (row = rowIter.Next())) {
+    rowIdx--;
+  }
+
+  return row;
+}
+
+Accessible*
+TableAccessible::CellInRowAt(Accessible* aRow, int32_t aColumn)
+{
+  int32_t colIdx = aColumn;
+
+  AccIterator cellIter(aRow, filters::GetCell);
+  Accessible* cell = cellIter.Next();
+  while (colIdx != 0 && (cell = cellIter.Next())) {
+    colIdx--;
+  }
+
+  return cell;
 }
