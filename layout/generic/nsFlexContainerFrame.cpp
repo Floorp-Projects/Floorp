@@ -1720,51 +1720,57 @@ nsFlexContainerFrame::
 }
 
 /**
- * A cached result for a measuring reflow.
+ * A cached result for a measuring reflow. This cache prevents us from doing
+ * exponential reflows in cases of deeply nested flex and scroll frames.
  *
- * Right now we only need to cache the available size and the computed height
- * for checking that the reflow input is valid, and the height and the ascent
- * to be used. This can be extended later if needed.
+ * We store the cached value in the flex item's frame property table, for
+ * simplicity.
  *
- * The assumption here is that a given flex item measurement won't change until
- * either the available size or computed height changes, or the flex item's
- * intrinsic size is marked as dirty (due to a style or DOM change).
+ * Right now, we cache the following as a "key", from the item's ReflowInput:
+ *   - its ComputedSize
+ *   - its min/max block size (in case its ComputedBSize is unconstrained)
+ *   - its AvailableBSize
+ * ...and we cache the following as the "value", from the item's ReflowOutput:
+ *   - its final BSize
+ *   - its ascent
  *
- * Note that the components of "Key" (mComputed{Min,Max,}BSize and
- * mAvailableSize) are sufficient to catch any changes to the flex container's
- * size that the item may care about for its cached measuring reflow. If
- * the item cares about the container's BSize -- e.g. if it has a percent
- * height and the container's height changes, in a horizontal-WM container --
- * then that'll be detectable via the item's resolved "mComputedBSize"
- * differing from the value in our Key.  And if the item cares about the
- * container's ISize -- e.g. if it has a percent width and the container's
- * width changes, in a horizontal-WM container -- then that'll be detectable
- * via mAvailableSize changing, because we always use the flex container's
- * ComputedISize as the Available ISize for its flex items.
+ * The assumption here is that a given flex item measurement from our "value"
+ * won't change unless one of the pieces of the "key" change, or the flex
+ * item's intrinsic size is marked as dirty (due to a style or DOM change).
+ * (The latter will cause the cached value to be discarded, in
+ * nsFrame::MarkIntrinsicISizesDirty.)
+ *
+ * Note that the components of "Key" (mComputed{MinB,MaxB,}Size and
+ * mAvailableBSize) are sufficient to catch any changes to the flex container's
+ * size that the item may care about for its measuring reflow. Specifically:
+ *  - If the item cares about the container's size (e.g. if it has a percent
+ *    height and the container's height changes, in a horizontal-WM container)
+ *    then that'll be detectable via the item's ReflowInput's "ComputedSize()"
+ *    differing from the value in our Key.  And the same applies for the
+ *    inline axis.
+ *  - If the item is fragmentable (pending bug 939897) and its measured BSize
+ *    depends on where it gets fragmented, then that sort of change can be
+ *    detected due to the item's ReflowInput's "AvailableBSize()" differing
+ *    from the value in our Key.
  *
  * One particular case to consider (& need to be sure not to break when
  * changing this class): the flex item's computed BSize may change between
  * measuring reflows due to how the mIsFlexContainerMeasuringBSize flag affects
  * size computation (see bug 1336708). This is one reason we need to use the
  * computed BSize as part of the key.
- *
- * Caching it prevents us from doing exponential reflows in cases of deeply
- * nested flex and scroll frames.
- *
- * We store them in the frame property table for simplicity.
  */
 class nsFlexContainerFrame::CachedMeasuringReflowResult
 {
   struct Key
   {
     const LogicalSize mAvailableSize;
-    const nscoord mComputedBSize;
+    const LogicalSize mComputedSize;
     const nscoord mComputedMinBSize;
     const nscoord mComputedMaxBSize;
 
     explicit Key(const ReflowInput& aRI)
       : mAvailableSize(aRI.AvailableSize())
-      , mComputedBSize(aRI.ComputedBSize())
+      , mComputedSize(aRI.ComputedSize())
       , mComputedMinBSize(aRI.ComputedMinBSize())
       , mComputedMaxBSize(aRI.ComputedMaxBSize())
     { }
@@ -1772,7 +1778,7 @@ class nsFlexContainerFrame::CachedMeasuringReflowResult
     bool operator==(const Key& aOther) const
     {
       return mAvailableSize == aOther.mAvailableSize &&
-        mComputedBSize == aOther.mComputedBSize &&
+        mComputedSize == aOther.mComputedSize &&
         mComputedMinBSize == aOther.mComputedMinBSize &&
         mComputedMaxBSize == aOther.mComputedMaxBSize;
     }
