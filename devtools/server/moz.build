@@ -20,7 +20,6 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 DevToolsModules(
-    'actor-registry.js',
     'main.js',
 )
 
