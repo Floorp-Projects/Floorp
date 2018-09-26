@@ -349,9 +349,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   MOZ_ASSERT(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalSize finalSize(wm,
-                        aReflowInput.ComputedISize(),
-                        aReflowInput.ComputedBSize());
+  LogicalSize finalSize = aReflowInput.ComputedSize();
 
   // stash this away so we can compute our inner area later
   mBorderPadding   = aReflowInput.ComputedLogicalBorderPadding();
