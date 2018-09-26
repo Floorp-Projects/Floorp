@@ -735,14 +735,6 @@ TabChild::SetChromeFlags(uint32_t aChromeFlags)
 }
 
 NS_IMETHODIMP
-TabChild::DestroyBrowserWindow()
-{
-  NS_WARNING("TabChild::DestroyBrowserWindow not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TabChild::RemoteSizeShellTo(int32_t aWidth, int32_t aHeight,
                             int32_t aShellItemWidth, int32_t aShellItemHeight)
 {
@@ -796,14 +788,6 @@ TabChild::RemoteDropLinks(uint32_t aLinksCount,
   bool sent = SendDropLinks(linksArray);
 
   return sent ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-TabChild::SizeBrowserTo(int32_t aWidth, int32_t aHeight)
-{
-  NS_WARNING("TabChild::SizeBrowserTo not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
