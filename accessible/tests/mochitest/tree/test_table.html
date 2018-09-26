@@ -218,6 +218,21 @@
         ] };
       testAccessibleTree("table_containing_inlinetable", accTree);
 
+      // ///////////////////////////////////////////////////////////////////////
+      // table with a cell that has display:block
+      accTree =
+        { TABLE: [
+          { ROW: [
+            { CELL: [
+              { TEXT_LEAF: [ ] }
+            ] },
+            { CELL: [
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("table_containing_block_cell", accTree);
+
       SimpleTest.finish();
     }
 
@@ -343,5 +358,12 @@
        </tr>
      </table>
    </td></tr></table>
+
+  <table id="table_containing_block_cell">
+    <tr>
+      <td>Normal cell</td>
+      <td style="display: block;">Block cell</td>
+    </tr>
+  </table>
 </body>
 </html>
