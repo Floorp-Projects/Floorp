@@ -19,6 +19,7 @@ LOCAL_INCLUDES += [
     '/accessible/base',
     '/accessible/generic',
     '/accessible/xpcom',
+    '/layout/forms',
     '/layout/generic',
     '/layout/tables',
     '/layout/xul',

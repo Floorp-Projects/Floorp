@@ -20,7 +20,6 @@
 #include "mozilla/Attributes.h"
 #include "nsGfxScrollFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
 #include "nsSelectsAreaFrame.h"
 
@@ -47,7 +46,6 @@ class HTMLOptionsCollection;
 
 class nsListControlFrame final : public nsHTMLScrollFrame,
                                  public nsIFormControlFrame,
-                                 public nsIListControlFrame,
                                  public nsISelectControlFrame
 {
 public:
@@ -110,40 +108,39 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-    // nsIListControlFrame
-  virtual void SetComboboxFrame(nsIFrame* aComboboxFrame) override;
-  virtual int32_t GetSelectedIndex() override;
-  virtual HTMLOptionElement* GetCurrentOption() override;
+  void SetComboboxFrame(nsIFrame* aComboboxFrame);
+  int32_t GetSelectedIndex();
+  HTMLOptionElement* GetCurrentOption();
 
   /**
    * Gets the text of the currently selected item.
    * If the there are zero items then an empty string is returned
    * If there is nothing selected, then the 0th item's text is returned.
    */
-  virtual void GetOptionText(uint32_t aIndex, nsAString& aStr) override;
+  void GetOptionText(uint32_t aIndex, nsAString& aStr);
 
-  virtual void CaptureMouseEvents(bool aGrabMouseEvents) override;
-  virtual nscoord GetBSizeOfARow() override;
-  virtual uint32_t GetNumberOfOptions() override;
-  virtual void AboutToDropDown() override;
+  void CaptureMouseEvents(bool aGrabMouseEvents);
+  nscoord GetBSizeOfARow();
+  uint32_t GetNumberOfOptions();
+  void AboutToDropDown();
 
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  virtual void AboutToRollup() override;
+  void AboutToRollup();
 
   /**
    * Dispatch a DOM oninput and onchange event synchroniously.
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  virtual void FireOnInputAndOnChange() override;
+  void FireOnInputAndOnChange();
 
   /**
    * Makes aIndex the selected option of a combobox list.
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  virtual void ComboboxFinish(int32_t aIndex) override;
-  virtual void OnContentReset() override;
+  void ComboboxFinish(int32_t aIndex);
+  void OnContentReset();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(int32_t index) override;

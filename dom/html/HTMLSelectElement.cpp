@@ -28,7 +28,7 @@
 #include "nsIForm.h"
 #include "nsIFormProcessor.h"
 #include "nsIFrame.h"
-#include "nsIListControlFrame.h"
+#include "nsListControlFrame.h"
 #include "nsISelectControlFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsMappedAttributes.h"
@@ -1605,7 +1605,7 @@ HTMLSelectElement::DispatchContentReset()
         comboFrame->OnContentReset();
       }
     } else {
-      nsIListControlFrame* listFrame = do_QueryFrame(formControlFrame);
+      nsListControlFrame* listFrame = do_QueryFrame(formControlFrame);
       if (listFrame) {
         listFrame->OnContentReset();
       }
