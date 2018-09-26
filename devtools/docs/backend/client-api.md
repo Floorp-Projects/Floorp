@@ -23,7 +23,6 @@ function start() {
 
   // Attach listeners for client events.
   client.addListener("tabNavigated", onTab);
-  client.addListener("newScript", onScript);
   client.connect((type, traits) => {
     // Now the client is conected to the server.
     debugTab();
@@ -54,7 +53,6 @@ async function startClient() {
 
   // Attach listeners for client events.
   client.addListener("tabNavigated", onTab);
-  client.addListener("newScript", onScript);
 
   client.connect((type, traits) => {
     // Now the client is conected to the server.
@@ -173,7 +171,6 @@ function startDebugger() {
   client = new DebuggerClient(transport);
   // Attach listeners for client events.
   client.addListener("tabNavigated", onTab);
-  client.addListener("newScript", fooListener);
   client.connect((type, traits) => {
     // Now the client is conected to the server.
     debugTab();
