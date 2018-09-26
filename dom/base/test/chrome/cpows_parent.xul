@@ -254,7 +254,7 @@
                          .createInstance(Ci.nsISecureBrowserUI);
 
         try {
-          secureUI.setDocShell(docshell);
+          secureUI.init(docshell);
           ok(false, "expected exception passing CPOW to C++");
         } catch (e) {
           is(e.result, Cr.NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE,

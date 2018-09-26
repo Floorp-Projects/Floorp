@@ -1191,18 +1191,14 @@ nsWebBrowser::Create()
 
   // Hook into the OnSecurityChange() notification for lock/unlock icon
   // updates
-  nsCOMPtr<mozIDOMWindowProxy> domWindow;
-  rv = GetContentDOMWindow(getter_AddRefs(domWindow));
-  if (NS_SUCCEEDED(rv)) {
-    // this works because the implementation of nsISecureBrowserUI
-    // (nsSecureBrowserUIImpl) gets a docShell from the domWindow,
-    // and calls docShell->SetSecurityUI(this);
-    nsCOMPtr<nsISecureBrowserUI> securityUI =
-      do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      securityUI->Init(domWindow);
-    }
+  // this works because the implementation of nsISecureBrowserUI
+  // (nsSecureBrowserUIImpl) calls docShell->SetSecurityUI(this);
+  nsCOMPtr<nsISecureBrowserUI> securityUI =
+    do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+  securityUI->Init(mDocShell);
 
   mDocShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)
   mDocShellTreeOwner->AddChromeListeners();

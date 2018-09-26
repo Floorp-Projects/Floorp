@@ -2251,7 +2251,6 @@ nsDocShell::SetSecurityUI(nsISecureBrowserUI* aSecurityUI)
   MOZ_ASSERT(!mIsBeingDestroyed);
 
   mSecurityUI = aSecurityUI;
-  mSecurityUI->SetDocShell(this);
   return NS_OK;
 }
 
