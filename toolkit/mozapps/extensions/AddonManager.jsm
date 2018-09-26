@@ -33,7 +33,6 @@ const PREF_SYS_ADDON_UPDATE_ENABLED   = "extensions.systemAddon.update.enabled";
 const PREF_MIN_WEBEXT_PLATFORM_VERSION = "extensions.webExtensionsMinPlatformVersion";
 const PREF_WEBAPI_TESTING             = "extensions.webapi.testing";
 const PREF_WEBEXT_PERM_PROMPTS        = "extensions.webextPermissionPrompts";
-const PREF_XPINSTALL_DIALOG           = "extensions.xpinstall.confirm.dialog";
 
 const UPDATE_REQUEST_VERSION          = 2;
 
@@ -71,7 +70,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Extension: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
-  PromptUtils: "resource://gre/modules/SharedPromptUtils.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
@@ -2572,49 +2570,8 @@ var AddonManagerInternal = {
           } catch (e) {}
         }
 
-        if (Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
-          this.installNotifyObservers("addon-install-confirmation",
-                                      browser, url, proxy);
-          return;
-        }
-
-        let args = {};
-        args.url = url;
-        args.installs = [proxy];
-        args.wrappedJSObject = args;
-
-        try {
-          Services.telemetry.getHistogramById("SECURITY_UI")
-                  .add(Ci.nsISecurityUITelemetry.WARNING_CONFIRM_ADDON_INSTALL);
-          let parentWindow = null;
-          if (browser) {
-            // Find the outer browser
-            let docShell = browser.ownerGlobal.docShell;
-            if (docShell.itemType == Ci.nsIDocShellTreeItem.typeContent)
-              browser = docShell.chromeEventHandler;
-
-            parentWindow = browser.ownerGlobal;
-            PromptUtils.fireDialogEvent(parentWindow, "DOMWillOpenModalDialog", browser);
-          }
-
-          // Ugh modal dialogs...
-          let reallyReject = reject;
-          let cancelled = false;
-          reject = () => {
-            cancelled = true;
-          };
-          Services.ww.openWindow(parentWindow,
-                                 Services.prefs.getStringPref(PREF_XPINSTALL_DIALOG),
-                                 null, "chrome,modal,centerscreen", args);
-          if (cancelled) {
-            reallyReject();
-          }
-        } catch (e) {
-          logger.warn("Exception showing install confirmation dialog", e);
-          // Cancel the install, as currently there is no way to make it fail
-          // from here.
-          reject();
-        }
+        this.installNotifyObservers("addon-install-confirmation",
+                                    browser, url, proxy);
       } else {
         resolve();
       }
