@@ -38,7 +38,7 @@ config = {
         'start-emulator',
         'download-and-extract',
         'create-virtualenv',
-        'verify-emulator',
+        'verify-device',
         'install',
         'run-tests',
     ],
