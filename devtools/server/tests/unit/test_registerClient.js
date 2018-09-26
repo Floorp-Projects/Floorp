@@ -51,7 +51,7 @@ TestClient.prototype = {
 };
 
 function run_test() {
-  DebuggerServer.addGlobalActor({
+  ActorRegistry.addGlobalActor({
     constructorName: "TestActor",
     constructorFun: TestActor,
   }, "test");
