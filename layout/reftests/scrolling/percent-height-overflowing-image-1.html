@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>Testcase for %-height potentially-overflowing images</title>
+  <!-- This test exercises a series of scenarios where the presence of
+       scrollbars affects the layout in a way that may make those scrollbars
+       unnecessary. Specifically, we have a series of examples here
+       with a scrollable div, where...
+         - The child's width depends on its container's height, via
+           its aspect ratio and via having a percent-height.
+         - *Without* scrollbars, the child is too wide and causes horizontal
+           overflow.
+         - If we *add* a horizontal scrollbar (which occupies vertical space),
+           the child's height is reduced (on platforms where scrollbars take up
+           space) and so its width is reduced as well, and it might not
+           cause horizontal overflow beyond its parent's border-box anymore.
+       This creates a bit of a paradox.  We resolve it by opting to show
+       scrollbars, to be on the safe side & to make sure that we don't
+       have any unreachable content.
+    -->
+  <style>
+    .container {
+      overflow: auto;
+      height: 80px;
+      border: 2px solid purple;
+      margin: 1px;
+      display: inline-block;
+    }
+    .percent-size {
+      display: block;
+      height: 100%;
+      border: 2px solid black;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <!-- Here, the div is extremely skinny; there'll definitely be horizontal
+       overflow (but not vertical), so we should just show the horizontal
+       scrollbar: -->
+  <div class="container" style="width: 30px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <div class="container" style="width: 40px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <br>
+
+  <!-- Here, the div is nearly wide enough to avoid overflow, but not quite. On
+       platforms where scrollbars occupy layout-space, the presence of any
+       horizontal scrollbar here will reduce the height of the child, and (via
+       the child's aspect ratio) reduce the width of the child, such that the
+       child ends up skinnier than the parent's width and won't overflow the
+       parent's border-box anymore. We resolve this by just throwing up our
+       hands and showing *both* scrollbars (horizontal and vertical). -->
+  <div class="container" style="width: 78px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <div class="container" style="width: 79px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <br>
+
+  <!-- Here, the div is wide enough so that no scrollbars are needed. -->
+  <div class="container" style="width: 80px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <div class="container" style="width: 90px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+</body>

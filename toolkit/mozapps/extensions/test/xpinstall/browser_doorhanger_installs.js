@@ -11,12 +11,6 @@ const CHROMEROOT = extractChromeRoot(gTestPath);
 
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_CUSTOM_CONFIRMATION_UI, true]],
-  });
-});
-
 function waitForTick() {
   return new Promise(resolve => executeSoon(resolve));
 }

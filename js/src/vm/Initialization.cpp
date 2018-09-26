@@ -113,6 +113,8 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
     RETURN_IF_FAIL(js::Mutex::Init());
 
+    RETURN_IF_FAIL(js::wasm::Init());
+
     js::gc::InitMemorySubsystem(); // Ensure gc::SystemPageSize() works.
 
     RETURN_IF_FAIL(js::jit::InitProcessExecutableMemory());

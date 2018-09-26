@@ -281,7 +281,7 @@ TEST(MimeType, ImproperlyQuotedParameter1)
   ASSERT_TRUE(parsed) << "Parsing succeeded";
   nsAutoString out;
   parsed->Serialize(out);
-  ASSERT_TRUE(out.EqualsLiteral("x/x")) <<
+  ASSERT_TRUE(out.EqualsLiteral("x/x;test=\"\"")) <<
     "Improperly-quoted parameter is handled properly #1";
 }
 
@@ -622,7 +622,7 @@ TEST(MimeType, DoubleQuotes9)
   ASSERT_TRUE(parsed) << "Parsing succeeded";
   nsAutoString out;
   parsed->Serialize(out);
-  ASSERT_TRUE(out.EqualsLiteral("text/html;charset=GBK")) <<
+  ASSERT_TRUE(out.EqualsLiteral("text/html;charset=\"\"")) <<
     "Double quotes handled properly #9";
 }
 

@@ -1,3 +1,12 @@
+commit 786e980807f104d35bf31a769d31699024b89c2f
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Tue Sep 25 14:18:35 2018 -0700
+
+    Stream support for R16*_UNORM and P010/P016.
+    
+    Bug: angleproject:2850
+    Change-Id: Ib23b3012b5244c8e3edbdfa05d9b4e4869bbfed8
+
 commit b46b71ba277b13a7b72075766676a9698a665efd
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Tue Sep 18 17:03:59 2018 -0700

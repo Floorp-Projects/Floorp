@@ -502,6 +502,9 @@ ScaledFontDWrite::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutO
 
   *aOutOptions = Some(options);
   *aOutPlatformOptions = Some(platformOptions);
+
+  GetVariationsFromFontFace(mFontFace, aOutVariations);
+
   return true;
 }
 

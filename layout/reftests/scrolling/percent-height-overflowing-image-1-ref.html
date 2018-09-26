@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>Reference case for %-height potentially-overflowing images</title>
+  <style>
+    .container {
+      height: 80px;
+      border: 2px solid purple;
+      margin: 1px;
+      display: inline-block;
+    }
+    .percent-size {
+      display: block;
+      height: 100%;
+      border: 2px solid black;
+      box-sizing: border-box;
+    }
+    .scrollX {
+      overflow-x: scroll;
+    }
+    .scrollBoth {
+      overflow: scroll;
+    }
+  </style>
+</head>
+<body>
+  <div class="container scrollX" style="width: 30px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <div class="container scrollX" style="width: 40px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <br>
+
+  <div class="container scrollBoth" style="width: 78px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <div class="container scrollBoth" style="width: 79px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <br>
+
+  <div class="container" style="width: 80px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+  <div class="container" style="width: 90px">
+    <img class="percent-size" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAADklEQVQImWP4DwUMMAAAa6YH+b3nj3MAAAAASUVORK5CYII=">
+  </div>
+</body>

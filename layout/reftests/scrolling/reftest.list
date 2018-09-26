@@ -10,6 +10,8 @@ random-if(Android) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-12)
 random-if(Android) HTTP == image-1.html image-1.html?ref
 random-if(Android) HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref # bug 760269
 random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357
+fails-if(Android) == percent-height-overflowing-image-1.html percent-height-overflowing-image-1-ref.html # bug 1494132
+
 pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-1.html scroll-behavior-1.html?ref
 pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref
 pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref

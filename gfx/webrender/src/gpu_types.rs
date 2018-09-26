@@ -80,6 +80,15 @@ pub struct BlurInstance {
     pub blur_direction: BlurDirection,
 }
 
+#[derive(Debug)]
+#[repr(C)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ScalingInstance {
+    pub task_address: RenderTaskAddress,
+    pub src_task_address: RenderTaskAddress,
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -140,7 +149,7 @@ pub struct ClipMaskBorderCornerDotDash {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct PrimitiveInstance {
+pub struct PrimitiveInstanceData {
     data: [i32; 4],
 }
 
@@ -251,8 +260,8 @@ impl GlyphInstance {
     // TODO(gw): Some of these fields can be moved to the primitive
     //           header since they are constant, and some can be
     //           compressed to a smaller size.
-    pub fn build(&self, data0: i32, data1: i32, data2: i32) -> PrimitiveInstance {
-        PrimitiveInstance {
+    pub fn build(&self, data0: i32, data1: i32, data2: i32) -> PrimitiveInstanceData {
+        PrimitiveInstanceData {
             data: [
                 self.prim_header_index.0 as i32,
                 data0,
@@ -283,9 +292,9 @@ impl SplitCompositeInstance {
     }
 }
 
-impl From<SplitCompositeInstance> for PrimitiveInstance {
+impl From<SplitCompositeInstance> for PrimitiveInstanceData {
     fn from(instance: SplitCompositeInstance) -> Self {
-        PrimitiveInstance {
+        PrimitiveInstanceData {
             data: [
                 instance.prim_header_index.0,
                 instance.polygons_address.as_int(),
@@ -324,9 +333,9 @@ pub struct BrushInstance {
     pub brush_flags: BrushFlags,
 }
 
-impl From<BrushInstance> for PrimitiveInstance {
+impl From<BrushInstance> for PrimitiveInstanceData {
     fn from(instance: BrushInstance) -> Self {
-        PrimitiveInstance {
+        PrimitiveInstanceData {
             data: [
                 instance.prim_header_index.0,
                 instance.clip_task_address.0 as i32,
