@@ -26,7 +26,11 @@ if (inFrame) {
 }
 
 function setCookieBehavior(behavior) {
-  return SpecialPowers.pushPrefEnv({"set": [[kPrefName, behavior]]});
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["browser.contentblocking.enabled", true],
+    ["browser.contentblocking.ui.enabled", true],
+    [kPrefName, behavior],
+  ]});
 }
 
 function runIFrame(url) {
