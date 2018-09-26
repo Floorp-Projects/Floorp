@@ -143,7 +143,6 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr)
     int32_t     len = 0;
     while (aFormatStr[len] && !nsCRT::IsAsciiSpace(char16_t(aFormatStr[len])))
       ++len;
-    name.SetCapacity(len + 1);
     name.Append(aFormatStr, len);
     aFormatStr += len;
 

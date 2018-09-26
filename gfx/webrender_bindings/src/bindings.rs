@@ -38,6 +38,14 @@ pub enum WrExternalImageBufferType {
     ExternalBuffer = 4,
 }
 
+/// Used to indicate if an image is opaque, or has an alpha channel.
+#[repr(u8)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum OpacityType {
+    Opaque = 0,
+    HasAlphaChannel = 1,
+}
+
 impl WrExternalImageBufferType {
     fn to_wr(self) -> ExternalImageType {
         match self {
@@ -283,7 +291,7 @@ pub struct WrImageDescriptor {
     pub width: u32,
     pub height: u32,
     pub stride: u32,
-    pub is_opaque: bool,
+    pub opacity: OpacityType,
 }
 
 impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
@@ -296,7 +304,7 @@ impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
                 None
             },
             format: self.format,
-            is_opaque: self.is_opaque,
+            is_opaque: self.opacity == OpacityType::Opaque,
             offset: 0,
             allow_mipmaps: false,
         }

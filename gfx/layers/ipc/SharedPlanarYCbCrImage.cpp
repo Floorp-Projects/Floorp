@@ -124,17 +124,17 @@ SharedPlanarYCbCrImage::AdoptData(const Data& aData)
     supportsTextureDirectMapping);
 
   static_cast<BufferTextureData*>(mTextureClient->GetInternalData())
-    ->SetDesciptor(YCbCrDescriptor(aData.mYSize,
-                                   aData.mYStride,
-                                   aData.mCbCrSize,
-                                   aData.mCbCrStride,
-                                   yOffset,
-                                   cbOffset,
-                                   crOffset,
-                                   aData.mStereoMode,
-                                   aData.mYUVColorSpace,
-                                   aData.mBitDepth,
-                                   hasIntermediateBuffer));
+    ->SetDescriptor(YCbCrDescriptor(aData.mYSize,
+                                    aData.mYStride,
+                                    aData.mCbCrSize,
+                                    aData.mCbCrStride,
+                                    yOffset,
+                                    cbOffset,
+                                    crOffset,
+                                    aData.mStereoMode,
+                                    aData.mColorDepth,
+                                    aData.mYUVColorSpace,
+                                    hasIntermediateBuffer));
 
   return true;
 }
@@ -191,7 +191,7 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
   mData.mPicSize = aData.mPicSize;
   mData.mStereoMode = aData.mStereoMode;
   mData.mYUVColorSpace = aData.mYUVColorSpace;
-  mData.mBitDepth = aData.mBitDepth;
+  mData.mColorDepth = aData.mColorDepth;
   // those members are not always equal to aData's, due to potentially different
   // packing.
   mData.mYSkip = 0;

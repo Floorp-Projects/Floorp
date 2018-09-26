@@ -34,6 +34,10 @@ public:
   virtual bool StartPresentation() = 0;
   virtual void StopPresentation() = 0;
   virtual bool SubmitFrame(const mozilla::gfx::VRLayer_Stereo_Immersive& aLayer) = 0;
+  virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                             float aIntensity, float aDuration) = 0;
+  virtual void StopVibrateHaptic(uint32_t aControllerIdx) = 0;
+  virtual void StopAllHaptics() = 0;
 
 #if defined(XP_WIN)
 protected:

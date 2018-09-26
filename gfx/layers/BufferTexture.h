@@ -36,8 +36,8 @@ public:
                                            gfx::IntSize aCbCrSize,
                                            uint32_t aCbCrStride,
                                            StereoMode aStereoMode,
+                                           gfx::ColorDepth aColorDepth,
                                            YUVColorSpace aYUVColorSpace,
-                                           uint32_t aBitDepth,
                                            TextureFlags aTextureFlags);
 
   virtual bool Lock(OpenMode aMode) override { return true; }
@@ -58,13 +58,13 @@ public:
   virtual BufferTextureData* AsBufferTextureData() override { return this; }
 
   // Don't use this.
-  void SetDesciptor(const BufferDescriptor& aDesc);
+  void SetDescriptor(BufferDescriptor&& aDesc);
 
   Maybe<gfx::IntSize> GetCbCrSize() const;
 
   Maybe<YUVColorSpace> GetYUVColorSpace() const;
 
-  Maybe<uint32_t> GetBitDepth() const;
+  Maybe<gfx::ColorDepth> GetColorDepth() const;
 
   Maybe<StereoMode> GetStereoMode() const;
 

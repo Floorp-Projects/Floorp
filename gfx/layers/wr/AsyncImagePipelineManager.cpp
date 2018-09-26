@@ -381,7 +381,7 @@ AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
 
   float opacity = 1.0f;
   Maybe<wr::WrClipId> referenceFrameId = builder.PushStackingContext(
-    wr::ToLayoutRect(aPipeline->mScBounds),
+    wr::ToRoundedLayoutRect(aPipeline->mScBounds),
     nullptr,
     nullptr,
     &opacity,
@@ -404,15 +404,15 @@ AsyncImagePipelineManager::ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
       MOZ_ASSERT(aPipeline->mCurrentTexture->AsWebRenderTextureHost());
       Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
       aPipeline->mCurrentTexture->PushDisplayItems(builder,
-                                                  wr::ToLayoutRect(rect),
-                                                  wr::ToLayoutRect(rect),
+                                                  wr::ToRoundedLayoutRect(rect),
+                                                  wr::ToRoundedLayoutRect(rect),
                                                   aPipeline->mFilter,
                                                   range_keys);
       HoldExternalImage(aPipelineId, aEpoch, aPipeline->mCurrentTexture->AsWebRenderTextureHost());
     } else {
       MOZ_ASSERT(keys.Length() == 1);
-      builder.PushImage(wr::ToLayoutRect(rect),
-                        wr::ToLayoutRect(rect),
+      builder.PushImage(wr::ToRoundedLayoutRect(rect),
+                        wr::ToRoundedLayoutRect(rect),
                         true,
                         aPipeline->mFilter,
                         keys[0]);

@@ -106,10 +106,10 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
   UniquePtr<uint8_t[]> cbChannel;
   UniquePtr<uint8_t[]> crChannel;
   layers::PlanarYCbCrData dstData;
-  const layers::PlanarYCbCrData& srcData = aData.mBitDepth == 8 ? aData : dstData;
+  const layers::PlanarYCbCrData& srcData =
+    aData.mColorDepth == ColorDepth::COLOR_8 ? aData : dstData;
 
-  if (aData.mBitDepth != 8) {
-    MOZ_ASSERT(aData.mBitDepth > 8 && aData.mBitDepth <= 16);
+  if (aData.mColorDepth != ColorDepth::COLOR_8) {
     // Convert to 8 bits data first.
     dstData.mPicSize = aData.mPicSize;
     dstData.mPicX = aData.mPicX;
@@ -121,7 +121,7 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
     dstData.mCbCrSize = aData.mCbCrSize;
     dstData.mCbCrStride = (aData.mCbCrSize.width + 31) & ~31;
     dstData.mYUVColorSpace = aData.mYUVColorSpace;
-    dstData.mBitDepth = 8;
+    dstData.mColorDepth = ColorDepth::COLOR_8;
 
     size_t ySize = GetAlignedStride<1>(dstData.mYStride, aData.mYSize.height);
     size_t cbcrSize =
@@ -137,13 +137,15 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
     dstData.mCbChannel = cbChannel.get();
     dstData.mCrChannel = crChannel.get();
 
+    int bitDepth = BitDepthForColorDepth(aData.mColorDepth);
+
     ConvertYCbCr16to8Line(dstData.mYChannel,
                           dstData.mYStride,
                           reinterpret_cast<uint16_t*>(aData.mYChannel),
                           aData.mYStride / 2,
                           aData.mYSize.width,
                           aData.mYSize.height,
-                          aData.mBitDepth);
+                          bitDepth);
 
     ConvertYCbCr16to8Line(dstData.mCbChannel,
                           dstData.mCbCrStride,
@@ -151,7 +153,7 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                           aData.mCbCrStride / 2,
                           aData.mCbCrSize.width,
                           aData.mCbCrSize.height,
-                          aData.mBitDepth);
+                          bitDepth);
 
     ConvertYCbCr16to8Line(dstData.mCrChannel,
                           dstData.mCbCrStride,
@@ -159,7 +161,7 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                           aData.mCbCrStride / 2,
                           aData.mCbCrSize.width,
                           aData.mCbCrSize.height,
-                          aData.mBitDepth);
+                          bitDepth);
   }
 
   YUVType yuvtype =

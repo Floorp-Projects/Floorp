@@ -14,6 +14,7 @@
 #include "mozilla/TimeStamp.h"
 #include "gfxVR.h"
 
+class nsITimer;
 namespace mozilla {
 namespace layers {
 class TextureHost;
@@ -62,6 +63,7 @@ public:
   void DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameResultInfo& aResult);
   void StartVRNavigation(const uint32_t& aDisplayID);
   void StopVRNavigation(const uint32_t& aDisplayID, const TimeDuration& aTimeout);
+  static void StopVRListenerThreadTasks();
 
 protected:
   VRManager();
@@ -72,6 +74,14 @@ private:
   void Init();
   void Destroy();
   void Shutdown();
+  void StartTasks();
+  void StopTasks();
+  static void TaskTimerCallback(nsITimer* aTimer, void* aClosure);
+  void RunTasks();
+  void Run1msTasks(double aDeltaTime);
+  void Run10msTasks();
+  void Run100msTasks();
+  uint32_t GetOptimalTaskInterval();
 
   void DispatchVRDisplayInfoUpdate();
   void UpdateRequestedDevices();
@@ -95,6 +105,8 @@ private:
   TimeStamp mLastControllerEnumerationTime;
   TimeStamp mLastDisplayEnumerationTime;
   TimeStamp mLastActiveTime;
+  TimeStamp mLastTickTime;
+  double mAccumulator100ms;
   RefPtr<VRSystemManagerPuppet> mPuppetManager;
   RefPtr<VRSystemManagerExternal> mExternalManager;
 #if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
@@ -103,6 +115,8 @@ private:
   bool mVRDisplaysRequested;
   bool mVRControllersRequested;
   bool mVRServiceStarted;
+  uint32_t mTaskInterval;
+  RefPtr<nsITimer> mTaskTimer;
 };
 
 } // namespace gfx

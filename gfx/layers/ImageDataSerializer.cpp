@@ -177,15 +177,15 @@ Maybe<YUVColorSpace> YUVColorSpaceFromBufferDescriptor(const BufferDescriptor& a
   }
 }
 
-Maybe<uint32_t> BitDepthFromBufferDescriptor(const BufferDescriptor& aDescriptor)
+Maybe<gfx::ColorDepth> ColorDepthFromBufferDescriptor(const BufferDescriptor& aDescriptor)
 {
   switch (aDescriptor.type()) {
     case BufferDescriptor::TRGBDescriptor:
       return Nothing();
     case BufferDescriptor::TYCbCrDescriptor:
-      return Some(aDescriptor.get_YCbCrDescriptor().bitDepth());
+      return Some(aDescriptor.get_YCbCrDescriptor().colorDepth());
     default:
-      MOZ_CRASH("GFX:  BitDepthFromBufferDescriptor");
+      MOZ_CRASH("GFX:  ColorDepthFromBufferDescriptor");
   }
 }
 
@@ -254,7 +254,7 @@ DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aD
   ycbcrData.mCbCrSize     = aDescriptor.cbCrSize();
   ycbcrData.mPicSize      = ySize;
   ycbcrData.mYUVColorSpace = aDescriptor.yUVColorSpace();
-  ycbcrData.mBitDepth     = aDescriptor.bitDepth();
+  ycbcrData.mColorDepth   = aDescriptor.colorDepth();
 
   gfx::ConvertYCbCrToRGB(ycbcrData,
                          gfx::SurfaceFormat::B8G8R8X8,
@@ -286,7 +286,7 @@ ConvertAndScaleFromYCbCrDescriptor(uint8_t* aBuffer,
   ycbcrData.mCbCrSize     = aDescriptor.cbCrSize();
   ycbcrData.mPicSize      = aDescriptor.ySize();
   ycbcrData.mYUVColorSpace = aDescriptor.yUVColorSpace();
-  ycbcrData.mBitDepth     = aDescriptor.bitDepth();
+  ycbcrData.mColorDepth   = aDescriptor.colorDepth();
 
   gfx::ConvertYCbCrToRGB(ycbcrData, aDestFormat, aDestSize, aDestBuffer, aStride);
 }
