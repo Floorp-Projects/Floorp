@@ -162,12 +162,6 @@ nsROCSSPrimitiveValue::GetCssText(nsString& aText, ErrorResult& aRv)
   aRv = GetCssText(aText);
 }
 
-void
-nsROCSSPrimitiveValue::SetCssText(const nsAString& aText, ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-}
-
 uint16_t
 nsROCSSPrimitiveValue::CssValueType() const
 {

@@ -56,7 +56,6 @@ public:
 
   // CSSValue
   void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) final;
-  void SetCssText(const nsAString& aText, mozilla::ErrorResult& aRv) final;
   uint16_t CssValueType() const final;
 
   // CSSPrimitiveValue
