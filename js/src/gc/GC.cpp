@@ -7886,16 +7886,6 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
 
     if (shouldCollectNurseryForSlice(nonincrementalByAPI, budget)) {
         minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
-        if (!nonincrementalByAPI && budget.isTimeBudget()) {
-            // End this slice now if nursery collection took 4/5ths of our
-            // budget and there's 5ms or less left in the budget.
-            if ((nursery().lastDuration() / budget.toDuration()) > 0.8 &&
-                (budget.toDuration() - nursery().lastDuration() <=
-                    mozilla::TimeDuration::FromMilliseconds(5)))
-            {
-                return IncrementalResult::Ok;
-            }
-        }
     }
 
     AutoGCSession session(rt, JS::HeapState::MajorCollecting);
