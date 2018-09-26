@@ -109,7 +109,7 @@ RemoteWebProgressManager.prototype = {
       this._progressListeners.filter(l => l.listener != aListener);
   },
 
-  _fixSecInfo(aSecInfo) {
+  _fixSecInfoAndState(aSecInfo, aState) {
     let deserialized = null;
     if (aSecInfo) {
       let helper = Cc["@mozilla.org/network/serialization-helper;1"]
@@ -119,7 +119,7 @@ RemoteWebProgressManager.prototype = {
       deserialized.QueryInterface(Ci.nsITransportSecurityInfo);
     }
 
-    return deserialized;
+    return [deserialized, aState];
   },
 
   setCurrentURI(aURI) {
@@ -240,23 +240,19 @@ RemoteWebProgressManager.prototype = {
       break;
 
     case "Content:SecurityChange":
-      let secInfo = this._fixSecInfo(json.secInfo);
-      let oldState = json.oldState;
-      let state = json.state;
-      let contentBlockingLogJSON = json.contentBlockingLogJSON;
+      let [secInfo, state] = this._fixSecInfoAndState(json.secInfo, json.state);
 
       if (isTopLevel) {
         // Invoking this getter triggers the generation of the underlying object,
         // which we need to access with ._securityUI, because .securityUI returns
         // a wrapper that makes _update inaccessible.
         void this._browser.securityUI;
-        this._browser._securityUI._update(secInfo, oldState, state,
-                                          contentBlockingLogJSON);
+        this._browser._securityUI._update(secInfo, state);
       }
 
       this._callProgressListeners(
         Ci.nsIWebProgress.NOTIFY_SECURITY, "onSecurityChange", webProgress,
-        request, oldState, state, contentBlockingLogJSON
+        request, state
       );
       break;
 

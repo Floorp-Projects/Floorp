@@ -474,32 +474,15 @@ interface nsIWebProgressListener : nsISupports
    *        The nsIWebProgress instance that fired the notification.
    * @param aRequest
    *        The nsIRequest that has new security state.
-   * @param aOldState
-   *        A value composed of the Security State Flags and the Security
-   *        Strength Flags listed above.  Any undefined bits are reserved for
-   *        future use.  This represents the security state before the change.
    * @param aState
    *        A value composed of the Security State Flags and the Security
    *        Strength Flags listed above.  Any undefined bits are reserved for
-   *        future use.  This represents the security state after the change.
-   * @param aContentBlockingLog
-   *        An optional JSON string representing a log of the content blocking
-   *        events happened so far.  This will be a JSON object containing keys
-   *        representing origins that content blocking has acted on, with values
-   *        being an array of items, each representing one action.  Each action
-   *        itself is an an array containing three elements, the first element
-   *        being a blocking code from one of the Security State Flags above, and
-   *        the second element being a boolean representing whether the origin
-   *        was blocked (if true) or unblocked (if false) in that category, and
-   *        the third element being the number of times that combination has been
-   *        repeated consecutively.
+   *        future use.
    *
    * NOTE: These notifications will only occur if a security package is
    * installed.
    */
   void onSecurityChange(in nsIWebProgress aWebProgress,
                         in nsIRequest aRequest,
-                        in unsigned long aOldState,
-                        in unsigned long aState,
-                        in AString aContentBlockingLogJSON);
+                        in unsigned long aState);
 };

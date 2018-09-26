@@ -31,13 +31,12 @@ public:
 protected:
   virtual ~nsSecureBrowserUIImpl() {};
 
-  // Do mixed content and tracking protection checks. May update mState and mOldState.
+  // Do mixed content and tracking protection checks. May update mState.
   void CheckForBlockedContent();
   // Given some information about a request from an OnLocationChange event,
-  // update mState, mOldState and mTopLevelSecurityInfo.
+  // update mState and mTopLevelSecurityInfo.
   nsresult UpdateStateAndSecurityInfo(nsIChannel* channel, nsIURI* uri);
 
-  uint32_t mOldState;
   uint32_t mState;
   nsWeakPtr mDocShell;
   nsWeakPtr mWebProgress;
