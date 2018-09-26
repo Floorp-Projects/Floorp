@@ -18,6 +18,7 @@ import xtalos
 EVENTNAME_INDEX = 0
 PROCESS_INDEX = 2
 THREAD_ID_INDEX = 3
+PARENT_PID_INDEX = 3
 DISKBYTES_COL = "Size"
 FNAME_COL = "FileName"
 IMAGEFUNC_COL = "Image!Function"
@@ -50,6 +51,7 @@ net_events = {
 gThreads = {}
 gConnectionIDs = {}
 gHeaders = {}
+gBrowserPID = None
 
 
 def uploadFile(filename):
@@ -199,12 +201,31 @@ def etl2csv(xperf_path, etl_filename, debug=False):
     return csv_filename
 
 
-def trackThread(row, firefoxPID):
+def trackProcess(row, firstFirefoxPID):
+    global gBrowserPID
+    if gBrowserPID:
+        return
+
+    # Without the launcher, the initial Firefox process *is* the browser
+    # process. OTOH, with the launcher process enabled, the browser is actually
+    # the first child process of the first Firefox process.
+    parentPID = int(row[PARENT_PID_INDEX])
+    if parentPID == firstFirefoxPID:
+        proc = row[PROCESS_INDEX]
+        gBrowserPID = int(re.search("^.* \(\s*(\d+)\)$", proc).group(1))
+
+
+def getBrowserPID():
+    global gBrowserPID
+    return gBrowserPID
+
+
+def trackThread(row, browserPID):
     event, proc, tid = \
         row[EVENTNAME_INDEX], row[PROCESS_INDEX], row[THREAD_ID_INDEX]
     if event in ["T-DCStart", "T-Start"]:
         procName, procID = re.search("^(.*) \(\s*(\d+)\)$", proc).group(1, 2)
-        if procID == str(firefoxPID):
+        if procID == str(browserPID):
             imgIdx = getIndex(event, IMAGEFUNC_COL)
             img = re.match("([^!]+)!", row[imgIdx]).group(1)
             if img == procName:
@@ -319,8 +340,10 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
     csvname = etl2csv(xperf_path, etl_filename, debug=debug)
     for row in readFile(csvname):
         event = row[EVENTNAME_INDEX]
-        if event in ["T-DCStart", "T-Start", "T-DCEnd", "T-End"]:
-            trackThread(row, processID)
+        if event == "P-Start":
+            trackProcess(row, processID)
+        elif event in ["T-DCStart", "T-Start", "T-DCEnd", "T-End"]:
+            trackThread(row, getBrowserPID())
         elif event in ["FileIoRead", "FileIoWrite"] and \
                 row[THREAD_ID_INDEX] in gThreads:
             fileSummary(row, stage, files)
