@@ -10,8 +10,8 @@ ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class UAWidgetsChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
 
     this.widgets = new WeakMap();
   }
