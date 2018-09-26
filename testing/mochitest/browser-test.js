@@ -19,16 +19,7 @@ ChromeUtils.defineModuleGetter(this, "ContentSearch",
 const SIMPLETEST_OVERRIDES =
   ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
 
-// non-android is bootstrapped by marionette
-if (Services.appinfo.OS == "Android") {
-  window.addEventListener("load", function() {
-    window.addEventListener("MozAfterPaint", function() {
-      setTimeout(testInit, 0);
-    }, {once: true});
-  }, {once: true});
-} else {
-  setTimeout(testInit, 0);
-}
+setTimeout(testInit, 0);
 
 var TabDestroyObserver = {
   outstanding: new Set(),
