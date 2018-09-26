@@ -38,7 +38,6 @@ parent:
   async NewCompositable(CompositableHandle handle, TextureInfo info);
   async ReleaseCompositable(CompositableHandle compositable);
 
-  sync Create(IntSize aSize);
   async DeleteCompositorAnimations(uint64_t[] aIds);
   async SetDisplayList(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
                        LayoutSize aContentSize, ByteBuf aDL, BuiltDisplayListDescriptor aDLDesc,
