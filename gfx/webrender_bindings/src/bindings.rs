@@ -2050,6 +2050,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
          .dl_builder
          .push_yuv_image(&prim_info,
                          YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
+                         ColorDepth::Color8,
                          color_space,
                          image_rendering);
 }
@@ -2073,6 +2074,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
          .dl_builder
          .push_yuv_image(&prim_info,
                          YuvData::NV12(image_key_0, image_key_1),
+                         ColorDepth::Color8,
                          color_space,
                          image_rendering);
 }
@@ -2095,6 +2097,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
          .dl_builder
          .push_yuv_image(&prim_info,
                          YuvData::InterleavedYCbCr(image_key_0),
+                         ColorDepth::Color8,
                          color_space,
                          image_rendering);
 }
