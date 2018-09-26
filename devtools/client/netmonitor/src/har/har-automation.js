@@ -45,9 +45,7 @@ HarAutomation.prototype = {
     this.toolbox = toolbox;
 
     const target = toolbox.target;
-    target.attach().then(() => {
-      this.startMonitoring(target.client, target.form);
-    });
+    this.startMonitoring(target.client, target.form);
   },
 
   destroy: function() {
