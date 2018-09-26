@@ -10,8 +10,10 @@
  */
 
 dictionary MediaConfiguration {
-  VideoConfiguration video;
-  AudioConfiguration audio;
+  // Bug 1493798: This should actually be optional and its members required.
+  VideoConfiguration video = null;
+  // Bug 1493798: This should actually be optional and its members required.
+  AudioConfiguration audio = null;
 };
 
 dictionary MediaDecodingConfiguration : MediaConfiguration {

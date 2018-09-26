@@ -12,6 +12,8 @@
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
 
+#include <array>
+
 namespace rx
 {
 
@@ -35,45 +37,62 @@ egl::Error GetGLDescFromTex(ID3D11Texture2D *const tex,
     out->height    = desc.Height;
     out->mipLevels = 0;
 
-    UINT maxPlaneIndex = 0;
+    std::array<uint32_t, 2> planeFormats = {};
     switch (desc.Format)
     {
         case DXGI_FORMAT_NV12:
-            // The UV plane of NV12 textures has half the width/height of the Y plane
-            if ((desc.Width % 2) != 0 || (desc.Height % 2) != 0)
-                return egl::EglBadParameter() << "NV12 tetxures must have even width and height.";
+            planeFormats = {GL_R8, GL_RG8};
+            break;
 
-            maxPlaneIndex = 1;
-            if (planeIndex == 0)
-            {
-                out->internalFormat = GL_R8;
-            }
-            else
-            {
-                out->internalFormat = GL_RG8;
-                out->width /= 2;
-                out->height /= 2;
-            }
+        case DXGI_FORMAT_P010:
+        case DXGI_FORMAT_P016:
+            planeFormats = {GL_R16_EXT, GL_RG16_EXT};
             break;
 
         case DXGI_FORMAT_R8_UNORM:
-            out->internalFormat = GL_R8;
+            planeFormats = {GL_R8};
             break;
         case DXGI_FORMAT_R8G8_UNORM:
-            out->internalFormat = GL_RG8;
+            planeFormats[0] = GL_RG8;
             break;
         case DXGI_FORMAT_R8G8B8A8_UNORM:
-            out->internalFormat = GL_RGBA8;
+            planeFormats[0] = GL_RGBA8;
             break;
         case DXGI_FORMAT_B8G8R8A8_UNORM:
-            out->internalFormat = GL_BGRA8_EXT;
+            planeFormats[0] = GL_BGRA8_EXT;
+            break;
+
+        case DXGI_FORMAT_R16_UNORM:
+            planeFormats[0] = GL_R16_EXT;
+            break;
+        case DXGI_FORMAT_R16G16_UNORM:
+            planeFormats[0] = GL_RG16_EXT;
+            break;
+        case DXGI_FORMAT_R16G16B16A16_UNORM:
+            planeFormats[0] = GL_RGBA16_EXT;
             break;
 
         default:
             return egl::EglBadParameter() << "Unsupported format";
     }
 
-    if (planeIndex > maxPlaneIndex)  // Just kidding, there's no plane out there.
+    if (planeFormats[1])  // If we have YUV planes, expect 4:2:0.
+    {
+        if ((desc.Width % 2) != 0 || (desc.Height % 2) != 0)
+            return egl::EglBadParameter() << "YUV 4:2:0 textures must have even width and height.";
+    }
+    if (planeIndex > 0)
+    {
+        out->width /= 2;
+        out->height /= 2;
+    }
+
+    out->internalFormat = 0;
+    if (planeIndex < planeFormats.size())
+    {
+        out->internalFormat = planeFormats[planeIndex];
+    }
+    if (!out->internalFormat)
         return egl::EglBadParameter() << "Plane out of range";
 
     return egl::NoError();

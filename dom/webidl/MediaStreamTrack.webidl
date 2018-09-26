@@ -42,26 +42,41 @@ typedef (DOMString or sequence<DOMString> or ConstrainDOMStringParameters) Const
 // function in MediaManager.cpp to make OverconstrainedError's constraint work!
 
 dictionary MediaTrackConstraintSet {
-    ConstrainLong width;
-    ConstrainLong height;
-    ConstrainDouble frameRate;
-    ConstrainDOMString facingMode;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainLong width = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainLong height = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainDouble frameRate = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainDOMString facingMode = null;
     DOMString mediaSource = "camera";
     long long browserWindow;
     boolean scrollWithPage;
-    ConstrainDOMString deviceId;
-    ConstrainLong viewportOffsetX;
-    ConstrainLong viewportOffsetY;
-    ConstrainLong viewportWidth;
-    ConstrainLong viewportHeight;
-    ConstrainBoolean echoCancellation;
-    ConstrainBoolean noiseSuppression;
-    ConstrainBoolean autoGainControl;
-    ConstrainLong channelCount;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainDOMString deviceId = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainLong viewportOffsetX = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainLong viewportOffsetY = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainLong viewportWidth = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainLong viewportHeight = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainBoolean echoCancellation = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainBoolean noiseSuppression = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainBoolean autoGainControl = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainLong channelCount = null;
 
     // Deprecated with warnings:
-    ConstrainBoolean mozNoiseSuppression;
-    ConstrainBoolean mozAutoGainControl;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainBoolean mozNoiseSuppression = null;
+    // FIXME: bug 1493860 or bug 1493798: should this "= null" be here?
+    ConstrainBoolean mozAutoGainControl = null;
 };
 
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {

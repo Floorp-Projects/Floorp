@@ -7,7 +7,7 @@ use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayListIter, Cli
 use api::{ClipId, ColorF, ComplexClipRegion, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DevicePixelScale, DeviceUintRect, DisplayItemRef, ExtendMode, ExternalScrollId};
 use api::{FilterOp, FontInstanceKey, GlyphInstance, GlyphOptions, RasterSpace, GradientStop};
-use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint};
+use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, LayoutPoint, ColorDepth};
 use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D};
 use api::{LineOrientation, LineStyle, LocalClip, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, RepeatMode, ScrollFrameDisplayItem, ScrollSensitivity};
@@ -26,7 +26,7 @@ use internal_types::{FastHashMap, FastHashSet};
 use picture::{PictureCompositeMode, PictureIdGenerator, PicturePrimitive};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity};
-use prim_store::{BorderSource, BrushSegment, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
+use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
 use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitive};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
@@ -162,6 +162,9 @@ pub struct DisplayListFlattener<'a> {
 
     /// Reference to the clip interner for this document.
     clip_interner: &'a mut ClipDataInterner,
+
+    /// The estimated count of primtives we expect to encounter during flattening.
+    prim_count_estimate: usize,
 }
 
 impl<'a> DisplayListFlattener<'a> {
@@ -201,6 +204,7 @@ impl<'a> DisplayListFlattener<'a> {
             clip_store: ClipStore::new(),
             picture_id_generator,
             clip_interner,
+            prim_count_estimate: 0,
         };
 
         flattener.push_root(
@@ -285,6 +289,9 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             }
         }
+
+        self.prim_count_estimate += pipeline.display_list.prim_count_estimate();
+        self.prim_store.primitives.reserve(self.prim_count_estimate);
 
         self.flatten_items(&mut pipeline.display_list.iter(), pipeline_id, LayoutVector2D::zero());
 
@@ -550,6 +557,7 @@ impl<'a> DisplayListFlattener<'a> {
                     clip_and_scroll,
                     &prim_info,
                     info.yuv_data,
+                    info.color_depth,
                     info.color_space,
                     info.image_rendering,
                 );
@@ -1061,9 +1069,11 @@ impl<'a> DisplayListFlattener<'a> {
 
         // For each filter, create a new image with that composite mode.
         for filter in &composite_ops.filters {
+            let filter = filter.sanitize();
+
             let mut filter_picture = PicturePrimitive::new_image(
                 self.picture_id_generator.next(),
-                Some(PictureCompositeMode::Filter(*filter)),
+                Some(PictureCompositeMode::Filter(filter)),
                 false,
                 pipeline_id,
                 None,
@@ -1641,7 +1651,7 @@ impl<'a> DisplayListFlattener<'a> {
                 let br_inner = br_outer - vec2(border_item.widths.right, border_item.widths.bottom);
 
                 fn add_segment(
-                    segments: &mut Vec<BrushSegment>,
+                    segments: &mut BrushSegmentVec,
                     rect: LayoutRect,
                     uv_rect: TexelRect,
                     repeat_horizontal: RepeatMode,
@@ -1680,7 +1690,7 @@ impl<'a> DisplayListFlattener<'a> {
                 }
 
                 // Build the list of image segments
-                let mut segments = vec![];
+                let mut segments = BrushSegmentVec::new();
 
                 // Top left
                 add_segment(
@@ -2043,6 +2053,7 @@ impl<'a> DisplayListFlattener<'a> {
         clip_and_scroll: ScrollNodeAndClipChain,
         info: &LayoutPrimitiveInfo,
         yuv_data: YuvData,
+        color_depth: ColorDepth,
         color_space: YuvColorSpace,
         image_rendering: ImageRendering,
     ) {
@@ -2057,6 +2068,7 @@ impl<'a> DisplayListFlattener<'a> {
             BrushKind::YuvImage {
                 yuv_key,
                 format,
+                color_depth,
                 color_space,
                 image_rendering,
             },

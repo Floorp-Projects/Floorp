@@ -487,6 +487,23 @@ impl Texture {
         self.last_frame_used == frame_id
     }
 
+    /// Returns true if this texture was used within `threshold` frames of
+    /// the current frame.
+    pub fn used_recently(&self, current_frame_id: FrameId, threshold: usize) -> bool {
+        self.last_frame_used + threshold >= current_frame_id
+    }
+
+    /// Returns the number of bytes (generally in GPU memory) that this texture
+    /// consumes.
+    pub fn size_in_bytes(&self) -> usize {
+        assert!(self.layer_count > 0 || self.width + self.height == 0);
+        let bpp = self.format.bytes_per_pixel() as usize;
+        let w = self.width as usize;
+        let h = self.height as usize;
+        let count = self.layer_count as usize;
+        bpp * w * h * count
+    }
+
     #[cfg(feature = "replay")]
     pub fn into_external(mut self) -> ExternalTexture {
         let ext = ExternalTexture {
@@ -2222,6 +2239,11 @@ impl Device {
                 external: gl::RED,
                 pixel_type: gl::UNSIGNED_BYTE,
             },
+            ImageFormat::R16 => FormatDesc {
+                internal: gl::R16 as _,
+                external: gl::RED,
+                pixel_type: gl::UNSIGNED_SHORT,
+            },
             ImageFormat::BGRA8 => {
                 let external = self.bgra_format;
                 FormatDesc {
@@ -2378,6 +2400,7 @@ impl<'a> UploadTarget<'a> {
     fn update_impl(&mut self, chunk: UploadChunk) {
         let (gl_format, bpp, data_type) = match self.texture.format {
             ImageFormat::R8 => (gl::RED, 1, gl::UNSIGNED_BYTE),
+            ImageFormat::R16 => (gl::RED, 2, gl::UNSIGNED_SHORT),
             ImageFormat::BGRA8 => (self.bgra_format, 4, gl::UNSIGNED_BYTE),
             ImageFormat::RG8 => (gl::RG, 2, gl::UNSIGNED_BYTE),
             ImageFormat::RGBAF32 => (gl::RGBA, 16, gl::FLOAT),

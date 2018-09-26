@@ -52,9 +52,11 @@ dictionary PublicKeyCredentialCreationOptions {
 
     unsigned long                                timeout;
     sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
-    AuthenticatorSelectionCriteria               authenticatorSelection;
+    // FIXME: bug 1493860: should this "= null" be here?
+    AuthenticatorSelectionCriteria               authenticatorSelection = null;
     AttestationConveyancePreference              attestation = "none";
-    AuthenticationExtensionsClientInputs         extensions;
+    // FIXME: bug 1493860: should this "= null" be here?
+    AuthenticationExtensionsClientInputs         extensions = null;
 };
 
 dictionary PublicKeyCredentialEntity {
@@ -100,7 +102,8 @@ dictionary PublicKeyCredentialRequestOptions {
     USVString                            rpId;
     sequence<PublicKeyCredentialDescriptor> allowCredentials = [];
     UserVerificationRequirement          userVerification = "preferred";
-    AuthenticationExtensionsClientInputs extensions;
+    // FIXME: bug 1493860: should this "= null" be here?
+    AuthenticationExtensionsClientInputs extensions = null;
 };
 
 // TODO - Use partial dictionaries when bug 1436329 is fixed.
@@ -125,7 +128,8 @@ dictionary CollectedClientData {
     required DOMString           origin;
     required DOMString           hashAlgorithm;
     DOMString                    tokenBindingId;
-    AuthenticationExtensionsClientInputs clientExtensions;
+    // FIXME: bug 1493860: should this "= null" be here?
+    AuthenticationExtensionsClientInputs clientExtensions = null;
     AuthenticationExtensionsAuthenticatorInputs authenticatorExtensions;
 };
 

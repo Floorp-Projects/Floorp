@@ -1266,7 +1266,7 @@ function tryHovering(dbg, line, column, elementName) {
 async function assertPreviewTextValue(dbg, line, column, { text, expression }) {
   const previewEl = await tryHovering(dbg, line, column, "previewPopup");
 
-  is(previewEl.innerText, text, "Preview text shown to user");
+  ok(previewEl.innerText.includes(text), "Preview text shown to user");
 
   const preview = dbg.selectors.getPreview(dbg.getState());
   is(preview.updating, false, "Preview.updating");
