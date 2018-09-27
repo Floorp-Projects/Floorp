@@ -1,16 +1,16 @@
 {
-    "llvm_revision": "335538",
+    "llvm_revision": "342383",
     "stages": "1",
     "build_libcxx": true,
     "build_type": "Release",
     "assertions": false,
     "osx_cross_compile": true,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_601/final",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_601/final",
-    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_601/final",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_601/final",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_601/final",
-    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_601/final",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_700/final",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_700/final",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_700/final",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_700/final",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_700/final",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_700/final",
     "python_path": "/usr/bin/python2.7",
     "gcc_dir": "/builds/worker/workspace/build/src/gcc",
     "cc": "/builds/worker/workspace/build/src/clang/bin/clang",
@@ -23,9 +23,6 @@
     "patches": [
       "static-llvm-symbolizer.patch",
       "compiler-rt-cross-compile.patch",
-      "compiler-rt-no-codesign.patch",
-      "r322401.patch",
-      "r325356.patch",
-      "r339636.patch"
+      "compiler-rt-no-codesign.patch"
     ]
 }
