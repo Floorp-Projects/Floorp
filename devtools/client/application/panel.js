@@ -23,10 +23,6 @@ class ApplicationPanel {
   }
 
   async open() {
-    if (!this.toolbox.target.isRemote) {
-      await this.toolbox.target.attach();
-    }
-
     await this.panelWin.Application.bootstrap({
       toolbox: this.toolbox,
       panel: this,

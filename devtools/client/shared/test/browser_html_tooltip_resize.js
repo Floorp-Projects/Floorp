@@ -28,7 +28,7 @@ add_task(async function() {
   const div = doc.createElementNS(HTML_NS, "div");
   div.textContent = "tooltip";
   div.style.cssText = "width: 100px; height: 40px";
-  tooltip.setContent(div);
+  tooltip.panel.appendChild(div);
 
   const box1 = doc.getElementById("box1");
 

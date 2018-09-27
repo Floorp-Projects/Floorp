@@ -116,7 +116,9 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
   }
   const width = Math.max(CONTAINER_MIN_WIDTH, imgWidth + 2 * IMAGE_PADDING);
 
-  tooltip.setContent(div, {width, height});
+  tooltip.panel.innerHTML = "";
+  tooltip.panel.appendChild(div);
+  tooltip.setContentSize({width, height});
 }
 
 /*
@@ -133,7 +135,9 @@ function setBrokenImageTooltip(tooltip, doc) {
   div.className = "theme-comment devtools-tooltip-image-broken";
   const message = L10N.getStr("previewTooltip.image.brokenImage");
   div.textContent = message;
-  tooltip.setContent(div);
+
+  tooltip.panel.innerHTML = "";
+  tooltip.panel.appendChild(div);
 }
 
 module.exports.getImageDimensions = getImageDimensions;

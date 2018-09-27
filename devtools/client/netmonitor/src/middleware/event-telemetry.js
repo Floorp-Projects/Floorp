@@ -114,7 +114,7 @@ function filterChange({action, state, oldState, telemetry, sessionId}) {
     trigger = "text";
   }
 
-  telemetry.recordEvent("devtools.main", "filters_changed", "netmonitor", null, {
+  telemetry.recordEvent("filters_changed", "netmonitor", null, {
     "trigger": trigger,
     "active": activeFilters.join(","),
     "inactive": inactiveFilters.join(","),
@@ -128,7 +128,7 @@ function filterChange({action, state, oldState, telemetry, sessionId}) {
  * telemetry event.
  */
 function sidePanelChange({state, oldState, telemetry, sessionId}) {
-  telemetry.recordEvent("devtools.main", "sidepanel_changed", "netmonitor", null, {
+  telemetry.recordEvent("sidepanel_changed", "netmonitor", null, {
     "oldpanel": oldState.ui.detailsPanelSelectedTab,
     "newpanel": state.ui.detailsPanelSelectedTab,
     "session_id": sessionId,
@@ -140,7 +140,7 @@ function sidePanelChange({state, oldState, telemetry, sessionId}) {
  * It's responsible for recording "edit_resend" telemetry event.
  */
 function sendCustomRequest({telemetry, sessionId}) {
-  telemetry.recordEvent("devtools.main", "edit_resend", "netmonitor", null, {
+  telemetry.recordEvent("edit_resend", "netmonitor", null, {
     "session_id": sessionId,
   });
 }
@@ -150,7 +150,7 @@ function sendCustomRequest({telemetry, sessionId}) {
  * It's responsible for recording "throttle_changed" telemetry event.
  */
 function throttlingChange({action, telemetry, sessionId}) {
-  telemetry.recordEvent("devtools.main", "throttle_changed", "netmonitor", null, {
+  telemetry.recordEvent("throttle_changed", "netmonitor", null, {
     "mode": action.profile,
     "session_id": sessionId,
   });

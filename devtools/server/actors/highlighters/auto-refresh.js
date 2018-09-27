@@ -199,6 +199,10 @@ AutoRefreshHighlighter.prototype = {
    * @return {Boolean}
    */
   _hasWindowScrolled: function() {
+    if (!this.win) {
+      return false;
+    }
+
     const { pageXOffset, pageYOffset } = this.win;
     const hasChanged = this._scroll.x !== pageXOffset ||
                      this._scroll.y !== pageYOffset;

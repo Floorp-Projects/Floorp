@@ -82,7 +82,7 @@ function createToolMenuElements(toolDefinition, doc) {
     try {
       const window = event.target.ownerDocument.defaultView;
       await gDevToolsBrowser.selectToolCommand(window.gBrowser, id, Cu.now());
-      sendEntryPointTelemetry();
+      sendEntryPointTelemetry(window);
     } catch (e) {
       console.error(`Exception while opening ${id}: ${e}\n${e.stack}`);
     }
@@ -110,17 +110,15 @@ function createToolMenuElements(toolDefinition, doc) {
  * `devtools/startup/devtools-startup.js` but that codepath is only used the
  * first time a toolbox is opened for a tab.
  */
-function sendEntryPointTelemetry() {
+function sendEntryPointTelemetry(window) {
   if (!telemetry) {
     telemetry = new Telemetry();
   }
 
-  telemetry.addEventProperty(
-    "devtools.main", "open", "tools", null, "shortcut", ""
-  );
+  telemetry.addEventProperty(window, "open", "tools", null, "shortcut", "");
 
   telemetry.addEventProperty(
-    "devtools.main", "open", "tools", null, "entrypoint", "SystemMenu"
+    window, "open", "tools", null, "entrypoint", "SystemMenu"
   );
 }
 

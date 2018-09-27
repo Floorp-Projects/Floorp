@@ -172,6 +172,47 @@ payment-dialog[changes-prevented][complete-status="success"] #pay {
   left: 0;
 }
 
+.persist-checkbox {
+  padding: 5px 0;
+}
+
+.persist-checkbox > label {
+  display: flex;
+  align-items: center;
+}
+
+.info-tooltip {
+  display: inline-block;
+  background-image: url(chrome://global/skin/icons/help.svg);
+  width: 16px;
+  height: 16px;
+  padding: 2px 4px;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: relative;
+}
+
+.info-tooltip:focus::after,
+.info-tooltip:hover::after {
+  content: attr(aria-label);
+  display: block;
+  position: absolute;
+  padding: 2px 5px;
+  background-color: #fff;
+  border: 1px solid #bebebf;
+  box-shadow: 1px 1px 3px #bebebf;
+  font-size: smaller;
+  min-width: 188px;
+  left: -86px;
+  bottom: 20px;
+}
+
+.info-tooltip:dir(rtl):focus::after,
+.info-tooltip:dir(rtl):hover::after {
+  left: auto;
+  right: -86px;
+}
+
 .branding {
   background-image: url(chrome://branding/content/icon32.png);
   background-size: 16px;
@@ -182,6 +223,6 @@ payment-dialog[changes-prevented][complete-status="success"] #pay {
   margin-inline-end: auto;
 }
 
-body[dir="rtl"] .branding {
+.branding:dir(rtl) {
   background-position: right center;
 }

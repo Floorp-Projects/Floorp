@@ -32,7 +32,8 @@ add_task(async function() {
   div.style.height = "100px";
   div.style.boxSizing = "border-box";
   div.textContent = "tooltip";
-  tooltip.setContent(div, {width: 50, height: 100});
+  tooltip.panel.appendChild(div);
+  tooltip.setContentSize({width: 50, height: 100});
 
   info("Display the tooltip on box1.");
   await showTooltip(tooltip, box1, {x: 5, y: 10});

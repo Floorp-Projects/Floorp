@@ -125,6 +125,11 @@ add_task(async function test_show_completePayment2() {
     info("select the shipping address");
     await selectPaymentDialogShippingAddressByCountry(frame, "US");
 
+    info("entering CSC");
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "123",
+    });
+
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
 
@@ -233,6 +238,11 @@ add_task(async function test_supportedNetworks() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
+
+    info("entering CSC");
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "789",
+    });
 
     await spawnPaymentDialogTask(frame, () => {
       let acceptedCards = content.document.querySelector("accepted-cards");

@@ -24,9 +24,9 @@ public:
 
   bool IsBasicCardPayment(const nsAString& aSupportedMethods);
   bool IsValidBasicCardRequest(JSContext* aCx, JSObject* aData, nsAString& aErrorMsg);
+  bool IsValidBasicCardErrors(JSContext* aCx, JSObject* aData);
   bool IsValidExpiryMonth(const nsAString& aExpiryMonth);
   bool IsValidExpiryYear(const nsAString& aExpiryYear);
-
 /*
   To let BasicCardResponse using the same data type with non-BasicCard response
   in IPC transferring, following two methods is used to Encode/Decode the raw

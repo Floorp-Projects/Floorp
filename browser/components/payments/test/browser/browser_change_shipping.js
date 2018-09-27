@@ -103,6 +103,10 @@ add_task(async function test_change_shipping() {
       btn.click();
     });
 
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "123",
+    });
+
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
 
@@ -262,6 +266,10 @@ add_task(async function test_no_shippingchange_without_shipping() {
       eventName: "shippingaddresschange",
     }, PTU.ContentTasks.ensureNoPaymentRequestEvent);
     info("added shipping change handler");
+
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "456",
+    });
 
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);

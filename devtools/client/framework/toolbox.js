@@ -540,14 +540,15 @@ Toolbox.prototype = {
 
       // Wait until the original tool is selected so that the split
       // console input will receive focus.
+      const browserWin = this.win.top;
       let splitConsolePromise = promise.resolve();
       if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
         splitConsolePromise = this.openSplitConsole();
         this.telemetry.addEventProperty(
-          "devtools.main", "open", "tools", null, "splitconsole", true);
+          browserWin, "open", "tools", null, "splitconsole", true);
       } else {
         this.telemetry.addEventProperty(
-          "devtools.main", "open", "tools", null, "splitconsole", false);
+          browserWin, "open", "tools", null, "splitconsole", false);
       }
 
       await promise.all([
@@ -736,7 +737,7 @@ Toolbox.prototype = {
   },
 
   _pingTelemetry: function() {
-    this.telemetry.toolOpened("toolbox");
+    this.telemetry.toolOpened("toolbox", this.sessionId, this);
 
     this.telemetry.getHistogramById(HOST_HISTOGRAM).add(this._getTelemetryHostId());
 
@@ -745,12 +746,13 @@ Toolbox.prototype = {
     const currentTheme = Services.prefs.getCharPref("devtools.theme");
     this.telemetry.keyedScalarAdd(CURRENT_THEME_SCALAR, currentTheme, 1);
 
-    this.telemetry.preparePendingEvent("devtools.main", "open", "tools", null, [
+    const browserWin = this.win.top;
+    this.telemetry.preparePendingEvent(browserWin, "open", "tools", null, [
       "entrypoint", "first_panel", "host", "shortcut",
       "splitconsole", "width", "session_id"
     ]);
     this.telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "host", this._getTelemetryHostString()
+      browserWin, "open", "tools", null, "host", this._getTelemetryHostString()
     );
   },
 
@@ -1394,9 +1396,9 @@ Toolbox.prototype = {
    */
   togglePaintFlashing: function() {
     if (this.isPaintFlashing) {
-      this.telemetry.toolOpened("paintflashing");
+      this.telemetry.toolOpened("paintflashing", this.sessionId, this);
     } else {
-      this.telemetry.toolClosed("paintflashing");
+      this.telemetry.toolClosed("paintflashing", this.sessionId, this);
     }
     this.isPaintFlashing = !this.isPaintFlashing;
     return this.target.activeTab.reconfigure({"paintFlashing": this.isPaintFlashing});
@@ -1910,7 +1912,7 @@ Toolbox.prototype = {
         id === "options" ||
         this.additionalToolDefinitions.get(id)) {
       if (this.currentToolId) {
-        this.telemetry.toolClosed(this.currentToolId);
+        this.telemetry.toolClosed(this.currentToolId, this.sessionId, this);
       }
 
       this._pingTelemetrySelectTool(id, reason);
@@ -1949,7 +1951,7 @@ Toolbox.prototype = {
     // On first load this.currentToolId === undefined so we need to skip sending
     // a devtools.main.exit telemetry event.
     if (this.currentToolId) {
-      this.telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
+      this.telemetry.recordEvent("exit", prevPanelName, null, {
         "host": this._hostType,
         "width": width,
         "panel_name": prevPanelName,
@@ -1959,7 +1961,8 @@ Toolbox.prototype = {
       });
     }
 
-    this.telemetry.addEventProperties("devtools.main", "open", "tools", null, {
+    const browserWin = this.win.top;
+    this.telemetry.addEventProperties(browserWin, "open", "tools", null, {
       "width": width,
       "session_id": this.sessionId
     });
@@ -1968,9 +1971,9 @@ Toolbox.prototype = {
       pending.push("message_count");
     }
 
-    this.telemetry.preparePendingEvent("devtools.main", "enter", panelName, null, pending);
+    this.telemetry.preparePendingEvent(this, "enter", panelName, null, pending);
 
-    this.telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
+    this.telemetry.addEventProperties(this, "enter", panelName, null, {
       "host": this._hostType,
       "start_state": reason,
       "panel_name": panelName,
@@ -1981,7 +1984,7 @@ Toolbox.prototype = {
     if (reason !== "initial_panel") {
       const width = Math.ceil(this.win.outerWidth / 50) * 50;
       this.telemetry.addEventProperty(
-        "devtools.main", "enter", panelName, null, "width", width
+        this, "enter", panelName, null, "width", width
       );
     }
 
@@ -1989,10 +1992,10 @@ Toolbox.prototype = {
     // devtools/client/webconsole/webconsole-output-wrapper.js
     if (!cold && id === "webconsole") {
       this.telemetry.addEventProperty(
-        "devtools.main", "enter", "webconsole", null, "message_count", 0);
+        this, "enter", "webconsole", null, "message_count", 0);
     }
 
-    this.telemetry.toolOpened(id);
+    this.telemetry.toolOpened(id, this.sessionId, this);
   },
 
   /**
@@ -2060,7 +2063,7 @@ Toolbox.prototype = {
 
     return this.loadTool("webconsole").then(() => {
       this.component.setIsSplitConsoleActive(true);
-      this.telemetry.recordEvent("devtools.main", "activate", "split_console", null, {
+      this.telemetry.recordEvent("activate", "split_console", null, {
         "host": this._getTelemetryHostString(),
         "width": Math.ceil(this.win.outerWidth / 50) * 50,
         "session_id": this.sessionId
@@ -2082,7 +2085,7 @@ Toolbox.prototype = {
     this._refreshConsoleDisplay();
     this.component.setIsSplitConsoleActive(false);
 
-    this.telemetry.recordEvent("devtools.main", "deactivate", "split_console", null, {
+    this.telemetry.recordEvent("deactivate", "split_console", null, {
       "host": this._getTelemetryHostString(),
       "width": Math.ceil(this.win.outerWidth / 50) * 50,
       "session_id": this.sessionId
@@ -2814,7 +2817,7 @@ Toolbox.prototype = {
 
     // We normally handle toolClosed from selectTool() but in the event of the
     // toolbox closing we need to handle it here instead.
-    this.telemetry.toolClosed(this.currentToolId);
+    this.telemetry.toolClosed(this.currentToolId, this.sessionId, this);
 
     this._lastFocusedElement = null;
 
@@ -2906,8 +2909,8 @@ Toolbox.prototype = {
     const width = Math.ceil(win.outerWidth / 50) * 50;
     const prevPanelName = this.getTelemetryPanelNameOrOther(this.currentToolId);
 
-    this.telemetry.toolClosed("toolbox");
-    this.telemetry.recordEvent("devtools.main", "exit", prevPanelName, null, {
+    this.telemetry.toolClosed("toolbox", this.sessionId, this);
+    this.telemetry.recordEvent("exit", prevPanelName, null, {
       "host": host,
       "width": width,
       "panel_name": this.getTelemetryPanelNameOrOther(this.currentToolId),
@@ -2915,7 +2918,7 @@ Toolbox.prototype = {
       "reason": "toolbox_close",
       "session_id": this.sessionId
     });
-    this.telemetry.recordEvent("devtools.main", "close", "tools", null, {
+    this.telemetry.recordEvent("close", "tools", null, {
       "host": host,
       "width": width,
       "session_id": this.sessionId

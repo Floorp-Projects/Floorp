@@ -40,12 +40,6 @@ const { reportException } = require("devtools/shared/DevToolsUtils");
  *          Returns a |Debugger| instance that can manage its set of debuggee
  *          globals itself and is decorated with the |EventEmitter| class.
  *
- *          Events emitted by the returned |Debugger| instance:
- *
- *            - "newGlobal": Emitted when a new global has been added as a
- *               debuggee. Passes the |Debugger.Object| wrapping the new
- *               debuggee global to listeners.
- *
  *          Existing |Debugger| properties set on the returned |Debugger|
  *          instance:
  *
@@ -97,10 +91,7 @@ const reportDebuggerHookException = e => reportException("Debugger Hook", e);
  */
 function safeAddDebuggee(dbg, global) {
   try {
-    const wrappedGlobal = dbg.addDebuggee(global);
-    if (wrappedGlobal) {
-      dbg.emit("newGlobal", wrappedGlobal);
-    }
+    dbg.addDebuggee(global);
   } catch (e) {
     // Ignoring attempt to add the debugger's compartment as a debuggee.
   }

@@ -60,7 +60,8 @@
   <!ENTITY basicCardPage.addButton.label      "Add">
   <!ENTITY basicCardPage.nextButton.label     "Next">
   <!ENTITY basicCardPage.updateButton.label   "Update">
-  <!ENTITY basicCardPage.persistCheckbox.label     "Save credit card to &brandShortName; (Security code will not be saved)">
+  <!ENTITY basicCardPage.persistCheckbox.label     "Save credit card to &brandShortName; (CVV will not be saved)">
+  <!ENTITY basicCardPage.persistCheckbox.infoTooltip  "&brandShortName; can securely store your credit card information to use in forms like this, so you don’t have to enter it every time.">
   <!ENTITY addressPage.error.genericSave      "There was an error saving the address.">
   <!ENTITY addressPage.cancelButton.label     "Cancel">
   <!ENTITY addressPage.backButton.label       "Back">
@@ -68,6 +69,7 @@
   <!ENTITY addressPage.nextButton.label       "Next">
   <!ENTITY addressPage.updateButton.label     "Update">
   <!ENTITY addressPage.persistCheckbox.label  "Save address to &brandShortName;">
+  <!ENTITY addressPage.persistCheckbox.infoTooltip  "&brandShortName; can add your address to forms like this, so you don’t have to type it every time.">
   <!ENTITY failErrorPage.title                "We couldn’t complete your payment to **host-name**">
   <!ENTITY failErrorPage.suggestionHeading    "The most likely cause is a hiccup with your credit card.">
   <!ENTITY failErrorPage.suggestion1          "Make sure the card you’re using hasn’t expired">
@@ -199,6 +201,7 @@
                        data-update-button-label="&basicCardPage.updateButton.label;"
                        data-cancel-button-label="&cancelPaymentButton.label;"
                        data-persist-checkbox-label="&basicCardPage.persistCheckbox.label;"
+                       data-persist-checkbox-info-tooltip="&basicCardPage.persistCheckbox.infoTooltip;"
                        data-accepted-cards-label="&acceptedCards.label;"
                        data-field-required-symbol="&fieldRequiredSymbol;"
                        hidden="hidden"></basic-card-form>
@@ -211,6 +214,7 @@
                     data-next-button-label="&addressPage.nextButton.label;"
                     data-update-button-label="&addressPage.updateButton.label;"
                     data-persist-checkbox-label="&addressPage.persistCheckbox.label;"
+                    data-persist-checkbox-info-tooltip="&addressPage.persistCheckbox.infoTooltip;"
                     data-field-required-symbol="&fieldRequiredSymbol;"
                     hidden="hidden"></address-form>
 

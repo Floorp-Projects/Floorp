@@ -58,6 +58,19 @@ function foo() {
 foo()
 `});
 
+consoleApi.set("console.trace('bar', {'foo': 'bar'}, [1,2,3])", {
+  keys: ["console.trace('bar', {'foo': 'bar'}, [1,2,3])"],
+  code: `
+function testStacktraceWithLog() {
+  console.trace('bar', {'foo': 'bar'}, [1,2,3])
+}
+function foo() {
+  testStacktraceWithLog()
+}
+
+foo()
+`});
+
 consoleApi.set("console.time('bar')", {
   keys: [
     "console.time('bar')",

@@ -110,7 +110,7 @@ class SwatchBasedEditorTooltip {
     if (tooltipAnchor) {
       const onShown = this.tooltip.once("shown");
 
-      this.tooltip.show(tooltipAnchor, "topcenter bottomleft");
+      this.tooltip.show(tooltipAnchor);
       this.tooltip.once("hidden", () => this.onTooltipHidden());
 
       return onShown;

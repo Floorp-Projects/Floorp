@@ -252,7 +252,9 @@ var PaymentTestUtils = {
      * @returns {undefined}
      */
     completePayment: () => {
-      content.document.getElementById("pay").click();
+      let button = content.document.getElementById("pay");
+      ok(!button.disabled, "Pay button should not be disabled when clicking it");
+      button.click();
     },
 
     setSecurityCode: ({securityCode}) => {
