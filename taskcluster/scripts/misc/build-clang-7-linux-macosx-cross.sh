@@ -25,7 +25,7 @@ set +x
 
 cd build/build-clang
 # |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-6-macosx64.json --skip-tar
+../../mach python ./build-clang.py -c clang-7-macosx64.json --skip-tar
 
 # We now have a native macosx64 toolchain.
 # What we want is a native linux64 toolchain which can target macosx64 and use the sanitizer dylibs.

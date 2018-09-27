@@ -27,12 +27,12 @@ macosx64-clang:
         tooltool-downloads: internal
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-6-macosx64.json'
+            - 'build/build-clang/clang-7-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-6
+        - linux64-clang-7
         - linux64-gcc-4.9
         - linux64-node
 
@@ -63,7 +63,7 @@ macosx64-clang-tidy:
         toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-6
+        - linux64-clang-7
         - linux64-gcc-4.9
         - linux64-node
 
@@ -88,7 +88,7 @@ macosx64-cctools-port:
         toolchain-artifact: public/build/cctools.tar.bz2
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-6
+        - linux64-clang-7
         - linux64-node
 
 macosx64-gn:
@@ -113,7 +113,7 @@ macosx64-gn:
         toolchain-artifact: public/build/gn.tar.xz
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-6
+        - linux64-clang-7
         - linux64-node
 
 macosx64-node:
