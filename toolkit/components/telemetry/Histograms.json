@@ -858,11 +858,12 @@
   },
   "GEOLOCATION_REQUEST_GRANTED": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["mds@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["tdsmith@mozilla.com"],
+    "expires_in_version": "65",
     "kind": "enumerated",
     "n_values": 20,
-    "bug_numbers": [1230209],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1230209, 1494496],
     "description": "Geolocation requests either granted or denied (0=denied/other, 1=denied/http, 2=denied/https, ..., 10=granted/other, 11=granted/http, 12=granted/https)"
   },
   "GEOLOCATION_WATCHPOSITION_SECURE_ORIGIN" : {
