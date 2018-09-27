@@ -2394,7 +2394,6 @@ nsPrefBranch::GetFloatPref(const char* aPrefName, float* aRetVal)
   nsAutoCString stringVal;
   nsresult rv = GetCharPref(aPrefName, stringVal);
   if (NS_SUCCEEDED(rv)) {
-    // ToFloat() does a locale-independent conversion.
     *aRetVal = stringVal.ToFloat(&rv);
   }
 
@@ -5036,7 +5035,6 @@ Preferences::GetFloat(const char* aPrefName,
   nsAutoCString result;
   nsresult rv = Preferences::GetCString(aPrefName, result, aKind);
   if (NS_SUCCEEDED(rv)) {
-    // ToFloat() does a locale-independent conversion.
     *aResult = result.ToFloat(&rv);
   }
   return rv;
@@ -5847,9 +5845,7 @@ static void
 SetPref_float(const char* aName, float aDefaultValue)
 {
   PrefValue value;
-  // Convert the value in a locale-independent way.
-  nsAutoCString defaultValue;
-  defaultValue.AppendFloat(aDefaultValue);
+  nsPrintfCString defaultValue("%f", aDefaultValue);
   value.mStringVal = defaultValue.get();
   pref_SetPref(aName,
                PrefType::String,
@@ -5977,7 +5973,8 @@ InitVarCachePref(const nsACString& aName,
   }
 }
 
-static void
+// XXX: this will eventually become used
+MOZ_MAYBE_UNUSED static void
 InitVarCachePref(const nsACString& aName,
                  float* aCache,
                  float aDefaultValue,
