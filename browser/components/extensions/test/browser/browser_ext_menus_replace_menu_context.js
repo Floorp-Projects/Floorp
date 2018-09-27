@@ -66,7 +66,7 @@ add_task(async function overrideContext_with_context() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {gecko: {id: "@menu-test-extension"}},
-      permissions: ["menus", "tabs", "bookmarks", "<all_urls>"],
+      permissions: ["menus", "menus.overrideContext", "tabs", "bookmarks", "<all_urls>"],
     },
     files: {
       "tab.html": `
