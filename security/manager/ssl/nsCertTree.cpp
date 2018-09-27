@@ -1127,7 +1127,7 @@ nsCertTree::CycleHeader(nsTreeColumn* col)
 }
 
 NS_IMETHODIMP
-nsCertTree::SelectionChanged()
+nsCertTree::SelectionChangedXPCOM()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
