@@ -221,8 +221,11 @@ impl MarionetteHandler {
         );
         prefs.insert("marionette.port", Pref::new(port));
 
-        prefs.write().map_err(|_| {
-            WebDriverError::new(ErrorStatus::UnknownError, "Unable to write Firefox profile")
+        prefs.write().map_err(|e| {
+            WebDriverError::new(
+                ErrorStatus::UnknownError,
+                format!("Unable to write Firefox profile: {}", e),
+            )
         })
     }
 }
