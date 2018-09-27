@@ -75,6 +75,11 @@ export default class PaymentMethodPicker extends RichPicker {
                       `does not exist in the payment method picker`);
     }
 
+    let securityCodeState = state[this.selectedStateKey + "SecurityCode"];
+    if (securityCodeState && securityCodeState != this.securityCodeInput.value) {
+      this.securityCodeInput.defaultValue = securityCodeState;
+    }
+
     super.render(state);
   }
 
@@ -143,7 +148,9 @@ export default class PaymentMethodPicker extends RichPicker {
       page: {
         id: "basic-card-page",
       },
-      "basic-card-page": {},
+      "basic-card-page": {
+        selectedStateKey: this.selectedStateKey,
+      },
     };
 
     switch (target) {

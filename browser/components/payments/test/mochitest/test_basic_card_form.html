@@ -138,6 +138,7 @@ add_task(async function test_saveButton() {
   let year = (new Date()).getFullYear().toString();
   fillField(form.form.querySelector("#cc-exp-year"), year);
   fillField(form.form.querySelector("#cc-type"), "visa");
+  fillField(form.form.querySelector("#cc-csc"), "123");
   isnot(form.form.querySelector("#billingAddressGUID").value, address2.guid,
         "Check initial billing address");
   fillField(form.form.querySelector("#billingAddressGUID"), address2.guid);
@@ -203,7 +204,7 @@ add_task(async function test_requiredAttributePropagated() {
   await asyncElementRendered();
 
   let requiredElements = [...form.form.elements].filter(e => e.required && !e.disabled);
-  is(requiredElements.length, 6, "Number of required elements");
+  is(requiredElements.length, 7, "Number of required elements");
   for (let element of requiredElements) {
     if (element.id == "billingAddressGUID") {
       // The billing address has a different layout.
@@ -445,6 +446,7 @@ add_task(async function test_field_validity_updates() {
   let ccNumber = form.form.querySelector("#cc-number");
   let nameInput = form.form.querySelector("#cc-name");
   let typeInput = form.form.querySelector("#cc-type");
+  let cscInput = form.form.querySelector("#cc-csc");
   let monthInput = form.form.querySelector("#cc-exp-month");
   let yearInput = form.form.querySelector("#cc-exp-year");
 
@@ -460,6 +462,7 @@ add_task(async function test_field_validity_updates() {
   let year = (new Date()).getFullYear().toString();
   fillField(yearInput, year);
   fillField(typeInput, "visa");
+  fillField(cscInput, "456");
   ok(ccNumber.checkValidity(), "cc-number field is valid with good input");
   ok(nameInput.checkValidity(), "cc-name field is valid with a value");
   ok(monthInput.checkValidity(), "cc-exp-month field is valid with a value");
