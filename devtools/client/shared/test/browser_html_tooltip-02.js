@@ -41,7 +41,8 @@ async function testClickInTooltipContent(doc) {
   info("Test a tooltip is not closed when clicking inside itself");
 
   const tooltip = new HTMLTooltip(doc, {useXulWrapper});
-  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
+  tooltip.panel.appendChild(getTooltipContent(doc));
+  tooltip.setContentSize({width: 100, height: 50});
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   const onTooltipContainerClick = once(tooltip.container, "click");
@@ -57,7 +58,8 @@ async function testConsumeOutsideClicksFalse(doc) {
   const box4 = doc.getElementById("box4");
 
   const tooltip = new HTMLTooltip(doc, {consumeOutsideClicks: false, useXulWrapper});
-  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
+  tooltip.panel.appendChild(getTooltipContent(doc));
+  tooltip.setContentSize({width: 100, height: 50});
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   const onBox4Clicked = once(box4, "click");
@@ -80,7 +82,8 @@ async function testConsumeOutsideClicksTrue(doc) {
   box4.addEventListener("click", () => box4clicks++);
 
   const tooltip = new HTMLTooltip(doc, {consumeOutsideClicks: true, useXulWrapper});
-  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
+  tooltip.panel.appendChild(getTooltipContent(doc));
+  tooltip.setContentSize({width: 100, height: 50});
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   const onHidden = once(tooltip, "hidden");
@@ -98,7 +101,8 @@ async function testConsumeWithRightClick(doc) {
   const box4 = doc.getElementById("box4");
 
   const tooltip = new HTMLTooltip(doc, {consumeOutsideClicks: true, useXulWrapper});
-  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
+  tooltip.panel.appendChild(getTooltipContent(doc));
+  tooltip.setContentSize({width: 100, height: 50});
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   // Only left-click events should be consumed, so we expect to catch a click when using
@@ -120,7 +124,8 @@ async function testClickInOuterIframe(doc) {
   const frame = doc.getElementById("frame");
 
   const tooltip = new HTMLTooltip(doc, {useXulWrapper});
-  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
+  tooltip.panel.appendChild(getTooltipContent(doc));
+  tooltip.setContentSize({width: 100, height: 50});
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   const onHidden = once(tooltip, "hidden");
@@ -139,7 +144,8 @@ async function testClickInInnerIframe(doc) {
   const iframe = doc.createElementNS(HTML_NS, "iframe");
   iframe.style.width = "100px";
   iframe.style.height = "50px";
-  tooltip.setContent(iframe, {width: 100, height: 50});
+  tooltip.panel.appendChild(iframe);
+  tooltip.setContentSize({width: 100, height: 50});
   await showTooltip(tooltip, doc.getElementById("box1"));
 
   const onTooltipContainerClick = once(tooltip.container, "click");

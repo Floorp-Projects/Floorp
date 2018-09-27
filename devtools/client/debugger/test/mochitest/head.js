@@ -1093,11 +1093,7 @@ function attachTarget(client, tab) {
 
 function listWorkers(tabClient) {
   info("Listing workers.");
-  return new Promise(function (resolve) {
-    tabClient.listWorkers(function (response) {
-      resolve(response);
-    });
-  });
+  return tabClient.listWorkers();
 }
 
 function findWorker(workers, url) {

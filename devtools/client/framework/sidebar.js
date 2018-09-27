@@ -100,6 +100,18 @@ ToolSidebar.prototype = {
 
   TABPANEL_ID_PREFIX: "sidebar-panel-",
 
+  get toolboxSessionId() {
+    const frameElement = this._panelDoc.ownerGlobal.parent.frameElement;
+
+    if (frameElement) {
+      return frameElement.getAttribute("session_id");
+    }
+
+    // We are not running inside a toolbox... this is probably a scratchpad
+    // instance so return -1.
+    return -1;
+  },
+
   /**
    * Add a "…" button at the end of the tabstripe that toggles a dropdown menu
    * containing the list of all tabs if any become hidden due to lack of room.
@@ -450,13 +462,13 @@ ToolSidebar.prototype = {
     this._currentTool = this.getCurrentTabID();
     if (previousTool) {
       if (this._telemetry) {
-        this._telemetry.toolClosed(previousTool);
+        this._telemetry.toolClosed(previousTool, this.toolboxSessionId, this);
       }
       this.emit(previousTool + "-unselected");
     }
 
     if (this._telemetry) {
-      this._telemetry.toolOpened(this._currentTool);
+      this._telemetry.toolOpened(this._currentTool, this.toolboxSessionId, this);
     }
 
     this.emit(this._currentTool + "-selected");
@@ -508,7 +520,7 @@ ToolSidebar.prototype = {
       this._currentTool = id;
 
       if (this._telemetry) {
-        this._telemetry.toolOpened(this._currentTool);
+        this._telemetry.toolOpened(this._currentTool, this.toolboxSessionId, this);
       }
 
       this._selectTabSoon(id);
@@ -578,7 +590,7 @@ ToolSidebar.prototype = {
     }
 
     if (this._currentTool && this._telemetry) {
-      this._telemetry.toolClosed(this._currentTool);
+      this._telemetry.toolClosed(this._currentTool, this.toolboxSessionId, this);
     }
 
     this._toolPanel.emit("sidebar-destroyed", this);

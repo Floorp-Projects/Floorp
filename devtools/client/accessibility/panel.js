@@ -59,11 +59,6 @@ AccessibilityPanel.prototype = {
       resolver = resolve;
     });
 
-    // Local monitoring needs to make the target remote.
-    if (!this.target.isRemote) {
-      await this.target.attach();
-    }
-
     this._telemetry = new Telemetry();
     this.panelWin.gTelemetry = this._telemetry;
 
@@ -147,9 +142,9 @@ AccessibilityPanel.prototype = {
 
   updateA11YServiceDurationTimer() {
     if (this.front.enabled) {
-      this._telemetry.start(A11Y_SERVICE_DURATION, this, true);
+      this._telemetry.start(A11Y_SERVICE_DURATION, this);
     } else {
-      this._telemetry.finish(A11Y_SERVICE_DURATION, this, true);
+      this._telemetry.finish(A11Y_SERVICE_DURATION, this);
     }
   },
 

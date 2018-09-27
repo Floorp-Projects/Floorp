@@ -20,13 +20,11 @@ function test() {
   addTab(TEST_URL).then(async () => {
     target = await TargetFactory.forTab(gBrowser.selectedTab);
 
-    target.attach().then(() => {
-      toolIDs = gDevTools.getToolDefinitionArray()
-                  .filter(def => def.isTargetSupported(target))
-                  .map(def => def.id);
-      gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM)
-               .then(startReloadTest);
-    });
+    toolIDs = gDevTools.getToolDefinitionArray()
+                .filter(def => def.isTargetSupported(target))
+                .map(def => def.id);
+    gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM)
+             .then(startReloadTest);
   });
 }
 

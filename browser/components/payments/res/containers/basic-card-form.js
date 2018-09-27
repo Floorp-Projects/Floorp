@@ -150,6 +150,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
                                               this.dataset.addButtonLabel;
     }
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
+    this.persistCheckbox.infoTooltip = this.dataset.persistCheckboxInfoTooltip;
     this.addressAddLink.textContent = this.dataset.addressAddLinkLabel;
     this.addressEditLink.textContent = this.dataset.addressEditLinkLabel;
     this.acceptedCardsList.label = this.dataset.acceptedCardsLabel;
@@ -167,6 +168,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
     this.genericErrorText.textContent = page.error;
 
     this.form.querySelector("#cc-number").disabled = editing;
+
+    // The CVV fields should be hidden and disabled when editing.
+    this.form.querySelector("#cc-csc-container").hidden = editing;
+    this.form.querySelector("#cc-csc").disabled = editing;
 
     // If a card is selected we want to edit it.
     if (editing) {
@@ -283,6 +288,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
             preserveFieldValues: true,
             guid: basicCardPage.guid,
             persistCheckboxValue: this.persistCheckbox.checked,
+            selectedStateKey: basicCardPage.selectedStateKey,
           },
         };
         let billingAddressGUID = this.form.querySelector("#billingAddressGUID");
@@ -399,7 +405,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       record.isTemporary = true;
     }
 
-    for (let editableFieldName of ["cc-name", "cc-exp-month", "cc-exp-year"]) {
+    for (let editableFieldName of ["cc-name", "cc-exp-month", "cc-exp-year", "cc-type"]) {
       record[editableFieldName] = record[editableFieldName] || "";
     }
 
@@ -409,14 +415,23 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
       record["cc-number"] = record["cc-number"] || "";
     }
 
+    // Never save the CSC in storage. Storage will throw and not save the record
+    // if it is passed.
+    delete record["cc-csc"];
+
     try {
       let {guid} = await paymentRequest.updateAutofillRecord("creditCards", record,
                                                              basicCardPage.guid);
+      let {selectedStateKey} = currentState["basic-card-page"];
+      if (!selectedStateKey) {
+        throw new Error(`state["basic-card-page"].selectedStateKey is required`);
+      }
       this.requestStore.setState({
         page: {
           id: "payment-summary",
         },
-        selectedPaymentCard: guid,
+        [selectedStateKey]: guid,
+        [selectedStateKey + "SecurityCode"]: this.form.querySelector("#cc-csc").value,
       });
     } catch (ex) {
       log.warn("saveRecord: error:", ex);

@@ -544,7 +544,7 @@ function getAllActorsInMessage(message) {
   const actors = [];
   if (Array.isArray(parameters)) {
     message.parameters.forEach(parameter => {
-      if (parameter.actor) {
+      if (parameter && parameter.actor) {
         actors.push(parameter.actor);
       }
     });

@@ -754,7 +754,7 @@ TextPropertyEditor.prototype = {
     }
     this.prop.setEnabled(!checked);
     event.stopPropagation();
-    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview", null, {
+    this.telemetry.recordEvent("edit_rule", "ruleview", null, {
       "session_id": this.toolbox.sessionId
     });
   },
@@ -827,7 +827,7 @@ TextPropertyEditor.prototype = {
       return;
     }
 
-    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview", null, {
+    this.telemetry.recordEvent("edit_rule", "ruleview", null, {
       "session_id": this.toolbox.sessionId
     });
 
@@ -922,7 +922,7 @@ TextPropertyEditor.prototype = {
       return;
     }
 
-    this.telemetry.recordEvent("devtools.main", "edit_rule", "ruleview", null, {
+    this.telemetry.recordEvent("edit_rule", "ruleview", null, {
       "session_id": this.toolbox.sessionId
     });
 

@@ -317,10 +317,8 @@ class FirefoxConnector {
     };
 
     // Reconfigures the tab, optionally triggering a reload.
-    const reconfigureTab = (options) => {
-      return new Promise((resolve) => {
-        this.tabTarget.activeTab.reconfigure(options, resolve);
-      });
+    const reconfigureTab = options => {
+      return this.tabTarget.activeTab.reconfigure(options);
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.

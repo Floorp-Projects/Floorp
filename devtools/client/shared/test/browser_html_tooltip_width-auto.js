@@ -36,7 +36,8 @@ async function runTests(doc) {
   tooltipContent.style.cssText = "height: 100%; width: 150px; background: red;";
 
   info("Set tooltip content using width:auto");
-  tooltip.setContent(tooltipContent, {width: "auto", height: 50});
+  tooltip.panel.appendChild(tooltipContent);
+  tooltip.setContentSize({width: "auto", height: 50});
 
   info("Show the tooltip and check the tooltip panel width.");
   await showTooltip(tooltip, doc.getElementById("box1"));

@@ -158,13 +158,13 @@ this._telemetry = new Telemetry();
 And use the instance to report e.g. tool opening...
 
 ```js
-this._telemetry.toolOpened("mytoolname");
+this._telemetry.toolOpened("mytoolname", sessionId, this);
 ```
 
 ... or closing:
 
 ```js
-this._telemetry.toolClosed("mytoolname");
+this._telemetry.toolClosed("mytoolname", sessionId, this);
 ```
 
 Note that `mytoolname` is the id we declared in the `telemetry.js` module.
@@ -201,7 +201,7 @@ this._telemetry = new Telemetry();
 And use the instance to report e.g. tool opening...
 
 ```js
-this._telemetry.toolOpened("mytoolname");
+this._telemetry.toolOpened("mytoolname", sessionId, this);
 ```
 
 Notes:
@@ -237,12 +237,12 @@ And use the instance to report e.g. tool opening...
 
 ```js
 // Event telemetry is disabled by default so enable it for your category.
-this._telemetry.setEventRecordingEnabled("devtools.main", true);
+this._telemetry.setEventRecordingEnabled(true);
 
 // If you already have all the properties for the event you can send the
 // telemetry event using:
-// this._telemetry.recordEvent(category, method, object, value, extra) e.g.
-this._telemetry.recordEvent("devtools.main", "open", "tools", null, {
+// this._telemetry.recordEvent(method, object, value, extra) e.g.
+this._telemetry.recordEvent("open", "tools", null, {
   "entrypoint": "ContextMenu",
   "first_panel": "Inspector",
   "host": "bottom",
@@ -259,31 +259,31 @@ this._telemetry.recordEvent("devtools.main", "open", "tools", null, {
 // property... we do this before creating the pending event simply to
 // demonstrate that properties can be sent before the pending event is created.
 this._telemetry.addEventProperty(
-  "devtools.main", "open", "tools", null, "entrypoint", "ContextMenu");
+  this, "open", "tools", null, "entrypoint", "ContextMenu");
 
-// In this example `"devtools.main", "open", "tools", null` make up the
+// In this example `"open", "tools", null` make up the
 // signature of the event and needs to be sent with all properties.
 
 // Create the pending event using
-// this._telemetry.preparePendingEvent(category, method, object, value,
+// this._telemetry.preparePendingEvent(this, method, object, value,
 // expectedPropertyNames) e.g.
-this._telemetry.preparePendingEvent("devtools.main", "open", "tools", null,
+this._telemetry.preparePendingEvent(this, "open", "tools", null,
   ["entrypoint", "first_panel", "host", "splitconsole", "width", "session_id"]
 );
 
 // Use the category, method, object, value combinations above to add each
 // property.
 this._telemetry.addEventProperty(
-  "devtools.main", "open", "tools", null, "first_panel", "inspector");
+  this, "open", "tools", null, "first_panel", "inspector");
 this._telemetry.addEventProperty(
-  "devtools.main", "open", "tools", null, "host", "bottom");
+  this, "open", "tools", null, "host", "bottom");
 this._telemetry.addEventProperty(
-  "devtools.main", "open", "tools", null, "splitconsole", false);
+  this, "open", "tools", null, "splitconsole", false);
 this._telemetry.addEventProperty(
-  "devtools.main", "open", "tools", null, "width", 1024);
+  this, "open", "tools", null, "width", 1024);
 
 // You can also add properties in batches using e.g.:
-this._telemetry.addEventProperties("devtools.main", "open", "tools", null, {
+this._telemetry.addEventProperties(this, "open", "tools", null, {
   "first_panel": "inspector",
   "host": "bottom",
   "splitconsole": false,
@@ -315,7 +315,7 @@ To see these warnings, you need to have the `browser.dom.window.dump.enabled` br
 Then, try doing things that trigger telemetry calls (e.g. opening a tool). Imagine we had a typo when reporting the tool was opened:
 
 ```js
-this._telemetry.toolOpened('mytoolnmae');
+this._telemetry.toolOpened('mytoolnmae', sessionId, this);
                                   ^^^^ typo, should be *mytoolname*
 ```
 

@@ -206,18 +206,34 @@ DebuggerClient.prototype = {
    *   * String deviceID
    *            Build ID of remote runtime. A date with like this: YYYYMMDD.
    */
-  async checkRuntimeVersion(listTabsForm) {
-    let incompatible = null;
+  async checkRuntimeVersion() {
+    const localID = Services.appinfo.appBuildID.substr(0, 8);
 
-    const deviceFront = await this.mainRoot.getFront("device");
+    let deviceFront;
+    try {
+      deviceFront = await this.mainRoot.getFront("device");
+    } catch (e) {
+      // On <FF55, getFront is going to call RootActor.getRoot and fail
+      // because this method doesn't exists.
+      if (e.error == "unrecognizedPacketType") {
+        return {
+          incompatible: "too-old",
+          minVersion: MIN_SUPPORTED_PLATFORM_VERSION,
+          runtimeVersion: "<55",
+          localID,
+          runtimeID: "?",
+        };
+      }
+      throw e;
+    }
     const desc = await deviceFront.getDescription();
+    let incompatible = null;
 
     // 1) Check for Firefox too recent on device.
     // Compare device and firefox build IDs
     // and only compare by day (strip hours/minutes) to prevent
     // warning against builds of the same day.
     const runtimeID = desc.appbuildid.substr(0, 8);
-    const localID = Services.appinfo.appBuildID.substr(0, 8);
     function buildIDToDate(buildID) {
       const fields = buildID.match(/(\d{4})(\d{2})(\d{2})/);
       // Date expects 0 - 11 for months

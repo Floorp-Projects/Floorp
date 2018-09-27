@@ -318,6 +318,7 @@ WebConsoleClient.prototype = {
       url: options.url,
       selectedNodeActor: options.selectedNodeActor,
       selectedObjectActor: options.selectedObjectActor,
+      mapped: options.mapped,
     };
 
     return new Promise((resolve, reject) => {
