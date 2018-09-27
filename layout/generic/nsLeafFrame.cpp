@@ -60,10 +60,8 @@ void
 nsLeafFrame::SizeToAvailSize(const ReflowInput& aReflowInput,
                              ReflowOutput& aDesiredSize)
 {
-  WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalSize size(wm, aReflowInput.AvailableISize(), // FRAME
-                   aReflowInput.AvailableBSize());
-  aDesiredSize.SetSize(wm, size);
+  aDesiredSize.SetSize(aReflowInput.GetWritingMode(),
+                       aReflowInput.AvailableSize());
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
 }

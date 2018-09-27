@@ -640,6 +640,23 @@ describe("CFRPageActions", () => {
         assert.equal(dispatchStub, pageAction._dispatchToASRouter);
         assert.calledOnce(PageAction.prototype.show);
       });
+      it("should add the right url if we fetched and addon install URL", async () => {
+        sinon.stub(CFRPageActions, "_fetchLatestAddonVersion").returns(Promise.resolve("latest-addon.xpi"));
+        fakeRecommendation.template = "cfr_doorhanger";
+        await CFRPageActions.addRecommendation(fakeBrowser, fakeHost, fakeRecommendation, dispatchStub);
+        const recommendation = CFRPageActions.RecommendationMap.get(fakeBrowser);
+        assert.equal(recommendation.content.buttons.primary.action.data.url, "latest-addon.xpi");
+
+        // sanity check - just go through some of the rest of the attributes to make sure they were untouched
+        assert.equal(recommendation.id, fakeRecommendation.id);
+        assert.equal(recommendation.content.heading_text, fakeRecommendation.content.heading_text);
+        assert.equal(recommendation.content.addon, fakeRecommendation.content.addon);
+        assert.equal(recommendation.content.text, fakeRecommendation.content.text);
+        assert.equal(recommendation.content.buttons.secondary, fakeRecommendation.content.buttons.secondary);
+        assert.equal(recommendation.content.buttons.primary.action.id, fakeRecommendation.content.buttons.primary.action.id);
+
+        delete fakeRecommendation.template;
+      });
     });
 
     describe("clearRecommendations", () => {
