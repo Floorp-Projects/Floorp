@@ -10,6 +10,7 @@ const DEFAULT_CONTENT = {
     "sumo_path": "extensionrecommendations"
   },
   "addon": {
+    "id": "1234",
     "title": "Addon name",
     "icon": "https://mozilla.org/icon",
     "author": "Author name",
@@ -24,8 +25,8 @@ const DEFAULT_CONTENT = {
       },
       "action": {
         "type": "INSTALL_ADDON_FROM_URL",
-        "data": {"url": "https://example.com"}
-      }
+        "data": {"url": null},
+      },
     },
     "secondary": {
       "label": {
@@ -46,6 +47,7 @@ const L10N_CONTENT = {
     "sumo_path": "extensionrecommendations"
   },
   "addon": {
+    "id": "1234",
     "title": "Addon name",
     "icon": "https://mozilla.org/icon",
     "author": "Author name",
@@ -57,8 +59,8 @@ const L10N_CONTENT = {
       "label": {"string_id": "btn_ok_id"},
       "action": {
         "type": "INSTALL_ADDON_FROM_URL",
-        "data": {"url": "https://example.com"}
-      }
+        "data": {"url": null},
+      },
     },
     "secondary": {
       "label": {"string_id": "btn_cancel_id"},

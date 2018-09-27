@@ -88,6 +88,12 @@
     "addon": {
       "type": "object",
       "properties": {
+        "id": {
+          "allOf": [
+            {"$ref": "#/definitions/plainText"},
+            {"description": "Unique addon ID"}
+          ]
+        },
         "title": {
           "allOf": [
             {"$ref": "#/definitions/plainText"},
@@ -200,10 +206,9 @@
                 "data": {
                   "properties": {
                     "url": {
-                      "allOf": [
-                        {"$ref": "#/definitions/linkUrl"},
-                        {"description": "URL used in combination with the primary action dispatched."}
-                      ]
+                      "type": "null",
+                      "$comment": "This is dynamically generated from the addon.id. See CFRPageActions.jsm",
+                      "description": "URL used in combination with the primary action dispatched."
                     }
                   }
                 }
