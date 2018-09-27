@@ -55,13 +55,12 @@
 
 // Trivial subclasses of nsStaticAtom so that function signatures can require
 // an atom from a specific atom list.
-#define DEFINE_STATIC_ATOM_SUBCLASS(name_)                   \
-  class name_ : public nsStaticAtom                          \
-  {                                                          \
-  public:                                                    \
-    constexpr name_(const char16_t* aStr, uint32_t aLength,  \
-                    uint32_t aHash, uint32_t aOffset)        \
-      : nsStaticAtom(aStr, aLength, aHash, aOffset) {}       \
+#define DEFINE_STATIC_ATOM_SUBCLASS(name_)                                     \
+  class name_ : public nsStaticAtom                                            \
+  {                                                                            \
+  public:                                                                      \
+    constexpr name_(uint32_t aLength, uint32_t aHash, uint32_t aOffset)        \
+      : nsStaticAtom(aLength, aHash, aOffset) {}                               \
   };
 
 DEFINE_STATIC_ATOM_SUBCLASS(nsICSSAnonBoxPseudo)
