@@ -7,13 +7,13 @@
 // Check the animation player's initial state
 
 add_task(async function() {
-  const {target, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   await playerHasAnInitialState(walker, animations);
   await playerStateIsCorrect(walker, animations);
 
-  await target.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 

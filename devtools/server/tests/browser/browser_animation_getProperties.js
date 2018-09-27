@@ -10,7 +10,7 @@
 const URL = MAIN_DOMAIN + "animation.html";
 
 add_task(async function() {
-  const {target, walker, animations} = await initAnimationsFrontForUrl(URL);
+  const {client, walker, animations} = await initAnimationsFrontForUrl(URL);
 
   info("Get the test node and its animation front");
   const node = await walker.querySelector(walker.rootNode, ".simple-animation");
@@ -31,6 +31,6 @@ add_task(async function() {
   // purpose. This object comes straight out of the web animations API
   // unmodified.
 
-  await target.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
