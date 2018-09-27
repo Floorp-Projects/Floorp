@@ -353,6 +353,15 @@ class JSTerm extends Component {
               return "CodeMirror.Pass";
             },
 
+            "Ctrl-Space": () => {
+              if (!this.autocompletePopup.isOpen) {
+                this.updateAutocompletion(true);
+                return null;
+              }
+
+              return "CodeMirror.Pass";
+            },
+
             "Esc": false,
             "Cmd-F": false,
             "Ctrl-F": false,
@@ -806,6 +815,7 @@ class JSTerm extends Component {
     const inputNode = this.inputNode;
     const inputValue = this.getInputValue();
     let inputUpdated = false;
+
     if (event.ctrlKey) {
       switch (event.charCode) {
         case 101:
@@ -863,6 +873,13 @@ class JSTerm extends Component {
         default:
           break;
       }
+
+      if (event.key === " " && !this.autocompletePopup.isOpen) {
+        // Open the autocompletion popup on Ctrl-Space (if it wasn't displayed).
+        this.updateAutocompletion(true);
+        event.preventDefault();
+      }
+
       return;
     } else if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
       if (!this.autocompletePopup.isOpen && (
@@ -1102,7 +1119,12 @@ class JSTerm extends Component {
            node.selectionStart == 0 && !multiline;
   }
 
-  async updateAutocompletion() {
+  /**
+   *
+   * @param {Boolean} force: True to not perform any check before trying to show the
+   *                         autocompletion popup. Defaults to false.
+   */
+  async updateAutocompletion(force = false) {
     const inputValue = this.getInputValue();
     const {editor, inputNode} = this;
     const frameActor = this.getFrameActor(this.SELECTED_FRAME);
@@ -1110,17 +1132,22 @@ class JSTerm extends Component {
     const cursor = this.getSelectionStart();
 
     // Complete if:
-    // - The input is not empty
-    // - AND there is not text selected
-    // - AND the input or frameActor are different from previous completion
-    // - AND there is not an alphanumeric (+ "_" and "$") right after the cursor
-    if (
+    // - `force` is true OR
+    //   - The input is not empty
+    //   - AND there is not text selected
+    //   - AND the input or frameActor are different from previous completion
+    //   - AND there is not an alphanumeric (+ "_" and "$") right after the cursor
+    if (!force && (
       !inputValue ||
       (inputNode && inputNode.selectionStart != inputNode.selectionEnd) ||
       (editor && editor.getSelection()) ||
-      (this.lastInputValue === inputValue && frameActor === this._lastFrameActorId) ||
+      (
+        !force &&
+        this.lastInputValue === inputValue &&
+        frameActor === this._lastFrameActorId
+      ) ||
       /^[a-zA-Z0-9_$]/.test(inputValue.substring(cursor))
-    ) {
+    )) {
       this.clearCompletion();
       this.emit("autocomplete-updated");
       return;
