@@ -2,10 +2,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let cookieBehavior = BEHAVIOR_REJECT_FOREIGN;
 let blockingByContentBlocking = true;
-let blockingByContentBlockingUI = true;
-let blockingByContentBlockingRTUI = true;
 let blockingByAllowList = true;
-let expectedBlockingNotifications = true;
 
 let rootDir = getRootDirectory(gTestPath);
 let jar = getJar(rootDir);

@@ -84,8 +84,6 @@ function runTest(aExpectedResponses) {
 // the given cookie policy.
 function testShouldIntercept(behavior, lifetime, done) {
   SpecialPowers.pushPrefEnv({"set": [
-      ["browser.contentblocking.enabled", true],
-      ["browser.contentblocking.ui.enabled", true],
       ["network.cookie.cookieBehavior", behavior],
       ["network.cookie.lifetimePolicy", lifetime],
   ]}, function() {

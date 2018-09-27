@@ -144,9 +144,7 @@ CheckContentBlockingAllowList(nsIURI* aTopWinURI)
 {
   bool isAllowed = false;
   nsresult rv =
-    AntiTrackingCommon::IsOnContentBlockingAllowList(aTopWinURI,
-                                                     AntiTrackingCommon::eStorageChecks,
-                                                     isAllowed);
+    AntiTrackingCommon::IsOnContentBlockingAllowList(aTopWinURI, isAllowed);
   if (NS_SUCCEEDED(rv) && isAllowed) {
     LOG_SPEC(("The top-level window (%s) is on the content blocking allow list, "
               "bail out early", _spec), aTopWinURI);
@@ -201,7 +199,7 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
              aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
 
-  if (!AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()) {
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
     return;
   }
 
@@ -257,13 +255,6 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
 }
 } // anonymous
 
-/* static */ bool
-AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()
-{
-  return StaticPrefs::browser_contentblocking_enabled() &&
-         StaticPrefs::browser_contentblocking_ui_enabled();
-}
-
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
 AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigin,
                                                          nsPIDOMWindowInner* aParentWindow)
@@ -280,7 +271,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
-  if (!ShouldHonorContentBlockingCookieRestrictions()) {
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
     LOG(("The content blocking pref has been disabled, bail out early"));
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
@@ -477,7 +468,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
 
   if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
     // Now, we have to also honour the Content Blocking pref.
-    if (!ShouldHonorContentBlockingCookieRestrictions()) {
+    if (!StaticPrefs::browser_contentblocking_enabled()) {
       LOG(("The content blocking pref has been disabled, bail out early by "
            "by pretending our window isn't a third-party window"));
       return true;
@@ -503,7 +494,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
   // Now, we have to also honour the Content Blocking pref.
-  if (!ShouldHonorContentBlockingCookieRestrictions()) {
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
     LOG(("The content blocking pref has been disabled, bail out early by "
          "by pretending our window isn't a tracking window"));
     return true;
@@ -684,7 +675,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
 
   if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
     // Now, we have to also honour the Content Blocking pref.
-    if (!ShouldHonorContentBlockingCookieRestrictions()) {
+    if (!StaticPrefs::browser_contentblocking_enabled()) {
       LOG(("The content blocking pref has been disabled, bail out early by "
            "by pretending our window isn't a third-party window"));
       return true;
@@ -710,7 +701,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
   // Now, we have to also honour the Content Blocking pref.
-  if (!ShouldHonorContentBlockingCookieRestrictions()) {
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
     LOG(("The content blocking pref has been disabled, bail out early by "
          "pretending our channel isn't a tracking channel"));
     return true;
@@ -833,7 +824,7 @@ AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner*
   }
 
   // Now, we have to also honour the Content Blocking pref.
-  if (!ShouldHonorContentBlockingCookieRestrictions()) {
+  if (!StaticPrefs::browser_contentblocking_enabled()) {
     LOG(("The content blocking pref has been disabled, bail out early"));
     return true;
   }
@@ -900,22 +891,9 @@ AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner*
 
 nsresult
 AntiTrackingCommon::IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
-  AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose,
-  bool& aIsAllowListed)
+                                                 bool& aIsAllowListed)
 {
   aIsAllowListed = false;
-
-  // For storage checks, check the storage pref, and for annotations checks,
-  // check the corresponding pref as well.  This allows each set of checks to
-  // be disabled individually if needed.
-  if ((aPurpose == eStorageChecks &&
-       !StaticPrefs::browser_contentblocking_allowlist_storage_enabled()) ||
-      (aPurpose == eTrackingAnnotations &&
-       !StaticPrefs::browser_contentblocking_allowlist_annotations_enabled())) {
-    LOG(("Attempting to check the content blocking allow list aborted because "
-         "the third-party cookies UI has been disabled."));
-    return NS_OK;
-  }
 
   LOG_SPEC(("Deciding whether the user has overridden content blocking for %s",
             _spec), aTopWinURI);
