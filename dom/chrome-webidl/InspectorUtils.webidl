@@ -9,7 +9,7 @@
  *
  * See InspectorUtils.h for documentation on these methods.
  */
-[ChromeOnly]
+[Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled"]
 namespace InspectorUtils {
   // documentOnly tells whether user and UA sheets should get included.
   sequence<StyleSheet> getAllStyleSheets(Document document, optional boolean documentOnly = false);
@@ -129,7 +129,7 @@ dictionary InspectorFontFeature {
   required DOMString languageSystem;
 };
 
-[ChromeOnly]
+[Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled"]
 interface InspectorFontFace {
   // An indication of how we found this font during font-matching.
   // Note that the same physical font may have been found in multiple ways within a range.
