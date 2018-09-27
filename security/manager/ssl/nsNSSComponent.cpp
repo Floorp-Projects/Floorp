@@ -777,13 +777,15 @@ nsNSSComponent::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
 class LoadLoadableRootsTask final : public Runnable
 {
 public:
-  explicit LoadLoadableRootsTask(nsNSSComponent* nssComponent,
-                                 bool importEnterpriseRoots,
-                                 uint32_t familySafetyMode)
+  LoadLoadableRootsTask(nsNSSComponent* nssComponent,
+                        bool importEnterpriseRoots,
+                        uint32_t familySafetyMode,
+                        Vector<nsCString>&& possibleLoadableRootsLocations)
     : Runnable("LoadLoadableRootsTask")
     , mNSSComponent(nssComponent)
     , mImportEnterpriseRoots(importEnterpriseRoots)
     , mFamilySafetyMode(familySafetyMode)
+    , mPossibleLoadableRootsLocations(std::move(possibleLoadableRootsLocations))
   {
     MOZ_ASSERT(nssComponent);
   }
@@ -798,6 +800,7 @@ private:
   RefPtr<nsNSSComponent> mNSSComponent;
   bool mImportEnterpriseRoots;
   uint32_t mFamilySafetyMode;
+  Vector<nsCString> mPossibleLoadableRootsLocations;
   nsCOMPtr<nsIThread> mThread;
 };
 
@@ -988,6 +991,8 @@ nsNSSComponent::CheckForSmartCardChanges()
 static nsresult
 GetNSS3Directory(nsCString& result)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   UniquePRString nss3Path(
     PR_GetLibraryFilePathname(MOZ_DLL_PREFIX "nss3" MOZ_DLL_SUFFIX,
                               reinterpret_cast<PRFuncPtr>(NSS_Initialize)));
@@ -1032,6 +1037,8 @@ GetNSS3Directory(nsCString& result)
 static nsresult
 GetDirectoryPath(const char* directoryKey, nsCString& result)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIProperties> directoryService(
     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   if (!directoryService) {
@@ -1060,20 +1067,24 @@ GetDirectoryPath(const char* directoryKey, nsCString& result)
 #endif
 }
 
-
-nsresult
-LoadLoadableRootsTask::LoadLoadableRoots()
+// The loadable roots library is probably in the same directory we loaded the
+// NSS shared library from, but in some cases it may be elsewhere. This function
+// enumerates and returns the possible locations as nsCStrings.
+static nsresult
+ListPossibleLoadableRootsLocations(
+  Vector<nsCString>& possibleLoadableRootsLocations)
 {
-  // Find the best Roots module for our purposes.
-  // Prefer the application's installation directory,
-  // but also ensure the library is at least the version we expect.
-  Vector<nsCString> possibleCKBILocations;
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
   // First try in the directory where we've already loaded
   // MOZ_DLL_PREFIX nss3 MOZ_DLL_SUFFIX, since that's likely to be correct.
   nsAutoCString nss3Dir;
   nsresult rv = GetNSS3Directory(nss3Dir);
   if (NS_SUCCEEDED(rv)) {
-    if (!possibleCKBILocations.append(std::move(nss3Dir))) {
+    if (!possibleLoadableRootsLocations.append(std::move(nss3Dir))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
@@ -1085,7 +1096,7 @@ LoadLoadableRootsTask::LoadLoadableRoots()
   nsAutoCString currentProcessDir;
   rv = GetDirectoryPath(NS_XPCOM_CURRENT_PROCESS_DIR, currentProcessDir);
   if (NS_SUCCEEDED(rv)) {
-    if (!possibleCKBILocations.append(std::move(currentProcessDir))) {
+    if (!possibleLoadableRootsLocations.append(std::move(currentProcessDir))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
@@ -1095,7 +1106,7 @@ LoadLoadableRootsTask::LoadLoadableRoots()
   nsAutoCString greDir;
   rv = GetDirectoryPath(NS_GRE_DIR, greDir);
   if (NS_SUCCEEDED(rv)) {
-    if (!possibleCKBILocations.append(std::move(greDir))) {
+    if (!possibleLoadableRootsLocations.append(std::move(greDir))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
@@ -1104,14 +1115,21 @@ LoadLoadableRootsTask::LoadLoadableRoots()
   // As a last resort, this will cause the library loading code to use the OS'
   // default library search path.
   nsAutoCString emptyString;
-  if (!possibleCKBILocations.append(std::move(emptyString))) {
+  if (!possibleLoadableRootsLocations.append(std::move(emptyString))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (const auto& possibleCKBILocation : possibleCKBILocations) {
-    if (mozilla::psm::LoadLoadableRoots(possibleCKBILocation)) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("loaded CKBI from %s",
-                                            possibleCKBILocation.get()));
+  return NS_OK;
+}
+
+nsresult
+LoadLoadableRootsTask::LoadLoadableRoots()
+{
+  for (const auto& possibleLocation : mPossibleLoadableRootsLocations) {
+    if (mozilla::psm::LoadLoadableRoots(possibleLocation)) {
+      MOZ_LOG(gPIPNSSLog,
+              LogLevel::Debug,
+              ("loaded CKBI from %s", possibleLocation.get()));
       return NS_OK;
     }
   }
@@ -1487,6 +1505,8 @@ nsNSSComponent::setEnabledTLSVersions()
 static void
 SetNSSDatabaseCacheModeAsAppropriate()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIFile> profileFile;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(profileFile));
@@ -1964,8 +1984,16 @@ nsNSSComponent::InitializeNSS()
                                                       false);
     uint32_t familySafetyMode = Preferences::GetUint(kFamilySafetyModePref,
                                                      kFamilySafetyModeDefault);
+    Vector<nsCString> possibleLoadableRootsLocations;
+    rv = ListPossibleLoadableRootsLocations(possibleLoadableRootsLocations);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     RefPtr<LoadLoadableRootsTask> loadLoadableRootsTask(
-      new LoadLoadableRootsTask(this, importEnterpriseRoots, familySafetyMode));
+      new LoadLoadableRootsTask(this,
+                                importEnterpriseRoots,
+                                familySafetyMode,
+                                std::move(possibleLoadableRootsLocations)));
     rv = loadLoadableRootsTask->Dispatch();
     if (NS_FAILED(rv)) {
       return rv;
