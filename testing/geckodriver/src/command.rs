@@ -139,7 +139,7 @@ impl WebDriverExtensionCommand for GeckoExtensionCommand {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct AddonInstallParameters {
     pub path: String,
-    pub temporary: bool,
+    pub temporary: Option<bool>,
 }
 
 impl<'de> Deserialize<'de> for AddonInstallParameters {
@@ -151,14 +151,14 @@ impl<'de> Deserialize<'de> for AddonInstallParameters {
         #[serde(deny_unknown_fields)]
         struct Base64 {
             addon: String,
-            temporary: bool,
+            temporary: Option<bool>,
         };
 
         #[derive(Debug, Deserialize)]
         #[serde(deny_unknown_fields)]
         struct Path {
             path: String,
-            temporary: bool,
+            temporary: Option<bool>,
         };
 
         #[derive(Debug, Deserialize)]
@@ -254,7 +254,18 @@ mod tests {
         let json = r#"{"path": "/path/to.xpi", "temporary": true}"#;
         let data = AddonInstallParameters {
             path: "/path/to.xpi".to_string(),
-            temporary: true,
+            temporary: Some(true),
+        };
+
+        check_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_path_only() {
+        let json = r#"{"path": "/path/to.xpi"}"#;
+        let data = AddonInstallParameters {
+            path: "/path/to.xpi".to_string(),
+            temporary: None,
         };
 
         check_deserialize(&json, &data);
@@ -275,18 +286,23 @@ mod tests {
     }
 
     #[test]
-    fn test_json_addon_install_parameters_with_path_only() {
-        let json = r#"{"path": "/path/to.xpi"}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
     fn test_json_addon_install_parameters_with_addon() {
         let json = r#"{"addon": "aGVsbG8=", "temporary": true}"#;
         let data = serde_json::from_str::<AddonInstallParameters>(&json).unwrap();
 
-        assert_eq!(data.temporary, true);
+        assert_eq!(data.temporary, Some(true));
+        let mut file = File::open(data.path).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+        assert_eq!(contents, "hello");
+    }
+
+    #[test]
+    fn test_json_addon_install_parameters_with_addon_only() {
+        let json = r#"{"addon": "aGVsbG8="}"#;
+        let data = serde_json::from_str::<AddonInstallParameters>(&json).unwrap();
+
+        assert_eq!(data.temporary, None);
         let mut file = File::open(data.path).unwrap();
         let mut contents = String::new();
         file.read_to_string(&mut contents).unwrap();
@@ -303,13 +319,6 @@ mod tests {
     #[test]
     fn test_json_addon_install_parameters_with_addon_and_temporary_invalid_type() {
         let json = r#"{"addon": "aGVsbG8=", "temporary": "foo"}"#;
-
-        assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_addon_install_parameters_with_addon_only() {
-        let json = r#"{"addon": "aGVsbG8="}"#;
 
         assert!(serde_json::from_str::<AddonInstallParameters>(&json).is_err());
     }
