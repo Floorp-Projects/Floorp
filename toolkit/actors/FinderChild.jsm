@@ -31,14 +31,14 @@ const MESSAGES = [
 ];
 
 class FinderChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
 
-    this._finder = new Finder(mm.docShell);
+    this._finder = new Finder(this.docShell);
     this._finder.addResultListener(this);
 
     for (let msg of MESSAGES) {
-      mm.addMessageListener(msg, this);
+      this.mm.addMessageListener(msg, this);
     }
   }
 

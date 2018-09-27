@@ -620,8 +620,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                          &aReflowInput, aReflowInput.mReflowDepth);
 
   WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalSize computedSize(wm, aReflowInput.ComputedISize(),
-                           aReflowInput.ComputedBSize());
+  LogicalSize computedSize = aReflowInput.ComputedSize();
 
   LogicalMargin m = aReflowInput.ComputedLogicalBorderPadding();
   // GetXULBorderAndPadding(m);

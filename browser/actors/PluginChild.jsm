@@ -34,8 +34,8 @@ const OVERLAY_DISPLAY = {
 };
 
 class PluginChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
 
     // Cache of plugin actions for the current page.
     this.pluginData = new Map();

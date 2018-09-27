@@ -10,10 +10,8 @@
  */
 
 dictionary MediaConfiguration {
-  // Bug 1493798: This should actually be optional and its members required.
-  VideoConfiguration video = null;
-  // Bug 1493798: This should actually be optional and its members required.
-  AudioConfiguration audio = null;
+  VideoConfiguration video;
+  AudioConfiguration audio;
 };
 
 dictionary MediaDecodingConfiguration : MediaConfiguration {
@@ -34,22 +32,16 @@ enum MediaEncodingType {
   "transmission"
 };
 
-// all members are specified as required in the spec.
-// We enforce that requirement in the MediaCapabilities code instead
-// See https://github.com/heycam/webidl/issues/76
 dictionary VideoConfiguration {
-  DOMString contentType;
-  unsigned long width;
-  unsigned long height;
-  unsigned long long bitrate;
-  DOMString framerate;
+  required DOMString contentType;
+  required unsigned long width;
+  required unsigned long height;
+  required unsigned long long bitrate;
+  required DOMString framerate;
 };
 
-// contentType member is specified as required in the spec.
-// We enforce that requirement in the MediaCapabilities code instead
-// See https://github.com/heycam/webidl/issues/76
 dictionary AudioConfiguration {
-  DOMString contentType;
+  required DOMString contentType;
   DOMString channels;
   unsigned long long bitrate;
   unsigned long samplerate;

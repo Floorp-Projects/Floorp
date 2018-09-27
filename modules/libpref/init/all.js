@@ -2954,8 +2954,8 @@ pref("layout.css.mix-blend-mode.enabled", true);
 // Is support for isolation enabled?
 pref("layout.css.isolation.enabled", true);
 
-// Is support for CSS Scrollbar color properties enabled?
-pref("layout.css.scrollbar-colors.enabled", true);
+// Is support for scrollbar-color property enabled?
+pref("layout.css.scrollbar-color.enabled", true);
 
 // Is support for scrollbar-width property enabled?
 pref("layout.css.scrollbar-width.enabled", true);
@@ -5832,7 +5832,7 @@ pref("layers.mlgpu.enable-on-windows7", true);
 #endif
 
 // Enable lowercased response header name
-pref("dom.xhr.lowercase_header.enabled", false);
+pref("dom.xhr.lowercase_header.enabled", true);
 
 // Control whether clients.openWindow() opens windows in the same process
 // that called the API vs following our normal multi-process selection
