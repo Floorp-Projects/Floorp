@@ -7857,6 +7857,7 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
 
 static void
 GetFontFacesForFramesInner(nsIFrame* aFrame,
+                           nsLayoutUtils::UsedFontFaceList& aResult,
                            nsLayoutUtils::UsedFontFaceTable& aFontFaces,
                            uint32_t aMaxRanges,
                            bool aSkipCollapsedWhitespace)
@@ -7866,7 +7867,7 @@ GetFontFacesForFramesInner(nsIFrame* aFrame,
   if (aFrame->IsTextFrame()) {
     if (!aFrame->GetPrevContinuation()) {
       nsLayoutUtils::GetFontFacesForText(aFrame, 0, INT32_MAX, true,
-                                         aFontFaces, aMaxRanges,
+                                         aResult, aFontFaces, aMaxRanges,
                                          aSkipCollapsedWhitespace);
     }
     return;
@@ -7879,7 +7880,7 @@ GetFontFacesForFramesInner(nsIFrame* aFrame,
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
       child = nsPlaceholderFrame::GetRealFrameFor(child);
-      GetFontFacesForFramesInner(child, aFontFaces, aMaxRanges,
+      GetFontFacesForFramesInner(child, aResult, aFontFaces, aMaxRanges,
                                  aSkipCollapsedWhitespace);
     }
   }
@@ -7887,6 +7888,7 @@ GetFontFacesForFramesInner(nsIFrame* aFrame,
 
 /* static */ nsresult
 nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
+                                     UsedFontFaceList& aResult,
                                      UsedFontFaceTable& aFontFaces,
                                      uint32_t aMaxRanges,
                                      bool aSkipCollapsedWhitespace)
@@ -7894,7 +7896,7 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
   MOZ_ASSERT(aFrame, "NULL frame pointer");
 
   while (aFrame) {
-    GetFontFacesForFramesInner(aFrame, aFontFaces, aMaxRanges,
+    GetFontFacesForFramesInner(aFrame, aResult, aFontFaces, aMaxRanges,
                                aSkipCollapsedWhitespace);
     aFrame = GetNextContinuationOrIBSplitSibling(aFrame);
   }
@@ -7907,6 +7909,7 @@ AddFontsFromTextRun(gfxTextRun* aTextRun,
                     nsTextFrame* aFrame,
                     gfxSkipCharsIterator& aSkipIter,
                     const gfxTextRun::Range& aRange,
+                    nsLayoutUtils::UsedFontFaceList& aResult,
                     nsLayoutUtils::UsedFontFaceTable& aFontFaces,
                     uint32_t aMaxRanges)
 {
@@ -7926,6 +7929,7 @@ AddFontsFromTextRun(gfxTextRun* aTextRun,
       fontFace = new InspectorFontFace(fe, aTextRun->GetFontGroup(),
                                        glyphRuns.GetGlyphRun()->mMatchType);
       aFontFaces.Put(fe, fontFace);
+      aResult.AppendElement(fontFace);
     }
 
     // Add this glyph run to the fontFace's list of ranges, unless we have
@@ -7965,6 +7969,7 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
                                    int32_t aStartOffset,
                                    int32_t aEndOffset,
                                    bool aFollowContinuations,
+                                   UsedFontFaceList& aResult,
                                    UsedFontFaceTable& aFontFaces,
                                    uint32_t aMaxRanges,
                                    bool aSkipCollapsedWhitespace)
@@ -8012,7 +8017,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
          curr->HasNonSuppressedText())) {
       gfxTextRun::Range range(iter.ConvertOriginalToSkipped(fstart),
                               iter.ConvertOriginalToSkipped(fend));
-      AddFontsFromTextRun(textRun, curr, iter, range, aFontFaces, aMaxRanges);
+      AddFontsFromTextRun(textRun, curr, iter, range, aResult, aFontFaces,
+                          aMaxRanges);
     }
 
     curr = next;

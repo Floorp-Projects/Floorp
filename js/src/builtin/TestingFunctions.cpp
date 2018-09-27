@@ -876,7 +876,7 @@ WasmExtractCode(JSContext* cx, unsigned argc, Value* vp)
     } else if (baselineTier) {
         tier = wasm::Tier::Baseline;
     } else {
-        tier = wasm::Tier::Ion;
+        tier = wasm::Tier::Optimized;
     }
 
     RootedValue result(cx);

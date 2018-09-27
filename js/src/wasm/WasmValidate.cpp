@@ -2494,7 +2494,7 @@ DecodeCodeSection(Decoder& d, ModuleEnvironment* env,
 {
     if (!env->codeSection) {
         if (env->numFuncDefs() != 0) {
-            return d.fail("expected function bodies");
+            return d.fail("expected code section");
         }
         return true;
     }
@@ -2780,8 +2780,8 @@ wasm::Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error
     HasGcTypes gcTypesConfigured = HasGcTypes::False;
 #endif
 
-    CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Ion, DebugEnabled::False,
-                                    gcTypesConfigured);
+    CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized, OptimizedBackend::Ion,
+                                    DebugEnabled::False, gcTypesConfigured);
     ModuleEnvironment env(gcTypesConfigured,
                           &compilerEnv,
                           cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()

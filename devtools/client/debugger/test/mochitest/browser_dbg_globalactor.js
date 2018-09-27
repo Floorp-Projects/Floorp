@@ -13,7 +13,7 @@ add_task(async function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
-  DebuggerServer.registerModule(ACTORS_URL, {
+  ActorRegistry.registerModule(ACTORS_URL, {
     prefix: "testOne",
     constructor: "TestActor1",
     type: { global: true },
@@ -44,9 +44,11 @@ add_task(async function() {
     const conn = DebuggerServer._connections[connID];
     const actorPrefix = conn._prefix + "testOne";
     for (let pool of conn._extraPools) {
-      count += Object.keys(pool._actors).filter(e => {
-        return e.startsWith(actorPrefix);
-      }).length;
+      for (const actor of pool.poolChildren()) {
+        if (actor.actorID.startsWith(actorPrefix)) {
+          count++;
+        }
+      }
     }
   }
 

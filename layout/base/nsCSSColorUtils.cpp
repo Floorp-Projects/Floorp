@@ -21,7 +21,7 @@
 
 void NS_GetSpecial3DColors(nscolor aResult[2], nscolor aBorderColor)
 {
-  const float kDarkerScale = 2.0 / 3.0;
+  const float kDarkerScale = 2.0f / 3.0f;
 
   uint8_t r = NS_GET_R(aBorderColor);
   uint8_t g = NS_GET_G(aBorderColor);

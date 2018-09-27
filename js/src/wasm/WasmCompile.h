@@ -49,6 +49,7 @@ struct CompileArgs : ShareableBase<CompileArgs>
     ScriptedCaller scriptedCaller;
     UniqueChars sourceMapURL;
     bool baselineEnabled;
+    bool forceCranelift;
     bool debugEnabled;
     bool ionEnabled;
     bool sharedMemoryEnabled;
@@ -58,6 +59,7 @@ struct CompileArgs : ShareableBase<CompileArgs>
     explicit CompileArgs(ScriptedCaller&& scriptedCaller)
       : scriptedCaller(std::move(scriptedCaller)),
         baselineEnabled(false),
+        forceCranelift(false),
         debugEnabled(false),
         ionEnabled(false),
         sharedMemoryEnabled(false),

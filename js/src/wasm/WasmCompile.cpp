@@ -83,6 +83,11 @@ CompileArgs::CompileArgs(JSContext* cx, ScriptedCaller&& scriptedCaller)
 
     baselineEnabled = cx->options().wasmBaseline();
     ionEnabled = cx->options().wasmIon();
+#ifdef ENABLE_WASM_CRANELIFT
+    forceCranelift = cx->options().wasmForceCranelift();
+#else
+    forceCranelift = false;
+#endif
     sharedMemoryEnabled = cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
     gcTypesConfigured = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
     testTiering = cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2;
@@ -175,7 +180,7 @@ static const double arm32BaselineBytesPerBytecode = arm32IonBytesPerBytecode * 1
 static const double arm64BaselineBytesPerBytecode = arm64IonBytesPerBytecode * 1.39; // Guess
 
 static double
-IonBytesPerBytecode(SystemClass cls)
+OptimizedBytesPerBytecode(SystemClass cls)
 {
     switch (cls) {
       case SystemClass::DesktopX86:
@@ -225,8 +230,8 @@ wasm::EstimateCompiledCodeSize(Tier tier, size_t bytecodeSize)
     switch (tier) {
       case Tier::Baseline:
         return double(bytecodeSize) * BaselineBytesPerBytecode(cls);
-      case Tier::Ion:
-        return double(bytecodeSize) * IonBytesPerBytecode(cls);
+      case Tier::Optimized:
+        return double(bytecodeSize) * OptimizedBytesPerBytecode(cls);
     }
     MOZ_CRASH("bad tier");
 }
@@ -360,7 +365,7 @@ TieringBeneficial(uint32_t codeSize)
     // the code memory.  It's like we need some kind of code memory reservation
     // system or JIT compilation for large modules.
 
-    double ionRatio = IonBytesPerBytecode(cls);
+    double ionRatio = OptimizedBytesPerBytecode(cls);
     double baselineRatio = BaselineBytesPerBytecode(cls);
     double needMemory = codeSize * (ionRatio + baselineRatio);
     double availMemory = LikelyAvailableExecutableMemory();
@@ -385,11 +390,13 @@ CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
 
 CompilerEnvironment::CompilerEnvironment(CompileMode mode,
                                          Tier tier,
+                                         OptimizedBackend optimizedBackend,
                                          DebugEnabled debugEnabled,
                                          HasGcTypes gcTypesConfigured)
   : state_(InitialWithModeTierDebug),
     mode_(mode),
     tier_(tier),
+    optimizedBackend_(optimizedBackend),
     debug_(debugEnabled),
     gcTypes_(gcTypesConfigured)
 {
@@ -434,6 +441,9 @@ CompilerEnvironment::computeParameters(Decoder& d, HasGcTypes gcFeatureOptIn)
     bool baselineEnabled = BaselineCanCompile() && (argBaselineEnabled || argTestTiering);
     bool debugEnabled = BaselineCanCompile() && argDebugEnabled;
     bool ionEnabled = IonCanCompile() && (argIonEnabled || !baselineEnabled || argTestTiering);
+#ifdef ENABLE_WASM_CRANELIFT
+    bool forceCranelift = args_->forceCranelift;
+#endif
 
     // HasCompilerSupport() should prevent failure here
     MOZ_RELEASE_ASSERT(baselineEnabled || ionEnabled);
@@ -445,8 +455,16 @@ CompilerEnvironment::computeParameters(Decoder& d, HasGcTypes gcFeatureOptIn)
         tier_ = Tier::Baseline;
     } else {
         mode_ = CompileMode::Once;
-        tier_ = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Ion;
+        tier_ = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Optimized;
     }
+
+    optimizedBackend_ = OptimizedBackend::Ion;
+#ifdef ENABLE_WASM_CRANELIFT
+    if (forceCranelift) {
+        optimizedBackend_ = OptimizedBackend::Cranelift;
+    }
+#endif
+
     debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
     gcTypes_ = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
     state_ = Computed;
@@ -551,9 +569,14 @@ wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode, const Module&
     UniqueChars error;
     Decoder d(bytecode, 0, &error);
 
-    HasGcTypes gcTypesConfigured = HasGcTypes::False; // No Ion support yet
-    CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Ion, DebugEnabled::False,
-                                    gcTypesConfigured);
+    HasGcTypes gcTypesConfigured = HasGcTypes::False; // No optimized backend support yet
+    OptimizedBackend optimizedBackend = args.forceCranelift
+                                      ? OptimizedBackend::Cranelift
+                                      : OptimizedBackend::Ion;
+
+    CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized, optimizedBackend,
+                                    DebugEnabled::False, gcTypesConfigured);
+
     ModuleEnvironment env(gcTypesConfigured,
                           &compilerEnv,
                           args.sharedMemoryEnabled ? Shareable::True : Shareable::False);

@@ -1419,7 +1419,7 @@ EnsureLazyEntryStub(const Instance& instance, size_t funcExportIndex, const Func
         return stubs->createOne(funcExportIndex, codeTier);
     }
 
-    MOZ_ASSERT(prevTier == Tier::Baseline && tier == Tier::Ion);
+    MOZ_ASSERT(prevTier == Tier::Baseline && tier == Tier::Optimized);
 
     auto stubs2 = instance.code(tier).lazyStubs().lock();
 
