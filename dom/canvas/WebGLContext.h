@@ -289,9 +289,11 @@ class WebGLContext
     friend class WebGLContextUserData;
     friend class WebGLExtensionCompressedTextureASTC;
     friend class WebGLExtensionCompressedTextureATC;
+    friend class WebGLExtensionCompressedTextureBPTC;
     friend class WebGLExtensionCompressedTextureES3;
     friend class WebGLExtensionCompressedTextureETC1;
     friend class WebGLExtensionCompressedTexturePVRTC;
+    friend class WebGLExtensionCompressedTextureRGTC;
     friend class WebGLExtensionCompressedTextureS3TC;
     friend class WebGLExtensionCompressedTextureS3TC_SRGB;
     friend class WebGLExtensionDepthTexture;
