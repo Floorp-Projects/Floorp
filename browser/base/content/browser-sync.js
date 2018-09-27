@@ -361,7 +361,7 @@ var gSync = {
     }
   },
 
-  populateSendTabToDevicesMenu(devicesPopup, aTab, createDeviceNodeFn) {
+  populateSendTabToDevicesMenu(devicesPopup, url, title, multiselected, createDeviceNodeFn) {
     if (!createDeviceNodeFn) {
       createDeviceNodeFn = (clientId, name, clientType, lastModified) => {
         let eltName = name ? "menuitem" : "menuseparator";
@@ -386,7 +386,7 @@ var gSync = {
 
     const state = UIState.get();
     if (state.status == UIState.STATUS_SIGNED_IN && this.remoteClients.length > 0) {
-      this._appendSendTabDeviceList(fragment, createDeviceNodeFn, aTab);
+      this._appendSendTabDeviceList(fragment, createDeviceNodeFn, url, title, multiselected);
     } else if (state.status == UIState.STATUS_SIGNED_IN) {
       this._appendSendTabSingleDevice(fragment, createDeviceNodeFn);
     } else if (state.status == UIState.STATUS_NOT_VERIFIED ||
@@ -402,26 +402,25 @@ var gSync = {
   // TODO: once our transition from the old-send tab world is complete,
   // this list should be built using the FxA device list instead of the client
   // collection.
-  _appendSendTabDeviceList(fragment, createDeviceNodeFn, tab) {
-    let tabsToSend = tab.multiselected ? gBrowser.selectedTabs : [tab];
-
-    function getTabUrl(t) {
-      return t.linkedBrowser.currentURI.spec;
-    }
-    function getTabTitle(t) {
-      return t.linkedBrowser.contentTitle;
-    }
+  _appendSendTabDeviceList(fragment, createDeviceNodeFn, url, title, multiselected) {
+    let tabsToSend = multiselected ?
+      gBrowser.selectedTabs.map(t => {
+        return {
+          url: t.linkedBrowser.currentURI.spec,
+          title: t.linkedBrowser.contentTitle,
+        };
+      }) : [{url, title}];
 
     const onSendAllCommand = (event) => {
       for (let t of tabsToSend) {
-        this.sendTabToDevice(getTabUrl(t), this.remoteClients, getTabTitle(t));
+        this.sendTabToDevice(t.url, this.remoteClients, t.title);
       }
     };
     const onTargetDeviceCommand = (event) => {
       const clientId = event.target.getAttribute("clientId");
       const client = this.remoteClients.find(c => c.id == clientId);
       for (let t of tabsToSend) {
-        this.sendTabToDevice(getTabUrl(t), [client], getTabTitle(t));
+        this.sendTabToDevice(t.url, [client], t.title);
       }
     };
 
