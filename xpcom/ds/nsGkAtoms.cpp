@@ -6,10 +6,6 @@
 
 #include "nsGkAtoms.h"
 
-// Register an array of static atoms with the atom table.
-void
-NS_RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen);
-
 namespace mozilla {
 namespace detail {
 
@@ -98,9 +94,4 @@ const nsStaticAtom* const nsGkAtoms::sAtoms = mozilla::detail::gGkAtoms.mAtoms;
           static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::name_)]));
 #include "nsGkAtomList.h"
 #undef GK_ATOM
-
-void nsGkAtoms::RegisterStaticAtoms()
-{
-  NS_RegisterStaticAtoms(sAtoms, sAtomsLen);
-}
 
