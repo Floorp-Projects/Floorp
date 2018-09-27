@@ -25,3 +25,12 @@ dictionary BasicCardResponse {
            DOMString cardSecurityCode;
            PaymentAddress? billingAddress;
 };
+
+dictionary BasicCardErrors {
+  DOMString cardNumber;
+  DOMString cardholderName;
+  DOMString cardSecurityCode;
+  DOMString expiryMonth;
+  DOMString expiryYear;
+  AddressErrors billingAddress;
+};

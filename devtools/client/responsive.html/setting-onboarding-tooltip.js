@@ -42,7 +42,8 @@ class SettingOnboardingTooltip {
 
     this.closeButton.addEventListener("click", this.onCloseButtonClick);
 
-    this.tooltip.setContent(container, { width: CONTAINER_WIDTH });
+    this.tooltip.panel.appendChild(container);
+    this.tooltip.setContentSize({ width: CONTAINER_WIDTH });
     this.tooltip.show(this.doc.getElementById("settings-button"), {
       position: "bottom",
     });

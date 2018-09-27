@@ -40,14 +40,9 @@ StyleEditorPanel.prototype = {
    * open is effectively an asynchronous constructor
    */
   async open() {
-    // We always interact with the target as if it were remote
-    if (!this.target.isRemote) {
-      await this.target.attach();
-    }
-
     this.target.on("close", this.destroy);
 
-    this._debuggee = await this._target.getFront("stylesheets");
+    this._debuggee = await this.target.getFront("stylesheets");
 
     // Initialize the CSS properties database.
     const {cssProperties} = await initCssProperties(this._toolbox);

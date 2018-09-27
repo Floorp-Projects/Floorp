@@ -17,6 +17,7 @@ export let requestStore = new PaymentsStore({
   "basic-card-page": {
     guid: null,
     // preserveFieldValues: true,
+    selectedStateKey: null,
   },
   "address-page": {
     guid: null,

@@ -93,12 +93,9 @@ NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsContentDLF* it = new nsContentDLF();
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return CallQueryInterface(it, aResult);
+  RefPtr<nsContentDLF> it = new nsContentDLF();
+  it.forget(aResult);
+  return NS_OK;
 }
 
 nsContentDLF::nsContentDLF()

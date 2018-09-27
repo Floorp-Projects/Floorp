@@ -3294,7 +3294,8 @@ nsHTMLDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
   // State from nsHTMLDocument
   clone->mLoadFlags = mLoadFlags;
 
-  return CallQueryInterface(clone.get(), aResult);
+  clone.forget(aResult);
+  return NS_OK;
 }
 
 bool

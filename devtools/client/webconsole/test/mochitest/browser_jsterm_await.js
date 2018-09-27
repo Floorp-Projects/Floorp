@@ -23,43 +23,42 @@ async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const {jsterm} = hud;
 
+  const executeAndWaitForResultMessage = (input, expectedOutput) =>
+    executeAndWaitForMessage(hud, input, expectedOutput, ".result");
+
   info("Evaluate a top-level await expression");
-  let onMessage = waitForMessage(hud, "await1");
-  // We use "await" + 1 to not match the evaluated command message.
-  const simpleAwait = `await new Promise(r => setTimeout(() => r("await" + 1), 1000))`;
-  jsterm.execute(simpleAwait);
-  await onMessage;
+  const simpleAwait = `await new Promise(r => setTimeout(() => r(["await1"]), 500))`;
+  await executeAndWaitForResultMessage(
+    simpleAwait,
+    `Array [ "await1" ]`,
+  );
+
   // Check that the resulting promise of the async iife is not displayed.
   let messages = hud.ui.outputNode.querySelectorAll(".message .message-body");
   let messagesText = Array.from(messages).map(n => n.textContent).join(" - ");
-  is(messagesText, `${simpleAwait} - await1`,
+  is(messagesText, `${simpleAwait} - Array [ "await1" ]`,
     "The output contains the the expected messages");
 
   info("Check that assigning the result of a top-level await expression works");
-  onMessage = waitForMessage(hud, "await2");
-  jsterm.execute(`x = await new Promise(r => setTimeout(() => r("await" + 2), 1000))`);
-  await onMessage;
+  await executeAndWaitForResultMessage(
+    `x = await new Promise(r => setTimeout(() => r("await2"), 500))`,
+    `await2`,
+  );
 
-  onMessage = waitForMessage(hud, `"-await2-"`);
-  jsterm.execute(`"-" + x + "-"`);
-  let message = await onMessage;
+  let message = await executeAndWaitForResultMessage(
+    `"-" + x + "-"`,
+    `"-await2-"`,
+  );
   ok(message.node, "`x` was assigned as expected");
-
-  info("Check that awaiting for a rejecting promise displays an error");
-  onMessage = waitForMessage(hud, "await-rej", ".message.error");
-  jsterm.execute(`x = await new Promise((resolve,reject) =>
-    setTimeout(() => reject("await-" + "rej"), 1000))`);
-  message = await onMessage;
-  ok(message.node, "awaiting for a rejecting promise displays an error message");
 
   info("Check that concurrent await expression work fine");
   hud.ui.clearOutput();
-  const delays = [2000, 500, 1000, 1500];
+  const delays = [1000, 500, 2000, 1500];
   const inputs = delays.map(delay => `await new Promise(
     r => setTimeout(() => r("await-concurrent-" + ${delay}), ${delay}))`);
 
   // Let's wait for the message that sould be displayed last.
-  onMessage = waitForMessage(hud, "await-concurrent-2000");
+  const onMessage = waitForMessage(hud, "await-concurrent-2000", ".message.result");
   for (const input of inputs) {
     jsterm.execute(input);
   }
@@ -69,17 +68,18 @@ async function performTests() {
   messagesText = Array.from(messages).map(n => n.textContent);
   const expectedMessages = [
     ...inputs,
-    "await-concurrent-500",
-    "await-concurrent-1000",
-    "await-concurrent-1500",
-    "await-concurrent-2000",
+    `"await-concurrent-500"`,
+    `"await-concurrent-1000"`,
+    `"await-concurrent-1500"`,
+    `"await-concurrent-2000"`,
   ];
   is(JSON.stringify(messagesText, null, 2), JSON.stringify(expectedMessages, null, 2),
     "The output contains the the expected messages, in the expected order");
 
   info("Check that a logged promise is still displayed as a promise");
-  onMessage = waitForMessage(hud, "Promise {");
-  jsterm.execute(`new Promise(r => setTimeout(() => r(1), 1000))`);
-  message = await onMessage;
+  message = await executeAndWaitForResultMessage(
+    `new Promise(r => setTimeout(() => r(1), 1000))`,
+    `Promise {`,
+  );
   ok(message, "Promise are displayed as expected");
 }

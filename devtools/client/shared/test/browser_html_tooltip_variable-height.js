@@ -29,7 +29,8 @@ add_task(async function() {
   info("Set tooltip content 50px tall, but request a container 200px tall");
   const tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.style.cssText = "height: " + TOOLTIP_HEIGHT + "px; background: red;";
-  tooltip.setContent(tooltipContent, {width: CONTAINER_WIDTH, height: Infinity});
+  tooltip.panel.appendChild(tooltipContent);
+  tooltip.setContentSize({width: CONTAINER_WIDTH, height: Infinity});
 
   info("Show the tooltip and check the container and panel height.");
   await showTooltip(tooltip, doc.getElementById("box1"));

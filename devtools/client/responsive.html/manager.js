@@ -125,7 +125,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       tel.scalarAdd("devtools.responsive.toolbox_opened_first", 1);
     }
 
-    tel.recordEvent("devtools.main", "activate", "responsive_design", null, {
+    tel.recordEvent("activate", "responsive_design", null, {
       "host": hostType,
       "width": Math.ceil(window.outerWidth / 50) * 50,
       "session_id": toolbox ? toolbox.sessionId : -1
@@ -188,7 +188,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
 
     const hostType = toolbox ? toolbox.hostType : "none";
     const t = this._telemetry;
-    t.recordEvent("devtools.main", "deactivate", "responsive_design", null, {
+    t.recordEvent("deactivate", "responsive_design", null, {
       "host": hostType,
       "width": Math.ceil(window.outerWidth / 50) * 50,
       "session_id": toolbox ? toolbox.sessionId : -1

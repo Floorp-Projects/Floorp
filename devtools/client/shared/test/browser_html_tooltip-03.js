@@ -85,6 +85,7 @@ function createTooltip(doc) {
   input.setAttribute("type", "text");
   div.appendChild(input);
 
-  tooltip.setContent(div, {width: 150, height: 50});
+  tooltip.panel.appendChild(div);
+  tooltip.setContentSize({width: 150, height: 50});
   return tooltip;
 }

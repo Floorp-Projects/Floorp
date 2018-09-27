@@ -23,8 +23,6 @@
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
 
-#include "nsDOMCSSRect.h"
-#include "nsDOMCSSRGBColor.h"
 #include "nsDOMCSSValueList.h"
 #include "nsFlexContainerFrame.h"
 #include "nsGridContainerFrame.h"
@@ -84,7 +82,7 @@ NS_NewComputedDOMStyle(dom::Element* aElement,
 static nsDOMCSSValueList*
 GetROCSSValueList(bool aCommaDelimited)
 {
-  return new nsDOMCSSValueList(aCommaDelimited, true);
+  return new nsDOMCSSValueList(aCommaDelimited);
 }
 
 template<typename T>
@@ -1121,21 +1119,25 @@ void
 nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
                                    nscolor aColor)
 {
-  nsROCSSPrimitiveValue *red   = new nsROCSSPrimitiveValue;
-  nsROCSSPrimitiveValue *green = new nsROCSSPrimitiveValue;
-  nsROCSSPrimitiveValue *blue  = new nsROCSSPrimitiveValue;
-  nsROCSSPrimitiveValue *alpha  = new nsROCSSPrimitiveValue;
-
-  uint8_t a = NS_GET_A(aColor);
-  nsDOMCSSRGBColor *rgbColor =
-    new nsDOMCSSRGBColor(red, green, blue, alpha, a < 255);
-
-  red->SetNumber(NS_GET_R(aColor));
-  green->SetNumber(NS_GET_G(aColor));
-  blue->SetNumber(NS_GET_B(aColor));
-  alpha->SetNumber(nsStyleUtil::ColorComponentToFloat(a));
-
-  aValue->SetColor(rgbColor);
+  nsAutoString string;
+  const bool hasAlpha = NS_GET_A(aColor) != 255;
+  if (hasAlpha) {
+    string.AppendLiteral("rgba(");
+  } else {
+    string.AppendLiteral("rgb(");
+  }
+  string.AppendInt(NS_GET_R(aColor));
+  string.AppendLiteral(", ");
+  string.AppendInt(NS_GET_G(aColor));
+  string.AppendLiteral(", ");
+  string.AppendInt(NS_GET_B(aColor));
+  if (hasAlpha) {
+    string.AppendLiteral(", ");
+    float alpha = nsStyleUtil::ColorComponentToFloat(NS_GET_A(aColor));
+    nsStyleUtil::AppendCSSNumber(alpha, string);
+  }
+  string.AppendLiteral(")");
+  aValue->SetString(string);
 }
 
 void
@@ -3164,33 +3166,6 @@ nsComputedDOMStyle::DoGetZIndex()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetImageRegion()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  const nsStyleList* list = StyleList();
-
-  if (list->mImageRegion.width <= 0 || list->mImageRegion.height <= 0) {
-    val->SetIdent(eCSSKeyword_auto);
-  } else {
-    // create the cssvalues for the sides, stick them in the rect object
-    nsROCSSPrimitiveValue *topVal    = new nsROCSSPrimitiveValue;
-    nsROCSSPrimitiveValue *rightVal  = new nsROCSSPrimitiveValue;
-    nsROCSSPrimitiveValue *bottomVal = new nsROCSSPrimitiveValue;
-    nsROCSSPrimitiveValue *leftVal   = new nsROCSSPrimitiveValue;
-    nsDOMCSSRect * domRect = new nsDOMCSSRect(topVal, rightVal,
-                                              bottomVal, leftVal);
-    topVal->SetAppUnits(list->mImageRegion.y);
-    rightVal->SetAppUnits(list->mImageRegion.width + list->mImageRegion.x);
-    bottomVal->SetAppUnits(list->mImageRegion.height + list->mImageRegion.y);
-    leftVal->SetAppUnits(list->mImageRegion.x);
-    val->SetRect(domRect);
-  }
-
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetInitialLetter()
 {
   const nsStyleTextReset* textReset = StyleTextReset();
@@ -3777,52 +3752,6 @@ nsComputedDOMStyle::DoGetContain()
                                        NS_STYLE_CONTAIN_SIZE, NS_STYLE_CONTAIN_PAINT,
                                        valueStr);
     val->SetString(valueStr);
-  }
-
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetClip()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  const nsStyleEffects* effects = StyleEffects();
-
-  if (effects->mClipFlags == NS_STYLE_CLIP_AUTO) {
-    val->SetIdent(eCSSKeyword_auto);
-  } else {
-    // create the cssvalues for the sides, stick them in the rect object
-    nsROCSSPrimitiveValue *topVal    = new nsROCSSPrimitiveValue;
-    nsROCSSPrimitiveValue *rightVal  = new nsROCSSPrimitiveValue;
-    nsROCSSPrimitiveValue *bottomVal = new nsROCSSPrimitiveValue;
-    nsROCSSPrimitiveValue *leftVal   = new nsROCSSPrimitiveValue;
-    nsDOMCSSRect * domRect = new nsDOMCSSRect(topVal, rightVal,
-                                              bottomVal, leftVal);
-    if (effects->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
-      topVal->SetIdent(eCSSKeyword_auto);
-    } else {
-      topVal->SetAppUnits(effects->mClip.y);
-    }
-
-    if (effects->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
-      rightVal->SetIdent(eCSSKeyword_auto);
-    } else {
-      rightVal->SetAppUnits(effects->mClip.width + effects->mClip.x);
-    }
-
-    if (effects->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
-      bottomVal->SetIdent(eCSSKeyword_auto);
-    } else {
-      bottomVal->SetAppUnits(effects->mClip.height + effects->mClip.y);
-    }
-
-    if (effects->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
-      leftVal->SetIdent(eCSSKeyword_auto);
-    } else {
-      leftVal->SetAppUnits(effects->mClip.x);
-    }
-    val->SetRect(domRect);
   }
 
   return val.forget();

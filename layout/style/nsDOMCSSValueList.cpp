@@ -8,14 +8,14 @@
 
 #include "nsDOMCSSValueList.h"
 #include "nsString.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/Move.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsDOMCSSValueList::nsDOMCSSValueList(bool aCommaDelimited, bool aReadonly)
-  : CSSValue(), mCommaDelimited(aCommaDelimited), mReadonly(aReadonly)
+nsDOMCSSValueList::nsDOMCSSValueList(bool aCommaDelimited)
+  : CSSValue()
+  , mCommaDelimited(aCommaDelimited)
 {
 }
 
@@ -38,8 +38,7 @@ nsDOMCSSValueList::GetCssText(nsAString& aCssText)
   nsAutoString separator;
   if (mCommaDelimited) {
     separator.AssignLiteral(", ");
-  }
-  else {
+  } else {
     separator.Assign(char16_t(' '));
   }
 
@@ -74,21 +73,4 @@ void
 nsDOMCSSValueList::GetCssText(nsString& aCssText, ErrorResult& aRv)
 {
   GetCssText(aCssText);
-}
-
-void
-nsDOMCSSValueList::SetCssText(const nsAString& aText, ErrorResult& aRv)
-{
-  if (mReadonly) {
-    aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-    return;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Can't SetCssText yet: please write me!");
-}
-
-uint16_t
-nsDOMCSSValueList::CssValueType() const
-{
-  return CSSValue::CSS_VALUE_LIST;
 }

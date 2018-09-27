@@ -35,20 +35,13 @@ DebuggerPanel.prototype = {
    *         A promise that is resolved when the Debugger completes opening.
    */
   open: function () {
-    let targetPromise;
-
-    // Local debugging needs to make the target remote.
-    if (!this.target.isRemote) {
-      targetPromise = this.target.attach();
-      // Listen for tab switching events to manage focus when the content window
-      // is paused and events suppressed.
+    // Listen for tab switching events to manage focus when the content window
+    // is paused and events suppressed.
+    if (this.target.isLocalTab) {
       this.target.tab.addEventListener("TabSelect", this);
-    } else {
-      targetPromise = promise.resolve(this.target);
     }
 
-    return targetPromise
-      .then(() => this._controller.startupDebugger())
+    return Promise.resolve(this._controller.startupDebugger())
       .then(() => this._controller.connect())
       .then(() => {
         this._toolbox.on("host-changed", this.handleHostChanged);

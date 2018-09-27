@@ -564,6 +564,10 @@ add_task(async function test_private_persist_addresses() {
          tempAddress.name.includes(address["family-name"]), "Address.name was computed");
     }, {address: addressToAdd, tempAddressGuid});
 
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "123",
+    });
+
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
 

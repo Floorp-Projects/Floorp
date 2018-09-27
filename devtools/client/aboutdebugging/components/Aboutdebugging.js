@@ -70,12 +70,18 @@ class AboutDebuggingApp extends Component {
   componentDidMount() {
     window.addEventListener("hashchange", this.onHashChange);
     this.onHashChange();
-    this.props.telemetry.toolOpened("aboutdebugging");
+
+    // aboutdebugging is not connected with a toolbox so we pass -1 as the
+    // toolbox session id.
+    this.props.telemetry.toolOpened("aboutdebugging", -1, this);
   }
 
   componentWillUnmount() {
     window.removeEventListener("hashchange", this.onHashChange);
-    this.props.telemetry.toolClosed("aboutdebugging");
+
+    // aboutdebugging is not connected with a toolbox so we pass -1 as the
+    // toolbox session id.
+    this.props.telemetry.toolClosed("aboutdebugging", -1, this);
   }
 
   onHashChange() {

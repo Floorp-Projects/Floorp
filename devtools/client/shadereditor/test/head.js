@@ -165,8 +165,6 @@ function initShaderEditor(aUrl) {
     const tab = await addTab(aUrl);
     const target = await TargetFactory.forTab(tab);
 
-    await target.attach();
-
     Services.prefs.setBoolPref("devtools.shadereditor.enabled", true);
     const toolbox = await gDevTools.showToolbox(target, "shadereditor");
     const panel = toolbox.getCurrentPanel();

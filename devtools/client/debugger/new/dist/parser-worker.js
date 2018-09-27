@@ -46777,7 +46777,7 @@ function mapTopLevelAwait(expression) {
   const ast = hasTopLevelAwait(expression);
   if (ast) {
     const func = wrapExpression(ast);
-    return (0, _generator2.default)(_template2.default.ast(`(${func})().then(console.log).catch(console.error);`)).code;
+    return (0, _generator2.default)(_template2.default.ast(`(${func})();`)).code;
   }
 
   return expression;

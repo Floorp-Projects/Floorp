@@ -11,7 +11,6 @@ const TAB_URL = EXAMPLE_URL + "doc_inline-debugger-statement.html";
 
 var gClient, gThreadClient;
 var gAttached = promise.defer();
-var gNewGlobal = promise.defer();
 var gNewChromeSource = promise.defer();
 
 var { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
@@ -30,7 +29,7 @@ function test() {
     is(aType, "browser",
       "Root actor should identify itself as a browser.");
 
-    promise.all([gAttached.promise, gNewGlobal.promise, gNewChromeSource.promise])
+    promise.all([gAttached.promise, gNewChromeSource.promise])
       .then(resumeAndCloseConnection)
       .then(finish)
       .catch(aError => {
@@ -43,8 +42,6 @@ function test() {
 
 function testParentProcessTargetActor() {
   gClient.getProcess().then(aResponse => {
-    gClient.addListener("newGlobal", onNewGlobal);
-
     let actor = aResponse.form.actor;
     gClient.attachTarget(actor).then(([response, tabClient]) => {
       tabClient.attachThread(null).then(([aResponse, aThreadClient]) => {
@@ -66,13 +63,6 @@ function testParentProcessTargetActor() {
   });
 }
 
-function onNewGlobal() {
-  ok(true, "Received a new chrome global.");
-
-  gClient.removeListener("newGlobal", onNewGlobal);
-  gNewGlobal.resolve();
-}
-
 function onNewSource(aEvent, aPacket) {
   if (aPacket.source.url.startsWith("chrome:")) {
     ok(true, "Received a new chrome source: " + aPacket.source.url);
@@ -92,7 +82,6 @@ registerCleanupFunction(function () {
   gClient = null;
   gThreadClient = null;
   gAttached = null;
-  gNewGlobal = null;
   gNewChromeSource = null;
 
   customLoader = null;

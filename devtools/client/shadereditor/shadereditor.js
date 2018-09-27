@@ -591,7 +591,7 @@ class ShadersEditorsView {
       messageDiv.textContent = message;
       div.appendChild(messageDiv);
     }
-    tooltip.setContent(div);
+    tooltip.panel.appendChild(div);
 
     tooltip.startTogglingOnHover(node, () => true, {
       toggleDelay: GUTTER_ERROR_PANEL_DELAY

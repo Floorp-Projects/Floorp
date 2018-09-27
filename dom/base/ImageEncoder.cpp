@@ -354,7 +354,9 @@ ImageEncoder::GetInputStream(int32_t aWidth,
                            nsDependentString(aEncoderOptions));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(aEncoder, aStream);
+  nsCOMPtr<imgIEncoder> encoder(aEncoder);
+  encoder.forget(aStream);
+  return NS_OK;
 }
 
 /* static */
