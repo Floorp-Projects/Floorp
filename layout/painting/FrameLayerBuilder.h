@@ -27,7 +27,7 @@ class nsDisplayList;
 class nsDisplayItem;
 class gfxContext;
 class nsDisplayItemGeometry;
-class nsDisplayMask;
+class nsDisplayMasksAndClipPaths;
 
 namespace mozilla {
 struct ActiveScrolledRoot;

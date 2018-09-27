@@ -41,9 +41,6 @@ public:
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  // Invalidate users of this filter
-  void Invalidate();
-
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 
