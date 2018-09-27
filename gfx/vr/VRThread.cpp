@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRThread.h"
+#include "nsDebug.h"
+#include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "VRManager.h"
 
@@ -161,7 +163,16 @@ void
 VRThread::Shutdown()
 {
   if (mThread) {
-    mThread->Shutdown();
+    if (nsThreadManager::get().IsNSThread()) {
+      mThread->Shutdown();
+    } else {
+      NS_WARNING("VRThread::Shutdown() may only be called from an XPCOM thread");
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "VRThread::Shutdown",
+        [thread = mThread]() {
+          thread->Shutdown();
+        }));
+    }
     mThread = nullptr;
   }
   mStarted = false;
