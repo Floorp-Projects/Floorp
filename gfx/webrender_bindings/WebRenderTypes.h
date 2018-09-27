@@ -298,6 +298,13 @@ static inline wr::LayoutPoint ToLayoutPoint(const mozilla::LayoutDeviceIntPoint&
   return ToLayoutPoint(LayoutDevicePoint(point));
 }
 
+static inline wr::LayoutPoint ToRoundedLayoutPoint(const mozilla::LayoutDevicePoint& point)
+{
+  mozilla::LayoutDevicePoint rounded = point;
+  rounded.Round();
+  return ToLayoutPoint(rounded);
+}
+
 static inline wr::WorldPoint ToWorldPoint(const mozilla::ScreenPoint& point)
 {
   wr::WorldPoint p;
