@@ -741,9 +741,8 @@ be temporary, and you can try again later.</li>
      Argument 1 will be replaced with a line break in the application. -->
     <string name="tip_request_desktop"><![CDATA[Rather see the full desktop site?%1$s Menu > Request desktop site]]></string>
 
-    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
-        Argument 1 is the app name (Firefox Focus/Firefox Klar/etc). -->
-    <string name="tip_disable_tips">Turn off tips on the %1$s start screen</string>
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Turn off tips on the start screen</string>
 
     <!-- Displayed in a snackbar when a user opens a new tab, gives action to switch to the newly opened tab -->
     <string name="new_tab_opened_snackbar">New tab opened</string>
@@ -751,4 +750,7 @@ be temporary, and you can try again later.</li>
 
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Switch to link in new tab immediately</string>
+
+    <!-- deprecated strings -->
+    <string name="tip_disable_tips">Turn off tips on the %1$s start screen</string>
 </resources>

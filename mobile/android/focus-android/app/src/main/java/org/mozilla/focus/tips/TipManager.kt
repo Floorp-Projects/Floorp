@@ -13,7 +13,7 @@ import mozilla.components.browser.session.Session
 import org.mozilla.focus.R.string.app_name
 import org.mozilla.focus.R.string.tip_add_to_homescreen
 import org.mozilla.focus.R.string.tip_autocomplete_url
-import org.mozilla.focus.R.string.tip_disable_tips
+import org.mozilla.focus.R.string.tip_disable_tips2
 import org.mozilla.focus.R.string.tip_disable_tracking_protection
 import org.mozilla.focus.R.string.tip_open_in_new_tab
 import org.mozilla.focus.R.string.tip_request_desktop
@@ -147,9 +147,8 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
         }
 
         fun createDisableTipsTip(context: Context): Tip {
-            val appName = context.resources.getString(app_name)
-            val id = tip_disable_tips
-            val name = context.resources.getString(id, appName)
+            val id = tip_disable_tips2
+            val name = context.resources.getString(id)
 
             val shouldDisplayDisableTips = {
                 // Count number of app launches
@@ -210,7 +209,7 @@ object TipManager {
 
         // Always show the disable tip if it's ready to be displayed
         for (tip in listOfTips) {
-            if (tip.id == tip_disable_tips && tip.shouldDisplay()) {
+            if (tip.id == tip_disable_tips2 && tip.shouldDisplay()) {
                 listOfTips.remove(tip)
                 return tip
             }
