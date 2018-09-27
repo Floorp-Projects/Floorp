@@ -809,6 +809,12 @@ CreateGLContextANGLE()
   auto* egl = gl::GLLibraryEGL::Get();
   auto flags = gl::CreateContextFlags::PREFER_ES3;
 
+  if (egl->IsExtensionSupported(
+     gl::GLLibraryEGL::MOZ_create_context_provoking_vertex_dont_care))
+  {
+     flags |= gl::CreateContextFlags::PROVOKING_VERTEX_DONT_CARE;
+  }
+
   // Create GLContext with dummy EGLSurface, the EGLSurface is not used.
   // Instread we override it with EGLSurface of SwapChain's back buffer.
   RefPtr<gl::GLContext> gl = gl::GLContextProviderEGL::CreateHeadless(flags, &discardFailureId);

@@ -69,7 +69,8 @@ static const char* sEGLExtensionNames[] = {
     "EGL_ANGLE_device_creation",
     "EGL_ANGLE_device_creation_d3d11",
     "EGL_KHR_surfaceless_context",
-    "EGL_KHR_create_context_no_error"
+    "EGL_KHR_create_context_no_error",
+    "EGL_MOZ_create_context_provoking_vertex_dont_care"
 };
 
 #if defined(ANDROID)
