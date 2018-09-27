@@ -99,19 +99,17 @@ impl MarionetteHandler {
     ) -> WebDriverResult<Map<String, Value>> {
         let (options, capabilities) = {
             let mut fx_capabilities = FirefoxCapabilities::new(self.settings.binary.as_ref());
-            let mut capabilities = try!(
-                try!(new_session_parameters.match_browser(&mut fx_capabilities)).ok_or(
-                    WebDriverError::new(
-                        ErrorStatus::SessionNotCreated,
-                        "Unable to find a matching set of capabilities",
-                    ),
-                )
-            );
+            let mut capabilities = new_session_parameters
+                .match_browser(&mut fx_capabilities)?
+                .ok_or(WebDriverError::new(
+                    ErrorStatus::SessionNotCreated,
+                    "Unable to find a matching set of capabilities",
+                ))?;
 
-            let options = try!(FirefoxOptions::from_capabilities(
+            let options = FirefoxOptions::from_capabilities(
                 fx_capabilities.chosen_binary,
-                &mut capabilities
-            ));
+                &mut capabilities,
+            )?;
             (options, capabilities)
         };
 
@@ -121,7 +119,7 @@ impl MarionetteHandler {
 
         let port = self.settings.port.unwrap_or(get_free_port()?);
         if !self.settings.connect_existing {
-            try!(self.start_browser(port, options));
+            self.start_browser(port, options)?;
         }
 
         let mut connection = MarionetteConnection::new(port, session_id.clone());
