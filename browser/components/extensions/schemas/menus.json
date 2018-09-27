@@ -442,7 +442,7 @@
                 "type": "integer",
                 "minimum": 0,
                 "optional": true,
-                "description": "Required when context is 'tab'. Requires 'tabs' and '<all_urls>' permission."
+                "description": "Required when context is 'tab'. Requires 'tabs' permission."
               }
             }
           }

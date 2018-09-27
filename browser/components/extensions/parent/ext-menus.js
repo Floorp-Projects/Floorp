@@ -348,7 +348,11 @@ var gMenuBuilder = {
         item.checked = true;
       }
 
-      if (contextData.tab) {
+      let {webExtContextData} = contextData;
+      if (contextData.tab &&
+          // If the menu context was overridden by the extension, do not grant
+          // activeTab since the extension also controls the tabId.
+          (!webExtContextData || webExtContextData.extensionId !== item.extension.id)) {
         item.tabManager.addActiveTabPermission(contextData.tab);
       }
 
