@@ -313,6 +313,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     if (page.onboardingWizard && !Object.keys(savedBasicCards).length) {
       successStateChange = {
         "basic-card-page": {
+          selectedStateKey: "selectedPaymentCard",
           // Preserve field values as the user may have already edited the card
           // page and went back to the address page to make a correction.
           preserveFieldValues: true,

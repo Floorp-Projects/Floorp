@@ -128,7 +128,7 @@ var paymentDialogWrapper = {
     let addressData = this.temporaryStore.addresses.get(guid) ||
                       await formAutofillStorage.addresses.get(guid);
     if (!addressData) {
-      throw new Error(`Shipping address not found: ${guid}`);
+      throw new Error(`Address not found: ${guid}`);
     }
 
     let address = this.createPaymentAddress({

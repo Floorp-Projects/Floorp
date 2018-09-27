@@ -44,6 +44,10 @@
   grid-area: cc-type;
 }
 
+#cc-csc-container {
+  grid-area: cc-csc;
+}
+
 #billingAddressGUID-container {
   grid-area: billingAddressGUID;
 }

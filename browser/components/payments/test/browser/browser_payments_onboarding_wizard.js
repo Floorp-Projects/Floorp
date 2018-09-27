@@ -91,7 +91,10 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       }, "Shipping address is selected as the billing address");
     });
 
-    await fillInCardForm(frame, PTU.BasicCards.JohnDoe);
+    await fillInCardForm(frame, {
+      ["cc-csc"]: "123",
+      ...PTU.BasicCards.JohnDoe,
+    });
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
@@ -362,7 +365,10 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
       }, "Billing Address is correctly shown");
     });
 
-    await fillInCardForm(frame, PTU.BasicCards.JohnDoe);
+    await fillInCardForm(frame, {
+      ["cc-csc"]: "123",
+      ...PTU.BasicCards.JohnDoe,
+    });
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
