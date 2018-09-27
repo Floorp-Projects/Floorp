@@ -3260,6 +3260,17 @@
     "n_buckets": 50,
     "description": "DNS Cache Entry Age at Removal Time (minutes)"
   },
+  "DNS_BY_TYPE_CLEANUP_AGE": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1440,
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1481251],
+    "releaseChannelCollection": "opt-out",
+    "n_buckets": 50,
+    "description": "DNS Cache Entry Age for by-type queries at Removal Time (minutes)"
+  },
   "DNS_PREMATURE_EVICTION": {
     "record_in_processes": ["main"],
     "expires_in_version": "never",
@@ -3270,6 +3281,17 @@
     "bug_numbers": [1460305],
     "n_buckets": 50,
     "description": "DNS Cache Entry Age at Removal Time of non-expired entries (minutes)"
+  },
+  "DNS_BY_TYPE_PREMATURE_EVICTION": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1440,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1481251],
+    "n_buckets": 50,
+    "description": "DNS Cache Entry Age for by-type queries at Removal Time of non-expired entries (minutes)"
   },
   "DNS_LOOKUP_TIME": {
     "record_in_processes": ["main"],
@@ -3302,6 +3324,28 @@
     "bug_numbers": [1434852],
     "n_buckets": 50,
     "description": "Time for a completed native name resolution (msec)"
+  },
+  "DNS_BY_TYPE_FAILED_LOOKUP_TIME": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1481251],
+    "n_buckets": 50,
+    "description": "Time for a completed by-type resolution that has a negative answer (msec)."
+  },
+  "DNS_BY_TYPE_SUCCEEDED_LOOKUP_TIME": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1481251],
+    "n_buckets": 50,
+    "description": "Time for a completed by-type resolution that succeeded (msec)."
   },
   "DNS_NATIVE_QUEUING": {
     "record_in_processes": ["main"],
