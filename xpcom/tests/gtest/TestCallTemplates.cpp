@@ -33,6 +33,17 @@ class NS_NO_VTABLE nsITestService : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITestService, NS_ITESTSERVICE_IID)
 
+#define NS_ITESTSERVICE2_IID \
+  {0x137b5253, 0x37b1, 0x43c7, \
+    { 0x96, 0x2b, 0xab, 0xf1, 0x2d, 0x22, 0x56, 0xaf }}
+
+class NS_NO_VTABLE nsITestService2 : public nsISupports {
+  public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITESTSERVICE2_IID)
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITestService2, NS_ITESTSERVICE2_IID)
+
 class nsTestService final : public nsITestService,
                             public nsSupportsWeakReference
 {
@@ -70,14 +81,14 @@ void JustTestingCompilation()
 
     nsTestService *myTestService =
         reinterpret_cast<nsTestService*>(mySupportsPtr);
-    nsISupportsWeakReference *mySupportsWeakRef;
-    CallQueryInterface(myTestService, &mySupportsWeakRef);
+    nsITestService2 *myTestService2;
+    CallQueryInterface(myTestService, &myTestService2);
 
     nsCOMPtr<nsISupports> mySupportsCOMPtr = mySupportsPtr;
     CallQueryInterface(mySupportsCOMPtr, &myITestService);
 
     RefPtr<nsTestService> myTestServiceRefPtr = myTestService;
-    CallQueryInterface(myTestServiceRefPtr, &mySupportsWeakRef);
+    CallQueryInterface(myTestServiceRefPtr, &myTestService2);
 
     /* Test CallQueryReferent */
 
