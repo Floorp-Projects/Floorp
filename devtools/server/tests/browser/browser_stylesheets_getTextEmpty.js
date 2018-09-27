@@ -6,23 +6,12 @@
 
 // Test that StyleSheetActor.getText handles empty text correctly.
 
-const {StyleSheetsFront} = require("devtools/shared/fronts/stylesheets");
-
 const CONTENT = "<style>body { background-color: #f06; }</style>";
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(CONTENT);
 
 add_task(async function() {
-  await addTab(TEST_URI);
-
-  info("Initialising the debugger server and client.");
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-
-  info("Attaching to the active tab.");
-  await client.attachTarget(form.actor);
-
-  const front = StyleSheetsFront(client, form);
+  const target = await addTabTarget(TEST_URI);
+  const front = target.getFront("stylesheets");
   ok(front, "The StyleSheetsFront was created.");
 
   const sheets = await front.getStyleSheets();
@@ -36,5 +25,5 @@ add_task(async function() {
   const source = await longStr.string();
   is(source, "", "text is empty");
 
-  await client.close();
+  await target.destroy();
 });
