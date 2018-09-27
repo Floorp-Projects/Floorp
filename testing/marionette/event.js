@@ -456,6 +456,8 @@ function createKeyboardEventDictionary_(key, keyEvent, win) {
       keyEvent.keyCode : 0;
   let keyName = "Unidentified";
 
+  let printable = false;
+
   if (key.indexOf("KEY_") == 0) {
     keyName = key.substr("KEY_".length);
     result.flags |= Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
@@ -479,6 +481,7 @@ function createKeyboardEventDictionary_(key, keyEvent, win) {
     // only force printable if "raw character" and event key match, like "a"
     if (!("key" in keyEvent && key != keyEvent.key)) {
       result.flags |= Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
+      printable = true;
     }
   }
 
@@ -488,7 +491,7 @@ function createKeyboardEventDictionary_(key, keyEvent, win) {
   }
 
   let resultKey = "key" in keyEvent ? keyEvent.key : keyName;
-  if (!MODIFIER_KEYCODES_LOOKUP[key] && keyEvent.shiftKey) {
+  if (printable && keyEvent.shiftKey) {
     resultKey = resultKey.toUpperCase();
   }
 
