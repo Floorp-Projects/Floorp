@@ -261,9 +261,14 @@ OptionsPanel.prototype = {
       return tool.visibilityswitch && !tool.hiddenInOptions;
     });
 
+    const fragment = this.panelDoc.createDocumentFragment();
     for (const tool of toggleableTools) {
-      defaultToolsBox.appendChild(createToolCheckbox(tool));
+      fragment.appendChild(createToolCheckbox(tool));
     }
+
+    const toolsNotSupportedLabelNode =
+      this.panelDoc.getElementById("tools-not-supported-label");
+    defaultToolsBox.insertBefore(fragment, toolsNotSupportedLabelNode);
 
     // Clean up any existent additional tools content.
     for (const label of additionalToolsBox.querySelectorAll("label")) {
