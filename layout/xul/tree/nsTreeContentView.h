@@ -90,7 +90,9 @@ class nsTreeContentView final : public nsITreeView,
                  mozilla::ErrorResult& aError);
     void ToggleOpenState(int32_t aRow, mozilla::ErrorResult& aError);
     void CycleHeader(nsTreeColumn& aColumn, mozilla::ErrorResult& aError);
-    // XPCOM SelectionChanged() is OK
+    void SelectionChanged()
+    {
+    }
     void CycleCell(int32_t aRow, nsTreeColumn& aColumn)
     {
     }
