@@ -263,27 +263,6 @@ nsSVGUtils::NeedsReflowSVG(nsIFrame *aFrame)
   return NS_SUBTREE_DIRTY(aFrame);
 }
 
-void
-nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
-{
-  MOZ_ASSERT(!(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG),
-             "Not expecting to be called on the outer SVG Frame");
-
-  aFrame = aFrame->GetParent();
-
-  while (aFrame) {
-    if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)
-      return;
-
-    SVGFilterObserverListForCSSProp* observers =
-      SVGObserverUtils::GetFilterObserverList(aFrame);
-    if (observers) {
-      observers->Invalidate();
-    }
-    aFrame = aFrame->GetParent();
-  }
-}
-
 Size
 nsSVGUtils::GetContextSize(const nsIFrame* aFrame)
 {

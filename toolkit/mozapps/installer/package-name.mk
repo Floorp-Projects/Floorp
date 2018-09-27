@@ -23,10 +23,10 @@ endif
 
 # TARGET_OS/TARGET_CPU may be unintuitive, so we hardcode some special formats
 ifeq ($(OS_ARCH),WINNT)
-ifeq ($(TARGET_CPU),x86_64)
-MOZ_PKG_PLATFORM := win64
-else
+ifeq ($(CPU_ARCH),x86)
 MOZ_PKG_PLATFORM := win32
+else
+MOZ_PKG_PLATFORM := win64
 endif
 endif
 ifeq ($(OS_ARCH),Darwin)

@@ -16,6 +16,7 @@
       "r318309.patch",
       "r320462.patch",
       "msvc-host-x64.patch",
+      "aarch64-vastart-checking.patch",
       "loosen-msvc-detection.patch"
     ]
 }
