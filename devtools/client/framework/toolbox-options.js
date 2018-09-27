@@ -391,7 +391,15 @@ OptionsPanel.prototype = {
 
     for (const prefDefinition of prefDefinitions) {
       const parent = this.panelDoc.getElementById(prefDefinition.parentId);
-      parent.appendChild(createPreferenceOption(prefDefinition));
+      // We want to insert the new definition after the last existing
+      // definition, but before any other element.
+      // For example in the "Advanced Settings" column there's indeed a <span>
+      // text at the end, and we want that it stays at the end.
+      // The reference element can be `null` if there's no label or if there's
+      // no element after the last label. But that's OK and it will do what we
+      // want.
+      const referenceElement = parent.querySelector("label:last-of-type + *");
+      parent.insertBefore(createPreferenceOption(prefDefinition), referenceElement);
       parent.removeAttribute("hidden");
     }
   },
