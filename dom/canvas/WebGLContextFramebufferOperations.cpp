@@ -4,11 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
-#include "WebGLTexture.h"
-#include "WebGLRenderbuffer.h"
-#include "WebGLFramebuffer.h"
+
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
+#include "WebGLFormats.h"
+#include "WebGLFramebuffer.h"
+#include "WebGLRenderbuffer.h"
+#include "WebGLTexture.h"
 
 namespace mozilla {
 

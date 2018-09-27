@@ -7,6 +7,7 @@
 #include "GLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
+#include "WebGLFormats.h"
 
 #ifdef FOO
 #error FOO is already defined! We use FOO() macros to keep things succinct in this file.
