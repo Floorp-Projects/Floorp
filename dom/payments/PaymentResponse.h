@@ -89,7 +89,12 @@ public:
 protected:
   ~PaymentResponse();
 
-  nsresult ValidatePaymentValidationErrors(const PaymentValidationErrors& aErrors);
+  nsresult ValidatePaymentValidationErrors(
+    const PaymentValidationErrors& aErrors);
+
+  nsresult ConvertPaymentMethodErrors(JSContext* aCx,
+                                      const PaymentValidationErrors& aErrors,
+                                      nsAString& aErrorMsg) const;
 
   nsresult DispatchUpdateEvent(const nsAString& aType);
 
