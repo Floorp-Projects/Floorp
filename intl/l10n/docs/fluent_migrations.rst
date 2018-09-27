@@ -476,7 +476,7 @@ category used in plural forms. For these reasons, it’s not possible to use
                   elements=[
                       FTL.Placeable(
                           expression=FTL.SelectExpression(
-                              expression=VARIABLE_REFERENCE("tabCount"),
+                              selector=VARIABLE_REFERENCE("tabCount"),
                               variants=[
                                   FTL.Variant(
                                       key=FTL.NumberExpression("1"),
