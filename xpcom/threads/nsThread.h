@@ -60,6 +60,10 @@ public:
            MainThreadFlag aMainThread,
            uint32_t aStackSize);
 
+private:
+  nsThread();
+
+public:
   // Initialize this as a wrapper for a new PRThread, and optionally give it a name.
   nsresult Init(const nsACString& aName = NS_LITERAL_CSTRING(""));
 
@@ -146,6 +150,8 @@ public:
 
   static nsThreadEnumerator Enumerate();
 
+  static uint32_t MaxActiveThreads();
+
 private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);
 
@@ -174,6 +180,21 @@ protected:
   static mozilla::LinkedList<nsThread>& ThreadList();
   static void ClearThreadList();
 
+  // The current number of active threads.
+  static uint32_t sActiveThreads;
+  // The maximum current number of active threads we've had in this session.
+  static uint32_t sMaxActiveThreads;
+
+  void AddToThreadList();
+  void MaybeRemoveFromThreadList();
+
+
+  // Whether or not these members have a value determines whether the nsThread
+  // is treated as a full XPCOM thread or as a thin wrapper.
+  //
+  // For full nsThreads, they will always contain valid pointers. For thin
+  // wrappers around non-XPCOM threads, they will be null, and event dispatch
+  // methods which rely on them will fail (and assert) if called.
   RefPtr<mozilla::SynchronizedEventQueue> mEvents;
   RefPtr<mozilla::ThreadEventTarget> mEventTarget;
 

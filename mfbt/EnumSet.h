@@ -29,6 +29,7 @@ template<typename T,
 class EnumSet
 {
 public:
+  typedef T valueType;
 
   EnumSet()
     : mBitField(0)
@@ -95,7 +96,7 @@ public:
   /**
    * Union
    */
-  void operator+=(const EnumSet aEnumSet)
+  void operator+=(const EnumSet& aEnumSet)
   {
     incVersion();
     mBitField |= aEnumSet.mBitField;
@@ -104,7 +105,7 @@ public:
   /**
    * Union
    */
-  EnumSet operator+(const EnumSet aEnumSet) const
+  EnumSet operator+(const EnumSet& aEnumSet) const
   {
     EnumSet result(*this);
     result += aEnumSet;
@@ -133,7 +134,7 @@ public:
   /**
    * Remove a set of elements
    */
-  void operator-=(const EnumSet aEnumSet)
+  void operator-=(const EnumSet& aEnumSet)
   {
     incVersion();
     mBitField &= ~(aEnumSet.mBitField);
@@ -142,7 +143,7 @@ public:
   /**
    * Remove a set of elements
    */
-  EnumSet operator-(const EnumSet aEnumSet) const
+  EnumSet operator-(const EnumSet& aEnumSet) const
   {
     EnumSet result(*this);
     result -= aEnumSet;
@@ -161,7 +162,7 @@ public:
   /**
    * Intersection
    */
-  void operator&=(const EnumSet aEnumSet)
+  void operator&=(const EnumSet& aEnumSet)
   {
     incVersion();
     mBitField &= aEnumSet.mBitField;
@@ -170,7 +171,7 @@ public:
   /**
    * Intersection
    */
-  EnumSet operator&(const EnumSet aEnumSet) const
+  EnumSet operator&(const EnumSet& aEnumSet) const
   {
     EnumSet result(*this);
     result &= aEnumSet;
@@ -180,9 +181,33 @@ public:
   /**
    * Equality
    */
-  bool operator==(const EnumSet aEnumSet) const
+  bool operator==(const EnumSet& aEnumSet) const
   {
     return mBitField == aEnumSet.mBitField;
+  }
+
+  /**
+   * Equality
+   */
+  bool operator==(T aEnum) const
+  {
+    return mBitField == bitFor(aEnum);
+  }
+
+  /**
+   * Not equal
+   */
+  bool operator!=(const EnumSet& aEnumSet) const
+  {
+    return !operator==(aEnumSet);
+  }
+
+  /**
+   * Not equal
+   */
+  bool operator!=(T aEnum) const
+  {
+    return !operator==(aEnum);
   }
 
   /**
@@ -191,6 +216,14 @@ public:
   bool contains(T aEnum) const
   {
     return mBitField & bitFor(aEnum);
+  }
+
+  /**
+   * Test if a set is contained in the set.
+   */
+  bool contains(const EnumSet& aEnumSet) const
+  {
+    return (mBitField & aEnumSet.mBitField) == aEnumSet.mBitField;
   }
 
   /**
