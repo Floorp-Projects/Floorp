@@ -57,7 +57,7 @@ add_task(async function overrideContext_in_extension_tab() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["menus"],
+      permissions: ["menus", "menus.overrideContext"],
     },
     files: {
       "tab.html": `
@@ -250,7 +250,7 @@ add_task(async function overrideContext_sidebar_edge_cases() {
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary", // To automatically show sidebar on load.
     manifest: {
-      permissions: ["menus"],
+      permissions: ["menus", "menus.overrideContext"],
       sidebar_action: {
         default_panel: "sidebar.html",
       },

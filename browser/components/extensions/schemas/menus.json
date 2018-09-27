@@ -15,6 +15,14 @@
             "contextMenus"
           ]
         }]
+      }, {
+        "$extend": "OptionalPermission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "menus.overrideContext"
+          ]
+        }]
       }
     ]
   },
@@ -404,6 +412,7 @@
       },
       {
         "name": "overrideContext",
+        "permissions": ["menus.overrideContext"],
         "type": "function",
         "description": "Show the matching menu items from this extension instead of the default menu. This should be called during a 'contextmenu' DOM event handler, and only applies to the menu that opens after this event.",
         "parameters": [
