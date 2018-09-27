@@ -777,7 +777,6 @@ public class SessionAccessibility {
         final int id;
         if (message != null) {
             id = message.getInt("id");
-            mAutoFillNodes.put(id, message);
         } else {
             id = View.NO_ID;
         }
