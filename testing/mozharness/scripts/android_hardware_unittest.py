@@ -11,24 +11,21 @@ import glob
 import os
 import re
 import sys
-import signal
 import subprocess
-import time
-import tempfile
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript, PreScriptAction, PostScriptAction
-from mozharness.mozilla.automation import TBPL_RETRY, EXIT_STATUS_DICT
 from mozharness.mozilla.mozbase import MozbaseMixin
+from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.codecoverage import CodeCoverageMixin
 
 
 class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
-                          CodeCoverageMixin):
+                          CodeCoverageMixin, AndroidMixin):
     config_options = [[
         ["--test-suite"],
         {"action": "store",
@@ -97,9 +94,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         # these are necessary since self.config is read only
         c = self.config
         abs_dirs = self.query_abs_dirs()
-        self.adb_path = self.query_exe('adb')
-        self.logcat_file = None
-        self.logcat_proc = None
         self.installer_url = c.get('installer_url')
         self.installer_path = c.get('installer_path')
         self.test_url = c.get('test_url')
@@ -119,18 +113,9 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
                 self.test_suite = m.group(1)
                 if self.this_chunk is None:
                     self.this_chunk = m.group(2)
-        self.sdk_level = None
         self.xre_path = None
         self.log_raw_level = c.get('log_raw_level')
         self.log_tbpl_level = c.get('log_tbpl_level')
-
-    def _query_tests_dir(self):
-        dirs = self.query_abs_dirs()
-        try:
-            test_dir = self.config["suite_definitions"][self.test_suite]["testsdir"]
-        except Exception:
-            test_dir = self.test_suite
-        return os.path.join(dirs['abs_test_install_dir'], test_dir)
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -165,169 +150,13 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
-    @PreScriptAction('create-virtualenv')
-    def _pre_create_virtualenv(self, action):
+    def _query_tests_dir(self):
         dirs = self.query_abs_dirs()
-        requirements = None
-        suites = self._query_suites()
-        if ('mochitest-media', 'mochitest-media') in suites:
-            # mochitest-media is the only thing that needs this
-            requirements = os.path.join(dirs['abs_mochitest_dir'],
-                                        'websocketprocessbridge',
-                                        'websocketprocessbridge_requirements.txt')
-        elif ('marionette', 'marionette') in suites:
-            requirements = os.path.join(dirs['abs_test_install_dir'],
-                                        'config', 'marionette_requirements.txt')
-        if requirements:
-            self.register_virtualenv_module(requirements=[requirements],
-                                            two_pass=True)
-
-    def _retry(self, max_attempts, interval, func, description, max_time=0):
-        '''
-        Execute func until it returns True, up to max_attempts times, waiting for
-        interval seconds between each attempt. description is logged on each attempt.
-        If max_time is specified, no further attempts will be made once max_time
-        seconds have elapsed; this provides some protection for the case where
-        the run-time for func is long or highly variable.
-        '''
-        status = False
-        attempts = 0
-        if max_time > 0:
-            end_time = datetime.datetime.now() + datetime.timedelta(seconds=max_time)
-        else:
-            end_time = None
-        while attempts < max_attempts and not status:
-            if (end_time is not None) and (datetime.datetime.now() > end_time):
-                self.info("Maximum retry run-time of %d seconds exceeded; "
-                          "remaining attempts abandoned" % max_time)
-                break
-            if attempts != 0:
-                self.info("Sleeping %d seconds" % interval)
-                time.sleep(interval)
-            attempts += 1
-            self.info(">> %s: Attempt #%d of %d" % (description, attempts, max_attempts))
-            status = func()
-        return status
-
-    def _run_with_timeout(self, timeout, cmd, quiet=False):
-        timeout_cmd = ['timeout', '%s' % timeout] + cmd
-        return self._run_proc(timeout_cmd, quiet=quiet)
-
-    def _run_proc(self, cmd, quiet=False):
-        self.info('Running %s' % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        if out and not quiet:
-            self.info('%s' % str(out.strip()))
-        if err and not quiet:
-            self.info('stderr: %s' % str(err.strip()))
-        return out, err
-
-    def _verify_adb(self):
-        self.info('Verifying adb connectivity')
-        self._run_with_timeout(180, [self.adb_path,
-                                     '-s',
-                                     self.device_serial,
-                                     'wait-for-device'])
-        return True
-
-    def _verify_adb_device(self):
-        out, _ = self._run_with_timeout(30, [self.adb_path, 'devices'])
-        if (self.device_serial in out) and ("device" in out):
-            return True
-        return False
-
-    def _is_boot_completed(self):
-        boot_cmd = [self.adb_path, '-s', self.device_serial,
-                    'shell', 'getprop', 'sys.boot_completed']
-        out, _ = self._run_with_timeout(30, boot_cmd)
-        if out.strip() == '1':
-            return True
-        return False
-
-    def _verify_device(self):
-        adb_ok = self._verify_adb()
-        if not adb_ok:
-            self.warning('Unable to communicate with adb')
-            return False
-        adb_device_ok = self._retry(4, 30, self._verify_adb_device,
-                                    "Verify device visible to adb")
-        if not adb_device_ok:
-            self.warning('Unable to communicate with device via adb')
-            return False
-        boot_ok = self._retry(30, 10, self._is_boot_completed, "Verify Android boot completed",
-                              max_time=330)
-        if not boot_ok:
-            self.warning('Unable to verify Android boot completion')
-            return False
-        return True
-
-    def _install_fennec_apk(self):
-        package = self._query_package_name()
-        if package:
-            cmd = [self.adb_path, '-s', self.device_serial,
-                   'uninstall', package]
-            out, err = self._run_with_timeout(300, cmd, True)
-        install_ok = False
-        if int(self.sdk_level) >= 23:
-            cmd = [self.adb_path, '-s', self.device_serial, 'install', '-r', '-g',
-                   self.installer_path]
-        else:
-            cmd = [self.adb_path, '-s', self.device_serial, 'install', '-r',
-                   self.installer_path]
-        out, err = self._run_with_timeout(300, cmd, True)
-        if 'Success' in out or 'Success' in err:
-            install_ok = True
-        return install_ok
-
-    def _install_robocop_apk(self):
-        install_ok = False
-        if int(self.sdk_level) >= 23:
-            cmd = [self.adb_path, '-s', self.device_serial, 'install', '-r', '-g',
-                   self.robocop_path]
-        else:
-            cmd = [self.adb_path, '-s', self.device_serial, 'install', '-r',
-                   self.robocop_path]
-        out, err = self._run_with_timeout(300, cmd, True)
-        if 'Success' in out or 'Success' in err:
-            install_ok = True
-        return install_ok
-
-    def _dump_host_state(self):
-        self._run_proc(['ps', '-ef'])
-        self._run_proc(['netstat', '-a', '-p', '-n', '-t', '-u'])
-
-    def _kill_processes(self, process_name):
-        p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        self.info("Let's kill every process called %s" % process_name)
-        for line in out.splitlines():
-            if process_name in line:
-                pid = int(line.split(None, 1)[0])
-                self.info("Killing pid %d." % pid)
-                os.kill(pid, signal.SIGKILL)
-
-    def _restart_adbd(self):
-        self._run_with_timeout(30, [self.adb_path, 'kill-server'])
-        self._run_with_timeout(30, [self.adb_path, 'root'])
-
-    def _screenshot(self, prefix):
-        """
-           Save a screenshot of the entire screen to the blob upload directory.
-        """
-        dirs = self.query_abs_dirs()
-        utility = os.path.join(self.xre_path, "screentopng")
-        if not os.path.exists(utility):
-            self.warning("Unable to take screenshot: %s does not exist" % utility)
-            return
         try:
-            tmpfd, filename = tempfile.mkstemp(prefix=prefix, suffix='.png',
-                                               dir=dirs['abs_blob_upload_dir'])
-            os.close(tmpfd)
-            self.info("Taking screenshot with %s; saving to %s" % (utility, filename))
-            subprocess.call([utility, filename], env=self.query_env())
-        except OSError, err:
-            self.warning("Failed to take screenshot: %s" % err.strerror)
+            test_dir = self.config["suite_definitions"][self.test_suite]["testsdir"]
+        except Exception:
+            test_dir = self.test_suite
+        return os.path.join(dirs['abs_test_install_dir'], test_dir)
 
     def _query_package_name(self):
         if self.app_name is None:
@@ -349,14 +178,10 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             self.apk_path = os.path.join(apk_dir, self.installer_path)
             unzip = self.query_exe("unzip")
             package_path = os.path.join(apk_dir, 'package-name.txt')
-            unzip_cmd = [unzip, '-q', '-o',  self.apk_path]
+            unzip_cmd = [unzip, '-q', '-o', self.apk_path]
             self.run_command(unzip_cmd, cwd=apk_dir, halt_on_failure=True)
             self.app_name = str(self.read_from_file(package_path, verbose=True)).rstrip()
         return self.app_name
-
-    def preflight_install(self):
-        # in the base class, this checks for mozinstall, but we don't use it
-        pass
 
     def _build_command(self):
         c = self.config
@@ -441,122 +266,65 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
 
         return cmd
 
-    def _get_repo_url(self, path):
-        """
-           Return a url for a file (typically a tooltool manifest) in this hg repo
-           and using this revision (or mozilla-central/default if repo/rev cannot
-           be determined).
+    def _query_suites(self):
+        if self.test_suite:
+            return [(self.test_suite, self.test_suite)]
+        # per-test mode: determine test suites to run
+        all = [('mochitest', {'plain': 'mochitest',
+                              'chrome': 'mochitest-chrome',
+                              'plain-clipboard': 'mochitest-plain-clipboard',
+                              'plain-gpu': 'mochitest-plain-gpu'}),
+               ('reftest', {'reftest': 'reftest', 'crashtest': 'crashtest'}),
+               ('xpcshell', {'xpcshell': 'xpcshell'})]
+        suites = []
+        for (category, all_suites) in all:
+            cat_suites = self.query_per_test_category_suites(category, all_suites)
+            for k in cat_suites.keys():
+                suites.append((k, cat_suites[k]))
+        return suites
 
-           :param path specifies the directory path to the file of interest.
-        """
-        if 'GECKO_HEAD_REPOSITORY' in os.environ and 'GECKO_HEAD_REV' in os.environ:
-            # probably taskcluster
-            repo = os.environ['GECKO_HEAD_REPOSITORY']
-            revision = os.environ['GECKO_HEAD_REV']
+    def _query_suite_categories(self):
+        if self.test_suite:
+            categories = [self.test_suite]
         else:
-            # something unexpected!
-            repo = 'https://hg.mozilla.org/mozilla-central'
-            revision = 'default'
-            self.warning('Unable to find repo/revision for manifest; '
-                         'using mozilla-central/default')
-        url = '%s/raw-file/%s/%s' % (
-            repo,
-            revision,
-            path)
-        return url
-
-    def _tooltool_fetch(self, url, dir):
-        c = self.config
-
-        manifest_path = self.download_file(
-            url,
-            file_name='releng.manifest',
-            parent_dir=dir
-        )
-
-        if not os.path.exists(manifest_path):
-            self.fatal("Could not retrieve manifest needed to retrieve "
-                       "artifacts from %s" % manifest_path)
-
-        self.tooltool_fetch(manifest_path,
-                            output_dir=dir,
-                            cache=c.get("tooltool_cache", None))
+            # per-test mode
+            categories = ['mochitest', 'reftest', 'xpcshell']
+        return categories
 
     ##########################################
     # Actions for AndroidHardwareTest        #
     ##########################################
-    def _dump_perf_info(self):
-        '''
-        Dump some host and device performance-related information
-        to an artifact file, to help understand why jobs run slowly
-        sometimes. This is hopefully a temporary diagnostic.
-        See bug 1321605.
-        '''
-        dir = self.query_abs_dirs()['abs_blob_upload_dir']
-        perf_path = os.path.join(dir, "android-performance.log")
-        with open(perf_path, "w") as f:
 
-            f.write('\n\nHost /proc/cpuinfo:\n')
-            out, _ = self._run_proc(['cat', '/proc/cpuinfo'], quiet=True)
-            f.write(out)
+    def preflight_install(self):
+        # in the base class, this checks for mozinstall, but we don't use it
+        pass
 
-            f.write('\n\nHost /proc/meminfo:\n')
-            out, _ = self._run_proc(['cat', '/proc/meminfo'], quiet=True)
-            f.write(out)
-
-            f.write('\n\nHost process list:\n')
-            out, _ = self._run_proc(['ps', '-ef'], quiet=True)
-            f.write(out)
-
-            f.write('\n\nDevice /proc/cpuinfo:\n')
-            cmd = [self.adb_path, '-s', self.device_serial,
-                   'shell', 'cat', '/proc/cpuinfo']
-            out, _ = self._run_with_timeout(30, cmd, quiet=True)
-            f.write(out)
-            cpuinfo = out
-
-            f.write('\n\nDevice /proc/meminfo:\n')
-            cmd = [self.adb_path, '-s', self.device_serial,
-                   'shell', 'cat', '/proc/meminfo']
-            out, _ = self._run_with_timeout(30, cmd, quiet=True)
-            f.write(out)
-
-            f.write('\n\nDevice process list:\n')
-            cmd = [self.adb_path, '-s', self.device_serial,
-                   'shell', 'ps']
-            out, _ = self._run_with_timeout(30, cmd, quiet=True)
-            f.write(out)
-
-        for line in cpuinfo.split('\n'):
-            m = re.match("BogoMIPS.*: (\d*)", line)
-            if m:
-                bogomips = int(m.group(1))
-                self.info("Found Android bogomips: %d" % bogomips)
-                break
+    @PreScriptAction('create-virtualenv')
+    def pre_create_virtualenv(self, action):
+        dirs = self.query_abs_dirs()
+        requirements = None
+        suites = self._query_suites()
+        if ('mochitest-media', 'mochitest-media') in suites:
+            # mochitest-media is the only thing that needs this
+            requirements = os.path.join(dirs['abs_mochitest_dir'],
+                                        'websocketprocessbridge',
+                                        'websocketprocessbridge_requirements.txt')
+        elif ('marionette', 'marionette') in suites:
+            requirements = os.path.join(dirs['abs_test_install_dir'],
+                                        'config', 'marionette_requirements.txt')
+        if requirements:
+            self.register_virtualenv_module(requirements=[requirements],
+                                            two_pass=True)
 
     def verify_device(self):
         '''
         Check to see if the device can be contacted via adb.
         '''
         self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
-        self._dump_perf_info()
-        # Start logcat for the device. The adb process runs until the
-        # corresponding device is stopped. Output is written directly to
-        # the blobber upload directory so that it is uploaded automatically
-        # at the end of the job.
-        logcat_filename = 'logcat-%s.log' % self.device_serial
-        logcat_path = os.path.join(self.abs_dirs['abs_blob_upload_dir'],
-                                   logcat_filename)
-        self.logcat_file = open(logcat_path, 'w')
-        logcat_cmd = [self.adb_path, '-s', self.device_serial, 'logcat', '-v',
-                      'threadtime', 'Trace:S', 'StrictMode:S',
-                      'ExchangeService:S']
-        self.info(' '.join(logcat_cmd))
-        self.logcat_proc = subprocess.Popen(logcat_cmd, stdout=self.logcat_file,
-                                            stdin=subprocess.PIPE)
+        self.dump_perf_info()
+        self.logcat_start()
         # Get a post-boot device process list for diagnostics
-        ps_cmd = [self.adb_path, '-s', self.device_serial, 'shell', 'ps']
-        self._run_with_timeout(30, ps_cmd)
+        self.info(self.shell_output('ps'))
 
     def download_and_extract(self):
         """
@@ -591,55 +359,13 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         if install_needed is False:
             self.info("Skipping apk installation for %s" % self.test_suite)
             return
-
         assert self.installer_path is not None, \
             "Either add installer_path to the config or use --installer-path."
-
-        cmd = [self.adb_path, '-s', self.device_serial, 'shell',
-               'getprop', 'ro.build.version.sdk']
-        self.sdk_level, _ = self._run_with_timeout(30, cmd)
-
-        # Install Fennec
-        install_ok = self._retry(3, 30, self._install_fennec_apk, "Install app APK")
-        if not install_ok:
-            self.fatal('INFRA-ERROR: Failed to install %s on %s' %
-                       (self.installer_path, self.device_name),
-                       EXIT_STATUS_DICT[TBPL_RETRY])
-
+        self.install_apk(self.installer_path)
         # Install Robocop if required
         if self.test_suite and self.test_suite.startswith('robocop'):
-            install_ok = self._retry(3, 30, self._install_robocop_apk, "Install Robocop APK")
-            if not install_ok:
-                self.fatal('INFRA-ERROR: Failed to install %s on %s' %
-                           (self.robocop_path, self.device_name),
-                           EXIT_STATUS_DICT[TBPL_RETRY])
-
+            self.install_apk(self.robocop_path)
         self.info("Finished installing apps for %s" % self.device_name)
-
-    def _query_suites(self):
-        if self.test_suite:
-            return [(self.test_suite, self.test_suite)]
-        # per-test mode: determine test suites to run
-        all = [('mochitest', {'plain': 'mochitest',
-                              'chrome': 'mochitest-chrome',
-                              'plain-clipboard': 'mochitest-plain-clipboard',
-                              'plain-gpu': 'mochitest-plain-gpu'}),
-               ('reftest', {'reftest': 'reftest', 'crashtest': 'crashtest'}),
-               ('xpcshell', {'xpcshell': 'xpcshell'})]
-        suites = []
-        for (category, all_suites) in all:
-            cat_suites = self.query_per_test_category_suites(category, all_suites)
-            for k in cat_suites.keys():
-                suites.append((k, cat_suites[k]))
-        return suites
-
-    def _query_suite_categories(self):
-        if self.test_suite:
-            categories = [self.test_suite]
-        else:
-            # per-test mode
-            categories = ['mochitest', 'reftest', 'xpcshell']
-        return categories
 
     def run_tests(self):
         """
@@ -714,14 +440,11 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
     @PostScriptAction('run-tests')
     def stop_device(self, action, success=None):
         '''
-        Report device health.
+        Cleanup after test run.
         '''
-        if self.logcat_proc:
-            self.info("Killing logcat pid %d." % self.logcat_proc.pid)
-            self.logcat_proc.kill()
-            self.logcat_file.close()
+        self.logcat_stop()
 
 
 if __name__ == '__main__':
-    hardwareTest = AndroidHardwareTest()
-    hardwareTest.run_and_exit()
+    test = AndroidHardwareTest()
+    test.run_and_exit()
