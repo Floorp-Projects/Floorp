@@ -207,10 +207,36 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t amount = 0;
+
 #if defined(MOZ_LIBAV_FFT)
-    amount += aMallocSizeOf(mAvRDFT);
-    amount += aMallocSizeOf(mAvIRDFT);
+    auto ComputedSizeOfContextIfSet = [this](void* aContext) -> size_t {
+      if (!aContext) {
+        return 0;
+      }
+      // RDFTContext is only forward declared in public headers, but this is
+      // an estimate based on a value of 231 seen requested from
+      // _aligned_alloc on Win64.  Don't use malloc_usable_size() because the
+      // context pointer is not necessarily from malloc.
+      size_t amount = 232;
+      // Add size of allocations performed in ff_fft_init().
+      // The maximum FFT size used is 32768 = 2^15 and so revtab32 is not
+      // allocated.
+      MOZ_ASSERT(mFFTSize <= 32768);
+      amount += mFFTSize * (sizeof(uint16_t) + 2 * sizeof(float));
+
+      return amount;
+    };
+
+    amount += ComputedSizeOfContextIfSet(mAvRDFT);
+    amount += ComputedSizeOfContextIfSet(mAvIRDFT);
 #else
+#ifdef BUILD_ARM_NEON
+    amount += aMallocSizeOf(mOmxFFT);
+    amount += aMallocSizeOf(mOmxIFFT);
+#endif
+#ifdef USE_SIMD
+#error kiss fft uses malloc only when USE_SIMD is not defined
+#endif
     amount += aMallocSizeOf(mKissFFT);
     amount += aMallocSizeOf(mKissIFFT);
 #endif
