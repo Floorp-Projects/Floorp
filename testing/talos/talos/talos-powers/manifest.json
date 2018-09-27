@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "Talos Powers",
+  "description": "Gives Talos content special powers.",
+  "version": "1.1",
+
+  "applications": {
+    "gecko": {
+      "id": "talos-powers@mozilla.org"
+    }
+  },
+
+  "experiment_apis": {
+    "talos_powers": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

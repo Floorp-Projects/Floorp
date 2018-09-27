@@ -293,5 +293,5 @@ a circle that only has a fill animates over complex SVG via changes to its
     });
   });
  ]]></script>
- <script type="text/javascript" xlink:href="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
+ <script type="text/javascript" xlink:href="resource://talos-powers/TalosContentProfiler.js"></script>
 </svg>
