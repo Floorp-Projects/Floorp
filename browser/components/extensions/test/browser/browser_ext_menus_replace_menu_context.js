@@ -24,7 +24,7 @@ add_task(async function overrideContext_with_context() {
       browser.test.assertEq("testTabAccess", msg, `Expected message in ${browser.runtime.id}`);
       let tab = await browser.tabs.get(tabId);
       if (!tab.url) { // tabs or activeTab not active.
-        browser.test.sendMessage("testTabAccessDone", false);
+        browser.test.sendMessage("testTabAccessDone", "tab_no_url");
         return;
       }
       try {
@@ -32,10 +32,12 @@ add_task(async function overrideContext_with_context() {
           code: "document.URL",
         });
         browser.test.assertEq("http://example.com/?SomeTab", url, "Expected successful executeScript");
+        browser.test.sendMessage("testTabAccessDone", "executeScript_ok");
+        return;
       } catch (e) {
-        browser.test.fail(`Failed to execute script at ${tabId} (${tab.url}): ${e}`);
+        browser.test.assertEq("Missing host permission for the tab", e.message, "Expected error message");
+        browser.test.sendMessage("testTabAccessDone", "executeScript_failed");
       }
-      browser.test.sendMessage("testTabAccessDone", true);
     });
     browser.menus.onShown.addListener((info, tab) => {
       browser.test.sendMessage("onShown", {
@@ -66,7 +68,7 @@ add_task(async function overrideContext_with_context() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {gecko: {id: "@menu-test-extension"}},
-      permissions: ["menus", "menus.overrideContext", "tabs", "bookmarks", "<all_urls>"],
+      permissions: ["menus", "menus.overrideContext", "tabs", "bookmarks"],
     },
     files: {
       "tab.html": `
@@ -83,6 +85,9 @@ add_task(async function overrideContext_with_context() {
           url: "http://example.com/bookmark",
         });
         let testCases = [{
+          context: "tab",
+          tabId: tab.id,
+        }, {
           context: "tab",
           tabId: tab.id,
         }, {
@@ -145,14 +150,15 @@ add_task(async function overrideContext_with_context() {
       `${makeWidgetId(otherExtension.id)}-menuitem-_tab_context`,
     ], "Expected menu items after changing context to tab");
 
-    // Extension should already be able to execute script due to host permissions.
     extension.sendMessage("testTabAccess", tabId);
-    ok(await extension.awaitMessage("testTabAccessDone"),
-       "Extension has access via permissions");
+    is(await extension.awaitMessage("testTabAccessDone"),
+       "executeScript_failed",
+       "executeScript should fail due to the lack of permissions.");
 
     otherExtension.sendMessage("testTabAccess", tabId);
-    isnot(await otherExtension.awaitMessage("testTabAccessDone"),
-          "Other extension should not have activeTab permissions yet.");
+    is(await otherExtension.awaitMessage("testTabAccessDone"),
+       "tab_no_url",
+       "Other extension should not have activeTab permissions yet.");
 
     // Click on the menu item of the other extension to unlock host permissions.
     let menuItems = menu.getElementsByAttribute("label", "tab_context");
@@ -165,13 +171,44 @@ add_task(async function overrideContext_with_context() {
       tabId,
     }, "Expected onClicked details after changing context to tab");
 
+    extension.sendMessage("testTabAccess", tabId);
+    is(await extension.awaitMessage("testTabAccessDone"),
+       "executeScript_failed",
+       "executeScript of extension that created the menu should still fail.");
+
     otherExtension.sendMessage("testTabAccess", tabId);
-    ok(await otherExtension.awaitMessage("testTabAccessDone"),
+    is(await otherExtension.awaitMessage("testTabAccessDone"),
+       "executeScript_ok",
        "Other extension should have activeTab permissions.");
   }
 
   {
-    // Test case 2: context=bookmark
+    // Test case 2: context=tab, click on menu item of extension..
+    let menu = await openContextMenu("a");
+    await extension.awaitMessage("oncontextmenu_in_dom");
+
+    // The previous test has already verified the visible menu items,
+    // so we skip checking the onShown result and only test clicking.
+    await extension.awaitMessage("onShown");
+    await otherExtension.awaitMessage("onShown");
+    let menuItems = menu.getElementsByAttribute("label", "tab_context");
+    is(menuItems.length, 2, "There are two menu items with label 'tab_context'");
+    await closeExtensionContextMenu(menuItems[0]);
+
+    Assert.deepEqual(await extension.awaitMessage("onClicked"), {
+      menuItemId: "tab_context",
+      bookmarkId: undefined,
+      tabId,
+    }, "Expected onClicked details after changing context to tab");
+
+    extension.sendMessage("testTabAccess", tabId);
+    is(await extension.awaitMessage("testTabAccessDone"),
+       "executeScript_failed",
+       "activeTab permission should not be available to the extension that created the menu.");
+  }
+
+  {
+    // Test case 3: context=bookmark
     let menu = await openContextMenu("a");
     await extension.awaitMessage("oncontextmenu_in_dom");
     for (let ext of [extension, otherExtension]) {
@@ -193,7 +230,7 @@ add_task(async function overrideContext_with_context() {
   }
 
   {
-    // Test case 3: context=tab, invalid tabId.
+    // Test case 4: context=tab, invalid tabId.
     let menu = await openContextMenu("a");
     await extension.awaitMessage("oncontextmenu_in_dom");
     // When an invalid tabId is used, all extension menu logic is skipped and
