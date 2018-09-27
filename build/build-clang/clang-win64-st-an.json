@@ -18,6 +18,7 @@
       "r320462.patch",
       "r327876.patch",
       "loosen-msvc-detection.patch",
+      "aarch64-vastart-checking.patch",
       "fflush-before-unlocking.patch"
     ]
 }
