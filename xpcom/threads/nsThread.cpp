@@ -441,15 +441,12 @@ nsThread::AddToThreadList()
 void
 nsThread::MaybeRemoveFromThreadList()
 {
-  // We shouldn't need to lock before checking isInList at this point. We're
-  // destroying the last reference to this object, so there's no way for anyone
-  // else to remove it in the middle of our check. And the not-in-list state is
-  // determined the element's next and previous members pointing to itself, so a
-  // non-atomic update to an adjacent member won't affect the outcome either.
   if (isInList()) {
     OffTheBooksMutexAutoLock mal(ThreadListMutex());
-    sActiveThreads--;
-    removeFrom(ThreadList());
+    if (isInList()) {
+      sActiveThreads--;
+      removeFrom(ThreadList());
+    }
   }
 }
 
