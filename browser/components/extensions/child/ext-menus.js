@@ -179,9 +179,39 @@ this.menusInternal = class extends ExtensionAPI {
             throw new ExtensionError("overrideContext must be called during a \"contextmenu\" event");
           }
 
+          let checkValidArg = (contextType, propKey) => {
+            if (contextOptions.context !== contextType) {
+              if (contextOptions[propKey]) {
+                throw new ExtensionError(`Property "${propKey}" can only be used with context "${contextType}"`);
+              }
+              return false;
+            }
+            if (contextOptions.showDefaults) {
+              throw new ExtensionError(`Property "showDefaults" cannot be used with context "${contextType}"`);
+            }
+            if (!contextOptions[propKey]) {
+              throw new ExtensionError(`Property "${propKey}" is required for context "${contextType}"`);
+            }
+            return true;
+          };
+          if (checkValidArg("tab", "tabId")) {
+            if (!context.extension.hasPermission("tabs") ||
+                !context.extension.whiteListedHosts.subsumes(new MatchPattern("<all_urls>"))) {
+              throw new ExtensionError(`The "tab" context requires the "tabs" and "<all_urls>" permission.`);
+            }
+          }
+          if (checkValidArg("bookmark", "bookmarkId")) {
+            if (!context.extension.hasPermission("bookmarks")) {
+              throw new ExtensionError(`The "bookmark" context requires the "bookmarks" permission.`);
+            }
+          }
+
           let webExtContextData = {
             extensionId: context.extension.id,
             showDefaults: contextOptions.showDefaults,
+            overrideContext: contextOptions.context,
+            bookmarkId: contextOptions.bookmarkId,
+            tabId: contextOptions.tabId,
           };
 
           if (pendingMenuEvent) {

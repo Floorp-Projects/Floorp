@@ -47,6 +47,7 @@ var gMenuBuilder = {
   // to be displayed. We always clear all the items again when
   // popuphidden fires.
   build(contextData) {
+    contextData = this.maybeOverrideContextData(contextData);
     let xulMenu = contextData.menu;
     xulMenu.addEventListener("popuphidden", this);
     this.xulMenu = xulMenu;
@@ -60,6 +61,33 @@ var gMenuBuilder = {
       // menu items before hiding the default items.
       Promise.resolve().then(() => this.hideDefaultMenuItems());
     }
+  },
+
+  maybeOverrideContextData(contextData) {
+    let {webExtContextData} = contextData;
+    if (!webExtContextData || !webExtContextData.overrideContext) {
+      return contextData;
+    }
+    if (webExtContextData.overrideContext === "bookmark") {
+      return {
+        menu: contextData.menu,
+        bookmarkId: webExtContextData.bookmarkId,
+        onBookmark: true,
+        webExtContextData,
+      };
+    }
+    if (webExtContextData.overrideContext === "tab") {
+      // TODO: Handle invalid tabs more gracefully (instead of throwing).
+      let tab = tabTracker.getTab(webExtContextData.tabId);
+      return {
+        menu: contextData.menu,
+        tab,
+        pageUrl: tab.linkedBrowser.currentURI.spec,
+        onTab: true,
+        webExtContextData,
+      };
+    }
+    throw new Error(`Unexpected overrideContext: ${webExtContextData.overrideContext}`);
   },
 
   createAndInsertTopLevelElements(root, contextData, nextSibling) {
@@ -79,6 +107,7 @@ var gMenuBuilder = {
       let {
         extensionId,
         showDefaults,
+        overrideContext,
       } = contextData.webExtContextData;
       if (extensionId === root.extension.id) {
         rootElements = this.buildTopLevelElements(root, contextData, Infinity, false);
@@ -87,7 +116,7 @@ var gMenuBuilder = {
         if (rootElements.length && showDefaults && !this.itemsToCleanUp.has(nextSibling)) {
           rootElements.push(this.xulMenu.ownerDocument.createXULElement("menuseparator"));
         }
-      } else if (!showDefaults) {
+      } else if (!showDefaults && !overrideContext) {
         // When the default menu items should be hidden, menu items from other
         // extensions should be hidden too.
         return;
