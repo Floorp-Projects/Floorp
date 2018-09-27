@@ -89,7 +89,7 @@ export default class PaymentMethodPicker extends RichPicker {
     }
 
     let acceptedNetworks = paymentRequest.getAcceptedNetworks(state.request);
-    let selectedCard = state.savedBasicCards[selectedOption.value];
+    let selectedCard = paymentRequest.getBasicCards(state)[selectedOption.value];
     let isSupported = selectedCard["cc-type"] &&
                       acceptedNetworks.includes(selectedCard["cc-type"]);
     return isSupported;
