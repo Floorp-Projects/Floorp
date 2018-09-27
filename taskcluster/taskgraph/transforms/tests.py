@@ -778,7 +778,7 @@ def enable_code_coverage(config, tests):
             elif 'osx' in test['build-platform']:
                 test['fetches']['toolchain'].append('macosx64-grcov')
             elif 'win' in test['build-platform']:
-                test['fetches']['fetch'].append('grcov-win-x86_64')
+                test['fetches']['toolchain'].append('win64-grcov')
 
             if 'talos' in test['test-name']:
                 test['max-run-time'] = 7200
