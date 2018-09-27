@@ -16,14 +16,9 @@ import org.mozilla.focus.ext.requireComponents
  * Adapter implementation to show a list of active browsing sessions and an "erase" button at the end.
  */
 class SessionsAdapter internal constructor(
-    private val fragment: SessionsSheetFragment
+    private val fragment: SessionsSheetFragment,
+    private var sessions: List<Session> = emptyList()
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), SessionManager.Observer {
-    private var sessions: List<Session>? = null
-
-    init {
-        this.sessions = emptyList()
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
 
@@ -43,7 +38,7 @@ class SessionsAdapter internal constructor(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder.itemViewType) {
             EraseViewHolder.LAYOUT_ID -> { /* Nothing to do */ }
-            SessionViewHolder.LAYOUT_ID -> (holder as SessionViewHolder).bind(sessions!![position])
+            SessionViewHolder.LAYOUT_ID -> (holder as SessionViewHolder).bind(sessions[position])
             else -> throw IllegalStateException("Unknown viewType")
         }
     }
@@ -57,11 +52,11 @@ class SessionsAdapter internal constructor(
     }
 
     private fun isErasePosition(position: Int): Boolean {
-        return position == sessions!!.size
+        return position == sessions.size
     }
 
     override fun getItemCount(): Int {
-        return sessions!!.size + 1
+        return sessions.size + 1
     }
 
     override fun onSessionAdded(session: Session) {

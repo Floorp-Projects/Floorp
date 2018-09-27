@@ -417,6 +417,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 eraseButton.updateSessionsCount(sessionManager.sessions.size)
             }
         })
+
+        tabsButton.updateSessionsCount(sessionManager.sessions.size)
+        eraseButton.updateSessionsCount(sessionManager.sessions.size)
     }
 
     private fun initialiseCustomTabUi(view: View) {
