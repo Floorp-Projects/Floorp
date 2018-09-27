@@ -28,6 +28,10 @@ add_task(async function test_complete_success() {
       }
     );
 
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "123",
+    });
+
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
 
     // Add a handler to complete the payment above.
@@ -55,6 +59,10 @@ add_task(async function test_complete_fail() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
+
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "456",
+    });
 
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
@@ -88,6 +96,10 @@ add_task(async function test_complete_timeout() {
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
+
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
+      securityCode: "789",
+    });
 
     info("clicking pay");
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
