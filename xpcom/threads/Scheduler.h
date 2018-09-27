@@ -14,6 +14,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "nsILabelableRunnable.h"
+#include "nsPrintfCString.h"
 
 // Windows silliness. winbase.h defines an empty no-argument Yield macro.
 #undef Yield

@@ -30,6 +30,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
+#include "nsPrintfCString.h"
 #include "nsScriptSecurityManager.h"
 #include "nsSandboxFlags.h"
 #include "prtime.h"
