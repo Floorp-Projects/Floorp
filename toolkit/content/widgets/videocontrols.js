@@ -631,6 +631,10 @@ this.VideoControlsImplPageWidget = class {
             this.toggleFullscreen();
             break;
           case "resizevideocontrols":
+            // Since this event come from the layout, this is the only place
+            // we are sure of that probing into layout won't trigger or force
+            // reflow.
+            this.updateReflowedDimensions();
             this.adjustControlSize();
             break;
           case "fullscreenchange":
@@ -979,6 +983,18 @@ this.VideoControlsImplPageWidget = class {
         }
       },
       HIDE_CONTROLS_TIMEOUT_MS: 2000,
+      isMouseOverControlBar(event) {
+        // XXX: this triggers reflow too, but the layout should only be dirty
+        // if the web content touches it while the mouse is moving.
+        let el = this.shadowRoot.elementFromPoint(event.clientX, event.clientY);
+        while (el && el !== this.shadowRoot) {
+          if (el == this.controlBar) {
+            return true;
+          }
+          el = el.parentNode;
+        }
+        return false;
+      },
       onMouseMove(event) {
         // If the controls are static, don't change anything.
         if (!this.dynamicControls) {
@@ -1007,7 +1023,7 @@ this.VideoControlsImplPageWidget = class {
         // Hide the controls if the mouse cursor is left on top of the video
         // but above the control bar and if the click-to-play overlay is hidden.
         if ((this._controlsHiddenByTimeout ||
-            event.clientY < this.controlBar.getBoundingClientRect().top) &&
+            !this.isMouseOverControlBar(event)) &&
             this.clickToPlay.hidden) {
           this._hideControlsTimeout = this.window.setTimeout(
             () => this._hideControlsFn(),
@@ -1034,12 +1050,7 @@ this.VideoControlsImplPageWidget = class {
         }
 
         var isMouseOver = (event.type == "mouseover");
-
-        var controlRect = this.controlBar.getBoundingClientRect();
-        var isMouseInControls = event.clientY > controlRect.top &&
-        event.clientY < controlRect.bottom &&
-        event.clientX > controlRect.left &&
-        event.clientX < controlRect.right;
+        var isMouseInControls = this.isMouseOverControlBar(event);
 
         // Suppress fading out the controls until the video has rendered
         // its first frame. But since autoplay videos start off with no
@@ -1330,8 +1341,8 @@ this.VideoControlsImplPageWidget = class {
         }
       },
       hideClickToPlay() {
-        let videoHeight = this.video.clientHeight;
-        let videoWidth = this.video.clientWidth;
+        let videoHeight = this.reflowedDimensions.videoHeight;
+        let videoWidth = this.reflowedDimensions.videoWidth;
 
         // The play button will animate to 3x its size. This
         // shows the animation unless the video is too small
@@ -1707,6 +1718,20 @@ this.VideoControlsImplPageWidget = class {
 
       controlBarMinHeight: 40,
       controlBarMinVisibleHeight: 28,
+
+      // Set the values to intrinsic dimensions before the first update.
+      reflowedDimensions: {
+        videoHeight: 150,
+        videoWidth: 300,
+        videocontrolsWidth: 300,
+      },
+
+      updateReflowedDimensions() {
+        this.reflowedDimensions.videoHeight = this.video.clientHeight;
+        this.reflowedDimensions.videoWidth = this.video.clientWidth;
+        this.reflowedDimensions.videocontrolsWidth = this.videocontrols.clientWidth;
+      },
+
       adjustControlSize() {
         const minControlBarPaddingWidth = 18;
 
@@ -1723,12 +1748,12 @@ this.VideoControlsImplPageWidget = class {
           return;
         }
 
-        let givenHeight = this.video.clientHeight;
+        let givenHeight = this.reflowedDimensions.videoHeight;
         let videoWidth = (this.isAudioOnly ?
-                          this.videocontrols.clientWidth :
-                          this.video.clientWidth) || minRequiredWidth;
+                          this.reflowedDimensions.videocontrolsWidth :
+                          this.reflowedDimensions.videoWidth) || minRequiredWidth;
         let videoHeight = this.isAudioOnly ? this.controlBarMinHeight : givenHeight;
-        let videocontrolsWidth = this.videocontrols.clientWidth;
+        let videocontrolsWidth = this.reflowedDimensions.videocontrolsWidth;
 
         let widthUsed = minControlBarPaddingWidth;
         let preventAppendControl = false;
