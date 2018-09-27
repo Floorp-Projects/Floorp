@@ -2,9 +2,9 @@ Disable codesign for macosx cross-compile toolchain. Codesign only works on OSX.
 
 Index: cmake/Modules/AddCompilerRT.cmake
 ===================================================================
---- a/compiler-rt/cmake/Modules/AddCompilerRT.cmake	(revision 312553)
+--- a/compiler-rt/cmake/Modules/AddCompilerRT.cmake	(revision 342374)
 +++ b/compiler-rt/cmake/Modules/AddCompilerRT.cmake	(working copy)
-@@ -224,14 +224,6 @@
+@@ -290,14 +290,6 @@
          set_target_properties(${libname} PROPERTIES IMPORT_PREFIX "")
          set_target_properties(${libname} PROPERTIES IMPORT_SUFFIX ".lib")
        endif()
@@ -18,4 +18,4 @@ Index: cmake/Modules/AddCompilerRT.cmake
 -      endif()
      endif()
      install(TARGETS ${libname}
-       ARCHIVE DESTINATION ${COMPILER_RT_LIBRARY_INSTALL_DIR}
+       ARCHIVE DESTINATION ${install_dir_${libname}}
