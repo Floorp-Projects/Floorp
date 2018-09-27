@@ -821,6 +821,95 @@ stubPreparedMessages.set(`console.trace()`, new ConsoleMessage({
   "private": false
 }));
 
+stubPreparedMessages.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1538037986659,
+  "type": "trace",
+  "helperType": null,
+  "level": "log",
+  "messageText": null,
+  "parameters": [
+    "bar",
+    {
+      "type": "object",
+      "actor": "server1.conn0.child1/obj35",
+      "class": "Object",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 1,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "foo": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "bar"
+          }
+        },
+        "ownSymbols": [],
+        "ownPropertiesLength": 1,
+        "ownSymbolsLength": 0,
+        "safeGetterValues": {}
+      }
+    },
+    {
+      "type": "object",
+      "actor": "server1.conn0.child1/obj36",
+      "class": "Array",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 4,
+      "preview": {
+        "kind": "ArrayLike",
+        "length": 3,
+        "items": [
+          1,
+          2,
+          3
+        ]
+      }
+    }
+  ],
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":3,\"column\":3},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":null,\"parameters\":[\"bar\",{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj35\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"foo\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":\"bar\"}},\"ownSymbols\":[],\"ownPropertiesLength\":1,\"ownSymbolsLength\":0,\"safeGetterValues\":{}}},{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj36\",\"class\":\"Array\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":4,\"preview\":{\"kind\":\"ArrayLike\",\"length\":3,\"items\":[1,2,3]}}],\"source\":\"console-api\",\"type\":\"trace\",\"userProvidedStyles\":[],\"private\":false}",
+  "stacktrace": [
+    {
+      "columnNumber": 3,
+      "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+      "functionName": "testStacktraceWithLog",
+      "lineNumber": 3
+    },
+    {
+      "columnNumber": 3,
+      "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+      "functionName": "foo",
+      "lineNumber": 6
+    },
+    {
+      "columnNumber": 1,
+      "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+      "functionName": "triggerPacket",
+      "lineNumber": 9
+    }
+  ],
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "line": 3,
+    "column": 3
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null,
+  "indent": 0,
+  "prefix": "",
+  "private": false
+}));
+
 stubPreparedMessages.set(`console.time('bar')`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
@@ -2507,6 +2596,93 @@ stubPackets.set(`console.trace()`, {
         "columnNumber": 3,
         "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
         "functionName": "testStacktraceFiltering",
+        "lineNumber": 3
+      },
+      {
+        "columnNumber": 3,
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+        "functionName": "foo",
+        "lineNumber": 6
+      },
+      {
+        "columnNumber": 1,
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+        "functionName": "triggerPacket",
+        "lineNumber": 9
+      }
+    ],
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
+stubPackets.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "bar",
+      {
+        "type": "object",
+        "actor": "server1.conn0.child1/obj35",
+        "class": "Object",
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "ownPropertyLength": 1,
+        "preview": {
+          "kind": "Object",
+          "ownProperties": {
+            "foo": {
+              "configurable": true,
+              "enumerable": true,
+              "writable": true,
+              "value": "bar"
+            }
+          },
+          "ownSymbols": [],
+          "ownPropertiesLength": 1,
+          "ownSymbolsLength": 0,
+          "safeGetterValues": {}
+        }
+      },
+      {
+        "type": "object",
+        "actor": "server1.conn0.child1/obj36",
+        "class": "Array",
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "ownPropertyLength": 4,
+        "preview": {
+          "kind": "ArrayLike",
+          "length": 3,
+          "items": [
+            1,
+            2,
+            3
+          ]
+        }
+      }
+    ],
+    "columnNumber": 3,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "testStacktraceWithLog",
+    "groupName": "",
+    "level": "trace",
+    "lineNumber": 3,
+    "prefix": "",
+    "private": false,
+    "timeStamp": 1538037986659,
+    "timer": null,
+    "stacktrace": [
+      {
+        "columnNumber": 3,
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+        "functionName": "testStacktraceWithLog",
         "lineNumber": 3
       },
       {
