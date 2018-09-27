@@ -616,8 +616,7 @@ if __name__ == "__main__":
         # Silence clang's warnings about arguments not being used in compilation.
         extra_cxxflags2 = ["-fPIC", '-Qunused-arguments']
         extra_asmflags = []
-        # Avoid libLLVM internal function calls going through the PLT.
-        extra_ldflags = ['-Wl,-Bsymbolic']
+        extra_ldflags = []
 
         if 'LD_LIBRARY_PATH' in os.environ:
             os.environ['LD_LIBRARY_PATH'] = ('%s/lib64/:%s' %
