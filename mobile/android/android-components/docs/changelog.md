@@ -4,6 +4,26 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 0.25.1 (2018-09-27)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.25...v0.25.1),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/28?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.25.1/index)
+
+* Compiled against:
+  * Android
+    * SDK: 27
+    * Support Libraries: 27.1.1
+  * Kotlin
+    * Standard library: 1.2.61
+    * Coroutines: 0.23.4
+  * GeckoView
+    * Nightly: 64.0.20180905100117
+    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
+    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
+
+* **browser-engine-system**: Fixed a `NullPointerException` in `SystemEngineSession.captureThumbnail()`.
+
 # 0.25 (2018-09-26)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.24...v0.25),
