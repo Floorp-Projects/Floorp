@@ -1,4 +1,0 @@
-mozilla.components.service.fretboard
-mozilla.components.service.fretboard.scheduler.jobscheduler
-mozilla.components.service.fretboard.source.kinto
-mozilla.components.service.fretboard.storage.flatfile
