@@ -78,7 +78,7 @@ function messageClose(id) {
 }
 
 function messageTableDataGet(id, client, dataType) {
-  return (dispatch) => {
+  return ({dispatch}) => {
     let fetchObjectActorData;
     if (["Map", "WeakMap", "Set", "WeakSet"].includes(dataType)) {
       fetchObjectActorData = (cb) => client.enumEntries(cb);

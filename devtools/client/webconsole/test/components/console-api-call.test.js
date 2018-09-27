@@ -223,7 +223,11 @@ describe("ConsoleAPICall component:", () => {
     it("renders", () => {
       const message = stubPreparedMessages.get(
         "console.assert(false, {message: 'foobar'})");
-      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      // We need to wrap the ConsoleApiElement in a Provider in order for the
+      // ObjectInspector to work.
+      const wrapper = render(Provider({ store: setupStore() },
+        ConsoleApiCall({ message, serviceContainer })));
 
       expect(wrapper.find(".message-body").text())
         .toBe("Assertion failed: Object { message: \"foobar\" }");
@@ -248,13 +252,19 @@ describe("ConsoleAPICall component:", () => {
   describe("console.timeLog", () => {
     it("renders as expected", () => {
       let message = stubPreparedMessages.get("console.timeLog('bar') - 1");
-      let wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+      // We need to wrap the ConsoleApiElement in a Provider in order for the
+      // ObjectInspector to work.
+      let wrapper = render(Provider({ store: setupStore() },
+        ConsoleApiCall({ message, serviceContainer })));
 
       expect(wrapper.find(".message-body").text()).toBe(message.parameters[0]);
       expect(wrapper.find(".message-body").text()).toMatch(/^bar: \d+(\.\d+)?ms$/);
 
       message = stubPreparedMessages.get("console.timeLog('bar') - 2");
-      wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+      // We need to wrap the ConsoleApiElement in a Provider in order for the
+      // ObjectInspector to work.
+      wrapper = render(Provider({ store: setupStore() },
+        ConsoleApiCall({ message, serviceContainer })));
       expect(wrapper.find(".message-body").text())
         .toMatch(/^bar: \d+(\.\d+)?ms second call Object \{ state\: 1 \}$/);
     });
@@ -519,7 +529,10 @@ describe("ConsoleAPICall component:", () => {
   describe("console.dirxml", () => {
     it("renders", () => {
       const message = stubPreparedMessages.get("console.dirxml(window)");
-      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+      // We need to wrap the ConsoleApiElement in a Provider in order for the
+      // ObjectInspector to work.
+      const wrapper = render(Provider({ store: setupStore() },
+        ConsoleApiCall({ message, serviceContainer })));
 
       expect(wrapper.find(".message-body").text())
         .toBe("Window http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html");
@@ -529,7 +542,11 @@ describe("ConsoleAPICall component:", () => {
   describe("console.dir", () => {
     it("renders", () => {
       const message = stubPreparedMessages.get("console.dir({C, M, Y, K})");
-      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      // We need to wrap the ConsoleApiElement in a Provider in order for the
+      // ObjectInspector to work.
+      const wrapper = render(Provider({ store: setupStore() },
+        ConsoleApiCall({ message, serviceContainer })));
 
       expect(wrapper.find(".message-body").text())
         .toBe(`Object { cyan: "C", magenta: "M", yellow: "Y", black: "K" }`);

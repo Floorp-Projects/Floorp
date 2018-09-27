@@ -26,7 +26,7 @@ function filterTextSet(text) {
 }
 
 function filterToggle(filter) {
-  return (dispatch, getState, {prefsService}) => {
+  return ({dispatch, getState, prefsService}) => {
     dispatch({
       type: FILTER_TOGGLE,
       filter,
@@ -37,7 +37,7 @@ function filterToggle(filter) {
 }
 
 function filtersClear() {
-  return (dispatch, getState, {prefsService}) => {
+  return ({dispatch, getState, prefsService}) => {
     dispatch({
       type: FILTERS_CLEAR,
     });
@@ -58,7 +58,7 @@ function filtersClear() {
  * to keep non-default filters the user might have set.
  */
 function defaultFiltersReset() {
-  return (dispatch, getState, {prefsService}) => {
+  return ({dispatch, getState, prefsService}) => {
     // Get the state before dispatching so the action does not alter prefs reset.
     const filterState = getAllFilters(getState());
 
