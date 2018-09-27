@@ -617,7 +617,7 @@ APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
     aTxn.UpdateScrollPosition(
         wr::AsPipelineId(apzc->GetGuid().mLayersId),
         apzc->GetGuid().mScrollId,
-        wr::ToLayoutPoint(LayoutDevicePoint::FromUnknownPoint(asyncScrollDelta.ToUnknownPoint())));
+        wr::ToRoundedLayoutPoint(LayoutDevicePoint::FromUnknownPoint(asyncScrollDelta.ToUnknownPoint())));
 
     apzc->ReportCheckerboard(aSampleTime);
   }
