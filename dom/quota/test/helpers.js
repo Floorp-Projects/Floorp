@@ -5,7 +5,10 @@
 
 const NS_ERROR_STORAGE_BUSY = SpecialPowers.Cr.NS_ERROR_STORAGE_BUSY;
 
-var testGenerator = testSteps();
+var testGenerator;
+if (testSteps.constructor.name === "GeneratorFunction") {
+  testGenerator = testSteps();
+}
 
 function clearAllDatabases(callback)
 {
@@ -14,6 +17,7 @@ function clearAllDatabases(callback)
   let request = qms.clearStoragesForPrincipal(principal);
   let cb = SpecialPowers.wrapCallback(callback);
   request.callback = cb;
+  return request;
 }
 
 var testHarnessGenerator = testHarnessSteps();
@@ -24,6 +28,14 @@ function* testHarnessSteps()
   function nextTestHarnessStep(val)
   {
     testHarnessGenerator.next(val);
+  }
+
+  function* loadScript(src) {
+    let script = document.createElement("script");
+    script.src = src;
+    script.onload = nextTestHarnessStep;
+    document.head.appendChild(script);
+    yield undefined;
   }
 
   let testScriptPath;
@@ -141,16 +153,22 @@ function* testHarnessSteps()
 
   info("Running test in main thread");
 
-  let script = document.createElement("script");
-  script.src = "head-shared.js";
-  script.onload = nextTestHarnessStep;
-  document.head.appendChild(script);
-  yield undefined;
+  yield* loadScript("head-shared.js");
 
   // Now run the test script in the main thread.
-  testGenerator.next();
+  if (testSteps.constructor.name === "AsyncFunction") {
+    SimpleTest.registerCleanupFunction(async function() {
+      await requestFinished(clearAllDatabases());
+    });
 
-  yield undefined;
+    yield* loadScript("/tests/SimpleTest/AddTask.js");
+
+    add_task(testSteps);
+  } else {
+    testGenerator.next();
+
+    yield undefined;
+  }
 }
 
 if (!window.runTest) {
@@ -344,23 +362,27 @@ function getSimpleDatabase()
   return connection;
 }
 
-function* requestFinished(request) {
-  request.callback = SpecialPowers.wrapCallback(continueToNextStepSync);
-  yield undefined;
-  if (request.resultCode == SpecialPowers.Cr.NS_OK) {
-    let result = request.result;
-    if (SpecialPowers.call_Instanceof(result, SpecialPowers.Ci.nsISDBResult)) {
-      let wrapper = {};
-      for (let i in result) {
-        if (typeof result[i] == "function") {
-          wrapper[i] = SpecialPowers.unwrap(result[i]);
-        } else {
-          wrapper[i] = result[i];
+function requestFinished(request) {
+  return new Promise(function(resolve, reject) {
+    request.callback = SpecialPowers.wrapCallback(function(request) {
+      if (request.resultCode === SpecialPowers.Cr.NS_OK) {
+        let result = request.result;
+        if (SpecialPowers.call_Instanceof(result,
+                                          SpecialPowers.Ci.nsISDBResult)) {
+          let wrapper = {};
+          for (let i in result) {
+            if (typeof result[i] == "function") {
+              wrapper[i] = SpecialPowers.unwrap(result[i]);
+            } else {
+              wrapper[i] = result[i];
+            }
+          }
+          result = wrapper;
         }
+        resolve(result);
+      } else {
+        reject(request.resultCode);
       }
-      return wrapper;
-    }
-    return result;
-  }
-  throw request.resultCode;
+    });
+  });
 }
