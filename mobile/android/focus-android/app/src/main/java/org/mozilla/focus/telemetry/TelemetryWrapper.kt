@@ -191,14 +191,12 @@ object TelemetryWrapper {
         val UNIQUE_DOMAINS_COUNT = "unique_domains_count"
     }
 
-    enum class BrowserContextMenuValue {
-        Link, Image, ImageWithLink;
+    enum class BrowserContextMenuValue(val value: String) {
+        Link(Value.LINK),
+        Image(Value.IMAGE),
+        ImageWithLink(Value.IMAGE_WITH_LINK);
 
-        override fun toString(): String = when (this) {
-            Link -> Value.LINK
-            Image -> Value.IMAGE
-            ImageWithLink -> Value.IMAGE_WITH_LINK
-        }
+        override fun toString(): String = value
     }
 
     @JvmStatic
