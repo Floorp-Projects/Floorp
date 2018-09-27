@@ -11,6 +11,7 @@ import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
 export default class LabelledCheckbox extends ObservedPropertiesMixin(HTMLElement) {
   static get observedAttributes() {
     return [
+      "infoTooltip",
       "form",
       "label",
       "value",
@@ -21,6 +22,10 @@ export default class LabelledCheckbox extends ObservedPropertiesMixin(HTMLElemen
 
     this._label = document.createElement("label");
     this._labelSpan = document.createElement("span");
+    this._infoTooltip = document.createElement("span");
+    this._infoTooltip.className = "info-tooltip";
+    this._infoTooltip.setAttribute("tabindex", "0");
+    this._infoTooltip.setAttribute("role", "tooltip");
     this._checkbox = document.createElement("input");
     this._checkbox.type = "checkbox";
   }
@@ -29,11 +34,13 @@ export default class LabelledCheckbox extends ObservedPropertiesMixin(HTMLElemen
     this.appendChild(this._label);
     this._label.appendChild(this._checkbox);
     this._label.appendChild(this._labelSpan);
+    this._label.appendChild(this._infoTooltip);
     this.render();
   }
 
   render() {
     this._labelSpan.textContent = this.label;
+    this._infoTooltip.setAttribute("aria-label", this.infoTooltip);
     // We don't use the ObservedPropertiesMixin behaviour because we want to be able to mirror
     // form="" but ObservedPropertiesMixin removes attributes when "".
     if (this.hasAttribute("form")) {

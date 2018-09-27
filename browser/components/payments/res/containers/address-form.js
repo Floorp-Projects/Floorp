@@ -139,6 +139,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
                                               this.dataset.addButtonLabel;
     }
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
+    this.persistCheckbox.infoTooltip = this.dataset.persistCheckboxInfoTooltip;
 
     this.backButton.hidden = page.onboardingWizard;
     this.cancelButton.hidden = !page.onboardingWizard;

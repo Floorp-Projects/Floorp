@@ -150,6 +150,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
                                               this.dataset.addButtonLabel;
     }
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
+    this.persistCheckbox.infoTooltip = this.dataset.persistCheckboxInfoTooltip;
     this.addressAddLink.textContent = this.dataset.addressAddLinkLabel;
     this.addressEditLink.textContent = this.dataset.addressEditLinkLabel;
     this.acceptedCardsList.label = this.dataset.acceptedCardsLabel;
