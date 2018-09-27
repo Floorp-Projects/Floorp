@@ -654,6 +654,28 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "texture_compression_bptc",
+        GLVersion::GL4_2,
+        GLESVersion::NONE,
+        GLContext::Extension_None,
+        {
+            GLContext::ARB_texture_compression_bptc,
+            GLContext::EXT_texture_compression_bptc,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "texture_compression_rgtc",
+        GLVersion::GL3,
+        GLESVersion::NONE,
+        GLContext::Extension_None,
+        {
+            GLContext::ARB_texture_compression_rgtc,
+            GLContext::EXT_texture_compression_rgtc,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "texture_float",
         GLVersion::GL3,
         GLESVersion::ES3,
