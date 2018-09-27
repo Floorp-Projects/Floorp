@@ -82,7 +82,8 @@ public:
 
     // Request decoding at the intrinsic size.
     mImage->RequestDecodeForSize(IntSize(width, height),
-                                 imgIContainer::DECODE_FLAGS_DEFAULT);
+                                 imgIContainer::DECODE_FLAGS_DEFAULT |
+                                 imgIContainer::FLAG_HIGH_QUALITY_SCALING);
 
     // If there's already an error, we may never get a FRAME_COMPLETE
     // notification, so go ahead and notify our owner right away.

@@ -1186,7 +1186,8 @@ nsBulletFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aDa
 
       // Request a decode at that size.
       container->RequestDecodeForSize(IntSize(width, height),
-                                      imgIContainer::DECODE_FLAGS_DEFAULT);
+                                      imgIContainer::DECODE_FLAGS_DEFAULT |
+                                      imgIContainer::FLAG_HIGH_QUALITY_SCALING);
     }
 
     InvalidateFrame();
