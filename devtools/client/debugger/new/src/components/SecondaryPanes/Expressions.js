@@ -36,6 +36,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
+const {
+  ObjectInspector
+} = _devtoolsReps.objectInspector;
+
 class Expressions extends _react.Component {
   constructor(props) {
     super(props);
@@ -157,7 +161,7 @@ class Expressions extends _react.Component {
         onDoubleClick: (items, options) => this.editExpression(expression, index)
       }, _react2.default.createElement("div", {
         className: "expression-content"
-      }, _react2.default.createElement(_devtoolsReps.ObjectInspector, {
+      }, _react2.default.createElement(ObjectInspector, {
         roots: [root],
         autoExpandDepth: 0,
         disableWrap: true,
