@@ -18,8 +18,6 @@
                                 onget="return this.getAttribute('disabled') == 'true';"/>
       <property name="value" onget="return this.getAttribute('value');"
                              onset="this.setAttribute('value', val); return val;"/>
-      <property name="crop" onget="return this.getAttribute('crop');"
-                            onset="this.setAttribute('crop', val); return val;"/>
     </implementation>
   </binding>
 
