@@ -34,7 +34,6 @@
 #include "CacheMap.h"
 #include "WebGLContextLossHandler.h"
 #include "WebGLContextUnchecked.h"
-#include "WebGLFormats.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLTexture.h"
@@ -102,6 +101,9 @@ class MozFramebuffer;
 namespace webgl {
 class AvailabilityRunnable;
 struct CachedDrawFetchLimits;
+struct FormatInfo;
+class FormatUsageAuthority;
+struct FormatUsageInfo;
 struct LinkedProgramInfo;
 class ShaderValidator;
 class TexUnpackBlob;
