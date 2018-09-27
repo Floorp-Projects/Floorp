@@ -7,6 +7,7 @@ const NS_OK = Cr.NS_OK;
 const NS_ERROR_FAILURE = Cr.NS_ERROR_FAILURE;
 const NS_ERROR_UNEXPECTED = Cr.NS_ERROR_UNEXPECTED;
 const NS_ERROR_STORAGE_BUSY = Cr.NS_ERROR_STORAGE_BUSY;
+const NS_ERROR_FILE_NO_DEVICE_SPACE = Cr.NS_ERROR_FILE_NO_DEVICE_SPACE;
 
 function is(a, b, msg)
 {
@@ -94,6 +95,17 @@ function resetTesting()
 {
   SpecialPowers.clearUserPref("dom.quotaManager.testing");
   SpecialPowers.clearUserPref("dom.simpleDB.enabled");
+}
+
+function setGlobalLimit(globalLimit)
+{
+  SpecialPowers.setIntPref("dom.quotaManager.temporaryStorage.fixedLimit",
+                           globalLimit);
+}
+
+function resetGlobalLimit()
+{
+  SpecialPowers.clearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
 }
 
 function init(callback)
@@ -333,6 +345,10 @@ var SpecialPowers = {
 
   setBoolPref: function(prefName, value) {
     this._getPrefs().setBoolPref(prefName, value);
+  },
+
+  setIntPref: function(prefName, value) {
+    this._getPrefs().setIntPref(prefName, value);
   },
 
   clearUserPref: function(prefName) {
