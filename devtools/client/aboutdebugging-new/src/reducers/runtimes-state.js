@@ -79,6 +79,7 @@ function runtimesReducer(state = RuntimesState(), action) {
       const networkRuntimes = locations.map(location => {
         return {
           id: location,
+          name: location,
           type: RUNTIMES.NETWORK,
         };
       });
