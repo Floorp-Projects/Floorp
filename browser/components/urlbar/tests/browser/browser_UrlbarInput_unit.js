@@ -14,7 +14,14 @@ let generalListener;
 let input;
 let inputOptions;
 
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.import("resource:///modules/UrlbarController.jsm", this);
+
+/* global sinon */
+Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+
+registerCleanupFunction(function() {
+  delete window.sinon;
+});
 
 /**
  * Asserts that the query context has the expected values.
@@ -30,15 +37,6 @@ function assertContextMatches(context, expectedValues) {
     Assert.equal(context[key], value,
       `Should have the expected value for ${key} in the QueryContext`);
   }
-}
-
-/**
- * @returns {object} A fake element with minimal functions for simulating textbox etc.
- */
-function createFakeElement() {
-  return {
-    addEventListener() {},
-  };
 }
 
 /**
@@ -68,7 +66,7 @@ function checkHandleQueryCall(stub, expectedQueryContextProps) {
   }
 }
 
-add_task(function setup() {
+add_task(async function setup() {
   sandbox = sinon.sandbox.create();
 
   fakeController = new UrlbarController();
@@ -76,17 +74,30 @@ add_task(function setup() {
   sandbox.stub(fakeController, "handleQuery");
   sandbox.stub(PrivateBrowsingUtils, "isWindowPrivate").returns(false);
 
-  let textbox = createFakeElement();
-  textbox.inputField = createFakeElement();
-  textbox.inputField.controllers = { insertControllerAt() {} };
+  // Open a new window, so we don't affect other tests by adding extra
+  // UrbarInput wrappers around the urlbar.
+  let gTestRoot = getRootDirectory(gTestPath);
+
+  let win = window.openDialog(gTestRoot + "empty.xul",
+                    "", "chrome");
+  await BrowserTestUtils.waitForEvent(win, "load");
+
+  registerCleanupFunction(async () => {
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+  });
+
+  // Clone the elements into the new window, so we get exact copies without having
+  // to replicate the xul.
+  let doc = win.document;
+  let textbox = doc.importNode(document.getElementById("urlbar"), true);
+  doc.documentElement.appendChild(textbox);
+  let panel = doc.importNode(document.getElementById("urlbar-results"), true);
+  doc.documentElement.appendChild(panel);
+
   inputOptions = {
     textbox,
-    panel: {
-      ownerDocument: {},
-      querySelector() {
-        return createFakeElement();
-      },
-    },
+    panel,
     controller: fakeController,
   };
 
