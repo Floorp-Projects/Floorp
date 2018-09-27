@@ -6238,12 +6238,10 @@ DebuggerScript_getChildScripts(JSContext* cx, unsigned argc, Value* vp)
         // and the calling function is stored as script->objects()->vector[0].
         // It is not really a child script of this script, so skip it using
         // innerObjectsStart().
-        ObjectArray* objects = script->objects();
         RootedFunction fun(cx);
         RootedScript funScript(cx);
-        RootedObject obj(cx), s(cx);
-        for (uint32_t i = 0; i < objects->length; i++) {
-            obj = objects->vector[i];
+        RootedObject s(cx);
+        for (const GCPtrObject& obj : script->objects()) {
             if (obj->is<JSFunction>()) {
                 fun = &obj->as<JSFunction>();
                 // The inner function could be a wasm native.
@@ -6429,13 +6427,11 @@ class FlowGraphSummary {
                 // was an incoming edge of the catch block. This is needed
                 // because we only report offsets of entry points which have
                 // valid incoming edges.
-                JSTryNote* tn = script->trynotes()->vector;
-                JSTryNote* tnlimit = tn + script->trynotes()->length;
-                for (; tn < tnlimit; tn++) {
-                    uint32_t startOffset = script->mainOffset() + tn->start;
+                for (const JSTryNote& tn : script->trynotes()) {
+                    uint32_t startOffset = script->mainOffset() + tn.start;
                     if (startOffset == r.frontOffset() + 1) {
-                        uint32_t catchOffset = startOffset + tn->length;
-                        if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
+                        uint32_t catchOffset = startOffset + tn.length;
+                        if (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY) {
                             addEdge(lineno, column, catchOffset);
                         }
                     }
@@ -7455,17 +7451,14 @@ class DebuggerScriptIsInCatchScopeMatcher
         size_t offset = offset_ - script->mainOffset();
 
         if (script->hasTrynotes()) {
-            JSTryNote* tnBegin = script->trynotes()->vector;
-            JSTryNote* tnEnd = tnBegin + script->trynotes()->length;
-            while (tnBegin != tnEnd) {
-                if (tnBegin->start <= offset &&
-                    offset <= tnBegin->start + tnBegin->length &&
-                    tnBegin->kind == JSTRY_CATCH)
+            for (const JSTryNote& tn : script->trynotes()) {
+                if (tn.start <= offset &&
+                    offset <= tn.start + tn.length &&
+                    tn.kind == JSTRY_CATCH)
                 {
                     isInCatch_ = true;
                     return true;
                 }
-                ++tnBegin;
             }
         }
         isInCatch_ = false;
