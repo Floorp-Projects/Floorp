@@ -82,7 +82,6 @@
 #include "js/GCAnnotations.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/RTCCertificate.h"
-#include "mozilla/dom/RTCConfigurationBinding.h"
 #include "mozilla/dom/RTCDTMFSenderBinding.h"
 #include "mozilla/dom/RTCDTMFToneChangeEvent.h"
 #include "mozilla/dom/RTCRtpReceiverBinding.h"
@@ -413,162 +412,10 @@ PeerConnectionImpl::~PeerConnectionImpl()
   // to release off a timer (and XPCOM Shutdown) to avoid churn
 }
 
-/**
- * In JS, an RTCConfiguration looks like this:
- *
- * { "iceServers": [ { url:"stun:stun.example.org" },
- *                   { url:"turn:turn.example.org?transport=udp",
- *                     username: "jib", credential:"mypass"} ] }
- *
- * This function converts that into an internal PeerConnectionConfiguration
- * object.
- */
-nsresult
-PeerConnectionConfiguration::Init(const RTCConfiguration& aSrc)
-{
-  if (aSrc.mIceServers.WasPassed()) {
-    for (size_t i = 0; i < aSrc.mIceServers.Value().Length(); i++) {
-      nsresult rv = AddIceServer(aSrc.mIceServers.Value()[i]);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
-  switch (aSrc.mBundlePolicy) {
-    case dom::RTCBundlePolicy::Balanced:
-      setBundlePolicy(kBundleBalanced);
-      break;
-    case dom::RTCBundlePolicy::Max_compat:
-      setBundlePolicy(kBundleMaxCompat);
-      break;
-    case dom::RTCBundlePolicy::Max_bundle:
-      setBundlePolicy(kBundleMaxBundle);
-      break;
-    default:
-      MOZ_CRASH();
-  }
-
-  switch (aSrc.mIceTransportPolicy) {
-    case dom::RTCIceTransportPolicy::Relay:
-      setIceTransportPolicy(NrIceCtx::ICE_POLICY_RELAY);
-      break;
-    case dom::RTCIceTransportPolicy::All:
-      if (Preferences::GetBool("media.peerconnection.ice.no_host", false)) {
-        setIceTransportPolicy(NrIceCtx::ICE_POLICY_NO_HOST);
-      } else {
-        setIceTransportPolicy(NrIceCtx::ICE_POLICY_ALL);
-      }
-      break;
-    default:
-      MOZ_CRASH();
-  }
-  return NS_OK;
-}
-
-nsresult
-PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
-{
-  NS_ENSURE_STATE(aServer.mUrls.WasPassed());
-  NS_ENSURE_STATE(aServer.mUrls.Value().IsStringSequence());
-  auto &urls = aServer.mUrls.Value().GetAsStringSequence();
-  for (size_t i = 0; i < urls.Length(); i++) {
-    // Without STUN/TURN handlers, NS_NewURI returns nsSimpleURI rather than
-    // nsStandardURL. To parse STUN/TURN URI's to spec
-    // http://tools.ietf.org/html/draft-nandakumar-rtcweb-stun-uri-02#section-3
-    // http://tools.ietf.org/html/draft-petithuguenin-behave-turn-uri-03#section-3
-    // we parse out the query-string, and use ParseAuthority() on the rest
-    RefPtr<nsIURI> url;
-    nsresult rv = NS_NewURI(getter_AddRefs(url), urls[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool isStun = false, isStuns = false, isTurn = false, isTurns = false;
-    url->SchemeIs("stun", &isStun);
-    url->SchemeIs("stuns", &isStuns);
-    url->SchemeIs("turn", &isTurn);
-    url->SchemeIs("turns", &isTurns);
-    if (!(isStun || isStuns || isTurn || isTurns)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (isStuns) {
-      continue; // TODO: Support STUNS (Bug 1056934)
-    }
-    nsAutoCString spec;
-    rv = url->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // TODO(jib@mozilla.com): Revisit once nsURI supports STUN/TURN (Bug 833509)
-    int32_t port;
-    nsAutoCString host;
-    nsAutoCString transport;
-    {
-      uint32_t hostPos;
-      int32_t hostLen;
-      nsAutoCString path;
-      rv = url->GetPathQueryRef(path);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Tolerate query-string + parse 'transport=[udp|tcp]' by hand.
-      int32_t questionmark = path.FindChar('?');
-      if (questionmark >= 0) {
-        const nsCString match = NS_LITERAL_CSTRING("transport=");
-
-        for (int32_t i = questionmark, endPos; i >= 0; i = endPos) {
-          endPos = path.FindCharInSet("&", i + 1);
-          const nsDependentCSubstring fieldvaluepair = Substring(path, i + 1,
-                                                                 endPos);
-          if (StringBeginsWith(fieldvaluepair, match)) {
-            transport = Substring(fieldvaluepair, match.Length());
-            ToLowerCase(transport);
-          }
-        }
-        path.SetLength(questionmark);
-      }
-
-      rv = net_GetAuthURLParser()->ParseAuthority(path.get(), path.Length(),
-                                                  nullptr,  nullptr,
-                                                  nullptr,  nullptr,
-                                                  &hostPos,  &hostLen, &port);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!hostLen) {
-        return NS_ERROR_FAILURE;
-      }
-      if (hostPos > 1)  /* The username was removed */
-        return NS_ERROR_FAILURE;
-      path.Mid(host, hostPos, hostLen);
-    }
-    if (port == -1)
-      port = (isStuns || isTurns)? 5349 : 3478;
-
-    if (isStuns || isTurns) {
-      // Should we barf if transport is set to udp or something?
-      transport = kNrIceTransportTls;
-    }
-
-    if (transport.IsEmpty()) {
-      transport = kNrIceTransportUdp;
-    }
-
-    if (isTurn || isTurns) {
-      NS_ConvertUTF16toUTF8 credential(aServer.mCredential.Value());
-      NS_ConvertUTF16toUTF8 username(aServer.mUsername.Value());
-
-      if (!addTurnServer(host.get(), port,
-                         username.get(),
-                         credential.get(),
-                         transport.get())) {
-        return NS_ERROR_FAILURE;
-      }
-    } else {
-      if (!addStunServer(host.get(), port, transport.get())) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-  }
-  return NS_OK;
-}
-
 nsresult
 PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                nsGlobalWindowInner* aWindow,
-                               const PeerConnectionConfiguration& aConfiguration,
+                               const RTCConfiguration& aConfiguration,
                                nsISupports* aThread)
 {
   nsresult res;
@@ -671,9 +518,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   mMedia->SignalCandidate.connect(this, &PeerConnectionImpl::CandidateReady);
 
   // Initialize the media object.
-  res = mMedia->Init(aConfiguration.getStunServers(),
-                     aConfiguration.getTurnServers(),
-                     aConfiguration.getIceTransportPolicy());
+  res = mMedia->Init(aConfiguration);
   if (NS_FAILED(res)) {
     CSFLogError(LOGTAG, "%s: Couldn't initialize media object", __FUNCTION__);
     return res;
@@ -692,7 +537,22 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
-  res = mJsepSession->SetBundlePolicy(aConfiguration.getBundlePolicy());
+  JsepBundlePolicy bundlePolicy;
+  switch (aConfiguration.mBundlePolicy) {
+    case dom::RTCBundlePolicy::Balanced:
+      bundlePolicy = kBundleBalanced;
+      break;
+    case dom::RTCBundlePolicy::Max_compat:
+      bundlePolicy = kBundleMaxCompat;
+      break;
+    case dom::RTCBundlePolicy::Max_bundle:
+      bundlePolicy = kBundleMaxBundle;
+      break;
+    default:
+      MOZ_CRASH();
+  }
+
+  res = mJsepSession->SetBundlePolicy(bundlePolicy);
   if (NS_FAILED(res)) {
     CSFLogError(LOGTAG, "%s: Couldn't set bundle policy, res=%u, error=%s",
                         __FUNCTION__,
@@ -715,15 +575,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   MOZ_ASSERT(aThread);
   mThread = do_QueryInterface(aThread);
 
-  PeerConnectionConfiguration converted;
-  nsresult res = converted.Init(aConfiguration);
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG, "%s: Invalid RTCConfiguration", __FUNCTION__);
-    rv.Throw(res);
-    return;
-  }
-
-  res = Initialize(aObserver, &aWindow, converted, aThread);
+  nsresult res = Initialize(aObserver, &aWindow, aConfiguration, aThread);
   if (NS_FAILED(res)) {
     rv.Throw(res);
     return;
@@ -2804,40 +2656,6 @@ PeerConnectionImpl::GetName()
   return mName;
 }
 
-static mozilla::dom::PCImplIceConnectionState
-toDomIceConnectionState(NrIceCtx::ConnectionState state) {
-  switch (state) {
-    case NrIceCtx::ICE_CTX_INIT:
-      return PCImplIceConnectionState::New;
-    case NrIceCtx::ICE_CTX_CHECKING:
-      return PCImplIceConnectionState::Checking;
-    case NrIceCtx::ICE_CTX_CONNECTED:
-      return PCImplIceConnectionState::Connected;
-    case NrIceCtx::ICE_CTX_COMPLETED:
-      return PCImplIceConnectionState::Completed;
-    case NrIceCtx::ICE_CTX_FAILED:
-      return PCImplIceConnectionState::Failed;
-    case NrIceCtx::ICE_CTX_DISCONNECTED:
-      return PCImplIceConnectionState::Disconnected;
-    case NrIceCtx::ICE_CTX_CLOSED:
-      return PCImplIceConnectionState::Closed;
-  }
-  MOZ_CRASH();
-}
-
-static mozilla::dom::PCImplIceGatheringState
-toDomIceGatheringState(NrIceCtx::GatheringState state) {
-  switch (state) {
-    case NrIceCtx::ICE_CTX_GATHER_INIT:
-      return PCImplIceGatheringState::New;
-    case NrIceCtx::ICE_CTX_GATHER_STARTED:
-      return PCImplIceGatheringState::Gathering;
-    case NrIceCtx::ICE_CTX_GATHER_COMPLETE:
-      return PCImplIceGatheringState::Complete;
-  }
-  MOZ_CRASH();
-}
-
 void
 PeerConnectionImpl::CandidateReady(const std::string& candidate,
                                    const std::string& transportId) {
@@ -2935,13 +2753,11 @@ static bool isFailed(PCImplIceConnectionState state) {
 }
 
 void PeerConnectionImpl::IceConnectionStateChange(
-    NrIceCtx* ctx,
-    NrIceCtx::ConnectionState state) {
+    dom::PCImplIceConnectionState domState) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
 
-  auto domState = toDomIceConnectionState(state);
   if (domState == mIceConnectionState) {
     // no work to be done since the states are the same.
     // this can happen during ICE rollback situations.
@@ -3008,15 +2824,13 @@ void PeerConnectionImpl::IceConnectionStateChange(
 }
 
 void
-PeerConnectionImpl::IceGatheringStateChange(
-    NrIceCtx* ctx,
-    NrIceCtx::GatheringState state)
+PeerConnectionImpl::IceGatheringStateChange(dom::PCImplIceGatheringState state)
 {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
 
-  mIceGatheringState = toDomIceGatheringState(state);
+  mIceGatheringState = state;
 
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...
@@ -3094,8 +2908,8 @@ PeerConnectionImpl::BuildStatsQuery_m(
   // a ref instead of making multiple calls.  NrIceCtx uses threadsafe refcounting.
   // NOTE: Do this after all other failure tests, to ensure we don't
   // accidentally release the Ctx on Mainthread.
-  query->iceCtx = mMedia->ice_ctx();
-  if (!query->iceCtx) {
+  query->media = mMedia;
+  if (!query->media) {
     CSFLogError(LOGTAG, "Could not build stats query, no ice_ctx");
     return NS_ERROR_UNEXPECTED;
   }
@@ -3151,117 +2965,10 @@ PeerConnectionImpl::BuildStatsQuery_m(
   return rv;
 }
 
-static void ToRTCIceCandidateStats(
-    const std::vector<NrIceCandidate>& candidates,
-    RTCStatsType candidateType,
-    const nsString& componentId,
-    DOMHighResTimeStamp now,
-    RTCStatsReportInternal* report) {
-
-  MOZ_ASSERT(report);
-  for (const auto& candidate : candidates) {
-    RTCIceCandidateStats cand;
-    cand.mType.Construct(candidateType);
-    NS_ConvertASCIItoUTF16 codeword(candidate.codeword.c_str());
-    cand.mComponentId.Construct(componentId);
-    cand.mId.Construct(codeword);
-    cand.mTimestamp.Construct(now);
-    cand.mCandidateType.Construct(
-        RTCStatsIceCandidateType(candidate.type));
-    cand.mIpAddress.Construct(
-        NS_ConvertASCIItoUTF16(candidate.cand_addr.host.c_str()));
-    cand.mPortNumber.Construct(candidate.cand_addr.port);
-    cand.mTransport.Construct(
-        NS_ConvertASCIItoUTF16(candidate.cand_addr.transport.c_str()));
-    if (candidateType == RTCStatsType::Local_candidate) {
-      cand.mMozLocalTransport.Construct(
-          NS_ConvertASCIItoUTF16(candidate.local_addr.transport.c_str()));
-    }
-    report->mIceCandidateStats.Value().AppendElement(cand, fallible);
-    if (candidate.trickled) {
-      report->mTrickledIceCandidateStats.Value().AppendElement(cand, fallible);
-    }
-  }
-}
-
-static void RecordIceStats_s(
-    const NrIceMediaStream& mediaStream,
-    bool internalStats,
-    DOMHighResTimeStamp now,
-    RTCStatsReportInternal* report) {
-
-  NS_ConvertASCIItoUTF16 transportId(mediaStream.GetId().c_str());
-
-  std::vector<NrIceCandidatePair> candPairs;
-  nsresult res = mediaStream.GetCandidatePairs(&candPairs);
-  if (NS_FAILED(res)) {
-    CSFLogError(LOGTAG,
-        "%s: Error getting candidate pairs for transport id \"%s\"",
-        __FUNCTION__, mediaStream.GetId().c_str());
-    return;
-  }
-
-  for (auto& candPair : candPairs) {
-    NS_ConvertASCIItoUTF16 codeword(candPair.codeword.c_str());
-    NS_ConvertASCIItoUTF16 localCodeword(candPair.local.codeword.c_str());
-    NS_ConvertASCIItoUTF16 remoteCodeword(candPair.remote.codeword.c_str());
-    // Only expose candidate-pair statistics to chrome, until we've thought
-    // through the implications of exposing it to content.
-
-    RTCIceCandidatePairStats s;
-    s.mId.Construct(codeword);
-    s.mTransportId.Construct(transportId);
-    s.mTimestamp.Construct(now);
-    s.mType.Construct(RTCStatsType::Candidate_pair);
-    s.mLocalCandidateId.Construct(localCodeword);
-    s.mRemoteCandidateId.Construct(remoteCodeword);
-    s.mNominated.Construct(candPair.nominated);
-    s.mWritable.Construct(candPair.writable);
-    s.mReadable.Construct(candPair.readable);
-    s.mPriority.Construct(candPair.priority);
-    s.mSelected.Construct(candPair.selected);
-    s.mBytesSent.Construct(candPair.bytes_sent);
-    s.mBytesReceived.Construct(candPair.bytes_recvd);
-    s.mLastPacketSentTimestamp.Construct(candPair.ms_since_last_send);
-    s.mLastPacketReceivedTimestamp.Construct(candPair.ms_since_last_recv);
-    s.mState.Construct(RTCStatsIceCandidatePairState(candPair.state));
-    s.mComponentId.Construct(candPair.component_id);
-    report->mIceCandidatePairStats.Value().AppendElement(s, fallible);
-  }
-
-  std::vector<NrIceCandidate> candidates;
-  if (NS_SUCCEEDED(mediaStream.GetLocalCandidates(&candidates))) {
-    ToRTCIceCandidateStats(candidates,
-                           RTCStatsType::Local_candidate,
-                           transportId,
-                           now,
-                           report);
-    // add the local candidates unparsed string to a sequence
-    for (const auto& candidate : candidates) {
-      report->mRawLocalCandidates.Value().AppendElement(
-          NS_ConvertASCIItoUTF16(candidate.label.c_str()), fallible);
-    }
-  }
-  candidates.clear();
-
-  if (NS_SUCCEEDED(mediaStream.GetRemoteCandidates(&candidates))) {
-    ToRTCIceCandidateStats(candidates,
-                           RTCStatsType::Remote_candidate,
-                           transportId,
-                           now,
-                           report);
-    // add the remote candidates unparsed string to a sequence
-    for (const auto& candidate : candidates) {
-      report->mRawRemoteCandidates.Value().AppendElement(
-          NS_ConvertASCIItoUTF16(candidate.label.c_str()), fallible);
-    }
-  }
-}
-
 nsresult
 PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
 
-  ASSERT_ON_THREAD(query->iceCtx->thread());
+  ASSERT_ON_THREAD(query->media->GetSTSThread());
 
   // Gather stats from pipelines provided (can't touch mMedia + stream on STS)
 
@@ -3485,22 +3192,16 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
   }
 
   if (query->grabAllLevels) {
-    for (const auto& stream : query->iceCtx->GetStreams()) {
-      RecordIceStats_s(*stream,
-                       query->internalStats,
-                       query->now,
-                       query->report);
-    }
-  } else if (query->iceCtx->GetStream(query->transportId)) {
-    RecordIceStats_s(*query->iceCtx->GetStream(query->transportId),
-                     query->internalStats,
-                     query->now,
-                     query->report);
+    query->media->GetAllIceStats_s(query->internalStats,
+                                   query->now,
+                                   query->report);
+  } else {
+    query->media->GetIceStats_s(query->transportId,
+                                query->internalStats,
+                                query->now,
+                                query->report);
   }
 
-  // NrIceCtx must be destroyed on STS, so it is not safe
-  // to dispatch it back to main.
-  query->iceCtx = nullptr;
   return NS_OK;
 }
 
@@ -3509,8 +3210,8 @@ void PeerConnectionImpl::GetStatsForPCObserver_s(
     nsAutoPtr<RTCStatsQuery> query) {
 
   MOZ_ASSERT(query);
-  MOZ_ASSERT(query->iceCtx);
-  ASSERT_ON_THREAD(query->iceCtx->thread());
+  MOZ_ASSERT(query->media);
+  ASSERT_ON_THREAD(query->media->GetSTSThread());
 
   nsresult rv = PeerConnectionImpl::ExecuteStatsQuery_s(query.get());
 
@@ -3569,15 +3270,6 @@ PeerConnectionImpl::RecordIceRestartStatistics(JsepSdpType type)
       ++mIceRollbackCount;
       break;
   }
-}
-
-void
-PeerConnectionImpl::IceStreamReady(NrIceMediaStream *aStream)
-{
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(aStream);
-
-  CSFLogDebug(LOGTAG, "%s: %s", __FUNCTION__, aStream->name().c_str());
 }
 
 //Telemetry for when calls start
