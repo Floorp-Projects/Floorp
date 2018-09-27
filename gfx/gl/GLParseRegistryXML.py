@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# coding=utf8
-
+#!/usr/bin/env python2
 
 ################################################################################
 # TUTORIAL
@@ -27,6 +25,9 @@ import os
 import sys
 import xml.etree.ElementTree
 
+assert len(sys.argv) == 3, 'Usage: ./GLParseRegistryXML.py path/to/OpenGL-Registry path/to/EGL-Registry'
+
+(_, GL_REGISTRY_PATH, EGL_REGISTRY_PATH) = sys.argv
 
 ################################################################################
 # export management
@@ -97,17 +98,6 @@ def getScriptDir():
     return os.path.dirname(__file__) + '/'
 
 
-def getXMLDir():
-    if len(sys.argv) == 1:
-        return './'
-
-    dirPath = sys.argv[1]
-    if dirPath[-1] != '/':
-        dirPath += '/'
-
-    return dirPath
-
-
 class GLConst:
     def __init__(self, lib, name, value, type):
         self.lib = lib
@@ -127,9 +117,7 @@ class GLDatabase:
         # there is no vendor="EXT" and vendor="ATI" in gl.xml,
         # so we manualy declare them
 
-    def loadXML(self, path):
-        xmlPath = getXMLDir() + path
-
+    def loadXML(self, xmlPath):
         if not os.path.isfile(xmlPath):
             print('missing file "' + xmlPath + '"')
             return False
@@ -174,7 +162,7 @@ class GLDatabase:
         return True
 
     def exportConsts(self, path):
-        with open(getScriptDir() + path, 'w') as f:
+        with open(getScriptDir() + path, 'wb') as f:
 
             headerFile = GLConstHeader(f)
             headerFile.formatFileBegin()
@@ -200,10 +188,10 @@ class GLDatabase:
 
 glDatabase = GLDatabase()
 
-success = glDatabase.loadXML('gl.xml')
-success = success and glDatabase.loadXML('egl.xml')
-success = success and glDatabase.loadXML('glx.xml')
-success = success and glDatabase.loadXML('wgl.xml')
+success = glDatabase.loadXML(GL_REGISTRY_PATH + '/xml/gl.xml')
+success = success and glDatabase.loadXML(GL_REGISTRY_PATH + '/xml/glx.xml')
+success = success and glDatabase.loadXML(GL_REGISTRY_PATH + '/xml/wgl.xml')
+success = success and glDatabase.loadXML(EGL_REGISTRY_PATH + '/api/egl.xml')
 
 if success:
     glDatabase.exportConsts('GLConsts.h')
