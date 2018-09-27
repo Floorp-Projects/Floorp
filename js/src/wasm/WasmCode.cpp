@@ -1256,7 +1256,7 @@ bool
 Code::setTier2(UniqueCodeTier tier2, const LinkData& linkData) const
 {
     MOZ_RELEASE_ASSERT(!hasTier2());
-    MOZ_RELEASE_ASSERT(tier2->tier() == Tier::Ion && tier1_->tier() == Tier::Baseline);
+    MOZ_RELEASE_ASSERT(tier2->tier() == Tier::Optimized && tier1_->tier() == Tier::Baseline);
 
     if (!tier2->initialize(*this, linkData, *metadata_)) {
         return false;
@@ -1328,8 +1328,8 @@ Code::codeTier(Tier tier) const
             return *tier1_;
         }
         MOZ_CRASH("No code segment at this tier");
-      case Tier::Ion:
-        if (tier1_->tier() == Tier::Ion) {
+      case Tier::Optimized:
+        if (tier1_->tier() == Tier::Optimized) {
             MOZ_ASSERT(tier1_->initialized());
             return *tier1_;
         }
@@ -1338,9 +1338,8 @@ Code::codeTier(Tier tier) const
             return *tier2_;
         }
         MOZ_CRASH("No code segment at this tier");
-      default:
-        MOZ_CRASH();
     }
+    MOZ_CRASH();
 }
 
 bool

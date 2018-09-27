@@ -659,7 +659,7 @@ ExecuteCompileTask(CompileTask* task, UniqueChars* error)
     MOZ_ASSERT(task->output.empty());
 
     switch (task->env.tier()) {
-      case Tier::Ion:
+      case Tier::Optimized:
         if (!IonCompileFunctions(task->env, task->lifo, task->inputs,
                                  &task->output, task->dvs, error)) {
             return false;
@@ -808,9 +808,9 @@ ModuleGenerator::compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
 
     uint32_t threshold;
     switch (tier()) {
-      case Tier::Baseline: threshold = JitOptions.wasmBatchBaselineThreshold; break;
-      case Tier::Ion:      threshold = JitOptions.wasmBatchIonThreshold;      break;
-      default:             MOZ_CRASH("Invalid tier value");                   break;
+      case Tier::Baseline:  threshold = JitOptions.wasmBatchBaselineThreshold; break;
+      case Tier::Optimized: threshold = JitOptions.wasmBatchIonThreshold;      break;
+      default:              MOZ_CRASH("Invalid tier value");                   break;
     }
 
     batchedBytecode_ += funcBytecodeLength;
@@ -1148,7 +1148,7 @@ bool
 ModuleGenerator::finishTier2(const Module& module)
 {
     MOZ_ASSERT(mode() == CompileMode::Tier2);
-    MOZ_ASSERT(tier() == Tier::Ion);
+    MOZ_ASSERT(tier() == Tier::Optimized);
     MOZ_ASSERT(!env_->debugEnabled());
 
     if (cancelled_ && *cancelled_) {

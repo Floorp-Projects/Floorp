@@ -588,7 +588,7 @@ class CodeTier
         if (tier == Tier::Baseline) {
             return mutexid::WasmLazyStubsTier1;
         }
-        MOZ_ASSERT(tier == Tier::Ion);
+        MOZ_ASSERT(tier == Tier::Optimized);
         return mutexid::WasmLazyStubsTier2;
     }
 

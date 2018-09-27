@@ -633,7 +633,7 @@ class WebSocketDaemon(object):
 
 def release_mozlog_lock():
     try:
-        from mozlog import StructuredLogger
+        from mozlog.structuredlog import StructuredLogger
         try:
             StructuredLogger._lock.release()
         except threading.ThreadError:
