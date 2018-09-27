@@ -23,7 +23,7 @@ declare_args() {
   # introduce extra locking to check the state of an iterator against the state
   # of the current object. For iterator- and thread-heavy code, this can
   # significantly slow execution.
-  enable_iterator_debugging = !build_with_mozilla
+  enable_iterator_debugging = true 
 }
 
 # ==============================================
