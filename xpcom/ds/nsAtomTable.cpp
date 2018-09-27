@@ -595,16 +595,14 @@ static bool gStaticAtomsDone = false;
 void
 NS_InitAtomTable()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gAtomTable);
-  gAtomTable = new nsAtomTable();
 
-  // Bug 1340710 has caused us to use an empty atom at arbitrary times after
-  // startup. If we end up creating one before nsGkAtoms::_empty is registered,
-  // we get an assertion about transmuting a dynamic atom into a static atom.
-  // In order to avoid that, we register nsGkAtoms immediately after creating
-  // the atom table to guarantee that the empty string atom will always be
-  // static.
-  nsGkAtoms::RegisterStaticAtoms();
+  // We register static atoms immediately so they're available for use as early
+  // as possible.
+  gAtomTable = new nsAtomTable();
+  gAtomTable->RegisterStaticAtoms(nsGkAtoms::sAtoms, nsGkAtoms::sAtomsLen);
+  gStaticAtomsDone = true;
 }
 
 void
@@ -677,15 +675,6 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen)
     }
     he->mAtom = const_cast<nsStaticAtom*>(atom);
   }
-}
-
-void
-NS_RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(gAtomTable);
-  gAtomTable->RegisterStaticAtoms(aAtoms, aAtomsLen);
-  gStaticAtomsDone = true;
 }
 
 already_AddRefed<nsAtom>

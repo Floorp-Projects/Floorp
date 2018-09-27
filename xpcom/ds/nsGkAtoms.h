@@ -118,6 +118,8 @@ struct GkAtoms
 class nsGkAtoms
 {
 private:
+  friend void NS_InitAtomTable();
+
   // This is a useful handle to the array of atoms, used below and also
   // possibly by Rust code.
   static const nsStaticAtom* const sAtoms;
@@ -127,8 +129,6 @@ private:
     static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::AtomsCount);
 
 public:
-  static void RegisterStaticAtoms();
-
   static nsStaticAtom* GetAtomByIndex(size_t aIndex)
   {
     MOZ_ASSERT(aIndex < sAtomsLen);
