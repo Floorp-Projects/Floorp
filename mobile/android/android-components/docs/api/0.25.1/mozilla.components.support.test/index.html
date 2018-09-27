@@ -1,0 +1,54 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>mozilla.components.support.test - android-components</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">android-components</a>&nbsp;/&nbsp;<a href="./index.html">mozilla.components.support.test</a><br/>
+<br/>
+<h2>Package mozilla.components.support.test</h2>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="any.html">any</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">any</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="any.html#T"><span class="identifier">T</span></a></code>
+<p>Mockito matcher that matches anything, including nulls and varargs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="eq.html">eq</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span> <span class="identifier">eq</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.test$eq(mozilla.components.support.test.eq.T)/value">value</span><span class="symbol">:</span>&nbsp;<a href="eq.html#T"><span class="identifier">T</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="eq.html#T"><span class="identifier">T</span></a></code>
+<p>Mockito matcher that matches if the argument is the same as the provided value.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="expect-exception.html">expectException</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html"><span class="identifier">Throwable</span></a><span class="symbol">&gt;</span> <span class="identifier">expectException</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.support.test$expectException(kotlin.reflect.KClass((mozilla.components.support.test.expectException.T)), kotlin.Function0((kotlin.Unit)))/clazz">clazz</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-class/index.html"><span class="identifier">KClass</span></a><span class="symbol">&lt;</span><a href="expect-exception.html#T"><span class="identifier">T</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="mozilla.components.support.test$expectException(kotlin.reflect.KClass((mozilla.components.support.test.expectException.T)), kotlin.Function0((kotlin.Unit)))/block">block</span><span class="symbol">:</span>&nbsp;<span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Expect <a href="expect-exception.html#mozilla.components.support.test$expectException(kotlin.reflect.KClass((mozilla.components.support.test.expectException.T)), kotlin.Function0((kotlin.Unit)))/block">block</a> to throw an exception. Otherwise fail the test (junit).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="mock.html">mock</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span> <span class="identifier">mock</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="mock.html#T"><span class="identifier">T</span></a></code>
+<p>Dynamically create a mock object. This method is helpful when creating mocks of classes
+using generics.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

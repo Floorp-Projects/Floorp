@@ -1,0 +1,47 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SyncWorker - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.service.fretboard.scheduler.workmanager</a>&nbsp;/&nbsp;<a href="./index.html">SyncWorker</a><br/>
+<br/>
+<h1>SyncWorker</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">SyncWorker</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">Worker</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/scheduler/workmanager/SyncWorker.kt#L10">(source)</a>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SyncWorker</span><span class="symbol">(</span><span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="do-work.html">doWork</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">doWork</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">Result</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-fretboard.html">getFretboard</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getFretboard</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../mozilla.components.service.fretboard/-fretboard/index.html"><span class="identifier">Fretboard</span></a></code>
+<p>Used to provide the instance of Fretboard
+the app is using</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
