@@ -72,7 +72,8 @@ function AutocompletePopup(toolboxDoc, options = {}) {
     this._listPadding = Number(listPadding);
   }
 
-  this._tooltip.setContent(this._list, { height: Infinity });
+  this._tooltip.panel.appendChild(this._list);
+  this._tooltip.setContentSize({ height: Infinity });
 
   this.onClick = this.onClick.bind(this);
   this._list.addEventListener("click", this.onClick);

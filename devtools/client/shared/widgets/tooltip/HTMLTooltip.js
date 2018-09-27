@@ -360,8 +360,7 @@ module.exports.HTMLTooltip = HTMLTooltip;
 
 HTMLTooltip.prototype = {
   /**
-   * The tooltip panel is the parentNode of the tooltip content provided in
-   * setContent().
+   * The tooltip panel is the parentNode of the tooltip content.
    */
   get panel() {
     return this.container.querySelector(".tooltip-panel");
@@ -382,11 +381,9 @@ HTMLTooltip.prototype = {
   },
 
   /**
-   * Set the tooltip content element. The preferred width/height should also be
-   * specified here.
+   * Set the preferred width/height of the panel content.
+   * The panel content is set by appending content to `this.panel`.
    *
-   * @param {Element} content
-   *        The tooltip content, should be a HTML element.
    * @param {Object}
    *        - {Number} width: preferred width for the tooltip container. If not specified
    *          the tooltip container will be measured before being displayed, and the
@@ -404,12 +401,9 @@ HTMLTooltip.prototype = {
    *          making content behind this area inaccessible until the tooltip is
    *          dismissed.
    */
-  setContent: function(content, {width = "auto", height = "auto"} = {}) {
+  setContentSize: function({width = "auto", height = "auto"} = {}) {
     this.preferredWidth = width;
     this.preferredHeight = height;
-
-    this.panel.innerHTML = "";
-    this.panel.appendChild(content);
   },
 
   /**
