@@ -691,7 +691,7 @@ nsTreeContentView::CycleHeader(nsTreeColumn* aCol)
 }
 
 NS_IMETHODIMP
-nsTreeContentView::SelectionChanged()
+nsTreeContentView::SelectionChangedXPCOM()
 {
   return NS_OK;
 }

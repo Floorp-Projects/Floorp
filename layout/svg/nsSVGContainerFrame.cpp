@@ -210,10 +210,6 @@ nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
     mContent->AsElement(), nsRestyleHint(0), nsChangeHint_UpdateOverflow);
 
   nsSVGContainerFrame::RemoveFrame(aListID, aOldFrame);
-
-  if (!(GetStateBits() & (NS_FRAME_IS_NONDISPLAY | NS_STATE_IS_OUTER_SVG))) {
-    nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
-  }
 }
 
 bool

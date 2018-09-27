@@ -851,6 +851,9 @@ nsThread::ShutdownInternal(bool aSync)
   NotNull<nsThread*> currentThread =
     WrapNotNull(nsThreadManager::get().GetCurrentThread());
 
+  MOZ_DIAGNOSTIC_ASSERT(currentThread->EventQueue(),
+                        "Shutdown() may only be called from an XPCOM thread");
+
   nsAutoPtr<nsThreadShutdownContext>& context =
     *currentThread->mRequestedShutdownContexts.AppendElement();
   context = new nsThreadShutdownContext(WrapNotNull(this), currentThread, aSync);
