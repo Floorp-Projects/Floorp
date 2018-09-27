@@ -564,10 +564,8 @@ ControlFlowGenerator::processTry()
 
     // Try-finally is not yet supported.
     if (!checkedTryFinally_) {
-        JSTryNote* tn = script->trynotes()->vector;
-        JSTryNote* tnlimit = tn + script->trynotes()->length;
-        for (; tn < tnlimit; tn++) {
-            if (tn->kind == JSTRY_FINALLY) {
+        for (const JSTryNote& tn : script->trynotes()) {
+            if (tn.kind == JSTRY_FINALLY) {
                 return ControlStatus::Abort;
             }
         }

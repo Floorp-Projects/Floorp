@@ -39,6 +39,7 @@ NFPREGS EQU 8
 
 	MACRO
 	STUBENTRY $functionname, $paramcount
+	EXPORT |$functionname|
 |$functionname| PROC
 	mov	w17, $paramcount
 	b	SharedStub

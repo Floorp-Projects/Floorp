@@ -15,6 +15,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ReverseIterator.h"
 
 #include <string.h>
 
@@ -9630,12 +9631,12 @@ BytecodeEmitter::copySrcNotes(jssrcnote* destination, uint32_t nsrcnotes)
 }
 
 void
-CGNumberList::finish(ConstArray* array)
+CGNumberList::finish(mozilla::Span<GCPtrValue> array)
 {
-    MOZ_ASSERT(length() == array->length);
+    MOZ_ASSERT(length() == array.size());
 
     for (unsigned i = 0; i < length(); i++) {
-        array->vector[i] = DoubleValue(list[i]);
+        array[i].init(DoubleValue(list[i]));
     }
 }
 
@@ -9657,32 +9658,31 @@ CGObjectList::add(ObjectBox* objbox)
 }
 
 void
-CGObjectList::finish(ObjectArray* array)
+CGObjectList::finish(mozilla::Span<GCPtrObject> array)
 {
     MOZ_ASSERT(length <= INDEX_LIMIT);
-    MOZ_ASSERT(length == array->length);
+    MOZ_ASSERT(length == array.size());
 
-    js::GCPtrObject* cursor = array->vector + array->length;
     ObjectBox* objbox = lastbox;
-    do {
-        --cursor;
-        MOZ_ASSERT(!*cursor);
+    for (GCPtrObject& obj : mozilla::Reversed(array)) {
+        MOZ_ASSERT(obj == nullptr);
         MOZ_ASSERT(objbox->object->isTenured());
         if (objbox->isFunctionBox()) {
             objbox->asFunctionBox()->finish();
         }
-        *cursor = objbox->object;
-    } while ((objbox = objbox->emitLink) != nullptr);
-    MOZ_ASSERT(cursor == array->vector);
+        obj.init(objbox->object);
+        objbox = objbox->emitLink;
+    }
 }
 
 void
-CGScopeList::finish(ScopeArray* array)
+CGScopeList::finish(mozilla::Span<GCPtrScope> array)
 {
     MOZ_ASSERT(length() <= INDEX_LIMIT);
-    MOZ_ASSERT(length() == array->length);
+    MOZ_ASSERT(length() == array.size());
+
     for (uint32_t i = 0; i < length(); i++) {
-        array->vector[i].init(vector[i]);
+        array[i].init(vector[i]);
     }
 }
 
@@ -9703,12 +9703,12 @@ CGTryNoteList::append(JSTryNoteKind kind, uint32_t stackDepth, size_t start, siz
 }
 
 void
-CGTryNoteList::finish(TryNoteArray* array)
+CGTryNoteList::finish(mozilla::Span<JSTryNote> array)
 {
-    MOZ_ASSERT(length() == array->length);
+    MOZ_ASSERT(length() == array.size());
 
     for (unsigned i = 0; i < length(); i++) {
-        array->vector[i] = list[i];
+        array[i] = list[i];
     }
 }
 
@@ -9737,9 +9737,9 @@ CGScopeNoteList::recordEnd(uint32_t index, uint32_t offset, bool inPrologue)
 }
 
 void
-CGScopeNoteList::finish(ScopeNoteArray* array, uint32_t prologueLength)
+CGScopeNoteList::finish(mozilla::Span<ScopeNote> array, uint32_t prologueLength)
 {
-    MOZ_ASSERT(length() == array->length);
+    MOZ_ASSERT(length() == array.size());
 
     for (unsigned i = 0; i < length(); i++) {
         if (!list[i].startInPrologue) {
@@ -9750,14 +9750,14 @@ CGScopeNoteList::finish(ScopeNoteArray* array, uint32_t prologueLength)
         }
         MOZ_ASSERT(list[i].end >= list[i].start);
         list[i].length = list[i].end - list[i].start;
-        array->vector[i] = list[i];
+        array[i] = list[i];
     }
 }
 
 void
-CGYieldAndAwaitOffsetList::finish(YieldAndAwaitOffsetArray& array, uint32_t prologueLength)
+CGYieldAndAwaitOffsetList::finish(mozilla::Span<uint32_t> array, uint32_t prologueLength)
 {
-    MOZ_ASSERT(length() == array.length());
+    MOZ_ASSERT(length() == array.size());
 
     for (unsigned i = 0; i < length(); i++) {
         array[i] = prologueLength + list[i];

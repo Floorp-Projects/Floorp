@@ -12,15 +12,10 @@ XPCOMUtils.defineLazyServiceGetter(Services, "cookiemgr",
                                    "nsICookieManager");
 
 function restore_prefs() {
-  Services.prefs.clearUserPref("browser.contentblocking.enabled");
-  Services.prefs.clearUserPref("browser.contentblocking.ui.enabled");
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
   Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
 }
 registerCleanupFunction(restore_prefs);
-
-Services.prefs.setBoolPref("browser.contentblocking.enabled", true);
-Services.prefs.setBoolPref("browser.contentblocking.ui.enabled", true);
 
 async function fake_profile_change() {
   await new Promise(resolve => {

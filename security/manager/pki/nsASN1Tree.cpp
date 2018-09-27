@@ -340,7 +340,7 @@ nsNSSASN1Tree::CycleHeader(nsTreeColumn*)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::SelectionChanged()
+nsNSSASN1Tree::SelectionChangedXPCOM()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

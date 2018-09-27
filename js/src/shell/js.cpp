@@ -3072,17 +3072,15 @@ TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
         return false;
     }
 
-    JSTryNote* tn = script->trynotes()->vector;
-    JSTryNote* tnlimit = tn + script->trynotes()->length;
-    do {
-        uint32_t startOff = script->pcToOffset(script->main()) + tn->start;
+    for (const JSTryNote& tn : script->trynotes()) {
+        uint32_t startOff = script->pcToOffset(script->main()) + tn.start;
         if (!sp->jsprintf(" %-16s %6u %8u %8u\n",
-                          TryNoteName(static_cast<JSTryNoteKind>(tn->kind)),
-                          tn->stackDepth, startOff, startOff + tn->length))
+                          TryNoteName(static_cast<JSTryNoteKind>(tn.kind)),
+                          tn.stackDepth, startOff, startOff + tn.length))
         {
             return false;
         }
-    } while (++tn != tnlimit);
+    }
     return true;
 }
 
@@ -3097,28 +3095,26 @@ ScopeNotes(JSContext* cx, HandleScript script, Sprinter* sp)
         return false;
     }
 
-    ScopeNoteArray* notes = script->scopeNotes();
-    for (uint32_t i = 0; i < notes->length; i++) {
-        const ScopeNote* note = &notes->vector[i];
-        if (note->index == ScopeNote::NoScopeIndex) {
+    for (const ScopeNote& note : script->scopeNotes()) {
+        if (note.index == ScopeNote::NoScopeIndex) {
             if (!sp->jsprintf("%8s ", "(none)")) {
                 return false;
             }
         } else {
-            if (!sp->jsprintf("%8u ", note->index)) {
+            if (!sp->jsprintf("%8u ", note.index)) {
                 return false;
             }
         }
-        if (note->parent == ScopeNote::NoScopeIndex) {
+        if (note.parent == ScopeNote::NoScopeIndex) {
             if (!sp->jsprintf("%8s ", "(none)")) {
                 return false;
             }
         } else {
-            if (!sp->jsprintf("%8u ", note->parent)) {
+            if (!sp->jsprintf("%8u ", note.parent)) {
                 return false;
             }
         }
-        if (!sp->jsprintf("%8u %8u\n", note->start, note->start + note->length)) {
+        if (!sp->jsprintf("%8u %8u\n", note.start, note.start + note.length)) {
             return false;
         }
     }
@@ -3189,9 +3185,7 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
     }
 
     if (recursive && script->hasObjects()) {
-        ObjectArray* objects = script->objects();
-        for (unsigned i = 0; i != objects->length; ++i) {
-            JSObject* obj = objects->vector[i];
+        for (JSObject* obj : script->objects()) {
             if (obj->is<JSFunction>()) {
                 if (!sp->put("\n")) {
                     return false;

@@ -710,9 +710,7 @@ AddInnerLazyFunctionsFromScript(JSScript* script, AutoObjectVector& lazyFunction
     if (!script->hasObjects()) {
         return true;
     }
-    ObjectArray* objects = script->objects();
-    for (size_t i = 0; i < objects->length; i++) {
-        JSObject* obj = objects->vector[i];
+    for (JSObject* obj : script->objects()) {
         if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpretedLazy()) {
             if (!lazyFunctions.append(obj)) {
                 return false;

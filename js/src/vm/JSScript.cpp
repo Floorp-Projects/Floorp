@@ -304,11 +304,10 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
 static inline uint32_t
 FindScopeIndex(JSScript* script, Scope& scope)
 {
-    ScopeArray* scopes = script->scopes();
-    GCPtrScope* vector = scopes->vector;
-    unsigned length = scopes->length;
+    auto scopes = script->scopes();
+    unsigned length = scopes.size();
     for (uint32_t i = 0; i < length; ++i) {
-        if (vector[i] == &scope) {
+        if (scopes[i] == &scope) {
             return i;
         }
     }
@@ -358,7 +357,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     };
 
     uint32_t length, lineno, column, nfixed, nslots;
-    uint32_t natoms, nsrcnotes, i;
+    uint32_t natoms, nsrcnotes;
     uint32_t nconsts, nobjects, nscopes, nregexps, ntrynotes, nscopenotes, nyieldoffsets;
     uint32_t prologueLength;
     uint32_t funLength = 0;
@@ -408,20 +407,20 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         nsrcnotes = script->numNotes();
 
         if (script->hasConsts()) {
-            nconsts = script->consts()->length;
+            nconsts = script->consts().size();
         }
         if (script->hasObjects()) {
-            nobjects = script->objects()->length;
+            nobjects = script->objects().size();
         }
-        nscopes = script->scopes()->length;
+        nscopes = script->scopes().size();
         if (script->hasTrynotes()) {
-            ntrynotes = script->trynotes()->length;
+            ntrynotes = script->trynotes().size();
         }
         if (script->hasScopeNotes()) {
-            nscopenotes = script->scopeNotes()->length;
+            nscopenotes = script->scopeNotes().size();
         }
         if (script->hasYieldAndAwaitOffsets()) {
-            nyieldoffsets = script->yieldAndAwaitOffsets().length();
+            nyieldoffsets = script->yieldAndAwaitOffsets().size();
         }
 
         nTypeSets = script->nTypeSets();
@@ -704,7 +703,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     MOZ_TRY(xdr->codeBytes(code, length));
     MOZ_TRY(xdr->codeBytes(code + length, nsrcnotes));
 
-    for (i = 0; i != natoms; ++i) {
+    for (uint32_t i = 0; i != natoms; ++i) {
         if (mode == XDR_DECODE) {
             RootedAtom tmp(cx);
             MOZ_TRY(XDRAtom(xdr, &tmp));
@@ -723,27 +722,26 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     if (nconsts) {
-        GCPtrValue* vector = script->consts()->vector;
         RootedValue val(cx);
-        for (i = 0; i != nconsts; ++i) {
+        for (GCPtrValue& elem : script->consts()) {
             if (mode == XDR_ENCODE) {
-                val = vector[i];
+                val = elem.get();
             }
             MOZ_TRY(XDRScriptConst(xdr, &val));
             if (mode == XDR_DECODE) {
-                vector[i].init(val);
+                elem.init(val);
             }
         }
     }
 
     {
         MOZ_ASSERT(nscopes != 0);
-        GCPtrScope* vector = script->scopes()->vector;
+        GCPtrScope* vector = script->scopes().data();
         RootedScope scope(cx);
         RootedScope enclosing(cx);
         ScopeKind scopeKind;
         uint32_t enclosingScopeIndex = 0;
-        for (i = 0; i != nscopes; ++i) {
+        for (uint32_t i = 0; i != nscopes; ++i) {
             if (mode == XDR_ENCODE) {
                 scope = vector[i];
                 scopeKind = scope->kind();
@@ -834,87 +832,94 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
      * all references to enclosing blocks (via FindScopeIndex below) happen
      * after the enclosing block has been XDR'd.
      */
-    for (i = 0; i != nobjects; ++i) {
-        GCPtrObject* objp = &script->objects()->vector[i];
-        XDRClassKind classk;
+    if (nobjects) {
+        for (GCPtrObject& elem : script->objects()) {
+            XDRClassKind classk;
 
-        if (mode == XDR_ENCODE) {
-            JSObject* obj = *objp;
-            if (obj->is<RegExpObject>()) {
-                classk = CK_RegexpObject;
-            } else if (obj->is<JSFunction>()) {
-                classk = CK_JSFunction;
-            } else if (obj->is<PlainObject>() || obj->is<ArrayObject>()) {
-                classk = CK_JSObject;
-            } else {
-                MOZ_CRASH("Cannot encode this class of object.");
-            }
-        }
-
-        MOZ_TRY(xdr->codeEnum32(&classk));
-
-        switch (classk) {
-          case CK_RegexpObject: {
-            Rooted<RegExpObject*> regexp(cx);
             if (mode == XDR_ENCODE) {
-                regexp = &(*objp)->as<RegExpObject>();
-            }
-            MOZ_TRY(XDRScriptRegExpObject(xdr, &regexp));
-            if (mode == XDR_DECODE) {
-                *objp = regexp;
-            }
-            break;
-          }
-
-          case CK_JSFunction: {
-            /* Code the nested function's enclosing scope. */
-            uint32_t funEnclosingScopeIndex = 0;
-            RootedScope funEnclosingScope(cx);
-            if (mode == XDR_ENCODE) {
-                RootedFunction function(cx, &(*objp)->as<JSFunction>());
-
-                if (function->isInterpretedLazy()) {
-                    funEnclosingScope = function->lazyScript()->enclosingScope();
-                } else if (function->isInterpreted()) {
-                    funEnclosingScope = function->nonLazyScript()->enclosingScope();
+                JSObject* obj = elem.get();
+                if (obj->is<RegExpObject>()) {
+                    classk = CK_RegexpObject;
+                } else if (obj->is<JSFunction>()) {
+                    classk = CK_JSFunction;
+                } else if (obj->is<PlainObject>() || obj->is<ArrayObject>()) {
+                    classk = CK_JSObject;
                 } else {
-                    MOZ_ASSERT(function->isAsmJSNative());
-                    return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
+                    MOZ_CRASH("Cannot encode this class of object.");
+                }
+            }
+
+            MOZ_TRY(xdr->codeEnum32(&classk));
+
+            switch (classk) {
+              case CK_RegexpObject: {
+                Rooted<RegExpObject*> regexp(cx);
+                if (mode == XDR_ENCODE) {
+                    regexp = &elem->as<RegExpObject>();
+                }
+                MOZ_TRY(XDRScriptRegExpObject(xdr, &regexp));
+                if (mode == XDR_DECODE) {
+                    elem.init(regexp);
+                }
+                break;
+              }
+
+              case CK_JSFunction: {
+                /* Code the nested function's enclosing scope. */
+                uint32_t funEnclosingScopeIndex = 0;
+                RootedScope funEnclosingScope(cx);
+                if (mode == XDR_ENCODE) {
+                    RootedFunction function(cx, &elem->as<JSFunction>());
+
+                    if (function->isInterpretedLazy()) {
+                        funEnclosingScope = function->lazyScript()->enclosingScope();
+                    } else if (function->isInterpreted()) {
+                        funEnclosingScope = function->nonLazyScript()->enclosingScope();
+                    } else {
+                        MOZ_ASSERT(function->isAsmJSNative());
+                        return xdr->fail(JS::TranscodeResult_Failure_AsmJSNotSupported);
+                    }
+
+                    funEnclosingScopeIndex = FindScopeIndex(script, *funEnclosingScope);
                 }
 
-                funEnclosingScopeIndex = FindScopeIndex(script, *funEnclosingScope);
+                MOZ_TRY(xdr->codeUint32(&funEnclosingScopeIndex));
+
+                if (mode == XDR_DECODE) {
+                    funEnclosingScope = script->getScope(funEnclosingScopeIndex);
+                }
+
+                // Code nested function and script.
+                RootedFunction tmp(cx);
+                if (mode == XDR_ENCODE) {
+                    tmp = &elem->as<JSFunction>();
+                }
+                MOZ_TRY(XDRInterpretedFunction(xdr, funEnclosingScope, sourceObject, &tmp));
+                if (mode == XDR_DECODE) {
+                    elem.init(tmp);
+                }
+                break;
+              }
+
+              case CK_JSObject: {
+                /* Code object literal. */
+                RootedObject tmp(cx);
+                if (mode == XDR_ENCODE) {
+                    tmp = elem.get();
+                }
+                MOZ_TRY(XDRObjectLiteral(xdr, &tmp));
+                if (mode == XDR_DECODE) {
+                    elem.init(tmp);
+                }
+                break;
+              }
+
+              default: {
+                // Fail in debug, but only soft-fail in release
+                MOZ_ASSERT(false, "Bad XDR class kind");
+                return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+              }
             }
-
-            MOZ_TRY(xdr->codeUint32(&funEnclosingScopeIndex));
-
-            if (mode == XDR_DECODE) {
-                MOZ_ASSERT(funEnclosingScopeIndex < script->scopes()->length);
-                funEnclosingScope = script->scopes()->vector[funEnclosingScopeIndex];
-            }
-
-            // Code nested function and script.
-            RootedFunction tmp(cx);
-            if (mode == XDR_ENCODE) {
-                tmp = &(*objp)->as<JSFunction>();
-            }
-            MOZ_TRY(XDRInterpretedFunction(xdr, funEnclosingScope, sourceObject, &tmp));
-            *objp = tmp;
-            break;
-          }
-
-          case CK_JSObject: {
-            /* Code object literal. */
-            RootedObject tmp(cx, *objp);
-            MOZ_TRY(XDRObjectLiteral(xdr, &tmp));
-            *objp = tmp;
-            break;
-          }
-
-          default: {
-            // Fail in debug, but only soft-fail in release
-            MOZ_ASSERT(false, "Bad XDR class kind");
-            return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-          }
         }
     }
 
@@ -922,30 +927,28 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     // mismatch here indicates we will almost certainly crash in release.
     MOZ_TRY(xdr->codeMarker(0xF83B989A));
 
-    if (ntrynotes != 0) {
-        JSTryNote* tnfirst = script->trynotes()->vector;
-        MOZ_ASSERT(script->trynotes()->length == ntrynotes);
-        JSTryNote* tn = tnfirst + ntrynotes;
-        do {
-            --tn;
-            MOZ_TRY(xdr->codeUint8(&tn->kind));
-            MOZ_TRY(xdr->codeUint32(&tn->stackDepth));
-            MOZ_TRY(xdr->codeUint32(&tn->start));
-            MOZ_TRY(xdr->codeUint32(&tn->length));
-        } while (tn != tnfirst);
+    if (ntrynotes) {
+        for (JSTryNote& elem : script->trynotes()) {
+            MOZ_TRY(xdr->codeUint8(&elem.kind));
+            MOZ_TRY(xdr->codeUint32(&elem.stackDepth));
+            MOZ_TRY(xdr->codeUint32(&elem.start));
+            MOZ_TRY(xdr->codeUint32(&elem.length));
+        }
     }
 
-    for (i = 0; i < nscopenotes; ++i) {
-        ScopeNote* note = &script->scopeNotes()->vector[i];
-        MOZ_TRY(xdr->codeUint32(&note->index));
-        MOZ_TRY(xdr->codeUint32(&note->start));
-        MOZ_TRY(xdr->codeUint32(&note->length));
-        MOZ_TRY(xdr->codeUint32(&note->parent));
+    if (nscopenotes) {
+        for (ScopeNote& elem : script->scopeNotes()) {
+            MOZ_TRY(xdr->codeUint32(&elem.index));
+            MOZ_TRY(xdr->codeUint32(&elem.start));
+            MOZ_TRY(xdr->codeUint32(&elem.length));
+            MOZ_TRY(xdr->codeUint32(&elem.parent));
+        }
     }
 
-    for (i = 0; i < nyieldoffsets; ++i) {
-        uint32_t* offset = &script->yieldAndAwaitOffsets()[i];
-        MOZ_TRY(xdr->codeUint32(offset));
+    if (nyieldoffsets) {
+        for (uint32_t& elem : script->yieldAndAwaitOffsets()) {
+            MOZ_TRY(xdr->codeUint32(&elem));
+        }
     }
 
     if (scriptBits & (1 << HasLazyScript)) {
@@ -2967,25 +2970,25 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
 
     if (nconsts != 0) {
         MOZ_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(JS::Value) == 0);
-        script->consts()->length = nconsts;
-        script->consts()->vector = (GCPtrValue*)cursor;
-        cursor += nconsts * sizeof(script->consts()->vector[0]);
+        script->constsRaw()->length = nconsts;
+        script->constsRaw()->vector = (GCPtrValue*)cursor;
+        cursor += nconsts * sizeof(script->constsRaw()->vector[0]);
     }
 
-    script->scopes()->length = nscopes;
-    script->scopes()->vector = (GCPtrScope*)cursor;
-    cursor += nscopes * sizeof(script->scopes()->vector[0]);
+    script->scopesRaw()->length = nscopes;
+    script->scopesRaw()->vector = (GCPtrScope*)cursor;
+    cursor += nscopes * sizeof(script->scopesRaw()->vector[0]);
 
     if (nobjects != 0) {
-        script->objects()->length = nobjects;
-        script->objects()->vector = (GCPtrObject*)cursor;
-        cursor += nobjects * sizeof(script->objects()->vector[0]);
+        script->objectsRaw()->length = nobjects;
+        script->objectsRaw()->vector = (GCPtrObject*)cursor;
+        cursor += nobjects * sizeof(script->objectsRaw()->vector[0]);
     }
 
     if (ntrynotes != 0) {
-        script->trynotes()->length = ntrynotes;
-        script->trynotes()->vector = reinterpret_cast<JSTryNote*>(cursor);
-        size_t vectorSize = ntrynotes * sizeof(script->trynotes()->vector[0]);
+        script->trynotesRaw()->length = ntrynotes;
+        script->trynotesRaw()->vector = reinterpret_cast<JSTryNote*>(cursor);
+        size_t vectorSize = ntrynotes * sizeof(script->trynotesRaw()->vector[0]);
 #ifdef DEBUG
         memset(cursor, 0, vectorSize);
 #endif
@@ -2993,9 +2996,9 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
     }
 
     if (nscopenotes != 0) {
-        script->scopeNotes()->length = nscopenotes;
-        script->scopeNotes()->vector = reinterpret_cast<ScopeNote*>(cursor);
-        size_t vectorSize = nscopenotes * sizeof(script->scopeNotes()->vector[0]);
+        script->scopeNotesRaw()->length = nscopenotes;
+        script->scopeNotesRaw()->vector = reinterpret_cast<ScopeNote*>(cursor);
+        size_t vectorSize = nscopenotes * sizeof(script->scopeNotesRaw()->vector[0]);
 #ifdef DEBUG
         memset(cursor, 0, vectorSize);
 #endif
@@ -3004,7 +3007,7 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
 
     if (nyieldoffsets != 0) {
         yieldAndAwaitOffsets->init(reinterpret_cast<uint32_t*>(cursor), nyieldoffsets);
-        size_t vectorSize = nyieldoffsets * sizeof(script->yieldAndAwaitOffsets()[0]);
+        size_t vectorSize = nyieldoffsets * sizeof(script->yieldAndAwaitOffsetsRaw()[0]);
 #ifdef DEBUG
         memset(cursor, 0, vectorSize);
 #endif
@@ -3039,7 +3042,7 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
     if (!functionProtoScope) {
         return false;
     }
-    script->scopes()->vector[0].init(functionProtoScope);
+    script->scopesRaw()->vector[0].init(functionProtoScope);
 
     uint32_t codeLength = 1;
     uint32_t srcNotesLength = 1;
@@ -3272,17 +3275,15 @@ JSScript::assertValidJumpTargets() const
 
     // Check catch/finally blocks as jump targets.
     if (hasTrynotes()) {
-        JSTryNote* tn = trynotes()->vector;
-        JSTryNote* tnlimit = tn + trynotes()->length;
-        for (; tn < tnlimit; tn++) {
-            jsbytecode* tryStart = mainEntry + tn->start;
+        for (const JSTryNote& tn : trynotes()) {
+            jsbytecode* tryStart = mainEntry + tn.start;
             jsbytecode* tryPc = tryStart - 1;
-            if (tn->kind != JSTRY_CATCH && tn->kind != JSTRY_FINALLY) {
+            if (tn.kind != JSTRY_CATCH && tn.kind != JSTRY_FINALLY) {
                 continue;
             }
 
             MOZ_ASSERT(JSOp(*tryPc) == JSOP_TRY);
-            jsbytecode* tryTarget = tryStart + tn->length;
+            jsbytecode* tryTarget = tryStart + tn.length;
             MOZ_ASSERT(mainEntry <= tryTarget && tryTarget < end);
             MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*tryTarget)));
         }
@@ -3665,12 +3666,12 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     /* Some embeddings are not careful to use ExposeObjectToActiveJS as needed. */
     MOZ_ASSERT(!src->sourceObject()->isMarkedGray());
 
-    uint32_t nconsts   = src->hasConsts()   ? src->consts()->length   : 0;
-    uint32_t nobjects  = src->hasObjects()  ? src->objects()->length  : 0;
-    uint32_t nscopes   = src->scopes()->length;
-    uint32_t ntrynotes = src->hasTrynotes() ? src->trynotes()->length : 0;
-    uint32_t nscopenotes = src->hasScopeNotes() ? src->scopeNotes()->length : 0;
-    uint32_t nyieldoffsets = src->hasYieldAndAwaitOffsets() ? src->yieldAndAwaitOffsets().length() : 0;
+    uint32_t nconsts = src->hasConsts() ? src->consts().size() : 0;
+    uint32_t nobjects = src->hasObjects() ? src->objects().size() : 0;
+    uint32_t nscopes = src->scopes().size();
+    uint32_t ntrynotes = src->hasTrynotes() ? src->trynotes().size() : 0;
+    uint32_t nscopenotes = src->hasScopeNotes() ? src->scopeNotes().size() : 0;
+    uint32_t nyieldoffsets = src->hasYieldAndAwaitOffsets() ? src->yieldAndAwaitOffsets().size() : 0;
 
     /* Script data */
 
@@ -3689,11 +3690,10 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     {
         MOZ_ASSERT(nscopes != 0);
         MOZ_ASSERT(src->bodyScopeIndex() + 1 == scopes.length());
-        GCPtrScope* vector = src->scopes()->vector;
         RootedScope original(cx);
         RootedScope clone(cx);
-        for (uint32_t i = scopes.length(); i < nscopes; i++) {
-            original = vector[i];
+        for (const GCPtrScope& elem : src->scopes().From(scopes.length())) {
+            original = elem.get();
             clone = Scope::clone(cx, original, scopes[FindScopeIndex(src, *original->enclosing())]);
             if (!clone || !scopes.append(clone)) {
                 return false;
@@ -3705,11 +3705,10 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
 
     AutoObjectVector objects(cx);
     if (nobjects != 0) {
-        GCPtrObject* vector = src->objects()->vector;
         RootedObject obj(cx);
         RootedObject clone(cx);
-        for (unsigned i = 0; i < nobjects; i++) {
-            obj = vector[i];
+        for (const GCPtrObject& elem : src->objects()) {
+            obj = elem.get();
             clone = nullptr;
             if (obj->is<RegExpObject>()) {
                 clone = CloneScriptRegExpObject(cx, obj->as<RegExpObject>());
@@ -3796,35 +3795,35 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->bitFields_.hideScriptFromDebugger_ = src->bitFields_.hideScriptFromDebugger_;
 
     if (nconsts != 0) {
-        GCPtrValue* vector = Rebase<GCPtrValue>(dst, src, src->consts()->vector);
-        dst->consts()->vector = vector;
+        GCPtrValue* vector = Rebase<GCPtrValue>(dst, src, src->constsRaw()->vector);
+        dst->constsRaw()->vector = vector;
         for (unsigned i = 0; i < nconsts; ++i) {
             MOZ_ASSERT_IF(vector[i].isGCThing(), vector[i].toString()->isAtom());
         }
     }
     if (nobjects != 0) {
-        GCPtrObject* vector = Rebase<GCPtrObject>(dst, src, src->objects()->vector);
-        dst->objects()->vector = vector;
+        GCPtrObject* vector = Rebase<GCPtrObject>(dst, src, src->objectsRaw()->vector);
+        dst->objectsRaw()->vector = vector;
         for (unsigned i = 0; i < nobjects; ++i) {
             vector[i].init(&objects[i]->as<NativeObject>());
         }
     }
     {
-        GCPtrScope* vector = Rebase<GCPtrScope>(dst, src, src->scopes()->vector);
-        dst->scopes()->vector = vector;
+        GCPtrScope* vector = Rebase<GCPtrScope>(dst, src, src->scopesRaw()->vector);
+        dst->scopesRaw()->vector = vector;
         for (uint32_t i = 0; i < nscopes; ++i) {
             vector[i].init(scopes[i]);
         }
     }
     if (ntrynotes != 0) {
-        dst->trynotes()->vector = Rebase<JSTryNote>(dst, src, src->trynotes()->vector);
+        dst->trynotesRaw()->vector = Rebase<JSTryNote>(dst, src, src->trynotesRaw()->vector);
     }
     if (nscopenotes != 0) {
-        dst->scopeNotes()->vector = Rebase<ScopeNote>(dst, src, src->scopeNotes()->vector);
+        dst->scopeNotesRaw()->vector = Rebase<ScopeNote>(dst, src, src->scopeNotesRaw()->vector);
     }
     if (nyieldoffsets != 0) {
-        dst->yieldAndAwaitOffsets().vector_ =
-            Rebase<uint32_t>(dst, src, src->yieldAndAwaitOffsets().vector_);
+        dst->yieldAndAwaitOffsetsRaw().vector_ =
+            Rebase<uint32_t>(dst, src, src->yieldAndAwaitOffsetsRaw().vector_);
     }
 
     return true;
@@ -4173,18 +4172,19 @@ JSScript::traceChildren(JSTracer* trc)
         scriptData()->traceChildren(trc);
     }
 
-    if (ScopeArray* scopearray = scopes()) {
-        TraceRange(trc, scopearray->length, scopearray->vector, "scopes");
+    if (data) {
+        auto array = scopes();
+        TraceRange(trc, array.size(), array.data(), "scopes");
     }
 
     if (hasConsts()) {
-        ConstArray* constarray = consts();
-        TraceRange(trc, constarray->length, constarray->vector, "consts");
+        auto array = consts();
+        TraceRange(trc, array.size(), array.data(), "consts");
     }
 
     if (hasObjects()) {
-        ObjectArray* objarray = objects();
-        TraceRange(trc, objarray->length, objarray->vector, "objects");
+        auto array = objects();
+        TraceRange(trc, array.size(), array.data(), "objects");
     }
 
     MOZ_ASSERT_IF(sourceObject(), MaybeForwarded(sourceObject())->compartment() == compartment());
@@ -4252,16 +4252,16 @@ JSScript::lookupScope(jsbytecode* pc)
 
     size_t offset = pc - code();
 
-    ScopeNoteArray* notes = scopeNotes();
+    auto notes = scopeNotes();
     Scope* scope = nullptr;
 
     // Find the innermost block chain using a binary search.
     size_t bottom = 0;
-    size_t top = notes->length;
+    size_t top = notes.size();
 
     while (bottom < top) {
         size_t mid = bottom + (top - bottom) / 2;
-        const ScopeNote* note = &notes->vector[mid];
+        const ScopeNote* note = &notes[mid];
         if (note->start <= offset) {
             // Block scopes are ordered in the list by their starting offset, and since
             // blocks form a tree ones earlier in the list may cover the pc even if
@@ -4270,7 +4270,7 @@ JSScript::lookupScope(jsbytecode* pc)
             // the searched range for coverage.
             size_t check = mid;
             while (check >= bottom) {
-                const ScopeNote* checkNote = &notes->vector[check];
+                const ScopeNote* checkNote = &notes[check];
                 MOZ_ASSERT(checkNote->start <= offset);
                 if (offset < checkNote->start + checkNote->length) {
                     // We found a matching block chain but there may be inner ones
@@ -4724,10 +4724,8 @@ JSScript::hasLoops()
     if (!hasTrynotes()) {
         return false;
     }
-    JSTryNote* tn = trynotes()->vector;
-    JSTryNote* tnlimit = tn + trynotes()->length;
-    for (; tn < tnlimit; tn++) {
-        switch (tn->kind) {
+    for (const JSTryNote& tn : trynotes()) {
+        switch (tn.kind) {
           case JSTRY_FOR_IN:
           case JSTRY_FOR_OF:
           case JSTRY_LOOP:

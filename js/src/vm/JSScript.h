@@ -13,6 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Span.h"
 #include "mozilla/Variant.h"
 
 #include "jstypes.h"
@@ -1825,8 +1826,7 @@ class JSScript : public js::gc::TenuredCell
 
     js::VarScope* functionExtraBodyVarScope() const {
         MOZ_ASSERT(functionHasExtraBodyVarScope());
-        for (uint32_t i = 0; i < scopes()->length; i++) {
-            js::Scope* scope = getScope(i);
+        for (js::Scope* scope : scopes()) {
             if (scope->kind() == js::ScopeKind::FunctionBodyVar) {
                 return &scope->as<js::VarScope>();
             }
@@ -1835,8 +1835,7 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool needsBodyEnvironment() const {
-        for (uint32_t i = 0; i < scopes()->length; i++) {
-            js::Scope* scope = getScope(i);
+        for (js::Scope* scope : scopes()) {
             if (ScopeKindIsInBody(scope->kind()) && scope->hasEnvironment()) {
                 return true;
             }
@@ -1931,34 +1930,68 @@ class JSScript : public js::gc::TenuredCell
 
     size_t dataSize() const { return dataSize_; }
 
-    js::ConstArray* consts() {
+  private:
+
+    js::ConstArray* constsRaw() const {
         MOZ_ASSERT(hasConsts());
         return reinterpret_cast<js::ConstArray*>(data + constsOffset());
     }
 
-    js::ObjectArray* objects() {
+    js::ObjectArray* objectsRaw() const {
         MOZ_ASSERT(hasObjects());
         return reinterpret_cast<js::ObjectArray*>(data + objectsOffset());
     }
 
-    js::ScopeArray* scopes() const {
+    js::ScopeArray* scopesRaw() const {
         return reinterpret_cast<js::ScopeArray*>(data + scopesOffset());
     }
 
-    js::TryNoteArray* trynotes() const {
+    js::TryNoteArray* trynotesRaw() const {
         MOZ_ASSERT(hasTrynotes());
         return reinterpret_cast<js::TryNoteArray*>(data + trynotesOffset());
     }
 
-    js::ScopeNoteArray* scopeNotes() {
+    js::ScopeNoteArray* scopeNotesRaw() const {
         MOZ_ASSERT(hasScopeNotes());
         return reinterpret_cast<js::ScopeNoteArray*>(data + scopeNotesOffset());
     }
 
-    js::YieldAndAwaitOffsetArray& yieldAndAwaitOffsets() {
+    js::YieldAndAwaitOffsetArray& yieldAndAwaitOffsetsRaw() const {
         MOZ_ASSERT(hasYieldAndAwaitOffsets());
         return *reinterpret_cast<js::YieldAndAwaitOffsetArray*>(data +
                                                                 yieldAndAwaitOffsetsOffset());
+    }
+
+  public:
+
+    mozilla::Span<js::GCPtrValue> consts() const {
+        js::ConstArray* array = constsRaw();
+        return mozilla::MakeSpan(array->vector, array->length);
+    }
+
+    mozilla::Span<js::GCPtrObject> objects() const {
+        js::ObjectArray* array = objectsRaw();
+        return mozilla::MakeSpan(array->vector, array->length);
+    }
+
+    mozilla::Span<js::GCPtrScope> scopes() const {
+        js::ScopeArray* array = scopesRaw();
+        return mozilla::MakeSpan(array->vector, array->length);
+    }
+
+    mozilla::Span<JSTryNote> trynotes() const {
+        js::TryNoteArray* array = trynotesRaw();
+        return mozilla::MakeSpan(array->vector, array->length);
+    }
+
+    mozilla::Span<js::ScopeNote> scopeNotes() const {
+        js::ScopeNoteArray* array = scopeNotesRaw();
+        return mozilla::MakeSpan(array->vector, array->length);
+    }
+
+    mozilla::Span<uint32_t> yieldAndAwaitOffsets() const {
+        js::YieldAndAwaitOffsetArray& array = yieldAndAwaitOffsetsRaw();
+        return mozilla::MakeSpan(&array[0], array.length());
     }
 
     bool hasLoops();
@@ -2001,10 +2034,8 @@ class JSScript : public js::gc::TenuredCell
     }
 
     JSObject* getObject(size_t index) {
-        js::ObjectArray* arr = objects();
-        MOZ_ASSERT(index < arr->length);
-        MOZ_ASSERT(arr->vector[index]->isTenured());
-        return arr->vector[index];
+        MOZ_ASSERT(objects()[index]->isTenured());
+        return objects()[index];
     }
 
     JSObject* getObject(jsbytecode* pc) {
@@ -2013,9 +2044,7 @@ class JSScript : public js::gc::TenuredCell
     }
 
     js::Scope* getScope(size_t index) const {
-        js::ScopeArray* array = scopes();
-        MOZ_ASSERT(index < array->length);
-        return array->vector[index];
+        return scopes()[index];
     }
 
     js::Scope* getScope(jsbytecode* pc) const {
@@ -2040,9 +2069,7 @@ class JSScript : public js::gc::TenuredCell
     inline js::RegExpObject* getRegExp(jsbytecode* pc);
 
     const js::Value& getConst(size_t index) {
-        js::ConstArray* arr = consts();
-        MOZ_ASSERT(index < arr->length);
-        return arr->vector[index];
+        return consts()[index];
     }
 
     // The following 3 functions find the static scope just before the

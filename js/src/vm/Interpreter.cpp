@@ -1303,7 +1303,7 @@ js::UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei)
 // will have no pc location distinguishing the try block scope from the inner
 // let block scope.
 jsbytecode*
-js::UnwindEnvironmentToTryPc(JSScript* script, JSTryNote* tn)
+js::UnwindEnvironmentToTryPc(JSScript* script, const JSTryNote* tn)
 {
     jsbytecode* pc = script->main() + tn->start;
     if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
@@ -1327,7 +1327,7 @@ ForcedReturn(JSContext* cx, InterpreterRegs& regs)
 }
 
 static void
-SettleOnTryNote(JSContext* cx, JSTryNote* tn, EnvironmentIter& ei, InterpreterRegs& regs)
+SettleOnTryNote(JSContext* cx, const JSTryNote* tn, EnvironmentIter& ei, InterpreterRegs& regs)
 {
     // Unwind the environment to the beginning of the JSOP_TRY.
     UnwindEnvironment(cx, ei, UnwindEnvironmentToTryPc(regs.fp()->script(), tn));
@@ -1363,7 +1363,7 @@ UnwindIteratorsForUncatchableException(JSContext* cx, const InterpreterRegs& reg
     // ProcessTryNotes.
     bool inForOfIterClose = false;
     for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
-        JSTryNote* tn = *tni;
+        const JSTryNote* tn = *tni;
         switch (tn->kind) {
           case JSTRY_FOR_IN: {
             // See corresponding comment in ProcessTryNotes.
@@ -1403,7 +1403,7 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
 {
     bool inForOfIterClose = false;
     for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
-        JSTryNote* tn = *tni;
+        const JSTryNote* tn = *tni;
 
         switch (tn->kind) {
           case JSTRY_CATCH:
