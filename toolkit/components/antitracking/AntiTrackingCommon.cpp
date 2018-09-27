@@ -260,8 +260,7 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
 /* static */ bool
 AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()
 {
-  return StaticPrefs::browser_contentblocking_enabled() &&
-         StaticPrefs::browser_contentblocking_ui_enabled();
+  return StaticPrefs::browser_contentblocking_enabled();
 }
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>

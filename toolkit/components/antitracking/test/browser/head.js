@@ -522,8 +522,7 @@ this.AntiTracking = {
     await SpecialPowers.pushPrefEnv({"set": [
       ["browser.contentblocking.allowlist.annotations.enabled", blockingByContentBlockingRTUI],
       ["browser.contentblocking.allowlist.storage.enabled", blockingByContentBlockingRTUI],
-      ["browser.contentblocking.enabled", blockingByContentBlocking],
-      ["browser.contentblocking.ui.enabled", blockingByContentBlockingUI],
+      ["browser.contentblocking.enabled", blockingByContentBlocking && blockingByContentBlockingUI],
       ["network.cookie.cookieBehavior", cookieBehavior],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
