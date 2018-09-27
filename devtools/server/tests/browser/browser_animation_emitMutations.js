@@ -8,7 +8,7 @@
 // node after getAnimationPlayersForNode was called on that node.
 
 add_task(async function() {
-  const {client, walker, animations} =
+  const {target, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non-animated node");
@@ -57,6 +57,6 @@ add_task(async function() {
   ok(changes[1].player === p1 || changes[1].player === p2,
     "The second removed player was one of the previously added players");
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

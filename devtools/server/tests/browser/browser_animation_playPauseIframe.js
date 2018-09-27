@@ -12,7 +12,7 @@ const URL = MAIN_DOMAIN + "animation.html";
 add_task(async function() {
   info("Creating a test document with 2 iframes containing animated nodes");
 
-  const {client, walker, animations} = await initAnimationsFrontForUrl(
+  const {target, walker, animations} = await initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8," +
     "<iframe id='i1' src='" + URL + "'></iframe>" +
     "<iframe id='i2' src='" + URL + "'></iframe>");
@@ -29,7 +29,7 @@ add_task(async function() {
   await toggleAndCheckStates(animations, nodeInFrame1, "running");
   await toggleAndCheckStates(animations, nodeInFrame2, "running");
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });
 
