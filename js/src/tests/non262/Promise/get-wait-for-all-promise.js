@@ -13,7 +13,7 @@ let originalThen = Promise.prototype.then;
 Promise.prototype.then = 1;
 
 // Replacing Promise[@@species] shouldn't affect getWaitForAllPromise.
-Promise[Symbol.species] = function(){};
+Object.defineProperty(Promise, Symbol.species, { get: function(){} });
 
 // Replacing `Promise` shouldn't affect getWaitForAllPromise.
 let PromiseCtor = Promise;
