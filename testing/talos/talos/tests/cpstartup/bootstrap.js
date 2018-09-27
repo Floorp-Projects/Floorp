@@ -37,7 +37,7 @@ var CPStartup = {
   get Profiler() {
     delete this.Profiler;
     let context = {};
-    Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosParentProfiler.js", context);
+    Services.scriptloader.loadSubScript("resource://talos-powers/TalosParentProfiler.js", context);
     return this.Profiler = context.TalosParentProfiler;
   },
 

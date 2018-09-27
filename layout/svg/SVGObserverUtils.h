@@ -366,6 +366,10 @@ public:
   bool ReferencesValidResources();
   void Invalidate() { OnRenderingChange(); }
 
+  const nsTArray<RefPtr<SVGFilterObserver>>& GetObservers() const {
+    return mObservers;
+  }
+
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(SVGFilterObserverList)
@@ -571,7 +575,6 @@ public:
                                       URIObserverHashtable)
 
   struct EffectProperties {
-    SVGFilterObserverListForCSSProp* mFilterObservers;
     SVGMaskObserverList* mMaskObservers;
     nsSVGPaintingProperty* mClipPath;
 
@@ -622,25 +625,6 @@ public:
      */
     bool HasInvalidMask() {
       return !HasNoOrValidMask();
-    }
-
-    bool HasValidFilter() {
-      return mFilterObservers && mFilterObservers->ReferencesValidResources();
-    }
-
-    /*
-     * @return true if we either do not have filter or all filters we have
-     * are valid.
-     */
-    bool HasNoOrValidFilter() {
-      return !mFilterObservers || mFilterObservers->ReferencesValidResources();
-    }
-
-    /*
-     * @return true if we have an invalid filter.
-     */
-    bool HasInvalidFilter() {
-      return !HasNoOrValidFilter();
     }
   };
 
@@ -706,6 +690,13 @@ public:
     INVALIDATE_REFLOW = 1
   };
 
+  enum ReferenceState {
+    /// Has no references to SVG filters (may still have CSS filter functions!)
+    eHasNoRefs,
+    eHasRefsAllValid,
+    eHasRefsSomeInvalid,
+  };
+
   /**
    * This can be called on any element or frame. Only direct observers of this
    * (frame's) element, if any, are invalidated.
@@ -726,6 +717,25 @@ public:
    */
   static bool
   GetMarkerFrames(nsIFrame* aMarkedFrame, nsSVGMarkerFrame*(*aFrames)[3]);
+
+  /**
+   * Get the frames of the SVG filters applied to the given frame, and add the
+   * frame as an observer to those filter frames.
+   *
+   * NOTE! A return value of eHasNoRefs does NOT mean that there are no filters
+   * to be applied, only that there are no references to SVG filter elements.
+   *
+   * XXX Callers other than ComputePostEffectsVisualOverflowRect and
+   * nsSVGUtils::GetPostFilterVisualOverflowRect should not need to initiate
+   * observing.  If we have a bug that causes invalidation (which would remove
+   * observers) between reflow and painting, then we don't really want to
+   * re-add abservers during painting.  That has the potential to hide logic
+   * bugs, or cause later invalidation problems.  However, let's not change
+   * that behavior just yet due to the regression potential.
+   */
+  static ReferenceState
+  GetAndObserveFilters(nsIFrame* aFilteredFrame,
+                       nsTArray<nsSVGFilterFrame*>* aFilterFrames);
 
   /**
    * Get the SVGGeometryElement that is referenced by aTextPathFrame, and make

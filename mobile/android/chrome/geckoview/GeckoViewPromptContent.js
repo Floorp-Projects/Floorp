@@ -5,7 +5,7 @@
 
 ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
-GeckoViewUtils.addLazyEventListener(this, ["click", "contextmenu"], {
+GeckoViewUtils.addLazyEventListener(this, ["click", "contextmenu", "DOMPopupBlocked"], {
   handler: _ =>
     Cc["@mozilla.org/prompter;1"].getService().wrappedJSObject,
   options: {

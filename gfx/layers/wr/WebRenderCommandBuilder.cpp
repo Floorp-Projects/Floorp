@@ -716,8 +716,8 @@ struct DIGroup
     bool backfaceHidden = false;
 
     // Emit a dispatch-to-content hit test region covering this area
-    auto hitInfo = CompositorHitTestInfo::eVisibleToHitTest |
-                   CompositorHitTestInfo::eDispatchToContent;
+    CompositorHitTestInfo hitInfo(CompositorHitTestFlags::eVisibleToHitTest,
+                                  CompositorHitTestFlags::eDispatchToContent);
 
     // XXX - clipping the item against the paint rect breaks some content.
     // cf. Bug 1455422.

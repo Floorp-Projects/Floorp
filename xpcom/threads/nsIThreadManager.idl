@@ -85,19 +85,6 @@ interface nsIThreadManager : nsISupports
   [noscript] nsIThread newNamedThread(in ACString name, [optional] in unsigned long stackSize);
 
   /**
-   * Get the nsIThread object (if any) corresponding to the given PRThread.
-   * This method returns null if there is no corresponding nsIThread.
-   *
-   * @param prthread
-   *   The PRThread of the nsIThread being requested.
-   *
-   * @returns
-   *   The nsIThread object corresponding to the given PRThread or null if no
-   *   such nsIThread exists.
-   */
-  [noscript] nsIThread getThreadFromPRThread(in PRThread prthread);
-
-  /**
    * Get the main thread.
    */
   readonly attribute nsIThread mainThread;
