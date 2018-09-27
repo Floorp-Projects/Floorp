@@ -3470,6 +3470,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   MOZ_ASSERT(sf);
 
+  // Are we the root content document's root scroll frame?
+  bool isRcdRsf = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
+
   if (ignoringThisScrollFrame) {
     // Root scrollframes have FrameMetrics and clipping on their container
     // layers, so don't apply clipping again.
@@ -3490,7 +3493,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (aBuilder->IsPaintingToWindow() &&
           gfxPrefs::LayoutUseContainersForRootFrames() && mIsRoot) {
         asrSetter.EnterScrollFrame(sf);
-        aBuilder->SetActiveScrolledRootForRootScrollframe(aBuilder->CurrentActiveScrolledRoot());
+        if (isRcdRsf) {
+          aBuilder->SetActiveScrolledRootForRootScrollframe(aBuilder->CurrentActiveScrolledRoot());
+        }
       }
 
       nsDisplayListBuilder::AutoBuildingDisplayList
@@ -3656,7 +3661,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       asrSetter.EnterScrollFrame(sf);
     }
 
-    if (mIsScrollableLayerInRootContainer) {
+    if (mIsScrollableLayerInRootContainer && isRcdRsf) {
       aBuilder->SetActiveScrolledRootForRootScrollframe(aBuilder->CurrentActiveScrolledRoot());
     }
 
