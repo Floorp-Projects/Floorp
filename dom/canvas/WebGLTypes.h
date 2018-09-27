@@ -144,6 +144,8 @@ enum class WebGLExtensionID : uint8_t {
     EXT_blend_minmax,
     EXT_color_buffer_float,
     EXT_color_buffer_half_float,
+    EXT_texture_compression_bptc,
+    EXT_texture_compression_rgtc,
     EXT_frag_depth,
     EXT_sRGB,
     EXT_shader_texture_lod,

@@ -816,6 +816,22 @@ partial interface WebGLRenderingContext {
 // specific extension interfaces
 
 [NoInterfaceObject]
+interface EXT_texture_compression_bptc {
+    const GLenum COMPRESSED_RGBA_BPTC_UNORM_EXT = 0x8E8C;
+    const GLenum COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT = 0x8E8D;
+    const GLenum COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT = 0x8E8E;
+    const GLenum COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT = 0x8E8F;
+};
+
+[NoInterfaceObject]
+interface EXT_texture_compression_rgtc {
+    const GLenum COMPRESSED_RED_RGTC1_EXT = 0x8DBB;
+    const GLenum COMPRESSED_SIGNED_RED_RGTC1_EXT = 0x8DBC;
+    const GLenum COMPRESSED_RED_GREEN_RGTC2_EXT = 0x8DBD;
+    const GLenum COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT = 0x8DBE;
+};
+
+[NoInterfaceObject]
 interface WEBGL_compressed_texture_s3tc
 {
     const GLenum COMPRESSED_RGB_S3TC_DXT1_EXT  = 0x83F0;
