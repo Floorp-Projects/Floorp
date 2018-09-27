@@ -62,11 +62,7 @@
         iframe.addEventListener("load", iframeLoaded);
       }
       SpecialPowers.pushPrefEnv({
-        "set": [
-          ["browser.contentblocking.enabled", true],
-          ["browser.contentblocking.ui.enabled", true],
-          ["network.cookie.cookieBehavior", testData[testIndex].cookieBehavior],
-        ]
+        "set": [["network.cookie.cookieBehavior", testData[testIndex].cookieBehavior]]
       }, () => {
         iframe.src = testData[testIndex].host + iframe1Path;
       });
