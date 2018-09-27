@@ -29,19 +29,6 @@ public:
   typedef std::function<void(const bool&)>
     FirstPartyStorageAccessGrantedForOriginResolver;
 
-  // This function should be called to determine whether we need to honour the
-  // content blocking cookie restrictions.  It takes into account whether
-  // content blocking itself is active, and also whether the UI for it is being
-  // shown to the user.  The reason we make this depend on whether the UI is being
-  // shown is to avoid confusing scenarios where the user's privacy choices will
-  // be overridden by the invisible prefs that cannot be controlled in the UI.
-  //
-  // Please note that this function doesn't perform any special checks on _what_
-  // kind of restrictions the consumer is expected to follow.  The consumer is
-  // still responsible to perform further checks to determine that.
-  static bool
-  ShouldHonorContentBlockingCookieRestrictions();
-
   // This method returns true if the URI has first party storage access when
   // loaded inside the passed 3rd party context tracking resource window.
   // If the window is first party context, please use
@@ -108,17 +95,10 @@ public:
                                                              const nsCString& aGrantedOrigin,
                                                              FirstPartyStorageAccessGrantedForOriginResolver&& aResolver);
 
-  enum ContentBlockingAllowListPurpose {
-    eStorageChecks,
-    eTrackingProtection,
-    eTrackingAnnotations,
-  };
 
   // Check whether a top window URI is on the content blocking allow list.
   static nsresult
-  IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
-                               ContentBlockingAllowListPurpose aPurpose,
-                               bool& aIsAllowListed);
+  IsOnContentBlockingAllowList(nsIURI* aTopWinURI, bool& aIsAllowListed);
 
   // This method can be called on the parent process or on the content process.
   // The notification is propagated to the child channel if aChannel is a parent

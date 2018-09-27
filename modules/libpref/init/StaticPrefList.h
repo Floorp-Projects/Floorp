@@ -1277,35 +1277,12 @@ PREF("preferences.allow.omt-write", bool, true)
 //---------------------------------------------------------------------------
 
 // Whether Content Blocking has been enabled.
+// Please note that privacy protections provided by Gecko may depend on this preference.
+// Turning this off may disable some protections.  Please do not turn this pref off without
+// realizing the implications of what you're doing.
 VARCACHE_PREF(
   "browser.contentblocking.enabled",
    browser_contentblocking_enabled,
-  bool, true
-)
-
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
-# define PREF_VALUE false
-#endif
-// Whether Content Blocking UI has been enabled.
-VARCACHE_PREF(
-  "browser.contentblocking.ui.enabled",
-   browser_contentblocking_ui_enabled,
-  bool, PREF_VALUE
-)
-#undef PREF_VALUE
-
-// Whether Content Blocking Third-Party Cookies UI has been enabled.
-VARCACHE_PREF(
-  "browser.contentblocking.allowlist.storage.enabled",
-   browser_contentblocking_allowlist_storage_enabled,
-  bool, false
-)
-
-VARCACHE_PREF(
-  "browser.contentblocking.allowlist.annotations.enabled",
-   browser_contentblocking_allowlist_annotations_enabled,
   bool, true
 )
 
