@@ -7,7 +7,8 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
+// TODO: Upgrade to the current version reps https://bugzilla.mozilla.org/show_bug.cgi?id=1494680
+const { REPS, MODE } = require("devtools/client/shared/components/reps/reps-old");
 const { Rep } = REPS;
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const TreeView = createFactory(TreeViewClass);
