@@ -34,23 +34,23 @@ extern constexpr GkAtoms gGkAtoms = {
     // Expansion of the example GK_ATOM entries in nsGkAtoms.h:
     //
     //   nsStaticAtom(
-    //     u"a", 1, 0x01234567,
+    //     1, 0x01234567,
     //     offsetof(GkAtoms, mAtoms[static_cast<size_t>(GkAtoms::Atoms::a)]) -
     //     offsetof(GkAtoms, a_string)),
     //
     //   nsStaticAtom(
-    //     u"bb", 2, 0x12345678,
+    //     2, 0x12345678,
     //     offsetof(GkAtoms, mAtoms[static_cast<size_t>(GkAtoms::Atoms::bb)]) -
     //     offsetof(GkAtoms, bb_string)),
     //
     //   nsStaticAtom(
-    //     u"ccc", 3, 0x23456789,
+    //     3, 0x23456789,
     //     offsetof(GkAtoms, mAtoms[static_cast<size_t>(GkAtoms::Atoms::ccc)]) -
     //     offsetof(GkAtoms, ccc_string)),
     //
     #define GK_ATOM(name_, value_, hash_, type_, atom_type_)                   \
       nsStaticAtom(                                                            \
-        u"" value_, sizeof(value_) - 1, hash_,                                 \
+        sizeof(value_) - 1, hash_,                                             \
         offsetof(GkAtoms,                                                      \
                  mAtoms[static_cast<size_t>(GkAtoms::Atoms::name_)]) -         \
         offsetof(GkAtoms, name_##_string)),
