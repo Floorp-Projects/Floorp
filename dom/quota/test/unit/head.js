@@ -32,8 +32,29 @@ if (!this.runTest) {
 
     Cu.importGlobalProperties(["indexedDB", "File", "Blob", "FileReader"]);
 
-    do_test_pending();
-    testGenerator.next();
+    // In order to support converting tests to using async functions from using
+    // generator functions, we detect async functions by checking the name of
+    // function's constructor.
+    Assert.ok(typeof testSteps === "function",
+              "There should be a testSteps function");
+    if (testSteps.constructor.name === "AsyncFunction") {
+      // Do run our existing cleanup function that would normally be called by
+      // the generator's call to finishTest().
+      registerCleanupFunction(resetTesting);
+
+      add_task(testSteps);
+
+      // Since we defined run_test, we must invoke run_next_test() to start the
+      // async test.
+      run_next_test();
+    } else {
+      Assert.ok(testSteps.constructor.name === "GeneratorFunction",
+                "Unsupported function type");
+
+      do_test_pending();
+
+      testGenerator.next();
+    }
   }
 }
 
@@ -293,13 +314,16 @@ function getSimpleDatabase(principal)
   return connection;
 }
 
-function* requestFinished(request) {
-  request.callback = continueToNextStepSync;
-  yield undefined;
-  if (request.resultCode == NS_OK) {
-    return request.result;
-  }
-  throw request.resultCode;
+function requestFinished(request) {
+  return new Promise(function(resolve, reject) {
+    request.callback = function(request) {
+      if (request.resultCode == Cr.NS_OK) {
+        resolve(request.result);
+      } else {
+        reject(request.resultCode);
+      }
+    }
+  });
 }
 
 var SpecialPowers = {
