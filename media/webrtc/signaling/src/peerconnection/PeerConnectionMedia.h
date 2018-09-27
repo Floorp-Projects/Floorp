@@ -50,18 +50,17 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   explicit PeerConnectionMedia(PeerConnectionImpl *parent);
 
   PeerConnectionImpl* GetPC() { return mParent; }
-  nsresult Init(const std::vector<NrIceStunServer>& stun_servers,
-                const std::vector<NrIceTurnServer>& turn_servers,
-                NrIceCtx::Policy policy);
+  nsresult Init(const dom::RTCConfiguration& aConfiguration);
   // WARNING: This destroys the object!
   void SelfDestruct();
 
-  RefPtr<NrIceCtx> ice_ctx() const { return mIceCtx; }
-
-  RefPtr<NrIceMediaStream> ice_media_stream(
-      const std::string& aTransportId) const {
-    return mIceCtx->GetStream(aTransportId);
-  }
+  void GetIceStats_s(const std::string& aTransportId,
+                     bool internalStats,
+                     DOMHighResTimeStamp now,
+                     RTCStatsReportInternal* report) const;
+  void GetAllIceStats_s(bool internalStats,
+                        DOMHighResTimeStamp now,
+                        RTCStatsReportInternal* report) const;
 
   // Ensure ICE transports exist that we might need when offer/answer concludes
   void EnsureTransports(const JsepSession& aSession);
@@ -161,9 +160,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                               bool aPrivacyRequested);
 
   // ICE state signals
-  sigslot::signal2<NrIceCtx*, NrIceCtx::GatheringState>
+  sigslot::signal1<mozilla::dom::PCImplIceGatheringState>
       SignalIceGatheringStateChange;
-  sigslot::signal2<NrIceCtx*, NrIceCtx::ConnectionState>
+  sigslot::signal1<mozilla::dom::PCImplIceConnectionState>
       SignalIceConnectionStateChange;
   // This passes a candidate:... attribute and transport id
   sigslot::signal2<const std::string&, const std::string&> SignalCandidate;
@@ -290,6 +289,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   bool IsIceCtxReady() const {
     return mProxyResolveCompleted && mLocalAddrsCompleted;
   }
+
+  void GetIceStats_s(const NrIceMediaStream& aStream,
+                     bool internalStats,
+                     DOMHighResTimeStamp now,
+                     RTCStatsReportInternal* report) const;
 
   // The parent PC
   PeerConnectionImpl *mParent;
