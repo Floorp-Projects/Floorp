@@ -262,6 +262,8 @@ class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>> {
   ObjectValueMap(JSContext* cx, JSObject* obj) : WeakMap(cx, obj) {}
 
   bool findZoneEdges() override;
+
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
 
 // Generic weak map for mapping objects to other objects.
