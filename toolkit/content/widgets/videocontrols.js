@@ -198,7 +198,7 @@ this.VideoControlsImplPageWidget = class {
         // If we have metadata, check if this is a <video> without
         // video data, or a video with no audio track.
         if (this.video.readyState >= this.video.HAVE_METADATA) {
-          if (this.video instanceof this.window.HTMLVideoElement &&
+          if (this.video.localName == "video" &&
               (this.video.videoWidth == 0 || this.video.videoHeight == 0)) {
             this.isAudioOnly = true;
           }
@@ -247,6 +247,12 @@ this.VideoControlsImplPageWidget = class {
           this.clickToPlay,
         ];
 
+        let throwOnGet = {
+          get() {
+            throw new Error("Please don't trigger reflow. See bug 1493525.");
+          },
+        };
+
         for (let control of adjustableControls) {
           if (!control) {
             break;
@@ -276,6 +282,17 @@ this.VideoControlsImplPageWidget = class {
                 return parseInt(preDefinedSize, 10);
               },
             },
+            offsetLeft: throwOnGet,
+            offsetTop: throwOnGet,
+            offsetWidth: throwOnGet,
+            offsetHeight: throwOnGet,
+            offsetParent: throwOnGet,
+            clientLeft: throwOnGet,
+            clientTop: throwOnGet,
+            clientWidth: throwOnGet,
+            clientHeight: throwOnGet,
+            getClientRects: throwOnGet,
+            getBoundingClientRect: throwOnGet,
             isAdjustableControl: {
               value: true,
             },
@@ -471,7 +488,7 @@ this.VideoControlsImplPageWidget = class {
           case "loadedmetadata":
             // If a <video> doesn't have any video data, treat it as <audio>
             // and show the controls (they won't fade back out)
-            if (this.video instanceof this.window.HTMLVideoElement &&
+            if (this.video.localName == "video" &&
                 (this.video.videoWidth == 0 || this.video.videoHeight == 0)) {
               this.isAudioOnly = true;
               this.startFadeOut(this.clickToPlay, true);
@@ -494,7 +511,7 @@ this.VideoControlsImplPageWidget = class {
             this.controlsSpacer.removeAttribute("aria-label");
             this.statusOverlay.removeAttribute("error");
             this.statusIcon.setAttribute("type", "throbber");
-            this.isAudioOnly = this.video instanceof this.window.HTMLAudioElement;
+            this.isAudioOnly = this.video.localName == "audio";
             this.setPlayButtonState(true);
             this.setupNewLoadState();
             this.setupStatusFader();
@@ -634,7 +651,9 @@ this.VideoControlsImplPageWidget = class {
             // Since this event come from the layout, this is the only place
             // we are sure of that probing into layout won't trigger or force
             // reflow.
+            this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = true;
             this.updateReflowedDimensions();
+            this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = false;
             this.adjustControlSize();
             break;
           case "fullscreenchange":
@@ -1153,8 +1172,9 @@ this.VideoControlsImplPageWidget = class {
           // Unhide
           element.hidden = false;
         } else {
-          if (element == this.controlBar && !this.hasError() &&
-              this.document.mozFullScreenElement == this.video) {
+          if (element == this.controlBar &&
+              !this.hasError() &&
+              this.isVideoInFullScreen) {
             this.controlsSpacer.setAttribute("hideCursor", true);
           }
 
@@ -1254,7 +1274,7 @@ this.VideoControlsImplPageWidget = class {
       },
 
       get isVideoInFullScreen() {
-        return this.document.mozFullScreenElement == this.video;
+        return this.document.mozFullScreenElement == this.shadowRoot.host;
       },
 
       toggleFullscreen() {
@@ -1383,11 +1403,6 @@ this.VideoControlsImplPageWidget = class {
         var attrName = muted ? "unmutelabel" : "mutelabel";
         var value = this.muteButton.getAttribute(attrName);
         this.muteButton.setAttribute("aria-label", value);
-      },
-
-      _getComputedPropertyValueAsInt(element, property) {
-        let value = this.window.getComputedStyle(element).getPropertyValue(property);
-        return parseInt(value, 10);
       },
 
       keyHandler(event) {
@@ -1719,6 +1734,33 @@ this.VideoControlsImplPageWidget = class {
       controlBarMinHeight: 40,
       controlBarMinVisibleHeight: 28,
 
+      reflowTriggeringCallValidator: {
+        isReflowTriggeringPropsAllowed: false,
+        reflowTriggeringProps: Object.freeze([
+          "offsetLeft", "offsetTop", "offsetWidth", "offsetHeight", "offsetParent",
+          "clientLeft", "clientTop", "clientWidth", "clientHeight",
+          "getClientRects", "getBoundingClientRect"]),
+        get(obj, prop) {
+          if (!this.isReflowTriggeringPropsAllowed &&
+              this.reflowTriggeringProps.includes(prop)) {
+            throw new Error("Please don't trigger reflow. See bug 1493525.");
+          }
+          let val = obj[prop];
+          if (typeof val == "function") {
+            return function() { return val.apply(obj, arguments); };
+          }
+          return val;
+        },
+
+        set(obj, prop, value) {
+          return Reflect.set(obj, prop, value);
+        },
+      },
+
+      installReflowCallValidator(element) {
+        return new Proxy(element, this.reflowTriggeringCallValidator);
+      },
+
       // Set the values to intrinsic dimensions before the first update.
       reflowedDimensions: {
         videoHeight: 150,
@@ -1781,7 +1823,7 @@ this.VideoControlsImplPageWidget = class {
 
         // Since the size of videocontrols is expanded with controlBar in <audio>, we
         // should fix the dimensions in order not to recursively trigger reflow afterwards.
-        if (this.video instanceof this.window.HTMLAudioElement) {
+        if (this.video.localName == "audio") {
           if (givenHeight) {
             // The height of controlBar should be capped with the bounds between controlBarMinHeight
             // and controlBarMinVisibleHeight.
@@ -1828,8 +1870,8 @@ this.VideoControlsImplPageWidget = class {
 
       init(shadowRoot) {
         this.shadowRoot = shadowRoot;
-        this.video = shadowRoot.host;
-        this.videocontrols = shadowRoot.firstChild;
+        this.video = this.installReflowCallValidator(shadowRoot.host);
+        this.videocontrols = this.installReflowCallValidator(shadowRoot.firstChild);
         this.document = this.videocontrols.ownerDocument;
         this.window = this.document.defaultView;
         this.shadowRoot = shadowRoot;
@@ -1873,6 +1915,9 @@ this.VideoControlsImplPageWidget = class {
           this.controlsContainer.classList.add("touch");
         }
 
+        // XXX: Calling getComputedStyle() here by itself doesn't cause any reflow,
+        // but there is no guard proventing accessing any properties and methods
+        // of this saved CSSStyleDeclaration instance that could trigger reflow.
         this.controlBarComputedStyles = this.window.getComputedStyle(this.controlBar);
 
         // Hide and show control in certain order.
@@ -1888,7 +1933,7 @@ this.VideoControlsImplPageWidget = class {
           this.volumeStack,
         ];
 
-        this.isAudioOnly = this.video instanceof this.window.HTMLAudioElement;
+        this.isAudioOnly = this.video.localName == "audio";
         this.setupInitialState();
         this.setupNewLoadState();
         this.initTextTracks();
@@ -2053,8 +2098,8 @@ this.VideoControlsImplPageWidget = class {
       },
 
       init(shadowRoot) {
-        this.videocontrols = shadowRoot.firstChild;
-        this.video = shadowRoot.host;
+        this.videocontrols = this.Utils.videocontrols;
+        this.video = this.Utils.video;
         this.shadowRoot = shadowRoot;
 
         this.controlsEvents = [
