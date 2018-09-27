@@ -1253,8 +1253,10 @@ trait ToMarionette {
 impl ToMarionette for AddonInstallParameters {
     fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
         let mut data = Map::new();
-        data.insert("path".to_string(), Value::String(self.path.clone()));
-        data.insert("temporary".to_string(), Value::Bool(self.temporary));
+        data.insert("path".to_string(), serde_json::to_value(&self.path)?);
+        if self.temporary.is_some() {
+            data.insert("temporary".to_string(), serde_json::to_value(&self.temporary)?);
+        }
         Ok(data)
     }
 }
