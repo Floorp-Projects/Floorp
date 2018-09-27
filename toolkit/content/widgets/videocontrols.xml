@@ -1418,11 +1418,6 @@
         this.muteButton.setAttribute("aria-label", value);
       },
 
-      _getComputedPropertyValueAsInt(element, property) {
-        let value = getComputedStyle(element, null).getPropertyValue(property);
-        return parseInt(value, 10);
-      },
-
       keyHandler(event) {
         // Ignore keys when content might be providing its own.
         if (!this.video.hasAttribute("controls")) {
