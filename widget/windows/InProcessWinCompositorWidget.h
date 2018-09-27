@@ -24,6 +24,10 @@ public:
                                const layers::CompositorOptions& aOptions,
                                nsWindow* aWindow);
 
+  void OnDestroyWindow() override;
+  void UpdateTransparency(nsTransparencyMode aMode) override;
+  void ClearTransparentWindow() override;
+
   void ObserveVsync(VsyncObserver* aObserver) override;
   nsIWidget* RealWidget() override;
 
