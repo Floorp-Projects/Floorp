@@ -1786,8 +1786,7 @@ PeerConnectionWrapper.prototype = {
       ok(res.id == key, "Coherent stats id");
       var nowish = Date.now();
       var minimum = this.whenCreated;
-      if (false) { // Bug 1325430 - timestamps aren't working properly in update 49
-      // if (!twoMachines) {
+      if (!twoMachines) {
         // Bug 1225729: On android, sometimes the first RTCP of the first
         // test run gets this value, likely because no RTP has been sent yet.
         if (res.timestamp != 2085978496000) {
@@ -1839,17 +1838,17 @@ PeerConnectionWrapper.prototype = {
               ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
               ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
               ok(rem.bytesReceived >= rem.packetsReceived, "Rtcp bytesReceived");
-	       if (false) { // Bug 1325430 if (!this.disableRtpCountChecking) {
-	       // no guarantee which one is newer!
-	       // Note: this must change when we add a timestamp field to remote RTCP reports
-	       // and make rem.timestamp be the reception time
-		if (res.timestamp >= rem.timestamp) {
-                 ok(rem.packetsReceived <= res.packetsSent, "No more than sent packets");
-		 } else {
+              if (!this.disableRtpCountChecking) {
+                // no guarantee which one is newer!
+                // Note: this must change when we add a timestamp field to remote RTCP reports
+                // and make rem.timestamp be the reception time
+                if (res.timestamp >= rem.timestamp) {
+                  ok(rem.packetsReceived <= res.packetsSent, "No more than sent packets");
+                } else {
                   info("REVERSED timestamps: rec:" +
-		     rem.packetsReceived + " time:" + rem.timestamp + " sent:" + res.packetsSent + " time:" + res.timestamp);
-		 }
-		// Else we may have received more than outdated Rtcp packetsSent
+                    rem.packetsReceived + " time:" + rem.timestamp + " sent:" + res.packetsSent + " time:" + res.timestamp);
+                }
+                // Else we may have received more than outdated Rtcp packetsSent
                 ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
               }
               ok(rem.jitter !== undefined, "Rtcp jitter");
