@@ -726,6 +726,7 @@ GetDynamicName(JSContext* cx, JSObject* envChain, JSString* str, Value* vp)
         atom = AtomizeString(cx, str);
         if (!atom) {
             vp->setUndefined();
+            cx->recoverFromOutOfMemory();
             return;
         }
     }
