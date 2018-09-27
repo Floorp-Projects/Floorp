@@ -343,6 +343,19 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
   return NS_OK;
 }
 
+bool
+BasicCardService::IsValidBasicCardErrors(JSContext* aCx,
+                                         JSObject* aData)
+{
+  if (!aData) {
+    return true;
+  }
+  JS::RootedValue data(aCx, JS::ObjectValue(*aData));
+
+  BasicCardErrors bcError;
+  return !bcError.Init(aCx, data);
+}
+
 #ifdef PaymentBasicCardMacros
 #undef PaymentBasicCardMacros
 #undef EncodeBasicCardProperty

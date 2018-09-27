@@ -952,7 +952,7 @@ WebConsoleActor.prototype =
     const response = this.evaluateJS(request);
     response.resultID = resultID;
 
-    this._waitForHelperResultAndSend(response).catch(e =>
+    this._waitForResultAndSend(response).catch(e =>
       DevToolsUtils.reportException(
         "evaluateJSAsync",
         Error(`Encountered error while waiting for Helper Result: ${e}`)
@@ -961,28 +961,45 @@ WebConsoleActor.prototype =
   },
 
   /**
-   * In order to have asynchronous commands such as screenshot, we have to be
-   * able to handle promises in the helper result. This method handles waiting
-   * for the promise, and then dispatching the result
-   *
+   * In order to have asynchronous commands (e.g. screenshot, top-level await, …) ,
+   * we have to be able to handle promises. This method handles waiting for the promise,
+   * and then dispatching the result.
    *
    * @private
    * @param object response
    *         The response packet to send to with the unique id in the
-   *         `resultID` field, and potentially a promise in the helperResult
-   *         field.
+   *         `resultID` field, and potentially a promise in the `helperResult` or in the
+   *         `awaitResult` field.
    *
    * @return object
    *         The response packet to send to with the unique id in the
    *         `resultID` field, with a sanitized helperResult field.
    */
-  _waitForHelperResultAndSend: async function(response) {
+  _waitForResultAndSend: async function(response) {
     // Wait for asynchronous command completion before sending back the response
     if (
-      response.helperResult &&
-      typeof response.helperResult.then == "function"
+      response.helperResult && typeof response.helperResult.then == "function"
     ) {
       response.helperResult = await response.helperResult;
+    } else if (response.awaitResult && typeof response.awaitResult.then === "function") {
+      let result;
+      try {
+        result = await response.awaitResult;
+      } catch (e) {
+        // The promise was rejected. We let the engine handle this as it will report a
+        // `uncaught exception` error.
+        response.topLevelAwaitRejected = true;
+      }
+
+      if (!response.topLevelAwaitRejected) {
+        // `createValueGrip` expect a debuggee value, while here we have the raw object.
+        // We need to call `makeDebuggeeValue` on it to make it work.
+        const dbgResult = this.makeDebuggeeValue(result);
+        response.result = this.createValueGrip(dbgResult);
+      }
+
+      // Remove the promise from the response object.
+      delete response.awaitResult;
     }
 
     // Finally, send an unsolicited evaluationResult packet with
@@ -1010,21 +1027,30 @@ WebConsoleActor.prototype =
       selectedNodeActor: request.selectedNodeActor,
       selectedObjectActor: request.selectedObjectActor,
     };
+    const {mapped} = request;
 
     const evalInfo = evalWithDebugger(input, evalOptions, this);
     const evalResult = evalInfo.result;
     const helperResult = evalInfo.helperResult;
 
     let result, errorDocURL, errorMessage, errorNotes = null, errorGrip = null,
-      frame = null;
+      frame = null, awaitResult;
     if (evalResult) {
       if ("return" in evalResult) {
         result = evalResult.return;
+        if (
+          mapped &&
+          mapped.await &&
+          result &&
+          result.class === "Promise" &&
+          typeof result.unsafeDereference === "function"
+        ) {
+          awaitResult = result.unsafeDereference();
+        }
       } else if ("yield" in evalResult) {
         result = evalResult.yield;
       } else if ("throw" in evalResult) {
         const error = evalResult.throw;
-
         errorGrip = this.createValueGrip(error);
 
         errorMessage = String(error);
@@ -1100,18 +1126,31 @@ WebConsoleActor.prototype =
     // If a value is encountered that the debugger server doesn't support yet,
     // the console should remain functional.
     let resultGrip;
-    try {
-      resultGrip = this.createValueGrip(result);
-    } catch (e) {
-      errorMessage = e;
+    if (!awaitResult) {
+      try {
+        resultGrip = this.createValueGrip(result);
+      } catch (e) {
+        errorMessage = e;
+      }
     }
 
-    this._lastConsoleInputEvaluation = result;
+    if (!awaitResult) {
+      this._lastConsoleInputEvaluation = result;
+    } else {
+      // If we evaluated a top-level await expression, we want to assign its result to the
+      // _lastConsoleInputEvaluation only when the promise resolves, and only if it
+      // resolves. If the promise rejects, we don't re-assign _lastConsoleInputEvaluation,
+      // it will keep its previous value.
+      awaitResult.then(res => {
+        this._lastConsoleInputEvaluation = this.makeDebuggeeValue(res);
+      });
+    }
 
     return {
       from: this.actorID,
       input: input,
       result: resultGrip,
+      awaitResult,
       timestamp: timestamp,
       exception: errorGrip,
       exceptionMessage: this._createStringGrip(errorMessage),

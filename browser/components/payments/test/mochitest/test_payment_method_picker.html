@@ -210,6 +210,65 @@ add_task(async function test_delete() {
   ok(options[0].textContent.includes("J Smith"), "Check remaining card #1");
   ok(options[1].textContent.includes("Jane Fields"), "Check remaining card #2");
 });
+
+add_task(async function test_supportedNetworks_tempCards() {
+  await picker1.requestStore.reset();
+
+  let request = Object.assign({}, picker1.requestStore.getState().request);
+  request.paymentMethods = [
+    {
+      supportedMethods: "basic-card",
+      data: {
+        supportedNetworks: [
+          "mastercard",
+          "visa",
+        ],
+      },
+    },
+  ];
+
+  await picker1.requestStore.setState({
+    request,
+    selectedPaymentCard: "68gjdh354j",
+    tempBasicCards: {
+      "68gjdh354j": {
+        "cc-exp": "2017-08",
+        "cc-exp-month": 8,
+        "cc-exp-year": 2017,
+        "cc-name": "J Smith",
+        "cc-number": "***********1234",
+        "cc-type": "discover",
+        "guid": "68gjdh354j",
+      },
+    },
+  });
+  await asyncElementRendered();
+  let options = picker1.dropdown.popupBox.children;
+  is(options.length, 1, "Check dropdown has one card");
+  ok(options[0].textContent.includes("J Smith"), "Check remaining card #1");
+
+  ok(picker1.classList.contains("invalid-selected-option"),
+     "Check discover is recognized as not supported");
+
+  info("change the card to be a visa");
+  await picker1.requestStore.setState({
+    tempBasicCards: {
+      "68gjdh354j": {
+        "cc-exp": "2017-08",
+        "cc-exp-month": 8,
+        "cc-exp-year": 2017,
+        "cc-name": "J Smith",
+        "cc-number": "***********1234",
+        "cc-type": "visa",
+        "guid": "68gjdh354j",
+      },
+    },
+  });
+  await asyncElementRendered();
+
+  ok(!picker1.classList.contains("invalid-selected-option"),
+     "Check visa is recognized as supported");
+});
 </script>
 
 </body>

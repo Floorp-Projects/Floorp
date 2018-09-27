@@ -66,7 +66,14 @@ function ConsoleApiCall(props) {
   };
 
   if (type === "trace") {
-    messageBody = dom.span({className: "cm-variable"}, "console.trace()");
+    const traceParametersBody = Array.isArray(parameters) && parameters.length > 0
+      ? [" "].concat(formatReps(messageBodyConfig))
+      : [];
+
+    messageBody = [
+      dom.span({className: "cm-variable"}, "console.trace()"),
+      ...traceParametersBody
+    ];
   } else if (type === "assert") {
     const reps = formatReps(messageBodyConfig);
     messageBody = dom.span({ className: "cm-variable" }, "Assertion failed: ", reps);

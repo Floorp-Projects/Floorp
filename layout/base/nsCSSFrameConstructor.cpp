@@ -6088,7 +6088,7 @@ FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
   aParentFrame->DrainSelfOverflowList();
 
   if (aNextSibling) {
-    MOZ_ASSERT(aNextSibling->GetParent() == aParentFrame, "Wrong parent");
+    MOZ_ASSERT(aNextSibling->GetParent()->GetContentInsertionFrame() == aParentFrame, "Wrong parent");
     return aNextSibling->GetPrevSibling();
   }
 
@@ -10582,6 +10582,9 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
     MOZ_ASSERT(!aBlockFrame->GetPrevContinuation(),
                "Setting up a first-letter frame on a non-first block continuation?");
     auto parent = static_cast<nsContainerFrame*>(aParentFrame->FirstContinuation());
+    if (MOZ_UNLIKELY(parent->IsLineFrame())) {
+      parent = parent->GetParent();
+    }
     parent->SetHasFirstLetterChild();
     aBlockFrame->SetProperty(nsContainerFrame::FirstLetterProperty(),
                              letterFrame);
@@ -10700,6 +10703,7 @@ static void ClearHasFirstLetterChildFrom(nsContainerFrame* aParentFrame)
   auto* parent =
     static_cast<nsContainerFrame*>(aParentFrame->FirstContinuation());
   if (MOZ_UNLIKELY(parent->IsLineFrame())) {
+    MOZ_ASSERT(!parent->HasFirstLetterChild());
     parent = parent->GetParent();
   }
   MOZ_ASSERT(parent->HasFirstLetterChild());

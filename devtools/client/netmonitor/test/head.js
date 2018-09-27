@@ -136,12 +136,6 @@ function waitForNavigation(target) {
   });
 }
 
-function reconfigureTab(target, options) {
-  return new Promise((resolve) => {
-    target.activeTab.reconfigure(options, resolve);
-  });
-}
-
 function toggleCache(target, disabled) {
   const options = { cacheDisabled: disabled, performReload: true };
   const navigationFinished = waitForNavigation(target);
@@ -149,7 +143,7 @@ function toggleCache(target, disabled) {
   // Disable the cache for any toolbox that it is opened from this point on.
   Services.prefs.setBoolPref("devtools.cache.disabled", disabled);
 
-  return reconfigureTab(target, options).then(() => navigationFinished);
+  return target.activeTab.reconfigure(options).then(() => navigationFinished);
 }
 
 /**
@@ -290,9 +284,6 @@ function initNetMonitor(url, enableCache) {
     info("Net tab added successfully: " + url);
 
     const target = await TargetFactory.forTab(tab);
-
-    await target.attach();
-    info("Target remoted.");
 
     const toolbox = await gDevTools.showToolbox(target, "netmonitor");
     info("Network monitor pane shown successfully.");

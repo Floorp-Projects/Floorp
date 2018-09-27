@@ -37,7 +37,8 @@ async function runTests(doc) {
   const tooltip = new HTMLTooltip(doc, {type: "arrow", useXulWrapper});
   const div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "35px";
-  tooltip.setContent(div, {width: 200, height: 35});
+  tooltip.panel.appendChild(div);
+  tooltip.setContentSize({width: 200, height: 35});
 
   const {right: docRight} = doc.documentElement.getBoundingClientRect();
 

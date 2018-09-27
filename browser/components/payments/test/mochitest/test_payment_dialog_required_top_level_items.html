@@ -115,6 +115,11 @@ async function setup({shippingRequired, payerRequired}) {
   state.selectedShippingAddress = null;
   state.selectedShippingOption = null;
   await el1.requestStore.setState(state);
+
+  // Fill the security code input so it doesn't interfere with checking the pay
+  // button state for dropdown changes.
+  el1._paymentMethodPicker.securityCodeInput.select();
+  sendString("123");
   await asyncElementRendered();
 }
 
@@ -215,6 +220,34 @@ add_task(async function runTests() {
       ok(!payButton.disabled, "Button is enabled when selected option has all required fields");
     }
   }
+});
+
+add_task(async function test_securityCodeRequired() {
+  await setup({
+    payerRequired: false,
+    shippingRequired: false,
+  });
+
+  let picker = el1._paymentMethodPicker;
+  let payButton = document.getElementById("pay");
+
+  let stateChangedPromise = promiseStateChange(el1.requestStore);
+  selectFirstItemOfPicker(picker);
+  await stateChangedPromise;
+
+  picker.securityCodeInput.select();
+  stateChangedPromise = promiseStateChange(el1.requestStore);
+  synthesizeKey("VK_DELETE");
+  await stateChangedPromise;
+
+  ok(payButton.disabled, "Button is disabled when CVV is empty");
+
+  picker.securityCodeInput.select();
+  stateChangedPromise = promiseStateChange(el1.requestStore);
+  sendString("123");
+  await stateChangedPromise;
+
+  ok(!payButton.disabled, "Button is enabled when CVV is filled");
 });
 </script>
 

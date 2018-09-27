@@ -807,15 +807,13 @@ function getSource(threadClient, url) {
 }
 
 /**
- * Do a fake reload which clears the thread debugger
+ * Do a reload which clears the thread debugger
  *
- * @param TabClient tabClient
+ * @param TabFront tabFront
  * @returns Promise<response>
  */
-function reload(tabClient) {
-  const deferred = defer();
-  tabClient._reload({}, deferred.resolve);
-  return deferred.promise;
+function reload(tabFront) {
+  return tabFront.reload({});
 }
 
 /**

@@ -291,10 +291,6 @@ class MenuButton extends PureComponent {
   }
 
   render() {
-    // We bypass the call to HTMLTooltip. setContent and set the panel contents
-    // directly here.
-    //
-    // Bug 1472942: Do this for all users of HTMLTooltip.
     const menu = ReactDOM.createPortal(
       typeof this.props.children === "function"
         ? this.props.children()

@@ -1036,10 +1036,14 @@ BrowserPageActions.sendToDevice = {
   onShowingSubview(panelViewNode) {
     let bodyNode = panelViewNode.querySelector(".panel-subview-body");
     let panelNode = panelViewNode.closest("panel");
+    let browser = gBrowser.selectedBrowser;
+    let url = browser.currentURI.spec;
+    let title = browser.contentTitle;
+    let multiselected = gBrowser.selectedTab.multiselected;
 
     // This is on top because it also clears the device list between state
     // changes.
-    gSync.populateSendTabToDevicesMenu(bodyNode, gBrowser.selectedTab, (clientId, name, clientType, lastModified) => {
+    gSync.populateSendTabToDevicesMenu(bodyNode, url, title, multiselected, (clientId, name, clientType, lastModified) => {
       if (!name) {
         return document.createXULElement("toolbarseparator");
       }

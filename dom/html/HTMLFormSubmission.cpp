@@ -789,7 +789,7 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 
     mimeStream->AddHeader("Content-Type", "text/plain");
     mimeStream->SetData(bodyStream);
-    CallQueryInterface(mimeStream, aPostDataStream);
+    mimeStream.forget(aPostDataStream);
   }
 
   return rv;

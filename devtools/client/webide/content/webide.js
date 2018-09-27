@@ -57,7 +57,10 @@ window.addEventListener("unload", function() {
 var UI = {
   init: function() {
     this._telemetry = new Telemetry();
-    this._telemetry.toolOpened("webide");
+
+    // webide is not connected with a toolbox so we pass -1 as the
+    // toolbox session id.
+    this._telemetry.toolOpened("webide", -1, this);
 
     AppManager.init();
 
@@ -102,7 +105,10 @@ var UI = {
     AppManager.off("app-manager-update", this.appManagerUpdate);
     AppManager.destroy();
     this.updateConnectionTelemetry();
-    this._telemetry.toolClosed("webide");
+
+    // webide is not connected with a toolbox so we pass -1 as the
+    // toolbox session id.
+    this._telemetry.toolClosed("webide", -1, this);
   },
 
   onfocus: function() {
@@ -718,7 +724,7 @@ var UI = {
   async checkRuntimeVersion() {
     if (AppManager.connected) {
       const { client } = AppManager.connection;
-      const report = await client.checkRuntimeVersion(AppManager.listTabsForm);
+      const report = await client.checkRuntimeVersion();
       if (report.incompatible == "too-recent") {
         this.reportError("error_runtimeVersionTooRecent", report.runtimeID,
           report.localID);

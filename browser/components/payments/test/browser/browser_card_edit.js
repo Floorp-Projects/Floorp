@@ -61,7 +61,10 @@ async function add_link(aOptions = {}) {
     if (aOptions.hasOwnProperty("setCardPersistCheckedValue")) {
       cardOptions.setPersistCheckedValue = aOptions.setCardPersistCheckedValue;
     }
-    await fillInCardForm(frame, PTU.BasicCards.JaneMasterCard, cardOptions);
+    await fillInCardForm(frame, {
+      ["cc-csc"]: 123,
+      ...PTU.BasicCards.JaneMasterCard,
+    }, cardOptions);
 
     await verifyCardNetwork(frame, cardOptions);
     await verifyPersistCheckbox(frame, cardOptions);
@@ -650,7 +653,10 @@ add_task(async function test_private_card_adding() {
                                                 "Check card page state");
     });
 
-    await fillInCardForm(frame, PTU.BasicCards.JohnDoe);
+    await fillInCardForm(frame, {
+      ["cc-csc"]: "999",
+      ...PTU.BasicCards.JohnDoe,
+    });
 
     await spawnPaymentDialogTask(frame, async function() {
       let {

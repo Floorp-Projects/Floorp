@@ -252,11 +252,12 @@ LIRGeneratorShared::assignSnapshot(LInstruction* ins, BailoutKind kind)
     MOZ_ASSERT(ins->id() == 0);
 
     LSnapshot* snapshot = buildSnapshot(ins, lastResumePoint_, kind);
-    if (snapshot) {
-        ins->assignSnapshot(snapshot);
-    } else {
+    if (!snapshot) {
         abort(AbortReason::Alloc, "buildSnapshot failed");
+        return;
     }
+
+    ins->assignSnapshot(snapshot);
 }
 
 void
@@ -278,6 +279,7 @@ LIRGeneratorShared::assignSafepoint(LInstruction* ins, MInstruction* mir, Bailou
 
     if (!lirGraph_.noteNeedsSafepoint(ins)) {
         abort(AbortReason::Alloc, "noteNeedsSafepoint failed");
+        return;
     }
 }
 

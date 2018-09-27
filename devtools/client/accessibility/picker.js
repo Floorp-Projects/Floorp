@@ -141,7 +141,8 @@ class Picker {
 
     await this.walker.cancelPick();
 
-    this._telemetry.toolClosed("accessibility_picker");
+    this._telemetry.toolClosed(
+      "accessibility_picker", this.toolbox.sessionId, this);
 
     this.walker.off("picker-accessible-hovered", this.onPickerAccessibleHovered);
     this.walker.off("picker-accessible-picked", this.onPickerAccessiblePicked);
@@ -172,7 +173,8 @@ class Picker {
 
     await this.walker.pick(doFocus);
 
-    this._telemetry.toolOpened("accessibility_picker");
+    this._telemetry.toolOpened(
+      "accessibility_picker", this.toolbox.sessionId, this);
 
     this.emit("picker-started");
   }
