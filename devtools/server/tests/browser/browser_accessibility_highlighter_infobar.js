@@ -10,7 +10,7 @@ const { truncateString } = require("devtools/shared/inspector/utils");
 const { MAX_STRING_LENGTH } = require("devtools/server/actors/highlighters/utils/accessibility");
 
 add_task(async function() {
-  const { target, walker, accessibility } =
+  const { client, walker, accessibility } =
     await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility_infobar.html");
 
   const a11yWalker = await accessibility.getWalker();
@@ -25,7 +25,7 @@ add_task(async function() {
 
   await accessibility.disable();
   await waitForA11yShutdown();
-  await target.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 

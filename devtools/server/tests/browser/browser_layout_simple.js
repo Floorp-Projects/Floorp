@@ -7,7 +7,7 @@
 // Simple checks for the LayoutActor and GridActor
 
 add_task(async function() {
-  const {target, walker, layout} = await initLayoutFrontForUrl(
+  const {client, walker, layout} = await initLayoutFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 
   ok(layout, "The LayoutFront was created");
@@ -26,6 +26,6 @@ add_task(async function() {
   ok(Array.isArray(grids), "An array of grids was returned");
   is(grids.length, 0, "0 grids have been returned for the invalid node");
 
-  await target.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

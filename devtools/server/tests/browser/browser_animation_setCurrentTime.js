@@ -7,12 +7,12 @@
 // Check that the AnimationsActor allows changing many players' currentTimes at once.
 
 add_task(async function() {
-  const {target, walker, animations} =
+  const {client, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   await testSetCurrentTimes(walker, animations);
 
-  await target.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 

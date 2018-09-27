@@ -25,12 +25,10 @@ let gInspectee = null;
 
 addTest(function setup() {
   const url = document.getElementById("inspectorContent").href;
-  attachURL(url, async function(err, client, tab, doc) {
+  attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    const {TargetFactory} = require("devtools/client/framework/target");
-    const target = await TargetFactory.forTab(tab);
-    await target.attach();
-    const inspectorFront = target.getFront("inspector");
+    const {InspectorFront} = require("devtools/shared/fronts/inspector");
+    const inspectorFront = InspectorFront(client, tab);
     promiseDone(inspectorFront.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
       gWalker = walker;
