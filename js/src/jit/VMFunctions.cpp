@@ -738,7 +738,7 @@ GetDynamicNamePure(JSContext* cx, JSObject* envChain, JSString* str, Value* vp)
     JSObject* scope = nullptr;
     JSObject* pobj = nullptr;
     if (LookupNameNoGC(cx, atom->asPropertyName(), envChain, &scope, &pobj, &prop)) {
-        return FetchNameNoGC(pobj, prop, MutableHandleValue::fromMarkedLocation(vp));
+        return FetchNameNoGC(pobj, prop, vp);
     }
     return false;
 }
