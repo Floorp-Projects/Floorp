@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {InspectorFront} = require("devtools/shared/fronts/inspector");
 const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar>" +
                  "<div id='baz'></div><body></html>";
 
@@ -16,7 +15,7 @@ add_task(async function() {
 async function runTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   await target.attach();
-  const inspector = InspectorFront(target.client, target.form);
+  const inspector = target.getFront("inspector");
   const walker = await inspector.getWalker();
   const {ed, win, edWin} = await setup(null, {
     autocomplete: true,
