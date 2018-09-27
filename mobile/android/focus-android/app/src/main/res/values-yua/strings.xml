@@ -146,6 +146,7 @@
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n "<li>Kexi&#8217; wa k&#8217;&#225;abet a ts&#8217;a&#8217;ik y&#225;anal ba&#8217;il ti&#8217; a n&#250;ukulil uti&#8217;al u beytal a je&#8217;ik le tseel weba&#8217;.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">K’aschajij le nuupankil uts ka’acho’</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n "<li>Le je&#8217;ela&#8217; kexi&#8217; wa u t&#225;alamil le meyajta&#8217;al internet ti&#8217; a n&#250;ukulila&#8217;, wa kex y&#225;an m&#225;ax tun ts&#8217;&#225;akuba&#8217;aj bey u nuupankil internet ti&#8217; a n&#250;ukulila&#8217;.</li>"\n "<li>Wa ts&#8217;&#243;ok a y&#224;ax meyajtik le nuupankil internet ti&#8217; a n&#250;ukulila&#8217;, kexi&#8217; wa le t&#225;alamila&#8217; chen jun s&#250;utuk. Ju beytal a ka&#8217;a je&#8217;ik ich jun s&#250;utuk tu ka&#8217;aten.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Yáan u táalamil ma’ u cha’ik a je’ik le tseel weba’.</string>
   <string name="contextmenu_link_share">Túuxta’ak le nuupankila’</string>
   <string name="contextmenu_link_copy">Ka’a ts’íibta’ak le k’áaba’ ti’ le nuupankila’</string>

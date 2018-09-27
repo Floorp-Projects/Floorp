@@ -216,8 +216,18 @@
   <string name="biometric_auth_image_description">Texhlal u vi\' q\'ab\'e\'</string>
   <string name="biometric_auth_not_recognized_error">Ye\' ni texhla u vi\' aq\'ab\'e\'. B\'an unpajte.</string>
   <string name="biometric_auth_moved_too_quickly">Oora kuxh kat atiinsa u vi\' aq\'ab\'e\'. B\'an unpajte.</string>
+  <string name="enable_search_suggestion_title">Nasa\' uva\' la inachonsa see ti\' unq\'a vee\' nachuke\'?</string>
+  <string name="enable_search_suggestion_subtitle">Aq\'al uva\' la nachonsal see, %1$s la taq\'en u vee\' natz\'ib\'aku\' tu k\'uchul tetze\' uve\' ni chukun uve\' kat atxaaa. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Chus nimate</string>
   <string name="enable_search_suggestions_no">Ye\'le</string>
   <string name="enable_search_suggestions_yes">Kanoj</string>
+  <string name="no_suggestions_message">At jununil unq\'a taq\'onb\'ale\' ye\' ni k\'uchun u nachonsal tetze\'.</string>
   <string name="dismiss_no_suggestions_prompt_button">Ye\' kuxh eetz sti\'</string>
+  <string name="tip_disable_tracking_protection">Ni kuxh iyane\'?\n Eesa u kach\'ub\' chukb\'al tetze\'</string>
+  <string name="tip_add_to_homescreen">Oora kuxh la ok axh stuul tul pajul kuxh la laa unq\'a vee\' uve\' pal chit ab\'anb\'eta\'%1$s Laa Menú &gt; Aq\'kan ti xe\'teb\'al</string>
+  <string name="tip_set_default_browser">Jaj Junun u k\'uchb\'al chukb\'al tetze\' tu %1$s\n Aq\'kan u %1$se\' uva\' a\' chite\' la b\'anb\'e</string>
+  <string name="tip_autocomplete_url">B\'an atz\'ajsat unq\'a URLs ti\' unq\'a vee\' uve\' pal chit ab\'anb\'eta\'\n Laaku\' kam kuxh URL tan u k\'uchb\'al ixaansal tetze\'</string>
+  <string name="tip_open_in_new_tab">Jaj uma\'t ak\' chukb\'al tetz\n Laaku\' ab\'iste kuxh chukb\'al tetz</string>
+  <string name="tip_request_desktop">Nasa\' eelat ve\'te\' uva\' at ve\'t kan svatz?%1$s Menú &gt; La jaj ve\'te\' aq\'al uva\' la kaa svatz</string>
+  <string name="tip_disable_tips">Eesel unq\'a alol isuuchile\' uve\' ni kuxh tul ti xe\'teb\'al u %1$se\'</string>
 </resources>
