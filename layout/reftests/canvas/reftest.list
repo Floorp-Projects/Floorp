@@ -70,7 +70,7 @@ random != text-emoji.html text-emoji-notref.html
 == evenodd-fill-1.html evenodd-fill-ref.html
 
 == dash-sanity.html data:text/html,<body>Pass
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||skiaContent,0-9,0-470) random-if(Android) fails-if(webrender) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||skiaContent,0-9,0-470) random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
 
 == ctm-sanity.html data:text/html,<body>Pass
 == ctm-singular-sanity.html data:text/html,<body>Pass
