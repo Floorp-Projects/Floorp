@@ -256,7 +256,7 @@ private class MockedTabsTray : TabsTray {
 
     override fun register(observer: TabsTray.Observer) {}
 
-    override fun register(observer: TabsTray.Observer, owner: LifecycleOwner) {}
+    override fun register(observer: TabsTray.Observer, owner: LifecycleOwner, autoPause: Boolean) {}
 
     override fun register(observer: TabsTray.Observer, view: View) {}
 
@@ -267,4 +267,8 @@ private class MockedTabsTray : TabsTray {
     override fun notifyObservers(block: TabsTray.Observer.() -> Unit) {}
 
     override fun <R> wrapConsumers(block: TabsTray.Observer.(R) -> Boolean): List<(R) -> Boolean> = emptyList()
+
+    override fun pauseObserver(observer: TabsTray.Observer) {}
+
+    override fun resumeObserver(observer: TabsTray.Observer) {}
 }

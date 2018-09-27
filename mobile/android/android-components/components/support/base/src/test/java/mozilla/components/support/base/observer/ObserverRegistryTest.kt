@@ -18,6 +18,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -292,11 +295,80 @@ class ObserverRegistryTest {
         assertEquals(valueToConsume, observer3.notifiedWith!!)
     }
 
+    @Test
+    fun `observer is paused on lifecycle event (ON_PAUSE)`() {
+        val mockedLifecycle = MockedLifecycle(Lifecycle.State.STARTED)
+        val owner = MockedLifecycleOwner(mockedLifecycle)
+
+        val registry = spy(ObserverRegistry<TestObserver>())
+
+        val observer = TestObserver()
+        registry.register(observer, owner, autoPause = false)
+
+        val autoPausedObserver = TestObserver()
+        registry.register(autoPausedObserver, owner, autoPause = true)
+
+        // Both observers get notified
+        assertFalse(observer.notified)
+        assertFalse(autoPausedObserver.notified)
+        registry.notifyObservers { somethingChanged() }
+        assertTrue(observer.notified)
+        assertTrue(autoPausedObserver.notified)
+
+        // Pause observers
+        mockedLifecycle.observer?.onStateChanged(null, Lifecycle.Event.ON_PAUSE)
+
+        observer.notified = false
+        autoPausedObserver.notified = false
+        registry.notifyObservers { somethingChanged() }
+
+        // (Regular) observer still gets notified
+        verify(registry, never()).pauseObserver(observer)
+        assertTrue(observer.notified)
+
+        // (Auto-paused) observer is now paused and no longer gets notified
+        verify(registry).pauseObserver(autoPausedObserver)
+        assertFalse(autoPausedObserver.notified)
+    }
+
+    @Test
+    fun `observer is resumed on lifecycle event (ON_RESUME)`() {
+        val mockedLifecycle = MockedLifecycle(Lifecycle.State.STARTED)
+        val owner = MockedLifecycleOwner(mockedLifecycle)
+
+        val registry = spy(ObserverRegistry<TestIntObserver>())
+        val observer = TestIntObserver()
+        registry.register(observer, owner, autoPause = true)
+
+        // Pause observer
+        mockedLifecycle.observer?.onStateChanged(null, Lifecycle.Event.ON_PAUSE)
+        registry.notifyObservers { somethingChanged(1) }
+        registry.notifyObservers { somethingChanged(2) }
+        registry.notifyObservers { somethingChanged(3) }
+        assertEquals(emptyList<Int>(), observer.notified)
+
+        // Resume observer
+        mockedLifecycle.observer?.onStateChanged(null, Lifecycle.Event.ON_RESUME)
+
+        // Resumed observer gets notified
+        registry.notifyObservers { somethingChanged(4) }
+        assertEquals(listOf(4), observer.notified)
+        verify(registry).resumeObserver(observer)
+    }
+
     private class TestObserver {
         var notified: Boolean = false
 
         fun somethingChanged() {
             notified = true
+        }
+    }
+
+    private class TestIntObserver {
+        var notified: List<Int> = listOf()
+
+        fun somethingChanged(value: Int) {
+            notified += value
         }
     }
 

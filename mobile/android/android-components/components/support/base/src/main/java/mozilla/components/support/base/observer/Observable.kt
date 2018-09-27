@@ -18,6 +18,8 @@ import android.view.View
 interface Observable<T> {
     /**
      * Registers an observer to get notified about changes.
+     *
+     * @param observer the observer to register.
      */
     fun register(observer: T)
 
@@ -26,18 +28,28 @@ interface Observable<T> {
      *
      * The observer will automatically unsubscribe if the lifecycle of the provided LifecycleOwner
      * becomes DESTROYED.
+     *
+     * @param observer the observer to register.
+     * @param owner the lifecycle owner the provided observer is bound to.
+     * @param autoPause whether or not the observer should automatically be
+     * paused/resumed with the bound lifecycle.
      */
-    fun register(observer: T, owner: LifecycleOwner)
+    fun register(observer: T, owner: LifecycleOwner, autoPause: Boolean = false)
 
     /**
      * Registers an observer to get notified about changes.
      *
      * The observer will automatically unsubscribe if the provided view gets detached.
+     *
+     * @param observer the observer to register.
+     * @param view the view the provided observer is bound to.
      */
     fun register(observer: T, view: View)
 
     /**
      * Unregisters an observer.
+     *
+     * @param observer the observer to unregister.
      */
     fun unregister(observer: T)
 
@@ -47,9 +59,28 @@ interface Observable<T> {
     fun unregisterObservers()
 
     /**
-     * Notify all registered observers about a change.
+     * Notifies all registered observers about a change.
+     *
+     * @param block the notification (method on the observer to be invoked).
      */
     fun notifyObservers(block: T.() -> Unit)
+
+    /**
+     * Pauses the provided observer. No notifications will be sent to this
+     * observer until [resumeObserver] is called.
+     *
+     * @param observer the observer to pause.
+     */
+    fun pauseObserver(observer: T)
+
+    /**
+     * Resumes the provided observer. Notifications sent since it
+     * was last paused (see [pauseObserver]]) are lost and will not be
+     * re-delivered.
+     *
+     * @param observer the observer to resume.
+     */
+    fun resumeObserver(observer: T)
 
     /**
      * Returns a list of lambdas wrapping a consuming method of an observer.
