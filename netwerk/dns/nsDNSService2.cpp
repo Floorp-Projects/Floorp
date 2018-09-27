@@ -67,22 +67,20 @@ public:
     NS_DECL_NSIDNSRECORD
 
     explicit nsDNSRecord(nsHostRecord *hostRecord)
-        : mIter(nullptr)
+        : mHostRecord(hostRecord)
+        , mIter(nullptr)
         , mIterGenCnt(-1)
-        , mDone(false)
-    {
-        mHostRecord = do_QueryInterface(hostRecord);
-    }
+        , mDone(false) {}
 
 private:
     virtual ~nsDNSRecord() = default;
 
-    nsCOMPtr<AddrHostRecord>  mHostRecord;
-    NetAddrElement            *mIter;
-    int                        mIterGenCnt; // the generation count of
-                                            // mHostRecord->addr_info when we
-                                            // start iterating
-    bool                       mDone;
+    RefPtr<nsHostRecord>  mHostRecord;
+    NetAddrElement         *mIter;
+    int                     mIterGenCnt; // the generation count of
+                                         // mHostRecord->addr_info when we
+                                         // start iterating
+    bool                    mDone;
 };
 
 NS_IMPL_ISUPPORTS(nsDNSRecord, nsIDNSRecord)
@@ -316,13 +314,12 @@ public:
     NS_DECL_NSIDNSBYTYPERECORD
 
     explicit nsDNSByTypeRecord(nsHostRecord *hostRecord)
-    {
-        mHostRecord = do_QueryInterface(hostRecord);
-    }
+      : mHostRecord(hostRecord)
+    {}
 
 private:
     virtual ~nsDNSByTypeRecord() = default;
-    nsCOMPtr<TypeHostRecord>  mHostRecord;
+    RefPtr<nsHostRecord>  mHostRecord;
 };
 
 NS_IMPL_ISUPPORTS(nsDNSByTypeRecord, nsIDNSByTypeRecord)
@@ -331,7 +328,8 @@ NS_IMETHODIMP
 nsDNSByTypeRecord::GetRecords(nsTArray<nsCString> &aRecords)
 {
    // deep copy
-   mHostRecord->GetRecords(aRecords);
+   MutexAutoLock lock(mHostRecord->mRequestByTypeResultLock);
+   aRecords = mHostRecord->mRequestByTypeResult;
    return NS_OK;
 }
 
@@ -339,7 +337,11 @@ NS_IMETHODIMP
 nsDNSByTypeRecord::GetRecordsAsOneString(nsACString &aRecords)
 {
   // deep copy
-  mHostRecord->GetRecordsAsOneString(aRecords);
+  MutexAutoLock lock(mHostRecord->mRequestByTypeResultLock);
+
+  for (uint32_t i = 0; i < mHostRecord->mRequestByTypeResult.Length(); i++) {
+    aRecords.Append(mHostRecord->mRequestByTypeResult[i]);
+  }
   return NS_OK;
 }
 
