@@ -6,6 +6,10 @@ categories: releases
 author: arturo
 ---
 
+# 0.25.1 (2018-09-27)
+
+* **browser-engine-system**: Fixed a `NullPointerException` in `SystemEngineSession.captureThumbnail()`.
+
 # 0.25 (2018-09-26)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.24...v0.25),
