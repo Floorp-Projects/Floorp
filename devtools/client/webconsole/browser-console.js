@@ -69,7 +69,9 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
       this.destroy();
     }, {once: true});
 
-    this._telemetry.toolOpened("browserconsole");
+    // browserconsole is not connected with a toolbox so we pass -1 as the
+    // toolbox session id.
+    this._telemetry.toolOpened("browserconsole", -1, this);
 
     this._bcInit = this.$init();
     return this._bcInit;
@@ -89,7 +91,10 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
     }
 
     this._bcDestroyer = (async () => {
-      this._telemetry.toolClosed("browserconsole");
+      // browserconsole is not connected with a toolbox so we pass -1 as the
+      // toolbox session id.
+      this._telemetry.toolClosed("browserconsole", -1, this);
+
       await this.$destroy();
       await this.target.client.close();
       this.hudService._browserConsoleID = null;

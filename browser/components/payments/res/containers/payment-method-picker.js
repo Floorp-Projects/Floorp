@@ -25,6 +25,7 @@ export default class PaymentMethodPicker extends RichPicker {
     this.securityCodeInput.pattern = "[0-9]{3,}";
     this.securityCodeInput.classList.add("security-code");
     this.securityCodeInput.addEventListener("change", this);
+    this.securityCodeInput.addEventListener("input", this);
   }
 
   connectedCallback() {
@@ -74,6 +75,11 @@ export default class PaymentMethodPicker extends RichPicker {
                       `does not exist in the payment method picker`);
     }
 
+    let securityCodeState = state[this.selectedStateKey + "SecurityCode"];
+    if (securityCodeState && securityCodeState != this.securityCodeInput.value) {
+      this.securityCodeInput.defaultValue = securityCodeState;
+    }
+
     super.render(state);
   }
 
@@ -88,7 +94,7 @@ export default class PaymentMethodPicker extends RichPicker {
     }
 
     let acceptedNetworks = paymentRequest.getAcceptedNetworks(state.request);
-    let selectedCard = state.savedBasicCards[selectedOption.value];
+    let selectedCard = paymentRequest.getBasicCards(state)[selectedOption.value];
     let isSupported = selectedCard["cc-type"] &&
                       acceptedNetworks.includes(selectedCard["cc-type"]);
     return isSupported;
@@ -100,8 +106,9 @@ export default class PaymentMethodPicker extends RichPicker {
 
   handleEvent(event) {
     switch (event.type) {
+      case "input":
       case "change": {
-        this.onChange(event);
+        this.onInputOrChange(event);
         break;
       }
       case "click": {
@@ -111,7 +118,7 @@ export default class PaymentMethodPicker extends RichPicker {
     }
   }
 
-  onChange({target}) {
+  onInputOrChange({target}) {
     let selectedKey = this.selectedStateKey;
     let stateChange = {};
 
@@ -141,7 +148,9 @@ export default class PaymentMethodPicker extends RichPicker {
       page: {
         id: "basic-card-page",
       },
-      "basic-card-page": {},
+      "basic-card-page": {
+        selectedStateKey: this.selectedStateKey,
+      },
     };
 
     switch (target) {

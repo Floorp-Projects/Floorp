@@ -34,6 +34,10 @@ add_task(async function test_page_contextmenu() {
 add_task(async function test_link_contextmenu() {
   const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: remoteClientsFixture,
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
+  let expectation = sandbox.mock(gSync)
+                           .expects("sendTabToDevice")
+                           .once()
+                           .withExactArgs("https://www.example.org/", [{id: 1, name: "Foo"}], "Click on me!!");
 
   // Add a link to the page
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
@@ -44,17 +48,13 @@ add_task(async function test_link_contextmenu() {
     content.document.body.appendChild(a);
   });
 
-  await openContentContextMenu("#testingLink", "context-sendlinktodevice");
-  is(document.getElementById("context-sendlinktodevice").hidden, false, "Send tab to device is shown");
-  is(document.getElementById("context-sendlinktodevice").disabled, false, "Send tab to device is enabled");
-  checkPopup([
-    { label: "Foo" },
-    { label: "Bar" },
-    "----",
-    { label: "Send to All Devices" },
-  ]);
+  await openContentContextMenu("#testingLink", "context-sendlinktodevice", "context-sendlinktodevice-popup");
+  is(document.getElementById("context-sendlinktodevice").hidden, false, "Send link to device is shown");
+  is(document.getElementById("context-sendlinktodevice").disabled, false, "Send link to device is enabled");
+  document.getElementById("context-sendlinktodevice-popup").querySelector("menuitem").click();
   await hideContentContextMenu();
 
+  expectation.verify();
   sandbox.restore();
 });
 

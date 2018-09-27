@@ -20,33 +20,17 @@ function WebAudioEditorPanel(iframeWindow, toolbox) {
 exports.WebAudioEditorPanel = WebAudioEditorPanel;
 
 WebAudioEditorPanel.prototype = {
-  open: function() {
-    let targetPromise;
+  open: async function() {
+    this.panelWin.gToolbox = this._toolbox;
+    this.panelWin.gTarget = this.target;
 
-    // Local debugging needs to make the target remote.
-    if (!this.target.isRemote) {
-      targetPromise = this.target.attach();
-    } else {
-      targetPromise = Promise.resolve(this.target);
-    }
+    this.panelWin.gFront = new WebAudioFront(this.target.client, this.target.form);
 
-    return targetPromise
-      .then(() => {
-        this.panelWin.gToolbox = this._toolbox;
-        this.panelWin.gTarget = this.target;
+    await this.panelWin.startupWebAudioEditor();
 
-        this.panelWin.gFront = new WebAudioFront(this.target.client, this.target.form);
-        return this.panelWin.startupWebAudioEditor();
-      })
-      .then(() => {
-        this.isReady = true;
-        this.emit("ready");
-        return this;
-      })
-      .catch(function onError(aReason) {
-        console.error("WebAudioEditorPanel open failed. " +
-                      aReason.error + ": " + aReason.message);
-      });
+    this.isReady = true;
+    this.emit("ready");
+    return this;
   },
 
   // DevToolPanel API

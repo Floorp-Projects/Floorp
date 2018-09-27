@@ -14,4 +14,5 @@ EXTRA_JS_MODULES += [
     'UrlbarView.jsm',
 ]
 
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

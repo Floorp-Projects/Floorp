@@ -42,18 +42,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //
  * // NOTE: You CAN send properties before preparing the event.
  * //
- * telemetry.preparePendingEvent("devtools.main", "pause", "debugger", null, [
+ * telemetry.preparePendingEvent(this, "pause", "debugger", null, [
  *   "reason", "collapsed_callstacks"
  * ]);
  *
  * // Elsewhere in another codepath send the reason property
  * telemetry.addEventProperty(
- *   "devtools.main", "pause", "debugger", null, "reason", "debugger-statement"
+ *   this, "pause", "debugger", null, "reason", "debugger-statement"
  * );
  *
  * // Elsewhere in another codepath send the collapsed_callstacks property
  * telemetry.addEventProperty(
- *   "devtools.main", "pause", "debugger", null, "collapsed_callstacks", 1
+ *   this, "pause", "debugger", null, "collapsed_callstacks", 1
  * );
  */
 const telemetry = new _telemetry2.default();
@@ -75,7 +75,7 @@ function recordEvent(eventName, fields = {}) {
   /* eslint-disable camelcase */
 
 
-  telemetry.recordEvent("devtools.main", eventName, "debugger", null, {
+  telemetry.recordEvent(eventName, "debugger", null, {
     session_id: sessionId,
     ...fields
   });

@@ -53,6 +53,7 @@ DevToolsModules(
     'undo.js',
     'unicode-url.js',
     'view-source.js',
+    'WeakMapMap.js',
     'webgl-utils.js',
     'zoom-keys.js',
 )

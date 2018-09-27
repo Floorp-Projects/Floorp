@@ -4825,7 +4825,7 @@ LIRGenerator::lowerWasmCall(MWasmCall* ins, bool needsBoundsCheck)
 {
     auto* lir = allocateVariadic<LClass>(ins->numOperands(), needsBoundsCheck);
     if (!lir) {
-        abort(AbortReason::Alloc, "Couldn't allocate for MWasmCall");
+        abort(AbortReason::Alloc, "OOM: LIRGenerator::lowerWasmCall");
         return nullptr;
     }
 
@@ -5199,6 +5199,8 @@ LIRGeneratorShared::visitEmittedAtUses(MInstruction* ins)
 bool
 LIRGenerator::visitInstruction(MInstruction* ins)
 {
+    MOZ_ASSERT(!errored());
+
     if (ins->isRecoveredOnBailout()) {
         MOZ_ASSERT(!JitOptions.disableRecoverIns);
         return true;
@@ -5446,7 +5448,7 @@ LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins)
         lir = allocateVariadic<LIonToWasmCall>(ins->numOperands(), scratch, fp);
     }
     if (!lir) {
-        abort(AbortReason::Alloc, "Couldn't allocate for LIonToWasmCallBase");
+        abort(AbortReason::Alloc, "OOM: LIRGenerator::visitIonToWasmCall");
         return;
     }
 

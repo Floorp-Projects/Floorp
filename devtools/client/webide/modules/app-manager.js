@@ -152,16 +152,17 @@ var AppManager = exports.AppManager = {
       this.preferenceFront = null;
     } else {
       const response = await this.connection.client.listTabs();
-      // RootClient.getRoot request was introduced in FF59, but RootClient.getFront
-      // expects it to work. Override its root form with the listTabs results (which is
-      // an equivalent) in orfer to fix RootClient.getFront.
-      Object.defineProperty(this.connection.client.mainRoot, "rootForm", {
-        value: response
-      });
       this._listTabsResponse = response;
-      this.deviceFront = await this.connection.client.mainRoot.getFront("device");
-      this.preferenceFront = await this.connection.client.mainRoot.getFront("preference");
-      this._recordRuntimeInfo();
+      try {
+        this.deviceFront = await this.connection.client.mainRoot.getFront("device");
+        this.preferenceFront = await this.connection.client.mainRoot.getFront("preference");
+        this._recordRuntimeInfo();
+      } catch (e) {
+        // This may fail on <FF55 (because of lack of bug 1352157) but we will want to
+        // emit runtime-global-actors in order to call checkRuntimeVersion and display
+        // the compatibility popup.
+        console.error(e);
+      }
       this.update("runtime-global-actors");
     }
 
@@ -510,10 +511,6 @@ var AppManager = exports.AppManager = {
            this.connection.client.mainRoot.traits.allowChromeProcess ||
            (this._listTabsResponse &&
             this._listTabsResponse.consoleActor);
-  },
-
-  get listTabsForm() {
-    return this._listTabsResponse;
   },
 
   disconnectRuntime: function() {

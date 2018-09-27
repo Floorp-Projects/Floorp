@@ -89,14 +89,22 @@ PRG_clear(PRG prg)
 static SECStatus
 PRG_get_bytes_internal(void* prg_vp, unsigned char* bytes, size_t len)
 {
+  SECStatus rv = SECSuccess;
   PRG prg = (PRG)prg_vp;
+  unsigned char* in = NULL;
 
-  unsigned char in[len];
+  P_CHECKA(in = calloc(len, sizeof(unsigned char)));
   memset(in, 0, len);
 
   int outlen;
-  SECStatus rv = PK11_CipherOp(prg->ctx, bytes, &outlen, len, in, len);
-  return (rv != SECSuccess || (size_t)outlen != len) ? SECFailure : SECSuccess;
+  P_CHECKC(PK11_CipherOp(prg->ctx, bytes, &outlen, len, in, len));
+  P_CHECKCB((size_t)outlen == len);
+
+cleanup:
+  if (in)
+    free(in);
+
+  return rv;
 }
 
 SECStatus

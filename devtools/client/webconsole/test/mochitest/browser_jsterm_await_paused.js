@@ -5,6 +5,12 @@
 
 "use strict";
 
+// Import helpers for the new debugger
+/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
+  this);
+
 const TEST_URI =
   `data:text/html;charset=utf-8,Web Console test top-level await when debugger paused`;
 
@@ -21,41 +27,53 @@ add_task(async function() {
 });
 
 async function performTests() {
+  // Force the split console to be closed.
+  await pushPref("devtools.toolbox.splitconsoleEnabled", false);
   const hud = await openNewTabAndConsole(TEST_URI);
   const {jsterm} = hud;
 
   const pauseExpression = `(() => {
-    var foo = "bar";
+    var foo = ["bar"];
     /* Will pause the script and open the debugger panel */
     debugger;
+    return "pauseExpression-res";
   })()`;
   jsterm.execute(pauseExpression);
 
   // wait for the debugger to be opened and paused.
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
-  const dbg = await waitFor(() => toolbox.getPanel("jsdebugger"));
-  await waitFor(() => dbg._selectors.isPaused(dbg._getState()));
-  await toolbox.toggleSplitConsole();
 
-  const onMessage = waitForMessage(hud, "res: bar");
+  await waitFor(() => toolbox.getPanel("jsdebugger"));
+  const dbg = createDebuggerContext(toolbox);
+  await waitForPaused(dbg);
+
+  await toolbox.openSplitConsole();
+
   const awaitExpression = `await new Promise(res => {
-    setTimeout(() => res("res: " + foo), 1000);
+    setTimeout(() => res(["res", ...foo]), 1000);
   })`;
-  await jsterm.execute(awaitExpression);
+
+  const onAwaitResultMessage = waitForMessage(hud, `[ "res", "bar" ]`, ".message.result");
+  jsterm.execute(awaitExpression);
+  // We send an evaluation just after the await one to ensure the await evaluation was
+  // done. We can't await on the previous execution because it waits for the result to
+  // be send, which won't happen until we resume the debugger.
+  await jsterm.execute(`"smoke"`);
 
   // Click on the resume button to not be paused anymore.
-  dbg.panelWin.document.querySelector("button.resume").click();
+  await resume(dbg);
 
-  await onMessage;
-  const messages = hud.ui.outputNode.querySelectorAll(".message .message-body");
+  await onAwaitResultMessage;
+  const messages = hud.ui.outputNode.querySelectorAll(".message.result .message-body");
   const messagesText = Array.from(messages).map(n => n.textContent);
   const expectedMessages = [
-    pauseExpression,
-    awaitExpression,
-    // The result of pauseExpression
-    "undefined",
-    "res: bar",
+    // Result of "smoke"
+    `"smoke"`,
+    // The result of pauseExpression (after smoke since pauseExpression iife was paused)
+    `"pauseExpression-res"`,
+    // Result of await
+    `Array [ "res", "bar" ]`,
   ];
   is(JSON.stringify(messagesText, null, 2), JSON.stringify(expectedMessages, null, 2),
     "The output contains the the expected messages, in the expected order");

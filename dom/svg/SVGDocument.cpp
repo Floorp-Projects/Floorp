@@ -40,7 +40,8 @@ SVGDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
   nsresult rv = CloneDocHelper(clone.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(clone.get(), aResult);
+  clone.forget(aResult);
+  return NS_OK;
 }
 
 } // namespace dom

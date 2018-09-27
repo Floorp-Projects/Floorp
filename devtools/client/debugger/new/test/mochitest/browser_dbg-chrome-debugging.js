@@ -8,7 +8,6 @@
  */
 
 var gClient, gThreadClient;
-var gNewGlobal = promise.defer();
 var gNewChromeSource = promise.defer();
 
 var { DevToolsLoader } = ChromeUtils.import(
@@ -35,12 +34,6 @@ async function attachThread(client, actor) {
   return threadClient;
 }
 
-function onNewGlobal() {
-  ok(true, "Received a new chrome global.");
-  gClient.removeListener("newGlobal", onNewGlobal);
-  gNewGlobal.resolve();
-}
-
 function onNewSource(event, packet) {
   if (packet.source.url.startsWith("chrome:")) {
     ok(true, "Received a new chrome source: " + packet.source.url);
@@ -58,7 +51,6 @@ function resumeAndCloseConnection() {
 registerCleanupFunction(function() {
   gClient = null;
   gThreadClient = null;
-  gNewGlobal = null;
   gNewChromeSource = null;
 
   customLoader = null;
@@ -78,8 +70,7 @@ add_task(async function() {
 
   // listen for a new source and global
   gThreadClient.addListener("newSource", onNewSource);
-  gClient.addListener("newGlobal", onNewGlobal);
-  await promise.all([gNewGlobal.promise, gNewChromeSource.promise]);
+  await gNewChromeSource.promise;
 
   await resumeAndCloseConnection();
 });

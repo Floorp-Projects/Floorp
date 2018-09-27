@@ -1322,12 +1322,9 @@ nsWindowWatcher::GetWindowEnumerator(nsISimpleEnumerator** aResult)
   }
 
   MutexAutoLock lock(mListLock);
-  nsWatcherWindowEnumerator* enumerator = new nsWatcherWindowEnumerator(this);
-  if (enumerator) {
-    return CallQueryInterface(enumerator, aResult);
-  }
-
-  return NS_ERROR_OUT_OF_MEMORY;
+  RefPtr<nsWatcherWindowEnumerator> enumerator = new nsWatcherWindowEnumerator(this);
+  enumerator.forget(aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2094,7 +2091,8 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
         doc->SetIsInitialDocument(true);
       }
     }
-    rv = CallQueryInterface(piOpenedWindow, aOpenedWindow);
+    piOpenedWindow.forget(aOpenedWindow);
+    rv = NS_OK;
   }
   return rv;
 }
@@ -2457,10 +2455,8 @@ nsWindowWatcher::GetWindowTreeItem(mozIDOMWindowProxy* aWindow,
   *aResult = 0;
 
   if (aWindow) {
-    nsIDocShell* docshell = nsPIDOMWindowOuter::From(aWindow)->GetDocShell();
-    if (docshell) {
-      CallQueryInterface(docshell, aResult);
-    }
+    nsCOMPtr<nsIDocShell> docshell = nsPIDOMWindowOuter::From(aWindow)->GetDocShell();
+    docshell.forget(aResult);
   }
 }
 

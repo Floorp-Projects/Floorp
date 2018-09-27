@@ -34,11 +34,6 @@ ShaderEditorPanel.prototype = {
    *         A promise that is resolved when the Shader Editor completes opening.
    */
   async open() {
-    // Local debugging needs to make the target remote.
-    if (!this.target.isRemote) {
-      await this.target.attach();
-    }
-
     this.front = new WebGLFront(this.target.client, this.target.form);
     this.shadersListView = new ShadersListView();
     this.eventsHandler = new EventsHandler();

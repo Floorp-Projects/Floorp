@@ -35,7 +35,6 @@ function test() {
     toggleAllTools(true);
     const tab = await addTab("about:blank");
     const target = await TargetFactory.forTab(tab);
-    await target.attach();
     await performChecks(target);
     gBrowser.removeCurrentTab();
     toggleAllTools(false);

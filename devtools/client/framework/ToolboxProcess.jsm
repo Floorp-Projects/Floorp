@@ -302,7 +302,9 @@ BrowserToolboxProcess.prototype = {
     }).then(proc => {
       this._dbgProcess = proc;
 
-      this._telemetry.toolOpened("jsbrowserdebugger");
+      // jsbrowserdebugger is not connected with a toolbox so we pass -1 as the
+      // toolbox session id.
+      this._telemetry.toolOpened("jsbrowserdebugger", -1, this);
 
       dumpn("Chrome toolbox is now running...");
       this.emit("run", this);
@@ -355,7 +357,9 @@ BrowserToolboxProcess.prototype = {
     this._dbgProcess.stdout.close();
     await this._dbgProcess.kill();
 
-    this._telemetry.toolClosed("jsbrowserdebugger");
+    // jsbrowserdebugger is not connected with a toolbox so we pass -1 as the
+    // toolbox session id.
+    this._telemetry.toolClosed("jsbrowserdebugger", -1, this);
 
     if (this.debuggerServer) {
       this.debuggerServer.off("connectionchange", this._onConnectionChange);
