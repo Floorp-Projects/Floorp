@@ -919,6 +919,9 @@ set_config('ENABLE_MARIONETTE', marionette)
 def geckodriver_default(enable_tests, target, cross_compile, hazard, asan):
     if not enable_tests:
         return False
+    # geckodriver depends on winapi 0.2.8, which doesn't work with AArch64.
+    if target.os == 'WINNT' and target.cpu == 'aarch64':
+        return False
     if hazard or target.os == 'Android' or (asan and cross_compile):
         return False
     return True

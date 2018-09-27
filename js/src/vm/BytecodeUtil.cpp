@@ -13,6 +13,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ReverseIterator.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
 
@@ -945,19 +946,17 @@ BytecodeParser::parse()
             // Note that there is no problem with code which is skipped by a thrown
             // exception but is not caught by a later handler in the same function:
             // no more code will execute, and it does not matter what is defined.
-            JSTryNote* tn = script_->trynotes()->vector;
-            JSTryNote* tnlimit = tn + script_->trynotes()->length;
-            for (; tn < tnlimit; tn++) {
-                uint32_t startOffset = script_->mainOffset() + tn->start;
+            for (const JSTryNote& tn : script_->trynotes()) {
+                uint32_t startOffset = script_->mainOffset() + tn.start;
                 if (startOffset == offset + 1) {
-                    uint32_t catchOffset = startOffset + tn->length;
-                    if (tn->kind == JSTRY_CATCH) {
+                    uint32_t catchOffset = startOffset + tn.length;
+                    if (tn.kind == JSTRY_CATCH) {
                         if (!addJump(catchOffset, &nextOffset, stackDepth, offsetStack,
                                      pc, JumpKind::TryCatch))
                         {
                             return false;
                         }
-                    } else if (tn->kind == JSTRY_FINALLY) {
+                    } else if (tn.kind == JSTRY_FINALLY) {
                         if (!addJump(catchOffset, &nextOffset, stackDepth, offsetStack,
                                      pc, JumpKind::TryFinally))
                         {
@@ -1455,15 +1454,12 @@ Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
           // with an offset. This simplifies code coverage analysis
           // based on this disassembled output.
           if (op == JSOP_TRY) {
-              TryNoteArray* trynotes = script->trynotes();
-              uint32_t i;
               size_t mainOffset = script->mainOffset();
-              for(i = 0; i < trynotes->length; i++) {
-                  JSTryNote note = trynotes->vector[i];
-                  if (note.kind == JSTRY_CATCH && note.start + mainOffset == loc + 1) {
+              for (const JSTryNote& tn : script->trynotes()) {
+                  if (tn.kind == JSTRY_CATCH && tn.start + mainOffset == loc + 1) {
                       if (!sp->jsprintf(" %u (%+d)",
-                                        unsigned(loc + note.length + 1),
-                                        int(note.length + 1)))
+                                        unsigned(loc + tn.length + 1),
+                                        int(tn.length + 1)))
                       {
                           return 0;
                       }
@@ -3120,10 +3116,8 @@ GenerateLcovInfo(JSContext* cx, JS::Realm* realm, GenericPrinter& out)
             if (!script->hasObjects()) {
                 continue;
             }
-            size_t idx = script->objects()->length;
-            while (idx--) {
-                JSObject* obj = script->getObject(idx);
-
+            auto objects = script->objects();
+            for (JSObject* obj : mozilla::Reversed(objects)) {
                 // Only continue on JSFunction objects.
                 if (!obj->is<JSFunction>()) {
                     continue;

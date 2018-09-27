@@ -46,6 +46,8 @@ def apply_patches():
     os.system("patch -p3 < allow_disabling_asm_avx2.patch")
     # Patch to add H444ToARGB() variant
     os.system("patch -p3 < add_H444ToARGB.patch")
+    # Patch to avoid selecting neon codepaths on AArch64 Windows
+    os.system("patch -p3 < aarch64-windows-noneon.patch")
 
 def update_readme(commit, commitdate):
     with open('README_MOZILLA') as f:

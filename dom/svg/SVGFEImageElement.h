@@ -76,9 +76,6 @@ public:
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
 
 private:
-  // Invalidate users of the filter containing this element.
-  void Invalidate();
-
   nsresult LoadSVGImage(bool aForce, bool aNotify);
 
 protected:
