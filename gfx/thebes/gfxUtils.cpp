@@ -1009,8 +1009,7 @@ gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
   dataSurface->Unmap();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIInputStream> imgStream;
-  CallQueryInterface(encoder.get(), getter_AddRefs(imgStream));
+  nsCOMPtr<nsIInputStream> imgStream(encoder);
   if (!imgStream) {
     return NS_ERROR_FAILURE;
   }
