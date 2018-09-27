@@ -84,7 +84,6 @@ class TestSwitchFrame(MarionetteTestCase):
         self.marionette.switch_to_frame(self.marionette.find_element(By.ID, 'iframe1'))
         kill_iframe = self.marionette.find_element(By.ID, "killIframe")
         kill_iframe.click()
-        self.marionette.find_element(By.ID, "killIframe")
         self.marionette.switch_to_frame()
         self.assertEqual(0, len(self.marionette.find_elements(By.ID, "iframe1")))
 
