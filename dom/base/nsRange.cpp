@@ -3172,7 +3172,7 @@ nsRange::GetClientRectsAndTexts(
 }
 
 nsresult
-nsRange::GetUsedFontFaces(nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
+nsRange::GetUsedFontFaces(nsLayoutUtils::UsedFontFaceList& aResult,
                           uint32_t aMaxRanges, bool aSkipCollapsedWhitespace)
 {
   NS_ENSURE_TRUE(mStart.Container(), NS_ERROR_UNEXPECTED);
@@ -3189,9 +3189,8 @@ nsRange::GetUsedFontFaces(nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
   NS_ENSURE_TRUE(mStart.Container()->IsInComposedDoc(), NS_ERROR_UNEXPECTED);
 
   // A table to map gfxFontEntry objects to InspectorFontFace objects.
-  // (We hold on to the InspectorFontFaces strongly due to the nsAutoPtrs
-  // in the nsClassHashtable, until we move them out into aResult at the end
-  // of the function.)
+  // This table does NOT own the InspectorFontFace objects, it only holds
+  // raw pointers to them. They are owned by the aResult array.
   nsLayoutUtils::UsedFontFaceTable fontFaces;
 
   RangeSubtreeIterator iter;
@@ -3217,26 +3216,23 @@ nsRange::GetUsedFontFaces(nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
          int32_t offset = startContainer == endContainer ?
            mEnd.Offset() : content->GetText()->GetLength();
          nsLayoutUtils::GetFontFacesForText(frame, mStart.Offset(), offset,
-                                            true, fontFaces, aMaxRanges,
+                                            true, aResult, fontFaces,
+                                            aMaxRanges,
                                             aSkipCollapsedWhitespace);
          continue;
        }
        if (node == endContainer) {
          nsLayoutUtils::GetFontFacesForText(frame, 0, mEnd.Offset(),
-                                            true, fontFaces, aMaxRanges,
+                                            true, aResult, fontFaces,
+                                            aMaxRanges,
                                             aSkipCollapsedWhitespace);
          continue;
        }
     }
 
-    nsLayoutUtils::GetFontFacesForFrames(frame, fontFaces, aMaxRanges,
+    nsLayoutUtils::GetFontFacesForFrames(frame, aResult, fontFaces,
+                                         aMaxRanges,
                                          aSkipCollapsedWhitespace);
-  }
-
-  // Take ownership of the InspectorFontFaces in the table and move them into
-  // the aResult outparam.
-  for (auto iter = fontFaces.Iter(); !iter.Done(); iter.Next()) {
-    aResult.AppendElement(std::move(iter.Data()));
   }
 
   return NS_OK;
