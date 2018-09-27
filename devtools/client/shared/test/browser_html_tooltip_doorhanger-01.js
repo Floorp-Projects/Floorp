@@ -40,7 +40,7 @@ async function runTests(doc) {
   const div = doc.createElementNS(HTML_NS, "div");
   div.style.width = "200px";
   div.style.height = "35px";
-  tooltip.setContent(div);
+  tooltip.panel.appendChild(div);
 
   const docBounds = doc.documentElement.getBoundingClientRect();
 

@@ -28,7 +28,8 @@ add_task(async function() {
   const tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
   const div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "100%";
-  tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
+  tooltip.panel.appendChild(div);
+  tooltip.setContentSize({width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
 
   const box1 = doc.getElementById("box1");
   const box2 = doc.getElementById("box2");

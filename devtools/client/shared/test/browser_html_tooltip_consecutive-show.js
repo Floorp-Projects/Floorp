@@ -33,7 +33,8 @@ add_task(async function() {
   const width = 100, height = 50;
 
   const tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
-  tooltip.setContent(getTooltipContent(doc), {width, height});
+  tooltip.panel.appendChild(getTooltipContent(doc));
+  tooltip.setContentSize({width, height});
 
   info("Show the tooltip on each of the 4 hbox, without calling hide in between");
 

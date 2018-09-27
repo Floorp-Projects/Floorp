@@ -197,10 +197,9 @@ EventTooltip.prototype = {
       this._addContentListeners(header);
     }
 
-    this._tooltip.setContent(
-      this.container,
-      {width: CONTAINER_WIDTH, height: Infinity}
-    );
+    this._tooltip.panel.innerHTML = "";
+    this._tooltip.panel.appendChild(this.container);
+    this._tooltip.setContentSize({ width: CONTAINER_WIDTH, height: Infinity });
     this._tooltip.on("hidden", this.destroy);
   },
 

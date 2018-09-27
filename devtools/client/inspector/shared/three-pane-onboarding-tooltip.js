@@ -68,7 +68,8 @@ class ThreePaneOnboardingTooltip {
     this.closeButton.addEventListener("click", this.onCloseButtonClick);
     this.learnMoreLink.addEventListener("click", this.onLearnMoreLinkClick);
 
-    this.tooltip.setContent(container, { width: CONTAINER_WIDTH });
+    this.tooltip.panel.appendChild(container);
+    this.tooltip.setContentSize({ width: CONTAINER_WIDTH });
     this.tooltip.show(this.doc.querySelector("#inspector-sidebar .sidebar-toggle"), {
       position: "top",
     });
