@@ -50,7 +50,6 @@ function test_props_forelement(element, label, value)
   if (value)
     is(element.value, value, "element value");
   is(element.accessKey, "B", "element accessKey");
-  is(element.crop, "end", "element crop");
   is(element.image, "happy.png", "element image");
   is(element.command, "cmd_nothing", "element command");
   ok(element.tabIndex === 0, "element tabIndex");
@@ -62,7 +61,6 @@ function test_props_forelement(element, label, value)
   if (value)
     is(element.value = "lb", "lb", "element value setter return");
   is(element.accessKey = "L", "L", "element accessKey setter return");
-  is(element.crop = "start", "start", "element crop setter return");
   is(element.image = "sad.png", "sad.png", "element image setter return");
   is(element.command = "cmd_action", "cmd_action", "element command setter return");
 
@@ -71,7 +69,6 @@ function test_props_forelement(element, label, value)
   if (value)
     is(element.value, "lb", "element value after set");
   is(element.accessKey, "L", "element accessKey after set");
-  is(element.crop, "start", "element crop after set");
   is(element.image, "sad.png", "element image after set");
   is(element.command, "cmd_action", "element command after set");
 
