@@ -8,6 +8,7 @@
 
 #include "GLContext.h"
 #include "WebGLContextUtils.h"
+#include "WebGLFormats.h"
 
 namespace mozilla {
 
