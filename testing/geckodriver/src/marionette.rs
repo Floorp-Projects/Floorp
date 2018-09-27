@@ -210,10 +210,7 @@ impl MarionetteHandler {
         prefs.insert_slice(&extra_prefs[..]);
 
         if self.settings.jsdebugger {
-            prefs.insert(
-                "devtools.browsertoolbox.panel",
-                Pref::new("jsdebugger".to_owned()),
-            );
+            prefs.insert("devtools.browsertoolbox.panel", Pref::new("jsdebugger"));
             prefs.insert("devtools.debugger.remote-enabled", Pref::new(true));
             prefs.insert("devtools.chrome.enabled", Pref::new(true));
             prefs.insert("devtools.debugger.prompt-connection", Pref::new(false));
