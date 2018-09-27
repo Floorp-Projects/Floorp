@@ -195,9 +195,8 @@ this.menusInternal = class extends ExtensionAPI {
             return true;
           };
           if (checkValidArg("tab", "tabId")) {
-            if (!context.extension.hasPermission("tabs") ||
-                !context.extension.whiteListedHosts.subsumes(new MatchPattern("<all_urls>"))) {
-              throw new ExtensionError(`The "tab" context requires the "tabs" and "<all_urls>" permission.`);
+            if (!context.extension.hasPermission("tabs")) {
+              throw new ExtensionError(`The "tab" context requires the "tabs" permission.`);
             }
           }
           if (checkValidArg("bookmark", "bookmarkId")) {

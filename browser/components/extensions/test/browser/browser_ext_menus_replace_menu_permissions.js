@@ -19,7 +19,7 @@ add_task(async function overrideContext_permissions() {
     const CONTEXT_OPTIONS_TAB = {context: "tab", tabId: 1};
     const CONTEXT_OPTIONS_BOOKMARK = {context: "bookmark", bookmarkId: "x"};
 
-    const E_PERM_TAB = /The "tab" context requires the "tabs" and "<all_urls>" permission/;
+    const E_PERM_TAB = /The "tab" context requires the "tabs" permission/;
     const E_PERM_BOOKMARK = /The "bookmark" context requires the "bookmarks" permission/;
 
     function assertAllowed(contextOptions) {
@@ -95,29 +95,11 @@ add_task(async function overrideContext_permissions() {
       yield;
 
       assertNotAllowed(CONTEXT_OPTIONS_BOOKMARK, E_PERM_BOOKMARK);
-      // "tabs" permission was granted, but host permissions are required too.
-      assertNotAllowed(CONTEXT_OPTIONS_TAB, E_PERM_TAB);
-
-      await requestPermissions({origins: ["<all_urls>"]});
-      await browser.permissions.remove({permissions: ["tabs"]});
-      browser.test.log("Active permissions: <all_urls>");
-      yield;
-
-      // Just host permissions are not sufficient for either context.
-      assertNotAllowed(CONTEXT_OPTIONS_BOOKMARK, E_PERM_BOOKMARK);
-      assertNotAllowed(CONTEXT_OPTIONS_TAB, E_PERM_TAB);
-
-      await requestPermissions({permissions: ["tabs"]});
-      browser.test.log("Active permissions: <all_urls>, tabs");
-      yield;
-
-      assertNotAllowed(CONTEXT_OPTIONS_BOOKMARK, E_PERM_BOOKMARK);
       assertAllowed(CONTEXT_OPTIONS_TAB);
-      await browser.permissions.remove({origins: ["<all_urls>"]});
-      browser.test.log("Active permissions: tabs without hosts");
+      await browser.permissions.remove({permissions: ["tabs"]});
+      browser.test.log("Active permissions: none");
       yield;
 
-      // Host permissions were revoked, access should be blocked again.
       assertNotAllowed(CONTEXT_OPTIONS_TAB, E_PERM_TAB);
 
       await browser.permissions.remove({permissions: ["menus.overrideContext"]});
@@ -142,7 +124,7 @@ add_task(async function overrideContext_permissions() {
     useAddonManager: "temporary", // To automatically show sidebar on load.
     manifest: {
       permissions: ["menus"],
-      optional_permissions: ["menus.overrideContext", "tabs", "bookmarks", "<all_urls>"],
+      optional_permissions: ["menus.overrideContext", "tabs", "bookmarks"],
       sidebar_action: {
         default_panel: "sidebar.html",
       },
