@@ -124,7 +124,7 @@ open class AutocompleteListFragment : Fragment() {
         super.onResume()
 
         (activity as BaseSettingsFragment.ActionBarUpdater).apply {
-            updateTitle(R.string.preference_autocomplete_subitem_customlist)
+            updateTitle(R.string.preference_autocomplete_subitem_manage_sites)
             updateIcon(R.drawable.ic_back)
         }
 

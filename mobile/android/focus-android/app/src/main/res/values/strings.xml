@@ -174,20 +174,23 @@
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
     <string name="preference_subitem_autocomplete">URL Autocomplete</string>
 
-    <!-- Title of "switch" preference that enables/disables autocomplete -->
-    <string name="preference_switch_autocomplete">Autocomplete</string>
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">For Top sites</string>
 
-    <!-- Preference title: URL autocomplete list that ships with Focus/Klar. -->
-    <string name="preference_category_autocomplete_preinstalled">Default URL List</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
+    <string name="preference_autocomplete_topsite_summary">Enable to autocomplete more than 450 popular URLs in the address bar.</string>
 
-    <!-- Preference summary: URL autocomplete list that ships with Focus/Klar. -->
-    <string name="preference_autocomplete_preinstalled_summary">Enable to have %1$s autocomplete over 450 popular URLs in the address bar.</string>
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-dfined list -->
+    <string name="preference_switch_autocomplete_user_list">For Sites You Add</string>
 
-    <!-- Preference category: Custom (user-defined) autocomplete URLs. -->
-    <string name="preference_category_autocomplete_custom_urls">Custom URLs</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
+    <string name="preference_autocomplete_user_list_summary">Enable to autocomplete more than 450 popular URLs in the address bar.</string>
 
-    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing custom autocomplete URLs -->
-    <string name="preference_autocomplete_subitem_customlist">Custom URLs</string>
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Manage sites</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Manage sites</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Add custom URL</string>
@@ -753,4 +756,9 @@ be temporary, and you can try again later.</li>
 
     <!-- deprecated strings -->
     <string name="tip_disable_tips">Turn off tips on the %1$s start screen</string>
+    <string name="preference_switch_autocomplete">Autocomplete</string>
+    <string name="preference_category_autocomplete_preinstalled">Default URL List</string>
+    <string name="preference_autocomplete_preinstalled_summary">Enable to have %1$s autocomplete over 450 popular URLs in the address bar.</string>
+    <string name="preference_category_autocomplete_custom_urls">Custom URLs</string>
+    <string name="preference_autocomplete_subitem_customlist">Custom URLs</string>
 </resources>

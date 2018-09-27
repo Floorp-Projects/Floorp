@@ -6,7 +6,6 @@ package org.mozilla.focus.autocomplete
 
 import android.content.Context
 import android.util.AttributeSet
-import org.mozilla.focus.R
 import org.mozilla.focus.settings.LearnMoreSwitchPreference
 import org.mozilla.focus.utils.SupportUtils
 
@@ -18,8 +17,4 @@ class AutocompleteDefaultDomainsPreference(
     attrs: AttributeSet?
 ) : LearnMoreSwitchPreference(context, attrs) {
     override fun getLearnMoreUrl() = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.AUTOCOMPLETE)
-
-    override fun getDescription(): String? =
-            context.getString(R.string.preference_autocomplete_preinstalled_summary,
-                    context.getString(R.string.app_name))
 }
