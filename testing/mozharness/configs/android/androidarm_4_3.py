@@ -17,6 +17,7 @@ config = {
         "unpack": "True"
         }
         ] """,
+    "emulator_avd_name": "test-1",
     "emulator_process_name": "emulator64-arm",
     "emulator_extra_args": "-show-kernel -debug init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket",
     "exes": {
@@ -27,9 +28,6 @@ config = {
         "PATH": "%(PATH)s:%(abs_work_dir)s/android-sdk-linux/tools:%(abs_work_dir)s/android-sdk-linux/platform-tools",
         "MINIDUMP_SAVEPATH": "%(abs_work_dir)s/../minidumps"
     },
-    "emulator": {
-        "name": "test-1",
-        "device_id": "emulator-5554",
-    },
     "marionette_extra": "--emulator",
+    "bogomips_minimum": 250,
 }
