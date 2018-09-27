@@ -33,7 +33,8 @@ add_task(async function() {
   const tooltip = new HTMLTooltip(doc, {useXulWrapper: true});
 
   info("Set tooltip content");
-  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
+  tooltip.panel.appendChild(getTooltipContent(doc));
+  tooltip.setContentSize({width: 100, height: 50});
 
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 
