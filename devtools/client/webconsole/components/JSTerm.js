@@ -353,6 +353,15 @@ class JSTerm extends Component {
               return "CodeMirror.Pass";
             },
 
+            "Ctrl-Space": () => {
+              if (!this.autocompletePopup.isOpen) {
+                this.updateAutocompletion(true);
+                return null;
+              }
+
+              return "CodeMirror.Pass";
+            },
+
             "Esc": false,
             "Cmd-F": false,
             "Ctrl-F": false,
@@ -430,21 +439,9 @@ class JSTerm extends Component {
    * @private
    * @param {Object} response
    *        The message received from the server.
-   * @param {Object} options
-   *        On options object that can contain the following properties:
-   *          - {Object} mapped: An object indicating if the input was modified by the
-   *                             parser worker.
    */
-  async _executeResultCallback(response, options = {}) {
+  async _executeResultCallback(response) {
     if (!this.hud) {
-      return null;
-    }
-
-    // If the expression was a top-level await that the parser-worker transformed, we
-    // don't want to show the result returned by the server as it's a Promise that was
-    // created on our end by wrapping the input in an instantly called async function
-    // (e.g. `await 42` -> `(async () => {return await 42})()`).
-    if (options && options.mapped && options.mapped.await) {
       return null;
     }
 
@@ -452,6 +449,13 @@ class JSTerm extends Component {
       console.error("Evaluation error " + response.error + ": " + response.message);
       return null;
     }
+
+    // If the evaluation was a top-level await expression that was rejected, there will
+    // be an uncaught exception reported, so we don't want need to print anything here.
+    if (response.topLevelAwaitRejected === true) {
+      return null;
+    }
+
     let errorMessage = response.exceptionMessage;
 
     // Wrap thrown strings in Error objects, so `throw "foo"` outputs "Error: foo"
@@ -571,6 +575,7 @@ class JSTerm extends Component {
     const options = {
       frame: this.SELECTED_FRAME,
       selectedNodeActor,
+      mapped: mappedExpressionRes ? mappedExpressionRes.mapped : null
     };
 
     // Even if requestEvaluation rejects (because of webConsoleClient.evaluateJSAsync),
@@ -578,9 +583,7 @@ class JSTerm extends Component {
     const onEvaluated = this.requestEvaluation(executeString, options)
       .then(res => res, res => res);
     const response = await onEvaluated;
-    return this._executeResultCallback(response, {
-      mapped: mappedExpressionRes ? mappedExpressionRes.mapped : null
-    });
+    return this._executeResultCallback(response);
   }
 
   /**
@@ -603,6 +606,8 @@ class JSTerm extends Component {
    *        - selectedNodeActor: tells the NodeActor ID of the current selection
    *        in the Inspector, if such a selection exists. This is used by
    *        helper functions that can evaluate on the current selection.
+   *        - mapped: basically getMappedExpression().mapped. An object that indicates
+   *        which modifications were done to the input entered by the user.
    * @return object
    *         A promise object that is resolved when the server response is
    *         received.
@@ -619,14 +624,10 @@ class JSTerm extends Component {
       frameActor = this.getFrameActor(options.frame);
     }
 
-    const evalOptions = {
-      bindObjectActor: options.bindObjectActor,
+    return this.webConsoleClient.evaluateJSAsync(str, null, {
       frameActor,
-      selectedNodeActor: options.selectedNodeActor,
-      selectedObjectActor: options.selectedObjectActor,
-    };
-
-    return this.webConsoleClient.evaluateJSAsync(str, null, evalOptions);
+      ...options,
+    });
   }
 
   /**
@@ -806,6 +807,7 @@ class JSTerm extends Component {
     const inputNode = this.inputNode;
     const inputValue = this.getInputValue();
     let inputUpdated = false;
+
     if (event.ctrlKey) {
       switch (event.charCode) {
         case 101:
@@ -863,6 +865,13 @@ class JSTerm extends Component {
         default:
           break;
       }
+
+      if (event.key === " " && !this.autocompletePopup.isOpen) {
+        // Open the autocompletion popup on Ctrl-Space (if it wasn't displayed).
+        this.updateAutocompletion(true);
+        event.preventDefault();
+      }
+
       return;
     } else if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
       if (!this.autocompletePopup.isOpen && (
@@ -1102,7 +1111,12 @@ class JSTerm extends Component {
            node.selectionStart == 0 && !multiline;
   }
 
-  async updateAutocompletion() {
+  /**
+   *
+   * @param {Boolean} force: True to not perform any check before trying to show the
+   *                         autocompletion popup. Defaults to false.
+   */
+  async updateAutocompletion(force = false) {
     const inputValue = this.getInputValue();
     const {editor, inputNode} = this;
     const frameActor = this.getFrameActor(this.SELECTED_FRAME);
@@ -1110,17 +1124,22 @@ class JSTerm extends Component {
     const cursor = this.getSelectionStart();
 
     // Complete if:
-    // - The input is not empty
-    // - AND there is not text selected
-    // - AND the input or frameActor are different from previous completion
-    // - AND there is not an alphanumeric (+ "_" and "$") right after the cursor
-    if (
+    // - `force` is true OR
+    //   - The input is not empty
+    //   - AND there is not text selected
+    //   - AND the input or frameActor are different from previous completion
+    //   - AND there is not an alphanumeric (+ "_" and "$") right after the cursor
+    if (!force && (
       !inputValue ||
       (inputNode && inputNode.selectionStart != inputNode.selectionEnd) ||
       (editor && editor.getSelection()) ||
-      (this.lastInputValue === inputValue && frameActor === this._lastFrameActorId) ||
+      (
+        !force &&
+        this.lastInputValue === inputValue &&
+        frameActor === this._lastFrameActorId
+      ) ||
       /^[a-zA-Z0-9_$]/.test(inputValue.substring(cursor))
-    ) {
+    )) {
       this.clearCompletion();
       this.emit("autocomplete-updated");
       return;

@@ -82,11 +82,6 @@ OptionsPanel.prototype = {
   },
 
   async open() {
-    // For local debugging we need to make the target remote.
-    if (!this.target.isRemote) {
-      await this.target.attach();
-    }
-
     this.setupToolsList();
     this.setupToolbarButtonsList();
     this.setupThemeList();
@@ -266,9 +261,14 @@ OptionsPanel.prototype = {
       return tool.visibilityswitch && !tool.hiddenInOptions;
     });
 
+    const fragment = this.panelDoc.createDocumentFragment();
     for (const tool of toggleableTools) {
-      defaultToolsBox.appendChild(createToolCheckbox(tool));
+      fragment.appendChild(createToolCheckbox(tool));
     }
+
+    const toolsNotSupportedLabelNode =
+      this.panelDoc.getElementById("tools-not-supported-label");
+    defaultToolsBox.insertBefore(fragment, toolsNotSupportedLabelNode);
 
     // Clean up any existent additional tools content.
     for (const label of additionalToolsBox.querySelectorAll("label")) {
@@ -396,7 +396,15 @@ OptionsPanel.prototype = {
 
     for (const prefDefinition of prefDefinitions) {
       const parent = this.panelDoc.getElementById(prefDefinition.parentId);
-      parent.appendChild(createPreferenceOption(prefDefinition));
+      // We want to insert the new definition after the last existing
+      // definition, but before any other element.
+      // For example in the "Advanced Settings" column there's indeed a <span>
+      // text at the end, and we want that it stays at the end.
+      // The reference element can be `null` if there's no label or if there's
+      // no element after the last label. But that's OK and it will do what we
+      // want.
+      const referenceElement = parent.querySelector("label:last-of-type + *");
+      parent.insertBefore(createPreferenceOption(prefDefinition), referenceElement);
       parent.removeAttribute("hidden");
     }
   },
@@ -459,6 +467,10 @@ OptionsPanel.prototype = {
     } else {
       // Hide the checkbox and label
       this.disableJSNode.parentNode.style.display = "none";
+
+      const triggersPageRefreshLabel =
+        this.panelDoc.getElementById("triggers-page-refresh-label");
+      triggersPageRefreshLabel.style.display = "none";
     }
   },
 
@@ -519,7 +531,7 @@ OptionsPanel.prototype = {
             "javascriptEnabled": this._origJavascriptEnabled,
             "performReload": false
           };
-          this.target.activeTab.reconfigure(options, resolve);
+          this.target.activeTab.reconfigure(options).then(resolve);
         } else {
           resolve();
         }

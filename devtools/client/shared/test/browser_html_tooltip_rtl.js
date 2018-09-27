@@ -30,7 +30,8 @@ add_task(async function() {
   const div = doc.createElementNS(HTML_NS, "div");
   div.textContent = "tooltip";
   div.style.cssText = "box-sizing: border-box; border: 1px solid black";
-  tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
+  tooltip.panel.appendChild(div);
+  tooltip.setContentSize({width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
 
   await testRtlAnchors(doc, tooltip);
   await testLtrAnchors(doc, tooltip);
@@ -134,7 +135,8 @@ async function testRtlArrow(doc) {
   const div = doc.createElementNS(HTML_NS, "div");
   div.textContent = "tooltip";
   div.style.cssText = "box-sizing: border-box; border: 1px solid black";
-  arrowTooltip.setContent(div, {
+  arrowTooltip.panel.appendChild(div);
+  arrowTooltip.setContentSize({
     width: TOOLTIP_WIDTH,
     height: TOOLTIP_HEIGHT,
   });

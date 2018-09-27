@@ -23,7 +23,8 @@ add_task(async function() {
   const tooltipContent = doc.createElementNS(HTML_NS, "div");
   tooltipContent.textContent = "tooltip";
   const tooltip = new HTMLTooltip(doc, {useXulWrapper: false});
-  tooltip.setContent(tooltipContent, {width, height});
+  tooltip.panel.appendChild(tooltipContent);
+  tooltip.setContentSize({width, height});
 
   const container = doc.getElementById("container");
   tooltip.startTogglingOnHover(container, () => true);

@@ -314,6 +314,39 @@ describe("ConsoleAPICall component:", () => {
       // it should not be collapsible.
       expect(wrapper.find(`.theme-twisty`).length).toBe(0);
     });
+    it("render with arguments", () => {
+      const message = stubPreparedMessages.get(
+        "console.trace('bar', {'foo': 'bar'}, [1,2,3])");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer, open: true }));
+
+      const filepath = "http://example.com/browser/devtools/client/webconsole/" +
+                       "test/fixtures/stub-generators/test-console-api.html";
+
+      expect(wrapper.find(".message-body").text())
+        .toBe("console.trace() bar Object { foo: \"bar\" } Array(3) [ 1, 2, 3 ]");
+
+      const frameLinks = wrapper.find(
+        `.stack-trace span.frame-link[data-url]`);
+      expect(frameLinks.length).toBe(3);
+
+      expect(frameLinks.eq(0).find(".frame-link-function-display-name").text())
+        .toBe("testStacktraceWithLog");
+      expect(frameLinks.eq(0).find(".frame-link-filename").text())
+        .toBe(filepath);
+
+      expect(frameLinks.eq(1).find(".frame-link-function-display-name").text())
+        .toBe("foo");
+      expect(frameLinks.eq(1).find(".frame-link-filename").text())
+        .toBe(filepath);
+
+      expect(frameLinks.eq(2).find(".frame-link-function-display-name").text())
+        .toBe("triggerPacket");
+      expect(frameLinks.eq(2).find(".frame-link-filename").text())
+        .toBe(filepath);
+
+      // it should not be collapsible.
+      expect(wrapper.find(`.theme-twisty`).length).toBe(0);
+    });
   });
 
   describe("console.group", () => {

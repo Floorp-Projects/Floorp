@@ -27,7 +27,8 @@ async function testRuleView(ruleView, inspector) {
 
   const tooltip = ruleView.tooltips.getTooltip("previewTooltip");
   const tooltipContent = ruleView.styleDocument.createElementNS(XHTML_NS, "div");
-  await tooltip.setContent(tooltipContent, {width: 100, height: 30});
+  tooltip.panel.appendChild(tooltipContent);
+  tooltip.setContentSize({width: 100, height: 30});
 
   // Stop listening for mouse movements because it's not needed for this test,
   // and causes intermittent failures on Linux. When this test runs in the suite
@@ -52,7 +53,8 @@ async function testComputedView(computedView, inspector) {
 
   const tooltip = computedView.tooltips.getTooltip("previewTooltip");
   const tooltipContent = computedView.styleDocument.createElementNS(XHTML_NS, "div");
-  await tooltip.setContent(tooltipContent, {width: 100, height: 30});
+  tooltip.panel.appendChild(tooltipContent);
+  await tooltip.setContentSize({width: 100, height: 30});
 
   // Stop listening for mouse movements because it's not needed for this test,
   // and causes intermittent failures on Linux. When this test runs in the suite

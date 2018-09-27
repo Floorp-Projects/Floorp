@@ -207,7 +207,7 @@ DevToolsStartup.prototype = {
   get telemetry() {
     if (!this._telemetry) {
       this._telemetry = new Telemetry();
-      this._telemetry.setEventRecordingEnabled("devtools.main", true);
+      this._telemetry.setEventRecordingEnabled(true);
     }
     return this._telemetry;
   },
@@ -247,9 +247,11 @@ DevToolsStartup.prototype = {
     }
 
     if (flags.console) {
+      this.commandLine = true;
       this.handleConsoleFlag(cmdLine);
     }
     if (flags.debugger) {
+      this.commandLine = true;
       this.handleDebuggerFlag(cmdLine);
     }
 
@@ -314,6 +316,13 @@ DevToolsStartup.prototype = {
   onFirstWindowReady(window) {
     if (this.devtoolsFlag) {
       this.handleDevToolsFlag(window);
+
+      // In the case of the --jsconsole and --jsdebugger command line parameters
+      // there was no browser window when they were processed so we act on the
+      // this.commandline flag instead.
+      if (this.commandLine) {
+        this.sendEntryPointTelemetry("CommandLine");
+      }
     }
 
     // Wait until we get a window before sending a ping to telemetry to avoid slowing down
@@ -630,7 +639,11 @@ DevToolsStartup.prototype = {
       return null;
     }
 
-    this.sendEntryPointTelemetry(reason, key);
+    // In the case of the --jsconsole and --jsdebugger command line parameters
+    // there is no browser window yet so we don't send any telemetry yet.
+    if (reason !== "CommandLine") {
+      this.sendEntryPointTelemetry(reason, key);
+    }
 
     this.initialized = true;
     const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
@@ -757,8 +770,6 @@ DevToolsStartup.prototype = {
       Services.obs.addObserver(observe, "devtools-thread-resumed");
     }
 
-    this.sendEntryPointTelemetry("CommandLine");
-
     const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
     BrowserToolboxProcess.init();
 
@@ -874,13 +885,10 @@ DevToolsStartup.prototype = {
       keys = `${modifiers}+${shortcut}`;
     }
 
-    this.telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "shortcut", keys
-    );
+    const window = Services.wm.getMostRecentWindow("navigator:browser");
 
-    this.telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "entrypoint", reason
-    );
+    this.telemetry.addEventProperty(window, "open", "tools", null, "shortcut", keys);
+    this.telemetry.addEventProperty(window, "open", "tools", null, "entrypoint", reason);
 
     if (this.recorded) {
       return;

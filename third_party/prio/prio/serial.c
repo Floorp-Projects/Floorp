@@ -22,12 +22,16 @@ serial_write_mp_int(msgpack_packer* pk, const mp_int* n)
 {
   SECStatus rv = SECSuccess;
   unsigned int n_size = mp_unsigned_octet_size(n);
+  unsigned char* data = NULL;
 
-  unsigned char data[n_size];
-  MP_CHECK(mp_to_fixlen_octets(n, data, n_size));
+  P_CHECKA(data = calloc(n_size, sizeof(unsigned char)));
+  MP_CHECKC(mp_to_fixlen_octets(n, data, n_size));
 
-  P_CHECK(msgpack_pack_str(pk, n_size));
-  P_CHECK(msgpack_pack_str_body(pk, data, n_size));
+  P_CHECKC(msgpack_pack_str(pk, n_size));
+  P_CHECKC(msgpack_pack_str_body(pk, data, n_size));
+cleanup:
+  if (data)
+    free(data);
   return rv;
 }
 

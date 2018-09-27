@@ -36,28 +36,15 @@ class StoragePanel {
    * open is effectively an asynchronous constructor
    */
   open() {
-    let targetPromise;
-    // We always interact with the target as if it were remote
-    if (!this.target.isRemote) {
-      targetPromise = this.target.attach();
-    } else {
-      targetPromise = Promise.resolve(this.target);
-    }
+    this.target.on("close", this.destroy);
+    this._front = new StorageFront(this.target.client, this.target.form);
 
-    return targetPromise.then(() => {
-      this.target.on("close", this.destroy);
-      this._front = new StorageFront(this.target.client, this.target.form);
+    this.UI = new StorageUI(this._front, this._target,
+                            this._panelWin, this._toolbox);
+    this.isReady = true;
+    this.emit("ready");
 
-      this.UI = new StorageUI(this._front, this._target,
-                              this._panelWin, this._toolbox);
-      this.isReady = true;
-      this.emit("ready");
-
-      return this;
-    }).catch(e => {
-      console.log("error while opening storage panel", e);
-      this.destroy();
-    });
+    return this;
   }
 
   /**

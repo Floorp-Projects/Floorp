@@ -124,7 +124,8 @@ CallQueryInterface(T* aSource, DestinationType** aDestination)
 {
   // We permit nsISupports-to-nsISupports here so that one can still obtain
   // the canonical nsISupports pointer with CallQueryInterface.
-  static_assert(!mozilla::IsSame<T, DestinationType>::value ||
+  static_assert(!(mozilla::IsSame<DestinationType, T>::value ||
+                  mozilla::IsBaseOf<DestinationType, T>::value) ||
                 mozilla::IsSame<DestinationType, nsISupports>::value,
                 "don't use CallQueryInterface for compile-time-determinable casts");
 

@@ -95,15 +95,17 @@ PublicKey_import(PublicKey* pk, const unsigned char* data, unsigned int dataLen)
   SECStatus rv = SECSuccess;
   CERTSubjectPublicKeyInfo* pkinfo = NULL;
   *pk = NULL;
+  unsigned char* key_bytes = NULL;
+  uint8_t* spki_data = NULL;
 
   if (dataLen != CURVE25519_KEY_LEN)
     return SECFailure;
 
-  unsigned char key_bytes[dataLen];
+  P_CHECKA(key_bytes = calloc(dataLen, sizeof(unsigned char)));
   memcpy(key_bytes, data, dataLen);
 
   const int spki_len = sizeof(curve25519_spki_zeros);
-  uint8_t spki_data[spki_len];
+  P_CHECKA(spki_data = calloc(spki_len, sizeof(uint8_t)));
   memcpy(spki_data, curve25519_spki_zeros, spki_len);
   SECItem spki_item = { siBuffer, spki_data, spki_len };
 
@@ -116,6 +118,10 @@ PublicKey_import(PublicKey* pk, const unsigned char* data, unsigned int dataLen)
   memcpy((*pk)->u.ec.publicValue.data, data, CURVE25519_KEY_LEN);
 
 cleanup:
+  if (key_bytes)
+    free(key_bytes);
+  if (spki_data)
+    free(spki_data);
   if (pkinfo)
     SECKEY_DestroySubjectPublicKeyInfo(pkinfo);
 
