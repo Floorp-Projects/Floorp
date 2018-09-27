@@ -716,6 +716,12 @@ private:
    * FCDATA_USE_CHILD_ITEMS is set.
    */
 #define FCDATA_IS_WRAPPER_ANON_BOX 0x400000
+  /**
+   * If FCDATA_MAY_NEED_BULLET is set, then the frame will be checked
+   * whether an nsBulletFrame needs to be created for it or not. Only the
+   * frames inherited from nsBlockFrame should have this bit set.
+   */
+#define FCDATA_MAY_NEED_BULLET 0x800000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -1870,6 +1876,8 @@ private:
                       nsFrameItems&            aFrameItems,
                       nsIFrame*                aPositionedFrameForAbsPosContainer,
                       PendingBinding*          aPendingBinding);
+
+  void CreateBulletFrameForListItemIfNeeded(nsBlockFrame* aBlockFrame);
 
   nsIFrame* ConstructInline(nsFrameConstructorState& aState,
                             FrameConstructionItem&   aItem,

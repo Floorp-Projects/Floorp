@@ -7111,10 +7111,6 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
   if (kFloatList == aListID) {
     mFloats.SetFrames(aChildList);
   } else if (kPrincipalList == aListID) {
-    NS_ASSERTION((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
-                                    NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
-                 "how can we have a bullet already?");
-
 #ifdef DEBUG
     // The only times a block that is an anonymous box is allowed to have a
     // first-letter frame are when it's the block inside a non-anonymous cell,
@@ -7143,51 +7139,25 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
 #endif
 
     AddFrames(aChildList, nullptr);
-
-    // Create a list bullet if this is a list-item. Note that this is
-    // done here so that RenumberLists will work (it needs the bullets
-    // to store the bullet numbers).  Also note that due to various
-    // wrapper frames (scrollframes, columns) we want to use the
-    // outermost (primary, ideally, but it's not set yet when we get
-    // here) frame of our content for the display check.  On the other
-    // hand, we look at ourselves for the GetPrevInFlow() check, since
-    // for a columnset we don't want a bullet per column.  Note that
-    // the outermost frame for the content is the primary frame in
-    // most cases; the ones when it's not (like tables) can't be
-    // StyleDisplay::ListItem).
-    nsIFrame* possibleListItem = this;
-    while (1) {
-      nsIFrame* parent = possibleListItem->GetParent();
-      if (parent->GetContent() != GetContent()) {
-        break;
-      }
-      possibleListItem = parent;
-    }
-    if (mozilla::StyleDisplay::ListItem ==
-          possibleListItem->StyleDisplay()->mDisplay &&
-        !GetPrevInFlow()) {
-      // Resolve style for the bullet frame
-      const nsStyleList* styleList = StyleList();
-      CounterStyle* style = styleList->mCounterStyle;
-
-      CreateBulletFrameForListItem(
-        style->IsBullet(),
-        styleList->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE);
-    }
   } else {
     nsContainerFrame::SetInitialChildList(aListID, aChildList);
   }
 }
 
 void
-nsBlockFrame::CreateBulletFrameForListItem(bool aCreateBulletList,
-                                           bool aListStylePositionInside)
+nsBlockFrame::CreateBulletFrameForListItem()
 {
-  nsIPresShell* shell = PresShell();
+  MOZ_ASSERT((GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
+                                NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
+             "How can we have a bullet already?");
 
-  CSSPseudoElementType pseudoType = aCreateBulletList ?
-    CSSPseudoElementType::mozListBullet :
-    CSSPseudoElementType::mozListNumber;
+  nsIPresShell* shell = PresShell();
+  const nsStyleList* styleList = StyleList();
+
+  CSSPseudoElementType pseudoType =
+    styleList->mCounterStyle->IsBullet()
+    ? CSSPseudoElementType::mozListBullet
+    : CSSPseudoElementType::mozListNumber;
 
   RefPtr<ComputedStyle> kidSC = ResolveBulletStyle(pseudoType,
                                                     shell->StyleSet());
@@ -7198,7 +7168,7 @@ nsBlockFrame::CreateBulletFrameForListItem(bool aCreateBulletList,
 
   // If the list bullet frame should be positioned inside then add
   // it to the flow now.
-  if (aListStylePositionInside) {
+  if (styleList->mListStylePosition == NS_STYLE_LIST_STYLE_POSITION_INSIDE) {
     nsFrameList bulletList(bullet, bullet);
     AddFrames(bulletList, nullptr);
     SetProperty(InsideBulletProperty(), bullet);
@@ -7268,7 +7238,7 @@ nsBlockFrame::RenumberChildFrames(int32_t* aOrdinal,
   } while (bifLineIter.Next());
 
   // We need to set NS_FRAME_HAS_DIRTY_CHILDREN bits up the tree between
-  // the bullet and the caller of RenumberLists.  But the caller itself
+  // the bullet and the caller of RenumberList.  But the caller itself
   // has to be responsible for setting the bit itself, since that caller
   // might be making a FrameNeedsReflow call, which requires that the
   // bit not be set yet.

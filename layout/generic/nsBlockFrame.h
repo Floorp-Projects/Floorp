@@ -509,16 +509,12 @@ protected:
    */
   bool IsVisualFormControl(nsPresContext* aPresContext);
 
+public:
   /**
    * Helper function to create bullet frame.
-   * @param aCreateBulletList true to create bullet list; otherwise number list.
-   * @param aListStylePositionInside true to put the list position inside;
-   * otherwise outside.
    */
-  void CreateBulletFrameForListItem(bool aCreateBulletList,
-                                    bool aListStylePositionInside);
+  void CreateBulletFrameForListItem();
 
-public:
   /**
    * Does all the real work for removing aDeletedFrame
    * -- finds the line containing aDeletedFrame

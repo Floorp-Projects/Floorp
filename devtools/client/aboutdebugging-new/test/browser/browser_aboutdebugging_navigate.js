@@ -25,6 +25,12 @@ add_task(async function() {
   ok(isSidebarItemSelected(thisFirefoxSidebarItem),
     "ThisFirefox sidebar item is selected by default");
 
+  // Wait until the about:debugging target is visible in the tab list
+  // Otherwise, we might have a race condition where TAB1 is discovered by the initial
+  // listTabs from the watchRuntime action, instead of being discovered after the
+  // TAB_UPDATED event. See analysis in Bug 1493968.
+  await waitUntil(() => findDebugTargetByText("about:debugging", document));
+
   info("Open a new background tab TAB1");
   const backgroundTab1 = await addTab(TAB_URL_1, { background: true });
 
