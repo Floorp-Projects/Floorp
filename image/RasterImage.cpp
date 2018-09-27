@@ -1136,7 +1136,8 @@ RasterImage::StartDecoding(uint32_t aFlags)
     return NS_OK;
   }
 
-  uint32_t flags = (aFlags & FLAG_ASYNC_NOTIFY) | FLAG_SYNC_DECODE_IF_FAST;
+  uint32_t flags =
+    (aFlags & FLAG_ASYNC_NOTIFY) | FLAG_SYNC_DECODE_IF_FAST | FLAG_HIGH_QUALITY_SCALING;
   return RequestDecodeForSize(mSize, flags);
 }
 
@@ -1152,7 +1153,8 @@ RasterImage::StartDecodingWithResult(uint32_t aFlags)
     return false;
   }
 
-  uint32_t flags = (aFlags & FLAG_ASYNC_NOTIFY) | FLAG_SYNC_DECODE_IF_FAST;
+  uint32_t flags =
+    (aFlags & FLAG_ASYNC_NOTIFY) | FLAG_SYNC_DECODE_IF_FAST | FLAG_HIGH_QUALITY_SCALING;
   DrawableSurface surface = RequestDecodeForSizeInternal(mSize, flags);
   return surface && surface->IsFinished();
 }
@@ -1814,7 +1816,7 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
     // If we were a metadata decode and a full decode was requested, do it.
     if (mWantFullDecode) {
       mWantFullDecode = false;
-      RequestDecodeForSize(mSize, DECODE_FLAGS_DEFAULT);
+      RequestDecodeForSize(mSize, DECODE_FLAGS_DEFAULT | FLAG_HIGH_QUALITY_SCALING);
     }
   }
 }
