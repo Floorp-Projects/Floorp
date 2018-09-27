@@ -621,7 +621,8 @@ XMLDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const
   clone->mAsync = mAsync;
   clone->mIsPlainDocument = mIsPlainDocument;
 
-  return CallQueryInterface(clone.get(), aResult);
+  clone.forget(aResult);
+  return NS_OK;
 }
 
 JSObject*
