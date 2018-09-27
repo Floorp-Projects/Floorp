@@ -2289,8 +2289,16 @@ public:
    */
   static bool NeedsPrintPreviewBackground(nsPresContext* aPresContext);
 
-  typedef nsClassHashtable<nsPtrHashKey<gfxFontEntry>,
-                           mozilla::dom::InspectorFontFace> UsedFontFaceTable;
+  /**
+   * Types used by the helpers for InspectorUtils.getUsedFontFaces.
+   * The API returns an array (UsedFontFaceList) that owns the
+   * InspectorFontFace instances, but during range traversal we also
+   * want to maintain a mapping from gfxFontEntry to InspectorFontFace
+   * records, so use a temporary hashtable for that.
+   */
+  typedef nsTArray<nsAutoPtr<mozilla::dom::InspectorFontFace>> UsedFontFaceList;
+  typedef nsDataHashtable<nsPtrHashKey<gfxFontEntry>,
+                          mozilla::dom::InspectorFontFace*> UsedFontFaceTable;
 
   /**
    * Adds all font faces used in the frame tree starting from aFrame
@@ -2298,7 +2306,8 @@ public:
    * aMaxRanges: maximum number of text ranges to record for each face.
    */
   static nsresult GetFontFacesForFrames(nsIFrame* aFrame,
-                                        UsedFontFaceTable& aResult,
+                                        UsedFontFaceList& aResult,
+                                        UsedFontFaceTable& aFontFaces,
                                         uint32_t aMaxRanges,
                                         bool aSkipCollapsedWhitespace);
 
@@ -2313,7 +2322,8 @@ public:
                                   int32_t aStartOffset,
                                   int32_t aEndOffset,
                                   bool aFollowContinuations,
-                                  UsedFontFaceTable& aResult,
+                                  UsedFontFaceList& aResult,
+                                  UsedFontFaceTable& aFontFaces,
                                   uint32_t aMaxRanges,
                                   bool aSkipCollapsedWhitespace);
 

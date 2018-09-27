@@ -10,8 +10,8 @@
  */
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
-var { ActorPool, RegisteredActorFactory,
-      ObservedActorFactory } = require("devtools/server/actors/common");
+var { Pool } = require("devtools/shared/protocol");
+var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 
@@ -33,8 +33,6 @@ const CONTENT_PROCESS_SERVER_STARTUP_SCRIPT =
   "resource://devtools/server/startup/content-process.js";
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-
-var gRegisteredModules = Object.create(null);
 
 /**
  * Public API
@@ -83,6 +81,7 @@ var DebuggerServer = {
     }
 
     this._connections = {};
+    ActorRegistry.init(this._connections);
     this._nextConnID = 0;
 
     this._initialized = true;
@@ -112,14 +111,9 @@ var DebuggerServer = {
       this._connections[connID].close();
     }
 
-    for (const id of Object.getOwnPropertyNames(gRegisteredModules)) {
-      this.unregisterModule(id);
-    }
-    gRegisteredModules = Object.create(null);
+    ActorRegistry.destroy();
 
     this.closeAllListeners();
-    this.globalActorFactories = {};
-    this.targetScopedActorFactories = {};
     this._initialized = false;
 
     dumpn("Debugger server is shut down.");
@@ -155,7 +149,7 @@ var DebuggerServer = {
    */
   registerActors({ root, browser, target }) {
     if (browser) {
-      this._addBrowserActors();
+      ActorRegistry.addBrowserActors();
     }
 
     if (root) {
@@ -164,7 +158,7 @@ var DebuggerServer = {
     }
 
     if (target) {
-      this._addTargetScopedActors();
+      ActorRegistry.addTargetScopedActors();
     }
   },
 
@@ -173,254 +167,6 @@ var DebuggerServer = {
    */
   registerAllActors() {
     this.registerActors({ root: true, browser: true, target: true });
-  },
-
-  /**
-   * Register a CommonJS module with the debugger server.
-   * @param id string
-   *        The ID of a CommonJS module.
-   *        The actor is going to be registered immediately, but loaded only
-   *        when a client starts sending packets to an actor with the same id.
-   *
-   * @param options object
-   *        An object with 3 mandatory attributes:
-   *        - prefix (string):
-   *          The prefix of an actor is used to compute:
-   *          - the `actorID` of each new actor instance (ex: prefix1).
-   *            (See ActorPool.addActor)
-   *          - the actor name in the listTabs request. Sending a listTabs
-   *            request to the root actor returns actor IDs. IDs are in
-   *            dictionaries, with actor names as keys and actor IDs as values.
-   *            The actor name is the prefix to which the "Actor" string is
-   *            appended. So for an actor with the `console` prefix, the actor
-   *            name will be `consoleActor`.
-   *        - constructor (string):
-   *          the name of the exported symbol to be used as the actor
-   *          constructor.
-   *        - type (a dictionary of booleans with following attribute names):
-   *          - "global"
-   *            registers a global actor instance, if true.
-   *            A global actor has the root actor as its parent.
-   *          - "target"
-   *            registers a target-scoped actor instance, if true.
-   *            A new actor will be created for each target, such as a tab.
-   */
-  registerModule(id, options) {
-    if (id in gRegisteredModules) {
-      return;
-    }
-
-    if (!options) {
-      throw new Error("DebuggerServer.registerModule requires an options argument");
-    }
-    const {prefix, constructor, type} = options;
-    if (typeof (prefix) !== "string") {
-      throw new Error(`Lazy actor definition for '${id}' requires a string ` +
-                      `'prefix' option.`);
-    }
-    if (typeof (constructor) !== "string") {
-      throw new Error(`Lazy actor definition for '${id}' requires a string ` +
-                      `'constructor' option.`);
-    }
-    if (!("global" in type) && !("target" in type)) {
-      throw new Error(`Lazy actor definition for '${id}' requires a dictionary ` +
-                      `'type' option whose attributes can be 'global' or 'target'.`);
-    }
-    const name = prefix + "Actor";
-    const mod = {
-      id,
-      prefix,
-      constructorName: constructor,
-      type,
-      globalActor: type.global,
-      targetScopedActor: type.target
-    };
-    gRegisteredModules[id] = mod;
-    if (mod.targetScopedActor) {
-      this.addTargetScopedActor(mod, name);
-    }
-    if (mod.globalActor) {
-      this.addGlobalActor(mod, name);
-    }
-  },
-
-  /**
-   * Returns true if a module id has been registered.
-   */
-  isModuleRegistered(id) {
-    return (id in gRegisteredModules);
-  },
-
-  /**
-   * Unregister a previously-loaded CommonJS module from the debugger server.
-   */
-  unregisterModule(id) {
-    const mod = gRegisteredModules[id];
-    if (!mod) {
-      throw new Error("Tried to unregister a module that was not previously registered.");
-    }
-
-    // Lazy actors
-    if (mod.targetScopedActor) {
-      this.removeTargetScopedActor(mod);
-    }
-    if (mod.globalActor) {
-      this.removeGlobalActor(mod);
-    }
-
-    delete gRegisteredModules[id];
-  },
-
-  /**
-   * Install Firefox-specific actors.
-   *
-   * /!\ Be careful when adding a new actor, especially global actors.
-   * Any new global actor will be exposed and returned by the root actor.
-   */
-  _addBrowserActors() {
-    this.registerModule("devtools/server/actors/preference", {
-      prefix: "preference",
-      constructor: "PreferenceActor",
-      type: { global: true }
-    });
-    this.registerModule("devtools/server/actors/actor-registry", {
-      prefix: "actorRegistry",
-      constructor: "ActorRegistryActor",
-      type: { global: true }
-    });
-    this.registerModule("devtools/server/actors/addon/addons", {
-      prefix: "addons",
-      constructor: "AddonsActor",
-      type: { global: true }
-    });
-    this.registerModule("devtools/server/actors/device", {
-      prefix: "device",
-      constructor: "DeviceActor",
-      type: { global: true }
-    });
-    this.registerModule("devtools/server/actors/heap-snapshot-file", {
-      prefix: "heapSnapshotFile",
-      constructor: "HeapSnapshotFileActor",
-      type: { global: true }
-    });
-    // Always register this as a global module, even while there is a pref turning
-    // on and off the other performance actor. This actor shouldn't conflict with
-    // the other one. These are also lazily loaded so there shouldn't be a performance
-    // impact.
-    this.registerModule("devtools/server/actors/perf", {
-      prefix: "perf",
-      constructor: "PerfActor",
-      type: { global: true }
-    });
-  },
-
-  /**
-   * Install target-scoped actors.
-   */
-  _addTargetScopedActors() {
-    this.registerModule("devtools/server/actors/webconsole", {
-      prefix: "console",
-      constructor: "WebConsoleActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/inspector/inspector", {
-      prefix: "inspector",
-      constructor: "InspectorActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/canvas", {
-      prefix: "canvas",
-      constructor: "CanvasActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/webgl", {
-      prefix: "webgl",
-      constructor: "WebGLActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/webaudio", {
-      prefix: "webaudio",
-      constructor: "WebAudioActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/stylesheets", {
-      prefix: "styleSheets",
-      constructor: "StyleSheetsActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/storage", {
-      prefix: "storage",
-      constructor: "StorageActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/memory", {
-      prefix: "memory",
-      constructor: "MemoryActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/framerate", {
-      prefix: "framerate",
-      constructor: "FramerateActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/reflow", {
-      prefix: "reflow",
-      constructor: "ReflowActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/css-properties", {
-      prefix: "cssProperties",
-      constructor: "CssPropertiesActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/csscoverage", {
-      prefix: "cssUsage",
-      constructor: "CSSUsageActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/timeline", {
-      prefix: "timeline",
-      constructor: "TimelineActor",
-      type: { target: true }
-    });
-    if ("nsIProfiler" in Ci &&
-        !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)) {
-      this.registerModule("devtools/server/actors/performance", {
-        prefix: "performance",
-        constructor: "PerformanceActor",
-        type: { target: true }
-      });
-    }
-    this.registerModule("devtools/server/actors/animation", {
-      prefix: "animations",
-      constructor: "AnimationsActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/promises", {
-      prefix: "promises",
-      constructor: "PromisesActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/emulation", {
-      prefix: "emulation",
-      constructor: "EmulationActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/addon/webextension-inspected-window", {
-      prefix: "webExtensionInspectedWindow",
-      constructor: "WebExtensionInspectedWindowActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/accessibility", {
-      prefix: "accessibility",
-      constructor: "AccessibilityActor",
-      type: { target: true }
-    });
-    this.registerModule("devtools/server/actors/screenshot", {
-      prefix: "screenshot",
-      constructor: "ScreenshotActor",
-      type: { target: true }
-    });
   },
 
   /**
@@ -1164,147 +910,6 @@ var DebuggerServer = {
   },
 
   /**
-   * Registers handlers for new target-scoped request types defined dynamically.
-   *
-   * Note that the name or actorPrefix of the request type is not allowed to clash with
-   * existing protocol packet properties, like 'title', 'url' or 'actor', since that would
-   * break the protocol.
-   *
-   * @param actor object
-   *        - constructorName: (required)
-   *          name of actor constructor, which is also used when removing the actor.
-   *        One of the following:
-   *          - id:
-   *            module ID that contains the actor
-   *          - constructorFun:
-   *            a function to construct the actor
-   * @param name string
-   *        The name of the new request type.
-   */
-  addTargetScopedActor(actor, name) {
-    if (!name) {
-      throw Error("addTargetScopedActor requires the `name` argument");
-    }
-    if (["title", "url", "actor"].includes(name)) {
-      throw Error(name + " is not allowed");
-    }
-    if (DebuggerServer.targetScopedActorFactories.hasOwnProperty(name)) {
-      throw Error(name + " already exists");
-    }
-    DebuggerServer.targetScopedActorFactories[name] =
-      new RegisteredActorFactory(actor, name);
-  },
-
-  /**
-   * Unregisters the handler for the specified target-scoped request type.
-   *
-   * When unregistering an existing target-scoped actor, we remove the actor factory as
-   * well as all existing instances of the actor.
-   *
-   * @param actor object, string
-   *        In case of object:
-   *          The `actor` object being given to related addTargetScopedActor call.
-   *        In case of string:
-   *          The `name` string being given to related addTargetScopedActor call.
-   */
-  removeTargetScopedActor(actorOrName) {
-    let name;
-    if (typeof actorOrName == "string") {
-      name = actorOrName;
-    } else {
-      const actor = actorOrName;
-      for (const factoryName in DebuggerServer.targetScopedActorFactories) {
-        const handler = DebuggerServer.targetScopedActorFactories[factoryName];
-        if ((handler.name && handler.name == actor.name) ||
-            (handler.id && handler.id == actor.id)) {
-          name = factoryName;
-          break;
-        }
-      }
-    }
-    if (!name) {
-      return;
-    }
-    delete DebuggerServer.targetScopedActorFactories[name];
-    for (const connID of Object.getOwnPropertyNames(this._connections)) {
-      // DebuggerServerConnection in child process don't have rootActor
-      if (this._connections[connID].rootActor) {
-        this._connections[connID].rootActor.removeActorByName(name);
-      }
-    }
-  },
-
-  /**
-   * Registers handlers for new browser-scoped request types defined dynamically.
-   *
-   * Note that the name or actorPrefix of the request type is not allowed to clash with
-   * existing protocol packet properties, like 'from', 'tabs' or 'selected', since that
-   * would break the protocol.
-   *
-   * @param actor object
-   *        - constructorName: (required)
-   *          name of actor constructor, which is also used when removing the actor.
-   *        One of the following:
-   *          - id:
-   *            module ID that contains the actor
-   *          - constructorFun:
-   *            a function to construct the actor
-   * @param name string
-   *        The name of the new request type.
-   */
-  addGlobalActor(actor, name) {
-    if (!name) {
-      throw Error("addGlobalActor requires the `name` argument");
-    }
-    if (["from", "tabs", "selected"].includes(name)) {
-      throw Error(name + " is not allowed");
-    }
-    if (DebuggerServer.globalActorFactories.hasOwnProperty(name)) {
-      throw Error(name + " already exists");
-    }
-    DebuggerServer.globalActorFactories[name] = new RegisteredActorFactory(actor, name);
-  },
-
-  /**
-   * Unregisters the handler for the specified browser-scoped request type.
-   *
-   * When unregistering an existing global actor, we remove the actor factory as well as
-   * all existing instances of the actor.
-   *
-   * @param actor object, string
-   *        In case of object:
-   *          The `actor` object being given to related addGlobalActor call.
-   *        In case of string:
-   *          The `name` string being given to related addGlobalActor call.
-   */
-  removeGlobalActor(actorOrName) {
-    let name;
-    if (typeof actorOrName == "string") {
-      name = actorOrName;
-    } else {
-      const actor = actorOrName;
-      for (const factoryName in DebuggerServer.globalActorFactories) {
-        const handler = DebuggerServer.globalActorFactories[factoryName];
-        if ((handler.name && handler.name == actor.name) ||
-            (handler.id && handler.id == actor.id)) {
-          name = factoryName;
-          break;
-        }
-      }
-    }
-    if (!name) {
-      return;
-    }
-    delete DebuggerServer.globalActorFactories[name];
-    for (const connID of Object.getOwnPropertyNames(this._connections)) {
-      // DebuggerServerConnection in child process don't have rootActor
-      if (this._connections[connID].rootActor) {
-        this._connections[connID].rootActor.removeActorByName(name);
-      }
-    }
-  },
-
-  /**
    * Called when DevTools are unloaded to remove the contend process server startup script
    * for the list of scripts loaded for each new content process. Will also remove message
    * listeners from already loaded scripts.
@@ -1376,7 +981,7 @@ function DebuggerServerConnection(prefix, transport) {
   this._transport.hooks = this;
   this._nextID = 1;
 
-  this._actorPool = new ActorPool(this);
+  this._actorPool = new Pool(this);
   this._extraPools = [this._actorPool];
 
   // Responses to a given actor must be returned the the client
@@ -1488,14 +1093,14 @@ DebuggerServerConnection.prototype = {
    * Add an actor to the default actor pool for this connection.
    */
   addActor(actor) {
-    this._actorPool.addActor(actor);
+    this._actorPool.manage(actor);
   },
 
   /**
    * Remove an actor to the default actor pool for this connection.
    */
   removeActor(actor) {
-    this._actorPool.removeActor(actor);
+    this._actorPool.unmanage(actor);
   },
 
   /**
@@ -1526,30 +1131,27 @@ DebuggerServerConnection.prototype = {
   },
 
   _getOrCreateActor(actorID) {
-    let actor = this.getActor(actorID);
-    if (!actor) {
-      this.transport.send({ from: actorID ? actorID : "root",
-                            error: "noSuchActor",
-                            message: "No such actor for ID: " + actorID });
-      return null;
-    }
-
-    // Dynamically-loaded actors have to be created lazily.
-    if (actor instanceof ObservedActorFactory) {
-      try {
-        actor = actor.createActor();
-      } catch (error) {
-        const prefix = "Error occurred while creating actor '" + actor.name;
-        this.transport.send(this._unknownError(actorID, prefix, error));
+    try {
+      const actor = this.getActor(actorID);
+      if (!actor) {
+        this.transport.send({ from: actorID ? actorID : "root",
+                              error: "noSuchActor",
+                              message: "No such actor for ID: " + actorID });
+        return null;
       }
-    } else if (typeof (actor) !== "object") {
-      // ActorPools should now contain only actor instances (i.e. objects)
-      // or ObservedActorFactory instances.
-      throw new Error("Unexpected actor constructor/function in ActorPool " +
-                      "for actorID=" + actorID + ".");
-    }
 
-    return actor;
+      if (typeof (actor) !== "object") {
+        // ActorPools should now contain only actor instances (i.e. objects)
+        throw new Error("Unexpected actor constructor/function in ActorPool " +
+                        "for actorID=" + actorID + ".");
+      }
+
+      return actor;
+    } catch (error) {
+      const prefix = `Error occurred while creating actor' ${actorID}`;
+      this.transport.send(this._unknownError(actorID, prefix, error));
+    }
+    return null;
   },
 
   poolFor(actorID) {

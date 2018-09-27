@@ -23,10 +23,7 @@
 var { Ci, Cu, Cr, Cc } = require("chrome");
 var Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
-var {
-  ActorPool, createExtraActors, appendExtraActors
-} = require("devtools/server/actors/common");
-var { DebuggerServer } = require("devtools/server/main");
+var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
 var { TabSources } = require("devtools/server/actors/utils/TabSources");
@@ -41,7 +38,8 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/shared/locales/browsing-context.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { ActorClassWithSpec, Actor, Pool } = require("devtools/shared/protocol");
+const { LazyPool, createExtraActors } = require("devtools/shared/protocol/lazy-pool");
 const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
 
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/thread", true);
@@ -105,7 +103,7 @@ const browsingContextTargetPrototype = {
    * is a `docShell`.
    *
    * The main goal of this class is to expose the target-scoped actors being registered
-   * via `DebuggerServer.registerModule` and manage their lifetimes. In addition, this
+   * via `ActorRegistry.registerModule` and manage their lifetimes. In addition, this
    * class also tracks the lifetime of the targeted browsing context.
    *
    * ### Main requests:
@@ -478,16 +476,18 @@ const browsingContextTargetPrototype = {
     // Always use the same ActorPool, so existing actor instances
     // (created in createExtraActors) are not lost.
     if (!this._targetScopedActorPool) {
-      this._targetScopedActorPool = new ActorPool(this.conn);
-      this.conn.addActorPool(this._targetScopedActorPool);
+      this._targetScopedActorPool = new LazyPool(this.conn);
     }
 
     // Walk over target-scoped actor factories and make sure they are all
     // instantiated and added into the ActorPool.
-    this._createExtraActors(DebuggerServer.targetScopedActorFactories,
-      this._targetScopedActorPool);
+    const actors = createExtraActors(
+      ActorRegistry.targetScopedActorFactories,
+      this._targetScopedActorPool,
+      this
+    );
 
-    this._appendExtraActors(response);
+    Object.assign(response, actors);
     return response;
   },
 
@@ -495,8 +495,8 @@ const browsingContextTargetPrototype = {
    * Called when the actor is removed from the connection.
    */
   destroy() {
-    Actor.prototype.destroy.call(this);
     this.exit();
+    Actor.prototype.destroy.call(this);
   },
 
   /**
@@ -560,10 +560,6 @@ const browsingContextTargetPrototype = {
 
     return false;
   },
-
-  /* Support for DebuggerServer.addTargetScopedActor. */
-  _createExtraActors: createExtraActors,
-  _appendExtraActors: appendExtraActors,
 
   /**
    * Does the actual work of attaching to a browsing context.
@@ -651,15 +647,18 @@ const browsingContextTargetPrototype = {
     }
 
     return this._workerTargetActorList.getList().then((actors) => {
-      const pool = new ActorPool(this.conn);
+      const pool = new Pool(this.conn);
       for (const actor of actors) {
-        pool.addActor(actor);
+        pool.manage(actor);
       }
 
-      this.conn.removeActorPool(this._workerTargetActorPool);
-      this._workerTargetActorPool = pool;
-      this.conn.addActorPool(this._workerTargetActorPool);
+      // Do not destroy the pool before transfering ownership to the newly created
+      // pool, so that we do not accidently destroy actors that are still in use.
+      if (this._workerTargetActorPool) {
+        this._workerTargetActorPool.destroy();
+      }
 
+      this._workerTargetActorPool = pool;
       this._workerTargetActorList.onListChanged = this._onWorkerTargetActorListChanged;
 
       return {
@@ -888,7 +887,7 @@ const browsingContextTargetPrototype = {
     // Shut down actors that belong to this target's pool.
     this._styleSheetActors.clear();
     if (this._targetScopedActorPool) {
-      this.conn.removeActorPool(this._targetScopedActorPool);
+      this._targetScopedActorPool.destroy();
       this._targetScopedActorPool = null;
     }
 
@@ -899,7 +898,7 @@ const browsingContextTargetPrototype = {
     }
 
     if (this._workerTargetActorPool !== null) {
-      this.conn.removeActorPool(this._workerTargetActorPool);
+      this._workerTargetActorPool.destroy();
       this._workerTargetActorPool = null;
     }
 
@@ -1440,7 +1439,7 @@ const browsingContextTargetPrototype = {
     const actor = new StyleSheetActor(styleSheet, this);
     this._styleSheetActors.set(styleSheet, actor);
 
-    this._targetScopedActorPool.addActor(actor);
+    this._targetScopedActorPool.manage(actor);
     this.emit("stylesheet-added", actor);
 
     return actor;
@@ -1454,7 +1453,7 @@ const browsingContextTargetPrototype = {
       }
       delete this._extraActors[name];
     }
-  },
+  }
 };
 
 exports.browsingContextTargetPrototype = browsingContextTargetPrototype;
