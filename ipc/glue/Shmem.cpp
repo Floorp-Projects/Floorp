@@ -515,12 +515,13 @@ IPDLParamTraits<Shmem>::Read(const IPC::Message* aMsg, PickleIterator* aIter,
   }
 
   Shmem::SharedMemory* rawmem = aActor->LookupSharedMemory(id);
-  if (!rawmem) {
-    return false;
+  if (rawmem) {
+    *aResult = Shmem(
+      Shmem::PrivateIPDLCaller(),
+      rawmem, id);
+    return true;
   }
-  *aResult = Shmem(
-    Shmem::PrivateIPDLCaller(),
-    rawmem, id);
+  *aResult = Shmem();
   return true;
 }
 
