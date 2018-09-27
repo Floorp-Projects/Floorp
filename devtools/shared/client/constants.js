@@ -21,7 +21,6 @@ const ThreadStateTypes = {
  */
 const UnsolicitedNotifications = {
   "consoleAPICall": "consoleAPICall",
-  "eventNotification": "eventNotification",
   "fileActivity": "fileActivity",
   "lastPrivateContextExited": "lastPrivateContextExited",
   "logMessage": "logMessage",
@@ -39,13 +38,6 @@ const UnsolicitedNotifications = {
   "tabNavigated": "tabNavigated",
   "frameUpdate": "frameUpdate",
   "pageError": "pageError",
-  "documentLoad": "documentLoad",
-  "enteredFrame": "enteredFrame",
-  "exitedFrame": "exitedFrame",
-  "appOpen": "appOpen",
-  "appClose": "appClose",
-  "appInstall": "appInstall",
-  "appUninstall": "appUninstall",
   "evaluationResult": "evaluationResult",
   "newSource": "newSource",
   "updatedSource": "updatedSource",
