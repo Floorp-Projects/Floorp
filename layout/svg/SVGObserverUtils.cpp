@@ -535,6 +535,8 @@ nsSVGPaintingProperty::OnRenderingChange()
   }
 }
 
+// Note that the returned list will be empty in the case of a 'filter' property
+// that only specifies CSS filter functions (no url()'s to SVG filters).
 static SVGFilterObserverListForCSSProp*
 GetOrCreateFilterObserverListForCSS(nsIFrame* aFrame)
 {
@@ -615,6 +617,38 @@ SVGObserverUtils::GetMarkerFrames(nsIFrame* aMarkedFrame,
 #undef GET_MARKER
 
   return foundMarker;
+}
+
+SVGObserverUtils::ReferenceState
+SVGObserverUtils::GetAndObserveFilters(nsIFrame* aFilteredFrame,
+                                       nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+{
+  SVGFilterObserverListForCSSProp* observerList =
+    GetOrCreateFilterObserverListForCSS(aFilteredFrame);
+  if (!observerList) {
+    return eHasNoRefs;
+  }
+
+  const nsTArray<RefPtr<SVGFilterObserver>>& observers =
+    observerList->GetObservers();
+  if (observers.IsEmpty()) {
+    return eHasNoRefs;
+  }
+
+  for (uint32_t i = 0; i < observers.Length(); i++) {
+    nsSVGFilterFrame* filter = observers[i]->GetFilterFrame();
+    if (!filter) {
+      if (aFilterFrames) {
+        aFilterFrames->Clear();
+      }
+      return eHasRefsSomeInvalid;
+    }
+    if (aFilterFrames) {
+      aFilterFrames->AppendElement(filter);
+    }
+  }
+
+  return eHasRefsAllValid;
 }
 
 SVGGeometryElement*
@@ -741,8 +775,6 @@ SVGObserverUtils::GetEffectProperties(nsIFrame* aFrame)
   EffectProperties result;
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
 
-  result.mFilterObservers = GetOrCreateFilterObserverListForCSS(aFrame);
-
   if (style->mClipPath.GetType() == StyleShapeSourceType::URL) {
     RefPtr<URLAndReferrerInfo> pathURI = SVGObserverUtils::GetClipPathURI(aFrame);
     result.mClipPath =
@@ -847,7 +879,7 @@ SVGObserverUtils::EffectProperties::GetMaskFrames()
 bool
 SVGObserverUtils::EffectProperties::HasNoOrValidEffects()
 {
-  return HasNoOrValidClipPath() && HasNoOrValidMask() && HasNoOrValidFilter();
+  return HasNoOrValidClipPath() && HasNoOrValidMask();
 }
 
 bool

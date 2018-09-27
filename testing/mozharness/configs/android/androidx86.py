@@ -16,6 +16,7 @@ config = {
         "unpack": "True"
         }
         ] """,
+    "emulator_avd_name": "test-1",
     "emulator_process_name": "emulator64-x86",
     "emulator_extra_args": "-show-kernel -debug init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket -qemu -m 1024",
     "exes": {
@@ -25,9 +26,5 @@ config = {
         "DISPLAY": ":0.0",
         "PATH": "%(PATH)s:%(abs_work_dir)s/android-sdk18/tools:%(abs_work_dir)s/android-sdk18/platform-tools",
         "MINIDUMP_SAVEPATH": "%(abs_work_dir)s/../minidumps"
-    },
-    "emulator": {
-        "name": "test-1",
-        "device_id": "emulator-5554",
     },
 }
