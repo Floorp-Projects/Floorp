@@ -1980,7 +1980,7 @@ nsContainerFrame::RenumberChildFrames(int32_t* aOrdinal,
   }
 
   // We need to set NS_FRAME_HAS_DIRTY_CHILDREN bits up the tree between
-  // the bullet and the caller of RenumberLists.  But the caller itself
+  // the bullet and the caller of RenumberList.  But the caller itself
   // has to be responsible for setting the bit itself, since that caller
   // might be making a FrameNeedsReflow call, which requires that the
   // bit not be set yet.

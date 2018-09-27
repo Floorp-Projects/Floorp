@@ -62,7 +62,7 @@ class Sidebar extends PureComponent {
           icon: GLOBE_ICON,
           isSelected: selectedPage === pageId,
           key: pageId,
-          name: runtime.id,
+          name: runtime.name,
           runtimeId: runtime.id,
           selectable: runtimeHasClient,
         });
