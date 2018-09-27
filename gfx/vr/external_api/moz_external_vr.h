@@ -7,6 +7,12 @@
 #ifndef GFX_VR_EXTERNAL_API_H
 #define GFX_VR_EXTERNAL_API_H
 
+#define GFX_VR_EIGHTCC(c1, c2, c3, c4, c5, c6, c7, c8) \
+  ((uint64_t)(c1) << 56 | (uint64_t)(c2) << 48 | \
+  (uint64_t)(c3) << 40 | (uint64_t)(c4) << 32 | \
+  (uint64_t)(c5) << 24 | (uint64_t)(c6) << 16 | \
+  (uint64_t)(c7) << 8 | (uint64_t)(c8))
+
 #include <stddef.h>
 #include <stdint.h>
 #include <type_traits>
@@ -29,7 +35,7 @@ namespace dom {
 #endif //  MOZILLA_INTERNAL_API
 namespace gfx {
 
-static const int32_t kVRExternalVersion = 3;
+static const int32_t kVRExternalVersion = 4;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -265,6 +271,9 @@ struct VRDisplayState
   bool shutdown;
 #endif // defined(__ANDROID__)
   char mDisplayName[kVRDisplayNameMaxLen];
+  // eight byte character code identifier
+  // LSB first, so "ABCDEFGH" -> ('H'<<56) + ('G'<<48) + ('F'<<40) + ('E'<<32) + ('D'<<24) + ('C'<<16) + ('B'<<8) + 'A').
+  uint64_t mEightCC;
   VRDisplayCapabilityFlags mCapabilityFlags;
   VRFieldOfView mEyeFOV[VRDisplayState::NumEyes];
   Point3D_POD mEyeTranslation[VRDisplayState::NumEyes];
@@ -278,6 +287,9 @@ struct VRDisplayState
   uint64_t mLastSubmittedFrameId;
   bool mLastSubmittedFrameSuccessful;
   uint32_t mPresentingGeneration;
+  // Telemetry
+  bool mReportsDroppedFrames;
+  uint64_t mDroppedFrameCount;
 };
 
 struct VRControllerState

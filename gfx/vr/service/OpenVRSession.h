@@ -65,6 +65,7 @@ private:
   void EnumerateControllers(VRSystemState& aState);
   void UpdateControllerPoses(VRSystemState& aState);
   void UpdateControllerButtons(VRSystemState& aState);
+  void UpdateTelemetry(VRSystemState& aSystemState);
 
   bool SubmitFrame(void* aTextureHandle,
                    ::vr::ETextureType aTextureType,
