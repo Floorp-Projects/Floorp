@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <locale.h>
-
 #include "gtest/gtest.h"
 #include "mozilla/Preferences.h"
 
@@ -35,23 +33,4 @@ TEST(PrefsBasics, Errors)
     Preferences::GetFloat("foo.float", 1.0f, PrefValueKind::Default), 3.33f);
   ASSERT_FLOAT_EQ(Preferences::GetFloat("foo.float", 1.0f, PrefValueKind::User),
                   4.44f);
-}
-
-TEST(PrefsBasics, FloatConversions)
-{
-  // Set a global locale that uses the comma as the decimal separator. Since
-  // we can't tell which locales will be available on a machine the tests are
-  // executed only if the locale was set correctly.
-  const char* oldLocale = setlocale(LC_NUMERIC, "nl_NL");
-  if (oldLocale != nullptr) {
-    Preferences::SetFloat("foo.float", 3.33f, PrefValueKind::Default);
-    Preferences::SetFloat("foo.float", 4.44f, PrefValueKind::User);
-    ASSERT_FLOAT_EQ(
-      Preferences::GetFloat("foo.float", 1.0f, PrefValueKind::Default), 3.33f);
-    ASSERT_FLOAT_EQ(
-      Preferences::GetFloat("foo.float", 1.0f, PrefValueKind::User), 4.44f);
-
-    // Restore the original locale
-    setlocale(LC_NUMERIC, oldLocale);
-  }
 }

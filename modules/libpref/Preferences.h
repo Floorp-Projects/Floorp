@@ -19,6 +19,7 @@
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
@@ -308,9 +309,7 @@ public:
                            float aValue,
                            PrefValueKind aKind = PrefValueKind::User)
   {
-    nsAutoCString value;
-    value.AppendFloat(aValue);
-    return SetCString(aPrefName, value, aKind);
+    return SetCString(aPrefName, nsPrintfCString("%f", aValue), aKind);
   }
 
   static nsresult SetCString(const char* aPrefName,

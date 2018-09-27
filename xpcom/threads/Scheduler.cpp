@@ -16,6 +16,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "nsCycleCollector.h"
 #include "nsIThread.h"
+#include "nsPrintfCString.h"
 #include "nsThread.h"
 #include "nsThreadManager.h"
 #include "PrioritizedEventQueue.h"

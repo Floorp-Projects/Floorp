@@ -29,7 +29,6 @@
 #include "nsILoadInfo.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
-#include "nsPrintfCString.h"
 #include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"
 #include "nsQueryObject.h"
