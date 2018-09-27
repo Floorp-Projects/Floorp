@@ -215,10 +215,7 @@ impl MarionetteHandler {
             prefs.insert("marionette.debugging.clicktostart", Pref::new(true));
         }
 
-        prefs.insert(
-            "marionette.log.level",
-            Pref::new(logging::max_level().to_string()),
-        );
+        prefs.insert("marionette.log.level", logging::max_level().into());
         prefs.insert("marionette.port", Pref::new(port));
 
         prefs.write().map_err(|e| {
@@ -1486,4 +1483,32 @@ impl ToMarionette for WindowRectParameters {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::{MarionetteHandler, MarionetteSettings};
+    use mozprofile::preferences::PrefValue;
+    use mozprofile::profile::Profile;
+
+    // This is not a pretty test, mostly due to the nature of
+    // mozprofile's and MarionetteHandler's APIs, but we have had
+    // several regressions related to marionette.log.level.
+    #[test]
+    fn test_marionette_log_level() {
+        let mut profile = Profile::new(None).unwrap();
+        let handler = MarionetteHandler::new(MarionetteSettings::default());
+        handler.set_prefs(2828, &mut profile, false, vec![]).ok();
+        let user_prefs = profile.user_prefs().unwrap();
+
+        let pref = user_prefs.get("marionette.log.level").unwrap();
+        let value = match pref.value {
+            PrefValue::String(ref s) => s,
+            _ => panic!(),
+        };
+        for (i, ch) in value.chars().enumerate() {
+            if i == 0 {
+                assert!(ch.is_uppercase());
+            } else {
+                assert!(ch.is_lowercase());
+            }
+        }
+    }
+}
