@@ -68,6 +68,11 @@
   width: 16px;
   height: 16px;
   margin-inline-end: .6em;
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.6;
 }
 
 .urlbarView-favicon {
@@ -76,12 +81,8 @@
   opacity: 0.6;
 }
 
-.urlbarView-row[action=switch-to-tab] > .row-inner > .action-icon {
-  height: 8px;
-  border-top-left-radius: 3px;
-  border-top-right-radius: 3px;
-  background: currentcolor;
-  opacity: 0.5;
+.urlbarView-row[action=switch-to-tab] > .urlbarView-row-inner > .urlbarView-action-icon {
+  background-image: url(chrome://browser/skin/tab.svg);
 }
 
 .urlbarView-title {

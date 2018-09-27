@@ -432,7 +432,9 @@ class damp(PageloaderTest):
     win_counters = w7_counters = linux_counters = mac_counters = None
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     preferences = {'devtools.memory.enabled': True,
-                   'addon.test.damp.webserver': '${webserver}'}
+                   'addon.test.damp.webserver': '${webserver}',
+                   'startup.homepage_welcome_url': '',
+                   'startup.homepage_welcome_url.additional': ''}
     unit = 'ms'
     subtest_alerts = True
     perfherder_framework = 'devtools'
