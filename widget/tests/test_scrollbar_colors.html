@@ -63,7 +63,7 @@ if (outerRect.width == outer.clientWidth &&
 } else {
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({
-    "set": [["layout.css.scrollbar-colors.enabled", true]],
+    "set": [["layout.css.scrollbar-color.enabled", true]],
   }, function() {
     document.querySelector('#style').textContent = `
       .outer { scrollbar-color: blue cyan; }

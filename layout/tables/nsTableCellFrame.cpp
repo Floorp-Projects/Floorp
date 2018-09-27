@@ -858,8 +858,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowInput);
 
   WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalSize availSize(wm, aReflowInput.AvailableISize(),
-                            aReflowInput.AvailableBSize());
+  LogicalSize availSize = aReflowInput.AvailableSize();
 
   LogicalMargin borderPadding = aReflowInput.ComputedLogicalPadding();
   LogicalMargin border = GetBorderWidth(wm);

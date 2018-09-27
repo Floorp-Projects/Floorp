@@ -1118,10 +1118,7 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
       // We found a reflow state for the outermost wrapping frame, so use
       // its computed metrics if available, converted to our writing mode
       WritingMode lastWM = aLastRI->GetWritingMode();
-      LogicalSize lastRISize =
-        LogicalSize(lastWM,
-                    aLastRI->ComputedISize(),
-                    aLastRI->ComputedBSize()).ConvertTo(aWM, lastWM);
+      LogicalSize lastRISize = aLastRI->ComputedSize().ConvertTo(aWM, lastWM);
       LogicalMargin lastRIPadding =
         aLastRI->ComputedLogicalPadding().ConvertTo(aWM, lastWM);
       LogicalMargin logicalScrollbars(aWM, scrollbars);

@@ -14,10 +14,14 @@ var EXPORTED_SYMBOLS = ["ActorManagerChild"];
 
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {DefaultMap} = ExtensionUtils;
 
 const {sharedData} = Services.cpmm;
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "simulateFission",
+                                      "browser.fission.simulate", false);
 
 function getMessageManager(window) {
   return window.docShell.messageManager;
@@ -67,7 +71,7 @@ class Dispatcher {
       let obj = {};
       ChromeUtils.import(actor.module, obj);
 
-      inst = new obj[actorName](this.mm);
+      inst = new obj[actorName](this);
       this.instances.set(actorName, inst);
     }
     return inst;
@@ -80,7 +84,19 @@ class Dispatcher {
   }
 
   handleActorEvent(actor, event) {
-    return this.getActor(actor).handleEvent(event);
+    let targetWindow = null;
+
+    if (simulateFission) {
+      targetWindow = event.target.ownerGlobal;
+      let dispatcherWindow = this.window || this.mm.content;
+
+      if (targetWindow != dispatcherWindow) {
+        // events can't propagate across frame boundaries because the
+        // frames will be hosted on separated processes.
+        return;
+      }
+    }
+    this.getActor(actor).handleEvent(event);
   }
 
   receiveMessage(message) {
@@ -148,12 +164,10 @@ class SingletonDispatcher extends Dispatcher {
     }
 
     for (let actor of this.instances.values()) {
-      if (typeof actor.cleanup === "function") {
-        try {
-          actor.cleanup();
-        } catch (e) {
-          Cu.reportError(e);
-        }
+      try {
+        actor.cleanup();
+      } catch (e) {
+        Cu.reportError(e);
       }
     }
 

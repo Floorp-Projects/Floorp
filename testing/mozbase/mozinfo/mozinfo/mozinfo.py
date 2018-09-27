@@ -183,13 +183,14 @@ def sanitize(info):
 
 
 def update(new_info):
-    """
-    Update the info.
+    """Adds information from json file to the global symbol table.
+
+    Given the parameter new_info, this method will look for the file.
+    If found, the file is read into a buffer and assumed to be json.
 
     :param new_info: Either a dict containing the new info or a path/url
                      to a json file containing the new info.
     """
-
     PY3 = sys.version_info[0] == 3
     if PY3:
         string_types = str,
@@ -215,16 +216,29 @@ def update(new_info):
         globals()['isUnix'] = True
 
 
-def find_and_update_from_json(*dirs):
-    """
-    Find a mozinfo.json file, load it, and update the info with the
-    contents.
+def find_and_update_from_json(*dirs, **kwargs):
+    """Find a mozinfo.json file, load it, and update global symbol table.
 
-    :param dirs: Directories in which to look for the file. They will be
-                 searched after first looking in the root of the objdir
-                 if the current script is being run from a Mozilla objdir.
+    This method will first check the relevant objdir directory for the
+    necessary mozinfo.json file, if the current script is being run from a
+    Mozilla objdir.
 
-    Returns the full path to mozinfo.json if it was found, or None otherwise.
+    If the objdir directory did not supply the necessary data, this method
+    will then look for the required mozinfo.json file from the provided
+    tuple of directories.
+
+    If file is found, the global symbols table is updated via a helper method.
+
+    If no valid files are found, an exception is raised.
+
+    :param tuple dirs: Directories in which to look for the file.
+    :param dict kwargs: optional values:
+                        raise_exception: if this value is provided, the default
+                                         behavior of raising an exception is
+                                         overridden.
+    :returns: EnvironmentError: default behavior.
+              None: if exception raising is suppressed.
+              json_path: string representation of path.
     """
     # First, see if we're in an objdir
     try:
@@ -240,6 +254,8 @@ def find_and_update_from_json(*dirs):
     except (BuildEnvironmentNotFoundException, MozconfigFindException):
         pass
 
+    raise_exception = kwargs.get('raise_exception', True)
+
     for d in dirs:
         d = _os.path.abspath(d)
         json_path = _os.path.join(d, "mozinfo.json")
@@ -247,7 +263,10 @@ def find_and_update_from_json(*dirs):
             update(json_path)
             return json_path
 
-    return None
+    if raise_exception:
+        raise EnvironmentError('{}: could not find any mozinfo.json.'.format(__name__))
+    else:
+        return None
 
 
 def output_to_file(path):

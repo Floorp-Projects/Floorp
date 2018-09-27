@@ -1755,6 +1755,13 @@ pref("app.shield.optoutstudies.enabled", false);
 // Multi-lingual preferences
 pref("intl.multilingual.enabled", false);
 
+// Simulate conditions that will happen when the browser
+// is running with Fission enabled. This is meant to assist
+// development and testing of Fission.
+// The current simulated conditions are:
+// - Don't propagate events from subframes to JS child actors
+pref("browser.fission.simulate", false);
+
 // Prio preferences
 // Only enable by default on Nightly.
 // On platforms that do not build libprio, do not set these prefs at all, which gives us a way to detect support.

@@ -9,8 +9,9 @@ var EXPORTED_SYMBOLS = ["ZoomChild"];
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class ZoomChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
+
     this._cache = {
       fullZoom: NaN,
       textZoom: NaN,

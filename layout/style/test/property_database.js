@@ -8101,7 +8101,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
   );
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-colors.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-color.enabled")) {
   gCSSProperties["scrollbar-color"] = {
     domProp: "scrollbarColor",
     inherited: true,

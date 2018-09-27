@@ -41,9 +41,7 @@ struct TableRowGroupReflowInput {
                         nsTableFrame*            aTableFrame)
       : reflowInput(aReflowInput)
       , tableFrame(aTableFrame)
-      , availSize(aReflowInput.GetWritingMode(),
-                  aReflowInput.AvailableISize(),
-                  aReflowInput.AvailableBSize())
+      , availSize(aReflowInput.AvailableSize())
       , bCoord(0)
   {
   }

@@ -10,17 +10,17 @@ var EXPORTED_SYMBOLS = ["PopupBlockingChild"];
 ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
 class PopupBlockingChild extends ActorChild {
-  constructor(mm) {
-    super(mm);
+  constructor(dispatcher) {
+    super(dispatcher);
 
     this.popupData = null;
     this.popupDataInternal = null;
 
-    mm.addEventListener("pageshow", this, true);
-    mm.addEventListener("pagehide", this, true);
+    this.mm.addEventListener("pageshow", this, true);
+    this.mm.addEventListener("pagehide", this, true);
 
-    mm.addMessageListener("PopupBlocking:UnblockPopup", this);
-    mm.addMessageListener("PopupBlocking:GetBlockedPopupList", this);
+    this.mm.addMessageListener("PopupBlocking:UnblockPopup", this);
+    this.mm.addMessageListener("PopupBlocking:GetBlockedPopupList", this);
   }
 
   receiveMessage(msg) {
