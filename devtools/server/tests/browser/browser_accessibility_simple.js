@@ -16,7 +16,7 @@ function checkAccessibilityState(accessibility, expected) {
 // Simple checks for the AccessibilityActor and AccessibleWalkerActor
 
 add_task(async function() {
-  const { walker: domWalker, client, accessibility} = await initAccessibilityFrontForUrl(
+  const { walker: domWalker, target, accessibility} = await initAccessibilityFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 
   ok(accessibility, "The AccessibilityFront was created");
@@ -63,6 +63,6 @@ add_task(async function() {
   checkAccessibilityState(accessibility,
     { enabled: false, canBeDisabled: true, canBeEnabled: true });
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

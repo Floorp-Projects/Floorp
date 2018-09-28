@@ -7,7 +7,7 @@
 // Checks for the AccessibleActor
 
 add_task(async function() {
-  const {client, walker, accessibility} =
+  const {target, walker, accessibility} =
     await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
   const modifiers = Services.appinfo.OS === "Darwin" ? "\u2303\u2325" : "Alt+Shift+";
 
@@ -50,6 +50,6 @@ add_task(async function() {
 
   await accessibility.disable();
   await waitForA11yShutdown();
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

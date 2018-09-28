@@ -5,7 +5,6 @@
 "use strict";
 
 const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
-const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
 const CSS_URI = "http://mochi.test:8888/browser/devtools/client/sourceeditor" +
                 "/test/css_statemachine_testcases.css";
@@ -86,7 +85,7 @@ add_task(async function test() {
 async function runTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   await target.attach();
-  inspector = InspectorFront(target.client, target.form);
+  inspector = target.getFront("inspector");
   const walker = await inspector.getWalker();
   completer = new CSSCompleter({walker: walker,
                                 cssProperties: getClientCssProperties()});

@@ -15,7 +15,7 @@ const ALL_ANIMATED_NODES = [".simple-animation", ".multiple-animations",
                             ".delayed-animation"];
 
 add_task(async function() {
-  const {client, walker, animations} =
+  const {target, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Pause all animations in the test document");
@@ -24,7 +24,7 @@ add_task(async function() {
   info("Play all animations in the test document");
   await toggleAndCheckStates(walker, animations, ALL_ANIMATED_NODES, "running");
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });
 
