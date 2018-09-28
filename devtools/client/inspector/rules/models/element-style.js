@@ -10,6 +10,7 @@ const UserProperties = require("devtools/client/inspector/rules/models/user-prop
 const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 
 loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/utils", true);
+loader.lazyRequireGetter(this, "isCssVariable", "devtools/shared/fronts/css-properties", true);
 
 /**
  * ElementStyle is responsible for the following:
@@ -21,7 +22,7 @@ loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/
  * @param  {CssRuleView} ruleView
  *         The instance of the rule-view panel.
  * @param  {Object} store
- *         The ElementStyle can use this object to store metadata
+ *         The ElementStyle can use this object to store metadatas
  *         that might outlast the rule view, particularly the current
  *         set of disabled properties.
  * @param  {PageStyleFront} pageStyle
