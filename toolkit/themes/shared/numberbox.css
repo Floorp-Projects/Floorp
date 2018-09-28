@@ -14,7 +14,7 @@ html|*.numberbox-input {
 }
 
 textbox[type="number"][hidespinbuttons="true"] html|*.numberbox-input {
-  -moz-appearance: textfield !important;
+  -moz-appearance: textfield;
 }
 
 /* input[type=number] uses display: flex; by default which is incompatible with XUL flexbox
