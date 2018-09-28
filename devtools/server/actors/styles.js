@@ -26,6 +26,7 @@ loader.lazyRequireGetter(this, "UPDATE_PRESERVING_RULES",
   "devtools/server/actors/stylesheets", true);
 loader.lazyRequireGetter(this, "UPDATE_GENERAL",
   "devtools/server/actors/stylesheets", true);
+loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 
 loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
   return InspectorUtils.getCSSPseudoElementNames();
@@ -976,6 +977,10 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     this.rawStyle = item.style;
     this._parentSheet = null;
     this._onStyleApplied = this._onStyleApplied.bind(this);
+    // Parsed CSS declarations from this.form().declarations used to check CSS property
+    // names and values before tracking changes. Using cached values instead of accessing
+    // this.form().declarations on demand because that would cause needless re-parsing.
+    this._declarations = [];
 
     if (CSSRule.isInstance(item)) {
       this.type = item.type;
@@ -1016,6 +1021,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     this.pageStyle = null;
     this.rawNode = null;
     this.rawRule = null;
+    this._declarations = null;
     if (this.sheetActor) {
       this.sheetActor.off("style-applied", this._onStyleApplied);
     }
@@ -1152,6 +1158,9 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         decl.isNameValid = CSS.supports(decl.name, "initial");
         return decl;
       });
+      // Cache parsed declarations so we don't needlessly re-parse authoredText every time
+      // we need need to check previous property names and values when tracking changes.
+      this._declarations = declarations;
     }
 
     return form;
@@ -1292,13 +1301,32 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * Set the contents of the rule.  This rewrites the rule in the
    * stylesheet and causes it to be re-evaluated.
    *
-   * @param {String} newText the new text of the rule
+   * @param {String} newText
+   *        The new text of the rule
+   * @param {Array} modifications
+   *        Array with modifications applied to the rule. Contains objects like:
+   *        {
+   *          type: "set",
+   *          index: <number>,
+   *          name: <string>,
+   *          value: <string>,
+   *          priority: <optional string>
+   *        }
+   *         or
+   *        {
+   *          type: "remove",
+   *          index: <number>,
+   *          name: <string>,
+   *        }
    * @returns the rule with updated properties
    */
-  async setRuleText(newText) {
+  async setRuleText(newText, modifications = []) {
     if (!this.canSetRuleText) {
       throw new Error("invalid call to setRuleText");
     }
+
+    // Log the changes before applying them so we have access to the previous values.
+    modifications.map(mod => this.logChange(mod));
 
     if (this.type === ELEMENT_STYLE) {
       // For element style rules, set the node's style attribute.
@@ -1324,6 +1352,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    * Modify a rule's properties. Passed an array of modifications:
    * {
    *   type: "set",
+   *   index: <number>,
    *   name: <string>,
    *   value: <string>,
    *   priority: <optional string>
@@ -1331,6 +1360,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    *  or
    * {
    *   type: "remove",
+   *   index: <number>,
    *   name: <string>,
    * }
    *
@@ -1356,6 +1386,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     const tempElement = document.createElementNS(XHTML_NS, "div");
 
     for (const mod of modifications) {
+      this.logChange(mod);
       if (mod.type === "set") {
         tempElement.style.setProperty(mod.name, mod.value, mod.priority || "");
         this.rawStyle.setProperty(mod.name,
@@ -1466,6 +1497,71 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       return true;
     }
     return false;
+  },
+
+  /**
+   * Take an object with instructions to modify a CSS declaration and emit a
+   * "track-change" event with normalized metadata which describes the change.
+   *
+   * @param {Object} change
+   *        Data about a modification to a rule. @see |modifyProperties()|
+   */
+  logChange(change) {
+    const prevValue = this._declarations[change.index]
+      ? this._declarations[change.index].value
+      : null;
+    const prevName = this._declarations[change.index]
+      ? this._declarations[change.index].name
+      : null;
+
+    // Metadata about a change.
+    const data = {};
+    data.type = change.type;
+    data.selector = this.rawRule.selectorText;
+
+    // For inline style changes, generate a unique selector and pass the node tag.
+    if (this.type === ELEMENT_STYLE) {
+      data.tag = this.rawNode.tagName;
+      data.href = "inline";
+      // findCssSelector() fails on XUL documents. Catch and silently ignore that error.
+      try {
+        data.selector = findCssSelector(this.rawNode);
+      } catch (err) {}
+    } else {
+      data.href = this._parentSheet.href || "inline stylesheet";
+    }
+
+    switch (change.type) {
+      case "set":
+        // If `change.newName` is defined, use it because the property is being renamed.
+        // Otherwise, a new declaration is being created or the value of an existing
+        // declaration is being updated. In that case, use the provided `change.name`.
+        const name = change.newName ? change.newName : change.name;
+        // Reuse the previous value when the property is being renamed.
+        const value = change.newName ? prevValue : change.value;
+
+        data.add = { property: name, value };
+        // If there is a previous value, log its removal together with the previous
+        // property name. Using the previous name handles the case for renaming a property
+        // and is harmless when updating an existing value (the name stays the same).
+        data.remove = prevValue ? { property: prevName, value: prevValue } : null;
+        break;
+
+      case "remove":
+        data.add = null;
+        data.remove = { property: change.name, value: prevValue };
+        break;
+    }
+
+    // Do not track non-changes. This can occur when typing a value in the Rule view
+    // inline editor, then committing it by pressing the Enter key.
+    if (data.add && data.remove &&
+        data.add.property === data.remove.property &&
+        data.add.value === data.remove.value) {
+      return;
+    }
+
+    this.emit("track-change", data);
   },
 
   /**
