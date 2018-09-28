@@ -4,10 +4,6 @@
 
 "use strict";
 
-const {
-  WebExtensionInspectedWindowFront
-} = require("devtools/shared/fronts/addon/webextension-inspected-window");
-
 const TEST_RELOAD_URL = `${MAIN_DOMAIN}/inspectedwindow-reload-target.sjs`;
 
 async function setup(pageUrl) {
@@ -26,17 +22,15 @@ async function setup(pageUrl) {
     addonId: extension.id,
   };
 
-  await addTab(pageUrl);
-  initDebuggerServer();
+  const target = await addTabTarget(pageUrl);
 
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
+  const { client, form } = target;
 
   const [, tabClient] = await client.attachTarget(form.actor);
 
   const [, consoleClient] = await client.attachConsole(form.consoleActor, []);
 
-  const inspectedWindowFront = new WebExtensionInspectedWindowFront(client, form);
+  const inspectedWindowFront = target.getFront("webExtensionInspectedWindow");
 
   return {
     client, form,

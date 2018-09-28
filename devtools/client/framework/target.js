@@ -364,7 +364,8 @@ TabTarget.prototype = {
   // i.e. an actor served by RootActor.listTabs or RootActorActor.getTab requests
   getFront(typeName) {
     let front = this.fronts.get(typeName);
-    if (front) {
+    // the front might have been destroyed and no longer have an actor ID
+    if (front && front.actorID) {
       return front;
     }
     front = getFront(this.client, typeName, this.form);
