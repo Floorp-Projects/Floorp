@@ -662,7 +662,7 @@ privacy-header = Browser Privacy
 
 ## Privacy Section - Forms
 
-forms-header = Forms & Passwords
+logins-header = Logins & Passwords
 forms-ask-to-save-logins =
     .label = Ask to save logins and passwords for websites
     .accesskey = r
