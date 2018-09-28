@@ -41,6 +41,11 @@ USE_LIBS += [
     'static:js',
 ]
 
+if CONFIG['ENABLE_WASM_CRANELIFT']:
+    USE_LIBS += [
+        'jsrust'
+    ]
+
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR

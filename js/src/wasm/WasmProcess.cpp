@@ -22,6 +22,7 @@
 #include "mozilla/ScopeExit.h"
 
 #include "vm/MutexIDs.h"
+#include "wasm/cranelift/clifapi.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmInstance.h"
@@ -280,6 +281,10 @@ bool
 wasm::Init()
 {
     MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
+
+#ifdef ENABLE_WASM_CRANELIFT
+    cranelift_initialize();
+#endif
 
     ProcessCodeSegmentMap* map = js_new<ProcessCodeSegmentMap>();
     if (!map) {

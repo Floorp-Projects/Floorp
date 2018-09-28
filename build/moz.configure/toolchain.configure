@@ -1116,10 +1116,10 @@ def check_have_64_bit(have_64_bit, compiler_have_64_bit):
                         'about the target bitness.')
 
 
-option(env='BINDGEN_CFLAGS',
-       nargs=1,
-       default=bindgen_cflags_defaults,
-       help='Options bindgen should pass to the C/C++ parser')
+js_option(env='BINDGEN_CFLAGS',
+          nargs=1,
+          default=bindgen_cflags_defaults,
+          help='Options bindgen should pass to the C/C++ parser')
 
 
 @depends('BINDGEN_CFLAGS')

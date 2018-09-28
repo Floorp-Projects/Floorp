@@ -14,6 +14,7 @@ cubeb_pulse_rust = ["gkrust-shared/cubeb_pulse_rust"]
 gecko_debug = ["gkrust-shared/gecko_debug"]
 simd-accel = ["gkrust-shared/simd-accel"]
 moz_memory = ["gkrust-shared/moz_memory"]
+spidermonkey_rust = ["gkrust-shared/spidermonkey_rust"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }

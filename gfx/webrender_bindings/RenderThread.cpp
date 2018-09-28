@@ -160,7 +160,10 @@ RenderThread::AccumulateMemoryReport(MemoryReport aInitial)
   RefPtr<MemoryReportPromise::Private> p = new MemoryReportPromise::Private(__func__);
   MOZ_ASSERT(!IsInRenderThread());
   if (!Get() || !Get()->Loop()) {
-    // Seems to happen sometimes, see bug 1494430.
+    // This happens when the GPU process fails to start and we fall back to the
+    // basic compositor in the parent process. We could assert against this if we
+    // made the webrender detection code in gfxPlatform.cpp smarter.
+    // See bug 1494430 comment 12.
     NS_WARNING("No render thread, returning empty memory report");
     p->Resolve(aInitial, __func__);
     return p;
