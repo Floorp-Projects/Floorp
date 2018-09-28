@@ -14,7 +14,6 @@ const {PluralForm} = require("devtools/shared/plural-form");
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
-const {UndoStack} = require("devtools/client/shared/undo");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const MarkupElementContainer = require("devtools/client/inspector/markup/views/element-container");
@@ -23,8 +22,10 @@ const MarkupTextContainer = require("devtools/client/inspector/markup/views/text
 const SlottedNodeContainer = require("devtools/client/inspector/markup/views/slotted-node-container");
 const RootContainer = require("devtools/client/inspector/markup/views/root-container");
 
+loader.lazyRequireGetter(this, "UndoStack", "devtools/client/shared/undo", true);
+
 const INSPECTOR_L10N =
-      new LocalizationHelper("devtools/client/locales/inspector.properties");
+  new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 // Page size for pageup/pagedown
 const PAGE_SIZE = 10;
@@ -64,6 +65,7 @@ const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
 function MarkupView(inspector, frame, controllerWindow) {
   EventEmitter.decorate(this);
 
+  this.controllerWindow = controllerWindow;
   this.inspector = inspector;
   this.highlighters = inspector.highlighters;
   this.walker = this.inspector.walker;
@@ -84,9 +86,6 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.popup = new AutocompletePopup(inspector.toolbox.doc, {
     autoSelect: true,
   });
-
-  this.undo = new UndoStack();
-  this.undo.installController(controllerWindow);
 
   this._containers = new Map();
   // This weakmap will hold keys used with the _containers map, in order to retrieve the
@@ -144,6 +143,15 @@ MarkupView.prototype = {
 
   get toolbox() {
     return this.inspector.toolbox;
+  },
+
+  get undo() {
+    if (!this._undo) {
+      this._undo = new UndoStack();
+      this._undo.installController(this.controllerWindow);
+    }
+
+    return this._undo;
   },
 
   /**
@@ -1900,8 +1908,10 @@ MarkupView.prototype = {
       this.htmlEditor = null;
     }
 
-    this.undo.destroy();
-    this.undo = null;
+    if (this._undo) {
+      this._undo.destroy();
+      this._undo = null;
+    }
 
     this.popup.destroy();
     this.popup = null;
@@ -1937,6 +1947,7 @@ MarkupView.prototype = {
     this.imagePreviewTooltip.destroy();
     this.imagePreviewTooltip = null;
 
+    this.controllerWindow = null;
     this.doc = null;
     this.highlighters = null;
     this.win = null;
