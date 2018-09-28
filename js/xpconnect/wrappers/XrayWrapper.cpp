@@ -1742,15 +1742,6 @@ DOMXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flag
     }
 
     JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
-    if (JS_IsGlobalObject(obj)) {
-        // We could do this in a shared enumerateNames with JSXrayTraits, but we
-        // don't really have globals we expose via those.
-        JSAutoRealm ar(cx, obj);
-        if (!JS_NewEnumerateStandardClassesIncludingResolved(
-          cx, obj, props, !(flags & JSITER_HIDDEN))) {
-            return false;
-        }
-    }
     return XrayOwnPropertyKeys(cx, wrapper, obj, flags, props);
 }
 
