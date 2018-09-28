@@ -239,7 +239,7 @@ add_task(async function test_add_payer_contact_name_email_link() {
       is(title.textContent, "Add Payer Contact", "Page title should be set");
 
       let saveButton = content.document.querySelector("address-form .save-button");
-      is(saveButton.textContent, "Add", "Save button has the correct label");
+      is(saveButton.textContent, "Next", "Save button has the correct label");
 
       info("check that non-payer requested fields are hidden");
       for (let selector of ["#organization", "#tel"]) {

@@ -114,7 +114,7 @@ add_task(async function test_backButton() {
 
 add_task(async function test_saveButton() {
   let form = new BasicCardForm();
-  form.dataset.addButtonLabel = "Add";
+  form.dataset.nextButtonLabel = "Next";
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
   display.appendChild(form);
@@ -184,7 +184,7 @@ add_task(async function test_saveButton() {
   ok(!form.saveButton.disabled, "Save button is enabled after re-filling cc-number");
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
-  is(form.saveButton.textContent, "Add", "Check label");
+  is(form.saveButton.textContent, "Next", "Check label");
   form.saveButton.scrollIntoView();
   synthesizeMouseAtCenter(form.saveButton, {});
 
@@ -453,7 +453,7 @@ add_task(async function test_edit() {
 
 add_task(async function test_field_validity_updates() {
   let form = new BasicCardForm();
-  form.dataset.updateButtonLabel = "Add";
+  form.dataset.updateButtonLabel = "Update";
   await form.promiseReady;
   display.appendChild(form);
   await asyncElementRendered();
@@ -511,7 +511,7 @@ add_task(async function test_field_validity_updates() {
 
 add_task(async function test_numberCustomValidityReset() {
   let form = new BasicCardForm();
-  form.dataset.updateButtonLabel = "Add";
+  form.dataset.updateButtonLabel = "Update";
   await form.promiseReady;
   display.appendChild(form);
   await asyncElementRendered();
