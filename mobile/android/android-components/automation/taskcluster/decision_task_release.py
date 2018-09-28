@@ -48,6 +48,8 @@ def generate_build_task(version):
     checkout = ("git fetch origin --tags && "
                 "git config advice.detachedHead false && "
                 "git checkout {}".format(version))
+    bintray_publishing = (" && python automation/taskcluster/release/fetch-bintray-api-key.py"
+                          " && ./gradlew bintrayUpload --debug")
 
     assemble_task = 'assembleRelease'
     scopes = [
@@ -61,8 +63,8 @@ def generate_build_task(version):
         command=(checkout +
                  ' && ./gradlew --no-daemon clean test detektCheck ktlint '
                  + assemble_task +
-                 ' docs uploadArchives zipMavenArtifacts'),
-        # TODO: add `./gradlew bintrayUpload --debug` too when fully ready
+                 ' docs uploadArchives zipMavenArtifacts' +
+                 bintray_publishing),
         features={
             "chainOfTrust": True
         },
@@ -166,7 +168,7 @@ def release(version):
     # been taken into consideration. But changing the `artifact_id` solely here
     # will break Cot on beetmover tasks as the build task still generates them
     # with the `artifact_id` that's baked within the `build.gradle` of each of
-    # the components. Therefore, we inject a temporary task in between Build
+    # the components. Therefore we inject a temporary task in between Build
     # task and beetmover tasks that's to massage the ids according to the new
     # ones. That means, downloading the zip archives from the Build task,
     # extracting, renaming files and re-zipping things back to feed Beetmover
