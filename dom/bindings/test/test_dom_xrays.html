@@ -32,6 +32,8 @@ function checkXrayProperty(obj, name, values)
       ok(!obj.hasOwnProperty(name), "hasOwnProperty shouldn't see \"" + name + "\" through Xrays");
       is(Object.getOwnPropertyDescriptor(obj, name), undefined, "getOwnPropertyDescriptor shouldn't see \"" + name + "\" through Xrays");
       ok(!Object.keys(obj).includes(name), "Enumerating the Xray should not return \"" + name + "\"");
+      ok(!Object.getOwnPropertyNames(obj).includes(name),
+         `The Xray's property names should not include ${name}`)
     } else {
       ok(obj.hasOwnProperty(name), "hasOwnProperty should see \"" + name + "\" through Xrays");
       var pd = Object.getOwnPropertyDescriptor(obj, name);
@@ -41,8 +43,12 @@ function checkXrayProperty(obj, name, values)
       } else {
         is(obj[name], value, "Should get the right value for \"" + name + "\" through Xrays");
       }
-      if (pd && pd.enumerable) {
-        ok(Object.keys(obj).indexOf("" + name) > -1, "Enumerating the Xray should return \"" + name + "\"");
+      if (pd) {
+        if (pd.enumerable) {
+          ok(Object.keys(obj).indexOf("" + name) > -1, "Enumerating the Xray should return \"" + name + "\"");
+        }
+        ok(Object.getOwnPropertyNames(obj).indexOf("" + name) > -1,
+           `The Xray's property names should include ${name}`)
       }
     }
   } while ((obj = Object.getPrototypeOf(obj)));
@@ -100,6 +106,13 @@ function test()
   is(win.addEventListener, eventTargetProto.addEventListener, "Named properties shouldn't shadow WebIDL-defined properties");
 
   is(win.toString, win.Object.prototype.toString, "Named properties shouldn't shadow ECMAScript-defined properties");
+
+  // WebIDL interface names should be exposed.
+  var waivedWin = Cu.waiveXrays(win);
+  checkWindowXrayProperty(win, "Element", Cu.unwaiveXrays(waivedWin.Element))
+
+  // JS standard classes should be exposed.
+  checkWindowXrayProperty(win, "Array", Cu.unwaiveXrays(waivedWin.Array))
 
   // HTMLDocument
   // Unforgeable properties live on the instance.
