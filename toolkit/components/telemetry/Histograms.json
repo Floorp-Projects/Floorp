@@ -12541,6 +12541,7 @@
     "kind": "enumerated",
     "bug_numbers": [1229961],
     "n_values": 12,
+    "releaseChannelCollection": "opt-out",
     "description": "Plugin drawing model. 0 when windowed, otherwise NPDrawingModel + 1."
   },
   "DOM_SCRIPT_KIND": {
