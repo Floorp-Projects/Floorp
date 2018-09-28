@@ -175,7 +175,12 @@
       "pins": "mozilla_services", "test_mode": true, "id": 3 },
     { "name": "aus5.mozilla.org", "include_subdomains": true,
       "pins": "mozilla_services", "test_mode": true, "id": 7 },
+    // Catchall for applications hosted under firefox.com
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=1494431
+    { "name": "firefox.com", "include_subdomains": true,
+      "pins": "mozilla_services", "test_mode": true, "id": 15 },
     // Firefox Accounts & sync
+    // superseded by catchall for firefox.com, but leaving for tracking
     { "name": "accounts.firefox.com", "include_subdomains": true,
       "pins": "mozilla_services", "test_mode": false, "id": 4 },
     { "name": "api.accounts.firefox.com", "include_subdomains": true,
@@ -197,6 +202,7 @@
     { "name": "telemetry.mozilla.org", "include_subdomains": true,
       "pins": "mozilla_services", "test_mode": true, "id": 8 },
     // Test Pilot
+    // superseded by catchall for firefox.com, but leaving for tracking
     { "name": "testpilot.firefox.com", "include_subdomains": false,
       "pins": "mozilla_services", "test_mode": false, "id": 9 },
     // Crash report sites
