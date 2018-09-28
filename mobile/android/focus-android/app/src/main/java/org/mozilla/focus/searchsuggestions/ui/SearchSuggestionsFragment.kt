@@ -239,6 +239,13 @@ private class SuggestionViewHolder(
             0,
             0
         )
+
+        val backgroundDrawableArray =
+                suggestionText.context.obtainStyledAttributes(intArrayOf(R.attr.selectableItemBackground))
+        val backgroundDrawable = backgroundDrawableArray.getDrawable(0)
+        backgroundDrawableArray.recycle()
+        suggestionText.background = backgroundDrawable
+
         val size = itemView.resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
 
         if (UrlUtils.isUrl(suggestionText.text.toString())) {

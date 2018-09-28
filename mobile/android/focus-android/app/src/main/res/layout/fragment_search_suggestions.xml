@@ -112,6 +112,7 @@
         android:layout_height="match_parent">
 
         <LinearLayout
+            android:background="@color/searchHintBackgroundColor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" >
@@ -120,7 +121,7 @@
                 android:id="@+id/searchView"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
-                android:background="@color/searchHintBackgroundColor"
+                android:background="?android:attr/selectableItemBackground"
                 android:drawableStart="@drawable/ic_search"
                 android:drawablePadding="16dp"
                 android:ellipsize="end"
@@ -135,7 +136,6 @@
                 android:id="@+id/suggestionList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/searchSuggestionsBackground"
                 android:orientation="vertical"
                 android:nestedScrollingEnabled="false" />
         </LinearLayout>
