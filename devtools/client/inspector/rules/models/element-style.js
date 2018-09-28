@@ -7,10 +7,10 @@
 const promise = require("promise");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const UserProperties = require("devtools/client/inspector/rules/models/user-properties");
-const { getCssProperties, isCssVariable } = require("devtools/shared/fronts/css-properties");
 const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 
 loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/utils", true);
+loader.lazyRequireGetter(this, "isCssVariable", "devtools/shared/fronts/css-properties", true);
 
 /**
  * ElementStyle is responsible for the following:
@@ -38,7 +38,7 @@ function ElementStyle(element, ruleView, store, pageStyle, showUserAgentStyles) 
   this.pageStyle = pageStyle;
   this.showUserAgentStyles = showUserAgentStyles;
   this.rules = [];
-  this.cssProperties = getCssProperties(this.ruleView.inspector.toolbox);
+  this.cssProperties = this.ruleView.cssProperties;
   this.variables = new Map();
 
   // We don't want to overwrite this.store.userProperties so we only create it
