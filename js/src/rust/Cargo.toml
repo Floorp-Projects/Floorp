@@ -1,0 +1,12 @@
+[package]
+name = "jsrust"
+version = "0.1.0"
+authors = ["The Spidermonkey developers"]
+
+[lib]
+name = "jsrust"
+crate-type = ["staticlib"]
+path = "lib.rs"
+
+[dependencies]
+jsrust_shared = { path = "./shared" }

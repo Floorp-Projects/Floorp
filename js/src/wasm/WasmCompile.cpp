@@ -544,6 +544,17 @@ wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, Uni
         return nullptr;
     }
 
+#ifdef ENABLE_WASM_CRANELIFT
+    if (compilerEnv.tier() == Tier::Optimized &&
+        compilerEnv.optimizedBackend() == OptimizedBackend::Cranelift)
+    {
+        // At the moment, Cranelift performs no validation, so validate
+        // explicitly.
+        if (!ValidateForCranelift(bytecode, error))
+           return nullptr;
+    }
+#endif
+
     ModuleGenerator mg(args, &env, nullptr, error);
     if (!mg.init()) {
         return nullptr;

@@ -435,6 +435,7 @@ class MachCommands(MachCommandBase):
              parser=create_parser_manifest_update)
     def wpt_manifest_update(self, **params):
         self.setup()
+        self.wpt_manifest_download(**params)
         wpt_manifest_updater = self._spawn(WPTManifestUpdater)
         return wpt_manifest_updater.run_update(**params)
 

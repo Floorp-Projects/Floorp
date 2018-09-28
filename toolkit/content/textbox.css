@@ -6,7 +6,7 @@
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 html|*.textbox-input {
-  -moz-appearance: none !important;
+  -moz-appearance: none;
   text-align: inherit;
   text-shadow: inherit;
   box-sizing: border-box;

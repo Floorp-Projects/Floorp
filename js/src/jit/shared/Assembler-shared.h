@@ -915,7 +915,10 @@ class AssemblerShared
         enoughMemory_ &= callFarJumps_.append(jmp);
     }
     void append(const wasm::MemoryAccessDesc& access, uint32_t pcOffset) {
-        append(wasm::Trap::OutOfBounds, wasm::TrapSite(pcOffset, access.trapOffset()));
+        appendOutOfBoundsTrap(access.trapOffset(), pcOffset);
+    }
+    void appendOutOfBoundsTrap(wasm::BytecodeOffset trapOffset, uint32_t pcOffset) {
+        append(wasm::Trap::OutOfBounds, wasm::TrapSite(pcOffset, trapOffset));
     }
     void append(wasm::SymbolicAccess access) {
         enoughMemory_ &= symbolicAccesses_.append(access);
