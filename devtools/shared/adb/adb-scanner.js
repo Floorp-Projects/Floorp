@@ -5,8 +5,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { ConnectionManager } =
-  require("devtools/shared/client/connection-manager");
 const { Devices } = require("devtools/shared/apps/Devices.jsm");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { RuntimeTypes } =
@@ -104,15 +102,7 @@ function Runtime(device, model, socketPath) {
 Runtime.prototype = {
   type: RuntimeTypes.USB,
   connect(connection) {
-    const port = ConnectionManager.getFreeTCPPort();
-    const local = "tcp:" + port;
-    let remote;
-    if (this._socketPath.startsWith("@")) {
-      remote = "localabstract:" + this._socketPath.substring(1);
-    } else {
-      remote = "localfilesystem:" + this._socketPath;
-    }
-    return this.device.forwardPort(local, remote).then(() => {
+    return ADB.prepareTCPConnection(this._socketPath).then(port => {
       connection.host = "localhost";
       connection.port = port;
       connection.connect();
