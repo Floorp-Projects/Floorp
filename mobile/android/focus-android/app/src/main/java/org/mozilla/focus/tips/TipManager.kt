@@ -196,13 +196,14 @@ object TipManager {
     @Suppress("ReturnCount") // Using early returns
     fun getNextTipIfAvailable(context: Context): Tip? {
         if (!context.isInExperiment(homeScreenTipsExperimentDescriptor)) return null
+        if (!Settings.getInstance(context).shouldDisplayHomescreenTips()) return null
 
         if (!listInitialized) {
             populateListOfTips(context)
             listInitialized = true
         }
 
-        // Only show three tips before going back to the "Focus" branding and if they're enabled
+        // Only show three tips before going back to the "Focus" branding
         if (tipsShown == MAX_TIPS_TO_DISPLAY || listOfTips.count() <= 0) {
             return null
         }

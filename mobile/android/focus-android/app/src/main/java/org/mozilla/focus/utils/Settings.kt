@@ -33,7 +33,8 @@ class Settings private constructor(context: Context) {
 
     private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val resources: Resources = context.resources
-    val hasAddedToHomeScreen = context.isInExperiment(homeScreenTipsExperimentDescriptor)
+    val hasAddedToHomeScreen: Boolean
+        get() = preferences.getBoolean(getPreferenceKey(R.string.has_added_to_home_screen), false)
 
     val defaultSearchEngineName: String
         get() = preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), "")!!
@@ -49,6 +50,11 @@ class Settings private constructor(context: Context) {
             preferences.getBoolean(
                     getPreferenceKey(R.string.pref_key_remote_debugging),
                     false)
+
+    fun shouldDisplayHomescreenTips() =
+            preferences.getBoolean(
+                    getPreferenceKey(R.string.pref_key_homescreen_tips),
+                    true)
 
     fun shouldShowSearchSuggestions(): Boolean =
             preferences.getBoolean(

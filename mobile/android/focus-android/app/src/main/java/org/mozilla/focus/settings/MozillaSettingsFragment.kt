@@ -14,11 +14,17 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.SupportUtils
+import org.mozilla.focus.utils.homeScreenTipsExperimentDescriptor
+import org.mozilla.focus.utils.isInExperiment
 
 class MozillaSettingsFragment : BaseSettingsFragment(),
     SharedPreferences.OnSharedPreferenceChangeListener {
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.mozilla_settings)
+
+        if (!requireContext().isInExperiment(homeScreenTipsExperimentDescriptor)) {
+            preferenceScreen.removePreference(findPreference(getString(R.string.pref_key_homescreen_tips)))
+        }
     }
 
     override fun onResume() {
