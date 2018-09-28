@@ -6,7 +6,6 @@
 
 const Services = require("Services");
 const { l10n } = require("devtools/shared/inspector/css-logic");
-const { getCssProperties } = require("devtools/shared/fronts/css-properties");
 const { InplaceEditor, editableField } = require("devtools/client/shared/inplace-editor");
 const {
   createChild,
