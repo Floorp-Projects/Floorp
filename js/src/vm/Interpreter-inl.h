@@ -228,7 +228,7 @@ FetchName(JSContext* cx, HandleObject receiver, HandleObject holder, HandlePrope
 }
 
 inline bool
-FetchNameNoGC(JSObject* pobj, PropertyResult prop, MutableHandleValue vp)
+FetchNameNoGC(JSObject* pobj, PropertyResult prop, Value* vp)
 {
     if (!prop || !pobj->isNative()) {
         return false;
@@ -239,8 +239,8 @@ FetchNameNoGC(JSObject* pobj, PropertyResult prop, MutableHandleValue vp)
         return false;
     }
 
-    vp.set(pobj->as<NativeObject>().getSlot(shape->slot()));
-    return !IsUninitializedLexical(vp);
+    *vp = pobj->as<NativeObject>().getSlot(shape->slot());
+    return !IsUninitializedLexical(*vp);
 }
 
 template <js::GetNameMode mode>
@@ -253,7 +253,7 @@ GetEnvironmentName(JSContext* cx, HandleObject envChain, HandlePropertyName name
         JSObject* obj = nullptr;
         JSObject* pobj = nullptr;
         if (LookupNameNoGC(cx, name, envChain, &obj, &pobj, &prop)) {
-            if (FetchNameNoGC(pobj, prop, vp)) {
+            if (FetchNameNoGC(pobj, prop, vp.address())) {
                 return true;
             }
         }

@@ -88,6 +88,20 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Fuzzing prefs. It's important that these can only be checked in fuzzing
+// builds (when FUZZING is defined), otherwise you could enable the fuzzing
+// stuff on your regular build which would be bad :)
+//---------------------------------------------------------------------------
+
+#ifdef FUZZING
+VARCACHE_PREF(
+  "fuzzing.enabled",
+   fuzzing_enabled,
+  bool, false
+)
+#endif
+
+//---------------------------------------------------------------------------
 // Clipboard prefs
 //---------------------------------------------------------------------------
 

@@ -25,9 +25,7 @@ add_task(async function init() {
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
   });
-  searchIcon = document.getAnonymousElementByAttribute(
-    searchbar, "anonid", "searchbar-search-button"
-  );
+  searchIcon = searchbar.querySelector(".searchbar-search-button");
 
   await promiseNewEngine(TEST_ENGINE_BASENAME, {
     setAsCurrent: false,

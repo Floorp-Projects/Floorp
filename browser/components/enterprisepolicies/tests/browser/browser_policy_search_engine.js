@@ -26,9 +26,8 @@ async function test_opensearch(shouldWork) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, rootDir + "opensearch.html");
   let searchPopup = document.getElementById("PopupSearchAutoComplete");
   let promiseSearchPopupShown = BrowserTestUtils.waitForEvent(searchPopup, "popupshown");
-  let searchBarButton = document.getAnonymousElementByAttribute(searchBar,
-                                                                "anonid",
-                                                                "searchbar-search-button");
+  let searchBarButton = searchBar.querySelector(".searchbar-search-button");
+
   searchBarButton.click();
   await promiseSearchPopupShown;
   let oneOffsContainer = document.getAnonymousElementByAttribute(searchPopup,

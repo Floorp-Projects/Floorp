@@ -68,6 +68,8 @@ var _debuggee = require("./debuggee");
 
 var _debuggee2 = _interopRequireDefault(_debuggee);
 
+var _devtoolsReps = require("devtools/client/shared/components/reps/reps.js");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -94,5 +96,6 @@ exports.default = {
   projectTextSearch: _projectTextSearch2.default,
   quickOpen: _quickOpen2.default,
   sourceTree: _sourceTree2.default,
-  debuggee: _debuggee2.default
+  debuggee: _debuggee2.default,
+  objectInspector: _devtoolsReps.objectInspector.reducer.default
 };
