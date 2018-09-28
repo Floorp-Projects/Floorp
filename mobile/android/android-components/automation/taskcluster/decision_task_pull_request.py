@@ -59,7 +59,7 @@ def create_task(name, description, command):
         "payload": {
             "features": {},
             "maxRunTime": 7200,
-            "image": "mozillamobile/android-components:1.4",
+            "image": "mozillamobile/android-components:1.5",
             "command": [
                 "/bin/bash",
                 "--login",

@@ -25,7 +25,7 @@ tasks:
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"
-      image: 'mozillamobile/android-components:1.4'
+      image: 'mozillamobile/android-components:1.5'
       command:
         - /bin/bash
         - '--login'
@@ -63,7 +63,7 @@ tasks:
     payload:
       maxRunTime: 600
       deadline: "{{ '2 hours' | $fromNow }}"
-      image: 'mozillamobile/android-components:1.4'
+      image: 'mozillamobile/android-components:1.5'
       command:
         - /bin/bash
         - '--login'
