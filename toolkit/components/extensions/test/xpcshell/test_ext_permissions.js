@@ -376,6 +376,7 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "identity",
   "idle",
   "menus",
+  "menus.overrideContext",
   "mozillaAddons",
   "search",
   "storage",

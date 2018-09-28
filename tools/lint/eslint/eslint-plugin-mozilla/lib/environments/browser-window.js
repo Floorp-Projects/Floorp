@@ -72,6 +72,7 @@ function getGlobalScriptsIncludes() {
     let match = line.match(globalScriptsRegExp);
     if (match) {
       let sourceFile = (match[1] || match[2])
+                .replace("chrome://browser/content/search/", "browser/components/search/content/")
                 .replace("chrome://browser/content/", "browser/base/content/")
                 .replace("chrome://global/content/", "toolkit/content/");
 

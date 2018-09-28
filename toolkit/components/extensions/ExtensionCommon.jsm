@@ -939,11 +939,19 @@ class LocalAPIImplementation extends SchemaAPIInterface {
   }
 
   callFunction(args) {
-    return this.pathObj[this.name](...args);
+    try {
+      return this.pathObj[this.name](...args);
+    } catch (e) {
+      throw this.context.normalizeError(e);
+    }
   }
 
   callFunctionNoReturn(args) {
-    this.pathObj[this.name](...args);
+    try {
+      this.pathObj[this.name](...args);
+    } catch (e) {
+      throw this.context.normalizeError(e);
+    }
   }
 
   callAsyncFunction(args, callback, requireUserInput) {

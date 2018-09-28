@@ -47,19 +47,24 @@ const {
     Rep
   },
   MODE,
-  ObjectInspector,
-  ObjectInspectorUtils
+  objectInspector
 } = _devtoolsReps2.default;
 const {
-  createNode,
-  getChildren,
-  getValue,
-  nodeIsPrimitive,
-  NODE_TYPES
-} = ObjectInspectorUtils.node;
+  ObjectInspector,
+  utils
+} = objectInspector;
 const {
-  loadItemProperties
-} = ObjectInspectorUtils.loadProperties;
+  node: {
+    createNode,
+    getChildren,
+    getValue,
+    nodeIsPrimitive,
+    NODE_TYPES
+  },
+  loadProperties: {
+    loadItemProperties
+  }
+} = utils;
 
 function inPreview(event) {
   const relatedTarget = event.relatedTarget;

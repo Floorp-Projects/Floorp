@@ -30,6 +30,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "nsContentUtils.h"
@@ -861,7 +862,7 @@ ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx)
 #endif // JS_GC_ZEAL
 
 #ifdef FUZZING
-    bool fuzzingEnabled = Preferences::GetBool("fuzzing.enabled");
+    bool fuzzingEnabled = StaticPrefs::fuzzing_enabled();
 #endif
 
     JS::ContextOptionsRef(cx).setBaseline(useBaseline)

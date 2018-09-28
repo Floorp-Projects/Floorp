@@ -216,9 +216,22 @@ public:
   // Strip off "wyciwyg://n/" part of a URL. aURI must have "wyciwyg" scheme.
   static nsresult RemoveWyciwygScheme(nsIURI* aURI, nsIURI** aReturn);
 
-  static bool     IsCallerChrome();
-  static bool     ThreadsafeIsCallerChrome();
-  static bool     IsCallerContentXBL();
+  static bool IsCallerChrome();
+  static bool ThreadsafeIsCallerChrome();
+  static bool IsCallerContentXBL();
+  static bool IsFuzzingEnabled()
+#ifndef FUZZING
+  {
+    return false;
+  }
+#else
+  ;
+#endif
+
+  static bool IsCallerChromeOrFuzzingEnabled(JSContext* aCx, JSObject*)
+  {
+    return ThreadsafeIsSystemCaller(aCx) || IsFuzzingEnabled();
+  }
 
   // The APIs for checking whether the caller is system (in the sense of system
   // principal) should only be used when the JSContext is known to accurately

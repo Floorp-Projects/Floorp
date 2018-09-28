@@ -24,5 +24,5 @@ add_task(async function() {
 
   await stepOver(dbg);
   is(getLabel(dbg, 4), "foo()");
-  is(getLabel(dbg, 5), "Window");
+  is(getLabel(dbg, 11), "Window");
 });

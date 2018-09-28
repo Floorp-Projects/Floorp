@@ -113,14 +113,16 @@ CreateIFoo( void** result )
 void
 set_a_IFoo( nsCOMPtr<IFoo>* result )
 {
-  nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
+  // Various places in this file do a static_cast to nsISupports* in order to
+  // make the QI non-trivial, to avoid hitting a static assert.
+  nsCOMPtr<IFoo> foop(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
   *result = foop;
 }
 
 nsCOMPtr<IFoo>
 return_a_IFoo()
 {
-  nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
+  nsCOMPtr<IFoo> foop(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
   return foop;
 }
 
@@ -242,7 +244,7 @@ TEST(COMPtr, Bloat_Smart)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(barP);
 
-  nsCOMPtr<IFoo> fooP( do_QueryInterface(barP, &rv) );
+  nsCOMPtr<IFoo> fooP(do_QueryInterface(static_cast<nsISupports*>(barP), &rv));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(fooP);
 }
@@ -254,12 +256,12 @@ TEST(COMPtr, AddRefAndRelease)
   IBar::total_destructions_ = 0;
 
   {
-    nsCOMPtr<IFoo> foop( do_QueryInterface(new IFoo) );
+    nsCOMPtr<IFoo> foop(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
     ASSERT_EQ(foop->refcount_, (unsigned int)1);
     ASSERT_EQ(IFoo::total_constructions_, 1);
     ASSERT_EQ(IFoo::total_destructions_, 0);
 
-    foop = do_QueryInterface(new IFoo);
+    foop = do_QueryInterface(static_cast<nsISupports*>(new IFoo));
     ASSERT_EQ(foop->refcount_, (unsigned int)1);
     ASSERT_EQ(IFoo::total_constructions_, 2);
     ASSERT_EQ(IFoo::total_destructions_, 1);
@@ -288,7 +290,7 @@ TEST(COMPtr, AddRefAndRelease)
   ASSERT_EQ(IFoo::total_destructions_, 2);
 
   {
-    nsCOMPtr<IFoo> foop( do_QueryInterface(new IBar) );
+    nsCOMPtr<IFoo> foop(do_QueryInterface(static_cast<nsISupports*>(new IBar)));
     mozilla::Unused << foop;
   }
 
@@ -301,8 +303,8 @@ void Comparison()
   IFoo::total_destructions_ = 0;
 
   {
-    nsCOMPtr<IFoo> foo1p( do_QueryInterface(new IFoo) );
-    nsCOMPtr<IFoo> foo2p( do_QueryInterface(new IFoo) );
+    nsCOMPtr<IFoo> foo1p(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
+    nsCOMPtr<IFoo> foo2p(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
 
     ASSERT_EQ(IFoo::total_constructions_, 2);
 
@@ -394,7 +396,7 @@ TEST(COMPtr, AssignmentHelpers)
   ASSERT_EQ(IFoo::total_destructions_, 4);
 
   {
-    nsCOMPtr<IFoo> fooP( do_QueryInterface(new IFoo) );
+    nsCOMPtr<IFoo> fooP(do_QueryInterface(static_cast<nsISupports*>(new IFoo)));
     ASSERT_TRUE(fooP);
 
     ASSERT_EQ(IFoo::total_constructions_, 5);
@@ -419,7 +421,7 @@ TEST(COMPtr, QueryInterface)
   {
     nsCOMPtr<IFoo> fooP;
     ASSERT_FALSE(fooP);
-    fooP = do_QueryInterface(new IFoo);
+    fooP = do_QueryInterface(static_cast<nsISupports*>(new IFoo));
     ASSERT_TRUE(fooP);
     ASSERT_EQ(IFoo::total_queries_, 1);
 
@@ -432,12 +434,12 @@ TEST(COMPtr, QueryInterface)
   }
 
   {
-    nsCOMPtr<IBar> barP( do_QueryInterface(new IBar) );
+    nsCOMPtr<IBar> barP(do_QueryInterface(static_cast<nsISupports*>(new IBar)));
     ASSERT_EQ(IBar::total_queries_, 1);
 
     // Test that |QueryInterface| is called when assigning a smart-pointer of
     // a different type.
-    nsCOMPtr<IFoo> fooP( do_QueryInterface(barP) );
+    nsCOMPtr<IFoo> fooP(do_QueryInterface(static_cast<nsISupports*>(barP)));
     ASSERT_EQ(IBar::total_queries_, 2);
     ASSERT_EQ(IFoo::total_queries_, 1);
     ASSERT_TRUE(fooP);

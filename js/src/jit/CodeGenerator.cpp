@@ -5315,16 +5315,14 @@ CodeGenerator::visitGetDynamicName(LGetDynamicName* lir)
     masm.passABIArg(envChain);
     masm.passABIArg(name);
     masm.passABIArg(temp2);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetDynamicName));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetDynamicNamePure));
 
     const ValueOperand out = ToOutValue(lir);
 
     masm.loadValue(Address(masm.getStackPointer(), 0), out);
     masm.adjustStack(sizeof(Value));
 
-    Label undefined;
-    masm.branchTestUndefined(Assembler::Equal, out, &undefined);
-    bailoutFrom(&undefined, lir->snapshot());
+    bailoutIfFalseBool(ReturnReg, lir->snapshot());
 }
 
 typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValue,

@@ -12,12 +12,15 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const actions = require("devtools/client/webconsole/actions/index");
 const { createContextMenu, createEditContextMenu } = require("devtools/client/webconsole/utils/context-menu");
 const { configureStore } = require("devtools/client/webconsole/store");
+
 const { isPacketPrivate } = require("devtools/client/webconsole/utils/messages");
 const { getAllMessagesById, getMessage } = require("devtools/client/webconsole/selectors/messages");
 const Telemetry = require("devtools/client/shared/telemetry");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const App = createFactory(require("devtools/client/webconsole/components/App"));
+const ObjectClient = require("devtools/shared/client/object-client");
+const LongStringClient = require("devtools/shared/client/long-string-client");
 
 let store = null;
 
@@ -38,12 +41,6 @@ function WebConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
   this.throttledDispatchPromise = null;
 
   this.telemetry = new Telemetry();
-
-  store = configureStore(this.hud, {
-    // We may not have access to the toolbox (e.g. in the browser console).
-    sessionId: this.toolbox && this.toolbox.sessionId || -1,
-    telemetry: this.telemetry,
-  });
 }
 
 WebConsoleOutputWrapper.prototype = {
@@ -53,6 +50,8 @@ WebConsoleOutputWrapper.prototype = {
         this.hud[id] = node;
       };
       const { hud } = this;
+      const debuggerClient = this.owner.target.client;
+
       const serviceContainer = {
         attachRefToHud,
         emitNewMessage: (node, messageId, timeStamp) => {
@@ -85,6 +84,21 @@ WebConsoleOutputWrapper.prototype = {
             ...extra,
             "session_id": this.toolbox && this.toolbox.sessionId || -1
           });
+        },
+        createObjectClient: (object) => {
+          return new ObjectClient(debuggerClient, object);
+        },
+
+        createLongStringClient: (object) => {
+          return new LongStringClient(debuggerClient, object);
+        },
+
+        releaseActor: (actor) => {
+          if (!actor) {
+            return null;
+          }
+
+          return debuggerClient.release(actor);
         }
       };
 
@@ -210,6 +224,13 @@ WebConsoleOutputWrapper.prototype = {
         });
       }
 
+      store = configureStore(this.hud, {
+        // We may not have access to the toolbox (e.g. in the browser console).
+        sessionId: this.toolbox && this.toolbox.sessionId || -1,
+        telemetry: this.telemetry,
+        services: serviceContainer
+      });
+
       const {prefs} = store.getState();
       const app = App({
         attachRefToHud,
@@ -223,8 +244,13 @@ WebConsoleOutputWrapper.prototype = {
       });
 
       // Render the root Application component.
-      const provider = createElement(Provider, { store }, app);
-      this.body = ReactDOM.render(provider, this.parentNode);
+      if (this.parentNode) {
+        const provider = createElement(Provider, { store }, app);
+        this.body = ReactDOM.render(provider, this.parentNode);
+      } else {
+        // If there's no parentNode, we are in a test. So we can resolve immediately.
+        resolve();
+      }
     });
   },
 

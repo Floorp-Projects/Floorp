@@ -710,12 +710,12 @@ CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHa
     return true;
 }
 
-void
-GetDynamicName(JSContext* cx, JSObject* envChain, JSString* str, Value* vp)
+bool
+GetDynamicNamePure(JSContext* cx, JSObject* envChain, JSString* str, Value* vp)
 {
-    // Lookup a string on the env chain, returning either the value found or
-    // undefined through rval. This function is infallible, and cannot GC or
-    // invalidate.
+    // Lookup a string on the env chain, returning the value found through rval.
+    // This function is infallible, and cannot GC or invalidate.
+    // Returns false if the lookup could not be completed without GC.
 
     AutoUnsafeCallWithABI unsafe;
 
@@ -725,26 +725,22 @@ GetDynamicName(JSContext* cx, JSObject* envChain, JSString* str, Value* vp)
     } else {
         atom = AtomizeString(cx, str);
         if (!atom) {
-            vp->setUndefined();
-            return;
+            cx->recoverFromOutOfMemory();
+            return false;
         }
     }
 
     if (!frontend::IsIdentifier(atom) || frontend::IsKeyword(atom)) {
-        vp->setUndefined();
-        return;
+        return false;
     }
 
     PropertyResult prop;
     JSObject* scope = nullptr;
     JSObject* pobj = nullptr;
     if (LookupNameNoGC(cx, atom->asPropertyName(), envChain, &scope, &pobj, &prop)) {
-        if (FetchNameNoGC(pobj, prop, MutableHandleValue::fromMarkedLocation(vp))) {
-            return;
-        }
+        return FetchNameNoGC(pobj, prop, vp);
     }
-
-    vp->setUndefined();
+    return false;
 }
 
 void

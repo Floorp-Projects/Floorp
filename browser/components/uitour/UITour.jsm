@@ -153,9 +153,7 @@ var UITour = {
     ["searchIcon", {
       query: (aDocument) => {
         let searchbar = aDocument.getElementById("searchbar");
-        return aDocument.getAnonymousElementByAttribute(searchbar,
-                                                        "anonid",
-                                                        "searchbar-search-button");
+        return searchbar.querySelector(".searchbar-search-button");
       },
       widgetName: "search-container",
     }],

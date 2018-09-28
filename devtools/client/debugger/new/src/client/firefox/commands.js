@@ -35,6 +35,18 @@ function setupCommands(dependencies) {
   };
 }
 
+function createObjectClient(grip) {
+  return debuggerClient.createObjectClient(grip);
+}
+
+function releaseActor(actor) {
+  if (!actor) {
+    return;
+  }
+
+  return debuggerClient.release(actor);
+}
+
 function sendPacket(packet, callback = r => r) {
   return debuggerClient.request(packet).then(callback);
 }
@@ -406,6 +418,8 @@ async function fetchWorkers() {
 const clientCommands = {
   autocomplete,
   blackBox,
+  createObjectClient,
+  releaseActor,
   interrupt,
   eventListeners,
   pauseGrip,
