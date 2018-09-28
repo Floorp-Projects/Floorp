@@ -35,5 +35,5 @@ var macOSPoliciesParser = {
     }
 
     return nativePolicies;
-  }
+  },
 };
