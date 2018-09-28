@@ -22,6 +22,7 @@ const {
 const TYPE_TO_RUNTIMES_KEY = {
   [RUNTIMES.THIS_FIREFOX]: "thisFirefoxRuntimes",
   [RUNTIMES.NETWORK]: "networkRuntimes",
+  [RUNTIMES.USB]: "usbRuntimes",
 };
 
 function RuntimesState(networkRuntimes = []) {
@@ -96,6 +97,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         return {
           id: runtime.id,
           name: runtime.name,
+          socketPath: runtime._socketPath,
           type: RUNTIMES.USB,
         };
       });

@@ -18,7 +18,6 @@ Device.prototype = {
   type: "adb",
 
   shell: ADB.shell.bind(ADB),
-  forwardPort: ADB.forwardPort.bind(ADB),
 
   getModel() {
     if (this._modelPromise) {

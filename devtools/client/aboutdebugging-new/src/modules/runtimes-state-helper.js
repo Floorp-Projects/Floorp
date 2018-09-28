@@ -19,6 +19,7 @@ function findRuntimeById(id, runtimesState) {
   const allRuntimes = [
     ...runtimesState.networkRuntimes,
     ...runtimesState.thisFirefoxRuntimes,
+    ...runtimesState.usbRuntimes,
   ];
   return allRuntimes.find(r => r.id === id);
 }
