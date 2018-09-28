@@ -253,10 +253,14 @@ impl ClipScrollTree {
         &mut self,
         pan: WorldPoint,
         scene_properties: &SceneProperties,
-    ) -> TransformPalette {
-        let mut transform_palette = TransformPalette::new(self.spatial_nodes.len());
+        mut transform_palette: Option<&mut TransformPalette>,
+    ) {
         if self.spatial_nodes.is_empty() {
-            return transform_palette;
+            return;
+        }
+
+        if let Some(ref mut palette) = transform_palette {
+            palette.allocate(self.spatial_nodes.len());
         }
 
         self.coord_systems.clear();
@@ -282,7 +286,9 @@ impl ClipScrollTree {
             };
 
             node.update(&mut state, &mut self.coord_systems, scene_properties);
-            node.push_gpu_data(&mut transform_palette, node_index);
+            if let Some(ref mut palette) = transform_palette {
+                node.push_gpu_data(palette, node_index);
+            }
 
             if !node.children.is_empty() {
                 node.prepare_state_for_children(&mut state);
@@ -293,8 +299,6 @@ impl ClipScrollTree {
                 );
             }
         }
-
-        transform_palette
     }
 
     pub fn finalize_and_apply_pending_scroll_offsets(&mut self, old_states: ScrollStates) {
@@ -506,7 +510,7 @@ fn test_cst_simple_translation() {
         LayoutVector2D::zero(),
     );
 
-    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new(), None);
 
     test_pt(100.0, 100.0, &cst, child1, root, 200.0, 100.0);
     test_pt(100.0, 100.0, &cst, root, child1, 0.0, 100.0);
@@ -551,7 +555,7 @@ fn test_cst_simple_scale() {
         LayoutVector2D::zero(),
     );
 
-    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new(), None);
 
     test_pt(100.0, 100.0, &cst, child1, root, 400.0, 100.0);
     test_pt(100.0, 100.0, &cst, root, child1, 25.0, 100.0);
@@ -605,7 +609,7 @@ fn test_cst_scale_translation() {
         LayoutVector2D::zero(),
     );
 
-    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new(), None);
 
     test_pt(100.0, 100.0, &cst, child1, root, 200.0, 150.0);
     test_pt(100.0, 100.0, &cst, child2, root, 300.0, 450.0);
@@ -644,7 +648,7 @@ fn test_cst_translation_rotate() {
         LayoutVector2D::zero(),
     );
 
-    cst.update_tree(WorldPoint::zero(), &SceneProperties::new());
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new(), None);
 
     test_pt(100.0, 0.0, &cst, child1, root, 0.0, -100.0);
 }
