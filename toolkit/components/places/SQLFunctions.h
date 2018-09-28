@@ -50,7 +50,7 @@ namespace places {
  *        Indicates if aURL is a bookmark or not.  Treated as a boolean.
  * @param aOpenPageCount
  *        The number of times aURL has been registered as being open.  (See
- *        mozIPlacesAutoComplete::registerOpenPage.)
+ *        UrlbarProviderOpenTabs::registerOpenTab.)
  * @param aMatchBehavior
  *        The match behavior to use for this search.
  * @param aSearchBehavior

@@ -390,6 +390,10 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
 
         try {
             WifiManager mgr = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            if (mgr == null) {
+                return 0;
+            }
+
             DhcpInfo d = mgr.getDhcpInfo();
             if (d == null) {
                 return 0;
@@ -416,6 +420,9 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
             case "Wifi:Enable":
                 final WifiManager mgr = (WifiManager)
                         applicationContext.getSystemService(Context.WIFI_SERVICE);
+                if (mgr == null) {
+                    return;
+                }
 
                 if (!mgr.isWifiEnabled()) {
                     mgr.setWifiEnabled(true);

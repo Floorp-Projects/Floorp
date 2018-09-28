@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # flake8: noqa: E501
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import cPickle as pickle
 import os
+import re
 import shutil
 import tempfile
 import unittest
@@ -19,6 +20,7 @@ from mozfile import NamedTemporaryFile
 from moztest.resolve import (
     TestMetadata,
     TestResolver,
+    TEST_SUITES,
 )
 
 
@@ -155,6 +157,46 @@ ALL_TESTS = {
 TEST_DEFAULTS = {
     "/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": {"support-files": "\ndata/**\nxpcshell_updater.ini"}
 }
+
+TASK_LABELS = [
+    'test-linux64/opt-browser-screenshots-1',
+    'test-linux64/opt-browser-screenshots-e10s-1',
+    'test-linux64/opt-marionette',
+    'test-linux64/opt-mochitest',
+    'test-linux64/debug-mochitest-e10s',
+    'test-linux64/opt-mochitest-a11y',
+    'test-linux64/opt-mochitest-browser',
+    'test-linux64/opt-mochitest-browser-chrome',
+    'test-linux64/opt-mochitest-browser-chrome-e10s',
+    'test-linux64/opt-mochitest-browser-chrome-e10s-11',
+    'test-linux64/opt-mochitest-chrome',
+    'test-linux64/opt-mochitest-clipboard',
+    'test-linux64/opt-mochitest-devtools',
+    'test-linux64/opt-mochitest-devtools-chrome',
+    'test-linux64/opt-mochitest-gpu',
+    'test-linux64/opt-mochitest-gpu-e10s',
+    'test-linux64/opt-mochitest-media-e10s-1',
+    'test-linux64/opt-mochitest-media-e10s-11',
+    'test-linux64/opt-mochitest-plain',
+    'test-linux64/opt-mochitest-screenshots-1',
+    'test-linux64/opt-reftest',
+    'test-linux64/debug-reftest-e10s-1',
+    'test-linux64/debug-reftest-e10s-11',
+    'test-linux64/opt-robocop',
+    'test-linux64/opt-robocop-1',
+    'test-linux64/opt-robocop-e10s',
+    'test-linux64/opt-robocop-e10s-1',
+    'test-linux64/opt-robocop-e10s-11',
+    'test-linux64/opt-web-platform-tests-e10s-1',
+    'test-linux64/opt-web-platform-tests-reftests-e10s-1',
+    'test-linux64/opt-web-platform-tests-reftest-e10s-1',
+    'test-linux64/opt-web-platform-tests-wdspec-e10s-1',
+    'test-linux64/opt-web-platform-tests-1',
+    'test-linux64/opt-web-platform-test-e10s-1',
+    'test-linux64/opt-xpcshell',
+    'test-linux64/opt-xpcshell-1',
+    'test-linux64/opt-xpcshell-2',
+]
 
 
 class Base(unittest.TestCase):
@@ -340,6 +382,80 @@ class TestTestResolver(Base):
             'image/test/browser/browser_bug666317.js',
             'mobile/android/tests/browser/junit3/src/TestDistribution.java',
         ]
+
+    def test_task_regexes(self):
+        """Test the task_regexes defined in TEST_SUITES."""
+
+        test_cases = {
+            'mochitest-browser': [
+                'test-linux64/opt-mochitest-browser-chrome',
+                'test-linux64/opt-mochitest-browser-chrome-e10s',
+            ],
+            'mochitest-chrome': [
+                'test-linux64/opt-mochitest-chrome',
+            ],
+            'mochitest-devtools': [
+                'test-linux64/opt-mochitest-devtools-chrome',
+            ],
+            'mochitest-gpu': [
+                'test-linux64/opt-mochitest-gpu',
+                'test-linux64/opt-mochitest-gpu-e10s',
+            ],
+            'mochitest-media': [
+                'test-linux64/opt-mochitest-media-e10s-1',
+            ],
+            'mochitest-plain': [
+                'test-linux64/opt-mochitest',
+                'test-linux64/debug-mochitest-e10s',
+                # this isn't a real task but the regex would match it if it were
+                'test-linux64/opt-mochitest-plain',
+            ],
+            'mochitest-screenshots': [
+                'test-linux64/opt-browser-screenshots-1',
+                'test-linux64/opt-browser-screenshots-e10s-1',
+            ],
+            'reftest': [
+                'test-linux64/opt-reftest',
+                'test-linux64/debug-reftest-e10s-1',
+            ],
+            'robocop': [
+                'test-linux64/opt-robocop',
+                'test-linux64/opt-robocop-1',
+                'test-linux64/opt-robocop-e10s',
+                'test-linux64/opt-robocop-e10s-1',
+            ],
+            'web-platform-tests': [
+                'test-linux64/opt-web-platform-tests-e10s-1',
+                'test-linux64/opt-web-platform-tests-reftests-e10s-1',
+                'test-linux64/opt-web-platform-tests-reftest-e10s-1',
+                'test-linux64/opt-web-platform-tests-wdspec-e10s-1',
+                'test-linux64/opt-web-platform-tests-1',
+            ],
+            'web-platform-tests-testharness': [
+                'test-linux64/opt-web-platform-tests-e10s-1',
+                'test-linux64/opt-web-platform-tests-1',
+            ],
+            'web-platform-tests-reftest': [
+                'test-linux64/opt-web-platform-tests-reftests-e10s-1',
+            ],
+            'web-platform-tests-wdspec': [
+                'test-linux64/opt-web-platform-tests-wdspec-e10s-1',
+            ],
+            'xpcshell': [
+                'test-linux64/opt-xpcshell',
+                'test-linux64/opt-xpcshell-1',
+            ],
+        }
+
+        regexes = []
+
+        def match_task(task):
+            return any(re.search(pattern, task) for pattern in regexes)
+
+        for suite, expected in sorted(test_cases.items()):
+            print(suite)
+            regexes = TEST_SUITES[suite]['task_regex']
+            assert set(filter(match_task, TASK_LABELS)) == set(expected)
 
 
 if __name__ == '__main__':

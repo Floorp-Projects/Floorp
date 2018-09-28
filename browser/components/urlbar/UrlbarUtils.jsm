@@ -22,16 +22,38 @@ var UrlbarUtils = {
     MERGE: 2,
   },
 
-  MATCHTYPE: {
+  // Extensions are allowed to add suggestions if they have registered a keyword
+  // with the omnibox API. This is the maximum number of suggestions an extension
+  // is allowed to add for a given search string.
+  // This value includes the heuristic result.
+  MAXIMUM_ALLOWED_EXTENSION_MATCHES: 6,
+
+  // This is used by UnifiedComplete, the new implementation will use
+  // PROVIDER_TYPE and MATCH_TYPE
+  MATCH_GROUP: {
     HEURISTIC: "heuristic",
     GENERAL: "general",
     SUGGESTION: "suggestion",
     EXTENSION: "extension",
   },
 
-  // Extensions are allowed to add suggestions if they have registered a keyword
-  // with the omnibox API. This is the maximum number of suggestions an extension
-  // is allowed to add for a given search string.
-  // This value includes the heuristic result.
-  MAXIMUM_ALLOWED_EXTENSION_MATCHES: 6,
+  // Defines provider types.
+  PROVIDER_TYPE: {
+    // Should be executed immediately, because it returns heuristic results
+    // that must be handled to the user asap.
+    IMMEDIATE: 1,
+    // Can be delayed, contains results coming from the session or the profile.
+    PROFILE: 2,
+    // Can be delayed, contains results coming from the network.
+    NETWORK: 3,
+    // Can be delayed, contains results coming from unknown sources.
+    EXTENSION: 4,
+  },
+
+  // Defines UrlbarMatch types.
+  MATCH_TYPE: {
+    // Indicates an open tab.
+    // The payload is: { url, userContextId }
+    TAB_SWITCH: 1,
+  },
 };

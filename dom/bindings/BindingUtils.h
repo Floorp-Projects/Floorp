@@ -2995,9 +2995,9 @@ RecordReplayRegisterDeferredFinalize(T* aObject)
   DeferredFinalizer<T>::RecordReplayRegisterDeferredFinalize(aObject);
 }
 
-// This returns T's CC participant if it participates in CC or null if it
-// doesn't. This also returns null for classes that don't inherit from
-// nsISupports (QI should be used to get the participant for those).
+// This returns T's CC participant if it participates in CC and does not inherit
+// from nsISupports. Otherwise, it returns null. QI should be used to get the
+// participant if T inherits from nsISupports.
 template<class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
 class GetCCParticipant
 {
@@ -3021,7 +3021,7 @@ public:
   Get()
   {
     // Passing int() here will try to call the GetHelper that takes an int as
-    // its firt argument. If T doesn't participate in CC then substitution for
+    // its first argument. If T doesn't participate in CC then substitution for
     // the second argument (with a default value) will fail and because of
     // SFINAE the next best match (the variant taking a double) will be called.
     return GetHelper<T>(int());
