@@ -38,7 +38,7 @@ function createContext(searchString = "foo") {
   return new QueryContext({
     searchString,
     lastKey: searchString ? searchString[searchString.length - 1] : "",
-    maxResults: 1,
+    maxResults: Services.prefs.getIntPref("browser.urlbar.maxRichResults"),
     isPrivate: true,
   });
 }
