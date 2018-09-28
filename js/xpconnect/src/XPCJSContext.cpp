@@ -800,6 +800,9 @@ ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx)
     bool useWasm = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm");
     bool useWasmIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_ionjit");
     bool useWasmBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_baselinejit");
+#ifdef ENABLE_WASM_CRANELIFT
+    bool useWasmCranelift = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_cranelift");
+#endif
 #ifdef ENABLE_WASM_GC
     bool useWasmGc = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_gc");
 #endif
@@ -871,6 +874,9 @@ ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx)
                              .setWasm(useWasm)
                              .setWasmIon(useWasmIon)
                              .setWasmBaseline(useWasmBaseline)
+#ifdef ENABLE_WASM_CRANELIFT
+                             .setWasmForceCranelift(useWasmCranelift)
+#endif
 #ifdef ENABLE_WASM_GC
                              .setWasmGc(useWasmGc)
 #endif

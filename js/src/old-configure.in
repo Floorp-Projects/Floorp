@@ -1820,6 +1820,9 @@ elif test "$EARLY_BETA_OR_EARLIER"; then
 fi
 AC_SUBST(EARLY_BETA_OR_EARLIER)
 
+BINDGEN_SYSTEM_FLAGS="$_BINDGEN_CFLAGS $NSPR_CFLAGS"
+AC_SUBST(BINDGEN_SYSTEM_FLAGS)
+
 dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================

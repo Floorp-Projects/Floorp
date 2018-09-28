@@ -25,3 +25,6 @@ if (CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android') or CONFIG
 
 if CONFIG['MOZ_MEMORY']:
     gkrust_features += ['moz_memory']
+
+if CONFIG['ENABLE_WASM_CRANELIFT']:
+    gkrust_features += ['spidermonkey_rust']

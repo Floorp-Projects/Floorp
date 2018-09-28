@@ -439,3 +439,7 @@
   flex-grow: 1;
   margin-inline-start: 6px;
 }
+
+#timings-panel .learn-more-link{
+  width: -moz-max-content;
+}

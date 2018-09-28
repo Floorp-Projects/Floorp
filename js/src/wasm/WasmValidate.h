@@ -919,6 +919,11 @@ ConvertMemoryPagesToBytes(Limits* memory);
 MOZ_MUST_USE bool
 Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error);
 
+// Same, but don't require a JSContext.
+MOZ_MUST_USE bool
+ValidateForCranelift(const ShareableBytes& bytecode, UniqueChars* error);
+
+
 }  // namespace wasm
 }  // namespace js
 
