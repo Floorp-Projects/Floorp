@@ -51,3 +51,54 @@ accepted-cards:not(.branded) .accepted-cards-item[data-network-id]::after {
   overflow: hidden;
   width: 100%;
 }
+
+/*
+  We use .png / @2x.png images where we don't yet have a vector version of a logo
+*/
+.accepted-cards-item[data-network-id="amex"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-amex.png");
+}
+
+.accepted-cards-item[data-network-id="cartebancaire"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-cartebancaire.png");
+}
+
+.accepted-cards-item[data-network-id="diners"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-diners.svg");
+}
+
+.accepted-cards-item[data-network-id="discover"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-discover.png");
+}
+
+.accepted-cards-item[data-network-id="jcb"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-jcb.svg");
+}
+
+.accepted-cards-item[data-network-id="mastercard"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-mastercard.svg");
+}
+
+.accepted-cards-item[data-network-id="mir"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-mir.svg");
+}
+
+.accepted-cards-item[data-network-id="unionpay"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-unionpay.svg");
+}
+
+.accepted-cards-item[data-network-id="visa"] {
+  background-image: url("chrome://formautofill/content/third-party/cc-logo-visa.svg");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .accepted-cards-item[data-network-id="amex"] {
+    background-image: url("chrome://formautofill/content/third-party/cc-logo-amex@2x.png");
+  }
+  .accepted-cards-item[data-network-id="cartebancaire"] {
+    background-image: url("chrome://formautofill/content/third-party/cc-logo-cartebancaire@2x.png");
+  }
+  .accepted-cards-item[data-network-id="discover"] {
+    background-image: url("chrome://formautofill/content/third-party/cc-logo-discover@2x.png");
+  }
+}
