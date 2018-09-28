@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # flake8: noqa: E501
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import cPickle as pickle
 import os
@@ -407,6 +407,8 @@ class TestTestResolver(Base):
             'mochitest-plain': [
                 'test-linux64/opt-mochitest',
                 'test-linux64/debug-mochitest-e10s',
+                # this isn't a real task but the regex would match it if it were
+                'test-linux64/opt-mochitest-plain',
             ],
             'mochitest-screenshots': [
                 'test-linux64/opt-browser-screenshots-1',
@@ -425,6 +427,7 @@ class TestTestResolver(Base):
             'web-platform-tests': [
                 'test-linux64/opt-web-platform-tests-e10s-1',
                 'test-linux64/opt-web-platform-tests-reftests-e10s-1',
+                'test-linux64/opt-web-platform-tests-reftest-e10s-1',
                 'test-linux64/opt-web-platform-tests-wdspec-e10s-1',
                 'test-linux64/opt-web-platform-tests-1',
             ],
@@ -450,6 +453,7 @@ class TestTestResolver(Base):
             return any(re.search(pattern, task) for pattern in regexes)
 
         for suite, expected in sorted(test_cases.items()):
+            print(suite)
             regexes = TEST_SUITES[suite]['task_regex']
             assert set(filter(match_task, TASK_LABELS)) == set(expected)
 
