@@ -150,12 +150,14 @@ var AppManager = exports.AppManager = {
       this._listTabsResponse = null;
       this.deviceFront = null;
       this.preferenceFront = null;
+      this.perfFront = null;
     } else {
       const response = await this.connection.client.listTabs();
       this._listTabsResponse = response;
       try {
         this.deviceFront = await this.connection.client.mainRoot.getFront("device");
         this.preferenceFront = await this.connection.client.mainRoot.getFront("preference");
+        this.perfFront = await this.connection.client.mainRoot.getFront("perf");
         this._recordRuntimeInfo();
       } catch (e) {
         // This may fail on <FF55 (because of lack of bug 1352157) but we will want to

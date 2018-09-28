@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {AddonsFront} = require("devtools/shared/fronts/addon/addons");
-
 startupAddonsManager();
 
 async function connect() {
@@ -16,7 +14,7 @@ async function connect() {
   const addonsActor = root.addonsActor;
   ok(addonsActor, "Got AddonsActor instance");
 
-  const addons = AddonsFront(client, {addonsActor});
+  const addons = await client.mainRoot.getFront("addons");
   return [client, addons];
 }
 

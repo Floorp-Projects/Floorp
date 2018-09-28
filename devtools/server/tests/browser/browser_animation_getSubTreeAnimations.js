@@ -12,7 +12,7 @@ const URL = MAIN_DOMAIN + "animation.html";
 add_task(async function() {
   info("Creating a test document with 2 iframes containing animated nodes");
 
-  const {client, walker, animations} = await initAnimationsFrontForUrl(
+  const {target, walker, animations} = await initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8," +
     "<iframe id='iframe' src='" + URL + "'></iframe>");
 
@@ -33,6 +33,6 @@ add_task(async function() {
   // at least have the infinitely running animations.
   ok(players.length >= 4, "All subtree animations were retrieved");
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

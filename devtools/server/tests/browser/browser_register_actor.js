@@ -4,7 +4,6 @@ var gClient;
 
 function test() {
   waitForExplicitFinish();
-  const {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
   const actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
 
   DebuggerServer.init();
@@ -13,14 +12,14 @@ function test() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect()
     .then(() => gClient.listTabs())
-    .then(response => {
+    .then(async response => {
       const options = {
         prefix: "helloActor",
         constructor: "HelloActor",
         type: { target: true }
       };
 
-      const registry = ActorRegistryFront(gClient, response);
+      const registry = await gClient.mainRoot.getFront("actorRegistry");
       registry.registerActor(actorURL, options).then(actorFront => {
         gClient.listTabs().then(res => {
           const tab = res.tabs[res.selected];

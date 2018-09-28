@@ -108,7 +108,7 @@ const GRID_FRAGMENT_DATA = {
 };
 
 add_task(async function() {
-  const { client, walker, layout } =
+  const { target, walker, layout } =
     await initLayoutFrontForUrl(MAIN_DOMAIN + "grid.html");
   const grids = await layout.getGrids(walker.rootNode);
   const grid = grids[0];
@@ -129,6 +129,6 @@ add_task(async function() {
     ok(false, "Did not get grid container node front.");
   }
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

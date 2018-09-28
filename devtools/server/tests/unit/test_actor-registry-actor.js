@@ -12,8 +12,6 @@ var gRegistryFront;
 var gActorFront;
 var gOldPref;
 
-const { ActorRegistryFront } = require("devtools/shared/fronts/actor-registry");
-
 function run_test() {
   gOldPref = Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps");
   Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", false);
@@ -24,11 +22,9 @@ function run_test() {
   do_test_pending();
 }
 
-function getRegistry() {
-  gClient.listTabs().then((response) => {
-    gRegistryFront = ActorRegistryFront(gClient, response);
-    registerNewActor();
-  });
+async function getRegistry() {
+  gRegistryFront = await gClient.mainRoot.getFront("actorRegistry");
+  registerNewActor();
 }
 
 function registerNewActor() {

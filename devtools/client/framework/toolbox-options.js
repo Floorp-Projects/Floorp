@@ -516,32 +516,17 @@ OptionsPanel.prototype = {
   },
 
   destroy: function() {
-    if (this.destroyPromise) {
-      return this.destroyPromise;
+    if (this.destroyed) {
+      return;
     }
+    this.destroyed = true;
 
     this._removeListeners();
 
-    this.destroyPromise = new Promise(resolve => {
-      if (this.target.activeTab) {
-        this.disableJSNode.removeEventListener("click", this._disableJSClicked);
-        // FF41+ automatically cleans up state in actor on disconnect
-        if (!this.target.activeTab.traits.noTabReconfigureOnClose) {
-          const options = {
-            "javascriptEnabled": this._origJavascriptEnabled,
-            "performReload": false
-          };
-          this.target.activeTab.reconfigure(options).then(resolve);
-        } else {
-          resolve();
-        }
-      } else {
-        resolve();
-      }
-    });
+    if (this.target.activeTab) {
+      this.disableJSNode.removeEventListener("click", this._disableJSClicked);
+    }
 
     this.panelWin = this.panelDoc = this.disableJSNode = this.toolbox = null;
-
-    return this.destroyPromise;
   }
 };

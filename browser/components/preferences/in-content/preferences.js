@@ -230,7 +230,7 @@ async function spotlight(subcategory) {
     if (!gSearchResultsPane.categoriesInitialized) {
       await waitForSystemAddonInjectionsFinished([{
         isGoingToInject: formAutofillParent.initialized,
-        elementId: "formAutofillGroup",
+        elementId: "formAutofillGroupBox",
       }]);
     }
     scrollAndHighlight(subcategory);
@@ -240,7 +240,7 @@ async function spotlight(subcategory) {
    * Wait for system addons finished their dom injections.
    * @param {Array} addons - The system addon information array.
    * For example, the element is looked like
-   * { isGoingToInject: true, elementId: "formAutofillGroup" }.
+   * { isGoingToInject: true, elementId: "formAutofillGroupBox" }.
    * The `isGoingToInject` means the system addon will be visible or not,
    * and the `elementId` means the id of the element will be injected into the dom
    * if the `isGoingToInject` is true.

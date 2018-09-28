@@ -483,7 +483,7 @@ var paymentDialogWrapper = {
 
   onOpenPreferences() {
     let prefsURL = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-    prefsURL.data = "about:preferences#privacy-address-autofill";
+    prefsURL.data = "about:preferences#privacy-form-autofill";
     Services.ww.openWindow(null, AppConstants.BROWSER_CHROME_URL, "_blank", "chrome,all,dialog=no",
                            prefsURL);
   },
