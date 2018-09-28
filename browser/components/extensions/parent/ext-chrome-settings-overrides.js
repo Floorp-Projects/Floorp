@@ -287,6 +287,10 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         suggestURL: searchProvider.suggest_url,
         queryCharset: "UTF-8",
       };
+      if (searchProvider.search_url_post_params) {
+        params.method = "POST";
+        params.postData = searchProvider.search_url_post_params;
+      }
       Services.search.addEngineWithDetails(searchProvider.name.trim(), params);
       await ExtensionSettingsStore.addSetting(
         extension.id, DEFAULT_SEARCH_STORE_TYPE, ENGINE_ADDED_SETTING_NAME,
