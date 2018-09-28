@@ -5,9 +5,7 @@
 
 var disableWorkerTest = "SimpleDB doesn't work in workers yet";
 
-var testGenerator = testSteps();
-
-function* testSteps()
+async function testSteps()
 {
   const name = "data";
   const bufferSize = 100;
@@ -15,18 +13,18 @@ function* testSteps()
   let database = getSimpleDatabase();
 
   let request = database.open(name);
-  yield* requestFinished(request);
+  await requestFinished(request);
 
   let buffer1 = getRandomBuffer(bufferSize);
 
   request = database.write(buffer1);
-  yield* requestFinished(request);
+  await requestFinished(request);
 
   request = database.seek(0);
-  yield* requestFinished(request);
+  await requestFinished(request);
 
   request = database.read(bufferSize);
-  let result = yield* requestFinished(request);
+  let result = await requestFinished(request);
 
   let buffer2 = result.getAsArrayBuffer();
 
@@ -36,20 +34,18 @@ function* testSteps()
 
   try {
     request = database2.open(name);
-    yield* requestFinished(request);
+    await requestFinished(request);
     ok(false, "Should have thrown!");
   } catch(ex) {
     ok(request.resultCode == NS_ERROR_STORAGE_BUSY, "Good result code.");
   }
 
   request = database.close();
-  yield* requestFinished(request);
+  await requestFinished(request);
 
   request = database2.open(name);
-  yield* requestFinished(request);
+  await requestFinished(request);
 
   request = database2.close();
-  yield* requestFinished(request);
-
-  finishTest();
+  await requestFinished(request);
 }

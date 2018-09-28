@@ -169,7 +169,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
-    @Test fun trackingProtectionBasic() {
+    @Test fun trackingProtection() {
         val category = TrackingProtectionDelegate.CATEGORY_TEST;
         sessionRule.runtime.settings.trackingProtectionCategories = category
         sessionRule.session.loadTestPath(TRACKERS_PATH)
@@ -229,6 +229,102 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Where should not be null", where, notNullValue())
                 assertThat("Where should match", where,
                         equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
+                return null
+            }
+        })
+    }
+
+    @Test fun safebrowsingPhishing() {
+        val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
+
+        sessionRule.runtime.settings.blockPhishing = true
+
+        testLoadExpectError(phishingUri,
+                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
+                        GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_PHISHING_URI)
+
+        sessionRule.runtime.settings.blockPhishing = false
+
+        sessionRule.session.loadUri(phishingUri)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(
+                object : Callbacks.NavigationDelegate {
+            @AssertCalled(false)
+            override fun onLoadError(session: GeckoSession, uri: String?,
+                                     category: Int, error: Int): GeckoResult<String>? {
+                return null
+            }
+        })
+    }
+
+    @Test fun safebrowsingMalware() {
+        val malwareUri = "https://www.itisatrap.org/firefox/its-an-attack.html"
+
+        sessionRule.runtime.settings.blockMalware = true
+
+        testLoadExpectError(malwareUri,
+                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
+                        GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_MALWARE_URI)
+
+        sessionRule.runtime.settings.blockMalware = false
+
+        sessionRule.session.loadUri(malwareUri)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(
+                object : Callbacks.NavigationDelegate {
+            @AssertCalled(false)
+            override fun onLoadError(session: GeckoSession, uri: String?,
+                                     category: Int, error: Int): GeckoResult<String>? {
+                return null
+            }
+        })
+    }
+
+    @Test fun safebrowsingUnwanted() {
+        val unwantedUri = "https://www.itisatrap.org/firefox/unwanted.html"
+
+        sessionRule.runtime.settings.blockMalware = true
+
+        testLoadExpectError(unwantedUri,
+                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
+                        GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_UNWANTED_URI)
+
+        sessionRule.runtime.settings.blockMalware = false
+
+        sessionRule.session.loadUri(unwantedUri)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(
+                object : Callbacks.NavigationDelegate {
+            @AssertCalled(false)
+            override fun onLoadError(session: GeckoSession, uri: String?,
+                                     category: Int, error: Int): GeckoResult<String>? {
+                return null
+            }
+        })
+    }
+
+    @Test fun safebrowsingHarmful() {
+        val harmfulUri = "https://www.itisatrap.org/firefox/harmful.html"
+
+        sessionRule.runtime.settings.blockMalware = true
+
+        testLoadExpectError(harmfulUri,
+                        GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
+                        GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_HARMFUL_URI)
+
+        sessionRule.runtime.settings.blockMalware = false
+
+        sessionRule.session.loadUri(harmfulUri)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(
+                object : Callbacks.NavigationDelegate {
+            @AssertCalled(false)
+            override fun onLoadError(session: GeckoSession, uri: String?,
+                                     category: Int, error: Int): GeckoResult<String>? {
                 return null
             }
         })
