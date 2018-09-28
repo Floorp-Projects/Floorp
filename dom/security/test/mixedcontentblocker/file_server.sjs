@@ -1,5 +1,14 @@
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
+function ERR(response, msg) {
+  dump("ERROR: " + msg + "\n");
+  response.write("HTTP/1.1 400 Bad Request\r\n");
+  response.write("Content-Type: text/html; charset=UTF-8\r\n");
+  response.write("Content-Length: " + msg.length + "\r\n");
+  response.write("\r\n");
+  response.write(msg);
+}
+
 function loadContentFromFile(path) {
   // Load the content to return in the response from file.
   // Since it's relative to the cwd of the test runner, we start there and
@@ -25,11 +34,15 @@ function handleRequest(request, response)
   const { scheme, host, path } = request;
   // get the Content-Type to serve from the query string
   var contentType = null;
+  var uniqueID = null;
   var showLastRequest = false;
   request.queryString.split('&').forEach(function (val) {
      var [name, value] = val.split('=');
        if (name == "type") {
          contentType = unescape(value);
+       }
+       if (name == "uniqueID") {
+         uniqueID = unescape(value);
        }
        if (name == "lastRequest") {
          showLastRequest = true;
@@ -41,7 +54,22 @@ function handleRequest(request, response)
 
   if (showLastRequest) {
     response.setHeader("Content-Type", "text/html", false);
-    response.write(getState("lastRequest"));
+
+    // We don't want to expose the same lastRequest multiple times.
+    var state = getState("lastRequest");
+    setState("lastRequest", "");
+
+    if (state == "") {
+      ERR(response, "No last request!");
+      return;
+    }
+
+    response.write(state);
+    return;
+  }
+
+  if (!uniqueID) {
+    ERR(response, "No uniqueID?!?");
     return;
   }
 
@@ -49,7 +77,8 @@ function handleRequest(request, response)
     scheme,
     host,
     path,
-    contentType: contentType || "other"
+    uniqueID,
+    contentType: contentType || "other",
   }));
 
   switch (contentType) {
