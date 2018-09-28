@@ -50,6 +50,7 @@
 #include "prenv.h"
 #include "ScopedGLHelpers.h"
 #include "VRManagerChild.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
@@ -80,10 +81,6 @@
 
 #ifdef XP_WIN
 #include "WGLLibrary.h"
-#endif
-
-#if defined(MOZ_WIDGET_ANDROID)
-#include "mozilla/layers/ImageBridgeChild.h"
 #endif
 
 // Generated
@@ -145,6 +142,7 @@ WebGLContext::WebGLContext()
     mEmitContextLostErrorOnce = false;
     mWebGLError = 0;
     mUnderlyingGLError = 0;
+    mVRReady = false;
 
     mContextLostErrorSet = false;
 
@@ -1269,6 +1267,7 @@ WebGLContext::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
 
     aRenderer->Initialize(data);
     aRenderer->SetDirty();
+    mVRReady = true;
     return true;
 }
 
@@ -2307,6 +2306,8 @@ WebGLContext::GetVRFrame()
     if (!gl)
         return nullptr;
 
+    EnsureVRReady();
+
     // Create a custom GLScreenBuffer for VR.
     if (!mVRScreen) {
         auto caps = gl->Screen()->mCaps;
@@ -2343,6 +2344,7 @@ WebGLContext::GetVRFrame()
 already_AddRefed<layers::SharedSurfaceTextureClient>
 WebGLContext::GetVRFrame()
 {
+  EnsureVRReady();
   /**
    * Swap buffers as though composition has occurred.
    * We will then share the resulting front buffer to be submitted to the VR
@@ -2366,6 +2368,35 @@ WebGLContext::GetVRFrame()
 }
 
 #endif  // ifdefined(MOZ_WIDGET_ANDROID)
+
+void
+WebGLContext::EnsureVRReady()
+{
+    if (mVRReady) {
+        return;
+    }
+
+    // Make not composited canvases work with WebVR. See bug #1492554
+    // WebGLContext::InitializeCanvasRenderer is only called when the 2D compositor renders a WebGL canvas
+    // for the first time. This causes canvases not added to the DOM not to work properly with WebVR.
+    // Here we mimic what InitializeCanvasRenderer does internally as a workaround.
+    const auto imageBridge = ImageBridgeChild::GetSingleton();
+    if (imageBridge) {
+        const auto caps = gl->Screen()->mCaps;
+        auto flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
+        if (!IsPremultAlpha() && mOptions.alpha) {
+            flags |= TextureFlags::NON_PREMULTIPLIED;
+        }
+        auto factory = gl::GLScreenBuffer::CreateFactory(gl, caps, imageBridge.get(), flags);
+        gl->Screen()->Morph(std::move(factory));
+#if defined(MOZ_WIDGET_ANDROID)
+        // On Android we are using a different GLScreenBuffer for WebVR, so we need a resize here because 
+        // PresentScreenBuffer() may not be called for the gl->Screen() after we set the new factory.
+        gl->Screen()->Resize(DrawingBufferSize());
+#endif
+        mVRReady = true;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
