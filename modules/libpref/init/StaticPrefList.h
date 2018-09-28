@@ -1622,14 +1622,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-// How many recent block/unblock actions per origins we remember in the
-// Content Blocking log for each top-level window.
-VARCACHE_PREF(
-  "browser.contentblocking.originlog.length",
-   browser_contentblocking_originlog_length,
-  uint32_t, 32
-)
-
 // Whether FastBlock has been enabled.
 VARCACHE_PREF(
   "browser.fastblock.enabled",

@@ -93,8 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
       {
       },
   
-    onSecurityChange : function(aWebProgress, aRequest, aOldState, aState,
-                                aContentBlockingLogJSON)
+    onSecurityChange : function(aWebProgress, aRequest, aState)
       {
       },
   
