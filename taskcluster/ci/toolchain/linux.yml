@@ -549,7 +549,7 @@ linux64-rust-nightly:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', 'nightly-2018-08-18',
+            '--channel', 'nightly-2018-09-16',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
