@@ -576,25 +576,21 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(Element* aElement,
   if (inDocWithShell &&
       aStyleType == eAll &&
       !aElement->IsHTMLElement(nsGkAtoms::area)) {
-    Element* element = nullptr;
+    nsIFrame* frame = nullptr;
     if (aPseudo == nsCSSPseudoElements::before()) {
-      element = nsLayoutUtils::GetBeforePseudo(aElement);
+      frame = nsLayoutUtils::GetBeforeFrame(aElement);
     } else if (aPseudo == nsCSSPseudoElements::after()) {
-      element = nsLayoutUtils::GetAfterPseudo(aElement);
+      frame = nsLayoutUtils::GetAfterFrame(aElement);
     } else if (!aPseudo) {
-      element = aElement;
+      frame = nsLayoutUtils::GetStyleFrame(aElement);
     }
-
-    if (element) {
-      nsIFrame* primaryFrame = element->GetPrimaryFrame();
-      if (nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(element)) {
-        ComputedStyle* result = styleFrame->Style();
-        // Don't use the style if it was influenced by pseudo-elements,
-        // since then it's not the primary style for this element / pseudo.
-        if (!MustReresolveStyle(result)) {
-          RefPtr<ComputedStyle> ret = result;
-          return ret.forget();
-        }
+    if (frame) {
+      ComputedStyle* result = frame->Style();
+      // Don't use the style if it was influenced by pseudo-elements, since then
+      // it's not the primary style for this element / pseudo.
+      if (!MustReresolveStyle(result)) {
+        RefPtr<ComputedStyle> ret = result;
+        return ret.forget();
       }
     }
   }
