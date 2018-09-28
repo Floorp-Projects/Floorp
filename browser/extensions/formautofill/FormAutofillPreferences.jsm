@@ -51,7 +51,7 @@ FormAutofillPreferences.prototype = {
     this.createPreferenceGroup(document);
     this.attachEventListeners();
 
-    return this.refs.formAutofillGroup;
+    return this.refs.formAutofillGroupBox;
   },
 
   /**
@@ -69,6 +69,10 @@ FormAutofillPreferences.prototype = {
    */
   createPreferenceGroup(document) {
     let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "autofill-card-address";
+    let formAutofillGroupBox = document.createXULElement("groupbox");
+    let formAutofillGroupBoxCaption = document.createXULElement("caption");
+    let formAutofillGroupBoxCaptionLabel = document.createXULElement("label");
+    let formAutofillGroupBoxDescription = document.createXULElement("description");
     let formAutofillGroup = document.createXULElement("vbox");
     let addressAutofill = document.createXULElement("hbox");
     let addressAutofillCheckboxGroup = document.createXULElement("hbox");
@@ -88,6 +92,15 @@ FormAutofillPreferences.prototype = {
     formAutofillGroup.id = "formAutofillGroup";
     addressAutofill.id = "addressAutofill";
     addressAutofillLearnMore.id = "addressAutofillLearnMore";
+
+    formAutofillGroupBox.setAttribute("id", "formAutofillGroupBox");
+    formAutofillGroupBox.setAttribute("data-category", "panePrivacy");
+    formAutofillGroupBox.setAttribute("data-subcategory", "form-autofill");
+    formAutofillGroupBoxCaptionLabel.textContent = this.bundle.GetStringFromName("autofillHeader");
+    formAutofillGroupBoxDescription.textContent =
+      this.bundle.formatStringFromName("autofillDescription",
+                                       [FormAutofillUtils.brandBundle.GetStringFromName("brandShortName")],
+                                       1);
 
     addressAutofill.setAttribute("data-subcategory", "address-autofill");
     addressAutofillCheckboxLabel.textContent = this.bundle.GetStringFromName("autofillAddressesCheckbox");
@@ -113,6 +126,10 @@ FormAutofillPreferences.prototype = {
     addressAutofillCheckboxGroup.flex = 1;
     addressAutofillCheckboxLabel.flex = 1;
 
+    formAutofillGroupBoxCaption.appendChild(formAutofillGroupBoxCaptionLabel);
+    formAutofillGroupBox.appendChild(formAutofillGroupBoxCaption);
+    formAutofillGroupBox.appendChild(formAutofillGroupBoxDescription);
+    formAutofillGroupBox.appendChild(formAutofillGroup);
     formAutofillGroup.appendChild(addressAutofill);
     addressAutofill.appendChild(addressAutofillCheckboxGroup);
     addressAutofillCheckboxGroup.appendChild(addressAutofillCheckbox);
@@ -123,6 +140,7 @@ FormAutofillPreferences.prototype = {
     savedAddressesBtnWrapper.appendChild(savedAddressesBtn);
 
     this.refs = {
+      formAutofillGroupBox,
       formAutofillGroup,
       addressAutofillCheckbox,
       addressAutofillCheckboxLabel,
