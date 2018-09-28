@@ -46,7 +46,7 @@
                              xbl:inherits="mode=progressmode,value=progress,paused=progresspaused"/>
           <xul:description class="downloadDetails downloadDetailsNormal"
                            crop="end"
-                           xbl:inherits="value=status,tooltiptext=fullStatus"/>
+                           xbl:inherits="value=status,tooltiptext=status"/>
           <xul:description class="downloadDetails downloadDetailsHover"
                            crop="end"
                            xbl:inherits="value=hoverStatus"/>
@@ -68,7 +68,7 @@
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
       <xul:vbox class="toolbarbutton-text" flex="1">
         <xul:label crop="end" xbl:inherits="value=label,accesskey,crop,wrap"/>
-        <xul:label class="status-text status-full" crop="end" xbl:inherits="value=fullStatus"/>
+        <xul:label class="status-text status-full" crop="end" xbl:inherits="value=status"/>
         <xul:label class="status-text status-open" crop="end" xbl:inherits="value=openLabel"/>
         <xul:label class="status-text status-retry" crop="end" xbl:inherits="value=retryLabel"/>
         <xul:label class="status-text status-show" crop="end" xbl:inherits="value=showLabel"/>
