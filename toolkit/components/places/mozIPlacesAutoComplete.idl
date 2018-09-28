@@ -108,35 +108,6 @@ interface mozIPlacesAutoComplete : nsISupports
   const long BEHAVIOR_SEARCHES = 1 << 9;
 
   /**
-   * Mark a page as being currently open.
-   *
-   * @note Pages will not be automatically unregistered when Private Browsing
-   *       mode is entered or exited.  Therefore, consumers MUST unregister or
-   *       register themselves.
-   *
-   * @param aURI
-   *        The URI to register as an open page.
-   * @param aUserContextId
-   *        The Container Id of the tab.
-   */
-  void registerOpenPage(in nsIURI aURI, in uint32_t aUserContextId);
-
-  /**
-   * Mark a page as no longer being open (either by closing the window or tab,
-   * or by navigating away from that page).
-   *
-   * @note Pages will not be automatically unregistered when Private Browsing
-   *       mode is entered or exited.  Therefore, consumers MUST unregister or
-   *       register themselves.
-   *
-   * @param aURI
-   *        The URI to unregister as an open page.
-   * @param aUserContextId
-   *        The Container Id of the tab.
-   */
-  void unregisterOpenPage(in nsIURI aURI, in uint32_t aUserContextId);
-
-  /**
    * Populate list of Preloaded Sites from JSON.
    *
    * @param sites

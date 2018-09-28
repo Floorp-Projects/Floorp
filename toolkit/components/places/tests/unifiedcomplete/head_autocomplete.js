@@ -25,6 +25,9 @@ ChromeUtils.import("resource://testing-common/httpd.js");
 
 // Put any other stuff relative to this test folder below.
 
+ChromeUtils.defineModuleGetter(this, "UrlbarProviderOpenTabs",
+  "resource:///modules/UrlbarProviderOpenTabs.jsm");
+
 const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 
 async function cleanup() {
@@ -313,18 +316,14 @@ var addBookmark = async function(aBookmarkObj) {
 };
 
 function addOpenPages(aUri, aCount = 1, aUserContextId = 0) {
-  let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
-             .getService(Ci.mozIPlacesAutoComplete);
   for (let i = 0; i < aCount; i++) {
-    ac.registerOpenPage(aUri, aUserContextId);
+    UrlbarProviderOpenTabs.registerOpenTab(aUri.spec, aUserContextId);
   }
 }
 
 function removeOpenPages(aUri, aCount = 1, aUserContextId = 0) {
-  let ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
-             .getService(Ci.mozIPlacesAutoComplete);
   for (let i = 0; i < aCount; i++) {
-    ac.unregisterOpenPage(aUri, aUserContextId);
+    UrlbarProviderOpenTabs.unregisterOpenTab(aUri.spec, aUserContextId);
   }
 }
 
