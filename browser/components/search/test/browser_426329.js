@@ -70,8 +70,7 @@ function promiseSetEngine() {
         case "engine-current":
           ok(ss.currentEngine.name == "Bug 426329", "currentEngine set");
           searchBar = BrowserSearch.searchBar;
-          searchButton = document.getAnonymousElementByAttribute(searchBar,
-                             "anonid", "search-go-button");
+          searchButton = searchBar.querySelector(".search-go-button");
           ok(searchButton, "got search-go-button");
           searchBar.value = "test";
 
@@ -117,7 +116,7 @@ async function prepareTest() {
   if (document.activeElement == searchBar)
     return;
 
-  let focusPromise = BrowserTestUtils.waitForEvent(searchBar, "focus");
+  let focusPromise = BrowserTestUtils.waitForEvent(searchBar.textbox, "focus");
   gURLBar.focus();
   searchBar.focus();
   await focusPromise;

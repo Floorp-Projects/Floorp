@@ -16,486 +16,11 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="searchbar">
-    <content>
-      <xul:stringbundle src="chrome://browser/locale/search.properties"
-                        anonid="searchbar-stringbundle"/>
-      <!--
-      There is a dependency between "maxrows" attribute and
-      "SuggestAutoComplete._historyLimit" (nsSearchSuggestions.js). Changing
-      one of them requires changing the other one.
-      -->
-      <xul:textbox class="searchbar-textbox"
-                   anonid="searchbar-textbox"
-                   type="autocomplete"
-                   inputtype="search"
-                   placeholder="&searchInput.placeholder;"
-                   flex="1"
-                   autocompletepopup="PopupSearchAutoComplete"
-                   autocompletesearch="search-autocomplete"
-                   autocompletesearchparam="searchbar-history"
-                   maxrows="10"
-                   completeselectedindex="true"
-                   minresultsforpopup="0"
-                   xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
-        <!--
-        Empty <box> to properly position the icon within the autocomplete
-        binding's anonymous children (the autocomplete binding positions <box>
-        children differently)
-        -->
-        <xul:box>
-          <xul:hbox class="searchbar-search-button"
-                    anonid="searchbar-search-button"
-                    xbl:inherits="addengines"
-                    tooltiptext="&searchIcon.tooltip;">
-            <xul:image class="searchbar-search-icon"/>
-            <xul:image class="searchbar-search-icon-overlay"/>
-          </xul:hbox>
-        </xul:box>
-        <xul:hbox class="search-go-container">
-          <xul:image class="search-go-button urlbar-icon" hidden="true"
-                     anonid="search-go-button"
-                     onclick="handleSearchCommand(event);"
-                     tooltiptext="&contentSearchSubmit.tooltip;"/>
-        </xul:hbox>
-      </xul:textbox>
-    </content>
-
-    <implementation implements="nsIObserver">
-      <constructor><![CDATA[
-        if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
-          return;
-
-        Services.obs.addObserver(this, "browser-search-engine-modified");
-        Services.obs.addObserver(this, "browser-search-service");
-
-        this._initialized = true;
-
-        (window.delayedStartupPromise || Promise.resolve()).then(() => {
-          window.requestIdleCallback(() => {
-            Services.search.init(aStatus => {
-              // Bail out if the binding's been destroyed
-              if (!this._initialized)
-                return;
-
-              if (Components.isSuccessCode(aStatus)) {
-                // Refresh the display (updating icon, etc)
-                this.updateDisplay();
-                BrowserSearch.updateOpenSearchBadge();
-              } else {
-                Cu.reportError("Cannot initialize search service, bailing out: " + aStatus);
-              }
-            });
-          });
-        });
-
-        // Wait until the popupshowing event to avoid forcing immediate
-        // attachment of the search-one-offs binding.
-        this.textbox.popup.addEventListener("popupshowing", () => {
-          let oneOffButtons = this.textbox.popup.oneOffButtons;
-          // Some accessibility tests create their own <searchbar> that doesn't
-          // use the popup binding below, so null-check oneOffButtons.
-          if (oneOffButtons) {
-            oneOffButtons.telemetryOrigin = "searchbar";
-            // Set .textbox first, since the popup setter will cause
-            // a _rebuild call that uses it.
-            oneOffButtons.textbox = this.textbox;
-            oneOffButtons.popup = this.textbox.popup;
-          }
-        }, {capture: true, once: true});
-      ]]></constructor>
-
-      <destructor><![CDATA[
-        this.destroy();
-      ]]></destructor>
-
-      <method name="destroy">
-        <body><![CDATA[
-        if (this._initialized) {
-          this._initialized = false;
-
-          Services.obs.removeObserver(this, "browser-search-engine-modified");
-          Services.obs.removeObserver(this, "browser-search-service");
-        }
-
-        // Make sure to break the cycle from _textbox to us. Otherwise we leak
-        // the world. But make sure it's actually pointing to us.
-        // Also make sure the textbox has ever been constructed, otherwise the
-        // _textbox getter will cause the textbox constructor to run, add an
-        // observer, and leak the world too.
-        if (this._textboxInitialized && this._textbox.mController.input == this)
-          this._textbox.mController.input = null;
-        ]]></body>
-      </method>
-
-      <field name="_ignoreFocus">false</field>
-      <field name="_clickClosedPopup">false</field>
-      <field name="_stringBundle">document.getAnonymousElementByAttribute(this,
-          "anonid", "searchbar-stringbundle");</field>
-      <field name="_textboxInitialized">false</field>
-      <field name="_textbox">document.getAnonymousElementByAttribute(this,
-          "anonid", "searchbar-textbox");</field>
-      <field name="_engines">null</field>
-      <field name="FormHistory" readonly="true">
-        (ChromeUtils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
-      </field>
-
-      <property name="engines" readonly="true">
-        <getter><![CDATA[
-          if (!this._engines)
-            this._engines = Services.search.getVisibleEngines();
-          return this._engines;
-        ]]></getter>
-      </property>
-
-      <property name="currentEngine">
-        <setter><![CDATA[
-          Services.search.currentEngine = val;
-          return val;
-        ]]></setter>
-        <getter><![CDATA[
-          var currentEngine = Services.search.currentEngine;
-          // Return a dummy engine if there is no currentEngine
-          return currentEngine || {name: "", uri: null};
-        ]]></getter>
-      </property>
-
-      <!-- textbox is used by sanitize.js to clear the undo history when
-           clearing form information. -->
-      <property name="textbox" readonly="true"
-                onget="return this._textbox;"/>
-
-      <property name="value" onget="return this._textbox.value;"
-                             onset="return this._textbox.value = val;"/>
-
-      <method name="focus">
-        <body><![CDATA[
-          this._textbox.focus();
-        ]]></body>
-      </method>
-
-      <method name="select">
-        <body><![CDATA[
-          this._textbox.select();
-        ]]></body>
-      </method>
-
-      <method name="observe">
-        <parameter name="aEngine"/>
-        <parameter name="aTopic"/>
-        <parameter name="aVerb"/>
-        <body><![CDATA[
-          if (aTopic == "browser-search-engine-modified" ||
-              (aTopic == "browser-search-service" && aVerb == "init-complete")) {
-            // Make sure the engine list is refetched next time it's needed
-            this._engines = null;
-
-            // Update the popup header and update the display after any modification.
-            this._textbox.popup.updateHeader();
-            this.updateDisplay();
-          }
-        ]]></body>
-      </method>
-
-      <method name="setIcon">
-        <parameter name="element"/>
-        <parameter name="uri"/>
-        <body><![CDATA[
-          element.setAttribute("src", uri);
-        ]]></body>
-      </method>
-
-      <method name="updateDisplay">
-        <body><![CDATA[
-          var uri = this.currentEngine.iconURI;
-          this.setIcon(this, uri ? uri.spec : "");
-
-          var name = this.currentEngine.name;
-          var text = this._stringBundle.getFormattedString("searchtip", [name]);
-          this._textbox.label = text;
-          this._textbox.tooltipText = text;
-        ]]></body>
-      </method>
-
-      <method name="updateGoButtonVisibility">
-        <body><![CDATA[
-          document.getAnonymousElementByAttribute(this, "anonid",
-                                                  "search-go-button")
-                  .hidden = !this._textbox.value;
-        ]]></body>
-      </method>
-
-      <method name="openSuggestionsPanel">
-        <parameter name="aShowOnlySettingsIfEmpty"/>
-        <body><![CDATA[
-          if (this._textbox.open)
-            return;
-
-          this._textbox.showHistoryPopup();
-
-          if (this._textbox.value) {
-            // showHistoryPopup does a startSearch("") call, ensure the
-            // controller handles the text from the input box instead:
-            this._textbox.mController.handleText();
-          } else if (aShowOnlySettingsIfEmpty) {
-            this.setAttribute("showonlysettings", "true");
-          }
-        ]]></body>
-      </method>
-
-      <method name="selectEngine">
-        <parameter name="aEvent"/>
-        <parameter name="isNextEngine"/>
-        <body><![CDATA[
-          // Find the new index
-          var newIndex = this.engines.indexOf(this.currentEngine);
-          newIndex += isNextEngine ? 1 : -1;
-
-          if (newIndex >= 0 && newIndex < this.engines.length) {
-            this.currentEngine = this.engines[newIndex];
-          }
-
-          aEvent.preventDefault();
-          aEvent.stopPropagation();
-
-          this.openSuggestionsPanel();
-        ]]></body>
-      </method>
-
-      <method name="handleSearchCommand">
-        <parameter name="aEvent"/>
-        <parameter name="aEngine"/>
-        <parameter name="aForceNewTab"/>
-        <body><![CDATA[
-          var where = "current";
-          let params;
-
-          // Open ctrl/cmd clicks on one-off buttons in a new background tab.
-          if (aEvent && aEvent.originalTarget.getAttribute("anonid") == "search-go-button") {
-            if (aEvent.button == 2)
-              return;
-            where = whereToOpenLink(aEvent, false, true);
-          } else if (aForceNewTab) {
-            where = "tab";
-            if (Services.prefs.getBoolPref("browser.tabs.loadInBackground"))
-              where += "-background";
-          } else {
-            var newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
-            if (((aEvent instanceof KeyboardEvent && aEvent.altKey) ^ newTabPref) &&
-                !isTabEmpty(gBrowser.selectedTab)) {
-              where = "tab";
-            }
-            if ((aEvent instanceof MouseEvent) &&
-                (aEvent.button == 1 || aEvent.getModifierState("Accel"))) {
-              where = "tab";
-              params = {
-                inBackground: true,
-              };
-            }
-          }
-
-          this.handleSearchCommandWhere(aEvent, aEngine, where, params);
-        ]]></body>
-      </method>
-
-      <method name="handleSearchCommandWhere">
-        <parameter name="aEvent"/>
-        <parameter name="aEngine"/>
-        <parameter name="aWhere"/>
-        <parameter name="aParams"/>
-        <body><![CDATA[
-          var textBox = this._textbox;
-          var textValue = textBox.value;
-
-          let selection = this.telemetrySearchDetails;
-          let oneOffRecorded = false;
-
-          BrowserUsageTelemetry.recordSearchbarSelectedResultMethod(
-            aEvent,
-            selection ? selection.index : -1
-          );
-
-          if (!selection || (selection.index == -1)) {
-            oneOffRecorded = this.textbox.popup.oneOffButtons
-                                 .maybeRecordTelemetry(aEvent, aWhere, aParams);
-            if (!oneOffRecorded) {
-              let source = "unknown";
-              let type = "unknown";
-              let target = aEvent.originalTarget;
-              if (aEvent instanceof KeyboardEvent) {
-                type = "key";
-              } else if (aEvent instanceof MouseEvent) {
-                type = "mouse";
-                if (target.classList.contains("search-panel-header") ||
-                    target.parentNode.classList.contains("search-panel-header")) {
-                  source = "header";
-                }
-              } else if (aEvent instanceof XULCommandEvent) {
-                if (target.getAttribute("anonid") == "paste-and-search") {
-                  source = "paste";
-                }
-              }
-              if (!aEngine) {
-                aEngine = this.currentEngine;
-              }
-              BrowserSearch.recordOneoffSearchInTelemetry(aEngine, source, type,
-                                                          aWhere);
-            }
-          }
-
-          // This is a one-off search only if oneOffRecorded is true.
-          this.doSearch(textValue, aWhere, aEngine, aParams, oneOffRecorded);
-
-          if (aWhere == "tab" && aParams && aParams.inBackground)
-            this.focus();
-        ]]></body>
-      </method>
-
-      <method name="doSearch">
-        <parameter name="aData"/>
-        <parameter name="aWhere"/>
-        <parameter name="aEngine"/>
-        <parameter name="aParams"/>
-        <parameter name="aOneOff"/>
-        <body><![CDATA[
-          var textBox = this._textbox;
-
-          // Save the current value in the form history
-          if (aData && !PrivateBrowsingUtils.isWindowPrivate(window) && this.FormHistory.enabled) {
-            this.FormHistory.update(
-              { op: "bump",
-                fieldname: textBox.getAttribute("autocompletesearchparam"),
-                value: aData },
-              { handleError(aError) {
-                  Cu.reportError("Saving search to form history failed: " + aError.message);
-              }});
-          }
-
-          let engine = aEngine || this.currentEngine;
-          var submission = engine.getSubmission(aData, null, "searchbar");
-          let telemetrySearchDetails = this.telemetrySearchDetails;
-          this.telemetrySearchDetails = null;
-          if (telemetrySearchDetails && telemetrySearchDetails.index == -1) {
-            telemetrySearchDetails = null;
-          }
-          // If we hit here, we come either from a one-off, a plain search or a suggestion.
-          const details = {
-            isOneOff: aOneOff,
-            isSuggestion: (!aOneOff && telemetrySearchDetails),
-            selection: telemetrySearchDetails,
-          };
-          BrowserSearch.recordSearchInTelemetry(engine, "searchbar", details);
-          // null parameter below specifies HTML response for search
-          let params = {
-            postData: submission.postData,
-          };
-          if (aParams) {
-            for (let key in aParams) {
-              params[key] = aParams[key];
-            }
-          }
-          openTrustedLinkIn(submission.uri.spec, aWhere, params);
-        ]]></body>
-      </method>
-    </implementation>
-
-    <handlers>
-      <handler event="command"><![CDATA[
-        const target = event.originalTarget;
-        if (target.engine) {
-          this.currentEngine = target.engine;
-        } else if (target.classList.contains("addengine-item")) {
-          // Select the installed engine if the installation succeeds
-          var installCallback = {
-            onSuccess: engine => this.currentEngine = engine,
-          };
-          Services.search.addEngine(target.getAttribute("uri"), null,
-                                    target.getAttribute("src"), false,
-                                    installCallback);
-        } else
-          return;
-
-        this.focus();
-        this.select();
-      ]]></handler>
-
-      <handler event="DOMMouseScroll"
-               phase="capturing"
-               modifiers="accel"
-               action="this.selectEngine(event, (event.detail > 0));"/>
-
-      <handler event="input" action="this.updateGoButtonVisibility();"/>
-      <handler event="drop" action="this.updateGoButtonVisibility();"/>
-
-      <handler event="blur">
-      <![CDATA[
-        // If the input field is still focused then a different window has
-        // received focus, ignore the next focus event.
-        this._ignoreFocus = (document.activeElement == this._textbox.inputField);
-      ]]></handler>
-
-      <handler event="focus">
-      <![CDATA[
-        // Speculatively connect to the current engine's search URI (and
-        // suggest URI, if different) to reduce request latency
-        this.currentEngine.speculativeConnect({window,
-                                               originAttributes: gBrowser.contentPrincipal
-                                                                         .originAttributes});
-
-        if (this._ignoreFocus) {
-          // This window has been re-focused, don't show the suggestions
-          this._ignoreFocus = false;
-          return;
-        }
-
-        // Don't open the suggestions if there is no text in the textbox.
-        if (!this._textbox.value)
-          return;
-
-        // Don't open the suggestions if the mouse was used to focus the
-        // textbox, that will be taken care of in the click handler.
-        if (Services.focus.getLastFocusMethod(window) & Services.focus.FLAG_BYMOUSE)
-          return;
-
-        this.openSuggestionsPanel();
-      ]]></handler>
-
-      <handler event="mousedown" phase="capturing">
-      <![CDATA[
-        if (event.originalTarget.getAttribute("anonid") == "searchbar-search-button") {
-          this._clickClosedPopup = this._textbox.popup._isHiding;
-        }
-      ]]></handler>
-
-      <handler event="mousedown" button="0">
-      <![CDATA[
-        // Ignore clicks on the search go button.
-        if (event.originalTarget.getAttribute("anonid") == "search-go-button") {
-          return;
-        }
-
-        let isIconClick = event.originalTarget.getAttribute("anonid") == "searchbar-search-button";
-
-        // Ignore clicks on the icon if they were made to close the popup
-        if (isIconClick && this._clickClosedPopup) {
-          return;
-        }
-
-        // Open the suggestions whenever clicking on the search icon or if there
-        // is text in the textbox.
-        if (isIconClick || this._textbox.value) {
-          this.openSuggestionsPanel(true);
-        }
-      ]]></handler>
-
-    </handlers>
-  </binding>
-
   <binding id="searchbar-textbox"
       extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation>
       <constructor><![CDATA[
-        if (document.getBindingParent(this).parentNode.parentNode.localName ==
+        if (this.closest("searchbar").parentNode.parentNode.localName ==
             "toolbarpaletteitem")
           return;
 
@@ -513,7 +38,7 @@
                                 {capture: true, once: true});
 
         this.setAttribute("aria-owns", this.popup.id);
-        document.getBindingParent(this)._textboxInitialized = true;
+        this.closest("searchbar")._textboxInitialized = true;
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -530,7 +55,7 @@
       <method name="initContextMenu">
         <parameter name="aMenu"/>
         <body><![CDATA[
-          let stringBundle = document.getBindingParent(this)._stringBundle;
+          let stringBundle = this.closest("searchbar")._stringBundle;
 
           let pasteAndSearch, suggestMenuItem;
           let element, label, akey;
@@ -686,7 +211,7 @@
         <body>
           <![CDATA[
             if (!this.popupOpen) {
-              document.getBindingParent(this).openSuggestionsPanel();
+              this.closest("searchbar").openSuggestionsPanel();
               return false;
             }
             return true;
@@ -729,7 +254,7 @@
             BrowserSearch.searchBar.telemetrySearchDetails = this._selectionDetails;
             this._selectionDetails = null;
           }
-          document.getBindingParent(this).handleSearchCommand(aEvent, engine);
+          this.closest("searchbar").handleSearchCommand(aEvent, engine);
         ]]></body>
       </method>
 
@@ -804,11 +329,11 @@
 
       <handler event="keypress" keycode="VK_UP" modifiers="accel"
                phase="capturing"
-               action="document.getBindingParent(this).selectEngine(event, false);"/>
+               action='this.closest("searchbar").selectEngine(event, false);'/>
 
       <handler event="keypress" keycode="VK_DOWN" modifiers="accel"
                phase="capturing"
-               action="document.getBindingParent(this).selectEngine(event, true);"/>
+               action='this.closest("searchbar").selectEngine(event, true);'/>
 
       <handler event="keypress" keycode="VK_DOWN" modifiers="alt"
                phase="capturing"
@@ -835,7 +360,7 @@
         if (data) {
           event.preventDefault();
           this.value = data;
-          document.getBindingParent(this).openSuggestionsPanel();
+          this.closest("searchbar").openSuggestionsPanel();
         }
       ]]>
       </handler>

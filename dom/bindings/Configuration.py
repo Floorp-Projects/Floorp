@@ -105,6 +105,7 @@ class Configuration(DescriptorProvider):
                             (partialIface.location, iface.location))
                 if not (iface.getExtendedAttribute("ChromeOnly") or
                         iface.getExtendedAttribute("Func") == ["IsChromeOrXBL"] or
+                        iface.getExtendedAttribute("Func") == ["nsContentUtils::IsCallerChromeOrFuzzingEnabled"] or
                         not (iface.hasInterfaceObject() or
                              iface.isNavigatorProperty()) or
                         isInWebIDLRoot(iface.filename())):

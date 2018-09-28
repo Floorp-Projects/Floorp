@@ -1696,6 +1696,7 @@ NewRope(JSContext* cx, unsigned argc, Value* vp)
 
     Rooted<JSRope*> str(cx, JSRope::new_<NoGC>(cx, left, right, length, heap));
     if (!str) {
+        JS_ReportOutOfMemory(cx);
         return false;
     }
 

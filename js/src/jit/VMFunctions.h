@@ -751,7 +751,7 @@ GetIntrinsicValue(JSContext* cx, HandlePropertyName name, MutableHandleValue rva
 MOZ_MUST_USE bool
 CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHandleValue rval);
 
-void GetDynamicName(JSContext* cx, JSObject* scopeChain, JSString* str, Value* vp);
+bool GetDynamicNamePure(JSContext* cx, JSObject* scopeChain, JSString* str, Value* vp);
 
 void PostWriteBarrier(JSRuntime* rt, js::gc::Cell* cell);
 void PostGlobalWriteBarrier(JSRuntime* rt, GlobalObject* obj);

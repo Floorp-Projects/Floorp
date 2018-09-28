@@ -8,6 +8,7 @@ const {
 // Test utils.
 const expect = require("expect");
 const { render } = require("enzyme");
+const Provider = createFactory(require("react-redux").Provider);
 
 const ConsoleOutput = createFactory(require("devtools/client/webconsole/components/ConsoleOutput"));
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
@@ -37,13 +38,19 @@ function getDefaultProps(initialized) {
 
 describe("ConsoleOutput component:", () => {
   it("Render only the last messages that fits the viewport when non-initialized", () => {
-    const rendered = render(ConsoleOutput(getDefaultProps(false)));
+    // We need to wrap the ConsoleApiElement in a Provider in order for the
+    // ObjectInspector to work.
+    const rendered = render(Provider({ store: setupStore() },
+      ConsoleOutput(getDefaultProps(false))));
     const messagesNumber = rendered.find(".message").length;
     expect(messagesNumber).toBe(getInitialMessageCountForViewport(window));
   });
 
   it("Render every message when initialized", () => {
-    const rendered = render(ConsoleOutput(getDefaultProps(true)));
+    // We need to wrap the ConsoleApiElement in a Provider in order for the
+    // ObjectInspector to work.
+    const rendered = render(Provider({ store: setupStore() },
+      ConsoleOutput(getDefaultProps(true))));
     expect(rendered.find(".message").length).toBe(MESSAGES_NUMBER);
   });
 });

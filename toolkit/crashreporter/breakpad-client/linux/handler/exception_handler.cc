@@ -96,6 +96,7 @@
 #include "linux/minidump_writer/minidump_writer.h"
 #include "common/linux/eintr_wrapper.h"
 #include "third_party/lss/linux_syscall_support.h"
+#include "prenv.h"
 
 #if defined(__ANDROID__)
 #include "linux/sched.h"
@@ -104,6 +105,8 @@
 #ifndef PR_SET_PTRACER
 #define PR_SET_PTRACER 0x59616d61
 #endif
+
+#define SKIP_SIGILL(sig) if (g_skip_sigill_ && (sig == SIGILL)) continue;
 
 namespace google_breakpad {
 
@@ -213,6 +216,7 @@ pthread_mutex_t g_handler_stack_mutex_ = PTHREAD_MUTEX_INITIALIZER;
 ExceptionHandler::CrashContext g_crash_context_;
 
 FirstChanceHandler g_first_chance_handler_ = nullptr;
+bool g_skip_sigill_ = false;
 }  // namespace
 
 // Runs before crashing: normal context.
@@ -227,6 +231,8 @@ ExceptionHandler::ExceptionHandler(const MinidumpDescriptor& descriptor,
       callback_context_(callback_context),
       minidump_descriptor_(descriptor),
       crash_handler_(NULL) {
+
+  g_skip_sigill_ = PR_GetEnv("MOZ_DISABLE_EXCEPTION_HANDLER_SIGILL") ? true : false;
   if (server_fd >= 0)
     crash_generation_client_.reset(CrashGenerationClient::TryCreate(server_fd));
 
@@ -278,6 +284,7 @@ bool ExceptionHandler::InstallHandlersLocked() {
 
   // Fail if unable to store all the old handlers.
   for (int i = 0; i < kNumHandledSignals; ++i) {
+    SKIP_SIGILL(kExceptionSignals[i]);
     if (sigaction(kExceptionSignals[i], NULL, &old_handlers[i]) == -1)
       return false;
   }
@@ -287,13 +294,16 @@ bool ExceptionHandler::InstallHandlersLocked() {
   sigemptyset(&sa.sa_mask);
 
   // Mask all exception signals when we're handling one of them.
-  for (int i = 0; i < kNumHandledSignals; ++i)
+  for (int i = 0; i < kNumHandledSignals; ++i) {
+    SKIP_SIGILL(kExceptionSignals[i]);
     sigaddset(&sa.sa_mask, kExceptionSignals[i]);
+  }
 
   sa.sa_sigaction = SignalHandler;
   sa.sa_flags = SA_ONSTACK | SA_SIGINFO;
 
   for (int i = 0; i < kNumHandledSignals; ++i) {
+    SKIP_SIGILL(kExceptionSignals[i]);
     if (sigaction(kExceptionSignals[i], &sa, NULL) == -1) {
       // At this point it is impractical to back out changes, and so failure to
       // install a signal is intentionally ignored.
@@ -311,6 +321,7 @@ void ExceptionHandler::RestoreHandlersLocked() {
     return;
 
   for (int i = 0; i < kNumHandledSignals; ++i) {
+    SKIP_SIGILL(kExceptionSignals[i]);
     if (sigaction(kExceptionSignals[i], &old_handlers[i], NULL) == -1) {
       InstallDefaultHandler(kExceptionSignals[i]);
     }

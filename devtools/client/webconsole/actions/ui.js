@@ -23,7 +23,7 @@ const {
 } = require("devtools/client/webconsole/constants");
 
 function filterBarToggle() {
-  return (dispatch, getState, {prefsService}) => {
+  return ({dispatch, getState, prefsService}) => {
     dispatch({
       type: FILTER_BAR_TOGGLE,
     });
@@ -33,7 +33,7 @@ function filterBarToggle() {
 }
 
 function persistToggle() {
-  return (dispatch, getState, {prefsService}) => {
+  return ({dispatch, getState, prefsService}) => {
     dispatch({
       type: PERSIST_TOGGLE,
     });
@@ -83,7 +83,7 @@ function splitConsoleCloseButtonToggle(shouldDisplayButton) {
  * @param {String} messageId: id of the message containing the {actor} parameter.
  */
 function showMessageObjectInSidebar(actor, messageId) {
-  return (dispatch, getState) => {
+  return ({dispatch, getState}) => {
     const { parameters } = getMessage(getState(), messageId);
     if (Array.isArray(parameters)) {
       for (const parameter of parameters) {
