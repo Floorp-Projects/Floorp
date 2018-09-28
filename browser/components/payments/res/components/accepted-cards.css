@@ -1,12 +1,15 @@
 accepted-cards {
   margin: 1em 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: first baseline;
 }
 
 .accepted-cards-label {
   display: inline-block;
-  margin-inline-end: 1em;
-  color: GrayText;
   font-size: smaller;
+  flex: 0 2 content;
+  white-space: nowrap;
 }
 
 .accepted-cards-list {
@@ -14,31 +17,37 @@ accepted-cards {
   list-style-type: none;
   margin: 0;
   padding: 0;
+  flex: 2 1 auto;
 }
 
 .accepted-cards-list > .accepted-cards-item {
   display: inline-block;
-  width: 50px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  text-align: center;
-  margin-inline-end: 8px;
+  margin: 5px 0;
+  margin-inline-start: 10px;
+  vertical-align: middle;
   background-repeat: no-repeat;
   background-position: center;
-  vertical-align: middle;
+  background-size: contain;
 }
 
 /* placeholders for specific card icons we don't yet have assets for */
-.accepted-cards-item[data-network-id] {
+accepted-cards:not(.branded) .accepted-cards-item[data-network-id] {
+  width: 48px;
+  text-align: center;
   background-image: url("./card-icon.svg");
+  -moz-context-properties: fill-opacity;
+  fill-opacity: 0.5;
 }
-.accepted-cards-item[data-network-id]::after {
+accepted-cards:not(.branded) .accepted-cards-item[data-network-id]::after {
   box-sizing: border-box;
   content: attr(data-network-id);
-  padding: 4px;
+  padding: 8px 4px 0 4px;
   text-align: center;
   font-size: 0.7rem;
-  display: block;
+  display: inline-block;
   overflow: hidden;
   width: 100%;
 }

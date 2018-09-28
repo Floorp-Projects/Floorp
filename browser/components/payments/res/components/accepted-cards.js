@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
-import paymentRequest from "../paymentRequest.js";
 /* import-globals-from ../unprivileged-fallbacks.js */
 
 /**
@@ -30,8 +29,12 @@ export default class AcceptedCards extends PaymentStateSubscriberMixin(HTMLEleme
       let item = document.createElement("li");
       item.classList.add("accepted-cards-item");
       item.dataset.networkId = network;
+      item.setAttribute("aria-role", "image");
+      item.setAttribute("aria-label", network);
       this._listEl.appendChild(item);
     }
+    let isBranded = PaymentDialogUtils.isOfficialBranding();
+    this.classList.toggle("branded", isBranded);
     this.appendChild(this._listEl);
     // Only call the connected super callback(s) once our markup is fully
     // connected
@@ -39,10 +42,19 @@ export default class AcceptedCards extends PaymentStateSubscriberMixin(HTMLEleme
   }
 
   render(state) {
-    let acceptedNetworks = paymentRequest.getAcceptedNetworks(state.request);
-    for (let item of this._listEl.children) {
-      let network = item.dataset.networkId;
-      item.hidden = !(network && acceptedNetworks.includes(network));
+    let basicCardMethod = state.request.paymentMethods
+      .find(method => method.supportedMethods == "basic-card");
+    let merchantNetworks = basicCardMethod && basicCardMethod.data &&
+                           basicCardMethod.data.supportedNetworks;
+    if (merchantNetworks && merchantNetworks.length) {
+      for (let item of this._listEl.children) {
+        let network = item.dataset.networkId;
+        item.hidden = !(network && merchantNetworks.includes(network));
+      }
+      this.hidden = false;
+    } else {
+      // hide the whole list if the merchant didn't specify a preference
+      this.hidden = true;
     }
   }
 
