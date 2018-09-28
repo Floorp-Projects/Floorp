@@ -85,9 +85,17 @@ SECStatus tls13_ConstructHelloRetryRequest(sslSocket *ss,
                                            sslBuffer *buffer);
 SECStatus tls13_HandleHelloRetryRequest(sslSocket *ss, const PRUint8 *b,
                                         PRUint32 length);
+SECStatus tls13_HandleKeyShare(sslSocket *ss,
+                               TLS13KeyShareEntry *entry,
+                               sslKeyPair *keyPair,
+                               SSLHashType hash,
+                               PK11SymKey **out);
+TLS13KeyShareEntry *tls13_CopyKeyShareEntry(TLS13KeyShareEntry *o);
 void tls13_DestroyKeyShareEntry(TLS13KeyShareEntry *entry);
 void tls13_DestroyKeyShares(PRCList *list);
-SECStatus tls13_CreateKeyShare(sslSocket *ss, const sslNamedGroupDef *groupDef);
+SECStatus tls13_CreateKeyShare(sslSocket *ss, const sslNamedGroupDef *groupDef,
+                               sslEphemeralKeyPair **keyPair);
+SECStatus tls13_AddKeyShare(sslSocket *ss, const sslNamedGroupDef *groupDef);
 void tls13_DestroyEarlyData(PRCList *list);
 SECStatus tls13_SetAlertCipherSpec(sslSocket *ss);
 tls13ExtensionStatus tls13_ExtensionStatus(PRUint16 extension,
@@ -106,6 +114,7 @@ PRUint16 tls13_EncodeDraftVersion(SSL3ProtocolVersion version,
 SECStatus tls13_ClientReadSupportedVersion(sslSocket *ss);
 SECStatus tls13_NegotiateVersion(sslSocket *ss,
                                  const TLSExtension *supported_versions);
+PRBool tls13_ShouldRequestClientAuth(sslSocket *ss);
 
 PRBool tls13_IsReplay(const sslSocket *ss, const sslSessionID *sid);
 void tls13_AntiReplayRollover(PRTime now);
@@ -120,6 +129,22 @@ SECStatus tls13_SendKeyUpdate(sslSocket *ss, tls13KeyUpdateRequest request,
                               PRBool buffer);
 SECStatus SSLExp_KeyUpdate(PRFileDesc *fd, PRBool requestUpdate);
 PRBool tls13_MaybeTls13(sslSocket *ss);
+SSLAEADCipher tls13_GetAead(const ssl3BulkCipherDef *cipherDef);
 void tls13_SetSpecRecordVersion(sslSocket *ss, ssl3CipherSpec *spec);
+
+/* Use this instead of FATAL_ERROR when no alert shall be sent. */
+#define LOG_ERROR(ss, prError)                                                     \
+    do {                                                                           \
+        SSL_TRC(3, ("%d: TLS13[%d]: fatal error %d in %s (%s:%d)",                 \
+                    SSL_GETPID(), ss->fd, prError, __func__, __FILE__, __LINE__)); \
+        PORT_SetError(prError);                                                    \
+    } while (0)
+
+/* Log an error and generate an alert because something is irreparably wrong. */
+#define FATAL_ERROR(ss, prError, desc)       \
+    do {                                     \
+        LOG_ERROR(ss, prError);              \
+        tls13_FatalError(ss, prError, desc); \
+    } while (0)
 
 #endif /* __tls13con_h_ */

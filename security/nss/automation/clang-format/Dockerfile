@@ -1,26 +1,35 @@
-FROM ubuntu:16.04
-MAINTAINER Franziskus Kiefer <franziskuskiefer@gmail.com>
+# Minimal image with clang-format 3.9.
+FROM ubuntu:18.04
+LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 
-RUN useradd -d /home/worker -s /bin/bash -m worker
-WORKDIR /home/worker
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    clang-format-3.9 \
+    locales \
+    mercurial \
+ && rm -rf /var/lib/apt/lists/* \
+ && apt-get autoremove -y && apt-get clean -y
 
-# Install dependencies.
-ADD setup.sh /tmp/setup.sh
-RUN bash /tmp/setup.sh
+RUN update-alternatives --install /usr/bin/clang-format \
+    clang-format $(which clang-format-3.9) 10
 
-# Change user.
-USER worker
-
-# Env variables.
-ENV HOME /home/worker
 ENV SHELL /bin/bash
 ENV USER worker
-ENV LOGNAME worker
+ENV LOGNAME $USER
+ENV HOME /home/$USER
 ENV HOSTNAME taskcluster-worker
 ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
+ENV LC_ALL $LANG
 ENV HOST localhost
 ENV DOMSUF localdomain
 
-# Entrypoint.
+RUN locale-gen $LANG \
+ && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
+
+RUN useradd -d $HOME -s $SHELL -m $USER
+WORKDIR $HOME
+USER $USER
+
+# Entrypoint - which only works if /home/worker/nss is mounted.
 ENTRYPOINT ["/home/worker/nss/automation/clang-format/run_clang_format.sh"]

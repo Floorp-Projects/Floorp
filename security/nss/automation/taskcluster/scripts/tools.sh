@@ -2,12 +2,11 @@
 
 set -v -e -x
 
+# Assert that we're not running as root.
 if [[ $(id -u) -eq 0 ]]; then
-    # Stupid Docker. It works without sometimes... But not always.
-    echo "127.0.0.1 localhost.localdomain" >> /etc/hosts
-
-    # Drop privileges by re-running this script.
-    # Note: this mangles arguments, better to avoid running scripts as root.
+    # This exec is still needed until aarch64 images are updated (Bug 1488325).
+    # Remove when images are updated.  Until then, assert that things are good.
+    [[ $(uname -m) == aarch64 ]]
     exec su worker -c "$0 $*"
 fi
 

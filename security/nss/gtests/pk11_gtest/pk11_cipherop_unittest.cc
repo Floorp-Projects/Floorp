@@ -10,7 +10,7 @@
 #include <nss.h>
 #include <pk11pub.h>
 
-static const size_t kKeyLen = 128/8;
+static const size_t kKeyLen = 128 / 8;
 
 namespace nss_test {
 
@@ -21,8 +21,7 @@ namespace nss_test {
 // cipher context with data that is not cipher block aligned.
 //
 
-static SECStatus GetBytes(PK11Context *ctx, uint8_t *bytes, size_t len)
-{
+static SECStatus GetBytes(PK11Context* ctx, uint8_t* bytes, size_t len) {
   std::vector<uint8_t> in(len, 0);
 
   int outlen;
@@ -38,9 +37,10 @@ TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOps) {
   PK11SymKey* key;
   PK11Context* ctx;
 
-  NSSInitContext* globalctx = NSS_InitContext("", "", "", "", NULL,
-                    NSS_INIT_READONLY | NSS_INIT_NOCERTDB | NSS_INIT_NOMODDB |
-                      NSS_INIT_FORCEOPEN | NSS_INIT_NOROOTINIT);
+  NSSInitContext* globalctx =
+      NSS_InitContext("", "", "", "", NULL,
+                      NSS_INIT_READONLY | NSS_INIT_NOCERTDB | NSS_INIT_NOMODDB |
+                          NSS_INIT_FORCEOPEN | NSS_INIT_NOROOTINIT);
 
   const CK_MECHANISM_TYPE cipher = CKM_AES_CTR;
 
@@ -53,15 +53,16 @@ TEST(Pkcs11CipherOp, SingleCtxMultipleUnalignedCipherOps) {
     key_bytes[i] = i;
   }
 
-  SECItem keyItem = { siBuffer, key_bytes, kKeyLen };
+  SECItem keyItem = {siBuffer, key_bytes, kKeyLen};
 
   // The IV can be all zeros since we only encrypt once with
   // each AES key.
-  CK_AES_CTR_PARAMS param = { 128, {} };
-  SECItem paramItem = { siBuffer, reinterpret_cast<unsigned char*>(&param), sizeof(CK_AES_CTR_PARAMS) };
+  CK_AES_CTR_PARAMS param = {128, {}};
+  SECItem paramItem = {siBuffer, reinterpret_cast<unsigned char*>(&param),
+                       sizeof(CK_AES_CTR_PARAMS)};
 
-  key = PK11_ImportSymKey(slot, cipher, PK11_OriginUnwrap,
-                                        CKA_ENCRYPT, &keyItem, NULL);
+  key = PK11_ImportSymKey(slot, cipher, PK11_OriginUnwrap, CKA_ENCRYPT,
+                          &keyItem, NULL);
   ctx = PK11_CreateContextBySymKey(cipher, CKA_ENCRYPT, key, &paramItem);
   ASSERT_TRUE(key);
   ASSERT_TRUE(ctx);

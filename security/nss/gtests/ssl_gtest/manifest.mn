@@ -52,6 +52,7 @@ CPPSRCS = \
       tls_hkdf_unittest.cc \
       tls_filter.cc \
       tls_protect.cc \
+      tls_esni_unittest.cc \
       $(NULL)
 
 INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \

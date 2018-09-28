@@ -51,13 +51,13 @@ is_httpserv_alive()
 wait_for_httpserv()
 {
   echo "trying to connect to httpserv at `date`"
-  echo "tstclnt -p ${NSS_AIA_PORT} -h ${HOSTADDR} -q -v"
-  ${BINDIR}/tstclnt -p ${NSS_AIA_PORT} -h ${HOSTADDR} -q -v
+  echo "tstclnt -4 -p ${NSS_AIA_PORT} -h ${HOSTADDR} -q -v"
+  ${BINDIR}/tstclnt -4 -p ${NSS_AIA_PORT} -h ${HOSTADDR} -q -v
   if [ $? -ne 0 ]; then
       sleep 5
       echo "retrying to connect to httpserv at `date`"
-      echo "tstclnt -p ${NSS_AIA_PORT} -h ${HOSTADDR} -q -v"
-      ${BINDIR}/tstclnt -p ${NSS_AIA_PORT} -h ${HOSTADDR} -q -v
+      echo "tstclnt -4 -p ${NSS_AIA_PORT} -h ${HOSTADDR} -q -v"
+      ${BINDIR}/tstclnt -4 -p ${NSS_AIA_PORT} -h ${HOSTADDR} -q -v
       if [ $? -ne 0 ]; then
           html_failed "Waiting for Server"
       fi
@@ -974,8 +974,8 @@ check_ocsp()
     OCSP_HOST=$(${BINDIR}/pp -w -t certificate -i ${CERT_FILE} | grep URI | sed "s/.*:\/\///" | sed "s/:.*//")
     OCSP_PORT=$(${BINDIR}/pp -w -t certificate -i ${CERT_FILE} | grep URI | sed "s/^.*:.*:\/\/.*:\([0-9]*\).*$/\1/")
 
-    echo "tstclnt -h ${OCSP_HOST} -p ${OCSP_PORT} -q -t 20"
-    tstclnt -h ${OCSP_HOST} -p ${OCSP_PORT} -q -t 20
+    echo "tstclnt -4 -h ${OCSP_HOST} -p ${OCSP_PORT} -q -t 20"
+    tstclnt -4 -h ${OCSP_HOST} -p ${OCSP_PORT} -q -t 20
     return $?
 }
 
