@@ -5,8 +5,8 @@ buildscript {
     ext.support_libraries_version = '28.0.0-rc02'
     ext.espresso_version = '3.0.1'
     ext.kotlin_version = '1.2.70'
-    ext.geckoview_revision = '49b9303f687d8f41b80739bdb9657bda866a1ce6'
-    ext.geckoview_version = '62.0.3.20180922023437' // GeckoView 62 RelBranch from 2018.09.21
+    ext.geckoview_revision = '97c33560b0e28c6744ab83d63493fe41ad4ae8ff'
+    ext.geckoview_version = '62.0.3.20180928184514' // GeckoView 62 RelBranch from 2018.09.28
     ext.spotbugs_version = '3.1.2'
     ext.mozilla_components_version = '0.25'
 
