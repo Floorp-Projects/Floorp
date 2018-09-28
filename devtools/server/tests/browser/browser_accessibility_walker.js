@@ -7,7 +7,7 @@
 // Checks for the AccessibleWalkerActor
 
 add_task(async function() {
-  const {client, walker, accessibility} =
+  const {target, walker, accessibility} =
     await initAccessibilityFrontForUrl(MAIN_DOMAIN + "doc_accessibility.html");
 
   const a11yWalker = await accessibility.getWalker();
@@ -127,6 +127,6 @@ add_task(async function() {
 
   await accessibility.disable();
   await waitForA11yShutdown();
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

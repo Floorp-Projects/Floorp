@@ -41,43 +41,50 @@ var addTab = async function(url) {
   const tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  info(`Tab added and URL ${url} loaded`);
+  info(`Tab added a URL ${url} loaded`);
 
   return tab.linkedBrowser;
 };
 
+// does almost the same thing as addTab, but directly returns an object
+async function addTabTarget(url) {
+  info(`Adding a new tab with URL: ${url}`);
+  const tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  info(`Tab added a URL ${url} loaded`);
+  return getTargetForTab(tab);
+}
+
+async function getTargetForTab(tab) {
+  const target = await TargetFactory.forTab(tab);
+  info("Attaching to the active tab.");
+  await target.attach();
+  return target;
+}
+
 async function initAnimationsFrontForUrl(url) {
-  const {AnimationsFront} = require("devtools/shared/fronts/animation");
+  const { inspector, walker, target } = await initInspectorFront(url);
+  const animations = target.getFront("animations");
 
-  const { inspector, walker, client, form } = await initInspectorFront(url);
-  const animations = AnimationsFront(client, form);
-
-  return {inspector, walker, animations, client};
+  return {inspector, walker, animations, target};
 }
 
 async function initLayoutFrontForUrl(url) {
-  const {inspector, walker, client} = await initInspectorFront(url);
+  const {inspector, walker, target} = await initInspectorFront(url);
   const layout = await walker.getLayoutInspector();
 
-  return {inspector, walker, layout, client};
+  return {inspector, walker, layout, target};
 }
 
 async function initAccessibilityFrontForUrl(url) {
-  const {AccessibilityFront} = require("devtools/shared/fronts/accessibility");
-  const {InspectorFront} = require("devtools/shared/fronts/inspector");
-
-  await addTab(url);
-
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const inspector = InspectorFront(client, form);
+  const target = await addTabTarget(url);
+  const inspector = target.getFront("inspector");
   const walker = await inspector.getWalker();
-  const accessibility = AccessibilityFront(client, form);
+  const accessibility = target.getFront("accessibility");
 
   await accessibility.bootstrap();
 
-  return {inspector, walker, accessibility, client};
+  return {inspector, walker, accessibility, target};
 }
 
 function initDebuggerServer() {
@@ -93,28 +100,20 @@ function initDebuggerServer() {
 }
 
 async function initPerfFront() {
-  const {PerfFront} = require("devtools/shared/fronts/perf");
-
   initDebuggerServer();
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   await waitUntilClientConnected(client);
-  const rootForm = await getRootForm(client);
-  const front = PerfFront(client, rootForm);
+  const front = await client.mainRoot.getFront("perf");
   return {front, client};
 }
 
 async function initInspectorFront(url) {
-  const { InspectorFront } = require("devtools/shared/fronts/inspector");
-  await addTab(url);
+  const target = await addTabTarget(url);
 
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const inspector = InspectorFront(client, form);
-
+  const inspector = target.getFront("inspector");
   const walker = await inspector.getWalker();
 
-  return {inspector, walker, client, form};
+  return {inspector, walker, target};
 }
 
 /**
@@ -249,7 +248,7 @@ function waitForMarkerType(front, types, predicate,
     }
 
     const markers = unpackFun(name, data);
-    info("Got markers: " + JSON.stringify(markers, null, 2));
+    info("Got markers");
 
     filteredMarkers = filteredMarkers.concat(
       markers.filter(m => types.includes(m.name)));
