@@ -3,7 +3,7 @@ set -e -v
 
 # This script is for building tup on Linux.
 
-TUP_REVISION=e948a999a38fefa0ac0d92f6357f82aca2f9cb17
+TUP_REVISION=v0.7.8
 
 WORKSPACE=$HOME/workspace
 UPLOAD_DIR=$HOME/artifacts
@@ -17,7 +17,7 @@ cd $WORKSPACE/build/src
 git clone https://github.com/gittup/tup.git
 cd tup
 git checkout $TUP_REVISION
-echo 'CONFIG_TUP_SERVER=ldpreload' > tup.config
+(echo 'CONFIG_TUP_SERVER=ldpreload'; echo 'CONFIG_TUP_USE_SYSTEM_PCRE=n') > tup.config
 ./bootstrap-ldpreload.sh
 cd ..
 tar caf tup.tar.xz tup/tup tup/tup-ldpreload.so tup/tup.1

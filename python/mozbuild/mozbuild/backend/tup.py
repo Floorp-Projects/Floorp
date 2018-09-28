@@ -463,6 +463,7 @@ class TupBackend(CommonBackend):
     def _gen_program(self, backend_file, prog):
         cc_or_cxx = 'CXX' if prog.cxx_link else 'CC'
         objs, _, _, shared_libs, os_libs, static_libs = self._expand_libs(prog)
+
         static_libs = self._lib_paths(backend_file.objdir, static_libs)
         shared_libs = self._lib_paths(backend_file.objdir, shared_libs)
 
@@ -470,6 +471,16 @@ class TupBackend(CommonBackend):
         # so depend on the installed libraries here. This can be made more
         # accurate once we start building libraries in their final locations.
         inputs = objs + static_libs + shared_libs + [self._shlibs]
+
+
+        rust_linked = [l for l in prog.linked_libraries
+                       if isinstance(l, RustLibrary)]
+
+        extra_inputs = []
+        if rust_linked:
+            extra_inputs = [self._rust_output_group(rust_linked[0].output_category) or
+                            self._rust_libs]
+            static_libs += self._lib_paths(backend_file.objdir, rust_linked)
 
         list_file_name = '%s.list' % prog.name.replace('.', '_')
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
@@ -494,6 +505,7 @@ class TupBackend(CommonBackend):
         backend_file.rule(
             cmd=cmd,
             inputs=inputs,
+            extra_inputs=extra_inputs,
             outputs=outputs,
             display='LINK %o'
         )
@@ -805,19 +817,6 @@ class TupBackend(CommonBackend):
         rust_build_home = mozpath.join(self.environment.topobjdir,
                                        'toolkit/library/rust')
 
-        def get_libloading_outdir():
-            for invocation in invocations:
-                if (invocation['package_name'] == 'libloading' and
-                    invocation['outputs'][0].endswith('.rlib')):
-                    return invocation['env']['OUT_DIR']
-
-        def get_lmdb_sys_outdir():
-            for invocation in invocations:
-                if (invocation['package_name'] == 'lmdb-sys' and
-                    len(invocation['outputs']) >= 1 and
-                    invocation['outputs'][0].endswith('.rlib')):
-                    return invocation['env']['OUT_DIR']
-
         def display_name(invocation):
             output_str = ''
             if invocation['outputs']:
@@ -864,10 +863,11 @@ class TupBackend(CommonBackend):
             invocation['full-deps'] = set()
 
             if os.path.basename(invocation['program']) == 'build-script-build':
+                out_dir = invocation['env']['OUT_DIR']
                 for output in cargo_extra_outputs.get(shortname, []):
-                    outputs.append(os.path.join(invocation['env']['OUT_DIR'], output))
+                    outputs.append(os.path.join(out_dir, output))
 
-                script_stdout = mozpath.join(rust_build_home,
+                script_stdout = mozpath.join(out_dir,
                                              '%s_%s_build_out.txt' % (shortname,
                                                                       invocation['kind']))
                 command.extend(['>', script_stdout])
@@ -891,14 +891,16 @@ class TupBackend(CommonBackend):
                                for t in inv['target_kind'])
 
                 def get_output_files(inv):
-                    candidate_file = mozpath.join(rust_build_home,
-                                                  '%s_%s_build_out.txt' %
-                                                  (inv['package_name'],
-                                                   inv['kind']))
-                    if (candidate_file in all_dep_build_outputs and
-                        candidate_file not in seen_dep_outputs):
-                        dep_build_outputs.append(candidate_file)
-                        seen_dep_outputs.add(candidate_file)
+                    out_dir = inv['env'].get('OUT_DIR')
+                    if out_dir:
+                        candidate_file = mozpath.join(out_dir,
+                                                      '%s_%s_build_out.txt' %
+                                                      (inv['package_name'],
+                                                       inv['kind']))
+                        if (candidate_file in all_dep_build_outputs and
+                            candidate_file not in seen_dep_outputs):
+                            dep_build_outputs.append(candidate_file)
+                            seen_dep_outputs.add(candidate_file)
 
                     for dep in inv['deps']:
                         dep_inv = invocations[dep]
