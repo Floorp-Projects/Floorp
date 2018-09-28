@@ -26,11 +26,15 @@
     const OFFSET_SCREEN_PX = 50;
     const OFFSET_CSS_PX = OFFSET_SCREEN_PX / RESOLUTION;
 
-    function computeDelta(visual) {
+    // Measure scrollbar widths before zooming.
+    const verticalScrollbarWidth = window.innerWidth - document.scrollingElement.clientWidth;
+    const horizontalScrollbarWidth = window.innerHeight - document.scrollingElement.clientHeight;
+
+    function computeDelta(visual, scrollbarWidth) {
       // Compute the distance from the right/bottom edge of the visual
       // viewport to the same edge of the layout viewport and add the desired
       // offset to that.
-      const layout = visual * RESOLUTION;
+      const layout = (visual + scrollbarWidth) * RESOLUTION;
       return layout - visual + OFFSET_SCREEN_PX;
     }
 
@@ -40,7 +44,7 @@
         {
           x: 0,
           y: 0,
-          dx: (width) => -computeDelta(width),
+          dx: (width) => -computeDelta(width, verticalScrollbarWidth),
           dy: (height) => 0,
           expected: {
             x: [OFFSET_CSS_PX, "x-offset was adjusted"],
@@ -51,7 +55,7 @@
           x: OFFSET_SCREEN_PX,
           y: 0,
           dx: (width) => 0,
-          dy: (height) => -computeDelta(height),
+          dy: (height) => -computeDelta(height, horizontalScrollbarWidth),
           expected: {
             x: [OFFSET_CSS_PX, "x-offset was not affected"],
             y: [OFFSET_CSS_PX, "y-offset was adjusted"],
