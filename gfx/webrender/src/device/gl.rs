@@ -2235,7 +2235,7 @@ impl Device {
     fn gl_describe_format(&self, format: ImageFormat) -> FormatDesc {
         match format {
             ImageFormat::R8 => FormatDesc {
-                internal: gl::RED as _,
+                internal: gl::R8 as _,
                 external: gl::RED,
                 pixel_type: gl::UNSIGNED_BYTE,
             },

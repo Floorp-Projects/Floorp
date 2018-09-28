@@ -125,6 +125,7 @@ add_task(async function test_management_themes() {
   };
   is(await extension.awaitMessage("onInstalled"), "Bling", "LWT installed");
   is(await extension.awaitMessage("onEnabled"), "Bling", "LWT enabled");
+  is(await extension.awaitMessage("onDisabled"), "Default", "default disabled");
 
   await theme.startup();
   is(await extension.awaitMessage("onInstalled"), "Simple theme test", "webextension theme installed");

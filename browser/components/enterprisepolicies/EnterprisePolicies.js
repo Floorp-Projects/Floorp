@@ -8,6 +8,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   WindowsGPOParser: "resource:///modules/policies/WindowsGPOParser.jsm",
+  macOSPoliciesParser: "resource:///modules/policies/macOSPoliciesParser.jsm",
   Policies: "resource:///modules/policies/Policies.jsm",
   JsonSchemaValidator: "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
 });
@@ -76,16 +77,19 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _chooseProvider() {
+    let provider = null;
     if (AppConstants.platform == "win") {
-      let gpoProvider = new GPOPoliciesProvider();
-      if (gpoProvider.hasPolicies) {
-        return gpoProvider;
-      }
+      provider = new WindowsGPOPoliciesProvider();
+    } else if (AppConstants.platform == "macosx") {
+      provider = new macOSPoliciesProvider();
+    }
+    if (provider && provider.hasPolicies) {
+      return provider;
     }
 
-    let jsonProvider = new JSONPoliciesProvider();
-    if (jsonProvider.hasPolicies) {
-      return jsonProvider;
+    provider = new JSONPoliciesProvider();
+    if (provider.hasPolicies) {
+      return provider;
     }
 
     return null;
@@ -395,7 +399,7 @@ class JSONPoliciesProvider {
   }
 }
 
-class GPOPoliciesProvider {
+class WindowsGPOPoliciesProvider {
   constructor() {
     this._policies = null;
 
@@ -426,6 +430,42 @@ class GPOPoliciesProvider {
       this._policies = WindowsGPOParser.readPolicies(wrk, this._policies, isMachineRoot);
     }
     wrk.close();
+  }
+}
+
+class macOSPoliciesProvider {
+  constructor() {
+    this._policies = null;
+    let prefReader = Cc["@mozilla.org/mac-preferences-reader;1"]
+                       .createInstance(Ci.nsIMacPreferencesReader);
+    if (!prefReader.policiesEnabled()) {
+      return;
+    }
+    this._policies = macOSPoliciesParser.readPolicies(prefReader);
+    this._removeUnknownPolicies();
+  }
+
+  _removeUnknownPolicies() {
+    let { schema } = ChromeUtils.import("resource:///modules/policies/schema.jsm", {});
+
+    for (let policyName of Object.keys(this._policies)) {
+      if (!schema.properties.hasOwnProperty(policyName)) {
+        log.debug(`Removing unknown policy: ${policyName}`);
+        delete this._policies[policyName];
+      }
+    }
+  }
+
+  get hasPolicies() {
+    return this._policies !== null;
+  }
+
+  get policies() {
+    return this._policies;
+  }
+
+  get failed() {
+    return this._failed;
   }
 }
 

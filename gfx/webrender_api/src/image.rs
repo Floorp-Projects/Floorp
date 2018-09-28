@@ -379,7 +379,7 @@ pub struct BlobImageDescriptor {
 /// Representation of a rasterized blob image. This is obtained by passing
 /// `BlobImageData` to the embedding via the rasterization callback.
 pub struct RasterizedBlobImage {
-    /// The bounding rectangle for this bob image.
+    /// The bounding rectangle for this blob image.
     pub rasterized_rect: DeviceUintRect,
     /// Backing store. The format is stored out of band in `BlobImageDescriptor`.
     pub data: Arc<Vec<u8>>,
