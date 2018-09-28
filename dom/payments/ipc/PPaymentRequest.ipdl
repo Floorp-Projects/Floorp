@@ -175,6 +175,7 @@ struct IPCPaymentAddress
   nsString country;
   nsString[] addressLine;
   nsString region;
+  nsString regionCode;
   nsString city;
   nsString dependentLocality;
   nsString postalCode;

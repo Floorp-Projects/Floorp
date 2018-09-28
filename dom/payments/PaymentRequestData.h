@@ -287,6 +287,7 @@ private:
   nsString mCountry;
   nsCOMPtr<nsIArray> mAddressLine;
   nsString mRegion;
+  nsString mRegionCode;
   nsString mCity;
   nsString mDependentLocality;
   nsString mPostalCode;
