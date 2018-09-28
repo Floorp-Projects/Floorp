@@ -38,6 +38,7 @@
       <command id="cmd_importPackagedApp" oncommand="Cmds.importPackagedApp()" label="&projectMenu_importPackagedApp_label;"/>
       <command id="cmd_importHostedApp" oncommand="Cmds.importHostedApp()" label="&projectMenu_importHostedApp_label;"/>
       <command id="cmd_showDevicePrefs" label="&runtimeMenu_showDevicePrefs_label;" oncommand="Cmds.showDevicePrefs()"/>
+      <command id="cmd_showPerformancePanel" label="&runtimeMenu_showPerformancePanel_label;" oncommand="Cmds.showPerformancePanel()"/>
       <command id="cmd_showSettings" label="&runtimeMenu_showSettings_label;" oncommand="Cmds.showSettings()"/>
       <command id="cmd_removeProject" oncommand="Cmds.removeProject()" label="&projectMenu_remove_label;"/>
       <command id="cmd_showProjectPanel" oncommand="Cmds.showProjectPanel()"/>
@@ -83,6 +84,7 @@
         <menuitem command="cmd_showRuntimeDetails" accesskey="&runtimeMenu_showDetails_accesskey;"/>
         <menuitem command="cmd_showDevicePrefs" accesskey="&runtimeMenu_showDevicePrefs_accesskey;"/>
         <menuitem command="cmd_showSettings" accesskey="&runtimeMenu_showSettings_accesskey;"/>
+        <menuitem command="cmd_showPerformancePanel" accesskey="&runtimeMenu_showPerformancePanel_accesskey;"/>
         <menuseparator/>
         <menuitem command="cmd_disconnectRuntime" accesskey="&runtimeMenu_disconnect_accesskey;"/>
       </menupopup>
@@ -151,6 +153,7 @@
         <iframe id="deck-panel-prefs" flex="1" src="prefs.xhtml"/>
         <iframe id="deck-panel-runtimedetails" flex="1" lazysrc="runtimedetails.xhtml"/>
         <iframe id="deck-panel-devicepreferences" flex="1" lazysrc="devicepreferences.xhtml"/>
+        <iframe id="deck-panel-performance" flex="1" lazysrc="chrome://devtools/content/performance-new/index.xhtml"/>
       </deck>
       <splitter class="devtools-side-splitter" id="runtime-listing-splitter"/>
       <vbox id="runtime-listing-panel" class="runtime-listing panel-list" flex="1">

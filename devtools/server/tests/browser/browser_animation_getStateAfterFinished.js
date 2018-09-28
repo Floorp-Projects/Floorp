@@ -12,7 +12,7 @@
 // information.
 
 add_task(async function() {
-  const {client, walker, animations} =
+  const {target, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non animated node");
@@ -51,6 +51,6 @@ add_task(async function() {
   is(players[1].state.iterationCount, 100,
      "The iterationCount of the second animation is correct");
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

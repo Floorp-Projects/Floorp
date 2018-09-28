@@ -132,6 +132,7 @@ button.panel-item:not(:disabled):hover {
 
 #runtime-preferences,
 #runtime-settings                 { background-image: -moz-image-rect(url("icons.png"), 105, 464, 131, 438); }
+#runtime-performance              { background-image: url(chrome://devtools/skin/images/tool-profiler.svg); }
 
 #runtime-panel-nousbdevice,
 #runtime-details                  { background-image: -moz-image-rect(url("icons.png"), 156, 438, 182, 412);  }

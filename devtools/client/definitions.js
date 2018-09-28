@@ -264,10 +264,13 @@ function switchPerformancePanel() {
       return new NewPerformancePanel(frame, target);
     };
     Tools.performance.isTargetSupported = function(target) {
-     // Root actors are lazily initialized, so we can't check if the target has
-     // the perf actor yet. Also this function is not async, so we can't initialize
-     // the actor yet.
-      return true;
+      // Root actors are lazily initialized, so we can't check if the target has
+      // the perf actor yet. Also this function is not async, so we can't initialize
+      // the actor yet.
+      // We don't display the new performance panel for remote context in the
+      // toolbox, because this has an overhead. Instead we should use WebIDE (or
+      // the coming about:debugging).
+      return target.isLocalTab;
     };
   } else {
     Tools.performance.url = "chrome://devtools/content/performance/index.xul";

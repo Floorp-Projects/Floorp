@@ -7,7 +7,7 @@
 // Simple checks for the AnimationsActor
 
 add_task(async function() {
-  const {client, walker, animations} = await initAnimationsFrontForUrl(
+  const {target, walker, animations} = await initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 
   ok(animations, "The AnimationsFront was created");
@@ -32,6 +32,6 @@ add_task(async function() {
   ok(Array.isArray(players), "An array of players was returned");
   is(players.length, 0, "0 players have been returned for the invalid node");
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

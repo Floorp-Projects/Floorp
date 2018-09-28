@@ -30,7 +30,7 @@ class Sidebar extends PureComponent {
   }
 
   renderDevices() {
-    const { dispatch, runtimes, selectedPage } = this.props;
+    const { runtimes } = this.props;
     if (!runtimes.networkRuntimes.length && !runtimes.usbRuntimes.length) {
       return Localized(
         {
@@ -45,41 +45,36 @@ class Sidebar extends PureComponent {
     }
 
     return [
-      ...runtimes.networkRuntimes.map(runtime => {
-        const pageId = "networklocation-" + runtime.id;
-        const runtimeHasClient = !!runtime.client;
-
-        const connectComponent = DeviceSidebarItemAction({
-          connected: runtimeHasClient,
-          dispatch,
-          runtimeId: runtime.id,
-        });
-
-        return SidebarItem({
-          connectComponent,
-          id: pageId,
-          dispatch,
-          icon: GLOBE_ICON,
-          isSelected: selectedPage === pageId,
-          key: pageId,
-          name: runtime.name,
-          runtimeId: runtime.id,
-          selectable: runtimeHasClient,
-        });
-      }),
-      ...runtimes.usbRuntimes.map(runtime => {
-        const pageId = "usb-" + runtime.id;
-        return SidebarItem({
-          id: pageId,
-          dispatch,
-          icon: USB_ICON,
-          isSelected: false,
-          key: pageId,
-          name: runtime.name,
-          selectable: false,
-        });
-      }),
+      ...this.renderSidebarItems(GLOBE_ICON, runtimes.networkRuntimes),
+      ...this.renderSidebarItems(USB_ICON, runtimes.usbRuntimes),
     ];
+  }
+
+  renderSidebarItems(icon, runtimes) {
+    const { dispatch, selectedPage } = this.props;
+
+    return runtimes.map(runtime => {
+      const pageId = runtime.type + "-" + runtime.id;
+      const runtimeHasClient = !!runtime.client;
+
+      const connectComponent = DeviceSidebarItemAction({
+        connected: runtimeHasClient,
+        dispatch,
+        runtimeId: runtime.id,
+      });
+
+      return SidebarItem({
+        connectComponent,
+        id: pageId,
+        dispatch,
+        icon,
+        isSelected: selectedPage === pageId,
+        key: pageId,
+        name: runtime.name,
+        runtimeId: runtime.id,
+        selectable: runtimeHasClient,
+      });
+    });
   }
 
   render() {

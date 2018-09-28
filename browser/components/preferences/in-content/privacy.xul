@@ -18,7 +18,7 @@
 
 <!-- Passwords -->
 <groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" hidden="true">
-  <caption><label data-l10n-id="forms-header"/></caption>
+  <caption><label data-l10n-id="logins-header"/></caption>
 
   <vbox id="passwordSettings">
     <hbox id="savePasswordsBox">
