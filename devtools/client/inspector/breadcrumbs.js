@@ -7,16 +7,16 @@
 "use strict";
 
 const promise = require("promise");
-
+const flags = require("devtools/shared/flags");
 const {ELLIPSIS} = require("devtools/shared/l10n");
+const EventEmitter = require("devtools/shared/event-emitter");
+
+loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
 
 const MAX_LABEL_LENGTH = 40;
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const SCROLL_REPEAT_MS = 100;
-
-const EventEmitter = require("devtools/shared/event-emitter");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 // Some margin may be required for visible element detection.
 const SCROLL_MARGIN = 1;
@@ -385,11 +385,16 @@ HTMLBreadcrumbs.prototype = {
     this.outer.addEventListener("mouseout", this, true);
     this.outer.addEventListener("focus", this, true);
 
-    this.shortcuts = new KeyShortcuts({ window: this.win, target: this.outer });
     this.handleShortcut = this.handleShortcut.bind(this);
 
-    this.shortcuts.on("Right", this.handleShortcut);
-    this.shortcuts.on("Left", this.handleShortcut);
+    if (flags.testing) {
+      // In tests, we start listening immediately to avoid having to simulate a focus.
+      this.initKeyShortcuts();
+    } else {
+      this.outer.addEventListener("focus", () => {
+        this.initKeyShortcuts();
+      }, { once: true });
+    }
 
     // We will save a list of already displayed nodes in this array.
     this.nodeHierarchy = [];
@@ -410,8 +415,13 @@ HTMLBreadcrumbs.prototype = {
     this.update();
   },
 
-  /**
+  initKeyShortcuts() {
+    this.shortcuts = new KeyShortcuts({ window: this.win, target: this.outer });
+    this.shortcuts.on("Right", this.handleShortcut);
+    this.shortcuts.on("Left", this.handleShortcut);
+  },
 
+  /**
    * Build a string that represents the node: tagName#id.class1.class2.
    * @param {NodeFront} node The node to pretty-print
    * @return {String}
@@ -619,7 +629,10 @@ HTMLBreadcrumbs.prototype = {
     this.container.removeEventListener("mouseover", this, true);
     this.container.removeEventListener("mouseout", this, true);
     this.container.removeEventListener("focus", this, true);
-    this.shortcuts.destroy();
+
+    if (this.shortcuts) {
+      this.shortcuts.destroy();
+    }
 
     this.empty();
 
