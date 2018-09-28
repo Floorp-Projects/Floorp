@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
-use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, Epoch};
+use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, ExternalEvent, Epoch};
 use api::{BuiltDisplayList, ColorF, LayoutSize, NotificationRequest, Checkpoint};
 use api::channel::MsgSender;
 #[cfg(feature = "capture")]
@@ -39,7 +39,6 @@ pub struct Transaction {
     pub frame_ops: Vec<FrameMsg>,
     pub notifications: Vec<NotificationRequest>,
     pub set_root_pipeline: Option<PipelineId>,
-    pub build_frame: bool,
     pub render_frame: bool,
 }
 
@@ -73,7 +72,6 @@ pub struct BuiltTransaction {
     pub clip_updates: Option<ClipDataUpdateList>,
     pub scene_build_start_time: u64,
     pub scene_build_end_time: u64,
-    pub build_frame: bool,
     pub render_frame: bool,
 }
 
@@ -116,6 +114,7 @@ pub struct BuiltScene {
 // Message from render backend to scene builder.
 pub enum SceneBuilderRequest {
     Transaction(Box<Transaction>),
+    ExternalEvent(ExternalEvent),
     DeleteDocument(DocumentId),
     WakeUp,
     Flush(MsgSender<()>),
@@ -132,6 +131,7 @@ pub enum SceneBuilderRequest {
 // Message from scene builder to render backend.
 pub enum SceneBuilderResult {
     Transaction(Box<BuiltTransaction>, Option<Sender<SceneSwapResult>>),
+    ExternalEvent(ExternalEvent),
     FlushComplete(MsgSender<()>),
     Stopped,
 }
@@ -228,6 +228,10 @@ impl SceneBuilder {
                 Ok(SceneBuilderRequest::SaveScene(config)) => {
                     self.save_scene(config);
                 }
+                Ok(SceneBuilderRequest::ExternalEvent(evt)) => {
+                    self.tx.send(SceneBuilderResult::ExternalEvent(evt)).unwrap();
+                    self.api_tx.send(ApiMsg::WakeUp).unwrap();
+                }
                 Ok(SceneBuilderRequest::Stop) => {
                     self.tx.send(SceneBuilderResult::Stopped).unwrap();
                     // We don't need to send a WakeUp to api_tx because we only
@@ -307,7 +311,6 @@ impl SceneBuilder {
 
             let txn = Box::new(BuiltTransaction {
                 document_id: item.document_id,
-                build_frame: true,
                 render_frame: item.build_frame,
                 built_scene,
                 resource_updates: Vec::new(),
@@ -408,7 +411,6 @@ impl SceneBuilder {
 
         Box::new(BuiltTransaction {
             document_id: txn.document_id,
-            build_frame: txn.build_frame || built_scene.is_some(),
             render_frame: txn.render_frame,
             built_scene,
             rasterized_blobs,

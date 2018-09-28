@@ -348,9 +348,11 @@ impl FrameBuilder {
         resource_cache.begin_frame(frame_id);
         gpu_cache.begin_frame();
 
-        let mut transform_palette = clip_scroll_tree.update_tree(
+        let mut transform_palette = TransformPalette::new();
+        clip_scroll_tree.update_tree(
             pan,
             scene_properties,
+            Some(&mut transform_palette),
         );
 
         self.update_scroll_bars(clip_scroll_tree, gpu_cache);
