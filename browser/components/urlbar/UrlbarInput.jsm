@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
+                                   "@mozilla.org/widget/clipboardhelper;1",
+                                   "nsIClipboardHelper");
+
 /**
  * Represents the urlbar <textbox>.
  * Also forwards important textbox properties and methods.
@@ -35,6 +39,8 @@ class UrlbarInput {
    */
   constructor(options = {}) {
     this.textbox = options.textbox;
+    this.textbox.clickSelectsAll = UrlbarPrefs.get("clickSelectsAll");
+
     this.panel = options.panel;
     this.window = this.textbox.ownerGlobal;
     this.controller = options.controller || new UrlbarController();
@@ -90,10 +96,11 @@ class UrlbarInput {
     }
 
     this.addEventListener("input", this);
-    this.inputField.addEventListener("select", this);
+    this.inputField.addEventListener("mousedown", this);
     this.inputField.addEventListener("overflow", this);
     this.inputField.addEventListener("underflow", this);
     this.inputField.addEventListener("scrollend", this);
+    this.inputField.addEventListener("select", this);
 
     this.inputField.controllers.insertControllerAt(0, new CopyCutController(this));
   }
@@ -301,6 +308,15 @@ class UrlbarInput {
 
   // Event handlers below.
 
+  _onmousedown(event) {
+    if (event.button == 0 &&
+        event.detail == 2 &&
+        UrlbarPrefs.get("doubleClickSelectsAll")) {
+      this.editor.selectAll();
+      event.preventDefault();
+    }
+  }
+
   _oninput(event) {
     this.valueIsTyped = true;
 
@@ -327,7 +343,7 @@ class UrlbarInput {
       return;
     }
 
-    Services.clipboard.copyStringToClipboard(val, Services.clipboard.kSelectionClipboard);
+    ClipboardHelper.copyStringToClipboard(val, Services.clipboard.kSelectionClipboard);
   }
 
   _onoverflow(event) {
@@ -396,9 +412,7 @@ class CopyCutController {
       urlbar.window.SetPageProxyState("invalid");
     }
 
-    Cc["@mozilla.org/widget/clipboardhelper;1"]
-      .getService(Ci.nsIClipboardHelper)
-      .copyString(val);
+    ClipboardHelper.copyString(val);
   }
 
   /**
