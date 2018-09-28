@@ -10,6 +10,7 @@ with Files("**"):
 XPIDL_SOURCES += [
     'nsIDOMWakeLockListener.idl',
     'nsIPowerManagerService.idl',
+    'nsIWakeLock.idl',
 ]
 
 XPIDL_MODULE = 'dom_power'
