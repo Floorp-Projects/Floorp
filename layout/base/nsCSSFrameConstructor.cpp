@@ -2639,7 +2639,6 @@ nsIFrame*
 nsCSSFrameConstructor::ConstructRootFrame()
 {
   AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ConstructRootFrame", LAYOUT);
-  AUTO_PROFILER_TRACING("Frame Construction", "ConstructRootFrame");
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
   ServoStyleSet* styleSet = mPresShell->StyleSet();
@@ -6952,7 +6951,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
              !RestyleManager()->IsInStyleRefresh());
 
   AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentAppended", LAYOUT);
-  AUTO_PROFILER_TRACING("Frame Construction", "ContentAppended");
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
 #ifdef DEBUG
@@ -7261,7 +7259,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
              !RestyleManager()->IsInStyleRefresh());
 
   AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentRangeInserted", LAYOUT);
-  AUTO_PROFILER_TRACING("Frame Construction", "ContentRangeInserted");
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
   MOZ_ASSERT(aStartChild, "must always pass a child");
@@ -7705,7 +7702,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
   MOZ_ASSERT(!aChild->IsRootOfAnonymousSubtree() || !aOldNextSibling,
              "Anonymous roots don't have siblings");
   AUTO_PROFILER_LABEL("nsCSSFrameConstructor::ContentRemoved", LAYOUT);
-  AUTO_PROFILER_TRACING("Frame Construction", "ContentRemoved");
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   nsPresContext* presContext = mPresShell->GetPresContext();
   MOZ_ASSERT(presContext, "Our presShell should have a valid presContext");
@@ -8097,7 +8093,6 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
                                             const CharacterDataChangeInfo& aInfo)
 {
   AUTO_PROFILER_LABEL("nsCSSFrameConstructor::CharacterDataChanged", LAYOUT);
-  AUTO_PROFILER_TRACING("Frame Construction", "CharacterDataChanged");
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 
   if ((aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) &&
