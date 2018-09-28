@@ -327,15 +327,12 @@ ssl3_HandleECDHClientKeyExchange(sslSocket *ss, PRUint8 *b,
 ** Take an encoded key share and make a public key out of it.
 */
 SECStatus
-ssl_ImportECDHKeyShare(sslSocket *ss, SECKEYPublicKey *peerKey,
+ssl_ImportECDHKeyShare(SECKEYPublicKey *peerKey,
                        PRUint8 *b, PRUint32 length,
                        const sslNamedGroupDef *ecGroup)
 {
     SECStatus rv;
     SECItem ecPoint = { siBuffer, NULL, 0 };
-
-    PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
-    PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
     if (!length) {
         PORT_SetError(SSL_ERROR_RX_MALFORMED_ECDHE_KEY_SHARE);
@@ -616,7 +613,7 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, PRUint8 *b, PRUint32 length)
     peerKey->arena = arena;
 
     /* create public key from point data */
-    rv = ssl_ImportECDHKeyShare(ss, peerKey, ec_point.data, ec_point.len,
+    rv = ssl_ImportECDHKeyShare(peerKey, ec_point.data, ec_point.len,
                                 ecGroup);
     if (rv != SECSuccess) {
         /* error code is set */
