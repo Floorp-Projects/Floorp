@@ -18,7 +18,7 @@ const { assert, dumpn } = DevToolsUtils;
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const { threadSpec } = require("devtools/shared/specs/script");
 
-loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
+loader.lazyImporter(this, "findCssSelector", "resource://gre/modules/css-selector.js");
 loader.lazyRequireGetter(this, "BreakpointActor", "devtools/server/actors/breakpoint", true);
 loader.lazyRequireGetter(this, "setBreakpointAtEntryPoints", "devtools/server/actors/breakpoint", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
