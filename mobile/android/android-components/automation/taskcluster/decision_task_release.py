@@ -113,6 +113,7 @@ def generate_massager_task(build_task_id, massager_task_id,
 
 
 def generate_beetmover_task(build_task_id, version, artifact, info):
+    version = version.lstrip('v')
     upstreamArtifacts = [
         {
             "paths": [
