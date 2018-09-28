@@ -371,6 +371,11 @@ var UI = {
     const disconnectCmd = document.querySelector("#cmd_disconnectRuntime");
     const devicePrefsCmd = document.querySelector("#cmd_showDevicePrefs");
     const settingsCmd = document.querySelector("#cmd_showSettings");
+    const performancePanelCmd = document.querySelector("#cmd_showPerformancePanel");
+
+    // Display the performance menu only if the pref is enabled
+    const performancePanelMenu = document.querySelector("menuitem[command=cmd_showPerformancePanel]");
+    performancePanelMenu.hidden = !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false);
 
     if (AppManager.connected) {
       if (AppManager.deviceFront) {
@@ -381,12 +386,16 @@ var UI = {
         devicePrefsCmd.removeAttribute("disabled");
       }
       disconnectCmd.removeAttribute("disabled");
+      if (AppManager.perfFront) {
+        performancePanelCmd.removeAttribute("disabled");
+      }
     } else {
       detailsCmd.setAttribute("disabled", "true");
       screenshotCmd.setAttribute("disabled", "true");
       disconnectCmd.setAttribute("disabled", "true");
       devicePrefsCmd.setAttribute("disabled", "true");
       settingsCmd.setAttribute("disabled", "true");
+      performancePanelCmd.setAttribute("disabled", "true");
     }
 
     const runtimePanelButton = document.querySelector("#runtime-panel-button");
@@ -863,6 +872,15 @@ var Cmds = {
 
   showDevicePrefs: function() {
     UI.selectDeckPanel("devicepreferences");
+  },
+
+  showPerformancePanel: function() {
+    UI.selectDeckPanel("performance");
+    const iframe = document.getElementById("deck-panel-performance");
+
+    iframe.addEventListener("DOMContentLoaded", () => {
+      iframe.contentWindow.gInit(AppManager.perfFront, AppManager.preferenceFront);
+    }, { once: true });
   },
 
   async play() {

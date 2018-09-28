@@ -71,6 +71,10 @@ RuntimeList.prototype = {
     this._Cmds.showSettings();
   },
 
+  showPerformancePanel: function() {
+    this._Cmds.showPerformancePanel();
+  },
+
   showTroubleShooting: function() {
     this._Cmds.showTroubleShooting();
   },
@@ -92,6 +96,10 @@ RuntimeList.prototype = {
     const disconnectCmd = doc.querySelector("#runtime-disconnect");
     const devicePrefsCmd = doc.querySelector("#runtime-preferences");
     const settingsCmd = doc.querySelector("#runtime-settings");
+    const performanceCmd = doc.querySelector("#runtime-performance");
+
+    // Display the performance button only if the pref is enabled
+    performanceCmd.hidden = !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false);
 
     if (AppManager.connected) {
       if (AppManager.deviceFront) {
@@ -102,12 +110,16 @@ RuntimeList.prototype = {
         devicePrefsCmd.removeAttribute("disabled");
       }
       disconnectCmd.removeAttribute("disabled");
+      if (AppManager.perfFront) {
+        performanceCmd.removeAttribute("disabled");
+      }
     } else {
       detailsCmd.setAttribute("disabled", "true");
       screenshotCmd.setAttribute("disabled", "true");
       disconnectCmd.setAttribute("disabled", "true");
       devicePrefsCmd.setAttribute("disabled", "true");
       settingsCmd.setAttribute("disabled", "true");
+      performanceCmd.setAttribute("disabled", "true");
     }
   },
 
