@@ -31,6 +31,8 @@ export class _StartupOverlay extends React.PureComponent {
         if (response.status === 200) {
           const {flowId, flowBeginTime} = await response.json();
           this.setState({flowId, flowBeginTime});
+        } else {
+          this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_FETCH_ERROR", value: response.status}}));
         }
       } catch (error) {
         this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_ERROR"}}));
@@ -69,13 +71,22 @@ export class _StartupOverlay extends React.PureComponent {
   }
 
   onSubmit() {
-    this.props.dispatch(ac.UserEvent({event: "SUBMIT_EMAIL"}));
+    this.props.dispatch(ac.UserEvent({event: "SUBMIT_EMAIL", ...this._getFormInfo()}));
+
     window.addEventListener("visibilitychange", this.removeOverlay);
   }
 
   clickSkip() {
-    this.props.dispatch(ac.UserEvent({event: "SKIPPED_SIGNIN"}));
+    this.props.dispatch(ac.UserEvent({event: "SKIPPED_SIGNIN", ...this._getFormInfo()}));
     this.removeOverlay();
+  }
+
+  /**
+   * Report to telemetry additional information about the form submission.
+   */
+  _getFormInfo() {
+    const value = {has_flow_params: this.state.flowId.length > 0};
+    return {value};
   }
 
   onInputInvalid(e) {

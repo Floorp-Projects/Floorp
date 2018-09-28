@@ -27,8 +27,14 @@ const FRECENT_SITES_IGNORE_BLOCKED = false;
 const FRECENT_SITES_NUM_ITEMS = 25;
 const FRECENT_SITES_MIN_FRECENCY = 100;
 
+/**
+ * CachedTargetingGetter
+ * @param property {string} Name of the method called on ActivityStreamProvider
+ * @param options {{}?} Options object passsed to ActivityStreamProvider method
+ * @param updateInterval {number?} Update interval for query. Defaults to FRECENT_SITES_UPDATE_INTERVAL
+ */
 function CachedTargetingGetter(property, options = null, updateInterval = FRECENT_SITES_UPDATE_INTERVAL) {
-  const targetingGetter = {
+  return {
     _lastUpdated: 0,
     _value: null,
     // For testing
@@ -36,39 +42,44 @@ function CachedTargetingGetter(property, options = null, updateInterval = FRECEN
       this._lastUpdated = 0;
       this._value = null;
     },
-  };
-
-  Object.defineProperty(targetingGetter, property, {
-    get: () => new Promise(async (resolve, reject) => {
-      const now = Date.now();
-      if (now - targetingGetter._lastUpdated >= updateInterval) {
-        try {
-          targetingGetter._value = await asProvider[property](options);
-          targetingGetter._lastUpdated = now;
-        } catch (e) {
-          Cu.reportError(e);
-          reject(e);
+    get() {
+      return new Promise(async (resolve, reject) => {
+        const now = Date.now();
+        if (now - this._lastUpdated >= updateInterval) {
+          try {
+            this._value = await asProvider[property](options);
+            this._lastUpdated = now;
+          } catch (e) {
+            Cu.reportError(e);
+            reject(e);
+          }
         }
-      }
-      resolve(targetingGetter._value);
-    }),
-  });
-
-  return targetingGetter;
+        resolve(this._value);
+      });
+    },
+  };
 }
 
-const TopFrecentSitesCache = new CachedTargetingGetter(
-  "getTopFrecentSites",
-  {
-    ignoreBlocked: FRECENT_SITES_IGNORE_BLOCKED,
-    numItems: FRECENT_SITES_NUM_ITEMS,
-    topsiteFrecency: FRECENT_SITES_MIN_FRECENCY,
-    onePerDomain: true,
-    includeFavicon: false,
-  }
-);
-
-const TotalBookmarksCountCache = new CachedTargetingGetter("getTotalBookmarksCount");
+const QueryCache = {
+  expireAll() {
+    Object.keys(this.queries).forEach(query => {
+      this.queries[query].expire();
+    });
+  },
+  queries: {
+    TopFrecentSites: new CachedTargetingGetter(
+      "getTopFrecentSites",
+      {
+        ignoreBlocked: FRECENT_SITES_IGNORE_BLOCKED,
+        numItems: FRECENT_SITES_NUM_ITEMS,
+        topsiteFrecency: FRECENT_SITES_MIN_FRECENCY,
+        onePerDomain: true,
+        includeFavicon: false,
+      }
+    ),
+    TotalBookmarksCount: new CachedTargetingGetter("getTotalBookmarksCount"),
+  },
+};
 
 /**
  * sortMessagesByWeightedRank
@@ -97,6 +108,12 @@ function sortMessagesByWeightedRank(messages) {
 }
 
 const TargetingGetters = {
+  get locale() {
+    return Services.locale.appLocaleAsLangTag;
+  },
+  get localeLanguageCode() {
+    return Services.locale.appLocaleAsLangTag && Services.locale.appLocaleAsLangTag.substr(0, 2);
+  },
   get browserSettings() {
     const {settings} = TelemetryEnvironment.currentEnvironment;
     return {
@@ -173,7 +190,7 @@ const TargetingGetters = {
     return Services.prefs.getIntPref("devtools.selfxss.count");
   },
   get topFrecentSites() {
-    return TopFrecentSitesCache.getTopFrecentSites.then(sites => sites.map(site => (
+    return QueryCache.queries.TopFrecentSites.get().then(sites => sites.map(site => (
       {
         url: site.url,
         host: (new URL(site.url)).hostname,
@@ -194,7 +211,7 @@ const TargetingGetters = {
     }, {});
   },
   get totalBookmarksCount() {
-    return TotalBookmarksCountCache.getTotalBookmarksCount;
+    return QueryCache.queries.TotalBookmarksCount.get();
   },
   get firefoxVersion() {
     return parseInt(AppConstants.MOZ_APP_VERSION.match(/\d+/), 10);
@@ -289,7 +306,6 @@ this.ASRouterTargeting = {
 };
 
 // Export for testing
-this.TopFrecentSitesCache = TopFrecentSitesCache;
-this.TotalBookmarksCountCache = TotalBookmarksCountCache;
+this.QueryCache = QueryCache;
 this.CachedTargetingGetter = CachedTargetingGetter;
-this.EXPORTED_SYMBOLS = ["ASRouterTargeting", "TopFrecentSitesCache", "TotalBookmarksCountCache", "CachedTargetingGetter"];
+this.EXPORTED_SYMBOLS = ["ASRouterTargeting", "QueryCache", "CachedTargetingGetter"];

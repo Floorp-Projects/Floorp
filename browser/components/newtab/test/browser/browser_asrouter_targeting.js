@@ -1,4 +1,4 @@
-const {ASRouterTargeting, TopFrecentSitesCache, TotalBookmarksCountCache} =
+const {ASRouterTargeting, QueryCache} =
   ChromeUtils.import("resource://activity-stream/lib/ASRouterTargeting.jsm", {});
 const {AddonTestUtils} =
   ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
@@ -90,6 +90,24 @@ add_task(async function check_other_error_handling() {
 });
 
 // ASRouterTargeting.Environment
+add_task(async function check_locale() {
+  ok(Services.locale.appLocaleAsLangTag, "Services.locale.appLocaleAsLangTag exists");
+  const message = {id: "foo", targeting: `locale == "${Services.locale.appLocaleAsLangTag}"`};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "should select correct item when filtering by locale");
+});
+add_task(async function check_localeLanguageCode() {
+  const currentLanguageCode = Services.locale.appLocaleAsLangTag.substr(0, 2);
+  is(
+    Services.locale.negotiateLanguages([currentLanguageCode], [Services.locale.appLocaleAsLangTag])[0],
+    Services.locale.appLocaleAsLangTag,
+    "currentLanguageCode should resolve to the current locale (e.g en => en-US)"
+  );
+  const message = {id: "foo", targeting: `localeLanguageCode == "${currentLanguageCode}"`};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "should select correct item when filtering by localeLanguageCode");
+});
+
 add_task(async function checkProfileAgeCreated() {
   let profileAccessor = new ProfileAge();
   is(await ASRouterTargeting.Environment.profileAgeCreated, await profileAccessor.created,
@@ -135,8 +153,9 @@ add_task(async function check_totalBookmarksCount() {
   await clearHistoryAndBookmarks();
   const message = {id: "foo", targeting: "totalBookmarksCount > 0"};
 
-  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), undefined,
-    "Should not select any message because");
+  const results = await ASRouterTargeting.findMatchingMessage({messages: [message]});
+  is(results ? JSON.stringify(results) : results, undefined,
+    "Should not select any message because bookmarks count is not 0");
 
   const bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -144,7 +163,7 @@ add_task(async function check_totalBookmarksCount() {
     url: "https://mozilla1.com/nowNew",
   });
 
-  TotalBookmarksCountCache.expire();
+  QueryCache.queries.TotalBookmarksCount.expire();
 
   is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
     "Should select correct item after bookmarks are added.");
@@ -305,7 +324,6 @@ add_task(async function checkFrecentSites() {
 
   // Cleanup
   await clearHistoryAndBookmarks();
-  TopFrecentSitesCache.expire();
 });
 
 add_task(async function check_firefox_version() {
