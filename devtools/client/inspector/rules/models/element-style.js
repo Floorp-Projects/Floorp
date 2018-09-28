@@ -38,7 +38,7 @@ function ElementStyle(element, ruleView, store, pageStyle, showUserAgentStyles) 
   this.pageStyle = pageStyle;
   this.showUserAgentStyles = showUserAgentStyles;
   this.rules = [];
-  this.cssProperties = getCssProperties(this.ruleView.inspector.toolbox);
+  this.cssProperties = this.ruleView.cssProperties;
   this.variables = new Map();
 
   // We don't want to overwrite this.store.userProperties so we only create it

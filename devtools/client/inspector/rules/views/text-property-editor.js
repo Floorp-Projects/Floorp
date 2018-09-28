@@ -71,6 +71,7 @@ const GENERIC_FONT_FAMILIES = [
 function TextPropertyEditor(ruleEditor, property) {
   this.ruleEditor = ruleEditor;
   this.ruleView = this.ruleEditor.ruleView;
+  this.cssProperties = this.ruleView.cssProperties;
   this.doc = this.ruleEditor.doc;
   this.popup = this.ruleView.popup;
   this.prop = property;
@@ -82,7 +83,6 @@ function TextPropertyEditor(ruleEditor, property) {
 
   this.toolbox = this.ruleView.inspector.toolbox;
   this.telemetry = this.toolbox.telemetry;
-  this.cssProperties = getCssProperties(this.toolbox);
 
   this.getGridlineNames = this.getGridlineNames.bind(this);
   this.update = this.update.bind(this);
