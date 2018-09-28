@@ -108,7 +108,7 @@ public:
 
 protected:
   // Used by nsStaticAtom.
-  constexpr nsAtom(const char16_t* aStr, uint32_t aLength, uint32_t aHash)
+  constexpr nsAtom(uint32_t aLength, uint32_t aHash)
     : mLength(aLength)
     , mKind(static_cast<uint32_t>(nsAtom::AtomKind::Static))
     , mHash(aHash)
@@ -147,9 +147,9 @@ public:
   // which is what we use when atomizing strings. We compute this hash in
   // Atom.py and assert in nsAtomTable::RegisterStaticAtoms that the two
   // hashes match.
-  constexpr nsStaticAtom(const char16_t* aStr, uint32_t aLength,
-                         uint32_t aHash, uint32_t aStringOffset)
-    : nsAtom(aStr, aLength, aHash)
+  constexpr nsStaticAtom(uint32_t aLength, uint32_t aHash,
+                         uint32_t aStringOffset)
+    : nsAtom(aLength, aHash)
     , mStringOffset(aStringOffset)
   {}
 
