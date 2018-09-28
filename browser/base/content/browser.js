@@ -5709,6 +5709,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     let haveMultipleTabs = gBrowser.visibleTabs.length > 1;
     document.getElementById("toolbar-context-reloadAllTabs").disabled = !haveMultipleTabs;
 
+    document.getElementById("toolbar-context-selectAllTabs").disabled = gBrowser.allTabsSelected();
     document.getElementById("toolbar-context-undoCloseTab").disabled =
       SessionStore.getClosedTabCount(window) == 0;
     return;
