@@ -37,6 +37,13 @@ Test the basic-card-form element
 import BasicCardForm from "../../res/containers/basic-card-form.js";
 
 let display = document.getElementById("display");
+let supportedNetworks = ["discover", "amex"];
+let paymentMethods = [{
+  supportedMethods: "basic-card",
+  data: {
+    supportedNetworks,
+  },
+}];
 
 function checkCCForm(customEl, expectedCard) {
   const CC_PROPERTY_NAMES = [
@@ -117,7 +124,11 @@ add_task(async function test_saveButton() {
   let address2 = deepClone(PTU.Addresses.TimBL2);
   address2.guid = "TimBL2GUID";
 
+
   await form.requestStore.setState({
+    request: {
+      paymentMethods,
+    },
     savedAddresses: {
       [address1.guid]: deepClone(address1),
       [address2.guid]: deepClone(address2),
@@ -126,6 +137,7 @@ add_task(async function test_saveButton() {
 
   await asyncElementRendered();
 
+  // when merchant provides supportedNetworks, the accepted card list should be visible
   ok(!form.acceptedCardsList.hidden, "Accepted card list should be visible when adding a card");
 
   ok(form.saveButton.disabled, "Save button should initially be disabled");
@@ -349,6 +361,9 @@ add_task(async function test_edit() {
   card1.billingAddressGUID = address1.guid;
 
   await form.requestStore.setState({
+    request: {
+      paymentMethods,
+    },
     page: {
       id: "basic-card-page",
     },
@@ -368,7 +383,7 @@ add_task(async function test_edit() {
      "Check no fields are visibly invalid on an 'edit' form with a complete card");
   checkCCForm(form, card1);
   ok(!form.saveButton.disabled, "Save button should be enabled upon edit for a valid card");
-  ok(form.acceptedCardsList.hidden, "Accepted card list should be hidden when editing a card");
+  ok(!form.acceptedCardsList.hidden, "Accepted card list should be visible when editing a card");
 
   let requiredElements = [...form.form.elements].filter(e => e.required && !e.disabled);
   ok(requiredElements.length, "There should be at least one required element");
