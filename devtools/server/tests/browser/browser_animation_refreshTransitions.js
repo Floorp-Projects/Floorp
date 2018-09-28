@@ -9,7 +9,7 @@
 // AnimationPlayerFront should be sent, and the old one should be removed.
 
 add_task(async function() {
-  const {client, walker, animations} =
+  const {target, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve the test node");
@@ -49,7 +49,7 @@ add_task(async function() {
   is(reportedMutations.filter(m => m.type === "added").length, 2,
     "2 'added' events were sent (for the new transitions)");
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });
 

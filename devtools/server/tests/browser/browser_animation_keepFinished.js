@@ -11,7 +11,7 @@
 // AnimationPlayerActor.
 
 add_task(async function() {
-  const {client, walker, animations} =
+  const {target, walker, animations} =
     await initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non-animated node");
@@ -44,7 +44,7 @@ add_task(async function() {
 
   animations.off("mutations", onMutations);
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });
 

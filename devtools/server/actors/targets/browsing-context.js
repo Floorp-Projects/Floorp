@@ -246,9 +246,6 @@ const browsingContextTargetPrototype = {
       // Supports frame listing via `listFrames` request and `frameUpdate` events
       // as well as frame switching via `switchToFrame` request
       frames: true,
-      // Do not require to send reconfigure request to reset the document state
-      // to what it was before using the actor
-      noTabReconfigureOnClose: true,
       // Supports the logInPage request.
       logInPage: true,
       // Supports requests related to rewinding.

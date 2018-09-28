@@ -13,6 +13,7 @@ const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { getFileForBinary } = require("./adb-binary");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 const { Services } = require("resource://gre/modules/Services.jsm");
+const { ConnectionManager } = require("devtools/shared/client/connection-manager");
 loader.lazyRequireGetter(this, "check",
                          "devtools/shared/adb/adb-running-checker", true);
 
@@ -271,6 +272,18 @@ const ADB = {
                .then(function onSuccess(data) {
                  return data;
                });
+  },
+
+  // Prepare TCP connection for provided socket path.
+  // The returned value is a port number of localhost for the connection.
+  async prepareTCPConnection(socketPath) {
+    const port = ConnectionManager.getFreeTCPPort();
+    const local = `tcp:${ port }`;
+    const remote = socketPath.startsWith("@")
+                     ? `localabstract:${ socketPath.substring(1) }`
+                     : `localfilesystem:${ socketPath }`;
+    await this.forwardPort(local, remote);
+    return port;
   },
 
   // Run a shell command

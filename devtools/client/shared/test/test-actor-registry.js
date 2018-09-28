@@ -15,9 +15,7 @@
   // Register a test actor that can operate on the remote document
   exports.registerTestActor = async function(client) {
     // First, instanciate ActorRegistryFront to be able to dynamically register an actor
-    const response = await client.listTabs();
-    const { ActorRegistryFront } = require("devtools/shared/fronts/actor-registry");
-    const registryFront = ActorRegistryFront(client, response);
+    const registryFront = await client.mainRoot.getFront("actorRegistry");
 
     // Then ask to register our test-actor to retrieve its front
     const options = {

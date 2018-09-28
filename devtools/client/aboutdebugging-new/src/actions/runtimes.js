@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { ADB } = require("devtools/shared/adb/adb");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 
@@ -45,12 +46,21 @@ async function createNetworkClient(host, port) {
   return client;
 }
 
-async function createClientForRuntime(id, type) {
+async function createUSBClient(socketPath) {
+  const port = await ADB.prepareTCPConnection(socketPath);
+  return createNetworkClient("localhost", port);
+}
+
+async function createClientForRuntime(runtime) {
+  const { id, type } = runtime;
+
   if (type === RUNTIMES.THIS_FIREFOX) {
     return createLocalClient();
   } else if (type === RUNTIMES.NETWORK) {
     const [host, port] = id.split(":");
     return createNetworkClient(host, port);
+  } else if (type === RUNTIMES.USB) {
+    return createUSBClient(runtime.socketPath);
   }
 
   return null;
@@ -61,7 +71,7 @@ function connectRuntime(id) {
     dispatch({ type: CONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
-      const client = await createClientForRuntime(id, runtime.type);
+      const client = await createClientForRuntime(runtime);
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
