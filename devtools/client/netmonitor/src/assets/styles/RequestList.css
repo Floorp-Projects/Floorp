@@ -396,6 +396,10 @@
   background-repeat: no-repeat;
 }
 
+.selected .tracking-resource {
+  filter: brightness(500%);
+}
+
 /* RemoteIP column */
 
 .requests-list-remoteip {

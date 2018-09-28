@@ -2289,16 +2289,20 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
     }
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t initializerKind;
-        if (!d.readVarU32(&initializerKind)) {
+        uint32_t initializerKindVal;
+        if (!d.readVarU32(&initializerKindVal)) {
             return d.fail("expected elem initializer-kind field");
         }
-
-        if (initializerKind != uint32_t(InitializerKind::Active) &&
-            initializerKind != uint32_t(InitializerKind::Passive))
-        {
+        switch (initializerKindVal) {
+          case uint32_t(InitializerKind::Active):
+          case uint32_t(InitializerKind::Passive):
+          case uint32_t(InitializerKind::ActiveWithIndex):
+            break;
+          default:
             return d.fail("invalid elem initializer-kind field");
         }
+
+        InitializerKind initializerKind = InitializerKind(initializerKindVal);
 
         MOZ_ASSERT(env->tables.length() <= 1);
         if (env->tables.length() == 0) {
@@ -2310,9 +2314,21 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             return false;
         }
 
-        seg->tableIndex = 0;
+        uint32_t tableIndex = 0;
+        if (initializerKind == InitializerKind::ActiveWithIndex) {
+            if (!d.readVarU32(&tableIndex)) {
+                return d.fail("expected table index");
+            }
+            if (tableIndex > 0) {
+                return d.fail("table index must be zero");
+            }
+        }
 
-        if (initializerKind == uint32_t(InitializerKind::Active)) {
+        seg->tableIndex = tableIndex;
+
+        if (initializerKind == InitializerKind::Active ||
+            initializerKind == InitializerKind::ActiveWithIndex)
+        {
             InitExpr offset;
             if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
                                              env->types.length(), &offset))
@@ -2538,23 +2554,40 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
     }
 
     for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t initializerKind;
-        if (!d.readVarU32(&initializerKind)) {
+        uint32_t initializerKindVal;
+        if (!d.readVarU32(&initializerKindVal)) {
             return d.fail("expected data initializer-kind field");
         }
 
-        if (initializerKind != uint32_t(InitializerKind::Active) &&
-            initializerKind != uint32_t(InitializerKind::Passive))
-        {
+        switch (initializerKindVal) {
+          case uint32_t(InitializerKind::Active):
+          case uint32_t(InitializerKind::Passive):
+          case uint32_t(InitializerKind::ActiveWithIndex):
+            break;
+          default:
             return d.fail("invalid data initializer-kind field");
         }
+
+        InitializerKind initializerKind = InitializerKind(initializerKindVal);
 
         if (!env->usesMemory()) {
             return d.fail("data segment requires a memory section");
         }
 
+        uint32_t memIndex = 0;
+        if (initializerKind == InitializerKind::ActiveWithIndex) {
+            if (!d.readVarU32(&memIndex)) {
+                return d.fail("expected memory index");
+            }
+            if (memIndex > 0) {
+                return d.fail("memory index must be zero");
+            }
+        }
+
         DataSegmentEnv seg;
-        if (initializerKind == uint32_t(InitializerKind::Active)) {
+        if (initializerKind == InitializerKind::Active ||
+            initializerKind == InitializerKind::ActiveWithIndex)
+        {
             InitExpr segOffset;
             if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
                                              env->types.length(), &segOffset))
@@ -2797,6 +2830,38 @@ wasm::Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error
         return false;
     }
 
+    if (!DecodeModuleTail(d, &env, dvs)) {
+        return false;
+    }
+
+    MOZ_ASSERT(!*error, "unreported error in decoding");
+    return true;
+}
+
+bool
+wasm::ValidateForCranelift(const ShareableBytes& bytecode, UniqueChars* error)
+{
+    Decoder d(bytecode.bytes, 0, error);
+
+    // Cranelift doesn't support GC yet.
+    HasGcTypes hasGcTypes = HasGcTypes::False;
+
+    // Cranelift doesn't support threads yet.
+    Shareable threadSupport = Shareable::False;
+
+    CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
+                                    OptimizedBackend::Cranelift, DebugEnabled::False, hasGcTypes);
+    ModuleEnvironment env(hasGcTypes, &compilerEnv, threadSupport);
+
+    if (!DecodeModuleEnvironment(d, &env)) {
+        return false;
+    }
+
+    ExclusiveDeferredValidationState dvs(mutexid::WasmDeferredValidation);
+
+    if (!DecodeCodeSection(d, &env, dvs)) {
+        return false;
+    }
     if (!DecodeModuleTail(d, &env, dvs)) {
         return false;
     }
