@@ -214,9 +214,11 @@ impl BorderSideHelpers for BorderSide {
         // modulate the colors in order to generate colors for the inset/outset
         // and groove/ridge border styles.
         //
+        // NOTE(emilio): Gecko at least takes the background color into
+        // account, should we do the same? Looks a bit annoying for this.
+        //
         // NOTE(emilio): If you change this algorithm, do the same change on
-        // get_colors_for_side in cs_border_segment.glsl, and
-        // NS_GetSpecial3DColors in Gecko.
+        // get_colors_for_side in cs_border_segment.glsl.
         if self.color.r != 0.0 || self.color.g != 0.0 || self.color.b != 0.0 {
             let scale = if lighter { 1.0 } else { 2.0 / 3.0 };
             return self.color.scale_rgb(scale)
