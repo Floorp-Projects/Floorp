@@ -108,6 +108,7 @@ struct LoadInfoArgs
   bool                        loadTriggeredFromExternal;
   bool                        serviceWorkerTaintingSynthesized;
   bool                        documentHasUserInteracted;
+  bool                        documentHasLoaded;
 };
 
 /**
@@ -150,6 +151,7 @@ struct ParentLoadInfoForwarderArgs
   bool isTrackerBlocked;
   LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED trackerBlockedReason;
   bool documentHasUserInteracted;
+  bool documentHasLoaded;
 
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder

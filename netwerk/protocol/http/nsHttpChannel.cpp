@@ -711,7 +711,8 @@ IsContentPolicyTypeWhitelistedForFastBlock(nsILoadInfo* aLoadInfo)
 bool
 nsHttpChannel::CheckFastBlocked()
 {
-    LOG(("nsHttpChannel::CheckFastBlocked [this=%p]\n", this));
+    LOG(("nsHttpChannel::CheckFastBlocked [this=%p, url=%s]",
+         this, mSpec.get()));
     MOZ_ASSERT(mIsThirdPartyTrackingResource);
 
     static bool sFastBlockInited = false;
@@ -740,14 +741,19 @@ nsHttpChannel::CheckFastBlocked()
 
     bool engageFastBlock = false;
 
-    if (IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo) ||
-        // If the user has interacted with the document, we disable fastblock.
-        (mLoadInfo && mLoadInfo->GetDocumentHasUserInteracted())) {
-
-        LOG(("FastBlock passed (invalid) [this=%p]\n", this));
+    TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
+    if (IsContentPolicyTypeWhitelistedForFastBlock(mLoadInfo)) {
+        LOG(("FastBlock passed (whitelisted content type %u) (%lf) [this=%p]\n",
+             mLoadInfo ? mLoadInfo->GetExternalContentPolicyType() : nsIContentPolicy::TYPE_OTHER,
+             duration.ToMilliseconds(), this));
+    } else if (mLoadInfo && mLoadInfo->GetDocumentHasUserInteracted()) {
+        LOG(("FastBlock passed (user interaction) (%lf) [this=%p]\n",
+             duration.ToMilliseconds(), this));
+    } else if (mLoadInfo && mLoadInfo->GetDocumentHasLoaded()) {
+        LOG(("FastBlock passed (document loaded) (%lf) [this=%p]\n",
+             duration.ToMilliseconds(), this));
     } else {
-        TimeDuration duration = TimeStamp::NowLoRes() - timestamp;
-        bool hasFastBlockStarted = duration.ToMilliseconds() >= sFastBlockTimeout;
+            bool hasFastBlockStarted = duration.ToMilliseconds() >= sFastBlockTimeout;
         bool hasFastBlockStopped = false;
         if ((sFastBlockLimit != 0) && (sFastBlockLimit > sFastBlockTimeout)) {
             hasFastBlockStopped = duration.ToMilliseconds() > sFastBlockLimit;
