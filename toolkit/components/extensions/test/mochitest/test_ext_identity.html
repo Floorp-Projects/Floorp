@@ -138,12 +138,21 @@ add_task(async function test_otherRedirectURL() {
   await extension.unload();
 });
 
-function background_launchWebAuthFlow(interactive, path, redirect = true) {
-  let expected_redirect = "https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/identity_cb";
+function background_launchWebAuthFlow(interactive, path, redirect = true, useRedirectUri = true) {
+  let uri_path = useRedirectUri ? "identity_cb" : "";
+  let expected_redirect = `https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/${uri_path}`;
   let base_uri = "https://example.com/tests/toolkit/components/extensions/test/mochitest/";
-  let redirect_uri = browser.identity.getRedirectURL("/identity_cb");
+  let redirect_uri = browser.identity.getRedirectURL(useRedirectUri ? uri_path : undefined);
   browser.test.assertEq(expected_redirect, redirect_uri, "expected redirect uri matches hash");
-  let url = `${base_uri}${path}?redirect_uri=${encodeURIComponent(redirect_uri)}`;
+  let url = `${base_uri}${path}`;
+  if (useRedirectUri) {
+    url = `${url}?redirect_uri=${encodeURIComponent(redirect_uri)}`;
+  } else {
+    // We kind of fake it with the redirect url that would normally be configured
+    // in the oauth service.  This does still test that the identity service falls back
+    // to the extensions redirect url.
+    url = `${url}?default_redirect=${encodeURIComponent(expected_redirect)}`;
+  }
   if (!redirect) {
     url = `${url}&no_redirect=1`;
   }
@@ -189,6 +198,28 @@ add_task(async function test_autoRedirect() {
       ],
     },
     background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs")`,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_autoRedirect_noRedirectURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "applications": {
+        "gecko": {
+          "id": "identity@mozilla.org",
+        },
+      },
+      "permissions": [
+        "webRequest",
+        "identity",
+        "https://*.example.com/*",
+      ],
+    },
+    background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs", true, false)`,
   });
 
   await extension.startup();
