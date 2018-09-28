@@ -7,12 +7,6 @@
 ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
                                "resource://testing-common/ContentTaskUtils.jsm");
 
-loader.lazyGetter(this, "WebExtensionInspectedWindowFront", () => {
-  return require(
-    "devtools/shared/fronts/addon/webextension-inspected-window"
-  ).WebExtensionInspectedWindowFront;
-}, true);
-
 const SIDEBAR_ID = "an-extension-sidebar";
 const SIDEBAR_TITLE = "Sidebar Title";
 
@@ -113,10 +107,7 @@ add_task(async function testSidebarSetObject() {
 });
 
 add_task(async function testSidebarSetObjectValueGrip() {
-  const inspectedWindowFront = new WebExtensionInspectedWindowFront(
-    toolbox.target.client, toolbox.target.form
-  );
-
+  const inspectedWindowFront = toolbox.target.getFront("webExtensionInspectedWindow");
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
@@ -158,10 +149,7 @@ add_task(async function testSidebarSetObjectValueGrip() {
 });
 
 add_task(async function testSidebarDOMNodeHighlighting() {
-  const inspectedWindowFront = new WebExtensionInspectedWindowFront(
-    toolbox.target.client, toolbox.target.form
-  );
-
+  const inspectedWindowFront = toolbox.target.getFront("webExtensionInspectedWindow");
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
