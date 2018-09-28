@@ -221,6 +221,10 @@ PaymentRequestParent::ChangeShippingAddress(const nsAString& aRequestId,
   rv = aAddress->GetRegion(region);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoString regionCode;
+  rv = aAddress->GetRegionCode(regionCode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoString city;
   rv = aAddress->GetCity(city);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -262,7 +266,7 @@ PaymentRequestParent::ChangeShippingAddress(const nsAString& aRequestId,
     addressLine.AppendElement(address);
   }
 
-  IPCPaymentAddress ipcAddress(country, addressLine, region, city,
+  IPCPaymentAddress ipcAddress(country, addressLine, region, regionCode, city,
                                dependentLocality, postalCode, sortingCode,
                                organization, recipient, phone);
 
