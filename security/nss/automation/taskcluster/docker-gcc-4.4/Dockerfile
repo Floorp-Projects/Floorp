@@ -1,30 +1,39 @@
 FROM ubuntu:14.04
-MAINTAINER Tim Taubert <ttaubert@mozilla.com>
+LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 
-RUN useradd -d /home/worker -s /bin/bash -m worker
-WORKDIR /home/worker
+RUN dpkg --add-architecture i386
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    g++-4.4 \
+    gcc-4.4 \
+    locales \
+    make \
+    mercurial \
+    zlib1g-dev \
+ && rm -rf /var/lib/apt/lists/* \
+ && apt-get autoremove -y && apt-get clean -y
 
-# Add build and test scripts.
-ADD bin /home/worker/bin
-RUN chmod +x /home/worker/bin/*
-
-# Install dependencies.
-ADD setup.sh /tmp/setup.sh
-RUN bash /tmp/setup.sh
-
-# Change user.
-USER worker
-
-# Env variables.
-ENV HOME /home/worker
 ENV SHELL /bin/bash
 ENV USER worker
-ENV LOGNAME worker
-ENV HOSTNAME taskcluster-worker
+ENV LOGNAME $USER
+ENV HOME /home/$USER
 ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
+ENV LC_ALL $LANG
 ENV HOST localhost
 ENV DOMSUF localdomain
+
+RUN locale-gen $LANG \
+ && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
+
+RUN useradd -d $HOME -s $SHELL -m $USER
+WORKDIR $HOME
+
+# Add build and test scripts.
+ADD bin $HOME/bin
+RUN chmod +x $HOME/bin/*
+
+USER $USER
 
 # Set a default command for debugging.
 CMD ["/bin/bash", "--login"]
