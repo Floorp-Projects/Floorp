@@ -13,7 +13,7 @@ tup = check_prog('TUP', ['tup'])
 @checking('for tup version')
 @imports('re')
 def tup_version(tup):
-    tup_min_version = '0.7.7'
+    tup_min_version = '0.7.8'
     out = check_cmd_output(tup, '--version',
                            onerror=lambda: die('Failed to get tup version'))
     m = re.search(r'tup v?([0-9]+\.[0-9]+\.[0-9]+)', out)
