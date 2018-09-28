@@ -7,10 +7,9 @@
 const promise = require("promise");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const UserProperties = require("devtools/client/inspector/rules/models/user-properties");
+const { promiseWarn } = require("devtools/client/inspector/shared/utils");
+const { getCssProperties, isCssVariable } = require("devtools/shared/fronts/css-properties");
 const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
-
-loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/utils", true);
-loader.lazyRequireGetter(this, "isCssVariable", "devtools/shared/fronts/css-properties", true);
 
 /**
  * ElementStyle is responsible for the following:
@@ -22,7 +21,7 @@ loader.lazyRequireGetter(this, "isCssVariable", "devtools/shared/fronts/css-prop
  * @param  {CssRuleView} ruleView
  *         The instance of the rule-view panel.
  * @param  {Object} store
- *         The ElementStyle can use this object to store metadatas
+ *         The ElementStyle can use this object to store metadata
  *         that might outlast the rule view, particularly the current
  *         set of disabled properties.
  * @param  {PageStyleFront} pageStyle
@@ -38,7 +37,7 @@ function ElementStyle(element, ruleView, store, pageStyle, showUserAgentStyles) 
   this.pageStyle = pageStyle;
   this.showUserAgentStyles = showUserAgentStyles;
   this.rules = [];
-  this.cssProperties = this.ruleView.cssProperties;
+  this.cssProperties = getCssProperties(this.ruleView.inspector.toolbox);
   this.variables = new Map();
 
   // We don't want to overwrite this.store.userProperties so we only create it

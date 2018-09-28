@@ -6,11 +6,11 @@
 
 "use strict";
 
+const {parseDeclarations} = require("devtools/shared/css/parsing-utils");
 const promise = require("promise");
-
-loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
-loader.lazyRequireGetter(this, "getCSSLexer", "devtools/shared/css/lexer", true);
-loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
+const {getCSSLexer} = require("devtools/shared/css/lexer");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
+const {throttle} = require("devtools/shared/throttle");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -199,4 +199,5 @@ exports.blurOnMultipleProperties = blurOnMultipleProperties;
 exports.createChild = createChild;
 exports.getSelectorFromGrip = getSelectorFromGrip;
 exports.promiseWarn = promiseWarn;
+exports.throttle = throttle;
 exports.translateNodeFrontToGrip = translateNodeFrontToGrip;

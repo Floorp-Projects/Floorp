@@ -5,8 +5,8 @@
 "use strict";
 
 const Services = require("Services");
+const { throttle } = require("devtools/client/inspector/shared/utils");
 const flags = require("devtools/shared/flags");
-const { throttle } = require("devtools/shared/throttle");
 
 const {
   updateGridColor,
