@@ -20,9 +20,10 @@ window._gBrowser = {
   init() {
     ChromeUtils.defineModuleGetter(this, "AsyncTabSwitcher",
       "resource:///modules/AsyncTabSwitcher.jsm");
+    ChromeUtils.defineModuleGetter(this, "UrlbarProviderOpenTabs",
+      "resource:///modules/UrlbarProviderOpenTabs.jsm");
 
     XPCOMUtils.defineLazyServiceGetters(this, {
-      _unifiedComplete: ["@mozilla.org/autocomplete/search;1?name=unifiedcomplete", "mozIPlacesAutoComplete"],
       serializationHelper: ["@mozilla.org/network/serialization-helper;1", "nsISerializationHelper"],
       mURIFixup: ["@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
     });
@@ -2479,7 +2480,8 @@ window._gBrowser = {
         if (lazyBrowserURI) {
           // Lazy browser must be explicitly registered so tab will appear as
           // a switch-to-tab candidate in autocomplete.
-          this._unifiedComplete.registerOpenPage(lazyBrowserURI, userContextId);
+          this.UrlbarProviderOpenTabs.registerOpenTab(lazyBrowserURI.spec,
+                                                      userContextId);
           b.registeredOpenURI = lazyBrowserURI;
         }
       } else {
@@ -2947,8 +2949,9 @@ window._gBrowser = {
     }
 
     if (browser.registeredOpenURI && !aAdoptedByTab) {
-      this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI,
-        browser.getAttribute("usercontextid") || 0);
+      let userContextId = browser.getAttribute("usercontextid") || 0;
+      this.UrlbarProviderOpenTabs.unregisterOpenTab(browser.registeredOpenURI.spec,
+                                                    userContextId);
       delete browser.registeredOpenURI;
     }
 
@@ -3234,8 +3237,9 @@ window._gBrowser = {
 
     // Unregister the previously opened URI
     if (otherBrowser.registeredOpenURI) {
-      this._unifiedComplete.unregisterOpenPage(otherBrowser.registeredOpenURI,
-        otherBrowser.getAttribute("usercontextid") || 0);
+      let userContextId = otherBrowser.getAttribute("usercontextid") || 0;
+      this.UrlbarProviderOpenTabs.unregisterOpenTab(otherBrowser.registeredOpenURI.spec,
+                                                    userContextId);
       delete otherBrowser.registeredOpenURI;
     }
 
@@ -3854,6 +3858,16 @@ window._gBrowser = {
     }
   },
 
+  selectAllTabs() {
+    let visibleTabs = this.visibleTabs;
+    gBrowser.addRangeToMultiSelectedTabs(visibleTabs[0],
+                                         visibleTabs[visibleTabs.length - 1]);
+  },
+
+  allTabsSelected() {
+    return this.visibleTabs.every(t => t.multiselected);
+  },
+
   lockClearMultiSelectionOnce() {
     this._clearMultiSelectionLockedOnce = true;
     this._clearMultiSelectionLocked = true;
@@ -4368,8 +4382,9 @@ window._gBrowser = {
     for (let tab of this.tabs) {
       let browser = tab.linkedBrowser;
       if (browser.registeredOpenURI) {
-        this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI,
-          browser.getAttribute("usercontextid") || 0);
+        let userContextId = browser.getAttribute("usercontextid") || 0;
+        this.UrlbarProviderOpenTabs.unregisterOpenTab(browser.registeredOpenURI.spec,
+                                                      userContextId);
         delete browser.registeredOpenURI;
       }
 
@@ -5027,8 +5042,8 @@ class TabProgressListener {
 
       let userContextId = this.mBrowser.getAttribute("usercontextid") || 0;
       if (this.mBrowser.registeredOpenURI) {
-        gBrowser._unifiedComplete
-          .unregisterOpenPage(this.mBrowser.registeredOpenURI, userContextId);
+        let uri = this.mBrowser.registeredOpenURI;
+        gBrowser.UrlbarProviderOpenTabs.unregisterOpenTab(uri.spec, userContextId);
         delete this.mBrowser.registeredOpenURI;
       }
       // Tabs in private windows aren't registered as "Open" so
@@ -5036,7 +5051,8 @@ class TabProgressListener {
       if (!isBlankPageURL(aLocation.spec) &&
           (!PrivateBrowsingUtils.isWindowPrivate(window) ||
             PrivateBrowsingUtils.permanentPrivateBrowsing)) {
-        gBrowser._unifiedComplete.registerOpenPage(aLocation, userContextId);
+        gBrowser.UrlbarProviderOpenTabs.registerOpenTab(aLocation.spec,
+                                                        userContextId);
         this.mBrowser.registeredOpenURI = aLocation;
       }
 
@@ -5364,6 +5380,9 @@ var TabContextMenu = {
     this.contextTab.toggleMuteMenuItem = toggleMute;
     this.contextTab.toggleMultiSelectMuteMenuItem = toggleMultiSelectMute;
     this._updateToggleMuteMenuItems(this.contextTab);
+
+    let selectAllTabs = document.getElementById("context_selectAllTabs");
+    selectAllTabs.disabled = gBrowser.allTabsSelected();
 
     this.contextTab.addEventListener("TabAttrModified", this);
     aPopupMenu.addEventListener("popuphiding", this);

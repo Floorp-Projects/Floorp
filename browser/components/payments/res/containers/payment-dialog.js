@@ -374,13 +374,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
     this._renderPayerFields(state);
 
-    // hide the accepted cards list if the merchant didn't specify a preference
-    let basicCardMethod = request.paymentMethods
-      .find(method => method.supportedMethods == "basic-card");
-    let merchantNetworks = basicCardMethod && basicCardMethod.data &&
-                           basicCardMethod.data.supportedNetworks;
-    this._acceptedCardsList.hidden = !(merchantNetworks && merchantNetworks.length);
-
     let isMac = /mac/i.test(navigator.platform);
     for (let manageTextEl of this._manageText.children) {
       manageTextEl.hidden = manageTextEl.dataset.os == "mac" ? !isMac : isMac;
