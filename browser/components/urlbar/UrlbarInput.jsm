@@ -304,11 +304,11 @@ class UrlbarInput {
   _oninput(event) {
     this.valueIsTyped = true;
 
-    // XXX Fill in lastKey & maxResults, and add anything else we need.
+    // XXX Fill in lastKey, and add anything else we need.
     this.controller.handleQuery(new QueryContext({
       searchString: event.target.value,
       lastKey: "",
-      maxResults: 12,
+      maxResults: UrlbarPrefs.get("maxRichResults"),
       isPrivate: this.isPrivate,
     }));
   }
