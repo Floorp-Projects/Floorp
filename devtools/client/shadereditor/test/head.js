@@ -13,7 +13,6 @@ Services.scriptloader.loadSubScript(
 
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 var { DebuggerServer } = require("devtools/server/main");
-var { WebGLFront } = require("devtools/shared/fronts/webgl");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
 
@@ -153,7 +152,7 @@ function initBackend(aUrl) {
 
     await target.attach();
 
-    const front = new WebGLFront(target.client, target.form);
+    const front = target.getFront("webgl");
     return { target, front };
   })();
 }
