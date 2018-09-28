@@ -519,6 +519,12 @@ let buttonActions = {
     let body = paymentDialog.ownerDocument.body;
     body.dir = body.dir == "rtl" ? "ltr" : "rtl";
   },
+
+  toggleBranding() {
+    for (let container of paymentDialog.querySelectorAll("accepted-cards")) {
+      container.classList.toggle("branded");
+    }
+  },
 };
 
 window.addEventListener("click", function onButtonClick(evt) {

@@ -17,7 +17,8 @@ from subprocess import check_output
 __all__ = ['get_debugger_info',
            'get_default_debugger_name',
            'DebuggerSearch',
-           'get_default_valgrind_args']
+           'get_default_valgrind_args',
+           'DebuggerInfo']
 
 '''
 Map of debugging programs to information about them, like default arguments
@@ -71,6 +72,12 @@ _DEBUGGER_PRIORITIES = {
     'android': ['gdb'],
     'unknown': ['gdb']
 }
+
+
+DebuggerInfo = namedtuple(
+    'DebuggerInfo',
+    ['path', 'interactive', 'args', 'requiresEscapedArgs']
+)
 
 
 def _windbg_installation_paths():
@@ -176,11 +183,6 @@ def get_debugger_info(debugger, debuggerArgs=None, debuggerInteractive=False):
         return default
 
     # Define a namedtuple to access the debugger information from the outside world.
-    DebuggerInfo = namedtuple(
-        'DebuggerInfo',
-        ['path', 'interactive', 'args', 'requiresEscapedArgs']
-    )
-
     debugger_arguments = []
 
     if debuggerArgs:

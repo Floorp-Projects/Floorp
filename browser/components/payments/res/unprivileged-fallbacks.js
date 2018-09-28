@@ -103,4 +103,7 @@ var PaymentDialogUtils = {
     };
     return prefValues;
   },
+  isOfficialBranding() {
+    return false;
+  },
 };

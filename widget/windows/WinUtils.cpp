@@ -433,6 +433,7 @@ struct CoTaskMemFreePolicy
 
 SetThreadDpiAwarenessContextProc WinUtils::sSetThreadDpiAwarenessContext = NULL;
 EnableNonClientDpiScalingProc WinUtils::sEnableNonClientDpiScaling = NULL;
+GetSystemMetricsForDpiProc WinUtils::sGetSystemMetricsForDpi = NULL;
 
 /* static */
 void
@@ -454,6 +455,9 @@ WinUtils::Initialize()
         sSetThreadDpiAwarenessContext = (SetThreadDpiAwarenessContextProc)
           ::GetProcAddress(user32Dll, "SetThreadDpiAwarenessContext");
       }
+
+      sGetSystemMetricsForDpi = (GetSystemMetricsForDpiProc)
+        ::GetProcAddress(user32Dll, "GetSystemMetricsForDpi");
     }
   }
 }
@@ -669,6 +673,27 @@ WinUtils::MonitorFromRect(const gfx::Rect& rect)
   };
 
   return ::MonitorFromRect(&globalWindowBounds, MONITOR_DEFAULTTONEAREST);
+}
+
+/* static */
+bool
+WinUtils::HasSystemMetricsForDpi()
+{
+  return (sGetSystemMetricsForDpi != NULL);
+}
+
+/* static */
+int
+WinUtils::GetSystemMetricsForDpi(int nIndex, UINT dpi)
+{
+  if (HasSystemMetricsForDpi()) {
+    return sGetSystemMetricsForDpi(nIndex, dpi);
+  } else {
+    double scale = IsPerMonitorDPIAware()
+      ? dpi / SystemDPI()
+      : 1.0;
+    return NSToIntRound(::GetSystemMetrics(nIndex) * scale);
+  }
 }
 
 #ifdef ACCESSIBILITY

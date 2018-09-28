@@ -123,10 +123,6 @@ var whitelist = [
   {file: "resource://app/modules/translation/GoogleTranslator.jsm"},
   {file: "resource://app/modules/translation/YandexTranslator.jsm"},
 
-  // The Quantum Bar files are not in use yet, but we plan to start using them
-  // soon in parallel to the old implementation.
-  {file: "resource://app/modules/UrlbarTokenizer.jsm"},
-
   // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339424 (wontfix?)
   {file: "chrome://browser/locale/taskbar.properties",

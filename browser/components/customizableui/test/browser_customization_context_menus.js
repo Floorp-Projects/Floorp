@@ -58,6 +58,7 @@ add_task(async function tabstrip_context() {
   let expectedEntries = [
     ["#toolbar-context-reloadAllTabs", true],
     ["#toolbar-context-bookmarkAllTabs", true],
+    ["#toolbar-context-selectAllTabs", true],
     ["#toolbar-context-undoCloseTab", !closedTabsAvailable],
     ["---"],
   ];
