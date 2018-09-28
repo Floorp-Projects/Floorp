@@ -463,6 +463,7 @@ class TupBackend(CommonBackend):
     def _gen_program(self, backend_file, prog):
         cc_or_cxx = 'CXX' if prog.cxx_link else 'CC'
         objs, _, _, shared_libs, os_libs, static_libs = self._expand_libs(prog)
+
         static_libs = self._lib_paths(backend_file.objdir, static_libs)
         shared_libs = self._lib_paths(backend_file.objdir, shared_libs)
 
@@ -470,6 +471,16 @@ class TupBackend(CommonBackend):
         # so depend on the installed libraries here. This can be made more
         # accurate once we start building libraries in their final locations.
         inputs = objs + static_libs + shared_libs + [self._shlibs]
+
+
+        rust_linked = [l for l in prog.linked_libraries
+                       if isinstance(l, RustLibrary)]
+
+        extra_inputs = []
+        if rust_linked:
+            extra_inputs = [self._rust_output_group(rust_linked[0].output_category) or
+                            self._rust_libs]
+            static_libs += self._lib_paths(backend_file.objdir, rust_linked)
 
         list_file_name = '%s.list' % prog.name.replace('.', '_')
         list_file = self._make_list_file(backend_file.objdir, objs, list_file_name)
@@ -494,6 +505,7 @@ class TupBackend(CommonBackend):
         backend_file.rule(
             cmd=cmd,
             inputs=inputs,
+            extra_inputs=extra_inputs,
             outputs=outputs,
             display='LINK %o'
         )
