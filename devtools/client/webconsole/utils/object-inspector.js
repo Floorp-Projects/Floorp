@@ -5,12 +5,10 @@
 "use strict";
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const ObjectClient = require("devtools/shared/client/object-client");
-const LongStringClient = require("devtools/shared/client/long-string-client");
 
 const reps = require("devtools/client/shared/components/reps/reps");
-const { REPS, MODE } = reps;
-const ObjectInspector = createFactory(reps.ObjectInspector);
+const { REPS, MODE, objectInspector } = reps;
+const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 const { Grip } = REPS;
 
 /**
@@ -30,6 +28,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
   let onDOMNodeMouseOver;
   let onDOMNodeMouseOut;
   let onInspectIconClick;
+
   if (serviceContainer) {
     onDOMNodeMouseOver = serviceContainer.highlightDomElement
       ? (object) => serviceContainer.highlightDomElement(object)
@@ -50,16 +49,6 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
     autoExpandDepth: 0,
     mode: MODE.LONG,
     roots,
-    createObjectClient: object =>
-      new ObjectClient(serviceContainer.hudProxy.client, object),
-    createLongStringClient: object =>
-      new LongStringClient(serviceContainer.hudProxy.client, object),
-    releaseActor: actor => {
-      if (!actor || !serviceContainer.hudProxy.releaseActor) {
-        return;
-      }
-      serviceContainer.hudProxy.releaseActor(actor);
-    },
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
     openLink: serviceContainer.openLink,
@@ -85,7 +74,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
 
 function createRootsFromGrip(grip) {
   return [{
-    path: (grip && grip.actor) || JSON.stringify(grip),
+    path: Symbol((grip && grip.actor) || JSON.stringify(grip)),
     contents: { value: grip }
   }];
 }

@@ -63,13 +63,9 @@ add_task(async function init() {
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
   });
-  textbox = searchbar._textbox;
-  searchIcon = document.getAnonymousElementByAttribute(
-    searchbar, "anonid", "searchbar-search-button"
-  );
-  goButton = document.getAnonymousElementByAttribute(
-    searchbar, "anonid", "search-go-button"
-  );
+  textbox = searchbar.textbox;
+  searchIcon = searchbar.querySelector(".searchbar-search-button");
+  goButton = searchbar.querySelector(".search-go-button");
 
   await promiseNewEngine("testEngine.xml");
 
@@ -231,7 +227,7 @@ add_task(async function focus_change_closes_popup() {
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
   promise = promiseEvent(searchPopup, "popuphidden");
-  let promise2 = promiseEvent(searchbar, "blur");
+  let promise2 = promiseEvent(searchbar.textbox, "blur");
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   await promise;
   await promise2;
@@ -254,7 +250,7 @@ add_task(async function focus_change_closes_small_popup() {
   is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
 
   promise = promiseEvent(searchPopup, "popuphidden");
-  let promise2 = promiseEvent(searchbar, "blur");
+  let promise2 = promiseEvent(searchbar.textbox, "blur");
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   await promise;
   await promise2;
@@ -369,7 +365,7 @@ add_task(async function refocus_window_doesnt_open_popup_mouse() {
   }
   searchPopup.addEventListener("popupshowing", listener);
 
-  promise = promiseEvent(searchbar, "focus");
+  promise = promiseEvent(searchbar.textbox, "focus");
   newWin.close();
   await promise;
 
@@ -406,7 +402,7 @@ add_task(async function refocus_window_doesnt_open_popup_keyboard() {
   }
   searchPopup.addEventListener("popupshowing", listener);
 
-  promise = promiseEvent(searchbar, "focus");
+  promise = promiseEvent(searchbar.textbox, "focus");
   newWin.close();
   await promise;
 

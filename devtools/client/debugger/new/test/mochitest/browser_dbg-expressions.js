@@ -87,9 +87,11 @@ add_task(async function() {
   // Test expanding properties when the debuggee is active
   await resume(dbg);
   await addExpression(dbg, "location");
-  await toggleExpressionNode(dbg, 1);
 
   is(findAllElements(dbg, "expressionNodes").length, 17);
+
+  await toggleExpressionNode(dbg, 1);
+  is(findAllElements(dbg, "expressionNodes").length, 1);
 
   await deleteExpression(dbg, "location");
   is(findAllElements(dbg, "expressionNodes").length, 0);
