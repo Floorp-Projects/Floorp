@@ -981,6 +981,17 @@
     "n_buckets": 100,
     "description": "Unique Set Size (KB)"
   },
+  "MEMORY_UNIQUE_CONTENT_STARTUP": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["erahm@mozilla.com", "memshrink-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1494827],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 2048,
+    "high": 131072,
+    "n_buckets": 100,
+    "description": "Unique Set Size of Content Process at Startup (KB)"
+  },
   "MEMORY_VSIZE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
