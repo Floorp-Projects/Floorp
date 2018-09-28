@@ -7,9 +7,10 @@
 const promise = require("promise");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const UserProperties = require("devtools/client/inspector/rules/models/user-properties");
-const { promiseWarn } = require("devtools/client/inspector/shared/utils");
 const { getCssProperties, isCssVariable } = require("devtools/shared/fronts/css-properties");
 const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
+
+loader.lazyRequireGetter(this, "promiseWarn", "devtools/client/inspector/shared/utils", true);
 
 /**
  * ElementStyle is responsible for the following:
