@@ -1795,6 +1795,12 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
              aPseudoElement == CSSPseudoElementType::after,
              "unexpected aPseudoElement");
 
+  if (aParentFrame && aParentFrame->IsHTMLVideoFrame()) {
+    // Video frames may not be leafs when backed by an UA widget, but we still don't want to expose generated content.
+    MOZ_ASSERT(aOriginatingElement.GetShadowRoot()->IsUAWidget());
+    return;
+  }
+
   ServoStyleSet* styleSet = mPresShell->StyleSet();
 
   // Probe for the existence of the pseudo-element
