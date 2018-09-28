@@ -45,17 +45,19 @@ class Fretboard(
      * saves them to local storage
      */
     @Synchronized
-    fun updateExperiments() {
+    fun updateExperiments(): Boolean {
         if (!experimentsLoaded) {
             loadExperiments()
         }
-        try {
+        return try {
             val serverExperiments = source.getExperiments(experimentsResult)
             experimentsResult = serverExperiments
             storage.save(serverExperiments)
+            true
         } catch (e: ExperimentDownloadException) {
             // Keep using the local experiments
             logger.error(e.message, e)
+            false
         }
     }
 

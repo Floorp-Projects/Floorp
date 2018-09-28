@@ -8,7 +8,6 @@ import androidx.work.Constraints
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import java.util.concurrent.TimeUnit
 
 /**
@@ -17,27 +16,21 @@ import java.util.concurrent.TimeUnit
  */
 class WorkManagerSyncScheduler {
     /**
-     * Schedule sync with the request specified
-     *
-     * @param request object with the sync request configuration
-     */
-    fun schedule(request: WorkRequest) {
-        WorkManager.getInstance().enqueue(request)
-    }
-
-    /**
      * Schedule sync with the default constraints
      * (once a day and charging)
      *
      * @param worker worker class
      */
-    fun schedule(worker: Class<out SyncWorker>) {
+    fun schedule(
+        worker: Class<out SyncWorker>,
+        interval: Pair<Long, TimeUnit> = Pair(1, TimeUnit.DAYS)
+    ) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-        val syncWork = PeriodicWorkRequest.Builder(SyncWorker::class.java, 1, TimeUnit.DAYS)
+        val syncWork = PeriodicWorkRequest.Builder(worker, interval.first, interval.second)
             .setConstraints(constraints)
             .build()
-        schedule(syncWork)
+        WorkManager.getInstance().enqueue(syncWork)
     }
 }
