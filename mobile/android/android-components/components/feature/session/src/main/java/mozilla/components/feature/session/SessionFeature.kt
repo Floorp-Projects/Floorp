@@ -52,6 +52,6 @@ class SessionFeature(
         presenter.stop()
 
         sessionStorage?.stop()
-        sessionStorage?.persist(sessionManager)
+        sessionStorage?.persist(sessionManager.engine, sessionManager.createSnapshot())
     }
 }

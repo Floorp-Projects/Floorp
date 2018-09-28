@@ -4,7 +4,10 @@
 
 package mozilla.components.browser.session
 
+import android.support.annotation.GuardedBy
 import mozilla.components.browser.session.engine.EngineObserver
+import mozilla.components.browser.session.storage.SessionWithState
+import mozilla.components.browser.session.storage.SessionsSnapshot
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.base.observer.Observable
@@ -20,6 +23,8 @@ class SessionManager(
     delegate: Observable<SessionManager.Observer> = ObserverRegistry()
 ) : Observable<SessionManager.Observer> by delegate {
     private val values = mutableListOf<Session>()
+
+    @GuardedBy("values")
     private var selectedIndex: Int = NO_SELECTION
 
     /**
@@ -27,6 +32,25 @@ class SessionManager(
      */
     val size: Int
         get() = synchronized(values) { values.size }
+
+    /**
+     * Returns a snapshot suitable for persisting for "session read" purposes.
+     */
+    fun createSnapshot(): SessionsSnapshot = synchronized(values) {
+        // Filter out CustomTab and private sessions.
+        // We're using 'values' directly instead of 'sessions' to get benefits of a sequence.
+        values.asSequence()
+                .filter { !it.isCustomTabSession() }
+                .filter { !it.private }
+                .mapIndexed { index, session ->
+                    SessionWithState(
+                            session,
+                            selectedIndex == index,
+                            session.engineSessionHolder.engineSession
+                    )
+                }
+                .toList()
+    }
 
     /**
      * Gets the currently selected session if there is one.
@@ -78,7 +102,16 @@ class SessionManager(
         engineSession: EngineSession? = null,
         parent: Session? = null
     ) = synchronized(values) {
+        addInternal(session, selected, engineSession, parent, viaRestore = false)
+    }
 
+    private fun addInternal(
+        session: Session,
+        selected: Boolean = false,
+        engineSession: EngineSession? = null,
+        parent: Session? = null,
+        viaRestore: Boolean = false
+    ) = synchronized(values) {
         if (parent != null) {
             val parentIndex = values.indexOf(parent)
 
@@ -95,11 +128,42 @@ class SessionManager(
 
         engineSession?.let { link(session, it) }
 
-        notifyObservers { onSessionAdded(session) }
+        if (!viaRestore) {
+            notifyObservers { onSessionAdded(session) }
+        }
 
-        if (selected || (selectedIndex == NO_SELECTION && !session.isCustomTabSession())) {
+        // We're only auto-selecting session on empty selection index during a regular add (not via
+        // restore). That's because during a read, we know exactly which session will be the
+        // selected one. It does not make sense to go through selection twice in that case - when
+        // the first session was added, and then when the "selected" was added.
+        val autoSelect = !viaRestore && selectedIndex == NO_SELECTION && !session.isCustomTabSession()
+        if (selected || autoSelect) {
             select(session)
         }
+    }
+
+    /**
+     * Restores sessions from the provided snapshot.
+     * Notification behaviour is as follows:
+     * - onSessionAdded notifications will not fire,
+     * - onSessionSelected notification will fire exactly once if the snapshot isn't empty,
+     * - once snapshot has been restored, and appropriate session has been selected, onSessionsRestored
+     *   notification will fire.
+     * If a non-empty snapshot doesn't contain a selected session, first session will be selected.
+     */
+    fun restore(snapshot: SessionsSnapshot) {
+        snapshot.forEach {
+            addInternal(it.session,
+                    selected = it.selected, engineSession = it.engineSession, viaRestore = true
+            )
+        }
+
+        // In case snapshot didn't contain a selected session, select the very first one.
+        if (selectedIndex == NO_SELECTION && snapshot.isNotEmpty()) {
+            select(snapshot[0].session)
+        }
+
+        notifyObservers { onSessionsRestored() }
     }
 
     /**
@@ -308,6 +372,13 @@ class SessionManager(
          * The given session has been added.
          */
         fun onSessionAdded(session: Session) = Unit
+
+        /**
+         * Sessions have been restored via a snapshot. This callback is invoked at the end of the
+         * call to <code>read</code>, after every session in the snapshot was added, and
+         * appropriate session was selected.
+         */
+        fun onSessionsRestored() = Unit
 
         /**
          * The given session has been removed.

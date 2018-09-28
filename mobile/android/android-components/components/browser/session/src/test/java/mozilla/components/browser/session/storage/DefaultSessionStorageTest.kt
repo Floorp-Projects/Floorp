@@ -8,15 +8,15 @@ import android.util.AtomicFile
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -53,113 +53,51 @@ class DefaultSessionStorageTest {
         `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
 
-        val sessionManager = SessionManager(engine)
-        sessionManager.add(session1, true, engineSession)
-        sessionManager.add(session2)
+        // Engine session just for one of the sessions for simplicity.
+        val sessionsSnapshot = mutableListOf<SessionWithState>()
+        sessionsSnapshot.add(SessionWithState(session1, selected = true, engineSession = engineSession))
+        sessionsSnapshot.add(SessionWithState(session2, selected = false))
 
-        // Persist current sessions
+        // Persist the snapshot
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
-        val persisted = storage.persist(sessionManager)
+        val persisted = storage.persist(engine, sessionsSnapshot)
         assertTrue(persisted)
 
-        // Restore session using a fresh SessionManager
-        val restoredSessionManager = SessionManager(engine)
-        val restored = storage.restore(restoredSessionManager)
-        assertTrue(restored)
-        assertEquals(2, restoredSessionManager.sessions.size)
+        // Read it back
+        val restoredSnapshot = storage.read(engine)
+        assertNotNull(restoredSnapshot)
+        assertEquals(2, restoredSnapshot!!.size)
 
-        val restoredSession = restoredSessionManager.sessions.first()
-        assertEquals(session1, restoredSession)
-        assertEquals(session1.id, restoredSessionManager.selectedSessionOrThrow.id)
-        assertEquals(session1.url, restoredSession.url)
+        assertEquals(session1, restoredSnapshot[0].session)
+        assertEquals(session1.url, restoredSnapshot[0].session.url)
+        assertEquals(true, restoredSnapshot[0].selected)
 
-        val restoredEngineSession = restoredSessionManager.sessions.first().engineSessionHolder.engineSession
+        assertEquals(session2, restoredSnapshot[1].session)
+        assertEquals(session2.url, restoredSnapshot[1].session.url)
+        assertEquals(false, restoredSnapshot[1].selected)
+
+        val restoredEngineSession = restoredSnapshot[0].engineSession
         assertNotNull(restoredEngineSession)
         verify(restoredEngineSession)!!.restoreState(engineSessionState.filter { it.key != "k3" })
-
-        assertEquals(session2, restoredSessionManager.sessions.last())
     }
 
     @Test
-    fun persistAndRestoreWithoutSession() {
+    fun persistAndRestoreEmptySnapshot() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
-        val sessionManager = SessionManager(engine)
-
-        // Persist current sessions
+        // Persist empty snapshot
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
-        val persisted = storage.persist(sessionManager)
+        val persisted = storage.persist(engine, listOf())
         assertTrue(persisted)
 
         // Restore sessions using a fresh SessionManager
-        val restoredSessionManager = SessionManager(engine)
-        val restored = storage.restore(restoredSessionManager)
-        assertTrue(restored)
-        assertEquals(0, restoredSessionManager.sessions.size)
+        val restoredSnapshot = storage.read(engine)
+        assertEquals(0, restoredSnapshot!!.size)
     }
 
     @Test
-    fun persistIgnoresCustomTabSessions() {
-        val session = Session("http://mozilla.org")
-        session.customTabConfig = mock(CustomTabConfig::class.java)
-        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
-
-        val engineSession = mock(EngineSession::class.java)
-        `when`(engineSession.saveState()).thenReturn(engineSessionState)
-
-        val engine = mock(Engine::class.java)
-        `when`(engine.name()).thenReturn("gecko")
-        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
-
-        val sessionManager = SessionManager(engine)
-        sessionManager.add(session, true, engineSession)
-
-        // Persist current sessions
-        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
-        val persisted = storage.persist(sessionManager)
-        assertTrue(persisted)
-
-        // Restore session using a fresh SessionManager
-        val restoredSessionManager = SessionManager(engine)
-        val restored = storage.restore(restoredSessionManager)
-        assertTrue(restored)
-
-        // Nothing to restore as CustomTab sessions should not be persisted
-        assertEquals(0, restoredSessionManager.sessions.size)
-    }
-
-    @Test
-    fun persistIgnoresPrivateSessions() {
-        val session = Session("http://mozilla.org", true)
-        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
-
-        val engineSession = mock(EngineSession::class.java)
-        `when`(engineSession.saveState()).thenReturn(engineSessionState)
-
-        val engine = mock(Engine::class.java)
-        `when`(engine.name()).thenReturn("gecko")
-        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
-
-        val sessionManager = SessionManager(engine)
-        sessionManager.add(session, true, engineSession)
-
-        // Persist current sessions
-        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
-        val persisted = storage.persist(sessionManager)
-        assertTrue(persisted)
-
-        // Restore session using a fresh SessionManager
-        val restoredSessionManager = SessionManager(engine)
-        val restored = storage.restore(restoredSessionManager)
-        assertTrue(restored)
-
-        // Nothing to restore as private sessions should not be persisted
-        assertEquals(0, restoredSessionManager.sessions.size)
-    }
-
-    @Test
-    fun restoreReturnsFalseOnIOException() {
+    fun restoreReturnsNullOnIOException() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
@@ -170,12 +108,11 @@ class DefaultSessionStorageTest {
         doReturn(file).`when`(storage).getFile(anyString())
         doThrow(FileNotFoundException::class.java).`when`(file).openRead()
 
-        val restored = storage.restore(SessionManager(engine))
-        assertFalse(restored)
+        assertNull(storage.read(engine))
     }
 
     @Test
-    fun restoreReturnsFalseOnJSONException() {
+    fun restoreReturnsNullOnJSONException() {
         val session = Session("http://mozilla.org")
         val engineSession = mock(EngineSession::class.java)
 
@@ -183,16 +120,14 @@ class DefaultSessionStorageTest {
         `when`(engine.name()).thenReturn("gecko")
         `when`(engine.createSession()).thenReturn(engineSession)
 
-        val sessionManager = SessionManager(engine)
-        sessionManager.add(session, true, engineSession)
+        val sessionsSnapshot = listOf(SessionWithState(session, true, engineSession))
 
         val storage = spy(DefaultSessionStorage(RuntimeEnvironment.application))
-        val persisted = storage.persist(sessionManager)
+        val persisted = storage.persist(engine, sessionsSnapshot)
         assertTrue(persisted)
 
         doThrow(JSONException::class.java).`when`(storage).deserializeSession(anyString(), anyJson())
-        val restored = storage.restore(SessionManager(engine))
-        assertFalse(restored)
+        assertNull(storage.read(engine))
     }
 
     @Test
@@ -206,14 +141,12 @@ class DefaultSessionStorageTest {
         val storage = spy(DefaultSessionStorage(context))
         val file = mock(AtomicFile::class.java)
 
-        val sessionManager = SessionManager(engine)
-        sessionManager.add(session, true, engineSession)
+        val sessionsSnapshot = listOf(SessionWithState(session, true, engineSession))
 
         doReturn(file).`when`(storage).getFile(anyString())
         doThrow(IOException::class.java).`when`(file).startWrite()
 
-        val persisted = storage.persist(sessionManager)
-        assertFalse(persisted)
+        assertFalse(storage.persist(engine, sessionsSnapshot))
     }
 
     @Test
@@ -227,13 +160,12 @@ class DefaultSessionStorageTest {
         val storage = spy(DefaultSessionStorage(context))
         val file = mock(AtomicFile::class.java)
 
-        val sessionManager = SessionManager(engine)
-        sessionManager.add(session, true, engineSession)
+        val sessionsSnapshot = listOf(SessionWithState(session, true, engineSession))
 
         doReturn(file).`when`(storage).getFile(anyString())
         doThrow(JSONException::class.java).`when`(storage).serializeSession(session)
 
-        val persisted = storage.persist(sessionManager)
+        val persisted = storage.persist(engine, sessionsSnapshot)
         assertFalse(persisted)
     }
 

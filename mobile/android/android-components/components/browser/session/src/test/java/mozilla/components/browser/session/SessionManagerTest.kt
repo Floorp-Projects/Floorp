@@ -5,6 +5,7 @@
 package mozilla.components.browser.session
 
 import android.graphics.Bitmap
+import mozilla.components.browser.session.storage.SessionWithState
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -15,11 +16,15 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.never
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.never
+import org.mockito.Mockito.times
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 
 class SessionManagerTest {
     @Test
@@ -288,6 +293,181 @@ class SessionManagerTest {
         val manager = SessionManager(mock())
 
         assertEquals(0, manager.size)
+    }
+
+    @Test
+    fun `createSnapshot works when manager has no sessions`() {
+        val manager = SessionManager(mock())
+        assertEquals(0, manager.createSnapshot().size)
+    }
+
+    @Test
+    fun `createSnapshot ignores private sessions`() {
+        val manager = SessionManager(mock())
+        val session = Session("http://mozilla.org", true)
+        manager.add(session)
+
+        assertEquals(0, manager.createSnapshot().size)
+    }
+
+    @Test
+    fun `createSnapshot ignores CustomTab sessions`() {
+        val manager = SessionManager(mock())
+        val session = Session("http://mozilla.org")
+        session.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
+        manager.add(session)
+
+        assertEquals(0, manager.createSnapshot().size)
+    }
+
+    @Test
+    fun `createSnapshot ignores private CustomTab sessions`() {
+        val manager = SessionManager(mock())
+        val session = Session("http://mozilla.org", true)
+        session.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
+        manager.add(session)
+
+        assertEquals(0, manager.createSnapshot().size)
+    }
+
+    @Test
+    fun `restore may be used to bulk-add session from a SessionsSnapshot`() {
+        val manager = SessionManager(mock())
+
+        // Empty snapshot.
+        manager.restore(listOf())
+        assertEquals(0, manager.size)
+
+        // Just one session in the snapshot.
+        manager.restore(listOf(SessionWithState(session = Session("http://www.mozilla.org"))))
+        assertEquals(1, manager.size)
+        assertEquals("http://www.mozilla.org", manager.selectedSessionOrThrow.url)
+
+        // Multiple sessions in the snapshot.
+        val regularSession = Session("http://www.firefox.com")
+        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
+        val engineSession = mock(EngineSession::class.java)
+        `when`(engineSession.saveState()).thenReturn(engineSessionState)
+
+        manager.restore(listOf(
+                SessionWithState(session = regularSession, selected = true, engineSession = engineSession),
+                SessionWithState(session = Session("http://www.wikipedia.org"))
+        ))
+        assertEquals(3, manager.size)
+        assertEquals("http://www.firefox.com", manager.selectedSessionOrThrow.url)
+        val snapshotState = manager.selectedSessionOrThrow.engineSessionHolder.engineSession!!.saveState()
+        assertEquals(4, snapshotState.size)
+        assertEquals("v0", snapshotState["k0"])
+        assertEquals(1, snapshotState["k1"])
+        assertEquals(true, snapshotState["k2"])
+        assertEquals(emptyList<Any>(), snapshotState["k3"])
+    }
+
+    @Test
+    fun `restore fires correct notifications`() {
+        val manager = SessionManager(mock())
+
+        val observer: SessionManager.Observer = mock()
+        manager.register(observer)
+
+        // Empty snapshot will only fire onSessionsRestored
+        manager.restore(listOf())
+
+        assertEquals(0, manager.size)
+        verify(observer, times(1)).onSessionsRestored()
+
+        reset(observer)
+
+        val session = Session("http://www.mozilla.org")
+        // Snapshot with a single session without a selected session.
+        manager.restore(listOf(SessionWithState(session)))
+
+        verify(observer, times(1)).onSessionsRestored()
+        verify(observer, never()).onSessionAdded(session)
+        verify(observer, times(1)).onSessionSelected(session)
+
+        manager.removeAll()
+        reset(observer)
+
+        val session2 = Session("http://www.firefox.com")
+        // Snapshot with multiple sessions, none are selected.
+        manager.restore(listOf(SessionWithState(session2), SessionWithState(session)))
+
+        assertEquals(2, manager.size)
+        verify(observer, times(1)).onSessionsRestored()
+        verify(observer, never()).onSessionAdded(session)
+        verify(observer, never()).onSessionAdded(session2)
+        verify(observer, never()).onSessionSelected(session)
+        verify(observer, times(1)).onSessionSelected(session2)
+
+        manager.removeAll()
+        reset(observer)
+
+        val session3 = Session("http://www.wikipedia.org")
+        // Snapshot with multiple sessions, one is selected.
+        manager.restore(listOf(SessionWithState(session2), SessionWithState(session3, selected = true), SessionWithState(session)))
+
+        assertEquals(3, manager.size)
+        verify(observer, times(1)).onSessionsRestored()
+        verify(observer, never()).onSessionAdded(session)
+        verify(observer, never()).onSessionAdded(session2)
+        verify(observer, never()).onSessionAdded(session3)
+        verify(observer, never()).onSessionSelected(session)
+        verify(observer, never()).onSessionSelected(session2)
+        verify(observer, times(1)).onSessionSelected(session3)
+
+        manager.removeAll()
+        reset(observer)
+
+        // Snapshot with multiple sessions, multiple are selected.
+        manager.restore(listOf(SessionWithState(session2, selected = true), SessionWithState(session3, selected = true), SessionWithState(session)))
+
+        assertEquals(3, manager.size)
+        verify(observer, times(1)).onSessionsRestored()
+        verify(observer, never()).onSessionAdded(session)
+        verify(observer, never()).onSessionAdded(session2)
+        verify(observer, never()).onSessionAdded(session3)
+        verify(observer, never()).onSessionSelected(session)
+        verify(observer, times(1)).onSessionSelected(session2)
+        verify(observer, times(1)).onSessionSelected(session3)
+    }
+
+    @Test
+    fun `createSnapshot produces a correct snapshot of sessions`() {
+        val manager = SessionManager(mock())
+        val customTabSession = Session("http://mozilla.org")
+        customTabSession.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
+        val privateSession = Session("http://www.secret.com", true)
+        val privateCustomTabSession = Session("http://very.secret.com", true)
+        privateCustomTabSession.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
+
+        val regularSession = Session("http://www.firefox.com")
+        val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
+        val engineSession = mock(EngineSession::class.java)
+        `when`(engineSession.saveState()).thenReturn(engineSessionState)
+
+        val engine = mock(Engine::class.java)
+        `when`(engine.name()).thenReturn("gecko")
+        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java))
+
+        manager.add(regularSession, true, engineSession)
+        manager.add(privateSession)
+        manager.add(customTabSession)
+        manager.add(privateCustomTabSession)
+
+        val snapshot = manager.createSnapshot()
+        assertEquals(1, snapshot.size)
+
+        val snapshotSession = snapshot[0]
+        assertEquals("http://www.firefox.com", snapshotSession.session.url)
+        assertTrue(snapshotSession.selected)
+
+        val snapshotState = snapshotSession.engineSession!!.saveState()
+        assertEquals(4, snapshotState.size)
+        assertEquals("v0", snapshotState["k0"])
+        assertEquals(1, snapshotState["k1"])
+        assertEquals(true, snapshotState["k2"])
+        assertEquals(emptyList<Any>(), snapshotState["k3"])
     }
 
     @Test

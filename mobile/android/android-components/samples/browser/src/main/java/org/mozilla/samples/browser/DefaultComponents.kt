@@ -38,12 +38,15 @@ open class DefaultComponents(private val applicationContext: Context) {
     val sessionStorage by lazy { DefaultSessionStorage(applicationContext) }
 
     val sessionManager by lazy {
-        SessionManager(engine, defaultSession = { Session("about:blank") }).apply {
-            sessionStorage.restore(this)
+        SessionManager(engine,
+                defaultSession = { Session("about:blank") }
+        ).apply {
+            sessionStorage.read(engine)?.let {
+                restore(it)
+            }
 
             if (size == 0) {
-                val initialSession = Session("https://www.mozilla.org")
-                add(initialSession)
+                add(Session("https://www.mozilla.org"))
             }
         }
     }

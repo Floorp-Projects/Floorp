@@ -57,7 +57,7 @@ class DefaultSessionStorage(
     override fun start(sessionManager: SessionManager) {
         if (savePeriodically) {
             scheduledFuture = scheduler.scheduleAtFixedRate(
-                { persist(sessionManager) },
+                { persist(sessionManager.engine, sessionManager.createSnapshot()) },
                 saveIntervalInSeconds,
                 saveIntervalInSeconds,
                 TimeUnit.SECONDS)
@@ -69,9 +69,11 @@ class DefaultSessionStorage(
     }
 
     @Synchronized
-    override fun restore(sessionManager: SessionManager): Boolean {
-        return try {
-            getFile(sessionManager.engine.name()).openRead().use {
+    override fun read(engine: Engine): SessionsSnapshot? {
+        val snapshot: MutableList<SessionWithState> = mutableListOf()
+
+        try {
+            getFile(engine.name()).openRead().use {
                 val json = it.bufferedReader().use {
                     it.readText()
                 }
@@ -85,41 +87,43 @@ class DefaultSessionStorage(
                     val jsonSession = jsonRoot.getJSONObject(it)
                     val session = deserializeSession(it, jsonSession.getJSONObject(SESSION_KEY))
                     val engineSession = deserializeEngineSession(
-                        sessionManager.engine,
-                        jsonSession.getJSONObject(ENGINE_SESSION_KEY))
-                    sessionManager.add(session, engineSession = engineSession)
-                }
+                            engine,
+                            jsonSession.getJSONObject(ENGINE_SESSION_KEY))
 
-                sessionManager.findSessionById(selectedSessionId)?.let { session ->
-                    sessionManager.select(session)
+                    snapshot.add(SessionWithState(
+                            session,
+                            session.id == selectedSessionId,
+                            engineSession
+                    ))
                 }
             }
-            true
         } catch (_: IOException) {
-            false
+            return null
         } catch (_: JSONException) {
-            false
+            return null
         }
+
+        return snapshot
     }
 
     @Synchronized
-    override fun persist(sessionManager: SessionManager): Boolean {
+    override fun persist(engine: Engine, snapshot: SessionsSnapshot): Boolean {
         var file: AtomicFile? = null
         var outputStream: FileOutputStream? = null
 
         return try {
             val json = JSONObject()
             json.put(VERSION_KEY, VERSION)
-            json.put(SELECTED_SESSION_KEY, sessionManager.selectedSession?.id ?: "")
+            json.put(SELECTED_SESSION_KEY, snapshot.find { it.selected }?.session?.id ?: "")
 
-            sessionManager.sessions.filter { !it.private }.forEach { session ->
+            snapshot.forEach {
                 val sessionJson = JSONObject()
-                sessionJson.put(SESSION_KEY, serializeSession(session))
-                sessionJson.put(ENGINE_SESSION_KEY, serializeEngineSession(sessionManager.getEngineSession(session)))
-                json.put(session.id, sessionJson)
+                sessionJson.put(SESSION_KEY, serializeSession(it.session))
+                sessionJson.put(ENGINE_SESSION_KEY, serializeEngineSession(it.engineSession))
+                json.put(it.session.id, sessionJson)
             }
 
-            file = getFile(sessionManager.engine.name())
+            file = getFile(engine.name())
             outputStream = file.startWrite()
             outputStream.write(json.toString().toByteArray())
             file.finishWrite(outputStream)
