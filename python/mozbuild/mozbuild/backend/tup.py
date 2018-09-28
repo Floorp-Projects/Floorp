@@ -51,6 +51,7 @@ from ..frontend.data import (
     HostProgram,
     HostSimpleProgram,
     RustLibrary,
+    RustProgram,
     SharedLibrary,
     Sources,
     StaticLibrary,
@@ -657,7 +658,7 @@ class TupBackend(CommonBackend):
             backend_file.host_sources[obj.canonical_suffix].extend(obj.files)
         elif isinstance(obj, VariablePassthru):
             backend_file.variables = obj.variables
-        elif isinstance(obj, RustLibrary):
+        elif isinstance(obj, (RustLibrary, RustProgram)):
             self._gen_rust_rules(obj, backend_file)
         elif isinstance(obj, StaticLibrary):
             backend_file.static_lib = obj
@@ -752,25 +753,37 @@ class TupBackend(CommonBackend):
             self._cmd.run_process(cwd=tup_base_dir, log_name='tup', args=[tup, 'init', '--no-sync'])
 
     def _get_cargo_flags(self, obj):
+
+        def output_flags(obj):
+            if isinstance(obj, RustLibrary):
+                return ['--lib']
+            if isinstance(obj, RustProgram):
+                return ['--bin', obj.name]
+
+        def feature_flags(obj):
+            if isinstance(obj, RustLibrary) and obj.features:
+                return ['--features', ' '.join(obj.features)]
+            return []
+
         cargo_flags = ['--build-plan', '-Z', 'unstable-options']
         if not self.environment.substs.get('MOZ_DEBUG_RUST'):
             cargo_flags += ['--release']
         cargo_flags += [
             '--frozen',
             '--manifest-path', mozpath.join(obj.srcdir, 'Cargo.toml'),
-            '--lib',
+        ] + output_flags(obj) + [
             '--target=%s' % self.environment.substs['RUST_TARGET'],
-        ]
-        if obj.features:
-            cargo_flags += [
-                '--features', ' '.join(obj.features)
-            ]
+        ] + feature_flags(obj)
+
         return cargo_flags
 
     def _get_cargo_env(self, lib, backend_file):
+        cargo_target_dir = mozpath.normpath(lib.objdir)
+        if isinstance(lib, RustLibrary):
+            cargo_target_dir = mozpath.normpath(mozpath.join(cargo_target_dir,
+                                                             lib.target_dir))
         env = {
-            'CARGO_TARGET_DIR': mozpath.normpath(mozpath.join(lib.objdir,
-                                                              lib.target_dir)),
+            'CARGO_TARGET_DIR': cargo_target_dir,
             'RUSTC': self.environment.substs['RUSTC'],
             'MOZ_SRC': self.environment.topsrcdir,
             'MOZ_DIST': self.environment.substs['DIST'],
@@ -810,7 +823,7 @@ class TupBackend(CommonBackend):
 
         return env
 
-    def _gen_cargo_rules(self, backend_file, build_plan, cargo_env, output_group):
+    def _gen_cargo_rules(self, obj,  build_plan, cargo_env, output_group):
         invocations = build_plan['invocations']
         processed = set()
 
@@ -965,6 +978,14 @@ class TupBackend(CommonBackend):
 
                 for dst, link in invocation['links'].iteritems():
                     rust_backend_file.symlink_rule(link, dst, output_group)
+                    if invocation['target_kind'][0] == 'bin' and link in outputs:
+                        # Additionally link the program to its final target.
+                        rust_backend_file.symlink_rule(link,
+                                                       mozpath.join(self.environment.topobjdir,
+                                                                    obj.install_target,
+                                                                    obj.name),
+                                                       output_group)
+
 
         for val in enumerate(invocations):
             _process(*val)
@@ -989,9 +1010,10 @@ class TupBackend(CommonBackend):
 
         cargo_plan = json.loads(''.join(output_lines))
 
-        self._gen_cargo_rules(backend_file, cargo_plan, cargo_env,
-                              self._rust_output_group(obj.output_category) or
-                              self._rust_libs)
+        output_group = self._rust_libs
+        if isinstance(obj, RustLibrary) and obj.output_category:
+            output_group = self._rust_output_group(obj.output_category)
+        self._gen_cargo_rules(obj, cargo_plan, cargo_env, output_group)
         self.backend_input_files |= set(cargo_plan['inputs'])
 
 
