@@ -50,8 +50,6 @@ ArrowScrollBox.prototype = {
   init: function() {
     this.constructHtml();
 
-    this.onUnderflow();
-
     this.onScroll = this.onScroll.bind(this);
     this.onStartBtnClick = this.onStartBtnClick.bind(this);
     this.onEndBtnClick = this.onEndBtnClick.bind(this);
