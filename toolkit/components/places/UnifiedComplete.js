@@ -345,6 +345,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -368,121 +370,6 @@ function iconHelper(url) {
   }
   return PlacesUtils.favicons.defaultFavicon.spec;
 }
-
-/**
- * Storage object for switch-to-tab entries.
- * This takes care of caching and registering open pages, that will be reused
- * by switch-to-tab queries.  It has an internal cache, so that the Sqlite
- * store is lazy initialized only on first use.
- * It has a simple API:
- *   initDatabase(conn): initializes the temporary Sqlite entities to store data
- *   add(uri): adds a given nsIURI to the store
- *   delete(uri): removes a given nsIURI from the store
- *   shutdown(): stops storing data to Sqlite
- */
-XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
-  _conn: null,
-  // Temporary queue used while the database connection is not available.
-  _queue: new Map(),
-  // Whether we are in the process of updating the temp table.
-  _updatingLevel: 0,
-  get updating() {
-    return this._updatingLevel > 0;
-  },
-  async initDatabase(conn) {
-    // To reduce IO use an in-memory table for switch-to-tab tracking.
-    // Note: this should be kept up-to-date with the definition in
-    //       nsPlacesTables.h.
-    await conn.execute(
-      `CREATE TEMP TABLE moz_openpages_temp (
-         url TEXT,
-         userContextId INTEGER,
-         open_count INTEGER,
-         PRIMARY KEY (url, userContextId)
-       )`);
-
-    // Note: this should be kept up-to-date with the definition in
-    //       nsPlacesTriggers.h.
-    await conn.execute(
-      `CREATE TEMPORARY TRIGGER moz_openpages_temp_afterupdate_trigger
-       AFTER UPDATE OF open_count ON moz_openpages_temp FOR EACH ROW
-       WHEN NEW.open_count = 0
-       BEGIN
-         DELETE FROM moz_openpages_temp
-         WHERE url = NEW.url
-           AND userContextId = NEW.userContextId;
-       END`);
-
-    this._conn = conn;
-
-    // Populate the table with the current cache contents...
-    for (let [userContextId, uris] of this._queue) {
-      for (let uri of uris) {
-        this.add(uri, userContextId).catch(Cu.reportError);
-      }
-    }
-
-    // ...then clear it to avoid double additions.
-    this._queue.clear();
-  },
-
-  async add(uri, userContextId) {
-    if (!this._conn) {
-      if (!this._queue.has(userContextId)) {
-        this._queue.set(userContextId, new Set());
-      }
-      this._queue.get(userContextId).add(uri);
-      return;
-    }
-    try {
-      this._updatingLevel++;
-      await this._conn.executeCached(
-        `INSERT OR REPLACE INTO moz_openpages_temp (url, userContextId, open_count)
-          VALUES ( :url,
-                    :userContextId,
-                    IFNULL( ( SELECT open_count + 1
-                              FROM moz_openpages_temp
-                              WHERE url = :url
-                              AND userContextId = :userContextId ),
-                            1
-                          )
-                  )
-        `, { url: uri.spec, userContextId });
-    } finally {
-      this._updatingLevel--;
-    }
-  },
-
-  async delete(uri, userContextId) {
-    if (!this._conn) {
-      if (!this._queue.has(userContextId)) {
-        throw new Error("Unknown userContextId!");
-      }
-
-      this._queue.get(userContextId).delete(uri);
-      if (this._queue.get(userContextId).size == 0) {
-        this._queue.delete(userContextId);
-      }
-      return;
-    }
-    try {
-      this._updatingLevel++;
-      await this._conn.executeCached(
-        `UPDATE moz_openpages_temp
-         SET open_count = open_count - 1
-         WHERE url = :url
-           AND userContextId = :userContextId
-        `, { url: uri.spec, userContextId });
-    } finally {
-      this._updatingLevel--;
-    }
-  },
-
-  shutdown() {
-    this._conn = null;
-    this._queue.clear();
-  },
-}));
 
 // Preloaded Sites related
 
@@ -707,13 +594,13 @@ function Search(searchString, searchParam, autocompleteListener,
   for (let i = 0; previousResult && i < previousResult.matchCount; ++i) {
     let style = previousResult.getStyleAt(i);
     if (style.includes("heuristic")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCHTYPE.HEURISTIC);
+      this._previousSearchMatchTypes.push(UrlbarUtils.MATCH_GROUP.HEURISTIC);
     } else if (style.includes("suggestion")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCHTYPE.SUGGESTION);
+      this._previousSearchMatchTypes.push(UrlbarUtils.MATCH_GROUP.SUGGESTION);
     } else if (style.includes("extension")) {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCHTYPE.EXTENSION);
+      this._previousSearchMatchTypes.push(UrlbarUtils.MATCH_GROUP.EXTENSION);
     } else {
-      this._previousSearchMatchTypes.push(UrlbarUtils.MATCHTYPE.GENERAL);
+      this._previousSearchMatchTypes.push(UrlbarUtils.MATCH_GROUP.GENERAL);
     }
   }
 
@@ -733,8 +620,8 @@ function Search(searchString, searchParam, autocompleteListener,
   this._usedURLs = [];
   this._usedPlaceIds = new Set();
 
-  // Counters for the number of matches per MATCHTYPE.
-  this._counts = Object.values(UrlbarUtils.MATCHTYPE)
+  // Counters for the number of matches per MATCH_GROUP.
+  this._counts = Object.values(UrlbarUtils.MATCH_GROUP)
                        .reduce((o, p) => { o[p] = 0; return o; }, {});
 }
 
@@ -876,7 +763,7 @@ Search.prototype = {
     // Used by stop() to interrupt an eventual running statement.
     this.interrupt = () => {
       // Interrupt any ongoing statement to run the search sooner.
-      if (!SwitchToTabStorage.updating) {
+      if (!UrlbarProvidersManager.interruptLevel) {
         conn.interrupt();
       }
     };
@@ -921,7 +808,7 @@ Search.prototype = {
     this._addingHeuristicFirstMatch = true;
     let hasHeuristic = await this._matchFirstHeuristicResult(conn);
     this._addingHeuristicFirstMatch = false;
-    this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.HEURISTIC);
+    this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.HEURISTIC);
     if (!this.pending)
       return;
 
@@ -962,7 +849,7 @@ Search.prototype = {
         if (this.hasBehavior("restrict")) {
           // Wait for the suggestions to be added.
           await searchSuggestionsCompletePromise;
-          this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.SUGGESTION);
+          this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.SUGGESTION);
           // We're done if we're restricting to search suggestions.
           // Notify the result completion then stop the search.
           this._autocompleteSearch.finishSearch(true);
@@ -972,7 +859,7 @@ Search.prototype = {
     }
     // In any case, clear previous suggestions.
     searchSuggestionsCompletePromise.then(() => {
-      this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.SUGGESTION);
+      this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.SUGGESTION);
     });
 
     // Run the adaptive query first.
@@ -1019,15 +906,15 @@ Search.prototype = {
 
     // Ideally we should wait until MATCH_BOUNDARY_ANYWHERE, but that query
     // may be really slow and we may end up showing old results for too long.
-    this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.GENERAL);
+    this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.GENERAL);
 
     this._matchAboutPages();
 
     // If we do not have enough results, and our match type is
     // MATCH_BOUNDARY_ANYWHERE, search again with MATCH_ANYWHERE to get more
     // results.
-    let count = this._counts[UrlbarUtils.MATCHTYPE.GENERAL] +
-                this._counts[UrlbarUtils.MATCHTYPE.HEURISTIC];
+    let count = this._counts[UrlbarUtils.MATCH_GROUP.GENERAL] +
+                this._counts[UrlbarUtils.MATCH_GROUP.HEURISTIC];
     if (this._matchBehavior == MATCH_BOUNDARY_ANYWHERE &&
         count < UrlbarPrefs.get("maxRichResults")) {
       this._matchBehavior = MATCH_ANYWHERE;
@@ -1481,8 +1368,8 @@ Search.prototype = {
   },
 
   _addExtensionMatch(content, comment) {
-    let count = this._counts[UrlbarUtils.MATCHTYPE.EXTENSION] +
-                this._counts[UrlbarUtils.MATCHTYPE.HEURISTIC];
+    let count = this._counts[UrlbarUtils.MATCH_GROUP.EXTENSION] +
+                this._counts[UrlbarUtils.MATCH_GROUP.HEURISTIC];
     if (count >= UrlbarUtils.MAXIMUM_ALLOWED_EXTENSION_MATCHES) {
       return;
     }
@@ -1496,7 +1383,7 @@ Search.prototype = {
       icon: "chrome://browser/content/extension.svg",
       style: "action extension",
       frecency: Infinity,
-      type: UrlbarUtils.MATCHTYPE.EXTENSION,
+      type: UrlbarUtils.MATCH_GROUP.EXTENSION,
     });
   },
 
@@ -1521,7 +1408,7 @@ Search.prototype = {
     };
     if (suggestion) {
       match.style += " suggestion";
-      match.type = UrlbarUtils.MATCHTYPE.SUGGESTION;
+      match.type = UrlbarUtils.MATCH_GROUP.SUGGESTION;
     }
 
     this._addMatch(match);
@@ -1540,7 +1427,7 @@ Search.prototype = {
     // matches may appear stale for a long time.
     // This is necessary because WebExtensions don't have a method to notify
     // that they are done providing results, so they could be pending forever.
-    setTimeout(() => this._cleanUpNonCurrentMatches(UrlbarUtils.MATCHTYPE.EXTENSION), 100);
+    setTimeout(() => this._cleanUpNonCurrentMatches(UrlbarUtils.MATCH_GROUP.EXTENSION), 100);
 
     // Since the extension has no way to signale when it's done pushing
     // results, we add a timeout racing with the addition.
@@ -1686,8 +1573,8 @@ Search.prototype = {
     }
     // If the search has been canceled by the user or by _addMatch, or we
     // fetched enough results, we can stop the underlying Sqlite query.
-    let count = this._counts[UrlbarUtils.MATCHTYPE.GENERAL] +
-                this._counts[UrlbarUtils.MATCHTYPE.HEURISTIC];
+    let count = this._counts[UrlbarUtils.MATCH_GROUP.GENERAL] +
+                this._counts[UrlbarUtils.MATCH_GROUP.HEURISTIC];
     if (!this.pending || count >= UrlbarPrefs.get("maxRichResults")) {
       cancel();
     }
@@ -1727,9 +1614,9 @@ Search.prototype = {
       throw new Error("Frecency not provided");
 
     if (this._addingHeuristicFirstMatch)
-      match.type = UrlbarUtils.MATCHTYPE.HEURISTIC;
+      match.type = UrlbarUtils.MATCH_GROUP.HEURISTIC;
     else if (typeof match.type != "string")
-      match.type = UrlbarUtils.MATCHTYPE.GENERAL;
+      match.type = UrlbarUtils.MATCH_GROUP.GENERAL;
 
     // A search could be canceled between a query start and its completion,
     // in such a case ensure we won't notify any result for it.
@@ -1769,7 +1656,7 @@ Search.prototype = {
       TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
     if (this._currentMatchCount == 6)
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
-    this.notifyResult(true, match.type == UrlbarUtils.MATCHTYPE.HEURISTIC);
+    this.notifyResult(true, match.type == UrlbarUtils.MATCH_GROUP.HEURISTIC);
   },
 
   _getInsertIndexForMatch(match) {
@@ -1794,7 +1681,7 @@ Search.prototype = {
             isDupe = true;
             // Don't replace the match if the existing one is heuristic and the
             // new one is a switchtab, instead also add the switchtab match.
-            if (matchType == UrlbarUtils.MATCHTYPE.HEURISTIC &&
+            if (matchType == UrlbarUtils.MATCH_GROUP.HEURISTIC &&
                 action.type == "switchtab") {
               isDupe = false;
               // Since we allow to insert a dupe in this case, we must continue
@@ -1830,7 +1717,7 @@ Search.prototype = {
     // the first added match (the heuristic one).
     if (!this._buckets) {
       // Convert the buckets to readable objects with a count property.
-      let buckets = match.type == UrlbarUtils.MATCHTYPE.HEURISTIC &&
+      let buckets = match.type == UrlbarUtils.MATCH_GROUP.HEURISTIC &&
                     match.style.includes("searchengine") ? UrlbarPrefs.get("matchBucketsSearch")
                                                          : UrlbarPrefs.get("matchBuckets");
       // - available is the number of available slots in the bucket
@@ -1888,7 +1775,7 @@ Search.prototype = {
    * Removes matches from a previous search, that are no more returned by the
    * current search
    * @param type
-   *        The UrlbarUtils.MATCHTYPE to clean up.
+   *        The UrlbarUtils.MATCH_GROUP to clean up.
    * @param [optional] notify
    *        Whether to notify a result change.
    */
@@ -2415,13 +2302,12 @@ UnifiedComplete.prototype = {
                                         // previous result, the controller and
                                         // ourselves.
                                         this._currentSearch = null;
-                                        SwitchToTabStorage.shutdown();
                                       });
         } catch (ex) {
           // It's too late to block shutdown.
           throw ex;
         }
-        await SwitchToTabStorage.initDatabase(conn);
+        await UrlbarProviderOpenTabs.promiseDb();
         return conn;
       })().catch(ex => {
         dump("Couldn't get database handle: " + ex + "\n");
@@ -2432,14 +2318,6 @@ UnifiedComplete.prototype = {
   },
 
   // mozIPlacesAutoComplete
-
-  registerOpenPage(uri, userContextId) {
-    SwitchToTabStorage.add(uri, userContextId).catch(Cu.reportError);
-  },
-
-  unregisterOpenPage(uri, userContextId) {
-    SwitchToTabStorage.delete(uri, userContextId).catch(Cu.reportError);
-  },
 
   populatePreloadedSiteStorage(json) {
     PreloadedSiteStorage.populate(json);

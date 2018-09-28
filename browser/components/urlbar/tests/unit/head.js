@@ -14,12 +14,18 @@ if (commonFile) {
 // Put any other stuff relative to this test folder below.
 
 ChromeUtils.import("resource:///modules/UrlbarController.jsm");
-ChromeUtils.defineModuleGetter(this, "UrlbarInput",
-                               "resource:///modules/UrlbarInput.jsm");
-ChromeUtils.defineModuleGetter(this, "UrlbarTokenizer",
-                               "resource:///modules/UrlbarTokenizer.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
-                               "resource://testing-common/PlacesTestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  UrlbarController: "resource:///modules/UrlbarController.jsm",
+  UrlbarInput: "resource:///modules/UrlbarInput.jsm",
+  UrlbarMatch: "resource:///modules/UrlbarMatch.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+});
 
 // ================================================
 // Load mocking/stubbing library, sinon
