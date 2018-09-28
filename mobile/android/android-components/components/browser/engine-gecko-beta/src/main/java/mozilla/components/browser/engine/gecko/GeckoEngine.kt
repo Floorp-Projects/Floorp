@@ -56,11 +56,16 @@ class GeckoEngine(
                     runtime.settings.trackingProtectionCategories = it.categories
                 }
             }
+
+        override var remoteDebuggingEnabled: Boolean
+            get() = runtime.settings.remoteDebuggingEnabled
+            set(value) { runtime.settings.remoteDebuggingEnabled = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
             this.webFontsEnabled = it.webFontsEnabled
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
+            this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
         }
     }
 }

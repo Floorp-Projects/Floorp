@@ -8,6 +8,7 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -58,6 +59,10 @@ class GeckoEngineTest {
         engine.settings.webFontsEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
 
+        assertFalse(engine.settings.remoteDebuggingEnabled)
+        engine.settings.remoteDebuggingEnabled = true
+        verify(runtimeSettings).remoteDebuggingEnabled = true
+
         assertEquals(TrackingProtectionPolicy.none(), engine.settings.trackingProtectionPolicy)
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.all()
         verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
@@ -83,10 +88,12 @@ class GeckoEngineTest {
         GeckoEngine(runtime, DefaultSettings(
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
                 javascriptEnabled = false,
-                webFontsEnabled = false))
+                webFontsEnabled = false,
+                remoteDebuggingEnabled = true))
 
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
+        verify(runtimeSettings).remoteDebuggingEnabled = true
         verify(runtimeSettings).trackingProtectionCategories = TrackingProtectionPolicy.all().categories
     }
 }

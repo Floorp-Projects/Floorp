@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.system
 
 import android.content.Context
 import android.util.AttributeSet
+import android.webkit.WebView
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -45,7 +46,18 @@ class SystemEngine(
     /**
      * See [Engine.settings]
      */
-    override val settings: Settings
-        get() = throw UnsupportedOperationException("""Not supported by this implementation:
-            Use EngineSession.settings instead""".trimIndent())
+    override val settings: Settings = object : Settings() {
+        private var internalRemoteDebuggingEnabled = false
+
+        override var remoteDebuggingEnabled: Boolean
+            get() = internalRemoteDebuggingEnabled
+            set(value) {
+                WebView.setWebContentsDebuggingEnabled(value)
+                internalRemoteDebuggingEnabled = value
+            }
+    }.apply {
+        defaultSettings?.let {
+           this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
+        }
+    }
 }

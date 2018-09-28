@@ -4,7 +4,9 @@
 
 package mozilla.components.browser.engine.system
 
+import mozilla.components.concept.engine.DefaultSettings
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -36,8 +38,11 @@ class SystemEngineTest {
         assertEquals("System", SystemEngine().name())
     }
 
-    @Test(expected = UnsupportedOperationException::class)
+    @Test
     fun testSettings() {
-        SystemEngine().settings
+        val engine = SystemEngine(DefaultSettings(remoteDebuggingEnabled = true))
+        assertTrue(engine.settings.remoteDebuggingEnabled)
+        engine.settings.remoteDebuggingEnabled = false
+        assertFalse(engine.settings.remoteDebuggingEnabled)
     }
 }

@@ -97,6 +97,11 @@ abstract class Settings {
      * Setting to control whether or not horizontal scrolling is enabled.
      */
     open var horizontalScrollBarEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not remote debugging is enabled.
+     */
+    open var remoteDebuggingEnabled: Boolean by UnsupportedSetting()
 }
 
 /**
@@ -118,16 +123,19 @@ data class DefaultSettings(
     override var allowUniversalAccessFromFileURLs: Boolean = false,
     override var allowContentAccess: Boolean = true,
     override var verticalScrollBarEnabled: Boolean = true,
-    override var horizontalScrollBarEnabled: Boolean = true
+    override var horizontalScrollBarEnabled: Boolean = true,
+    override var remoteDebuggingEnabled: Boolean = false
 ) : Settings()
 
 class UnsupportedSetting<T> {
     operator fun getValue(thisRef: Any?, prop: KProperty<*>): T {
-        throw UnsupportedSettingException("Setting ${prop.name} is not supported by this engine!")
+        throw UnsupportedSettingException("The setting ${prop.name} is not supported by this engine or session. " +
+                "Check both the engine and engine session implementation.")
     }
 
     operator fun setValue(thisRef: Any?, prop: KProperty<*>, value: T) {
-        throw UnsupportedSettingException("Setting ${prop.name} is not supported by this engine!")
+        throw UnsupportedSettingException("The setting ${prop.name} is not supported by this engine or session. " +
+                "Check both the engine and engine session implementation.")
     }
 }
 

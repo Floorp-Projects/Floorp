@@ -258,6 +258,7 @@ class SystemEngineSessionTest {
         `when`(webViewSettings.displayZoomControls).thenReturn(true)
         `when`(webViewSettings.allowContentAccess).thenReturn(true)
         `when`(webViewSettings.allowFileAccess).thenReturn(true)
+        `when`(webViewSettings.mediaPlaybackRequiresUserGesture).thenReturn(true)
 
         val webView = mock(WebView::class.java)
         `when`(webView.context).thenReturn(RuntimeEnvironment.application)
@@ -285,7 +286,7 @@ class SystemEngineSessionTest {
         engineSession.settings.userAgentString = "userAgent"
         verify(webViewSettings).userAgentString = "userAgent"
 
-        assertFalse(engineSession.settings.mediaPlaybackRequiresUserGesture)
+        assertTrue(engineSession.settings.mediaPlaybackRequiresUserGesture)
         engineSession.settings.mediaPlaybackRequiresUserGesture = false
         verify(webViewSettings).mediaPlaybackRequiresUserGesture = false
 

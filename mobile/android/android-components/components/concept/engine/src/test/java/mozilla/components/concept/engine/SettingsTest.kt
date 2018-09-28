@@ -52,7 +52,9 @@ class SettingsTest {
             { settings.verticalScrollBarEnabled },
             { settings.verticalScrollBarEnabled = false },
             { settings.horizontalScrollBarEnabled },
-            { settings.horizontalScrollBarEnabled = false }
+            { settings.horizontalScrollBarEnabled = false },
+            { settings.remoteDebuggingEnabled },
+            { settings.remoteDebuggingEnabled = false }
         )
     }
 
@@ -80,6 +82,7 @@ class SettingsTest {
         assertFalse(settings.allowUniversalAccessFromFileURLs)
         assertTrue(settings.verticalScrollBarEnabled)
         assertTrue(settings.horizontalScrollBarEnabled)
+        assertFalse(settings.remoteDebuggingEnabled)
 
         val interceptor: RequestInterceptor = mock()
 
@@ -99,7 +102,8 @@ class SettingsTest {
             allowFileAccessFromFileURLs = true,
             allowUniversalAccessFromFileURLs = true,
             verticalScrollBarEnabled = false,
-            horizontalScrollBarEnabled = false)
+            horizontalScrollBarEnabled = false,
+            remoteDebuggingEnabled = true)
 
         assertFalse(defaultSettings.domStorageEnabled)
         assertFalse(defaultSettings.javascriptEnabled)
@@ -117,5 +121,6 @@ class SettingsTest {
         assertTrue(defaultSettings.allowUniversalAccessFromFileURLs)
         assertFalse(defaultSettings.verticalScrollBarEnabled)
         assertFalse(defaultSettings.horizontalScrollBarEnabled)
+        assertTrue(defaultSettings.remoteDebuggingEnabled)
     }
 }
