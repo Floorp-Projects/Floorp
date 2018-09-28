@@ -26,6 +26,8 @@ ChromeUtils.defineModuleGetter(this, "FormAutofill",
                                "resource://formautofill/FormAutofill.jsm");
 ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+                               "resource://gre/modules/AppConstants.jsm");
 
 const SAVE_CREDITCARD_DEFAULT_PREF = "dom.payments.defaults.saveCreditCard";
 const SAVE_ADDRESS_DEFAULT_PREF = "dom.payments.defaults.saveAddress";
@@ -105,8 +107,7 @@ let PaymentFrameScript = {
       },
 
       isOfficialBranding() {
-        // XXX: stub, will reflect AppConstants.MOZILLA_OFFICIAL when we have real logos
-        return false;
+        return AppConstants.MOZILLA_OFFICIAL;
       },
     };
     waivedContent.PaymentDialogUtils = Cu.cloneInto(PaymentDialogUtils, waivedContent, {
