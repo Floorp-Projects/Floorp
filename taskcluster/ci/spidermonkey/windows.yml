@@ -19,6 +19,7 @@ sm-plain-win32/debug:
     run:
         spidermonkey-variant: plaindebug
     toolchains:
+        - win64-clang-cl
         - win64-rust
 
 sm-plain-win32/opt:
@@ -31,6 +32,7 @@ sm-plain-win32/opt:
     run:
         spidermonkey-variant: plain
     toolchains:
+        - win64-clang-cl
         - win64-rust
 
 sm-compacting-win32/debug:
@@ -43,4 +45,5 @@ sm-compacting-win32/debug:
     run:
         spidermonkey-variant: compacting
     toolchains:
+        - win64-clang-cl
         - win64-rust

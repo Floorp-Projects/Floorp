@@ -168,6 +168,10 @@ def generate_config(obj_base_path):
     import ConfigParser
     here = os.path.split(os.path.abspath(__file__))[0]
     config_path = os.path.join(here, 'wptrunner.ini')
+
+    if not os.path.exists(obj_base_path):
+        os.makedirs(obj_base_path)
+
     path = os.path.join(obj_base_path, 'wptrunner.local.ini')
 
     if os.path.exists(path):

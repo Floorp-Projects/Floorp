@@ -153,7 +153,8 @@ enum class MemoryMasks
 enum class InitializerKind
 {
     Active                               = 0x00,
-    Passive                              = 0x01
+    Passive                              = 0x01,
+    ActiveWithIndex                      = 0x02
 };
 
 enum class Op
