@@ -150,8 +150,12 @@ runTest(() => pushPrefs(
       "getUserMedia with unsatisfied required constraint",
       "OverconstrainedError", "deviceId",
       () => getUserMedia({ audio: true,
-                           video: { deviceId: { exact: "unheardof" } } }))));
-
+                           video: { deviceId: { exact: "unheardof" } } })))
+  .then(() => mustFailWith(
+      "getUserMedia with unsatisfied required constraint array",
+      "OverconstrainedError", "deviceId",
+      () => getUserMedia({ audio: true,
+                           video: { deviceId: { exact: ["a", "b"] } } }))));
 </script>
 </pre>
 </body>
