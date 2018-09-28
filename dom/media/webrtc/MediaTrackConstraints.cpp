@@ -214,7 +214,7 @@ NormalizedConstraintSet::StringRange::SetFrom(
       mExact.insert(aOther.mExact.Value().GetAsString());
     } else {
       for (auto& str : aOther.mExact.Value().GetAsStringSequence()) {
-        mIdeal.insert(str);
+        mExact.insert(str);
       }
     }
   }
