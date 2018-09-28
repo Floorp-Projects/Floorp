@@ -4704,8 +4704,7 @@ Tab.prototype = {
   _state: null,
   _hostChanged: false, // onLocationChange will flip this bit
 
-  onSecurityChange: function(aWebProgress, aRequest, aOldState, aState,
-                             aContentBlockingLogJSON) {
+  onSecurityChange: function(aWebProgress, aRequest, aState) {
     // Don't need to do anything if the data we use to update the UI hasn't changed
     if (this._state == aState && !this._hostChanged)
       return;
