@@ -204,7 +204,8 @@ function generateErrors() {
                     "Enterprise Policies Child",
                     "BookmarksPolicies.jsm",
                     "ProxyPolicies.jsm",
-                    "WebsiteFilter Policy"];
+                    "WebsiteFilter Policy",
+                    "macOSPoliciesParser.jsm"];
 
   let new_cont = document.getElementById("errorsContent");
   new_cont.classList.add("errors");

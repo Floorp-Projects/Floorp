@@ -31,6 +31,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'WindowsGPOParser.jsm',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXTRA_JS_MODULES.policies += [
+        'macOSPoliciesParser.jsm',
+]
+
 FINAL_LIBRARY = 'browsercomps'
 
 JAR_MANIFESTS += ['jar.mn']
