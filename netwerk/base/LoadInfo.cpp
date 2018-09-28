@@ -91,6 +91,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsTracker(false)
   , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(false)
+  , mDocumentHasLoaded(false)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -162,6 +163,21 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
         mTopLevelPrincipal = innerWindow->GetTopLevelPrincipal();
         mTopLevelStorageAreaPrincipal =
           innerWindow->GetTopLevelStorageAreaPrincipal();
+        mDocumentHasLoaded = innerWindow->IsDocumentLoaded();
+
+        if (innerWindow->IsFrame()) {
+          // For resources within iframes, we actually want the
+          // top-level document's flag, not the iframe document's.
+          mDocumentHasLoaded = false;
+          nsGlobalWindowOuter* topOuter = innerWindow->GetScriptableTopInternal();
+          if (topOuter) {
+            nsGlobalWindowInner* topInner =
+              nsGlobalWindowInner::Cast(topOuter->GetCurrentInnerWindow());
+            if (topInner) {
+              mDocumentHasLoaded = topInner->IsDocumentLoaded();
+            }
+          }
+        }
       }
     }
 
@@ -331,6 +347,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mIsTracker(false)
   , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(false)
+  , mDocumentHasLoaded(false)
 {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
@@ -432,6 +449,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mIsTracker(rhs.mIsTracker)
   , mIsTrackerBlocked(rhs.mIsTrackerBlocked)
   , mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted)
+  , mDocumentHasLoaded(rhs.mDocumentHasLoaded)
 {
 }
 
@@ -478,7 +496,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aIsPreflight,
                    bool aLoadTriggeredFromExternal,
                    bool aServiceWorkerTaintingSynthesized,
-                   bool aDocumentHasUserInteracted)
+                   bool aDocumentHasUserInteracted,
+                   bool aDocumentHasLoaded)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mPrincipalToInherit(aPrincipalToInherit)
@@ -524,6 +543,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsTracker(false)
   , mIsTrackerBlocked(false)
   , mDocumentHasUserInteracted(aDocumentHasUserInteracted)
+  , mDocumentHasLoaded(aDocumentHasLoaded)
 {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal || aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -1403,6 +1423,21 @@ NS_IMETHODIMP
 LoadInfo::SetDocumentHasUserInteracted(bool aDocumentHasUserInteracted)
 {
   mDocumentHasUserInteracted = aDocumentHasUserInteracted;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetDocumentHasLoaded(bool *aDocumentHasLoaded)
+{
+  MOZ_ASSERT(aDocumentHasLoaded);
+  *aDocumentHasLoaded = mDocumentHasLoaded;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetDocumentHasLoaded(bool aDocumentHasLoaded)
+{
+  mDocumentHasLoaded = aDocumentHasLoaded;
   return NS_OK;
 }
 
