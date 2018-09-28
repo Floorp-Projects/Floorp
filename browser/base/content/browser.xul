@@ -115,6 +115,8 @@ xmlns="http://www.w3.org/1999/xhtml"
       <menuitem id="context_toggleMuteSelectedTabs" hidden="true"
                 oncommand="gBrowser.toggleMuteAudioOnMultiSelectedTabs(TabContextMenu.contextTab);"/>
       <menuseparator/>
+      <menuitem id="context_selectAllTabs" label="&selectAllTabs.label;" accesskey="&selectAllTabs.accesskey;"
+                oncommand="gBrowser.selectAllTabs();"/>
       <menuitem id="context_pinTab" label="&pinTab.label;"
                 accesskey="&pinTab.accesskey;"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
@@ -421,6 +423,12 @@ xmlns="http://www.w3.org/1999/xhtml"
                 command="Browser:BookmarkAllTabs"
                 label="&toolbarContextMenu.bookmarkAllTabs.label;"
                 accesskey="&toolbarContextMenu.bookmarkAllTabs.accesskey;"/>
+      <menuitem id="toolbar-context-selectAllTabs"
+                class="toolbaritem-tabsmenu"
+                contexttype="tabbar"
+                oncommand="gBrowser.selectAllTabs();"
+                label="&toolbarContextMenu.selectAllTabs.label;"
+                accesskey="&toolbarContextMenu.selectAllTabs.accesskey;"/>
       <menuitem id="toolbar-context-undoCloseTab"
                 class="toolbaritem-tabsmenu"
                 contexttype="tabbar"

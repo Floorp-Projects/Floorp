@@ -3848,6 +3848,16 @@ window._gBrowser = {
     }
   },
 
+  selectAllTabs() {
+    let visibleTabs = this.visibleTabs;
+    gBrowser.addRangeToMultiSelectedTabs(visibleTabs[0],
+                                         visibleTabs[visibleTabs.length - 1]);
+  },
+
+  allTabsSelected() {
+    return this.visibleTabs.every(t => t.multiselected);
+  },
+
   lockClearMultiSelectionOnce() {
     this._clearMultiSelectionLockedOnce = true;
     this._clearMultiSelectionLocked = true;
@@ -5359,6 +5369,9 @@ var TabContextMenu = {
     this.contextTab.toggleMuteMenuItem = toggleMute;
     this.contextTab.toggleMultiSelectMuteMenuItem = toggleMultiSelectMute;
     this._updateToggleMuteMenuItems(this.contextTab);
+
+    let selectAllTabs = document.getElementById("context_selectAllTabs");
+    selectAllTabs.disabled = gBrowser.allTabsSelected();
 
     this.contextTab.addEventListener("TabAttrModified", this);
     aPopupMenu.addEventListener("popuphiding", this);
