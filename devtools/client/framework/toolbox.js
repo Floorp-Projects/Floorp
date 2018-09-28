@@ -5,6 +5,7 @@
 "use strict";
 
 const SOURCE_MAP_WORKER = "resource://devtools/client/shared/source-map/worker.js";
+const SOURCE_MAP_WORKER_ASSETS = "resource://devtools/client/shared/source-map/assets/";
 
 const MAX_ORDINAL = 99;
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
@@ -665,7 +666,10 @@ Toolbox.prototype = {
       },
     });
 
-    this._sourceMapService.startSourceMapWorker(SOURCE_MAP_WORKER);
+    this._sourceMapService.startSourceMapWorker(
+      SOURCE_MAP_WORKER,
+      SOURCE_MAP_WORKER_ASSETS,
+    );
     return this._sourceMapService;
   },
 
