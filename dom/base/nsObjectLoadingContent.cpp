@@ -2296,7 +2296,8 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
       handlerURI->GetSpec(spec);
       LOG(("OBJLC [%p]: Loading fake plugin handler (%s)", this, spec.get()));
 
-      rv = mFrameLoader->LoadURI(handlerURI, false);
+      rv = mFrameLoader->LoadURI(handlerURI,
+                                 thisContent->AsElement()->NodePrincipal(), false);
       if (NS_FAILED(rv)) {
         LOG(("OBJLC [%p]: LoadURI() failed for fake handler", this));
         mFrameLoader->Destroy();
