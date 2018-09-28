@@ -51,7 +51,7 @@ add_task(async function test_support_toolbar_field_properties() {
   let toolbox = document.querySelector("#navigator-toolbox");
   let fields = [
     toolbox.querySelector("#urlbar"),
-    document.getAnonymousElementByAttribute(searchbar, "anonid", "searchbar-textbox"),
+    searchbar.querySelector(".searchbar-textbox"),
   ].filter(field => {
     let bounds = field.getBoundingClientRect();
     return bounds.width > 0 && bounds.height > 0;

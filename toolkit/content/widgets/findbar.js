@@ -5,7 +5,8 @@
 
 "use strict";
 
-// Wrap to prevent accidentally leaking to window scope:
+// This is loaded into chrome windows with the subscript loader. Wrap in
+// a block to prevent accidentally leaking globals onto `window`.
 {
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");

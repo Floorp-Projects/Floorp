@@ -12,6 +12,8 @@ const { ui } = require("./ui");
 const { notifications } = require("./notifications");
 const { history } = require("./history");
 
+const { objectInspector } = require("devtools/client/shared/components/reps/reps.js");
+
 exports.reducers = {
   filters,
   messages,
@@ -19,4 +21,5 @@ exports.reducers = {
   ui,
   notifications,
   history,
+  objectInspector: objectInspector.reducer.default
 };

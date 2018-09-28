@@ -251,8 +251,7 @@ nsSecureBrowserUIImpl::UpdateStateAndSecurityInfo(nsIChannel* channel,
 // CheckForBlockedContent).
 // When we receive a notification from the top-level nsIWebProgress, we extract
 // any relevant security information and set our state accordingly. We then call
-// OnSecurityChange on the docShell corresponding to the nsIWebProgress we were
-// initialized with to notify any downstream listeners of the security state.
+// OnSecurityChange to notify any downstream listeners of the security state.
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIRequest* aRequest,
@@ -294,22 +293,15 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  }
 
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
-  if (docShell) {
-    nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
-    if (eventSink) {
-      MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-              ("  calling OnSecurityChange %p %x\n", aRequest, mState));
-      Unused << eventSink->OnSecurityChange(aRequest, mState);
-    } else {
-      MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-              ("  docShell doesn't implement nsISecurityEventSink? %p\n",
-               docShell.get()));
+    nsCOMPtr<nsISecurityEventSink> eventSink;
+    NS_QueryNotificationCallbacks(channel, eventSink);
+    if (NS_WARN_IF(!eventSink)) {
+      return NS_ERROR_INVALID_ARG;
     }
-  } else {
-    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  docShell went away?\n"));
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+            ("  calling OnSecurityChange %p %x\n", aRequest, mState));
+    Unused << eventSink->OnSecurityChange(aRequest, mState);
   }
 
   return NS_OK;

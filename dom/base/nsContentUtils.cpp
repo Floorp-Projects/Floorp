@@ -2211,6 +2211,14 @@ nsContentUtils::IsCallerChrome()
   return xpc::IsUniversalXPConnectEnabled(GetCurrentJSContext());
 }
 
+#ifdef FUZZING
+bool
+nsContentUtils::IsFuzzingEnabled()
+{
+  return StaticPrefs::fuzzing_enabled();
+}
+#endif
+
 /* static */
 bool
 nsContentUtils::ShouldResistFingerprinting()

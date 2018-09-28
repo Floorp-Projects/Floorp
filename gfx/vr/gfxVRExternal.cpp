@@ -133,7 +133,9 @@ VRDisplayExternal::StartPresentation()
   PushState();
 
   mDisplayInfo.mDisplayState.mLastSubmittedFrameId = 0;
-  // mTelemetry.mLastDroppedFrameCount = stats.m_nNumReprojectedFrames;
+  if (mDisplayInfo.mDisplayState.mReportsDroppedFrames) {
+    mTelemetry.mLastDroppedFrameCount = mDisplayInfo.mDisplayState.mDroppedFrameCount;
+  }
 }
 
 void
@@ -149,20 +151,31 @@ VRDisplayExternal::StopPresentation()
 
   PushState(true);
 
-  // TODO - Implement telemetry:
+  Telemetry::HistogramID timeSpentID = Telemetry::HistogramCount;
+  Telemetry::HistogramID droppedFramesID = Telemetry::HistogramCount;
+  int viewIn = 0;
 
-/*
-  const TimeDuration duration = TimeStamp::Now() - mTelemetry.mPresentationStart;
-  Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, 2);
-  Telemetry::Accumulate(Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_OPENVR,
-                        duration.ToMilliseconds());
+  if (mDisplayInfo.mDisplayState.mEightCC == GFX_VR_EIGHTCC('O', 'c', 'u', 'l', 'u', 's', ' ', 'D')) {
+    // Oculus Desktop API
+    timeSpentID = Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_OCULUS;
+    droppedFramesID = Telemetry::WEBVR_DROPPED_FRAMES_IN_OCULUS;
+    viewIn = 1;
+  } else if (mDisplayInfo.mDisplayState.mEightCC == GFX_VR_EIGHTCC('O', 'p', 'e', 'n', 'V', 'R', ' ', ' ')) {
+    // OpenVR API
+    timeSpentID = Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_OPENVR;
+    droppedFramesID = Telemetry::WEBVR_DROPPED_FRAMES_IN_OPENVR;
+    viewIn = 2;
+  }
 
-  ::vr::Compositor_CumulativeStats stats;
-  mVRCompositor->GetCumulativeStats(&stats, sizeof(::vr::Compositor_CumulativeStats));
-  const uint32_t droppedFramesPerSec = (stats.m_nNumReprojectedFrames -
-                                        mTelemetry.mLastDroppedFrameCount) / duration.ToSeconds();
-  Telemetry::Accumulate(Telemetry::WEBVR_DROPPED_FRAMES_IN_OPENVR, droppedFramesPerSec);
-*/
+  if (viewIn) {
+    const TimeDuration duration = TimeStamp::Now() - mTelemetry.mPresentationStart;
+    Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, viewIn);
+    Telemetry::Accumulate(timeSpentID,
+                          duration.ToMilliseconds());
+    const uint32_t droppedFramesPerSec = (mDisplayInfo.mDisplayState.mDroppedFrameCount -
+                                          mTelemetry.mLastDroppedFrameCount) / duration.ToSeconds();
+    Telemetry::Accumulate(droppedFramesID, droppedFramesPerSec);
+  }
 }
 
 void

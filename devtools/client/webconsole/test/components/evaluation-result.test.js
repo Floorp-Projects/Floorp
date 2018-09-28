@@ -23,7 +23,10 @@ const serviceContainer = require("devtools/client/webconsole/test/fixtures/servi
 describe("EvaluationResult component:", () => {
   it("renders a grip result", () => {
     const message = stubPreparedMessages.get("new Date(0)");
-    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    // We need to wrap the ConsoleApiElement in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(Provider({ store: setupStore() },
+      EvaluationResult({ message, serviceContainer })));
 
     expect(wrapper.find(".message-body").text()).toBe("Date 1970-01-01T00:00:00.000Z");
 
@@ -70,7 +73,10 @@ describe("EvaluationResult component:", () => {
 
   it("renders an inspect command result", () => {
     const message = stubPreparedMessages.get("inspect({a: 1})");
-    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    // We need to wrap the ConsoleApiElement in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(Provider({ store: setupStore() },
+      EvaluationResult({ message, serviceContainer })));
 
     expect(wrapper.find(".message-body").text()).toBe("Object { a: 1 }");
   });
@@ -108,15 +114,18 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get("new Date(0)");
 
     const indent = 10;
-    let wrapper = render(EvaluationResult({
+    // We need to wrap the ConsoleApiElement in a Provider in order for the
+    // ObjectInspector to work.
+    let wrapper = render(Provider({ store: setupStore() }, EvaluationResult({
       message: Object.assign({}, message, {indent}),
       serviceContainer,
-    }));
+    })));
     let indentEl = wrapper.find(".indent");
     expect(indentEl.prop("style").width).toBe(`${indent * INDENT_WIDTH}px`);
     expect(indentEl.prop("data-indent")).toBe(`${indent}`);
 
-    wrapper = render(EvaluationResult({ message, serviceContainer}));
+    wrapper = render(Provider({ store: setupStore() },
+      EvaluationResult({ message, serviceContainer})));
     indentEl = wrapper.find(".indent");
     expect(indentEl.prop("style").width).toBe(`0`);
     expect(indentEl.prop("data-indent")).toBe(`0`);
@@ -133,11 +142,13 @@ describe("EvaluationResult component:", () => {
 
   it("has a timestamp when passed a truthy timestampsVisible prop", () => {
     const message = stubPreparedMessages.get("new Date(0)");
-    const wrapper = render(EvaluationResult({
+    // We need to wrap the ConsoleApiElement in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(Provider({ store: setupStore() }, EvaluationResult({
       message,
       serviceContainer,
       timestampsVisible: true,
-    }));
+    })));
     const { timestampString } = require("devtools/client/webconsole/webconsole-l10n");
 
     expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
@@ -145,11 +156,13 @@ describe("EvaluationResult component:", () => {
 
   it("does not have a timestamp when timestampsVisible prop is falsy", () => {
     const message = stubPreparedMessages.get("new Date(0)");
-    const wrapper = render(EvaluationResult({
+    // We need to wrap the ConsoleApiElement in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(Provider({ store: setupStore() }, EvaluationResult({
       message,
       serviceContainer,
       timestampsVisible: false,
-    }));
+    })));
 
     expect(wrapper.find(".timestamp").length).toBe(0);
   });

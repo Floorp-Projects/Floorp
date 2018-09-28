@@ -96,11 +96,18 @@ add_task(async function test_actionContextMenus() {
     is(second.label, "click 1", "Second menu item title is correct");
     is(second.id, `${idPrefix}1`, "Second menu item id is correct");
 
-    is(last.label, "click 5", "Last menu item title is correct");
-    is(last.id, `${idPrefix}5`, "Last menu item id is correct");
+    is(last.tagName, "menu", "Last menu item type is correct");
+    is(last.label, "Generated extension", "Last menu item title is correct");
+    is(last.getAttribute("ext-type"), "top-level-menu", "Last menu ext-type is correct");
     is(separator.tagName, "menuseparator", "Separator after last menu item");
 
-    await closeActionContextMenu(popup.firstElementChild, kind);
+    // Verify that menu items exceeding ACTION_MENU_TOP_LEVEL_LIMIT are moved into a submenu.
+    let overflowPopup = await openSubmenu(last);
+    is(overflowPopup.children.length, 4, "Excess items should be moved into a submenu");
+    is(overflowPopup.firstElementChild.id, `${idPrefix}5`, "First submenu item ID is correct");
+    is(overflowPopup.lastElementChild.id, `${idPrefix}8`, "Last submenu item ID is correct");
+
+    await closeActionContextMenu(overflowPopup.firstElementChild, kind);
     const {info, tab} = await extension.awaitMessage("click");
     is(info.pageUrl, "http://example.com/", "Click info pageUrl is correct");
     is(tab.id, tabId, "Click event tab ID is correct");

@@ -211,6 +211,7 @@ OpenVRSession::InitState(VRSystemState& aSystemState)
 {
   VRDisplayState& state = aSystemState.displayState;
   strncpy(state.mDisplayName, "OpenVR HMD", kVRDisplayNameMaxLen);
+  state.mEightCC = GFX_VR_EIGHTCC('O', 'p', 'e', 'n', 'V', 'R', ' ', ' ');
   state.mIsConnected = mVRSystem->IsTrackedDeviceConnected(::vr::k_unTrackedDeviceIndex_Hmd);
   state.mIsMounted = false;
   state.mCapabilityFlags = (VRDisplayCapabilityFlags)((int)VRDisplayCapabilityFlags::Cap_None |
@@ -219,6 +220,7 @@ OpenVRSession::InitState(VRSystemState& aSystemState)
     (int)VRDisplayCapabilityFlags::Cap_External |
     (int)VRDisplayCapabilityFlags::Cap_Present |
     (int)VRDisplayCapabilityFlags::Cap_StageParameters);
+  state.mReportsDroppedFrames = true;
 
   ::vr::ETrackedPropertyError err;
   bool bHasProximitySensor = mVRSystem->GetBoolTrackedDeviceProperty(::vr::k_unTrackedDeviceIndex_Hmd, ::vr::Prop_ContainsProximitySensor_Bool, &err);
@@ -776,6 +778,7 @@ OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState)
   EnumerateControllers(aSystemState);
   UpdateControllerButtons(aSystemState);
   UpdateControllerPoses(aSystemState);
+  UpdateTelemetry(aSystemState);
 }
 
 bool
@@ -1091,6 +1094,14 @@ OpenVRSession::StopAllHaptics()
       haptic = 0.0f;
     }
   }
+}
+
+void
+OpenVRSession::UpdateTelemetry(VRSystemState& aSystemState)
+{
+  ::vr::Compositor_CumulativeStats stats;
+  mVRCompositor->GetCumulativeStats(&stats, sizeof(::vr::Compositor_CumulativeStats));
+  aSystemState.displayState.mDroppedFrameCount = stats.m_nNumReprojectedFrames;
 }
 
 } // namespace mozilla
