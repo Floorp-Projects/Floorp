@@ -6,6 +6,7 @@
 
 const promise = require("promise");
 const Services = require("Services");
+const flags = require("devtools/shared/flags");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -14,7 +15,6 @@ const {PluralForm} = require("devtools/shared/plural-form");
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
-const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const MarkupElementContainer = require("devtools/client/inspector/markup/views/element-container");
 const MarkupReadOnlyContainer = require("devtools/client/inspector/markup/views/read-only-container");
@@ -22,6 +22,7 @@ const MarkupTextContainer = require("devtools/client/inspector/markup/views/text
 const RootContainer = require("devtools/client/inspector/markup/views/root-container");
 
 loader.lazyRequireGetter(this, "SlottedNodeContainer", "devtools/client/inspector/markup/views/slotted-node-container");
+loader.lazyRequireGetter(this, "HTMLTooltip", "devtools/client/shared/widgets/tooltip/HTMLTooltip", true);
 loader.lazyRequireGetter(this, "UndoStack", "devtools/client/shared/undo", true);
 
 const INSPECTOR_L10N =
@@ -123,8 +124,16 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.toolbox.on("picker-canceled", this._onToolboxPickerCanceled);
   this.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
 
+  if (flags.testing) {
+    // In tests, we start listening immediately to avoid having to simulate a mousemove.
+    this._initTooltips();
+  } else {
+    this._elt.addEventListener("mousemove", () => {
+      this._initTooltips();
+    }, { once: true });
+  }
+
   this._onNewSelection();
-  this._initTooltips();
 
   this._prefObserver = new PrefObserver("devtools.markup");
   this._prefObserver.on(ATTR_COLLAPSE_ENABLED_PREF, this._onCollapseAttributesPrefChange);
@@ -140,6 +149,18 @@ MarkupView.prototype = {
   CONTAINER_FLASHING_DURATION: 500,
 
   _selectedContainer: null,
+
+  get eventDetailsTooltip() {
+    if (!this._eventDetailsTooltip) {
+      // This tooltip will be attached to the toolbox document.
+      this._eventDetailsTooltip = new HTMLTooltip(this.toolbox.doc, {
+        type: "arrow",
+        consumeOutsideClicks: false,
+      });
+    }
+
+    return this._eventDetailsTooltip;
+  },
 
   get toolbox() {
     return this.inspector.toolbox;
@@ -168,10 +189,6 @@ MarkupView.prototype = {
 
   _initTooltips: function() {
     // The tooltips will be attached to the toolbox document.
-    this.eventDetailsTooltip = new HTMLTooltip(this.toolbox.doc, {
-      type: "arrow",
-      consumeOutsideClicks: false,
-    });
     this.imagePreviewTooltip = new HTMLTooltip(this.toolbox.doc, {
       type: "arrow",
       useXulWrapper: true,
@@ -180,8 +197,7 @@ MarkupView.prototype = {
   },
 
   _enableImagePreviewTooltip: function() {
-    this.imagePreviewTooltip.startTogglingOnHover(this._elt,
-      this._isImagePreviewTarget);
+    this.imagePreviewTooltip.startTogglingOnHover(this._elt, this._isImagePreviewTarget);
   },
 
   _disableImagePreviewTooltip: function() {
@@ -1903,9 +1919,19 @@ MarkupView.prototype = {
 
     this._hoveredContainer = null;
 
+    if (this._eventDetailsTooltip) {
+      this._eventDetailsTooltip.destroy();
+      this._eventDetailsTooltip = null;
+    }
+
     if (this.htmlEditor) {
       this.htmlEditor.destroy();
       this.htmlEditor = null;
+    }
+
+    if (this.imagePreviewTooltip) {
+      this.imagePreviewTooltip.destroy();
+      this.imagePreviewTooltip = null;
     }
 
     if (this._undo) {
@@ -1940,12 +1966,6 @@ MarkupView.prototype = {
       container.destroy();
     }
     this._containers = null;
-
-    this.eventDetailsTooltip.destroy();
-    this.eventDetailsTooltip = null;
-
-    this.imagePreviewTooltip.destroy();
-    this.imagePreviewTooltip = null;
 
     this.controllerWindow = null;
     this.doc = null;
