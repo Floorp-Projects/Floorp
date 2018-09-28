@@ -5,23 +5,19 @@
 "use strict";
 
 const Services = require("Services");
-
 const { l10n } = require("devtools/shared/inspector/css-logic");
-const {getCssProperties} = require("devtools/shared/fronts/css-properties");
-const {InplaceEditor, editableField} =
-      require("devtools/client/shared/inplace-editor");
+const { getCssProperties } = require("devtools/shared/fronts/css-properties");
+const { InplaceEditor, editableField } = require("devtools/client/shared/inplace-editor");
 const {
   createChild,
   appendText,
   advanceValidate,
-  blurOnMultipleProperties
+  blurOnMultipleProperties,
 } = require("devtools/client/inspector/shared/utils");
-const {
-  parseDeclarations,
-  parseSingleValue,
-} = require("devtools/shared/css/parsing-utils");
 
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "parseSingleValue", "devtools/shared/css/parsing-utils", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
