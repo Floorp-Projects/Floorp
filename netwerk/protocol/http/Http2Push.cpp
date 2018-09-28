@@ -246,6 +246,9 @@ Http2PushedStream::AdjustInitialWindow()
 void
 Http2PushedStream::SetConsumerStream(Http2Stream *consumer)
 {
+  LOG3(("Http2PushedStream::SetConsumerStream this=%p consumer=%p",
+        this, consumer));
+
   mConsumerStream = consumer;
   mDeferCleanupOnPush = false;
 }
