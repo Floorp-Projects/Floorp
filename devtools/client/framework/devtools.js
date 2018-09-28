@@ -16,9 +16,6 @@ loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 
-loader.lazyRequireGetter(this, "WebExtensionInspectedWindowFront",
-      "devtools/shared/fronts/addon/webextension-inspected-window", true);
-
 const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
   require("devtools/client/definitions");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -626,7 +623,7 @@ DevTools.prototype = {
    * browser/components/extensions/ext-devtools-inspectedWindow.js
    */
   createWebExtensionInspectedWindowFront: function(tabTarget) {
-    return new WebExtensionInspectedWindowFront(tabTarget.client, tabTarget.form);
+    return tabTarget.getFront("webExtensionInspectedWindow");
   },
 
   /**
