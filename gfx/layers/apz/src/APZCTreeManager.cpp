@@ -2748,7 +2748,7 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
       APZCTM_LOG("Found target %p using root lookup\n", result);
     }
     APZCTM_LOG("Successfully matched APZC %p via node %p (hit result 0x%x)\n",
-        result, resultNode, (int)*aOutHitResult);
+        result, resultNode, aOutHitResult->serialize());
     return result;
   }
 
