@@ -28,7 +28,7 @@ add_task(async function init() {
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
   });
-  textbox = searchbar._textbox;
+  textbox = searchbar.textbox;
 
   await promiseNewEngine("testEngine.xml");
 

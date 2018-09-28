@@ -47,10 +47,6 @@
   min-width: -moz-fit-content;
 }
 
-searchbar {
-  -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
-}
-
 .searchbar-textbox {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-textbox");
 }

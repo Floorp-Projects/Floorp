@@ -8,7 +8,9 @@ const { createFactory, PureComponent } = require("devtools/client/shared/vendor/
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const Accordion = createFactory(require("devtools/client/inspector/layout/components/Accordion"));
-const reps = require("devtools/client/shared/components/reps/reps");
+
+// TODO: Upgrade to the current version reps https://bugzilla.mozilla.org/show_bug.cgi?id=1494680
+const reps = require("devtools/client/shared/components/reps/reps-old");
 const Types = require("../types");
 
 const { REPS, MODE } = reps;
