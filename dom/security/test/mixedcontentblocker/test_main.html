@@ -99,6 +99,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
       firstTest = false;
     }
 
+    // Simple check from the iframe.
+    if (event.data.check) {
+      ok(event.data.status, event.data.msg);
+      return;
+    }
+
     log("test: "+event.data.test+", msg: "+event.data.msg + " logging message.");
     // test that the load type matches the pref for this type of content
     // (i.e. active vs. display)
