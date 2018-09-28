@@ -8,6 +8,7 @@
 #include "SVGObserverUtils.h"
 
 // Keep others in (case-insensitive) order:
+#include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/RestyleManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsISupportsImpl.h"
@@ -393,6 +394,37 @@ SVGFilterObserverListForCSSProp::OnRenderingChange()
     frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
+
+class SVGFilterObserverListForCanvasContext final : public SVGFilterObserverList
+{
+public:
+  SVGFilterObserverListForCanvasContext(CanvasRenderingContext2D* aContext,
+                                        Element* aCanvasElement,
+                                        nsTArray<nsStyleFilter>& aFilters)
+    : SVGFilterObserverList(aFilters, aCanvasElement)
+    , mContext(aContext)
+  {}
+
+  virtual void OnRenderingChange() override
+  {
+    if (!mContext) {
+      MOZ_CRASH("GFX: This should never be called without a context");
+    }
+    // Refresh the cached FilterDescription in mContext->CurrentState().filter.
+    // If this filter is not at the top of the state stack, we'll refresh the
+    // wrong filter, but that's ok, because we'll refresh the right filter
+    // when we pop the state stack in CanvasRenderingContext2D::Restore().
+    RefPtr<CanvasRenderingContext2D> kungFuDeathGrip(mContext);
+    kungFuDeathGrip->UpdateFilter();
+  }
+
+  void DetachFromContext() { mContext = nullptr; }
+
+private:
+  CanvasRenderingContext2D* mContext;
+};
+
+
 void
 SVGMarkerObserver::OnRenderingChange()
 {
@@ -534,26 +566,6 @@ nsSVGPaintingProperty::OnRenderingChange()
   }
 }
 
-// Note that the returned list will be empty in the case of a 'filter' property
-// that only specifies CSS filter functions (no url()'s to SVG filters).
-static SVGFilterObserverListForCSSProp*
-GetOrCreateFilterObserverListForCSS(nsIFrame* aFrame)
-{
-  const nsStyleEffects* effects = aFrame->StyleEffects();
-  if (!effects->HasFilters())
-    return nullptr;
-
-  SVGFilterObserverListForCSSProp* observers =
-    aFrame->GetProperty(SVGObserverUtils::FilterProperty());
-  if (observers) {
-    return observers;
-  }
-  observers = new SVGFilterObserverListForCSSProp(effects->mFilters, aFrame);
-  NS_ADDREF(observers);
-  aFrame->SetProperty(SVGObserverUtils::FilterProperty(), observers);
-  return observers;
-}
-
 static SVGMaskObserverList*
 GetOrCreateMaskProperty(nsIFrame* aFrame)
 {
@@ -618,20 +630,38 @@ SVGObserverUtils::GetMarkerFrames(nsIFrame* aMarkedFrame,
   return foundMarker;
 }
 
-SVGObserverUtils::ReferenceState
-SVGObserverUtils::GetAndObserveFilters(nsIFrame* aFilteredFrame,
-                                       nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+// Note that the returned list will be empty in the case of a 'filter' property
+// that only specifies CSS filter functions (no url()'s to SVG filters).
+static SVGFilterObserverListForCSSProp*
+GetOrCreateFilterObserverListForCSS(nsIFrame* aFrame)
 {
-  SVGFilterObserverListForCSSProp* observerList =
-    GetOrCreateFilterObserverListForCSS(aFilteredFrame);
-  if (!observerList) {
-    return eHasNoRefs;
+  const nsStyleEffects* effects = aFrame->StyleEffects();
+  if (!effects->HasFilters()) {
+    return nullptr;
+  }
+  SVGFilterObserverListForCSSProp* observers =
+    aFrame->GetProperty(SVGObserverUtils::FilterProperty());
+  if (observers) {
+    return observers;
+  }
+  observers = new SVGFilterObserverListForCSSProp(effects->mFilters, aFrame);
+  NS_ADDREF(observers);
+  aFrame->SetProperty(SVGObserverUtils::FilterProperty(), observers);
+  return observers;
+}
+
+static SVGObserverUtils::ReferenceState
+GetFilters(SVGFilterObserverListForCSSProp* aObserverList,
+           nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+{
+  if (!aObserverList) {
+    return SVGObserverUtils::eHasNoRefs;
   }
 
   const nsTArray<RefPtr<SVGFilterObserver>>& observers =
-    observerList->GetObservers();
+    aObserverList->GetObservers();
   if (observers.IsEmpty()) {
-    return eHasNoRefs;
+    return SVGObserverUtils::eHasNoRefs;
   }
 
   for (uint32_t i = 0; i < observers.Length(); i++) {
@@ -640,14 +670,49 @@ SVGObserverUtils::GetAndObserveFilters(nsIFrame* aFilteredFrame,
       if (aFilterFrames) {
         aFilterFrames->Clear();
       }
-      return eHasRefsSomeInvalid;
+      return SVGObserverUtils::eHasRefsSomeInvalid;
     }
     if (aFilterFrames) {
       aFilterFrames->AppendElement(filter);
     }
   }
 
-  return eHasRefsAllValid;
+  return SVGObserverUtils::eHasRefsAllValid;
+}
+
+SVGObserverUtils::ReferenceState
+SVGObserverUtils::GetAndObserveFilters(nsIFrame* aFilteredFrame,
+                                       nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+{
+  SVGFilterObserverListForCSSProp* observerList =
+    GetOrCreateFilterObserverListForCSS(aFilteredFrame);
+  return GetFilters(observerList, aFilterFrames);
+}
+
+SVGObserverUtils::ReferenceState
+SVGObserverUtils::GetFiltersIfObserving(nsIFrame* aFilteredFrame,
+                                        nsTArray<nsSVGFilterFrame*>* aFilterFrames)
+{
+  SVGFilterObserverListForCSSProp* observerList =
+    aFilteredFrame->GetProperty(SVGObserverUtils::FilterProperty());
+  return GetFilters(observerList, aFilterFrames);
+}
+
+already_AddRefed<nsISupports>
+SVGObserverUtils::ObserveFiltersForCanvasContext(CanvasRenderingContext2D* aContext,
+                                                 Element* aCanvasElement,
+                                                 nsTArray<nsStyleFilter>& aFilters)
+{
+  return do_AddRef(new SVGFilterObserverListForCanvasContext(aContext,
+                                                             aCanvasElement,
+                                                             aFilters));
+}
+
+void
+SVGObserverUtils::DetachFromCanvasContext(nsISupports* aAutoObserver)
+{
+  static_cast<SVGFilterObserverListForCanvasContext*>(aAutoObserver)->
+    DetachFromContext();
 }
 
 SVGGeometryElement*

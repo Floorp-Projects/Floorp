@@ -31,6 +31,8 @@ extern crate u2fhid;
 extern crate log;
 extern crate cosec;
 extern crate rsdparsa_capi;
+#[cfg(feature = "spidermonkey_rust")]
+extern crate jsrust_shared;
 
 use std::boxed::Box;
 use std::env;

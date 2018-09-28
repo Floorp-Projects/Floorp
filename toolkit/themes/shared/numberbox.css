@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== numberbox.css ==================================================
+  == Styles used by the XUL textbox type="number" element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+html|*.numberbox-input {
+  text-align: right;
+}
+
+textbox[type="number"][hidespinbuttons="true"] html|*.numberbox-input {
+  -moz-appearance: textfield;
+}
+
+/* input[type=number] uses display: flex; by default which is incompatible with XUL flexbox
+   Forcing XUL flexbox allows changing the size of the input. */
+html|*.numberbox-input,
+html|*.numberbox-input::-moz-number-wrapper,
+html|*.numberbox-input::-moz-number-spin-box {
+  display: -moz-box;
+  -moz-box-align: center;
+}
+
+html|*.numberbox-input::-moz-number-spin-box {
+  -moz-box-orient: vertical;
+}
+
+html|*.numberbox-input::-moz-number-wrapper,
+html|*.numberbox-input::-moz-number-spin-up,
+html|*.numberbox-input::-moz-number-spin-down,
+html|*.numberbox-input::-moz-number-text {
+  -moz-box-flex: 1;
+}
+
+html|*.numberbox-input::-moz-number-wrapper {
+  width: 100%;
+}
