@@ -13,6 +13,7 @@ window.addEventListener("load", function() {
   document.getElementById("runtime-disconnect").onclick = DisconnectRuntime;
   document.getElementById("runtime-preferences").onclick = ShowDevicePreferences;
   document.getElementById("runtime-settings").onclick = ShowSettings;
+  document.getElementById("runtime-performance").onclick = ShowPerformancePanel;
   document.getElementById("runtime-panel-noadbextension").onclick = ShowAddons;
   document.getElementById("runtime-panel-nousbdevice").onclick = ShowTroubleShooting;
   document.getElementById("refresh-devices").onclick = RefreshScanners;
@@ -38,6 +39,10 @@ function ShowDevicePreferences() {
 
 function ShowSettings() {
   runtimeList.showSettings();
+}
+
+function ShowPerformancePanel() {
+  runtimeList.showPerformancePanel();
 }
 
 function RefreshScanners() {
