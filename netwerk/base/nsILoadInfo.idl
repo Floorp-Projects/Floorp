@@ -1066,4 +1066,10 @@ interface nsILoadInfo : nsISupports
     * The top-level document has been user-interacted.
     */
   [infallible] attribute boolean documentHasUserInteracted;
+
+  /**
+    * This attribute represents whether the document to which this
+    * load belongs had finished loading when the load was initiated.
+    */
+  [infallible] attribute boolean documentHasLoaded;
 };

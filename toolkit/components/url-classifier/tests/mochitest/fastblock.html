@@ -7,6 +7,9 @@
   <!-- Tracking iframe contains some trackers -->
   <iframe id="fastIFrame" data-touched="not sure" src="http://tracking.example.org/chrome/toolkit/components/url-classifier/tests/mochitest/fastblock_iframe.html" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></iframe>
 
+  <!-- A slow tracking iframe containing some trackers -->
+  <iframe id="slowIFrame" data-touched="not sure" src="http://tracking.example.org/chrome/toolkit/components/url-classifier/tests/mochitest/fastblock_iframe.html?slow" onload="this.dataset.touched='yes';"></iframe>
+
   <!-- A fast tracker that redirects to become a slow tracker -->
   <script id="redirectScript"src="http://example.com/chrome/toolkit/components/url-classifier/tests/mochitest/redirect_tracker.sjs" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
 
