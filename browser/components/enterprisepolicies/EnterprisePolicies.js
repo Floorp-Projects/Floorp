@@ -435,6 +435,7 @@ class WindowsGPOPoliciesProvider {
 
 class macOSPoliciesProvider {
   constructor() {
+    this._policies = null;
     let prefReader = Cc["@mozilla.org/mac-preferences-reader;1"]
                        .createInstance(Ci.nsIMacPreferencesReader);
     if (!prefReader.policiesEnabled()) {
