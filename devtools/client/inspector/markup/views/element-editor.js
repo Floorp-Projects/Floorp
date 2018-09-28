@@ -6,15 +6,16 @@
 
 const Services = require("Services");
 const TextEditor = require("devtools/client/inspector/markup/views/text-editor");
+const {
+  getAutocompleteMaxWidth,
+  flashElementOn,
+  flashElementOff,
+  parseAttributeValues,
+} = require("devtools/client/inspector/markup/utils");
 const { truncateString } = require("devtools/shared/inspector/utils");
 const { editableField, InplaceEditor } = require("devtools/client/shared/inplace-editor");
 const { parseAttribute } = require("devtools/client/shared/node-attribute-parser");
 const { getCssProperties } = require("devtools/shared/fronts/css-properties");
-
-loader.lazyRequireGetter(this, "flashElementOn", "devtools/client/inspector/markup/utils", true);
-loader.lazyRequireGetter(this, "flashElementOff", "devtools/client/inspector/markup/utils", true);
-loader.lazyRequireGetter(this, "getAutocompleteMaxWidth", "devtools/client/inspector/markup/utils", true);
-loader.lazyRequireGetter(this, "parseAttributeValues", "devtools/client/inspector/markup/utils", true);
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
