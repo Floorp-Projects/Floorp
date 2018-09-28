@@ -4,14 +4,13 @@
 
 "use strict";
 
-const { editableField } = require("devtools/client/shared/inplace-editor");
-const { LocalizationHelper } = require("devtools/shared/l10n");
-
-loader.lazyRequireGetter(this, "getAutocompleteMaxWidth", "devtools/client/inspector/markup/utils", true);
-loader.lazyRequireGetter(this, "getCssProperties", "devtools/shared/fronts/css-properties", true);
+const {getAutocompleteMaxWidth} = require("devtools/client/inspector/markup/utils");
+const {editableField} = require("devtools/client/shared/inplace-editor");
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
+const {LocalizationHelper} = require("devtools/shared/l10n");
 
 const INSPECTOR_L10N =
-  new LocalizationHelper("devtools/client/locales/inspector.properties");
+      new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 /**
  * Creates a simple text editor node, used for TEXT and COMMENT

@@ -7,10 +7,9 @@ const { createStore, applyMiddleware } = require("devtools/client/shared/vendor/
 const { thunk } = require("./middleware/thunk");
 const { waitUntilService } = require("./middleware/wait-service");
 const { task } = require("./middleware/task");
+const { log } = require("./middleware/log");
 const { promise } = require("./middleware/promise");
-
-loader.lazyRequireGetter(this, "history", "devtools/client/shared/redux/middleware/history", true);
-loader.lazyRequireGetter(this, "log", "devtools/client/shared/redux/middleware/log", true);
+const { history } = require("./middleware/history");
 
 /**
  * This creates a dispatcher with all the standard middleware in place

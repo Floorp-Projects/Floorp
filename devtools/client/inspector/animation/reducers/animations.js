@@ -14,7 +14,7 @@ const {
   UPDATE_SIDEBAR_SIZE,
 } = require("../actions/index");
 
-loader.lazyRequireGetter(this, "TimeScale", "devtools/client/inspector/animation/utils/timescale");
+const TimeScale = require("../utils/timescale");
 
 const INITIAL_STATE = {
   animations: [],

@@ -6,6 +6,7 @@
 
 "use strict";
 
+const { getTabPrefs } = require("devtools/shared/indentation");
 const InspectorUtils = require("InspectorUtils");
 
 const MAX_DATA_URL_LENGTH = 40;
@@ -46,9 +47,11 @@ const MAX_DATA_URL_LENGTH = 40;
 
 const Services = require("Services");
 
-loader.lazyRequireGetter(this, "getCSSLexer", "devtools/shared/css/lexer", true);
-loader.lazyRequireGetter(this, "getTabPrefs", "devtools/shared/indentation", true);
+loader.lazyImporter(this, "findCssSelector", "resource://gre/modules/css-selector.js");
+loader.lazyImporter(this, "getCssPath", "resource://gre/modules/css-selector.js");
+loader.lazyImporter(this, "getXPath", "resource://gre/modules/css-selector.js");
 
+const CSSLexer = require("devtools/shared/css/lexer");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const styleInspectorL10N =
   new LocalizationHelper("devtools/shared/locales/styleinspector.properties");
@@ -187,7 +190,7 @@ function prettifyCSS(text, ruleCount) {
   // minified file.
   let indent = "";
   let indentLevel = 0;
-  const tokens = getCSSLexer(text);
+  const tokens = CSSLexer.getCSSLexer(text);
   let result = "";
   let pushbackToken = undefined;
 
@@ -358,6 +361,28 @@ function prettifyCSS(text, ruleCount) {
 }
 
 exports.prettifyCSS = prettifyCSS;
+
+/**
+ * Find a unique CSS selector for a given element
+ * @returns a string such that ele.ownerDocument.querySelector(reply) === ele
+ * and ele.ownerDocument.querySelectorAll(reply).length === 1
+ */
+exports.findCssSelector = findCssSelector;
+
+/**
+ * Get the full CSS path for a given element.
+ * @returns a string that can be used as a CSS selector for the element. It might not
+ * match the element uniquely. It does however, represent the full path from the root
+ * node to the element.
+ */
+exports.getCssPath = getCssPath;
+
+/**
+ * Get the xpath for a given element.
+ * @param {DomNode} ele
+ * @returns a string that can be used as an XPath to find the element uniquely.
+ */
+exports.getXPath = getXPath;
 
 /**
  * Given a node, check to see if it is a ::before or ::after element.

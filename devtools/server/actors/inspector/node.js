@@ -12,9 +12,9 @@ const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 
-loader.lazyImporter(this, "getCssPath", "resource://gre/modules/css-selector.js");
-loader.lazyImporter(this, "getXPath", "resource://gre/modules/css-selector.js");
-loader.lazyImporter(this, "findCssSelector", "resource://gre/modules/css-selector.js");
+loader.lazyRequireGetter(this, "getCssPath", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "getXPath", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 
 loader.lazyRequireGetter(this, "isAfterPseudoElement", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isAnonymous", "devtools/shared/layout/utils", true);
