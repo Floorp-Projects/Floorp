@@ -54,10 +54,7 @@ var ecmaGlobals =
     {name: "Float32Array", insecureContext: true},
     {name: "Float64Array", insecureContext: true},
     {name: "Function", insecureContext: true},
-    // NB: We haven't bothered to resolve constants like Infinity and NaN on
-    // Xrayed windows (which are seen from the XBL scope). We could support
-    // this if needed with some refactoring.
-    {name: "Infinity", insecureContext: true, xbl: false},
+    {name: "Infinity", insecureContext: true},
     {name: "Int16Array", insecureContext: true},
     {name: "Int32Array", insecureContext: true},
     {name: "Int8Array", insecureContext: true},
@@ -66,7 +63,7 @@ var ecmaGlobals =
     {name: "JSON", insecureContext: true},
     {name: "Map", insecureContext: true},
     {name: "Math", insecureContext: true},
-    {name: "NaN", insecureContext: true, xbl: false},
+    {name: "NaN", insecureContext: true},
     {name: "Number", insecureContext: true},
     {name: "Object", insecureContext: true},
     {name: "Promise", insecureContext: true},
@@ -1323,6 +1320,12 @@ function runTest(isXBLScope) {
        "If this is failing: DANGER, are you sure you want to expose the new interface " + name +
        " to all webpages as a property on the window (XBL: " + isXBLScope + ")? Do not make a change to this file without a " +
        " review from a DOM peer for that specific change!!! (or a JS peer for changes to ecmaGlobals)");
+
+    ok(name in window,
+       `${name} is exposed as an own property on the window but tests false for "in" in the ${isXBLScope ? "XBL" : "global"} scope`);
+    ok(Object.getOwnPropertyDescriptor(window, name),
+       `${name} is exposed as an own property on the window but has no property descriptor in the ${isXBLScope ? "XBL" : "global"} scope`);
+
     delete interfaceMap[name];
   }
   for (var name of Object.keys(interfaceMap)) {
@@ -1332,13 +1335,8 @@ function runTest(isXBLScope) {
       delete interfaceMap[name];
     }
   }
-  if (isXBLScope) {
-    todo_is(Object.keys(interfaceMap).length, 0,
-            "The following interface(s) are not enumerated: " + Object.keys(interfaceMap).join(", "));
-  } else {
-    is(Object.keys(interfaceMap).length, 0,
-       "The following interface(s) are not enumerated: " + Object.keys(interfaceMap).join(", "));
-  }
+  is(Object.keys(interfaceMap).length, 0,
+     "The following interface(s) are not enumerated: " + Object.keys(interfaceMap).join(", "));
 }
 
 runTest(false);
