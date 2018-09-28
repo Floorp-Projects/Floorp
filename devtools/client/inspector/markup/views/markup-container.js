@@ -36,6 +36,12 @@ function MarkupContainer() { }
 let markupContainerID = 0;
 
 MarkupContainer.prototype = {
+  // Get the UndoStack from the MarkupView.
+  get undo() {
+    // undo is a lazy getter in the MarkupView.
+    return this.markup.undo;
+  },
+
   /*
    * Initialize the MarkupContainer.  Should be called while one
    * of the other contain classes is instantiated.
@@ -52,7 +58,6 @@ MarkupContainer.prototype = {
     this.markup = markupView;
     this.node = node;
     this.type = type;
-    this.undo = this.markup.undo;
     this.win = this.markup._frame.contentWindow;
     this.id = "treeitem-" + markupContainerID++;
     this.htmlElt = this.win.document.documentElement;
