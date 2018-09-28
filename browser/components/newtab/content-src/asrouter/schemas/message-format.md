@@ -100,8 +100,10 @@ Name | Type | Example value | Description
 `providerCohorts` | `Object` | `{onboarding: "hello"}` | Cohorts defined for all providers
 `previousSessionEnd` | `Number` | `1536325802800` | Timestamp in milliseconds of previously closed session
 `totalBookmarksCount` | `Number` | `8` | Total number of bookmarks
-`firefoxVersion` | `Number` | `64` | The major Firefox version of the browser 
+`firefoxVersion` | `Number` | `64` | The major Firefox version of the browser
 `region` | `String` | `US` | Country code retrieved from `location.services.mozilla.com` can be `""` if request did not finish, encountered an error
+`locale` | `String` | `en-US` | Locale of the browser
+`localeLanguageCode` | `String` | `en` | Locale language code (without country code) of the browser
 #### addonsInfo Example
 
 ```javascript

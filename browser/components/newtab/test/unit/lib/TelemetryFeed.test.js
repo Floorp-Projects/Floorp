@@ -10,11 +10,12 @@ import {
   UserEventPing,
 } from "test/schemas/pings";
 import {FakePrefs, GlobalOverrider} from "test/unit/utils";
+import {ASRouterPreferences} from "lib/ASRouterPreferences.jsm";
 import injector from "inject!lib/TelemetryFeed.jsm";
 
 const FAKE_UUID = "{foo-123-foo}";
-const FAKE_ROUTER_MESSAGE_PROVIDER = JSON.stringify([{id: "cfr", enabled: true}]);
-const FAKE_ROUTER_MESSAGE_PROVIDER_COHORT = JSON.stringify([{id: "cfr", enabled: true, cohort: "cohort_group"}]);
+const FAKE_ROUTER_MESSAGE_PROVIDER = [{id: "cfr", enabled: true}];
+const FAKE_ROUTER_MESSAGE_PROVIDER_COHORT = [{id: "cfr", enabled: true, cohort: "cohort_group"}];
 
 describe("TelemetryFeed", () => {
   let globals;
@@ -38,7 +39,6 @@ describe("TelemetryFeed", () => {
     PREF_IMPRESSION_ID,
     TELEMETRY_PREF,
     EVENTS_TELEMETRY_PREF,
-    ROUTER_MESSAGE_PROVIDER_PREF,
   } = injector({
     "common/PerfService.jsm": {perfService},
     "lib/UTEventReporting.jsm": {UTEventReporting},
@@ -52,13 +52,14 @@ describe("TelemetryFeed", () => {
     globals.set("gUUIDGenerator", {generateUUID: () => FAKE_UUID});
     globals.set("PingCentre", PingCentre);
     globals.set("UTEventReporting", UTEventReporting);
-    FakePrefs.prototype.prefs[ROUTER_MESSAGE_PROVIDER_PREF] = FAKE_ROUTER_MESSAGE_PROVIDER;
+    sandbox.stub(ASRouterPreferences, "providers").get(() => FAKE_ROUTER_MESSAGE_PROVIDER);
     instance = new TelemetryFeed();
   });
   afterEach(() => {
     clock.restore();
     globals.restore();
     FakePrefs.prototype.prefs = {};
+    ASRouterPreferences.uninit();
   });
   describe("#init", () => {
     it("should add .pingCentre, a PingCentre instance", () => {
@@ -115,20 +116,6 @@ describe("TelemetryFeed", () => {
         instance._prefs.set(EVENTS_TELEMETRY_PREF, true);
 
         assert.propertyVal(instance, "eventTelemetryEnabled", true);
-      });
-    });
-    describe("a-s router message provider cohort changes from false to true", () => {
-      beforeEach(() => {
-        FakePrefs.prototype.prefs = {};
-        instance = new TelemetryFeed();
-
-        assert.ok(!instance.isInCFRCohort);
-      });
-
-      it("should set the _isInCFRCohort property to true", () => {
-        instance._prefs.set(ROUTER_MESSAGE_PROVIDER_PREF, FAKE_ROUTER_MESSAGE_PROVIDER_COHORT);
-
-        assert.ok(instance.isInCFRCohort);
       });
     });
   });
@@ -488,18 +475,6 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "tiles", tiles);
     });
   });
-  describe("#_parseCFRCohort", () => {
-    it("should return true if it is in the CFR cohort", () => {
-      assert.ok(instance._parseCFRCohort(FAKE_ROUTER_MESSAGE_PROVIDER_COHORT));
-    });
-    it("should return false if it is not in the CFR cohort", () => {
-      assert.ok(!instance._parseCFRCohort(FAKE_ROUTER_MESSAGE_PROVIDER));
-    });
-    it("should report an error given an invalid pref", () => {
-      assert.ok(!instance._parseCFRCohort("some in valid json string"));
-      assert.called(global.Cu.reportError);
-    });
-  });
   describe("#applyCFRPolicy", () => {
     it("should use client_id and message_id in prerelease", () => {
       globals.set("UpdateUtils", {getUpdateChannel() { return "nightly"; }});
@@ -539,7 +514,7 @@ describe("TelemetryFeed", () => {
     });
     it("should use client_id and message_id in the experiment cohort in release", () => {
       globals.set("UpdateUtils", {getUpdateChannel() { return "release"; }});
-      FakePrefs.prototype.prefs[ROUTER_MESSAGE_PROVIDER_PREF] = FAKE_ROUTER_MESSAGE_PROVIDER_COHORT;
+      sandbox.stub(ASRouterPreferences, "providers").get(() => FAKE_ROUTER_MESSAGE_PROVIDER_COHORT);
       const data = {
         action: "cfr_user_event",
         source: "CFR",
@@ -749,15 +724,6 @@ describe("TelemetryFeed", () => {
       instance.uninit();
 
       assert.notProperty(instance._prefs.observers, EVENTS_TELEMETRY_PREF);
-    });
-    it("should remove the a-s router message provider listener", () => {
-      instance = new TelemetryFeed();
-
-      assert.property(instance._prefs.observers, ROUTER_MESSAGE_PROVIDER_PREF);
-
-      instance.uninit();
-
-      assert.notProperty(instance._prefs.observers, ROUTER_MESSAGE_PROVIDER_PREF);
     });
     it("should call Cu.reportError if this._prefs.ignore throws", () => {
       globals.sandbox.stub(FakePrefs.prototype, "ignore").throws("Some Error");

@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Oke, paham",
   "prefs_home_header": "Konten Beranda Firefox",
   "prefs_home_description": "Pilih konten yang ingin Anda tampilkan dalam Beranda Firefox.",
-  "prefs_section_rows_option": "{num} baris;{num} baris",
+  "prefs_section_rows_option": "{num} baris",
   "prefs_search_header": "Pencarian Web",
   "prefs_topsites_description": "Situs yang sering Anda kunjungi",
   "prefs_topstories_description2": "Konten bermutu dari seluruh web, khusus untuk Anda",

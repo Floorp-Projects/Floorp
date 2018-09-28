@@ -16,6 +16,8 @@ const DEFAULT_STATE = {
   _devtoolsPref: DEVTOOLS_PREF,
 };
 
+const USER_PREFERENCES = {snippets: "browser.newtabpage.activity-stream.feeds.snippets"};
+
 class _ASRouterPreferences {
   constructor() {
     Object.assign(this, DEFAULT_STATE);
@@ -71,6 +73,13 @@ class _ASRouterPreferences {
     this._callbacks.forEach(cb => cb(aPrefName));
   }
 
+  getUserPreference(providerId) {
+    if (!USER_PREFERENCES[providerId]) {
+      return null;
+    }
+    return Services.prefs.getBoolPref(USER_PREFERENCES[providerId], true);
+  }
+
   addListener(callback) {
     this._callbacks.add(callback);
   }
@@ -85,6 +94,9 @@ class _ASRouterPreferences {
     }
     Services.prefs.addObserver(this._providerPref, this);
     Services.prefs.addObserver(this._devtoolsPref, this);
+    for (const id of Object.keys(USER_PREFERENCES)) {
+      Services.prefs.addObserver(USER_PREFERENCES[id], this);
+    }
     this._initialized = true;
   }
 
@@ -92,6 +104,9 @@ class _ASRouterPreferences {
     if (this._initialized) {
       Services.prefs.removeObserver(this._providerPref, this);
       Services.prefs.removeObserver(this._devtoolsPref, this);
+      for (const id of Object.keys(USER_PREFERENCES)) {
+        Services.prefs.removeObserver(USER_PREFERENCES[id], this);
+      }
     }
     Object.assign(this, DEFAULT_STATE);
     this._callbacks.clear();

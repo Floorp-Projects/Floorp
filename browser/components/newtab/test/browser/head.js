@@ -2,6 +2,8 @@
 
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "QueryCache",
+  "resource://activity-stream/lib/ASRouterTargeting.jsm");
 
 function popPrefs() {
   return SpecialPowers.popPrefEnv();
@@ -22,6 +24,7 @@ async function setDefaultTopSites() { // eslint-disable-line no-unused-vars
 async function clearHistoryAndBookmarks() { // eslint-disable-line no-unused-vars
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
+  QueryCache.expireAll();
 }
 
 /**
