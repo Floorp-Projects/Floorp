@@ -15,7 +15,6 @@
 #include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
 #include "keyhi.h"
-#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
@@ -1021,22 +1020,16 @@ nsNSSSocketInfo::SetEsniTxt(const nsACString & aEsniTxt)
   mEsniTxt = aEsniTxt;
 
   if (mEsniTxt.Length()) {
-    nsAutoCString esniBin;
-    if (NS_OK != Base64Decode(mEsniTxt, esniBin)) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-              ("[%p] Invalid ESNIKeys record. Couldn't base64 decode\n",
-               (void*) mFd));
-      return NS_OK;
-    }
+    fprintf(stderr,"\n\nTODO - SSL_EnableSNI() [%s] (%d bytes)\n",
+            mEsniTxt.get(), mEsniTxt.Length());
 
+#if 0
     if (SECSuccess != SSL_EnableESNI(mFd,
-                                     reinterpret_cast<const PRUint8*>(esniBin.get()),
-                                     esniBin.Length(), nullptr)) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("[%p] Invalid ESNIKeys record %s\n",
-                                            (void*) mFd,
-                                            PR_ErrorToName(PR_GetError())));
-      return NS_OK;
+                                     reinterpret_cast<const PRUint8*>(mEsniTxt.get()),
+                                     mEsniTxt.Length(), "dummy.invalid")) {
+      return NS_ERROR_FAILURE;
     }
+#endif
   }
 
   return NS_OK;
