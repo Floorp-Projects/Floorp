@@ -20,6 +20,8 @@ ChromeUtils.defineModuleGetter(this, "ASRouterPreferences",
   "resource://activity-stream/lib/ASRouterPreferences.jsm");
 ChromeUtils.defineModuleGetter(this, "ASRouterTargeting",
   "resource://activity-stream/lib/ASRouterTargeting.jsm");
+ChromeUtils.defineModuleGetter(this, "QueryCache",
+  "resource://activity-stream/lib/ASRouterTargeting.jsm");
 ChromeUtils.defineModuleGetter(this, "ASRouterTriggerListeners",
   "resource://activity-stream/lib/ASRouterTriggerListeners.jsm");
 
@@ -243,6 +245,17 @@ const MessageLoaderUtils = {
 this.MessageLoaderUtils = MessageLoaderUtils;
 
 /**
+ * hasLegacyOnboardingConflict - Checks if we need to turn off snippets because of
+ *                               legacy onboarding using the same UI space
+ *
+ * @param {Provider} provider
+ * @returns {boolean} Is there a conflict with legacy onboarding?
+ */
+function hasLegacyOnboardingConflict(provider) {
+  return provider.id === "snippets" && !Services.prefs.getBoolPref(ONBOARDING_FINISHED_PREF, false);
+}
+
+/**
  * @class _ASRouter - Keeps track of all messages, UI surfaces, and
  * handles blocking, rotation, etc. Inspecting ASRouter.state will
  * tell you what the current displayed message is in all UI surfaces.
@@ -293,6 +306,14 @@ class _ASRouter {
     }
   }
 
+  // This will be removed when legacy onboarding is removed.
+  async observe(aSubject, aTopic, aPrefName) {
+    if (aPrefName === ONBOARDING_FINISHED_PREF) {
+      this._updateMessageProviders();
+      await this.loadMessagesFromAllProviders();
+    }
+  }
+
   // Update message providers and fetch new messages on pref change
   async onPrefChange() {
     this._updateMessageProviders();
@@ -315,10 +336,17 @@ class _ASRouter {
 
   // Fetch and decode the message provider pref JSON, and update the message providers
   _updateMessageProviders() {
+    const previousProviders =  this.state.providers;
     const providers = [
       // If we have added a `preview` provider, hold onto it
-      ...this.state.providers.filter(p => p.id === "preview"),
-      ...ASRouterPreferences.providers.filter(p => p.enabled),
+      ...previousProviders.filter(p => p.id === "preview"),
+      // The provider should be enabled and not have a user preference set to false
+      ...ASRouterPreferences.providers.filter(p => (
+        p.enabled &&
+        ASRouterPreferences.getUserPreference(p.id) !== false) &&
+        // sorry this is crappy. will remove soon
+        !hasLegacyOnboardingConflict(p)
+      ),
     ].map(_provider => {
       // make a copy so we don't modify the source of the pref
       const provider = {..._provider};
@@ -339,6 +367,14 @@ class _ASRouter {
     });
 
     const providerIDs = providers.map(p => p.id);
+
+    // Clear old messages for providers that are no longer enabled
+    for (const prevProvider of previousProviders) {
+      if (!providerIDs.includes(prevProvider.id)) {
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_PROVIDER", data: {id: prevProvider.id}});
+      }
+    }
+
     this.setState(prevState => ({
       providers,
       // Clear any messages from removed providers
@@ -436,6 +472,8 @@ class _ASRouter {
     this.dispatchToAS = dispatchToAS;
     this.dispatch = this.dispatch.bind(this);
 
+    // For watching legacy onboarding. To be removed when legacy onboarding is gone.
+    Services.prefs.addObserver(ONBOARDING_FINISHED_PREF, this);
     ASRouterPreferences.init();
     ASRouterPreferences.addListener(this.onPrefChange);
 
@@ -467,6 +505,8 @@ class _ASRouter {
 
     this.overrideOrEnableLegacyOnboarding();
 
+    // For watching legacy onboarding. To be removed when legacy onboarding is gone.
+    Services.prefs.removeObserver(ONBOARDING_FINISHED_PREF, this);
     ASRouterPreferences.removeListener(this.onPrefChange);
     ASRouterPreferences.uninit();
 
@@ -494,8 +534,13 @@ class _ASRouter {
 
   _onStateChanged(state) {
     if (ASRouterPreferences.devtoolsEnabled) {
-      this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: this.state});
+      this._updateAdminState();
     }
+  }
+
+  _updateAdminState(target) {
+    const channel = target || this.messageChannel;
+    channel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: this.state});
   }
 
   _handleTargetingError(type, error, message) {
@@ -907,8 +952,7 @@ class _ASRouter {
           await this.handleUserAction({data: action.data, target});
         }
         break;
-      case "CONNECT_UI_REQUEST":
-      case "GET_NEXT_MESSAGE":
+      case "SNIPPETS_REQUEST":
       case "TRIGGER":
         // Wait for our initial message loading to be done before responding to any UI requests
         await this.waitForInitialized;
@@ -965,7 +1009,7 @@ class _ASRouter {
           this._addPreviewEndpoint(action.data.endpoint.url, target.portID);
           await this.loadMessagesFromAllProviders();
         } else {
-          target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: this.state});
+          this._updateAdminState(target);
         }
         break;
       case "IMPRESSION":
@@ -975,6 +1019,9 @@ class _ASRouter {
         if (this.dispatchToAS) {
           this.dispatchToAS(ac.ASRouterUserEvent(action.data));
         }
+        break;
+      case "EXPIRE_QUERY_CACHE":
+        QueryCache.expireAll();
         break;
     }
   }

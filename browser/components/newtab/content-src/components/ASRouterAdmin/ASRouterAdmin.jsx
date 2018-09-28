@@ -16,7 +16,7 @@ export class ASRouterAdmin extends React.PureComponent {
   }
 
   componentWillMount() {
-    const endpoint = ASRouterUtils.getEndpoint();
+    const endpoint = ASRouterUtils.getPreviewEndpoint();
     ASRouterUtils.sendMessage({type: "ADMIN_CONNECT_STATE", data: {endpoint}});
     ASRouterUtils.addListener(this.onMessage);
   }
@@ -49,6 +49,10 @@ export class ASRouterAdmin extends React.PureComponent {
 
   handleOverride(id) {
     return () => ASRouterUtils.overrideMessage(id);
+  }
+
+  expireCache() {
+    ASRouterUtils.sendMessage({type: "EXPIRE_QUERY_CACHE"});
   }
 
   renderMessageItem(msg) {
@@ -113,7 +117,8 @@ export class ASRouterAdmin extends React.PureComponent {
   render() {
     return (<div className="asrouter-admin outer-wrapper">
       <h1>AS Router Admin</h1>
-      <button className="button primary" onClick={ASRouterUtils.getNextMessage}>Refresh Current Message</button>
+      <h2>Targeting Utilities</h2>
+      <button className="button" onClick={this.expireCache}>Expire Cache</button> (This expires the cache in ASR Targeting for bookmarks and top sites)
       <h2>Message Providers</h2>
       {this.state.providers ? this.renderProviders() : null}
       <h2>Messages</h2>
