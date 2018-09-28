@@ -255,6 +255,7 @@ private:
                            const ImageIntRect& aDirtyRect,
                            wr::TransactionBuilder& aResources,
                            UniquePtr<ScheduleSharedSurfaceRelease>& aScheduleRelease);
+  void ObserveSharedSurfaceRelease(const nsTArray<wr::ExternalImageKeyPair>& aPairs);
 
   bool PushExternalImageForTexture(wr::ExternalImageId aExtId,
                                    wr::ImageKey aKey,
