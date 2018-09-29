@@ -96,6 +96,11 @@ payment-dialog > header > .page-error {
   color: #D70022;
 }
 
+.manage-text {
+  margin: 0;
+  padding: 18px 0;
+}
+
 .page > footer {
   align-items: center;
   justify-content: end;
@@ -140,6 +145,11 @@ payment-dialog > header > .page-error {
   flex: 0 1 auto;
 }
 
+payment-dialog[complete-status="processing"] #pay {
+  /* Force opacity to 1 even when disabled in the processing state. */
+  opacity: 1;
+}
+
 payment-dialog #pay::before {
   -moz-context-properties: fill;
   content: url(chrome://browser/skin/connection-secure.svg);
@@ -156,7 +166,7 @@ payment-dialog[changes-prevented][complete-status="processing"] #pay,
 payment-dialog[changes-prevented][complete-status="success"] #pay {
   /* Show the pay button above #disabled-overlay */
   position: relative;
-  z-index: 1;
+  z-index: 51;
 }
 
 #disabled-overlay {
@@ -170,6 +180,9 @@ payment-dialog[changes-prevented][complete-status="success"] #pay {
   right: 0;
   bottom: 0;
   left: 0;
+  /* z-index must be greater than some positioned fields and #pay with z-index
+     but less than 99, the z-index of the debugging console. */
+  z-index: 50;
 }
 
 .persist-checkbox {

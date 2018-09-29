@@ -21,6 +21,7 @@ Test the payment-method-picker component
 <body>
   <p id="display">
     <payment-method-picker id="picker1"
+                           data-invalid-label="picker1: Missing or invalid"
                            selected-state-key="selectedPaymentCard"></payment-method-picker>
   </p>
 <div id="content" style="display: none">
@@ -153,6 +154,7 @@ add_task(async function test_change_selected_card() {
   is(selectedPaymentCardSecurityCode, null, "store should have empty security code");
   ok(picker1.classList.contains("invalid-selected-option"), "Missing fields for the third option");
   ok(!isHidden(picker1.invalidLabel), "The invalid label should be visible");
+  is(picker1.invalidLabel.innerText, picker1.dataset.invalidLabel, "Check displayed error text");
 
   await SimpleTest.promiseFocus();
   picker1.dropdown.popupBox.focus();
@@ -249,6 +251,7 @@ add_task(async function test_supportedNetworks_tempCards() {
 
   ok(picker1.classList.contains("invalid-selected-option"),
      "Check discover is recognized as not supported");
+  is(picker1.invalidLabel.innerText, picker1.dataset.invalidLabel, "Check displayed error text");
 
   info("change the card to be a visa");
   await picker1.requestStore.setState({

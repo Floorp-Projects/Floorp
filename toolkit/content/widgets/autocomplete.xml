@@ -735,6 +735,9 @@
                 onget="return this.richlistbox.selectedIndex;">
         <setter>
           <![CDATA[
+          if (val != this.richlistbox.selectedIndex) {
+            this._previousSelectedIndex = this.richlistbox.selectedIndex;
+          }
           this.richlistbox.selectedIndex = val;
           // Since ensureElementIsVisible may cause an expensive Layout flush,
           // invoke it only if there may be a scrollbar, so if we could fetch
@@ -751,6 +754,8 @@
         ]]>
         </setter>
       </property>
+
+      <field name="_previousSelectedIndex">-1</field>
 
       <method name="onSearchBegin">
         <body><![CDATA[

@@ -53,6 +53,8 @@ let REQUEST_1 = {
         },
       },
     ],
+    payer: {},
+    paymentMethod: {},
     shippingAddressErrors: {},
     shippingOptions: [
       {
@@ -85,7 +87,7 @@ let REQUEST_1 = {
     requestShipping: true,
     shippingType: "shipping",
   },
-  shippingOption: "456",
+  shippingOption: "std",
 };
 
 let REQUEST_2 = {
@@ -133,6 +135,8 @@ let REQUEST_2 = {
         },
       },
     ],
+    payer: {},
+    paymentMethod: {},
     shippingAddressErrors: {},
     shippingOptions: [
       {
@@ -439,10 +443,70 @@ let buttonActions = {
     paymentDialog.setStateFromParent({savedBasicCards: BASIC_CARDS_1});
   },
 
+  setBasicCardErrors() {
+    let request = Object.assign({}, requestStore.getState().request);
+    request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
+    request.paymentDetails.paymentMethod = {
+      cardNumber: "",
+      cardholderName: "",
+      cardSecurityCode: "",
+      expiryMonth: "",
+      expiryYear: "",
+      billingAddress: {
+        addressLine: "Can only buy from ROADS, not DRIVES, BOULEVARDS, or STREETS",
+        city: "Can only buy from CITIES, not TOWNSHIPS or VILLAGES",
+        country: "Can only buy from US, not CA",
+        organization: "Can only buy from CORPORATIONS, not CONSORTIUMS",
+        phone: "Only allowed to buy from area codes that start with 9",
+        postalCode: "Only allowed to buy from postalCodes that start with 0",
+        recipient: "Can only buy from names that start with J",
+        region: "Can only buy from regions that start with M",
+      },
+    };
+    requestStore.setState({
+      request,
+    });
+  },
+
+
   setChangesPrevented(evt) {
     requestStore.setState({
       changesPrevented: evt.target.checked,
     });
+  },
+
+  setCompleteStatus() {
+    let input = document.querySelector("[name='setCompleteStatus']:checked");
+    let completeStatus = input.value;
+    let request = requestStore.getState().request;
+    paymentDialog.setStateFromParent({
+      request: Object.assign({}, request, { completeStatus }),
+    });
+  },
+
+  setPayerErrors() {
+    let request = Object.assign({}, requestStore.getState().request);
+    request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
+    request.paymentDetails.payer = {
+      email: "Only @mozilla.com emails are supported",
+      name: "Payer name must start with M",
+      phone: "Payer area codes must start with 1",
+    };
+    requestStore.setState({
+      request,
+    });
+  },
+
+  setPaymentOptions() {
+    let options = {};
+    let checkboxes = document.querySelectorAll("#paymentOptions input[type='checkbox']");
+    for (let input of checkboxes) {
+      options[input.name] = input.checked;
+    }
+    let req = Object.assign({}, requestStore.getState().request, {
+      paymentOptions: options,
+    });
+    requestStore.setState({ request: req });
   },
 
   setRequest1() {
@@ -466,29 +530,17 @@ let buttonActions = {
     buttonActions.setPaymentOptions();
   },
 
-  setPaymentOptions() {
-    let options = {};
-    let checkboxes = document.querySelectorAll("#paymentOptions input[type='checkbox']");
-    for (let input of checkboxes) {
-      options[input.name] = input.checked;
-    }
-    let req = Object.assign({}, requestStore.getState().request, {
-      paymentOptions: options,
-    });
-    requestStore.setState({ request: req });
-  },
-
   setShippingError() {
     let request = Object.assign({}, requestStore.getState().request);
     request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
-    request.paymentDetails.error = "Error!";
+    request.paymentDetails.error = "Shipping Error!";
     request.paymentDetails.shippingOptions = [];
     requestStore.setState({
       request,
     });
   },
 
-  setAddressErrors() {
+  setShippingAddressErrors() {
     let request = Object.assign({}, requestStore.getState().request);
     request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
     request.paymentDetails.shippingAddressErrors = {
@@ -503,15 +555,6 @@ let buttonActions = {
     };
     requestStore.setState({
       request,
-    });
-  },
-
-  setCompleteStatus() {
-    let input = document.querySelector("[name='setCompleteStatus']:checked");
-    let completeStatus = input.value;
-    let request = requestStore.getState().request;
-    paymentDialog.setStateFromParent({
-      request: Object.assign({}, request, { completeStatus }),
     });
   },
 

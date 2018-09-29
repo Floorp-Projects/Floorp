@@ -36,7 +36,6 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
     this.invalidLabel = document.createElement("label");
     this.invalidLabel.className = "invalid-label";
     this.invalidLabel.setAttribute("for", this.dropdown.popupBox.id);
-    this.invalidLabel.textContent = this.dataset.invalidLabel;
   }
 
   connectedCallback() {
@@ -58,8 +57,10 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
   render(state) {
     this.editLink.hidden = !this.dropdown.value;
 
+    let errorText = this.errorForSelectedOption(state);
     this.classList.toggle("invalid-selected-option",
-                          !this.isSelectedOptionValid(state));
+                          !!errorText);
+    this.invalidLabel.textContent = errorText;
   }
 
   get selectedOption() {
@@ -78,8 +79,18 @@ export default class RichPicker extends PaymentStateSubscriberMixin(HTMLElement)
     return [];
   }
 
-  isSelectedOptionValid() {
-    return !this.missingFieldsOfSelectedOption().length;
+  /**
+   * @param {object} state Application state
+   * @returns {string} Containing an error message for the picker or "" for no error.
+   */
+  errorForSelectedOption(state) {
+    if (!this.selectedOption) {
+      return "";
+    }
+    if (!this.dataset.invalidLabel) {
+      throw new Error("data-invalid-label is required");
+    }
+    return this.missingFieldsOfSelectedOption().length ? this.dataset.invalidLabel : "";
   }
 
   missingFieldsOfSelectedOption() {
