@@ -63,7 +63,7 @@ ReaderProxy::OnAudioDataRequestCompleted(RefPtr<AudioData> aAudio)
     StartTime().ToMicroseconds() - mLoopingOffset.ToMicroseconds();
   aAudio->AdjustForStartTime(offset);
   if (aAudio->mTime.IsValid()) {
-    mLastAudioEndTime = aAudio->GetEndTime();
+    mLastAudioEndTime = aAudio->mTime;
     return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
   }
   return AudioDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
@@ -87,10 +87,7 @@ ReaderProxy::OnAudioDataRequestFailed(const MediaResult& aError)
 
   // Save the duration of the audio track if it hasn't been set.
   if (!mAudioDuration.IsValid()) {
-    // The demuxer may get a wrong end-time from the last audio frame.
-    // We need to make sure the duration that is used to adjusted the time in
-    // MDSM is equal to or larger than the duration in MDSM.
-    mAudioDuration = std::max(mLastAudioEndTime, mDuration.Ref().ref());
+    mAudioDuration = mLastAudioEndTime;
   }
 
   // For seamless looping, the demuxer is sought to the beginning and then
