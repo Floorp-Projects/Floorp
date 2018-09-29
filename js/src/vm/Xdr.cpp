@@ -11,7 +11,10 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Utf8.h"
 
+#include <algorithm> // std::transform
 #include <string.h>
+#include <type_traits> // std::is_same
+#include <utility> // std::move
 
 #include "jsapi.h"
 #include "jsutil.h"
@@ -48,22 +51,15 @@ XDRCoderBase::validateResultCode(JSContext* cx, JS::TranscodeResult code) const
 
 template<XDRMode mode>
 XDRResult
-XDRState<mode>::codeChars(const Latin1Char* chars, size_t nchars)
+XDRState<mode>::codeChars(Latin1Char* chars, size_t nchars)
 {
-    static_assert(sizeof(Latin1Char) == sizeof(uint8_t), "Latin1Char must fit in 1 byte");
-
-    MOZ_ASSERT(mode == XDR_ENCODE);
-
-    if (nchars == 0) {
-        return Ok();
-    }
-    uint8_t* ptr = buf.write(nchars);
-    if (!ptr) {
-        return fail(JS::TranscodeResult_Throw);
-    }
-
-    mozilla::PodCopy(ptr, chars, nchars);
-    return Ok();
+    static_assert(sizeof(Latin1Char) == 1,
+                  "Latin1Char must be 1 byte for nchars below to be the "
+                  "proper count of bytes");
+    static_assert(std::is_same<Latin1Char, unsigned char>::value,
+                  "Latin1Char must be unsigned char to C++-safely reinterpret "
+                  "the bytes generically copied below as Latin1Char");
+    return codeBytes(chars, nchars);
 }
 
 template<XDRMode mode>
