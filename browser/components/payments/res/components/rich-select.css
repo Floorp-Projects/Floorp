@@ -7,7 +7,8 @@ rich-select {
      than grow wider than 100% of the parent. */
   box-sizing: border-box;
   display: block;
-  margin: 14px 0;
+  /* Has to be the same as `payment-method-picker > input`: */
+  margin: 10px 0;
   /* Padding for the dropmarker (copied from common.css) */
   padding-inline-end: 24px;
   position: relative;
