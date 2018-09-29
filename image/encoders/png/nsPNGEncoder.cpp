@@ -9,6 +9,7 @@
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "prprf.h"
+#include "mozilla/CheckedInt.h"
 
 using namespace mozilla;
 
@@ -703,28 +704,53 @@ nsPNGEncoder::WriteCallback(png_structp png, png_bytep data,
     return;
   }
 
-  if (that->mImageBufferUsed + size > that->mImageBufferSize) {
+  CheckedUint32 sizeNeeded = CheckedUint32(that->mImageBufferUsed) + size;
+  if (!sizeNeeded.isValid()) {
+    // Take the lock to ensure that nobody is trying to read from the buffer
+    // we are destroying
+    ReentrantMonitorAutoEnter autoEnter(that->mReentrantMonitor);
+
+    that->NullOutImageBuffer();
+    return;
+  }
+
+  if (sizeNeeded.value() > that->mImageBufferSize) {
     // When we're reallocing the buffer we need to take the lock to ensure
     // that nobody is trying to read from the buffer we are destroying
     ReentrantMonitorAutoEnter autoEnter(that->mReentrantMonitor);
 
-    // expand buffer, just double each time
-    that->mImageBufferSize *= 2;
-    uint8_t* newBuf = (uint8_t*)realloc(that->mImageBuffer,
-                                        that->mImageBufferSize);
-    if (!newBuf) {
-      // can't resize, just zero (this will keep us from writing more)
-      free(that->mImageBuffer);
-      that->mImageBuffer = nullptr;
-      that->mImageBufferSize = 0;
-      that->mImageBufferUsed = 0;
-      return;
+    while (sizeNeeded.value() > that->mImageBufferSize) {
+      // expand buffer, just double each time
+      CheckedUint32 bufferSize = CheckedUint32(that->mImageBufferSize) * 2;
+      if (!bufferSize.isValid()) {
+        that->NullOutImageBuffer();
+        return;
+      }
+      that->mImageBufferSize *= 2;
+      uint8_t* newBuf = (uint8_t*)realloc(that->mImageBuffer,
+                                          that->mImageBufferSize);
+      if (!newBuf) {
+        // can't resize, just zero (this will keep us from writing more)
+        that->NullOutImageBuffer();
+        return;
+      }
+      that->mImageBuffer = newBuf;
     }
-    that->mImageBuffer = newBuf;
   }
+
   memcpy(&that->mImageBuffer[that->mImageBufferUsed], data, size);
   that->mImageBufferUsed += size;
   that->NotifyListener();
+}
+
+void nsPNGEncoder::NullOutImageBuffer()
+{
+  mReentrantMonitor.AssertCurrentThreadIn();
+
+  free(mImageBuffer);
+  mImageBuffer = nullptr;
+  mImageBufferSize = 0;
+  mImageBufferUsed = 0;
 }
 
 void
