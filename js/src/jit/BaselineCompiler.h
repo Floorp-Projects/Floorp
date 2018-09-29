@@ -417,7 +417,6 @@ class BaselineCompiler final
 
     enum CallVMPhase {
         POST_INITIALIZE,
-        PRE_INITIALIZE,
         CHECK_OVER_RECURSED
     };
     bool callVM(const VMFunction& fun, CallVMPhase phase=POST_INITIALIZE);
@@ -451,7 +450,7 @@ class BaselineCompiler final
         return emitIC(stub, ICEntry::Kind_NonOp);
     }
 
-    MOZ_MUST_USE bool emitStackCheck(bool earlyCheck=false);
+    MOZ_MUST_USE bool emitStackCheck();
     MOZ_MUST_USE bool emitInterruptCheck();
     MOZ_MUST_USE bool emitWarmUpCounterIncrement(bool allowOsr=true);
     MOZ_MUST_USE bool emitArgumentTypeChecks();

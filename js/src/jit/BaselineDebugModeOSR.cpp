@@ -100,7 +100,6 @@ struct DebugModeOSREntry
         return frameKind == ICEntry::Kind_CallVM ||
                frameKind == ICEntry::Kind_WarmupCounter ||
                frameKind == ICEntry::Kind_StackCheck ||
-               frameKind == ICEntry::Kind_EarlyStackCheck ||
                frameKind == ICEntry::Kind_DebugTrap ||
                frameKind == ICEntry::Kind_DebugPrologue ||
                frameKind == ICEntry::Kind_DebugAfterYield ||
@@ -311,8 +310,6 @@ ICEntryKindToString(ICEntry::Kind kind)
         return "warmup counter";
       case ICEntry::Kind_StackCheck:
         return "stack check";
-      case ICEntry::Kind_EarlyStackCheck:
-        return "early stack check";
       case ICEntry::Kind_DebugTrap:
         return "debug trap";
       case ICEntry::Kind_DebugPrologue:
@@ -482,7 +479,6 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 MOZ_ASSERT(kind == ICEntry::Kind_CallVM ||
                            kind == ICEntry::Kind_WarmupCounter ||
                            kind == ICEntry::Kind_StackCheck ||
-                           kind == ICEntry::Kind_EarlyStackCheck ||
                            kind == ICEntry::Kind_DebugTrap ||
                            kind == ICEntry::Kind_DebugPrologue ||
                            kind == ICEntry::Kind_DebugAfterYield ||
@@ -527,15 +523,13 @@ PatchBaselineFramesForDebugMode(JSContext* cx,
                 break;
               }
 
-              case ICEntry::Kind_StackCheck:
-              case ICEntry::Kind_EarlyStackCheck: {
+              case ICEntry::Kind_StackCheck: {
                 // Case I above.
                 //
                 // Patching mechanism is identical to a CallVM. This is
                 // handled especially only because the stack check VM call is
                 // part of the prologue, and not tied an opcode.
-                bool earlyCheck = kind == ICEntry::Kind_EarlyStackCheck;
-                ICEntry& stackCheckEntry = bl->stackCheckICEntry(earlyCheck);
+                ICEntry& stackCheckEntry = bl->stackCheckICEntry();
                 recompInfo->resumeAddr = bl->returnAddressForIC(stackCheckEntry);
                 popFrameReg = false;
                 break;
@@ -1012,8 +1006,7 @@ IsReturningFromCallVM(BaselineDebugModeOSRInfo* info)
     // kind because they do not exist in a 1-1 relationship with a pc offset.
     return info->frameKind == ICEntry::Kind_CallVM ||
            info->frameKind == ICEntry::Kind_WarmupCounter ||
-           info->frameKind == ICEntry::Kind_StackCheck ||
-           info->frameKind == ICEntry::Kind_EarlyStackCheck;
+           info->frameKind == ICEntry::Kind_StackCheck;
 }
 
 static void
@@ -1031,7 +1024,6 @@ EmitBranchIsReturningFromCallVM(MacroAssembler& masm, Register entry, Label* lab
     EmitBranchICEntryKind(masm, entry, ICEntry::Kind_CallVM, label);
     EmitBranchICEntryKind(masm, entry, ICEntry::Kind_WarmupCounter, label);
     EmitBranchICEntryKind(masm, entry, ICEntry::Kind_StackCheck, label);
-    EmitBranchICEntryKind(masm, entry, ICEntry::Kind_EarlyStackCheck, label);
 }
 
 static void

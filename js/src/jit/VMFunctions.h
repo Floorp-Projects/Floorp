@@ -684,8 +684,7 @@ class InterpreterStubExitFrameLayout;
 bool InvokeFromInterpreterStub(JSContext* cx, InterpreterStubExitFrameLayout* frame);
 
 bool CheckOverRecursed(JSContext* cx);
-bool CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,
-                                uint32_t extra, uint32_t earlyCheck);
+bool CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame);
 
 JSObject* BindVar(JSContext* cx, HandleObject scopeChain);
 MOZ_MUST_USE bool

@@ -151,27 +151,18 @@ InvokeFromInterpreterStub(JSContext* cx, InterpreterStubExitFrameLayout* frame)
     return true;
 }
 
-#ifdef JS_SIMULATOR
-static bool
-CheckSimulatorRecursionLimitWithExtra(JSContext* cx, uint32_t extra)
-{
-    if (cx->simulator()->overRecursedWithExtra(extra)) {
-        ReportOverRecursed(cx);
-        return false;
-    }
-    return true;
-}
-#endif
-
 bool
 CheckOverRecursed(JSContext* cx)
 {
     // We just failed the jitStackLimit check. There are two possible reasons:
-    //  - jitStackLimit was the real stack limit and we're over-recursed
-    //  - jitStackLimit was set to UINTPTR_MAX by JSRuntime::requestInterrupt
-    //    and we need to call JSRuntime::handleInterrupt.
+    //  1) jitStackLimit was the real stack limit and we're over-recursed
+    //  2) jitStackLimit was set to UINTPTR_MAX by JSContext::requestInterrupt
+    //     and we need to call JSContext::handleInterrupt.
+
+    // This handles 1).
 #ifdef JS_SIMULATOR
-    if (!CheckSimulatorRecursionLimitWithExtra(cx, 0)) {
+    if (cx->simulator()->overRecursedWithExtra(0)) {
+        ReportOverRecursed(cx);
         return false;
     }
 #else
@@ -179,62 +170,27 @@ CheckOverRecursed(JSContext* cx)
         return false;
     }
 #endif
+
+    // This handles 2).
     gc::MaybeVerifyBarriers(cx);
     return cx->handleInterrupt();
 }
 
-// This function can get called in two contexts.  In the usual context, it's
-// called with earlyCheck=false, after the env chain has been initialized on
-// a baseline frame.  In this case, it's ok to throw an exception, so a failed
-// stack check returns false, and a successful stack check promps a check for
-// an interrupt from the runtime, which may also cause a false return.
-//
-// In the second case, it's called with earlyCheck=true, prior to frame
-// initialization.  An exception cannot be thrown in this instance, so instead
-// an error flag is set on the frame and true returned.
+// This function gets called when the overrecursion check fails for a Baseline
+// frame. This is just like CheckOverRecursed, with an extra check to handle
+// early stack check failures.
 bool
-CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,
-                           uint32_t extra, uint32_t earlyCheck)
+CheckOverRecursedBaseline(JSContext* cx, BaselineFrame* frame)
 {
-    MOZ_ASSERT_IF(earlyCheck, !frame->overRecursed());
-
-    // See |CheckOverRecursed| above.  This is a variant of that function which
-    // accepts an argument holding the extra stack space needed for the Baseline
-    // frame that's about to be pushed.
-    uint8_t spDummy;
-    uint8_t* checkSp = (&spDummy) - extra;
-    if (earlyCheck) {
-#ifdef JS_SIMULATOR
-        (void)checkSp;
-        if (!CheckSimulatorRecursionLimitWithExtra(cx, extra)) {
-            frame->setOverRecursed();
-        }
-#else
-        if (!CheckRecursionLimitWithStackPointer(cx, checkSp)) {
-            frame->setOverRecursed();
-        }
-#endif
-        return true;
-    }
-
     // The OVERRECURSED flag may have already been set on the frame by an
-    // early over-recursed check.  If so, throw immediately.
+    // early over-recursed check (before pushing the locals).  If so, throw
+    // immediately.
     if (frame->overRecursed()) {
+        ReportOverRecursed(cx);
         return false;
     }
 
-#ifdef JS_SIMULATOR
-    if (!CheckSimulatorRecursionLimitWithExtra(cx, extra)) {
-        return false;
-    }
-#else
-    if (!CheckRecursionLimitWithStackPointer(cx, checkSp)) {
-        return false;
-    }
-#endif
-
-    gc::MaybeVerifyBarriers(cx);
-    return cx->handleInterrupt();
+    return CheckOverRecursed(cx);
 }
 
 JSObject*

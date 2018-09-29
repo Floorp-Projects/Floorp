@@ -2138,7 +2138,7 @@ MacroAssemblerCompat::branchStackPtrRhs(Condition cond, AbsoluteAddress lhs, Lab
 {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch = temps.AcquireX();
-    movePtr(ImmPtr(lhs.addr), scratch.asUnsized());
+    loadPtr(lhs, scratch.asUnsized());
     // Cmp disallows SP as the rhs, so flip the operands and invert the
     // condition.
     Cmp(GetStackPointer64(), scratch);
