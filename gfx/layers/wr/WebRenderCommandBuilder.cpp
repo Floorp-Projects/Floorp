@@ -9,6 +9,7 @@
 #include "BasicLayers.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/ClipManager.h"
 #include "mozilla/layers/ImageClient.h"
@@ -746,6 +747,7 @@ struct DIGroup
         data->mInvalid = false;
       } else {
         BlobItemData* data = GetBlobItemData(item);
+        gfxCriticalError() << "DisplayItem" << item->Name() << "should be invalid";
         // if the item is invalid it needs to be fully contained
         MOZ_RELEASE_ASSERT(!data->mInvalid);
       }
