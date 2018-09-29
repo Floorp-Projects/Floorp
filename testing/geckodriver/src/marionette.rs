@@ -1406,7 +1406,6 @@ impl ToMarionette for JavascriptCommandParameters {
         let mut data = serde_json::to_value(self)?.as_object().unwrap().clone();
         data.insert("newSandbox".to_string(), Value::Bool(false));
         data.insert("specialPowers".to_string(), Value::Bool(false));
-        data.insert("scriptTimeout".to_string(), Value::Null);
         Ok(data)
     }
 }

@@ -546,13 +546,29 @@ where
 /// [`screenY`]: https://w3c.github.io/webdriver/webdriver-spec.html#dfn-screeny
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct WindowRectParameters {
-    #[serde(default, deserialize_with = "deserialize_to_i32")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_i32"
+    )]
     pub x: Option<i32>,
-    #[serde(default, deserialize_with = "deserialize_to_i32")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_i32"
+    )]
     pub y: Option<i32>,
-    #[serde(default, deserialize_with = "deserialize_to_positive_i32")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_positive_i32"
+    )]
     pub width: Option<i32>,
-    #[serde(default, deserialize_with = "deserialize_to_positive_i32")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_positive_i32"
+    )]
     pub height: Option<i32>,
 }
 
