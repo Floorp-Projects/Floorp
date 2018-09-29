@@ -1,5 +1,6 @@
 trust-domain: gecko
 project-repo-param-prefix: ''
+product-dir: 'browser'
 treeherder:
     group-names:
         'cram': 'Cram tests'

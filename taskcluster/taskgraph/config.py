@@ -24,12 +24,15 @@ graph_config_schema = Schema({
     # (See http://firefox-source-docs.mozilla.org/taskcluster/taskcluster/parameters.html#push-information  # noqa
     # and http://firefox-source-docs.mozilla.org/taskcluster/taskcluster/parameters.html#comm-push-information)  # noqa
     Required('project-repo-param-prefix'): basestring,
+    # This specifies the top level directory of the application being built.
+    # ie. "browser/" for Firefox, "comm/mail/" for Thunderbird.
+    Required('product-dir'): basestring,
     Required('treeherder'): {
         # Mapping of treeherder group symbols to descriptive names
         Required('group-names'): {basestring: basestring}
     },
     Required('index'): {
-        Required('products'): [basestring],
+        Required('products'): [basestring]
     },
     Required('try'): {
         # We have a few platforms for which we want to do some "extra" builds, or at
