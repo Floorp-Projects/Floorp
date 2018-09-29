@@ -88,9 +88,10 @@ var paymentRequest = {
 
     switch (messageType) {
       case "responseSent": {
+        let {request} = document.querySelector("payment-dialog").requestStore.getState();
         document.querySelector("payment-dialog").requestStore.setState({
           changesPrevented: true,
-          completionState: "processing",
+          request: Object.assign({}, request, { completeStatus: "processing" }),
         });
         break;
       }

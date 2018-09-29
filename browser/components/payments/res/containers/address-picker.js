@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import AddressForm from "./address-form.js";
 import AddressOption from "../components/address-option.js";
 import RichPicker from "./rich-picker.js";
 import paymentRequest from "../paymentRequest.js";
@@ -148,6 +149,24 @@ export default class AddressPicker extends RichPicker {
 
   get selectedStateKey() {
     return this.getAttribute("selected-state-key");
+  }
+
+  errorForSelectedOption(state) {
+    let superError = super.errorForSelectedOption(state);
+    if (superError) {
+      return superError;
+    }
+
+    if (!this.selectedOption) {
+      return "";
+    }
+
+    let merchantFieldErrors = AddressForm.merchantFieldErrorsForForm(state,
+                                                                     [this.selectedStateKey]);
+    // TODO: errors in priority order.
+    return Object.values(merchantFieldErrors).find(msg => {
+      return typeof(msg) == "string" && msg.length;
+    }) || "";
   }
 
   handleEvent(event) {

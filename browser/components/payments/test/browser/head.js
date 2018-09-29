@@ -412,14 +412,19 @@ async function navigateToAddAddressPage(frame, aOptions = {
 async function fillInBillingAddressForm(frame, aAddress) {
   // For now billing and shipping address forms have the same fields but that may
   // change so use separarate helpers.
-  return fillInShippingAddressForm(frame, aAddress);
+  return fillInShippingAddressForm(frame, aAddress, {
+    expectedSelectedStateKey: ["basic-card-page", "billingAddressGUID"],
+  });
 }
 
 async function fillInShippingAddressForm(frame, aAddress, aOptions) {
   let address = Object.assign({}, aAddress);
   // Email isn't used on address forms, only payer/contact ones.
   delete address.email;
-  return fillInAddressForm(frame, address, aOptions);
+  return fillInAddressForm(frame, address, {
+    expectedSelectedStateKey: ["selectedShippingAddress"],
+    ...aOptions,
+  });
 }
 
 async function fillInPayerAddressForm(frame, aAddress) {
@@ -431,12 +436,29 @@ async function fillInPayerAddressForm(frame, aAddress) {
     }
     delete address[fieldName];
   }
-  return fillInAddressForm(frame, address);
+  return fillInAddressForm(frame, address, {
+    expectedSelectedStateKey: ["selectedPayerAddress"],
+  });
 }
 
+/**
+ * @param {HTMLElement} frame
+ * @param {object} aAddress
+ * @param {object} [aOptions = {}]
+ * @param {boolean} [aOptions.setPersistCheckedValue = undefined] How to set the persist checkbox.
+ * @param {string[]} [expectedSelectedStateKey = undefined] The expected selectedStateKey for
+                                                            address-page.
+ */
 async function fillInAddressForm(frame, aAddress, aOptions = {}) {
   await spawnPaymentDialogTask(frame, async (args) => {
     let {address, options = {}} = args;
+
+    if (options.expectedSelectedStateKey) {
+      let store = Cu.waiveXrays(content.document.querySelector("address-form")).requestStore;
+      Assert.deepEqual(store.getState()["address-page"].selectedStateKey,
+                       options.expectedSelectedStateKey,
+                       "Check address page selectedStateKey");
+    }
 
     if (typeof(address.country) != "undefined") {
       // Set the country first so that the appropriate fields are visible.

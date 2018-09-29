@@ -66,6 +66,14 @@ function sendStringAndCheckValidity(element, string, isValid) {
 
 add_task(async function test_initialState() {
   let form = new AddressForm();
+
+  await form.requestStore.setState({
+    "address-page": {
+      selectedStateKey: ["selectedShippingAddress"],
+      title: "Sample page title",
+    },
+  });
+
   let {page} = form.requestStore.getState();
   is(page.id, "payment-summary", "Check initial page");
   await form.promiseReady;
@@ -88,15 +96,17 @@ add_task(async function test_backButton() {
       id: "address-page",
     },
     "address-page": {
+      selectedStateKey: ["selectedShippingAddress"],
       title: "Sample page title",
     },
   });
+
   await form.promiseReady;
   display.appendChild(form);
   await asyncElementRendered();
 
   let stateChangePromise = promiseStateChange(form.requestStore);
-  is(form.pageTitleHeading.textContent, "Sample page title", "Check label");
+  is(form.pageTitleHeading.textContent, "Sample page title", "Check title");
 
   is(form.backButton.textContent, "Back", "Check label");
   form.backButton.scrollIntoView();
@@ -208,6 +218,7 @@ add_task(async function test_edit() {
     },
     "address-page": {
       guid: address1.guid,
+      selectedStateKey: ["selectedShippingAddress"],
     },
     savedAddresses: {
       [address1.guid]: deepClone(address1),
@@ -231,6 +242,7 @@ add_task(async function test_edit() {
     },
     "address-page": {
       guid: minimalAddress.guid,
+      selectedStateKey: ["selectedShippingAddress"],
     },
     savedAddresses: {
       [minimalAddress.guid]: deepClone(minimalAddress),
@@ -250,7 +262,9 @@ add_task(async function test_edit() {
     page: {
       id: "address-page",
     },
-    "address-page": {},
+    "address-page": {
+      selectedStateKey: ["selectedShippingAddress"],
+    },
   });
   await asyncElementRendered();
   is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
@@ -272,6 +286,7 @@ add_task(async function test_restricted_address_fields() {
   await form.requestStore.setState({
     "address-page": {
       addressFields: "name email tel",
+      selectedStateKey: ["selectedPayerAddress"],
     },
   });
   await asyncElementRendered();
@@ -312,7 +327,9 @@ add_task(async function test_restricted_address_fields() {
 
   form.remove();
   await form.requestStore.setState({
-    "address-page": {},
+    "address-page": {
+      selectedStateKey: ["selectedShippingAddress"],
+    },
   });
 });
 
@@ -380,14 +397,21 @@ add_task(async function test_field_validation() {
   form.remove();
 });
 
-add_task(async function test_customMerchantValidity() {
+add_task(async function test_merchantShippingAddressErrors() {
   let form = new AddressForm();
   await form.promiseReady;
+
+  // Merchant errors only make sense when editing a record so add one.
+  let address1 = deepClone(PTU.Addresses.TimBL);
+  address1.guid = "9864798564";
+
   const state = {
     page: {
       id: "address-page",
     },
     "address-page": {
+      guid: address1.guid,
+      selectedStateKey: ["selectedShippingAddress"],
       title: "Sample page title",
     },
     request: {
@@ -403,6 +427,9 @@ add_task(async function test_customMerchantValidity() {
           region: "Region needs to start with a Y",
         },
       },
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
     },
   };
   await form.requestStore.setState(state);
@@ -434,11 +461,18 @@ add_task(async function test_customMerchantValidity() {
 add_task(async function test_customMerchantValidity_reset() {
   let form = new AddressForm();
   await form.promiseReady;
+
+  // Merchant errors only make sense when editing a record so add one.
+  let address1 = deepClone(PTU.Addresses.TimBL);
+  address1.guid = "9864798564";
+
   const state = {
     page: {
       id: "address-page",
     },
     "address-page": {
+      guid: address1.guid,
+      selectedStateKey: ["selectedShippingAddress"],
       title: "Sample page title",
     },
     request: {
@@ -454,6 +488,9 @@ add_task(async function test_customMerchantValidity_reset() {
           region: "Region needs to start with a Y",
         },
       },
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
     },
   };
   await form.requestStore.setState(state);
@@ -472,10 +509,168 @@ add_task(async function test_customMerchantValidity_reset() {
   await asyncElementRendered();
   is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
      "Check fields are visibly valid - custom validity cleared");
+
+  form.remove();
+});
+
+add_task(async function test_customMerchantValidity_correctAddressForm() {
+  let form = new AddressForm();
+  await form.promiseReady;
+
+  // Merchant errors only make sense when editing a record so add one.
+  let address1 = deepClone(PTU.Addresses.TimBL);
+  address1.guid = "9864798564";
+
+  const state = {
+    page: {
+      id: "address-page",
+    },
+    "address-page": {
+      guid: address1.guid,
+      selectedStateKey: ["selectedShippingAddress"],
+      title: "Edit Shipping Address",
+    },
+    request: {
+      paymentDetails: {
+        shippingAddressErrors: {
+          addressLine: "Street address needs to start with a D",
+          city: "City needs to start with a B",
+          country: "Country needs to start with a C",
+          organization: "organization needs to start with an A",
+          phone: "Telephone needs to start with a 9",
+          postalCode: "Postal code needs to start with a 0",
+          recipient: "Name needs to start with a Z",
+          region: "Region needs to start with a Y",
+        },
+      },
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
+    },
+  };
+  await form.requestStore.setState(state);
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  ok(form.querySelectorAll(":-moz-ui-invalid").length >= 8, "Check fields are visibly invalid");
+
+  info("change to a biling address form");
+  await form.requestStore.setState({
+    "address-page": {
+      guid: address1.guid,
+      selectedStateKey: ["basic-card-page", "billingAddressGUID"],
+      title: "Edit Billing Address",
+    },
+  });
+  await asyncElementRendered();
+  is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
+     "Check fields are visibly valid - shipping errors are not relevant to a billing address form");
+
+  info("change errors to billing address errors");
+  await form.requestStore.setState({
+    request: {
+      paymentDetails: {
+        paymentMethod: {
+          billingAddress: {
+            addressLine: "Billing Street address needs to start with a D",
+            city: "Billing City needs to start with a B",
+            country: "Billing Country needs to start with a C",
+            organization: "Billing organization needs to start with an A",
+            phone: "Billing Telephone needs to start with a 9",
+            postalCode: "Billing Postal code needs to start with a 0",
+            recipient: "Billing Name needs to start with a Z",
+            region: "Billing Region needs to start with a Y",
+          },
+        },
+      },
+    },
+  });
+  await asyncElementRendered();
+  ok(form.querySelectorAll(":-moz-ui-invalid").length >= 8,
+     "Check billing fields are visibly invalid");
+
+  info("change to an ADD shipping address form");
+  await form.requestStore.setState({
+    "address-page": {
+      guid: null,
+      selectedStateKey: ["selectedShippingAddress"],
+      title: "Edit Billing Address",
+    },
+  });
+  await asyncElementRendered();
+  is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
+     "Check fields are visibly valid - merchant errors are not relevant to an 'add' form");
+
+  form.remove();
+});
+
+add_task(async function test_merchantPayerAddressErrors() {
+  let form = new AddressForm();
+  await form.promiseReady;
+
+  // Merchant errors only make sense when editing a record so add one.
+  let address1 = deepClone(PTU.Addresses.TimBL);
+  address1.guid = "9864798564";
+
+  const state = {
+    page: {
+      id: "address-page",
+    },
+    "address-page": {
+      addressFields: "name email tel",
+      guid: address1.guid,
+      selectedStateKey: ["selectedPayerAddress"],
+      title: "Edit Payer Address",
+    },
+    request: {
+      paymentDetails: {
+        payer: {
+          email: "Email must be @mozilla.org",
+          name: "Name needs to start with a W",
+          phone: "Telephone needs to start with a 1",
+        },
+      },
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
+    },
+  };
+  await form.requestStore.setState(state);
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  function checkValidationMessage(selector, property) {
+    is(form.form.querySelector(selector).validationMessage,
+       state.request.paymentDetails.payer[property],
+       "Validation message should match for " + selector);
+  }
+
+  ok(form.saveButton.disabled, "Save button should be disabled due to validation errors");
+
+  checkValidationMessage("#tel", "phone");
+  checkValidationMessage("#family-name", "name");
+  checkValidationMessage("#email", "email");
+
+  is(form.querySelectorAll(":-moz-ui-invalid").length, 3, "Check payer fields are visibly invalid");
+
+  await form.requestStore.setState({
+    request: {
+      paymentDetails: {
+        payer: {},
+      },
+    },
+  });
+  await asyncElementRendered();
+
+  is(form.querySelectorAll(":-moz-ui-invalid").length, 0,
+     "Check payer fields are visibly valid after clearing merchant errors");
+
+  form.remove();
 });
 
 add_task(async function test_field_validation() {
-  sinon.stub(PaymentDialogUtils, "getFormFormat").returns({
+  let getFormFormatStub = sinon.stub(PaymentDialogUtils, "getFormFormat");
+  getFormFormatStub.returns({
     addressLevel1Label: "state",
     postalCodeLabel: "US",
     fieldsOrder: [
@@ -493,6 +688,7 @@ add_task(async function test_field_validation() {
       id: "address-page",
     },
     "address-page": {
+      selectedStateKey: ["selectedShippingAddress"],
       title: "Sample page title",
     },
     request: {
@@ -516,10 +712,11 @@ add_task(async function test_field_validation() {
   ok(addressLevel1Input.checkValidity(),
      "address-level1 should be valid by default when it is not visible");
 
+  getFormFormatStub.restore();
   form.remove();
 });
 
-add_task(async function test_field_validation_dom_errors() {
+add_task(async function test_field_validation_dom_popup() {
   let form = new AddressForm();
   await form.promiseReady;
   const state = {
@@ -527,15 +724,17 @@ add_task(async function test_field_validation_dom_errors() {
       id: "address-page",
     },
     "address-page": {
+      selectedStateKey: ["selectedShippingAddress"],
       title: "Sample page title",
     },
   };
+
   await form.requestStore.setState(state);
   display.appendChild(form);
   await asyncElementRendered();
 
   const BAD_POSTAL_CODE = "hi mom";
-  let postalCode = document.getElementById("postal-code");
+  let postalCode = form.querySelector("#postal-code");
   postalCode.focus();
   sendString(BAD_POSTAL_CODE, window);
   postalCode.blur();

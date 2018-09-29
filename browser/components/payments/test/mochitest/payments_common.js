@@ -50,7 +50,9 @@ function promiseContentToChromeMessage(messageType) {
  * @param {HTMLElement} destinationEl - Where to append the copied resources
  */
 function importDialogDependencies(templateFrame, destinationEl) {
-  for (let template of templateFrame.contentDocument.querySelectorAll("template")) {
+  let templates = templateFrame.contentDocument.querySelectorAll("template");
+  isnot(templates, null, "Check some templates found");
+  for (let template of templates) {
     let imported = document.importNode(template, true);
     destinationEl.appendChild(imported);
   }
