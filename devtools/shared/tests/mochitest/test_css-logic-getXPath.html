@@ -12,7 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987877
   <script type="application/javascript">
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/css-selector.js", this);
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const CssLogic = require("devtools/shared/inspector/css-logic");
 
 const _tests = [];
 function addTest(test) {
@@ -35,19 +36,19 @@ window.onload = function () {
 addTest(function getXPathForUnattachedElement() {
   let unattached = document.createElement("div");
   unattached.id = "unattached";
-  is(getXPath(unattached), "", "Unattached node returns empty string");
+  is(CssLogic.getXPath(unattached), "", "Unattached node returns empty string");
 
   let unattachedChild = document.createElement("div");
   unattached.appendChild(unattachedChild);
-  is(getXPath(unattachedChild), "", "Unattached child returns empty string");
+  is(CssLogic.getXPath(unattachedChild), "", "Unattached child returns empty string");
 
   let unattachedBody = document.createElement("body");
-  is(getXPath(unattachedBody), "", "Unattached body returns empty string");
+  is(CssLogic.getXPath(unattachedBody), "", "Unattached body returns empty string");
 
   runNextTest();
 });
 
-addTest(function testGetXPath() {
+addTest(function getXPath() {
   let data = [{
     // Target elements that have an ID get a short XPath.
     selector: "#i-have-an-id",
@@ -69,7 +70,7 @@ addTest(function testGetXPath() {
 
   for (let {selector, path} of data) {
     let node = document.querySelector(selector);
-    is(getXPath(node), path, `Full css path is correct for ${selector}`);
+    is(CssLogic.getXPath(node), path, `Full css path is correct for ${selector}`);
   }
 
   runNextTest();
