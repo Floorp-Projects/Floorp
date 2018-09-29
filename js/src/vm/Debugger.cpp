@@ -1029,9 +1029,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 RootedValue wrappedValue(cx, value);
                 RootedValue completion(cx);
                 if (!dbg->wrapDebuggeeValue(cx, &wrappedValue)) {
-                {
                     resumeMode = dbg->reportUncaughtException(ar);
-                }
                     break;
                 }
 
