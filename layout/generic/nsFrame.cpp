@@ -1173,9 +1173,8 @@ nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
   // correctness because text nodes themselves shouldn't have effects applied.
   if (!IsTextFrame() && !GetPrevContinuation()) {
     // Kick off loading of external SVG resources referenced from properties if
-    // any. This currently includes filter, clip-path, and mask. We don't care
-    // about the return value. We only want its side effect.
-    Unused << SVGObserverUtils::GetEffectProperties(this);
+    // any. This currently includes filter, clip-path, and mask.
+    SVGObserverUtils::InitiateResourceDocLoads(this);
   }
 
   // If the page contains markup that overrides text direction, and
