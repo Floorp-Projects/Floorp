@@ -820,6 +820,14 @@ nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
 {
   HideWindowChrome(aFullScreen);
 
+  nsCOMPtr<nsIScreen> screen = aScreen;
+  if (!screen) {
+    screen = GetWidgetScreen();
+    if (!screen) {
+      return;
+    }
+  }
+
   if (aFullScreen) {
     if (!mOriginalBounds) {
       mOriginalBounds = new LayoutDeviceIntRect();
@@ -827,25 +835,26 @@ nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
     *mOriginalBounds = GetScreenBounds();
 
     // Move to top-left corner of screen and size to the screen dimensions
-    nsCOMPtr<nsIScreen> screen = aScreen;
-    if (!screen) {
-      screen = GetWidgetScreen();
-    }
-    if (screen) {
-      int32_t left, top, width, height;
-      if (NS_SUCCEEDED(screen->GetRectDisplayPix(&left, &top, &width, &height))) {
-        Resize(left, top, width, height, true);
-      }
+    int32_t left, top, width, height;
+    if (NS_SUCCEEDED(screen->GetRectDisplayPix(&left, &top, &width, &height))) {
+      Resize(left, top, width, height, true);
     }
   } else if (mOriginalBounds) {
+    int32_t left, top, width, height;
+    if (NS_FAILED(screen->GetAvailRectDisplayPix(&left, &top,
+                                                 &width, &height))) {
+      return;
+    }
+    gfx::Rect screenRect(left, top, width, height);
+    gfx::Rect rect;
     if (BoundsUseDesktopPixels()) {
       DesktopRect deskRect = *mOriginalBounds / GetDesktopToDeviceScale();
-      Resize(deskRect.X(), deskRect.Y(),
-	     deskRect.Width(), deskRect.Height(), true);
+      rect = deskRect.ToUnknownRect();
     } else {
-      Resize(mOriginalBounds->X(), mOriginalBounds->Y(),
-	     mOriginalBounds->Width(), mOriginalBounds->Height(), true);
+      rect = gfx::Rect(mOriginalBounds->ToUnknownRect());
     }
+    rect = rect.MoveInsideAndClamp(screenRect);
+    Resize(rect.x, rect.y, rect.width, rect.height, true);
   }
 }
 
