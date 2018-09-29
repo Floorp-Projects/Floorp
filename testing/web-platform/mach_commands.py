@@ -152,24 +152,6 @@ class WebPlatformTestsUpdater(MozbuildObject):
 #            pdb.post_mortem()
 
 
-class WebPlatformTestsReduce(WebPlatformTestsRunner):
-
-    def run_reduce(self, **kwargs):
-        from wptrunner import reduce
-
-        self.setup_kwargs(kwargs)
-
-        kwargs["capture_stdio"] = True
-        logger = reduce.setup_logging(kwargs, {"mach": sys.stdout})
-        tests = reduce.do_reduce(**kwargs)
-
-        if not tests:
-            logger.warning("Test was not unstable")
-
-        for item in tests:
-            logger.info(item.id)
-
-
 class WebPlatformTestsCreator(MozbuildObject):
     template_prefix = """<!doctype html>
 %(documentElement)s<meta charset=utf-8>
@@ -314,11 +296,6 @@ def create_parser_update():
     return updatecommandline.create_parser()
 
 
-def create_parser_reduce():
-    from wptrunner import wptcommandline
-    return wptcommandline.create_parser_reduce()
-
-
 def create_parser_create():
     import argparse
     p = argparse.ArgumentParser()
@@ -399,22 +376,6 @@ class MachCommands(MachCommandBase):
              parser=create_parser_update)
     def update_wpt(self, **params):
         return self.update_web_platform_tests(**params)
-
-    @Command("web-platform-tests-reduce",
-             category="testing",
-             conditions=[conditions.is_firefox],
-             parser=create_parser_reduce)
-    def unstable_web_platform_tests(self, **params):
-        self.setup()
-        wpt_reduce = self._spawn(WebPlatformTestsReduce)
-        return wpt_reduce.run_reduce(**params)
-
-    @Command("wpt-reduce",
-             category="testing",
-             conditions=[conditions.is_firefox],
-             parser=create_parser_reduce)
-    def unstable_wpt(self, **params):
-        return self.unstable_web_platform_tests(**params)
 
     @Command("web-platform-tests-create",
              category="testing",
