@@ -194,10 +194,10 @@ nsImageRenderer::PrepareImage()
 
       // If the referenced element is an <img>, <canvas>, or <video> element,
       // prefer SurfaceFromElement as it's more reliable.
-      mImageElementSurface =
-        nsLayoutUtils::SurfaceFromElement(property->GetReferencedElement());
+      mImageElementSurface = nsLayoutUtils::SurfaceFromElement(
+                               property->GetAndObserveReferencedElement());
       if (!mImageElementSurface.GetSourceSurface()) {
-        nsIFrame* paintServerFrame = property->GetReferencedFrame();
+        nsIFrame* paintServerFrame = property->GetAndObserveReferencedFrame();
         // If there's no referenced frame, or the referenced frame is
         // non-displayable SVG, then we have nothing valid to paint.
         if (!paintServerFrame ||

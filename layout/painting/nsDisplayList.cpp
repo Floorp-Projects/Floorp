@@ -9718,7 +9718,8 @@ nsDisplayMasksAndClipPaths::IsValidMask() {
   SVGObserverUtils::EffectProperties effectProperties =
     SVGObserverUtils::GetEffectProperties(firstFrame);
 
-  if (effectProperties.HasInvalidClipPath() ||
+  if (SVGObserverUtils::GetAndObserveClipPath(firstFrame, nullptr) ==
+        SVGObserverUtils::eHasRefsSomeInvalid ||
       effectProperties.HasInvalidMask()) {
     return false;
   }
@@ -10036,13 +10037,15 @@ nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo)
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
   SVGObserverUtils::EffectProperties effectProperties =
     SVGObserverUtils::GetEffectProperties(firstFrame);
-  nsSVGClipPathFrame* clipPathFrame = effectProperties.GetClipPathFrame();
   bool first = true;
   aTo += " effects=(";
   if (mFrame->StyleEffects()->mOpacity != 1.0f && mHandleOpacity) {
     first = false;
     aTo += nsPrintfCString("opacity(%f)", mFrame->StyleEffects()->mOpacity);
   }
+  nsSVGClipPathFrame* clipPathFrame;
+  // XXX Check return value?
+  SVGObserverUtils::GetAndObserveClipPath(firstFrame, &clipPathFrame);
   if (clipPathFrame) {
     if (!first) {
       aTo += ", ";
@@ -10050,9 +10053,7 @@ nsDisplayMasksAndClipPaths::PrintEffects(nsACString& aTo)
     aTo += nsPrintfCString(
       "clip(%s)", clipPathFrame->IsTrivial() ? "trivial" : "non-trivial");
     first = false;
-  }
-  const nsStyleSVGReset* style = mFrame->StyleSVGReset();
-  if (style->HasClipPath() && !clipPathFrame) {
+  } else if (mFrame->StyleSVGReset()->HasClipPath()) {
     if (!first) {
       aTo += ", ";
     }
