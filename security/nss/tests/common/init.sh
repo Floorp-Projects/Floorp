@@ -356,40 +356,34 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
 #HOST and DOMSUF are needed for the server cert
 
-    DOMAINNAME=`which domainname`
-    if [ -z "${DOMSUF}" -a $? -eq 0 -a -n "${DOMAINNAME}" ]; then
+    if [ -z "$DOMSUF" ] && hash domainname 2>/dev/null; then
         DOMSUF=`domainname`
     fi
+    # hostname -d and domainname both return (none) if hostname doesn't
+    # include a dot.  Pretend we didn't get an answer.
+    if [ "$DOMSUF" = "(none)" ]; then
+        DOMSUF=
+    fi
 
-    case $HOST in
+    if [ -z "$HOST" ]; then
+        HOST=`uname -n`
+    fi
+    case "$HOST" in
         *\.*)
-            if [ -z "${DOMSUF}" ]; then
-                DOMSUF=`echo $HOST | sed -e "s/^[^.]*\.//"`
+            if [ -z "$DOMSUF" ]; then
+                DOMSUF="${HOST#*.}"
             fi
-            HOST=`echo $HOST | sed -e "s/\..*//"`
+            HOST="${HOST%%.*}"
             ;;
         ?*)
             ;;
         *)
-            HOST=`uname -n`
-            case $HOST in
-                *\.*)
-                    if [ -z "${DOMSUF}" ]; then
-                        DOMSUF=`echo $HOST | sed -e "s/^[^.]*\.//"`
-                    fi
-                    HOST=`echo $HOST | sed -e "s/\..*//"`
-                    ;;
-                ?*)
-                    ;;
-                *)
-                    echo "$SCRIPTNAME: Fatal HOST environment variable is not defined."
-                    exit 1 #does not need to be Exit, very early in script
-                    ;;
-            esac
+            echo "$SCRIPTNAME: Fatal HOST environment variable is not defined."
+            exit 1 #does not need to be Exit, very early in script
             ;;
     esac
 
-    if [ -z "${DOMSUF}" -a "${OS_ARCH}" != "Android" ]; then
+    if [ -z "$DOMSUF" -a "$OS_ARCH" != "Android" ]; then
         echo "$SCRIPTNAME: Fatal DOMSUF env. variable is not defined."
         exit 1 #does not need to be Exit, very early in script
     fi
@@ -397,8 +391,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 #HOSTADDR was a workaround for the dist. stress test, and is probably
 #not needed anymore (purpose: be able to use IP address for the server
 #cert instead of PC name which was not in the DNS because of dyn IP address
-    if [ -z "$USE_IP" -o "$USE_IP" != "TRUE" ] ; then
-        if [ -z "${DOMSUF}" ]; then
+    if [ "$USE_IP" != "TRUE" ] ; then
+        if [ -z "$DOMSUF" ]; then
             HOSTADDR=${HOST}
         else
             HOSTADDR=${HOST}.${DOMSUF}
@@ -595,7 +589,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         P_R_EXT_SERVERDIR="multiaccess:${D_EXT_SERVER}"
         P_R_EXT_CLIENTDIR="multiaccess:${D_EXT_CLIENT}"
         P_R_IMPLICIT_INIT_DIR="multiaccess:${D_IMPLICIT_INIT}"
-	P_R_RSAPSSDIR="multiaccess:${D_RSAPSS}"
+        P_R_RSAPSSDIR="multiaccess:${D_RSAPSS}"
     fi
 
     R_PWFILE=../tests.pw

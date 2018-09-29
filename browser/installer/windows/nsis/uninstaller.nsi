@@ -656,16 +656,17 @@ Function un.onGUIEnd
     ; not going to go around starting elevated web browsers. But to start an
     ; unelevated process directly from here we need a pretty nasty hack; see
     ; the ExecInExplorer plugin code itself for the details.
+    ; If we were the default browser and we've now been uninstalled, we need
+    ; to take steps to make sure the user doesn't see an "open with" dialog;
+    ; they're helping us out by answering this survey, they don't need more
+    ; friction. Sometimes Windows 7 and 8 automatically switch the default to
+    ; IE, but it isn't reliable, so we'll manually invoke IE in that case.
+    ; Windows 10 always seems to just clear the default browser, so for it
+    ; we'll manually invoke Edge using Edge's custom URI scheme.
     ${If} ${AtLeastWin10}
-      ; If we were the default browser and we've now been uninstalled, we need
-      ; to take steps to make sure the user doesn't see an "open with" dialog;
-      ; they're helping us out by answering this survey, they don't need more
-      ; friction. Windows 7 and 8 automatically switch the default to IE, so
-      ; nothing to do for those, but 10 leaves the default empty and does show
-      ; the dialog, so we have to force Edge there.
       ExecInExplorer::Exec "microsoft-edge:$R1"
     ${Else}
-      ExecInExplorer::Exec "$R1"
+      ExecInExplorer::Exec "iexplore.exe" /cmdargs "$R1"
     ${EndIf}
   ${EndIf}
 FunctionEnd

@@ -6,8 +6,7 @@
 
 "use strict";
 
-const {escapeCSSComment} = require("devtools/shared/css/parsing-utils");
-const {getCssProperties} = require("devtools/shared/fronts/css-properties");
+loader.lazyRequireGetter(this, "escapeCSSComment", "devtools/shared/css/parsing-utils", true);
 
 /**
  * TextProperty is responsible for the following:
@@ -42,10 +41,8 @@ function TextProperty(rule, name, value, priority, enabled = true,
   this.priority = priority;
   this.enabled = !!enabled;
   this.invisible = invisible;
+  this.cssProperties = this.rule.elementStyle.ruleView.cssProperties;
   this.panelDoc = this.rule.elementStyle.ruleView.inspector.panelDoc;
-
-  const toolbox = this.rule.elementStyle.ruleView.inspector.toolbox;
-  this.cssProperties = getCssProperties(toolbox);
 
   this.updateComputed();
 }

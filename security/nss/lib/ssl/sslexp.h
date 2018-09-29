@@ -452,8 +452,65 @@ typedef SECStatus(PR_CALLBACK *SSLResumptionTokenCallback)(
                          (PRFileDesc * _fd, PRUint32 _size), \
                          (fd, size))
 
-/* Deprecated experimental APIs */
+/* Set the ESNI key pair on a socket (server side)
+ *
+ * fd -- the socket
+ * record/recordLen -- the encoded DNS record (not base64)
+ *
+ * Important: the suites that are advertised in the record must
+ * be configured on, or this call will fail.
+ */
+#define SSL_SetESNIKeyPair(fd,                                              \
+                           privKey, record, recordLen)                      \
+    SSL_EXPERIMENTAL_API("SSL_SetESNIKeyPair",                              \
+                         (PRFileDesc * _fd,                                 \
+                          SECKEYPrivateKey * _privKey,                      \
+                          const PRUint8 *_record, unsigned int _recordLen), \
+                         (fd, privKey,                                      \
+                          record, recordLen))
 
+/* Set the ESNI keys on a client
+ *
+ * fd -- the socket
+ * ensikeys/esniKeysLen -- the ESNI key structure (not base64)
+ * dummyESNI -- the dummy ESNI to use (if any)
+ */
+#define SSL_EnableESNI(fd, esniKeys, esniKeysLen, dummySNI) \
+    SSL_EXPERIMENTAL_API("SSL_EnableESNI",                  \
+                         (PRFileDesc * _fd,                 \
+                          const PRUint8 *_esniKeys,         \
+                          unsigned int _esniKeysLen,        \
+                          const char *_dummySNI),           \
+                         (fd, esniKeys, esniKeysLen, dummySNI))
+
+/*
+ * Generate an encoded ESNIKeys structure (presumably server side).
+ *
+ * cipherSuites -- the cipher suites that can be used
+ * cipherSuitesCount -- the number of suites in cipherSuites
+ * group -- the named group this key corresponds to
+ * pubKey -- the public key for the key pair
+ * pad -- the length to pad to
+ * notBefore/notAfter -- validity range
+ * out/outlen/maxlen -- where to output the data
+ */
+#define SSL_EncodeESNIKeys(cipherSuites, cipherSuiteCount,          \
+                           group, pubKey, pad, notBefore, notAfter, \
+                           out, outlen, maxlen)                     \
+    SSL_EXPERIMENTAL_API("SSL_EncodeESNIKeys",                      \
+                         (PRUint16 * _cipherSuites,                 \
+                          unsigned int _cipherSuiteCount,           \
+                          SSLNamedGroup _group,                     \
+                          SECKEYPublicKey *_pubKey,                 \
+                          PRUint16 _pad,                            \
+                          PRUint64 _notBefore, PRUint64 _notAfter,  \
+                          PRUint8 *_out, unsigned int *_outlen,     \
+                          unsigned int _maxlen),                    \
+                         (cipherSuites, cipherSuiteCount,           \
+                          group, pubKey, pad, notBefore, notAfter,  \
+                          out, outlen, maxlen))
+
+/* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API
 
 SEC_END_PROTOS

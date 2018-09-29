@@ -91,6 +91,10 @@ SECStatus ssl3_HandleExtendedMasterSecretXtn(const sslSocket *ss,
                                              SECItem *data);
 SECStatus ssl3_ProcessSessionTicketCommon(sslSocket *ss, const SECItem *ticket,
                                           /* out */ SECItem *appToken);
+PRBool ssl_ShouldSendSNIExtension(const sslSocket *ss, const char *url);
+SECStatus ssl3_ClientFormatServerNameXtn(const sslSocket *ss, const char *url,
+                                         TLSExtensionData *xtnData,
+                                         sslBuffer *buf);
 SECStatus ssl3_ClientSendServerNameXtn(const sslSocket *ss,
                                        TLSExtensionData *xtnData,
                                        sslBuffer *buf, PRBool *added);

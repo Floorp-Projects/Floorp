@@ -656,7 +656,7 @@ ssl_LookupCipherSuiteCfgMutable(ssl3CipherSuite suite,
     return NULL;
 }
 
-const static ssl3CipherSuiteCfg *
+const ssl3CipherSuiteCfg *
 ssl_LookupCipherSuiteCfg(ssl3CipherSuite suite, const ssl3CipherSuiteCfg *suites)
 {
     return ssl_LookupCipherSuiteCfgMutable(suite,
@@ -854,9 +854,9 @@ ssl3_config_match_init(sslSocket *ss)
 /* Return PR_TRUE if suite is usable.  This if the suite is permitted by policy,
  * enabled, has a certificate (as needed), has a viable key agreement method, is
  * usable with the negotiated TLS version, and is otherwise usable. */
-static PRBool
-config_match(const ssl3CipherSuiteCfg *suite, PRUint8 policy,
-             const SSLVersionRange *vrange, const sslSocket *ss)
+PRBool
+ssl3_config_match(const ssl3CipherSuiteCfg *suite, PRUint8 policy,
+                  const SSLVersionRange *vrange, const sslSocket *ss)
 {
     const ssl3CipherSuiteDef *cipher_def;
     const ssl3KEADef *kea_def;
@@ -899,7 +899,7 @@ count_cipher_suites(sslSocket *ss, PRUint8 policy)
         return 0;
     }
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
-        if (config_match(&ss->cipherSuites[i], policy, &ss->vrange, ss))
+        if (ssl3_config_match(&ss->cipherSuites[i], policy, &ss->vrange, ss))
             count++;
     }
     if (count == 0) {
@@ -4798,7 +4798,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         suite = ssl_LookupCipherSuiteCfg(sid->u.ssl3.cipherSuite,
                                          ss->cipherSuites);
         PORT_Assert(suite);
-        if (!suite || !config_match(suite, ss->ssl3.policy, &ss->vrange, ss)) {
+        if (!suite || !ssl3_config_match(suite, ss->ssl3.policy, &ss->vrange, ss)) {
             sidOK = PR_FALSE;
         }
 
@@ -4946,6 +4946,14 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         PR_RWLock_Rlock(sid->u.ssl3.lock);
     }
 
+    /* Generate a new random if this is the first attempt. */
+    if (type == client_hello_initial) {
+        rv = ssl3_GetNewRandom(ss->ssl3.hs.client_random);
+        if (rv != SECSuccess) {
+            goto loser; /* err set by GetNewRandom. */
+        }
+    }
+
     if (ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3 &&
         type == client_hello_initial) {
         rv = tls13_SetupClientHello(ss);
@@ -4953,6 +4961,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
             goto loser;
         }
     }
+
     if (isTLS || (ss->firstHsDone && ss->peerRequestedProtection)) {
         rv = ssl_ConstructExtensions(ss, &extensionBuf, ssl_hs_client_hello);
         if (rv != SECSuccess) {
@@ -5024,13 +5033,6 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         goto loser; /* err set by ssl3_AppendHandshake* */
     }
 
-    /* Generate a new random if this is the first attempt. */
-    if (type == client_hello_initial) {
-        rv = ssl3_GetNewRandom(ss->ssl3.hs.client_random);
-        if (rv != SECSuccess) {
-            goto loser; /* err set by GetNewRandom. */
-        }
-    }
     rv = ssl3_AppendHandshake(ss, ss->ssl3.hs.client_random,
                               SSL3_RANDOM_LENGTH);
     if (rv != SECSuccess) {
@@ -5085,7 +5087,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     }
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
         ssl3CipherSuiteCfg *suite = &ss->cipherSuites[i];
-        if (config_match(suite, ss->ssl3.policy, &ss->vrange, ss)) {
+        if (ssl3_config_match(suite, ss->ssl3.policy, &ss->vrange, ss)) {
             actual_count++;
             if (actual_count > num_suites) {
                 /* set error card removal/insertion error */
@@ -6326,7 +6328,7 @@ ssl_ClientSetCipherSuite(sslSocket *ss, SSL3ProtocolVersion version,
         ssl3CipherSuiteCfg *suiteCfg = &ss->cipherSuites[i];
         if (suite == suiteCfg->cipher_suite) {
             SSLVersionRange vrange = { version, version };
-            if (!config_match(suiteCfg, ss->ssl3.policy, &vrange, ss)) {
+            if (!ssl3_config_match(suiteCfg, ss->ssl3.policy, &vrange, ss)) {
                 /* config_match already checks whether the cipher suite is
                  * acceptable for the version, but the check is repeated here
                  * in order to give a more precise error code. */
@@ -7858,6 +7860,30 @@ ssl3_KEASupportsTickets(const ssl3KEADef *kea_def)
     return PR_TRUE;
 }
 
+SECStatus
+ssl3_NegotiateCipherSuiteInner(sslSocket *ss, const SECItem *suites,
+                               PRUint16 version, PRUint16 *suitep)
+{
+    unsigned int j;
+    unsigned int i;
+
+    for (j = 0; j < ssl_V3_SUITES_IMPLEMENTED; j++) {
+        ssl3CipherSuiteCfg *suite = &ss->cipherSuites[j];
+        SSLVersionRange vrange = { version, version };
+        if (!ssl3_config_match(suite, ss->ssl3.policy, &vrange, ss)) {
+            continue;
+        }
+        for (i = 0; i + 1 < suites->len; i += 2) {
+            PRUint16 suite_i = (suites->data[i] << 8) | suites->data[i + 1];
+            if (suite_i == suite->cipher_suite) {
+                *suitep = suite_i;
+                return SECSuccess;
+            }
+        }
+    }
+    return SECFailure;
+}
+
 /* Select a cipher suite.
 **
 ** NOTE: This suite selection algorithm should be the same as the one in
@@ -7876,24 +7902,16 @@ SECStatus
 ssl3_NegotiateCipherSuite(sslSocket *ss, const SECItem *suites,
                           PRBool initHashes)
 {
-    unsigned int j;
-    unsigned int i;
+    PRUint16 selected;
+    SECStatus rv;
 
-    for (j = 0; j < ssl_V3_SUITES_IMPLEMENTED; j++) {
-        ssl3CipherSuiteCfg *suite = &ss->cipherSuites[j];
-        SSLVersionRange vrange = { ss->version, ss->version };
-        if (!config_match(suite, ss->ssl3.policy, &vrange, ss)) {
-            continue;
-        }
-        for (i = 0; i + 1 < suites->len; i += 2) {
-            PRUint16 suite_i = (suites->data[i] << 8) | suites->data[i + 1];
-            if (suite_i == suite->cipher_suite) {
-                ss->ssl3.hs.cipher_suite = suite_i;
-                return ssl3_SetupCipherSuite(ss, initHashes);
-            }
-        }
+    rv = ssl3_NegotiateCipherSuiteInner(ss, suites, ss->version, &selected);
+    if (rv != SECSuccess) {
+        return SECFailure;
     }
-    return SECFailure;
+
+    ss->ssl3.hs.cipher_suite = selected;
+    return ssl3_SetupCipherSuite(ss, initHashes);
 }
 
 /*
@@ -8025,9 +8043,12 @@ ssl3_ServerCallSNICallback(sslSocket *ss)
                 }
                 /* Need to tell the client that application has picked
                  * the name from the offered list and reconfigured the socket.
+                 * Don't do this if we negotiated ESNI.
                  */
-                ssl3_RegisterExtensionSender(ss, &ss->xtnData, ssl_server_name_xtn,
-                                             ssl_SendEmptyExtension);
+                if (!ssl3_ExtensionNegotiated(ss, ssl_tls13_encrypted_sni_xtn)) {
+                    ssl3_RegisterExtensionSender(ss, &ss->xtnData, ssl_server_name_xtn,
+                                                 ssl_SendEmptyExtension);
+                }
             } else {
                 /* Callback returned index outside of the boundary. */
                 PORT_Assert((unsigned int)ret < ss->xtnData.sniNameArrSize);
@@ -8631,7 +8652,7 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
              * The product policy won't change during the process lifetime.
              * Implemented ("isPresent") shouldn't change for servers.
              */
-            if (!config_match(suite, ss->ssl3.policy, &vrange, ss))
+            if (!ssl3_config_match(suite, ss->ssl3.policy, &vrange, ss))
                 break;
 #else
             if (!suite->enabled)
@@ -9013,7 +9034,7 @@ ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, unsigned int leng
     for (j = 0; j < ssl_V3_SUITES_IMPLEMENTED; j++) {
         ssl3CipherSuiteCfg *suite = &ss->cipherSuites[j];
         SSLVersionRange vrange = { ss->version, ss->version };
-        if (!config_match(suite, ss->ssl3.policy, &vrange, ss)) {
+        if (!ssl3_config_match(suite, ss->ssl3.policy, &vrange, ss)) {
             continue;
         }
         for (i = 0; i + 2 < suite_length; i += 3) {

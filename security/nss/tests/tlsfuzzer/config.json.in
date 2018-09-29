@@ -1,0 +1,166 @@
+[
+    {
+        "server_command": [
+            "@SELFSERV@", "-w", "nss", "-d", "@SERVERDIR@",
+            "-V", "tls1.0:", "-H", "1",
+            "-n", "rsa",
+            "-n", "rsa-pss",
+	    "-J", "rsa_pss_rsae_sha256,rsa_pss_rsae_sha384,rsa_pss_rsae_sha512,rsa_pss_pss_sha256",
+            "-u", "-Z", "-p", "@PORT@"
+        ],
+        "server_hostname": "@HOSTADDR@",
+        "server_port": @PORT@,
+        "tests" : [
+            {
+                "name" : "test-tls13-conversation.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ]
+            },
+            {
+                "name" : "test-tls13-count-tickets.py",
+                "arguments": [
+                    "-p", "@PORT@", "-t", "1"
+                ]
+            },
+            {
+                "name" : "test-tls13-dhe-shared-secret-padding.py",
+                "comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1305243",
+                "arguments": [
+                    "-p", "@PORT@",
+                    "-e", "TLS 1.3 with x448"
+                ]
+            },
+            {
+                "name" : "test-tls13-empty-alert.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ],
+                "comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1471656",
+                "exp_pass": false
+            },
+            {
+                "name" : "test-tls13-ffdhe-sanity.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ]
+            },
+            {
+                "name" : "test-tls13-finished.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ],
+                "comment" : "https://bugzilla.mozilla.org/show_bug.cgi?id=1472747",
+                "exp_pass": false
+            },
+            {
+                "name" : "test-tls13-0rtt-garbage.py",
+                "comment": "the disabled test timeouts because of https://bugzilla.mozilla.org/show_bug.cgi?id=1472747",
+                "arguments": [
+                    "-p", "@PORT@", "--cookie",
+                    "-e", "undecryptable record later in handshake together with early_data"
+                ]
+            },
+            {
+                "name" : "test-tls13-hrr.py",
+                "arguments": [
+                    "-p", "@PORT@", "--cookie"
+                ]
+            },
+            {
+                "name" : "test-tls13-legacy-version.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ],
+                "comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1490006",
+                "exp_pass": false
+            },
+            {
+                "name" : "test-tls13-nociphers.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ]
+            },
+            {
+                "name" : "test-tls13-pkcs-signature.py",
+                "comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1489997",
+                "arguments": [
+                    "-p", "@PORT@",
+                    "-e", "rsa_pkcs1_sha256 signature",
+                    "-e", "rsa_pkcs1_sha384 signature",
+                    "-e", "rsa_pkcs1_sha512 signature"
+                ]
+            },
+            {
+                "name" : "test-tls13-rsa-signatures.py",
+		"comment": "selfserv can be set up to use multiple certs, but only one for each auth type",
+                "arguments": [
+                    "-p", "@PORT@", "-b",
+		    "-e", "tls13 signature rsa_pss_pss_sha384",
+		    "-e", "tls13 signature rsa_pss_pss_sha512"
+                ]
+            },
+            {
+                "name" : "test-tls13-rsapss-signatures.py",
+		"comment": "selfserv can be set up to use multiple certs, but only one to each auth type",
+                "arguments": [
+                    "-p", "@PORT@", "-b",
+		    "-e", "tls13 signature rsa_pss_pss_sha384",
+		    "-e", "tls13 signature rsa_pss_pss_sha512"
+                ]
+            },
+            {
+                "name" : "test-tls13-record-padding.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ]
+            },
+            {
+                "name" : "test-tls13-session-resumption.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ]
+            },
+            {
+                "name" : "test-tls13-signature-algorithms.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ],
+                "comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1482386",
+                "exp_pass": false
+            },
+            {
+                "name" : "test-tls13-unrecognised-groups.py",
+                "arguments": [
+                    "-p", "@PORT@", "--cookie"
+                ]
+            },
+            {
+                "name" : "test-tls13-version-negotiation.py",
+                "comment": "the disabled test timeouts because of https://github.com/tomato42/tlsfuzzer/issues/452",
+                "arguments": [
+                    "-p", "@PORT@",
+                    "-e", "SSL 2.0 ClientHello with TLS 1.3 version and TLS 1.3 only ciphersuites"
+                ]
+            },
+            {
+                "name" : "test-tls13-zero-length-data.py",
+                "arguments": [
+                    "-p", "@PORT@"
+                ]
+            },
+            {
+                "name" : "test-dhe-no-shared-secret-padding.py",
+                "comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494221 and SSLv3 cannot be enabled in server",
+                "arguments": [
+                    "-p", "@PORT@",
+                    "-e", "Protocol (3, 0) in SSLv2 compatible ClientHello",
+                    "-e", "Protocol (3, 1) in SSLv2 compatible ClientHello",
+                    "-e", "Protocol (3, 2) in SSLv2 compatible ClientHello",
+                    "-e", "Protocol (3, 3) in SSLv2 compatible ClientHello",
+                    "-e", "Protocol (3, 0)"
+                ]
+            }
+        ]
+    }
+]

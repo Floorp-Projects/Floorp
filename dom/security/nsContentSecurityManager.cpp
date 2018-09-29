@@ -19,14 +19,19 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
 #include "nsIImageLoadingContent.h"
+#include "nsIRedirectHistoryEntry.h"
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/Logging.h"
+
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager,
                   nsIContentSecurityManager,
                   nsIChannelEventSink)
+
+static mozilla::LazyLogModule sCSMLog("CSMLog");
 
 /* static */ bool
 nsContentSecurityManager::AllowTopLevelNavigationToDataURI(nsIChannel* aChannel)
@@ -617,6 +622,168 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
   return NS_OK;
 }
 
+static void
+LogPrincipal(nsIPrincipal* aPrincipal, const nsAString& aPrincipalName) {
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  %s: SystemPrincipal\n",
+      NS_ConvertUTF16toUTF8(aPrincipalName).get()));
+    return;
+  }
+  if (aPrincipal) {
+    if (aPrincipal->GetIsNullPrincipal()) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug, ("  %s: NullPrincipal\n",
+       NS_ConvertUTF16toUTF8(aPrincipalName).get()));
+      return;
+    }
+    if (aPrincipal->GetIsExpandedPrincipal()) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug, ("  %s: Expanded Principal\n",
+        NS_ConvertUTF16toUTF8(aPrincipalName).get()));
+      return;
+    }
+    nsCOMPtr<nsIURI> principalURI;
+    nsAutoCString principalSpec;
+    aPrincipal->GetURI(getter_AddRefs(principalURI));
+    if (principalURI) {
+      principalURI->GetSpec(principalSpec);
+    }
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  %s: %s\n",
+     NS_ConvertUTF16toUTF8(aPrincipalName).get(), principalSpec.get()));
+    return;
+  }
+  MOZ_LOG(sCSMLog, LogLevel::Debug, ("  %s: nullptr\n",
+   NS_ConvertUTF16toUTF8(aPrincipalName).get()));
+}
+
+static void
+LogSecurityFlags(nsSecurityFlags securityFlags) {
+  struct DebugSecFlagType {
+    unsigned long secFlag;
+    char secTypeStr[128];
+  };
+  static const DebugSecFlagType secTypes[] =
+{
+  { nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+    "SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK" },
+  { nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
+    "SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS" },
+  { nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+    "SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED" },
+  { nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
+    "SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS" },
+  { nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+    "SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL" },
+  { nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
+    "SEC_REQUIRE_CORS_DATA_INHERITS" },
+  { nsILoadInfo::SEC_COOKIES_DEFAULT,
+    "SEC_COOKIES_DEFAULT" },
+  { nsILoadInfo::SEC_COOKIES_INCLUDE,
+    "SEC_COOKIES_INCLUDE" },
+  { nsILoadInfo::SEC_COOKIES_SAME_ORIGIN,
+    "SEC_COOKIES_SAME_ORIGIN" },
+  { nsILoadInfo::SEC_COOKIES_OMIT,
+    "SEC_COOKIES_OMIT" },
+  { nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+    "SEC_FORCE_INHERIT_PRINCIPAL" },
+  { nsILoadInfo::SEC_SANDBOXED,
+    "SEC_SANDBOXED" },
+  { nsILoadInfo::SEC_ABOUT_BLANK_INHERITS,
+    "SEC_ABOUT_BLANK_INHERITS" },
+  { nsILoadInfo::SEC_ALLOW_CHROME,
+    "SEC_ALLOW_CHROME" },
+  { nsILoadInfo::SEC_DISALLOW_SCRIPT,
+    "SEC_DISALLOW_SCRIPT" },
+  { nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS,
+    "SEC_DONT_FOLLOW_REDIRECTS" },
+  { nsILoadInfo::SEC_LOAD_ERROR_PAGE,
+    "SEC_LOAD_ERROR_PAGE" },
+  { nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL_OVERRULE_OWNER,
+    "SEC_FORCE_INHERIT_PRINCIPAL_OVERRULE_OWNER" }
+  };
+
+for (const DebugSecFlagType flag : secTypes) {
+  if (securityFlags & flag.secFlag) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug, ("    %s,\n", flag.secTypeStr));
+    }
+  }
+}
+static void
+DebugDoContentSecurityCheck(nsIChannel* aChannel, nsILoadInfo* aLoadInfo) {
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+
+    // we only log http channels, unless loglevel is 5.
+  if (httpChannel || MOZ_LOG_TEST(sCSMLog, LogLevel::Verbose)) {
+    nsCOMPtr<nsIURI> channelURI;
+    nsAutoCString channelSpec;
+    nsAutoCString channelMethod;
+    NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+    if (channelURI) {
+      channelURI->GetSpec(channelSpec);
+    }
+
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("doContentSecurityCheck {\n"));
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  channelURI: %s\n",
+     channelSpec.get()));
+
+    // Log HTTP-specific things
+    if (httpChannel) {
+      nsresult rv;
+      rv = httpChannel->GetRequestMethod(channelMethod);
+      if (!NS_FAILED(rv)) {
+        MOZ_LOG(sCSMLog, LogLevel::Debug, ("  HTTP Method: %s\n",
+         channelMethod.get()));
+      }
+    }
+
+    // Log Principals
+    nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
+    LogPrincipal(aLoadInfo->LoadingPrincipal(),
+     NS_LITERAL_STRING("loadingPrincipal"));
+    LogPrincipal(requestPrincipal, NS_LITERAL_STRING("triggeringPrincipal"));
+    LogPrincipal(aLoadInfo->PrincipalToInherit(),
+      NS_LITERAL_STRING("principalToInherit"));
+
+    // Log Redirect Chain
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  RedirectChain:\n"));
+    for (nsIRedirectHistoryEntry* redirectHistoryEntry :
+     aLoadInfo->RedirectChain()) {
+      nsCOMPtr<nsIPrincipal> principal;
+      redirectHistoryEntry->GetPrincipal(getter_AddRefs(principal));
+      LogPrincipal(principal, NS_LITERAL_STRING("->"));
+    }
+
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  internalContentPolicyType: %d\n",
+     aLoadInfo->InternalContentPolicyType()));
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  externalContentPolicyType: %d\n",
+     aLoadInfo->GetExternalContentPolicyType()));
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  upgradeInsecureRequests: %s\n",
+     aLoadInfo->GetUpgradeInsecureRequests() ? "true" : "false"));
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  initalSecurityChecksDone: %s\n",
+     aLoadInfo->GetInitialSecurityCheckDone() ? "true" : "false"));
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  enforceSecurity: %s\n",
+     aLoadInfo->GetEnforceSecurity() ? "true" : "false"));
+
+    // Log CSPrequestPrincipal
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    requestPrincipal->GetCsp(getter_AddRefs(csp));
+    if (csp) {
+      nsAutoString parsedPolicyStr;
+      uint32_t count = 0;
+      csp->GetPolicyCount(&count);
+      MOZ_LOG(sCSMLog, LogLevel::Debug, ("  CSP (%d): ", count));
+      for (uint32_t i = 0; i < count; ++i) {
+        csp->GetPolicyString(i, parsedPolicyStr);
+        MOZ_LOG(sCSMLog, LogLevel::Debug, ("    %s\n",
+         NS_ConvertUTF16toUTF8(parsedPolicyStr).get()));
+      }
+    }
+
+    // Security Flags
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  securityFlags: "));
+    LogSecurityFlags(aLoadInfo->GetSecurityFlags());
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("}\n\n"));
+  }
+}
+
 /*
  * Based on the security flags provided in the loadInfo of the channel,
  * doContentSecurityCheck() performs the following content security checks
@@ -645,6 +812,10 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
   if (!loadInfo) {
     MOZ_ASSERT(false, "channel needs to have loadInfo to perform security checks");
     return NS_ERROR_UNEXPECTED;
+  }
+
+  if (MOZ_UNLIKELY(MOZ_LOG_TEST(sCSMLog, LogLevel::Debug))) {
+    DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
 
   // if dealing with a redirected channel then we have already installed
