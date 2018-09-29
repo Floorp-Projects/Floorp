@@ -192,6 +192,23 @@ add_task(async function test_processing_completeStatus() {
   let primaryButtons = document.querySelectorAll("footer button.primary");
   ok(Array.from(primaryButtons).every(el => isHidden(el) || el.disabled),
      "all primary footer buttons are hidden or disabled");
+
+  info("Got an update from the parent process with an error from .retry()");
+  request = el1.requestStore.getState().request;
+  let paymentDetails = deepClone(request.paymentDetails);
+  paymentDetails.error = "Sample retry error";
+  await el1.setStateFromParent({
+    request: Object.assign({}, request, {
+      completeStatus: "",
+      paymentDetails,
+    }),
+  });
+  await asyncElementRendered();
+
+  let {changesPrevented, page} = el1.requestStore.getState();
+  ok(!changesPrevented, "Changes should no longer be prevented");
+  is(page.id, "payment-summary", "Check back on payment-summary");
+  ok(el1.innerText.includes("Sample retry error"), "Check error text is visible");
 });
 
 add_task(async function test_success_unknown_completeStatus() {

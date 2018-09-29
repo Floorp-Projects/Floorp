@@ -50,7 +50,7 @@ export default class CompletionErrorPage extends PaymentStateSubscriberMixin(Pay
     for (let key of [
       "pageTitle", "suggestion-heading", "suggestion-1", "suggestion-2", "suggestion-3",
     ]) {
-      if (this.dataset[key]) {
+      if (this.dataset[key] && displayHost) {
         this.dataset[key] = this.dataset[key].replace("**host-name**", displayHost);
       }
     }
