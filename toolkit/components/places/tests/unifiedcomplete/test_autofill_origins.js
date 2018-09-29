@@ -329,3 +329,135 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
 
   await cleanup();
 });
+
+// This is similar to bookmarked() in autofill_tasks.js, but it adds
+// unbookmarked visits for multiple URLs with the same origin.
+add_task(async function bookmarkedMultiple() {
+  // Force only bookmarked pages to be suggested and therefore only bookmarked
+  // pages to be completed.
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
+
+  let search = "ex";
+  let baseURL = "http://example.com/";
+  let bookmarkedURL = baseURL + "bookmarked";
+
+  // Add visits for three different URLs all sharing the same origin, and then
+  // bookmark the second one.  After that, the origin should be autofilled.  The
+  // reason for adding unbookmarked visits before and after adding the
+  // bookmarked visit is to make sure our aggregate SQL query for determining
+  // whether an origin is bookmarked is correct.
+
+  await PlacesTestUtils.addVisits([{
+    uri: baseURL + "other1",
+  }]);
+  await check_autocomplete({
+    search,
+    matches: [],
+  });
+
+  await PlacesTestUtils.addVisits([{
+    uri: bookmarkedURL,
+  }]);
+  await check_autocomplete({
+    search,
+    matches: [],
+  });
+
+  await PlacesTestUtils.addVisits([{
+    uri: baseURL + "other2",
+  }]);
+  await check_autocomplete({
+    search,
+    matches: [],
+  });
+
+  // Now bookmark the second URL.  It should be suggested and completed.
+  await addBookmark({
+    uri: bookmarkedURL,
+  });
+  await check_autocomplete({
+    search,
+    autofilled: "example.com/",
+    completed: baseURL,
+    matches: [
+      {
+        value: "example.com/",
+        comment: "example.com",
+        style: ["autofill", "heuristic"],
+      },
+      {
+        value: bookmarkedURL,
+        comment: "A bookmark",
+        style: ["bookmark"],
+      },
+    ],
+  });
+
+  await cleanup();
+});
+
+// This is similar to bookmarkedPrefix() in autofill_tasks.js, but it adds
+// unbookmarked visits for multiple URLs with the same origin.
+add_task(async function bookmarkedPrefixMultiple() {
+  // Force only bookmarked pages to be suggested and therefore only bookmarked
+  // pages to be completed.
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
+
+  let search = "http://ex";
+  let baseURL = "http://example.com/";
+  let bookmarkedURL = baseURL + "bookmarked";
+
+  // Add visits for three different URLs all sharing the same origin, and then
+  // bookmark the second one.  After that, the origin should be autofilled.  The
+  // reason for adding unbookmarked visits before and after adding the
+  // bookmarked visit is to make sure our aggregate SQL query for determining
+  // whether an origin is bookmarked is correct.
+
+  await PlacesTestUtils.addVisits([{
+    uri: baseURL + "other1",
+  }]);
+  await check_autocomplete({
+    search,
+    matches: [],
+  });
+
+  await PlacesTestUtils.addVisits([{
+    uri: bookmarkedURL,
+  }]);
+  await check_autocomplete({
+    search,
+    matches: [],
+  });
+
+  await PlacesTestUtils.addVisits([{
+    uri: baseURL + "other2",
+  }]);
+  await check_autocomplete({
+    search,
+    matches: [],
+  });
+
+  // Now bookmark the second URL.  It should be suggested and completed.
+  await addBookmark({
+    uri: bookmarkedURL,
+  });
+  await check_autocomplete({
+    search,
+    autofilled: "http://example.com/",
+    completed: baseURL,
+    matches: [
+      {
+        value: "http://example.com/",
+        comment: "example.com",
+        style: ["autofill", "heuristic"],
+      },
+      {
+        value: bookmarkedURL,
+        comment: "A bookmark",
+        style: ["bookmark"],
+      },
+    ],
+  });
+
+  await cleanup();
+});

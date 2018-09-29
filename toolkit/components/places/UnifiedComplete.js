@@ -329,14 +329,14 @@ const SQL_ORIGIN_PREFIX_QUERY = originQuery(
 
 const SQL_ORIGIN_BOOKMARKED_QUERY = originQuery(
   `AND bookmarked`,
-  `(SELECT foreign_count > 0 FROM moz_places
+  `(SELECT TOTAL(foreign_count) > 0 FROM moz_places
     WHERE moz_places.origin_id = moz_origins.id)`
 );
 
 const SQL_ORIGIN_PREFIX_BOOKMARKED_QUERY = originQuery(
   `AND bookmarked
    AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  `(SELECT foreign_count > 0 FROM moz_places
+  `(SELECT TOTAL(foreign_count) > 0 FROM moz_places
     WHERE moz_places.origin_id = moz_origins.id)`
 );
 
