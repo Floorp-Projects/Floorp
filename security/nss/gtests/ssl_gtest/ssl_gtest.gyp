@@ -51,6 +51,7 @@
         'tls_connect.cc',
         'tls_filter.cc',
         'tls_hkdf_unittest.cc',
+        'tls_esni_unittest.cc',
         'tls_protect.cc'
       ],
       'dependencies': [

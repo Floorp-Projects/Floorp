@@ -7,6 +7,7 @@
 #define nsIDocument_h___
 
 #include "mozilla/FlushType.h"           // for enum
+#include "mozilla/Pair.h"                // for Pair
 #include "nsAutoPtr.h"                   // for member
 #include "nsCOMArray.h"                  // for member
 #include "nsCompatibility.h"             // for member
@@ -29,6 +30,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"                      // for use in inline functions
 #include "nsIUUIDGenerator.h"
+#include "nsIWebProgressListener.h"      // for nsIWebProgressListener
 #include "nsPIDOMWindow.h"               // for use in inline functions
 #include "nsPropertyTable.h"             // for member
 #include "nsStringFwd.h"
@@ -43,6 +45,7 @@
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/dom/ContentBlockingLog.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/EnumSet.h"
@@ -977,11 +980,20 @@ public:
   }
 
   /**
+   * Get the content blocking log.
+   */
+  mozilla::dom::ContentBlockingLog* GetContentBlockingLog()
+  {
+    return &mContentBlockingLog;
+  }
+
+  /**
    * Get tracking content blocked flag for this document.
    */
   bool GetHasTrackingContentBlocked()
   {
-    return mHasTrackingContentBlocked;
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT);
   }
 
   /**
@@ -989,7 +1001,8 @@ public:
    */
   bool GetHasSlowTrackingContentBlocked()
   {
-    return mHasSlowTrackingContentBlocked;
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
   }
 
   /**
@@ -997,7 +1010,8 @@ public:
    */
   bool GetHasAllCookiesBlocked()
   {
-    return mHasAllCookiesBlocked;
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL);
   }
 
   /**
@@ -1005,7 +1019,8 @@ public:
    */
   bool GetHasTrackingCookiesBlocked()
   {
-    return mHasTrackingCookiesBlocked;
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER);
   }
 
   /**
@@ -1013,7 +1028,8 @@ public:
    */
   bool GetHasForeignCookiesBlocked()
   {
-    return mHasForeignCookiesBlocked;
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
   }
 
   /**
@@ -1021,55 +1037,74 @@ public:
    */
   bool GetHasCookiesBlockedByPermission()
   {
-    return mHasCookiesBlockedByPermission;
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION);
   }
 
   /**
    * Set the tracking content blocked flag for this document.
    */
-  void SetHasTrackingContentBlocked(bool aHasTrackingContentBlocked)
+  void SetHasTrackingContentBlocked(bool aHasTrackingContentBlocked,
+                                    const nsAString& aOriginBlocked)
   {
-    mHasTrackingContentBlocked = aHasTrackingContentBlocked;
+    RecordContentBlockingLog(aOriginBlocked,
+                             nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT,
+                             aHasTrackingContentBlocked);
   }
 
   /**
    * Set the slow tracking content blocked flag for this document.
    */
-  void SetHasSlowTrackingContentBlocked(bool aHasSlowTrackingContentBlocked)
+  void SetHasSlowTrackingContentBlocked(bool aHasSlowTrackingContentBlocked,
+                                        const nsAString& aOriginBlocked)
   {
-    mHasSlowTrackingContentBlocked = aHasSlowTrackingContentBlocked;
+    RecordContentBlockingLog(aOriginBlocked,
+                             nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT,
+                             aHasSlowTrackingContentBlocked);
   }
 
   /**
    * Set the all cookies blocked flag for this document.
    */
-  void SetHasAllCookiesBlocked(bool aHasAllCookiesBlocked)
+  void SetHasAllCookiesBlocked(bool aHasAllCookiesBlocked,
+                               const nsAString& aOriginBlocked)
   {
-    mHasAllCookiesBlocked = aHasAllCookiesBlocked;
+    RecordContentBlockingLog(aOriginBlocked,
+                             nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL,
+                             aHasAllCookiesBlocked);
   }
 
   /**
    * Set the tracking cookies blocked flag for this document.
    */
-  void SetHasTrackingCookiesBlocked(bool aHasTrackingCookiesBlocked)
+  void SetHasTrackingCookiesBlocked(bool aHasTrackingCookiesBlocked,
+                                    const nsAString& aOriginBlocked)
   {
-    mHasTrackingCookiesBlocked = aHasTrackingCookiesBlocked;
+    RecordContentBlockingLog(aOriginBlocked,
+                             nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
+                             aHasTrackingCookiesBlocked);
   }
 
   /**
    * Set the third-party cookies blocked flag for this document.
    */
-  void SetHasForeignCookiesBlocked(bool aHasForeignCookiesBlocked)
+  void SetHasForeignCookiesBlocked(bool aHasForeignCookiesBlocked,
+                                   const nsAString& aOriginBlocked)
   {
-    mHasForeignCookiesBlocked = aHasForeignCookiesBlocked;
+    RecordContentBlockingLog(aOriginBlocked,
+                             nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN,
+                             aHasForeignCookiesBlocked);
   }
 
   /**
    * Set the cookies blocked by site permission flag for this document.
    */
-  void SetHasCookiesBlockedByPermission(bool aHasCookiesBlockedByPermission)
+  void SetHasCookiesBlockedByPermission(bool aHasCookiesBlockedByPermission,
+                                        const nsAString& aOriginBlocked)
   {
-    mHasCookiesBlockedByPermission = aHasCookiesBlockedByPermission;
+    RecordContentBlockingLog(aOriginBlocked,
+                             nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION,
+                             aHasCookiesBlockedByPermission);
   }
 
   /**
@@ -3850,6 +3885,12 @@ protected:
                                        bool aUpdateCSSLoader);
 
 private:
+  void RecordContentBlockingLog(const nsAString& aOrigin,
+                                uint32_t aType, bool aBlocked)
+  {
+    mContentBlockingLog.RecordLog(aOrigin, aType, aBlocked);
+  }
+
   mutable std::bitset<eDeprecatedOperationCount> mDeprecationWarnedAbout;
   mutable std::bitset<eDocumentWarningCount> mDocWarningWarnedAbout;
 
@@ -4148,24 +4189,6 @@ protected:
 
   // True if a document load has a CSP with unsafe-inline attached.
   bool mHasUnsafeInlineCSP : 1;
-
-  // True if a document has blocked Tracking Content
-  bool mHasTrackingContentBlocked : 1;
-
-  // True if a document has blocked Slow Tracking Content
-  bool mHasSlowTrackingContentBlocked : 1;
-
-  // True if a document has blocked All Cookies
-  bool mHasAllCookiesBlocked : 1;
-
-  // True if a document has blocked Tracking Cookies
-  bool mHasTrackingCookiesBlocked : 1;
-
-  // True if a document has blocked Foreign Cookies
-  bool mHasForeignCookiesBlocked : 1;
-
-  // True if a document has blocked Cookies By Site Permission
-  bool mHasCookiesBlockedByPermission : 1;
 
   // True if a document has loaded Tracking Content
   bool mHasTrackingContentLoaded : 1;
@@ -4518,6 +4541,11 @@ protected:
   // calling NoteScriptTrackingStatus().  Currently we assume that a URL not
   // existing in the set means the corresponding script isn't a tracking script.
   nsTHashtable<nsCStringHashKey> mTrackingScripts;
+
+  // The log of all content blocking actions taken on this document.  This is only
+  // stored on top-level documents and includes the activity log for all of the
+  // nested subdocuments as well.
+  mozilla::dom::ContentBlockingLog mContentBlockingLog;
 
   // List of ancestor principals.  This is set at the point a document
   // is connected to a docshell and not mutated thereafter.

@@ -16,6 +16,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -26,6 +27,7 @@
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsJSUtils.h"
+#include "nsMemoryReporterManager.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -423,6 +425,15 @@ ScriptPreloader::FinishContentStartup()
     if (mChildActor) {
         mChildActor->SendScriptsAndFinalize(mScripts);
     }
+
+#ifdef XP_WIN
+    // Record the amount of USS at startup. This is Windows-only for now,
+    // we could turn it on for Linux relatively cheaply. On macOS it can have
+    // a perf impact.
+    mozilla::Telemetry::Accumulate(
+        mozilla::Telemetry::MEMORY_UNIQUE_CONTENT_STARTUP,
+        nsMemoryReporterManager::ResidentUnique() / 1024);
+#endif
 }
 
 bool
