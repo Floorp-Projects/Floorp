@@ -23,6 +23,7 @@ Test the address-picker component
   <p id="display">
     <address-picker id="picker1"
                     data-field-separator=", "
+                    data-invalid-label="Picker1: Missing or Invalid"
                     selected-state-key="selectedShippingAddress"></address-picker>
   </p>
 <div id="content" style="display: none">
@@ -150,6 +151,7 @@ add_task(async function test_change_selected_address() {
   // The third option is missing some fields. Make sure that it is marked as such.
   ok(picker1.classList.contains("invalid-selected-option"), "The third option is missing fields");
   ok(!isHidden(picker1.invalidLabel), "The invalid label should be visible");
+  is(picker1.invalidLabel.innerText, picker1.dataset.invalidLabel, "Check displayed error text");
 
   picker1.dropdown.popupBox.focus();
   synthesizeKey(options[1].getAttribute("name"), {});
@@ -208,6 +210,66 @@ add_task(async function test_delete() {
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 1, "Check dropdown has one remaining address");
   ok(options[0].textContent.includes("Mrs. Bar"), "Check remaining address");
+});
+
+add_task(async function test_merchantError() {
+  picker1.requestStore.setState({
+    selectedShippingAddress: "68gjdh354j",
+  });
+  await asyncElementRendered();
+
+  is(picker1.selectedStateKey, "selectedShippingAddress", "Check selectedStateKey");
+
+  let state = picker1.requestStore.getState();
+  let {
+    request,
+  } = state;
+  ok(!picker1.classList.contains("invalid-selected-option"), "No validation on a valid option");
+  ok(isHidden(picker1.invalidLabel), "The invalid label should be hidden");
+
+  let requestWithShippingAddressErrors = deepClone(request);
+  Object.assign(requestWithShippingAddressErrors.paymentDetails, {
+    shippingAddressErrors: {
+      country: "Your country is not supported",
+    },
+  });
+  picker1.requestStore.setState({
+    request: requestWithShippingAddressErrors,
+  });
+  await asyncElementRendered();
+
+  ok(picker1.classList.contains("invalid-selected-option"), "The merchant error applies");
+  ok(!isHidden(picker1.invalidLabel), "The merchant error should be visible");
+  is(picker1.invalidLabel.innerText, "Your country is not supported", "Check displayed error text");
+
+  info("update the request to remove the errors");
+  picker1.requestStore.setState({
+    request,
+  });
+  await asyncElementRendered();
+  ok(!picker1.classList.contains("invalid-selected-option"),
+     "No errors visible when merchant errors cleared");
+  ok(isHidden(picker1.invalidLabel), "The invalid label should be hidden");
+
+  info("Set billing address and payer errors which aren't relevant to this picker");
+  let requestWithNonShippingAddressErrors = deepClone(request);
+  Object.assign(requestWithNonShippingAddressErrors.paymentDetails, {
+    payer: {
+      name: "Your name is too short",
+    },
+    paymentMethod: {
+      billingAddress: {
+        country: "Your billing country is not supported",
+      },
+    },
+    shippingAddressErrors: {},
+  });
+  picker1.requestStore.setState({
+    request: requestWithNonShippingAddressErrors,
+  });
+  await asyncElementRendered();
+  ok(!picker1.classList.contains("invalid-selected-option"), "No errors on a shipping picker");
+  ok(isHidden(picker1.invalidLabel), "The invalid label should still be hidden");
 });
 </script>
 

@@ -9,6 +9,7 @@
     "label    edit     add"
     "dropdown dropdown dropdown"
     "invalid  invalid  invalid";
+  padding-top: 8px;
 }
 
 .rich-picker > label {
@@ -62,7 +63,7 @@ payment-method-picker > input {
   border: 1px solid #0C0C0D33;
   border-inline-start: none;
   grid-area: cvv;
-  margin: 14px 0; /* Has to be same as rich-select */
+  margin: 10px 0; /* Has to be same as rich-select */
   padding: 8px;
   /* So the error outline appears above the adjacent dropdown */
   z-index: 1;
