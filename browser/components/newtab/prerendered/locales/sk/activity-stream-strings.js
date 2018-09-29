@@ -77,7 +77,7 @@ window.gActivityStreamStrings = {
   "pocket_more_reccommendations": "Ďalšie odporúčania",
   "pocket_learn_more": "Ďalšie informácie",
   "pocket_cta_button": "Získajte Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_cta_text": "Ukladajte si články do služby Pocket a užívajte si skvelé čítanie.",
   "highlights_empty_state": "Začnite s prehliadaním a my vám na tomto mieste ukážeme skvelé články, videá a ostatné stránky, ktoré ste nedávno navštívili alebo pridali medzi záložky.",
   "topstories_empty_state": "Už ste prečítali všetko. Ďalšie príbehy zo služby {provider} tu nájdete opäť neskôr. Nemôžete sa dočkať? Vyberte si populárnu tému a pozrite sa na ďalšie skvelé príbehy z celého webu.",
   "manual_migration_explanation2": "Vyskúšajte Firefox so záložkami, históriou prehliadania a heslami s iných prehliadačov.",

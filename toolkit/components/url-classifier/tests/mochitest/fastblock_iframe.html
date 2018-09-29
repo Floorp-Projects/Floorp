@@ -6,13 +6,13 @@
 <body>
 
   <!-- Tracking URL -->
-  <script id="goodIFrameScript" data-touched="not sure" src="http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/good.js" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+  <script id="goodIFrameScript" data-touched="not sure" src="http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/good.js?iframe" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
 
   <!-- Tracking Annotation -->
-  <script id="fastIFrameScript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+  <script id="fastIFrameScript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/evil.js?iframe" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
 
   <!-- Tracking Annotation -->
-  <script id="slowIFrameScript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.js" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
+  <script id="slowIFrameScript" data-touched="not sure" src="http://itisatracker.org/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.js?iframe" onload="this.dataset.touched='yes';" onerror="this.dataset.touched='no';"></script>
 
 </body>
 </html>

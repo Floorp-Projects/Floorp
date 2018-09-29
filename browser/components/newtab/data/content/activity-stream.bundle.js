@@ -964,6 +964,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
+const ASR_CONTAINER_ID = "asr-newtab-container";
 
 const ASRouterUtils = {
   addListener(listener) {
@@ -993,9 +994,6 @@ const ASRouterUtils = {
   unblockBundle(bundle) {
     ASRouterUtils.sendMessage({ type: "UNBLOCK_BUNDLE", data: { bundle } });
   },
-  getNextMessage() {
-    ASRouterUtils.sendMessage({ type: "GET_NEXT_MESSAGE" });
-  },
   overrideMessage(id) {
     ASRouterUtils.sendMessage({ type: "OVERRIDE_MESSAGE", data: { id } });
   },
@@ -1003,7 +1001,7 @@ const ASRouterUtils = {
     const payload = common_Actions_jsm__WEBPACK_IMPORTED_MODULE_1__["actionCreators"].ASRouterUserEvent(ping);
     global.RPMSendAsyncMessage(content_src_lib_init_store__WEBPACK_IMPORTED_MODULE_2__["OUTGOING_MESSAGE_NAME"], payload);
   },
-  getEndpoint() {
+  getPreviewEndpoint() {
     if (window.location.href.includes("endpoint")) {
       const params = new URLSearchParams(window.location.href.slice(window.location.href.indexOf("endpoint")));
       try {
@@ -1159,14 +1157,14 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
   }
 
   componentWillMount() {
-    const endpoint = ASRouterUtils.getEndpoint();
+    const endpoint = ASRouterUtils.getPreviewEndpoint();
     ASRouterUtils.addListener(this.onMessageFromParent);
 
     // If we are loading about:welcome we want to trigger the onboarding messages
     if (this.props.document.location.href === "about:welcome") {
       ASRouterUtils.sendMessage({ type: "TRIGGER", data: { trigger: { id: "firstRun" } } });
     } else {
-      ASRouterUtils.sendMessage({ type: "CONNECT_UI_REQUEST", data: { endpoint } });
+      ASRouterUtils.sendMessage({ type: "SNIPPETS_REQUEST", data: { endpoint } });
     }
   }
 
@@ -1192,7 +1190,6 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
             links: this.state.message.content.links,
             sendClick: this.sendClick }),
           UISurface: "NEWTAB_FOOTER_BAR",
-          getNextMessage: ASRouterUtils.getNextMessage,
           onBlock: this.onBlockById(this.state.message.id),
           onAction: ASRouterUtils.executeAction,
           sendUserActionTelemetry: this.sendUserActionTelemetry }))
@@ -1205,7 +1202,6 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
       UISurface: "NEWTAB_OVERLAY",
       onAction: ASRouterUtils.executeAction,
       onDoneButton: this.clearBundle(this.state.bundle.bundle),
-      getNextMessage: ASRouterUtils.getNextMessage,
       sendUserActionTelemetry: this.sendUserActionTelemetry }));
   }
 
@@ -1232,7 +1228,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
       return null;
     }
     return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(
-      "div",
+      react__WEBPACK_IMPORTED_MODULE_6___default.a.Fragment,
       null,
       this.renderPreviewBanner(),
       bundle.template === "onboarding" ? this.renderOnboarding() : this.renderSnippets()
@@ -1249,7 +1245,14 @@ class ASRouterContent {
   }
 
   _mount() {
-    this.containerElement = global.document.getElementById("snippets-container");
+    this.containerElement = global.document.getElementById(ASR_CONTAINER_ID);
+    if (!this.containerElement) {
+      this.containerElement = global.document.createElement("div");
+      this.containerElement.id = ASR_CONTAINER_ID;
+      this.containerElement.style.zIndex = 1;
+      global.document.body.appendChild(this.containerElement);
+    }
+
     react_dom__WEBPACK_IMPORTED_MODULE_7___default.a.render(react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(ASRouterUISurface, null), this.containerElement);
   }
 
@@ -1784,7 +1787,7 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
   }
 
   componentWillMount() {
-    const endpoint = _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].getEndpoint();
+    const endpoint = _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].getPreviewEndpoint();
     _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].sendMessage({ type: "ADMIN_CONNECT_STATE", data: { endpoint } });
     _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].addListener(this.onMessage);
   }
@@ -1817,6 +1820,10 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
 
   handleOverride(id) {
     return () => _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].overrideMessage(id);
+  }
+
+  expireCache() {
+    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].sendMessage({ type: "EXPIRE_QUERY_CACHE" });
   }
 
   renderMessageItem(msg) {
@@ -1970,10 +1977,16 @@ class ASRouterAdmin extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureCom
         "AS Router Admin"
       ),
       react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
-        "button",
-        { className: "button primary", onClick: _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_0__["ASRouterUtils"].getNextMessage },
-        "Refresh Current Message"
+        "h2",
+        null,
+        "Targeting Utilities"
       ),
+      react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
+        "button",
+        { className: "button", onClick: this.expireCache },
+        "Expire Cache"
+      ),
+      " (This expires the cache in ASR Targeting for bookmarks and top sites)",
       react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(
         "h2",
         null,
@@ -5144,6 +5157,8 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
           if (response.status === 200) {
             const { flowId, flowBeginTime } = yield response.json();
             _this.setState({ flowId, flowBeginTime });
+          } else {
+            _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_FETCH_ERROR", value: response.status } }));
           }
         } catch (error) {
           _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_ERROR" } }));
@@ -5183,13 +5198,22 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
   }
 
   onSubmit() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "SUBMIT_EMAIL" }));
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent(Object.assign({ event: "SUBMIT_EMAIL" }, this._getFormInfo())));
+
     window.addEventListener("visibilitychange", this.removeOverlay);
   }
 
   clickSkip() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "SKIPPED_SIGNIN" }));
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent(Object.assign({ event: "SKIPPED_SIGNIN" }, this._getFormInfo())));
     this.removeOverlay();
+  }
+
+  /**
+   * Report to telemetry additional information about the form submission.
+   */
+  _getFormInfo() {
+    const value = { has_flow_params: this.state.flowId.length > 0 };
+    return { value };
   }
 
   onInputInvalid(e) {

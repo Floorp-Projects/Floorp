@@ -247,5 +247,11 @@
   <string>%MOZ_DEVELOPER_REPO_PATH%</string>
   <key>MozillaDeveloperObjPath</key>
   <string>%MOZ_DEVELOPER_OBJ_PATH%</string>
+
+  <key>NSCameraUsageDescription</key>
+  <string>Only sites you allow within %MAC_APP_NAME% will be able to use the camera.</string>
+
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Only sites you allow within %MAC_APP_NAME% will be able to use the microphone.</string>
 </dict>
 </plist>

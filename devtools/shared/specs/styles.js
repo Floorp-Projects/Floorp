@@ -197,7 +197,10 @@ const styleRuleSpec = generateActorSpec({
 
   methods: {
     setRuleText: {
-      request: { modification: Arg(0, "string") },
+      request: {
+        newText: Arg(0, "string"),
+        modifications: Arg(1, "array:json")
+      },
       response: { rule: RetVal("domstylerule") }
     },
     modifyProperties: {
