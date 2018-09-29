@@ -6,7 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import functools
+import os.path
 import json
 import time
 import yaml
@@ -15,7 +15,7 @@ from datetime import datetime
 from mozbuild.util import ReadOnlyDict, memoize
 from mozversioncontrol import get_repository_object
 
-from . import APP_VERSION_PATH, GECKO, VERSION_PATH
+from . import GECKO
 
 
 class ParameterMismatch(Exception):
@@ -33,8 +33,16 @@ def get_contents(path):
     return contents
 
 
-get_version = functools.partial(get_contents, VERSION_PATH)
-get_app_version = functools.partial(get_contents, APP_VERSION_PATH)
+def get_version(product_dir='browser'):
+    version_path = os.path.join(GECKO, product_dir, 'config',
+                                'version_display.txt')
+    return get_contents(version_path)
+
+
+def get_app_version(product_dir='browser'):
+    app_version_path = os.path.join(GECKO, product_dir, 'config',
+                                    'version.txt')
+    return get_contents(app_version_path)
 
 
 # Please keep this list sorted and in sync with taskcluster/docs/parameters.rst
