@@ -127,7 +127,7 @@ var WindowHelper = {
     messageManager.removeMessageListener("Browser:Init", _handleMessage);
   },
 
-  onActivate(window, hasFocus) {
+  onActivate(window) {
     // If this window was the last focused window, we don't need to do anything
     if (window == _trackedWindows[0])
       return;
