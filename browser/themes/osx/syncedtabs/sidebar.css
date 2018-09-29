@@ -18,7 +18,7 @@ body:not([lwt-sidebar]) .content-container {
   font-size: 12px;
 }
 
-body:not([lwt-sidebar]) .item.selected > .item-title-container {
+body:not([lwt-sidebar]) .item.selected:not(:focus) > .item-title-container {
   -moz-appearance: -moz-mac-source-list-selection;
   -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
 }
