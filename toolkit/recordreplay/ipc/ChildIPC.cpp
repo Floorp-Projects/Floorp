@@ -23,6 +23,7 @@
 
 #include "InfallibleVector.h"
 #include "MemorySnapshot.h"
+#include "nsPrintfCString.h"
 #include "ParentInternal.h"
 #include "ProcessRecordReplay.h"
 #include "ProcessRedirect.h"

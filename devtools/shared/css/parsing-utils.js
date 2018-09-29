@@ -560,6 +560,10 @@ function parseNamedDeclarations(isCssPropertyKnown, inputString,
 function RuleRewriter(isCssPropertyKnown, rule, inputString) {
   this.rule = rule;
   this.isCssPropertyKnown = isCssPropertyKnown;
+  // The RuleRewriter sends CSS rules as text to the server, but with this modifications
+  // array, it also sends the list of changes so the server doesn't have to re-parse the
+  // rule if it needs to track what changed.
+  this.modifications = [];
 
   // Keep track of which any declarations we had to rewrite while
   // performing the requested action.
@@ -858,6 +862,7 @@ RuleRewriter.prototype = {
     // We could conceivably compute the name offsets instead so we
     // could preserve white space and comments on the LHS of the ":".
     this.completeCopying(this.decl.colonOffsets[0]);
+    this.modifications.push({ type: "set", index, name, newName });
   },
 
   /**
@@ -912,6 +917,12 @@ RuleRewriter.prototype = {
         " " + escapeCSSComment(declText) + " */";
     }
     this.completeCopying(copyOffset);
+
+    if (isEnabled) {
+      this.modifications.push({ type: "set", index, name, value: decl.value });
+    } else {
+      this.modifications.push({ type: "remove", index, name });
+    }
   },
 
   /**
@@ -1006,8 +1017,11 @@ RuleRewriter.prototype = {
    *                          enabled, false if disabled
    */
   createProperty: function(index, name, value, priority, enabled) {
-    this.editPromise = this.internalCreateProperty(index, name, value,
-                                                   priority, enabled);
+    this.editPromise = this.internalCreateProperty(index, name, value, priority, enabled);
+    // Log the modification only if the created property is enabled.
+    if (enabled) {
+      this.modifications.push({ type: "set", index, name, value, priority });
+    }
   },
 
   /**
@@ -1043,6 +1057,7 @@ RuleRewriter.prototype = {
     }
     this.result += ";";
     this.completeCopying(this.decl.offsets[1]);
+    this.modifications.push({ type: "set", index, name, value, priority });
   },
 
   /**
@@ -1089,6 +1104,7 @@ RuleRewriter.prototype = {
       }
     }
     this.completeCopying(copyOffset);
+    this.modifications.push({ type: "remove", index, name });
   },
 
   /**
@@ -1111,7 +1127,7 @@ RuleRewriter.prototype = {
    */
   apply: function() {
     return promise.resolve(this.editPromise).then(() => {
-      return this.rule.setRuleText(this.result);
+      return this.rule.setRuleText(this.result, this.modifications);
     });
   },
 

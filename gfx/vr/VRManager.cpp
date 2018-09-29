@@ -329,7 +329,12 @@ VRManager::TaskTimerCallback(nsITimer* aTimer, void* aClosure)
 void
 VRManager::RunTasks()
 {
-  MOZ_ASSERT(VRListenerThreadHolder::IsInVRListenerThread());
+  // During shutdown, this might be called outside of the
+  // VR Listener Thread; however, we no longer need to
+  // execute any tasks during this time.
+  if (!VRListenerThreadHolder::IsInVRListenerThread()) {
+    return;
+  }
 
   // Will be called once every 1ms when a VR presentation
   // is active or once per vsync when a VR presentation is

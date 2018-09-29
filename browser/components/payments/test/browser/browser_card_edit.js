@@ -46,7 +46,7 @@ async function add_link(aOptions = {}) {
       is(title.textContent, "Add Credit Card", "Add title should be set");
 
       let saveButton = content.document.querySelector("basic-card-form .save-button");
-      is(saveButton.textContent, "Add", "Save button has the correct label");
+      is(saveButton.textContent, "Next", "Save button has the correct label");
 
       is(state.isPrivate, testArgs.isPrivate,
          "isPrivate flag has expected value when shown from a private/non-private session");

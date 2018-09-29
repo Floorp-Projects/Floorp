@@ -4,6 +4,8 @@
 
 #include "other/CombinedStacks.h"
 #include "other/ProcessedStack.h"
+#include "nsPrintfCString.h"
+
 using namespace mozilla::Telemetry;
 using namespace TelemetryTestHelpers;
 

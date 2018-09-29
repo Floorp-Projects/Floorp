@@ -697,6 +697,7 @@ public:
     void PolygonOffset(GLfloat factor, GLfloat units);
 
     already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
+    void EnsureVRReady();
 
     ////
 
@@ -1488,6 +1489,7 @@ protected:
     bool mRestoreWhenVisible;
     bool mShouldPresent;
     bool mDisableFragHighP;
+    bool mVRReady;
 
     template<typename WebGLObjectType>
     void DeleteWebGLObjectsArray(nsTArray<WebGLObjectType>& array);

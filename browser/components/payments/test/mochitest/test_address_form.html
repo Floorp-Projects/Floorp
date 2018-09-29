@@ -110,7 +110,7 @@ add_task(async function test_backButton() {
 
 add_task(async function test_saveButton() {
   let form = new AddressForm();
-  form.dataset.addButtonLabel = "Add";
+  form.dataset.nextButtonLabel = "Next";
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
   display.appendChild(form);
@@ -147,7 +147,7 @@ add_task(async function test_saveButton() {
   ok(!form.saveButton.disabled, "Save button is enabled after changing the country to US");
 
   let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
-  is(form.saveButton.textContent, "Add", "Check label");
+  is(form.saveButton.textContent, "Next", "Check label");
   form.saveButton.scrollIntoView();
   synthesizeMouseAtCenter(form.saveButton, {});
 
@@ -265,7 +265,7 @@ add_task(async function test_edit() {
 
 add_task(async function test_restricted_address_fields() {
   let form = new AddressForm();
-  form.dataset.addButtonLabel = "Add";
+  form.dataset.nextButtonLabel = "Next";
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
   display.appendChild(form);

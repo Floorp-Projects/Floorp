@@ -3,6 +3,14 @@ const FAKE_PROVIDERS = [{id: "foo"}, {id: "bar"}];
 
 const PROVIDER_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
 const DEVTOOLS_PREF = "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
+const SNIPPETS_USER_PREF = "browser.newtabpage.activity-stream.feeds.snippets";
+
+/** NUMBER_OF_PREFS_TO_OBSERVE includes:
+ *  1. asrouter.messageProvider
+ *  2. asrouter.devtoolsEnabled
+ *  3. browser.newtabpage.activity-stream.feeds.snippets (user preference - snippets)
+ */
+const NUMBER_OF_PREFS_TO_OBSERVE = 3;
 
 describe("ASRouterPreferences", () => {
   let ASRouterPreferences;
@@ -16,7 +24,7 @@ describe("ASRouterPreferences", () => {
     sandbox = sinon.sandbox.create();
     addObserverStub = sandbox.stub(global.Services.prefs, "addObserver");
     stringPrefStub =  sandbox.stub(global.Services.prefs, "getStringPref").withArgs(PROVIDER_PREF).returns(JSON.stringify(FAKE_PROVIDERS));
-    boolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(DEVTOOLS_PREF).returns(false);
+    boolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
   });
   afterEach(() => {
     sandbox.restore();
@@ -29,12 +37,12 @@ describe("ASRouterPreferences", () => {
       ASRouterPreferences.init();
       assert.isTrue(ASRouterPreferences._initialized);
     });
-    it("should set two observers and not re-initialize if already initialized", () => {
+    it(`should set ${NUMBER_OF_PREFS_TO_OBSERVE} observers and not re-initialize if already initialized`, () => {
       ASRouterPreferences.init();
-      assert.calledTwice(addObserverStub);
+      assert.callCount(addObserverStub, NUMBER_OF_PREFS_TO_OBSERVE);
       ASRouterPreferences.init();
       ASRouterPreferences.init();
-      assert.calledTwice(addObserverStub);
+      assert.callCount(addObserverStub, NUMBER_OF_PREFS_TO_OBSERVE);
     });
   });
   describe("#uninit", () => {
@@ -64,7 +72,7 @@ describe("ASRouterPreferences", () => {
       // Tests to make sure we don't remove observers that weren't set
       ASRouterPreferences.uninit();
 
-      assert.calledTwice(removeStub);
+      assert.callCount(removeStub, NUMBER_OF_PREFS_TO_OBSERVE);
       assert.calledWith(removeStub, PROVIDER_PREF);
       assert.calledWith(removeStub, DEVTOOLS_PREF);
       assert.isEmpty(ASRouterPreferences._callbacks);
@@ -161,6 +169,12 @@ describe("ASRouterPreferences", () => {
       sandbox.stub(ASRouterPreferences, "providers").get(() => [{id: "snippets", enabled: true}]);
 
       assert.isFalse(ASRouterPreferences.specialConditions.allowLegacySnippets);
+    });
+  });
+  describe("#getUserPreference(providerId)", () => {
+    it("should return the user preference for snippets", () => {
+      boolPrefStub.withArgs(SNIPPETS_USER_PREF).returns(true);
+      assert.isTrue(ASRouterPreferences.getUserPreference("snippets"));
     });
   });
   describe("observer, listeners", () => {

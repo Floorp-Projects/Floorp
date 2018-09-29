@@ -65,14 +65,14 @@ describe("#CachedTargetingGetter", () => {
     frecentStub.resolves();
     clock.tick(sixHours);
 
-    await topsitesCache.getTopFrecentSites; // eslint-disable-line no-unused-expressions
-    await topsitesCache.getTopFrecentSites; // eslint-disable-line no-unused-expressions
+    await topsitesCache.get();
+    await topsitesCache.get();
 
     assert.calledOnce(global.NewTabUtils.activityStreamProvider.getTopFrecentSites);
 
     clock.tick(sixHours);
 
-    await topsitesCache.getTopFrecentSites; // eslint-disable-line no-unused-expressions
+    await topsitesCache.get();
 
     assert.calledTwice(global.NewTabUtils.activityStreamProvider.getTopFrecentSites);
   });
@@ -83,7 +83,7 @@ describe("#CachedTargetingGetter", () => {
     // assert.throws expect a function as the first parameter, try/catch is a
     // workaround
     try {
-      await topsitesCache.getTopFrecentSites; // eslint-disable-line no-unused-expressions
+      await topsitesCache.get();
       assert.isTrue(false);
     } catch (e) {
       assert.calledOnce(global.Cu.reportError);

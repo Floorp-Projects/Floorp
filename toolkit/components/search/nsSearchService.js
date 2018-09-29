@@ -2675,7 +2675,6 @@ SearchService.prototype = {
 
     Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
     Services.telemetry.getHistogramById("SEARCH_SERVICE_INIT_SYNC").add(true);
-    this._recordEngineTelemetry();
 
     LOG("_syncInit end");
   },
@@ -2718,7 +2717,6 @@ SearchService.prototype = {
     this._initObservers.resolve(this._initRV);
     Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
     Services.telemetry.getHistogramById("SEARCH_SERVICE_INIT_SYNC").add(false);
-    this._recordEngineTelemetry();
 
     LOG("_asyncInit: Completed _asyncInit");
   },
@@ -3021,7 +3019,6 @@ SearchService.prototype = {
         // so signal to 'callers' that we're done.
         gInitialized = true;
         Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
-        this._recordEngineTelemetry();
       } catch (err) {
         LOG("Reinit failed: " + err);
         Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-failed");
@@ -4255,11 +4252,6 @@ SearchService.prototype = {
     }
 
     return result;
-  },
-
-  _recordEngineTelemetry() {
-    Services.telemetry.getHistogramById("SEARCH_SERVICE_ENGINE_COUNT")
-            .add(Object.keys(this._engines).length);
   },
 
   /**
