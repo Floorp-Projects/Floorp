@@ -773,7 +773,6 @@ WEBIDL_FILES = [
     'StorageType.webidl',
     'StreamFilter.webidl',
     'StreamFilterDataEvent.webidl',
-    'StructuredCloneTester.webidl',
     'StyleSheet.webidl',
     'StyleSheetList.webidl',
     'SubtleCrypto.webidl',
