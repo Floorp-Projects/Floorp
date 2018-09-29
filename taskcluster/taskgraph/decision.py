@@ -20,6 +20,7 @@ from .try_option_syntax import parse_message
 from .actions import render_actions_json
 from taskgraph.util.partials import populate_release_history
 from taskgraph.util.yaml import load_yaml
+from taskgraph.config import load_graph_config
 
 
 logger = logging.getLogger(__name__)
@@ -186,6 +187,11 @@ def get_decision_parameters(options):
     This also applies per-project parameters, based on the given project.
 
     """
+    # --root is not passed to mach when building Firefox
+    root = options.get('root') or 'taskcluster/ci'
+    _config = load_graph_config(root)
+    product_dir = _config['product-dir']
+
     parameters = {n: options[n] for n in [
         'base_repository',
         'head_repository',
@@ -218,8 +224,8 @@ def get_decision_parameters(options):
     parameters['existing_tasks'] = {}
     parameters['do_not_optimize'] = []
     parameters['build_number'] = 1
-    parameters['version'] = get_version()
-    parameters['app_version'] = get_app_version()
+    parameters['version'] = get_version(product_dir)
+    parameters['app_version'] = get_app_version(product_dir)
     parameters['next_version'] = None
     parameters['release_type'] = 'nightly'
     parameters['release_eta'] = ''
