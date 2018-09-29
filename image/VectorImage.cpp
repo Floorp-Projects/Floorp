@@ -66,7 +66,7 @@ public:
     MOZ_ASSERT(mVectorImage, "Need a non-null VectorImage");
 
     StartObserving();
-    Element* elem = GetTarget();
+    Element* elem = GetReferencedElementWithoutObserving();
     MOZ_ASSERT(elem, "no root SVG node for us to observe");
 
     SVGObserverUtils::AddRenderingObserver(elem, this);
@@ -85,14 +85,14 @@ protected:
     StopObserving();
   }
 
-  virtual Element* GetTarget() override
+  Element* GetReferencedElementWithoutObserving() override
   {
     return mDocWrapper->GetRootSVGElem();
   }
 
   virtual void OnRenderingChange() override
   {
-    Element* elem = GetTarget();
+    Element* elem = GetReferencedElementWithoutObserving();
     MOZ_ASSERT(elem, "missing root SVG node");
 
     if (mHonoringInvalidations && !mDocWrapper->ShouldIgnoreInvalidation()) {
