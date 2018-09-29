@@ -225,7 +225,6 @@
   font-size: 12px;
   min-width: 70px;
   margin-right: 10px;
-  text-transform: capitalize;
   -moz-user-select: none;
 }
 
@@ -239,7 +238,6 @@
 .font-control-label-detail {
   color: var(--secondary-label-color);
   font-size: smaller;
-  text-transform: none;
 }
 
 .font-value-input {
