@@ -19,8 +19,8 @@ public:
 
   static nsFontInflationData* FindFontInflationDataFor(const nsIFrame *aFrame);
 
-  // Returns whether the usable width changed (which requires the
-  // caller to mark its descendants dirty)
+  // Returns whether the effective width changed (which requires the
+  // caller to mark its descendants dirty
   static bool
     UpdateFontInflationDataISizeFor(const ReflowInput& aReflowInput);
 
@@ -33,8 +33,8 @@ public:
     return mInflationEnabled;
   }
 
-  nscoord UsableISize() const {
-    return mUsableISize;
+  nscoord EffectiveISize() const {
+    return mNCAISize;
   }
 
 private:
@@ -67,7 +67,7 @@ private:
   }
 
   nsIFrame *mBFCFrame;
-  nscoord mUsableISize;
+  nscoord mNCAISize;
   nscoord mTextAmount, mTextThreshold;
   bool mInflationEnabled; // for this BFC
   bool mTextDirty;
