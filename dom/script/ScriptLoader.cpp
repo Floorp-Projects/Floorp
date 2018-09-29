@@ -2412,8 +2412,8 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
 
                 if (srcBuf) {
                   if (recordreplay::IsRecordingOrReplaying()) {
-                    recordreplay::NoteContentParse(this, options.filename(), "application/javascript",
-                                                   srcBuf->get(), srcBuf->length());
+                    recordreplay::NoteContentParse16(this, options.filename(), "application/javascript",
+                                                     srcBuf->get(), srcBuf->length());
                   }
                   rv = exec.CompileAndExec(options, *srcBuf, &script);
                 } else {

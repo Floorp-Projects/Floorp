@@ -14,6 +14,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Range.h"
+#include "mozilla/Utf8.h"
 
 #include <string.h>
 
@@ -65,6 +66,7 @@ using mozilla::ArrayLength;
 using mozilla::CheckedInt;
 using mozilla::Maybe;
 using mozilla::Some;
+using mozilla::Utf8Unit;
 
 using JS::AutoStableStringChars;
 using JS::CompileOptions;
@@ -1803,19 +1805,36 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 
             // Parse and compile the script from source.
             UncompressedSourceCache::AutoHoldEntry holder;
-            ScriptSource::PinnedChars chars(cx, lazy->scriptSource(), holder,
-                                            lazy->sourceStart(), lazyLength);
-            if (!chars.get()) {
-                return false;
-            }
 
-            if (!frontend::CompileLazyFunction(cx, lazy, chars.get(), lazyLength)) {
-		// The frontend shouldn't fail after linking the function and the
-		// non-lazy script together.
-                MOZ_ASSERT(fun->isInterpretedLazy());
-                MOZ_ASSERT(fun->lazyScript() == lazy);
-                MOZ_ASSERT(!lazy->hasScript());
-                return false;
+            if (lazy->scriptSource()->hasSourceType<Utf8Unit>()) {
+                // UTF-8 source text.
+                ScriptSource::PinnedChars<Utf8Unit> chars(cx, lazy->scriptSource(), holder,
+                                                          lazy->sourceStart(), lazyLength);
+                if (!chars.get()) {
+                    return false;
+                }
+
+                // XXX There are no UTF-8 ScriptSources now, so just crash so this
+                //     gets filled in later.
+                MOZ_CRASH("UTF-8 lazy function compilation not implemented yet");
+            } else {
+                MOZ_ASSERT(lazy->scriptSource()->hasSourceType<char16_t>());
+
+                // UTF-16 source text.
+                ScriptSource::PinnedChars<char16_t> chars(cx, lazy->scriptSource(), holder,
+                                                          lazy->sourceStart(), lazyLength);
+                if (!chars.get()) {
+                    return false;
+                }
+
+                if (!frontend::CompileLazyFunction(cx, lazy, chars.get(), lazyLength)) {
+                    // The frontend shouldn't fail after linking the function and the
+                    // non-lazy script together.
+                    MOZ_ASSERT(fun->isInterpretedLazy());
+                    MOZ_ASSERT(fun->lazyScript() == lazy);
+                    MOZ_ASSERT(!lazy->hasScript());
+                    return false;
+                }
             }
         }
 
