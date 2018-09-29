@@ -411,6 +411,8 @@ public:
         IDX_LASTINDEX               ,
         IDX_THEN                    ,
         IDX_ISINSTANCE              ,
+        IDX_INFINITY                ,
+        IDX_NAN                     ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 

@@ -936,6 +936,25 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
             firstClientWrite = ss->ssl3.hs.ws == idle_handshake;
             ssl_ReleaseSSL3HandshakeLock(ss);
         }
+        /* Allow the server to send 0.5 RTT data in TLS 1.3. Requesting a
+         * certificate implies that the server might condition its sending on
+         * client authentication, so force servers that do that to wait.
+         *
+         * What might not be obvious here is that this allows 0.5 RTT when doing
+         * PSK-based resumption.  As a result, 0.5 RTT is always enabled when
+         * early data is accepted.
+         *
+         * This check might be more conservative than absolutely necessary.
+         * It's possible that allowing 0.5 RTT data when the server requests,
+         * but does not require client authentication is safe because we can
+         * expect the server to check for a client certificate properly. */
+        if (ss->sec.isServer &&
+            ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+            !tls13_ShouldRequestClientAuth(ss)) {
+            ssl_GetSSL3HandshakeLock(ss);
+            allowEarlySend = TLS13_IN_HS_STATE(ss, wait_finished);
+            ssl_ReleaseSSL3HandshakeLock(ss);
+        }
         if (!allowEarlySend && ss->handshake) {
             rv = ssl_Do1stHandshake(ss);
         }

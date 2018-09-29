@@ -29,9 +29,10 @@ const {
 const promise = require("promise");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {Tools} = require("devtools/client/definitions");
-const {gDevTools} = require("devtools/client/framework/devtools");
 const CssLogic = require("devtools/shared/inspector/css-logic");
+
+loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");

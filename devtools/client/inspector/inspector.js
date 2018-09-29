@@ -609,17 +609,6 @@ Inspector.prototype = {
     this.panelWin.addEventListener("resize", this.onPanelWindowResize, true);
   },
 
-  /**
-   * Splitter clean up.
-   */
-  teardownSplitter: function() {
-    this.panelWin.removeEventListener("resize", this.onPanelWindowResize, true);
-
-    this.sidebar.off("show", this.onSidebarShown);
-    this.sidebar.off("hide", this.onSidebarHidden);
-    this.sidebar.off("destroy", this.onSidebarHidden);
-  },
-
   _onLazyPanelResize: async function() {
     // We can be called on a closed window because of the deferred task.
     if (window.closed) {
@@ -784,6 +773,11 @@ Inspector.prototype = {
   async addRuleView({ defaultTab = "ruleview", skipQueue = false } = {}) {
     const ruleViewSidebar = this.sidebarSplitBox.startPanelContainer;
 
+    if (this.is3PaneModeEnabled || defaultTab === "ruleview") {
+      // Force the rule view panel creation by calling getPanel
+      this.getPanel("ruleview");
+    }
+
     if (this.is3PaneModeEnabled) {
       // Convert to 3 pane mode by removing the rule view from the inspector sidebar
       // and adding the rule view to the middle (in landscape/horizontal mode) or
@@ -792,9 +786,6 @@ Inspector.prototype = {
 
       this.setSidebarSplitBoxState();
 
-      // Force the rule view panel creation by calling getPanel
-      this.getPanel("ruleview");
-
       await this.sidebar.removeTab("ruleview");
 
       this.ruleViewSideBar.addExistingTab(
@@ -802,7 +793,7 @@ Inspector.prototype = {
         INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
         true);
 
-      this.ruleViewSideBar.show("ruleview");
+      this.ruleViewSideBar.show();
     } else {
       // Removes the rule view from the 3 pane mode and adds the rule view to the main
       // inspector sidebar.
@@ -898,8 +889,6 @@ Inspector.prototype = {
     this.ruleViewSideBar = new ToolSidebar(ruleSideBar, this, "inspector", {
       hideTabstripe: true
     });
-
-    this.sidebar.on("select", this.onSidebarSelect);
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
@@ -1013,11 +1002,12 @@ Inspector.prototype = {
     this.sidebar.addAllQueuedTabs();
 
     // Persist splitter state in preferences.
+    this.sidebar.on("select", this.onSidebarSelect);
     this.sidebar.on("show", this.onSidebarShown);
     this.sidebar.on("hide", this.onSidebarHidden);
     this.sidebar.on("destroy", this.onSidebarHidden);
 
-    this.sidebar.show(defaultTab);
+    this.sidebar.show();
   },
 
   /**
@@ -1431,9 +1421,13 @@ Inspector.prototype = {
 
     this.cancelUpdate();
 
+    this.panelWin.removeEventListener("resize", this.onPanelWindowResize, true);
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("detached-front", this.onDetached);
     this.sidebar.off("select", this.onSidebarSelect);
+    this.sidebar.off("show", this.onSidebarShown);
+    this.sidebar.off("hide", this.onSidebarHidden);
+    this.sidebar.off("destroy", this.onSidebarHidden);
     this.target.off("will-navigate", this._onBeforeNavigate);
     this.target.off("thread-paused", this._updateDebuggerPausedWarning);
     this.target.off("thread-resumed", this._updateDebuggerPausedWarning);
@@ -1480,7 +1474,6 @@ Inspector.prototype = {
       this.ruleViewSideBar.destroy() : null;
     const markupDestroyer = this._destroyMarkup();
 
-    this.teardownSplitter();
     this.teardownToolbar();
 
     this.breadcrumbs.destroy();
