@@ -50,3 +50,6 @@ l10n-repo/
 
 # jacoco.exec
 jacoco.exec
+
+#Gihub Bot Token
+.github_token

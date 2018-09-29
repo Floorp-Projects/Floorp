@@ -235,3 +235,6 @@ task printVersion {
         println("version: " + Config.componentsVersion)
     }
 }
+
+apply plugin: GVNightlyVersionVerifierPlugin
+apply plugin: GitHubPlugin
