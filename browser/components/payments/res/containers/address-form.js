@@ -132,12 +132,12 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     let editing = !!addressPage.guid;
     this.cancelButton.textContent = this.dataset.cancelButtonLabel;
     this.backButton.textContent = this.dataset.backButtonLabel;
-    if (page.onboardingWizard) {
-      this.saveButton.textContent = this.dataset.nextButtonLabel;
+    if (editing) {
+      this.saveButton.textContent = this.dataset.updateButtonLabel;
     } else {
-      this.saveButton.textContent = editing ? this.dataset.updateButtonLabel :
-                                              this.dataset.addButtonLabel;
+      this.saveButton.textContent = this.dataset.nextButtonLabel;
     }
+
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
     this.persistCheckbox.infoTooltip = this.dataset.persistCheckboxInfoTooltip;
 

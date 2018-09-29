@@ -99,7 +99,11 @@ ProcessCmdLine(int& aArgc, wchar_t* aArgv[])
       mozilla::CheckArg(aArgc, aArgv, L"marionette",
                         static_cast<const wchar_t**>(nullptr),
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
-      mozilla::EnvHasValue("MOZ_AUTOMATION")) {
+      mozilla::CheckArg(aArgc, aArgv, L"headless",
+                        static_cast<const wchar_t**>(nullptr),
+                        mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
+      mozilla::EnvHasValue("MOZ_AUTOMATION") ||
+      mozilla::EnvHasValue("MOZ_HEADLESS")) {
     result |= mozilla::LauncherFlags::eWaitForBrowser;
   }
 

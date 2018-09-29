@@ -78,7 +78,5 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['CC_TYPE'] not in ('clang', 'gcc'):
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wshadow']
 
-DEFINES['MOZ_PLUGIN_CONTAINER'] = 1;
-
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
