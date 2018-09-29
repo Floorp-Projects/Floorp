@@ -44,10 +44,17 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     this.persistCheckbox = new LabelledCheckbox();
     this.persistCheckbox.className = "persist-checkbox";
 
+    // Combination of AddressErrors and PayerErrorFields as keys
     this._errorFieldMap = {
       addressLine: "#street-address",
       city: "#address-level2",
       country: "#country",
+      email: "#email",
+      // Bug 1472283 is on file to support
+      // additional-name and family-name.
+      // XXX: For now payer name errors go on the family-name and address-errors
+      //      go on the given-name so they don't overwrite each other.
+      name: "#family-name",
       organization: "#organization",
       phone: "#tel",
       postalCode: "#postal-code",
@@ -82,7 +89,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     this.promiseReady.then(form => {
       this.body.appendChild(form);
 
-      let record = {};
+      let record = undefined;
       this.formHandler = new EditAddress({
         form,
       }, record, {
@@ -121,7 +128,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     let {
       page,
       "address-page": addressPage,
-      request,
     } = state;
 
     if (this.id && page && page.id !== this.id) {
@@ -179,11 +185,14 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     // Add validation to some address fields
     this.updateRequiredState();
 
-    let shippingAddressErrors = request.paymentDetails.shippingAddressErrors;
+    // Show merchant errors for the appropriate address form.
+    let merchantFieldErrors = AddressForm.merchantFieldErrorsForForm(state,
+                                                                     addressPage.selectedStateKey);
     for (let [errorName, errorSelector] of Object.entries(this._errorFieldMap)) {
       let container = this.form.querySelector(errorSelector + "-container");
       let field = this.form.querySelector(errorSelector);
-      let errorText = (shippingAddressErrors && shippingAddressErrors[errorName]) || "";
+      // Never show errors on an 'add' screen as they would be for a different address.
+      let errorText = (editing && merchantFieldErrors && merchantFieldErrors[errorName]) || "";
       field.setCustomValidity(errorText);
       let span = PaymentDialog.maybeCreateFieldErrorElement(container);
       span.textContent = errorText;
@@ -367,6 +376,34 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
           error: this.dataset.errorGenericSave,
         },
       });
+    }
+  }
+
+  /**
+   * Get the dictionary of field-specific merchant errors relevant to the
+   * specific form identified by the state key.
+   * @param {object} state The application state
+   * @param {string[]} stateKey The key in state to return address errors for.
+   * @returns {object} with keys as PaymentRequest field names and values of
+   *                   merchant-provided error strings.
+   */
+  static merchantFieldErrorsForForm(state, stateKey) {
+    let {paymentDetails} = state.request;
+    switch (stateKey.join("|")) {
+      case "selectedShippingAddress": {
+        return paymentDetails.shippingAddressErrors;
+      }
+      case "selectedPayerAddress": {
+        return paymentDetails.payer;
+      }
+      case "basic-card-page|billingAddressGUID": {
+        // `paymentMethod` can be null.
+        return (paymentDetails.paymentMethod
+                && paymentDetails.paymentMethod.billingAddress) || {};
+      }
+      default: {
+        throw new Error("Unknown selectedStateKey");
+      }
     }
   }
 }
