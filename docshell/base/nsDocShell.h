@@ -1173,6 +1173,9 @@ private: // data members
   // We will check the innerWin's timing before creating a new one
   // in MaybeInitTiming()
   bool mBlankTiming : 1;
+
+  // This flag indicates when the title is valid for the current URI.
+  bool mTitleValidForCurrentURI : 1;
 };
 
 #endif /* nsDocShell_h__ */
