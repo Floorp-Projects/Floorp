@@ -489,7 +489,7 @@ class XDRState : public XDRCoderBase
         return Ok();
     }
 
-    XDRResult codeChars(const JS::Latin1Char* chars, size_t nchars);
+    XDRResult codeChars(JS::Latin1Char* chars, size_t nchars);
     XDRResult codeChars(mozilla::Utf8Unit* units, size_t nchars);
 
     XDRResult codeChars(char16_t* chars, size_t nchars);
