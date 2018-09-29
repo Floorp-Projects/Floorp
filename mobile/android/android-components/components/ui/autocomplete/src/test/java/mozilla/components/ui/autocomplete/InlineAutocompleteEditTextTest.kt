@@ -324,17 +324,6 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testPostIsCalledWhenAutocompletedTextIsDeleted() {
-        val et = spy(InlineAutocompleteEditText(context, attributes))
-        val icw = et.onCreateInputConnection(mock(EditorInfo::class.java))
-
-        et.setText("text")
-        et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
-        icw?.deleteSurroundingText(0, 1)
-        verify(et).post(any<Runnable>())
-    }
-
-    @Test
     fun testRemoveAutocompleteOnComposing() {
         val et = InlineAutocompleteEditText(context, attributes)
         val ic = et.onCreateInputConnection(mock(EditorInfo::class.java))

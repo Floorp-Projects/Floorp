@@ -468,18 +468,6 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
                     // If we have autocomplete text, the cursor is at the boundary between
                     // regular and autocomplete text. So regardless of which direction we
                     // are deleting, we should delete the autocomplete text first.
-                    // Make the IME aware that we interrupted the deleteSurroundingText call,
-                    // by restarting the IME.
-                    post {
-                        // On some devices this method can lead to race conditions (see Javadoc on
-                        // [InputConnection#deleteSurroundingText], and in at least one case this
-                        // caused our soft keyboard to desynchronize from its backing EditText.
-                        //
-                        // It is not known exactly how this method interacts with platform code
-                        // to create problems, but posting has resolved the reported issue.
-                        val imm = ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        imm.restartInput(this@InlineAutocompleteEditText)
-                    }
                     return false
                 }
                 return super.deleteSurroundingText(beforeLength, afterLength)
