@@ -8288,15 +8288,9 @@ MinimumFontSizeFor(nsPresContext* aPresContext, WritingMode aWritingMode,
     return 0;
   }
 
-  // Clamp the container width to the device dimensions
-  nscoord iFrameISize = aWritingMode.IsVertical()
-    ? aPresContext->GetVisibleArea().height
-    : aPresContext->GetVisibleArea().width;
-  nscoord effectiveContainerISize = std::min(iFrameISize, aContainerISize);
-
   nscoord byLine = 0, byInch = 0;
   if (emPerLine != 0) {
-    byLine = effectiveContainerISize / emPerLine;
+    byLine = aContainerISize / emPerLine;
   }
   if (minTwips != 0) {
     // REVIEW: Is this giving us app units and sizes *not* counting
@@ -8304,7 +8298,7 @@ MinimumFontSizeFor(nsPresContext* aPresContext, WritingMode aWritingMode,
     gfxSize screenSize = aPresContext->ScreenSizeInchesForFontInflation();
     float deviceISizeInches = aWritingMode.IsVertical()
       ? screenSize.height : screenSize.width;
-    byInch = NSToCoordRound(effectiveContainerISize /
+    byInch = NSToCoordRound(aContainerISize /
                             (deviceISizeInches * 1440 /
                              minTwips ));
   }
@@ -8452,7 +8446,7 @@ nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame *aFrame)
 
       return MinimumFontSizeFor(aFrame->PresContext(),
                                 aFrame->GetWritingMode(),
-                                data->EffectiveISize());
+                                data->UsableISize());
     }
   }
 
