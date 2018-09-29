@@ -42,6 +42,8 @@ export let requestStore = new PaymentsStore({
       id: null,
       totalItem: {label: null, amount: {currency: null, value: 0}},
       displayItems: [],
+      payer: {},
+      paymentMethod: null,
       shippingAddressErrors: {},
       shippingOptions: [],
       modifiers: null,

@@ -95,6 +95,23 @@ cargo_extra_outputs = {
     'webrender': [
         'shaders.rs',
     ],
+    'geckodriver': [
+        'build-info.rs',
+    ],
+    'crc': [
+        'crc64_constants.rs',
+        'crc32_constants.rs',
+    ],
+    'bzip2-sys': [
+        'bzip2-1.0.6/blocksort.o',
+        'bzip2-1.0.6/bzlib.o',
+        'bzip2-1.0.6/compress.o',
+        'bzip2-1.0.6/crctable.o',
+        'bzip2-1.0.6/decompress.o',
+        'bzip2-1.0.6/huffman.o',
+        'bzip2-1.0.6/randtable.o',
+        'libbz2.a',
+    ],
     'cranelift-codegen': [
         'binemit-arm32.rs',
         'binemit-arm64.rs',
