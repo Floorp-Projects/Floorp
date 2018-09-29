@@ -44,28 +44,6 @@ class TlsExtensionTruncator : public TlsExtensionFilter {
   size_t length_;
 };
 
-class TlsExtensionDamager : public TlsExtensionFilter {
- public:
-  TlsExtensionDamager(const std::shared_ptr<TlsAgent>& a, uint16_t extension,
-                      size_t index)
-      : TlsExtensionFilter(a), extension_(extension), index_(index) {}
-  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
-                                               const DataBuffer& input,
-                                               DataBuffer* output) {
-    if (extension_type != extension_) {
-      return KEEP;
-    }
-
-    *output = input;
-    output->data()[index_] += 73;  // Increment selected for maximum damage
-    return CHANGE;
-  }
-
- private:
-  uint16_t extension_;
-  size_t index_;
-};
-
 class TlsExtensionAppender : public TlsHandshakeFilter {
  public:
   TlsExtensionAppender(const std::shared_ptr<TlsAgent>& a,
@@ -611,7 +589,6 @@ TEST_F(TlsExtensionTest13Stream, WrongServerKeyShare) {
   EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
 }
 
-// TODO(ekr@rtfm.com): This is the wrong error code. See bug 1307269.
 TEST_F(TlsExtensionTest13Stream, UnknownServerKeyShare) {
   const uint16_t wrong_group = 0xffff;
 
@@ -625,10 +602,10 @@ TEST_F(TlsExtensionTest13Stream, UnknownServerKeyShare) {
   DataBuffer buf(key_share, sizeof(key_share));
   EnsureTlsSetup();
   MakeTlsFilter<TlsExtensionReplacer>(server_, ssl_tls13_key_share_xtn, buf);
-  client_->ExpectSendAlert(kTlsAlertMissingExtension);
+  client_->ExpectSendAlert(kTlsAlertIllegalParameter);
   server_->ExpectSendAlert(kTlsAlertBadRecordMac);
   ConnectExpectFail();
-  EXPECT_EQ(SSL_ERROR_MISSING_KEY_SHARE, client_->error_code());
+  EXPECT_EQ(SSL_ERROR_RX_MALFORMED_KEY_SHARE, client_->error_code());
   EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
 }
 

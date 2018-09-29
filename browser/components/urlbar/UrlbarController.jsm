@@ -14,7 +14,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 const ProvidersManager = {
   queryStart(queryContext, controller) {
     queryContext.results = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < queryContext.maxResults; i++) {
       const SWITCH_TO_TAB = Math.random() < .3;
       let url = "http://www." + queryContext.searchString;
       while (Math.random() < .9) {

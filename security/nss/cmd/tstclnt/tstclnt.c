@@ -28,6 +28,7 @@
 #include "prio.h"
 #include "prnetdb.h"
 #include "nss.h"
+#include "nssb64.h"
 #include "ocsp.h"
 #include "ssl.h"
 #include "sslproto.h"
@@ -224,7 +225,8 @@ PrintUsageHeader()
             "  [-V [min-version]:[max-version]] [-K] [-T] [-U]\n"
             "  [-r N] [-w passwd] [-W pwfile] [-q [-t seconds]]\n"
             "  [-I groups] [-J signatureschemes]\n"
-            "  [-A requestfile] [-L totalconnections] [-P {client,server}] [-Q]\n"
+            "  [-A requestfile] [-L totalconnections] [-P {client,server}]\n"
+            "  [-N encryptedSniKeys] [-Q]\n"
             "\n",
             progName);
 }
@@ -308,6 +310,7 @@ PrintParameterUsage()
     fprintf(stderr, "%-20s Enable alternative TLS 1.3 handshake\n", "-X alt-server-hello");
     fprintf(stderr, "%-20s Use DTLS\n", "-P {client, server}");
     fprintf(stderr, "%-20s Exit after handshake\n", "-Q");
+    fprintf(stderr, "%-20s Encrypted SNI Keys\n", "-N");
 }
 
 static void
@@ -985,6 +988,7 @@ PRBool stopAfterHandshake = PR_FALSE;
 PRBool requestToExit = PR_FALSE;
 char *versionString = NULL;
 PRBool handshakeComplete = PR_FALSE;
+char *encryptedSNIKeys = NULL;
 
 static int
 writeBytesToServer(PRFileDesc *s, const PRUint8 *buf, int nb)
@@ -1424,6 +1428,26 @@ run()
         }
     }
 
+    if (encryptedSNIKeys) {
+        SECItem esniKeysBin = { siBuffer, NULL, 0 };
+
+        if (!NSSBase64_DecodeBuffer(NULL, &esniKeysBin, encryptedSNIKeys,
+                                    strlen(encryptedSNIKeys))) {
+            SECU_PrintError(progName, "ESNIKeys record is invalid base64");
+            error = 1;
+            goto done;
+        }
+
+        rv = SSL_EnableESNI(s, esniKeysBin.data, esniKeysBin.len,
+                            "dummy.invalid");
+        SECITEM_FreeItem(&esniKeysBin, PR_FALSE);
+        if (rv < 0) {
+            SECU_PrintError(progName, "SSL_EnableESNI failed");
+            error = 1;
+            goto done;
+        }
+    }
+
     serverCertAuth.dbHandle = CERT_GetDefaultCertDB();
 
     SSL_AuthCertificateHook(s, ownAuthCertificate, &serverCertAuth);
@@ -1683,7 +1707,7 @@ main(int argc, char **argv)
      * Please leave some time before reusing these.
      */
     optstate = PL_CreateOptState(argc, argv,
-                                 "46A:CDFGHI:J:KL:M:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:");
+                                 "46A:CDFGHI:J:KL:M:N:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -1758,6 +1782,10 @@ main(int argc, char **argv)
                         serverCertAuth.allowCRLSideChannelData = PR_TRUE;
                         break;
                 };
+                break;
+
+            case 'N':
+                encryptedSNIKeys = PORT_Strdup(optstate->value);
                 break;
 
             case 'P':
@@ -2108,6 +2136,7 @@ done:
     PORT_Free(pwdata.data);
     PORT_Free(host);
     PORT_Free(zeroRttData);
+    PORT_Free(encryptedSNIKeys);
 
     if (enabledGroups) {
         PORT_Free(enabledGroups);

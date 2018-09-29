@@ -454,7 +454,8 @@ typedef enum {
     ssl_tls13_key_share_xtn = 51,
     ssl_next_proto_nego_xtn = 13172, /* Deprecated. */
     ssl_renegotiation_info_xtn = 0xff01,
-    ssl_tls13_short_header_xtn = 0xff03 /* Deprecated. */
+    ssl_tls13_short_header_xtn = 0xff03, /* Deprecated. */
+    ssl_tls13_encrypted_sni_xtn = 0xffce,
 } SSLExtensionType;
 
 /* This is the old name for the supported_groups extensions. */

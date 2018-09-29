@@ -273,7 +273,9 @@ PresentationResponderLoadingCallback::OnStatusChange(nsIWebProgress* aWebProgres
 NS_IMETHODIMP
 PresentationResponderLoadingCallback::OnSecurityChange(nsIWebProgress* aWebProgress,
                                                        nsIRequest* aRequest,
-                                                       uint32_t state)
+                                                       uint32_t aOldState,
+                                                       uint32_t aState,
+                                                       const nsAString& aContentBlockingLogJSON)
 {
   // Do nothing.
   return NS_OK;

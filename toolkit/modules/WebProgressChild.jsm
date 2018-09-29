@@ -213,12 +213,15 @@ class WebProgressChild {
     return null;
   }
 
-  onSecurityChange(aWebProgress, aRequest, aState) {
+  onSecurityChange(aWebProgress, aRequest, aOldState, aState,
+                   aContentBlockingLogJSON) {
     let json = this._setupJSON(aWebProgress, aRequest);
     let objects = this._setupObjects(aWebProgress, aRequest);
 
+    json.oldState = aOldState;
     json.state = aState;
     json.secInfo = this.getSecInfoAsString();
+    json.contentBlockingLogJSON = aContentBlockingLogJSON;
 
     json.matchedList = null;
     if (aRequest && aRequest instanceof Ci.nsIClassifiedChannel) {

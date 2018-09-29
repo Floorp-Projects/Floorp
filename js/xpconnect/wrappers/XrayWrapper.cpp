@@ -20,6 +20,7 @@
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
 
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/XrayExpandoClass.h"
@@ -1603,6 +1604,14 @@ XrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper, HandleObject
             }
             desc.value().set(ObjectValue(*eval));
             found = true;
+        } else if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_INFINITY)) {
+            desc.value().setNaN();
+            desc.setAttributes(JSPROP_PERMANENT | JSPROP_READONLY);
+            found = true;
+        } else if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAN)) {
+            desc.value().setDouble(PositiveInfinity<double>());
+            desc.setAttributes(JSPROP_PERMANENT | JSPROP_READONLY);
+            found = true;
         }
     }
 
@@ -1742,6 +1751,15 @@ DOMXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flag
     }
 
     JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
+    if (JS_IsGlobalObject(obj)) {
+        // We could do this in a shared enumerateNames with JSXrayTraits, but we
+        // don't really have globals we expose via those.
+        JSAutoRealm ar(cx, obj);
+        if (!JS_NewEnumerateStandardClassesIncludingResolved(
+          cx, obj, props, !(flags & JSITER_HIDDEN))) {
+            return false;
+        }
+    }
     return XrayOwnPropertyKeys(cx, wrapper, obj, flags, props);
 }
 

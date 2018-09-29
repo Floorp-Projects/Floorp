@@ -168,13 +168,15 @@ Module::finishTier2(const LinkData& linkData2, UniqueCodeTier code2) const
         }
     }
 
-    // Tier-2 is done; let everyone know.
+    // Tier-2 is done; let everyone know. Mark tier-2 active for testing
+    // purposes so that wasmHasTier2CompilationCompleted() only returns true
+    // after tier-2 has been fully cached.
 
-    testingTier2Active_ = false;
     if (tier2Listener_) {
         serialize(linkData2, *tier2Listener_);
         tier2Listener_ = nullptr;
     }
+    testingTier2Active_ = false;
 
     return true;
 }
@@ -206,7 +208,6 @@ Module::serializedSize(const LinkData& linkData) const
 /* virtual */ void
 Module::serialize(const LinkData& linkData, uint8_t* begin, size_t size) const
 {
-    MOZ_RELEASE_ASSERT(!testingTier2Active_);
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
     MOZ_RELEASE_ASSERT(code_->hasTier(Tier::Serialized));
 

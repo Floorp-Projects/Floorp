@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, you can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, you can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This file is an NSIS plugin which exports a function that starts a process
 // from a provided path by using the shell automation API to have explorer.exe
@@ -89,7 +89,7 @@ GetApplicationFromShellView(IShellView* view)
 }
 
 static bool
-ShellExecInExplorerProcess(wchar_t* path)
+ShellExecInExplorerProcess(wchar_t* path, wchar_t* args = nullptr)
 {
   bool rv = false;
   if (SUCCEEDED(CoInitialize(nullptr))) {
@@ -98,9 +98,15 @@ ShellExecInExplorerProcess(wchar_t* path)
       IShellDispatch2 *shellDispatch = GetApplicationFromShellView(desktopView);
       if (shellDispatch) {
         BSTR bstrPath = SysAllocString(path);
-        rv = SUCCEEDED(shellDispatch->ShellExecuteW(bstrPath,
-                                                    VARIANT{}, VARIANT{},
+        VARIANT vArgs;
+        VariantInit(&vArgs);
+        if (args) {
+          vArgs.vt = VT_BSTR;
+          vArgs.bstrVal = SysAllocString(args);
+        }
+        rv = SUCCEEDED(shellDispatch->ShellExecuteW(bstrPath, vArgs, VARIANT{},
                                                     VARIANT{}, VARIANT{}));
+        VariantClear(&vArgs);
         SysFreeString(bstrPath);
         shellDispatch->Release();
       }
@@ -117,13 +123,13 @@ struct stack_t {
 };
 
 /**
-* Removes an element from the top of the NSIS stack
-*
-* @param  stacktop A pointer to the top of the stack
-* @param  str      The string to pop to
-* @param  len      The max length
-* @return 0 on success
-*/
+ * Removes an element from the top of the NSIS stack
+ *
+ * @param  stacktop A pointer to the top of the stack
+ * @param  str      The string to pop to
+ * @param  len      The max length
+ * @return 0 on success
+ */
 int
 popstring(stack_t **stacktop, TCHAR *str, int len)
 {
@@ -141,13 +147,13 @@ popstring(stack_t **stacktop, TCHAR *str, int len)
 }
 
 /**
-* Adds an element to the top of the NSIS stack
-*
-* @param  stacktop A pointer to the top of the stack
-* @param  str      The string to push on the stack
-* @param  len      The length of the string to push on the stack
-* @return 0 on success
-*/
+ * Adds an element to the top of the NSIS stack
+ *
+ * @param  stacktop A pointer to the top of the stack
+ * @param  str      The string to push on the stack
+ * @param  len      The length of the string to push on the stack
+ * @return 0 on success
+ */
 void
 pushstring(stack_t **stacktop, const TCHAR *str, int len)
 {
@@ -172,11 +178,31 @@ extern "C" void __declspec(dllexport)
 Exec(HWND, int, TCHAR *, stack_t **stacktop, void *)
 {
   wchar_t path[MAX_PATH + 1];
+  wchar_t args[MAX_PATH + 1];
+  bool rv = false;
+  bool restoreArgString = false;
   // We're skipping building the C runtime to keep the file size low, so we
   // can't use a normal string initialization because that would call memset.
   path[0] = L'\0';
+  args[0] = L'\0';
   popstring(stacktop, path, MAX_PATH);
-  bool rv = ShellExecInExplorerProcess(path);
+  if (!stacktop || !*stacktop) {
+    popstring(stacktop, args, MAX_PATH);
+    // This stack item may not be for us, but we don't know yet.
+    restoreArgString = true;
+  }
+
+  if (lstrcmpW(args, L"/cmdargs") == 0) {
+    popstring(stacktop, args, MAX_PATH);
+    rv = ShellExecInExplorerProcess(path, args);
+  } else {
+    // If the stack wasn't empty, then we popped something that wasn't for us.
+    if (restoreArgString) {
+      pushstring(stacktop, args, lstrlenW(args));
+    }
+    rv = ShellExecInExplorerProcess(path);
+  }
+
   pushstring(stacktop, rv ? L"1" : L"0", 2);
 }
 

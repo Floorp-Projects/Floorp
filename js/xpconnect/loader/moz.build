@@ -49,6 +49,7 @@ LOCAL_INCLUDES += [
     '../src',
     '../wrappers',
     '/dom/base',
+    '/xpcom/base/',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

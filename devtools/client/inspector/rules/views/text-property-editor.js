@@ -5,23 +5,18 @@
 "use strict";
 
 const Services = require("Services");
-
 const { l10n } = require("devtools/shared/inspector/css-logic");
-const {getCssProperties} = require("devtools/shared/fronts/css-properties");
-const {InplaceEditor, editableField} =
-      require("devtools/client/shared/inplace-editor");
+const { InplaceEditor, editableField } = require("devtools/client/shared/inplace-editor");
 const {
   createChild,
   appendText,
   advanceValidate,
-  blurOnMultipleProperties
+  blurOnMultipleProperties,
 } = require("devtools/client/inspector/shared/utils");
-const {
-  parseDeclarations,
-  parseSingleValue,
-} = require("devtools/shared/css/parsing-utils");
 
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "parseSingleValue", "devtools/shared/css/parsing-utils", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -75,6 +70,7 @@ const GENERIC_FONT_FAMILIES = [
 function TextPropertyEditor(ruleEditor, property) {
   this.ruleEditor = ruleEditor;
   this.ruleView = this.ruleEditor.ruleView;
+  this.cssProperties = this.ruleView.cssProperties;
   this.doc = this.ruleEditor.doc;
   this.popup = this.ruleView.popup;
   this.prop = property;
@@ -86,7 +82,6 @@ function TextPropertyEditor(ruleEditor, property) {
 
   this.toolbox = this.ruleView.inspector.toolbox;
   this.telemetry = this.toolbox.telemetry;
-  this.cssProperties = getCssProperties(this.toolbox);
 
   this.getGridlineNames = this.getGridlineNames.bind(this);
   this.update = this.update.bind(this);

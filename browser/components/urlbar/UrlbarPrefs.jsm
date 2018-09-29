@@ -43,10 +43,20 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // this value.  See UnifiedComplete.
   ["autoFill.stddevMultiplier", [0.0, "getFloatPref"]],
 
+  // If true, this optimizes for replacing the full URL rather than editing
+  // part of it. This also copies the urlbar value to the selection clipboard
+  // on systems that support it.
+  ["clickSelectsAll", false],
+
   // The amount of time (ms) to wait after the user has stopped typing before
   // fetching results.  However, we ignore this for the very first result (the
   // "heuristic" result).  We fetch it as fast as possible.
   ["delay", 50],
+
+  // If true, this optimizes for replacing the full URL rather than selecting a
+  // portion of it. This also copies the urlbar value to the selection
+  // clipboard on systems that support it.
+  ["doubleClickSelectsAll", false],
 
   // When true, `javascript:` URLs are not included in search results.
   ["filter.javascript", true],

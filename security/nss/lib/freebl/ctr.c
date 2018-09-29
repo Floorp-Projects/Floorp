@@ -221,7 +221,7 @@ CTR_Update_HW_AES(CTRContext *ctr, unsigned char *outbuf,
 
     if (inlen >= blocksize) {
         rv = intel_aes_ctr_worker(((AESContext *)(ctr->context))->Nr)(
-                 ctr, outbuf, outlen, maxout, inbuf, inlen, blocksize);
+            ctr, outbuf, outlen, maxout, inbuf, inlen, blocksize);
         if (rv != SECSuccess) {
             return SECFailure;
         }
