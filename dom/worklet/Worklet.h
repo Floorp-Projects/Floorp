@@ -8,57 +8,23 @@
 #define mozilla_dom_Worklet_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 
 class nsPIDOMWindowInner;
-class nsIPrincipal;
 
 namespace mozilla {
+
+class WorkletImpl;
+
 namespace dom {
 
 class Promise;
-class Worklet;
 class WorkletFetchHandler;
-class WorkletGlobalScope;
 struct WorkletOptions;
-class WorkletThread;
 enum class CallerType : uint32_t;
-
-class WorkletLoadInfo
-{
-public:
-  WorkletLoadInfo(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
-  ~WorkletLoadInfo();
-
-  uint64_t OuterWindowID() const { return mOuterWindowID; }
-  uint64_t InnerWindowID() const { return mInnerWindowID; }
-  bool DumpEnabled() const { return mDumpEnabled; }
-
-  const OriginAttributes& OriginAttributesRef() const
-  {
-    return mOriginAttributes;
-  }
-
-  nsIPrincipal* Principal() const
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mPrincipal;
-  }
-
-private:
-  uint64_t mOuterWindowID;
-  uint64_t mInnerWindowID;
-  bool mDumpEnabled;
-  OriginAttributes mOriginAttributes;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  friend class Worklet;
-  friend class WorkletThread;
-};
 
 class Worklet final : public nsISupports
                     , public nsWrapperCache
@@ -67,13 +33,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Worklet)
 
-  enum WorkletType {
-    eAudioWorklet,
-    ePaintWorklet,
-  };
-
-  Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
-          WorkletType aWorkletType);
+  Worklet(nsPIDOMWindowInner* aWindow, RefPtr<WorkletImpl> aImpl);
 
   nsPIDOMWindowInner* GetParentObject() const
   {
@@ -88,23 +48,6 @@ public:
             const WorkletOptions& aOptions,
             CallerType aCallerType, ErrorResult& aRv);
 
-  WorkletType Type() const
-  {
-    return mWorkletType;
-  }
-
-  static already_AddRefed<WorkletGlobalScope>
-  CreateGlobalScope(JSContext* aCx, WorkletType aWorkletType);
-
-  WorkletThread*
-  GetOrCreateThread();
-
-  const WorkletLoadInfo&
-  LoadInfo() const
-  {
-    return mWorkletLoadInfo;
-  }
-
 private:
   ~Worklet();
 
@@ -114,18 +57,11 @@ private:
   void
   AddImportFetchHandler(const nsACString& aURI, WorkletFetchHandler* aHandler);
 
-  void
-  TerminateThread();
-
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-
-  WorkletType mWorkletType;
 
   nsRefPtrHashtable<nsCStringHashKey, WorkletFetchHandler> mImportHandlers;
 
-  RefPtr<WorkletThread> mWorkletThread;
-
-  WorkletLoadInfo mWorkletLoadInfo;
+  const RefPtr<WorkletImpl> mImpl;
 
   friend class WorkletFetchHandler;
 };
