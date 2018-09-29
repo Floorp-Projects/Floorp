@@ -12,7 +12,10 @@
 namespace mozilla {
 namespace dom {
 
-PaintWorkletGlobalScope::PaintWorkletGlobalScope() = default;
+PaintWorkletGlobalScope::PaintWorkletGlobalScope(WorkletImpl* aImpl)
+  : WorkletGlobalScope(aImpl)
+{
+}
 
 bool
 PaintWorkletGlobalScope::WrapGlobalObject(JSContext* aCx,

@@ -45,14 +45,9 @@ public:
   Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
 
   static already_AddRefed<Console>
-  CreateForWorklet(JSContext* aCx, uint64_t aOuterWindowID,
-                   uint64_t aInnerWindowID, ErrorResult& aRv);
-
-  // WebIDL methods
-  nsPIDOMWindowInner* GetParentObject() const
-  {
-    return mWindow;
-  }
+  CreateForWorklet(JSContext* aCx, nsIGlobalObject* aGlobal,
+                   uint64_t aOuterWindowID, uint64_t aInnerWindowID,
+                   ErrorResult& aRv);
 
   static void
   Log(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
@@ -140,7 +135,7 @@ public:
   SetConsoleEventHandler(AnyCallback* aHandler);
 
 private:
-  Console(JSContext* aCx, nsPIDOMWindowInner* aWindow,
+  Console(JSContext* aCx, nsIGlobalObject* aGlobal,
           uint64_t aOuterWindowID, uint64_t aInnerWIndowID);
   ~Console();
 
@@ -445,8 +440,9 @@ private:
   uint32_t
   InternalLogLevelToInteger(MethodName aName) const;
 
-  // All these nsCOMPtr are touched on main thread only.
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  // Owning/CC thread only
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  // These nsCOMPtr are touched on main thread only.
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
   RefPtr<JSObjectHolder> mSandbox;
 
@@ -501,6 +497,7 @@ private:
   friend class ConsoleProfileWorkletRunnable;
   friend class ConsoleRunnable;
   friend class ConsoleWorkerRunnable;
+  friend class ConsoleWorkletRunnable;
 };
 
 } // namespace dom

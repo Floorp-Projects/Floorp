@@ -102,6 +102,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/StaticPrefs.h"
+#include "PaintWorkletImpl.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -7819,7 +7820,7 @@ nsGlobalWindowInner::GetPaintWorklet(ErrorResult& aRv)
       return nullptr;
     }
 
-    mPaintWorklet = new Worklet(this, principal, Worklet::ePaintWorklet);
+    mPaintWorklet = PaintWorkletImpl::CreateWorklet(this, principal);
   }
 
   return mPaintWorklet;

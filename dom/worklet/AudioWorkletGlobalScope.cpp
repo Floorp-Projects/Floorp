@@ -12,8 +12,9 @@
 namespace mozilla {
 namespace dom {
 
-AudioWorkletGlobalScope::AudioWorkletGlobalScope()
-  : mCurrentFrame(0)
+AudioWorkletGlobalScope::AudioWorkletGlobalScope(WorkletImpl* aImpl)
+  : WorkletGlobalScope(aImpl)
+  , mCurrentFrame(0)
   , mCurrentTime(0)
   , mSampleRate(0.0)
 {}
