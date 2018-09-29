@@ -1009,12 +1009,6 @@ protected:
                                     nscoord* aOutsideBoxSizing) const;
 
   void CalculateBlockSideMargins(LayoutFrameType aFrameType);
-
-  /**
-   * Make all descendants of this frame dirty.
-   * Exceptions: XULBoxFrame and TabeColGroupFrame children.
-   */
-  static void MarkFrameChildrenDirty(nsIFrame* aFrame);
 };
 
 } // namespace mozilla
