@@ -1135,10 +1135,7 @@ var gViewController = {
                   addon: aAddon,
                   icon: aAddon.iconURL,
                   permissions: perms,
-                  resolve() {
-                    aAddon.markAsSeen();
-                    aAddon.enable();
-                  },
+                  resolve() { aAddon.enable(); },
                   reject() {},
                 },
               },

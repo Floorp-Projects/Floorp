@@ -1387,28 +1387,3 @@ function promiseNotification(id = "addon-webext-permissions") {
     PopupNotifications.panel.addEventListener("popupshown", popupshown);
   });
 }
-
-/**
- * Wait for the given PopupNotification to display
- *
- * @param {string} name
- *        The name of the notification to wait for.
- *
- * @returns {Promise}
- *          Resolves with the notification window.
- */
-function promisePopupNotificationShown(name = "addon-webext-permissions") {
-  return new Promise(resolve => {
-    function popupshown() {
-      let notification = PopupNotifications.getNotification(name);
-      if (!notification) { return; }
-
-      ok(notification, `${name} notification shown`);
-      ok(PopupNotifications.isPanelOpen, "notification panel open");
-
-      PopupNotifications.panel.removeEventListener("popupshown", popupshown);
-      resolve(PopupNotifications.panel.firstChild);
-    }
-    PopupNotifications.panel.addEventListener("popupshown", popupshown);
-  });
-}
