@@ -19,9 +19,19 @@ template<class T>
 class nsMaybeWeakPtr
 {
 public:
-  MOZ_IMPLICIT nsMaybeWeakPtr(nsISupports* aRef) : mPtr(aRef) {}
+  nsMaybeWeakPtr() = default;
+  MOZ_IMPLICIT nsMaybeWeakPtr(T* aRef) : mPtr(aRef) {}
   MOZ_IMPLICIT nsMaybeWeakPtr(const nsCOMPtr<nsIWeakReference>& aRef) : mPtr(aRef) {}
-  MOZ_IMPLICIT nsMaybeWeakPtr(const nsCOMPtr<T>& aRef) : mPtr(aRef) {}
+
+  nsMaybeWeakPtr<T>& operator=(T* aRef) {
+    mPtr = aRef;
+    return *this;
+  }
+
+  nsMaybeWeakPtr<T>& operator=(const nsCOMPtr<nsIWeakReference>& aRef) {
+    mPtr = aRef;
+    return *this;
+  }
 
   bool operator==(const nsMaybeWeakPtr<T> &other) const {
     return mPtr == other.mPtr;
@@ -47,14 +57,15 @@ class nsMaybeWeakPtrArray : public nsTArray<nsMaybeWeakPtr<T>>
 public:
   nsresult AppendWeakElement(T* aElement, bool aOwnsWeak)
   {
-    nsCOMPtr<nsISupports> ref;
+    nsMaybeWeakPtr<T> ref;
+
     if (aOwnsWeak) {
       ref = do_GetWeakReference(aElement);
     } else {
       ref = aElement;
     }
 
-    if (MaybeWeakArray::Contains(ref.get())) {
+    if (MaybeWeakArray::Contains(ref)) {
       return NS_ERROR_INVALID_ARG;
     }
     if (!MaybeWeakArray::AppendElement(ref)) {
