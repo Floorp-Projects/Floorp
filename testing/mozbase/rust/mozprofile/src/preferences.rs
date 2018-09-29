@@ -79,6 +79,7 @@ pub struct Pref {
 }
 
 impl Pref {
+    /// Create a new preference with `value`.
     pub fn new<T>(value: T) -> Pref
     where
         T: Into<PrefValue>,
@@ -89,6 +90,8 @@ impl Pref {
         }
     }
 
+    /// Create a new sticky, or locked, preference with `value`.
+    /// These cannot be changed by the user in `about:config`.
     pub fn new_sticky<T>(value: T) -> Pref
     where
         T: Into<PrefValue>,
