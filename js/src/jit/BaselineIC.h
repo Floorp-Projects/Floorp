@@ -253,9 +253,6 @@ class ICEntry
         // handler via the over-recursion check on function entry.
         Kind_StackCheck,
 
-        // As above, but for the early check. See emitStackCheck.
-        Kind_EarlyStackCheck,
-
         // A fake IC entry for returning from DebugTrapHandler.
         Kind_DebugTrap,
 
