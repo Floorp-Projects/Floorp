@@ -1733,7 +1733,7 @@ impl PrimitiveStore {
                     frame_context.device_pixel_scale,
                     &frame_context.world_rect,
                     &clip_node_collector,
-                    frame_state.clip_data_store,
+                    &mut frame_state.resources.clip_data_store,
                 );
 
             let clip_chain = match clip_chain {
@@ -2087,7 +2087,7 @@ fn write_brush_segment_description(
         let clip_instance = frame_state
             .clip_store
             .get_instance_from_range(&clip_chain.clips_range, i);
-        let clip_node = &frame_state.clip_data_store[clip_instance.handle];
+        let clip_node = &frame_state.resources.clip_data_store[clip_instance.handle];
 
         // If this clip item is positioned by another positioning node, its relative position
         // could change during scrolling. This means that we would need to resegment. Instead
@@ -2254,7 +2254,7 @@ impl Primitive {
                     frame_context.device_pixel_scale,
                     &frame_context.world_rect,
                     clip_node_collector,
-                    frame_state.clip_data_store,
+                    &mut frame_state.resources.clip_data_store,
                 );
 
             match segment_clip_chain {
@@ -2287,7 +2287,7 @@ impl Primitive {
                         frame_state.gpu_cache,
                         frame_state.resource_cache,
                         frame_state.render_tasks,
-                        frame_state.clip_data_store,
+                        &mut frame_state.resources.clip_data_store,
                     );
 
                     let clip_task_id = frame_state.render_tasks.add(clip_task);
@@ -2828,7 +2828,7 @@ impl Primitive {
                     frame_state.gpu_cache,
                     frame_state.resource_cache,
                     frame_state.render_tasks,
-                    frame_state.clip_data_store,
+                    &mut frame_state.resources.clip_data_store,
                 );
 
                 let clip_task_id = frame_state.render_tasks.add(clip_task);
