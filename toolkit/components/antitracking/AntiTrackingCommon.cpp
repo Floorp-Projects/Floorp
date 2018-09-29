@@ -200,10 +200,10 @@ CheckContentBlockingAllowList(nsIHttpChannel* aChannel)
 }
 
 void
-ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
+ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
                         uint32_t aRejectedReason)
 {
-  MOZ_ASSERT(aWindow && aChannel);
+  MOZ_ASSERT(aWindow && aURI);
   MOZ_ASSERT(aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
@@ -252,9 +252,7 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIHttpChannel* aChannel,
 
   MOZ_ASSERT(message);
 
-  nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
-  NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
+  NS_ConvertUTF8toUTF16 spec(aURI->GetSpecOrDefault());
   const char16_t* params[] = { spec.get() };
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -328,13 +326,38 @@ ReportUnblockingConsole(nsPIDOMWindowInner* aWindow,
   }
 }
 
+already_AddRefed<nsPIDOMWindowOuter>
+GetTopWindow(nsPIDOMWindowInner* aWindow)
+{
+  nsIDocument* document = aWindow->GetExtantDoc();
+  if (!document) {
+    return nullptr;
+  }
+
+  nsIChannel* channel = document->GetChannel();
+  if (!channel) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> pwin;
+  auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
+  if (outer) {
+    pwin = outer->GetTopOuter();
+  }
+
+  if (!pwin) {
+    return nullptr;
+  }
+
+  return pwin.forget();
+}
+
 } // anonymous
 
 /* static */ bool
 AntiTrackingCommon::ShouldHonorContentBlockingCookieRestrictions()
 {
-  return StaticPrefs::browser_contentblocking_enabled() &&
-         StaticPrefs::browser_contentblocking_ui_enabled();
+  return StaticPrefs::browser_contentblocking_enabled();
 }
 
 /* static */ RefPtr<AntiTrackingCommon::StorageAccessGrantPromise>
@@ -394,9 +417,30 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(const nsAString& aOrigi
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), trackingOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Couldn't make a new URI out of the tracking origin"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> pwin = GetTopWindow(parentWindow);
+  if (!pwin) {
+    LOG(("Couldn't get the top window"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  nsIChannel* channel =
+    pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
+
+  // We hardcode this block reason since the first-party storage access permission
+  // is granted for the purpose of blocking trackers.
+  const uint32_t blockReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+  pwin->NotifyContentBlockingState(blockReason, channel, false, uri);
+
   NS_ConvertUTF16toUTF8 grantedOrigin(aOrigin);
 
-  ReportUnblockingConsole(aParentWindow, NS_ConvertUTF8toUTF16(trackingOrigin),
+  ReportUnblockingConsole(parentWindow, NS_ConvertUTF8toUTF16(trackingOrigin),
                           aOrigin, aReason);
 
   if (XRE_IsParentProcess()) {
@@ -1060,8 +1104,7 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
              aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
+  if (!aChannel) {
     return;
   }
 
@@ -1081,7 +1124,7 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
   }
 
   nsCOMPtr<mozIDOMWindowProxy> win;
-  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(httpChannel,
+  nsresult rv = thirdPartyUtil->GetTopWindowForChannel(aChannel,
                                                        getter_AddRefs(win));
   NS_ENSURE_SUCCESS_VOID(rv);
 
@@ -1090,9 +1133,12 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
     return;
   }
 
-  pwin->NotifyContentBlockingState(aRejectedReason, aChannel);
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
 
-  ReportBlockingToConsole(pwin, httpChannel, aRejectedReason);
+  pwin->NotifyContentBlockingState(aRejectedReason, aChannel, true, uri);
+
+  ReportBlockingToConsole(pwin, uri, aRejectedReason);
 }
 
 /* static */ void
@@ -1106,30 +1152,34 @@ AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow,
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
              aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
 
-  nsIDocument* document = aWindow->GetExtantDoc();
-  if (!document) {
-    return;
-  }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel =
-    do_QueryInterface(document->GetChannel());
-  if (!httpChannel) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> pwin;
-  auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
-  if (outer) {
-    pwin = outer->GetTopOuter();
-  }
-
+  nsCOMPtr<nsPIDOMWindowOuter> pwin = GetTopWindow(aWindow);
   if (!pwin) {
     return;
   }
 
-  pwin->NotifyContentBlockingState(aRejectedReason, httpChannel);
+  nsPIDOMWindowInner* inner = pwin->GetCurrentInnerWindow();
+  if (!inner) {
+    return;
+  }
+  nsIDocument* pwinDoc = inner->GetExtantDoc();
+  if (!pwinDoc) {
+    return;
+  }
+  nsIChannel* channel = pwinDoc->GetChannel();
+  if (!channel) {
+    return;
+  }
 
-  ReportBlockingToConsole(pwin, httpChannel, aRejectedReason);
+  nsIDocument* document = aWindow->GetExtantDoc();
+  if (!document) {
+    return;
+  }
+  nsIURI* uri = document->GetDocumentURI();
+
+  pwin->NotifyContentBlockingState(aRejectedReason, channel, true, uri);
+
+  ReportBlockingToConsole(pwin, uri, aRejectedReason);
 }
 
 /* static */ void

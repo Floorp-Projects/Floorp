@@ -24,8 +24,8 @@ interop_init()
   cd "${HOSTDIR}/interop"
   INTEROP=${INTEROP:=tls_interop}
   if [ ! -d "$INTEROP" ]; then
-    git clone -q https://github.com/jallmann/tls-interop "$INTEROP"
-    git -C "$INTEROP" checkout -q a4878c30db639053fc4f08573d3ae6cbd3cf1d6f
+    git clone -q https://github.com/mozilla/tls-interop "$INTEROP"
+    git -C "$INTEROP" checkout -q 8348561ae922bb21ecc1415dba15ca68bb5d18a2
   fi
   INTEROP=$(cd "$INTEROP";pwd -P)
 

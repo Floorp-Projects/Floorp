@@ -2116,7 +2116,9 @@ nsPrintJob::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsPrintJob::OnSecurityChange(nsIWebProgress* aWebProgress,
                              nsIRequest* aRequest,
-                             uint32_t aState)
+                             uint32_t aState,
+                             uint32_t aOldState,
+                             const nsAString& aContentBlockingLogJSON)
 {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;

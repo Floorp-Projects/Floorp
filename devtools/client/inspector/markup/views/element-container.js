@@ -4,21 +4,19 @@
 
 "use strict";
 
-const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";
-
 const promise = require("promise");
 const Services = require("Services");
-const nodeConstants = require("devtools/shared/dom-node-constants");
-const clipboardHelper = require("devtools/shared/platform/clipboard");
-const {setImageTooltip, setBrokenImageTooltip} =
-      require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
 const ElementEditor = require("devtools/client/inspector/markup/views/element-editor");
+const {ELEMENT_NODE} = require("devtools/shared/dom-node-constants");
 const {extend} = require("devtools/shared/extend");
 
-// Lazy load this module as _buildEventTooltipContent is only called on click
-loader.lazyRequireGetter(this, "setEventTooltip",
-  "devtools/client/shared/widgets/tooltip/EventTooltipHelper", true);
+loader.lazyRequireGetter(this, "setEventTooltip", "devtools/client/shared/widgets/tooltip/EventTooltipHelper", true);
+loader.lazyRequireGetter(this, "setImageTooltip", "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
+loader.lazyRequireGetter(this, "setBrokenImageTooltip", "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
+loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
+
+const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";
 
 /**
  * An implementation of MarkupContainer for Elements that can contain
@@ -34,7 +32,7 @@ function MarkupElementContainer(markupView, node) {
   MarkupContainer.prototype.initialize.call(this, markupView, node,
     "elementcontainer");
 
-  if (node.nodeType === nodeConstants.ELEMENT_NODE) {
+  if (node.nodeType === ELEMENT_NODE) {
     this.editor = new ElementEditor(this, node);
   } else {
     throw new Error("Invalid node for MarkupElementContainer");

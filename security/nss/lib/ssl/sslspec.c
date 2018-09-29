@@ -203,7 +203,7 @@ ssl_CipherSpecAddRef(ssl3CipherSpec *spec)
                  SSL_GETPID(), SPEC_DIR(spec), spec, spec->refCt));
 }
 
-static void
+void
 ssl_DestroyKeyMaterial(ssl3KeyMaterial *keyMaterial)
 {
     PK11_FreeSymKey(keyMaterial->key);
