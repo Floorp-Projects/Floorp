@@ -46,7 +46,7 @@ add_task(async function test_basic_search() {
 
   params = await resultsPromise;
 
-  Assert.equal(params[0].results.length, 12,
+  Assert.equal(params[0].results.length, Services.prefs.getIntPref("browser.urlbar.maxRichResults"),
     "Should have given the expected amount of results");
 
   for (let result of params[0].results) {

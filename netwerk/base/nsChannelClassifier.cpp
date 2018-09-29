@@ -623,8 +623,9 @@ nsChannelClassifier::NotifyTrackingProtectionDisabled(nsIChannel *aChannel)
     }
     doc->SetHasTrackingContentLoaded(true);
     securityUI->GetState(&state);
+    const uint32_t oldState = state;
     state |= nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT;
-    eventSink->OnSecurityChange(nullptr, state);
+    eventSink->OnSecurityChange(nullptr, oldState, state, doc->GetContentBlockingLog());
 
     return NS_OK;
 }

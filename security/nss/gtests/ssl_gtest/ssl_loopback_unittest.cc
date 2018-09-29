@@ -320,6 +320,53 @@ TEST_F(TlsConnectStreamTls13, DropRecordClient) {
   SendReceive();
 }
 
+// Check that a server can use 0.5 RTT if client authentication isn't enabled.
+TEST_P(TlsConnectTls13, WriteBeforeClientFinished) {
+  EnsureTlsSetup();
+  StartConnect();
+  client_->Handshake();  // ClientHello
+  server_->Handshake();  // ServerHello
+
+  server_->SendData(10);
+  client_->ReadBytes(10);  // Client should emit the Finished as a side-effect.
+  server_->Handshake();    // Server consumes the Finished.
+  CheckConnected();
+}
+
+// We don't allow 0.5 RTT if client authentication is requested.
+TEST_P(TlsConnectTls13, WriteBeforeClientFinishedClientAuth) {
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(false);
+  StartConnect();
+  client_->Handshake();  // ClientHello
+  server_->Handshake();  // ServerHello
+
+  static const uint8_t data[] = {1, 2, 3};
+  EXPECT_GT(0, PR_Write(server_->ssl_fd(), data, sizeof(data)));
+  EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
+
+  Handshake();
+  CheckConnected();
+  SendReceive();
+}
+
+// 0.5 RTT should fail with client authentication required.
+TEST_P(TlsConnectTls13, WriteBeforeClientFinishedClientAuthRequired) {
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  StartConnect();
+  client_->Handshake();  // ClientHello
+  server_->Handshake();  // ServerHello
+
+  static const uint8_t data[] = {1, 2, 3};
+  EXPECT_GT(0, PR_Write(server_->ssl_fd(), data, sizeof(data)));
+  EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
+
+  Handshake();
+  CheckConnected();
+  SendReceive();
+}
+
 // The next two tests takes advantage of the fact that we
 // automatically read the first 1024 bytes, so if
 // we provide 1200 bytes, they overrun the read buffer

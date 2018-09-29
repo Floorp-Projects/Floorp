@@ -11,6 +11,8 @@
 
 #include "sslencode.h"
 
+#define TLS13_ESNI_NONCE_SIZE 16
+
 typedef enum {
     sni_nametype_hostname
 } SNINameType;
@@ -101,6 +103,14 @@ struct TLSExtensionDataStr {
 
     /* The record size limit set by the peer. Our value is kept in ss->opt. */
     PRUint16 recordSizeLimit;
+
+    /* ESNI working state */
+    SECItem keyShareExtension;
+    ssl3CipherSuite esniSuite;
+    sslEphemeralKeyPair *esniPrivateKey;
+    /* Pointer into |ss->esniKeys->keyShares| */
+    TLS13KeyShareEntry *peerEsniShare;
+    PRUint8 esniNonce[TLS13_ESNI_NONCE_SIZE];
 };
 
 typedef struct TLSExtensionStr {

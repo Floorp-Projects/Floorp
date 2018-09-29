@@ -464,7 +464,8 @@ var ContentBlocking = {
     Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD").add(value);
   },
 
-  onSecurityChange(state, webProgress, isSimulated) {
+  onSecurityChange(oldState, state, webProgress, isSimulated,
+                   contentBlockingLogJSON) {
     let baseURI = this._baseURIForChannelClassifier;
 
     // Don't deal with about:, file: etc.

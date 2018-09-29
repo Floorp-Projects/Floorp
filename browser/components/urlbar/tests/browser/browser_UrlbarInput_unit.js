@@ -115,6 +115,7 @@ add_task(function test_input_starts_query() {
   checkHandleQueryCall(fakeController.handleQuery, {
     searchString: "search",
     isPrivate: false,
+    maxResults: UrlbarPrefs.get("maxRichResults"),
   });
 
   sandbox.resetHistory();

@@ -1054,7 +1054,7 @@ linux64-ccov/opt:
         need-xvfb: true
     toolchains:
         - linux64-clang-7
-        - linux64-rust
+        - linux64-rust-nightly
         - linux64-gcc
         - linux64-cbindgen
         - linux64-sccache

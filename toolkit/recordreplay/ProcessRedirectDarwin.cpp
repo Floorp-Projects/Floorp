@@ -372,6 +372,7 @@ namespace recordreplay {
   MACRO(CGSSetDebugOptions, RR_ScalarRval)                       \
   MACRO(CGSShutdownServerConnections)                            \
   MACRO(CTFontCopyFamilyName, RR_ScalarRval)                     \
+  MACRO(CTFontCopyFeatures, RR_ScalarRval)                       \
   MACRO(CTFontCopyFontDescriptor, RR_ScalarRval)                 \
   MACRO(CTFontCopyGraphicsFont, RR_ScalarRval)                   \
   MACRO(CTFontCopyTable, RR_ScalarRval)                          \

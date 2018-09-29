@@ -1,3 +1,14 @@
+commit 4fb8d7f978adda36086377ea7846951faa9f6bd3
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Wed Sep 26 18:04:05 2018 -0700
+
+    Polyfill BitCount for ARM/ARM64 on MSVC.
+    
+    Also _WIN64 implies _WIN32.
+    
+    Bug: angleproject:2858
+    Change-Id: I63e2ffd2e9e304171ea6adb99836733981cc1813
+
 commit 786e980807f104d35bf31a769d31699024b89c2f
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Tue Sep 25 14:18:35 2018 -0700
