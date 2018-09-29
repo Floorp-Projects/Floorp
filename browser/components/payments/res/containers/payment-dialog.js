@@ -155,6 +155,13 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
         };
         state.changesPrevented = false;
         break;
+      case "": {
+        // When we get a DOM update for an updateWith() or retry() the completeStatus
+        // is "" when we need to show non-final screens. Don't set the page as we
+        // may be on a form instead of payment-summary
+        state.changesPrevented = false;
+        break;
+      }
     }
     return state;
   }
