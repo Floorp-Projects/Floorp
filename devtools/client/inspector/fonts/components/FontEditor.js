@@ -107,7 +107,7 @@ class FontEditor extends PureComponent {
         {
           className: "font-control-label",
         },
-        getStr("fontinspector.usedFontsLabel")
+        getStr("fontinspector.fontsUsedLabel")
       ),
       dom.div(
         {
