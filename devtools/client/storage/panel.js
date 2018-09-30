@@ -8,8 +8,6 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
-loader.lazyRequireGetter(this, "StorageFront",
-                         "devtools/shared/fronts/storage", true);
 loader.lazyRequireGetter(this, "StorageUI",
                          "devtools/client/storage/ui", true);
 
@@ -37,7 +35,7 @@ class StoragePanel {
    */
   open() {
     this.target.on("close", this.destroy);
-    this._front = new StorageFront(this.target.client, this.target.form);
+    this._front = this.target.getFront("storage");
 
     this.UI = new StorageUI(this._front, this._target,
                             this._panelWin, this._toolbox);
