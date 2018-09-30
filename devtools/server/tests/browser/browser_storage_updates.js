@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {StorageFront} = require("devtools/shared/fronts/storage");
-
 const TESTS = [
   // index 0
   {
@@ -181,13 +179,8 @@ const TESTS = [
 ];
 
 add_task(async function() {
-  await addTab(MAIN_DOMAIN + "storage-updates.html");
-
-  initDebuggerServer();
-
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const front = StorageFront(client, form);
+  const target = await addTabTarget(MAIN_DOMAIN + "storage-updates.html");
+  const front = target.getFront("storage");
 
   await front.listStores();
 
@@ -197,7 +190,7 @@ add_task(async function() {
   }
 
   await testClearLocalAndSessionStores(front);
-  await finishTests(client);
+  await finishTests(target);
 });
 
 function markOutMatched(toBeEmptied, data) {
@@ -309,8 +302,8 @@ function storesCleared(data) {
   }
 }
 
-async function finishTests(client) {
-  await client.close();
+async function finishTests(target) {
+  await target.destroy();
   DebuggerServer.destroy();
   finish();
 }

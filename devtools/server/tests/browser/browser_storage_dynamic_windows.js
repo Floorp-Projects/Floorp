@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { StorageFront } = require("devtools/shared/fronts/storage");
 /* import-globals-from storage-helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js",
@@ -80,12 +79,9 @@ const afterIframeRemoved = {
 };
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-dynamic-windows.html");
+  const { target, front } =
+    await openTabAndSetupStorage(MAIN_DOMAIN + "storage-dynamic-windows.html");
 
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const front = StorageFront(client, form);
   const data = await front.listStores();
 
   await testStores(data, front);
@@ -94,7 +90,7 @@ add_task(async function() {
 
   // Forcing GC/CC to get rid of docshells and windows created by this test.
   forceCollections();
-  await client.close();
+  await target.destroy();
   forceCollections();
   DebuggerServer.destroy();
   forceCollections();
