@@ -277,9 +277,6 @@ struct DocumentHandle;
 // Geometry in a stacking context's local coordinate space (logical pixels).
 struct LayoutPixel;
 
-// Coordinates in normalized space (between zero and one).
-struct NormalizedCoordinates;
-
 // The renderer is responsible for submitting to the GPU the work prepared by the
 // RenderBackend.
 struct Renderer;
@@ -1052,8 +1049,6 @@ struct WrImageDescriptor {
   }
 };
 
-using NormalizedRect = TypedRect<float, NormalizedCoordinates>;
-
 struct WrTransformProperty {
   uint64_t id;
   LayoutTransform transform;
@@ -1715,7 +1710,7 @@ WR_FUNC;
 WR_INLINE
 void wr_resource_updates_set_image_visible_area(Transaction *aTxn,
                                                 WrImageKey aKey,
-                                                const NormalizedRect *aArea)
+                                                const DeviceUintRect *aArea)
 WR_FUNC;
 
 WR_INLINE

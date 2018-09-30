@@ -1587,11 +1587,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         hint &= ~nsChangeHint_UpdateTransformLayer;
       }
 
-      if (hint & nsChangeHint_UpdateEffects) {
-        for (nsIFrame* cont = frame; cont;
-             cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-          SVGObserverUtils::UpdateEffects(cont);
-        }
+      if ((hint & nsChangeHint_UpdateEffects) &&
+          frame == nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame)) {
+        SVGObserverUtils::UpdateEffects(frame);
       }
       if ((hint & nsChangeHint_InvalidateRenderingObservers) ||
           ((hint & nsChangeHint_UpdateOpacityLayer) &&

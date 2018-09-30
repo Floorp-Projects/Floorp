@@ -231,6 +231,12 @@ public:
   void SetWriteOnly();
 
   /**
+   * Force the canvas to be write-only, except for readers from
+   * a specific extension's content script expanded principal.
+   */
+  void SetWriteOnly(nsIPrincipal* aExpandedReader);
+
+  /**
    * Notify that some canvas content has changed and the window may
    * need to be updated. aDamageRect is in canvas coordinates.
    */
@@ -395,8 +401,15 @@ public:
   // We set this when script paints an image from a different origin.
   // We also transitively set it when script paints a canvas which
   // is itself write-only.
-  bool                     mWriteOnly;
+  bool mWriteOnly;
 
+  // When this canvas is (only) tainted by an image from an extension
+  // content script, allow reads from the same extension afterwards.
+  RefPtr<nsIPrincipal> mExpandedReader;
+
+  // Determines if the caller should be able to read the content.
+  bool CallerCanRead(JSContext* aCx);
+  
   bool IsPrintCallbackDone();
 
   void HandlePrintCallback(nsPresContext::nsPresContextType aType);

@@ -15,7 +15,7 @@ use internal_types::{FastHashMap};
 use picture::{PictureCompositeMode, PictureSurface, RasterConfig};
 use prim_store::{PrimitiveIndex, PrimitiveStore, SpaceMapper};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use render_backend::FrameId;
+use render_backend::{FrameResources, FrameId};
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
 use resource_cache::{ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
@@ -24,8 +24,7 @@ use spatial_node::SpatialNode;
 use std::f32;
 use std::sync::Arc;
 use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
-use tiling::{ScrollbarPrimitive, SpecialRenderPasses};
-use util;
+use tiling::{SpecialRenderPasses};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -47,7 +46,6 @@ impl Default for ChasePrimitive {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameBuilderConfig {
-    pub enable_scrollbars: bool,
     pub default_font_render_mode: FontRenderMode,
     pub dual_source_blending_is_supported: bool,
     pub dual_source_blending_is_enabled: bool,
@@ -64,7 +62,6 @@ pub struct FrameBuilder {
     pub clip_store: ClipStore,
     pub hit_testing_runs: Vec<HitTestingRun>,
     pub config: FrameBuilderConfig,
-    pub scrollbar_prims: Vec<ScrollbarPrimitive>,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -85,7 +82,7 @@ pub struct FrameBuildingState<'a> {
     pub gpu_cache: &'a mut GpuCache,
     pub special_render_passes: &'a mut SpecialRenderPasses,
     pub transforms: &'a mut TransformPalette,
-    pub clip_data_store: &'a mut ClipDataStore,
+    pub resources: &'a mut FrameResources,
     pub segment_builder: SegmentBuilder,
 }
 
@@ -95,7 +92,6 @@ pub struct PictureContext {
     pub inflation_factor: f32,
     pub allow_subpixel_aa: bool,
     pub is_passthrough: bool,
-    pub establishes_raster_root: bool,
     pub raster_space: RasterSpace,
 }
 
@@ -135,7 +131,6 @@ impl FrameBuilder {
     pub fn empty() -> Self {
         FrameBuilder {
             hit_testing_runs: Vec::new(),
-            scrollbar_prims: Vec::new(),
             prim_store: PrimitiveStore::new(),
             clip_store: ClipStore::new(),
             screen_rect: DeviceUintRect::zero(),
@@ -143,7 +138,6 @@ impl FrameBuilder {
             background_color: None,
             scene_id: 0,
             config: FrameBuilderConfig {
-                enable_scrollbars: false,
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
                 dual_source_blending_is_supported: false,
@@ -161,7 +155,6 @@ impl FrameBuilder {
     ) -> Self {
         FrameBuilder {
             hit_testing_runs: flattener.hit_testing_runs,
-            scrollbar_prims: flattener.scrollbar_prims,
             prim_store: flattener.prim_store,
             clip_store: flattener.clip_store,
             screen_rect,
@@ -186,7 +179,7 @@ impl FrameBuilder {
         device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
         transform_palette: &mut TransformPalette,
-        clip_data_store: &mut ClipDataStore,
+        resources: &mut FrameResources,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -224,7 +217,7 @@ impl FrameBuilder {
             gpu_cache,
             special_render_passes,
             transforms: transform_palette,
-            clip_data_store,
+            resources,
             segment_builder: SegmentBuilder::new(),
         };
 
@@ -290,35 +283,6 @@ impl FrameBuilder {
         Some(render_task_id)
     }
 
-    fn update_scroll_bars(&mut self, clip_scroll_tree: &ClipScrollTree, gpu_cache: &mut GpuCache) {
-        static SCROLLBAR_PADDING: f32 = 8.0;
-
-        for scrollbar_prim in &self.scrollbar_prims {
-            let metadata = &mut self.prim_store.primitives[scrollbar_prim.prim_index.0].metadata;
-            let scroll_frame = &clip_scroll_tree.spatial_nodes[scrollbar_prim.scroll_frame_index.0];
-
-            // Invalidate what's in the cache so it will get rebuilt.
-            gpu_cache.invalidate(&metadata.gpu_location);
-
-            let scrollable_distance = scroll_frame.scrollable_size().height;
-            if scrollable_distance <= 0.0 {
-                metadata.local_clip_rect.size = LayoutSize::zero();
-                continue;
-            }
-            let amount_scrolled = -scroll_frame.scroll_offset().y / scrollable_distance;
-
-            let frame_rect = scrollbar_prim.frame_rect;
-            let min_y = frame_rect.origin.y + SCROLLBAR_PADDING;
-            let max_y = frame_rect.origin.y + frame_rect.size.height -
-                (SCROLLBAR_PADDING + metadata.local_rect.size.height);
-
-            metadata.local_rect.origin.x = frame_rect.origin.x + frame_rect.size.width -
-                (metadata.local_rect.size.width + SCROLLBAR_PADDING);
-            metadata.local_rect.origin.y = util::lerp(min_y, max_y, amount_scrolled);
-            metadata.local_clip_rect = metadata.local_rect;
-        }
-    }
-
     pub fn build(
         &mut self,
         resource_cache: &mut ResourceCache,
@@ -332,7 +296,7 @@ impl FrameBuilder {
         texture_cache_profile: &mut TextureCacheProfileCounters,
         gpu_cache_profile: &mut GpuCacheProfileCounters,
         scene_properties: &SceneProperties,
-        clip_data_store: &mut ClipDataStore,
+        resources: &mut FrameResources,
     ) -> Frame {
         profile_scope!("build");
         debug_assert!(
@@ -355,8 +319,6 @@ impl FrameBuilder {
             Some(&mut transform_palette),
         );
 
-        self.update_scroll_bars(clip_scroll_tree, gpu_cache);
-
         let mut render_tasks = RenderTaskTree::new(frame_id);
 
         let screen_size = self.screen_rect.size.to_i32();
@@ -373,7 +335,7 @@ impl FrameBuilder {
             device_pixel_scale,
             scene_properties,
             &mut transform_palette,
-            clip_data_store,
+            resources,
         );
 
         resource_cache.block_until_all_resources_added(gpu_cache,
@@ -417,7 +379,7 @@ impl FrameBuilder {
                 resource_cache,
                 use_dual_source_blending,
                 clip_scroll_tree,
-                clip_data_store,
+                resources,
             };
 
             pass.build(

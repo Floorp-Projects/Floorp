@@ -123,12 +123,6 @@ pub type LayoutRectAu = TypedRect<Au, LayoutPixel>;
 pub type LayoutSizeAu = TypedSize2D<Au, LayoutPixel>;
 pub type LayoutVector2DAu = TypedVector2D<Au, LayoutPixel>;
 
-/// Coordinates in normalized space (between zero and one).
-#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct NormalizedCoordinates;
-
-pub type NormalizedRect = TypedRect<f32, NormalizedCoordinates>;
-
 /// Stores two coordinates in texel space. The coordinates
 /// are stored in texel coordinates because the texture atlas
 /// may grow. Storing them as texel coords and normalizing

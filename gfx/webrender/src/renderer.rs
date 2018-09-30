@@ -1721,7 +1721,6 @@ impl Renderer {
         };
 
         let config = FrameBuilderConfig {
-            enable_scrollbars: options.enable_scrollbars,
             default_font_render_mode,
             dual_source_blending_is_enabled: true,
             dual_source_blending_is_supported: ext_dual_source_blending,
@@ -1759,6 +1758,7 @@ impl Renderer {
             });
         let sampler = options.sampler;
         let size_of_op = options.size_of_op;
+        let namespace_alloc_by_client = options.namespace_alloc_by_client;
 
         let blob_image_handler = options.blob_image_handler.take();
         let thread_listener_for_render_backend = thread_listener.clone();
@@ -1842,6 +1842,7 @@ impl Renderer {
                 recorder,
                 sampler,
                 size_of_op,
+                namespace_alloc_by_client,
             );
             backend.run(backend_profile_counters);
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
@@ -4400,7 +4401,6 @@ pub struct RendererOptions {
     pub enable_aa: bool,
     pub enable_dithering: bool,
     pub max_recorded_profiles: usize,
-    pub enable_scrollbars: bool,
     pub precache_shaders: bool,
     pub renderer_kind: RendererKind,
     pub enable_subpixel_aa: bool,
@@ -4422,6 +4422,7 @@ pub struct RendererOptions {
     pub sampler: Option<Box<AsyncPropertySampler + Send>>,
     pub chase_primitive: ChasePrimitive,
     pub support_low_priority_transactions: bool,
+    pub namespace_alloc_by_client: bool,
 }
 
 impl Default for RendererOptions {
@@ -4433,7 +4434,6 @@ impl Default for RendererOptions {
             enable_dithering: true,
             debug_flags: DebugFlags::empty(),
             max_recorded_profiles: 0,
-            enable_scrollbars: false,
             precache_shaders: false,
             renderer_kind: RendererKind::Native,
             enable_subpixel_aa: false,
@@ -4457,6 +4457,7 @@ impl Default for RendererOptions {
             sampler: None,
             chase_primitive: ChasePrimitive::Nothing,
             support_low_priority_transactions: false,
+            namespace_alloc_by_client: false,
         }
     }
 }

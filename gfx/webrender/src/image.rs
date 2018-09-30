@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{TileOffset, TileRange, LayoutRect, LayoutSize, LayoutPoint};
-use api::{DeviceUintSize, NormalizedRect};
+use api::{DeviceUintSize, DeviceUintRect};
 use euclid::{vec2, point2};
 use prim_store::EdgeAaSegmentMask;
 
@@ -227,22 +227,21 @@ pub fn for_each_tile(
 }
 
 pub fn compute_tile_range(
-    visible_area: &NormalizedRect,
-    image_size: &DeviceUintSize,
+    visible_area: &DeviceUintRect,
     tile_size: u16,
 ) -> TileRange {
     // Tile dimensions in normalized coordinates.
-    let tw = (image_size.width as f32) / (tile_size as f32);
-    let th = (image_size.height as f32) / (tile_size as f32);
+    let tw = 1. / (tile_size as f32);
+    let th = 1. / (tile_size as f32);
 
     let t0 = point2(
-        f32::floor(visible_area.origin.x * tw),
-        f32::floor(visible_area.origin.y * th),
+        f32::floor(visible_area.origin.x as f32 * tw),
+        f32::floor(visible_area.origin.y as f32 * th),
     ).cast::<u16>();
 
     let t1 = point2(
-        f32::ceil(visible_area.max_x() * tw),
-        f32::ceil(visible_area.max_y() * th),
+        f32::ceil(visible_area.max_x() as f32 * tw),
+        f32::ceil(visible_area.max_y() as f32 * th),
     ).cast::<u16>();
 
     TileRange {
