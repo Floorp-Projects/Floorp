@@ -328,7 +328,8 @@ IpcResourceUpdateQueue::UpdateExternalImage(wr::ExternalImageId aExtId,
 }
 
 void
-IpcResourceUpdateQueue::SetImageVisibleArea(ImageKey aKey, const gfx::Rect& aArea)
+IpcResourceUpdateQueue::SetImageVisibleArea(ImageKey aKey,
+                                            const ImageIntRect& aArea)
 {
   mUpdates.AppendElement(layers::OpSetImageVisibleArea(aArea, aKey));
 }

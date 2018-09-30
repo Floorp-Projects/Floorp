@@ -185,9 +185,9 @@ impl<'a> RawtestHarness<'a> {
         );
         txn.set_image_visible_area(
             blob_img,
-            NormalizedRect {
-                origin: point2(0.0, 0.03),
-                size: size2(1.0, 0.03),
+            DeviceUintRect {
+                origin: point2(0, 111256 / 30),
+                size: size2(1510, 111256 / 30),
             }
         );
 
@@ -310,9 +310,9 @@ impl<'a> RawtestHarness<'a> {
         );
         // Set a visible rectangle that is too small.
         // This will force sync rasterization of the missing tiles during frame building.
-        txn.set_image_visible_area(blob_img2, NormalizedRect {
-            origin: point2(0.25, 0.25),
-            size: size2(0.1, 0.1),
+        txn.set_image_visible_area(blob_img2, DeviceUintRect {
+            origin: point2(200, 200),
+            size: size2(80, 80),
         });
 
         builder.push_image(

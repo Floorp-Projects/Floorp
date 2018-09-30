@@ -2717,10 +2717,11 @@ ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame,
     // case, and we handle that specially.
     nsRect dirtyRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
-    nsIFrame* firstFrame = nsLayoutUtils::FirstContinuationOrIBSplitSibling(aMaskedFrame);
-    SVGObserverUtils::EffectProperties effectProperties =
-        SVGObserverUtils::GetEffectProperties(firstFrame);
-    nsTArray<nsSVGMaskFrame*> maskFrames = effectProperties.GetMaskFrames();
+    nsIFrame* firstFrame =
+      nsLayoutUtils::FirstContinuationOrIBSplitSibling(aMaskedFrame);
+    nsTArray<nsSVGMaskFrame*> maskFrames;
+    // XXX check return value?
+    SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
 
     for (uint32_t i = 0; i < maskFrames.Length(); ++i) {
       gfxRect clipArea;

@@ -4,10 +4,10 @@
 
 use api::{ColorF, BorderStyle, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FilterOp, ImageFormat};
-use api::{LayoutRect, MixBlendMode, PipelineId};
+use api::{MixBlendMode, PipelineId};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
-use clip::{ClipDataStore, ClipStore};
-use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
+use clip::ClipStore;
+use clip_scroll_tree::{ClipScrollTree};
 use device::{FrameId, Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
@@ -17,8 +17,9 @@ use gpu_types::{TransformData, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
-use prim_store::{PrimitiveIndex, PrimitiveStore, DeferredResolve};
+use prim_store::{PrimitiveStore, DeferredResolve};
 use profiler::FrameProfileCounters;
+use render_backend::FrameResources;
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
 use resource_cache::ResourceCache;
@@ -31,13 +32,6 @@ const MIN_TARGET_SIZE: u32 = 2048;
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
 const STYLE_MASK: i32 = 0x00FF_FF00;
 
-#[derive(Debug)]
-pub struct ScrollbarPrimitive {
-    pub scroll_frame_index: SpatialNodeIndex,
-    pub prim_index: PrimitiveIndex,
-    pub frame_rect: LayoutRect,
-}
-
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -49,7 +43,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub resource_cache: &'rc mut ResourceCache,
     pub use_dual_source_blending: bool,
     pub clip_scroll_tree: &'a ClipScrollTree,
-    pub clip_data_store: &'a ClipDataStore,
+    pub resources: &'a FrameResources,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -594,7 +588,7 @@ impl RenderTarget for AlphaRenderTarget {
                     clip_store,
                     ctx.clip_scroll_tree,
                     transforms,
-                    ctx.clip_data_store,
+                    &ctx.resources.clip_data_store,
                 );
             }
             RenderTaskKind::ClipRegion(ref task) => {

@@ -343,7 +343,7 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
       }
       case OpUpdateResource::TOpSetImageVisibleArea: {
         const auto& op = cmd.get_OpSetImageVisibleArea();
-        wr::NormalizedRect area;
+        wr::DeviceUintRect area;
         area.origin.x = op.area().x;
         area.origin.y = op.area().y;
         area.size.width = op.area().width;
