@@ -446,13 +446,6 @@ nsChildView::Create(nsIWidget* aParent,
   if (!gChildViewMethodsSwizzled) {
     nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
                               @selector(nsChildView_NSView_mouseDownCanMoveWindow));
-#ifdef __LP64__
-    nsToolkit::SwizzleMethods([NSEvent class], @selector(addLocalMonitorForEventsMatchingMask:handler:),
-                              @selector(nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:handler:),
-                              true);
-    nsToolkit::SwizzleMethods([NSEvent class], @selector(removeMonitor:),
-                              @selector(nsChildView_NSEvent_removeMonitor:), true);
-#endif
     gChildViewMethodsSwizzled = true;
   }
 
@@ -7274,48 +7267,3 @@ static const CGEventField kCGWindowNumberField = (const CGEventField) 51;
 }
 
 @end
-
-#ifdef __LP64__
-// When using blocks, at least on OS X 10.7, the OS sometimes calls
-// +[NSEvent removeMonitor:] more than once on a single event monitor, which
-// causes crashes.  See bug 678607.  We hook these methods to work around
-// the problem.
-@interface NSEvent (MethodSwizzling)
-+ (id)nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:(unsigned long long)mask handler:(id)block;
-+ (void)nsChildView_NSEvent_removeMonitor:(id)eventMonitor;
-@end
-
-// This is a local copy of the AppKit frameworks sEventObservers hashtable.
-// It only stores "local monitors".  We use it to ensure that +[NSEvent
-// removeMonitor:] is never called more than once on the same local monitor.
-static NSHashTable *sLocalEventObservers = nil;
-
-@implementation NSEvent (MethodSwizzling)
-
-+ (id)nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:(unsigned long long)mask handler:(id)block
-{
-  if (!sLocalEventObservers) {
-    sLocalEventObservers = [[NSHashTable hashTableWithOptions:
-      NSHashTableStrongMemory | NSHashTableObjectPointerPersonality] retain];
-  }
-  id retval =
-    [self nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:mask handler:block];
-  if (sLocalEventObservers && retval && ![sLocalEventObservers containsObject:retval]) {
-    [sLocalEventObservers addObject:retval];
-  }
-  return retval;
-}
-
-+ (void)nsChildView_NSEvent_removeMonitor:(id)eventMonitor
-{
-  if (sLocalEventObservers && [eventMonitor isKindOfClass: ::NSClassFromString(@"_NSLocalEventObserver")]) {
-    if (![sLocalEventObservers containsObject:eventMonitor]) {
-      return;
-    }
-    [sLocalEventObservers removeObject:eventMonitor];
-  }
-  [self nsChildView_NSEvent_removeMonitor:eventMonitor];
-}
-
-@end
-#endif // #ifdef __LP64__
