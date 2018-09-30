@@ -1359,7 +1359,7 @@ pub extern "C" fn wr_resource_updates_update_image(
 pub extern "C" fn wr_resource_updates_set_image_visible_area(
     txn: &mut Transaction,
     key: WrImageKey,
-    area: &NormalizedRect,
+    area: &DeviceUintRect,
 ) {
     txn.set_image_visible_area(key, *area);
 }

@@ -9,6 +9,7 @@
 #include "BasicLayers.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/ClipManager.h"
 #include "mozilla/layers/ImageClient.h"
@@ -62,23 +63,6 @@ static void DestroyBlobGroupDataProperty(nsTArray<BlobItemData*>* aArray);
 NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(BlobGroupDataProperty,
                                     nsTArray<BlobItemData*>,
                                     DestroyBlobGroupDataProperty);
-
-static void
-SetBlobImageVisibleArea(wr::IpcResourceUpdateQueue& aResources,
-                        wr::ImageKey aImageKey,
-                        const LayoutDeviceRect& aImageRect,
-                        const LayoutDeviceRect& aPaintRect)
-{
-  LayoutDeviceRect visibleRect = aImageRect.Intersect(aPaintRect);
-  // Send the visible rect in normalized coordinates.
-  Rect visibleArea = Rect((visibleRect.x - aImageRect.x) / aImageRect.width,
-                          (visibleRect.y - aImageRect.y) / aImageRect.height,
-                          visibleRect.width / aImageRect.width,
-                          visibleRect.height / aImageRect.height);
-
-  aResources.SetImageVisibleArea(aImageKey, visibleArea);
-}
-
 
 // These are currently manually allocated and ownership is help by the mDisplayItems
 // hash table in DIGroup
@@ -348,7 +332,7 @@ struct DIGroup
   nsPoint mLastAnimatedGeometryRootOrigin;
   IntRect mInvalidRect;
   nsRect mGroupBounds;
-  LayoutDeviceRect mPaintRect;
+  LayerIntRect mPaintRect;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
   FrameMetrics::ViewID mScrollId;
@@ -631,7 +615,9 @@ struct DIGroup
       GP("Not repainting group because it's empty\n");
       GP("End EndGroup\n");
       if (mKey) {
-        SetBlobImageVisibleArea(aResources, mKey.value(), bounds, mPaintRect);
+        aResources.SetImageVisibleArea(
+          mKey.value(),
+          ViewAs<ImagePixel>(mPaintRect, PixelCastJustification::LayerIsImage));
         PushImage(aBuilder, bounds);
       }
       return;
@@ -703,7 +689,9 @@ struct DIGroup
     }
     mFonts = std::move(fonts);
     mInvalidRect.SetEmpty();
-    SetBlobImageVisibleArea(aResources, mKey.value(), mPaintRect, bounds);
+    aResources.SetImageVisibleArea(
+      mKey.value(),
+      ViewAs<ImagePixel>(mPaintRect, PixelCastJustification::LayerIsImage));
     PushImage(aBuilder, bounds);
     GP("End EndGroup\n\n");
   }
@@ -759,6 +747,8 @@ struct DIGroup
         data->mInvalid = false;
       } else {
         BlobItemData* data = GetBlobItemData(item);
+        if (data->mInvalid)
+          gfxCriticalError() << "DisplayItem" << item->Name() << "should be invalid";
         // if the item is invalid it needs to be fully contained
         MOZ_RELEASE_ASSERT(!data->mInvalid);
       }
@@ -1232,16 +1222,23 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
   g.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mResidualOffset = residualOffset;
   group.mGroupBounds = groupBounds;
-  group.mPaintRect = LayoutDeviceRect::FromAppUnits(
-    aWrappingItem->GetPaintRect(),
-    appUnitsPerDevPixel
-  );
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mLayerBounds = LayerIntRect::FromUnknownRect(ScaleToOutsidePixelsOffset(group.mGroupBounds,
                                                                                 scale.width,
                                                                                 scale.height,
                                                                                 group.mAppUnitsPerDevPixel,
                                                                                 residualOffset));
+  group.mPaintRect = LayerIntRect::FromUnknownRect(
+                       ScaleToOutsidePixelsOffset(aWrappingItem->GetPaintRect(),
+                                                  scale.width,
+                                                  scale.height,
+                                                  group.mAppUnitsPerDevPixel,
+                                                  residualOffset))
+                       .Intersect(group.mLayerBounds);
+  // XXX: Make the paint rect relative to the layer bounds. After we include
+  // mLayerBounds.TopLeft() in the blob image we want to stop doing this
+  // adjustment.
+  group.mPaintRect = group.mPaintRect - group.mLayerBounds.TopLeft();
   g.mTransform = Matrix::Scaling(scale.width, scale.height)
                                 .PostTranslate(residualOffset.x, residualOffset.y);
   group.mScale = scale;

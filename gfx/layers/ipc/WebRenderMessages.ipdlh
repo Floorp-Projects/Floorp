@@ -139,7 +139,7 @@ struct OpUpdateBlobImage {
 };
 
 struct OpSetImageVisibleArea {
-  Rect area;
+  ImageIntRect area;
   ImageKey key;
 };
 

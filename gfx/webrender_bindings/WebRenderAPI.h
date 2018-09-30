@@ -141,7 +141,7 @@ public:
                                         const wr::DeviceUintRect& aDirtyRect,
                                         uint8_t aChannelIndex = 0);
 
-  void SetImageVisibleArea(ImageKey aKey, const wr::NormalizedRect& aArea);
+  void SetImageVisibleArea(ImageKey aKey, const wr::DeviceUintRect& aArea);
 
   void DeleteImage(wr::ImageKey aKey);
 

@@ -5439,13 +5439,7 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
 
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
-  if (mCanvasElement && mCanvasElement->IsWriteOnly() &&
-      // We could ask bindings for the caller type, but they already hand us a
-      // JSContext, and we're at least _somewhat_ perf-sensitive (so may not
-      // want to compute the caller type in the common non-write-only case), so
-      // let's just use what we have.
-      !nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::all_urlsPermission))
-  {
+  if (mCanvasElement && !mCanvasElement->CallerCanRead(aCx)) {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;

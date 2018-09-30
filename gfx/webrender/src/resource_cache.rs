@@ -11,7 +11,7 @@ use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, Fo
 use api::{GlyphDimensions, IdNamespace};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering};
 use api::{MemoryReport, VoidPtrToSizeFn};
-use api::{TileOffset, TileSize, TileRange, NormalizedRect, BlobImageData};
+use api::{TileOffset, TileSize, TileRange, BlobImageData};
 use app_units::Au;
 #[cfg(feature = "capture")]
 use capture::ExternalCaptureImage;
@@ -555,7 +555,6 @@ impl ResourceCache {
                         if let Some(tile_size) = template.tiling {
                             template.viewport_tiles = Some(compute_tile_range(
                                 &area,
-                                &template.descriptor.size,
                                 tile_size,
                             ));
                         }
@@ -1040,31 +1039,28 @@ impl ResourceCache {
                 let mut tiles = template.viewport_tiles.unwrap_or_else(|| {
                     // Default to requesting the full range of tiles.
                     compute_tile_range(
-                        &NormalizedRect {
-                            origin: point2(0.0, 0.0),
-                            size: size2(1.0, 1.0),
+                        &DeviceUintRect {
+                            origin: point2(0, 0),
+                            size: template.descriptor.size,
                         },
-                        &template.descriptor.size,
                         tile_size,
                     )
                 });
 
                 // Don't request tiles that weren't invalidated.
                 if let Some(dirty_rect) = template.dirty_rect {
-                    let f32_size = template.descriptor.size.to_f32();
-                    let normalized_dirty_rect = NormalizedRect {
+                    let dirty_rect = DeviceUintRect {
                         origin: point2(
-                            dirty_rect.origin.x as f32 / f32_size.width,
-                            dirty_rect.origin.y as f32 / f32_size.height,
+                            dirty_rect.origin.x,
+                            dirty_rect.origin.y,
                         ),
                         size: size2(
-                            dirty_rect.size.width as f32 / f32_size.width,
-                            dirty_rect.size.height as f32 / f32_size.height,
+                            dirty_rect.size.width,
+                            dirty_rect.size.height,
                         ),
                     };
                     let dirty_tiles = compute_tile_range(
-                        &normalized_dirty_rect,
-                        &template.descriptor.size,
+                        &dirty_rect,
                         tile_size,
                     );
 
@@ -1173,7 +1169,7 @@ impl ResourceCache {
     fn discard_tiles_outside_visible_area(
         &mut self,
         key: ImageKey,
-        area: &NormalizedRect
+        area: &DeviceUintRect
     ) {
         let template = match self.blob_image_templates.get(&key) {
             Some(template) => template,
@@ -1194,7 +1190,6 @@ impl ResourceCache {
 
         let tile_range = compute_tile_range(
             &area,
-            &template.descriptor.size,
             tile_size,
         );
 

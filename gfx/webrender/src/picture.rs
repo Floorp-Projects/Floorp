@@ -292,9 +292,9 @@ impl PicturePrimitive {
             raster_spatial_node_index
         };
 
-        if establishes_raster_root {
+        if has_surface {
             frame_state.clip_store
-                       .push_raster_root(raster_spatial_node_index);
+                       .push_surface(surface_spatial_node_index);
         }
 
         let map_pic_to_world = SpaceMapper::new_with_target(
@@ -361,7 +361,6 @@ impl PicturePrimitive {
             inflation_factor,
             allow_subpixel_aa,
             is_passthrough: self.raster_config.is_none(),
-            establishes_raster_root,
             raster_space,
         };
 
@@ -425,10 +424,10 @@ impl PicturePrimitive {
             }
         };
 
-        let clip_node_collector = if context.establishes_raster_root {
-            Some(frame_state.clip_store.pop_raster_root())
-        } else {
+        let clip_node_collector = if context.is_passthrough {
             None
+        } else {
+            Some(frame_state.clip_store.pop_surface())
         };
 
         (local_rect, clip_node_collector)
