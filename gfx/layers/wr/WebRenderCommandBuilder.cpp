@@ -747,7 +747,8 @@ struct DIGroup
         data->mInvalid = false;
       } else {
         BlobItemData* data = GetBlobItemData(item);
-        gfxCriticalError() << "DisplayItem" << item->Name() << "should be invalid";
+        if (data->mInvalid)
+          gfxCriticalError() << "DisplayItem" << item->Name() << "should be invalid";
         // if the item is invalid it needs to be fully contained
         MOZ_RELEASE_ASSERT(!data->mInvalid);
       }
