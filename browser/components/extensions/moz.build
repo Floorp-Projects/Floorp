@@ -17,7 +17,6 @@ EXTRA_JS_MODULES += [
     'ExtensionControlledPopup.jsm',
     'ExtensionPopups.jsm',
     'ParseBreakpadSymbols-worker.js',
-    'ParseCppFiltSymbols-worker.js',
     'ParseNMSymbols-worker.js',
     'ParseSymbols.jsm',
 ]
