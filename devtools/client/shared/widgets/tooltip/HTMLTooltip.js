@@ -6,13 +6,13 @@
 
 "use strict";
 
+const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipToggle");
-const {focusableSelector} = require("devtools/client/shared/focus");
-const {getCurrentZoom} = require("devtools/shared/layout/utils");
-const {listenOnce} = require("devtools/shared/async-utils");
 
-const Services = require("Services");
+loader.lazyRequireGetter(this, "focusableSelector", "devtools/client/shared/focus", true);
+loader.lazyRequireGetter(this, "getCurrentZoom", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "listenOnce", "devtools/shared/async-utils", true);
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
