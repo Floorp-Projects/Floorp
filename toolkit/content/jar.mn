@@ -100,6 +100,7 @@ toolkit.jar:
    content/global/elements/findbar.js          (widgets/findbar.js)
    content/global/elements/editor.js          (widgets/editor.js)
    content/global/elements/general.js          (widgets/general.js)
+   content/global/elements/radio.js            (widgets/radio.js)
    content/global/elements/stringbundle.js     (widgets/stringbundle.js)
    content/global/elements/tabbox.js           (widgets/tabbox.js)
    content/global/elements/textbox.js          (widgets/textbox.js)
