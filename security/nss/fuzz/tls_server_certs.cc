@@ -8,7 +8,7 @@
 #include "ssl.h"
 
 #include "cpputil.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 #include "tls_server_certs.h"
 
 const uint8_t kP256ServerCert[] = {

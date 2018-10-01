@@ -5,115 +5,133 @@
   'includes': [
     'coreconf/config.gypi'
   ],
-  'targets': [
-    {
-      'target_name': 'nss_libs',
-      'type': 'none',
-      'dependencies': [
-        'lib/ckfw/builtins/builtins.gyp:nssckbi',
-        'lib/freebl/freebl.gyp:freebl3',
-        'lib/softoken/softoken.gyp:softokn3',
-      ],
-      'conditions': [
-        [ 'moz_fold_libs==0', {
-          'dependencies': [
-            'lib/nss/nss.gyp:nss3',
-            'lib/smime/smime.gyp:smime3',
-            'lib/sqlite/sqlite.gyp:sqlite3',
-            'lib/ssl/ssl.gyp:ssl3',
-            'lib/util/util.gyp:nssutil3',
-          ],
-        }],
-        [ 'OS=="linux"', {
-          'dependencies': [
-            'lib/freebl/freebl.gyp:freeblpriv3',
-            'lib/sysinit/sysinit.gyp:nsssysinit',
-          ],
-        }],
-        [ 'disable_dbm==0', {
-          'dependencies': [
-            'lib/softoken/legacydb/legacydb.gyp:nssdbm3',
-          ],
-        }],
-      ],
-    },
-    {
-      'target_name': 'nss_static_libs',
-      'type': 'none',
-      'dependencies': [
-        'cmd/lib/lib.gyp:sectool',
-        'lib/base/base.gyp:nssb',
-        'lib/certdb/certdb.gyp:certdb',
-        'lib/certhigh/certhigh.gyp:certhi',
-        'lib/ckfw/ckfw.gyp:nssckfw',
-        'lib/crmf/crmf.gyp:crmf',
-        'lib/cryptohi/cryptohi.gyp:cryptohi',
-        'lib/dev/dev.gyp:nssdev',
-        'lib/freebl/freebl.gyp:freebl',
-        'lib/jar/jar.gyp:jar',
-        'lib/nss/nss.gyp:nss_static',
-        'lib/pk11wrap/pk11wrap.gyp:pk11wrap',
-        'lib/pkcs12/pkcs12.gyp:pkcs12',
-        'lib/pkcs7/pkcs7.gyp:pkcs7',
-        'lib/pki/pki.gyp:nsspki',
-        'lib/smime/smime.gyp:smime',
-        'lib/softoken/softoken.gyp:softokn',
-        'lib/ssl/ssl.gyp:ssl',
-        'lib/util/util.gyp:nssutil',
-        'lib/libpkix/libpkix.gyp:libpkix',
-      ],
-      'conditions': [
-        [ 'OS=="linux"', {
-          'dependencies': [
-            'lib/sysinit/sysinit.gyp:nsssysinit_static',
-          ],
-        }],
-        [ 'disable_dbm==0', {
-          'dependencies': [
-            'lib/dbm/src/src.gyp:dbm',
-            'lib/softoken/legacydb/legacydb.gyp:nssdbm',
-          ],
-        }],
-        [ 'use_system_sqlite==0', {
-          'dependencies': [
-            'lib/sqlite/sqlite.gyp:sqlite',
-          ],
-        }],
-        [ 'moz_fold_libs==1', {
-          'dependencies': [
-            'lib/nss/nss.gyp:nss3_static',
-            'lib/smime/smime.gyp:smime3_static',
-          ],
-        }],
-      ],
-    },
-    {
-      'target_name': 'nss_cmds',
-      'type': 'none',
-      'dependencies': [
-        'cmd/certutil/certutil.gyp:certutil',
-        'cmd/modutil/modutil.gyp:modutil',
-        'cmd/pk12util/pk12util.gyp:pk12util',
-        'cmd/shlibsign/shlibsign.gyp:shlibsign',
-      ],
-      'conditions': [
-        [ 'mozilla_client==0', {
-          'dependencies': [
-            'cmd/crlutil/crlutil.gyp:crlutil',
-            'cmd/pwdecrypt/pwdecrypt.gyp:pwdecrypt',
-            'cmd/signtool/signtool.gyp:signtool',
-            'cmd/signver/signver.gyp:signver',
-            'cmd/smimetools/smimetools.gyp:cmsutil',
-            'cmd/ssltap/ssltap.gyp:ssltap',
-            'cmd/symkeyutil/symkeyutil.gyp:symkeyutil',
-            'nss-tool/nss_tool.gyp:nss',
-            'nss-tool/nss_tool.gyp:hw-support',
-          ],
-        }],
-      ],
-    },
-  ],
   'conditions': [
+    [ 'mozpkix_only==0', {
+      'targets': [
+        {
+          'target_name': 'nss_libs',
+          'type': 'none',
+          'dependencies': [
+            'lib/ckfw/builtins/builtins.gyp:nssckbi',
+            'lib/freebl/freebl.gyp:freebl3',
+            'lib/softoken/softoken.gyp:softokn3',
+          ],
+          'conditions': [
+            [ 'moz_fold_libs==0', {
+              'dependencies': [
+                'lib/nss/nss.gyp:nss3',
+                'lib/smime/smime.gyp:smime3',
+                'lib/sqlite/sqlite.gyp:sqlite3',
+                'lib/ssl/ssl.gyp:ssl3',
+                'lib/util/util.gyp:nssutil3',
+              ],
+            }],
+            [ 'OS=="linux"', {
+              'dependencies': [
+                'lib/freebl/freebl.gyp:freeblpriv3',
+                'lib/sysinit/sysinit.gyp:nsssysinit',
+              ],
+            }],
+            [ 'disable_dbm==0', {
+              'dependencies': [
+                'lib/softoken/legacydb/legacydb.gyp:nssdbm3',
+              ],
+            }],
+          ],
+        },
+        {
+          'target_name': 'nss_static_libs',
+          'type': 'none',
+          'dependencies': [
+            'cmd/lib/lib.gyp:sectool',
+            'lib/base/base.gyp:nssb',
+            'lib/certdb/certdb.gyp:certdb',
+            'lib/certhigh/certhigh.gyp:certhi',
+            'lib/ckfw/ckfw.gyp:nssckfw',
+            'lib/crmf/crmf.gyp:crmf',
+            'lib/cryptohi/cryptohi.gyp:cryptohi',
+            'lib/dev/dev.gyp:nssdev',
+            'lib/freebl/freebl.gyp:freebl',
+            'lib/jar/jar.gyp:jar',
+            'lib/libpkix/libpkix.gyp:libpkix',
+            # mozpkix and mozpkix-testlib are static C++ libs
+            'lib/mozpkix/mozpkix.gyp:mozpkix',
+            'lib/mozpkix/mozpkix.gyp:mozpkix-testlib',
+            'lib/nss/nss.gyp:nss_static',
+            'lib/pk11wrap/pk11wrap.gyp:pk11wrap',
+            'lib/pkcs12/pkcs12.gyp:pkcs12',
+            'lib/pkcs7/pkcs7.gyp:pkcs7',
+            'lib/pki/pki.gyp:nsspki',
+            'lib/smime/smime.gyp:smime',
+            'lib/softoken/softoken.gyp:softokn',
+            'lib/ssl/ssl.gyp:ssl',
+            'lib/util/util.gyp:nssutil',
+          ],
+          'conditions': [
+            [ 'OS=="linux"', {
+              'dependencies': [
+                'lib/sysinit/sysinit.gyp:nsssysinit_static',
+              ],
+            }],
+            [ 'disable_dbm==0', {
+              'dependencies': [
+                'lib/dbm/src/src.gyp:dbm',
+                'lib/softoken/legacydb/legacydb.gyp:nssdbm',
+              ],
+            }],
+            [ 'use_system_sqlite==0', {
+              'dependencies': [
+                'lib/sqlite/sqlite.gyp:sqlite',
+              ],
+            }],
+            [ 'moz_fold_libs==1', {
+              'dependencies': [
+                'lib/nss/nss.gyp:nss3_static',
+                'lib/smime/smime.gyp:smime3_static',
+              ],
+            }],
+          ],
+        },
+        {
+          'target_name': 'nss_cmds',
+          'type': 'none',
+          'dependencies': [
+            'cmd/certutil/certutil.gyp:certutil',
+            'cmd/modutil/modutil.gyp:modutil',
+            'cmd/pk12util/pk12util.gyp:pk12util',
+            'cmd/shlibsign/shlibsign.gyp:shlibsign',
+          ],
+          'conditions': [
+            [ 'mozilla_client==0', {
+              'dependencies': [
+                'cmd/crlutil/crlutil.gyp:crlutil',
+                'cmd/pwdecrypt/pwdecrypt.gyp:pwdecrypt',
+                'cmd/signtool/signtool.gyp:signtool',
+                'cmd/signver/signver.gyp:signver',
+                'cmd/smimetools/smimetools.gyp:cmsutil',
+                'cmd/ssltap/ssltap.gyp:ssltap',
+                'cmd/symkeyutil/symkeyutil.gyp:symkeyutil',
+                'nss-tool/nss_tool.gyp:nss',
+                'nss-tool/nss_tool.gyp:hw-support',
+              ],
+            }],
+          ],
+        },
+      ],
+    }, { # else, i.e. mozpkix_only==1
+      # Build only mozpkix.
+      'targets': [
+        {
+          'target_name': 'nss_mozpkix_libs',
+          'type': 'none',
+          'dependencies': [
+            # mozpkix and mozpkix-testlib are static C++ libs
+            'lib/mozpkix/mozpkix.gyp:mozpkix',
+            'lib/mozpkix/mozpkix.gyp:mozpkix-testlib',
+          ],
+        },
+      ],
+    }],
     [ 'disable_tests==0', {
       'targets': [
         {
@@ -170,11 +188,12 @@
             'gtests/certdb_gtest/certdb_gtest.gyp:certdb_gtest',
             'gtests/freebl_gtest/freebl_gtest.gyp:prng_gtest',
             'gtests/freebl_gtest/freebl_gtest.gyp:blake2b_gtest',
+            'gtests/mozpkix_gtest/mozpkix_gtest.gyp:mozpkix_gtest',
+            'gtests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim',
             'gtests/pk11_gtest/pk11_gtest.gyp:pk11_gtest',
             'gtests/softoken_gtest/softoken_gtest.gyp:softoken_gtest',
             'gtests/ssl_gtest/ssl_gtest.gyp:ssl_gtest',
             'gtests/util_gtest/util_gtest.gyp:util_gtest',
-            'gtests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim',
           ],
           'conditions': [
             [ 'OS=="linux"', {
