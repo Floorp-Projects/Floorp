@@ -620,6 +620,13 @@ GetEffectProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
   return prop;
 }
 
+static nsSVGPaintingProperty*
+GetPaintingProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
+  const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>* aProperty)
+{
+  return GetEffectProperty(aURI, aFrame, aProperty);
+}
+
 bool
 SVGObserverUtils::GetMarkerFrames(nsIFrame* aMarkedFrame,
                                   nsSVGMarkerFrame*(*aFrames)[3])
@@ -753,8 +760,8 @@ GetOrCreateClipPathObserver(nsIFrame* aClippedFrame)
   }
   css::URLValue* url = svgStyleReset->mClipPath.GetURL();
   RefPtr<URLAndReferrerInfo> pathURI = ResolveURLUsingLocalRef(aClippedFrame, url);
-  return SVGObserverUtils::GetPaintingProperty(pathURI, aClippedFrame,
-                                         SVGObserverUtils::ClipPathProperty());
+  return GetPaintingProperty(pathURI, aClippedFrame,
+                             SVGObserverUtils::ClipPathProperty());
 }
 
 SVGObserverUtils::ReferenceState
@@ -943,35 +950,40 @@ SVGObserverUtils::RemoveTemplateObserver(nsIFrame* aFrame)
   aFrame->DeleteProperty(SVGObserverUtils::HrefToTemplateProperty());
 }
 
-nsSVGPaintingProperty*
-SVGObserverUtils::GetPaintingProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-  const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>* aProperty)
+Element*
+SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
+                                               const nsAtom* aHref)
 {
-  return GetEffectProperty(aURI, aFrame, aProperty);
-}
-
-nsSVGPaintingProperty*
-SVGObserverUtils::GetPaintingPropertyForURI(URLAndReferrerInfo* aURI,
-  nsIFrame* aFrame,
-  URIObserverHashtablePropertyDescriptor aProperty)
-{
-  if (!aURI)
-    return nullptr;
-
   SVGObserverUtils::URIObserverHashtable *hashtable =
-    aFrame->GetProperty(aProperty);
+    aFrame->GetProperty(BackgroundImageProperty());
   if (!hashtable) {
     hashtable = new SVGObserverUtils::URIObserverHashtable();
-    aFrame->SetProperty(aProperty, hashtable);
+    aFrame->SetProperty(BackgroundImageProperty(), hashtable);
   }
-  nsSVGPaintingProperty* prop =
-    static_cast<nsSVGPaintingProperty*>(hashtable->GetWeak(aURI));
-  if (!prop) {
-    bool watchImage = aProperty == SVGObserverUtils::BackgroundImageProperty();
-    prop = new nsSVGPaintingProperty(aURI, aFrame, watchImage);
-    hashtable->Put(aURI, prop);
+
+  nsAutoString elementId =
+    NS_LITERAL_STRING("#") + nsDependentAtomString(aHref);
+  nsCOMPtr<nsIURI> targetURI;
+  nsCOMPtr<nsIURI> base = aFrame->GetContent()->GetBaseURI();
+  nsContentUtils::NewURIWithDocumentCharset(
+    getter_AddRefs(targetURI),
+    elementId,
+    aFrame->GetContent()->GetUncomposedDoc(),
+    base);
+  RefPtr<URLAndReferrerInfo> url = new URLAndReferrerInfo(
+    targetURI,
+    aFrame->GetContent()->OwnerDoc()->GetDocumentURI(),
+    aFrame->GetContent()->OwnerDoc()->GetReferrerPolicy());
+
+  // XXXjwatt: this is broken - we're using the address of a new
+  // URLAndReferrerInfo as the hash key every time!
+  nsSVGPaintingProperty* observer =
+    static_cast<nsSVGPaintingProperty*>(hashtable->GetWeak(url));
+  if (!observer) {
+    observer = new nsSVGPaintingProperty(url, aFrame, /* aWatchImage */ true);
+    hashtable->Put(url, observer);
   }
-  return prop;
+  return observer->GetAndObserveReferencedElement();
 }
 
 nsSVGPaintServerFrame *
@@ -1002,7 +1014,7 @@ SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
                                         SVGObserverUtils::FillProperty() :
                                         SVGObserverUtils::StrokeProperty();
   nsSVGPaintingProperty *property =
-    SVGObserverUtils::GetPaintingProperty(paintServerURL, frame, propDesc);
+    GetPaintingProperty(paintServerURL, frame, propDesc);
   if (!property)
     return nullptr;
   nsIFrame* result = property->GetAndObserveReferencedFrame();
