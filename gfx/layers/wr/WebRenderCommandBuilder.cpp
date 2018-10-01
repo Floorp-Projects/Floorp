@@ -747,8 +747,17 @@ struct DIGroup
         data->mInvalid = false;
       } else {
         BlobItemData* data = GetBlobItemData(item);
-        if (data->mInvalid)
-          gfxCriticalError() << "DisplayItem" << item->Name() << "should be invalid";
+        if (data->mInvalid) {
+          if (item->GetType() == DisplayItemType::TYPE_TRANSFORM) {
+            nsDisplayTransform* transformItem = static_cast<nsDisplayTransform*>(item);
+            const Matrix4x4Flagged& t = transformItem->GetTransform();
+            Matrix t2d;
+            bool is2D = t.Is2D(&t2d);
+            gfxCriticalError() << "DisplayItemTransform-" << is2D << "-should-be-invalid";
+          } else {
+            gfxCriticalError() << "DisplayItem" << item->Name() << "should be invalid";
+          }
+        }
         // if the item is invalid it needs to be fully contained
         MOZ_RELEASE_ASSERT(!data->mInvalid);
       }
