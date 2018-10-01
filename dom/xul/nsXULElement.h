@@ -419,6 +419,11 @@ public:
     {
         SetAttr(aName, aValue, aError);
     }
+    bool GetXULBoolAttr(nsAtom* aName) const
+    {
+        return AttrValueIs(kNameSpaceID_None, aName,
+                           NS_LITERAL_STRING("true"), eCaseMatters);
+    }
     void SetXULBoolAttr(nsAtom* aName, bool aValue)
     {
         if (aValue) {
