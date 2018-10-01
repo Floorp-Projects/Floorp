@@ -13,8 +13,6 @@ use std::iter;
 
 use proc_macro2::{Delimiter, Spacing, TokenStream, TokenTree};
 
-#[cfg(feature = "parsing")]
-use parse::{ParseStream, Result};
 #[cfg(feature = "extra-traits")]
 use std::hash::{Hash, Hasher};
 #[cfg(feature = "extra-traits")]
@@ -41,8 +39,8 @@ ast_struct! {
     ///
     /// The `style` field of type `AttrStyle` distinguishes whether an attribute
     /// is outer or inner. Doc comments and block comments are promoted to
-    /// attributes, as this is how they are processed by the compiler and by
-    /// `macro_rules!` macros.
+    /// attributes that have `is_sugared_doc` set to true, as this is how they
+    /// are processed by the compiler and by `macro_rules!` macros.
     ///
     /// The `path` field gives the possibly colon-delimited path against which
     /// the attribute is resolved. It is equal to `"doc"` for desugared doc
@@ -60,58 +58,13 @@ ast_struct! {
     /// across most Rust libraries.
     ///
     /// [`interpret_meta`]: #method.interpret_meta
-    ///
-    /// # Parsing
-    ///
-    /// This type does not implement the [`Parse`] trait and thus cannot be
-    /// parsed directly by [`ParseStream::parse`]. Instead use
-    /// [`ParseStream::call`] with one of the two parser functions
-    /// [`Attribute::parse_outer`] or [`Attribute::parse_inner`] depending on
-    /// which you intend to parse.
-    ///
-    /// [`Parse`]: parse/trait.Parse.html
-    /// [`ParseStream::parse`]: parse/struct.ParseBuffer.html#method.parse
-    /// [`ParseStream::call`]: parse/struct.ParseBuffer.html#method.call
-    /// [`Attribute::parse_outer`]: #method.parse_outer
-    /// [`Attribute::parse_inner`]: #method.parse_inner
-    ///
-    /// ```
-    /// #[macro_use]
-    /// extern crate syn;
-    ///
-    /// use syn::{Attribute, Ident};
-    /// use syn::parse::{Parse, ParseStream, Result};
-    ///
-    /// // Parses a unit struct with attributes.
-    /// //
-    /// //     #[path = "s.tmpl"]
-    /// //     struct S;
-    /// struct UnitStruct {
-    ///     attrs: Vec<Attribute>,
-    ///     struct_token: Token![struct],
-    ///     name: Ident,
-    ///     semi_token: Token![;],
-    /// }
-    ///
-    /// impl Parse for UnitStruct {
-    ///     fn parse(input: ParseStream) -> Result<Self> {
-    ///         Ok(UnitStruct {
-    ///             attrs: input.call(Attribute::parse_outer)?,
-    ///             struct_token: input.parse()?,
-    ///             name: input.parse()?,
-    ///             semi_token: input.parse()?,
-    ///         })
-    ///     }
-    /// }
-    /// #
-    /// # fn main() {}
-    /// ```
     pub struct Attribute #manual_extra_traits {
         pub pound_token: Token![#],
         pub style: AttrStyle,
         pub bracket_token: token::Bracket,
         pub path: Path,
         pub tts: TokenStream,
+        pub is_sugared_doc: bool,
     }
 }
 
@@ -126,6 +79,7 @@ impl PartialEq for Attribute {
             && self.bracket_token == other.bracket_token
             && self.path == other.path
             && TokenStreamHelper(&self.tts) == TokenStreamHelper(&other.tts)
+            && self.is_sugared_doc == other.is_sugared_doc
     }
 }
 
@@ -140,6 +94,7 @@ impl Hash for Attribute {
         self.bracket_token.hash(state);
         self.path.hash(state);
         TokenStreamHelper(&self.tts).hash(state);
+        self.is_sugared_doc.hash(state);
     }
 }
 
@@ -172,32 +127,6 @@ impl Attribute {
         }
 
         None
-    }
-
-    /// Parses zero or more outer attributes from the stream.
-    ///
-    /// *This function is available if Syn is built with the `"parsing"`
-    /// feature.*
-    #[cfg(feature = "parsing")]
-    pub fn parse_outer(input: ParseStream) -> Result<Vec<Self>> {
-        let mut attrs = Vec::new();
-        while input.peek(Token![#]) {
-            attrs.push(input.call(parsing::single_parse_outer)?);
-        }
-        Ok(attrs)
-    }
-
-    /// Parses zero or more inner attributes from the stream.
-    ///
-    /// *This function is available if Syn is built with the `"parsing"`
-    /// feature.*
-    #[cfg(feature = "parsing")]
-    pub fn parse_inner(input: ParseStream) -> Result<Vec<Self>> {
-        let mut attrs = Vec::new();
-        while input.peek(Token![#]) && input.peek2(Token![!]) {
-            attrs.push(input.call(parsing::single_parse_inner)?);
-        }
-        Ok(attrs)
     }
 
     fn extract_meta_list(ident: Ident, tt: &TokenTree) -> Option<Meta> {
@@ -282,15 +211,7 @@ fn nested_meta_item_from_tokens(tts: &[TokenTree]) -> Option<(NestedMeta, &[Toke
                 }
             }
 
-            let nested_meta = if ident == "true" || ident == "false" {
-                NestedMeta::Literal(Lit::Bool(LitBool {
-                    value: ident == "true",
-                    span: ident.span(),
-                }))
-            } else {
-                NestedMeta::Meta(Meta::Word(ident.clone()))
-            };
-            Some((nested_meta, &tts[1..]))
+            Some((Meta::Word(ident.clone()).into(), &tts[1..]))
         }
 
         _ => None,
@@ -475,39 +396,122 @@ where
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
+    use buffer::Cursor;
+    use parse_error;
+    use proc_macro2::{Literal, Punct, Spacing, Span, TokenTree};
+    use synom::PResult;
 
-    use parse::{ParseStream, Result};
-    #[cfg(feature = "full")]
-    use private;
-
-    pub fn single_parse_inner(input: ParseStream) -> Result<Attribute> {
-        let content;
-        Ok(Attribute {
-            pound_token: input.parse()?,
-            style: AttrStyle::Inner(input.parse()?),
-            bracket_token: bracketed!(content in input),
-            path: content.call(Path::parse_mod_style)?,
-            tts: content.parse()?,
-        })
+    fn eq(span: Span) -> TokenTree {
+        let mut op = Punct::new('=', Spacing::Alone);
+        op.set_span(span);
+        op.into()
     }
 
-    pub fn single_parse_outer(input: ParseStream) -> Result<Attribute> {
-        let content;
-        Ok(Attribute {
-            pound_token: input.parse()?,
-            style: AttrStyle::Outer,
-            bracket_token: bracketed!(content in input),
-            path: content.call(Path::parse_mod_style)?,
-            tts: content.parse()?,
-        })
+    impl Attribute {
+        named!(pub parse_inner -> Self, alt!(
+            do_parse!(
+                pound: punct!(#) >>
+                bang: punct!(!) >>
+                path_and_tts: brackets!(tuple!(
+                    call!(Path::parse_mod_style),
+                    syn!(TokenStream),
+                )) >>
+                ({
+                    let (bracket, (path, tts)) = path_and_tts;
+
+                    Attribute {
+                        style: AttrStyle::Inner(bang),
+                        path: path,
+                        tts: tts,
+                        is_sugared_doc: false,
+                        pound_token: pound,
+                        bracket_token: bracket,
+                    }
+                })
+            )
+            |
+            map!(
+                call!(lit_doc_comment, Comment::Inner),
+                |lit| {
+                    let span = lit.span();
+                    Attribute {
+                        style: AttrStyle::Inner(<Token![!]>::new(span)),
+                        path: Ident::new("doc", span).into(),
+                        tts: vec![
+                            eq(span),
+                            lit,
+                        ].into_iter().collect(),
+                        is_sugared_doc: true,
+                        pound_token: <Token![#]>::new(span),
+                        bracket_token: token::Bracket(span),
+                    }
+                }
+            )
+        ));
+
+        named!(pub parse_outer -> Self, alt!(
+            do_parse!(
+                pound: punct!(#) >>
+                path_and_tts: brackets!(tuple!(
+                    call!(Path::parse_mod_style),
+                    syn!(TokenStream),
+                )) >>
+                ({
+                    let (bracket, (path, tts)) = path_and_tts;
+
+                    Attribute {
+                        style: AttrStyle::Outer,
+                        path: path,
+                        tts: tts,
+                        is_sugared_doc: false,
+                        pound_token: pound,
+                        bracket_token: bracket,
+                    }
+                })
+            )
+            |
+            map!(
+                call!(lit_doc_comment, Comment::Outer),
+                |lit| {
+                    let span = lit.span();
+                    Attribute {
+                        style: AttrStyle::Outer,
+                        path: Ident::new("doc", span).into(),
+                        tts: vec![
+                            eq(span),
+                            lit,
+                        ].into_iter().collect(),
+                        is_sugared_doc: true,
+                        pound_token: <Token![#]>::new(span),
+                        bracket_token: token::Bracket(span),
+                    }
+                }
+            )
+        ));
     }
 
-    #[cfg(feature = "full")]
-    impl private {
-        pub fn attrs(outer: Vec<Attribute>, inner: Vec<Attribute>) -> Vec<Attribute> {
-            let mut attrs = outer;
-            attrs.extend(inner);
-            attrs
+    enum Comment {
+        Inner,
+        Outer,
+    }
+
+    fn lit_doc_comment(input: Cursor, style: Comment) -> PResult<TokenTree> {
+        match input.literal() {
+            Some((lit, rest)) => {
+                let string = lit.to_string();
+                let ok = match style {
+                    Comment::Inner => string.starts_with("//!") || string.starts_with("/*!"),
+                    Comment::Outer => string.starts_with("///") || string.starts_with("/**"),
+                };
+                if ok {
+                    let mut new = Literal::string(&string);
+                    new.set_span(lit.span());
+                    Ok((new.into(), rest))
+                } else {
+                    parse_error()
+                }
+            }
+            _ => parse_error(),
         }
     }
 }

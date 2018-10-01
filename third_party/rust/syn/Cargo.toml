@@ -12,10 +12,10 @@
 
 [package]
 name = "syn"
-version = "0.15.7"
+version = "0.14.6"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = ["/Cargo.toml", "/src/**/*.rs", "/README.md", "/LICENSE-APACHE", "/LICENSE-MIT"]
-description = "Parser for Rust source code"
+description = "Nom parser for Rust source code"
 documentation = "https://docs.rs/syn"
 readme = "README.md"
 categories = ["development-tools::procedural-macro-helpers"]
@@ -26,9 +26,6 @@ all-features = true
 
 [package.metadata.playground]
 all-features = true
-
-[lib]
-name = "syn"
 
 [[example]]
 name = "dump-syntax"
@@ -48,9 +45,6 @@ version = "0.1"
 [dev-dependencies.rayon]
 version = "1.0"
 
-[dev-dependencies.regex]
-version = "1.0"
-
 [dev-dependencies.walkdir]
 version = "2.1"
 
@@ -66,5 +60,3 @@ printing = ["quote"]
 proc-macro = ["proc-macro2/proc-macro", "quote/proc-macro"]
 visit = []
 visit-mut = []
-[badges.travis-ci]
-repository = "dtolnay/syn"

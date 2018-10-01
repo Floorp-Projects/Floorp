@@ -1,11 +1,8 @@
 #![feature(test)]
-#[cfg(feature = "slog")]
-#[macro_use]
-extern crate slog;
+
 extern crate test;
 extern crate uuid;
-#[cfg(feature = "slog")]
-use slog::Drain;
+
 use test::Bencher;
 use uuid::Uuid;
 
@@ -86,15 +83,5 @@ fn bench_valid_hyphenated(b: &mut Bencher) {
 fn bench_valid_short(b: &mut Bencher) {
     b.iter(|| {
         let _ = Uuid::parse_str("67e5504410b1426f9247bb680e5fe0c8");
-    });
-}
-
-#[cfg(feature = "slog")]
-#[bench]
-fn bench_log_discard_kv(b: &mut Bencher) {
-    let root = slog::Logger::root(slog::Discard.fuse(), o!());
-    let u1 = Uuid::parse_str("F9168C5E-CEB2-4FAB-B6BF-329BF39FA1E4").unwrap();
-    b.iter(|| {
-        crit!(root, "test"; "u1" => u1);
     });
 }

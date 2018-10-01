@@ -9,29 +9,140 @@
 //! A stably addressed token buffer supporting efficient traversal based on a
 //! cheaply copyable cursor.
 //!
+//! The [`Synom`] trait is implemented for syntax tree types that can be parsed
+//! from one of these token cursors.
+//!
+//! [`Synom`]: ../synom/trait.Synom.html
+//!
 //! *This module is available if Syn is built with the `"parsing"` feature.*
+//!
+//! # Example
+//!
+//! This example shows a basic token parser for parsing a token stream without
+//! using Syn's parser combinator macros.
+//!
+//! ```
+//! #![feature(proc_macro_diagnostic)]
+//!
+//! extern crate syn;
+//! extern crate proc_macro;
+//!
+//! #[macro_use]
+//! extern crate quote;
+//!
+//! use syn::{token, ExprTuple};
+//! use syn::buffer::{Cursor, TokenBuffer};
+//! use syn::spanned::Spanned;
+//! use syn::synom::Synom;
+//! use proc_macro::{Diagnostic, Span, TokenStream};
+//!
+//! /// A basic token parser for parsing a token stream without using Syn's
+//! /// parser combinator macros.
+//! pub struct Parser<'a> {
+//!     cursor: Cursor<'a>,
+//! }
+//!
+//! impl<'a> Parser<'a> {
+//!     pub fn new(cursor: Cursor<'a>) -> Self {
+//!         Parser { cursor }
+//!     }
+//!
+//!     pub fn current_span(&self) -> Span {
+//!         self.cursor.span().unstable()
+//!     }
+//!
+//!     pub fn parse<T: Synom>(&mut self) -> Result<T, Diagnostic> {
+//!         let (val, rest) = T::parse(self.cursor)
+//!             .map_err(|e| match T::description() {
+//!                 Some(desc) => {
+//!                     self.current_span().error(format!("{}: expected {}", e, desc))
+//!                 }
+//!                 None => {
+//!                     self.current_span().error(e.to_string())
+//!                 }
+//!             })?;
+//!
+//!         self.cursor = rest;
+//!         Ok(val)
+//!     }
+//!
+//!     pub fn expect_eof(&mut self) -> Result<(), Diagnostic> {
+//!         if !self.cursor.eof() {
+//!             return Err(self.current_span().error("trailing characters; expected eof"));
+//!         }
+//!
+//!         Ok(())
+//!     }
+//! }
+//!
+//! fn eval(input: TokenStream) -> Result<TokenStream, Diagnostic> {
+//!     let buffer = TokenBuffer::new(input);
+//!     let mut parser = Parser::new(buffer.begin());
+//!
+//!     // Parse some syntax tree types out of the input tokens. In this case we
+//!     // expect something like:
+//!     //
+//!     //     (a, b, c) = (1, 2, 3)
+//!     let a = parser.parse::<ExprTuple>()?;
+//!     parser.parse::<token::Eq>()?;
+//!     let b = parser.parse::<ExprTuple>()?;
+//!     parser.expect_eof()?;
+//!
+//!     // Perform some validation and report errors.
+//!     let (a_len, b_len) = (a.elems.len(), b.elems.len());
+//!     if a_len != b_len {
+//!         let diag = b.span().unstable()
+//!             .error(format!("expected {} element(s), got {}", a_len, b_len))
+//!             .span_note(a.span().unstable(), "because of this");
+//!
+//!         return Err(diag);
+//!     }
+//!
+//!     // Build the output tokens.
+//!     let out = quote! {
+//!         println!("All good! Received two tuples of size {}", #a_len);
+//!     };
+//!
+//!     Ok(out.into())
+//! }
+//! #
+//! # extern crate proc_macro2;
+//! #
+//! # // This method exists on proc_macro2::Span but is behind the "nightly"
+//! # // feature.
+//! # trait ToUnstableSpan {
+//! #     fn unstable(&self) -> Span;
+//! # }
+//! #
+//! # impl ToUnstableSpan for proc_macro2::Span {
+//! #     fn unstable(&self) -> Span {
+//! #         unimplemented!()
+//! #     }
+//! # }
+//! #
+//! # fn main() {}
+//! ```
 
 // This module is heavily commented as it contains the only unsafe code in Syn,
 // and caution should be used when editing it. The public-facing interface is
 // 100% safe but the implementation is fragile internally.
 
-#[cfg(all(
-    not(all(target_arch = "wasm32", target_os = "unknown")),
-    feature = "proc-macro"
-))]
+#[cfg(feature = "proc-macro")]
 use proc_macro as pm;
-use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Ident, Literal, Span, TokenStream};
+use proc_macro2::{Group, Punct, TokenTree};
 
 use std::marker::PhantomData;
 use std::ptr;
 
-use Lifetime;
+#[cfg(synom_verbose_trace)]
+use std::fmt::{self, Debug};
 
 /// Internal type which is used instead of `TokenTree` to represent a token tree
 /// within a `TokenBuffer`.
 enum Entry {
     // Mimicking types from proc-macro.
-    Group(Group, TokenBuffer),
+    Group(Span, Delimiter, TokenBuffer),
     Ident(Ident),
     Punct(Punct),
     Literal(Literal),
@@ -43,6 +154,10 @@ enum Entry {
 /// A buffer that can be efficiently traversed multiple times, unlike
 /// `TokenStream` which requires a deep copy in order to traverse more than
 /// once.
+///
+/// See the [module documentation] for an example of `TokenBuffer` in action.
+///
+/// [module documentation]: index.html
 ///
 /// *This type is available if Syn is built with the `"parsing"` feature.*
 pub struct TokenBuffer {
@@ -74,7 +189,7 @@ impl TokenBuffer {
                 TokenTree::Group(g) => {
                     // Record the index of the interesting entry, and store an
                     // `End(null)` there temporarially.
-                    seqs.push((entries.len(), g));
+                    seqs.push((entries.len(), g.span(), g.delimiter(), g.stream().clone()));
                     entries.push(Entry::End(ptr::null()));
                 }
             }
@@ -88,7 +203,7 @@ impl TokenBuffer {
         // constant address after this point, as we are going to store a raw
         // pointer into it.
         let mut entries = entries.into_boxed_slice();
-        for (idx, group) in seqs {
+        for (idx, span, delim, seq_stream) in seqs {
             // We know that this index refers to one of the temporary
             // `End(null)` entries, and we know that the last entry is
             // `End(up)`, so the next index is also valid.
@@ -96,8 +211,8 @@ impl TokenBuffer {
 
             // The end entry stored at the end of this Entry::Group should
             // point to the Entry which follows the Group in the list.
-            let inner = Self::inner_new(group.stream(), seq_up);
-            entries[idx] = Entry::Group(group, inner);
+            let inner = Self::inner_new(seq_stream, seq_up);
+            entries[idx] = Entry::Group(span, delim, inner);
         }
 
         TokenBuffer { data: entries }
@@ -108,10 +223,7 @@ impl TokenBuffer {
     ///
     /// *This method is available if Syn is built with both the `"parsing"` and
     /// `"proc-macro"` features.*
-    #[cfg(all(
-        not(all(target_arch = "wasm32", target_os = "unknown")),
-        feature = "proc-macro"
-    ))]
+    #[cfg(feature = "proc-macro")]
     pub fn new(stream: pm::TokenStream) -> TokenBuffer {
         Self::new2(stream.into())
     }
@@ -141,16 +253,20 @@ impl TokenBuffer {
 /// Two cursors are equal if they have the same location in the same input
 /// stream, and have the same scope.
 ///
+/// See the [module documentation] for an example of a `Cursor` in action.
+///
+/// [module documentation]: index.html
+///
 /// *This type is available if Syn is built with the `"parsing"` feature.*
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Cursor<'a> {
-    // The current entry which the `Cursor` is pointing at.
+    /// The current entry which the `Cursor` is pointing at.
     ptr: *const Entry,
-    // This is the only `Entry::End(..)` object which this cursor is allowed to
-    // point at. All other `End` objects are skipped over in `Cursor::create`.
+    /// This is the only `Entry::End(..)` object which this cursor is allowed to
+    /// point at. All other `End` objects are skipped over in `Cursor::create`.
     scope: *const Entry,
-    // Cursor is covariant in 'a. This field ensures that our pointers are still
-    // valid.
+    /// This uses the &'a reference which guarantees that these pointers are
+    /// still valid.
     marker: PhantomData<&'a Entry>,
 }
 
@@ -215,14 +331,12 @@ impl<'a> Cursor<'a> {
     ///
     /// WARNING: This mutates its argument.
     fn ignore_none(&mut self) {
-        if let Entry::Group(ref group, ref buf) = *self.entry() {
-            if group.delimiter() == Delimiter::None {
-                // NOTE: We call `Cursor::create` here to make sure that
-                // situations where we should immediately exit the span after
-                // entering it are handled correctly.
-                unsafe {
-                    *self = Cursor::create(&buf.data[0], self.scope);
-                }
+        if let Entry::Group(_, Delimiter::None, ref buf) = *self.entry() {
+            // NOTE: We call `Cursor::create` here to make sure that situations
+            // where we should immediately exit the span after entering it are
+            // handled correctly.
+            unsafe {
+                *self = Cursor::create(&buf.data[0], self.scope);
             }
         }
     }
@@ -245,9 +359,9 @@ impl<'a> Cursor<'a> {
             self.ignore_none();
         }
 
-        if let Entry::Group(ref group, ref buf) = *self.entry() {
-            if group.delimiter() == delim {
-                return Some((buf.begin(), group.span(), unsafe { self.bump() }));
+        if let Entry::Group(span, group_delim, ref buf) = *self.entry() {
+            if group_delim == delim {
+                return Some((buf.begin(), span, unsafe { self.bump() }));
             }
         }
 
@@ -269,9 +383,7 @@ impl<'a> Cursor<'a> {
     pub fn punct(mut self) -> Option<(Punct, Cursor<'a>)> {
         self.ignore_none();
         match *self.entry() {
-            Entry::Punct(ref op) if op.as_char() != '\'' => {
-                Some((op.clone(), unsafe { self.bump() }))
-            }
+            Entry::Punct(ref op) => Some((op.clone(), unsafe { self.bump() })),
             _ => None,
         }
     }
@@ -282,28 +394,6 @@ impl<'a> Cursor<'a> {
         self.ignore_none();
         match *self.entry() {
             Entry::Literal(ref lit) => Some((lit.clone(), unsafe { self.bump() })),
-            _ => None,
-        }
-    }
-
-    /// If the cursor is pointing at a `Lifetime`, returns it along with a
-    /// cursor pointing at the next `TokenTree`.
-    pub fn lifetime(mut self) -> Option<(Lifetime, Cursor<'a>)> {
-        self.ignore_none();
-        match *self.entry() {
-            Entry::Punct(ref op) if op.as_char() == '\'' && op.spacing() == Spacing::Joint => {
-                let next = unsafe { self.bump() };
-                match next.ident() {
-                    Some((ident, rest)) => {
-                        let lifetime = Lifetime {
-                            apostrophe: op.span(),
-                            ident: ident,
-                        };
-                        Some((lifetime, rest))
-                    }
-                    None => None,
-                }
-            }
             _ => None,
         }
     }
@@ -329,7 +419,12 @@ impl<'a> Cursor<'a> {
     /// will return a `Group(None, ..)` if the cursor is looking at one.
     pub fn token_tree(self) -> Option<(TokenTree, Cursor<'a>)> {
         let tree = match *self.entry() {
-            Entry::Group(ref group, _) => group.clone().into(),
+            Entry::Group(span, delim, ref buf) => {
+                let stream = buf.begin().token_stream();
+                let mut g = Group::new(delim, stream);
+                g.set_span(span);
+                TokenTree::from(g)
+            }
             Entry::Literal(ref lit) => lit.clone().into(),
             Entry::Ident(ref ident) => ident.clone().into(),
             Entry::Punct(ref op) => op.clone().into(),
@@ -345,11 +440,24 @@ impl<'a> Cursor<'a> {
     /// cursor points to eof.
     pub fn span(self) -> Span {
         match *self.entry() {
-            Entry::Group(ref group, _) => group.span(),
+            Entry::Group(span, ..) => span,
             Entry::Literal(ref l) => l.span(),
             Entry::Ident(ref t) => t.span(),
             Entry::Punct(ref o) => o.span(),
             Entry::End(..) => Span::call_site(),
         }
+    }
+}
+
+// We do a custom implementation for `Debug` as the default implementation is
+// pretty useless.
+#[cfg(synom_verbose_trace)]
+impl<'a> Debug for Cursor<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Print what the cursor is currently looking at.
+        // This will look like Cursor("some remaining tokens here")
+        f.debug_tuple("Cursor")
+            .field(&self.token_stream().to_string())
+            .finish()
     }
 }
