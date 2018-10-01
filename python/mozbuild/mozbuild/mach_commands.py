@@ -850,6 +850,8 @@ class RunProgram(MachCommandBase):
         help='Set the specified pref before starting the program. Can be set multiple times. Prefs can also be set in ~/.mozbuild/machrc in the [runprefs] section - see `./mach settings` for more information.')
     @CommandArgument('--temp-profile', action='store_true', group=prog_group,
         help='Run the program using a new temporary profile created inside the objdir.')
+    @CommandArgument('--macos-open', action='store_true', group=prog_group,
+        help="On macOS, run the program using the open(1) command. Per open(1), the browser is launched \"just as if you had double-clicked the file's icon\". The browser can not be launched under a debugger with this option.")
 
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
@@ -873,8 +875,8 @@ class RunProgram(MachCommandBase):
     @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
         help='Show stats when doing dumps.')
     def run(self, params, remote, background, noprofile, disable_e10s,
-        enable_crash_reporter, setpref, temp_profile, debug, debugger,
-        debugger_args, dmd, mode, stacks, show_dump_stats):
+        enable_crash_reporter, setpref, temp_profile, macos_open, debug,
+        debugger, debugger_args, dmd, mode, stacks, show_dump_stats):
 
         if conditions.is_android(self):
             # Running Firefox for Android is completely different
@@ -899,7 +901,23 @@ class RunProgram(MachCommandBase):
                 print(e)
                 return 1
 
-            args = [binpath]
+            args = []
+            if macos_open:
+                if debug:
+                    print("The browser can not be launched in the debugger "
+                        "when using the macOS open command.")
+                    return 1
+                try:
+                    m = re.search(r'^.+\.app', binpath)
+                    apppath = m.group(0)
+                    args = ['open', apppath, '--args']
+                except Exception as e:
+                    print("Couldn't get the .app path from the binary path. "
+                        "The macOS open option can only be used on macOS")
+                    print(e)
+                    return 1
+            else:
+                args = [binpath]
 
             if params:
                 args.extend(params)
