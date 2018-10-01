@@ -11,7 +11,6 @@ FINAL_LIBRARY = 'xul'
 
 SOURCES += [
     'RemoteUtils.cpp',
-    'XRemoteClient.cpp',
 ]
 
 if CONFIG['MOZ_ENABLE_DBUS'] and CONFIG['MOZ_WAYLAND']:
@@ -20,3 +19,7 @@ if CONFIG['MOZ_ENABLE_DBUS'] and CONFIG['MOZ_WAYLAND']:
     ]
     CXXFLAGS += CONFIG['TK_CFLAGS']
     CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+else:
+    SOURCES += [
+        'XRemoteClient.cpp',
+    ]
