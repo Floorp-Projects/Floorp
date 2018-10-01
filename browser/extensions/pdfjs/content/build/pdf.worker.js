@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.0.866';
-var pdfjsBuild = '0e41eb16';
+var pdfjsVersion = '2.0.892';
+var pdfjsBuild = 'ec10cae5';
 var pdfjsCoreWorker = __w_pdfjs_require__(1);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -327,7 +327,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.866';
+    let workerVersion = '2.0.892';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -20445,18 +20445,18 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           switch (glyphName[0]) {
             case 'G':
               if (glyphName.length === 3) {
-                code = parseInt(glyphName.substr(1), 16);
+                code = parseInt(glyphName.substring(1), 16);
               }
               break;
             case 'g':
               if (glyphName.length === 5) {
-                code = parseInt(glyphName.substr(1), 16);
+                code = parseInt(glyphName.substring(1), 16);
               }
               break;
             case 'C':
             case 'c':
               if (glyphName.length >= 3) {
-                code = +glyphName.substr(1);
+                code = +glyphName.substring(1);
               }
               break;
             default:
@@ -21614,7 +21614,7 @@ class CMap {
     var lastByte = dstLow.length - 1;
     while (low <= high) {
       this._map[low++] = dstLow;
-      dstLow = dstLow.substr(0, lastByte) + String.fromCharCode(dstLow.charCodeAt(lastByte) + 1);
+      dstLow = dstLow.substring(0, lastByte) + String.fromCharCode(dstLow.charCodeAt(lastByte) + 1);
     }
   }
   mapBfRangeToArray(low, high, array) {
@@ -26016,7 +26016,7 @@ var CFFCompiler = function CFFCompilerClosure() {
       nibbles += nibbles.length & 1 ? 'f' : 'ff';
       var out = [30];
       for (i = 0, ii = nibbles.length; i < ii; i += 2) {
-        out.push(parseInt(nibbles.substr(i, 2), 16));
+        out.push(parseInt(nibbles.substring(i, i + 2), 16));
       }
       return out;
     },
@@ -31683,9 +31683,9 @@ function getUnicodeForGlyph(name, glyphsUnicodeMap) {
  if (name[0] === 'u') {
   var nameLen = name.length, hexStr;
   if (nameLen === 7 && name[1] === 'n' && name[2] === 'i') {
-   hexStr = name.substr(3);
+   hexStr = name.substring(3);
   } else if (nameLen >= 5 && nameLen <= 7) {
-   hexStr = name.substr(1);
+   hexStr = name.substring(1);
   } else {
    return -1;
   }
