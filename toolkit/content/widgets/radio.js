@@ -311,25 +311,17 @@ class MozRadiogroup extends MozBaseControl {
       return this._radioChildren;
 
     var radioChildren = [];
-    var doc = this.ownerDocument;
 
     if (this.hasChildNodes()) {
-      // Don't store the collected child nodes immediately,
-      // collecting the child nodes could trigger constructors
-      // which would blow away our list.
-
-      var iterator = doc.createTreeWalker(this,
-        NodeFilter.SHOW_ELEMENT,
-        this._filterRadioGroup);
-      while (iterator.nextNode())
-        radioChildren.push(iterator.currentNode);
-      return this._radioChildren = radioChildren;
+      return this._radioChildren = [...this.querySelectorAll("radio")]
+        .filter(r => r.control == this);
     }
 
     // We don't have child nodes.
     const XUL_NS = "http://www.mozilla.org/keymaster/" +
       "gatekeeper/there.is.only.xul";
-    var elems = doc.getElementsByAttribute("group", this.id);
+
+    var elems = this.ownerDocument.getElementsByAttribute("group", this.id);
     for (var i = 0; i < elems.length; i++) {
       if ((elems[i].namespaceURI == XUL_NS) &&
         (elems[i].localName == "radio")) {
@@ -337,18 +329,6 @@ class MozRadiogroup extends MozBaseControl {
       }
     }
     return this._radioChildren = radioChildren;
-  }
-
-  _filterRadioGroup(node) {
-    switch (node.localName) {
-      case "radio":
-        return NodeFilter.FILTER_ACCEPT;
-      case "template":
-      case "radiogroup":
-        return NodeFilter.FILTER_REJECT;
-      default:
-        return NodeFilter.FILTER_SKIP;
-    }
   }
 
   getIndexOfItem(item) {
