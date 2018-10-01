@@ -1169,7 +1169,11 @@ DebuggerClient.prototype = {
    */
   createObjectClient: function(grip) {
     return new ObjectClient(this, grip);
-  }
+  },
+
+  get transport() {
+    return this._transport;
+  },
 };
 
 eventSource(DebuggerClient.prototype);
