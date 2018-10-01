@@ -99,7 +99,7 @@ function test_iframe_without_allow() {
   ok(ifr.policy.allowedFeatures().includes("camera"), "Camera is allowed");
   ok(ifr.policy.allowedFeatures().includes("geolocation"), "Geolocation is allowed");
   // microphone is disabled for this origin
-  ok(!ifr.policy.allowedFeatures().ncludes("microphone"), "microphone is not allowed");
+  ok(!ifr.policy.allowedFeatures().includes("microphone"), "microphone is not allowed");
   // vr is disabled everywhere.
   ok(!ifr.policy.allowedFeatures().includes("vr"), "VR is not allowed");
 
