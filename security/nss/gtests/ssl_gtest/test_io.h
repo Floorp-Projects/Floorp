@@ -17,7 +17,7 @@
 #include "databuffer.h"
 #include "dummy_io.h"
 #include "prio.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 #include "sslt.h"
 
 namespace nss_test {

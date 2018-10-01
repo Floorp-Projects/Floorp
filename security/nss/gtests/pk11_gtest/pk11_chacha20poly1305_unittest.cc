@@ -10,7 +10,7 @@
 #include "sechash.h"
 
 #include "cpputil.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 #include "gtest/gtest.h"
 

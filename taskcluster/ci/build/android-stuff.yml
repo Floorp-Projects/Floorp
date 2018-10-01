@@ -81,7 +81,6 @@ android-test-ccov/opt:
         - android-gradle-dependencies
         - android-sdk-linux
         - linux64-node
-        - linux64-grcov
     fetches:
         # We use a fetch instead of toolchains here, because mozharness expects
         # it there (since the code is shared with tests that don't support

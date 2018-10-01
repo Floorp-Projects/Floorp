@@ -1902,10 +1902,6 @@ MOZ_AUTH_EXTENSION=1
 if test "$MOZ_IOS"; then
    MOZ_AUTH_EXTENSION=
 fi
-MOZ_RAW=
-MOZ_SRTP=
-MOZ_WEBRTC_HARDWARE_AEC_NS=
-MOZ_SCTP=
 VPX_USE_YASM=
 VPX_ASFLAGS=
 VPX_AS_CONVERSION=
@@ -1914,7 +1910,6 @@ VPX_ARM_ASM=
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
 MOZ_PREF_EXTENSIONS=1
-MOZ_REFLOW_PERF=
 MOZ_SPELLCHECK=1
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UNIVERSALCHARDET=1
@@ -1936,13 +1931,6 @@ case "$target_os" in
         NS_ENABLE_TSF=1
         AC_DEFINE(NS_ENABLE_TSF)
         ;;
-esac
-
-case "${target}" in
-    *-android*|*-linuxandroid*)
-        MOZ_RAW=1
-        ;;
-
 esac
 
 # Optional Firefox for Android partner distribution directory.
@@ -2341,46 +2329,12 @@ AC_TRY_COMPILE([#include <linux/ethtool.h>],
 AC_SUBST(MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI)
 
 if test -n "$MOZ_WEBRTC"; then
-    MOZ_RAW=1
-    MOZ_SCTP=1
-    MOZ_SRTP=1
-    AC_DEFINE(MOZ_SCTP)
-    AC_DEFINE(MOZ_SRTP)
     if test -n "$MOZ_X11"; then
       MOZ_WEBRTC_X11_LIBS="-lXext -lXdamage -lXfixes -lXcomposite"
     fi
 fi
 
-dnl ========================================================
-dnl = Force hardware AEC, disable webrtc.org AEC
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(hardware-aec-ns,
-[  --enable-hardware-aec-ns   Enable support for hardware AEC and noise suppression],
-    MOZ_WEBRTC_HARDWARE_AEC_NS=1,
-    MOZ_WEBRTC_HARDWARE_AEC_NS=)
-
-if test -n "$MOZ_WEBRTC_HARDWARE_AEC_NS"; then
-    AC_DEFINE(MOZ_WEBRTC_HARDWARE_AEC_NS)
-fi
-
-AC_SUBST(MOZ_WEBRTC_HARDWARE_AEC_NS)
-AC_SUBST(MOZ_SCTP)
-AC_SUBST(MOZ_SRTP)
 AC_SUBST_LIST(MOZ_WEBRTC_X11_LIBS)
-
-dnl ========================================================
-dnl = Enable Raw Codecs
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(raw,
-[  --enable-raw           Enable support for RAW media],
-    MOZ_RAW=1,
-    MOZ_RAW=)
-
-if test -n "$MOZ_RAW"; then
-    AC_DEFINE(MOZ_RAW)
-fi
-
-AC_SUBST(MOZ_RAW)
 
 dnl ========================================================
 dnl = Apple platform decoder support
@@ -3003,49 +2957,6 @@ AC_CHECK_PROGS(WGET, wget, "")
 AC_SUBST(WGET)
 
 dnl ========================================================
-dnl Maintenance Service
-dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(maintenance-service,
-[  --enable-maintenance-service       Enable building of maintenanceservice],
-    MOZ_MAINTENANCE_SERVICE=1,
-    MOZ_MAINTENANCE_SERVICE= )
-
-if test -n "$MOZ_MAINTENANCE_SERVICE"; then
-  if test "$OS_ARCH" = "WINNT"; then
-    AC_DEFINE(MOZ_MAINTENANCE_SERVICE)
-  else
-    AC_MSG_ERROR([Can only build with --enable-maintenance-service with a Windows target])
-  fi
-fi
-
-dnl ========================================================
-dnl Bundled fonts on desktop platforms
-dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(bundled-fonts,
-[  --enable-bundled-fonts  Enable support for bundled fonts on desktop platforms],
-    MOZ_BUNDLED_FONTS=1,
-    MOZ_BUNDLED_FONTS=)
-
-if test -n "$MOZ_BUNDLED_FONTS"; then
-  AC_DEFINE(MOZ_BUNDLED_FONTS)
-fi
-
-dnl ========================================================
-dnl Verify MAR signatures
-dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(verify-mar,
-[  --enable-verify-mar     Enable verifying MAR signatures],
-    MOZ_VERIFY_MAR_SIGNATURE=1,
-    MOZ_VERIFY_MAR_SIGNATURE= )
-
-if test -n "$MOZ_VERIFY_MAR_SIGNATURE"; then
-  AC_DEFINE(MOZ_VERIFY_MAR_SIGNATURE)
-fi
-
-dnl ========================================================
 dnl Enable building the signmar program.
 dnl This option is much different than the --enable-verify-mar option.
 dnl --enable-verify-mar is for enabling the verification check on MAR
@@ -3609,29 +3520,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
 dnl ========================================================
-dnl = Enable TaskTracer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(tasktracer,
-[  --enable-tasktracer       Set compile flags necessary for using TaskTracer],
-    MOZ_TASK_TRACER=1,
-    MOZ_TASK_TRACER= )
-if test -n "$MOZ_TASK_TRACER"; then
-    AC_DEFINE(MOZ_TASK_TRACER)
-    AC_SUBST(MOZ_TASK_TRACER)
-fi
-
-dnl ========================================================
-dnl Turn on reflow counting
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(reflow-perf,
-[  --enable-reflow-perf    Enable reflow performance tracing],
-    MOZ_REFLOW_PERF=1,
-    MOZ_REFLOW_PERF= )
-if test -n "$MOZ_REFLOW_PERF"; then
-    AC_DEFINE(MOZ_REFLOW_PERF)
-fi
-
-dnl ========================================================
 dnl = Offer a way to disable the startup cache
 dnl ========================================================
 
@@ -4053,9 +3941,7 @@ AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
-AC_SUBST(MOZ_MAINTENANCE_SERVICE)
 AC_SUBST(MOZ_STUB_INSTALLER)
-AC_SUBST(MOZ_VERIFY_MAR_SIGNATURE)
 AC_SUBST(MOZ_ENABLE_SIGNMAR)
 AC_SUBST(MOZ_UPDATER)
 
@@ -4468,11 +4354,6 @@ fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions
 dnl ========================================================
-
-if test "$MOZ_DEBUG"; then
-    AC_DEFINE(MOZ_REFLOW_PERF)
-    AC_DEFINE(MOZ_REFLOW_PERF_DSP)
-fi
 
 if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK" ; then
     AC_DEFINE(MOZ_ACCESSIBILITY_ATK)

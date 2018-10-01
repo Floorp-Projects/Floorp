@@ -182,3 +182,18 @@ FeaturePolicy::GetAllowlistForFeature(const nsAString& aFeatureName,
     aList.AppendElement(defaultAllowList);
   }
 }
+
+void
+FeaturePolicy::MaybeSetAllowedPolicy(const nsAString& aFeatureName)
+{
+  MOZ_ASSERT(FeaturePolicyUtils::IsSupportedFeature(aFeatureName));
+
+  if (HasDeclaredFeature(aFeatureName)) {
+    return;
+  }
+
+  Feature feature(aFeatureName);
+  feature.SetAllowsAll();
+
+  mFeatures.AppendElement(feature);
+}

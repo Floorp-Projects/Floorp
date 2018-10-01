@@ -3124,6 +3124,10 @@ SearchService.prototype = {
     "clid=2308146",
     "fr=mcafee",
     "PC=MC0",
+    "secure.webofsearch.com",
+    "secure.startpageweb.com",
+    "secure.webstartsearch.com",
+    "secure.startwebsearch.com",
   ],
 
   _addEngineToStore: function SRCH_SVC_addEngineToStore(aEngine) {

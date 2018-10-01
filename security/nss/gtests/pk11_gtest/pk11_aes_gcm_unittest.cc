@@ -10,7 +10,7 @@
 #include "secerr.h"
 #include "sechash.h"
 
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 #include "gcm-vectors.h"
 #include "gtest/gtest.h"

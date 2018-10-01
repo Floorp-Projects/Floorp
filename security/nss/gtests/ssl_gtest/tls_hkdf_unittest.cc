@@ -11,7 +11,7 @@
 
 #include "databuffer.h"
 #include "gtest_utils.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 namespace nss_test {
 

@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include "blapi.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 #include "secerr.h"
 
 namespace nss_test {

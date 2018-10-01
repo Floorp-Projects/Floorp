@@ -936,8 +936,9 @@ DownloadsViewItem.prototype = {
     if (this.downloadState != newState) {
       this.downloadState = newState;
       this._updateState();
+    } else {
+      this._updateStateInner();
     }
-    this._updateProgress();
   },
 
   isCommandEnabled(aCommand) {
@@ -1030,9 +1031,7 @@ DownloadsViewItem.prototype = {
   },
 
   downloadsCmd_copyLocation() {
-    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"]
-                    .getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(this.download.source.url);
+    DownloadsCommon.copyDownloadLink(this.download);
   },
 
   downloadsCmd_doDefault() {
