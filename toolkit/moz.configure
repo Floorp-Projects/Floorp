@@ -39,6 +39,20 @@ set_config('MOZ_GECKO_PROFILER', gecko_profiler_define)
 set_define('MOZ_GECKO_PROFILER', gecko_profiler_define)
 
 
+# Whether code to parse ELF binaries should be compiled for the Gecko profiler
+# (for symbol table dumping).
+@depends(gecko_profiler, target)
+def gecko_profiler_parse_elf(value, target):
+    # Currently we only want to build this code on Android, in order to dump
+    # symbols from Android system libraries on the device. For other platforms
+    # there exist alternatives that don't require bloating up our binary size.
+    if value and target.os == 'Android':
+        return True
+
+set_config('MOZ_GECKO_PROFILER_PARSE_ELF', gecko_profiler_parse_elf)
+set_define('MOZ_GECKO_PROFILER_PARSE_ELF', gecko_profiler_parse_elf)
+
+
 option('--enable-dmd', env='MOZ_DMD',
        help='Enable Dark Matter Detector (heap profiler). '
             'Also enables jemalloc, replace-malloc and profiling')
