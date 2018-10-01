@@ -1091,7 +1091,11 @@ public class GeckoAppShell
     private static void vibrate(long milliseconds) {
         sVibrationEndTime = System.nanoTime() + milliseconds * 1000000;
         sVibrationMaybePlaying = true;
-        vibrator().vibrate(milliseconds);
+        try {
+            vibrator().vibrate(milliseconds);
+        } catch (final SecurityException ignore) {
+            Log.w(LOGTAG, "No VIBRATE permission");
+        }
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -1106,14 +1110,22 @@ public class GeckoAppShell
 
         sVibrationEndTime = System.nanoTime() + vibrationDuration * 1000000;
         sVibrationMaybePlaying = true;
-        vibrator().vibrate(pattern, repeat);
+        try {
+            vibrator().vibrate(pattern, repeat);
+        } catch (final SecurityException ignore) {
+            Log.w(LOGTAG, "No VIBRATE permission");
+        }
     }
 
     @WrapForJNI(calledFrom = "gecko")
     private static void cancelVibrate() {
         sVibrationMaybePlaying = false;
         sVibrationEndTime = 0;
-        vibrator().cancel();
+        try {
+            vibrator().cancel();
+        } catch (final SecurityException ignore) {
+            Log.w(LOGTAG, "No VIBRATE permission");
+        }
     }
 
     @WrapForJNI(calledFrom = "gecko")
