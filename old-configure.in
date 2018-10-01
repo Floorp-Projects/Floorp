@@ -1910,7 +1910,6 @@ VPX_ARM_ASM=
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
 MOZ_PREF_EXTENSIONS=1
-MOZ_REFLOW_PERF=
 MOZ_SPELLCHECK=1
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UNIVERSALCHARDET=1
@@ -3521,17 +3520,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
 dnl ========================================================
-dnl Turn on reflow counting
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(reflow-perf,
-[  --enable-reflow-perf    Enable reflow performance tracing],
-    MOZ_REFLOW_PERF=1,
-    MOZ_REFLOW_PERF= )
-if test -n "$MOZ_REFLOW_PERF"; then
-    AC_DEFINE(MOZ_REFLOW_PERF)
-fi
-
-dnl ========================================================
 dnl = Offer a way to disable the startup cache
 dnl ========================================================
 
@@ -4366,11 +4354,6 @@ fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions
 dnl ========================================================
-
-if test "$MOZ_DEBUG"; then
-    AC_DEFINE(MOZ_REFLOW_PERF)
-    AC_DEFINE(MOZ_REFLOW_PERF_DSP)
-fi
 
 if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK" ; then
     AC_DEFINE(MOZ_ACCESSIBILITY_ATK)
