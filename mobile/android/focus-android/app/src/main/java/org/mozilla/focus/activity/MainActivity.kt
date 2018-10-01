@@ -24,7 +24,6 @@ import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
-import org.mozilla.focus.session.IntentProcessor
 import org.mozilla.focus.session.ui.SessionsSheetFragment
 import org.mozilla.focus.settings.ExperimentsSettingsFragment
 import org.mozilla.focus.telemetry.SentryWrapper
@@ -45,8 +44,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     protected open val currentSessionForActivity: Session
         get() = components.sessionManager.selectedSessionOrThrow
-
-    private val intentProcessor by lazy { IntentProcessor(components.sessionManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -181,8 +178,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             openGeneralSettings()
             return
         }
-
-        intentProcessor.handleNewIntent(this, intent)
 
         val action = intent.action
 
