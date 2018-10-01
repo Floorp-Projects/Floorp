@@ -8,8 +8,9 @@
 #define mozilla_dom_FeaturePolicyUtils_h
 
 #include "nsString.h"
-#include "nsTArray.h"
-#include "nsCOMPtr.h"
+#include <functional>
+
+class nsIDocument;
 
 namespace mozilla {
 namespace dom {
@@ -18,7 +19,24 @@ class FeaturePolicyUtils final
 {
 public:
   static bool
+  IsFeatureAllowed(nsIDocument* aDocument,
+                   const nsAString& aFeatureName);
+
+  static bool
   IsSupportedFeature(const nsAString& aFeatureName);
+
+  static void
+  ForEachFeature(const std::function<void(const char*)>& aCallback);
+
+  static void
+  DefaultAllowListFeature(const nsAString& aFeatureName,
+                          const nsAString& aDefaultOrigin,
+                          nsAString& aDefaultAllowList);
+
+  static bool
+  AllowDefaultFeature(const nsAString& aFeatureName,
+                      const nsAString& aDefaultOrigin,
+                      const nsAString& aOrigin);
 };
 
 } // dom namespace

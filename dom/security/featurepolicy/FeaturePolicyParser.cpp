@@ -33,6 +33,20 @@ ReportToConsoleUnsupportedFeature(nsIDocument* aDocument,
 }
 
 void
+ReportToConsoleInvalidEmptyAllowValue(nsIDocument* aDocument,
+                                      const nsString& aFeatureName)
+{
+  const char16_t* params[] = { aFeatureName.get() };
+
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Feature Policy"),
+                                  aDocument,
+                                  nsContentUtils::eSECURITY_PROPERTIES,
+                                  "FeaturePolicyInvalidEmptyAllowValue",
+                                  params, ArrayLength(params));
+}
+
+void
 ReportToConsoleInvalidAllowValue(nsIDocument* aDocument,
                                  const nsString& aValue)
 {
@@ -51,11 +65,11 @@ ReportToConsoleInvalidAllowValue(nsIDocument* aDocument,
 /* static */ bool
 FeaturePolicyParser::ParseString(const nsAString& aPolicy,
                                  nsIDocument* aDocument,
-                                 nsIURI* aSelfURI,
+                                 const nsAString& aSelfOrigin,
+                                 const nsAString& aSrcOrigin,
+                                 bool aSrcEnabled,
                                  nsTArray<Feature>& aParsedFeatures)
 {
-  MOZ_ASSERT(aSelfURI);
-
   nsTArray<nsTArray<nsString>> tokens;
   PolicyTokenizer::tokenizePolicy(aPolicy, tokens);
 
@@ -73,35 +87,74 @@ FeaturePolicyParser::ParseString(const nsAString& aPolicy,
 
     Feature feature(featureTokens[0]);
 
-    // we gotta start at 1 here
-    for (uint32_t i = 1; i < featureTokens.Length(); ++i) {
-      const nsString& curVal = featureTokens[i];
-      if (curVal.LowerCaseEqualsASCII("'none'")) {
-      	feature.SetAllowsNone();
-        break;
-      }
-
-      if (curVal.EqualsLiteral("*")) {
-      	feature.SetAllowsAll();
-        break;
-      }
-
-      if (curVal.LowerCaseEqualsASCII("'self'")) {
-        feature.AppendURIToWhiteList(aSelfURI);
+    if (featureTokens.Length() == 1) {
+      if (aSrcEnabled) {
+        // Note that this src origin can be empty if opaque.
+        feature.AppendOriginToWhiteList(aSrcOrigin);
+      } else {
+        ReportToConsoleInvalidEmptyAllowValue(aDocument, featureTokens[0]);
         continue;
       }
+    } else {
+      // we gotta start at 1 here
+      for (uint32_t i = 1; i < featureTokens.Length(); ++i) {
+        const nsString& curVal = featureTokens[i];
+        if (curVal.LowerCaseEqualsASCII("'none'")) {
+          feature.SetAllowsNone();
+          break;
+        }
 
-      nsCOMPtr<nsIURI> uri;
-      nsresult rv = NS_NewURI(getter_AddRefs(uri), curVal);
-      if (NS_FAILED(rv)) {
-        ReportToConsoleInvalidAllowValue(aDocument, curVal);
-        continue;
+        if (curVal.EqualsLiteral("*")) {
+          feature.SetAllowsAll();
+          break;
+        }
+
+        if (curVal.LowerCaseEqualsASCII("'self'")) {
+          // Opaque origins are passed as empty string.
+          if (!aSelfOrigin.IsEmpty()) {
+            feature.AppendOriginToWhiteList(aSelfOrigin);
+          }
+          continue;
+        }
+
+        if (aSrcEnabled && curVal.LowerCaseEqualsASCII("'src'")) {
+          // Opaque origins are passed as empty string.
+          if (!aSrcOrigin.IsEmpty()) {
+            feature.AppendOriginToWhiteList(aSrcOrigin);
+          }
+          continue;
+        }
+
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = NS_NewURI(getter_AddRefs(uri), curVal);
+        if (NS_FAILED(rv)) {
+          ReportToConsoleInvalidAllowValue(aDocument, curVal);
+          continue;
+        }
+
+        nsAutoString origin;
+        rv = nsContentUtils::GetUTFOrigin(uri, origin);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          ReportToConsoleInvalidAllowValue(aDocument, curVal);
+          continue;
+        }
+
+        feature.AppendOriginToWhiteList(origin);
       }
-
-      feature.AppendURIToWhiteList(uri);
     }
 
-    parsedFeatures.AppendElement(feature);
+    // No duplicate!
+    bool found = false;
+    for (const Feature& parsedFeature : parsedFeatures) {
+      if (parsedFeature.Name() == feature.Name()) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      parsedFeatures.AppendElement(feature);
+    }
   }
 
   aParsedFeatures.SwapElements(parsedFeatures);
