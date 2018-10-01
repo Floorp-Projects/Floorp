@@ -4,10 +4,6 @@
 
 MOZ_AUTOMATION_L10N_CHECK=0
 
-if [ "x$IS_NIGHTLY" = "xyes" ]; then
-  # Some nightlies don't want these set.
-  MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-1}
-fi
 . "$topsrcdir/build/mozconfig.common"
 
 # Rust requires dsymutil into PATH
