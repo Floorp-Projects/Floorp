@@ -108,6 +108,9 @@ raptor-fetch-firefox:
     - raptor-wasm-misc-ion-firefox
     - raptor-assorted-dom-firefox
 
+raptor-fetch-geckoview:
+    - raptor-unity-webgl-geckoview
+
 raptor-fetch-chrome:
     - raptor-unity-webgl-chrome
     - raptor-wasm-misc-chrome

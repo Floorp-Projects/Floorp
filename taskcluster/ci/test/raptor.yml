@@ -228,6 +228,24 @@ raptor-unity-webgl-firefox:
         fetch:
             - unity-webgl
 
+raptor-unity-webgl-geckoview:
+    description: "Raptor Unity WebGL on Geckoview"
+    try-name: raptor-unity-webgl-geckoview
+    treeherder-symbol: Rap(ugl)
+    target: geckoview_example.apk
+    run-on-projects:
+        by-test-platform:
+            android-hw-.*arm7.*: ['try', 'mozilla-central']
+    max-run-time: 900
+    mozharness:
+        extra-options:
+            - --test=raptor-unity-webgl
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+    fetches:
+        fetch:
+            - unity-webgl
+
 raptor-unity-webgl-chrome:
     description: "Raptor Unity WebGL on Chrome"
     try-name: raptor-unity-webgl-chrome
