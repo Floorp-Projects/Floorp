@@ -175,16 +175,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
         session = requireComponents.sessionManager.findSessionById(sessionUUID) ?: Session("about:blank")
 
-        session.register(object : Session.Observer {
-            override fun onTrackerBlocked(session: Session, blocked: String, all: List<String>) {
-                menuWeakReference?.let {
-                    val menu = it.get()
-
-                    menu?.updateTrackers(all.size)
-                }
-            }
-        }, owner = this)
-
         findInPageCoordinator.matches.observe(
             this,
             Observer { matches -> updateFindInPageResult(matches!!.first, matches.second) })
@@ -248,15 +238,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             TelemetryWrapper.swipeReloadEvent()
         }
 
-        // We need to set the initial value here and then update the view from the observer. That's needlessly verbose.
-        // We want to change that in Android Components: https://github.com/mozilla-mobile/android-components/issues/665
-        urlView!!.text = UrlUtils.stripUserInfo(session.url)
-        session.register(object : Session.Observer {
-            override fun onUrlChanged(session: Session, url: String) {
-                urlView?.text = UrlUtils.stripUserInfo(url)
-            }
-        }, owner = this)
-
         findInPageView = view.findViewById(R.id.find_in_page)
 
         findInPageQuery = view.findViewById(R.id.queryText)
@@ -298,34 +279,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
         LoadTimeObserver.addObservers(session, this)
 
-        session.register(object : Session.Observer {
-            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-                if (loading) {
-                    backgroundTransitionGroup!!.resetTransition()
-
-                    progressView!!.progress = INITIAL_PROGRESS
-                    progressView!!.visibility = View.VISIBLE
-                } else {
-                    if (progressView!!.visibility == View.VISIBLE) {
-                        // We start a transition only if a page was just loading before
-                        // allowing to avoid issue #1179
-                        backgroundTransitionGroup!!.startTransition(ANIMATION_DURATION)
-                        progressView!!.visibility = View.GONE
-                    }
-                    swipeRefresh!!.isRefreshing = false
-                }
-
-                updateBlockingBadging(loading || session.trackerBlockingEnabled)
-
-                updateToolbarButtonStates(loading)
-
-                val menu = menuWeakReference!!.get()
-                menu?.updateLoading(loading)
-
-                hideFindInPage()
-            }
-        }, owner = this)
-
         refreshButton = view.findViewById(R.id.refresh)
         refreshButton?.let { it.setOnClickListener(this) }
 
@@ -346,33 +299,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         securityView = view.findViewById(R.id.security_info)
 
         securityView!!.setImageResource(R.drawable.ic_internet)
-        session.register(object : Session.Observer {
-            override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
-                if (!session.loading) {
-                    if (securityInfo.secure) {
-                        securityView!!.setImageResource(R.drawable.ic_lock)
-                    } else {
-                        if (URLUtil.isHttpUrl(url)) {
-                            // HTTP site
-                            securityView!!.setImageResource(R.drawable.ic_internet)
-                        } else {
-                            // Certificate is bad
-                            securityView!!.setImageResource(R.drawable.ic_warning)
-                        }
-                    }
-                } else {
-                    securityView!!.setImageResource(R.drawable.ic_internet)
-                }
-            }
-        }, owner = this)
 
         securityView!!.setOnClickListener(this)
-
-        session.register(object : Session.Observer {
-            override fun onProgress(session: Session, progress: Int) {
-                progressView?.progress = progress
-            }
-        })
 
         menuView = view.findViewById<View>(R.id.menuView) as ImageButton
         menuView!!.setOnClickListener(this)
@@ -389,6 +317,19 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         findInPageViewHeight = findInPageView!!.measuredHeight
 
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        session.register(sessionObserver, owner = this)
+
+        // We need to update the views with the initial values. Other than LiveData an Observer doesn't get the initial
+        // values automatically yet.
+        // We want to change that in Android Components: https://github.com/mozilla-mobile/android-components/issues/665
+        sessionObserver.apply {
+            onLoadingStateChanged(session, session.loading)
+            onUrlChanged(session, session.url)
+            onSecurityChanged(session, session.securityInfo)
+        }
     }
 
     private fun initialiseNormalBrowserUi(view: View) {
@@ -1347,6 +1288,68 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             findInPagePrevious!!.alpha = 0.4f
             findInPageResultTextView!!.text = ""
             findInPageResultTextView!!.contentDescription = ""
+        }
+    }
+
+    private val sessionObserver = object : Session.Observer {
+        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+            if (loading) {
+                backgroundTransitionGroup!!.resetTransition()
+
+                progressView!!.progress = INITIAL_PROGRESS
+                progressView!!.visibility = View.VISIBLE
+            } else {
+                if (progressView!!.visibility == View.VISIBLE) {
+                    // We start a transition only if a page was just loading before
+                    // allowing to avoid issue #1179
+                    backgroundTransitionGroup!!.startTransition(ANIMATION_DURATION)
+                    progressView!!.visibility = View.GONE
+                }
+                swipeRefresh!!.isRefreshing = false
+            }
+
+            updateBlockingBadging(loading || session.trackerBlockingEnabled)
+
+            updateToolbarButtonStates(loading)
+
+            val menu = menuWeakReference!!.get()
+            menu?.updateLoading(loading)
+
+            hideFindInPage()
+        }
+
+        override fun onUrlChanged(session: Session, url: String) {
+            urlView?.text = UrlUtils.stripUserInfo(url)
+        }
+
+        override fun onProgress(session: Session, progress: Int) {
+            progressView?.progress = progress
+        }
+
+        override fun onTrackerBlocked(session: Session, blocked: String, all: List<String>) {
+            menuWeakReference?.let {
+                val menu = it.get()
+
+                menu?.updateTrackers(all.size)
+            }
+        }
+
+        override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
+            if (!session.loading) {
+                if (securityInfo.secure) {
+                    securityView!!.setImageResource(R.drawable.ic_lock)
+                } else {
+                    if (URLUtil.isHttpUrl(url)) {
+                        // HTTP site
+                        securityView!!.setImageResource(R.drawable.ic_internet)
+                    } else {
+                        // Certificate is bad
+                        securityView!!.setImageResource(R.drawable.ic_warning)
+                    }
+                }
+            } else {
+                securityView!!.setImageResource(R.drawable.ic_internet)
+            }
         }
     }
 
