@@ -100,6 +100,9 @@ with Files("DynamicsCompressorNode.webidl"):
 with Files("FakePluginTagInit.webidl"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
+with Files("FeaturePolicy.webidl"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
 with Files("Flex.webidl"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
@@ -497,6 +500,7 @@ WEBIDL_FILES = [
     'ExtendableEvent.webidl',
     'ExtendableMessageEvent.webidl',
     'FakePluginTagInit.webidl',
+    'FeaturePolicy.webidl',
     'Fetch.webidl',
     'FetchEvent.webidl',
     'FetchObserver.webidl',
