@@ -12,6 +12,7 @@
  * https://w3c.github.io/page-visibility/#extensions-to-the-document-interface
  * https://drafts.csswg.org/cssom/#extensions-to-the-document-interface
  * https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface
+ * https://wicg.github.io/feature-policy/#policy
  */
 
 interface WindowProxy;
@@ -546,3 +547,9 @@ Document implements OnErrorEventHandlerForNodes;
 Document implements GeometryUtils;
 Document implements FontFaceSource;
 Document implements DocumentOrShadowRoot;
+
+// https://wicg.github.io/feature-policy/#policy
+partial interface Document {
+    [SameObject, Pref="dom.security.featurePolicy.enabled"]
+    readonly attribute Policy policy;
+};

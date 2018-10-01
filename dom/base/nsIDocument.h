@@ -164,6 +164,7 @@ class Element;
 struct ElementCreationOptions;
 class Event;
 class EventTarget;
+class FeaturePolicy;
 class FontFaceSet;
 class FrameRequestCallback;
 class ImageTracker;
@@ -1439,6 +1440,8 @@ protected:
   friend class nsUnblockOnloadEvent;
 
   nsresult InitCSP(nsIChannel* aChannel);
+
+  nsresult InitFeaturePolicy(nsIChannel* aChannel);
 
   void PostUnblockOnloadEvent();
 
@@ -3773,6 +3776,9 @@ public:
     mAllowPaymentRequest = aAllowPaymentRequest;
   }
 
+  mozilla::dom::FeaturePolicy*
+  Policy() const;
+
   bool IsShadowDOMEnabled() const
   {
     return mIsShadowDOMEnabled;
@@ -4085,6 +4091,8 @@ protected:
   mozilla::EventStates mDocumentState;
 
   RefPtr<mozilla::dom::Promise> mReadyForIdle;
+
+  RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
