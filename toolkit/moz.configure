@@ -983,6 +983,14 @@ set_define('MOZ_PEERCONNECTION', webrtc)
 set_config('MOZ_WEBRTC_ASSERT_ALWAYS', webrtc)
 set_define('MOZ_WEBRTC_ASSERT_ALWAYS', webrtc)
 
+option('--enable-hardware-aec-ns', when=webrtc,
+       help='Enable support for hardware AEC and noise suppression')
+
+set_config('MOZ_WEBRTC_HARDWARE_AEC_NS',
+           depends_if('--enable-hardware-aec-ns', when=webrtc)(lambda _: True))
+set_define('MOZ_WEBRTC_HARDWARE_AEC_NS',
+           depends_if('--enable-hardware-aec-ns', when=webrtc)(lambda _: True))
+
 # RAW media
 # ==============================================================
 

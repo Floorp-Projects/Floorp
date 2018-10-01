@@ -1902,7 +1902,6 @@ MOZ_AUTH_EXTENSION=1
 if test "$MOZ_IOS"; then
    MOZ_AUTH_EXTENSION=
 fi
-MOZ_WEBRTC_HARDWARE_AEC_NS=
 VPX_USE_YASM=
 VPX_ASFLAGS=
 VPX_AS_CONVERSION=
@@ -2336,19 +2335,6 @@ if test -n "$MOZ_WEBRTC"; then
     fi
 fi
 
-dnl ========================================================
-dnl = Force hardware AEC, disable webrtc.org AEC
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(hardware-aec-ns,
-[  --enable-hardware-aec-ns   Enable support for hardware AEC and noise suppression],
-    MOZ_WEBRTC_HARDWARE_AEC_NS=1,
-    MOZ_WEBRTC_HARDWARE_AEC_NS=)
-
-if test -n "$MOZ_WEBRTC_HARDWARE_AEC_NS"; then
-    AC_DEFINE(MOZ_WEBRTC_HARDWARE_AEC_NS)
-fi
-
-AC_SUBST(MOZ_WEBRTC_HARDWARE_AEC_NS)
 AC_SUBST_LIST(MOZ_WEBRTC_X11_LIBS)
 
 dnl ========================================================
