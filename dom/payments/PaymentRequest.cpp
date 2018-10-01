@@ -6,6 +6,7 @@
 
 #include "BasicCardPayment.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/PaymentRequestChild.h"
 #include "mozilla/dom/PaymentResponse.h"
@@ -557,6 +558,12 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  if (!FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                            NS_LITERAL_STRING("payment"))) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
