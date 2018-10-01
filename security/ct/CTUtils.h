@@ -17,13 +17,14 @@ namespace mozilla { namespace ct {
 // Note: checks if the output parameter overflows while reading.
 // |length| indicates the size (in bytes) of the serialized integer.
 template <size_t length, typename T>
-pkix::Result ReadUint(Reader& in, T& out);
+mozilla::pkix::Result ReadUint(mozilla::pkix::Reader& in, T& out);
 
 // Reads a length-prefixed variable amount of bytes from |in|, updating |out|
 // on success. |prefixLength| indicates the number of bytes needed to represent
 // the length.
 template <size_t prefixLength>
-pkix::Result ReadVariableBytes(Reader& in, Input& out);
+mozilla::pkix::Result ReadVariableBytes(mozilla::pkix::Reader& in,
+                                        mozilla::pkix::Input& out);
 
 } } // namespace mozilla::ct
 
