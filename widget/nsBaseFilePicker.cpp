@@ -305,8 +305,8 @@ NS_IMETHODIMP nsBaseFilePicker::SetDisplayDirectory(nsIFile *aDirectory)
   nsresult rv = aDirectory->Clone(getter_AddRefs(directory));
   if (NS_FAILED(rv))
     return rv;
-  mDisplayDirectory = do_QueryInterface(directory, &rv);
-  return rv;
+  mDisplayDirectory = directory;
+  return NS_OK;
 }
 
 // Get the display directory

@@ -139,11 +139,7 @@ nsWebBrowserFind::FindNext(bool* aResult)
   }
 
   // remember where we started
-  nsCOMPtr<nsIDocShellTreeItem> startingItem =
-    do_QueryInterface(searchFrame->GetDocShell(), &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsCOMPtr<nsIDocShellTreeItem> startingItem = searchFrame->GetDocShell();
 
   nsCOMPtr<nsIDocShellTreeItem> curItem;
 

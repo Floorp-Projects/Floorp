@@ -746,8 +746,9 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
             rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                                         getter_AddRefs(directory));
         }
-        if (directory)
-            mDiskCacheParentDirectory = do_QueryInterface(directory, &rv);
+        if (directory) {
+            mDiskCacheParentDirectory = directory;
+        }
     }
     if (mDiskCacheParentDirectory) {
         bool firstSmartSizeRun;
@@ -816,8 +817,9 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
                                         getter_AddRefs(directory));
         }
 #endif
-        if (directory)
-            mOfflineCacheParentDirectory = do_QueryInterface(directory, &rv);
+        if (directory) {
+            mOfflineCacheParentDirectory = directory;
+        }
     }
 
     // read memory cache device prefs
