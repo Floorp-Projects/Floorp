@@ -83,6 +83,11 @@
             "optional": true,
             "description": "The parent ID, if any, for the item clicked."
           },
+          "viewType": {
+            "$ref": "extension.ViewType",
+            "optional": true,
+            "description": "The type of view where the menu is clicked. May be unset if the menu is not associated with a view."
+          },
           "mediaType": {
             "type": "string",
             "optional": true,
@@ -210,6 +215,15 @@
                 "optional": true,
                 "description": "List of contexts this menu item will appear in. Defaults to ['page'] if not specified."
               },
+              "viewTypes": {
+                "type": "array",
+                "items": {
+                  "$ref": "extension.ViewType"
+                },
+                "minItems": 1,
+                "optional": true,
+                "description": "List of view types where the menu item will be shown. Defaults to any view, including those without a viewType."
+              },
               "visible": {
                 "type": "boolean",
                 "optional": true,
@@ -315,6 +329,14 @@
                 "type": "array",
                 "items": {
                   "$ref": "ContextType"
+                },
+                "minItems": 1,
+                "optional": true
+              },
+              "viewTypes": {
+                "type": "array",
+                "items": {
+                  "$ref": "extension.ViewType"
                 },
                 "minItems": 1,
                 "optional": true
@@ -499,6 +521,10 @@
                 "description": "A list of all contexts that apply to the menu.",
                 "type": "array",
                 "items": {"$ref": "ContextType"}
+              },
+              "viewType": {
+                "$ref": "extension.ViewType",
+                "optional": true
               },
               "editable": {
                 "type": "boolean"
