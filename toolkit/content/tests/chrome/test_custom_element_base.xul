@@ -17,6 +17,7 @@
   <simpleelement id="three" disabled="true" style="-moz-user-focus: normal;"/>
   <button id="four"/>
 
+
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
@@ -113,7 +114,7 @@
 
     await SimpleTest.promiseFocus();
     ok(document.hasFocus(), "has focus");
-    
+
     // This should skip the disabled simpleelement.
     synthesizeKey("VK_TAB");
     is(document.activeElement.id, "one", "Tab 1");
@@ -127,6 +128,14 @@
 
     synthesizeKey("VK_TAB", { shiftKey: true });
     is(document.activeElement.id, "one", "Tab 1");
+
+    info("Checking that interfaces get inherited automatically with implementCustomInterface");
+    class ExtendedElement extends SimpleElement { }
+    MozXULElement.implementCustomInterface(ExtendedElement, [Ci.nsIDOMXULSelectControlElement]);
+    customElements.define("extendedelement", ExtendedElement);
+    const extendedInstance = document.createXULElement("extendedelement");
+    ok(extendedInstance instanceof Ci.nsIDOMXULSelectControlElement, "interface applied");
+    ok(extendedInstance instanceof Ci.nsIDOMXULControlElement, "inherited interface applied");
   }
   ]]>
   </script>
