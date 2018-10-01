@@ -1903,9 +1903,7 @@ if test "$MOZ_IOS"; then
    MOZ_AUTH_EXTENSION=
 fi
 MOZ_RAW=
-MOZ_SRTP=
 MOZ_WEBRTC_HARDWARE_AEC_NS=
-MOZ_SCTP=
 VPX_USE_YASM=
 VPX_ASFLAGS=
 VPX_AS_CONVERSION=
@@ -2342,10 +2340,6 @@ AC_SUBST(MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI)
 
 if test -n "$MOZ_WEBRTC"; then
     MOZ_RAW=1
-    MOZ_SCTP=1
-    MOZ_SRTP=1
-    AC_DEFINE(MOZ_SCTP)
-    AC_DEFINE(MOZ_SRTP)
     if test -n "$MOZ_X11"; then
       MOZ_WEBRTC_X11_LIBS="-lXext -lXdamage -lXfixes -lXcomposite"
     fi
@@ -2364,8 +2358,6 @@ if test -n "$MOZ_WEBRTC_HARDWARE_AEC_NS"; then
 fi
 
 AC_SUBST(MOZ_WEBRTC_HARDWARE_AEC_NS)
-AC_SUBST(MOZ_SCTP)
-AC_SUBST(MOZ_SRTP)
 AC_SUBST_LIST(MOZ_WEBRTC_X11_LIBS)
 
 dnl ========================================================
