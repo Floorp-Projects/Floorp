@@ -299,6 +299,11 @@ class TupBackend(CommonBackend):
         return env
 
     def build(self, config, output, jobs, verbose, what=None):
+        if len(what) == 1 and what[0] in ('binaries', 'faster'):
+            print("\nNOTE: `binaries` and `faster` targets are subsumed by the "
+                  "top-level build command in the Tup backend. Running `build` "
+                  "with no parameters instead.\n")
+            what = None
         if not what:
             what = ['%s/<default>' % config.topobjdir]
         else:
