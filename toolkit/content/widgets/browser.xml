@@ -252,6 +252,18 @@
         ]]></body>
       </method>
 
+      <method name="deprioritize">
+        <body><![CDATA[
+          if (!this.isRemoteBrowser) {
+            return;
+          }
+          let {frameLoader} = this;
+          if (frameLoader.tabParent) {
+            frameLoader.tabParent.deprioritize();
+          }
+        ]]></body>
+      </method>
+
 
       <property name="renderLayers">
         <getter>

@@ -43,6 +43,12 @@ interface nsITabParent : nsISupports
   void forceRepaint();
 
   /**
+   * Adjusts the tab's active state in the process priority manager,
+   * allowing its process to be given a lower priority.
+   */
+  void deprioritize();
+
+  /**
    * As an optimisation, setting the docshell's active state to
    * inactive also triggers a layer invalidation to free up some
    * potentially unhelpful memory usage. Calling preserveLayers
