@@ -54,6 +54,7 @@
 #include "mozilla/dom/XULFrameElementBinding.h"
 #include "mozilla/dom/XULMenuElementBinding.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
+#include "mozilla/dom/XULTextElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -3870,10 +3871,13 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
 
   constructorGetterCallback cb = nullptr;
   if (ns == kNameSpaceID_XUL) {
-    if (definition->mLocalName == nsGkAtoms::menupopup ||
-        definition->mLocalName == nsGkAtoms::popup ||
-        definition->mLocalName == nsGkAtoms::panel ||
-        definition->mLocalName == nsGkAtoms::tooltip) {
+    if (definition->mLocalName == nsGkAtoms::description ||
+        definition->mLocalName == nsGkAtoms::label) {
+      cb = XULTextElement_Binding::GetConstructorObject;
+    } else if (definition->mLocalName == nsGkAtoms::menupopup ||
+               definition->mLocalName == nsGkAtoms::popup ||
+               definition->mLocalName == nsGkAtoms::panel ||
+               definition->mLocalName == nsGkAtoms::tooltip) {
       cb = XULPopupElement_Binding::GetConstructorObject;
     } else if (definition->mLocalName == nsGkAtoms::iframe ||
                 definition->mLocalName == nsGkAtoms::browser ||

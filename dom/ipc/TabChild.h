@@ -540,6 +540,7 @@ public:
 
   void ClearCachedResources();
   void InvalidateLayers();
+  void SchedulePaint();
   void ReinitRendering();
   void ReinitRenderingForDeviceReset();
 

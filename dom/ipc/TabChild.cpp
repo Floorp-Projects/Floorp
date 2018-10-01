@@ -3211,6 +3211,25 @@ TabChild::InvalidateLayers()
 }
 
 void
+TabChild::SchedulePaint()
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return;
+  }
+
+  // We don't use TabChildBase::GetPresShell() here because that would create
+  // a content viewer if one doesn't exist yet. Creating a content viewer can
+  // cause JS to run, which we want to avoid. nsIDocShell::GetPresShell
+  // returns null if no content viewer exists yet.
+  if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
+    if (nsIFrame* root = presShell->GetRootFrame()) {
+      root->SchedulePaint();
+    }
+  }
+}
+
+void
 TabChild::ReinitRendering()
 {
   MOZ_ASSERT(mLayersId.IsValid());
