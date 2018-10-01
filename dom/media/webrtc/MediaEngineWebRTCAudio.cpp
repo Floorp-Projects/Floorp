@@ -535,10 +535,9 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aOutHandle);
+  // This is going away in bug 1497254
   auto handle = MakeRefPtr<AllocationHandle>(aConstraints, aPrincipalInfo,
                                              aDeviceId);
-  LOG(("Mic source %p allocation %p Allocate()", this, handle.get()));
-
   nsresult rv = ReevaluateAllocation(handle, nullptr, aPrefs, aDeviceId,
                                      aOutBadConstraint);
   if (NS_FAILED(rv)) {
@@ -552,6 +551,27 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
   return NS_OK;
 }
 
+class EndTrackMessage : public ControlMessage
+{
+  public:
+    EndTrackMessage(MediaStream* aStream,
+                    TrackID aTrackID)
+    : ControlMessage(aStream)
+    , mTrackID(aTrackID)
+  {
+  }
+
+  void Run() override
+  {
+    mStream->AsSourceStream()->EndTrack(mTrackID);
+  }
+
+protected:
+  RefPtr<AudioInputProcessing> mInputProcessing;
+  TrackID mTrackID;
+};
+
+
 nsresult
 MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandle>& aHandle)
 {
@@ -563,7 +583,19 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
                         "Source should be stopped for the track before removing");
 
   if (mStream && IsTrackIDExplicit(mTrackID)) {
-    mStream->EndTrack(mTrackID);
+    RefPtr<MediaStream> sourceStream = mStream;
+    RefPtr<MediaStreamGraphImpl> graphImpl = mStream->GraphImpl();
+    NS_DispatchToMainThread(media::NewRunnableFrom(
+      [ graph = std::move(graphImpl),
+        stream = std::move(sourceStream),
+        trackID = mTrackID]() mutable {
+        if (graph) {
+        graph->AppendMessage(
+            MakeUnique<EndTrackMessage>(stream, trackID));
+        }
+        return NS_OK;
+      }
+    ));
   }
 
   MOZ_ASSERT(mHandle, "Only deallocate once");
@@ -692,17 +724,18 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(media::NewRunnableFrom(
-    [ that, graph = std::move(gripGraph), enabled = that->mEnabled ]() mutable {
+    [ that, graph = std::move(gripGraph), enabled = mEnabled, deviceID ]() mutable {
 
     if (graph) {
-    graph->AppendMessage(
-        MakeUnique<StartStopMessage>(that->mInputProcessing, enabled));
+      graph->AppendMessage(
+          MakeUnique<StartStopMessage>(that->mInputProcessing, enabled));
     }
+
+    that->mStream->OpenAudioInput(deviceID, that->mInputProcessing);
 
     return NS_OK;
   }));
 
-  mStream->OpenAudioInput(deviceID, mInputProcessing);
 
   MOZ_ASSERT(mState != kReleased);
   mState = kStarted;
@@ -721,7 +754,6 @@ MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aH
 
   MOZ_ASSERT(mStream, "SetTrack must have been called before ::Stop");
 
-  // This spans setting both the enabled state and mState.
   if (!mEnabled) {
     // Already stopped - this is allowed
     return NS_OK;
@@ -736,19 +768,20 @@ MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aH
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> gripGraph = mStream->GraphImpl();
   NS_DispatchToMainThread(media::NewRunnableFrom(
-    [ that, graph = std::move(gripGraph), enabled = that->mEnabled ]() mutable {
+    [ that, graph = std::move(gripGraph), enabled = mEnabled, stream = mStream]() mutable {
 
     if (graph) {
       graph->AppendMessage(
           MakeUnique<StartStopMessage>(that->mInputProcessing, enabled));
     }
 
+    CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
+    Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
+    stream->CloseAudioInput(id, that->mInputProcessing);
+
     return NS_OK;
   }));
 
-  CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
-  Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
-  mStream->CloseAudioInput(id, mInputProcessing);
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
   mState = kStopped;
@@ -779,6 +812,7 @@ AudioInputProcessing::AudioInputProcessing(uint32_t aMaxChannelCount,
   , mLiveSilenceAppended(false)
   , mTrackID(aTrackID)
   , mPrincipal(aPrincipalHandle)
+  , mEnabled(false)
 {
 }
 
@@ -1076,10 +1110,7 @@ AudioInputProcessing::NotifyOutputData(MediaStreamGraphImpl* aGraph,
                                        uint32_t aChannels)
 {
   MOZ_ASSERT(aGraph->CurrentDriver()->OnThread());
-
-  if (!mEnabled) {
-    return;
-  }
+  MOZ_ASSERT(mEnabled);
 
   if (!mPacketizerOutput ||
       mPacketizerOutput->PacketSize() != aRate/100u ||
