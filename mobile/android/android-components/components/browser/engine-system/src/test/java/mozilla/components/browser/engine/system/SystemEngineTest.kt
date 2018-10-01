@@ -9,6 +9,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -17,17 +18,28 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class SystemEngineTest {
 
+    private val context = RuntimeEnvironment.application
+
+    @Before
+    fun setup() {
+        // This is setting a internal field just for testing purposes as
+        // WebSettings.getDefaultUserAgent isn't mocked by Roboelectric
+        SystemEngine.defaultUserAgent = "test-ua-string"
+    }
+
     @Test
     fun testCreateView() {
-        assertTrue(SystemEngine().createView(RuntimeEnvironment.application) is SystemEngineView)
+        val engine = SystemEngine(context)
+        assertTrue(engine.createView(context) is SystemEngineView)
     }
 
     @Test
     fun testCreateSession() {
-        assertTrue(SystemEngine().createSession() is SystemEngineSession)
+        val engine = SystemEngine(context)
+        assertTrue(engine.createSession() is SystemEngineSession)
 
         try {
-            SystemEngine().createSession(true)
+            engine.createSession(true)
             // Private browsing not yet supported
             fail("Expected UnsupportedOperationException")
         } catch (e: UnsupportedOperationException) { }
@@ -35,14 +47,24 @@ class SystemEngineTest {
 
     @Test
     fun testName() {
-        assertEquals("System", SystemEngine().name())
+        val engine = SystemEngine(context)
+        assertEquals("System", engine.name())
     }
 
     @Test
     fun testSettings() {
-        val engine = SystemEngine(DefaultSettings(remoteDebuggingEnabled = true))
+        var engine = SystemEngine(context, DefaultSettings(remoteDebuggingEnabled = true))
         assertTrue(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = false
         assertFalse(engine.settings.remoteDebuggingEnabled)
+
+        // Specifying no ua-string default should result in WebView default
+        // It should be possible to read and set a new default
+        assertEquals("test-ua-string", engine.settings.userAgentString)
+        engine.settings.userAgentString = engine.settings.userAgentString + "-test"
+        assertEquals("test-ua-string-test", engine.settings.userAgentString)
+
+        // It should be possible to specify a custom ua-string default
+        assertEquals("foo", SystemEngine(context, DefaultSettings(userAgentString = "foo")).settings.userAgentString)
     }
 }

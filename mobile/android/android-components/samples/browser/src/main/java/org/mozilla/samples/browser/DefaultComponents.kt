@@ -26,7 +26,7 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     // Engine
     open val engine: Engine by lazy {
-        SystemEngine()
+        SystemEngine(applicationContext)
     }
 
     // Session

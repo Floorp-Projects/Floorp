@@ -270,7 +270,6 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                 loadWithOverviewMode = it.loadWithOverviewMode
                 trackingProtectionPolicy = it.trackingProtectionPolicy
                 requestInterceptor = it.requestInterceptor
-                userAgentString = it.userAgentString
                 mediaPlaybackRequiresUserGesture = it.mediaPlaybackRequiresUserGesture
                 javaScriptCanOpenWindowsAutomatically = it.javaScriptCanOpenWindowsAutomatically
                 allowFileAccess = it.allowFileAccess
@@ -279,6 +278,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                 allowFileAccessFromFileURLs = it.allowFileAccessFromFileURLs
                 verticalScrollBarEnabled = it.verticalScrollBarEnabled
                 horizontalScrollBarEnabled = it.horizontalScrollBarEnabled
+                userAgentString = it.userAgentString
             }
         }
 
