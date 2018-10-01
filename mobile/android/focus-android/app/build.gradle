@@ -177,7 +177,7 @@ dependencies {
     implementation "com.android.support:recyclerview-v7:$support_libraries_version"
     implementation "com.android.support:support-v4:$support_libraries_version"
     implementation "com.android.support:preference-v7:$support_libraries_version"
-    implementation 'io.sentry:sentry-android:1.7.3'
+    implementation 'io.sentry:sentry-android:1.7.9'
 
     implementation "android.arch.lifecycle:extensions:$architecture_components_version"
 
