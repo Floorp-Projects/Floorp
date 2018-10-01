@@ -26,6 +26,19 @@ var prefs = [
   // Prevent the dynamic toolbar from interfering with main-thread scroll
   // offset values.
   ["browser.chrome.dynamictoolbar", false],
+  // Explicitly enable pinch-zooming, so this test can run on desktop
+  // even though zooming isn't enabled by default on desktop yet.
+  ["apz.allow_zooming", true],
+  // Pinch-zooming currently requires meta viewport support (this requirement
+  // will eventually be removed).
+  ["dom.meta-viewport.enabled", true],
+  // Pinch-zooming currently requires container scrolling (this requirement
+  // will eventually be removed).
+  ["layout.scroll.root-frame-containers", true],
+  // Retained displaylists don't work well with container scrolling, so
+  // they too need to be disabled for now.
+  ["layout.display-list.retain", false],
+  ["layout.display-list.retain.chrome", false],
 ];
 
 // Increase the tap timeouts so the double-tap is still detected in case of
