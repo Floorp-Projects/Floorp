@@ -28,6 +28,7 @@ DevToolsModules(
     'location.js',
     'log.js',
     'makeRecord.js',
+    'memoize.js',
     'path.js',
     'prefs.js',
     'preview.js',

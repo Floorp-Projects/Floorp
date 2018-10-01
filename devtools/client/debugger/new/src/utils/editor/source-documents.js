@@ -93,17 +93,19 @@ function clearEditor(editor) {
 }
 
 function showLoading(editor) {
-  if (hasDocument("loading")) {
-    return;
-  }
+  let doc = getDocument("loading");
 
-  const doc = editor.createDocument();
-  setDocument("loading", doc);
-  editor.replaceDocument(doc);
-  editor.setText(L10N.getStr("loadingText"));
-  editor.setMode({
-    name: "text"
-  });
+  if (doc) {
+    editor.replaceDocument(doc);
+  } else {
+    doc = editor.createDocument();
+    setDocument("loading", doc);
+    doc.setValue(L10N.getStr("loadingText"));
+    editor.replaceDocument(doc);
+    editor.setMode({
+      name: "text"
+    });
+  }
 }
 
 function showErrorMessage(editor, msg) {
