@@ -153,12 +153,6 @@ button.warning {
 
 /*** category selector ***/
 
-#categories {
-  /* With photon this should be 70px but there are some hidden forward/back
-     buttons that are 39px tall above this. */
-  padding-top: 31px;
-}
-
 #categories > .category[disabled] {
   overflow: hidden;
   height: 0;
