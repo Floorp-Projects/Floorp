@@ -51,8 +51,7 @@ nsresult nsZipDataStream::Init(nsZipWriter *aWriter,
                                          nullptr);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        mOutput = do_QueryInterface(converter, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
+        mOutput = converter;
     }
     else {
         mHeader->mMethod = ZIP_METHOD_STORE;
