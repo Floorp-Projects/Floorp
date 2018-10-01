@@ -146,6 +146,11 @@ nsXULElement* NS_NewBasicXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& a
 nsXULElement* nsXULElement::Construct(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
+  if (nodeInfo->Equals(nsGkAtoms::label) ||
+      nodeInfo->Equals(nsGkAtoms::description)) {
+    return new XULTextElement(nodeInfo.forget());
+  }
+
   if (nodeInfo->Equals(nsGkAtoms::menupopup) ||
       nodeInfo->Equals(nsGkAtoms::popup) ||
       nodeInfo->Equals(nsGkAtoms::panel) ||
