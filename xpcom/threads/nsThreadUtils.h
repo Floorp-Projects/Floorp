@@ -134,6 +134,19 @@ extern nsresult
 NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent);
 
 /**
+ * Dispatch the given event to the idle queue of the main thread.
+ *
+ * @param aEvent The event to dispatch.
+ *
+ * @returns NS_ERROR_INVALID_ARG
+ *   If event is null.
+ * @returns NS_ERROR_UNEXPECTED
+ *   If the thread is shutting down.
+ */
+extern nsresult
+NS_IdleDispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent);
+
+/**
  * Dispatch the given event to the idle queue of the current thread.
  *
  * @param aEvent The event to dispatch. If the event implements
