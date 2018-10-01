@@ -57,15 +57,9 @@
       <property name="control" readonly="true">
         <getter>
         <![CDATA[
-          const XUL_NS = "http://www.mozilla.org/keymaster/"
-                       + "gatekeeper/there.is.only.xul";
-          var parent = this.parentNode;
-          while (parent) {
-            if ((parent.namespaceURI == XUL_NS) &&
-                (parent.localName == "radiogroup")) {
-              return parent;
-            }
-            parent = parent.parentNode;
+          var radiogroup = this.closest("radiogroup");
+          if (radiogroup) {
+            return radiogroup;
           }
 
           var group = this.getAttribute("group");
@@ -73,10 +67,8 @@
             return null;
           }
 
-          parent = this.ownerDocument.getElementById(group);
-          if (!parent ||
-              (parent.namespaceURI != XUL_NS) ||
-              (parent.localName != "radiogroup")) {
+          var parent = this.ownerDocument.getElementById(group);
+          if (!parent || parent.localName != "radiogroup") {
             parent = null;
           }
           return parent;
