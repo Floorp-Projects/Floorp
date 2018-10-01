@@ -12,7 +12,7 @@ var _devtoolsEnvironment = require("devtools/client/debugger/new/dist/vendors").
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /* global window */
-const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_PAUSE_POINTS", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "MAP_FRAMES", "ADD_SCOPES", "IN_SCOPE_LINES", "REMOVE_BREAKPOINT"];
+const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_PAUSE_POINTS", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "MAP_FRAMES", "ADD_SCOPES", "IN_SCOPE_LINES", "REMOVE_BREAKPOINT", "NODE_PROPERTIES_LOADED"];
 
 function cloneAction(action) {
   action = action || {};
