@@ -32,19 +32,6 @@
 using namespace mozilla;
 using namespace mozilla::css;
 
-template<class T>
-static bool MightHaveRef(const T& aString)
-{
-  const typename T::char_type* current = aString.BeginReading();
-  for (; current != aString.EndReading(); current++) {
-    if (*current == '#') {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 nsCSSValue::nsCSSValue(int32_t aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
@@ -1267,38 +1254,17 @@ css::URLValueData::IsLocalRef() const
 bool
 css::URLValueData::HasRef() const
 {
-  bool result = false;
-
   if (IsLocalRef()) {
-    result = true;
-  } else {
-    if (nsIURI* uri = GetURI()) {
-      nsAutoCString ref;
-      nsresult rv = uri->GetRef(ref);
-      if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
-        result = true;
-      }
-    }
+    return true;
   }
 
-  mMightHaveRef = Some(result);
-
-  return result;
-}
-
-bool
-css::URLValueData::MightHaveRef() const
-{
-  if (mMightHaveRef.isNothing()) {
-    bool result = ::MightHaveRef(GetString());
-    if (!ServoStyleSet::IsInServoTraversal()) {
-      // Can only cache the result if we're not on a style worker thread.
-      mMightHaveRef.emplace(result);
-    }
-    return result;
+  if (nsIURI* uri = GetURI()) {
+    nsAutoCString ref;
+    nsresult rv = uri->GetRef(ref);
+    return NS_SUCCEEDED(rv) && !ref.IsEmpty();
   }
 
-  return mMightHaveRef.value();
+  return false;
 }
 
 already_AddRefed<nsIURI>
