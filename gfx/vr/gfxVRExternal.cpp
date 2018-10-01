@@ -136,6 +136,11 @@ VRDisplayExternal::StartPresentation()
   if (mDisplayInfo.mDisplayState.mReportsDroppedFrames) {
     mTelemetry.mLastDroppedFrameCount = mDisplayInfo.mDisplayState.mDroppedFrameCount;
   }
+
+#if defined(MOZ_WIDGET_ANDROID)
+  mLastSubmittedFrameId = 0;
+  mLastStartedFrame = 0;
+#endif
 }
 
 void
