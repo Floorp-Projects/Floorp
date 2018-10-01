@@ -996,10 +996,7 @@ nsMultiMixedConv::SendData()
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIInputStream> inStream(do_QueryInterface(ss, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    return mPartChannel->SendOnDataAvailable(mContext, inStream, offset, mRawDataLength);
+    return mPartChannel->SendOnDataAvailable(mContext, ss, offset, mRawDataLength);
 }
 
 void

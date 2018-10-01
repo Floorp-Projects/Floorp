@@ -1224,7 +1224,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             nsCOMPtr<nsIFile> dir;
             rv = XRE_GetFileFromPath(argv[2], getter_AddRefs(dir));
             if (NS_SUCCEEDED(rv)) {
-                appDir = do_QueryInterface(dir, &rv);
+                appDir = dir;
                 dirprovider.SetAppDir(appDir);
             }
             if (NS_FAILED(rv)) {

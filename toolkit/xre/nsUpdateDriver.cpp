@@ -175,8 +175,8 @@ GetFile(nsIFile* dir, const nsACString& name, nsCOMPtr<nsIFile>& result)
   if (NS_FAILED(rv))
     return false;
 
-  result = do_QueryInterface(file, &rv);
-  return NS_SUCCEEDED(rv);
+  result = file;
+  return true;
 }
 
 static bool

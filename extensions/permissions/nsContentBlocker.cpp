@@ -123,8 +123,7 @@ nsContentBlocker::Init()
   // The branch is not a copy of the prefservice, but a new object, because
   // it is a non-default branch. Adding obeservers to it will only work if
   // we make sure that the object doesn't die. So, keep a reference to it.
-  mPrefBranchInternal = do_QueryInterface(prefBranch, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mPrefBranchInternal = prefBranch;
 
   rv = mPrefBranchInternal->AddObserver("", this, true);
   PrefChanged(prefBranch, nullptr);
