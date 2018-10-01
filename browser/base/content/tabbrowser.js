@@ -1554,6 +1554,7 @@ window._gBrowser = {
     opener,
     remoteType,
     sameProcessAsFrameLoader,
+    recordExecution,
   } = {}) {
     let isRemote = aBrowser.getAttribute("remote") == "true";
 
@@ -1625,6 +1626,14 @@ window._gBrowser = {
     } else {
       aBrowser.setAttribute("remote", "false");
       aBrowser.removeAttribute("remoteType");
+    }
+
+    if (recordExecution) {
+      aBrowser.setAttribute("recordExecution", recordExecution);
+
+      // Web Replay middleman processes need the default URL to be loaded in
+      // order to set up their rendering state.
+      aBrowser.setAttribute("nodefaultsrc", "false");
     }
 
     // NB: This works with the hack in the browser constructor that
