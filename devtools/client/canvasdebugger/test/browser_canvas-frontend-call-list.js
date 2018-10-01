@@ -53,7 +53,7 @@ async function ifTestingSupported() {
       is($(".call-item-context", item.target).getAttribute("value"), context,
         "The item's context label has the correct text.");
     } else {
-      is($(".call-item-context", item.target) + "", "[object XULElement]",
+      is($(".call-item-context", item.target) + "", "[object XULTextElement]",
         "The item's context label should not be available.");
     }
 

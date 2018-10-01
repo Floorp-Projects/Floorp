@@ -561,6 +561,12 @@ WebRenderLayerManager::WrUpdated()
 {
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardLocalImages();
+
+  if (mWidget) {
+    if (dom::TabChild* tabChild = mWidget->GetOwningTabChild()) {
+      tabChild->SchedulePaint();
+    }
+  }
 }
 
 dom::TabGroup*
