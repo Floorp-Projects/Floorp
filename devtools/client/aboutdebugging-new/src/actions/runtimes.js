@@ -66,18 +66,31 @@ async function createClientForRuntime(runtime) {
   return null;
 }
 
+async function getRuntimeInfo(client) {
+  const deviceFront = await client.mainRoot.getFront("device");
+  const { brandName: name, version } = await deviceFront.getDescription();
+
+  return {
+    icon: "chrome://branding/content/icon64.png",
+    name,
+    version,
+  };
+}
+
 function connectRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: CONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const client = await createClientForRuntime(runtime);
+      const info = await getRuntimeInfo(client);
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
         runtime: {
           id,
           client,
+          info,
           type: runtime.type,
         }
       });
