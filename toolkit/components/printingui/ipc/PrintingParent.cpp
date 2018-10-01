@@ -42,7 +42,7 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
 
   PrintProgressDialogParent* dialogParent =
     static_cast<PrintProgressDialogParent*>(printProgressDialog);
-  nsCOMPtr<nsIObserver> observer = do_QueryInterface(dialogParent);
+  nsCOMPtr<nsIObserver> observer = dialogParent;
 
   nsCOMPtr<nsIWebProgressListener> printProgressListener;
   nsCOMPtr<nsIPrintProgressParams> printProgressParams;
@@ -283,7 +283,7 @@ PrintingParent::DOMWindowFromBrowserParent(PBrowserParent* parent)
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> frame(do_QueryInterface(frameElement));
+  nsCOMPtr<nsIContent> frame(frameElement);
   if (!frame) {
     return nullptr;
   }

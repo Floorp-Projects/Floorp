@@ -2047,7 +2047,7 @@ nsresult
 nsXULWindow::SetRootShellSize(int32_t aWidth,
                               int32_t aHeight)
 {
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = do_QueryInterface(mDocShell);
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = mDocShell;
   return SizeShellTo(docShellAsItem, aWidth, aHeight);
 }
 
@@ -2551,7 +2551,7 @@ nsXULWindow::SizeShell()
     nsCOMPtr<nsIContentViewer> cv;
     mDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) {
-      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = do_QueryInterface(mDocShell);
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = mDocShell;
       nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
       docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
       if (treeOwner) {

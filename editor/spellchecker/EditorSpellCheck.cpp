@@ -727,7 +727,7 @@ EditorSpellCheck::UpdateCurrentDictionary(
     NS_ENSURE_TRUE(ownerDoc, NS_ERROR_FAILURE);
     nsIDocument* parentDoc = ownerDoc->GetParentDocument();
     if (parentDoc) {
-      rootContent = do_QueryInterface(parentDoc->GetDocumentElement());
+      rootContent = parentDoc->GetDocumentElement();
     }
   }
 

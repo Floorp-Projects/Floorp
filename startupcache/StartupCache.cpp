@@ -189,7 +189,7 @@ StartupCache::Init()
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mFile = do_QueryInterface(file);
+    mFile = file;
   }
 
   NS_ENSURE_TRUE(mFile, NS_ERROR_UNEXPECTED);

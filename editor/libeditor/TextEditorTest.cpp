@@ -42,7 +42,7 @@ void TextEditorTest::Run(nsIEditor *aEditor, int32_t *outNumTests, int32_t *outN
 {
   if (!aEditor) return;
   mTextEditor = do_QueryInterface(aEditor);
-  mEditor = do_QueryInterface(aEditor);
+  mEditor = aEditor;
   RunUnitTest(outNumTests, outNumTestsFailed);
 }
 
