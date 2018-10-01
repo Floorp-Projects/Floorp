@@ -15,12 +15,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=957479
   // Child needs to invoke us, otherwise our onload will fire before the child
   // has done the write/close bit.
   onmessage = function doTest() {
-    is(frames[0].location.pathname, "/tests/docshell/test/mochitest/file_pushState_after_document_open.html",
-       "Should have the right path here");
+    is(frames[0].location.pathname, "/tests/docshell/test/file_pushState_after_document_open.html", "Should have the right path here");
     is(frames[0].location.hash, "", "Should have the right hash here");
     frames[0].history.pushState({}, '', frames[0].document.URL + "#foopy");
-    is(frames[0].location.pathname, "/tests/docshell/test/mochitest/file_pushState_after_document_open.html",
-       "Pathname should not have changed");
+    is(frames[0].location.pathname, "/tests/docshell/test/file_pushState_after_document_open.html", "Pathname should not have changed");
     is(frames[0].location.hash, "#foopy", "Hash should have changed");
     SimpleTest.finish();
   }
