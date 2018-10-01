@@ -10,7 +10,7 @@ namespace mozilla { namespace ct {
 
 typedef mozilla::pkix::Result Result;
 
-Result
+void
 GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
                                      CTLogOperatorList& operators)
 {
@@ -25,12 +25,9 @@ GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
       }
     }
     if (!alreadyAdded) {
-      if (!operators.append(sctLogOperatorId)) {
-        return Result::FATAL_ERROR_NO_MEMORY;
-      }
+      operators.push_back(sctLogOperatorId);
     }
   }
-  return Success;
 }
 
 Result

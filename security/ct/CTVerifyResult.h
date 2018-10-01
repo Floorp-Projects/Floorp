@@ -7,8 +7,9 @@
 #ifndef CTVerifyResult_h
 #define CTVerifyResult_h
 
+#include <vector>
+
 #include "CTLog.h"
-#include "mozilla/Vector.h"
 #include "SignedCertificateTimestamp.h"
 
 namespace mozilla { namespace ct {
@@ -54,7 +55,7 @@ struct VerifiedSCT
   uint64_t logDisqualificationTime;
 };
 
-typedef Vector<VerifiedSCT> VerifiedSCTList;
+typedef std::vector<VerifiedSCT> VerifiedSCTList;
 
 // Holds Signed Certificate Timestamps verification results.
 class CTVerifyResult

@@ -157,16 +157,13 @@ CTLogVerifier::Init(Input subjectPublicKeyInfo,
   }
   mSignatureAlgorithm = trustDomain.mSignatureAlgorithm;
 
-  rv = InputToBuffer(subjectPublicKeyInfo, mSubjectPublicKeyInfo);
-  if (rv != Success) {
-    return rv;
-  }
+  InputToBuffer(subjectPublicKeyInfo, mSubjectPublicKeyInfo);
 
   if (mSignatureAlgorithm == DigitallySigned::SignatureAlgorithm::ECDSA) {
     SECItem spkiSECItem = {
       siBuffer,
-      mSubjectPublicKeyInfo.begin(),
-      static_cast<unsigned int>(mSubjectPublicKeyInfo.length())
+      mSubjectPublicKeyInfo.data(),
+      static_cast<unsigned int>(mSubjectPublicKeyInfo.size())
     };
     UniqueCERTSubjectPublicKeyInfo spki(
       SECKEY_DecodeDERSubjectPublicKeyInfo(&spkiSECItem));
@@ -190,11 +187,9 @@ CTLogVerifier::Init(Input subjectPublicKeyInfo,
     mPublicECKey.reset(nullptr);
   }
 
-  if (!mKeyId.resizeUninitialized(SHA256_LENGTH)) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
+  mKeyId.resize(SHA256_LENGTH);
   rv = DigestBufNSS(subjectPublicKeyInfo, DigestAlgorithm::sha256,
-                    mKeyId.begin(), mKeyId.length());
+                    mKeyId.data(), mKeyId.size());
   if (rv != Success) {
     return rv;
   }
@@ -229,9 +224,8 @@ CTLogVerifier::Verify(const LogEntry& entry,
   // sct.extensions may be empty.  If it is, sctExtensionsInput will remain in
   // its default state, which is valid but of length 0.
   Input sctExtensionsInput;
-  if (sct.extensions.length() > 0) {
-    rv = sctExtensionsInput.Init(sct.extensions.begin(),
-                                 sct.extensions.length());
+  if (!sct.extensions.empty()) {
+    rv = sctExtensionsInput.Init(sct.extensions.data(), sct.extensions.size());
     if (rv != Success) {
       return rv;
     }

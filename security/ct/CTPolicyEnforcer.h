@@ -54,10 +54,10 @@ public:
   // operators are treated differenly when evaluating the policy.
   // See CTDiversityPolicy class.
   // |compliance| - the result of the compliance check.
-  pkix::Result CheckCompliance(const VerifiedSCTList& verifiedScts,
-                               size_t certLifetimeInCalendarMonths,
-                               const CTLogOperatorList& dependentOperators,
-                               CTPolicyCompliance& compliance);
+  void CheckCompliance(const VerifiedSCTList& verifiedScts,
+                       size_t certLifetimeInCalendarMonths,
+                       const CTLogOperatorList& dependentOperators,
+                       CTPolicyCompliance& compliance);
 };
 
 } } // namespace mozilla::ct

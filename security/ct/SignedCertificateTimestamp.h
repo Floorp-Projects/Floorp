@@ -8,7 +8,6 @@
 #define SignedCertificateTimestamp_h
 
 #include "Buffer.h"
-#include "mozilla/Vector.h"
 #include "pkix/Input.h"
 #include "pkix/Result.h"
 
@@ -88,19 +87,16 @@ struct SignedCertificateTimestamp
 
 inline pkix::Result BufferToInput(const Buffer& buffer, pkix::Input& input)
 {
-  if (buffer.length() == 0) {
+  if (buffer.empty()) {
     return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  return input.Init(buffer.begin(), buffer.length());
+  return input.Init(buffer.data(), buffer.size());
 }
 
-inline pkix::Result InputToBuffer(pkix::Input input, Buffer& buffer)
+inline void InputToBuffer(pkix::Input input, Buffer& buffer)
 {
-  buffer.clear();
-  if (!buffer.append(input.UnsafeGetData(), input.GetLength())) {
-    return pkix::Result::FATAL_ERROR_NO_MEMORY;
-  }
-  return pkix::Success;
+  buffer.assign(input.UnsafeGetData(),
+                input.UnsafeGetData() + input.GetLength());
 }
 
 } } // namespace mozilla::ct

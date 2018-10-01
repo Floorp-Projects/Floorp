@@ -32,11 +32,11 @@ pkix::Result GetPrecertLogEntry(pkix::Input leafCertificate,
 // X.509v3 certificate that is not expected to contain an X.509v3 extension
 // with the OID 1.3.6.1.4.1.11129.2.4.2 (meaning a certificate without
 // an embedded SCT).
-// On success, fills |output| with the data for an X509Chain log entry.
+// Fills |output| with the data for an X509Chain log entry.
 // The returned |output| is intended to be verified by CTLogVerifier::Verify.
 // Note that |leafCertificate| is not checked for validity or well-formedness.
 // You might want to validate it first using pkix::BuildCertChain or similar.
-pkix::Result GetX509LogEntry(pkix::Input leafCertificate, LogEntry& output);
+void GetX509LogEntry(pkix::Input leafCertificate, LogEntry& output);
 
 } } // namespace mozilla::ct
 
