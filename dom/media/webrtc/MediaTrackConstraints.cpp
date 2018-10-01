@@ -481,6 +481,7 @@ MediaConstraintsHelper::SelectSettings(
     bool aIsChrome)
 {
   auto& c = aConstraints;
+  LogConstraints(c);
 
   // First apply top-level constraints.
 
