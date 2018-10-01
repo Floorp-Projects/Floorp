@@ -32,6 +32,7 @@ import android.webkit.WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
+import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineView
@@ -192,17 +193,25 @@ class SystemEngineView @JvmOverloads constructor(
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
             handler.cancel()
-
             session?.let { session ->
-                session.settings.requestInterceptor?.onErrorRequest(session, error.primaryError, error.url)?.apply {
-                    view.loadDataWithBaseURL(url ?: error.url, data, mimeType, encoding, null)
+                session.settings.requestInterceptor?.onErrorRequest(
+                    session,
+                    ErrorType.ERROR_SECURITY_SSL,
+                    error.url
+                )?.apply {
+                    view.loadDataWithBaseURL(url, data, mimeType, encoding, null)
                 }
             }
         }
 
         override fun onReceivedError(view: WebView, errorCode: Int, description: String?, failingUrl: String?) {
             session?.let { session ->
-                session.settings.requestInterceptor?.onErrorRequest(session, errorCode, failingUrl)?.apply {
+                val errorType = SystemEngineSession.webViewErrorToErrorType(errorCode)
+                session.settings.requestInterceptor?.onErrorRequest(
+                    session,
+                    errorType,
+                    failingUrl
+                )?.apply {
                     view.loadDataWithBaseURL(url ?: failingUrl, data, mimeType, encoding, null)
                 }
             }
@@ -214,10 +223,10 @@ class SystemEngineView @JvmOverloads constructor(
                 if (!request.isForMainFrame) {
                     return
                 }
-
+                val errorType = SystemEngineSession.webViewErrorToErrorType(error.errorCode)
                 session.settings.requestInterceptor?.onErrorRequest(
                     session,
-                    error.errorCode,
+                    errorType,
                     request.url.toString()
                 )?.apply {
                     view.loadDataWithBaseURL(url ?: request.url.toString(), data, mimeType, encoding, null)

@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
@@ -265,25 +266,6 @@ be temporary, and you can try again later.</li>
     <string name="error_safe_phishing_uri_title">Deceptive site issue</string>
     <string name="error_safe_phishing_uri_message"><![CDATA[
 <p>This web page at %1$s has been reported as a deceptive site and has been blocked based on your security preferences.</p>
-     ]]></string>
-
-    <!-- Private Browsing -->
-    <string name="private_browsing_title">Private Browsing</string>
-    <string name="private_browsing_body"><![CDATA[
-<h1>Private Browsing</h1>
-
-<p>When you browse in a Private Window, Firefox Reality <strong>does not save</strong>:</p>
-
-<ul class="two-column">
-    <li>visited pages</li>
-    <li>searches</li>
-    <li>cookies</li>
-    <li>temporary files</li>
-</ul>
-
-<p>Private Browsing <strong>doesn\'t make you anonymous</strong> on the Internet. Your employer or Internet service provider can still know what page you visit.</p>
-
-<p class="about-info">Learn more about <a id="learnMore">Private Browsing</a>.</p>
      ]]></string>
 
 </resources>

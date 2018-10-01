@@ -8,9 +8,11 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebStorage
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.webkit.WebViewDatabase
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
+import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
@@ -474,7 +476,55 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun `desktop mode`() {
+    fun testWebViewErrorMappingToErrorType() {
+        Assert.assertEquals(
+            ErrorType.ERROR_UNKNOWN_HOST,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_HOST_LOOKUP)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_CONNECTION_REFUSED,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_CONNECT)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_CONNECTION_REFUSED,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_IO)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_NET_TIMEOUT,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_TIMEOUT)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_REDIRECT_LOOP,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_REDIRECT_LOOP)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_UNKNOWN_PROTOCOL,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_UNSUPPORTED_SCHEME)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_SECURITY_SSL,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_FAILED_SSL_HANDSHAKE)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_MALFORMED_URI,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_BAD_URL)
+        )
+        Assert.assertEquals(
+            ErrorType.UNKNOWN,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_TOO_MANY_REQUESTS)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_FILE_NOT_FOUND,
+            SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_FILE_NOT_FOUND)
+        )
+        Assert.assertEquals(
+            ErrorType.UNKNOWN,
+            SystemEngineSession.webViewErrorToErrorType(-500)
+        )
+    }
+
+    @Test
+    fun testDesktopMode() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
@@ -586,6 +636,8 @@ class SystemEngineSessionTest {
     fun testCaptureThumbnail() {
         val engineSession = spy(SystemEngineSession::class.java)
         val webView = mock(WebView::class.java)
+        assertNull(engineSession.captureThumbnail())
+
         `when`(engineSession.currentView()).thenReturn(webView)
         assertNull(engineSession.captureThumbnail())
 

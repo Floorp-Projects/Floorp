@@ -13,10 +13,10 @@ import org.mozilla.samples.browser.request.SampleRequestInterceptor
 /**
  * Helper class for lazily instantiating components needed by the application.
  */
-class Components(private val applicationContext: Context) : DefaultComponents(applicationContext){
+class Components(private val applicationContext: Context) : DefaultComponents(applicationContext) {
     override val engine: Engine by lazy {
         val defaultSettings = DefaultSettings().apply {
-            requestInterceptor = SampleRequestInterceptor()
+            requestInterceptor = SampleRequestInterceptor(applicationContext)
         }
         GeckoEngine(applicationContext, defaultSettings)
     }

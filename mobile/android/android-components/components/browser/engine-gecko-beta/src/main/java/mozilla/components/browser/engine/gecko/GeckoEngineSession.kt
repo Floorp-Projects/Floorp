@@ -8,10 +8,12 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.runBlocking
+import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
@@ -281,10 +283,10 @@ class GeckoEngineSession(
         ): GeckoResult<String> {
             settings.requestInterceptor?.onErrorRequest(
                 this@GeckoEngineSession,
-                error,
+                geckoErrorToErrorType(error),
                 uri
             )?.apply {
-                return GeckoResult.fromValue(data)
+                return GeckoResult.fromValue(Base64.encodeToUriString(data))
             }
             return GeckoResult.fromValue(null)
         }
@@ -426,5 +428,66 @@ class GeckoEngineSession(
         internal const val GECKO_STATE_KEY = "GECKO_STATE"
         internal const val MOZ_NULL_PRINCIPAL = "moz-nullprincipal:"
         internal const val ABOUT_BLANK = "about:blank"
+
+        /**
+         * Provides an ErrorType corresponding to the error code provided.
+         */
+        @Suppress("ComplexMethod")
+        internal fun geckoErrorToErrorType(@GeckoSession.NavigationDelegate.LoadError errorCode: Int) =
+            when (errorCode) {
+                GeckoSession.NavigationDelegate.ERROR_UNKNOWN ->
+                    ErrorType.UNKNOWN
+                GeckoSession.NavigationDelegate.ERROR_SECURITY_SSL ->
+                    ErrorType.ERROR_SECURITY_SSL
+                GeckoSession.NavigationDelegate.ERROR_SECURITY_BAD_CERT ->
+                    ErrorType.ERROR_SECURITY_BAD_CERT
+                GeckoSession.NavigationDelegate.ERROR_NET_INTERRUPT ->
+                    ErrorType.ERROR_NET_INTERRUPT
+                GeckoSession.NavigationDelegate.ERROR_NET_TIMEOUT ->
+                    ErrorType.ERROR_NET_TIMEOUT
+                GeckoSession.NavigationDelegate.ERROR_CONNECTION_REFUSED ->
+                    ErrorType.ERROR_CONNECTION_REFUSED
+                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_SOCKET_TYPE ->
+                    ErrorType.ERROR_UNKNOWN_SOCKET_TYPE
+                GeckoSession.NavigationDelegate.ERROR_REDIRECT_LOOP ->
+                    ErrorType.ERROR_REDIRECT_LOOP
+                GeckoSession.NavigationDelegate.ERROR_OFFLINE ->
+                    ErrorType.ERROR_OFFLINE
+                GeckoSession.NavigationDelegate.ERROR_PORT_BLOCKED ->
+                    ErrorType.ERROR_PORT_BLOCKED
+                GeckoSession.NavigationDelegate.ERROR_NET_RESET ->
+                    ErrorType.ERROR_NET_RESET
+                GeckoSession.NavigationDelegate.ERROR_UNSAFE_CONTENT_TYPE ->
+                    ErrorType.ERROR_UNSAFE_CONTENT_TYPE
+                GeckoSession.NavigationDelegate.ERROR_CORRUPTED_CONTENT ->
+                    ErrorType.ERROR_CORRUPTED_CONTENT
+                GeckoSession.NavigationDelegate.ERROR_CONTENT_CRASHED ->
+                    ErrorType.ERROR_CONTENT_CRASHED
+                GeckoSession.NavigationDelegate.ERROR_INVALID_CONTENT_ENCODING ->
+                    ErrorType.ERROR_INVALID_CONTENT_ENCODING
+                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_HOST ->
+                    ErrorType.ERROR_UNKNOWN_HOST
+                GeckoSession.NavigationDelegate.ERROR_MALFORMED_URI ->
+                    ErrorType.ERROR_MALFORMED_URI
+                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_PROTOCOL ->
+                    ErrorType.ERROR_UNKNOWN_PROTOCOL
+                GeckoSession.NavigationDelegate.ERROR_FILE_NOT_FOUND ->
+                    ErrorType.ERROR_FILE_NOT_FOUND
+                GeckoSession.NavigationDelegate.ERROR_FILE_ACCESS_DENIED ->
+                    ErrorType.ERROR_FILE_ACCESS_DENIED
+                GeckoSession.NavigationDelegate.ERROR_PROXY_CONNECTION_REFUSED ->
+                    ErrorType.ERROR_PROXY_CONNECTION_REFUSED
+                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_PROXY_HOST ->
+                    ErrorType.ERROR_UNKNOWN_PROXY_HOST
+                GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_MALWARE_URI ->
+                    ErrorType.ERROR_SAFEBROWSING_MALWARE_URI
+                GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_UNWANTED_URI ->
+                    ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI
+                GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_HARMFUL_URI ->
+                    ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI
+                GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_PHISHING_URI ->
+                    ErrorType.ERROR_SAFEBROWSING_PHISHING_URI
+                else -> ErrorType.UNKNOWN
+            }
     }
 }

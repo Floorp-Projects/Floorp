@@ -6,7 +6,6 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
-import mozilla.components.browser.errorpages.ErrorPages
 
 /**
  * Entry point for interacting with the engine implementation.
@@ -40,11 +39,6 @@ interface Engine {
      * @return the engine name as specified by concrete implementations.
      */
     fun name(): String
-
-    /**
-     * Returns an ErrorPages struct from an error code
-     */
-    fun errorTypeFromCode(errorCode: Int, errorCategory: Int? = null): ErrorPages.ErrorType
 
     /**
      * Provides access to the settings of this engine.

@@ -11,10 +11,12 @@ import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebStorage
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.DefaultSettings
 import android.webkit.WebViewDatabase
+import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.ktx.kotlin.toBundle
@@ -332,5 +334,52 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
      */
     internal fun internalNotifyObservers(block: Observer.() -> Unit) {
         super.notifyObservers(block)
+    }
+
+    companion object {
+        /**
+         * Provides an ErrorType corresponding to the error code provided.
+         *
+         * Chromium's mapping (internal error code, to Android WebView error code) is described at:
+         * https://goo.gl/vspwct (ErrorCodeConversionHelper.java)
+         */
+        @Suppress("ComplexMethod")
+        internal fun webViewErrorToErrorType(errorCode: Int) =
+            when (errorCode) {
+                WebViewClient.ERROR_UNKNOWN -> ErrorType.UNKNOWN
+
+                // This is probably the most commonly shown error. If there's no network, we inevitably
+                // show this.
+                WebViewClient.ERROR_HOST_LOOKUP -> ErrorType.ERROR_UNKNOWN_HOST
+
+                WebViewClient.ERROR_CONNECT -> ErrorType.ERROR_CONNECTION_REFUSED
+
+                // It's unclear what this actually means - it's not well documented. Based on looking at
+                // ErrorCodeConversionHelper this could happen if networking is disabled during load, in which
+                // case the generic error is good enough:
+                WebViewClient.ERROR_IO -> ErrorType.ERROR_CONNECTION_REFUSED
+
+                WebViewClient.ERROR_TIMEOUT -> ErrorType.ERROR_NET_TIMEOUT
+
+                WebViewClient.ERROR_REDIRECT_LOOP -> ErrorType.ERROR_REDIRECT_LOOP
+
+                WebViewClient.ERROR_UNSUPPORTED_SCHEME -> ErrorType.ERROR_UNKNOWN_PROTOCOL
+
+                WebViewClient.ERROR_FAILED_SSL_HANDSHAKE -> ErrorType.ERROR_SECURITY_SSL
+
+                WebViewClient.ERROR_BAD_URL -> ErrorType.ERROR_MALFORMED_URI
+
+                // Seems to be an indication of OOM, insufficient resources, or too many queued DNS queries
+                WebViewClient.ERROR_TOO_MANY_REQUESTS -> ErrorType.UNKNOWN
+
+                WebViewClient.ERROR_FILE_NOT_FOUND -> ErrorType.ERROR_FILE_NOT_FOUND
+
+                // There's no mapping for the following errors yet. At the time this library was
+                // extracted from Focus we didn't use any of those errors.
+                // WebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME
+                // WebViewClient.ERROR_AUTHENTICATION
+                // WebViewClient.ERROR_FILE
+                else -> ErrorType.UNKNOWN
+            }
     }
 }

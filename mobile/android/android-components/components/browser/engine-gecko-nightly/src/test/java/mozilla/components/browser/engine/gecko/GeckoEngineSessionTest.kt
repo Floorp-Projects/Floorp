@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import android.os.Handler
+import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -13,6 +14,7 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -485,8 +487,8 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testOnLoadErrorCallsInterceptor() {
-        var interceptorCalledWithUri: String? = null
+    fun testOnLoadErrorCallsInterceptorWithNull() {
+        var interceptedUri: String? = null
         val requestInterceptor: RequestInterceptor = mock()
         var defaultSettings = DefaultSettings()
         var engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
@@ -498,12 +500,12 @@ class GeckoEngineSessionTest {
             ERROR_CATEGORY_UNKNOWN,
             ERROR_UNKNOWN
         )
-        verify(requestInterceptor, never()).onErrorRequest(engineSession, ERROR_CATEGORY_UNKNOWN, "")
+        verify(requestInterceptor, never()).onErrorRequest(engineSession, ErrorType.UNKNOWN, "")
         onLoadError.then { value: String? ->
-            interceptorCalledWithUri = value
+            interceptedUri = value
             GeckoResult<String>(null)
         }
-        assertNull(interceptorCalledWithUri)
+        assertNull(interceptedUri)
 
         // Interceptor is called correctly
         defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
@@ -514,12 +516,145 @@ class GeckoEngineSessionTest {
             ERROR_CATEGORY_UNKNOWN,
             ERROR_UNKNOWN
         )
-        verify(requestInterceptor).onErrorRequest(engineSession, ERROR_UNKNOWN, "")
+        verify(requestInterceptor).onErrorRequest(engineSession, ErrorType.UNKNOWN, "")
         onLoadError.then { value: String? ->
-            interceptorCalledWithUri = value
+            interceptedUri = value
             GeckoResult<String>(null)
         }
-        assertNull(interceptorCalledWithUri)
+        assertNull(interceptedUri)
+    }
+
+    @Test
+    fun testOnLoadErrorCallsInterceptorWithErrorPage() {
+        val requestInterceptor: RequestInterceptor = object : RequestInterceptor {
+            override fun onErrorRequest(
+                session: EngineSession,
+                errorType: ErrorType,
+                uri: String?
+            ): RequestInterceptor.ErrorResponse? =
+                RequestInterceptor.ErrorResponse("nonNullData")
+        }
+        val defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+
+        val onLoadError = engineSession.geckoSession.navigationDelegate.onLoadError(
+            engineSession.geckoSession,
+            "about:failed",
+            ERROR_CATEGORY_UNKNOWN,
+            ERROR_UNKNOWN
+        )
+        onLoadError.then { value: String? ->
+            assertTrue(value!!.contains("data:text/html;base64,"))
+            GeckoResult<String>(null)
+        }
+    }
+
+    @Test
+    fun testGeckoErrorMappingToErrorType() {
+        Assert.assertEquals(
+            ErrorType.ERROR_SECURITY_SSL,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_SECURITY_SSL)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_SECURITY_BAD_CERT,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_SECURITY_BAD_CERT)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_NET_INTERRUPT,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_NET_INTERRUPT)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_NET_TIMEOUT,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_NET_TIMEOUT)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_NET_RESET,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_NET_RESET)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_CONNECTION_REFUSED,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_CONNECTION_REFUSED)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_UNKNOWN_SOCKET_TYPE,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_UNKNOWN_SOCKET_TYPE)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_REDIRECT_LOOP,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_REDIRECT_LOOP)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_OFFLINE,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_OFFLINE)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_PORT_BLOCKED,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_PORT_BLOCKED)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_UNSAFE_CONTENT_TYPE,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_UNSAFE_CONTENT_TYPE)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_CORRUPTED_CONTENT,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_CORRUPTED_CONTENT)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_CONTENT_CRASHED,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_CONTENT_CRASHED)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_INVALID_CONTENT_ENCODING,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_INVALID_CONTENT_ENCODING)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_UNKNOWN_HOST,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_UNKNOWN_HOST)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_MALFORMED_URI,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_MALFORMED_URI)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_UNKNOWN_PROTOCOL,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_UNKNOWN_PROTOCOL)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_FILE_NOT_FOUND,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_FILE_NOT_FOUND)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_FILE_ACCESS_DENIED,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_FILE_ACCESS_DENIED)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_PROXY_CONNECTION_REFUSED,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_PROXY_CONNECTION_REFUSED)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_UNKNOWN_PROXY_HOST,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_UNKNOWN_PROXY_HOST)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_SAFEBROWSING_MALWARE_URI,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_MALWARE_URI)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_HARMFUL_URI)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_SAFEBROWSING_PHISHING_URI,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_PHISHING_URI)
+        )
+        Assert.assertEquals(
+            ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI,
+            GeckoEngineSession.geckoErrorToErrorType(GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_UNWANTED_URI)
+        )
+        Assert.assertEquals(
+            ErrorType.UNKNOWN,
+            GeckoEngineSession.geckoErrorToErrorType(-500)
+        )
     }
 
     @Test

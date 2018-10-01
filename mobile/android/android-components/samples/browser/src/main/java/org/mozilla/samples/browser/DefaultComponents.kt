@@ -16,17 +16,22 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.DefaultSessionStorage
+import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.samples.browser.request.SampleRequestInterceptor
 
 open class DefaultComponents(private val applicationContext: Context) {
 
     // Engine
     open val engine: Engine by lazy {
-        SystemEngine(applicationContext)
+        val settings = DefaultSettings(
+            requestInterceptor = SampleRequestInterceptor(applicationContext)
+        )
+        SystemEngine(applicationContext, settings)
     }
 
     // Session
