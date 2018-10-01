@@ -40,6 +40,7 @@ add_task(async function overrideContext_with_context() {
       }
     });
     browser.menus.onShown.addListener((info, tab) => {
+      browser.test.assertEq("tab", info.viewType, "Expected viewType at onShown");
       browser.test.sendMessage("onShown", {
         menuIds: info.menuIds,
         contexts: info.contexts,
@@ -48,6 +49,7 @@ add_task(async function overrideContext_with_context() {
       });
     });
     browser.menus.onClicked.addListener((info, tab) => {
+      browser.test.assertEq("tab", info.viewType, "Expected viewType at onClicked");
       browser.test.sendMessage("onClicked", {
         menuItemId: info.menuItemId,
         bookmarkId: info.bookmarkId,

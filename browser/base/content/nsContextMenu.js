@@ -129,6 +129,7 @@ nsContextMenu.prototype = {
         linkUrl: this.linkURL,
         selectionText: this.isTextSelected ? this.selectionInfo.fullText : undefined,
         frameId: this.frameOuterWindowID,
+        webExtBrowserType: this.webExtBrowserType,
         webExtContextData: gContextMenuContentData ? gContextMenuContentData.webExtContextData : undefined,
       };
       subject.wrappedJSObject = subject;

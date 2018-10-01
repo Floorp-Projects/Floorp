@@ -199,6 +199,7 @@ add_task(async function test_show_hide_without_menu_item() {
     },
     expectedShownEvent: {
       contexts: ["page", "all"],
+      viewType: "tab",
       editable: false,
       frameId: 0,
     },
@@ -221,6 +222,7 @@ add_task(async function test_show_hide_without_menu_item() {
   Assert.deepEqual(events[0], {
     menuIds: [],
     contexts: ["page", "all"],
+    viewType: "tab",
     editable: false,
     pageUrl: PAGE,
     frameId: 0,
@@ -236,10 +238,12 @@ add_task(async function test_show_hide_pageAction() {
     },
     expectedShownEvent: {
       contexts: ["page_action", "all"],
+      viewType: undefined,
       editable: false,
     },
     expectedShownEventWithPermissions: {
       contexts: ["page_action", "all"],
+      viewType: undefined,
       editable: false,
       pageUrl: PAGE,
     },
@@ -260,10 +264,12 @@ add_task(async function test_show_hide_browserAction() {
     },
     expectedShownEvent: {
       contexts: ["browser_action", "all"],
+      viewType: undefined,
       editable: false,
     },
     expectedShownEventWithPermissions: {
       contexts: ["browser_action", "all"],
+      viewType: undefined,
       editable: false,
       pageUrl: PAGE,
     },
@@ -285,6 +291,7 @@ add_task(async function test_show_hide_browserAction_popup() {
     },
     expectedShownEvent: {
       contexts: ["page", "all"],
+      viewType: "popup",
       frameId: 0,
       editable: false,
       get pageUrl() { return popupUrl; },
@@ -292,6 +299,7 @@ add_task(async function test_show_hide_browserAction_popup() {
     },
     expectedShownEventWithPermissions: {
       contexts: ["page", "all"],
+      viewType: "popup",
       frameId: 0,
       editable: false,
       get pageUrl() { return popupUrl; },
@@ -317,10 +325,12 @@ add_task(async function test_show_hide_tab() {
     },
     expectedShownEvent: {
       contexts: ["tab"],
+      viewType: undefined,
       editable: false,
     },
     expectedShownEventWithPermissions: {
       contexts: ["tab"],
+      viewType: undefined,
       editable: false,
       pageUrl: PAGE,
     },
@@ -341,10 +351,12 @@ add_task(async function test_show_hide_tools_menu() {
     },
     expectedShownEvent: {
       contexts: ["tools_menu"],
+      viewType: undefined,
       editable: false,
     },
     expectedShownEventWithPermissions: {
       contexts: ["tools_menu"],
+      viewType: undefined,
       editable: false,
       pageUrl: PAGE,
     },
@@ -365,11 +377,13 @@ add_task(async function test_show_hide_page() {
     },
     expectedShownEvent: {
       contexts: ["page", "all"],
+      viewType: "tab",
       editable: false,
       frameId: 0,
     },
     expectedShownEventWithPermissions: {
       contexts: ["page", "all"],
+      viewType: "tab",
       editable: false,
       pageUrl: PAGE,
       frameId: 0,
@@ -394,11 +408,13 @@ add_task(async function test_show_hide_frame() {
     },
     expectedShownEvent: {
       contexts: ["frame", "all"],
+      viewType: "tab",
       editable: false,
       get frameId() { return frameId; },
     },
     expectedShownEventWithPermissions: {
       contexts: ["frame", "all"],
+      viewType: "tab",
       editable: false,
       get frameId() { return frameId; },
       pageUrl: PAGE,
@@ -428,11 +444,13 @@ add_task(async function test_show_hide_password() {
     },
     expectedShownEvent: {
       contexts: ["editable", "password", "all"],
+      viewType: "tab",
       editable: true,
       frameId: 0,
     },
     expectedShownEventWithPermissions: {
       contexts: ["editable", "password", "all"],
+      viewType: "tab",
       editable: true,
       frameId: 0,
       pageUrl: PAGE,
@@ -455,11 +473,13 @@ add_task(async function test_show_hide_link() {
     },
     expectedShownEvent: {
       contexts: ["link", "all"],
+      viewType: "tab",
       editable: false,
       frameId: 0,
     },
     expectedShownEventWithPermissions: {
       contexts: ["link", "all"],
+      viewType: "tab",
       editable: false,
       frameId: 0,
       linkText: "Some link",
@@ -484,12 +504,14 @@ add_task(async function test_show_hide_image_link() {
     },
     expectedShownEvent: {
       contexts: ["image", "link", "all"],
+      viewType: "tab",
       mediaType: "image",
       editable: false,
       frameId: 0,
     },
     expectedShownEventWithPermissions: {
       contexts: ["image", "link", "all"],
+      viewType: "tab",
       mediaType: "image",
       editable: false,
       frameId: 0,
@@ -518,11 +540,13 @@ add_task(async function test_show_hide_editable_selection() {
     },
     expectedShownEvent: {
       contexts: ["editable", "selection", "all"],
+      viewType: "tab",
       editable: true,
       frameId: 0,
     },
     expectedShownEventWithPermissions: {
       contexts: ["editable", "selection", "all"],
+      viewType: "tab",
       editable: true,
       frameId: 0,
       pageUrl: PAGE,
@@ -555,12 +579,14 @@ add_task(async function test_show_hide_video() {
     },
     expectedShownEvent: {
       contexts: ["video", "all"],
+      viewType: "tab",
       mediaType: "video",
       editable: false,
       frameId: 0,
     },
     expectedShownEventWithPermissions: {
       contexts: ["video", "all"],
+      viewType: "tab",
       mediaType: "video",
       editable: false,
       frameId: 0,
@@ -594,12 +620,14 @@ add_task(async function test_show_hide_audio() {
     },
     expectedShownEvent: {
       contexts: ["audio", "all"],
+      viewType: "tab",
       mediaType: "audio",
       editable: false,
       frameId: 0,
     },
     expectedShownEventWithPermissions: {
       contexts: ["audio", "all"],
+      viewType: "tab",
       mediaType: "audio",
       editable: false,
       frameId: 0,
