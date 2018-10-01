@@ -244,6 +244,10 @@ used in Firefox.
 
 ## Release Notes
 
+### 0.8.7
+
+* Fixed a panic in the UTF-16LE/UTF-16BE decoder when decoding to UTF-8.
+
 ### 0.8.6
 
 * Temporarily removed the debug assertion added in version 0.8.5 from
