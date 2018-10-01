@@ -11,8 +11,6 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 
-class nsIURI;
-
 namespace mozilla {
 namespace dom {
 
@@ -39,13 +37,19 @@ public:
   AllowsAll() const;
 
   void
-  AppendURIToWhiteList(nsIURI* aURI);
+  AppendOriginToWhiteList(const nsAString& aOrigin);
+
+  void
+  GetWhiteListedOrigins(nsTArray<nsString>& aList) const;
 
   bool
-  WhiteListContains(nsIURI* aURI) const;
+  WhiteListContains(const nsAString& aOrigin) const;
 
   bool
   IsWhiteList() const;
+
+  bool
+  Allows(const nsAString& aOrigin) const;
 
 private:
   nsString mFeatureName;
@@ -63,7 +67,7 @@ private:
 
   Policy mPolicy;
 
-  nsTArray<nsCOMPtr<nsIURI>> mWhiteList;
+  nsTArray<nsString> mWhiteListedOrigins;
 };
 
 } // dom namespace

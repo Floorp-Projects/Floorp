@@ -33,6 +33,8 @@ public:
   }
 
   // nsIContent
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent) override;
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsAtom* aAttribute,
                                 const nsAString& aValue,
@@ -43,7 +45,7 @@ public:
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  uint32_t GetSandboxFlags();
+  uint32_t GetSandboxFlags() const;
 
   // Web IDL binding methods
   void GetSrc(nsString& aSrc) const
@@ -115,6 +117,14 @@ public:
   void SetAlign(const nsAString& aAlign, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
+  }
+  void GetAllow(DOMString& aAllow)
+  {
+    GetHTMLAttr(nsGkAtoms::allow, aAllow);
+  }
+  void SetAllow(const nsAString& aAllow, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::allow, aAllow, aError);
   }
   void GetScrolling(DOMString& aScrolling)
   {
@@ -188,6 +198,9 @@ public:
   bool FullscreenFlag() const { return mFullscreenFlag; }
   void SetFullscreenFlag(bool aValue) { mFullscreenFlag = aValue; }
 
+  FeaturePolicy*
+  Policy() const;
+
 protected:
   virtual ~HTMLIFrameElement();
 
@@ -207,6 +220,11 @@ private:
                                     MappedDeclarations&);
 
   static const DOMTokenListSupportedToken sSupportedSandboxTokens[];
+
+  void RefreshFeaturePolicy();
+
+  nsresult
+  GetFeaturePolicyDefaultOrigin(nsAString& aDefaultOrigin) const;
 
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.
