@@ -85,10 +85,20 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     Services.profiler.StopProfiler();
   },
 
+  async getSymbolTable(debugPath, breakpadId) {
+    const [addr, index, buffer] =
+      await Services.profiler.getSymbolTable(debugPath, breakpadId);
+    // The protocol does not support the transfer of typed arrays, so we convert
+    // these typed arrays to plain JS arrays of numbers now.
+    // Our return value type is declared as "array:array:number".
+    return [Array.from(addr), Array.from(index), Array.from(buffer)];
+  },
+
   async getProfileAndStopProfiler() {
     if (!IS_SUPPORTED_PLATFORM) {
       return null;
     }
+
     let profile;
     try {
       // Attempt to pull out the data.
