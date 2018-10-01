@@ -24,6 +24,8 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/Move.h"
+#include "mozilla/SystemGroup.h"
 #include "nsLocalFile.h"
 #include "nsThreadUtils.h"
 #include "ProfilerParent.h"
@@ -34,6 +36,14 @@ using namespace mozilla;
 using dom::AutoJSAPI;
 using dom::Promise;
 using std::string;
+
+extern "C" {
+  // This function is defined in the profiler rust module at tools/profiler/rust-helper.
+  // nsProfiler::SymbolTable and CompactSymbolTable have identical memory layout.
+  bool profiler_get_symbol_table(const char* debug_path,
+                                 const char* breakpad_id,
+                                 nsProfiler::SymbolTable* symbol_table);
+}
 
 NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
 
@@ -50,6 +60,9 @@ nsProfiler::~nsProfiler()
   if (observerService) {
     observerService->RemoveObserver(this, "chrome-document-global-created");
     observerService->RemoveObserver(this, "last-pb-context-exited");
+  }
+  if (mSymbolTableThread) {
+    mSymbolTableThread->Shutdown();
   }
 }
 
@@ -394,6 +407,73 @@ nsProfiler::DumpProfileToFileAsync(const nsACString& aFilename,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsProfiler::GetSymbolTable(const nsACString& aDebugPath,
+                           const nsACString& aBreakpadID,
+                           JSContext* aCx,
+                           nsISupports** aPromise)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!aCx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIGlobalObject* globalObject =
+    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  GetSymbolTableMozPromise(aDebugPath, aBreakpadID)->Then(
+    GetMainThreadSerialEventTarget(), __func__,
+    [promise](const SymbolTable& aSymbolTable) {
+      AutoJSAPI jsapi;
+      if (NS_WARN_IF(!jsapi.Init(promise->GlobalJSObject()))) {
+        // We're really hosed if we can't get a JS context for some reason.
+        promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+        return;
+      }
+
+      JSContext* cx = jsapi.cx();
+
+      JS::RootedObject addrsArray(
+        cx,
+        dom::Uint32Array::Create(
+          cx, aSymbolTable.mAddrs.Length(), aSymbolTable.mAddrs.Elements()));
+      JS::RootedObject indexArray(
+        cx,
+        dom::Uint32Array::Create(
+          cx, aSymbolTable.mIndex.Length(), aSymbolTable.mIndex.Elements()));
+      JS::RootedObject bufferArray(
+        cx,
+        dom::Uint8Array::Create(
+          cx, aSymbolTable.mBuffer.Length(), aSymbolTable.mBuffer.Elements()));
+
+      if (addrsArray && indexArray && bufferArray) {
+        JS::RootedObject tuple(cx, JS_NewArrayObject(cx, 3));
+        JS_SetElement(cx, tuple, 0, addrsArray);
+        JS_SetElement(cx, tuple, 1, indexArray);
+        JS_SetElement(cx, tuple, 2, bufferArray);
+        promise->MaybeResolve(tuple);
+      } else {
+        promise->MaybeReject(NS_ERROR_FAILURE);
+      }
+    },
+    [promise](nsresult aRv) {
+      promise->MaybeReject(aRv);
+    });
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsProfiler::GetElapsedTime(double* aElapsedTime)
@@ -625,6 +705,48 @@ nsProfiler::StartGathering(double aSinceTime)
   if (!mPendingProfiles) {
     FinishGathering();
   }
+
+  return promise;
+}
+
+RefPtr<nsProfiler::SymbolTablePromise>
+nsProfiler::GetSymbolTableMozPromise(const nsACString& aDebugPath,
+                                     const nsACString& aBreakpadID)
+{
+  MozPromiseHolder<SymbolTablePromise> promiseHolder;
+  RefPtr<SymbolTablePromise> promise = promiseHolder.Ensure(__func__);
+
+  if (!mSymbolTableThread) {
+    nsresult rv =
+      NS_NewNamedThread("ProfSymbolTable", getter_AddRefs(mSymbolTableThread));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      promiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+      return promise;
+    }
+  }
+
+  mSymbolTableThread->Dispatch(NS_NewRunnableFunction(
+    "nsProfiler::GetSymbolTableMozPromise runnable on ProfSymbolTable thread",
+    [promiseHolder = std::move(promiseHolder),
+     debugPath = nsCString(aDebugPath),
+     breakpadID = nsCString(aBreakpadID)]() mutable {
+      AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("profiler_get_symbol_table", OTHER, debugPath);
+      SymbolTable symbolTable;
+      bool succeeded = profiler_get_symbol_table(debugPath.get(), breakpadID.get(), &symbolTable);
+      SystemGroup::Dispatch(TaskCategory::Other, NS_NewRunnableFunction(
+        "nsProfiler::GetSymbolTableMozPromise result on main thread",
+        [promiseHolder = std::move(promiseHolder),
+         symbolTable = std::move(symbolTable),
+         succeeded]() mutable {
+          if (succeeded) {
+            promiseHolder.Resolve(std::move(symbolTable), __func__);
+          } else {
+            promiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+          }
+        }
+      ));
+    }
+  ));
 
   return promise;
 }
