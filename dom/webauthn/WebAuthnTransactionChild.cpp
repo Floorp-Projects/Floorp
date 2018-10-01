@@ -28,6 +28,11 @@ WebAuthnTransactionChild::RecvConfirmRegister(const uint64_t& aTransactionId,
     return IPC_FAIL_NO_REASON(this);
   }
 
+  // We don't own the reference to mManager. We need to prevent its refcount
+  // going to 0 while we call anything that can reach the call to
+  // StopListeningForVisibilityEvents in WebAuthnManager::ClearTransaction
+  // (often via WebAuthnManager::RejectTransaction).
+  RefPtr<WebAuthnManagerBase> kungFuDeathGrip(mManager);
   mManager->FinishMakeCredential(aTransactionId, aResult);
   return IPC_OK();
 }
@@ -40,6 +45,11 @@ WebAuthnTransactionChild::RecvConfirmSign(const uint64_t& aTransactionId,
     return IPC_FAIL_NO_REASON(this);
   }
 
+  // We don't own the reference to mManager. We need to prevent its refcount
+  // going to 0 while we call anything that can reach the call to
+  // StopListeningForVisibilityEvents in WebAuthnManager::ClearTransaction
+  // (often via WebAuthnManager::RejectTransaction).
+  RefPtr<WebAuthnManagerBase> kungFuDeathGrip(mManager);
   mManager->FinishGetAssertion(aTransactionId, aResult);
   return IPC_OK();
 }
@@ -52,6 +62,11 @@ WebAuthnTransactionChild::RecvAbort(const uint64_t& aTransactionId,
     return IPC_FAIL_NO_REASON(this);
   }
 
+  // We don't own the reference to mManager. We need to prevent its refcount
+  // going to 0 while we call anything that can reach the call to
+  // StopListeningForVisibilityEvents in WebAuthnManager::ClearTransaction
+  // (often via WebAuthnManager::RejectTransaction).
+  RefPtr<WebAuthnManagerBase> kungFuDeathGrip(mManager);
   mManager->RequestAborted(aTransactionId, aError);
   return IPC_OK();
 }
