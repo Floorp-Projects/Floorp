@@ -544,6 +544,29 @@ nsPACMan::LoadPACFromURI(const nsACString &aSpec)
   NS_ENSURE_STATE(loader);
 
   LOG(("nsPACMan::LoadPACFromURI aSpec: %s\n", aSpec.BeginReading()));
+
+  CancelExistingLoad();
+
+  mLoader = loader;
+  mPACURIRedirectSpec.Truncate();
+  mNormalPACURISpec.Truncate(); // set at load time
+  mLoadFailureCount = 0;  // reset
+  mAutoDetect = aSpec.IsEmpty();
+  mPACURISpec.Assign(aSpec);
+
+  // reset to Null
+  mScheduledReload = TimeStamp();
+
+  // if we're on the main thread here so we can get hold of prefs,
+  // we check that we have WPAD preffed on if we're auto-detecting
+  if (mAutoDetect && NS_IsMainThread()) {
+    nsresult rv = GetNetworkProxyTypeFromPref(&mProxyConfigType);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    MOZ_RELEASE_ASSERT(mProxyConfigType == nsIProtocolProxyService::PROXYCONFIG_WPAD,
+            "WPAD is being executed when not selected by user");
+  }
   // Since we might get called from nsProtocolProxyService::Init, we need to
   // post an event back to the main thread before we try to use the IO service.
   //
@@ -561,17 +584,6 @@ nsPACMan::LoadPACFromURI(const nsACString &aSpec)
     mLoadPending = true;
   }
 
-  CancelExistingLoad();
-
-  mLoader = loader;
-  mPACURIRedirectSpec.Truncate();
-  mNormalPACURISpec.Truncate(); // set at load time
-  mLoadFailureCount = 0;  // reset
-  mAutoDetect = aSpec.IsEmpty();
-  mPACURISpec.Assign(aSpec);
-
-  // reset to Null
-  mScheduledReload = TimeStamp();
   return NS_OK;
 }
 
@@ -638,7 +650,11 @@ nsPACMan::StartLoading()
   }
 
   if (mAutoDetect) {
-    GetNetworkProxyTypeFromPref(&mProxyConfigType);
+    nsresult rv = GetNetworkProxyTypeFromPref(&mProxyConfigType);
+    if (!NS_SUCCEEDED(rv)) {
+      NS_WARNING("Could not retrieve Network Proxy Type pref when auto-detecting proxy. Halting.");
+      return;
+    }
     RefPtr<ExecutePACThreadAction> wpadConfigurer =
       new ExecutePACThreadAction(this);
     wpadConfigurer->ConfigureWPAD();
