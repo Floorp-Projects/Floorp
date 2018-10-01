@@ -15,6 +15,12 @@ function getCurrentClient(runtimesState) {
 }
 exports.getCurrentClient = getCurrentClient;
 
+function getCurrentRuntimeInfo(runtimesState) {
+  const runtime = getCurrentRuntime(runtimesState);
+  return runtime ? runtime.info : null;
+}
+exports.getCurrentRuntimeInfo = getCurrentRuntimeInfo;
+
 function findRuntimeById(id, runtimesState) {
   const allRuntimes = [
     ...runtimesState.networkRuntimes,
