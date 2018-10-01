@@ -211,7 +211,6 @@ def old_configure_options(*options):
     '--enable-system-extension-dirs',
     '--enable-system-pixman',
     '--enable-system-sqlite',
-    '--enable-tasktracer',
     '--enable-thread-sanitizer',
     '--enable-signed-overflow-sanitizer',
     '--enable-universalchardet',

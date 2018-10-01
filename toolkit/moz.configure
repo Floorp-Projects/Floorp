@@ -1153,3 +1153,11 @@ set_define('MOZ_VERIFY_MAR_SIGNATURE',
            depends_if('--enable-verify-mar')(lambda _: True))
 set_config('MOZ_VERIFY_MAR_SIGNATURE',
            depends_if('--enable-verify-mar')(lambda _: True))
+
+# TaskTracer
+# ==============================================================
+
+option('--enable-tasktracer', help='Enable TaskTracer')
+
+set_define('MOZ_TASK_TRACER', depends_if('--enable-tasktracer')(lambda _: True))
+set_config('MOZ_TASK_TRACER', depends_if('--enable-tasktracer')(lambda _: True))
