@@ -26,22 +26,23 @@ android {
         }
     }
 
-    flavorDimensions "channel", "abi"
+    flavorDimensions "engine", "abi"
 
     productFlavors {
         // GeckoView release channels
-        nightly {
-            dimension "channel"
+        geckoNightly {
+            dimension "engine"
         }
-        beta {
-            dimension "channel"
+        geckoBeta {
+            dimension "engine"
         }
-        production {
-            dimension "channel"
+        geckoRelease {
+            dimension "engine"
         }
 
-        systemEngine {
-            dimension "channel"
+        // WebView
+        system {
+            dimension "engine"
         }
         
         // Processor architecture
@@ -54,6 +55,9 @@ android {
         aarch64 {
             dimension "abi"
         }
+        universal {
+            dimension "abi"
+        }
     }
 
     variantFilter { variant ->
@@ -62,22 +66,31 @@ android {
             // release versions.
             setIgnore(true)
         }
+
+        def flavors = variant.flavors*.name.toString().toLowerCase()
+        if (flavors.contains("system") && !flavors.contains("universal")) {
+            setIgnore(true)
+        }
+
+        if (flavors.contains("gecko") && flavors.contains("universal")) {
+            setIgnore(true)
+        }
     }
 }
 
 
 configurations {
-    nightlyArmImplementation {}
-    nightlyX86Implementation {}
-    nightlyAarch64Implementation {}
+    geckoNightlyArmImplementation {}
+    geckoNightlyX86Implementation {}
+    geckoNightlyAarch64Implementation {}
 
-    betaArmImplementation {}
-    betaX86Implementation {}
-    betaAarch64Implementation {}
+    geckoBetaArmImplementation {}
+    geckoBetaX86Implementation {}
+    geckoBetaAarch64Implementation {}
 
-    productionArmImplementation {}
-    productionX86Implementation {}
-    productionAarch64Implementation {}
+    geckoReleaseArmImplementation {}
+    geckoReleaseX86Implementation {}
+    geckoReleaseAarch64Implementation {}
 }
 
 dependencies {
@@ -103,20 +116,20 @@ dependencies {
 
     implementation project(':support-utils')
 
-    nightlyImplementation project(':browser-engine-gecko-nightly')
-    nightlyArmImplementation Gecko.geckoview_nightly_arm
-    nightlyX86Implementation Gecko.geckoview_nightly_x86
-    nightlyAarch64Implementation Gecko.geckoview_nightly_aarch64
+    geckoNightlyImplementation project(':browser-engine-gecko-nightly')
+    geckoNightlyArmImplementation Gecko.geckoview_nightly_arm
+    geckoNightlyX86Implementation Gecko.geckoview_nightly_x86
+    geckoNightlyAarch64Implementation Gecko.geckoview_nightly_aarch64
 
-    betaImplementation project(':browser-engine-gecko-beta')
-    betaArmImplementation "org.mozilla.geckoview:geckoview-beta-armeabi-v7a:${rootProject.ext.geckoBeta['version']}"
-    betaX86Implementation "org.mozilla.geckoview:geckoview-beta-x86:${rootProject.ext.geckoBeta['version']}"
-    betaAarch64Implementation "org.mozilla.geckoview:geckoview-beta-arm64-v8a:${rootProject.ext.geckoBeta['version']}"
+    geckoBetaImplementation project(':browser-engine-gecko-beta')
+    geckoBetaArmImplementation "org.mozilla.geckoview:geckoview-beta-armeabi-v7a:${rootProject.ext.geckoBeta['version']}"
+    geckoBetaX86Implementation "org.mozilla.geckoview:geckoview-beta-x86:${rootProject.ext.geckoBeta['version']}"
+    geckoBetaAarch64Implementation "org.mozilla.geckoview:geckoview-beta-arm64-v8a:${rootProject.ext.geckoBeta['version']}"
 
-    productionImplementation project(':browser-engine-gecko')
-    productionArmImplementation "org.mozilla:geckoview-release-armeabi-v7a:${rootProject.ext.geckoRelease['version']}"
-    productionX86Implementation "org.mozilla:geckoview-release-x86:${rootProject.ext.geckoRelease['version']}"
-    productionAarch64Implementation "org.mozilla:geckoview-release-arm64-v8a:${rootProject.ext.geckoRelease['version']}"
+    geckoReleaseImplementation project(':browser-engine-gecko')
+    geckoReleaseArmImplementation "org.mozilla:geckoview-release-armeabi-v7a:${rootProject.ext.geckoRelease['version']}"
+    geckoReleaseX86Implementation "org.mozilla:geckoview-release-x86:${rootProject.ext.geckoRelease['version']}"
+    geckoReleaseAarch64Implementation "org.mozilla:geckoview-release-arm64-v8a:${rootProject.ext.geckoRelease['version']}"
 
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines
