@@ -25,4 +25,4 @@ fun Context.isInExperiment(descriptor: ExperimentDescriptor): Boolean =
 
 val Context.activeExperimentNames: List<String>
     get() = app.fretboard.getExperimentsMap(this)
-            .map { it.key + if (it.value) "-B" else "-A" }
+            .map { it.key + if (it.value) ":B" else ":A" }
