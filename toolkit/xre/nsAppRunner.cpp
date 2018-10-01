@@ -3196,9 +3196,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     ChaosMode::SetChaosFeature(static_cast<ChaosFeature>(
                                ChaosFeature::ThreadScheduling
                                | ChaosFeature::NetworkScheduling
-                               | ChaosFeature::TimerScheduling
-                               | ChaosFeature::TaskDispatching
-                               | ChaosFeature::TaskRunning));
+                               | ChaosFeature::TimerScheduling));
   }
 #endif
 
