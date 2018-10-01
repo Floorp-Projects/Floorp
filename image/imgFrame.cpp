@@ -935,7 +935,8 @@ imgFrame::FinalizeSurfaceInternal()
   mMonitor.AssertCurrentThreadOwns();
 
   // Not all images will have mRawSurface to finalize (i.e. paletted images).
-  if (!mRawSurface || mRawSurface->GetType() != SurfaceType::DATA_SHARED) {
+  if (mShouldRecycle || !mRawSurface ||
+      mRawSurface->GetType() != SurfaceType::DATA_SHARED) {
     return;
   }
 
@@ -1080,6 +1081,10 @@ RecyclingSourceSurface::RecyclingSourceSurface(imgFrame* aParent, DataSourceSurf
 {
   mParent->mMonitor.AssertCurrentThreadOwns();
   ++mParent->mRecycleLockCount;
+
+  if (aSurface->GetType() == SurfaceType::DATA_SHARED) {
+    mType = SurfaceType::DATA_RECYCLING_SHARED;
+  }
 }
 
 RecyclingSourceSurface::~RecyclingSourceSurface()
