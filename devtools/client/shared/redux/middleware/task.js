@@ -3,9 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Task } = require("devtools/shared/task");
-const { executeSoon, isGenerator, isAsyncFunction, reportException } =
-  require("devtools/shared/DevToolsUtils");
+loader.lazyRequireGetter(this, "Task", "devtools/shared/task", true);
+loader.lazyRequireGetter(this, "executeSoon", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(this, "isGenerator", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(this, "isAsyncFunction", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(this, "reportException", "devtools/shared/DevToolsUtils", true);
+
 const ERROR_TYPE = exports.ERROR_TYPE = "@@redux/middleware/task#error";
 
 /**
