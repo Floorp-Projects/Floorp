@@ -182,7 +182,6 @@ def old_configure_options(*options):
     '--enable-extensions',
     '--enable-feeds',
     '--enable-gconf',
-    '--enable-hardware-aec-ns',
     '--enable-icf',
     '--enable-install-strip',
     '--enable-ios-target',
