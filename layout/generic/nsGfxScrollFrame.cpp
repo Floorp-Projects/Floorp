@@ -2269,8 +2269,7 @@ void
 ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsAtom* aOrigin)
 {
   // Apply desired destination range since this is the last step of scrolling.
-  mAsyncSmoothMSDScroll = nullptr;
-  mAsyncScroll = nullptr;
+  RemoveObservers();
   AutoWeakFrame weakFrame(mOuter);
   ScrollToImpl(mDestination, aRange, aOrigin);
   if (!weakFrame.IsAlive()) {
@@ -4897,13 +4896,22 @@ ScrollFrameHelper::Destroy(PostDestroyData& aPostDestroyData)
     mScrollActivityTimer->Cancel();
     mScrollActivityTimer = nullptr;
   }
+  RemoveObservers();
+}
+
+void
+ScrollFrameHelper::RemoveObservers()
+{
   if (mAsyncScroll) {
     mAsyncScroll->RemoveObserver();
+    mAsyncScroll = nullptr;
   }
   if (mAsyncSmoothMSDScroll) {
     mAsyncSmoothMSDScroll->RemoveObserver();
+    mAsyncSmoothMSDScroll = nullptr;
   }
 }
+
 
 /**
  * Called when we want to update the scrollbar position, either because scrolling happened
