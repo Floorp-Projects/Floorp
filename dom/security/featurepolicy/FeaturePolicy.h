@@ -101,12 +101,6 @@ public:
                     const nsAString& aSrcOrigin,
                     bool aSrcEnabled);
 
-  // This method creates a policy for aFeatureName allowing it to '*' if it
-  // doesn't exist yet. It's used by HTMLIFrameElement to enable features by
-  // attributes.
-  void
-  MaybeSetAllowedPolicy(const nsAString& aFeatureName);
-
   // Clears all the declarative policy directives. This is needed when the
   // 'allow' attribute or the 'src' attribute change for HTMLIFrameElement's
   // policy.

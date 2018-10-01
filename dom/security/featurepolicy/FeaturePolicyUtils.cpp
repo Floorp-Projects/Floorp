@@ -47,6 +47,7 @@ static FeatureMap sSupportedFeatures[] = {
   { "microphone", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
   { "midi", FeatureMap::eSelf  },
+  // TODO: not supported yet!!!
   { "payment", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
   { "picture-in-picture", FeatureMap::eAll  },
