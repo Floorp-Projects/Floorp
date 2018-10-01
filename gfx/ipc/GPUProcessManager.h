@@ -211,6 +211,8 @@ private:
   void RebuildRemoteSessions();
   void RebuildInProcessSessions();
 
+  void FallbackToSoftware(const char* aMessage);
+
 private:
   GPUProcessManager();
 
