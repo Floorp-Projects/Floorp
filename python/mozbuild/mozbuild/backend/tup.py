@@ -766,7 +766,7 @@ class TupBackend(CommonBackend):
             return []
 
         cargo_flags = ['--build-plan', '-Z', 'unstable-options']
-        if not self.environment.substs.get('MOZ_DEBUG_RUST'):
+        if not obj.config.substs.get('MOZ_DEBUG_RUST'):
             cargo_flags += ['--release']
         cargo_flags += [
             '--frozen',
