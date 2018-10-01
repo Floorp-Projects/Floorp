@@ -7,8 +7,6 @@ pref("devtools.webide.autoinstallADBExtension", true);
 pref("devtools.webide.autoConnectRuntime", true);
 pref("devtools.webide.restoreLastProject", true);
 pref("devtools.webide.enableLocalRuntime", false);
-pref("devtools.webide.adbExtensionURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/devtools/adb-extension/#OS#/adb-extension-latest-#OS#.xpi");
-pref("devtools.webide.adbExtensionID", "adb@mozilla.org");
 pref("devtools.webide.lastConnectedRuntime", "");
 pref("devtools.webide.lastSelectedProject", "");
 pref("devtools.webide.zoom", "1");
