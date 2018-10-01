@@ -118,7 +118,6 @@ clang_checkers:
   - name: readability-non-const-parameter
   - name: readability-redundant-control-flow
   - name: readability-redundant-smartptr-get
-    publish: !!bool no
   - name: readability-redundant-string-cstr
   - name: readability-redundant-string-init
   - name: readability-static-accessed-through-instance
