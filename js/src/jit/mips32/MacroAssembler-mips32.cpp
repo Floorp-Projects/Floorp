@@ -2693,9 +2693,12 @@ MacroAssemblerMIPSCompat::wasmStoreI64Impl(const wasm::MemoryAccessDesc& access,
 }
 
 static void
-EnterAtomic64Region(MacroAssembler& masm, Register addr, Register spinlock, Register scratch)
+EnterAtomic64Region(MacroAssembler& masm, const wasm::MemoryAccessDesc& access, Register addr,
+                    Register spinlock, Register scratch)
 {
     masm.movePtr(wasm::SymbolicAddress::js_jit_gAtomic64Lock, spinlock);
+
+    masm.append(access, masm.size());
     masm.as_lbu(zero, addr, 7); // Force memory trap on invalid access before we enter the spinlock.
 
     Label tryLock;
@@ -2730,10 +2733,8 @@ AtomicLoad64(MacroAssembler& masm, const wasm::MemoryAccessDesc& access, const T
 
     masm.computeEffectiveAddress(mem, SecondScratchReg);
 
-    EnterAtomic64Region(masm, /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
+    EnterAtomic64Region(masm, access, /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
                         /* scratch= */ output.low);
-
-    // FIXME: Emit signal handling information.
 
     masm.load64(Address(SecondScratchReg, 0), output);
 
@@ -2741,15 +2742,15 @@ AtomicLoad64(MacroAssembler& masm, const wasm::MemoryAccessDesc& access, const T
 }
 
 void
-MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access, const Address& mem, Register64 temp,
-                                 Register64 output)
+MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access, const Address& mem,
+                                 Register64 temp, Register64 output)
 {
     AtomicLoad64(*this, access, mem, temp, output);
 }
 
 void
-MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access, const BaseIndex& mem, Register64 temp,
-                                 Register64 output)
+MacroAssembler::wasmAtomicLoad64(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                                 Register64 temp, Register64 output)
 {
     AtomicLoad64(*this, access, mem, temp, output);
 }
@@ -2761,10 +2762,8 @@ MacroAssemblerMIPSCompat::wasmAtomicStore64(const wasm::MemoryAccessDesc& access
 {
     computeEffectiveAddress(mem, SecondScratchReg);
 
-    EnterAtomic64Region(asMasm(), /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
-                        /* scratch= */ temp);
-
-    // FIXME: Emit signal handling information.
+    EnterAtomic64Region(asMasm(), access, /* addr= */ SecondScratchReg,
+                       /* spinlock= */ ScratchRegister, /* scratch= */ temp);
 
     store64(value, Address(SecondScratchReg, 0));
 
@@ -2791,10 +2790,8 @@ WasmCompareExchange64(MacroAssembler& masm, const wasm::MemoryAccessDesc& access
     masm.computeEffectiveAddress(mem, SecondScratchReg);
     Address addr(SecondScratchReg, 0);
 
-    EnterAtomic64Region(masm, /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
+    EnterAtomic64Region(masm, access, /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
                         /* scratch= */ output.low);
-
-    // FIXME: emit signal handling information
 
     masm.load64(addr, output);
 
@@ -2829,10 +2826,8 @@ WasmAtomicExchange64(MacroAssembler& masm, const wasm::MemoryAccessDesc& access,
     masm.computeEffectiveAddress(mem, SecondScratchReg);
     Address addr(SecondScratchReg, 0);
 
-    EnterAtomic64Region(masm, /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
+    EnterAtomic64Region(masm, access, /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
                         /* scratch= */ output.low);
-
-    // FIXME: emit signal handling information
 
     masm.load64(addr, output);
     masm.store64(src, addr);
@@ -2841,15 +2836,15 @@ WasmAtomicExchange64(MacroAssembler& masm, const wasm::MemoryAccessDesc& access,
 }
 
 void
-MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access, const Address& mem, Register64 src,
-                                     Register64 output)
+MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access, const Address& mem,
+                                     Register64 src, Register64 output)
 {
     WasmAtomicExchange64(*this, access, mem, src, output);
 }
 
 void
-MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access, const BaseIndex& mem, Register64 src,
-                                     Register64 output)
+MacroAssembler::wasmAtomicExchange64(const wasm::MemoryAccessDesc& access, const BaseIndex& mem,
+                                     Register64 src, Register64 output)
 {
     WasmAtomicExchange64(*this, access, mem, src, output);
 }
@@ -2861,10 +2856,8 @@ AtomicFetchOp64(MacroAssembler& masm, const wasm::MemoryAccessDesc& access, Atom
 {
     masm.computeEffectiveAddress(mem, SecondScratchReg);
 
-    EnterAtomic64Region(masm, /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
+    EnterAtomic64Region(masm, access, /* addr= */ SecondScratchReg, /* spinlock= */ ScratchRegister,
                         /* scratch= */ output.low);
-
-    // FIXME: Emit signal handling information.
 
     masm.load64(Address(SecondScratchReg, 0), output);
 
