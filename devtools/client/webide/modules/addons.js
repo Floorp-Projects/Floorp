@@ -9,8 +9,8 @@ const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-var ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbExtensionURL");
-var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbExtensionID");
+var ADB_LINK = Services.prefs.getCharPref("devtools.remote.adb.extensionURL");
+var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.remote.adb.extensionID");
 
 var platform = Services.appShell.hiddenDOMWindow.navigator.platform;
 var OS = "";
