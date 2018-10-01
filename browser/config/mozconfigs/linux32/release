@@ -1,10 +1,6 @@
 # This make file should be identical to the beta mozconfig, apart from the
 # safeguard below
 
-if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then
-  MOZ_AUTOMATION_UPDATE_PACKAGING=1
-fi
-
 export MOZ_PGO=1
 
 . "$topsrcdir/browser/config/mozconfigs/linux32/common-opt"
