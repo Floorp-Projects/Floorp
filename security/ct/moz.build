@@ -8,33 +8,35 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Security: PSM")
 
 EXPORTS += [
-    'BRNameMatchingPolicy.h',
-    'CertVerifier.h',
-    'OCSPCache.h',
+    'BTInclusionProof.h',
+    'BTVerifier.h',
+    'Buffer.h',
+    'CTLog.h',
+    'CTPolicyEnforcer.h',
+    'CTVerifyResult.h',
+    'SignedCertificateTimestamp.h',
+    'SignedTreeHead.h',
 ]
 
 UNIFIED_SOURCES += [
-    'BRNameMatchingPolicy.cpp',
-    'CertVerifier.cpp',
-    'NSSCertDBTrustDomain.cpp',
-    'OCSPCache.cpp',
-    'OCSPVerificationTrustDomain.cpp',
+    'BTVerifier.cpp',
+    'Buffer.cpp',
+    'CTDiversityPolicy.cpp',
+    'CTLogVerifier.cpp',
+    'CTObjectsExtractor.cpp',
+    'CTPolicyEnforcer.cpp',
+    'CTSerialization.cpp',
+    'CTVerifyResult.cpp',
+    'MultiLogCTVerifier.cpp',
+    'SignedCertificateTimestamp.cpp',
 ]
 
-if not CONFIG['NSS_NO_EV_CERTS']:
-    UNIFIED_SOURCES += [
-        'ExtendedValidation.cpp',
-    ]
-
 LOCAL_INCLUDES += [
-    '/security/ct',
-    '/security/manager/ssl',
     '/security/pkix/include',
     '/security/pkix/lib',
 ]
 
 DIRS += [
-    '../ct',
     '../pkix',
 ]
 
