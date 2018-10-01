@@ -1161,3 +1161,19 @@ option('--enable-tasktracer', help='Enable TaskTracer')
 
 set_define('MOZ_TASK_TRACER', depends_if('--enable-tasktracer')(lambda _: True))
 set_config('MOZ_TASK_TRACER', depends_if('--enable-tasktracer')(lambda _: True))
+
+# Reflow counting
+# ==============================================================
+
+@depends(moz_debug, '--help')
+def reflow_perf(debug, _):
+    if debug:
+        return True
+
+option('--enable-reflow-perf', help='Enable reflow performance tracing',
+       default=reflow_perf)
+
+# The difference in conditions here comes from the initial implementation
+# in old-configure, which was unexplained there as well.
+set_define('MOZ_REFLOW_PERF', depends_if('--enable-reflow-perf')(lambda _: True))
+set_define('MOZ_REFLOW_PERF_DSP', reflow_perf)
