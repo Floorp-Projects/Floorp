@@ -64,6 +64,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/SVGUseElement.h"
@@ -1927,6 +1928,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchors);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnonymousContents)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFeaturePolicy)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
@@ -2019,6 +2021,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCommandDispatcher)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFeaturePolicy)
 
   tmp->mParentDocument = nullptr;
 
@@ -2779,6 +2782,10 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // Initialize FeaturePolicy
+  nsresult rv = InitFeaturePolicy(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // XFO needs to be checked after CSP because it is ignored if
   // the CSP defines frame-ancestors.
   if (!FramingChecker::CheckFrameOptions(aChannel, docShell, NodePrincipal())) {
@@ -3000,6 +3007,69 @@ nsIDocument::InitCSP(nsIChannel* aChannel)
     }
   }
   ApplySettingsFromCSP(false);
+  return NS_OK;
+}
+
+nsresult
+nsIDocument::InitFeaturePolicy(nsIChannel* aChannel)
+{
+  MOZ_ASSERT(!mFeaturePolicy, "we should only call init once");
+
+  // we need to create a policy here so getting the policy within
+  // ::Policy() can *always* return a non null policy
+  mFeaturePolicy = new FeaturePolicy(this);
+
+  if (!StaticPrefs::dom_security_featurePolicy_enabled()) {
+    return NS_OK;
+  }
+
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(NodePrincipal(), origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mFeaturePolicy->SetDefaultOrigin(origin);
+
+  RefPtr<FeaturePolicy> parentPolicy = nullptr;
+  if (mDocumentContainer) {
+    nsPIDOMWindowOuter* containerWindow = mDocumentContainer->GetWindow();
+    if (containerWindow) {
+      nsCOMPtr<nsINode> node = containerWindow->GetFrameElementInternal();
+      if (node) {
+        HTMLIFrameElement* iframe = HTMLIFrameElement::FromNode(node);
+        if (iframe) {
+          parentPolicy = iframe->Policy();
+        }
+      }
+    }
+  }
+
+  if (parentPolicy) {
+    // Let's inherit the policy from the parent HTMLIFrameElement if it exists.
+    mFeaturePolicy->InheritPolicy(parentPolicy);
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!httpChannel) {
+    return NS_OK;
+  }
+
+  // query the policy from the header
+  nsAutoCString value;
+  rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Feature-Policy"),
+                                      value);
+  if (NS_SUCCEEDED(rv)) {
+    mFeaturePolicy->SetDeclaredPolicy(this, NS_ConvertUTF8toUTF16(value),
+                                      origin, EmptyString(),
+                                      false /* 'src' enabled */);
+  }
+
   return NS_OK;
 }
 
@@ -10162,6 +10232,17 @@ nsIDocument::MaybeResolveReadyForIdle()
   if (readyPromise) {
     readyPromise->MaybeResolve(this);
   }
+}
+
+FeaturePolicy*
+nsIDocument::Policy() const
+{
+  MOZ_ASSERT(StaticPrefs::dom_security_featurePolicy_enabled());
+
+  // The policy is created when the document is initialized. We _must_ have a
+  // policy here.
+  MOZ_ASSERT(mFeaturePolicy);
+  return mFeaturePolicy;
 }
 
 nsIDOMXULCommandDispatcher*

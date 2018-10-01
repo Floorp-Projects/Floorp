@@ -170,34 +170,16 @@ nsImageRenderer::PrepareImage()
       mPrepareResult = ImgDrawResult::SUCCESS;
       break;
     case eStyleImageType_Element: {
-      nsAutoString elementId =
-        NS_LITERAL_STRING("#") + nsDependentAtomString(mImage->GetElementId());
-      nsCOMPtr<nsIURI> targetURI;
-      nsCOMPtr<nsIURI> base = mForFrame->GetContent()->GetBaseURI();
-      nsContentUtils::NewURIWithDocumentCharset(
-        getter_AddRefs(targetURI),
-        elementId,
-        mForFrame->GetContent()->GetUncomposedDoc(),
-        base);
-      RefPtr<URLAndReferrerInfo> url = new URLAndReferrerInfo(
-        targetURI,
-        mForFrame->GetContent()->OwnerDoc()->GetDocumentURI(),
-        mForFrame->GetContent()->OwnerDoc()->GetReferrerPolicy());
-
-      nsSVGPaintingProperty* property = SVGObserverUtils::GetPaintingPropertyForURI(
-          url, mForFrame->FirstContinuation(),
-          SVGObserverUtils::BackgroundImageProperty());
-      if (!property) {
-        mPrepareResult = ImgDrawResult::BAD_IMAGE;
-        return false;
-      }
-
+      Element* paintElement = // may be null
+        SVGObserverUtils::GetAndObserveBackgroundImage(
+          mForFrame->FirstContinuation(), mImage->GetElementId());
       // If the referenced element is an <img>, <canvas>, or <video> element,
       // prefer SurfaceFromElement as it's more reliable.
-      mImageElementSurface = nsLayoutUtils::SurfaceFromElement(
-                               property->GetAndObserveReferencedElement());
+      mImageElementSurface = nsLayoutUtils::SurfaceFromElement(paintElement);
+
       if (!mImageElementSurface.GetSourceSurface()) {
-        nsIFrame* paintServerFrame = property->GetAndObserveReferencedFrame();
+        nsIFrame* paintServerFrame =
+          paintElement ? paintElement->GetPrimaryFrame() : nullptr;
         // If there's no referenced frame, or the referenced frame is
         // non-displayable SVG, then we have nothing valid to paint.
         if (!paintServerFrame ||

@@ -63,6 +63,7 @@ STATIC_ATOMS = [
     Atom("after", "after"),
     Atom("align", "align"),
     Atom("alink", "alink"),
+    Atom("allow", "allow"),
     Atom("allowdirs", "allowdirs"),
     Atom("allowevents", "allowevents"),
     Atom("allowforms", "allow-forms"),
