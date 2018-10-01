@@ -10,10 +10,6 @@
 
 #include <stdint.h>
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
-#include "mozilla/TypeTraits.h"
-
 namespace mozilla { namespace ct {
 
 using namespace mozilla::pkix;

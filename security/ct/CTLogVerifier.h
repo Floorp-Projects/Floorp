@@ -7,13 +7,15 @@
 #ifndef CTLogVerifier_h
 #define CTLogVerifier_h
 
+#include <memory>
+
 #include "CTLog.h"
-#include "pkix/Input.h"
-#include "pkix/pkix.h"
-#include "pkix/Result.h"
-#include "ScopedNSSTypes.h"
+#include "CTUtils.h"
 #include "SignedCertificateTimestamp.h"
 #include "SignedTreeHead.h"
+#include "pkix/Input.h"
+#include "pkix/Result.h"
+#include "pkix/pkix.h"
 
 namespace mozilla { namespace ct {
 

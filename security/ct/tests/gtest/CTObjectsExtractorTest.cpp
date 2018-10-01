@@ -21,7 +21,9 @@ public:
   void SetUp() override
   {
     // Does nothing if NSS is already initialized.
-    MOZ_RELEASE_ASSERT(NSS_NoDB_Init(nullptr) == SECSuccess);
+    if (NSS_NoDB_Init(nullptr) != SECSuccess) {
+      abort();
+    }
 
     mTestCert = GetDEREncodedX509Cert();
     mEmbeddedCert = GetDEREncodedTestEmbeddedCert();

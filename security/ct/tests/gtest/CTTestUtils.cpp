@@ -12,9 +12,6 @@
 #include "BTInclusionProof.h"
 #include "CTSerialization.h"
 #include "gtest/gtest.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
-#include "mozilla/Vector.h"
 #include "pkix/Input.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
@@ -435,15 +432,16 @@ CharToByte(char c)
   } else if (c >= 'A' && c <= 'F') {
     return c - 'A' + 10;
   }
-  MOZ_RELEASE_ASSERT(false);
-  return 0;
+  abort();
 }
 
 static Buffer
 HexToBytes(const char* hexData)
 {
   size_t hexLen = strlen(hexData);
-  MOZ_RELEASE_ASSERT(hexLen > 0 && (hexLen % 2 == 0));
+  if (!(hexLen > 0 && (hexLen % 2 == 0))) {
+    abort();
+  }
   size_t resultLen = hexLen / 2;
   Buffer result;
   result.reserve(resultLen);
@@ -715,7 +713,9 @@ Buffer
 ExtractCertSPKI(Input cert)
 {
   BackCert backCert(cert, EndEntityOrCA::MustBeEndEntity, nullptr);
-  MOZ_RELEASE_ASSERT(backCert.Init() == Success);
+  if (backCert.Init() != Success) {
+    abort();
+  }
 
   Input spkiInput = backCert.GetSubjectPublicKeyInfo();
   Buffer spki;
@@ -874,15 +874,18 @@ Input
 InputForBuffer(const Buffer& buffer)
 {
   Input input;
-  MOZ_RELEASE_ASSERT(Success == input.Init(buffer.data(), buffer.size()));
+  if (input.Init(buffer.data(), buffer.size()) != Success) {
+    abort();
+  }
   return input;
 }
 
 Input InputForSECItem(const SECItem& item)
 {
   Input input;
-  MOZ_RELEASE_ASSERT(Success ==
-                     input.Init(item.data, item.len));
+  if (input.Init(item.data, item.len) != Success) {
+    abort();
+  }
   return input;
 }
 

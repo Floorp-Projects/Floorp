@@ -8,10 +8,7 @@
 #include "CTUtils.h"
 
 #include <stdint.h>
-
-#include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
-#include "mozilla/TypeTraits.h"
+#include <type_traits>
 
 namespace mozilla { namespace ct {
 
@@ -77,7 +74,7 @@ Result
 ReadUint(Reader& in, T& out)
 {
   uint64_t value;
-  static_assert(mozilla::IsUnsigned<T>::value, "T must be unsigned");
+  static_assert(std::is_unsigned<T>::value, "T must be unsigned");
   static_assert(length <= 8, "At most 8 byte integers can be read");
   static_assert(sizeof(T) >= length, "T must be able to hold <length> bytes");
   Result rv = UncheckedReadUint(length, in, value);
@@ -198,7 +195,7 @@ WriteUint(T value, Buffer& output)
 {
   static_assert(length <= 8, "At most 8 byte integers can be written");
   static_assert(sizeof(T) >= length, "T must be able to hold <length> bytes");
-  if (mozilla::IsSigned<T>::value) {
+  if (std::is_signed<T>::value) {
     // We accept signed integer types assuming the actual value is non-negative.
     if (value < 0) {
       return Result::FATAL_ERROR_INVALID_ARGS;
@@ -363,7 +360,7 @@ EncodeLogEntry(const LogEntry& entry, Buffer& output)
     case LogEntry::Type::Precert:
       return EncodePrecertLogEntry(entry, output);
     default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected LogEntry type");
+      assert(false);
   }
   return Result::ERROR_BAD_DER;
 }

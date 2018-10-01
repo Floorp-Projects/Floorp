@@ -10,12 +10,6 @@
 #include <stdint.h>
 #include <vector>
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/Logging.h"
-
-extern mozilla::LazyLogModule gCertVerifierLog;
-
 namespace mozilla { namespace ct {
 
 using namespace mozilla::pkix;
@@ -222,9 +216,6 @@ CheckNonEmbeddedCompliance(const VerifiedSCTList& verifiedScts, bool& compliant)
       return verifiedSct.status == VerifiedSCT::Status::Valid;
     });
 
-  MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-          ("CT Policy non-embedded case status: validSCTs=%zu\n",
-           validSctsCount));
   compliant = validSctsCount >= 2;
 }
 
@@ -259,11 +250,6 @@ CheckEmbeddedCompliance(const VerifiedSCTList& verifiedScts,
   size_t requiredSctsCount =
     GetRequiredEmbeddedSctsCount(certLifetimeInCalendarMonths);
 
-  MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-          ("CT Policy embedded case status: "
-           "requiredSCTs=%zu embeddedSCTs=%zu\n",
-           requiredSctsCount, embeddedSctsCount));
-
   compliant = embeddedSctsCount >= requiredSctsCount;
 }
 
@@ -278,25 +264,13 @@ CTPolicyEnforcer::CheckCompliance(const VerifiedSCTList& verifiedScts,
   bool diversityOK;
   CheckOperatorDiversityCompliance(verifiedScts, certIssuanceTime,
                                    dependentOperators, diversityOK);
-  if (diversityOK) {
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-            ("CT Policy: diversity satisfied\n"));
-  }
 
   bool nonEmbeddedCaseOK;
   CheckNonEmbeddedCompliance(verifiedScts, nonEmbeddedCaseOK);
-  if (nonEmbeddedCaseOK) {
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-            ("CT Policy: non-embedded case satisfied)\n"));
-  }
 
   bool embeddedCaseOK;
   CheckEmbeddedCompliance(verifiedScts, certLifetimeInCalendarMonths,
                           certIssuanceTime, embeddedCaseOK);
-  if (embeddedCaseOK) {
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-            ("CT Policy: embedded case satisfied\n"));
-  }
 
   if (nonEmbeddedCaseOK || embeddedCaseOK) {
     compliance = diversityOK ? CTPolicyCompliance::Compliant
@@ -308,20 +282,12 @@ CTPolicyEnforcer::CheckCompliance(const VerifiedSCTList& verifiedScts,
 
   switch (compliance) {
     case CTPolicyCompliance::Compliant:
-      MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-                ("CT Policy compliance: Compliant\n"));
-      break;
     case CTPolicyCompliance::NotEnoughScts:
-      MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-                ("CT Policy compliance: NotEnoughScts\n"));
-      break;
     case CTPolicyCompliance::NotDiverseScts:
-      MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-                ("CT Policy compliance: NotDiverseScts\n"));
       break;
     case CTPolicyCompliance::Unknown:
     default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected CTPolicyCompliance type");
+      assert(false);
   }
 }
 

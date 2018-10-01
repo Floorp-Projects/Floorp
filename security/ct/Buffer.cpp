@@ -6,6 +6,8 @@
 
 #include "Buffer.h"
 
+#include <string.h>
+
 namespace mozilla {
 
 bool

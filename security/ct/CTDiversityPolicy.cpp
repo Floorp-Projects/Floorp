@@ -31,7 +31,7 @@ GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
 }
 
 Result
-CTDiversityPolicy::GetDependentOperators(const UniqueCERTCertList& builtChain,
+CTDiversityPolicy::GetDependentOperators(const CERTCertList* builtChain,
                                          const CTLogOperatorList& operators,
                                          CTLogOperatorList& dependentOperators)
 {
