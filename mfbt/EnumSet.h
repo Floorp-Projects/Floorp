@@ -31,29 +31,29 @@ class EnumSet
 public:
   typedef T valueType;
 
-  EnumSet()
+  constexpr EnumSet()
     : mBitField(0)
   {
   }
 
-  MOZ_IMPLICIT EnumSet(T aEnum)
+  constexpr MOZ_IMPLICIT EnumSet(T aEnum)
     : mBitField(bitFor(aEnum))
   { }
 
-  EnumSet(T aEnum1, T aEnum2)
+  constexpr EnumSet(T aEnum1, T aEnum2)
     : mBitField(bitFor(aEnum1) |
                 bitFor(aEnum2))
   {
   }
 
-  EnumSet(T aEnum1, T aEnum2, T aEnum3)
+  constexpr EnumSet(T aEnum1, T aEnum2, T aEnum3)
     : mBitField(bitFor(aEnum1) |
                 bitFor(aEnum2) |
                 bitFor(aEnum3))
   {
   }
 
-  EnumSet(T aEnum1, T aEnum2, T aEnum3, T aEnum4)
+  constexpr EnumSet(T aEnum1, T aEnum2, T aEnum3, T aEnum4)
     : mBitField(bitFor(aEnum1) |
                 bitFor(aEnum2) |
                 bitFor(aEnum3) |
@@ -69,7 +69,7 @@ public:
     }
   }
 
-  EnumSet(const EnumSet& aEnumSet)
+  constexpr EnumSet(const EnumSet& aEnumSet)
     : mBitField(aEnumSet.mBitField)
   {
   }
@@ -342,7 +342,7 @@ public:
   }
 
 private:
-  static Serialized bitFor(T aEnum)
+  constexpr static Serialized bitFor(T aEnum)
   {
     auto bitNumber = static_cast<Serialized>(aEnum);
     MOZ_DIAGNOSTIC_ASSERT(bitNumber < kMaxBits);

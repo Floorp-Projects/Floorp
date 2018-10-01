@@ -52,14 +52,14 @@ enum class CompositorHitTestFlags : uint8_t {
 using CompositorHitTestInfo = EnumSet<CompositorHitTestFlags, uint32_t>;
 
 // A CompositorHitTestInfo with none of the flags set
-const CompositorHitTestInfo CompositorHitTestInvisibleToHit;
+constexpr CompositorHitTestInfo CompositorHitTestInvisibleToHit;
 
 // Mask to check for all the touch-action flags at once
-const CompositorHitTestInfo CompositorHitTestTouchActionMask =
-  CompositorHitTestInfo(CompositorHitTestFlags::eTouchActionPanXDisabled) +
-  CompositorHitTestInfo(CompositorHitTestFlags::eTouchActionPanYDisabled) +
-  CompositorHitTestInfo(CompositorHitTestFlags::eTouchActionPinchZoomDisabled) +
-  CompositorHitTestInfo(CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled);
+constexpr CompositorHitTestInfo CompositorHitTestTouchActionMask(
+  CompositorHitTestFlags::eTouchActionPanXDisabled,
+  CompositorHitTestFlags::eTouchActionPanYDisabled,
+  CompositorHitTestFlags::eTouchActionPinchZoomDisabled,
+  CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled);
 
 } // namespace gfx
 
