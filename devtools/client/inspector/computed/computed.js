@@ -15,7 +15,6 @@ const OutputParser = require("devtools/client/shared/output-parser");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
-const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
@@ -158,8 +157,7 @@ function CssComputedView(inspector, document, pageStyle) {
 
   this.propertyViews = [];
 
-  const cssProperties = getCssProperties(inspector.toolbox);
-  this._outputParser = new OutputParser(document, cssProperties);
+  this._outputParser = new OutputParser(document, inspector.cssProperties);
 
   // Create bound methods.
   this.focusWindow = this.focusWindow.bind(this);

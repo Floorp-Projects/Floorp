@@ -12,7 +12,6 @@ const {
 
 loader.lazyRequireGetter(this, "EditingSession", "devtools/client/inspector/boxmodel/utils/editing-session");
 loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
-loader.lazyRequireGetter(this, "getCssProperties", "devtools/shared/fronts/css-properties", true);
 
 const NUMERIC = /^-?[\d\.]+$/;
 
@@ -319,7 +318,7 @@ BoxModel.prototype = {
 
         this.updateBoxModel("editable-value-change");
       },
-      cssProperties: getCssProperties(this.inspector.toolbox)
+      cssProperties: this.inspector.cssProperties,
     }, event);
   },
 
