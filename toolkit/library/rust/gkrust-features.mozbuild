@@ -28,9 +28,3 @@ if CONFIG['MOZ_MEMORY']:
 
 if CONFIG['ENABLE_WASM_CRANELIFT']:
     gkrust_features += ['spidermonkey_rust']
-
-if CONFIG['MOZ_GECKO_PROFILER']:
-    gkrust_features += ['gecko_profiler']
-
-if CONFIG['MOZ_GECKO_PROFILER_PARSE_ELF']:
-    gkrust_features += ['gecko_profiler_parse_elf']
