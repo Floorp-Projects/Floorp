@@ -31,7 +31,7 @@
   <string name="preference_privacy_and_security_summary">Urmărire, cookie-uri, împărtășire de date</string>
   <string name="preference_search_summary">Setează motorul implicit, completare automată</string>
   <string name="preference_mozilla_summary">Despre %1$s, ajutor</string>
-  <string name="preference_category_tracking_protection">Protecție față de urmărire</string>
+  <string name="preference_category_tracking_protection">Protecție împotriva urmăririi</string>
   <string name="preference_category_web_content">Conținut web</string>
   <string name="preference_category_switching_apps">Comutare de aplicații</string>
   <string name="preference_category_general">General</string>
@@ -153,7 +153,7 @@
   <string name="error_unsupportedprotocol_title">Adresa nu a fost înțeleasă</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>S-ar putea s&#259; fie nevoie s&#259; instalezi alt program pentru a deschide aceast&#259; adres&#259;.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Conexiunea securizată a eșuat</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aceasta s-ar putea datora unei probleme &#238;n configura&#539;ia serverului sau ar putea s&#259; fie cineva care &#238;ncearc&#259; s&#259; uzurpeze identitatea serverului.</li>"\n  "<li>Dac&#259; te-ai conectat cu succes &#238;n trecut la acest server, eroarea poate fi temporar&#259; &#537;i po&#539;i &#238;ncerca din nou mai t&#226;rziu.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aceasta s-ar putea datora unei probleme &#238;n configura&#539;ia serverului sau\nar putea s&#259; fie cineva care &#238;ncearc&#259; s&#259; uzurpeze identitatea serverului.</li>"\n  "<li>Dac&#259; te-ai conectat cu succes &#238;n trecut la acest server, eroarea poate fi\ntemporar&#259; &#537;i po&#539;i &#238;ncerca din nou mai t&#226;rziu.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Nu putem încărca această pagină dintr-un motiv oarecare.</string>
   <string name="contextmenu_link_share">Partajează linkul</string>
@@ -177,7 +177,7 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">Adaugă</string>
   <string name="dialog_addtohomescreen_action_cancel">Renunță</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Scurtătura se va deschide cu protecţia față de urmărire dezactivată</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Scurtătura se va deschide cu protecţia împotriva urmăririi dezactivată</string>
   <string name="notification_browsing_session_channel_name">Sesiune de navigare privată</string>
   <string name="notification_browsing_session_channel_description">Notificările îți permit să ştergi sesiunea %1$s cu o atingere. Nu ai nevoie să deschizi aplicaţia sau să vezi ce rulează în browser.</string>
   <string name="tabs_tray_action_erase">Șterge istoricul de navigare</string>
@@ -223,7 +223,7 @@
   <string name="enable_search_suggestions_yes">Da</string>
   <string name="no_suggestions_message">Unele motoare de căutare nu pot afișa sugestii.</string>
   <string name="dismiss_no_suggestions_prompt_button">Înlătură</string>
-  <string name="tip_disable_tracking_protection">Site-ul se comportă neașteptat?\n Încearcă să dezactivezi protecția față de urmărire</string>
+  <string name="tip_disable_tracking_protection">Site-ul se comportă neașteptat?\n Încearcă să dezactivezi protecția împotriva urmăririi</string>
   <string name="tip_add_to_homescreen">Obține acces cu o singură atingere la site-urile frecvent vizitate%1$s Meniu &gt; Adaugă la ecranul principal</string>
   <string name="tip_set_default_browser">Deschide fiecare link în %1$s\n Setează %1$s ca browser implicit</string>
   <string name="tip_autocomplete_url">Autocompletează adrese pentru site-uri frecvent vizitate\n Apasă lung pe orice adreesă din bara de adrese</string>
