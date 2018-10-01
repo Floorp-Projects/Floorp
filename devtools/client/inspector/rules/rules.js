@@ -16,7 +16,6 @@ const {PrefObserver} = require("devtools/client/shared/prefs");
 const ElementStyle = require("devtools/client/inspector/rules/models/element-style");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const RuleEditor = require("devtools/client/inspector/rules/views/rule-editor");
-const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
@@ -105,6 +104,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   EventEmitter.decorate(this);
 
   this.inspector = inspector;
+  this.cssProperties = inspector.cssProperties;
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
   this.store = store || {};
@@ -115,8 +115,6 @@ function CssRuleView(inspector, document, store, pageStyle) {
 
   // Allow tests to override debouncing behavior, as this can cause intermittents.
   this.debounce = debounce;
-
-  this.cssProperties = getCssProperties(inspector.toolbox);
 
   this._outputParser = new OutputParser(document, this.cssProperties);
 
