@@ -34,6 +34,7 @@ DIRS += [
     'webaudioeditor',
     'webconsole',
     'webide',
+    'webreplay',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
