@@ -302,10 +302,15 @@ def checks(target, binary):
         checks.append(check_stdcxx)
         checks.append(check_libgcc)
         checks.append(check_glibc)
-    checks.append(check_textrel)
+
+    # Disabled for local builds because of readelf performance: See bug 1472496
+    if not buildconfig.substs.get('DEVELOPER_OPTIONS'):
+        checks.append(check_textrel)
+        checks.append(check_pt_load)
+        checks.append(check_mozglue_order)
+
     checks.append(check_nsmodules)
-    checks.append(check_pt_load)
-    checks.append(check_mozglue_order)
+
     retcode = 0
     basename = os.path.basename(binary)
     for c in checks:
