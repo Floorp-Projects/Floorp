@@ -3377,6 +3377,23 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
           // Pushed streams are special on padding-only final data frames.
           // See bug 1409570 comments 6-8 for details.
           streamToCleanup->SetPushComplete();
+          Http2Stream *pushSink = streamToCleanup->GetConsumerStream();
+          if (pushSink) {
+            bool enqueueSink = true;
+            for (auto iter = mPushesReadyForRead.begin();
+                 iter != mPushesReadyForRead.end();
+                 ++iter) {
+              if (*iter == pushSink) {
+                enqueueSink = false;
+                break;
+              }
+            }
+            if (enqueueSink) {
+              mPushesReadyForRead.Push(pushSink);
+              // No use trying to clean up, it won't do anything, anyway
+              streamToCleanup = nullptr;
+            }
+          }
         }
         CleanupStream(streamToCleanup, NS_OK, CANCEL_ERROR);
       }
