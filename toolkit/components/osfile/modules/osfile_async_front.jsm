@@ -86,9 +86,6 @@ for (let [constProp, dirKey] of [
   ["winAppDataDir", "AppData"],
   ["winLocalAppDataDir", "LocalAppData"],
   ["winStartMenuProgsDir", "Progs"],
-  ["tmpDir", "TmpD"],
-  ["homeDir", "Home"],
-  ["macUserLibDir", "ULibDir"],
   ]) {
 
   if (constProp in SharedAll.Constants.Path) {
