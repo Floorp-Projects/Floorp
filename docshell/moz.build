@@ -21,7 +21,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 
 MOCHITEST_MANIFESTS += [
     'test/iframesandbox/mochitest.ini',
-    'test/mochitest.ini',
+    'test/mochitest/mochitest.ini',
     'test/navigation/mochitest.ini',
 ]
 
