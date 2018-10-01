@@ -106,9 +106,6 @@ with Files('*1045096*'):
 with Files('*1151421*'):
     BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
-with Files('*369814*'):
-    BUG_COMPONENT = ('Core', 'Networking: JAR')
-
 with Files('*402210*'):
     BUG_COMPONENT = ('Core', 'DOM: Security')
 
