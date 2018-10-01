@@ -12,19 +12,21 @@
 
 using namespace mozilla::dom;
 
+#define URL_SELF NS_LITERAL_STRING("https://example.com")
+#define URL_EXAMPLE_COM NS_LITERAL_STRING("http://example.com")
+#define URL_EXAMPLE_NET NS_LITERAL_STRING("http://example.net")
+
 void
 CheckParser(const nsAString& aInput, bool aExpectedResults,
             uint32_t aExpectedFeatures, nsTArray<Feature>& aParsedFeatures)
 {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                          NS_LITERAL_STRING("https://example.com"));
-  ASSERT_EQ(NS_OK, rv) << "NS_NewURI works.";
-
   nsTArray<Feature> parsedFeatures;
-  ASSERT_TRUE(FeaturePolicyParser::ParseString(aInput, nullptr, uri,
-                                               parsedFeatures) ==
-                aExpectedResults);
+  ASSERT_TRUE(FeaturePolicyParser::ParseString(aInput,
+                                               nullptr,
+                                               URL_SELF,
+                                               EmptyString(),
+                                               true, // 'src' enabled
+                                               parsedFeatures) == aExpectedResults);
   ASSERT_TRUE(parsedFeatures.Length() == aExpectedFeatures);
 
   parsedFeatures.SwapElements(aParsedFeatures);
@@ -32,21 +34,6 @@ CheckParser(const nsAString& aInput, bool aExpectedResults,
 
 TEST(FeaturePolicyParser, Basic)
 {
-  nsCOMPtr<nsIURI> uriSelf;
-  nsresult rv = NS_NewURI(getter_AddRefs(uriSelf),
-                          NS_LITERAL_STRING("https://example.com"));
-  ASSERT_EQ(NS_OK, rv) << "NS_NewURI works.";
-
-  nsCOMPtr<nsIURI> uriExampleCom;
-  rv = NS_NewURI(getter_AddRefs(uriExampleCom),
-                 NS_LITERAL_STRING("http://example.com"));
-  ASSERT_EQ(NS_OK, rv) << "NS_NewURI works.";
-
-  nsCOMPtr<nsIURI> uriExampleNet;
-  rv = NS_NewURI(getter_AddRefs(uriExampleNet),
-                 NS_LITERAL_STRING("http://example.net"));
-  ASSERT_EQ(NS_OK, rv) << "NS_NewURI works.";
-
   nsTArray<Feature> parsedFeatures;
 
   // Empty string is a valid policy.
@@ -107,26 +94,26 @@ TEST(FeaturePolicyParser, Basic)
   CheckParser(NS_LITERAL_STRING("camera      'self'"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriSelf));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
 
   // Multiple spaces around the value
   CheckParser(NS_LITERAL_STRING("camera      'self'    "), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriSelf));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
 
   // No final '
   CheckParser(NS_LITERAL_STRING("camera      'self"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
   ASSERT_TRUE(parsedFeatures[0].IsWhiteList());
-  ASSERT_TRUE(!parsedFeatures[0].WhiteListContains(uriSelf));
+  ASSERT_TRUE(!parsedFeatures[0].WhiteListContains(URL_SELF));
 
   // Lowercase/Uppercase
   CheckParser(NS_LITERAL_STRING("camera      'selF'"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriSelf));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
 
   // Lowercase/Uppercase
   CheckParser(NS_LITERAL_STRING("camera * 'self' none' a.com 123"), true, 1,
@@ -149,23 +136,23 @@ TEST(FeaturePolicyParser, Basic)
   // 'self'
   CheckParser(NS_LITERAL_STRING("camera 'self'"), true, 1, parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriSelf));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
 
   // A couple of URLs
   CheckParser(NS_LITERAL_STRING("camera http://example.com http://example.net"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(!parsedFeatures[0].WhiteListContains(uriSelf));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriExampleCom));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriExampleNet));
+  ASSERT_TRUE(!parsedFeatures[0].WhiteListContains(URL_SELF));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_EXAMPLE_COM));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_EXAMPLE_NET));
 
   // A couple of URLs + self
   CheckParser(NS_LITERAL_STRING("camera http://example.com 'self' http://example.net"), true, 1,
               parsedFeatures);
   ASSERT_TRUE(parsedFeatures[0].Name().Equals(NS_LITERAL_STRING("camera")));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriSelf));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriExampleCom));
-  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(uriExampleNet));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_SELF));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_EXAMPLE_COM));
+  ASSERT_TRUE(parsedFeatures[0].WhiteListContains(URL_EXAMPLE_NET));
 
   // A couple of URLs but then *
   CheckParser(NS_LITERAL_STRING("camera http://example.com 'self' http://example.net *"), true, 1,

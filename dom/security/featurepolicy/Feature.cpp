@@ -6,9 +6,34 @@
 
 #include "Feature.h"
 
-#include "nsIURI.h"
-
 using namespace mozilla::dom;
+
+void
+Feature::GetWhiteListedOrigins(nsTArray<nsString>& aList) const
+{
+  MOZ_ASSERT(mPolicy == eWhiteList);
+  aList.AppendElements(mWhiteListedOrigins);
+}
+
+bool
+Feature::Allows(const nsAString& aOrigin) const
+{
+  if (mPolicy == eNone) {
+    return false;
+  }
+
+  if (mPolicy == eAll) {
+    return true;
+  }
+
+  for (const nsString& whiteListedOrigin : mWhiteListedOrigins) {
+    if (whiteListedOrigin.Equals(aOrigin)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 Feature::Feature(const nsAString& aFeatureName)
   : mFeatureName(aFeatureName)
@@ -27,7 +52,7 @@ void
 Feature::SetAllowsNone()
 {
   mPolicy = eNone;
-  mWhiteList.Clear();
+  mWhiteListedOrigins.Clear();
 }
 
 bool
@@ -40,7 +65,7 @@ void
 Feature::SetAllowsAll()
 {
   mPolicy = eAll;
-  mWhiteList.Clear();
+  mWhiteListedOrigins.Clear();
 }
 
 bool
@@ -50,29 +75,20 @@ Feature::AllowsAll() const
 }
 
 void
-Feature::AppendURIToWhiteList(nsIURI* aURI)
+Feature::AppendOriginToWhiteList(const nsAString& aOrigin)
 {
   mPolicy = eWhiteList;
-  mWhiteList.AppendElement(aURI);
+  mWhiteListedOrigins.AppendElement(aOrigin);
 }
 
 bool
-Feature::WhiteListContains(nsIURI* aURI) const
+Feature::WhiteListContains(const nsAString& aOrigin) const
 {
-  MOZ_ASSERT(aURI);
-
   if (!IsWhiteList()) {
     return false;
   }
 
-  bool equal = false;
-  for (nsIURI* uri : mWhiteList) {
-    if (NS_SUCCEEDED(uri->Equals(aURI, &equal)) && equal) {
-      return true;
-    }
-  }
-
-  return false;
+  return mWhiteListedOrigins.Contains(aOrigin);
 }
 
 bool

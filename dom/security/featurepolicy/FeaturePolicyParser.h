@@ -20,10 +20,14 @@ class Feature;
 class FeaturePolicyParser final
 {
 public:
+  // aSelfOrigin must not be empty. if aSrcOrigin is empty, the parsing will not
+  // support 'src' as valid allow directive value.
   static bool
   ParseString(const nsAString& aPolicy,
               nsIDocument* aDocument,
-              nsIURI* aSelfURI,
+              const nsAString& aSelfOrigin,
+              const nsAString& aSrcOrigin,
+              bool aSrcEnabled,
               nsTArray<Feature>& aParsedFeatures);
 };
 
