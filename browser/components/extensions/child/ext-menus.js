@@ -174,11 +174,6 @@ this.menusInternal = class extends ExtensionAPI {
         },
 
         overrideContext(contextOptions) {
-          let {event} = context.contentWindow;
-          if (!event || event.type !== "contextmenu" || !event.isTrusted) {
-            throw new ExtensionError("overrideContext must be called during a \"contextmenu\" event");
-          }
-
           let checkValidArg = (contextType, propKey) => {
             if (contextOptions.context !== contextType) {
               if (contextOptions[propKey]) {
@@ -223,12 +218,16 @@ this.menusInternal = class extends ExtensionAPI {
             observe(subject, topic, data) {
               pendingMenuEvent = null;
               Services.obs.removeObserver(this, "on-prepare-contextmenu");
-              subject.wrappedJSObject.webExtContextData = this.webExtContextData;
+              subject = subject.wrappedJSObject;
+              if (context.principal.subsumes(subject.context.principal)) {
+                subject.webExtContextData = this.webExtContextData;
+              }
             },
             run() {
               // "on-prepare-contextmenu" is expected to be observed before the
               // end of the "contextmenu" event dispatch. This task is queued
               // in case that does not happen, e.g. when the menu is not shown.
+              // ... or if the method was not called during a contextmenu event.
               if (pendingMenuEvent === this) {
                 pendingMenuEvent = null;
                 Services.obs.removeObserver(this, "on-prepare-contextmenu");
