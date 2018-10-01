@@ -10,15 +10,10 @@
 var BUFFER_SIZE = 20000;
 var config = { bufferSize: BUFFER_SIZE };
 
-const { PerformanceFront } = require("devtools/shared/fronts/performance");
-
 add_task(async function() {
-  await addTab(MAIN_DOMAIN + "doc_perf.html");
+  const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
 
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const front = PerformanceFront(client, form);
+  const front = target.getFront("performance");
   await front.connect();
 
   await front.setProfilerStatusInterval(10);
@@ -54,6 +49,6 @@ add_task(async function() {
     "buffer usage should be null when no longer recording.");
 
   await front.destroy();
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });
