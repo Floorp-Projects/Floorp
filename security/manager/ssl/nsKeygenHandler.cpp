@@ -544,7 +544,7 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
         KeygenRunnable->SetParams( slot, attrFlags, nullptr, 0,
                                    keyGenMechanism, params, m_ctx );
 
-        runnable = do_QueryInterface(KeygenRunnable);
+        runnable = KeygenRunnable;
         if (runnable) {
             rv = dialogs->DisplayGeneratingKeypairInfo(m_ctx, runnable);
             // We call join on the thread so we can be sure that no

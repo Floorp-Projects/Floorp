@@ -26,7 +26,7 @@ class JSStringEnumerator final : public nsIJSEnumerator
   NS_DECL_NSIJSENUMERATOR
 
   explicit JSStringEnumerator(nsIStringEnumerator* aEnumerator)
-    : mEnumerator(do_QueryInterface(aEnumerator))
+    : mEnumerator(aEnumerator)
   {
     MOZ_ASSERT(mEnumerator);
   }

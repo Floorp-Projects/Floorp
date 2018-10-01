@@ -232,7 +232,7 @@ TabParent::CacheFrameLoader(nsFrameLoader* aFrameLoader)
 already_AddRefed<nsPIDOMWindowOuter>
 TabParent::GetParentWindowOuter()
 {
-  nsCOMPtr<nsIContent> frame = do_QueryInterface(GetOwnerElement());
+  nsCOMPtr<nsIContent> frame = GetOwnerElement();
   if (!frame) {
     return nullptr;
   }
@@ -585,7 +585,7 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
   RefPtr<Event> event = aEvent.mEvent;
   NS_ENSURE_TRUE(event, IPC_OK());
 
-  nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(mFrameElement);
+  nsCOMPtr<mozilla::dom::EventTarget> target = mFrameElement;
   NS_ENSURE_TRUE(target, IPC_OK());
 
   event->SetOwner(target);
@@ -1146,8 +1146,7 @@ TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent)
 LayoutDeviceToCSSScale
 TabParent::GetLayoutDeviceToCSSScale()
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
-  nsIDocument* doc = (content ? content->OwnerDoc() : nullptr);
+  nsIDocument* doc = (mFrameElement ? mFrameElement->OwnerDoc() : nullptr);
   nsPresContext* ctx = (doc ? doc->GetPresContext() : nullptr);
   return LayoutDeviceToCSSScale(ctx
     ? (float)ctx->AppUnitsPerDevPixel() / AppUnitsPerCSSPixel()
@@ -2028,8 +2027,7 @@ TabParent::RecvRequestFocus(const bool& aCanRaise)
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
-  if (!content || !content->OwnerDoc()) {
+  if (!mFrameElement || !mFrameElement->OwnerDoc()) {
     return IPC_OK();
   }
 
@@ -2485,7 +2483,7 @@ TabParent::RecvSetInputContext(
 already_AddRefed<nsIWidget>
 TabParent::GetTopLevelWidget()
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  nsCOMPtr<nsIContent> content = mFrameElement;
   if (content) {
     nsIPresShell* shell = content->OwnerDoc()->GetShell();
     if (shell) {
@@ -2566,7 +2564,7 @@ TabParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> window;
-  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
+  nsCOMPtr<nsIContent> frame = mFrameElement;
   if (frame)
     window = frame->OwnerDoc()->GetWindow();
 
@@ -3080,7 +3078,7 @@ TabParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch, bool aActive)
     return;
   }
 
-  nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(mFrameElement);
+  nsCOMPtr<mozilla::dom::EventTarget> target = mFrameElement;
   if (!target) {
     NS_WARNING("Could not locate target for layer tree message.");
     return;
@@ -3113,7 +3111,7 @@ TabParent::RecvPaintWhileInterruptingJSNoOp(const LayersObserverEpoch& aEpoch)
 mozilla::ipc::IPCResult
 TabParent::RecvRemotePaintIsReady()
 {
-  nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(mFrameElement);
+  nsCOMPtr<mozilla::dom::EventTarget> target = mFrameElement;
   if (!target) {
     NS_WARNING("Could not locate target for MozAfterRemotePaint message.");
     return IPC_OK();

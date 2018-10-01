@@ -332,7 +332,7 @@ HttpChannelParentListener::OnRedirectResult(bool succeeded)
       MOZ_ASSERT(parent);
       parent->Delete();
       mInterceptCanceled = false;
-      mNextListener = do_QueryInterface(redirectChannel);
+      mNextListener = redirectChannel;
       MOZ_ASSERT(mNextListener);
       redirectChannel->SetParentListener(this);
     }

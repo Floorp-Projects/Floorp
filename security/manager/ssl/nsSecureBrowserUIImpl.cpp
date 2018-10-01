@@ -137,7 +137,7 @@ nsSecureBrowserUIImpl::CheckForBlockedContent()
   // For content docShells, the mixed content security state is set on the root
   // docShell.
   if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(docShell);
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     Unused << docShellTreeItem->GetSameTypeRootTreeItem(
       getter_AddRefs(sameTypeRoot));

@@ -242,7 +242,7 @@ NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetInstallingWorker(nsIServiceWorkerInfo **aResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIServiceWorkerInfo> info = do_QueryInterface(mInstallingWorker);
+  RefPtr<ServiceWorkerInfo> info = mInstallingWorker;
   info.forget(aResult);
   return NS_OK;
 }
@@ -251,7 +251,7 @@ NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetWaitingWorker(nsIServiceWorkerInfo **aResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIServiceWorkerInfo> info = do_QueryInterface(mWaitingWorker);
+  RefPtr<ServiceWorkerInfo> info = mWaitingWorker;
   info.forget(aResult);
   return NS_OK;
 }
@@ -260,7 +260,7 @@ NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetActiveWorker(nsIServiceWorkerInfo **aResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIServiceWorkerInfo> info = do_QueryInterface(mActiveWorker);
+  RefPtr<ServiceWorkerInfo> info = mActiveWorker;
   info.forget(aResult);
   return NS_OK;
 }

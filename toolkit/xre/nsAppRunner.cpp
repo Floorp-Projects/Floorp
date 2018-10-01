@@ -1117,7 +1117,7 @@ nsXULAppInfo::SetEnabled(bool aEnabled)
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIFile> xreBinDirectory = do_QueryInterface(greBinDir);
+    nsCOMPtr<nsIFile> xreBinDirectory = greBinDir;
     if (!xreBinDirectory) {
       return NS_ERROR_FAILURE;
     }
