@@ -9,7 +9,7 @@ import android.os.Bundle
 import android.support.v7.preference.Preference
 import mozilla.components.browser.session.Session
 import org.mozilla.focus.R
-import org.mozilla.focus.browser.LocalizedContent
+import org.mozilla.focus.activity.InfoActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
@@ -51,9 +51,8 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
 
         when (preference.key) {
             resources.getString(R.string.pref_key_about) -> run {
-                val session = Session(LocalizedContent.URL_ABOUT, source = Session.Source.MENU)
-                activity.components.sessionManager.add(session)
-                activity.finish()
+                val intent = InfoActivity.getAboutIntent(requireContext())
+                startActivity(intent)
             }
             resources.getString(R.string.pref_key_help) -> run {
                 val session = Session(SupportUtils.HELP_URL, source = Session.Source.MENU)
@@ -61,9 +60,8 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
                 activity.finish()
             }
             resources.getString(R.string.pref_key_rights) -> run {
-                val session = Session(LocalizedContent.URL_RIGHTS, source = Session.Source.MENU)
-                activity.components.sessionManager.add(session)
-                activity.finish()
+                val intent = InfoActivity.getRightsIntent(requireContext())
+                startActivity(intent)
             }
             resources.getString(R.string.pref_key_privacy_notice) -> {
                 val url = if (AppConstants.isKlarBuild)
