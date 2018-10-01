@@ -9,6 +9,8 @@ with Files('*'):
 
 TEST_DIRS += ['test']
 
+DIRS += [ 'featurepolicy' ]
+
 EXPORTS.mozilla.dom += [
     'ContentVerifier.h',
     'CSPEvalChecker.h',
