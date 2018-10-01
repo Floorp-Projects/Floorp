@@ -744,24 +744,24 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     return this._devToolsToolbox;
   }
 
-  set devToolsTarget(contextDevToolsTarget) {
-    if (this._devToolsTarget) {
+  set devToolsTargetPromise(promise) {
+    if (this._devToolsTargetPromise) {
       throw new Error("Cannot set the context DevTools target twice");
     }
 
-    this._devToolsTarget = contextDevToolsTarget;
+    this._devToolsTargetPromise = promise;
 
-    return contextDevToolsTarget;
+    return promise;
   }
 
-  get devToolsTarget() {
-    return this._devToolsTarget;
+  get devToolsTargetPromise() {
+    return this._devToolsTargetPromise;
   }
 
   shutdown() {
-    if (this._devToolsTarget) {
-      this._devToolsTarget.destroy();
-      this._devToolsTarget = null;
+    if (this._devToolsTargetPromise) {
+      this._devToolsTargetPromise.then(target => target.destroy());
+      this._devToolsTargetPromise = null;
     }
 
     this._devToolsToolbox = null;
