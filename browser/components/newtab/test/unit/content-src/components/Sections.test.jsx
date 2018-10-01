@@ -141,6 +141,7 @@ describe("<Section>", () => {
     beforeEach(() => {
       Object.assign(FAKE_SECTION, {
         initialized: true,
+        dispatch: () => {},
         rows: [],
         emptyState: {message: "Some message", icon: "moz-extension://some/extension/path"}
       });
@@ -408,6 +409,31 @@ describe("<Section>", () => {
       assert.calledOnce(props.dispatch);
       const [action] = props.dispatch.firstCall.args;
       assert.deepEqual(action.data.tiles, [{id: 2432}]);
+    });
+  });
+
+  describe("tab rehydrated", () => {
+    it("should fire NEW_TAB_REHYDRATED event", () => {
+      const dispatch = sinon.spy();
+      const TOP_STORIES_SECTION = {
+        id: "topstories",
+        title: "TopStories",
+        pref: {collapsed: false},
+        initialized: false,
+        rows: [{guid: 1, link: "http://localhost", isDefault: true}],
+        topics: [],
+        read_more_endpoint: "http://localhost/read-more",
+        maxRows: 1,
+        eventSource: "TOP_STORIES"
+      };
+      wrapper = shallow(<Section Pocket={{waitingForSpoc: true, pocketCta: {}}} {...TOP_STORIES_SECTION} dispatch={dispatch} />);
+      assert.notCalled(dispatch);
+
+      wrapper.setProps({initialized: true});
+
+      assert.calledOnce(dispatch);
+      const [action] = dispatch.firstCall.args;
+      assert.equal("NEW_TAB_REHYDRATED", action.type);
     });
   });
 
