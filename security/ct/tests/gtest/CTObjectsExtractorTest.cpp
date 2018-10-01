@@ -61,14 +61,14 @@ TEST_F(CTObjectsExtractorTest, ExtractPrecert)
 TEST_F(CTObjectsExtractorTest, ExtractOrdinaryX509Cert)
 {
   LogEntry entry;
-  ASSERT_EQ(Success, GetX509LogEntry(InputForBuffer(mTestCert), entry));
+  GetX509LogEntry(InputForBuffer(mTestCert), entry);
 
   EXPECT_EQ(LogEntry::Type::X509, entry.type);
   // Should have empty tbsCertificate / issuerKeyHash for this log entry type.
   EXPECT_TRUE(entry.tbsCertificate.empty());
   EXPECT_TRUE(entry.issuerKeyHash.empty());
   // Length of leafCertificate should be 718, see the CT Serialization tests.
-  EXPECT_EQ(718U, entry.leafCertificate.length());
+  EXPECT_EQ(718U, entry.leafCertificate.size());
 }
 
 // Test that an externally-provided SCT verifies over the LogEntry
@@ -79,7 +79,7 @@ TEST_F(CTObjectsExtractorTest, ComplementarySCTVerifies)
   GetX509CertSCT(sct);
 
   LogEntry entry;
-  ASSERT_EQ(Success, GetX509LogEntry(InputForBuffer(mTestCert), entry));
+  GetX509LogEntry(InputForBuffer(mTestCert), entry);
   EXPECT_EQ(Success, mLog.Verify(entry, sct));
 }
 

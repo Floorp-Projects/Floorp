@@ -7,8 +7,9 @@
 #ifndef BTInclusionProof_h
 #define BTInclusionProof_h
 
+#include <vector>
+
 #include "Buffer.h"
-#include "mozilla/Vector.h"
 
 namespace mozilla { namespace ct {
 
@@ -26,14 +27,12 @@ namespace mozilla { namespace ct {
 //         NodeHash inclusion_path<1..2^16-1>;
 //     } InclusionProofDataV2;
 
-const uint64_t kInitialPathLengthCapacity = 32;
-
 struct InclusionProofDataV2
 {
   Buffer logId;
   uint64_t treeSize;
   uint64_t leafIndex;
-  Vector<Buffer, kInitialPathLengthCapacity> inclusionPath;
+  std::vector<Buffer> inclusionPath;
 };
 
 } } // namespace mozilla:ct

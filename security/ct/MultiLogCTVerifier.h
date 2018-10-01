@@ -7,9 +7,10 @@
 #ifndef MultiLogCTVerifier_h
 #define MultiLogCTVerifier_h
 
+#include <vector>
+
 #include "CTLogVerifier.h"
 #include "CTVerifyResult.h"
-#include "mozilla/Vector.h"
 #include "pkix/Input.h"
 #include "pkix/Result.h"
 #include "pkix/Time.h"
@@ -23,7 +24,7 @@ class MultiLogCTVerifier
 {
 public:
   // Adds a new log to the list of known logs to verify against.
-  pkix::Result AddLog(CTLogVerifier&& log);
+  void AddLog(CTLogVerifier&& log);
 
   // Verifies SCTs embedded in the certificate itself, SCTs embedded in a
   // stapled OCSP response, and SCTs obtained via the
@@ -79,7 +80,7 @@ private:
                                CTVerifyResult& result);
 
   // The list of known logs.
-  Vector<CTLogVerifier> mLogs;
+  std::vector<CTLogVerifier> mLogs;
 };
 
 } } // namespace mozilla::ct

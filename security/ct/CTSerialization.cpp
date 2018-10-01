@@ -183,12 +183,10 @@ ReadVersion(Reader& in, SignedCertificateTimestamp::Version& out)
 static Result
 UncheckedWriteUint(size_t length, uint64_t value, Buffer& output)
 {
-  if (!output.reserve(length + output.length())) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
+  output.reserve(length + output.size());
   for (; length > 0; --length) {
     uint8_t nextByte = (value >> ((length - 1) * 8)) & 0xFF;
-    output.infallibleAppend(nextByte);
+    output.push_back(nextByte);
   }
   return Success;
 }
@@ -226,23 +224,18 @@ WriteUint(T value, Buffer& output)
 // length when reading.
 // If the length of |input| is dynamic and data is expected to follow it,
 // WriteVariableBytes must be used.
-static Result
+static void
 WriteEncodedBytes(Input input, Buffer& output)
 {
-  if (!output.append(input.UnsafeGetData(), input.GetLength())) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
-  return Success;
+  output.insert(output.end(), input.UnsafeGetData(),
+                input.UnsafeGetData() + input.GetLength());
 }
 
 // Same as above, but the source data is in a Buffer.
-static Result
+static void
 WriteEncodedBytes(const Buffer& source, Buffer& output)
 {
-  if (!output.appendAll(source)) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
-  return Success;
+  output.insert(output.end(), source.begin(), source.end());
 }
 
 // A variable-length byte array is prefixed by its length when serialized.
@@ -275,7 +268,8 @@ WriteVariableBytes(Input input, Buffer& output)
   if (rv != Success) {
     return rv;
   }
-  return WriteEncodedBytes(input, output);
+  WriteEncodedBytes(input, output);
+  return Success;
 }
 
 // Same as above, but the source data is in a Buffer.
@@ -305,13 +299,10 @@ EncodeAsn1CertLogEntry(const LogEntry& entry, Buffer& output)
 static Result
 EncodePrecertLogEntry(const LogEntry& entry, Buffer& output)
 {
-  if (entry.issuerKeyHash.length() != kLogIdLength) {
+  if (entry.issuerKeyHash.size() != kLogIdLength) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-  Result rv = WriteEncodedBytes(entry.issuerKeyHash, output);
-  if (rv != Success) {
-    return rv;
-  }
+  WriteEncodedBytes(entry.issuerKeyHash, output);
   return WriteVariableBytes<kTbsCertificateLengthBytes>(entry.tbsCertificate,
                                                         output);
 }
@@ -352,10 +343,7 @@ DecodeDigitallySigned(Reader& reader, DigitallySigned& output)
   if (rv != Success) {
     return rv;
   }
-  rv = InputToBuffer(signatureData, result.signatureData);
-  if (rv != Success) {
-    return rv;
-  }
+  InputToBuffer(signatureData, result.signatureData);
 
   output = std::move(result);
   return Success;
@@ -406,10 +394,7 @@ EncodeV1SCTSignedData(uint64_t timestamp, Input serializedLogEntry,
   }
   // NOTE: serializedLogEntry must already be serialized and contain the
   // length as the prefix.
-  rv = WriteEncodedBytes(serializedLogEntry, output);
-  if (rv != Success) {
-    return rv;
-  }
+  WriteEncodedBytes(serializedLogEntry, output);
   return WriteVariableBytes<kExtensionsLengthBytes>(extensions, output);
 }
 
@@ -435,10 +420,11 @@ EncodeTreeHeadSignature(const SignedTreeHead& signedTreeHead,
   if (rv != Success) {
     return rv;
   }
-  if (signedTreeHead.sha256RootHash.length() != kSthRootHashLength) {
+  if (signedTreeHead.sha256RootHash.size() != kSthRootHashLength) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-  return WriteEncodedBytes(signedTreeHead.sha256RootHash, output);
+  WriteEncodedBytes(signedTreeHead.sha256RootHash, output);
+  return Success;
 }
 
 Result
@@ -502,14 +488,8 @@ DecodeSignedCertificateTimestamp(Reader& reader,
     return rv;
   }
 
-  rv = InputToBuffer(logId, result.logId);
-  if (rv != Success) {
-    return rv;
-  }
-  rv = InputToBuffer(extensions, result.extensions);
-  if (rv != Success) {
-    return rv;
-  }
+  InputToBuffer(logId, result.logId);
+  InputToBuffer(extensions, result.extensions);
   result.timestamp = timestamp;
 
   output = std::move(result);
@@ -517,7 +497,7 @@ DecodeSignedCertificateTimestamp(Reader& reader,
 }
 
 Result
-EncodeSCTList(const Vector<pkix::Input>& scts, Buffer& output)
+EncodeSCTList(const std::vector<pkix::Input>& scts, Buffer& output)
 {
   // Find out the total size of the SCT list to be written so we can
   // write the prefix for the list before writing its contents.
@@ -528,9 +508,7 @@ EncodeSCTList(const Vector<pkix::Input>& scts, Buffer& output)
       /* length prefix size */ kSerializedSCTLengthBytes;
   }
 
-  if (!output.reserve(kSCTListLengthBytes + sctListLength)) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
+  output.reserve(kSCTListLengthBytes + sctListLength);
 
   // Write the prefix for the SCT list.
   Result rv = WriteVariableBytesPrefix<kSCTListLengthBytes>(sctListLength,

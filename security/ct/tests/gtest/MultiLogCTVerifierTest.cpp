@@ -39,7 +39,7 @@ public:
                                 mLogOperatorID,
                                 CTLogStatus::Included,
                                 0 /*disqualification time*/));
-    ASSERT_EQ(Success, mVerifier.AddLog(std::move(log)));
+    mVerifier.AddLog(std::move(log));
 
     mTestCert = GetDEREncodedX509Cert();
     mEmbeddedCert = GetDEREncodedTestEmbeddedCert();
@@ -56,7 +56,7 @@ public:
                                       VerifiedSCT::Origin origin)
   {
     EXPECT_EQ(0U, result.decodingErrors);
-    ASSERT_EQ(1U, result.verifiedScts.length());
+    ASSERT_EQ(1U, result.verifiedScts.size());
     EXPECT_EQ(VerifiedSCT::Status::Valid, result.verifiedScts[0].status);
     EXPECT_EQ(origin, result.verifiedScts[0].origin);
     EXPECT_EQ(mLogOperatorID, result.verifiedScts[0].logOperatorId);
@@ -65,8 +65,8 @@ public:
   // Writes an SCTList containing a single |sct| into |output|.
   void EncodeSCTListForTesting(Input sct, Buffer& output)
   {
-    Vector<Input> list;
-    ASSERT_TRUE(list.append(std::move(sct)));
+    std::vector<Input> list;
+    list.push_back(std::move(sct));
     ASSERT_EQ(Success, EncodeSCTList(list, output));
   }
 
@@ -225,7 +225,7 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromUnknownLog)
                              mNow, result));
 
   EXPECT_EQ(0U, result.decodingErrors);
-  ASSERT_EQ(1U, result.verifiedScts.length());
+  ASSERT_EQ(1U, result.verifiedScts.size());
   EXPECT_EQ(VerifiedSCT::Status::UnknownLog, result.verifiedScts[0].status);
 }
 
@@ -236,7 +236,7 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromDisqualifiedLog)
   const uint64_t disqualificationTime = 12345u;
   ASSERT_EQ(Success, log.Init(InputForBuffer(GetTestPublicKey()),
     mLogOperatorID, CTLogStatus::Disqualified, disqualificationTime));
-  ASSERT_EQ(Success, verifier.AddLog(std::move(log)));
+  verifier.AddLog(std::move(log));
 
   Buffer sct(GetTestSignedCertificateTimestamp());
   Buffer sctList;
@@ -249,7 +249,7 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromDisqualifiedLog)
                             mNow, result));
 
   EXPECT_EQ(0U, result.decodingErrors);
-  ASSERT_EQ(1U, result.verifiedScts.length());
+  ASSERT_EQ(1U, result.verifiedScts.size());
   EXPECT_EQ(VerifiedSCT::Status::ValidFromDisqualifiedLog,
             result.verifiedScts[0].status);
   EXPECT_EQ(disqualificationTime,

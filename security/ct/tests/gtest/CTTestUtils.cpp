@@ -446,11 +446,11 @@ HexToBytes(const char* hexData)
   MOZ_RELEASE_ASSERT(hexLen > 0 && (hexLen % 2 == 0));
   size_t resultLen = hexLen / 2;
   Buffer result;
-  MOZ_RELEASE_ASSERT(result.reserve(resultLen));
+  result.reserve(resultLen);
   for (size_t i = 0; i < resultLen; ++i) {
     uint8_t hi = CharToByte(hexData[i*2]);
     uint8_t lo = CharToByte(hexData[i*2 + 1]);
-    result.infallibleAppend((hi << 4) | lo);
+    result.push_back((hi << 4) | lo);
   }
   return result;
 }
@@ -495,7 +495,7 @@ GetTestDigitallySignedData()
   // 1 byte of signature algorithm
   // 2 bytes - prefix containing length of the signature data.
   Buffer result;
-  MOZ_RELEASE_ASSERT(result.append(encoded.begin() + 4, encoded.end()));
+  result.assign(encoded.begin() + 4, encoded.end());
   return result;
 }
 
@@ -663,7 +663,7 @@ GetSampleSTHTreeHeadDecodedSignature(DigitallySigned& signature)
 {
   Buffer ths = HexToBytes(kSampleSTHTreeHeadSignature);
   Input thsInput;
-  ASSERT_EQ(Success, thsInput.Init(ths.begin(), ths.length()));
+  ASSERT_EQ(Success, thsInput.Init(ths.data(), ths.size()));
   Reader thsReader(thsInput);
   ASSERT_EQ(Success, DecodeDigitallySigned(thsReader, signature));
   ASSERT_TRUE(thsReader.AtEnd());
@@ -719,7 +719,7 @@ ExtractCertSPKI(Input cert)
 
   Input spkiInput = backCert.GetSubjectPublicKeyInfo();
   Buffer spki;
-  MOZ_RELEASE_ASSERT(InputToBuffer(spkiInput, spki) == Success);
+  InputToBuffer(spkiInput, spki);
   return spki;
 }
 
@@ -741,7 +741,7 @@ ExtractEmbeddedSCTList(Input cert, Buffer& result)
     ASSERT_EQ(Success,
               ExtractSignedCertificateTimestampListFromExtension(*scts,
                                                                  sctList));
-    ASSERT_EQ(Success, InputToBuffer(sctList, result));
+    InputToBuffer(sctList, result);
   }
 }
 
@@ -839,10 +839,7 @@ public:
       ADD_FAILURE();
       return;
     }
-    if (InputToBuffer(data, signedCertificateTimestamps) != Success) {
-      ADD_FAILURE();
-      return;
-    }
+    InputToBuffer(data, signedCertificateTimestamps);
   }
 
   Buffer signedCertificateTimestamps;
@@ -873,20 +870,11 @@ ExtractSCTListFromOCSPResponse(Input cert,
   result = std::move(trustDomain.signedCertificateTimestamps);
 }
 
-Buffer
-cloneBuffer(const Buffer& buffer)
-{
-  Buffer cloned;
-  MOZ_RELEASE_ASSERT(cloned.appendAll(buffer));
-  return cloned;
-}
-
 Input
 InputForBuffer(const Buffer& buffer)
 {
   Input input;
-  MOZ_RELEASE_ASSERT(Success ==
-                     input.Init(buffer.begin(), buffer.length()));
+  MOZ_RELEASE_ASSERT(Success == input.Init(buffer.data(), buffer.size()));
   return input;
 }
 
@@ -908,7 +896,7 @@ operator<<(std::ostream& stream, const ct::Buffer& buffer)
   if (buffer.empty()) {
     stream << "EMPTY";
   } else {
-    for (size_t i = 0; i < buffer.length(); ++i) {
+    for (size_t i = 0; i < buffer.size(); ++i) {
       if (i >= 1000) {
         stream << "...";
         break;

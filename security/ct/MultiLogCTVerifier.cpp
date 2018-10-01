@@ -16,25 +16,19 @@ namespace mozilla { namespace ct {
 using namespace mozilla::pkix;
 
 // Note: this moves |verifiedSct| to the target list in |result|.
-static Result
+static void
 StoreVerifiedSct(CTVerifyResult& result,
                  VerifiedSCT&& verifiedSct,
                  VerifiedSCT::Status status)
 {
   verifiedSct.status = status;
-  if (!result.verifiedScts.append(std::move(verifiedSct))) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
-  return Success;
+  result.verifiedScts.push_back(std::move(verifiedSct));
 }
 
-Result
+void
 MultiLogCTVerifier::AddLog(CTLogVerifier&& log)
 {
-  if (!mLogs.append(std::move(log))) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
-  return Success;
+  mLogs.push_back(std::move(log));
 }
 
 Result
@@ -67,10 +61,7 @@ MultiLogCTVerifier::Verify(Input cert,
   }
 
   LogEntry x509Entry;
-  rv = GetX509LogEntry(cert, x509Entry);
-  if (rv != Success) {
-    return rv;
-  }
+  GetX509LogEntry(cert, x509Entry);
 
   // Verify SCTs from a stapled OCSP response
   if (sctListFromOCSPResponse.GetLength() > 0) {
@@ -151,23 +142,26 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
 
   if (!matchingLog) {
     // SCT does not match any known log.
-    return StoreVerifiedSct(result, std::move(verifiedSct),
-                            VerifiedSCT::Status::UnknownLog);
+    StoreVerifiedSct(result, std::move(verifiedSct),
+                     VerifiedSCT::Status::UnknownLog);
+    return Success;
   }
 
   verifiedSct.logOperatorId = matchingLog->operatorId();
 
   if (!matchingLog->SignatureParametersMatch(verifiedSct.sct.signature)) {
     // SCT signature parameters do not match the log's.
-    return StoreVerifiedSct(result, std::move(verifiedSct),
-                            VerifiedSCT::Status::InvalidSignature);
+    StoreVerifiedSct(result, std::move(verifiedSct),
+                     VerifiedSCT::Status::InvalidSignature);
+    return Success;
   }
 
   Result rv = matchingLog->Verify(expectedEntry, verifiedSct.sct);
   if (rv != Success) {
     if (rv == Result::ERROR_BAD_SIGNATURE) {
-      return StoreVerifiedSct(result, std::move(verifiedSct),
-                              VerifiedSCT::Status::InvalidSignature);
+      StoreVerifiedSct(result, std::move(verifiedSct),
+                       VerifiedSCT::Status::InvalidSignature);
+      return Success;
     }
     return rv;
   }
@@ -181,8 +175,9 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
   Time sctTime =
     TimeFromEpochInSeconds((verifiedSct.sct.timestamp + 999u) / 1000u);
   if (sctTime > time) {
-    return StoreVerifiedSct(result, std::move(verifiedSct),
-                            VerifiedSCT::Status::InvalidTimestamp);
+    StoreVerifiedSct(result, std::move(verifiedSct),
+                     VerifiedSCT::Status::InvalidTimestamp);
+    return Success;
   }
 
   // SCT verified ok, see if the log is qualified. Since SCTs from
@@ -190,12 +185,13 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
   // the CT Policy), the log qualification check must be the last one we do.
   if (matchingLog->isDisqualified()) {
     verifiedSct.logDisqualificationTime = matchingLog->disqualificationTime();
-    return StoreVerifiedSct(result, std::move(verifiedSct),
-                            VerifiedSCT::Status::ValidFromDisqualifiedLog);
+    StoreVerifiedSct(result, std::move(verifiedSct),
+                     VerifiedSCT::Status::ValidFromDisqualifiedLog);
+    return Success;
   }
 
-  return StoreVerifiedSct(result, std::move(verifiedSct),
-                          VerifiedSCT::Status::Valid);
+  StoreVerifiedSct(result, std::move(verifiedSct), VerifiedSCT::Status::Valid);
+  return Success;
 }
 
 } } // namespace mozilla::ct

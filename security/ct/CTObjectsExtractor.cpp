@@ -6,13 +6,14 @@
 
 #include "CTObjectsExtractor.h"
 
+#include <vector>
+
 #include "hasht.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/Vector.h"
 #include "pkix/pkixnss.h"
 #include "pkixutil.h"
 
@@ -238,9 +239,7 @@ private:
         if (rv != Success) {
           return rv;
         }
-        if (!mExtensionTLVs.append(std::move(extensionTLV))) {
-          return Result::FATAL_ERROR_NO_MEMORY;
-        }
+        mExtensionTLVs.push_back(std::move(extensionTLV));
       }
     }
     return Success;
@@ -257,7 +256,7 @@ private:
     //       dump of |mExtensionTLVs|
 
     Result rv;
-    if (mExtensionTLVs.length() > 0) {
+    if (!mExtensionTLVs.empty()) {
       uint8_t tbsHeaderBuffer[MAX_TLV_HEADER_LENGTH];
       uint8_t extensionsContextHeaderBuffer[MAX_TLV_HEADER_LENGTH];
       uint8_t extensionsHeaderBuffer[MAX_TLV_HEADER_LENGTH];
@@ -344,7 +343,7 @@ private:
 
   Input mDER;
   Input mTLVsBeforeExtensions;
-  Vector<Input, 16> mExtensionTLVs;
+  std::vector<Input> mExtensionTLVs;
   Output mOutput;
   Input mPrecertTBS;
 };
@@ -358,39 +357,36 @@ GetPrecertLogEntry(Input leafCertificate, Input issuerSubjectPublicKeyInfo,
   output.Reset();
 
   Buffer precertTBSBuffer;
-  if (!precertTBSBuffer.resize(leafCertificate.GetLength())) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
+  precertTBSBuffer.resize(leafCertificate.GetLength());
 
   PrecertTBSExtractor extractor(leafCertificate,
-                                precertTBSBuffer.begin(),
-                                precertTBSBuffer.length());
+                                precertTBSBuffer.data(),
+                                precertTBSBuffer.size());
   Result rv = extractor.Init();
   if (rv != Success) {
     return rv;
   }
   Input precertTBS(extractor.GetPrecertTBS());
-  MOZ_ASSERT(precertTBS.UnsafeGetData() == precertTBSBuffer.begin());
-  precertTBSBuffer.shrinkTo(precertTBS.GetLength());
+  MOZ_ASSERT(precertTBS.UnsafeGetData() == precertTBSBuffer.data());
+  MOZ_ASSERT(precertTBS.GetLength() <= precertTBSBuffer.size());
+  precertTBSBuffer.resize(precertTBS.GetLength());
 
   output.type = LogEntry::Type::Precert;
   output.tbsCertificate = std::move(precertTBSBuffer);
 
-  if (!output.issuerKeyHash.resizeUninitialized(SHA256_LENGTH)) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
+  output.issuerKeyHash.resize(SHA256_LENGTH);
   return DigestBufNSS(issuerSubjectPublicKeyInfo, DigestAlgorithm::sha256,
-                      output.issuerKeyHash.begin(),
-                      output.issuerKeyHash.length());
+                      output.issuerKeyHash.data(),
+                      output.issuerKeyHash.size());
 }
 
-Result
+void
 GetX509LogEntry(Input leafCertificate, LogEntry& output)
 {
   MOZ_ASSERT(leafCertificate.GetLength() > 0);
   output.Reset();
   output.type = LogEntry::Type::X509;
-  return InputToBuffer(leafCertificate, output.leafCertificate);
+  InputToBuffer(leafCertificate, output.leafCertificate);
 }
 
 } } // namespace mozilla::ct
