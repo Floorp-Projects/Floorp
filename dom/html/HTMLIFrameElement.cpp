@@ -174,7 +174,8 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
     if ((aName == nsGkAtoms::allow ||
          aName == nsGkAtoms::src ||
-         aName == nsGkAtoms::sandbox) &&
+         aName == nsGkAtoms::sandbox ||
+         aName == nsGkAtoms::allowpaymentrequest) &&
         StaticPrefs::dom_security_featurePolicy_enabled()) {
       RefreshFeaturePolicy();
     }
@@ -307,8 +308,12 @@ HTMLIFrameElement::RefreshFeaturePolicy()
 
   mFeaturePolicy->InheritPolicy(OwnerDoc()->Policy());
 
+  if (AllowPaymentRequest()) {
+    mFeaturePolicy->MaybeSetAllowedPolicy(NS_LITERAL_STRING("payment"));
+  }
+
   // TODO: https://wicg.github.io/feature-policy/#process-feature-policy-attributes
-  // requires to check allowfullscreen, allowpaymentrequest and allowusermediarequest
+  // requires to check allowfullscreen, and allowusermediarequest
 }
 
 } // namespace dom

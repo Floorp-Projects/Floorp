@@ -8,7 +8,7 @@
 #include "prerror.h"
 #include "nss.h"
 #include "gtest/gtest.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 #include "cpputil.h"
 #include "databuffer.h"
 #include "util.h"

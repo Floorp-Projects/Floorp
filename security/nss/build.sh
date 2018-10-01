@@ -99,6 +99,7 @@ while [ $# -gt 0 ]; do
         --system-nspr) set_nspr_path "/usr/include/nspr/:"; no_local_nspr=1 ;;
         --enable-libpkix) gyp_params+=(-Ddisable_libpkix=0) ;;
         --enable-fips) gyp_params+=(-Ddisable_fips=0) ;;
+        --mozpkix-only) gyp_params+=(-Dmozpkix_only=1 -Ddisable_tests=1 -Dsign_libs=0) ;;
         *) show_help; exit 2 ;;
     esac
     shift

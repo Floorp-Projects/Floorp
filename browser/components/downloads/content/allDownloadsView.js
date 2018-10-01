@@ -97,14 +97,9 @@ HistoryDownloadElementShell.prototype = {
     if (this._downloadState !== newState) {
       this._downloadState = newState;
       this.onStateChanged();
+    } else {
+      this._updateStateInner();
     }
-
-    // This cannot be placed within onStateChanged because
-    // when a download goes from hasBlockedData to !hasBlockedData
-    // it will still remain in the same state.
-    this.element.classList.toggle("temporary-block",
-                                  !!this.download.hasBlockedData);
-    this._updateProgress();
   },
   _downloadState: null,
 
@@ -137,7 +132,8 @@ HistoryDownloadElementShell.prototype = {
       return true;
     }
     aTerm = aTerm.toLowerCase();
-    return this.displayName.toLowerCase().includes(aTerm) ||
+    let displayName = DownloadsViewUI.getDisplayName(this.download);
+    return displayName.toLowerCase().includes(aTerm) ||
            this.download.source.url.toLowerCase().includes(aTerm);
   },
 

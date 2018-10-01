@@ -18,7 +18,7 @@
 #include "ssl3prot.h"
 #include "sslerr.h"
 #include "sslproto.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 #include "nsskeys.h"
 

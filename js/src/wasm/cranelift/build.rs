@@ -55,29 +55,32 @@ fn main() {
     let arch = {
         let target_arch = env::var("CARGO_CFG_TARGET_ARCH");
         match target_arch.as_ref().map(|x| x.as_str()) {
-            Ok("aarch64") => Arch::Aarch64,
-            Ok("arm") => Arch::Arm,
-            Ok("x86") => Arch::X86,
-            Ok("x86_64") => Arch::X64,
-            _ => panic!("unknown arch")
+            Ok("aarch64") => Some(Arch::Aarch64),
+            Ok("arm") => Some(Arch::Arm),
+            Ok("x86") => Some(Arch::X86),
+            Ok("x86_64") => Some(Arch::X64),
+            _ => None
         }
     };
 
     match env::var("CARGO_CFG_TARGET_OS").as_ref().map(|x| x.as_str()) {
         Ok("android") => {
             bindings = bindings.clang_arg("-DOS_ANDROID=1");
-            bindings = match arch {
+            bindings = match arch.expect("unknown android architecture") {
                 Arch::Aarch64 => { bindings.clang_arg("--target=aarch64-linux-android") }
                 Arch::Arm => { bindings.clang_arg("--target=armv7-linux-androideabi") }
                 Arch::X86 => { bindings.clang_arg("--target=i686-linux-android") }
                 Arch::X64 => { bindings.clang_arg("--target=x86_64-linux-android") }
             };
         }
+
         Ok("linux") | Ok("freebsd") | Ok("dragonfly") | Ok("openbsd") | Ok("bitrig") | Ok("netbsd")
             | Ok("macos") | Ok("ios") => {
             // Nothing to do in particular for these OSes, until proven the contrary.
         }
+
         Ok("windows") => {
+            let arch = arch.expect("unknown Windows architecture");
             bindings = bindings.clang_arg("-DOS_WIN=1")
                 .clang_arg("-DWIN32=1");
             bindings = match env::var("CARGO_CFG_TARGET_ENV").as_ref().map(|x| x.as_str()) {
@@ -102,6 +105,7 @@ fn main() {
                 _ => panic!("unknown Windows build environment")
             };
         }
+
         os => panic!("unknown target os {:?}!", os)
     }
 

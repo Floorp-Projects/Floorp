@@ -8,7 +8,7 @@
 #include "prerror.h"
 #include "prio.h"
 
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 class DummyIOLayerMethods {
  public:

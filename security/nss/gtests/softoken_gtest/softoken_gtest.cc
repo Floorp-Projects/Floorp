@@ -11,7 +11,7 @@
 #include "pk11pub.h"
 #include "secerr.h"
 
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"

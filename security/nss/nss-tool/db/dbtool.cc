@@ -4,7 +4,7 @@
 
 #include "dbtool.h"
 #include "argparse.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 #include "util.h"
 
 #include <iomanip>

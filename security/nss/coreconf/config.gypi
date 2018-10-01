@@ -108,8 +108,12 @@
     'emit_llvm%': 0,
     'nss_public_dist_dir%': '<(nss_dist_dir)/public',
     'nss_private_dist_dir%': '<(nss_dist_dir)/private',
+    # This is only needed when building with --mozpkix-only and might not work
+    # on all machines.
+    'nss_include_dir%': '/usr/include/nss',
     'only_dev_random%': 1,
     'disable_fips%': 1,
+    'mozpkix_only%': 0,
   },
   'target_defaults': {
     # Settings specific to targets should go here.
@@ -126,6 +130,11 @@
       '<(nss_dist_dir)/private/<(module)',
     ],
     'conditions': [
+      [ 'mozpkix_only==1 and OS=="linux"', {
+        'include_dirs': [
+          '<(nss_include_dir)',
+        ],
+      }],
       [ 'disable_fips==1', {
         'defines': [
           'NSS_FIPS_DISABLED',
