@@ -345,7 +345,7 @@ SharedSurfacesChild::Share(ImageContainer* aContainer,
   auto sharedSurface = static_cast<SourceSurfaceSharedData*>(surface.get());
   SharedSurfacesAnimation* anim = aContainer->GetSharedSurfacesAnimation();
   if (anim) {
-    return anim->UpdateKey(sharedSurface, aManager, aResources, aKey);
+    return anim->UpdateKey(surface, sharedSurface, aManager, aResources, aKey);
   }
 
   return Share(sharedSurface, aManager, aResources, aKey);
@@ -453,11 +453,12 @@ SharedSurfacesChild::UpdateAnimation(ImageContainer* aContainer,
   MOZ_ASSERT(anim);
 
   auto sharedSurface = static_cast<SourceSurfaceSharedData*>(aSurface);
-  return anim->SetCurrentFrame(sharedSurface, aDirtyRect);
+  return anim->SetCurrentFrame(aSurface, sharedSurface, aDirtyRect);
 }
 
 nsresult
-SharedSurfacesAnimation::SetCurrentFrame(SourceSurfaceSharedData* aSurface,
+SharedSurfacesAnimation::SetCurrentFrame(SourceSurface* aParentSurface,
+                                         SourceSurfaceSharedData* aSurface,
                                          const gfx::IntRect& aDirtyRect)
 {
   MOZ_ASSERT(aSurface);
@@ -494,7 +495,8 @@ SharedSurfacesAnimation::SetCurrentFrame(SourceSurfaceSharedData* aSurface,
 }
 
 nsresult
-SharedSurfacesAnimation::UpdateKey(SourceSurfaceSharedData* aSurface,
+SharedSurfacesAnimation::UpdateKey(SourceSurface* aParentSurface,
+                                   SourceSurfaceSharedData* aSurface,
                                    WebRenderLayerManager* aManager,
                                    wr::IpcResourceUpdateQueue& aResources,
                                    wr::ImageKey& aKey)
