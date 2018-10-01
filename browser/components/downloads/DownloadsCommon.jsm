@@ -44,7 +44,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadUIHelper: "resource://gre/modules/DownloadUIHelper.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  gClipboardHelper: ["@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper"],
 });
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
@@ -277,6 +282,30 @@ var DownloadsCommon = {
       return DownloadsCommon.DOWNLOAD_CANCELED;
     }
     return DownloadsCommon.DOWNLOAD_NOTSTARTED;
+  },
+
+  /**
+   * Removes a Download object from both session and history downloads.
+   */
+  async deleteDownload(download) {
+    // Remove the associated history element first, if any, so that the views
+    // that combine history and session downloads won't resurrect the history
+    // download into the view just before it is deleted permanently.
+    try {
+      await PlacesUtils.history.remove(download.source.url);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    let list = await Downloads.getList(Downloads.ALL);
+    await list.remove(download);
+    await download.finalize(true);
+  },
+
+  /**
+   * Copies the source URI of the given Download object to the clipboard.
+   */
+  copyDownloadLink(download) {
+    gClipboardHelper.copyString(download.source.url);
   },
 
   /**

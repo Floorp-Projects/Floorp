@@ -6,7 +6,7 @@
 #define util_h__
 
 #include "nspr.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 #include <secmodt.h>
 #include <string>

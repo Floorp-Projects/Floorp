@@ -264,6 +264,10 @@ Inspector.prototype = {
     return this._search;
   },
 
+  get cssProperties() {
+    return this._cssProperties.cssProperties;
+  },
+
   /**
    * Handle promise rejections for various asynchronous actions, and only log errors if
    * the inspector panel still exists.

@@ -10,7 +10,6 @@ const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { getColor } = require("devtools/client/shared/theme");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
-const { getCssProperties } = require("devtools/shared/fronts/css-properties");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const { debounce } = require("devtools/shared/debounce");
 const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
@@ -62,7 +61,7 @@ const HISTOGRAM_FONT_TYPE_DISPLAYED = "DEVTOOLS_FONTEDITOR_FONT_TYPE_DISPLAYED";
 
 class FontInspector {
   constructor(inspector, window) {
-    this.cssProperties = getCssProperties(inspector.toolbox);
+    this.cssProperties = inspector.cssProperties;
     this.document = window.document;
     this.inspector = inspector;
     // Set of unique keyword values supported by designated font properties.
