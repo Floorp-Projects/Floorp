@@ -797,33 +797,70 @@ MediaEngineRemoteVideoSource::GetBestFitnessDistance(
 }
 
 static void
+LogConstraintStringRange(const NormalizedConstraintSet::StringRange& aRange)
+{
+  if (aRange.mExact.size() <= 1 && aRange.mIdeal.size() <= 1) {
+    LOG(("  %s: { exact: [%s], ideal: [%s] }",
+         aRange.mName,
+         (aRange.mExact.size()? NS_ConvertUTF16toUTF8(*aRange.mExact.begin()).get() : ""),
+         (aRange.mIdeal.size()? NS_ConvertUTF16toUTF8(*aRange.mIdeal.begin()).get() : "")));
+  } else {
+    LOG(("  %s: { exact: [", aRange.mName));
+    for (auto& entry : aRange.mExact) {
+      LOG(("      %s,", NS_ConvertUTF16toUTF8(entry).get()));
+    }
+    LOG(("    ], ideal: ["));
+    for (auto& entry : aRange.mIdeal) {
+      LOG(("      %s,", NS_ConvertUTF16toUTF8(entry).get()));
+    }
+    LOG(("    ]}"));
+  }
+}
+
+template<typename T>
+static void
+LogConstraintRange(const NormalizedConstraintSet::Range<T>& aRange)
+{
+  if (aRange.mIdeal.isSome()) {
+    LOG(("  %s: { min: %d, max: %d, ideal: %d }",
+         aRange.mName, aRange.mMin, aRange.mMax, aRange.mIdeal.valueOr(0)));
+  } else {
+    LOG(("  %s: { min: %d, max: %d }",
+         aRange.mName, aRange.mMin, aRange.mMax));
+  }
+}
+
+template<>
+void
+LogConstraintRange(const NormalizedConstraintSet::Range<double>& aRange)
+{
+  if (aRange.mIdeal.isSome()) {
+    LOG(("  %s: { min: %f, max: %f, ideal: %f }",
+         aRange.mName, aRange.mMin, aRange.mMax, aRange.mIdeal.valueOr(0)));
+  } else {
+    LOG(("  %s: { min: %f, max: %f }",
+         aRange.mName, aRange.mMin, aRange.mMax));
+  }
+}
+
+static void
 LogConstraints(const NormalizedConstraintSet& aConstraints)
 {
   auto& c = aConstraints;
-  if (c.mWidth.mIdeal.isSome()) {
-    LOG(("Constraints: width: { min: %d, max: %d, ideal: %d }",
-         c.mWidth.mMin, c.mWidth.mMax,
-         c.mWidth.mIdeal.valueOr(0)));
-  } else {
-    LOG(("Constraints: width: { min: %d, max: %d }",
-         c.mWidth.mMin, c.mWidth.mMax));
-  }
-  if (c.mHeight.mIdeal.isSome()) {
-    LOG(("             height: { min: %d, max: %d, ideal: %d }",
-         c.mHeight.mMin, c.mHeight.mMax,
-         c.mHeight.mIdeal.valueOr(0)));
-  } else {
-    LOG(("             height: { min: %d, max: %d }",
-         c.mHeight.mMin, c.mHeight.mMax));
-  }
-  if (c.mFrameRate.mIdeal.isSome()) {
-    LOG(("             frameRate: { min: %f, max: %f, ideal: %f }",
-         c.mFrameRate.mMin, c.mFrameRate.mMax,
-         c.mFrameRate.mIdeal.valueOr(0)));
-  } else {
-    LOG(("             frameRate: { min: %f, max: %f }",
-         c.mFrameRate.mMin, c.mFrameRate.mMax));
-  }
+  LOG(("Constraints: {"));
+  LOG(("%s", [&]() {
+    LogConstraintRange(c.mWidth);
+    LogConstraintRange(c.mHeight);
+    LogConstraintRange(c.mFrameRate);
+    LogConstraintStringRange(c.mMediaSource);
+    LogConstraintStringRange(c.mFacingMode);
+    LogConstraintStringRange(c.mDeviceId);
+    LogConstraintRange(c.mEchoCancellation);
+    LogConstraintRange(c.mAutoGainControl);
+    LogConstraintRange(c.mNoiseSuppression);
+    LogConstraintRange(c.mChannelCount);
+    return "}";
+  }()));
 }
 
 static void

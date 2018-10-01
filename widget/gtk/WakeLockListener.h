@@ -41,6 +41,8 @@ private:
   WakeLockListener();
   ~WakeLockListener() = default;
 
+  bool EnsureDBusConnection();
+
   static mozilla::StaticRefPtr<WakeLockListener> sSingleton;
 
 #ifdef MOZ_ENABLE_DBUS
