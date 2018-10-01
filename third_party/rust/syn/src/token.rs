@@ -24,7 +24,7 @@
 //! # #[macro_use]
 //! # extern crate syn;
 //! #
-//! # use syn::{Attribute, Visibility, Ident, Type, Expr};
+//! # use syn::{Attribute, Expr, Ident, Type, Visibility};
 //! #
 //! pub struct ItemStatic {
 //!     pub attrs: Vec<Attribute>,
@@ -44,470 +44,625 @@
 //!
 //! # Parsing
 //!
-//! These tokens can be parsed using the [`Synom`] trait and the parser
-//! combinator macros [`punct!`], [`keyword!`], [`parens!`], [`braces!`], and
-//! [`brackets!`].
+//! Keywords and punctuation can be parsed through the [`ParseStream::parse`]
+//! method. Delimiter tokens are parsed using the [`parenthesized!`],
+//! [`bracketed!`] and [`braced!`] macros.
 //!
-//! [`Synom`]: ../synom/trait.Synom.html
-//! [`punct!`]: ../macro.punct.html
-//! [`keyword!`]: ../macro.keyword.html
-//! [`parens!`]: ../macro.parens.html
-//! [`braces!`]: ../macro.braces.html
-//! [`brackets!`]: ../macro.brackets.html
+//! [`ParseStream::parse`]: ../parse/struct.ParseBuffer.html#method.parse
+//! [`parenthesized!`]: ../macro.parenthesized.html
+//! [`bracketed!`]: ../macro.bracketed.html
+//! [`braced!`]: ../macro.braced.html
 //!
 //! ```
-//! #[macro_use]
-//! extern crate syn;
-//!
-//! use syn::synom::Synom;
-//! use syn::{Attribute, Visibility, Ident, Type, Expr};
+//! # extern crate syn;
 //! #
-//! # struct ItemStatic;
-//! # use syn::ItemStatic as SynItemStatic;
+//! use syn::Attribute;
+//! use syn::parse::{Parse, ParseStream, Result};
+//! #
+//! # enum ItemStatic {}
 //!
 //! // Parse the ItemStatic struct shown above.
-//! impl Synom for ItemStatic {
-//!     named!(parse -> Self, do_parse!(
-//! #       (ItemStatic)
-//! #   ));
-//! # }
-//! #
-//! # mod example {
-//! #   use super::*;
-//! #   use super::SynItemStatic as ItemStatic;
-//! #
-//! #   named!(parse -> ItemStatic, do_parse!(
-//!         attrs: many0!(Attribute::parse_outer) >>
-//!         vis: syn!(Visibility) >>
-//!         static_token: keyword!(static) >>
-//!         mutability: option!(keyword!(mut)) >>
-//!         ident: syn!(Ident) >>
-//!         colon_token: punct!(:) >>
-//!         ty: syn!(Type) >>
-//!         eq_token: punct!(=) >>
-//!         expr: syn!(Expr) >>
-//!         semi_token: punct!(;) >>
-//!         (ItemStatic {
-//!             attrs, vis, static_token, mutability, ident, colon_token,
-//!             ty: Box::new(ty), eq_token, expr: Box::new(expr), semi_token,
+//! impl Parse for ItemStatic {
+//!     fn parse(input: ParseStream) -> Result<Self> {
+//!         # use syn::ItemStatic;
+//!         # fn parse(input: ParseStream) -> Result<ItemStatic> {
+//!         Ok(ItemStatic {
+//!             attrs: input.call(Attribute::parse_outer)?,
+//!             vis: input.parse()?,
+//!             static_token: input.parse()?,
+//!             mutability: input.parse()?,
+//!             ident: input.parse()?,
+//!             colon_token: input.parse()?,
+//!             ty: input.parse()?,
+//!             eq_token: input.parse()?,
+//!             expr: input.parse()?,
+//!             semi_token: input.parse()?,
 //!         })
-//!     ));
+//!         # }
+//!         # unimplemented!()
+//!     }
 //! }
 //! #
 //! # fn main() {}
 //! ```
 
-use proc_macro2::{Ident, Span};
+use std;
+#[cfg(feature = "parsing")]
+use std::cell::Cell;
+#[cfg(feature = "extra-traits")]
+use std::cmp;
+#[cfg(feature = "extra-traits")]
+use std::fmt::{self, Debug};
+#[cfg(feature = "extra-traits")]
+use std::hash::{Hash, Hasher};
+#[cfg(feature = "parsing")]
+use std::rc::Rc;
 
-macro_rules! tokens {
-    (
-        punct: {
-            $($punct:tt pub struct $punct_name:ident/$len:tt #[$punct_doc:meta])*
-        }
-        delimiter: {
-            $($delimiter:tt pub struct $delimiter_name:ident #[$delimiter_doc:meta])*
-        }
-        keyword: {
-            $($keyword:tt pub struct $keyword_name:ident #[$keyword_doc:meta])*
-        }
-    ) => (
-        $(token_punct_def! { #[$punct_doc] pub struct $punct_name/$len })*
-        $(token_punct_parser! { $punct pub struct $punct_name })*
-        $(token_delimiter! { #[$delimiter_doc] $delimiter pub struct $delimiter_name })*
-        $(token_keyword! { #[$keyword_doc] $keyword pub struct $keyword_name })*
-    )
+#[cfg(feature = "parsing")]
+use proc_macro2::Delimiter;
+#[cfg(any(feature = "parsing", feature = "printing"))]
+use proc_macro2::Ident;
+use proc_macro2::Span;
+#[cfg(feature = "printing")]
+use proc_macro2::TokenStream;
+#[cfg(feature = "printing")]
+use quote::{ToTokens, TokenStreamExt};
+
+#[cfg(feature = "parsing")]
+use buffer::Cursor;
+#[cfg(feature = "parsing")]
+use error::Result;
+#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(feature = "parsing")]
+use lifetime::Lifetime;
+#[cfg(any(feature = "full", feature = "derive"))]
+#[cfg(feature = "parsing")]
+use lit::{Lit, LitBool, LitByte, LitByteStr, LitChar, LitFloat, LitInt, LitStr};
+#[cfg(feature = "parsing")]
+use lookahead;
+#[cfg(feature = "parsing")]
+use parse::{Parse, ParseStream};
+use span::IntoSpans;
+
+/// Marker trait for types that represent single tokens.
+///
+/// This trait is sealed and cannot be implemented for types outside of Syn.
+#[cfg(feature = "parsing")]
+pub trait Token: private::Sealed {
+    // Not public API.
+    #[doc(hidden)]
+    fn peek(cursor: Cursor) -> bool;
+
+    // Not public API.
+    #[doc(hidden)]
+    fn display() -> &'static str;
 }
 
-macro_rules! token_punct_def {
-    (#[$doc:meta]pub struct $name:ident / $len:tt) => {
-        #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
-        #[$doc]
-        ///
-        /// Don't try to remember the name of this type -- use the [`Token!`]
-        /// macro instead.
-        ///
-        /// [`Token!`]: index.html
-        pub struct $name(pub [Span; $len]);
-
-        impl $name {
-            pub fn new(span: Span) -> Self {
-                $name([span; $len])
-            }
-        }
-
-        impl ::std::default::Default for $name {
-            fn default() -> Self {
-                $name([Span::call_site(); $len])
-            }
-        }
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                f.write_str(stringify!($name))
-            }
-        }
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::cmp::Eq for $name {}
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::cmp::PartialEq for $name {
-            fn eq(&self, _other: &$name) -> bool {
-                true
-            }
-        }
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::hash::Hash for $name {
-            fn hash<H>(&self, _state: &mut H)
-            where
-                H: ::std::hash::Hasher,
-            {
-            }
-        }
-
-        impl From<Span> for $name {
-            fn from(span: Span) -> Self {
-                $name([span; $len])
-            }
-        }
-    };
+#[cfg(feature = "parsing")]
+mod private {
+    pub trait Sealed {}
 }
 
-macro_rules! token_punct_parser {
-    ($s:tt pub struct $name:ident) => {
-        #[cfg(feature = "printing")]
-        impl ::quote::ToTokens for $name {
-            fn to_tokens(&self, tokens: &mut ::proc_macro2::TokenStream) {
-                printing::punct($s, &self.0, tokens);
+#[cfg(feature = "parsing")]
+impl private::Sealed for Ident {}
+
+#[cfg(feature = "parsing")]
+fn peek_impl(cursor: Cursor, peek: fn(ParseStream) -> bool) -> bool {
+    let scope = Span::call_site();
+    let unexpected = Rc::new(Cell::new(None));
+    let buffer = ::private::new_parse_buffer(scope, cursor, unexpected);
+    peek(&buffer)
+}
+
+#[cfg(any(feature = "full", feature = "derive"))]
+macro_rules! impl_token {
+    ($name:ident $display:expr) => {
+        #[cfg(feature = "parsing")]
+        impl Token for $name {
+            fn peek(cursor: Cursor) -> bool {
+                fn peek(input: ParseStream) -> bool {
+                    <$name as Parse>::parse(input).is_ok()
+                }
+                peek_impl(cursor, peek)
+            }
+
+            fn display() -> &'static str {
+                $display
             }
         }
 
         #[cfg(feature = "parsing")]
-        impl ::Synom for $name {
-            fn parse(tokens: $crate::buffer::Cursor) -> $crate::synom::PResult<$name> {
-                parsing::punct($s, tokens, $name)
-            }
-
-            fn description() -> Option<&'static str> {
-                Some(concat!("`", $s, "`"))
-            }
-        }
+        impl private::Sealed for $name {}
     };
 }
 
-macro_rules! token_keyword {
-    (#[$doc:meta] $s:tt pub struct $name:ident) => {
-        #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
-        #[$doc]
-        ///
-        /// Don't try to remember the name of this type -- use the [`Token!`]
-        /// macro instead.
-        ///
-        /// [`Token!`]: index.html
-        pub struct $name(pub Span);
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(Lifetime "lifetime");
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(Lit "literal");
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(LitStr "string literal");
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(LitByteStr "byte string literal");
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(LitByte "byte literal");
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(LitChar "character literal");
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(LitInt "integer literal");
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(LitFloat "floating point literal");
+#[cfg(any(feature = "full", feature = "derive"))]
+impl_token!(LitBool "boolean literal");
 
-        impl ::std::default::Default for $name {
-            fn default() -> Self {
-                $name(Span::call_site())
-            }
-        }
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                f.write_str(stringify!($name))
-            }
-        }
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::cmp::Eq for $name {}
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::cmp::PartialEq for $name {
-            fn eq(&self, _other: &$name) -> bool {
-                true
-            }
-        }
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::hash::Hash for $name {
-            fn hash<H>(&self, _state: &mut H)
-            where
-                H: ::std::hash::Hasher,
-            {
-            }
-        }
-
-        #[cfg(feature = "printing")]
-        impl ::quote::ToTokens for $name {
-            fn to_tokens(&self, tokens: &mut ::proc_macro2::TokenStream) {
-                printing::keyword($s, &self.0, tokens);
-            }
-        }
-
-        #[cfg(feature = "parsing")]
-        impl ::Synom for $name {
-            fn parse(tokens: $crate::buffer::Cursor) -> $crate::synom::PResult<$name> {
-                parsing::keyword($s, tokens, $name)
-            }
-
-            fn description() -> Option<&'static str> {
-                Some(concat!("`", $s, "`"))
-            }
-        }
-
-        impl From<Span> for $name {
-            fn from(span: Span) -> Self {
-                $name(span)
-            }
-        }
-    };
+// Not public API.
+#[cfg(feature = "parsing")]
+#[doc(hidden)]
+pub trait CustomKeyword {
+    fn ident() -> &'static str;
+    fn display() -> &'static str;
 }
 
-macro_rules! token_delimiter {
-    (#[$doc:meta] $s:tt pub struct $name:ident) => {
-        #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
-        #[$doc]
-        pub struct $name(pub Span);
+#[cfg(feature = "parsing")]
+impl<K: CustomKeyword> private::Sealed for K {}
 
-        impl ::std::default::Default for $name {
-            fn default() -> Self {
-                $name(Span::call_site())
+#[cfg(feature = "parsing")]
+impl<K: CustomKeyword> Token for K {
+    fn peek(cursor: Cursor) -> bool {
+        parsing::peek_keyword(cursor, K::ident())
+    }
+
+    fn display() -> &'static str {
+        K::display()
+    }
+}
+
+macro_rules! define_keywords {
+    ($($token:tt pub struct $name:ident #[$doc:meta])*) => {
+        $(
+            #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
+            #[$doc]
+            ///
+            /// Don't try to remember the name of this type -- use the [`Token!`]
+            /// macro instead.
+            ///
+            /// [`Token!`]: index.html
+            pub struct $name {
+                pub span: Span,
             }
-        }
 
-        #[cfg(feature = "extra-traits")]
-        impl ::std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                f.write_str(stringify!($name))
+            #[doc(hidden)]
+            #[allow(non_snake_case)]
+            pub fn $name<S: IntoSpans<[Span; 1]>>(span: S) -> $name {
+                $name {
+                    span: span.into_spans()[0],
+                }
             }
-        }
 
-        #[cfg(feature = "extra-traits")]
-        impl ::std::cmp::Eq for $name {}
-
-        #[cfg(feature = "extra-traits")]
-        impl ::std::cmp::PartialEq for $name {
-            fn eq(&self, _other: &$name) -> bool {
-                true
+            impl std::default::Default for $name {
+                fn default() -> Self {
+                    $name {
+                        span: Span::call_site(),
+                    }
+                }
             }
-        }
 
-        #[cfg(feature = "extra-traits")]
-        impl ::std::hash::Hash for $name {
-            fn hash<H>(&self, _state: &mut H)
-            where
-                H: ::std::hash::Hasher,
-            {
+            #[cfg(feature = "extra-traits")]
+            impl Debug for $name {
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str(stringify!($name))
+                }
             }
-        }
 
-        impl $name {
+            #[cfg(feature = "extra-traits")]
+            impl cmp::Eq for $name {}
+
+            #[cfg(feature = "extra-traits")]
+            impl PartialEq for $name {
+                fn eq(&self, _other: &$name) -> bool {
+                    true
+                }
+            }
+
+            #[cfg(feature = "extra-traits")]
+            impl Hash for $name {
+                fn hash<H: Hasher>(&self, _state: &mut H) {}
+            }
+
             #[cfg(feature = "printing")]
-            pub fn surround<F>(&self, tokens: &mut ::proc_macro2::TokenStream, f: F)
-            where
-                F: FnOnce(&mut ::proc_macro2::TokenStream),
-            {
-                printing::delim($s, &self.0, tokens, f);
+            impl ToTokens for $name {
+                fn to_tokens(&self, tokens: &mut TokenStream) {
+                    printing::keyword($token, &self.span, tokens);
+                }
             }
 
             #[cfg(feature = "parsing")]
-            pub fn parse<F, R>(
-                tokens: $crate::buffer::Cursor,
-                f: F,
-            ) -> $crate::synom::PResult<($name, R)>
-            where
-                F: FnOnce($crate::buffer::Cursor) -> $crate::synom::PResult<R>,
-            {
-                parsing::delim($s, tokens, $name, f)
+            impl Parse for $name {
+                fn parse(input: ParseStream) -> Result<Self> {
+                    Ok($name {
+                        span: parsing::keyword(input, $token)?,
+                    })
+                }
             }
-        }
 
-        impl From<Span> for $name {
-            fn from(span: Span) -> Self {
-                $name(span)
+            #[cfg(feature = "parsing")]
+            impl Token for $name {
+                fn peek(cursor: Cursor) -> bool {
+                    parsing::peek_keyword(cursor, $token)
+                }
+
+                fn display() -> &'static str {
+                    concat!("`", $token, "`")
+                }
             }
-        }
+
+            #[cfg(feature = "parsing")]
+            impl private::Sealed for $name {}
+        )*
     };
 }
 
-token_punct_def! {
-    /// `_`
-    pub struct Underscore/1
+macro_rules! define_punctuation_structs {
+    ($($token:tt pub struct $name:ident/$len:tt #[$doc:meta])*) => {
+        $(
+            #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
+            #[$doc]
+            ///
+            /// Don't try to remember the name of this type -- use the [`Token!`]
+            /// macro instead.
+            ///
+            /// [`Token!`]: index.html
+            pub struct $name {
+                pub spans: [Span; $len],
+            }
+
+            #[doc(hidden)]
+            #[allow(non_snake_case)]
+            pub fn $name<S: IntoSpans<[Span; $len]>>(spans: S) -> $name {
+                $name {
+                    spans: spans.into_spans(),
+                }
+            }
+
+            impl std::default::Default for $name {
+                fn default() -> Self {
+                    $name {
+                        spans: [Span::call_site(); $len],
+                    }
+                }
+            }
+
+            #[cfg(feature = "extra-traits")]
+            impl Debug for $name {
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str(stringify!($name))
+                }
+            }
+
+            #[cfg(feature = "extra-traits")]
+            impl cmp::Eq for $name {}
+
+            #[cfg(feature = "extra-traits")]
+            impl PartialEq for $name {
+                fn eq(&self, _other: &$name) -> bool {
+                    true
+                }
+            }
+
+            #[cfg(feature = "extra-traits")]
+            impl Hash for $name {
+                fn hash<H: Hasher>(&self, _state: &mut H) {}
+            }
+        )*
+    };
+}
+
+macro_rules! define_punctuation {
+    ($($token:tt pub struct $name:ident/$len:tt #[$doc:meta])*) => {
+        $(
+            define_punctuation_structs! {
+                $token pub struct $name/$len #[$doc]
+            }
+
+            #[cfg(feature = "printing")]
+            impl ToTokens for $name {
+                fn to_tokens(&self, tokens: &mut TokenStream) {
+                    printing::punct($token, &self.spans, tokens);
+                }
+            }
+
+            #[cfg(feature = "parsing")]
+            impl Parse for $name {
+                fn parse(input: ParseStream) -> Result<Self> {
+                    Ok($name {
+                        spans: parsing::punct(input, $token)?,
+                    })
+                }
+            }
+
+            #[cfg(feature = "parsing")]
+            impl Token for $name {
+                fn peek(cursor: Cursor) -> bool {
+                    parsing::peek_punct(cursor, $token)
+                }
+
+                fn display() -> &'static str {
+                    concat!("`", $token, "`")
+                }
+            }
+
+            #[cfg(feature = "parsing")]
+            impl private::Sealed for $name {}
+        )*
+    };
+}
+
+macro_rules! define_delimiters {
+    ($($token:tt pub struct $name:ident #[$doc:meta])*) => {
+        $(
+            #[cfg_attr(feature = "clone-impls", derive(Copy, Clone))]
+            #[$doc]
+            pub struct $name {
+                pub span: Span,
+            }
+
+            #[doc(hidden)]
+            #[allow(non_snake_case)]
+            pub fn $name<S: IntoSpans<[Span; 1]>>(span: S) -> $name {
+                $name {
+                    span: span.into_spans()[0],
+                }
+            }
+
+            impl std::default::Default for $name {
+                fn default() -> Self {
+                    $name {
+                        span: Span::call_site(),
+                    }
+                }
+            }
+
+            #[cfg(feature = "extra-traits")]
+            impl Debug for $name {
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str(stringify!($name))
+                }
+            }
+
+            #[cfg(feature = "extra-traits")]
+            impl cmp::Eq for $name {}
+
+            #[cfg(feature = "extra-traits")]
+            impl PartialEq for $name {
+                fn eq(&self, _other: &$name) -> bool {
+                    true
+                }
+            }
+
+            #[cfg(feature = "extra-traits")]
+            impl Hash for $name {
+                fn hash<H: Hasher>(&self, _state: &mut H) {}
+            }
+
+            impl $name {
+                #[cfg(feature = "printing")]
+                pub fn surround<F>(&self, tokens: &mut TokenStream, f: F)
+                where
+                    F: FnOnce(&mut TokenStream),
+                {
+                    printing::delim($token, &self.span, tokens, f);
+                }
+            }
+
+            #[cfg(feature = "parsing")]
+            impl private::Sealed for $name {}
+        )*
+    };
+}
+
+define_punctuation_structs! {
+    "_" pub struct Underscore/1 /// `_`
 }
 
 #[cfg(feature = "printing")]
-impl ::quote::ToTokens for Underscore {
-    fn to_tokens(&self, tokens: &mut ::proc_macro2::TokenStream) {
-        use quote::TokenStreamExt;
-        tokens.append(::proc_macro2::Ident::new("_", self.0[0]));
+impl ToTokens for Underscore {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.append(Ident::new("_", self.spans[0]));
     }
 }
 
 #[cfg(feature = "parsing")]
-impl ::Synom for Underscore {
-    fn parse(input: ::buffer::Cursor) -> ::synom::PResult<Underscore> {
-        match input.ident() {
-            Some((ident, rest)) => {
+impl Parse for Underscore {
+    fn parse(input: ParseStream) -> Result<Self> {
+        input.step(|cursor| {
+            if let Some((ident, rest)) = cursor.ident() {
                 if ident == "_" {
-                    Ok((Underscore([ident.span()]), rest))
-                } else {
-                    ::parse_error()
+                    return Ok((Underscore(ident.span()), rest));
                 }
             }
-            None => parsing::punct("_", input, Underscore),
-        }
-    }
-
-    fn description() -> Option<&'static str> {
-        Some("`_`")
-    }
-}
-
-token_punct_def! {
-    /// `'`
-    pub struct Apostrophe/1
-}
-
-// Implement Clone anyway because it is required for cloning Lifetime.
-#[cfg(not(feature = "clone-impls"))]
-impl Clone for Apostrophe {
-    fn clone(&self) -> Self {
-        Apostrophe(self.0)
-    }
-}
-
-#[cfg(feature = "printing")]
-impl ::quote::ToTokens for Apostrophe {
-    fn to_tokens(&self, tokens: &mut ::proc_macro2::TokenStream) {
-        use quote::TokenStreamExt;
-        let mut token = ::proc_macro2::Punct::new('\'', ::proc_macro2::Spacing::Joint);
-        token.set_span(self.0[0]);
-        tokens.append(token);
+            if let Some((punct, rest)) = cursor.punct() {
+                if punct.as_char() == '_' {
+                    return Ok((Underscore(punct.span()), rest));
+                }
+            }
+            Err(cursor.error("expected `_`"))
+        })
     }
 }
 
 #[cfg(feature = "parsing")]
-impl ::Synom for Apostrophe {
-    fn parse(input: ::buffer::Cursor) -> ::synom::PResult<Apostrophe> {
-        match input.punct() {
-            Some((op, rest)) => {
-                if op.as_char() == '\'' && op.spacing() == ::proc_macro2::Spacing::Joint {
-                    Ok((Apostrophe([op.span()]), rest))
-                } else {
-                    ::parse_error()
-                }
-            }
-            None => ::parse_error(),
+impl Token for Underscore {
+    fn peek(cursor: Cursor) -> bool {
+        if let Some((ident, _rest)) = cursor.ident() {
+            return ident == "_";
         }
+        if let Some((punct, _rest)) = cursor.punct() {
+            return punct.as_char() == '_';
+        }
+        false
     }
 
-    fn description() -> Option<&'static str> {
-        Some("`'`")
+    fn display() -> &'static str {
+        "`_`"
     }
 }
 
-tokens! {
-    punct: {
-        "+"        pub struct Add/1        /// `+`
-        "+="       pub struct AddEq/2      /// `+=`
-        "&"        pub struct And/1        /// `&`
-        "&&"       pub struct AndAnd/2     /// `&&`
-        "&="       pub struct AndEq/2      /// `&=`
-        "@"        pub struct At/1         /// `@`
-        "!"        pub struct Bang/1       /// `!`
-        "^"        pub struct Caret/1      /// `^`
-        "^="       pub struct CaretEq/2    /// `^=`
-        ":"        pub struct Colon/1      /// `:`
-        "::"       pub struct Colon2/2     /// `::`
-        ","        pub struct Comma/1      /// `,`
-        "/"        pub struct Div/1        /// `/`
-        "/="       pub struct DivEq/2      /// `/=`
-        "$"        pub struct Dollar/1     /// `$`
-        "."        pub struct Dot/1        /// `.`
-        ".."       pub struct Dot2/2       /// `..`
-        "..."      pub struct Dot3/3       /// `...`
-        "..="      pub struct DotDotEq/3   /// `..=`
-        "="        pub struct Eq/1         /// `=`
-        "=="       pub struct EqEq/2       /// `==`
-        ">="       pub struct Ge/2         /// `>=`
-        ">"        pub struct Gt/1         /// `>`
-        "<="       pub struct Le/2         /// `<=`
-        "<"        pub struct Lt/1         /// `<`
-        "*="       pub struct MulEq/2      /// `*=`
-        "!="       pub struct Ne/2         /// `!=`
-        "|"        pub struct Or/1         /// `|`
-        "|="       pub struct OrEq/2       /// `|=`
-        "||"       pub struct OrOr/2       /// `||`
-        "#"        pub struct Pound/1      /// `#`
-        "?"        pub struct Question/1   /// `?`
-        "->"       pub struct RArrow/2     /// `->`
-        "<-"       pub struct LArrow/2     /// `<-`
-        "%"        pub struct Rem/1        /// `%`
-        "%="       pub struct RemEq/2      /// `%=`
-        "=>"       pub struct FatArrow/2   /// `=>`
-        ";"        pub struct Semi/1       /// `;`
-        "<<"       pub struct Shl/2        /// `<<`
-        "<<="      pub struct ShlEq/3      /// `<<=`
-        ">>"       pub struct Shr/2        /// `>>`
-        ">>="      pub struct ShrEq/3      /// `>>=`
-        "*"        pub struct Star/1       /// `*`
-        "-"        pub struct Sub/1        /// `-`
-        "-="       pub struct SubEq/2      /// `-=`
+#[cfg(feature = "parsing")]
+impl private::Sealed for Underscore {}
+
+#[cfg(feature = "parsing")]
+impl Token for Paren {
+    fn peek(cursor: Cursor) -> bool {
+        lookahead::is_delimiter(cursor, Delimiter::Parenthesis)
     }
-    delimiter: {
-        "{"        pub struct Brace        /// `{...}`
-        "["        pub struct Bracket      /// `[...]`
-        "("        pub struct Paren        /// `(...)`
-        " "        pub struct Group        /// None-delimited group
+
+    fn display() -> &'static str {
+        "parentheses"
     }
-    keyword: {
-        "as"       pub struct As           /// `as`
-        "async"    pub struct Async        /// `async`
-        "auto"     pub struct Auto         /// `auto`
-        "box"      pub struct Box          /// `box`
-        "break"    pub struct Break        /// `break`
-        "Self"     pub struct CapSelf      /// `Self`
-        "catch"    pub struct Catch        /// `catch`
-        "const"    pub struct Const        /// `const`
-        "continue" pub struct Continue     /// `continue`
-        "crate"    pub struct Crate        /// `crate`
-        "default"  pub struct Default      /// `default`
-        "do"       pub struct Do           /// `do`
-        "dyn"      pub struct Dyn          /// `dyn`
-        "else"     pub struct Else         /// `else`
-        "enum"     pub struct Enum         /// `enum`
-        "extern"   pub struct Extern       /// `extern`
-        "fn"       pub struct Fn           /// `fn`
-        "for"      pub struct For          /// `for`
-        "if"       pub struct If           /// `if`
-        "impl"     pub struct Impl         /// `impl`
-        "in"       pub struct In           /// `in`
-        "let"      pub struct Let          /// `let`
-        "loop"     pub struct Loop         /// `loop`
-        "macro"    pub struct Macro        /// `macro`
-        "match"    pub struct Match        /// `match`
-        "mod"      pub struct Mod          /// `mod`
-        "move"     pub struct Move         /// `move`
-        "mut"      pub struct Mut          /// `mut`
-        "pub"      pub struct Pub          /// `pub`
-        "ref"      pub struct Ref          /// `ref`
-        "return"   pub struct Return       /// `return`
-        "self"     pub struct Self_        /// `self`
-        "static"   pub struct Static       /// `static`
-        "struct"   pub struct Struct       /// `struct`
-        "super"    pub struct Super        /// `super`
-        "trait"    pub struct Trait        /// `trait`
-        "type"     pub struct Type         /// `type`
-        "union"    pub struct Union        /// `union`
-        "unsafe"   pub struct Unsafe       /// `unsafe`
-        "use"      pub struct Use          /// `use`
-        "where"    pub struct Where        /// `where`
-        "while"    pub struct While        /// `while`
-        "yield"    pub struct Yield        /// `yield`
+}
+
+#[cfg(feature = "parsing")]
+impl Token for Brace {
+    fn peek(cursor: Cursor) -> bool {
+        lookahead::is_delimiter(cursor, Delimiter::Brace)
     }
+
+    fn display() -> &'static str {
+        "curly braces"
+    }
+}
+
+#[cfg(feature = "parsing")]
+impl Token for Bracket {
+    fn peek(cursor: Cursor) -> bool {
+        lookahead::is_delimiter(cursor, Delimiter::Bracket)
+    }
+
+    fn display() -> &'static str {
+        "square brackets"
+    }
+}
+
+#[cfg(feature = "parsing")]
+impl Token for Group {
+    fn peek(cursor: Cursor) -> bool {
+        lookahead::is_delimiter(cursor, Delimiter::None)
+    }
+
+    fn display() -> &'static str {
+        "invisible group"
+    }
+}
+
+define_keywords! {
+    "abstract"    pub struct Abstract     /// `abstract`
+    "as"          pub struct As           /// `as`
+    "async"       pub struct Async        /// `async`
+    "auto"        pub struct Auto         /// `auto`
+    "become"      pub struct Become       /// `become`
+    "box"         pub struct Box          /// `box`
+    "break"       pub struct Break        /// `break`
+    "Self"        pub struct CapSelf      /// `Self`
+    "const"       pub struct Const        /// `const`
+    "continue"    pub struct Continue     /// `continue`
+    "crate"       pub struct Crate        /// `crate`
+    "default"     pub struct Default      /// `default`
+    "do"          pub struct Do           /// `do`
+    "dyn"         pub struct Dyn          /// `dyn`
+    "else"        pub struct Else         /// `else`
+    "enum"        pub struct Enum         /// `enum`
+    "existential" pub struct Existential  /// `existential`
+    "extern"      pub struct Extern       /// `extern`
+    "final"       pub struct Final        /// `final`
+    "fn"          pub struct Fn           /// `fn`
+    "for"         pub struct For          /// `for`
+    "if"          pub struct If           /// `if`
+    "impl"        pub struct Impl         /// `impl`
+    "in"          pub struct In           /// `in`
+    "let"         pub struct Let          /// `let`
+    "loop"        pub struct Loop         /// `loop`
+    "macro"       pub struct Macro        /// `macro`
+    "match"       pub struct Match        /// `match`
+    "mod"         pub struct Mod          /// `mod`
+    "move"        pub struct Move         /// `move`
+    "mut"         pub struct Mut          /// `mut`
+    "override"    pub struct Override     /// `override`
+    "priv"        pub struct Priv         /// `priv`
+    "pub"         pub struct Pub          /// `pub`
+    "ref"         pub struct Ref          /// `ref`
+    "return"      pub struct Return       /// `return`
+    "self"        pub struct Self_        /// `self`
+    "static"      pub struct Static       /// `static`
+    "struct"      pub struct Struct       /// `struct`
+    "super"       pub struct Super        /// `super`
+    "trait"       pub struct Trait        /// `trait`
+    "try"         pub struct Try          /// `try`
+    "type"        pub struct Type         /// `type`
+    "typeof"      pub struct Typeof       /// `typeof`
+    "union"       pub struct Union        /// `union`
+    "unsafe"      pub struct Unsafe       /// `unsafe`
+    "unsized"     pub struct Unsized      /// `unsized`
+    "use"         pub struct Use          /// `use`
+    "virtual"     pub struct Virtual      /// `virtual`
+    "where"       pub struct Where        /// `where`
+    "while"       pub struct While        /// `while`
+    "yield"       pub struct Yield        /// `yield`
+}
+
+define_punctuation! {
+    "+"           pub struct Add/1        /// `+`
+    "+="          pub struct AddEq/2      /// `+=`
+    "&"           pub struct And/1        /// `&`
+    "&&"          pub struct AndAnd/2     /// `&&`
+    "&="          pub struct AndEq/2      /// `&=`
+    "@"           pub struct At/1         /// `@`
+    "!"           pub struct Bang/1       /// `!`
+    "^"           pub struct Caret/1      /// `^`
+    "^="          pub struct CaretEq/2    /// `^=`
+    ":"           pub struct Colon/1      /// `:`
+    "::"          pub struct Colon2/2     /// `::`
+    ","           pub struct Comma/1      /// `,`
+    "/"           pub struct Div/1        /// `/`
+    "/="          pub struct DivEq/2      /// `/=`
+    "$"           pub struct Dollar/1     /// `$`
+    "."           pub struct Dot/1        /// `.`
+    ".."          pub struct Dot2/2       /// `..`
+    "..."         pub struct Dot3/3       /// `...`
+    "..="         pub struct DotDotEq/3   /// `..=`
+    "="           pub struct Eq/1         /// `=`
+    "=="          pub struct EqEq/2       /// `==`
+    ">="          pub struct Ge/2         /// `>=`
+    ">"           pub struct Gt/1         /// `>`
+    "<="          pub struct Le/2         /// `<=`
+    "<"           pub struct Lt/1         /// `<`
+    "*="          pub struct MulEq/2      /// `*=`
+    "!="          pub struct Ne/2         /// `!=`
+    "|"           pub struct Or/1         /// `|`
+    "|="          pub struct OrEq/2       /// `|=`
+    "||"          pub struct OrOr/2       /// `||`
+    "#"           pub struct Pound/1      /// `#`
+    "?"           pub struct Question/1   /// `?`
+    "->"          pub struct RArrow/2     /// `->`
+    "<-"          pub struct LArrow/2     /// `<-`
+    "%"           pub struct Rem/1        /// `%`
+    "%="          pub struct RemEq/2      /// `%=`
+    "=>"          pub struct FatArrow/2   /// `=>`
+    ";"           pub struct Semi/1       /// `;`
+    "<<"          pub struct Shl/2        /// `<<`
+    "<<="         pub struct ShlEq/3      /// `<<=`
+    ">>"          pub struct Shr/2        /// `>>`
+    ">>="         pub struct ShrEq/3      /// `>>=`
+    "*"           pub struct Star/1       /// `*`
+    "-"           pub struct Sub/1        /// `-`
+    "-="          pub struct SubEq/2      /// `-=`
+    "~"           pub struct Tilde/1      /// `~`
+}
+
+define_delimiters! {
+    "{"           pub struct Brace        /// `{...}`
+    "["           pub struct Bracket      /// `[...]`
+    "("           pub struct Paren        /// `(...)`
+    " "           pub struct Group        /// None-delimited group
 }
 
 /// A type-macro that expands to the name of the Rust type representation of a
@@ -521,324 +676,183 @@ tokens! {
 #[macro_export]
 #[cfg_attr(rustfmt, rustfmt_skip)]
 macro_rules! Token {
-    (+)        => { $crate::token::Add };
-    (+=)       => { $crate::token::AddEq };
-    (&)        => { $crate::token::And };
-    (&&)       => { $crate::token::AndAnd };
-    (&=)       => { $crate::token::AndEq };
-    (@)        => { $crate::token::At };
-    (!)        => { $crate::token::Bang };
-    (^)        => { $crate::token::Caret };
-    (^=)       => { $crate::token::CaretEq };
-    (:)        => { $crate::token::Colon };
-    (::)       => { $crate::token::Colon2 };
-    (,)        => { $crate::token::Comma };
-    (/)        => { $crate::token::Div };
-    (/=)       => { $crate::token::DivEq };
-    (.)        => { $crate::token::Dot };
-    (..)       => { $crate::token::Dot2 };
-    (...)      => { $crate::token::Dot3 };
-    (..=)      => { $crate::token::DotDotEq };
-    (=)        => { $crate::token::Eq };
-    (==)       => { $crate::token::EqEq };
-    (>=)       => { $crate::token::Ge };
-    (>)        => { $crate::token::Gt };
-    (<=)       => { $crate::token::Le };
-    (<)        => { $crate::token::Lt };
-    (*=)       => { $crate::token::MulEq };
-    (!=)       => { $crate::token::Ne };
-    (|)        => { $crate::token::Or };
-    (|=)       => { $crate::token::OrEq };
-    (||)       => { $crate::token::OrOr };
-    (#)        => { $crate::token::Pound };
-    (?)        => { $crate::token::Question };
-    (->)       => { $crate::token::RArrow };
-    (<-)       => { $crate::token::LArrow };
-    (%)        => { $crate::token::Rem };
-    (%=)       => { $crate::token::RemEq };
-    (=>)       => { $crate::token::FatArrow };
-    (;)        => { $crate::token::Semi };
-    (<<)       => { $crate::token::Shl };
-    (<<=)      => { $crate::token::ShlEq };
-    (>>)       => { $crate::token::Shr };
-    (>>=)      => { $crate::token::ShrEq };
-    (*)        => { $crate::token::Star };
-    (-)        => { $crate::token::Sub };
-    (-=)       => { $crate::token::SubEq };
-    (_)        => { $crate::token::Underscore };
-    (as)       => { $crate::token::As };
-    (async)    => { $crate::token::Async };
-    (auto)     => { $crate::token::Auto };
-    (box)      => { $crate::token::Box };
-    (break)    => { $crate::token::Break };
-    (Self)     => { $crate::token::CapSelf };
-    (catch)    => { $crate::token::Catch };
-    (const)    => { $crate::token::Const };
-    (continue) => { $crate::token::Continue };
-    (crate)    => { $crate::token::Crate };
-    (default)  => { $crate::token::Default };
-    (do)       => { $crate::token::Do };
-    (dyn)      => { $crate::token::Dyn };
-    (else)     => { $crate::token::Else };
-    (enum)     => { $crate::token::Enum };
-    (extern)   => { $crate::token::Extern };
-    (fn)       => { $crate::token::Fn };
-    (for)      => { $crate::token::For };
-    (if)       => { $crate::token::If };
-    (impl)     => { $crate::token::Impl };
-    (in)       => { $crate::token::In };
-    (let)      => { $crate::token::Let };
-    (loop)     => { $crate::token::Loop };
-    (macro)    => { $crate::token::Macro };
-    (match)    => { $crate::token::Match };
-    (mod)      => { $crate::token::Mod };
-    (move)     => { $crate::token::Move };
-    (mut)      => { $crate::token::Mut };
-    (pub)      => { $crate::token::Pub };
-    (ref)      => { $crate::token::Ref };
-    (return)   => { $crate::token::Return };
-    (self)     => { $crate::token::Self_ };
-    (static)   => { $crate::token::Static };
-    (struct)   => { $crate::token::Struct };
-    (super)    => { $crate::token::Super };
-    (trait)    => { $crate::token::Trait };
-    (type)     => { $crate::token::Type };
-    (union)    => { $crate::token::Union };
-    (unsafe)   => { $crate::token::Unsafe };
-    (use)      => { $crate::token::Use };
-    (where)    => { $crate::token::Where };
-    (while)    => { $crate::token::While };
-    (yield)    => { $crate::token::Yield };
+    (abstract)    => { $crate::token::Abstract };
+    (as)          => { $crate::token::As };
+    (async)       => { $crate::token::Async };
+    (auto)        => { $crate::token::Auto };
+    (become)      => { $crate::token::Become };
+    (box)         => { $crate::token::Box };
+    (break)       => { $crate::token::Break };
+    (Self)        => { $crate::token::CapSelf };
+    (const)       => { $crate::token::Const };
+    (continue)    => { $crate::token::Continue };
+    (crate)       => { $crate::token::Crate };
+    (default)     => { $crate::token::Default };
+    (do)          => { $crate::token::Do };
+    (dyn)         => { $crate::token::Dyn };
+    (else)        => { $crate::token::Else };
+    (enum)        => { $crate::token::Enum };
+    (existential) => { $crate::token::Existential };
+    (extern)      => { $crate::token::Extern };
+    (final)       => { $crate::token::Final };
+    (fn)          => { $crate::token::Fn };
+    (for)         => { $crate::token::For };
+    (if)          => { $crate::token::If };
+    (impl)        => { $crate::token::Impl };
+    (in)          => { $crate::token::In };
+    (let)         => { $crate::token::Let };
+    (loop)        => { $crate::token::Loop };
+    (macro)       => { $crate::token::Macro };
+    (match)       => { $crate::token::Match };
+    (mod)         => { $crate::token::Mod };
+    (move)        => { $crate::token::Move };
+    (mut)         => { $crate::token::Mut };
+    (override)    => { $crate::token::Override };
+    (priv)        => { $crate::token::Priv };
+    (pub)         => { $crate::token::Pub };
+    (ref)         => { $crate::token::Ref };
+    (return)      => { $crate::token::Return };
+    (self)        => { $crate::token::Self_ };
+    (static)      => { $crate::token::Static };
+    (struct)      => { $crate::token::Struct };
+    (super)       => { $crate::token::Super };
+    (trait)       => { $crate::token::Trait };
+    (try)         => { $crate::token::Try };
+    (type)        => { $crate::token::Type };
+    (typeof)      => { $crate::token::Typeof };
+    (union)       => { $crate::token::Union };
+    (unsafe)      => { $crate::token::Unsafe };
+    (unsized)     => { $crate::token::Unsized };
+    (use)         => { $crate::token::Use };
+    (virtual)     => { $crate::token::Virtual };
+    (where)       => { $crate::token::Where };
+    (while)       => { $crate::token::While };
+    (yield)       => { $crate::token::Yield };
+    (+)           => { $crate::token::Add };
+    (+=)          => { $crate::token::AddEq };
+    (&)           => { $crate::token::And };
+    (&&)          => { $crate::token::AndAnd };
+    (&=)          => { $crate::token::AndEq };
+    (@)           => { $crate::token::At };
+    (!)           => { $crate::token::Bang };
+    (^)           => { $crate::token::Caret };
+    (^=)          => { $crate::token::CaretEq };
+    (:)           => { $crate::token::Colon };
+    (::)          => { $crate::token::Colon2 };
+    (,)           => { $crate::token::Comma };
+    (/)           => { $crate::token::Div };
+    (/=)          => { $crate::token::DivEq };
+    (.)           => { $crate::token::Dot };
+    (..)          => { $crate::token::Dot2 };
+    (...)         => { $crate::token::Dot3 };
+    (..=)         => { $crate::token::DotDotEq };
+    (=)           => { $crate::token::Eq };
+    (==)          => { $crate::token::EqEq };
+    (>=)          => { $crate::token::Ge };
+    (>)           => { $crate::token::Gt };
+    (<=)          => { $crate::token::Le };
+    (<)           => { $crate::token::Lt };
+    (*=)          => { $crate::token::MulEq };
+    (!=)          => { $crate::token::Ne };
+    (|)           => { $crate::token::Or };
+    (|=)          => { $crate::token::OrEq };
+    (||)          => { $crate::token::OrOr };
+    (#)           => { $crate::token::Pound };
+    (?)           => { $crate::token::Question };
+    (->)          => { $crate::token::RArrow };
+    (<-)          => { $crate::token::LArrow };
+    (%)           => { $crate::token::Rem };
+    (%=)          => { $crate::token::RemEq };
+    (=>)          => { $crate::token::FatArrow };
+    (;)           => { $crate::token::Semi };
+    (<<)          => { $crate::token::Shl };
+    (<<=)         => { $crate::token::ShlEq };
+    (>>)          => { $crate::token::Shr };
+    (>>=)         => { $crate::token::ShrEq };
+    (*)           => { $crate::token::Star };
+    (-)           => { $crate::token::Sub };
+    (-=)          => { $crate::token::SubEq };
+    (~)           => { $crate::token::Tilde };
+    (_)           => { $crate::token::Underscore };
 }
-
-/// Parse a single Rust punctuation token.
-///
-/// See the [token module] documentation for details and examples.
-///
-/// [token module]: token/index.html
-///
-/// *This macro is available if Syn is built with the `"parsing"` feature.*
-#[cfg(feature = "parsing")]
-#[macro_export]
-#[cfg_attr(rustfmt, rustfmt_skip)]
-macro_rules! punct {
-    ($i:expr, +)   => { call!($i, <$crate::token::Add as $crate::synom::Synom>::parse) };
-    ($i:expr, +=)  => { call!($i, <$crate::token::AddEq as $crate::synom::Synom>::parse) };
-    ($i:expr, &)   => { call!($i, <$crate::token::And as $crate::synom::Synom>::parse) };
-    ($i:expr, &&)  => { call!($i, <$crate::token::AndAnd as $crate::synom::Synom>::parse) };
-    ($i:expr, &=)  => { call!($i, <$crate::token::AndEq as $crate::synom::Synom>::parse) };
-    ($i:expr, @)   => { call!($i, <$crate::token::At as $crate::synom::Synom>::parse) };
-    ($i:expr, !)   => { call!($i, <$crate::token::Bang as $crate::synom::Synom>::parse) };
-    ($i:expr, ^)   => { call!($i, <$crate::token::Caret as $crate::synom::Synom>::parse) };
-    ($i:expr, ^=)  => { call!($i, <$crate::token::CaretEq as $crate::synom::Synom>::parse) };
-    ($i:expr, :)   => { call!($i, <$crate::token::Colon as $crate::synom::Synom>::parse) };
-    ($i:expr, ::)  => { call!($i, <$crate::token::Colon2 as $crate::synom::Synom>::parse) };
-    ($i:expr, ,)   => { call!($i, <$crate::token::Comma as $crate::synom::Synom>::parse) };
-    ($i:expr, /)   => { call!($i, <$crate::token::Div as $crate::synom::Synom>::parse) };
-    ($i:expr, /=)  => { call!($i, <$crate::token::DivEq as $crate::synom::Synom>::parse) };
-    ($i:expr, .)   => { call!($i, <$crate::token::Dot as $crate::synom::Synom>::parse) };
-    ($i:expr, ..)  => { call!($i, <$crate::token::Dot2 as $crate::synom::Synom>::parse) };
-    ($i:expr, ...) => { call!($i, <$crate::token::Dot3 as $crate::synom::Synom>::parse) };
-    ($i:expr, ..=) => { call!($i, <$crate::token::DotDotEq as $crate::synom::Synom>::parse) };
-    ($i:expr, =)   => { call!($i, <$crate::token::Eq as $crate::synom::Synom>::parse) };
-    ($i:expr, ==)  => { call!($i, <$crate::token::EqEq as $crate::synom::Synom>::parse) };
-    ($i:expr, >=)  => { call!($i, <$crate::token::Ge as $crate::synom::Synom>::parse) };
-    ($i:expr, >)   => { call!($i, <$crate::token::Gt as $crate::synom::Synom>::parse) };
-    ($i:expr, <=)  => { call!($i, <$crate::token::Le as $crate::synom::Synom>::parse) };
-    ($i:expr, <)   => { call!($i, <$crate::token::Lt as $crate::synom::Synom>::parse) };
-    ($i:expr, *=)  => { call!($i, <$crate::token::MulEq as $crate::synom::Synom>::parse) };
-    ($i:expr, !=)  => { call!($i, <$crate::token::Ne as $crate::synom::Synom>::parse) };
-    ($i:expr, |)   => { call!($i, <$crate::token::Or as $crate::synom::Synom>::parse) };
-    ($i:expr, |=)  => { call!($i, <$crate::token::OrEq as $crate::synom::Synom>::parse) };
-    ($i:expr, ||)  => { call!($i, <$crate::token::OrOr as $crate::synom::Synom>::parse) };
-    ($i:expr, #)   => { call!($i, <$crate::token::Pound as $crate::synom::Synom>::parse) };
-    ($i:expr, ?)   => { call!($i, <$crate::token::Question as $crate::synom::Synom>::parse) };
-    ($i:expr, ->)  => { call!($i, <$crate::token::RArrow as $crate::synom::Synom>::parse) };
-    ($i:expr, <-)  => { call!($i, <$crate::token::LArrow as $crate::synom::Synom>::parse) };
-    ($i:expr, %)   => { call!($i, <$crate::token::Rem as $crate::synom::Synom>::parse) };
-    ($i:expr, %=)  => { call!($i, <$crate::token::RemEq as $crate::synom::Synom>::parse) };
-    ($i:expr, =>)  => { call!($i, <$crate::token::FatArrow as $crate::synom::Synom>::parse) };
-    ($i:expr, ;)   => { call!($i, <$crate::token::Semi as $crate::synom::Synom>::parse) };
-    ($i:expr, <<)  => { call!($i, <$crate::token::Shl as $crate::synom::Synom>::parse) };
-    ($i:expr, <<=) => { call!($i, <$crate::token::ShlEq as $crate::synom::Synom>::parse) };
-    ($i:expr, >>)  => { call!($i, <$crate::token::Shr as $crate::synom::Synom>::parse) };
-    ($i:expr, >>=) => { call!($i, <$crate::token::ShrEq as $crate::synom::Synom>::parse) };
-    ($i:expr, *)   => { call!($i, <$crate::token::Star as $crate::synom::Synom>::parse) };
-    ($i:expr, -)   => { call!($i, <$crate::token::Sub as $crate::synom::Synom>::parse) };
-    ($i:expr, -=)  => { call!($i, <$crate::token::SubEq as $crate::synom::Synom>::parse) };
-    ($i:expr, _)   => { call!($i, <$crate::token::Underscore as $crate::synom::Synom>::parse) };
-}
-
-/// Parse a single Rust keyword token.
-///
-/// See the [token module] documentation for details and examples.
-///
-/// [token module]: token/index.html
-///
-/// *This macro is available if Syn is built with the `"parsing"` feature.*
-#[cfg(feature = "parsing")]
-#[macro_export]
-#[cfg_attr(rustfmt, rustfmt_skip)]
-macro_rules! keyword {
-    ($i:expr, as)       => { call!($i, <$crate::token::As as $crate::synom::Synom>::parse) };
-    ($i:expr, async)    => { call!($i, <$crate::token::Async as $crate::synom::Synom>::parse) };
-    ($i:expr, auto)     => { call!($i, <$crate::token::Auto as $crate::synom::Synom>::parse) };
-    ($i:expr, box)      => { call!($i, <$crate::token::Box as $crate::synom::Synom>::parse) };
-    ($i:expr, break)    => { call!($i, <$crate::token::Break as $crate::synom::Synom>::parse) };
-    ($i:expr, Self)     => { call!($i, <$crate::token::CapSelf as $crate::synom::Synom>::parse) };
-    ($i:expr, catch)    => { call!($i, <$crate::token::Catch as $crate::synom::Synom>::parse) };
-    ($i:expr, const)    => { call!($i, <$crate::token::Const as $crate::synom::Synom>::parse) };
-    ($i:expr, continue) => { call!($i, <$crate::token::Continue as $crate::synom::Synom>::parse) };
-    ($i:expr, crate)    => { call!($i, <$crate::token::Crate as $crate::synom::Synom>::parse) };
-    ($i:expr, default)  => { call!($i, <$crate::token::Default as $crate::synom::Synom>::parse) };
-    ($i:expr, do)       => { call!($i, <$crate::token::Do as $crate::synom::Synom>::parse) };
-    ($i:expr, dyn)      => { call!($i, <$crate::token::Dyn as $crate::synom::Synom>::parse) };
-    ($i:expr, else)     => { call!($i, <$crate::token::Else as $crate::synom::Synom>::parse) };
-    ($i:expr, enum)     => { call!($i, <$crate::token::Enum as $crate::synom::Synom>::parse) };
-    ($i:expr, extern)   => { call!($i, <$crate::token::Extern as $crate::synom::Synom>::parse) };
-    ($i:expr, fn)       => { call!($i, <$crate::token::Fn as $crate::synom::Synom>::parse) };
-    ($i:expr, for)      => { call!($i, <$crate::token::For as $crate::synom::Synom>::parse) };
-    ($i:expr, if)       => { call!($i, <$crate::token::If as $crate::synom::Synom>::parse) };
-    ($i:expr, impl)     => { call!($i, <$crate::token::Impl as $crate::synom::Synom>::parse) };
-    ($i:expr, in)       => { call!($i, <$crate::token::In as $crate::synom::Synom>::parse) };
-    ($i:expr, let)      => { call!($i, <$crate::token::Let as $crate::synom::Synom>::parse) };
-    ($i:expr, loop)     => { call!($i, <$crate::token::Loop as $crate::synom::Synom>::parse) };
-    ($i:expr, macro)    => { call!($i, <$crate::token::Macro as $crate::synom::Synom>::parse) };
-    ($i:expr, match)    => { call!($i, <$crate::token::Match as $crate::synom::Synom>::parse) };
-    ($i:expr, mod)      => { call!($i, <$crate::token::Mod as $crate::synom::Synom>::parse) };
-    ($i:expr, move)     => { call!($i, <$crate::token::Move as $crate::synom::Synom>::parse) };
-    ($i:expr, mut)      => { call!($i, <$crate::token::Mut as $crate::synom::Synom>::parse) };
-    ($i:expr, pub)      => { call!($i, <$crate::token::Pub as $crate::synom::Synom>::parse) };
-    ($i:expr, ref)      => { call!($i, <$crate::token::Ref as $crate::synom::Synom>::parse) };
-    ($i:expr, return)   => { call!($i, <$crate::token::Return as $crate::synom::Synom>::parse) };
-    ($i:expr, self)     => { call!($i, <$crate::token::Self_ as $crate::synom::Synom>::parse) };
-    ($i:expr, static)   => { call!($i, <$crate::token::Static as $crate::synom::Synom>::parse) };
-    ($i:expr, struct)   => { call!($i, <$crate::token::Struct as $crate::synom::Synom>::parse) };
-    ($i:expr, super)    => { call!($i, <$crate::token::Super as $crate::synom::Synom>::parse) };
-    ($i:expr, trait)    => { call!($i, <$crate::token::Trait as $crate::synom::Synom>::parse) };
-    ($i:expr, type)     => { call!($i, <$crate::token::Type as $crate::synom::Synom>::parse) };
-    ($i:expr, union)    => { call!($i, <$crate::token::Union as $crate::synom::Synom>::parse) };
-    ($i:expr, unsafe)   => { call!($i, <$crate::token::Unsafe as $crate::synom::Synom>::parse) };
-    ($i:expr, use)      => { call!($i, <$crate::token::Use as $crate::synom::Synom>::parse) };
-    ($i:expr, where)    => { call!($i, <$crate::token::Where as $crate::synom::Synom>::parse) };
-    ($i:expr, while)    => { call!($i, <$crate::token::While as $crate::synom::Synom>::parse) };
-    ($i:expr, yield)    => { call!($i, <$crate::token::Yield as $crate::synom::Synom>::parse) };
-}
-
-macro_rules! ident_from_token {
-    ($token:ident) => {
-        impl From<Token![$token]> for Ident {
-            fn from(token: Token![$token]) -> Ident {
-                Ident::new(stringify!($token), token.0)
-            }
-        }
-    };
-}
-
-ident_from_token!(self);
-ident_from_token!(Self);
-ident_from_token!(super);
-ident_from_token!(crate);
-ident_from_token!(extern);
 
 #[cfg(feature = "parsing")]
 mod parsing {
-    use proc_macro2::{Delimiter, Spacing, Span};
+    use proc_macro2::{Spacing, Span};
 
     use buffer::Cursor;
-    use parse_error;
-    use synom::PResult;
+    use error::{Error, Result};
+    use parse::ParseStream;
+    use span::FromSpans;
 
-    pub trait FromSpans: Sized {
-        fn from_spans(spans: &[Span]) -> Self;
+    pub fn keyword(input: ParseStream, token: &str) -> Result<Span> {
+        input.step(|cursor| {
+            if let Some((ident, rest)) = cursor.ident() {
+                if ident == token {
+                    return Ok((ident.span(), rest));
+                }
+            }
+            Err(cursor.error(format!("expected `{}`", token)))
+        })
     }
 
-    impl FromSpans for [Span; 1] {
-        fn from_spans(spans: &[Span]) -> Self {
-            [spans[0]]
+    pub fn peek_keyword(cursor: Cursor, token: &str) -> bool {
+        if let Some((ident, _rest)) = cursor.ident() {
+            ident == token
+        } else {
+            false
         }
     }
 
-    impl FromSpans for [Span; 2] {
-        fn from_spans(spans: &[Span]) -> Self {
-            [spans[0], spans[1]]
-        }
+    pub fn punct<S: FromSpans>(input: ParseStream, token: &str) -> Result<S> {
+        let mut spans = [input.cursor().span(); 3];
+        punct_helper(input, token, &mut spans)?;
+        Ok(S::from_spans(&spans))
     }
 
-    impl FromSpans for [Span; 3] {
-        fn from_spans(spans: &[Span]) -> Self {
-            [spans[0], spans[1], spans[2]]
-        }
-    }
+    fn punct_helper(input: ParseStream, token: &str, spans: &mut [Span; 3]) -> Result<()> {
+        input.step(|cursor| {
+            let mut cursor = *cursor;
+            assert!(token.len() <= spans.len());
 
-    pub fn punct<'a, T, R>(s: &str, mut tokens: Cursor<'a>, new: fn(T) -> R) -> PResult<'a, R>
-    where
-        T: FromSpans,
-    {
-        let mut spans = [Span::call_site(); 3];
-        assert!(s.len() <= spans.len());
-        let chars = s.chars();
-
-        for (i, (ch, slot)) in chars.zip(&mut spans).enumerate() {
-            match tokens.punct() {
-                Some((op, rest)) => {
-                    if op.as_char() == ch {
-                        if i != s.len() - 1 {
-                            match op.spacing() {
-                                Spacing::Joint => {}
-                                _ => return parse_error(),
-                            }
+            for (i, ch) in token.chars().enumerate() {
+                match cursor.punct() {
+                    Some((punct, rest)) => {
+                        spans[i] = punct.span();
+                        if punct.as_char() != ch {
+                            break;
+                        } else if i == token.len() - 1 {
+                            return Ok(((), rest));
+                        } else if punct.spacing() != Spacing::Joint {
+                            break;
                         }
-                        *slot = op.span();
-                        tokens = rest;
-                    } else {
-                        return parse_error();
+                        cursor = rest;
                     }
+                    None => break,
                 }
-                _ => return parse_error(),
             }
-        }
-        Ok((new(T::from_spans(&spans)), tokens))
+
+            Err(Error::new(spans[0], format!("expected `{}`", token)))
+        })
     }
 
-    pub fn keyword<'a, T>(keyword: &str, tokens: Cursor<'a>, new: fn(Span) -> T) -> PResult<'a, T> {
-        if let Some((ident, rest)) = tokens.ident() {
-            if ident == keyword {
-                return Ok((new(ident.span()), rest));
-            }
-        }
-        parse_error()
-    }
-
-    pub fn delim<'a, F, R, T>(
-        delim: &str,
-        tokens: Cursor<'a>,
-        new: fn(Span) -> T,
-        f: F,
-    ) -> PResult<'a, (T, R)>
-    where
-        F: FnOnce(Cursor) -> PResult<R>,
-    {
-        // NOTE: We should support none-delimited sequences here.
-        let delim = match delim {
-            "(" => Delimiter::Parenthesis,
-            "{" => Delimiter::Brace,
-            "[" => Delimiter::Bracket,
-            " " => Delimiter::None,
-            _ => panic!("unknown delimiter: {}", delim),
-        };
-
-        if let Some((inside, span, rest)) = tokens.group(delim) {
-            match f(inside) {
-                Ok((ret, remaining)) => {
-                    if remaining.eof() {
-                        return Ok(((new(span), ret), rest));
+    pub fn peek_punct(mut cursor: Cursor, token: &str) -> bool {
+        for (i, ch) in token.chars().enumerate() {
+            match cursor.punct() {
+                Some((punct, rest)) => {
+                    if punct.as_char() != ch {
+                        break;
+                    } else if i == token.len() - 1 {
+                        return true;
+                    } else if punct.spacing() != Spacing::Joint {
+                        break;
                     }
+                    cursor = rest;
                 }
-                Err(err) => return Err(err),
+                None => break,
             }
         }
-        parse_error()
+        false
     }
 }
 

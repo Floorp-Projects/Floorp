@@ -66,16 +66,29 @@ ast_enum_of_structs! {
 }
 
 impl Fields {
-    /// Get an iterator over the [`Field`] items in this object. This iterator
-    /// can be used to iterate over a named or unnamed struct or variant's
-    /// fields uniformly.
+    /// Get an iterator over the borrowed [`Field`] items in this object. This
+    /// iterator can be used to iterate over a named or unnamed struct or
+    /// variant's fields uniformly.
     ///
     /// [`Field`]: struct.Field.html
     pub fn iter(&self) -> punctuated::Iter<Field> {
         match *self {
-            Fields::Unit => punctuated::Iter::private_empty(),
+            Fields::Unit => private::empty_punctuated_iter(),
             Fields::Named(ref f) => f.named.iter(),
             Fields::Unnamed(ref f) => f.unnamed.iter(),
+        }
+    }
+
+    /// Get an iterator over the mutably borrowed [`Field`] items in this
+    /// object. This iterator can be used to iterate over a named or unnamed
+    /// struct or variant's fields uniformly.
+    ///
+    /// [`Field`]: struct.Field.html
+    pub fn iter_mut(&mut self) -> punctuated::IterMut<Field> {
+        match *self {
+            Fields::Unit => private::empty_punctuated_iter_mut(),
+            Fields::Named(ref mut f) => f.named.iter_mut(),
+            Fields::Unnamed(ref mut f) => f.unnamed.iter_mut(),
         }
     }
 }
@@ -86,6 +99,15 @@ impl<'a> IntoIterator for &'a Fields {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut Fields {
+    type Item = &'a mut Field;
+    type IntoIter = punctuated::IterMut<'a, Field>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
     }
 }
 
@@ -163,160 +185,134 @@ ast_enum_of_structs! {
 pub mod parsing {
     use super::*;
 
-    use synom::Synom;
+    use ext::IdentExt;
+    use parse::{Parse, ParseStream, Result};
 
-    impl Synom for Variant {
-        named!(parse -> Self, do_parse!(
-            attrs: many0!(Attribute::parse_outer) >>
-            id: syn!(Ident) >>
-            fields: alt!(
-                syn!(FieldsNamed) => { Fields::Named }
-                |
-                syn!(FieldsUnnamed) => { Fields::Unnamed }
-                |
-                epsilon!() => { |_| Fields::Unit }
-            ) >>
-            disr: option!(tuple!(punct!(=), syn!(Expr))) >>
-            (Variant {
-                ident: id,
-                attrs: attrs,
-                fields: fields,
-                discriminant: disr,
+    impl Parse for Variant {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(Variant {
+                attrs: input.call(Attribute::parse_outer)?,
+                ident: input.parse()?,
+                fields: {
+                    if input.peek(token::Brace) {
+                        Fields::Named(input.parse()?)
+                    } else if input.peek(token::Paren) {
+                        Fields::Unnamed(input.parse()?)
+                    } else {
+                        Fields::Unit
+                    }
+                },
+                discriminant: {
+                    if input.peek(Token![=]) {
+                        let eq_token: Token![=] = input.parse()?;
+                        let discriminant: Expr = input.parse()?;
+                        Some((eq_token, discriminant))
+                    } else {
+                        None
+                    }
+                },
             })
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("enum variant")
         }
     }
 
-    impl Synom for FieldsNamed {
-        named!(parse -> Self, map!(
-            braces!(call!(Punctuated::parse_terminated_with, Field::parse_named)),
-            |(brace, fields)| FieldsNamed {
-                brace_token: brace,
-                named: fields,
-            }
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("named fields in a struct or struct variant")
+    impl Parse for FieldsNamed {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let content;
+            Ok(FieldsNamed {
+                brace_token: braced!(content in input),
+                named: content.parse_terminated(Field::parse_named)?,
+            })
         }
     }
 
-    impl Synom for FieldsUnnamed {
-        named!(parse -> Self, map!(
-            parens!(call!(Punctuated::parse_terminated_with, Field::parse_unnamed)),
-            |(paren, fields)| FieldsUnnamed {
-                paren_token: paren,
-                unnamed: fields,
-            }
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("unnamed fields in a tuple struct or tuple variant")
+    impl Parse for FieldsUnnamed {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let content;
+            Ok(FieldsUnnamed {
+                paren_token: parenthesized!(content in input),
+                unnamed: content.parse_terminated(Field::parse_unnamed)?,
+            })
         }
     }
 
     impl Field {
-        named!(pub parse_named -> Self, do_parse!(
-            attrs: many0!(Attribute::parse_outer) >>
-            vis: syn!(Visibility) >>
-            id: syn!(Ident) >>
-            colon: punct!(:) >>
-            ty: syn!(Type) >>
-            (Field {
-                ident: Some(id),
-                vis: vis,
-                attrs: attrs,
-                ty: ty,
-                colon_token: Some(colon),
+        /// Parses a named (braced struct) field.
+        pub fn parse_named(input: ParseStream) -> Result<Self> {
+            Ok(Field {
+                attrs: input.call(Attribute::parse_outer)?,
+                vis: input.parse()?,
+                ident: Some(input.parse()?),
+                colon_token: Some(input.parse()?),
+                ty: input.parse()?,
             })
-        ));
+        }
 
-        named!(pub parse_unnamed -> Self, do_parse!(
-            attrs: many0!(Attribute::parse_outer) >>
-            vis: syn!(Visibility) >>
-            ty: syn!(Type) >>
-            (Field {
+        /// Parses an unnamed (tuple struct) field.
+        pub fn parse_unnamed(input: ParseStream) -> Result<Self> {
+            Ok(Field {
+                attrs: input.call(Attribute::parse_outer)?,
+                vis: input.parse()?,
                 ident: None,
                 colon_token: None,
-                vis: vis,
-                attrs: attrs,
-                ty: ty,
+                ty: input.parse()?,
             })
-        ));
+        }
     }
 
-    impl Synom for Visibility {
-        named!(parse -> Self, alt!(
-            do_parse!(
-                pub_token: keyword!(pub) >>
-                other: parens!(keyword!(crate)) >>
-                (Visibility::Restricted(VisRestricted {
-                    pub_token: pub_token,
-                    paren_token: other.0,
-                    in_token: None,
-                    path: Box::new(other.1.into()),
-                }))
-            )
-            |
-            do_parse!(
-                crate_token: keyword!(crate) >>
-                not!(punct!(::)) >>
-                (Visibility::Crate(VisCrate {
-                    crate_token: crate_token,
-                }))
-            )
-            |
-            do_parse!(
-                pub_token: keyword!(pub) >>
-                other: parens!(keyword!(self)) >>
-                (Visibility::Restricted(VisRestricted {
-                    pub_token: pub_token,
-                    paren_token: other.0,
-                    in_token: None,
-                    path: Box::new(other.1.into()),
-                }))
-            )
-            |
-            do_parse!(
-                pub_token: keyword!(pub) >>
-                other: parens!(keyword!(super)) >>
-                (Visibility::Restricted(VisRestricted {
-                    pub_token: pub_token,
-                    paren_token: other.0,
-                    in_token: None,
-                    path: Box::new(other.1.into()),
-                }))
-            )
-            |
-            do_parse!(
-                pub_token: keyword!(pub) >>
-                other: parens!(do_parse!(
-                    in_tok: keyword!(in) >>
-                    restricted: call!(Path::parse_mod_style) >>
-                    (in_tok, restricted)
-                )) >>
-                (Visibility::Restricted(VisRestricted {
-                    pub_token: pub_token,
-                    paren_token: other.0,
-                    in_token: Some((other.1).0),
-                    path: Box::new((other.1).1),
-                }))
-            )
-            |
-            keyword!(pub) => { |tok| {
-                Visibility::Public(VisPublic {
-                    pub_token: tok,
-                })
-            } }
-            |
-            epsilon!() => { |_| Visibility::Inherited }
-        ));
+    impl Parse for Visibility {
+        fn parse(input: ParseStream) -> Result<Self> {
+            if input.peek(Token![pub]) {
+                Self::parse_pub(input)
+            } else if input.peek(Token![crate]) {
+                Self::parse_crate(input)
+            } else {
+                Ok(Visibility::Inherited)
+            }
+        }
+    }
 
-        fn description() -> Option<&'static str> {
-            Some("visibility qualifier such as `pub`")
+    impl Visibility {
+        fn parse_pub(input: ParseStream) -> Result<Self> {
+            let pub_token = input.parse::<Token![pub]>()?;
+
+            if input.peek(token::Paren) {
+                let ahead = input.fork();
+                let mut content;
+                parenthesized!(content in ahead);
+
+                if content.peek(Token![crate])
+                    || content.peek(Token![self])
+                    || content.peek(Token![super])
+                {
+                    return Ok(Visibility::Restricted(VisRestricted {
+                        pub_token: pub_token,
+                        paren_token: parenthesized!(content in input),
+                        in_token: None,
+                        path: Box::new(Path::from(content.call(Ident::parse_any)?)),
+                    }));
+                } else if content.peek(Token![in]) {
+                    return Ok(Visibility::Restricted(VisRestricted {
+                        pub_token: pub_token,
+                        paren_token: parenthesized!(content in input),
+                        in_token: Some(content.parse()?),
+                        path: Box::new(content.call(Path::parse_mod_style)?),
+                    }));
+                }
+            }
+
+            Ok(Visibility::Public(VisPublic {
+                pub_token: pub_token,
+            }))
+        }
+
+        fn parse_crate(input: ParseStream) -> Result<Self> {
+            if input.peek2(Token![::]) {
+                Ok(Visibility::Inherited)
+            } else {
+                Ok(Visibility::Crate(VisCrate {
+                    crate_token: input.parse()?,
+                }))
+            }
         }
     }
 }
@@ -324,8 +320,11 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
+
     use proc_macro2::TokenStream;
     use quote::{ToTokens, TokenStreamExt};
+
+    use print::TokensOrDefault;
 
     impl ToTokens for Variant {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -383,7 +382,7 @@ mod printing {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.pub_token.to_tokens(tokens);
             self.paren_token.surround(tokens, |tokens| {
-                // XXX: If we have a path which is not "self" or "super" or
+                // TODO: If we have a path which is not "self" or "super" or
                 // "crate", automatically add the "in" token.
                 self.in_token.to_tokens(tokens);
                 self.path.to_tokens(tokens);

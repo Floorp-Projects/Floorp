@@ -19,8 +19,8 @@ ast_struct! {
     /// representation of the syntax tree.
     ///
     /// ```
-    /// extern crate syn;
-    ///
+    /// # extern crate syn;
+    /// #
     /// use std::env;
     /// use std::fs::File;
     /// use std::io::Read;
@@ -88,21 +88,21 @@ ast_struct! {
 pub mod parsing {
     use super::*;
 
-    use synom::Synom;
+    use parse::{Parse, ParseStream, Result};
 
-    impl Synom for File {
-        named!(parse -> Self, do_parse!(
-            attrs: many0!(Attribute::parse_inner) >>
-            items: many0!(Item::parse) >>
-            (File {
+    impl Parse for File {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(File {
                 shebang: None,
-                attrs: attrs,
-                items: items,
+                attrs: input.call(Attribute::parse_inner)?,
+                items: {
+                    let mut items = Vec::new();
+                    while !input.is_empty() {
+                        items.push(input.parse()?);
+                    }
+                    items
+                },
             })
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("crate")
         }
     }
 }

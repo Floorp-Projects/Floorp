@@ -44,7 +44,7 @@ matrix:
 
     # Testing other channels
     - env: TARGET=x86_64-unknown-linux-gnu
-      rust: 1.8.0
+      rust: 1.13.0
     - env: TARGET=x86_64-unknown-linux-gnu
       rust: stable
 

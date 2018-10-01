@@ -79,123 +79,144 @@ ast_enum_of_structs! {
 pub mod parsing {
     use super::*;
 
-    use synom::Synom;
+    use parse::{Parse, ParseStream, Result};
 
-    enum DeriveInputKind {
-        Struct(Token![struct]),
-        Enum(Token![enum]),
-        Union(Token![union]),
-    }
+    impl Parse for DeriveInput {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let attrs = input.call(Attribute::parse_outer)?;
+            let vis = input.parse::<Visibility>()?;
 
-    impl Synom for DeriveInputKind {
-        named!(parse -> Self, alt!(
-            keyword!(struct) => { DeriveInputKind::Struct }
-            |
-            keyword!(enum) => { DeriveInputKind::Enum }
-            |
-            keyword!(union) => { DeriveInputKind::Union }
-        ));
-    }
-
-    impl Synom for DeriveInput {
-        named!(parse -> Self, do_parse!(
-            attrs: many0!(Attribute::parse_outer) >>
-            vis: syn!(Visibility) >>
-            which: syn!(DeriveInputKind) >>
-            id: syn!(Ident) >>
-            generics: syn!(Generics) >>
-            item: switch!(value!(which),
-                DeriveInputKind::Struct(s) => map!(data_struct, move |(wh, fields, semi)| DeriveInput {
-                    ident: id,
-                    vis: vis,
+            let lookahead = input.lookahead1();
+            if lookahead.peek(Token![struct]) {
+                let struct_token = input.parse::<Token![struct]>()?;
+                let ident = input.parse::<Ident>()?;
+                let generics = input.parse::<Generics>()?;
+                let (where_clause, fields, semi) = data_struct(input)?;
+                Ok(DeriveInput {
                     attrs: attrs,
+                    vis: vis,
+                    ident: ident,
                     generics: Generics {
-                        where_clause: wh,
+                        where_clause: where_clause,
                         ..generics
                     },
                     data: Data::Struct(DataStruct {
-                        struct_token: s,
+                        struct_token: struct_token,
                         fields: fields,
                         semi_token: semi,
                     }),
                 })
-                |
-                DeriveInputKind::Enum(e) => map!(data_enum, move |(wh, brace, variants)| DeriveInput {
-                    ident: id,
-                    vis: vis,
+            } else if lookahead.peek(Token![enum]) {
+                let enum_token = input.parse::<Token![enum]>()?;
+                let ident = input.parse::<Ident>()?;
+                let generics = input.parse::<Generics>()?;
+                let (where_clause, brace, variants) = data_enum(input)?;
+                Ok(DeriveInput {
                     attrs: attrs,
+                    vis: vis,
+                    ident: ident,
                     generics: Generics {
-                        where_clause: wh,
+                        where_clause: where_clause,
                         ..generics
                     },
                     data: Data::Enum(DataEnum {
-                        variants: variants,
+                        enum_token: enum_token,
                         brace_token: brace,
-                        enum_token: e,
+                        variants: variants,
                     }),
                 })
-                |
-                DeriveInputKind::Union(u) => map!(data_union, move |(wh, fields)| DeriveInput {
-                    ident: id,
-                    vis: vis,
+            } else if lookahead.peek(Token![union]) {
+                let union_token = input.parse::<Token![union]>()?;
+                let ident = input.parse::<Ident>()?;
+                let generics = input.parse::<Generics>()?;
+                let (where_clause, fields) = data_union(input)?;
+                Ok(DeriveInput {
                     attrs: attrs,
+                    vis: vis,
+                    ident: ident,
                     generics: Generics {
-                        where_clause: wh,
+                        where_clause: where_clause,
                         ..generics
                     },
                     data: Data::Union(DataUnion {
-                        union_token: u,
+                        union_token: union_token,
                         fields: fields,
                     }),
                 })
-            ) >>
-            (item)
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("derive input")
+            } else {
+                Err(lookahead.error())
+            }
         }
     }
 
-    named!(data_struct -> (Option<WhereClause>, Fields, Option<Token![;]>), alt!(
-        do_parse!(
-            wh: option!(syn!(WhereClause)) >>
-            fields: syn!(FieldsNamed) >>
-            (wh, Fields::Named(fields), None)
-        )
-        |
-        do_parse!(
-            fields: syn!(FieldsUnnamed) >>
-            wh: option!(syn!(WhereClause)) >>
-            semi: punct!(;) >>
-            (wh, Fields::Unnamed(fields), Some(semi))
-        )
-        |
-        do_parse!(
-            wh: option!(syn!(WhereClause)) >>
-            semi: punct!(;) >>
-            (wh, Fields::Unit, Some(semi))
-        )
-    ));
+    pub fn data_struct(
+        input: ParseStream,
+    ) -> Result<(Option<WhereClause>, Fields, Option<Token![;]>)> {
+        let mut lookahead = input.lookahead1();
+        let mut where_clause = None;
+        if lookahead.peek(Token![where]) {
+            where_clause = Some(input.parse()?);
+            lookahead = input.lookahead1();
+        }
 
-    named!(data_enum -> (Option<WhereClause>, token::Brace, Punctuated<Variant, Token![,]>), do_parse!(
-        wh: option!(syn!(WhereClause)) >>
-        data: braces!(Punctuated::parse_terminated) >>
-        (wh, data.0, data.1)
-    ));
+        if where_clause.is_none() && lookahead.peek(token::Paren) {
+            let fields = input.parse()?;
 
-    named!(data_union -> (Option<WhereClause>, FieldsNamed), tuple!(
-        option!(syn!(WhereClause)),
-        syn!(FieldsNamed),
-    ));
+            lookahead = input.lookahead1();
+            if lookahead.peek(Token![where]) {
+                where_clause = Some(input.parse()?);
+                lookahead = input.lookahead1();
+            }
+
+            if lookahead.peek(Token![;]) {
+                let semi = input.parse()?;
+                Ok((where_clause, Fields::Unnamed(fields), Some(semi)))
+            } else {
+                Err(lookahead.error())
+            }
+        } else if lookahead.peek(token::Brace) {
+            let fields = input.parse()?;
+            Ok((where_clause, Fields::Named(fields), None))
+        } else if lookahead.peek(Token![;]) {
+            let semi = input.parse()?;
+            Ok((where_clause, Fields::Unit, Some(semi)))
+        } else {
+            Err(lookahead.error())
+        }
+    }
+
+    pub fn data_enum(
+        input: ParseStream,
+    ) -> Result<(
+        Option<WhereClause>,
+        token::Brace,
+        Punctuated<Variant, Token![,]>,
+    )> {
+        let where_clause = input.parse()?;
+
+        let content;
+        let brace = braced!(content in input);
+        let variants = content.parse_terminated(Variant::parse)?;
+
+        Ok((where_clause, brace, variants))
+    }
+
+    pub fn data_union(input: ParseStream) -> Result<(Option<WhereClause>, FieldsNamed)> {
+        let where_clause = input.parse()?;
+        let fields = input.parse()?;
+        Ok((where_clause, fields))
+    }
 }
 
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use attr::FilterAttrs;
+
     use proc_macro2::TokenStream;
     use quote::ToTokens;
+
+    use attr::FilterAttrs;
+    use print::TokensOrDefault;
 
     impl ToTokens for DeriveInput {
         fn to_tokens(&self, tokens: &mut TokenStream) {

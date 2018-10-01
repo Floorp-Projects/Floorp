@@ -29,17 +29,17 @@
 //! static assertion that `Sync` is implemented for that type.
 //!
 //! ```
+//! # extern crate proc_macro;
+//! # extern crate proc_macro2;
+//! # extern crate syn;
+//! #
 //! #[macro_use]
 //! extern crate quote;
 //!
-//! extern crate syn;
-//! extern crate proc_macro;
-//! extern crate proc_macro2;
-//!
-//! use syn::Type;
-//! use syn::spanned::Spanned;
 //! use proc_macro::TokenStream;
 //! use proc_macro2::Span;
+//! use syn::Type;
+//! use syn::spanned::Spanned;
 //!
 //! # const IGNORE_TOKENS: &str = stringify! {
 //! #[proc_macro_derive(MyMacro)]
@@ -85,9 +85,10 @@ use quote::ToTokens;
 /// tree node.
 ///
 /// This trait is automatically implemented for all types that implement
-/// [`ToTokens`] from the `quote` crate.
+/// [`ToTokens`] from the `quote` crate. It is sealed and cannot be implemented
+/// outside of the Syn crate other than by implementing `ToTokens`.
 ///
-/// [`ToTokens`]: https://docs.rs/quote/0.4/quote/trait.ToTokens.html
+/// [`ToTokens`]: https://docs.rs/quote/0.6/quote/trait.ToTokens.html
 ///
 /// See the [module documentation] for an example.
 ///
@@ -95,12 +96,18 @@ use quote::ToTokens;
 ///
 /// *This trait is available if Syn is built with both the `"parsing"` and
 /// `"printing"` features.*
-pub trait Spanned {
+pub trait Spanned: private::Sealed {
     /// Returns a `Span` covering the complete contents of this syntax tree
     /// node, or [`Span::call_site()`] if this node is empty.
     ///
-    /// [`Span::call_site()`]: https://docs.rs/proc-macro2/0.2/proc_macro2/struct.Span.html#method.call_site
+    /// [`Span::call_site()`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.Span.html#method.call_site
     fn span(&self) -> Span;
+}
+
+mod private {
+    use quote::ToTokens;
+    pub trait Sealed {}
+    impl<T: ToTokens> Sealed for T {}
 }
 
 impl<T> Spanned for T
