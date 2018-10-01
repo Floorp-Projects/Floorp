@@ -29,7 +29,7 @@ var EXPORTED_SYMBOLS = ["Sanitizer"];
 
 function Sanitizer() {}
 Sanitizer.prototype = {
-  clearItem: function(aItemName, startTime) {
+  clearItem: function(aItemName, startTime, clearUnfinishedDownloads) {
     // Only a subset of items support deletion with startTime.
     // Those who do not will be rejected with error message.
     if (typeof startTime != "undefined") {
@@ -43,6 +43,8 @@ Sanitizer.prototype = {
         default:
           return Promise.reject({message: `Invalid argument: ${aItemName} does not support startTime argument.`});
       }
+    } else if (aItemName === "downloadFiles" && typeof clearUnfinishedDownloads != "undefined") {
+      return this._clear(aItemName, { clearUnfinishedDownloads });
     } else {
       return this._clear(aItemName);
     }
@@ -316,7 +318,9 @@ Sanitizer.prototype = {
 
     // Adapted from desktop, but heavily modified - see comments below.
     downloadFiles: {
-      clear: Task.async(function* ({ startTime = 0, deleteFiles = true} = {}) {
+      clear: Task.async(function* ({ startTime = 0,
+                                     deleteFiles = true,
+                                     clearUnfinishedDownloads = false } = {}) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_DOWNLOADS", refObj);
 
@@ -328,12 +332,10 @@ Sanitizer.prototype = {
         // just use that method directly, but we want to be able to remove the
         // downloaded files as well.
         for (let download of downloads) {
-          // Remove downloads that have been canceled, even if the cancellation
-          // operation hasn't completed yet so we don't check "stopped" here.
-          // Failed downloads with partial data are also removed. The startTime
-          // check is provided for addons that may want to delete only recent downloads.
-          if (download.stopped && (!download.hasPartialData || download.error) &&
-              download.startTime.getTime() >= startTime) {
+          let downloadFinished = download.stopped &&
+                                 (!download.hasPartialData || download.error);
+          if ((downloadFinished || clearUnfinishedDownloads) &&
+               download.startTime.getTime() >= startTime) {
             // Remove the download first, so that the views don't get the change
             // notifications that may occur during finalization.
             yield list.remove(download);
