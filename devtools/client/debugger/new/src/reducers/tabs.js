@@ -28,7 +28,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * Tabs reducer
  * @module reducers/tabs
  */
-function update(state = _prefs.prefs.tabs || [], action) {
+function isSimilarTab(tab, url, isOriginal) {
+  return tab.url === url && tab.isOriginal === isOriginal;
+}
+
+function update(state = [], action) {
   switch (action.type) {
     case "ADD_TAB":
     case "UPDATE_TAB":
@@ -39,7 +43,7 @@ function update(state = _prefs.prefs.tabs || [], action) {
 
     case "CLOSE_TAB":
     case "CLOSE_TABS":
-      _prefs.prefs.tabs = action.tabs;
+      _prefs.asyncStore.tabs = action.tabs;
       return action.tabs;
 
     default:
@@ -76,7 +80,7 @@ function updateTabList(tabs, {
     tabs[currentIndex].framework = framework;
   }
 
-  _prefs.prefs.tabs = tabs;
+  _prefs.asyncStore.tabs = tabs;
   return tabs;
 }
 
@@ -86,7 +90,7 @@ function moveTabInList(tabs, {
 }) {
   const currentIndex = tabs.findIndex(tab => tab.url == url);
   tabs = (0, _lodashMove2.default)(tabs, currentIndex, newIndex);
-  _prefs.prefs.tabs = tabs;
+  _prefs.asyncStore.tabs = tabs;
   return tabs;
 }
 /**

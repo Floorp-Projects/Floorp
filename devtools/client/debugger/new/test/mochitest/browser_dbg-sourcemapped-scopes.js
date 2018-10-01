@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // This test can be really slow on debug platforms and should be split.
-requestLongerTimeout(20);
+requestLongerTimeout(30);
 
 // Tests loading sourcemapped sources for Babel's compile output.
 
