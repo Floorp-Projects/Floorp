@@ -23,6 +23,16 @@ function RecordNewTab() {
   gBrowser.selectedTab = gBrowser.addWebTab("about:blank", { recordExecution: "*" });
 }
 
+function ReloadAndRecordTab() {
+  const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+  const url = gBrowser.currentURI.spec;
+  gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true,
+                                   { recordExecution: "*", newFrameloader: true });
+  gBrowser.loadURI(url, {
+    triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
+  });
+}
+
 function SaveRecording() {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
   const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
@@ -52,6 +62,7 @@ function ReplayNewTab() {
 
 const menuItems = [
   { id: "devtoolsRecordNewTab", command: RecordNewTab },
+  { id: "devtoolsReloadAndRecordTab", command: ReloadAndRecordTab },
   { id: "devtoolsSaveRecording", command: SaveRecording },
   { id: "devtoolsReplayNewTab", command: ReplayNewTab },
 ];
