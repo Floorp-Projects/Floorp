@@ -67,7 +67,7 @@ class GeckoViewAutoFill {
       return;
     }
 
-    debug `Adding auto-fill ${aFormLike.rootElement.tagName}`;
+    debug `Adding auto-fill ${aFormLike}`;
 
     this._autoFillTasks.delete(aFormLike.rootElement);
 
