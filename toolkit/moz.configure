@@ -1085,3 +1085,15 @@ def libprio(info):
 
 set_config('MOZ_LIBPRIO', libprio)
 
+# Maintenance service (Windows only)
+# ==============================================================
+
+option('--enable-maintenance-service', help='Enable building of maintenance service',
+       when=target_is_windows, default=target_is_windows)
+
+set_define('MOZ_MAINTENANCE_SERVICE',
+           depends_if('--enable-maintenance-service',
+                      when=target_is_windows)(lambda _: True))
+set_config('MOZ_MAINTENANCE_SERVICE',
+           depends_if('--enable-maintenance-service',
+                      when=target_is_windows)(lambda _: True))
