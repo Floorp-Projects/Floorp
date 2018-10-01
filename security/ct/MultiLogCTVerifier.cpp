@@ -8,8 +8,6 @@
 
 #include "CTObjectsExtractor.h"
 #include "CTSerialization.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
 
 namespace mozilla { namespace ct {
 
@@ -40,7 +38,7 @@ MultiLogCTVerifier::Verify(Input cert,
                            Time time,
                            CTVerifyResult& result)
 {
-  MOZ_ASSERT(cert.GetLength() > 0);
+  assert(cert.GetLength() > 0);
   result.Reset();
 
   Result rv;

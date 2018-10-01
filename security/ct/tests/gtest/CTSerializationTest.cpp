@@ -7,7 +7,6 @@
 #include "CTSerialization.h"
 #include "CTTestUtils.h"
 #include "gtest/gtest.h"
-#include "mozilla/Move.h"
 
 namespace mozilla { namespace ct {
 

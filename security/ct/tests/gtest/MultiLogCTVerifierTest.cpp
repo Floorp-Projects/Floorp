@@ -13,8 +13,6 @@
 #include "CTSerialization.h"
 #include "CTTestUtils.h"
 #include "gtest/gtest.h"
-#include "mozilla/EnumSet.h"
-#include "mozilla/Move.h"
 #include "nss.h"
 
 namespace mozilla { namespace ct {
@@ -32,7 +30,9 @@ public:
   void SetUp() override
   {
     // Does nothing if NSS is already initialized.
-    MOZ_RELEASE_ASSERT(NSS_NoDB_Init(nullptr) == SECSuccess);
+    if (NSS_NoDB_Init(nullptr) != SECSuccess) {
+      abort();
+    }
 
     CTLogVerifier log;
     ASSERT_EQ(Success, log.Init(InputForBuffer(GetTestPublicKey()),
@@ -203,14 +203,23 @@ TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromMultipleSources)
                              mNow, result));
 
   // The result should contain verified SCTs from TLS and OCSP origins.
-  EnumSet<VerifiedSCT::Origin> origins;
+  size_t embeddedCount = 0;
+  size_t tlsExtensionCount = 0;
+  size_t ocspResponseCount = 0;
   for (const VerifiedSCT& verifiedSct : result.verifiedScts) {
     EXPECT_EQ(VerifiedSCT::Status::Valid, verifiedSct.status);
-    origins += verifiedSct.origin;
+    switch (verifiedSct.origin) {
+      case VerifiedSCT::Origin::Embedded: embeddedCount++; break;
+      case VerifiedSCT::Origin::TLSExtension: tlsExtensionCount++; break;
+      case VerifiedSCT::Origin::OCSPResponse: ocspResponseCount++; break;
+      case VerifiedSCT::Origin::Unknown:
+      default:
+        ASSERT_TRUE(false);
+    }
   }
-  EXPECT_FALSE(origins.contains(VerifiedSCT::Origin::Embedded));
-  EXPECT_TRUE(origins.contains(VerifiedSCT::Origin::OCSPResponse));
-  EXPECT_TRUE(origins.contains(VerifiedSCT::Origin::TLSExtension));
+  EXPECT_EQ(embeddedCount, 0u);
+  EXPECT_TRUE(tlsExtensionCount > 0);
+  EXPECT_TRUE(ocspResponseCount > 0);
 }
 
 TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromUnknownLog)

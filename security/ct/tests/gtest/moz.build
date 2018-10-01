@@ -21,4 +21,7 @@ LOCAL_INCLUDES += [
     '/security/pkix/lib',
 ]
 
+if not CONFIG['MOZ_DEBUG']:
+    DEFINES['NDEBUG'] = True
+
 FINAL_LIBRARY = 'xul-gtest'

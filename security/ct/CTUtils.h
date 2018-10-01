@@ -7,8 +7,47 @@
 #ifndef CTUtils_h
 #define CTUtils_h
 
+#include <memory>
+
+#include "cryptohi.h"
+#include "keyhi.h"
+#include "keythi.h"
+#include "pk11pub.h"
 #include "pkix/Input.h"
 #include "pkix/Result.h"
+
+#define MOZILLA_CT_ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
+
+struct DeleteHelper
+{
+  void operator()(CERTSubjectPublicKeyInfo* value)
+  {
+    SECKEY_DestroySubjectPublicKeyInfo(value);
+  }
+  void operator()(PK11SlotInfo* value) { PK11_FreeSlot(value); }
+  void operator()(SECKEYPublicKey* value) { SECKEY_DestroyPublicKey(value); }
+  void operator()(SECItem* value) { SECITEM_FreeItem(value, true); }
+};
+
+template <class T>
+struct MaybeDeleteHelper
+{
+  void operator()(T* ptr)
+  {
+    if (ptr) {
+      DeleteHelper del;
+      del(ptr);
+    }
+  }
+};
+
+typedef std::unique_ptr<CERTSubjectPublicKeyInfo, MaybeDeleteHelper<CERTSubjectPublicKeyInfo>>
+  UniqueCERTSubjectPublicKeyInfo;
+typedef std::unique_ptr<PK11SlotInfo, MaybeDeleteHelper<PK11SlotInfo>>
+  UniquePK11SlotInfo;
+typedef std::unique_ptr<SECKEYPublicKey, MaybeDeleteHelper<SECKEYPublicKey>>
+  UniqueSECKEYPublicKey;
+typedef std::unique_ptr<SECItem, MaybeDeleteHelper<SECItem>> UniqueSECItem;
 
 namespace mozilla { namespace ct {
 

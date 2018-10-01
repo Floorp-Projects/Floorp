@@ -10,8 +10,6 @@
 
 #include "CTSerialization.h"
 #include "hasht.h"
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/Assertions.h"
 #include "pkix/pkixnss.h"
 #include "pkixutil.h"
 
@@ -68,7 +66,7 @@ public:
 
   Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve curve) override
   {
-    MOZ_ASSERT(mSignatureAlgorithm ==
+    assert(mSignatureAlgorithm ==
       DigitallySigned::SignatureAlgorithm::Anonymous);
     if (curve != NamedCurve::secp256r1) {
       return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
@@ -86,7 +84,7 @@ public:
                                             unsigned int modulusSizeInBits)
                                             override
   {
-    MOZ_ASSERT(mSignatureAlgorithm ==
+    assert(mSignatureAlgorithm ==
       DigitallySigned::SignatureAlgorithm::Anonymous);
     // Require RSA keys of at least 2048 bits. See RFC 6962, Section 2.1.4.
     if (modulusSizeInBits < 2048) {
@@ -145,7 +143,7 @@ CTLogVerifier::Init(Input subjectPublicKeyInfo,
       break;
     case CTLogStatus::Unknown:
     default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported CTLogStatus");
+      assert(false);
       return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
@@ -266,7 +264,7 @@ static Result
 FasterVerifyECDSASignedDigestNSS(const SignedDigest& sd,
                                  UniqueSECKEYPublicKey& pubkey)
 {
-  MOZ_ASSERT(pubkey);
+  assert(pubkey);
   if (!pubkey) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
@@ -299,14 +297,14 @@ CTLogVerifier::VerifySignature(Input data, Input signature)
 {
   uint8_t digest[SHA256_LENGTH];
   Result rv = DigestBufNSS(data, DigestAlgorithm::sha256, digest,
-                           ArrayLength(digest));
+                           MOZILLA_CT_ARRAY_LENGTH(digest));
   if (rv != Success) {
     return rv;
   }
 
   SignedDigest signedDigest;
   signedDigest.digestAlgorithm = DigestAlgorithm::sha256;
-  rv = signedDigest.digest.Init(digest, ArrayLength(digest));
+  rv = signedDigest.digest.Init(digest, MOZILLA_CT_ARRAY_LENGTH(digest));
   if (rv != Success) {
     return rv;
   }
@@ -335,7 +333,7 @@ CTLogVerifier::VerifySignature(Input data, Input signature)
     case DigitallySigned::SignatureAlgorithm::Anonymous:
     case DigitallySigned::SignatureAlgorithm::DSA:
     default:
-      MOZ_ASSERT_UNREACHABLE("RSA/ECDSA expected");
+      assert(false);
       return Result::FATAL_ERROR_INVALID_ARGS;
   }
   if (rv != Success) {
