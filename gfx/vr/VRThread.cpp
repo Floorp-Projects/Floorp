@@ -53,7 +53,10 @@ VRListenerThreadHolder::VRListenerThreadHolder()
 VRListenerThreadHolder::~VRListenerThreadHolder()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  DestroyThread(mThread);
+
+  if (mThread) {
+    DestroyThread(mThread);
+  }
 }
 
 /* static */ void
@@ -98,14 +101,24 @@ VRListenerThreadHolder::Start()
   MOZ_ASSERT(!sVRListenerThreadHolder, "The VR listener thread has already been started!");
   sFinishedVRListenerShutDown = false;
   sVRListenerThreadHolder = new VRListenerThreadHolder();
+
+  if (!sVRListenerThreadHolder->GetThread()) {
+    MOZ_ASSERT(false, "VR listener thread not started.");
+    sVRListenerThreadHolder = nullptr;
+  }
 }
 
 void
 VRListenerThreadHolder::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread!");
-  MOZ_ASSERT(sVRListenerThreadHolder, "The VR listener thread has already been shut down!");
   VRManager::StopVRListenerThreadTasks();
+
+  if (!sVRListenerThreadHolder) {
+    // We've already shutdown or never started.
+    return;
+  }
+
   sVRListenerThreadHolder = nullptr;
 
   SpinEventLoopUntil([&]() { return sFinishedVRListenerShutDown; });
