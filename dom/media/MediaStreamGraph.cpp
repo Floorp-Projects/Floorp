@@ -3323,7 +3323,7 @@ SourceMediaStream::GetEndOfAppendedData(TrackID aID)
   if (track) {
     return track->mEndOfFlushedData + track->mData->GetDuration();
   }
-  NS_ERROR("Track not found");
+  MOZ_CRASH("Track not found");
   return 0;
 }
 
