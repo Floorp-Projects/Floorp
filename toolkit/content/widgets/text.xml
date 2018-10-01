@@ -9,19 +9,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <!-- bound to <description>s -->
-  <binding id="text-base">
-    <implementation>
-      <property name="disabled" onset="if (val) this.setAttribute('disabled', 'true');
-                                       else this.removeAttribute('disabled');
-                                       return val;"
-                                onget="return this.getAttribute('disabled') == 'true';"/>
-      <property name="value" onget="return this.getAttribute('value');"
-                             onset="this.setAttribute('value', val); return val;"/>
-    </implementation>
-  </binding>
-
-  <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
+  <binding id="text-label">
     <implementation>
       <property name="accessKey">
         <getter>

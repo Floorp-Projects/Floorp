@@ -26,6 +26,7 @@ if CONFIG['MOZ_XUL']:
         'XULMenuElement.h',
         'XULPopupElement.h',
         'XULScrollElement.h',
+        'XULTextElement.h'
     ]
 
     UNIFIED_SOURCES += [
@@ -42,6 +43,7 @@ if CONFIG['MOZ_XUL']:
         'XULMenuElement.cpp',
         'XULPopupElement.cpp',
         'XULScrollElement.cpp',
+        'XULTextElement.cpp'
     ]
 
 XPIDL_SOURCES += [
