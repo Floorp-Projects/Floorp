@@ -50,8 +50,15 @@ exports.ForgetAddonsList = function() {
   AvailableAddons = null;
 };
 
-function Addon() {}
-Addon.prototype = {
+function ADBAddon() {
+  EventEmitter.decorate(this);
+  // This addon uses the string "linux" for "linux32"
+  const fixedOS = OS == "linux32" ? "linux" : OS;
+  this.xpiLink = ADB_LINK.replace(/#OS#/g, fixedOS);
+  this.updateInstallStatus();
+}
+
+ADBAddon.prototype = {
   _status: "unknown",
   set status(value) {
     Devices.adbExtensionInstalled = (value == "installed");
@@ -65,7 +72,7 @@ Addon.prototype = {
   },
 
   updateInstallStatus: async function() {
-    const addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
       this.status = "installed";
     } else {
@@ -74,7 +81,7 @@ Addon.prototype = {
   },
 
   install: async function() {
-    const addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
       this.status = "installed";
       return;
@@ -91,7 +98,7 @@ Addon.prototype = {
   },
 
   uninstall: async function() {
-    const addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     addon.uninstall();
   },
 
@@ -133,13 +140,3 @@ Addon.prototype = {
     this.installFailureHandler(install, "Install failed");
   },
 };
-
-function ADBAddon() {
-  EventEmitter.decorate(this);
-  // This addon uses the string "linux" for "linux32"
-  const fixedOS = OS == "linux32" ? "linux" : OS;
-  this.xpiLink = ADB_LINK.replace(/#OS#/g, fixedOS);
-  this.addonID = ADB_ADDON_ID;
-  this.updateInstallStatus();
-}
-ADBAddon.prototype = Object.create(Addon.prototype);
