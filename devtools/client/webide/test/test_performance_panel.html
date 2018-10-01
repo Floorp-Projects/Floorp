@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title></title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+  <body>
+    <script type="application/javascript">
+      window.onload = async function() {
+        SimpleTest.waitForExplicitFinish();
+
+        try {
+          Services.prefs.setBoolPref("devtools.performance.new-panel-enabled", true);
+
+          DebuggerServer.init();
+          DebuggerServer.registerAllActors();
+
+          const win = await openWebIDE();
+
+          const perfIframe = win.document.querySelector("#deck-panel-performance");
+          const docRuntime = getRuntimeDocument(win);
+
+          win.AppManager.update("runtime-list");
+
+          await connectToLocalRuntime(win);
+
+          const prefs = docRuntime.querySelector("#runtime-performance");
+
+          ok(!prefs.hidden, "performance button is displayed");
+          ok(!prefs.hasAttribute("disabled"), "performance cmd enabled");
+
+          const deck = win.document.querySelector("#deck");
+
+          win.Cmds.showPerformancePanel();
+          is(deck.selectedPanel, perfIframe, "performance iframe selected");
+
+          await nextTick();
+
+          await lazyIframeIsLoaded(perfIframe);
+
+          await SimpleTest.promiseWaitForCondition(
+            () => perfIframe.contentDocument.querySelector(".perf"),
+            "Waited for the react rendering that never came."
+          );
+          ok(true, "The perf interface was correctly rendered.");
+          await closeWebIDE(win);
+        } catch (e) {
+          ok(false, "Exception: " + e + "\nStack: " + e.stack);
+        } finally {
+          Services.prefs.clearUserPref("devtools.performance.new-panel-enabled");
+          SimpleTest.finish();
+        }
+      };
+    </script>
+  </body>
+</html>
