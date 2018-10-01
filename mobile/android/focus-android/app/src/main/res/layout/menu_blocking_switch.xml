@@ -44,12 +44,14 @@
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="6dp"
         android:layout_marginBottom="36dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/menu_help"
         android:src="@drawable/ic_info"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <RelativeLayout
         android:layout_width="0dp"
