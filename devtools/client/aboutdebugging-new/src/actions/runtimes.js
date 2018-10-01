@@ -68,10 +68,14 @@ async function createClientForRuntime(runtime) {
 
 async function getRuntimeInfo(client) {
   const deviceFront = await client.mainRoot.getFront("device");
-  const { brandName: name, version } = await deviceFront.getDescription();
+  const { brandName: name, channel, version } = await deviceFront.getDescription();
+  const icon =
+    (channel === "release" || channel === "beta" || channel === "aurora")
+      ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
+      : "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
 
   return {
-    icon: "chrome://branding/content/icon64.png",
+    icon,
     name,
     version,
   };
