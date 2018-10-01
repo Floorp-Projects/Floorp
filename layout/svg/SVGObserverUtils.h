@@ -95,6 +95,10 @@ private:
  */
 class SVGRenderingObserver : public nsStubMutationObserver
 {
+
+protected:
+  virtual ~SVGRenderingObserver() = default;
+
 public:
   typedef mozilla::dom::Element Element;
 
@@ -121,7 +125,7 @@ public:
   // When a SVGRenderingObserver list gets forcibly cleared, it uses this
   // callback to notify every observer that's cleared from it, so they can
   // react.
-  void NotifyEvictedFromRenderingObserverSet();
+  void NotifyEvictedFromRenderingObserverList();
 
   nsIFrame* GetAndObserveReferencedFrame();
   /**
@@ -136,10 +140,6 @@ public:
   virtual bool ObservesReflow() { return true; }
 
 protected:
-  virtual ~SVGRenderingObserver() {
-    StopObserving();
-  }
-
   void StartObserving();
   void StopObserving();
 
