@@ -23,6 +23,9 @@ import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.IWebView;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO;
 import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_YES;
 
@@ -216,7 +219,14 @@ import static android.view.View.IMPORTANT_FOR_ACCESSIBILITY_YES;
             final boolean isSecure = certificate != null || UrlUtils.isLocalizedContent(view.getUrl());
 
             callback.onPageFinished(isSecure);
-            callback.onSecurityChanged(isSecure, null, (certificate != null) ? certificate.getIssuedBy().getOName() : null);
+
+            String host = null;
+            try {
+                host = new URI(url).getHost();
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+            callback.onSecurityChanged(isSecure, host, (certificate != null) ? certificate.getIssuedBy().getOName() : null);
             // The URL which is supplied in onPageFinished() could be fake (see #301), but webview's
             // URL is always correct _except_ for error pages
             final String viewURL = view.getUrl();
