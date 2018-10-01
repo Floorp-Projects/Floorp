@@ -9,8 +9,8 @@
 
 #include "CTLog.h"
 #include "CTVerifyResult.h"
+#include "certt.h"
 #include "pkix/Result.h"
-#include "ScopedNSSTypes.h"
 
 namespace mozilla { namespace ct {
 
@@ -30,7 +30,7 @@ public:
   // issuing the certificate (as defined by the CT Policy).
   //
   // NOTE: TBD, PENDING FINALIZATION OF MOZILLA CT POLICY.
-  pkix::Result GetDependentOperators(const UniqueCERTCertList& builtChain,
+  pkix::Result GetDependentOperators(const CERTCertList* builtChain,
                                      const CTLogOperatorList& operators,
                                      CTLogOperatorList& dependentOperators);
 };

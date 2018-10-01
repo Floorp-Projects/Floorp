@@ -390,7 +390,7 @@ CertVerifier::VerifyCertificateTransparencyPolicy(
   GetCTLogOperatorsFromVerifiedSCTList(result.verifiedScts, allOperators);
 
   CTLogOperatorList dependentOperators;
-  rv = mCTDiversityPolicy->GetDependentOperators(builtChain, allOperators,
+  rv = mCTDiversityPolicy->GetDependentOperators(builtChain.get(), allOperators,
                                                  dependentOperators);
   if (rv != Success) {
     return rv;

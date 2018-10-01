@@ -10,13 +10,12 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "CTLogVerifier.h"
 #include "CTVerifyResult.h"
+#include "SignedCertificateTimestamp.h"
 #include "gtest/gtest.h"
 #include "hasht.h"
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/Assertions.h"
 #include "prtime.h"
-#include "SignedCertificateTimestamp.h"
 
 // Implemented in CertVerifier.cpp.
 extern mozilla::pkix::Result
@@ -42,7 +41,7 @@ public:
     logId.resize(SHA256_LENGTH);
     std::fill(logId.begin(), logId.end(), 0);
     // Just raw-copy |logId| into the output buffer.
-    MOZ_ASSERT(sizeof(logNo) <= logId.size());
+    assert(sizeof(logNo) <= logId.size());
     memcpy(logId.data(), &logNo, sizeof(logNo));
   }
 
@@ -341,7 +340,7 @@ TEST_F(CTPolicyEnforcerTest,
     { 3*12 + 4, 5 }
   };
 
-  for (size_t i = 0; i < ArrayLength(kTestData); ++i) {
+  for (size_t i = 0; i < MOZILLA_CT_ARRAY_LENGTH(kTestData); ++i) {
     SCOPED_TRACE(i);
 
     size_t months = kTestData[i].certLifetimeInCalendarMonths;
@@ -401,7 +400,7 @@ TEST_F(CTPolicyEnforcerTest, TestEdgeCasesOfGetCertLifetimeInFullMonths)
       12 }
   };
 
-  for (size_t i = 0; i < ArrayLength(kTestData); ++i) {
+  for (size_t i = 0; i < MOZILLA_CT_ARRAY_LENGTH(kTestData); ++i) {
     SCOPED_TRACE(i);
 
     size_t months;

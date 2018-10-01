@@ -6,14 +6,10 @@
 
 #include "CTObjectsExtractor.h"
 
+#include <limits>
 #include <vector>
 
 #include "hasht.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/Casting.h"
-#include "mozilla/Move.h"
-#include "mozilla/PodOperations.h"
-#include "mozilla/RangedPtr.h"
 #include "pkix/pkixnss.h"
 #include "pkixutil.h"
 
@@ -33,7 +29,7 @@ public:
   Output(uint8_t* buffer, size_t length)
     : begin(buffer)
     , end(buffer + length)
-    , current(buffer, begin, end)
+    , current(begin)
     , overflowed(false)
   {
   }
@@ -58,17 +54,17 @@ public:
 
   Result GetInput(/*out*/ Input& input) const
   {
-    if (overflowed) {
+    if (overflowed || current < begin) {
       return Result::FATAL_ERROR_INVALID_STATE;
     }
-    size_t length = AssertedCast<size_t>(current.get() - begin);
+    size_t length = static_cast<size_t>(current - begin);
     return input.Init(begin, length);
   }
 
 private:
   uint8_t* begin;
   uint8_t* end;
-  RangedPtr<uint8_t> current;
+  uint8_t* current;
   bool overflowed;
 
   Output(const Output&) = delete;
@@ -76,14 +72,17 @@ private:
 
   void Write(const uint8_t* data, size_t length)
   {
-    size_t available = AssertedCast<size_t>(end - current.get());
+    if (end < current) {
+      overflowed = true;
+    }
+    size_t available = static_cast<size_t>(end - current);
     if (available < length) {
       overflowed = true;
     }
     if (overflowed) {
       return;
     }
-    PodCopy(current.get(), data, length);
+    memcpy(current, data, length);
     current += length;
   }
 };
@@ -121,6 +120,15 @@ static const size_t MAX_TLV_HEADER_LENGTH = 4;
 // DER tag of the "extensions [3]" field from TBSCertificate
 static const uint8_t EXTENSIONS_CONTEXT_TAG =
   der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3;
+
+Result
+CheckForInputSizeTypeOverflow(size_t length)
+{
+  if (length > std::numeric_limits<Input::size_type>::max()) {
+    return Result::FATAL_ERROR_INVALID_STATE;
+  }
+  return Success;
+}
 
 // Given a leaf certificate, extracts the DER-encoded TBSCertificate component
 // of the corresponding Precertificate.
@@ -278,9 +286,17 @@ private:
       if (rv != Success) {
         return rv;
       }
+      // Since we're getting these extensions from a certificate that has
+      // already fit in an Input, this shouldn't overflow.
+      size_t extensionsContextLengthAsSizeT =
+        static_cast<size_t>(extensionsHeader.GetLength()) +
+        static_cast<size_t>(extensionsValueLength);
+      rv = CheckForInputSizeTypeOverflow(extensionsContextLengthAsSizeT);
+      if (rv != Success) {
+        return rv;
+      }
       Input::size_type extensionsContextLength =
-        AssertedCast<Input::size_type>(extensionsHeader.GetLength() +
-                                       extensionsValueLength);
+        static_cast<Input::size_type>(extensionsContextLengthAsSizeT);
       rv = MakeTLVHeader(EXTENSIONS_CONTEXT_TAG,
                          extensionsContextLength,
                          extensionsContextHeaderBuffer,
@@ -288,11 +304,17 @@ private:
       if (rv != Success) {
         return rv;
       }
+      size_t tbsLengthAsSizeT =
+        static_cast<size_t>(mTLVsBeforeExtensions.GetLength()) +
+        static_cast<size_t>(extensionsContextHeader.GetLength()) +
+        static_cast<size_t>(extensionsHeader.GetLength()) +
+        static_cast<size_t>(extensionsValueLength);
+      rv = CheckForInputSizeTypeOverflow(tbsLengthAsSizeT);
+      if (rv != Success) {
+        return rv;
+      }
       Input::size_type tbsLength =
-        AssertedCast<Input::size_type>(mTLVsBeforeExtensions.GetLength() +
-                                       extensionsContextHeader.GetLength() +
-                                       extensionsHeader.GetLength() +
-                                       extensionsValueLength);
+        static_cast<Input::size_type>(tbsLengthAsSizeT);
       rv = MakeTLVHeader(der::SEQUENCE, tbsLength, tbsHeaderBuffer, tbsHeader);
       if (rv != Success) {
         return rv;
@@ -327,14 +349,14 @@ private:
     Output output(buffer);
     output.Write(tag);
     if (length < 128) {
-      output.Write(AssertedCast<uint8_t>(length));
+      output.Write(static_cast<uint8_t>(length));
     } else if (length < 256) {
       output.Write(0x81u);
-      output.Write(AssertedCast<uint8_t>(length));
+      output.Write(static_cast<uint8_t>(length));
     } else if (length < 65536) {
       output.Write(0x82u);
-      output.Write(AssertedCast<uint8_t>(length / 256));
-      output.Write(AssertedCast<uint8_t>(length % 256));
+      output.Write(static_cast<uint8_t>(length / 256));
+      output.Write(static_cast<uint8_t>(length % 256));
     } else {
       return Result::FATAL_ERROR_INVALID_ARGS;
     }
@@ -352,8 +374,8 @@ Result
 GetPrecertLogEntry(Input leafCertificate, Input issuerSubjectPublicKeyInfo,
                    LogEntry& output)
 {
-  MOZ_ASSERT(leafCertificate.GetLength() > 0);
-  MOZ_ASSERT(issuerSubjectPublicKeyInfo.GetLength() > 0);
+  assert(leafCertificate.GetLength() > 0);
+  assert(issuerSubjectPublicKeyInfo.GetLength() > 0);
   output.Reset();
 
   Buffer precertTBSBuffer;
@@ -367,8 +389,8 @@ GetPrecertLogEntry(Input leafCertificate, Input issuerSubjectPublicKeyInfo,
     return rv;
   }
   Input precertTBS(extractor.GetPrecertTBS());
-  MOZ_ASSERT(precertTBS.UnsafeGetData() == precertTBSBuffer.data());
-  MOZ_ASSERT(precertTBS.GetLength() <= precertTBSBuffer.size());
+  assert(precertTBS.UnsafeGetData() == precertTBSBuffer.data());
+  assert(precertTBS.GetLength() <= precertTBSBuffer.size());
   precertTBSBuffer.resize(precertTBS.GetLength());
 
   output.type = LogEntry::Type::Precert;
@@ -383,7 +405,7 @@ GetPrecertLogEntry(Input leafCertificate, Input issuerSubjectPublicKeyInfo,
 void
 GetX509LogEntry(Input leafCertificate, LogEntry& output)
 {
-  MOZ_ASSERT(leafCertificate.GetLength() > 0);
+  assert(leafCertificate.GetLength() > 0);
   output.Reset();
   output.type = LogEntry::Type::X509;
   InputToBuffer(leafCertificate, output.leafCertificate);
