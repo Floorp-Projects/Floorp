@@ -20,8 +20,6 @@ const {
   VIEW_NODE_VARIABLE_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 
-loader.lazyRequireGetter(this, "getCssProperties",
-  "devtools/shared/fronts/css-properties", true);
 loader.lazyRequireGetter(this, "getColor",
   "devtools/client/shared/theme", true);
 loader.lazyRequireGetter(this, "HTMLTooltip",
@@ -60,10 +58,7 @@ function TooltipsOverlay(view) {
 
 TooltipsOverlay.prototype = {
   get _cssProperties() {
-    delete TooltipsOverlay.prototype._cssProperties;
-    const properties = getCssProperties(this.view.inspector.toolbox);
-    TooltipsOverlay.prototype._cssProperties = properties;
-    return properties;
+    return this.view.inspector.cssProperties;
   },
 
   get isEditing() {

@@ -9,7 +9,6 @@ const TextEditor = require("devtools/client/inspector/markup/views/text-editor")
 const { truncateString } = require("devtools/shared/inspector/utils");
 const { editableField, InplaceEditor } = require("devtools/client/shared/inplace-editor");
 const { parseAttribute } = require("devtools/client/shared/node-attribute-parser");
-const { getCssProperties } = require("devtools/shared/fronts/css-properties");
 
 loader.lazyRequireGetter(this, "flashElementOn", "devtools/client/inspector/markup/utils", true);
 loader.lazyRequireGetter(this, "flashElementOff", "devtools/client/inspector/markup/utils", true);
@@ -58,7 +57,7 @@ function ElementEditor(container, node) {
   this.doc = this.markup.doc;
   this.inspector = this.markup.inspector;
   this.highlighters = this.markup.highlighters;
-  this._cssProperties = getCssProperties(this.markup.toolbox);
+  this._cssProperties = this.inspector.cssProperties;
 
   this.attrElements = new Map();
   this.animationTimers = {};
