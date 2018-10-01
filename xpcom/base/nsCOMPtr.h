@@ -469,11 +469,37 @@ public:
     NSCAP_LOG_ASSIGNMENT(this, aSmartPtr.mRawPtr);
   }
 
+  template <class U>
+  MOZ_IMPLICIT nsCOMPtr(const nsCOMPtr<U>& aSmartPtr)
+    : NSCAP_CTOR_BASE(aSmartPtr.get())
+  {
+    // Make sure that U actually inherits from T
+    static_assert(mozilla::IsBaseOf<T, U>::value,
+                  "U should be a subclass of T");
+    assert_validity();
+    if (mRawPtr) {
+      NSCAP_ADDREF(this, mRawPtr);
+    }
+    NSCAP_LOG_ASSIGNMENT(this, aSmartPtr.get());
+  }
+
   nsCOMPtr(nsCOMPtr<T>&& aSmartPtr)
     : NSCAP_CTOR_BASE(aSmartPtr.mRawPtr)
   {
     assert_validity();
     aSmartPtr.mRawPtr = nullptr;
+    NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
+    NSCAP_ASSERT_NO_QUERY_NEEDED();
+  }
+
+  template <class U>
+  nsCOMPtr(nsCOMPtr<U>&& aSmartPtr)
+    : NSCAP_CTOR_BASE(aSmartPtr.forget().template downcast<T>().take())
+  {
+    // Make sure that U actually inherits from T
+    static_assert(mozilla::IsBaseOf<T, U>::value,
+                  "U should be a subclass of T");
+    assert_validity();
     NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
     NSCAP_ASSERT_NO_QUERY_NEEDED();
   }
@@ -619,9 +645,30 @@ public:
     return *this;
   }
 
+  template<class U>
+  nsCOMPtr<T>& operator=(const nsCOMPtr<U>& aRhs)
+  {
+    // Make sure that U actually inherits from T
+    static_assert(mozilla::IsBaseOf<T, U>::value,
+                  "U should be a subclass of T");
+    assign_with_AddRef(static_cast<T*>(aRhs.get()));
+    return *this;
+  }
+
   nsCOMPtr<T>& operator=(nsCOMPtr<T>&& aRhs)
   {
     assign_assuming_AddRef(aRhs.forget().take());
+    NSCAP_ASSERT_NO_QUERY_NEEDED();
+    return *this;
+  }
+
+  template<class U>
+  nsCOMPtr<T>& operator=(nsCOMPtr<U>&& aRhs)
+  {
+    // Make sure that U actually inherits from T
+    static_assert(mozilla::IsBaseOf<T, U>::value,
+                  "U should be a subclass of T");
+    assign_assuming_AddRef(aRhs.forget().template downcast<T>().take());
     NSCAP_ASSERT_NO_QUERY_NEEDED();
     return *this;
   }
