@@ -73,10 +73,10 @@ ast_enum_of_structs! {
         /// *This type is available if Syn is built with the `"derive"` or
         /// `"full"` feature.*
         pub BareFn(TypeBareFn {
-            pub lifetimes: Option<BoundLifetimes>,
             pub unsafety: Option<Token![unsafe]>,
             pub abi: Option<Abi>,
             pub fn_token: Token![fn],
+            pub lifetimes: Option<BoundLifetimes>,
             pub paren_token: token::Paren,
             pub inputs: Punctuated<BareFnArg, Token![,]>,
             pub variadic: Option<Token![...]>,
@@ -249,13 +249,14 @@ ast_enum! {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
+    use path::parsing::qpath;
+    use synom::Synom;
 
-    use parse::{Parse, ParseStream, Result};
-    use path;
+    impl Synom for Type {
+        named!(parse -> Self, call!(ambig_ty, true));
 
-    impl Parse for Type {
-        fn parse(input: ParseStream) -> Result<Self> {
-            ambig_ty(input, true)
+        fn description() -> Option<&'static str> {
+            Some("type")
         }
     }
 
@@ -265,351 +266,250 @@ pub mod parsing {
         /// contain a `+` character.
         ///
         /// This parser does not allow a `+`, while the default parser does.
-        pub fn without_plus(input: ParseStream) -> Result<Self> {
-            ambig_ty(input, false)
+        named!(pub without_plus -> Self, call!(ambig_ty, false));
+    }
+
+    named!(ambig_ty(allow_plus: bool) -> Type, alt!(
+        syn!(TypeGroup) => { Type::Group }
+        |
+        // must be before TypeTuple
+        call!(TypeParen::parse, allow_plus) => { Type::Paren }
+        |
+        // must be before TypePath
+        syn!(TypeMacro) => { Type::Macro }
+        |
+        // must be before TypePath
+        syn!(TypeBareFn) => { Type::BareFn }
+        |
+        // must be before TypeTraitObject
+        call!(TypePath::parse, allow_plus) => { Type::Path }
+        |
+        // Don't try parsing more than one trait bound if we aren't allowing it.
+        // must be before TypeTuple
+        call!(TypeTraitObject::parse, allow_plus) => { Type::TraitObject }
+        |
+        syn!(TypeSlice) => { Type::Slice }
+        |
+        syn!(TypeArray) => { Type::Array }
+        |
+        syn!(TypePtr) => { Type::Ptr }
+        |
+        syn!(TypeReference) => { Type::Reference }
+        |
+        syn!(TypeNever) => { Type::Never }
+        |
+        syn!(TypeTuple) => { Type::Tuple }
+        |
+        syn!(TypeImplTrait) => { Type::ImplTrait }
+        |
+        syn!(TypeInfer) => { Type::Infer }
+    ));
+
+    impl Synom for TypeSlice {
+        named!(parse -> Self, map!(
+            brackets!(syn!(Type)),
+            |(b, ty)| TypeSlice {
+                elem: Box::new(ty),
+                bracket_token: b,
+            }
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("slice type")
         }
     }
 
-    fn ambig_ty(input: ParseStream, allow_plus: bool) -> Result<Type> {
-        if input.peek(token::Group) {
-            return input.parse().map(Type::Group);
-        }
-
-        let mut lifetimes = None::<BoundLifetimes>;
-        let mut lookahead = input.lookahead1();
-        if lookahead.peek(Token![for]) {
-            lifetimes = input.parse()?;
-            lookahead = input.lookahead1();
-            if !lookahead.peek(Ident)
-                && !lookahead.peek(Token![fn])
-                && !lookahead.peek(Token![unsafe])
-                && !lookahead.peek(Token![extern])
-                && !lookahead.peek(Token![super])
-                && !lookahead.peek(Token![self])
-                && !lookahead.peek(Token![Self])
-                && !lookahead.peek(Token![crate])
-            {
-                return Err(lookahead.error());
-            }
-        }
-
-        if lookahead.peek(token::Paren) {
-            let content;
-            let paren_token = parenthesized!(content in input);
-            if content.is_empty() {
-                return Ok(Type::Tuple(TypeTuple {
-                    paren_token: paren_token,
-                    elems: Punctuated::new(),
-                }));
-            }
-            if content.peek(Lifetime) {
-                return Ok(Type::Paren(TypeParen {
-                    paren_token: paren_token,
-                    elem: Box::new(Type::TraitObject(content.parse()?)),
-                }));
-            }
-            let first: Type = content.parse()?;
-            if content.peek(Token![,]) {
-                Ok(Type::Tuple(TypeTuple {
-                    paren_token: paren_token,
-                    elems: {
-                        let mut elems = Punctuated::new();
-                        elems.push_value(first);
-                        elems.push_punct(content.parse()?);
-                        let rest: Punctuated<Type, Token![,]> =
-                            content.parse_terminated(Parse::parse)?;
-                        elems.extend(rest);
-                        elems
-                    },
-                }))
-            } else {
-                Ok(Type::Paren(TypeParen {
-                    paren_token: paren_token,
-                    elem: Box::new(first),
-                }))
-            }
-        } else if lookahead.peek(Token![fn])
-            || lookahead.peek(Token![unsafe])
-            || lookahead.peek(Token![extern]) && !input.peek2(Token![::])
-        {
-            let mut bare_fn: TypeBareFn = input.parse()?;
-            bare_fn.lifetimes = lifetimes;
-            Ok(Type::BareFn(bare_fn))
-        } else if lookahead.peek(Ident)
-            || input.peek(Token![super])
-            || input.peek(Token![self])
-            || input.peek(Token![Self])
-            || input.peek(Token![crate])
-            || input.peek(Token![extern])
-            || lookahead.peek(Token![::])
-            || lookahead.peek(Token![<])
-        {
-            if input.peek(Token![dyn]) {
-                let mut trait_object: TypeTraitObject = input.parse()?;
-                if lifetimes.is_some() {
-                    match *trait_object.bounds.iter_mut().next().unwrap() {
-                        TypeParamBound::Trait(ref mut trait_bound) => {
-                            trait_bound.lifetimes = lifetimes;
-                        }
-                        TypeParamBound::Lifetime(_) => unreachable!(),
-                    }
-                }
-                return Ok(Type::TraitObject(trait_object));
-            }
-
-            let ty: TypePath = input.parse()?;
-            if ty.qself.is_some() {
-                return Ok(Type::Path(ty));
-            }
-
-            if input.peek(Token![!]) && !input.peek(Token![!=]) {
-                let mut contains_arguments = false;
-                for segment in &ty.path.segments {
-                    match segment.arguments {
-                        PathArguments::None => {}
-                        PathArguments::AngleBracketed(_) | PathArguments::Parenthesized(_) => {
-                            contains_arguments = true;
-                        }
-                    }
-                }
-
-                if !contains_arguments {
-                    let bang_token: Token![!] = input.parse()?;
-                    let (delimiter, tts) = mac::parse_delimiter(input)?;
-                    return Ok(Type::Macro(TypeMacro {
-                        mac: Macro {
-                            path: ty.path,
-                            bang_token: bang_token,
-                            delimiter: delimiter,
-                            tts: tts,
-                        },
-                    }));
-                }
-            }
-
-            if lifetimes.is_some() || allow_plus && input.peek(Token![+]) {
-                let mut bounds = Punctuated::new();
-                bounds.push_value(TypeParamBound::Trait(TraitBound {
-                    paren_token: None,
-                    modifier: TraitBoundModifier::None,
-                    lifetimes: lifetimes,
-                    path: ty.path,
-                }));
-                if allow_plus {
-                    while input.peek(Token![+]) {
-                        bounds.push_punct(input.parse()?);
-                        bounds.push_value(input.parse()?);
-                    }
-                }
-                return Ok(Type::TraitObject(TypeTraitObject {
-                    dyn_token: None,
-                    bounds: bounds,
-                }));
-            }
-
-            Ok(Type::Path(ty))
-        } else if lookahead.peek(token::Bracket) {
-            let content;
-            let bracket_token = bracketed!(content in input);
-            let elem: Type = content.parse()?;
-            if content.peek(Token![;]) {
-                Ok(Type::Array(TypeArray {
-                    bracket_token: bracket_token,
+    impl Synom for TypeArray {
+        named!(parse -> Self, map!(
+            brackets!(do_parse!(
+                elem: syn!(Type) >>
+                    semi: punct!(;) >>
+                    len: syn!(Expr) >>
+                    (elem, semi, len)
+            )),
+            |(brackets, (elem, semi, len))| {
+                TypeArray {
                     elem: Box::new(elem),
-                    semi_token: content.parse()?,
-                    len: content.parse()?,
-                }))
-            } else {
-                Ok(Type::Slice(TypeSlice {
-                    bracket_token: bracket_token,
-                    elem: Box::new(elem),
-                }))
+                    len: len,
+                    bracket_token: brackets,
+                    semi_token: semi,
+                }
             }
-        } else if lookahead.peek(Token![*]) {
-            input.parse().map(Type::Ptr)
-        } else if lookahead.peek(Token![&]) {
-            input.parse().map(Type::Reference)
-        } else if lookahead.peek(Token![!]) && !input.peek(Token![=]) {
-            input.parse().map(Type::Never)
-        } else if lookahead.peek(Token![impl ]) {
-            input.parse().map(Type::ImplTrait)
-        } else if lookahead.peek(Token![_]) {
-            input.parse().map(Type::Infer)
-        } else if lookahead.peek(Lifetime) {
-            input.parse().map(Type::TraitObject)
-        } else {
-            Err(lookahead.error())
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("array type")
         }
     }
 
-    impl Parse for TypeSlice {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let content;
-            Ok(TypeSlice {
-                bracket_token: bracketed!(content in input),
-                elem: content.parse()?,
+    impl Synom for TypePtr {
+        named!(parse -> Self, do_parse!(
+            star: punct!(*) >>
+            mutability: alt!(
+                keyword!(const) => { |c| (None, Some(c)) }
+                |
+                keyword!(mut) => { |m| (Some(m), None) }
+            ) >>
+            target: call!(Type::without_plus) >>
+            (TypePtr {
+                const_token: mutability.1,
+                star_token: star,
+                mutability: mutability.0,
+                elem: Box::new(target),
             })
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("raw pointer type")
         }
     }
 
-    impl Parse for TypeArray {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let content;
-            Ok(TypeArray {
-                bracket_token: bracketed!(content in input),
-                elem: content.parse()?,
-                semi_token: content.parse()?,
-                len: content.parse()?,
-            })
-        }
-    }
-
-    impl Parse for TypePtr {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let star_token: Token![*] = input.parse()?;
-
-            let lookahead = input.lookahead1();
-            let (const_token, mutability) = if lookahead.peek(Token![const]) {
-                (Some(input.parse()?), None)
-            } else if lookahead.peek(Token![mut]) {
-                (None, Some(input.parse()?))
-            } else {
-                return Err(lookahead.error());
-            };
-
-            Ok(TypePtr {
-                star_token: star_token,
-                const_token: const_token,
+    impl Synom for TypeReference {
+        named!(parse -> Self, do_parse!(
+            amp: punct!(&) >>
+            life: option!(syn!(Lifetime)) >>
+            mutability: option!(keyword!(mut)) >>
+            // & binds tighter than +, so we don't allow + here.
+            target: call!(Type::without_plus) >>
+            (TypeReference {
+                lifetime: life,
                 mutability: mutability,
-                elem: Box::new(input.call(Type::without_plus)?),
+                elem: Box::new(target),
+                and_token: amp,
             })
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("reference type")
         }
     }
 
-    impl Parse for TypeReference {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(TypeReference {
-                and_token: input.parse()?,
-                lifetime: input.parse()?,
-                mutability: input.parse()?,
-                // & binds tighter than +, so we don't allow + here.
-                elem: Box::new(input.call(Type::without_plus)?),
+    impl Synom for TypeBareFn {
+        named!(parse -> Self, do_parse!(
+            lifetimes: option!(syn!(BoundLifetimes)) >>
+            unsafety: option!(keyword!(unsafe)) >>
+            abi: option!(syn!(Abi)) >>
+            fn_: keyword!(fn) >>
+            parens: parens!(do_parse!(
+                inputs: call!(Punctuated::parse_terminated) >>
+                variadic: option!(cond_reduce!(inputs.empty_or_trailing(), punct!(...))) >>
+                (inputs, variadic)
+            )) >>
+            output: call!(ReturnType::without_plus) >>
+            (TypeBareFn {
+                unsafety: unsafety,
+                abi: abi,
+                lifetimes: lifetimes,
+                output: output,
+                variadic: (parens.1).1,
+                fn_token: fn_,
+                paren_token: parens.0,
+                inputs: (parens.1).0,
             })
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("`fn` type")
         }
     }
 
-    impl Parse for TypeBareFn {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let args;
-            let allow_variadic;
-            Ok(TypeBareFn {
-                lifetimes: input.parse()?,
-                unsafety: input.parse()?,
-                abi: input.parse()?,
-                fn_token: input.parse()?,
-                paren_token: parenthesized!(args in input),
-                inputs: {
-                    let mut inputs = Punctuated::new();
-                    while !args.is_empty() && !args.peek(Token![...]) {
-                        inputs.push_value(args.parse()?);
-                        if args.is_empty() {
-                            break;
-                        }
-                        inputs.push_punct(args.parse()?);
-                    }
-                    allow_variadic = inputs.empty_or_trailing();
-                    inputs
-                },
-                variadic: {
-                    if allow_variadic && args.peek(Token![...]) {
-                        Some(args.parse()?)
-                    } else {
-                        None
-                    }
-                },
-                output: input.call(ReturnType::without_plus)?,
-            })
+    impl Synom for TypeNever {
+        named!(parse -> Self, map!(
+            punct!(!),
+            |b| TypeNever { bang_token: b }
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("never type: `!`")
         }
     }
 
-    impl Parse for TypeNever {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(TypeNever {
-                bang_token: input.parse()?,
-            })
+    impl Synom for TypeInfer {
+        named!(parse -> Self, map!(
+            punct!(_),
+            |u| TypeInfer { underscore_token: u }
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("inferred type: `_`")
         }
     }
 
-    impl Parse for TypeInfer {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(TypeInfer {
-                underscore_token: input.parse()?,
+    impl Synom for TypeTuple {
+        named!(parse -> Self, do_parse!(
+            data: parens!(Punctuated::parse_terminated) >>
+            (TypeTuple {
+                paren_token: data.0,
+                elems: data.1,
             })
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("tuple type")
         }
     }
 
-    impl Parse for TypeTuple {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let content;
-            Ok(TypeTuple {
-                paren_token: parenthesized!(content in input),
-                elems: content.parse_terminated(Type::parse)?,
-            })
+    impl Synom for TypeMacro {
+        named!(parse -> Self, map!(syn!(Macro), |mac| TypeMacro { mac: mac }));
+
+        fn description() -> Option<&'static str> {
+            Some("macro invocation")
         }
     }
 
-    impl Parse for TypeMacro {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(TypeMacro {
-                mac: input.parse()?,
-            })
+    impl Synom for TypePath {
+        named!(parse -> Self, call!(Self::parse, false));
+
+        fn description() -> Option<&'static str> {
+            Some("type path")
         }
     }
 
-    impl Parse for TypePath {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let (qself, mut path) = path::parsing::qpath(input, false)?;
-
-            if path.segments.last().unwrap().value().arguments.is_empty()
-                && input.peek(token::Paren)
-            {
-                let args: ParenthesizedGenericArguments = input.parse()?;
-                let parenthesized = PathArguments::Parenthesized(args);
-                path.segments.last_mut().unwrap().value_mut().arguments = parenthesized;
-            }
-
-            Ok(TypePath {
-                qself: qself,
-                path: path,
+    impl TypePath {
+        named!(parse(allow_plus: bool) -> Self, do_parse!(
+            qpath: qpath >>
+            parenthesized: option!(cond_reduce!(
+                qpath.1.segments.last().unwrap().value().arguments.is_empty(),
+                syn!(ParenthesizedGenericArguments)
+            )) >>
+            cond!(allow_plus, not!(punct!(+))) >>
+            ({
+                let (qself, mut path) = qpath;
+                if let Some(parenthesized) = parenthesized {
+                    let parenthesized = PathArguments::Parenthesized(parenthesized);
+                    path.segments.last_mut().unwrap().value_mut().arguments = parenthesized;
+                }
+                TypePath { qself: qself, path: path }
             })
-        }
+        ));
     }
 
     impl ReturnType {
-        pub fn without_plus(input: ParseStream) -> Result<Self> {
-            Self::parse(input, false)
-        }
+        named!(pub without_plus -> Self, call!(Self::parse, false));
+        named!(parse(allow_plus: bool) -> Self, alt!(
+            do_parse!(
+                arrow: punct!(->) >>
+                ty: call!(ambig_ty, allow_plus) >>
+                (ReturnType::Type(arrow, Box::new(ty)))
+            )
+            |
+            epsilon!() => { |_| ReturnType::Default }
+        ));
+    }
 
-        pub fn parse(input: ParseStream, allow_plus: bool) -> Result<Self> {
-            if input.peek(Token![->]) {
-                let arrow = input.parse()?;
-                let ty = ambig_ty(input, allow_plus)?;
-                Ok(ReturnType::Type(arrow, Box::new(ty)))
-            } else {
-                Ok(ReturnType::Default)
-            }
+    impl Synom for ReturnType {
+        named!(parse -> Self, call!(Self::parse, true));
+
+        fn description() -> Option<&'static str> {
+            Some("return type")
         }
     }
 
-    impl Parse for ReturnType {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Self::parse(input, true)
-        }
-    }
+    impl Synom for TypeTraitObject {
+        named!(parse -> Self, call!(Self::parse, true));
 
-    impl Parse for TypeTraitObject {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Self::parse(input, true)
+        fn description() -> Option<&'static str> {
+            Some("trait object type")
         }
     }
 
@@ -623,133 +523,123 @@ pub mod parsing {
     }
 
     impl TypeTraitObject {
-        pub fn without_plus(input: ParseStream) -> Result<Self> {
-            Self::parse(input, false)
-        }
+        named!(pub without_plus -> Self, call!(Self::parse, false));
 
         // Only allow multiple trait references if allow_plus is true.
-        pub fn parse(input: ParseStream, allow_plus: bool) -> Result<Self> {
-            Ok(TypeTraitObject {
-                dyn_token: input.parse()?,
-                bounds: {
+        named!(parse(allow_plus: bool) -> Self, do_parse!(
+            dyn_token: option!(keyword!(dyn)) >>
+            bounds: alt!(
+                cond_reduce!(allow_plus, Punctuated::parse_terminated_nonempty)
+                |
+                syn!(TypeParamBound) => {|x| {
                     let mut bounds = Punctuated::new();
-                    if allow_plus {
-                        loop {
-                            bounds.push_value(input.parse()?);
-                            if !input.peek(Token![+]) {
-                                break;
-                            }
-                            bounds.push_punct(input.parse()?);
-                        }
-                    } else {
-                        bounds.push_value(input.parse()?);
-                    }
-                    // Just lifetimes like `'a + 'b` is not a TraitObject.
-                    if !at_least_one_type(&bounds) {
-                        return Err(input.error("expected at least one type"));
-                    }
+                    bounds.push_value(x);
                     bounds
-                },
+                }}
+            ) >>
+            // Just lifetimes like `'a + 'b` is not a TraitObject.
+            cond_reduce!(at_least_one_type(&bounds)) >>
+            (TypeTraitObject {
+                dyn_token: dyn_token,
+                bounds: bounds,
             })
+        ));
+    }
+
+    impl Synom for TypeImplTrait {
+        named!(parse -> Self, do_parse!(
+            impl_: keyword!(impl) >>
+            // NOTE: rust-lang/rust#34511 includes discussion about whether or
+            // not + should be allowed in ImplTrait directly without ().
+            elem: call!(Punctuated::parse_terminated_nonempty) >>
+            (TypeImplTrait {
+                impl_token: impl_,
+                bounds: elem,
+            })
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("`impl Trait` type")
         }
     }
 
-    impl Parse for TypeImplTrait {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(TypeImplTrait {
-                impl_token: input.parse()?,
-                // NOTE: rust-lang/rust#34511 includes discussion about whether
-                // or not + should be allowed in ImplTrait directly without ().
-                bounds: {
-                    let mut bounds = Punctuated::new();
-                    loop {
-                        bounds.push_value(input.parse()?);
-                        if !input.peek(Token![+]) {
-                            break;
-                        }
-                        bounds.push_punct(input.parse()?);
-                    }
-                    bounds
-                },
+    impl Synom for TypeGroup {
+        named!(parse -> Self, do_parse!(
+            data: grouped!(syn!(Type)) >>
+            (TypeGroup {
+                group_token: data.0,
+                elem: Box::new(data.1),
             })
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("type surrounded by invisible delimiters")
         }
     }
 
-    impl Parse for TypeGroup {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let group = private::parse_group(input)?;
-            Ok(TypeGroup {
-                group_token: group.token,
-                elem: group.content.parse()?,
-            })
-        }
-    }
+    impl Synom for TypeParen {
+        named!(parse -> Self, call!(Self::parse, false));
 
-    impl Parse for TypeParen {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Self::parse(input, false)
+        fn description() -> Option<&'static str> {
+            Some("parenthesized type")
         }
     }
 
     impl TypeParen {
-        fn parse(input: ParseStream, allow_plus: bool) -> Result<Self> {
-            let content;
-            Ok(TypeParen {
-                paren_token: parenthesized!(content in input),
-                elem: Box::new(ambig_ty(&content, allow_plus)?),
+        named!(parse(allow_plus: bool) -> Self, do_parse!(
+            data: parens!(syn!(Type)) >>
+            cond!(allow_plus, not!(punct!(+))) >>
+            (TypeParen {
+                paren_token: data.0,
+                elem: Box::new(data.1),
             })
-        }
+        ));
     }
 
-    impl Parse for BareFnArg {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(BareFnArg {
-                name: {
-                    if (input.peek(Ident) || input.peek(Token![_]))
-                        && !input.peek2(Token![::])
-                        && input.peek2(Token![:])
-                    {
-                        let name: BareFnArgName = input.parse()?;
-                        let colon: Token![:] = input.parse()?;
-                        Some((name, colon))
-                    } else {
-                        None
-                    }
-                },
-                ty: input.parse()?,
+    impl Synom for BareFnArg {
+        named!(parse -> Self, do_parse!(
+            name: option!(do_parse!(
+                name: syn!(BareFnArgName) >>
+                not!(punct!(::)) >>
+                colon: punct!(:) >>
+                (name, colon)
+            )) >>
+            ty: syn!(Type) >>
+            (BareFnArg {
+                name: name,
+                ty: ty,
             })
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("function type argument")
         }
     }
 
-    impl Parse for BareFnArgName {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let lookahead = input.lookahead1();
-            if lookahead.peek(Ident) {
-                input.parse().map(BareFnArgName::Named)
-            } else if lookahead.peek(Token![_]) {
-                input.parse().map(BareFnArgName::Wild)
-            } else {
-                Err(lookahead.error())
-            }
+    impl Synom for BareFnArgName {
+        named!(parse -> Self, alt!(
+            map!(syn!(Ident), BareFnArgName::Named)
+            |
+            map!(punct!(_), BareFnArgName::Wild)
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("function argument name")
         }
     }
 
-    impl Parse for Abi {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(Abi {
-                extern_token: input.parse()?,
-                name: input.parse()?,
+    impl Synom for Abi {
+        named!(parse -> Self, do_parse!(
+            extern_: keyword!(extern) >>
+            name: option!(syn!(LitStr)) >>
+            (Abi {
+                extern_token: extern_,
+                name: name,
             })
-        }
-    }
+        ));
 
-    impl Parse for Option<Abi> {
-        fn parse(input: ParseStream) -> Result<Self> {
-            if input.peek(Token![extern]) {
-                input.parse().map(Some)
-            } else {
-                Ok(None)
-            }
+        fn description() -> Option<&'static str> {
+            Some("`extern` ABI qualifier")
         }
     }
 }
@@ -757,11 +647,8 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-
     use proc_macro2::TokenStream;
     use quote::ToTokens;
-
-    use print::TokensOrDefault;
 
     impl ToTokens for TypeSlice {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -813,8 +700,8 @@ mod printing {
                 self.inputs.to_tokens(tokens);
                 if let Some(ref variadic) = self.variadic {
                     if !self.inputs.empty_or_trailing() {
-                        let span = variadic.spans[0];
-                        Token![,](span).to_tokens(tokens);
+                        let span = variadic.0[0];
+                        <Token![,]>::new(span).to_tokens(tokens);
                     }
                     variadic.to_tokens(tokens);
                 }
@@ -839,7 +726,7 @@ mod printing {
 
     impl ToTokens for TypePath {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            private::print_path(tokens, &self.qself, &self.path);
+            PathTokens(&self.qself, &self.path).to_tokens(tokens);
         }
     }
 

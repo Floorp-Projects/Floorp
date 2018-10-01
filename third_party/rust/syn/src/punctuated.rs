@@ -38,11 +38,11 @@ use std::slice;
 use std::vec;
 
 #[cfg(feature = "parsing")]
-use parse::{Parse, ParseStream, Result};
-#[cfg(any(feature = "full", feature = "derive"))]
-use private;
+use buffer::Cursor;
 #[cfg(feature = "parsing")]
-use token::Token;
+use parse_error;
+#[cfg(feature = "parsing")]
+use synom::{PResult, Synom};
 
 /// A punctuated sequence of syntax tree nodes of type `T` separated by
 /// punctuation of type `P`.
@@ -208,16 +208,18 @@ impl<T, P> Punctuated<T, P> {
     pub fn empty_or_trailing(&self) -> bool {
         self.last.is_none()
     }
+}
 
+impl<T, P> Punctuated<T, P>
+where
+    P: Default,
+{
     /// Appends a syntax tree node onto the end of this punctuated sequence.
     ///
     /// If there is not a trailing punctuation in this sequence when this method
     /// is called, the default value of punctuation type `P` is inserted before
     /// the given value of type `T`.
-    pub fn push(&mut self, value: T)
-    where
-        P: Default,
-    {
+    pub fn push(&mut self, value: T) {
         if !self.empty_or_trailing() {
             self.push_punct(Default::default());
         }
@@ -230,10 +232,7 @@ impl<T, P> Punctuated<T, P> {
     ///
     /// Panics if `index` is greater than the number of elements previously in
     /// this punctuated sequence.
-    pub fn insert(&mut self, index: usize, value: T)
-    where
-        P: Default,
-    {
+    pub fn insert(&mut self, index: usize, value: T) {
         assert!(index <= self.len());
 
         if index == self.len() {
@@ -241,113 +240,6 @@ impl<T, P> Punctuated<T, P> {
         } else {
             self.inner.insert(index, (value, Default::default()));
         }
-    }
-
-    /// Parses zero or more occurrences of `T` separated by punctuation of type
-    /// `P`, with optional trailing punctuation.
-    ///
-    /// Parsing continues until the end of this parse stream. The entire content
-    /// of this parse stream must consist of `T` and `P`.
-    ///
-    /// *This function is available if Syn is built with the `"parsing"`
-    /// feature.*
-    #[cfg(feature = "parsing")]
-    pub fn parse_terminated(input: ParseStream) -> Result<Self>
-    where
-        T: Parse,
-        P: Parse,
-    {
-        Self::parse_terminated_with(input, T::parse)
-    }
-
-    /// Parses zero or more occurrences of `T` using the given parse function,
-    /// separated by punctuation of type `P`, with optional trailing
-    /// punctuation.
-    ///
-    /// Like [`parse_terminated`], the entire content of this stream is expected
-    /// to be parsed.
-    ///
-    /// [`parse_terminated`]: #method.parse_terminated
-    ///
-    /// *This function is available if Syn is built with the `"parsing"`
-    /// feature.*
-    #[cfg(feature = "parsing")]
-    pub fn parse_terminated_with(
-        input: ParseStream,
-        parser: fn(ParseStream) -> Result<T>,
-    ) -> Result<Self>
-    where
-        P: Parse,
-    {
-        let mut punctuated = Punctuated::new();
-
-        loop {
-            if input.is_empty() {
-                break;
-            }
-            let value = parser(input)?;
-            punctuated.push_value(value);
-            if input.is_empty() {
-                break;
-            }
-            let punct = input.parse()?;
-            punctuated.push_punct(punct);
-        }
-
-        Ok(punctuated)
-    }
-
-    /// Parses one or more occurrences of `T` separated by punctuation of type
-    /// `P`, not accepting trailing punctuation.
-    ///
-    /// Parsing continues as long as punctuation `P` is present at the head of
-    /// the stream. This method returns upon parsing a `T` and observing that it
-    /// is not followed by a `P`, even if there are remaining tokens in the
-    /// stream.
-    ///
-    /// *This function is available if Syn is built with the `"parsing"`
-    /// feature.*
-    #[cfg(feature = "parsing")]
-    pub fn parse_separated_nonempty(input: ParseStream) -> Result<Self>
-    where
-        T: Parse,
-        P: Token + Parse,
-    {
-        Self::parse_separated_nonempty_with(input, T::parse)
-    }
-
-    /// Parses one or more occurrences of `T` using the given parse function,
-    /// separated by punctuation of type `P`, not accepting trailing
-    /// punctuation.
-    ///
-    /// Like [`parse_separated_nonempty`], may complete early without parsing
-    /// the entire content of this stream.
-    ///
-    /// [`parse_separated_nonempty`]: #method.parse_separated_nonempty
-    ///
-    /// *This function is available if Syn is built with the `"parsing"`
-    /// feature.*
-    #[cfg(feature = "parsing")]
-    pub fn parse_separated_nonempty_with(
-        input: ParseStream,
-        parser: fn(ParseStream) -> Result<T>,
-    ) -> Result<Self>
-    where
-        P: Token + Parse,
-    {
-        let mut punctuated = Punctuated::new();
-
-        loop {
-            let value = parser(input)?;
-            punctuated.push_value(value);
-            if !P::peek(input.cursor()) {
-                break;
-            }
-            let punct = input.parse()?;
-            punctuated.push_punct(punct);
-        }
-
-        Ok(punctuated)
     }
 }
 
@@ -574,8 +466,10 @@ struct PrivateIter<'a, T: 'a, P: 'a> {
 }
 
 #[cfg(any(feature = "full", feature = "derive"))]
-impl private {
-    pub fn empty_punctuated_iter<'a, T>() -> Iter<'a, T> {
+impl<'a, T> Iter<'a, T> {
+    // Not public API.
+    #[doc(hidden)]
+    pub fn private_empty() -> Self {
         Iter {
             inner: Box::new(iter::empty()),
         }
@@ -625,15 +519,6 @@ pub struct IterMut<'a, T: 'a> {
 struct PrivateIterMut<'a, T: 'a, P: 'a> {
     inner: slice::IterMut<'a, (T, P)>,
     last: option::IntoIter<&'a mut T>,
-}
-
-#[cfg(any(feature = "full", feature = "derive"))]
-impl private {
-    pub fn empty_punctuated_iter_mut<'a, T>() -> IterMut<'a, T> {
-        IterMut {
-            inner: Box::new(iter::empty()),
-        }
-    }
 }
 
 impl<'a, T> Iterator for IterMut<'a, T> {
@@ -753,6 +638,126 @@ impl<T, P> IndexMut<usize> for Punctuated<T, P> {
             }
         } else {
             &mut self.inner[index].0
+        }
+    }
+}
+
+#[cfg(feature = "parsing")]
+impl<T, P> Punctuated<T, P>
+where
+    T: Synom,
+    P: Synom,
+{
+    /// Parse **zero or more** syntax tree nodes with punctuation in between and
+    /// **no trailing** punctuation.
+    pub fn parse_separated(input: Cursor) -> PResult<Self> {
+        Self::parse_separated_with(input, T::parse)
+    }
+
+    /// Parse **one or more** syntax tree nodes with punctuation in bewteen and
+    /// **no trailing** punctuation.
+    /// allowing trailing punctuation.
+    pub fn parse_separated_nonempty(input: Cursor) -> PResult<Self> {
+        Self::parse_separated_nonempty_with(input, T::parse)
+    }
+
+    /// Parse **zero or more** syntax tree nodes with punctuation in between and
+    /// **optional trailing** punctuation.
+    pub fn parse_terminated(input: Cursor) -> PResult<Self> {
+        Self::parse_terminated_with(input, T::parse)
+    }
+
+    /// Parse **one or more** syntax tree nodes with punctuation in between and
+    /// **optional trailing** punctuation.
+    pub fn parse_terminated_nonempty(input: Cursor) -> PResult<Self> {
+        Self::parse_terminated_nonempty_with(input, T::parse)
+    }
+}
+
+#[cfg(feature = "parsing")]
+impl<T, P> Punctuated<T, P>
+where
+    P: Synom,
+{
+    /// Parse **zero or more** syntax tree nodes using the given parser with
+    /// punctuation in between and **no trailing** punctuation.
+    pub fn parse_separated_with(input: Cursor, parse: fn(Cursor) -> PResult<T>) -> PResult<Self> {
+        Self::parse(input, parse, false)
+    }
+
+    /// Parse **one or more** syntax tree nodes using the given parser with
+    /// punctuation in between and **no trailing** punctuation.
+    pub fn parse_separated_nonempty_with(
+        input: Cursor,
+        parse: fn(Cursor) -> PResult<T>,
+    ) -> PResult<Self> {
+        match Self::parse(input, parse, false) {
+            Ok((ref b, _)) if b.is_empty() => parse_error(),
+            other => other,
+        }
+    }
+
+    /// Parse **zero or more** syntax tree nodes using the given parser with
+    /// punctuation in between and **optional trailing** punctuation.
+    pub fn parse_terminated_with(input: Cursor, parse: fn(Cursor) -> PResult<T>) -> PResult<Self> {
+        Self::parse(input, parse, true)
+    }
+
+    /// Parse **one or more** syntax tree nodes using the given parser with
+    /// punctuation in between and **optional trailing** punctuation.
+    pub fn parse_terminated_nonempty_with(
+        input: Cursor,
+        parse: fn(Cursor) -> PResult<T>,
+    ) -> PResult<Self> {
+        match Self::parse(input, parse, true) {
+            Ok((ref b, _)) if b.is_empty() => parse_error(),
+            other => other,
+        }
+    }
+
+    fn parse(
+        mut input: Cursor,
+        parse: fn(Cursor) -> PResult<T>,
+        terminated: bool,
+    ) -> PResult<Self> {
+        let mut res = Punctuated::new();
+
+        // get the first element
+        match parse(input) {
+            Err(_) => Ok((res, input)),
+            Ok((o, i)) => {
+                if i == input {
+                    return parse_error();
+                }
+                input = i;
+                res.push_value(o);
+
+                // get the separator first
+                while let Ok((s, i2)) = P::parse(input) {
+                    if i2 == input {
+                        break;
+                    }
+
+                    // get the element next
+                    if let Ok((o3, i3)) = parse(i2) {
+                        if i3 == i2 {
+                            break;
+                        }
+                        res.push_punct(s);
+                        res.push_value(o3);
+                        input = i3;
+                    } else {
+                        break;
+                    }
+                }
+                if terminated {
+                    if let Ok((sep, after)) = P::parse(input) {
+                        res.push_punct(sep);
+                        input = after;
+                    }
+                }
+                Ok((res, input))
+            }
         }
     }
 }

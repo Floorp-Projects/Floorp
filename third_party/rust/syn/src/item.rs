@@ -93,7 +93,6 @@ ast_enum_of_structs! {
             pub vis: Visibility,
             pub constness: Option<Token![const]>,
             pub unsafety: Option<Token![unsafe]>,
-            pub asyncness: Option<Token![async]>,
             pub abi: Option<Abi>,
             pub ident: Ident,
             pub decl: Box<FnDecl>,
@@ -133,21 +132,6 @@ ast_enum_of_structs! {
             pub generics: Generics,
             pub eq_token: Token![=],
             pub ty: Box<Type>,
-            pub semi_token: Token![;],
-        }),
-
-        /// An existential type: `existential type Iter: Iterator<Item = u8>`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Existential(ItemExistential {
-            pub attrs: Vec<Attribute>,
-            pub vis: Visibility,
-            pub existential_token: Token![existential],
-            pub type_token: Token![type],
-            pub ident: Ident,
-            pub generics: Generics,
-            pub colon_token: Option<Token![:]>,
-            pub bounds: Punctuated<TypeParamBound, Token![+]>,
             pub semi_token: Token![;],
         }),
 
@@ -204,20 +188,6 @@ ast_enum_of_structs! {
             pub supertraits: Punctuated<TypeParamBound, Token![+]>,
             pub brace_token: token::Brace,
             pub items: Vec<TraitItem>,
-        }),
-
-        /// A trait alias: `pub trait SharableIterator = Iterator + Sync`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub TraitAlias(ItemTraitAlias {
-            pub attrs: Vec<Attribute>,
-            pub vis: Visibility,
-            pub trait_token: Token![trait],
-            pub ident: Ident,
-            pub generics: Generics,
-            pub eq_token: Token![=],
-            pub bounds: Punctuated<TypeParamBound, Token![+]>,
-            pub semi_token: Token![;],
         }),
 
         /// An impl block providing trait or associated items: `impl<A> Trait
@@ -459,15 +429,6 @@ ast_enum_of_structs! {
             pub semi_token: Token![;],
         }),
 
-        /// A macro invocation within an extern block.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Macro(ForeignItemMacro {
-            pub attrs: Vec<Attribute>,
-            pub mac: Macro,
-            pub semi_token: Option<Token![;]>,
-        }),
-
         /// Tokens in an `extern` block not interpreted by Syn.
         ///
         /// *This type is available if Syn is built with the `"full"` feature.*
@@ -636,20 +597,6 @@ ast_enum_of_structs! {
             pub semi_token: Token![;],
         }),
 
-        /// An existential type within an impl block.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Existential(ImplItemExistential {
-            pub attrs: Vec<Attribute>,
-            pub existential_token: Token![existential],
-            pub type_token: Token![type],
-            pub ident: Ident,
-            pub generics: Generics,
-            pub colon_token: Option<Token![:]>,
-            pub bounds: Punctuated<TypeParamBound, Token![+]>,
-            pub semi_token: Token![;],
-        }),
-
         /// A macro invocation within an impl block.
         ///
         /// *This type is available if Syn is built with the `"full"` feature.*
@@ -696,7 +643,6 @@ ast_struct! {
     pub struct MethodSig {
         pub constness: Option<Token![const]>,
         pub unsafety: Option<Token![unsafe]>,
-        pub asyncness: Option<Token![async]>,
         pub abi: Option<Abi>,
         pub ident: Ident,
         pub decl: FnDecl,
@@ -768,1192 +714,902 @@ ast_enum_of_structs! {
 pub mod parsing {
     use super::*;
 
-    use ext::IdentExt;
-    use parse::{Parse, ParseStream, Result};
+    use synom::Synom;
 
-    impl Parse for Item {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let ahead = input.fork();
-            ahead.call(Attribute::parse_outer)?;
-            let vis: Visibility = ahead.parse()?;
+    impl_synom!(Item "item" alt!(
+        syn!(ItemExternCrate) => { Item::ExternCrate }
+        |
+        syn!(ItemUse) => { Item::Use }
+        |
+        syn!(ItemStatic) => { Item::Static }
+        |
+        syn!(ItemConst) => { Item::Const }
+        |
+        syn!(ItemFn) => { Item::Fn }
+        |
+        call!(unstable_async_fn) => { Item::Verbatim }
+        |
+        syn!(ItemMod) => { Item::Mod }
+        |
+        syn!(ItemForeignMod) => { Item::ForeignMod }
+        |
+        syn!(ItemType) => { Item::Type }
+        |
+        syn!(ItemStruct) => { Item::Struct }
+        |
+        syn!(ItemEnum) => { Item::Enum }
+        |
+        syn!(ItemUnion) => { Item::Union }
+        |
+        syn!(ItemTrait) => { Item::Trait }
+        |
+        syn!(ItemImpl) => { Item::Impl }
+        |
+        syn!(ItemMacro) => { Item::Macro }
+        |
+        syn!(ItemMacro2) => { Item::Macro2 }
+    ));
 
-            let lookahead = ahead.lookahead1();
-            if lookahead.peek(Token![extern]) {
-                ahead.parse::<Token![extern]>()?;
-                let lookahead = ahead.lookahead1();
-                if lookahead.peek(Token![crate]) {
-                    input.parse().map(Item::ExternCrate)
-                } else if lookahead.peek(Token![fn]) {
-                    input.parse().map(Item::Fn)
-                } else if lookahead.peek(token::Brace) {
-                    input.parse().map(Item::ForeignMod)
-                } else if lookahead.peek(LitStr) {
-                    ahead.parse::<LitStr>()?;
-                    let lookahead = ahead.lookahead1();
-                    if lookahead.peek(token::Brace) {
-                        input.parse().map(Item::ForeignMod)
-                    } else if lookahead.peek(Token![fn]) {
-                        input.parse().map(Item::Fn)
-                    } else {
-                        Err(lookahead.error())
-                    }
-                } else {
-                    Err(lookahead.error())
-                }
-            } else if lookahead.peek(Token![use]) {
-                input.parse().map(Item::Use)
-            } else if lookahead.peek(Token![static]) {
-                input.parse().map(Item::Static)
-            } else if lookahead.peek(Token![const]) {
-                ahead.parse::<Token![const]>()?;
-                let lookahead = ahead.lookahead1();
-                if lookahead.peek(Ident) {
-                    input.parse().map(Item::Const)
-                } else if lookahead.peek(Token![unsafe])
-                    || lookahead.peek(Token![async])
-                    || lookahead.peek(Token![extern])
-                    || lookahead.peek(Token![fn])
-                {
-                    input.parse().map(Item::Fn)
-                } else {
-                    Err(lookahead.error())
-                }
-            } else if lookahead.peek(Token![unsafe]) {
-                ahead.parse::<Token![unsafe]>()?;
-                let lookahead = ahead.lookahead1();
-                if lookahead.peek(Token![trait])
-                    || lookahead.peek(Token![auto]) && ahead.peek2(Token![trait])
-                {
-                    input.parse().map(Item::Trait)
-                } else if lookahead.peek(Token![impl ]) {
-                    input.parse().map(Item::Impl)
-                } else if lookahead.peek(Token![async])
-                    || lookahead.peek(Token![extern])
-                    || lookahead.peek(Token![fn])
-                {
-                    input.parse().map(Item::Fn)
-                } else {
-                    Err(lookahead.error())
-                }
-            } else if lookahead.peek(Token![async]) || lookahead.peek(Token![fn]) {
-                input.parse().map(Item::Fn)
-            } else if lookahead.peek(Token![mod]) {
-                input.parse().map(Item::Mod)
-            } else if lookahead.peek(Token![type]) {
-                input.parse().map(Item::Type)
-            } else if lookahead.peek(Token![existential]) {
-                input.parse().map(Item::Existential)
-            } else if lookahead.peek(Token![struct]) {
-                input.parse().map(Item::Struct)
-            } else if lookahead.peek(Token![enum]) {
-                input.parse().map(Item::Enum)
-            } else if lookahead.peek(Token![union]) && ahead.peek2(Ident) {
-                input.parse().map(Item::Union)
-            } else if lookahead.peek(Token![trait])
-                || lookahead.peek(Token![auto]) && ahead.peek2(Token![trait])
-            {
-                input.parse().map(Item::Trait)
-            } else if lookahead.peek(Token![impl ])
-                || lookahead.peek(Token![default]) && !ahead.peek2(Token![!])
-            {
-                input.parse().map(Item::Impl)
-            } else if lookahead.peek(Token![macro]) {
-                input.parse().map(Item::Macro2)
-            } else if vis.is_inherited()
-                && (lookahead.peek(Ident)
-                    || lookahead.peek(Token![self])
-                    || lookahead.peek(Token![super])
-                    || lookahead.peek(Token![extern])
-                    || lookahead.peek(Token![crate])
-                    || lookahead.peek(Token![::]))
-            {
-                input.parse().map(Item::Macro)
-            } else {
-                Err(lookahead.error())
-            }
-        }
-    }
-
-    impl Parse for ItemMacro {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let path = input.call(Path::parse_mod_style)?;
-            let bang_token: Token![!] = input.parse()?;
-            let ident: Option<Ident> = input.parse()?;
-            let (delimiter, tts) = input.call(mac::parse_delimiter)?;
-            let semi_token: Option<Token![;]> = if !delimiter.is_brace() {
-                Some(input.parse()?)
-            } else {
-                None
-            };
-            Ok(ItemMacro {
-                attrs: attrs,
-                ident: ident,
-                mac: Macro {
-                    path: path,
-                    bang_token: bang_token,
-                    delimiter: delimiter,
-                    tts: tts,
-                },
-                semi_token: semi_token,
-            })
-        }
-    }
+    impl_synom!(ItemMacro "macro item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        what: call!(Path::parse_mod_style) >>
+        bang: punct!(!) >>
+        ident: option!(syn!(Ident)) >>
+        body: call!(tt::delimited) >>
+        semi: cond!(!is_brace(&body.0), punct!(;)) >>
+        (ItemMacro {
+            attrs: attrs,
+            ident: ident,
+            mac: Macro {
+                path: what,
+                bang_token: bang,
+                delimiter: body.0,
+                tts: body.1,
+            },
+            semi_token: semi,
+        })
+    ));
 
     // TODO: figure out the actual grammar; is body required to be braced?
-    impl Parse for ItemMacro2 {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let args;
-            let body;
-            Ok(ItemMacro2 {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                macro_token: input.parse()?,
-                ident: input.parse()?,
-                paren_token: parenthesized!(args in input),
-                args: args.parse()?,
-                brace_token: braced!(body in input),
-                body: body.parse()?,
-            })
-        }
-    }
+    impl_synom!(ItemMacro2 "macro2 item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        macro_: keyword!(macro) >>
+        ident: syn!(Ident) >>
+        args: call!(tt::parenthesized) >>
+        body: call!(tt::braced) >>
+        (ItemMacro2 {
+            attrs: attrs,
+            vis: vis,
+            macro_token: macro_,
+            ident: ident,
+            paren_token: args.0,
+            args: args.1,
+            brace_token: body.0,
+            body: body.1,
+        })
+    ));
 
-    impl Parse for ItemExternCrate {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ItemExternCrate {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                extern_token: input.parse()?,
-                crate_token: input.parse()?,
-                ident: input.parse()?,
-                rename: {
-                    if input.peek(Token![as]) {
-                        let as_token: Token![as] = input.parse()?;
-                        let rename: Ident = input.parse()?;
-                        Some((as_token, rename))
-                    } else {
-                        None
-                    }
+    impl_synom!(ItemExternCrate "extern crate item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        extern_: keyword!(extern) >>
+        crate_: keyword!(crate) >>
+        ident: syn!(Ident) >>
+        rename: option!(tuple!(keyword!(as), syn!(Ident))) >>
+        semi: punct!(;) >>
+        (ItemExternCrate {
+            attrs: attrs,
+            vis: vis,
+            extern_token: extern_,
+            crate_token: crate_,
+            ident: ident,
+            rename: rename,
+            semi_token: semi,
+        })
+    ));
+
+    impl_synom!(ItemUse "use item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        use_: keyword!(use) >>
+        leading_colon: option!(punct!(::)) >>
+        tree: syn!(UseTree) >>
+        semi: punct!(;) >>
+        (ItemUse {
+            attrs: attrs,
+            vis: vis,
+            use_token: use_,
+            leading_colon: leading_colon,
+            tree: tree,
+            semi_token: semi,
+        })
+    ));
+
+    named!(use_element -> Ident, alt!(
+        syn!(Ident)
+        |
+        keyword!(self) => { Into::into }
+        |
+        keyword!(super) => { Into::into }
+        |
+        keyword!(crate) => { Into::into }
+        |
+        keyword!(extern) => { Into::into }
+    ));
+
+    impl_synom!(UseTree "use tree" alt!(
+        syn!(UseRename) => { UseTree::Rename }
+        |
+        syn!(UsePath) => { UseTree::Path }
+        |
+        syn!(UseName) => { UseTree::Name }
+        |
+        syn!(UseGlob) => { UseTree::Glob }
+        |
+        syn!(UseGroup) => { UseTree::Group }
+    ));
+
+    impl_synom!(UsePath "use path" do_parse!(
+        ident: call!(use_element) >>
+        colon2_token: punct!(::) >>
+        tree: syn!(UseTree) >>
+        (UsePath {
+            ident: ident,
+            colon2_token: colon2_token,
+            tree: Box::new(tree),
+        })
+    ));
+
+    impl_synom!(UseName "use name" do_parse!(
+        ident: call!(use_element) >>
+        (UseName {
+            ident: ident,
+        })
+    ));
+
+    impl_synom!(UseRename "use rename" do_parse!(
+        ident: call!(use_element) >>
+        as_token: keyword!(as) >>
+        rename: syn!(Ident) >>
+        (UseRename {
+            ident: ident,
+            as_token: as_token,
+            rename: rename,
+        })
+    ));
+
+    impl_synom!(UseGlob "use glob" do_parse!(
+        star: punct!(*) >>
+        (UseGlob {
+            star_token: star,
+        })
+    ));
+
+    impl_synom!(UseGroup "use group" do_parse!(
+        list: braces!(Punctuated::parse_terminated) >>
+        (UseGroup {
+            brace_token: list.0,
+            items: list.1,
+        })
+    ));
+
+    impl_synom!(ItemStatic "static item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        static_: keyword!(static) >>
+        mutability: option!(keyword!(mut)) >>
+        ident: syn!(Ident) >>
+        colon: punct!(:) >>
+        ty: syn!(Type) >>
+        eq: punct!(=) >>
+        value: syn!(Expr) >>
+        semi: punct!(;) >>
+        (ItemStatic {
+            attrs: attrs,
+            vis: vis,
+            static_token: static_,
+            mutability: mutability,
+            ident: ident,
+            colon_token: colon,
+            ty: Box::new(ty),
+            eq_token: eq,
+            expr: Box::new(value),
+            semi_token: semi,
+        })
+    ));
+
+    impl_synom!(ItemConst "const item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        const_: keyword!(const) >>
+        ident: syn!(Ident) >>
+        colon: punct!(:) >>
+        ty: syn!(Type) >>
+        eq: punct!(=) >>
+        value: syn!(Expr) >>
+        semi: punct!(;) >>
+        (ItemConst {
+            attrs: attrs,
+            vis: vis,
+            const_token: const_,
+            ident: ident,
+            colon_token: colon,
+            ty: Box::new(ty),
+            eq_token: eq,
+            expr: Box::new(value),
+            semi_token: semi,
+        })
+    ));
+
+    impl_synom!(ItemFn "fn item" do_parse!(
+        outer_attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        constness: option!(keyword!(const)) >>
+        unsafety: option!(keyword!(unsafe)) >>
+        abi: option!(syn!(Abi)) >>
+        fn_: keyword!(fn) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        inputs: parens!(Punctuated::parse_terminated) >>
+        ret: syn!(ReturnType) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        inner_attrs_stmts: braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            call!(Block::parse_within),
+        )) >>
+        (ItemFn {
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend((inner_attrs_stmts.1).0);
+                attrs
+            },
+            vis: vis,
+            constness: constness,
+            unsafety: unsafety,
+            abi: abi,
+            decl: Box::new(FnDecl {
+                fn_token: fn_,
+                paren_token: inputs.0,
+                inputs: inputs.1,
+                output: ret,
+                variadic: None,
+                generics: Generics {
+                    where_clause: where_clause,
+                    ..generics
                 },
-                semi_token: input.parse()?,
-            })
+            }),
+            ident: ident,
+            block: Box::new(Block {
+                brace_token: inner_attrs_stmts.0,
+                stmts: (inner_attrs_stmts.1).1,
+            }),
+        })
+    ));
+
+    named!(unstable_async_fn -> ItemVerbatim, do_parse!(
+        begin: call!(verbatim::grab_cursor) >>
+        many0!(Attribute::parse_outer) >>
+        syn!(Visibility) >>
+        option!(keyword!(const)) >>
+        option!(keyword!(unsafe)) >>
+        keyword!(async) >>
+        option!(syn!(Abi)) >>
+        keyword!(fn) >>
+        syn!(Ident) >>
+        syn!(Generics) >>
+        parens!(Punctuated::<FnArg, Token![,]>::parse_terminated) >>
+        syn!(ReturnType) >>
+        option!(syn!(WhereClause)) >>
+        braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            call!(Block::parse_within),
+        )) >>
+        end: call!(verbatim::grab_cursor) >>
+        (ItemVerbatim {
+            tts: verbatim::token_range(begin..end),
+        })
+    ));
+
+    impl Synom for FnArg {
+        named!(parse -> Self, alt!(
+            do_parse!(
+                and: punct!(&) >>
+                lt: option!(syn!(Lifetime)) >>
+                mutability: option!(keyword!(mut)) >>
+                self_: keyword!(self) >>
+                not!(punct!(:)) >>
+                (ArgSelfRef {
+                    lifetime: lt,
+                    mutability: mutability,
+                    and_token: and,
+                    self_token: self_,
+                }.into())
+            )
+            |
+            do_parse!(
+                mutability: option!(keyword!(mut)) >>
+                self_: keyword!(self) >>
+                not!(punct!(:)) >>
+                (ArgSelf {
+                    mutability: mutability,
+                    self_token: self_,
+                }.into())
+            )
+            |
+            do_parse!(
+                pat: syn!(Pat) >>
+                colon: punct!(:) >>
+                ty: syn!(Type) >>
+                (ArgCaptured {
+                    pat: pat,
+                    ty: ty,
+                    colon_token: colon,
+                }.into())
+            )
+            |
+            syn!(Type) => { FnArg::Ignored }
+        ));
+
+        fn description() -> Option<&'static str> {
+            Some("function argument")
         }
     }
 
-    impl Parse for ItemUse {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ItemUse {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                use_token: input.parse()?,
-                leading_colon: input.parse()?,
-                tree: input.call(use_tree)?,
-                semi_token: input.parse()?,
-            })
-        }
-    }
+    impl_synom!(ItemMod "mod item" do_parse!(
+        outer_attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        mod_: keyword!(mod) >>
+        ident: syn!(Ident) >>
+        content_semi: alt!(
+            punct!(;) => {|semi| (
+                Vec::new(),
+                None,
+                Some(semi),
+            )}
+            |
+            braces!(
+                tuple!(
+                    many0!(Attribute::parse_inner),
+                    many0!(Item::parse),
+                )
+            ) => {|(brace, (inner_attrs, items))| (
+                inner_attrs,
+                Some((brace, items)),
+                None,
+            )}
+        ) >>
+        (ItemMod {
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend(content_semi.0);
+                attrs
+            },
+            vis: vis,
+            mod_token: mod_,
+            ident: ident,
+            content: content_semi.1,
+            semi: content_semi.2,
+        })
+    ));
 
-    fn use_tree(input: ParseStream) -> Result<UseTree> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Ident)
-            || lookahead.peek(Token![self])
-            || lookahead.peek(Token![super])
-            || lookahead.peek(Token![crate])
-            || lookahead.peek(Token![extern])
-        {
-            let ident = input.call(Ident::parse_any)?;
-            if input.peek(Token![::]) {
-                Ok(UseTree::Path(UsePath {
-                    ident: ident,
-                    colon2_token: input.parse()?,
-                    tree: Box::new(input.call(use_tree)?),
-                }))
-            } else if input.peek(Token![as]) {
-                Ok(UseTree::Rename(UseRename {
-                    ident: ident,
-                    as_token: input.parse()?,
-                    rename: {
-                        if input.peek(Ident) {
-                            input.parse()?
-                        } else if input.peek(Token![_]) {
-                            Ident::from(input.parse::<Token![_]>()?)
-                        } else {
-                            return Err(input.error("expected identifier or underscore"));
-                        }
+    impl_synom!(ItemForeignMod "foreign mod item" do_parse!(
+        outer_attrs: many0!(Attribute::parse_outer) >>
+        abi: syn!(Abi) >>
+        braced_content: braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            many0!(ForeignItem::parse),
+        )) >>
+        (ItemForeignMod {
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend((braced_content.1).0);
+                attrs
+            },
+            abi: abi,
+            brace_token: braced_content.0,
+            items: (braced_content.1).1,
+        })
+    ));
+
+    impl_synom!(ForeignItem "foreign item" alt!(
+        syn!(ForeignItemFn) => { ForeignItem::Fn }
+        |
+        syn!(ForeignItemStatic) => { ForeignItem::Static }
+        |
+        syn!(ForeignItemType) => { ForeignItem::Type }
+        |
+        call!(foreign_item_macro) => { ForeignItem::Verbatim }
+    ));
+
+    impl_synom!(ForeignItemFn "foreign function" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        fn_: keyword!(fn) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        inputs: parens!(do_parse!(
+            args: call!(Punctuated::parse_terminated) >>
+            variadic: option!(cond_reduce!(args.empty_or_trailing(), punct!(...))) >>
+            (args, variadic)
+        )) >>
+        ret: syn!(ReturnType) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        semi: punct!(;) >>
+        ({
+            let (parens, (inputs, variadic)) = inputs;
+            ForeignItemFn {
+                ident: ident,
+                attrs: attrs,
+                semi_token: semi,
+                decl: Box::new(FnDecl {
+                    fn_token: fn_,
+                    paren_token: parens,
+                    inputs: inputs,
+                    variadic: variadic,
+                    output: ret,
+                    generics: Generics {
+                        where_clause: where_clause,
+                        ..generics
                     },
-                }))
-            } else {
-                Ok(UseTree::Name(UseName { ident: ident }))
-            }
-        } else if lookahead.peek(Token![*]) {
-            Ok(UseTree::Glob(UseGlob {
-                star_token: input.parse()?,
-            }))
-        } else if lookahead.peek(token::Brace) {
-            let content;
-            Ok(UseTree::Group(UseGroup {
-                brace_token: braced!(content in input),
-                items: content.parse_terminated(use_tree)?,
-            }))
-        } else {
-            Err(lookahead.error())
-        }
-    }
-
-    impl Parse for ItemStatic {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ItemStatic {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                static_token: input.parse()?,
-                mutability: input.parse()?,
-                ident: input.parse()?,
-                colon_token: input.parse()?,
-                ty: input.parse()?,
-                eq_token: input.parse()?,
-                expr: input.parse()?,
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for ItemConst {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ItemConst {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                const_token: input.parse()?,
-                ident: input.parse()?,
-                colon_token: input.parse()?,
-                ty: input.parse()?,
-                eq_token: input.parse()?,
-                expr: input.parse()?,
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for ItemFn {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let outer_attrs = input.call(Attribute::parse_outer)?;
-            let vis: Visibility = input.parse()?;
-            let constness: Option<Token![const]> = input.parse()?;
-            let unsafety: Option<Token![unsafe]> = input.parse()?;
-            let asyncness: Option<Token![async]> = input.parse()?;
-            let abi: Option<Abi> = input.parse()?;
-            let fn_token: Token![fn] = input.parse()?;
-            let ident: Ident = input.parse()?;
-            let generics: Generics = input.parse()?;
-
-            let content;
-            let paren_token = parenthesized!(content in input);
-            let inputs = content.parse_terminated(FnArg::parse)?;
-
-            let output: ReturnType = input.parse()?;
-            let where_clause: Option<WhereClause> = input.parse()?;
-
-            let content;
-            let brace_token = braced!(content in input);
-            let inner_attrs = content.call(Attribute::parse_inner)?;
-            let stmts = content.call(Block::parse_within)?;
-
-            Ok(ItemFn {
-                attrs: private::attrs(outer_attrs, inner_attrs),
+                }),
                 vis: vis,
+            }
+        })
+    ));
+
+    impl_synom!(ForeignItemStatic "foreign static" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        static_: keyword!(static) >>
+        mutability: option!(keyword!(mut)) >>
+        ident: syn!(Ident) >>
+        colon: punct!(:) >>
+        ty: syn!(Type) >>
+        semi: punct!(;) >>
+        (ForeignItemStatic {
+            ident: ident,
+            attrs: attrs,
+            semi_token: semi,
+            ty: Box::new(ty),
+            mutability: mutability,
+            static_token: static_,
+            colon_token: colon,
+            vis: vis,
+        })
+    ));
+
+    impl_synom!(ForeignItemType "foreign type" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        type_: keyword!(type) >>
+        ident: syn!(Ident) >>
+        semi: punct!(;) >>
+        (ForeignItemType {
+            attrs: attrs,
+            vis: vis,
+            type_token: type_,
+            ident: ident,
+            semi_token: semi,
+        })
+    ));
+
+    named!(foreign_item_macro -> ForeignItemVerbatim, do_parse!(
+        begin: call!(verbatim::grab_cursor) >>
+        many0!(Attribute::parse_outer) >>
+        mac: syn!(Macro) >>
+        cond!(!is_brace(&mac.delimiter), punct!(;)) >>
+        end: call!(verbatim::grab_cursor) >>
+        (ForeignItemVerbatim {
+            tts: verbatim::token_range(begin..end),
+        })
+    ));
+
+    impl_synom!(ItemType "type item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        type_: keyword!(type) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        eq: punct!(=) >>
+        ty: syn!(Type) >>
+        semi: punct!(;) >>
+        (ItemType {
+            attrs: attrs,
+            vis: vis,
+            type_token: type_,
+            ident: ident,
+            generics: Generics {
+                where_clause: where_clause,
+                ..generics
+            },
+            eq_token: eq,
+            ty: Box::new(ty),
+            semi_token: semi,
+        })
+    ));
+
+    impl_synom!(ItemStruct "struct item" switch!(
+        map!(syn!(DeriveInput), Into::into),
+        Item::Struct(item) => value!(item)
+        |
+        _ => reject!()
+    ));
+
+    impl_synom!(ItemEnum "enum item" switch!(
+        map!(syn!(DeriveInput), Into::into),
+        Item::Enum(item) => value!(item)
+        |
+        _ => reject!()
+    ));
+
+    impl_synom!(ItemUnion "union item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        union_: keyword!(union) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        fields: syn!(FieldsNamed) >>
+        (ItemUnion {
+            attrs: attrs,
+            vis: vis,
+            union_token: union_,
+            ident: ident,
+            generics: Generics {
+                where_clause: where_clause,
+                ..generics
+            },
+            fields: fields,
+        })
+    ));
+
+    impl_synom!(ItemTrait "trait item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        unsafety: option!(keyword!(unsafe)) >>
+        auto_: option!(keyword!(auto)) >>
+        trait_: keyword!(trait) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        colon: option!(punct!(:)) >>
+        bounds: cond!(colon.is_some(), Punctuated::parse_separated_nonempty) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        body: braces!(many0!(TraitItem::parse)) >>
+        (ItemTrait {
+            attrs: attrs,
+            vis: vis,
+            unsafety: unsafety,
+            auto_token: auto_,
+            trait_token: trait_,
+            ident: ident,
+            generics: Generics {
+                where_clause: where_clause,
+                ..generics
+            },
+            colon_token: colon,
+            supertraits: bounds.unwrap_or_default(),
+            brace_token: body.0,
+            items: body.1,
+        })
+    ));
+
+    impl_synom!(TraitItem "trait item" alt!(
+        syn!(TraitItemConst) => { TraitItem::Const }
+        |
+        syn!(TraitItemMethod) => { TraitItem::Method }
+        |
+        syn!(TraitItemType) => { TraitItem::Type }
+        |
+        syn!(TraitItemMacro) => { TraitItem::Macro }
+    ));
+
+    impl_synom!(TraitItemConst "const trait item" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        const_: keyword!(const) >>
+        ident: syn!(Ident) >>
+        colon: punct!(:) >>
+        ty: syn!(Type) >>
+        default: option!(tuple!(punct!(=), syn!(Expr))) >>
+        semi: punct!(;) >>
+        (TraitItemConst {
+            attrs: attrs,
+            const_token: const_,
+            ident: ident,
+            colon_token: colon,
+            ty: ty,
+            default: default,
+            semi_token: semi,
+        })
+    ));
+
+    impl_synom!(TraitItemMethod "method trait item" do_parse!(
+        outer_attrs: many0!(Attribute::parse_outer) >>
+        constness: option!(keyword!(const)) >>
+        unsafety: option!(keyword!(unsafe)) >>
+        abi: option!(syn!(Abi)) >>
+        fn_: keyword!(fn) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        inputs: parens!(Punctuated::parse_terminated) >>
+        ret: syn!(ReturnType) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        body: option!(braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            call!(Block::parse_within),
+        ))) >>
+        semi: cond!(body.is_none(), punct!(;)) >>
+        ({
+            let (inner_attrs, stmts) = match body {
+                Some((b, (inner_attrs, stmts))) => (inner_attrs, Some((stmts, b))),
+                None => (Vec::new(), None),
+            };
+            TraitItemMethod {
+                attrs: {
+                    let mut attrs = outer_attrs;
+                    attrs.extend(inner_attrs);
+                    attrs
+                },
+                sig: MethodSig {
+                    constness: constness,
+                    unsafety: unsafety,
+                    abi: abi,
+                    ident: ident,
+                    decl: FnDecl {
+                        inputs: inputs.1,
+                        output: ret,
+                        fn_token: fn_,
+                        paren_token: inputs.0,
+                        variadic: None,
+                        generics: Generics {
+                            where_clause: where_clause,
+                            ..generics
+                        },
+                    },
+                },
+                default: stmts.map(|stmts| {
+                    Block {
+                        stmts: stmts.0,
+                        brace_token: stmts.1,
+                    }
+                }),
+                semi_token: semi,
+            }
+        })
+    ));
+
+    impl_synom!(TraitItemType "trait item type" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        type_: keyword!(type) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        colon: option!(punct!(:)) >>
+        bounds: cond!(colon.is_some(), Punctuated::parse_separated_nonempty) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        default: option!(tuple!(punct!(=), syn!(Type))) >>
+        semi: punct!(;) >>
+        (TraitItemType {
+            attrs: attrs,
+            type_token: type_,
+            ident: ident,
+            generics: Generics {
+                where_clause: where_clause,
+                ..generics
+            },
+            colon_token: colon,
+            bounds: bounds.unwrap_or_default(),
+            default: default,
+            semi_token: semi,
+        })
+    ));
+
+    impl_synom!(TraitItemMacro "trait item macro" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        mac: syn!(Macro) >>
+        semi: cond!(!is_brace(&mac.delimiter), punct!(;)) >>
+        (TraitItemMacro {
+            attrs: attrs,
+            mac: mac,
+            semi_token: semi,
+        })
+    ));
+
+    impl_synom!(ItemImpl "impl item" do_parse!(
+        outer_attrs: many0!(Attribute::parse_outer) >>
+        defaultness: option!(keyword!(default)) >>
+        unsafety: option!(keyword!(unsafe)) >>
+        impl_: keyword!(impl) >>
+        generics: syn!(Generics) >>
+        polarity_path: alt!(
+            do_parse!(
+                polarity: option!(punct!(!)) >>
+                path: syn!(Path) >>
+                for_: keyword!(for) >>
+                (Some((polarity, path, for_)))
+            )
+            |
+            epsilon!() => { |_| None }
+        ) >>
+        self_ty: syn!(Type) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        inner: braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            many0!(ImplItem::parse),
+        )) >>
+        (ItemImpl {
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend((inner.1).0);
+                attrs
+            },
+            defaultness: defaultness,
+            unsafety: unsafety,
+            impl_token: impl_,
+            generics: Generics {
+                where_clause: where_clause,
+                ..generics
+            },
+            trait_: polarity_path,
+            self_ty: Box::new(self_ty),
+            brace_token: inner.0,
+            items: (inner.1).1,
+        })
+    ));
+
+    impl_synom!(ImplItem "item in impl block" alt!(
+        syn!(ImplItemConst) => { ImplItem::Const }
+        |
+        syn!(ImplItemMethod) => { ImplItem::Method }
+        |
+        call!(unstable_async_method) => { ImplItem::Verbatim }
+        |
+        syn!(ImplItemType) => { ImplItem::Type }
+        |
+        syn!(ImplItemMacro) => { ImplItem::Macro }
+    ));
+
+    impl_synom!(ImplItemConst "const item in impl block" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        defaultness: option!(keyword!(default)) >>
+        const_: keyword!(const) >>
+        ident: syn!(Ident) >>
+        colon: punct!(:) >>
+        ty: syn!(Type) >>
+        eq: punct!(=) >>
+        value: syn!(Expr) >>
+        semi: punct!(;) >>
+        (ImplItemConst {
+            attrs: attrs,
+            vis: vis,
+            defaultness: defaultness,
+            const_token: const_,
+            ident: ident,
+            colon_token: colon,
+            ty: ty,
+            eq_token: eq,
+            expr: value,
+            semi_token: semi,
+        })
+    ));
+
+    impl_synom!(ImplItemMethod "method in impl block" do_parse!(
+        outer_attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        defaultness: option!(keyword!(default)) >>
+        constness: option!(keyword!(const)) >>
+        unsafety: option!(keyword!(unsafe)) >>
+        abi: option!(syn!(Abi)) >>
+        fn_: keyword!(fn) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        inputs: parens!(Punctuated::parse_terminated) >>
+        ret: syn!(ReturnType) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        inner_attrs_stmts: braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            call!(Block::parse_within),
+        )) >>
+        (ImplItemMethod {
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend((inner_attrs_stmts.1).0);
+                attrs
+            },
+            vis: vis,
+            defaultness: defaultness,
+            sig: MethodSig {
                 constness: constness,
                 unsafety: unsafety,
-                asyncness: asyncness,
                 abi: abi,
                 ident: ident,
-                decl: Box::new(FnDecl {
-                    fn_token: fn_token,
-                    paren_token: paren_token,
-                    inputs: inputs,
-                    output: output,
+                decl: FnDecl {
+                    fn_token: fn_,
+                    paren_token: inputs.0,
+                    inputs: inputs.1,
+                    output: ret,
+                    generics: Generics {
+                        where_clause: where_clause,
+                        ..generics
+                    },
                     variadic: None,
-                    generics: Generics {
-                        where_clause: where_clause,
-                        ..generics
-                    },
-                }),
-                block: Box::new(Block {
-                    brace_token: brace_token,
-                    stmts: stmts,
-                }),
-            })
-        }
-    }
-
-    impl Parse for FnArg {
-        fn parse(input: ParseStream) -> Result<Self> {
-            if input.peek(Token![&]) {
-                let ahead = input.fork();
-                if ahead.call(arg_self_ref).is_ok() && !ahead.peek(Token![:]) {
-                    return input.call(arg_self_ref).map(FnArg::SelfRef);
-                }
-            }
-
-            if input.peek(Token![mut]) || input.peek(Token![self]) {
-                let ahead = input.fork();
-                if ahead.call(arg_self).is_ok() && !ahead.peek(Token![:]) {
-                    return input.call(arg_self).map(FnArg::SelfValue);
-                }
-            }
-
-            let ahead = input.fork();
-            let err = match ahead.call(arg_captured) {
-                Ok(_) => return input.call(arg_captured).map(FnArg::Captured),
-                Err(err) => err,
-            };
-
-            let ahead = input.fork();
-            if ahead.parse::<Type>().is_ok() {
-                return input.parse().map(FnArg::Ignored);
-            }
-
-            Err(err)
-        }
-    }
-
-    fn arg_self_ref(input: ParseStream) -> Result<ArgSelfRef> {
-        Ok(ArgSelfRef {
-            and_token: input.parse()?,
-            lifetime: input.parse()?,
-            mutability: input.parse()?,
-            self_token: input.parse()?,
+                },
+            },
+            block: Block {
+                brace_token: inner_attrs_stmts.0,
+                stmts: (inner_attrs_stmts.1).1,
+            },
         })
-    }
+    ));
 
-    fn arg_self(input: ParseStream) -> Result<ArgSelf> {
-        Ok(ArgSelf {
-            mutability: input.parse()?,
-            self_token: input.parse()?,
+    named!(unstable_async_method -> ImplItemVerbatim, do_parse!(
+        begin: call!(verbatim::grab_cursor) >>
+        many0!(Attribute::parse_outer) >>
+        syn!(Visibility) >>
+        option!(keyword!(default)) >>
+        option!(keyword!(const)) >>
+        option!(keyword!(unsafe)) >>
+        keyword!(async) >>
+        option!(syn!(Abi)) >>
+        keyword!(fn) >>
+        syn!(Ident) >>
+        syn!(Generics) >>
+        parens!(Punctuated::<FnArg, Token![,]>::parse_terminated) >>
+        syn!(ReturnType) >>
+        option!(syn!(WhereClause)) >>
+        braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            call!(Block::parse_within),
+        )) >>
+        end: call!(verbatim::grab_cursor) >>
+        (ImplItemVerbatim {
+            tts: verbatim::token_range(begin..end),
         })
-    }
+    ));
 
-    fn arg_captured(input: ParseStream) -> Result<ArgCaptured> {
-        Ok(ArgCaptured {
-            pat: input.parse()?,
-            colon_token: input.parse()?,
-            ty: input.parse()?,
+    impl_synom!(ImplItemType "type in impl block" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        vis: syn!(Visibility) >>
+        defaultness: option!(keyword!(default)) >>
+        type_: keyword!(type) >>
+        ident: syn!(Ident) >>
+        generics: syn!(Generics) >>
+        where_clause: option!(syn!(WhereClause)) >>
+        eq: punct!(=) >>
+        ty: syn!(Type) >>
+        semi: punct!(;) >>
+        (ImplItemType {
+            attrs: attrs,
+            vis: vis,
+            defaultness: defaultness,
+            type_token: type_,
+            ident: ident,
+            generics: Generics {
+                where_clause: where_clause,
+                ..generics
+            },
+            eq_token: eq,
+            ty: ty,
+            semi_token: semi,
         })
-    }
+    ));
 
-    impl Parse for ItemMod {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let outer_attrs = input.call(Attribute::parse_outer)?;
-            let vis: Visibility = input.parse()?;
-            let mod_token: Token![mod] = input.parse()?;
-            let ident: Ident = input.parse()?;
+    impl_synom!(ImplItemMacro "macro in impl block" do_parse!(
+        attrs: many0!(Attribute::parse_outer) >>
+        mac: syn!(Macro) >>
+        semi: cond!(!is_brace(&mac.delimiter), punct!(;)) >>
+        (ImplItemMacro {
+            attrs: attrs,
+            mac: mac,
+            semi_token: semi,
+        })
+    ));
 
-            let lookahead = input.lookahead1();
-            if lookahead.peek(Token![;]) {
-                Ok(ItemMod {
-                    attrs: outer_attrs,
-                    vis: vis,
-                    mod_token: mod_token,
-                    ident: ident,
-                    content: None,
-                    semi: Some(input.parse()?),
-                })
-            } else if lookahead.peek(token::Brace) {
-                let content;
-                let brace_token = braced!(content in input);
-                let inner_attrs = content.call(Attribute::parse_inner)?;
-
-                let mut items = Vec::new();
-                while !content.is_empty() {
-                    items.push(content.parse()?);
-                }
-
-                Ok(ItemMod {
-                    attrs: private::attrs(outer_attrs, inner_attrs),
-                    vis: vis,
-                    mod_token: mod_token,
-                    ident: ident,
-                    content: Some((brace_token, items)),
-                    semi: None,
-                })
-            } else {
-                Err(lookahead.error())
-            }
-        }
-    }
-
-    impl Parse for ItemForeignMod {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let outer_attrs = input.call(Attribute::parse_outer)?;
-            let abi: Abi = input.parse()?;
-
-            let content;
-            let brace_token = braced!(content in input);
-            let inner_attrs = content.call(Attribute::parse_inner)?;
-            let mut items = Vec::new();
-            while !content.is_empty() {
-                items.push(content.parse()?);
-            }
-
-            Ok(ItemForeignMod {
-                attrs: private::attrs(outer_attrs, inner_attrs),
-                abi: abi,
-                brace_token: brace_token,
-                items: items,
-            })
-        }
-    }
-
-    impl Parse for ForeignItem {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let ahead = input.fork();
-            ahead.call(Attribute::parse_outer)?;
-            let vis: Visibility = ahead.parse()?;
-
-            let lookahead = ahead.lookahead1();
-            if lookahead.peek(Token![fn]) {
-                input.parse().map(ForeignItem::Fn)
-            } else if lookahead.peek(Token![static]) {
-                input.parse().map(ForeignItem::Static)
-            } else if lookahead.peek(Token![type]) {
-                input.parse().map(ForeignItem::Type)
-            } else if vis.is_inherited()
-                && (lookahead.peek(Ident)
-                    || lookahead.peek(Token![self])
-                    || lookahead.peek(Token![super])
-                    || lookahead.peek(Token![extern])
-                    || lookahead.peek(Token![crate])
-                    || lookahead.peek(Token![::]))
-            {
-                input.parse().map(ForeignItem::Macro)
-            } else {
-                Err(lookahead.error())
-            }
-        }
-    }
-
-    impl Parse for ForeignItemFn {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let vis: Visibility = input.parse()?;
-            let fn_token: Token![fn] = input.parse()?;
-            let ident: Ident = input.parse()?;
-            let generics: Generics = input.parse()?;
-
-            let content;
-            let paren_token = parenthesized!(content in input);
-            let mut inputs = Punctuated::new();
-            while !content.is_empty() && !content.peek(Token![...]) {
-                inputs.push_value(content.parse()?);
-                if content.is_empty() {
-                    break;
-                }
-                inputs.push_punct(content.parse()?);
-            }
-            let variadic: Option<Token![...]> = if inputs.empty_or_trailing() {
-                content.parse()?
-            } else {
-                None
-            };
-
-            let output: ReturnType = input.parse()?;
-            let where_clause: Option<WhereClause> = input.parse()?;
-            let semi_token: Token![;] = input.parse()?;
-
-            Ok(ForeignItemFn {
-                attrs: attrs,
-                vis: vis,
-                ident: ident,
-                decl: Box::new(FnDecl {
-                    fn_token: fn_token,
-                    paren_token: paren_token,
-                    inputs: inputs,
-                    output: output,
-                    variadic: variadic,
-                    generics: Generics {
-                        where_clause: where_clause,
-                        ..generics
-                    },
-                }),
-                semi_token: semi_token,
-            })
-        }
-    }
-
-    impl Parse for ForeignItemStatic {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ForeignItemStatic {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                static_token: input.parse()?,
-                mutability: input.parse()?,
-                ident: input.parse()?,
-                colon_token: input.parse()?,
-                ty: input.parse()?,
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for ForeignItemType {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ForeignItemType {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                type_token: input.parse()?,
-                ident: input.parse()?,
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for ForeignItemMacro {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let mac: Macro = input.parse()?;
-            let semi_token: Option<Token![;]> = if mac.delimiter.is_brace() {
-                None
-            } else {
-                Some(input.parse()?)
-            };
-            Ok(ForeignItemMacro {
-                attrs: attrs,
-                mac: mac,
-                semi_token: semi_token,
-            })
-        }
-    }
-
-    impl Parse for ItemType {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ItemType {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                type_token: input.parse()?,
-                ident: input.parse()?,
-                generics: {
-                    let mut generics: Generics = input.parse()?;
-                    generics.where_clause = input.parse()?;
-                    generics
-                },
-                eq_token: input.parse()?,
-                ty: input.parse()?,
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for ItemExistential {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ItemExistential {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                existential_token: input.parse()?,
-                type_token: input.parse()?,
-                ident: input.parse()?,
-                generics: {
-                    let mut generics: Generics = input.parse()?;
-                    generics.where_clause = input.parse()?;
-                    generics
-                },
-                colon_token: Some(input.parse()?),
-                bounds: {
-                    let mut bounds = Punctuated::new();
-                    while !input.peek(Token![;]) {
-                        if !bounds.is_empty() {
-                            bounds.push_punct(input.parse()?);
-                        }
-                        bounds.push_value(input.parse()?);
-                    }
-                    bounds
-                },
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for ItemStruct {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let vis = input.parse::<Visibility>()?;
-            let struct_token = input.parse::<Token![struct]>()?;
-            let ident = input.parse::<Ident>()?;
-            let generics = input.parse::<Generics>()?;
-            let (where_clause, fields, semi_token) = derive::parsing::data_struct(input)?;
-            Ok(ItemStruct {
-                attrs: attrs,
-                vis: vis,
-                struct_token: struct_token,
-                ident: ident,
-                generics: Generics {
-                    where_clause: where_clause,
-                    ..generics
-                },
-                fields: fields,
-                semi_token: semi_token,
-            })
-        }
-    }
-
-    impl Parse for ItemEnum {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let vis = input.parse::<Visibility>()?;
-            let enum_token = input.parse::<Token![enum]>()?;
-            let ident = input.parse::<Ident>()?;
-            let generics = input.parse::<Generics>()?;
-            let (where_clause, brace_token, variants) = derive::parsing::data_enum(input)?;
-            Ok(ItemEnum {
-                attrs: attrs,
-                vis: vis,
-                enum_token: enum_token,
-                ident: ident,
-                generics: Generics {
-                    where_clause: where_clause,
-                    ..generics
-                },
-                brace_token: brace_token,
-                variants: variants,
-            })
-        }
-    }
-
-    impl Parse for ItemUnion {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let vis = input.parse::<Visibility>()?;
-            let union_token = input.parse::<Token![union]>()?;
-            let ident = input.parse::<Ident>()?;
-            let generics = input.parse::<Generics>()?;
-            let (where_clause, fields) = derive::parsing::data_union(input)?;
-            Ok(ItemUnion {
-                attrs: attrs,
-                vis: vis,
-                union_token: union_token,
-                ident: ident,
-                generics: Generics {
-                    where_clause: where_clause,
-                    ..generics
-                },
-                fields: fields,
-            })
-        }
-    }
-
-    impl Parse for ItemTrait {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let vis: Visibility = input.parse()?;
-            let unsafety: Option<Token![unsafe]> = input.parse()?;
-            let auto_token: Option<Token![auto]> = input.parse()?;
-            let trait_token: Token![trait] = input.parse()?;
-            let ident: Ident = input.parse()?;
-            let mut generics: Generics = input.parse()?;
-            let colon_token: Option<Token![:]> = input.parse()?;
-
-            let mut supertraits = Punctuated::new();
-            if colon_token.is_some() {
-                loop {
-                    supertraits.push_value(input.parse()?);
-                    if input.peek(Token![where]) || input.peek(token::Brace) {
-                        break;
-                    }
-                    supertraits.push_punct(input.parse()?);
-                    if input.peek(Token![where]) || input.peek(token::Brace) {
-                        break;
-                    }
-                }
-            }
-
-            generics.where_clause = input.parse()?;
-
-            let content;
-            let brace_token = braced!(content in input);
-            let mut items = Vec::new();
-            while !content.is_empty() {
-                items.push(content.parse()?);
-            }
-
-            Ok(ItemTrait {
-                attrs: attrs,
-                vis: vis,
-                unsafety: unsafety,
-                auto_token: auto_token,
-                trait_token: trait_token,
-                ident: ident,
-                generics: generics,
-                colon_token: colon_token,
-                supertraits: supertraits,
-                brace_token: brace_token,
-                items: items,
-            })
-        }
-    }
-
-    impl Parse for ItemTraitAlias {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let vis: Visibility = input.parse()?;
-            let trait_token: Token![trait] = input.parse()?;
-            let ident: Ident = input.parse()?;
-            let mut generics: Generics = input.parse()?;
-            let eq_token: Token![=] = input.parse()?;
-
-            let mut bounds = Punctuated::new();
-            loop {
-                if input.peek(Token![where]) || input.peek(Token![;]) {
-                    break;
-                }
-                bounds.push_value(input.parse()?);
-                if input.peek(Token![where]) || input.peek(Token![;]) {
-                    break;
-                }
-                bounds.push_punct(input.parse()?);
-            }
-
-            generics.where_clause = input.parse()?;
-            let semi_token: Token![;] = input.parse()?;
-
-            Ok(ItemTraitAlias {
-                attrs: attrs,
-                vis: vis,
-                trait_token: trait_token,
-                ident: ident,
-                generics: generics,
-                eq_token: eq_token,
-                bounds: bounds,
-                semi_token: semi_token,
-            })
-        }
-    }
-
-    impl Parse for TraitItem {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let ahead = input.fork();
-            ahead.call(Attribute::parse_outer)?;
-
-            let lookahead = ahead.lookahead1();
-            if lookahead.peek(Token![const]) {
-                ahead.parse::<Token![const]>()?;
-                let lookahead = ahead.lookahead1();
-                if lookahead.peek(Ident) {
-                    input.parse().map(TraitItem::Const)
-                } else if lookahead.peek(Token![unsafe])
-                    || lookahead.peek(Token![extern])
-                    || lookahead.peek(Token![fn])
-                {
-                    input.parse().map(TraitItem::Method)
-                } else {
-                    Err(lookahead.error())
-                }
-            } else if lookahead.peek(Token![unsafe])
-                || lookahead.peek(Token![extern])
-                || lookahead.peek(Token![fn])
-            {
-                input.parse().map(TraitItem::Method)
-            } else if lookahead.peek(Token![type]) {
-                input.parse().map(TraitItem::Type)
-            } else if lookahead.peek(Ident)
-                || lookahead.peek(Token![self])
-                || lookahead.peek(Token![super])
-                || lookahead.peek(Token![extern])
-                || lookahead.peek(Token![crate])
-                || lookahead.peek(Token![::])
-            {
-                input.parse().map(TraitItem::Macro)
-            } else {
-                Err(lookahead.error())
-            }
-        }
-    }
-
-    impl Parse for TraitItemConst {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(TraitItemConst {
-                attrs: input.call(Attribute::parse_outer)?,
-                const_token: input.parse()?,
-                ident: input.parse()?,
-                colon_token: input.parse()?,
-                ty: input.parse()?,
-                default: {
-                    if input.peek(Token![=]) {
-                        let eq_token: Token![=] = input.parse()?;
-                        let default: Expr = input.parse()?;
-                        Some((eq_token, default))
-                    } else {
-                        None
-                    }
-                },
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for TraitItemMethod {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let outer_attrs = input.call(Attribute::parse_outer)?;
-            let constness: Option<Token![const]> = input.parse()?;
-            let unsafety: Option<Token![unsafe]> = input.parse()?;
-            let abi: Option<Abi> = input.parse()?;
-            let fn_token: Token![fn] = input.parse()?;
-            let ident: Ident = input.parse()?;
-            let generics: Generics = input.parse()?;
-
-            let content;
-            let paren_token = parenthesized!(content in input);
-            let inputs = content.parse_terminated(FnArg::parse)?;
-
-            let output: ReturnType = input.parse()?;
-            let where_clause: Option<WhereClause> = input.parse()?;
-
-            let lookahead = input.lookahead1();
-            let (brace_token, inner_attrs, stmts, semi_token) = if lookahead.peek(token::Brace) {
-                let content;
-                let brace_token = braced!(content in input);
-                let inner_attrs = content.call(Attribute::parse_inner)?;
-                let stmts = content.call(Block::parse_within)?;
-                (Some(brace_token), inner_attrs, stmts, None)
-            } else if lookahead.peek(Token![;]) {
-                let semi_token: Token![;] = input.parse()?;
-                (None, Vec::new(), Vec::new(), Some(semi_token))
-            } else {
-                return Err(lookahead.error());
-            };
-
-            Ok(TraitItemMethod {
-                attrs: private::attrs(outer_attrs, inner_attrs),
-                sig: MethodSig {
-                    constness: constness,
-                    unsafety: unsafety,
-                    asyncness: None,
-                    abi: abi,
-                    ident: ident,
-                    decl: FnDecl {
-                        fn_token: fn_token,
-                        paren_token: paren_token,
-                        inputs: inputs,
-                        output: output,
-                        variadic: None,
-                        generics: Generics {
-                            where_clause: where_clause,
-                            ..generics
-                        },
-                    },
-                },
-                default: brace_token.map(|brace_token| Block {
-                    brace_token: brace_token,
-                    stmts: stmts,
-                }),
-                semi_token: semi_token,
-            })
-        }
-    }
-
-    impl Parse for TraitItemType {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let type_token: Token![type] = input.parse()?;
-            let ident: Ident = input.parse()?;
-            let mut generics: Generics = input.parse()?;
-            let colon_token: Option<Token![:]> = input.parse()?;
-
-            let mut bounds = Punctuated::new();
-            if colon_token.is_some() {
-                while !input.peek(Token![where]) && !input.peek(Token![=]) && !input.peek(Token![;])
-                {
-                    if !bounds.is_empty() {
-                        bounds.push_punct(input.parse()?);
-                    }
-                    bounds.push_value(input.parse()?);
-                }
-            }
-
-            generics.where_clause = input.parse()?;
-            let default = if input.peek(Token![=]) {
-                let eq_token: Token![=] = input.parse()?;
-                let default: Type = input.parse()?;
-                Some((eq_token, default))
-            } else {
-                None
-            };
-            let semi_token: Token![;] = input.parse()?;
-
-            Ok(TraitItemType {
-                attrs: attrs,
-                type_token: type_token,
-                ident: ident,
-                generics: generics,
-                colon_token: colon_token,
-                bounds: bounds,
-                default: default,
-                semi_token: semi_token,
-            })
-        }
-    }
-
-    impl Parse for TraitItemMacro {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let mac: Macro = input.parse()?;
-            let semi_token: Option<Token![;]> = if mac.delimiter.is_brace() {
-                None
-            } else {
-                Some(input.parse()?)
-            };
-            Ok(TraitItemMacro {
-                attrs: attrs,
-                mac: mac,
-                semi_token: semi_token,
-            })
-        }
-    }
-
-    impl Parse for ItemImpl {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let outer_attrs = input.call(Attribute::parse_outer)?;
-            let defaultness: Option<Token![default]> = input.parse()?;
-            let unsafety: Option<Token![unsafe]> = input.parse()?;
-            let impl_token: Token![impl ] = input.parse()?;
-            let generics: Generics = input.parse()?;
-            let trait_ = {
-                let ahead = input.fork();
-                if ahead.parse::<Option<Token![!]>>().is_ok()
-                    && ahead.parse::<Path>().is_ok()
-                    && ahead.parse::<Token![for]>().is_ok()
-                {
-                    let polarity: Option<Token![!]> = input.parse()?;
-                    let path: Path = input.parse()?;
-                    let for_token: Token![for] = input.parse()?;
-                    Some((polarity, path, for_token))
-                } else {
-                    None
-                }
-            };
-            let self_ty: Type = input.parse()?;
-            let where_clause: Option<WhereClause> = input.parse()?;
-
-            let content;
-            let brace_token = braced!(content in input);
-            let inner_attrs = content.call(Attribute::parse_inner)?;
-
-            let mut items = Vec::new();
-            while !content.is_empty() {
-                items.push(content.parse()?);
-            }
-
-            Ok(ItemImpl {
-                attrs: private::attrs(outer_attrs, inner_attrs),
-                defaultness: defaultness,
-                unsafety: unsafety,
-                impl_token: impl_token,
-                generics: Generics {
-                    where_clause: where_clause,
-                    ..generics
-                },
-                trait_: trait_,
-                self_ty: Box::new(self_ty),
-                brace_token: brace_token,
-                items: items,
-            })
-        }
-    }
-
-    impl Parse for ImplItem {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let ahead = input.fork();
-            ahead.call(Attribute::parse_outer)?;
-            let vis: Visibility = ahead.parse()?;
-
-            let mut lookahead = ahead.lookahead1();
-            let defaultness = if lookahead.peek(Token![default]) && !ahead.peek2(Token![!]) {
-                let defaultness: Token![default] = ahead.parse()?;
-                lookahead = ahead.lookahead1();
-                Some(defaultness)
-            } else {
-                None
-            };
-
-            if lookahead.peek(Token![const]) {
-                ahead.parse::<Token![const]>()?;
-                let lookahead = ahead.lookahead1();
-                if lookahead.peek(Ident) {
-                    input.parse().map(ImplItem::Const)
-                } else if lookahead.peek(Token![unsafe])
-                    || lookahead.peek(Token![async])
-                    || lookahead.peek(Token![extern])
-                    || lookahead.peek(Token![fn])
-                {
-                    input.parse().map(ImplItem::Method)
-                } else {
-                    Err(lookahead.error())
-                }
-            } else if lookahead.peek(Token![unsafe])
-                || lookahead.peek(Token![async])
-                || lookahead.peek(Token![extern])
-                || lookahead.peek(Token![fn])
-            {
-                input.parse().map(ImplItem::Method)
-            } else if lookahead.peek(Token![type]) {
-                input.parse().map(ImplItem::Type)
-            } else if vis.is_inherited()
-                && defaultness.is_none()
-                && lookahead.peek(Token![existential])
-            {
-                input.parse().map(ImplItem::Existential)
-            } else if vis.is_inherited()
-                && defaultness.is_none()
-                && (lookahead.peek(Ident)
-                    || lookahead.peek(Token![self])
-                    || lookahead.peek(Token![super])
-                    || lookahead.peek(Token![extern])
-                    || lookahead.peek(Token![crate])
-                    || lookahead.peek(Token![::]))
-            {
-                input.parse().map(ImplItem::Macro)
-            } else {
-                Err(lookahead.error())
-            }
-        }
-    }
-
-    impl Parse for ImplItemConst {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ImplItemConst {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                defaultness: input.parse()?,
-                const_token: input.parse()?,
-                ident: input.parse()?,
-                colon_token: input.parse()?,
-                ty: input.parse()?,
-                eq_token: input.parse()?,
-                expr: input.parse()?,
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for ImplItemMethod {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let outer_attrs = input.call(Attribute::parse_outer)?;
-            let vis: Visibility = input.parse()?;
-            let defaultness: Option<Token![default]> = input.parse()?;
-            let constness: Option<Token![const]> = input.parse()?;
-            let unsafety: Option<Token![unsafe]> = input.parse()?;
-            let asyncness: Option<Token![async]> = input.parse()?;
-            let abi: Option<Abi> = input.parse()?;
-            let fn_token: Token![fn] = input.parse()?;
-            let ident: Ident = input.parse()?;
-            let generics: Generics = input.parse()?;
-
-            let content;
-            let paren_token = parenthesized!(content in input);
-            let inputs = content.parse_terminated(FnArg::parse)?;
-
-            let output: ReturnType = input.parse()?;
-            let where_clause: Option<WhereClause> = input.parse()?;
-
-            let content;
-            let brace_token = braced!(content in input);
-            let inner_attrs = content.call(Attribute::parse_inner)?;
-            let stmts = content.call(Block::parse_within)?;
-
-            Ok(ImplItemMethod {
-                attrs: private::attrs(outer_attrs, inner_attrs),
-                vis: vis,
-                defaultness: defaultness,
-                sig: MethodSig {
-                    constness: constness,
-                    unsafety: unsafety,
-                    asyncness: asyncness,
-                    abi: abi,
-                    ident: ident,
-                    decl: FnDecl {
-                        fn_token: fn_token,
-                        paren_token: paren_token,
-                        inputs: inputs,
-                        output: output,
-                        variadic: None,
-                        generics: Generics {
-                            where_clause: where_clause,
-                            ..generics
-                        },
-                    },
-                },
-                block: Block {
-                    brace_token: brace_token,
-                    stmts: stmts,
-                },
-            })
-        }
-    }
-
-    impl Parse for ImplItemType {
-        fn parse(input: ParseStream) -> Result<Self> {
-            Ok(ImplItemType {
-                attrs: input.call(Attribute::parse_outer)?,
-                vis: input.parse()?,
-                defaultness: input.parse()?,
-                type_token: input.parse()?,
-                ident: input.parse()?,
-                generics: {
-                    let mut generics: Generics = input.parse()?;
-                    generics.where_clause = input.parse()?;
-                    generics
-                },
-                eq_token: input.parse()?,
-                ty: input.parse()?,
-                semi_token: input.parse()?,
-            })
-        }
-    }
-
-    impl Parse for ImplItemExistential {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let ety: ItemExistential = input.parse()?;
-            Ok(ImplItemExistential {
-                attrs: ety.attrs,
-                existential_token: ety.existential_token,
-                type_token: ety.type_token,
-                ident: ety.ident,
-                generics: ety.generics,
-                colon_token: ety.colon_token,
-                bounds: ety.bounds,
-                semi_token: ety.semi_token,
-            })
-        }
-    }
-
-    impl Parse for ImplItemMacro {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
-            let mac: Macro = input.parse()?;
-            let semi_token: Option<Token![;]> = if mac.delimiter.is_brace() {
-                None
-            } else {
-                Some(input.parse()?)
-            };
-            Ok(ImplItemMacro {
-                attrs: attrs,
-                mac: mac,
-                semi_token: semi_token,
-            })
-        }
-    }
-
-    impl Visibility {
-        fn is_inherited(&self) -> bool {
-            match *self {
-                Visibility::Inherited => true,
-                _ => false,
-            }
-        }
-    }
-
-    impl MacroDelimiter {
-        fn is_brace(&self) -> bool {
-            match *self {
-                MacroDelimiter::Brace(_) => true,
-                MacroDelimiter::Paren(_) | MacroDelimiter::Bracket(_) => false,
-            }
+    fn is_brace(delimiter: &MacroDelimiter) -> bool {
+        match *delimiter {
+            MacroDelimiter::Brace(_) => true,
+            MacroDelimiter::Paren(_) | MacroDelimiter::Bracket(_) => false,
         }
     }
 }
@@ -1961,12 +1617,9 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-
+    use attr::FilterAttrs;
     use proc_macro2::TokenStream;
     use quote::{ToTokens, TokenStreamExt};
-
-    use attr::FilterAttrs;
-    use print::TokensOrDefault;
 
     impl ToTokens for ItemExternCrate {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -2029,7 +1682,6 @@ mod printing {
             self.vis.to_tokens(tokens);
             self.constness.to_tokens(tokens);
             self.unsafety.to_tokens(tokens);
-            self.asyncness.to_tokens(tokens);
             self.abi.to_tokens(tokens);
             NamedDecl(&self.decl, &self.ident).to_tokens(tokens);
             self.block.brace_token.surround(tokens, |tokens| {
@@ -2077,23 +1729,6 @@ mod printing {
             self.generics.where_clause.to_tokens(tokens);
             self.eq_token.to_tokens(tokens);
             self.ty.to_tokens(tokens);
-            self.semi_token.to_tokens(tokens);
-        }
-    }
-
-    impl ToTokens for ItemExistential {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            tokens.append_all(self.attrs.outer());
-            self.vis.to_tokens(tokens);
-            self.existential_token.to_tokens(tokens);
-            self.type_token.to_tokens(tokens);
-            self.ident.to_tokens(tokens);
-            self.generics.to_tokens(tokens);
-            self.generics.where_clause.to_tokens(tokens);
-            if !self.bounds.is_empty() {
-                TokensOrDefault(&self.colon_token).to_tokens(tokens);
-                self.bounds.to_tokens(tokens);
-            }
             self.semi_token.to_tokens(tokens);
         }
     }
@@ -2166,20 +1801,6 @@ mod printing {
             self.brace_token.surround(tokens, |tokens| {
                 tokens.append_all(&self.items);
             });
-        }
-    }
-
-    impl ToTokens for ItemTraitAlias {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            tokens.append_all(self.attrs.outer());
-            self.vis.to_tokens(tokens);
-            self.trait_token.to_tokens(tokens);
-            self.ident.to_tokens(tokens);
-            self.generics.to_tokens(tokens);
-            self.eq_token.to_tokens(tokens);
-            self.bounds.to_tokens(tokens);
-            self.generics.where_clause.to_tokens(tokens);
-            self.semi_token.to_tokens(tokens);
         }
     }
 
@@ -2391,22 +2012,6 @@ mod printing {
         }
     }
 
-    impl ToTokens for ImplItemExistential {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            tokens.append_all(self.attrs.outer());
-            self.existential_token.to_tokens(tokens);
-            self.type_token.to_tokens(tokens);
-            self.ident.to_tokens(tokens);
-            self.generics.to_tokens(tokens);
-            self.generics.where_clause.to_tokens(tokens);
-            if !self.bounds.is_empty() {
-                TokensOrDefault(&self.colon_token).to_tokens(tokens);
-                self.bounds.to_tokens(tokens);
-            }
-            self.semi_token.to_tokens(tokens);
-        }
-    }
-
     impl ToTokens for ImplItemMacro {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(self.attrs.outer());
@@ -2453,14 +2058,6 @@ mod printing {
         }
     }
 
-    impl ToTokens for ForeignItemMacro {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            tokens.append_all(self.attrs.outer());
-            self.mac.to_tokens(tokens);
-            self.semi_token.to_tokens(tokens);
-        }
-    }
-
     impl ToTokens for ForeignItemVerbatim {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.tts.to_tokens(tokens);
@@ -2471,7 +2068,6 @@ mod printing {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.constness.to_tokens(tokens);
             self.unsafety.to_tokens(tokens);
-            self.asyncness.to_tokens(tokens);
             self.abi.to_tokens(tokens);
             NamedDecl(&self.decl, &self.ident).to_tokens(tokens);
         }

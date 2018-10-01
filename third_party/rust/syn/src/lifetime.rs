@@ -13,8 +13,7 @@ use std::hash::{Hash, Hasher};
 use proc_macro2::{Ident, Span};
 use unicode_xid::UnicodeXID;
 
-#[cfg(feature = "parsing")]
-use lookahead;
+use token::Apostrophe;
 
 /// A Rust lifetime: `'a`.
 ///
@@ -32,42 +31,25 @@ use lookahead;
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
 #[derive(Clone)]
 pub struct Lifetime {
-    pub apostrophe: Span,
+    pub apostrophe: Apostrophe,
     pub ident: Ident,
 }
 
 impl Lifetime {
-    /// # Panics
-    ///
-    /// Panics if the lifetime does not conform to the bulleted rules above.
-    ///
-    /// # Invocation
-    ///
-    /// ```
-    /// # extern crate proc_macro2;
-    /// # extern crate syn;
-    /// #
-    /// # use proc_macro2::Span;
-    /// # use syn::Lifetime;
-    /// #
-    /// # fn f() -> Lifetime {
-    /// Lifetime::new("'a", Span::call_site())
-    /// # }
-    /// ```
-    pub fn new(symbol: &str, span: Span) -> Self {
-        if !symbol.starts_with('\'') {
+    pub fn new(s: &str, span: Span) -> Self {
+        if !s.starts_with('\'') {
             panic!(
                 "lifetime name must start with apostrophe as in \"'a\", got {:?}",
-                symbol
+                s
             );
         }
 
-        if symbol == "'" {
+        if s == "'" {
             panic!("lifetime name must not be empty");
         }
 
-        fn xid_ok(symbol: &str) -> bool {
-            let mut chars = symbol.chars();
+        fn xid_ok(s: &str) -> bool {
+            let mut chars = s.chars();
             let first = chars.next().unwrap();
             if !(UnicodeXID::is_xid_start(first) || first == '_') {
                 return false;
@@ -80,13 +62,13 @@ impl Lifetime {
             true
         }
 
-        if !xid_ok(&symbol[1..]) {
-            panic!("{:?} is not a valid lifetime name", symbol);
+        if !xid_ok(&s[1..]) {
+            panic!("{:?} is not a valid lifetime name", s);
         }
 
         Lifetime {
-            apostrophe: span,
-            ident: Ident::new(&symbol[1..], span),
+            apostrophe: Apostrophe::default(),
+            ident: Ident::new(&s[1..], span),
         }
     }
 }
@@ -125,25 +107,30 @@ impl Hash for Lifetime {
 }
 
 #[cfg(feature = "parsing")]
-#[doc(hidden)]
-#[allow(non_snake_case)]
-pub fn Lifetime(marker: lookahead::TokenMarker) -> Lifetime {
-    match marker {}
-}
-
-#[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
+    use buffer::Cursor;
+    use parse_error;
+    use synom::PResult;
+    use synom::Synom;
 
-    use parse::{Parse, ParseStream, Result};
+    impl Synom for Lifetime {
+        fn parse(input: Cursor) -> PResult<Self> {
+            let (apostrophe, rest) = Apostrophe::parse(input)?;
+            let (ident, rest) = match rest.ident() {
+                Some(pair) => pair,
+                None => return parse_error(),
+            };
 
-    impl Parse for Lifetime {
-        fn parse(input: ParseStream) -> Result<Self> {
-            input.step(|cursor| {
-                cursor
-                    .lifetime()
-                    .ok_or_else(|| cursor.error("expected lifetime"))
-            })
+            let ret = Lifetime {
+                ident: ident,
+                apostrophe: apostrophe,
+            };
+            Ok((ret, rest))
+        }
+
+        fn description() -> Option<&'static str> {
+            Some("lifetime")
         }
     }
 }
@@ -151,15 +138,12 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-
-    use proc_macro2::{Punct, Spacing, TokenStream};
-    use quote::{ToTokens, TokenStreamExt};
+    use proc_macro2::TokenStream;
+    use quote::ToTokens;
 
     impl ToTokens for Lifetime {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            let mut apostrophe = Punct::new('\'', Spacing::Joint);
-            apostrophe.set_span(self.apostrophe);
-            tokens.append(apostrophe);
+            self.apostrophe.to_tokens(tokens);
             self.ident.to_tokens(tokens);
         }
     }
