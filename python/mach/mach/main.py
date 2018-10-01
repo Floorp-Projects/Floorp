@@ -452,41 +452,6 @@ To see more help for a specific command, run:
             # to command line handling (e.g alias, defaults) will be ignored.
             self.load_settings(args.settings_file)
 
-        def _check_debugger(program):
-            """Checks if debugger specified in command line is installed.
-
-            This internal function calls an in-tree library 'which'.
-
-            If the call does not raise any exceptions, mach is permitted
-            to continue execution.
-
-            Otherwise, mach execution is halted.
-
-            Args:
-                program (str): debugger program name.
-            """
-            from which import which, WhichError
-            try:
-                which(program)
-            except WhichError:
-                print("Specified debugger '{}' is not found.\n" +
-                      "Is it installed? Is it in your PATH?".format(program))
-                sys.exit(1)
-
-        # For the codepath where ./mach <test_type> --debugger=<program>,
-        # checks if the debugger specified is installed on system.
-        if (hasattr(args.command_args, "debugger") and
-                getattr(args.command_args, "debugger") is not None):
-            _check_debugger(getattr(args.command_args, "debugger"))
-        # For the codepath where ./mach test --debugger=<program> <test_type>,
-        # checks if the debugger specified is installed on system.
-        elif (hasattr(args.command_args, "extra_args") and
-                getattr(args.command_args, "extra_args")):
-            extra_args = getattr(args.command_args, "extra_args")
-            # This supports common use case where one debugger is specified.
-            debugger = [ea.split("=")[1] for ea in extra_args if "debugger" in ea]
-            _check_debugger(''.join(debugger))
-
         if not hasattr(args, 'mach_handler'):
             raise MachError('ArgumentParser result missing mach handler info.')
 
