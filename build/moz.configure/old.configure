@@ -193,7 +193,6 @@ def old_configure_options(*options):
     '--enable-libproxy',
     '--enable-llvm-hacks',
     '--enable-logrefcnt',
-    '--enable-maintenance-service',
     '--enable-memory-sanitizer',
     '--enable-mobile-optimize',
     '--enable-necko-wifi',
