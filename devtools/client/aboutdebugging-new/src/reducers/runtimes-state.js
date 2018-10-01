@@ -96,6 +96,7 @@ function runtimesReducer(state = RuntimesState(), action) {
       const usbRuntimes = runtimes.map(runtime => {
         return {
           id: runtime.id,
+          model: runtime._model,
           name: runtime.name,
           socketPath: runtime._socketPath,
           type: RUNTIMES.USB,
