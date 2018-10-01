@@ -23,11 +23,23 @@ function checkIsDefaultMenuItemVisible(visibleMenuItemIds) {
 // - Calling overrideContext({showDefaults:true}) causes the default menu items
 //   to be shown, but only after the extension's.
 // - overrideContext expires after the menu is opened once.
+// - overrideContext can be called from shadow DOM.
 add_task(async function overrideContext_in_extension_tab() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.webcomponents.shadowdom.enabled", true]],
+  });
+
   function extensionTabScript() {
     document.addEventListener("contextmenu", () => {
       browser.menus.overrideContext({});
       browser.test.sendMessage("oncontextmenu_in_dom_part_1");
+    }, {once: true});
+
+    let shadowRoot = document.getElementById("shadowHost").attachShadow({mode: "open"});
+    shadowRoot.innerHTML = `<a href="http://example.com/">Link</a>`;
+    shadowRoot.firstChild.addEventListener("contextmenu", () => {
+      browser.menus.overrideContext({});
+      browser.test.sendMessage("oncontextmenu_in_shadow_dom");
     }, {once: true});
 
     browser.menus.create({
@@ -63,6 +75,7 @@ add_task(async function overrideContext_in_extension_tab() {
       "tab.html": `
         <!DOCTYPE html><meta charset="utf-8">
         <a href="http://example.com/">Link</a>
+        <div id="shadowHost"></div>
         <script src="tab.js"></script>
       `,
       "tab.js": extensionTabScript,
@@ -78,6 +91,7 @@ add_task(async function overrideContext_in_extension_tab() {
 
       browser.menus.onShown.addListener(info => {
         browser.test.assertEq("bg_1,bg_2,tab_1,tab_2", info.menuIds.join(","), "Expected menu items.");
+        browser.test.assertEq("all,link", info.contexts.sort().join(","), "Expected menu contexts");
         browser.test.sendMessage("onShown");
       });
 
@@ -178,6 +192,20 @@ add_task(async function overrideContext_in_extension_tab() {
     await closeContextMenu();
   }
 
+  {
+    // Tests that overrideContext({}) can be used from a listener inside shadow DOM.
+    let menu = await openContextMenu(() => content.document.getElementById("shadowHost").shadowRoot.firstChild);
+    await extension.awaitMessage("oncontextmenu_in_shadow_dom");
+    await extension.awaitMessage("onShown");
+
+    Assert.deepEqual(
+      getVisibleChildrenIds(menu),
+      EXPECTED_EXTENSION_MENU_IDS,
+      "Expected only extension menu items after overrideContext({}) in shadow DOM");
+
+    await closeContextMenu();
+  }
+
   // Unloading the extension will automatically close the extension's tab.html
   await extension.unload();
   await otherExtension.unload();
@@ -268,10 +296,6 @@ add_task(async function overrideContext_sidebar_edge_cases() {
         () => { browser.menus.overrideContext({someInvalidParameter: true}); },
         /Unexpected property "someInvalidParameter"/,
         "overrideContext should be available and the parameters be validated.");
-      browser.test.assertThrows(
-        () => { browser.menus.overrideContext({}); },
-        /overrideContext must be called during a "contextmenu" event/,
-        "overrideContext should fail outside of a 'contextmenu' event.");
       browser.test.sendMessage("bg_test_done");
     },
   });
