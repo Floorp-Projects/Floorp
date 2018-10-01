@@ -62,7 +62,7 @@ class LineHeight extends PureComponent {
 
     return FontPropertyValue({
       autoIncrement: true,
-      label: getStr("fontinspector.lineHeightLabel"),
+      label: getStr("fontinspector.lineHeightLabelCapitalized"),
       min: 0,
       max: this.historicMax[unit],
       name: "line-height",
