@@ -1,9 +1,10 @@
 {
-  "name": "mozillaeslintsetup",
-  "description": "This package file is for setup of ESLint only for editor integration.",
+  "name": "mozilla-central",
+  "description": "This package file is for node modules used in mozilla-central",
   "repository": {},
   "license": "MPL-2.0",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "eslint": "5.6.0",
     "eslint-plugin-html": "4.0.6",
     "eslint-plugin-mozilla": "file:tools/lint/eslint/eslint-plugin-mozilla",
@@ -11,5 +12,6 @@
     "eslint-plugin-react": "7.11.1",
     "eslint-plugin-spidermonkey-js": "file:tools/lint/eslint/eslint-plugin-spidermonkey-js"
   },
-  "devDependencies": {}
+  "notes(private)": "We don't want to publish to npm, so this is marked as private",
+  "private": true
 }
