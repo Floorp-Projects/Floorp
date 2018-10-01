@@ -4,36 +4,19 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 
-ChromeUtils.defineModuleGetter(this, "DownloadsViewUI",
-  "resource:///modules/DownloadsViewUI.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadsCommon",
-  "resource:///modules/DownloadsCommon.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
+  DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+});
 
 const DOWNLOAD_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for downloads changed events
-
-class DownloadElement extends DownloadsViewUI.DownloadElementShell {
-  constructor(download, browser) {
-    super();
-    this._download = download;
-    this.element = browser;
-    this.element._shell = this;
-  }
-
-  get download() {
-    return this._download;
-  }
-
-  downloadsCmd_copyLocation() {
-    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(this.download.source.url);
-  }
-}
 
 this.DownloadsManager = class DownloadsManager {
   constructor(store) {
     this._downloadData = null;
     this._store = null;
-    this._viewableDownloadItems = new Map();
+    this._downloadItems = new Map();
     this._downloadTimer = null;
   }
 
@@ -43,17 +26,16 @@ this.DownloadsManager = class DownloadsManager {
     return timer;
   }
 
-  formatDownload(element) {
-    const downloadedItem = element.download;
-    const description = element.sizeStrings.stateLabel;
+  formatDownload(download) {
     return {
-      hostname: new URL(downloadedItem.source.url).hostname,
-      url: downloadedItem.source.url,
-      path: downloadedItem.target.path,
-      title: element.displayName,
-      description,
-      referrer: downloadedItem.source.referrer,
-      date_added: downloadedItem.endTime,
+      hostname: new URL(download.source.url).hostname,
+      url: download.source.url,
+      path: download.target.path,
+      title: DownloadsViewUI.getDisplayName(download),
+      description: DownloadsViewUI.getSizeWithUnits(download) ||
+                   DownloadsCommon.strings.sizeUnknown,
+      referrer: download.source.referrer,
+      date_added: download.endTime,
     };
   }
 
@@ -65,10 +47,8 @@ this.DownloadsManager = class DownloadsManager {
   }
 
   onDownloadAdded(download) {
-    const elem = new DownloadElement(download, this._browser);
-    const downloadedItem = elem.download;
-    if (!this._viewableDownloadItems.has(downloadedItem.source.url)) {
-      this._viewableDownloadItems.set(downloadedItem.source.url, elem);
+    if (!this._downloadItems.has(download.source.url)) {
+      this._downloadItems.set(download.source.url, download);
 
       // On startup, all existing downloads fire this notification, so debounce them
       if (this._downloadTimer) {
@@ -83,13 +63,13 @@ this.DownloadsManager = class DownloadsManager {
   }
 
   onDownloadRemoved(download) {
-    if (this._viewableDownloadItems.has(download.source.url)) {
-      this._viewableDownloadItems.delete(download.source.url);
+    if (this._downloadItems.has(download.source.url)) {
+      this._downloadItems.delete(download.source.url);
       this._store.dispatch({type: at.DOWNLOAD_CHANGED});
     }
   }
 
-  async getDownloads(threshold, {numItems = this._viewableDownloadItems.size, onlySucceeded = false, onlyExists = false}) {
+  async getDownloads(threshold, {numItems = this._downloadItems.size, onlySucceeded = false, onlyExists = false}) {
     if (!threshold) {
       return [];
     }
@@ -97,22 +77,22 @@ this.DownloadsManager = class DownloadsManager {
 
     // Only get downloads within the time threshold specified and sort by recency
     const downloadThreshold = Date.now() - threshold;
-    let downloads = [...this._viewableDownloadItems.values()]
-                      .filter(elem => elem.download.endTime > downloadThreshold)
-                      .sort((elem1, elem2) => elem1.download.endTime < elem2.download.endTime);
+    let downloads = [...this._downloadItems.values()]
+                      .filter(download => download.endTime > downloadThreshold)
+                      .sort((download1, download2) => download1.endTime < download2.endTime);
 
-    for (const elem of downloads) {
+    for (const download of downloads) {
       // Only include downloads where the file still exists
       if (onlyExists) {
         // Refresh download to ensure the 'exists' attribute is up to date
-        await elem.download.refresh();
-        if (!elem.download.target.exists) { continue; }
+        await download.refresh();
+        if (!download.target.exists) { continue; }
       }
       // Only include downloads that were completed successfully
       if (onlySucceeded) {
-        if (!elem.download.succeeded) { continue; }
+        if (!download.succeeded) { continue; }
       }
-      const formattedDownloadForHighlights = this.formatDownload(elem);
+      const formattedDownloadForHighlights = this.formatDownload(download);
       results.push(formattedDownloadForHighlights);
       if (results.length === numItems) {
         break;
@@ -133,30 +113,40 @@ this.DownloadsManager = class DownloadsManager {
   }
 
   onAction(action) {
-    let downloadsCmd;
+    let doDownloadAction = callback => {
+      let download = this._downloadItems.get(action.data.url);
+      if (download) {
+        callback(download);
+      }
+    };
+
     switch (action.type) {
       case at.COPY_DOWNLOAD_LINK:
-        downloadsCmd = "downloadsCmd_copyLocation";
+        doDownloadAction(download => {
+          DownloadsCommon.copyDownloadLink(download);
+        });
         break;
       case at.REMOVE_DOWNLOAD_FILE:
-        downloadsCmd = "downloadsCmd_delete";
+        doDownloadAction(download => {
+          DownloadsCommon.deleteDownload(download).catch(Cu.reportError);
+        });
         break;
       case at.SHOW_DOWNLOAD_FILE:
-        downloadsCmd = "downloadsCmd_show";
+        doDownloadAction(download => {
+          DownloadsCommon.showDownloadedFile(
+            new FileUtils.File(download.target.path));
+        });
         break;
       case at.OPEN_DOWNLOAD_FILE:
-        downloadsCmd = "downloadsCmd_open";
+        doDownloadAction(download => {
+          DownloadsCommon.openDownloadedFile(
+            new FileUtils.File(download.target.path), null,
+            this._browser.ownerGlobal);
+        });
         break;
       case at.UNINIT:
         this.uninit();
         break;
-    }
-    // Call the appropriate downloads command function based on the event we received
-    if (downloadsCmd) {
-      let elem = this._viewableDownloadItems.get(action.data.url);
-      if (elem) {
-        elem[downloadsCmd]();
-      }
     }
   }
 };

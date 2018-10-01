@@ -10,7 +10,7 @@
 #include "sechash.h"
 
 #include "gtest/gtest.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 #include "pk11_signature_test.h"
 #include "pk11_rsapss_vectors.h"

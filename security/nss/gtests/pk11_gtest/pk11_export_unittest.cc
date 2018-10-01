@@ -9,7 +9,7 @@
 #include "pk11pub.h"
 
 #include "gtest/gtest.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 
 namespace nss_test {
 

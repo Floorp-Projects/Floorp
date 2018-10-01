@@ -26,7 +26,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsAtom;
-class nsIPresShell;
 class nsIURI;
 class nsSVGClipPathFrame;
 class nsSVGMarkerFrame;
@@ -34,7 +33,6 @@ class nsSVGPaintServerFrame;
 class nsSVGFilterFrame;
 class nsSVGMaskFrame;
 namespace mozilla {
-class SVGFilterObserverList;
 namespace dom {
 class CanvasRenderingContext2D;
 class SVGGeometryElement;
@@ -161,384 +159,14 @@ protected:
 
   virtual Element* GetReferencedElementWithoutObserving() = 0;
 
+#ifdef DEBUG
+  void DebugObserverSet();
+#endif
+
   // Whether we're in our referenced element's observer list at this time.
   bool mInObserverList;
 };
 
-
-/*
- * SVG elements reference supporting resources by element ID. We need to
- * track when those resources change and when the document changes in ways
- * that affect which element is referenced by a given ID (e.g., when
- * element IDs change). The code here is responsible for that.
- *
- * When a frame references a supporting resource, we create a property
- * object derived from SVGIDRenderingObserver to manage the relationship. The
- * property object is attached to the referencing frame.
- */
-class SVGIDRenderingObserver : public SVGRenderingObserver
-{
-public:
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::IDTracker IDTracker;
-
-  SVGIDRenderingObserver(URLAndReferrerInfo* aURI, nsIContent* aObservingContent,
-                         bool aReferenceImage);
-  virtual ~SVGIDRenderingObserver();
-
-protected:
-  Element* GetReferencedElementWithoutObserving() override {
-    return mObservedElementTracker.get();
-  }
-
-  void OnRenderingChange() override;
-
-  /**
-   * Helper that provides a reference to the element with the ID that our
-   * observer wants to observe, and that will invalidate our observer if the
-   * element that that ID identifies changes to a different element (or none).
-   */
-  class ElementTracker final : public IDTracker
-  {
-  public:
-    explicit ElementTracker(SVGIDRenderingObserver* aOwningObserver)
-      : mOwningObserver(aOwningObserver)
-    {}
-  protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo) override {
-      mOwningObserver->StopObserving(); // stop observing the old element
-      IDTracker::ElementChanged(aFrom, aTo);
-      mOwningObserver->StartObserving(); // start observing the new element
-      mOwningObserver->OnRenderingChange();
-    }
-    /**
-     * Override IsPersistent because we want to keep tracking the element
-     * for the ID even when it changes.
-     */
-    virtual bool IsPersistent() override { return true; }
-  private:
-    SVGIDRenderingObserver* mOwningObserver;
-  };
-
-  ElementTracker mObservedElementTracker;
-};
-
-struct nsSVGFrameReferenceFromProperty
-{
-  explicit nsSVGFrameReferenceFromProperty(nsIFrame* aFrame)
-    : mFrame(aFrame)
-    , mFramePresShell(aFrame->PresShell())
-  {}
-
-  // Clear our reference to the frame.
-  void Detach();
-
-  // null if the frame has become invalid
-  nsIFrame* Get();
-
-private:
-  // The frame that this property is attached to, may be null
-  nsIFrame *mFrame;
-  // When a presshell is torn down, we don't delete the properties for
-  // each frame until after the frames are destroyed. So here we remember
-  // the presshell for the frames we care about and, before we use the frame,
-  // we test the presshell to see if it's destroying itself. If it is,
-  // then the frame pointer is not valid and we know the frame has gone away.
-  // mFramePresShell may be null, but when mFrame is non-null, mFramePresShell
-  // is guaranteed to be non-null, too.
-  nsIPresShell *mFramePresShell;
-};
-
-/**
- * Used for gradient-to-gradient, pattern-to-pattern and filter-to-filter
- * references to "template" elements (specified via the 'href' attributes).
- *
- * This is a special class for the case where we know we only want to call
- * InvalidateDirectRenderingObservers (as opposed to
- * InvalidateRenderingObservers).
- *
- * TODO(jwatt): If we added a new NS_FRAME_RENDERING_OBSERVER_CONTAINER state
- * bit to clipPath, filter, gradients, marker, mask, pattern and symbol, and
- * could have InvalidateRenderingObservers stop on reaching such an element,
- * then we would no longer need this class (not to mention improving perf by
- * significantly cutting down on ancestor traversal).
- */
-class SVGTemplateElementObserver : public SVGIDRenderingObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  SVGTemplateElementObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-                             bool aReferenceImage)
-    : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage)
-    , mFrameReference(aFrame)
-  {}
-
-protected:
-  virtual ~SVGTemplateElementObserver() = default; // non-public
-
-  virtual void OnRenderingChange() override;
-
-  nsSVGFrameReferenceFromProperty mFrameReference;
-};
-
-class nsSVGRenderingObserverProperty : public SVGIDRenderingObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  nsSVGRenderingObserverProperty(URLAndReferrerInfo* aURI, nsIFrame *aFrame,
-                                 bool aReferenceImage)
-    : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage)
-    , mFrameReference(aFrame)
-  {}
-
-protected:
-  virtual ~nsSVGRenderingObserverProperty() {}
-
-  virtual void OnRenderingChange() override;
-
-  nsSVGFrameReferenceFromProperty mFrameReference;
-};
-
-/**
- * In a filter chain, there can be multiple SVG reference filters.
- * e.g. filter: url(#svg-filter-1) blur(10px) url(#svg-filter-2);
- *
- * This class keeps track of one SVG reference filter in a filter chain.
- * e.g. url(#svg-filter-1)
- *
- * It fires invalidations when the SVG filter element's id changes or when
- * the SVG filter element's content changes.
- *
- * The SVGFilterObserverList class manages a list of SVGFilterObservers.
- */
-class SVGFilterObserver final : public SVGIDRenderingObserver
-{
-public:
-  SVGFilterObserver(URLAndReferrerInfo* aURI,
-                    nsIContent* aObservingContent,
-                    SVGFilterObserverList* aFilterChainObserver)
-    : SVGIDRenderingObserver(aURI, aObservingContent, false)
-    , mFilterObserverList(aFilterChainObserver)
-  {
-  }
-
-  // XXXjwatt: This will return false if the reference is to a filter in an
-  // external resource document that hasn't loaded yet!
-  bool ReferencesValidResource() { return GetAndObserveFilterFrame(); }
-
-  void DetachFromChainObserver() { mFilterObserverList = nullptr; }
-
-  /**
-   * @return the filter frame, or null if there is no filter frame
-   */
-  nsSVGFilterFrame* GetAndObserveFilterFrame();
-
-  // nsISupports
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(SVGFilterObserver)
-
-  void Invalidate() { OnRenderingChange(); };
-
-protected:
-  virtual ~SVGFilterObserver() {}
-
-  // SVGIDRenderingObserver
-  virtual void OnRenderingChange() override;
-
-private:
-  SVGFilterObserverList* mFilterObserverList;
-};
-
-/**
- * This class manages a list of SVGFilterObservers, which correspond to
- * reference to SVG filters in a list of filters in a given 'filter' property.
- * e.g. filter: url(#svg-filter-1) blur(10px) url(#svg-filter-2);
- *
- * In the above example, the SVGFilterObserverList will manage two
- * SVGFilterObservers, one for each of the references to SVG filters.  CSS
- * filters like "blur(10px)" don't reference filter elements, so they don't
- * need an SVGFilterObserver.  The style system invalidates changes to CSS
- * filters.
- */
-class SVGFilterObserverList : public nsISupports
-{
-public:
-  SVGFilterObserverList(const nsTArray<nsStyleFilter>& aFilters,
-                        nsIContent* aFilteredElement,
-                        nsIFrame* aFiltedFrame = nullptr);
-
-  bool ReferencesValidResources();
-  void Invalidate() { OnRenderingChange(); }
-
-  const nsTArray<RefPtr<SVGFilterObserver>>& GetObservers() const {
-    return mObservers;
-  }
-
-  // nsISupports
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(SVGFilterObserverList)
-
-protected:
-  virtual ~SVGFilterObserverList();
-
-  virtual void OnRenderingChange() = 0;
-
-private:
-
-  void DetachObservers()
-  {
-    for (uint32_t i = 0; i < mObservers.Length(); i++) {
-      mObservers[i]->DetachFromChainObserver();
-    }
-  }
-
-  nsTArray<RefPtr<SVGFilterObserver>> mObservers;
-};
-
-class SVGFilterObserverListForCSSProp final : public SVGFilterObserverList
-{
-public:
-  SVGFilterObserverListForCSSProp(const nsTArray<nsStyleFilter>& aFilters,
-                                  nsIFrame* aFilteredFrame)
-    : SVGFilterObserverList(aFilters, aFilteredFrame->GetContent(),
-                            aFilteredFrame)
-    , mFrameReference(aFilteredFrame)
-  {}
-
-  void DetachFromFrame() { mFrameReference.Detach(); }
-
-protected:
-  virtual void OnRenderingChange() override;
-
-  nsSVGFrameReferenceFromProperty mFrameReference;
-};
-
-class SVGMarkerObserver final: public nsSVGRenderingObserverProperty
-{
-public:
-  SVGMarkerObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame, bool aReferenceImage)
-    : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
-
-protected:
-  virtual void OnRenderingChange() override;
-};
-
-class SVGTextPathObserver final : public nsSVGRenderingObserverProperty
-{
-public:
-  SVGTextPathObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame, bool aReferenceImage)
-    : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage)
-    , mValid(true) {}
-
-  virtual bool ObservesReflow() override { return false; }
-
-protected:
-  virtual void OnRenderingChange() override;
-
-private:
-  /**
-   * Returns true if the target of the textPath is the frame of a 'path' element.
-   */
-  bool TargetIsValid();
-
-  bool mValid;
-};
-
-class nsSVGPaintingProperty final : public nsSVGRenderingObserverProperty
-{
-public:
-  nsSVGPaintingProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame, bool aReferenceImage)
-    : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
-
-protected:
-  virtual void OnRenderingChange() override;
-};
-
-class SVGMaskObserverList final : public nsISupports
-{
-public:
-  explicit SVGMaskObserverList(nsIFrame* aFrame);
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  const nsTArray<RefPtr<nsSVGPaintingProperty>>& GetObservers() const
-  {
-    return mProperties;
-  }
-
-  void ResolveImage(uint32_t aIndex);
-
-private:
-  virtual ~SVGMaskObserverList() {}
-  nsTArray<RefPtr<nsSVGPaintingProperty>> mProperties;
-  nsIFrame* mFrame;
-};
-
-/**
- * A manager for one-shot SVGRenderingObserver tracking.
- * nsSVGRenderingObservers can be added or removed. They are not strongly
- * referenced so an observer must be removed before it dies.
- * When InvalidateAll is called, all outstanding references get
- * OnNonDOMMutationRenderingChange()
- * called on them and the list is cleared. The intent is that
- * the observer will force repainting of whatever part of the document
- * is needed, and then at paint time the observer will do a clean lookup
- * of the referenced element and [re-]add itself to the element's observer list.
- *
- * InvalidateAll must be called before this object is destroyed, i.e.
- * before the referenced frame is destroyed. This should normally happen
- * via nsSVGContainerFrame::RemoveFrame, since only frames in the frame
- * tree should be referenced.
- */
-class SVGRenderingObserverList
-{
-public:
-  SVGRenderingObserverList()
-    : mObservers(4)
-  {
-    MOZ_COUNT_CTOR(SVGRenderingObserverList);
-  }
-
-  ~SVGRenderingObserverList() {
-    InvalidateAll();
-    MOZ_COUNT_DTOR(SVGRenderingObserverList);
-  }
-
-  void Add(SVGRenderingObserver* aObserver)
-  { mObservers.PutEntry(aObserver); }
-  void Remove(SVGRenderingObserver* aObserver)
-  { mObservers.RemoveEntry(aObserver); }
-#ifdef DEBUG
-  bool Contains(SVGRenderingObserver* aObserver)
-  { return (mObservers.GetEntry(aObserver) != nullptr); }
-#endif
-  bool IsEmpty()
-  { return mObservers.Count() == 0; }
-
-  /**
-   * Drop all our observers, and notify them that we have changed and dropped
-   * our reference to them.
-   */
-  void InvalidateAll();
-
-  /**
-   * Drop all observers that observe reflow, and notify them that we have changed and dropped
-   * our reference to them.
-   */
-  void InvalidateAllForReflow();
-
-  /**
-   * Drop all our observers, and notify them that we have dropped our reference
-   * to them.
-   */
-  void RemoveAll();
-
-private:
-  nsTHashtable<nsPtrHashKey<SVGRenderingObserver>> mObservers;
-};
 
 class SVGObserverUtils
 {
@@ -546,40 +174,7 @@ public:
   typedef mozilla::dom::CanvasRenderingContext2D CanvasRenderingContext2D;
   typedef mozilla::dom::Element Element;
   typedef dom::SVGGeometryElement SVGGeometryElement;
-  typedef nsInterfaceHashtable<nsRefPtrHashKey<URLAndReferrerInfo>,
-    nsIMutationObserver> URIObserverHashtable;
-
-  using PaintingPropertyDescriptor =
-    const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>*;
-  using URIObserverHashtablePropertyDescriptor =
-    const mozilla::FramePropertyDescriptor<URIObserverHashtable>*;
-
-  static void DestroyFilterProperty(SVGFilterObserverListForCSSProp* aProp)
-  {
-    // SVGFilterObserverListForCSSProp is cycle-collected, so dropping the last
-    // reference doesn't necessarily destroy it. We need to tell it that the
-    // frame has now become invalid.
-    aProp->DetachFromFrame();
-
-    aProp->Release();
-  }
-
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefToTemplateProperty,
-                                       SVGTemplateElementObserver)
-  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty,
-                                      SVGFilterObserverListForCSSProp,
-                                      DestroyFilterProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, SVGMaskObserverList)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsSVGPaintingProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerStartProperty, SVGMarkerObserver)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMidProperty, SVGMarkerObserver)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerEndProperty, SVGMarkerObserver)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(FillProperty, nsSVGPaintingProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(StrokeProperty, nsSVGPaintingProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefAsTextPathProperty,
-                                       SVGTextPathObserver)
-  NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
-                                      URIObserverHashtable)
+  using HrefToTemplateCallback = const std::function<void(nsAString&)>&;
 
   /**
    * Ensures that that if the given frame requires any resources that are in
@@ -603,11 +198,6 @@ public:
    * XXX rename to something more meaningful like RefreshResourceReferences?
    */
   static void UpdateEffects(nsIFrame* aFrame);
-
-  /**
-   * @param aFrame should be the first continuation
-   */
-  static SVGFilterObserverListForCSSProp* GetFilterObserverList(nsIFrame* aFrame);
 
   /**
    * @param aFrame must be a first-continuation.
@@ -785,7 +375,6 @@ public:
   static void
   RemoveTextPathObserver(nsIFrame* aTextPathFrame);
 
-  using HrefToTemplateCallback = const std::function<void(nsAString&)>&;
   /**
    * Gets the nsIFrame of a referenced SVG "template" element, if any, and
    * makes aFrame start observing rendering changes to the template element.
@@ -810,35 +399,10 @@ public:
                                const nsAtom* aHref);
 
   /**
-   * A helper function to resolve marker's URL.
-   */
-  static already_AddRefed<URLAndReferrerInfo>
-  GetMarkerURI(nsIFrame* aFrame,
-               RefPtr<mozilla::css::URLValue> nsStyleSVG::* aMarker);
-
-  /**
-   * A helper function to resolve filter URL.
-   */
-  static already_AddRefed<URLAndReferrerInfo>
-  GetFilterURI(nsIFrame* aFrame, uint32_t aIndex);
-
-  /**
    * A helper function to resolve filter URL.
    */
   static already_AddRefed<URLAndReferrerInfo>
   GetFilterURI(nsIFrame* aFrame, const nsStyleFilter& aFilter);
-
-  /**
-   * A helper function to resolve paint-server URL.
-   */
-  static already_AddRefed<URLAndReferrerInfo>
-  GetPaintURI(nsIFrame* aFrame, nsStyleSVGPaint nsStyleSVG::* aPaint);
-
-  /**
-   * A helper function to resolve SVG mask URL.
-   */
-  static already_AddRefed<URLAndReferrerInfo>
-  GetMaskURI(nsIFrame* aFrame, uint32_t aIndex);
 
   /**
    * Return a baseURL for resolving a local-ref URL.
