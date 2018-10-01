@@ -62,6 +62,7 @@
                 onsyncfrompreference="return gPrivacyPane.updateContentBlockingToggle()"
                 preference="browser.contentblocking.enabled"/>
       <button id="contentBlockingToggle"
+              data-l10n-attrs="tooltiptext"
               data-l10n-id="content-blocking-toggle-on"/>
       <label id="contentBlockingToggleLabel"
              data-l10n-id="content-blocking-toggle-label-on"
