@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef scoped_ptrs_h__
-#define scoped_ptrs_h__
+#ifndef nss_scoped_ptrs_h__
+#define nss_scoped_ptrs_h__
 
 #include <memory>
 #include "cert.h"
@@ -13,7 +13,6 @@
 #include "p12.h"
 #include "pk11pub.h"
 #include "pkcs11uri.h"
-#include "sslexp.h"
 
 struct ScopedDelete {
   void operator()(CERTCertificate* cert) { CERT_DestroyCertificate(cert); }
@@ -29,6 +28,9 @@ struct ScopedDelete {
   void operator()(PK11SymKey* key) { PK11_FreeSymKey(key); }
   void operator()(PRFileDesc* fd) { PR_Close(fd); }
   void operator()(SECAlgorithmID* id) { SECOID_DestroyAlgorithmID(id, true); }
+  void operator()(SECKEYEncryptedPrivateKeyInfo* e) {
+    SECKEY_DestroyEncryptedPrivateKeyInfo(e, true);
+  }
   void operator()(SECItem* item) { SECITEM_FreeItem(item, true); }
   void operator()(SECKEYPublicKey* key) { SECKEY_DestroyPublicKey(key); }
   void operator()(SECKEYPrivateKey* key) { SECKEY_DestroyPrivateKey(key); }
@@ -39,9 +41,6 @@ struct ScopedDelete {
   void operator()(PLArenaPool* arena) { PORT_FreeArena(arena, PR_FALSE); }
   void operator()(PK11Context* context) { PK11_DestroyContext(context, true); }
   void operator()(PK11GenericObject* obj) { PK11_DestroyGenericObject(obj); }
-  void operator()(SSLResumptionTokenInfo* token) {
-    SSL_DestroyResumptionTokenInfo(token);
-  }
   void operator()(SEC_PKCS12DecoderContext* dcx) {
     SEC_PKCS12DecoderFinish(dcx);
   }
@@ -69,6 +68,7 @@ SCOPED(PK11SlotInfo);
 SCOPED(PK11SymKey);
 SCOPED(PRFileDesc);
 SCOPED(SECAlgorithmID);
+SCOPED(SECKEYEncryptedPrivateKeyInfo);
 SCOPED(SECItem);
 SCOPED(SECKEYPublicKey);
 SCOPED(SECKEYPrivateKey);
@@ -77,10 +77,9 @@ SCOPED(PK11URI);
 SCOPED(PLArenaPool);
 SCOPED(PK11Context);
 SCOPED(PK11GenericObject);
-SCOPED(SSLResumptionTokenInfo);
 SCOPED(SEC_PKCS12DecoderContext);
 SCOPED(CERTDistNames);
 
 #undef SCOPED
 
-#endif  // scoped_ptrs_h__
+#endif  // nss_scoped_ptrs_h__
