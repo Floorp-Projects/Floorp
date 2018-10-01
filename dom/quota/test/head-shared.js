@@ -10,6 +10,9 @@ function getBuffer(size)
   return buffer;
 }
 
+// May be called for any size, but you should call getBuffer() if you know
+// that size is big and that randomness is not necessary because it is
+// noticeably faster.
 function getRandomBuffer(size)
 {
   let buffer = getBuffer(size);

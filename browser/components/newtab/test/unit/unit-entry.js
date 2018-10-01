@@ -5,15 +5,6 @@ import chaiJsonSchema from "chai-json-schema";
 import enzyme from "enzyme";
 enzyme.configure({adapter: new Adapter()});
 
-class DownloadElementShell {
-  downloadsCmd_open() {}
-  downloadsCmd_show() {}
-  downloadsCmd_openReferrer() {}
-  downloadsCmd_delete() {}
-  get sizeStrings() { return {stateLabel: "1.5 MB"}; }
-  displayName() {}
-}
-
 // Cause React warnings to make tests that trigger them fail
 const origConsoleError = console.error; // eslint-disable-line no-console
 console.error = function(msg, ...args) { // eslint-disable-line no-console
@@ -104,7 +95,14 @@ const TEST_GLOBAL = {
   PluralForm: {get() {}},
   Preferences: FakePrefs,
   PrivateBrowsingUtils: {isWindowPrivate: () => false},
-  DownloadsViewUI: {DownloadElementShell},
+  DownloadsViewUI: {
+    getDisplayName: () => "filename.ext",
+    getSizeWithUnits: () => "1.5 MB",
+  },
+  FileUtils: {
+    // eslint-disable-next-line object-shorthand
+    File: function() {}, // NB: This is a function/constructor
+  },
   Services: {
     locale: {
       get appLocaleAsLangTag() { return "en-US"; },

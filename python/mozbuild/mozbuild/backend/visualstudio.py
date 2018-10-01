@@ -230,8 +230,10 @@ class VisualStudioBackend(CommonBackend):
             debugger=None
             if prefix == 'binary':
                 if item.startswith(self.environment.substs['MOZ_APP_NAME']):
-                    debugger = ('$(TopObjDir)\\dist\\bin\\%s' % item,
-                        '-no-remote -profile $(TopObjDir)\\tmp\\profile-default')
+                    app_args = '-no-remote -profile $(TopObjDir)\\tmp\\profile-default'
+                    if self.environment.substs.get('MOZ_LAUNCHER_PROCESS', False):
+                        app_args += ' -wait-for-browser'
+                    debugger = ('$(TopObjDir)\\dist\\bin\\%s' % item, app_args)
                 else:
                     debugger = ('$(TopObjDir)\\dist\\bin\\%s' % item, '')
 

@@ -419,11 +419,6 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
     } else {
       this._updateState();
     }
-
-    // This cannot be placed within onStateChanged because when a download goes
-    // from hasBlockedData to !hasBlockedData it will still remain in the same state.
-    this.element.classList.toggle("temporary-block",
-                                  !!this.download.hasBlockedData);
   }
 
   /**
@@ -433,7 +428,7 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
   _updateState() {
     super._updateState();
     this.element.setAttribute("label", this.element.getAttribute("displayName"));
-    this.element.setAttribute("tooltiptext", this.element.getAttribute("fullStatus"));
+    this.element.setAttribute("tooltiptext", this.element.getAttribute("status"));
 
     if (this.isCommandEnabled("downloadsCmd_show")) {
       this.element.setAttribute("openLabel", kButtonLabels.open);
@@ -463,8 +458,6 @@ DownloadsSubview.Button = class extends DownloadsViewUI.DownloadElementShell {
    * Command handler; copy the download URL to the OS general clipboard.
    */
   downloadsCmd_copyLocation() {
-    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"]
-                      .getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(this.download.source.url);
+    DownloadsCommon.copyDownloadLink(this.download);
   }
 };
