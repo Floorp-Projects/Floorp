@@ -983,6 +983,22 @@ set_define('MOZ_PEERCONNECTION', webrtc)
 set_config('MOZ_WEBRTC_ASSERT_ALWAYS', webrtc)
 set_define('MOZ_WEBRTC_ASSERT_ALWAYS', webrtc)
 
+# RAW media
+# ==============================================================
+
+@depends(target, webrtc)
+def raw_media_default(target, webrtc):
+    if target.os == 'Android':
+        return True
+    if webrtc:
+        return True
+
+option('--enable-raw', help='Enable support for RAW media',
+       default=raw_media_default)
+
+set_config('MOZ_RAW', depends_if('--enable-raw')(lambda _: True))
+set_define('MOZ_RAW', depends_if('--enable-raw')(lambda _: True))
+
 # ASan Reporter Addon
 # ==============================================================
 option('--enable-address-sanitizer-reporter',
