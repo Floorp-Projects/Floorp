@@ -3003,19 +3003,6 @@ AC_CHECK_PROGS(WGET, wget, "")
 AC_SUBST(WGET)
 
 dnl ========================================================
-dnl Bundled fonts on desktop platforms
-dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(bundled-fonts,
-[  --enable-bundled-fonts  Enable support for bundled fonts on desktop platforms],
-    MOZ_BUNDLED_FONTS=1,
-    MOZ_BUNDLED_FONTS=)
-
-if test -n "$MOZ_BUNDLED_FONTS"; then
-  AC_DEFINE(MOZ_BUNDLED_FONTS)
-fi
-
-dnl ========================================================
 dnl Verify MAR signatures
 dnl ========================================================
 

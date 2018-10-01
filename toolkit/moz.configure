@@ -1097,3 +1097,21 @@ set_define('MOZ_MAINTENANCE_SERVICE',
 set_config('MOZ_MAINTENANCE_SERVICE',
            depends_if('--enable-maintenance-service',
                       when=target_is_windows)(lambda _: True))
+
+# Bundled fonts on desktop platform
+# ==============================================================
+
+@depends(target)
+def bundled_fonts_default(target):
+    return target.os == 'WINNT' or target.kernel == 'Linux'
+
+@depends(build_project)
+def allow_bundled_fonts(project):
+    return project == 'browser'
+
+option('--enable-bundled-fonts', default=bundled_fonts_default,
+       when=allow_bundled_fonts,
+       help='Enable support for bundled fonts on desktop platforms')
+
+set_define('MOZ_BUNDLED_FONTS',
+           depends_if('--enable-bundled-fonts', when=allow_bundled_fonts)(lambda _: True))
