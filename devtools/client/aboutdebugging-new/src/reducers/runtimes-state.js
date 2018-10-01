@@ -40,7 +40,7 @@ function RuntimesState(networkRuntimes = []) {
 function runtimesReducer(state = RuntimesState(), action) {
   switch (action.type) {
     case CONNECT_RUNTIME_SUCCESS: {
-      const { id, client, info } = action.runtime;
+      const { id, client } = action.runtime;
 
       // Find the array of runtimes that contains the updated runtime.
       const runtime = findRuntimeById(id, state);
@@ -50,7 +50,7 @@ function runtimesReducer(state = RuntimesState(), action) {
       // Add the new client to the runtime.
       const updatedRuntimes = runtimesToUpdate.map(r => {
         if (r.id === id) {
-          return Object.assign({}, r, { client, info });
+          return Object.assign({}, r, { client });
         }
         return r;
       });
@@ -68,7 +68,7 @@ function runtimesReducer(state = RuntimesState(), action) {
       // Remove the client from the updated runtime.
       const updatedRuntimes = runtimesToUpdate.map(r => {
         if (r.id === id) {
-          return Object.assign({}, r, { client: null, info: null });
+          return Object.assign({}, r, { client: null });
         }
         return r;
       });
@@ -96,7 +96,6 @@ function runtimesReducer(state = RuntimesState(), action) {
       const usbRuntimes = runtimes.map(runtime => {
         return {
           id: runtime.id,
-          model: runtime._model,
           name: runtime.name,
           socketPath: runtime._socketPath,
           type: RUNTIMES.USB,
