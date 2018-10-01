@@ -12,18 +12,20 @@
  */
 
 const Services = require("Services");
+const flags = require("devtools/shared/flags");
 const {
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_FONT_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_VARIABLE_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
-const { getColor } = require("devtools/client/shared/theme");
-const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 
 loader.lazyRequireGetter(this, "getCssProperties",
   "devtools/shared/fronts/css-properties", true);
-
+loader.lazyRequireGetter(this, "getColor",
+  "devtools/client/shared/theme", true);
+loader.lazyRequireGetter(this, "HTMLTooltip",
+  "devtools/client/shared/widgets/tooltip/HTMLTooltip", true);
 loader.lazyRequireGetter(this, "getImageDimensions",
   "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
 loader.lazyRequireGetter(this, "setImageTooltip",
@@ -84,10 +86,17 @@ TooltipsOverlay.prototype = {
 
     this._isStarted = true;
 
-    // For now, preview tooltip has to be instantiated on startup in order to
-    // call tooltip.startTogglingOnHover. Ideally startTogglingOnHover wouldn't be part
-    // of HTMLTooltip and offer a way to lazy load this tooltip.
-    this.getTooltip("previewTooltip");
+    // Instantiate the preview tooltip when the rule/computed view is hovered over in
+    // order to call tooltip.starTogglingOnHover. This will allow the preview tooltip
+    // to be shown when an appropriate element is hovered over.
+    if (flags.testing) {
+      this.getTooltip("previewTooltip");
+    } else {
+      // Lazily get the preview tooltip to avoid loading HTMLTooltip.
+      this.view.element.addEventListener("mousemove", () => {
+        this.getTooltip("previewTooltip");
+      }, { once: true });
+    }
   },
 
   /**
