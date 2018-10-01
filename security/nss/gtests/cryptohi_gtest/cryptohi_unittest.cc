@@ -8,7 +8,7 @@
 
 #include "gtest/gtest.h"
 
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
 #include "cryptohi.h"
 #include "secitem.h"
 #include "secerr.h"
