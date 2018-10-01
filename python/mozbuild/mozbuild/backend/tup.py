@@ -1105,7 +1105,7 @@ class TupBackend(CommonBackend):
             if not path:
                 raise Exception("Cannot install to " + target)
 
-        js_shell = self.environment.substs.get('JS_SHELL_NAME')
+        js_shell = obj.config.substs.get('JS_SHELL_NAME')
         if js_shell:
             js_shell = '%s%s' % (js_shell,
                                  self.environment.substs['BIN_SUFFIX'])
