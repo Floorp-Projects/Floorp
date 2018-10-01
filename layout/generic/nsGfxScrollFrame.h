@@ -687,6 +687,9 @@ protected:
   bool HasBgAttachmentLocal() const;
   uint8_t GetScrolledFrameDir() const;
 
+  // Removes any RefreshDriver observers we might have registered.
+  void RemoveObservers();
+
   static void EnsureFrameVisPrefsCached();
   static bool sFrameVisPrefsCached;
   // The number of scrollports wide/high to expand when tracking frame visibility.
