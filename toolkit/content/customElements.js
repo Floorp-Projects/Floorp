@@ -159,23 +159,30 @@ function getInterfaceProxy(obj) {
 // Attach the base class to the window so other scripts can use it:
 window.MozXULElement = MozXULElement;
 
-for (let script of [
-  "chrome://global/content/elements/general.js",
-  "chrome://global/content/elements/textbox.js",
-  "chrome://global/content/elements/tabbox.js",
-]) {
-  Services.scriptloader.loadSubScript(script, window);
-}
+// For now, don't load any elements in the extension dummy document.
+// We will want to load <browser> when that's migrated (bug 1441935).
+const isDummyDocument = document.documentURI == "chrome://extensions/content/dummy.xul";
+if (!isDummyDocument) {
 
-for (let [tag, script] of [
-  ["findbar", "chrome://global/content/elements/findbar.js"],
-  ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
-  ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
-  ["editor", "chrome://global/content/elements/editor.js"],
-]) {
-  customElements.setElementCreationCallback(tag, () => {
+  for (let script of [
+    "chrome://global/content/elements/general.js",
+    "chrome://global/content/elements/textbox.js",
+    "chrome://global/content/elements/tabbox.js",
+  ]) {
     Services.scriptloader.loadSubScript(script, window);
-  });
+  }
+
+  for (let [tag, script] of [
+    ["findbar", "chrome://global/content/elements/findbar.js"],
+    ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
+    ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
+    ["editor", "chrome://global/content/elements/editor.js"],
+  ]) {
+    customElements.setElementCreationCallback(tag, () => {
+      Services.scriptloader.loadSubScript(script, window);
+    });
+  }
+
 }
 
 }
