@@ -240,7 +240,7 @@ ImageDocument::Destroy()
 {
   if (mImageContent) {
     // Remove our event listener from the image content.
-    nsCOMPtr<EventTarget> target = do_QueryInterface(mImageContent);
+    nsCOMPtr<EventTarget> target = mImageContent;
     target->RemoveEventListener(NS_LITERAL_STRING("load"), this, false);
     target->RemoveEventListener(NS_LITERAL_STRING("click"), this, false);
 
@@ -286,7 +286,7 @@ ImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
         CreateSyntheticDocument();
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic document");
 
-      target = do_QueryInterface(mImageContent);
+      target = mImageContent;
       target->AddEventListener(NS_LITERAL_STRING("load"), this, false);
       target->AddEventListener(NS_LITERAL_STRING("click"), this, false);
     }

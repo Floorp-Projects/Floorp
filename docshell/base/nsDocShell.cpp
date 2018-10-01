@@ -3832,7 +3832,7 @@ nsDocShell::AddChildSHEntryInternal(nsISHEntry* aCloneRef,
       index, getter_AddRefs(currentHE));
     NS_ENSURE_TRUE(currentHE, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsISHEntry> currentEntry(do_QueryInterface(currentHE));
+    nsCOMPtr<nsISHEntry> currentEntry(currentHE);
     if (currentEntry) {
       nsCOMPtr<nsISHEntry> nextEntry;
       uint32_t cloneID = aCloneRef->GetID();
@@ -6631,11 +6631,7 @@ nsDocShell::SuspendRefreshURIs()
 
       timer->Cancel();
 
-      nsCOMPtr<nsITimerCallback> rt = do_QueryInterface(callback);
-      NS_ASSERTION(rt,
-                   "RefreshURIList timer callbacks should only be RefreshTimer objects");
-
-      mRefreshURIList->ReplaceElementAt(rt, i);
+      mRefreshURIList->ReplaceElementAt(callback, i);
     }
   }
 
@@ -9501,7 +9497,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       // In some cases the Open call doesn't actually result in a new
       // window being opened.  We can detect these cases by examining the
       // document in |newWin|, if any.
-      nsCOMPtr<nsPIDOMWindowOuter> piNewWin = do_QueryInterface(newWin);
+      nsCOMPtr<nsPIDOMWindowOuter> piNewWin = newWin;
       if (piNewWin) {
         nsCOMPtr<nsIDocument> newDoc = piNewWin->GetExtantDoc();
         if (!newDoc || newDoc->IsInitialDocument()) {

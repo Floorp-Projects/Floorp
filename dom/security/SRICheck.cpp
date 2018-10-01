@@ -333,8 +333,7 @@ SRICheckDataVerifier::Verify(const SRIMetadata& aMetadata,
 
   if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
     nsAutoCString requestURL;
-    nsCOMPtr<nsIRequest> request;
-    request = do_QueryInterface(aChannel);
+    nsCOMPtr<nsIRequest> request = aChannel;
     request->GetName(requestURL);
     SRILOG(("SRICheckDataVerifier::Verify, url=%s (length=%zu)",
             requestURL.get(), mBytesHashed));

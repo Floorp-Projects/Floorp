@@ -1933,7 +1933,7 @@ nsNavHistoryQueryResultNode::GetTargetFolderGuid(nsACString& aGuid) {
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetQuery(nsINavHistoryQuery** _query)
 {
-  nsCOMPtr<nsINavHistoryQuery> query = do_QueryInterface(mQuery);
+  RefPtr<nsNavHistoryQuery> query = mQuery;
   query.forget(_query);
   return NS_OK;
 }
@@ -1943,7 +1943,7 @@ NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetQueryOptions(nsINavHistoryQueryOptions** _options)
 {
   MOZ_ASSERT(mOptions, "Options should be valid");
-  nsCOMPtr<nsINavHistoryQueryOptions> options = do_QueryInterface(mOptions);
+  RefPtr<nsNavHistoryQueryOptions> options = mOptions;
   options.forget(_options);
   return NS_OK;
 }
@@ -3055,7 +3055,7 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::GetQueryOptions(nsINavHistoryQueryOptions** _options)
 {
   MOZ_ASSERT(mOptions, "Options should be valid");
-  nsCOMPtr<nsINavHistoryQueryOptions> options = do_QueryInterface(mOptions);
+  RefPtr<nsNavHistoryQueryOptions> options = mOptions;
   options.forget(_options);
   return NS_OK;
 }

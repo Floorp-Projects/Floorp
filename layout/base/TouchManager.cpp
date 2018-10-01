@@ -307,7 +307,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         }
         nsCOMPtr<nsINode> targetNode(do_QueryInterface(targetPtr));
         if (!targetNode->IsInComposedDoc()) {
-          targetPtr = do_QueryInterface(info.mNonAnonymousTarget);
+          targetPtr = info.mNonAnonymousTarget;
         }
         touch->SetTouchTarget(targetPtr);
 
@@ -372,7 +372,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         nsCOMPtr<EventTarget> targetPtr = info.mTouch->mOriginalTarget;
         nsCOMPtr<nsINode> targetNode(do_QueryInterface(targetPtr));
         if (targetNode && !targetNode->IsInComposedDoc()) {
-          targetPtr = do_QueryInterface(info.mNonAnonymousTarget);
+          targetPtr = info.mNonAnonymousTarget;
         }
 
         aCurrentEventContent = do_QueryInterface(targetPtr);

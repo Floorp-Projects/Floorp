@@ -649,7 +649,7 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
   // Only attach if we're really in a document
   nsCOMPtr<nsIDocument> doc = contentNode->GetUncomposedDoc();
   if (doc)
-    piTarget = do_QueryInterface(doc);
+    piTarget = doc;
 
   if (!piTarget)
     return NS_ERROR_FAILURE;

@@ -414,7 +414,7 @@ nsHttpTransaction::Init(uint32_t caps,
                 MOZ_ASSERT(wrappedStream != nullptr);
                 LOG(("nsHttpTransaction::Init %p wrapping input stream using throttle queue %p\n",
                      this, queue));
-                mRequestStream = do_QueryInterface(wrappedStream);
+                mRequestStream = wrappedStream;
             }
         }
     }

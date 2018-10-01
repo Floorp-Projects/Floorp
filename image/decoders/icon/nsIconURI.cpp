@@ -713,7 +713,7 @@ nsMozIconURI::Deserialize(const URIParams& aParams)
 NS_IMETHODIMP
 nsMozIconURI::GetInnerURI(nsIURI** aURI)
 {
-  nsCOMPtr<nsIURI> iconURL = do_QueryInterface(mIconURL);
+  nsCOMPtr<nsIURI> iconURL = mIconURL;
   if (!iconURL) {
     *aURI = nullptr;
     return NS_ERROR_FAILURE;

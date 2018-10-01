@@ -2029,7 +2029,7 @@ ServiceWorkerPrivate::GetDebugger(nsIWorkerDebugger** aResult)
 
   MOZ_ASSERT(mWorkerPrivate);
 
-  nsCOMPtr<nsIWorkerDebugger> debugger = do_QueryInterface(mWorkerPrivate->Debugger());
+  nsCOMPtr<nsIWorkerDebugger> debugger = mWorkerPrivate->Debugger();
   debugger.forget(aResult);
 
   return NS_OK;

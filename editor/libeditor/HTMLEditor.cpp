@@ -490,7 +490,7 @@ HTMLEditor::FindSelectionRoot(nsINode* aNode)
   // permission script.
   if (IsReadonly()) {
     // We still want to allow selection in a readonly editor.
-    content = do_QueryInterface(GetRoot());
+    content = GetRoot();
     return content.forget();
   }
 

@@ -486,7 +486,7 @@ already_AddRefed<nsIEventTarget>
 DecodePool::GetIOEventTarget()
 {
   MutexAutoLock threadPoolLock(mMutex);
-  nsCOMPtr<nsIEventTarget> target = do_QueryInterface(mIOThread);
+  nsCOMPtr<nsIEventTarget> target = mIOThread;
   return target.forget();
 }
 

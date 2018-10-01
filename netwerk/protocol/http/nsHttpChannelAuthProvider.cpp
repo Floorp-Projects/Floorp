@@ -106,7 +106,7 @@ nsHttpChannelAuthProvider::Init(nsIHttpAuthenticableChannel *channel)
     rv = mAuthChannel->GetIsSSL(&mUsingSSL);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIProxiedChannel> proxied(do_QueryInterface(channel));
+    nsCOMPtr<nsIProxiedChannel> proxied(channel);
     if (proxied) {
         nsCOMPtr<nsIProxyInfo> pi;
         rv = proxied->GetProxyInfo(getter_AddRefs(pi));

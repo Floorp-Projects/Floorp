@@ -186,7 +186,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
   // Make sure to set the item type on the docshell _before_ calling
   // Create() so it knows what type it is.
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(mDocShell);
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
 

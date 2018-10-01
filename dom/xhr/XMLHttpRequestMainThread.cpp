@@ -2260,7 +2260,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     NS_ASSERTION(!mFlagSyncLooping,
       "We weren't supposed to support HTML parsing with XHR!");
     mParseEndListener = new nsXHRParseEndListener(this);
-    nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(mResponseXML);
+    nsCOMPtr<EventTarget> eventTarget = mResponseXML;
     EventListenerManager* manager =
       eventTarget->GetOrCreateListenerManager();
     manager->AddEventListenerByType(mParseEndListener,

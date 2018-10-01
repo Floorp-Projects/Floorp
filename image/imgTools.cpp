@@ -74,7 +74,7 @@ public:
 
       nsCOMPtr<imgIContainer> container;
       if (NS_SUCCEEDED(mStatus)) {
-        container = do_QueryInterface(mImage);
+        container = mImage;
       }
 
       mCallback->OnImageReady(container, mStatus);

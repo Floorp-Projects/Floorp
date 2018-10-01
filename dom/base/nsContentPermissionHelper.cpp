@@ -98,7 +98,7 @@ VisibilityChangeListener::RemoveListener()
     return;
   }
 
-  nsCOMPtr<EventTarget> target = do_QueryInterface(window->GetExtantDoc());
+  nsCOMPtr<EventTarget> target = window->GetExtantDoc();
   if (target) {
     target->RemoveSystemEventListener(NS_LITERAL_STRING(kVisibilityChange),
                                       /* listener */ this,

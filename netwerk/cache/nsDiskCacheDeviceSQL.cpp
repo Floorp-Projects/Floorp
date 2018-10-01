@@ -2865,7 +2865,7 @@ nsOfflineCacheDevice::SetCacheParentDirectory(nsIFile *parentDir)
   if (NS_FAILED(rv))
     return;
 
-  mCacheDirectory = do_QueryInterface(dir);
+  mCacheDirectory = dir;
 }
 
 void
