@@ -17,6 +17,7 @@ whitelist['nightly']['macosx64'] += [
     'ac_add_options --enable-instruments',
     'ac_add_options --enable-dtrace',
     'if test `uname -s` != Linux; then',
+    'fi',
 ]
 
 whitelist['nightly']['win64'] += [
@@ -28,9 +29,6 @@ for platform in all_platforms:
         'ac_add_options --enable-update-channel=release',
         'ac_add_options --enable-official-branding',
         'export BUILDING_RELEASE=1',
-        'if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then',
-        'MOZ_AUTOMATION_UPDATE_PACKAGING=1',
-        'fi',
     ]
 whitelist['release']['win32'] += ['export MOZ_PGO=1']
 whitelist['release']['win64'] += ['export MOZ_PGO=1']
