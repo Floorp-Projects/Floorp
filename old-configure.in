@@ -3003,19 +3003,6 @@ AC_CHECK_PROGS(WGET, wget, "")
 AC_SUBST(WGET)
 
 dnl ========================================================
-dnl Verify MAR signatures
-dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(verify-mar,
-[  --enable-verify-mar     Enable verifying MAR signatures],
-    MOZ_VERIFY_MAR_SIGNATURE=1,
-    MOZ_VERIFY_MAR_SIGNATURE= )
-
-if test -n "$MOZ_VERIFY_MAR_SIGNATURE"; then
-  AC_DEFINE(MOZ_VERIFY_MAR_SIGNATURE)
-fi
-
-dnl ========================================================
 dnl Enable building the signmar program.
 dnl This option is much different than the --enable-verify-mar option.
 dnl --enable-verify-mar is for enabling the verification check on MAR
@@ -4024,7 +4011,6 @@ AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
 AC_SUBST(MOZ_STUB_INSTALLER)
-AC_SUBST(MOZ_VERIFY_MAR_SIGNATURE)
 AC_SUBST(MOZ_ENABLE_SIGNMAR)
 AC_SUBST(MOZ_UPDATER)
 

@@ -1115,3 +1115,13 @@ option('--enable-bundled-fonts', default=bundled_fonts_default,
 
 set_define('MOZ_BUNDLED_FONTS',
            depends_if('--enable-bundled-fonts', when=allow_bundled_fonts)(lambda _: True))
+
+# Verify MAR signatures
+# ==============================================================
+
+option('--enable-verify-mar', help='Enable verifying MAR signatures')
+
+set_define('MOZ_VERIFY_MAR_SIGNATURE',
+           depends_if('--enable-verify-mar')(lambda _: True))
+set_config('MOZ_VERIFY_MAR_SIGNATURE',
+           depends_if('--enable-verify-mar')(lambda _: True))
