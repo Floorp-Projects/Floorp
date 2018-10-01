@@ -17,7 +17,8 @@
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
-#include "scoped_ptrs.h"
+#include "nss_scoped_ptrs.h"
+#include "scoped_ptrs_ssl.h"
 
 extern bool g_ssl_gtest_verbose;
 

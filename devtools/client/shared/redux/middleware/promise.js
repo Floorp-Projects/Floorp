@@ -3,10 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateUUID } = require("devtools/shared/generate-uuid");
-const {
-  entries, toObject, executeSoon
-} = require("devtools/shared/DevToolsUtils");
+loader.lazyRequireGetter(this, "generateUUID", "devtools/shared/generate-uuid", true);
+loader.lazyRequireGetter(this, "entries", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(this, "executeSoon", "devtools/shared/DevToolsUtils", true);
+loader.lazyRequireGetter(this, "toObject", "devtools/shared/DevToolsUtils", true);
+
 const PROMISE = exports.PROMISE = "@@dispatch/promise";
 
 function promiseMiddleware({ dispatch, getState }) {
