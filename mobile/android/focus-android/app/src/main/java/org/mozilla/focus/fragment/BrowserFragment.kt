@@ -901,7 +901,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             // Go back in web history
             goBack()
         } else {
-            if (session.source == Session.Source.ACTION_VIEW || session.source == Session.Source.CUSTOM_TAB) {
+            if (session.source == Session.Source.ACTION_VIEW || session.isCustomTabSession()) {
                 TelemetryWrapper.eraseBackToAppEvent()
 
                 // This session has been started from a VIEW intent. Go back to the previous app
