@@ -37,7 +37,7 @@ add_task(async function test_constructor_ok() {
 add_task(async function test_constructor_invalid() {
   Assert.throws(() => {
     new CrashManager({foo: true});
-  }, /Required key not present in options/);
+  }, /Unknown property in options/);
 });
 
 add_task(async function test_get_manager() {

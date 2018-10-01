@@ -28,7 +28,7 @@ add_task(async function test_main_process_crash() {
       },
       (minidump, extra) => {
         basename = minidump.leafName;
-        cm._eventsDirs = [getEventDir()];
+        Object.defineProperty(cm, "_eventsDirs", {value: [getEventDir()]});
         cm.aggregateEventsFiles().then(resolve, reject);
       },
       true);

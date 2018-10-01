@@ -113,37 +113,22 @@ function parseAndRemoveField(obj, field) {
  *     Telemetry histogram to report store size under.
  */
 var CrashManager = function(options) {
-  for (let k of ["pendingDumpsDir", "submittedDumpsDir", "eventsDirs",
-    "storeDir"]) {
-    if (!(k in options)) {
-      throw new Error("Required key not present in options: " + k);
-    }
-  }
-
   this._log = Log.repository.getLogger("Crashes.CrashManager");
 
   for (let k in options) {
-    let v = options[k];
+    let value = options[k];
 
     switch (k) {
       case "pendingDumpsDir":
-        this._pendingDumpsDir = v;
-        break;
-
       case "submittedDumpsDir":
-        this._submittedDumpsDir = v;
-        break;
-
       case "eventsDirs":
-        this._eventsDirs = v;
-        break;
-
       case "storeDir":
-        this._storeDir = v;
+        let key = "_" + k;
+        delete this[key];
+        Object.defineProperty(this, key, {value});
         break;
-
       case "telemetryStoreSizeKey":
-        this._telemetryStoreSizeKey = v;
+        this._telemetryStoreSizeKey = value;
         break;
 
       default:
@@ -220,6 +205,47 @@ this.CrashManager.prototype = Object.freeze({
   EVENT_FILE_ERROR_MALFORMED: "malformed",
   // The type of event is unknown.
   EVENT_FILE_ERROR_UNKNOWN_EVENT: "unknown-event",
+
+  _lazyGetDir(field, path, leaf) {
+    delete this[field];
+    let value = OS.Path.join(path, leaf);
+    Object.defineProperty(this, field, { value });
+    return value;
+  },
+
+  get _crDir() {
+    return this._lazyGetDir("_crDir",
+                            OS.Constants.Path.userApplicationDataDir,
+                            "Crash Reports");
+  },
+
+  get _storeDir() {
+    return this._lazyGetDir("_storeDir",
+                            OS.Constants.Path.profileDir,
+                            "crashes");
+  },
+
+  get _pendingDumpsDir() {
+    return this._lazyGetDir("_pendingDumpsDir",
+                            this._crDir,
+                            "pending");
+  },
+
+  get _submittedDumpsDir() {
+    return this._lazyGetDir("_submittedDumpsDir",
+                            this._crDir,
+                            "submitted");
+  },
+
+  get _eventsDirs() {
+    delete this._eventsDirs;
+    let value = [
+      OS.Path.join(this._crDir, "events"),
+      OS.Path.join(this._storeDir, "events"),
+    ];
+    Object.defineProperty(this, "_eventsDirs", { value });
+    return value;
+  },
 
   /**
    * Obtain a list of all dumps pending upload.
@@ -1430,15 +1456,7 @@ XPCOMUtils.defineLazyGetter(this.CrashManager, "Singleton", function() {
     return gCrashManager;
   }
 
-  let crPath = OS.Path.join(OS.Constants.Path.userApplicationDataDir,
-                            "Crash Reports");
-  let storePath = OS.Path.join(OS.Constants.Path.profileDir, "crashes");
-
   gCrashManager = new CrashManager({
-    pendingDumpsDir: OS.Path.join(crPath, "pending"),
-    submittedDumpsDir: OS.Path.join(crPath, "submitted"),
-    eventsDirs: [OS.Path.join(crPath, "events"), OS.Path.join(storePath, "events")],
-    storeDir: storePath,
     telemetryStoreSizeKey: "CRASH_STORE_COMPRESSED_BYTES",
   });
 
