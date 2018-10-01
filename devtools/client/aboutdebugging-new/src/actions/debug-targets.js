@@ -43,8 +43,8 @@ function inspectDebugTarget(type, id) {
     switch (type) {
       case DEBUG_TARGETS.TAB: {
         // Open tab debugger in new window.
-        if (runtime.type === RUNTIMES.NETWORK) {
-          const [host, port] = runtime.id.split(":");
+        if (runtime.type === RUNTIMES.NETWORK || runtime.type === RUNTIMES.USB) {
+          const { host, port } = client.transport.connectionSettings;
           window.open(`about:devtools-toolbox?type=tab&id=${id}` +
                       `&host=${host}&port=${port}`);
         } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
