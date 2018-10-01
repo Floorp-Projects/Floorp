@@ -9,7 +9,6 @@
 
 #include "CTLog.h"
 #include "CTVerifyResult.h"
-#include "mozilla/Vector.h"
 #include "pkix/Result.h"
 #include "ScopedNSSTypes.h"
 
@@ -17,8 +16,8 @@ namespace mozilla { namespace ct {
 
 // Retuns the list of unique CT log operator IDs appearing in the provided
 // list of verified SCTs.
-pkix::Result GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
-                                                  CTLogOperatorList& operators);
+void GetCTLogOperatorsFromVerifiedSCTList(const VerifiedSCTList& list,
+                                          CTLogOperatorList& operators);
 
 // Helper class used by CTPolicyEnforcer to check the CT log operators
 // diversity requirements of the CT Policy.

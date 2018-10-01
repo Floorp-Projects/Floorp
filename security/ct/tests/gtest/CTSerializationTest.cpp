@@ -48,8 +48,7 @@ TEST_F(CTSerializationTest, FailsToDecodePartialDigitallySigned)
 {
   Input partial;
   ASSERT_EQ(Success,
-    partial.Init(mTestDigitallySigned.begin(),
-      mTestDigitallySigned.length() - 5));
+    partial.Init(mTestDigitallySigned.data(), mTestDigitallySigned.size() - 5));
   Reader partialReader(partial);
 
   DigitallySigned parsed;
@@ -64,7 +63,7 @@ TEST_F(CTSerializationTest, EncodesDigitallySigned)
     DigitallySigned::HashAlgorithm::SHA256;
   digitallySigned.signatureAlgorithm =
     DigitallySigned::SignatureAlgorithm::ECDSA;
-  digitallySigned.signatureData = cloneBuffer(mTestSignatureData);
+  digitallySigned.signatureData = mTestSignatureData;
 
   Buffer encoded;
 
@@ -79,14 +78,12 @@ TEST_F(CTSerializationTest, EncodesLogEntryForX509Cert)
 
   Buffer encoded;
   ASSERT_EQ(Success, EncodeLogEntry(entry, encoded));
-  EXPECT_EQ((718U + 5U), encoded.length());
+  EXPECT_EQ((718U + 5U), encoded.size());
   // First two bytes are log entry type. Next, length:
-  // Length is 718 which is 512 + 206, which is 0x2ce
-  Buffer expectedPrefix;
-  MOZ_RELEASE_ASSERT(expectedPrefix.append("\0\0\0\x2\xCE", 5));
+  // Length is 718 which is 512 + 206, which is { 0, ..., 2, 206 }.
+  Buffer expectedPrefix = { 0, 0, 0, 2, 206 };
   Buffer encodedPrefix;
-  MOZ_RELEASE_ASSERT(encodedPrefix.
-    append(encoded.begin(), encoded.begin() + 5));
+  encodedPrefix.assign(encoded.begin(), encoded.begin() + 5);
   EXPECT_EQ(expectedPrefix, encodedPrefix);
 }
 
@@ -98,20 +95,17 @@ TEST_F(CTSerializationTest, EncodesLogEntryForPrecert)
   Buffer encoded;
   ASSERT_EQ(Success, EncodeLogEntry(entry, encoded));
   // log entry type + issuer key + length + tbsCertificate
-  EXPECT_EQ((2U + 32U + 3U + entry.tbsCertificate.length()), encoded.length());
+  EXPECT_EQ((2U + 32U + 3U + entry.tbsCertificate.size()), encoded.size());
 
   // First two bytes are log entry type.
-  Buffer expectedPrefix;
-  MOZ_RELEASE_ASSERT(expectedPrefix.append("\0\x1", 2));
+  Buffer expectedPrefix = { 0, 1 };
   Buffer encodedPrefix;
-  MOZ_RELEASE_ASSERT(encodedPrefix.
-    append(encoded.begin(), encoded.begin() + 2));
+  encodedPrefix.assign(encoded.begin(), encoded.begin() + 2);
   EXPECT_EQ(expectedPrefix, encodedPrefix);
 
   // Next is the issuer key (32 bytes).
   Buffer encodedKeyHash;
-  MOZ_RELEASE_ASSERT(encodedKeyHash.
-    append(encoded.begin() + 2, encoded.begin() + 2 + 32));
+  encodedKeyHash.assign(encoded.begin() + 2, encoded.begin() + 2 + 32);
   EXPECT_EQ(GetDefaultIssuerKeyHash(), encodedKeyHash);
 }
 
@@ -124,18 +118,15 @@ TEST_F(CTSerializationTest, EncodesV1SCTSignedData)
   Buffer encoded;
   ASSERT_EQ(Success, EncodeV1SCTSignedData(
     timestamp, dummyEntry, emptyExtensions, encoded));
-  EXPECT_EQ((size_t) 15, encoded.length());
+  EXPECT_EQ((size_t) 15, encoded.size());
 
-  const uint8_t EXPECTED_BYTES[] = {
+  Buffer expectedBuffer = {
     0x00, // version
     0x00, // signature type
     0x00, 0x00, 0x01, 0x39, 0xFE, 0x35, 0x3C, 0xF5, // timestamp
     0x61, 0x62, 0x63, // log signature
     0x00, 0x00 // extensions (empty)
   };
-  Buffer expectedBuffer;
-  MOZ_RELEASE_ASSERT(
-    expectedBuffer.append(EXPECTED_BYTES, sizeof(EXPECTED_BYTES)));
   EXPECT_EQ(expectedBuffer, encoded);
 }
 
@@ -182,9 +173,9 @@ TEST_F(CTSerializationTest, EncodesSCTList)
   const uint8_t SCT_1[] = { 0x61, 0x62, 0x63 };
   const uint8_t SCT_2[] = { 0x64, 0x65, 0x66 };
 
-  Vector<Input> list;
-  ASSERT_TRUE(list.append(Input(SCT_1)));
-  ASSERT_TRUE(list.append(Input(SCT_2)));
+  std::vector<Input> list;
+  list.push_back(Input(SCT_1));
+  list.push_back(Input(SCT_2));
 
   Buffer encodedList;
   ASSERT_EQ(Success, EncodeSCTList(list, encodedList));
@@ -217,7 +208,7 @@ TEST_F(CTSerializationTest, DecodesSignedCertificateTimestamp)
   const uint64_t expectedTime = 1365181456089;
   EXPECT_EQ(expectedTime, sct.timestamp);
   const size_t expectedSignatureLength = 71;
-  EXPECT_EQ(expectedSignatureLength, sct.signature.signatureData.length());
+  EXPECT_EQ(expectedSignatureLength, sct.signature.signatureData.size());
   EXPECT_TRUE(sct.extensions.empty());
 }
 
@@ -253,18 +244,17 @@ TEST_F(CTSerializationTest, EncodesValidSignedTreeHead)
   // Bytes 2-9 are timestamp
   // Bytes 10-17 are tree size
   // Bytes 18-49 are sha256 root hash
-  ASSERT_EQ(50u, encoded.length());
-  const uint8_t EXPECTED_BYTES_PREFIX[] = {
+  ASSERT_EQ(50u, encoded.size());
+  Buffer expectedBuffer = {
     0x00, // version
     0x01, // signature type
     0x00, 0x00, 0x01, 0x45, 0x3c, 0x5f, 0xb8, 0x35, // timestamp
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15  // tree size
     // sha256 root hash should follow
   };
-  Buffer expectedBuffer;
-  MOZ_RELEASE_ASSERT(expectedBuffer.append(EXPECTED_BYTES_PREFIX, 18));
   Buffer hash = GetSampleSTHSHA256RootHash();
-  MOZ_RELEASE_ASSERT(expectedBuffer.append(hash.begin(), hash.length()));
+  expectedBuffer.insert(expectedBuffer.end(), hash.begin(),
+                        hash.begin() + hash.size());
   EXPECT_EQ(expectedBuffer, encoded);
 }
 } } // namespace mozilla::ct

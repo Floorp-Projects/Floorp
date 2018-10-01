@@ -7,7 +7,8 @@
 #ifndef CTSerialization_h
 #define CTSerialization_h
 
-#include "mozilla/Vector.h"
+#include <vector>
+
 #include "pkix/Input.h"
 #include "pkix/Result.h"
 #include "SignedCertificateTimestamp.h"
@@ -63,7 +64,8 @@ pkix::Result DecodeSignedCertificateTimestamp(pkix::Reader& input,
   SignedCertificateTimestamp& output);
 
 // Encodes a list of SCTs (|scts|) to |output|.
-pkix::Result EncodeSCTList(const Vector<pkix::Input>& scts, Buffer& output);
+pkix::Result EncodeSCTList(const std::vector<pkix::Input>& scts,
+                           Buffer& output);
 
 } } // namespace mozilla::ct
 

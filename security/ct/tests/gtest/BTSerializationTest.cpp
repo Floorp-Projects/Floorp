@@ -50,10 +50,7 @@ TEST_F(BTSerializationTest, DecodesInclusionProof)
   const uint64_t expectedLeafIndex = 2;
   const uint64_t expectedInclusionPathElements = 2;
 
-  const uint8_t EXPECTED_LOGID[] = { 0x01, 0x00 };
-  Buffer expectedLogId;
-  MOZ_RELEASE_ASSERT(expectedLogId.append(EXPECTED_LOGID, 2));
-
+  Buffer expectedLogId = { 0x01, 0x00 };
 
   Input encodedProofInput = InputForBuffer(mTestInclusionProof);
   Reader encodedProofReader(encodedProofInput);
@@ -63,7 +60,7 @@ TEST_F(BTSerializationTest, DecodesInclusionProof)
   EXPECT_EQ(expectedLogId, ipr.logId);
   EXPECT_EQ(expectedTreeSize, ipr.treeSize);
   EXPECT_EQ(expectedLeafIndex, ipr.leafIndex);
-  EXPECT_EQ(expectedInclusionPathElements, ipr.inclusionPath.length());
+  EXPECT_EQ(expectedInclusionPathElements, ipr.inclusionPath.size());
   EXPECT_EQ(GetTestNodeHash0(), ipr.inclusionPath[0]);
   EXPECT_EQ(GetTestNodeHash1(), ipr.inclusionPath[1]);
 }

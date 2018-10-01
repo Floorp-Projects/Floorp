@@ -128,9 +128,6 @@ void ExtractSCTListFromOCSPResponse(pkix::Input cert,
                                     pkix::Time time,
                                     Buffer& result);
 
-// We need this in tests code since mozilla::Vector only allows move assignment.
-Buffer cloneBuffer(const Buffer& buffer);
-
 // Returns Input for the data stored in the buffer, failing assertion on error.
 pkix::Input InputForBuffer(const Buffer& buffer);
 
@@ -138,13 +135,5 @@ pkix::Input InputForBuffer(const Buffer& buffer);
 pkix::Input InputForSECItem(const SECItem& item);
 
 } } // namespace mozilla::ct
-
-
-namespace mozilla {
-
-// GTest needs this to be in Buffer's namespace (i.e. in mozilla::Vector's).
-std::ostream& operator<<(std::ostream& stream, const ct::Buffer& buf);
-
-} // namespace mozilla
 
 #endif  // CTTestUtils_h

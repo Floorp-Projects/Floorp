@@ -245,11 +245,7 @@ CertVerifier::LoadKnownCTLogs()
       continue;
     }
 
-    rv = mCTVerifier->AddLog(std::move(logVerifier));
-    if (rv != Success) {
-      MOZ_ASSERT_UNREACHABLE("Failed activating a known CT Log");
-      continue;
-    }
+    mCTVerifier->AddLog(std::move(logVerifier));
   }
   // TBD: Initialize mCTDiversityPolicy with the CA dependency map
   // of the known CT logs operators.
@@ -391,11 +387,7 @@ CertVerifier::VerifyCertificateTransparencyPolicy(
   }
 
   CTLogOperatorList allOperators;
-  rv = GetCTLogOperatorsFromVerifiedSCTList(result.verifiedScts,
-                                            allOperators);
-  if (rv != Success) {
-    return rv;
-  }
+  GetCTLogOperatorsFromVerifiedSCTList(result.verifiedScts, allOperators);
 
   CTLogOperatorList dependentOperators;
   rv = mCTDiversityPolicy->GetDependentOperators(builtChain, allOperators,
@@ -406,14 +398,8 @@ CertVerifier::VerifyCertificateTransparencyPolicy(
 
   CTPolicyEnforcer ctPolicyEnforcer;
   CTPolicyCompliance ctPolicyCompliance;
-  rv = ctPolicyEnforcer.CheckCompliance(result.verifiedScts, lifetimeInMonths,
-                                        dependentOperators, ctPolicyCompliance);
-  if (rv != Success) {
-    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-            ("CT policy check failed with fatal error %" PRIu32 "\n",
-             static_cast<uint32_t>(rv)));
-    return rv;
-  }
+  ctPolicyEnforcer.CheckCompliance(result.verifiedScts, lifetimeInMonths,
+                                   dependentOperators, ctPolicyCompliance);
 
   if (ctInfo) {
     ctInfo->verifyResult = std::move(result);

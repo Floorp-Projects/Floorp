@@ -101,7 +101,7 @@ TEST_F(CTLogVerifierTest, FailsInvalidLogID)
 
   // Mangle the log ID, which should cause it to match a different log before
   // attempting signature validation.
-  MOZ_RELEASE_ASSERT(certSct.logId.append('\x0'));
+  certSct.logId.push_back('\x0');
 
   EXPECT_EQ(pkix::Result::FATAL_ERROR_INVALID_ARGS, mLog.Verify(certEntry,
                                                                 certSct));
@@ -126,7 +126,8 @@ TEST_F(CTLogVerifierTest, DoesNotVerifyInvalidSTH)
 TEST_F(CTLogVerifierTest, ExcessDataInPublicKey)
 {
   Buffer key = GetTestPublicKey();
-  MOZ_RELEASE_ASSERT(key.append("extra", 5));
+  std::string extra = "extra";
+  key.insert(key.end(), extra.begin(), extra.end());
 
   CTLogVerifier log;
   EXPECT_NE(Success, log.Init(InputForBuffer(key),

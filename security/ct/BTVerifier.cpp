@@ -67,7 +67,7 @@ DecodeInclusionProof(pkix::Reader& reader, InclusionProofDataV2& output)
   }
 
   Reader pathReader(pathInput);
-  Vector<Buffer, kInitialPathLengthCapacity> inclusionPath;
+  std::vector<Buffer> inclusionPath;
 
   while (!pathReader.AtEnd()) {
     Input hash;
@@ -77,24 +77,16 @@ DecodeInclusionProof(pkix::Reader& reader, InclusionProofDataV2& output)
     }
 
     Buffer hashBuffer;
-    rv = InputToBuffer(hash, hashBuffer);
-    if (rv != Success) {
-      return rv;
-    }
+    InputToBuffer(hash, hashBuffer);
 
-    if (!inclusionPath.append(std::move(hashBuffer))) {
-      return pkix::Result::FATAL_ERROR_NO_MEMORY;
-    }
+    inclusionPath.push_back(std::move(hashBuffer));
   }
 
   if (!reader.AtEnd()){
     return pkix::Result::ERROR_BAD_DER;
   }
 
-  rv = InputToBuffer(logId, result.logId);
-  if (rv != Success) {
-    return rv;
-  }
+  InputToBuffer(logId, result.logId);
 
   result.inclusionPath = std::move(inclusionPath);
 

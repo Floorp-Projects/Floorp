@@ -33,17 +33,17 @@ class CTPolicyEnforcerTest : public ::testing::Test
 public:
   void SetUp() override
   {
-    MOZ_ALWAYS_TRUE(OPERATORS_1_AND_2.append(OPERATOR_1));
-    MOZ_ALWAYS_TRUE(OPERATORS_1_AND_2.append(OPERATOR_2));
+    OPERATORS_1_AND_2.push_back(OPERATOR_1);
+    OPERATORS_1_AND_2.push_back(OPERATOR_2);
   }
 
   void GetLogId(Buffer& logId, size_t logNo)
   {
-    ASSERT_TRUE(logId.resize(SHA256_LENGTH));
+    logId.resize(SHA256_LENGTH);
     std::fill(logId.begin(), logId.end(), 0);
     // Just raw-copy |logId| into the output buffer.
-    MOZ_ASSERT(sizeof(logNo) <= logId.length());
-    memcpy(logId.begin(), &logNo, sizeof(logNo));
+    MOZ_ASSERT(sizeof(logNo) <= logId.size());
+    memcpy(logId.data(), &logNo, sizeof(logNo));
   }
 
   void AddSct(VerifiedSCTList& verifiedScts,
@@ -65,7 +65,7 @@ public:
     Buffer logId;
     GetLogId(logId, logNo);
     verifiedSct.sct.logId = std::move(logId);
-    ASSERT_TRUE(verifiedScts.append(std::move(verifiedSct)));
+    verifiedScts.push_back(std::move(verifiedSct));
   }
 
   void AddMultipleScts(VerifiedSCTList& verifiedScts,
@@ -87,11 +87,10 @@ public:
                        CTPolicyCompliance expectedCompliance)
   {
     CTPolicyCompliance compliance;
-    ASSERT_EQ(Success,
-              mPolicyEnforcer.CheckCompliance(verifiedSct,
-                                              certLifetimeInCalendarMonths,
-                                              dependentLogOperators,
-                                              compliance));
+    mPolicyEnforcer.CheckCompliance(verifiedSct,
+                                    certLifetimeInCalendarMonths,
+                                    dependentLogOperators,
+                                    compliance);
     EXPECT_EQ(expectedCompliance, compliance);
   }
 
@@ -355,12 +354,7 @@ TEST_F(CTPolicyEnforcerTest,
       AddMultipleScts(scts, sctsAvailable, 1, ORIGIN_EMBEDDED, TIMESTAMP_1);
 
       CTPolicyCompliance compliance;
-      ASSERT_EQ(Success,
-                mPolicyEnforcer.CheckCompliance(scts, months, NO_OPERATORS,
-                                                compliance))
-        << "i=" << i
-        << " sctsRequired=" << sctsRequired
-        << " sctsAvailable=" << sctsAvailable;
+      mPolicyEnforcer.CheckCompliance(scts, months, NO_OPERATORS, compliance);
       EXPECT_EQ(CTPolicyCompliance::NotEnoughScts, compliance)
         << "i=" << i
         << " sctsRequired=" << sctsRequired
@@ -372,10 +366,7 @@ TEST_F(CTPolicyEnforcerTest,
     AddMultipleScts(scts, sctsRequired, 2, ORIGIN_EMBEDDED, TIMESTAMP_1);
 
     CTPolicyCompliance compliance;
-    ASSERT_EQ(Success,
-              mPolicyEnforcer.CheckCompliance(scts, months, NO_OPERATORS,
-                                              compliance))
-      << "i=" << i;
+    mPolicyEnforcer.CheckCompliance(scts, months, NO_OPERATORS, compliance);
     EXPECT_EQ(CTPolicyCompliance::Compliant, compliance)
       << "i=" << i;
   }
