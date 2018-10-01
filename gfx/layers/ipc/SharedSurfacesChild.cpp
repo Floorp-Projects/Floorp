@@ -8,6 +8,7 @@
 #include "SharedSurfacesParent.h"
 #include "CompositorManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/image/RecyclingSourceSurface.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -154,6 +155,24 @@ SharedSurfacesChild::SharedUserData::UpdateKey(WebRenderLayerManager* aManager,
   }
 
   return key;
+}
+
+/* static */ SourceSurfaceSharedData*
+SharedSurfacesChild::AsSourceSurfaceSharedData(SourceSurface* aSurface)
+{
+  MOZ_ASSERT(aSurface);
+  switch (aSurface->GetType()) {
+    case SurfaceType::DATA_SHARED:
+      return static_cast<SourceSurfaceSharedData*>(aSurface);
+    case SurfaceType::DATA_RECYCLING_SHARED: {
+      auto recycleSurface =
+        static_cast<image::RecyclingSourceSurface*>(aSurface);
+      auto childSurface = recycleSurface->GetChildSurface();
+      return static_cast<SourceSurfaceSharedData*>(childSurface);
+    }
+    default:
+      return nullptr;
+  }
 }
 
 /* static */ void
@@ -338,11 +357,11 @@ SharedSurfacesChild::Share(ImageContainer* aContainer,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (surface->GetType() != SurfaceType::DATA_SHARED) {
+  auto sharedSurface = AsSourceSurfaceSharedData(surface);
+  if (!sharedSurface) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  auto sharedSurface = static_cast<SourceSurfaceSharedData*>(surface.get());
   SharedSurfacesAnimation* anim = aContainer->GetSharedSurfacesAnimation();
   if (anim) {
     return anim->UpdateKey(surface, sharedSurface, aManager, aResources, aKey);
@@ -358,14 +377,14 @@ SharedSurfacesChild::Share(SourceSurface* aSurface,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSurface);
 
-  if (aSurface->GetType() != SurfaceType::DATA_SHARED) {
+  auto sharedSurface = AsSourceSurfaceSharedData(aSurface);
+  if (!sharedSurface) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   // The external image ID does not change with the invalidation counter. The
   // caller of this should be aware of the invalidations of the surface through
   // another mechanism (e.g. imgRequestProxy listener notifications).
-  auto sharedSurface = static_cast<SourceSurfaceSharedData*>(aSurface);
   SharedUserData* data = nullptr;
   nsresult rv = ShareInternal(sharedSurface, &data);
   if (NS_SUCCEEDED(rv)) {
@@ -443,7 +462,8 @@ SharedSurfacesChild::UpdateAnimation(ImageContainer* aContainer,
   MOZ_ASSERT(aSurface);
 
   // If we aren't using shared surfaces, then is nothing to do.
-  if (aSurface->GetType() != SurfaceType::DATA_SHARED) {
+  auto sharedSurface = SharedSurfacesChild::AsSourceSurfaceSharedData(aSurface);
+  if (!sharedSurface) {
     MOZ_ASSERT(!aContainer->GetSharedSurfacesAnimation());
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -452,7 +472,6 @@ SharedSurfacesChild::UpdateAnimation(ImageContainer* aContainer,
     aContainer->EnsureSharedSurfacesAnimation();
   MOZ_ASSERT(anim);
 
-  auto sharedSurface = static_cast<SourceSurfaceSharedData*>(aSurface);
   return anim->SetCurrentFrame(aSurface, sharedSurface, aDirtyRect);
 }
 
