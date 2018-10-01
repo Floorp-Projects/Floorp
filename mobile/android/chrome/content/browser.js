@@ -1581,6 +1581,13 @@ var BrowserApp = {
           promises.push(Sanitizer.clearItem("cookies"));
           promises.push(Sanitizer.clearItem("sessions"));
           break;
+        case "downloadFiles":
+          // If the user is quiting the app and the downloads are to be sanitized
+          // means he chose to "Clear private data -> Downloads" upon exit so
+          // all downloads will be purged, irrespective of their current state (in progress/error/completed)
+          let clearUnfinishedDownloads = aShutdown === true;
+          promises.push(Sanitizer.clearItem(key, undefined, clearUnfinishedDownloads));
+          break;
         case "openTabs":
           if (aShutdown === true) {
             Services.obs.notifyObservers(null, "browser:purge-session-tabs");
