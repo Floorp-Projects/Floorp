@@ -397,13 +397,8 @@ WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending, void* user_data)
 
 
 WakeLockListener::WakeLockListener()
-  : mConnection(already_AddRefed<DBusConnection>(
-    dbus_bus_get(DBUS_BUS_SESSION, nullptr)))
+  : mConnection(nullptr)
 {
-  if (mConnection) {
-    dbus_connection_set_exit_on_disconnect(mConnection, false);
-    dbus_connection_setup_with_g_main(mConnection, nullptr);
-  }
 }
 
 /* static */ WakeLockListener*
@@ -422,10 +417,26 @@ WakeLockListener::Shutdown()
   sSingleton = nullptr;
 }
 
+bool
+WakeLockListener::EnsureDBusConnection()
+{
+  if (!mConnection) {
+    mConnection =
+      already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SESSION, nullptr));
+
+    if (mConnection) {
+      dbus_connection_set_exit_on_disconnect(mConnection, false);
+      dbus_connection_setup_with_g_main(mConnection, nullptr);
+    }
+  }
+
+  return mConnection != nullptr;
+}
+
 nsresult
 WakeLockListener::Callback(const nsAString& topic, const nsAString& state)
 {
-  if (!mConnection) {
+  if (!EnsureDBusConnection()) {
     return NS_ERROR_FAILURE;
   }
 
