@@ -15,6 +15,9 @@ from taskgraph import decision
 from mozunit import main, MockedOpen
 
 
+FAKE_GRAPH_CONFIG = {'product-dir': 'browser'}
+
+
 class TestDecision(unittest.TestCase):
 
     def test_write_artifact_json(self):
@@ -64,7 +67,7 @@ class TestGetDecisionParameters(unittest.TestCase):
 
     def test_simple_options(self):
         with MockedOpen({self.ttc_file: None}):
-            params = decision.get_decision_parameters(self.options)
+            params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)
         self.assertEqual(params['pushlog_id'], 143)
         self.assertEqual(params['build_date'], 1503691511)
         self.assertEqual(params['moz_build_date'], '20170825200511')
@@ -75,14 +78,14 @@ class TestGetDecisionParameters(unittest.TestCase):
     def test_no_email_owner(self):
         self.options['owner'] = 'ffxbld'
         with MockedOpen({self.ttc_file: None}):
-            params = decision.get_decision_parameters(self.options)
+            params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)
         self.assertEqual(params['owner'], 'ffxbld@noreply.mozilla.org')
 
     def test_try_options(self):
         self.options['message'] = 'try: -b do -t all'
         self.options['project'] = 'try'
         with MockedOpen({self.ttc_file: None}):
-            params = decision.get_decision_parameters(self.options)
+            params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)
         self.assertEqual(params['try_mode'], 'try_option_syntax')
         self.assertEqual(params['try_options']['build_types'], 'do')
         self.assertEqual(params['try_options']['unittests'], 'all')
@@ -92,7 +95,7 @@ class TestGetDecisionParameters(unittest.TestCase):
         ttc = {'tasks': ['a', 'b'], 'templates': {}}
         self.options['project'] = 'try'
         with MockedOpen({self.ttc_file: json.dumps(ttc)}):
-            params = decision.get_decision_parameters(self.options)
+            params = decision.get_decision_parameters(FAKE_GRAPH_CONFIG, self.options)
             self.assertEqual(params['try_mode'], 'try_task_config')
             self.assertEqual(params['try_options'], None)
             self.assertEqual(params['try_task_config'], ttc)

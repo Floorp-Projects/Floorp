@@ -20,7 +20,6 @@ from .try_option_syntax import parse_message
 from .actions import render_actions_json
 from taskgraph.util.partials import populate_release_history
 from taskgraph.util.yaml import load_yaml
-from taskgraph.config import load_graph_config
 
 
 logger = logging.getLogger(__name__)
@@ -146,7 +145,7 @@ def taskgraph_decision(options, parameters=None):
      * calling TaskCluster APIs to create the graph
     """
 
-    parameters = parameters or get_decision_parameters(options)
+    parameters = parameters or (lambda config: get_decision_parameters(config, options))
 
     # create a TaskGraphGenerator instance
     tgg = TaskGraphGenerator(
@@ -154,10 +153,10 @@ def taskgraph_decision(options, parameters=None):
         parameters=parameters)
 
     # write out the parameters used to generate this graph
-    write_artifact('parameters.yml', dict(**parameters))
+    write_artifact('parameters.yml', dict(**tgg.parameters))
 
     # write out the public/actions.json file
-    write_artifact('actions.json', render_actions_json(parameters, tgg.graph_config))
+    write_artifact('actions.json', render_actions_json(tgg.parameters, tgg.graph_config))
 
     # write out the full graph for reference
     full_task_json = tgg.full_task_graph.to_json()
@@ -178,19 +177,16 @@ def taskgraph_decision(options, parameters=None):
     write_artifact('label-to-taskid.json', tgg.label_to_taskid)
 
     # actually create the graph
-    create_tasks(tgg.morphed_task_graph, tgg.label_to_taskid, parameters)
+    create_tasks(tgg.morphed_task_graph, tgg.label_to_taskid, tgg.parameters)
 
 
-def get_decision_parameters(options):
+def get_decision_parameters(config, options):
     """
     Load parameters from the command-line options for 'taskgraph decision'.
     This also applies per-project parameters, based on the given project.
 
     """
-    # --root is not passed to mach when building Firefox
-    root = options.get('root') or 'taskcluster/ci'
-    _config = load_graph_config(root)
-    product_dir = _config['product-dir']
+    product_dir = config['product-dir']
 
     parameters = {n: options[n] for n in [
         'base_repository',
