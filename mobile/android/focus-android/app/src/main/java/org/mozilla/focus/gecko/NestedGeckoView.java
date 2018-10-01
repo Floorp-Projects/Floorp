@@ -42,9 +42,10 @@ public class NestedGeckoView extends GeckoView implements NestedScrollingChild {
 
         switch (action) {
             case MotionEvent.ACTION_MOVE:
+                final boolean allowScroll = !shouldPinOnScreen();
                 int deltaY = mLastY - eventY;
 
-                if (dispatchNestedPreScroll(0, deltaY, mScrollConsumed, mScrollOffset)) {
+                if (allowScroll && dispatchNestedPreScroll(0, deltaY, mScrollConsumed, mScrollOffset)) {
                     deltaY -= mScrollConsumed[1];
                     event.offsetLocation(0, -mScrollOffset[1]);
                     mNestedOffsetY += mScrollOffset[1];
@@ -52,7 +53,7 @@ public class NestedGeckoView extends GeckoView implements NestedScrollingChild {
 
                 mLastY = eventY - mScrollOffset[1];
 
-                if (dispatchNestedScroll(0, mScrollOffset[1], 0, deltaY, mScrollOffset)) {
+                if (allowScroll && dispatchNestedScroll(0, mScrollOffset[1], 0, deltaY, mScrollOffset)) {
                     mLastY -= mScrollOffset[1];
                     event.offsetLocation(0, mScrollOffset[1]);
                     mNestedOffsetY += mScrollOffset[1];
