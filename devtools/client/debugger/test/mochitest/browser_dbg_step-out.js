@@ -54,18 +54,7 @@ function testNormalReturn() {
 
 function testReturnWithException() {
   waitForCaretAndScopes(gPanel, 24).then(() => {
-    waitForCaretAndScopes(gPanel, 26).then(() => {
-      let innerScope = gVars.getScopeAtIndex(0);
-      let exceptionVar = innerScope.get("<exception>");
-
-      is(exceptionVar.name, "<exception>",
-        "Should have the right property name for the returned value.");
-      is(exceptionVar.value, "boom",
-        "Should have the right property value for the returned value.");
-      ok(exceptionVar._internalItem, "Should be an internal item");
-      ok(exceptionVar._target.hasAttribute("pseudo-item"),
-         "Element should be marked as a pseudo-item");
-
+    waitForCaretAndScopes(gPanel, 31).then(() => {
       resumeDebuggee().then(() => closeDebuggerAndFinish(gPanel));
     });
 

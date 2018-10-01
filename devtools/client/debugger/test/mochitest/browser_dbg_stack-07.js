@@ -52,7 +52,7 @@ function performTest() {
     testBottomFrame(4);
 
     yield performStep("StepOut");
-    testTopFrame(1);
+    testStepOutFrame(0);
 
     yield resumeDebuggerThenCloseAndFinish(gPanel);
   });
@@ -97,6 +97,19 @@ function performTest() {
     is(gEditor.getText().search(/firstCall/), -1,
       "The second source is displayed.");
     is(gEditor.getText().search(/debugger/), 166,
+      "The first source is not displayed.");
+  }
+
+  function testStepOutFrame(frameIndex) {
+    is(gFrames.selectedIndex, frameIndex,
+      "Topmost frame should be selected after click.");
+    is(gClassicFrames.selectedIndex, gFrames.itemCount - frameIndex - 1,
+      "Topmost frame should also be selected in the mirrored view.");
+    is(gSources.selectedIndex, 0,
+      "The first source is now selected in the widget.");
+    is(gEditor.getText().search(/firstCall/), 118,
+      "The first source is displayed.");
+    is(gEditor.getText().search(/debugger/), -1,
       "The first source is not displayed.");
   }
 }
