@@ -1238,7 +1238,7 @@ pub fn is_str_bidi(buffer: &str) -> bool {
 ///
 /// Returns `true` if the input contains an RTL character or an unpaired
 /// high surrogate that could be the high half of an RTL character.
-/// Returns `false` if teh input contains neither RTL characters nor
+/// Returns `false` if the input contains neither RTL characters nor
 /// unpaired high surrogates that could be higher halves of RTL characters.
 #[inline]
 pub fn is_utf16_bidi(buffer: &[u16]) -> bool {
