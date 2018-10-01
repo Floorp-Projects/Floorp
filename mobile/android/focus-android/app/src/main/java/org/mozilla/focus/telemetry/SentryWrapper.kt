@@ -20,6 +20,7 @@ import org.mozilla.focus.BuildConfig
 object SentryWrapper {
 
     private const val TAG_BUILD_FLAVOR: String = "build_flavor"
+    private const val TAG_BUILD_TYPE: String = "build_type"
 
     fun init(context: Context) {
         onIsEnabledChanged(context, TelemetryWrapper.isTelemetryEnabled(context))
@@ -42,6 +43,7 @@ object SentryWrapper {
 
     private fun addTags() {
         Sentry.getContext().addTag(TAG_BUILD_FLAVOR, BuildConfig.FLAVOR)
+        Sentry.getContext().addTag(TAG_BUILD_TYPE, BuildConfig.BUILD_TYPE)
     }
 
     fun captureGeckoCrash() {
