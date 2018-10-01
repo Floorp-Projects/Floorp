@@ -167,3 +167,14 @@ about-debugging-worker-status-stopped = Stopped
 # registration could be found yet. Only active registrations are visible from
 # about:debugging, so such service workers are considered as registering.
 about-debugging-worker-status-registering = Registering
+
+# Displayed for runtime info in runtime pages.
+# { $name } is brand name such as "Firefox Nightly"
+# { $version } is version such as "64.0a1"
+about-debugging-runtime-info = { $name } ({ $version })
+
+# Displayed for runtime info in runtime page when we display the model as well.
+# { $name } is brand name such as "Firefox Nightly"
+# { $version } is version such as "64.0a1"
+# { $model } is model name of device
+about-debugging-runtime-info-with-model = { $name } on { $model } ({ $version })
