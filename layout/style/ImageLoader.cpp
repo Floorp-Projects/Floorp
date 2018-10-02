@@ -544,12 +544,23 @@ InvalidateImages(nsIFrame* aFrame)
        aFrame->GetProperty(layers::WebRenderUserDataProperty::Key())) {
     for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
       RefPtr<layers::WebRenderUserData> data = iter.UserData();
-      if (data->GetType() == layers::WebRenderAnimationData::UserDataType::eFallback &&
-          !IsRenderNoImages(data->GetDisplayItemKey())) {
-        static_cast<layers::WebRenderFallbackData*>(data.get())->SetInvalid(true);
+      switch (data->GetType()) {
+        case layers::WebRenderUserData::UserDataType::eFallback:
+          if (!IsRenderNoImages(data->GetDisplayItemKey())) {
+            static_cast<layers::WebRenderFallbackData*>(data.get())->SetInvalid(true);
+          }
+          //XXX: handle Blob data
+          invalidateFrame = true;
+          break;
+        case layers::WebRenderUserData::UserDataType::eImage:
+          if (static_cast<layers::WebRenderImageData*>(data.get())->IsAsyncAnimatedImage()) {
+            break;
+          }
+          MOZ_FALLTHROUGH;
+        default:
+          invalidateFrame = true;
+          break;
       }
-      //XXX: handle Blob data
-      invalidateFrame = true;
     }
   }
 
