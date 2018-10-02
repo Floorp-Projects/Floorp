@@ -21,8 +21,8 @@ async function test() {
   await stepOverToLine(client, 27);
   await reverseStepInToLine(client, 33);
   await reverseStepOverToLine(client, 32);
-  await reverseStepOutToLine(client, 26);
-  await reverseStepOverToLine(client, 25);
+  await reverseStepOutToLine(client, 23);
+  await reverseStepOverToLine(client, 22);
 
   await toolbox.destroy();
   await gBrowser.removeTab(tab);
