@@ -7,6 +7,10 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86/opt: 3
             default: default
+    serviceworker-e10s:
+        by-test-platform:
+            linux64/debug: both
+            default: false
     mozharness:
         script:
             by-test-platform:
