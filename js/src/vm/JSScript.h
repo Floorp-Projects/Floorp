@@ -2342,6 +2342,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t shouldDeclareArguments : 1;
         uint32_t hasThisBinding : 1;
         uint32_t isAsync : 1;
+        uint32_t isBinAST : 1;
 
         uint32_t numClosedOverBindings : NumClosedOverBindingsBits;
 
@@ -2528,6 +2529,13 @@ class LazyScript : public gc::TenuredCell
 
     frontend::ParseGoal parseGoal() const {
         return frontend::ParseGoal(p_.parseGoal);
+    }
+
+    bool isBinAST() const {
+        return p_.isBinAST;
+    }
+    void setIsBinAST() {
+        p_.isBinAST = true;
     }
 
     bool strict() const {
