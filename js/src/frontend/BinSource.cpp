@@ -221,6 +221,23 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
         // TODO (efaust): This capture will have to come from encoder side for arrow functions.
     }
 
+    // This models PerHandlerParser::declaeFunctionArgumentsObject, with some subtleties removed,
+    // as they don't yet apply to us.
+    HandlePropertyName arguments = cx_->names().arguments;
+    if (hasUsedName(arguments) || parseContext_->functionBox()->bindingsAccessedDynamically()) {
+        ParseContext::Scope& funScope = parseContext_->functionScope();
+        ParseContext::Scope::AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(arguments);
+        if (!p) {
+            BINJS_TRY(funScope.addDeclaredName(parseContext_, p, arguments, DeclarationKind::Var,
+                                               DeclaredNameInfo::npos));
+            funbox->declaredArguments = true;
+            funbox->usesArguments = true;
+
+            funbox->setArgumentsHasLocalBinding();
+            funbox->setDefinitelyNeedsArgsObj();
+        }
+    }
+
     // Check all our bindings after maybe adding function This.
     MOZ_TRY(checkFunctionClosedVars());
 
@@ -467,6 +484,9 @@ BinASTParser<Tok>::appendDirectivesToBody(ListNode* body, ListNode* directives)
         }
         prefix->setKind(body->getKind());
         prefix->setOp(body->getOp());
+        if (body->hasTopLevelFunctionDeclarations()) {
+            prefix->setHasTopLevelFunctionDeclarations();
+        }
         result = prefix;
     }
 
