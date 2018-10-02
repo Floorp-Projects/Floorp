@@ -26,8 +26,6 @@
 
 <script src="chrome://global/content/config.js"/>
 
-<stringbundle id="configBundle" src="chrome://global/locale/config.properties"/>
-
 <menupopup id="configContext" onpopupshowing="if (event.target == this) updateContextMenu();">
   <menuitem id="toggleSelected" data-l10n-id="config-toggle" default="true"
             oncommand="ModifySelected();"/>
