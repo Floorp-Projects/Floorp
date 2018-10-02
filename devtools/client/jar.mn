@@ -157,6 +157,7 @@ devtools.jar:
     skin/images/webconsole/info.svg (themes/images/webconsole/info.svg)
     skin/images/webconsole/input.svg (themes/images/webconsole/input.svg)
     skin/images/webconsole/return.svg (themes/images/webconsole/return.svg)
+    skin/images/webconsole/jump.svg (themes/images/webconsole/jump.svg)
     skin/images/breadcrumbs-scrollbutton.svg (themes/images/breadcrumbs-scrollbutton.svg)
     skin/animation.css (themes/animation.css)
     skin/canvasdebugger.css (themes/canvasdebugger.css)
