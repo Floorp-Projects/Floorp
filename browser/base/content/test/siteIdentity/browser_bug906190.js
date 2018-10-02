@@ -34,16 +34,20 @@ async function doTest(parentTabSpec, childTabSpec, testTaskFn, waitForMetaRefres
     await promiseReloaded;
 
     // Wait for the script in the page to update the contents of the test div.
-    let testDiv = gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv");
-    await BrowserTestUtils.waitForCondition(
-      () => testDiv.innerHTML == "Mixed Content Blocker disabled");
+    await ContentTask.spawn(browser, childTabSpec, async (childTabSpecContent) => {
+      let testDiv = content.document.getElementById("mctestdiv");
+      await ContentTaskUtils.waitForCondition(() =>
+        testDiv.innerHTML == "Mixed Content Blocker disabled"
+      );
 
-    // Add the link for the child tab to the page.
-    let mainDiv = gBrowser.contentDocumentAsCPOW.createElement("div");
-    // eslint-disable-next-line no-unsanitized/property
-    mainDiv.innerHTML =
-      '<p><a id="linkToOpenInNewTab" href="' + childTabSpec + '">Link</a></p>';
-    gBrowser.contentDocumentAsCPOW.body.appendChild(mainDiv);
+      // Add the link for the child tab to the page.
+      let mainDiv = content.document.createElement("div");
+
+      // eslint-disable-next-line no-unsanitized/property
+      mainDiv.innerHTML =
+        '<p><a id="linkToOpenInNewTab" href="' + childTabSpecContent + '">Link</a></p>';
+      content.document.body.appendChild(mainDiv);
+    });
 
     // Execute the test in the child tabs with the two methods to open it.
     for (let openFn of [simulateCtrlClick, simulateContextMenuOpenInTab]) {
@@ -116,8 +120,11 @@ add_task(async function test_same_origin() {
       activeLoaded: true, activeBlocked: false, passiveLoaded: false,
     });
 
-    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
-       "Mixed Content Blocker disabled", "OK: Executed mixed script");
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      Assert.equal(content.document.getElementById("mctestdiv").innerHTML,
+                   "Mixed Content Blocker disabled",
+                   "OK: Executed mixed script");
+    });
   });
 });
 
@@ -137,8 +144,11 @@ add_task(async function test_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
-       "Mixed Content Blocker enabled", "OK: Blocked mixed script");
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      Assert.equal(content.document.getElementById("mctestdiv").innerHTML,
+                   "Mixed Content Blocker enabled",
+                   "OK: Blocked mixed script");
+    });
   });
 });
 
@@ -158,8 +168,11 @@ add_task(async function test_same_origin_metarefresh_same_origin() {
       activeLoaded: true, activeBlocked: false, passiveLoaded: false,
     });
 
-    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
-       "Mixed Content Blocker disabled", "OK: Executed mixed script");
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      Assert.equal(content.document.getElementById("mctestdiv").innerHTML,
+                   "Mixed Content Blocker disabled",
+                   "OK: Executed mixed script");
+    });
   }, true);
 });
 
@@ -178,8 +191,11 @@ add_task(async function test_same_origin_metarefresh_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
-       "Mixed Content Blocker enabled", "OK: Blocked mixed script");
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      Assert.equal(content.document.getElementById("mctestdiv").innerHTML,
+                   "Mixed Content Blocker enabled",
+                   "OK: Blocked mixed script");
+    });
   }, true);
 });
 
@@ -192,14 +208,17 @@ add_task(async function test_same_origin_metarefresh_different_origin() {
 add_task(async function test_same_origin_302redirect_same_origin() {
   // the sjs files returns a 302 redirect- note, same origins
   await doTest(HTTPS_TEST_ROOT_1 + "file_bug906190_1.html",
-               HTTPS_TEST_ROOT_1 + "file_bug906190.sjs", function() {
+               HTTPS_TEST_ROOT_1 + "file_bug906190.sjs", async function() {
     // The doorhanger should appear but activeBlocked should be >> NOT << true.
     // Currently it is >> TRUE << - see follow up bug 914860
     ok(!gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
        "OK: Mixed Content is NOT being blocked");
 
-    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
-       "Mixed Content Blocker disabled", "OK: Executed mixed script");
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      Assert.equal(content.document.getElementById("mctestdiv").innerHTML,
+                   "Mixed Content Blocker disabled",
+                   "OK: Executed mixed script");
+    });
   });
 });
 
@@ -218,8 +237,11 @@ add_task(async function test_same_origin_302redirect_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(gBrowser.contentDocumentAsCPOW.getElementById("mctestdiv").innerHTML,
-       "Mixed Content Blocker enabled", "OK: Blocked mixed script");
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      Assert.equal(content.document.getElementById("mctestdiv").innerHTML,
+                   "Mixed Content Blocker enabled",
+                   "OK: Blocked mixed script");
+    });
   });
 });
 
