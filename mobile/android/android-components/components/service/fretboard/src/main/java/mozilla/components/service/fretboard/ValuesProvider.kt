@@ -84,4 +84,11 @@ open class ValuesProvider {
     open fun getReleaseChannel(context: Context): String? {
         return null
     }
+
+    /**
+     * Provides the client ID (UUID) used for bucketing the users.
+     */
+    open fun getClientId(context: Context): String {
+        return DeviceUuidFactory(context).uuid
+    }
 }

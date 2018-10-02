@@ -24,6 +24,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.isAccessible
 
@@ -502,6 +503,24 @@ class FretboardTest {
                 .thenReturn("a94b1dab-030e-4b13-be15-cc80c1eda8b3")
         val fretboard = Fretboard(experimentSource, experimentStorage)
         assertTrue(fretboard.getUserBucket(context) == 54)
+    }
+
+    @Test
+    fun testGetUserBucketWithOverridenClientId() {
+        val experimentSource = mock(ExperimentSource::class.java)
+        val experimentStorage = mock(ExperimentStorage::class.java)
+
+        val fretboard1 = Fretboard(experimentSource, experimentStorage, object : ValuesProvider() {
+            override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
+        })
+
+        assertEquals(79, fretboard1.getUserBucket(RuntimeEnvironment.application))
+
+        val fretboard2 = Fretboard(experimentSource, experimentStorage, object : ValuesProvider() {
+            override fun getClientId(context: Context): String = "01a15650-9a5d-4383-a7ba-2f047b25c620"
+        })
+
+        assertEquals(55, fretboard2.getUserBucket(RuntimeEnvironment.application))
     }
 
     @Test
