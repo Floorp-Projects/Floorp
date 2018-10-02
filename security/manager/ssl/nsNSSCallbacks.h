@@ -14,7 +14,7 @@
 #include "nspr.h"
 #include "nsString.h"
 #include "pk11func.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 
 using mozilla::OriginAttributes;
 using mozilla::TimeDuration;

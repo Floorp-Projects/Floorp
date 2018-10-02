@@ -13,7 +13,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsICertBlocklist.h"
 #include "nsString.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 #include "secmodt.h"
 
 namespace mozilla { namespace psm {

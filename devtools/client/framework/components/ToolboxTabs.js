@@ -3,10 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory, createRef } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { ToolboxTabsOrderManager } = require("devtools/client/framework/toolbox-tabs-order-manager");
 
 const { div } = dom;
@@ -50,6 +49,8 @@ class ToolboxTabs extends Component {
       // Array of overflowed tool id.
       overflowedTabIds: [],
     };
+
+    this.wrapperEl = createRef();
 
     // Map with tool Id and its width size. This lifecycle is out of React's
     // lifecycle. If a tool is registered, ToolboxTabs will add target tool id
@@ -122,12 +123,11 @@ class ToolboxTabs extends Component {
    * Update the Map of tool id and tool tab width.
    */
   updateCachedToolTabsWidthMap() {
-    const thisNode = findDOMNode(this);
     const utils = window.windowUtils;
     // Force a reflow before calling getBoundingWithoutFlushing on each tab.
-    thisNode.clientWidth;
+    this.wrapperEl.current.clientWidth;
 
-    for (const tab of thisNode.querySelectorAll(".devtools-tab")) {
+    for (const tab of this.wrapperEl.current.querySelectorAll(".devtools-tab")) {
       const tabId = tab.id.replace("toolbox-tab-", "");
       if (!this._cachedToolTabsWidthMap.has(tabId)) {
         const rect = utils.getBoundsWithoutFlushing(tab);
@@ -142,8 +142,7 @@ class ToolboxTabs extends Component {
    * function will not update state.
    */
   updateOverflowedTabs() {
-    const node = findDOMNode(this);
-    const toolboxWidth = parseInt(getComputedStyle(node).width, 10);
+    const toolboxWidth = parseInt(getComputedStyle(this.wrapperEl.current).width, 10);
     const { currentToolId } = this.props;
     const enabledTabs = this.props.panelDefinitions.map(def => def.id);
     let sumWidth = 0;
@@ -276,7 +275,8 @@ class ToolboxTabs extends Component {
 
     return div(
       {
-        className: "toolbox-tabs-wrapper"
+        className: "toolbox-tabs-wrapper",
+        ref: this.wrapperEl,
       },
       div(
         {

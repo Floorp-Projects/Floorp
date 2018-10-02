@@ -298,6 +298,7 @@ extern const char* const CacheKindNames[];
     _(CallProxyGetByValueResult)          \
     _(CallProxyHasPropResult)             \
     _(CallObjectHasSparseElementResult)   \
+    _(CallNativeGetElementResult)        \
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
     _(LoadStringResult)                   \
@@ -1259,6 +1260,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallObjectHasSparseElementResult, obj);
         writeOperandId(index);
     }
+    void callNativeGetElementResult(ObjOperandId obj, Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::CallNativeGetElementResult, obj);
+        writeOperandId(index);
+    }
     void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
         addStubField(offset, StubField::Type::RawWord);
@@ -1568,6 +1573,9 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
                                uint32_t index, Int32OperandId indexId);
     bool tryAttachUnboxedElementHole(HandleObject obj, ObjOperandId objId,
                                      uint32_t index, Int32OperandId indexId);
+
+    bool tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
+                                 uint32_t index, Int32OperandId indexId);
 
     bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
 

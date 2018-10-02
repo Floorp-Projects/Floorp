@@ -1803,7 +1803,7 @@ html .toggle-button.end.vertical svg {
   -moz-user-select: none;
   user-select: none;
   box-sizing: border-box;
-  height: 30px;
+  height: 29px;
   margin: 0;
   padding: 0;
 }
@@ -2231,6 +2231,12 @@ menuseparator {
   fill: var(--theme-selection-color);
 }
 
+.source-footer > .commands > div.loader {
+  vertical-align: top;
+  width: 20px;
+  margin: 0 4px;
+}
+
 .source-footer > .commands > .action > img.prettyPrint {
   mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
   height: 16px;
@@ -2276,12 +2282,33 @@ menuseparator {
 
 .search-bar {
   display: flex;
-  flex-direction: column;
+  border: 1px solid transparent;
+  border-top: 1px solid var(--theme-splitter-color);
+  height: var(--editor-searchbar-height);
+}
+
+.search-bar.search-bar-focused {
+  border: 1px solid var(--blue-50);
+  transition: border-color 0.2s ease-in-out;
 }
 
 .search-bar .search-field {
   padding-left: 7px;
-  height: var(--editor-searchbar-height);
+}
+
+.search-bar .search-shadow {
+  flex-grow: 1;
+}
+
+.search-bar .search-shadow.focused {
+  border-color: transparent;
+  transition: none;
+}
+
+.search-bar .search-field {
+  border-bottom: none;
+  padding-right: 0;
+  height: 100%;
 }
 
 .search-field .close-btn {
@@ -2297,10 +2324,7 @@ menuseparator {
   display: flex;
   flex-shrink: 0;
   justify-content: flex-end;
-  width: calc(100% - 1px);
-  height: var(--editor-second-searchbar-height);
   background-color: var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
   padding: 0 13px;
 }
 
@@ -2681,7 +2705,6 @@ menuseparator {
   --debug-line-border: rgb(145, 188, 219);
   --debug-expression-background: rgba(202, 227, 255, 0.5);
   --editor-searchbar-height: 27px;
-  --editor-second-searchbar-height: 27px;
   --debug-line-error-border: rgb(255, 0, 0);
   --debug-expression-error-background: rgba(231, 116, 113, 0.3);
   --editor-header-height: 30px;
@@ -3446,7 +3469,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .frames .location {
-  font-weight: lighter;
+  font-weight: normal;
   display: flex;
   justify-content: space-between;
   flex-direction: row;
@@ -3686,7 +3709,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .command-bar {
-  flex: 0 0 30px;
+  flex: 0 0 29px;
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   overflow: hidden;
@@ -4041,7 +4064,7 @@ html .welcomebox .toggle-button-end.collapsed {
 .source-header {
   border-bottom: 1px solid var(--theme-splitter-color);
   width: 100%;
-  height: 30px;
+  height: 29px;
   display: flex;
 }
 
@@ -4165,6 +4188,7 @@ html[dir="rtl"] img.moreTabs {
   overflow: hidden;
   padding: 0 4px;
   align-self: center;
+  margin-bottom: 2px;
 }
 
 .source-tab .filename span {

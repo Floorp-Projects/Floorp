@@ -10,8 +10,8 @@
 
 #include "CTSerialization.h"
 #include "hasht.h"
-#include "pkix/pkixnss.h"
-#include "pkixutil.h"
+#include "mozpkix/pkixnss.h"
+#include "mozpkix/pkixutil.h"
 
 namespace mozilla { namespace ct {
 
