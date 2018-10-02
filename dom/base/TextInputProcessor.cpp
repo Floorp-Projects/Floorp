@@ -364,6 +364,16 @@ TextInputProcessor::BeginInputTransactionForTests(
 }
 
 nsresult
+TextInputProcessor::BeginInputTransactionForFuzzing(
+                      nsPIDOMWindowInner* aWindow,
+                      nsITextInputProcessorCallback* aCallback,
+                      bool* aSucceeded)
+{
+  MOZ_RELEASE_ASSERT(aSucceeded, "aSucceeded must not be nullptr");
+  return BeginInputTransactionInternal(aWindow, aCallback, false, *aSucceeded);
+}
+
+nsresult
 TextInputProcessor::BeginInputTransactionInternal(
                       mozIDOMWindow* aWindow,
                       nsITextInputProcessorCallback* aCallback,
@@ -1076,7 +1086,30 @@ TextInputProcessor::PrepareKeyboardEventToDispatch(
         aKeyboardEvent.mKeyNameIndex);
   }
 
-  aKeyboardEvent.mIsSynthesizedByTIP = (mForTests)? false : true;
+  aKeyboardEvent.mIsSynthesizedByTIP = !mForTests;
+
+  // When this emulates real input only in content process, we need to
+  // initialize edit commands with the main process's widget via PuppetWidget
+  // because they are initialized by TabParent before content process treats
+  // them.
+  if (aKeyboardEvent.mIsSynthesizedByTIP && !XRE_IsParentProcess()) {
+    // Note that retrieving edit commands from content process is expensive.
+    // Let's skip it when the keyboard event is inputting text.
+    if (!aKeyboardEvent.IsInputtingText()) {
+      // FYI: WidgetKeyboardEvent::InitAllEditCommands() isn't available here
+      //      since it checks whether it's called in the main process to
+      //      avoid performance issues so that we need to initialize each
+      //      command manually here.
+      aKeyboardEvent.InitEditCommandsFor(
+                       nsIWidget::NativeKeyBindingsForSingleLineEditor);
+      aKeyboardEvent.InitEditCommandsFor(
+                       nsIWidget::NativeKeyBindingsForMultiLineEditor);
+      aKeyboardEvent.InitEditCommandsFor(
+                       nsIWidget::NativeKeyBindingsForRichTextEditor);
+    } else {
+      aKeyboardEvent.PreventNativeKeyBindings();
+    }
+  }
 
   return NS_OK;
 }
@@ -1101,6 +1134,16 @@ TextInputProcessor::Keydown(Event* aDOMKeyEvent,
     return NS_ERROR_INVALID_ARG;
   }
   return KeydownInternal(*originalKeyEvent, aKeyFlags, true, *aConsumedFlags);
+}
+
+nsresult
+TextInputProcessor::Keydown(const WidgetKeyboardEvent& aKeyboardEvent,
+                            uint32_t aKeyFlags,
+                            uint32_t* aConsumedFlags)
+{
+  uint32_t consumedFlags = 0;
+  return KeydownInternal(aKeyboardEvent, aKeyFlags, true,
+                         aConsumedFlags ? *aConsumedFlags : consumedFlags);
 }
 
 nsresult
@@ -1197,6 +1240,16 @@ TextInputProcessor::Keyup(Event* aDOMKeyEvent,
 }
 
 nsresult
+TextInputProcessor::Keyup(const WidgetKeyboardEvent& aKeyboardEvent,
+                          uint32_t aKeyFlags,
+                          bool* aDoDefault)
+{
+  bool doDefault = false;
+  return KeyupInternal(aKeyboardEvent, aKeyFlags,
+                       aDoDefault ? *aDoDefault : doDefault);
+}
+
+nsresult
 TextInputProcessor::KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
                                   uint32_t aKeyFlags,
                                   bool& aDoDefault)
@@ -1250,13 +1303,8 @@ TextInputProcessor::GetModifierState(const nsAString& aModifierKeyName,
 {
   MOZ_RELEASE_ASSERT(aActive, "aActive must not be null");
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-  if (!mModifierKeyDataArray) {
-    *aActive = false;
-    return NS_OK;
-  }
-  Modifiers activeModifiers = mModifierKeyDataArray->GetActiveModifiers();
   Modifiers modifier = WidgetInputEvent::GetModifier(aModifierKeyName);
-  *aActive = ((activeModifiers & modifier) != 0);
+  *aActive = ((GetActiveModifiers() & modifier) != 0);
   return NS_OK;
 }
 
