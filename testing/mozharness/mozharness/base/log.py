@@ -692,6 +692,7 @@ def numeric_log_level(level):
     """
     return LOG_LEVELS[level]
 
+
 # __main__ {{{1
 if __name__ == '__main__':
     """ Useless comparison, due to the `pass` keyword on its body"""
