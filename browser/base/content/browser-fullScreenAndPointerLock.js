@@ -591,9 +591,25 @@ var FullScreen = {
     }
 
     // a textbox in chrome is focused (location bar anyone?): don't collapse chrome
-    if (document.commandDispatcher.focusedElement &&
-        document.commandDispatcher.focusedElement.ownerDocument == document &&
-        document.commandDispatcher.focusedElement.localName == "input") {
+    let focused = document.commandDispatcher.focusedElement;
+    if (focused && focused.ownerDocument == document &&
+        focused.localName == "input") {
+      // But try collapse the chrome again when anything happens which can make
+      // it lose the focus. We cannot listen on "blur" event on focused here
+      // because that event can be triggered by "mousedown", and hiding chrome
+      // would cause the content to move. This combination may split a single
+      // click into two actionless halves.
+      let retryHideNavToolbox = () => {
+        // Wait for at least a frame to give it a chance to be passed down to
+        // the content.
+        requestAnimationFrame(() => {
+          setTimeout(() => this.hideNavToolbox(aAnimate), 0);
+        });
+        window.removeEventListener("keypress", retryHideNavToolbox);
+        window.removeEventListener("click", retryHideNavToolbox);
+      };
+      window.addEventListener("keypress", retryHideNavToolbox);
+      window.addEventListener("click", retryHideNavToolbox);
       return;
     }
 
