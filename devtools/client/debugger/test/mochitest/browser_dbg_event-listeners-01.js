@@ -9,38 +9,29 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_event-listeners-01.html";
 
-var gClient;
-var gTab;
-
-function test() {
+add_task(async function() {
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
   let transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
-  gClient.connect().then(([aType, aTraits]) => {
-    is(aType, "browser",
-      "Root actor should identify itself as a browser.");
+  let client = new DebuggerClient(transport);
+  let [type, traits] = await client.connect();
 
-    addTab(TAB_URL)
-      .then((aTab) => {
-        gTab = aTab;
-        return attachThreadActorForUrl(gClient, TAB_URL);
-      })
-      .then(pauseDebuggee)
-      .then(testEventListeners)
-      .then(() => gClient.close())
-      .then(finish)
-      .catch(aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-  });
-}
+  Assert.equal(type, "browser",
+    "Root actor should identify itself as a browser.");
 
-function pauseDebuggee(aThreadClient) {
+  let tab = await addTab(TAB_URL);
+  let threadClient = await attachThreadActorForUrl(client, TAB_URL);
+  await pauseDebuggee(tab, client, threadClient);
+  await testEventListeners(client, threadClient);
+
+  await client.close();
+});
+
+function pauseDebuggee(aTab, aClient, aThreadClient) {
   let deferred = promise.defer();
 
-  gClient.addOneTimeListener("paused", (aEvent, aPacket) => {
+  aClient.addOneTimeListener("paused", (aEvent, aPacket) => {
     is(aPacket.type, "paused",
       "We should now be paused.");
     is(aPacket.why.type, "debuggerStatement",
@@ -49,97 +40,93 @@ function pauseDebuggee(aThreadClient) {
     deferred.resolve(aThreadClient);
   });
 
-  generateMouseClickInTab(gTab, "content.document.querySelector('button')");
+  generateMouseClickInTab(aTab, "content.document.querySelector('button')");
 
   return deferred.promise;
 }
 
-function testEventListeners(aThreadClient) {
-  let deferred = promise.defer();
+async function testEventListeners(aClient, aThreadClient) {
+  let packet = await aThreadClient.eventListeners();
 
-  aThreadClient.eventListeners(aPacket => {
-    if (aPacket.error) {
-      let msg = "Error getting event listeners: " + aPacket.message;
-      ok(false, msg);
-      deferred.reject(msg);
-      return;
+  if (packet.error) {
+    let msg = "Error getting event listeners: " + packet.message;
+    Assert.ok(false, msg);
+    return;
+  }
+
+  is(packet.listeners.length, 3, "Found all event listeners.");
+
+  let listeners = await promise.all(packet.listeners.map(listener => {
+    const lDeferred = promise.defer();
+    aThreadClient.pauseGrip(listener.function).getDefinitionSite(aResponse => {
+      if (aResponse.error) {
+        const msg = "Error getting function definition site: " + aResponse.message;
+        ok(false, msg);
+        lDeferred.reject(msg);
+        return;
+      }
+      listener.function.url = aResponse.source.url;
+      lDeferred.resolve(listener);
+    });
+    return lDeferred.promise;
+  }));
+
+  let types = [];
+
+  for (let l of listeners) {
+    info("Listener for the " + l.type + " event.");
+    let node = l.node;
+    ok(node, "There is a node property.");
+    ok(node.object, "There is a node object property.");
+    if (node.selector != "window") {
+      let nodeCount =
+        await ContentTask.spawn(gBrowser.selectedBrowser, node.selector, async (selector) => {
+          return content.document.querySelectorAll(selector).length;
+        });
+      Assert.equal(nodeCount, 1, "The node property is a unique CSS selector.");
+    } else {
+      Assert.ok(true, "The node property is a unique CSS selector.");
     }
 
-    is(aPacket.listeners.length, 3,
-      "Found all event listeners.");
+    let func = l.function;
+    ok(func, "There is a function property.");
+    is(func.type, "object", "The function form is of type 'object'.");
+    is(func.class, "Function", "The function form is of class 'Function'.");
 
-    promise.all(aPacket.listeners.map(listener => {
-      const lDeferred = promise.defer();
-      aThreadClient.pauseGrip(listener.function).getDefinitionSite(aResponse => {
-        if (aResponse.error) {
-          const msg = "Error getting function definition site: " + aResponse.message;
-          ok(false, msg);
-          lDeferred.reject(msg);
-          return;
-        }
-        listener.function.url = aResponse.source.url;
-        lDeferred.resolve(listener);
-      });
-      return lDeferred.promise;
-    })).then(listeners => {
-      let types = [];
+    // The onchange handler is an inline string that doesn't have
+    // a URL because it's basically eval'ed
+    if (l.type !== "change") {
+      is(func.url, TAB_URL, "The function url is correct.");
+    }
 
-      for (let l of listeners) {
-        info("Listener for the " + l.type + " event.");
-        let node = l.node;
-        ok(node, "There is a node property.");
-        ok(node.object, "There is a node object property.");
-        ok(node.selector == "window" ||
-          gBrowser.contentDocumentAsCPOW.querySelectorAll(node.selector).length == 1,
-          "The node property is a unique CSS selector.");
+    is(l.allowsUntrusted, true,
+      "'allowsUntrusted' property has the right value.");
+    is(l.inSystemEventGroup, false,
+      "'inSystemEventGroup' property has the right value.");
 
-        let func = l.function;
-        ok(func, "There is a function property.");
-        is(func.type, "object", "The function form is of type 'object'.");
-        is(func.class, "Function", "The function form is of class 'Function'.");
+    types.push(l.type);
 
-        // The onchange handler is an inline string that doesn't have
-        // a URL because it's basically eval'ed
-        if (l.type !== "change") {
-          is(func.url, TAB_URL, "The function url is correct.");
-        }
+    if (l.type == "keyup") {
+      is(l.capturing, true,
+        "Capturing property has the right value.");
+      is(l.isEventHandler, false,
+        "'isEventHandler' property has the right value.");
+    } else if (l.type == "load") {
+      is(l.capturing, false,
+        "Capturing property has the right value.");
+      is(l.isEventHandler, false,
+        "'isEventHandler' property has the right value.");
+    } else {
+      is(l.capturing, false,
+        "Capturing property has the right value.");
+      is(l.isEventHandler, true,
+        "'isEventHandler' property has the right value.");
+    }
+  }
 
-        is(l.allowsUntrusted, true,
-          "'allowsUntrusted' property has the right value.");
-        is(l.inSystemEventGroup, false,
-          "'inSystemEventGroup' property has the right value.");
+  Assert.ok(types.includes("click"), "Found the click handler.");
+  Assert.ok(types.includes("change"), "Found the change handler.");
+  Assert.ok(types.includes("keyup"), "Found the keyup handler.");
 
-        types.push(l.type);
-
-        if (l.type == "keyup") {
-          is(l.capturing, true,
-            "Capturing property has the right value.");
-          is(l.isEventHandler, false,
-            "'isEventHandler' property has the right value.");
-        } else if (l.type == "load") {
-          is(l.capturing, false,
-            "Capturing property has the right value.");
-          is(l.isEventHandler, false,
-            "'isEventHandler' property has the right value.");
-        } else {
-          is(l.capturing, false,
-            "Capturing property has the right value.");
-          is(l.isEventHandler, true,
-            "'isEventHandler' property has the right value.");
-        }
-      }
-
-      ok(types.includes("click"), "Found the click handler.");
-      ok(types.includes("change"), "Found the change handler.");
-      ok(types.includes("keyup"), "Found the keyup handler.");
-
-      aThreadClient.resume(deferred.resolve);
-    });
-  });
-
-  return deferred.promise;
+  await aThreadClient.resume();
 }
-
-registerCleanupFunction(function () {
-  gClient = null;
-});
