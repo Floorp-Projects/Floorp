@@ -332,8 +332,7 @@ def getDigestFromFile(args, inputFile):
         if args.filter_stacks_for_testing:
             # When running SmokeDMD.cpp, every stack trace should contain at
             # least one frame that contains 'DMD.cpp', from either |DMD.cpp| or
-            # |SmokeDMD.cpp|. (Or 'dmd.cpp' on Windows.) On builds without
-            # debuginfo we expect just |SmokeDMD|. If we see such a
+            # |SmokeDMD.cpp|. (Or 'dmd.cpp' on Windows.) If we see such a
             # frame, we replace the entire stack trace with a single,
             # predictable frame. There is too much variation in the stack
             # traces across different machines and platforms to do more precise
@@ -341,8 +340,7 @@ def getDigestFromFile(args, inputFile):
             # stack fixing fails completely.
             for frameKey in frameKeys:
                 frameDesc = frameTable[frameKey]
-                expected = ('DMD.cpp', 'dmd.cpp', 'SmokeDMD')
-                if any(ex in frameDesc for ex in expected):
+                if 'DMD.cpp' in frameDesc or 'dmd.cpp' in frameDesc:
                     return [fmt.format(1, ': ... DMD.cpp ...')]
 
         # The frame number is always '#00' (see DMD.h for why), so we have to
