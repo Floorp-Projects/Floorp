@@ -268,12 +268,14 @@ enum InflateUTF8Action {
 
 enum class OnUTF8Error {
     InsertReplacementCharacter,
+    InsertQuestionMark,
     Throw,
     Crash,
 };
 
-static const char16_t REPLACE_UTF8 = 0xFFFD;
-static const Latin1Char REPLACE_UTF8_LATIN1 = '?';
+// The Unicode REPLACEMENT CHARACTER, rendered as a diamond with a question
+// mark, meaning "someone screwed up here but it wasn't me".
+static const char16_t REPLACEMENT_CHARACTER = 0xFFFD;
 
 // If making changes to this algorithm, make sure to also update
 // LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
@@ -329,12 +331,15 @@ InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, CharT* dst, size_t* dstle
                 } else if (ErrorAction == OnUTF8Error::Crash) {         \
                     MOZ_CRASH("invalid UTF-8 string: " # report);       \
                 } else {                                                \
-                    MOZ_ASSERT(ErrorAction == OnUTF8Error::InsertReplacementCharacter); \
+                    char16_t replacement;                               \
+                    if (ErrorAction == OnUTF8Error::InsertReplacementCharacter) { \
+                        replacement = REPLACEMENT_CHARACTER;            \
+                    } else {                                            \
+                        MOZ_ASSERT(ErrorAction == OnUTF8Error::InsertQuestionMark); \
+                        replacement = '?';                              \
+                    }                                                   \
                     if (Action == Copy) {                               \
-                        if (std::is_same<decltype(dst[0]), Latin1Char>::value) \
-                            dst[j] = CharT(REPLACE_UTF8_LATIN1);        \
-                        else                                            \
-                            dst[j] = CharT(REPLACE_UTF8);               \
+                        dst[j] = CharT(replacement);                    \
                     }                                                   \
                     n = n2;                                             \
                     goto invalidMultiByteCodeUnit;                      \
@@ -446,6 +451,8 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
         for (uint32_t i = 0; i < srclen; i++) {
             dst[i] = CharT(src[i]);
         }
+    } else if (std::is_same<decltype(dst[0]), Latin1Char>::value) {
+        MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<Copy, OnUTF8Error::InsertQuestionMark, CharT>(cx, src, dst, outlen, &encoding)));
     } else {
         MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<Copy, OnUTF8Error::InsertReplacementCharacter, CharT>(cx, src, dst, outlen, &encoding)));
     }
@@ -503,7 +510,7 @@ JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outl
 Latin1CharsZ
 JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter, Latin1CharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<OnUTF8Error::InsertQuestionMark, Latin1CharsZ>(cx, utf8, outlen);
 }
 
 #ifdef DEBUG
