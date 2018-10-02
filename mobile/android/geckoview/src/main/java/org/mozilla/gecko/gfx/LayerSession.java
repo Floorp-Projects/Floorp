@@ -70,11 +70,12 @@ public class LayerSession {
         private void onCompositorDetached() {
             // Clear out any pending calls on the UI thread.
             LayerSession.this.onCompositorDetached();
-            disposeNative();
         }
 
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-        @Override protected native void disposeNative();
+        @Override protected void disposeNative() {
+            // Disposal happens in native code.
+            throw new UnsupportedOperationException();
+        }
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         public native void attachNPZC(PanZoomController npzc);
