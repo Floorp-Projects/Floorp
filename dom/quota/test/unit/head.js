@@ -116,6 +116,14 @@ function init(callback)
   return request;
 }
 
+function initTemporaryStorage(callback)
+{
+  let request = SpecialPowers._getQuotaManager().initTemporaryStorage();
+  request.callback = callback;
+
+  return request;
+}
+
 function initOrigin(principal, persistence, callback)
 {
   let request =
