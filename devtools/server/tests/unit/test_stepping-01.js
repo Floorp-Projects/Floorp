@@ -5,77 +5,87 @@
 "use strict";
 
 /**
- * Check basic step-over functionality.
+ * Check scenarios where we're leaving function a and
+ * going to the function b's call-site.
  */
 
-var gDebuggee;
-var gClient;
-var gCallback;
+async function testFinish({threadClient, debuggerClient}) {
+  await resume(threadClient);
+  await close(debuggerClient);
+
+  do_test_finished();
+}
+
+async function invokeAndPause({global, debuggerClient}, expression) {
+  return executeOnNextTickAndWaitForPause(
+    () => Cu.evalInSandbox(expression, global),
+    debuggerClient
+  );
+}
+
+async function step({threadClient, debuggerClient}, cmd) {
+  return cmd(debuggerClient, threadClient);
+}
+
+function getPauseLocation(packet) {
+  const {line, column} = packet.frame.where;
+  return {line, column};
+}
+
+function getPauseReturn(packet) {
+  dump(`>> getPauseReturn yo ${JSON.stringify(packet.why)}\n`);
+  return packet.why.frameFinished.return;
+}
+
+async function steps(dbg, sequence) {
+  const locations = [];
+  for (const cmd of sequence) {
+    const packet = await step(dbg, cmd);
+    locations.push(getPauseLocation(packet));
+  }
+  return locations;
+}
+
+async function stepOutOfA(dbg, func, expectedLocation) {
+  await invokeAndPause(dbg, `${func}()`);
+  await steps(dbg, [stepOver, stepIn]);
+
+  dump(`>>> oof\n`);
+  const packet = await step(dbg, stepOut);
+  dump(`>>> foo\n`);
+
+  deepEqual(getPauseLocation(packet), expectedLocation, `step out location in ${func}`);
+
+  await resume(dbg.threadClient);
+}
+
+async function stepOverInA(dbg, func, expectedLocation) {
+  await invokeAndPause(dbg, `${func}()`);
+  await steps(dbg, [stepOver, stepIn, stepOver]);
+
+  let packet = await step(dbg, stepOver);
+  dump(`>> stepOverInA hi\n`);
+  equal(getPauseReturn(packet).ownPropertyLength, 1, "a() is returning obj");
+
+  packet = await step(dbg, stepOver);
+  deepEqual(getPauseLocation(packet), expectedLocation, `step out location in ${func}`);
+
+  await resume(dbg.threadClient);
+}
+
+async function testStep(dbg, func, expectedLocation) {
+  await stepOverInA(dbg, func, expectedLocation);
+  await stepOutOfA(dbg, func, expectedLocation);
+}
 
 function run_test() {
-  do_test_pending();
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-}
+  return (async function() {
+    const dbg = await setupTestFromUrl("stepping.js");
 
-function run_test_with_server(server, callback) {
-  gCallback = callback;
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-stepping", server);
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect(test_simple_stepping);
-}
+    await testStep(dbg, "arithmetic", {line: 16, column: 8});
+    await testStep(dbg, "composition", {line: 21, column: 2});
+    await testStep(dbg, "chaining", {line: 26, column: 6});
 
-async function test_simple_stepping() {
-  const [attachResponse,, threadClient] = await attachTestTabAndResume(gClient,
-                                                                       "test-stepping");
-  ok(!attachResponse.error, "Should not get an error attaching");
-
-  dumpn("Evaluating test code and waiting for first debugger statement");
-  const dbgStmt = await executeOnNextTickAndWaitForPause(evaluateTestCode, gClient);
-  equal(dbgStmt.frame.where.line, 2, "Should be at debugger statement on line 2");
-  equal(gDebuggee.a, undefined);
-  equal(gDebuggee.b, undefined);
-
-  dumpn("Step Over to line 3");
-  const step1 = await stepOver(gClient, threadClient);
-  equal(step1.type, "paused");
-  equal(step1.why.type, "resumeLimit");
-  equal(step1.frame.where.line, 3);
-  equal(gDebuggee.a, undefined);
-  equal(gDebuggee.b, undefined);
-
-  dumpn("Step Over to line 4");
-  const step3 = await stepOver(gClient, threadClient);
-  equal(step3.type, "paused");
-  equal(step3.why.type, "resumeLimit");
-  equal(step3.frame.where.line, 4);
-  equal(gDebuggee.a, 1);
-  equal(gDebuggee.b, undefined);
-
-  dumpn("Step Over to line 4 to leave the frame");
-  const step4 = await stepOver(gClient, threadClient);
-  equal(step4.type, "paused");
-  equal(step4.why.type, "resumeLimit");
-  equal(step4.frame.where.line, 4);
-  equal(gDebuggee.a, 1);
-  equal(gDebuggee.b, 2);
-
-  finishClient(gClient, gCallback);
-}
-
-function evaluateTestCode() {
-  /* eslint-disable */
-  Cu.evalInSandbox(
-    `                                   // 1
-    debugger;                           // 2
-    var a = 1;                          // 3
-    var b = 2;`,                        // 4
-    gDebuggee,
-    "1.8",
-    "test_stepping-01-test-code.js",
-    1
-  );
-  /* eslint-disable */
+    await testFinish(dbg);
+  })();
 }
