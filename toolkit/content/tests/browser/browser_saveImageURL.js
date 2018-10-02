@@ -38,15 +38,18 @@ add_task(async function preferred_API() {
 
     saveImageURL(url, "image.jpg", null, true, false, null, null, null, null,
       false, gBrowser.contentPrincipal);
-    let channel = gBrowser.contentWindowAsCPOW.docShell.currentDocumentChannel;
-    if (channel) {
-      ok(true, channel.QueryInterface(Ci.nsIHttpChannelInternal)
-                      .channelIsForDownload);
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      let channel = docShell.currentDocumentChannel;
+      if (channel) {
+        todo(channel.QueryInterface(Ci.nsIHttpChannelInternal)
+                    .channelIsForDownload);
 
-      // Throttleable is the only class flag assigned to downloads.
-      ok(channel.QueryInterface(Ci.nsIClassOfService).classFlags,
-         Ci.nsIClassOfService.Throttleable);
-    }
+        // Throttleable is the only class flag assigned to downloads.
+        todo(channel.QueryInterface(Ci.nsIClassOfService).classFlags ==
+             Ci.nsIClassOfService.Throttleable);
+      }
+    });
+
     await waitForFilePicker();
   });
 });
@@ -74,15 +77,18 @@ add_task(async function deprecated_API() {
     // pass the XUL document instead to test this interface.
     let doc = document;
 
-    let channel = gBrowser.contentWindowAsCPOW.docShell.currentDocumentChannel;
-    if (channel) {
-      ok(true, channel.QueryInterface(Ci.nsIHttpChannelInternal)
-                      .channelIsForDownload);
 
-      // Throttleable is the only class flag assigned to downloads.
-      ok(channel.QueryInterface(Ci.nsIClassOfService).classFlags,
-         Ci.nsIClassOfService.Throttleable);
-    }
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      let channel = docShell.currentDocumentChannel;
+      if (channel) {
+        todo(channel.QueryInterface(Ci.nsIHttpChannelInternal)
+                    .channelIsForDownload);
+
+        // Throttleable is the only class flag assigned to downloads.
+        todo(channel.QueryInterface(Ci.nsIClassOfService).classFlags ==
+             Ci.nsIClassOfService.Throttleable);
+      }
+    });
     saveImageURL(url, "image.jpg", null, true, false, null, doc, null, null);
     await waitForFilePicker();
   });
