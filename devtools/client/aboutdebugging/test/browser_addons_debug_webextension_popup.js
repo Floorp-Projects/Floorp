@@ -45,6 +45,9 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
   let onReadyForOpenPopup;
   let onPopupCustomMessage;
 
+  is(Services.prefs.getBoolPref("ui.popup.disable_autohide"), false,
+     "disable_autohide shoult be initially false");
+
   Management.on("startup", function listener(event, extension) {
     if (extension.name != ADDON_NAME) {
       return;
@@ -194,7 +197,10 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
 
   await onToolboxClose;
 
-  ok(true, "Addon toolbox closed");
+  info("Addon toolbox closed");
+
+  is(Services.prefs.getBoolPref("ui.popup.disable_autohide"), false,
+     "disable_autohide should be reset to false when the toolbox is closed");
 
   await uninstallAddon({document, id: ADDON_ID, name: ADDON_NAME});
   await closeAboutDebugging(tab);
