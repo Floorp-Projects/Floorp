@@ -242,7 +242,7 @@ RenderThread::RendererCount()
 }
 
 void
-RenderThread::NewFrameReady(wr::WindowId aWindowId)
+RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender)
 {
   if (mHasShutdown) {
     return;
@@ -250,10 +250,11 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
 
   if (!IsInRenderThread()) {
     Loop()->PostTask(
-      NewRunnableMethod<wr::WindowId>("wr::RenderThread::NewFrameReady",
-                                      this,
-                                      &RenderThread::NewFrameReady,
-                                      aWindowId));
+      NewRunnableMethod<wr::WindowId, bool>("wr::RenderThread::NewFrameReady",
+                                            this,
+                                            &RenderThread::HandleFrame,
+                                            aWindowId,
+                                            aRender));
     return;
   }
 
@@ -276,7 +277,7 @@ RenderThread::NewFrameReady(wr::WindowId aWindowId)
     startTime = info->mStartTimes.front();
   }
 
-  UpdateAndRender(aWindowId, startTime);
+  UpdateAndRender(aWindowId, startTime, aRender, /* aReadback */ false);
   FrameRenderingComplete(aWindowId);
 }
 
@@ -353,10 +354,12 @@ NotifyDidRender(layers::CompositorBridgeParent* aBridge,
 void
 RenderThread::UpdateAndRender(wr::WindowId aWindowId,
                               const TimeStamp& aStartTime,
+                              bool aRender,
                               bool aReadback)
 {
   AUTO_PROFILER_TRACING("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
+  MOZ_ASSERT(aRender || !aReadback);
 
   auto it = mRenderers.find(aWindowId);
   MOZ_ASSERT(it != mRenderers.end());
@@ -366,10 +369,10 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
 
   auto& renderer = it->second;
 
-  bool ret = renderer->UpdateAndRender(aReadback);
-  if (!ret) {
-    // Render did not happen, do not call NotifyDidRender.
-    return;
+  if (aRender) {
+    renderer->UpdateAndRender(aReadback);
+  } else {
+    renderer->Update();
   }
 
   TimeStamp end = TimeStamp::Now();
@@ -750,10 +753,10 @@ WebRenderProgramCache::~WebRenderProgramCache()
 
 extern "C" {
 
-static void NewFrameReady(mozilla::wr::WrWindowId aWindowId)
+static void HandleFrame(mozilla::wr::WrWindowId aWindowId, bool aRender)
 {
   mozilla::wr::RenderThread::Get()->IncRenderingFrameCount(aWindowId);
-  mozilla::wr::RenderThread::Get()->NewFrameReady(aWindowId);
+  mozilla::wr::RenderThread::Get()->HandleFrame(aWindowId, aRender);
 }
 
 void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId)
@@ -763,12 +766,12 @@ void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId)
 
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId)
 {
-  NewFrameReady(aWindowId);
+  HandleFrame(aWindowId, /* aRender */ true);
 }
 
 void wr_notifier_nop_frame_done(mozilla::wr::WrWindowId aWindowId)
 {
-  mozilla::wr::RenderThread::Get()->DecPendingFrameCount(aWindowId);
+  HandleFrame(aWindowId, /* aRender */ false);
 }
 
 void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId, size_t aRawEvent)
