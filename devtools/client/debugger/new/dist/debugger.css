@@ -3469,7 +3469,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .frames .location {
-  font-weight: lighter;
+  font-weight: normal;
   display: flex;
   justify-content: space-between;
   flex-direction: row;
