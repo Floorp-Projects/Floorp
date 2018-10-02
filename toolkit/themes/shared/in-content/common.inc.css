@@ -798,7 +798,11 @@ xul|treechildren::-moz-tree-image(selected) {
   border-radius: 4px;
   color: var(--grey-90);
   min-height: 32px;
-  padding: 0 4px;
+  padding: 4px;
+}
+
+.message-bar-description {
+  line-height: 1.25;
 }
 
 /* The message-bar-button styles have extra specificity to override
