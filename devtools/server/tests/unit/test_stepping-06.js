@@ -8,103 +8,140 @@
  * Check that stepping out of a function returns the right return value.
  */
 
-var gDebuggee;
-var gClient;
-var gThreadClient;
-var gCallback;
+async function invokeAndPause({global, debuggerClient}, expression) {
+  return executeOnNextTickAndWaitForPause(
+    () => Cu.evalInSandbox(expression, global),
+    debuggerClient
+  );
+}
+
+async function step({threadClient, debuggerClient}, cmd) {
+  return cmd(debuggerClient, threadClient);
+}
+
+function getPauseLocation(packet) {
+  const {line, column} = packet.frame.where;
+  return {line, column};
+}
+
+function getFrameFinished(packet) {
+  return packet.why.frameFinished;
+}
+
+async function steps(dbg, sequence) {
+  const locations = [];
+  for (const cmd of sequence) {
+    const packet = await step(dbg, cmd);
+    locations.push(getPauseLocation(packet));
+  }
+  return locations;
+}
+
+async function testFinish({threadClient, debuggerClient}) {
+  await resume(threadClient);
+  await close(debuggerClient);
+
+  do_test_finished();
+}
+
+async function testRet(dbg) {
+  let packet;
+
+  info(`1. Test returning from doRet via stepping over`);
+  await invokeAndPause(dbg, `doRet()`);
+  await steps(dbg, [stepOver, stepIn, stepOver]);
+  packet = await step(dbg, stepOver);
+
+  deepEqual(
+    getPauseLocation(packet),
+    {line: 6, column: 0},
+    `completion location in doRet`
+  );
+  deepEqual(
+    getFrameFinished(packet),
+    {"return": 2}, `completion value`);
+
+  await resume(dbg.threadClient);
+
+  info(`2. Test leaving from doRet via stepping out`);
+  await invokeAndPause(dbg, `doRet()`);
+  await steps(dbg, [stepOver, stepIn]);
+
+  packet = await step(dbg, stepOut);
+
+  deepEqual(
+    getPauseLocation(packet),
+    {line: 15, column: 2},
+    `completion location in doThrow`
+  );
+
+  deepEqual(
+    getFrameFinished(packet),
+    {"return": 2},
+    `completion completion value`
+  );
+
+  await resume(dbg.threadClient);
+}
+
+async function testThrow(dbg) {
+  let packet;
+
+  info(`3. Test leaving from doThrow via stepping over`);
+  await invokeAndPause(dbg, `doThrow()`);
+  await steps(dbg, [stepOver, stepOver, stepIn]);
+  packet = await step(dbg, stepOver);
+
+  deepEqual(
+    getPauseLocation(packet),
+    {line: 9, column: 8},
+    `completion location in doThrow`
+  );
+
+  deepEqual(
+    getFrameFinished(packet).throw.class,
+    "Error",
+    `completion value class`
+  );
+  deepEqual(
+    getFrameFinished(packet).throw.preview.message,
+    "yo",
+    `completion value preview`
+  );
+
+  await resume(dbg.threadClient);
+
+  info(`4. Test leaving from doThrow via stepping out`);
+  await invokeAndPause(dbg, `doThrow()`);
+  await steps(dbg, [stepOver, stepOver, stepIn]);
+
+  packet = await step(dbg, stepOut);
+  deepEqual(
+    getPauseLocation(packet),
+    {line: 22, column: 14},
+    `completion location in doThrow`
+  );
+
+  deepEqual(
+    getFrameFinished(packet).throw.class,
+    "Error",
+    `completion completion value class`
+  );
+  deepEqual(
+    getFrameFinished(packet).throw.preview.message,
+    "yo",
+    `completion completion value preview`
+  );
+  await resume(dbg.threadClient);
+}
 
 function run_test() {
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-  do_test_pending();
-}
+  return (async function() {
+    const dbg = await setupTestFromUrl("completions.js");
 
-function run_test_with_server(server, callback) {
-  gCallback = callback;
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-stack", server);
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(
-      gClient, "test-stack",
-      function(response, tabClient, threadClient) {
-        gThreadClient = threadClient;
-        // XXX: We have to do an executeSoon so that the error isn't caught and
-        // reported by DebuggerClient.requester (because we are using the local
-        // transport and share a stack) which causes the test to fail.
-        Services.tm.dispatchToMainThread({
-          run: test_simple_stepping
-        });
-      });
-  });
-}
+    await testRet(dbg);
+    await testThrow(dbg);
 
-async function test_simple_stepping() {
-  await executeOnNextTickAndWaitForPause(evaluateTestCode, gClient);
-
-  const step1 = await stepOut(gClient, gThreadClient);
-  equal(step1.type, "paused");
-  equal(step1.frame.where.line, 6);
-  equal(step1.why.type, "resumeLimit");
-  equal(step1.why.frameFinished.return, 10);
-
-  gThreadClient.resume();
-  const step2 = await waitForPause(gThreadClient);
-  equal(step2.type, "paused");
-  equal(step2.frame.where.line, 8);
-  equal(step2.why.type, "debuggerStatement");
-
-  gThreadClient.stepOut();
-  const step3 = await waitForPause(gThreadClient);
-  equal(step3.type, "paused");
-  equal(step3.frame.where.line, 9);
-  equal(step3.why.type, "resumeLimit");
-  equal(step3.why.frameFinished.return.type, "undefined");
-
-  gThreadClient.resume();
-  const step4 = await waitForPause(gThreadClient);
-
-  equal(step4.type, "paused");
-  equal(step4.frame.where.line, 11);
-
-  gThreadClient.stepOut();
-  const step5 = await waitForPause(gThreadClient);
-  equal(step5.type, "paused");
-  equal(step5.frame.where.line, 12);
-  equal(step5.why.type, "resumeLimit");
-  equal(step5.why.frameFinished.throw, "ah");
-
-  finishClient(gClient, gCallback);
-}
-
-function evaluateTestCode() {
-  /* eslint-disable */
-  Cu.evalInSandbox(
-    `                                   //  1
-    function f() {                      //  2
-      debugger;                         //  3
-      var a = 10;                       //  4
-      return a;                         //  5
-    }                                   //  6
-    function g() {                      //  7
-      debugger;                         //  8
-    }                                   //  9
-    function h() {                      // 10
-      debugger;                         // 11
-      throw 'ah';                       // 12
-      return 2;                         // 13
-    }                                   // 14
-    f()                                 // 15
-    g()                                 // 16
-    try {                               // 17
-      h();                              // 18
-    } catch (ex) { };                   // 19
-    `,                                  // 20
-    gDebuggee,
-    "1.8",
-    "test_stepping-07-test-code.js",
-    1
-  );
-  /* eslint-enable */
+    await testFinish(dbg);
+  })();
 }
