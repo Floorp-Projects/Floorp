@@ -277,11 +277,21 @@ static const Latin1Char REPLACE_UTF8_LATIN1 = '?';
 
 // If making changes to this algorithm, make sure to also update
 // LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
+//
+// Scan UTF8 input and (internally, at least) convert it to a series of
+// UTF-16 code units. But you can also do odd things like pass
+// CharT=Latin1Char, in which case each output code unit is silently truncated
+// to 8 bits; or Action=Count, in which case the output is discarded entirely
+// because we're just counting how many UTF-16 code units of output there are.
 template <InflateUTF8Action Action, OnUTF8Error ErrorAction, typename CharT>
 static bool
-InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t* dstlenp,
-                          JS::SmallestEncoding *smallestEncoding)
+InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, CharT* dst, size_t* dstlenp,
+                   JS::SmallestEncoding *smallestEncoding)
 {
+    static_assert(std::is_same<CharT, char16_t>::value ||
+                  std::is_same<CharT, Latin1Char>::value,
+                  "bad CharT");
+
     if (Action != Nop) {
         *smallestEncoding = JS::SmallestEncoding::ASCII;
     }
@@ -420,7 +430,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
     *outlen = 0;
 
     JS::SmallestEncoding encoding;
-    if (!InflateUTF8StringToBuffer<Count, ErrorAction, CharT>(cx, src, /* dst = */ nullptr, outlen, &encoding)) {
+    if (!InflateUTF8ToUTF16<Count, ErrorAction, CharT>(cx, src, /* dst = */ nullptr, outlen, &encoding)) {
         return CharsT();
     }
 
@@ -437,7 +447,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
             dst[i] = CharT(src[i]);
         }
     } else {
-        MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<Copy, OnUTF8Error::InsertReplacementCharacter, CharT>(cx, src, dst, outlen, &encoding)));
+        MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<Copy, OnUTF8Error::InsertReplacementCharacter, CharT>(cx, src, dst, outlen, &encoding)));
     }
 
     dst[*outlen] = 0;    // NUL char
@@ -475,7 +485,7 @@ JS::SmallestEncoding
 JS::FindSmallestEncoding(UTF8Chars utf8)
 {
     JS::SmallestEncoding encoding;
-    MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<FindEncoding, OnUTF8Error::InsertReplacementCharacter, char16_t>(
+    MOZ_ALWAYS_TRUE((InflateUTF8ToUTF16<FindEncoding, OnUTF8Error::InsertReplacementCharacter, char16_t>(
                          /* cx = */ nullptr,
                          utf8,
                          /* dst = */ nullptr,
@@ -502,7 +512,7 @@ JS::ConstUTF8CharsZ::validate(size_t aLength)
 {
     MOZ_ASSERT(data_);
     UTF8Chars chars(data_, aLength);
-    InflateUTF8StringToBuffer<Nop, OnUTF8Error::Crash, char16_t>(
+    InflateUTF8ToUTF16<Nop, OnUTF8Error::Crash, char16_t>(
         /* cx = */ nullptr,
         chars,
         /* dst = */ nullptr,
