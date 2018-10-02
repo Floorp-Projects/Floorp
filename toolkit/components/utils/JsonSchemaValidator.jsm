@@ -108,26 +108,52 @@ function validateAndParseParamRecursive(param, properties) {
       }
 
       let parsedObj = {};
-      for (let property of Object.keys(properties.properties)) {
-        log.debug(`in object, checking\n    property: ${property}\n    value: ${param[property]}\n    expected type: ${properties.properties[property].type}`);
-
-        if (!param.hasOwnProperty(property)) {
-          if (properties.required && properties.required.includes(property)) {
-            log.error(`Object is missing required property ${property}`);
-            return [false, null];
+      let patternProperties = [];
+      if ("patternProperties" in properties) {
+        for (let propName of Object.keys(properties.patternProperties || {})) {
+          let pattern;
+          try {
+            pattern = new RegExp(propName);
+          } catch (e) {
+            throw new Error(`Internal error: Invalid property pattern ${propName}`);
           }
-          continue;
+          patternProperties.push({
+            pattern,
+            schema: properties.patternProperties[propName],
+          });
         }
-
-        let [valid, parsedValue] = validateAndParseParamRecursive(param[property], properties.properties[property]);
-
-        if (!valid) {
-          return [false, null];
-        }
-
-        parsedObj[property] = parsedValue;
       }
 
+      if (properties.required) {
+        for (let required of properties.required) {
+          if (!(required in param)) {
+            log.error(`Object is missing required property ${required}`);
+            return [false, null];
+          }
+        }
+      }
+
+      for (let item of Object.keys(param)) {
+        let schema;
+        if ("properties" in properties &&
+            properties.properties.hasOwnProperty(item)) {
+          schema = properties.properties[item];
+        } else if (patternProperties.length) {
+          for (let patternProperty of patternProperties) {
+            if (patternProperty.pattern.test(item)) {
+              schema = patternProperty.schema;
+              break;
+            }
+          }
+        }
+        if (schema) {
+          let [valid, parsedValue] = validateAndParseParamRecursive(param[item], schema);
+          if (!valid) {
+            return [false, null];
+          }
+          parsedObj[item] = parsedValue;
+        }
+      }
       return [true, parsedObj];
     }
   }
