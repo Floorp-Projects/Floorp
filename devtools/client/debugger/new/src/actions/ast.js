@@ -59,7 +59,7 @@ function setSymbols(sourceId) {
   }) => {
     const source = (0, _selectors.getSourceFromId)(getState(), sourceId);
 
-    if (source.isWasm || (0, _selectors.hasSymbols)(getState(), source)) {
+    if (source.isWasm || (0, _selectors.hasSymbols)(getState(), source) || !(0, _source.isLoaded)(source)) {
       return;
     }
 

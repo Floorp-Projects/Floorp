@@ -934,6 +934,12 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults)
     // for EXPECTED_FUZZY we need special handling because we can have
     // Pass, UnexpectedPass, or UnexpectedFail
 
+    if ((g.currentURLTargetType == URL_TARGET_TYPE_TEST && g.urls[0].wrCapture.test) ||
+        (g.currentURLTargetType == URL_TARGET_TYPE_REFERENCE && g.urls[0].wrCapture.ref)) {
+      logger.info("Running webrender capture");
+      g.windowUtils.wrCapture();
+    }
+
     var output;
     var extra;
 

@@ -471,21 +471,6 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(uint32_t aStatusType,
       nullptr);
 }
 
-NS_IMETHODIMP nsContentTreeOwner::SetWebBrowser(nsIWebBrowser* aWebBrowser)
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::GetWebBrowser(nsIWebBrowser** aWebBrowser)
-{
-  // Unimplemented, and probably will remain so; xpfe windows have docshells,
-  // not webbrowsers.
-  NS_ENSURE_ARG_POINTER(aWebBrowser);
-  *aWebBrowser = 0;
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsContentTreeOwner::SetChromeFlags(uint32_t aChromeFlags)
 {
    NS_ENSURE_STATE(mXULWindow);
@@ -496,18 +481,6 @@ NS_IMETHODIMP nsContentTreeOwner::GetChromeFlags(uint32_t* aChromeFlags)
 {
   NS_ENSURE_STATE(mXULWindow);
   return mXULWindow->GetChromeFlags(aChromeFlags);
-}
-
-NS_IMETHODIMP nsContentTreeOwner::DestroyBrowserWindow()
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::SizeBrowserTo(int32_t aCX, int32_t aCY)
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
@@ -521,12 +494,6 @@ NS_IMETHODIMP nsContentTreeOwner::IsWindowModal(bool *_retval)
   NS_ENSURE_STATE(mXULWindow);
   *_retval = mXULWindow->mContinueModalLoop;
   return NS_OK;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::ExitModalEventLoop(nsresult aStatus)
-{
-   NS_ENSURE_STATE(mXULWindow);
-   return mXULWindow->ExitModalLoop(aStatus);
 }
 
 //*****************************************************************************

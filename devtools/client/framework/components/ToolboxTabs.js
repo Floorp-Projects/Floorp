@@ -7,13 +7,21 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+const { ToolboxTabsOrderManager } = require("devtools/client/framework/toolbox-tabs-order-manager");
+
 const { div } = dom;
 
-const MenuButton = createFactory(require("devtools/client/shared/components/menu/MenuButton"));
-const MenuItem = createFactory(require("devtools/client/shared/components/menu/MenuItem"));
-const MenuList = createFactory(require("devtools/client/shared/components/menu/MenuList"));
 const ToolboxTab = createFactory(require("devtools/client/framework/components/ToolboxTab"));
-const { ToolboxTabsOrderManager } = require("devtools/client/framework/toolbox-tabs-order-manager");
+
+loader.lazyGetter(this, "MenuButton", function() {
+  return createFactory(require("devtools/client/shared/components/menu/MenuButton"));
+});
+loader.lazyGetter(this, "MenuItem", function() {
+  return createFactory(require("devtools/client/shared/components/menu/MenuItem"));
+});
+loader.lazyGetter(this, "MenuList", function() {
+  return createFactory(require("devtools/client/shared/components/menu/MenuList"));
+});
 
 // 26px is chevron devtools button width.(i.e. tools-chevronmenu)
 const CHEVRON_BUTTON_WIDTH = 26;

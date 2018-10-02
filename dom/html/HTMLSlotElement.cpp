@@ -143,7 +143,8 @@ FlattenAssignedNodes(HTMLSlotElement* aSlot, nsTArray<RefPtr<nsINode>>& aNodes)
   }
 
   for (const RefPtr<nsINode>& assignedNode : assignedNodes) {
-    if (auto* slot = HTMLSlotElement::FromNode(assignedNode)) {
+    auto* slot = HTMLSlotElement::FromNode(assignedNode);
+    if (slot && slot->GetContainingShadow()) {
       FlattenAssignedNodes(slot, aNodes);
     } else {
       aNodes.AppendElement(assignedNode);

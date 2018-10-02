@@ -341,7 +341,7 @@ PaymentResponse::ValidatePaymentValidationErrors(
     return NS_OK;
   }
   // check PaymentValidationErrors.payer
-  PayerErrorFields payerErrors(aErrors.mPayer);
+  PayerErrors payerErrors(aErrors.mPayer);
   if (payerErrors.mName.WasPassed() && !payerErrors.mName.Value().IsEmpty()) {
     return NS_OK;
   }

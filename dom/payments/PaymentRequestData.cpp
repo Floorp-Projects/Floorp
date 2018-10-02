@@ -492,7 +492,7 @@ PaymentDetails::GetShippingAddressErrors(JSContext* aCx, JS::MutableHandleValue 
 NS_IMETHODIMP
 PaymentDetails::GetPayer(JSContext* aCx, JS::MutableHandleValue aErrors)
 {
-  PayerErrorFields errors;
+  PayerErrors errors;
   errors.Init(mPayerErrors);
   if (!ToJSValue(aCx, errors, aErrors)) {
     return NS_ERROR_FAILURE;

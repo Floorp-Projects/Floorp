@@ -97,9 +97,9 @@ function setPreview(expression, location, tokenPos, cursorPos) {
         const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 
         if (location && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId)) {
-          const mapResult =
-            await dispatch((0, _expressions.getMappedExpression)(expression));
-          if (mapResult !== null) {
+          const mapResult = await dispatch((0, _expressions.getMappedExpression)(expression));
+
+          if (mapResult) {
             expression = mapResult.expression;
           }
         }
