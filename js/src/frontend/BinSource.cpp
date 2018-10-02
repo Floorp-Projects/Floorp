@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Vector.h"
 
 #include "frontend/BinSource-macros.h"
@@ -75,7 +76,8 @@ namespace frontend {
 
 using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
-BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames)
+BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+                                   HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript)
   : AutoGCRooter(cx, AutoGCRooter::Tag::BinParser)
   , cx_(cx)
   , alloc_(alloc)
@@ -83,9 +85,12 @@ BinASTParserBase::BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTrac
   , usedNames_(usedNames)
   , nodeAlloc_(cx, alloc)
   , keepAtoms_(cx)
+  , sourceObject_(cx, sourceObject)
+  , lazyScript_(cx, lazyScript)
   , parseContext_(nullptr)
   , factory_(cx, alloc, nullptr, SourceKind::Binary)
 {
+    MOZ_ASSERT_IF(lazyScript, lazyScript->isBinAST());
     cx->frontendCollectionPool().addActiveCompilation();
     tempPoolMark_ = alloc.mark();
 }
@@ -154,6 +159,54 @@ BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
     return result; // Magic conversion to Ok.
 }
 
+template<typename Tok> JS::Result<ParseNode*>
+BinASTParser<Tok>::parseLazyFunction(const uint8_t* start, const size_t firstOffset, const size_t len)
+{
+    MOZ_ASSERT(lazyScript_);
+
+    tokenizer_.emplace(cx_, this, start, len);
+
+    // Re-initialize the tokenizer
+    mozilla::DebugOnly<bool> success = tokenizer_->readHeader().isOk();
+    MOZ_ASSERT(success);
+
+    tokenizer_->seek(firstOffset);
+
+    // For now, only function declarations and function expression are supported.
+    RootedFunction func(cx_, lazyScript_->functionNonDelazifying());
+    bool isExpr = func->isLambda();
+    MOZ_ASSERT(func->kind() == JSFunction::FunctionKind::NormalFunction);
+
+    // Poison the tokenizer when we leave to ensure that it's not used again by accident.
+    auto onExit = mozilla::MakeScopeExit([&]() { poison(); });
+
+    // TODO: This should be actually shared with the auto-generated version.
+
+    auto syntaxKind = isExpr ? FunctionSyntaxKind::Expression : FunctionSyntaxKind::Statement;
+    BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(lazyScript_->generatorKind(),
+                                                lazyScript_->asyncKind(), syntaxKind, nullptr));
+
+    // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
+    BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+    BINJS_TRY(funpc.init());
+    parseContext_->functionScope().useAsVarScope(parseContext_);
+    MOZ_ASSERT(parseContext_->isFunctionBox());
+
+    ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
+    BINJS_TRY(lexicalScope.init(parseContext_));
+    ListNode* params;
+    ListNode* tmpBody;
+    auto parseFunc = isExpr ? &BinASTParser::parseFunctionExpressionContents
+                            : &BinASTParser::parseFunctionOrMethodContents;
+    MOZ_TRY((this->*parseFunc)(func->nargs(), &params, &tmpBody));
+
+    BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
+    BINJS_TRY_DECL(body, factory_.newLexicalScope(*lexicalScopeData, tmpBody));
+
+    auto binKind = isExpr ? BinKind::LazyFunctionExpression : BinKind::LazyFunctionDeclaration;
+    return buildFunction(firstOffset, binKind, nullptr, params, body, funbox);
+}
+
 template<typename Tok> void
 BinASTParser<Tok>::forceStrictIfNecessary(FunctionBox* funbox, ListNode* directives)
 {
@@ -173,6 +226,8 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
     FunctionSyntaxKind syntax,
     ParseNode* name)
 {
+    MOZ_ASSERT_IF(!parseContext_, lazyScript_);
+
     RootedAtom atom(cx_);
     if (name) {
         atom = name->name();
@@ -186,33 +241,39 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
 
     // Allocate the function before walking down the tree.
     RootedFunction fun(cx_);
-    BINJS_TRY_VAR(fun, AllocNewFunction(cx_, atom, syntax, generatorKind, functionAsyncKind, nullptr));
+    BINJS_TRY_VAR(fun, !parseContext_
+        ? lazyScript_->functionNonDelazifying()
+        : AllocNewFunction(cx_, atom, syntax, generatorKind, functionAsyncKind, nullptr));
+    MOZ_ASSERT_IF(parseContext_, fun->explicitName() == atom);
+
+    mozilla::Maybe<Directives> directives;
+    if (parseContext_) {
+        directives.emplace(parseContext_);
+    } else {
+        directives.emplace(lazyScript_->strict());
+    }
 
     auto* funbox = alloc_.new_<FunctionBox>(cx_, traceListHead_, fun, /* toStringStart = */ 0,
-                                            Directives(parseContext_), /* extraWarning = */ false,
+                                            *directives, /* extraWarning = */ false,
                                             generatorKind, functionAsyncKind);
     if (!funbox) {
         return raiseOOM();
     }
 
     traceListHead_ = funbox;
-    funbox->initWithEnclosingParseContext(parseContext_, syntax);
+    if (parseContext_) {
+        funbox->initWithEnclosingParseContext(parseContext_, syntax);
+    } else {
+        funbox->initFromLazyFunction();
+    }
     return funbox;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
-                                 ListNode* params, ParseNode* body, FunctionBox* funbox)
+template<typename Tok> JS::Result<CodeNode*>
+BinASTParser<Tok>::makeEmptyFunctionNode(const size_t start, const BinKind kind, FunctionBox* funbox)
 {
+    // LazyScript compilation requires basically none of the fields filled out.
     TokenPos pos = tokenizer_->pos(start);
-
-    // Set the argument count for building argument packets. Function.length is handled
-    // by setting the appropriate funbox field during argument parsing.
-    funbox->function()->setArgCount(params ? uint16_t(params->count()) : 0);
-
-    // ParseNode represents the body as concatenated after the params.
-    params->appendWithoutOrderAssumption(body);
-
     bool isStatement = kind == BinKind::EagerFunctionDeclaration ||
                        kind == BinKind::LazyFunctionDeclaration;
 
@@ -221,6 +282,25 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
                      : factory_.newFunctionExpression(pos));
 
     factory_.setFunctionBox(result, funbox);
+
+    return result;
+}
+
+template<typename Tok> JS::Result<ParseNode*>
+BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
+                                 ListNode* params, ParseNode* body, FunctionBox* funbox)
+{
+    // Set the argument count for building argument packets. Function.length is handled
+    // by setting the appropriate funbox field during argument parsing.
+    if (!lazyScript_ || lazyScript_->functionNonDelazifying() != funbox->function()) {
+        funbox->function()->setArgCount(params ? uint16_t(params->count()) : 0);
+    }
+
+    // ParseNode represents the body as concatenated after the params.
+    params->appendWithoutOrderAssumption(body);
+
+    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
+
     factory_.setFunctionFormalParametersAndBody(result, params);
 
     HandlePropertyName dotThis = cx_->names().dotThis;
