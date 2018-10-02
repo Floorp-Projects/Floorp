@@ -24,13 +24,20 @@ const char nsWindow::NativePtr<mozilla::a11y::SessionAccessibility>::sName[] =
 using namespace mozilla::a11y;
 
 void
-SessionAccessibility::SetAttached(bool aAttached)
+SessionAccessibility::SetAttached(bool aAttached,
+                                  already_AddRefed<Runnable> aRunnable)
 {
   if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
     uiThread->Dispatch(NS_NewRunnableFunction(
       "SessionAccessibility::Attach",
       [aAttached,
        sa = java::SessionAccessibility::NativeProvider::GlobalRef(
-         mSessionAccessibility)] { sa->SetAttached(aAttached); }));
+           mSessionAccessibility),
+       runnable = RefPtr<Runnable>(aRunnable)] {
+        sa->SetAttached(aAttached);
+        if (runnable) {
+          runnable->Run();
+        }
+      }));
   }
 }
