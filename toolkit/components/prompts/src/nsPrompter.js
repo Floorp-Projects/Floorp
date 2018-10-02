@@ -291,8 +291,15 @@ var PromptUtilsTemp = {
             var chromeWin =
                 promptWin.docShell.chromeEventHandler.ownerGlobal.wrappedJSObject;
 
-            if (chromeWin.getTabModalPromptBox)
-                promptBox = chromeWin.getTabModalPromptBox(promptWin);
+            if (chromeWin) {
+                if (chromeWin.gBrowser &&
+                    chromeWin.gBrowser.getTabModalPromptBox) {
+                    let browser = promptWin.docShell.chromeEventHandler;
+                    promptBox = chromeWin.gBrowser.getTabModalPromptBox(browser);
+                } else if (chromeWin.getTabModalPromptBox) {
+                    chromeWin.getTabModalPromptBox(promptWin);
+                }
+            }
         } catch (e) {
             // If any errors happen, just assume no tabmodal prompter.
         }
