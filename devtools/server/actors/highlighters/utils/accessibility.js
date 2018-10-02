@@ -4,9 +4,14 @@
 
 "use strict";
 
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getCurrentZoom, getViewportDimensions } = require("devtools/shared/layout/utils");
 const { moveInfobar, createNode } = require("./markup");
 const { truncateString } = require("devtools/shared/inspector/utils");
+
+const STRINGS_URI = "devtools/shared/locales/accessibility.properties";
+loader.lazyRequireGetter(this, "LocalizationHelper", "devtools/shared/l10n", true);
+DevToolsUtils.defineLazyGetter(this, "L10N", () => new LocalizationHelper(STRINGS_URI));
 
 // Max string length for truncating accessible name values.
 const MAX_STRING_LENGTH = 50;
@@ -19,6 +24,7 @@ const MAX_STRING_LENGTH = 50;
 class Infobar {
   constructor(highlighter) {
     this.highlighter = highlighter;
+    this.audit = new Audit(this);
   }
 
   get document() {
@@ -110,6 +116,8 @@ class Infobar {
       },
       prefix: this.prefix,
     });
+
+    this.audit.buildMarkup(infobarText);
   }
 
   /**
@@ -117,6 +125,8 @@ class Infobar {
    */
   destroy() {
     this.highlighter = null;
+    this.audit.destroy();
+    this.audit = null;
   }
 
   /**
@@ -168,10 +178,11 @@ class Infobar {
    * Update content of the infobar.
    */
   update(container) {
-    const { name, role } = this.options;
+    const { audit, name, role } = this.options;
 
     this.updateRole(role, this.getElement("infobar-role"));
     this.updateName(name, this.getElement("infobar-name"));
+    this.audit.update(audit);
 
     // Position the infobar.
     this._moveInfobar(container);
@@ -356,6 +367,145 @@ class XULWindowInfobar extends Infobar {
 }
 
 /**
+ * Audit component used within the accessible highlighter infobar. This component is
+ * responsible for rendering and updating its containing AuditReport components that
+ * display various audit information such as contrast ratio score.
+ */
+class Audit {
+  constructor(infobar) {
+    this.infobar = infobar;
+
+    // A list of audit reports to be shown on the fly when highlighting an accessible
+    // object.
+    this.reports = [
+      new ContrastRatio(this)
+    ];
+  }
+
+  get prefix() {
+    return this.infobar.prefix;
+  }
+
+  get win() {
+    return this.infobar.win;
+  }
+
+  buildMarkup(root) {
+    const audit = createNode(this.win, {
+      nodeType: "span",
+      parent: root,
+      attributes: {
+        "class": "infobar-audit",
+        "id": "infobar-audit",
+      },
+      prefix: this.prefix,
+    });
+
+    this.reports.forEach(report => report.buildMarkup(audit));
+  }
+
+  update(audit = {}) {
+    const el = this.getElement("infobar-audit");
+    el.setAttribute("hidden", true);
+
+    let updated = false;
+    this.reports.forEach(report => {
+      if (report.update(audit)) {
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      el.removeAttribute("hidden");
+    }
+  }
+
+  getElement(id) {
+    return this.infobar.getElement(id);
+  }
+
+  setTextContent(el, text) {
+    return this.infobar.setTextContent(el, text);
+  }
+
+  destroy() {
+    this.infobar = null;
+    this.reports.forEach(report => report.destroy());
+    this.reports = null;
+  }
+}
+
+/**
+ * A common interface between audit report components used to render accessibility audit
+ * information for the currently highlighted accessible object.
+ */
+class AuditReport {
+  constructor(audit) {
+    this.audit = audit;
+  }
+
+  get prefix() {
+    return this.audit.prefix;
+  }
+
+  get win() {
+    return this.audit.win;
+  }
+
+  getElement(id) {
+    return this.audit.getElement(id);
+  }
+
+  setTextContent(el, text) {
+    return this.audit.setTextContent(el, text);
+  }
+
+  destroy() {
+    this.audit = null;
+  }
+}
+
+/**
+ * Contrast ratio audit report that is used to display contrast ratio score as part of the
+ * inforbar,
+ */
+class ContrastRatio extends AuditReport {
+  buildMarkup(root) {
+    createNode(this.win, {
+      nodeType: "span",
+      parent: root,
+      attributes: {
+        "class": "contrast-ratio",
+        "id": "contrast-ratio",
+      },
+      prefix: this.prefix,
+    });
+  }
+
+  /**
+   * Update contrast ratio score infobar markup.
+   * @param  {Number}
+   *         Contrast ratio for an accessible object being highlighted.
+   * @return {Boolean}
+   *         True if the contrast ratio markup was updated correctly and infobar audit
+   *         block should be visible.
+   */
+  update({ contrastRatio }) {
+    const el = this.getElement("contrast-ratio");
+    ["fail", "AA", "AAA"].forEach(style => el.classList.remove(style));
+
+    if (!contrastRatio) {
+      return false;
+    }
+
+    el.classList.add(getContrastRatioScoreStyle(contrastRatio));
+    this.setTextContent(el,
+      L10N.getFormatStr("accessibility.contrast.ratio", contrastRatio.ratio.toFixed(2)));
+    return true;
+  }
+}
+
+/**
  * A helper function that calculate accessible object bounds and positioning to
  * be used for highlighting.
  *
@@ -408,6 +558,29 @@ function getBounds(win, { x, y, w, h, zoom }) {
   const height = bottom - top;
 
   return { left, right, top, bottom, width, height };
+}
+
+/**
+ * Get contrast ratio score styling to be applied on the element that renders the contrast
+ * ratio.
+ * @param  {Number} options.ratio
+ *         Value of the contrast ratio for a given accessible object.
+ * @param  {Boolean} options.largeText
+ *         True if the accessible object contains large text.
+ * @return {String}
+ *         CSS class that represents the appropriate contrast ratio score styling.
+ */
+function getContrastRatioScoreStyle({ ratio, largeText }) {
+  const levels = largeText ? { AA: 3, AAA: 4.5 } : { AA: 4.5, AAA: 7 };
+
+  let style = "fail";
+  if (ratio >= levels.AAA) {
+    style = "AAA";
+  } else if (ratio >= levels.AA) {
+    style = "AA";
+  }
+
+  return style;
 }
 
 exports.MAX_STRING_LENGTH = MAX_STRING_LENGTH;

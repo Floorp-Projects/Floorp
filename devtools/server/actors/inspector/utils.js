@@ -6,6 +6,7 @@
 
 const {Cu} = require("chrome");
 
+loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
@@ -13,6 +14,8 @@ loader.lazyRequireGetter(this, "nodeFilterConstants", "devtools/shared/dom-node-
 
 loader.lazyRequireGetter(this, "isNativeAnonymous", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isXBLAnonymous", "devtools/shared/layout/utils", true);
+
+loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -245,8 +248,67 @@ const imageToImageData = async function(node, maxDim) {
   };
 };
 
+/**
+ * Finds the computed background color of the closest parent with a set background color.
+ *
+ * @param  {DOMNode}  node
+ *         Node for which we want to find closest background color.
+ * @return {String}
+ *         String with the background color of the form rgba(r, g, b, a). Defaults to
+ *         rgba(255, 255, 255, 1) if no background color is found.
+ */
+function getClosestBackgroundColor(node) {
+  let current = node;
+
+  while (current) {
+    const computedStyle = CssLogic.getComputedStyle(current);
+    if (computedStyle) {
+      const currentStyle = computedStyle.getPropertyValue("background-color");
+      if (colorUtils.isValidCSSColor(currentStyle)) {
+        const currentCssColor = new colorUtils.CssColor(currentStyle);
+        if (!currentCssColor.isTransparent()) {
+          return currentCssColor.rgba;
+        }
+      }
+    }
+
+    current = current.parentNode;
+  }
+
+  return "rgba(255, 255, 255, 1)";
+}
+
+/**
+ * Finds the background image of the closest parent where it is set.
+ *
+ * @param  {DOMNode}  node
+ *         Node for which we want to find the background image.
+ * @return {String}
+ *         String with the value of the background iamge property. Defaults to "none" if
+ *         no background image is found.
+ */
+function getClosestBackgroundImage(node) {
+  let current = node;
+
+  while (current.ownerDocument) {
+    const computedStyle = CssLogic.getComputedStyle(current);
+    if (computedStyle) {
+      const currentBackgroundImage = computedStyle.getPropertyValue("background-image");
+      if (currentBackgroundImage !== "none") {
+        return currentBackgroundImage;
+      }
+    }
+
+    current = current.parentNode;
+  }
+
+  return "none";
+}
+
 module.exports = {
   allAnonymousContentTreeWalkerFilter,
+  getClosestBackgroundColor,
+  getClosestBackgroundImage,
   getNodeDisplayName,
   imageToImageData,
   isNodeDead,

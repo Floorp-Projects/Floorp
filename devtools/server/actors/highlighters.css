@@ -647,13 +647,32 @@
   fill: #6a5acd;
 }
 
-:-moz-native-anonymous .accessible-infobar-name {
-  color:var(--highlighter-infobar-color);
+:-moz-native-anonymous .accessible-infobar-name,
+:-moz-native-anonymous .accessible-infobar-audit {
+  color: var(--highlighter-infobar-color);
   max-width: 90%;
 }
 
-:-moz-native-anonymous .accessible-infobar-name:not(:empty) {
-  color: var(--highlighter-infobar-color);
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after,
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
+  color: #90E274;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).fail:after {
+  color: #E57180;
+  content: " ⚠️";
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after {
+  content: " AA\2713";
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
+  content: " AAA\2713";
+}
+
+:-moz-native-anonymous .accessible-infobar-name:not(:empty),
+:-moz-native-anonymous .accessible-infobar-audit:not(:empty) {
   border-inline-start: 1px solid #5a6169;
   margin-inline-start: 6px;
   padding-inline-start: 6px;
