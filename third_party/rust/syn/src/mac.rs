@@ -8,8 +8,12 @@
 
 use super::*;
 use proc_macro2::TokenStream;
+#[cfg(feature = "parsing")]
+use proc_macro2::{Delimiter, TokenTree};
 use token::{Brace, Bracket, Paren};
 
+#[cfg(feature = "parsing")]
+use parse::{ParseStream, Result};
 #[cfg(feature = "extra-traits")]
 use std::hash::{Hash, Hasher};
 #[cfg(feature = "extra-traits")]
@@ -67,26 +71,44 @@ impl Hash for Macro {
 }
 
 #[cfg(feature = "parsing")]
+pub fn parse_delimiter(input: ParseStream) -> Result<(MacroDelimiter, TokenStream)> {
+    input.step(|cursor| {
+        if let Some((TokenTree::Group(g), rest)) = cursor.token_tree() {
+            let span = g.span();
+            let delimiter = match g.delimiter() {
+                Delimiter::Parenthesis => MacroDelimiter::Paren(Paren(span)),
+                Delimiter::Brace => MacroDelimiter::Brace(Brace(span)),
+                Delimiter::Bracket => MacroDelimiter::Bracket(Bracket(span)),
+                Delimiter::None => {
+                    return Err(cursor.error("expected delimiter"));
+                }
+            };
+            Ok(((delimiter, g.stream().clone()), rest))
+        } else {
+            Err(cursor.error("expected delimiter"))
+        }
+    })
+}
+
+#[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
 
-    use synom::Synom;
+    use parse::{Parse, ParseStream, Result};
 
-    impl Synom for Macro {
-        named!(parse -> Self, do_parse!(
-            what: call!(Path::parse_mod_style) >>
-            bang: punct!(!) >>
-            body: call!(tt::delimited) >>
-            (Macro {
-                path: what,
-                bang_token: bang,
-                delimiter: body.0,
-                tts: body.1,
+    impl Parse for Macro {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let tts;
+            Ok(Macro {
+                path: input.call(Path::parse_mod_style)?,
+                bang_token: input.parse()?,
+                delimiter: {
+                    let (delimiter, content) = parse_delimiter(input)?;
+                    tts = content;
+                    delimiter
+                },
+                tts: tts,
             })
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("macro invocation")
         }
     }
 }
