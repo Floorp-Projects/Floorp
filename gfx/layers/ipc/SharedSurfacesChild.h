@@ -7,7 +7,6 @@
 #ifndef MOZILLA_GFX_SHAREDSURFACESCHILD_H
 #define MOZILLA_GFX_SHAREDSURFACESCHILD_H
 
-#include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/Maybe.h"              // for Maybe
@@ -15,6 +14,7 @@
 #include "mozilla/StaticPtr.h"          // for StaticRefPtr
 #include "mozilla/gfx/UserData.h"       // for UserDataKey
 #include "mozilla/webrender/WebRenderTypes.h" // for wr::ImageKey
+#include "nsTArray.h"                   // for AutoTArray
 
 namespace mozilla {
 namespace gfx {
@@ -84,8 +84,70 @@ private:
   SharedSurfacesChild() = delete;
   ~SharedSurfacesChild() = delete;
 
-  class ImageKeyData;
-  class SharedUserData;
+  class ImageKeyData final {
+  public:
+    ImageKeyData(WebRenderLayerManager* aManager,
+                 const wr::ImageKey& aImageKey);
+    ~ImageKeyData();
+
+    ImageKeyData(ImageKeyData&& aOther);
+    ImageKeyData& operator=(ImageKeyData&& aOther);
+    ImageKeyData(const ImageKeyData&) = delete;
+    ImageKeyData& operator=(const ImageKeyData&) = delete;
+
+    void MergeDirtyRect(const Maybe<gfx::IntRect>& aDirtyRect);
+
+    Maybe<gfx::IntRect> TakeDirtyRect()
+    {
+      return std::move(mDirtyRect);
+    }
+
+    RefPtr<WebRenderLayerManager> mManager;
+    Maybe<gfx::IntRect> mDirtyRect;
+    wr::ImageKey mImageKey;
+  };
+
+  class SharedUserData final {
+  public:
+    explicit SharedUserData(const wr::ExternalImageId& aId)
+      : mId(aId)
+      , mShared(false)
+    { }
+
+    ~SharedUserData();
+
+    const wr::ExternalImageId& Id() const
+    {
+      return mId;
+    }
+
+    void SetId(const wr::ExternalImageId& aId)
+    {
+      mId = aId;
+      mKeys.Clear();
+      mShared = false;
+    }
+
+    bool IsShared() const
+    {
+      return mShared;
+    }
+
+    void MarkShared()
+    {
+      MOZ_ASSERT(!mShared);
+      mShared = true;
+    }
+
+    wr::ImageKey UpdateKey(WebRenderLayerManager* aManager,
+                           wr::IpcResourceUpdateQueue& aResources,
+                           const Maybe<gfx::IntRect>& aDirtyRect);
+
+  private:
+    AutoTArray<ImageKeyData, 1> mKeys;
+    wr::ExternalImageId mId;
+    bool mShared : 1;
+  };
 
   static nsresult ShareInternal(gfx::SourceSurfaceSharedData* aSurface,
                                 SharedUserData** aUserData);
