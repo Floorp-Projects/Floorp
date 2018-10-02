@@ -260,9 +260,8 @@ ReportTooBigCharacter(JSContext* cx, uint32_t v)
 }
 
 enum InflateUTF8Action {
-    CountAndReportInvalids,
-    CountAndIgnoreInvalids,
-    AssertNoInvalids,
+    Count,
+    Nop,
     Copy,
     FindEncoding
 };
@@ -283,7 +282,7 @@ static bool
 InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t* dstlenp,
                           JS::SmallestEncoding *smallestEncoding)
 {
-    if (Action != AssertNoInvalids) {
+    if (Action != Nop) {
         *smallestEncoding = JS::SmallestEncoding::ASCII;
     }
     auto RequireLatin1 = [&smallestEncoding]{
@@ -361,7 +360,7 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t
 
             // Determine the code unit's length in CharT and act accordingly.
             v = JS::Utf8ToOneUcs4Char((uint8_t*)&src[i], n);
-            if (Action != AssertNoInvalids) {
+            if (Action != Nop) {
                 if (v > 0xff) {
                     RequireUTF16();
                     if (Action == FindEncoding) {
@@ -400,13 +399,13 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t
             // header will do the final i++ to move to the start of the next
             // code unit.
             i += n - 1;
-            if (Action != AssertNoInvalids) {
+            if (Action != Nop) {
                 RequireUTF16();
             }
         }
     }
 
-    if (Action != AssertNoInvalids && Action != FindEncoding) {
+    if (Action != Nop && Action != FindEncoding) {
         *dstlenp = j;
     }
 
@@ -449,27 +448,27 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<CountAndReportInvalids, OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<Count, OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8, outlen);
 }
 
 TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen)
 {
     UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-    return InflateUTF8StringHelper<CountAndReportInvalids, OnUTF8Error::Throw, TwoByteCharsZ>(cx, chars, outlen);
+    return InflateUTF8StringHelper<Count, OnUTF8Error::Throw, TwoByteCharsZ>(cx, chars, outlen);
 }
 
 TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<CountAndIgnoreInvalids, OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<Count, OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, utf8, outlen);
 }
 
 TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::ConstUTF8CharsZ& utf8, size_t* outlen)
 {
     UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-    return InflateUTF8StringHelper<CountAndIgnoreInvalids, OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, chars, outlen);
+    return InflateUTF8StringHelper<Count, OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, chars, outlen);
 }
 
 JS::SmallestEncoding
@@ -488,13 +487,13 @@ JS::FindSmallestEncoding(UTF8Chars utf8)
 Latin1CharsZ
 JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<CountAndReportInvalids, OnUTF8Error::Throw, Latin1CharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<Count, OnUTF8Error::Throw, Latin1CharsZ>(cx, utf8, outlen);
 }
 
 Latin1CharsZ
 JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<CountAndIgnoreInvalids, OnUTF8Error::InsertReplacementCharacter, Latin1CharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<Count, OnUTF8Error::InsertReplacementCharacter, Latin1CharsZ>(cx, utf8, outlen);
 }
 
 #ifdef DEBUG
@@ -503,7 +502,7 @@ JS::ConstUTF8CharsZ::validate(size_t aLength)
 {
     MOZ_ASSERT(data_);
     UTF8Chars chars(data_, aLength);
-    InflateUTF8StringToBuffer<AssertNoInvalids, OnUTF8Error::Crash, char16_t>(
+    InflateUTF8StringToBuffer<Nop, OnUTF8Error::Crash, char16_t>(
         /* cx = */ nullptr,
         chars,
         /* dst = */ nullptr,
