@@ -68,14 +68,14 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
      *
      * Does NOT copy the buffer.
      */
-    BinTokenReaderTester(JSContext* cx, const uint8_t* start, const size_t length);
+    BinTokenReaderTester(JSContext* cx, ErrorReporter* er, const uint8_t* start, const size_t length);
 
     /**
      * Construct a token reader.
      *
      * Does NOT copy the buffer.
      */
-    BinTokenReaderTester(JSContext* cx, const Vector<uint8_t>& chars);
+    BinTokenReaderTester(JSContext* cx, ErrorReporter* er, const Vector<uint8_t>& chars);
 
     /**
      * Read the header of the file.
