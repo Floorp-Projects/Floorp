@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
+
 config = {
     "options": [
         "--prefs-root=%(test_path)s/prefs",
@@ -17,8 +18,7 @@ config = {
     "download_minidump_stackwalk": True,
 
     # this would normally be in "exes", but "exes" is clobbered by remove_executables
-    "geckodriver": "%(abs_test_bin_dir)s/geckodriver",
+    "geckodriver": "%(test_install_path)s/bin/geckodriver",
 
     "per_test_category": "web-platform",
 }
-
