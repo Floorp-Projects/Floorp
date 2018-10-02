@@ -89,6 +89,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
             "default": False,
             "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
          ],
+        [["--setpref"], {
+            "action": "append",
+            "metavar": "PREF=VALUE",
+            "dest": "extra_prefs",
+            "default": [],
+            "help": "Defines an extra user preference."}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -204,6 +211,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
 
         for test_type in test_types:
             cmd.append("--test-type=%s" % test_type)
+
+        if c['extra_prefs']:
+            cmd.extend(['--setpref={}'.format(p) for p in c['extra_prefs']])
 
         if not c["e10s"]:
             cmd.append("--disable-e10s")
