@@ -100,10 +100,6 @@ vbox {
 
 /********** label **********/
 
-label {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-label");
-}
-
 label.text-link, label[onclick] {
   -moz-binding: url("chrome://global/content/bindings/text.xml#text-link");
   -moz-user-focus: normal;
