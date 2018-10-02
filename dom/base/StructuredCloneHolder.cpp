@@ -13,6 +13,7 @@
 #include "mozilla/dom/StructuredCloneBlob.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
@@ -28,6 +29,8 @@
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/StructuredCloneTags.h"
+#include "mozilla/dom/StructuredCloneTester.h"
+#include "mozilla/dom/StructuredCloneTesterBinding.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/URLSearchParams.h"
@@ -455,6 +458,10 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
   }
 #endif
 
+  if (aTag == SCTAG_DOM_STRUCTURED_CLONE_TESTER) {
+    return StructuredCloneTester::ReadStructuredClone(aCx, aReader);
+  }
+
   // Don't know what this is. Bail.
   xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
   return nullptr;
@@ -504,6 +511,22 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
     }
   }
 #endif
+
+  // StructuredCloneTester - testing only
+  {
+    StructuredCloneTester* sct = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(StructuredCloneTester, &obj, sct))) {
+      MOZ_ASSERT(StaticPrefs::dom_testing_structuredclonetester_enabled());
+
+      // "Fail" serialization
+      if (!sct->Serializable()) {
+        xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+        return false;
+      }
+
+      return sct->WriteStructuredClone(aWriter);
+    }
+  }
 
   if (NS_IsMainThread() && xpc::IsReflector(obj)) {
     nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(obj);
