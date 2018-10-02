@@ -171,7 +171,10 @@ object WebContextMenu {
                 }
                 R.id.menu_new_tab -> {
                     val session = Session(hitTarget.linkURL, source = Session.Source.MENU)
-                    context.components.sessionManager.add(session, selected = false)
+                    context.components.sessionManager.add(
+                            session,
+                            selected = Settings.getInstance(context).shouldOpenNewTabs()
+                    )
 
                     if (!Settings.getInstance(context).shouldOpenNewTabs()) {
                         // Show Snackbar to allow users to switch to tab they just opened
