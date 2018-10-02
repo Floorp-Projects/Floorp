@@ -73,3 +73,47 @@ function promiseControllerNotification(controller, notification) {
     controller.addQueryListener(proxifiedObserver);
   });
 }
+
+
+/**
+ * Helper function to clear the existing providers and register a basic provider
+ * that returns only the results given.
+ *
+ * @param {array} results The results for the provider to return.
+ * @param {function} [cancelCallback] Optional, called when the query provider
+ *                                    receives a cancel instruction.
+ */
+function registerBasicTestProvider(results, cancelCallback) {
+  // First unregister all the existing providers.
+  for (let providers of UrlbarProvidersManager.providers.values()) {
+    for (let provider of providers.values()) {
+      // While here check all providers have name and type.
+      Assert.ok(Object.values(UrlbarUtils.PROVIDER_TYPE).includes(provider.type),
+        `The provider "${provider.name}" should have a valid type`);
+      Assert.ok(provider.name, "All providers should have a name");
+      UrlbarProvidersManager.unregisterProvider(provider);
+    }
+  }
+  UrlbarProvidersManager.registerProvider({
+    get name() {
+      return "TestProvider";
+    },
+    get type() {
+      return UrlbarUtils.PROVIDER_TYPE.PROFILE;
+    },
+    async startQuery(context, add) {
+      Assert.ok(context, "context is passed-in");
+      Assert.equal(typeof add, "function", "add is a callback");
+      this._context = context;
+      for (const result of results) {
+        add(this, result);
+      }
+    },
+    cancelQuery(context) {
+      Assert.equal(this._context, context, "context is the same");
+      if (cancelCallback) {
+        cancelCallback();
+      }
+    },
+  });
+}

@@ -6,6 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["UrlbarView"];
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+});
+
 /**
  * Receives and displays address bar autocomplete results.
  */
@@ -78,6 +83,9 @@ class UrlbarView {
   }
 
   onQueryResults(queryContext) {
+    // XXX For now, clear the results for each set received. We should really
+    // be updating the existing list.
+    this._rows.textContent = "";
     for (let result of queryContext.results) {
       this._addRow(result);
     }
@@ -97,7 +105,7 @@ class UrlbarView {
   _addRow(result) {
     let item = this._createElement("div");
     item.className = "urlbarView-row";
-    if (result.type == "switchtotab") {
+    if (result.type == UrlbarUtils.MATCH_TYPE.TAB_SWITCH) {
       item.setAttribute("action", "switch-to-tab");
     }
 
@@ -115,12 +123,12 @@ class UrlbarView {
 
     let title = this._createElement("span");
     title.className = "urlbarView-title";
-    title.textContent = result.title;
+    title.textContent = result.title || result.url;
     content.appendChild(title);
 
     let secondary = this._createElement("span");
     secondary.className = "urlbarView-secondary";
-    if (result.type == "switchtotab") {
+    if (result.type == UrlbarUtils.MATCH_TYPE.TAB_SWITCH) {
       secondary.classList.add("urlbarView-action");
       secondary.textContent = "Switch to Tab";
     } else {

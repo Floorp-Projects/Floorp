@@ -321,7 +321,7 @@ class UrlbarInput {
     this.valueIsTyped = true;
 
     // XXX Fill in lastKey, and add anything else we need.
-    this.controller.handleQuery(new QueryContext({
+    this.controller.startQuery(new QueryContext({
       searchString: event.target.value,
       lastKey: "",
       maxResults: UrlbarPrefs.get("maxRichResults"),
@@ -442,4 +442,3 @@ class CopyCutController {
 
   onEvent() {}
 }
-
