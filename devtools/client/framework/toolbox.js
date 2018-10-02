@@ -2248,7 +2248,14 @@ Toolbox.prototype = {
    * client. See the definition of the preference actor for more information.
    */
   get preferenceFront() {
-    return this.target.client.mainRoot.getFront("preference");
+    const frontPromise = this.target.client.mainRoot.getFront("preference");
+    frontPromise.then(front => {
+      // Set the _preferenceFront property to allow the resetPreferences toolbox method
+      // to cleanup the preference set when the toolbox is closed.
+      this._preferenceFront = front;
+    });
+
+    return frontPromise;
   },
 
   // Is the disable auto-hide of pop-ups feature available in this context?
@@ -2258,6 +2265,7 @@ Toolbox.prototype = {
 
   async toggleNoAutohide() {
     const front = await this.preferenceFront;
+
     const toggledValue = !(await this._isDisableAutohideEnabled());
 
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
