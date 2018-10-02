@@ -7763,6 +7763,7 @@ HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo)
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->AudioCaptureStreamChangeIfNeeded();
   }
+  UpdateWakeLock();
 }
 
 void

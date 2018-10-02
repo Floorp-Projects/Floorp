@@ -164,6 +164,7 @@ protected:
   void WakeLockRelease() override;
   void UpdateWakeLock() override;
 
+  bool ShouldCreateVideoWakeLock() const;
   void CreateVideoWakeLockIfNeeded();
   void ReleaseVideoWakeLockIfExists();
 
