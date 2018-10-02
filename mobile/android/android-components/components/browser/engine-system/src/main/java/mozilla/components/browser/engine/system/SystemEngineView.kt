@@ -332,7 +332,6 @@ class SystemEngineView @JvmOverloads constructor(
         val view = findViewWithTag<View>("mosac_system_engine_fullscreen")
         val webView = findViewWithTag<WebView>("mosac_system_engine_webview")
         view?.let {
-            fullScreenCallback?.onCustomViewHidden()
             webView?.apply { this.visibility = View.VISIBLE }
             removeView(view)
         }

@@ -297,7 +297,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
      * See [EngineSession.exitFullScreenMode]
      */
     override fun exitFullScreenMode() {
-        // no-op
+        view?.get()?.fullScreenCallback?.onCustomViewHidden()
     }
 
     override fun captureThumbnail(): Bitmap? {

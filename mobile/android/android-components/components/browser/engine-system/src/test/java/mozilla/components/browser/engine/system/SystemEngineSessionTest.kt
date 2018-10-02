@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebStorage
@@ -643,5 +644,17 @@ class SystemEngineSessionTest {
 
         `when`(webView.drawingCache).thenReturn(ShadowBitmap.createBitmap(10, 10, Bitmap.Config.RGB_565))
         assertNotNull(engineSession.captureThumbnail())
+    }
+
+    @Test
+    fun testExitFullscreenModeWithWebViewAndCallBack() {
+        val engineSession = SystemEngineSession()
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        val customViewCallback = mock(WebChromeClient.CustomViewCallback::class.java)
+
+        engineView.render(engineSession)
+        engineView.fullScreenCallback = customViewCallback
+        engineSession.exitFullScreenMode()
+        verify(customViewCallback).onCustomViewHidden()
     }
 }
