@@ -71,7 +71,7 @@ class BlockedSiteChild extends ActorChild {
     let desc = Services.prefs.getCharPref(
       "browser.safebrowsing.provider." + provider + ".reportURL", "");
     if (desc) {
-      doc.getElementById("error_desc_link").setAttribute("href", desc + aEvent.detail.url);
+      doc.getElementById("error_desc_link").setAttribute("href", desc + encodeURIComponent(aEvent.detail.url));
     }
 
     // Set other links in error details.
