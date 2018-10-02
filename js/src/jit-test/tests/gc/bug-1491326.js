@@ -1,6 +1,6 @@
 // |jit-test| --fuzzing-safe
 
-if (!('oomTest') in this)
+if (!('oomTest' in this))
     quit();
 
 var g = newGlobal();
