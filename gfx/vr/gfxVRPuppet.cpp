@@ -14,6 +14,7 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "gfxVRPuppet.h"
@@ -394,7 +395,7 @@ VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
       }
       // Dispatch the base64 encoded string to the DOM side. Then, it will be decoded
       // and convert to a PNG image there.
-      MessageLoop* loop = VRListenerThreadHolder::Loop();
+      MessageLoop* loop = CompositorThreadHolder::Loop();
       loop->PostTask(NewRunnableMethod<const uint32_t, VRSubmitFrameResultInfo>(
         "VRManager::DispatchSubmitFrameResult",
         vm, &VRManager::DispatchSubmitFrameResult, mDisplayInfo.mDisplayID, result
@@ -540,7 +541,7 @@ VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
         }
         // Dispatch the base64 encoded string to the DOM side. Then, it will be decoded
         // and convert to a PNG image there.
-        MessageLoop* loop = VRListenerThreadHolder::Loop();
+        MessageLoop* loop = CompositorThreadHolder::Loop();
         loop->PostTask(NewRunnableMethod<const uint32_t, VRSubmitFrameResultInfo>(
           "VRManager::DispatchSubmitFrameResult",
           vm, &VRManager::DispatchSubmitFrameResult, mDisplayInfo.mDisplayID, result

@@ -1170,7 +1170,6 @@ gfxPlatform::InitLayersIPC()
     }
 
     layers::CompositorThreadHolder::Start();
-    gfx::VRListenerThreadHolder::Start();
   }
 }
 
@@ -1199,7 +1198,6 @@ gfxPlatform::ShutdownLayersIPC()
         layers::ImageBridgeChild::ShutDown();
         // This has to happen after shutting down the child protocols.
         layers::CompositorThreadHolder::Shutdown();
-        gfx::VRListenerThreadHolder::Shutdown();
         image::ImageMemoryReporter::ShutdownForWebRender();
         // There is a case that RenderThread exists when gfxVars::UseWebRender() is false.
         // This could happen when WebRender was fallbacked to compositor.

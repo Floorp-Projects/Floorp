@@ -546,7 +546,7 @@ void
 VRControllerOpenVR::VibrateHapticComplete(const VRManagerPromise& aPromise)
 {
   VRManager *vm = VRManager::Get();
-  VRListenerThreadHolder::Loop()->PostTask(
+  CompositorThreadHolder::Loop()->PostTask(
     NewRunnableMethod<StoreCopyPassByConstLRef<VRManagerPromise>>(
       "VRManager::NotifyVibrateHapticCompleted",
       vm, &VRManager::NotifyVibrateHapticCompleted, aPromise));

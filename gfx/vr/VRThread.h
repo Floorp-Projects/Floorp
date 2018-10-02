@@ -13,39 +13,6 @@
 namespace mozilla {
 namespace gfx {
 
-class VRListenerThreadHolder final
-{
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(VRListenerThreadHolder)
-
-public:
-  VRListenerThreadHolder();
-
-  base::Thread* GetThread() const {
-    return mThread;
-  }
-
-  static VRListenerThreadHolder* GetSingleton();
-
-  static bool IsActive() {
-    return GetSingleton() && Loop();
-  }
-
-  static void Start();
-  static void Shutdown();
-  static MessageLoop* Loop();
-  static bool IsInVRListenerThread();
-
-private:
-  ~VRListenerThreadHolder();
-
-  base::Thread* const mThread;
-
-  static base::Thread* CreateThread();
-  static void DestroyThread(base::Thread* aThread);
-};
-
-base::Thread* VRListenerThread();
-
 class VRThread final
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRThread)

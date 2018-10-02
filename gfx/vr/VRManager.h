@@ -63,7 +63,6 @@ public:
   void DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameResultInfo& aResult);
   void StartVRNavigation(const uint32_t& aDisplayID);
   void StopVRNavigation(const uint32_t& aDisplayID, const TimeDuration& aTimeout);
-  static void StopVRListenerThreadTasks();
 
 protected:
   VRManager();
