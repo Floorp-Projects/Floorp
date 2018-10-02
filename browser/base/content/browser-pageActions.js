@@ -58,20 +58,9 @@ var BrowserPageActions = {
   _onPanelShowing() {
     this.placeLazyActionsInPanel();
     for (let action of PageActions.actionsInPanel(window)) {
-      if (action.id == "sendToDevice") {
-        this.panelNode.removeAttribute(action.getTitle());
-        action.setTitle(this.getSendToDeviceString(), window);
-      }
       let buttonNode = this.panelButtonNodeForActionID(action.id);
       action.onShowingInPanel(buttonNode);
     }
-  },
-
-  getSendToDeviceString() {
-    let tabCount = gBrowser.multiSelectedTabsCount || 1;
-    return PluralForm.get(tabCount,
-                          gNavigatorBundle.getString("pageAction.sendTabsToDevice.label"))
-                     .replace("#1", tabCount.toLocaleString());
   },
 
   placeLazyActionsInPanel() {
@@ -1005,8 +994,21 @@ BrowserPageActions.emailLink = {
 // send to device
 BrowserPageActions.sendToDevice = {
   onBeforePlacedInWindow(browserWindow) {
+    this._updateTitle();
+    gBrowser.addEventListener("TabMultiSelect", event => {
+      this._updateTitle();
+    });
+  },
+
+  // The action's title in this window depends on the number of tabs that are
+  // selected.
+  _updateTitle() {
     let action = PageActions.actionForID("sendToDevice");
-    BrowserPageActions.takeActionTitleFromPanel(action);
+    let string =
+      gBrowserBundle.GetStringFromName("pageAction.sendTabsToDevice.label");
+    let tabCount = gBrowser.selectedTabs.length;
+    let title = PluralForm.get(tabCount, string).replace("#1", tabCount);
+    action.setTitle(title, window);
   },
 
   onSubviewPlaced(panelViewNode) {
