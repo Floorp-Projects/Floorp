@@ -190,6 +190,10 @@
   --theme-focus-border-color-textbox: #0675d3;
   --theme-textbox-box-shadow: rgba(97,181,255,.75);
 
+  /* Text sizes */
+  --theme-body-font-size: 11px;
+  --theme-code-font-size: 11px;
+
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */
   --theme-focus-outline: 1px dotted var(--theme-focus-outline-color);

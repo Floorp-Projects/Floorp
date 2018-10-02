@@ -45,7 +45,7 @@ add_task(async function() {
   info("Testing the rule-view selector");
   const ruleView = inspector.getPanel("ruleview").view;
   const cssRuleEditor = getRuleViewRuleEditor(ruleView, 1);
-  EventUtils.synthesizeMouse(cssRuleEditor.selectorText, 0, 0, {}, inspector.panelWin);
+  EventUtils.synthesizeMouseAtCenter(cssRuleEditor.selectorText, {}, inspector.panelWin);
   await checkTextBox(inspector.panelDoc.activeElement, toolbox);
 
   info("Testing the rule-view property name");

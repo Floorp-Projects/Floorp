@@ -160,7 +160,6 @@ window {
 #inspector-breadcrumbs .breadcrumbs-widget-item {
   white-space: nowrap;
   flex-shrink: 0;
-  font: message-box;
 }
 
 #inspector-rules-container,
