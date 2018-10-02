@@ -4,10 +4,9 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
+const { createRef, Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 class Draggable extends Component {
   static get propTypes() {
@@ -22,6 +21,9 @@ class Draggable extends Component {
 
   constructor(props) {
     super(props);
+
+    this.draggableEl = createRef();
+
     this.startDragging = this.startDragging.bind(this);
     this.onMove = this.onMove.bind(this);
     this.onUp = this.onUp.bind(this);
@@ -34,7 +36,7 @@ class Draggable extends Component {
     this.isDragging = true;
 
     ev.preventDefault();
-    const doc = ReactDOM.findDOMNode(this).ownerDocument;
+    const doc = this.draggableEl.current.ownerDocument;
     doc.addEventListener("mousemove", this.onMove);
     doc.addEventListener("mouseup", this.onUp);
     this.props.onStart && this.props.onStart();
@@ -58,7 +60,7 @@ class Draggable extends Component {
     this.isDragging = false;
 
     ev.preventDefault();
-    const doc = ReactDOM.findDOMNode(this).ownerDocument;
+    const doc = this.draggableEl.current.ownerDocument;
     doc.removeEventListener("mousemove", this.onMove);
     doc.removeEventListener("mouseup", this.onUp);
     this.props.onStop && this.props.onStop();
@@ -66,6 +68,7 @@ class Draggable extends Component {
 
   render() {
     return dom.div({
+      ref: this.draggableEl,
       role: "presentation",
       style: this.props.style,
       className: this.props.className,
