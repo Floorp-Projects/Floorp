@@ -797,36 +797,6 @@ MediaEngineRemoteVideoSource::GetBestFitnessDistance(
 }
 
 static void
-LogConstraints(const NormalizedConstraintSet& aConstraints)
-{
-  auto& c = aConstraints;
-  if (c.mWidth.mIdeal.isSome()) {
-    LOG(("Constraints: width: { min: %d, max: %d, ideal: %d }",
-         c.mWidth.mMin, c.mWidth.mMax,
-         c.mWidth.mIdeal.valueOr(0)));
-  } else {
-    LOG(("Constraints: width: { min: %d, max: %d }",
-         c.mWidth.mMin, c.mWidth.mMax));
-  }
-  if (c.mHeight.mIdeal.isSome()) {
-    LOG(("             height: { min: %d, max: %d, ideal: %d }",
-         c.mHeight.mMin, c.mHeight.mMax,
-         c.mHeight.mIdeal.valueOr(0)));
-  } else {
-    LOG(("             height: { min: %d, max: %d }",
-         c.mHeight.mMin, c.mHeight.mMax));
-  }
-  if (c.mFrameRate.mIdeal.isSome()) {
-    LOG(("             frameRate: { min: %f, max: %f, ideal: %f }",
-         c.mFrameRate.mMin, c.mFrameRate.mMax,
-         c.mFrameRate.mIdeal.valueOr(0)));
-  } else {
-    LOG(("             frameRate: { min: %f, max: %f }",
-         c.mFrameRate.mMin, c.mFrameRate.mMax));
-  }
-}
-
-static void
 LogCapability(const char* aHeader,
               const webrtc::CaptureCapability &aCapability,
               uint32_t aDistance)
@@ -885,11 +855,11 @@ MediaEngineRemoteVideoSource::ChooseCapability(
     LOG(("ChooseCapability: prefs: %dx%d @%dfps",
          aPrefs.GetWidth(), aPrefs.GetHeight(),
          aPrefs.mFPS));
-    LogConstraints(aConstraints);
+    MediaConstraintsHelper::LogConstraints(aConstraints);
     if (!aConstraints.mAdvanced.empty()) {
       LOG(("Advanced array[%zu]:", aConstraints.mAdvanced.size()));
       for (auto& advanced : aConstraints.mAdvanced) {
-        LogConstraints(advanced);
+        MediaConstraintsHelper::LogConstraints(advanced);
       }
     }
   }

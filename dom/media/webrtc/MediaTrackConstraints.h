@@ -344,6 +344,8 @@ public:
       dom::OwningBooleanOrConstrainBooleanParameters& to,
       const char* aMessageName,
       nsPIDOMWindowInner* aWindow);
+
+  static void LogConstraints(const NormalizedConstraintSet& aConstraints);
 };
 
 } // namespace mozilla
