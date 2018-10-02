@@ -7205,8 +7205,8 @@ function BrowserOpenAddonsMgr(aView) {
       if (aView) {
         emWindow.loadView(aView);
       }
-      browserWindow.gBrowser.selectedTab =
-        browserWindow.gBrowser._getTabForContentWindow(emWindow);
+      let tab = browserWindow.gBrowser.getTabForBrowser(emWindow.docShell.chromeEventHandler);
+      browserWindow.gBrowser.selectedTab = tab;
       emWindow.focus();
       resolve(emWindow);
       return;
