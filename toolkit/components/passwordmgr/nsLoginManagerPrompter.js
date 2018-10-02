@@ -247,7 +247,7 @@ LoginManagerPrompter.prototype = {
   _factory: null,
   _chromeWindow: null,
   _browser: null,
-  _opener: null,
+  _openerBrowser: null,
 
   __strBundle: null, // String bundle for L10N
   get _strBundle() {
@@ -723,7 +723,7 @@ LoginManagerPrompter.prototype = {
       this._chromeWindow = win;
       this._browser = browser;
     }
-    this._opener = null;
+    this._openerBrowser = null;
     this._factory = aFactory || null;
 
     this.log("===== initialized =====");
@@ -733,17 +733,18 @@ LoginManagerPrompter.prototype = {
     this._browser = aBrowser;
   },
 
-  set opener(aOpener) {
-    this._opener = aOpener;
+  set openerBrowser(aOpenerBrowser) {
+    this._openerBrowser = aOpenerBrowser;
   },
 
   promptToSavePassword(aLogin) {
     this.log("promptToSavePassword");
     var notifyObj = this._getPopupNote() || this._getNotifyBox();
-    if (notifyObj)
+    if (notifyObj) {
       this._showSaveLoginNotification(notifyObj, aLogin);
-    else
+    } else {
       this._showSaveLoginDialog(aLogin);
+    }
   },
 
   /**
@@ -1397,31 +1398,19 @@ LoginManagerPrompter.prototype = {
   _getChromeWindow(aWindow) {
     // Handle non-e10s toolkit consumers.
     if (!Cu.isCrossProcessWrapper(aWindow)) {
-      let chromeWin = aWindow.docShell.chromeEventHandler.ownerGlobal;
+      let browser = aWindow.docShell.chromeEventHandler;
+      if (!browser) {
+        return null;
+      }
+
+      let chromeWin = browser.ownerGlobal;
       if (!chromeWin) {
         return null;
       }
 
-      // gBrowser only exists on some apps, like Firefox.
-      let tabbrowser = chromeWin.gBrowser ||
-        (typeof chromeWin.getBrowser == "function" ? chromeWin.getBrowser() : null);
-      // At least serve the chrome window if getBrowser()
-      // or getBrowserForContentWindow() are not supported.
-      if (!tabbrowser || typeof tabbrowser.getBrowserForContentWindow != "function") {
-        return { win: chromeWin };
-      }
-
-      let browser = tabbrowser.getBrowserForContentWindow(aWindow);
       return { win: chromeWin, browser };
     }
 
-    for (let win of Services.wm.getEnumerator(null)) {
-      let tabbrowser = win.gBrowser || win.getBrowser();
-      let browser = tabbrowser.getBrowserForContentWindow(aWindow);
-      if (browser) {
-        return { win, browser };
-      }
-    }
     return null;
   },
 
@@ -1429,7 +1418,7 @@ LoginManagerPrompter.prototype = {
     // Some sites pop up a temporary login window, which disappears
     // upon submission of credentials. We want to put the notification
     // bar in the opener window if this seems to be happening.
-    if (this._opener) {
+    if (this._openerBrowser) {
       let chromeDoc = this._chromeWindow.document.documentElement;
 
       // Check to see if the current window was opened with chrome
@@ -1438,11 +1427,14 @@ LoginManagerPrompter.prototype = {
       // assume it'll stick around and *don't* use the opener.
       if (chromeDoc.getAttribute("chromehidden") && !this._browser.canGoBack) {
         this.log("Using opener window for notification bar.");
-        return this._getChromeWindow(this._opener);
+        return { win: this._openerBrowser.ownerGlobal, browser: this._openerBrowser };
       }
     }
 
-    return { win: this._chromeWindow, browser: this._browser };
+    return {
+      win: this._chromeWindow,
+      browser: this._browser,
+    };
   },
 
   /**
