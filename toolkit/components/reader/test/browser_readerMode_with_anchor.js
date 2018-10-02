@@ -29,7 +29,10 @@ add_task(async function test_loading_withoutHash() {
     let readerButton = document.getElementById("reader-mode-button");
     readerButton.click();
     await pageShownPromise;
-    is(gBrowser.contentDocumentAsCPOW.documentElement.scrollTop, 0, "scrollTop should be 0");
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      Assert.equal(content.document.documentElement.scrollTop, 0,
+                   "scrollTop should be 0");
+    });
     await BrowserTestUtils.synthesizeMouseAtCenter("#foo-anchor", {}, browser);
     await ContentTask.spawn(browser, null, async function() {
       let foo = content.document.getElementById("foo");
