@@ -1496,7 +1496,19 @@ pub extern "C" fn wr_api_capture(
     use std::io::Write;
 
     let cstr = unsafe { CStr::from_ptr(path) };
-    let path = PathBuf::from(&*cstr.to_string_lossy());
+    let mut path = PathBuf::from(&*cstr.to_string_lossy());
+
+    // Increment the extension until we find a fresh path
+    while path.is_dir() {
+        let count: u32 = path.extension()
+            .and_then(|x| x.to_str())
+            .and_then(|x| x.parse().ok())
+            .unwrap_or(0);
+        path.set_extension((count + 1).to_string());
+    }
+
+    let border = "--------------------------\n";
+    print!("{} Capturing WR state to: {:?}\n{}", &border, &path, &border);
 
     let _ = create_dir_all(&path);
     match File::create(path.join("wr.txt")) {
