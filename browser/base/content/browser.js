@@ -1442,18 +1442,6 @@ var gBrowserInit = {
     // load homepages, which might need them.
     OfflineApps.init();
 
-    gBrowser.addEventListener("AboutTabCrashedLoad", function(event) {
-      let ownerDoc = event.originalTarget;
-
-      if (!ownerDoc.documentURI.startsWith("about:tabcrashed")) {
-        return;
-      }
-
-      let browser = gBrowser.getBrowserForDocument(event.target);
-      // Reset the zoom for the tabcrashed page.
-      ZoomManager.setZoomForBrowser(browser, 1);
-    }, false, true);
-
     gBrowser.addEventListener("InsecureLoginFormsStateChange", function() {
       gIdentityHandler.refreshForInsecureLoginForms();
     }, true);
