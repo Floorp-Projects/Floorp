@@ -26,7 +26,7 @@ function test() {
       source: TAB_URL,
       line: 1
     };
-    let [tab,, panel] = yield initDebugger(TAB_URL, options);
+    let [tab, panel] = yield initDebugger(TAB_URL, options);
     let toolbox = yield selectWorker(panel, WORKER_URL);
     let workerPanel = toolbox.getCurrentPanel();
     yield waitForSourceShown(workerPanel, ".coffee");

@@ -20,7 +20,7 @@ function test() {
     source: EXAMPLE_URL + "code_script-switching-01.js",
     line: 1
   };
-  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
+  initDebugger(TAB_URL, options).then(([aTab, aPanel]) => {
     ok(aTab, "Should have a tab available.");
     ok(aPanel, "Should have a debugger pane available.");
 

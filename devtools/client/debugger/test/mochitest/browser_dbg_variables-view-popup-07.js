@@ -16,7 +16,7 @@ function test() {
       source: TAB_URL,
       line: 1
     };
-    let [tab,, panel] = yield initDebugger(TAB_URL, options);
+    let [tab, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;

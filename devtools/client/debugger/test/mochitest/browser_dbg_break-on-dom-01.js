@@ -14,7 +14,7 @@ function test() {
     source: TAB_URL,
     line: 1
   };
-  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
+  initDebugger(TAB_URL, options).then(([aTab, aPanel]) => {
     let gPanel = aPanel;
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
