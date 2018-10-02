@@ -137,6 +137,7 @@ linux-qr-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl1-core
+    - mochitest-webgl1-ext
     - reftest
     - xpcshell
 
@@ -168,6 +169,9 @@ windows-qr-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - reftest
 
 jsdcov-code-coverage-tests:

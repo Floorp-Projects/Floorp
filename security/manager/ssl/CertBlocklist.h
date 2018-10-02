@@ -14,7 +14,7 @@
 #include "nsIX509CertDB.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
-#include "pkix/Input.h"
+#include "mozpkix/Input.h"
 
 #define NS_CERT_BLOCKLIST_CID \
 {0x11aefd53, 0x2fbb, 0x4c92, {0xa0, 0xc1, 0x05, 0x32, 0x12, 0xae, 0x42, 0xd0} }

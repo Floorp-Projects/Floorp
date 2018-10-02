@@ -30,6 +30,8 @@ var _sources = require("../sources/index");
 
 var _selectors = require("../../selectors/index");
 
+var _select = require("./select");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -58,6 +60,7 @@ function createPrettySource(sourceId) {
       type: "ADD_SOURCE",
       source: prettySource
     });
+    dispatch((0, _select.selectSource)(prettySource.id));
     const {
       code,
       mappings
