@@ -120,7 +120,7 @@ class IntentProcessor(
         return if (CustomTabConfig.isCustomTabIntent(intent)) {
             Session(url, source = Session.Source.CUSTOM_TAB).apply {
                 customTabConfig = CustomTabConfig.createFromIntent(intent)
-                sessionManager.add(this, selected = true)
+                sessionManager.add(this, selected = false)
             }
         } else {
             Session(url, source = source).apply {
@@ -146,7 +146,7 @@ class IntentProcessor(
         session.trackerBlockingEnabled = blockingEnabled
         session.shouldRequestDesktopSite = requestDesktop
 
-        sessionManager.add(session, selected = true)
+        sessionManager.add(session, selected = !session.isCustomTabSession())
 
         return session
     }
