@@ -5,7 +5,7 @@
 /* exported CustomizableUI makeWidgetId focusWindow forceGC
  *          getBrowserActionWidget
  *          clickBrowserAction clickPageAction
- *          getBrowserActionPopup getPageActionPopup
+ *          getBrowserActionPopup getPageActionPopup getPageActionButton
  *          closeBrowserAction closePageAction
  *          promisePopupShown promisePopupHidden
  *          openContextMenu closeContextMenu
@@ -417,7 +417,7 @@ function closeChromeContextMenu(menuId, itemToSelect, win = window) {
 }
 
 async function openActionContextMenu(extension, kind, win = window) {
-  // See comment from clickPageAction below.
+  // See comment from getPageActionButton below.
   SetPageProxyState("valid");
   await promiseAnimationFrame(win);
   let buttonID;
@@ -450,7 +450,7 @@ function getPageActionPopup(extension, win = window) {
   return win.document.getElementById(panelId);
 }
 
-async function clickPageAction(extension, win = window) {
+async function getPageActionButton(extension, win = window) {
   // This would normally be set automatically on navigation, and cleared
   // when the user types a value into the URL bar, to show and hide page
   // identity info and icons such as page action buttons.
@@ -463,8 +463,11 @@ async function clickPageAction(extension, win = window) {
 
   let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
 
-  let elem = win.document.getElementById(pageActionId);
+  return win.document.getElementById(pageActionId);
+}
 
+async function clickPageAction(extension, win = window) {
+  let elem = await getPageActionButton(extension, win);
   EventUtils.synthesizeMouseAtCenter(elem, {}, win);
   return new Promise(SimpleTest.executeSoon);
 }
