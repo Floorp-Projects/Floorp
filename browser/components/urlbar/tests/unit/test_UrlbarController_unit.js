@@ -34,8 +34,8 @@ add_task(function setup() {
   sandbox = sinon.sandbox.create();
 
   fPM = {
-    queryStart: sandbox.stub(),
-    queryCancel: sandbox.stub(),
+    startQuery: sandbox.stub(),
+    cancelQuery: sandbox.stub(),
   };
 
   generalListener = {
@@ -111,17 +111,17 @@ add_task(function test__notify() {
 
 add_task(function test_handle_query_starts_search() {
   const context = createContext();
-  controller.handleQuery(context);
+  controller.startQuery(context);
 
-  Assert.equal(fPM.queryStart.callCount, 1,
-    "Should have called queryStart once");
-  Assert.equal(fPM.queryStart.args[0].length, 2,
-    "Should have called queryStart with two arguments");
+  Assert.equal(fPM.startQuery.callCount, 1,
+    "Should have called startQuery once");
+  Assert.equal(fPM.startQuery.args[0].length, 2,
+    "Should have called startQuery with two arguments");
 
-  assertContextMatches(fPM.queryStart.args[0][0], {
+  assertContextMatches(fPM.startQuery.args[0][0], {
     autoFill: true,
   });
-  Assert.equal(fPM.queryStart.args[0][1], controller,
+  Assert.equal(fPM.startQuery.args[0][1], controller,
     "Should have passed the controller as the second argument");
 
 
@@ -136,17 +136,17 @@ add_task(function test_handle_query_starts_search() {
 add_task(function test_handle_query_starts_search_sets_autoFill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
 
-  controller.handleQuery(createContext());
+  controller.startQuery(createContext());
 
-  Assert.equal(fPM.queryStart.callCount, 1,
-    "Should have called queryStart once");
-  Assert.equal(fPM.queryStart.args[0].length, 2,
-    "Should have called queryStart with two arguments");
+  Assert.equal(fPM.startQuery.callCount, 1,
+    "Should have called startQuery once");
+  Assert.equal(fPM.startQuery.args[0].length, 2,
+    "Should have called startQuery with two arguments");
 
-  assertContextMatches(fPM.queryStart.args[0][0], {
+  assertContextMatches(fPM.startQuery.args[0][0], {
     autoFill: false,
   });
-  Assert.equal(fPM.queryStart.args[0][1], controller,
+  Assert.equal(fPM.startQuery.args[0][1], controller,
     "Should have passed the controller as the second argument");
 
   sandbox.resetHistory();
@@ -158,10 +158,10 @@ add_task(function test_cancel_query() {
   const context = createContext();
   controller.cancelQuery(context);
 
-  Assert.equal(fPM.queryCancel.callCount, 1,
-    "Should have called queryCancel once");
-  Assert.equal(fPM.queryCancel.args[0].length, 1,
-    "Should have called queryCancel with one argument");
+  Assert.equal(fPM.cancelQuery.callCount, 1,
+    "Should have called cancelQuery once");
+  Assert.equal(fPM.cancelQuery.args[0].length, 1,
+    "Should have called cancelQuery with one argument");
 
   Assert.equal(generalListener.onQueryCancelled.callCount, 1,
     "Should have called onQueryCancelled for the listener");
