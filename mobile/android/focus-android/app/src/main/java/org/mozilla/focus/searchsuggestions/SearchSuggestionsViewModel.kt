@@ -60,7 +60,7 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
 
-        if (state.value is State.ReadyForSuggestions) {
+        if (state.value === State.ReadyForSuggestions) {
             fetcher.requestSuggestions(query)
         }
     }

@@ -633,7 +633,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             return
         }
 
-        if (grantResults.size <= 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+        if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
             // We didn't get the storage permission: We are not able to start this download.
             pendingDownload = null
         }

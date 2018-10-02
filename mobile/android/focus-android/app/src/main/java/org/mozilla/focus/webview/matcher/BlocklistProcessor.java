@@ -111,7 +111,7 @@ public class BlocklistProcessor {
     private static void extractCategories(final JsonReader reader, final Map<String, Trie> categoryMap, final ListType listType) throws IOException {
         reader.beginObject();
 
-        final List<String> socialOverrides = new LinkedList<String>();
+        final List<String> socialOverrides = new LinkedList<>();
 
         while (reader.hasNext()) {
             final String categoryName = reader.nextName();

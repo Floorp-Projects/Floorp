@@ -37,11 +37,8 @@ public class UrlUtils {
      */
     public static boolean isUrl(String url) {
         String trimmedUrl = url.trim();
-        if (trimmedUrl.contains(" ")) {
-            return false;
-        }
+        return !trimmedUrl.contains(" ") && (trimmedUrl.contains(".") || trimmedUrl.contains(":"));
 
-        return trimmedUrl.contains(".") || trimmedUrl.contains(":");
     }
 
     public static boolean isValidSearchQueryUrl(String url) {
@@ -58,11 +55,8 @@ public class UrlUtils {
     }
 
     public static boolean isHttpOrHttps(String url) {
-        if (TextUtils.isEmpty(url)) {
-            return false;
-        }
+        return !TextUtils.isEmpty(url) && (url.startsWith("http:") || url.startsWith("https:"));
 
-        return url.startsWith("http:") || url.startsWith("https:");
     }
 
     public static String createSearchUrl(Context context, String searchTerm) {

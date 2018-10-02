@@ -59,7 +59,7 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .apply();
         CustomDomains.INSTANCE.save(
                 InstrumentationRegistry.getInstrumentation().getTargetContext(),
-                Collections.<String>emptyList());
+                Collections.emptyList());
 
         final Context appContext = InstrumentationRegistry.getInstrumentation()
                 .getTargetContext()

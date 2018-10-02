@@ -57,10 +57,7 @@ import org.mozilla.focus.webview.matcher.util.FocusString;
             return true;
         }
 
-        if (site.length() == 1) {
-            return false;
-        }
+        return site.length() != 1 && isWhiteListed(site.substring(1), resource, next);
 
-        return isWhiteListed(site.substring(1), resource, next);
     }
 }

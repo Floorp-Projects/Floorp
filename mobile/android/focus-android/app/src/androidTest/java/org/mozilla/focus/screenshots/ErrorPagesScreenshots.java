@@ -57,7 +57,7 @@ public class ErrorPagesScreenshots extends ScreenshotTest {
     }
 
     @Test
-    public void takeScreenshotsOfErrorPages() throws Exception {
+    public void takeScreenshotsOfErrorPages() {
         for (ErrorTypes error: ErrorTypes.values()) {
             onView(withId(R.id.urlView))
                     .check(matches(isDisplayed()))

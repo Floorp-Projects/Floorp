@@ -326,7 +326,7 @@ android.applicationVariants.all { variant ->
             def token = new File("${rootDir}/.adjust_token").text.trim()
             buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
             println "(Added from .adjust_token file)"
-        } catch (java.io.FileNotFoundException e) {
+        } catch (FileNotFoundException ignored) {
             buildConfigField 'String', 'ADJUST_TOKEN', 'null'
             println("X_X")
         }
@@ -354,7 +354,7 @@ android.applicationVariants.all {
         def token = new File("${rootDir}/.sentry_token").text.trim()
         buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
         println "(Added from .sentry_token file)"
-    } catch (java.io.FileNotFoundException e) {
+    } catch (FileNotFoundException ignored) {
         buildConfigField 'String', 'SENTRY_TOKEN', 'null'
         println("X_X")
     }

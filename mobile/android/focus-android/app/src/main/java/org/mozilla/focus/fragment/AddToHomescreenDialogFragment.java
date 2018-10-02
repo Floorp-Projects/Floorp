@@ -66,19 +66,19 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
         // For the dialog we display the Pre Oreo version of the icon because the Oreo+
         // adaptive launcher icon does not have a mask applied until we create the shortcut
         final Bitmap iconBitmap = IconGenerator.generateLauncherIconPreOreo(getContext(), IconGenerator.getRepresentativeCharacter(url));
-        final ImageView iconView = (ImageView) dialogView.findViewById(R.id.homescreen_icon);
+        final ImageView iconView = dialogView.findViewById(R.id.homescreen_icon);
         iconView.setImageBitmap(iconBitmap);
 
-        final ImageView blockIcon = (ImageView) dialogView.findViewById(R.id.homescreen_dialog_block_icon);
+        final ImageView blockIcon = dialogView.findViewById(R.id.homescreen_dialog_block_icon);
         blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled);
 
-        final Button addToHomescreenDialogCancelButton = (Button) dialogView.findViewById(R.id.addtohomescreen_dialog_cancel);
-        final Button addToHomescreenDialogConfirmButton = (Button) dialogView.findViewById(R.id.addtohomescreen_dialog_add);
+        final Button addToHomescreenDialogCancelButton = dialogView.findViewById(R.id.addtohomescreen_dialog_cancel);
+        final Button addToHomescreenDialogConfirmButton = dialogView.findViewById(R.id.addtohomescreen_dialog_add);
 
-        final LinearLayout warning = (LinearLayout) dialogView.findViewById(R.id.homescreen_dialog_warning_layout);
+        final LinearLayout warning = dialogView.findViewById(R.id.homescreen_dialog_warning_layout);
         warning.setVisibility(blockingEnabled ? View.GONE : View.VISIBLE);
 
-        final EditText editableTitle = (EditText) dialogView.findViewById(R.id.edit_title);
+        final EditText editableTitle = dialogView.findViewById(R.id.edit_title);
 
         if (!TextUtils.isEmpty(title)) {
             editableTitle.setText(title);

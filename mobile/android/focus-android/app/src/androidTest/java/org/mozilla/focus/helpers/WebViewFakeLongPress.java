@@ -28,7 +28,7 @@ public class WebViewFakeLongPress implements ViewAction {
 
     @Override
     public String getDescription() {
-        return String.format("Long pressing webview");
+        return "Long pressing webview";
     }
 
     @Override

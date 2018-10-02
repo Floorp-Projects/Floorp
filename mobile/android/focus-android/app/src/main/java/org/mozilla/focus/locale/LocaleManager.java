@@ -51,7 +51,7 @@ public class LocaleManager {
     private boolean systemLocaleDidChange;
     private BroadcastReceiver receiver;
 
-    private static final AtomicReference<LocaleManager> instance = new AtomicReference<LocaleManager>();
+    private static final AtomicReference<LocaleManager> instance = new AtomicReference<>();
 
     public static LocaleManager getInstance() {
         LocaleManager localeManager = instance.get();

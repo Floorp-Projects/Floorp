@@ -77,16 +77,14 @@ class Settings private constructor(context: Context) {
                     resources.getString(R.string.preference_privacy_should_block_cookies_no_option))!!
 
     fun shouldBlockCookies(): Boolean =
-            shouldBlockCookiesValue().equals(resources.getString(
-                    R.string.preference_privacy_should_block_cookies_yes_option))
+            shouldBlockCookiesValue() == resources.getString(
+                    R.string.preference_privacy_should_block_cookies_yes_option)
 
     fun shouldBlockThirdPartyCookies(): Boolean =
-            shouldBlockCookiesValue().equals(
-                    resources.getString(
-                            R.string.preference_privacy_should_block_cookies_third_party_only_option)) ||
-                    shouldBlockCookiesValue().equals(
-                            resources.getString(
-                                    R.string.preference_privacy_should_block_cookies_yes_option))
+            shouldBlockCookiesValue() == resources.getString(
+                    R.string.preference_privacy_should_block_cookies_third_party_only_option) ||
+                    shouldBlockCookiesValue() == resources.getString(
+                    R.string.preference_privacy_should_block_cookies_yes_option)
 
     fun shouldShowFirstrun(): Boolean =
             !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false)

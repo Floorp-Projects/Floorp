@@ -47,7 +47,8 @@
         android:orientation="horizontal"
         android:elevation="4dp"
         android:clickable="true"
-        android:clipChildren="false">
+        android:clipChildren="false"
+        android:focusable="true">
 
         <View
             android:id="@+id/toolbarBackgroundView"

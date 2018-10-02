@@ -568,7 +568,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             if (value != null && !value.isEmpty()) {
                 return formatter.parse(value);
             }
-        } catch (final ParseException e) {
+        } catch (final ParseException ignored) {
         }
         return defaultToNow ? new Date() : null;
     }
@@ -637,7 +637,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             if (resId != 0) {
                 try {
                     picker = (DatePicker) inflater.inflate(resId, /* root */ null);
-                } catch (final ClassCastException | InflateException e) {
+                } catch (final ClassCastException | InflateException ignored) {
                 }
             }
             if (picker == null) {
@@ -664,7 +664,7 @@ public final class GeckoViewPrompt implements GeckoSession.PromptDelegate {
             if (resId != 0) {
                 try {
                     picker = (TimePicker) inflater.inflate(resId, /* root */ null);
-                } catch (final ClassCastException | InflateException e) {
+                } catch (final ClassCastException | InflateException ignored) {
                 }
             }
             if (picker == null) {

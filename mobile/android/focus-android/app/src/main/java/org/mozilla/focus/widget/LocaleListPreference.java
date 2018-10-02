@@ -250,11 +250,7 @@ public class LocaleListPreference extends ListPreference {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof LocaleDescriptor) {
-                return compareTo((LocaleDescriptor) obj) == 0;
-            } else {
-                return false;
-            }
+            return obj instanceof LocaleDescriptor && compareTo((LocaleDescriptor) obj) == 0;
         }
 
         @Override
@@ -295,17 +291,12 @@ public class LocaleListPreference extends ListPreference {
             // on common Android devices. Make sure we can show them.
             // See documentation for CharacterValidator.
             // Note that bn-IN is checked here even if it passed above.
-            if (this.tag.equals("or") ||
-                    this.tag.equals("my") ||
-                    this.tag.equals("pa-IN") ||
-                    this.tag.equals("gu-IN") ||
-                    this.tag.equals("bn-IN")) {
-                if (validator.characterIsMissingInFont(this.nativeName.substring(0, 1))) {
-                    return false;
-                }
-            }
+            return !this.tag.equals("or") &&
+                    !this.tag.equals("my") &&
+                    !this.tag.equals("pa-IN") &&
+                    !this.tag.equals("gu-IN") &&
+                    !this.tag.equals("bn-IN") || !validator.characterIsMissingInFont(this.nativeName.substring(0, 1));
 
-            return true;
         }
     }
 

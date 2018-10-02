@@ -50,7 +50,7 @@ public class ChangeSearchEngineTest {
     public String mSearchEngine;
 
     @Parameterized.Parameters
-    public static Iterable<? extends Object> data() {
+    public static Iterable<?> data() {
         return Arrays.asList("Google", "DuckDuckGo");
     }
 
@@ -76,7 +76,7 @@ public class ChangeSearchEngineTest {
     };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
@@ -163,9 +163,9 @@ public class ChangeSearchEngineTest {
                     isDescendantOfA(childAtPosition(withId(R.id.suggestionList), count))))
                     .check(matches(isDisplayed()));
             count++;
-        };
+        }
 
-       // Tap URL bar, check it displays search term (instead of URL)
+        // Tap URL bar, check it displays search term (instead of URL)
        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
        TestHelper.inlineAutocompleteEditText.click();
        TestHelper.inlineAutocompleteEditText.clearTextField();

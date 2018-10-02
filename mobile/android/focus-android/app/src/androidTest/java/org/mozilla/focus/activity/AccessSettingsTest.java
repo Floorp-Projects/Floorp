@@ -11,7 +11,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import org.junit.After;
@@ -58,7 +57,7 @@ public class AccessSettingsTest {
     }
 
     @Test
-    public void AccessSettingsTest() throws UiObjectNotFoundException {
+    public void AccessSettingsTest() {
 
         UiObject generalHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("General")

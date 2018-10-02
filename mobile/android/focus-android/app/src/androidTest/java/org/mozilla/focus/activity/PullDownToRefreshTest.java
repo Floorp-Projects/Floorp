@@ -9,7 +9,6 @@ import android.support.test.espresso.ViewAction;
 import android.support.test.espresso.web.webdriver.Locator;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.view.View;
 
 import org.hamcrest.Matcher;
@@ -79,7 +78,7 @@ public class PullDownToRefreshTest {
     }
 
     @Test
-    public void pullDownToRefreshTest() throws InterruptedException, UiObjectNotFoundException, IOException {
+    public void pullDownToRefreshTest() {
 
        onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))

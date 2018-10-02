@@ -27,7 +27,7 @@ public class UrlUtilsTest {
     }
 
     @Test
-    public void urlsMatchExceptForTrailingSlash() throws Exception {
+    public void urlsMatchExceptForTrailingSlash() {
         assertTrue(UrlUtils.urlsMatchExceptForTrailingSlash("http://www.mozilla.org", "http://www.mozilla.org"));
         assertTrue(UrlUtils.urlsMatchExceptForTrailingSlash("http://www.mozilla.org/", "http://www.mozilla.org"));
         assertTrue(UrlUtils.urlsMatchExceptForTrailingSlash("http://www.mozilla.org", "http://www.mozilla.org/"));

@@ -17,4 +17,5 @@
           android:lines="1"
           android:paddingEnd="16dp"
           android:paddingStart="16dp"
-          android:textSize="16sp"/>
+          android:textSize="16sp"
+    android:focusable="true" />

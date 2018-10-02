@@ -8,7 +8,8 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:background="?android:attr/selectableItemBackground"
-    android:clickable="true">
+    android:clickable="true"
+    android:focusable="true">
 
     <TextView
         android:layout_width="0dp"

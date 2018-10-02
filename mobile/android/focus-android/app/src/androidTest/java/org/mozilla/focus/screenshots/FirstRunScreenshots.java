@@ -47,7 +47,7 @@ public class FirstRunScreenshots extends ScreenshotTest {
     public static final LocaleTestRule localeTestRule = new LocaleTestRule();
 
     @Test
-    public void takeScreenshotsOfFirstrun() throws UiObjectNotFoundException, InterruptedException {
+    public void takeScreenshotsOfFirstrun() throws UiObjectNotFoundException {
         onView(withText(R.string.firstrun_defaultbrowser_title))
                 .check(matches(isDisplayed()));
 

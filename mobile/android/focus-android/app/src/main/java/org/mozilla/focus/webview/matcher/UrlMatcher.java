@@ -80,9 +80,9 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         }
 
         if (blockListOverrides != null) {
-            for (int i = 0; i < blockListOverrides.length; i++) {
+            for (int blockListOverride : blockListOverrides) {
                 try (final JsonReader jsonReader =
-                             new JsonReader(new InputStreamReader(context.getResources().openRawResource(blockListOverrides[i]), StandardCharsets.UTF_8))) {
+                             new JsonReader(new InputStreamReader(context.getResources().openRawResource(blockListOverride), StandardCharsets.UTF_8))) {
                     BlocklistProcessor.loadCategoryMap(jsonReader, categoryMap, BlocklistProcessor.ListType.OVERRIDE_LIST);
                 } catch (IOException e) {
                     throw new IllegalStateException("Unable to parse override blacklist");
@@ -193,7 +193,6 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         if (enabled) {
             if (enabledCategories.contains(category)) {
                 // Early return - nothing to do if the category is already enabled
-                return;
             } else {
                 enabledCategories.add(category);
                 previouslyUnmatched.clear();
@@ -201,7 +200,6 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         } else {
             if (!enabledCategories.contains(category)) {
                 // Early return - nothing to do if the category is already disabled
-                return;
             } else {
                 enabledCategories.remove(category);
                 previouslyMatched.clear();

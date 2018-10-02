@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.support.customtabs.ICustomTabsCallback;
 import android.support.customtabs.ICustomTabsService;
 
@@ -21,44 +20,44 @@ public class CustomTabsService extends Service {
     public IBinder onBind(Intent intent) {
         return new ICustomTabsService.Stub() {
             @Override
-            public boolean warmup(long flags) throws RemoteException {
+            public boolean warmup(long flags) {
                 return true;
             }
 
             @Override
-            public boolean newSession(ICustomTabsCallback callback) throws RemoteException {
+            public boolean newSession(ICustomTabsCallback callback) {
                 return true;
             }
 
             @Override
-            public boolean mayLaunchUrl(ICustomTabsCallback callback, Uri url, Bundle extras, List<Bundle> otherLikelyBundles) throws RemoteException {
+            public boolean mayLaunchUrl(ICustomTabsCallback callback, Uri url, Bundle extras, List<Bundle> otherLikelyBundles) {
                 return true;
             }
 
             @Override
-            public Bundle extraCommand(String s, Bundle bundle) throws RemoteException {
+            public Bundle extraCommand(String s, Bundle bundle) {
                 return null;
             }
 
             @Override
-            public boolean updateVisuals(ICustomTabsCallback callback, Bundle bundle) throws RemoteException {
+            public boolean updateVisuals(ICustomTabsCallback callback, Bundle bundle) {
                 return false;
             }
 
             @Override
             public boolean requestPostMessageChannel(ICustomTabsCallback iCustomTabsCallback,
-                                                     Uri uri) throws RemoteException {
+                                                     Uri uri) {
                 return false;
             }
 
             @Override
             public int postMessage(ICustomTabsCallback iCustomTabsCallback, String s,
-                                   Bundle bundle) throws RemoteException {
+                                   Bundle bundle) {
                 return 0;
             }
 
             @Override
-            public boolean validateRelationship(ICustomTabsCallback iCustomTabsCallback, int i, Uri uri, Bundle bundle) throws RemoteException {
+            public boolean validateRelationship(ICustomTabsCallback iCustomTabsCallback, int i, Uri uri, Bundle bundle) {
                 return false;
             }
         };

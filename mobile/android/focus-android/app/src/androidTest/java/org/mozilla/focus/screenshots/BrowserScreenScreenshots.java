@@ -117,7 +117,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                     .check(matches(isDisplayed()))
                     .perform(click());
             Screengrab.screenshot("Suggestion_accept_dialog");
-        } catch (AssertionError e) { }
+        } catch (AssertionError ignored) { }
 
         onView(withId(R.id.clearView))
                 .check(matches(isDisplayed()))
@@ -150,7 +150,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
             dismissbutton.check(matches(isDisplayed()));
             Screengrab.screenshot("Suggestion_unavailable_dialog");
             dismissbutton.perform(click());
-        } catch (AssertionError e) { }
+        } catch (AssertionError ignored) { }
 
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))

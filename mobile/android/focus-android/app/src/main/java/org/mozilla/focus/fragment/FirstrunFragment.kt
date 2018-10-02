@@ -114,12 +114,12 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
         val sessionManager = requireContext().components.sessionManager
 
         val fragment: Fragment
-        if (sessionUUID == null) {
-            fragment = UrlInputFragment.createWithoutSession()
+        fragment = if (sessionUUID == null) {
+            UrlInputFragment.createWithoutSession()
         } else {
             val session = sessionManager.findSessionById(sessionUUID)
 
-            fragment = BrowserFragment.createForSession(session!!)
+            BrowserFragment.createForSession(session!!)
         }
 
         fragmentManager

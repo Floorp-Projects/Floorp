@@ -11,9 +11,9 @@
     <item android:id="@+id/learn_more"
           android:icon="@drawable/ic_menu_info"
           android:title="@string/preference_autocomplete_learn_more"
-          app:showAsAction="always"/>
+          app:showAsAction="ifRoom"/>
 
     <item android:id="@+id/menu_save_search_engine"
         android:title="@string/search_add_manually_save"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
 </menu>

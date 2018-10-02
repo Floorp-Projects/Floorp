@@ -73,7 +73,7 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
         AppAdapter adapter = new AppAdapter(
                 wrapper,
                 (ActivityInfo[]) getArguments().getParcelableArray(ARGUMENT_KEY_APPS),
-                (ActivityInfo) getArguments().getParcelable(ARGUMENT_STORE));
+                getArguments().getParcelable(ARGUMENT_STORE));
         adapter.setOnAppSelectedListener(this);
         appList.setAdapter(adapter);
 
