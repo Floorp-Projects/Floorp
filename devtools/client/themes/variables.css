@@ -217,6 +217,7 @@
   --theme-console-info-image: url(chrome://devtools/skin/images/webconsole/info.svg);
   --theme-console-input-image: url(chrome://devtools/skin/images/webconsole/input.svg);
   --theme-console-return-image: url(chrome://devtools/skin/images/webconsole/return.svg);
+  --theme-console-jump-image: url(chrome://devtools/skin/images/webconsole/jump.svg);
 
   /* Firefox Colors CSS Variables v1.0.3
    * Colors are taken from: https://github.com/FirefoxUX/design-tokens

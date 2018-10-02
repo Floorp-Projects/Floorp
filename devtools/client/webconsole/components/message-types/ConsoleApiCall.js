@@ -42,6 +42,7 @@ function ConsoleApiCall(props) {
   } = props;
   const {
     id: messageId,
+    executionPoint,
     indent,
     source,
     type,
@@ -113,6 +114,7 @@ function ConsoleApiCall(props) {
 
   return Message({
     messageId,
+    executionPoint,
     open,
     collapsible,
     collapseTitle,

@@ -34,7 +34,7 @@ class MessageContainer extends Component {
       timestampsVisible: PropTypes.bool.isRequired,
       repeat: PropTypes.number,
       networkMessageUpdate: PropTypes.object,
-      getMessage: PropTypes.func.isRequired,
+      getMessage: PropTypes.func.isRequired
     };
   }
 

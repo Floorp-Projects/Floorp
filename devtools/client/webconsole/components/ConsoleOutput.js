@@ -153,7 +153,7 @@ class ConsoleOutput extends Component {
       repeat: messagesRepeat[messageId],
       networkMessageUpdate: networkMessagesUpdate[messageId],
       networkMessageActiveTabId,
-      getMessage: () => messages.get(messageId),
+      getMessage: () => messages.get(messageId)
     }));
 
     return (

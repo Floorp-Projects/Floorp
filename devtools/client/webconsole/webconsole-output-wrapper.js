@@ -65,6 +65,13 @@ WebConsoleOutputWrapper.prototype = {
         openLink: (url, e) => {
           hud.owner.openLink(url, e);
         },
+        canRewind: () => {
+          if (!hud.owner.target.activeTab) {
+            return false;
+          }
+
+          return hud.owner.target.activeTab.traits.canRewind;
+        },
         createElement: nodename => {
           return this.document.createElement(nodename);
         },
@@ -220,7 +227,9 @@ WebConsoleOutputWrapper.prototype = {
               .setNodeFront(front, { reason: "console" });
 
             return Promise.all([onNodeFrontSet, onInspectorUpdated]);
-          }
+          },
+          jumpToExecutionPoint: executionPoint =>
+            this.toolbox.threadClient.timeWarp(executionPoint)
         });
       }
 
