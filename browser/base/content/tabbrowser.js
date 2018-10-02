@@ -2554,6 +2554,30 @@ window._gBrowser = {
     return t;
   },
 
+  moveTabsToStart(contextTab) {
+    let tabs = contextTab.multiselected ?
+      gBrowser.selectedTabs :
+      [contextTab];
+    // Walk the array in reverse order so the tabs are kept in order.
+    for (let i = tabs.length - 1; i >= 0; i--) {
+      let tab = tabs[i];
+      if (tab._tPos > 0) {
+        this.moveTabTo(tab, 0);
+      }
+    }
+  },
+
+  moveTabsToEnd(contextTab) {
+    let tabs = contextTab.multiselected ?
+      gBrowser.selectedTabs :
+      [contextTab];
+    for (let tab of tabs) {
+      if (tab._tPos < this.tabs.length - 1) {
+        this.moveTabTo(tab, this.tabs.length - 1);
+      }
+    }
+  },
+
   warnAboutClosingTabs(tabsToClose, aCloseTabs, aOptionalMessage) {
     if (tabsToClose <= 1)
       return true;
@@ -3841,7 +3865,8 @@ window._gBrowser = {
   },
 
   allTabsSelected() {
-    return this.visibleTabs.every(t => t.multiselected);
+    return this.visibleTabs.length == 1 ||
+           this.visibleTabs.every(t => t.multiselected);
   },
 
   lockClearMultiSelectionOnce() {
@@ -5292,6 +5317,23 @@ var TabContextMenu = {
     contextPinSelectedTabs.hidden = this.contextTab.pinned || !multiselectionContext;
     let contextUnpinSelectedTabs = document.getElementById("context_unpinSelectedTabs");
     contextUnpinSelectedTabs.hidden = !this.contextTab.pinned || !multiselectionContext;
+
+    let contextMoveTabOptions = document.getElementById("context_moveTabOptions");
+    contextMoveTabOptions.disabled = gBrowser.allTabsSelected();
+    let moveTabOptionsStringPrefix = multiselectionContext ? "multiselectcontext" : "nonmultiselectcontext";
+    let moveTabOptionsLabel = contextMoveTabOptions.getAttribute(moveTabOptionsStringPrefix + "label");
+    let moveTabOptionsAccessKey = contextMoveTabOptions.getAttribute(moveTabOptionsStringPrefix + "accesskey");
+    contextMoveTabOptions.setAttribute("label", moveTabOptionsLabel);
+    contextMoveTabOptions.setAttribute("accesskey", moveTabOptionsAccessKey);
+    let selectedTabs = gBrowser.selectedTabs;
+    let contextMoveTabToEnd = document.getElementById("context_moveToEnd");
+    let allSelectedTabsAdjacent = selectedTabs.every((element, index, array) => {
+      return array.length > index + 1 ? element._tPos + 1 == array[index + 1]._tPos : true;
+    });
+    contextMoveTabToEnd.disabled = selectedTabs[selectedTabs.length - 1]._tPos == gBrowser.visibleTabs.length - 1 &&
+                                   allSelectedTabsAdjacent;
+    let contextMoveTabToStart = document.getElementById("context_moveToStart");
+    contextMoveTabToStart.disabled = selectedTabs[0]._tPos == 0 && allSelectedTabsAdjacent;
 
     // Hide the "Duplicate Tab" if there is a selection present
     let contextDuplicateTab = document.getElementById("context_duplicateTab");
