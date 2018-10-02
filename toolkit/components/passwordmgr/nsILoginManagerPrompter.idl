@@ -38,12 +38,11 @@ interface nsILoginManagerPrompter : nsISupports {
   attribute Element browser;
 
   /**
-   * The opener that was used to open the window passed to init.
+   * The opener browser that was used to open the window passed to init.
    * The opener can be used to determine in which window the prompt
-   * should be shown. Must be a content window that is not a frame window,
-   * make sure to pass the top window using e.g. window.top.
+   * should be shown.
    */
-  attribute nsIDOMWindow opener;
+  attribute Element openerBrowser;
 
   /**
    * Ask the user if they want to save a login (Yes, Never, Not Now)

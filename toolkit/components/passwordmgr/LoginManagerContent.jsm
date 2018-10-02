@@ -970,16 +970,20 @@ var LoginManagerContent = {
                               value: oldPasswordField.value } :
                             null;
 
-    // Make sure to pass the opener's top in case it was in a frame.
-    let openerTopWindow = win.opener ? win.opener.top : null;
+    // Make sure to pass the opener's top ID in case it was in a frame.
+    let openerTopWindowID = null;
+    if (win.opener) {
+      openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
+    }
 
     messageManager.sendAsyncMessage("RemoteLogins:onFormSubmit",
                                     { hostname,
                                       formSubmitURL,
                                       usernameField: mockUsername,
                                       newPasswordField: mockPassword,
-                                      oldPasswordField: mockOldPassword },
-                                    { openerTopWindow });
+                                      oldPasswordField: mockOldPassword,
+                                      openerTopWindowID,
+                                    });
   },
 
   /**
