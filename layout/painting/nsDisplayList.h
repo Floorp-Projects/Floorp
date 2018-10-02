@@ -1921,26 +1921,46 @@ public:
    */
   struct WeakFrameRegion
   {
-    std::vector<WeakFrame> mFrames;
+    /**
+     * A wrapper to store WeakFrame and the pointer to the underlying frame.
+     * This is needed because WeakFrame does not store the frame pointer after
+     * the frame has been deleted.
+     */
+    struct WeakFrameWrapper {
+      explicit WeakFrameWrapper(nsIFrame* aFrame)
+        : mWeakFrame(new WeakFrame(aFrame))
+        , mFrame(aFrame)
+      {
+      }
+
+      mozilla::UniquePtr<WeakFrame> mWeakFrame;
+      void* mFrame;
+    };
+
+    nsTHashtable<nsPtrHashKey<void>> mFrameSet;
+    nsTArray<WeakFrameWrapper> mFrames;
     nsTArray<pixman_box32_t> mRects;
 
-    void Add(nsIFrame* aFrame, const nsRect& aRect)
+    template<typename RectType>
+    void Add(nsIFrame* aFrame, const RectType& aRect)
     {
-      mFrames.emplace_back(aFrame);
-      mRects.AppendElement(nsRegion::RectToBox(aRect));
-    }
+      if (mFrameSet.Contains(aFrame)) {
+        return;
+      }
 
-    void Add(nsIFrame* aFrame, const mozilla::gfx::IntRect& aRect)
-    {
-      mFrames.emplace_back(aFrame);
+      mFrameSet.PutEntry(aFrame);
+      mFrames.AppendElement(WeakFrameWrapper(aFrame));
       mRects.AppendElement(nsRegion::RectToBox(aRect));
     }
 
     void Clear()
     {
-      mFrames.clear();
+      mFrameSet.Clear();
+      mFrames.Clear();
       mRects.Clear();
     }
+
+    void RemoveModifiedFramesAndRects();
 
     typedef mozilla::gfx::ArrayView<pixman_box32_t> BoxArrayView;
 
