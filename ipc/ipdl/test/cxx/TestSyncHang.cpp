@@ -36,7 +36,8 @@ DeferredSyncHangParentShutdown()
 {
   // ping to DeleteSubprocess
   XRE_GetIOMessageLoop()->PostTask(
-      NewRunnableFunction(DeleteSyncHangSubprocess, MessageLoop::current()));
+      NewRunnableFunction("DeleteSyncHangSubprocess", DeleteSyncHangSubprocess,
+                          MessageLoop::current()));
 }
 
 void
@@ -49,7 +50,8 @@ TestSyncHangParent::Main()
   if (launched)
     fail("Calling SyncLaunch with an invalid path should return false");
 
-  MessageLoop::current()->PostTask(NewRunnableFunction(DeferredSyncHangParentShutdown));
+  MessageLoop::current()->PostTask(NewRunnableFunction("DeferredSyncHangParentShutdown",
+                                                       DeferredSyncHangParentShutdown));
   Close();
 }
 
