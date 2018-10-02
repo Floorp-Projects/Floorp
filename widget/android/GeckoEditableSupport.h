@@ -211,12 +211,17 @@ public:
 
     // GeckoEditableChild methods
     using EditableBase::AttachNative;
+    using EditableBase::DisposeNative;
 
-    void OnDetach() {
+    const java::GeckoEditableChild::Ref& GetJavaEditable() { return mEditable; }
+
+    void OnDetach(already_AddRefed<Runnable> aDisposer)
+    {
         RefPtr<GeckoEditableSupport> self(this);
-        nsAppShell::PostEvent([this, self] {
+        nsAppShell::PostEvent([this, self,
+                               disposer = RefPtr<Runnable>(aDisposer)] {
             mEditableAttached = false;
-            DisposeNative(mEditable);
+            disposer->Run();
         });
     }
 

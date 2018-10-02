@@ -450,7 +450,7 @@ public:
     using Base::AttachNative;
     using Base::DisposeNative;
 
-    void OnDetach()
+    void OnDetach(already_AddRefed<Runnable> aDisposer)
     {
         // There are several considerations when shutting down NPZC. 1) The
         // Gecko thread may destroy NPZC at any time when nsWindow closes. 2)
@@ -484,20 +484,15 @@ public:
         // release mWindow until the UI thread is done using it, thus avoiding
         // the race condition.
 
-        typedef PanZoomController::GlobalRef NPZCRef;
-        auto callDestroy = [] (const NPZCRef& npzc) {
-            npzc->SetAttached(false);
-        };
-
-        PanZoomController::GlobalRef npzc = mNPZC;
-        RefPtr<nsThread> uiThread = GetAndroidUiThread();
-        if (!uiThread) {
-            return;
+        if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
+            uiThread->Dispatch(NS_NewRunnableFunction(
+                        "NPZCSupport::OnDetach",
+                        [npzc = PanZoomController::GlobalRef(mNPZC),
+                         disposer = RefPtr<Runnable>(aDisposer)] {
+                            npzc->SetAttached(false);
+                            disposer->Run();
+                        }));
         }
-        uiThread->Dispatch(NewRunnableFunction(
-                "OnDetachRunnable",
-                static_cast<void(*)(const NPZCRef&)>(callDestroy),
-                std::move(npzc)), nsIThread::DISPATCH_NORMAL);
     }
 
     const PanZoomController::Ref& GetJavaNPZC() const
@@ -902,14 +897,16 @@ public:
     using Base::AttachNative;
     using Base::DisposeNative;
 
-    void OnDetach()
+    void OnDetach(already_AddRefed<Runnable> aDisposer)
     {
         if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
-            LayerSession::Compositor::GlobalRef compositor(mCompositor);
             uiThread->Dispatch(NS_NewRunnableFunction(
                     "LayerViewSupport::OnDetach",
-                    [compositor] {
+                    [compositor =
+                            LayerSession::Compositor::GlobalRef(mCompositor),
+                     disposer = RefPtr<Runnable>(aDisposer)] {
                         compositor->OnCompositorDetached();
+                        disposer->Run();
                     }));
         }
     }
@@ -1181,20 +1178,23 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
 {
     // Disassociate our GeckoEditable instance with our native object.
     if (window.mEditableSupport) {
-        window.mEditableSupport.Detach();
+        window.mEditableSupport.Detach(
+                window.mEditableSupport->GetJavaEditable());
         window.mEditableParent = nullptr;
     }
 
     if (window.mNPZCSupport) {
-        window.mNPZCSupport.Detach();
+        window.mNPZCSupport.Detach(window.mNPZCSupport->GetJavaNPZC());
     }
 
     if (window.mLayerViewSupport) {
-        window.mLayerViewSupport.Detach();
+        window.mLayerViewSupport.Detach(
+                window.mLayerViewSupport->GetJavaCompositor());
     }
 
     if (window.mSessionAccessibility) {
-        window.mSessionAccessibility.Detach();
+        window.mSessionAccessibility.Detach(
+                window.mSessionAccessibility->GetJavaAccessibility());
     }
 }
 
@@ -1299,14 +1299,15 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
 {
     if (window.mNPZCSupport) {
         MOZ_ASSERT(window.mLayerViewSupport);
-        window.mNPZCSupport.Detach();
+        window.mNPZCSupport.Detach(window.mNPZCSupport->GetJavaNPZC());
     }
 
     auto compositor = LayerSession::Compositor::LocalRef(
             inst.Env(), LayerSession::Compositor::Ref::From(aCompositor));
     if (window.mLayerViewSupport &&
             window.mLayerViewSupport->GetJavaCompositor() != compositor) {
-        window.mLayerViewSupport.Detach();
+        window.mLayerViewSupport.Detach(
+                window.mLayerViewSupport->GetJavaCompositor());
     }
     if (!window.mLayerViewSupport) {
         window.mLayerViewSupport.Attach(compositor, &window, compositor);
@@ -1317,7 +1318,8 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
             java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
 
     if (window.mSessionAccessibility) {
-        window.mSessionAccessibility.Detach();
+        window.mSessionAccessibility.Detach(
+                window.mSessionAccessibility->GetJavaAccessibility());
     }
     if (aSessionAccessibility) {
         AttachAccessibility(inst, aSessionAccessibility);
@@ -1348,7 +1350,8 @@ nsWindow::GeckoViewSupport::AttachEditable(const GeckoSession::Window::LocalRef&
     editableChild = java::GeckoEditableChild::Ref::From(aEditableChild);
 
     if (window.mEditableSupport) {
-        window.mEditableSupport.Detach();
+        window.mEditableSupport.Detach(
+                window.mEditableSupport->GetJavaEditable());
     }
 
     window.mEditableSupport.Attach(editableChild, &window, editableChild);
@@ -1366,7 +1369,8 @@ nsWindow::GeckoViewSupport::AttachAccessibility(const GeckoSession::Window::Loca
       aSessionAccessibility);
 
     if (window.mSessionAccessibility) {
-        window.mSessionAccessibility.Detach();
+        window.mSessionAccessibility.Detach(
+                window.mSessionAccessibility->GetJavaAccessibility());
     }
 
     window.mSessionAccessibility.Attach(

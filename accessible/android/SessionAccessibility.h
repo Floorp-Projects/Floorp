@@ -25,10 +25,18 @@ public:
     : mWindow(aPtr, aWindow)
     , mSessionAccessibility(aSessionAccessibility)
   {
-    SetAttached(true);
+    SetAttached(true, nullptr);
   }
 
-  void OnDetach() { SetAttached(false); }
+  void OnDetach(already_AddRefed<Runnable> aDisposer)
+  {
+    SetAttached(false, std::move(aDisposer));
+  }
+
+  const java::SessionAccessibility::NativeProvider::Ref& GetJavaAccessibility()
+  {
+    return mSessionAccessibility;
+  }
 
   // Native implementations
   using Base::AttachNative;
@@ -39,7 +47,7 @@ public:
 private:
   ~SessionAccessibility() {}
 
-  void SetAttached(bool aAttached);
+  void SetAttached(bool aAttached, already_AddRefed<Runnable> aRunnable);
 
   nsWindow::WindowPtr<SessionAccessibility> mWindow; // Parent only
   java::SessionAccessibility::NativeProvider::GlobalRef mSessionAccessibility;
