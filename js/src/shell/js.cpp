@@ -5077,13 +5077,12 @@ template <typename Tok>
 static bool
 ParseBinASTData(JSContext* cx, uint8_t* buf_data, uint32_t buf_length,
                 GlobalSharedContext* globalsc, UsedNameTracker& usedNames,
-                const JS::ReadOnlyCompileOptions& options,
-                HandleScriptSourceObject sourceObj)
+                const JS::ReadOnlyCompileOptions& options)
 {
     MOZ_ASSERT(globalsc);
 
     // Note: We need to keep `reader` alive as long as we can use `parsed`.
-    BinASTParser<Tok> reader(cx, cx->tempLifoAlloc(), usedNames, options, sourceObj);
+    BinASTParser<Tok> reader(cx, cx->tempLifoAlloc(), usedNames, options);
 
     JS::Result<ParseNode*> parsed = reader.parse(globalsc, buf_data, buf_length);
 
@@ -5184,17 +5183,12 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
 
     UsedNameTracker usedNames(cx);
 
-    RootedScriptSourceObject sourceObj(cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
-    if (!sourceObj) {
-        return false;
-    }
-
     Directives directives(false);
     GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
 
     auto parseFunc = useMultipart ? ParseBinASTData<frontend::BinTokenReaderMultipart>
                                   : ParseBinASTData<frontend::BinTokenReaderTester>;
-    if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options, sourceObj)) {
+    if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options)) {
         return false;
     }
 
