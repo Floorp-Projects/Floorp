@@ -64,7 +64,8 @@ var gTests = [
     Services.prefs.setCharPref(kStatusPref, "pending");
 
     let loadPromise = promiseStoppedLoad(expectedURL);
-    gBrowser.contentDocumentAsCPOW.getElementById("searchResetKeepCurrent").click();
+    await BrowserTestUtils.synthesizeMouseAtCenter("#searchResetKeepCurrent", {},
+                                                   gBrowser.selectedBrowser);
     await loadPromise;
 
     is(engine, Services.search.currentEngine,
@@ -82,20 +83,29 @@ var gTests = [
   async run() {
     let currentEngine = Services.search.currentEngine;
     let originalEngine = Services.search.originalDefaultEngine;
-    let doc = gBrowser.contentDocumentAsCPOW;
-    let defaultEngineSpan = doc.getElementById("defaultEngine");
-    is(defaultEngineSpan.textContent, originalEngine.name,
+    let browser = gBrowser.selectedBrowser;
+    let defaultEngineSpanText =
+      await ContentTask.spawn(browser, null, async () => {
+        return content.document.getElementById("defaultEngine").textContent;
+      });
+
+    is(defaultEngineSpanText, originalEngine.name,
        "the name of the original default engine is displayed");
 
     let expectedURL = originalEngine.
                       getSubmission(kSearchStr, null, kSearchPurpose).
                       uri.spec;
     let loadPromise = promiseStoppedLoad(expectedURL);
-    let button = doc.getElementById("searchResetChangeEngine");
-    is(doc.activeElement, button,
-       "the 'Change Search Engine' button is focused");
+
+    await ContentTask.spawn(browser, null, async () => {
+      let button = content.document.getElementById("searchResetChangeEngine");
+      Assert.equal(content.document.activeElement, button,
+                   "the 'Change Search Engine' button is focused");
+    });
+
     Services.prefs.setCharPref(kStatusPref, "pending");
-    button.click();
+    await BrowserTestUtils.synthesizeMouseAtCenter("#searchResetChangeEngine",
+                                                   {}, browser);
     await loadPromise;
 
     is(originalEngine, Services.search.currentEngine,
@@ -114,7 +124,9 @@ var gTests = [
     let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false,
                                                      "about:preferences#search");
-    gBrowser.contentDocumentAsCPOW.getElementById("linkSettingsPage").click();
+    let browser = gBrowser.selectedBrowser;
+    await BrowserTestUtils.synthesizeMouseAtCenter("#linkSettingsPage",
+                                                   {}, browser);
     await loadPromise;
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.OPENED_SETTINGS);
