@@ -88,7 +88,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.onUpdatedSourceEvent = this.onUpdatedSourceEvent.bind(this);
 
     this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
-    this.createCompletionGrip = this.createCompletionGrip.bind(this);
     this.onDebuggerStatement = this.onDebuggerStatement.bind(this);
     this.onNewScript = this.onNewScript.bind(this);
     this.objectGrip = this.objectGrip.bind(this);
@@ -523,15 +522,15 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     };
   },
 
-  _makeOnPop: function({ thread, pauseAndRespond, startLocation, steppingType }) {
+  _makeOnPop: function({ thread, pauseAndRespond, createValueGrip: createValueGripHook,
+                          startLocation }) {
     const result = function(completion) {
       // onPop is called with 'this' set to the current frame.
       const generatedLocation = thread.sources.getFrameLocation(this);
-      const originalLocation = thread.unsafeSynchronize(
+      const { originalSourceActor } = thread.unsafeSynchronize(
         thread.sources.getOriginalLocation(generatedLocation)
       );
 
-      const { originalSourceActor } = originalLocation;
       const url = originalSourceActor.url;
 
       if (thread.sources.isBlackBoxed(url)) {
@@ -542,24 +541,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // subsequent step events on its caller.
       this.reportedPop = true;
 
-      if (steppingType == "finish") {
-        const parentFrame = thread._getNextStepFrame(this);
-        if (parentFrame && parentFrame.script) {
-          const { onStep } = thread._makeSteppingHooks(
-            originalLocation, "next", false, completion
-          );
-          parentFrame.onStep = onStep;
-          return undefined;
-        }
-      }
-
       return pauseAndRespond(this, packet => {
-        if (completion) {
-          thread.createCompletionGrip(packet, completion);
+        packet.why.frameFinished = {};
+        if (!completion) {
+          packet.why.frameFinished.terminated = true;
+        } else if (completion.hasOwnProperty("return")) {
+          packet.why.frameFinished.return = createValueGripHook(completion.return);
+        } else if (completion.hasOwnProperty("yield")) {
+          packet.why.frameFinished.return = createValueGripHook(completion.yield);
         } else {
-          packet.why.frameFinished = {
-            terminated: true
-          };
+          packet.why.frameFinished.throw = createValueGripHook(completion.throw);
         }
         return packet;
       });
@@ -578,7 +569,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   // Return whether reaching a script offset should be considered a distinct
-  // "step" from another location.
+  // "step" from another location in the same frame.
   _intraFrameLocationIsStepTarget: function(startLocation, script, offset) {
     // Only allow stepping stops at entry points for the line.
     if (!script.getOffsetLocation(offset).isEntryPoint) {
@@ -630,7 +621,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   _makeOnStep: function({ thread, pauseAndRespond, startFrame,
-                          startLocation, steppingType, completion }) {
+                          startLocation, steppingType }) {
     // Breaking in place: we should always pause.
     if (steppingType === "break") {
       return () => pauseAndRespond(this);
@@ -655,38 +646,21 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         return undefined;
       }
 
+      // A step has occurred if we have changed frames.
+      if (this !== startFrame) {
+        return pauseAndRespond(this);
+      }
+
       // A step has occurred if we reached a step target.
       if (thread._intraFrameLocationIsStepTarget(startLocation,
                                                  this.script, this.offset)) {
-        return pauseAndRespond(
-          this,
-          packet => thread.createCompletionGrip(packet, completion)
-        );
+        return pauseAndRespond(this);
       }
 
       // Otherwise, let execution continue (we haven't executed enough code to
       // consider this a "step" yet).
       return undefined;
     };
-  },
-
-  createCompletionGrip: function(packet, completion) {
-    if (!completion) {
-      return packet;
-    }
-
-    const createGrip = value => createValueGrip(value, this._pausePool, this.objectGrip);
-    packet.why.frameFinished = {};
-
-    if (completion.hasOwnProperty("return")) {
-      packet.why.frameFinished.return = createGrip(completion.return);
-    } else if (completion.hasOwnProperty("yield")) {
-      packet.why.frameFinished.return = createGrip(completion.yield);
-    } else if (completion.hasOwnProperty("throw")) {
-      packet.why.frameFinished.throw = createGrip(completion.throw);
-    }
-
-    return packet;
   },
 
   /**
@@ -722,7 +696,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   /**
    * Define the JS hook functions for stepping.
    */
-  _makeSteppingHooks: function(startLocation, steppingType, rewinding, completion) {
+  _makeSteppingHooks: function(startLocation, steppingType, rewinding) {
     // Bind these methods and state because some of the hooks are called
     // with 'this' set to the current frame. Rather than repeating the
     // binding in each _makeOnX method, just do it once here and pass it
@@ -733,12 +707,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         { type: "resumeLimit" },
         onPacket
       ),
+      createValueGrip: v => createValueGrip(v, this._pausePool, this.objectGrip),
       thread: this,
       startFrame: this.youngestFrame,
       startLocation: startLocation,
       steppingType: steppingType,
-      rewinding: rewinding,
-      completion
+      rewinding: rewinding
     };
 
     return {
