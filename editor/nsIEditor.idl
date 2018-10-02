@@ -57,7 +57,7 @@ interface nsIEditor  : nsISupports
                                 in AString sourceAttrValue,
                                 in boolean aSuppressTransaction);
   void removeAttributeOrEquivalent(in Element element,
-                                   in DOMString sourceAttrName,
+                                   in AString sourceAttrName,
                                    in boolean aSuppressTransaction);
 
   /** edit flags for this editor.  May be set at any time. */

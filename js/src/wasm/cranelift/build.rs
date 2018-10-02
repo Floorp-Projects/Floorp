@@ -75,8 +75,14 @@ fn main() {
         }
 
         Ok("linux") | Ok("freebsd") | Ok("dragonfly") | Ok("openbsd") | Ok("bitrig") | Ok("netbsd")
-            | Ok("macos") | Ok("ios") => {
+            | Ok("ios") => {
             // Nothing to do in particular for these OSes, until proven the contrary.
+        }
+
+        Ok("macos") => {
+            bindings = bindings.clang_arg("-DOS_MACOSX=1");
+            bindings = bindings.clang_arg("-stdlib=libc++");
+            bindings = bindings.clang_arg("--target=x86_64-apple-darwin");
         }
 
         Ok("windows") => {

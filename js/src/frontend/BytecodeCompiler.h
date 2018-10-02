@@ -43,6 +43,9 @@ CompileGlobalBinASTScript(JSContext *cx, LifoAlloc& alloc,
                           const uint8_t* src, size_t len,
                           ScriptSourceObject** sourceObjectOut = nullptr);
 
+MOZ_MUST_USE bool
+CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, const uint8_t* buf, size_t length);
+
 #endif // JS_BUILD_BINAST
 
 JSScript*

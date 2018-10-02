@@ -15,20 +15,20 @@ interface nsIAccessibleApplication : nsISupports
   /**
    * Returns the application name.
    */
-  readonly attribute DOMString appName;
+  readonly attribute AString appName;
 
   /**
    * Returns the application version.
    */
-  readonly attribute DOMString appVersion;
+  readonly attribute AString appVersion;
 
   /**
    * Returns the platform name.
    */
-  readonly attribute DOMString platformName;
+  readonly attribute AString platformName;
 
   /**
    * Returns the platform version.
    */
-  readonly attribute DOMString platformVersion;
+  readonly attribute AString platformVersion;
 };

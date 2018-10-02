@@ -778,7 +778,6 @@ txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
         // String
         case nsIDataType::VTYPE_CHAR:
         case nsIDataType::VTYPE_WCHAR:
-        case nsIDataType::VTYPE_DOMSTRING:
         case nsIDataType::VTYPE_CHAR_STR:
         case nsIDataType::VTYPE_WCHAR_STR:
         case nsIDataType::VTYPE_STRING_SIZE_IS:
@@ -1357,7 +1356,6 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
         // String
         case nsIDataType::VTYPE_CHAR:
         case nsIDataType::VTYPE_WCHAR:
-        case nsIDataType::VTYPE_DOMSTRING:
         case nsIDataType::VTYPE_CHAR_STR:
         case nsIDataType::VTYPE_WCHAR_STR:
         case nsIDataType::VTYPE_STRING_SIZE_IS:

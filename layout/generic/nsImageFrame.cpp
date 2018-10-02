@@ -2558,7 +2558,8 @@ nsImageFrame::IconLoad::Notify(imgIRequest* aRequest,
 
     // Request a decode at that size.
     image->RequestDecodeForSize(IntSize(width, height),
-                                imgIContainer::DECODE_FLAGS_DEFAULT);
+                                imgIContainer::DECODE_FLAGS_DEFAULT |
+                                imgIContainer::FLAG_HIGH_QUALITY_SCALING);
   }
 
   nsTObserverArray<nsImageFrame*>::ForwardIterator iter(mIconObservers);

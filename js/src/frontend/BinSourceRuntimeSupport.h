@@ -10,12 +10,17 @@
 #include "mozilla/HashFunctions.h"
 
 #include "frontend/BinToken.h"
+#include "gc/DeletePolicy.h"
 
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/Result.h"
+#include "js/UniquePtr.h"
+#include "js/Vector.h"
 
 namespace js {
+
+class ScriptSource;
 
 // Support for parsing JS Binary ASTs.
 struct BinaryASTSupport {
@@ -35,6 +40,9 @@ struct BinaryASTSupport {
         CharSlice(const char* start, const uint32_t byteLen)
             : start_(start)
             , byteLen_(byteLen)
+        { }
+        explicit CharSlice(JSContext*)
+          : CharSlice(nullptr, 0)
         { }
         const char* begin() const {
             return start_;
@@ -67,8 +75,13 @@ struct BinaryASTSupport {
     BinaryASTSupport();
 
     JS::Result<const BinVariant*>  binVariant(JSContext*, const CharSlice);
-    JS::Result<const BinField*> binField(JSContext*, const CharSlice);
     JS::Result<const BinKind*> binKind(JSContext*,  const CharSlice);
+
+    bool ensureBinTablesInitialized(JSContext*);
+
+  private:
+    bool ensureBinKindsInitialized(JSContext*);
+    bool ensureBinVariantsInitialized(JSContext*);
 
   private:
     // A HashMap that can be queried without copies from a CharSlice key.
@@ -83,6 +96,73 @@ struct BinaryASTSupport {
     BinVariantMap binVariantMap_;
 
 };
+
+namespace frontend {
+
+class BinASTSourceMetadata
+{
+    using CharSlice = BinaryASTSupport::CharSlice;
+
+    const uint32_t numStrings_;
+    const uint32_t numBinKinds_;
+
+    // The data lives inline in the allocation, after this class.
+    inline JSAtom** atomsBase() {
+        return reinterpret_cast<JSAtom**>(reinterpret_cast<uintptr_t>(this + 1));
+    }
+    inline CharSlice* sliceBase() {
+        return reinterpret_cast<CharSlice*>(reinterpret_cast<uintptr_t>(atomsBase()) + numStrings_ * sizeof(JSAtom*));
+    }
+    inline BinKind* binKindBase() {
+        return reinterpret_cast<BinKind*>(reinterpret_cast<uintptr_t>(sliceBase()) + numStrings_ * sizeof(CharSlice));
+    }
+
+    static inline size_t totalSize(uint32_t numBinKinds, uint32_t numStrings) {
+        return sizeof(BinASTSourceMetadata) +
+               numStrings * sizeof(JSAtom*) +
+               numStrings * sizeof(CharSlice) +
+               numBinKinds * sizeof(BinKind);
+    }
+
+    BinASTSourceMetadata(uint32_t numBinKinds, uint32_t numStrings)
+      : numStrings_(numStrings),
+        numBinKinds_(numBinKinds)
+    { }
+
+    friend class js::ScriptSource;
+
+  public:
+    static BinASTSourceMetadata* Create(const Vector<BinKind>& binKinds, uint32_t numStrings);
+
+    inline uint32_t numBinKinds() {
+        return numBinKinds_;
+    }
+
+    inline uint32_t numStrings() {
+        return numStrings_;
+    }
+
+    inline BinKind& getBinKind(uint32_t index) {
+        MOZ_ASSERT(index < numBinKinds_);
+        return binKindBase()[index];
+    }
+
+    inline CharSlice& getSlice(uint32_t index) {
+        MOZ_ASSERT(index < numStrings_);
+        return sliceBase()[index];
+    }
+
+    inline JSAtom*& getAtom(uint32_t index) {
+        MOZ_ASSERT(index < numStrings_);
+        return atomsBase()[index];
+    }
+
+    void trace(JSTracer* tracer);
+};
+
+}
+
+typedef UniquePtr<frontend::BinASTSourceMetadata, GCManagedDeletePolicy<frontend::BinASTSourceMetadata>> UniqueBinASTSourceMetadataPtr;
 
 } // namespace js
 

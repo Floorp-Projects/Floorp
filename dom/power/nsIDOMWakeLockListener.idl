@@ -25,5 +25,5 @@ interface nsIDOMMozWakeLockListener : nsISupports
    * @param aTopic The resource name related to the wake lock.
    * @param aState The wake lock state
    */
-  void callback(in DOMString aTopic, in DOMString aState);
+  void callback(in AString aTopic, in AString aState);
 };

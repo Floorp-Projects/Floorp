@@ -48,7 +48,7 @@ interface nsIPresentationSessionTransport : nsISupports
    * Send message to the remote endpoint.
    * @param data The message to send.
    */
-  void send(in DOMString data);
+  void send(in AString data);
 
   /*
    * Send the binary message to the remote endpoint.

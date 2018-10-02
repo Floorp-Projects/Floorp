@@ -208,7 +208,6 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
       return new UTF8TextVariant(v);
     }
     case nsIDataType::VTYPE_WCHAR:
-    case nsIDataType::VTYPE_DOMSTRING:
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
     case nsIDataType::VTYPE_ASTRING: {

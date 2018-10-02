@@ -498,14 +498,6 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
             }
             return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_ASTRING }, &iid, 0, pErr);
         }
-        case nsIDataType::VTYPE_DOMSTRING:
-        {
-            nsAutoString astring;
-            if (NS_FAILED(variant->GetAsAString(astring))) {
-                return false;
-            }
-            return XPCConvert::NativeData2JS(pJSVal, &astring, { TD_DOMSTRING }, &iid, 0, pErr);
-        }
         case nsIDataType::VTYPE_CSTRING:
         {
             nsAutoCString cString;
@@ -671,7 +663,6 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                 // The rest are illegal.
                 case nsIDataType::VTYPE_VOID:
                 case nsIDataType::VTYPE_ASTRING:
-                case nsIDataType::VTYPE_DOMSTRING:
                 case nsIDataType::VTYPE_CSTRING:
                 case nsIDataType::VTYPE_UTF8STRING:
                 case nsIDataType::VTYPE_WSTRING_SIZE_IS:
@@ -796,13 +787,6 @@ NS_IMETHODIMP_(nsresult) XPCVariant::GetAsID(nsID* retval)
 
 NS_IMETHODIMP XPCVariant::GetAsAString(nsAString & _retval)
 {
-    return mData.ConvertToAString(_retval);
-}
-
-NS_IMETHODIMP XPCVariant::GetAsDOMString(nsAString & _retval)
-{
-    // A DOMString maps to an AString internally, so we can re-use
-    // ConvertToAString here.
     return mData.ConvertToAString(_retval);
 }
 
