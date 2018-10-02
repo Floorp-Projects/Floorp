@@ -22,6 +22,8 @@
 namespace js {
 namespace frontend {
 
+class BinASTSourceMetadata;
+
 /**
  * A token reader for a simple, alternative serialization format for BinAST.
  *
@@ -212,6 +214,11 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
      * Read a single uint32_t.
      */
     MOZ_MUST_USE JS::Result<uint32_t> readInternalUint32();
+
+  public:
+    void traceMetadata(JSTracer*) {}
+    BinASTSourceMetadata* takeMetadata() { MOZ_CRASH("Tester format has no metadata to take!"); }
+    MOZ_MUST_USE JS::Result<Ok> initFromScriptSource(ScriptSource*) { MOZ_CRASH("Tester format not for dynamic use"); }
 
   public:
     // The following classes are used whenever we encounter a tuple/tagged tuple/list
