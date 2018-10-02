@@ -140,7 +140,7 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleString)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-simple-string.binjs", contents);
-    Tokenizer tokenizer(cx, contents);
+    Tokenizer tokenizer(cx, nullptr, contents);
 
     Chars found(cx);
     CHECK(tokenizer.readChars(found).isOk());
@@ -156,7 +156,7 @@ BEGIN_TEST(testBinTokenReaderTesterStringWithEscapes)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-string-with-escapes.binjs", contents);
-    Tokenizer tokenizer(cx, contents);
+    Tokenizer tokenizer(cx, nullptr, contents);
 
     Chars found(cx);
     CHECK(tokenizer.readChars(found).isOk());
@@ -172,7 +172,7 @@ BEGIN_TEST(testBinTokenReaderTesterEmptyUntaggedTuple)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-empty-untagged-tuple.binjs", contents);
-    Tokenizer tokenizer(cx, contents);
+    Tokenizer tokenizer(cx, nullptr, contents);
 
     {
         Tokenizer::AutoTuple guard(tokenizer);
@@ -189,7 +189,7 @@ BEGIN_TEST(testBinTokenReaderTesterTwoStringsInTuple)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-trivial-untagged-tuple.binjs", contents);
-    Tokenizer tokenizer(cx, contents);
+    Tokenizer tokenizer(cx, nullptr, contents);
 
     {
         Tokenizer::AutoTuple guard(tokenizer);
@@ -215,7 +215,7 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleTaggedTuple)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-simple-tagged-tuple.binjs", contents);
-    Tokenizer tokenizer(cx, contents);
+    Tokenizer tokenizer(cx, nullptr, contents);
 
     {
         js::frontend::BinKind tag;
@@ -249,7 +249,7 @@ BEGIN_TEST(testBinTokenReaderTesterEmptyList)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-empty-list.binjs", contents);
-    Tokenizer tokenizer(cx, contents);
+    Tokenizer tokenizer(cx, nullptr, contents);
 
     {
         uint32_t length;
@@ -269,7 +269,7 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleList)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-trivial-list.binjs", contents);
-    Tokenizer tokenizer(cx, contents);
+    Tokenizer tokenizer(cx, nullptr, contents);
 
     {
         uint32_t length;
@@ -299,7 +299,7 @@ BEGIN_TEST(testBinTokenReaderTesterNestedList)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-nested-lists.binjs", contents);
-    Tokenizer tokenizer(cx, contents);
+    Tokenizer tokenizer(cx, nullptr, contents);
 
     {
         uint32_t outerLength;
