@@ -495,6 +495,10 @@ var TabCrashHandler = {
     });
 
     let browser = message.target.browser;
+    let window = browser.ownerGlobal;
+
+    // Reset the zoom for the tabcrashed page.
+    window.ZoomManager.setZoomForBrowser(browser, 1);
 
     let childID = this.browserMap.get(browser);
     let index = this.unseenCrashedChildIDs.indexOf(childID);
