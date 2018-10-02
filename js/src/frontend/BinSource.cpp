@@ -112,15 +112,17 @@ BinASTParserBase::~BinASTParserBase()
 // ------------- Toplevel constructions
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const Vector<uint8_t>& data)
+BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const Vector<uint8_t>& data,
+                         BinASTSourceMetadata** metadataPtr)
 {
-    return parse(globalsc, data.begin(), data.length());
+    return parse(globalsc, data.begin(), data.length(), metadataPtr);
 }
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const uint8_t* start, const size_t length)
+BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const uint8_t* start, const size_t length,
+                         BinASTSourceMetadata** metadataPtr)
 {
-    auto result = parseAux(globalsc, start, length);
+    auto result = parseAux(globalsc, start, length, metadataPtr);
     poison(); // Make sure that the parser is never used again accidentally.
     return result;
 }
@@ -128,7 +130,8 @@ BinASTParser<Tok>::parse(GlobalSharedContext* globalsc, const uint8_t* start, co
 
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
-                            const uint8_t* start, const size_t length)
+                            const uint8_t* start, const size_t length,
+                            BinASTSourceMetadata** metadataPtr)
 {
     MOZ_ASSERT(globalsc);
 
@@ -156,19 +159,22 @@ BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
     }
     globalsc->bindings = *bindings;
 
+    if (metadataPtr) {
+        *metadataPtr = tokenizer_->takeMetadata();
+    }
+
     return result; // Magic conversion to Ok.
 }
 
 template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parseLazyFunction(const uint8_t* start, const size_t firstOffset, const size_t len)
+BinASTParser<Tok>::parseLazyFunction(ScriptSource* scriptSource, const size_t firstOffset)
 {
     MOZ_ASSERT(lazyScript_);
+    MOZ_ASSERT(scriptSource->length() > firstOffset);
 
-    tokenizer_.emplace(cx_, this, start, len);
+    tokenizer_.emplace(cx_, this, scriptSource->binASTSource(), scriptSource->length());
 
-    // Re-initialize the tokenizer
-    mozilla::DebugOnly<bool> success = tokenizer_->readHeader().isOk();
-    MOZ_ASSERT(success);
+    MOZ_TRY(tokenizer_->initFromScriptSource(scriptSource));
 
     tokenizer_->seek(firstOffset);
 
@@ -736,6 +742,13 @@ TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser)
     static_cast<BinASTParserBase*>(parser)->trace(trc);
 }
 
+template<typename Tok>
+void
+BinASTParser<Tok>::doTrace(JSTracer* trc)
+{
+    if (tokenizer_)
+        tokenizer_->traceMetadata(trc);
+}
 
 // Force class instantiation.
 // This ensures that the symbols are built, without having to export all our
