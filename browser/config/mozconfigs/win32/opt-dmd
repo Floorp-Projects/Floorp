@@ -1,0 +1,3 @@
+ac_add_options --enable-dmd
+
+. "$topsrcdir/browser/config/mozconfigs/win32/nightly"
