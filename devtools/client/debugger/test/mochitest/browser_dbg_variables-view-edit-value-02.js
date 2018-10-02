@@ -16,7 +16,7 @@ function test() {
     source: TAB_URL,
     line: 1
   };
-  initDebugger(TAB_URL, options).then(([tab,, panel]) => {
+  initDebugger(TAB_URL, options).then(([tab, panel]) => {
     gDebugger = panel.panelWin;
     gVars = gDebugger.DebuggerView.Variables;
 

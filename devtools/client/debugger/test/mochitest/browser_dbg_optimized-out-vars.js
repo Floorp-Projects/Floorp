@@ -14,7 +14,7 @@ function test() {
       source: TAB_URL,
       line: 1
     };
-    let [tab,, panel] = yield initDebugger(TAB_URL, options);
+    let [tab, panel] = yield initDebugger(TAB_URL, options);
     gDebugger = panel.panelWin;
     sources = gDebugger.DebuggerView.Sources;
 

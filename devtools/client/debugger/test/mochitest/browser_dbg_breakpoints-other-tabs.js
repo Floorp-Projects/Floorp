@@ -15,8 +15,8 @@ var test = Task.async(function* () {
     source: EXAMPLE_URL + "code_breakpoints-other-tabs.js",
     line: 1
   };
-  const [tab1,, panel1] = yield initDebugger(TAB_URL, options);
-  const [tab2,, panel2] = yield initDebugger(TAB_URL, options);
+  const [tab1, panel1] = yield initDebugger(TAB_URL, options);
+  const [tab2, panel2] = yield initDebugger(TAB_URL, options);
   const queries = panel1.panelWin.require("./content/queries");
   const actions = bindActionCreators(panel1);
   const getState = panel1.panelWin.DebuggerController.getState;

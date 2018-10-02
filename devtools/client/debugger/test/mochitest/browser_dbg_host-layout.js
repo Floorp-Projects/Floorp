@@ -34,7 +34,7 @@ async function testHosts(aHostTypes, aLayoutTypes) {
 
   Services.prefs.setCharPref("devtools.toolbox.host", getHost(firstHost));
 
-  let [tab, debuggee, panel] = await initDebugger();
+  let [tab, panel] = await initDebugger();
   if (getHost(firstHost) === "window") {
     await resizeToolboxWindow(panel, firstHost);
   }

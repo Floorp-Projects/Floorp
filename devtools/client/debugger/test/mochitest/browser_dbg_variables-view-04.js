@@ -14,7 +14,7 @@ function test() {
     source: TAB_URL,
     line: 1
   };
-  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
+  initDebugger(TAB_URL, options).then(([aTab, aPanel]) => {
     let variables = aPanel.panelWin.DebuggerView.Variables;
     let testScope = variables.addScope("test");
     let testVar = testScope.addItem("something");

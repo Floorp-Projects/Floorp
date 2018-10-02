@@ -18,7 +18,7 @@ function* runTests() {
     source: TAB_URL,
     line: 1
   };
-  let [,, panel] = yield initDebugger(TAB_URL, options);
+  let [, panel] = yield initDebugger(TAB_URL, options);
   let dbgWin = panel.panelWin;
   let sources = dbgWin.DebuggerView.Sources;
   let frames = dbgWin.DebuggerView.StackFrames;

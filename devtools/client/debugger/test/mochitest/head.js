@@ -553,7 +553,6 @@ let initDebugger = Task.async(function*(urlOrTab, options) {
   }
   info("Debugee tab added successfully: " + urlOrTab);
 
-  let debuggee = tab.linkedBrowser.contentWindowAsCPOW.wrappedJSObject;
   let target = yield TargetFactory.forTab(tab);
 
   let toolbox = yield gDevTools.showToolbox(target, "jsdebugger");
@@ -593,7 +592,7 @@ let initDebugger = Task.async(function*(urlOrTab, options) {
     yield onCaretUpdated;
   }
 
-  return [tab, debuggee, debuggerPanel, window];
+  return [tab, debuggerPanel, window];
 });
 
 // Creates an add-on debugger for a given add-on. The returned AddonDebugger

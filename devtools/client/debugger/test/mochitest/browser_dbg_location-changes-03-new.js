@@ -15,9 +15,8 @@ function test() {
     source: TAB_URL_1,
     line: 1
   };
-  initDebugger(TAB_URL_1, options).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL_1, options).then(([aTab, aPanel]) => {
     const gTab = aTab;
-    const gDebuggee = aDebuggee;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
     const gEditor = gDebugger.DebuggerView.editor;

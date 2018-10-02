@@ -10,19 +10,17 @@
 const TAB_URL = EXAMPLE_URL + "doc_iframes.html";
 
 function test() {
-  let gTab, gDebuggee, gPanel, gDebugger;
-  let gIframe, gEditor, gSources, gFrames;
+  let gTab, gPanel, gDebugger;
+  let gEditor, gSources, gFrames;
 
   let options = {
     source: EXAMPLE_URL + "doc_inline-debugger-statement.html",
     line: 1
   };
-  initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL, options).then(([aTab, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
-    gIframe = gDebuggee.frames[0];
     gEditor = gDebugger.DebuggerView.editor;
     gSources = gDebugger.DebuggerView.Sources;
     gFrames = gDebugger.DebuggerView.StackFrames;
@@ -57,7 +55,11 @@ function test() {
   function checkIframePause() {
     // Spin the event loop before causing the debuggee to pause, to allow
     // this function to return first.
-    executeSoon(() => gIframe.runDebuggerStatement());
+    executeSoon(() => {
+      ContentTask.spawn(gTab.linkedBrowser, null, async () => {
+        content.frames[0].wrappedJSObject.runDebuggerStatement()
+      });
+    });
 
     return waitForCaretAndScopes(gPanel, 16).then(() => {
       is(gDebugger.gThreadClient.paused, true,

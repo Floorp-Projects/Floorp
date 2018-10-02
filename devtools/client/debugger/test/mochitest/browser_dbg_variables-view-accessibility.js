@@ -11,7 +11,7 @@ var gTab, gPanel, gDebugger;
 var gVariablesView;
 
 function test() {
-  initDebugger().then(([aTab,, aPanel]) => {
+  initDebugger().then(([aTab, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;

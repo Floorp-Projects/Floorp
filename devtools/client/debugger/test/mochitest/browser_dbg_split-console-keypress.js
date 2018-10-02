@@ -20,7 +20,7 @@ function test() {
     source: TAB_URL,
     line: 1
   };
-  initDebugger(TAB_URL, options).then(([aTab, debuggeeWin, aPanel]) => {
+  initDebugger(TAB_URL, options).then(([aTab, aPanel]) => {
     gPanel = aPanel;
     gDebugger = aPanel.panelWin;
     gToolbox = gDevTools.getToolbox(aPanel.target);

@@ -11,7 +11,7 @@
 const TAB_URL_1 = EXAMPLE_URL + "doc_script-switching-01.html";
 const TAB_URL_2 = EXAMPLE_URL + "doc_recursion-stack.html";
 
-var gTab, gDebuggee, gPanel, gDebugger;
+var gTab, gPanel, gDebugger;
 var gSources;
 
 const test = Task.async(function* () {
@@ -21,7 +21,7 @@ const test = Task.async(function* () {
     source: EXAMPLE_URL + "code_script-switching-01.js",
     line: 1
   };
-  ([gTab, gDebuggee, gPanel]) = yield initDebugger(TAB_URL_1, options);
+  ([gTab, gPanel]) = yield initDebugger(TAB_URL_1, options);
   gDebugger = gPanel.panelWin;
   gSources = gDebugger.DebuggerView.Sources;
 
@@ -37,7 +37,11 @@ function testFirstPage() {
 
   // Spin the event loop before causing the debuggee to pause, to allow
   // this function to return first.
-  executeSoon(() => gDebuggee.firstCall());
+  executeSoon(() => {
+    ContentTask.spawn(gTab.linkedBrowser, null, async () => {
+      content.wrappedJSObject.firstCall();
+    });
+  });
 
   return waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
     .then(validateFirstPage);
@@ -88,7 +92,6 @@ function validateSecondPage() {
 
 registerCleanupFunction(function () {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gSources = null;

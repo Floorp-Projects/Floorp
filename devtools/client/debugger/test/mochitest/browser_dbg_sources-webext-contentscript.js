@@ -38,7 +38,7 @@ function test() {
       source: `moz-extension://${mozExtensionHostname}/webext-content-script.js`,
       line: 1
     };
-    [,, gPanel] = yield initDebugger(TAB_URL, options);
+    [, gPanel] = yield initDebugger(TAB_URL, options);
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
 

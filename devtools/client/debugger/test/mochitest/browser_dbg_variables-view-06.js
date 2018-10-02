@@ -14,7 +14,7 @@ var test = Task.async(function* () {
     source: TAB_URL,
     line: 1
   };
-  const [tab,, panel] = yield initDebugger(TAB_URL, options);
+  const [tab, panel] = yield initDebugger(TAB_URL, options);
 
   const scopes = waitForCaretAndScopes(panel, 21);
   callInTab(tab, "doPause");

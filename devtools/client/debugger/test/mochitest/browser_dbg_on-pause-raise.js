@@ -14,7 +14,7 @@ add_task(async function() {
     source: TAB_URL,
     line: 1
   };
-  let [tab,, panel] = await initDebugger(TAB_URL, options);
+  let [tab, panel] = await initDebugger(TAB_URL, options);
   let panelWin = panel.panelWin;
   let toolbox = panel._toolbox;
   let toolboxTab = toolbox.doc.getElementById("toolbox-tab-jsdebugger");

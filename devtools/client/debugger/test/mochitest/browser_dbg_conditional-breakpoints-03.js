@@ -10,7 +10,7 @@
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
 
 function test() {
-  initDebugger().then(([aTab,, aPanel]) => {
+  initDebugger().then(([aTab, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
