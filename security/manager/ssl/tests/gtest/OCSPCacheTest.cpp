@@ -11,8 +11,8 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Sprintf.h"
 #include "nss.h"
-#include "pkix/pkixtypes.h"
-#include "pkixtestutil.h"
+#include "mozpkix/pkixtypes.h"
+#include "mozpkix/test/pkixtestutil.h"
 #include "prerr.h"
 #include "secerr.h"
 
