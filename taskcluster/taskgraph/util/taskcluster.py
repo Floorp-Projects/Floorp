@@ -55,9 +55,9 @@ def get_session():
     return session
 
 
-def _do_request(url, **kwargs):
+def _do_request(url, force_get=False, **kwargs):
     session = get_session()
-    if kwargs:
+    if kwargs and not force_get:
         response = session.post(url, **kwargs)
     else:
         response = session.get(url, stream=True)
@@ -259,10 +259,26 @@ def send_email(address, subject, content, link, use_proxy=False):
         # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
         url = os.environ['TASKCLUSTER_PROXY_URL'] + '/notify/v1/email'
     else:
-        url = liburls.api(os.environ['TASKCLUSTER_ROOT_URL'], 'notify', 'v1', 'email')
+        url = liburls.api(get_root_url(), 'notify', 'v1', 'email')
     _do_request(url, json={
         'address': address,
         'subject': subject,
         'content': content,
         'link': link,
     })
+
+
+def list_task_group(task_group_id):
+    """Generate the tasks in a task group"""
+    params = {}
+    while True:
+        url = liburls.api(get_root_url(), 'queue', 'v1',
+                          'task-group/{}/list'.format(task_group_id))
+        resp = _do_request(url, force_get=True, params=params).json()
+        for task in [t['status'] for t in resp['tasks']]:
+            if task['state'] in ['running', 'pending', 'unscheduled']:
+                yield task['taskId']
+        if resp.get('continuationToken'):
+            params = {'continuationToken': resp.get('continuationToken')}
+        else:
+            break
