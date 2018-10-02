@@ -266,10 +266,10 @@ windows10-64-qr/debug:
 windows10-64-qr/opt:
     build-platform: win64/opt
     test-sets:
+        - awsy
         - windows-qr-tests
         - windows-talos
         - raptor-firefox
-
 
 ##
 # MacOS X platforms (matching /macosx.*/)
