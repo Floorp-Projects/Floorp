@@ -150,3 +150,14 @@ async function evaluateSearchResults(keyword, searchReults) {
   }
 }
 
+function waitForMutation(target, opts, cb) {
+  return new Promise((resolve) => {
+    let observer = new MutationObserver(() => {
+      if (!cb || cb(target)) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(target, opts);
+  });
+}
