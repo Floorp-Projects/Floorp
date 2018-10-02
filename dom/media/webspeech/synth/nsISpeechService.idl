@@ -92,7 +92,7 @@ interface nsISpeechTask : nsISupports
    * @param aCharIndex   offset of spoken characters.
    * @param aCharLength  length of text in boundary event to be spoken.
    */
-  [optional_argc] void dispatchBoundary(in DOMString aName, in float aElapsedTime,
+  [optional_argc] void dispatchBoundary(in AString aName, in float aElapsedTime,
                                         in unsigned long aCharIndex,
                                         [optional] in unsigned long aCharLength);
 
@@ -103,7 +103,7 @@ interface nsISpeechTask : nsISupports
    * @param aElapsedTime time in seconds since speech has started.
    * @param aCharIndex   offset of spoken characters.
    */
-  void dispatchMark(in DOMString aName, in float aElapsedTime, in unsigned long aCharIndex);
+  void dispatchMark(in AString aName, in float aElapsedTime, in unsigned long aCharIndex);
 };
 
 /**
@@ -131,7 +131,7 @@ interface nsISpeechService : nsISupports
    * @param aTask  task instance for utterance, used for sending events or audio
    *                 data back to browser.
    */
-  void speak(in DOMString aText, in DOMString aUri,
+  void speak(in AString aText, in AString aUri,
              in float aVolume, in float aRate, in float aPitch,
              in nsISpeechTask aTask);
 };

@@ -212,7 +212,10 @@ Arguments:
         factory_.addList(/* list = */ result, /* kid = */ item);
 
 ArrayExpression:
-    build:
+    build: |
+        if (elements->empty()) {
+            elements->setHasNonConstInitializer();
+        }
         auto result = elements;
 
 AssertedBlockScope:
@@ -479,6 +482,18 @@ BreakStatement:
 CallExpression:
     build: |
         auto op = JSOP_CALL;
+
+        // Try to optimize funcall and funapply at the bytecode level
+        if (PropertyName* prop = factory_.maybeDottedProperty(callee)) {
+            if (prop == cx_->names().apply) {
+                op = JSOP_FUNAPPLY;
+                if (parseContext_->isFunctionBox())
+                    parseContext_->functionBox()->usesApply = true;
+            } else if (prop == cx_->names().call) {
+                op = JSOP_FUNCALL;
+            }
+        }
+
         // Check for direct calls to `eval`.
         if (factory_.isEvalName(callee, cx_)) {
             if (!parseContext_->varScope().lookupDeclaredNameForAdd(callee->name())
@@ -504,6 +519,7 @@ CatchClause:
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
         BINJS_TRY(currentScope.init(parseContext_));
     build: |
+        MOZ_TRY(checkClosedVars(currentScope));
         BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
         BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
         BINJS_TRY(factory_.setupCatchScope(result, binding, body));
@@ -614,6 +630,11 @@ EagerFunctionDeclaration:
         const auto syntax = FunctionSyntaxKind::Statement;
     inherits: EagerFunctionExpression
 
+LazyFunctionDeclaration:
+    init: |
+        const auto syntax = FunctionSyntaxKind::Statement;
+    inherits: LazyFunctionExpression
+
 FunctionExpressionContents:
     type-ok:
         Ok
@@ -686,6 +707,8 @@ EagerFunctionExpression:
                     (syntax != FunctionSyntaxKind::Setter &&
                      syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
+                forceStrictIfNecessary(funbox, directives);
+
                 // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
                 BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
                 BINJS_TRY(funpc.init());
@@ -704,6 +727,42 @@ EagerFunctionExpression:
         BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
         BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
         BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, body, funbox));
+
+LazyFunctionExpression:
+    init: |
+        const auto syntax = FunctionSyntaxKind::Expression;
+    fields:
+        contents:
+            block:
+                replace:
+                    // Don't parse the contents until we delazify.
+    build: |
+        BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+            isGenerator ? GeneratorKind::Generator
+                        : GeneratorKind::NotGenerator,
+            isAsync ? FunctionAsyncKind::AsyncFunction
+                    : FunctionAsyncKind::SyncFunction,
+            syntax, name));
+
+        forceStrictIfNecessary(funbox, directives);
+
+        RootedFunction fun(cx_, funbox->function());
+
+        // TODO: This will become incorrect in the face of ES6 features.
+        fun->setArgCount(length);
+
+        auto skipStart = contentsSkip.startOffset();
+        BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_, parseContext_->closedOverBindingsForLazy(), parseContext_->innerFunctionsForLazy,
+                                                skipStart, skipStart + contentsSkip.length(),
+                                                skipStart, 0, skipStart, ParseGoal::Script));
+
+        if (funbox->strict()) {
+            lazy->setStrict();
+        }
+        lazy->setIsBinAST();
+        funbox->function()->initLazyScript(lazy);
+
+        BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
 
 EagerGetter:
     init: |
@@ -871,6 +930,10 @@ ListOfObjectProperty:
         ListNode*
     init:
         BINJS_TRY_DECL(result, factory_.newObjectLiteral(start));
+    append: |
+        if (!item->isConstant())
+            result->setHasNonConstInitializer();
+        result->appendWithoutOrderAssumption(item);
 
 ListOfOptionalSpreadElementOrExpression:
     type-ok:

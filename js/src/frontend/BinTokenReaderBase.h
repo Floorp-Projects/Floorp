@@ -8,6 +8,7 @@
 #define frontend_BinTokenReaderBase_h
 
 #include "frontend/BinToken.h"
+#include "frontend/ErrorReporter.h"
 #include "frontend/TokenStream.h"
 
 #include "js/Result.h"
@@ -27,16 +28,16 @@ class MOZ_STACK_CLASS BinTokenReaderBase
     // The information needed to skip a subtree.
     class SkippableSubTree {
       public:
-        SkippableSubTree(const uint8_t* start, const size_t length)
-          : start_(start)
+        SkippableSubTree(const size_t startOffset, const size_t length)
+          : startOffset_(startOffset)
           , length_(length)
         { }
 
         // The position in the source buffer at which the subtree starts.
         //
         // `SkippableSubTree` does *not* attempt to keep anything alive.
-        const uint8_t* start() const {
-            return start_;
+        size_t startOffset() const {
+            return startOffset_;
         }
 
         // The length of the subtree.
@@ -44,7 +45,7 @@ class MOZ_STACK_CLASS BinTokenReaderBase
             return length_;
         }
       private:
-        const uint8_t* start_;
+        const size_t startOffset_;
         const size_t length_;
     };
 
@@ -54,6 +55,9 @@ class MOZ_STACK_CLASS BinTokenReaderBase
     TokenPos pos();
     TokenPos pos(size_t startOffset);
     size_t offset() const;
+
+    // Set the tokenizer's cursor in the file. Use with caution.
+    void seek(size_t offset);
 
      /**
       * Poison this tokenizer.
@@ -73,8 +77,9 @@ class MOZ_STACK_CLASS BinTokenReaderBase
         const BinField field);
 
   protected:
-    BinTokenReaderBase(JSContext* cx, const uint8_t* start, const size_t length)
+    BinTokenReaderBase(JSContext* cx, ErrorReporter* er, const uint8_t* start, const size_t length)
         : cx_(cx)
+        , errorReporter_(er)
         , poisoned_(false)
         , start_(start)
         , current_(start)
@@ -151,6 +156,8 @@ class MOZ_STACK_CLASS BinTokenReaderBase
 #endif
 
     JSContext* cx_;
+
+    ErrorReporter* errorReporter_;
 
     // `true` if we have encountered an error. Errors are non recoverable.
     // Attempting to read from a poisoned tokenizer will cause assertion errors.

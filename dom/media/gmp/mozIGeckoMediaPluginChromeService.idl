@@ -34,7 +34,7 @@ interface mozIGeckoMediaPluginChromeService : nsISupports
    * pattern in JSON format.
    */
   void forgetThisSite(in AString site,
-                      in DOMString aPattern);
+                      in AString aPattern);
 
   /**
    * Returns true if the given node id is allowed to store things

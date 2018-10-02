@@ -22,7 +22,7 @@ interface nsITaskbarPreviewButton : nsISupports
    *
    * Default: an empty string
    */
-  attribute DOMString tooltip;
+  attribute AString tooltip;
 
   /**
    * True if the array of previews should be dismissed when this button is clicked.

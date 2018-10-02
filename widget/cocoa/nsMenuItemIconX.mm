@@ -289,7 +289,8 @@ nsMenuItemIconX::Notify(imgIRequest* aRequest,
     int32_t width = 0, height = 0;
     image->GetWidth(&width);
     image->GetHeight(&height);
-    image->RequestDecodeForSize(nsIntSize(width, height), imgIContainer::FLAG_NONE);
+    image->RequestDecodeForSize(nsIntSize(width, height),
+                                imgIContainer::FLAG_HIGH_QUALITY_SCALING);
   }
 
   if (aType == imgINotificationObserver::FRAME_COMPLETE) {

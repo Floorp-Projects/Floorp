@@ -20,7 +20,7 @@ interface nsIMenuBuilder : nsISupports
    * a new context for this menu, so all subsequent methods will add new items
    * to this newly created menu.
    */
-  void openContainer(in DOMString aLabel);
+  void openContainer(in AString aLabel);
 
   /**
    * Add a new menu item. All menu item details can be obtained from
@@ -72,5 +72,5 @@ interface nsIMenuBuilder : nsISupports
    *
    * @param aGeneratedItemId the menuitem id
    */
-  void click(in DOMString aGeneratedItemId);
+  void click(in AString aGeneratedItemId);
 };

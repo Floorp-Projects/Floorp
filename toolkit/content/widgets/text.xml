@@ -9,36 +9,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <binding id="text-label">
-    <implementation>
-      <property name="accessKey">
-        <getter>
-          <![CDATA[
-            var accessKey = this.getAttribute("accesskey");
-            return accessKey ? accessKey[0] : null;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            this.setAttribute("accesskey", val);
-            return val;
-          ]]>
-        </setter>
-      </property>
-
-      <property name="control" onget="return getAttribute('control');">
-        <setter>
-          <![CDATA[
-            // After this gets set, the label will use the binding #label-control
-            this.setAttribute("control", val);
-            return val;
-          ]]>
-        </setter>
-      </property>
-    </implementation>
-  </binding>
-
-  <binding id="label-control" extends="chrome://global/content/bindings/text.xml#text-label">
+  <binding id="label-control">
     <content>
       <children/><html:span anonid="accessKeyParens"></html:span>
     </content>
@@ -286,7 +257,7 @@
     </handlers>
   </binding>
 
-  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
+  <binding id="text-link">
     <implementation>
       <property name="href" onget="return this.getAttribute('href');"
                             onset="this.setAttribute('href', val); return val;" />
