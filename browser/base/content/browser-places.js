@@ -1642,20 +1642,14 @@ var BookmarkingUI = {
 
   onPanelMenuViewShowing: function BUI_onViewShowing(aEvent) {
     let panelview = aEvent.target;
+
     this.updateBookmarkPageMenuItem();
-    // Update checked status of the toolbar toggle.
-    let viewToolbar = document.getElementById("panelMenu_viewBookmarksToolbar");
-    if (viewToolbar) {
-      let personalToolbar = document.getElementById("PersonalToolbar");
-      if (personalToolbar.collapsed)
-        viewToolbar.removeAttribute("checked");
-      else
-        viewToolbar.setAttribute("checked", "true");
-    }
+
     // Get all statically placed buttons to supply them with keyboard shortcuts.
     let staticButtons = panelview.getElementsByTagName("toolbarbutton");
     for (let i = 0, l = staticButtons.length; i < l; ++i)
       CustomizableUI.addShortcut(staticButtons[i]);
+
     // Setup the Places view.
     // We restrict the amount of results to 42. Not 50, but 42. Why? Because 42.
     let query = "place:queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
