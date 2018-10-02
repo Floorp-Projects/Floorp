@@ -135,7 +135,7 @@ class OrderedListBox {
 }
 
 class SortedItemSelectList {
-  constructor({menulist, button, onSelect}) {
+  constructor({menulist, button, onSelect, onChange}) {
     this.menulist = menulist;
     this.popup = menulist.firstElementChild;
     this.button = button;
@@ -143,6 +143,9 @@ class SortedItemSelectList {
 
     menulist.addEventListener("command", () => {
       button.disabled = !menulist.selectedItem;
+      if (menulist.selectedItem) {
+        onChange(this.items[menulist.selectedIndex]);
+      }
     });
     button.addEventListener("command", () => {
       if (!menulist.selectedItem) return;
@@ -163,7 +166,7 @@ class SortedItemSelectList {
   }
 
   populate() {
-    let {items, menulist, popup} = this;
+    let {button, items, menulist, popup} = this;
     popup.textContent = "";
 
     let frag = document.createDocumentFragment();
@@ -174,6 +177,8 @@ class SortedItemSelectList {
 
     menulist.setAttribute("label", menulist.getAttribute("placeholder"));
     menulist.disabled = menulist.itemCount == 0;
+    menulist.selectedIndex = -1;
+    button.disabled = true;
   }
 
   /**
@@ -278,6 +283,12 @@ var gBrowserLanguagesDialog = {
       menulist: document.getElementById("availableLocales"),
       button: document.getElementById("add"),
       onSelect: (item) => this.availableLanguageSelected(item),
+      onChange: (item) => {
+        this.hideError();
+        if (item.value == "search") {
+          this.loadLocalesFromAMO();
+        }
+      },
     });
 
     // Populate the list with the installed locales even if the user is
@@ -323,6 +334,8 @@ var gBrowserLanguagesDialog = {
       .map(lang => lang.target_locale);
     let availableItems = getLocaleDisplayInfo(availableLocales);
     let items = this._availableLocales.items;
+    // Drop the search item.
+    items.pop();
     items = items.concat(availableItems);
 
     // Update the dropdown and enable it again.
@@ -337,6 +350,10 @@ var gBrowserLanguagesDialog = {
     } else {
       items = [];
     }
+    items.push({
+      label: await document.l10n.formatValue("browser-languages-search"),
+      value: "search",
+    });
     this._availableLocales.setItems(items);
   },
 
