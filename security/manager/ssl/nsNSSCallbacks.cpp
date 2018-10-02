@@ -33,7 +33,7 @@
 #include "nsProtectedAuthThread.h"
 #include "nsProxyRelease.h"
 #include "nsStringStream.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 #include "ssl.h"
 #include "sslproto.h"
 

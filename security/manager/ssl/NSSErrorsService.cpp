@@ -6,7 +6,7 @@
 
 #include "nsNSSComponent.h"
 #include "nsServiceManagerUtils.h"
-#include "pkix/pkixnss.h"
+#include "mozpkix/pkixnss.h"
 #include "secerr.h"
 #include "sslerr.h"
 

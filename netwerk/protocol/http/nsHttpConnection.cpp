@@ -39,7 +39,7 @@
 #include "nsProxyRelease.h"
 #include "nsSocketTransport2.h"
 #include "nsStringStream.h"
-#include "pkix/pkixnss.h"
+#include "mozpkix/pkixnss.h"
 #include "sslt.h"
 #include "NSSErrorsService.h"
 #include "TunnelUtils.h"

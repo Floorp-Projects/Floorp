@@ -60,8 +60,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/crypto',
     '/security/manager/ssl',
-    '/security/pkix/include',
-    '/security/pkix/lib',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

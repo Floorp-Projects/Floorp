@@ -23,7 +23,7 @@
 #include "nsXPCOMCID.h"
 #include "nsString.h"
 #include "nsTreeColumns.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 
 using namespace mozilla;
 
