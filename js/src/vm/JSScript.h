@@ -18,7 +18,6 @@
 
 #include "jstypes.h"
 
-#include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
@@ -431,15 +430,7 @@ class ScriptSource
         { }
     };
 
-    struct BinAST
-    {
-        SharedImmutableString string;
-        explicit BinAST(SharedImmutableString&& str)
-          : string(std::move(str))
-        { }
-    };
-
-    using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed, BinAST>;
+    using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed>;
     SourceType data;
 
     // If the GC attempts to call setCompressedSource with PinnedChars
@@ -504,13 +495,11 @@ class ScriptSource
     mozilla::TimeStamp parseEnded_;
 
     // True if we can call JSRuntime::sourceHook to load the source on
-    // demand. If sourceRetrievable_ and hasSourceText() are false, it is not
+    // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
     // possible to get source at all.
     bool sourceRetrievable_:1;
     bool hasIntroductionOffset_:1;
     bool containsAsmJS_:1;
-
-    UniquePtr<frontend::BinASTSourceMetadata> binASTMetadata_;
 
     const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                                size_t chunk);
@@ -566,19 +555,9 @@ class ScriptSource
     MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceBufferHolder& srcBuf);
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }
-    bool hasSourceText() const { return hasUncompressedSource() || hasCompressedSource(); }
-    bool hasBinASTSource() const { return data.is<BinAST>(); }
+    bool hasSourceData() const { return !data.is<Missing>(); }
     bool hasUncompressedSource() const { return data.is<Uncompressed>(); }
     bool hasCompressedSource() const { return data.is<Compressed>(); }
-
-    void setBinASTSourceMetadata(frontend::BinASTSourceMetadata* metadata) {
-        MOZ_ASSERT(hasBinASTSource());
-        binASTMetadata_.reset(metadata);
-    }
-    frontend::BinASTSourceMetadata* binASTSourceMetadata() const {
-        MOZ_ASSERT(hasBinASTSource());
-        return binASTMetadata_.get();
-    }
 
     size_t length() const {
         struct LengthMatcher
@@ -591,17 +570,13 @@ class ScriptSource
                 return c.uncompressedLength;
             }
 
-            size_t match(const BinAST& b) {
-                return b.string.length();
-            }
-
             size_t match(const Missing& m) {
                 MOZ_CRASH("ScriptSource::length on a missing source");
                 return 0;
             }
         };
 
-        MOZ_ASSERT(hasSourceText() || hasBinASTSource());
+        MOZ_ASSERT(hasSourceData());
         return data.match(LengthMatcher());
     }
 
@@ -630,25 +605,6 @@ class ScriptSource
                                           size_t rawLength,
                                           size_t sourceLength);
     void setCompressedSource(SharedImmutableString&& raw, size_t sourceLength);
-
-#if defined(JS_BUILD_BINAST)
-
-    /*
-     * Do not take ownership of the given `buf`. Store the canonical, shared
-     * and de-duplicated version. If there is no extant shared version of
-     * `buf`, make a copy.
-     */
-    MOZ_MUST_USE bool setBinASTSourceCopy(JSContext* cx, const uint8_t* buf, size_t len);
-
-    /*
-     * Take ownership of the given `buf` and return the canonical, shared and
-     * de-duplicated version.
-     */
-    MOZ_MUST_USE bool setBinASTSource(JSContext* cx, UniqueChars&& buf, size_t len);
-
-    const uint8_t* binASTSource();
-
-#endif /* JS_BUILD_BINAST */
 
     // XDR handling
     template <XDRMode mode>
@@ -735,8 +691,6 @@ class ScriptSource
         MOZ_ASSERT(parseEnded_.IsNull());
         parseEnded_ = ReallyNow();
     }
-
-    void trace(JSTracer* trc);
 };
 
 class ScriptSourceHolder
@@ -791,9 +745,6 @@ class ScriptSourceObject : public NativeObject
     static bool initElementProperties(JSContext* cx, HandleScriptSourceObject source,
                                       HandleObject element, HandleString elementAttrName);
 
-    bool hasSource() const {
-        return !getReservedSlot(SOURCE_SLOT).isUndefined();
-    }
     ScriptSource* source() const {
         return static_cast<ScriptSource*>(getReservedSlot(SOURCE_SLOT).toPrivate());
     }
@@ -2359,7 +2310,6 @@ class LazyScript : public gc::TenuredCell
         uint32_t shouldDeclareArguments : 1;
         uint32_t hasThisBinding : 1;
         uint32_t isAsync : 1;
-        uint32_t isBinAST : 1;
 
         uint32_t numClosedOverBindings : NumClosedOverBindingsBits;
 
@@ -2546,13 +2496,6 @@ class LazyScript : public gc::TenuredCell
 
     frontend::ParseGoal parseGoal() const {
         return frontend::ParseGoal(p_.parseGoal);
-    }
-
-    bool isBinAST() const {
-        return p_.isBinAST;
-    }
-    void setIsBinAST() {
-        p_.isBinAST = true;
     }
 
     bool strict() const {

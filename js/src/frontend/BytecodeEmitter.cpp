@@ -5753,14 +5753,8 @@ BytecodeEmitter::emitFunction(CodeNode* funNode, bool needsProto)
                 return false;
             }
 
-            EmitterMode nestedMode = emitterMode;
-            if (nestedMode == BytecodeEmitter::LazyFunction) {
-                MOZ_ASSERT(lazyScript->isBinAST());
-                nestedMode = BytecodeEmitter::Normal;
-            }
-
             BytecodeEmitter bce2(this, parser, funbox, script, /* lazyScript = */ nullptr,
-                                 funNode->pn_pos, nestedMode);
+                                 funNode->pn_pos, emitterMode);
             if (!bce2.init()) {
                 return false;
             }

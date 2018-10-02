@@ -13,7 +13,7 @@
 #include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/TokenStream.h"
 #include "js/Result.h"
-#include "vm/JSContext.h"
+#include "vm/Runtime.h"
 
 namespace js {
 namespace frontend {
@@ -78,21 +78,9 @@ BinaryASTSupport::BinaryASTSupport()
 {
 }
 
-/**
- * It is expected that all bin tables are initialized on the main thread, and that
- * any helper threads will find the read-only tables properly initialized, so that
- * they can do their accesses safely without taking any locks.
- */
-bool
-BinaryASTSupport::ensureBinTablesInitialized(JSContext* cx)
+JS::Result<const js::frontend::BinKind*>
+BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
 {
-    return ensureBinKindsInitialized(cx) && ensureBinVariantsInitialized(cx);
-}
-
-bool
-BinaryASTSupport::ensureBinKindsInitialized(JSContext* cx)
-{
-    MOZ_ASSERT(!cx->helperThread());
     if (binKindMap_.empty()) {
         for (size_t i = 0; i < frontend::BINKIND_LIMIT; ++i) {
             const BinKind variant = static_cast<BinKind>(i);
@@ -100,47 +88,12 @@ BinaryASTSupport::ensureBinKindsInitialized(JSContext* cx)
             auto ptr = binKindMap_.lookupForAdd(key);
             MOZ_ASSERT(!ptr);
             if (!binKindMap_.add(ptr, key, variant)) {
-                ReportOutOfMemory(cx);
-                return false;
+                return ReportOutOfMemoryResult(cx);
             }
         }
     }
 
-    return true;
-}
-
-bool
-BinaryASTSupport::ensureBinVariantsInitialized(JSContext* cx)
-{
-    MOZ_ASSERT(!cx->helperThread());
-    if (binVariantMap_.empty()) {
-        for (size_t i = 0; i < frontend::BINVARIANT_LIMIT; ++i) {
-            const BinVariant variant = static_cast<BinVariant>(i);
-            const CharSlice& key = getBinVariant(variant);
-            auto ptr = binVariantMap_.lookupForAdd(key);
-            MOZ_ASSERT(!ptr);
-            if (!binVariantMap_.add(ptr, key, variant)) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-
-JS::Result<const js::frontend::BinKind*>
-BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
-{
-    MOZ_ASSERT_IF(cx->helperThread(), !binKindMap_.empty());
-    if (!cx->helperThread()) {
-        // Initialize Lazily if on main thread.
-        if (!ensureBinKindsInitialized(cx)) {
-            return cx->alreadyReportedError();
-        }
-    }
-
-    auto ptr = binKindMap_.readonlyThreadsafeLookup(key);
+    auto ptr = binKindMap_.lookup(key);
     if (!ptr) {
         return nullptr;
     }
@@ -151,15 +104,20 @@ BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
 JS::Result<const js::frontend::BinVariant*>
 BinaryASTSupport::binVariant(JSContext* cx, const CharSlice key)
 {
-    MOZ_ASSERT_IF(cx->helperThread(), !binVariantMap_.empty());
-    if (!cx->helperThread()) {
-        // Initialize lazily if on main thread.
-        if (!ensureBinVariantsInitialized(cx)) {
-            return cx->alreadyReportedError();
+    if (binVariantMap_.empty()) {
+        for (size_t i = 0; i < frontend::BINVARIANT_LIMIT; ++i) {
+            const BinVariant variant = static_cast<BinVariant>(i);
+            const CharSlice& key = getBinVariant(variant);
+            auto ptr = binVariantMap_.lookupForAdd(key);
+            MOZ_ASSERT(!ptr);
+            if (!binVariantMap_.add(ptr, key, variant)) {
+                return ReportOutOfMemoryResult(cx);
+            }
         }
     }
 
-    auto ptr = binVariantMap_.readonlyThreadsafeLookup(key);
+
+    auto ptr = binVariantMap_.lookup(key);
     if (!ptr) {
         return nullptr;
     }
