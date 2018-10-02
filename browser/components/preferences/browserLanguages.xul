@@ -40,9 +40,9 @@
         <row>
           <richlistbox id="requestedLocales"/>
           <vbox>
-            <button id="up" disabled="true" data-l10n-id="languages-customize-moveup"/>
-            <button id="down" disabled="true" data-l10n-id="languages-customize-movedown"/>
-            <button id="remove" disabled="true" data-l10n-id="languages-customize-remove"/>
+            <button id="up" class="action-button" disabled="true" data-l10n-id="languages-customize-moveup"/>
+            <button id="down" class="action-button" disabled="true" data-l10n-id="languages-customize-movedown"/>
+            <button id="remove" class="action-button" disabled="true" data-l10n-id="languages-customize-remove"/>
           </vbox>
         </row>
         <row>
@@ -53,7 +53,7 @@
             <menupopup/>
           </menulist>
           <button id="add"
-                  class="add-browser-language"
+                  class="add-browser-language action-button"
                   data-l10n-id="languages-customize-add"
                   disabled="true"/>
         </row>
