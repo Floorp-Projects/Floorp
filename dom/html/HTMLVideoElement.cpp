@@ -296,32 +296,29 @@ HTMLVideoElement::GetVideoPlaybackQuality()
   return playbackQuality.forget();
 }
 
-void
-HTMLVideoElement::WakeLockCreate()
-{
-  HTMLMediaElement::WakeLockCreate();
-  UpdateScreenWakeLock();
-}
 
 void
 HTMLVideoElement::WakeLockRelease()
 {
-  UpdateScreenWakeLock();
   HTMLMediaElement::WakeLockRelease();
+  ReleaseVideoWakeLockIfExists();
 }
 
 void
-HTMLVideoElement::UpdateScreenWakeLock()
+HTMLVideoElement::UpdateWakeLock()
 {
-  if (mScreenWakeLock && mPaused) {
-    ErrorResult rv;
-    mScreenWakeLock->Unlock(rv);
-    rv.SuppressException();
-    mScreenWakeLock = nullptr;
-    return;
+  HTMLMediaElement::UpdateWakeLock();
+  if (!mPaused) {
+    CreateVideoWakeLockIfNeeded();
+  } else {
+    ReleaseVideoWakeLockIfExists();
   }
+}
 
-  if (!mScreenWakeLock && !mPaused && HasVideo()) {
+void
+HTMLVideoElement::CreateVideoWakeLockIfNeeded()
+{
+  if (!mScreenWakeLock && HasVideo()) {
     RefPtr<power::PowerManagerService> pmService =
       power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE_VOID(pmService);
@@ -330,6 +327,18 @@ HTMLVideoElement::UpdateScreenWakeLock()
     mScreenWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("video-playing"),
                                              OwnerDoc()->GetInnerWindow(),
                                              rv);
+  }
+}
+
+void
+HTMLVideoElement::ReleaseVideoWakeLockIfExists()
+{
+  if (mScreenWakeLock) {
+    ErrorResult rv;
+    mScreenWakeLock->Unlock(rv);
+    rv.SuppressException();
+    mScreenWakeLock = nullptr;
+    return;
   }
 }
 
