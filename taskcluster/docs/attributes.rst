@@ -118,6 +118,12 @@ test_chunk
 This is the chunk number of a chunked test suite (talos or unittest).  Note
 that this is a string!
 
+serviceworker_e10s
+==================
+
+For test suites which distinguish whether or not they run with the serviceworker
+e10s redesign enabled.
+
 e10s
 ====
 
