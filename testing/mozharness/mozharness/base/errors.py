@@ -28,6 +28,7 @@ from mozharness.base.log import DEBUG, WARNING, ERROR, CRITICAL, FATAL
 class VCSException(Exception):
     pass
 
+
 # ErrorLists {{{1
 BaseErrorList = [{
     'substr': r'''command not found''',
@@ -128,7 +129,8 @@ VirtualenvErrorList = [
     {'substr': r'''not found or a compiler error:''', 'level': WARNING},
     {'regex': re.compile('''\d+: error: '''), 'level': ERROR},
     {'regex': re.compile('''\d+: warning: '''), 'level': WARNING},
-    {'regex': re.compile(r'''Downloading .* \(.*\): *([0-9]+%)? *[0-9\.]+[kmKM]b'''), 'level': DEBUG},
+    {'regex': re.compile(
+        r'''Downloading .* \(.*\): *([0-9]+%)? *[0-9\.]+[kmKM]b'''), 'level': DEBUG},
 ] + PythonErrorList
 
 
@@ -159,7 +161,8 @@ JarsignerErrorList = [{
     'substr': r'''command not found''',
     'level': FATAL
 }, {
-    'substr': r'''jarsigner error: java.lang.RuntimeException: keystore load: Keystore was tampered with, or password was incorrect''',
+    'substr': r'''jarsigner error: java.lang.RuntimeException: keystore load: '''
+              r'''Keystore was tampered with, or password was incorrect''',
     'level': FATAL,
     'explanation': r'''The store passphrase is probably incorrect!''',
 }, {
@@ -167,7 +170,8 @@ JarsignerErrorList = [{
     'level': FATAL,
     'explanation': r'''The key passphrase is probably incorrect!''',
 }, {
-    'regex': re.compile(r'''jarsigner error: java.lang.RuntimeException: keystore load: .* .No such file or directory'''),
+    'regex': re.compile(r'''jarsigner error: java.lang.RuntimeException: '''
+                        r'''keystore load: .* .No such file or directory'''),
     'level': FATAL,
     'explanation': r'''The keystore doesn't exist!''',
 }, {

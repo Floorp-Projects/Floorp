@@ -289,7 +289,8 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
         if os.path.exists(src):
             try:
                 revs = []
-                for line in self.get_output_from_command(cmd, cwd=src, throw_exception=True).rstrip().split("\n"):
+                for line in self.get_output_from_command(
+                        cmd, cwd=src, throw_exception=True).rstrip().split("\n"):
                     try:
                         rev, branch = line.split()
                     # Mercurial displays no branch at all if the revision
