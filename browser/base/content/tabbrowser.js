@@ -644,11 +644,6 @@ window._gBrowser = {
     return this.browsers[aIndex];
   },
 
-  getBrowserIndexForDocument(aDocument) {
-    var tab = this._getTabForContentWindow(aDocument.defaultView);
-    return tab ? tab._tPos : -1;
-  },
-
   getBrowserForDocument(aDocument) {
     var tab = this._getTabForContentWindow(aDocument.defaultView);
     return tab ? tab.linkedBrowser : null;
