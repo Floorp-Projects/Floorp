@@ -205,9 +205,6 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
     }
 
     case nsXPTType::T_ASTRING:
-        // Fall through to T_DOMSTRING case
-
-    case nsXPTType::T_DOMSTRING:
     {
         const nsAString* p = static_cast<const nsAString*>(s);
         if (!p || p->IsVoid()) {
@@ -608,37 +605,24 @@ XPCConvert::JSData2Native(JSContext* cx,
 
     case nsXPTType::T_ASTRING:
     {
-        if (s.isUndefined()) {
-            ((nsAString*)d)->SetIsVoid(true);
-            return true;
-        }
-        MOZ_FALLTHROUGH;
-    }
-    case nsXPTType::T_DOMSTRING:
-    {
         nsAString* ws = (nsAString*)d;
-        if (s.isNull()) {
+        if (s.isUndefined() || s.isNull()) {
             ws->SetIsVoid(true);
             return true;
         }
         size_t length = 0;
-        JSString* str = nullptr;
-        if (!s.isUndefined()) {
-            str = ToString(cx, s);
-            if (!str) {
-                return false;
-            }
-
-            length = JS_GetStringLength(str);
-            if (!length) {
-                ws->Truncate();
-                return true;
-            }
+        JSString* str = ToString(cx, s);
+        if (!str) {
+            return false;
         }
 
-        if (!str) {
-            ws->AssignLiteral(u"undefined");
-        } else if (XPCStringConvert::IsDOMString(str)) {
+        length = JS_GetStringLength(str);
+        if (!length) {
+            ws->Truncate();
+            return true;
+        }
+
+        if (XPCStringConvert::IsDOMString(str)) {
             // The characters represent an existing nsStringBuffer that
             // was shared by XPCStringConvert::ReadableToJSVal.
             const char16_t* chars = JS_GetTwoByteExternalStringChars(str);
@@ -1685,7 +1669,6 @@ xpc::InnerCleanupValue(const nsXPTType& aType, void* aValue, uint32_t aArrayLen)
             break;
 
         // String types
-        case nsXPTType::T_DOMSTRING:
         case nsXPTType::T_ASTRING:
             ((nsAString*)aValue)->Truncate();
             break;

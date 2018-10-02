@@ -19,7 +19,7 @@ interface nsIPresentationSessionTransportBuilderListener : nsISupports
 
   void sendOffer(in nsIPresentationChannelDescription offer);
   void sendAnswer(in nsIPresentationChannelDescription answer);
-  void sendIceCandidate(in DOMString candidate);
+  void sendIceCandidate(in AString candidate);
   void close(in nsresult reason);
 };
 
@@ -75,6 +75,6 @@ interface nsIPresentationDataChannelSessionTransportBuilder : nsIPresentationSes
   // Bug 1275150 - Merge TCP builder with the following APIs
   void onOffer(in nsIPresentationChannelDescription offer);
   void onAnswer(in nsIPresentationChannelDescription answer);
-  void onIceCandidate(in DOMString candidate);
+  void onIceCandidate(in AString candidate);
   void notifyDisconnected(in nsresult reason);
 };

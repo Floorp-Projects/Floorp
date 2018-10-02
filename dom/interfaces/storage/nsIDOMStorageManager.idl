@@ -46,7 +46,7 @@ interface nsIDOMStorageManager : nsISupports
    */
   Storage createStorage(in mozIDOMWindow aWindow,
                         in nsIPrincipal aPrincipal,
-                        in DOMString aDocumentURI,
+                        in AString aDocumentURI,
                         [optional] in bool aPrivate);
   /**
    * Returns instance of DOM storage object for given principal.

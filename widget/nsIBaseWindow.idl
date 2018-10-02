@@ -166,14 +166,14 @@ interface nsIBaseWindow : nsISupports
 
 	/*
 	This is the handle (HWND, GdkWindow*, ...) to the native window of the
-	control, exposed as a DOMString.
+	control, exposed as an AString.
 
-	@return DOMString in hex format with "0x" prepended, or empty string if
+	@return AString in hex format with "0x" prepended, or empty string if
 	mainWidget undefined
 
 	@throws NS_ERROR_NOT_IMPLEMENTED for non-XULWindows
 	*/
-	readonly attribute DOMString nativeHandle;
+	readonly attribute AString nativeHandle;
 
 	/*
 	Attribute controls the visibility of the object behind this interface.

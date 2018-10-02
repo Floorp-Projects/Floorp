@@ -41,7 +41,7 @@ interface nsITaskbarPreview : nsISupports
    *
    * Default: an empty string
    */
-  attribute DOMString tooltip;
+  attribute AString tooltip;
 
   /**
    * Whether or not the preview is visible.

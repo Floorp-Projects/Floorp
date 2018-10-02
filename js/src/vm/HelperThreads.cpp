@@ -930,6 +930,9 @@ js::StartOffThreadDecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& opti
                                const uint8_t* buf, size_t length,
                                JS::OffThreadCompileCallback callback, void *callbackData)
 {
+    if (!cx->runtime()->binast().ensureBinTablesInitialized(cx))
+        return false;
+
     auto task = cx->make_unique<BinASTDecodeTask>(cx, buf, length, callback, callbackData);
     if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
         return false;

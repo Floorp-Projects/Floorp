@@ -26,34 +26,20 @@ struct FeatureMap {
  */
 static FeatureMap sSupportedFeatures[] = {
   // TODO: not supported yet!!!
-  { "accelerometer", FeatureMap::eSelf },
-  // TODO: not supported yet!!!
-  { "ambient-light-sensor", FeatureMap::eSelf },
-  // TODO: not supported yet!!!
   { "autoplay", FeatureMap::eSelf },
   // TODO: not supported yet!!!
   { "camera", FeatureMap::eSelf  },
-  // TODO: not supported yet!!!
   { "encrypted-media", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
   { "fullscreen", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
   { "geolocation", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
-  { "gyroscope", FeatureMap::eSelf  },
-  // TODO: not supported yet!!!
-  { "magnetometer", FeatureMap::eSelf  },
-  // TODO: not supported yet!!!
   { "microphone", FeatureMap::eSelf  },
-  // TODO: not supported yet!!!
   { "midi", FeatureMap::eSelf  },
   { "payment", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
-  { "picture-in-picture", FeatureMap::eAll  },
-  // TODO: not supported yet!!!
   { "speaker", FeatureMap::eSelf  },
-  // TODO: not supported yet!!!
-  { "usb", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
   { "vr", FeatureMap::eSelf  },
 };

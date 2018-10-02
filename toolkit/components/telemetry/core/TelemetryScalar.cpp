@@ -532,7 +532,6 @@ ScalarString::SetValue(nsIVariant* aValue)
   aValue->GetDataType(&type);
   if (type != nsIDataType::VTYPE_CHAR &&
       type != nsIDataType::VTYPE_WCHAR &&
-      type != nsIDataType::VTYPE_DOMSTRING &&
       type != nsIDataType::VTYPE_CHAR_STR &&
       type != nsIDataType::VTYPE_WCHAR_STR &&
       type != nsIDataType::VTYPE_STRING_SIZE_IS &&

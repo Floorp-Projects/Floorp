@@ -483,7 +483,6 @@ class Native(object):
     # A `None` here means that the written type should be used as-is.
     specialtypes = {
         'nsid': None,
-        'domstring': ('const nsAString&', 'nsAString&', 'nsString'),
         'utf8string': ('const nsACString&', 'nsACString&', 'nsCString'),
         'cstring': ('const nsACString&', 'nsACString&', 'nsCString'),
         'astring': ('const nsAString&', 'nsAString&', 'nsString'),
@@ -601,7 +600,7 @@ class Native(object):
             if 'element' in calltype:
                 return '::nsstring::nsCString'
             return prefix + '::nsstring::nsACString'
-        if self.specialtype in ['astring', 'domstring']:
+        if self.specialtype == 'astring':
             if 'element' in calltype:
                 return '::nsstring::nsString'
             return prefix + '::nsstring::nsAString'

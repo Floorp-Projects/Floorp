@@ -2598,6 +2598,9 @@ BinASTParser<Tok>::parseInterfaceArrayExpression(const size_t start, const BinKi
 
     BINJS_MOZ_TRY_DECL(elements, parseListOfOptionalSpreadElementOrExpression());
 
+    if (elements->empty()) {
+        elements->setHasNonConstInitializer();
+    }
     auto result = elements;
     return result;
 }
@@ -3857,6 +3860,18 @@ BinASTParser<Tok>::parseInterfaceCallExpression(const size_t start, const BinKin
     BINJS_MOZ_TRY_DECL(arguments, parseArguments());
 
     auto op = JSOP_CALL;
+
+    // Try to optimize funcall and funapply at the bytecode level
+    if (PropertyName* prop = factory_.maybeDottedProperty(callee)) {
+        if (prop == cx_->names().apply) {
+            op = JSOP_FUNAPPLY;
+            if (parseContext_->isFunctionBox())
+                parseContext_->functionBox()->usesApply = true;
+        } else if (prop == cx_->names().call) {
+            op = JSOP_FUNCALL;
+        }
+    }
+
     // Check for direct calls to `eval`.
     if (factory_.isEvalName(callee, cx_)) {
         if (!parseContext_->varScope().lookupDeclaredNameForAdd(callee->name())
@@ -3921,6 +3936,7 @@ BinASTParser<Tok>::parseInterfaceCatchClause(const size_t start, const BinKind k
 
     BINJS_MOZ_TRY_DECL(body, parseBlock());
 
+    MOZ_TRY(checkClosedVars(currentScope));
     BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
     BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
     BINJS_TRY(factory_.setupCatchScope(result, binding, body));
@@ -4620,6 +4636,8 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
+    forceStrictIfNecessary(funbox, directives);
+
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
     BINJS_TRY(funpc.init());
@@ -4699,6 +4717,8 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, con
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
+    forceStrictIfNecessary(funbox, directives);
+
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
     BINJS_TRY(funpc.init());
@@ -4772,6 +4792,8 @@ BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind k
         syntax,
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
+
+    forceStrictIfNecessary(funbox, directives);
 
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
@@ -4852,6 +4874,8 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
+    forceStrictIfNecessary(funbox, directives);
+
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
     BINJS_TRY(funpc.init());
@@ -4926,6 +4950,8 @@ BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind k
         syntax,
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
+
+    forceStrictIfNecessary(funbox, directives);
 
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
@@ -6024,7 +6050,55 @@ BinASTParser<Tok>::parseLazyFunctionDeclaration()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazyFunctionDeclaration)");
+    MOZ_ASSERT(kind == BinKind::LazyFunctionDeclaration);
+    BINJS_TRY(CheckRecursionLimit(cx_));
+
+#if defined(DEBUG)
+    const BinField expected_fields[7] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Length, BinField::Directives, BinField::ContentsSkip, BinField::Contents };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+    const auto syntax = FunctionSyntaxKind::Statement;
+
+    BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
+
+    BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
+
+    BINJS_MOZ_TRY_DECL(name, parseBindingIdentifier());
+
+    BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
+
+    BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
+
+    BINJS_MOZ_TRY_DECL(contentsSkip, tokenizer_->readSkippableSubTree());
+    // Don't parse the contents until we delazify.
+
+    BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+        isGenerator ? GeneratorKind::Generator
+                    : GeneratorKind::NotGenerator,
+        isAsync ? FunctionAsyncKind::AsyncFunction
+                : FunctionAsyncKind::SyncFunction,
+        syntax, name));
+
+    forceStrictIfNecessary(funbox, directives);
+
+    RootedFunction fun(cx_, funbox->function());
+
+    // TODO: This will become incorrect in the face of ES6 features.
+    fun->setArgCount(length);
+
+    auto skipStart = contentsSkip.startOffset();
+    BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_, parseContext_->closedOverBindingsForLazy(), parseContext_->innerFunctionsForLazy,
+                                            skipStart, skipStart + contentsSkip.length(),
+                                            skipStart, 0, skipStart, ParseGoal::Script));
+
+    if (funbox->strict()) {
+        lazy->setStrict();
+    }
+    lazy->setIsBinAST();
+    funbox->function()->initLazyScript(lazy);
+
+    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
+    return result;
 }
 
 
@@ -6059,7 +6133,55 @@ BinASTParser<Tok>::parseLazyFunctionExpression()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazyFunctionExpression)");
+    MOZ_ASSERT(kind == BinKind::LazyFunctionExpression);
+    BINJS_TRY(CheckRecursionLimit(cx_));
+
+#if defined(DEBUG)
+    const BinField expected_fields[7] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Length, BinField::Directives, BinField::ContentsSkip, BinField::Contents };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+    const auto syntax = FunctionSyntaxKind::Expression;
+
+    BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
+
+    BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
+
+    BINJS_MOZ_TRY_DECL(name, parseOptionalBindingIdentifier());
+
+    BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
+
+    BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
+
+    BINJS_MOZ_TRY_DECL(contentsSkip, tokenizer_->readSkippableSubTree());
+    // Don't parse the contents until we delazify.
+
+    BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+        isGenerator ? GeneratorKind::Generator
+                    : GeneratorKind::NotGenerator,
+        isAsync ? FunctionAsyncKind::AsyncFunction
+                : FunctionAsyncKind::SyncFunction,
+        syntax, name));
+
+    forceStrictIfNecessary(funbox, directives);
+
+    RootedFunction fun(cx_, funbox->function());
+
+    // TODO: This will become incorrect in the face of ES6 features.
+    fun->setArgCount(length);
+
+    auto skipStart = contentsSkip.startOffset();
+    BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_, parseContext_->closedOverBindingsForLazy(), parseContext_->innerFunctionsForLazy,
+                                            skipStart, skipStart + contentsSkip.length(),
+                                            skipStart, 0, skipStart, ParseGoal::Script));
+
+    if (funbox->strict()) {
+        lazy->setStrict();
+    }
+    lazy->setIsBinAST();
+    funbox->function()->initLazyScript(lazy);
+
+    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
+    return result;
 }
 
 
@@ -8352,6 +8474,8 @@ BinASTParser<Tok>::parseListOfObjectProperty()
 
     for (uint32_t i = 0; i < length; ++i) {
         BINJS_MOZ_TRY_DECL(item, parseObjectProperty());
+        if (!item->isConstant())
+            result->setHasNonConstInitializer();
         result->appendWithoutOrderAssumption(item);
     }
 

@@ -19,7 +19,7 @@ interface nsIConsoleAPIStorage : nsISupports
    *          given this function returns all of the cached events, from any
    *          window.
    */
-  jsval getEvents([optional] in DOMString aId);
+  jsval getEvents([optional] in AString aId);
 
   /**
    * Record an event associated with the given window ID.
@@ -33,7 +33,7 @@ interface nsIConsoleAPIStorage : nsISupports
    * @param object aEvent
    *        A JavaScript object you want to store.
    */
-  void recordEvent(in DOMString aId, in DOMString aOuterId, in jsval aEvent);
+  void recordEvent(in AString aId, in AString aOuterId, in jsval aEvent);
 
   /**
    * Clear storage data for the given window.
@@ -43,5 +43,5 @@ interface nsIConsoleAPIStorage : nsISupports
    *        messages. If this is not specified all of the cached messages are
    *        cleared, from all window objects.
    */
-  void clearEvents([optional] in DOMString aId);
+  void clearEvents([optional] in AString aId);
 };

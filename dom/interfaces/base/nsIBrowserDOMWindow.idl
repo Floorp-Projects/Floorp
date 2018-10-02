@@ -14,7 +14,7 @@ interface nsIPrincipal;
 [scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
 interface nsIOpenURIInFrameParams : nsISupports
 {
-  attribute DOMString referrer;
+  attribute AString referrer;
   attribute unsigned long referrerPolicy;
   readonly attribute boolean isPrivate;
   attribute nsIPrincipal triggeringPrincipal;
