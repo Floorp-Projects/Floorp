@@ -98,6 +98,14 @@ BinTokenReaderBase::pos(size_t start)
     return pos;
 }
 
+void
+BinTokenReaderBase::seek(size_t offset)
+{
+    MOZ_ASSERT(start_ + offset >= start_ &&
+               start_ + offset < stop_);
+    current_ = start_ + offset;
+}
+
 JS::Result<Ok>
 BinTokenReaderBase::readBuf(uint8_t* bytes, uint32_t len)
 {

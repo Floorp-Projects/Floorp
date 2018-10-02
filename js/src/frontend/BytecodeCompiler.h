@@ -64,6 +64,9 @@ CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
 MOZ_MUST_USE bool
 CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length);
 
+MOZ_MUST_USE bool
+CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, const uint8_t* buf, size_t length);
+
 //
 // Compile a single function. The source in srcBuf must match the ECMA-262
 // FunctionExpression production.

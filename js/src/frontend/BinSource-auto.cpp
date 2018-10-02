@@ -6050,7 +6050,55 @@ BinASTParser<Tok>::parseLazyFunctionDeclaration()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazyFunctionDeclaration)");
+    MOZ_ASSERT(kind == BinKind::LazyFunctionDeclaration);
+    BINJS_TRY(CheckRecursionLimit(cx_));
+
+#if defined(DEBUG)
+    const BinField expected_fields[7] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Length, BinField::Directives, BinField::ContentsSkip, BinField::Contents };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+    const auto syntax = FunctionSyntaxKind::Statement;
+
+    BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
+
+    BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
+
+    BINJS_MOZ_TRY_DECL(name, parseBindingIdentifier());
+
+    BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
+
+    BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
+
+    BINJS_MOZ_TRY_DECL(contentsSkip, tokenizer_->readSkippableSubTree());
+    // Don't parse the contents until we delazify.
+
+    BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+        isGenerator ? GeneratorKind::Generator
+                    : GeneratorKind::NotGenerator,
+        isAsync ? FunctionAsyncKind::AsyncFunction
+                : FunctionAsyncKind::SyncFunction,
+        syntax, name));
+
+    forceStrictIfNecessary(funbox, directives);
+
+    RootedFunction fun(cx_, funbox->function());
+
+    // TODO: This will become incorrect in the face of ES6 features.
+    fun->setArgCount(length);
+
+    auto skipStart = contentsSkip.startOffset();
+    BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_, parseContext_->closedOverBindingsForLazy(), parseContext_->innerFunctionsForLazy,
+                                            skipStart, skipStart + contentsSkip.length(),
+                                            skipStart, 0, skipStart, ParseGoal::Script));
+
+    if (funbox->strict()) {
+        lazy->setStrict();
+    }
+    lazy->setIsBinAST();
+    funbox->function()->initLazyScript(lazy);
+
+    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
+    return result;
 }
 
 
@@ -6085,7 +6133,55 @@ BinASTParser<Tok>::parseLazyFunctionExpression()
 template<typename Tok> JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(const size_t start, const BinKind kind, const BinFields& fields)
 {
-    return raiseError("FIXME: Not implemented yet (LazyFunctionExpression)");
+    MOZ_ASSERT(kind == BinKind::LazyFunctionExpression);
+    BINJS_TRY(CheckRecursionLimit(cx_));
+
+#if defined(DEBUG)
+    const BinField expected_fields[7] = { BinField::IsAsync, BinField::IsGenerator, BinField::Name, BinField::Length, BinField::Directives, BinField::ContentsSkip, BinField::Contents };
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+    const auto syntax = FunctionSyntaxKind::Expression;
+
+    BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool());
+
+    BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool());
+
+    BINJS_MOZ_TRY_DECL(name, parseOptionalBindingIdentifier());
+
+    BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong());
+
+    BINJS_MOZ_TRY_DECL(directives, parseListOfDirective());
+
+    BINJS_MOZ_TRY_DECL(contentsSkip, tokenizer_->readSkippableSubTree());
+    // Don't parse the contents until we delazify.
+
+    BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+        isGenerator ? GeneratorKind::Generator
+                    : GeneratorKind::NotGenerator,
+        isAsync ? FunctionAsyncKind::AsyncFunction
+                : FunctionAsyncKind::SyncFunction,
+        syntax, name));
+
+    forceStrictIfNecessary(funbox, directives);
+
+    RootedFunction fun(cx_, funbox->function());
+
+    // TODO: This will become incorrect in the face of ES6 features.
+    fun->setArgCount(length);
+
+    auto skipStart = contentsSkip.startOffset();
+    BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_, parseContext_->closedOverBindingsForLazy(), parseContext_->innerFunctionsForLazy,
+                                            skipStart, skipStart + contentsSkip.length(),
+                                            skipStart, 0, skipStart, ParseGoal::Script));
+
+    if (funbox->strict()) {
+        lazy->setStrict();
+    }
+    lazy->setIsBinAST();
+    funbox->function()->initLazyScript(lazy);
+
+    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
+    return result;
 }
 
 
