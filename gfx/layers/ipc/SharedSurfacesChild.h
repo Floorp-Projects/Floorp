@@ -84,6 +84,8 @@ private:
   SharedSurfacesChild() = delete;
   ~SharedSurfacesChild() = delete;
 
+  friend class SharedSurfacesAnimation;
+
   class ImageKeyData final {
   public:
     ImageKeyData(WebRenderLayerManager* aManager,
@@ -107,14 +109,24 @@ private:
     wr::ImageKey mImageKey;
   };
 
-  class SharedUserData final {
+  class SharedUserData {
   public:
+    SharedUserData()
+      : mShared(false)
+    { }
+
     explicit SharedUserData(const wr::ExternalImageId& aId)
       : mId(aId)
       , mShared(false)
     { }
 
     ~SharedUserData();
+
+    SharedUserData(const SharedUserData& aOther) = delete;
+    SharedUserData& operator=(const SharedUserData& aOther) = delete;
+
+    SharedUserData(SharedUserData&& aOther) = delete;
+    SharedUserData& operator=(SharedUserData&& aOther) = delete;
 
     const wr::ExternalImageId& Id() const
     {
@@ -143,7 +155,7 @@ private:
                            wr::IpcResourceUpdateQueue& aResources,
                            const Maybe<gfx::IntRect>& aDirtyRect);
 
-  private:
+  protected:
     AutoTArray<ImageKeyData, 1> mKeys;
     wr::ExternalImageId mId;
     bool mShared : 1;
@@ -152,10 +164,45 @@ private:
   static nsresult ShareInternal(gfx::SourceSurfaceSharedData* aSurface,
                                 SharedUserData** aUserData);
 
-  static void Unshare(const wr::ExternalImageId& aId, nsTArray<ImageKeyData>& aKeys);
+  static void Unshare(const wr::ExternalImageId& aId,
+                      bool aReleaseId,
+                      nsTArray<ImageKeyData>& aKeys);
+
   static void DestroySharedUserData(void* aClosure);
 
   static gfx::UserDataKey sSharedKey;
+};
+
+/**
+ * This helper class owns a single ImageKey which will map to different external
+ * image IDs representing different frames in an animation.
+ */
+class SharedSurfacesAnimation final : private SharedSurfacesChild::SharedUserData
+{
+public:
+  SharedSurfacesAnimation()
+  { }
+
+  /**
+   * Set the animation to display the given frame.
+   * @param aSurface    The current frame.
+   * @param aDirtyRect  Dirty rect representing the change between the new frame
+   *                    and the previous frame. We will request only the delta
+   *                    be reuploaded by WebRender.
+   */
+  nsresult SetCurrentFrame(gfx::SourceSurfaceSharedData* aSurface,
+                           const gfx::IntRect& aDirtyRect);
+
+  /**
+   * Generate an ImageKey for the given frame.
+   * @param aSurface  The current frame. This should match what was cached via
+   *                  SetCurrentFrame, but if it does not, it will need to
+   *                  regenerate the cached ImageKey.
+   */
+  nsresult UpdateKey(gfx::SourceSurfaceSharedData* aSurface,
+                     WebRenderLayerManager* aManager,
+                     wr::IpcResourceUpdateQueue& aResources,
+                     wr::ImageKey& aKey);
 };
 
 } // namespace layers

@@ -59,33 +59,36 @@ SharedSurfacesChild::ImageKeyData::MergeDirtyRect(const Maybe<IntRect>& aDirtyRe
 
 SharedSurfacesChild::SharedUserData::~SharedUserData()
 {
-  if (mShared) {
-    mShared = false;
+  if (mShared || !mKeys.IsEmpty()) {
     if (NS_IsMainThread()) {
-      SharedSurfacesChild::Unshare(mId, mKeys);
+      SharedSurfacesChild::Unshare(mId, mShared, mKeys);
     } else {
       class DestroyRunnable final : public Runnable
       {
       public:
         DestroyRunnable(const wr::ExternalImageId& aId,
+                        bool aReleaseId,
                         nsTArray<ImageKeyData>&& aKeys)
           : Runnable("SharedSurfacesChild::SharedUserData::DestroyRunnable")
           , mId(aId)
+          , mReleaseId(aReleaseId)
           , mKeys(std::move(aKeys))
         { }
 
         NS_IMETHOD Run() override
         {
-          SharedSurfacesChild::Unshare(mId, mKeys);
+          SharedSurfacesChild::Unshare(mId, mReleaseId, mKeys);
           return NS_OK;
         }
 
       private:
         wr::ExternalImageId mId;
+        bool mReleaseId;
         AutoTArray<ImageKeyData, 1> mKeys;
       };
 
-      nsCOMPtr<nsIRunnable> task = new DestroyRunnable(mId, std::move(mKeys));
+      nsCOMPtr<nsIRunnable> task =
+        new DestroyRunnable(mId, mShared, std::move(mKeys));
       SystemGroup::Dispatch(TaskCategory::Other, task.forget());
     }
   }
@@ -129,6 +132,7 @@ SharedSurfacesChild::SharedUserData::UpdateKey(WebRenderLayerManager* aManager,
         entry.MergeDirtyRect(aDirtyRect);
         Maybe<IntRect> dirtyRect = entry.TakeDirtyRect();
         if (dirtyRect) {
+          MOZ_ASSERT(mShared);
           aResources.UpdateExternalImage(mId, entry.mImageKey,
                                          ViewAs<ImagePixel>(dirtyRect.ref()));
         }
@@ -370,6 +374,7 @@ SharedSurfacesChild::Share(SourceSurface* aSurface,
 
 /* static */ void
 SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId,
+                             bool aReleaseId,
                              nsTArray<ImageKeyData>& aKeys)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -378,6 +383,11 @@ SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId,
     if (!entry.mManager->IsDestroyed()) {
       entry.mManager->AddImageKeyForDiscard(entry.mImageKey);
     }
+  }
+
+  if (!aReleaseId) {
+    // We don't own the external image ID itself.
+    return;
   }
 
   CompositorManagerChild* manager = CompositorManagerChild::GetInstance();
@@ -416,6 +426,67 @@ SharedSurfacesChild::GetExternalId(const SourceSurfaceSharedData* aSurface)
   }
 
   return Some(data->Id());
+}
+
+nsresult
+SharedSurfacesAnimation::SetCurrentFrame(SourceSurfaceSharedData* aSurface,
+                                         const gfx::IntRect& aDirtyRect)
+{
+  MOZ_ASSERT(aSurface);
+
+  SharedUserData* data = nullptr;
+  nsresult rv = SharedSurfacesChild::ShareInternal(aSurface, &data);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  MOZ_ASSERT(data);
+  mId = data->Id();
+
+  auto i = mKeys.Length();
+  while (i > 0) {
+    --i;
+    SharedSurfacesChild::ImageKeyData& entry = mKeys[i];
+    if (entry.mManager->IsDestroyed()) {
+      mKeys.RemoveElementAt(i);
+      continue;
+    }
+
+    entry.MergeDirtyRect(Some(aDirtyRect));
+
+    Maybe<IntRect> dirtyRect = entry.TakeDirtyRect();
+    if (dirtyRect) {
+      auto& resourceUpdates = entry.mManager->AsyncResourceUpdates();
+      resourceUpdates.UpdateExternalImage(mId, entry.mImageKey,
+                                          ViewAs<ImagePixel>(dirtyRect.ref()));
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+SharedSurfacesAnimation::UpdateKey(SourceSurfaceSharedData* aSurface,
+                                   WebRenderLayerManager* aManager,
+                                   wr::IpcResourceUpdateQueue& aResources,
+                                   wr::ImageKey& aKey)
+{
+  SharedUserData* data = nullptr;
+  nsresult rv = SharedSurfacesChild::ShareInternal(aSurface, &data);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  MOZ_ASSERT(data);
+  if (mId.mHandle != data->Id().mHandle) {
+    mKeys.Clear();
+    mId = data->Id();
+  }
+
+  aKey = SharedSurfacesChild::SharedUserData::UpdateKey(aManager,
+                                                        aResources,
+                                                        Nothing());
+  return NS_OK;
 }
 
 } // namespace layers
