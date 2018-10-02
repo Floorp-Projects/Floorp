@@ -343,4 +343,13 @@ public class Utils {
         }
         return "#endif // " + ifdef + "\n";
     }
+
+    public static boolean isJNIObject(Class<?> cls) {
+        for (; cls != null; cls = cls.getSuperclass()) {
+            if (cls.getName().equals("org.mozilla.gecko.mozglue.JNIObject")) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
