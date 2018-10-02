@@ -192,7 +192,8 @@ function evaluateExpression(expression) {
 
       if (selectedSource && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) && !(0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id)) {
         const mapResult = await dispatch(getMappedExpression(input));
-        if (mapResult !== null) {
+
+        if (mapResult) {
           input = mapResult.expression;
         }
       }

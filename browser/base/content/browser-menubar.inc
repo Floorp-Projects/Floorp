@@ -498,18 +498,6 @@
                             key="key_viewSource"
                             command="View:PageSource"
                             accesskey="&pageSourceCmd.accesskey;"/>
-                  <menuitem id="menu_devtools_recordExecution"
-                            label="&devtoolsRecordExecution.label;"
-                            command="Tools:RecordExecution"
-                            hidden="true"/>
-                  <menuitem id="menu_devtools_saveRecording"
-                            label="&devtoolsSaveRecording.label;"
-                            command="Tools:SaveRecording"
-                            hidden="true"/>
-                  <menuitem id="menu_devtools_replayExecution"
-                            label="&devtoolsReplayExecution.label;"
-                            command="Tools:ReplayExecution"
-                            hidden="true"/>
                 </menupopup>
               </menu>
               <menuitem id="menu_pageInfo"

@@ -325,6 +325,17 @@ NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
                                  NS_GetCurrentThread());
 }
 
+extern nsresult
+NS_IdleDispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent)
+{
+  nsCOMPtr<nsIThread> mainThread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
+  if (NS_SUCCEEDED(rv)) {
+    return NS_IdleDispatchToThread(std::move(aEvent), mainThread);
+  }
+  return rv;
+}
+
 class IdleRunnableWrapper : public IdleRunnable
 {
 public:

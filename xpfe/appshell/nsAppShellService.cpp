@@ -254,22 +254,6 @@ WebBrowserChrome2Stub::SetStatus(uint32_t aStatusType, const char16_t* aStatus)
 }
 
 NS_IMETHODIMP
-WebBrowserChrome2Stub::GetWebBrowser(nsIWebBrowser** aWebBrowser)
-{
-  MOZ_ASSERT_UNREACHABLE("WebBrowserChrome2Stub::GetWebBrowser is "
-                         "not supported");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-WebBrowserChrome2Stub::SetWebBrowser(nsIWebBrowser* aWebBrowser)
-{
-  MOZ_ASSERT_UNREACHABLE("WebBrowserChrome2Stub::SetWebBrowser is "
-                         "not supported");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 WebBrowserChrome2Stub::GetChromeFlags(uint32_t* aChromeFlags)
 {
   *aChromeFlags = 0;
@@ -280,22 +264,6 @@ NS_IMETHODIMP
 WebBrowserChrome2Stub::SetChromeFlags(uint32_t aChromeFlags)
 {
   MOZ_ASSERT_UNREACHABLE("WebBrowserChrome2Stub::SetChromeFlags is "
-                         "not supported");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-WebBrowserChrome2Stub::DestroyBrowserWindow()
-{
-  MOZ_ASSERT_UNREACHABLE("WebBrowserChrome2Stub::DestroyBrowserWindow is "
-                         "not supported");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-WebBrowserChrome2Stub::SizeBrowserTo(int32_t aCX, int32_t aCY)
-{
-  MOZ_ASSERT_UNREACHABLE("WebBrowserChrome2Stub::SizeBrowserTo is "
                          "not supported");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -312,14 +280,6 @@ WebBrowserChrome2Stub::IsWindowModal(bool* aResult)
 {
   *aResult = false;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-WebBrowserChrome2Stub::ExitModalEventLoop(nsresult aStatus)
-{
-  MOZ_ASSERT_UNREACHABLE("WebBrowserChrome2Stub::ExitModalEventLoop is "
-                         "not supported");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

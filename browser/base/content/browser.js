@@ -7245,35 +7245,6 @@ function BrowserOpenAddonsMgr(aView) {
   });
 }
 
-function BeginRecordExecution() {
-  gBrowser.selectedTab = gBrowser.addWebTab("about:blank", { recordExecution: "*" });
-}
-
-function SaveRecordedExecution() {
-  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  let window = gBrowser.ownerGlobal;
-  fp.init(window, null, Ci.nsIFilePicker.modeSave);
-  fp.open(rv => {
-    if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
-      var tabParent = gBrowser.selectedTab.linkedBrowser.frameLoader.tabParent;
-      if (!tabParent || !tabParent.saveRecording(fp.file.path)) {
-        window.alert("Current tab is not recording");
-      }
-    }
-  });
-}
-
-function BeginReplayExecution() {
-  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  let window = gBrowser.ownerGlobal;
-  fp.init(window, null, Ci.nsIFilePicker.modeOpen);
-  fp.open(rv => {
-    if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
-      gBrowser.selectedTab = gBrowser.addWebTab(null, { replayExecution: fp.file.path });
-    }
-  });
-}
-
 function AddKeywordForSearchField() {
   let mm = gBrowser.selectedBrowser.messageManager;
 
