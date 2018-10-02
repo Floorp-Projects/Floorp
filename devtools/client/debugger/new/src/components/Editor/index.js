@@ -238,11 +238,9 @@ class Editor extends _react.PureComponent {
       return;
     }
 
-    (0, _editor.startOperation)();
     this.setText(nextProps);
     this.setSize(nextProps);
     this.scrollToLocation(nextProps);
-    (0, _editor.endOperation)();
   }
 
   setupEditor() {
@@ -339,10 +337,8 @@ class Editor extends _react.PureComponent {
         const editor = this.setupEditor();
         (0, _editor.updateDocument)(editor, selectedSource);
       } else {
-        (0, _editor.startOperation)();
         this.setText(this.props);
         this.setSize(this.props);
-        (0, _editor.endOperation)();
       }
     }
   }
