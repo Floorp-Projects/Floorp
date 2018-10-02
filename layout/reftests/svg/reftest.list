@@ -553,6 +553,8 @@ fuzzy-if(skiaContent,0-1,0-100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-en
 == currentColor-override-lighting.svg currentColor-override-lighting-ref.svg
 == currentColor-override-stop.svg pass.svg
 
+== mask-invalidation.html mask-invalidation-ref.html
+
 # Shadow DOM id tracking.
 pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106
 pref(dom.webcomponents.shadowdom.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106
