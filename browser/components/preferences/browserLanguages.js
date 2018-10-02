@@ -135,10 +135,11 @@ class OrderedListBox {
 }
 
 class SortedItemSelectList {
-  constructor({menulist, button, onSelect, onChange}) {
+  constructor({menulist, button, onSelect, onChange, compareFn}) {
     this.menulist = menulist;
     this.popup = menulist.firstElementChild;
     this.button = button;
+    this.compareFn = compareFn;
     this.items = [];
 
     menulist.addEventListener("command", () => {
@@ -161,7 +162,7 @@ class SortedItemSelectList {
   }
 
   setItems(items) {
-    this.items = items.sort((a, b) => a.label > b.label);
+    this.items = items.sort(this.compareFn);
     this.populate();
   }
 
@@ -187,22 +188,24 @@ class SortedItemSelectList {
    * @param {object} item The item to insert.
    */
   addItem(item) {
-    let {items, menulist, popup} = this;
-    let i;
+    let {compareFn, items, menulist, popup} = this;
 
     // Find the index of the item to insert before.
-    for (i = 0; i < items.length && items[i].label < item.label; i++)
-      ;
-
+    let i = items.findIndex(el => compareFn(el, item) < 0);
     items.splice(i, 0, item);
     popup.insertBefore(this.createItem(item), menulist.getItemAtIndex(i));
+
     menulist.disabled = menulist.itemCount == 0;
   }
 
-  createItem({label, value}) {
+  createItem({label, value, className, disabled}) {
     let item = document.createElement("menuitem");
     item.value = value;
     item.setAttribute("label", label);
+    if (className)
+      item.classList.add(className);
+    if (disabled)
+      item.setAttribute("disabled", "true");
     return item;
   }
 
@@ -230,6 +233,7 @@ class SortedItemSelectList {
 }
 
 function getLocaleDisplayInfo(localeCodes) {
+  let availableLocales = new Set(Services.locale.availableLocales);
   let packagedLocales = new Set(Services.locale.packagedLocales);
   let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
   return localeCodes.map((code, i) => {
@@ -238,8 +242,31 @@ function getLocaleDisplayInfo(localeCodes) {
       label: localeNames[i],
       value: code,
       canRemove: !packagedLocales.has(code),
+      installed: availableLocales.has(code),
     };
   });
+}
+
+function compareItems(a, b) {
+  // Sort by installed.
+  if (a.installed != b.installed) {
+    return a.installed ? -1 : 1;
+
+  // The search label is always last.
+  } else if (a.value == "search") {
+    return 1;
+  } else if (b.value == "search") {
+    return -1;
+
+  // If both items are locales, sort by label.
+  } else if (a.value && b.value) {
+    return a.label.localeCompare(b.label);
+
+  // One of them is a label, put it first.
+  } else if (a.value) {
+    return 1;
+  }
+  return -1;
 }
 
 var gBrowserLanguagesDialog = {
@@ -248,7 +275,7 @@ var gBrowserLanguagesDialog = {
   requestedLocales: null,
 
   beforeAccept() {
-    this.requestedLocales = this._requestedLocales.items.map(item => item.value);
+    this.requestedLocales = this.getRequestedLocales();
     return true;
   },
 
@@ -273,7 +300,7 @@ var gBrowserLanguagesDialog = {
       upButton: document.getElementById("up"),
       downButton: document.getElementById("down"),
       removeButton: document.getElementById("remove"),
-      onRemove: (item) => this._availableLocales.addItem(item),
+      onRemove: (item) => this.requestedLocaleRemoved(item),
     });
     this._requestedLocales.setItems(getLocaleDisplayInfo(requested));
   },
@@ -282,6 +309,7 @@ var gBrowserLanguagesDialog = {
     this._availableLocales = new SortedItemSelectList({
       menulist: document.getElementById("availableLocales"),
       button: document.getElementById("add"),
+      compareFn: compareItems,
       onSelect: (item) => this.availableLanguageSelected(item),
       onChange: (item) => {
         this.hideError();
@@ -333,6 +361,12 @@ var gBrowserLanguagesDialog = {
       .filter(({target_locale}) => !installedLocales.has(target_locale))
       .map(lang => lang.target_locale);
     let availableItems = getLocaleDisplayInfo(availableLocales);
+    availableItems.push({
+      label: await document.l10n.formatValue("browser-languages-available-label"),
+      className: "label-item",
+      disabled: true,
+      installed: false,
+    });
     let items = this._availableLocales.items;
     // Drop the search item.
     items.pop();
@@ -347,6 +381,7 @@ var gBrowserLanguagesDialog = {
     let items;
     if (available.length > 0) {
       items = getLocaleDisplayInfo(available);
+      items.push(await this.createInstalledLabel());
     } else {
       items = [];
     }
@@ -363,6 +398,8 @@ var gBrowserLanguagesDialog = {
     if (available.has(item.value)) {
       this._requestedLocales.addItem(item);
       if (available.size == this._requestedLocales.items.length) {
+        // Remove the installed label, they're all installed.
+        this._availableLocales.items.shift();
         this._availableLocales.setItems(this._availableLocales.items);
       }
     } else if (this.availableLangpacks.has(item.value)) {
@@ -398,5 +435,27 @@ var gBrowserLanguagesDialog = {
     document.querySelectorAll(".warning-message-separator")
       .forEach(separator => separator.classList.remove("thin"));
     document.getElementById("warning-message").hidden = true;
+  },
+
+  getRequestedLocales() {
+    return this._requestedLocales.items.map(item => item.value);
+  },
+
+  async requestedLocaleRemoved(item) {
+    this._availableLocales.addItem(item);
+
+    // If the item we added is at the top of the list, it needs the label.
+    if (this._availableLocales.items[0] == item) {
+      this._availableLocales.addItem(await this.createInstalledLabel());
+    }
+  },
+
+  async createInstalledLabel() {
+    return {
+      label: await document.l10n.formatValue("browser-languages-installed-label"),
+      className: "label-item",
+      disabled: true,
+      installed: true,
+    };
   },
 };
