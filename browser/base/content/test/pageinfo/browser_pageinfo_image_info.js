@@ -1,12 +1,7 @@
-/* Make sure that "View Image Info" loads the correct image data */
-function getImageInfo(imageElement) {
-  return {
-    currentSrc: imageElement.currentSrc,
-    width: imageElement.width,
-    height: imageElement.height,
-    imageText: imageElement.title || imageElement.alt,
-  };
-}
+/**
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ **/
 
 const URI =
   "data:text/html," +
@@ -17,34 +12,35 @@ const URI =
   "<img src='about:logo?b' height=200 width=250 alt=1>" +
   "<img src='about:logo?b' height=100 width=150 alt=2 id='test-image'>";
 
-function test() {
-  waitForExplicitFinish();
+add_task(async function() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URI);
+  let browser = tab.linkedBrowser;
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  let imageInfo = await ContentTask.spawn(browser, null, async () => {
+    let testImg = content.document.getElementById("test-image");
 
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false,
-                                 URI).then(function() {
-    var doc = gBrowser.contentDocumentAsCPOW;
-    var testImg = doc.getElementById("test-image");
-    var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,
-                                   "mediaTab", getImageInfo(testImg));
-
-    pageInfo.addEventListener("load", function() {
-      pageInfo.onFinished.push(function() {
-        var pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
-        pageInfoImg.addEventListener("loadend", function() {
-
-          is(pageInfoImg.src, testImg.src, "selected image has the correct source");
-          is(pageInfoImg.width, testImg.width, "selected image has the correct width");
-          is(pageInfoImg.height, testImg.height, "selected image has the correct height");
-
-          pageInfo.close();
-          gBrowser.removeCurrentTab();
-          finish();
-        });
-      });
-    }, {capture: true, once: true});
+    return {
+      src: testImg.src,
+      currentSrc: testImg.currentSrc,
+      width: testImg.width,
+      height: testImg.height,
+      imageText: testImg.title || testImg.alt,
+    };
   });
 
-  BrowserTestUtils.loadURI(gBrowser, URI);
-}
+  let pageInfo = BrowserPageInfo(browser.currentURI.spec, "mediaTab", imageInfo);
+  await BrowserTestUtils.waitForEvent(pageInfo, "load", true /** capture **/);
+  await new Promise(resolve => {
+    pageInfo.onFinished.push(() => {
+      let pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
+      BrowserTestUtils.waitForEvent(pageInfoImg, "loadend").then(() => {
+        Assert.equal(pageInfoImg.src, imageInfo.src, "selected image has the correct source");
+        Assert.equal(pageInfoImg.width, imageInfo.width, "selected image has the correct width");
+        Assert.equal(pageInfoImg.height, imageInfo.height, "selected image has the correct height");
+        resolve();
+      });
+    });
+  });
+  pageInfo.close();
+  BrowserTestUtils.removeTab(tab);
+});
