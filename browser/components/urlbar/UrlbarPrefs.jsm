@@ -61,6 +61,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // When true, `javascript:` URLs are not included in search results.
   ["filter.javascript", true],
 
+  // Applies URL highlighting and other styling to the text in the urlbar input.
+  ["formatting.enabled", false],
+
   // Allows results from one search to be reused in the next search.  One of the
   // INSERTMETHOD values.
   ["insertMethod", UrlbarUtils.INSERTMETHOD.MERGE_RELATED],
