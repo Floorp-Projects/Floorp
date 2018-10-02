@@ -43,6 +43,34 @@ WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame)
   return false;
 }
 
+/* static */ bool
+WebRenderUserData::ProcessInvalidateForImage(nsIFrame* aFrame, DisplayItemType aType)
+{
+  MOZ_ASSERT(aFrame);
+
+  if (!aFrame->HasProperty(WebRenderUserDataProperty::Key())) {
+    return false;
+  }
+
+  auto type = static_cast<uint32_t>(aType);
+  RefPtr<WebRenderFallbackData> fallback =
+    GetWebRenderUserData<WebRenderFallbackData>(aFrame, type);
+  if (fallback) {
+    fallback->SetInvalid(true);
+    aFrame->SchedulePaint();
+    return true;
+  }
+
+  RefPtr<WebRenderImageData> image =
+    GetWebRenderUserData<WebRenderImageData>(aFrame, type);
+  if (image && image->IsAsyncAnimatedImage()) {
+    return true;
+  }
+
+  aFrame->SchedulePaint();
+  return false;
+}
+
 WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
   : mWRManager(aWRManager)
   , mFrame(aItem->Frame())
@@ -81,6 +109,12 @@ WebRenderImageData::~WebRenderImageData()
   if (mPipelineId) {
     WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
   }
+}
+
+bool
+WebRenderImageData::IsAsyncAnimatedImage() const
+{
+  return mContainer && mContainer->GetSharedSurfacesAnimation();
 }
 
 void
