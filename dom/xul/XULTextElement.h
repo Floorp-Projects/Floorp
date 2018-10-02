@@ -37,6 +37,14 @@ public:
   {
     SetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue, true);
   }
+  void GetAccessKey(DOMString& aValue) const
+  {
+    GetXULAttr(nsGkAtoms::accesskey, aValue);
+  }
+  MOZ_CAN_RUN_SCRIPT void SetAccessKey(const nsAString& aValue)
+  {
+    SetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, aValue, true);
+  }
 
 protected:
   virtual ~XULTextElement() {}

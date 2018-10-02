@@ -34,7 +34,6 @@ struct nsIDataType
         VTYPE_WCHAR             = TD_WCHAR            ,
         VTYPE_VOID              = TD_VOID             ,
         VTYPE_ID                = TD_PNSIID           ,
-        VTYPE_DOMSTRING         = TD_DOMSTRING        ,
         VTYPE_CHAR_STR          = TD_PSTRING          ,
         VTYPE_WCHAR_STR         = TD_PWSTRING         ,
         VTYPE_INTERFACE         = TD_INTERFACE_TYPE   ,
@@ -82,7 +81,6 @@ interface nsIVariant : nsISupports
     [noscript] wchar        getAsWChar();
     [notxpcom] nsresult     getAsID(out nsID retval);
     [noscript] AString      getAsAString();
-    [noscript] DOMString    getAsDOMString();
     [noscript] ACString     getAsACString();
     [noscript] AUTF8String  getAsAUTF8String();
     [noscript] string       getAsString();
@@ -133,7 +131,6 @@ interface nsIWritableVariant : nsIVariant
     void setAsWChar(in wchar aValue);
     void setAsID(in nsIDRef aValue);
     void setAsAString(in AString aValue);
-    void setAsDOMString(in DOMString aValue);
     void setAsACString(in ACString aValue);
     void setAsAUTF8String(in AUTF8String aValue);
     void setAsString(in string aValue);

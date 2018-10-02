@@ -25,9 +25,9 @@ interface nsIWebContentHandlerRegistrar : nsISupports
    * The additional contentWindow param for this method represents the dom
    * content window from which the method has been called.
    */
-   void registerProtocolHandler(in DOMString protocol,
-                                in DOMString uri,
-                                in DOMString title,
+   void registerProtocolHandler(in AString protocol,
+                                in AString uri,
+                                in AString title,
                                 in nsISupports windowOrBrowser);
   /**
    * Removes a registered protocol handler

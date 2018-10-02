@@ -59,7 +59,6 @@ TestParams.prototype = {
   testString: f,
   testWchar: f,
   testWstring: f,
-  testDOMString: f,
   testAString: f,
   testAUTF8String: f,
   testACString: f,

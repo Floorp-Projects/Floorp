@@ -7800,11 +7800,11 @@ class DebuggerSourceGetTextMatcher
 
     ReturnType match(HandleScriptSourceObject sourceObject) {
         ScriptSource* ss = sourceObject->source();
-        bool hasSourceData = ss->hasSourceData();
-        if (!ss->hasSourceData() && !JSScript::loadSource(cx_, ss, &hasSourceData)) {
+        bool hasSourceText = ss->hasSourceText();
+        if (!ss->hasSourceText() && !JSScript::loadSource(cx_, ss, &hasSourceText)) {
             return nullptr;
         }
-        if (!hasSourceData) {
+        if (!hasSourceText) {
             return NewStringCopyZ<CanGC>(cx_, "[no source]");
         }
 

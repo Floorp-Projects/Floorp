@@ -10,10 +10,10 @@
 [scriptable, uuid(ca7b0bc7-c67c-4b79-8270-ed7ba002af08)]
 interface nsIGfxInfoDebug : nsISupports
 {
-  void spoofVendorID(in DOMString aVendorID);
-  void spoofDeviceID(in DOMString aDeviceID);
+  void spoofVendorID(in AString aVendorID);
+  void spoofDeviceID(in AString aDeviceID);
   
-  void spoofDriverVersion(in DOMString aDriverVersion);
+  void spoofDriverVersion(in AString aDriverVersion);
 
   void spoofOSVersion(in unsigned long aVersion);
 };

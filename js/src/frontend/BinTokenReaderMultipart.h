@@ -45,15 +45,7 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart: public BinTokenReaderBase
       public:
         explicit BinFields(JSContext*) {}
     };
-    struct Chars: public CharSlice {
-        explicit Chars(JSContext*)
-          : CharSlice(nullptr, 0)
-        { }
-        Chars(const char* start, const uint32_t byteLen)
-          : CharSlice(start, byteLen)
-        { }
-        Chars(const Chars& other) = default;
-    };
+    using Chars = CharSlice;
 
   public:
     /**
@@ -61,14 +53,16 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart: public BinTokenReaderBase
      *
      * Does NOT copy the buffer.
      */
-    BinTokenReaderMultipart(JSContext* cx, const uint8_t* start, const size_t length);
+    BinTokenReaderMultipart(JSContext* cx, ErrorReporter* er, const uint8_t* start, const size_t length);
 
     /**
      * Construct a token reader.
      *
      * Does NOT copy the buffer.
      */
-    BinTokenReaderMultipart(JSContext* cx, const Vector<uint8_t>& chars);
+    BinTokenReaderMultipart(JSContext* cx, ErrorReporter* er, const Vector<uint8_t>& chars);
+
+    ~BinTokenReaderMultipart();
 
     /**
      * Read the header of the file.
@@ -192,28 +186,27 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart: public BinTokenReaderBase
     MOZ_MUST_USE JS::Result<uint32_t> readInternalUint32();
 
   private:
-    // A mapping grammar index => BinKind, as defined by the [GRAMMAR]
-    // section of the file. Populated during readHeader().
-    Vector<BinKind> grammarTable_;
-
     // A mapping string index => BinVariant as extracted from the [STRINGS]
     // section of the file. Populated lazily.
     js::HashMap<uint32_t, BinVariant, DefaultHasher<uint32_t>, SystemAllocPolicy> variantsTable_;
 
-    // A mapping index => JSAtom, as defined by the [STRINGS]
-    // section of the file. Populated during readHeader().
-    using AtomVector = GCVector<JSAtom*>;
-    JS::Rooted<AtomVector> atomsTable_;
-
-    // The same mapping, but as CharSlice. Populated during readHeader().
-    // The slices are into the source buffer.
-    Vector<Chars> slicesTable_;
+    enum class MetadataOwnership {
+        Owned,
+        Unowned
+    };
+    MetadataOwnership metadataOwned_;
+    BinASTSourceMetadata* metadata_;
 
     const uint8_t* posBeforeTree_;
 
     BinTokenReaderMultipart(const BinTokenReaderMultipart&) = delete;
     BinTokenReaderMultipart(BinTokenReaderMultipart&&) = delete;
     BinTokenReaderMultipart& operator=(BinTokenReaderMultipart&) = delete;
+
+  public:
+    void traceMetadata(JSTracer* trc);
+    BinASTSourceMetadata* takeMetadata();
+    MOZ_MUST_USE JS::Result<Ok> initFromScriptSource(ScriptSource* scriptSource);
 
   public:
     // The following classes are used whenever we encounter a tuple/tagged tuple/list

@@ -21,12 +21,12 @@ interface nsIPowerManagerService : nsISupports
 {
   void              addWakeLockListener(in nsIDOMMozWakeLockListener aListener);
   void              removeWakeLockListener(in nsIDOMMozWakeLockListener aListener);
-  DOMString         getWakeLockState(in DOMString aTopic);
+  AString           getWakeLockState(in AString aTopic);
 
   /**
    * Return a wake lock (MozWakeLock) object of aTopic associated with aWindow.
    * A wake lock without associated window, e.g. used in chrome, is
    * always considered invisible.
    */
-  nsISupports newWakeLock(in DOMString aTopic, [optional] in mozIDOMWindow aWindow);
+  nsISupports newWakeLock(in AString aTopic, [optional] in mozIDOMWindow aWindow);
 };

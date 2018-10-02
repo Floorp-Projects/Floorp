@@ -19,16 +19,16 @@ interface nsINotificationStorageCallback : nsISupports
    * @param body: the notification body
    * @param tag: the notification tag
    */
-  void handle(in DOMString id,
-              in DOMString title,
-              in DOMString dir,
-              in DOMString lang,
-              in DOMString body,
-              in DOMString tag,
-              in DOMString icon,
-              in DOMString data,
-              in DOMString behavior,
-              in DOMString serviceWorkerRegistrationScope);
+  void handle(in AString id,
+              in AString title,
+              in AString dir,
+              in AString lang,
+              in AString body,
+              in AString tag,
+              in AString icon,
+              in AString data,
+              in AString behavior,
+              in AString serviceWorkerRegistrationScope);
 
   /**
    * Callback function used to notify C++ the we have returned
@@ -65,18 +65,18 @@ interface nsINotificationStorage : nsISupports
    *                        May be empty. Only set for Notifications created by
    *                        showNotification().
    */
-  void put(in DOMString origin,
-           in DOMString id,
-           in DOMString title,
-           in DOMString dir,
-           in DOMString lang,
-           in DOMString body,
-           in DOMString tag,
-           in DOMString icon,
-           in DOMString alertName,
-           in DOMString data,
-           in DOMString behavior,
-           in DOMString serviceWorkerRegistrationScope);
+  void put(in AString origin,
+           in AString id,
+           in AString title,
+           in AString dir,
+           in AString lang,
+           in AString body,
+           in AString tag,
+           in AString icon,
+           in AString alertName,
+           in AString data,
+           in AString behavior,
+           in AString serviceWorkerRegistrationScope);
 
   /**
    * Retrieve a list of notifications.
@@ -86,8 +86,8 @@ interface nsINotificationStorage : nsISupports
    * @param callback: nsINotificationStorageCallback, used for
    *                  returning notifications objects
    */
-  void get(in DOMString origin,
-           in DOMString tag,
+  void get(in AString origin,
+           in AString tag,
            in nsINotificationStorageCallback aCallback);
 
   /**
@@ -100,8 +100,8 @@ interface nsINotificationStorage : nsISupports
    * called if that ID is not found. Done() will be called right after
    * Handle().
    */
-  void getByID(in DOMString origin,
-               in DOMString id,
+  void getByID(in AString origin,
+               in AString id,
                in nsINotificationStorageCallback aCallback);
 
   /**
@@ -110,8 +110,8 @@ interface nsINotificationStorage : nsISupports
    * @param origin: the origin/app to delete the notification from
    * @param id: the uuid for the notification to delete
    */
-  void delete(in DOMString origin,
-              in DOMString id);
+  void delete(in AString origin,
+              in AString id);
 
   /**
    * Notifications are not supposed to be persistent, according to spec, at
@@ -125,7 +125,7 @@ interface nsINotificationStorage : nsISupports
    *
    * @return boolean
    */
-  boolean canPut(in DOMString origin);
+  boolean canPut(in AString origin);
 };
 
 %{C++

@@ -33,13 +33,13 @@ interface nsITCPSocketCallback : nsISupports {
   void fireErrorEvent(in AString name, in AString type);
 
   // Dispatch a "data" event at this object with a string
-  void fireDataStringEvent(in DOMString type, in ACString data);
+  void fireDataStringEvent(in AString type, in ACString data);
 
   // Dispatch a "data" event at this object with an Array
-  void fireDataArrayEvent(in DOMString type, [const] in nsUint8TArrayRef data);
+  void fireDataArrayEvent(in AString type, [const] in nsUint8TArrayRef data);
 
   // Dispatch an event of the given type at this object.
-  void fireEvent(in DOMString type);
+  void fireEvent(in AString type);
 
   // Update the DOM object's readyState.
   // @param readyState

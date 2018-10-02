@@ -78,10 +78,6 @@ typedef unsigned long       size_t;
 
 [ptr]         native nsQIResult(void);
 
-[ref, domstring] native DOMString(ignored);
-[ref, domstring] native DOMStringRef(ignored);
-[ptr, domstring] native DOMStringPtr(ignored);
-
 [ref, utf8string] native AUTF8String(ignored);
 [ref, utf8string] native AUTF8StringRef(ignored);
 [ptr, utf8string] native AUTF8StringPtr(ignored);

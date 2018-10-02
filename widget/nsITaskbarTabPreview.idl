@@ -28,7 +28,7 @@ interface nsITaskbarTabPreview : nsITaskbarPreview
    *
    * Default: an empty string
    */
-  attribute DOMString title;
+  attribute AString title;
 
   /**
    * The icon displayed next to the title in the preview

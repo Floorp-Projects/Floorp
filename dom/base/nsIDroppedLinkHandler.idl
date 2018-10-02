@@ -14,17 +14,17 @@ interface nsIDroppedLinkItem : nsISupports
   /**
    * Returns the URL of the link.
    */
-  readonly attribute DOMString url;
+  readonly attribute AString url;
 
   /**
    * Returns the link name.
    */
-  readonly attribute DOMString name;
+  readonly attribute AString name;
 
   /**
    * Returns the MIME-Type.
    */
-  readonly attribute DOMString type;
+  readonly attribute AString type;
 };
 
 [scriptable, uuid(21B5C25A-28A9-47BD-8431-FA9116305DED)]

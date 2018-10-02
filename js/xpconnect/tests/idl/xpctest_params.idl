@@ -33,7 +33,6 @@ interface nsIXPCTestParams : nsISupports {
   string                testString(in string a, inout string b);
   wchar                 testWchar(in wchar a, inout wchar b);
   wstring               testWstring(in wstring a, inout wstring b);
-  DOMString             testDOMString(in DOMString a, inout DOMString b);
   AString               testAString(in AString a, inout AString b);
   AUTF8String           testAUTF8String(in AUTF8String a, inout AUTF8String b);
   ACString              testACString(in ACString a, inout ACString b);
