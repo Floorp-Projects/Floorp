@@ -70,5 +70,4 @@ browser-languages-select-language =
 browser-languages-installed-label = Installed languages
 browser-languages-available-label = Available languages
 
-browser-languages-error =
-    .value = An error occurred.
+browser-languages-error = { -brand-short-name } can’t update your languages right now. Check that you are connected to the internet or try again.

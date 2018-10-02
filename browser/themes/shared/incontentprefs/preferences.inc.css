@@ -966,6 +966,10 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   margin-inline-end: 4px;
 }
 
+#warning-message > .message-bar-description {
+  width: 32em;
+}
+
 .add-web-language,
 .add-browser-language {
   margin: 0;
