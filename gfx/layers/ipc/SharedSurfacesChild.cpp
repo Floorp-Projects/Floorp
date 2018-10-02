@@ -8,7 +8,6 @@
 #include "SharedSurfacesParent.h"
 #include "CompositorManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -344,6 +343,11 @@ SharedSurfacesChild::Share(ImageContainer* aContainer,
   }
 
   auto sharedSurface = static_cast<SourceSurfaceSharedData*>(surface.get());
+  SharedSurfacesAnimation* anim = aContainer->GetSharedSurfacesAnimation();
+  if (anim) {
+    return anim->UpdateKey(sharedSurface, aManager, aResources, aKey);
+  }
+
   return Share(sharedSurface, aManager, aResources, aKey);
 }
 
@@ -426,6 +430,30 @@ SharedSurfacesChild::GetExternalId(const SourceSurfaceSharedData* aSurface)
   }
 
   return Some(data->Id());
+}
+
+/* static */ nsresult
+SharedSurfacesChild::UpdateAnimation(ImageContainer* aContainer,
+                                     SourceSurface* aSurface,
+                                     const IntRect& aDirtyRect)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aContainer);
+  MOZ_ASSERT(!aContainer->IsAsync());
+  MOZ_ASSERT(aSurface);
+
+  // If we aren't using shared surfaces, then is nothing to do.
+  if (aSurface->GetType() != SurfaceType::DATA_SHARED) {
+    MOZ_ASSERT(!aContainer->GetSharedSurfacesAnimation());
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  SharedSurfacesAnimation* anim =
+    aContainer->EnsureSharedSurfacesAnimation();
+  MOZ_ASSERT(anim);
+
+  auto sharedSurface = static_cast<SourceSurfaceSharedData*>(aSurface);
+  return anim->SetCurrentFrame(sharedSurface, aDirtyRect);
 }
 
 nsresult
