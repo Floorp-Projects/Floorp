@@ -690,11 +690,16 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
 
     frontend::BinASTParser<BinTokenReaderMultipart> parser(cx, alloc, usedNames, options, sourceObj);
 
-    auto parsed = parser.parse(&globalsc, src, len);
+    // Metadata stores internal pointers, so we must use the same buffer every time, including for lazy parses
+    ScriptSource* ss = sourceObj->source();
+    BinASTSourceMetadata* metadata = nullptr;
+    auto parsed = parser.parse(&globalsc, ss->binASTSource(), ss->length(), &metadata);
 
     if (parsed.isErr()) {
         return nullptr;
     }
+
+    sourceObj->source()->setBinASTSourceMetadata(metadata);
 
     BytecodeEmitter bce(nullptr, &parser, &globalsc, script, nullptr, 0);
 
@@ -960,9 +965,7 @@ frontend::CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, con
                                                            usedNames, options, sourceObj,
                                                            lazy);
 
-    auto parsed = parser.parseLazyFunction(lazy->scriptSource()->binASTSource(),
-                                           lazy->sourceStart(),
-                                           lazy->scriptSource()->length());
+    auto parsed = parser.parseLazyFunction(lazy->scriptSource(), lazy->sourceStart());
 
     if (parsed.isErr())
         return false;
