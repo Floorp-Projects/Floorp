@@ -36,6 +36,7 @@
 #include "BatteryManager.h"
 #include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/Clipboard.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/GamepadServiceTest.h"
 #include "mozilla/dom/MediaCapabilities.h"
 #include "mozilla/dom/WakeLock.h"
@@ -1719,6 +1720,14 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
                                     "MediaEMEInsecureContextDeprecatedWarning",
                                     params,
                                     ArrayLength(params));
+  }
+
+  nsIDocument* doc = mWindow->GetExtantDoc();
+  if (doc &&
+      !FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                            NS_LITERAL_STRING("encrypted-media"))) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
   }
 
   RefPtr<DetailedPromise> promise =
