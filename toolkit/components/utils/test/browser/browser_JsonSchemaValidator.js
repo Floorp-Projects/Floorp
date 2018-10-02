@@ -396,3 +396,54 @@ add_task(async function test_number_or_array_values() {
   ok(!JsonSchemaValidator.validateAndParseParameters([[]], schema)[0], "Invalid value");
   ok(!JsonSchemaValidator.validateAndParseParameters([0, 1, [2, 3]], schema)[0], "Invalid value");
 });
+
+add_task(async function test_patternProperties() {
+  let schema = {
+    type: "object",
+    properties: {
+      "S-bool-property": { "type": "boolean" },
+    },
+    patternProperties: {
+      "^S-": { "type": "string" },
+      "^N-": { "type": "number" },
+      "^B-": { "type": "boolean" },
+    },
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({
+    "S-string": "test",
+    "N-number": 5,
+    "B-boolean": true,
+    "S-bool-property": false,
+  }, schema);
+
+  ok(valid, "Object is valid");
+  is(parsed["S-string"], "test", "parsedProperty is correct");
+  is(parsed["N-number"], 5, "parsedProperty is correct");
+  is(parsed["B-boolean"], true, "parsedProperty is correct");
+  is(parsed["S-bool-property"], false, "property is correct");
+
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({
+    "N-string": "test",
+  }, schema);
+
+  ok(!valid, "Object is not valid since there is a type mismatch");
+
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({
+    "S-number": 5,
+  }, schema);
+
+  ok(!valid, "Object is not valid since there is a type mismatch");
+
+  schema = {
+    type: "object",
+    patternProperties: {
+      "[": {" type": "string" },
+    },
+  };
+
+  Assert.throws(() => {
+    [valid, parsed] = JsonSchemaValidator.validateAndParseParameters({}, schema);
+  }, /Invalid property pattern/, "Checking that invalid property patterns throw");
+});

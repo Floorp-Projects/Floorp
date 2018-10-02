@@ -632,6 +632,13 @@
       }
     },
 
+    "SecurityDevices": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": { "type": "string" }
+      }
+    },
+
     "WebsiteFilter": {
       "machine_only": "true",
 
