@@ -228,13 +228,7 @@ runTestFromPath(JSContext* cx, const char* path)
         frontend::Directives directives(false);
         frontend::GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
 
-        RootedScriptSourceObject sourceObj(cx, frontend::CreateScriptSourceObject(cx, binOptions,
-                                                   mozilla::Nothing()));
-        if (!sourceObj) {
-            MOZ_CRASH();
-        }
-
-        frontend::BinASTParser<Tok> binParser(cx, allocScope.alloc(), binUsedNames, binOptions, sourceObj);
+        frontend::BinASTParser<Tok> binParser(cx, allocScope.alloc(), binUsedNames, binOptions);
 
         auto binParsed = binParser.parse(&globalsc, binSource); // Will be deallocated once `reader` goes out of scope.
         RootedValue binExn(cx);
