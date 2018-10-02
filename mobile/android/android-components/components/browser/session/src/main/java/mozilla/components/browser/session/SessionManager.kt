@@ -78,7 +78,7 @@ class SessionManager(
 
         notifyObservers { onSessionAdded(session) }
 
-        if (selected || selectedIndex == NO_SELECTION) {
+        if (selected || (selectedIndex == NO_SELECTION && !session.isCustomTabSession())) {
             select(session)
         }
     }

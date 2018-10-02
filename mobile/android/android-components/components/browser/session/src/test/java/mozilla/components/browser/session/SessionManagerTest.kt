@@ -420,4 +420,15 @@ class SessionManagerTest {
 
         assertTrue(onlySelectedSessionMustHaveAThumbnail)
     }
+
+    @Test
+    fun `custom tab session will not be selected if it is the first session`() {
+        val session = Session("about:blank")
+        session.customTabConfig = Mockito.mock(CustomTabConfig::class.java)
+
+        val manager = SessionManager(mock())
+        manager.add(session)
+
+        assertNull(manager.selectedSession)
+    }
 }
