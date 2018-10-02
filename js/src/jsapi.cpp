@@ -4102,7 +4102,7 @@ JS_DecompileScript(JSContext* cx, HandleScript script)
     if (fun) {
         return JS_DecompileFunction(cx, fun);
     }
-    bool haveSource = script->scriptSource()->hasSourceData();
+    bool haveSource = script->scriptSource()->hasSourceText();
     if (!haveSource && !JSScript::loadSource(cx, script->scriptSource(), &haveSource)) {
         return nullptr;
     }

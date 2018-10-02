@@ -6682,7 +6682,7 @@ HandleInstantiationFailure(JSContext* cx, CallArgs args, const AsmJSMetadata& me
 
     // Source discarding is allowed to affect JS semantics because it is never
     // enabled for normal JS content.
-    bool haveSource = source->hasSourceData();
+    bool haveSource = source->hasSourceText();
     if (!haveSource && !JSScript::loadSource(cx, source, &haveSource)) {
         return false;
     }
@@ -7618,7 +7618,7 @@ js::AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool isToSource)
         return nullptr;
     }
 
-    bool haveSource = source->hasSourceData();
+    bool haveSource = source->hasSourceText();
     if (!haveSource && !JSScript::loadSource(cx, source, &haveSource)) {
         return nullptr;
     }
@@ -7669,7 +7669,7 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
         return nullptr;
     }
 
-    bool haveSource = source->hasSourceData();
+    bool haveSource = source->hasSourceText();
     if (!haveSource && !JSScript::loadSource(cx, source, &haveSource)) {
         return nullptr;
     }
