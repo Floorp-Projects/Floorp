@@ -11,8 +11,8 @@ async function testVal(aExpected, overflowSide = "") {
 
   gURLBar.focus();
   Assert.equal(document.activeElement, gURLBar.inputField, "URL Bar should be focused");
-  Assert.equal(gURLBar.scheme.value, "", "Check the scheme value");
-  Assert.equal(getComputedStyle(gURLBar.scheme).visibility, "hidden",
+  Assert.equal(gURLBar.valueFormatter.scheme.value, "", "Check the scheme value");
+  Assert.equal(getComputedStyle(gURLBar.valueFormatter.scheme).visibility, "hidden",
                "Check the scheme box visibility");
 
   gURLBar.blur();
@@ -26,7 +26,7 @@ async function testVal(aExpected, overflowSide = "") {
   if (scheme == "http://" && Services.prefs.getBoolPref("browser.urlbar.trimURLs", true))
     scheme = "";
 
-  Assert.equal(gURLBar.scheme.value, scheme, "Check the scheme value");
+  Assert.equal(gURLBar.valueFormatter.scheme.value, scheme, "Check the scheme value");
   let isOverflowed = gURLBar.inputField.scrollWidth > gURLBar.inputField.clientWidth;
   Assert.equal(isOverflowed, !!overflowSide, "Check The input field overflow");
   Assert.equal(gURLBar.getAttribute("textoverflow"), overflowSide,
@@ -34,7 +34,7 @@ async function testVal(aExpected, overflowSide = "") {
   if (overflowSide) {
     let side = gURLBar.inputField.scrollLeft == 0 ? "end" : "start";
     Assert.equal(side, overflowSide, "Check the overflow side");
-    Assert.equal(getComputedStyle(gURLBar.scheme).visibility,
+    Assert.equal(getComputedStyle(gURLBar.valueFormatter.scheme).visibility,
                  scheme && isOverflowed && overflowSide == "start" ? "visible" : "hidden",
                  "Check the scheme box visibility");
   }

@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
 });
 
@@ -95,7 +96,13 @@ class UrlbarInput {
       });
     }
 
+    XPCOMUtils.defineLazyGetter(this, "valueFormatter", () => {
+      return new UrlbarValueFormatter(this);
+    });
+
     this.addEventListener("input", this);
+    this.inputField.addEventListener("blur", this);
+    this.inputField.addEventListener("focus", this);
     this.inputField.addEventListener("mousedown", this);
     this.inputField.addEventListener("overflow", this);
     this.inputField.addEventListener("underflow", this);
@@ -116,7 +123,11 @@ class UrlbarInput {
     return UrlbarPrefs.get("trimURLs") ? this.window.trimURL(val) : val;
   }
 
+  /**
+   * Applies styling to the text in the urlbar input, depending on the text.
+   */
   formatValue() {
+    this.valueFormatter.update();
   }
 
   closePopup() {
@@ -307,6 +318,14 @@ class UrlbarInput {
   }
 
   // Event handlers below.
+
+  _onblur(event) {
+    this.formatValue();
+  }
+
+  _onfocus(event) {
+    this.formatValue();
+  }
 
   _onmousedown(event) {
     if (event.button == 0 &&
