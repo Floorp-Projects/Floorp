@@ -156,6 +156,13 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             "default": False,
             "help": "Tries to enable the WebRender compositor.",
         }],
+        [["--setpref"], {
+            "action": "append",
+            "metavar": "PREF=VALUE",
+            "dest": "extra_prefs",
+            "default": [],
+            "help": "Defines an extra user preference."}
+         ],
     ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, **kwargs):
@@ -356,6 +363,8 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             options += self.config['talos_extra_options']
         if self.config.get('code_coverage', False):
             options.extend(['--code-coverage'])
+        if self.config['extra_prefs']:
+            options.extend(['--setpref={}'.format(p) for p in self.config['extra_prefs']])
         return options
 
     def populate_webroot(self):

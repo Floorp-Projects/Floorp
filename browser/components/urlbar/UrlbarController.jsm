@@ -7,32 +7,7 @@
 var EXPORTED_SYMBOLS = ["QueryContext", "UrlbarController"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-// XXX This is a fake manager to provide a basic integration test whilst we
-// are still constructing the manager.
-// eslint-disable-next-line require-jsdoc
-const ProvidersManager = {
-  queryStart(queryContext, controller) {
-    queryContext.results = [];
-    for (let i = 0; i < queryContext.maxResults; i++) {
-      const SWITCH_TO_TAB = Math.random() < .3;
-      let url = "http://www." + queryContext.searchString;
-      while (Math.random() < .9) {
-        url += queryContext.searchString;
-      }
-      let title = queryContext.searchString;
-      while (Math.random() < .5) {
-        title += queryContext.isPrivate ? " private" : " foo bar";
-      }
-      queryContext.results.push({
-        title,
-        type: SWITCH_TO_TAB ? "switchtotab" : "normal",
-        url,
-      });
-    }
-    controller.receiveResults(queryContext);
-  },
-};
+ChromeUtils.import("resource:///modules/UrlbarProvidersManager.jsm");
 
 /**
  * QueryContext defines a user's autocomplete input from within the Address Bar.
@@ -110,7 +85,7 @@ class UrlbarController {
    *   Intended for use in unit tests only.
    */
   constructor(options = {}) {
-    this.manager = options.manager || ProvidersManager;
+    this.manager = options.manager || UrlbarProvidersManager;
 
     this._listeners = new Set();
   }
@@ -120,21 +95,22 @@ class UrlbarController {
    *
    * @param {QueryContext} queryContext The query details.
    */
-  handleQuery(queryContext) {
+  async startQuery(queryContext) {
     queryContext.autoFill = Services.prefs.getBoolPref("browser.urlbar.autoFill", true);
 
     this._notify("onQueryStarted", queryContext);
 
-    this.manager.queryStart(queryContext, this);
+    await this.manager.startQuery(queryContext, this);
   }
 
   /**
-   * Cancels an in-progress query.
+   * Cancels an in-progress query. Note, queries may continue running if they
+   * can't be canceled.
    *
    * @param {QueryContext} queryContext The query details.
    */
   cancelQuery(queryContext) {
-    this.manager.queryCancel(queryContext);
+    this.manager.cancelQuery(queryContext);
 
     this._notify("onQueryCancelled", queryContext);
   }

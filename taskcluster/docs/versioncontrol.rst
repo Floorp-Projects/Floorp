@@ -15,14 +15,20 @@ The ``robustcheckout`` Mercurial extension is used throughout CI to
 perform clones and working directory updates. The canonical home of
 the extension is in the
 https://hg.mozilla.org/hgcustom/version-control-tools repository
-at the path ``hgext/robustcheckout/__init__.py``. A copy of the
-extension is vendored at
-``testing/mozharness/external_tools/robustcheckout.py``.
+at the path ``hgext/robustcheckout/__init__.py``.
+
 
 When upgrading Mercurial, the ``robustcheckout`` extension should also
 be updated to ensure it is compatible with the version of Mercurial
 being upgraded to. Typically, one simply copies the latest version
-from ``version-control-tools`` into the vendored location.
+from ``version-control-tools`` into the vendored locations.
+
+The locations are as follows:
+
+- In-tree: ``testing/mozharness/external_tools/robustcheckout.py``
+- Treescript: ``https://github.com/mozilla-releng/treescript/tree/master/treescript/py2/robustcheckout.py``
+- build-puppet: ``https://github.com/mozilla-releng/build-puppet/blob/master/modules/mercurial/files/robustcheckout.py``
+
 
 Debian Packages for Debian Based Docker Images
 ----------------------------------------------

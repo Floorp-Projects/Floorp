@@ -167,10 +167,6 @@ const PREFS_CONFIG = new Map([
     title: "Experiment to remove tiles that are the same as the default search",
     value: true,
   }],
-  ["improvesearch.topSiteSearchShortcuts", {
-    title: "Experiment to show special top sites that perform keyword searches",
-    value: UpdateUtils.getUpdateChannel(true) !== "release",
-  }],
   ["improvesearch.topSiteSearchShortcuts.searchEngines", {
     title: "An ordered, comma-delimited list of search shortcuts that we should try and pin",
     // This pref is dynamic as the shortcuts vary depending on the region

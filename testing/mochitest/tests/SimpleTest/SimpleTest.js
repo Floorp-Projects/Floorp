@@ -731,7 +731,7 @@ SimpleTest.promiseFocus = function (targetWindow, expectBlankPage)
  * @param targetWindow
  *        optional window to be loaded and focused, defaults to 'window'.
  *        This may also be a <browser> element, in which case the window within
- *        that browser will be focused.
+ *        that browser will be focused. This cannot be a window CPOW.
  * @param expectBlankPage
  *        true if targetWindow.location is 'about:blank'. Defaults to false
  */
@@ -888,35 +888,15 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     }
 
     var isWrapper = Cu.isCrossProcessWrapper(targetWindow);
-    if (isWrapper || (browser && browser.isRemoteBrowser)) {
-        var mustFocusSubframe = false;
-        if (isWrapper) {
-            // Look for a tabbrowser and see if targetWindow corresponds to one
-            // within that tabbrowser. If not, just return.
-            var tabBrowser = window.gBrowser || null;
-            browser = tabBrowser ? tabBrowser.getBrowserForContentWindow(targetWindow.top) : null;
-            if (!browser) {
-                SimpleTest.info("child process window cannot be focused");
-                return;
-            }
+    if (isWrapper) {
+        throw new Error("Can't pass CPOW to SimpleTest.focus as the content window.");
+    }
 
-            mustFocusSubframe = (targetWindow != targetWindow.top);
-        }
-
-        // If a subframe in a child process needs to be focused, first focus the
-        // parent frame, then send a WaitForFocus:FocusChild message to the child
-        // containing the subframe to focus.
+    if (browser && browser.isRemoteBrowser) {
         browser.messageManager.addMessageListener("WaitForFocus:ChildFocused", function waitTest(msg) {
-            if (mustFocusSubframe) {
-                mustFocusSubframe = false;
-                var mm = gBrowser.selectedBrowser.messageManager;
-                mm.sendAsyncMessage("WaitForFocus:FocusChild", {}, { child: targetWindow } );
-            }
-            else {
-                browser.messageManager.removeMessageListener("WaitForFocus:ChildFocused", waitTest);
-                SimpleTest._pendingWaitForFocusCount--;
-                setTimeout(callback, 0, browser ? browser.contentWindowAsCPOW : targetWindow);
-            }
+            browser.messageManager.removeMessageListener("WaitForFocus:ChildFocused", waitTest);
+            SimpleTest._pendingWaitForFocusCount--;
+            setTimeout(callback, 0, browser);
         });
 
         // Serialize the waitForFocusInner function and run it in the child process.

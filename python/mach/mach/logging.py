@@ -93,7 +93,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
 
     def set_terminal(self, terminal):
         self.terminal = terminal
-        self._sgr0 = blessings.tigetstr('sgr0') or '' if terminal and blessings else ''
+        self._sgr0 = terminal.normal if terminal and blessings else ''
 
     def format(self, record):
         f = record.msg.format(**record.params)

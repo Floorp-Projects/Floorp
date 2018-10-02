@@ -27,6 +27,9 @@ nsFontInflationData::FindFontInflationDataFor(const nsIFrame *aFrame)
   const nsIFrame *bfc = FlowRootFor(aFrame);
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
                "should have found a flow root");
+  MOZ_ASSERT(aFrame->GetWritingMode().IsVertical() ==
+               bfc->GetWritingMode().IsVertical(),
+             "current writing mode should match that of our flow root");
 
   return bfc->GetProperty(FontInflationDataProperty());
 }
@@ -39,14 +42,14 @@ nsFontInflationData::UpdateFontInflationDataISizeFor(const ReflowInput& aReflowI
                "should have been given a flow root");
   nsFontInflationData *data = bfc->GetProperty(FontInflationDataProperty());
   bool oldInflationEnabled;
-  nscoord oldNCAISize;
+  nscoord oldUsableISize;
   if (data) {
-    oldNCAISize = data->mNCAISize;
+    oldUsableISize = data->mUsableISize;
     oldInflationEnabled = data->mInflationEnabled;
   } else {
     data = new nsFontInflationData(bfc);
     bfc->SetProperty(FontInflationDataProperty(), data);
-    oldNCAISize = -1;
+    oldUsableISize = -1;
     oldInflationEnabled = true; /* not relevant */
   }
 
@@ -55,8 +58,7 @@ nsFontInflationData::UpdateFontInflationDataISizeFor(const ReflowInput& aReflowI
   if (oldInflationEnabled != data->mInflationEnabled)
     return true;
 
-  return oldInflationEnabled &&
-         oldNCAISize != data->mNCAISize;
+  return oldInflationEnabled && oldUsableISize != data->mUsableISize;
 }
 
 /* static */ void
@@ -73,7 +75,7 @@ nsFontInflationData::MarkFontInflationDataTextDirty(nsIFrame *aBFCFrame)
 
 nsFontInflationData::nsFontInflationData(nsIFrame *aBFCFrame)
   : mBFCFrame(aBFCFrame)
-  , mNCAISize(0)
+  , mUsableISize(0)
   , mTextAmount(0)
   , mTextThreshold(0)
   , mInflationEnabled(false)
@@ -214,7 +216,23 @@ nsFontInflationData::UpdateISize(const ReflowInput &aReflowInput)
     mTextDirty = true;
   }
 
-  mNCAISize = newNCAISize;
+  // Font inflation increases the font size for a given flow root so that the
+  // text is legible when we've zoomed such that the respective nearest common
+  // ancestor's (NCA) full inline-size (ISize) fills the screen. We assume how-
+  // ever that we don't want to zoom out further than the root iframe's ISize
+  // (i.e. the viewport for a top-level document, or the containing iframe
+  // otherwise), since in some cases zooming out further might not even be
+  // possible or make sense.
+  // Hence the ISize assumed to be usable for displaying text is limited to the
+  // visible area.
+  nsPresContext* presContext = bfc->PresContext();
+  MOZ_ASSERT(bfc->GetWritingMode().IsVertical() ==
+               nca->GetWritingMode().IsVertical(),
+             "writing mode of NCA should match that of its flow root");
+  nscoord iFrameISize = bfc->GetWritingMode().IsVertical()
+                          ? presContext->GetVisibleArea().height
+                          : presContext->GetVisibleArea().width;
+  mUsableISize = std::min(iFrameISize, newNCAISize);
   mTextThreshold = newTextThreshold;
   mInflationEnabled = mTextAmount >= mTextThreshold;
 }

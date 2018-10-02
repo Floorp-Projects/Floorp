@@ -1113,6 +1113,9 @@ this.VideoControlsImplPageWidget = class {
           options: {
             easing: "ease",
             duration: 400,
+             // The fill mode here and below is a workaround to avoid flicker
+             // due to bug 1495350.
+             fill: "both",
           },
         },
         controlBar: {
@@ -1123,6 +1126,7 @@ this.VideoControlsImplPageWidget = class {
           options: {
             easing: "ease",
             duration: 200,
+            fill: "both",
           },
         },
         statusOverlay: {
@@ -1133,6 +1137,7 @@ this.VideoControlsImplPageWidget = class {
           ],
           options: {
             duration: 1050,
+            fill: "both",
           },
         },
       },
@@ -1203,7 +1208,7 @@ this.VideoControlsImplPageWidget = class {
               case "finished":
                 // There is no animation currently playing.
                 // Schedule a new animation with the desired playback direction.
-                animation.updatePlaybackRate(fadeIn ? 1 : -1);
+                animation.playbackRate = fadeIn ? 1 : -1;
                 animation.play();
                 break;
               case "running":
@@ -1222,13 +1227,20 @@ this.VideoControlsImplPageWidget = class {
           animation.cancel();
           finishedPromise = Promise.resolve();
         }
-        finishedPromise.then(() => {
+        finishedPromise.then(animation => {
           if (element == this.controlBar) {
             this.onControlBarAnimationFinished();
           }
           element.classList.remove(fadeIn ? "fadein" : "fadeout");
           if (!fadeIn) {
             element.hidden = true;
+          }
+          if (animation) {
+            // Explicitly clear the animation effect so that filling animations
+            // stop overwriting stylesheet styles. Remove when bug 1495350 is
+            // fixed and animations are no longer filling animations.
+            // This also stops them from accumulating (See bug 1253476).
+            animation.cancel();
           }
         }, () => { /* Do nothing on rejection */ });
       },
