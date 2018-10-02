@@ -426,7 +426,7 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
       }
       case OpUpdateResource::TOpDeleteImage: {
         const auto& op = cmd.get_OpDeleteImage();
-        aUpdates.DeleteImage(op.key());
+        DeleteImage(op.key(), aUpdates);
         break;
       }
       case OpUpdateResource::TOpDeleteFont: {
@@ -456,27 +456,28 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
     return true;
   }
 
-  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Acquire(aExtId);
-  if (dSurf) {
-    auto it = mSharedSurfaceIds.emplace(wr::AsUint64(aExtId));
-    if (!it.second) {
-      // We already have a mapping for this image, so decrement the ownership
-      // counter just increased unnecessarily. This can happen when an image is
-      // slow to decode and we need to invalidate it by updating its image key.
-      SharedSurfacesParent::Release(aExtId);
-    }
+  auto key = wr::AsUint64(aKey);
+  auto it = mSharedSurfaceIds.find(key);
+  if (it != mSharedSurfaceIds.end()) {
+    gfxCriticalNote << "Readding known shared surface: " << key;
+    return false;
+  }
 
-    if (!gfxEnv::EnableWebRenderRecording()) {
-      wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
-                                     dSurf->GetFormat());
-      aResources.AddExternalImage(aKey, descriptor, aExtId,
-                                  wr::WrExternalImageBufferType::ExternalBuffer,
-                                  0);
-      return true;
-    }
-  } else {
+  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Acquire(aExtId);
+  if (!dSurf) {
     gfxCriticalNote << "DataSourceSurface of SharedSurfaces does not exist for extId:" << wr::AsUint64(aExtId);
     return false;
+  }
+
+  mSharedSurfaceIds.insert(std::make_pair(key, aExtId));
+
+  if (!gfxEnv::EnableWebRenderRecording()) {
+    wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
+                                   dSurf->GetFormat());
+    aResources.AddExternalImage(aKey, descriptor, aExtId,
+                                wr::WrExternalImageBufferType::ExternalBuffer,
+                                0);
+    return true;
   }
 
   DataSourceSurface::MappedSurface map;
@@ -570,16 +571,30 @@ WebRenderBridgeParent::UpdateExternalImage(wr::ExternalImageId aExtId,
     return true;
   }
 
-  uint64_t imageId = wr::AsUint64(aExtId);
-  if (mSharedSurfaceIds.find(imageId) == mSharedSurfaceIds.end()) {
-    gfxCriticalNote << "Updating unknown shared surface: " << wr::AsUint64(aExtId);
+  auto key = wr::AsUint64(aKey);
+  auto it = mSharedSurfaceIds.find(key);
+  if (it == mSharedSurfaceIds.end()) {
+    gfxCriticalNote << "Updating unknown shared surface: " << key;
     return false;
   }
 
-  RefPtr<DataSourceSurface> dSurf = SharedSurfacesParent::Get(aExtId);
+  RefPtr<DataSourceSurface> dSurf;
+  if (it->second == aExtId) {
+    dSurf = SharedSurfacesParent::Get(aExtId);
+  } else {
+    dSurf = SharedSurfacesParent::Acquire(aExtId);
+  }
+
   if (!dSurf) {
     gfxCriticalNote << "Shared surface does not exist for extId:" << wr::AsUint64(aExtId);
     return false;
+  }
+
+  if (!(it->second == aExtId)) {
+    // We already have a mapping for this image key, so ensure we release the
+    // previous external image ID.
+    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, it->second);
+    it->second = aExtId;
   }
 
   if (!gfxEnv::EnableWebRenderRecording()) {
@@ -1036,11 +1051,6 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
         RemovePipelineIdForCompositable(op.pipelineId(), aTxn);
         break;
       }
-      case WebRenderParentCommand::TOpRemoveExternalImageId: {
-        const OpRemoveExternalImageId& op = cmd.get_OpRemoveExternalImageId();
-        RemoveExternalImageId(op.externalImageId());
-        break;
-      }
       case WebRenderParentCommand::TOpReleaseTextureOfImage: {
         const OpReleaseTextureOfImage& op = cmd.get_OpReleaseTextureOfImage();
         ReleaseTextureOfImage(op.key());
@@ -1274,17 +1284,20 @@ WebRenderBridgeParent::RemovePipelineIdForCompositable(const wr::PipelineId& aPi
 }
 
 void
-WebRenderBridgeParent::RemoveExternalImageId(const ExternalImageId& aImageId)
+WebRenderBridgeParent::DeleteImage(const ImageKey& aKey,
+                                   wr::TransactionBuilder& aUpdates)
 {
   if (mDestroyed) {
     return;
   }
 
-  uint64_t imageId = wr::AsUint64(aImageId);
-  if (mSharedSurfaceIds.find(imageId) != mSharedSurfaceIds.end()) {
-    mSharedSurfaceIds.erase(imageId);
-    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, aImageId);
+  auto it = mSharedSurfaceIds.find(wr::AsUint64(aKey));
+  if (it != mSharedSurfaceIds.end()) {
+    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, it->second);
+    mSharedSurfaceIds.erase(it);
   }
+
+  aUpdates.DeleteImage(aKey);
 }
 
 void
@@ -1858,8 +1871,7 @@ WebRenderBridgeParent::ClearResources()
   }
   mAsyncCompositables.clear();
   for (const auto& entry : mSharedSurfaceIds) {
-    wr::ExternalImageId id = wr::ToExternalImageId(entry);
-    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, id);
+    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, entry.second);
   }
   mSharedSurfaceIds.clear();
 

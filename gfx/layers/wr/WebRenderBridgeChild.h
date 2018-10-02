@@ -101,8 +101,6 @@ public:
                                     const CompositableHandle& aHandlee);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId);
 
-  void DeallocExternalImageId(const wr::ExternalImageId& aImageId);
-
   /// Release TextureClient that is bounded to ImageKey.
   /// It is used for recycling TextureClient.
   void ReleaseTextureOfImage(const wr::ImageKey& aKey);

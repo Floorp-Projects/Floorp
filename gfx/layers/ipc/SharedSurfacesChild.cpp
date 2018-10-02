@@ -422,14 +422,8 @@ SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId,
   MOZ_ASSERT(NS_IsMainThread());
 
   for (const auto& entry : aKeys) {
-    if (entry.mManager->IsDestroyed()) {
-      continue;
-    }
-
-    entry.mManager->AddImageKeyForDiscard(entry.mImageKey);
-    WebRenderBridgeChild* wrBridge = entry.mManager->WrBridge();
-    if (wrBridge) {
-      wrBridge->DeallocExternalImageId(aId);
+    if (!entry.mManager->IsDestroyed()) {
+      entry.mManager->AddImageKeyForDiscard(entry.mImageKey);
     }
   }
 

@@ -223,13 +223,6 @@ WebRenderBridgeChild::GetNextExternalImageId()
 }
 
 void
-WebRenderBridgeChild::DeallocExternalImageId(const wr::ExternalImageId& aImageId)
-{
-  AddWebRenderParentCommand(
-    OpRemoveExternalImageId(aImageId));
-}
-
-void
 WebRenderBridgeChild::ReleaseTextureOfImage(const wr::ImageKey& aKey)
 {
   AddWebRenderParentCommand(
