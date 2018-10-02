@@ -45,6 +45,7 @@ typedef struct _MacSandboxInfo {
     , hasFilePrivileges(false)
     , hasSandboxedProfile(false)
     , hasAudio(false)
+    , hasWindowServer(false)
     , shouldLog(true)
   {
   }
@@ -55,6 +56,7 @@ typedef struct _MacSandboxInfo {
   bool hasFilePrivileges;
   bool hasSandboxedProfile;
   bool hasAudio;
+  bool hasWindowServer;
   MacSandboxPluginInfo pluginInfo;
   std::string appPath;
   std::string appBinaryPath;
