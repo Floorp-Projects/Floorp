@@ -270,13 +270,15 @@ public final class PanZoomController extends JNIObject {
             flushEventQueue();
         } else if (mAttached) {
             mAttached = false;
-            disposeNative();
             enableEventQueue();
         }
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko") @Override // JNIObject
-    protected native void disposeNative();
+    @Override // JNIObject
+    protected void disposeNative() {
+        // Disposal happens in native code.
+        throw new UnsupportedOperationException();
+    }
 
     @WrapForJNI(stubName = "SetIsLongpressEnabled") // Called from test thread.
     private native void nativeSetIsLongpressEnabled(boolean isLongpressEnabled);

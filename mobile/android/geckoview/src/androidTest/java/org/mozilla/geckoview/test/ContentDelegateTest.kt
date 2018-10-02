@@ -106,6 +106,33 @@ class ContentDelegateTest : BaseSessionTest() {
 
     @IgnoreCrash
     @ReuseSession(false)
+    @WithDisplay(width = 10, height = 10)
+    @Test fun crashContent_tapAfterCrash() {
+        // This test doesn't make sense without multiprocess
+        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+        // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
+        // that waits for debugger to attach during a SIGSEGV.
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.cpuArch == "x86",
+                   equalTo(false))
+
+        mainSession.delegateUntilTestEnd(object : Callbacks.ContentDelegate {
+            override fun onCrash(session: GeckoSession) {
+                mainSession.open()
+                mainSession.loadTestPath(HELLO_HTML_PATH)
+            }
+        })
+
+        mainSession.synthesizeTap(5, 5)
+        mainSession.loadUri(CONTENT_CRASH_URL)
+        mainSession.waitForPageStop()
+
+        mainSession.synthesizeTap(5, 5)
+        mainSession.reload()
+        mainSession.waitForPageStop()
+    }
+
+    @IgnoreCrash
+    @ReuseSession(false)
     @Test fun crashContentMultipleSessions() {
         // This test doesn't make sense without multiprocess
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
