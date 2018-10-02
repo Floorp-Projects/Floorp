@@ -137,7 +137,7 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _callbacks: {
-    // The earlist that a policy callback can run. This will
+    // The earliest that a policy callback can run. This will
     // happen right after the Policy Engine itself has started,
     // and before the Add-ons Manager has started.
     onBeforeAddons: [],

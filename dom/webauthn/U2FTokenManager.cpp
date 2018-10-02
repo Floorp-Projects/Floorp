@@ -244,7 +244,7 @@ U2FTokenManager::RunSendPromptNotification(nsString aJSON)
     return;
   }
 
-  nsCOMPtr<nsIU2FTokenManager> self = do_QueryInterface(this);
+  nsCOMPtr<nsIU2FTokenManager> self = this;
   MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(self, "webauthn-prompt", aJSON.get()));
 }
 

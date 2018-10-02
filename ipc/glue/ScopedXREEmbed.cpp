@@ -56,7 +56,7 @@ ScopedXREEmbed::Start()
   if (NS_FAILED(rv))
     return;
 
-  localFile = do_QueryInterface(parent);
+  localFile = parent;
   NS_ENSURE_TRUE_VOID(localFile);
 
 #ifdef OS_MACOSX

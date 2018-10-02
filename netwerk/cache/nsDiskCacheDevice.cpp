@@ -1079,7 +1079,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsIFile * parentDir)
     rv = directory->AppendNative(NS_LITERAL_CSTRING("Cache"));
     if (NS_FAILED(rv))  return;
 
-    mCacheDirectory = do_QueryInterface(directory);
+    mCacheDirectory = directory;
 }
 
 

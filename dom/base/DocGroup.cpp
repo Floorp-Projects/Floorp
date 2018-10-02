@@ -86,7 +86,7 @@ DocGroup::ReportPerformanceInfo()
 
   // iterating on documents until we find the top window
   for (const auto& document : *this) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
+    nsCOMPtr<nsIDocument> doc = document;
     MOZ_ASSERT(doc);
     nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
     if (!docURI) {

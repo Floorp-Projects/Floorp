@@ -186,7 +186,7 @@ SharedThreadPool::SharedThreadPool(const nsCString& aName,
   , mPool(aPool)
   , mRefCnt(0)
 {
-  mEventTarget = do_QueryInterface(aPool);
+  mEventTarget = aPool;
 }
 
 SharedThreadPool::~SharedThreadPool()

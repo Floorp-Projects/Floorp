@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-/* global addMessageListener, addEventListener, content */
+/* global addMessageListener, addEventListener, content, sendAsyncMessage */
 
 /**
  * This frame script injects itself into perf-html.io and injects the profile
@@ -10,8 +10,11 @@
  */
 
 const TRANSFER_EVENT = "devtools:perf-html-transfer-profile";
+const SYMBOL_TABLE_REQUEST_EVENT = "devtools:perf-html-request-symbol-table";
+const SYMBOL_TABLE_RESPONSE_EVENT = "devtools:perf-html-reply-symbol-table";
 
 let gProfile = null;
+const symbolReplyPromiseMap = new Map();
 
 addMessageListener(TRANSFER_EVENT, e => {
   gProfile = e.data;
@@ -20,6 +23,20 @@ addMessageListener(TRANSFER_EVENT, e => {
   // If not try again at DOMContentLoaded which should be called after the script
   // tag was synchronously loaded in.
   addEventListener("DOMContentLoaded", connectToPage);
+});
+
+addMessageListener(SYMBOL_TABLE_RESPONSE_EVENT, e => {
+  const { debugName, breakpadId, status, result, error } = e.data;
+  const promiseKey = [debugName, breakpadId].join(":");
+  const { resolve, reject } = symbolReplyPromiseMap.get(promiseKey);
+  symbolReplyPromiseMap.delete(promiseKey);
+
+  if (status === "success") {
+    const [addresses, index, buffer] = result;
+    resolve([addresses, index, buffer]);
+  } else {
+    reject(error);
+  }
 });
 
 function connectToPage() {
@@ -32,17 +49,14 @@ function connectToPage() {
   }
 }
 
-/**
- * For now, do not try to symbolicate. Reject any attempt.
- */
 function getSymbolTable(debugName, breakpadId) {
-  // Errors will not properly clone into the content page as they bring privileged
-  // stacks information into the page. In this case provide a mock object to maintain
-  // the Error type object shape.
-  const error = {
-    message: `The DevTools' "perf" actor does not support symbolication.`
-  };
-  return Promise.reject(error);
+  return new Promise((resolve, reject) => {
+    sendAsyncMessage(SYMBOL_TABLE_REQUEST_EVENT, { debugName, breakpadId });
+    symbolReplyPromiseMap.set([debugName, breakpadId].join(":"), {
+      resolve,
+      reject,
+    });
+  });
 }
 
 // The following functions handle the security of cloning the object into the page.

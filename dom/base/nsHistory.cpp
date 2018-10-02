@@ -126,8 +126,7 @@ nsHistory::GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(win->GetExtantDoc());
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;

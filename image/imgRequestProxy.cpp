@@ -720,7 +720,7 @@ imgRequestProxy::GetImage(imgIContainer** aImage)
   RefPtr<Image> image = GetImage();
   nsCOMPtr<imgIContainer> imageToReturn;
   if (image) {
-    imageToReturn = do_QueryInterface(image);
+    imageToReturn = image;
   }
   if (!imageToReturn && GetOwner()) {
     imageToReturn = GetOwner()->GetImage();

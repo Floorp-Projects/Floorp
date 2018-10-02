@@ -2046,46 +2046,42 @@ nsDisplayListBuilder::GetWindowDraggingRegion() const
 }
 
 /**
- * Removes modified frames and rects from |aRegion|.
+ * Removes modified frames and rects from this WeakFrameRegion.
  */
-static void
-RemoveModifiedFramesAndRects(nsDisplayListBuilder::WeakFrameRegion& aRegion)
+void
+nsDisplayListBuilder::WeakFrameRegion::RemoveModifiedFramesAndRects()
 {
-  std::vector<WeakFrame>& frames = aRegion.mFrames;
-  nsTArray<pixman_box32_t>& rects = aRegion.mRects;
-
-  MOZ_ASSERT(frames.size() == rects.Length());
+  MOZ_ASSERT(mFrames.Length() == mRects.Length());
 
   uint32_t i = 0;
-  uint32_t length = frames.size();
+  uint32_t length = mFrames.Length();
 
   while (i < length) {
-    WeakFrame& frame = frames[i];
+    auto& wrapper = mFrames[i];
 
-    if (!frame.IsAlive() || frame->IsFrameModified()) {
-      // To avoid O(n) shifts in the array, move the last element of the array
-      // to the current position and decrease the array length. Moving WeakFrame
-      // inside of the array causes a new WeakFrame to be created and registered
-      // with PresShell. We could avoid this by, for example, using a wrapper
-      // class for WeakFrame, or by storing raw  WeakFrame pointers.
-      frames[i] = frames[length - 1];
-      rects[i] = rects[length - 1];
+    if (!wrapper.mWeakFrame->IsAlive() ||
+        wrapper.mWeakFrame->GetFrame()->IsFrameModified()) {
+      // To avoid multiple O(n) shifts in the array, move the last element of
+      // the array to the current position and decrease the array length.
+      mFrameSet.RemoveEntry(wrapper.mFrame);
+      mFrames[i] = std::move(mFrames[length - 1]);
+      mRects[i] = std::move(mRects[length - 1]);
       length--;
     } else {
       i++;
     }
   }
 
-  frames.resize(length);
-  rects.TruncateLength(length);
+  mFrames.TruncateLength(length);
+  mRects.TruncateLength(length);
 }
 
 void
 nsDisplayListBuilder::RemoveModifiedWindowRegions()
 {
-  RemoveModifiedFramesAndRects(mRetainedWindowDraggingRegion);
-  RemoveModifiedFramesAndRects(mRetainedWindowNoDraggingRegion);
-  RemoveModifiedFramesAndRects(mWindowExcludeGlassRegion);
+  mRetainedWindowDraggingRegion.RemoveModifiedFramesAndRects();
+  mRetainedWindowNoDraggingRegion.RemoveModifiedFramesAndRects();
+  mWindowExcludeGlassRegion.RemoveModifiedFramesAndRects();
 }
 
 void
