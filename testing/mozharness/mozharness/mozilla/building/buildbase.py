@@ -23,7 +23,9 @@ import glob
 import sys
 from datetime import datetime
 import re
-from mozharness.base.config import BaseConfig, parse_config_file, DEFAULT_CONFIG_PATH
+from mozharness.base.config import (
+    BaseConfig, parse_config_file, DEFAULT_CONFIG_PATH,
+)
 from mozharness.base.log import ERROR, OutputParser, FATAL
 from mozharness.base.script import PostScriptRun
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -31,7 +33,6 @@ from mozharness.mozilla.automation import (
     AutomationMixin,
     EXIT_STATUS_DICT,
     TBPL_STATUS_DICT,
-    TBPL_EXCEPTION,
     TBPL_FAILURE,
     TBPL_RETRY,
     TBPL_WARNING,
@@ -62,7 +63,7 @@ Skipping run_tooltool...',
 }
 
 
-### Output Parsers
+# Output Parsers
 
 TBPL_UPLOAD_ERRORS = [
     {
@@ -164,10 +165,12 @@ class CheckTestCompleteParser(OutputParser):
 
         return self.tbpl_status
 
+
 class MozconfigPathError(Exception):
     """
     There was an error getting a mozconfig path from a mozharness config.
     """
+
 
 def get_mozconfig_path(script, config, dirs):
     """
@@ -258,21 +261,19 @@ class BuildingConfig(BaseConfig):
         # not matter. ie: you can supply --branch before --build-pool
         # or vice versa and the hierarchy will not be different
 
-        #### The order from highest precedence to lowest is:
-        ## There can only be one of these...
+        # ### The order from highest precedence to lowest is:
+        # # There can only be one of these...
         # 1) build_pool: this can be either staging, pre-prod, and prod cfgs
         # 2) branch: eg: mozilla-central, cedar, cypress, etc
         # 3) build_variant: these could be known like asan and debug
         #                   or a custom config
-        ##
-        ## There can be many of these
+        #
+        # # There can be many of these
         # 4) all other configs: these are any configs that are passed with
         #                       --cfg and --opt-cfg. There order is kept in
         #                       which they were passed on the cmd line. This
         #                       behaviour is maintains what happens by default
         #                       in mozharness
-        ##
-        ####
 
         # so, let's first assign the configs that hold a known position of
         # importance (1 through 3)
@@ -320,8 +321,9 @@ class BuildingConfig(BaseConfig):
         if pool_cfg_file:
             # take only the specific pool. If we are here, the pool
             # must be present
-            build_pool_configs = parse_config_file(pool_cfg_file,
-                                                   search_path=config_paths + [DEFAULT_CONFIG_PATH])
+            build_pool_configs = parse_config_file(
+                pool_cfg_file,
+                search_path=config_paths + [DEFAULT_CONFIG_PATH])
             all_config_dicts.append(
                 (pool_cfg_file, build_pool_configs[options.build_pool])
             )
@@ -362,7 +364,8 @@ class BuildOptionParser(object):
         'code-coverage-opt': 'builds/releng_sub_%s_configs/%s_code_coverage_opt.py',
         'source': 'builds/releng_sub_%s_configs/%s_source.py',
         'noopt-debug': 'builds/releng_sub_%s_configs/%s_noopt_debug.py',
-        'api-16-gradle-dependencies': 'builds/releng_sub_%s_configs/%s_api_16_gradle_dependencies.py',
+        'api-16-gradle-dependencies':
+            'builds/releng_sub_%s_configs/%s_api_16_gradle_dependencies.py',
         'api-16': 'builds/releng_sub_%s_configs/%s_api_16.py',
         'api-16-artifact': 'builds/releng_sub_%s_configs/%s_api_16_artifact.py',
         'api-16-debug': 'builds/releng_sub_%s_configs/%s_api_16_debug.py',
@@ -370,7 +373,8 @@ class BuildOptionParser(object):
         'api-16-debug-artifact': 'builds/releng_sub_%s_configs/%s_api_16_debug_artifact.py',
         'api-16-gradle': 'builds/releng_sub_%s_configs/%s_api_16_gradle.py',
         'api-16-gradle-artifact': 'builds/releng_sub_%s_configs/%s_api_16_gradle_artifact.py',
-        'api-16-without-google-play-services': 'builds/releng_sub_%s_configs/%s_api_16_without_google_play_services.py',
+        'api-16-without-google-play-services':
+            'builds/releng_sub_%s_configs/%s_api_16_without_google_play_services.py',
         'rusttests': 'builds/releng_sub_%s_configs/%s_rusttests.py',
         'rusttests-debug': 'builds/releng_sub_%s_configs/%s_rusttests_debug.py',
         'x86': 'builds/releng_sub_%s_configs/%s_x86.py',
@@ -386,7 +390,7 @@ class BuildOptionParser(object):
         'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
         'android-findbugs': 'builds/releng_sub_%s_configs/%s_findbugs.py',
         'android-geckoview-docs': 'builds/releng_sub_%s_configs/%s_geckoview_docs.py',
-        'valgrind' : 'builds/releng_sub_%s_configs/%s_valgrind.py',
+        'valgrind': 'builds/releng_sub_%s_configs/%s_valgrind.py',
         'artifact': 'builds/releng_sub_%s_configs/%s_artifact.py',
         'debug-artifact': 'builds/releng_sub_%s_configs/%s_debug_artifact.py',
         'devedition': 'builds/releng_sub_%s_configs/%s_devedition.py',
@@ -766,13 +770,12 @@ or run without that action (ie: --no-{action})"
             # dirs['abs_obj_dir'] can be different from env['MOZ_OBJDIR'] on
             # mac, and that confuses mach.
             del env['MOZ_OBJDIR']
-            return self.get_output_from_command(cmd,
-                cwd=dirs['abs_obj_dir'], env=env)
+            return self.get_output_from_command(
+                cmd, cwd=dirs['abs_obj_dir'], env=env)
         else:
             return None
 
     def query_buildid(self):
-        c = self.config
         if self.buildid:
             return self.buildid
 
@@ -1126,7 +1129,8 @@ or run without that action (ie: --no-{action})"
         dirs = self.query_abs_dirs()
 
         if 'MOZILLABUILD' in os.environ:
-            # We found many issues with intermittent build failures when not invoking mach via bash.
+            # We found many issues with intermittent build failures when not
+            # invoking mach via bash.
             # See bug 1364651 before considering changing.
             mach = [
                 os.path.join(os.environ['MOZILLABUILD'], 'msys', 'bin', 'bash.exe'),
@@ -1199,7 +1203,9 @@ or run without that action (ie: --no-{action})"
             cwd=objdir,
         )
         if not package_filename:
-            self.fatal("Unable to determine the package filename for the multi-l10n build. Was trying to run: %s" % package_cmd)
+            self.fatal(
+                "Unable to determine the package filename for the multi-l10n build. "
+                "Was trying to run: %s" % package_cmd)
 
         self.info('Multi-l10n package filename is: %s' % package_filename)
 
@@ -1216,7 +1222,7 @@ or run without that action (ie: --no-{action})"
             'echo-variable-UPLOAD_FILES',
             'AB_CD=multi',
         ]
-        output = self.get_output_from_command(
+        self.get_output_from_command(
             upload_files_cmd,
             cwd=objdir,
         )
@@ -1362,7 +1368,6 @@ or run without that action (ie: --no-{action})"
 
         return data
 
-
     def _load_sccache_stats(self):
         stats_file = os.path.join(
             self.query_abs_dirs()['abs_obj_dir'], 'sccache-stats.json'
@@ -1457,7 +1462,7 @@ or run without that action (ie: --no-{action})"
                                                         subtests[name]))
                     size_measurements.append(
                         {'name': name, 'value': subtests[name]})
-            except:
+            except Exception:
                 self.info('Unable to search %s for component sizes.' % installer)
                 size_measurements = []
 
@@ -1473,7 +1478,7 @@ or run without that action (ie: --no-{action})"
 
             return alert
 
-        if installer.endswith('.apk'): # Android
+        if installer.endswith('.apk'):  # Android
             yield filter_alert({
                 "name": "installer size",
                 "value": installer_size,
@@ -1494,8 +1499,6 @@ or run without that action (ie: --no-{action})"
         """
         Returns a dictionary of sections and their sizes.
         """
-        from StringIO import StringIO
-
         # Check for `rust_size`, our cross platform version of size. It should
         # be installed by tooltool in $abs_src_dir/rust-size/rust-size
         rust_size = os.path.join(self.query_abs_dirs()['abs_src_dir'],

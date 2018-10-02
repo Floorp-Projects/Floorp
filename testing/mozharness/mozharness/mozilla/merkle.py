@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-
 import struct
+
 
 def _round2(n):
     k = 1
@@ -8,11 +7,14 @@ def _round2(n):
         k <<= 1
     return k >> 1
 
+
 def _leaf_hash(hash_fn, leaf):
     return hash_fn(b'\x00' + leaf).digest()
 
+
 def _pair_hash(hash_fn, left, right):
     return hash_fn(b'\x01' + left + right).digest()
+
 
 class InclusionProof:
     """
@@ -56,7 +58,7 @@ class InclusionProof:
             raise Exception('Inclusion proof too short for log ID header')
         log_id_len, = struct.unpack('B', serialized[start:start+read])
         start += read
-        start += log_id_len # Ignore the log ID itself
+        start += log_id_len  # Ignore the log ID itself
 
         read = 8 + 8 + 2
         if len(serialized) < start + read:
@@ -118,9 +120,9 @@ class InclusionProof:
 
         return node
 
-
     def verify(self, hash_fn, leaf, leaf_index, tree_size, tree_head):
         return self._expected_head(hash_fn, leaf, leaf_index, tree_size) == tree_head
+
 
 class MerkleTree:
     """

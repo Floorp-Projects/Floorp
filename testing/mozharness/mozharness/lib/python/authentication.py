@@ -12,6 +12,7 @@ CREDENTIALS_PATH = os.path.expanduser("~/.mozilla/credentials.cfg")
 DIRNAME = os.path.dirname(CREDENTIALS_PATH)
 LDAP_PASSWORD = None
 
+
 def get_credentials():
     """ Returns http credentials.
 
@@ -45,6 +46,7 @@ def get_credentials():
         LDAP_PASSWORD = getpass.getpass()
 
     return https_username, LDAP_PASSWORD
+
 
 def get_credentials_path():
     if os.path.isfile(CREDENTIALS_PATH):

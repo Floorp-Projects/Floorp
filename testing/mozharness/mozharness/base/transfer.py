@@ -34,7 +34,7 @@ class TransferMixin(object):
             r = urllib2.urlopen(url, timeout=timeout)
             j = json.load(r)
             self.log(pprint.pformat(j), level=log_level)
-        except:
+        except BaseException:
             self.exception(message="Unable to download %s!" % url)
             raise
         return j
@@ -44,7 +44,7 @@ class TransferMixin(object):
                              scp_options=None,
                              error_level=ERROR,
                              create_remote_directory=True,
-                            ):
+                             ):
         """
         Create a remote directory and upload the contents of
         a local directory to it via scp only
@@ -77,7 +77,9 @@ class TransferMixin(object):
                                 cwd=dirs['abs_work_dir'],
                                 return_type='num_errors',
                                 error_list=mkdir_error_list):
-                self.log("Unable to create remote directory %s:%s!" % (remote_host, remote_path), level=error_level)
+                self.log(
+                    "Unable to create remote directory %s:%s!"
+                    % (remote_host, remote_path), level=error_level)
                 return -2
         if self.run_command([scp, '-oIdentityFile=%s' % ssh_key,
                              scp_options, '.',
@@ -85,5 +87,7 @@ class TransferMixin(object):
                             cwd=local_path,
                             return_type='num_errors',
                             error_list=SSHErrorList):
-            self.log("Unable to scp %s to %s:%s!" % (local_path, remote_host, remote_path), level=error_level)
+            self.log(
+                "Unable to scp %s to %s:%s!"
+                % (local_path, remote_host, remote_path), level=error_level)
             return -3

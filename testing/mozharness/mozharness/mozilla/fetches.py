@@ -22,7 +22,8 @@ class FetchesMixin(object):
 
         self._fetch_script = find_executable('fetch-content')
         if not self._fetch_script and 'GECKO_PATH' in os.environ:
-            self._fetch_script = os.path.join(os.environ['GECKO_PATH'],
+            self._fetch_script = os.path.join(
+                os.environ['GECKO_PATH'],
                 'taskcluster', 'script', 'misc', 'fetch-content')
         return self._fetch_script
 

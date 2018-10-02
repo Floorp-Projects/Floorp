@@ -78,6 +78,7 @@ def make_immutable(item):
 class LockedTuple(tuple):
     def __new__(cls, items):
         return tuple.__new__(cls, (make_immutable(x) for x in items))
+
     def __deepcopy__(self, memo):
         return [deepcopy(elem, memo) for elem in self]
 
@@ -135,7 +136,12 @@ class ReadOnlyDict(dict):
             result[k] = deepcopy(v, memo)
         return result
 
-DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "configs")
+
+DEFAULT_CONFIG_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "configs",
+)
+
 
 # parse_config_file {{{1
 def parse_config_file(file_name, quiet=False, search_path=None,
@@ -166,7 +172,8 @@ def parse_config_file(file_name, quiet=False, search_path=None,
         config = dict(json_config)
         fh.close()
     else:
-        raise RuntimeError("Unknown config file type %s! (config files must end in .json or .py)" % file_name)
+        raise RuntimeError(
+            "Unknown config file type %s! (config files must end in .json or .py)" % file_name)
     # TODO return file_path
     return config
 
@@ -258,7 +265,7 @@ class BaseConfig(object):
             # not add anything from the test invocation command line
             # arguments to the mozharness options.
             if option_args is None:
-                option_args=['dummy_mozharness_script_with_no_command_line_options.py']
+                option_args = ['dummy_mozharness_script_with_no_command_line_options.py']
         if config_options is None:
             config_options = []
         self._create_config_parser(config_options, usage)
@@ -408,7 +415,7 @@ class BaseConfig(object):
 
     def verify_actions_order(self, action_list):
         try:
-            indexes = [ self.all_actions.index(elt) for elt in action_list ]
+            indexes = [self.all_actions.index(elt) for elt in action_list]
             sorted_indexes = sorted(indexes)
             for i in range(len(indexes)):
                 if indexes[i] != sorted_indexes[i]:
@@ -456,7 +463,10 @@ class BaseConfig(object):
                     )
                 else:
                     all_cfg_files_and_dicts.append(
-                        (cf, parse_config_file(cf, search_path=config_paths + [DEFAULT_CONFIG_PATH]))
+                        (cf, parse_config_file(
+                            cf,
+                            search_path=config_paths + [DEFAULT_CONFIG_PATH]
+                        ))
                     )
             except Exception:
                 if cf in options.opt_config_files:
