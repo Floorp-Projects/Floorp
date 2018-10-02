@@ -122,8 +122,15 @@ class MozXULElement extends XULElement {
    *        Array of interface names.
    */
   static implementCustomInterface(cls, ifaces) {
+    const numbers = new Set(ifaces.map(i => i.number));
+    if (cls.prototype.customInterfaceNumbers) {
+      // Base class already implemented some interfaces. Inherit:
+      cls.prototype.customInterfaceNumbers.forEach(number => numbers.add(number));
+    }
+
+    cls.prototype.customInterfaceNumbers = numbers;
     cls.prototype.getCustomInterfaceCallback = function getCustomInterfaceCallback(iface) {
-      if (ifaces.includes(Ci[Components.interfacesByID[iface.number]])) {
+      if (numbers.has(iface.number)) {
         return getInterfaceProxy(this);
       }
       return null;
@@ -156,26 +163,60 @@ function getInterfaceProxy(obj) {
   return obj._customInterfaceProxy;
 }
 
+class MozBaseControl extends MozXULElement {
+  get disabled() {
+    return this.getAttribute("disabled") == "true";
+  }
+
+  set disabled(val) {
+    if (val) {
+      this.setAttribute("disabled", "true");
+    } else {
+      this.removeAttribute("disabled");
+    }
+  }
+
+  get tabIndex() {
+    return parseInt(this.getAttribute("tabindex")) || 0;
+  }
+
+  set tabIndex(val) {
+    if (val) {
+      this.setAttribute("tabindex", val);
+    } else {
+      this.removeAttribute("tabindex");
+    }
+  }
+}
+
+MozXULElement.implementCustomInterface(MozBaseControl, [Ci.nsIDOMXULControlElement]);
+
 // Attach the base class to the window so other scripts can use it:
 window.MozXULElement = MozXULElement;
+window.MozBaseControl = MozBaseControl;
 
-for (let script of [
-  "chrome://global/content/elements/general.js",
-  "chrome://global/content/elements/textbox.js",
-  "chrome://global/content/elements/tabbox.js",
-]) {
-  Services.scriptloader.loadSubScript(script, window);
-}
-
-for (let [tag, script] of [
-  ["findbar", "chrome://global/content/elements/findbar.js"],
-  ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
-  ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
-  ["editor", "chrome://global/content/elements/editor.js"],
-]) {
-  customElements.setElementCreationCallback(tag, () => {
+// For now, don't load any elements in the extension dummy document.
+// We will want to load <browser> when that's migrated (bug 1441935).
+const isDummyDocument = document.documentURI == "chrome://extensions/content/dummy.xul";
+if (!isDummyDocument) {
+  for (let script of [
+    "chrome://global/content/elements/general.js",
+    "chrome://global/content/elements/radio.js",
+    "chrome://global/content/elements/textbox.js",
+    "chrome://global/content/elements/tabbox.js",
+  ]) {
     Services.scriptloader.loadSubScript(script, window);
-  });
-}
+  }
 
+  for (let [tag, script] of [
+    ["findbar", "chrome://global/content/elements/findbar.js"],
+    ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
+    ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
+    ["editor", "chrome://global/content/elements/editor.js"],
+  ]) {
+    customElements.setElementCreationCallback(tag, () => {
+      Services.scriptloader.loadSubScript(script, window);
+    });
+  }
+}
 }

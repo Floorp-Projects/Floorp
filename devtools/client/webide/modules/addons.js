@@ -9,8 +9,11 @@ const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-var ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbExtensionURL");
-var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbExtensionID");
+var ADB_LINK = Services.prefs.getCharPref("devtools.remote.adb.extensionURL");
+var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.remote.adb.extensionID");
+
+// Extension ID for adb helper extension that might be installed on Firefox 63 or older.
+const OLD_ADB_ADDON_ID = "adbhelper@mozilla.org";
 
 var platform = Services.appShell.hiddenDOMWindow.navigator.platform;
 var OS = "";
@@ -50,8 +53,20 @@ exports.ForgetAddonsList = function() {
   AvailableAddons = null;
 };
 
-function Addon() {}
-Addon.prototype = {
+function ADBAddon() {
+  EventEmitter.decorate(this);
+
+  // This addon uses the string "linux" for "linux32"
+  const fixedOS = OS == "linux32" ? "linux" : OS;
+  this.xpiLink = ADB_LINK.replace(/#OS#/g, fixedOS);
+
+  // Uninstall old version of the extension that might be installed on this profile.
+  this.uninstallOldExtension();
+
+  this.updateInstallStatus();
+}
+
+ADBAddon.prototype = {
   _status: "unknown",
   set status(value) {
     Devices.adbExtensionInstalled = (value == "installed");
@@ -65,7 +80,7 @@ Addon.prototype = {
   },
 
   updateInstallStatus: async function() {
-    const addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
       this.status = "installed";
     } else {
@@ -74,7 +89,7 @@ Addon.prototype = {
   },
 
   install: async function() {
-    const addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
       this.status = "installed";
       return;
@@ -91,8 +106,15 @@ Addon.prototype = {
   },
 
   uninstall: async function() {
-    const addon = await AddonManager.getAddonByID(this.addonID);
+    const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     addon.uninstall();
+  },
+
+  uninstallOldExtension: async function() {
+    const oldAddon = await AddonManager.getAddonByID(OLD_ADB_ADDON_ID);
+    if (oldAddon) {
+      oldAddon.uninstall();
+    }
   },
 
   installFailureHandler: function(install, message) {
@@ -133,13 +155,3 @@ Addon.prototype = {
     this.installFailureHandler(install, "Install failed");
   },
 };
-
-function ADBAddon() {
-  EventEmitter.decorate(this);
-  // This addon uses the string "linux" for "linux32"
-  const fixedOS = OS == "linux32" ? "linux" : OS;
-  this.xpiLink = ADB_LINK.replace(/#OS#/g, fixedOS);
-  this.addonID = ADB_ADDON_ID;
-  this.updateInstallStatus();
-}
-ADBAddon.prototype = Object.create(Addon.prototype);

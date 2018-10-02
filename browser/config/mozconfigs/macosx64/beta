@@ -1,7 +1,3 @@
-if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then
-  MOZ_AUTOMATION_UPDATE_PACKAGING=1
-fi
-
 . "$topsrcdir/browser/config/mozconfigs/macosx64/common-opt"
 
 ac_add_options --enable-official-branding

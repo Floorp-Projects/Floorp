@@ -53,33 +53,6 @@ class NMParser {
     });
     this._worker.postMessage({
       finish: true,
-      isDarwin: Services.appinfo.OS === "Darwin",
-    });
-    return promise;
-  }
-}
-
-class CppFiltParser {
-  constructor() {
-    this._worker = new ChromeWorker("resource://app/modules/ParseCppFiltSymbols-worker.js");
-  }
-
-  consume(buffer) {
-    this._worker.postMessage({buffer}, [buffer]);
-  }
-
-  finish() {
-    const promise = new Promise((resolve, reject) => {
-      this._worker.onmessage = (e) => {
-        if (e.data.error) {
-          reject(e.data.error);
-        } else {
-          resolve(e.data.result);
-        }
-      };
-    });
-    this._worker.postMessage({
-      finish: true,
     });
     return promise;
   }
@@ -138,26 +111,14 @@ const getSymbolsFromNM = async function(path, arch) {
   const args = [path];
   if (Services.appinfo.OS === "Darwin") {
     args.unshift("-arch", arch);
-  } else {
-    // Mac's `nm` doesn't support the demangle option, so we have to
-    // post-process the symbols with c++filt.
-    args.unshift("--demangle");
   }
 
   await spawnProcess("nm", args, data => parser.consume(data));
-  await spawnProcess("nm", ["-D", ...args], data => parser.consume(data));
-  let result = await parser.finish();
   if (Services.appinfo.OS !== "Darwin") {
-    return result;
+    // Darwin nm does not support the -D option.
+    await spawnProcess("nm", ["-D", ...args], data => parser.consume(data));
   }
-
-  const [addresses, symbolsJoinedBuffer] = result;
-  const decoder = new TextDecoder();
-  const symbolsJoined = decoder.decode(symbolsJoinedBuffer);
-  const demangler = new CppFiltParser(addresses.length);
-  await spawnProcess("c++filt", [], data => demangler.consume(data), symbolsJoined);
-  const [newIndex, newBuffer] = await demangler.finish();
-  return [addresses, newIndex, newBuffer];
+  return parser.finish();
 };
 
 const getEnvVarCaseInsensitive = function(env, name) {

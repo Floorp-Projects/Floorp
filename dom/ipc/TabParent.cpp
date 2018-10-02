@@ -170,6 +170,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mLayerTreeEpoch{1}
   , mPreserveLayers(false)
   , mRenderLayers(true)
+  , mActiveInPriorityManager(false)
   , mHasLayers(false)
   , mHasPresented(false)
   , mHasBeforeUnload(false)
@@ -2858,10 +2859,6 @@ TabParent::SetDocShellIsActive(bool isActive)
   }
 #endif
 
-  // Let's inform the priority manager. This operation can end up with the
-  // changing of the process priority.
-  ProcessPriorityManager::TabActivityChanged(this, isActive);
-
   // Keep track of how many active recording/replaying tabs there are.
   if (Manager()->AsContentParent()->IsRecordingOrReplaying()) {
     SetIsActiveRecordReplayTab(isActive);
@@ -2880,6 +2877,13 @@ TabParent::GetDocShellIsActive(bool* aIsActive)
 NS_IMETHODIMP
 TabParent::SetRenderLayers(bool aEnabled)
 {
+  if (mActiveInPriorityManager != aEnabled) {
+    mActiveInPriorityManager = aEnabled;
+    // Let's inform the priority manager. This operation can end up with the
+    // changing of the process priority.
+    ProcessPriorityManager::TabActivityChanged(this, aEnabled);
+  }
+
   if (aEnabled == mRenderLayers) {
     if (aEnabled && mHasLayers && mPreserveLayers) {
       // RenderLayers might be called when we've been preserving layers,
@@ -2926,8 +2930,26 @@ TabParent::GetHasLayers(bool* aResult)
 }
 
 NS_IMETHODIMP
+TabParent::Deprioritize()
+{
+  if (mActiveInPriorityManager)   {
+    ProcessPriorityManager::TabActivityChanged(this, false);
+    mActiveInPriorityManager = false;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TabParent::ForceRepaint()
 {
+  if (!mActiveInPriorityManager) {
+    // If a tab is left and then returned to very rapidly, it can be
+    // deprioritized without losing its loaded status. In this case we won't
+    // go through SetRenderLayers.
+    mActiveInPriorityManager = true;
+    ProcessPriorityManager::TabActivityChanged(this, true);
+  }
+
   SetRenderLayersInternal(true /* aEnabled */,
                           true /* aForceRepaint */);
   return NS_OK;

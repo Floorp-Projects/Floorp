@@ -67,12 +67,8 @@ onmessage = async e => {
     }
     if (e.data.finish) {
       const {syms, approximateLength} = nmParser.finish();
-      let result;
-      if (e.data.isDarwin) {
-        result = ParseSymbols.convertSymsMapToDemanglerFormat(syms);
-      } else {
-        result = ParseSymbols.convertSymsMapToExpectedSymFormat(syms, approximateLength);
-      }
+      const result =
+        ParseSymbols.convertSymsMapToExpectedSymFormat(syms, approximateLength);
 
       postMessage({result}, result.map(r => r.buffer));
       close();

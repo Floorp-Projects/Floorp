@@ -18,9 +18,9 @@ unity-webgl:
   description: unity-webgl benchmark
   fetch:
     type: static-url
-    url: https://github.com/mozilla/perf-automation/releases/download/unity-webgl-v1/unity-webgl-6beb3d3e22ab.zip
-    sha256: f71ee3a3f5b9513f041e1dd01c032d51f2071e1ad130e8ac2cf0c553c468b9ea
-    size: 27062962
+    url: https://github.com/mozilla/perf-automation/releases/download/unity-webgl-v3/unity-webgl-2720cdc79082.zip
+    sha256: 2d5a741cb3bfbd191d0aa2b4c4f71d615db84a0760e20c4e4cf701b3682df0d0
+    size: 27062969
 
 assorted-dom:
   description: assorted-dom benchmark

@@ -5,10 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRService.h"
-#include "OpenVRSession.h"
 #include "gfxPrefs.h"
 #include "base/thread.h"                // for Thread
 #include <cstring>                      // for memcmp
+
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+#include "OpenVRSession.h"
+#include "OSVRSession.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -208,11 +212,23 @@ VRService::ServiceInitialize()
   // Try to start a VRSession
   UniquePtr<VRSession> session;
 
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
   // Try OpenVR
-  session = MakeUnique<OpenVRSession>();
-  if (!session->Initialize(mSystemState)) {
-    session = nullptr;
+  if (!session) {
+    session = MakeUnique<OpenVRSession>();
+    if (!session->Initialize(mSystemState)) {
+      session = nullptr;
+    }
   }
+  // Try OSVR
+  if (!session) {
+    session = MakeUnique<OSVRSession>();
+    if (!session->Initialize(mSystemState)) {
+      session = nullptr;
+    }
+  }
+#endif
+
   if (session) {
     mSession = std::move(session);
     // Setting enumerationCompleted to true indicates to the browser
