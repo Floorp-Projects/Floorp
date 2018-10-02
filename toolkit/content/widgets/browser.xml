@@ -499,22 +499,12 @@
                 readonly="true"
                 onget="return this.isRemoteBrowser ? this._remoteWebProgress : this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
 
-      <field name="_contentWindow">null</field>
-      <property name="contentWindowAsCPOW"
-                readonly="true"
-                onget="return this.isRemoteBrowser ? this._contentWindow : this.contentWindow;"/>
-
       <property name="sessionHistory"
                 onget="return this.webNavigation.sessionHistory;"
                 readonly="true"/>
 
       <property name="markupDocumentViewer"
                 onget="return this.docShell.contentViewer;"
-                readonly="true"/>
-
-      <field name="_contentDocument">null</field>
-      <property name="contentDocumentAsCPOW"
-                onget="return this.isRemoteBrowser ? this._contentDocument : this.contentDocument;"
                 readonly="true"/>
 
       <field name="_contentTitle">""</field>
