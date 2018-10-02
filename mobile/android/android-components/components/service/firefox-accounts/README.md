@@ -20,7 +20,7 @@ for help with integrating this component into your application.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:fxa:{latest-version}
+implementation "org.mozilla.components:service-firefox-accounts:{latest-version}"
 ```
 
 ### Start coding

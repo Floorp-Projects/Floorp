@@ -9,7 +9,7 @@ Abstract definition of a tabs tray component.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:abstract-tabstray:{latest-version}
+implementation "org.mozilla.components:concept-tabstray:{latest-version}"
 ```
 
 ## License

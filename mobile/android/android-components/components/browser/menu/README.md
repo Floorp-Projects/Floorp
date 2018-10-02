@@ -9,7 +9,7 @@ A generic menu with customizable items primarily for browser toolbars.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:menu:{latest-version}
+implementation "org.mozilla.components:browser-menu:{latest-version}"
 ```
 
 ## License

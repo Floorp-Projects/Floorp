@@ -90,6 +90,15 @@ The following diagram does not contain all available components. See [Components
 * ⚪ **Preview** - This component is almost/partially ready and can be tested in products.
 * 🔵 **Production ready** - Used by shipping products.
 
+Our artifacts live in [maven.mozilla.org](https://maven.mozilla.org/maven2) remember to add it in your root ```build.gradle``` file:
+```groovy
+repositories {
+  maven {
+   url "https://maven.mozilla.org/maven2"
+  }
+}
+```
+
 ## Browser
 
 High-level components for building browser(-like) apps.
@@ -100,7 +109,7 @@ High-level components for building browser(-like) apps.
 
 * 🔴 [**Engine-Gecko-Beta**](components/browser/engine-gecko-beta/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Beta channel).
 
-* 🔴 [**Engine-Gecko-Nightly**](components/browser/engine-gecko/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Nightly channel).
+* 🔴 [**Engine-Gecko-Nightly**](components/browser/engine-gecko-nightly/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Nightly channel).
 
 * ⚪ [**Engine-System**](components/browser/engine-system/README.md) - *Engine* implementation based on the system's WebView.
 

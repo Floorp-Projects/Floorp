@@ -9,7 +9,7 @@ Search plugins and companion code to load, parse and use them.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:search:{latest-version}
+implementation "org.mozilla.components:browser-search:{latest-version}"
 ```
 
 ## License

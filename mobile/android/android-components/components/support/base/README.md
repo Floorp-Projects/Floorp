@@ -11,7 +11,7 @@ Usually this component never needs to be added to application projects manually.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:base:{latest-version}
+implementation "org.mozilla.components:support-base:{latest-version}"
 ```
 
 ### Logging

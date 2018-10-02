@@ -11,7 +11,7 @@ See [concept-engine](../../concept/engine/README.md) for a documentation of the 
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:engine-system:{latest-version}
+implementation "org.mozilla.components:browser-engine-system:{latest-version}"
 ```
 
 ### Initializing

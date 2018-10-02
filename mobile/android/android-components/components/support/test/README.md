@@ -9,7 +9,7 @@ A collection of helpers for testing components.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:test:{latest-version}
+implementation "org.mozilla.components:support-test:{latest-version}"
 ```
 
 ## License

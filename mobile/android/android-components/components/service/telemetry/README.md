@@ -13,7 +13,7 @@ The goal of this library is to provide a generic set of components to support a 
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:telemetry:{latest-version}
+implementation "org.mozilla.components:service-telemetry:{latest-version}"
 ```
 
 

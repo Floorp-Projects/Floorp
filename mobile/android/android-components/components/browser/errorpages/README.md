@@ -9,7 +9,7 @@ Responsive browser error pages for Android apps.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:errorpages:{latest-version}
+implementation "org.mozilla.components:browser-errorpages:{latest-version}"
 ```
 
 ## License

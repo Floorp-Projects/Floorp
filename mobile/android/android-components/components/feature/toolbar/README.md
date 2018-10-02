@@ -9,7 +9,7 @@ A component that connects a (concept) toolbar implementation with the browser se
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:feature-toolbar:{latest-version}
+implementation "org.mozilla.components:feature-toolbar:{latest-version}"
 ```
 
 ## License

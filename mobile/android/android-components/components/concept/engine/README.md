@@ -17,7 +17,7 @@ Other components and apps only referencing `concept-engine` makes it possible to
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:engine:{latest-version}
+implementation "org.mozilla.components:concept-engine:{latest-version}"
 ```
 
 ### Integration

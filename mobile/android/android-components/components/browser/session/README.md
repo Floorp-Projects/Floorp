@@ -9,7 +9,7 @@ This component provides a generic representation of a browser [Session](#session
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:session:{latest-version}
+implementation "org.mozilla.components:browser-session:{latest-version}"
 ```
 
 ### Session

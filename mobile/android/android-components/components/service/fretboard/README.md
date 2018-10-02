@@ -9,7 +9,7 @@ An Android framework for segmenting users in order to run A/B tests and rollout 
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:fretboard:{latest-version}"
+implementation "org.mozilla.components:service-fretboard:{latest-version}"
 ```
 
 ### Creating Fretboard instance

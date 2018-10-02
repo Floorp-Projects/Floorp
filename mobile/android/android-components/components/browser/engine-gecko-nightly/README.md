@@ -9,7 +9,7 @@
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:engine-gecko:{latest-version}
+implementation "org.mozilla.components:browser-engine-gecko-nightly:{latest-version}"
 ```
 
 ## License

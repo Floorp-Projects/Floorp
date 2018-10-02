@@ -9,7 +9,7 @@ A set of Kotlin extensions on top of the Android framework and Kotlin standard l
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:ktx:{latest-version}
+implementation "org.mozilla.components:support-ktx:{latest-version}"
 ```
 
 ## License

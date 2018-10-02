@@ -9,7 +9,7 @@ Localized and customizable domain lists for auto-completion in browsers.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:domains:{latest-version}
+implementation "org.mozilla.components:browser-domains:{latest-version}"
 ```
 
 ## License

@@ -9,7 +9,7 @@ A component that connects a trabs tray implementation with the session and toolb
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:feature-tabs:{latest-version}
+implementation "org.mozilla.components:feature-tabs:{latest-version}"
 ```
 
 ## License

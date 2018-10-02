@@ -9,7 +9,7 @@ An animated progress bar following the Photon Design System.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.photon:progress:{latest-version}
+implementation "org.mozilla.photon:ui-progress:{latest-version}"
 ```
 
 ## License

@@ -9,7 +9,7 @@ A set of components to provide autocomplete functionality.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:autocomplete:{latest-version}
+implementation "org.mozilla.components:ui-autocomplete:{latest-version}"
 ```
 
 ## License

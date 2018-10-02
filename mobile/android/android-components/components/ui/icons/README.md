@@ -9,7 +9,7 @@ A collection of often used browser icons.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.photon:icons:{latest-version}
+implementation "org.mozilla.photon:ui-icons:{latest-version}"
 ```
 
 ## License

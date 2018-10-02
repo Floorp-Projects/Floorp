@@ -9,7 +9,7 @@ Abstract definition of a browser toolbar component.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:abstract-toolbar:{latest-version}
+implementation "org.mozilla.components:concept-toolbar:{latest-version}"
 ```
 
 ## License

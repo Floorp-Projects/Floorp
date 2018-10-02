@@ -9,7 +9,7 @@ A component that connects an (concept) engine implementation with the browser se
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:feature-session:{latest-version}
+implementation "org.mozilla.components:feature-session:{latest-version}"
 ```
 
 ## License

@@ -9,7 +9,7 @@ Generic utility classes to be shared between projects.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:utils:{latest-version}
+implementation "org.mozilla.components:support-utils:{latest-version}"
 ```
 
 ## License

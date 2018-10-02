@@ -9,7 +9,7 @@ The standard set of fonts used by Mozilla Android products.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.photon:fonts:{latest-version}
+implementation "org.mozilla.photon:ui-fonts:{latest-version}"
 ```
 
 ## License

@@ -15,7 +15,7 @@ The **Firefox Sync - Logins Component** provides a way for Android applications 
 Use gradle to download the library from JCenter:
 
 ```
-implementation "org.mozilla.components:sync-logins:{latest-version}
+implementation "org.mozilla.components:service-sync-logins:{latest-version}"
 ```
 
 You will also need the Firefox Accounts component to be able to obtain the keys to decrypt the Logins data:

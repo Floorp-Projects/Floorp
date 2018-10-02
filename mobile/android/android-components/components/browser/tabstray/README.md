@@ -9,7 +9,7 @@ A customizable tabs tray for browsers.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:tabstray:{latest-version}
+implementation "org.mozilla.components:browser-tabstray:{latest-version}"
 ```
 
 ## License

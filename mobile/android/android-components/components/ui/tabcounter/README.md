@@ -9,7 +9,7 @@ A button that shows the current tab count and can animate state changes.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:tabcounter:{latest-version}
+implementation "org.mozilla.components:ui-tabcounter:{latest-version}"
 ```
 
 ## License

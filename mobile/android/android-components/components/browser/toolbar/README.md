@@ -9,7 +9,7 @@ A customizable toolbar for browsers.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:toolbar:{latest-version}
+implementation "org.mozilla.components:browser-toolbar:{latest-version}"
 ```
 
 ## License

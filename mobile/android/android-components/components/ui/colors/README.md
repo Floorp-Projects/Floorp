@@ -9,7 +9,7 @@ The standard set of [Photon](https://design.firefox.com/photon/) colors.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.photon:colors:{latest-version}
+implementation "org.mozilla.photon:ui-colors:{latest-version}"
 ```
 
 ## License

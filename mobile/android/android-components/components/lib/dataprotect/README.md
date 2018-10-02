@@ -9,7 +9,7 @@ A component using AndroidKeyStore to protect user data.
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:dataprotect:{latest-version}
+implementation "org.mozilla.components:lib-dataprotect:{latest-version}"
 ```
 
 ## License

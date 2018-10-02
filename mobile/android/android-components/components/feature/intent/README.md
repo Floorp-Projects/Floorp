@@ -9,7 +9,7 @@ A component that provides intent processing functionality by combining various o
 Use gradle to download the library from JCenter:
 
 ```Groovy
-implementation "org.mozilla.components:feature-intent:{latest-version}
+implementation "org.mozilla.components:feature-intent:{latest-version}"
 ```
 
 ## License
