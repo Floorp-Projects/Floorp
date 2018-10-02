@@ -46,7 +46,11 @@ raptor-tp6-chrome:
     description: "Raptor tp6 on Chrome"
     try-name: raptor-tp6-chrome
     treeherder-symbol: Rap-C(tp6)
-    run-on-projects: ['try']
+    run-on-projects: ['try', 'mozilla-central']
+    tier:
+        by-test-platform:
+            linux64.*: 3
+            default: 2
     max-run-time: 1200
     mozharness:
         extra-options:
