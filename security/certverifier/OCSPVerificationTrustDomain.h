@@ -7,7 +7,7 @@
 #ifndef mozilla_psm__OCSPVerificationTrustDomain_h
 #define mozilla_psm__OCSPVerificationTrustDomain_h
 
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 #include "NSSCertDBTrustDomain.h"
 
 namespace mozilla { namespace psm {

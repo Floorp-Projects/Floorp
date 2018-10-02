@@ -85,7 +85,6 @@ LOCAL_INCLUDES += [
     '/dom/media/platforms',
     '/dom/media/platforms/agnostic',
     '/security/certverifier',
-    '/security/pkix/include',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'

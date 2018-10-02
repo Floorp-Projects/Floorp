@@ -13,9 +13,9 @@
 #include "CTUtils.h"
 #include "SignedCertificateTimestamp.h"
 #include "SignedTreeHead.h"
-#include "pkix/Input.h"
-#include "pkix/Result.h"
-#include "pkix/pkix.h"
+#include "mozpkix/Input.h"
+#include "mozpkix/Result.h"
+#include "mozpkix/pkix.h"
 
 namespace mozilla { namespace ct {
 

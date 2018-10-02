@@ -38,92 +38,175 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 /* eslint-disable max-len */
-const ATTRIBUTE_TYPES = [
-  {namespaceURI: HTML_NS, attributeName: "action", tagName: "form", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "background", tagName: "body", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "cite", tagName: "blockquote", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "cite", tagName: "q", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "cite", tagName: "del", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "cite", tagName: "ins", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "classid", tagName: "object", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "codebase", tagName: "object", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "codebase", tagName: "applet", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "command", tagName: "menuitem", type: TYPE_IDREF},
-  {namespaceURI: "*", attributeName: "contextmenu", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "data", tagName: "object", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "for", tagName: "label", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "for", tagName: "output", type: TYPE_IDREF_LIST},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "button", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "fieldset", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "input", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "keygen", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "label", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "object", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "output", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "select", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "form", tagName: "textarea", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "formaction", tagName: "button", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "formaction", tagName: "input", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "headers", tagName: "td", type: TYPE_IDREF_LIST},
-  {namespaceURI: HTML_NS, attributeName: "headers", tagName: "th", type: TYPE_IDREF_LIST},
-  {namespaceURI: HTML_NS, attributeName: "href", tagName: "a", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "href", tagName: "area", type: TYPE_URI},
-  {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_CSS_RESOURCE_URI,
-  /* eslint-enable */
-   isValid: (namespaceURI, tagName, attributes) => {
-     return getAttribute(attributes, "rel") === "stylesheet";
-   }},
-  /* eslint-disable max-len */
-  {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "href", tagName: "base", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "icon", tagName: "menuitem", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "list", tagName: "input", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "longdesc", tagName: "img", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "longdesc", tagName: "frame", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "longdesc", tagName: "iframe", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "manifest", tagName: "html", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "menu", tagName: "button", type: TYPE_IDREF},
-  {namespaceURI: HTML_NS, attributeName: "ping", tagName: "a", type: TYPE_URI_LIST},
-  {namespaceURI: HTML_NS, attributeName: "ping", tagName: "area", type: TYPE_URI_LIST},
-  {namespaceURI: HTML_NS, attributeName: "poster", tagName: "video", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "profile", tagName: "head", type: TYPE_URI},
-  {namespaceURI: "*", attributeName: "src", tagName: "script", type: TYPE_JS_RESOURCE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "input", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "frame", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "iframe", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "img", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "audio", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "embed", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "source", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "track", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "src", tagName: "video", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "usemap", tagName: "img", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "usemap", tagName: "input", type: TYPE_URI},
-  {namespaceURI: HTML_NS, attributeName: "usemap", tagName: "object", type: TYPE_URI},
-  {namespaceURI: "*", attributeName: "xmlns", tagName: "*", type: TYPE_URI},
-  {namespaceURI: XUL_NS, attributeName: "command", tagName: "key", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "containment", tagName: "*", type: TYPE_URI},
-  {namespaceURI: XUL_NS, attributeName: "context", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "datasources", tagName: "*", type: TYPE_URI_LIST},
-  {namespaceURI: XUL_NS, attributeName: "insertafter", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "insertbefore", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "menu", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "observes", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "popup", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "ref", tagName: "*", type: TYPE_URI},
-  {namespaceURI: XUL_NS, attributeName: "removeelement", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "src", tagName: "stringbundle", type: TYPE_URI},
-  {namespaceURI: XUL_NS, attributeName: "template", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "tooltip", tagName: "*", type: TYPE_IDREF},
+const ATTRIBUTE_TYPES = {
+  "action": [
+    {namespaceURI: HTML_NS, tagName: "form", type: TYPE_URI},
+  ],
+  "background": [
+    {namespaceURI: HTML_NS,  tagName: "body", type: TYPE_URI},
+  ],
+  "cite": [
+    {namespaceURI: HTML_NS, tagName: "blockquote", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "q", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "del", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "ins", type: TYPE_URI},
+  ],
+  "classid": [
+    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
+  ],
+  "codebase": [
+    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "applet", type: TYPE_URI},
+  ],
+  "command": [
+    {namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_IDREF},
+    {namespaceURI: XUL_NS, tagName: "key", type: TYPE_IDREF},
+  ],
+  "contextmenu": [
+    {namespaceURI: "*", tagName: "*", type: TYPE_IDREF},
+  ],
+  "data": [
+    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
+  ],
+  "for": [
+    {namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF_LIST},
+  ],
+  "form": [
+    {namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "fieldset", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "keygen", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "label", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "output", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "select", type: TYPE_IDREF},
+    {namespaceURI: HTML_NS, tagName: "textarea", type: TYPE_IDREF},
+  ],
+  "formaction": [
+    {namespaceURI: HTML_NS, tagName: "button", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
+  ],
+  "headers": [
+    {namespaceURI: HTML_NS, tagName: "td", type: TYPE_IDREF_LIST},
+    {namespaceURI: HTML_NS, tagName: "th", type: TYPE_IDREF_LIST},
+  ],
+  "href": [
+    {namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI},
+    {namespaceURI: "*", tagName: "link", type: TYPE_CSS_RESOURCE_URI,
+     /* eslint-enable */
+     isValid: (namespaceURI, tagName, attributes) => {
+       return getAttribute(attributes, "rel") === "stylesheet";
+     }},
+    /* eslint-disable max-len */
+    {namespaceURI: "*", tagName: "link", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "base", type: TYPE_URI},
+  ],
+  "icon": [
+    {namespaceURI: HTML_NS, tagName: "menuitem", type: TYPE_URI},
+  ],
+  "list": [
+    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_IDREF},
+  ],
+  "longdesc": [
+    {namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI},
+  ],
+  "manifest": [
+    {namespaceURI: HTML_NS, tagName: "html", type: TYPE_URI},
+  ],
+  "menu": [
+    {namespaceURI: HTML_NS, tagName: "button", type: TYPE_IDREF},
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
+  "ping": [
+    {namespaceURI: HTML_NS, tagName: "a", type: TYPE_URI_LIST},
+    {namespaceURI: HTML_NS, tagName: "area", type: TYPE_URI_LIST},
+  ],
+  "poster": [
+    {namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI},
+  ],
+  "profile": [
+    {namespaceURI: HTML_NS, tagName: "head", type: TYPE_URI},
+  ],
+  "src": [
+    {namespaceURI: "*", tagName: "script", type: TYPE_JS_RESOURCE_URI},
+    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "frame", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "iframe", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "audio", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "embed", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "source", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "track", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "video", type: TYPE_URI},
+    {namespaceURI: XUL_NS, tagName: "stringbundle", type: TYPE_URI},
+  ],
+  "usemap": [
+    {namespaceURI: HTML_NS, tagName: "img", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "input", type: TYPE_URI},
+    {namespaceURI: HTML_NS, tagName: "object", type: TYPE_URI},
+
+  ],
+  "xmlns": [
+    {namespaceURI: "*", tagName: "*", type: TYPE_URI},
+  ],
+  "containment": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI},
+  ],
+  "context": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
+  "datasources": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI_LIST},
+  ],
+  "insertafter": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
+  "insertbefore": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
+  "observes": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
+  "popup": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
+  "ref": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_URI},
+  ],
+  "removeelement": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
+  "template": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
+  "tooltip": [
+    {namespaceURI: XUL_NS, tagName: "*", type: TYPE_IDREF},
+  ],
   /* eslint-enable */
   // SVG links aren't handled yet, see bug 1158831.
-  // {namespaceURI: SVG_NS, attributeName: "fill", tagName: "*", type: },
-  // {namespaceURI: SVG_NS, attributeName: "stroke", tagName: "*", type: },
-  // {namespaceURI: SVG_NS, attributeName: "markerstart", tagName: "*", type: },
-  // {namespaceURI: SVG_NS, attributeName: "markermid", tagName: "*", type: },
-  // {namespaceURI: SVG_NS, attributeName: "markerend", tagName: "*", type: },
-  // {namespaceURI: SVG_NS, attributeName: "xlink:href", tagName: "*", type: }
-];
+  // "fill": [
+  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  // ],
+  // "stroke": [
+  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  // ],
+  // "markerstart": [
+  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  // ],
+  // "markermid": [
+  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  // ],
+  // "markerend": [
+  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  // ],
+  // "xlink:href": [
+  //   {namespaceURI: SVG_NS, tagName: "*", type: },
+  // ],
+};
 
 var parsers = {
   [TYPE_URI]: function(attributeValue) {
@@ -215,21 +298,19 @@ function parseAttribute(namespaceURI, tagName, attributes, attributeName) {
  * type object otherwise.
  */
 function getType(namespaceURI, tagName, attributes, attributeName) {
-  for (const typeData of ATTRIBUTE_TYPES) {
-    const containsAttribute = attributeName === typeData.attributeName ||
-                            typeData.attributeName === "*";
+  if (!ATTRIBUTE_TYPES[attributeName]) {
+    return null;
+  }
+
+  for (const typeData of ATTRIBUTE_TYPES[attributeName]) {
     const hasNamespace = namespaceURI === typeData.namespaceURI ||
                        typeData.namespaceURI === "*";
     const hasTagName = tagName.toLowerCase() === typeData.tagName ||
                      typeData.tagName === "*";
-    const isValid = typeData.isValid
-                  ? typeData.isValid(namespaceURI,
-                                     tagName,
-                                     attributes,
-                                     attributeName)
-                  : true;
+    const isValid = typeData.isValid ?
+      typeData.isValid(namespaceURI, tagName, attributes, attributeName) : true;
 
-    if (containsAttribute && hasNamespace && hasTagName && isValid) {
+    if (hasNamespace && hasTagName && isValid) {
       return typeData.type;
     }
   }

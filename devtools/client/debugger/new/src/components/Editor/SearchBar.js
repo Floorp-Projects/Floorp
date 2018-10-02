@@ -169,6 +169,12 @@ class SearchBar extends _react.Component {
       return this.doSearch(e.target.value);
     };
 
+    this.onFocus = e => {
+      this.setState({
+        inputFocused: true
+      });
+    };
+
     this.onBlur = e => {
       this.setState({
         inputFocused: false
@@ -337,14 +343,18 @@ class SearchBar extends _react.Component {
       return _react2.default.createElement("div", null);
     }
 
+    const classes = (0, _classnames2.default)("search-bar", {
+      "search-bar-focused": this.state.inputFocused
+    });
     return _react2.default.createElement("div", {
-      className: "search-bar"
+      className: classes
     }, _react2.default.createElement(_SearchInput2.default, {
       query: this.state.query,
       count: count,
       placeholder: L10N.getStr("sourceSearch.search.placeholder2"),
       summaryMsg: this.buildSummaryMsg(),
       onChange: this.onChange,
+      onFocus: this.onFocus,
       onBlur: this.onBlur,
       showErrorEmoji: this.shouldShowErrorEmoji(),
       onKeyDown: this.onKeyDown,
