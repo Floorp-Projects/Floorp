@@ -73,13 +73,32 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
     justify-content: center;
   }
 
-  .accessible-infobar-name {
-    color: rgb(221, 0, 169);
+  .accessible-infobar-name,
+  .accessible-infobar-audit {
+    color: hsl(210, 30%, 85%);
     max-width: 90%;
   }
 
-  .accessible-infobar-name:not(:empty) {
-    color: hsl(210, 30%, 85%);
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after,
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
+    color: #90E274;
+  }
+
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).fail:after {
+    color: #E57180;
+    content: " ⚠️";
+  }
+
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after {
+    content: " AA\u2713";
+  }
+
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
+    content: " AAA\u2713";
+  }
+
+  .accessible-infobar-name:not(:empty),
+  .accessible-infobar-audit:not(:empty) {
     border-inline-start: 1px solid #5a6169;
     margin-inline-start: 6px;
     padding-inline-start: 6px;

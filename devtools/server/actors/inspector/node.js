@@ -10,8 +10,6 @@ const InspectorUtils = require("InspectorUtils");
 const protocol = require("devtools/shared/protocol");
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 
-loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
-
 loader.lazyRequireGetter(this, "getCssPath", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "getXPath", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
@@ -686,26 +684,15 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   /**
-   * Finds the computed background color of the closest parent with
-   * a set background color.
-   * Returns a string with the background color of the form
-   * rgba(r, g, b, a). Defaults to rgba(255, 255, 255, 1) if no
-   * background color is found.
+   * Finds the computed background color of the closest parent with a set background
+   * color.
+   *
+   * @return {String}
+   *         String with the background color of the form rgba(r, g, b, a). Defaults to
+   *         rgba(255, 255, 255, 1) if no background color is found.
    */
   getClosestBackgroundColor: function() {
-    let current = this.rawNode;
-    while (current) {
-      const computedStyle = CssLogic.getComputedStyle(current);
-      const currentStyle = computedStyle.getPropertyValue("background-color");
-      if (colorUtils.isValidCSSColor(currentStyle)) {
-        const currentCssColor = new colorUtils.CssColor(currentStyle);
-        if (!currentCssColor.isTransparent()) {
-          return currentCssColor.rgba;
-        }
-      }
-      current = current.parentNode;
-    }
-    return "rgba(255, 255, 255, 1)";
+    return InspectorActorUtils.getClosestBackgroundColor(this.rawNode);
   },
 
   /**
