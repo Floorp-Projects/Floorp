@@ -36,7 +36,8 @@ namespace frontend {
 class BinASTParserBase: private JS::AutoGCRooter
 {
   public:
-    BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames);
+    BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
+                     HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript);
     ~BinASTParserBase();
 
   public:
@@ -80,6 +81,8 @@ class BinASTParserBase: private JS::AutoGCRooter
     // Root atoms and objects allocated for the parse tree.
     AutoKeepAtoms keepAtoms_;
 
+    RootedScriptSourceObject sourceObject_;
+    Rooted<LazyScript*> lazyScript_;
     ParseContext* parseContext_;
     FullParseHandler factory_;
 
@@ -105,8 +108,9 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     using Chars = typename Tokenizer::Chars;
 
   public:
-    BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames, const JS::ReadOnlyCompileOptions& options)
-        : BinASTParserBase(cx, alloc, usedNames)
+    BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames, const JS::ReadOnlyCompileOptions& options,
+                 HandleScriptSourceObject sourceObject, Handle<LazyScript*> lazyScript = nullptr)
+        : BinASTParserBase(cx, alloc, usedNames, sourceObject, lazyScript)
         , options_(options)
         , variableDeclarationKind_(VariableDeclarationKind::Var)
     {
@@ -127,6 +131,8 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     JS::Result<ParseNode*> parse(GlobalSharedContext* globalsc,
                                  const uint8_t* start, const size_t length);
     JS::Result<ParseNode*> parse(GlobalSharedContext* globalsc, const Vector<uint8_t>& data);
+
+    JS::Result<ParseNode*> parseLazyFunction(const uint8_t* start, const size_t firstOffset, const size_t length);
 
   private:
     MOZ_MUST_USE JS::Result<ParseNode*> parseAux(GlobalSharedContext* globalsc,
@@ -170,9 +176,11 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     // --- Auxiliary parsing functions
 
     // Build a function object for a function-producing production. Called AFTER creating the scope.
+    JS::Result<CodeNode*>
+    makeEmptyFunctionNode(const size_t start, const BinKind kind, FunctionBox* funbox);
     JS::Result<ParseNode*>
     buildFunction(const size_t start, const BinKind kind, ParseNode* name, ListNode* params,
-        ParseNode* body, FunctionBox* funbox);
+                  ParseNode* body, FunctionBox* funbox);
     JS::Result<FunctionBox*>
     buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind, FunctionSyntaxKind syntax, ParseNode* name);
 
