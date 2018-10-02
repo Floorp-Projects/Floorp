@@ -15,6 +15,8 @@ extern crate nserror;
 extern crate xpcom;
 extern crate netwerk_helper;
 extern crate prefs_parser;
+#[cfg(feature = "gecko_profiler")]
+extern crate profiler_helper;
 extern crate mozurl;
 #[cfg(feature = "quantum_render")]
 extern crate webrender_bindings;
