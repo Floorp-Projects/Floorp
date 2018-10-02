@@ -4636,6 +4636,8 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
+    forceStrictIfNecessary(funbox, directives);
+
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
     BINJS_TRY(funpc.init());
@@ -4715,6 +4717,8 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, con
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
+    forceStrictIfNecessary(funbox, directives);
+
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
     BINJS_TRY(funpc.init());
@@ -4788,6 +4792,8 @@ BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind k
         syntax,
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
+
+    forceStrictIfNecessary(funbox, directives);
 
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
@@ -4868,6 +4874,8 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
 
+    forceStrictIfNecessary(funbox, directives);
+
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
     BINJS_TRY(funpc.init());
@@ -4942,6 +4950,8 @@ BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind k
         syntax,
         (syntax != FunctionSyntaxKind::Setter &&
          syntax != FunctionSyntaxKind::Getter) ? name : nullptr));
+
+    forceStrictIfNecessary(funbox, directives);
 
     // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
     BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
