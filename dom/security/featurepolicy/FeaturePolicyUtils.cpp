@@ -29,7 +29,6 @@ static FeatureMap sSupportedFeatures[] = {
   { "autoplay", FeatureMap::eSelf },
   // TODO: not supported yet!!!
   { "camera", FeatureMap::eSelf  },
-  // TODO: not supported yet!!!
   { "encrypted-media", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
   { "fullscreen", FeatureMap::eSelf  },
