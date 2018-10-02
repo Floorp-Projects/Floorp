@@ -6,6 +6,7 @@
 #ifndef mozilla_image_Image_h
 #define mozilla_image_Image_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TimeStamp.h"
@@ -393,14 +394,14 @@ protected:
                                       uint32_t aFlags,
                                       layers::ImageContainer** aContainer);
 
-  void UpdateImageContainer();
+  void UpdateImageContainer(const Maybe<gfx::IntRect>& aDirtyRect);
 
   void ReleaseImageContainer();
 
 private:
   void SetCurrentImage(layers::ImageContainer* aContainer,
                        gfx::SourceSurface* aSurface,
-                       bool aInTransaction);
+                       const Maybe<gfx::IntRect>& aDirtyRect);
 
   struct ImageContainerEntry {
     ImageContainerEntry(const gfx::IntSize& aSize,
