@@ -18,6 +18,7 @@
 
 #include "jstypes.h"
 
+#include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
@@ -509,6 +510,8 @@ class ScriptSource
     bool hasIntroductionOffset_:1;
     bool containsAsmJS_:1;
 
+    UniquePtr<frontend::BinASTSourceMetadata> binASTMetadata_;
+
     const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                                size_t chunk);
 
@@ -567,6 +570,15 @@ class ScriptSource
     bool hasBinASTSource() const { return data.is<BinAST>(); }
     bool hasUncompressedSource() const { return data.is<Uncompressed>(); }
     bool hasCompressedSource() const { return data.is<Compressed>(); }
+
+    void setBinASTSourceMetadata(frontend::BinASTSourceMetadata* metadata) {
+        MOZ_ASSERT(hasBinASTSource());
+        binASTMetadata_.reset(metadata);
+    }
+    frontend::BinASTSourceMetadata* binASTSourceMetadata() const {
+        MOZ_ASSERT(hasBinASTSource());
+        return binASTMetadata_.get();
+    }
 
     size_t length() const {
         struct LengthMatcher
@@ -723,6 +735,8 @@ class ScriptSource
         MOZ_ASSERT(parseEnded_.IsNull());
         parseEnded_ = ReallyNow();
     }
+
+    void trace(JSTracer* trc);
 };
 
 class ScriptSourceHolder
@@ -777,6 +791,9 @@ class ScriptSourceObject : public NativeObject
     static bool initElementProperties(JSContext* cx, HandleScriptSourceObject source,
                                       HandleObject element, HandleString elementAttrName);
 
+    bool hasSource() const {
+        return !getReservedSlot(SOURCE_SLOT).isUndefined();
+    }
     ScriptSource* source() const {
         return static_cast<ScriptSource*>(getReservedSlot(SOURCE_SLOT).toPrivate());
     }
