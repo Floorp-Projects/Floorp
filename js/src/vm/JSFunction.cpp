@@ -1051,7 +1051,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
     // that eval returns lambda, not function statement.
     bool addParentheses = haveSource && isToSource && (fun->isLambda() && !fun->isArrow());
 
-    if (haveSource && !script->scriptSource()->hasSourceData() &&
+    if (haveSource && !script->scriptSource()->hasSourceText() &&
         !JSScript::loadSource(cx, script->scriptSource(), &haveSource))
     {
         return nullptr;
@@ -1783,7 +1783,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 
         // This is lazy canonical-function.
 
-        MOZ_ASSERT(lazy->scriptSource()->hasSourceData());
+        MOZ_ASSERT(lazy->scriptSource()->hasSourceText());
 
         // Parse and compile the script from source.
         size_t lazyLength = lazy->sourceEnd() - lazy->sourceStart();
