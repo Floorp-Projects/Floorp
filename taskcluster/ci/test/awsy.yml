@@ -2,6 +2,10 @@ job-defaults:
     suite: awsy
     max-run-time: 7200
     instance-size: xlarge
+    virtualization:
+        by-test-platform:
+            windows10-64-qr/.*: hardware
+            default: virtual
     allow-software-gl-layers: false
     mozharness:
         script: awsy_script.py
