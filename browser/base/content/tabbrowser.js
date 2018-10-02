@@ -644,36 +644,8 @@ window._gBrowser = {
     return this.browsers[aIndex];
   },
 
-  getBrowserForDocument(aDocument) {
-    var tab = this._getTabForContentWindow(aDocument.defaultView);
-    return tab ? tab.linkedBrowser : null;
-  },
-
-  getBrowserForContentWindow(aWindow) {
-    var tab = this._getTabForContentWindow(aWindow);
-    return tab ? tab.linkedBrowser : null;
-  },
-
   getBrowserForOuterWindowID(aID) {
     return this._outerWindowIDBrowserMap.get(aID);
-  },
-
-  _getTabForContentWindow(aWindow) {
-    // When not using remote browsers, we can take a fast path by getting
-    // directly from the content window to the browser without looping
-    // over all browsers.
-    if (!gMultiProcessBrowser) {
-      let browser = aWindow.docShell.chromeEventHandler;
-      return this.getTabForBrowser(browser);
-    }
-
-    for (let i = 0; i < this.browsers.length; i++) {
-      // NB: We use contentWindowAsCPOW so that this code works both
-      // for remote browsers as well. aWindow may be a CPOW.
-      if (this.browsers[i].contentWindowAsCPOW == aWindow)
-        return this.tabs[i];
-    }
-    return null;
   },
 
   getTabForBrowser(aBrowser) {
