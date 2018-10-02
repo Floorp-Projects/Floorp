@@ -2598,6 +2598,9 @@ BinASTParser<Tok>::parseInterfaceArrayExpression(const size_t start, const BinKi
 
     BINJS_MOZ_TRY_DECL(elements, parseListOfOptionalSpreadElementOrExpression());
 
+    if (elements->empty()) {
+        elements->setHasNonConstInitializer();
+    }
     auto result = elements;
     return result;
 }
@@ -3921,6 +3924,7 @@ BinASTParser<Tok>::parseInterfaceCatchClause(const size_t start, const BinKind k
 
     BINJS_MOZ_TRY_DECL(body, parseBlock());
 
+    MOZ_TRY(checkClosedVars(currentScope));
     BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
     BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
     BINJS_TRY(factory_.setupCatchScope(result, binding, body));
@@ -8352,6 +8356,8 @@ BinASTParser<Tok>::parseListOfObjectProperty()
 
     for (uint32_t i = 0; i < length; ++i) {
         BINJS_MOZ_TRY_DECL(item, parseObjectProperty());
+        if (!item->isConstant())
+            result->setHasNonConstInitializer();
         result->appendWithoutOrderAssumption(item);
     }
 
