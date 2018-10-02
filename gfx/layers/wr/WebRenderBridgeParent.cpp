@@ -179,6 +179,29 @@ protected:
   bool mIsActive;
 };
 
+class WebRenderBridgeParent::ScheduleSharedSurfaceRelease final
+  : public wr::NotificationHandler
+{
+public:
+  ScheduleSharedSurfaceRelease()
+  { }
+
+  void Add(const wr::ExternalImageId& aId)
+  {
+    mSurfaces.AppendElement(aId);
+  }
+
+  void Notify(wr::Checkpoint) override
+  {
+    for (const auto& id : mSurfaces) {
+      SharedSurfacesParent::Release(id);
+    }
+  }
+
+private:
+  AutoTArray<wr::ExternalImageId, 20> mSurfaces;
+};
+
 class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender
 {
 public:
@@ -321,6 +344,7 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
                                        wr::TransactionBuilder& aUpdates)
 {
   wr::ShmSegmentsReader reader(aSmallShmems, aLargeShmems);
+  UniquePtr<ScheduleSharedSurfaceRelease> scheduleRelease;
 
   for (const auto& cmd : aResourceUpdates) {
     switch (cmd.type()) {
@@ -388,7 +412,8 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
       }
       case OpUpdateResource::TOpUpdateExternalImage: {
         const auto& op = cmd.get_OpUpdateExternalImage();
-        if (!UpdateExternalImage(op.externalImageId(), op.key(), op.dirtyRect(), aUpdates)) {
+        if (!UpdateExternalImage(op.externalImageId(), op.key(), op.dirtyRect(),
+                                 aUpdates, scheduleRelease)) {
           return false;
         }
         break;
@@ -443,6 +468,9 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
     }
   }
 
+  if (scheduleRelease) {
+    aUpdates.Notify(wr::Checkpoint::FrameRendered, std::move(scheduleRelease));
+  }
   return true;
 }
 
@@ -563,7 +591,8 @@ bool
 WebRenderBridgeParent::UpdateExternalImage(wr::ExternalImageId aExtId,
                                            wr::ImageKey aKey,
                                            const ImageIntRect& aDirtyRect,
-                                           wr::TransactionBuilder& aResources)
+                                           wr::TransactionBuilder& aResources,
+                                           UniquePtr<ScheduleSharedSurfaceRelease>& aScheduleRelease)
 {
   Range<wr::ImageKey> keys(&aKey, 1);
   // Check if key is obsoleted.
@@ -592,8 +621,12 @@ WebRenderBridgeParent::UpdateExternalImage(wr::ExternalImageId aExtId,
 
   if (!(it->second == aExtId)) {
     // We already have a mapping for this image key, so ensure we release the
-    // previous external image ID.
-    mAsyncImageManager->HoldExternalImage(mPipelineId, mWrEpoch, it->second);
+    // previous external image ID. This can happen when an image is animated,
+    // and it is changing the external image that the animation points to.
+    if (!aScheduleRelease) {
+      aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>();
+    }
+    aScheduleRelease->Add(it->second);
     it->second = aExtId;
   }
 
