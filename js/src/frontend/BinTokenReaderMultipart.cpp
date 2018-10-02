@@ -148,7 +148,7 @@ BinTokenReaderMultipart::readHeader()
         if (byteLen == 2 && *current_ == 255 && *(current_ + 1) == 0) {
             atom = nullptr;
         } else {
-            BINJS_TRY_VAR(atom, Atomize(cx_, (const char*)current_, byteLen));
+            BINJS_TRY_VAR(atom, AtomizeUTF8Chars(cx_, (const char*)current_, byteLen));
         }
 
         // Populate `atomsTable_`: i => atom.
