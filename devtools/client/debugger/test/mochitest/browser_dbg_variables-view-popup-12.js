@@ -16,7 +16,7 @@ function test() {
       source: TAB_URL,
       line: 1
     };
-    let [tab,, panel] = yield initDebugger(TAB_URL, options);
+    let [tab, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let events = win.EVENTS;
     let watch = win.DebuggerView.WatchExpressions;

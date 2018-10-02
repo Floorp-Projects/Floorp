@@ -16,14 +16,18 @@ function test() {
       source: TAB_URL,
       line: 1
     };
-    let [tab, debuggee, panel] = yield initDebugger(TAB_URL, options);
+    let [tab, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let vars = win.DebuggerView.Variables;
 
     win.DebuggerView.WatchExpressions.addExpression("this");
 
     // Allow this generator function to yield first.
-    executeSoon(() => debuggee.ermahgerd());
+    executeSoon(() => {
+      ContentTask.spawn(tab.linkedBrowser, null, async () => {
+        content.wrappedJSObject.ermahgerd();
+      });
+    });
     yield waitForDebuggerEvents(panel, win.EVENTS.FETCHED_WATCH_EXPRESSIONS);
 
     let exprScope = vars.getScopeAtIndex(0);

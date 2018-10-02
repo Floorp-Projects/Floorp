@@ -18,7 +18,7 @@ function test() {
     source: TAB_URL,
     line: 1
   };
-  initDebugger(TAB_URL, options).then(Task.async(function* ([aTab,, aPanel]) {
+  initDebugger(TAB_URL, options).then(Task.async(function* ([aTab, aPanel]) {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;

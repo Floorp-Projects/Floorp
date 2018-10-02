@@ -15,7 +15,7 @@ const IFRAME_URL = "data:text/html;charset=utf-8," +
 const TAB_URL = `data:text/html;charset=utf-8,<iframe src="${IFRAME_URL}"/>`;
 
 add_task(async function() {
-  let [,, panel] = await initDebugger();
+  let [, panel] = await initDebugger();
   let dbg = panel.panelWin;
   let newSource;
 
