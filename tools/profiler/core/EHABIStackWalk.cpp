@@ -630,13 +630,9 @@ void EHAddrSpace::Update() {
 
   for (size_t i = 0; i < info.GetSize(); ++i) {
     const SharedLibrary &lib = info.GetEntry(i);
-    if (lib.GetOffset() != 0)
-      // TODO: if it has a name, and we haven't seen a mapping of
-      // offset 0 for that file, try opening it and reading the
-      // headers instead.  The only thing I've seen so far that's
-      // linked so as to need that treatment is the dynamic linker
-      // itself.
-      continue;
+    // FIXME: This isn't correct if the start address isn't p_offset 0, because
+    // the start address will not point at the file header. But this is worked
+    // around by magic number checks in the EHTable constructor.
     EHTable tab(reinterpret_cast<const void *>(lib.GetStart()),
               lib.GetEnd() - lib.GetStart(), lib.GetNativeDebugPath());
     if (tab.isValid())
