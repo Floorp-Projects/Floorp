@@ -630,6 +630,11 @@ EagerFunctionDeclaration:
         const auto syntax = FunctionSyntaxKind::Statement;
     inherits: EagerFunctionExpression
 
+LazyFunctionDeclaration:
+    init: |
+        const auto syntax = FunctionSyntaxKind::Statement;
+    inherits: LazyFunctionExpression
+
 FunctionExpressionContents:
     type-ok:
         Ok
@@ -722,6 +727,42 @@ EagerFunctionExpression:
         BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
         BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
         BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, body, funbox));
+
+LazyFunctionExpression:
+    init: |
+        const auto syntax = FunctionSyntaxKind::Expression;
+    fields:
+        contents:
+            block:
+                replace:
+                    // Don't parse the contents until we delazify.
+    build: |
+        BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+            isGenerator ? GeneratorKind::Generator
+                        : GeneratorKind::NotGenerator,
+            isAsync ? FunctionAsyncKind::AsyncFunction
+                    : FunctionAsyncKind::SyncFunction,
+            syntax, name));
+
+        forceStrictIfNecessary(funbox, directives);
+
+        RootedFunction fun(cx_, funbox->function());
+
+        // TODO: This will become incorrect in the face of ES6 features.
+        fun->setArgCount(length);
+
+        auto skipStart = contentsSkip.startOffset();
+        BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_, parseContext_->closedOverBindingsForLazy(), parseContext_->innerFunctionsForLazy,
+                                                skipStart, skipStart + contentsSkip.length(),
+                                                skipStart, 0, skipStart, ParseGoal::Script));
+
+        if (funbox->strict()) {
+            lazy->setStrict();
+        }
+        lazy->setIsBinAST();
+        funbox->function()->initLazyScript(lazy);
+
+        BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(skipStart, kind, funbox));
 
 EagerGetter:
     init: |
