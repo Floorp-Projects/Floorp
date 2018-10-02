@@ -154,6 +154,18 @@ BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
     return result; // Magic conversion to Ok.
 }
 
+template<typename Tok> void
+BinASTParser<Tok>::forceStrictIfNecessary(FunctionBox* funbox, ListNode* directives)
+{
+    JSAtom* useStrict = cx_->names().useStrict;
+
+    for (const ParseNode* directive : directives->contents()) {
+        if (directive->as<NameNode>().atom() == useStrict) {
+            funbox->strictScript = true;
+            break;
+        }
+    }
+}
 
 template<typename Tok> JS::Result<FunctionBox*>
 BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind,
