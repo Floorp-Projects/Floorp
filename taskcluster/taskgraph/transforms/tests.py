@@ -20,6 +20,7 @@ for example - use `all_tests.py` instead.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.attributes import match_run_on_projects
 from taskgraph.util.schema import resolve_keyed_by, OptimizationSchema
 from taskgraph.util.treeherder import split_symbol, join_symbol, add_suffix
 from taskgraph.util.platforms import platform_family
@@ -201,6 +202,14 @@ test_description_schema = Schema({
     # the time (with unit) after which this task is deleted; default depends on
     # the branch (see below)
     Optional('expires-after'): basestring,
+
+    # Whether to run this task with the serviceworker e10s redesign enabled
+    # (desktop-test only).  If 'both', run one task with and one task without.
+    # Tasks with this enabled have have "-sw" appended to the test name and
+    # treeherder group.
+    Optional('serviceworker-e10s'): optionally_keyed_by(
+        'test-platform', 'project',
+        Any(bool, 'both')),
 
     # Whether to run this task with e10s (desktop-test only).  If false, run
     # without e10s; if true, run with e10s; if 'both', run one task with and
@@ -460,6 +469,7 @@ def set_defaults(config, tests):
         test.setdefault('loopback-video', False)
         test.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
         test.setdefault('checkout', False)
+        test.setdefault('serviceworker-e10s', False)
 
         test['mozharness'].setdefault('extra-options', [])
         test['mozharness'].setdefault('requires-signed-builds', False)
@@ -686,6 +696,7 @@ def handle_keyed_by(config, tests):
         'docker-image',
         'max-run-time',
         'chunks',
+        'serviceworker-e10s',
         'e10s',
         'suite',
         'run-on-projects',
@@ -811,6 +822,37 @@ def handle_run_on_projects(config, tests):
     for test in tests:
         if test['run-on-projects'] == 'built-projects':
             test['run-on-projects'] = test['build-attributes'].get('run_on_projects', ['all'])
+        yield test
+
+
+@transforms.add
+def split_serviceworker_e10s(config, tests):
+    for test in tests:
+        sw = test.pop('serviceworker-e10s')
+
+        test['serviceworker-e10s'] = False
+        test['attributes']['serviceworker_e10s'] = False
+
+        if sw == 'both':
+            yield copy.deepcopy(test)
+            sw = True
+        if sw:
+            if not match_run_on_projects('mozilla-central', test['run-on-projects']):
+                continue
+
+            test['description'] += " with serviceworker-e10s redesign enabled"
+            test['run-on-projects'] = ['mozilla-central']
+            test['test-name'] += '-sw'
+            test['try-name'] += '-sw'
+            test['attributes']['serviceworker_e10s'] = True
+            group, symbol = split_symbol(test['treeherder-symbol'])
+            if group != '?':
+                group += '-sw'
+            else:
+                symbol += '-sw'
+            test['treeherder-symbol'] = join_symbol(group, symbol)
+            test['mozharness']['extra-options'].append(
+                '--setpref="dom.serviceWorkers.parent_intercept=true"')
         yield test
 
 

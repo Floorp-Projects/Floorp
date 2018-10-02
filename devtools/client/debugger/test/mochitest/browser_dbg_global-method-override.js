@@ -16,7 +16,7 @@ function test() {
     source: TAB_URL,
     line: 1
   };
-  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
+  initDebugger(TAB_URL, options).then(([aTab, aPanel]) => {
     let gDebugger = aPanel.panelWin;
     ok(gDebugger, "Should have a debugger available.");
     is(gDebugger.gThreadClient.state, "attached", "Debugger should be attached.");

@@ -669,11 +669,14 @@ pub fn is_utf16_latin1(buffer: &[u16]) -> bool {
 /// that trigger right-to-left processing.
 ///
 /// The check is done on a Unicode block basis without regard to assigned
-/// vs. unassigned code points in the block. Additionally, the four
-/// RIGHT-TO-LEFT FOO controls in General Punctuation are checked for.
-/// Control characters that are technically bidi controls but do not cause
-/// right-to-left behavior without the presence of right-to-left characters
-/// or right-to-left controls are not checked for.
+/// vs. unassigned code points in the block. Hebrew presentation forms in
+/// the Alphabetic Presentation Forms block are treated as if they formed
+/// a block on their own (i.e. it treated as right-to-left). Additionally,
+/// the four RIGHT-TO-LEFT FOO controls in General Punctuation are checked
+/// for. Control characters that are technically bidi controls but do not
+/// cause right-to-left behavior without the presence of right-to-left
+/// characters or right-to-left controls are not checked for. As a special
+/// case, U+FEFF is excluded from Arabic Presentation Forms-B.
 ///
 /// Returns `true` if the input is invalid UTF-8 or the input contains an
 /// RTL character. Returns `false` if the input is valid UTF-8 and contains
@@ -699,15 +702,15 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
     // U+202E: E2 80 AE
     // U+2067: E2 81 A7
     //
-    // U+FB4F: EF AD 8F
-    // U+FB50: EF AD 90
+    // U+FB1C: EF AC 9C
+    // U+FB1D: EF AC 9D
     // U+FDFF: EF B7 BF
     // U+FE00: EF B8 80
     //
     // U+FE6F: EF B9 AF
     // U+FE70: EF B9 B0
+    // U+FEFE: EF BB BE
     // U+FEFF: EF BB BF
-    // U+FF00: EF BC 80
     //
     // U+107FF: F0 90 9F BF
     // U+10800: F0 90 A0 80
@@ -797,9 +800,9 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
                             {
                                 return true;
                             }
-                            if in_inclusive_range8(second, 0xAD, 0xB7) {
-                                if second == 0xAD {
-                                    if third > 0x8F {
+                            if in_inclusive_range8(second, 0xAC, 0xB7) {
+                                if second == 0xAC {
+                                    if third > 0x9C {
                                         return true;
                                     }
                                 } else {
@@ -808,6 +811,10 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
                             } else if in_inclusive_range8(second, 0xB9, 0xBB) {
                                 if second == 0xB9 {
                                     if third > 0xAF {
+                                        return true;
+                                    }
+                                } else if second == 0xBB {
+                                    if third != 0xBF {
                                         return true;
                                     }
                                 } else {
@@ -1013,9 +1020,9 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
                     {
                         return true;
                     }
-                    if in_inclusive_range8(second, 0xAD, 0xB7) {
-                        if second == 0xAD {
-                            if third > 0x8F {
+                    if in_inclusive_range8(second, 0xAC, 0xB7) {
+                        if second == 0xAC {
+                            if third > 0x9C {
                                 return true;
                             }
                         } else {
@@ -1024,6 +1031,10 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
                     } else if in_inclusive_range8(second, 0xB9, 0xBB) {
                         if second == 0xB9 {
                             if third > 0xAF {
+                                return true;
+                            }
+                        } else if second == 0xBB {
+                            if third != 0xBF {
                                 return true;
                             }
                         } else {
@@ -1083,11 +1094,14 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
 /// right-to-left processing.
 ///
 /// The check is done on a Unicode block basis without regard to assigned
-/// vs. unassigned code points in the block. Additionally, the four
-/// RIGHT-TO-LEFT FOO controls in General Punctuation are checked for.
-/// Control characters that are technically bidi controls but do not cause
-/// right-to-left behavior without the presence of right-to-left characters
-/// or right-to-left controls are not checked for.
+/// vs. unassigned code points in the block. Hebrew presentation forms in
+/// the Alphabetic Presentation Forms block are treated as if they formed
+/// a block on their own (i.e. it treated as right-to-left). Additionally,
+/// the four RIGHT-TO-LEFT FOO controls in General Punctuation are checked
+/// for. Control characters that are technically bidi controls but do not
+/// cause right-to-left behavior without the presence of right-to-left
+/// characters or right-to-left controls are not checked for. As a special
+/// case, U+FEFF is excluded from Arabic Presentation Forms-B.
 #[inline]
 pub fn is_str_bidi(buffer: &str) -> bool {
     // U+058F: D6 8F
@@ -1100,15 +1114,15 @@ pub fn is_str_bidi(buffer: &str) -> bool {
     // U+202E: E2 80 AE
     // U+2067: E2 81 A7
     //
-    // U+FB4F: EF AD 8F
-    // U+FB50: EF AD 90
+    // U+FB1C: EF AC 9C
+    // U+FB1D: EF AC 9D
     // U+FDFF: EF B7 BF
     // U+FE00: EF B8 80
     //
     // U+FE6F: EF B9 AF
     // U+FE70: EF B9 B0
+    // U+FEFE: EF BB BE
     // U+FEFF: EF BB BF
-    // U+FF00: EF BC 80
     //
     // U+107FF: F0 90 9F BF
     // U+10800: F0 90 A0 80
@@ -1178,10 +1192,10 @@ pub fn is_str_bidi(buffer: &str) -> bool {
                             }
                         } else {
                             debug_assert_eq!(byte, 0xEF);
-                            if in_inclusive_range8(second, 0xAD, 0xB7) {
-                                if second == 0xAD {
+                            if in_inclusive_range8(second, 0xAC, 0xB7) {
+                                if second == 0xAC {
                                     let third = bytes[read + 2];
-                                    if third > 0x8F {
+                                    if third > 0x9C {
                                         return true;
                                     }
                                 } else {
@@ -1191,6 +1205,11 @@ pub fn is_str_bidi(buffer: &str) -> bool {
                                 if second == 0xB9 {
                                     let third = bytes[read + 2];
                                     if third > 0xAF {
+                                        return true;
+                                    }
+                                } else if second == 0xBB {
+                                    let third = bytes[read + 2];
+                                    if third != 0xBF {
                                         return true;
                                     }
                                 } else {
@@ -1230,11 +1249,14 @@ pub fn is_str_bidi(buffer: &str) -> bool {
 /// right-to-left processing.
 ///
 /// The check is done on a Unicode block basis without regard to assigned
-/// vs. unassigned code points in the block. Additionally, the four
-/// RIGHT-TO-LEFT FOO controls in General Punctuation are checked for.
-/// Control characters that are technically bidi controls but do not cause
-/// right-to-left behavior without the presence of right-to-left characters
-/// or right-to-left controls are not checked for.
+/// vs. unassigned code points in the block. Hebrew presentation forms in
+/// the Alphabetic Presentation Forms block are treated as if they formed
+/// a block on their own (i.e. it treated as right-to-left). Additionally,
+/// the four RIGHT-TO-LEFT FOO controls in General Punctuation are checked
+/// for. Control characters that are technically bidi controls but do not
+/// cause right-to-left behavior without the presence of right-to-left
+/// characters or right-to-left controls are not checked for. As a special
+/// case, U+FEFF is excluded from Arabic Presentation Forms-B.
 ///
 /// Returns `true` if the input contains an RTL character or an unpaired
 /// high surrogate that could be the high half of an RTL character.
@@ -1248,11 +1270,14 @@ pub fn is_utf16_bidi(buffer: &[u16]) -> bool {
 /// Checks whether a code point triggers right-to-left processing.
 ///
 /// The check is done on a Unicode block basis without regard to assigned
-/// vs. unassigned code points in the block. Additionally, the four
-/// RIGHT-TO-LEFT FOO controls in General Punctuation are checked for.
-/// Control characters that are technically bidi controls but do not cause
-/// right-to-left behavior without the presence of right-to-left characters
-/// or right-to-left controls are not checked for.
+/// vs. unassigned code points in the block. Hebrew presentation forms in
+/// the Alphabetic Presentation Forms block are treated as if they formed
+/// a block on their own (i.e. it treated as right-to-left). Additionally,
+/// the four RIGHT-TO-LEFT FOO controls in General Punctuation are checked
+/// for. Control characters that are technically bidi controls but do not
+/// cause right-to-left behavior without the presence of right-to-left
+/// characters or right-to-left controls are not checked for. As a special
+/// case, U+FEFF is excluded from Arabic Presentation Forms-B.
 #[inline(always)]
 pub fn is_char_bidi(c: char) -> bool {
     // Controls:
@@ -1266,8 +1291,9 @@ pub fn is_char_bidi(c: char) -> bool {
     // BMP RTL:
     // https://www.unicode.org/roadmaps/bmp/
     // U+0590...U+08FF
-    // U+FB50...U+FDFF Arabic Presentation Forms A
-    // U+FE70...U+FEFF Arabic Presentation Forms B
+    // U+FB1D...U+FDFF Hebrew presentation forms and
+    //                 Arabic Presentation Forms A
+    // U+FE70...U+FEFE Arabic Presentation Forms B (excl. BOM)
     //
     // Supplementary RTL:
     // https://www.unicode.org/roadmaps/smp/
@@ -1278,8 +1304,8 @@ pub fn is_char_bidi(c: char) -> bool {
         // Below Hebrew
         return false;
     }
-    if in_range32(code_point, 0x0900, 0xFB50) {
-        // Above Arabic Extended-A and below Arabic Presentation Forms
+    if in_range32(code_point, 0x0900, 0xFB1D) {
+        // Above Arabic Extended-A and below Hebrew presentation forms
         if in_inclusive_range32(code_point, 0x200F, 0x2067) {
             // In the range that contains the RTL controls
             return code_point == 0x200F
@@ -1297,8 +1323,8 @@ pub fn is_char_bidi(c: char) -> bool {
         // Between astral RTL blocks
         return false;
     }
-    if in_range32(code_point, 0xFF00, 0x10800) {
-        // Above Arabic Presentations Forms B and below first
+    if in_range32(code_point, 0xFEFF, 0x10800) {
+        // Above Arabic Presentations Forms B (excl. BOM) and below first
         // astral RTL
         return false;
     }
@@ -1312,11 +1338,14 @@ pub fn is_char_bidi(c: char) -> bool {
 /// Checks whether a UTF-16 code unit triggers right-to-left processing.
 ///
 /// The check is done on a Unicode block basis without regard to assigned
-/// vs. unassigned code points in the block. Additionally, the four
-/// RIGHT-TO-LEFT FOO controls in General Punctuation are checked for.
-/// Control characters that are technically bidi controls but do not cause
-/// right-to-left behavior without the presence of right-to-left characters
-/// or right-to-left controls are not checked for.
+/// vs. unassigned code points in the block. Hebrew presentation forms in
+/// the Alphabetic Presentation Forms block are treated as if they formed
+/// a block on their own (i.e. it treated as right-to-left). Additionally,
+/// the four RIGHT-TO-LEFT FOO controls in General Punctuation are checked
+/// for. Control characters that are technically bidi controls but do not
+/// cause right-to-left behavior without the presence of right-to-left
+/// characters or right-to-left controls are not checked for. As a special
+/// case, U+FEFF is excluded from Arabic Presentation Forms-B.
 ///
 /// Since supplementary-plane right-to-left blocks are identifiable from the
 /// high surrogate without examining the low surrogate, this function returns
@@ -1338,8 +1367,8 @@ pub fn is_utf16_code_unit_bidi(u: u16) -> bool {
         }
         return false;
     }
-    if in_range16(u, 0xD83C, 0xFB50) {
-        // Between astral RTL high surrogates and Arabic Presentation Forms
+    if in_range16(u, 0xD83C, 0xFB1D) {
+        // Between astral RTL high surrogates and Hebrew presentation forms
         // (Emoji is here)
         return false;
     }
@@ -1347,8 +1376,8 @@ pub fn is_utf16_code_unit_bidi(u: u16) -> bool {
         // Between RTL high surragates
         return false;
     }
-    if u > 0xFEFF {
-        // Above Arabic Presentation Forms
+    if u > 0xFEFE {
+        // Above Arabic Presentation Forms (excl. BOM)
         return false;
     }
     if in_range16(u, 0xFE00, 0xFE70) {
@@ -2370,13 +2399,14 @@ mod tests {
         assert!(!is_char_bidi('\u{1F4A9}'));
         assert!(!is_char_bidi('\u{FE00}'));
         assert!(!is_char_bidi('\u{202C}'));
+        assert!(!is_char_bidi('\u{FEFF}'));
         assert!(is_char_bidi('\u{0590}'));
         assert!(is_char_bidi('\u{08FF}'));
         assert!(is_char_bidi('\u{061C}'));
         assert!(is_char_bidi('\u{FB50}'));
         assert!(is_char_bidi('\u{FDFF}'));
         assert!(is_char_bidi('\u{FE70}'));
-        assert!(is_char_bidi('\u{FEFF}'));
+        assert!(is_char_bidi('\u{FEFE}'));
         assert!(is_char_bidi('\u{200F}'));
         assert!(is_char_bidi('\u{202B}'));
         assert!(is_char_bidi('\u{202E}'));
@@ -2395,13 +2425,15 @@ mod tests {
         assert!(!is_utf16_code_unit_bidi(0xD801));
         assert!(!is_utf16_code_unit_bidi(0xFE00));
         assert!(!is_utf16_code_unit_bidi(0x202C));
+        assert!(!is_utf16_code_unit_bidi(0xFEFF));
         assert!(is_utf16_code_unit_bidi(0x0590));
         assert!(is_utf16_code_unit_bidi(0x08FF));
         assert!(is_utf16_code_unit_bidi(0x061C));
+        assert!(is_utf16_code_unit_bidi(0xFB1D));
         assert!(is_utf16_code_unit_bidi(0xFB50));
         assert!(is_utf16_code_unit_bidi(0xFDFF));
         assert!(is_utf16_code_unit_bidi(0xFE70));
-        assert!(is_utf16_code_unit_bidi(0xFEFF));
+        assert!(is_utf16_code_unit_bidi(0xFEFE));
         assert!(is_utf16_code_unit_bidi(0x200F));
         assert!(is_utf16_code_unit_bidi(0x202B));
         assert!(is_utf16_code_unit_bidi(0x202E));
@@ -2420,13 +2452,14 @@ mod tests {
         assert!(!is_str_bidi("abcdefghijklmnop\u{1F4A9}abcdefghijklmnop"));
         assert!(!is_str_bidi("abcdefghijklmnop\u{FE00}abcdefghijklmnop"));
         assert!(!is_str_bidi("abcdefghijklmnop\u{202C}abcdefghijklmnop"));
+        assert!(!is_str_bidi("abcdefghijklmnop\u{FEFF}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{0590}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{08FF}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{061C}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{FB50}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{FDFF}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{FE70}abcdefghijklmnop"));
-        assert!(is_str_bidi("abcdefghijklmnop\u{FEFF}abcdefghijklmnop"));
+        assert!(is_str_bidi("abcdefghijklmnop\u{FEFE}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{200F}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{202B}abcdefghijklmnop"));
         assert!(is_str_bidi("abcdefghijklmnop\u{202E}abcdefghijklmnop"));
@@ -2457,6 +2490,9 @@ mod tests {
         assert!(!is_utf8_bidi(
             "abcdefghijklmnop\u{202C}abcdefghijklmnop".as_bytes()
         ));
+        assert!(!is_utf8_bidi(
+            "abcdefghijklmnop\u{FEFF}abcdefghijklmnop".as_bytes()
+        ));
         assert!(is_utf8_bidi(
             "abcdefghijklmnop\u{0590}abcdefghijklmnop".as_bytes()
         ));
@@ -2476,7 +2512,7 @@ mod tests {
             "abcdefghijklmnop\u{FE70}abcdefghijklmnop".as_bytes()
         ));
         assert!(is_utf8_bidi(
-            "abcdefghijklmnop\u{FEFF}abcdefghijklmnop".as_bytes()
+            "abcdefghijklmnop\u{FEFE}abcdefghijklmnop".as_bytes()
         ));
         assert!(is_utf8_bidi(
             "abcdefghijklmnop\u{200F}abcdefghijklmnop".as_bytes()
@@ -2530,6 +2566,10 @@ mod tests {
             0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x202C, 0x62, 0x63, 0x64, 0x65, 0x66,
             0x67, 0x68, 0x69,
         ]));
+        assert!(!is_utf16_bidi(&[
+            0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xFEFF, 0x62, 0x63, 0x64, 0x65, 0x66,
+            0x67, 0x68, 0x69,
+        ]));
         assert!(is_utf16_bidi(&[
             0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x0590, 0x62, 0x63, 0x64, 0x65, 0x66,
             0x67, 0x68, 0x69,
@@ -2540,6 +2580,10 @@ mod tests {
         ]));
         assert!(is_utf16_bidi(&[
             0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x061C, 0x62, 0x63, 0x64, 0x65, 0x66,
+            0x67, 0x68, 0x69,
+        ]));
+        assert!(is_utf16_bidi(&[
+            0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xFB1D, 0x62, 0x63, 0x64, 0x65, 0x66,
             0x67, 0x68, 0x69,
         ]));
         assert!(is_utf16_bidi(&[
@@ -2555,7 +2599,7 @@ mod tests {
             0x67, 0x68, 0x69,
         ]));
         assert!(is_utf16_bidi(&[
-            0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xFEFF, 0x62, 0x63, 0x64, 0x65, 0x66,
+            0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xFEFE, 0x62, 0x63, 0x64, 0x65, 0x66,
             0x67, 0x68, 0x69,
         ]));
         assert!(is_utf16_bidi(&[
@@ -2623,6 +2667,10 @@ mod tests {
             check_str_for_latin1_and_bidi("abcdefghijklmnop\u{202C}abcdefghijklmnop"),
             Latin1Bidi::Bidi
         );
+        assert_ne!(
+            check_str_for_latin1_and_bidi("abcdefghijklmnop\u{FEFF}abcdefghijklmnop"),
+            Latin1Bidi::Bidi
+        );
         assert_eq!(
             check_str_for_latin1_and_bidi("abcdefghijklmnop\u{0590}abcdefghijklmnop"),
             Latin1Bidi::Bidi
@@ -2648,7 +2696,7 @@ mod tests {
             Latin1Bidi::Bidi
         );
         assert_eq!(
-            check_str_for_latin1_and_bidi("abcdefghijklmnop\u{FEFF}abcdefghijklmnop"),
+            check_str_for_latin1_and_bidi("abcdefghijklmnop\u{FEFE}abcdefghijklmnop"),
             Latin1Bidi::Bidi
         );
         assert_eq!(
@@ -2711,6 +2759,10 @@ mod tests {
             check_utf8_for_latin1_and_bidi("abcdefghijklmnop\u{202C}abcdefghijklmnop".as_bytes()),
             Latin1Bidi::Bidi
         );
+        assert_ne!(
+            check_utf8_for_latin1_and_bidi("abcdefghijklmnop\u{FEFF}abcdefghijklmnop".as_bytes()),
+            Latin1Bidi::Bidi
+        );
         assert_eq!(
             check_utf8_for_latin1_and_bidi("abcdefghijklmnop\u{0590}abcdefghijklmnop".as_bytes()),
             Latin1Bidi::Bidi
@@ -2736,7 +2788,7 @@ mod tests {
             Latin1Bidi::Bidi
         );
         assert_eq!(
-            check_utf8_for_latin1_and_bidi("abcdefghijklmnop\u{FEFF}abcdefghijklmnop".as_bytes()),
+            check_utf8_for_latin1_and_bidi("abcdefghijklmnop\u{FEFE}abcdefghijklmnop".as_bytes()),
             Latin1Bidi::Bidi
         );
         assert_eq!(
@@ -2817,6 +2869,13 @@ mod tests {
             ]),
             Latin1Bidi::Bidi
         );
+        assert_ne!(
+            check_utf16_for_latin1_and_bidi(&[
+                0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xFEFF, 0x62, 0x63, 0x64, 0x65,
+                0x66, 0x67, 0x68, 0x69,
+            ]),
+            Latin1Bidi::Bidi
+        );
         assert_eq!(
             check_utf16_for_latin1_and_bidi(&[
                 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x0590, 0x62, 0x63, 0x64, 0x65,
@@ -2834,6 +2893,13 @@ mod tests {
         assert_eq!(
             check_utf16_for_latin1_and_bidi(&[
                 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x061C, 0x62, 0x63, 0x64, 0x65,
+                0x66, 0x67, 0x68, 0x69,
+            ]),
+            Latin1Bidi::Bidi
+        );
+        assert_eq!(
+            check_utf16_for_latin1_and_bidi(&[
+                0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xFB1D, 0x62, 0x63, 0x64, 0x65,
                 0x66, 0x67, 0x68, 0x69,
             ]),
             Latin1Bidi::Bidi
@@ -2861,7 +2927,7 @@ mod tests {
         );
         assert_eq!(
             check_utf16_for_latin1_and_bidi(&[
-                0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xFEFF, 0x62, 0x63, 0x64, 0x65,
+                0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0xFEFE, 0x62, 0x63, 0x64, 0x65,
                 0x66, 0x67, 0x68, 0x69,
             ]),
             Latin1Bidi::Bidi
@@ -2936,8 +3002,8 @@ mod tests {
     pub fn reference_is_char_bidi(c: char) -> bool {
         match c {
             '\u{0590}'...'\u{08FF}'
-            | '\u{FB50}'...'\u{FDFF}'
-            | '\u{FE70}'...'\u{FEFF}'
+            | '\u{FB1D}'...'\u{FDFF}'
+            | '\u{FE70}'...'\u{FEFE}'
             | '\u{10800}'...'\u{10FFF}'
             | '\u{1E800}'...'\u{1EFFF}'
             | '\u{200F}'
@@ -2952,8 +3018,8 @@ mod tests {
     pub fn reference_is_utf16_code_unit_bidi(u: u16) -> bool {
         match u {
             0x0590...0x08FF
-            | 0xFB50...0xFDFF
-            | 0xFE70...0xFEFF
+            | 0xFB1D...0xFDFF
+            | 0xFE70...0xFEFE
             | 0xD802
             | 0xD803
             | 0xD83A
@@ -3046,6 +3112,19 @@ mod tests {
                 }
             }
             assert_eq!(is_utf8_bidi(&buf[..]), expect);
+        }
+    }
+
+    #[test]
+    fn test_is_utf16_bidi_thoroughly() {
+        let mut buf = [0; 32];
+        for i in 0..0x10000u32 {
+            let u = i as u16;
+            buf[15] = u;
+            assert_eq!(
+                is_utf16_bidi(&buf[..]),
+                reference_is_utf16_code_unit_bidi(u)
+            );
         }
     }
 

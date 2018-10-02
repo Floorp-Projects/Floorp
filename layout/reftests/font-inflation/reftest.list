@@ -37,8 +37,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-3.html textarea-3-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == css-transform-1.html css-transform-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fuzzy-if(webrender,0-1,0-19) == css-transform-2.html css-transform-2-ref.html
-# skipped - bug 1380830
-fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-1764) skip test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == container-with-clamping.html container-with-clamping-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-1764) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == container-with-clamping.html container-with-clamping-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) load video-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == intrinsic-min-1.html intrinsic-min-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == intrinsic-max-1.html intrinsic-max-1-ref.html
@@ -67,6 +66,12 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fixed-height-body.html fixed-height-body-ref.html # Bug 1392106
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fixed-height-body-child.html fixed-height-body-child-ref.html # Bug 1392106
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == consecutive-inline.html consecutive-inline-ref.html
+
+# Ordinarily, reftests use a browser.viewport.desktopWidth of 800px, same as the
+# size of the reftest document.  The failure condition of the test below however
+# depends on the initial window size being smaller than the viewport the
+# MobileViewportManager eventually calculates, so we use a bigger value here.
+test-pref(font.size.inflation.emPerLine,20) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) test-pref(browser.viewport.desktopWidth,1000) == fixed-width-body-viewport.html fixed-width-body-viewport-ref.html
 
 # The tests below use nonzero values of the lineThreshold preference.
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == text-1.html text-1.html

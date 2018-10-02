@@ -21,7 +21,7 @@ add_task(async function() {
     source: TAB_URL,
     line: 1
   };
-  let [tab,, panel] = await initDebugger(TAB_URL, options);
+  let [tab, panel] = await initDebugger(TAB_URL, options);
   let win = panel.panelWin;
   let editor = win.DebuggerView.editor;
   let queries = win.require("./content/queries");

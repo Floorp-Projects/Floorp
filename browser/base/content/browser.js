@@ -1442,18 +1442,6 @@ var gBrowserInit = {
     // load homepages, which might need them.
     OfflineApps.init();
 
-    gBrowser.addEventListener("AboutTabCrashedLoad", function(event) {
-      let ownerDoc = event.originalTarget;
-
-      if (!ownerDoc.documentURI.startsWith("about:tabcrashed")) {
-        return;
-      }
-
-      let browser = gBrowser.getBrowserForDocument(event.target);
-      // Reset the zoom for the tabcrashed page.
-      ZoomManager.setZoomForBrowser(browser, 1);
-    }, false, true);
-
     gBrowser.addEventListener("InsecureLoginFormsStateChange", function() {
       gIdentityHandler.refreshForInsecureLoginForms();
     }, true);
@@ -5706,8 +5694,6 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   }
 
   if (showTabStripItems) {
-    PlacesCommandHook.updateBookmarkAllTabsCommand();
-
     let haveMultipleTabs = gBrowser.visibleTabs.length > 1;
     document.getElementById("toolbar-context-reloadAllTabs").disabled = !haveMultipleTabs;
 
@@ -6865,7 +6851,7 @@ var CanvasPermissionPromptHelper = {
     let browser;
     if (aSubject instanceof Ci.nsIDOMWindow) {
       let contentWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      browser = gBrowser.getBrowserForContentWindow(contentWindow);
+      browser = contentWindow.docShell.chromeEventHandler;
     } else {
       browser = aSubject.QueryInterface(Ci.nsIBrowser);
     }
@@ -7219,8 +7205,8 @@ function BrowserOpenAddonsMgr(aView) {
       if (aView) {
         emWindow.loadView(aView);
       }
-      browserWindow.gBrowser.selectedTab =
-        browserWindow.gBrowser._getTabForContentWindow(emWindow);
+      let tab = browserWindow.gBrowser.getTabForBrowser(emWindow.docShell.chromeEventHandler);
+      browserWindow.gBrowser.selectedTab = tab;
       emWindow.focus();
       resolve(emWindow);
       return;
@@ -7446,13 +7432,6 @@ const gRemoteControl = {
     }
   },
 };
-
-function getTabModalPromptBox(aWindow) {
-  var foundBrowser = gBrowser.getBrowserForDocument(aWindow.document);
-  if (foundBrowser)
-    return gBrowser.getTabModalPromptBox(foundBrowser);
-  return null;
-}
 
 /* DEPRECATED */
 function getBrowser() {

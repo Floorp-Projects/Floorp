@@ -14,6 +14,10 @@
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/MediaManager.h"
 
+mozilla::LogModule* GetMediaManagerLog();
+#undef LOG
+#define LOG(msg, ...) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, (msg, ##__VA_ARGS__))
+
 namespace mozilla {
 
 using dom::ConstrainBooleanParameters;
@@ -481,6 +485,7 @@ MediaConstraintsHelper::SelectSettings(
     bool aIsChrome)
 {
   auto& c = aConstraints;
+  LogConstraints(c);
 
   // First apply top-level constraints.
 
@@ -628,6 +633,71 @@ MediaConstraintsHelper::ConvertOldWithWarning(
       to.SetAsConstrainBooleanParameters() = old.GetAsConstrainBooleanParameters();
     }
   }
+}
+
+static void
+LogConstraintStringRange(const NormalizedConstraintSet::StringRange& aRange)
+{
+  if (aRange.mExact.size() <= 1 && aRange.mIdeal.size() <= 1) {
+    LOG("  %s: { exact: [%s], ideal: [%s] }",
+        aRange.mName,
+        (aRange.mExact.size()? NS_ConvertUTF16toUTF8(*aRange.mExact.begin()).get() : ""),
+        (aRange.mIdeal.size()? NS_ConvertUTF16toUTF8(*aRange.mIdeal.begin()).get() : ""));
+  } else {
+    LOG("  %s: { exact: [", aRange.mName);
+    for (auto& entry : aRange.mExact) {
+      LOG("      %s,", NS_ConvertUTF16toUTF8(entry).get());
+    }
+    LOG("    ], ideal: [");
+    for (auto& entry : aRange.mIdeal) {
+      LOG("      %s,", NS_ConvertUTF16toUTF8(entry).get());
+    }
+    LOG("    ]}");
+  }
+}
+
+template<typename T>
+static void
+LogConstraintRange(const NormalizedConstraintSet::Range<T>& aRange)
+{
+  if (aRange.mIdeal.isSome()) {
+    LOG("  %s: { min: %d, max: %d, ideal: %d }",
+         aRange.mName, aRange.mMin, aRange.mMax, aRange.mIdeal.valueOr(0));
+  } else {
+    LOG("  %s: { min: %d, max: %d }", aRange.mName, aRange.mMin, aRange.mMax);
+  }
+}
+
+template<>
+void
+LogConstraintRange(const NormalizedConstraintSet::Range<double>& aRange)
+{
+  if (aRange.mIdeal.isSome()) {
+    LOG("  %s: { min: %f, max: %f, ideal: %f }",
+         aRange.mName, aRange.mMin, aRange.mMax, aRange.mIdeal.valueOr(0));
+  } else {
+    LOG("  %s: { min: %f, max: %f }", aRange.mName, aRange.mMin, aRange.mMax);
+  }
+}
+
+/* static */ void
+MediaConstraintsHelper::LogConstraints(const NormalizedConstraintSet& aConstraints)
+{
+  auto& c = aConstraints;
+  LOG("Constraints: {");
+  LOG("%s", [&]() {
+    LogConstraintRange(c.mWidth);
+    LogConstraintRange(c.mHeight);
+    LogConstraintRange(c.mFrameRate);
+    LogConstraintStringRange(c.mMediaSource);
+    LogConstraintStringRange(c.mFacingMode);
+    LogConstraintStringRange(c.mDeviceId);
+    LogConstraintRange(c.mEchoCancellation);
+    LogConstraintRange(c.mAutoGainControl);
+    LogConstraintRange(c.mNoiseSuppression);
+    LogConstraintRange(c.mChannelCount);
+    return "}";
+  }());
 }
 
 }

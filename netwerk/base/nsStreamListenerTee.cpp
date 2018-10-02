@@ -85,8 +85,7 @@ nsStreamListenerTee::OnDataAvailable(nsIRequest *request,
         rv = mInputTee->SetSource(input);
         if (NS_FAILED(rv)) return rv;
 
-        tee = do_QueryInterface(mInputTee, &rv);
-        if (NS_FAILED(rv)) return rv;
+        tee = mInputTee;
     }
 
     return mListener->OnDataAvailable(request, context, tee, offset, count);
