@@ -1555,9 +1555,9 @@ StartMacOSContentSandbox()
 #endif
   }
 
-  nsAutoCString appPath, appBinaryPath, appDir;
-  if (!nsMacUtilsImpl::GetAppPaths(appPath, appBinaryPath, appDir)) {
-    MOZ_CRASH("Error resolving child process path");
+  nsAutoCString appPath;
+  if (!nsMacUtilsImpl::GetAppPath(appPath)) {
+    MOZ_CRASH("Error resolving child process app path");
   }
 
   ContentChild* cc = ContentChild::GetSingleton();
@@ -1583,8 +1583,6 @@ StartMacOSContentSandbox()
   info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
                    PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.appPath.assign(appPath.get());
-  info.appBinaryPath.assign(appBinaryPath.get());
-  info.appDir.assign(appDir.get());
   info.hasAudio = !Preferences::GetBool("media.cubeb.sandbox");
 
   // These paths are used to whitelist certain directories used by the testing
