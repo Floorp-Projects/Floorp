@@ -457,8 +457,9 @@ var FullZoom = {
 
     // With in-process content browsers, the event's target is the content
     // document.
-    if (target.nodeType == Node.DOCUMENT_NODE)
-      return gBrowser.getBrowserForDocument(target);
+    if (target.nodeType == Node.DOCUMENT_NODE) {
+      return target.ownerGlobal.docShell.chromeEventHandler;
+    }
 
     throw new Error("Unexpected ZoomChangeUsingMouseWheel event source");
   },
