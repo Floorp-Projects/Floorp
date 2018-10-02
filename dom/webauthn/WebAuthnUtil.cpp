@@ -7,7 +7,7 @@
 #include "mozilla/dom/WebAuthnUtil.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsNetUtil.h"
-#include "pkixutil.h"
+#include "mozpkix/pkixutil.h"
 
 namespace mozilla {
 namespace dom {

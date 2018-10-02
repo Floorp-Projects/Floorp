@@ -17,7 +17,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "nsString.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 
 #if defined(_MSC_VER)
 #pragma warning(push)

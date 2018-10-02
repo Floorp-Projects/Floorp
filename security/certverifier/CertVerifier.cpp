@@ -23,8 +23,8 @@
 #include "nsPromiseFlatString.h"
 #include "nsServiceManagerUtils.h"
 #include "pk11pub.h"
-#include "pkix/pkix.h"
-#include "pkix/pkixnss.h"
+#include "mozpkix/pkix.h"
+#include "mozpkix/pkixnss.h"
 #include "secmod.h"
 
 using namespace mozilla::ct;

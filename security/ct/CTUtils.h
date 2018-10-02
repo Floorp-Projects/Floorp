@@ -13,8 +13,8 @@
 #include "keyhi.h"
 #include "keythi.h"
 #include "pk11pub.h"
-#include "pkix/Input.h"
-#include "pkix/Result.h"
+#include "mozpkix/Input.h"
+#include "mozpkix/Result.h"
 
 #define MOZILLA_CT_ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 

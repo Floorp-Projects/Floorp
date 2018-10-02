@@ -23,8 +23,8 @@
 #include "nsSecurityHeaderParser.h"
 #include "nsStreamUtils.h"
 #include "nsWhitespaceTokenizer.h"
-#include "pkix/pkix.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkix.h"
+#include "mozpkix/pkixtypes.h"
 #include "secerr.h"
 
 NS_IMPL_ISUPPORTS(ContentSignatureVerifier,

@@ -21,7 +21,7 @@
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "p12plcy.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 #include "secerr.h"
 
 using namespace mozilla;

@@ -11,9 +11,9 @@
 
 #include "CTLogVerifier.h"
 #include "CTVerifyResult.h"
-#include "pkix/Input.h"
-#include "pkix/Result.h"
-#include "pkix/Time.h"
+#include "mozpkix/Input.h"
+#include "mozpkix/Result.h"
+#include "mozpkix/Time.h"
 #include "SignedCertificateTimestamp.h"
 
 namespace mozilla { namespace ct {

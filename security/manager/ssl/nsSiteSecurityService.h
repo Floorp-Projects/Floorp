@@ -14,7 +14,7 @@
 #include "nsISiteSecurityService.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 #include "prtime.h"
 
 class nsIURI;
