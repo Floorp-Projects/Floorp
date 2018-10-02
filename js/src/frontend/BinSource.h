@@ -213,6 +213,10 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     MOZ_MUST_USE JS::Result<ParseNode*> appendDirectivesToBody(ListNode* body,
         ListNode* directives);
 
+    // Optionally force a strict context without restarting the parse when we see a strict
+    // directive.
+    void forceStrictIfNecessary(FunctionBox* funbox, ListNode* directives);
+
   private: // Implement ErrorReporter
     const JS::ReadOnlyCompileOptions& options_;
 
