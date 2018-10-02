@@ -148,10 +148,28 @@ xmlns="http://www.w3.org/1999/xhtml"
         <menupopup oncommand="TabContextMenu.reopenInContainer(event);"
                    onpopupshowing="TabContextMenu.createReopenInContainerMenu(event);"/>
       </menu>
-      <menuitem id="context_openTabInWindow" label="&moveToNewWindow.label;"
-                accesskey="&moveToNewWindow.accesskey;"
-                tbattr="tabbrowser-multiple"
-                oncommand="gBrowser.replaceTabsWithWindow(TabContextMenu.contextTab);"/>
+      <menu id="context_moveTabOptions"
+            multiselectcontextlabel="&moveSelectedTabOptions.label;"
+            multiselectcontextaccesskey="&moveSelectedTabOptions.accesskey;"
+            nonmultiselectcontextlabel="&moveTabOptions.label;"
+            nonmultiselectcontextaccesskey="&moveTabOptions.accesskey;">
+        <menupopup id="moveTabOptionsMenu">
+          <menuitem id="context_moveToStart"
+                    label="&moveToStart.label;"
+                    accesskey="&moveToStart.accesskey;"
+                    tbattr="tabbrowser-multiple"
+                    oncommand="gBrowser.moveTabsToStart(TabContextMenu.contextTab);"/>
+          <menuitem id="context_moveToEnd"
+                    label="&moveToEnd.label;"
+                    accesskey="&moveToEnd.accesskey;"
+                    tbattr="tabbrowser-multiple"
+                    oncommand="gBrowser.moveTabsToEnd(TabContextMenu.contextTab);"/>
+          <menuitem id="context_openTabInWindow" label="&moveToNewWindow.label;"
+                    accesskey="&moveToNewWindow.accesskey;"
+                    tbattr="tabbrowser-multiple"
+                    oncommand="gBrowser.replaceTabsWithWindow(TabContextMenu.contextTab);"/>
+        </menupopup>
+      </menu>
       <menuseparator id="context_sendTabToDevice_separator" class="sync-ui-item"/>
       <menu id="context_sendTabToDevice"
             class="sync-ui-item">
