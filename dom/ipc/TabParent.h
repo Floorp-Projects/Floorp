@@ -775,6 +775,9 @@ private:
   // and have uploaded - for that, use mHasLayers.
   bool mRenderLayers;
 
+  // Whether this is active for the ProcessPriorityManager or not.
+  bool mActiveInPriorityManager;
+
   // True if the compositor has reported that the TabChild has uploaded
   // layers.
   bool mHasLayers;

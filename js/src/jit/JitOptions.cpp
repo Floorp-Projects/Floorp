@@ -257,6 +257,14 @@ DefaultJitOptions::DefaultJitOptions()
     // faster than Ion code so use scaled thresholds (see also bug 1320374).
     SET_DEFAULT(wasmBatchBaselineThreshold, 10000);
     SET_DEFAULT(wasmBatchIonThreshold, 1100);
+
+#ifdef JS_TRACE_LOGGING
+    // Toggles whether the traceLogger should be on or off.  In either case,
+    // some data structures will always be created and initialized such as
+    // the traceLoggerState.  However, unless this option is set to true
+    // the traceLogger will not be recording any events.
+    SET_DEFAULT(enableTraceLogger, false);
+#endif
 }
 
 bool

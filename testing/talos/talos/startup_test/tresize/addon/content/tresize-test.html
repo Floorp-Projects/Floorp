@@ -5,7 +5,7 @@
 <head>
 <script language="Javascript" type="text/javascript" src="../../../../scripts/Profiler.js"></script>
 <script language="Javascript" type="text/javascript" src="../../../../scripts/MozillaFileLogger.js"></script>
-<script language="Javascript" type="text/javascript" src="resource://talos-powers/TalosPowersContent.js"></script>
+<script language="Javascript" type="text/javascript" src="../../../../talos-powers/content/TalosPowersContent.js"></script>
 <script language="javascript" type="text/javascript">
 
 function runTest() {
@@ -23,7 +23,8 @@ function logResults(data) {
     });
 
 
-    window.setTimeout(function() {
+    window.setTimeout(async function() {
+      await TalosPowers.loadPromise;
       TalosPowersContent.goQuitApplication();
     }, 0);
   } else {

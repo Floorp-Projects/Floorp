@@ -46,7 +46,7 @@ async function testStepOutWithBreakpoint() {
   dumpn("Step out of innerFunction");
   const step2 = await stepOut(gClient, threadClient);
   // The bug was that we'd stop again at the breakpoint on line 7.
-  equal(step2.frame.where.line, 10);
+  equal(step2.frame.where.line, 4);
 
   finishClient(gClient, gCallback);
 }

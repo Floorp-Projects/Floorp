@@ -6,6 +6,7 @@
 
 #include "LauncherProcessWin.h"
 
+#include <io.h> // For printf_stderr
 #include <string.h>
 
 #include "mozilla/Attributes.h"
@@ -14,6 +15,7 @@
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SafeMode.h"
+#include "mozilla/Sprintf.h" // For printf_stderr
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
@@ -117,6 +119,50 @@ ProcessCmdLine(int& aArgc, wchar_t* aArgv[])
   return result;
 }
 
+// Duplicated from xpcom glue. Ideally this should be shared.
+static void
+printf_stderr(const char *fmt, ...)
+{
+  if (IsDebuggerPresent()) {
+    char buf[2048];
+    va_list args;
+    va_start(args, fmt);
+    VsprintfLiteral(buf, fmt, args);
+    va_end(args);
+    OutputDebugStringA(buf);
+  }
+
+  FILE *fp = _fdopen(_dup(2), "a");
+  if (!fp)
+      return;
+
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(fp, fmt, args);
+  va_end(args);
+
+  fclose(fp);
+}
+
+static void
+MaybeBreakForBrowserDebugging()
+{
+  if (mozilla::EnvHasValue("MOZ_DEBUG_BROWSER_PROCESS")) {
+    ::DebugBreak();
+    return;
+  }
+
+  const wchar_t* pauseLenS = _wgetenv(L"MOZ_DEBUG_BROWSER_PAUSE");
+  if (!pauseLenS || !(*pauseLenS)) {
+    return;
+  }
+
+  DWORD pauseLenMs = wcstoul(pauseLenS, nullptr, 10) * 1000;
+  printf_stderr("\n\nBROWSERBROWSERBROWSERBROWSER\n  debug me @ %lu\n\n",
+                ::GetCurrentProcessId());
+  ::Sleep(pauseLenMs);
+}
+
 #if defined(MOZ_LAUNCHER_PROCESS)
 
 static mozilla::Maybe<bool>
@@ -179,6 +225,12 @@ RunAsLauncherProcess(int& argc, wchar_t** argv)
   result |= CheckArg(argc, argv, L"launcher",
                      static_cast<const wchar_t**>(nullptr),
                      CheckArgFlag::RemoveArg) == ARG_FOUND;
+
+  if (!result) {
+    // In this case, we will be proceeding to run as the browser.
+    // We should check MOZ_DEBUG_BROWSER_* env vars.
+    MaybeBreakForBrowserDebugging();
+  }
 
   return result;
 }

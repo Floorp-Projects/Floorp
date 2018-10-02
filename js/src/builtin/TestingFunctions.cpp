@@ -1965,7 +1965,7 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
 #ifdef JS_TRACE_LOGGING
             // Reset the TraceLogger state if enabled.
             TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
-            if (logger->enabled()) {
+            if (logger && logger->enabled()) {
                 while (logger->enabled()) {
                     logger->disable();
                 }

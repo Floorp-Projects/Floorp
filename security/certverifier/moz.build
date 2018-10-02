@@ -9,34 +9,16 @@ with Files("**"):
 
 EXPORTS += [
     'BRNameMatchingPolicy.h',
-    'BTInclusionProof.h',
-    'BTVerifier.h',
-    'Buffer.h',
     'CertVerifier.h',
-    'CTLog.h',
-    'CTPolicyEnforcer.h',
-    'CTVerifyResult.h',
     'OCSPCache.h',
-    'SignedCertificateTimestamp.h',
-    'SignedTreeHead.h',
 ]
 
 UNIFIED_SOURCES += [
     'BRNameMatchingPolicy.cpp',
-    'BTVerifier.cpp',
-    'Buffer.cpp',
     'CertVerifier.cpp',
-    'CTDiversityPolicy.cpp',
-    'CTLogVerifier.cpp',
-    'CTObjectsExtractor.cpp',
-    'CTPolicyEnforcer.cpp',
-    'CTSerialization.cpp',
-    'CTVerifyResult.cpp',
-    'MultiLogCTVerifier.cpp',
     'NSSCertDBTrustDomain.cpp',
     'OCSPCache.cpp',
     'OCSPVerificationTrustDomain.cpp',
-    'SignedCertificateTimestamp.cpp',
 ]
 
 if not CONFIG['NSS_NO_EV_CERTS']:
@@ -45,12 +27,14 @@ if not CONFIG['NSS_NO_EV_CERTS']:
     ]
 
 LOCAL_INCLUDES += [
+    '/security/ct',
     '/security/manager/ssl',
     '/security/pkix/include',
     '/security/pkix/lib',
 ]
 
 DIRS += [
+    '../ct',
     '../pkix',
 ]
 

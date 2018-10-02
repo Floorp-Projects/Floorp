@@ -170,6 +170,7 @@ EXPORTS.js += [
     '../public/StructuredClone.h',
     '../public/SweepingAPI.h',
     '../public/TraceKind.h',
+    '../public/TraceLoggerAPI.h',
     '../public/TracingAPI.h',
     '../public/TrackedOptimizationInfo.h',
     '../public/Transcoding.h',

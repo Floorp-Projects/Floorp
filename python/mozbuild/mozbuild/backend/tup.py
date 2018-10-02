@@ -299,6 +299,11 @@ class TupBackend(CommonBackend):
         return env
 
     def build(self, config, output, jobs, verbose, what=None):
+        if len(what) == 1 and what[0] in ('binaries', 'faster'):
+            print("\nNOTE: `binaries` and `faster` targets are subsumed by the "
+                  "top-level build command in the Tup backend. Running `build` "
+                  "with no parameters instead.\n")
+            what = None
         if not what:
             what = ['%s/<default>' % config.topobjdir]
         else:
@@ -766,7 +771,7 @@ class TupBackend(CommonBackend):
             return []
 
         cargo_flags = ['--build-plan', '-Z', 'unstable-options']
-        if not self.environment.substs.get('MOZ_DEBUG_RUST'):
+        if not obj.config.substs.get('MOZ_DEBUG_RUST'):
             cargo_flags += ['--release']
         cargo_flags += [
             '--frozen',
@@ -1100,7 +1105,7 @@ class TupBackend(CommonBackend):
             if not path:
                 raise Exception("Cannot install to " + target)
 
-        js_shell = self.environment.substs.get('JS_SHELL_NAME')
+        js_shell = obj.config.substs.get('JS_SHELL_NAME')
         if js_shell:
             js_shell = '%s%s' % (js_shell,
                                  self.environment.substs['BIN_SUFFIX'])

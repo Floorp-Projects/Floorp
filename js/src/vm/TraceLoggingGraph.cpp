@@ -19,6 +19,7 @@
 
 #include "builtin/String.h"
 
+#include "js/Printf.h"
 #include "js/UniquePtr.h"
 #include "threading/LockGuard.h"
 #include "threading/Thread.h"
@@ -167,7 +168,7 @@ TraceLoggerGraphState::nextLoggerId()
         char threadName[16];
         js::ThisThread::GetName(threadName, sizeof(threadName));
         if (threadName[0]) {
-            written = fprintf(out, ", \"threadName\":\"%s\"", threadName);
+            written = fprintf(out, R"(, "threadName":"%s")", threadName);
         }
     }
 
@@ -544,7 +545,9 @@ TraceLoggerGraph::logTimestamp(uint32_t id, uint64_t timestamp)
         disable(timestamp);
     }
 
-    if (!eventFile) return;
+    if (!eventFile) {
+        return;
+    }
 
     // Format data in big endian
     timestamp = NativeEndian::swapToBigEndian(timestamp);
@@ -571,7 +574,9 @@ TraceLoggerGraph::getTreeEntry(uint32_t treeId, TreeEntry* entry)
     }
 
     // If treeFile is null and treeOffset is non-zero then something is wrong
-    if (!treeFile) return false;
+    if (!treeFile) {
+        return false;
+    }
 
     // Entry has been flushed to disk. Look it up.
     int success = fseek(treeFile, treeId * sizeof(TreeEntry), SEEK_SET);
@@ -692,6 +697,16 @@ TraceLoggerGraph::log(ContinuousSpace<EventEntry>& events)
 void
 TraceLoggerGraph::addTextId(uint32_t id, const char* text)
 {
+    mozilla::Maybe<uint32_t> line   = mozilla::Nothing();
+    mozilla::Maybe<uint32_t> column = mozilla::Nothing();
+    addTextId(id, text, line, column);
+}
+
+void
+TraceLoggerGraph::addTextId(uint32_t id, const char* text,
+                            mozilla::Maybe<uint32_t>& line,
+                            mozilla::Maybe<uint32_t>& column)
+{
     if (failed) {
         return;
     }
@@ -708,9 +723,19 @@ TraceLoggerGraph::addTextId(uint32_t id, const char* text)
         }
     }
 
-    if (!js::FileEscapedString(dictFile, text, strlen(text), '"')) {
+    js::UniqueChars str;
+    if (line && column) {
+        str = JS_smprintf("script %s:%u:%u", text, *line, *column);
+    } else if (line) {
+        str = JS_smprintf("script %s:%u", text, *line);
+    } else {
+        str = JS_smprintf("%s", text);
+    }
+
+    if (!js::FileEscapedString(dictFile, str.get(), strlen(str.get()), '"')) {
         failed = true;
     }
+    str.reset();
 }
 
 size_t

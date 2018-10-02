@@ -90,6 +90,7 @@ add_task(async function overrideContext_in_extension_tab() {
       browser.menus.create({id: "bg_4", title: "bg_4", documentUrlPatterns: [document.URL]});
 
       browser.menus.onShown.addListener(info => {
+        browser.test.assertEq("tab", info.viewType, "Expected viewType");
         browser.test.assertEq("bg_1,bg_2,tab_1,tab_2", info.menuIds.join(","), "Expected menu items.");
         browser.test.assertEq("all,link", info.contexts.sort().join(","), "Expected menu contexts");
         browser.test.sendMessage("onShown");
@@ -247,6 +248,7 @@ add_task(async function overrideContext_sidebar_edge_cases() {
     });
 
     browser.menus.onShown.addListener(info => {
+      browser.test.assertEq("sidebar", info.viewType, "Expected viewType");
       if (count === 1) {
         browser.test.assertEq("", info.menuIds.join(","), "Expected no items");
         browser.menus.create({id: "some_item", title: "some_item"}, () => {
