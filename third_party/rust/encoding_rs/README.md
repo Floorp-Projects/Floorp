@@ -244,6 +244,14 @@ used in Firefox.
 
 ## Release Notes
 
+### 0.8.8
+
+* Made the `is_foo_bidi()` not treat U+FEFF (ZERO WIDTH NO-BREAK SPACE
+  aka. BYTE ORDER MARK) as right-to-left.
+* Made the `is_foo_bidi()` functions report `true` if the input contains
+  Hebrew presentations forms (which are right-to-left but not in a
+  right-to-left-roadmapped block).
+
 ### 0.8.7
 
 * Fixed a panic in the UTF-16LE/UTF-16BE decoder when decoding to UTF-8.

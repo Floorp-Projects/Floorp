@@ -278,8 +278,8 @@ pub fn is_u16x8_bidi(s: u16x8) -> bool {
     // Quick refutation failed. Let's do the full check.
 
     (in_range16x8!(s, 0x0590, 0x0900)
-        | in_range16x8!(s, 0xFB50, 0xFE00)
-        | in_range16x8!(s, 0xFE70, 0xFF00)
+        | in_range16x8!(s, 0xFB1D, 0xFE00)
+        | in_range16x8!(s, 0xFE70, 0xFEFF)
         | in_range16x8!(s, 0xD802, 0xD804)
         | in_range16x8!(s, 0xD83A, 0xD83C)
         | s.eq(u16x8::splat(0x200F))

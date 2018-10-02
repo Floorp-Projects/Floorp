@@ -401,4 +401,58 @@ mod tests {
             assert_eq!(output[0], 0xFFFD);
         }
     }
+
+    #[test]
+    fn test_utf_16le_decode_near_end() {
+        let mut output = [0u8; 4];
+        let mut decoder = UTF_16LE.new_decoder();
+        {
+            let (result, read, written, had_errors) =
+                decoder.decode_to_utf8(&[0x03], &mut output[..], false);
+            assert_eq!(result, CoderResult::InputEmpty);
+            assert_eq!(read, 1);
+            assert_eq!(written, 0);
+            assert!(!had_errors);
+            assert_eq!(output[0], 0x0);
+        }
+        {
+            let (result, read, written, had_errors) =
+                decoder.decode_to_utf8(&[0x26, 0x03, 0x26], &mut output[..], false);
+            assert_eq!(result, CoderResult::OutputFull);
+            assert_eq!(read, 1);
+            assert_eq!(written, 3);
+            assert!(!had_errors);
+            assert_eq!(output[0], 0xE2);
+            assert_eq!(output[1], 0x98);
+            assert_eq!(output[2], 0x83);
+            assert_eq!(output[3], 0x00);
+        }
+    }
+
+    #[test]
+    fn test_utf_16be_decode_near_end() {
+        let mut output = [0u8; 4];
+        let mut decoder = UTF_16BE.new_decoder();
+        {
+            let (result, read, written, had_errors) =
+                decoder.decode_to_utf8(&[0x26], &mut output[..], false);
+            assert_eq!(result, CoderResult::InputEmpty);
+            assert_eq!(read, 1);
+            assert_eq!(written, 0);
+            assert!(!had_errors);
+            assert_eq!(output[0], 0x0);
+        }
+        {
+            let (result, read, written, had_errors) =
+                decoder.decode_to_utf8(&[0x03, 0x26, 0x03], &mut output[..], false);
+            assert_eq!(result, CoderResult::OutputFull);
+            assert_eq!(read, 1);
+            assert_eq!(written, 3);
+            assert!(!had_errors);
+            assert_eq!(output[0], 0xE2);
+            assert_eq!(output[1], 0x98);
+            assert_eq!(output[2], 0x83);
+            assert_eq!(output[3], 0x00);
+        }
+    }
 }
