@@ -170,7 +170,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         'apt-get install -yyq apt-transport-https ca-certificates && '
         'for task in $PACKAGES; do '
         '  echo "deb [trusted=yes] https://queue.taskcluster.net/v1/task'
-        '/$task/runs/0/artifacts/public/build/ debian/" '
+        '/$task/artifacts/public/build/ debian/" '
         '>> /etc/apt/sources.list; '
         'done && '
         # Install the base utilities required to build debian packages.
