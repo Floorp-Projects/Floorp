@@ -6851,7 +6851,7 @@ var CanvasPermissionPromptHelper = {
     let browser;
     if (aSubject instanceof Ci.nsIDOMWindow) {
       let contentWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      browser = gBrowser.getBrowserForContentWindow(contentWindow);
+      browser = contentWindow.docShell.chromeEventHandler;
     } else {
       browser = aSubject.QueryInterface(Ci.nsIBrowser);
     }
