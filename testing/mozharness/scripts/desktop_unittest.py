@@ -165,6 +165,13 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             "default": False,
             "help": "Run additional verification on modified tests using gpu instances."}
          ],
+        [["--setpref"], {
+            "action": "append",
+            "metavar": "PREF=VALUE",
+            "dest": "extra_prefs",
+            "default": [],
+            "help": "Defines an extra user preference."}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -406,6 +413,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
             if c['headless']:
                 base_cmd.append('--headless')
+
+            if c['extra_prefs']:
+                base_cmd.extend(['--setpref={}'.format(p) for p in c['extra_prefs']])
 
             # set pluginsPath
             abs_res_plugins_dir = os.path.join(abs_res_dir, 'plugins')
