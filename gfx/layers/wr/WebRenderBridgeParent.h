@@ -17,6 +17,7 @@
 #include "mozilla/layers/PWebRenderBridgeParent.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsTArrayForwardDeclare.h"
@@ -221,6 +222,8 @@ public:
   void ForceIsFirstPaint() { mIsFirstPaint = true; }
 
 private:
+  class ScheduleSharedSurfaceRelease;
+
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
 
@@ -237,7 +240,8 @@ private:
                         wr::TransactionBuilder& aResources);
   bool UpdateExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                            const ImageIntRect& aDirtyRect,
-                           wr::TransactionBuilder& aResources);
+                           wr::TransactionBuilder& aResources,
+                           UniquePtr<ScheduleSharedSurfaceRelease>& aScheduleRelease);
 
   bool PushExternalImageForTexture(wr::ExternalImageId aExtId,
                                    wr::ImageKey aKey,
