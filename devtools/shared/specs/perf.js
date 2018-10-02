@@ -50,6 +50,14 @@ const perfDescription = {
       response: {}
     },
 
+    getSymbolTable: {
+      request: {
+        debugPath: Arg(0, "string"),
+        breakpadId: Arg(1, "string"),
+      },
+      response: { value: RetVal("array:array:number") }
+    },
+
     isActive: {
       request: {},
       response: { value: RetVal("boolean") }
