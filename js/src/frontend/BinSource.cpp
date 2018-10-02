@@ -127,7 +127,7 @@ BinASTParser<Tok>::parseAux(GlobalSharedContext* globalsc,
 {
     MOZ_ASSERT(globalsc);
 
-    tokenizer_.emplace(cx_, start, length);
+    tokenizer_.emplace(cx_, this, start, length);
 
     BinParseContext globalpc(cx_, this, globalsc, /* newDirectives = */ nullptr);
     if (!globalpc.init()) {
