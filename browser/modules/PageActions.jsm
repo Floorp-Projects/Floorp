@@ -1137,12 +1137,14 @@ var gBuiltInActions = [
   },
 ];
 
+// send to device
 if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
   gBuiltInActions.push(
-  // send to device
   {
     id: "sendToDevice",
-    title: "sendToDevice-title",
+    // The actual title is set by each window, per window, and depends on the
+    // number of tabs that are selected.
+    title: "sendToDevice",
     onBeforePlacedInWindow(browserWindow) {
       browserPageActions(browserWindow).sendToDevice
         .onBeforePlacedInWindow(browserWindow);
@@ -1162,9 +1164,9 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
   });
 }
 
+// share URL
 if (AppConstants.platform == "macosx") {
   gBuiltInActions.push(
-  // Share URL
   {
     id: "shareURL",
     title: "shareURL-title",

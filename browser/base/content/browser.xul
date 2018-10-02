@@ -540,7 +540,6 @@ xmlns="http://www.w3.org/1999/xhtml"
            noautofocus="true"
            copyURL-title="&pageAction.copyLink.label;"
            emailLink-title="&emailPageCmd.label;"
-           sendToDevice-title=""
            sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;"
            shareURL-title="&pageAction.shareUrl.label;"
            shareMore-label="&pageAction.shareMore.label;">
