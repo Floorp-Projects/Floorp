@@ -7433,13 +7433,6 @@ const gRemoteControl = {
   },
 };
 
-function getTabModalPromptBox(aWindow) {
-  var foundBrowser = gBrowser.getBrowserForDocument(aWindow.document);
-  if (foundBrowser)
-    return gBrowser.getTabModalPromptBox(foundBrowser);
-  return null;
-}
-
 /* DEPRECATED */
 function getBrowser() {
   return gBrowser;
