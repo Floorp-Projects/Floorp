@@ -4,16 +4,17 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.MenuItemSwitcherLayout;
+import org.mozilla.gecko.util.BitmapUtils;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.VectorDrawable;
-import android.support.v4.content.ContextCompat;
+import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.view.LayoutInflater;
@@ -118,11 +119,11 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         if (icon != null) {
             // We want the icon to be of a specific size. Some do not
             // follow this rule so we have to resize them.
-            if (icon instanceof BitmapDrawable) {
-                Bitmap bitmap = ((BitmapDrawable) icon).getBitmap();
+            if (icon instanceof BitmapDrawable ||
+                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && icon instanceof AdaptiveIconDrawable)) {
+                Bitmap bitmap = BitmapUtils.getBitmapFromDrawable(icon);
                 d = new BitmapDrawable(res, Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
             } else {
-                // FIXME: Fix scale issue for AdaptiveIconDrawable in bug 1397174
                 d = icon;
             }
 
