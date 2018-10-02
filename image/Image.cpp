@@ -4,12 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Image.h"
+#include "gfxPrefs.h"
 #include "Layers.h"               // for LayerManager
 #include "nsRefreshDriver.h"
 #include "nsContentUtils.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"        // for Tie
+#include "mozilla/layers/SharedSurfacesChild.h"
 
 namespace mozilla {
 namespace image {
@@ -71,7 +73,7 @@ ImageResource::GetSpecTruncatedTo1k(nsCString& aSpec) const
 void
 ImageResource::SetCurrentImage(ImageContainer* aContainer,
                                SourceSurface* aSurface,
-                               bool aInTransaction)
+                               const Maybe<IntRect>& aDirtyRect)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aContainer);
@@ -97,10 +99,25 @@ ImageResource::SetCurrentImage(ImageContainer* aContainer,
                                                          mLastFrameID++,
                                                          mImageProducerID));
 
-  if (aInTransaction) {
+  if (aDirtyRect) {
     aContainer->SetCurrentImagesInTransaction(imageList);
   } else {
     aContainer->SetCurrentImages(imageList);
+  }
+
+  // If we are generating full frames, and we are animated, then we should
+  // request that the image container be treated as such, to avoid display
+  // list rebuilding to update frames for WebRender.
+  if (gfxPrefs::ImageAnimatedGenerateFullFrames() &&
+      mProgressTracker->GetProgress() & FLAG_IS_ANIMATED) {
+    if (aDirtyRect) {
+      layers::SharedSurfacesChild::UpdateAnimation(aContainer, aSurface,
+                                                   aDirtyRect.ref());
+    } else {
+      IntRect dirtyRect(IntPoint(0, 0), aSurface->GetSize());
+      layers::SharedSurfacesChild::UpdateAnimation(aContainer, aSurface,
+                                                   dirtyRect);
+    }
   }
 }
 
@@ -253,14 +270,14 @@ ImageResource::GetImageContainerImpl(LayerManager* aManager,
     }
   }
 
-  SetCurrentImage(container, surface, true);
+  SetCurrentImage(container, surface, Nothing());
   entry->mLastDrawResult = drawResult;
   container.forget(aOutContainer);
   return drawResult;
 }
 
 void
-ImageResource::UpdateImageContainer()
+ImageResource::UpdateImageContainer(const Maybe<IntRect>& aDirtyRect)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -278,7 +295,12 @@ ImageResource::UpdateImageContainer()
       // managed to convert the weak reference into a strong reference, that
       // means that an imagelib user still is holding onto the container. thus
       // we cannot consolidate and must keep updating the duplicate container.
-      SetCurrentImage(container, surface, false);
+      if (aDirtyRect) {
+        SetCurrentImage(container, surface, aDirtyRect);
+      } else {
+        IntRect dirtyRect(IntPoint(0, 0), bestSize);
+        SetCurrentImage(container, surface, Some(dirtyRect));
+      }
     } else {
       // Stop tracking if our weak pointer to the image container was freed.
       mImageContainers.RemoveElementAt(i);
