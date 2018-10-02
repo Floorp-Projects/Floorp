@@ -42,15 +42,14 @@ function onZoomChange(event) {
   if (event.target.nodeType == event.target.DOCUMENT_NODE) {
     // In non-e10s, the event is dispatched on the contentDocument
     // so we need to jump through some hoops to get to the <xul:browser>.
-    let gBrowser = event.currentTarget.gBrowser;
     let topDoc = event.target.defaultView.top.document;
     if (!topDoc.documentElement) {
       // In some events, such as loading synthetic documents, the
-      // documentElement will be null and getBrowserForDocument will
-      // return null.
+      // documentElement will be null and we won't be able to find
+      // an associated browser.
       return;
     }
-    browser = gBrowser.getBrowserForDocument(topDoc);
+    browser = topDoc.ownerGlobal.docShell.chromeEventHandler;
   } else {
     browser = event.originalTarget;
   }
