@@ -66,8 +66,7 @@ def create_task(name, description, command):
                 "-cx",
                 "export TERM=dumb && git fetch %s %s && git config advice.detachedHead false && git checkout %s && ./gradlew --no-daemon clean %s" % (REPO_URL, BRANCH, COMMIT, command)
             ],
-            "artifacts": {},
-            "deadline": taskcluster.stringDate(deadline)
+            "artifacts": {}
         },
         "provisionerId": "aws-provisioner-v1",
         "metadata": {

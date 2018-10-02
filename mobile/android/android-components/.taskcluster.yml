@@ -10,6 +10,7 @@ tasks:
 ####################################################################################################
   - provisionerId: '{{ taskcluster.docker.provisionerId }}'
     workerType: '{{ taskcluster.docker.workerType }}'
+    deadline: "{{ '2 hours' | $fromNow }}"
     extra:
       github:
         env: true
@@ -24,7 +25,6 @@ tasks:
       - "queue:scheduler-id:taskcluster-github"
     payload:
       maxRunTime: 3600
-      deadline: "{{ '2 hours' | $fromNow }}"
       image: 'mozillamobile/android-components:1.5'
       command:
         - /bin/bash
@@ -48,6 +48,7 @@ tasks:
 ####################################################################################################
   - provisionerId: aws-provisioner-v1
     workerType: gecko-focus
+    deadline: "{{ '2 hours' | $fromNow }}"
     extra:
       github:
         events:
@@ -62,7 +63,6 @@ tasks:
       - "queue:create-task:lowest:scriptworker-prov-v1/mobile-beetmover-v1"
     payload:
       maxRunTime: 600
-      deadline: "{{ '2 hours' | $fromNow }}"
       image: 'mozillamobile/android-components:1.5'
       command:
         - /bin/bash

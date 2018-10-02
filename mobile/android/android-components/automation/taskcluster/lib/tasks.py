@@ -52,8 +52,7 @@ class TaskBuilder(object):
                     "-cx",
                     command
                 ],
-                "artifacts": artifacts,
-                "deadline": taskcluster.stringDate(deadline)
+                "artifacts": artifacts
             },
             "provisionerId": "aws-provisioner-v1",
             "metadata": {
@@ -95,8 +94,7 @@ class TaskBuilder(object):
                     command,
                 ],
                 "artifacts": artifacts,
-                "upstreamZip": upstreamZip,
-                "deadline": taskcluster.stringDate(deadline)
+                "upstreamZip": upstreamZip
             },
             "provisionerId": "aws-provisioner-v1",
             "metadata": {
