@@ -9,4 +9,5 @@
 interface XULTextElement : XULElement {
   attribute boolean disabled;
   attribute DOMString value;
+  attribute DOMString accessKey;
 };

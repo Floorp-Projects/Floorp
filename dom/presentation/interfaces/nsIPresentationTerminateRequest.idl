@@ -22,7 +22,7 @@ interface nsIPresentationTerminateRequest: nsISupports
   readonly attribute nsIPresentationDevice device;
 
   // The Id for representing this session.
-  readonly attribute DOMString presentationId;
+  readonly attribute AString presentationId;
 
   // The control channel for this session.
   // Should only use this channel to complete session termination.

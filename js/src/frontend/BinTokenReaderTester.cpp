@@ -23,12 +23,12 @@ using AutoList = BinTokenReaderTester::AutoList;
 using AutoTaggedTuple = BinTokenReaderTester::AutoTaggedTuple;
 using AutoTuple = BinTokenReaderTester::AutoTuple;
 
-BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, const uint8_t* start, const size_t length)
-    : BinTokenReaderBase(cx, start, length)
+BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, ErrorReporter* er, const uint8_t* start, const size_t length)
+    : BinTokenReaderBase(cx, er, start, length)
 { }
 
-BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, const Vector<uint8_t>& buf)
-    : BinTokenReaderBase(cx, buf.begin(), buf.length())
+BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, ErrorReporter* er, const Vector<uint8_t>& buf)
+    : BinTokenReaderBase(cx, er, buf.begin(), buf.length())
 { }
 
 JS::Result<Ok>
@@ -240,7 +240,7 @@ BinTokenReaderTester::readSkippableSubTree()
         return raiseError("Invalid byte length in readSkippableSubTree");
     }
 
-    const auto start = current_;
+    const auto start = offset();
 
     current_ += byteLen;
 

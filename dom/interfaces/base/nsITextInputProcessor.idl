@@ -327,7 +327,7 @@ interface nsITextInputProcessor : nsISupports
    * Note that if you need to commit or cancel composition, use
    * commitComposition(), commitCompositionWith() or cancelComposition().
    */
-  void setPendingCompositionString(in DOMString aString);
+  void setPendingCompositionString(in AString aString);
 
   // ATTR_RAW_CLAUSE means that the clause hasn't been selected nor converted
   // yet.
@@ -454,7 +454,7 @@ interface nsITextInputProcessor : nsISupports
    *                        false.
    */
   [optional_argc]
-    boolean commitCompositionWith(in DOMString aCommitString,
+    boolean commitCompositionWith(in AString aCommitString,
                                   [optional] in Event aKeyboardEvent,
                                   [optional] in unsigned long aKeyFlags);
 
@@ -592,7 +592,7 @@ interface nsITextInputProcessor : nsISupports
    * @return                true if the modifier key is active.  Otherwise,
    *                        false.
    */
-  boolean getModifierState(in DOMString aModifierKey);
+  boolean getModifierState(in AString aModifierKey);
 
   /**
    * shareModifierStateOf() makes the instance shares modifier state of

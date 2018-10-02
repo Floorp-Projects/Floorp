@@ -55,8 +55,8 @@ interface nsIPresentationControlServerListener: nsISupports
    * @param aControlChannel The control channel for this session.
    */
   void onSessionRequest(in nsITCPDeviceInfo aDeviceInfo,
-                        in DOMString aUrl,
-                        in DOMString aPresentationId,
+                        in AString aUrl,
+                        in AString aPresentationId,
                         in nsIPresentationControlChannel aControlChannel);
 
   /**
@@ -67,7 +67,7 @@ interface nsIPresentationControlServerListener: nsISupports
    * @param aIsFromReceiver true if termination is initiated by receiver.
    */
   void onTerminateRequest(in nsITCPDeviceInfo aDeviceInfo,
-                          in DOMString aPresentationId,
+                          in AString aPresentationId,
                           in nsIPresentationControlChannel aControlChannel,
                           in boolean aIsFromReceiver);
 
@@ -79,8 +79,8 @@ interface nsIPresentationControlServerListener: nsISupports
    * @param aControlChannel The control channel for this session.
    */
   void onReconnectRequest(in nsITCPDeviceInfo aDeviceInfo,
-                          in DOMString url,
-                          in DOMString aPresentationId,
+                          in AString url,
+                          in AString aPresentationId,
                           in nsIPresentationControlChannel aControlChannel);
 };
 

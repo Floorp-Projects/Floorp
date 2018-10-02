@@ -29,7 +29,7 @@ interface nsIURIRefObject  : nsISupports
   /**
    * Return the next rewritable URI.
    */
-  DOMString GetNextURI();
+  AString GetNextURI();
 
   /**
    * Go back to the beginning of the attribute list
@@ -38,6 +38,6 @@ interface nsIURIRefObject  : nsISupports
    * @param aNewPat  New pattern to be replaced, e.g. http://mypage.aol.com/
    * @param aMakeRel Rewrite links as relative vs. absolute
    */
-  void RewriteAllURIs(in DOMString aOldPat, in DOMString aNewPat,
+  void RewriteAllURIs(in AString aOldPat, in AString aNewPat,
                       in boolean aMakeRel);
 };

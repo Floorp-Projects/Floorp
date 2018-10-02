@@ -8,6 +8,7 @@
 #include "mozilla/dom/MIDIAccess.h"
 #include "mozilla/dom/MIDIManagerChild.h"
 #include "mozilla/dom/MIDIPermissionRequest.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -70,6 +71,12 @@ MIDIAccessManager::RequestMIDIAccess(nsPIDOMWindowInner* aWindow,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
+
+  if (!FeaturePolicyUtils::IsFeatureAllowed(doc, NS_LITERAL_STRING("midi"))) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
   nsCOMPtr<nsIRunnable> permRunnable = new MIDIPermissionRequest(aWindow, p, aOptions);
   aRv = NS_DispatchToMainThread(permRunnable);
   if (NS_WARN_IF(aRv.Failed())) {

@@ -1051,7 +1051,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
     // that eval returns lambda, not function statement.
     bool addParentheses = haveSource && isToSource && (fun->isLambda() && !fun->isArrow());
 
-    if (haveSource && !script->scriptSource()->hasSourceData() &&
+    if (haveSource && !script->scriptSource()->hasSourceText() &&
         !JSScript::loadSource(cx, script->scriptSource(), &haveSource))
     {
         return nullptr;
@@ -1750,6 +1750,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
         // StaticScopeIter queries needsCallObject of those functions, which
         // requires a non-lazy script.  Note that if this ever changes,
         // XDRRelazificationInfo will have to be fixed.
+        bool isBinAST = lazy->scriptSource()->hasBinASTSource();
         bool canRelazify = !lazy->numInnerFunctions() && !lazy->hasDirectEval();
 
         if (script) {
@@ -1783,24 +1784,38 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 
         // This is lazy canonical-function.
 
-        MOZ_ASSERT(lazy->scriptSource()->hasSourceData());
-
-        // Parse and compile the script from source.
         size_t lazyLength = lazy->sourceEnd() - lazy->sourceStart();
-        UncompressedSourceCache::AutoHoldEntry holder;
-        ScriptSource::PinnedChars chars(cx, lazy->scriptSource(), holder,
-                                        lazy->sourceStart(), lazyLength);
-        if (!chars.get()) {
-            return false;
-        }
+        if (isBinAST) {
+#if defined(JS_BUILD_BINAST)
+            if (!frontend::CompileLazyBinASTFunction(cx, lazy,
+                    lazy->scriptSource()->binASTSource() + lazy->sourceStart(), lazyLength))
+            {
+                MOZ_ASSERT(fun->isInterpretedLazy());
+                MOZ_ASSERT(fun->lazyScript() == lazy);
+                MOZ_ASSERT(!lazy->hasScript());
+                return false;
+            }
+#else
+            MOZ_CRASH("Trying to delazify BinAST function in non-BinAST build");
+#endif /*JS_BUILD_BINAST */
+        } else {
+            MOZ_ASSERT(lazy->scriptSource()->hasSourceText());
 
-        if (!frontend::CompileLazyFunction(cx, lazy, chars.get(), lazyLength)) {
-            // The frontend shouldn't fail after linking the function and the
-            // non-lazy script together.
-            MOZ_ASSERT(fun->isInterpretedLazy());
-            MOZ_ASSERT(fun->lazyScript() == lazy);
-            MOZ_ASSERT(!lazy->hasScript());
-            return false;
+            // Parse and compile the script from source.
+            UncompressedSourceCache::AutoHoldEntry holder;
+            ScriptSource::PinnedChars chars(cx, lazy->scriptSource(), holder,
+                                            lazy->sourceStart(), lazyLength);
+            if (!chars.get())
+                return false;
+
+            if (!frontend::CompileLazyFunction(cx, lazy, chars.get(), lazyLength)) {
+		// The frontend shouldn't fail after linking the function and the
+		// non-lazy script together.
+                MOZ_ASSERT(fun->isInterpretedLazy());
+                MOZ_ASSERT(fun->lazyScript() == lazy);
+                MOZ_ASSERT(!lazy->hasScript());
+                return false;
+            }
         }
 
         script = fun->nonLazyScript();

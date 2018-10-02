@@ -82,7 +82,7 @@ interface nsIAccessible : nsISupports
   /**
     * For remote accessibles the id of the related DOM node.
     */
-  readonly attribute DOMString id;
+  readonly attribute AString id;
 
   /**
    * The document accessible that this access node resides in.
@@ -97,7 +97,7 @@ interface nsIAccessible : nsISupports
   /**
    * The language for the current DOM node, e.g. en, de, etc.
    */
-  readonly attribute DOMString language;
+  readonly attribute AString language;
 
   /**
    * Accessible name -- the main text equivalent for this node. The name is
