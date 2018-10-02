@@ -490,21 +490,27 @@ var PlacesCommandHook = {
    * Adds a folder with bookmarks to URIList given in param.
    */
   bookmarkPages(URIList) {
-    if (!URIList.length) {
-      return;
-    }
-
-    let bookmarkDialogInfo = {action: "add"};
     if (URIList.length > 1) {
-      bookmarkDialogInfo.type = "folder";
-      bookmarkDialogInfo.URIList = URIList;
-    } else {
-      bookmarkDialogInfo.type = "bookmark";
-      bookmarkDialogInfo.title = URIList[0].title;
-      bookmarkDialogInfo.uri = URIList[0].uri;
+      PlacesUIUtils.showBookmarkDialog({ action: "add",
+                                         type: "folder",
+                                         URIList,
+                                       }, window);
     }
+  },
 
-    PlacesUIUtils.showBookmarkDialog(bookmarkDialogInfo, window);
+  /**
+   * Updates disabled state for the "Bookmark All Tabs" command.
+   */
+  updateBookmarkAllTabsCommand:
+  function PCH_updateBookmarkAllTabsCommand() {
+    // There's nothing to do in non-browser windows.
+    if (window.location.href != AppConstants.BROWSER_CHROME_URL)
+      return;
+
+    // Disable "Bookmark All Tabs" if there are less than two
+    // "unique current pages".
+    goSetCommandEnabled("Browser:BookmarkAllTabs",
+                        this.uniqueCurrentPages.length >= 2);
   },
 
   /**
@@ -1563,6 +1569,7 @@ var BookmarkingUI = {
       return;
 
     this.updateBookmarkPageMenuItem();
+    PlacesCommandHook.updateBookmarkAllTabsCommand();
     this._initMobileBookmarks(document.getElementById("menu_mobileBookmarks"));
   },
 

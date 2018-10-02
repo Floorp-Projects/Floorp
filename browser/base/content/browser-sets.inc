@@ -55,6 +55,8 @@
     <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs"
              oncommand="PlacesCommandHook.bookmarkPage();"/>
+    <!-- The command disabled state must be manually updated through
+         PlacesCommandHook.updateBookmarkAllTabsCommand() -->
     <command id="Browser:BookmarkAllTabs"
              oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueCurrentPages);"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
