@@ -48,7 +48,7 @@ CodeGeneratorARM64::generateOutOfLineCode()
         masm.bind(&deoptLabel_);
 
         // Store the frame size, so the handler can recover the IonScript.
-        masm.Mov(x30, frameSize());
+        masm.push(Imm32(frameSize()));
 
         TrampolinePtr handler = gen->jitRuntime()->getGenericBailoutHandler();
         masm.jump(handler);
@@ -158,8 +158,8 @@ CodeGeneratorARM64::bailoutIf(Assembler::Condition condition, LSnapshot* snapsho
 void
 CodeGeneratorARM64::bailoutFrom(Label* label, LSnapshot* snapshot)
 {
-    MOZ_ASSERT(label->used());
-    MOZ_ASSERT(!label->bound());
+    MOZ_ASSERT_IF(!masm.oom(), label->used());
+    MOZ_ASSERT_IF(!masm.oom(), !label->bound());
 
     encode(snapshot);
 
