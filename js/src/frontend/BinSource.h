@@ -48,8 +48,11 @@ class BinASTParserBase: private JS::AutoGCRooter
 
     // --- GC.
 
+    virtual void doTrace(JSTracer* trc) {}
+
     void trace(JSTracer* trc) {
         ObjectBox::TraceList(trc, traceListHead_);
+        doTrace(trc);
     }
 
 
@@ -129,14 +132,17 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
      * In case of error, the parser reports the JS error.
      */
     JS::Result<ParseNode*> parse(GlobalSharedContext* globalsc,
-                                 const uint8_t* start, const size_t length);
-    JS::Result<ParseNode*> parse(GlobalSharedContext* globalsc, const Vector<uint8_t>& data);
+                                 const uint8_t* start, const size_t length,
+                                 BinASTSourceMetadata** metadataPtr = nullptr);
+    JS::Result<ParseNode*> parse(GlobalSharedContext* globalsc, const Vector<uint8_t>& data,
+                                 BinASTSourceMetadata** metadataPtr = nullptr);
 
-    JS::Result<ParseNode*> parseLazyFunction(const uint8_t* start, const size_t firstOffset, const size_t length);
+    JS::Result<ParseNode*> parseLazyFunction(ScriptSource* src, const size_t firstOffset);
 
   private:
     MOZ_MUST_USE JS::Result<ParseNode*> parseAux(GlobalSharedContext* globalsc,
-                                                 const uint8_t* start, const size_t length);
+                                                 const uint8_t* start, const size_t length,
+                                                 BinASTSourceMetadata** metadataPtr = nullptr);
 
     // --- Raise errors.
     //
@@ -231,6 +237,8 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     const JS::ReadOnlyCompileOptions& options() const override {
         return this->options_;
     }
+
+    void doTrace(JSTracer* trc) final;
 
   public:
     virtual ObjectBox* newObjectBox(JSObject* obj) override {

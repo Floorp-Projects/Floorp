@@ -10,6 +10,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ScopeExit.h"
 
 #include <utility>
 
@@ -47,12 +48,34 @@ using Chars = BinTokenReaderMultipart::Chars;
 
 BinTokenReaderMultipart::BinTokenReaderMultipart(JSContext* cx, ErrorReporter* er, const uint8_t* start, const size_t length)
   : BinTokenReaderBase(cx, er, start, length)
-  , grammarTable_(cx)
-  , atomsTable_(cx, AtomVector(cx))
-  , slicesTable_(cx)
+  , metadata_(nullptr)
   , posBeforeTree_(nullptr)
 {
     MOZ_ASSERT(er);
+}
+
+BinTokenReaderMultipart::~BinTokenReaderMultipart()
+{
+    if (metadata_ && metadataOwned_ == MetadataOwnership::Owned) {
+        UniqueBinASTSourceMetadataPtr ptr(metadata_);
+    }
+}
+
+BinASTSourceMetadata*
+BinTokenReaderMultipart::takeMetadata()
+{
+    MOZ_ASSERT(metadataOwned_ == MetadataOwnership::Owned);
+    metadataOwned_ = MetadataOwnership::Unowned;
+    return metadata_;
+}
+
+JS::Result<Ok>
+BinTokenReaderMultipart::initFromScriptSource(ScriptSource* scriptSource)
+{
+    metadata_ = scriptSource->binASTSourceMetadata();
+    metadataOwned_ = MetadataOwnership::Unowned;
+
+    return Ok();
 }
 
 JS::Result<Ok>
@@ -89,6 +112,7 @@ BinTokenReaderMultipart::readHeader()
 
     // This table maps BinKind index -> BinKind.
     // Initialize and populate.
+    Vector<BinKind> grammarTable_(cx_);
     if (!grammarTable_.reserve(grammarNumberOfEntries)) {
         return raiseOOM();
     }
@@ -130,14 +154,14 @@ BinTokenReaderMultipart::readHeader()
         return raiseError("Too many entries in strings table");
     }
 
-    // This table maps String index -> String.
-    // Initialize and populate.
-    if (!atomsTable_.reserve(stringsNumberOfEntries)) {
+    BinASTSourceMetadata* metadata = BinASTSourceMetadata::Create(grammarTable_, stringsNumberOfEntries);
+    if (!metadata) {
         return raiseOOM();
     }
-    if (!slicesTable_.reserve(stringsNumberOfEntries)) {
-        return raiseOOM();
-    }
+
+    // Free it if we don't make it out of here alive. Since we don't want to calloc(), we
+    // need to avoid marking atoms that might not be there.
+    auto se = mozilla::MakeScopeExit([metadata](){ js_free(metadata); });
 
     RootedAtom atom(cx_);
     for (uint32_t i = 0; i < stringsNumberOfEntries; ++i) {
@@ -153,12 +177,10 @@ BinTokenReaderMultipart::readHeader()
             BINJS_TRY_VAR(atom, AtomizeUTF8Chars(cx_, (const char*)current_, byteLen));
         }
 
-        // Populate `atomsTable_`: i => atom.
-        atomsTable_.infallibleAppend(atom); // We have reserved before entering the loop.
+        metadata->getAtom(i) = atom;
 
         // Populate `slicesTable_`: i => slice
-        Chars slice((const char*)current_, byteLen);
-        slicesTable_.infallibleAppend(std::move(slice)); // We have reserved before entering the loop.
+        new (&metadata->getSlice(i)) Chars((const char*)current_, byteLen);
 
         current_ += byteLen;
     }
@@ -166,6 +188,11 @@ BinTokenReaderMultipart::readHeader()
     if (posBeforeStrings + stringsByteLen != current_) {
         return raiseError("The length of the strings table didn't match its contents.");
     }
+
+    MOZ_ASSERT(!metadata_);
+    se.release();
+    metadata_ = metadata;
+    metadataOwned_ = MetadataOwnership::Owned;
 
     // Start reading AST.
     MOZ_TRY(readConst(SECTION_HEADER_TREE));
@@ -180,6 +207,14 @@ BinTokenReaderMultipart::readHeader()
 
     // At this stage, we're ready to start reading the tree.
     return Ok();
+}
+
+void
+BinTokenReaderMultipart::traceMetadata(JSTracer* trc)
+{
+    if (metadata_) {
+        metadata_->trace(trc);
+    }
 }
 
 JS::Result<bool>
@@ -233,10 +268,10 @@ BinTokenReaderMultipart::readMaybeAtom()
     updateLatestKnownGood();
     BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
-    if (index >= atomsTable_.length()) {
+    if (index >= metadata_->numStrings()) {
         return raiseError("Invalid index to strings table");
     }
-    return atomsTable_[index].get();
+    return metadata_->getAtom(index);
 }
 
 JS::Result<JSAtom*>
@@ -257,11 +292,11 @@ BinTokenReaderMultipart::readChars(Chars& out)
     updateLatestKnownGood();
     BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
-    if (index >= slicesTable_.length()) {
+    if (index >= metadata_->numStrings()) {
         return raiseError("Invalid index to strings table for string enum");
     }
 
-    out = slicesTable_[index];
+    out = metadata_->getSlice(index);
     return Ok();
 }
 
@@ -271,7 +306,7 @@ BinTokenReaderMultipart::readVariant()
     updateLatestKnownGood();
     BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
-    if (index >= slicesTable_.length()) {
+    if (index >= metadata_->numStrings()) {
         return raiseError("Invalid index to strings table for string enum");
     }
 
@@ -286,7 +321,7 @@ BinTokenReaderMultipart::readVariant()
     // Note that we stop parsing if we attempt to readVariant() with an
     // ill-formed variant, so we don't run the risk of feching an ill-variant
     // more than once.
-    Chars slice = slicesTable_[index]; // We have checked `index` above.
+    Chars slice = metadata_->getSlice(index); // We have checked `index` above.
     BINJS_MOZ_TRY_DECL(variant, cx_->runtime()->binast().binVariant(cx_, slice));
 
     if (!variant) {
@@ -334,11 +369,11 @@ JS::Result<Ok>
 BinTokenReaderMultipart::enterTaggedTuple(BinKind& tag, BinTokenReaderMultipart::BinFields&, AutoTaggedTuple& guard)
 {
     BINJS_MOZ_TRY_DECL(index, readInternalUint32());
-    if (index >= grammarTable_.length()) {
+    if (index >= metadata_->numBinKinds()) {
         return raiseError("Invalid index to grammar table");
     }
 
-    tag = grammarTable_[index];
+    tag = metadata_->getBinKind(index);
 
     // Enter the body.
     guard.init();
