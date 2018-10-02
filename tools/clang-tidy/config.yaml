@@ -18,14 +18,29 @@ clang_checkers:
   - name: bugprone-assert-side-effect
   - name: bugprone-bool-pointer-implicit-conversion
   - name: bugprone-forward-declaration-namespace
+  - name: bugprone-incorrect-roundings
+  - name: bugprone-integer-division
+  - name: bugprone-macro-parentheses
   - name: bugprone-macro-repeated-side-effects
+  - name: bugprone-misplaced-widening-cast
+  - name: bugprone-multiple-statement-macro
+  - name: bugprone-sizeof-expression
   - name: bugprone-string-constructor
   - name: bugprone-string-integer-assignment
   - name: bugprone-suspicious-memset-usage
   - name: bugprone-suspicious-missing-comma
   - name: bugprone-suspicious-semicolon
+  - name: bugprone-suspicious-string-compare
   - name: bugprone-swapped-arguments
   - name: bugprone-unused-raii
+  - name: bugprone-use-after-move
+  - name: clang-analyzer-core.CallAndMessage
+  - name: clang-analyzer-core.DivideZero
+  - name: clang-analyzer-core.NonNullParamChecker
+  - name: clang-analyzer-core.NullDereference
+  - name: clang-analyzer-core.UndefinedBinaryOperatorResult
+  - name: clang-analyzer-core.uninitialized.Assign
+  - name: clang-analyzer-core.uninitialized.Branch
   - name: clang-analyzer-cplusplus.NewDelete
   - name: clang-analyzer-cplusplus.NewDeleteLeaks
   - name: clang-analyzer-deadcode.DeadStores
@@ -46,6 +61,8 @@ clang_checkers:
   - name: clang-analyzer-unix.Malloc
   - name: clang-analyzer-unix.cstring.BadSizeArg
   - name: clang-analyzer-unix.cstring.NullArg
+  - name: misc-non-copyable-objects
+  - name: misc-redundant-expression
   - name: misc-unused-alias-decls
   - name: misc-unused-using-decls
   - name: modernize-avoid-bind
@@ -86,14 +103,18 @@ clang_checkers:
   - name: readability-braces-around-statements
   # Note: this can be loosened up by using the ShortStatementLines option
   - name: readability-container-size-empty
+  - name: readability-delete-null-pointer
   - name: readability-else-after-return
+  - name: readability-inconsistent-declaration-parameter-name
   - name: readability-misleading-indentation
+  - name: readability-non-const-parameter
   - name: readability-redundant-control-flow
   - name: readability-redundant-smartptr-get
     publish: !!bool no
   - name: readability-redundant-string-cstr
   - name: readability-redundant-string-init
   - name: readability-static-accessed-through-instance
+  - name: readability-simplify-boolean-expr
   - name: readability-uniqueptr-delete-release
   # We don't publish the google checkers since we are interested in only having
   # a general idea how our code complies with the rules added by these checkers.
