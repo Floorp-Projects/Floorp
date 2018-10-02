@@ -16,6 +16,8 @@
 #include "nsITextInputProcessorCallback.h"
 #include "nsTArray.h"
 
+class nsPIDOMWindowInner;
+
 namespace mozilla {
 
 namespace dom {
@@ -49,6 +51,41 @@ public:
                       WidgetKeyboardEvent& aKeyboardEvent,
                       uint32_t aIndexOfKeypress,
                       void* aData) override;
+
+  /**
+   * TextInputProcessor manages modifier key state.  E.g., when it dispatches
+   * a modifier keydown event, activates proper modifier state and when it
+   * dispatches a modifier keyup event, inactivates proper modifier state.
+   * This returns all active modifiers in the instance.
+   */
+  Modifiers GetActiveModifiers() const
+  {
+    return mModifierKeyDataArray ?
+      mModifierKeyDataArray->GetActiveModifiers() : MODIFIER_NONE;
+  }
+
+  /**
+   * This begins transaction for fuzzing.  This must be called only by
+   * FuzzingFunctions since this skips the permission check.
+   * See explanation of nsITextInputProcessor::BeginInputTransaction() for
+   * the detail.
+   */
+  nsresult
+  BeginInputTransactionForFuzzing(nsPIDOMWindowInner* aWindow,
+                                  nsITextInputProcessorCallback* aCallback,
+                                  bool* aSucceeded);
+
+  /**
+   * The following Keydown() and KeyUp() are same as nsITextInputProcessor's
+   * same name methods except the type of event class.  See explanation in
+   * nsITextInputProcessor for the detail.
+   */
+  nsresult Keydown(const WidgetKeyboardEvent& aKeyboardEvent,
+                   uint32_t aKeyFlags,
+                   uint32_t* aConsumedFlags = nullptr);
+  nsresult Keyup(const WidgetKeyboardEvent& aKeyboardEvent,
+                 uint32_t aKeyFlags,
+                 bool* aDoDefault = nullptr);
 
   /**
    * GuessCodeNameIndexOfPrintableKeyInUSEnglishLayout() returns CodeNameIndex
@@ -197,11 +234,6 @@ private:
     virtual ~ModifierKeyDataArray() { }
   };
 
-  Modifiers GetActiveModifiers() const
-  {
-    return mModifierKeyDataArray ?
-      mModifierKeyDataArray->GetActiveModifiers() : 0;
-  }
   void EnsureModifierKeyDataArray()
   {
     if (mModifierKeyDataArray) {

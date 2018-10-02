@@ -694,6 +694,34 @@ public:
       aEvent.mEditCommandsForRichTextEditorInitialized;
   }
 
+  void AssignCommands(const WidgetKeyboardEvent& aEvent)
+  {
+    mEditCommandsForSingleLineEditorInitialized =
+      aEvent.mEditCommandsForSingleLineEditorInitialized;
+    if (mEditCommandsForSingleLineEditorInitialized) {
+      mEditCommandsForSingleLineEditor =
+        aEvent.mEditCommandsForSingleLineEditor;
+    } else {
+      mEditCommandsForSingleLineEditor.Clear();
+    }
+    mEditCommandsForMultiLineEditorInitialized =
+      aEvent.mEditCommandsForMultiLineEditorInitialized;
+    if (mEditCommandsForMultiLineEditorInitialized) {
+      mEditCommandsForMultiLineEditor =
+        aEvent.mEditCommandsForMultiLineEditor;
+    } else {
+      mEditCommandsForMultiLineEditor.Clear();
+    }
+    mEditCommandsForRichTextEditorInitialized =
+      aEvent.mEditCommandsForRichTextEditorInitialized;
+    if (mEditCommandsForRichTextEditorInitialized) {
+      mEditCommandsForRichTextEditor =
+        aEvent.mEditCommandsForRichTextEditor;
+    } else {
+      mEditCommandsForRichTextEditor.Clear();
+    }
+  }
+
 private:
   static const char16_t* const kKeyNames[];
   static const char16_t* const kCodeNames[];
