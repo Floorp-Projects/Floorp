@@ -412,7 +412,7 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t
     return true;
 }
 
-template <InflateUTF8Action Action, OnUTF8Error ErrorAction, typename CharsT>
+template <OnUTF8Error ErrorAction, typename CharsT>
 static CharsT
 InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 {
@@ -420,7 +420,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
     *outlen = 0;
 
     JS::SmallestEncoding encoding;
-    if (!InflateUTF8StringToBuffer<Action, ErrorAction, CharT>(cx, src, /* dst = */ nullptr, outlen, &encoding)) {
+    if (!InflateUTF8StringToBuffer<Count, ErrorAction, CharT>(cx, src, /* dst = */ nullptr, outlen, &encoding)) {
         return CharsT();
     }
 
@@ -448,27 +448,27 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<Count, OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8, outlen);
 }
 
 TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen)
 {
     UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-    return InflateUTF8StringHelper<Count, OnUTF8Error::Throw, TwoByteCharsZ>(cx, chars, outlen);
+    return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, chars, outlen);
 }
 
 TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<Count, OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, utf8, outlen);
 }
 
 TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::ConstUTF8CharsZ& utf8, size_t* outlen)
 {
     UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-    return InflateUTF8StringHelper<Count, OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, chars, outlen);
+    return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, chars, outlen);
 }
 
 JS::SmallestEncoding
@@ -487,13 +487,13 @@ JS::FindSmallestEncoding(UTF8Chars utf8)
 Latin1CharsZ
 JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<Count, OnUTF8Error::Throw, Latin1CharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<OnUTF8Error::Throw, Latin1CharsZ>(cx, utf8, outlen);
 }
 
 Latin1CharsZ
 JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<Count, OnUTF8Error::InsertReplacementCharacter, Latin1CharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter, Latin1CharsZ>(cx, utf8, outlen);
 }
 
 #ifdef DEBUG
