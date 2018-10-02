@@ -45,14 +45,6 @@ mozharness.mozilla.purge module
     :undoc-members:
     :show-inheritance:
 
-mozharness.mozilla.signing module
----------------------------------
-
-.. automodule:: mozharness.mozilla.signing
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 mozharness.mozilla.tooltool module
 ----------------------------------
 
