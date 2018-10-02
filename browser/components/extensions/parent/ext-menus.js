@@ -68,23 +68,27 @@ var gMenuBuilder = {
     if (!webExtContextData || !webExtContextData.overrideContext) {
       return contextData;
     }
+    let contextDataBase = {
+      menu: contextData.menu,
+      // eslint-disable-next-line no-use-before-define
+      originalViewType: getContextViewType(contextData),
+      webExtContextData,
+    };
     if (webExtContextData.overrideContext === "bookmark") {
       return {
-        menu: contextData.menu,
+        ...contextDataBase,
         bookmarkId: webExtContextData.bookmarkId,
         onBookmark: true,
-        webExtContextData,
       };
     }
     if (webExtContextData.overrideContext === "tab") {
       // TODO: Handle invalid tabs more gracefully (instead of throwing).
       let tab = tabTracker.getTab(webExtContextData.tabId);
       return {
-        menu: contextData.menu,
+        ...contextDataBase,
         tab,
         pageUrl: tab.linkedBrowser.currentURI.spec,
         onTab: true,
-        webExtContextData,
       };
     }
     throw new Error(`Unexpected overrideContext: ${webExtContextData.overrideContext}`);
@@ -550,7 +554,22 @@ const getMenuContexts = contextData => {
   return contexts;
 };
 
+function getContextViewType(contextData) {
+  if ("originalViewType" in contextData) {
+    return contextData.originalViewType;
+  }
+  if (contextData.webExtBrowserType === "popup" ||
+      contextData.webExtBrowserType === "sidebar") {
+    return contextData.webExtBrowserType;
+  }
+  if (contextData.tab && contextData.menu.id === "contentAreaContextMenu") {
+    return "tab";
+  }
+  return undefined;
+}
+
 function addMenuEventInfo(info, contextData, extension, includeSensitiveData) {
+  info.viewType = getContextViewType(contextData);
   if (contextData.onVideo) {
     info.mediaType = "video";
   } else if (contextData.onAudio) {
@@ -779,6 +798,10 @@ MenuItem.prototype = {
     }
     let contexts = getMenuContexts(contextData);
     if (!this.contexts.some(n => contexts.has(n))) {
+      return false;
+    }
+
+    if (this.viewTypes && !this.viewTypes.includes(getContextViewType(contextData))) {
       return false;
     }
 

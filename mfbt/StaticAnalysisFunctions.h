@@ -11,6 +11,9 @@
 #ifndef bool
 #include <stdbool.h>
 #endif
+#define MOZ_CONSTEXPR
+#else  // __cplusplus
+#define MOZ_CONSTEXPR constexpr
 #endif
 /*
  * Functions that are used as markers in Gecko code for static analysis. Their
@@ -37,7 +40,6 @@ static MOZ_ALWAYS_INLINE T* MOZ_KnownLive(T* ptr) { return ptr; }
 template <typename T>
 static MOZ_ALWAYS_INLINE T& MOZ_KnownLive(T& ref) { return ref; }
 
-extern "C" {
 #endif
 
 /**
@@ -47,13 +49,9 @@ extern "C" {
  * Example:
  * MOZ_ASSERT(retVal = true);
  */
-static MOZ_ALWAYS_INLINE bool MOZ_AssertAssignmentTest(bool exprResult) {
+static MOZ_ALWAYS_INLINE MOZ_CONSTEXPR bool MOZ_AssertAssignmentTest(bool exprResult) {
   return exprResult;
 }
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 #define MOZ_CHECK_ASSERT_ASSIGNMENT(expr) MOZ_AssertAssignmentTest(!!(expr))
 

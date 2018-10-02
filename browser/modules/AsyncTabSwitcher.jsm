@@ -995,6 +995,8 @@ class AsyncTabSwitcher {
     this.logState("requestTab " + this.tinfo(tab));
     this.startTabSwitch();
 
+    let oldBrowser = this.requestedTab.linkedBrowser;
+    oldBrowser.deprioritize();
     this.requestedTab = tab;
     if (tabState == this.STATE_LOADED) {
       this.maybeVisibleTabs.clear();

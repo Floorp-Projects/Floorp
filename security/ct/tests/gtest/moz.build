@@ -1,0 +1,27 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'BTSerializationTest.cpp',
+    'CTDiversityPolicyTest.cpp',
+    'CTLogVerifierTest.cpp',
+    'CTObjectsExtractorTest.cpp',
+    'CTPolicyEnforcerTest.cpp',
+    'CTSerializationTest.cpp',
+    'CTTestUtils.cpp',
+    'MultiLogCTVerifierTest.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '../..',
+    '/security/pkix/include',
+    '/security/pkix/lib',
+]
+
+if not CONFIG['MOZ_DEBUG']:
+    DEFINES['NDEBUG'] = True
+
+FINAL_LIBRARY = 'xul-gtest'

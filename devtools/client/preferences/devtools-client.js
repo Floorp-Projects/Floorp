@@ -232,9 +232,6 @@ pref("devtools.dom.enabled", false);
 
 // Enable the Accessibility panel.
 pref("devtools.accessibility.enabled", true);
-// Counter to promote the Accessibility panel.
-// @remove after release 63 (See Bug 1482461)
-pref("devtools.promote.accessibility", 1);
 
 // Web Audio Editor Inspector Width should be a preference
 pref("devtools.webaudioeditor.inspectorWidth", 300);
