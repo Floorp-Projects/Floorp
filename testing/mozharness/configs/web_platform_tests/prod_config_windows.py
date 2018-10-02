@@ -6,7 +6,9 @@
 
 # This is a template config file for web-platform-tests test.
 
+import os
 import sys
+
 
 config = {
     "options": [
@@ -25,6 +27,9 @@ config = {
     },
 
     "download_minidump_stackwalk": True,
+
+    # this would normally be in "exes", but "exes" is clobbered by remove_executables
+    "geckodriver": os.path.join("%(abs_test_bin_dir)s", "geckodriver.exe"),
 
     "per_test_category": "web-platform",
 }

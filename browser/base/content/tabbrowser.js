@@ -644,41 +644,8 @@ window._gBrowser = {
     return this.browsers[aIndex];
   },
 
-  getBrowserIndexForDocument(aDocument) {
-    var tab = this._getTabForContentWindow(aDocument.defaultView);
-    return tab ? tab._tPos : -1;
-  },
-
-  getBrowserForDocument(aDocument) {
-    var tab = this._getTabForContentWindow(aDocument.defaultView);
-    return tab ? tab.linkedBrowser : null;
-  },
-
-  getBrowserForContentWindow(aWindow) {
-    var tab = this._getTabForContentWindow(aWindow);
-    return tab ? tab.linkedBrowser : null;
-  },
-
   getBrowserForOuterWindowID(aID) {
     return this._outerWindowIDBrowserMap.get(aID);
-  },
-
-  _getTabForContentWindow(aWindow) {
-    // When not using remote browsers, we can take a fast path by getting
-    // directly from the content window to the browser without looping
-    // over all browsers.
-    if (!gMultiProcessBrowser) {
-      let browser = aWindow.docShell.chromeEventHandler;
-      return this.getTabForBrowser(browser);
-    }
-
-    for (let i = 0; i < this.browsers.length; i++) {
-      // NB: We use contentWindowAsCPOW so that this code works both
-      // for remote browsers as well. aWindow may be a CPOW.
-      if (this.browsers[i].contentWindowAsCPOW == aWindow)
-        return this.tabs[i];
-    }
-    return null;
   },
 
   getTabForBrowser(aBrowser) {
@@ -4449,7 +4416,8 @@ window._gBrowser = {
         return;
       }
 
-      var tab = this._getTabForContentWindow(event.target);
+      let browser = event.target.docShell.chromeEventHandler;
+      let tab = this.getTabForBrowser(browser);
       if (tab) {
         // Skip running PermitUnload since it already happened.
         this.removeTab(tab, { skipPermitUnload: true });
@@ -4469,7 +4437,7 @@ window._gBrowser = {
       // browser, but that's in the originalTarget and not the target,
       // because it's across the tabbrowser's XBL boundary.
       let tabForEvent = targetIsWindow ?
-        this._getTabForContentWindow(event.target.top) :
+        this.getTabForBrowser(event.target.docShell.chromeEventHandler) :
         this.getTabForBrowser(event.originalTarget);
 
       // Focus window for beforeunload dialog so it is seen but don't
@@ -4532,7 +4500,8 @@ window._gBrowser = {
       if (contentWin != contentWin.top)
         return;
 
-      var tab = this._getTabForContentWindow(contentWin);
+      let browser = contentWin.docShell.chromeEventHandler;
+      var tab = this.getTabForBrowser(browser);
       if (!tab || tab.hasAttribute("pending"))
         return;
 
@@ -5343,13 +5312,10 @@ var TabContextMenu = {
     document.getElementById("context_closeTab").hidden = multiselectionContext;
     document.getElementById("context_closeSelectedTabs").hidden = !multiselectionContext;
 
-    // Hide "Bookmark All Tabs" for a pinned tab or multiselection.
+    // Hide "Bookmark Tab" for multiselection.
     // Update its state if visible.
-    let bookmarkAllTabs = document.getElementById("context_bookmarkAllTabs");
-    bookmarkAllTabs.hidden = this.contextTab.pinned || multiselectionContext;
-    if (!bookmarkAllTabs.hidden) {
-      PlacesCommandHook.updateBookmarkAllTabsCommand();
-    }
+    let bookmarkTab = document.getElementById("context_bookmarkTab");
+    bookmarkTab.hidden = multiselectionContext;
 
     // Show "Bookmark Selected Tabs" in a multiselect context and hide it otherwise.
     let bookmarkMultiSelectedTabs = document.getElementById("context_bookmarkSelectedTabs");

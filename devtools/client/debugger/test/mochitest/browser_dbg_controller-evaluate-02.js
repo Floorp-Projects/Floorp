@@ -15,7 +15,7 @@ function test() {
       source: EXAMPLE_URL + "code_script-switching-01.js",
       line: 1
     };
-    const [tab,, panel] = yield initDebugger(TAB_URL, options);
+    const [tab, panel] = yield initDebugger(TAB_URL, options);
     const win = panel.panelWin;
     const frames = win.DebuggerController.StackFrames;
     const framesView = win.DebuggerView.StackFrames;

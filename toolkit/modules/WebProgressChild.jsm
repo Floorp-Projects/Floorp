@@ -87,34 +87,12 @@ class WebProgressChild {
     };
   }
 
-  _setupObjects(aWebProgress, aRequest) {
-    let domWindow;
-    try {
-      domWindow = aWebProgress && aWebProgress.DOMWindow;
-    } catch (e) {
-      // If nsDocShell::Destroy has already been called, then we'll
-      // get NS_NOINTERFACE when trying to get the DOM window. Ignore
-      // that here.
-      domWindow = null;
-    }
-
-    return {
-      contentWindow: this.mm.content,
-      contentDocument: this.mm.content.document,
-      // DOMWindow is not necessarily the this.mm.content-window with subframes.
-      DOMWindow: domWindow,
-      webProgress: aWebProgress,
-      request: aRequest,
-    };
-  }
-
-  _send(name, data, objects) {
-    this.mm.sendAsyncMessage(name, data, objects);
+  _send(name, data) {
+    this.mm.sendAsyncMessage(name, data);
   }
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     let json = this._setupJSON(aWebProgress, aRequest, aStateFlags);
-    let objects = this._setupObjects(aWebProgress, aRequest);
 
     json.stateFlags = aStateFlags;
     json.status = aStatus;
@@ -130,7 +108,7 @@ class WebProgressChild {
       json.inLoadURI = this.inLoadURI;
     }
 
-    this._send("Content:StateChange", json, objects);
+    this._send("Content:StateChange", json);
   }
 
   // Note: Because the nsBrowserStatusFilter timeout runnable is
@@ -138,14 +116,13 @@ class WebProgressChild {
   // run this.mm.content JS.
   onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
     let json = this._setupJSON(aWebProgress, aRequest);
-    let objects = this._setupObjects(aWebProgress, aRequest);
 
     json.curSelf = aCurSelf;
     json.maxSelf = aMaxSelf;
     json.curTotal = aCurTotal;
     json.maxTotal = aMaxTotal;
 
-    this._send("Content:ProgressChange", json, objects);
+    this._send("Content:ProgressChange", json);
   }
 
   onProgressChange64(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
@@ -154,7 +131,6 @@ class WebProgressChild {
 
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
     let json = this._setupJSON(aWebProgress, aRequest);
-    let objects = this._setupObjects(aWebProgress, aRequest);
 
     json.location = aLocationURI ? aLocationURI.spec : "";
     json.flags = aFlags;
@@ -188,7 +164,7 @@ class WebProgressChild {
       }
     }
 
-    this._send("Content:LocationChange", json, objects);
+    this._send("Content:LocationChange", json);
   }
 
   // Note: Because the nsBrowserStatusFilter timeout runnable is
@@ -196,12 +172,11 @@ class WebProgressChild {
   // run this.mm.content JS.
   onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
     let json = this._setupJSON(aWebProgress, aRequest);
-    let objects = this._setupObjects(aWebProgress, aRequest);
 
     json.status = aStatus;
     json.message = aMessage;
 
-    this._send("Content:StatusChange", json, objects);
+    this._send("Content:StatusChange", json);
   }
 
   getSecInfoAsString() {
@@ -216,7 +191,6 @@ class WebProgressChild {
   onSecurityChange(aWebProgress, aRequest, aOldState, aState,
                    aContentBlockingLogJSON) {
     let json = this._setupJSON(aWebProgress, aRequest);
-    let objects = this._setupObjects(aWebProgress, aRequest);
 
     json.oldState = aOldState;
     json.state = aState;
@@ -228,7 +202,7 @@ class WebProgressChild {
       json.matchedList = aRequest.matchedList;
     }
 
-    this._send("Content:SecurityChange", json, objects);
+    this._send("Content:SecurityChange", json);
   }
 
   onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {

@@ -349,31 +349,38 @@ ReflowInput::SetComputedHeight(nscoord aComputedHeight)
   }
 }
 
+/* static */ void
+ReflowInput::MarkFrameChildrenDirty(nsIFrame* aFrame)
+{
+  if (aFrame->IsXULBoxFrame()) {
+    return;
+  }
+  // Mark all child frames as dirty.
+  //
+  // We don't do this for XUL boxes because they handle their child
+  // reflow separately.
+  for (nsIFrame::ChildListIterator childLists(aFrame); !childLists.IsDone();
+       childLists.Next()) {
+    for (nsIFrame* childFrame : childLists.CurrentList()) {
+      if (!childFrame->IsTableColGroupFrame()) {
+        childFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+      }
+    }
+  }
+}
+
 void
 ReflowInput::Init(nsPresContext*     aPresContext,
                         const LogicalSize* aContainingBlockSize,
                         const nsMargin*    aBorder,
                         const nsMargin*    aPadding)
 {
-  if ((mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
-      !mFrame->IsXULBoxFrame()) {
-    // Mark all child frames as dirty.
-    //
-    // We don't do this for XUL boxes because they handle their child
-    // reflow separately.
-    //
+  if ((mFrame->GetStateBits() & NS_FRAME_IS_DIRTY)) {
     // FIXME (bug 1376530): It would be better for memory locality if we
     // did this as we went.  However, we need to be careful not to do
     // this twice for any particular child if we reflow it twice.  The
     // easiest way to accomplish that is to do it at the start.
-    for (nsIFrame::ChildListIterator childLists(mFrame);
-         !childLists.IsDone(); childLists.Next()) {
-      for (nsIFrame* childFrame : childLists.CurrentList()) {
-        if (!childFrame->IsTableColGroupFrame()) {
-          childFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-        }
-      }
-    }
+    MarkFrameChildrenDirty(mFrame);
   }
 
   if (AvailableISize() == NS_UNCONSTRAINEDSIZE) {
@@ -638,9 +645,11 @@ ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
         nsIFrame *kid = mFrame->PrincipalChildList().FirstChild();
         if (kid) {
           kid->AddStateBits(NS_FRAME_IS_DIRTY);
+          MarkFrameChildrenDirty(kid);
         }
       } else {
         mFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+        MarkFrameChildrenDirty(mFrame);
       }
 
       // Mark intrinsic widths on all descendants dirty.  We need to do
@@ -2590,7 +2599,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   else if (aPadding) { // padding is an input arg
     ComputedPhysicalPadding() = *aPadding;
     needPaddingProp = mFrame->StylePadding()->IsWidthDependent() ||
-	  (mFrame->GetStateBits() & NS_FRAME_REFLOW_ROOT);
+    (mFrame->GetStateBits() & NS_FRAME_REFLOW_ROOT);
   }
   else {
     needPaddingProp = ComputePadding(aWM, aPercentBasis, aFrameType);

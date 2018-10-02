@@ -89,6 +89,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
             "default": False,
             "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
          ],
+        [["--setpref"], {
+            "action": "append",
+            "metavar": "PREF=VALUE",
+            "dest": "extra_prefs",
+            "default": [],
+            "help": "Defines an extra user preference."}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -171,9 +178,17 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
             # And exit
 
         c = self.config
+        run_file_name = "runtests.py"
+
         dirs = self.query_abs_dirs()
         abs_app_dir = self.query_abs_app_dir()
-        run_file_name = "runtests.py"
+        str_format_values = {
+            'binary_path': self.binary_path,
+            'test_path': dirs["abs_wpttest_dir"],
+            'test_install_path': dirs["abs_test_install_dir"],
+            'abs_app_dir': abs_app_dir,
+            'abs_work_dir': dirs["abs_work_dir"]
+        }
 
         cmd = [self.query_python_path('python'), '-u']
         cmd.append(os.path.join(dirs["abs_wpttest_dir"], run_file_name))
@@ -205,6 +220,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
         for test_type in test_types:
             cmd.append("--test-type=%s" % test_type)
 
+        if c['extra_prefs']:
+            cmd.extend(['--setpref={}'.format(p) for p in c['extra_prefs']])
+
         if not c["e10s"]:
             cmd.append("--disable-e10s")
 
@@ -226,6 +244,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
                     if val:
                         cmd.append("--%s=%s" % (opt.replace("_", "-"), val))
 
+        options = list(c.get("options", []))
+
         if "wdspec" in test_types:
             geckodriver_path = self._query_geckodriver()
             if not geckodriver_path or not os.path.isfile(geckodriver_path):
@@ -233,16 +253,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
                            "in common test package: %s" % str(geckodriver_path))
             cmd.append("--webdriver-binary=%s" % geckodriver_path)
             cmd.append("--webdriver-arg=-vv")  # enable trace logs
-
-        options = list(c.get("options", []))
-
-        str_format_values = {
-            'binary_path': self.binary_path,
-            'test_path': dirs["abs_wpttest_dir"],
-            'test_install_path': dirs["abs_test_install_dir"],
-            'abs_app_dir': abs_app_dir,
-            'abs_work_dir': dirs["abs_work_dir"]
-        }
 
         test_type_suite = {
             "testharness": "web-platform-tests",

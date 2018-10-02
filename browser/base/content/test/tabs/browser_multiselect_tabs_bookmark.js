@@ -23,7 +23,7 @@ add_task(async function test() {
   let tab2 = await addTab();
   let tab3 = await addTab();
 
-  let menuItemBookmarkAllTabs = document.getElementById("context_bookmarkAllTabs");
+  let menuItemBookmarkTab = document.getElementById("context_bookmarkTab");
   let menuItemBookmarkSelectedTabs = document.getElementById("context_bookmarkSelectedTabs");
 
   is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
@@ -37,12 +37,12 @@ add_task(async function test() {
 
   // Check the context menu with a non-multiselected tab
   updateTabContextMenu(tab3);
-  is(menuItemBookmarkAllTabs.hidden, false, "Bookmark All Tabs is visible");
+  is(menuItemBookmarkTab.hidden, false, "Bookmark Tab is visible");
   is(menuItemBookmarkSelectedTabs.hidden, true, "Bookmark Selected Tabs is hidden");
 
   // Check the context menu with a multiselected tab and one unique page in the selection.
   updateTabContextMenu(tab2);
-  is(menuItemBookmarkAllTabs.hidden, true, "Bookmark All Tabs is visible");
+  is(menuItemBookmarkTab.hidden, true, "Bookmark Tab is visible");
   is(menuItemBookmarkSelectedTabs.hidden, false, "Bookmark Selected Tabs is hidden");
   is(PlacesCommandHook.uniqueSelectedPages.length, 1, "No more than one unique selected page");
 
@@ -55,7 +55,7 @@ add_task(async function test() {
 
   // Check the context menu with a multiselected tab and two unique pages in the selection.
   updateTabContextMenu(tab2);
-  is(menuItemBookmarkAllTabs.hidden, true, "Bookmark All Tabs is visible");
+  is(menuItemBookmarkTab.hidden, true, "Bookmark Tab is visible");
   is(menuItemBookmarkSelectedTabs.hidden, false, "Bookmark Selected Tabs is hidden");
   is(PlacesCommandHook.uniqueSelectedPages.length, 2, "More than one unique selected page");
 

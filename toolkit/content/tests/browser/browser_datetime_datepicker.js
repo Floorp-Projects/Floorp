@@ -167,7 +167,10 @@ add_task(async function test_datepicker_clicked() {
     await ContentTaskUtils.waitForEvent(inputEl, "input");
   });
 
-  Assert.equal(gBrowser.contentDocumentAsCPOW.querySelector("input").value, firstDayOnCalendar);
+  let value = await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+    return content.document.querySelector("input").value;
+  });
+  Assert.equal(value, firstDayOnCalendar);
 
   await helper.tearDown();
 });
