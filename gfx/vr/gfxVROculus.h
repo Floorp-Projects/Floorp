@@ -72,7 +72,6 @@ private:
   VRTelemetry mTelemetry;
   bool mRequestPresentation;
   bool mRequestTracking;
-  bool mTracking;
   bool mDrawBlack;
   bool mIsConnected;
   bool mIsMounted;
