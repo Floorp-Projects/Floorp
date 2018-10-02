@@ -31,6 +31,10 @@ toolbarbutton.tabbable {
   -moz-user-focus: normal !important;
 }
 
+toolbarbutton[checked="true"] {
+  color: ButtonText;
+}
+
 toolbarbutton:hover {
   color: -moz-buttonhovertext;
 }
@@ -42,10 +46,6 @@ toolbarbutton[open="true"] {
 
 toolbarbutton[disabled="true"] {
   color: GrayText;
-}
-
-toolbarbutton[checked="true"]:not(:hover) {
-  color: ButtonText;
 }
 
 toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
