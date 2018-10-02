@@ -44,7 +44,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(PaymentRequ
     this.persistCheckbox = new LabelledCheckbox();
     this.persistCheckbox.className = "persist-checkbox";
 
-    // Combination of AddressErrors and PayerErrorFields as keys
+    // Combination of AddressErrors and PayerErrors as keys
     this._errorFieldMap = {
       addressLine: "#street-address",
       city: "#address-level2",

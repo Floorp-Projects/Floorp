@@ -720,22 +720,6 @@ TabChild::SetStatus(uint32_t aStatusType, const char16_t* aStatus)
 }
 
 NS_IMETHODIMP
-TabChild::GetWebBrowser(nsIWebBrowser** aWebBrowser)
-{
-  NS_WARNING("TabChild::GetWebBrowser not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TabChild::SetWebBrowser(nsIWebBrowser* aWebBrowser)
-{
-  NS_WARNING("TabChild::SetWebBrowser not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TabChild::GetChromeFlags(uint32_t* aChromeFlags)
 {
   *aChromeFlags = mChromeFlags;
@@ -746,14 +730,6 @@ NS_IMETHODIMP
 TabChild::SetChromeFlags(uint32_t aChromeFlags)
 {
   NS_WARNING("trying to SetChromeFlags from content process?");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TabChild::DestroyBrowserWindow()
-{
-  NS_WARNING("TabChild::DestroyBrowserWindow not supported in TabChild");
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -815,14 +791,6 @@ TabChild::RemoteDropLinks(uint32_t aLinksCount,
 }
 
 NS_IMETHODIMP
-TabChild::SizeBrowserTo(int32_t aWidth, int32_t aHeight)
-{
-  NS_WARNING("TabChild::SizeBrowserTo not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TabChild::ShowAsModal()
 {
   NS_WARNING("TabChild::ShowAsModal not supported in TabChild");
@@ -835,14 +803,6 @@ TabChild::IsWindowModal(bool* aRetVal)
 {
   *aRetVal = false;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-TabChild::ExitModalEventLoop(nsresult aStatus)
-{
-  NS_WARNING("TabChild::ExitModalEventLoop not supported in TabChild");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

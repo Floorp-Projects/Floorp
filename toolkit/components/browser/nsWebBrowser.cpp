@@ -97,8 +97,6 @@ nsWebBrowser::InternalDestroy()
 
   mInitInfo = nullptr;
 
-  mListenerArray = nullptr;
-
   return NS_OK;
 }
 
@@ -167,36 +165,6 @@ nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 // nsWebBrowser::nsIWebBrowser
 //*****************************************************************************
 
-// listeners that currently support registration through AddWebBrowserListener:
-//  - nsIWebProgressListener
-NS_IMETHODIMP
-nsWebBrowser::AddWebBrowserListener(nsIWeakReference* aListener,
-                                    const nsIID& aIID)
-{
-  NS_ENSURE_ARG_POINTER(aListener);
-
-  nsresult rv = NS_OK;
-  if (!mWebProgress) {
-    // The window hasn't been created yet, so queue up the listener. They'll be
-    // registered when the window gets created.
-    if (!mListenerArray) {
-      mListenerArray = new nsTArray<nsWebBrowserListenerState>();
-    }
-
-    nsWebBrowserListenerState* state = mListenerArray->AppendElement();
-    state->mWeakPtr = aListener;
-    state->mID = aIID;
-  } else {
-    nsCOMPtr<nsISupports> supports(do_QueryReferent(aListener));
-    if (!supports) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    rv = BindListener(supports, aIID);
-  }
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsWebBrowser::BindListener(nsISupports* aListener, const nsIID& aIID)
 {
@@ -223,77 +191,6 @@ nsWebBrowser::BindListener(nsISupports* aListener, const nsIID& aIID)
       return rv;
     }
     rv = shistory->AddSHistoryListener(listener);
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference* aListener,
-                                       const nsIID& aIID)
-{
-  NS_ENSURE_ARG_POINTER(aListener);
-
-  nsresult rv = NS_OK;
-  if (!mWebProgress) {
-    // if there's no-one to register the listener w/, and we don't have a queue
-    // going, the the called is calling Remove before an Add which doesn't make
-    // sense.
-    if (!mListenerArray) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // iterate the array and remove the queued listener
-    int32_t count = mListenerArray->Length();
-    while (count > 0) {
-      if (mListenerArray->ElementAt(count-1).Equals(aListener, aIID)) {
-        mListenerArray->RemoveElementAt(count-1);
-        break;
-      }
-      count--;
-    }
-
-    // if we've emptied the array, get rid of it.
-    if (0 >= mListenerArray->Length()) {
-      mListenerArray = nullptr;
-    }
-
-  } else {
-    nsCOMPtr<nsISupports> supports(do_QueryReferent(aListener));
-    if (!supports) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    rv = UnBindListener(supports, aIID);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::UnBindListener(nsISupports* aListener, const nsIID& aIID)
-{
-  NS_ENSURE_ARG_POINTER(aListener);
-  NS_ASSERTION(mWebProgress,
-               "this should only be called after we've retrieved a progress iface");
-  nsresult rv = NS_OK;
-
-  // remove the listener for the specified interface id
-  if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
-    nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    NS_ENSURE_STATE(mWebProgress);
-    rv = mWebProgress->RemoveProgressListener(listener);
-  } else if (aIID.Equals(NS_GET_IID(nsISHistoryListener))) {
-    nsCOMPtr<nsISHistory> shistory(do_GetInterface(mDocShell, &rv));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(aListener, &rv));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    rv = shistory->RemoveSHistoryListener(listener);
   }
   return rv;
 }
@@ -329,35 +226,6 @@ nsWebBrowser::SetContainerWindow(nsIWebBrowserChrome* aTopWindow)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetParentURIContentListener(
-    nsIURIContentListener** aParentContentListener)
-{
-  NS_ENSURE_ARG_POINTER(aParentContentListener);
-  *aParentContentListener = nullptr;
-
-  // get the interface from the docshell
-  nsCOMPtr<nsIURIContentListener> listener(do_GetInterface(mDocShell));
-
-  if (listener) {
-    return listener->GetParentContentListener(aParentContentListener);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::SetParentURIContentListener(
-    nsIURIContentListener* aParentContentListener)
-{
-  // get the interface from the docshell
-  nsCOMPtr<nsIURIContentListener> listener(do_GetInterface(mDocShell));
-
-  if (listener) {
-    return listener->SetParentContentListener(aParentContentListener);
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsWebBrowser::GetContentDOMWindow(mozIDOMWindowProxy** aResult)
 {
   if (!mDocShell) {
@@ -367,26 +235,6 @@ nsWebBrowser::GetContentDOMWindow(mozIDOMWindowProxy** aResult)
   nsCOMPtr<nsPIDOMWindowOuter> retval = mDocShell->GetWindow();
   retval.forget(aResult);
   return *aResult ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::GetIsActive(bool* aResult)
-{
-  *aResult = mIsActive;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::SetIsActive(bool aIsActive)
-{
-  // Set our copy of the value
-  mIsActive = aIsActive;
-
-  // If we have a docshell, pass on the request
-  if (mDocShell) {
-    return mDocShell->SetIsActive(aIsActive);
-  }
-  return NS_OK;
 }
 
 void
@@ -1135,22 +983,6 @@ nsWebBrowser::Create()
   // get the system default window background colour
   LookAndFeel::GetColor(LookAndFeel::eColorID_WindowBackground,
                         &mBackgroundColor);
-
-  // the docshell has been set so we now have our listener registrars.
-  if (mListenerArray) {
-    // we had queued up some listeners, let's register them now.
-    uint32_t count = mListenerArray->Length();
-    uint32_t i = 0;
-    NS_ASSERTION(count > 0, "array construction problem");
-    while (i < count) {
-      nsWebBrowserListenerState& state = mListenerArray->ElementAt(i);
-      nsCOMPtr<nsISupports> listener = do_QueryReferent(state.mWeakPtr);
-      NS_ASSERTION(listener, "bad listener");
-      (void)BindListener(listener, state.mID);
-      i++;
-    }
-    mListenerArray = nullptr;
-  }
 
   // HACK ALERT - this registration registers the nsDocShellTreeOwner as a
   // nsIWebBrowserListener so it can setup its MouseListener in one of the

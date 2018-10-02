@@ -42,7 +42,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * //
  * // NOTE: You CAN send properties before preparing the event.
  * //
- * telemetry.preparePendingEvent(this, "pause", "debugger", null, [
+ *  telemetry.preparePendingEvent(this, "pause", "debugger", null, [
  *   "reason", "collapsed_callstacks"
  * ]);
  *

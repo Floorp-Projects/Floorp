@@ -49,18 +49,6 @@ public:
   nsString name;
 };
 
-class nsWebBrowserListenerState
-{
-public:
-  bool Equals(nsIWeakReference* aListener, const nsIID& aID)
-  {
-    return mWeakPtr.get() == aListener && mID.Equals(aID);
-  }
-
-  nsWeakPtr mWeakPtr;
-  nsIID mID;
-};
-
 //  {cda5863a-aa9c-411e-be49-ea0d525ab4b5} -
 #define NS_WEBBROWSER_CID \
   { 0xcda5863a, 0xaa9c, 0x411e, { 0xbe, 0x49, 0xea, 0x0d, 0x52, 0x5a, 0xb4, 0xb5 } }
@@ -126,7 +114,6 @@ protected:
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
   NS_IMETHOD EnsureDocShellTreeOwner();
   NS_IMETHOD BindListener(nsISupports* aListener, const nsIID& aIID);
-  NS_IMETHOD UnBindListener(nsISupports* aListener, const nsIID& aIID);
   NS_IMETHOD EnableGlobalHistory(bool aEnable);
 
   // nsIWidgetListener methods for WidgetListenerDelegate.
@@ -170,7 +157,6 @@ protected:
 
   // Weak Reference interfaces...
   nsIWidget* mParentWidget;
-  nsAutoPtr<nsTArray<nsWebBrowserListenerState> > mListenerArray;
 };
 
 #endif /* nsWebBrowser_h__ */
