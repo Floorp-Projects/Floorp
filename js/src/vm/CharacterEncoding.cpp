@@ -272,9 +272,9 @@ static const Latin1Char REPLACE_UTF8_LATIN1 = '?';
 
 // If making changes to this algorithm, make sure to also update
 // LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
-template <InflateUTF8Action Action, typename CharT, class ContextT>
+template <InflateUTF8Action Action, typename CharT>
 static bool
-InflateUTF8StringToBuffer(ContextT* cx, const UTF8Chars src, CharT* dst, size_t* dstlenp,
+InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t* dstlenp,
                           JS::SmallestEncoding *smallestEncoding)
 {
     if (Action != AssertNoInvalids) {
@@ -409,9 +409,9 @@ InflateUTF8StringToBuffer(ContextT* cx, const UTF8Chars src, CharT* dst, size_t*
     return true;
 }
 
-template <InflateUTF8Action Action, typename CharsT, class ContextT>
+template <InflateUTF8Action Action, typename CharsT>
 static CharsT
-InflateUTF8StringHelper(ContextT* cx, const UTF8Chars src, size_t* outlen)
+InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 {
     using CharT = typename CharsT::CharT;
     *outlen = 0;
@@ -472,7 +472,7 @@ JS::SmallestEncoding
 JS::FindSmallestEncoding(UTF8Chars utf8)
 {
     JS::SmallestEncoding encoding;
-    MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<FindEncoding, char16_t, JSContext>(
+    MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<FindEncoding, char16_t>(
                          /* cx = */ nullptr,
                          utf8,
                          /* dst = */ nullptr,
@@ -499,7 +499,7 @@ JS::ConstUTF8CharsZ::validate(size_t aLength)
 {
     MOZ_ASSERT(data_);
     UTF8Chars chars(data_, aLength);
-    InflateUTF8StringToBuffer<AssertNoInvalids, char16_t, JSContext>(
+    InflateUTF8StringToBuffer<AssertNoInvalids, char16_t>(
         /* cx = */ nullptr,
         chars,
         /* dst = */ nullptr,
