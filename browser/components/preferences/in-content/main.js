@@ -809,6 +809,7 @@ var gMainPane = {
 
     // Add an option to search for more languages.
     let menuitem = document.createXULElement("menuitem");
+    menuitem.id = "defaultBrowserLanguageSearch";
     menuitem.setAttribute(
       "label", await document.l10n.formatValue("browser-languages-search"));
     menuitem.addEventListener("command", () => {
