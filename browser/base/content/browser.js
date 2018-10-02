@@ -5706,6 +5706,8 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   }
 
   if (showTabStripItems) {
+    PlacesCommandHook.updateBookmarkAllTabsCommand();
+
     let haveMultipleTabs = gBrowser.visibleTabs.length > 1;
     document.getElementById("toolbar-context-reloadAllTabs").disabled = !haveMultipleTabs;
 
