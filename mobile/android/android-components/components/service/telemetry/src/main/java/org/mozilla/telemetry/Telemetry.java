@@ -10,6 +10,7 @@ import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
+import org.mozilla.telemetry.measurement.ClientIdMeasurement;
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
 import org.mozilla.telemetry.measurement.EventsMeasurement;
 import org.mozilla.telemetry.net.TelemetryClient;
@@ -234,6 +235,13 @@ public class Telemetry {
 
     public TelemetryConfiguration getConfiguration() {
         return configuration;
+    }
+
+    /**
+     * Returns the unique client id for this installation (UUID).
+     */
+    public String getClientId() {
+        return (String) new ClientIdMeasurement(configuration).flush();
     }
 
     /**

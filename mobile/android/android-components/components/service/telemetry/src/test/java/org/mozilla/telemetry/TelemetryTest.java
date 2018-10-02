@@ -40,6 +40,7 @@ import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -459,6 +460,37 @@ public class TelemetryTest {
         TestUtils.waitForExecutor(telemetry);
 
         verify(telemetry).queuePing(TelemetryEventPingBuilder.TYPE);
+    }
+
+    @Test
+    public void testClientIdIsReturned() {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+
+        final TelemetryStorage storage = mock(TelemetryStorage.class);
+        final TelemetryClient client = mock(TelemetryClient.class);
+        final TelemetryScheduler scheduler = mock(TelemetryScheduler.class);
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler);
+        final String clientId = telemetry.getClientId();
+
+        assertNotNull(clientId);
+
+        assertTrue(clientId.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"));
+
+        final UUID uuid = UUID.fromString(clientId); // Should throw if invalid
+        assertEquals(4, uuid.version());
+
+        // Subsequent calls return the same client id.
+        assertEquals(clientId, telemetry.getClientId());
+
+        // Creating a new telemetry object will still return the same client id
+        final Telemetry otherTelemetry = new Telemetry(
+                new TelemetryConfiguration(RuntimeEnvironment.application),
+                mock(TelemetryStorage.class),
+                mock(TelemetryClient.class),
+                mock(TelemetryScheduler.class));
+
+        assertEquals(clientId, telemetry.getClientId());
     }
 
     private void assertJobIsScheduled() {
