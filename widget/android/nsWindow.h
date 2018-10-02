@@ -83,6 +83,7 @@ public:
     class NativePtr final
     {
         friend WindowPtr<Impl>;
+        friend nsWindow;
 
         static const char sName[];
 
@@ -90,11 +91,11 @@ public:
         Impl* mImpl;
         mozilla::Mutex mImplLock;
 
-    public:
-        class Locked;
-
         NativePtr() : mPtr(nullptr), mImpl(nullptr), mImplLock(sName) {}
         ~NativePtr() { MOZ_ASSERT(!mPtr); }
+
+    public:
+        class Locked;
 
         operator Impl*() const
         {
@@ -104,9 +105,11 @@ public:
 
         Impl* operator->() const { return operator Impl*(); }
 
-        template<class Instance, typename... Args>
-        void Attach(Instance aInstance, nsWindow* aWindow, Args&&... aArgs);
-        void Detach();
+        template<class Cls, typename... Args>
+        void Attach(const mozilla::jni::LocalRef<Cls>& aInstance,
+                    nsWindow* aWindow, Args&&... aArgs);
+        template<class Cls, typename T>
+        void Detach(const mozilla::jni::Ref<Cls, T>& aInstance);
     };
 
     template<class Impl>

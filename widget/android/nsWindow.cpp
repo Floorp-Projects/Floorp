@@ -193,9 +193,9 @@ namespace {
 } // namespace
 
 template<class Impl>
-template<class Instance, typename... Args> void
-nsWindow::NativePtr<Impl>::Attach(Instance aInstance, nsWindow* aWindow,
-                                  Args&&... aArgs)
+template<class Cls, typename... Args> void
+nsWindow::NativePtr<Impl>::Attach(const jni::LocalRef<Cls>& aInstance,
+                                  nsWindow* aWindow, Args&&... aArgs)
 {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mPtr && !mImpl);
@@ -205,16 +205,67 @@ nsWindow::NativePtr<Impl>::Attach(Instance aInstance, nsWindow* aWindow,
     mImpl = impl;
 
     // CallAttachNative transfers ownership of impl.
-    CallAttachNative<Instance, Impl>(aInstance, impl);
+    CallAttachNative<>(aInstance, impl);
 }
 
-template<class Impl> void
-nsWindow::NativePtr<Impl>::Detach()
+template<class Impl>
+template<class Cls, typename T> void
+nsWindow::NativePtr<Impl>::Detach(const jni::Ref<Cls, T>& aInstance)
 {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mPtr && mImpl);
 
-    mImpl->OnDetach();
+    // nsIRunnable that takes care of disposing the native object attached to
+    // the Java object in a safe manner.
+    class ImplDisposer : public Runnable {
+        const typename Cls::GlobalRef mInstance;
+        const uintptr_t mOldImpl;
+
+    public:
+        ImplDisposer(const typename Cls::LocalRef& aInstance)
+            : Runnable("nsWindow::NativePtr::Detach")
+            , mInstance(aInstance.Env(), aInstance)
+            , mOldImpl(aInstance ? jni::GetNativeHandle(aInstance.Env(),
+                                                        aInstance.Get()) : 0)
+        {
+            MOZ_CATCH_JNI_EXCEPTION(aInstance.Env());
+        }
+
+        NS_IMETHOD Run() override
+        {
+            if (!mInstance) {
+                return NS_OK;
+            }
+
+            if (!NS_IsMainThread()) {
+                NS_DispatchToMainThread(this);
+                return NS_OK;
+            }
+
+            typename Cls::LocalRef instance(jni::GetGeckoThreadEnv(),
+                                            mInstance);
+            auto newImpl = jni::GetNativeHandle(instance.Env(), instance.Get());
+            MOZ_CATCH_JNI_EXCEPTION(instance.Env());
+
+            if (mOldImpl == newImpl) {
+                // Only dispose the object if the native object has not changed.
+                Impl::DisposeNative(instance);
+            }
+            return NS_OK;
+        }
+    };
+
+    // Objects that use nsWindow::NativePtr are expected to implement a public
+    // member function with signature "void OnDetach(
+    // already_AddRefed<Runnable> aDisposer)".  This function should perform
+    // necessary cleanups for the native/Java objects, as well as mark the Java
+    // object as being disposed, so no native methods are called after that
+    // point. After this disposal step, the function must call "aDisposer->
+    // Run()" to finish disposing the native object. The disposer is
+    // thread-safe and may be called on any thread as necessary.
+    mImpl->OnDetach(do_AddRef(new ImplDisposer(
+            {jni::GetGeckoThreadEnv(), aInstance})));
+
     {
         Locked implLock(*this);
         mImpl = nullptr;
