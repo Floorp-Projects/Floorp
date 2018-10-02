@@ -240,7 +240,7 @@ BinTokenReaderTester::readSkippableSubTree()
         return raiseError("Invalid byte length in readSkippableSubTree");
     }
 
-    const auto start = current_;
+    const auto start = offset();
 
     current_ += byteLen;
 
