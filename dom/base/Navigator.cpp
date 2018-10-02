@@ -456,8 +456,8 @@ Navigator::GetProduct(nsAString& aProduct)
 void
 Navigator::GetProductSub(nsAString& aProductSub)
 {
-  // Legacy build ID hardcoded for backward compatibility (bug 776376)
-  aProductSub.AssignLiteral(LEGACY_BUILD_ID);
+  // Legacy build date hardcoded for backward compatibility (bug 776376)
+  aProductSub.AssignLiteral(LEGACY_UA_GECKO_TRAIL);
 }
 
 nsMimeTypeArray*
