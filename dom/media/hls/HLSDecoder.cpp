@@ -183,13 +183,8 @@ already_AddRefed<nsIPrincipal>
 HLSDecoder::GetCurrentPrincipal()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIPrincipal> principal;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (!secMan || !mChannel) {
-    return nullptr;
-  }
-  secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
-  return principal.forget();
+  // Bug 1478843
+  return nullptr;
 }
 
 void

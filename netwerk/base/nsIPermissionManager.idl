@@ -292,7 +292,7 @@ interface nsIPermissionManager : nsISupports
   /**
    * Remove all permissions that will match the origin pattern.
    */
-  void removePermissionsWithAttributes(in DOMString patternAsJSON);
+  void removePermissionsWithAttributes(in AString patternAsJSON);
 
   /**
    * If the current permission is set to expire, reset the expiration time. If

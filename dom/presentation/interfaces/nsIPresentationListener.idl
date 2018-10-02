@@ -27,14 +27,14 @@ interface nsIPresentationSessionListener : nsISupports
   /*
    * Called when session state changes.
    */
-  void notifyStateChange(in DOMString sessionId,
+  void notifyStateChange(in AString sessionId,
                          in unsigned short state,
                          in nsresult reason);
 
   /*
    * Called when receive messages.
    */
-  void notifyMessage(in DOMString sessionId,
+  void notifyMessage(in AString sessionId,
                      in ACString data,
                      in boolean isBinary);
 };
@@ -46,5 +46,5 @@ interface nsIPresentationRespondingListener : nsISupports
    * Called when an incoming session connects.
    */
   void notifySessionConnect(in unsigned long long windowId,
-                            in DOMString sessionId);
+                            in AString sessionId);
 };

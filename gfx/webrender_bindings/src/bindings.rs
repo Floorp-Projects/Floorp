@@ -3,6 +3,7 @@ use std::{mem, slice, ptr, env};
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::os::raw::{c_void, c_char, c_float};
 use gleam::gl;
 
@@ -28,6 +29,13 @@ use dwrote::{FontDescriptor, FontWeight, FontStretch, FontStyle};
 use core_foundation::string::CFString;
 #[cfg(target_os = "macos")]
 use core_graphics::font::CGFont;
+
+/// The unique id for WR resource identification.
+static NEXT_NAMESPACE_ID: AtomicUsize = AtomicUsize::new(1);
+
+fn next_namespace_id() -> IdNamespace {
+    IdNamespace(NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed) as u32)
+}
 
 /// Whether a border should be antialiased.
 #[repr(C)]
@@ -986,6 +994,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         max_texture_size: Some(8192), // Moz2D doesn't like textures bigger than this
         clear_color: Some(ColorF::new(0.0, 0.0, 0.0, 0.0)),
         precache_shaders: env_var_to_bool("MOZ_WR_PRECACHE_SHADERS"),
+        namespace_alloc_by_client: true,
         ..Default::default()
     };
 
@@ -1010,7 +1019,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     let window_size = DeviceUintSize::new(window_width, window_height);
     let layer = 0;
     *out_handle = Box::into_raw(Box::new(
-            DocumentHandle::new(sender.create_api(), window_size, layer)));
+            DocumentHandle::new(sender.create_api_by_client(next_namespace_id()), window_size, layer)));
     *out_renderer = Box::into_raw(Box::new(renderer));
 
     return true;
@@ -1026,7 +1035,7 @@ pub extern "C" fn wr_api_create_document(
     assert!(unsafe { is_in_compositor_thread() });
 
     *out_handle = Box::into_raw(Box::new(DocumentHandle::new(
-        root_dh.api.clone_sender().create_api(),
+        root_dh.api.clone_sender().create_api_by_client(next_namespace_id()),
         doc_size,
         layer
     )));
@@ -1046,7 +1055,7 @@ pub extern "C" fn wr_api_clone(
     assert!(unsafe { is_in_compositor_thread() });
 
     let handle = DocumentHandle {
-        api: dh.api.clone_sender().create_api(),
+        api: dh.api.clone_sender().create_api_by_client(next_namespace_id()),
         document_id: dh.document_id,
     };
     *out_handle = Box::into_raw(Box::new(handle));

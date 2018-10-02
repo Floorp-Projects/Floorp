@@ -13,10 +13,10 @@ interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
   attribute boolean open;
   
   // label of selected option or value of textfield for editable menu lists
-  readonly attribute DOMString label;
+  readonly attribute AString label;
 
-  attribute DOMString crop;
-  attribute DOMString image;
+  attribute AString crop;
+  attribute AString image;
   
   // For editable menu lists only.
   readonly attribute Element inputField;

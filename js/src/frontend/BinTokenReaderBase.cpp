@@ -31,9 +31,14 @@ ErrorResult<JS::Error&>
 BinTokenReaderBase::raiseError(const char* description)
 {
     MOZ_ASSERT(!cx_->isExceptionPending());
-    TokenPos pos = this->pos();
-    JS_ReportErrorASCII(cx_, "BinAST parsing error: %s at offsets %u => %u",
-                        description, pos.begin, pos.end);
+    if (MOZ_LIKELY(errorReporter_)) {
+        errorReporter_->reportErrorNoOffset(JSMSG_BINAST, description);
+    } else {
+        // Only true in testing code.
+        TokenPos pos = this->pos();
+        JS_ReportErrorASCII(cx_, "BinAST parsing error: %s at offsets %u => %u",
+                            description, pos.begin, pos.end);
+    }
     return cx_->alreadyReportedError();
 }
 
@@ -91,6 +96,14 @@ BinTokenReaderBase::pos(size_t start)
     pos.end = current_ - start_;
     MOZ_ASSERT(pos.end >= pos.begin);
     return pos;
+}
+
+void
+BinTokenReaderBase::seek(size_t offset)
+{
+    MOZ_ASSERT(start_ + offset >= start_ &&
+               start_ + offset < stop_);
+    current_ = start_ + offset;
 }
 
 JS::Result<Ok>

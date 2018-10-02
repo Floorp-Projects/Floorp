@@ -162,12 +162,6 @@ NS_IMETHODIMP nsXPCTestParams::TestWstring(const char16_t * a, char16_t * *b, ch
     return NS_OK;
 }
 
-NS_IMETHODIMP nsXPCTestParams::TestDOMString(const nsAString & a, nsAString & b, nsAString & _retval)
-{
-    STRING_METHOD_IMPL;
-}
-
-
 NS_IMETHODIMP nsXPCTestParams::TestAString(const nsAString & a, nsAString & b, nsAString & _retval)
 {
     STRING_METHOD_IMPL;

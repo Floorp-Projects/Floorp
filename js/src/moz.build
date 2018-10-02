@@ -709,6 +709,7 @@ if CONFIG['JS_BUILD_BINAST']:
     SOURCES += [
         'frontend/BinSource-auto.cpp',
         'frontend/BinSource.cpp',
+        'frontend/BinSourceRuntimeSupport.cpp',
         'frontend/BinToken.cpp',
         'frontend/BinTokenReaderBase.cpp',
         'frontend/BinTokenReaderMultipart.cpp',

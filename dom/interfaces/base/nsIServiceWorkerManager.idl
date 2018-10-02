@@ -50,8 +50,8 @@ interface nsIServiceWorkerInfo : nsISupports
   const unsigned short STATE_REDUNDANT = 5;
   const unsigned short STATE_UNKNOWN = 6;
 
-  readonly attribute DOMString scriptSpec;
-  readonly attribute DOMString cacheName;
+  readonly attribute AString scriptSpec;
+  readonly attribute AString cacheName;
 
   readonly attribute unsigned short state;
 
@@ -84,8 +84,8 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
 
   readonly attribute nsIPrincipal principal;
 
-  readonly attribute DOMString scope;
-  readonly attribute DOMString scriptSpec;
+  readonly attribute AString scope;
+  readonly attribute AString scriptSpec;
   readonly attribute unsigned short updateViaCache;
 
   readonly attribute PRTime lastUpdateTime;
@@ -123,29 +123,29 @@ interface nsIServiceWorkerManager : nsISupports
    */
   void unregister(in nsIPrincipal aPrincipal,
                   in nsIServiceWorkerUnregisterCallback aCallback,
-                  in DOMString aScope);
+                  in AString aScope);
 
   nsIServiceWorkerRegistrationInfo getRegistrationByPrincipal(in nsIPrincipal aPrincipal,
-                                                              in DOMString aScope);
+                                                              in AString aScope);
 
   [notxpcom, nostdcall] bool StartControlling(in const_ClientInfoRef aClientInfo,
                                               in const_ServiceWorkerDescriptorRef aServiceWorker);
 
   // Testing
-  DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);
+  AString getScopeForUrl(in nsIPrincipal aPrincipal, in AString aPath);
 
   // It returns an array of nsIServiceWorkerRegistrationInfos.
   nsIArray getAllRegistrations();
 
   // It calls softUpdate() for each child process.
   [implicit_jscontext] void propagateSoftUpdate(in jsval aOriginAttributes,
-                                                in DOMString aScope);
+                                                in AString aScope);
 
   // It calls unregister() in each child process. The callback is used to
   // inform when unregister() is completed on the current process.
   void propagateUnregister(in nsIPrincipal aPrincipal,
                            in nsIServiceWorkerUnregisterCallback aCallback,
-                           in DOMString aScope);
+                           in AString aScope);
 
   void sendNotificationClickEvent(in ACString aOriginSuffix,
                                   in ACString scope,

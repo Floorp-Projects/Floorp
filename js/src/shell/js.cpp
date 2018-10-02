@@ -5077,12 +5077,13 @@ template <typename Tok>
 static bool
 ParseBinASTData(JSContext* cx, uint8_t* buf_data, uint32_t buf_length,
                 GlobalSharedContext* globalsc, UsedNameTracker& usedNames,
-                const JS::ReadOnlyCompileOptions& options)
+                const JS::ReadOnlyCompileOptions& options,
+                HandleScriptSourceObject sourceObj)
 {
     MOZ_ASSERT(globalsc);
 
     // Note: We need to keep `reader` alive as long as we can use `parsed`.
-    BinASTParser<Tok> reader(cx, cx->tempLifoAlloc(), usedNames, options);
+    BinASTParser<Tok> reader(cx, cx->tempLifoAlloc(), usedNames, options, sourceObj);
 
     JS::Result<ParseNode*> parsed = reader.parse(globalsc, buf_data, buf_length);
 
@@ -5183,12 +5184,17 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
 
     UsedNameTracker usedNames(cx);
 
+    RootedScriptSourceObject sourceObj(cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
+    if (!sourceObj) {
+        return false;
+    }
+
     Directives directives(false);
     GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
 
     auto parseFunc = useMultipart ? ParseBinASTData<frontend::BinTokenReaderMultipart>
                                   : ParseBinASTData<frontend::BinTokenReaderTester>;
-    if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options)) {
+    if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options, sourceObj)) {
         return false;
     }
 
@@ -10056,13 +10062,19 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
 #endif
 #ifdef ENABLE_WASM_GC
     enableWasmGc = op.getBoolOption("wasm-gc");
-# ifdef ENABLE_WASM_CRANELIFT
-    enableWasmGc = false;
-# endif
 #endif
     enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
     enableAsyncStacks = !op.getBoolOption("no-async-stacks");
     enableStreams = op.getBoolOption("enable-streams");
+
+#if defined ENABLE_WASM_GC && defined ENABLE_WASM_CRANELIFT
+    // Note, once we remove --wasm-gc this test will no longer make any sense
+    // and we'll need a better solution.
+    if (enableWasmGc && wasmForceCranelift) {
+        fprintf(stderr, "Do not combine --wasm-gc and --wasm-force-cranelift, they are incompatible.\n");
+        return false;
+    }
+#endif
 
     JS::ContextOptionsRef(cx).setBaseline(enableBaseline)
                              .setIon(enableIon)

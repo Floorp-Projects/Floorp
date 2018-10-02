@@ -20,8 +20,8 @@ interface nsISynthVoiceRegistry : nsISupports
    * @param aLocalService     true if service does not require network.
    * @param aQueuesUtterances true if voice only speaks one utterance at a time
    */
-  void addVoice(in nsISpeechService aService, in DOMString aUri,
-                in DOMString aName, in DOMString aLang,
+  void addVoice(in nsISpeechService aService, in AString aUri,
+                in AString aName, in AString aLang,
                 in boolean aLocalService, in boolean aQueuesUtterances);
 
   /**
@@ -30,7 +30,7 @@ interface nsISynthVoiceRegistry : nsISupports
    * @param aService the service that was used to add the voice.
    * @param aUri     a unique identifier of an existing voice.
    */
-  void removeVoice(in nsISpeechService aService, in DOMString aUri);
+  void removeVoice(in nsISpeechService aService, in AString aUri);
 
   /**
    * Notify content of voice availability changes. This allows content
@@ -44,19 +44,19 @@ interface nsISynthVoiceRegistry : nsISupports
    * @param aUri       a unique identifier of an existing voice.
    * @param aIsDefault true if this voice should be toggled as default.
    */
-  void setDefaultVoice(in DOMString aUri, in boolean aIsDefault);
+  void setDefaultVoice(in AString aUri, in boolean aIsDefault);
 
   readonly attribute uint32_t voiceCount;
 
   AString getVoice(in uint32_t aIndex);
 
-  bool isDefaultVoice(in DOMString aUri);
+  bool isDefaultVoice(in AString aUri);
 
-  bool isLocalVoice(in DOMString aUri);
+  bool isLocalVoice(in AString aUri);
 
-  AString getVoiceLang(in DOMString aUri);
+  AString getVoiceLang(in AString aUri);
 
-  AString getVoiceName(in DOMString aUri);
+  AString getVoiceName(in AString aUri);
 };
 
 %{C++

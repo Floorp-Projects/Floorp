@@ -60,8 +60,14 @@ testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
     Directives directives(false);
     GlobalSharedContext globalsc(gCx, ScopeKind::Global, directives, false);
 
+    RootedScriptSourceObject sourceObj(gCx, frontend::CreateScriptSourceObject(gCx, options,
+                                               mozilla::Nothing()));
+    if (!sourceObj) {
+        ReportOutOfMemory(gCx);
+        return 0;
+    }
     BinASTParser<js::frontend::BinTokenReaderMultipart> reader(gCx, gCx->tempLifoAlloc(),
-                                                               binUsedNames, options);
+                                                               binUsedNames, options, sourceObj);
 
     // Will be deallocated once `reader` goes out of scope.
     auto binParsed = reader.parse(&globalsc, binSource);

@@ -30,7 +30,7 @@ interface nsIPushNotifier : nsISupports
    * used to report errors if the worker fails to handle the message.
    */
   void notifyPush(in ACString scope, in nsIPrincipal principal,
-                  in DOMString messageId);
+                  in AString messageId);
 
   /**
    * Same as `notifyPush`, except the subject of the observer notification
@@ -38,7 +38,7 @@ interface nsIPushNotifier : nsISupports
    * workers can access the |data| via the `PushMessageData` WebIDL interface.
    */
   void notifyPushWithData(in ACString scope, in nsIPrincipal principal,
-                          in DOMString messageId,
+                          in AString messageId,
                           [optional] in uint32_t dataLen,
                           [array, size_is(dataLen)] in uint8_t data);
 
@@ -61,7 +61,7 @@ interface nsIPushNotifier : nsISupports
   void notifySubscriptionModified(in ACString scope, in nsIPrincipal principal);
 
   void notifyError(in ACString scope, in nsIPrincipal principal,
-                   in DOMString message, in uint32_t flags);
+                   in AString message, in uint32_t flags);
 };
 
 /**
@@ -72,7 +72,7 @@ interface nsIPushNotifier : nsISupports
 interface nsIPushData : nsISupports
 {
   /** Extracts the data as a UTF-8 text string. */
-  DOMString text();
+  AString text();
 
   /** Extracts the data as a JSON value. */
   [implicit_jscontext] jsval json();

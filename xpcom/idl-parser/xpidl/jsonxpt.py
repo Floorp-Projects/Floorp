@@ -38,7 +38,6 @@ TypeMap = {
     'wstring':            'TD_PWSTRING',
     # special types
     'nsid':               'TD_PNSIID',
-    'domstring':          'TD_DOMSTRING',
     'astring':            'TD_ASTRING',
     'utf8string':         'TD_UTF8STRING',
     'cstring':            'TD_CSTRING',

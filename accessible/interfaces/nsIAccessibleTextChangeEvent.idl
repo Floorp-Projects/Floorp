@@ -29,5 +29,5 @@ interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
   /**
    * The inserted or removed text
    */
-  readonly attribute DOMString modifiedText;
+  readonly attribute AString modifiedText;
 };
