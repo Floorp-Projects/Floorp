@@ -315,10 +315,19 @@ HTMLVideoElement::UpdateWakeLock()
   }
 }
 
+bool
+HTMLVideoElement::ShouldCreateVideoWakeLock() const
+{
+  // Make sure we only request wake lock for video with audio track, because
+  // video without audio track is often used as background image which seems no
+  // need to hold a wakelock.
+  return HasVideo() && HasAudio();
+}
+
 void
 HTMLVideoElement::CreateVideoWakeLockIfNeeded()
 {
-  if (!mScreenWakeLock && HasVideo()) {
+  if (!mScreenWakeLock && ShouldCreateVideoWakeLock()) {
     RefPtr<power::PowerManagerService> pmService =
       power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE_VOID(pmService);
