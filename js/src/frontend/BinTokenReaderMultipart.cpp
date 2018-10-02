@@ -45,13 +45,15 @@ using AutoTuple = BinTokenReaderMultipart::AutoTuple;
 using CharSlice = BinaryASTSupport::CharSlice;
 using Chars = BinTokenReaderMultipart::Chars;
 
-BinTokenReaderMultipart::BinTokenReaderMultipart(JSContext* cx, const uint8_t* start, const size_t length)
-  : BinTokenReaderBase(cx, start, length)
+BinTokenReaderMultipart::BinTokenReaderMultipart(JSContext* cx, ErrorReporter* er, const uint8_t* start, const size_t length)
+  : BinTokenReaderBase(cx, er, start, length)
   , grammarTable_(cx)
   , atomsTable_(cx, AtomVector(cx))
   , slicesTable_(cx)
   , posBeforeTree_(nullptr)
-{ }
+{
+    MOZ_ASSERT(er);
+}
 
 JS::Result<Ok>
 BinTokenReaderMultipart::readHeader()
