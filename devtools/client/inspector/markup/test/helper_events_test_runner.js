@@ -120,7 +120,8 @@ async function checkEventsForNode(test, inspector, testActor) {
     // Make sure the header is not hidden by scrollbars before clicking.
     header.scrollIntoView();
 
-    EventUtils.synthesizeMouseAtCenter(header, {}, type.ownerGlobal);
+    // Avoid clicking the header's center (could hit the debugger button)
+    EventUtils.synthesizeMouse(header, 2, 2, {}, type.ownerGlobal);
     await tooltip.once("event-tooltip-ready");
 
     is(header.classList.contains("content-expanded"), true,

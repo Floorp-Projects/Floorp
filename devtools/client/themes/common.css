@@ -6,7 +6,12 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
+  /* Bug 1458224: the initial `font-size` is different on Mac/Windows
+   * (appears fixed to 11px) and Linux (bigger, depends on user settings).
+   * Workaround: specify font-size on root, on form inputs, and whenever
+   * we're using the `font` shorthand. */
   font: message-box;
+  font-size: var(--theme-body-font-size);
 
   --clear-icon-url: url("chrome://devtools/skin/images/clear.svg");
   --tab-line-hover-color: rgba(0,0,0,.2);
@@ -35,15 +40,16 @@
 
 .devtools-monospace {
   font-family: var(--monospace-font-family);
+  font-size: var(--theme-code-font-size);
 }
 
-:root[platform="linux"] .devtools-monospace {
-  font-size: 11px;
-}
-
-/* Override wrong system font from forms.css */
-html|button, html|select {
+/**
+ * Override wrong system font from forms.css
+ * Bug 1458224: buttons use a wrong default font-size on Linux
+ */
+html|button, html|select, html|input {
   font: message-box;
+  font-size: var(--theme-body-font-size);
 }
 
 /* Autocomplete Popup */
@@ -63,11 +69,6 @@ html|button, html|select {
 .devtools-autocomplete-popup ul,
 .devtools-autocomplete-popup li {
   margin: 0;
-}
-
-:root[platform="linux"] .devtools-autocomplete-listbox {
-  /* Root font size is bigger on Linux, adjust rem-based values. */
-  max-height: 16rem;
 }
 
 .devtools-autocomplete-listbox {
@@ -423,6 +424,7 @@ checkbox:-moz-focusring {
   padding: 4px 6px;
   border-color: var(--theme-splitter-color);
   font: message-box;
+  font-size: var(--theme-body-font-size);
 }
 
 :root[platform="mac"] .devtools-textinput,
