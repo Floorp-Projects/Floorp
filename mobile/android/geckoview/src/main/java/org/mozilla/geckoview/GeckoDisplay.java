@@ -17,7 +17,7 @@ import android.view.Surface;
 public class GeckoDisplay {
     private final GeckoSession session;
 
-    /* package */ GeckoDisplay(final GeckoSession session) {
+    protected GeckoDisplay(final GeckoSession session) {
         this.session = session;
     }
 

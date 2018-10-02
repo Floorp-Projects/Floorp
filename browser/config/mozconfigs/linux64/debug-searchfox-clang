@@ -13,8 +13,8 @@ ac_add_options --enable-dmd
 export CC="$topsrcdir/clang/bin/clang"
 export CXX="$topsrcdir/clang/bin/clang++"
 
-# Save rust analysis (this requires unlocking the unstable features)
-export RUSTC_BOOTSTRAP=1
+# Save rust analysis (this requires unlocking the unstable features,
+# which is done in the taskcluster task definition via RUSTC_BOOTSTRAP)
 export RUSTFLAGS="-Zsave-analysis"
 
 # Add the static checker

@@ -29,13 +29,10 @@ if not CONFIG['NSS_NO_EV_CERTS']:
 LOCAL_INCLUDES += [
     '/security/ct',
     '/security/manager/ssl',
-    '/security/pkix/include',
-    '/security/pkix/lib',
 ]
 
 DIRS += [
     '../ct',
-    '../pkix',
 ]
 
 TEST_DIRS += [

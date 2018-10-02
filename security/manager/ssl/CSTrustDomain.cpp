@@ -12,7 +12,7 @@
 #include "NSSCertDBTrustDomain.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "pkix/pkixnss.h"
+#include "mozpkix/pkixnss.h"
 
 using namespace mozilla::pkix;
 

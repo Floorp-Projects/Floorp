@@ -20,7 +20,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const prefsSchemaVersion = "1.0.4";
+const prefsSchemaVersion = "1.0.5";
 const pref = _devtoolsServices2.default.pref;
 
 if ((0, _devtoolsEnvironment.isDevelopment)()) {
@@ -55,14 +55,13 @@ if ((0, _devtoolsEnvironment.isDevelopment)()) {
   pref("devtools.debugger.features.wasm", true);
   pref("devtools.debugger.features.shortcuts", true);
   pref("devtools.debugger.features.root", true);
-  pref("devtools.debugger.features.column-breakpoints", false);
   pref("devtools.debugger.features.map-scopes", true);
   pref("devtools.debugger.features.remove-command-bar-options", true);
   pref("devtools.debugger.features.code-coverage", false);
   pref("devtools.debugger.features.event-listeners", false);
   pref("devtools.debugger.features.code-folding", false);
   pref("devtools.debugger.features.outline", true);
-  pref("devtools.debugger.features.column-breakpoints", true);
+  pref("devtools.debugger.features.column-breakpoints", false);
   pref("devtools.debugger.features.pause-points", true);
   pref("devtools.debugger.features.skip-pausing", true);
   pref("devtools.debugger.features.component-pane", false);
@@ -120,7 +119,8 @@ const features = exports.features = new _devtoolsModules.PrefsHelper("devtools.d
   componentPane: ["Bool", "component-pane"]
 });
 const asyncStore = exports.asyncStore = (0, _asyncStoreHelper.asyncStoreHelper)("debugger", {
-  pendingBreakpoints: ["pending-breakpoints", {}]
+  pendingBreakpoints: ["pending-breakpoints", {}],
+  tabs: ["tabs", []]
 });
 
 if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {

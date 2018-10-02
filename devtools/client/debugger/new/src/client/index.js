@@ -33,8 +33,10 @@ function loadFromPrefs(actions) {
 
 async function loadInitialState() {
   const pendingBreakpoints = await _prefs.asyncStore.pendingBreakpoints;
+  const tabs = await _prefs.asyncStore.tabs;
   return {
-    pendingBreakpoints
+    pendingBreakpoints,
+    tabs
   };
 }
 

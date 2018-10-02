@@ -9,8 +9,8 @@
 
 #include <iostream>
 
-#include "pkix/Input.h"
-#include "pkix/Time.h"
+#include "mozpkix/Input.h"
+#include "mozpkix/Time.h"
 #include "seccomon.h"
 #include "SignedCertificateTimestamp.h"
 #include "SignedTreeHead.h"

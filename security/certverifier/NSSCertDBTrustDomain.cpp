@@ -28,9 +28,9 @@
 #include "nsThreadUtils.h"
 #include "nss.h"
 #include "pk11pub.h"
-#include "pkix/Result.h"
-#include "pkix/pkix.h"
-#include "pkix/pkixnss.h"
+#include "mozpkix/Result.h"
+#include "mozpkix/pkix.h"
+#include "mozpkix/pkixnss.h"
 #include "prerror.h"
 #include "secerr.h"
 

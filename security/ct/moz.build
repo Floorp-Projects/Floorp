@@ -31,15 +31,6 @@ UNIFIED_SOURCES += [
     'SignedCertificateTimestamp.cpp',
 ]
 
-LOCAL_INCLUDES += [
-    '/security/pkix/include',
-    '/security/pkix/lib',
-]
-
-DIRS += [
-    '../pkix',
-]
-
 TEST_DIRS += [
     'tests/gtest',
 ]

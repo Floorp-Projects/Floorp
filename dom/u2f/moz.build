@@ -25,8 +25,6 @@ LOCAL_INCLUDES += [
     '/dom/crypto',
     '/dom/webauthn',
     '/security/manager/ssl',
-    '/security/pkix/include',
-    '/security/pkix/lib',
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

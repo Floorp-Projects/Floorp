@@ -8,8 +8,8 @@
 #define SignedCertificateTimestamp_h
 
 #include "Buffer.h"
-#include "pkix/Input.h"
-#include "pkix/Result.h"
+#include "mozpkix/Input.h"
+#include "mozpkix/Result.h"
 
 // Structures related to Certificate Transparency (RFC 6962).
 namespace mozilla { namespace ct {

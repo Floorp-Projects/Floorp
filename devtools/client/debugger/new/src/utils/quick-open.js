@@ -72,7 +72,7 @@ function formatSourcesForList(source, tabs) {
     value: source.relativeUrl,
     title,
     subtitle,
-    icon: tabs.includes(source.url) ? "tab result-item-icon" : (0, _classnames2.default)((0, _source.getSourceClassnames)(source), "result-item-icon"),
+    icon: tabs.some(tab => tab.url == source.url) ? "tab result-item-icon" : (0, _classnames2.default)((0, _source.getSourceClassnames)(source), "result-item-icon"),
     id: source.id,
     url: source.url
   };

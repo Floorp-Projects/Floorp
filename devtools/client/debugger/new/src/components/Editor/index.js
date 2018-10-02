@@ -100,7 +100,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // Redux actions
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
-  secondSearchbarHeight: "var(--editor-second-searchbar-height)",
   footerHeight: "var(--editor-footer-height)"
 };
 
@@ -239,11 +238,9 @@ class Editor extends _react.PureComponent {
       return;
     }
 
-    (0, _editor.startOperation)();
     this.setText(nextProps);
     this.setSize(nextProps);
     this.scrollToLocation(nextProps);
-    (0, _editor.endOperation)();
   }
 
   setupEditor() {
@@ -340,10 +337,8 @@ class Editor extends _react.PureComponent {
         const editor = this.setupEditor();
         (0, _editor.updateDocument)(editor, selectedSource);
       } else {
-        (0, _editor.startOperation)();
         this.setText(this.props);
         this.setSize(this.props);
-        (0, _editor.endOperation)();
       }
     }
   }
@@ -540,7 +535,6 @@ class Editor extends _react.PureComponent {
 
     if (searchOn) {
       subtractions.push(cssVars.searchbarHeight);
-      subtractions.push(cssVars.secondSearchbarHeight);
     }
 
     return {
@@ -588,7 +582,6 @@ class Editor extends _react.PureComponent {
       editor: editor,
       editorRef: this.$editorWrapper
     }), ";", _react2.default.createElement(_Footer2.default, {
-      editor: editor,
       horizontal: horizontal
     }), _react2.default.createElement(_HighlightLines2.default, {
       editor: editor
@@ -626,10 +619,10 @@ class Editor extends _react.PureComponent {
         "coverage-on": coverageOn
       }),
       ref: c => this.$editorWrapper = c
-    }, this.renderSearchBar(), _react2.default.createElement("div", {
+    }, _react2.default.createElement("div", {
       className: "editor-mount devtools-monospace",
       style: this.getInlineEditorStyles()
-    }), this.renderItems());
+    }), this.renderSearchBar(), this.renderItems());
   }
 
 }
