@@ -301,7 +301,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/netwerk/protocol/http',
     '/netwerk/socket',
-    '/security/pkix/include'
 ]
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

@@ -17,8 +17,6 @@ SOURCES += [
 
 LOCAL_INCLUDES += [
     '../..',
-    '/security/pkix/include',
-    '/security/pkix/lib',
 ]
 
 if not CONFIG['MOZ_DEBUG']:

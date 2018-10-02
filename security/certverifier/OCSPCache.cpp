@@ -28,7 +28,7 @@
 
 #include "NSSCertDBTrustDomain.h"
 #include "pk11pub.h"
-#include "pkix/pkixnss.h"
+#include "mozpkix/pkixnss.h"
 #include "ScopedNSSTypes.h"
 #include "secerr.h"
 

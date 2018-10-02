@@ -26,7 +26,7 @@
 #include "nsPromiseFlatString.h"
 #include "nsTHashtable.h"
 #include "nsThreadUtils.h"
-#include "pkix/Input.h"
+#include "mozpkix/Input.h"
 #include "prtime.h"
 
 NS_IMPL_ISUPPORTS(CertBlocklist, nsICertBlocklist)

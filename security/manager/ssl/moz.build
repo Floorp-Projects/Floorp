@@ -176,7 +176,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/crypto',
     '/security/certverifier',
-    '/security/pkix/include',
 ]
 
 LOCAL_INCLUDES += [
@@ -200,6 +199,10 @@ if not CONFIG['MOZ_SYSTEM_NSS']:
     USE_LIBS += [
         'crmf',
     ]
+
+# mozpkix is linked statically from the in-tree sources independent of whether
+# system NSS is used or not.
+USE_LIBS += [ 'mozpkix' ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -28,8 +28,8 @@
 #include "hasht.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Vector.h"
-#include "pkix/Result.h"
-#include "pkix/Time.h"
+#include "mozpkix/Result.h"
+#include "mozpkix/Time.h"
 #include "prerror.h"
 #include "seccomon.h"
 

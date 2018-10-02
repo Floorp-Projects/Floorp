@@ -20,7 +20,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsNSSCertificate.h"
 #include "nsString.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 
 namespace mozilla { namespace psm {
 

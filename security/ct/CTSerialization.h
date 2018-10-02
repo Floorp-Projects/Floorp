@@ -9,8 +9,8 @@
 
 #include <vector>
 
-#include "pkix/Input.h"
-#include "pkix/Result.h"
+#include "mozpkix/Input.h"
+#include "mozpkix/Result.h"
 #include "SignedCertificateTimestamp.h"
 #include "SignedTreeHead.h"
 

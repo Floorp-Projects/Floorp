@@ -36,8 +36,8 @@
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
-#include "pkix/pkix.h"
-#include "pkix/pkixnss.h"
+#include "mozpkix/pkix.h"
+#include "mozpkix/pkixnss.h"
 #include "plstr.h"
 #include "secmime.h"
 

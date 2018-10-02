@@ -6811,6 +6811,7 @@ Accessible.propTypes = {
   onAccessibleMouseOver: PropTypes.func,
   onAccessibleMouseOut: PropTypes.func,
   onInspectIconClick: PropTypes.func,
+  roleFirst: PropTypes.bool,
   separatorText: PropTypes.string
 };
 
@@ -6823,9 +6824,10 @@ function Accessible(props) {
     onAccessibleMouseOver,
     onAccessibleMouseOut,
     onInspectIconClick,
+    roleFirst,
     separatorText
   } = props;
-  const elements = getElements(object, nameMaxLength, separatorText);
+  const elements = getElements(object, nameMaxLength, roleFirst, separatorText);
   const isInTree = object.preview && object.preview.isConnected === true;
   const baseConfig = {
     "data-link-actor-id": object.actor,
@@ -6871,20 +6873,19 @@ function Accessible(props) {
   return span(baseConfig, ...elements, inspectIcon);
 }
 
-function getElements(grip, nameMaxLength, separatorText = ": ") {
+function getElements(grip, nameMaxLength, roleFirst = false, separatorText = ": ") {
   const { name, role } = grip.preview;
   const elements = [];
-
-  elements.push(span({ className: "accessible-role" }, role));
   if (name) {
-    elements.push(span({ className: "separator" }, separatorText), StringRep({
+    elements.push(StringRep({
       className: "accessible-name",
       object: name,
       cropLimit: nameMaxLength
-    }));
+    }), span({ className: "separator" }, separatorText));
   }
 
-  return elements;
+  elements.push(span({ className: "accessible-role" }, role));
+  return roleFirst ? elements.reverse() : elements;
 }
 
 // Registration
