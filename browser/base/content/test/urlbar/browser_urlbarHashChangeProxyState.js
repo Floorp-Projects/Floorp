@@ -89,10 +89,9 @@ add_task(async function() {
  * get the correct page icon when finished.
  */
 add_task(async function() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
-  // NB: CPOW usage because new tab pages can be preloaded, in which case no
-  // load events fire.
-  await BrowserTestUtils.waitForCondition(() => !tab.linkedBrowser.contentDocumentAsCPOW.hidden);
+  // Ensure there's no preloaded newtab browser, since that'll not fire a load event.
+  gBrowser.removePreloadedBrowser();
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab");
   let url = "https://example.org/browser/browser/base/content/test/urlbar/dummy_page.html#foo";
   gURLBar.value = url;
   gURLBar.select();
