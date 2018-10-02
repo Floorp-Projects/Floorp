@@ -121,6 +121,9 @@ OpenVRSession::~OpenVRSession()
 bool
 OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState)
 {
+  if (!gfxPrefs::VREnabled() || !gfxPrefs::VROpenVREnabled()) {
+    return false;
+  }
   if (mVRSystem != nullptr) {
     // Already initialized
     return true;

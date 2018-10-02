@@ -4,6 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Build OSVR on all platforms except Android
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'OSVRSession.cpp',
+    ]
+
 # Build OpenVR on Windows, Linux, and macOS desktop targets
 if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     UNIFIED_SOURCES += [

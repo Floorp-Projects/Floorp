@@ -51,11 +51,6 @@ UNIFIED_SOURCES += [
     'VRThread.cpp',
 ]
 
-if CONFIG['OS_TARGET'] != 'Android':
-    UNIFIED_SOURCES += [
-        'gfxVROSVR.cpp',
-    ]
-
 # VRDisplayHost includes MacIOSurface.h which includes Mac headers
 # which define Size and Points types in the root namespace that
 # often conflict with our own types.

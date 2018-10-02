@@ -26,7 +26,6 @@
 #endif
 #if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
 #include "gfxVROpenVR.h"
-#include "gfxVROSVR.h"
 #endif
 
 #include "gfxVRPuppet.h"
@@ -141,12 +140,6 @@ VRManager::VRManager()
     mgr = VRSystemManagerOpenVR::Create();
     if (mgr) {
       mManagers.AppendElement(mgr);
-    }
-
-    // OSVR is cross platform compatible
-    mgr = VRSystemManagerOSVR::Create();
-    if (mgr) {
-        mManagers.AppendElement(mgr);
     }
   } // !mVRService
 #endif
