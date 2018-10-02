@@ -358,7 +358,7 @@ ScreenOrientation::LockDeviceOrientation(hal::ScreenOrientation aOrientation,
     return false;
   }
 
-  nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner()->GetDoc());
+  nsCOMPtr<EventTarget> target = GetOwner()->GetDoc();
   // We need to register a listener so we learn when we leave fullscreen
   // and when we will have to unlock the screen.
   // This needs to be done before LockScreenOrientation call to make sure
@@ -404,7 +404,7 @@ ScreenOrientation::UnlockDeviceOrientation()
   }
 
   // Remove event listener in case of fullscreen lock.
-  nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner()->GetDoc());
+  nsCOMPtr<EventTarget> target = GetOwner()->GetDoc();
   if (target) {
     target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
                                       mFullscreenListener,

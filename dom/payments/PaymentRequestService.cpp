@@ -61,9 +61,8 @@ PaymentRequestEnumerator::GetNext(nsISupports** aItem)
   if (!rowRequest) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIPaymentRequest> request = do_QueryInterface(rowRequest);
   mIndex++;
-  request.forget(aItem);
+  rowRequest.forget(aItem);
   return NS_OK;
 }
 
@@ -114,8 +113,7 @@ PaymentRequestService::GetPaymentRequestById(const nsAString& aRequestId,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  nsCOMPtr<nsIPaymentRequest> request = do_QueryInterface(rowRequest);
-  request.forget(aRequest);
+  rowRequest.forget(aRequest);
   return NS_OK;
 }
 

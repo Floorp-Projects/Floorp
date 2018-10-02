@@ -137,7 +137,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
         archive = os.path.join(page_load_test_dir, 'tp5n.zip')
         unzip = self.query_exe('unzip')
         unzip_cmd = [unzip, '-q', '-o', archive, '-d', page_load_test_dir]
-        self.run_command(unzip_cmd, halt_on_failure=True)
+        self.run_command(unzip_cmd, halt_on_failure=False)
         self.run_command("ls %s" % page_load_test_dir)
 
     def run_tests(self, args=None, **kw):

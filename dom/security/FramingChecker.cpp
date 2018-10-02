@@ -67,8 +67,7 @@ FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   // principal and use it for the principal comparison.  Finding the top
   // content-type docshell doesn't work because some chrome documents are
   // loaded in content docshells (see bug 593387).
-  nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(
-    do_QueryInterface(static_cast<nsIDocShell*>(aDocShell)));
+  nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(aDocShell);
   nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
   nsCOMPtr<nsIDocShellTreeItem> curDocShellItem = thisDocShellItem;
   nsCOMPtr<nsIDocument> topDoc;

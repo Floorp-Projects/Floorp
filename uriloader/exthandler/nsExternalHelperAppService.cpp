@@ -2308,8 +2308,8 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile * aNewFileLocation)
   MOZ_ASSERT(aNewFileLocation, "Must be called with a non-null file");
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIFile> fileToUse = do_QueryInterface(aNewFileLocation);
-  mFinalFileDestination = do_QueryInterface(fileToUse);
+  nsCOMPtr<nsIFile> fileToUse = aNewFileLocation;
+  mFinalFileDestination = fileToUse;
 
   // Move what we have in the final directory, but append .part
   // to it, to indicate that it's unfinished.  Do not call SetTarget on the
@@ -2414,12 +2414,12 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 #ifdef XP_WIN
   fileToUse->Append(mSuggestedFileName + mTempFileExtension);
 #else
-  fileToUse->Append(mSuggestedFileName);  
+  fileToUse->Append(mSuggestedFileName);
 #endif
 
   nsresult rv = fileToUse->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
   if(NS_SUCCEEDED(rv)) {
-    mFinalFileDestination = do_QueryInterface(fileToUse);
+    mFinalFileDestination = fileToUse;
     // launch the progress window now that the user has picked the desired action.
     rv = CreateTransfer();
     if (NS_FAILED(rv)) {

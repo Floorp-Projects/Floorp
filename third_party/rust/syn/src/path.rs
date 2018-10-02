@@ -20,44 +20,6 @@ ast_struct! {
     }
 }
 
-impl Path {
-    pub fn global(&self) -> bool {
-        self.leading_colon.is_some()
-    }
-}
-
-/// A helper for printing a self-type qualified path as tokens.
-///
-/// ```rust
-/// extern crate syn;
-/// extern crate quote;
-/// extern crate proc_macro2;
-///
-/// use syn::{QSelf, Path, PathTokens};
-/// use proc_macro2::TokenStream;
-/// use quote::ToTokens;
-///
-/// struct MyNode {
-///     qself: Option<QSelf>,
-///     path: Path,
-/// }
-///
-/// impl ToTokens for MyNode {
-///     fn to_tokens(&self, tokens: &mut TokenStream) {
-///         PathTokens(&self.qself, &self.path).to_tokens(tokens);
-///     }
-/// }
-/// #
-/// # fn main() {}
-/// ```
-///
-/// *This type is available if Syn is built with the `"derive"` or `"full"`
-/// feature and the `"printing"` feature.*
-#[cfg(feature = "printing")]
-#[cfg_attr(feature = "extra-traits", derive(Debug, Eq, PartialEq, Hash))]
-#[cfg_attr(feature = "clone-impls", derive(Clone))]
-pub struct PathTokens<'a>(pub &'a Option<QSelf>, pub &'a Path);
-
 impl<T> From<T> for Path
 where
     T: Into<PathSegment>,
@@ -146,6 +108,8 @@ ast_enum! {
         /// A binding (equality constraint) on an associated type: the `Item =
         /// u8` in `Iterator<Item = u8>`.
         Binding(Binding),
+        /// An associated type bound: `Iterator<Item: Display>`.
+        Constraint(Constraint),
         /// A const expression. Must be inside of a block.
         ///
         /// NOTE: Identity expressions are represented as Type arguments, as
@@ -177,6 +141,18 @@ ast_struct! {
         pub ident: Ident,
         pub eq_token: Token![=],
         pub ty: Type,
+    }
+}
+
+ast_struct! {
+    /// An associated type bound: `Iterator<Item: Display>`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or `"full"`
+    /// feature.*
+    pub struct Constraint {
+        pub ident: Ident,
+        pub colon_token: Token![:],
+        pub bounds: Punctuated<TypeParamBound, Token![+]>,
     }
 }
 
@@ -227,201 +203,310 @@ ast_struct! {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use synom::Synom;
 
-    impl Synom for Path {
-        named!(parse -> Self, do_parse!(
-            colon: option!(punct!(::)) >>
-            segments: call!(Punctuated::<PathSegment, Token![::]>::parse_separated_nonempty) >>
-            cond_reduce!(segments.first().map_or(true, |seg| seg.value().ident != "dyn")) >>
-            (Path {
-                leading_colon: colon,
-                segments: segments,
-            })
-        ));
+    #[cfg(feature = "full")]
+    use expr;
+    use ext::IdentExt;
+    use parse::{Parse, ParseStream, Result};
 
-        fn description() -> Option<&'static str> {
-            Some("path")
+    impl Parse for Path {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Self::parse_helper(input, false)
         }
     }
 
-    #[cfg(not(feature = "full"))]
-    impl Synom for GenericArgument {
-        named!(parse -> Self, alt!(
-            call!(ty_no_eq_after) => { GenericArgument::Type }
-            |
-            syn!(Lifetime) => { GenericArgument::Lifetime }
-            |
-            syn!(Binding) => { GenericArgument::Binding }
-        ));
+    impl Parse for GenericArgument {
+        fn parse(input: ParseStream) -> Result<Self> {
+            if input.peek(Lifetime) && !input.peek2(Token![+]) {
+                return Ok(GenericArgument::Lifetime(input.parse()?));
+            }
+
+            if input.peek(Ident) && input.peek2(Token![=]) {
+                return Ok(GenericArgument::Binding(input.parse()?));
+            }
+
+            #[cfg(feature = "full")]
+            {
+                if input.peek(Ident) && input.peek2(Token![:]) && !input.peek2(Token![::]) {
+                    return Ok(GenericArgument::Constraint(input.parse()?));
+                }
+
+                if input.peek(Lit) {
+                    let lit = input.call(expr::parsing::expr_lit)?;
+                    return Ok(GenericArgument::Const(Expr::Lit(lit)));
+                }
+
+                if input.peek(token::Brace) {
+                    let block = input.call(expr::parsing::expr_block)?;
+                    return Ok(GenericArgument::Const(Expr::Block(block)));
+                }
+            }
+
+            input.parse().map(GenericArgument::Type)
+        }
+    }
+
+    impl Parse for AngleBracketedGenericArguments {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(AngleBracketedGenericArguments {
+                colon2_token: input.parse()?,
+                lt_token: input.parse()?,
+                args: {
+                    let mut args = Punctuated::new();
+                    loop {
+                        if input.peek(Token![>]) {
+                            break;
+                        }
+                        let value = input.parse()?;
+                        args.push_value(value);
+                        if input.peek(Token![>]) {
+                            break;
+                        }
+                        let punct = input.parse()?;
+                        args.push_punct(punct);
+                    }
+                    args
+                },
+                gt_token: input.parse()?,
+            })
+        }
+    }
+
+    impl Parse for ParenthesizedGenericArguments {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let content;
+            Ok(ParenthesizedGenericArguments {
+                paren_token: parenthesized!(content in input),
+                inputs: content.parse_terminated(Type::parse)?,
+                output: input.call(ReturnType::without_plus)?,
+            })
+        }
+    }
+
+    impl Parse for PathSegment {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Self::parse_helper(input, false)
+        }
+    }
+
+    impl PathSegment {
+        fn parse_helper(input: ParseStream, expr_style: bool) -> Result<Self> {
+            if input.peek(Token![super])
+                || input.peek(Token![self])
+                || input.peek(Token![Self])
+                || input.peek(Token![crate])
+                || input.peek(Token![extern])
+            {
+                let ident = input.call(Ident::parse_any)?;
+                return Ok(PathSegment::from(ident));
+            }
+
+            let ident = input.parse()?;
+            if !expr_style && input.peek(Token![<]) && !input.peek(Token![<=])
+                || input.peek(Token![::]) && input.peek3(Token![<])
+            {
+                Ok(PathSegment {
+                    ident: ident,
+                    arguments: PathArguments::AngleBracketed(input.parse()?),
+                })
+            } else {
+                Ok(PathSegment::from(ident))
+            }
+        }
+    }
+
+    impl Parse for Binding {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(Binding {
+                ident: input.parse()?,
+                eq_token: input.parse()?,
+                ty: input.parse()?,
+            })
+        }
     }
 
     #[cfg(feature = "full")]
-    impl Synom for GenericArgument {
-        named!(parse -> Self, alt!(
-            call!(ty_no_eq_after) => { GenericArgument::Type }
-            |
-            syn!(Lifetime) => { GenericArgument::Lifetime }
-            |
-            syn!(Binding) => { GenericArgument::Binding }
-            |
-            syn!(ExprLit) => { |l| GenericArgument::Const(Expr::Lit(l)) }
-            |
-            syn!(ExprBlock) => { |b| GenericArgument::Const(Expr::Block(b)) }
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("generic argument")
-        }
-    }
-
-    impl Synom for AngleBracketedGenericArguments {
-        named!(parse -> Self, do_parse!(
-            colon2: option!(punct!(::)) >>
-            lt: punct!(<) >>
-            args: call!(Punctuated::parse_terminated) >>
-            gt: punct!(>) >>
-            (AngleBracketedGenericArguments {
-                colon2_token: colon2,
-                lt_token: lt,
-                args: args,
-                gt_token: gt,
+    impl Parse for Constraint {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(Constraint {
+                ident: input.parse()?,
+                colon_token: input.parse()?,
+                bounds: {
+                    let mut bounds = Punctuated::new();
+                    loop {
+                        if input.peek(Token![,]) || input.peek(Token![>]) {
+                            break;
+                        }
+                        let value = input.parse()?;
+                        bounds.push_value(value);
+                        if !input.peek(Token![+]) {
+                            break;
+                        }
+                        let punct = input.parse()?;
+                        bounds.push_punct(punct);
+                    }
+                    bounds
+                },
             })
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("angle bracketed generic arguments")
-        }
-    }
-
-    impl Synom for ParenthesizedGenericArguments {
-        named!(parse -> Self, do_parse!(
-            data: parens!(Punctuated::parse_terminated) >>
-            output: call!(ReturnType::without_plus) >>
-            (ParenthesizedGenericArguments {
-                paren_token: data.0,
-                inputs: data.1,
-                output: output,
-            })
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("parenthesized generic arguments: `Foo(A, B, ..) -> T`")
-        }
-    }
-
-    impl Synom for PathSegment {
-        named!(parse -> Self, alt!(
-            do_parse!(
-                ident: syn!(Ident) >>
-                arguments: syn!(AngleBracketedGenericArguments) >>
-                (PathSegment {
-                    ident: ident,
-                    arguments: PathArguments::AngleBracketed(arguments),
-                })
-            )
-            |
-            mod_style_path_segment
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("path segment")
-        }
-    }
-
-    impl Synom for Binding {
-        named!(parse -> Self, do_parse!(
-            id: syn!(Ident) >>
-            eq: punct!(=) >>
-            ty: syn!(Type) >>
-            (Binding {
-                ident: id,
-                eq_token: eq,
-                ty: ty,
-            })
-        ));
-
-        fn description() -> Option<&'static str> {
-            Some("associated type binding")
         }
     }
 
     impl Path {
-        named!(pub parse_mod_style -> Self, do_parse!(
-            colon: option!(punct!(::)) >>
-            segments: call!(Punctuated::parse_separated_nonempty_with,
-                            mod_style_path_segment) >>
-            (Path {
-                leading_colon: colon,
-                segments: segments,
+        /// Parse a `Path` containing no path arguments on any of its segments.
+        ///
+        /// *This function is available if Syn is built with the `"parsing"`
+        /// feature.*
+        ///
+        /// # Example
+        ///
+        /// ```
+        /// #[macro_use]
+        /// extern crate syn;
+        ///
+        /// use syn::Path;
+        /// use syn::parse::{Parse, ParseStream, Result};
+        ///
+        /// // A simplified single `use` statement like:
+        /// //
+        /// //     use std::collections::HashMap;
+        /// //
+        /// // Note that generic parameters are not allowed in a `use` statement
+        /// // so the following must not be accepted.
+        /// //
+        /// //     use a::<b>::c;
+        /// struct SingleUse {
+        ///     use_token: Token![use],
+        ///     path: Path,
+        /// }
+        ///
+        /// impl Parse for SingleUse {
+        ///     fn parse(input: ParseStream) -> Result<Self> {
+        ///         Ok(SingleUse {
+        ///             use_token: input.parse()?,
+        ///             path: input.call(Path::parse_mod_style)?,
+        ///         })
+        ///     }
+        /// }
+        /// #
+        /// # fn main() {}
+        /// ```
+        pub fn parse_mod_style(input: ParseStream) -> Result<Self> {
+            Ok(Path {
+                leading_colon: input.parse()?,
+                segments: {
+                    let mut segments = Punctuated::new();
+                    loop {
+                        if !input.peek(Ident)
+                            && !input.peek(Token![super])
+                            && !input.peek(Token![self])
+                            && !input.peek(Token![Self])
+                            && !input.peek(Token![crate])
+                            && !input.peek(Token![extern])
+                        {
+                            break;
+                        }
+                        let ident = Ident::parse_any(input)?;
+                        segments.push_value(PathSegment::from(ident));
+                        if !input.peek(Token![::]) {
+                            break;
+                        }
+                        let punct = input.parse()?;
+                        segments.push_punct(punct);
+                    }
+                    if segments.is_empty() {
+                        return Err(input.error("expected path"));
+                    } else if segments.trailing_punct() {
+                        return Err(input.error("expected path segment"));
+                    }
+                    segments
+                },
             })
-        ));
+        }
+
+        fn parse_helper(input: ParseStream, expr_style: bool) -> Result<Self> {
+            if input.peek(Token![dyn]) {
+                return Err(input.error("expected path"));
+            }
+
+            Ok(Path {
+                leading_colon: input.parse()?,
+                segments: {
+                    let mut segments = Punctuated::new();
+                    let value = PathSegment::parse_helper(input, expr_style)?;
+                    segments.push_value(value);
+                    while input.peek(Token![::]) {
+                        let punct: Token![::] = input.parse()?;
+                        segments.push_punct(punct);
+                        let value = PathSegment::parse_helper(input, expr_style)?;
+                        segments.push_value(value);
+                    }
+                    segments
+                },
+            })
+        }
     }
 
-    named!(mod_style_path_segment -> PathSegment, alt!(
-        syn!(Ident) => { Into::into }
-        |
-        keyword!(super) => { Into::into }
-        |
-        keyword!(self) => { Into::into }
-        |
-        keyword!(Self) => { Into::into }
-        |
-        keyword!(crate) => { Into::into }
-        |
-        keyword!(extern) => { Into::into }
-    ));
-
-    named!(pub qpath -> (Option<QSelf>, Path), alt!(
-        map!(syn!(Path), |p| (None, p))
-        |
-        do_parse!(
-            lt: punct!(<) >>
-            this: syn!(Type) >>
-            path: option!(tuple!(keyword!(as), syn!(Path))) >>
-            gt: punct!(>) >>
-            colon2: punct!(::) >>
-            rest: call!(Punctuated::parse_separated_nonempty) >>
-            ({
-                let (pos, as_, path) = match path {
-                    Some((as_, mut path)) => {
-                        let pos = path.segments.len();
-                        path.segments.push_punct(colon2);
-                        path.segments.extend(rest.into_pairs());
-                        (pos, Some(as_), path)
-                    }
-                    None => {
-                        (0, None, Path {
-                            leading_colon: Some(colon2),
-                            segments: rest,
-                        })
-                    }
-                };
-                (Some(QSelf {
-                    lt_token: lt,
-                    ty: Box::new(this),
-                    position: pos,
-                    as_token: as_,
-                    gt_token: gt,
-                }), path)
-            })
-        )
-        |
-        map!(keyword!(self), |s| (None, s.into()))
-    ));
-
-    named!(pub ty_no_eq_after -> Type, do_parse!(
-        ty: syn!(Type) >>
-        not!(punct!(=)) >>
-        (ty)
-    ));
+    pub fn qpath(input: ParseStream, expr_style: bool) -> Result<(Option<QSelf>, Path)> {
+        if input.peek(Token![<]) {
+            let lt_token: Token![<] = input.parse()?;
+            let this: Type = input.parse()?;
+            let path = if input.peek(Token![as]) {
+                let as_token: Token![as] = input.parse()?;
+                let path: Path = input.parse()?;
+                Some((as_token, path))
+            } else {
+                None
+            };
+            let gt_token: Token![>] = input.parse()?;
+            let colon2_token: Token![::] = input.parse()?;
+            let mut rest = Punctuated::new();
+            loop {
+                let path = PathSegment::parse_helper(input, expr_style)?;
+                rest.push_value(path);
+                if !input.peek(Token![::]) {
+                    break;
+                }
+                let punct: Token![::] = input.parse()?;
+                rest.push_punct(punct);
+            }
+            let (position, as_token, path) = match path {
+                Some((as_token, mut path)) => {
+                    let pos = path.segments.len();
+                    path.segments.push_punct(colon2_token);
+                    path.segments.extend(rest.into_pairs());
+                    (pos, Some(as_token), path)
+                }
+                None => {
+                    let path = Path {
+                        leading_colon: Some(colon2_token),
+                        segments: rest,
+                    };
+                    (0, None, path)
+                }
+            };
+            let qself = QSelf {
+                lt_token: lt_token,
+                ty: Box::new(this),
+                position: position,
+                as_token: as_token,
+                gt_token: gt_token,
+            };
+            Ok((Some(qself), path))
+        } else {
+            let path = Path::parse_helper(input, expr_style)?;
+            Ok((None, path))
+        }
+    }
 }
 
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
+
     use proc_macro2::TokenStream;
     use quote::ToTokens;
+
+    use print::TokensOrDefault;
 
     impl ToTokens for Path {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -458,6 +543,7 @@ mod printing {
                 GenericArgument::Lifetime(ref lt) => lt.to_tokens(tokens),
                 GenericArgument::Type(ref ty) => ty.to_tokens(tokens),
                 GenericArgument::Binding(ref tb) => tb.to_tokens(tokens),
+                GenericArgument::Constraint(ref tc) => tc.to_tokens(tokens),
                 GenericArgument::Const(ref e) => match *e {
                     Expr::Lit(_) => e.to_tokens(tokens),
 
@@ -489,9 +575,15 @@ mod printing {
             // not been settled yet. https://github.com/rust-lang/rust/issues/44580
             let mut trailing_or_empty = true;
             for param in self.args.pairs() {
-                if let GenericArgument::Lifetime(_) = **param.value() {
-                    param.to_tokens(tokens);
-                    trailing_or_empty = param.punct().is_some();
+                match **param.value() {
+                    GenericArgument::Lifetime(_) => {
+                        param.to_tokens(tokens);
+                        trailing_or_empty = param.punct().is_some();
+                    }
+                    GenericArgument::Type(_)
+                    | GenericArgument::Binding(_)
+                    | GenericArgument::Constraint(_)
+                    | GenericArgument::Const(_) => {}
                 }
             }
             for param in self.args.pairs() {
@@ -503,16 +595,23 @@ mod printing {
                         param.to_tokens(tokens);
                         trailing_or_empty = param.punct().is_some();
                     }
-                    GenericArgument::Lifetime(_) | GenericArgument::Binding(_) => {}
+                    GenericArgument::Lifetime(_)
+                    | GenericArgument::Binding(_)
+                    | GenericArgument::Constraint(_) => {}
                 }
             }
             for param in self.args.pairs() {
-                if let GenericArgument::Binding(_) = **param.value() {
-                    if !trailing_or_empty {
-                        <Token![,]>::default().to_tokens(tokens);
-                        trailing_or_empty = true;
+                match **param.value() {
+                    GenericArgument::Binding(_) | GenericArgument::Constraint(_) => {
+                        if !trailing_or_empty {
+                            <Token![,]>::default().to_tokens(tokens);
+                            trailing_or_empty = true;
+                        }
+                        param.to_tokens(tokens);
                     }
-                    param.to_tokens(tokens);
+                    GenericArgument::Lifetime(_)
+                    | GenericArgument::Type(_)
+                    | GenericArgument::Const(_) => {}
                 }
             }
 
@@ -528,6 +627,14 @@ mod printing {
         }
     }
 
+    impl ToTokens for Constraint {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
+            self.ident.to_tokens(tokens);
+            self.colon_token.to_tokens(tokens);
+            self.bounds.to_tokens(tokens);
+        }
+    }
+
     impl ToTokens for ParenthesizedGenericArguments {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.paren_token.surround(tokens, |tokens| {
@@ -537,25 +644,27 @@ mod printing {
         }
     }
 
-    impl<'a> ToTokens for PathTokens<'a> {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            let qself = match *self.0 {
+    impl private {
+        pub fn print_path(tokens: &mut TokenStream, qself: &Option<QSelf>, path: &Path) {
+            let qself = match *qself {
                 Some(ref qself) => qself,
-                None => return self.1.to_tokens(tokens),
+                None => {
+                    path.to_tokens(tokens);
+                    return;
+                }
             };
             qself.lt_token.to_tokens(tokens);
             qself.ty.to_tokens(tokens);
 
-            // XXX: Gross.
-            let pos = if qself.position > 0 && qself.position >= self.1.segments.len() {
-                self.1.segments.len() - 1
+            let pos = if qself.position > 0 && qself.position >= path.segments.len() {
+                path.segments.len() - 1
             } else {
                 qself.position
             };
-            let mut segments = self.1.segments.pairs();
+            let mut segments = path.segments.pairs();
             if pos > 0 {
                 TokensOrDefault(&qself.as_token).to_tokens(tokens);
-                self.1.leading_colon.to_tokens(tokens);
+                path.leading_colon.to_tokens(tokens);
                 for (i, segment) in segments.by_ref().take(pos).enumerate() {
                     if i + 1 == pos {
                         segment.value().to_tokens(tokens);
@@ -567,7 +676,7 @@ mod printing {
                 }
             } else {
                 qself.gt_token.to_tokens(tokens);
-                self.1.leading_colon.to_tokens(tokens);
+                path.leading_colon.to_tokens(tokens);
             }
             for segment in segments {
                 segment.to_tokens(tokens);

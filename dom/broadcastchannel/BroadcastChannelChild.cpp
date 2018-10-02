@@ -42,8 +42,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   ipc::StructuredCloneDataNoTransfers cloneData;
   cloneData.BorrowFromClonedMessageDataForBackgroundChild(aData);
 
-  nsCOMPtr<DOMEventTargetHelper> helper = mBC;
-  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(helper);
+  nsCOMPtr<EventTarget> eventTarget = mBC;
 
   // The object is going to be deleted soon. No notify is required.
   if (!eventTarget) {
@@ -62,7 +61,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   nsCOMPtr<nsIGlobalObject> globalObject;
 
   if (NS_IsMainThread()) {
-    globalObject = do_QueryInterface(mBC->GetParentObject());
+    globalObject = mBC->GetParentObject();
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);

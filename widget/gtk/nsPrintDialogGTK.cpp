@@ -1024,12 +1024,11 @@ nsPrintDialogServiceGTK::Show(nsPIDOMWindowOuter *aParent,
     switch (printDialogResult) {
       case GTK_PRINT_OPERATION_RESULT_APPLY:
         {
-          nsCOMPtr<nsIObserver> observer = do_QueryInterface(fpPrintPortal);
           nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
           NS_ENSURE_STATE(os);
           // Observer waits until notified that the file with the content
           // to print has been written.
-          rv = os->AddObserver(observer, "print-to-file-finished", false);
+          rv = os->AddObserver(fpPrintPortal, "print-to-file-finished", false);
           NS_ENSURE_SUCCESS(rv, rv);
           break;
         }

@@ -310,8 +310,7 @@ FileReaderSync::ConvertStream(nsIInputStream *aStream,
                   nsIConverterInputStream::DEFAULT_REPLACEMENT_CHARACTER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIUnicharInputStream> unicharStream =
-    do_QueryInterface(converterStream);
+  nsCOMPtr<nsIUnicharInputStream> unicharStream = converterStream;
   NS_ENSURE_TRUE(unicharStream, NS_ERROR_FAILURE);
 
   uint32_t numChars;

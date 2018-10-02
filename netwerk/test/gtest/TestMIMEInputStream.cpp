@@ -80,7 +80,7 @@ TEST(TestNsMIMEInputStream, QIInputStreamLength) {
       rv = m->SetData(stream);
       ASSERT_EQ(NS_OK, rv);
 
-      mis = do_QueryInterface(m);
+      mis = m;
       ASSERT_TRUE(!!mis);
     }
 
@@ -113,7 +113,7 @@ TEST(TestNsMIMEInputStream, InputStreamLength) {
     rv = m->SetData(stream);
     ASSERT_EQ(NS_OK, rv);
 
-    mis = do_QueryInterface(m);
+    mis = m;
     ASSERT_TRUE(!!mis);
   }
 
@@ -143,7 +143,7 @@ TEST(TestNsMIMEInputStream, NegativeInputStreamLength) {
     rv = m->SetData(stream);
     ASSERT_EQ(NS_OK, rv);
 
-    mis = do_QueryInterface(m);
+    mis = m;
     ASSERT_TRUE(!!mis);
   }
 
@@ -173,7 +173,7 @@ TEST(TestNsMIMEInputStream, AsyncInputStreamLength) {
     rv = m->SetData(stream);
     ASSERT_EQ(NS_OK, rv);
 
-    mis = do_QueryInterface(m);
+    mis = m;
     ASSERT_TRUE(!!mis);
   }
 
@@ -206,7 +206,7 @@ TEST(TestNsMIMEInputStream, NegativeAsyncInputStreamLength) {
     rv = m->SetData(stream);
     ASSERT_EQ(NS_OK, rv);
 
-    mis = do_QueryInterface(m);
+    mis = m;
     ASSERT_TRUE(!!mis);
   }
 
@@ -239,7 +239,7 @@ TEST(TestNsMIMEInputStream, AbortLengthCallback) {
     rv = m->SetData(stream);
     ASSERT_EQ(NS_OK, rv);
 
-    mis = do_QueryInterface(m);
+    mis = m;
     ASSERT_TRUE(!!mis);
   }
 

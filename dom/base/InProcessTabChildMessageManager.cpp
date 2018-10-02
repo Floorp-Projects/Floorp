@@ -191,7 +191,7 @@ InProcessTabChildMessageManager::ChromeOuterWindowID()
     return 0;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(mDocShell);
+  nsCOMPtr<nsIDocShellTreeItem> item = mDocShell;
   nsCOMPtr<nsIDocShellTreeItem> root;
   nsresult rv = item->GetRootTreeItem(getter_AddRefs(root));
   if (NS_WARN_IF(NS_FAILED(rv))) {

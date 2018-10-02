@@ -413,7 +413,7 @@ EditorBase::InstallEventListeners()
   // Initialize the event target.
   nsCOMPtr<nsIContent> rootContent = GetRoot();
   NS_ENSURE_TRUE(rootContent, NS_ERROR_NOT_AVAILABLE);
-  mEventTarget = do_QueryInterface(rootContent->GetParent());
+  mEventTarget = rootContent->GetParent();
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_AVAILABLE);
 
   nsresult rv = mEventListener->Connect(this);
