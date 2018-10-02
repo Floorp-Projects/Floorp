@@ -5425,7 +5425,7 @@ pref("network.trr.bootstrapAddress", "");
 // Meant to survive basically a page load.
 pref("network.trr.blacklist-duration", 60);
 // Single TRR request timeout, in milliseconds
-pref("network.trr.request-timeout", 3000);
+pref("network.trr.request-timeout", 1500);
 // Allow AAAA entries to be used "early", before the A results are in
 pref("network.trr.early-AAAA", false);
 // Explicitly disable ECS (EDNS Client Subnet, RFC 7871)
