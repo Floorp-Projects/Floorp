@@ -7,10 +7,9 @@
 "use strict";
 
 define(function(require, exports, module) {
-  const { Component } = require("devtools/client/shared/vendor/react");
+  const { Component, createRef } = require("devtools/client/shared/vendor/react");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-  const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 
   /**
    * Renders simple 'tab' widget.
@@ -90,6 +89,8 @@ define(function(require, exports, module) {
         overflow: false,
       };
 
+      this.tabsEl = createRef();
+
       this.onOverflow = this.onOverflow.bind(this);
       this.onUnderflow = this.onUnderflow.bind(this);
       this.onKeyDown = this.onKeyDown.bind(this);
@@ -100,7 +101,7 @@ define(function(require, exports, module) {
     }
 
     componentDidMount() {
-      const node = findDOMNode(this);
+      const node = this.tabsEl.current;
       node.addEventListener("keydown", this.onKeyDown);
 
       // Register overflow listeners to manage visibility
@@ -163,7 +164,7 @@ define(function(require, exports, module) {
     }
 
     componentWillUnmount() {
-      const node = findDOMNode(this);
+      const node = this.tabsEl.current;
       node.removeEventListener("keydown", this.onKeyDown);
 
       if (this.props.showAllTabsMenu) {
@@ -246,8 +247,7 @@ define(function(require, exports, module) {
 
       this.setState(newState, () => {
         // Properly set focus on selected tab.
-        const node = findDOMNode(this);
-        const selectedTab = node.querySelector(".is-active > a");
+        const selectedTab = this.tabsEl.current.querySelector(".is-active > a");
         if (selectedTab) {
           selectedTab.focus();
         }
@@ -410,7 +410,10 @@ define(function(require, exports, module) {
 
     render() {
       return (
-        dom.div({ className: ["tabs", this.props.className].join(" ") },
+        dom.div({
+          className: ["tabs", this.props.className].join(" "),
+          ref: this.tabsEl,
+        },
           this.renderMenuItems(),
           this.renderPanels()
         )

@@ -7,7 +7,6 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
@@ -216,7 +215,7 @@ class BoxModelMain extends PureComponent {
    */
   moveFocus({ target, shiftKey }, level) {
     const editBoxes = [
-      ...findDOMNode(this).querySelectorAll(`[data-box="${level}"].boxmodel-editable`)
+      ...this.positionLayout.querySelectorAll(`[data-box="${level}"].boxmodel-editable`)
     ];
     const editingMode = target.tagName === "input";
     // target.nextSibling is input field
