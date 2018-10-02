@@ -39,7 +39,7 @@ graph_config_schema = Schema({
         # least build-ish things.  Sort of.  Anyway, these other things are implemented
         # as different "platforms".  These do *not* automatically ride along with "-p
         # all"
-        Required('ridealong-builds', default={}): {basestring: [basestring]},
+        Required('ridealong-builds'): {basestring: [basestring]},
     },
     Required('release-promotion'): {
         Required('products'): [basestring],
@@ -89,7 +89,7 @@ class GraphConfig(object):
 
 
 def validate_graph_config(config):
-    return validate_schema(graph_config_schema, config, "Invalid graph configuration:")
+    validate_schema(graph_config_schema, config, "Invalid graph configuration:")
 
 
 def load_graph_config(root_dir):
