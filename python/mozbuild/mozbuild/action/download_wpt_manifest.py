@@ -12,10 +12,9 @@ import buildconfig
 
 def main():
     print("Downloading wpt manifest")
-    man_path = os.path.join(buildconfig.topobjdir, '_tests', 'web-platform')
     sys.path.insert(0, buildconfig.topsrcdir)
-    import manifestdownload
-    manifestdownload.run(man_path, buildconfig.topsrcdir, force=True)
+    import manifestupdate
+    return 0 if manifestupdate.run(buildconfig.topsrcdir, buildconfig.topobjdir) else 1
 
 
 if __name__ == '__main__':
