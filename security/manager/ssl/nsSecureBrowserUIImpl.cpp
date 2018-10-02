@@ -288,7 +288,8 @@ nsSecureBrowserUIImpl::UpdateStateAndSecurityInfo(nsIChannel* channel,
 // CheckForBlockedContent).
 // When we receive a notification from the top-level nsIWebProgress, we extract
 // any relevant security information and set our state accordingly. We then call
-// OnSecurityChange to notify any downstream listeners of the security state.
+// OnSecurityChange on the docShell corresponding to the nsIWebProgress we were
+// initialized with to notify any downstream listeners of the security state.
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIRequest* aRequest,
@@ -331,24 +332,26 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+  }
 
-    nsCOMPtr<nsISecurityEventSink> eventSink;
-    NS_QueryNotificationCallbacks(channel, eventSink);
-    if (NS_WARN_IF(!eventSink)) {
-      return NS_ERROR_INVALID_ARG;
+  mozilla::dom::ContentBlockingLog* contentBlockingLog = nullptr;
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
+  if (docShell) {
+    nsIDocument* doc = docShell->GetDocument();
+    if (doc) {
+      contentBlockingLog = doc->GetContentBlockingLog();
     }
-    mozilla::dom::ContentBlockingLog* contentBlockingLog = nullptr;
-    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
-    if (docShell) {
-      nsIDocument* doc = docShell->GetDocument();
-      if (doc) {
-        contentBlockingLog = doc->GetContentBlockingLog();
-      }
-    }
+  }
+
+  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell);
+  if (eventSink) {
     MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
-            ("  calling OnSecurityChange %p %x\n", aRequest, mState));
+            ("  calling OnSecurityChange %p %x", aRequest, mState));
     Unused << eventSink->OnSecurityChange(aRequest, mOldState, mState,
                                           contentBlockingLog);
+  } else {
+    MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug,
+            ("  no docShell or couldn't QI it to nsISecurityEventSink?"));
   }
 
   return NS_OK;
