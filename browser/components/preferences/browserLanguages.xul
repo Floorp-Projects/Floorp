@@ -62,9 +62,7 @@
     <separator class="warning-message-separator"/>
     <hbox id="warning-message" class="message-bar message-bar-warning" hidden="true">
       <image class="message-bar-icon"/>
-      <hbox align="center" flex="1">
-        <description class="message-bar-description" data-l10n-id="browser-languages-error"/>
-      </hbox>
+      <description class="message-bar-description" data-l10n-id="browser-languages-error"/>
     </hbox>
     <separator class="warning-message-separator"/>
   </vbox>

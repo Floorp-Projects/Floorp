@@ -156,6 +156,7 @@ class SortedItemSelectList {
       menulist.setAttribute("label", menulist.getAttribute("placeholder"));
       button.disabled = true;
       menulist.disabled = menulist.itemCount == 0;
+      menulist.selectedIndex = -1;
 
       onSelect(item);
     });
