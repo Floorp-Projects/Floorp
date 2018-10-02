@@ -69,6 +69,46 @@ with Files('iframesandbox/*marquee_event_handlers*'):
     BUG_COMPONENT = ('Core', 'DOM: Security')
 
 
+with Files('mochitest/*1045096*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('mochitest/*1151421*'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+
+with Files('mochitest/*402210*'):
+    BUG_COMPONENT = ('Core', 'DOM: Security')
+
+with Files('mochitest/*509055*'):
+    BUG_COMPONENT = ('Core', 'History: Global')
+
+with Files('mochitest/*511449*'):
+    BUG_COMPONENT = ('Core', 'Widget: Cocoa')
+
+with Files('mochitest/*551225*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('mochitest/*570341*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('mochitest/*580069*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('mochitest/*637644*'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+
+with Files('mochitest/*640387*'):
+    BUG_COMPONENT = ('Core', 'DOM: Events')
+
+with Files('mochitest/*668513*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('mochitest/*797909*'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+
+with Files('mochitest/*forceinheritprincipal*'):
+    BUG_COMPONENT = ('Core', 'DOM: Security')
+
+
 with Files('navigation/*13871.html'):
     BUG_COMPONENT = ('Core', 'Security')
 
@@ -99,42 +139,3 @@ with Files('unit/*442584*'):
 
 with Files('unit/*setUsePrivateBrowsing*'):
     BUG_COMPONENT = ('Firefox', 'Extension Compatibility')
-
-with Files('*1045096*'):
-    BUG_COMPONENT = ('Core', 'DOM')
-
-with Files('*1151421*'):
-    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
-
-with Files('*402210*'):
-    BUG_COMPONENT = ('Core', 'DOM: Security')
-
-with Files('*509055*'):
-    BUG_COMPONENT = ('Core', 'History: Global')
-
-with Files('*511449*'):
-    BUG_COMPONENT = ('Core', 'Widget: Cocoa')
-
-with Files('*551225*'):
-    BUG_COMPONENT = ('Core', 'DOM')
-
-with Files('*570341*'):
-    BUG_COMPONENT = ('Core', 'DOM')
-
-with Files('*580069*'):
-    BUG_COMPONENT = ('Core', 'DOM')
-
-with Files('*637644*'):
-    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
-
-with Files('*640387*'):
-    BUG_COMPONENT = ('Core', 'DOM: Events')
-
-with Files('*668513*'):
-    BUG_COMPONENT = ('Core', 'DOM')
-
-with Files('*797909*'):
-    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
-
-with Files('*forceinheritprincipal*'):
-    BUG_COMPONENT = ('Core', 'DOM: Security')
