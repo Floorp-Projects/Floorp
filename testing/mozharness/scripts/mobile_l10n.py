@@ -93,7 +93,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
         self.repack_env = None
         self.revision = None
         self.upload_env = None
-        self.version = None
         self.upload_urls = {}
 
     # Helper methods {{{2
@@ -177,15 +176,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
             make_args=['AB_CD=%(locale)s']
         )
         return self.base_package_name
-
-    def query_version(self):
-        """Get the package name from the objdir.
-        Only valid after setup is run.
-        """
-        if self.version:
-            return self.version
-        self.version = self._query_make_variable("MOZ_APP_VERSION")
-        return self.version
 
     def query_upload_url(self, locale):
         if locale in self.upload_urls:
