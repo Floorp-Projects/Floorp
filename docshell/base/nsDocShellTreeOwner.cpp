@@ -402,7 +402,10 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
       shellAsWin->GetSize(&width, &height);
       return tabChild->RemoteSizeShellTo(aCX, aCY, width, height);
     }
-    return webBrowserChrome->SizeBrowserTo(aCX, aCY);
+    // XXX: this is weird, but we used to call a method here
+    // (webBrowserChrome->SizeBrowserTo()) whose implementations all failed
+    // like this, so...
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   NS_ENSURE_TRUE(aShellItem, NS_ERROR_FAILURE);
@@ -430,12 +433,10 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
     presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
     NS_ERROR_FAILURE);
 
-  nsRect shellArea = presContext->GetVisibleArea();
-
-  int32_t browserCX = presContext->AppUnitsToDevPixels(shellArea.Width());
-  int32_t browserCY = presContext->AppUnitsToDevPixels(shellArea.Height());
-
-  return webBrowserChrome->SizeBrowserTo(browserCX, browserCY);
+  // XXX: this is weird, but we used to call a method here
+  // (webBrowserChrome->SizeBrowserTo()) whose implementations all failed like
+  // this, so...
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -495,7 +496,10 @@ nsDocShellTreeOwner::Destroy()
 {
   nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = GetWebBrowserChrome();
   if (webBrowserChrome) {
-    return webBrowserChrome->DestroyBrowserWindow();
+    // XXX: this is weird, but we used to call a method here
+    // (webBrowserChrome->DestroyBrowserWindow()) whose implementations all
+    // failed like this, so...
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   return NS_ERROR_NULL_POINTER;

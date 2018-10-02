@@ -1,0 +1,91 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const { Cc, Ci } = require("chrome");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const MENUS_L10N = new LocalizationHelper("devtools/client/locales/menus.properties");
+
+function l10n(key) {
+  return MENUS_L10N.getStr(key);
+}
+
+const ChromeUtils = require("ChromeUtils");
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
+
+function RecordNewTab() {
+  const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+  gBrowser.selectedTab = gBrowser.addWebTab("about:blank", { recordExecution: "*" });
+}
+
+function ReloadAndRecordTab() {
+  const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+  const url = gBrowser.currentURI.spec;
+  gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true,
+                                   { recordExecution: "*", newFrameloader: true });
+  gBrowser.loadURI(url, {
+    triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
+  });
+}
+
+function SaveRecording() {
+  const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+  const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  const window = gBrowser.ownerGlobal;
+  fp.init(window, null, Ci.nsIFilePicker.modeSave);
+  fp.open(rv => {
+    if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
+      const tabParent = gBrowser.selectedTab.linkedBrowser.frameLoader.tabParent;
+      if (!tabParent || !tabParent.saveRecording(fp.file.path)) {
+        window.alert("Current tab is not recording");
+      }
+    }
+  });
+}
+
+function ReplayNewTab() {
+  const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+  const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  const window = gBrowser.ownerGlobal;
+  fp.init(window, null, Ci.nsIFilePicker.modeOpen);
+  fp.open(rv => {
+    if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
+      gBrowser.selectedTab = gBrowser.addWebTab(null, { replayExecution: fp.file.path });
+    }
+  });
+}
+
+const menuItems = [
+  { id: "devtoolsRecordNewTab", command: RecordNewTab },
+  { id: "devtoolsReloadAndRecordTab", command: ReloadAndRecordTab },
+  { id: "devtoolsSaveRecording", command: SaveRecording },
+  { id: "devtoolsReplayNewTab", command: ReplayNewTab },
+];
+
+exports.addWebReplayMenu = function(doc) {
+  const menu = doc.createXULElement("menu");
+  menu.id = "menu_webreplay";
+  menu.setAttribute("label", l10n("devtoolsWebReplay.label"));
+
+  const popup = doc.createXULElement("menupopup");
+  popup.id = "menupopup_webreplay";
+  menu.appendChild(popup);
+
+  for (const { id, command } of menuItems) {
+    const menuitem = doc.createXULElement("menuitem");
+    menuitem.id = id;
+    menuitem.setAttribute("label", l10n(id + ".label"));
+    menuitem.addEventListener("command", command);
+    popup.appendChild(menuitem);
+  }
+
+  const mds = doc.getElementById("menu_devtools_separator");
+  if (mds) {
+    mds.parentNode.insertBefore(menu, mds);
+  }
+};

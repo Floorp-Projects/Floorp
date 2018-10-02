@@ -583,8 +583,6 @@ WebRenderAPI::Capture()
 {
   uint8_t bits = 3; //TODO: get from JavaScript
   const char* path = "wr-capture"; //TODO: get from JavaScript
-  const char* border = "--------------------------\n";
-  printf("%s Capturing WR state to: %s\n%s", border, path, border);
   wr_api_capture(mDocHandle, path, bits);
 }
 
