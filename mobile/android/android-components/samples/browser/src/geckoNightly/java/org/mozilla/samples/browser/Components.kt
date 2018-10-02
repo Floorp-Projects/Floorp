@@ -18,8 +18,6 @@ class Components(private val applicationContext: Context) : DefaultComponents(ap
         val defaultSettings = DefaultSettings().apply {
             requestInterceptor = SampleRequestInterceptor()
         }
-
-        val runtime = GeckoRuntime.getDefault(applicationContext)
-        GeckoEngine(runtime, defaultSettings)
+        GeckoEngine(applicationContext, defaultSettings)
     }
 }

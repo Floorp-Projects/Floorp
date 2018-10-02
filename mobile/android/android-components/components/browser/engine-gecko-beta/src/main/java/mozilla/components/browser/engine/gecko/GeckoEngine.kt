@@ -17,8 +17,9 @@ import org.mozilla.geckoview.GeckoRuntime
  * Gecko-based implementation of Engine interface.
  */
 class GeckoEngine(
-    private val runtime: GeckoRuntime,
-    private val defaultSettings: Settings? = null
+    context: Context,
+    private val defaultSettings: Settings? = null,
+    private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context)
 ) : Engine {
 
     /**

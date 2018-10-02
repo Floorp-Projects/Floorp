@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.content.Context
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
@@ -25,20 +26,21 @@ import org.robolectric.RuntimeEnvironment
 class GeckoEngineTest {
 
     private val runtime: GeckoRuntime = mock(GeckoRuntime::class.java)
+    private val context: Context = mock(Context::class.java)
 
     @Test
     fun testCreateView() {
-        assertTrue(GeckoEngine(runtime).createView(RuntimeEnvironment.application) is GeckoEngineView)
+        assertTrue(GeckoEngine(context, runtime = runtime).createView(RuntimeEnvironment.application) is GeckoEngineView)
     }
 
     @Test
     fun testCreateSession() {
-        assertTrue(GeckoEngine(runtime).createSession() is GeckoEngineSession)
+        assertTrue(GeckoEngine(context, runtime = runtime).createSession() is GeckoEngineSession)
     }
 
     @Test
     fun testName() {
-        assertEquals("Gecko", GeckoEngine(runtime).name())
+        assertEquals("Gecko", GeckoEngine(context, runtime = runtime).name())
     }
 
     @Test
@@ -49,7 +51,7 @@ class GeckoEngineTest {
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtimeSettings.trackingProtectionCategories).thenReturn(TrackingProtectionPolicy.none().categories)
         `when`(runtime.settings).thenReturn(runtimeSettings)
-        val engine = GeckoEngine(runtime)
+        val engine = GeckoEngine(context, runtime = runtime)
 
         assertTrue(engine.settings.javascriptEnabled)
         engine.settings.javascriptEnabled = false
@@ -86,11 +88,11 @@ class GeckoEngineTest {
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
 
-        GeckoEngine(runtime, DefaultSettings(
+        GeckoEngine(context, DefaultSettings(
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
                 javascriptEnabled = false,
                 webFontsEnabled = false,
-                remoteDebuggingEnabled = true))
+                remoteDebuggingEnabled = true), runtime)
 
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
