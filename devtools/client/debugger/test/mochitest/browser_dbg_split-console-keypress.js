@@ -49,12 +49,13 @@ function test() {
       {key: "KEY_F11", keyRepeat: 2, caretLine: 18},
       {key: "KEY_F11", keyRepeat: 2, caretLine: 27},
       {key: "KEY_F10", keyRepeat: 1, caretLine: 27},
-      {key: "KEY_F11", keyRepeat: 1, caretLine: 18},
-      {key: "KEY_F11", keyRepeat: 5, caretLine: 32},
-      {key: "KEY_F11", modifier:"Shift", keyRepeat: 1, caretLine: 29},
-      {key: "KEY_F11", modifier:"Shift", keyRepeat: 2, caretLine: 34},
-      {key: "KEY_F11", modifier:"Shift", keyRepeat: 2, caretLine: 34}
+      {key: "KEY_F11", keyRepeat: 1, caretLine: 19},
+      {key: "KEY_F11", keyRepeat: 5, caretLine: 29},
+      {key: "KEY_F11", modifier:"Shift", keyRepeat: 1, caretLine: 32},
+      {key: "KEY_F11", modifier:"Shift", keyRepeat: 1, caretLine: 34},
+      {key: "KEY_F11", modifier:"Shift", keyRepeat: 1, caretLine: 34}
     ];
+
     // Trigger script that stops at debugger statement
     executeSoon(() => generateMouseClickInTab(gTab,
       "content.document.getElementById('start')"));
