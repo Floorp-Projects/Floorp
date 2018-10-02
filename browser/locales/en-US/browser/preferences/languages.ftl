@@ -67,5 +67,8 @@ browser-languages-select-language =
     .label = Select a language to add…
     .placeholder = Select a language to add…
 
+browser-languages-installed-label = Installed languages
+browser-languages-available-label = Available languages
+
 browser-languages-error =
     .value = An error occurred.

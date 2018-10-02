@@ -951,6 +951,11 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   margin-inline-start: 0;
 }
 
+#LanguagesDialog > .dialog-button-box > .dialog-button[dlgtype="accept"],
+#BrowserLanguagesDialog > .dialog-button-box > .dialog-button[dlgtype="accept"] {
+  margin-inline-end: 0;
+}
+
 #requestedLocales {
   min-height: 200px;
 }
@@ -963,5 +968,15 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 
 .add-web-language,
 .add-browser-language {
-  margin: 0 4px;
+  margin: 0;
+  margin-inline-start: 4px;
+}
+
+.action-button {
+  margin-inline-end: 0;
+}
+
+/* Menulist styles */
+.label-item {
+  font-size: 0.8em;
 }
