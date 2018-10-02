@@ -6,61 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(feature = "parsing")]
-use buffer::Cursor;
-#[cfg(feature = "parsing")]
-use synom::PResult;
-#[cfg(feature = "parsing")]
-use token::{Brace, Bracket, Paren};
-#[cfg(feature = "parsing")]
-use {parse_error, MacroDelimiter};
-
-#[cfg(feature = "extra-traits")]
 use std::hash::{Hash, Hasher};
 
-#[cfg(any(feature = "parsing", feature = "extra-traits"))]
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
 
-#[cfg(feature = "parsing")]
-pub fn delimited(input: Cursor) -> PResult<(MacroDelimiter, TokenStream)> {
-    if let Some((TokenTree::Group(g), rest)) = input.token_tree() {
-        let span = g.span();
-        let delimiter = match g.delimiter() {
-            Delimiter::Parenthesis => MacroDelimiter::Paren(Paren(span)),
-            Delimiter::Brace => MacroDelimiter::Brace(Brace(span)),
-            Delimiter::Bracket => MacroDelimiter::Bracket(Bracket(span)),
-            Delimiter::None => return parse_error(),
-        };
-
-        return Ok(((delimiter, g.stream().clone()), rest));
-    }
-    parse_error()
-}
-
-#[cfg(all(feature = "full", feature = "parsing"))]
-pub fn braced(input: Cursor) -> PResult<(Brace, TokenStream)> {
-    if let Some((TokenTree::Group(g), rest)) = input.token_tree() {
-        if g.delimiter() == Delimiter::Brace {
-            return Ok(((Brace(g.span()), g.stream().clone()), rest));
-        }
-    }
-    parse_error()
-}
-
-#[cfg(all(feature = "full", feature = "parsing"))]
-pub fn parenthesized(input: Cursor) -> PResult<(Paren, TokenStream)> {
-    if let Some((TokenTree::Group(g), rest)) = input.token_tree() {
-        if g.delimiter() == Delimiter::Parenthesis {
-            return Ok(((Paren(g.span()), g.stream().clone()), rest));
-        }
-    }
-    parse_error()
-}
-
-#[cfg(feature = "extra-traits")]
 pub struct TokenTreeHelper<'a>(pub &'a TokenTree);
 
-#[cfg(feature = "extra-traits")]
 impl<'a> PartialEq for TokenTreeHelper<'a> {
     fn eq(&self, other: &Self) -> bool {
         use proc_macro2::Spacing;
@@ -104,7 +55,6 @@ impl<'a> PartialEq for TokenTreeHelper<'a> {
     }
 }
 
-#[cfg(feature = "extra-traits")]
 impl<'a> Hash for TokenTreeHelper<'a> {
     fn hash<H: Hasher>(&self, h: &mut H) {
         use proc_macro2::Spacing;
@@ -138,10 +88,8 @@ impl<'a> Hash for TokenTreeHelper<'a> {
     }
 }
 
-#[cfg(feature = "extra-traits")]
 pub struct TokenStreamHelper<'a>(pub &'a TokenStream);
 
-#[cfg(feature = "extra-traits")]
 impl<'a> PartialEq for TokenStreamHelper<'a> {
     fn eq(&self, other: &Self) -> bool {
         let left = self.0.clone().into_iter().collect::<Vec<_>>();
@@ -158,7 +106,6 @@ impl<'a> PartialEq for TokenStreamHelper<'a> {
     }
 }
 
-#[cfg(feature = "extra-traits")]
 impl<'a> Hash for TokenStreamHelper<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let tts = self.0.clone().into_iter().collect::<Vec<_>>();

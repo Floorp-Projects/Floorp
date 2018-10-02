@@ -7959,9 +7959,9 @@ PresShell::DispatchEventToDOM(WidgetEvent* aEvent,
              GetContentForEvent(aEvent, getter_AddRefs(targetContent));
     }
     if (NS_SUCCEEDED(rv) && targetContent) {
-      eventTarget = do_QueryInterface(targetContent);
+      eventTarget = targetContent;
     } else if (mDocument) {
-      eventTarget = do_QueryInterface(mDocument);
+      eventTarget = mDocument;
       // If we don't have any content, the callback wouldn't probably
       // do nothing.
       eventCBPtr = nullptr;

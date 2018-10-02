@@ -4284,7 +4284,7 @@ nsDocumentViewer::SetIsPrintingInDocShellTree(nsIDocShellTreeItem* aParentNode,
                                                 bool                 aIsPrintingOrPP,
                                                 bool                 aStartAtTop)
 {
-  nsCOMPtr<nsIDocShellTreeItem> parentItem(do_QueryInterface(aParentNode));
+  nsCOMPtr<nsIDocShellTreeItem> parentItem(aParentNode);
 
   // find top of "same parent" tree
   if (aStartAtTop) {
@@ -4295,7 +4295,7 @@ nsDocumentViewer::SetIsPrintingInDocShellTree(nsIDocShellTreeItem* aParentNode,
         if (!parent) {
           break;
         }
-        parentItem = do_QueryInterface(parent);
+        parentItem = parent;
       }
       mTopContainerWhilePrinting = do_GetWeakReference(parentItem);
     } else {
@@ -4545,7 +4545,7 @@ nsDocumentViewer::OnDonePrinting()
     if (mDeferredWindowClose) {
       mDeferredWindowClose = false;
       if (mContainer) {
-        if (nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(mContainer->GetWindow())) {
+        if (nsCOMPtr<nsPIDOMWindowOuter> win = mContainer->GetWindow()) {
           win->Close();
         }
       }

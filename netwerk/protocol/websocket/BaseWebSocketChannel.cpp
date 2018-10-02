@@ -355,7 +355,7 @@ BaseWebSocketChannel::RetargetDeliveryTo(nsIEventTarget* aTargetThread)
   MOZ_ASSERT(!mTargetThread, "Delivery target should be set once, before AsyncOpen");
   MOZ_ASSERT(!mWasOpened, "Should not be called after AsyncOpen!");
 
-  mTargetThread = do_QueryInterface(aTargetThread);
+  mTargetThread = aTargetThread;
   MOZ_ASSERT(mTargetThread);
   return NS_OK;
 }

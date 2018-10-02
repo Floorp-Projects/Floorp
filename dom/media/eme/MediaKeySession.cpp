@@ -622,7 +622,7 @@ MediaKeySession::Token() const
 already_AddRefed<DetailedPromise>
 MediaKeySession::MakePromise(ErrorResult& aRv, const nsACString& aName)
 {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
   if (!global) {
     NS_WARNING("Passed non-global to MediaKeys ctor!");
     aRv.Throw(NS_ERROR_UNEXPECTED);

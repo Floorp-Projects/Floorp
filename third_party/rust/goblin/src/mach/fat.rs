@@ -1,0 +1,123 @@
+//! A Mach-o fat binary is a multi-architecture binary container
+
+use core::fmt;
+
+if_std! {
+    use std::fs::File;
+    use std::io::{self, Read};
+}
+
+use scroll::{self, Pread};
+use mach::constants::cputype::{CpuType, CpuSubType, CPU_SUBTYPE_MASK, CPU_ARCH_ABI64};
+use error;
+
+pub const FAT_MAGIC: u32 = 0xcafebabe;
+pub const FAT_CIGAM: u32 = 0xbebafeca;
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, Pread, Pwrite, SizeWith)]
+/// The Mach-o `FatHeader` always has its data bigendian
+pub struct FatHeader {
+    /// The magic number, `cafebabe`
+    pub magic: u32,
+    /// How many fat architecture headers there are
+    pub nfat_arch: u32,
+}
+
+pub const SIZEOF_FAT_HEADER: usize = 8;
+
+impl fmt::Debug for FatHeader {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "0x{:x} nfat_arch: {}\n", self.magic, self.nfat_arch)
+    }
+}
+
+impl FatHeader {
+    /// Reinterpret a `FatHeader` from `bytes`
+    pub fn from_bytes(bytes: &[u8; SIZEOF_FAT_HEADER]) -> FatHeader {
+        let mut offset = 0;
+        let magic = bytes.gread_with(&mut offset, scroll::BE).unwrap();
+        let nfat_arch = bytes.gread_with(&mut offset, scroll::BE).unwrap();
+        FatHeader {
+            magic: magic,
+            nfat_arch: nfat_arch,
+        }
+    }
+
+    /// Reads a `FatHeader` from a `File` on disk
+    #[cfg(feature = "std")]
+    pub fn from_fd(fd: &mut File) -> io::Result<FatHeader> {
+        let mut header = [0; SIZEOF_FAT_HEADER];
+        try!(fd.read(&mut header));
+        Ok(FatHeader::from_bytes(&header))
+    }
+
+    /// Parse a mach-o fat header from the `bytes`
+    pub fn parse(bytes: &[u8]) -> error::Result<FatHeader> {
+        Ok(bytes.pread_with::<FatHeader>(0, scroll::BE)?)
+    }
+
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, Pread, Pwrite, SizeWith)]
+/// The Mach-o `FatArch` always has its data bigendian
+pub struct FatArch {
+    /// What kind of CPU this binary is
+    pub cputype: u32,
+    pub cpusubtype: u32,
+    /// Where in the fat binary it starts
+    pub offset: u32,
+    /// How big the binary is
+    pub size: u32,
+    pub align: u32,
+}
+
+pub const SIZEOF_FAT_ARCH: usize = 20;
+
+impl fmt::Debug for FatArch {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("FatArch")
+            .field("cputype", &self.cputype())
+            .field("cmdsize", &self.cpusubtype())
+            .field("offset",  &format_args!("{:#x}", &self.offset))
+            .field("size",    &self.size)
+            .field("align",   &self.align)
+            .finish()
+    }
+}
+
+impl FatArch {
+    /// Get the slice of bytes this header describes from `bytes`
+    pub fn slice<'a>(&self, bytes: &'a [u8]) -> &'a [u8] {
+        let start = self.offset as usize;
+        let end = (self.offset + self.size) as usize;
+        &bytes[start..end]
+    }
+
+    /// Returns the cpu type
+    pub fn cputype(&self) -> CpuType {
+        self.cputype
+    }
+
+    /// Returns the cpu subtype with the capabilities removed
+    pub fn cpusubtype(&self) -> CpuSubType {
+        self.cpusubtype & !CPU_SUBTYPE_MASK
+    }
+
+    /// Returns the capabilities of the CPU
+    pub fn cpu_caps(&self) -> u32 {
+        (self.cpusubtype & CPU_SUBTYPE_MASK) >> 24
+    }
+
+    /// Whether this fat architecture header describes a 64-bit binary
+    pub fn is_64(&self) -> bool {
+        (self.cputype & CPU_ARCH_ABI64) == CPU_ARCH_ABI64
+    }
+
+    /// Parse a `FatArch` header from `bytes` at `offset`
+    pub fn parse(bytes: &[u8], offset: usize) -> error::Result<Self> {
+        let arch = bytes.pread_with::<FatArch>(offset, scroll::BE)?;
+        Ok(arch)
+    }
+}

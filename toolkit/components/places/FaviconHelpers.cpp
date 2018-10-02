@@ -1368,7 +1368,7 @@ FetchAndConvertUnsupportedPayloads::ConvertPayload(int64_t aId,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Read the stream into a new buffer.
-  nsCOMPtr<nsIInputStream> iconStream = do_QueryInterface(encoder);
+  nsCOMPtr<nsIInputStream> iconStream = encoder;
   NS_ENSURE_STATE(iconStream);
   rv = NS_ConsumeStream(iconStream, UINT32_MAX, aPayload);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -38,7 +38,7 @@ nsSecCheckWrapChannelBase::nsSecCheckWrapChannelBase(nsIChannel* aChannel)
  : mChannel(aChannel)
  , mHttpChannel(do_QueryInterface(aChannel))
  , mHttpChannelInternal(do_QueryInterface(aChannel))
- , mRequest(do_QueryInterface(aChannel))
+ , mRequest(aChannel)
  , mUploadChannel(do_QueryInterface(aChannel))
  , mUploadChannel2(do_QueryInterface(aChannel))
 {

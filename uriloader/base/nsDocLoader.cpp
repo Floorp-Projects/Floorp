@@ -1444,7 +1444,7 @@ NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
       // We only set mDocumentRequest in OnStartRequest(), but its possible
       // to get a redirect before that for service worker interception.
       if (mDocumentRequest) {
-        nsCOMPtr<nsIRequest> request(do_QueryInterface(aOldChannel));
+        nsCOMPtr<nsIRequest> request(aOldChannel);
         NS_ASSERTION(request == mDocumentRequest, "Wrong Document Channel");
       }
 #endif /* DEBUG */

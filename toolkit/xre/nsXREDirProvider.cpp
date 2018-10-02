@@ -172,7 +172,7 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
 #endif
 
   if (!mProfileDir) {
-    nsCOMPtr<nsIDirectoryServiceProvider> app(do_QueryInterface(mAppProvider));
+    nsCOMPtr<nsIDirectoryServiceProvider> app(mAppProvider);
     if (app) {
       bool per = false;
       app->GetFile(NS_APP_USER_PROFILE_50_DIR, &per, getter_AddRefs(mProfileDir));

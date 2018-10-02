@@ -464,7 +464,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
 
     rv = sis->SetData((char *)aHeadersData, aHeadersDataLen);
     NS_ENSURE_SUCCESS(rv, rv);
-    headersDataStream = do_QueryInterface(sis);
+    headersDataStream = sis;
   }
 
   int32_t blockPopups =

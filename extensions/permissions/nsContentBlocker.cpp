@@ -231,7 +231,7 @@ nsContentBlocker::ShouldProcess(nsIURI           *aContentLocation,
   // accept.  Those are most likely toplevel loads in windows, and
   // chrome generally knows what it's doing anyway.
   nsCOMPtr<nsIDocShellTreeItem> item =
-    do_QueryInterface(NS_CP_GetDocShellFromContext(requestingContext));
+    NS_CP_GetDocShellFromContext(requestingContext);
 
   if (item && item->ItemType() == nsIDocShellTreeItem::typeChrome) {
     *aDecision = nsIContentPolicy::ACCEPT;

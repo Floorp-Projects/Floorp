@@ -478,7 +478,7 @@ Event::EnsureWebAccessibleRelatedTarget(EventTarget* aRelatedTarget)
     if (content && content->ChromeOnlyAccess() &&
         !nsContentUtils::CanAccessNativeAnon()) {
       content = content->FindFirstNonChromeOnlyAccessContent();
-      relatedTarget = do_QueryInterface(content);
+      relatedTarget = content;
     }
 
     if (relatedTarget) {

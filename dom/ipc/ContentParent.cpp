@@ -4882,7 +4882,7 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
   TabParent* thisTabParent = TabParent::GetFrom(aThisTab);
   nsCOMPtr<nsIContent> frame;
   if (thisTabParent) {
-    frame = do_QueryInterface(thisTabParent->GetOwnerElement());
+    frame = thisTabParent->GetOwnerElement();
 
     if (NS_WARN_IF(thisTabParent->IsMozBrowser())) {
       return IPC_FAIL(this, "aThisTab is not a MozBrowser");

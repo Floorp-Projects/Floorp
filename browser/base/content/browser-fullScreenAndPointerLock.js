@@ -517,27 +517,6 @@ var FullScreen = {
   // Checks whether we are allowed to collapse the chrome
   _isPopupOpen: false,
   _isChromeCollapsed: false,
-  _safeToCollapse() {
-    if (!Services.prefs.getBoolPref("browser.fullscreen.autohide"))
-      return false;
-
-    // a popup menu is open in chrome: don't collapse chrome
-    if (this._isPopupOpen)
-      return false;
-
-    // On OS X Lion we don't want to hide toolbars.
-    if (this.useLionFullScreen)
-      return false;
-
-    // a textbox in chrome is focused (location bar anyone?): don't collapse chrome
-    if (document.commandDispatcher.focusedElement &&
-        document.commandDispatcher.focusedElement.ownerDocument == document &&
-        document.commandDispatcher.focusedElement.localName == "input") {
-      return false;
-    }
-
-    return true;
-  },
 
   _setPopupOpen(aEvent) {
     // Popups should only veto chrome collapsing if they were opened when the chrome was not collapsed.
@@ -596,8 +575,43 @@ var FullScreen = {
   },
 
   hideNavToolbox(aAnimate = false) {
-    if (this._isChromeCollapsed || !this._safeToCollapse())
+    if (this._isChromeCollapsed) {
       return;
+    }
+    if (!Services.prefs.getBoolPref("browser.fullscreen.autohide")) {
+      return;
+    }
+    // a popup menu is open in chrome: don't collapse chrome
+    if (this._isPopupOpen) {
+      return;
+    }
+    // On OS X Lion we don't want to hide toolbars.
+    if (this.useLionFullScreen) {
+      return;
+    }
+
+    // a textbox in chrome is focused (location bar anyone?): don't collapse chrome
+    let focused = document.commandDispatcher.focusedElement;
+    if (focused && focused.ownerDocument == document &&
+        focused.localName == "input") {
+      // But try collapse the chrome again when anything happens which can make
+      // it lose the focus. We cannot listen on "blur" event on focused here
+      // because that event can be triggered by "mousedown", and hiding chrome
+      // would cause the content to move. This combination may split a single
+      // click into two actionless halves.
+      let retryHideNavToolbox = () => {
+        // Wait for at least a frame to give it a chance to be passed down to
+        // the content.
+        requestAnimationFrame(() => {
+          setTimeout(() => this.hideNavToolbox(aAnimate), 0);
+        });
+        window.removeEventListener("keypress", retryHideNavToolbox);
+        window.removeEventListener("click", retryHideNavToolbox);
+      };
+      window.addEventListener("keypress", retryHideNavToolbox);
+      window.addEventListener("click", retryHideNavToolbox);
+      return;
+    }
 
     this._fullScrToggler.hidden = false;
 
