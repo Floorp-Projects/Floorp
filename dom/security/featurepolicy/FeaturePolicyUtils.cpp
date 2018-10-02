@@ -45,7 +45,6 @@ static FeatureMap sSupportedFeatures[] = {
   { "magnetometer", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
   { "microphone", FeatureMap::eSelf  },
-  // TODO: not supported yet!!!
   { "midi", FeatureMap::eSelf  },
   { "payment", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
