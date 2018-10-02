@@ -676,6 +676,9 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
         return nullptr;
     }
 
+    if (!sourceObj->source()->setBinASTSourceCopy(cx, src, len))
+        return nullptr;
+
     RootedScript script(cx, JSScript::Create(cx, options, sourceObj, 0, len, 0, len));
 
     if (!script) {
