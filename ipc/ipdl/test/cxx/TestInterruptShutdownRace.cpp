@@ -75,10 +75,11 @@ TestInterruptShutdownRaceParent::StartShuttingDown()
     delete static_cast<TestInterruptShutdownRaceParent*>(gParentActor);
     gParentActor = nullptr;
 
-    XRE_GetIOMessageLoop()->PostTask(NewRunnableFunction(DeleteSubprocess));
+    XRE_GetIOMessageLoop()->PostTask(NewRunnableFunction("DeleteSubprocess",
+                                                         DeleteSubprocess));
 
     // this is ordered after the OnMaybeDequeueOne event in the queue
-    MessageLoop::current()->PostTask(NewRunnableFunction(Done));
+    MessageLoop::current()->PostTask(NewRunnableFunction("Done", Done));
 
     // |this| has been deleted, be mindful
 }
