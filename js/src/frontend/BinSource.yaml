@@ -212,7 +212,10 @@ Arguments:
         factory_.addList(/* list = */ result, /* kid = */ item);
 
 ArrayExpression:
-    build:
+    build: |
+        if (elements->empty()) {
+            elements->setHasNonConstInitializer();
+        }
         auto result = elements;
 
 AssertedBlockScope:
@@ -504,6 +507,7 @@ CatchClause:
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
         BINJS_TRY(currentScope.init(parseContext_));
     build: |
+        MOZ_TRY(checkClosedVars(currentScope));
         BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
         BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
         BINJS_TRY(factory_.setupCatchScope(result, binding, body));
@@ -871,6 +875,10 @@ ListOfObjectProperty:
         ListNode*
     init:
         BINJS_TRY_DECL(result, factory_.newObjectLiteral(start));
+    append: |
+        if (!item->isConstant())
+            result->setHasNonConstInitializer();
+        result->appendWithoutOrderAssumption(item);
 
 ListOfOptionalSpreadElementOrExpression:
     type-ok:
