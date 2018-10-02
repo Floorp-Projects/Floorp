@@ -66,6 +66,16 @@ class SourcesTree extends _react.Component {
     });
   }
 
+  componentDidMount() {
+    const {
+      selectedSource
+    } = this.props;
+
+    if (selectedSource) {
+      this.setHighlightFocusItems(selectedSource);
+    }
+  }
+
   componentWillReceiveProps(nextProps) {
     const {
       projectRoot,
@@ -90,17 +100,11 @@ class SourcesTree extends _react.Component {
     }
 
     if (nextProps.shownSource && nextProps.shownSource != shownSource) {
-      const listItems = (0, _sourcesTree.getDirectories)(nextProps.shownSource, sourceTree);
-      return this.setState({
-        listItems
-      });
+      return this.setHighlightFocusItems(nextProps.shownSource);
     }
 
     if (nextProps.selectedSource && nextProps.selectedSource != selectedSource) {
-      const highlightItems = (0, _sourcesTree.getDirectories)(nextProps.selectedSource, sourceTree);
-      this.setState({
-        highlightItems
-      });
+      this.setHighlightFocusItems(nextProps.selectedSource);
     } // NOTE: do not run this every time a source is clicked,
     // only when a new source is added
 
@@ -114,6 +118,21 @@ class SourcesTree extends _react.Component {
         uncollapsedTree,
         sourceTree
       }));
+    }
+  }
+
+  setHighlightFocusItems(source) {
+    const {
+      sourceTree,
+      parentMap
+    } = this.state;
+
+    if (source) {
+      const items = (0, _sourcesTree.getDirectories)(source, parentMap, sourceTree);
+      return this.setState({
+        listItems: items,
+        highlightItems: items
+      });
     }
   }
 

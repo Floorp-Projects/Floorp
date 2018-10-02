@@ -32,8 +32,6 @@ var _CommandBarButton = require("../shared/Button/CommandBarButton");
 
 var _devtoolsServices = require("Services");
 
-var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* -*- indent-tabs-mode: nil; js-indent-level: 2; js-indent-level: 2 -*- */
@@ -41,22 +39,19 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-const {
-  appinfo
-} = _devtoolsServices2.default;
-const isMacOS = appinfo.OS === "Darwin";
+const isMacOS = _devtoolsServices.appinfo.OS === "Darwin"; // NOTE: the "resume" command will call either the resume or breakOnNext action
+// depending on whether or not the debugger is paused or running
+
 const COMMANDS = ["resume", "stepOver", "stepIn", "stepOut"];
 const KEYS = {
   WINNT: {
     resume: "F8",
-    pause: "F8",
     stepOver: "F10",
     stepIn: "F11",
     stepOut: "Shift+F11"
   },
   Darwin: {
     resume: "Cmd+\\",
-    pause: "Cmd+\\",
     stepOver: "Cmd+'",
     stepIn: "Cmd+;",
     stepOut: "Cmd+Shift+:",
@@ -64,7 +59,6 @@ const KEYS = {
   },
   Linux: {
     resume: "F8",
-    pause: "F8",
     stepOver: "F10",
     stepIn: "Ctrl+F11",
     stepOut: "Ctrl+Shift+F11"
@@ -72,7 +66,7 @@ const KEYS = {
 };
 
 function getKey(action) {
-  return getKeyForOS(appinfo.OS, action);
+  return getKeyForOS(_devtoolsServices.appinfo.OS, action);
 }
 
 function getKeyForOS(os, action) {
@@ -116,7 +110,12 @@ class CommandBar extends _react.Component {
   handleEvent(e, action) {
     e.preventDefault();
     e.stopPropagation();
-    this.props[action]();
+
+    if (action === "resume") {
+      this.props.isPaused ? this.props.resume() : this.props.breakOnNext();
+    } else {
+      this.props[action]();
+    }
   }
 
   renderStepButtons() {
@@ -162,7 +161,7 @@ class CommandBar extends _react.Component {
       return (0, _CommandBarButton.debugBtn)(null, "pause", "disabled", L10N.getStr("pausePendingButtonTooltip"), true);
     }
 
-    return (0, _CommandBarButton.debugBtn)(breakOnNext, "pause", "active", L10N.getFormatStr("pauseButtonTooltip", formatKey("pause")));
+    return (0, _CommandBarButton.debugBtn)(breakOnNext, "pause", "active", L10N.getFormatStr("pauseButtonTooltip", formatKey("resume")));
   }
 
   renderTimeTravelButtons() {

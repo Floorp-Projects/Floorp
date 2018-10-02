@@ -16,7 +16,7 @@
 #include "nsDependentString.h"
 #include "nsString.h"
 #include "pk11pub.h"
-#include "pkix/pkixtypes.h"
+#include "mozpkix/pkixtypes.h"
 
 namespace mozilla { namespace psm {
 

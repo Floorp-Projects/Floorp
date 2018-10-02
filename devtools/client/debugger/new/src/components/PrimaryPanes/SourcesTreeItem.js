@@ -220,12 +220,11 @@ class SourceTreeItem extends _react.Component {
 }
 
 function getHasMatchingGeneratedSource(state, source) {
-  if (!source) {
+  if (!source || !_devtoolsSourceMap.isOriginalId(source.id)) {
     return false;
   }
 
-  const sources = (0, _selectors.getSourcesByURL)(state, source.url);
-  return (0, _devtoolsSourceMap.isOriginalId)(source.id) && sources.length > 1;
+  return !!(0, _selectors.getSourceByURL)(state, source.url, false);
 }
 
 const mapStateToProps = (state, props) => {

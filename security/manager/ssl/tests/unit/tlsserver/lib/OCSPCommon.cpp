@@ -6,8 +6,8 @@
 
 #include <stdio.h>
 
-#include "pkixtestutil.h"
-#include "pkixtestnss.h"
+#include "mozpkix/test/pkixtestutil.h"
+#include "mozpkix/test/pkixtestnss.h"
 #include "TLSServer.h"
 #include "secder.h"
 #include "secerr.h"

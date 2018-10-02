@@ -11,7 +11,7 @@
 #include "nsNSSCertificate.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "pkix/Time.h"
+#include "mozpkix/Time.h"
 
 namespace mozilla {
 class OriginAttributes;

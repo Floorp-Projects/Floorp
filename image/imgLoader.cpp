@@ -2041,9 +2041,13 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
   //
   // XXX: nullptr seems to be a 'special' key value that indicates that NO
   //      validation is required.
-  //
+  // XXX: we also check the window ID because the loadID() can return a reused
+  //      pointer of a document. This can still happen for non-document image
+  //      cache entries.
   void *key = (void*) aCX;
-  if (request->LoadId() != key) {
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);
+  uint64_t innerWindowID = doc ? doc->InnerWindowID() : 0;
+  if (request->LoadId() != key || request->InnerWindowID() != innerWindowID) {
     // If we would need to revalidate this entry, but we're being told to
     // bypass the cache, we don't allow this entry to be used.
     if (aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE) {

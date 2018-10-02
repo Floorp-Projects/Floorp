@@ -10,7 +10,7 @@
 #include "CTLog.h"
 #include "CTVerifyResult.h"
 #include "certt.h"
-#include "pkix/Result.h"
+#include "mozpkix/Result.h"
 
 namespace mozilla { namespace ct {
 
