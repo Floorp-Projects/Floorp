@@ -4282,14 +4282,14 @@ HTMLMediaElement::UpdateWakeLock()
     Volume() > 0.0 && !mMuted && mIsAudioTrackAudible;
   // WakeLock when playing audible media.
   if (playing && isAudible) {
-    WakeLockCreate();
+    CreateAudioWakeLockIfNeeded();
   } else {
-    WakeLockRelease();
+    ReleaseAudioWakeLockIfExists();
   }
 }
 
 void
-HTMLMediaElement::WakeLockCreate()
+HTMLMediaElement::CreateAudioWakeLockIfNeeded()
 {
   if (!mWakeLock) {
     RefPtr<power::PowerManagerService> pmService =
@@ -4297,13 +4297,14 @@ HTMLMediaElement::WakeLockCreate()
     NS_ENSURE_TRUE_VOID(pmService);
 
     ErrorResult rv;
-    mWakeLock = pmService->NewWakeLock(
-      NS_LITERAL_STRING("audio-playing"), OwnerDoc()->GetInnerWindow(), rv);
+    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("audio-playing"),
+                                       OwnerDoc()->GetInnerWindow(),
+                                       rv);
   }
 }
 
 void
-HTMLMediaElement::WakeLockRelease()
+HTMLMediaElement::ReleaseAudioWakeLockIfExists()
 {
   if (mWakeLock) {
     ErrorResult rv;
@@ -4311,6 +4312,12 @@ HTMLMediaElement::WakeLockRelease()
     rv.SuppressException();
     mWakeLock = nullptr;
   }
+}
+
+void
+HTMLMediaElement::WakeLockRelease()
+{
+  ReleaseAudioWakeLockIfExists();
 }
 
 HTMLMediaElement::OutputMediaStream::OutputMediaStream()
