@@ -68,6 +68,12 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fixed-height-body-child.html fixed-height-body-child-ref.html # Bug 1392106
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == consecutive-inline.html consecutive-inline-ref.html
 
+# Ordinarily, reftests use a browser.viewport.desktopWidth of 800px, same as the
+# size of the reftest document.  The failure condition of the test below however
+# depends on the initial window size being smaller than the viewport the
+# MobileViewportManager eventually calculates, so we use a bigger value here.
+fails test-pref(font.size.inflation.emPerLine,20) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) test-pref(browser.viewport.desktopWidth,1000) == fixed-width-body-viewport.html fixed-width-body-viewport-ref.html
+
 # The tests below use nonzero values of the lineThreshold preference.
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == text-1.html text-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == list-1.html list-1-ref.html # Bug 1392106
