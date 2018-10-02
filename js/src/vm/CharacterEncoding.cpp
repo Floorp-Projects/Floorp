@@ -267,12 +267,18 @@ enum InflateUTF8Action {
     FindEncoding
 };
 
+enum class OnUTF8Error {
+    InsertReplacementCharacter,
+    Throw,
+    Crash,
+};
+
 static const char16_t REPLACE_UTF8 = 0xFFFD;
 static const Latin1Char REPLACE_UTF8_LATIN1 = '?';
 
 // If making changes to this algorithm, make sure to also update
 // LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
-template <InflateUTF8Action Action, typename CharT>
+template <InflateUTF8Action Action, OnUTF8Error ErrorAction, typename CharT>
 static bool
 InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t* dstlenp,
                           JS::SmallestEncoding *smallestEncoding)
@@ -308,20 +314,18 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t
 
         #define INVALID(report, arg, n2)                                \
             do {                                                        \
-                if (Action == CountAndReportInvalids) {                 \
+                if (ErrorAction == OnUTF8Error::Throw) {                \
                     report(cx, arg);                                    \
                     return false;                                       \
-                } else if (Action == AssertNoInvalids) {                \
+                } else if (ErrorAction == OnUTF8Error::Crash) {         \
                     MOZ_CRASH("invalid UTF-8 string: " # report);       \
                 } else {                                                \
+                    MOZ_ASSERT(ErrorAction == OnUTF8Error::InsertReplacementCharacter); \
                     if (Action == Copy) {                               \
                         if (std::is_same<decltype(dst[0]), Latin1Char>::value) \
                             dst[j] = CharT(REPLACE_UTF8_LATIN1);        \
                         else                                            \
                             dst[j] = CharT(REPLACE_UTF8);               \
-                    } else {                                            \
-                        MOZ_ASSERT(Action == CountAndIgnoreInvalids ||  \
-                                   Action == FindEncoding);             \
                     }                                                   \
                     n = n2;                                             \
                     goto invalidMultiByteCodeUnit;                      \
@@ -409,7 +413,7 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t
     return true;
 }
 
-template <InflateUTF8Action Action, typename CharsT>
+template <InflateUTF8Action Action, OnUTF8Error ErrorAction, typename CharsT>
 static CharsT
 InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 {
@@ -417,7 +421,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
     *outlen = 0;
 
     JS::SmallestEncoding encoding;
-    if (!InflateUTF8StringToBuffer<Action, CharT>(cx, src, /* dst = */ nullptr, outlen, &encoding)) {
+    if (!InflateUTF8StringToBuffer<Action, ErrorAction, CharT>(cx, src, /* dst = */ nullptr, outlen, &encoding)) {
         return CharsT();
     }
 
@@ -434,7 +438,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
             dst[i] = CharT(src[i]);
         }
     } else {
-        MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<Copy, CharT>(cx, src, dst, outlen, &encoding)));
+        MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<Copy, OnUTF8Error::InsertReplacementCharacter, CharT>(cx, src, dst, outlen, &encoding)));
     }
 
     dst[*outlen] = 0;    // NUL char
@@ -445,34 +449,34 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<CountAndReportInvalids, TwoByteCharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<CountAndReportInvalids, OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8, outlen);
 }
 
 TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen)
 {
     UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-    return InflateUTF8StringHelper<CountAndReportInvalids, TwoByteCharsZ>(cx, chars, outlen);
+    return InflateUTF8StringHelper<CountAndReportInvalids, OnUTF8Error::Throw, TwoByteCharsZ>(cx, chars, outlen);
 }
 
 TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<CountAndIgnoreInvalids, TwoByteCharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<CountAndIgnoreInvalids, OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, utf8, outlen);
 }
 
 TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const JS::ConstUTF8CharsZ& utf8, size_t* outlen)
 {
     UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-    return InflateUTF8StringHelper<CountAndIgnoreInvalids, TwoByteCharsZ>(cx, chars, outlen);
+    return InflateUTF8StringHelper<CountAndIgnoreInvalids, OnUTF8Error::InsertReplacementCharacter, TwoByteCharsZ>(cx, chars, outlen);
 }
 
 JS::SmallestEncoding
 JS::FindSmallestEncoding(UTF8Chars utf8)
 {
     JS::SmallestEncoding encoding;
-    MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<FindEncoding, char16_t>(
+    MOZ_ALWAYS_TRUE((InflateUTF8StringToBuffer<FindEncoding, OnUTF8Error::InsertReplacementCharacter, char16_t>(
                          /* cx = */ nullptr,
                          utf8,
                          /* dst = */ nullptr,
@@ -484,13 +488,13 @@ JS::FindSmallestEncoding(UTF8Chars utf8)
 Latin1CharsZ
 JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<CountAndReportInvalids, Latin1CharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<CountAndReportInvalids, OnUTF8Error::Throw, Latin1CharsZ>(cx, utf8, outlen);
 }
 
 Latin1CharsZ
 JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper<CountAndIgnoreInvalids, Latin1CharsZ>(cx, utf8, outlen);
+    return InflateUTF8StringHelper<CountAndIgnoreInvalids, OnUTF8Error::InsertReplacementCharacter, Latin1CharsZ>(cx, utf8, outlen);
 }
 
 #ifdef DEBUG
@@ -499,7 +503,7 @@ JS::ConstUTF8CharsZ::validate(size_t aLength)
 {
     MOZ_ASSERT(data_);
     UTF8Chars chars(data_, aLength);
-    InflateUTF8StringToBuffer<AssertNoInvalids, char16_t>(
+    InflateUTF8StringToBuffer<AssertNoInvalids, OnUTF8Error::Crash, char16_t>(
         /* cx = */ nullptr,
         chars,
         /* dst = */ nullptr,
