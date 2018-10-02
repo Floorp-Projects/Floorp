@@ -2455,7 +2455,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 #else
             // No BinAST, no BinASTMetadata
             MOZ_ASSERT(mode != XDR_ENCODE);
-            xdr->fail(JS::TranscodeResult_Throw);
+            return xdr->fail(JS::TranscodeResult_Throw);
 #endif // JS_BUILD_BINAST
         }
     }
