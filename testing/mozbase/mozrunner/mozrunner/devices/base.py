@@ -119,7 +119,7 @@ class Device(object):
             self.app_ctx.setup_profile(profile)
 
     def _get_online_devices(self):
-        adbhost = ADBHost()
+        adbhost = ADBHost(adb=self.app_ctx.adb)
         devices = adbhost.devices()
         return [d['device_serial'] for d in devices
                 if d['state'] != 'offline'
