@@ -208,9 +208,15 @@ const styleRuleSpec = generateActorSpec({
       response: { rule: RetVal("domstylerule") }
     },
     modifySelector: {
-      request: { selector: Arg(0, "string") },
-      response: { isModified: RetVal("boolean") },
+      request: {
+        node: Arg(0, "domnode"),
+        value: Arg(1, "string"),
+        editAuthored: Arg(2, "boolean")
+      },
+      response: RetVal("modifiedStylesReturn")
     },
+    // Remove once Firefox 64 is no longer supported.
+    // @See StyleRuleActor.modifySelector()
     modifySelector2: {
       request: {
         node: Arg(0, "domnode"),
