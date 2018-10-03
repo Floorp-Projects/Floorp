@@ -493,50 +493,6 @@ CodeGenerator::visitWasmStoreI64(LWasmStoreI64* ins)
 }
 
 void
-CodeGenerator::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
-{
-    const MAsmJSLoadHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() < wasm::OffsetGuardLimit);
-
-    const LAllocation* ptr = ins->ptr();
-    const LDefinition* out = ins->output();
-
-    Scalar::Type accessType = mir->access().type();
-
-    Operand srcAddr = ptr->isBogus()
-                      ? Operand(HeapReg, mir->offset())
-                      : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
-
-    uint32_t before = masm.size();
-    masm.wasmLoad(mir->access(), srcAddr, ToAnyRegister(out));
-    uint32_t after = masm.size();
-    verifyLoadDisassembly(before, after, accessType, srcAddr, *out->output());
-}
-
-void
-CodeGenerator::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
-{
-    const MAsmJSStoreHeap* mir = ins->mir();
-    MOZ_ASSERT(mir->offset() < wasm::OffsetGuardLimit);
-
-    const LAllocation* ptr = ins->ptr();
-    const LAllocation* value = ins->value();
-
-    Scalar::Type accessType = mir->access().type();
-
-    canonicalizeIfDeterministic(accessType, value);
-
-    Operand dstAddr = ptr->isBogus()
-                      ? Operand(HeapReg, mir->offset())
-                      : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
-
-    uint32_t before = masm.size();
-    wasmStore(mir->access(), value, dstAddr);
-    uint32_t after = masm.size();
-    verifyStoreDisassembly(before, after, accessType, dstAddr, *value);
-}
-
-void
 CodeGenerator::visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins)
 {
     MWasmCompareExchangeHeap* mir = ins->mir();

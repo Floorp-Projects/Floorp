@@ -596,14 +596,16 @@ class FunctionCompiler
     }
 
     MWasmLoadTls* maybeLoadBoundsCheckLimit() {
-        MWasmLoadTls* load = nullptr;
-#ifndef WASM_HUGE_MEMORY
+#ifdef WASM_HUGE_MEMORY
+        if (!env_.isAsmJS()) {
+            return nullptr;
+        }
+#endif
         AliasSet aliases = env_.maxMemoryLength.isSome() ? AliasSet::None()
                                                          : AliasSet::Load(AliasSet::WasmHeapMeta);
-        load = MWasmLoadTls::New(alloc(), tlsPointer_, offsetof(wasm::TlsData, boundsCheckLimit),
-                                 MIRType::Int32, aliases);
+        auto load = MWasmLoadTls::New(alloc(), tlsPointer_, offsetof(wasm::TlsData, boundsCheckLimit),
+                                      MIRType::Int32, aliases);
         curBlock_->add(load);
-#endif
         return load;
     }
 

@@ -47,7 +47,7 @@ AnyArrayBufferByteLength(const ArrayBufferObjectMaybeShared* buf)
 }
 
 inline uint32_t
-ArrayBufferObjectMaybeShared::byteLength()
+ArrayBufferObjectMaybeShared::byteLength() const
 {
     return AnyArrayBufferByteLength(this);
 }

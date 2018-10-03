@@ -615,9 +615,9 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents,
  *  - length - the wasm-visible current length of the buffer. Accesses in the
  *    range [0, length] succeed. May only increase.
  *
- *  - boundsCheckLimit - when !WASM_HUGE_MEMORY, the size against which we
- *    perform bounds checks. It is always a constant offset smaller than
- *    mappedSize. Currently that constant offset is 64k (wasm::GuardSize).
+ *  - boundsCheckLimit - the size against which we perform bounds checks. It is
+ *    always a constant offset smaller than mappedSize. Currently that constant
+ *    offset is 64k (wasm::GuardSize).
  *
  *  - maxSize - the optional declared limit on how much length can grow.
  *
@@ -935,47 +935,13 @@ js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
 // Returning false without throwing means that asm.js linking will fail which
 // will recompile as non-asm.js.
 /* static */ bool
-ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer, bool needGuard)
+ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer)
 {
-#ifdef WASM_HUGE_MEMORY
-    MOZ_ASSERT(needGuard);
-#endif
     MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
     if (buffer->forInlineTypedObject()) {
         return false;
-    }
-
-    if (needGuard) {
-        if (buffer->isWasm() && buffer->isPreparedForAsmJS()) {
-            return true;
-        }
-
-        // Non-prepared-for-asm.js wasm buffers can be detached at any time.
-        // This error can only be triggered for Atomics on !WASM_HUGE_MEMORY
-        // so this error is only visible in testing.
-        if (buffer->isWasm() || buffer->isPreparedForAsmJS()) {
-            return false;
-        }
-
-        uint32_t length = buffer->byteLength();
-        WasmArrayRawBuffer* wasmBuf = WasmArrayRawBuffer::Allocate(length, Some(length));
-        if (!wasmBuf) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-
-        void* data = wasmBuf->dataPointer();
-        memcpy(data, buffer->dataPointer(), length);
-
-        // Swap the new elements into the ArrayBufferObject. Mark the
-        // ArrayBufferObject so we don't do this again.
-        buffer->changeContents(cx, BufferContents::create<WASM>(data), OwnsData);
-        buffer->setIsPreparedForAsmJS();
-        MOZ_ASSERT(data == buffer->dataPointer());
-        cx->updateMallocCounter(wasmBuf->mappedSize());
-        return true;
     }
 
     if (!buffer->isWasm() && buffer->isPreparedForAsmJS()) {
@@ -1210,6 +1176,18 @@ ArrayBufferObjectMaybeShared::wasmBoundsCheckLimit() const
         return as<ArrayBufferObject>().wasmBoundsCheckLimit();
     }
     return as<SharedArrayBufferObject>().wasmBoundsCheckLimit();
+}
+#else
+uint32_t
+ArrayBufferObject::wasmBoundsCheckLimit() const
+{
+    return byteLength();
+}
+
+uint32_t
+ArrayBufferObjectMaybeShared::wasmBoundsCheckLimit() const
+{
+    return byteLength();
 }
 #endif
 

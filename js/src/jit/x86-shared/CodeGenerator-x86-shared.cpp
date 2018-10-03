@@ -400,6 +400,46 @@ CodeGenerator::visitWasmReinterpret(LWasmReinterpret* lir)
 }
 
 void
+CodeGenerator::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
+{
+    const MAsmJSLoadHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->access().offset() == 0);
+
+    const LAllocation* ptr = ins->ptr();
+    const LAllocation* boundsCheckLimit = ins->boundsCheckLimit();
+    AnyRegister out = ToAnyRegister(ins->output());
+
+    Scalar::Type accessType = mir->accessType();
+
+    OutOfLineLoadTypedArrayOutOfBounds* ool = nullptr;
+    if (mir->needsBoundsCheck()) {
+        ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(out, accessType);
+        addOutOfLineCode(ool, mir);
+
+        masm.wasmBoundsCheck(Assembler::AboveOrEqual, ToRegister(ptr), ToRegister(boundsCheckLimit),
+                             ool->entry());
+    }
+
+#ifdef JS_CODEGEN_X86
+    const LAllocation* memoryBase = ins->memoryBase();
+    Operand srcAddr = ptr->isBogus()
+                    ? Operand(ToRegister(memoryBase), 0)
+                    : Operand(ToRegister(memoryBase), ToRegister(ptr), TimesOne);
+#else
+    MOZ_ASSERT(!mir->hasMemoryBase());
+    Operand srcAddr = ptr->isBogus()
+                    ? Operand(HeapReg, 0)
+                    : Operand(HeapReg, ToRegister(ptr), TimesOne);
+#endif
+
+    masm.wasmLoad(mir->access(), srcAddr, out);
+
+    if (ool) {
+        masm.bind(ool->rejoin());
+    }
+}
+
+void
 CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool)
 {
     switch (ool->viewType()) {
@@ -424,6 +464,44 @@ CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTyp
         break;
     }
     masm.jmp(ool->rejoin());
+}
+
+void
+CodeGenerator::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
+{
+    const MAsmJSStoreHeap* mir = ins->mir();
+    MOZ_ASSERT(mir->offset() == 0);
+
+    const LAllocation* ptr = ins->ptr();
+    const LAllocation* value = ins->value();
+    const LAllocation* boundsCheckLimit = ins->boundsCheckLimit();
+
+    Scalar::Type accessType = mir->accessType();
+    canonicalizeIfDeterministic(accessType, value);
+
+    Label rejoin;
+    if (mir->needsBoundsCheck()) {
+        masm.wasmBoundsCheck(Assembler::AboveOrEqual, ToRegister(ptr), ToRegister(boundsCheckLimit),
+                             &rejoin);
+    }
+
+#ifdef JS_CODEGEN_X86
+    const LAllocation* memoryBase = ins->memoryBase();
+    Operand dstAddr = ptr->isBogus()
+                      ? Operand(ToRegister(memoryBase), 0)
+                      : Operand(ToRegister(memoryBase), ToRegister(ptr), TimesOne);
+#else
+    MOZ_ASSERT(!mir->hasMemoryBase());
+    Operand dstAddr = ptr->isBogus()
+                      ? Operand(HeapReg, 0)
+                      : Operand(HeapReg, ToRegister(ptr), TimesOne);
+#endif
+
+    masm.wasmStore(mir->access(), ToAnyRegister(value), dstAddr);
+
+    if (rejoin.used()) {
+        masm.bind(&rejoin);
+    }
 }
 
 void
