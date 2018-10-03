@@ -158,6 +158,42 @@ add_task(async function test_showCreditCards() {
   win.close();
 });
 
+add_task(async function test_showCreditCardIcons() {
+  await SpecialPowers.pushPrefEnv({"set": [["privacy.reduceTimerPrecision", false]]});
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+  let unknownCard = Object.assign({}, TEST_CREDIT_CARD_3, {"cc-type": "gringotts"});
+  await saveCreditCard(unknownCard);
+
+  let win = window.openDialog(MANAGE_CREDIT_CARDS_DIALOG_URL, null, DIALOG_SIZE);
+  await waitForFocusAndFormReady(win);
+
+  let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
+
+  is(selRecords.classList.contains("branded"), AppConstants.MOZILLA_OFFICIAL,
+     "record picker has 'branded' class in an MOZILLA_OFFICIAL build");
+
+  let option0 = selRecords.options[0];
+  let icon0Url = win.getComputedStyle(option0, "::before").backgroundImage;
+  let option1 = selRecords.options[1];
+  let icon1Url = win.getComputedStyle(option1, "::before").backgroundImage;
+
+  is(option0.getAttribute("cc-type"), "gringotts", "Option has the expected cc-type");
+  is(option1.getAttribute("cc-type"), "visa", "Option has the expected cc-type");
+
+  if (AppConstants.MOZILLA_OFFICIAL) {
+    ok(icon0Url.includes("icon-credit-card-generic.svg"),
+       "unknown network option ::before element has the generic icon as backgroundImage: " + icon0Url);
+    ok(icon1Url.includes("cc-logo-visa.svg"),
+       "visa option ::before element has the visa icon as backgroundImage " + icon1Url);
+  }
+
+  await removeCreditCards([option0.value, option1.value]);
+  await BrowserTestUtils.waitForEvent(selRecords, "RecordsLoaded");
+  is(selRecords.length, 0, "Credit card is removed");
+  win.close();
+});
+
+
 add_task(async function test_hasMasterPassword() {
   await saveCreditCard(TEST_CREDIT_CARD_1);
   LoginTestUtils.masterPassword.enable();
