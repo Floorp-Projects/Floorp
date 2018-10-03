@@ -11,11 +11,7 @@
  */
 .connect-page__network-form {
   display: grid;
-  grid-column-gap: 10px;
-  grid-template-columns: 100px auto max-content;
-  line-height: 36px;
-}
-
-.connect-page__network-form__input {
-  box-sizing: border-box;
+  grid-column-gap: calc(var(--base-distance) * 2);
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
 }

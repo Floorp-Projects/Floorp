@@ -9,11 +9,14 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "nsITextInputProcessor.h"
 #include "nsITextInputProcessorCallback.h"
 #include "nsTArray.h"
+
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -48,6 +51,80 @@ public:
                       WidgetKeyboardEvent& aKeyboardEvent,
                       uint32_t aIndexOfKeypress,
                       void* aData) override;
+
+  /**
+   * TextInputProcessor manages modifier key state.  E.g., when it dispatches
+   * a modifier keydown event, activates proper modifier state and when it
+   * dispatches a modifier keyup event, inactivates proper modifier state.
+   * This returns all active modifiers in the instance.
+   */
+  Modifiers GetActiveModifiers() const
+  {
+    return mModifierKeyDataArray ?
+      mModifierKeyDataArray->GetActiveModifiers() : MODIFIER_NONE;
+  }
+
+  /**
+   * This begins transaction for fuzzing.  This must be called only by
+   * FuzzingFunctions since this skips the permission check.
+   * See explanation of nsITextInputProcessor::BeginInputTransaction() for
+   * the detail.
+   */
+  nsresult
+  BeginInputTransactionForFuzzing(nsPIDOMWindowInner* aWindow,
+                                  nsITextInputProcessorCallback* aCallback,
+                                  bool* aSucceeded);
+
+  /**
+   * The following Keydown() and KeyUp() are same as nsITextInputProcessor's
+   * same name methods except the type of event class.  See explanation in
+   * nsITextInputProcessor for the detail.
+   */
+  nsresult Keydown(const WidgetKeyboardEvent& aKeyboardEvent,
+                   uint32_t aKeyFlags,
+                   uint32_t* aConsumedFlags = nullptr);
+  nsresult Keyup(const WidgetKeyboardEvent& aKeyboardEvent,
+                 uint32_t aKeyFlags,
+                 bool* aDoDefault = nullptr);
+
+  /**
+   * GuessCodeNameIndexOfPrintableKeyInUSEnglishLayout() returns CodeNameIndex
+   * of a printable key which is in usual keyboard of the platform and when
+   * active keyboard layout is US-English.
+   * Note that this does not aware of option key mapping on macOS.
+   *
+   * @param aKeyValue          The key value. Must be a character which can
+   *                           be inputted with US-English keyboard layout.
+   * @param aLocation          The location of the key.  This is important
+   *                           to distinguish whether the key is in Standard
+   *                           or Numpad. If this is not some, treated as
+   *                           Standard.
+   * @return                   Returns CODE_NAME_INDEX_UNKNOWN if there is
+   *                           no proper key.
+   */
+  static CodeNameIndex
+  GuessCodeNameIndexOfPrintableKeyInUSEnglishLayout(
+    const nsAString& aKeyValue,
+    const Maybe<uint32_t>& aLocation);
+
+  /**
+   * GuessKeyCodeOfPrintableKeyInUSEnglishLayout() returns a key code value
+   * of a printable key which is in usual keyboard of the platform and when
+   * active keyboard layout is US-English.
+   * Note that this does not aware of option key mapping on macOS.
+   *
+   * @param aKeyValue          The key value. Must be a character which can
+   *                           be inputted with US-English keyboard layout.
+   * @param aLocation          The location of the key.  This is important
+   *                           to distinguish whether the key is in Standard
+   *                           or Numpad. If this is not some, treated as
+   *                           Standard.
+   * @return                   Returns 0 if there is no proper key to input
+   *                           aKeyValue with US-English keyboard layout.
+   */
+  static uint32_t
+  GuessKeyCodeOfPrintableKeyInUSEnglishLayout(const nsAString& aKeyValue,
+                                              const Maybe<uint32_t>& aLocation);
 
 protected:
   virtual ~TextInputProcessor();
@@ -157,11 +234,6 @@ private:
     virtual ~ModifierKeyDataArray() { }
   };
 
-  Modifiers GetActiveModifiers() const
-  {
-    return mModifierKeyDataArray ?
-      mModifierKeyDataArray->GetActiveModifiers() : 0;
-  }
   void EnsureModifierKeyDataArray()
   {
     if (mModifierKeyDataArray) {

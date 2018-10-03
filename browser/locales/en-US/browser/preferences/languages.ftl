@@ -54,3 +54,20 @@ browser-languages-window =
     .style = width: 40em
 
 browser-languages-description = { -brand-short-name } will display the first language as your default and will display alternate languages if necessary in the order they appear.
+
+browser-languages-search = Search for more languages…
+
+browser-languages-searching =
+    .label = Searching for languages…
+
+browser-languages-downloading =
+    .label = Downloading…
+
+browser-languages-select-language =
+    .label = Select a language to add…
+    .placeholder = Select a language to add…
+
+browser-languages-installed-label = Installed languages
+browser-languages-available-label = Available languages
+
+browser-languages-error = { -brand-short-name } can’t update your languages right now. Check that you are connected to the internet or try again.

@@ -600,6 +600,13 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   WidgetKeyboardEvent keyEvent(true, aMessage, mWidget);
   InitEvent(keyEvent);
   keyEvent.AssignKeyEventData(aKeyboardEvent, false);
+  // Command arrays are not duplicated by AssignKeyEventData() due to
+  // both performance and footprint reasons.  So, when TextInputProcessor
+  // emulates real text input, the arrays may be initialized all commands
+  // already.  If so, we need to duplicate the arrays here.
+  if (keyEvent.mIsSynthesizedByTIP) {
+    keyEvent.AssignCommands(aKeyboardEvent);
+  }
 
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
     // If the key event should be dispatched as consumed event, marking it here.

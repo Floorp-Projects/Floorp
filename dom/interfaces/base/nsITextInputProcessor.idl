@@ -605,6 +605,64 @@ interface nsITextInputProcessor : nsISupports
    *                        to manage modifier state independently.
    */
   void shareModifierStateOf(in nsITextInputProcessor aOther);
+
+  /**
+   * Helper method to get usual |.code| value of non-printable keys.
+   *
+   * @param aKeyValue       A predefined key value such as "Enter".
+   *                        If this is not a proper non-printable key value
+   *                        or a proper key value but not in usual keyboard of
+   *                        the platform, this returns empty string.
+   * @param aLocation       The |.location| value.  This is important if
+   *                        the key may be in different location.
+   *                        E.g., Left vs. Right or Standard vs. Numpad.
+   *                        If this is undefined or null, it'll be treated
+   *                        as Standard or Left.
+   * @return                One of a code value of well-known key on usual
+   *                        keyboard on the platform, or empty string.
+   */
+  [optional_argc]
+    AString computeCodeValueOfNonPrintableKey(
+              in AString aKeyValue,
+              [optional] in jsval aLocation);
+
+  /**
+   * Helper method to guess |.code| value of a printable key which is in usual
+   * keyboard of the platform and when active keyboard layout is US-English.
+   * Note that this is not aware of option key mapping on macOS.
+   *
+   * @param aKeyValue          The key value. Must be a character which can
+   *                           be inputted with US-English keyboard layout.
+   * @param aLocation          The location of the key.  This is important
+   *                           to distinguish whether the key is in Standard
+   *                           or Numpad. If this is undefined or null, will
+   *                           be treated as Standard.
+   * @return                   Returns empty string if there is no proper key.
+   */
+  [optional_argc]
+    AString guessCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+              in AString aKeyValue,
+              [optional] in jsval aLocation);
+
+  /**
+   * Helper method to guess |.keyCode| value of a printable key which is in
+   * usual keyboard of the platform and when active keyboard layout is
+   * US-English.
+   * Note that this is not aware of option key mapping on macOS.
+   *
+   * @param aKeyValue          The key value.  Must be a character which can
+   *                           be inputted with US-English keyboard layout.
+   * @param aLocation          The location of the key.  This is important
+   *                           to distinguish whether the key is in Standard
+   *                           our Numpad.  If this is undefined or null,
+   *                           will be treated as Standard.
+   * @return                   Returns 0 if there is no proper key to input
+   *                           aKeyValue with US-English keyboard layout.
+   */
+  [optional_argc]
+    unsigned long guessKeyCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+                    in AString aKeyValue,
+                    [optional] in jsval aLocation);
 };
 
 %{C++

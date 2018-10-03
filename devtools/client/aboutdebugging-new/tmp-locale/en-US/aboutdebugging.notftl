@@ -122,6 +122,9 @@ about-debugging-extension-id = Extension ID
 # Clicking on it will add the new network location to the list.
 about-debugging-network-locations-add-button = Add
 
+# Text to display when there are no locations to show.
+about-debugging-network-locations-empty-text = No network locations have been added yet.
+
 # Text of the label for the text input that allows users to add new network locations in
 # the Connect page. A host is a hostname and a port separated by a colon, as suggested by
 # the input's placeholder "localhost:6080".
