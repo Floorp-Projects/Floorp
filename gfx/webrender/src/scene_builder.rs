@@ -4,7 +4,7 @@
 
 use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, ExternalEvent, Epoch};
-use api::{BuiltDisplayList, ColorF, LayoutSize, NotificationRequest, Checkpoint};
+use api::{BuiltDisplayList, ColorF, LayoutSize, NotificationRequest, Checkpoint, IdNamespace};
 use api::channel::MsgSender;
 #[cfg(feature = "capture")]
 use capture::CaptureConfig;
@@ -122,6 +122,7 @@ pub enum SceneBuilderRequest {
     DeleteDocument(DocumentId),
     WakeUp,
     Flush(MsgSender<()>),
+    ClearNamespace(IdNamespace),
     SetFrameBuilderConfig(FrameBuilderConfig),
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
@@ -137,6 +138,7 @@ pub enum SceneBuilderResult {
     Transaction(Box<BuiltTransaction>, Option<Sender<SceneSwapResult>>),
     ExternalEvent(ExternalEvent),
     FlushComplete(MsgSender<()>),
+    ClearNamespace(IdNamespace),
     Stopped,
 }
 
@@ -221,6 +223,15 @@ impl SceneBuilder {
         )
     }
 
+    /// Send a message to the render backend thread.
+    ///
+    /// We first put something in the result queue and then send a wake-up
+    /// message to the api queue that the render backend is blocking on.
+    pub fn send(&self, msg: SceneBuilderResult) {
+        self.tx.send(msg).unwrap();
+        let _ = self.api_tx.send(ApiMsg::WakeUp);
+    }
+
     /// The scene builder thread's event loop.
     pub fn run(&mut self) {
         if let Some(ref hooks) = self.hooks {
@@ -231,8 +242,7 @@ impl SceneBuilder {
             match self.rx.recv() {
                 Ok(SceneBuilderRequest::WakeUp) => {}
                 Ok(SceneBuilderRequest::Flush(tx)) => {
-                    self.tx.send(SceneBuilderResult::FlushComplete(tx)).unwrap();
-                    let _ = self.api_tx.send(ApiMsg::WakeUp);
+                    self.send(SceneBuilderResult::FlushComplete(tx));
                 }
                 Ok(SceneBuilderRequest::Transaction(mut txn)) => {
                     let built_txn = self.process_transaction(&mut txn);
@@ -244,6 +254,10 @@ impl SceneBuilder {
                 Ok(SceneBuilderRequest::SetFrameBuilderConfig(cfg)) => {
                     self.config = cfg;
                 }
+                Ok(SceneBuilderRequest::ClearNamespace(id)) => {
+                    self.documents.retain(|doc_id, _doc| doc_id.0 != id);
+                    self.send(SceneBuilderResult::ClearNamespace(id));
+                }
                 #[cfg(feature = "replay")]
                 Ok(SceneBuilderRequest::LoadScenes(msg)) => {
                     self.load_scenes(msg);
@@ -253,8 +267,7 @@ impl SceneBuilder {
                     self.save_scene(config);
                 }
                 Ok(SceneBuilderRequest::ExternalEvent(evt)) => {
-                    self.tx.send(SceneBuilderResult::ExternalEvent(evt)).unwrap();
-                    self.api_tx.send(ApiMsg::WakeUp).unwrap();
+                    self.send(SceneBuilderResult::ExternalEvent(evt));
                 }
                 Ok(SceneBuilderRequest::Stop) => {
                     self.tx.send(SceneBuilderResult::Stopped).unwrap();

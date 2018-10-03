@@ -434,6 +434,11 @@ impl ExternalTexture {
     }
 }
 
+/// WebRender interface to an OpenGL texture.
+///
+/// Because freeing a texture requires various device handles that are not
+/// reachable from this struct, manual destruction via `Device` is required.
+/// Our `Drop` implementation asserts that this has happened.
 pub struct Texture {
     id: gl::GLuint,
     target: gl::GLuint,

@@ -24,7 +24,7 @@ void brush_vs(
     vec4 unused
 ) {
     vec2 snapped_device_pos = snap_device_pos(vi);
-    vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
+    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
     vOp = user_data.x;
 
     PictureTask src_task = fetch_picture_task(user_data.z);
@@ -200,8 +200,8 @@ const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
 Fragment brush_fs() {
-    vec4 Cb = textureLod(sCacheRGBA8, vBackdropUv, 0.0);
-    vec4 Cs = textureLod(sCacheRGBA8, vSrcUv, 0.0);
+    vec4 Cb = textureLod(sPrevPassColor, vBackdropUv, 0.0);
+    vec4 Cs = textureLod(sPrevPassColor, vSrcUv, 0.0);
 
     if (Cb.a == 0.0) {
         return Fragment(Cs);
