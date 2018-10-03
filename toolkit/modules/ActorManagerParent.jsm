@@ -262,6 +262,17 @@ let ACTORS = {
     },
   },
 
+  UAWidgets: {
+    child: {
+      module: "resource://gre/actors/UAWidgetsChild.jsm",
+      events: {
+        "UAWidgetBindToTree": {},
+        "UAWidgetAttributeChanged": {},
+        "UAWidgetUnbindFromTree": {},
+      },
+    },
+  },
+
   UnselectedTabHover: {
     child: {
       module: "resource://gre/actors/UnselectedTabHoverChild.jsm",
