@@ -7,6 +7,7 @@
 #include "gfxPrefs.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextInputProcessor.h"
@@ -1273,6 +1274,292 @@ TextInputProcessor::ShareModifierStateOf(nsITextInputProcessor* aOther)
   }
   mModifierKeyDataArray = other->mModifierKeyDataArray;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TextInputProcessor::ComputeCodeValueOfNonPrintableKey(
+                      const nsAString& aKeyValue,
+                      JS::Handle<JS::Value> aLocation,
+                      uint8_t aOptionalArgc,
+                      nsAString& aCodeValue)
+{
+  aCodeValue.Truncate();
+
+  Maybe<uint32_t> location;
+  if (aOptionalArgc) {
+    if (aLocation.isNullOrUndefined()) {
+      // location should be nothing.
+    } else if (aLocation.isInt32()) {
+      location = mozilla::Some(static_cast<uint32_t>(aLocation.toInt32()));
+    } else {
+      NS_WARNING_ASSERTION(aLocation.isNullOrUndefined() || aLocation.isInt32(),
+        "aLocation must be undefined, null or int");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  KeyNameIndex keyNameIndex = WidgetKeyboardEvent::GetKeyNameIndex(aKeyValue);
+  if (keyNameIndex == KEY_NAME_INDEX_Unidentified ||
+      keyNameIndex == KEY_NAME_INDEX_USE_STRING) {
+    return NS_OK;
+  }
+
+  CodeNameIndex codeNameIndex =
+    WidgetKeyboardEvent::ComputeCodeNameIndexFromKeyNameIndex(keyNameIndex,
+                                                              location);
+  if (codeNameIndex == CODE_NAME_INDEX_UNKNOWN) {
+    return NS_OK;
+  }
+  MOZ_ASSERT(codeNameIndex != CODE_NAME_INDEX_USE_STRING);
+  WidgetKeyboardEvent::GetDOMCodeName(codeNameIndex, aCodeValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TextInputProcessor::GuessCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+                      const nsAString& aKeyValue,
+                      JS::Handle<JS::Value> aLocation,
+                      uint8_t aOptionalArgc,
+                      nsAString& aCodeValue)
+{
+  aCodeValue.Truncate();
+
+  Maybe<uint32_t> location;
+  if (aOptionalArgc) {
+    if (aLocation.isNullOrUndefined()) {
+      // location should be nothing.
+    } else if (aLocation.isInt32()) {
+      location = mozilla::Some(static_cast<uint32_t>(aLocation.toInt32()));
+    } else {
+      NS_WARNING_ASSERTION(aLocation.isNullOrUndefined() || aLocation.isInt32(),
+        "aLocation must be undefined, null or int");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  CodeNameIndex codeNameIndex =
+    GuessCodeNameIndexOfPrintableKeyInUSEnglishLayout(aKeyValue, location);
+  if (codeNameIndex == CODE_NAME_INDEX_UNKNOWN) {
+    return NS_OK;
+  }
+  MOZ_ASSERT(codeNameIndex != CODE_NAME_INDEX_USE_STRING);
+  WidgetKeyboardEvent::GetDOMCodeName(codeNameIndex, aCodeValue);
+  return NS_OK;
+}
+
+// static
+CodeNameIndex
+TextInputProcessor::GuessCodeNameIndexOfPrintableKeyInUSEnglishLayout(
+                      const nsAString& aKeyValue,
+                      const Maybe<uint32_t>& aLocation)
+{
+  if (aKeyValue.IsEmpty()) {
+    return CODE_NAME_INDEX_UNKNOWN;
+  }
+  // US keyboard layout can input only one character per key.  So, we can
+  // assume that if the key value is 2 or more characters, it's a known
+  // key name or not a usual key emulation.
+  if (aKeyValue.Length() > 1) {
+    return CODE_NAME_INDEX_UNKNOWN;
+  }
+  if (aLocation.isSome() &&
+      aLocation.value() ==
+        dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_NUMPAD) {
+    switch (aKeyValue[0]) {
+      case '+':
+        return CODE_NAME_INDEX_NumpadAdd;
+      case '-':
+        return CODE_NAME_INDEX_NumpadSubtract;
+      case '*':
+        return CODE_NAME_INDEX_NumpadMultiply;
+      case '/':
+        return CODE_NAME_INDEX_NumpadDivide;
+      case '.':
+        return CODE_NAME_INDEX_NumpadDecimal;
+      case '0':
+        return CODE_NAME_INDEX_Numpad0;
+      case '1':
+        return CODE_NAME_INDEX_Numpad1;
+      case '2':
+        return CODE_NAME_INDEX_Numpad2;
+      case '3':
+        return CODE_NAME_INDEX_Numpad3;
+      case '4':
+        return CODE_NAME_INDEX_Numpad4;
+      case '5':
+        return CODE_NAME_INDEX_Numpad5;
+      case '6':
+        return CODE_NAME_INDEX_Numpad6;
+      case '7':
+        return CODE_NAME_INDEX_Numpad7;
+      case '8':
+        return CODE_NAME_INDEX_Numpad8;
+      case '9':
+        return CODE_NAME_INDEX_Numpad9;
+      default:
+        return CODE_NAME_INDEX_UNKNOWN;
+    }
+  }
+
+  if (aLocation.isSome() &&
+      aLocation.value() !=
+        dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_STANDARD) {
+    return CODE_NAME_INDEX_UNKNOWN;
+  }
+
+  // TODO: Support characters inputted with option key on macOS.
+  switch (aKeyValue[0]) {
+    case 'a':
+    case 'A':
+      return CODE_NAME_INDEX_KeyA;
+    case 'b':
+    case 'B':
+      return CODE_NAME_INDEX_KeyB;
+    case 'c':
+    case 'C':
+      return CODE_NAME_INDEX_KeyC;
+    case 'd':
+    case 'D':
+      return CODE_NAME_INDEX_KeyD;
+    case 'e':
+    case 'E':
+      return CODE_NAME_INDEX_KeyE;
+    case 'f':
+    case 'F':
+      return CODE_NAME_INDEX_KeyF;
+    case 'g':
+    case 'G':
+      return CODE_NAME_INDEX_KeyG;
+    case 'h':
+    case 'H':
+      return CODE_NAME_INDEX_KeyH;
+    case 'i':
+    case 'I':
+      return CODE_NAME_INDEX_KeyI;
+    case 'j':
+    case 'J':
+      return CODE_NAME_INDEX_KeyJ;
+    case 'k':
+    case 'K':
+      return CODE_NAME_INDEX_KeyK;
+    case 'l':
+    case 'L':
+      return CODE_NAME_INDEX_KeyL;
+    case 'm':
+    case 'M':
+      return CODE_NAME_INDEX_KeyM;
+    case 'n':
+    case 'N':
+      return CODE_NAME_INDEX_KeyN;
+    case 'o':
+    case 'O':
+      return CODE_NAME_INDEX_KeyO;
+    case 'p':
+    case 'P':
+      return CODE_NAME_INDEX_KeyP;
+    case 'q':
+    case 'Q':
+      return CODE_NAME_INDEX_KeyQ;
+    case 'r':
+    case 'R':
+      return CODE_NAME_INDEX_KeyR;
+    case 's':
+    case 'S':
+      return CODE_NAME_INDEX_KeyS;
+    case 't':
+    case 'T':
+      return CODE_NAME_INDEX_KeyT;
+    case 'u':
+    case 'U':
+      return CODE_NAME_INDEX_KeyU;
+    case 'v':
+    case 'V':
+      return CODE_NAME_INDEX_KeyV;
+    case 'w':
+    case 'W':
+      return CODE_NAME_INDEX_KeyW;
+    case 'x':
+    case 'X':
+      return CODE_NAME_INDEX_KeyX;
+    case 'y':
+    case 'Y':
+      return CODE_NAME_INDEX_KeyY;
+    case 'z':
+    case 'Z':
+      return CODE_NAME_INDEX_KeyZ;
+
+    case '`':
+    case '~':
+      return CODE_NAME_INDEX_Backquote;
+    case '1':
+    case '!':
+      return CODE_NAME_INDEX_Digit1;
+    case '2':
+    case '@':
+      return CODE_NAME_INDEX_Digit2;
+    case '3':
+    case '#':
+      return CODE_NAME_INDEX_Digit3;
+    case '4':
+    case '$':
+      return CODE_NAME_INDEX_Digit4;
+    case '5':
+    case '%':
+      return CODE_NAME_INDEX_Digit5;
+    case '6':
+    case '^':
+      return CODE_NAME_INDEX_Digit6;
+    case '7':
+    case '&':
+      return CODE_NAME_INDEX_Digit7;
+    case '8':
+    case '*':
+      return CODE_NAME_INDEX_Digit8;
+    case '9':
+    case '(':
+      return CODE_NAME_INDEX_Digit9;
+    case '0':
+    case ')':
+      return CODE_NAME_INDEX_Digit0;
+    case '-':
+    case '_':
+      return CODE_NAME_INDEX_Minus;
+    case '=':
+    case '+':
+      return CODE_NAME_INDEX_Equal;
+
+    case '[':
+    case '{':
+      return CODE_NAME_INDEX_BracketLeft;
+    case ']':
+    case '}':
+      return CODE_NAME_INDEX_BracketRight;
+    case '\\':
+    case '|':
+      return CODE_NAME_INDEX_Backslash;
+
+    case ';':
+    case ':':
+      return CODE_NAME_INDEX_Semicolon;
+    case '\'':
+    case '"':
+      return CODE_NAME_INDEX_Quote;
+
+    case ',':
+    case '<':
+      return CODE_NAME_INDEX_Comma;
+    case '.':
+    case '>':
+      return CODE_NAME_INDEX_Period;
+    case '/':
+    case '?':
+      return CODE_NAME_INDEX_Slash;
+
+    case ' ':
+      return CODE_NAME_INDEX_Space;
+
+    default:
+      return CODE_NAME_INDEX_UNKNOWN;
+  }
 }
 
 /******************************************************************************
