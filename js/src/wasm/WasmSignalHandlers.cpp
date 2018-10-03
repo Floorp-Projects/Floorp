@@ -906,3 +906,54 @@ wasm::HaveSignalHandlers()
     MOZ_ASSERT(sTriedInstallSignalHandlers);
     return sHaveSignalHandlers;
 }
+
+bool
+wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr, uint32_t numBytes, uint8_t** newPC)
+{
+    const wasm::CodeSegment* codeSegment = wasm::LookupCodeSegment(regs.pc);
+    if (!codeSegment || !codeSegment->isModule()) {
+        return false;
+    }
+
+    const wasm::ModuleSegment& segment = *codeSegment->asModule();
+
+    Trap trap;
+    BytecodeOffset bytecode;
+    if (!segment.code().lookupTrap(regs.pc, &trap, &bytecode) || trap != Trap::OutOfBounds) {
+        return false;
+    }
+
+    Instance& instance = *reinterpret_cast<Frame*>(regs.fp)->tls->instance;
+    MOZ_ASSERT(&instance.code() == &segment.code());
+
+    if (!instance.memoryAccessInGuardRegion((uint8_t*)addr, numBytes)) {
+        return false;
+    }
+
+    jit::JitActivation* activation = TlsContext.get()->activation()->asJit();
+    activation->startWasmTrap(Trap::OutOfBounds, bytecode.offset(), regs);
+    *newPC = segment.trapCode();
+    return true;
+}
+
+bool
+wasm::HandleIllegalInstruction(const RegisterState& regs, uint8_t** newPC)
+{
+    const wasm::CodeSegment* codeSegment = wasm::LookupCodeSegment(regs.pc);
+    if (!codeSegment || !codeSegment->isModule()) {
+        return false;
+    }
+
+    const wasm::ModuleSegment& segment = *codeSegment->asModule();
+
+    Trap trap;
+    BytecodeOffset bytecode;
+    if (!segment.code().lookupTrap(regs.pc, &trap, &bytecode)) {
+        return false;
+    }
+
+    jit::JitActivation* activation = TlsContext.get()->activation()->asJit();
+    activation->startWasmTrap(trap, bytecode.offset(), regs);
+    *newPC = segment.trapCode();
+    return true;
+}

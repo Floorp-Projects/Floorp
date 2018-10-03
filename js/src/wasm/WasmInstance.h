@@ -105,9 +105,7 @@ class Instance
     WasmMemoryObject* memory() const;
     size_t memoryMappedSize() const;
     SharedArrayRawBuffer* sharedMemoryBuffer() const; // never null
-#ifdef JS_SIMULATOR
     bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;
-#endif
     const StructTypeVector& structTypes() const { return code_->structTypes(); }
 
     static constexpr size_t offsetOfJSJitArgsRectifier() {
