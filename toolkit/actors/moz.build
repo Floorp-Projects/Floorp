@@ -25,6 +25,7 @@ FINAL_TARGET_FILES.actors += [
     'SelectChild.jsm',
     'SelectionSourceChild.jsm',
     'ThumbnailsChild.jsm',
+    'UAWidgetsChild.jsm',
     'UnselectedTabHoverChild.jsm',
     'WebChannelChild.jsm',
     'WebNavigationChild.jsm',

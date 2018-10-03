@@ -43,7 +43,6 @@ FINAL_TARGET_FILES.actors += [
     'PageMetadataChild.jsm',
     'PageStyleChild.jsm',
     'PluginChild.jsm',
-    'UAWidgetsChild.jsm',
     'URIFixupChild.jsm',
     'WebRTCChild.jsm',
 ]

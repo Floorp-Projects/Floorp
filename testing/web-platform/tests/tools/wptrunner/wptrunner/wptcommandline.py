@@ -366,7 +366,6 @@ def set_from_config(kwargs):
 
     kwargs["suite_name"] = kwargs["config"].get("web-platform-tests", {}).get("name", "web-platform-tests")
 
-
     check_paths(kwargs)
 
 

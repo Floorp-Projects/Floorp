@@ -856,8 +856,6 @@ SERVO_BINDING_FUNC(Servo_GetArcStringData, void,
                    const RustString*, uint8_t const** chars, uint32_t* len);
 SERVO_BINDING_FUNC(Servo_ReleaseArcStringData, void,
                    const mozilla::ServoRawOffsetArc<RustString>* string);
-SERVO_BINDING_FUNC(Servo_CloneArcStringData, mozilla::ServoRawOffsetArc<RustString>,
-                   const mozilla::ServoRawOffsetArc<RustString>* string);
 
 // CSS parsing utility functions.
 SERVO_BINDING_FUNC(Servo_IsValidCSSColor, bool, const nsAString* value);

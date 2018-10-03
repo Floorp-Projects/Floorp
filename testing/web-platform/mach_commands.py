@@ -273,29 +273,6 @@ testing/web-platform/tests for tests that may be shared
             proc.wait()
 
 
-class WPTManifestUpdater(MozbuildObject):
-    def setup_logging(self, **kwargs):
-        from wptrunner import wptlogging
-        logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
-
-    def run_update(self, logger, rebuild=False, **kwargs):
-        import manifestupdate
-        wpt_dir = os.path.abspath(os.path.join(self.topsrcdir, 'testing', 'web-platform'))
-        config_dir = os.path.abspath(os.path.join(self.topobjdir, '_tests', 'web-platform'))
-        manifestupdate.update(logger, wpt_dir, rebuild, config_dir)
-
-
-class WPTManifestDownloader(MozbuildObject):
-    def setup_logging(self, **kwargs):
-        from wptrunner import wptlogging
-        logger = wptlogging.setup(kwargs, {"mach": sys.stdout})
-
-    def run_download(self, logger, manifest_update=True, force=False, **kwargs):
-        import manifestdownload
-        wpt_dir = os.path.abspath(os.path.join(self.topobjdir, '_tests', 'web-platform'))
-        manifestdownload.run(wpt_dir, self.topsrcdir, logger, force, manifest_update)
-
-
 def create_parser_update():
     from update import updatecommandline
     return updatecommandline.create_parser()
@@ -326,10 +303,6 @@ def create_parser_manifest_update():
     import manifestupdate
     return manifestupdate.create_parser()
 
-def create_parser_manifest_download():
-    import manifestdownload
-    return manifestdownload.create_parser()
-
 
 @CommandProvider
 class MachCommands(MachCommandBase):
@@ -357,8 +330,6 @@ class MachCommands(MachCommandBase):
 
         logger = wpt_runner.setup_logging(**params)
 
-        self.wpt_manifest_download(logger, **params)
-        params["manifest_update"] = False
         return wpt_runner.run(logger, **params)
 
     @Command("wpt",
@@ -406,19 +377,7 @@ class MachCommands(MachCommandBase):
              parser=create_parser_manifest_update)
     def wpt_manifest_update(self, **params):
         self.setup()
-        self.wpt_manifest_download(**params)
-        wpt_manifest_updater = self._spawn(WPTManifestUpdater)
-        logger = wpt_manifest_updater.setup_logging(**params)
-        self.wpt_manifest_download(logger, **params)
-        return wpt_manifest_updater.run_update(logger, **params)
-
-    @Command("wpt-manifest-download",
-             category="testing",
-             parser=create_parser_manifest_download)
-    def wpt_manifest_download(self, logger=None, **params):
-        self.setup()
-        if logger is None:
-            from wptrunner import wptlogging
-            logger = wptlogging.setup(params, {"mach": sys.stdout})
-        wpt_manifest_downloader = self._spawn(WPTManifestDownloader)
-        return wpt_manifest_downloader.run_download(logger, **params)
+        wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
+        wpt_runner = WebPlatformTestsRunner(wpt_setup)
+        logger = wpt_runner.setup_logging(**params)
+        return 0 if wpt_runner.update_manifest(logger, **params) else 1

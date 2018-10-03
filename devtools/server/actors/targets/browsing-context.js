@@ -458,7 +458,13 @@ const browsingContextTargetPrototype = {
                "Actor should have an actorID.");
 
     const response = {
-      actor: this.actorID
+      actor: this.actorID,
+      traits: {
+        // FF64+ exposes a new trait to help identify ParentProcessTargetActor used for
+        // xpcshell that isn't attached to any valid browsing context and so shouldn't
+        // be considered as a browsing context-inherited target on the client side.
+        isBrowsingContext: !!this.docShell,
+      },
     };
 
     // We may try to access window while the document is closing, then

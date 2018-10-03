@@ -113,7 +113,6 @@ RuleEditor.prototype = {
 
   get isSelectorEditable() {
     const trait = this.isEditable &&
-      this.ruleView.inspector.target.client.traits.selectorEditable &&
       this.rule.domRule.type !== ELEMENT_STYLE &&
       this.rule.domRule.type !== CSSRule.KEYFRAME_RULE;
 
@@ -653,22 +652,11 @@ RuleEditor.prototype = {
     const ruleView = this.ruleView;
     const elementStyle = ruleView._elementStyle;
     const element = elementStyle.element;
-    const supportsUnmatchedRules =
-      this.rule.domRule.supportsModifySelectorUnmatched;
 
     this.isEditing = true;
 
     try {
       const response = await this.rule.domRule.modifySelector(element, value);
-
-      if (!supportsUnmatchedRules) {
-        this.isEditing = false;
-
-        if (response) {
-          this.ruleView.refreshPanel();
-        }
-        return;
-      }
 
       // We recompute the list of applied styles, because editing a
       // selector might cause this rule's position to change.

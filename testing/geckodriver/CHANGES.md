@@ -4,13 +4,60 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-Unreleased
-----------
+0.23.0 (2018-10-03)
+-------------------
+
+This release contains a number of fixes for regressions introduced
+in 0.22.0, where we shipped a significant refactoring to the way
+geckodriver internally dealt with JSON serialisation.
 
 ### Removed
 
-- The `/session/{session id}/element/{element id}/tap` endpoint
+- The POST `/session/{session id}/element/{element id}/tap` endpoint
   was removed, thanks to Kerem Kat.
+
+### Changed
+
+- [webdriver crate] upgraded to 0.38.0.
+
+### Fixed
+
+- `desiredCapabilities` and `requiredCapabilities` are again
+  recognised on session creation
+
+  A regression in 0.22.0 caused geckodriver to recognise `desired`
+  and `required` instead of the correct `desiredCapabilities`
+  and `requiredCapabilities`.  This will have caused significant
+  problems for users who relied on this legacy Selenium-style
+  session creation pattern.
+
+  Do however note that support for Selenium-styled new session
+  requests is temporary and that this will be removed sometime
+  before the 1.0 release.
+
+- `duration` field made optional on pause actions
+
+  A regression in 0.22.0 caused the pause action primitive to
+  require a `duration` field.  This has now been fixed so that
+  pauses in action chains can be achieved with the default duration.
+
+- Log level formatted to expected Marionette input
+
+  A regression in 0.22.0 caused the log level to be improperly
+  formatted when using Firefox pre-releases.  This is now fixed so
+  that the requested log level is correctly interpreted by Marionette.
+
+- `temporary` field on addon installation made optional
+
+  A regression in 0.22.0 caused the `temporary` field for POST
+  `/session/{session id}/moz/addon/install` to be mandatory.  This has
+  now been fixed so that an addon is installed permanently by default.
+
+- SHA1s in version information uses limited number of characters
+
+  The SHA1 used in `--version` when building geckodriver from a
+  git repository is now limited to 12 characters, as it is when
+  building from an hg checkout.  This ensures reproducible builds.
 
 
 0.22.0 (2018-09-15)
@@ -75,7 +122,7 @@ to the standard.
   also through a new `moz:geckodriverVersion` field in the matched
   capabilities.
 
-- The webdriver library has been updated to version 0.37.0.
+- [webdriver crate] upgraded to 0.37.0.
 
 ### Fixed
 

@@ -60,6 +60,10 @@ add_test(function test_ogg() {
 });
 
 function getButtonByAttribute(aName, aValue) {
+  if (video.openOrClosedShadowRoot) {
+    return video.openOrClosedShadowRoot.firstChild.querySelector(`[${aName}="${aValue}"]`);
+  }
+
   let kids = InspectorUtils.getChildrenForNode(video, true);
   let videocontrols = kids[1];
   return contentDocument.getAnonymousElementByAttribute(videocontrols, aName, aValue);

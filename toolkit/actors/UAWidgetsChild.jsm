@@ -26,6 +26,10 @@ class UAWidgetsChild extends ActorChild {
         this.teardownWidget(aEvent.target);
         break;
     }
+
+    // In case we are a nested frame, prevent the message manager of the
+    // parent frame from receving the event.
+    aEvent.stopPropagation();
   }
 
   setupOrNotifyWidget(aElement) {

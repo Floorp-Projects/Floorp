@@ -61,8 +61,11 @@ class App extends PureComponent {
       { messages: messageContexts },
       dom.div(
         { className: "app" },
-        Sidebar({ dispatch, runtimes, selectedPage }),
-        this.getSelectedPageComponent()
+        Sidebar({ className: "app__sidebar", dispatch, runtimes, selectedPage }),
+        dom.main(
+          { className: "app__content" },
+          this.getSelectedPageComponent()
+        )
       )
     );
   }

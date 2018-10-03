@@ -801,85 +801,6 @@ function synthesizeAndWaitNativeMouseMove(aTarget, aOffsetX, aOffsetY,
   return eventReceivedPromise;
 }
 
-function _computeKeyCodeFromChar(aChar)
-{
-  if (aChar.length != 1) {
-    return 0;
-  }
-  var KeyEvent = _getKeyboardEvent();
-  if (aChar >= 'a' && aChar <= 'z') {
-    return KeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'a'.charCodeAt(0);
-  }
-  if (aChar >= 'A' && aChar <= 'Z') {
-    return KeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'A'.charCodeAt(0);
-  }
-  if (aChar >= '0' && aChar <= '9') {
-    return KeyEvent.DOM_VK_0 + aChar.charCodeAt(0) - '0'.charCodeAt(0);
-  }
-  // returns US keyboard layout's keycode
-  switch (aChar) {
-    case '~':
-    case '`':
-      return KeyEvent.DOM_VK_BACK_QUOTE;
-    case '!':
-      return KeyEvent.DOM_VK_1;
-    case '@':
-      return KeyEvent.DOM_VK_2;
-    case '#':
-      return KeyEvent.DOM_VK_3;
-    case '$':
-      return KeyEvent.DOM_VK_4;
-    case '%':
-      return KeyEvent.DOM_VK_5;
-    case '^':
-      return KeyEvent.DOM_VK_6;
-    case '&':
-      return KeyEvent.DOM_VK_7;
-    case '*':
-      return KeyEvent.DOM_VK_8;
-    case '(':
-      return KeyEvent.DOM_VK_9;
-    case ')':
-      return KeyEvent.DOM_VK_0;
-    case '-':
-    case '_':
-      return KeyEvent.DOM_VK_SUBTRACT;
-    case '+':
-    case '=':
-      return KeyEvent.DOM_VK_EQUALS;
-    case '{':
-    case '[':
-      return KeyEvent.DOM_VK_OPEN_BRACKET;
-    case '}':
-    case ']':
-      return KeyEvent.DOM_VK_CLOSE_BRACKET;
-    case '|':
-    case '\\':
-      return KeyEvent.DOM_VK_BACK_SLASH;
-    case ':':
-    case ';':
-      return KeyEvent.DOM_VK_SEMICOLON;
-    case '\'':
-    case '"':
-      return KeyEvent.DOM_VK_QUOTE;
-    case '<':
-    case ',':
-      return KeyEvent.DOM_VK_COMMA;
-    case '>':
-    case '.':
-      return KeyEvent.DOM_VK_PERIOD;
-    case '?':
-    case '/':
-      return KeyEvent.DOM_VK_SLASH;
-    case '\n':
-      return KeyEvent.DOM_VK_RETURN;
-    case ' ':
-      return KeyEvent.DOM_VK_SPACE;
-    default:
-      return 0;
-  }
-}
-
 /**
  * Synthesize a key event. It is targeted at whatever would be targeted by an
  * actual keypress by the user, typically the focused element.
@@ -934,7 +855,7 @@ function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback)
   }
   var KeyboardEvent = _getKeyboardEvent(aWindow);
   var modifiers = _emulateToActivateModifiers(TIP, event, aWindow);
-  var keyEventDict = _createKeyboardEventDictionary(aKey, event, aWindow);
+  var keyEventDict = _createKeyboardEventDictionary(aKey, event, TIP, aWindow);
   var keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
   var dispatchKeydown =
     !("type" in event) || event.type === "keydown" || !event.type;
@@ -973,7 +894,7 @@ function synthesizeAndWaitKey(aKey, aEvent, aWindow = window,
 {
   let browser = gBrowser.selectedTab.linkedBrowser;
   let mm = browser.messageManager;
-  let keyCode = _createKeyboardEventDictionary(aKey, aEvent, aWindow).dictionary.keyCode;
+  let keyCode = _createKeyboardEventDictionary(aKey, aEvent, null, aWindow).dictionary.keyCode;
   let ContentTask = _EU_Cu.import("resource://testing-common/ContentTask.jsm", null).ContentTask;
 
   let keyRegisteredPromise = new Promise(resolve => {
@@ -1518,279 +1439,26 @@ function _guessKeyNameFromKeyCode(aKeyCode, aWindow = window)
   }
 }
 
-function _guessCodeFromKeyName(aKeyName, aLocation, aWindow = window)
-{
-  var KeyboardEvent = _getKeyboardEvent(aWindow);
-  if (aLocation === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
-    switch (aKeyName) {
-      case "Insert":
-        return _EU_isMac(aWindow) ? "" : "Numpad0";
-      case "End":
-        return _EU_isMac(aWindow) ? "" : "Numpad1";
-      case "ArrowDown":
-        return _EU_isMac(aWindow) ? "" : "Numpad2";
-      case "PageDown":
-        return _EU_isMac(aWindow) ? "" : "Numpad3";
-      case "ArrowLeft":
-        return _EU_isMac(aWindow) ? "" : "Numpad4";
-      case "Clear":
-        return !_EU_isWin(aWindow) ? "" : "Numpad5";
-      case "ArrowRight":
-        return _EU_isMac(aWindow) ? "" : "Numpad6";
-      case "Home":
-        return _EU_isMac(aWindow) ? "" : "Numpad7";
-      case "ArrowUp":
-        return _EU_isMac(aWindow) ? "" : "Numpad8";
-      case "PageUp":
-        return _EU_isMac(aWindow) ? "" : "Numpad9";
-      case "Delete":
-        return _EU_isMac(aWindow) ? "" : "NumpadDecimal";
-      case "Enter":
-        return "NumpadEnter";
-      case "=":
-        return "NumpadEqual";
-      case "+":
-        return "NumpadAdd";
-      case "-":
-        return "NumpadSubtract";
-      case "*":
-        return "NumpadMultiply";
-      case "/":
-        return "NumpadDivide";
-      case "0":
-      case "1":
-      case "2":
-      case "3":
-      case "4":
-      case "5":
-      case "6":
-      case "7":
-      case "8":
-      case "9":
-        return "Numpad" + aKeyName;
-      default:
-        // FYI: NumLock (Clear on macOS) should be DOM_KEY_LOCATION_STANDARD.
-        return "";
-    }
-  }
-
-  if (aLocation === undefined ||
-      aLocation === KeyboardEvent.DOM_KEY_LOCATION_LEFT ||
-      aLocation === KeyboardEvent.DOM_KEY_LOCATION_RIGHT) {
-    function getLeftOrRightCode(aKey)
-    {
-      if (aLocation === undefined) {
-        return aKey + "Left";
-      }
-      if (aLocation === KeyboardEvent.DOM_KEY_LOCATION_LEFT) {
-        return aKey + "Left";
-      }
-      if (aLocation === KeyboardEvent.DOM_KEY_LOCATION_RIGHT) {
-        return aKey + "Right";
-      }
-      // If location value is illegal for left or right key, perhaps,
-      // it tries to emulate a virtual keyboard's event or something odd.
-      return "";
-    }
-    switch (aKeyName) {
-      case "Alt":
-      case "Control":
-      case "Shift":
-        return getLeftOrRightCode(aKeyName);
-      case "Meta":
-        if (_EU_isWin(aWindow)) {
-          return "";
-        }
-        if (_EU_isAndroid(aWindow) || _EU_isMac(aWindow)) {
-          return getLeftOrRightCode("OS");
-        }
-        // On Linux, Alt + Shift is "Meta".
-        return getLeftOrRightCode("Alt");
-      case "OS": // bug 1232918
-        if (_EU_isAndroid(aWindow) || _EU_isMac(aWindow)) {
-          return "";
-        }
-        return getLeftOrRightCode("OS");
-    }
-  }
-
-  if (aLocation === undefined || aLocation === 0) {
-    switch (aKeyName) {
-      // Same as key name.
-      case "ArrowDown":
-      case "ArrowLeft":
-      case "ArrowRight":
-      case "ArrowUp":
-      case "Backspace":
-      case "CapsLock":
-      case "ContextMenu":
-      case "Delete":
-      case "End":
-      case "Enter":
-      case "Escape":
-      case "F1":
-      case "F2":
-      case "F3":
-      case "F4":
-      case "F5":
-      case "F6":
-      case "F7":
-      case "F8":
-      case "F9":
-      case "F10":
-      case "F11":
-      case "F12":
-      case "F13":
-      case "F14":
-      case "F15":
-      case "F16":
-      case "F17":
-      case "F18":
-      case "F19":
-      case "F20":
-      case "Home":
-      case "PageDown":
-      case "PageUp":
-      case "Tab":
-        return aKeyName;
-      // Same as key name but not available only on macOS.
-      case "BrowserBack":
-      case "BrowserFavorites":
-      case "BrowserForward":
-      case "BrowserRefresh":
-      case "BrowserSearch":
-      case "BrowserStop":
-      case "F21":
-      case "F22":
-      case "F23":
-      case "F24":
-      case "Insert":
-      case "MediaPlayPause":
-      case "MediaStop":
-      case "MediaTrackNext":
-      case "MediaTrackPrevious":
-      case "Pause":
-      case "PrintScreen":
-      case "ScrollLock":
-        return _EU_isMac(aWindow) ? "" : aKeyName;
-      // Same as key name but available only on macOS.
-      case "Clear":
-      case "Fn":
-        return _EU_isMac(aWindow) ? aKeyName : "";
-      // Same as key name but not available only on Windows.
-      case "Help":
-        return _EU_isMac(aWindow) ? "" : aKeyName;
-      // Same as key name but available only on Windows and Linux.
-      case "BrowserHome":
-        return _EU_isWin(aWindow) || _EU_isLinux(aWindow) ? aKeyName : "";
-      // Same as key name but available only on Linux and Android.
-      case "Eject":
-      case "WakeUp":
-        return _EU_isLinux(aWindow) || _EU_isAndroid(aWindow) ? aKeyName : "";
-      // Special cases.
-      case "Break":
-        return !_EU_isMac(aWindow) ? "Pause" : "";
-      case "AudioVolumeDown":
-      case "AudioVolumeMute":
-      case "AudioVolumeUp":
-        return aKeyName.substr("Audio".length); // bug 1272579
-      case "LaunchApplication1":
-        return !_EU_isMac(aWindow) ? "LaunchApp1" : "";
-      case "LaunchApplication2":
-        return _EU_isWin(aWindow) || _EU_isLinux(aWindow) ? "LaunchApp2" : "";
-      // TODO: this function and synthesizeKey() should be able to take
-      //       keyboard layout name optionally.
-      default:
-        if (aKeyName.length != 1) {
-          return "";
-        }
-        if (aKeyName.charCodeAt(0) >= "A".charCodeAt(0) &&
-            aKeyName.charCodeAt(0) <= "Z".charCodeAt(0)) {
-          return "Key" + aKeyName;
-        }
-        if (aKeyName.charCodeAt(0) >= "a".charCodeAt(0) &&
-            aKeyName.charCodeAt(0) <= "z".charCodeAt(0)) {
-          return "Key" + aKeyName.toUpperCase();
-        }
-        if (aKeyName.charCodeAt(0) >= "0".charCodeAt(0) &&
-            aKeyName.charCodeAt(0) <= "9".charCodeAt(0)) {
-          return "Digit" + aKeyName;
-        }
-        switch (aKeyName) {
-          case " ":
-            return "Space";
-          case "`":
-          case "~":
-            return "Backquote";
-          case "\\":
-          case "|":
-            return "Backslash";
-          case "[":
-          case "{":
-            return "BracketLeft";
-          case "]":
-          case "}":
-            return "BracketRight";
-          case ",":
-          case "<":
-            return "Comma";
-          case ")":
-            return "Digit0";
-          case "!":
-            return "Digit1";
-          case "@":
-            return "Digit2";
-          case "#":
-            return "Digit3";
-          case "$":
-            return "Digit4";
-          case "%":
-            return "Digit5";
-          case "^":
-            return "Digit6";
-          case "&":
-            return "Digit7";
-          case "*":
-            return "Digit8";
-          case "(":
-            return "Digit9";
-          case "=":
-          case "+":
-            return "Equal";
-          case "-":
-          case "_":
-            return "Minus";
-          case ".":
-          case ">":
-            return "Period";
-          case "'":
-          case "\"":
-            return "Quote";
-          case ";":
-          case ":":
-            return "Semicolon";
-          case "/":
-          case "?":
-            return "Slash";
-          default:
-            return "";
-        }
-    }
-  }
-
-  return "";
-}
-
-function _createKeyboardEventDictionary(aKey, aKeyEvent, aWindow = window) {
+function _createKeyboardEventDictionary(aKey, aKeyEvent,
+                                        aTIP = null,
+                                        aWindow = window) {
   var result = { dictionary: null, flags: 0 };
   var keyCodeIsDefined = "keyCode" in aKeyEvent;
   var keyCode =
     (keyCodeIsDefined && aKeyEvent.keyCode >= 0 && aKeyEvent.keyCode <= 255) ?
       aKeyEvent.keyCode : 0;
   var keyName = "Unidentified";
+  var code = aKeyEvent.code;
+  if (!aTIP) {
+    aTIP = _getTIP(aWindow);
+  }
   if (aKey.indexOf("KEY_") == 0) {
     keyName = aKey.substr("KEY_".length);
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
+    if (code === undefined) {
+      code =
+        aTIP.computeCodeValueOfNonPrintableKey(keyName, aKeyEvent.location);
+    }
   } else if (aKey.indexOf("VK_") == 0) {
     keyCode = _getKeyboardEvent(aWindow)["DOM_" + aKey];
     if (!keyCode) {
@@ -1798,19 +1466,26 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent, aWindow = window) {
     }
     keyName = _guessKeyNameFromKeyCode(keyCode, aWindow);
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
+    if (code === undefined) {
+      code =
+        aTIP.computeCodeValueOfNonPrintableKey(keyName, aKeyEvent.location);
+    }
   } else if (aKey != "") {
     keyName = aKey;
     if (!keyCodeIsDefined) {
-      keyCode = _computeKeyCodeFromChar(aKey.charAt(0));
+      keyCode =
+        aTIP.guessKeyCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+               aKey, aKeyEvent.location);
     }
     if (!keyCode) {
       result.flags |= _EU_Ci.nsITextInputProcessor.KEY_KEEP_KEYCODE_ZERO;
     }
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
+    if (code === undefined) {
+      code = aTIP.guessCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+               keyName, aKeyEvent.location);
+    }
   }
-  var code = "code" in aKeyEvent ?
-    aKeyEvent.code :
-    _guessCodeFromKeyName(keyName, aKeyEvent.location, aWindow);
   var locationIsDefined = "location" in aKeyEvent;
   if (locationIsDefined && aKeyEvent.location === 0) {
     result.flags |= _EU_Ci.nsITextInputProcessor.KEY_KEEP_KEY_LOCATION_STANDARD;
@@ -1979,14 +1654,15 @@ function synthesizeComposition(aEvent, aWindow = window, aCallback)
   var keyEvent = null;
   if (aEvent.key && typeof aEvent.key.key === "string") {
     keyEventDict =
-      _createKeyboardEventDictionary(aEvent.key.key, aEvent.key, aWindow);
+      _createKeyboardEventDictionary(aEvent.key.key, aEvent.key, TIP, aWindow);
     keyEvent = new KeyboardEvent(aEvent.key.type === "keydown" ?
                                    "keydown" :
                                    aEvent.key.type === "keyup" ?
                                      "keyup" : "",
                                  keyEventDict.dictionary)
   } else if (aEvent.key === undefined) {
-    keyEventDict = _createKeyboardEventDictionary("KEY_Process", {}, aWindow);
+    keyEventDict =
+      _createKeyboardEventDictionary("KEY_Process", {}, TIP, aWindow);
     keyEvent = new KeyboardEvent("", keyEventDict.dictionary)
   }
   try {
@@ -2115,14 +1791,16 @@ function synthesizeCompositionChange(aEvent, aWindow = window, aCallback)
     var keyEvent = null;
     if (aEvent.key && typeof aEvent.key.key === "string") {
       keyEventDict =
-        _createKeyboardEventDictionary(aEvent.key.key, aEvent.key, aWindow);
+        _createKeyboardEventDictionary(aEvent.key.key, aEvent.key,
+                                       TIP, aWindow);
       keyEvent = new KeyboardEvent(aEvent.key.type === "keydown" ?
                                      "keydown" :
                                      aEvent.key.type === "keyup" ?
                                        "keyup" : "",
                                    keyEventDict.dictionary)
     } else if (aEvent.key === undefined) {
-      keyEventDict = _createKeyboardEventDictionary("KEY_Process", {}, aWindow);
+      keyEventDict =
+        _createKeyboardEventDictionary("KEY_Process", {}, TIP, aWindow);
       keyEvent = new KeyboardEvent("", keyEventDict.dictionary)
     }
     TIP.flushPendingComposition(keyEvent, keyEventDict.flags);

@@ -446,7 +446,7 @@ this.VideoControlsImplPageWidget = class {
           case "play":
             this.setPlayButtonState(false);
             this.setupStatusFader();
-            if (!this._triggeredByControls && this.dynamicControls && this.videocontrols.isTouchControls) {
+            if (!this._triggeredByControls && this.dynamicControls && this.isTouchControls) {
               this.startFadeOut(this.controlBar);
             }
             if (!this._triggeredByControls) {
@@ -1954,8 +1954,8 @@ this.VideoControlsImplPageWidget = class {
         }
 
         // TODO: Switch to touch controls on touch-based desktops (bug 1447547)
-        this.videocontrols.isTouchControls = isMobile;
-        if (this.videocontrols.isTouchControls) {
+        this.isTouchControls = isMobile;
+        if (this.isTouchControls) {
           this.controlsContainer.classList.add("touch");
         }
 
@@ -2034,8 +2034,8 @@ this.VideoControlsImplPageWidget = class {
 
         for (let { el, type, nonTouchOnly = false, touchOnly = false,
                    mozSystemGroup = true, capture = false } of this.controlsEvents) {
-          if ((this.videocontrols.isTouchControls && nonTouchOnly) ||
-              (!this.videocontrols.isTouchControls && touchOnly)) {
+          if ((this.isTouchControls && nonTouchOnly) ||
+              (!this.isTouchControls && touchOnly)) {
             continue;
           }
           el.addEventListener(type, this, { mozSystemGroup, capture });
@@ -2050,10 +2050,6 @@ this.VideoControlsImplPageWidget = class {
       video: null,
       controlsTimer: null,
       controlsTimeout: 5000,
-
-      get Utils() {
-        return this.videocontrols.Utils;
-      },
 
       get visible() {
         return !this.Utils.controlBar.hasAttribute("fadeout") &&
@@ -2141,9 +2137,12 @@ this.VideoControlsImplPageWidget = class {
         this.clearTimer();
       },
 
-      init(shadowRoot) {
+      init(shadowRoot, utils) {
+        this.Utils = utils;
         this.videocontrols = this.Utils.videocontrols;
         this.video = this.Utils.video;
+        this.document = this.videocontrols.ownerDocument;
+        this.window = this.document.defaultView;
         this.shadowRoot = shadowRoot;
 
         this.controlsEvents = [
@@ -2180,8 +2179,8 @@ this.VideoControlsImplPageWidget = class {
     };
 
     this.Utils.init(this.shadowRoot);
-    if (this.isTouchControls) {
-      this.TouchUtils.init(this.shadowRoot);
+    if (this.Utils.isTouchControls) {
+      this.TouchUtils.init(this.shadowRoot, this.Utils);
     }
     this.shadowRoot.firstChild.dispatchEvent(new this.window.CustomEvent("VideoBindingAttached"));
 
@@ -2269,19 +2268,19 @@ this.VideoControlsImplPageWidget = class {
 
   _setupEventListeners() {
     this.shadowRoot.firstChild.addEventListener("mouseover", event => {
-      if (!this.isTouchControls) {
+      if (!this.Utils.isTouchControls) {
         this.Utils.onMouseInOut(event);
       }
     });
 
     this.shadowRoot.firstChild.addEventListener("mouseout", event => {
-      if (!this.isTouchControls) {
+      if (!this.Utils.isTouchControls) {
         this.Utils.onMouseInOut(event);
       }
     });
 
     this.shadowRoot.firstChild.addEventListener("mousemove", event => {
-      if (!this.isTouchControls) {
+      if (!this.Utils.isTouchControls) {
         this.Utils.onMouseMove(event);
       }
     });
@@ -2372,8 +2371,8 @@ this.NoControlsImplPageWidget = class {
         }
 
         // TODO: Switch to touch controls on touch-based desktops (bug 1447547)
-        this.videocontrols.isTouchControls = isMobile;
-        if (this.videocontrols.isTouchControls) {
+        this.isTouchControls = isMobile;
+        if (this.isTouchControls) {
           this.controlsContainer.classList.add("touch");
         }
 
