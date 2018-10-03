@@ -97,7 +97,7 @@ private:
 
   friend class SharedSurfacesAnimation;
 
-  class ImageKeyData final {
+  class ImageKeyData {
   public:
     ImageKeyData(WebRenderLayerManager* aManager,
                  const wr::ImageKey& aImageKey);
@@ -120,7 +120,7 @@ private:
     wr::ImageKey mImageKey;
   };
 
-  class SharedUserData {
+  class SharedUserData final {
   public:
     SharedUserData()
       : mShared(false)
@@ -188,11 +188,15 @@ private:
  * This helper class owns a single ImageKey which will map to different external
  * image IDs representing different frames in an animation.
  */
-class SharedSurfacesAnimation final : private SharedSurfacesChild::SharedUserData
+class SharedSurfacesAnimation final
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedSurfacesAnimation)
+
   SharedSurfacesAnimation()
   { }
+
+  void Destroy();
 
   /**
    * Set the animation to display the given frame.
@@ -235,6 +239,14 @@ public:
    * image keys are already invalid.
    */
   void Invalidate(WebRenderLayerManager* aManager);
+
+private:
+  ~SharedSurfacesAnimation();
+
+  typedef SharedSurfacesChild::ImageKeyData ImageKeyData;
+
+  AutoTArray<ImageKeyData, 1> mKeys;
+  wr::ExternalImageId mId;
 };
 
 } // namespace layers
