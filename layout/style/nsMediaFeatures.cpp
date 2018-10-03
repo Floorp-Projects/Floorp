@@ -316,117 +316,136 @@ nsMediaFeatures::InitSystemMetrics()
   int32_t metricResult =
     LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollArrowStyle);
   if (metricResult & LookAndFeel::eScrollArrow_StartBackward) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_scrollbar_start_backward);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_start_backward);
   }
   if (metricResult & LookAndFeel::eScrollArrow_StartForward) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_scrollbar_start_forward);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_start_forward);
   }
   if (metricResult & LookAndFeel::eScrollArrow_EndBackward) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_scrollbar_end_backward);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_end_backward);
   }
   if (metricResult & LookAndFeel::eScrollArrow_EndForward) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_scrollbar_end_forward);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_end_forward);
   }
 
   metricResult =
     LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollSliderStyle);
   if (metricResult != LookAndFeel::eScrollThumbStyle_Normal) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_scrollbar_thumb_proportional);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_scrollbar_thumb_proportional);
   }
 
   metricResult =
     LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
   if (metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_overlay_scrollbars);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_overlay_scrollbars);
   }
 
   metricResult =
     LookAndFeel::GetInt(LookAndFeel::eIntID_MenuBarDrag);
   if (metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_menubar_drag);
+    sSystemMetrics->AppendElement((nsStaticAtom*)nsGkAtoms::_moz_menubar_drag);
   }
 
   nsresult rv =
     LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsDefaultTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_windows_default_theme);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_windows_default_theme);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacGraphiteTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_mac_graphite_theme);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_mac_graphite_theme);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_MacYosemiteTheme, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_mac_yosemite_theme);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_mac_yosemite_theme);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsAccentColorInTitlebar, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_windows_accent_color_in_titlebar);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_windows_accent_color_in_titlebar);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_DWMCompositor, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_windows_compositor);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_windows_compositor);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsGlass, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_windows_glass);
+    sSystemMetrics->AppendElement((nsStaticAtom*)nsGkAtoms::_moz_windows_glass);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_WindowsClassic, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_windows_classic);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_windows_classic);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_TouchEnabled, &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_touch_enabled);
+    sSystemMetrics->AppendElement((nsStaticAtom*)nsGkAtoms::_moz_touch_enabled);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_SwipeAnimationEnabled,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_swipe_animation_enabled);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_swipe_animation_enabled);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDAvailable,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_gtk_csd_available);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_available);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDTransparentBackground,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_gtk_csd_transparent_background);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_transparent_background);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMinimizeButton,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_gtk_csd_minimize_button);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_minimize_button);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDMaximizeButton,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_gtk_csd_maximize_button);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_maximize_button);
   }
 
   rv = LookAndFeel::GetInt(LookAndFeel::eIntID_GTKCSDCloseButton,
                            &metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_gtk_csd_close_button);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_close_button);
   }
 
   metricResult =
     LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme);
   if (metricResult) {
-    sSystemMetrics->AppendElement(nsGkAtoms::_moz_system_dark_theme);
+    sSystemMetrics->AppendElement(
+      (nsStaticAtom*)nsGkAtoms::_moz_system_dark_theme);
   }
 }
 
