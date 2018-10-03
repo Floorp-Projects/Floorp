@@ -113,6 +113,7 @@ clang_checkers:
   - name: readability-container-size-empty
   - name: readability-delete-null-pointer
   - name: readability-else-after-return
+  - name: readability-implicit-bool-conversion
   - name: readability-inconsistent-declaration-parameter-name
   - name: readability-misleading-indentation
   - name: readability-non-const-parameter
