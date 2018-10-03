@@ -2229,7 +2229,7 @@ Gecko_CSSValue_SetPixelLength(nsCSSValueBorrowedMut aCSSValue, float aLen)
 void
 Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut aCSSValue, nsStyleCoord::CalcValue aCalc)
 {
-  aCSSValue->SetCalcValue(&aCalc);
+  aCSSValue->SetCalcValue(aCalc);
 }
 
 nsStyleCoord::CalcValue
