@@ -2366,29 +2366,6 @@ Gecko_CSSValue_Drop(nsCSSValueBorrowedMut aCSSValue)
 }
 
 void
-Gecko_CSSValue_SetFontStretch(nsCSSValueBorrowedMut aCSSValue,
-                              float stretch)
-{
-  aCSSValue->SetFontStretch(
-    FontStretch(std::min(stretch * 100.0f, float(FontStretch::kMax))));
-}
-
-// FIXME(emilio): This function should probably have `Oblique` in its name.
-void
-Gecko_CSSValue_SetFontSlantStyle(nsCSSValueBorrowedMut aCSSValue,
-                                 float aAngle)
-{
-  aCSSValue->SetFontSlantStyle(mozilla::FontSlantStyle::Oblique(aAngle));
-}
-
-void
-Gecko_CSSValue_SetFontWeight(nsCSSValueBorrowedMut aCSSValue,
-                             float weight)
-{
-  aCSSValue->SetFontWeight(mozilla::FontWeight(weight));
-}
-
-void
 Gecko_nsStyleFont_SetLang(nsStyleFont* aFont, nsAtom* aAtom)
 {
   aFont->mLanguage = dont_AddRef(aAtom);

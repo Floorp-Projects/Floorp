@@ -51,7 +51,7 @@ protected:
   virtual ~nsFontFaceLoader();
 
   // helper method for determining the font-display value
-  uint8_t GetFontDisplay();
+  mozilla::StyleFontDisplay GetFontDisplay();
 
 private:
   RefPtr<gfxUserFontEntry>  mUserFontEntry;
