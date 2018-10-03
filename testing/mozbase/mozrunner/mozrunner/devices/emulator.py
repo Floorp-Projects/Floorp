@@ -142,7 +142,7 @@ class BaseEmulator(Device):
         self.connect()
 
     def _get_online_devices(self):
-        adbhost = ADBHost()
+        adbhost = ADBHost(adb=self.app_ctx.adb)
         return [d['device_serial'] for d in adbhost.devices() if d['state'] != 'offline' if
                 d['device_serial'].startswith('emulator')]
 

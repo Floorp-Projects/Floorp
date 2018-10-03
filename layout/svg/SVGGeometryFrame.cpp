@@ -643,7 +643,7 @@ SVGGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
   if ((aFlags & nsSVGUtils::eBBoxIncludeMarkers) != 0 &&
       element->IsMarkable()) {
     nsSVGMarkerFrame* markerFrames[nsSVGMark::eTypeCount];
-    if (SVGObserverUtils::GetMarkerFrames(this, &markerFrames)) {
+    if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
       nsTArray<nsSVGMark> marks;
       element->GetMarkPoints(&marks);
       if (uint32_t num = marks.Length()) {
@@ -808,7 +808,7 @@ SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
 
   if (element->IsMarkable()) {
     nsSVGMarkerFrame* markerFrames[nsSVGMark::eTypeCount];
-    if (SVGObserverUtils::GetMarkerFrames(this, &markerFrames)) {
+    if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
       nsTArray<nsSVGMark> marks;
       element->GetMarkPoints(&marks);
       if (uint32_t num = marks.Length()) {
