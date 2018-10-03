@@ -4,12 +4,17 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionPreferencesManager",
                                "resource://gre/modules/ExtensionPreferencesManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
                                "resource:///modules/ExtensionControlledPopup.jsm");
+
+var {
+  IconDetails,
+} = ExtensionParent;
 
 const DEFAULT_SEARCH_STORE_TYPE = "default_search";
 const DEFAULT_SEARCH_SETTING_NAME = "defaultSearch";
@@ -278,19 +283,31 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         Services.search.removeEngine(engines[0]);
       }
     }
+
+    let icons = extension.manifest.icons;
+    let iconURL = searchProvider.favicon_url ||
+                  (icons && extension.baseURI.resolve(IconDetails.getPreferredIcon(icons).icon));
+    let iconList = [];
+    if (icons) {
+      iconList = Object.entries(icons).map(icon => {
+        return {width: icon[0], height: icon[0],
+                url: extension.baseURI.resolve(icon[1])};
+      });
+    }
     try {
       let params = {
         template: searchProvider.search_url,
-        iconURL: searchProvider.favicon_url,
+        searchPostParams: searchProvider.search_url_post_params,
+        iconURL,
+        icons: iconList,
         alias: searchProvider.keyword,
         extensionID: extension.id,
+        isBuiltIn: extension.isPrivileged,
         suggestURL: searchProvider.suggest_url,
+        suggestPostParams: searchProvider.suggest_url_post_params,
         queryCharset: "UTF-8",
+        mozParams: searchProvider.params,
       };
-      if (searchProvider.search_url_post_params) {
-        params.method = "POST";
-        params.postData = searchProvider.search_url_post_params;
-      }
       Services.search.addEngineWithDetails(searchProvider.name.trim(), params);
       await ExtensionSettingsStore.addSetting(
         extension.id, DEFAULT_SEARCH_STORE_TYPE, ENGINE_ADDED_SETTING_NAME,
