@@ -230,13 +230,13 @@
           },
           {
             "name": "setPage",
-            "unsupported": true,
             "type": "function",
+            "async": true,
             "description": "Sets an HTML page to be displayed in the sidebar pane.",
             "parameters": [
               {
                 "name": "path",
-                "type": "string",
+                "$ref": "manifest.ExtensionURL",
                 "description": "Relative path of an extension page to display within the sidebar."
               }
             ]

@@ -2,6 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
+
 ChromeUtils.defineModuleGetter(this, "ExtensionChildDevToolsUtils",
                                "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
 
@@ -194,6 +198,23 @@ class ChildDevToolsInspectorSidebar extends ExtensionCommon.EventEmitter {
   api() {
     const {context, id} = this;
 
+    let extensionURL = new URL("/", context.uri.spec);
+
+    // This is currently needed by sidebar.setPage because API objects are not automatically wrapped
+    // by the API Schema validations and so the ExtensionURL type used in the JSON schema
+    // doesn't have any effect on the parameter received by the setPage API method.
+    function resolveExtensionURL(url) {
+      let sidebarPageURL = new URL(url, context.uri.spec);
+
+      if (extensionURL.protocol !== sidebarPageURL.protocol ||
+          extensionURL.host !== sidebarPageURL.host) {
+        throw new context.cloneScope.Error(
+          `Invalid sidebar URL: ${sidebarPageURL.href} is not a valid extension URL`);
+      }
+
+      return sidebarPageURL.href;
+    }
+
     return {
       onShown: new EventManager({
         context,
@@ -222,6 +243,15 @@ class ChildDevToolsInspectorSidebar extends ExtensionCommon.EventEmitter {
           };
         },
       }).api(),
+
+      setPage(extensionPageURL) {
+        let resolvedSidebarURL = resolveExtensionURL(extensionPageURL);
+
+        return context.childManager.callParentAsyncFunction(
+          "devtools.panels.elements.Sidebar.setPage",
+          [id, resolvedSidebarURL]
+        );
+      },
 
       setObject(jsonObject, rootTitle) {
         return context.cloneScope.Promise.resolve().then(() => {

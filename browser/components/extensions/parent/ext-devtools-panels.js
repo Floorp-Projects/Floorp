@@ -4,17 +4,93 @@
 
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
-                               "resource://gre/modules/E10SUtils.jsm");
-
 var {
   IconDetails,
   watchExtensionProxyContextLoad,
 } = ExtensionParent;
 
 var {
-  promiseEvent,
+  promiseDocumentLoaded,
 } = ExtensionUtils;
+
+const WEBEXT_PANELS_URL = "chrome://browser/content/webext-panels.xul";
+
+class BaseDevToolsPanel {
+  constructor(context, panelOptions) {
+    const toolbox = context.devToolsToolbox;
+    if (!toolbox) {
+      // This should never happen when this constructor is called with a valid
+      // devtools extension context.
+      throw Error("Missing mandatory toolbox");
+    }
+
+    this.context = context;
+    this.extension = context.extension;
+    this.toolbox = toolbox;
+    this.viewType = "devtools_panel";
+    this.panelOptions = panelOptions;
+    this.id = panelOptions.id;
+
+    this.unwatchExtensionProxyContextLoad = null;
+
+    // References to the panel browser XUL element and the toolbox window global which
+    // contains the devtools panel UI.
+    this.browser = null;
+    this.browserContainerWindow = null;
+  }
+
+  async createBrowserElement(window) {
+    const {toolbox} = this;
+    const {extension} = this.context;
+    const {url} = this.panelOptions || {url: "about:blank"};
+
+    this.browser = await window.getBrowser({
+      extension,
+      extensionUrl: url,
+      browserStyle: false,
+      viewType: "devtools_panel",
+      browserInsertedData: {
+        devtoolsToolboxInfo: {
+          toolboxPanelId: this.id,
+          inspectedWindowTabId: getTargetTabIdForToolbox(toolbox),
+        },
+      },
+    });
+
+    let hasTopLevelContext = false;
+
+    // Listening to new proxy contexts.
+    this.unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
+      // Keep track of the toolbox and target associated to the context, which is
+      // needed by the API methods implementation.
+      context.devToolsToolbox = toolbox;
+
+      if (!hasTopLevelContext) {
+        hasTopLevelContext = true;
+
+        // Resolve the promise when the root devtools_panel context has been created.
+        if (this._resolveTopLevelContext) {
+          this._resolveTopLevelContext(context);
+        }
+      }
+    });
+
+    this.browser.loadURI(url, {triggeringPrincipal: this.context.principal});
+  }
+
+  destroyBrowserElement() {
+    const {browser, unwatchExtensionProxyContextLoad} = this;
+    if (unwatchExtensionProxyContextLoad) {
+      this.unwatchExtensionProxyContextLoad = null;
+      unwatchExtensionProxyContextLoad();
+    }
+
+    if (browser) {
+      browser.remove();
+      this.browser = null;
+    }
+  }
+}
 
 /**
  * Represents an addon devtools panel in the main process.
@@ -31,42 +107,22 @@ var {
  * @param {string} options.url
  *        The url of the addon devtools panel, relative to the extension base URL.
  */
-class ParentDevToolsPanel {
+class ParentDevToolsPanel extends BaseDevToolsPanel {
   constructor(context, panelOptions) {
-    const toolbox = context.devToolsToolbox;
-    if (!toolbox) {
-      // This should never happen when this constructor is called with a valid
-      // devtools extension context.
-      throw Error("Missing mandatory toolbox");
-    }
-
-    this.extension = context.extension;
-    this.viewType = "devtools_panel";
+    super(context, panelOptions);
 
     this.visible = false;
-    this.toolbox = toolbox;
-
-    this.context = context;
-
-    this.panelOptions = panelOptions;
+    this.destroyed = false;
 
     this.context.callOnClose(this);
-
-    this.id = this.panelOptions.id;
 
     this.onToolboxPanelSelect = this.onToolboxPanelSelect.bind(this);
     this.onToolboxHostWillChange = this.onToolboxHostWillChange.bind(this);
     this.onToolboxHostChanged = this.onToolboxHostChanged.bind(this);
 
-    this.unwatchExtensionProxyContextLoad = null;
     this.waitTopLevelContext = new Promise(resolve => {
       this._resolveTopLevelContext = resolve;
     });
-
-    // References to the panel browser XUL element and the toolbox window global which
-    // contains the devtools panel UI.
-    this.browser = null;
-    this.browserContainerWindow = null;
 
     this.panelAdded = false;
     this.addPanel();
@@ -79,7 +135,7 @@ class ParentDevToolsPanel {
     this.toolbox.addAdditionalTool({
       id: this.id,
       extensionId: this.context.extension.id,
-      url: "chrome://browser/content/webext-panels.xul",
+      url: WEBEXT_PANELS_URL,
       icon: icon,
       label: title,
       tooltip: `DevTools Panel added by "${extensionName}" add-on.`,
@@ -193,6 +249,7 @@ class ParentDevToolsPanel {
     // Explicitly remove the panel if it is registered and the toolbox is not
     // closing itself.
     if (this.panelAdded && toolbox.isToolRegistered(this.id)) {
+      this.destroyBrowserElement();
       toolbox.removeAdditionalTool(this.id);
     }
 
@@ -204,90 +261,8 @@ class ParentDevToolsPanel {
     this.browserContainerWindow = null;
   }
 
-  createBrowserElement(window) {
-    const {toolbox} = this;
-    const {extension} = this.context;
-    const {url} = this.panelOptions;
-    const {document} = window;
-
-    // TODO Bug 1442601: Refactor ext-devtools-panels.js to reuse the helpers
-    // functions defined in webext-panels.xul (e.g. create the browser element
-    // using an helper function defined in webext-panels.js and shared with the
-    // extension sidebar pages).
-    let stack = document.getElementById("webext-panels-stack");
-    if (!stack) {
-      stack = document.createXULElement("stack");
-      stack.setAttribute("flex", "1");
-      stack.setAttribute("id", "webext-panels-stack");
-      document.documentElement.appendChild(stack);
-    }
-
-    const browser = document.createXULElement("browser");
-    browser.setAttribute("id", "webext-panels-browser");
-    browser.setAttribute("type", "content");
-    browser.setAttribute("disableglobalhistory", "true");
-    browser.setAttribute("flex", "1");
-    browser.setAttribute("class", "webextension-devtoolsPanel-browser");
-    browser.setAttribute("webextension-view-type", "devtools_panel");
-    // TODO Bug 1442604: Add additional tests for the select and autocompletion
-    // popups used in an extension devtools panels (in oop and non-oop mode).
-    browser.setAttribute("selectmenulist", "ContentSelectDropdown");
-    browser.setAttribute("autocompletepopup", "PopupAutoComplete");
-
-    // Ensure that the devtools panel browser is going to run in the same
-    // process of the other extension pages from the same addon.
-    browser.sameProcessAsFrameLoader = extension.groupFrameLoader;
-
-    this.browser = browser;
-
-    let awaitFrameLoader = Promise.resolve();
-    if (extension.remote) {
-      browser.setAttribute("remote", "true");
-      browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
-      awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
-    }
-
-    let hasTopLevelContext = false;
-
-    // Listening to new proxy contexts.
-    this.unwatchExtensionProxyContextLoad = watchExtensionProxyContextLoad(this, context => {
-      // Keep track of the toolbox and target associated to the context, which is
-      // needed by the API methods implementation.
-      context.devToolsToolbox = toolbox;
-
-      if (!hasTopLevelContext) {
-        hasTopLevelContext = true;
-
-        // Resolve the promise when the root devtools_panel context has been created.
-        awaitFrameLoader.then(() => this._resolveTopLevelContext(context));
-      }
-    });
-
-    stack.appendChild(browser);
-
-    extensions.emit("extension-browser-inserted", browser, {
-      devtoolsToolboxInfo: {
-        toolboxPanelId: this.id,
-        inspectedWindowTabId: getTargetTabIdForToolbox(toolbox),
-      },
-    });
-
-    browser.loadURI(url, {
-      triggeringPrincipal: extension.principal,
-    });
-  }
-
   destroyBrowserElement() {
-    const {browser, unwatchExtensionProxyContextLoad} = this;
-    if (unwatchExtensionProxyContextLoad) {
-      this.unwatchExtensionProxyContextLoad = null;
-      unwatchExtensionProxyContextLoad();
-    }
-
-    if (browser) {
-      browser.remove();
-      this.browser = null;
-    }
+    super.destroyBrowserElement();
 
     // If the panel has been removed or disabled (e.g. from the toolbox preferences
     // or during the toolbox switching between docked and undocked),
@@ -360,31 +335,26 @@ class DevToolsSelectionObserver extends EventEmitter {
  * @param {string} options.title
  *        The title of the addon devtools sidebar.
  */
-class ParentDevToolsInspectorSidebar {
-  constructor(context, sidebarOptions) {
-    const toolbox = context.devToolsToolbox;
-    if (!toolbox) {
-      // This should never happen when this constructor is called with a valid
-      // devtools extension context.
-      throw Error("Missing mandatory toolbox");
-    }
+class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
+  constructor(context, panelOptions) {
+    super(context, panelOptions);
 
-    this.extension = context.extension;
     this.visible = false;
     this.destroyed = false;
 
-    this.toolbox = toolbox;
-    this.context = context;
-    this.sidebarOptions = sidebarOptions;
-
     this.context.callOnClose(this);
 
-    this.id = this.sidebarOptions.id;
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onSidebarCreated = this.onSidebarCreated.bind(this);
+    this.onExtensionPageMount = this.onExtensionPageMount.bind(this);
+    this.onExtensionPageUnmount = this.onExtensionPageUnmount.bind(this);
+    this.onToolboxHostWillChange = this.onToolboxHostWillChange.bind(this);
+    this.onToolboxHostChanged = this.onToolboxHostChanged.bind(this);
 
     this.toolbox.once(`extension-sidebar-created-${this.id}`, this.onSidebarCreated);
-    this.toolbox.on(`inspector-sidebar-select`, this.onSidebarSelect);
+    this.toolbox.on("inspector-sidebar-select", this.onSidebarSelect);
+    this.toolbox.on("host-will-change", this.onToolboxHostWillChange);
+    this.toolbox.on("host-changed", this.onToolboxHostChanged);
 
     // Set by setObject if the sidebar has not been created yet.
     this._initializeSidebar = null;
@@ -395,7 +365,7 @@ class ParentDevToolsInspectorSidebar {
     this._lastObjectValueGrip = null;
 
     this.toolbox.registerInspectorExtensionSidebar(this.id, {
-      title: sidebarOptions.title,
+      title: panelOptions.title,
     });
   }
 
@@ -404,11 +374,24 @@ class ParentDevToolsInspectorSidebar {
       throw new Error("Unable to close a destroyed DevToolsSelectionObserver");
     }
 
+    if (this.extensionSidebar) {
+      this.extensionSidebar.off("extension-page-mount", this.onExtensionPageMount);
+      this.extensionSidebar.off("extension-page-unmount", this.onExtensionPageUnmount);
+    }
+
+    if (this.browser) {
+      this.destroyBrowserElement();
+      this.browser = null;
+      this.containerEl = null;
+    }
+
     // Release the last selected actor on the remote debugging server.
     this._updateLastObjectValueGrip(null);
 
     this.toolbox.off(`extension-sidebar-created-${this.id}`, this.onSidebarCreated);
-    this.toolbox.off(`inspector-sidebar-select`, this.onSidebarSelect);
+    this.toolbox.off("inspector-sidebar-select", this.onSidebarSelect);
+    this.toolbox.off("host-changed", this.onToolboxHostChanged);
+    this.toolbox.off("host-will-change", this.onToolboxHostWillChange);
 
     this.toolbox.unregisterInspectorExtensionSidebar(this.id);
     this.extensionSidebar = null;
@@ -417,8 +400,38 @@ class ParentDevToolsInspectorSidebar {
     this.destroyed = true;
   }
 
+  onToolboxHostWillChange() {
+    if (this.browser) {
+      this.destroyBrowserElement();
+    }
+  }
+
+  onToolboxHostChanged() {
+    if (this.containerEl && this.panelOptions.url) {
+      this.createBrowserElement(this.containerEl.contentWindow);
+    }
+  }
+
+  onExtensionPageMount(containerEl) {
+    this.containerEl = containerEl;
+
+    // Wait the webext-panel.xul page to have been loaded in the
+    // inspector sidebar panel.
+    promiseDocumentLoaded(containerEl.contentDocument).then(() => {
+      this.createBrowserElement(containerEl.contentWindow);
+    });
+  }
+
+  onExtensionPageUnmount() {
+    this.containerEl = null;
+    this.destroyBrowserElement();
+  }
+
   onSidebarCreated(sidebar) {
     this.extensionSidebar = sidebar;
+
+    sidebar.on("extension-page-mount", this.onExtensionPageMount);
+    sidebar.on("extension-page-unmount", this.onExtensionPageUnmount);
 
     const {_lazySidebarInit} = this;
     this._lazySidebarInit = null;
@@ -434,7 +447,6 @@ class ParentDevToolsInspectorSidebar {
     }
 
     if (!this.visible && id === this.id) {
-      // TODO: Wait for top level context if extension page
       this.visible = true;
       this.context.parentMessageManager.sendAsyncMessage("Extension:DevToolsInspectorSidebarShown", {
         inspectorSidebarId: this.id,
@@ -447,7 +459,32 @@ class ParentDevToolsInspectorSidebar {
     }
   }
 
+  setPage(extensionPageURL) {
+    this.panelOptions.url = extensionPageURL;
+
+    if (this.extensionSidebar) {
+      if (this.browser) {
+        // Just load the new extension page url in the existing browser, if
+        // it already exists.
+        this.browser.loadURI(this.panelOptions.url, {
+          triggeringPrincipal: this.context.extension.principal,
+        });
+      } else {
+        // The browser element doesn't exist yet, but the sidebar has been
+        // already created (e.g. because the inspector was already selected
+        // in a open toolbox and the extension has been installed/reloaded/updated).
+        this.extensionSidebar.setExtensionPage(WEBEXT_PANELS_URL);
+      }
+    } else {
+      // Defer the sidebar.setExtensionPage call.
+      this._setLazySidebarInit(
+        () => this.extensionSidebar.setExtensionPage(WEBEXT_PANELS_URL));
+    }
+  }
+
   setObject(object, rootTitle) {
+    delete this.panelOptions.url;
+
     this._updateLastObjectValueGrip(null);
 
     // Nest the object inside an object, as the value of the `rootTitle` property.
@@ -468,6 +505,8 @@ class ParentDevToolsInspectorSidebar {
   }
 
   setObjectValueGrip(objectValueGrip, rootTitle) {
+    delete this.panelOptions.url;
+
     this._updateLastObjectValueGrip(objectValueGrip);
 
     if (this.extensionSidebar) {
@@ -558,6 +597,10 @@ this.devtools_panels = class extends ExtensionAPI {
             // piece that is running in the child process to asks the parent process
             // to execute the sidebar methods.
             Sidebar: {
+              setPage(sidebarId, extensionPageURL) {
+                const sidebar = sidebarsById.get(sidebarId);
+                return sidebar.setPage(extensionPageURL);
+              },
               setObject(sidebarId, jsonObject, rootTitle) {
                 const sidebar = sidebarsById.get(sidebarId);
                 return sidebar.setObject(jsonObject, rootTitle);
