@@ -22,6 +22,11 @@ class WebPlatformTestsRunner(object):
 
     def run(self, logger, **kwargs):
         from wptrunner import wptrunner
+
+        if kwargs["manifest_update"] is not False:
+            self.update_manifest(logger)
+        kwargs["manifest_update"] = False
+
         if kwargs["product"] in ["firefox", None]:
             kwargs = self.setup.kwargs_firefox(kwargs)
         elif kwargs["product"] == "fennec":
@@ -33,3 +38,10 @@ class WebPlatformTestsRunner(object):
             raise ValueError("Unknown product %s" % kwargs["product"])
         result = wptrunner.start(**kwargs)
         return int(not result)
+
+    def update_manifest(self, logger, **kwargs):
+        import manifestupdate
+        return manifestupdate.run(logger=logger,
+                                  src_root=self.setup.topsrcdir,
+                                  obj_root=self.setup.topobjdir,
+                                  **kwargs)
