@@ -8,7 +8,6 @@ import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.PersistableBundle;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.schedule.TelemetryScheduler;
@@ -17,13 +16,23 @@ import org.mozilla.telemetry.schedule.TelemetryScheduler;
  * TelemetryScheduler implementation that uses Android's JobScheduler API to schedule ping uploads.
  */
 public class JobSchedulerTelemetryScheduler implements TelemetryScheduler {
-    public static final int JOB_ID = 42; //  TODO: Make this configurable (Issue #24)
+    private static final int DEFAULT_JOB_ID = 42;
+
+    private final int jobId;
+
+    public JobSchedulerTelemetryScheduler() {
+        this(DEFAULT_JOB_ID);
+    }
+
+    public JobSchedulerTelemetryScheduler(int jobId) {
+        this.jobId = jobId;
+    }
 
     @Override
     public void scheduleUpload(TelemetryConfiguration configuration) {
         final ComponentName jobService = new ComponentName(configuration.getContext(), TelemetryJobService.class);
 
-        final JobInfo jobInfo = new JobInfo.Builder(JOB_ID, jobService)
+        final JobInfo jobInfo = new JobInfo.Builder(jobId, jobService)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
                 .setBackoffCriteria(configuration.getInitialBackoffForUpload(), JobInfo.BACKOFF_POLICY_EXPONENTIAL)
