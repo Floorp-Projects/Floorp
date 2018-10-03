@@ -24,10 +24,12 @@ template <class ParseHandler> class PerHandlerParser;
 //
 // Usage:
 //    pn = parser->statement();
-//    if (!pn)
+//    if (!pn) {
 //        return false;
-//    if (!FoldConstants(cx, &pn, parser))
+//    }
+//    if (!FoldConstants(cx, &pn, parser)) {
 //        return false;
+//    }
 extern MOZ_MUST_USE bool
 FoldConstants(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>* parser);
 

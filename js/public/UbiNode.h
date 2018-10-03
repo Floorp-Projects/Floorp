@@ -975,8 +975,9 @@ class PreComputedEdgeRange : public EdgeRange {
 //    {
 //        mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
 //        JS::ubi::RootList rootList(cx, maybeNoGC);
-//        if (!rootList.init())
+//        if (!rootList.init()) {
 //            return false;
+//        }
 //
 //        // The AutoCheckCannotGC is guaranteed to exist if init returned true.
 //        MOZ_ASSERT(maybeNoGC.isSome());

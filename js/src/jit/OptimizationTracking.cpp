@@ -1271,8 +1271,9 @@ IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::readType(const IonTrackedType
             //   void* addr = JS_FUNC_TO_DATA_PTR(void*, fun->native());
             //   uintptr_t offset;
             //   Dl_info info;
-            //   if (dladdr(addr, &info) != 0)
+            //   if (dladdr(addr, &info) != 0) {
             //       offset = uintptr_t(addr) - uintptr_t(info.dli_fbase);
+            //   }
             //
             char locationBuf[20];
             if (!name) {
