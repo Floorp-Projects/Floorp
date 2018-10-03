@@ -162,6 +162,12 @@
   --arrowpanel-border-color: var(--default-arrowpanel-border-color);
 }
 
+#DateTimePickerPanel[side="top"],
+#DateTimePickerPanel[side="bottom"] {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 #widget-overflow .webextension-popup-browser {
   background: #fff;
 }
