@@ -805,19 +805,22 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
      *   PossibleError possibleError(*this);
      *   possibleError.setPendingExpressionErrorAt(pos, JSMSG_BAD_PROP_ID);
      *   // A JSMSG_BAD_PROP_ID ParseError is reported, returns false.
-     *   if (!possibleError.checkForExpressionError())
+     *   if (!possibleError.checkForExpressionError()) {
      *       return false; // we reach this point with a pending exception
+     *   }
      *
      *   PossibleError possibleError(*this);
      *   possibleError.setPendingExpressionErrorAt(pos, JSMSG_BAD_PROP_ID);
      *   // Returns true, no error is reported.
-     *   if (!possibleError.checkForDestructuringError())
+     *   if (!possibleError.checkForDestructuringError()) {
      *       return false; // not reached, no pending exception
+     *   }
      *
      *   PossibleError possibleError(*this);
      *   // Returns true, no error is reported.
-     *   if (!possibleError.checkForExpressionError())
+     *   if (!possibleError.checkForExpressionError()) {
      *       return false; // not reached, no pending exception
+     *   }
      */
     class MOZ_STACK_CLASS PossibleError
     {
