@@ -475,6 +475,34 @@ SharedSurfacesChild::UpdateAnimation(ImageContainer* aContainer,
   return anim->SetCurrentFrame(aSurface, sharedSurface, aDirtyRect);
 }
 
+SharedSurfacesAnimation::~SharedSurfacesAnimation()
+{
+  MOZ_ASSERT(mKeys.IsEmpty());
+}
+
+void
+SharedSurfacesAnimation::Destroy()
+{
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> task =
+      NewRunnableMethod("SharedSurfacesAnimation::Destroy",
+                        this, &SharedSurfacesAnimation::Destroy);
+    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
+    return;
+  }
+
+  if (mKeys.IsEmpty()) {
+    return;
+  }
+
+  for (const auto& entry : mKeys) {
+    MOZ_ASSERT(!entry.mManager->IsDestroyed());
+    entry.mManager->AddImageKeyForDiscard(entry.mImageKey);
+  }
+
+  mKeys.Clear();
+}
+
 nsresult
 SharedSurfacesAnimation::SetCurrentFrame(SourceSurface* aParentSurface,
                                          SourceSurfaceSharedData* aSurface,
@@ -482,7 +510,7 @@ SharedSurfacesAnimation::SetCurrentFrame(SourceSurface* aParentSurface,
 {
   MOZ_ASSERT(aSurface);
 
-  SharedUserData* data = nullptr;
+  SharedSurfacesChild::SharedUserData* data = nullptr;
   nsresult rv = SharedSurfacesChild::ShareInternal(aSurface, &data);
   if (NS_FAILED(rv)) {
     return rv;
@@ -494,12 +522,8 @@ SharedSurfacesAnimation::SetCurrentFrame(SourceSurface* aParentSurface,
   auto i = mKeys.Length();
   while (i > 0) {
     --i;
-    SharedSurfacesChild::ImageKeyData& entry = mKeys[i];
-    if (entry.mManager->IsDestroyed()) {
-      mKeys.RemoveElementAt(i);
-      continue;
-    }
-
+    ImageKeyData& entry = mKeys[i];
+    MOZ_ASSERT(!entry.mManager->IsDestroyed());
     entry.MergeDirtyRect(Some(aDirtyRect));
 
     Maybe<IntRect> dirtyRect = entry.TakeDirtyRect();
@@ -520,7 +544,7 @@ SharedSurfacesAnimation::UpdateKey(SourceSurface* aParentSurface,
                                    wr::IpcResourceUpdateQueue& aResources,
                                    wr::ImageKey& aKey)
 {
-  SharedUserData* data = nullptr;
+  SharedSurfacesChild::SharedUserData* data = nullptr;
   nsresult rv = SharedSurfacesChild::ShareInternal(aSurface, &data);
   if (NS_FAILED(rv)) {
     return rv;
@@ -532,9 +556,51 @@ SharedSurfacesAnimation::UpdateKey(SourceSurface* aParentSurface,
     mId = data->Id();
   }
 
-  aKey = SharedSurfacesChild::SharedUserData::UpdateKey(aManager,
-                                                        aResources,
-                                                        Nothing());
+  // We iterate through all of the items to ensure we clean up the old
+  // WebRenderLayerManager references. Most of the time there will be few
+  // entries and this should not be particularly expensive compared to the
+  // cost of duplicating image keys. In an ideal world, we would generate a
+  // single key for the surface, and it would be usable on all of the
+  // renderer instances. For now, we must allocate a key for each WR bridge.
+  wr::ImageKey key;
+  bool found = false;
+  auto i = mKeys.Length();
+  while (i > 0) {
+    --i;
+    ImageKeyData& entry = mKeys[i];
+    MOZ_ASSERT(!entry.mManager->IsDestroyed());
+    if (entry.mManager == aManager) {
+      WebRenderBridgeChild* wrBridge = aManager->WrBridge();
+      MOZ_ASSERT(wrBridge);
+
+      // Even if the manager is the same, its underlying WebRenderBridgeChild
+      // can change state. If our namespace differs, then our old key has
+      // already been discarded.
+      bool ownsKey = wrBridge->GetNamespace() == entry.mImageKey.mNamespace;
+      if (!ownsKey) {
+        entry.mImageKey = wrBridge->GetNextImageKey();
+        aResources.AddExternalImage(mId, entry.mImageKey);
+      } else {
+        Maybe<IntRect> dirtyRect = entry.TakeDirtyRect();
+        if (dirtyRect) {
+          aResources.UpdateExternalImage(mId, entry.mImageKey,
+                                         ViewAs<ImagePixel>(dirtyRect.ref()));
+        }
+      }
+
+      aKey = entry.mImageKey;
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    aKey = aManager->WrBridge()->GetNextImageKey();
+    ImageKeyData data(aManager, aKey);
+    mKeys.AppendElement(std::move(data));
+    aResources.AddExternalImage(mId, aKey);
+  }
+
   return NS_OK;
 }
 
