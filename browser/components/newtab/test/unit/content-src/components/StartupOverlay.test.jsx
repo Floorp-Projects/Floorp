@@ -23,7 +23,7 @@ describe("<StartupOverlay>", () => {
 
     assert.calledOnce(dispatch);
     assert.isUserEventAction(dispatch.firstCall.args[0]);
-    assert.calledWith(dispatch, ac.UserEvent({event: at.SKIPPED_SIGNIN}));
+    assert.calledWith(dispatch, ac.UserEvent({event: at.SKIPPED_SIGNIN, value: {has_flow_params: false}}));
   });
 
   it("should emit UserEvent SUBMIT_EMAIL when you submit the form", () => {
@@ -33,6 +33,6 @@ describe("<StartupOverlay>", () => {
 
     assert.calledOnce(dispatch);
     assert.isUserEventAction(dispatch.firstCall.args[0]);
-    assert.calledWith(dispatch, ac.UserEvent({event: at.SUBMIT_EMAIL}));
+    assert.calledWith(dispatch, ac.UserEvent({event: at.SUBMIT_EMAIL, value: {has_flow_params: false}}));
   });
 });
