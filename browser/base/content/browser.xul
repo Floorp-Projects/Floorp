@@ -114,18 +114,6 @@ xmlns="http://www.w3.org/1999/xhtml"
       <menuitem id="context_toggleMuteTab" oncommand="TabContextMenu.contextTab.toggleMuteAudio();"/>
       <menuitem id="context_toggleMuteSelectedTabs" hidden="true"
                 oncommand="gBrowser.toggleMuteAudioOnMultiSelectedTabs(TabContextMenu.contextTab);"/>
-      <menuseparator/>
-      <menuitem id="context_selectAllTabs" label="&selectAllTabs.label;" accesskey="&selectAllTabs.accesskey;"
-                oncommand="gBrowser.selectAllTabs();"/>
-      <menuitem id="context_bookmarkSelectedTabs"
-                hidden="true"
-                label="&bookmarkSelectedTabs.label;"
-                accesskey="&bookmarkSelectedTabs.accesskey;"
-                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueSelectedPages);"/>
-      <menuitem id="context_bookmarkTab"
-                label="&bookmarkTab.label;"
-                accesskey="&bookmarkTab.accesskey;"
-                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.getUniquePages([TabContextMenu.contextTab]));"/>
       <menuitem id="context_pinTab" label="&pinTab.label;"
                 accesskey="&pinTab.accesskey;"
                 oncommand="gBrowser.pinTab(TabContextMenu.contextTab);"/>
@@ -141,6 +129,18 @@ xmlns="http://www.w3.org/1999/xhtml"
       <menuitem id="context_duplicateTab" label="&duplicateTab.label;"
                 accesskey="&duplicateTab.accesskey;"
                 oncommand="duplicateTabIn(TabContextMenu.contextTab, 'tab');"/>
+      <menuseparator/>
+      <menuitem id="context_selectAllTabs" label="&selectAllTabs.label;" accesskey="&selectAllTabs.accesskey;"
+                oncommand="gBrowser.selectAllTabs();"/>
+      <menuitem id="context_bookmarkSelectedTabs"
+                hidden="true"
+                label="&bookmarkSelectedTabs.label;"
+                accesskey="&bookmarkSelectedTabs.accesskey;"
+                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.uniqueSelectedPages);"/>
+      <menuitem id="context_bookmarkTab"
+                label="&bookmarkTab.label;"
+                accesskey="&bookmarkTab.accesskey;"
+                oncommand="PlacesCommandHook.bookmarkPages(PlacesCommandHook.getUniquePages([TabContextMenu.contextTab]));"/>
       <menu id="context_reopenInContainer"
             label="&reopenInContainer.label;"
             accesskey="&reopenInContainer.accesskey;"
@@ -170,7 +170,6 @@ xmlns="http://www.w3.org/1999/xhtml"
                     oncommand="gBrowser.replaceTabsWithWindow(TabContextMenu.contextTab);"/>
         </menupopup>
       </menu>
-      <menuseparator id="context_sendTabToDevice_separator" class="sync-ui-item"/>
       <menu id="context_sendTabToDevice"
             class="sync-ui-item">
         <menupopup id="context_sendTabToDevicePopupMenu"
