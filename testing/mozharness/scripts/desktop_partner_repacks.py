@@ -16,15 +16,13 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.script import BaseScript
 from mozharness.mozilla.automation import AutomationMixin
-from mozharness.mozilla.release import ReleaseMixin
 from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.base.python import VirtualenvMixin
 from mozharness.base.log import FATAL
 
 
 # DesktopPartnerRepacks {{{1
-class DesktopPartnerRepacks(ReleaseMixin, AutomationMixin,
-                            BaseScript, VirtualenvMixin, SecretsMixin):
+class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, SecretsMixin):
     """Manages desktop partner repacks"""
     actions = [
                 "clobber",

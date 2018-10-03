@@ -28,15 +28,6 @@ mozharness.base.vcs.vcsbase module
     :undoc-members:
     :show-inheritance:
 
-mozharness.base.vcs.vcssync module
-----------------------------------
-
-.. automodule:: mozharness.base.vcs.vcssync
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 Module contents
 ---------------
 

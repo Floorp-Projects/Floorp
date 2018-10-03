@@ -1492,7 +1492,7 @@ VRControllerOculus::VibrateHapticComplete(ovrSession aSession, const VRManagerPr
   VRManager *vm = VRManager::Get();
   MOZ_ASSERT(vm);
 
-  VRListenerThreadHolder::Loop()->PostTask(
+  CompositorThreadHolder::Loop()->PostTask(
     NewRunnableMethod<StoreCopyPassByConstLRef<VRManagerPromise>>(
       "VRManager::NotifyVibrateHapticCompleted",
       vm, &VRManager::NotifyVibrateHapticCompleted, aPromise));

@@ -286,6 +286,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "dom.testing.structuredclonetester.enabled",
+  dom_testing_structuredclonetester_enabled,
+  RelaxedAtomicBool, false
+)
+
 // Enable Storage API for all platforms except Android.
 #if !defined(MOZ_WIDGET_ANDROID)
 # define PREF_VALUE true

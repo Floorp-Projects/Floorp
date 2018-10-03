@@ -31,6 +31,7 @@ external_tools_path = os.path.join(
     'external_tools',
 )
 
+
 def get_tlsv1_post():
     # Monkeypatch to work around SSL errors in non-bleeding-edge Python.
     # Taken from https://lukasa.co.uk/2013/01/Choosing_SSL_Version_In_Requests/
@@ -47,6 +48,7 @@ def get_tlsv1_post():
     s = requests.Session()
     s.mount('https://', TLSV1Adapter())
     return s.post
+
 
 # Virtualenv {{{1
 virtualenv_config_options = [
@@ -134,7 +136,8 @@ class VirtualenvMixin(object):
             if self._is_windows():
                 bin_dir = 'Scripts'
             virtualenv_path = self.query_virtualenv_path()
-            self.python_paths[binary] = os.path.abspath(os.path.join(virtualenv_path, bin_dir, binary))
+            self.python_paths[binary] = os.path.abspath(
+                os.path.join(virtualenv_path, bin_dir, binary))
 
         return self.python_paths[binary]
 
@@ -161,9 +164,12 @@ class VirtualenvMixin(object):
             if not pip:
                 self.log("package_versions: Program pip not in path", level=error_level)
                 return {}
-            pip_freeze_output = self.get_output_from_command([pip, "freeze"], silent=True, ignore_errors=True)
+            pip_freeze_output = self.get_output_from_command(
+                [pip, "freeze"], silent=True, ignore_errors=True)
             if not isinstance(pip_freeze_output, basestring):
-                self.fatal("package_versions: Error encountered running `pip freeze`: %s" % pip_freeze_output)
+                self.fatal(
+                    "package_versions: Error encountered running `pip freeze`: "
+                    + pip_freeze_output)
 
         for line in pip_freeze_output.splitlines():
             # parse the output into package, version
@@ -244,7 +250,9 @@ class VirtualenvMixin(object):
                                     install_method='pip')
             command = [self.query_python_path(), '-m', 'easy_install']
         else:
-            self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
+            self.fatal(
+                "install_module() doesn't understand an install_method of %s!"
+                % install_method)
 
         for link in c.get('find_links', []):
             parsed = urlparse.urlparse(link)
@@ -264,7 +272,9 @@ class VirtualenvMixin(object):
                 if install_method in (None, 'pip'):
                     command += ['-e']
                 else:
-                    self.fatal("editable installs not supported for install_method %s" % install_method)
+                    self.fatal(
+                        "editable installs not supported for install_method %s"
+                        % install_method)
             command += [module_url]
 
         # If we're only installing a single requirements file, use
@@ -282,7 +292,10 @@ class VirtualenvMixin(object):
             attempts=1 if optional else None,
             good_statuses=(0,),
             error_level=WARNING if optional else FATAL,
-            error_message='Could not install python package: ' + quoted_command + ' failed after %(attempts)d tries!',
+            error_message=(
+                'Could not install python package: '
+                + quoted_command + ' failed after %(attempts)d tries!'
+            ),
             args=[command, ],
             kwargs={
                 'error_list': VirtualenvErrorList,
@@ -362,7 +375,9 @@ class VirtualenvMixin(object):
             virtualenv_options.append('--always-copy')
 
         if os.path.exists(self.query_python_path()):
-            self.info("Virtualenv %s appears to already exist; skipping virtualenv creation." % self.query_python_path())
+            self.info(
+                "Virtualenv %s appears to already exist; "
+                "skipping virtualenv creation." % self.query_python_path())
         else:
             self.mkdir_p(dirs['abs_work_dir'])
             self.run_command(virtualenv + virtualenv_options + [venv_path],
@@ -588,7 +603,10 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             # XXX Some test harnesses are complaining about a string being
             # being fed into a 'f' formatter. This will help diagnose the
             # issue.
-            cpu_percent_str = str(round(cpu_percent)) + '%' if cpu_percent else "Can't collect data"
+            if cpu_percent:
+                cpu_percent_str = str(round(cpu_percent)) + '%'
+            else:
+                cpu_percent_str = "Can't collect data"
 
             try:
                 self.info(
