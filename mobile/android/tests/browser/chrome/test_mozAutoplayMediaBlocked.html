@@ -38,7 +38,35 @@ SimpleTest.requestLongerTimeout(2);
   Services.prefs.setBoolPref("media.autoplay.enabled.user-gestures-needed", true);
 })();
 
-add_task(async function test_MozAutoplayMediaBlocked() {
+add_task(async function test_UAWidgetMozAutoplayMediaBlocked() {
+  Services.prefs.setBoolPref("dom.ua_widget.enabled", true);
+
+  info("- open a new tab -");
+  let tab = gBrowserApp.addTab(URL);
+  let browser = tab.browser;
+
+  const mediaBlockedPromise = promiseTabEvent(browser, "MozAutoplayMediaBlocked");
+
+  info("- wait for loading tab's content -");
+  await promiseBrowserEvent(browser, "load");
+
+  info("- wait for 'MozAutoplayMediaBlocked' event -");
+  await mediaBlockedPromise;
+  ok(true, "got `MozAutoplayMediaBlocked` event");
+
+  let doc = browser.contentWindow.document;
+  let video = doc.getElementById("testAudio");
+
+  let button = video.openOrClosedShadowRoot.getElementById("clickToPlay");
+  ok(!button.hidden, "Click to play button is not hidden");
+
+  info("- remove tab -");
+  gBrowserApp.closeTab(tab);
+});
+
+add_task(async function test_XBLBindingMozAutoplayMediaBlocked() {
+  Services.prefs.setBoolPref("dom.ua_widget.enabled", false);
+
   info("- open a new tab -");
   let tab = gBrowserApp.addTab(URL);
   let browser = tab.browser;

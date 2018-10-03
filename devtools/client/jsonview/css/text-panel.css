@@ -16,7 +16,3 @@
   font-family: var(--monospace-font-family);
   color: var(--theme-content-color1);
 }
-
-:root[platform="linux"] .textPanelBox .data {
-  font-size: 80%; /* To handle big monospace font */
-}

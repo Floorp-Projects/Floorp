@@ -268,7 +268,6 @@ var AppManager = exports.AppManager = {
           form: this._listTabsResponse,
           client: this.connection.client,
           chrome: true,
-          isBrowsingContext: false
       });
     }
 

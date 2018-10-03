@@ -238,7 +238,7 @@ case that is not easily possible to do. The reason is that both of these
 values can be legitimately modified. On the compositor side, the input
 events the user is triggering modify the scroll position, which is then
 propagated to the main thread. However, on the main thread, web content
-might be running Javascript code that programatically sets the scroll
+might be running Javascript code that programmatically sets the scroll
 position (via window.scrollTo, for example). Scroll changes driven from
 the main thread are just as legitimate and need to be propagated to the
 compositor thread, so that the visual display updates in response.

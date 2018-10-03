@@ -1533,11 +1533,11 @@ Http2Session::RecvPriority(Http2Session *self)
   bool exclusive = !!(newPriorityDependency & 0x80000000);
   newPriorityDependency &= 0x7fffffff;
   uint8_t newPriorityWeight = *(self->mInputFrameBuffer.get() + kFrameHeaderBytes + 4);
-  if (self->mInputFrameDataStream) {
-    self->mInputFrameDataStream->SetPriorityDependency(newPriorityDependency,
-                                                       newPriorityWeight,
-                                                       exclusive);
-  }
+
+  // undefined what it means when the server sends a priority frame. ignore it.
+  LOG3(("Http2Session::RecvPriority %p 0x%X received dependency=0x%X "
+        "weight=%u exclusive=%d", self->mInputFrameDataStream, self->mInputFrameID,
+        newPriorityDependency, newPriorityWeight, exclusive));
 
   self->ResetDownstreamState();
   return NS_OK;
@@ -1982,10 +1982,9 @@ Http2Session::RecvPushPromise(Http2Session *self)
   pushedStream->SetHTTPState(Http2Stream::RESERVED_BY_REMOTE);
   static_assert(Http2Stream::kWorstPriority >= 0,
                 "kWorstPriority out of range");
-  uint8_t priorityWeight = (nsISupportsPriority::PRIORITY_LOWEST + 1) -
-    (Http2Stream::kWorstPriority - Http2Stream::kNormalPriority);
-  pushedStream->SetPriority(Http2Stream::kWorstPriority);
-  self->GeneratePriority(promisedID, priorityWeight);
+  uint32_t priorityDependency = pushedStream->PriorityDependency();
+  uint8_t priorityWeight = pushedStream->PriorityWeight();
+  self->SendPriorityFrame(promisedID, priorityDependency, priorityWeight);
   self->ResetDownstreamState();
   return NS_OK;
 }

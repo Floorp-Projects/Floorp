@@ -5348,15 +5348,6 @@ pub unsafe extern "C" fn Servo_ReleaseArcStringData(string: *const RawOffsetArc<
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_CloneArcStringData(
-    string: *const RawOffsetArc<RustString>,
-) -> RawOffsetArc<RustString> {
-    let string = string as *const RawOffsetArc<String>;
-    let cloned = (*string).clone();
-    mem::transmute::<_, RawOffsetArc<RustString>>(cloned)
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn Servo_GetArcStringData(
     string: *const RustString,
     utf8_chars: *mut *const u8,

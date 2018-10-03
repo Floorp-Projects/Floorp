@@ -184,9 +184,6 @@ class TCPConnection {
 
     this.driver = driverFactory();
     this.driver.init();
-
-    // lookup of commands sent by server to client by message ID
-    this.commands_ = new Map();
   }
 
   /**
@@ -234,17 +231,13 @@ class TCPConnection {
       return;
     }
 
-    // look up previous command we received a response for
-    if (msg instanceof Response) {
-      let cmd = this.commands_.get(msg.id);
-      this.commands_.delete(msg.id);
-      cmd.onresponse(msg);
-
     // execute new command
-    } else if (msg instanceof Command) {
+    if (msg instanceof Command) {
       (async () => {
         await this.execute(msg);
       })();
+    } else {
+      logger.fatal("Cannot process messages other than Command");
     }
   }
 
@@ -357,11 +350,10 @@ class TCPConnection {
    */
   send(msg) {
     msg.origin = Message.Origin.Server;
-    if (msg instanceof Command) {
-      this.commands_.set(msg.id, msg);
-      this.sendToEmulator(msg);
-    } else if (msg instanceof Response) {
+    if (msg instanceof Response) {
       this.sendToClient(msg);
+    } else {
+      logger.fatal("Cannot send messages other than Response");
     }
   }
 

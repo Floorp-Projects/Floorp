@@ -231,6 +231,7 @@
   width: 100%;
   height: 50vh;
   font: message-box;
+  font-size: var(--theme-body-font-size);
   resize: none;
 }
 
@@ -411,6 +412,7 @@
 .network-monitor .custom-request-panel textarea {
   resize: none;
   font: message-box;
+  font-size: var(--theme-body-font-size);
 }
 
 .network-monitor .custom-header,

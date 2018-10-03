@@ -2,13 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.connect-page__steps {
-  line-height: 1.5em;
+.connect-page__step-list {
   list-style-type: decimal;
-  margin-block-end: 20px;
-  margin-inline-start: 40px;
+  list-style-position: outside;
+  margin-inline-start: calc(var(--section-inline-margin) + var(--base-distance) * 4);
 }
 
 .connect-page__step {
-  padding-inline-start: 20px;
+  padding-inline-start: var(--base-distance);
 }

@@ -6,11 +6,6 @@
  * General styles
  */
 
-:root[platform="linux"],
-:root[platform="linux"] button {
-  font-size: 11px;
-}
-
 h1 {
   font-size: 22px;
   font-weight: normal;

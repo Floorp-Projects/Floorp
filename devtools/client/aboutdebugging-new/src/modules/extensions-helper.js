@@ -60,7 +60,6 @@ exports.debugRemoteAddon = async function(addonForm, client) {
     form: addonForm,
     chrome: true,
     client,
-    isBrowsingContext: addonForm.isWebExtension
   };
 
   const target = await TargetFactory.forRemoteTab(options);
