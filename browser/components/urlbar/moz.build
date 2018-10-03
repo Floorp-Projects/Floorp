@@ -14,6 +14,7 @@ EXTRA_JS_MODULES += [
     'UrlbarProvidersManager.jsm',
     'UrlbarTokenizer.jsm',
     'UrlbarUtils.jsm',
+    'UrlbarValueFormatter.jsm',
     'UrlbarView.jsm',
 ]
 

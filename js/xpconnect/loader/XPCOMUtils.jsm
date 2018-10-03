@@ -59,6 +59,17 @@ let global = Cu.getGlobalForObject({});
 
 const nsIFactoryQI = ChromeUtils.generateQI([Ci.nsIFactory]);
 
+// Some global imports expose additional symbols; for example,
+// `Cu.importGlobalProperties(["MessageChannel"])` imports `MessageChannel`
+// and `MessagePort`. This table maps those extra symbols to the main
+// import name.
+const EXTRA_GLOBAL_NAME_TO_IMPORT_NAME = {
+  Headers: "fetch",
+  MessagePort: "MessageChannel",
+  Request: "fetch",
+  Response: "fetch",
+};
+
 /**
  * Redefines the given property on the given object with the given
  * value. This can be used to redefine getter properties which do not
@@ -174,7 +185,8 @@ var XPCOMUtils = {
     for (let name of aNames) {
       this.defineLazyGetter(aObject, name, () => {
         if (!(name in global)) {
-          Cu.importGlobalProperties([name]);
+          let importName = EXTRA_GLOBAL_NAME_TO_IMPORT_NAME[name] || name;
+          Cu.importGlobalProperties([importName]);
         }
         return global[name];
       });
