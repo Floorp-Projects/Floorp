@@ -18,10 +18,6 @@ menulist > menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
 }
 
-progressmeter[mode="undetermined"] {
-  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-undetermined");
-}
-
 @media (-moz-menubar-drag) {
   toolbar[type="menubar"]:not([autohide="true"]) {
     -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
