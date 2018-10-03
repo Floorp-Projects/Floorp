@@ -6,13 +6,6 @@
 
 #include "nsMacUtilsImpl.h"
 
-#include "base/command_line.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsCOMPtr.h"
-#include "nsIFile.h"
-#include "nsIProperties.h"
-#include "nsServiceManagerUtils.h"
-
 #include <CoreFoundation/CoreFoundation.h>
 
 NS_IMPL_ISUPPORTS(nsMacUtilsImpl, nsIMacUtils)
@@ -132,64 +125,3 @@ nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated)
 
   return NS_OK;
 }
-
-#if defined(MOZ_CONTENT_SANDBOX)
-bool
-nsMacUtilsImpl::GetAppPath(nsCString &aAppPath)
-{
-  nsAutoCString appPath;
-  nsAutoCString appBinaryPath(
-    (CommandLine::ForCurrentProcess()->argv()[0]).c_str());
-
-  nsAutoCString::const_iterator start, end;
-  appBinaryPath.BeginReading(start);
-  appBinaryPath.EndReading(end);
-  if (RFindInReadable(NS_LITERAL_CSTRING(".app/Contents/MacOS/"), start, end)) {
-    end = start;
-    ++end; ++end; ++end; ++end;
-    appBinaryPath.BeginReading(start);
-    appPath.Assign(Substring(start, end));
-  } else {
-    return false;
-  }
-
-  nsCOMPtr<nsIFile> app, appBinary;
-  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(appPath),
-                                true, getter_AddRefs(app));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  rv = app->Normalize();
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  app->GetNativePath(aAppPath);
-
-  return true;
-}
-
-#if defined(DEBUG)
-// Given a path to a file, return the directory which contains it.
-nsAutoCString
-nsMacUtilsImpl::GetDirectoryPath(const char *aPath)
-{
-  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  if (!file ||
-      NS_FAILED(file->InitWithNativePath(nsDependentCString(aPath)))) {
-    MOZ_CRASH("Failed to create or init an nsIFile");
-  }
-  nsCOMPtr<nsIFile> directoryFile;
-  if (NS_FAILED(file->GetParent(getter_AddRefs(directoryFile))) ||
-      !directoryFile) {
-    MOZ_CRASH("Failed to get parent for an nsIFile");
-  }
-  directoryFile->Normalize();
-  nsAutoCString directoryPath;
-  if (NS_FAILED(directoryFile->GetNativePath(directoryPath))) {
-    MOZ_CRASH("Failed to get path for an nsIFile");
-  }
-  return directoryPath;
-}
-#endif /* DEBUG */
-#endif /* MOZ_CONTENT_SANDBOX */

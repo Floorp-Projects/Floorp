@@ -15,8 +15,6 @@
 #include <stdlib.h>
 #include <CoreFoundation/CoreFoundation.h>
 
-#include <iostream>
-#include <sstream>
 #include <vector>
 
 #include "mozilla/Assertions.h"
@@ -226,22 +224,16 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
       params.push_back(macOSMinor.c_str());
       params.push_back("APP_PATH");
       params.push_back(aInfo.appPath.c_str());
+      params.push_back("APP_BINARY_PATH");
+      params.push_back(aInfo.appBinaryPath.c_str());
+      params.push_back("APP_DIR");
+      params.push_back(aInfo.appDir.c_str());
       params.push_back("PROFILE_DIR");
       params.push_back(aInfo.profileDir.c_str());
       params.push_back("HOME_PATH");
       params.push_back(getenv("HOME"));
       params.push_back("HAS_SANDBOXED_PROFILE");
       params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
-      params.push_back("HAS_WINDOW_SERVER");
-      params.push_back(aInfo.hasWindowServer ? "TRUE" : "FALSE");
-      if (!aInfo.parentPort.empty()) {
-        params.push_back("PARENT_PORT");
-        params.push_back(aInfo.parentPort.c_str());
-      }
-      if (!aInfo.crashServerPort.empty()) {
-        params.push_back("CRASH_PORT");
-        params.push_back(aInfo.crashServerPort.c_str());
-      }
       if (!aInfo.testingReadPath1.empty()) {
         params.push_back("TESTING_READ_PATH1");
         params.push_back(aInfo.testingReadPath1.c_str());
@@ -329,187 +321,5 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
 
   return true;
 }
-
-/*
- * Fill |aInfo| with content sandbox params parsed from the provided
- * command line arguments. Return false if any sandbox parameters needed
- * for early startup of the sandbox are not present in the arguments.
- */
-bool
-GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo)
-{
-  // Ensure we find these paramaters in the command
-  // line arguments. Return false if any are missing.
-  bool foundSandboxLevel = false;
-  bool foundValidSandboxLevel = false;
-  bool foundParentPort = false;
-  bool foundAppPath = false;
-
-  // Read access directories used in testing
-  int nTestingReadPaths = 0;
-  std::string testingReadPaths[MAX_TESTING_READ_PATHS] = {};
-
-  // Collect sandbox params from CLI arguments
-  for (int i = 0; i < aArgc; i++) {
-
-    if ((strcmp(aArgv[i], "-sbLevel") == 0) && (i + 1 < aArgc)) {
-      std::stringstream ss(aArgv[i+1]);
-      int level = 0;
-      ss >> level;
-      foundSandboxLevel = true;
-      aInfo.level = level;
-      foundValidSandboxLevel = level > 0 && level <= 3 ? true : false;
-      if (!foundValidSandboxLevel) {
-        break;
-      }
-      i++;
-      continue;
-    }
-
-    if (strcmp(aArgv[i], "-sbLogging") == 0) {
-      aInfo.shouldLog = true;
-      continue;
-    }
-
-    if (strcmp(aArgv[i], "-sbAllowFileAccess") == 0) {
-      aInfo.hasFilePrivileges = true;
-      continue;
-    }
-
-    if (strcmp(aArgv[i], "-sbAllowAudio") == 0) {
-      aInfo.hasAudio = true;
-      continue;
-    }
-
-    if (strcmp(aArgv[i], "-sbAllowWindowServer") == 0) {
-      aInfo.hasWindowServer = true;
-      continue;
-    }
-
-    if ((strcmp(aArgv[i], "-sbAppPath") == 0) && (i + 1 < aArgc)) {
-      foundAppPath = true;
-      aInfo.appPath.assign(aArgv[i+1]);
-      i++;
-      continue;
-    }
-
-    if ((strcmp(aArgv[i], "-sbTestingReadPath") == 0) && (i + 1 < aArgc)) {
-      MOZ_ASSERT(nTestingReadPaths < MAX_TESTING_READ_PATHS);
-      testingReadPaths[nTestingReadPaths] = aArgv[i+1];
-      nTestingReadPaths++;
-      i++;
-      continue;
-    }
-
-    if ((strcmp(aArgv[i], "-profile") == 0) && (i + 1 < aArgc)) {
-      aInfo.hasSandboxedProfile = true;
-      aInfo.profileDir.assign(aArgv[i+1]);
-      i++;
-      continue;
-    }
-
-#ifdef DEBUG
-    if ((strcmp(aArgv[i], "-sbDebugWriteDir") == 0) && (i + 1 < aArgc)) {
-      aInfo.debugWriteDir.assign(aArgv[i+1]);
-      i++;
-      continue;
-    }
-#endif // DEBUG
-
-    // Handle positional arguments
-    if (strstr(aArgv[i], "org.mozilla.machname") != NULL) {
-      foundParentPort = true;
-      aInfo.parentPort.assign(aArgv[i]);
-      continue;
-    }
-
-    if (strstr(aArgv[i], "gecko-crash-server-pipe") != NULL) {
-      aInfo.crashServerPort.assign(aArgv[i]);
-      continue;
-    }
-  }
-
-  if (!foundSandboxLevel) {
-    fprintf(stderr, "Content sandbox disabled due to "
-                    "missing sandbox CLI level parameter.\n");
-    return false;
-  }
-
-  if (!foundValidSandboxLevel) {
-    fprintf(stderr, "Content sandbox disabled due to invalid"
-                    "sandbox level (%d)\n", aInfo.level);
-    return false;
-  }
-
-  if (!foundParentPort) {
-    fprintf(stderr, "Content sandbox disabled due to "
-                    "missing sandbox CLI parent port parameter.\n");
-    return false;
-  }
-
-  if (!foundAppPath) {
-    fprintf(stderr, "Content sandbox disabled due to "
-                    "missing sandbox CLI app path parameter.\n");
-    return false;
-  }
-
-  aInfo.testingReadPath1 = testingReadPaths[0];
-  aInfo.testingReadPath2 = testingReadPaths[1];
-  aInfo.testingReadPath3 = testingReadPaths[2];
-  aInfo.testingReadPath4 = testingReadPaths[3];
-
-  return true;
-}
-
-/*
- * Returns true if no errors were encountered or if early sandbox startup is
- * not enabled for this process. Returns false if an error was encountered.
- */
-bool
-EarlyStartMacSandboxIfEnabled(int aArgc, char** aArgv,
-                              std::string &aErrorMessage)
-{
-  bool earlyStartupEnabled = false;
-
-  // Check for the -sbStartup CLI parameter which
-  // indicates we should start the sandbox now.
-  for (int i = 0; i < aArgc; i++) {
-    if (strcmp(aArgv[i], "-sbStartup") == 0) {
-      earlyStartupEnabled = true;
-      break;
-    }
-  }
-
-  // The sandbox will be started later when/if parent
-  // sends the sandbox startup message. Return true
-  // indicating no errors occurred.
-  if (!earlyStartupEnabled) {
-    return true;
-  }
-
-  MacSandboxInfo info;
-  info.type = MacSandboxType_Content;
-  if (!GetContentSandboxParamsFromArgs(aArgc, aArgv, info)) {
-    return false;
-  }
-
-  return StartMacSandbox(info, aErrorMessage);
-}
-
-#ifdef DEBUG
-/*
- * Ensures that a process sandbox is enabled by attempting to enable
- * a new sandbox policy and ASSERT'ing that this fails. This depends
- * on sandbox_init() failing when called again after a sandbox has
- * already been successfully enabled.
- */
-void
-AssertMacSandboxEnabled()
-{
-  char *errorbuf = NULL;
-  int rv = sandbox_init("(version 1)(deny default)", 0, &errorbuf);
-  MOZ_ASSERT(rv != 0);
-}
-#endif /* DEBUG */
 
 } // namespace mozilla
