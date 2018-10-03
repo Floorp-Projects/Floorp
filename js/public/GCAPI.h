@@ -754,14 +754,6 @@ extern JS_PUBLIC_API(bool)
 IsGenerationalGCEnabled(JSRuntime* rt);
 
 /**
- * Returns the GC's "number". This does not correspond directly to the number
- * of GCs that have been run, but is guaranteed to be monotonically increasing
- * with GC activity.
- */
-extern JS_PUBLIC_API(size_t)
-GetGCNumber();
-
-/**
  * Pass a subclass of this "abstract" class to callees to require that they
  * never GC. Subclasses can use assertions or the hazard analysis to ensure no
  * GC happens.

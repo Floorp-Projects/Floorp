@@ -2554,14 +2554,24 @@ LIRGenerator::visitBinaryCache(MBinaryCache* ins)
     MDefinition* lhs = ins->getOperand(0);
     MDefinition* rhs = ins->getOperand(1);
 
-    MOZ_ASSERT(ins->type() == MIRType::Value);
-    MOZ_ASSERT(ins->type() == MIRType::Value);
-
-    LBinaryCache* lir = new(alloc()) LBinaryCache(useBox(lhs),
-                                                  useBox(rhs),
-                                                  tempFixed(FloatReg0),
-                                                  tempFixed(FloatReg1));
-    defineBox(lir, ins);
+    MOZ_ASSERT(ins->type() == MIRType::Value || ins->type() == MIRType::Boolean);
+    LInstruction* lir;
+    if (ins->type() == MIRType::Value) {
+        LBinaryValueCache* valueLir = new (alloc()) LBinaryValueCache(useBox(lhs),
+                                                                      useBox(rhs),
+                                                                      tempFixed(FloatReg0),
+                                                                      tempFixed(FloatReg1));
+        defineBox(valueLir, ins);
+        lir = valueLir;
+    } else {
+        MOZ_ASSERT(ins->type() == MIRType::Boolean);
+        LBinaryBoolCache* boolLir = new (alloc()) LBinaryBoolCache(useBox(lhs),
+                                                                   useBox(rhs),
+                                                                   tempFixed(FloatReg0),
+                                                                   tempFixed(FloatReg1));
+        define(boolLir, ins);
+        lir = boolLir;
+    }
     assignSafepoint(lir, ins);
 }
 

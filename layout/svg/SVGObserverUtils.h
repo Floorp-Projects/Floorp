@@ -125,7 +125,7 @@ public:
   // When a SVGRenderingObserver list gets forcibly cleared, it uses this
   // callback to notify every observer that's cleared from it, so they can
   // react.
-  void NotifyEvictedFromRenderingObserverList();
+  void NotifyEvictedFromRenderingObserverSet();
 
   nsIFrame* GetAndObserveReferencedFrame();
   /**
@@ -251,10 +251,11 @@ public:
   static void InvalidateDirectRenderingObservers(nsIFrame* aFrame, uint32_t aFlags = 0);
 
   /**
-   * Get the paint server for a aTargetFrame.
+   * Get the paint server for aPaintedFrame.
    */
-  static nsSVGPaintServerFrame *GetPaintServer(nsIFrame* aTargetFrame,
-                                               nsStyleSVGPaint nsStyleSVG::* aPaint);
+  static nsSVGPaintServerFrame*
+  GetAndObservePaintServer(nsIFrame* aPaintedFrame,
+                           nsStyleSVGPaint nsStyleSVG::* aPaint);
 
   /**
    * Get the start/mid/end-markers for the given frame, and add the frame as
@@ -262,7 +263,7 @@ public:
    * found, false otherwise.
    */
   static bool
-  GetMarkerFrames(nsIFrame* aMarkedFrame, nsSVGMarkerFrame*(*aFrames)[3]);
+  GetAndObserveMarkers(nsIFrame* aMarkedFrame, nsSVGMarkerFrame*(*aFrames)[3]);
 
   /**
    * Get the frames of the SVG filters applied to the given frame, and add the
@@ -366,7 +367,7 @@ public:
    * aTextPathFrame start observing rendering changes to that element.
    */
   static SVGGeometryElement*
-  GetTextPathsReferencedPath(nsIFrame* aTextPathFrame);
+  GetAndObserveTextPathsPath(nsIFrame* aTextPathFrame);
 
   /**
    * Make aTextPathFrame stop observing rendering changes to the
@@ -389,7 +390,7 @@ public:
    * used as a callback to lazily get the href value, if necessary.
    */
   static nsIFrame*
-  GetTemplateFrame(nsIFrame* aFrame, HrefToTemplateCallback aGetHref);
+  GetAndObserveTemplate(nsIFrame* aFrame, HrefToTemplateCallback aGetHref);
 
   static void
   RemoveTemplateObserver(nsIFrame* aFrame);

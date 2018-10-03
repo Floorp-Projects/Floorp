@@ -7198,10 +7198,10 @@ class MBinaryCache
     public MixPolicy<BoxPolicy<0>, BoxPolicy<1> >::Data
 {
   protected:
-    explicit MBinaryCache(MDefinition* left, MDefinition* right)
+    explicit MBinaryCache(MDefinition* left, MDefinition* right, MIRType resType)
       : MBinaryInstruction(classOpcode, left, right)
     {
-        setResultType(MIRType::Value);
+        setResultType(resType);
     }
 
   public:
