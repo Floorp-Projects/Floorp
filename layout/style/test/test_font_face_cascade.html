@@ -30,6 +30,6 @@ load_sheet(
   "USER_SHEET");
 
 is([...document.fonts].map(f => f.family).join(" "),
-   '"TestAgent" "TestUser" "TestAuthor"',
+   'TestAgent TestUser TestAuthor',
    "@font-face rules are returned in correct cascade order");
 </script>
