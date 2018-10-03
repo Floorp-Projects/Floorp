@@ -37,7 +37,7 @@ public:
   virtual SyncHandle GetSyncHandle() = 0;
 
   // Return false for failed synchronization.
-  virtual bool Synchronize(bool aFallible = false) = 0;
+  virtual bool Synchronize() = 0;
 
 protected:
   SyncObjectHost() { }
