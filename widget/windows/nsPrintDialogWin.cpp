@@ -178,8 +178,7 @@ nsPrintDialogServiceWin::GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow)
   // Now we might be the Browser so check this path
   nsCOMPtr<nsPIDOMWindowOuter> window = nsPIDOMWindowOuter::From(aWindow);
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    do_QueryInterface(window->GetDocShell());
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = window->GetDocShell();
   if (!treeItem)
     return nullptr;
 

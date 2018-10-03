@@ -60,7 +60,7 @@ nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 NS_IMETHODIMP
 nsSound::Play(nsIURL *aURL)
 {
-  nsCOMPtr<nsIURI> uri(do_QueryInterface(aURL));
+  nsCOMPtr<nsIURI> uri(aURL);
   nsCOMPtr<nsIStreamLoader> loader;
   return NS_NewStreamLoader(getter_AddRefs(loader),
                             uri,

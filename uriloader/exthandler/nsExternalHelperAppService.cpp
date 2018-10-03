@@ -339,7 +339,7 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
                                true, getter_AddRefs(ldir));
 
     NS_ENSURE_SUCCESS(rv, rv);
-    dir = do_QueryInterface(ldir);
+    dir = ldir;
 
     // If we're not checking for availability we're done.
     if (aSkipChecks) {

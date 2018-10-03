@@ -792,7 +792,7 @@ nsFilePicker::RememberLastUsedDirectory()
   nsCOMPtr<nsIFile> dir;
   nsAutoString newDir;
   if (NS_FAILED(file->GetParent(getter_AddRefs(dir))) ||
-      !(mDisplayDirectory = do_QueryInterface(dir)) ||
+      !(mDisplayDirectory = dir) ||
       NS_FAILED(mDisplayDirectory->GetPath(newDir)) ||
       newDir.IsEmpty()) {
     NS_WARNING("RememberLastUsedDirectory failed to get parent directory.");
