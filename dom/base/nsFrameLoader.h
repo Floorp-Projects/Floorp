@@ -139,8 +139,6 @@ public:
   nsresult LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
                    bool aOriginalSrc);
 
-  void AddProcessChangeBlockingPromise(mozilla::dom::Promise& aPromise, mozilla::ErrorResult& aRv);
-
   /**
    * Destroy the frame loader and everything inside it. This will
    * clear the weak owner content reference.
@@ -165,8 +163,6 @@ public:
                           mozilla::ErrorResult& aRv);
 
   void RequestNotifyAfterRemotePaint();
-
-  void RequestFrameLoaderClose(mozilla::ErrorResult& aRv);
 
   void RequestUpdatePosition(mozilla::ErrorResult& aRv);
 
@@ -443,14 +439,6 @@ private:
   nsresult
   PopulateUserContextIdFromAttribute(mozilla::OriginAttributes& aAttr);
 
-  // Swap ourselves with the frameloader aOther, and notify chrome code with
-  // a BrowserChangedProcess event.
-  bool SwapBrowsersAndNotify(nsFrameLoader* aOther);
-
-  // Returns a promise which will be resolved once all of the blockers have
-  // resolved which were added during the BrowserWillChangeProcess event.
-  already_AddRefed<mozilla::dom::Promise> FireWillChangeProcessEvent();
-
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
@@ -481,10 +469,6 @@ private:
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
-
-  // A stack-maintained reference to an array of promises which are blocking
-  // grouped history navigation
-  nsTArray<RefPtr<mozilla::dom::Promise>>* mBrowserChangingProcessBlockers;
 
   RefPtr<mozilla::dom::ParentSHistory> mParentSHistory;
 
