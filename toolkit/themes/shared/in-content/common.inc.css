@@ -45,6 +45,8 @@
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
+  --yellow-50: #ffe900;
+  --yellow-90: #3e2800;
 }
 
 html|html,
@@ -826,4 +828,14 @@ xul|treechildren::-moz-tree-image(selected) {
   margin-inline-end: 4px;
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+/* Warning styles */
+.message-bar-warning {
+  background-color: var(--yellow-50);
+  color: var(--yellow-90);
+}
+
+.message-bar-warning > .message-bar-icon {
+  list-style-image: url("chrome://browser/skin/warning.svg");
 }

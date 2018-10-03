@@ -785,9 +785,18 @@ var gMainPane = {
   },
 
   initBrowserLocale() {
-    let localeCodes = Services.locale.availableLocales;
-    let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
-    let locales = localeCodes.map((code, i) => ({code, name: localeNames[i]}));
+    gMainPane.setBrowserLocales(Services.locale.requestedLocale);
+  },
+
+  /**
+   * Update the available list of locales and select the locale that the user
+   * is "requesting". This could be the currently requested locale or a locale
+   * that the user would like to switch to after confirmation.
+   */
+  async setBrowserLocales(requesting) {
+    let available = Services.locale.availableLocales;
+    let localeNames = Services.intl.getLocaleDisplayNames(undefined, available);
+    let locales = available.map((code, i) => ({code, name: localeNames[i]}));
     locales.sort((a, b) => a.name > b.name);
 
     let fragment = document.createDocumentFragment();
@@ -797,10 +806,21 @@ var gMainPane = {
       menuitem.setAttribute("label", name);
       fragment.appendChild(menuitem);
     }
+
+    // Add an option to search for more languages.
+    let menuitem = document.createXULElement("menuitem");
+    menuitem.setAttribute(
+      "label", await document.l10n.formatValue("browser-languages-search"));
+    menuitem.addEventListener("command", () => {
+      gMainPane.showBrowserLanguages({search: true});
+    });
+    fragment.appendChild(menuitem);
+
     let menulist = document.getElementById("defaultBrowserLanguage");
     let menupopup = menulist.querySelector("menupopup");
+    menupopup.textContent = "";
     menupopup.appendChild(fragment);
-    menulist.value = Services.locale.requestedLocale;
+    menulist.value = requesting;
 
     document.getElementById("browserLanguagesBox").hidden = false;
   },
@@ -849,10 +869,16 @@ var gMainPane = {
   /* Show or hide the confirm change message bar based on the new locale. */
   onBrowserLanguageChange(event) {
     let locale = event.target.value;
-    if (locale == Services.locale.requestedLocale) {
+
+    // If there is no value, then this is the search option, leave the
+    // message bar in its current state.
+    if (!locale) {
+      return;
+    } else if (locale == Services.locale.requestedLocale) {
       this.hideConfirmLanguageChangeMessageBar();
       return;
     }
+
     let locales = Array.from(new Set([
       locale,
       ...Services.locale.requestedLocales,
@@ -984,23 +1010,23 @@ var gMainPane = {
     gSubDialog.open("chrome://browser/content/preferences/languages.xul");
   },
 
-  showBrowserLanguages() {
+  showBrowserLanguages({search}) {
+    let opts = {requesting: gMainPane.requestingLocales, search};
     gSubDialog.open(
       "chrome://browser/content/preferences/browserLanguages.xul",
-      null, gMainPane.requestingLocales, this.browserLanguagesClosed);
+      null, opts, this.browserLanguagesClosed);
   },
 
   /* Show or hide the confirm change message bar based on the updated ordering. */
   browserLanguagesClosed() {
     let requesting = this.gBrowserLanguagesDialog.requestedLocales;
     let requested = Services.locale.requestedLocales;
-    let defaultBrowserLanguage = document.getElementById("defaultBrowserLanguage");
     if (requesting && requesting.join(",") != requested.join(",")) {
       gMainPane.showConfirmLanguageChangeMessageBar(requesting);
-      defaultBrowserLanguage.value = requesting[0];
+      gMainPane.setBrowserLocales(requesting[0]);
       return;
     }
-    defaultBrowserLanguage.value = Services.locale.requestedLocale;
+    gMainPane.setBrowserLocales(Services.locale.requestedLocale);
     gMainPane.hideConfirmLanguageChangeMessageBar();
   },
 
