@@ -1073,9 +1073,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       line: this.line || undefined,
       column: this.column,
       traits: {
-        // Whether the style rule actor implements the modifySelector2 method
-        // that allows for unmatched rule to be added
-        modifySelectorUnmatched: true,
         // Whether the style rule actor implements the setRuleText
         // method.
         canSetRuleText: this.canSetRuleText,
@@ -1400,7 +1397,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   /**
-   * Helper function for modifySelector and modifySelector2, inserts the new
+   * Helper function for modifySelector, inserts the new
    * rule with the new selector into the parent style sheet and removes the
    * current rule. Returns the newly inserted css rule or null if the rule is
    * unsuccessfully inserted to the parent style sheet.
@@ -1459,44 +1456,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     }
 
     return this._getRuleFromIndex(parentStyleSheet);
-  },
-
-  /**
-   * Modify the current rule's selector by inserting a new rule with the new
-   * selector value and removing the current rule.
-   *
-   * Note this method was kept for backward compatibility, but unmatched rules
-   * support was added in FF41.
-   *
-   * @param string value
-   *        The new selector value
-   * @returns boolean
-   *        Returns a boolean if the selector in the stylesheet was modified,
-   *        and false otherwise
-   */
-  async modifySelector(value) {
-    if (this.type === ELEMENT_STYLE) {
-      return false;
-    }
-
-    const document = this.getDocument(this._parentSheet);
-    // Extract the selector, and pseudo elements and classes
-    const [selector] = value.split(/(:{1,2}.+$)/);
-    let selectorElement;
-
-    try {
-      selectorElement = document.querySelector(selector);
-    } catch (e) {
-      return false;
-    }
-
-    // Check if the selector is valid and not the same as the original
-    // selector
-    if (selectorElement && this.rawRule.selectorText !== value) {
-      await this._addNewSelector(value, false);
-      return true;
-    }
-    return false;
   },
 
   /**
@@ -1565,11 +1524,19 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   /**
+   * Calls modifySelector2() which needs to be kept around for backwards compatibility.
+   * TODO: Once Firefox 64 is no longer supported, inline that mehtod's content,
+   * then remove its definition from this file and from specs/styles.js
+   */
+  modifySelector: function(node, value, editAuthored = false) {
+    return this.modifySelector2(node, value, editAuthored);
+  },
+
+  /**
    * Modify the current rule's selector by inserting a new rule with the new
    * selector value and removing the current rule.
    *
-   * In contrast with the modifySelector method which was used before FF41,
-   * this method also returns information about the new rule and applied style
+   * Returns information about the new rule and applied style
    * so that consumers can immediately display the new rule, whether or not the
    * selector matches the current element without having to refresh the whole
    * list.

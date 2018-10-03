@@ -847,13 +847,23 @@ class XPCShellTests(object):
         return test_object
 
     def buildTestList(self, test_tags=None, test_paths=None, verify=False):
-        """
-          read the xpcshell.ini manifest and set self.alltests to be
-          an array of test objects.
+        """Reads the xpcshell.ini manifest and set self.alltests to an array.
 
-          if we are chunking tests, it will be done here as well
-        """
+        Given the parameters, this method compiles a list of tests to be run
+        that matches the criteria set by parameters.
 
+        If any chunking of tests are to occur, it is also done in this method.
+
+        If no tests are added to the list of tests to be run, an error
+        is logged. A sys.exit() signal is sent to the caller.
+
+        Args:
+            test_tags (list, optional): list of strings.
+            test_paths (list, optional): list of strings derived from the command
+                                         line argument provided by user, specifying
+                                         tests to be run.
+            verify (bool, optional): boolean value.
+        """
         if test_paths is None:
             test_paths = []
 
@@ -888,6 +898,7 @@ class XPCShellTests(object):
             self.log.error("no tests to run using specified "
                            "combination of filters: {}".format(
                                 mp.fmt_filters()))
+            sys.exit(1)
 
         if self.dump_tests:
             self.dump_tests = os.path.expanduser(self.dump_tests)

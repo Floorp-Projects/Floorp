@@ -260,18 +260,6 @@ let ACTORS = {
     },
   },
 
-  UAWidgets: {
-    child: {
-      module: "resource:///actors/UAWidgetsChild.jsm",
-      group: "browsers",
-      events: {
-        "UAWidgetBindToTree": {},
-        "UAWidgetAttributeChanged": {},
-        "UAWidgetUnbindFromTree": {},
-      },
-    },
-  },
-
   UITour: {
     child: {
       module: "resource:///modules/UITourChild.jsm",

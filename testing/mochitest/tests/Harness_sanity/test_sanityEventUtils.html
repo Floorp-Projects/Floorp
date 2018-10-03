@@ -121,13 +121,46 @@ function starttest() {
       is($("testKeyEvent").value, "a", "synthesizeKey should work");
       is(check, true, "synthesizeKey should dispatch keyPress");
       $("testKeyEvent").value = "";
-    
-      check = false;
-      $("testKeyEvent").addEventListener("keypress", doCheck, {once:true});
-      synthesizeKeyExpectEvent("a", {}, $("testKeyEvent"), "keypress");
-      is($("testKeyEvent").value, "a", "synthesizeKey should work");
-      is(check, true, "synthesizeKey should dispatch keyPress");
-      $("testKeyEvent").value = "";
+
+      // If |.code| value is not specified explicitly, it should be computed
+      // from the |.key| value or |.keyCode| value.  If a printable key is
+      // specified, the |.code| value should be guessed with US-English
+      // keyboard layout.
+      for (let test of [{ arg: "KEY_Enter", code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN },
+                        { arg: "VK_RETURN", code: "Enter", keyCode: KeyboardEvent.DOM_VK_RETURN },
+                        { arg: "KEY_Backspace", code: "Backspace", keyCode: KeyboardEvent.DOM_VK_BACK_SPACE },
+                        { arg: "KEY_Delete", code: "Delete", keyCode: KeyboardEvent.DOM_VK_DELETE },
+                        { arg: "KEY_Home", code: "Home", keyCode: KeyboardEvent.DOM_VK_HOME },
+                        { arg: "KEY_End", code: "End", keyCode: KeyboardEvent.DOM_VK_END },
+                        { arg: "KEY_ArrowDown", code: "ArrowDown", keyCode: KeyboardEvent.DOM_VK_DOWN },
+                        { arg: "KEY_ArrowUp", code: "ArrowUp", keyCode: KeyboardEvent.DOM_VK_UP },
+                        { arg: "KEY_ArrowLeft", code: "ArrowLeft", keyCode: KeyboardEvent.DOM_VK_LEFT },
+                        { arg: "KEY_ArrowRight", code: "ArrowRight", keyCode: KeyboardEvent.DOM_VK_RIGHT },
+                        { arg: "KEY_Shift", code: "ShiftLeft", keyCode: KeyboardEvent.DOM_VK_SHIFT },
+                        { arg: "KEY_Control", code: "ControlLeft", keyCode: KeyboardEvent.DOM_VK_CONTROL },
+                        { arg: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A },
+                        { arg: "B", code: "KeyB", keyCode: KeyboardEvent.DOM_VK_B },
+                        { arg: " ", code: "Space", keyCode: KeyboardEvent.DOM_VK_SPACE },
+                        { arg: "0", code: "Digit0", keyCode: KeyboardEvent.DOM_VK_0 },
+                        { arg: "(", code: "Digit9", keyCode: KeyboardEvent.DOM_VK_9 },
+                        { arg: "!", code: "Digit1", keyCode: KeyboardEvent.DOM_VK_1 },
+                        { arg: "[", code: "BracketLeft", keyCode: KeyboardEvent.DOM_VK_OPEN_BRACKET },
+                        { arg: ";", code: "Semicolon", keyCode: KeyboardEvent.DOM_VK_SEMICOLON },
+                        { arg: "\"", code: "Quote", keyCode: KeyboardEvent.DOM_VK_QUOTE },
+                        { arg: "~", code: "Backquote", keyCode: KeyboardEvent.DOM_VK_BACK_QUOTE },
+                        { arg: "<", code: "Comma", keyCode: KeyboardEvent.DOM_VK_COMMA },
+                        { arg: ".", code: "Period", keyCode: KeyboardEvent.DOM_VK_PERIOD }]) {
+        let keydown, keyup;
+        $("testKeyEvent").focus();
+        $("testKeyEvent").addEventListener("keydown", (e) => { keydown = e; }, {once: true});
+        $("testKeyEvent").addEventListener("keyup", (e) => { keyup = e; }, {once: true});
+        synthesizeKey(test.arg);
+        is(keydown.code, test.code, `Synthesizing "${test.arg}" should set code value of "keydown" to "${test.code}"`);
+        is(keydown.keyCode, test.keyCode, `Synthesizing "${test.arg}" should set keyCode value of "keydown" to "${test.keyCode}"`);
+        is(keyup.code, test.code, `Synthesizing "${test.arg}" key should set code value of "keyup" to "${test.code}"`);
+        is(keyup.keyCode, test.keyCode, `Synthesizing "${test.arg}" key should set keyCode value of "keyup" to "${test.keyCode}"`);
+        $("testKeyEvent").value = "";
+      }
     
       /* test synthesizeComposition */
       var description = "";
