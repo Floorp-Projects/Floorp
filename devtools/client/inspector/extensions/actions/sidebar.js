@@ -7,6 +7,7 @@
 const {
   EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE,
   EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE,
+  EXTENSION_SIDEBAR_PAGE_UPDATE,
   EXTENSION_SIDEBAR_REMOVE,
 } = require("./index");
 
@@ -32,6 +33,17 @@ module.exports = {
       sidebarId,
       objectValueGrip,
       rootTitle,
+    };
+  },
+
+  /**
+   * Switch the sidebar into the extension page mode.
+   */
+  updateExtensionPage(sidebarId, iframeURL) {
+    return {
+      type: EXTENSION_SIDEBAR_PAGE_UPDATE,
+      sidebarId,
+      iframeURL,
     };
   },
 
