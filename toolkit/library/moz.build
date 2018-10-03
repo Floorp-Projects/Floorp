@@ -310,6 +310,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'wintrust',
         'wtsapi32',
         'locationapi',
+        'runtimeobject',
         'sapi',
         'dxguid',
         'dhcpcsvc',
