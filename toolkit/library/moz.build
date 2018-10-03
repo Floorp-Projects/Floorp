@@ -314,12 +314,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'dxguid',
         'dhcpcsvc',
     ]
-
-    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-        OS_LIBS += [
-            'runtimeobject',
-        ]
-
     if CONFIG['ACCESSIBILITY']:
         OS_LIBS += [
             'oleacc',

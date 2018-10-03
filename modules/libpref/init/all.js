@@ -5090,18 +5090,7 @@ pref("alerts.showFavicons", false);
 // Whether to use platform-specific backends for showing desktop notifications.
 // If no such backend is available, or if the pref is false, then XUL
 // notifications are used.
-
-// Linux and macOS turn on system level notification as default, but Windows is
-// Nightly only due to unstable yet.
-#if defined(XP_WIN)
-#if defined(NIGHTLY_BUILD)
 pref("alerts.useSystemBackend", true);
-#else
-pref("alerts.useSystemBackend", false);
-#endif
-#else
-pref("alerts.useSystemBackend", true);
-#endif
 
 // DOM full-screen API.
 pref("full-screen-api.enabled", false);
