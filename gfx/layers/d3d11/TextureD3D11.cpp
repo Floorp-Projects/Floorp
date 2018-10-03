@@ -1716,21 +1716,23 @@ SyncObjectD3D11Host::GetSyncHandle()
 }
 
 bool
-SyncObjectD3D11Host::Synchronize()
+SyncObjectD3D11Host::Synchronize(bool aFallible)
 {
   HRESULT hr;
   AutoTextureLock lock(mKeyedMutex, hr, 10000);
 
   if (hr == WAIT_TIMEOUT) {
     hr = mDevice->GetDeviceRemovedReason();
-    if (hr == S_OK) {
+    if (hr != S_OK ) {
+      // Since the timeout is related to the driver-removed. Return false for
+      // error handling.
+      gfxCriticalNote << "GFX: D3D11 timeout with device-removed:" << gfx::hexa(hr);
+    } else if (aFallible) {
+      gfxCriticalNote << "GFX: D3D11 timeout on the D3D11 sync lock.";
+    } else {
       // There is no driver-removed event. Crash with this timeout.
       MOZ_CRASH("GFX: D3D11 normal status timeout");
     }
-
-    // Since the timeout is related to the driver-removed. Return false for
-    // error handling.
-    gfxCriticalNote << "GFX: D3D11 timeout with device-removed:" << gfx::hexa(hr);
 
     return false;
   }

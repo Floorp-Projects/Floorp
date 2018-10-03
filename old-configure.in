@@ -2314,14 +2314,6 @@ if test "$ACCESSIBILITY"; then
     AC_DEFINE(ACCESSIBILITY)
 fi
 
-dnl ========================================================
-dnl Accessibility is required for the linuxgl widget
-dnl backend
-dnl ========================================================
-if test "${MOZ_WIDGET_TOOLKIT}" = "linuxgl" -a "$ACCESSIBILITY" != "1"; then
-    AC_MSG_ERROR(["Accessibility is required for the linuxgl widget backend"])
-fi
-
 AC_TRY_COMPILE([#include <linux/ethtool.h>],
                [ struct ethtool_cmd cmd; cmd.speed_hi = 0; ],
                MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI=1)

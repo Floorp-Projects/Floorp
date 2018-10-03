@@ -4994,7 +4994,7 @@ SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
   }
 
   SVGGeometryElement* geomElement =
-    SVGObserverUtils::GetTextPathsReferencedPath(aTextPathFrame);
+    SVGObserverUtils::GetAndObserveTextPathsPath(aTextPathFrame);
   if (!geomElement) {
     return nullptr;
   }
@@ -5027,10 +5027,10 @@ SVGTextFrame::GetOffsetScale(nsIFrame* aTextPathFrame)
   }
 
   SVGGeometryElement* geomElement =
-    SVGObserverUtils::GetTextPathsReferencedPath(aTextPathFrame);
-  if (!geomElement)
+    SVGObserverUtils::GetAndObserveTextPathsPath(aTextPathFrame);
+  if (!geomElement) {
     return 1.0;
-
+  }
   return geomElement->GetPathLengthScale(SVGGeometryElement::eForTextPath);
 }
 
