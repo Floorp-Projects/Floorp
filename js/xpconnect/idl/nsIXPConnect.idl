@@ -64,26 +64,6 @@ public:
 %}
 };
 
-%{C++
-
-inline
-const nsQueryInterface
-do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative)
-{
-    return nsQueryInterface(aWrappedNative->Native());
-}
-
-inline
-const nsQueryInterfaceWithError
-do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative,
-                      nsresult *aError)
-
-{
-    return nsQueryInterfaceWithError(aWrappedNative->Native(), aError);
-}
-
-%}
-
 [builtinclass, uuid(3a01b0d6-074b-49ed-bac3-08c76366cae4)]
 interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 {

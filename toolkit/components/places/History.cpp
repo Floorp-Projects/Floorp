@@ -234,7 +234,7 @@ GetJSValueAsURI(JSContext* aCtx,
     nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, aValue.toObjectOrNull(),
                                                   getter_AddRefs(wrappedObj));
     NS_ENSURE_SUCCESS(rv, nullptr);
-    nsCOMPtr<nsIURI> uri = do_QueryWrappedNative(wrappedObj);
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(wrappedObj->Native());
     return uri.forget();
   }
   return nullptr;
