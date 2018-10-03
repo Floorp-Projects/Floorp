@@ -26,21 +26,21 @@ struct FeatureMap {
  */
 static FeatureMap sSupportedFeatures[] = {
   // TODO: not supported yet!!!
-  { "autoplay", FeatureMap::eAll },
+  { "autoplay", FeatureMap::eSelf },
   // TODO: not supported yet!!!
-  { "camera", FeatureMap::eAll  },
-  { "encrypted-media", FeatureMap::eAll  },
+  { "camera", FeatureMap::eSelf  },
+  { "encrypted-media", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
-  { "fullscreen", FeatureMap::eAll  },
+  { "fullscreen", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
-  { "geolocation", FeatureMap::eAll  },
+  { "geolocation", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
-  { "microphone", FeatureMap::eAll  },
-  { "midi", FeatureMap::eAll  },
-  { "payment", FeatureMap::eAll  },
+  { "microphone", FeatureMap::eSelf  },
+  { "midi", FeatureMap::eSelf  },
+  { "payment", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
-  { "speaker", FeatureMap::eAll  },
-  { "vr", FeatureMap::eAll  },
+  { "speaker", FeatureMap::eSelf  },
+  { "vr", FeatureMap::eSelf  },
 };
 
 /* static */ bool
