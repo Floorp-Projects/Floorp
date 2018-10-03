@@ -69,6 +69,7 @@ public:
   // overload of Http2Stream
   virtual bool HasSink() override { return !!mConsumerStream; }
   virtual void SetPushComplete() override { mPushCompleted = true; }
+  virtual void TopLevelOuterContentWindowIdChanged(uint64_t) override;
 
   nsCString &GetRequestString() { return mRequestString; }
 
@@ -99,6 +100,7 @@ private:
   bool mOnPushFailed;
   nsCString mRequestString;
 
+  uint32_t mDefaultPriorityDependency;
 };
 
 class Http2PushTransactionBuffer final : public nsAHttpTransaction
