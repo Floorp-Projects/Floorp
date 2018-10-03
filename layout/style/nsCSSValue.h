@@ -720,40 +720,15 @@ public:
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
   void SetSharedListValue(nsCSSValueSharedList* aList);
-  void SetDependentListValue(nsCSSValueList* aList);
-  void SetDependentPairListValue(nsCSSValuePairList* aList);
-  void SetAutoValue();
-  void SetInheritValue();
-  void SetInitialValue();
-  void SetUnsetValue();
   void SetNoneValue();
-  void SetAllValue();
-  void SetNormalValue();
-  void SetSystemFontValue();
-  void SetDummyValue();
-  void SetDummyInheritValue();
-
-  // Converts an nsStyleCoord::CalcValue back into a CSSValue
-  void SetCalcValue(const nsStyleCoord::CalcValue* aCalc);
 
   nsStyleCoord::CalcValue GetCalcValue() const;
+  void SetCalcValue(const nsStyleCoord::CalcValue&);
 
   // These are a little different - they allocate storage for you and
   // return a handle.
   nsCSSValueList* SetListValue();
   nsCSSValuePairList* SetPairListValue();
-
-  // These take ownership of the passed-in resource.
-  void AdoptListValue(mozilla::UniquePtr<nsCSSValueList> aValue);
-  void AdoptPairListValue(mozilla::UniquePtr<nsCSSValuePairList> aValue);
-
-  void StartImageLoad(nsIDocument* aDocument,
-                      mozilla::CORSMode aCORSMode) const;  // Only pretend const
-
-  // Initializes as a function value with the specified function id.
-  Array* InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs);
-  // Checks if this is a function value with the specified function id.
-  bool EqualsFunction(nsCSSKeyword aFunctionId) const;
 
   // Returns an already addrefed buffer.  Guaranteed to return non-null.
   // (Will abort on allocation failure.)
