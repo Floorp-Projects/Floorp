@@ -3,6 +3,14 @@ target: obj-x86_64-pc-linux-gnu
 # It is used by 'mach static-analysis' and 'mozreview static-analysis bot'
 # in order to have consistency across the used checkers.
 # All the clang checks used by the static-analysis tools.
+#
+# To add a new checker:
+# 1. Add it in this file
+# 2. Create a C/C++ test case in tools/clang-tidy/test/ reproducing the
+#    warning/error that the checker will detect
+# 3. Run './mach static-analysis autotest -d' to create the reference
+# 4. Check the json file in tools/clang-tidy/test/
+# 5. Commit this file + the .cpp test case + the json result
 platforms:
   - linux64
   - macosx64
@@ -18,14 +26,29 @@ clang_checkers:
   - name: bugprone-assert-side-effect
   - name: bugprone-bool-pointer-implicit-conversion
   - name: bugprone-forward-declaration-namespace
+  - name: bugprone-incorrect-roundings
+  - name: bugprone-integer-division
+  - name: bugprone-macro-parentheses
   - name: bugprone-macro-repeated-side-effects
+  - name: bugprone-misplaced-widening-cast
+  - name: bugprone-multiple-statement-macro
+  - name: bugprone-sizeof-expression
   - name: bugprone-string-constructor
   - name: bugprone-string-integer-assignment
   - name: bugprone-suspicious-memset-usage
   - name: bugprone-suspicious-missing-comma
   - name: bugprone-suspicious-semicolon
+  - name: bugprone-suspicious-string-compare
   - name: bugprone-swapped-arguments
   - name: bugprone-unused-raii
+  - name: bugprone-use-after-move
+  - name: clang-analyzer-core.CallAndMessage
+  - name: clang-analyzer-core.DivideZero
+  - name: clang-analyzer-core.NonNullParamChecker
+  - name: clang-analyzer-core.NullDereference
+  - name: clang-analyzer-core.UndefinedBinaryOperatorResult
+  - name: clang-analyzer-core.uninitialized.Assign
+  - name: clang-analyzer-core.uninitialized.Branch
   - name: clang-analyzer-cplusplus.NewDelete
   - name: clang-analyzer-cplusplus.NewDeleteLeaks
   - name: clang-analyzer-deadcode.DeadStores
@@ -46,6 +69,8 @@ clang_checkers:
   - name: clang-analyzer-unix.Malloc
   - name: clang-analyzer-unix.cstring.BadSizeArg
   - name: clang-analyzer-unix.cstring.NullArg
+  - name: misc-non-copyable-objects
+  - name: misc-redundant-expression
   - name: misc-unused-alias-decls
   - name: misc-unused-using-decls
   - name: modernize-avoid-bind
@@ -86,14 +111,17 @@ clang_checkers:
   - name: readability-braces-around-statements
   # Note: this can be loosened up by using the ShortStatementLines option
   - name: readability-container-size-empty
+  - name: readability-delete-null-pointer
   - name: readability-else-after-return
+  - name: readability-inconsistent-declaration-parameter-name
   - name: readability-misleading-indentation
+  - name: readability-non-const-parameter
   - name: readability-redundant-control-flow
   - name: readability-redundant-smartptr-get
-    publish: !!bool no
   - name: readability-redundant-string-cstr
   - name: readability-redundant-string-init
   - name: readability-static-accessed-through-instance
+  - name: readability-simplify-boolean-expr
   - name: readability-uniqueptr-delete-release
   # We don't publish the google checkers since we are interested in only having
   # a general idea how our code complies with the rules added by these checkers.

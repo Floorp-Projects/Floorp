@@ -27,7 +27,7 @@ def mock_command_output(monkeypatch):
     """Monkeypatches the ADBDevice.command_output() method call.
 
     Instead of calling the concrete method implemented in adb.py::ADBDevice,
-    this method simply returns a string representaton of the command that was
+    this method simply returns a string representation of the command that was
     received.
 
     :param object monkeypatch: pytest provided fixture for mocking.
@@ -45,6 +45,39 @@ def mock_command_output(monkeypatch):
 
     monkeypatch.setattr(mozdevice.ADBDevice,
                         'command_output', command_output_wrapper)
+
+
+@pytest.fixture(autouse=True)
+def mock_shell_output(monkeypatch):
+    """Monkeypatches the ADBDevice.shell_output() method call.
+
+    Instead of returning the output of an adb call, this method will
+    return appropriate string output. Content of the string output is
+    in line with the calling method's expectations.
+
+    :param object monkeypatch: pytest provided fixture for mocking.
+    """
+    def shell_output_wrapper(object, cmd, env=None, cwd=None, timeout=None, root=False):
+        """Actual monkeypatch implementation of the shell_output method call.
+
+        :param object object: placeholder object representing ADBDevice
+        :param str cmd: command to be executed
+        :param env: contains the environment variable
+        :type env: dict or None
+        :param cwd: The directory from which to execute.
+        :type cwd: str or None
+        :param timeout: unused parameter tp represent timeout threshold
+        :returns: string - string representation of a simulated call to adb
+        """
+        if 'pm list package error' in cmd:
+            return 'Error: Could not access the Package Manager'
+        elif 'pm list package none' in cmd:
+            return ''
+        elif 'pm list package' in cmd:
+            apps = ["org.mozilla.fennec", "org.mozilla.geckoview_example"]
+            return ('package:{}\n' * len(apps)).format(*apps)
+
+    monkeypatch.setattr(mozdevice.ADBDevice, 'shell_output', shell_output_wrapper)
 
 
 @pytest.fixture(autouse=True)

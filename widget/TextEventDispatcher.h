@@ -401,12 +401,10 @@ private:
     // tests because this instance won't dispatch the events via the parent
     // process again.
     eSameProcessSyncTestInputTransaction,
-    // Input transaction for Others (must be IME on B2G).  Events are fired
-    // synchronously because TextInputProcessor which is the only user of
-    // this input transaction type supports only keyboard apps on B2G.
-    // Keyboard apps on B2G doesn't want to dispatch keyboard events to
-    // chrome process. Therefore, this should dispatch key events only in
-    // the current process.
+    // Input transaction for others (currently, only FuzzingFunctions).
+    // Events are fired synchronously in the process.
+    // XXX Should we make this async for testing default action handlers in
+    //     the main process?
     eSameProcessSyncInputTransaction
   };
 

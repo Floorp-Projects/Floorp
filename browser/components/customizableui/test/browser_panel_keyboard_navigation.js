@@ -180,7 +180,7 @@ add_task(async function testTabKey() {
     let button = buttons[i];
     if (button.disabled)
       continue;
-    EventUtils.synthesizeKey("Tab", {shiftKey: true});
+    EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
     Assert.equal(document.commandDispatcher.focusedElement, button,
       "The correct button should be focused after shift + tabbing");
   }

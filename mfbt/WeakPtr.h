@@ -280,6 +280,10 @@ public:
 
   T* get() const { return mRef->get(); }
 
+  ~WeakPtr() {
+    MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(mRef);
+  }
+
 private:
   friend class SupportsWeakPtr<T>;
 

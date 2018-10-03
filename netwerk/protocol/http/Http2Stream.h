@@ -148,9 +148,13 @@ public:
   bool     BlockedOnRwin() { return mBlockedOnRwin; }
 
   uint32_t Priority() { return mPriority; }
+  uint32_t PriorityDependency() { return mPriorityDependency; }
+  uint8_t PriorityWeight() { return mPriorityWeight; }
   void SetPriority(uint32_t);
-  void SetPriorityDependency(uint32_t, uint8_t, bool);
+  void SetPriorityDependency(uint32_t, uint32_t);
   void UpdatePriorityDependency();
+
+  uint64_t TransactionTabId() { return mTransactionTabId; }
 
   // A pull stream has an implicit sink, a pushed stream has a sink
   // once it is matched to a pull stream.
@@ -176,7 +180,8 @@ public:
 
   nsresult GetOriginAttributes(mozilla::OriginAttributes *oa);
 
-  void TopLevelOuterContentWindowIdChanged(uint64_t windowId);
+  virtual void TopLevelOuterContentWindowIdChanged(uint64_t windowId);
+  void TopLevelOuterContentWindowIdChangedInternal(uint64_t windowId); // For use by pushed streams only
 
 protected:
   static void CreatePushHashKey(const nsCString &scheme,
@@ -240,6 +245,11 @@ protected:
 
   // The underlying socket transport object is needed to propogate some events
   nsISocketTransport         *mSocketTransport;
+
+  uint8_t mPriorityWeight; // h2 weight
+  uint32_t mPriorityDependency; // h2 stream id this one depends on
+  uint64_t mCurrentForegroundTabOuterContentWindowId;
+  uint64_t mTransactionTabId;
 
 private:
   friend class nsAutoPtr<Http2Stream>;
@@ -318,8 +328,6 @@ private:
   int64_t                      mRequestBodyLenRemaining;
 
   uint32_t                     mPriority; // geckoish weight
-  uint32_t                     mPriorityDependency; // h2 stream id 3 - 0xb
-  uint8_t                      mPriorityWeight; // h2 weight
 
   // mClientReceiveWindow, mServerReceiveWindow, and mLocalUnacked are for flow control.
   // *window are signed because the race conditions in asynchronous SETTINGS
@@ -354,10 +362,6 @@ private:
   SimpleBuffer mSimpleBuffer;
 
   bool mAttempting0RTT;
-
-  uint64_t mCurrentForegroundTabOuterContentWindowId;
-
-  uint64_t mTransactionTabId;
 
 /// connect tunnels
 public:

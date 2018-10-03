@@ -81,7 +81,18 @@ Http2PushedStream::Http2PushedStream(Http2PushTransactionBuffer *aTransaction,
   mBufferedPush->SetPushStream(this);
   mRequestContext = aAssociatedStream->RequestContext();
   mLastRead = TimeStamp::Now();
-  SetPriority(aAssociatedStream->Priority() + 1);
+  mPriorityDependency = aAssociatedStream->PriorityDependency();
+  if (mPriorityDependency == Http2Session::kUrgentStartGroupID ||
+      mPriorityDependency == Http2Session::kLeaderGroupID) {
+    mPriorityDependency = Http2Session::kFollowerGroupID;
+  }
+  // Cache this for later use in case of tab switch.
+  mDefaultPriorityDependency = mPriorityDependency;
+  SetPriorityDependency(aAssociatedStream->Priority() + 1, mPriorityDependency);
+  // Assume we are on the same tab as our associated stream, for priority purposes.
+  // It's possible this could change when we get paired with a sink, but it's unlikely
+  // and doesn't much matter anyway.
+  mTransactionTabId = aAssociatedStream->TransactionTabId();
 }
 
 bool
@@ -308,6 +319,36 @@ Http2PushedStream::GetBufferedData(char *buf,
     rv = GetPushComplete() ? NS_BASE_STREAM_CLOSED : NS_BASE_STREAM_WOULD_BLOCK;
 
   return rv;
+}
+
+void
+Http2PushedStream::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
+{
+  if (mConsumerStream) {
+    // Pass through to our sink, who will handle things appropriately.
+    mConsumerStream->TopLevelOuterContentWindowIdChangedInternal(windowId);
+    return;
+  }
+
+  MOZ_ASSERT(gHttpHandler->ActiveTabPriority());
+
+  mCurrentForegroundTabOuterContentWindowId = windowId;
+
+  if (!mSession->UseH2Deps()) {
+    return;
+  }
+
+  uint32_t oldDependency = mPriorityDependency;
+  if (mTransactionTabId != mCurrentForegroundTabOuterContentWindowId) {
+    mPriorityDependency = Http2Session::kBackgroundGroupID;
+    nsHttp::NotifyActiveTabLoadOptimization();
+  } else {
+    mPriorityDependency = mDefaultPriorityDependency;
+  }
+
+  if (mPriorityDependency != oldDependency) {
+    mSession->SendPriorityFrame(mStreamID, mPriorityDependency, mPriorityWeight);
+  }
 }
 
 //////////////////////////////////////////

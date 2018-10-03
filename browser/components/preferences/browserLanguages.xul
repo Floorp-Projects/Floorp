@@ -40,25 +40,30 @@
         <row>
           <richlistbox id="requestedLocales"/>
           <vbox>
-            <button id="up" disabled="true" data-l10n-id="languages-customize-moveup"/>
-            <button id="down" disabled="true" data-l10n-id="languages-customize-movedown"/>
-            <button id="remove" disabled="true" data-l10n-id="languages-customize-remove"/>
+            <button id="up" class="action-button" disabled="true" data-l10n-id="languages-customize-moveup"/>
+            <button id="down" class="action-button" disabled="true" data-l10n-id="languages-customize-movedown"/>
+            <button id="remove" class="action-button" disabled="true" data-l10n-id="languages-customize-remove"/>
           </vbox>
         </row>
         <row>
           <menulist id="availableLocales"
                     class="available-locales-list"
-                    data-l10n-id="languages-customize-select-language"
-                    data-l10n-attrs="placeholder">
+                    data-l10n-id="browser-languages-select-language"
+                    data-l10n-attrs="placeholder,label">
             <menupopup/>
           </menulist>
           <button id="add"
-                  class="add-browser-language"
+                  class="add-browser-language action-button"
                   data-l10n-id="languages-customize-add"
                   disabled="true"/>
         </row>
       </rows>
     </grid>
-    <separator/>
+    <separator class="warning-message-separator"/>
+    <hbox id="warning-message" class="message-bar message-bar-warning" hidden="true">
+      <image class="message-bar-icon"/>
+      <description class="message-bar-description" data-l10n-id="browser-languages-error"/>
+    </hbox>
+    <separator class="warning-message-separator"/>
   </vbox>
 </dialog>

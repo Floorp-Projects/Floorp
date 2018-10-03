@@ -1,11 +1,20 @@
-#include <memory>
+#define NULL __null
+
+namespace std {
+
+template <typename T>
+struct unique_ptr {
+  T& operator*() const;
+  T* operator->() const;
+  T* get() const;
+  explicit operator bool() const noexcept;
+};
+}
 
 struct A {
-  void f() {}
 };
 
 void foo() {
-  std::unique_ptr<A> ptr = std::make_unique<A>();
-  ptr.get()->f();
+  A& b2 = *std::unique_ptr<A>().get();
 }
 

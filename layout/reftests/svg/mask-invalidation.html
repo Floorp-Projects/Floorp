@@ -1,0 +1,24 @@
+<html class="reftest-wait">
+<svg>
+     <clipPath id=myClip>
+          <circle cx=100 cy=100 r=100 />
+    </clipPath>
+    <g style="transform: translate(0px, 0)" clip-path="url(#myClip)">
+          <!-- for some reason this first rect is needed to trigger the bug -->
+          <rect width=100 height=50 x=10 y=50 fill=green />
+          <rect id=gr width=100 height=50 x=0 y=50 fill=red />
+    </g>
+    <rect width=50 height=50 x=0 y=50 fill=green />
+</svg>
+<script>
+  function blam() {
+    let gr = document.getElementById("gr");
+    gr.setAttribute('fill', 'green');
+    document.documentElement.removeAttribute("class");
+  }
+document.addEventListener("MozReftestInvalidate", function() {
+    requestAnimationFrame(function() {
+    blam();
+  });
+});
+</script>

@@ -38,18 +38,6 @@ function installAddon(xpiName) {
   });
 }
 
-function waitForMutation(target, opts, cb) {
-  return new Promise((resolve) => {
-    let observer = new MutationObserver(() => {
-      if (!cb || cb(target)) {
-        observer.disconnect();
-        resolve();
-      }
-    });
-    observer.observe(target, opts);
-  });
-}
-
 function waitForMessageChange(element, cb, opts = { attributes: true, attributeFilter: ["hidden"] }) {
   return waitForMutation(element, opts, cb);
 }

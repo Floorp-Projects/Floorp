@@ -374,14 +374,13 @@ class ADBAndroid(ADBDevice):
     def is_app_installed(self, app_name, timeout=None):
         """Returns True if an app is installed on the device.
 
-        :param str app_name: The name of the app to be checked.
-        :param timeout: The maximum time in
-            seconds for any spawned adb process to complete before
-            throwing an ADBTimeoutError.
-            This timeout is per adb call. The total time spent
-            may exceed this value. If it is not specified, the value
-            set in the ADB constructor is used.
+        :param str app_name: name of the app to be checked.
+        :param timeout: maximum time in seconds for any spawned
+            adb process to complete before throwing an ADBTimeoutError.
+            This timeout is per adb call. If it is not specified,
+            the value set in the ADB constructor is used.
         :type timeout: integer or None
+
         :raises: * ADBTimeoutError
                  * ADBError
         """
@@ -389,9 +388,8 @@ class ADBAndroid(ADBDevice):
         data = self.shell_output("pm list package %s" % app_name, timeout=timeout)
         if pm_error_string in data:
             raise ADBError(pm_error_string)
-        if app_name not in data:
-            return False
-        return True
+        output = [line for line in data.splitlines() if line.strip()]
+        return any(['package:{}'.format(app_name) == out for out in output])
 
     def launch_application(self, app_name, activity_name, intent, url=None,
                            extras=None, wait=True, fail_if_running=True,

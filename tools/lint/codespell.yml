@@ -15,6 +15,8 @@ codespell:
         - devtools/shared/locales/en-US/
         - devtools/startup/locales/en-US/
         - dom/locales/en-US/
+        - gfx/docs/
+        - intl/docs/
         - intl/locales/en-US/
         - layout/tools/layout-debug/ui/locale/en-US/
         - mobile/android/base/locales/en-US/

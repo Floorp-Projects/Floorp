@@ -23,6 +23,7 @@ const USB_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg"
 class Sidebar extends PureComponent {
   static get propTypes() {
     return {
+      className: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
       runtimes: PropTypes.object.isRequired,
       selectedPage: PropTypes.string,
@@ -82,7 +83,7 @@ class Sidebar extends PureComponent {
 
     return dom.aside(
       {
-        className: "sidebar",
+        className: `sidebar ${this.props.className || ""}`,
       },
       dom.ul(
         {},

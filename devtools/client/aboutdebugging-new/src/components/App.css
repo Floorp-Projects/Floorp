@@ -10,19 +10,81 @@
  *  |   (240px)   |                               |
  *  |             |                               |
  *  +-------------+-------------------------------+
+ *
+ * Some of the values (font sizes, widths, etc.) are the same as
+ * about:preferences, which uses the shared common.css
  */
+
 .app {
-  display: grid;
-  font-size: 15px;
-  grid-column-gap: 40px;
-  grid-template-columns: 240px auto;
-  height: 100vh;
-  overflow: hidden;
+  /* from common */
+  --sidebar-width: 240px;
+  --app-top-padding: 70px;
+  --app-bottom-padding: 40px;
+  --app-left-padding: 34px;
+
+  box-sizing: border-box;
   width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* we don't want the sidebar to scroll, only the main content */
+
+  display: grid;
+  grid-column-gap: 40px;
+  grid-template-columns: var(--sidebar-width) auto;
+
+  font-size: var(--base-font-size);
+  line-height: var(--base-line-height);
+}
+
+.app__sidebar {
+  padding-block-start: var(--app-top-padding);
+  padding-block-end: var(--app-bottom-padding);
+  padding-inline-start: var(--app-left-padding);
+}
+
+.app__content {
+  padding-block-start: var(--app-top-padding);
+  padding-block-end: var(--app-bottom-padding);
+
+  /* we want to scroll only the main content, not the sidebar */
+  overflow-y: auto;
 }
 
 .page {
-  padding-block-start: 60px;
-  padding-inline-end: 40px;
-  overflow-y: auto;
+  width: var(--page-width);
+}
+
+.page__title {
+  /* from common */
+  font-weight: 300;
+  font-size: 1.46em;
+  line-height: 1.3;
+
+  margin-block-end: calc(var(--base-distance) * 4);
+}
+
+.page__section {
+  /* from common */
+  margin-block-end: calc(var(--base-distance) * 12);
+
+  --icon-size: calc(var(--base-distance) * 6);
+  --icon-gap: var(--base-distance);
+  --section-inline-margin: calc(var(--icon-size) + var(--icon-gap));
+}
+
+.page__section__title {
+  /* from common */
+  margin-block-start: calc(var(--base-distance) * 4);
+  font-weight: 600;
+  font-size: 1.14em;
+
+  display: grid;
+  grid-template-columns: var(--icon-size) 1fr;
+  grid-column-gap: var(--icon-gap);
+  align-items: center;
+}
+
+.page__section__icon {
+  width: 100%;
+  fill: currentColor;
+  -moz-context-properties: fill;
 }
