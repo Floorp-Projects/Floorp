@@ -718,6 +718,15 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                 })
          ->Track(mRequest);
 
+  // The stream, received from the child process, must be cloneable and seekable
+  // in order to allow devtools to inspect its content.
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableFunction("HttpChannelParent::EnsureUploadStreamIsCloneable",
+      [self]() {
+        self->TryInvokeAsyncOpen(NS_OK);
+      });
+  ++mAsyncOpenBarrier;
+  mChannel->EnsureUploadStreamIsCloneable(r);
   return true;
 }
 
@@ -741,7 +750,7 @@ HttpChannelParent::WaitForBgParent()
     return promise.forget();
   }
 
-  return mPromise.Ensure(__func__);;
+  return mPromise.Ensure(__func__);
 }
 
 bool
