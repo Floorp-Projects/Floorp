@@ -77,6 +77,8 @@ enum class ColorDepth : uint8_t {
   Color10,
   // 12 bits image
   Color12,
+  // 16 bits image
+  Color16,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -279,6 +281,9 @@ struct LayoutPixel;
 
 // The renderer is responsible for submitting to the GPU the work prepared by the
 // RenderBackend.
+//
+// We have a separate `Renderer` instance for each instance of WebRender (generally
+// one per OS window), and all instances share the same thread.
 struct Renderer;
 
 // Offset in number of tiles.
