@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   Lz4: "resource://gre/modules/lz4.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -3968,6 +3969,38 @@ SearchService.prototype = {
     if (isCurrent) {
       this.currentEngine = newEngine;
     }
+  },
+
+  addEnginesFromExtension(extension) {
+    let {IconDetails} = ExtensionParent;
+    let {manifest} = extension;
+
+    // General set of icons for an engine.
+    let icons = extension.manifest.icons;
+    let iconList = [];
+    if (icons) {
+      iconList = Object.entries(icons).map(icon => {
+        return {width: icon[0], height: icon[0],
+                url: extension.baseURI.resolve(icon[1])};
+      });
+    }
+    let preferredIconUrl = icons && extension.baseURI.resolve(IconDetails.getPreferredIcon(icons).icon);
+
+    let searchProvider = manifest.chrome_settings_overrides.search_provider;
+    let params = {
+      template: searchProvider.search_url,
+      searchPostParams: searchProvider.search_url_post_params,
+      iconURL: searchProvider.favicon_url || preferredIconUrl,
+      icons: iconList,
+      alias: searchProvider.keyword,
+      extensionID: extension.id,
+      isBuiltIn: extension.isPrivileged,
+      suggestURL: searchProvider.suggest_url,
+      suggestPostParams: searchProvider.suggest_url_post_params,
+      queryCharset: "UTF-8",
+      mozParams: searchProvider.params,
+    };
+    this.addEngineWithDetails(searchProvider.name.trim(), params);
   },
 
   addEngine: function SRCH_SVC_addEngine(aEngineURL, aDataType, aIconURL,

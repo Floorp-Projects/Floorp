@@ -4,17 +4,12 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionPreferencesManager",
                                "resource://gre/modules/ExtensionPreferencesManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
                                "resource:///modules/ExtensionControlledPopup.jsm");
-
-var {
-  IconDetails,
-} = ExtensionParent;
 
 const DEFAULT_SEARCH_STORE_TYPE = "default_search";
 const DEFAULT_SEARCH_SETTING_NAME = "defaultSearch";
@@ -217,7 +212,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           return;
         }
       }
-      await this.addSearchEngine(searchProvider);
+      await this.addSearchEngine();
       if (searchProvider.is_default) {
         if (extension.startupReason === "ADDON_INSTALL") {
           // Don't ask if it already the current engine
@@ -269,7 +264,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     }
   }
 
-  async addSearchEngine(searchProvider) {
+  async addSearchEngine() {
     let {extension} = this;
     let isCurrent = false;
     let index = -1;
@@ -283,37 +278,16 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         Services.search.removeEngine(engines[0]);
       }
     }
-
-    let icons = extension.manifest.icons;
-    let iconURL = searchProvider.favicon_url ||
-                  (icons && extension.baseURI.resolve(IconDetails.getPreferredIcon(icons).icon));
-    let iconList = [];
-    if (icons) {
-      iconList = Object.entries(icons).map(icon => {
-        return {width: icon[0], height: icon[0],
-                url: extension.baseURI.resolve(icon[1])};
-      });
-    }
     try {
-      let params = {
-        template: searchProvider.search_url,
-        searchPostParams: searchProvider.search_url_post_params,
-        iconURL,
-        icons: iconList,
-        alias: searchProvider.keyword,
-        extensionID: extension.id,
-        isBuiltIn: extension.isPrivileged,
-        suggestURL: searchProvider.suggest_url,
-        suggestPostParams: searchProvider.suggest_url_post_params,
-        queryCharset: "UTF-8",
-        mozParams: searchProvider.params,
-      };
-      Services.search.addEngineWithDetails(searchProvider.name.trim(), params);
+      Services.search.addEnginesFromExtension(extension);
+      // Bug 1488516.  Preparing to support multiple engines per extension so
+      // multiple locales can be loaded.
+      let engines = Services.search.getEnginesByExtensionID(extension.id);
       await ExtensionSettingsStore.addSetting(
         extension.id, DEFAULT_SEARCH_STORE_TYPE, ENGINE_ADDED_SETTING_NAME,
-        searchProvider.name.trim());
+        engines[0].name);
       if (extension.startupReason === "ADDON_UPGRADE") {
-        let engine = Services.search.getEngineByName(searchProvider.name.trim());
+        let engine = Services.search.getEngineByName(engines[0].name);
         if (isCurrent) {
           Services.search.currentEngine = engine;
         }

@@ -387,6 +387,8 @@ interface nsIBrowserSearchService : nsISupports
                             [optional] in AString url,
                             [optional] in AString extensionID);
 
+  void addEnginesFromExtension(in jsval extension);
+
   /**
    * Un-hides all engines in the set of engines returned by getDefaultEngines.
    */
