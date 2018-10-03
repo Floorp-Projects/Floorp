@@ -1528,7 +1528,6 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 NS_IMETHODIMP
 nsPipeInputStream::Seek(int32_t aWhence, int64_t aOffset)
 {
-  MOZ_ASSERT_UNREACHABLE("nsPipeInputStream::Seek");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
