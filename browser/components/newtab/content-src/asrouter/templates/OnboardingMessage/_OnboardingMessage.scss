@@ -133,8 +133,9 @@
     }
 
     &:focus,
-    &.active {
-      box-shadow: $shadow-primary;
+    &.active,
+    &:hover {
+      box-shadow: 0 0 0 5px $grey-30;
       transition: box-shadow 150ms;
     }
   }

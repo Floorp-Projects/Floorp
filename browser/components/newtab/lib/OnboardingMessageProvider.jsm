@@ -8,7 +8,7 @@ const L10N = new Localization([
   "browser/newtab/onboarding.ftl",
 ]);
 
-const ONBOARDING_MESSAGES = [
+const ONBOARDING_MESSAGES = () => ([
   {
     id: "ONBOARDING_1",
     template: "onboarding",
@@ -76,7 +76,7 @@ const ONBOARDING_MESSAGES = [
     targeting: "isInExperimentCohort == 2",
     trigger: {id: "firstRun"},
   },
-];
+]);
 
 const OnboardingMessageProvider = {
   async getExtraAttributes() {
@@ -87,7 +87,7 @@ const OnboardingMessageProvider = {
     return {header: header.value, button_label: button_label.value};
   },
   async getMessages() {
-    const messages = await this.translateMessages(ONBOARDING_MESSAGES);
+    const messages = await this.translateMessages(ONBOARDING_MESSAGES());
     return messages;
   },
   async translateMessages(messages) {

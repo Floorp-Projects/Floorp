@@ -364,8 +364,6 @@ describe("Highlights Feed", () => {
       assert.equal(highlights.length, 2);
       assert.equal(highlights[0].url, links[0].url);
       assert.equal(highlights[1].url, links[1].url);
-
-      assert.notCalled(global.NewTabUtils.activityStreamProvider._processHighlights);
     });
     it("should include downloads when includeDownloads pref is true", async () => {
       feed.store.state.Prefs.values["section.highlights.includeDownloads"] = true;
@@ -381,7 +379,7 @@ describe("Highlights Feed", () => {
       assert.equal(highlights[1].url, links[1].url);
       assert.equal(highlights[2].url, "https://site.com/download");
 
-      assert.calledOnce(global.NewTabUtils.activityStreamProvider._processHighlights);
+      assert.propertyVal(highlights[2], "type", "download");
     });
     it("should only take 1 download", async () => {
       feed.store.state.Prefs.values["section.highlights.includeDownloads"] = true;
@@ -396,8 +394,6 @@ describe("Highlights Feed", () => {
       assert.equal(highlights.length, 2);
       assert.equal(highlights[0].url, links[0].url);
       assert.equal(highlights[1].url, "https://site1.com/download");
-
-      assert.calledOnce(global.NewTabUtils.activityStreamProvider._processHighlights);
     });
     it("should sort bookmarks, pocket, and downloads chronologically", async () => {
       feed.store.state.Prefs.values["section.highlights.includeDownloads"] = true;
