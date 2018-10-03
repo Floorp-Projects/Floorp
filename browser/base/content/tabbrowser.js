@@ -4159,7 +4159,7 @@ window._gBrowser = {
     const affectedTabsLength = contextTabInSelection ? selectedTabs.length : 1;
     if (tab.mOverCloseButton) {
       label = tab.selected ?
-        stringWithShortcut("tabs.closeSelectedTabs.tooltip", "key_close", affectedTabsLength) :
+        stringWithShortcut("tabs.closeTabs.tooltip", "key_close", affectedTabsLength) :
         PluralForm.get(affectedTabsLength, gTabBrowserBundle.GetStringFromName("tabs.closeTabs.tooltip"))
                   .replace("#1", affectedTabsLength);
     } else if (tab._overPlayingIcon) {
@@ -5359,8 +5359,8 @@ var TabContextMenu = {
     document.getElementById("context_closeTab").hidden = multiselectionContext;
     document.getElementById("context_closeSelectedTabs").hidden = !multiselectionContext;
 
-    // Hide "Close Tab Options" if all tabs are selected
-    document.getElementById("context_closeTabOptions").hidden = gBrowser.allTabsSelected();
+    // Disable "Close Tab Options" if all tabs are selected
+    document.getElementById("context_closeTabOptions").disabled = gBrowser.allTabsSelected();
 
     // Hide "Bookmark Tab" for multiselection.
     // Update its state if visible.
