@@ -376,9 +376,35 @@ SERVO_BINDING_FUNC(Servo_FontFaceRule_IndexGetter, nsCSSFontDesc,
                    RawServoFontFaceRuleBorrowed rule, uint32_t index)
 SERVO_BINDING_FUNC(Servo_FontFaceRule_GetDeclCssText, void,
                    RawServoFontFaceRuleBorrowed rule, nsAString* result)
-SERVO_BINDING_FUNC(Servo_FontFaceRule_GetDescriptor, void,
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetFontWeight, bool,
                    RawServoFontFaceRuleBorrowed rule,
-                   nsCSSFontDesc desc, nsCSSValueBorrowedMut result)
+                   mozilla::StyleComputedFontWeightRange* out)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetFontDisplay, bool,
+                   RawServoFontFaceRuleBorrowed rule,
+                   mozilla::StyleFontDisplay* out)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetFontStyle, bool,
+                   RawServoFontFaceRuleBorrowed rule,
+                   mozilla::StyleComputedFontStyleDescriptor* out)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetFontStretch, bool,
+                   RawServoFontFaceRuleBorrowed rule,
+                   mozilla::StyleComputedFontStretchRange* out)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetFontLanguageOverride, bool,
+                   RawServoFontFaceRuleBorrowed rule,
+                   mozilla::StyleFontLanguageOverride* out)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetFamilyName, nsAtom*,
+                   RawServoFontFaceRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetUnicodeRanges, const mozilla::StyleUnicodeRange*,
+                   RawServoFontFaceRuleBorrowed rule,
+                   size_t* out_len)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetSources, void,
+                   RawServoFontFaceRuleBorrowed rule,
+                   nsTArray<mozilla::StyleFontFaceSourceListComponent>* components)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetVariationSettings, void,
+                   RawServoFontFaceRuleBorrowed rule,
+                   nsTArray<gfxFontVariation>* out)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetFeatureSettings, void,
+                   RawServoFontFaceRuleBorrowed rule,
+                   nsTArray<gfxFontFeature>* out)
 SERVO_BINDING_FUNC(Servo_FontFaceRule_GetDescriptorCssText, void,
                    RawServoFontFaceRuleBorrowed rule,
                    nsCSSFontDesc desc, nsAString* result)
@@ -881,9 +907,11 @@ SERVO_BINDING_FUNC(Servo_ParseFontShorthandForMatching, bool,
                    const nsAString* value,
                    RawGeckoURLExtraData* data,
                    RefPtr<SharedFontList>* family,
-                   nsCSSValueBorrowedMut style,
-                   nsCSSValueBorrowedMut stretch,
-                   nsCSSValueBorrowedMut weight);
+                   // We use ComputedFontStyleDescriptor just for convenience,
+                   // but the two values of Oblique are the same.
+                   mozilla::StyleComputedFontStyleDescriptor* style,
+                   float* stretch,
+                   float* weight);
 
 SERVO_BINDING_FUNC(Servo_ResolveLogicalProperty,
                    nsCSSPropertyID,
