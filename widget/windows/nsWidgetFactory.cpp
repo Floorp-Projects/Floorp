@@ -42,6 +42,11 @@
 #include "JumpListBuilder.h"
 #include "JumpListItem.h"
 #include "TaskbarPreview.h"
+// Toast notification support
+#ifndef __MINGW32__
+#include "ToastNotification.h"
+#include "nsToolkitCompsCID.h"
+#endif
 
 #include "WindowsUIUtils.h"
 
@@ -110,6 +115,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(WindowsUIUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+#ifndef __MINGW32__
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ToastNotification, Init)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(TaskbarPreviewCallback)
 #ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceWin, Init)
@@ -145,6 +153,9 @@ NS_DEFINE_NAMED_CID(NS_WIN_JUMPLISTLINK_CID);
 NS_DEFINE_NAMED_CID(NS_WIN_JUMPLISTSHORTCUT_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOWS_UIUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
+#ifndef __MINGW32__
+NS_DEFINE_NAMED_CID(NS_SYSTEMALERTSSERVICE_CID);
+#endif
 NS_DEFINE_NAMED_CID(NS_TASKBARPREVIEWCALLBACK_CID);
 #ifdef NS_PRINTING
 NS_DEFINE_NAMED_CID(NS_PRINTDIALOGSERVICE_CID);
@@ -176,6 +187,9 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_WIN_JUMPLISTSHORTCUT_CID, false, nullptr, JumpListShortcutConstructor },
   { &kNS_WINDOWS_UIUTILS_CID, false, nullptr, WindowsUIUtilsConstructor },
   { &kNS_DRAGSERVICE_CID, false, nullptr, nsDragServiceConstructor, Module::MAIN_PROCESS_ONLY },
+#ifndef __MINGW32__
+  { &kNS_SYSTEMALERTSSERVICE_CID, false, nullptr, ToastNotificationConstructor, Module::MAIN_PROCESS_ONLY },
+#endif
   { &kNS_TASKBARPREVIEWCALLBACK_CID, false, nullptr, TaskbarPreviewCallbackConstructor },
 #ifdef NS_PRINTING
   { &kNS_PRINTDIALOGSERVICE_CID, false, nullptr, nsPrintDialogServiceWinConstructor, Module::MAIN_PROCESS_ONLY },
@@ -207,6 +221,9 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/windows-jumplistshortcut;1", &kNS_WIN_JUMPLISTSHORTCUT_CID },
   { "@mozilla.org/windows-ui-utils;1", &kNS_WINDOWS_UIUTILS_CID },
   { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID, Module::MAIN_PROCESS_ONLY },
+#ifndef __MINGW32__
+  { NS_SYSTEMALERTSERVICE_CONTRACTID, &kNS_SYSTEMALERTSSERVICE_CID, Module::MAIN_PROCESS_ONLY },
+#endif
   { "@mozilla.org/widget/taskbar-preview-callback;1", &kNS_TASKBARPREVIEWCALLBACK_CID },
 #ifdef NS_PRINTING
   { NS_PRINTDIALOGSERVICE_CONTRACTID, &kNS_PRINTDIALOGSERVICE_CID },
