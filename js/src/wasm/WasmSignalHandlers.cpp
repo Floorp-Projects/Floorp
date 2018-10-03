@@ -825,6 +825,12 @@ ProcessHasSignalHandlers()
     // Install a SIGSEGV handler to handle safely-out-of-bounds asm.js heap
     // access and/or unaligned accesses.
 #if defined(XP_WIN)
+
+# if defined(_M_ARM64)
+    // The AArch64 Windows build is not ready for this yet.
+    return false;
+# endif
+
 # if defined(MOZ_ASAN)
     // Under ASan we need to let the ASan runtime's ShadowExceptionHandler stay
     // in the first handler position. This requires some coordination with
