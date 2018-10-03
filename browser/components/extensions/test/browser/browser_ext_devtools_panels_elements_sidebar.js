@@ -63,6 +63,7 @@ add_task(async function test_devtools_panels_elements_sidebar() {
     const sidebar1 = await browser.devtools.panels.elements.createSidebarPane("Test Sidebar 1");
     const sidebar2 = await browser.devtools.panels.elements.createSidebarPane("Test Sidebar 2");
     const sidebar3 = await browser.devtools.panels.elements.createSidebarPane("Test Sidebar 3");
+    const sidebar4 = await browser.devtools.panels.elements.createSidebarPane("Test Sidebar 4");
 
     const onShownListener = (event, sidebarInstance) => {
       browser.test.sendMessage(`devtools_sidebar_${event}`, sidebarInstance);
@@ -71,10 +72,12 @@ add_task(async function test_devtools_panels_elements_sidebar() {
     sidebar1.onShown.addListener(() => onShownListener("shown", "sidebar1"));
     sidebar2.onShown.addListener(() => onShownListener("shown", "sidebar2"));
     sidebar3.onShown.addListener(() => onShownListener("shown", "sidebar3"));
+    sidebar4.onShown.addListener(() => onShownListener("shown", "sidebar4"));
 
     sidebar1.onHidden.addListener(() => onShownListener("hidden", "sidebar1"));
     sidebar2.onHidden.addListener(() => onShownListener("hidden", "sidebar2"));
     sidebar3.onHidden.addListener(() => onShownListener("hidden", "sidebar3"));
+    sidebar4.onHidden.addListener(() => onShownListener("hidden", "sidebar4"));
 
     // Refresh the sidebar content on every inspector selection.
     browser.devtools.panels.elements.onSelectionChanged.addListener(() => {
@@ -91,7 +94,13 @@ add_task(async function test_devtools_panels_elements_sidebar() {
     sidebar2.setObject({anotherPropertyName: 123});
     sidebar3.setObject({propertyName: "propertyValue"}, "Optional Root Object Title");
 
+    sidebar4.setPage("sidebar.html");
+
     browser.test.sendMessage("devtools_page_loaded");
+  }
+
+  function sidebar() {
+    browser.test.sendMessage("sidebar-loaded");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -109,6 +118,17 @@ add_task(async function test_devtools_panels_elements_sidebar() {
        </body>
       </html>`,
       "devtools_page.js": devtools_page,
+      "sidebar.html": `<!DOCTYPE html>
+      <html>
+       <head>
+         <meta charset="utf-8">
+       </head>
+       <body>
+         sidebar panel
+         <script src="sidebar.js"></script>
+       </body>
+      </html>`,
+      "sidebar.js": sidebar,
     },
   });
 
@@ -187,6 +207,19 @@ add_task(async function test_devtools_panels_elements_sidebar() {
 
   info("Unloading the extension and check that all the sidebar have been removed");
 
+  inspector.sidebar.show(sidebarIds[3]);
+
+  const shownSidebarInstance4 = await extension.awaitMessage("devtools_sidebar_shown");
+  const hiddenSidebarInstance3 = await extension.awaitMessage("devtools_sidebar_hidden");
+
+  is(shownSidebarInstance4, "sidebar4", "Got the shown event on the third extension sidebar");
+  is(hiddenSidebarInstance3, "sidebar3", "Got the hidden event on the second extension sidebar");
+
+  isActiveSidebarTabTitle(inspector, "Test Sidebar 4",
+                          "Got the expected title on the active sidebar tab");
+
+  await extension.awaitMessage("sidebar-loaded");
+
   await extension.unload();
 
   is(Array.from(toolbox._inspectorExtensionSidebars.keys()).length, 0,
@@ -199,6 +232,9 @@ add_task(async function test_devtools_panels_elements_sidebar() {
      "The second registered sidebar has been removed");
 
   is(inspector.sidebar.getTabPanel(sidebarIds[2]), undefined,
+     "The third registered sidebar has been removed");
+
+  is(inspector.sidebar.getTabPanel(sidebarIds[3]), undefined,
      "The third registered sidebar has been removed");
 
   await expectNoSuchActorIDs(target.client, actors);

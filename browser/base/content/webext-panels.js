@@ -19,21 +19,26 @@ var {
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-function getBrowser(sidebar) {
+function getBrowser(panel) {
   let browser = document.getElementById("webext-panels-browser");
   if (browser) {
     return Promise.resolve(browser);
   }
 
-  let stack = document.createXULElement("stack");
-  stack.setAttribute("flex", "1");
+  let stack = document.getElementById("webext-panels-stack");
+  if (!stack) {
+    stack = document.createXULElement("stack");
+    stack.setAttribute("flex", "1");
+    stack.setAttribute("id", "webext-panels-stack");
+    document.documentElement.appendChild(stack);
+  }
 
   browser = document.createXULElement("browser");
   browser.setAttribute("id", "webext-panels-browser");
   browser.setAttribute("type", "content");
   browser.setAttribute("flex", "1");
   browser.setAttribute("disableglobalhistory", "true");
-  browser.setAttribute("webextension-view-type", "sidebar");
+  browser.setAttribute("webextension-view-type", panel.viewType);
   browser.setAttribute("context", "contentAreaContextMenu");
   browser.setAttribute("tooltip", "aHTMLTooltip");
   browser.setAttribute("autocompletepopup", "PopupAutoComplete");
@@ -41,13 +46,13 @@ function getBrowser(sidebar) {
 
   // Ensure that the browser is going to run in the same process of the other
   // extension pages from the same addon.
-  browser.sameProcessAsFrameLoader = sidebar.extension.groupFrameLoader;
+  browser.sameProcessAsFrameLoader = panel.extension.groupFrameLoader;
 
   let readyPromise;
-  if (sidebar.extension.remote) {
+  if (panel.extension.remote) {
     browser.setAttribute("remote", "true");
     browser.setAttribute("remoteType",
-                         E10SUtils.getRemoteTypeForURI(sidebar.uri, true,
+                         E10SUtils.getRemoteTypeForURI(panel.uri, true,
                                                        E10SUtils.EXTENSION_REMOTE_TYPE));
     readyPromise = promiseEvent(browser, "XULFrameLoaderCreated");
 
@@ -60,16 +65,15 @@ function getBrowser(sidebar) {
   }
 
   stack.appendChild(browser);
-  document.documentElement.appendChild(stack);
 
   return readyPromise.then(() => {
     browser.messageManager.loadFrameScript("chrome://browser/content/content.js", false, true);
-    ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
+    ExtensionParent.apiManager.emit("extension-browser-inserted", browser, panel.browserInsertedData);
 
     browser.messageManager.loadFrameScript(
       "chrome://extensions/content/ext-browser-content.js", false, true);
 
-    let options = sidebar.browserStyle !== false ? {stylesheets: ExtensionParent.extensionStylesheets} : {};
+    let options = panel.browserStyle !== false ? {stylesheets: ExtensionParent.extensionStylesheets} : {};
     browser.messageManager.sendAsyncMessage("Extension:InitBrowser", options);
     return browser;
   });
@@ -115,11 +119,14 @@ function loadPanel(extensionId, extensionUrl, browserStyle) {
   }
 
   let policy = WebExtensionPolicy.getByID(extensionId);
+
   let sidebar = {
     uri: extensionUrl,
     extension: policy.extension,
     browserStyle,
+    viewType: "sidebar",
   };
+
   getBrowser(sidebar).then(browser => {
     let uri = Services.io.newURI(policy.getURL());
     let triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
