@@ -61,13 +61,12 @@ const LOCALIZABLE_ATTRIBUTES = {
   },
   "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul": {
     global: [
-      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label"
-    ],
+      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label",
+      "title", "tooltiptext"],
     description: ["value"],
     key: ["key", "keycode"],
     label: ["value"],
     textbox: ["placeholder"],
-    toolbarbutton: ["tooltiptext"],
   }
 };
 
