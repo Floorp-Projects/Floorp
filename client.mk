@@ -127,7 +127,7 @@ configure:: $(configure-preqs)
 	@echo $(CONFIGURE) $(CONFIGURE_ARGS)
 	@cd $(OBJDIR) && $(CONFIGURE_ENV_ARGS) $(CONFIGURE) $(CONFIGURE_ARGS) \
 	  || ( echo '*** Fix above errors and then restart with\
-               "$(MAKE) -f client.mk build"' && exit 1 )
+               "./mach build"' && exit 1 )
 	@touch $(OBJDIR)/Makefile
 	$(call BUILDSTATUS,TIER_FINISH configure)
 
