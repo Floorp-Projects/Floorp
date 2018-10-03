@@ -51,7 +51,7 @@ exports.targetFromURL = async function targetFromURL(url) {
   // (handy to debug chrome stuff in a content process)
   let chrome = params.has("chrome");
 
-  let form, isBrowsingContext;
+  let form;
   if (type === "tab") {
     // Fetch target for a remote tab
     id = parseInt(id, 10);
@@ -78,12 +78,6 @@ exports.targetFromURL = async function targetFromURL(url) {
       const response = await client.getProcess(id);
       form = response.form;
       chrome = true;
-      if (id != 0) {
-        // Content processes are not exposing browsing context target actors with the full
-        // set of target-scoped actors we would get from a browser tab. Instead, they only
-        // support debugger and console.
-        isBrowsingContext = false;
-      }
     } catch (ex) {
       if (ex.error == "noProcess") {
         throw new Error(`targetFromURL, process with id '${id}' doesn't exist`);
@@ -113,7 +107,7 @@ exports.targetFromURL = async function targetFromURL(url) {
     throw new Error(`targetFromURL, unsupported type '${type}' parameter`);
   }
 
-  return TargetFactory.forRemoteTab({ client, form, chrome, isBrowsingContext });
+  return TargetFactory.forRemoteTab({ client, form, chrome });
 };
 
 /**
