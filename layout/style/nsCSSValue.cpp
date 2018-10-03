@@ -445,21 +445,6 @@ void nsCSSValue::SetURLValue(mozilla::css::URLValue* aValue)
   mValue.mURL->AddRef();
 }
 
-void nsCSSValue::SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_GridTemplateAreas;
-  mValue.mGridTemplateAreas = aValue;
-  mValue.mGridTemplateAreas->AddRef();
-}
-
-void nsCSSValue::SetFontFamilyListValue(already_AddRefed<SharedFontList> aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_FontFamilyList;
-  mValue.mFontFamilyList = aValue.take();
-}
-
 void nsCSSValue::SetFontStretch(FontStretch aStretch)
 {
   Reset();
@@ -535,27 +520,6 @@ void nsCSSValue::SetSharedListValue(nsCSSValueSharedList* aList)
   mValue.mSharedList->AddRef();
 }
 
-void nsCSSValue::SetDependentListValue(nsCSSValueList* aList)
-{
-  Reset();
-  if (aList) {
-    mUnit = eCSSUnit_ListDep;
-    mValue.mListDependent = aList;
-  }
-}
-
-void
-nsCSSValue::AdoptListValue(UniquePtr<nsCSSValueList> aValue)
-{
-  // We have to copy the first element since for owned lists the first
-  // element should be an nsCSSValueList_heap object.
-  SetListValue();
-  mValue.mList->mValue = std::move(aValue->mValue);
-  mValue.mList->mNext  = aValue->mNext;
-  aValue->mNext = nullptr;
-  aValue.reset();
-}
-
 nsCSSValuePairList* nsCSSValue::SetPairListValue()
 {
   Reset();
@@ -565,98 +529,22 @@ nsCSSValuePairList* nsCSSValue::SetPairListValue()
   return mValue.mPairList;
 }
 
-void nsCSSValue::SetDependentPairListValue(nsCSSValuePairList* aList)
-{
-  Reset();
-  if (aList) {
-    mUnit = eCSSUnit_PairListDep;
-    mValue.mPairListDependent = aList;
-  }
-}
-
-void
-nsCSSValue::AdoptPairListValue(UniquePtr<nsCSSValuePairList> aValue)
-{
-  // We have to copy the first element, since for owned pair lists, the first
-  // element should be an nsCSSValuePairList_heap object.
-  SetPairListValue();
-  mValue.mPairList->mXValue = std::move(aValue->mXValue);
-  mValue.mPairList->mYValue = std::move(aValue->mYValue);
-  mValue.mPairList->mNext   = aValue->mNext;
-  aValue->mNext = nullptr;
-  aValue.reset();
-}
-
-void nsCSSValue::SetAutoValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Auto;
-}
-
-void nsCSSValue::SetInheritValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Inherit;
-}
-
-void nsCSSValue::SetInitialValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Initial;
-}
-
-void nsCSSValue::SetUnsetValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Unset;
-}
-
 void nsCSSValue::SetNoneValue()
 {
   Reset();
   mUnit = eCSSUnit_None;
 }
 
-void nsCSSValue::SetAllValue()
-{
-  Reset();
-  mUnit = eCSSUnit_All;
-}
-
-void nsCSSValue::SetNormalValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Normal;
-}
-
-void nsCSSValue::SetSystemFontValue()
-{
-  Reset();
-  mUnit = eCSSUnit_System_Font;
-}
-
-void nsCSSValue::SetDummyValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Dummy;
-}
-
-void nsCSSValue::SetDummyInheritValue()
-{
-  Reset();
-  mUnit = eCSSUnit_DummyInherit;
-}
-
-void nsCSSValue::SetCalcValue(const nsStyleCoord::CalcValue* aCalc)
+void nsCSSValue::SetCalcValue(const nsStyleCoord::CalcValue& aCalc)
 {
   RefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
-  if (!aCalc->mHasPercent) {
-    arr->Item(0).SetIntegerCoordValue(aCalc->mLength);
+  if (!aCalc.mHasPercent) {
+    arr->Item(0).SetIntegerCoordValue(aCalc.mLength);
   } else {
-    nsCSSValue::Array *arr2 = nsCSSValue::Array::Create(2);
+    nsCSSValue::Array* arr2 = nsCSSValue::Array::Create(2);
     arr->Item(0).SetArrayValue(arr2, eCSSUnit_Calc_Plus);
-    arr2->Item(0).SetIntegerCoordValue(aCalc->mLength);
-    arr2->Item(1).SetPercentValue(aCalc->mPercent);
+    arr2->Item(0).SetIntegerCoordValue(aCalc.mLength);
+    arr2->Item(1).SetPercentValue(aCalc.mPercent);
   }
 
   SetArrayValue(arr, eCSSUnit_Calc);
@@ -665,8 +553,7 @@ void nsCSSValue::SetCalcValue(const nsStyleCoord::CalcValue* aCalc)
 nsStyleCoord::CalcValue
 nsCSSValue::GetCalcValue() const
 {
-  MOZ_ASSERT(mUnit == eCSSUnit_Calc,
-             "The unit should be eCSSUnit_Calc");
+  MOZ_ASSERT(mUnit == eCSSUnit_Calc, "The unit should be eCSSUnit_Calc");
 
   const nsCSSValue::Array* array = GetArrayValue();
   MOZ_ASSERT(array->Count() == 1,
@@ -702,31 +589,6 @@ nsCSSValue::GetCalcValue() const
   return result;
 }
 
-nsCSSValue::Array*
-nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs)
-{
-  RefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
-  func->Item(0).SetIntValue(aFunctionId, eCSSUnit_Enumerated);
-  SetArrayValue(func, eCSSUnit_Function);
-  return func;
-}
-
-bool
-nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
-{
-  if (mUnit != eCSSUnit_Function) {
-    return false;
-  }
-
-  nsCSSValue::Array* func = mValue.mArray;
-  MOZ_ASSERT(func && func->Count() >= 1 &&
-             func->Item(0).GetUnit() == eCSSUnit_Enumerated,
-             "illegally structured function value");
-
-  nsCSSKeyword thisFunctionId = func->Item(0).GetKeywordValue();
-  return thisFunctionId == aFunctionId;
-}
-
 // static
 already_AddRefed<nsStringBuffer>
 nsCSSValue::BufferFromString(const nsString& aValue)
@@ -751,16 +613,6 @@ nsCSSValue::BufferFromString(const nsString& aValue)
   // Null-terminate.
   data[length] = 0;
   return buffer.forget();
-}
-
-void
-nsCSSValue::AtomizeIdentValue()
-{
-  MOZ_ASSERT(mUnit == eCSSUnit_Ident);
-  RefPtr<nsAtom> atom = NS_Atomize(GetStringBufferValue());
-  Reset();
-  mUnit = eCSSUnit_AtomIdent;
-  mValue.mAtom = atom.forget().take();
 }
 
 /* static */ void
