@@ -2596,9 +2596,10 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 #if defined(DEBUG) && !defined(ANDROID)
-pref("csp.content_privileged_about_uris_without_csp", "blank,printpreview,srcdoc");
-// the following pref is for testing purposes only.
-pref("csp.overrule_content_privileged_about_uris_without_csp_whitelist", false);
+pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,about,addons,cache-entry,config,crashes,debugging,devtools,downloads,home,memory,networking,newtab,performance,plugins,policies,profiles,restartrequired,searchreset,serviceworkers,sessionrestore,support,sync-log,telemetry,url-classifier,webrtc,welcomeback");
+// the following prefs are for testing purposes only.
+pref("csp.overrule_about_uris_without_csp_whitelist", false);
+pref("csp.skip_about_page_has_csp_assert", false);
 #endif
 
 // Default Content Security Policy to apply to signed contents.
