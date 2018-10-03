@@ -79,7 +79,8 @@ class GittoolVCS(ScriptMixin, LogMixin):
         if clean:
             cmd.append('--clean')
 
-        for base_mirror_url in self.config.get('gittool_base_mirror_urls', self.config.get('vcs_base_mirror_urls', [])):
+        for base_mirror_url in self.config.get(
+                'gittool_base_mirror_urls', self.config.get('vcs_base_mirror_urls', [])):
             bits = urlparse.urlparse(repo)
             mirror_url = urlparse.urljoin(base_mirror_url, bits.path)
             cmd.extend(['--mirror', mirror_url])

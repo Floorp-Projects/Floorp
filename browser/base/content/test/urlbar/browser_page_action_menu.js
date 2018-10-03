@@ -527,6 +527,64 @@ add_task(async function sendToDevice_devices() {
   });
 });
 
+add_task(async function sendToDevice_title() {
+  // Open two tabs that are sendable.
+  await BrowserTestUtils.withNewTab("http://example.com/a", async otherBrowser => {
+    await BrowserTestUtils.withNewTab("http://example.com/b", async () => {
+      await promiseSyncReady();
+      const sandbox = sinon.sandbox.create();
+      sandbox.stub(gSync, "syncReady").get(() => true);
+      sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => false);
+      sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
+      sandbox.stub(gSync, "isSendableURI").returns(true);
+      sandbox.stub(gSync, "remoteClients").get(() => []);
+      sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockRemoteClients.find(c => c.id == id).type);
+
+      let cleanUp = () => {
+        sandbox.restore();
+      };
+      registerCleanupFunction(cleanUp);
+
+      // Open the panel.  Only one tab is selected, so the action's title should
+      // be "Send Tab to Device".
+      await promisePageActionPanelOpen();
+      let sendToDeviceButton =
+        document.getElementById("pageAction-panel-sendToDevice");
+      Assert.ok(!sendToDeviceButton.disabled);
+
+      Assert.equal(sendToDeviceButton.label, "Send Tab to Device");
+      Assert.equal(PageActions.actionForID("sendToDevice").getTitle(window),
+                   "Send Tab to Device");
+
+      // Hide the panel.
+      let hiddenPromise = promisePageActionPanelHidden();
+      BrowserPageActions.panelNode.hidePopup();
+      await hiddenPromise;
+
+      // Add the other tab to the selection.
+      gBrowser.addToMultiSelectedTabs(gBrowser.getTabForBrowser(otherBrowser),
+                                      false);
+
+      // Open the panel again.  Now the action's title should be "Send 2 Tabs to
+      // Device".
+      await promisePageActionPanelOpen();
+      Assert.ok(!sendToDeviceButton.disabled);
+      Assert.equal(sendToDeviceButton.label, "Send 2 Tabs to Device");
+      Assert.equal(PageActions.actionForID("sendToDevice").getTitle(window),
+                   "Send 2 Tabs to Device");
+
+      // Hide the panel.
+      hiddenPromise = promisePageActionPanelHidden();
+      BrowserPageActions.panelNode.hidePopup();
+      await hiddenPromise;
+
+      cleanUp();
+
+      await UIState.reset();
+    });
+  });
+});
+
 add_task(async function sendToDevice_inUrlbar() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {

@@ -67,14 +67,6 @@ mozharness.base.script module
     :undoc-members:
     :show-inheritance:
 
-mozharness.base.signing module
-------------------------------
-
-.. automodule:: mozharness.base.signing
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 mozharness.base.transfer module
 -------------------------------
 

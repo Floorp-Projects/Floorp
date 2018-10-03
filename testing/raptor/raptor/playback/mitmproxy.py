@@ -198,10 +198,13 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
         self.mitmdump_path = os.path.join(self.py3_path_to_executables(), 'mitmdump')
 
     def setup(self):
-        # install the generated CA certificate into Firefox
-        self.install_mitmproxy_cert(self.mitmproxy_proc,
-                                    self.browser_path)
-        return
+        # for firefox we need to install the generated mitmproxy CA cert
+        # for google chromium this is not necessary as chromium will be
+        # started with --ignore-certificate-errors cmd line arg
+        if self.config['app'] == "firefox":
+            # install the generated CA certificate into Firefox
+            self.install_mitmproxy_cert(self.mitmproxy_proc,
+                                        self.browser_path)
 
     def start(self):
         # if on windows, the mitmdump_path was already set when creating py3 env
@@ -343,7 +346,11 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
 
     def turn_off_browser_proxy(self):
         """Turn off the browser proxy that was used for mitmproxy playback"""
-        LOG.info("Turning off the browser proxy")
+        # in firefox we need to change the autoconfig files to revert
+        # the proxy; for google chromium the proxy was setup on the cmd line
+        # so nothing is required here
+        if self.config['app'] == "firefox":
+            LOG.info("Turning off the browser proxy")
 
-        write_autoconfig_files(fx_install_dir=self.browser_install,
-                               cfg_contents=MITMPROXY_OFF_SETTINGS)
+            write_autoconfig_files(fx_install_dir=self.browser_install,
+                                   cfg_contents=MITMPROXY_OFF_SETTINGS)

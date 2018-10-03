@@ -216,9 +216,14 @@ panelview[mainview] > .panel-header {
   pointer-events: none; /* avoid blocking dragover events on scroll buttons */
 }
 
+.tabbrowser-tab[tab-grouping],
 .tabbrowser-tab[tabdrop-samewindow],
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[fadein]:not([selected]):not([multiselected]) {
   transition: transform 200ms var(--animation-easing-function);
+}
+
+.tabbrowser-tab[tab-grouping][multiselected]:not([selected]) {
+  z-index: 2;
 }
 
 /* The next 3 rules allow dragging tabs slightly outside of the tabstrip
