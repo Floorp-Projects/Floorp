@@ -342,6 +342,47 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 }
 ```
 
+### Onboarding user events on about:welcome
+
+#### Form Submit Events
+
+```js
+{
+  "event": ["SUBMIT_EMAIL" | "SKIPPED_SIGNIN"],
+  "value": {
+    "has_flow_params": false,
+  }
+
+  // Basic metadata
+  "action": "activity_stream_event",
+  "page": "about:welcome",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7
+}
+```
+
+#### Firefox Accounts Metrics flow errors
+
+```js
+{
+  "event": ["FXA_METRICS_FETCH_ERROR" | "FXA_METRICS_ERROR"],
+  "value": 500, // Only FXA_METRICS_FETCH_ERROR provides this value, this value is any valid HTTP status code except 200.
+
+  // Basic metadata
+  "action": "activity_stream_event",
+  "page": "about:welcome",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7
+}
+```
+
+
 ## Session end pings
 
 When a session ends, the browser will send a `"activity_stream_session"` ping to our metrics servers. This ping contains the length of the session, a unique reason for why the session ended, and some additional metadata.

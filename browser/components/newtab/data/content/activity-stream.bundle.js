@@ -5051,6 +5051,8 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
           if (response.status === 200) {
             const { flowId, flowBeginTime } = yield response.json();
             _this.setState({ flowId, flowBeginTime });
+          } else {
+            _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_FETCH_ERROR", value: response.status } }));
           }
         } catch (error) {
           _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { value: "FXA_METRICS_ERROR" } }));
@@ -5090,13 +5092,22 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
   }
 
   onSubmit() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "SUBMIT_EMAIL" }));
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent(Object.assign({ event: "SUBMIT_EMAIL" }, this._getFormInfo())));
+
     window.addEventListener("visibilitychange", this.removeOverlay);
   }
 
   clickSkip() {
-    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({ event: "SKIPPED_SIGNIN" }));
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent(Object.assign({ event: "SKIPPED_SIGNIN" }, this._getFormInfo())));
     this.removeOverlay();
+  }
+
+  /**
+   * Report to telemetry additional information about the form submission.
+   */
+  _getFormInfo() {
+    const value = { has_flow_params: this.state.flowId.length > 0 };
+    return { value };
   }
 
   onInputInvalid(e) {
