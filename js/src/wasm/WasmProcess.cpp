@@ -278,6 +278,18 @@ wasm::LookupCode(const void* pc, const CodeRange** codeRange /* = nullptr */)
 }
 
 bool
+wasm::InCompiledCode(void* pc)
+{
+    if (LookupCodeSegment(pc)) {
+        return true;
+    }
+
+    const CodeRange* codeRange;
+    uint8_t* codeBase;
+    return LookupBuiltinThunk(pc, &codeRange, &codeBase);
+}
+
+bool
 wasm::Init()
 {
     MOZ_RELEASE_ASSERT(!sProcessCodeSegmentMap);
