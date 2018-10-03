@@ -95,7 +95,6 @@
 #include "mozilla/WebBrowserPersistLocalDocument.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/dom/GroupedHistoryEvent.h"
 #include "mozilla/dom/ParentSHistory.h"
 #include "mozilla/dom/ChildSHistory.h"
 
@@ -166,7 +165,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
   , mRemoteBrowser(nullptr)
   , mChildID(0)
   , mJSPluginID(aJSPluginID)
-  , mBrowserChangingProcessBlockers(nullptr)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
   , mDestroyCalled(false)
@@ -341,85 +339,6 @@ nsFrameLoader::LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
     mTriggeringPrincipal = nullptr;
   }
   return rv;
-}
-
-bool
-nsFrameLoader::SwapBrowsersAndNotify(nsFrameLoader* aOther)
-{
-  // Cache the owner content before calling SwapBrowsers, which will change
-  // these member variables.
-  RefPtr<mozilla::dom::Element> primaryContent = mOwnerContent;
-  RefPtr<mozilla::dom::Element> secondaryContent = aOther->mOwnerContent;
-
-  // Swap loaders through our owner, so the owner's listeners will be correctly
-  // setup.
-  nsCOMPtr<nsIBrowser> ourBrowser = do_QueryInterface(primaryContent);
-  nsCOMPtr<nsIBrowser> otherBrowser = do_QueryInterface(secondaryContent);
-  if (NS_WARN_IF(!ourBrowser || !otherBrowser)) {
-    return false;
-  }
-  nsresult rv = ourBrowser->SwapBrowsers(otherBrowser, nsIBrowser::SWAP_KEEP_PERMANENT_KEY);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  // Dispatch the BrowserChangedProcess event to tell JS that the process swap
-  // has occurred.
-  GroupedHistoryEventInit eventInit;
-  eventInit.mBubbles = true;
-  eventInit.mCancelable= false;
-  eventInit.mOtherBrowser = secondaryContent;
-  RefPtr<GroupedHistoryEvent> event =
-    GroupedHistoryEvent::Constructor(primaryContent,
-                                     NS_LITERAL_STRING("BrowserChangedProcess"),
-                                     eventInit);
-  event->SetTrusted(true);
-  primaryContent->DispatchEvent(*event);
-
-  return true;
-}
-
-already_AddRefed<Promise>
-nsFrameLoader::FireWillChangeProcessEvent()
-{
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mOwnerContent->GetOwnerGlobal()))) {
-    return nullptr;
-  }
-  JSContext* cx = jsapi.cx();
-
-  // Set our mBrowserChangingProcessBlockers property to refer to the blockers
-  // list. We will synchronously dispatch a DOM event to collect this list of
-  // blockers.
-  nsTArray<RefPtr<Promise>> blockers;
-  mBrowserChangingProcessBlockers = &blockers;
-
-  GroupedHistoryEventInit eventInit;
-  eventInit.mBubbles = true;
-  eventInit.mCancelable = false;
-  eventInit.mOtherBrowser = nullptr;
-  RefPtr<GroupedHistoryEvent> event =
-    GroupedHistoryEvent::Constructor(mOwnerContent,
-                                     NS_LITERAL_STRING("BrowserWillChangeProcess"),
-                                     eventInit);
-  event->SetTrusted(true);
-  mOwnerContent->DispatchEvent(*event);
-
-  mBrowserChangingProcessBlockers = nullptr;
-
-  ErrorResult rv;
-  RefPtr<Promise> allPromise = Promise::All(cx, blockers, rv);
-  return allPromise.forget();
-}
-
-void
-nsFrameLoader::AddProcessChangeBlockingPromise(Promise& aPromise, ErrorResult& aRv)
-{
-  if (NS_WARN_IF(!mBrowserChangingProcessBlockers)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  } else {
-    mBrowserChangingProcessBlockers->AppendElement(&aPromise);
-  }
 }
 
 nsresult
@@ -3121,22 +3040,6 @@ nsFrameLoader::RequestNotifyAfterRemotePaint()
   // If remote browsing (e10s), handle this with the TabParent.
   if (mRemoteBrowser) {
     Unused << mRemoteBrowser->SendRequestNotifyAfterRemotePaint();
-  }
-}
-
-void
-nsFrameLoader::RequestFrameLoaderClose(ErrorResult& aRv)
-{
-  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mOwnerContent);
-  if (NS_WARN_IF(!browser)) {
-    // OwnerElement other than nsIBrowser is not supported yet.
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return;
-  }
-
-  nsresult rv = browser->CloseBrowser();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
   }
 }
 
