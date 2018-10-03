@@ -9,7 +9,6 @@
 .toolbar {
   display: flex;
   height: 22px;
-  font: message-box;
   padding: 1px;
   padding-inline-start: 2px;
   background: var(--theme-toolbar-background);

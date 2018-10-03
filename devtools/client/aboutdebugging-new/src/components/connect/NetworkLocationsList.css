@@ -12,7 +12,5 @@
 .connect-page__network-location {
   display: grid;
   grid-template-columns: auto max-content;
-  line-height: 36px;
-  margin-block-start: 4px;
-  margin-block-end: 4px;
+  margin: calc(var(--base-distance) * 2) 0;
 }

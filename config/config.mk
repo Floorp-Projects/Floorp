@@ -414,17 +414,6 @@ ifneq (WINNT,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif # ! WINNT
 
-#
-# Java macros
-#
-
-# Make sure any compiled classes work with at least JVM 1.4
-JAVAC_FLAGS += -source 1.4
-
-ifdef MOZ_DEBUG
-JAVAC_FLAGS += -g
-endif
-
 # autoconf.mk sets OBJ_SUFFIX to an error to avoid use before including
 # this file
 OBJ_SUFFIX := $(_OBJ_SUFFIX)

@@ -128,9 +128,6 @@ RootActor.prototype = {
     // Whether the server can return wasm binary source
     wasmBinarySource: true,
     bulk: true,
-    // Whether the style rule actor implements the modifySelector method
-    // that modifies the rule's selector
-    selectorEditable: true,
     // Whether the dom node actor implements the getCssPath method. Added in 53.
     getCssPath: true,
     // Whether the dom node actor implements the getXPath method. Added in 56.

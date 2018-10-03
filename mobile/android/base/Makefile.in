@@ -30,9 +30,6 @@ chrome-%::
 
 include $(topsrcdir)/config/rules.mk
 
-# Override the Java settings with some specific android settings
-include $(topsrcdir)/config/android-common.mk
-
 # This target is only used by IDE integrations. It rebuilds resources
 # that end up in omni.ja using the equivalent of |mach build faster|,
 # does most of the packaging step, and then updates omni.ja in

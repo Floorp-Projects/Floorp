@@ -39,10 +39,6 @@
   font-family: var(--monospace-font-family);
 }
 
-:root[platform="linux"] .treeTable {
-  font-size: 80%; /* To handle big monospace font */
-}
-
 /* Make sure there is a little space between label and value columns. */
 .panelContent .treeTable .treeLabelCell {
   padding-right: 17px;

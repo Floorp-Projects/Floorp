@@ -256,7 +256,7 @@ Example:
 
     let rtf = new Services.intl.RelativeTimeFormat(undefined, {
       style: "long", // "narrow" | "short" | "long" (default)
-      numeric: "auto", // "always" | "auto" (defualt)
+      numeric: "auto", // "always" | "auto" (default)
     });
 
     let now = Date.now();

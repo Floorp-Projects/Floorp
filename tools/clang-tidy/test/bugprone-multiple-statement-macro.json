@@ -1,0 +1,1 @@
+[["warning", "multiple statement macro used without braces; some statements will be unconditionally executed", "bugprone-multiple-statement-macro"]]

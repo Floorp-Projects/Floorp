@@ -1376,19 +1376,6 @@ css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
 {
 }
 
-/*static*/ already_AddRefed<css::ImageValue>
-css::ImageValue::CreateFromURLValue(URLValue* aUrl,
-                                    nsIDocument* aDocument,
-                                    CORSMode aCORSMode)
-{
-  return do_AddRef(
-    new css::ImageValue(aUrl->GetURI(),
-                        Servo_CloneArcStringData(&aUrl->mString),
-                        do_AddRef(aUrl->mExtraData),
-                        aDocument,
-                        aCORSMode));
-}
-
 void
 css::ImageValue::Initialize(nsIDocument* aDocument)
 {

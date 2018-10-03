@@ -31,7 +31,7 @@ The flow of our rendering engine is as follows:
    on the compositor thread of the GPU process, which then dispatches to
    ``CompositorVsyncScheduler::Observer``.
 6. The ``RefreshTimerVsyncDispatcher`` notifies the Chrome
-   ``RefreshTimer`` that a vsync has occured.
+   ``RefreshTimer`` that a vsync has occurred.
 7. The ``RefreshTimerVsyncDispatcher`` sends IPC messages to all content
    processes to tick their respective active ``RefreshTimer``.
 8. The ``Compositor`` dispatches input events on the *Compositor
@@ -54,7 +54,7 @@ useful if a window is positioned halfway between the two monitors. Each
 platform will have to implement a specific ``Display`` object to hook
 and listen to vsync events. As of this writing, both Firefox OS and OS X
 create their own hardware specific *Hardware Vsync Thread* that executes
-after a vsync has occured. OS X creates one *Hardware Vsync Thread* per
+after a vsync has occurred. OS X creates one *Hardware Vsync Thread* per
 ``CVDisplayLinkRef``. We do not currently support multiple displays, so
 we use one global ``CVDisplayLinkRef`` that works across all active
 displays. On Windows, we have to create a new platform ``thread`` that
@@ -66,7 +66,7 @@ actually passed into the compositor and refresh driver.
 When a vsync occurs on a ``Display``, the *Hardware Vsync Thread*
 callback fetches all ``CompositorVsyncDispatchers`` associated with the
 ``Display``. Each ``CompositorVsyncDispatcher`` is notified that a vsync
-has occured with the vsync’s timestamp. It is the responsibility of the
+has occurred with the vsync’s timestamp. It is the responsibility of the
 ``CompositorVsyncDispatcher`` to notify the ``Compositor`` that is
 awaiting vsync notifications. The ``Display`` will then notify the
 associated ``RefreshTimerVsyncDispatcher``, which should notify all
@@ -142,11 +142,11 @@ The ``CompositorVsyncDispatcher`` executes on the *Hardware Vsync
 Thread*. It contains references to the ``nsBaseWidget`` it is associated
 with and has a lifetime equal to the ``nsBaseWidget``. The
 ``CompositorVsyncDispatcher`` is responsible for notifying the
-``CompositorBridgeParent`` that a vsync event has occured. There can be
+``CompositorBridgeParent`` that a vsync event has occurred. There can be
 multiple ``CompositorVsyncDispatchers`` per ``Display``, one
 ``CompositorVsyncDispatcher`` per window. The only responsibility of the
 ``CompositorVsyncDispatcher`` is to notify components when a vsync event
-has occured, and to stop listening to vsync when no components require
+has occurred, and to stop listening to vsync when no components require
 vsync events. We require one ``CompositorVsyncDispatcher`` per window so
 that we can handle multiple ``Displays``. When compositing in-process,
 the ``CompositorVsyncDispatcher`` is attached to the CompositorWidget
@@ -382,10 +382,10 @@ Thus the overall flow during normal execution is:
 1. VsyncSource::Display::RefreshTimerVsyncDispatcher receives a Vsync
    notification from the OS in the parent process.
 2. RefreshTimerVsyncDispatcher notifies
-   VsyncRefreshTimer::RefreshDriverVsyncObserver that a vsync occured on
+   VsyncRefreshTimer::RefreshDriverVsyncObserver that a vsync occurred on
    the parent process on the hardware vsync thread.
 3. RefreshTimerVsyncDispatcher notifies the VsyncParent on the hardware
-   vsync thread that a vsync occured.
+   vsync thread that a vsync occurred.
 4. The VsyncRefreshTimer::RefreshDriverVsyncObserver in the parent
    process posts a task to the main thread that ticks the refresh
    drivers.

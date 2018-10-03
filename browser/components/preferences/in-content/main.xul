@@ -293,7 +293,7 @@
       <button id="manageBrowserLanguagesButton"
               class="accessory-button"
               data-l10n-id="manage-browser-languages-button"
-              oncommand="gMainPane.showBrowserLanguages()"/>
+              oncommand="gMainPane.showBrowserLanguages({search: false})"/>
     </hbox>
   </vbox>
   <hbox id="confirmBrowserLanguage" class="message-bar" align="center" hidden="true">

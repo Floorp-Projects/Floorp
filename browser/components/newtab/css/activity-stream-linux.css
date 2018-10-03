@@ -2043,8 +2043,8 @@ a.firstrun-link {
       height: 30px;
       padding: 4px 0 6px;
       font-size: 15px; }
-      .modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active {
-        box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+      .modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active, .modalOverlayInner .footer .modalButton:hover {
+        box-shadow: 0 0 0 5px #D7D7DB;
         transition: box-shadow 150ms; }
 
 .SimpleSnippet.tall {
@@ -2177,8 +2177,8 @@ a.firstrun-link {
       .onboardingMessage .onboardingButton {
         float: none;
         margin-top: 30px; } }
-    .onboardingMessage .onboardingButton:focus, .onboardingMessage .onboardingButton.active {
-      box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+    .onboardingMessage .onboardingButton:focus, .onboardingMessage .onboardingButton.active, .onboardingMessage .onboardingButton:hover {
+      box-shadow: 0 0 0 5px #D7D7DB;
       transition: box-shadow 150ms; }
   .onboardingMessage::before {
     content: '';
