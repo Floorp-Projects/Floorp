@@ -33,9 +33,6 @@
 #include "js/Utility.h"
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
-#include "wasm/WasmInstance.h"
-#include "wasm/WasmProcess.h"
-#include "wasm/WasmSignalHandlers.h"
 
 js::jit::SimulatorProcess* js::jit::SimulatorProcess::singleton_ = nullptr;
 
@@ -46,9 +43,8 @@ using js::jit::ABIFunctionType;
 using js::jit::JitActivation;
 using js::jit::SimulatorProcess;
 
-Simulator::Simulator(JSContext* cx, Decoder* decoder, FILE* stream)
-  : cx_(cx)
-  , stream_(nullptr)
+Simulator::Simulator(Decoder* decoder, FILE* stream)
+  : stream_(nullptr)
   , print_disasm_(nullptr)
   , instrumentation_(nullptr)
   , stack_(nullptr)
@@ -161,7 +157,7 @@ Simulator* Simulator::Current() {
 }
 
 
-Simulator* Simulator::Create(JSContext* cx) {
+Simulator* Simulator::Create() {
   Decoder *decoder = js_new<vixl::Decoder>();
   if (!decoder)
     return nullptr;
@@ -171,9 +167,9 @@ Simulator* Simulator::Create(JSContext* cx) {
   // FIXME: Note that it can't be stored in the SimulatorRuntime due to lifetime conflicts.
   js::UniquePtr<Simulator> sim;
   if (getenv("USE_DEBUGGER") != nullptr)
-    sim.reset(js_new<Debugger>(cx, decoder, stdout));
+    sim.reset(js_new<Debugger>(decoder, stdout));
   else
-    sim.reset(js_new<Simulator>(cx, decoder, stdout));
+    sim.reset(js_new<Simulator>(decoder, stdout));
 
   // Check if Simulator:init ran out of memory.
   if (sim && sim->oom())
@@ -219,16 +215,6 @@ bool Simulator::overRecursedWithExtra(uint32_t extra) const {
 }
 
 
-static inline JitActivation*
-GetJitActivation(JSContext* cx)
-{
-    if (!js::wasm::CodeExists)
-        return nullptr;
-    if (!cx->activation() || !cx->activation()->isJit())
-        return nullptr;
-    return cx->activation()->asJit();
-}
-
 JS::ProfilingFrameIterator::RegisterState
 Simulator::registerState()
 {
@@ -238,41 +224,6 @@ Simulator::registerState()
   state.lr = (uint8_t*) get_lr();
   state.sp = (uint8_t*) get_sp();
   return state;
-}
-
-bool
-Simulator::handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes)
-{
-    JitActivation* act = GetJitActivation(cx_);
-    if (!act)
-        return false;
-
-    uint8_t* pc = (uint8_t*)get_pc();
-    uint8_t* fp = (uint8_t*)get_fp();
-
-    const js::wasm::CodeSegment* segment = js::wasm::LookupCodeSegment(pc);
-    if (!segment || !segment->isModule())
-        return false;
-    const js::wasm::ModuleSegment* moduleSegment = segment->asModule();
-
-    js::wasm::Instance* instance = js::wasm::LookupFaultingInstance(*moduleSegment, pc, fp);
-    if (!instance)
-	return false;
-
-    MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
-
-    if (!instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
-        return false;
-
-    js::wasm::Trap trap;
-    js::wasm::BytecodeOffset bytecode;
-    MOZ_ALWAYS_TRUE(moduleSegment->code().lookupTrap(pc, &trap, &bytecode));
-
-    MOZ_RELEASE_ASSERT(trap == js::wasm::Trap::OutOfBounds);
-
-    act->startWasmTrap(js::wasm::Trap::OutOfBounds, bytecode.offset(), registerState());
-    set_pc((Instruction*)moduleSegment->trapCode());
-    return true;
 }
 
 int64_t Simulator::call(uint8_t* entry, int argument_count, ...) {
@@ -418,30 +369,6 @@ void* Simulator::RedirectNativeFunction(void* nativeFunction, ABIFunctionType ty
   return redirection->addressOfSvcInstruction();
 }
 
-bool
-Simulator::handle_wasm_ill_fault()
-{
-    JitActivation* act = GetJitActivation(cx_);
-    if (!act)
-        return false;
-
-    uint8_t* pc = (uint8_t*)get_pc();
-
-    const js::wasm::CodeSegment* segment = js::wasm::LookupCodeSegment(pc);
-    if (!segment || !segment->isModule())
-        return false;
-    const js::wasm::ModuleSegment* moduleSegment = segment->asModule();
-
-    js::wasm::Trap trap;
-    js::wasm::BytecodeOffset bytecode;
-    if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
-        return false;
-
-    act->startWasmTrap(trap, bytecode.offset(), registerState());
-    set_pc((Instruction*)moduleSegment->trapCode());
-    return true;
-}
-
 void Simulator::VisitException(const Instruction* instr) {
   switch (instr->Mask(ExceptionMask)) {
     case BRK: {
@@ -452,10 +379,15 @@ void Simulator::VisitException(const Instruction* instr) {
     }
     case HLT:
       switch (instr->ImmException()) {
-        case kUnreachableOpcode:
-          if (!handle_wasm_ill_fault())
-              DoUnreachable(instr);
+        case kUnreachableOpcode: {
+          uint8_t* newPC;
+          if (js::wasm::HandleIllegalInstruction(registerState(), &newPC)) {
+            set_pc((Instruction*)newPC);
+            return;
+          }
+          DoUnreachable(instr);
           return;
+        }
         case kTraceOpcode:
           DoTrace(instr);
           return;

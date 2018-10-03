@@ -545,8 +545,8 @@ const char* RegisterToken::kWAliases[kNumberOfRegisters][kMaxAliasNumber] = {
 };
 
 
-Debugger::Debugger(JSContext* cx, Decoder* decoder, FILE* stream)
-    : Simulator(cx, decoder, stream),
+Debugger::Debugger(Decoder* decoder, FILE* stream)
+    : Simulator(decoder, stream),
       debug_parameters_(DBG_INACTIVE),
       pending_request_(false),
       steps_(0),

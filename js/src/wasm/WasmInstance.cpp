@@ -985,7 +985,6 @@ Instance::memoryMappedSize() const
     return memory_->buffer().wasmMappedSize();
 }
 
-#ifdef JS_SIMULATOR
 bool
 Instance::memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const
 {
@@ -1003,7 +1002,6 @@ Instance::memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const
     size_t lastByteOffset = addr - base + (numBytes - 1);
     return lastByteOffset >= memory()->volatileMemoryLength() && lastByteOffset < memoryMappedSize();
 }
-#endif
 
 void
 Instance::tracePrivate(JSTracer* trc)
