@@ -1221,7 +1221,7 @@ public class BrowserSearch extends HomeFragment
             // Find matching substrings in title field in TwoLinePageRow, ignoring cases. This needs
             // to be done indirectly through a case-insensitive matcher because the lower-case
             // version of a string might have a different number of characters than the original.
-            Pattern pattern = Pattern.compile(mSearchTerm, Pattern.CASE_INSENSITIVE);
+            Pattern pattern = Pattern.compile(mSearchTerm, Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
             Matcher matcher = pattern.matcher(title.toString());
 
             while (matcher.find()) {
