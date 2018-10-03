@@ -22,8 +22,7 @@ test(t => {
    + ' and no pending tasks')
 
 test(t => {
-  const div = createDiv(t);
-  const animation = div.animate({}, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate({}, 100 * MS_PER_SEC);
 
   animation.pause();
 
@@ -134,8 +133,7 @@ test(t => {
    + ' current time = 0');
 
 test(t => {
-  const div = createDiv(t);
-  const animation = div.animate({}, 0);
+  const animation = createDiv(t).animate({}, 0);
   assert_equals(animation.startTime, null,
                 'Sanity check: start time should be unresolved');
 
@@ -144,8 +142,7 @@ test(t => {
    + ' current time = target effect end and there is a pending play task');
 
 test(t => {
-  const div = createDiv(t);
-  const animation = div.animate({}, 100 * MS_PER_SEC);
+  const animation = createDiv(t).animate({}, 100 * MS_PER_SEC);
   assert_equals(animation.startTime, null,
                 'Sanity check: start time should be unresolved');
 
