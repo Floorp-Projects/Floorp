@@ -1985,10 +1985,8 @@ struct TlsData
     // Pointer to the base of the default memory (or null if there is none).
     uint8_t* memoryBase;
 
-#ifndef WASM_HUGE_MEMORY
     // Bounds check limit of memory, in bytes (or zero if there is no memory).
     uint32_t boundsCheckLimit;
-#endif
 
     // Pointer to the Instance that contains this TLS data.
     Instance* instance;

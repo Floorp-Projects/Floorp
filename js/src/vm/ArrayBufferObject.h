@@ -105,7 +105,7 @@ size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
 class ArrayBufferObjectMaybeShared : public NativeObject
 {
   public:
-    inline uint32_t byteLength();
+    inline uint32_t byteLength() const;
     inline bool isDetached() const;
     inline SharedMem<uint8_t*> dataPointerEither();
 
@@ -119,9 +119,7 @@ class ArrayBufferObjectMaybeShared : public NativeObject
     size_t wasmMappedSize() const {
         return WasmArrayBufferMappedSize(this);
     }
-#ifndef WASM_HUGE_MEMORY
     uint32_t wasmBoundsCheckLimit() const;
-#endif
 
     inline bool isPreparedForAsmJS() const;
     inline bool isWasm() const;
@@ -387,8 +385,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     bool isPreparedForAsmJS() const { return flags() & FOR_ASMJS; }
 
     // WebAssembly support:
-    static MOZ_MUST_USE bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer,
-                                             bool needGuard);
+    static MOZ_MUST_USE bool prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer);
     size_t wasmMappedSize() const;
     mozilla::Maybe<uint32_t> wasmMaxSize() const;
     static MOZ_MUST_USE bool wasmGrowToSizeInPlace(uint32_t newSize,
@@ -400,8 +397,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
                                                   Handle<ArrayBufferObject*> oldBuf,
                                                   MutableHandle<ArrayBufferObject*> newBuf,
                                                   JSContext* cx);
-    uint32_t wasmBoundsCheckLimit() const;
 #endif
+    uint32_t wasmBoundsCheckLimit() const;
 
     static void finalize(FreeOp* fop, JSObject* obj);
 

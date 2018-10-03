@@ -1497,14 +1497,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmReserveStackChecked(uint32_t amount, wasm::BytecodeOffset trapOffset);
 
     // Emit a bounds check against the wasm heap limit, jumping to 'label' if
-    // 'cond' holds. Required when WASM_HUGE_MEMORY is not defined. If
-    // JitOptions.spectreMaskIndex is true, in speculative executions 'index' is
-    // saturated in-place to 'boundsCheckLimit'.
+    // 'cond' holds. If JitOptions.spectreMaskIndex is true, in speculative
+    // executions 'index' is saturated in-place to 'boundsCheckLimit'.
     void wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, Label* label)
-        DEFINED_ON(arm, arm64, mips32, mips64, x86);
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
     void wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, Label* label)
-        DEFINED_ON(arm, arm64, mips32, mips64, x86);
+        DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
     // Each wasm load/store instruction appends its own wasm::Trap::OutOfBounds.
     void wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, AnyRegister out) DEFINED_ON(x86, x64);

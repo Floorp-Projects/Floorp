@@ -4636,11 +4636,6 @@ LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins)
 void
 LIRGenerator::visitWasmLoadTls(MWasmLoadTls* ins)
 {
-#ifdef WASM_HUGE_MEMORY
-    // This will disappear once we remove HeapReg and replace it with a load
-    // from Tls, but in the mean time it keeps us sane.
-    MOZ_CRASH("No WasmLoadTls here at the moment");
-#endif
     auto* lir = new(alloc()) LWasmLoadTls(useRegisterAtStart(ins->tlsPtr()));
     define(lir, ins);
 }
