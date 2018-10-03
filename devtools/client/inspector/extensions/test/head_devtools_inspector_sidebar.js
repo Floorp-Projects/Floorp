@@ -51,6 +51,24 @@ function waitForObjectInspector(panelDoc, waitForNodeWithType = "object") {
   });
 }
 
+// Helper function used inside the sidebar.setExtensionPage test case.
+async function testSetExtensionPageSidebarPanel(panelDoc, expectedURL) {
+  const selector = "iframe.inspector-extension-sidebar-page";
+  const iframesCount = await ContentTaskUtils.waitForCondition(() => {
+    return panelDoc.querySelectorAll(selector).length > 0;
+  }, "Wait for the extension page iframe");
+
+  is(iframesCount, 1, "Got the expected number of iframes in the extension panel");
+
+  const iframeWindow = panelDoc.querySelector(selector).contentWindow;
+  await ContentTaskUtils.waitForCondition(() => {
+    return iframeWindow.document.readyState === "complete";
+  }, "Wait for the extension page iframe to complete to load");
+
+  is(iframeWindow.location.href, expectedURL,
+     "Got the expected url in the extension panel iframe");
+}
+
 // Helper function used inside the sidebar.setObjectValueGrip test case.
 async function testSetExpressionSidebarPanel(panel, expected) {
   const {
