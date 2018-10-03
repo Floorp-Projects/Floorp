@@ -24,6 +24,7 @@ public:
 protected:
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
+  Maybe<Telemetry::HistogramID> SpeedHistogram() const override;
 
 private:
   friend class DecoderFactory;
