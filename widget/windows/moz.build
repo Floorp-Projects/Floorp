@@ -94,6 +94,8 @@ SOURCES += [
     'nsBidiKeyboard.cpp',
     'nsFilePicker.cpp',
     'nsWidgetFactory.cpp',
+    'ToastNotification.cpp',
+    'ToastNotificationHandler.cpp',
     'WinCompositorWidget.cpp',
     'WindowsUIUtils.cpp',
     'WinMouseScrollHandler.cpp',
@@ -171,6 +173,8 @@ OS_LIBS += [
 
 if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
     # C5038: Suppress initializer list order warnings from wrl.h
+    SOURCES['ToastNotification.cpp'].flags += ['-wd5038']
+    SOURCES['ToastNotificationHandler.cpp'].flags += ['-wd5038']
     SOURCES['WindowsUIUtils.cpp'].flags += ['-wd5038']
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
