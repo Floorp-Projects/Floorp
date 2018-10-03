@@ -6530,6 +6530,13 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
             JitSpew(js::jit::JitSpew_IonScripts, "Disable ion");
         }
         break;
+        case JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD:
+            if (value == uint32_t(-1)) {
+                jit::DefaultJitOptions defaultValues;
+                value = defaultValues.frequentBailoutThreshold;
+            }
+            jit::JitOptions.frequentBailoutThreshold = value;
+        break;
       case JSJITCOMPILER_BASELINE_ENABLE:
         if (value == 1) {
             JS::ContextOptionsRef(cx).setBaseline(true);
@@ -6621,6 +6628,9 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t* 
         break;
       case JSJITCOMPILER_ION_ENABLE:
         *valueOut = JS::ContextOptionsRef(cx).ion();
+        break;
+      case JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD:
+        *valueOut = jit::JitOptions.frequentBailoutThreshold;
         break;
       case JSJITCOMPILER_BASELINE_ENABLE:
         *valueOut = JS::ContextOptionsRef(cx).baseline();
