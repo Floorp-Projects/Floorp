@@ -573,7 +573,7 @@ SystemUsesNegativeSign(uint8_t aSystem)
 class BuiltinCounterStyle : public CounterStyle
 {
 public:
-  constexpr BuiltinCounterStyle(int32_t aStyle, nsStaticAtom** aName)
+  constexpr BuiltinCounterStyle(int32_t aStyle, nsStaticAtom* aName)
     : CounterStyle(aStyle)
     , mName(aName)
   {
@@ -613,13 +613,13 @@ private:
   // Extra indirection to point to nsGkAtoms members rather than the
   // nsAtom, because members of nsGkAtoms are updated at runtime but
   // we want to construct BuiltinCounterStyle at compile time.
-  nsStaticAtom** const mName;
+  nsStaticAtom* const mName;
 };
 
 /* virtual */ nsStaticAtom*
 BuiltinCounterStyle::GetStyleName() const
 {
-  return *mName;
+  return mName;
 }
 
 /* virtual */ void
@@ -957,7 +957,7 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
 
 static constexpr BuiltinCounterStyle gBuiltinStyleTable[] = {
 #define BUILTIN_COUNTER_STYLE(value_, atom_) \
-  { NS_STYLE_LIST_STYLE_ ## value_, &nsGkAtoms::atom_ },
+  { NS_STYLE_LIST_STYLE_ ## value_, nsGkAtoms::atom_ },
 #include "BuiltinCounterStyleList.h"
 #undef BUILTIN_COUNTER_STYLE
 };
