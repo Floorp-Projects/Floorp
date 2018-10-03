@@ -1073,9 +1073,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       line: this.line || undefined,
       column: this.column,
       traits: {
-        // Whether the style rule actor implements the modifySelector2 method
-        // that allows for unmatched rule to be added
-        modifySelectorUnmatched: true,
         // Whether the style rule actor implements the setRuleText
         // method.
         canSetRuleText: this.canSetRuleText,
