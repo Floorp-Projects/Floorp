@@ -64,34 +64,3 @@ extern constexpr GkAtoms gGkAtoms = {
 
 const nsStaticAtom* const nsGkAtoms::sAtoms = mozilla::detail::gGkAtoms.mAtoms;
 
-// Definition of the pointer to the static atom.
-//
-// Expansion of the example GK_ATOM entries in nsGkAtoms.h:
-//
-//   nsStaticAtom* nsGkAtoms::a =
-//     const_cast<nsStaticAtom*>(
-//       static_cast<const nsStaticAtom*>(
-//         &mozilla::detail::gGkAtoms.mAtoms[
-//           static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::a)]));
-//
-//   nsICSSPseudoElement* nsGkAtoms::bb =
-//     const_cast<nsICSSPseudoElement*>(
-//       static_cast<const nsICSSPseudoElement*>(
-//         &mozilla::detail::gGkAtoms.mAtoms[
-//           static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::bb)]));
-//
-//   nsICSSAnonBoxPseudo* nsGkAtoms::ccc =
-//     const_cast<nsICSSAnonBoxPseudo*>(
-//       static_cast<const nsICSSAnonBoxPseudo*>(
-//         &mozilla::detail::gGkAtoms.mAtoms[
-//           static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::ccc)]));
-//
-#define GK_ATOM(name_, value_, hash_, type_, atom_type_)                       \
-  type_* nsGkAtoms::name_ =                                                    \
-    const_cast<type_*>(                                                        \
-      static_cast<const type_*>(                                               \
-        &mozilla::detail::gGkAtoms.mAtoms[                                     \
-          static_cast<size_t>(mozilla::detail::GkAtoms::Atoms::name_)]));
-#include "nsGkAtomList.h"
-#undef GK_ATOM
-
