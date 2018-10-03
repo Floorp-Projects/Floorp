@@ -218,10 +218,6 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
     return sheet ? sheet.nodeHref : "";
   },
 
-  get supportsModifySelectorUnmatched() {
-    return this._form.traits && this._form.traits.modifySelectorUnmatched;
-  },
-
   get canSetRuleText() {
     return this._form.traits && this._form.traits.canSetRuleText;
   },
@@ -270,15 +266,10 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
 
   modifySelector: custom(async function(node, value) {
     let response;
-    if (this.supportsModifySelectorUnmatched) {
-      // If the debugee supports adding unmatched rules (post FF41)
-      if (this.canSetRuleText) {
-        response = await this.modifySelector2(node, value, true);
-      } else {
-        response = await this.modifySelector2(node, value);
-      }
+    if (this.canSetRuleText) {
+      response = await this.modifySelector2(node, value, true);
     } else {
-      response = await this._modifySelector(value);
+      response = await this.modifySelector2(node, value);
     }
 
     if (response.ruleProps) {
