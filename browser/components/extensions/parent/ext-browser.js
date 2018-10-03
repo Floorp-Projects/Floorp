@@ -189,6 +189,12 @@ global.TabContext = class extends EventEmitter {
   }
 
   onLocationChange(browser, webProgress, request, locationURI, flags) {
+    if (!webProgress.isTopLevel) {
+      // Only pageAction and browserAction are consuming the "location-change" event
+      // to update their per-tab status, and they should only do so in response of
+      // location changes related to the top level frame (See Bug 1493470 for a rationale).
+      return;
+    }
     let gBrowser = browser.ownerGlobal.gBrowser;
     let tab = gBrowser.getTabForBrowser(browser);
     // fromBrowse will be false in case of e.g. a hash change or history.pushState
