@@ -208,9 +208,6 @@ struct URLValue final : public URLValueData
 
 struct ImageValue final : public URLValueData
 {
-  static already_AddRefed<ImageValue>
-    CreateFromURLValue(URLValue*, nsIDocument*, CORSMode);
-
   // Not making the constructor and destructor inline because that would
   // force us to include imgIRequest.h, which leads to REQUIRES hell, since
   // this header is included all over.
