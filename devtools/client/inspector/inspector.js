@@ -23,7 +23,6 @@ const Promise = require("Promise");
 
 loader.lazyRequireGetter(this, "initCssProperties", "devtools/shared/fronts/css-properties", true);
 loader.lazyRequireGetter(this, "HTMLBreadcrumbs", "devtools/client/inspector/breadcrumbs", true);
-loader.lazyRequireGetter(this, "ThreePaneOnboardingTooltip", "devtools/client/inspector/shared/three-pane-onboarding-tooltip");
 loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
 loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
@@ -63,8 +62,6 @@ const PORTRAIT_MODE_WIDTH_THRESHOLD = 700;
 // mode.
 const SIDE_PORTAIT_MODE_WIDTH_THRESHOLD = 1000;
 
-const THREE_PANE_FIRST_RUN_PREF = "devtools.inspector.three-pane-first-run";
-const SHOW_THREE_PANE_ONBOARDING_PREF = "devtools.inspector.show-three-pane-tooltip";
 const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
 const THREE_PANE_CHROME_ENABLED_PREF = "devtools.inspector.chrome.three-pane-enabled";
@@ -132,9 +129,6 @@ function Inspector(toolbox) {
   // Store the URL of the target page prior to navigation in order to ensure
   // telemetry counts in the Grid Inspector are not double counted on reload.
   this.previousURL = this.target.url;
-
-  this.is3PaneModeFirstRun = Services.prefs.getBoolPref(THREE_PANE_FIRST_RUN_PREF);
-  this.show3PaneTooltip = Services.prefs.getBoolPref(SHOW_THREE_PANE_ONBOARDING_PREF);
 
   this.nodeMenuTriggerInfo = null;
 
@@ -295,14 +289,6 @@ Inspector.prototype = {
       this._updateDebuggerPausedWarning();
     }
 
-    // Resets the inspector sidebar widths if this is the first run of the 3 pane mode.
-    if (this.is3PaneModeFirstRun) {
-      Services.prefs.clearUserPref("devtools.toolsidebar-width.inspector");
-      Services.prefs.clearUserPref("devtools.toolsidebar-height.inspector");
-      Services.prefs.clearUserPref("devtools.toolsidebar-width.inspector.splitsidebar");
-      Services.prefs.setBoolPref(THREE_PANE_FIRST_RUN_PREF, false);
-    }
-
     this._initMarkup();
     this.isReady = false;
 
@@ -333,13 +319,6 @@ Inspector.prototype = {
 
     // Setup the toolbar only now because it may depend on the document.
     await this.setupToolbar();
-
-    // Show the 3 pane onboarding tooltip only if the inspector is visisble since the
-    // Accessibility panel initializes the Inspector and if it is not the browser toolbox.
-    if (this.show3PaneTooltip && !this.target.chrome &&
-        this.toolbox.currentToolId === "inspector") {
-      this.threePaneTooltip = new ThreePaneOnboardingTooltip(this.toolbox, this.panelDoc);
-    }
 
     // Log the 3 pane inspector setting on inspector open. The question we want to answer
     // is:
@@ -1458,10 +1437,6 @@ Inspector.prototype = {
       this.animationinspector.destroy();
     }
 
-    if (this.threePaneTooltip) {
-      this.threePaneTooltip.destroy();
-    }
-
     if (this._highlighters) {
       this._highlighters.destroy();
       this._highlighters = null;
@@ -1494,7 +1469,6 @@ Inspector.prototype = {
     this._target = null;
     this._toolbox = null;
     this.breadcrumbs = null;
-    this.is3PaneModeFirstRun = null;
     this.panelDoc = null;
     this.panelWin.inspector = null;
     this.panelWin = null;
@@ -1504,7 +1478,6 @@ Inspector.prototype = {
     this.sidebar = null;
     this.store = null;
     this.telemetry = null;
-    this.threePaneTooltip = null;
 
     this._panelDestroyer = promise.all([
       cssPropertiesDestroyer,
