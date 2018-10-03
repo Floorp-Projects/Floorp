@@ -1137,7 +1137,7 @@ pub extern "C" fn wr_transaction_notify(txn: &mut Transaction, when: Checkpoint,
         }
     }
 
-    let handler = Arc::new(GeckoNotification(event));
+    let handler = Box::new(GeckoNotification(event));
     txn.notify(NotificationRequest::new(when, handler));
 }
 
