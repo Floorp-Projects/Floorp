@@ -105,7 +105,7 @@ public:
                                    const nsTArray<gfxFontVariation>& aVariationSettings,
                                    uint32_t aLanguageOverride,
                                    gfxCharacterMap* aUnicodeRanges,
-                                   uint8_t aFontDisplay,
+                                   StyleFontDisplay aFontDisplay,
                                    RangeFlags aRangeFlags) override;
 
   private:
