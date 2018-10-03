@@ -219,10 +219,20 @@ function TabTarget({ form, client, chrome, tab = null }) {
   // * xpcshell debugging (it uses ParentProcessTargetActor, which inherits from
   //                       BrowsingContextActor, but doesn't have any valid browsing
   //                       context to attach to.)
-  // Unfortunately, for now, because of bug 1492265, we don't flag xpcshell correctly
-  // as there is no way to identify the target actor correctly.
-  const isContentProcessTarget = this._form.actor.match(/conn\d+\.content-process\d+\/contentProcessTarget\d+/);
-  this._isBrowsingContext = !this.isLegacyAddon && !isContentProcessTarget;
+  // Starting with FF64, BrowsingContextTargetActor exposes a traits to help identify
+  // the target actors inheriting from it. It also help identify the xpcshell debugging
+  // target actor that doesn't have any valid browsing context.
+  // (Once FF63 is no longer supported, we can remove the `else` branch and only look
+  // for the traits)
+  if (this._form.traits && ("isBrowsingContext" in this._form.traits)) {
+    this._isBrowsingContext = this._form.traits.isBrowsingContext;
+  } else {
+    // browser content toolbox's form will be of the form:
+    //   server0.conn0.content-process0/contentProcessTarget7
+    const isContentProcessTarget =
+      this._form.actor.match(/conn\d+\.content-process\d+\/contentProcessTarget\d+/);
+    this._isBrowsingContext = !this.isLegacyAddon && !isContentProcessTarget;
+  }
 
   // Cache of already created targed-scoped fronts
   // [typeName:string => Front instance]
