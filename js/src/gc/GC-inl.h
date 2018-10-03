@@ -289,11 +289,13 @@ class ZoneCellIter<TenuredCell> {
 // Iterator over the cells in a Zone, where the GC type (JSString, JSObject) is
 // known, for a single AllocKind. Example usages:
 //
-//   for (auto obj = zone->cellIter<JSObject>(AllocKind::OBJECT0); !obj.done(); obj.next())
+//   for (auto obj = zone->cellIter<JSObject>(AllocKind::OBJECT0); !obj.done(); obj.next()) {
 //       ...
+//   }
 //
-//   for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next())
+//   for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
 //       f(script->code());
+//   }
 //
 // As this code demonstrates, you can use 'script' as if it were a JSScript*.
 // Its actual type is ZoneCellIter<JSScript>, but for most purposes it will

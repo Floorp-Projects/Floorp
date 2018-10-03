@@ -46,8 +46,9 @@ CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl, const
 //   static bool
 //   IsAnswerObject(const Value& v)
 //   {
-//       if (!v.isObject())
+//       if (!v.isObject()) {
 //           return false;
+//       }
 //       return JS_GetClass(&v.toObject()) == &AnswerClass;
 //   }
 //

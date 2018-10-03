@@ -2526,8 +2526,9 @@ JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
  * This function is roughly equivalent to:
  *
  *     var result = [];
- *     for (key in obj)
+ *     for (key in obj) {
  *         result.push(key);
+ *     }
  *     return result;
  *
  * This is the closest thing we currently have to the ES6 [[Enumerate]]
@@ -3776,8 +3777,9 @@ JS_PutEscapedString(JSContext* cx, char* buffer, size_t size, JSString* str, cha
  *
  *   // in a fallible context
  *   JSFlatString* fstr = JS_FlattenString(cx, str);
- *   if (!fstr)
+ *   if (!fstr) {
  *     return false;
+ *   }
  *   MOZ_ASSERT(fstr == JS_ASSERT_STRING_IS_FLAT(str));
  *
  *   // in an infallible context, for the same 'str'
@@ -4787,17 +4789,21 @@ DeserializeWasmModule(PRFileDesc* bytecode, JS::UniqueChars filename, unsigned l
  * Convenience class for imitating a JS level for-of loop. Typical usage:
  *
  *     ForOfIterator it(cx);
- *     if (!it.init(iterable))
+ *     if (!it.init(iterable)) {
  *       return false;
+ *     }
  *     RootedValue val(cx);
  *     while (true) {
  *       bool done;
- *       if (!it.next(&val, &done))
+ *       if (!it.next(&val, &done)) {
  *         return false;
- *       if (done)
+ *       }
+ *       if (done) {
  *         break;
- *       if (!DoStuff(cx, val))
+ *       }
+ *       if (!DoStuff(cx, val)) {
  *         return false;
+ *       }
  *     }
  */
 class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {

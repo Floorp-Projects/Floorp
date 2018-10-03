@@ -97,8 +97,9 @@ namespace dbg {
 //                                 Builder::Object& result)
 //    {
 //        JSObject* eventObject = ... obtain debuggee event object somehow ...;
-//        if (!eventObject)
+//        if (!eventObject) {
 //            return false;
+//        }
 //        result = builder.newObject(cx);
 //        return result &&
 //               result.defineProperty(cx, "eventType", SafelyFetchType(eventObject)) &&
