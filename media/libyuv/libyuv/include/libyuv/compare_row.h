@@ -45,12 +45,6 @@ extern "C" {
 #endif  // clang >= 3.4
 #endif  // __clang__
 
-// The following are available for Visual C:
-#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && \
-    (defined(VISUALC_HAS_AVX2) || defined(CLANG_HAS_AVX2))
-#define HAS_HASHDJB2_AVX2
-#endif
-
 // The following are available for Visual C and GCC:
 #if !defined(LIBYUV_DISABLE_X86) && \
     (defined(__x86_64__) || defined(__i386__) || defined(_M_IX86))
@@ -60,7 +54,7 @@ extern "C" {
 #endif
 
 // The following are available for Visual C and clangcl 32 bit:
-#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && \
+#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && defined(_MSC_VER) && \
     (defined(VISUALC_HAS_AVX2) || defined(CLANG_HAS_AVX2))
 #define HAS_HASHDJB2_AVX2
 #define HAS_SUMSQUAREERROR_AVX2
