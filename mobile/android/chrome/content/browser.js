@@ -4201,7 +4201,7 @@ Tab.prototype = {
           if (errorExtra == "fileAccessDenied") {
             // Check if we already have the permissions, then - if we do not have them, show the prompt and reload the page.
             // If we already have them, it means access to file was denied.
-            RuntimePermissions.checkPermission(RuntimePermissions.READ_EXTERNAL_STORAGE).then((permissionAlreadyGranted) => {
+            RuntimePermissions.checkPermissions(RuntimePermissions.READ_EXTERNAL_STORAGE).then((permissionAlreadyGranted) => {
               if (!permissionAlreadyGranted) {
                 RuntimePermissions.waitForPermissions(RuntimePermissions.READ_EXTERNAL_STORAGE).then((permissionGranted) => {
                   if (permissionGranted) {
