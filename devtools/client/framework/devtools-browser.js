@@ -308,7 +308,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     }
   },
 
-  _getContentProcessTarget(processId) {
+  async _getContentProcessTarget(processId) {
     // Create a DebuggerServer in order to connect locally to it
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
@@ -317,28 +317,21 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     const transport = DebuggerServer.connectPipe();
     const client = new DebuggerClient(transport);
 
-    return new Promise(resolve => {
-      client.connect().then(() => {
-        client.getProcess(processId)
-              .then(response => {
-                const options = {
-                  form: response.form,
-                  client: client,
-                  chrome: true,
-                };
-                return TargetFactory.forRemoteTab(options);
-              })
-              .then(target => {
-                // Ensure closing the connection in order to cleanup
-                // the debugger client and also the server created in the
-                // content process
-                target.on("close", () => {
-                  client.close();
-                });
-                resolve(target);
-              });
-      });
+    await client.connect();
+    const response = await client.getProcess(processId);
+    const options = {
+      form: response.form,
+      client: client,
+      chrome: true,
+    };
+    const target = await TargetFactory.forRemoteTab(options);
+    // Ensure closing the connection in order to cleanup
+    // the debugger client and also the server created in the
+    // content process
+    target.on("close", () => {
+      client.close();
     });
+    return target;
   },
 
   /**
