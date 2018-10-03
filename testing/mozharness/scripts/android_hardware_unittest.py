@@ -7,7 +7,6 @@
 
 import copy
 import datetime
-import glob
 import os
 import re
 import sys
@@ -158,31 +157,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             test_dir = self.test_suite
         return os.path.join(dirs['abs_test_install_dir'], test_dir)
 
-    def _query_package_name(self):
-        if self.app_name is None:
-            # For convenience, assume geckoview.test/geckoview_example when install
-            # target looks like geckoview.
-            if 'androidTest' in self.installer_path:
-                self.app_name = 'org.mozilla.geckoview.test'
-            elif 'geckoview' in self.installer_path:
-                self.app_name = 'org.mozilla.geckoview_example'
-        if self.app_name is None:
-            # Find appname from package-name.txt - assumes download-and-extract
-            # has completed successfully.
-            # The app/package name will typically be org.mozilla.fennec,
-            # but org.mozilla.firefox for release builds, and there may be
-            # other variations. 'aapt dump badging <apk>' could be used as an
-            # alternative to package-name.txt, but introduces a dependency
-            # on aapt, found currently in the Android SDK build-tools component.
-            apk_dir = self.abs_dirs['abs_work_dir']
-            self.apk_path = os.path.join(apk_dir, self.installer_path)
-            unzip = self.query_exe("unzip")
-            package_path = os.path.join(apk_dir, 'package-name.txt')
-            unzip_cmd = [unzip, '-q', '-o', self.apk_path]
-            self.run_command(unzip_cmd, cwd=apk_dir, halt_on_failure=True)
-            self.app_name = str(self.read_from_file(package_path, verbose=True)).rstrip()
-        return self.app_name
-
     def _build_command(self):
         c = self.config
         dirs = self.query_abs_dirs()
@@ -242,7 +216,7 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
 
             if '%(app)' in option:
                 # only query package name if requested
-                cmd.extend([option % {'app': self._query_package_name()}])
+                cmd.extend([option % {'app': self.query_package_name()}])
             else:
                 option = option % str_format_values
                 if option:
@@ -337,18 +311,7 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             robocop_url = self.installer_url[:self.installer_url.rfind('/')] + '/robocop.apk'
             self.info("Downloading robocop...")
             self.download_file(robocop_url, 'robocop.apk', dirs['abs_work_dir'], error_level=FATAL)
-        self.rmtree(dirs['abs_xre_dir'])
-        self.mkdir_p(dirs['abs_xre_dir'])
-        if self.config["hostutils_manifest_path"]:
-            url = self._get_repo_url(self.config["hostutils_manifest_path"])
-            self._tooltool_fetch(url, dirs['abs_xre_dir'])
-            for p in glob.glob(os.path.join(dirs['abs_xre_dir'], 'host-utils-*')):
-                if os.path.isdir(p) and os.path.isfile(os.path.join(p, 'xpcshell')):
-                    self.xre_path = p
-            if not self.xre_path:
-                self.fatal("xre path not found in %s" % dirs['abs_xre_dir'])
-        else:
-            self.fatal("configure hostutils_manifest_path!")
+        self.xre_path = self.download_hostutils(dirs['abs_xre_dir'])
 
     def install(self):
         """
