@@ -108,6 +108,8 @@ var PdfJs = {
   },
 
   earlyInit() {
+    // Note: Please keep this in sync with the duplicated logic in
+    // nsBrowserGlue.js.
     Services.ppmm.sharedData.set("pdfjs.enabled", this.checkEnabled());
   },
 
