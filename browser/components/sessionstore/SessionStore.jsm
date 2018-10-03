@@ -1046,10 +1046,6 @@ var SessionStoreInternal = {
           this.resetEpoch(target);
         }
         break;
-      case "BrowserWillChangeProcess":
-        let promise = TabStateFlusher.flush(target);
-        target.frameLoader.addProcessChangeBlockingPromise(promise);
-        break;
       case "BrowserChangedProcess":
         let newEpoch = 1 + Math.max(this.getCurrentEpoch(target),
                                     this.getCurrentEpoch(aEvent.otherBrowser));
@@ -1125,7 +1121,6 @@ var SessionStoreInternal = {
     // Keep track of a browser's latest frameLoader.
     aWindow.gBrowser.addEventListener("XULFrameLoaderCreated", this);
     aWindow.gBrowser.addEventListener("BrowserChangedProcess", this);
-    aWindow.gBrowser.addEventListener("BrowserWillChangeProcess", this);
   },
 
   /**
@@ -1391,7 +1386,6 @@ var SessionStoreInternal = {
 
     aWindow.gBrowser.removeEventListener("XULFrameLoaderCreated", this);
     aWindow.gBrowser.removeEventListener("BrowserChangedProcess", this);
-    aWindow.gBrowser.removeEventListener("BrowserWillChangeProcess", this);
 
     let winData = this._windows[aWindow.__SSi];
 
