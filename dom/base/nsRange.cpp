@@ -3583,7 +3583,12 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
     bool isVisibleAndNotReplaced = IsVisibleAndNotInReplacedElement(f);
     if (currentState == AT_NODE) {
       bool isText = currentNode->IsText();
-      if (isVisibleAndNotReplaced) {
+      if (isText && currentNode->GetParent()->IsHTMLElement(nsGkAtoms::rp) &&
+          ElementIsVisibleNoFlush(currentNode->GetParent()->AsElement())) {
+        nsAutoString str;
+        currentNode->GetTextContent(str, aError);
+        result.Append(str);
+      } else if (isVisibleAndNotReplaced) {
         result.AddRequiredLineBreakCount(GetRequiredInnerTextLineBreakCount(f));
         if (isText) {
           nsIFrame::RenderedText text = f->GetRenderedText();
