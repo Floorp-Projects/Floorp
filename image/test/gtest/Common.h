@@ -433,9 +433,13 @@ ImageTestCase GreenJPGTestCase();
 ImageTestCase GreenBMPTestCase();
 ImageTestCase GreenICOTestCase();
 ImageTestCase GreenIconTestCase();
+ImageTestCase GreenWebPTestCase();
+
+ImageTestCase GreenWebPIccSrgbTestCase();
 
 ImageTestCase GreenFirstFrameAnimatedGIFTestCase();
 ImageTestCase GreenFirstFrameAnimatedPNGTestCase();
+ImageTestCase GreenFirstFrameAnimatedWebPTestCase();
 
 ImageTestCase CorruptTestCase();
 ImageTestCase CorruptBMPWithTruncatedHeader();
@@ -460,6 +464,7 @@ ImageTestCase DownscaledJPGTestCase();
 ImageTestCase DownscaledBMPTestCase();
 ImageTestCase DownscaledICOTestCase();
 ImageTestCase DownscaledIconTestCase();
+ImageTestCase DownscaledWebPTestCase();
 ImageTestCase DownscaledTransparentICOWithANDMaskTestCase();
 
 ImageTestCase TruncatedSmallGIFTestCase();
