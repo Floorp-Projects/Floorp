@@ -405,7 +405,10 @@ private:
     // Only non-null up until the decoder is created.
     RefPtr<TaskQueue> mTaskQueue;
 
-    // Mutex protecting mDescription and mDecoder.
+    // Mutex protecting mDescription, mDecoder, mTrackDemuxer and mWorkingInfo
+    // as those can be read outside the TaskQueue.
+    // They are only written on the TaskQueue however, as such mMutex doesn't
+    // need to be held when those members are read on the TaskQueue.
     Mutex mMutex;
     // The platform decoder.
     RefPtr<MediaDataDecoder> mDecoder;
@@ -588,6 +591,13 @@ private:
       }
       return mOriginalInfo.get();
     }
+    // Return the current TrackInfo updated as per the decoder output.
+    // Typically for audio, the number of channels and/or sampling rate can vary
+    // between what was found in the metadata and what the decoder returned.
+    const TrackInfo* GetWorkingInfo() const
+    {
+      return mWorkingInfo.get();
+    }
     bool IsEncrypted() const
     {
       return GetCurrentInfo()->mCrypto.mValid;
@@ -605,6 +615,9 @@ private:
     Maybe<media::TimeUnit> mLastTimeRangesEnd;
     // TrackInfo as first discovered during ReadMetadata.
     UniquePtr<TrackInfo> mOriginalInfo;
+    // Written exclusively on the TaskQueue, can be read on MDSM's TaskQueue.
+    // Must be read with parent's mutex held.
+    UniquePtr<TrackInfo> mWorkingInfo;
     RefPtr<TrackInfoSharedPtr> mInfo;
     Maybe<media::TimeUnit> mFirstDemuxedSampleTime;
     // Use NullDecoderModule or not.
