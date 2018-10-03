@@ -48,8 +48,8 @@
         <row>
           <menulist id="availableLocales"
                     class="available-locales-list"
-                    data-l10n-id="languages-customize-select-language"
-                    data-l10n-attrs="placeholder">
+                    data-l10n-id="browser-languages-select-language"
+                    data-l10n-attrs="placeholder,label">
             <menupopup/>
           </menulist>
           <button id="add"
@@ -59,6 +59,13 @@
         </row>
       </rows>
     </grid>
-    <separator/>
+    <separator class="warning-message-separator"/>
+    <hbox id="warning-message" class="message-bar message-bar-warning" hidden="true">
+      <image class="message-bar-icon"/>
+      <hbox align="center" flex="1">
+        <description class="message-bar-description" data-l10n-id="browser-languages-error"/>
+      </hbox>
+    </hbox>
+    <separator class="warning-message-separator"/>
   </vbox>
 </dialog>
