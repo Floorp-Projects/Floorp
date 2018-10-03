@@ -532,7 +532,7 @@
   },
   "FULLSCREEN_TRANSITION_BLACK_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["xquan@mozilla.com"],
+    "alert_emails": ["mozilla-telemetry@upsuper.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 100,
@@ -543,7 +543,7 @@
   },
   "FULLSCREEN_CHANGE_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["xquan@mozilla.com"],
+    "alert_emails": ["mozilla-telemetry@upsuper.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 100,
@@ -14185,7 +14185,7 @@
   },
   "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["xquan@mozilla.com", "botond@mozilla.com"],
+    "alert_emails": ["mozilla-telemetry@upsuper.org", "botond@mozilla.com"],
     "bug_numbers": [1423013, 1423017],
     "expires_in_version": "65",
     "kind": "categorical",

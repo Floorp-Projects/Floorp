@@ -40,14 +40,6 @@ interface FrameLoader {
   readonly attribute ParentSHistory? parentSHistory;
 
   /**
-   * Adds a blocking promise for the current cross process navigation.
-   * This method can only be called while the "BrowserWillChangeProcess" event
-   * is being fired.
-   */
-  [Throws]
-  void addProcessChangeBlockingPromise(Promise<any> aPromise);
-
-  /**
    * Find out whether the loader's frame is at too great a depth in
    * the frame tree.  This can be used to decide what operations may
    * or may not be allowed on the loader's docshell.
@@ -98,12 +90,6 @@ interface FrameLoader {
   void requestNotifyAfterRemotePaint();
 
   /**
-   * Close the window through the ownerElement.
-   */
-  [Throws]
-  void requestFrameLoaderClose();
-
-  /**
    * Force a remote browser to recompute its dimension and screen position.
    */
   [Throws]
@@ -128,13 +114,6 @@ interface FrameLoader {
    * Defaults to true.
    */
   attribute boolean clipSubdocument;
-
-  /**
-   * If false, then the subdocument's scroll coordinates will not be clamped
-   * to their scroll boundaries.
-   * Defaults to true.
-   */
-  attribute boolean clampScrollPosition;
 
   /**
    * The element which owns this frame loader.

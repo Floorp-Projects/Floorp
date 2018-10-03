@@ -13,11 +13,6 @@
   min-height: initial;
 }
 
-.downloadProgress[mode="undetermined"] {
-  /* for overriding rules on global.css in Linux. */
-  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
-}
-
 .downloadProgress > .progress-bar {
   background-color: Highlight;
 
@@ -29,7 +24,7 @@
   background-color: GrayText;
 }
 
-.downloadProgress[mode="undetermined"] > .progress-bar {
+.downloadProgress[progress-undetermined] > .progress-bar {
   /* Make a white reflecting animation.
      Create a gradient with 2 identical pattern, and enlarge the size to 200%.
      This allows us to animate background-position with percentage. */
@@ -56,7 +51,7 @@
   border-width: 1px;
 }
 
-.downloadProgress > .progress-remainder[mode="undetermined"] {
+.downloadProgress[progress-undetermined] > .progress-remainder {
   border: none;
 }
 

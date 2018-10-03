@@ -26,7 +26,7 @@
   margin: 0 10px;
 }
 
-.sidebar-panel:not([lwt-sidebar]) .sidebar-placesTreechildren::-moz-tree-row(selected) {
+.sidebar-panel:not([lwt-sidebar]) .sidebar-placesTreechildren::-moz-tree-row(selected,blur) {
   -moz-appearance: -moz-mac-source-list-selection;
   -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
 }
