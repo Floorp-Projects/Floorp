@@ -147,6 +147,8 @@ function runTests() {
       let store = await Services.crashmanager._getStore();
       store.reset();
 
+      await SimpleTest.promiseWaitForCondition(() => pluginElement.crash !== undefined,
+                                               "Waited too long for plugin to activate");
       pluginElement.crash();
     })();
   } catch (e) {

@@ -371,7 +371,6 @@ tooltip {
 }
 
 tooltip {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#tooltip");
   -moz-box-orient: vertical;
   white-space: pre-wrap;
   margin-top: 21px;
