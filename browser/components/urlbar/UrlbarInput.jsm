@@ -168,7 +168,7 @@ class UrlbarInput {
    *   DOM event from the <textbox>.
    */
   handleEvent(event) {
-    let methodName = "_on" + event.type;
+    let methodName = "_on_" + event.type;
     if (methodName in this) {
       this[methodName](event);
     } else {
@@ -319,15 +319,15 @@ class UrlbarInput {
 
   // Event handlers below.
 
-  _onblur(event) {
+  _on_blur(event) {
     this.formatValue();
   }
 
-  _onfocus(event) {
+  _on_focus(event) {
     this.formatValue();
   }
 
-  _onmousedown(event) {
+  _on_mousedown(event) {
     if (event.button == 0 &&
         event.detail == 2 &&
         UrlbarPrefs.get("doubleClickSelectsAll")) {
@@ -336,7 +336,7 @@ class UrlbarInput {
     }
   }
 
-  _oninput(event) {
+  _on_input(event) {
     this.valueIsTyped = true;
 
     // XXX Fill in lastKey, and add anything else we need.
@@ -348,7 +348,7 @@ class UrlbarInput {
     }));
   }
 
-  _onselect(event) {
+  _on_select(event) {
     if (!Services.clipboard.supportsSelectionClipboard()) {
       return;
     }
@@ -365,7 +365,7 @@ class UrlbarInput {
     ClipboardHelper.copyStringToClipboard(val, Services.clipboard.kSelectionClipboard);
   }
 
-  _onoverflow(event) {
+  _on_overflow(event) {
     const targetIsPlaceholder =
       !event.originalTarget.classList.contains("anonymous-div");
     // We only care about the non-placeholder text.
@@ -377,7 +377,7 @@ class UrlbarInput {
     this._updateTextOverflow();
   }
 
-  _onunderflow(event) {
+  _on_underflow(event) {
     const targetIsPlaceholder =
       !event.originalTarget.classList.contains("anonymous-div");
     // We only care about the non-placeholder text.
@@ -389,7 +389,7 @@ class UrlbarInput {
     this._updateTextOverflow();
   }
 
-  _onscrollend(event) {
+  _on_scrollend(event) {
     this._updateTextOverflow();
   }
 }
