@@ -5,11 +5,8 @@
 package mozilla.components.browser.engine.system.matcher
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.net.Uri
-import android.preference.PreferenceManager
 import android.util.JsonReader
-import mozilla.components.browser.engine.system.R
 import java.io.InputStreamReader
 import java.io.Reader
 import java.nio.charset.StandardCharsets.UTF_8
@@ -19,10 +16,9 @@ import java.util.LinkedList
  * Provides functionality to process categorized URL black/white lists and match
  * URLs against these lists.
  */
-class UrlMatcher : SharedPreferences.OnSharedPreferenceChangeListener {
-    private val categoryPrefMap: Map<String, String>
+class UrlMatcher {
     private val categories: MutableMap<String, Trie>
-    private val enabledCategories = HashSet<String>()
+    internal val enabledCategories = HashSet<String>()
 
     private val whiteList: WhiteList?
     private val previouslyMatched = HashSet<String>()
@@ -30,55 +26,49 @@ class UrlMatcher : SharedPreferences.OnSharedPreferenceChangeListener {
     private var blockWebfonts = true
 
     constructor(patterns: Array<String>) {
-        categoryPrefMap = mapOf("default" to "default")
         categories = HashMap()
         whiteList = null
 
         val defaultCategory = Trie.createRootNode()
         patterns.forEach { defaultCategory.put(it.reverse()) }
-        categories["default"] = defaultCategory
-        enabledCategories.add("default")
+        categories[DEFAULT] = defaultCategory
+        enabledCategories.add(DEFAULT)
     }
 
     internal constructor(
-        context: Context,
-        categoryPrefMap: Map<String, String>,
+        enabledCategories: Set<String>,
+        supportedCategories: Set<String>,
         categoryMap: MutableMap<String, Trie>,
         whiteList: WhiteList? = null
     ) {
-        this.categoryPrefMap = categoryPrefMap
         this.whiteList = whiteList
         this.categories = categoryMap
 
         for ((key) in categoryMap) {
-            if (!categoryPrefMap.values.contains(key)) {
+            if (!supportedCategories.contains(key)) {
                 throw IllegalArgumentException("categoryMap contains undeclared category")
             }
-            enabledCategories.add(key)
         }
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        categoryPrefMap.forEach { (k, v) -> setCategoryEnabled(v, prefs.getBoolean(k, true)) }
-
-        prefs.registerOnSharedPreferenceChangeListener(this)
+        enabledCategories.forEach { setCategoryEnabled(it, true) }
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, prefName: String) {
-        val categoryName = categoryPrefMap[prefName]
-        categoryName?.let {
-            val prefValue = sharedPreferences.getBoolean(prefName, false)
-            setCategoryEnabled(it, prefValue)
+    /**
+     * Enables the provided categories.
+     *
+     * @param categories set of categories to enable.
+     */
+    fun setCategoriesEnabled(categories: Set<String>) {
+        if (enabledCategories != categories) {
+            enabledCategories.removeAll { it != DEFAULT }
+            categories.forEach { setCategoryEnabled(it, true) }
         }
     }
 
-    private fun setCategoryEnabled(category: String, enabled: Boolean) {
+    internal fun setCategoryEnabled(category: String, enabled: Boolean) {
         if (WEBFONTS == category) {
             blockWebfonts = enabled
             return
-        }
-
-        if (!categories.keys.contains(category)) {
-            throw IllegalArgumentException("Can't enable/disable non-existent category")
         }
 
         if (enabled) {
@@ -156,46 +146,53 @@ class UrlMatcher : SharedPreferences.OnSharedPreferenceChangeListener {
     }
 
     companion object {
-        private const val WEBFONTS = "Webfonts"
-        private const val SOCIAL = "Social"
-        private const val DISCONNECT = "Disconnect"
+        const val ADVERTISING = "Advertising"
+        const val ANALYTICS = "Analytics"
+        const val CONTENT = "Content"
+        const val DISCONNECT = "Disconnect"
+        const val SOCIAL = "Social"
+        const val WEBFONTS = "Webfonts"
+        const val DEFAULT = "default"
+
         private val IGNORED_CATEGORIES = setOf("Legacy Disconnect", "Legacy Content")
         private val DISCONNECT_MOVED = setOf("Facebook", "Twitter")
         private val WEBFONT_EXTENSIONS = arrayOf(".woff2", ".woff", ".eot", ".ttf", ".otf")
 
-        private fun defaultPrefMap(context: Context): Map<String, String> = mapOf(
-            context.getString(R.string.pref_key_privacy_block_ads) to "Advertising",
-            context.getString(R.string.pref_key_privacy_block_analytics) to "Analytics",
-            context.getString(R.string.pref_key_privacy_block_social) to "Social",
-            context.getString(R.string.pref_key_privacy_block_other) to "Content",
-            context.getString(R.string.pref_key_performance_block_webfonts) to WEBFONTS
-        )
+        private val SUPPORTED_CATEGORIES = setOf(ADVERTISING, ANALYTICS, SOCIAL, CONTENT, WEBFONTS)
 
         /**
          * Creates a new matcher instance for the provided URL lists.
          *
-         * @param context the application context
          * @param blackListFile resource ID to a JSON file containing the black list
          * @param overrides array of resource ID to JSON files containing black list overrides
          * @param whiteListFile resource ID to a JSON file containing the white list
          */
-        fun createMatcher(context: Context, blackListFile: Int, overrides: IntArray?, whiteListFile: Int): UrlMatcher {
+        fun createMatcher(
+            context: Context,
+            blackListFile: Int,
+            overrides: IntArray?,
+            whiteListFile: Int,
+            enabledCategories: Set<String> = SUPPORTED_CATEGORIES
+        ): UrlMatcher {
             val blackListReader = InputStreamReader(context.resources.openRawResource(blackListFile), UTF_8)
             val whiteListReader = InputStreamReader(context.resources.openRawResource(whiteListFile), UTF_8)
             val overrideReaders = overrides?.map { InputStreamReader(context.resources.openRawResource(it), UTF_8) }
-            return createMatcher(context, blackListReader, overrideReaders, whiteListReader)
+            return createMatcher(blackListReader, overrideReaders, whiteListReader, enabledCategories)
         }
 
         /**
          * Creates a new matcher instance for the provided URL lists.
          *
-         * @param context the application context
          * @param black reader containing the black list
          * @param overrides array of resource ID to JSON files containing black list overrides
          * @param white resource ID to a JSON file containing the white list
          */
-        fun createMatcher(context: Context, black: Reader, overrides: List<Reader>?, white: Reader): UrlMatcher {
-            val categoryPrefMap = defaultPrefMap(context)
+        fun createMatcher(
+            black: Reader,
+            overrides: List<Reader>?,
+            white: Reader,
+            enabledCategories: Set<String> = SUPPORTED_CATEGORIES
+        ): UrlMatcher {
             val categoryMap = HashMap<String, Trie>()
 
             JsonReader(black).use {
@@ -210,7 +207,7 @@ class UrlMatcher : SharedPreferences.OnSharedPreferenceChangeListener {
 
             var whiteList: WhiteList? = null
             JsonReader(white).use { jsonReader -> whiteList = WhiteList.fromJson(jsonReader) }
-            return UrlMatcher(context, categoryPrefMap, categoryMap, whiteList)
+            return UrlMatcher(enabledCategories, SUPPORTED_CATEGORIES, categoryMap, whiteList)
         }
 
         /**

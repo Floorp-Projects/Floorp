@@ -37,7 +37,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
 
     internal var view: WeakReference<SystemEngineView>? = null
     internal var scheduledLoad = ScheduledLoad(null)
-    @Volatile internal var trackingProtectionEnabled = false
+    @Volatile internal var trackingProtectionPolicy: TrackingProtectionPolicy? = null
     @Volatile internal var webFontsEnabled = true
     @Volatile internal var internalSettings: Settings? = null
 
@@ -121,20 +121,14 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
 
     /**
      * See [EngineSession.enableTrackingProtection]
-     *
-     * Note that specifying tracking protection policies at run-time is
-     * not supported by [SystemEngine]. Tracking protection is always active
-     * for all URLs provided in domain_blacklist.json and domain_overrides.json,
-     * which both support specifying categories. See [UrlMatcher] for how to
-     * enable/disable specific categories.
      */
     override fun enableTrackingProtection(policy: TrackingProtectionPolicy) {
         currentView()?.let {
             // Make sure Url matcher is preloaded now that tracking protection is enabled
-            launch { SystemEngineView.getOrCreateUrlMatcher(it.context) }
+            launch { SystemEngineView.getOrCreateUrlMatcher(it.context, policy) }
         }
 
-        trackingProtectionEnabled = true
+        trackingProtectionPolicy = policy
         notifyObservers { onTrackerBlockingEnabledChange(true) }
     }
 
@@ -142,7 +136,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
      * See [EngineSession.disableTrackingProtection]
      */
     override fun disableTrackingProtection() {
-        trackingProtectionEnabled = false
+        trackingProtectionPolicy = null
         notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
@@ -254,10 +248,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                 set(value) { this@SystemEngineSession.webFontsEnabled = value }
 
             override var trackingProtectionPolicy: TrackingProtectionPolicy?
-                get() = if (trackingProtectionEnabled)
-                    TrackingProtectionPolicy.all()
-                else
-                    TrackingProtectionPolicy.none()
+                get() = this@SystemEngineSession.trackingProtectionPolicy
                 set(value) = value?.let { enableTrackingProtection(it) } ?: disableTrackingProtection()
 
             override var requestInterceptor: RequestInterceptor? = null

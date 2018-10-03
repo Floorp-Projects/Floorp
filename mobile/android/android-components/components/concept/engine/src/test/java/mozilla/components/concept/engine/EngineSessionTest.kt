@@ -7,6 +7,8 @@ package mozilla.components.concept.engine
 import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -395,7 +397,15 @@ class EngineSessionTest {
                 TrackingProtectionPolicy.AD,
                 TrackingProtectionPolicy.ANALYTICS,
                 TrackingProtectionPolicy.CONTENT,
-                TrackingProtectionPolicy.SOCIAL).categories)
+                TrackingProtectionPolicy.SOCIAL,
+                TrackingProtectionPolicy.WEBFONTS).categories)
+
+        val policy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.ANALYTICS)
+        assertTrue(policy.contains(TrackingProtectionPolicy.AD))
+        assertTrue(policy.contains(TrackingProtectionPolicy.ANALYTICS))
+        assertFalse(policy.contains(TrackingProtectionPolicy.WEBFONTS))
+        assertFalse(policy.contains(TrackingProtectionPolicy.SOCIAL))
+        assertFalse(policy.contains(TrackingProtectionPolicy.CONTENT))
     }
 
     @Test

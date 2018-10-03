@@ -19,6 +19,7 @@ import android.webkit.WebView
 import android.webkit.WebView.HitTestResult
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.eq
@@ -292,7 +293,7 @@ class SystemEngineViewTest {
         var response = webViewClient.shouldInterceptRequest(engineView.currentWebView, invalidRequest)
         assertNull(response)
 
-        engineSession.trackingProtectionEnabled = true
+        engineSession.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
         response = webViewClient.shouldInterceptRequest(engineView.currentWebView, invalidRequest)
         assertNotNull(response)
         assertNull(response.data)
@@ -670,5 +671,20 @@ class SystemEngineViewTest {
         assertEquals("invalid:", observedUrl)
         assertFalse(observedLoadingState)
         assertEquals(Triple(true, null, "testCA"), observedSecurityChange)
+    }
+
+    @Test
+    fun `URL matcher categories can be changed`() {
+        SystemEngineView.URL_MATCHER = null
+
+        var urlMatcher = SystemEngineView.getOrCreateUrlMatcher(RuntimeEnvironment.application,
+                TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.ANALYTICS)
+        )
+        assertEquals(setOf(UrlMatcher.ADVERTISING, UrlMatcher.ANALYTICS), urlMatcher.enabledCategories)
+
+        urlMatcher = SystemEngineView.getOrCreateUrlMatcher(RuntimeEnvironment.application,
+                TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.SOCIAL)
+        )
+        assertEquals(setOf(UrlMatcher.ADVERTISING, UrlMatcher.SOCIAL), urlMatcher.enabledCategories)
     }
 }

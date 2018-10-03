@@ -11,6 +11,7 @@ import android.webkit.WebView
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 
@@ -65,8 +66,15 @@ class SystemEngine(
             set(value) {
                 defaultSettings.userAgentString = value
             }
+
+        override var trackingProtectionPolicy: TrackingProtectionPolicy?
+            get() = defaultSettings.trackingProtectionPolicy
+            set(value) {
+                defaultSettings.trackingProtectionPolicy = value
+            }
     }.apply {
         this.remoteDebuggingEnabled = defaultSettings.remoteDebuggingEnabled
+        this.trackingProtectionPolicy = defaultSettings.trackingProtectionPolicy
         if (defaultSettings.userAgentString == null) {
             defaultSettings.userAgentString = defaultUserAgent
         }

@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.system
 
 import mozilla.components.concept.engine.DefaultSettings
+import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -53,10 +54,18 @@ class SystemEngineTest {
 
     @Test
     fun testSettings() {
-        var engine = SystemEngine(context, DefaultSettings(remoteDebuggingEnabled = true))
+        var engine = SystemEngine(context, DefaultSettings(
+                remoteDebuggingEnabled = true,
+                trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
+        ))
+
         assertTrue(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = false
         assertFalse(engine.settings.remoteDebuggingEnabled)
+
+        assertEquals(engine.settings.trackingProtectionPolicy, EngineSession.TrackingProtectionPolicy.all())
+        engine.settings.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.none()
+        assertEquals(engine.settings.trackingProtectionPolicy, EngineSession.TrackingProtectionPolicy.none())
 
         // Specifying no ua-string default should result in WebView default
         // It should be possible to read and set a new default

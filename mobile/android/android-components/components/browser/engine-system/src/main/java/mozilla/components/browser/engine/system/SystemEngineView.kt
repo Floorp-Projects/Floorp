@@ -33,6 +33,7 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.support.ktx.android.content.isOSOnLowMemory
@@ -148,7 +149,7 @@ class SystemEngineView @JvmOverloads constructor(
                 return WebResourceResponse(null, null, null)
             }
 
-            if (session?.trackingProtectionEnabled == true) {
+            session?.trackingProtectionPolicy?.let {
                 val resourceUri = request.url
                 val scheme = resourceUri.scheme
                 val path = resourceUri.path
@@ -170,7 +171,7 @@ class SystemEngineView @JvmOverloads constructor(
                 }
 
                 if (!request.isForMainFrame &&
-                        getOrCreateUrlMatcher(view.context).matches(resourceUri, Uri.parse(currentUrl))) {
+                        getOrCreateUrlMatcher(view.context, it).matches(resourceUri, Uri.parse(currentUrl))) {
                     session?.internalNotifyObservers { onTrackerBlocked(resourceUri.toString()) }
                     return WebResourceResponse(null, null, null)
                 }
@@ -345,15 +346,29 @@ class SystemEngineView @JvmOverloads constructor(
         @Volatile
         internal var URL_MATCHER: UrlMatcher? = null
 
+        private val urlMatcherCategoryMap = mapOf(
+                UrlMatcher.ADVERTISING to TrackingProtectionPolicy.AD,
+                UrlMatcher.ANALYTICS to TrackingProtectionPolicy.ANALYTICS,
+                UrlMatcher.CONTENT to TrackingProtectionPolicy.CONTENT,
+                UrlMatcher.SOCIAL to TrackingProtectionPolicy.SOCIAL,
+                UrlMatcher.WEBFONTS to TrackingProtectionPolicy.WEBFONTS
+        )
+
         @Synchronized
-        internal fun getOrCreateUrlMatcher(context: Context): UrlMatcher {
-            if (URL_MATCHER == null) {
+        internal fun getOrCreateUrlMatcher(context: Context, policy: TrackingProtectionPolicy): UrlMatcher {
+            val categories = urlMatcherCategoryMap.filterValues { policy.contains(it) }.keys
+
+            URL_MATCHER?.let {
+                it.setCategoriesEnabled(categories)
+            } ?: run {
                 URL_MATCHER = UrlMatcher.createMatcher(
                         context,
                         R.raw.domain_blacklist,
                         intArrayOf(R.raw.domain_overrides),
-                        R.raw.domain_whitelist)
+                        R.raw.domain_whitelist,
+                        categories)
             }
+
             return URL_MATCHER as UrlMatcher
         }
     }

@@ -64,13 +64,16 @@ abstract class EngineSession(
             const val ANALYTICS: Int = 1 shl 1
             const val SOCIAL: Int = 1 shl 2
             const val CONTENT: Int = 1 shl 3
-            internal const val ALL: Int = (1 shl 4) - 1
+            const val WEBFONTS: Int = 1 shl 4
+            internal const val ALL: Int = (1 shl 5) - 1
 
             fun none(): TrackingProtectionPolicy = TrackingProtectionPolicy(NONE)
             fun all(): TrackingProtectionPolicy = TrackingProtectionPolicy(ALL)
             fun select(vararg categories: Int): TrackingProtectionPolicy =
                 TrackingProtectionPolicy(categories.sum())
         }
+
+        fun contains(category: Int) = (categories and category) != 0
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

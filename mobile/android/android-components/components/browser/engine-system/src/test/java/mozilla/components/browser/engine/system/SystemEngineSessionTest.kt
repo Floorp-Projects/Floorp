@@ -208,11 +208,11 @@ class SystemEngineSessionTest {
             }
         })
 
-        assertFalse(engineSession.trackingProtectionEnabled)
+        assertNull(engineSession.trackingProtectionPolicy)
         runBlocking { engineSession.enableTrackingProtection() }
-        assertTrue(engineSession.trackingProtectionEnabled)
+        assertEquals(EngineSession.TrackingProtectionPolicy.all(), engineSession.trackingProtectionPolicy)
         assertNotNull(enabledObserved)
-        assertTrue(enabledObserved!!)
+        assertTrue(enabledObserved as Boolean)
     }
 
     @Test
@@ -225,12 +225,12 @@ class SystemEngineSessionTest {
             }
         })
 
-        engineSession.trackingProtectionEnabled = true
+        engineSession.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
 
         engineSession.disableTrackingProtection()
-        assertFalse(engineSession.trackingProtectionEnabled)
+        assertNull(engineSession.trackingProtectionPolicy)
         assertNotNull(enabledObserved)
-        assertFalse(enabledObserved!!)
+        assertFalse(enabledObserved as Boolean)
     }
 
     @Test
@@ -332,7 +332,7 @@ class SystemEngineSessionTest {
         assertFalse(engineSession.webFontsEnabled)
         assertFalse(engineSession.settings.webFontsEnabled)
 
-        assertEquals(EngineSession.TrackingProtectionPolicy.none(), engineSession.settings.trackingProtectionPolicy)
+        assertNull(engineSession.settings.trackingProtectionPolicy)
         engineSession.settings.trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
         verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
 
@@ -383,7 +383,7 @@ class SystemEngineSessionTest {
     fun testSharedFieldsAreVolatile() {
         val settingsField = SystemEngineSession::class.java.getDeclaredField("internalSettings")
         val webFontsEnabledField = SystemEngineSession::class.java.getDeclaredField("webFontsEnabled")
-        val trackingProtectionField = SystemEngineSession::class.java.getDeclaredField("trackingProtectionEnabled")
+        val trackingProtectionField = SystemEngineSession::class.java.getDeclaredField("trackingProtectionPolicy")
 
         assertTrue(Modifier.isVolatile(settingsField.modifiers))
         assertTrue(Modifier.isVolatile(webFontsEnabledField.modifiers))
