@@ -14,7 +14,6 @@
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
 #include <stdlib.h>
-#include "mozilla/Sandbox.h"
 #endif
 
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
@@ -297,13 +296,7 @@ ContentProcess::Init(int aArgc, char* aArgv[])
   mXREEmbed.Start();
 #if (defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
   mContent.SetProfileDir(profileDir);
-#if defined(DEBUG)
-  if (IsContentSandboxEnabled() &&
-      Preferences::GetBool("security.sandbox.content.mac.earlyinit")) {
-    AssertMacSandboxEnabled();
-  }
-#endif /* DEBUG */
-#endif /* XP_MACOSX && MOZ_CONTENT_SANDBOX */
+#endif
 
 #if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
   SetUpSandboxEnvironment();

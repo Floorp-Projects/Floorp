@@ -549,12 +549,6 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
                                  NS_GET_IID(nsIFile),
                                  getter_AddRefs(profileDir));
       if (NS_SUCCEEDED(rv)) {
-        // If the profile doesn't exist, normalization will
-        // fail. But we don't return an error here because some
-        // tests require startup with a missing profile dir.
-        // For users, almost universally, the profile will be in
-        // the home directory and normalization isn't required.
-        mozilla::Unused << profileDir->Normalize();
         nsAutoCString path;
         MOZ_ALWAYS_SUCCEEDS(profileDir->GetNativePath(path));
         aCmdLine.push_back("-profile");

@@ -6,8 +6,6 @@
 #ifndef mozilla_SandboxPolicies_h
 #define mozilla_SandboxPolicies_h
 
-#define MAX_TESTING_READ_PATHS 4
-
 namespace mozilla {
 
 static const char pluginSandboxRules[] = R"SANDBOX_LITERAL(
@@ -52,17 +50,16 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
   (define sandbox-level-3 (param "SANDBOX_LEVEL_3"))
   (define macosMinorVersion (string->number (param "MAC_OS_MINOR")))
   (define appPath (param "APP_PATH"))
+  (define appBinaryPath (param "APP_BINARY_PATH"))
+  (define appdir-path (param "APP_DIR"))
   (define hasProfileDir (param "HAS_SANDBOXED_PROFILE"))
   (define profileDir (param "PROFILE_DIR"))
-  (define hasWindowServer (param "HAS_WINDOW_SERVER"))
   (define home-path (param "HOME_PATH"))
   (define debugWriteDir (param "DEBUG_WRITE_DIR"))
   (define testingReadPath1 (param "TESTING_READ_PATH1"))
   (define testingReadPath2 (param "TESTING_READ_PATH2"))
   (define testingReadPath3 (param "TESTING_READ_PATH3"))
   (define testingReadPath4 (param "TESTING_READ_PATH4"))
-  (define parentPort (param "PARENT_PORT"))
-  (define crashPort (param "CRASH_PORT"))
 
   (if (string=? should-log "TRUE")
     (deny default)
@@ -84,12 +81,12 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
       (subpath "/System")
       (subpath "/usr/lib")
       (subpath "/Library/GPUBundles")
-      (subpath appPath))
+      (subpath appdir-path))
     (allow file-read*
         (subpath "/System")
         (subpath "/usr/lib")
         (subpath "/Library/GPUBundles")
-        (subpath appPath)))
+        (subpath appdir-path)))
 
   ; Allow read access to standard system paths.
   (allow file-read*
@@ -188,14 +185,6 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
     (ipc-posix-name-regex #"^CFPBS:"))
 
   (allow signal (target self))
-  (if (string? parentPort)
-    (allow mach-lookup (global-name parentPort)))
-  (if (string? crashPort)
-    (allow mach-lookup (global-name crashPort)))
-  (if (string=? hasWindowServer "TRUE")
-    (allow mach-lookup (global-name "com.apple.windowserver.active")))
-  (allow mach-lookup (global-name "com.apple.coreservices.launchservicesd"))
-  (allow mach-lookup (global-name "com.apple.lsd.mapdb"))
 
   (if (>= macosMinorVersion 13)
     (allow mach-lookup
@@ -241,7 +230,9 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
       (home-subpath "/Library/Colors")
       (home-subpath "/Library/Keyboard Layouts")
       (home-subpath "/Library/Input Methods")
-      (home-subpath "/Library/Spelling"))
+      (home-subpath "/Library/Spelling")
+      (literal appPath)
+      (literal appBinaryPath))
 
   (if (defined? 'file-map-executable)
     (begin
