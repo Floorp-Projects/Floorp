@@ -5430,6 +5430,8 @@ pref("network.trr.request-timeout", 1500);
 pref("network.trr.early-AAAA", false);
 // Explicitly disable ECS (EDNS Client Subnet, RFC 7871)
 pref("network.trr.disable-ECS", true);
+// After this many failed TRR requests in a row, consider TRR borked
+pref("network.trr.max-fails", 5);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");

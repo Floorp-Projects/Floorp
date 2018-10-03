@@ -955,6 +955,9 @@ TRR::OnStopRequest(nsIRequest *aRequest,
   nsCOMPtr<nsIChannel> channel;
   channel.swap(mChannel);
 
+  // Bad content is still considered "okay" if the HTTP response is okay
+  gTRRService->TRRIsOkay(NS_SUCCEEDED(aStatusCode));
+
   // if status was "fine", parse the response and pass on the answer
   if (!mFailed && NS_SUCCEEDED(aStatusCode)) {
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
@@ -1091,6 +1094,7 @@ TRR::Cancel()
     LOG(("TRR: %p canceling Channel %p %s %d\n", this,
          mChannel.get(), mHost.get(), mType));
     mChannel->Cancel(NS_ERROR_ABORT);
+    gTRRService->TRRIsOkay(false);
   }
 }
 

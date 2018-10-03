@@ -45,9 +45,11 @@ TRRService::TRRService()
   , mCaptiveIsPassed(false)
   , mUseGET(false)
   , mDisableECS(true)
+  , mDisableAfterFails(5)
   , mClearTRRBLStorage(false)
   , mConfirmationState(CONFIRM_INIT)
   , mRetryConfirmInterval(1000)
+  , mTRRFailures(0)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 }
@@ -263,6 +265,12 @@ TRRService::ReadPrefs(const char *name)
     bool tmp;
     if (NS_SUCCEEDED(Preferences::GetBool(TRR_PREF("disable-ECS"), &tmp))) {
       mDisableECS = tmp;
+    }
+  }
+  if (!name || !strcmp(name, TRR_PREF("max-fails"))) {
+    uint32_t fails;
+    if (NS_SUCCEEDED(Preferences::GetUint(TRR_PREF("max-fails"), &fails))) {
+      mDisableAfterFails = fails;
     }
   }
 
@@ -589,6 +597,26 @@ TRRService::Notify(nsITimer *aTimer)
 }
 
 
+void
+TRRService::TRRIsOkay(bool aWorks)
+{
+  if (aWorks) {
+    mTRRFailures = 0;
+  } else if ((mMode == MODE_TRRFIRST) && (mConfirmationState == CONFIRM_OK)) {
+    // only count failures while in OK state
+    uint32_t fails = ++mTRRFailures;
+    if (fails >= mDisableAfterFails) {
+      LOG(("TRRService goes FAILED after %u failures in a row\n", fails));
+      mConfirmationState = CONFIRM_FAILED;
+      // Fire off a timer and start re-trying the NS domain again
+      NS_NewTimerWithCallback(getter_AddRefs(mRetryConfirmTimer),
+                              this, mRetryConfirmInterval,
+                              nsITimer::TYPE_ONE_SHOT);
+      mTRRFailures = 0; // clear it again
+    }
+  }
+}
+
 AHostResolver::LookupStatus
 TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRSet, bool pb)
 {
@@ -607,8 +635,8 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
     LOG(("TRRService finishing confirmation test %s %d %X\n",
          mPrivateURI.get(), (int)mConfirmationState, (unsigned int)status));
     mConfirmer = nullptr;
-    if ((mConfirmationState == CONFIRM_FAILED) && (mMode == MODE_TRRONLY)) {
-      // in TRR-only mode; retry failed confirmations
+    if (mConfirmationState == CONFIRM_FAILED) {
+      // retry failed NS confirmation
       NS_NewTimerWithCallback(getter_AddRefs(mRetryConfirmTimer),
                               this, mRetryConfirmInterval,
                               nsITimer::TYPE_ONE_SHOT);
