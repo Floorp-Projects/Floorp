@@ -23,21 +23,28 @@ var t = async_test("Tests that a MediaStream can be assigned to a video element 
 t.step(function() {
   navigator.mediaDevices.getUserMedia({video: true})
     .then(t.step_func(function (stream) {
-      var testOncePlaying = function() {
+      const testOnceTimeUpdate = function() {
          assert_equals(vid.played.length, 1, "A MediaStream's timeline always consists of a single range");
-         assert_equals(vid.played.start(0), 0, "A MediaStream's timeline always consists of a single range");
-         assert_approx_equals(vid.played.end(0), vid.currentTime, 0.0001, "A MediaStream's timeline always consists of a single range");
-         assert_equals(vid.readyState, vid.HAVE_ENOUGH_DATA, "Upon selecting a media stream, the UA sets readyState to HAVE_ENOUGH_DATA");
+         assert_equals(vid.played.start(0), 0, "A MediaStream's timeline always starts at zero");
+         assert_equals(vid.played.end(0), vid.currentTime, "A MediaStream's end MUST return the last known currentTime, says mediacapture-main");
          assert_equals(vid.duration, Infinity, " A MediaStream does not have a pre-defined duration. ");
-         var time = vid.currentTime;
 
-         assert_approx_equals(vid.currentTime, time, 0.0001, "The UA MUST ignore attempts to set the currentTime attribute");
+         var time = vid.currentTime;
+         vid.currentTime = 0;
+         assert_equals(vid.currentTime, time, "The UA MUST ignore attempts to set the currentTime attribute");
+
          // TODO add test that duration must be set to currentTime
          // when mediastream is destroyed
-         vid.removeEventListener("timeupdate", testOncePlaying, false);
-         t.done();
       }
-      vid.addEventListener("timeupdate", t.step_func(testOncePlaying), false);
+      vid.addEventListener("timeupdate", t.step_func(testOnceTimeUpdate), {once: true});
+
+      const testOnceLoadedData = function() {
+         assert_equals(vid.readyState, vid.HAVE_ENOUGH_DATA, "Upon selecting a media stream, the UA sets readyState to HAVE_ENOUGH_DATA");
+         assert_equals(vid.duration, Infinity, "A MediaStream does not have a pre-defined duration.");
+
+         vid.addEventListener("timeupdate", () => t.step_timeout(t.done()), {once: true});
+      }
+      vid.addEventListener("loadeddata", t.step_func(testOnceLoadedData), {once: true});
       vid.srcObject = stream;
       vid.play();
       assert_true(!vid.seeking, "A MediaStream is not seekable");
@@ -45,7 +52,8 @@ t.step(function() {
       assert_equals(vid.defaultPlaybackRate, 1, "playback rate is always 1");
       assert_equals(vid.playbackRate, 1, "playback rate is always 1");
       assert_equals(vid.buffered.length, 0, "A MediaStream cannot be preloaded.  Therefore, there is no buffered timeranges");
-      assert_equals(vid.duration, vid.readyState == vid.HAVE_NOTHING ? NaN : Infinity, " A MediaStream does not have a pre-defined duration. ");
+      assert_equals(vid.readyState, vid.HAVE_NOTHING, "readyState is HAVE_NOTHING initially");
+      assert_equals(vid.duration, NaN, "A MediaStream does not have any duration initially.");
     }), function(error) {});
 });
 </script>
