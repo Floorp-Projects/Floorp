@@ -9,6 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
+const ExtensionPage = createFactory(require("./ExtensionPage"));
 const ObjectTreeView = createFactory(require("./ObjectTreeView"));
 const ObjectValueGripView = createFactory(require("./ObjectValueGripView"));
 const Types = require("../types");
@@ -29,6 +30,8 @@ class ExtensionSidebar extends PureComponent {
     return {
       id: PropTypes.string.isRequired,
       extensionsSidebar: PropTypes.object.isRequired,
+      onExtensionPageMount: PropTypes.func.isRequired,
+      onExtensionPageUnmount: PropTypes.func.isRequired,
       // Helpers injected as props by extension-sidebar.js.
       serviceContainer: PropTypes.shape(Types.serviceContainer).isRequired,
     };
@@ -38,14 +41,17 @@ class ExtensionSidebar extends PureComponent {
     const {
       id,
       extensionsSidebar,
+      onExtensionPageMount,
+      onExtensionPageUnmount,
       serviceContainer,
     } = this.props;
 
     const {
-      viewMode = "empty-sidebar",
+      iframeURL,
       object,
       objectValueGrip,
-      rootTitle
+      rootTitle,
+      viewMode = "empty-sidebar",
     } = extensionsSidebar[id] || {};
 
     let sidebarContentEl;
@@ -57,8 +63,15 @@ class ExtensionSidebar extends PureComponent {
       case "object-value-grip-view":
         sidebarContentEl = ObjectValueGripView({
           objectValueGrip,
-          serviceContainer,
           rootTitle,
+          serviceContainer,
+        });
+        break;
+      case "extension-page":
+        sidebarContentEl = ExtensionPage({
+          iframeURL,
+          onExtensionPageMount,
+          onExtensionPageUnmount,
         });
         break;
       case "empty-sidebar":
@@ -69,7 +82,13 @@ class ExtensionSidebar extends PureComponent {
 
     const className = "devtools-monospace extension-sidebar inspector-tabpanel";
 
-    return dom.div({ id, className }, sidebarContentEl);
+    return dom.div({
+      id,
+      className,
+      style: {
+        height: "100%",
+      },
+    }, sidebarContentEl);
   }
 }
 

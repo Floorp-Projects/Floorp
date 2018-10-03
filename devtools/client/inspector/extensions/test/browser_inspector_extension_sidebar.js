@@ -228,6 +228,23 @@ add_task(async function testSidebarDOMNodeOpenInspector() {
   await onNodeUnhighlight;
 });
 
+add_task(async function testSidebarSetExtensionPage() {
+  const inspectedWindowFront = toolbox.target.getFront("webExtensionInspectedWindow");
+
+  const sidebar = inspector.getPanel(SIDEBAR_ID);
+  const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
+
+  info("Testing sidebar.setExtensionPage");
+
+  const expectedURL = "data:text/html,<!DOCTYPE html><html><body><h1>Extension Page";
+
+  sidebar.setExtensionPage(expectedURL);
+
+  await testSetExtensionPageSidebarPanel(sidebarPanelContent, expectedURL);
+
+  inspectedWindowFront.destroy();
+});
+
 add_task(async function teardownExtensionSidebar() {
   info("Remove the sidebar instance");
 
