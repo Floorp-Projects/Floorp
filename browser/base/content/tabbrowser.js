@@ -4021,8 +4021,13 @@ window._gBrowser = {
   },
 
   unpinMultiSelectedTabs() {
-    for (let tab of this.selectedTabs) {
-        this.unpinTab(tab);
+    // The selectedTabs getter returns the tabs
+    // in visual order. We need to unpin in reverse
+    // order to maintain visual order.
+    let selectedTabs = this.selectedTabs;
+    for (let i = selectedTabs.length - 1; i >= 0; i--) {
+      let tab = selectedTabs[i];
+      this.unpinTab(tab);
     }
   },
 
