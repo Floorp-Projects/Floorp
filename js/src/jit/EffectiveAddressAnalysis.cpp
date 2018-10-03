@@ -195,71 +195,19 @@ AnalyzeLoadUnboxedScalar(MLoadUnboxedScalar* load)
 }
 
 template<typename AsmJSMemoryAccess>
-bool
-EffectiveAddressAnalysis::tryAddDisplacement(AsmJSMemoryAccess* ins, int32_t o)
-{
-#ifdef WASM_HUGE_MEMORY
-    // Compute the new offset. Check for overflow.
-    uint32_t oldOffset = ins->offset();
-    uint32_t newOffset = oldOffset + o;
-    if (o < 0 ? (newOffset >= oldOffset) : (newOffset < oldOffset)) {
-        return false;
-    }
-
-    // The offset must ultimately be written into the offset immediate of a load
-    // or store instruction so don't allow folding of the offset is bigger.
-    if (newOffset >= wasm::OffsetGuardLimit) {
-        return false;
-    }
-
-    // Everything checks out. This is the new offset.
-    ins->setOffset(newOffset);
-    return true;
-#else
-    return false;
-#endif
-}
-
-template<typename AsmJSMemoryAccess>
 void
 EffectiveAddressAnalysis::analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins)
 {
     MDefinition* base = ins->base();
 
     if (base->isConstant()) {
-        // Look for heap[i] where i is a constant offset, and fold the offset.
-        // By doing the folding now, we simplify the task of codegen; the offset
-        // is always the address mode immediate. This also allows it to avoid
-        // a situation where the sum of a constant pointer value and a non-zero
-        // offset doesn't actually fit into the address mode immediate.
-        int32_t imm = base->toConstant()->toInt32();
-        if (imm != 0 && tryAddDisplacement(ins, imm)) {
-            MInstruction* zero = MConstant::New(graph_.alloc(), Int32Value(0));
-            ins->block()->insertBefore(ins, zero);
-            ins->replaceBase(zero);
-        }
-
         // If the index is within the minimum heap length, we can optimize
         // away the bounds check.
+        int32_t imm = base->toConstant()->toInt32();
         if (imm >= 0) {
             int32_t end = (uint32_t)imm + ins->byteSize();
             if (end >= imm && (uint32_t)end <= mir_->minWasmHeapLength()) {
                  ins->removeBoundsCheck();
-            }
-        }
-    } else if (base->isAdd()) {
-        // Look for heap[a+i] where i is a constant offset, and fold the offset.
-        // Alignment masks have already been moved out of the way by the
-        // Alignment Mask Analysis pass.
-        MDefinition* op0 = base->toAdd()->getOperand(0);
-        MDefinition* op1 = base->toAdd()->getOperand(1);
-        if (op0->isConstant()) {
-            mozilla::Swap(op0, op1);
-        }
-        if (op1->isConstant()) {
-            int32_t imm = op1->toConstant()->toInt32();
-            if (tryAddDisplacement(ins, imm)) {
-                ins->replaceBase(op0);
             }
         }
     }

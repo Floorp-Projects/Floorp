@@ -19,17 +19,22 @@
 #include "wasm/WasmSignalHandlers.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ThreadLocal.h"
 
-#include "jit/AtomicOperations.h"
-#include "jit/Disassembler.h"
 #include "vm/Runtime.h"
-#include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 
-#include "vm/ArrayBufferObject-inl.h"
+using namespace js;
+using namespace js::wasm;
+
+using mozilla::DebugOnly;
+
+// =============================================================================
+// This following pile of macros and includes defines the ToRegisterState() and
+// the ContextTo{PC,FP,SP,LR}() functions from the (highly) platform-specific
+// CONTEXT struct which is provided to the signal handler.
+// =============================================================================
 
 #if defined(XP_WIN)
 # include "util/Windows.h"
@@ -51,76 +56,25 @@
 # endif
 #endif
 
-using namespace js;
-using namespace js::jit;
-using namespace js::wasm;
-
-using JS::GenericNaN;
-using mozilla::DebugOnly;
-
-// Crashing inside the signal handler can cause the handler to be recursively
-// invoked, eventually blowing the stack without actually showing a crash
-// report dialog via Breakpad. To guard against this we watch for such
-// recursion and fall through to the next handler immediately rather than
-// trying to handle it.
-
-static MOZ_THREAD_LOCAL(bool) sAlreadyInSignalHandler;
-
-struct AutoSignalHandler
-{
-    explicit AutoSignalHandler()
-    {
-        MOZ_ASSERT(!sAlreadyInSignalHandler.get());
-        sAlreadyInSignalHandler.set(true);
-    }
-
-    ~AutoSignalHandler() {
-        MOZ_ASSERT(sAlreadyInSignalHandler.get());
-        sAlreadyInSignalHandler.set(false);
-    }
-};
-
 #if defined(XP_WIN)
-# define XMM_sig(p,i) ((p)->Xmm##i)
 # define EIP_sig(p) ((p)->Eip)
 # define EBP_sig(p) ((p)->Ebp)
 # define ESP_sig(p) ((p)->Esp)
 # define RIP_sig(p) ((p)->Rip)
-# define RAX_sig(p) ((p)->Rax)
-# define RCX_sig(p) ((p)->Rcx)
-# define RDX_sig(p) ((p)->Rdx)
-# define RBX_sig(p) ((p)->Rbx)
 # define RSP_sig(p) ((p)->Rsp)
 # define RBP_sig(p) ((p)->Rbp)
-# define RSI_sig(p) ((p)->Rsi)
-# define RDI_sig(p) ((p)->Rdi)
-# define R8_sig(p) ((p)->R8)
-# define R9_sig(p) ((p)->R9)
-# define R10_sig(p) ((p)->R10)
 # define R11_sig(p) ((p)->R11)
-# define R12_sig(p) ((p)->R12)
 # define R13_sig(p) ((p)->R13)
 # define R14_sig(p) ((p)->R14)
 # define R15_sig(p) ((p)->R15)
 #elif defined(__OpenBSD__)
-# define XMM_sig(p,i) ((p)->sc_fpstate->fx_xmm[i])
 # define EIP_sig(p) ((p)->sc_eip)
 # define EBP_sig(p) ((p)->sc_ebp)
 # define ESP_sig(p) ((p)->sc_esp)
 # define RIP_sig(p) ((p)->sc_rip)
-# define RAX_sig(p) ((p)->sc_rax)
-# define RCX_sig(p) ((p)->sc_rcx)
-# define RDX_sig(p) ((p)->sc_rdx)
-# define RBX_sig(p) ((p)->sc_rbx)
 # define RSP_sig(p) ((p)->sc_rsp)
 # define RBP_sig(p) ((p)->sc_rbp)
-# define RSI_sig(p) ((p)->sc_rsi)
-# define RDI_sig(p) ((p)->sc_rdi)
-# define R8_sig(p) ((p)->sc_r8)
-# define R9_sig(p) ((p)->sc_r9)
-# define R10_sig(p) ((p)->sc_r10)
 # define R11_sig(p) ((p)->sc_r11)
-# define R12_sig(p) ((p)->sc_r12)
 # if defined(__arm__)
 #  define R13_sig(p) ((p)->sc_usr_sp)
 #  define R14_sig(p) ((p)->sc_usr_lr)
@@ -142,29 +96,17 @@ struct AutoSignalHandler
 # endif
 #elif defined(__linux__) || defined(__sun)
 # if defined(__linux__)
-#  define XMM_sig(p,i) ((p)->uc_mcontext.fpregs->_xmm[i])
 #  define EIP_sig(p) ((p)->uc_mcontext.gregs[REG_EIP])
 #  define EBP_sig(p) ((p)->uc_mcontext.gregs[REG_EBP])
 #  define ESP_sig(p) ((p)->uc_mcontext.gregs[REG_ESP])
 # else
-#  define XMM_sig(p,i) ((p)->uc_mcontext.fpregs.fp_reg_set.fpchip_state.xmm[i])
 #  define EIP_sig(p) ((p)->uc_mcontext.gregs[REG_PC])
 #  define EBP_sig(p) ((p)->uc_mcontext.gregs[REG_EBP])
 #  define ESP_sig(p) ((p)->uc_mcontext.gregs[REG_ESP])
 # endif
 # define RIP_sig(p) ((p)->uc_mcontext.gregs[REG_RIP])
-# define RAX_sig(p) ((p)->uc_mcontext.gregs[REG_RAX])
-# define RCX_sig(p) ((p)->uc_mcontext.gregs[REG_RCX])
-# define RDX_sig(p) ((p)->uc_mcontext.gregs[REG_RDX])
-# define RBX_sig(p) ((p)->uc_mcontext.gregs[REG_RBX])
 # define RSP_sig(p) ((p)->uc_mcontext.gregs[REG_RSP])
 # define RBP_sig(p) ((p)->uc_mcontext.gregs[REG_RBP])
-# define RSI_sig(p) ((p)->uc_mcontext.gregs[REG_RSI])
-# define RDI_sig(p) ((p)->uc_mcontext.gregs[REG_RDI])
-# define R8_sig(p) ((p)->uc_mcontext.gregs[REG_R8])
-# define R9_sig(p) ((p)->uc_mcontext.gregs[REG_R9])
-# define R10_sig(p) ((p)->uc_mcontext.gregs[REG_R10])
-# define R12_sig(p) ((p)->uc_mcontext.gregs[REG_R12])
 # if defined(__linux__) && defined(__arm__)
 #  define R11_sig(p) ((p)->uc_mcontext.arm_fp)
 #  define R13_sig(p) ((p)->uc_mcontext.arm_sp)
@@ -195,30 +137,17 @@ struct AutoSignalHandler
 # endif
 # if defined(__linux__) && \
      (defined(__ppc64__) ||  defined (__PPC64__) || defined(__ppc64le__) || defined (__PPC64LE__))
-// powerpc stack frame pointer (SFP or SP or FP)
 #  define R01_sig(p) ((p)->uc_mcontext.gp_regs[1])
-// powerpc next instruction pointer (NIP or PC)
 #  define R32_sig(p) ((p)->uc_mcontext.gp_regs[32])
 # endif
 #elif defined(__NetBSD__)
-# define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
 # define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
 # define EBP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EBP])
 # define ESP_sig(p) ((p)->uc_mcontext.__gregs[_REG_ESP])
 # define RIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RIP])
-# define RAX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RAX])
-# define RCX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RCX])
-# define RDX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RDX])
-# define RBX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RBX])
 # define RSP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RSP])
 # define RBP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RBP])
-# define RSI_sig(p) ((p)->uc_mcontext.__gregs[_REG_RSI])
-# define RDI_sig(p) ((p)->uc_mcontext.__gregs[_REG_RDI])
-# define R8_sig(p) ((p)->uc_mcontext.__gregs[_REG_R8])
-# define R9_sig(p) ((p)->uc_mcontext.__gregs[_REG_R9])
-# define R10_sig(p) ((p)->uc_mcontext.__gregs[_REG_R10])
 # define R11_sig(p) ((p)->uc_mcontext.__gregs[_REG_R11])
-# define R12_sig(p) ((p)->uc_mcontext.__gregs[_REG_R12])
 # define R13_sig(p) ((p)->uc_mcontext.__gregs[_REG_R13])
 # define R14_sig(p) ((p)->uc_mcontext.__gregs[_REG_R14])
 # define R15_sig(p) ((p)->uc_mcontext.__gregs[_REG_R15])
@@ -233,27 +162,12 @@ struct AutoSignalHandler
 #  define RFP_sig(p) ((p)->uc_mcontext.__gregs[_REG_S8])
 # endif
 #elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-# if defined(__DragonFly__)
-#  define XMM_sig(p,i) (((union savefpu*)(p)->uc_mcontext.mc_fpregs)->sv_xmm.sv_xmm[i])
-# else
-#  define XMM_sig(p,i) (((struct savefpu*)(p)->uc_mcontext.mc_fpstate)->sv_xmm[i])
-# endif
 # define EIP_sig(p) ((p)->uc_mcontext.mc_eip)
 # define EBP_sig(p) ((p)->uc_mcontext.mc_ebp)
 # define ESP_sig(p) ((p)->uc_mcontext.mc_esp)
 # define RIP_sig(p) ((p)->uc_mcontext.mc_rip)
-# define RAX_sig(p) ((p)->uc_mcontext.mc_rax)
-# define RCX_sig(p) ((p)->uc_mcontext.mc_rcx)
-# define RDX_sig(p) ((p)->uc_mcontext.mc_rdx)
-# define RBX_sig(p) ((p)->uc_mcontext.mc_rbx)
 # define RSP_sig(p) ((p)->uc_mcontext.mc_rsp)
 # define RBP_sig(p) ((p)->uc_mcontext.mc_rbp)
-# define RSI_sig(p) ((p)->uc_mcontext.mc_rsi)
-# define RDI_sig(p) ((p)->uc_mcontext.mc_rdi)
-# define R8_sig(p) ((p)->uc_mcontext.mc_r8)
-# define R9_sig(p) ((p)->uc_mcontext.mc_r9)
-# define R10_sig(p) ((p)->uc_mcontext.mc_r10)
-# define R12_sig(p) ((p)->uc_mcontext.mc_r12)
 # if defined(__FreeBSD__) && defined(__arm__)
 #  define R11_sig(p) ((p)->uc_mcontext.__gregs[_REG_R11])
 #  define R13_sig(p) ((p)->uc_mcontext.__gregs[_REG_R13])
@@ -482,498 +396,95 @@ ToRegisterState(CONTEXT* context)
     return state;
 }
 
-#if defined(WASM_HUGE_MEMORY)
-MOZ_COLD static void
-SetFPRegToNaN(size_t size, void* fp_reg)
-{
-    MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
-    memset(fp_reg, 0, Simd128DataSize);
-    switch (size) {
-      case 4: *static_cast<float*>(fp_reg) = GenericNaN(); break;
-      case 8: *static_cast<double*>(fp_reg) = GenericNaN(); break;
-      default:
-        // All SIMD accesses throw on OOB.
-        MOZ_CRASH("unexpected size in SetFPRegToNaN");
-    }
-}
+// =============================================================================
+// All signals/exceptions funnel down to this one trap-handling function which
+// tests whether the pc is in a wasm module and, if so, whether there is
+// actually a trap expected at this pc. These tests both avoid real bugs being
+// silently converted to wasm traps and provides the trapping wasm bytecode
+// offset we need to report in the error.
+//
+// Crashing inside wasm trap handling (due to a bug in trap handling or exposed
+// during trap handling) must be reported like a normal crash, not cause the
+// crash report to be lost. On Windows and non-Mach Unix, a crash during the
+// handler reenters the handler, possibly repeatedly until exhausting the stack,
+// and so we prevent recursion with the thread-local sAlreadyHandlingTrap. On
+// Mach, the wasm exception handler has its own thread and is installed only on
+// the thread-level debugging ports of JSRuntime threads, so a crash on
+// exception handler thread will not recurse; it will bubble up to the
+// process-level debugging ports (where Breakpad is installed).
+// =============================================================================
 
-MOZ_COLD static void
-SetGPRegToZero(void* gp_reg)
-{
-    memset(gp_reg, 0, sizeof(intptr_t));
-}
+static MOZ_THREAD_LOCAL(bool) sAlreadyHandlingTrap;
 
-MOZ_COLD static void
-SetFPRegToLoadedValue(SharedMem<void*> addr, size_t size, void* fp_reg)
+struct AutoHandlingTrap
 {
-    MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
-    memset(fp_reg, 0, Simd128DataSize);
-    AtomicOperations::memcpySafeWhenRacy(fp_reg, addr, size);
-}
-
-MOZ_COLD static void
-SetGPRegToLoadedValue(SharedMem<void*> addr, size_t size, void* gp_reg)
-{
-    MOZ_RELEASE_ASSERT(size <= sizeof(void*));
-    memset(gp_reg, 0, sizeof(void*));
-    AtomicOperations::memcpySafeWhenRacy(gp_reg, addr, size);
-}
-
-MOZ_COLD static void
-SetGPRegToLoadedValueSext32(SharedMem<void*> addr, size_t size, void* gp_reg)
-{
-    MOZ_RELEASE_ASSERT(size <= sizeof(int32_t));
-    int8_t msb = AtomicOperations::loadSafeWhenRacy(addr.cast<uint8_t*>() + (size - 1));
-    memset(gp_reg, 0, sizeof(void*));
-    memset(gp_reg, msb >> 7, sizeof(int32_t));
-    AtomicOperations::memcpySafeWhenRacy(gp_reg, addr, size);
-}
-
-MOZ_COLD static void
-StoreValueFromFPReg(SharedMem<void*> addr, size_t size, const void* fp_reg)
-{
-    MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
-    AtomicOperations::memcpySafeWhenRacy(addr, const_cast<void*>(fp_reg), size);
-}
-
-MOZ_COLD static void
-StoreValueFromGPReg(SharedMem<void*> addr, size_t size, const void* gp_reg)
-{
-    MOZ_RELEASE_ASSERT(size <= sizeof(void*));
-    AtomicOperations::memcpySafeWhenRacy(addr, const_cast<void*>(gp_reg), size);
-}
-
-MOZ_COLD static void
-StoreValueFromGPImm(SharedMem<void*> addr, size_t size, int32_t imm)
-{
-    MOZ_RELEASE_ASSERT(size <= sizeof(imm));
-    AtomicOperations::memcpySafeWhenRacy(addr, static_cast<void*>(&imm), size);
-}
-
-#if defined(JS_CODEGEN_X64)
-# if !defined(XP_DARWIN)
-MOZ_COLD static void*
-AddressOfFPRegisterSlot(CONTEXT* context, FloatRegisters::Encoding encoding)
-{
-    switch (encoding) {
-      case X86Encoding::xmm0:  return &XMM_sig(context, 0);
-      case X86Encoding::xmm1:  return &XMM_sig(context, 1);
-      case X86Encoding::xmm2:  return &XMM_sig(context, 2);
-      case X86Encoding::xmm3:  return &XMM_sig(context, 3);
-      case X86Encoding::xmm4:  return &XMM_sig(context, 4);
-      case X86Encoding::xmm5:  return &XMM_sig(context, 5);
-      case X86Encoding::xmm6:  return &XMM_sig(context, 6);
-      case X86Encoding::xmm7:  return &XMM_sig(context, 7);
-      case X86Encoding::xmm8:  return &XMM_sig(context, 8);
-      case X86Encoding::xmm9:  return &XMM_sig(context, 9);
-      case X86Encoding::xmm10: return &XMM_sig(context, 10);
-      case X86Encoding::xmm11: return &XMM_sig(context, 11);
-      case X86Encoding::xmm12: return &XMM_sig(context, 12);
-      case X86Encoding::xmm13: return &XMM_sig(context, 13);
-      case X86Encoding::xmm14: return &XMM_sig(context, 14);
-      case X86Encoding::xmm15: return &XMM_sig(context, 15);
-      default: break;
-    }
-    MOZ_CRASH();
-}
-
-MOZ_COLD static void*
-AddressOfGPRegisterSlot(CONTEXT* context, Registers::Code code)
-{
-    switch (code) {
-      case X86Encoding::rax: return &RAX_sig(context);
-      case X86Encoding::rcx: return &RCX_sig(context);
-      case X86Encoding::rdx: return &RDX_sig(context);
-      case X86Encoding::rbx: return &RBX_sig(context);
-      case X86Encoding::rsp: return &RSP_sig(context);
-      case X86Encoding::rbp: return &RBP_sig(context);
-      case X86Encoding::rsi: return &RSI_sig(context);
-      case X86Encoding::rdi: return &RDI_sig(context);
-      case X86Encoding::r8:  return &R8_sig(context);
-      case X86Encoding::r9:  return &R9_sig(context);
-      case X86Encoding::r10: return &R10_sig(context);
-      case X86Encoding::r11: return &R11_sig(context);
-      case X86Encoding::r12: return &R12_sig(context);
-      case X86Encoding::r13: return &R13_sig(context);
-      case X86Encoding::r14: return &R14_sig(context);
-      case X86Encoding::r15: return &R15_sig(context);
-      default: break;
-    }
-    MOZ_CRASH();
-}
-# else
-MOZ_COLD static void*
-AddressOfFPRegisterSlot(CONTEXT* context, FloatRegisters::Encoding encoding)
-{
-    switch (encoding) {
-      case X86Encoding::xmm0:  return &context->float_.__fpu_xmm0;
-      case X86Encoding::xmm1:  return &context->float_.__fpu_xmm1;
-      case X86Encoding::xmm2:  return &context->float_.__fpu_xmm2;
-      case X86Encoding::xmm3:  return &context->float_.__fpu_xmm3;
-      case X86Encoding::xmm4:  return &context->float_.__fpu_xmm4;
-      case X86Encoding::xmm5:  return &context->float_.__fpu_xmm5;
-      case X86Encoding::xmm6:  return &context->float_.__fpu_xmm6;
-      case X86Encoding::xmm7:  return &context->float_.__fpu_xmm7;
-      case X86Encoding::xmm8:  return &context->float_.__fpu_xmm8;
-      case X86Encoding::xmm9:  return &context->float_.__fpu_xmm9;
-      case X86Encoding::xmm10: return &context->float_.__fpu_xmm10;
-      case X86Encoding::xmm11: return &context->float_.__fpu_xmm11;
-      case X86Encoding::xmm12: return &context->float_.__fpu_xmm12;
-      case X86Encoding::xmm13: return &context->float_.__fpu_xmm13;
-      case X86Encoding::xmm14: return &context->float_.__fpu_xmm14;
-      case X86Encoding::xmm15: return &context->float_.__fpu_xmm15;
-      default: break;
-    }
-    MOZ_CRASH();
-}
-
-MOZ_COLD static void*
-AddressOfGPRegisterSlot(CONTEXT* context, Registers::Code code)
-{
-    switch (code) {
-      case X86Encoding::rax: return &context->thread.__rax;
-      case X86Encoding::rcx: return &context->thread.__rcx;
-      case X86Encoding::rdx: return &context->thread.__rdx;
-      case X86Encoding::rbx: return &context->thread.__rbx;
-      case X86Encoding::rsp: return &context->thread.__rsp;
-      case X86Encoding::rbp: return &context->thread.__rbp;
-      case X86Encoding::rsi: return &context->thread.__rsi;
-      case X86Encoding::rdi: return &context->thread.__rdi;
-      case X86Encoding::r8:  return &context->thread.__r8;
-      case X86Encoding::r9:  return &context->thread.__r9;
-      case X86Encoding::r10: return &context->thread.__r10;
-      case X86Encoding::r11: return &context->thread.__r11;
-      case X86Encoding::r12: return &context->thread.__r12;
-      case X86Encoding::r13: return &context->thread.__r13;
-      case X86Encoding::r14: return &context->thread.__r14;
-      case X86Encoding::r15: return &context->thread.__r15;
-      default: break;
-    }
-    MOZ_CRASH();
-}
-# endif  // !XP_DARWIN
-#elif defined(JS_CODEGEN_ARM64)
-MOZ_COLD static void*
-AddressOfFPRegisterSlot(CONTEXT* context, FloatRegisters::Encoding encoding)
-{
-    MOZ_CRASH("NYI - asm.js not supported yet on this platform");
-}
-
-MOZ_COLD static void*
-AddressOfGPRegisterSlot(CONTEXT* context, Registers::Code code)
-{
-    MOZ_CRASH("NYI - asm.js not supported yet on this platform");
-}
-#endif
-
-MOZ_COLD static void
-SetRegisterToCoercedUndefined(CONTEXT* context, size_t size,
-                              const Disassembler::OtherOperand& value)
-{
-    if (value.kind() == Disassembler::OtherOperand::FPR) {
-        SetFPRegToNaN(size, AddressOfFPRegisterSlot(context, value.fpr()));
-    } else {
-        SetGPRegToZero(AddressOfGPRegisterSlot(context, value.gpr()));
-    }
-}
-
-MOZ_COLD static void
-SetRegisterToLoadedValue(CONTEXT* context, SharedMem<void*> addr, size_t size,
-                         const Disassembler::OtherOperand& value)
-{
-    if (value.kind() == Disassembler::OtherOperand::FPR) {
-        SetFPRegToLoadedValue(addr, size, AddressOfFPRegisterSlot(context, value.fpr()));
-    } else {
-        SetGPRegToLoadedValue(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
-    }
-}
-
-MOZ_COLD static void
-SetRegisterToLoadedValueSext32(CONTEXT* context, SharedMem<void*> addr, size_t size,
-                               const Disassembler::OtherOperand& value)
-{
-    SetGPRegToLoadedValueSext32(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
-}
-
-MOZ_COLD static void
-StoreValueFromRegister(CONTEXT* context, SharedMem<void*> addr, size_t size,
-                       const Disassembler::OtherOperand& value)
-{
-    if (value.kind() == Disassembler::OtherOperand::FPR) {
-        StoreValueFromFPReg(addr, size, AddressOfFPRegisterSlot(context, value.fpr()));
-    } else if (value.kind() == Disassembler::OtherOperand::GPR) {
-        StoreValueFromGPReg(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
-    } else {
-        StoreValueFromGPImm(addr, size, value.imm());
-    }
-}
-
-MOZ_COLD static uint8_t*
-ComputeAccessAddress(CONTEXT* context, const Disassembler::ComplexAddress& address)
-{
-    MOZ_RELEASE_ASSERT(!address.isPCRelative(), "PC-relative addresses not supported yet");
-
-    uintptr_t result = address.disp();
-
-    if (address.hasBase()) {
-        uintptr_t base;
-        StoreValueFromGPReg(SharedMem<void*>::unshared(&base), sizeof(uintptr_t),
-                            AddressOfGPRegisterSlot(context, address.base()));
-        result += base;
+    AutoHandlingTrap() {
+        MOZ_ASSERT(!sAlreadyHandlingTrap.get());
+        sAlreadyHandlingTrap.set(true);
     }
 
-    if (address.hasIndex()) {
-        uintptr_t index;
-        StoreValueFromGPReg(SharedMem<void*>::unshared(&index), sizeof(uintptr_t),
-                            AddressOfGPRegisterSlot(context, address.index()));
-        MOZ_ASSERT(address.scale() < 32, "address shift overflow");
-        result += index * (uintptr_t(1) << address.scale());
+    ~AutoHandlingTrap() {
+        MOZ_ASSERT(sAlreadyHandlingTrap.get());
+        sAlreadyHandlingTrap.set(false);
     }
+};
 
-    return reinterpret_cast<uint8_t*>(result);
-}
-#endif // WASM_HUGE_MEMORY
-
-MOZ_COLD static MOZ_MUST_USE bool
-HandleOutOfBounds(CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                  const ModuleSegment* segment, const Instance& instance, JitActivation* activation,
-                  uint8_t** ppc)
+static MOZ_MUST_USE bool
+HandleTrap(CONTEXT* context, JSContext* cx)
 {
-    MOZ_RELEASE_ASSERT(segment->code().containsCodePC(pc));
+    MOZ_ASSERT(sAlreadyHandlingTrap.get());
 
-    Trap trap;
-    BytecodeOffset bytecode;
-    MOZ_ALWAYS_TRUE(segment->code().lookupTrap(pc, &trap, &bytecode));
-
-    if (trap != Trap::OutOfBounds) {
-        return false;
-    }
-
-    if (bytecode.isValid()) {
-        activation->startWasmTrap(Trap::OutOfBounds, bytecode.offset(), ToRegisterState(context));
-        *ppc = segment->trapCode();
-        return true;
-    }
-
-#ifndef WASM_HUGE_MEMORY
-    return false;
-#else
-    // On WASM_HUGE_MEMORY platforms, asm.js code may fault. asm.js does not
-    // trap on fault and so has no trap out-of-line path. Instead, stores are
-    // silently ignored (by advancing the pc past the store and resuming) and
-    // loads silently succeed with a JS-semantics-determined value.
-    MOZ_RELEASE_ASSERT(instance.isAsmJS());
-
-    // Asm.JS memory cannot grow or shrink - only wasm can grow or shrink it,
-    // and asm.js is not allowed to use wasm memory.  On this Asm.JS-only path
-    // we therefore need not worry about memory growing or shrinking while the
-    // signal handler is executing, and we can read the length without locking
-    // the memory.  Indeed, the buffer's byteLength always holds the correct
-    // value.
-    uint32_t memoryLength = instance.memory()->buffer().byteLength();
-
-    // Disassemble the instruction which caused the trap so that we can extract
-    // information about it and decide what to do.
-    Disassembler::HeapAccess access;
-    uint8_t* end = Disassembler::DisassembleHeapAccess(pc, &access);
-    const Disassembler::ComplexAddress& address = access.address();
-    MOZ_RELEASE_ASSERT(end > pc);
-    MOZ_RELEASE_ASSERT(segment->containsCodePC(end));
-
-    // Check x64 asm.js heap access invariants.
-    MOZ_RELEASE_ASSERT(address.disp() >= 0);
-    MOZ_RELEASE_ASSERT(address.base() == HeapReg.code());
-    MOZ_RELEASE_ASSERT(!address.hasIndex() || address.index() != HeapReg.code());
-    MOZ_RELEASE_ASSERT(address.scale() == 0);
-    if (address.hasBase()) {
-        uintptr_t base;
-        StoreValueFromGPReg(SharedMem<void*>::unshared(&base), sizeof(uintptr_t),
-                            AddressOfGPRegisterSlot(context, address.base()));
-        MOZ_RELEASE_ASSERT(reinterpret_cast<uint8_t*>(base) == instance.memoryBase());
-    }
-    if (address.hasIndex()) {
-        uintptr_t index;
-        StoreValueFromGPReg(SharedMem<void*>::unshared(&index), sizeof(uintptr_t),
-                            AddressOfGPRegisterSlot(context, address.index()));
-        MOZ_RELEASE_ASSERT(uint32_t(index) == index);
-    }
-
-    // Determine the actual effective address of the faulting access. We can't
-    // rely on the faultingAddress given to us by the OS, because we need the
-    // address of the start of the access, and the OS may sometimes give us an
-    // address somewhere in the middle of the heap access.
-    uint8_t* accessAddress = ComputeAccessAddress(context, address);
-    MOZ_RELEASE_ASSERT(size_t(faultingAddress - accessAddress) < access.size(),
-                       "Given faulting address does not appear to be within computed "
-                       "faulting address range");
-    MOZ_RELEASE_ASSERT(accessAddress >= instance.memoryBase(),
-                       "Access begins outside the asm.js heap");
-    MOZ_RELEASE_ASSERT(accessAddress + access.size() <= instance.memoryBase() +
-                       instance.memoryMappedSize(),
-                       "Access extends beyond the asm.js heap guard region");
-    MOZ_RELEASE_ASSERT(accessAddress + access.size() > instance.memoryBase() +
-                       memoryLength,
-                       "Computed access address is not actually out of bounds");
-
-    // The basic sandbox model is that all heap accesses are a heap base
-    // register plus an index, and the index is always computed with 32-bit
-    // operations, so we know it can only be 4 GiB off of the heap base.
-    //
-    // However, we wish to support the optimization of folding immediates
-    // and scaled indices into addresses, and any address arithmetic we fold
-    // gets done at full pointer width, so it doesn't get properly wrapped.
-    // We support this by extending HugeMappedSize to the greatest size that
-    // could be reached by such an unwrapped address, and then when we arrive
-    // here in the signal handler for such an access, we compute the fully
-    // wrapped address, and perform the load or store on it.
-    //
-    // Taking a signal is really slow, but in theory programs really shouldn't
-    // be hitting this anyway.
-    intptr_t unwrappedOffset = accessAddress - instance.memoryBase().unwrap(/* for value */);
-    uint32_t wrappedOffset = uint32_t(unwrappedOffset);
-    size_t size = access.size();
-    MOZ_RELEASE_ASSERT(wrappedOffset + size > wrappedOffset);
-    bool inBounds = wrappedOffset + size < memoryLength;
-
-    if (inBounds) {
-        // We now know that this is an access that is actually in bounds when
-        // properly wrapped. Complete the load or store with the wrapped
-        // address.
-        SharedMem<uint8_t*> wrappedAddress = instance.memoryBase() + wrappedOffset;
-        MOZ_RELEASE_ASSERT(wrappedAddress >= instance.memoryBase());
-        MOZ_RELEASE_ASSERT(wrappedAddress + size > wrappedAddress);
-        MOZ_RELEASE_ASSERT(wrappedAddress + size <= instance.memoryBase() + memoryLength);
-        switch (access.kind()) {
-          case Disassembler::HeapAccess::Load:
-            SetRegisterToLoadedValue(context, wrappedAddress.cast<void*>(), size, access.otherOperand());
-            break;
-          case Disassembler::HeapAccess::LoadSext32:
-            SetRegisterToLoadedValueSext32(context, wrappedAddress.cast<void*>(), size, access.otherOperand());
-            break;
-          case Disassembler::HeapAccess::Store:
-            StoreValueFromRegister(context, wrappedAddress.cast<void*>(), size, access.otherOperand());
-            break;
-          case Disassembler::HeapAccess::LoadSext64:
-            MOZ_CRASH("no int64 accesses in asm.js");
-          case Disassembler::HeapAccess::Unknown:
-            MOZ_CRASH("Failed to disassemble instruction");
-        }
-    } else {
-        // We now know that this is an out-of-bounds access made by an asm.js
-        // load/store that we should handle.
-        switch (access.kind()) {
-          case Disassembler::HeapAccess::Load:
-          case Disassembler::HeapAccess::LoadSext32:
-            // Assign the JS-defined result value to the destination register
-            // (ToInt32(undefined) or ToNumber(undefined), determined by the
-            // type of the destination register). Very conveniently, we can
-            // infer the type from the register class, so the only types using
-            // FP registers are float32 and double.
-            SetRegisterToCoercedUndefined(context, access.size(), access.otherOperand());
-            break;
-          case Disassembler::HeapAccess::Store:
-            // Do nothing.
-            break;
-          case Disassembler::HeapAccess::LoadSext64:
-            MOZ_CRASH("no int64 accesses in asm.js");
-          case Disassembler::HeapAccess::Unknown:
-            MOZ_CRASH("Failed to disassemble instruction");
-        }
-    }
-
-    *ppc = end;
-    return true;
-#endif // WASM_HUGE_MEMORY
-}
-
-MOZ_COLD static bool
-IsHeapAccessAddress(const Instance &instance, uint8_t* faultingAddress)
-{
-    size_t accessLimit = instance.memoryMappedSize();
-
-    return instance.metadata().usesMemory() &&
-           faultingAddress >= instance.memoryBase() &&
-           faultingAddress < instance.memoryBase() + accessLimit;
-}
-
-#if defined(XP_WIN)
-
-static bool
-HandleFault(PEXCEPTION_POINTERS exception)
-{
-    EXCEPTION_RECORD* record = exception->ExceptionRecord;
-    CONTEXT* context = exception->ContextRecord;
-
-    if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION &&
-        record->ExceptionCode != EXCEPTION_ILLEGAL_INSTRUCTION)
-    {
-        return false;
-    }
-
-    uint8_t** ppc = ContextToPC(context);
-    uint8_t* pc = *ppc;
-
+    uint8_t* pc = *ContextToPC(context);
     const CodeSegment* codeSegment = LookupCodeSegment(pc);
     if (!codeSegment || !codeSegment->isModule()) {
         return false;
     }
 
-    const ModuleSegment* moduleSegment = codeSegment->asModule();
+    const ModuleSegment& segment = *codeSegment->asModule();
 
-    JitActivation* activation = TlsContext.get()->activation()->asJit();
-    MOZ_ASSERT(activation);
-
-    const Instance* instance = LookupFaultingInstance(*moduleSegment, pc, ContextToFP(context));
-    if (!instance) {
+    Trap trap;
+    BytecodeOffset bytecode;
+    if (!segment.code().lookupTrap(pc, &trap, &bytecode)) {
         return false;
     }
 
-    if (record->ExceptionCode == EXCEPTION_ILLEGAL_INSTRUCTION) {
-        Trap trap;
-        BytecodeOffset bytecode;
-        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
-            return false;
-        }
-
-        activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(context));
-        *ppc = moduleSegment->trapCode();
-        return true;
-    }
-
-    MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
-
-    if (record->NumberParameters < 2) {
-        return false;
-    }
-
-    uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(record->ExceptionInformation[1]);
-
-    // This check isn't necessary, but, since we can, check anyway to make
-    // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(*instance, faultingAddress)) {
-        return false;
-    }
-
-    MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
-
-    return HandleOutOfBounds(context, pc, faultingAddress, moduleSegment, *instance, activation, ppc);
+    // We have a safe, expected wasm trap. Call startWasmTrap() to store enough
+    // register state at the point of the trap to allow stack unwinding or
+    // resumption, both of which will call finishWasmTrap().
+    jit::JitActivation* activation = cx->activation()->asJit();
+    activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(context));
+    *ContextToPC(context) = segment.trapCode();
+    return true;
 }
 
+// =============================================================================
+// The following platform specific signal/exception handlers are installed by
+// wasm::EnsureSignalHandlers() and funnel all potential wasm traps into
+// HandleTrap() above.
+// =============================================================================
+
+#if defined(XP_WIN)
+
 static LONG WINAPI
-WasmFaultHandler(LPEXCEPTION_POINTERS exception)
+WasmTrapHandler(LPEXCEPTION_POINTERS exception)
 {
-    // Before anything else, prevent handler recursion.
-    if (sAlreadyInSignalHandler.get()) {
+    if (sAlreadyHandlingTrap.get()) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
-    AutoSignalHandler ash;
+    AutoHandlingTrap aht;
 
-    if (HandleFault(exception)) {
-        return EXCEPTION_CONTINUE_EXECUTION;
+    EXCEPTION_RECORD* record = exception->ExceptionRecord;
+    if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION &&
+        record->ExceptionCode != EXCEPTION_ILLEGAL_INSTRUCTION)
+    {
+        return EXCEPTION_CONTINUE_SEARCH;
     }
 
-    // No need to worry about calling other handlers, the OS does this for us.
-    return EXCEPTION_CONTINUE_SEARCH;
+    if (!HandleTrap(exception->ContextRecord, TlsContext.get())) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    return EXCEPTION_CONTINUE_EXECUTION;
 }
 
 #elif defined(XP_DARWIN)
@@ -1041,60 +552,16 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
         return false;
     }
 
-    uint8_t** ppc = ContextToPC(&context);
-    uint8_t* pc = *ppc;
-
     if (request.body.exception != EXC_BAD_ACCESS &&
         request.body.exception != EXC_BAD_INSTRUCTION)
     {
         return false;
     }
 
-    // The faulting thread is suspended so we can access cx fields that can
-    // normally only be accessed by the cx's main thread.
-    AutoNoteSingleThreadedRegion anstr;
-
-    const CodeSegment* codeSegment = LookupCodeSegment(pc);
-    if (!codeSegment || !codeSegment->isModule()) {
-        return false;
-    }
-
-    const ModuleSegment* moduleSegment = codeSegment->asModule();
-
-    const Instance* instance = LookupFaultingInstance(*moduleSegment, pc, ContextToFP(&context));
-    if (!instance) {
-        return false;
-    }
-
-    JitActivation* activation = cx->activation()->asJit();
-    MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
-
-    if (request.body.exception == EXC_BAD_INSTRUCTION) {
-        Trap trap;
-        BytecodeOffset bytecode;
-        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
-            return false;
-        }
-
-        activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(&context));
-        *ppc = moduleSegment->trapCode();
-    } else {
-        MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
-
-        MOZ_ASSERT(request.body.exception == EXC_BAD_ACCESS);
-        if (request.body.codeCnt != 2) {
-            return false;
-        }
-
-        uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(request.body.code[1]);
-
-        // This check isn't necessary, but, since we can, check anyway to make
-        // sure we aren't covering up a real bug.
-        if (!IsHeapAccessAddress(*instance, faultingAddress)) {
-            return false;
-        }
-
-        if (!HandleOutOfBounds(&context, pc, faultingAddress, moduleSegment, *instance, activation, ppc)) {
+    {
+        AutoNoteSingleThreadedRegion anstr;
+        AutoHandlingTrap aht;
+        if (!HandleTrap(&context, cx)) {
             return false;
         }
     }
@@ -1269,98 +736,24 @@ MachExceptionHandler::install(JSContext* cx)
 #else  // If not Windows or Mac, assume Unix
 
 #ifdef __mips__
-    static const uint32_t kWasmTrapSignal = SIGFPE;
+static const uint32_t kWasmTrapSignal = SIGFPE;
 #else
-    static const uint32_t kWasmTrapSignal = SIGILL;
+static const uint32_t kWasmTrapSignal = SIGILL;
 #endif
-
-// Be very cautious and default to not handling; we don't want to accidentally
-// silence real crashes from real bugs.
-static bool
-HandleFault(int signum, siginfo_t* info, void* ctx)
-{
-    // Before anything else, prevent handler recursion.
-    if (sAlreadyInSignalHandler.get()) {
-        return false;
-    }
-    AutoSignalHandler ash;
-
-    MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS || signum == kWasmTrapSignal);
-
-    CONTEXT* context = (CONTEXT*)ctx;
-    uint8_t** ppc = ContextToPC(context);
-    uint8_t* pc = *ppc;
-
-    const CodeSegment* segment = LookupCodeSegment(pc);
-    if (!segment || !segment->isModule()) {
-        return false;
-    }
-
-    const ModuleSegment* moduleSegment = segment->asModule();
-
-    const Instance* instance = LookupFaultingInstance(*moduleSegment, pc, ContextToFP(context));
-    if (!instance) {
-        return false;
-    }
-
-    JitActivation* activation = TlsContext.get()->activation()->asJit();
-    MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
-
-    if (signum == kWasmTrapSignal) {
-        // Wasm traps for MIPS raise only integer overflow fp exception.
-#ifdef __mips__
-        if (info->si_code != FPE_INTOVF) {
-            return false;
-        }
-#endif
-        Trap trap;
-        BytecodeOffset bytecode;
-        if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
-            return false;
-        }
-
-        activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(context));
-        *ppc = moduleSegment->trapCode();
-        return true;
-    }
-
-    MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
-
-    uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(info->si_addr);
-
-    // Although it's not strictly necessary, to make sure we're not covering up
-    // any real bugs, check that the faulting address is indeed in the
-    // instance's memory.
-    if (!faultingAddress) {
-        // On some Linux systems, the kernel apparently sometimes "gives up" and
-        // passes a null faultingAddress with si_code set to SI_KERNEL.
-        // This is observed on some automation machines for some out-of-bounds
-        // atomic accesses on x86/64.
-#ifdef SI_KERNEL
-        if (info->si_code != SI_KERNEL) {
-            return false;
-        }
-#else
-        return false;
-#endif
-    } else {
-        if (!IsHeapAccessAddress(*instance, faultingAddress)) {
-            return false;
-        }
-    }
-
-    return HandleOutOfBounds(context, pc, faultingAddress, moduleSegment, *instance, activation, ppc);
-}
 
 static struct sigaction sPrevSEGVHandler;
 static struct sigaction sPrevSIGBUSHandler;
 static struct sigaction sPrevWasmTrapHandler;
 
 static void
-WasmFaultHandler(int signum, siginfo_t* info, void* context)
+WasmTrapHandler(int signum, siginfo_t* info, void* context)
 {
-    if (HandleFault(signum, info, context)) {
-        return;
+    if (!sAlreadyHandlingTrap.get()) {
+        AutoHandlingTrap aht;
+        MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS || signum == kWasmTrapSignal);
+        if (HandleTrap((CONTEXT*)context, TlsContext.get())) {
+            return;
+        }
     }
 
     struct sigaction* previousSignal = nullptr;
@@ -1426,8 +819,8 @@ ProcessHasSignalHandlers()
     }
 #endif
 
-    // Initalize ThreadLocal flag used by WasmFaultHandler
-    sAlreadyInSignalHandler.infallibleInit();
+    // Initalize ThreadLocal flag used by WasmTrapHandler
+    sAlreadyHandlingTrap.infallibleInit();
 
     // Install a SIGSEGV handler to handle safely-out-of-bounds asm.js heap
     // access and/or unaligned accesses.
@@ -1438,17 +831,17 @@ ProcessHasSignalHandlers()
     // MemoryProtectionExceptionHandler::isDisabled().
     const bool firstHandler = false;
 # else
-    // Otherwise, WasmFaultHandler needs to go first, so that we can recover
+    // Otherwise, WasmTrapHandler needs to go first, so that we can recover
     // from wasm faults and continue execution without triggering handlers
     // such as MemoryProtectionExceptionHandler that assume we are crashing.
     const bool firstHandler = true;
 # endif
-    if (!AddVectoredExceptionHandler(firstHandler, WasmFaultHandler)) {
+    if (!AddVectoredExceptionHandler(firstHandler, WasmTrapHandler)) {
         return false;
     }
 #elif defined(XP_DARWIN)
     // OSX handles seg faults via the Mach exception handler above, so don't
-    // install WasmFaultHandler.
+    // install WasmTrapHandler.
 #else
     // SA_NODEFER allows us to reenter the signal handler if we crash while
     // handling the signal, and fall through to the Breakpad handler by testing
@@ -1457,7 +850,7 @@ ProcessHasSignalHandlers()
     // Allow handling OOB with signals on all architectures
     struct sigaction faultHandler;
     faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-    faultHandler.sa_sigaction = WasmFaultHandler;
+    faultHandler.sa_sigaction = WasmTrapHandler;
     sigemptyset(&faultHandler.sa_mask);
     if (sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler)) {
         MOZ_CRASH("unable to install segv handler");
@@ -1467,7 +860,7 @@ ProcessHasSignalHandlers()
     // On Arm Handle Unaligned Accesses
     struct sigaction busHandler;
     busHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-    busHandler.sa_sigaction = WasmFaultHandler;
+    busHandler.sa_sigaction = WasmTrapHandler;
     sigemptyset(&busHandler.sa_mask);
     if (sigaction(SIGBUS, &busHandler, &sPrevSIGBUSHandler)) {
         MOZ_CRASH("unable to install sigbus handler");
@@ -1478,7 +871,7 @@ ProcessHasSignalHandlers()
     // wasm traps.
     struct sigaction wasmTrapHandler;
     wasmTrapHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-    wasmTrapHandler.sa_sigaction = WasmFaultHandler;
+    wasmTrapHandler.sa_sigaction = WasmTrapHandler;
     sigemptyset(&wasmTrapHandler.sa_mask);
     if (sigaction(kWasmTrapSignal, &wasmTrapHandler, &sPrevWasmTrapHandler)) {
         MOZ_CRASH("unable to install wasm trap handler");

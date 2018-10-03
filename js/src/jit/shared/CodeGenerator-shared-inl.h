@@ -8,7 +8,6 @@
 #define jit_shared_CodeGenerator_shared_inl_h
 
 #include "jit/shared/CodeGenerator-shared.h"
-#include "jit/Disassembler.h"
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -345,80 +344,6 @@ CodeGeneratorShared::restoreLiveVolatile(LInstruction* ins)
     LiveRegisterSet regs;
     regs.set() = RegisterSet::Intersect(safepoint->liveRegs().set(), RegisterSet::Volatile());
     masm.PopRegsInMask(regs);
-}
-
-void
-CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, bool isLoad,
-                                                 Scalar::Type type, Operand mem, LAllocation alloc)
-{
-#ifdef DEBUG
-    using namespace Disassembler;
-
-    Disassembler::HeapAccess::Kind kind = isLoad ? HeapAccess::Load : HeapAccess::Store;
-    switch (type) {
-      case Scalar::Int8:
-      case Scalar::Int16:
-        if (kind == HeapAccess::Load) {
-            kind = HeapAccess::LoadSext32;
-        }
-        break;
-      default:
-        break;
-    }
-
-    OtherOperand op;
-    switch (type) {
-      case Scalar::Int8:
-      case Scalar::Uint8:
-      case Scalar::Int16:
-      case Scalar::Uint16:
-      case Scalar::Int32:
-      case Scalar::Uint32:
-        if (!alloc.isConstant()) {
-            op = OtherOperand(ToRegister(alloc).encoding());
-        } else {
-            // x86 doesn't allow encoding an imm64 to memory move; the value
-            // is wrapped anyways.
-            int32_t i = ToInt32(&alloc);
-
-            // Sign-extend the immediate value out to 32 bits. We do this even
-            // for unsigned element types so that we match what the disassembly
-            // code does, as it doesn't know about signedness of stores.
-            unsigned shift = 32 - TypedArrayElemSize(type) * 8;
-            i = int32_t(uint32_t(i) << shift) >> shift;
-            op = OtherOperand(i);
-        }
-        break;
-      case Scalar::Int64:
-        // Can't encode an imm64-to-memory move.
-        op = OtherOperand(ToRegister(alloc).encoding());
-        break;
-      case Scalar::Float32:
-      case Scalar::Float64:
-        op = OtherOperand(ToFloatRegister(alloc).encoding());
-        break;
-      case Scalar::Uint8Clamped:
-      case Scalar::MaxTypedArrayViewType:
-        MOZ_CRASH("Unexpected array type");
-    }
-
-    HeapAccess access(kind, TypedArrayElemSize(type), ComplexAddress(mem), op);
-    masm.verifyHeapAccessDisassembly(begin, end, access);
-#endif
-}
-
-void
-CodeGeneratorShared::verifyLoadDisassembly(uint32_t begin, uint32_t end, Scalar::Type type,
-                                           Operand mem, LAllocation alloc)
-{
-    verifyHeapAccessDisassembly(begin, end, true, type, mem, alloc);
-}
-
-void
-CodeGeneratorShared::verifyStoreDisassembly(uint32_t begin, uint32_t end, Scalar::Type type,
-                                            Operand mem, LAllocation alloc)
-{
-    verifyHeapAccessDisassembly(begin, end, false, type, mem, alloc);
 }
 
 inline bool
