@@ -62,7 +62,7 @@ IonIC::scratchRegisterForEntryJump()
       case CacheKind::BinaryArith:
         return asBinaryArithIC()->output().scratchReg();
       case CacheKind::Compare:
-        return asCompareIC()->output().scratchReg();
+        return asCompareIC()->output();
       case CacheKind::Call:
       case CacheKind::TypeOf:
       case CacheKind::ToBool:
@@ -689,8 +689,12 @@ IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript, IonBinaryArith
 }
 
 /* static */ bool
-IonCompareIC::update(JSContext* cx, HandleScript outerScript, IonCompareIC* ic,
-                                    HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+IonCompareIC::update(JSContext* cx,
+                     HandleScript outerScript,
+                     IonCompareIC* ic,
+                     HandleValue lhs,
+                     HandleValue rhs,
+                     bool* res)
 {
     IonScript* ionScript = outerScript->ionScript();
     RootedScript script(cx, ic->script());
@@ -708,45 +712,44 @@ IonCompareIC::update(JSContext* cx, HandleScript outerScript, IonCompareIC* ic,
     RootedValue rhsCopy(cx, rhs);
 
     // Perform the compare operation.
-    bool out;
     switch (op) {
       case JSOP_LT:
-        if (!LessThan(cx, &lhsCopy, &rhsCopy, &out)) {
+        if (!LessThan(cx, &lhsCopy, &rhsCopy, res)) {
             return false;
         }
         break;
       case JSOP_LE:
-        if (!LessThanOrEqual(cx, &lhsCopy, &rhsCopy, &out)) {
+        if (!LessThanOrEqual(cx, &lhsCopy, &rhsCopy, res)) {
             return false;
         }
         break;
       case JSOP_GT:
-        if (!GreaterThan(cx, &lhsCopy, &rhsCopy, &out)) {
+        if (!GreaterThan(cx, &lhsCopy, &rhsCopy, res)) {
             return false;
         }
         break;
       case JSOP_GE:
-        if (!GreaterThanOrEqual(cx, &lhsCopy, &rhsCopy, &out)) {
+        if (!GreaterThanOrEqual(cx, &lhsCopy, &rhsCopy, res)) {
             return false;
         }
         break;
       case JSOP_EQ:
-        if (!LooselyEqual<true>(cx, &lhsCopy, &rhsCopy, &out)) {
+        if (!LooselyEqual<true>(cx, &lhsCopy, &rhsCopy, res)) {
             return false;
         }
         break;
       case JSOP_NE:
-        if (!LooselyEqual<false>(cx, &lhsCopy, &rhsCopy, &out)) {
+        if (!LooselyEqual<false>(cx, &lhsCopy, &rhsCopy, res)) {
             return false;
         }
         break;
       case JSOP_STRICTEQ:
-        if (!StrictlyEqual<true>(cx, &lhsCopy, &rhsCopy, &out)) {
+        if (!StrictlyEqual<true>(cx, &lhsCopy, &rhsCopy, res)) {
             return false;
         }
         break;
       case JSOP_STRICTNE:
-        if (!StrictlyEqual<false>(cx, &lhsCopy, &rhsCopy, &out)) {
+        if (!StrictlyEqual<false>(cx, &lhsCopy, &rhsCopy, res)) {
             return false;
         }
         break;
@@ -754,8 +757,6 @@ IonCompareIC::update(JSContext* cx, HandleScript outerScript, IonCompareIC* ic,
         MOZ_ASSERT_UNREACHABLE("Unhandled ion compare op");
         return false;
     }
-
-    res.setBoolean(out);
 
     if (ic->state().maybeTransition()) {
         ic->discardStubs(cx->zone());
