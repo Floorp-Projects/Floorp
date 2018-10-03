@@ -391,17 +391,18 @@ ContentPrincipal::SetDomain(nsIURI* aDomain)
 }
 
 static nsresult
-GetBaseDomainHelper(const nsCOMPtr<nsIURI>& aCodebase,
-                    bool* aHasBaseDomain,
-                    nsACString& aBaseDomain)
+GetSpecialBaseDomain(const nsCOMPtr<nsIURI>& aCodebase,
+                     bool* aHandled,
+                     nsACString& aBaseDomain)
 {
-  *aHasBaseDomain = false;
+  *aHandled = false;
 
   // For a file URI, we return the file path.
   if (NS_URIIsLocalFile(aCodebase)) {
     nsCOMPtr<nsIURL> url = do_QueryInterface(aCodebase);
 
     if (url) {
+      *aHandled = true;
       return url->GetFilePath(aBaseDomain);
     }
   }
@@ -415,17 +416,8 @@ GetBaseDomainHelper(const nsCOMPtr<nsIURI>& aCodebase,
   }
 
   if (hasNoRelativeFlag) {
+    *aHandled = true;
     return aCodebase->GetSpec(aBaseDomain);
-  }
-
-  *aHasBaseDomain = true;
-
-  // For everything else, we ask the TLD service via
-  // the ThirdPartyUtil.
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-    do_GetService(THIRDPARTYUTIL_CONTRACTID);
-  if (thirdPartyUtil) {
-    return thirdPartyUtil->GetBaseDomain(aCodebase, aBaseDomain);
   }
 
   return NS_OK;
@@ -434,33 +426,74 @@ GetBaseDomainHelper(const nsCOMPtr<nsIURI>& aCodebase,
 NS_IMETHODIMP
 ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
-  bool hasBaseDomain;
-  return GetBaseDomainHelper(mCodebase, &hasBaseDomain, aBaseDomain);
+  // Handle some special URIs first.
+  bool handled;
+  nsresult rv = GetSpecialBaseDomain(mCodebase, &handled, aBaseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (handled) {
+    return NS_OK;
+  }
+
+  // For everything else, we ask the TLD service via the ThirdPartyUtil.
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+    do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  if (!thirdPartyUtil) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return thirdPartyUtil->GetBaseDomain(mCodebase, aBaseDomain);
 }
 
 NS_IMETHODIMP
 ContentPrincipal::GetSiteOrigin(nsACString& aSiteOrigin)
 {
-  // Determine our base domain.
-  bool hasBaseDomain;
+  // Handle some special URIs first.
   nsAutoCString baseDomain;
-  nsresult rv = GetBaseDomainHelper(mCodebase, &hasBaseDomain, baseDomain);
+  bool handled;
+  nsresult rv = GetSpecialBaseDomain(mCodebase, &handled, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!hasBaseDomain) {
+  if (handled) {
     // This is a special URI ("file:", "about:", "view-source:", etc). Just
     // return the origin.
     return GetOrigin(aSiteOrigin);
   }
 
+  // For everything else, we ask the TLD service. Note that, unlike in
+  // GetBaseDomain, we don't use ThirdPartyUtil.getBaseDomain because if the
+  // host is an IP address that returns the raw address and we can't use it with
+  // SetHost below because SetHost expects '[' and ']' around IPv6 addresses.
+  // See bug 1491728.
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (!tldService) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool gotBaseDomain = false;
+  rv = tldService->GetBaseDomain(mCodebase, 0, baseDomain);
+  if (NS_SUCCEEDED(rv)) {
+    gotBaseDomain = true;
+  } else {
+    // If this is an IP address or something like "localhost", we just continue
+    // with gotBaseDomain = false.
+    if (rv != NS_ERROR_HOST_IS_IP_ADDRESS &&
+        rv != NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+      return rv;
+    }
+  }
+
   // NOTE: Calling `SetHostPort` with a portless domain is insufficient to clear
   // the port, so an extra `SetPort` call has to be made.
   nsCOMPtr<nsIURI> siteUri;
-  rv = NS_MutateURI(mCodebase)
-    .SetUserPass(EmptyCString())
-    .SetPort(-1)
-    .SetHostPort(baseDomain)
-    .Finalize(siteUri);
+  NS_MutateURI mutator(mCodebase);
+  mutator.SetUserPass(EmptyCString())
+         .SetPort(-1);
+  if (gotBaseDomain) {
+    mutator.SetHost(baseDomain);
+  }
+  rv = mutator.Finalize(siteUri);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to create siteUri");
   NS_ENSURE_SUCCESS(rv, rv);
 

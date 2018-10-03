@@ -43,16 +43,19 @@ int dl_iterate_phdr(
 
 struct LoadedLibraryInfo
 {
-  LoadedLibraryInfo(const char* aName, unsigned long aStart, unsigned long aEnd)
+  LoadedLibraryInfo(const char* aName, unsigned long aBaseAddress,
+                    unsigned long aFirstMappingStart, unsigned long aLastMappingEnd)
     : mName(aName)
-    , mStart(aStart)
-    , mEnd(aEnd)
+    , mBaseAddress(aBaseAddress)
+    , mFirstMappingStart(aFirstMappingStart)
+    , mLastMappingEnd(aLastMappingEnd)
   {
   }
 
   nsCString mName;
-  unsigned long mStart;
-  unsigned long mEnd;
+  unsigned long mBaseAddress;
+  unsigned long mFirstMappingStart;
+  unsigned long mLastMappingEnd;
 };
 
 #if defined(GP_OS_android)
@@ -134,8 +137,9 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
   if (dl_info->dlpi_phnum <= 0)
     return 0;
 
-  unsigned long libStart = -1;
-  unsigned long libEnd = 0;
+  unsigned long baseAddress = dl_info->dlpi_addr;
+  unsigned long firstMappingStart = -1;
+  unsigned long lastMappingEnd = 0;
 
   for (size_t i = 0; i < dl_info->dlpi_phnum; i++) {
     if (dl_info->dlpi_phdr[i].p_type != PT_LOAD) {
@@ -143,14 +147,16 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
     }
     unsigned long start = dl_info->dlpi_addr + dl_info->dlpi_phdr[i].p_vaddr;
     unsigned long end = start + dl_info->dlpi_phdr[i].p_memsz;
-    if (start < libStart)
-      libStart = start;
-    if (end > libEnd)
-      libEnd = end;
+    if (start < firstMappingStart) {
+      firstMappingStart = start;
+    }
+    if (end > lastMappingEnd) {
+      lastMappingEnd = end;
+    }
   }
 
-  libInfoList->AppendElement(LoadedLibraryInfo(dl_info->dlpi_name,
-                                               libStart, libEnd));
+  libInfoList->AppendElement(LoadedLibraryInfo(dl_info->dlpi_name, baseAddress,
+                                               firstMappingStart, lastMappingEnd));
 
   return 0;
 }
@@ -244,7 +250,10 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 
   for (const auto& libInfo : libInfoList) {
     info.AddSharedLibrary(
-      SharedLibraryAtPath(libInfo.mName.get(), libInfo.mStart, libInfo.mEnd));
+      SharedLibraryAtPath(libInfo.mName.get(),
+                          libInfo.mFirstMappingStart,
+                          libInfo.mLastMappingEnd,
+                          libInfo.mFirstMappingStart - libInfo.mBaseAddress));
   }
 
 #if defined(GP_OS_linux)

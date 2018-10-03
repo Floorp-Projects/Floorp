@@ -103,9 +103,10 @@ interface nsIProfiler : nsISupports
    * Every object has the properties:
    *  - start:      The start address of the memory region occupied by this library.
    *  - end:        The end address of the memory region occupied by this library.
-   *  - offset:     Usually zero, except on Android if the region was mapped from
-   *                a file (using mmap), then this is the offset in the file where
-   *                the mapping begins.
+   *  - offset:     Usually zero, except on Linux / Android if the first mapped
+   *                section of the library has been mapped to an address that's
+   *                different from the library's base address.
+   *                Then offset = start - baseAddress.
    *  - name:       The name (file basename) of the binary.
    *  - path:       The full absolute path to the binary.
    *  - debugName:  On Windows, the name of the pdb file for the binary. On other
