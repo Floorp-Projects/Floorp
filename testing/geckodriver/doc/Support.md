@@ -18,6 +18,11 @@ supported versions of Firefox, and required Selenium version:
  </thead>
 
  <tr>
+  <td>0.23.0
+  <td>≥ 3.11 (3.14 Python)
+  <td>57
+  <td>n/a
+ <tr>
   <td>0.22.0
   <td>≥ 3.11 (3.14 Python)
   <td>57
