@@ -18,11 +18,15 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-function runTests() {
+async function runTests() {
   var p1 = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => p1.hasWidget !== undefined,
+                                           "Waited too long for plugin to activate");
   is(p1.hasWidget(), false, "Plugin should be windowless by default");
 
   var p2 = document.getElementById("plugin2");
+  await SimpleTest.promiseWaitForCondition(() => p2.hasWidget !== undefined,
+                                           "Waited too long for plugin to activate");
   if (navigator.platform.includes("Mac")) {
     is(p2.hasWidget(), false, "Mac does not support windowed plugins");
   } else if (navigator.platform.includes("Win")) {

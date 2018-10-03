@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug 673468 **/
-
+  SimpleTest.waitForExplicitFinish();
   SpecialPowers.DOMWindowUtils.garbageCollect();
 
   let get_live_dom = function () {
@@ -73,6 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
     SpecialPowers.DOMWindowUtils.garbageCollect();
 
     check_wrappers_as_keys();
+    SimpleTest.finish();
   });
 
   ]]>
