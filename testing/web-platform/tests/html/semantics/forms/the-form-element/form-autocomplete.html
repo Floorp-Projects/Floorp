@@ -58,4 +58,59 @@
       assert_equals(input.autocomplete, keyword);
     }, keyword + " is an allowed autocomplete field name");
   });
+
+
+test(() => {
+  const select = document.createElement("select");
+  select.setAttribute("autocomplete", "  \n");
+  assert_equals(select.autocomplete, "");
+}, "Test whitespace-only attribute value");
+
+test(() => {
+  const select = document.createElement("select");
+
+  select.setAttribute("autocomplete", "foo off");
+  assert_equals(select.autocomplete, "");
+
+  // Normal category; max=3
+  select.setAttribute("autocomplete", "foo section-foo billing name");
+  assert_equals(select.autocomplete, "");
+
+  // Contact category; max=4
+  select.setAttribute("autocomplete", "foo section-bar billing work name");
+  assert_equals(select.autocomplete, "");
+}, "Test maximum number of tokens");
+
+test(() => {
+  const textarea = document.createElement("textarea");
+
+  textarea.setAttribute("autocomplete", "call-sign");
+  assert_equals(textarea.autocomplete, "");
+}, "Unknown field");
+
+test(() => {
+  const hidden = document.createElement("input");
+  hidden.type = "hidden";
+  hidden.setAttribute("autocomplete", "on");
+  assert_equals(hidden.autocomplete, "");
+  hidden.setAttribute("autocomplete", "off");
+  assert_equals(hidden.autocomplete, "");
+}, "Test 'wearing the autofill anchor mantle' with off/on");
+
+test(() => {
+  const textarea = document.createElement("textarea");
+
+  textarea.setAttribute("autocomplete", " HOME\ntel");
+  assert_equals(textarea.autocomplete, "home tel");
+
+  textarea.setAttribute("autocomplete", "shipping   country");
+  assert_equals(textarea.autocomplete, "shipping country");
+
+  textarea.setAttribute("autocomplete", "billing  work  email");
+  assert_equals(textarea.autocomplete, "billing work email");
+
+  textarea.setAttribute("autocomplete", "  section-FOO  bday");
+  assert_equals(textarea.autocomplete, "section-foo bday");
+}, "Serialize combinations of section, mode, contact, and field");
+
 </script>
