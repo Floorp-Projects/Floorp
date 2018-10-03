@@ -71,10 +71,9 @@ class RunInfo(dict):
                  browser_version=None,
                  browser_channel=None,
                  verify=None,
-                 extras=None,
-                 raise_exception=True):
+                 extras=None):
         import mozinfo
-        self._update_mozinfo(metadata_root, raise_exception=raise_exception)
+        self._update_mozinfo(metadata_root)
         self.update(mozinfo.info)
 
         from update.tree import GitTree
@@ -103,7 +102,7 @@ class RunInfo(dict):
         if extras is not None:
             self.update(extras)
 
-    def _update_mozinfo(self, metadata_root, **kwargs):
+    def _update_mozinfo(self, metadata_root):
         """Add extra build information from a mozinfo.json file in a parent
         directory"""
         import mozinfo
@@ -116,7 +115,7 @@ class RunInfo(dict):
             dirs.add(str(path))
             path = os.path.split(path)[0]
 
-        mozinfo.find_and_update_from_json(*dirs, **kwargs)
+        mozinfo.find_and_update_from_json(*dirs)
 
 
 class Test(object):
