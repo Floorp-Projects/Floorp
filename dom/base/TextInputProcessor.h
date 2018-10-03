@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "nsITextInputProcessor.h"
@@ -48,6 +49,26 @@ public:
                       WidgetKeyboardEvent& aKeyboardEvent,
                       uint32_t aIndexOfKeypress,
                       void* aData) override;
+
+  /**
+   * GuessCodeNameIndexOfPrintableKeyInUSEnglishLayout() returns CodeNameIndex
+   * of a printable key which is in usual keyboard of the platform and when
+   * active keyboard layout is US-English.
+   * Note that this does not aware of option key mapping on macOS.
+   *
+   * @param aKeyValue          The key value. Must be a character which can
+   *                           be inputted with US-English keyboard layout.
+   * @param aLocation          The location of the key.  This is important
+   *                           to distinguish whether the key is in Standard
+   *                           or Numpad. If this is not some, treated as
+   *                           Standard.
+   * @return                   Returns CODE_NAME_INDEX_UNKNOWN if there is
+   *                           no proper key.
+   */
+  static CodeNameIndex
+  GuessCodeNameIndexOfPrintableKeyInUSEnglishLayout(
+    const nsAString& aKeyValue,
+    const Maybe<uint32_t>& aLocation);
 
 protected:
   virtual ~TextInputProcessor();
