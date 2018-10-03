@@ -126,7 +126,7 @@ function onPluginCrashed(aEvent) {
   sendMouseEvent({type:'click'}, submitButton, window);
 }
 
-function runTests() {
+async function runTests() {
   // Default plugin hang timeout is too high for mochitests
   Services.prefs.setIntPref("dom.ipc.plugins.timeoutSecs", 1);
 
@@ -145,6 +145,8 @@ function runTests() {
   document.addEventListener("PluginCrashed", onPluginCrashed, false);
 
   var pluginElement = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement.hang !== undefined,
+                                           "Waited too long for plugin to activate");
   try {
     (async function() {
       // Clear data in CrashManager in case previous tests caused something

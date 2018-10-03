@@ -153,9 +153,12 @@ nsXULElement* nsXULElement::Construct(already_AddRefed<mozilla::dom::NodeInfo>&&
 
   if (nodeInfo->Equals(nsGkAtoms::menupopup) ||
       nodeInfo->Equals(nsGkAtoms::popup) ||
-      nodeInfo->Equals(nsGkAtoms::panel) ||
-      nodeInfo->Equals(nsGkAtoms::tooltip)) {
+      nodeInfo->Equals(nsGkAtoms::panel)) {
     return NS_NewXULPopupElement(nodeInfo.forget());
+  }
+
+  if (nodeInfo->Equals(nsGkAtoms::tooltip)) {
+    return NS_NewXULTooltipElement(nodeInfo.forget());
   }
 
   if (nodeInfo->Equals(nsGkAtoms::iframe) ||

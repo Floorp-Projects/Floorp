@@ -17,8 +17,10 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-function runTests() {
+async function runTests() {
   var pluginElement = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement.convertPointX !== undefined,
+                                           "Waited too long for plugin to activate");
   // Poll to see if the plugin is in the right place yet.
   // Check if x-coordinate 0 in plugin space is 0 in window space. If it is,
   // the plugin hasn't been placed yet.
