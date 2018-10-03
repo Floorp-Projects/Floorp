@@ -266,3 +266,29 @@ add_task(async function teardownExtensionSidebar() {
   inspector = null;
   extension = null;
 });
+
+add_task(async function testActiveTabOnNonExistingSidebar() {
+  // Set a fake non existing sidebar id in the activeSidebar pref,
+  // to simulate the scenario where an extension has installed a sidebar
+  // which has been saved in the preference but it doesn't exist anymore.
+  await SpecialPowers.pushPrefEnv({
+    set: [["devtools.inspector.activeSidebar"], "unexisting-sidebar-id"],
+  });
+
+  const res = await openInspectorForURL("about:blank");
+  inspector = res.inspector;
+  toolbox = res.toolbox;
+
+  const onceSidebarCreated = toolbox.once(`extension-sidebar-created-${SIDEBAR_ID}`);
+  toolbox.registerInspectorExtensionSidebar(SIDEBAR_ID, {title: SIDEBAR_TITLE});
+
+  // Wait the extension sidebar to be created and then unregister it to force the tabbar
+  // to select a new one.
+  await onceSidebarCreated;
+  toolbox.unregisterInspectorExtensionSidebar(SIDEBAR_ID);
+
+  is(inspector.sidebar.getCurrentTabID(), "layoutview",
+     "Got the expected inspector sidebar tab selected");
+
+  await SpecialPowers.popPrefEnv();
+});

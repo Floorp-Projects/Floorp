@@ -894,6 +894,8 @@ Inspector.prototype = {
       hideTabstripe: true
     });
 
+    // defaultTab may also be an empty string or a tab id that doesn't exist anymore
+    // (e.g. it was a tab registered by an addon that has been uninstalled).
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
     if (this.is3PaneModeEnabled && defaultTab === "ruleview") {

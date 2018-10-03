@@ -1628,6 +1628,13 @@ Toolbox.prototype = {
    *        An unique sidebar id
    */
   unregisterInspectorExtensionSidebar(id) {
+    // Unregister the sidebar from the toolbox if the toolbox is not already
+    // being destroyed (otherwise we would trigger a re-rendering of the
+    // inspector sidebar tabs while the toolbox is going away).
+    if (this._destroyer) {
+      return;
+    }
+
     const sidebarDef = this._inspectorExtensionSidebars.get(id);
     if (!sidebarDef) {
       return;
@@ -2811,6 +2818,12 @@ Toolbox.prototype = {
       return this._destroyer;
     }
 
+    this._destroyer = this._destroyToolbox();
+
+    return this._destroyer;
+  },
+
+  _destroyToolbox: async function() {
     this.emit("destroy");
 
     this._target.off("inspect-object", this._onInspectObject);
@@ -2929,7 +2942,7 @@ Toolbox.prototype = {
     // Finish all outstanding tasks (which means finish destroying panels and
     // then destroying the host, successfully or not) before destroying the
     // target.
-    this._destroyer = new Promise(resolve => {
+    const onceDestroyed = new Promise(resolve => {
       resolve(settleAll(outstanding)
         .catch(console.error)
         .then(() => {
@@ -2985,16 +2998,15 @@ Toolbox.prototype = {
     const leakCheckObserver = ({wrappedJSObject: barrier}) => {
       // Make the leak detector wait until this toolbox is properly destroyed.
       barrier.client.addBlocker("DevTools: Wait until toolbox is destroyed",
-                                this._destroyer);
+                                onceDestroyed);
     };
 
     const topic = "shutdown-leaks-before-check";
     Services.obs.addObserver(leakCheckObserver, topic);
-    this._destroyer.then(() => {
-      Services.obs.removeObserver(leakCheckObserver, topic);
-    });
 
-    return this._destroyer;
+    await onceDestroyed;
+
+    Services.obs.removeObserver(leakCheckObserver, topic);
   },
 
   _highlighterReady: function() {
