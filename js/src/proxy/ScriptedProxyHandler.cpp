@@ -761,7 +761,7 @@ bool ScriptedProxyHandler::defineProperty(JSContext* cx, HandleObject proxy,
 static bool CreateFilteredListFromArrayLike(JSContext* cx, HandleValue v,
                                             MutableHandleIdVector props) {
   // Step 2.
-  RootedObject obj(cx, NonNullObject(cx, JSMSG_NOT_NONNULL_OBJECT_RET_OWNKEYS,
+  RootedObject obj(cx, RequireObject(cx, JSMSG_NOT_NONNULL_OBJECT_RET_OWNKEYS,
                                      JSDVG_IGNORE_STACK, v));
   if (!obj) {
     return false;
@@ -1478,7 +1478,7 @@ static bool ProxyCreate(JSContext* cx, CallArgs& args, const char* callerName) {
 
   // Step 1.
   RootedObject target(cx,
-                      NonNullObjectArg(cx, "`target`", callerName, args[0]));
+                      RequireObjectArg(cx, "`target`", callerName, args[0]));
   if (!target) {
     return false;
   }
@@ -1492,7 +1492,7 @@ static bool ProxyCreate(JSContext* cx, CallArgs& args, const char* callerName) {
 
   // Step 3.
   RootedObject handler(cx,
-                       NonNullObjectArg(cx, "`handler`", callerName, args[1]));
+                       RequireObjectArg(cx, "`handler`", callerName, args[1]));
   if (!handler) {
     return false;
   }
