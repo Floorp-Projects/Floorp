@@ -1274,8 +1274,14 @@ Navigator::RequestGamepadServiceTest()
 already_AddRefed<Promise>
 Navigator::GetVRDisplays(ErrorResult& aRv)
 {
-  if (!mWindow || !mWindow->GetDocShell()) {
+  if (!mWindow || !mWindow->GetDocShell() || !mWindow->GetExtantDoc()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  if (!FeaturePolicyUtils::IsFeatureAllowed(mWindow->GetExtantDoc(),
+                                            NS_LITERAL_STRING("vr"))) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 

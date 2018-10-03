@@ -1848,6 +1848,8 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
   // focus
   if (mFocused)
     mScratchArray.AppendElement(nsGkAtoms::focus);
+  else
+    mScratchArray.AppendElement(nsGkAtoms::blur);
 
   // sort
   bool sorted = false;

@@ -14,6 +14,7 @@ var EXPORTED_SYMBOLS = [
 ];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
@@ -428,8 +429,15 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     if (this.download.hasProgress) {
       this.element.setAttribute("progressmode", "normal");
       this.element.setAttribute("progress", this.download.progress);
+      this.element.removeAttribute("progress-undetermined");
     } else {
-      this.element.setAttribute("progressmode", "undetermined");
+      // Suppress the progress animation on Linux for the Downloads Panel
+      // progress bars when the file size is unknown.
+      this.element.setAttribute("progressmode",
+                                AppConstants.platform == "linux" ? "normal" :
+                                                                   "undetermined");
+      this.element.setAttribute("progress-undetermined", "true");
+      this.element.setAttribute("progress", "100");
     }
 
     if (progressPaused) {

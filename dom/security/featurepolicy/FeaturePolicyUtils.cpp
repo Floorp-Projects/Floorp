@@ -40,7 +40,6 @@ static FeatureMap sSupportedFeatures[] = {
   { "payment", FeatureMap::eSelf  },
   // TODO: not supported yet!!!
   { "speaker", FeatureMap::eSelf  },
-  // TODO: not supported yet!!!
   { "vr", FeatureMap::eSelf  },
 };
 
