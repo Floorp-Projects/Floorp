@@ -107,7 +107,7 @@ bool operator<(const EHEntryHandle &lhs, const EHEntryHandle &rhs) {
 class EHTable {
   uint32_t mStartPC;
   uint32_t mEndPC;
-  uint32_t mLoadOffset;
+  uint32_t mBaseAddress;
 #ifdef HAVE_UNSORTED_EXIDX
   // In principle we should be able to binary-search the index section in
   // place, but the ICS toolchain's linker is noncompliant and produces
@@ -134,7 +134,7 @@ public:
   const std::string &name() const { return mName; }
   uint32_t startPC() const { return mStartPC; }
   uint32_t endPC() const { return mEndPC; }
-  uint32_t loadOffset() const { return mLoadOffset; }
+  uint32_t baseAddress() const { return mBaseAddress; }
 };
 
 class EHAddrSpace {
@@ -548,12 +548,12 @@ EHTable::EHTable(const void *aELF, size_t aSize, const std::string &aName)
 #endif
     mName(aName)
 {
-  const uint32_t base = reinterpret_cast<uint32_t>(aELF);
+  const uint32_t fileHeaderAddr = reinterpret_cast<uint32_t>(aELF);
 
   if (aSize < sizeof(Elf32_Ehdr))
     return;
 
-  const Elf32_Ehdr &file = *(reinterpret_cast<Elf32_Ehdr *>(base));
+  const Elf32_Ehdr &file = *(reinterpret_cast<Elf32_Ehdr *>(fileHeaderAddr));
   if (memcmp(&file.e_ident[EI_MAG0], ELFMAG, SELFMAG) != 0 ||
       file.e_ident[EI_CLASS] != ELFCLASS32 ||
       file.e_ident[EI_DATA] != hostEndian ||
@@ -571,7 +571,7 @@ EHTable::EHTable(const void *aELF, size_t aSize, const std::string &aName)
   const Elf32_Phdr *exidxHdr = 0, *zeroHdr = 0;
   for (unsigned i = 0; i < file.e_phnum; ++i) {
     const Elf32_Phdr &phdr =
-      *(reinterpret_cast<Elf32_Phdr *>(base + file.e_phoff
+      *(reinterpret_cast<Elf32_Phdr *>(fileHeaderAddr + file.e_phoff
                                        + i * file.e_phentsize));
     if (phdr.p_type == PT_ARM_EXIDX) {
       exidxHdr = &phdr;
@@ -589,15 +589,15 @@ EHTable::EHTable(const void *aELF, size_t aSize, const std::string &aName)
     return;
   if (!zeroHdr)
     return;
-  mLoadOffset = base - zeroHdr->p_vaddr;
-  mStartPC += mLoadOffset;
-  mEndPC += mLoadOffset;
+  mBaseAddress = fileHeaderAddr - zeroHdr->p_vaddr;
+  mStartPC += mBaseAddress;
+  mEndPC += mBaseAddress;
 
   // Create a sorted index of the index to work around linker bugs.
   const EHEntry *startTable =
-    reinterpret_cast<const EHEntry *>(mLoadOffset + exidxHdr->p_vaddr);
+    reinterpret_cast<const EHEntry *>(mBaseAddress + exidxHdr->p_vaddr);
   const EHEntry *endTable =
-    reinterpret_cast<const EHEntry *>(mLoadOffset + exidxHdr->p_vaddr
+    reinterpret_cast<const EHEntry *>(mBaseAddress + exidxHdr->p_vaddr
                                     + exidxHdr->p_memsz);
 #ifdef HAVE_UNSORTED_EXIDX
   mEntries.reserve(endTable - startTable);
@@ -630,13 +630,9 @@ void EHAddrSpace::Update() {
 
   for (size_t i = 0; i < info.GetSize(); ++i) {
     const SharedLibrary &lib = info.GetEntry(i);
-    if (lib.GetOffset() != 0)
-      // TODO: if it has a name, and we haven't seen a mapping of
-      // offset 0 for that file, try opening it and reading the
-      // headers instead.  The only thing I've seen so far that's
-      // linked so as to need that treatment is the dynamic linker
-      // itself.
-      continue;
+    // FIXME: This isn't correct if the start address isn't p_offset 0, because
+    // the start address will not point at the file header. But this is worked
+    // around by magic number checks in the EHTable constructor.
     EHTable tab(reinterpret_cast<const void *>(lib.GetStart()),
               lib.GetEnd() - lib.GetStart(), lib.GetNativeDebugPath());
     if (tab.isValid())
