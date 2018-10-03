@@ -21,6 +21,7 @@ const { isXUL } = require("devtools/server/actors/highlighters/utils/markup");
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const { CustomHighlighterActor, register } =
   require("devtools/server/actors/highlighters");
+const { getContrastRatioFor } = require("devtools/server/actors/utils/accessibility");
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
 const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
@@ -368,6 +369,36 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       actions: this.actions,
       attributes: this.attributes
     };
+  },
+
+  _isValidTextLeaf(rawAccessible) {
+    return !isDefunct(rawAccessible) &&
+           rawAccessible.role === nsIAccessibleRole.ROLE_TEXT_LEAF &&
+           rawAccessible.name && rawAccessible.name.trim().length > 0;
+  },
+
+  get _nonEmptyTextLeafs() {
+    return this.children().filter(child => this._isValidTextLeaf(child.rawAccessible));
+  },
+
+  /**
+   * Calculate the contrast ratio of the given accessible.
+   */
+  _getContrastRatio() {
+    return getContrastRatioFor(this._isValidTextLeaf(this.rawAccessible) ?
+      this.rawAccessible.DOMNode.parentNode : this.rawAccessible.DOMNode);
+  },
+
+  /**
+   * Audit the state of the accessible object.
+   *
+   * @return {Object|null}
+   *         Audit results for the accessible object.
+  */
+  get audit() {
+    return this.isDefunct ? null : {
+      contrastRatio: this._getContrastRatio()
+    };
   }
 });
 
@@ -710,13 +741,14 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         True if highlighter shows the accessible object.
    */
   highlightAccessible(accessible, options = {}) {
-    const { bounds, name, role } = accessible;
+    const { bounds } = accessible;
     if (!bounds) {
       return false;
     }
 
+    const { audit, name, role } = accessible;
     return this.highlighter.show({ rawNode: accessible.rawAccessible.DOMNode },
-                                 { ...options, ...bounds, name, role });
+                                 { ...options, ...bounds, name, role, audit });
   },
 
   /**
@@ -803,15 +835,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     }
 
     if (this._currentAccessible !== accessible) {
-      const { bounds, role, name } = accessible;
-      if (bounds) {
-        this.highlighter.show({ rawNode: event.originalTarget || event.target }, {
-          ...bounds,
-          role,
-          name
-        });
-      }
-
+      this.highlightAccessible(accessible);
       events.emit(this, "picker-accessible-hovered", accessible);
       this._currentAccessible = accessible;
     }
