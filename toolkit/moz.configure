@@ -829,6 +829,14 @@ def skia_includes(skia):
 
 set_config('SKIA_INCLUDES', skia_includes)
 
+option('--with-system-webp',
+       help='Use system libwebp (located with pkgconfig)')
+
+system_webp = pkg_check_modules('MOZ_WEBP', 'libwebp >= 1.0.0 libwebpdemux >= 1.0.0',
+                                when='--with-system-webp')
+
+set_config('MOZ_SYSTEM_WEBP', depends(when=system_webp)(lambda: True))
+
 # Build Freetype in the tree
 # ==============================================================
 @depends(target, skia_pdf)
