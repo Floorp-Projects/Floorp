@@ -4406,8 +4406,9 @@ SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp)
     }
 
     JSFlatString* strArg = JS_FlattenString(cx, args[0].toString());
-    if (!strArg)
+    if (!strArg) {
         return false;
+    }
 
 #define JIT_COMPILER_MATCH(key, string)                 \
     else if (JS_FlatStringEqualsAscii(strArg, string))  \
@@ -4424,8 +4425,9 @@ SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp)
     }
 
     int32_t number = args[1].toInt32();
-    if (number < 0)
+    if (number < 0) {
         number = -1;
+    }
 
     // Throw if disabling the JITs and there's JIT code on the stack, to avoid
     // assertion failures.
@@ -5087,8 +5089,9 @@ ParseBinASTData(JSContext* cx, uint8_t* buf_data, uint32_t buf_length,
 
     JS::Result<ParseNode*> parsed = reader.parse(globalsc, buf_data, buf_length);
 
-    if (parsed.isErr())
+    if (parsed.isErr()) {
         return false;
+    }
 
 #ifdef DEBUG
     Fprinter out(stderr);

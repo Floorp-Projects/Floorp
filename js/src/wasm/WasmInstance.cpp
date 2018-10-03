@@ -463,8 +463,9 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
 
     if (len == 0) {
         // Even though the length is zero, we must check for a valid offset.
-        if (byteOffset < memLen)
+        if (byteOffset < memLen) {
             return 0;
+        }
     } else {
         // Here, we know that |len - 1| cannot underflow.
         CheckedU32 highestOffset = CheckedU32(byteOffset) + CheckedU32(len - 1);
@@ -546,8 +547,9 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, 
     if (len == 0) {
         // Even though the number of items to copy is zero, we must check
         // for valid offsets.
-        if (dstOffset < tableLen && srcOffset < tableLen)
+        if (dstOffset < tableLen && srcOffset < tableLen) {
             return 0;
+        }
     } else {
         // Here, we know that |len - 1| cannot underflow.
         CheckedU32 lenMinus1 = CheckedU32(len - 1);
@@ -561,11 +563,13 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, 
             // Actually do the copy, taking care to handle overlapping cases
             // correctly.
             if (dstOffset > srcOffset) {
-                for (uint32_t i = len; i > 0; i--)
+                for (uint32_t i = len; i > 0; i--) {
                     table->copy(dstOffset + (i - 1), srcOffset + (i - 1));
+                }
             } else if (dstOffset < srcOffset) {
-                for (uint32_t i = 0; i < len; i++)
+                for (uint32_t i = 0; i < len; i++) {
                     table->copy(dstOffset + i, srcOffset + i);
+                }
             }
 
             return 0;
