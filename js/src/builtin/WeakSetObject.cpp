@@ -34,7 +34,7 @@ using namespace js;
 
   // Step 4.
   if (!args.get(0).isObject()) {
-    ReportNotObject(cx, JSMSG_NOT_NONNULL_OBJECT_WEAKSET_VAL, args.get(0));
+    ReportNotObject(cx, JSMSG_OBJECT_REQUIRED_WEAKSET_VAL, args.get(0));
     return false;
   }
 
@@ -201,7 +201,7 @@ bool WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
         MOZ_ASSERT(!keyVal.isMagic(JS_ELEMENTS_HOLE));
 
         if (keyVal.isPrimitive()) {
-          ReportNotObject(cx, JSMSG_NOT_NONNULL_OBJECT_WEAKSET_VAL, keyVal);
+          ReportNotObject(cx, JSMSG_OBJECT_REQUIRED_WEAKSET_VAL, keyVal);
           return false;
         }
 

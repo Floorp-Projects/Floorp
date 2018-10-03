@@ -87,7 +87,7 @@ function TypedArraySpeciesConstructor(obj) {
 
     // Step 4.
     if (!IsObject(ctor))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, "object's 'constructor' property");
+        ThrowTypeError(JSMSG_OBJECT_REQUIRED, "object's 'constructor' property");
 
     // Steps 5.
     var s = ctor[std_species];
