@@ -3,9 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'ConnectPage.css',
     'ConnectPage.js',
-    'ConnectSection.css',
     'ConnectSection.js',
     'ConnectSteps.css',
     'ConnectSteps.js',
