@@ -570,6 +570,7 @@ private:
   DECL_GFX_PREF(Live, "image.mem.volatile.min_threshold_kb",   ImageMemVolatileMinThresholdKB, int32_t, -1);
   DECL_GFX_PREF(Once, "image.multithreaded_decoding.limit",    ImageMTDecodingLimit, int32_t, -1);
   DECL_GFX_PREF(Once, "image.multithreaded_decoding.idle_timeout", ImageMTDecodingIdleTimeout, int32_t, -1);
+  DECL_GFX_PREF(Live, "image.webp.enabled",                    ImageWebPEnabled, bool, false);
 
   DECL_GFX_PREF(Once, "layers.acceleration.disabled",          LayersAccelerationDisabledDoNotUseDirectly, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps",          LayersDrawFPS, bool, false);
