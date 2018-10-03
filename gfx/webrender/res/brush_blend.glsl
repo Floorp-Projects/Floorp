@@ -101,8 +101,8 @@ void brush_vs(
         }
         case 10: {
             // Color Matrix
-            vec4 mat_data[3] = fetch_from_resource_cache_3(user_data.z);
-            vec4 offset_data = fetch_from_resource_cache_1(user_data.z + 4);
+            vec4 mat_data[3] = fetch_from_gpu_cache_3(user_data.z);
+            vec4 offset_data = fetch_from_gpu_cache_1(user_data.z + 4);
             vColorMat = mat3(mat_data[0].xyz, mat_data[1].xyz, mat_data[2].xyz);
             vColorOffset = offset_data.rgb;
             break;

@@ -28,7 +28,7 @@ Glyph fetch_glyph(int specific_prim_address,
     int glyph_address = specific_prim_address +
                         VECS_PER_TEXT_RUN +
                         int(uint(glyph_index) / GLYPHS_PER_GPU_BLOCK);
-    vec4 data = fetch_from_resource_cache_1(glyph_address);
+    vec4 data = fetch_from_gpu_cache_1(glyph_address);
     // Select XY or ZW based on glyph index.
     // We use "!= 0" instead of "== 1" here in order to work around a driver
     // bug with equality comparisons on integers.
@@ -46,7 +46,7 @@ struct GlyphResource {
 };
 
 GlyphResource fetch_glyph_resource(int address) {
-    vec4 data[2] = fetch_from_resource_cache_2(address);
+    vec4 data[2] = fetch_from_gpu_cache_2(address);
     return GlyphResource(data[0], data[1].x, data[1].yz, data[1].w);
 }
 
@@ -57,7 +57,7 @@ struct TextRun {
 };
 
 TextRun fetch_text_run(int address) {
-    vec4 data[3] = fetch_from_resource_cache_3(address);
+    vec4 data[3] = fetch_from_gpu_cache_3(address);
     return TextRun(data[0], data[1], data[2].xy);
 }
 

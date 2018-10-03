@@ -540,6 +540,7 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn post_translate(&self, new_offset: TypedVector2D<f32, Dst>) -> Self {
         match *self {
             FastTransform::Offset(offset) => {
