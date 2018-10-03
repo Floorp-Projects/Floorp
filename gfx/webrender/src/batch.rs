@@ -14,7 +14,7 @@ use gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders};
 use gpu_types::{ClipMaskInstance, SplitCompositeInstance};
 use gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
-use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
+use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
 use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
 use plane_split::{BspSplitter, Clipper, Polygon, Splitter};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, DeferredResolve};
@@ -66,29 +66,29 @@ pub enum BatchKind {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BatchTextures {
-    pub colors: [SourceTexture; 3],
+    pub colors: [TextureSource; 3],
 }
 
 impl BatchTextures {
     pub fn no_texture() -> Self {
         BatchTextures {
-            colors: [SourceTexture::Invalid; 3],
+            colors: [TextureSource::Invalid; 3],
         }
     }
 
     pub fn render_target_cache() -> Self {
         BatchTextures {
             colors: [
-                SourceTexture::CacheRGBA8,
-                SourceTexture::CacheA8,
-                SourceTexture::Invalid,
+                TextureSource::PrevPassColor,
+                TextureSource::PrevPassAlpha,
+                TextureSource::Invalid,
             ],
         }
     }
 
-    pub fn color(texture: SourceTexture) -> Self {
+    pub fn color(texture: TextureSource) -> Self {
         BatchTextures {
-            colors: [texture, texture, SourceTexture::Invalid],
+            colors: [texture, texture, TextureSource::Invalid],
         }
     }
 }
@@ -120,8 +120,8 @@ impl BatchKey {
 }
 
 #[inline]
-fn textures_compatible(t1: SourceTexture, t2: SourceTexture) -> bool {
-    t1 == SourceTexture::Invalid || t2 == SourceTexture::Invalid || t1 == t2
+fn textures_compatible(t1: TextureSource, t2: TextureSource) -> bool {
+    t1 == TextureSource::Invalid || t2 == TextureSource::Invalid || t1 == t2
 }
 
 pub struct AlphaBatchList {
@@ -761,9 +761,9 @@ impl AlphaBatchBuilder {
                                                 let shadow_textures = BatchTextures::render_target_cache();
                                                 let content_textures = BatchTextures {
                                                     colors: [
-                                                        SourceTexture::RenderTaskCache(saved_index),
-                                                        SourceTexture::Invalid,
-                                                        SourceTexture::Invalid,
+                                                        TextureSource::RenderTaskCache(saved_index),
+                                                        TextureSource::Invalid,
+                                                        TextureSource::Invalid,
                                                     ],
                                                 };
 
@@ -1089,7 +1089,7 @@ impl AlphaBatchBuilder {
                     glyph_fetch_buffer,
                     gpu_cache,
                     |texture_id, mut glyph_format, glyphs| {
-                        debug_assert_ne!(texture_id, SourceTexture::Invalid);
+                        debug_assert_ne!(texture_id, TextureSource::Invalid);
 
                         // Ignore color and only sample alpha when shadowing.
                         if text_cpu.shadow {
@@ -1101,8 +1101,8 @@ impl AlphaBatchBuilder {
                         let textures = BatchTextures {
                             colors: [
                                 texture_id,
-                                SourceTexture::Invalid,
-                                SourceTexture::Invalid,
+                                TextureSource::Invalid,
+                                TextureSource::Invalid,
                             ],
                         };
 
@@ -1344,7 +1344,7 @@ fn get_image_tile_params(
         deferred_resolves,
     );
 
-    if cache_item.texture_id == SourceTexture::Invalid {
+    if cache_item.texture_id == TextureSource::Invalid {
         None
     } else {
         let textures = BatchTextures::color(cache_item.texture_id);
@@ -1393,7 +1393,7 @@ impl BrushPrimitive {
                     println!("\tsource {:?}", cache_item);
                 }
 
-                if cache_item.texture_id == SourceTexture::Invalid {
+                if cache_item.texture_id == TextureSource::Invalid {
                     None
                 } else {
                     let textures = BatchTextures::color(cache_item.texture_id);
@@ -1431,7 +1431,7 @@ impl BrushPrimitive {
                     }
                 };
 
-                if cache_item.texture_id == SourceTexture::Invalid {
+                if cache_item.texture_id == TextureSource::Invalid {
                     None
                 } else {
                     let textures = BatchTextures::color(cache_item.texture_id);
@@ -1508,7 +1508,7 @@ impl BrushPrimitive {
                         deferred_resolves,
                     );
 
-                    if cache_item.texture_id == SourceTexture::Invalid {
+                    if cache_item.texture_id == TextureSource::Invalid {
                         warn!("Warnings: skip a PrimitiveKind::YuvImage");
                         return None;
                     }
@@ -1664,7 +1664,7 @@ pub fn resolve_image(
                     // the render thread...
                     let cache_handle = gpu_cache.push_deferred_per_frame_blocks(BLOCKS_PER_UV_RECT);
                     let cache_item = CacheItem {
-                        texture_id: SourceTexture::External(external_image),
+                        texture_id: TextureSource::External(external_image),
                         uv_rect_handle: cache_handle,
                         uv_rect: DeviceUintRect::new(
                             DeviceUintPoint::zero(),
@@ -1706,8 +1706,8 @@ pub struct ClipBatcher {
     /// Rectangle draws fill up the rectangles with rounded corners.
     pub rectangles: Vec<ClipMaskInstance>,
     /// Image draws apply the image masking.
-    pub images: FastHashMap<SourceTexture, Vec<ClipMaskInstance>>,
-    pub box_shadows: FastHashMap<SourceTexture, Vec<ClipMaskInstance>>,
+    pub images: FastHashMap<TextureSource, Vec<ClipMaskInstance>>,
+    pub box_shadows: FastHashMap<TextureSource, Vec<ClipMaskInstance>>,
     pub line_decorations: Vec<ClipMaskInstance>,
 }
 
@@ -1815,7 +1815,7 @@ impl ClipBatcher {
                         .get_cached_render_task(rt_handle);
                     let cache_item = resource_cache
                         .get_texture_cache_item(&rt_cache_entry.handle);
-                    debug_assert_ne!(cache_item.texture_id, SourceTexture::Invalid);
+                    debug_assert_ne!(cache_item.texture_id, TextureSource::Invalid);
 
                     self.box_shadows
                         .entry(cache_item.texture_id)
@@ -1846,9 +1846,9 @@ impl ClipBatcher {
     }
 }
 
-fn get_buffer_kind(texture: SourceTexture) -> ImageBufferKind {
+fn get_buffer_kind(texture: TextureSource) -> ImageBufferKind {
     match texture {
-        SourceTexture::External(ext_image) => {
+        TextureSource::External(ext_image) => {
             match ext_image.image_type {
                 ExternalImageType::TextureHandle(target) => {
                     target.into()

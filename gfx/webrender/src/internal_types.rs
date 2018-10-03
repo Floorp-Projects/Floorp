@@ -25,20 +25,23 @@ use tiling;
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
 pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
 
-// An ID for a texture that is owned by the
-// texture cache module. This can include atlases
-// or standalone textures allocated via the
-// texture cache (e.g. if an image is too large
-// to be added to an atlas). The texture cache
-// manages the allocation and freeing of these
-// IDs, and the rendering thread maintains a
-// map from cache texture ID to native texture.
-
+/// An ID for a texture that is owned by the `texture_cache` module.
+///
+/// This can include atlases or standalone textures allocated via the texture
+/// cache (e.g.  if an image is too large to be added to an atlas). The texture
+/// cache manages the allocation and freeing of these IDs, and the rendering
+/// thread maintains a map from cache texture ID to native texture.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheTextureId(pub usize);
 
+/// Identifies a render pass target that is persisted until the end of the frame.
+///
+/// By default, only the targets of the immediately-preceding pass are bound as
+/// inputs to the next pass. However, tasks can opt into having their target
+/// preserved in a list until the end of the frame, and this type specifies the
+/// index in that list.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -48,21 +51,24 @@ impl SavedTargetIndex {
     pub const PENDING: Self = SavedTargetIndex(!0);
 }
 
-// Represents the source for a texture.
-// These are passed from throughout the
-// pipeline until they reach the rendering
-// thread, where they are resolved to a
-// native texture ID.
-
+/// Identifies the source of an input texture to a shader.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum SourceTexture {
+pub enum TextureSource {
+    /// Equivalent to `None`, allowing us to avoid using `Option`s everywhere.
     Invalid,
+    /// An entry in the texture cache.
     TextureCache(CacheTextureId),
+    /// An external image texture, mananged by the embedding.
     External(ExternalImageData),
-    CacheA8,
-    CacheRGBA8,
+    /// The alpha target of the immediately-preceding pass.
+    PrevPassAlpha,
+    /// The color target of the immediately-preceding pass.
+    PrevPassColor,
+    /// A render target from an earlier pass. Unlike the immediately-preceding
+    /// passes, these are not made available automatically, but are instead
+    /// opt-in by the `RenderTask` (see `mark_for_saving()`).
     RenderTaskCache(SavedTargetIndex),
 }
 

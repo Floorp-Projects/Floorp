@@ -26,7 +26,7 @@ struct BoxShadowData {
 };
 
 BoxShadowData fetch_data(ivec2 address) {
-    vec4 data[3] = fetch_from_resource_cache_3_direct(address);
+    vec4 data[3] = fetch_from_gpu_cache_3_direct(address);
     RectWithSize dest_rect = RectWithSize(data[2].xy, data[2].zw);
     BoxShadowData bs_data = BoxShadowData(
         data[0].xy,
