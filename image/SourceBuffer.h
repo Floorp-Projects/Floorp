@@ -175,6 +175,14 @@ public:
     return mState == READY ? mData.mIterating.mNextReadLength : 0;
   }
 
+  /// If we're ready to read, returns whether or not everything available thus
+  /// far has been in the same contiguous buffer.
+  bool IsContiguous() const
+  {
+    MOZ_ASSERT(mState == READY, "Calling IsContiguous() in the wrong state");
+    return mState == READY ? mData.mIterating.mChunk == 0 : false;
+  }
+
   /// @return a count of the chunks we've advanced through.
   uint32_t ChunkCount() const { return mChunkCount; }
 

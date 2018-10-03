@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
     'nsIconDecoder.cpp',
     'nsJPEGDecoder.cpp',
     'nsPNGDecoder.cpp',
+    'nsWebPDecoder.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
