@@ -17,6 +17,7 @@ namespace jit {
 
 const OptimizationLevelInfo IonOptimizations;
 
+// Duplicated in all.js - ensure both match.
 const uint32_t OptimizationInfo::CompilerWarmupThreshold = 1000;
 const uint32_t OptimizationInfo::CompilerSmallFunctionWarmupThreshold = CompilerWarmupThreshold;
 
