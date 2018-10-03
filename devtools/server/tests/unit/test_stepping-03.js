@@ -37,7 +37,7 @@ async function test_simple_stepping() {
 
   const step1 = await stepOut(gClient, threadClient);
   equal(step1.type, "paused");
-  equal(step1.frame.where.line, 6);
+  equal(step1.frame.where.line, 8);
   equal(step1.why.type, "resumeLimit");
 
   equal(gDebuggee.a, 1);
