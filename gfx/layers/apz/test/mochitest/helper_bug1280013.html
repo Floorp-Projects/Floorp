@@ -17,6 +17,11 @@ function* test(testDriver) {
   // processing the scroll.
   SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
 
+  // Note on the synthesizeNativeTouchDrag() calls in this file: by using
+  // yield and *not* passing |testDriver| as the |aObserver| argument, these
+  // calls block until something else (in this case, the APZ:TransformEnd
+  // notification) resumes the test.
+
   // Scroll down to the iframe. Do it in two drags instead of one in case the
   // device screen is short
   yield synthesizeNativeTouchDrag(document.body, 10, 400, 0, -350);
