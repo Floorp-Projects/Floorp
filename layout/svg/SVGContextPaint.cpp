@@ -103,7 +103,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
   nsSVGPaintServerFrame *ps =
-    SVGObserverUtils::GetPaintServer(aFrame, aFillOrStroke);
+    SVGObserverUtils::GetAndObservePaintServer(aFrame, aFillOrStroke);
 
   if (ps) {
     RefPtr<gfxPattern> pattern =

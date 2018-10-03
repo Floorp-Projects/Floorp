@@ -3403,11 +3403,11 @@ CacheIRCompiler::emitComparePointerResultShared(bool symbol)
     Label ifTrue, done;
     masm.branchPtr(JSOpToCondition(op, /* signed = */true), left, right, &ifTrue);
 
-    masm.moveValue(BooleanValue(false), output.valueReg());
+    EmitStoreBoolean(masm, false, output);
     masm.jump(&done);
 
     masm.bind(&ifTrue);
-    masm.moveValue(BooleanValue(true), output.valueReg());
+    EmitStoreBoolean(masm, true, output);
     masm.bind(&done);
     return true;
 }
@@ -3436,11 +3436,11 @@ CacheIRCompiler::emitCompareInt32Result()
     Label ifTrue, done;
     masm.branch32(JSOpToCondition(op, /* signed = */true), left, right, &ifTrue);
 
-    masm.moveValue(BooleanValue(false), output.valueReg());
+    EmitStoreBoolean(masm, false, output);
     masm.jump(&done);
 
     masm.bind(&ifTrue);
-    masm.moveValue(BooleanValue(true), output.valueReg());
+    EmitStoreBoolean(masm, true, output);
     masm.bind(&done);
     return true;
 }
@@ -3461,11 +3461,11 @@ CacheIRCompiler::emitCompareDoubleResult()
 
     Label done, ifTrue;
     masm.branchDouble(JSOpToDoubleCondition(op), FloatReg0, FloatReg1, &ifTrue);
-    masm.moveValue(BooleanValue(false), output.valueReg());
+    EmitStoreBoolean(masm, false, output);
     masm.jump(&done);
 
     masm.bind(&ifTrue);
-    masm.moveValue(BooleanValue(true), output.valueReg());
+    EmitStoreBoolean(masm, true, output);
     masm.bind(&done);
     return true;
 }
@@ -3485,16 +3485,16 @@ CacheIRCompiler::emitCompareObjectUndefinedNullResult()
 
     if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
         // obj !== undefined/null for all objects.
-        masm.moveValue(BooleanValue(op == JSOP_STRICTNE), output.valueReg());
+        EmitStoreBoolean(masm, op == JSOP_STRICTNE, output);
     } else {
         MOZ_ASSERT(op == JSOP_EQ || op == JSOP_NE);
         AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
         Label done, emulatesUndefined;
         masm.branchIfObjectEmulatesUndefined(obj, scratch, failure->label(), &emulatesUndefined);
-        masm.moveValue(BooleanValue(op == JSOP_NE), output.valueReg());
+        EmitStoreBoolean(masm, op == JSOP_NE, output);
         masm.jump(&done);
         masm.bind(&emulatesUndefined);
-        masm.moveValue(BooleanValue(op == JSOP_EQ), output.valueReg());
+        EmitStoreBoolean(masm, op == JSOP_EQ, output);
         masm.bind(&done);
     }
     return true;

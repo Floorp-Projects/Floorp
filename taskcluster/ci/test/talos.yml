@@ -168,7 +168,7 @@ talos-g1:
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time:
         by-test-platform:
-            linux64.*: 2700
+            linux64.*: 3600
             default: 7200
     mozharness:
         extra-options:
@@ -184,7 +184,7 @@ talos-g1-profiling:
             default: ['mozilla-central', 'try']
     max-run-time:
         by-test-platform:
-            linux64.*: 2700
+            linux64.*: 3600
             default: 7200
     mozharness:
         extra-options:
