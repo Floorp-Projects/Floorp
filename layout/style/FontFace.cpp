@@ -223,23 +223,7 @@ void
 FontFace::GetFamily(nsString& aResult)
 {
   mFontFaceSet->FlushUserFontSet();
-
-  // Serialize the same way as in nsCSSFontFaceStyleDecl::GetPropertyValue.
-  nsCSSValue value;
-  GetDesc(eCSSFontDesc_Family, value);
-
-  aResult.Truncate();
-
-  if (value.GetUnit() == eCSSUnit_Null) {
-    return;
-  }
-
-  nsDependentString family(value.GetStringBufferValue());
-  if (!family.IsEmpty()) {
-    // The string length can be zero when the author passed an invalid
-    // family name or an invalid descriptor to the JS FontFace constructor.
-    nsStyleUtil::AppendEscapedCSSString(family, aResult);
-  }
+  GetDesc(eCSSFontDesc_Family, aResult);
 }
 
 void
@@ -295,10 +279,6 @@ void
 FontFace::GetUnicodeRange(nsString& aResult)
 {
   mFontFaceSet->FlushUserFontSet();
-
-  // There is no eCSSProperty_unicode_range for us to pass in to GetDesc
-  // to get a serialized (possibly defaulted) value, but that function
-  // doesn't use the property ID for this descriptor anyway.
   GetDesc(eCSSFontDesc_UnicodeRange, aResult);
 }
 
@@ -607,13 +587,6 @@ FontFace::SetDescriptors(const nsAString& aFamily,
 }
 
 void
-FontFace::GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const
-{
-  aResult.Reset();
-  Servo_FontFaceRule_GetDescriptor(GetData(), aDescID, &aResult);
-}
-
-void
 FontFace::GetDesc(nsCSSFontDesc aDescID, nsString& aResult) const
 {
   aResult.Truncate();
@@ -666,19 +639,91 @@ FontFace::SetUserFontEntry(gfxUserFontEntry* aEntry)
   }
 }
 
-bool
-FontFace::GetFamilyName(nsCString& aResult)
+Maybe<StyleComputedFontWeightRange>
+FontFace::GetFontWeight() const
 {
-  nsCSSValue value;
-  GetDesc(eCSSFontDesc_Family, value);
-
-  if (value.GetUnit() == eCSSUnit_String) {
-    nsString familyname;
-    value.GetStringValue(familyname);
-    AppendUTF16toUTF8(familyname, aResult);
+  StyleComputedFontWeightRange range;
+  if (!Servo_FontFaceRule_GetFontWeight(GetData(), &range)) {
+    return Nothing();
   }
+  return Some(range);
+}
 
-  return !aResult.IsEmpty();
+Maybe<StyleComputedFontStretchRange>
+FontFace::GetFontStretch() const
+{
+  StyleComputedFontStretchRange range;
+  if (!Servo_FontFaceRule_GetFontStretch(GetData(), &range)) {
+    return Nothing();
+  }
+  return Some(range);
+}
+
+Maybe<StyleComputedFontStyleDescriptor>
+FontFace::GetFontStyle() const
+{
+  StyleComputedFontStyleDescriptor descriptor;
+  if (!Servo_FontFaceRule_GetFontStyle(GetData(), &descriptor)) {
+    return Nothing();
+  }
+  return Some(descriptor);
+}
+
+Maybe<StyleFontDisplay>
+FontFace::GetFontDisplay() const
+{
+  StyleFontDisplay display;
+  if (!Servo_FontFaceRule_GetFontDisplay(GetData(), &display)) {
+    return Nothing();
+  }
+  return Some(display);
+}
+
+Maybe<StyleFontLanguageOverride>
+FontFace::GetFontLanguageOverride() const
+{
+  StyleFontLanguageOverride langOverride;
+  if (!Servo_FontFaceRule_GetFontLanguageOverride(GetData(), &langOverride)) {
+    return Nothing();
+  }
+  return Some(langOverride);
+}
+
+bool
+FontFace::HasLocalSrc() const
+{
+  AutoTArray<StyleFontFaceSourceListComponent, 8> components;
+  GetSources(components);
+  for (auto& component : components) {
+    if (component.tag == StyleFontFaceSourceListComponent::Tag::Local) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+FontFace::GetFontFeatureSettings(nsTArray<gfxFontFeature>& aFeatures) const
+{
+  Servo_FontFaceRule_GetFeatureSettings(GetData(), &aFeatures);
+}
+
+void
+FontFace::GetFontVariationSettings(nsTArray<gfxFontVariation>& aVariations) const
+{
+  Servo_FontFaceRule_GetVariationSettings(GetData(), &aVariations);
+}
+
+void
+FontFace::GetSources(nsTArray<StyleFontFaceSourceListComponent>& aSources) const
+{
+  Servo_FontFaceRule_GetSources(GetData(), &aSources);
+}
+
+nsAtom*
+FontFace::GetFamilyName() const
+{
+  return Servo_FontFaceRule_GetFamilyName(GetData());
 }
 
 void
@@ -795,19 +840,15 @@ FontFace::GetUnicodeRangeAsCharacterMap()
     return mUnicodeRange;
   }
 
-  nsCSSValue val;
-  GetDesc(eCSSFontDesc_UnicodeRange, val);
+  size_t len;
+  const StyleUnicodeRange* rangesPtr =
+    Servo_FontFaceRule_GetUnicodeRanges(GetData(), &len);
 
-  if (val.GetUnit() == eCSSUnit_Array) {
+  Span<const StyleUnicodeRange> ranges(rangesPtr, len);
+  if (!ranges.IsEmpty()) {
     mUnicodeRange = new gfxCharacterMap();
-    const nsCSSValue::Array& sources = *val.GetArrayValue();
-    MOZ_ASSERT(sources.Count() % 2 == 0,
-               "odd number of entries in a unicode-range: array");
-
-    for (uint32_t i = 0; i < sources.Count(); i += 2) {
-      uint32_t min = sources[i].GetIntValue();
-      uint32_t max = sources[i+1].GetIntValue();
-      mUnicodeRange->SetRange(min, max);
+    for (auto& range : ranges) {
+      mUnicodeRange->SetRange(range.start, range.end);
     }
   } else {
     mUnicodeRange = nullptr;
