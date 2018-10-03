@@ -6686,34 +6686,44 @@ GetSharedObject(JSContext* cx, unsigned argc, Value* vp)
             // Flag was set in the sender; ensure it is set in the receiver.
             MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
+            // The protocol for creating a SAB requires the refcount to be
+            // incremented prior to the SAB creation.
+
             SharedArrayRawBuffer* buf = mbx->val.sarb.buffer;
             uint32_t length = mbx->val.sarb.length;
             if (!buf->addReference()) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_SAB_REFCNT_OFLO);
                 return false;
             }
-            auto dropBuf = MakeScopeExit([buf] { buf->dropReference(); });
+
+            // If the allocation fails we must decrement the refcount before
+            // returning.
 
             Rooted<ArrayBufferObjectMaybeShared*> maybesab(cx, SharedArrayBufferObject::New(cx, buf, length));
             if (!maybesab) {
+                buf->dropReference();
                 return false;
             }
+
+            // At this point the SAB was created successfully and it owns the
+            // refcount-increase on the buffer that we performed above.  So even
+            // if we fail to allocate along any path below we must not decrement
+            // the refcount; the garbage collector must be allowed to handle
+            // that via finalization of the orphaned SAB object.
+
             if (mbx->tag == MailboxTag::SharedArrayBuffer) {
                 newObj = maybesab;
             } else {
                 if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_WebAssembly)) {
                     return false;
                 }
-
                 RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
                 newObj = WasmMemoryObject::create(cx, maybesab, proto);
                 MOZ_ASSERT_IF(newObj, newObj->as<WasmMemoryObject>().isShared());
+                if (!newObj) {
+                    return false;
+                }
             }
-            if (!newObj) {
-                return false;
-            }
-
-            dropBuf.release();
 
             break;
           }

@@ -133,9 +133,6 @@ with Files("GetUserMediaRequest.webidl"):
 with Files("Grid.webidl"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
-with Files("GroupedHistoryEvent.webidl"):
-    BUG_COMPONENT = ("Core", "Document Navigation")
-
 with Files("HTML*"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
@@ -1053,7 +1050,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'GamepadAxisMoveEvent.webidl',
     'GamepadButtonEvent.webidl',
     'GamepadEvent.webidl',
-    'GroupedHistoryEvent.webidl',
     'HashChangeEvent.webidl',
     'HiddenPluginEvent.webidl',
     'ImageCaptureErrorEvent.webidl',
