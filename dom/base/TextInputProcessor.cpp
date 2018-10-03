@@ -1562,6 +1562,252 @@ TextInputProcessor::GuessCodeNameIndexOfPrintableKeyInUSEnglishLayout(
   }
 }
 
+NS_IMETHODIMP
+TextInputProcessor::GuessKeyCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+                      const nsAString& aKeyValue,
+                      JS::Handle<JS::Value> aLocation,
+                      uint8_t aOptionalArgc,
+                      uint32_t* aKeyCodeValue)
+{
+  if (NS_WARN_IF(!aKeyCodeValue)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  Maybe<uint32_t> location;
+  if (aOptionalArgc) {
+    if (aLocation.isNullOrUndefined()) {
+      // location should be nothing.
+    } else if (aLocation.isInt32()) {
+      location = mozilla::Some(static_cast<uint32_t>(aLocation.toInt32()));
+    } else {
+      NS_WARNING_ASSERTION(aLocation.isNullOrUndefined() || aLocation.isInt32(),
+        "aLocation must be undefined, null or int");
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  *aKeyCodeValue =
+    GuessKeyCodeOfPrintableKeyInUSEnglishLayout(aKeyValue, location);
+  return NS_OK;
+}
+
+// static
+uint32_t
+TextInputProcessor::GuessKeyCodeOfPrintableKeyInUSEnglishLayout(
+                      const nsAString& aKeyValue,
+                      const Maybe<uint32_t>& aLocation)
+{
+  if (aKeyValue.IsEmpty()) {
+    return 0;
+  }
+  // US keyboard layout can input only one character per key.  So, we can
+  // assume that if the key value is 2 or more characters, it's a known
+  // key name of a non-printable key or not a usual key emulation.
+  if (aKeyValue.Length() > 1) {
+    return 0;
+  }
+
+  if (aLocation.isSome() &&
+      aLocation.value() ==
+        dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_NUMPAD) {
+    switch (aKeyValue[0]) {
+      case '+':
+        return dom::KeyboardEvent_Binding::DOM_VK_ADD;
+      case '-':
+        return dom::KeyboardEvent_Binding::DOM_VK_SUBTRACT;
+      case '*':
+        return dom::KeyboardEvent_Binding::DOM_VK_MULTIPLY;
+      case '/':
+        return dom::KeyboardEvent_Binding::DOM_VK_DIVIDE;
+      case '.':
+        return dom::KeyboardEvent_Binding::DOM_VK_DECIMAL;
+      case '0':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD0;
+      case '1':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD1;
+      case '2':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD2;
+      case '3':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD3;
+      case '4':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD4;
+      case '5':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD5;
+      case '6':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD6;
+      case '7':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD7;
+      case '8':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD8;
+      case '9':
+        return dom::KeyboardEvent_Binding::DOM_VK_NUMPAD9;
+      default:
+        return 0;
+    }
+  }
+
+  if (aLocation.isSome() &&
+      aLocation.value() !=
+        dom::KeyboardEvent_Binding::DOM_KEY_LOCATION_STANDARD) {
+    return 0;
+  }
+
+  // TODO: Support characters inputted with option key on macOS.
+  switch (aKeyValue[0]) {
+    case 'a':
+    case 'A':
+      return dom::KeyboardEvent_Binding::DOM_VK_A;
+    case 'b':
+    case 'B':
+      return dom::KeyboardEvent_Binding::DOM_VK_B;
+    case 'c':
+    case 'C':
+      return dom::KeyboardEvent_Binding::DOM_VK_C;
+    case 'd':
+    case 'D':
+      return dom::KeyboardEvent_Binding::DOM_VK_D;
+    case 'e':
+    case 'E':
+      return dom::KeyboardEvent_Binding::DOM_VK_E;
+    case 'f':
+    case 'F':
+      return dom::KeyboardEvent_Binding::DOM_VK_F;
+    case 'g':
+    case 'G':
+      return dom::KeyboardEvent_Binding::DOM_VK_G;
+    case 'h':
+    case 'H':
+      return dom::KeyboardEvent_Binding::DOM_VK_H;
+    case 'i':
+    case 'I':
+      return dom::KeyboardEvent_Binding::DOM_VK_I;
+    case 'j':
+    case 'J':
+      return dom::KeyboardEvent_Binding::DOM_VK_J;
+    case 'k':
+    case 'K':
+      return dom::KeyboardEvent_Binding::DOM_VK_K;
+    case 'l':
+    case 'L':
+      return dom::KeyboardEvent_Binding::DOM_VK_L;
+    case 'm':
+    case 'M':
+      return dom::KeyboardEvent_Binding::DOM_VK_M;
+    case 'n':
+    case 'N':
+      return dom::KeyboardEvent_Binding::DOM_VK_N;
+    case 'o':
+    case 'O':
+      return dom::KeyboardEvent_Binding::DOM_VK_O;
+    case 'p':
+    case 'P':
+      return dom::KeyboardEvent_Binding::DOM_VK_P;
+    case 'q':
+    case 'Q':
+      return dom::KeyboardEvent_Binding::DOM_VK_Q;
+    case 'r':
+    case 'R':
+      return dom::KeyboardEvent_Binding::DOM_VK_R;
+    case 's':
+    case 'S':
+      return dom::KeyboardEvent_Binding::DOM_VK_S;
+    case 't':
+    case 'T':
+      return dom::KeyboardEvent_Binding::DOM_VK_T;
+    case 'u':
+    case 'U':
+      return dom::KeyboardEvent_Binding::DOM_VK_U;
+    case 'v':
+    case 'V':
+      return dom::KeyboardEvent_Binding::DOM_VK_V;
+    case 'w':
+    case 'W':
+      return dom::KeyboardEvent_Binding::DOM_VK_W;
+    case 'x':
+    case 'X':
+      return dom::KeyboardEvent_Binding::DOM_VK_X;
+    case 'y':
+    case 'Y':
+      return dom::KeyboardEvent_Binding::DOM_VK_Y;
+    case 'z':
+    case 'Z':
+      return dom::KeyboardEvent_Binding::DOM_VK_Z;
+
+    case '`':
+    case '~':
+      return dom::KeyboardEvent_Binding::DOM_VK_BACK_QUOTE;
+    case '1':
+    case '!':
+      return dom::KeyboardEvent_Binding::DOM_VK_1;
+    case '2':
+    case '@':
+      return dom::KeyboardEvent_Binding::DOM_VK_2;
+    case '3':
+    case '#':
+      return dom::KeyboardEvent_Binding::DOM_VK_3;
+    case '4':
+    case '$':
+      return dom::KeyboardEvent_Binding::DOM_VK_4;
+    case '5':
+    case '%':
+      return dom::KeyboardEvent_Binding::DOM_VK_5;
+    case '6':
+    case '^':
+      return dom::KeyboardEvent_Binding::DOM_VK_6;
+    case '7':
+    case '&':
+      return dom::KeyboardEvent_Binding::DOM_VK_7;
+    case '8':
+    case '*':
+      return dom::KeyboardEvent_Binding::DOM_VK_8;
+    case '9':
+    case '(':
+      return dom::KeyboardEvent_Binding::DOM_VK_9;
+    case '0':
+    case ')':
+      return dom::KeyboardEvent_Binding::DOM_VK_0;
+    case '-':
+    case '_':
+      return dom::KeyboardEvent_Binding::DOM_VK_HYPHEN_MINUS;
+    case '=':
+    case '+':
+      return dom::KeyboardEvent_Binding::DOM_VK_EQUALS;
+
+    case '[':
+    case '{':
+      return dom::KeyboardEvent_Binding::DOM_VK_OPEN_BRACKET;
+    case ']':
+    case '}':
+      return dom::KeyboardEvent_Binding::DOM_VK_CLOSE_BRACKET;
+    case '\\':
+    case '|':
+      return dom::KeyboardEvent_Binding::DOM_VK_BACK_SLASH;
+
+    case ';':
+    case ':':
+      return dom::KeyboardEvent_Binding::DOM_VK_SEMICOLON;
+    case '\'':
+    case '"':
+      return dom::KeyboardEvent_Binding::DOM_VK_QUOTE;
+
+    case ',':
+    case '<':
+      return dom::KeyboardEvent_Binding::DOM_VK_COMMA;
+    case '.':
+    case '>':
+      return dom::KeyboardEvent_Binding::DOM_VK_PERIOD;
+    case '/':
+    case '?':
+      return dom::KeyboardEvent_Binding::DOM_VK_SLASH;
+
+    case ' ':
+      return dom::KeyboardEvent_Binding::DOM_VK_SPACE;
+
+    default:
+      return 0;
+  }
+}
+
 /******************************************************************************
  * TextInputProcessor::AutoPendingCompositionResetter
  ******************************************************************************/

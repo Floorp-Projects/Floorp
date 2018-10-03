@@ -801,85 +801,6 @@ function synthesizeAndWaitNativeMouseMove(aTarget, aOffsetX, aOffsetY,
   return eventReceivedPromise;
 }
 
-function _computeKeyCodeFromChar(aChar)
-{
-  if (aChar.length != 1) {
-    return 0;
-  }
-  var KeyEvent = _getKeyboardEvent();
-  if (aChar >= 'a' && aChar <= 'z') {
-    return KeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'a'.charCodeAt(0);
-  }
-  if (aChar >= 'A' && aChar <= 'Z') {
-    return KeyEvent.DOM_VK_A + aChar.charCodeAt(0) - 'A'.charCodeAt(0);
-  }
-  if (aChar >= '0' && aChar <= '9') {
-    return KeyEvent.DOM_VK_0 + aChar.charCodeAt(0) - '0'.charCodeAt(0);
-  }
-  // returns US keyboard layout's keycode
-  switch (aChar) {
-    case '~':
-    case '`':
-      return KeyEvent.DOM_VK_BACK_QUOTE;
-    case '!':
-      return KeyEvent.DOM_VK_1;
-    case '@':
-      return KeyEvent.DOM_VK_2;
-    case '#':
-      return KeyEvent.DOM_VK_3;
-    case '$':
-      return KeyEvent.DOM_VK_4;
-    case '%':
-      return KeyEvent.DOM_VK_5;
-    case '^':
-      return KeyEvent.DOM_VK_6;
-    case '&':
-      return KeyEvent.DOM_VK_7;
-    case '*':
-      return KeyEvent.DOM_VK_8;
-    case '(':
-      return KeyEvent.DOM_VK_9;
-    case ')':
-      return KeyEvent.DOM_VK_0;
-    case '-':
-    case '_':
-      return KeyEvent.DOM_VK_SUBTRACT;
-    case '+':
-    case '=':
-      return KeyEvent.DOM_VK_EQUALS;
-    case '{':
-    case '[':
-      return KeyEvent.DOM_VK_OPEN_BRACKET;
-    case '}':
-    case ']':
-      return KeyEvent.DOM_VK_CLOSE_BRACKET;
-    case '|':
-    case '\\':
-      return KeyEvent.DOM_VK_BACK_SLASH;
-    case ':':
-    case ';':
-      return KeyEvent.DOM_VK_SEMICOLON;
-    case '\'':
-    case '"':
-      return KeyEvent.DOM_VK_QUOTE;
-    case '<':
-    case ',':
-      return KeyEvent.DOM_VK_COMMA;
-    case '>':
-    case '.':
-      return KeyEvent.DOM_VK_PERIOD;
-    case '?':
-    case '/':
-      return KeyEvent.DOM_VK_SLASH;
-    case '\n':
-      return KeyEvent.DOM_VK_RETURN;
-    case ' ':
-      return KeyEvent.DOM_VK_SPACE;
-    default:
-      return 0;
-  }
-}
-
 /**
  * Synthesize a key event. It is targeted at whatever would be targeted by an
  * actual keypress by the user, typically the focused element.
@@ -1552,7 +1473,9 @@ function _createKeyboardEventDictionary(aKey, aKeyEvent,
   } else if (aKey != "") {
     keyName = aKey;
     if (!keyCodeIsDefined) {
-      keyCode = _computeKeyCodeFromChar(aKey.charAt(0));
+      keyCode =
+        aTIP.guessKeyCodeValueOfPrintableKeyInUSEnglishKeyboardLayout(
+               aKey, aKeyEvent.location);
     }
     if (!keyCode) {
       result.flags |= _EU_Ci.nsITextInputProcessor.KEY_KEEP_KEYCODE_ZERO;

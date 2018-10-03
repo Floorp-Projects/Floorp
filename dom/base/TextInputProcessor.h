@@ -70,6 +70,25 @@ public:
     const nsAString& aKeyValue,
     const Maybe<uint32_t>& aLocation);
 
+  /**
+   * GuessKeyCodeOfPrintableKeyInUSEnglishLayout() returns a key code value
+   * of a printable key which is in usual keyboard of the platform and when
+   * active keyboard layout is US-English.
+   * Note that this does not aware of option key mapping on macOS.
+   *
+   * @param aKeyValue          The key value. Must be a character which can
+   *                           be inputted with US-English keyboard layout.
+   * @param aLocation          The location of the key.  This is important
+   *                           to distinguish whether the key is in Standard
+   *                           or Numpad. If this is not some, treated as
+   *                           Standard.
+   * @return                   Returns 0 if there is no proper key to input
+   *                           aKeyValue with US-English keyboard layout.
+   */
+  static uint32_t
+  GuessKeyCodeOfPrintableKeyInUSEnglishLayout(const nsAString& aKeyValue,
+                                              const Maybe<uint32_t>& aLocation);
+
 protected:
   virtual ~TextInputProcessor();
 
