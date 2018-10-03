@@ -302,7 +302,7 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
                               MutableHandle<PropertyDescriptor> desc) {
   // step 2
   RootedObject obj(
-      cx, NonNullObject(cx, JSMSG_NOT_NONNULL_OBJECT_PROP_DESC, descval));
+      cx, RequireObject(cx, JSMSG_NOT_NONNULL_OBJECT_PROP_DESC, descval));
   if (!obj) {
     return false;
   }
