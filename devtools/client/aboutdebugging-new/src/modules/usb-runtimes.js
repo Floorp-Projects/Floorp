@@ -5,7 +5,7 @@
 "use strict";
 
 const { ADBScanner } = require("devtools/shared/adb/adb-scanner");
-const { getADBAddon } = require("devtools/client/webide/modules/addons");
+const { getADBAddon } = require("devtools/shared/adb/adb-addon");
 
 /**
  * This module provides a collection of helper methods to detect USB runtimes whom Firefox
