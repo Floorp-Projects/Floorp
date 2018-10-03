@@ -1174,7 +1174,9 @@ fails-if(usesRepeatResampling) fails-if(Android) fails-if(webrender) == 446100-1
 == 446100-1h.html about:blank
 == 447749-1.html 447749-1-ref.html
 fuzzy(0-127,0-2) == 448193.html 448193-ref.html
-# There isn't a way to load UA Widget in reftest yet.
+!= 449149-1a.html about:blank
+!= 449149-1b.html about:blank
+# Test again with original XBL bindings
 test-pref(dom.ua_widget.enabled,false) != 449149-1a.html about:blank
 test-pref(dom.ua_widget.enabled,false) != 449149-1b.html about:blank
 # Retry the above with XBL scopes
