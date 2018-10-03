@@ -1351,6 +1351,17 @@
     "n_buckets": 50,
     "description": "PNG image decode speed (Kbytes/sec)"
   },
+  "IMAGE_DECODE_SPEED_WEBP": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 500,
+    "high": 50000000,
+    "n_buckets": 50,
+    "description": "WebP image decode speed (Kbytes/sec)",
+    "bug_numbers": [1294490]
+  },
   "IMAGE_REQUEST_DISPATCHED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com","aosmond@mozilla.com"],
