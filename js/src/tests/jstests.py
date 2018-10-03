@@ -354,10 +354,8 @@ def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
                                                meta_filters=[filter_jsshell_tests]).load()
 
     run_info_extras = products.load_product(kwargs["config"], "firefox")[-1](**kwargs)
-    is_automation = os.environ.get('AUTOMATION', False)
     run_info = wpttest.get_run_info(kwargs["metadata_root"], "firefox",
-                                    debug=debug, extras=run_info_extras,
-                                    raise_exception=is_automation)
+                                    debug=debug, extras=run_info_extras)
 
     path_filter = testloader.TestFilter(test_manifests,
                                         include=requested_paths,
