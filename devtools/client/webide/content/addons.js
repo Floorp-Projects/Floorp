@@ -3,10 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+
 const Services = require("Services");
-const {gDevTools} = require("devtools/client/framework/devtools");
-const {getADBAddon, forgetADBAddon} = require("devtools/client/webide/modules/addons");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+
+const {gDevTools} = require("devtools/client/framework/devtools");
+const {getADBAddon, forgetADBAddon} = require("devtools/shared/adb/adb-addon");
 const {ADBScanner} = require("devtools/shared/adb/adb-scanner");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 

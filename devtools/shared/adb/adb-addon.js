@@ -9,14 +9,14 @@ const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-var ADB_LINK = Services.prefs.getCharPref("devtools.remote.adb.extensionURL");
-var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.remote.adb.extensionID");
+const ADB_LINK = Services.prefs.getCharPref("devtools.remote.adb.extensionURL");
+const ADB_ADDON_ID = Services.prefs.getCharPref("devtools.remote.adb.extensionID");
 
 // Extension ID for adb helper extension that might be installed on Firefox 63 or older.
 const OLD_ADB_ADDON_ID = "adbhelper@mozilla.org";
 
-var platform = Services.appShell.hiddenDOMWindow.navigator.platform;
-var OS = "";
+const platform = Services.appShell.hiddenDOMWindow.navigator.platform;
+let OS = "";
 if (platform.includes("Win")) {
   OS = "win32";
 } else if (platform.includes("Mac")) {
@@ -29,7 +29,7 @@ if (platform.includes("Win")) {
   }
 }
 
-var addonsListener = {};
+const addonsListener = {};
 addonsListener.onEnabled =
 addonsListener.onDisabled =
 addonsListener.onInstalled =
@@ -38,13 +38,15 @@ addonsListener.onUninstalled = (updatedAddon) => {
 };
 AddonManager.addAddonListener(addonsListener);
 
-var adbAddon = null;
-var getADBAddon = exports.getADBAddon = function() {
+// adbAddon is the exposed singleton for ADBAddon.
+let adbAddon = null;
+function getADBAddon() {
   if (!adbAddon) {
     adbAddon = new ADBAddon();
   }
   return adbAddon;
-};
+}
+exports.getADBAddon = getADBAddon;
 
 exports.forgetADBAddon = function() {
   adbAddon = null;
@@ -95,8 +97,12 @@ ADBAddon.prototype = {
     if (addon && addon.userDisabled) {
       await addon.enable();
     } else {
-      const install = await AddonManager.getInstallForURL(this.xpiLink, "application/x-xpinstall", null,
-                                                          null, null, null, null, {source: "webide"});
+      const install = await AddonManager.getInstallForURL(
+        this.xpiLink,
+        "application/x-xpinstall",
+        null, null, null, null, null,
+        { source: "webide" }
+      );
       install.addListener(this);
       install.install();
     }
