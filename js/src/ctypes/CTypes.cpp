@@ -1083,8 +1083,9 @@ TypeSourceForError(JSContext* cx, JSObject* typeObj)
 {
   AutoString source;
   BuildTypeSource(cx, typeObj, true, source);
-  if (!source)
+  if (!source) {
     return nullptr;
+  }
   return EncodeUTF8(cx, source);
 }
 
@@ -1093,8 +1094,9 @@ FunctionTypeSourceForError(JSContext* cx, HandleObject funObj)
 {
   AutoString funSource;
   BuildFunctionTypeSource(cx, funObj, funSource);
-  if (!funSource)
+  if (!funSource) {
     return nullptr;
+  }
   return EncodeUTF8(cx, funSource);
 }
 
@@ -1104,8 +1106,9 @@ ConversionPositionForError(JSContext* cx, ConversionType convType, HandleObject 
 {
   AutoString posSource;
   BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
-  if (!posSource)
+  if (!posSource) {
     return nullptr;
+  }
   return EncodeUTF8(cx, posSource);
 }
 

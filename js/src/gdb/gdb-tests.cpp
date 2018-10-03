@@ -37,16 +37,18 @@ template<typename T>
 static inline T*
 checkPtr(T* ptr)
 {
-  if (! ptr)
+  if (! ptr) {
     abort();
+  }
   return ptr;
 }
 
 static void
 checkBool(bool success)
 {
-  if (! success)
+  if (! success) {
     abort();
+  }
 }
 
 /* The warning reporter callback. */

@@ -47,15 +47,17 @@ jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals)
     options.creationOptions().setStreamsEnabled(true);
     newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals, JS::FireOnNewGlobalHook,
                                    options);
-    if (!newGlobal)
+    if (!newGlobal) {
         return nullptr;
+    }
 
     JSAutoRealm ar(cx, newGlobal);
 
     // Populate the global object with the standard globals like Object and
     // Array.
-    if (!JS::InitRealmStandardClasses(cx))
+    if (!JS::InitRealmStandardClasses(cx)) {
         return nullptr;
+    }
 
     return newGlobal;
 }
@@ -64,20 +66,23 @@ static bool
 jsfuzz_init(JSContext** cx, JS::PersistentRootedObject* global)
 {
     *cx = JS_NewContext(8L * 1024 * 1024);
-    if (!*cx)
+    if (!*cx) {
         return false;
+    }
 
     const size_t MAX_STACK_SIZE = 500000;
 
     JS_SetNativeStackQuota(*cx, MAX_STACK_SIZE);
 
     js::UseInternalJobQueues(*cx);
-    if (!JS::InitSelfHostedCode(*cx))
+    if (!JS::InitSelfHostedCode(*cx)) {
         return false;
+    }
     global->init(*cx);
     *global = jsfuzz_createGlobal(*cx, nullptr);
-    if (!*global)
+    if (!*global) {
         return false;
+    }
     JS::EnterRealm(*cx, *global);
     return true;
 }

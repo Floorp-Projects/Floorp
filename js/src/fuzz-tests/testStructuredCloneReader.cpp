@@ -75,8 +75,9 @@ testStructuredCloneReaderFuzz(const uint8_t* buf, size_t size) {
     JS::CloneDataPolicy policy;
 
     clonebufOut.emplace(scope, nullptr, nullptr);
-    if (!clonebufOut->write(gCx, deserialized, UndefinedHandleValue, policy))
+    if (!clonebufOut->write(gCx, deserialized, UndefinedHandleValue, policy)) {
         return 0;
+    }
 
     return 0;
 }

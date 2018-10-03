@@ -1693,8 +1693,9 @@ NodeBuilder::callImportExpression(HandleValue ident, HandleValue arg, TokenPos* 
                                   MutableHandleValue dst)
 {
     RootedValue cb(cx, callbacks[AST_CALL_IMPORT]);
-    if (!cb.isNull())
+    if (!cb.isNull()) {
         return callback(cb, arg, pos, dst);
+    }
 
     return newNode(AST_CALL_IMPORT, pos,
                    "ident", ident,
