@@ -93,7 +93,7 @@ void js::ReportNotObject(JSContext* cx, JSErrNum err, HandleValue v) {
 
 void js::ReportNotObject(JSContext* cx, const Value& v) {
   RootedValue value(cx, v);
-  ReportNotObject(cx, JSMSG_NOT_NONNULL_OBJECT, value);
+  ReportNotObject(cx, JSMSG_OBJECT_REQUIRED, value);
 }
 
 void js::ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun,
@@ -103,7 +103,7 @@ void js::ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun,
   UniqueChars bytes;
   if (const char* chars = ValueToSourceForError(cx, v, bytes)) {
     JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                               JSMSG_NOT_NONNULL_OBJECT_ARG, nth, fun, chars);
+                               JSMSG_OBJECT_REQUIRED_ARG, nth, fun, chars);
   }
 }
 
@@ -301,8 +301,8 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
                               bool checkAccessors,
                               MutableHandle<PropertyDescriptor> desc) {
   // step 2
-  RootedObject obj(
-      cx, RequireObject(cx, JSMSG_NOT_NONNULL_OBJECT_PROP_DESC, descval));
+  RootedObject obj(cx,
+                   RequireObject(cx, JSMSG_OBJECT_REQUIRED_PROP_DESC, descval));
   if (!obj) {
     return false;
   }
@@ -4152,7 +4152,7 @@ MOZ_MUST_USE JSObject* js::SpeciesConstructor(
   // Step 4.
   if (!ctor.isObject()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NOT_NONNULL_OBJECT,
+                              JSMSG_OBJECT_REQUIRED,
                               "object's 'constructor' property");
     return nullptr;
   }
