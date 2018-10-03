@@ -715,7 +715,7 @@ linux64-tup:
         kind: build
         platform: toolchains/opt
         symbol: TL(tup)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
