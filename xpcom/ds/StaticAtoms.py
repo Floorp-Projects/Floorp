@@ -165,6 +165,7 @@ STATIC_ATOMS = [
     Atom("bindToUntrustedContent", "bindToUntrustedContent"),
     Atom("block", "block"),
     Atom("blockquote", "blockquote"),
+    Atom("blur", "blur"),
     Atom("body", "body"),
     Atom("boolean", "boolean"),
     Atom("border", "border"),
