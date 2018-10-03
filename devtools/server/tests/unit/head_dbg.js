@@ -846,3 +846,32 @@ function getInflatedStackLocations(thread, sample) {
   // The profiler tree is inverted, so reverse the array.
   return locations.reverse();
 }
+
+async function setupTestFromUrl(url) {
+  do_test_pending();
+
+  const { createRootActor } = require("xpcshell-test/testactors");
+  DebuggerServer.setRootActor(createRootActor);
+  DebuggerServer.init(() => true);
+
+  const global = createTestGlobal("test");
+  DebuggerServer.addTestGlobal(global);
+
+  const debuggerClient = new DebuggerClient(DebuggerServer.connectPipe());
+  await connect(debuggerClient);
+
+  const { tabs } = await listTabs(debuggerClient);
+  const tab = findTab(tabs, "test");
+  const [, tabClient] = await attachTarget(debuggerClient, tab);
+
+  const [, threadClient] = await attachThread(tabClient);
+  await resume(threadClient);
+
+  const sourceUrl = getFileUrl(url);
+  const promise = waitForNewSource(threadClient, sourceUrl);
+  loadSubScript(sourceUrl, global);
+  const { source } = await promise;
+
+  const sourceClient = threadClient.source(source);
+  return { global, debuggerClient, threadClient, sourceClient };
+}

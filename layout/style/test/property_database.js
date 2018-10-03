@@ -130,6 +130,12 @@ var validGradientAndElementValues = [
   "linear-gradient(to right bottom, red, 50%, green 50%, 50%, blue)",
   "linear-gradient(to right bottom, red, 0%, green 50%, 100%, blue)",
 
+  "linear-gradient(red 0% 100%)",
+  "linear-gradient(red 0% 50%, blue 50%)",
+  "linear-gradient(red 0% 50%, blue 50% 100%)",
+  "linear-gradient(red 0% 50%, 0%, blue 50%)",
+  "linear-gradient(red 0% 50%, 0%, blue 50% 100%)",
+
   /* Unitless 0 is valid as an <angle> */
   "linear-gradient(0, red, blue)",
 
@@ -182,6 +188,12 @@ var validGradientAndElementValues = [
   "radial-gradient(7em 8em at 45px, red, blue)",
 
   "radial-gradient(circle at 15% 20%, red, blue)",
+
+  "radial-gradient(red 0% 100%)",
+  "radial-gradient(red 0% 50%, blue 50%)",
+  "radial-gradient(red 0% 50%, blue 50% 100%)",
+  "radial-gradient(red 0% 50%, 0%, blue 50%)",
+  "radial-gradient(red 0% 50%, 0%, blue 50% 100%)",
 
   "repeating-radial-gradient(red, blue)",
   "repeating-radial-gradient(red, yellow, blue)",
@@ -328,6 +340,16 @@ var invalidGradientAndElementValues = [
   "radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
   "radial-gradient(45px 399grad, farthest-side circle, red, blue)",
   "radial-gradient(circle red, blue)",
+
+  /* don't allow more than two positions with multi-position syntax */
+  "linear-gradient(red 0% 50% 100%)",
+  "linear-gradient(red 0% 50% 75%, blue 75%)",
+  "linear-gradient(to bottom, red 0% 50% 100%)",
+  "linear-gradient(to bottom, red 0% 50% 75%, blue 75%)",
+  "radial-gradient(red 0% 50% 100%)",
+  "radial-gradient(red 0% 50% 75%, blue 75%)",
+  "radial-gradient(center, red 0% 50% 100%)",
+  "radial-gradient(center, red 0% 50% 75%, blue 75%)",
 ];
 var unbalancedGradientAndElementValues = [
   "-moz-element(#a()",

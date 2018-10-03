@@ -26,7 +26,7 @@ function test_document() {
 
   ok(document.policy.allowsFeature("geolocation"), "Geolocation is enabled for self");
   ok(document.policy.allowsFeature("geolocation", location.origin), "Geolocation is enabled for self");
-  ok(!document.policy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not enabled for anything else");
+  ok(!document.policy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not enabled for any random URL");
   allowed = document.policy.getAllowlistForFeature("geolocation");
   is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
   is(allowed[0], location.origin, "allowlist is self");
@@ -68,19 +68,19 @@ function test_iframe_without_allow() {
   ok(!ifr.policy.allowsFeature("foobar"), "Random feature");
   ok(!ifr.policy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
 
-  ok(ifr.policy.allowsFeature("camera"), "Camera is always enabled for self");
-  ok(ifr.policy.allowsFeature("camera", location.origin), "Camera is allowed for self");
-  ok(!ifr.policy.allowsFeature("camera", "http://foo.bar"), "Camera is not allowed for a random URL");
+  ok(ifr.policy.allowsFeature("camera"), "Camera is always allowed");
+  ok(ifr.policy.allowsFeature("camera", location.origin), "Camera is always allowed");
+  ok(ifr.policy.allowsFeature("camera", "http://foo.bar"), "Camera is always allowed");
   let allowed = ifr.policy.getAllowlistForFeature("camera");
   is(allowed.length, 1, "Only 1 entry in allowlist for camera");
-  is(allowed[0], location.origin, "allowlist is 'self'");
+  is(allowed[0], "*", "allowlist is '*'");
 
-  ok(ifr.policy.allowsFeature("geolocation"), "Geolocation is enabled for self");
-  ok(ifr.policy.allowsFeature("geolocation", location.origin), "Geolocation is enabled for self");
-  ok(!ifr.policy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not enabled for anything else");
+  ok(ifr.policy.allowsFeature("geolocation"), "Geolocation is enabled for all");
+  ok(ifr.policy.allowsFeature("geolocation", location.origin), "Geolocation is enabled for all");
+  ok(ifr.policy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is allowed for any random URL");
   allowed = ifr.policy.getAllowlistForFeature("geolocation");
   is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
-  is(allowed[0], location.origin, "allowlist is self");
+  is(allowed[0], "*", "allowlist is '*'");
 
   ok(!ifr.policy.allowsFeature("microphone"), "Microphone is disabled for self");
   ok(!ifr.policy.allowsFeature("microphone", location.origin), "Microphone is disabled for self");
@@ -120,12 +120,12 @@ function test_iframe_with_allow() {
   let allowed = ifr.policy.getAllowlistForFeature("camera");
   is(allowed.length, 0, "Camera has an empty allowlist");
 
-  ok(ifr.policy.allowsFeature("geolocation"), "Geolocation is enabled for self");
-  ok(ifr.policy.allowsFeature("geolocation", location.origin), "Geolocation is enabled for self");
-  ok(!ifr.policy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not enabled for anything else");
+  ok(ifr.policy.allowsFeature("geolocation"), "Geolocation is enabled for all");
+  ok(ifr.policy.allowsFeature("geolocation", location.origin), "Geolocation is enabled for all");
+  ok(ifr.policy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is enabled for all");
   allowed = ifr.policy.getAllowlistForFeature("geolocation");
   is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
-  is(allowed[0], location.origin, "allowlist is self");
+  is(allowed[0], "*", "allowlist is '*'");
 
   ok(!ifr.policy.allowsFeature("microphone"), "Microphone is disabled for self");
   ok(!ifr.policy.allowsFeature("microphone", location.origin), "Microphone is disabled for self");
@@ -157,18 +157,18 @@ function test_iframe_contentDocument() {
     ok(!ifr.contentDocument.policy.allowsFeature("foobar"), "Random feature");
     ok(!ifr.contentDocument.policy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
 
-    ok(ifr.contentDocument.policy.allowsFeature("camera"), "Camera is always enabled for self");
-    ok(!ifr.contentDocument.policy.allowsFeature("camera", "http://foo.bar"), "Camera is not allowed for a random URL");
+    ok(ifr.contentDocument.policy.allowsFeature("camera"), "Camera is always allowed");
+    ok(ifr.contentDocument.policy.allowsFeature("camera", "http://foo.bar"), "Camera is always allowed");
     let allowed = ifr.contentDocument.policy.getAllowlistForFeature("camera");
     is(allowed.length, 1, "Only 1 entry in allowlist for camera");
-    is(allowed[0], location.origin, "allowlist is self");
+    is(allowed[0], "*", "allowlist is '*'");
 
-    ok(ifr.contentDocument.policy.allowsFeature("geolocation"), "Geolocation is enabled for self");
-    ok(ifr.contentDocument.policy.allowsFeature("geolocation", location.origin), "Geolocation is enabled for self");
-    ok(!ifr.contentDocument.policy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not enabled for anything else");
+    ok(ifr.contentDocument.policy.allowsFeature("geolocation"), "Geolocation is enabled for all");
+    ok(ifr.contentDocument.policy.allowsFeature("geolocation", location.origin), "Geolocation is enabled for all");
+    ok(ifr.contentDocument.policy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is enabled for any random URL");
     allowed = ifr.contentDocument.policy.getAllowlistForFeature("geolocation");
     is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
-    is(allowed[0], location.origin, "allowlist is self");
+    is(allowed[0], "*", "allowlist is '*'");
 
     ok(!ifr.contentDocument.policy.allowsFeature("microphone"), "Microphone is disabled for self");
     ok(!ifr.contentDocument.policy.allowsFeature("microphone", location.origin), "Microphone is disabled for self");
