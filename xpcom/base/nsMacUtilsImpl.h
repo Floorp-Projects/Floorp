@@ -21,14 +21,6 @@ public:
   {
   }
 
-#if defined(MOZ_CONTENT_SANDBOX)
-  static bool GetAppPath(nsCString &aAppPath);
-
-#ifdef DEBUG
-  static nsAutoCString GetDirectoryPath(const char *aPath);
-#endif /* DEBUG */
-#endif /* MOZ_CONTENT_SANDBOX */
-
 private:
   ~nsMacUtilsImpl()
   {
