@@ -93,7 +93,6 @@ const TargetFactory = exports.TargetFactory = {
       form: response.tab,
       // A local TabTarget will never perform chrome debugging.
       chrome: false,
-      isBrowsingContext: true,
       tab,
     });
   },
@@ -188,14 +187,11 @@ const TargetFactory = exports.TargetFactory = {
  * @param {Boolean} chrome
  *                  True, if we allow to see privileged resources like JSM, xpcom,
  *                  frame scripts...
- * @param {Boolean} isBrowsingContext (optional)
- *                  To be set to True if the Target actor inherits from BrowsingContextActor.
- *                  This argument is considered to be True is not passed.
  * @param {xul:tab} tab (optional)
  *                  If the target is a local Firefox tab, a reference to the firefox
  *                  frontend tab object.
  */
-function TabTarget({ form, client, chrome, isBrowsingContext = true, tab = null }) {
+function TabTarget({ form, client, chrome, tab = null }) {
   EventEmitter.decorate(this);
   this.destroy = this.destroy.bind(this);
   this.activeTab = this.activeConsole = null;
@@ -216,8 +212,17 @@ function TabTarget({ form, client, chrome, isBrowsingContext = true, tab = null 
     this._setupListeners();
   }
 
-  // Default isBrowsingContext to true if not explicitly specified
-  this._isBrowsingContext = isBrowsingContext;
+  // isBrowsingContext is true for all target connected to an actor that inherits from
+  // BrowsingContextTargetActor. It happens to be the case for almost all targets but:
+  // * legacy add-ons (old bootstrapped add-ons)
+  // * content process (browser content toolbox)
+  // * xpcshell debugging (it uses ParentProcessTargetActor, which inherits from
+  //                       BrowsingContextActor, but doesn't have any valid browsing
+  //                       context to attach to.)
+  // Unfortunately, for now, because of bug 1492265, we don't flag xpcshell correctly
+  // as there is no way to identify the target actor correctly.
+  const isContentProcessTarget = this._form.actor.match(/conn\d+\.content-process\d+\/contentProcessTarget\d+/);
+  this._isBrowsingContext = !this.isLegacyAddon && !isContentProcessTarget;
 
   // Cache of already created targed-scoped fronts
   // [typeName:string => Front instance]
@@ -388,8 +393,6 @@ TabTarget.prototype = {
   // Tells us if the related actor implements BrowsingContextTargetActor
   // interface and requires to call `attach` request before being used and
   // `detach` during cleanup.
-  // TODO: This flag is quite confusing, try to find a better way.
-  // Bug 1465635 hopes to blow up these classes entirely.
   get isBrowsingContext() {
     return this._isBrowsingContext;
   },
@@ -410,9 +413,12 @@ TabTarget.prototype = {
   },
 
   get isAddon() {
-    const isLegacyAddon = !!(this._form && this._form.actor &&
+    return this.isLegacyAddon || this.isWebExtension;
+  },
+
+  get isLegacyAddon() {
+    return !!(this._form && this._form.actor &&
       this._form.actor.match(/conn\d+\.addon(Target)?\d+/));
-    return isLegacyAddon || this.isWebExtension;
   },
 
   get isWebExtension() {

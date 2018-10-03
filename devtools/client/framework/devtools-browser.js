@@ -325,7 +325,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
                   form: response.form,
                   client: client,
                   chrome: true,
-                  isBrowsingContext: false
                 };
                 return TargetFactory.forRemoteTab(options);
               })
