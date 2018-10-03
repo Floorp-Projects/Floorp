@@ -1773,11 +1773,20 @@ this.VideoControlsImplPageWidget = class {
         return new Proxy(element, this.reflowTriggeringCallValidator);
       },
 
-      // Set the values to intrinsic dimensions before the first update.
       reflowedDimensions: {
+        // Set the dimensions to intrinsic <video> dimensions before the first
+        // update.
+        // These values are not picked up by <audio> in adjustControlSize()
+        // (except for the fact that they are non-zero),
+        // it takes controlBarMinHeight and the value below instead.
         videoHeight: 150,
         videoWidth: 300,
-        videocontrolsWidth: 300,
+
+        // <audio> takes this width to grow/shrink controls.
+        // The initial value has to be smaller than the calculated minRequiredWidth
+        // so that we don't run into bug 1495821 (see comment on adjustControlSize()
+        // below)
+        videocontrolsWidth: 0,
       },
 
       updateReflowedDimensions() {
@@ -1786,6 +1795,29 @@ this.VideoControlsImplPageWidget = class {
         this.reflowedDimensions.videocontrolsWidth = this.videocontrols.clientWidth;
       },
 
+      /**
+       * adjustControlSize() considers outer dimensions of the <video>/<audio> element
+       * from layout, and accordingly, sets/hides the controls, and adjusts
+       * the width/height of the control bar.
+       *
+       * It's important to remember that for <audio>, layout (specifically,
+       * nsVideoFrame) rely on us to expose the intrinsic dimensions of the
+       * control bar to properly size the <audio> element. We interact with layout
+       * by:
+       *
+       * 1) When the element has a non-zero height, explicitly set the height
+       *    of the control bar to a size between controlBarMinHeight and
+       *    controlBarMinVisibleHeight in response.
+       *    Note: the logic here is flawed and had caused the end height to be
+       *    depend on its previous state, see bug 1495817.
+       * 2) When the element has a outer width smaller or equal to minControlBarPaddingWidth,
+       *    explicitly set the control bar to minRequiredWidth, so that when the
+       *    outer width is unset, the audio element could go back to minRequiredWidth.
+       *    Otherwise, set the width of the control bar to be the current outer width.
+       *    Note: the logic here is also flawed; when the control bar is set to
+       *    the current outer width, it never go back when the width is unset,
+       *    see bug 1495821.
+       */
       adjustControlSize() {
         const minControlBarPaddingWidth = 18;
 
