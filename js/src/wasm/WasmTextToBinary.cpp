@@ -3562,8 +3562,9 @@ static AstMemOrTableDrop*
 ParseMemOrTableDrop(WasmParseContext& c, bool isMem)
 {
     WasmToken segIndexTok;
-    if (!c.ts.getIf(WasmToken::Index, &segIndexTok))
+    if (!c.ts.getIf(WasmToken::Index, &segIndexTok)) {
         return nullptr;
+    }
 
     return new(c.lifo) AstMemOrTableDrop(isMem, segIndexTok.index());
 }
@@ -3593,20 +3594,24 @@ static AstMemOrTableInit*
 ParseMemOrTableInit(WasmParseContext& c, bool inParens, bool isMem)
 {
     WasmToken segIndexTok;
-    if (!c.ts.getIf(WasmToken::Index, &segIndexTok))
+    if (!c.ts.getIf(WasmToken::Index, &segIndexTok)) {
         return nullptr;
+    }
 
     AstExpr* dst = ParseExpr(c, inParens);
-    if (!dst)
+    if (!dst) {
         return nullptr;
+    }
 
     AstExpr* src = ParseExpr(c, inParens);
-    if (!src)
+    if (!src) {
         return nullptr;
+    }
 
     AstExpr* len = ParseExpr(c, inParens);
-    if (!len)
+    if (!len) {
         return nullptr;
+    }
 
     return new(c.lifo) AstMemOrTableInit(isMem, segIndexTok.index(), dst, src, len);
 }
@@ -4228,8 +4233,9 @@ ParseInitializerExpressionOrPassive(WasmParseContext& c, AstExpr** maybeInitExpr
 #endif
 
     AstExpr* initExpr = ParseInitializerExpression(c);
-    if (!initExpr)
+    if (!initExpr) {
         return false;
+    }
 
     *maybeInitExpr = initExpr;
     return true;
@@ -7010,15 +7016,19 @@ EncodeDestinationOffsetOrFlags(Encoder& e, AstExpr* offsetIfActive)
         // In the MVP, the following VarU32 is the table or linear memory
         // index and it must be zero.  In the bulk-mem-ops proposal, it is
         // repurposed as a flag field.
-        if (!e.writeVarU32(uint32_t(InitializerKind::Active)))
+        if (!e.writeVarU32(uint32_t(InitializerKind::Active))) {
             return false;
-        if (!EncodeExpr(e, *offsetIfActive))
+        }
+        if (!EncodeExpr(e, *offsetIfActive)) {
             return false;
-        if (!e.writeOp(Op::End))
+        }
+        if (!e.writeOp(Op::End)) {
             return false;
+        }
     } else {
-        if (!e.writeVarU32(uint32_t(InitializerKind::Passive)))
+        if (!e.writeVarU32(uint32_t(InitializerKind::Passive))) {
             return false;
+        }
     }
 
     return true;

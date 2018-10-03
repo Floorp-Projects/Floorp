@@ -676,8 +676,9 @@ frontend::CompileGlobalBinASTScript(JSContext* cx, LifoAlloc& alloc, const ReadO
         return nullptr;
     }
 
-    if (!sourceObj->source()->setBinASTSourceCopy(cx, src, len))
+    if (!sourceObj->source()->setBinASTSourceCopy(cx, src, len)) {
         return nullptr;
+    }
 
     RootedScript script(cx, JSScript::Create(cx, options, sourceObj, 0, len, 0, len));
 
@@ -955,11 +956,13 @@ frontend::CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, con
     RootedScript script(cx, JSScript::Create(cx, options, sourceObj, lazy->sourceStart(), lazy->sourceEnd(),
                                              lazy->sourceStart(), lazy->sourceEnd()));
 
-    if (!script)
+    if (!script) {
         return false;
+    }
 
-    if (lazy->hasBeenCloned())
+    if (lazy->hasBeenCloned()) {
         script->setHasBeenCloned();
+    }
 
     frontend::BinASTParser<BinTokenReaderMultipart> parser(cx, cx->tempLifoAlloc(),
                                                            usedNames, options, sourceObj,
@@ -967,22 +970,26 @@ frontend::CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, con
 
     auto parsed = parser.parseLazyFunction(lazy->scriptSource(), lazy->sourceStart());
 
-    if (parsed.isErr())
+    if (parsed.isErr()) {
         return false;
+    }
 
     ParseNode *pn = parsed.unwrap();
 
     BytecodeEmitter bce(nullptr, &parser, pn->as<CodeNode>().funbox(), script,
                         lazy, pn->pn_pos, BytecodeEmitter::LazyFunction);
 
-    if (!bce.init())
+    if (!bce.init()) {
         return false;
+    }
 
-    if (!bce.emitFunctionScript(&pn->as<CodeNode>(), BytecodeEmitter::TopLevelFunction::Yes))
+    if (!bce.emitFunctionScript(&pn->as<CodeNode>(), BytecodeEmitter::TopLevelFunction::Yes)) {
         return false;
+    }
 
-    if (!NameFunctions(cx, pn))
+    if (!NameFunctions(cx, pn)) {
         return false;
+    }
 
     return script;
 }

@@ -657,8 +657,9 @@ WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp)
 #ifdef ENABLE_WASM_THREAD_OPS
     bool isSupported = wasm::HasSupport(cx);
 # ifdef ENABLE_WASM_CRANELIFT
-    if (cx->options().wasmForceCranelift())
+    if (cx->options().wasmForceCranelift()) {
         isSupported = false;
+    }
 # endif
 #else
     bool isSupported = false;
@@ -687,8 +688,9 @@ WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp)
 #ifdef ENABLE_WASM_BULKMEM_OPS
     bool isSupported = true;
 # ifdef ENABLE_WASM_CRANELIFT
-    if (cx->options().wasmForceCranelift())
+    if (cx->options().wasmForceCranelift()) {
         isSupported = false;
+    }
 # endif
 #else
     bool isSupported = false;
@@ -704,8 +706,9 @@ WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp)
 #ifdef ENABLE_WASM_GC
     bool isSupported = cx->options().wasmBaseline() && cx->options().wasmGc();
 # ifdef ENABLE_WASM_CRANELIFT
-    if (cx->options().wasmForceCranelift())
+    if (cx->options().wasmForceCranelift()) {
         isSupported = false;
+    }
 # endif
 #else
     bool isSupported = false;
@@ -1944,8 +1947,9 @@ RunIterativeFailureTest(JSContext* cx, const IterativeFailureTestParams& params,
             // exception specification and to check the exception against it.
 
             if (!failureWasSimulated && cx->isExceptionPending()) {
-                if (!cx->getPendingException(&exception))
+                if (!cx->getPendingException(&exception)) {
                     return false;
+                }
             }
             cx->clearPendingException();
             simulator.cleanup(cx);

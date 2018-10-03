@@ -2077,15 +2077,18 @@ OpIter<Policy>::readMemOrTableDrop(bool isMem, uint32_t* segIndex)
     MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableDrop);
 
     if (isMem) {
-        if (!env_.usesMemory())
+        if (!env_.usesMemory()) {
             return fail("can't touch memory without memory");
+        }
     } else {
-        if (env_.tables.length() == 0)
+        if (env_.tables.length() == 0) {
             return fail("can't table.drop without a table");
+        }
     }
 
-    if (!readVarU32(segIndex))
+    if (!readVarU32(segIndex)) {
         return false;
+    }
 
     if (isMem) {
         // We can't range-check *segIndex at this point since we don't yet
@@ -2093,8 +2096,9 @@ OpIter<Policy>::readMemOrTableDrop(bool isMem, uint32_t* segIndex)
         // defer the actual check for now.
         dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
      } else {
-        if (*segIndex >= env_.elemSegments.length())
+        if (*segIndex >= env_.elemSegments.length()) {
             return fail("table.drop index out of range");
+        }
     }
 
     return true;
@@ -2133,31 +2137,38 @@ OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableInit);
 
     if (isMem) {
-        if (!env_.usesMemory())
+        if (!env_.usesMemory()) {
             return fail("can't touch memory without memory");
+        }
     } else {
-        if (env_.tables.length() == 0)
+        if (env_.tables.length() == 0) {
             return fail("can't table.init without a table");
+        }
     }
 
-    if (!popWithType(ValType::I32, len))
+    if (!popWithType(ValType::I32, len)) {
         return false;
+    }
 
-    if (!popWithType(ValType::I32, src))
+    if (!popWithType(ValType::I32, src)) {
         return false;
+    }
 
-    if (!popWithType(ValType::I32, dst))
+    if (!popWithType(ValType::I32, dst)) {
         return false;
+    }
 
-    if (!readVarU32(segIndex))
+    if (!readVarU32(segIndex)) {
         return false;
+    }
 
     if (isMem) {
         // Same comment as for readMemOrTableDrop.
         dvs_.lock()->notifyDataSegmentIndex(*segIndex, d_.currentOffset());
     } else {
-        if (*segIndex >= env_.elemSegments.length())
+        if (*segIndex >= env_.elemSegments.length()) {
             return fail("table.init index out of range");
+        }
     }
 
     return true;

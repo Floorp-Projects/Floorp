@@ -150,8 +150,9 @@ Table::copy(uint32_t dstIndex, uint32_t srcIndex)
 {
     if (external_) {
         ExternalTableElem& dst = externalArray()[dstIndex];
-        if (dst.tls)
+        if (dst.tls) {
             JSObject::writeBarrierPre(dst.tls->instance->objectUnbarriered());
+        }
 
         ExternalTableElem& src = externalArray()[srcIndex];
         dst.code = src.code;
