@@ -1243,6 +1243,10 @@ function expectedOriginFrecency(urls) {
  *        this element can be `undefined`.
  */
 async function checkDB(expectedOrigins) {
+  // Frencencies for bookmarks are generated asynchronously but not within the
+  // await cycle for bookmarks.insert() etc, so wait for them to happen.
+  await PlacesTestUtils.promiseAsyncUpdates();
+
   let db = await PlacesUtils.promiseDBConnection();
   let rows = await db.execute(`
     SELECT prefix, host, frecency

@@ -374,6 +374,11 @@ Animation::UpdatePlaybackRate(double aPlaybackRate)
     return;
   }
 
+  // Calculate the play state using the existing playback rate since below we
+  // want to know if the animation is _currently_ finished or not, not whether
+  // it _will_ be finished.
+  AnimationPlayState playState = PlayState();
+
   mPendingPlaybackRate = Some(aPlaybackRate);
 
   // If we already have a pending task, there is nothing more to do since the
@@ -384,7 +389,6 @@ Animation::UpdatePlaybackRate(double aPlaybackRate)
 
   AutoMutationBatchForAnimation mb(*this);
 
-  AnimationPlayState playState = PlayState();
   if (playState == AnimationPlayState::Idle ||
       playState == AnimationPlayState::Paused) {
     // We are either idle or paused. In either case we can apply the pending
@@ -457,9 +461,10 @@ Animation::PlayState() const
     return AnimationPlayState::Paused;
   }
 
+  double playbackRate = CurrentOrPendingPlaybackRate();
   if (!currentTime.IsNull() &&
-      ((mPlaybackRate > 0.0 && currentTime.Value() >= EffectEnd()) ||
-       (mPlaybackRate < 0.0 && currentTime.Value() <= TimeDuration())))  {
+      ((playbackRate > 0.0 && currentTime.Value() >= EffectEnd()) ||
+       (playbackRate < 0.0 && currentTime.Value() <= TimeDuration())))  {
     return AnimationPlayState::Finished;
   }
 
