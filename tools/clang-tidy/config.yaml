@@ -3,6 +3,14 @@ target: obj-x86_64-pc-linux-gnu
 # It is used by 'mach static-analysis' and 'mozreview static-analysis bot'
 # in order to have consistency across the used checkers.
 # All the clang checks used by the static-analysis tools.
+#
+# To add a new checker:
+# 1. Add it in this file
+# 2. Create a C/C++ test case in tools/clang-tidy/test/ reproducing the
+#    warning/error that the checker will detect
+# 3. Run './mach static-analysis autotest -d' to create the reference
+# 4. Check the json file in tools/clang-tidy/test/
+# 5. Commit this file + the .cpp test case + the json result
 platforms:
   - linux64
   - macosx64
