@@ -25,9 +25,9 @@ const TYPE_TO_RUNTIMES_KEY = {
   [RUNTIMES.USB]: "usbRuntimes",
 };
 
-function RuntimesState(networkRuntimes = []) {
+function RuntimesState() {
   return {
-    networkRuntimes,
+    networkRuntimes: [],
     selectedRuntimeId: null,
     thisFirefoxRuntimes: [{
       id: RUNTIMES.THIS_FIREFOX,
