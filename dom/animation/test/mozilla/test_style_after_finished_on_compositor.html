@@ -1,7 +1,7 @@
 <!doctype html>
 <head>
 <meta charset=utf-8>
-<title>Test for styles after finished on the compositor</title>
+<title>Test for styles after an animation has finished on the compositor</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="../testcommon.js"></script>
@@ -110,7 +110,6 @@ promise_test(async t => {
 }, 'Transform animation initially transform: none is removed from compositor ' +
    'when finished');
 
-
 promise_test(async t => {
   const div = addDiv(t, { 'class': 'compositor' });
   const anim = div.animate([ { offset: 0,   transform: 'translateX(100px)' },
@@ -133,6 +132,188 @@ promise_test(async t => {
   assert_equals(transform, '', 'No transform animation runs on the compositor');
 }, 'Transform animation is removed from compositor even when it only visits ' +
    'exactly the point where the transform: none value was set');
+
+/*
+ *
+ * Tests for synthesized fill modes used when an animation on the compositor
+ * has finished and is waiting to be removed by the main thread.
+ *
+ */
+
+promise_test(async t => {
+  // Below if painting takes too long we'll skip the test so in order to give
+  // the test a better chance of running, wait until the system settles down.
+  await waitForIdle();
+
+  const div = addDiv(t, { class: 'compositor' });
+  const anim = div.animate({ opacity: [1, 0] }, 100);
+
+  const timeBeforeStart = window.performance.now();
+  await waitForPaints();
+
+  // If it took over 50ms to paint the first frame of the animation, we can't
+  // reliably test it. This situation can happen if, for example, GC runs while
+  // waiting for the paint.
+  if (window.performance.now() - timeBeforeStart >= 50) {
+    console.log('Skipping test because it took too long to paint the ' +
+                'first frame');
+    return;
+  }
+
+  let opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+  assert_not_equals(
+    opacity,
+    '',
+    'The animation style is applied on the compositor'
+  );
+
+  // Generate artificial busyness on the main thread for 200ms.
+  const waitStart = window.performance.now();
+  while (window.performance.now() - waitStart < 200) {}
+
+  // By now the animation on the compositor should have finished but should
+  // stay at the end of the animation because the main thread hasn't had
+  // a chance to remove the animation from the compositor yet.
+  opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+  assert_equals(
+    opacity,
+    '0',
+    'The opacity style from the end of the animation is still applied on ' +
+    'the compositor'
+  );
+}, 'Opacity animation when playing forwards uses fill: forwards while ' +
+   'waiting for the main thread to catch up');
+
+promise_test(async t => {
+  await waitForIdle();
+
+  const div = addDiv(t, { class: 'compositor' });
+  const anim = div.animate({ opacity: [0, 1] }, 100);
+  anim.playbackRate = -1;
+  anim.play();
+
+  const timeBeforeStart = window.performance.now();
+  await waitForPaints();
+
+  // If it took over 50ms to paint the first frame of the animation, we can't
+  // reliably test it. This situation can happen if, for example, GC runs while
+  // waiting for the paint.
+  if (window.performance.now() - timeBeforeStart >= 50) {
+    console.log('Skipping test because it took too long to paint the ' +
+                'first frame');
+    return;
+  }
+
+  // Bug 1496313: For animations playing backwards, in some cases the animation
+  // will not have arrived at the compositor by the time we go to check it.
+  // For now we just skip that if it happens since it only happens occasionally.
+  if (SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity') === '') {
+    console.log('Skipping test because the  took too long to paint the ' +
+                'first frame');
+    return;
+  }
+
+  // Generate artificial busyness on the main thread for 200ms.
+  const waitStart = window.performance.now();
+  while (window.performance.now() - waitStart < 200) {}
+
+  // By now the animation on the compositor should have finished but should
+  // stay at the start of the animation because the main thread hasn't had
+  // a chance to remove the animation from the compositor yet.
+  const opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+  assert_equals(
+    opacity,
+    '0',
+    'The opacity style from the start of the animation is still ' +
+    'applied on the compositor'
+  );
+}, 'Opacity animation when playing backwards uses fill: backwards while ' +
+   'waiting for the main thread to catch up');
+
+/*
+ * The following tests are as above but for a different initial fill mode
+ * hence comments have been removed.
+ */
+
+promise_test(async t => {
+  await waitForIdle();
+
+  const div = addDiv(t, { class: 'compositor' });
+  const anim = div.animate(
+    { opacity: [1, 0] },
+    { duration: 100, fill: 'backwards' }
+  );
+
+  const timeBeforeStart = window.performance.now();
+  await waitForPaints();
+
+  if (window.performance.now() - timeBeforeStart >= 50) {
+    console.log('Skipping test because it took too long to paint the ' +
+                'first frame');
+    return;
+  }
+
+  let opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+  assert_not_equals(
+    opacity,
+    '',
+    'The animation style is applied on the compositor'
+  );
+
+  const waitStart = window.performance.now();
+  while (window.performance.now() - waitStart < 200) {}
+
+  opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+  assert_equals(
+    opacity,
+    '0',
+    'The opacity style from the end of the animation is still ' +
+      'applied on the compositor'
+  );
+}, 'Opacity animation playing forwards with fill: backwards, ' +
+   'uses fill: both while waiting for the main thread to catch up');
+
+promise_test(async t => {
+  await waitForIdle();
+
+  const div = addDiv(t, { class: 'compositor' });
+  const anim = div.animate(
+    { opacity: [0, 1] },
+    { duration: 100, fill: 'forwards' }
+  );
+  anim.playbackRate = -1;
+  anim.play();
+
+  const timeBeforeStart = window.performance.now();
+  await waitForPaints();
+
+  if (window.performance.now() - timeBeforeStart >= 50) {
+    console.log('Skipping test because it took too long to paint the ' +
+                'first frame');
+    return;
+  }
+
+  // Bug 1496313: For animations playing backwards, in some cases the animation
+  // will not have arrived at the compositor by the time we go to check it.
+  // For now we just skip that if it happens since it only happens occasionally.
+  if (SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity') === '') {
+    console.log('Skipping test because the  took too long to paint the ' +
+                'first frame');
+    return;
+  }
+
+  const waitStart = window.performance.now();
+  while (window.performance.now() - waitStart < 200) {}
+
+  const opacity = SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'opacity');
+  assert_equals(
+    opacity,
+    '0',
+    'The opacity style from the start of the animation is still ' +
+    'applied on the compositor'
+  );
+}, 'Opacity animation playing backwards with fill: forwards, ' +
+   'uses fill: both while waiting for the main thread to catch up');
 
 </script>
 </body>
