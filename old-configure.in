@@ -158,7 +158,6 @@ case "$target" in
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
-        AC_CHECK_PROGS(MIDL, midl)
 
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -nologo"
@@ -321,7 +320,6 @@ case "$target" in
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
 
-        AC_CHECK_PROGS(MIDL, $target-widl widl)
         if test -n "$MIDL"; then
             case "$target" in
             i*86-*)
