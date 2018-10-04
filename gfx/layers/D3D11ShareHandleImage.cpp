@@ -32,14 +32,18 @@ D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
 }
 
 bool
-D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice)
+D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
+                                       ID3D11Device* aDevice,
+                                       bool aPreferNV12)
 {
   if (aAllocator) {
-    if (gfxPrefs::PDMWMFUseNV12Format() &&
+    if (aPreferNV12 && gfxPrefs::PDMWMFUseNV12Format() &&
         gfx::DeviceManagerDx::Get()->CanUseNV12()) {
-      mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
+      mTextureClient =
+        aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
     } else {
-      mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
+      mTextureClient =
+        aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
     }
     if (mTextureClient) {
       mTexture = static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())->GetD3D11Texture();
@@ -87,7 +91,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 
   HRESULT hr;
 
-  if (desc.Format == DXGI_FORMAT_NV12) {
+  if (desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM) {
     nsAutoCString error;
     std::unique_ptr<DXVA2Manager> manager(DXVA2Manager::CreateD3D11DXVA(nullptr, error, device));
 
