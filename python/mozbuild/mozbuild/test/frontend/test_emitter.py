@@ -459,7 +459,8 @@ class TestEmitterBasic(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(passthru.variables,
                          {'AS': 'yasm',
-                          'AS_DASH_C_FLAG': ''})
+                          'AS_DASH_C_FLAG': '',
+                          'ASOUTOPTION': '-o '})
         self.maxDiff = maxDiff
 
     def test_generated_files(self):
