@@ -624,7 +624,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
     // Sync values with nsICookieService.idl.
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ COOKIE_ACCEPT_ALL, COOKIE_ACCEPT_FIRST_PARTY,
-              COOKIE_ACCEPT_NONE, COOKIE_ACCEPT_VISITED })
+              COOKIE_ACCEPT_NONE, COOKIE_ACCEPT_VISITED,
+              COOKIE_ACCEPT_NON_TRACKERS })
     /* package */ @interface CookieBehavior {}
 
     /**
@@ -645,6 +646,12 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * sites previously visited in a first-party context.
      */
     public static final int COOKIE_ACCEPT_VISITED = 3;
+    /**
+     * Accept only first-party and non-tracking third-party cookies and site data
+     * to block cookies which are not associated with the domain of the visited
+     * site set by known trackers.
+     */
+    public static final int COOKIE_ACCEPT_NON_TRACKERS = 4;
 
     /**
      * Get the assigned cookie storage behavior.
