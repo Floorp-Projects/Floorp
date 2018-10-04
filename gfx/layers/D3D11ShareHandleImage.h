@@ -55,7 +55,9 @@ public:
                         const gfx::IntRect& aRect);
   virtual ~D3D11ShareHandleImage() {}
 
-  bool AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice);
+  bool AllocateTexture(D3D11RecycleAllocator* aAllocator,
+                       ID3D11Device* aDevice,
+                       bool aPreferNV12);
 
   gfx::IntSize GetSize() const override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
