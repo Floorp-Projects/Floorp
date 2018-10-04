@@ -4021,8 +4021,13 @@ window._gBrowser = {
   },
 
   unpinMultiSelectedTabs() {
-    for (let tab of this.selectedTabs) {
-        this.unpinTab(tab);
+    // The selectedTabs getter returns the tabs
+    // in visual order. We need to unpin in reverse
+    // order to maintain visual order.
+    let selectedTabs = this.selectedTabs;
+    for (let i = selectedTabs.length - 1; i >= 0; i--) {
+      let tab = selectedTabs[i];
+      this.unpinTab(tab);
     }
   },
 
@@ -4154,7 +4159,7 @@ window._gBrowser = {
     const affectedTabsLength = contextTabInSelection ? selectedTabs.length : 1;
     if (tab.mOverCloseButton) {
       label = tab.selected ?
-        stringWithShortcut("tabs.closeSelectedTabs.tooltip", "key_close", affectedTabsLength) :
+        stringWithShortcut("tabs.closeTabs.tooltip", "key_close", affectedTabsLength) :
         PluralForm.get(affectedTabsLength, gTabBrowserBundle.GetStringFromName("tabs.closeTabs.tooltip"))
                   .replace("#1", affectedTabsLength);
     } else if (tab._overPlayingIcon) {
@@ -5354,8 +5359,8 @@ var TabContextMenu = {
     document.getElementById("context_closeTab").hidden = multiselectionContext;
     document.getElementById("context_closeSelectedTabs").hidden = !multiselectionContext;
 
-    // Hide "Close Tab Options" if all tabs are selected
-    document.getElementById("context_closeTabOptions").hidden = gBrowser.allTabsSelected();
+    // Disable "Close Tab Options" if all tabs are selected
+    document.getElementById("context_closeTabOptions").disabled = gBrowser.allTabsSelected();
 
     // Hide "Bookmark Tab" for multiselection.
     // Update its state if visible.

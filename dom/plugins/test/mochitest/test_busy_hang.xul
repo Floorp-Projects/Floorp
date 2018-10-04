@@ -22,7 +22,7 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.expectChildProcessCrash();
 
-function runTests() {
+async function runTests() {
   // Default plugin hang timeout is too high for mochitests
   var prefs = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefBranch);
@@ -37,6 +37,9 @@ function runTests() {
   document.addEventListener("PluginCrashed", onPluginCrashed, false);
 
   var pluginElement = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement.hang !== undefined,
+                                           "Waited too long for plugin to activate");
+
   try {
     pluginElement.hang(true);
   } catch (e) {

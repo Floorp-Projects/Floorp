@@ -1970,7 +1970,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
         if (NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, &val.toObject(),
                                                       getter_AddRefs(wn))) || !wn ||
-            !(cInterfaceID = do_QueryWrappedNative(wn))) {
+            !(cInterfaceID = do_QueryInterface(wn->Native()))) {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
     } else {
@@ -2018,7 +2018,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
         nsCOMPtr<nsIXPConnectWrappedNative> wn;
         if (NS_FAILED(xpc->GetWrappedNativeOfJSObject(cx, val.toObjectOrNull(),
                                                       getter_AddRefs(wn))) || !wn ||
-            !(cClassID = do_QueryWrappedNative(wn))) {
+            !(cClassID = do_QueryInterface(wn->Native()))) {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
     }

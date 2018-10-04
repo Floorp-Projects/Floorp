@@ -129,7 +129,7 @@ BackstagePass::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc)
 NS_IMETHODIMP
 BackstagePass::Finalize(nsIXPConnectWrappedNative* wrapper, JSFreeOp * fop, JSObject * obj)
 {
-    nsCOMPtr<nsIGlobalObject> bsp(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIGlobalObject> bsp(do_QueryInterface(wrapper->Native()));
     MOZ_ASSERT(bsp);
     static_cast<BackstagePass*>(bsp.get())->ForgetGlobalObject();
     return NS_OK;

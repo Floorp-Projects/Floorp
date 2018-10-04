@@ -33,9 +33,15 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
   }, "browser-delayed-startup-finished");
 }
 
-function runTestsCallback() {
+async function runTestsCallback() {
   var pluginElement1 = document.getElementById("plugin1");
   var pluginElement2 = document.getElementById("plugin2");
+
+  await SimpleTest.promiseWaitForCondition(() => pluginElement1.queryPrivateModeState !== undefined,
+                                           "Waited too long for plugin to activate");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement2.queryPrivateModeState !== undefined,
+                                           "Waited too long for plugin to activate");
+
 
   var state1 = false;
   var state2 = false;

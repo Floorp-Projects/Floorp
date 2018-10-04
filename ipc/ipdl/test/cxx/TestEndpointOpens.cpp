@@ -72,7 +72,7 @@ TestEndpointOpensParent::RecvStartSubprotocol(
 
   TestEndpointOpensOpenedParent* a = new TestEndpointOpensOpenedParent();
   gParentThread->message_loop()->PostTask(
-    NewRunnableFunction(OpenParent, a, std::move(endpoint)));
+    NewRunnableFunction("OpenParent", OpenParent, a, std::move(endpoint)));
 
   return IPC_OK();
 }
@@ -137,7 +137,8 @@ TestEndpointOpensOpenedParent::ActorDestroy(ActorDestroyReason why)
   // which needs the top-level actor (this) to stay alive a little
   // longer so other things can be cleaned up.
   gParentThread->message_loop()->PostTask(
-    NewRunnableFunction(ShutdownTestEndpointOpensOpenedParent,
+    NewRunnableFunction("ShutdownTestEndpointOpensOpenedParent",
+                        ShutdownTestEndpointOpensOpenedParent,
                         this, GetTransport()));
 }
 
@@ -193,7 +194,7 @@ TestEndpointOpensChild::RecvStart()
 
   TestEndpointOpensOpenedChild* a = new TestEndpointOpensOpenedChild();
   gChildThread->message_loop()->PostTask(
-    NewRunnableFunction(OpenChild, a, std::move(child)));
+    NewRunnableFunction("OpenChild", OpenChild, a, std::move(child)));
 
   if (!SendStartSubprotocol(parent)) {
     fail("send StartSubprotocol");
@@ -274,7 +275,8 @@ TestEndpointOpensOpenedChild::ActorDestroy(ActorDestroyReason why)
   // longer so other things can be cleaned up.  Defer shutdown to
   // let cleanup finish.
   gChildThread->message_loop()->PostTask(
-    NewRunnableFunction(ShutdownTestEndpointOpensOpenedChild,
+    NewRunnableFunction("ShutdownTestEndpointOpensOpenedChild",
+                        ShutdownTestEndpointOpensOpenedChild,
                         this, GetTransport()));
 }
 

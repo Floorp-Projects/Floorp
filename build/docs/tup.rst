@@ -48,6 +48,14 @@ PATH, and enable the Tup backend::
    export TUP=~/.mozbuild/tup/tup
    ac_add_options --enable-build-backends=Tup
 
+Configuring Parallel Jobs
+-------------------------
+
+To override the default number of jobs run in parallel, set MOZ_PARALLEL_BUILD
+in your mozconfig::
+
+    mk_add_options MOZ_PARALLEL_BUILD=8
+
 What Works
 ==========
 
