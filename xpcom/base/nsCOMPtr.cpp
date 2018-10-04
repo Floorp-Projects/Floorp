@@ -7,7 +7,7 @@
 #include "nsCOMPtr.h"
 
 nsresult
-nsQueryInterface::operator()(const nsIID& aIID, void** aAnswer) const
+nsQueryInterfaceISupports::operator()(const nsIID& aIID, void** aAnswer) const
 {
   nsresult status;
   if (mRawPtr) {
@@ -20,7 +20,7 @@ nsQueryInterface::operator()(const nsIID& aIID, void** aAnswer) const
 }
 
 nsresult
-nsQueryInterfaceWithError::operator()(const nsIID& aIID, void** aAnswer) const
+nsQueryInterfaceISupportsWithError::operator()(const nsIID& aIID, void** aAnswer) const
 {
   nsresult status;
   if (mRawPtr) {
@@ -45,7 +45,7 @@ nsCOMPtr_base::assign_with_AddRef(nsISupports* aRawPtr)
 }
 
 void
-nsCOMPtr_base::assign_from_qi(const nsQueryInterface aQI, const nsIID& aIID)
+nsCOMPtr_base::assign_from_qi(const nsQueryInterfaceISupports aQI, const nsIID& aIID)
 {
   void* newRawPtr;
   if (NS_FAILED(aQI(aIID, &newRawPtr))) {
@@ -55,7 +55,7 @@ nsCOMPtr_base::assign_from_qi(const nsQueryInterface aQI, const nsIID& aIID)
 }
 
 void
-nsCOMPtr_base::assign_from_qi_with_error(const nsQueryInterfaceWithError& aQI,
+nsCOMPtr_base::assign_from_qi_with_error(const nsQueryInterfaceISupportsWithError& aQI,
                                          const nsIID& aIID)
 {
   void* newRawPtr;

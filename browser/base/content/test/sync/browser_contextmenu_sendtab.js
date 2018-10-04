@@ -26,20 +26,31 @@ add_task(async function setup() {
   await promiseSyncReady();
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
   gSync.init();
-  is(gBrowser.visibleTabs.length, 1, "there is one visible tab");
+  sinon.stub(Weave.Service.clientsEngine, "getClientType").returns("desktop");
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
+  registerCleanupFunction(() => {
+    gBrowser.removeCurrentTab();
+  });
+  is(gBrowser.visibleTabs.length, 2, "there are two visible tabs");
 });
-
-// We are not testing the devices popup contents, since it is already tested by
-// browser_contextmenu_sendpage.js and the code to populate it is the same.
 
 add_task(async function test_tab_contextmenu() {
   const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: remoteClientsFixture,
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
+  let expectation = sandbox.mock(gSync)
+                           .expects("sendTabToDevice")
+                           .once()
+                           .withExactArgs("about:mozilla", [{id: 1, name: "Foo"}], "The Book of Mozilla, 11:14");
 
   updateTabContextMenu(testTab);
+  await openTabContextMenu("context_sendTabToDevice");
   is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
   is(document.getElementById("context_sendTabToDevice").disabled, false, "Send tab to device is enabled");
 
+  document.getElementById("context_sendTabToDevicePopupMenu").querySelector("menuitem").click();
+
+  await hideTabContextMenu();
+  expectation.verify();
   sandbox.restore();
 });
 
@@ -109,3 +120,26 @@ add_task(async function test_tab_contextmenu_fxa_disabled() {
   getter.restore();
   [...document.querySelectorAll(".sync-ui-item")].forEach(e => e.hidden = false);
 });
+
+async function openTabContextMenu(openSubmenuId = null) {
+  const contextMenu = document.getElementById("tabContextMenu");
+  is(contextMenu.state, "closed", "checking if popup is closed");
+
+  const awaitPopupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(gBrowser.selectedTab, {type: "contextmenu", button: 2});
+  await awaitPopupShown;
+
+  if (openSubmenuId) {
+    const menuPopup = document.getElementById(openSubmenuId).menupopup;
+    const menuPopupPromise = BrowserTestUtils.waitForEvent(menuPopup, "popupshown");
+    menuPopup.openPopup();
+    await menuPopupPromise;
+  }
+}
+
+async function hideTabContextMenu() {
+  const contextMenu = document.getElementById("tabContextMenu");
+  const awaitPopupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  contextMenu.hidePopup();
+  await awaitPopupHidden;
+}
