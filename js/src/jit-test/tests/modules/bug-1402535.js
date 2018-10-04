@@ -3,5 +3,5 @@ if (!('stackTest' in this))
 
 stackTest(function() {
     let m = parseModule(``);
-    instantiateModule(m);
+    m.declarationInstantiation();
 });
