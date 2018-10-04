@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES += [
     'XULAlertAccessible.cpp',
-    'XULColorPickerAccessible.cpp',
     'XULComboboxAccessible.cpp',
     'XULElementAccessibles.cpp',
     'XULFormControlAccessible.cpp',
