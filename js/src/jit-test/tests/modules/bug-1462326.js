@@ -3,4 +3,4 @@
 let m = parseModule(`
   import A from "A";
 `);
-instantiateModule(m);
+m.declarationInstantiation();

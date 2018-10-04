@@ -1,7 +1,7 @@
 // Test requestedModules property
 
 function testRequestedModules(source, expected) {
-    var module = getModuleObject(parseModule(source));
+    var module = parseModule(source);
     var actual = module.requestedModules;
     assertEq(actual.length, expected.length);
     for (var i = 0; i < actual.length; i++) {

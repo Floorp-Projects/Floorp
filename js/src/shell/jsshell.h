@@ -14,7 +14,6 @@
 
 #include "jsapi.h"
 
-#include "gc/WeakMap.h"
 #include "js/GCVector.h"
 #include "threading/ConditionVariable.h"
 #include "threading/LockGuard.h"

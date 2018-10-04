@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global getModuleLoadPath setModuleLoadHook setModuleResolveHook parseModule instantiateModule evaluateModule os */
+/* global getModuleLoadPath setModuleLoadHook setModuleResolveHook parseModule os */
 
 // A basic synchronous module loader for testing the shell.
 {
@@ -161,8 +161,8 @@ const ReflectLoader = new class {
 
     loadAndExecute(path) {
         let module = this.loadAndParse(path);
-        instantiateModule(module);
-        return evaluateModule(module);
+        module.declarationInstantiation();
+        return module.evaluation();
     }
 
     importRoot(path) {

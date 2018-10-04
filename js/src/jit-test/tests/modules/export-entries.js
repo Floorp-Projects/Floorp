@@ -10,7 +10,7 @@ function testArrayContents(actual, expected) {
 }
 
 function testLocalExportEntries(source, expected) {
-    var module = getModuleObject(parseModule(source));
+    var module = parseModule(source);
     testArrayContents(module.localExportEntries, expected);
 }
 
@@ -69,7 +69,7 @@ testLocalExportEntries(
 // Test indirectExportEntries property
 
 function testIndirectExportEntries(source, expected) {
-    var module = getModuleObject(parseModule(source));
+    var module = parseModule(source);
     testArrayContents(module.indirectExportEntries, expected);
 }
 
@@ -100,7 +100,7 @@ testIndirectExportEntries(
 // Test starExportEntries property
 
 function testStarExportEntries(source, expected) {
-    var module = getModuleObject(parseModule(source));
+    var module = parseModule(source);
     testArrayContents(module.starExportEntries, expected);
 }
 

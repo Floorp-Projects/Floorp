@@ -14,4 +14,4 @@ moduleRepo['D'] = parseModule('export let x');
 moduleRepo['E'] = parseModule('export let x');
 
 let m = moduleRepo['A'];
-assertThrowsInstanceOf(() => instantiateModule(m), SyntaxError);
+assertThrowsInstanceOf(() => m.declarationInstantiation(), SyntaxError);

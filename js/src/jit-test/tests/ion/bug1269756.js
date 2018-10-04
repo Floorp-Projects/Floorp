@@ -3,6 +3,6 @@ if (!('oomTest' in this))
 
 oomTest(function() {
     m = parseModule(`while (x && NaN) prototype; let x`);
-    instantiateModule(m);
-    evaluateModule(m);
+    m.declarationInstantiation();
+    m.evaluation();
 })

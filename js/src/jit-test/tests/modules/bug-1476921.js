@@ -13,7 +13,7 @@ let b = moduleRepo['b'] = parseModule(`
     import * as ns0 from "a";
 `);
 
-instantiateModule(a);
-assertThrowsInstanceOf(() => evaluateModule(a), UniqueError);
-instantiateModule(b);
-assertThrowsInstanceOf(() => evaluateModule(b), UniqueError);
+a.declarationInstantiation();
+assertThrowsInstanceOf(() => a.evaluation(), UniqueError);
+b.declarationInstantiation();
+assertThrowsInstanceOf(() => b.evaluation(), UniqueError);

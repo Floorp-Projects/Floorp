@@ -5,8 +5,8 @@ load(libdir + "dummyModuleResolveHook.js");
 
 function parseAndEvaluate(source) {
     let m = parseModule(source);
-    instantiateModule(m);
-    evaluateModule(m);
+    m.declarationInstantiation();
+    m.evaluation();
     return m;
 }
 
@@ -15,20 +15,20 @@ parseAndEvaluate("");
 
 // Check evaluation returns evaluation result the first time, then undefined.
 let m = parseModule("1");
-instantiateModule(m);
-assertEq(evaluateModule(m), undefined);
-assertEq(typeof evaluateModule(m), "undefined");
+m.declarationInstantiation();
+assertEq(m.evaluation(), undefined);
+assertEq(typeof m.evaluation(), "undefined");
 
 // Check top level variables are initialized by evaluation.
 m = parseModule("export var x = 2 + 2;");
 assertEq(typeof getModuleEnvironmentValue(m, "x"), "undefined");
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();
 assertEq(getModuleEnvironmentValue(m, "x"), 4);
 
 m = parseModule("export let x = 2 * 3;");
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();
 assertEq(getModuleEnvironmentValue(m, "x"), 6);
 
 // Set up a module to import from.
@@ -62,20 +62,20 @@ parseAndEvaluate("export default class foo { constructor() {} };");
 
 // Test default import
 m = parseModule("import a from 'a'; export { a };")
-instantiateModule(m);
-evaluateModule(m)
+m.declarationInstantiation();
+m.evaluation()
 assertEq(getModuleEnvironmentValue(m, "a"), 2);
 
 // Test named import
 m = parseModule("import { x as y } from 'a'; export { y };")
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();
 assertEq(getModuleEnvironmentValue(m, "y"), 1);
 
 // Call exported function
 m = parseModule("import { f } from 'a'; export let x = f(3);")
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();
 assertEq(getModuleEnvironmentValue(m, "x"), 4);
 
 // Test importing an indirect export
@@ -93,7 +93,7 @@ assertDeepEq(getModuleEnvironmentValue(m, "z"), [1, 2, 1, 2]);
 
 // Import access in functions
 m = parseModule("import { x } from 'a'; function f() { return x; }")
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();
 let f = getModuleEnvironmentValue(m, "f");
 assertEq(f(), 1);
