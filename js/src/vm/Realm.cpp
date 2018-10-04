@@ -1080,12 +1080,6 @@ JS::GetObjectRealmOrNull(JSObject* obj)
     return IsCrossCompartmentWrapper(obj) ? nullptr : obj->nonCCWRealm();
 }
 
-JS_PUBLIC_API(JS::Realm*)
-JS::GetScriptRealm(JSScript* script)
-{
-    return script->realm();
-}
-
 JS_PUBLIC_API(void*)
 JS::GetRealmPrivate(JS::Realm* realm)
 {
