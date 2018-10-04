@@ -1051,6 +1051,18 @@ ModuleObject::setMetaObject(JSObject* obj)
     setReservedSlot(MetaObjectSlot, ObjectValue(*obj));
 }
 
+Value
+ModuleObject::hostDefinedField() const
+{
+    return getReservedSlot(HostDefinedSlot);
+}
+
+void
+ModuleObject::setHostDefinedField(const JS::Value& value)
+{
+    setReservedSlot(HostDefinedSlot, value);
+}
+
 Scope*
 ModuleObject::enclosingScope() const
 {

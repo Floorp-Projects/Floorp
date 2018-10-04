@@ -4161,17 +4161,17 @@ JS::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
 }
 
 JS_PUBLIC_API(void)
-JS::SetTopLevelScriptPrivate(JSScript* script, void* value)
+JS::SetModuleHostDefinedField(JSScript* script, const JS::Value& value)
 {
-    MOZ_ASSERT(script);
-    script->setTopLevelPrivate(value);
+    MOZ_ASSERT(script->module());
+    script->module()->setHostDefinedField(value);
 }
 
-JS_PUBLIC_API(void*)
-JS::GetTopLevelScriptPrivate(JSScript* script)
+JS_PUBLIC_API(JS::Value)
+JS::GetModuleHostDefinedField(JSScript* script)
 {
-    MOZ_ASSERT(script);
-    return script->maybeTopLevelPrivate();
+    MOZ_ASSERT(script->module());
+    return script->module()->hostDefinedField();
 }
 
 JS_PUBLIC_API(bool)
