@@ -54,6 +54,8 @@ let TestAboutPage = {
  * correctly clears the userTypedValue
  */
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["csp.skip_about_page_has_csp_assert", true]]});
+
   TestAboutPage.register();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/", true, true);
   ok(tab.linkedBrowser.isRemoteBrowser, "Browser should be remote");

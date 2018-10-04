@@ -1549,8 +1549,9 @@ nsAtom*
 Accessible::LandmarkRole() const
 {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  return roleMapEntry && roleMapEntry->IsOfType(eLandmark) ?
-    *(roleMapEntry->roleAtom) : nullptr;
+  return roleMapEntry && roleMapEntry->IsOfType(eLandmark)
+       ? roleMapEntry->roleAtom
+       : nullptr;
 }
 
 role

@@ -169,7 +169,6 @@ def old_configure_options(*options):
 @old_configure_options(
     '--cache-file',
     '--datadir',
-    '--enable-accessibility',
     '--enable-content-sandbox',
     '--enable-cookies',
     '--enable-cpp-rtti',

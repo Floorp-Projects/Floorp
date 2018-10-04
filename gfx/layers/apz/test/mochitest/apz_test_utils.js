@@ -54,6 +54,15 @@ function convertTestData(testData) {
   return result;
 }
 
+function getLastNonemptyBucket(buckets) {
+  for (var i = buckets.length - 1; i >= 0; --i) {
+    if (buckets[i].scrollFrames.length > 0) {
+      return buckets[i];
+    }
+  }
+  return null;
+}
+
 // Given APZ test data for a single paint on the compositor side,
 // reconstruct the APZC tree structure from the 'parentScrollId'
 // entries that were logged. More specifically, the subset of the

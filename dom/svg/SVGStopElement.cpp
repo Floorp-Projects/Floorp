@@ -19,7 +19,7 @@ SVGStopElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 nsSVGElement::NumberInfo SVGStopElement::sNumberInfo =
-{ &nsGkAtoms::offset, 0, true };
+{ nsGkAtoms::offset, 0, true };
 
 //----------------------------------------------------------------------
 // Implementation

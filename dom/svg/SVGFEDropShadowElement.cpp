@@ -24,19 +24,19 @@ SVGFEDropShadowElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 
 nsSVGElement::NumberInfo SVGFEDropShadowElement::sNumberInfo[2] =
 {
-  { &nsGkAtoms::dx, 2, false },
-  { &nsGkAtoms::dy, 2, false }
+  { nsGkAtoms::dx, 2, false },
+  { nsGkAtoms::dy, 2, false }
 };
 
 nsSVGElement::NumberPairInfo SVGFEDropShadowElement::sNumberPairInfo[1] =
 {
-  { &nsGkAtoms::stdDeviation, 2, 2 }
+  { nsGkAtoms::stdDeviation, 2, 2 }
 };
 
 nsSVGElement::StringInfo SVGFEDropShadowElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

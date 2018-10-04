@@ -66,7 +66,7 @@ ChildDNSService::GetDNSRecordHashKey(const nsACString &aHost,
 
   nsAutoCString originSuffix;
   aOriginAttributes.CreateSuffix(originSuffix);
-  aHashKey.Assign(originSuffix);
+  aHashKey.Append(originSuffix);
 
   aHashKey.AppendInt(aFlags);
   aHashKey.AppendPrintf("%p", aListener);

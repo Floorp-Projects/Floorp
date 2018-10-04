@@ -4,8 +4,8 @@ let m = parseModule(`
   let c = parseModule(\`
     import "a";
   \`);
-  instantiateModule(c);
+  c.declarationInstantiation();
 `);
 setModuleResolveHook(function(module, specifier) { return m; });
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();

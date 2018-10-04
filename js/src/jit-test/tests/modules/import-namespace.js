@@ -8,8 +8,8 @@ load(libdir + "dummyModuleResolveHook.js");
 
 function parseAndEvaluate(source) {
     let m = parseModule(source);
-    instantiateModule(m);
-    return evaluateModule(m);
+    m.declarationInstantiation();
+    return m.evaluation();
 }
 
 function testHasNames(names, expected) {
@@ -40,8 +40,8 @@ let b = moduleRepo['b'] = parseModule(
      export var x = ns.a + ns.b;`
 );
 
-instantiateModule(b);
-evaluateModule(b);
+b.declarationInstantiation();
+b.evaluation();
 testHasNames(getModuleEnvironmentNames(b), ["ns", "x"]);
 let ns = getModuleEnvironmentValue(b, "ns");
 testHasNames(Object.keys(ns), ["a", "b"]);
@@ -89,18 +89,18 @@ let c = moduleRepo['c'] =
     parseModule("export let c = 1; import * as ns from 'd'; let d = ns.d;");
 let d = moduleRepo['d'] =
     parseModule("export let d = 2; import * as ns from 'c'; let c = ns.c;");
-instantiateModule(c);
-instantiateModule(d);
-assertThrowsInstanceOf(() => evaluateModule(c), ReferenceError);
+c.declarationInstantiation();
+d.declarationInstantiation();
+assertThrowsInstanceOf(() => c.evaluation(), ReferenceError);
 
 // Test cyclic namespace import.
 let e = moduleRepo['e'] =
     parseModule("export let e = 1; import * as ns from 'f'; export function f() { return ns.f }");
 let f = moduleRepo['f'] =
     parseModule("export let f = 2; import * as ns from 'e'; export function e() { return ns.e }");
-instantiateModule(e);
-instantiateModule(f);
-evaluateModule(e);
-evaluateModule(f);
-assertEq(getModuleObject(e).namespace.f(), 2);
-assertEq(getModuleObject(f).namespace.e(), 1);
+e.declarationInstantiation();
+f.declarationInstantiation();
+e.evaluation();
+f.evaluation();
+assertEq(e.namespace.f(), 2);
+assertEq(f.namespace.e(), 1);

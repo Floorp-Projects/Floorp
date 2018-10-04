@@ -22,19 +22,19 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static nsStaticAtom** const unitMap[] =
+static const nsStaticAtom* const unitMap[] =
 {
   nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
   nullptr, /* SVG_LENGTHTYPE_NUMBER */
-  &nsGkAtoms::percentage,
-  &nsGkAtoms::em,
-  &nsGkAtoms::ex,
-  &nsGkAtoms::px,
-  &nsGkAtoms::cm,
-  &nsGkAtoms::mm,
-  &nsGkAtoms::in,
-  &nsGkAtoms::pt,
-  &nsGkAtoms::pc
+  nsGkAtoms::percentage,
+  nsGkAtoms::em,
+  nsGkAtoms::ex,
+  nsGkAtoms::px,
+  nsGkAtoms::cm,
+  nsGkAtoms::mm,
+  nsGkAtoms::in,
+  nsGkAtoms::pt,
+  nsGkAtoms::pc
 };
 
 static nsSVGAttrTearoffTable<nsSVGLength2, SVGAnimatedLength>
@@ -57,7 +57,7 @@ GetUnitString(nsAString& unit, uint16_t unitType)
 {
   if (IsValidUnitType(unitType)) {
     if (unitMap[unitType]) {
-      (*unitMap[unitType])->ToString(unit);
+      unitMap[unitType]->ToString(unit);
     }
     return;
   }
@@ -74,7 +74,7 @@ GetUnitTypeForString(const nsAString& unitStr)
   nsAtom *unitAtom = NS_GetStaticAtom(unitStr);
   if (unitAtom) {
     for (uint32_t i = 0 ; i < ArrayLength(unitMap) ; i++) {
-      if (unitMap[i] && *unitMap[i] == unitAtom) {
+      if (unitMap[i] == unitAtom) {
         return i;
       }
     }

@@ -185,10 +185,7 @@ class BackendTupfile(object):
         for srcs, compiler, flags, dash_c, prefix in compilers:
             for src in sorted(srcs):
                 self.export_icecc()
-                # AS can be set to $(CC), so we need to call expand_variables on
-                # the compiler to get the real value.
-                compiler_value = self.variables.get(compiler, self.environment.substs[compiler])
-                cmd = [expand_variables(compiler_value, self.environment.substs)]
+                cmd = [self.variables.get(compiler, self.environment.substs[compiler])]
                 cmd.extend(shell_quote(f) for f in self.local_flags[flags])
                 cmd.extend(shell_quote(f) for f in self.per_source_flags[src])
                 cmd.extend([dash_c, '%f', '-o', '%o'])

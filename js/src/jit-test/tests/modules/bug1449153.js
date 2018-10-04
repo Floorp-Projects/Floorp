@@ -26,11 +26,11 @@ moduleRepo["a"] = parseModule(`
 let c = moduleRepo["c"] = parseModule(`
     import "a";
 `);
-instantiateModule(c);
-assertThrowsMyError(() => evaluateModule(c));
+c.declarationInstantiation();
+assertThrowsMyError(() => c.evaluation());
 
 let b = moduleRepo['b'] = parseModule(`
     import * as ns0 from 'a'
 `);
-instantiateModule(b);
-assertThrowsMyError(() => evaluateModule(b));
+b.declarationInstantiation();
+assertThrowsMyError(() => b.evaluation(b));

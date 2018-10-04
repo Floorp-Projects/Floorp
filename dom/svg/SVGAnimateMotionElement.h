@@ -39,7 +39,7 @@ public:
                                       nsAtom **aLocalName) const override;
 
   // nsSVGElement
-  virtual nsAtom* GetPathDataAttrName() const override {
+  virtual nsStaticAtom* GetPathDataAttrName() const override {
     return nsGkAtoms::path;
   }
 

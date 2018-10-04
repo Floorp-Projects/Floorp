@@ -9086,18 +9086,20 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     nsRect dp;
     if (nsLayoutUtils::GetDisplayPort(aContent, &dp)) {
       metrics.SetDisplayPort(CSSRect::FromAppUnits(dp));
-      if (IsAPZTestLoggingEnabled()) {
-        LogTestDataForPaint(aLayerManager, scrollId, "displayport",
-                            metrics.GetDisplayPort());
-      }
     }
     if (nsLayoutUtils::GetCriticalDisplayPort(aContent, &dp)) {
       metrics.SetCriticalDisplayPort(CSSRect::FromAppUnits(dp));
-      if (IsAPZTestLoggingEnabled()) {
-        LogTestDataForPaint(aLayerManager, scrollId, "criticalDisplayport",
-                            metrics.GetCriticalDisplayPort());
-      }
     }
+
+    // Log the high-resolution display port (which is either the displayport
+    // or the critical displayport) for test purposes.
+    if (IsAPZTestLoggingEnabled()) {
+      LogTestDataForPaint(aLayerManager, scrollId, "displayport",
+                          gfxPrefs::UseLowPrecisionBuffer()
+                        ? metrics.GetCriticalDisplayPort()
+                        : metrics.GetDisplayPort());
+    }
+
     DisplayPortMarginsPropertyData* marginsData =
         static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
     if (marginsData) {

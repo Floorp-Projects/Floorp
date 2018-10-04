@@ -5,5 +5,5 @@ for (var i=0; i < 10000; ++i) {
     for (var x of iterator) {}
 }
 `);
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();

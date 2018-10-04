@@ -286,13 +286,13 @@ public:
   void GetStringBaseValue(uint8_t aAttrEnum, nsAString& aResult) const;
   void SetStringBaseValue(uint8_t aAttrEnum, const nsAString& aValue);
 
-  virtual nsAtom* GetPointListAttrName() const {
+  virtual nsStaticAtom* GetPointListAttrName() const {
     return nullptr;
   }
-  virtual nsAtom* GetPathDataAttrName() const {
+  virtual nsStaticAtom* GetPathDataAttrName() const {
     return nullptr;
   }
-  virtual nsAtom* GetTransformListAttrName() const {
+  virtual nsStaticAtom* GetTransformListAttrName() const {
     return nullptr;
   }
   const nsAttrValue* GetAnimatedClassName() const
@@ -344,23 +344,24 @@ protected:
   nsAttrValue WillChangeValue(nsAtom* aName);
   // aNewValue is set to the old value. This value may be invalid if
   // !StoresOwnData.
-  void DidChangeValue(nsAtom* aName, const nsAttrValue& aEmptyOrOldValue,
+  void DidChangeValue(nsAtom* aName,
+                      const nsAttrValue& aEmptyOrOldValue,
                       nsAttrValue& aNewValue);
   void MaybeSerializeAttrBeforeRemoval(nsAtom* aName, bool aNotify);
 
   static nsAtom* GetEventNameForAttr(nsAtom* aAttr);
 
   struct LengthInfo {
-    nsStaticAtom** mName;
-    float     mDefaultValue;
-    uint8_t   mDefaultUnitType;
-    uint8_t   mCtxType;
+    nsStaticAtom* const mName;
+    const float mDefaultValue;
+    const uint8_t mDefaultUnitType;
+    const uint8_t mCtxType;
   };
 
   struct LengthAttributesInfo {
-    nsSVGLength2* mLengths;
-    LengthInfo*   mLengthInfo;
-    uint32_t      mLengthCount;
+    nsSVGLength2* const mLengths;
+    const LengthInfo* const mLengthInfo;
+    const uint32_t mLengthCount;
 
     LengthAttributesInfo(nsSVGLength2 *aLengths,
                          LengthInfo *aLengthInfo,
@@ -372,15 +373,15 @@ protected:
   };
 
   struct NumberInfo {
-    nsStaticAtom** mName;
-    float     mDefaultValue;
-    bool mPercentagesAllowed;
+    nsStaticAtom* const mName;
+    const float mDefaultValue;
+    const bool mPercentagesAllowed;
   };
 
   struct NumberAttributesInfo {
-    nsSVGNumber2* mNumbers;
-    NumberInfo*   mNumberInfo;
-    uint32_t      mNumberCount;
+    nsSVGNumber2* const mNumbers;
+    const NumberInfo* const mNumberInfo;
+    const uint32_t mNumberCount;
 
     NumberAttributesInfo(nsSVGNumber2 *aNumbers,
                          NumberInfo *aNumberInfo,
@@ -392,15 +393,15 @@ protected:
   };
 
   struct NumberPairInfo {
-    nsStaticAtom** mName;
-    float     mDefaultValue1;
-    float     mDefaultValue2;
+    nsStaticAtom* const mName;
+    const float mDefaultValue1;
+    const float mDefaultValue2;
   };
 
   struct NumberPairAttributesInfo {
-    nsSVGNumberPair* mNumberPairs;
-    NumberPairInfo*  mNumberPairInfo;
-    uint32_t         mNumberPairCount;
+    nsSVGNumberPair* const mNumberPairs;
+    const NumberPairInfo* const mNumberPairInfo;
+    const uint32_t mNumberPairCount;
 
     NumberPairAttributesInfo(nsSVGNumberPair *aNumberPairs,
                              NumberPairInfo *aNumberPairInfo,
@@ -413,14 +414,14 @@ protected:
   };
 
   struct IntegerInfo {
-    nsStaticAtom** mName;
-    int32_t   mDefaultValue;
+    nsStaticAtom* const mName;
+    const int32_t mDefaultValue;
   };
 
   struct IntegerAttributesInfo {
-    nsSVGInteger* mIntegers;
-    IntegerInfo*  mIntegerInfo;
-    uint32_t      mIntegerCount;
+    nsSVGInteger* const mIntegers;
+    const IntegerInfo* const mIntegerInfo;
+    const uint32_t mIntegerCount;
 
     IntegerAttributesInfo(nsSVGInteger *aIntegers,
                           IntegerInfo *aIntegerInfo,
@@ -432,15 +433,15 @@ protected:
   };
 
   struct IntegerPairInfo {
-    nsStaticAtom** mName;
-    int32_t   mDefaultValue1;
-    int32_t   mDefaultValue2;
+    nsStaticAtom* const mName;
+    const int32_t mDefaultValue1;
+    const int32_t mDefaultValue2;
   };
 
   struct IntegerPairAttributesInfo {
-    nsSVGIntegerPair* mIntegerPairs;
-    IntegerPairInfo*  mIntegerPairInfo;
-    uint32_t          mIntegerPairCount;
+    nsSVGIntegerPair* const mIntegerPairs;
+    const IntegerPairInfo* const mIntegerPairInfo;
+    const uint32_t mIntegerPairCount;
 
     IntegerPairAttributesInfo(nsSVGIntegerPair *aIntegerPairs,
                               IntegerPairInfo *aIntegerPairInfo,
@@ -453,15 +454,15 @@ protected:
   };
 
   struct AngleInfo {
-    nsStaticAtom** mName;
-    float     mDefaultValue;
-    uint8_t   mDefaultUnitType;
+    nsStaticAtom* const mName;
+    const float mDefaultValue;
+    const uint8_t mDefaultUnitType;
   };
 
   struct AngleAttributesInfo {
-    nsSVGAngle* mAngles;
-    AngleInfo*  mAngleInfo;
-    uint32_t    mAngleCount;
+    nsSVGAngle* const mAngles;
+    const AngleInfo* const mAngleInfo;
+    const uint32_t mAngleCount;
 
     AngleAttributesInfo(nsSVGAngle *aAngles,
                         AngleInfo *aAngleInfo,
@@ -473,14 +474,14 @@ protected:
   };
 
   struct BooleanInfo {
-    nsStaticAtom** mName;
-    bool mDefaultValue;
+    nsStaticAtom* const mName;
+    const bool mDefaultValue;
   };
 
   struct BooleanAttributesInfo {
-    nsSVGBoolean* mBooleans;
-    BooleanInfo*  mBooleanInfo;
-    uint32_t      mBooleanCount;
+    nsSVGBoolean* const mBooleans;
+    const BooleanInfo* const mBooleanInfo;
+    const uint32_t mBooleanCount;
 
     BooleanAttributesInfo(nsSVGBoolean *aBooleans,
                           BooleanInfo *aBooleanInfo,
@@ -494,15 +495,15 @@ protected:
   friend class nsSVGEnum;
 
   struct EnumInfo {
-    nsStaticAtom**    mName;
-    nsSVGEnumMapping* mMapping;
-    uint16_t          mDefaultValue;
+    nsStaticAtom* const mName;
+    const nsSVGEnumMapping* const mMapping;
+    const uint16_t mDefaultValue;
   };
 
   struct EnumAttributesInfo {
-    nsSVGEnum* mEnums;
-    EnumInfo*  mEnumInfo;
-    uint32_t   mEnumCount;
+    nsSVGEnum* const mEnums;
+    const EnumInfo* const mEnumInfo;
+    const uint32_t mEnumCount;
 
     EnumAttributesInfo(nsSVGEnum *aEnums,
                        EnumInfo *aEnumInfo,
@@ -515,13 +516,13 @@ protected:
   };
 
   struct NumberListInfo {
-    nsStaticAtom** mName;
+    nsStaticAtom* const mName;
   };
 
   struct NumberListAttributesInfo {
-    SVGAnimatedNumberList* mNumberLists;
-    NumberListInfo*        mNumberListInfo;
-    uint32_t               mNumberListCount;
+    SVGAnimatedNumberList* const mNumberLists;
+    const NumberListInfo* const mNumberListInfo;
+    const uint32_t mNumberListCount;
 
     NumberListAttributesInfo(SVGAnimatedNumberList *aNumberLists,
                              NumberListInfo *aNumberListInfo,
@@ -535,8 +536,8 @@ protected:
   };
 
   struct LengthListInfo {
-    nsStaticAtom** mName;
-    uint8_t   mAxis;
+    nsStaticAtom* const mName;
+    const uint8_t mAxis;
     /**
      * Flag to indicate whether appending zeros to the end of the list would
      * change the rendering of the SVG for the attribute in question. For x and
@@ -545,13 +546,13 @@ protected:
      * determine if it can sensibly animate from-to lists of different lengths,
      * which is desirable in the case of dx and dy.
      */
-    bool mCouldZeroPadList;
+    const bool mCouldZeroPadList;
   };
 
   struct LengthListAttributesInfo {
-    SVGAnimatedLengthList* mLengthLists;
-    LengthListInfo*        mLengthListInfo;
-    uint32_t               mLengthListCount;
+    SVGAnimatedLengthList* const mLengthLists;
+    const LengthListInfo* const mLengthListInfo;
+    const uint32_t mLengthListCount;
 
     LengthListAttributesInfo(SVGAnimatedLengthList *aLengthLists,
                              LengthListInfo *aLengthListInfo,
@@ -565,15 +566,15 @@ protected:
   };
 
   struct StringInfo {
-    nsStaticAtom** mName;
-    int32_t      mNamespaceID;
-    bool mIsAnimatable;
+    nsStaticAtom* const mName;
+    const int32_t mNamespaceID;
+    const bool mIsAnimatable;
   };
 
   struct StringAttributesInfo {
-    nsSVGString*  mStrings;
-    StringInfo*   mStringInfo;
-    uint32_t      mStringCount;
+    nsSVGString* const mStrings;
+    const StringInfo* const mStringInfo;
+    const uint32_t mStringCount;
 
     StringAttributesInfo(nsSVGString *aStrings,
                          StringInfo *aStringInfo,
@@ -587,13 +588,13 @@ protected:
   friend class mozilla::DOMSVGStringList;
 
   struct StringListInfo {
-    nsStaticAtom** mName;
+    nsStaticAtom* const mName;
   };
 
   struct StringListAttributesInfo {
-    SVGStringList*    mStringLists;
-    StringListInfo*   mStringListInfo;
-    uint32_t          mStringListCount;
+    SVGStringList* const mStringLists;
+    const StringListInfo* const mStringListInfo;
+    const uint32_t mStringListCount;
 
     StringListAttributesInfo(SVGStringList  *aStringLists,
                              StringListInfo *aStringListInfo,

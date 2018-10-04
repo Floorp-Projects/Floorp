@@ -85,7 +85,7 @@ public:
    */
   void UnsetAttr(const nsAtom* aAttribute);
 
-  nsAtom* GetAttrName(uint8_t aAttrEnum) const;
+  nsStaticAtom* GetAttrName(uint8_t aAttrEnum) const;
   void GetAttrValue(uint8_t aAttrEnum, nsAttrValue &aValue) const;
 
   void MaybeInvalidate();
@@ -109,7 +109,7 @@ protected:
 private:
   enum { FEATURES, EXTENSIONS, LANGUAGE };
   SVGStringList mStringListAttributes[3];
-  static nsStaticAtom** sStringListNames[3];
+  static nsStaticAtom* const sStringListNames[3];
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGTests, MOZILLA_DOMSVGTESTS_IID)

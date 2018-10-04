@@ -66,6 +66,15 @@ APZInputBridge::ReceiveInputEvent(
         UpdateWheelTransaction(mouseEvent.mRefPoint, mouseEvent.mMessage);
       }
 
+      // If zooming is enabled, mark the mouse event as "ignore root
+      // scroll frame". This ensures that the main-thread hit test the
+      // mouse event undergoes (in PositionedEventTargeting.cpp) uses
+      // the IGNORE_ROOT_SCROLL_FRAME flag, which is needed for correct
+      // hit testing in a zoomed-in or zoomed-out state.
+      if (gfxPrefs::APZAllowZooming()) {
+        mouseEvent.mIgnoreRootScrollFrame = true;
+      }
+
       if (WillHandleMouseEvent(mouseEvent)) {
 
         MouseInput input(mouseEvent);

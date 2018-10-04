@@ -23,7 +23,7 @@ SVGFEMergeElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::StringInfo SVGFEMergeElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true }
 };
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEMergeElement)

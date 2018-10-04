@@ -1340,6 +1340,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 raise SandboxValidationError('yasm is not available', context)
             passthru.variables['AS'] = yasm
             passthru.variables['AS_DASH_C_FLAG'] = ''
+            passthru.variables['ASOUTOPTION'] = '-o '
             computed_as_flags.resolve_flags('OS',
                                             context.config.substs.get('YASM_ASFLAGS', []))
 

@@ -22,19 +22,19 @@ namespace dom {
 using namespace SVGTextContentElement_Binding;
 
 nsSVGEnumMapping SVGTextContentElement::sLengthAdjustMap[] = {
-  { &nsGkAtoms::spacing, LENGTHADJUST_SPACING },
-  { &nsGkAtoms::spacingAndGlyphs, LENGTHADJUST_SPACINGANDGLYPHS },
+  { nsGkAtoms::spacing, LENGTHADJUST_SPACING },
+  { nsGkAtoms::spacingAndGlyphs, LENGTHADJUST_SPACINGANDGLYPHS },
   { nullptr, 0 }
 };
 
 nsSVGElement::EnumInfo SVGTextContentElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::lengthAdjust, sLengthAdjustMap, LENGTHADJUST_SPACING }
+  { nsGkAtoms::lengthAdjust, sLengthAdjustMap, LENGTHADJUST_SPACING }
 };
 
 nsSVGElement::LengthInfo SVGTextContentElement::sLengthInfo[1] =
 {
-  { &nsGkAtoms::textLength, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
+  { nsGkAtoms::textLength, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY }
 };
 
 SVGTextFrame*

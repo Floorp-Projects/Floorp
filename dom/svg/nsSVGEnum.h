@@ -27,8 +27,8 @@ class SVGAnimationElement;
 typedef uint8_t nsSVGEnumValue;
 
 struct nsSVGEnumMapping {
-  nsStaticAtom** mKey;
-  nsSVGEnumValue mVal;
+  nsStaticAtom* const mKey;
+  const nsSVGEnumValue mVal;
 };
 
 class nsSVGEnum
@@ -66,7 +66,7 @@ private:
   bool mIsAnimated;
   bool mIsBaseSet;
 
-  nsSVGEnumMapping *GetMapping(nsSVGElement *aSVGElement);
+  const nsSVGEnumMapping* GetMapping(nsSVGElement *aSVGElement);
 
 public:
   struct DOMAnimatedEnum final : public mozilla::dom::SVGAnimatedEnumeration

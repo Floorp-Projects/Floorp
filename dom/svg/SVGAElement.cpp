@@ -30,9 +30,9 @@ SVGAElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::StringInfo SVGAElement::sStringInfo[3] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_None, true },
-  { &nsGkAtoms::href, kNameSpaceID_XLink, true },
-  { &nsGkAtoms::target, kNameSpaceID_None, true }
+  { nsGkAtoms::href, kNameSpaceID_None, true },
+  { nsGkAtoms::href, kNameSpaceID_XLink, true },
+  { nsGkAtoms::target, kNameSpaceID_None, true }
 };
 
 // static
@@ -349,13 +349,13 @@ SVGAElement::IsLink(nsIURI** aURI) const
   // result is poorly specified. Either way, we return false.
 
   static Element::AttrValuesArray sTypeVals[] =
-    { &nsGkAtoms::_empty, &nsGkAtoms::simple, nullptr };
+    { nsGkAtoms::_empty, nsGkAtoms::simple, nullptr };
 
   static Element::AttrValuesArray sShowVals[] =
-    { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
+    { nsGkAtoms::_empty, nsGkAtoms::_new, nsGkAtoms::replace, nullptr };
 
   static Element::AttrValuesArray sActuateVals[] =
-    { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nullptr };
+    { nsGkAtoms::_empty, nsGkAtoms::onRequest, nullptr };
 
   // Optimization: check for href first for early return
   bool useBareHref = mStringAttributes[HREF].IsExplicitlySet();
@@ -391,7 +391,7 @@ SVGAElement::GetLinkTarget(nsAString& aTarget)
   if (aTarget.IsEmpty()) {
 
     static Element::AttrValuesArray sShowVals[] =
-      { &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
+      { nsGkAtoms::_new, nsGkAtoms::replace, nullptr };
 
     switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
                             sShowVals, eCaseMatters)) {

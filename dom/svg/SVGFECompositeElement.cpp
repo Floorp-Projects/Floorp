@@ -22,25 +22,25 @@ SVGFECompositeElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 
 nsSVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] =
 {
-  { &nsGkAtoms::k1, 0, false },
-  { &nsGkAtoms::k2, 0, false },
-  { &nsGkAtoms::k3, 0, false },
-  { &nsGkAtoms::k4, 0, false }
+  { nsGkAtoms::k1, 0, false },
+  { nsGkAtoms::k2, 0, false },
+  { nsGkAtoms::k3, 0, false },
+  { nsGkAtoms::k4, 0, false }
 };
 
 nsSVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
-  {&nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},
-  {&nsGkAtoms::in, SVG_FECOMPOSITE_OPERATOR_IN},
-  {&nsGkAtoms::out, SVG_FECOMPOSITE_OPERATOR_OUT},
-  {&nsGkAtoms::atop, SVG_FECOMPOSITE_OPERATOR_ATOP},
-  {&nsGkAtoms::xor_, SVG_FECOMPOSITE_OPERATOR_XOR},
-  {&nsGkAtoms::arithmetic, SVG_FECOMPOSITE_OPERATOR_ARITHMETIC},
+  {nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},
+  {nsGkAtoms::in, SVG_FECOMPOSITE_OPERATOR_IN},
+  {nsGkAtoms::out, SVG_FECOMPOSITE_OPERATOR_OUT},
+  {nsGkAtoms::atop, SVG_FECOMPOSITE_OPERATOR_ATOP},
+  {nsGkAtoms::xor_, SVG_FECOMPOSITE_OPERATOR_XOR},
+  {nsGkAtoms::arithmetic, SVG_FECOMPOSITE_OPERATOR_ARITHMETIC},
   {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::_operator,
+  { nsGkAtoms::_operator,
     sOperatorMap,
     SVG_FECOMPOSITE_OPERATOR_OVER
   }
@@ -48,9 +48,9 @@ nsSVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] =
 
 nsSVGElement::StringInfo SVGFECompositeElement::sStringInfo[3] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true },
-  { &nsGkAtoms::in2, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true },
+  { nsGkAtoms::in2, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

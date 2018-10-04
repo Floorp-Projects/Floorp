@@ -14,25 +14,25 @@
 
   // Test Setup:
   // The test overrules the whitelist of about: pages that are allowed to load without a CSP
-  // and makes sure to hit the assertion within AssertContentPrivilegedAboutPageHasCSP().
-  // However, due to the caching mechanism within AssertContentPrivilegedAboutPageHasCSP this
+  // and makes sure to hit the assertion within AssertAboutPageHasCSP().
+  // However, due to the caching mechanism within AssertAboutPageHasCSP this
   // test loads a second dummy data: URI to reset the old cache and finally resets the pref
   // used for testing purposes.
 
-  let origWhiteList = SpecialPowers.getCharPref("csp.content_privileged_about_uris_without_csp");
+  let origWhiteList = SpecialPowers.getCharPref("csp.about_uris_without_csp");
 
-  SpecialPowers.setCharPref("csp.content_privileged_about_uris_without_csp", "");
-  SpecialPowers.setBoolPref("csp.overrule_content_privileged_about_uris_without_csp_whitelist", true);
+  SpecialPowers.setCharPref("csp.about_uris_without_csp", "");
+  SpecialPowers.setBoolPref("csp.overrule_about_uris_without_csp_whitelist", true);
 
   ok(true, "sanity: prefs flipped and test runs");
   let myFrame = document.getElementById("testframe");
   myFrame.src = "about:blank";
   // booom :-)
 
-  SpecialPowers.setCharPref("csp.content_privileged_about_uris_without_csp", origWhiteList);
+  SpecialPowers.setCharPref("csp.about_uris_without_csp", origWhiteList);
   myFrame.src = "data:text/html,<body>just a dumy data: URI</body>";
 
-  SpecialPowers.setBoolPref("csp.overrule_content_privileged_about_uris_without_csp_whitelist", false);
+  SpecialPowers.setBoolPref("csp.overrule_about_uris_without_csp_whitelist", false);
 
   SimpleTest.finish();
 </script>

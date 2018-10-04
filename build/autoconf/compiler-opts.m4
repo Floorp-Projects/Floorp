@@ -4,39 +4,6 @@ dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 dnl Add compiler specific options
 
-AC_DEFUN([MOZ_DEFAULT_COMPILER],
-[
-dnl Default to MSVC for win32 and gcc-4.2 for darwin
-dnl ==============================================================
-if test -z "$CROSS_COMPILE"; then
-case "$target" in
-*-mingw*)
-    if test -z "$CPP"; then CPP="$CC -E -nologo"; fi
-    if test -z "$CXXCPP"; then CXXCPP="$CXX -TP -E -nologo"; ac_cv_prog_CXXCPP="$CXXCPP"; fi
-    if test -z "$AS"; then
-        case "${target_cpu}" in
-        i*86)
-            AS=ml;
-            ;;
-        x86_64)
-            AS=ml64;
-            ;;
-        aarch64)
-            AS=armasm64;
-            ;;
-        esac
-    fi
-    if test -z "$MIDL"; then MIDL=midl; fi
-
-    # need override this flag since we don't use $(LDFLAGS) for this.
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
-    ;;
-esac
-fi
-])
-
 dnl ============================================================================
 dnl C++ rtti
 dnl We don't use it in the code, but it can be usefull for debugging, so give

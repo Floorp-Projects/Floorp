@@ -7,5 +7,5 @@ g.eval("(" + function() {
     };
 } + ")()");
 m = parseModule(` s1 `);
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();

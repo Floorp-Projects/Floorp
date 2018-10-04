@@ -31,7 +31,7 @@ g.eval(
         let e = 5;
         function f() { debugger; return e; }
     \`);
-    instantiateModule(m);
-    evaluateModule(m);
+    m.declarationInstantiation();
+    m.evaluation();
 `);
 

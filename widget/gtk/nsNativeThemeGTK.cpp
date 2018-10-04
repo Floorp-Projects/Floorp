@@ -325,8 +325,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType, nsIFrame* aF
       if (treeBodyFrame) {
         const mozilla::AtomArray& atoms =
           treeBodyFrame->GetPropertyArrayForCurrentDrawingItem();
-        aState->selected = atoms.Contains(nsGkAtoms::selected);
-        aState->inHover = atoms.Contains(nsGkAtoms::hover);
+        aState->selected = atoms.Contains((nsStaticAtom*)nsGkAtoms::selected);
+        aState->inHover = atoms.Contains((nsStaticAtom*)nsGkAtoms::hover);
       }
     }
 

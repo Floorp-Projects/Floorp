@@ -1847,23 +1847,23 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
 
   // focus
   if (mFocused)
-    mScratchArray.AppendElement(nsGkAtoms::focus);
+    mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::focus);
   else
-    mScratchArray.AppendElement(nsGkAtoms::blur);
+    mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::blur);
 
   // sort
   bool sorted = false;
   mView->IsSorted(&sorted);
   if (sorted)
-    mScratchArray.AppendElement(nsGkAtoms::sorted);
+    mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::sorted);
 
   // drag session
   if (mSlots && mSlots->mIsDragging)
-    mScratchArray.AppendElement(nsGkAtoms::dragSession);
+    mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::dragSession);
 
   if (aRowIndex != -1) {
     if (aRowIndex == mMouseOverRow)
-      mScratchArray.AppendElement(nsGkAtoms::hover);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::hover);
 
     nsCOMPtr<nsITreeSelection> selection;
     mView->GetSelection(getter_AddRefs(selection));
@@ -1873,20 +1873,20 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
       bool isSelected;
       selection->IsSelected(aRowIndex, &isSelected);
       if (isSelected)
-        mScratchArray.AppendElement(nsGkAtoms::selected);
+        mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::selected);
 
       // current
       int32_t currentIndex;
       selection->GetCurrentIndex(&currentIndex);
       if (aRowIndex == currentIndex)
-        mScratchArray.AppendElement(nsGkAtoms::current);
+        mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::current);
 
       // active
       if (aCol) {
         RefPtr<nsTreeColumn> currentColumn;
         selection->GetCurrentColumn(getter_AddRefs(currentColumn));
         if (aCol == currentColumn)
-          mScratchArray.AppendElement(nsGkAtoms::active);
+          mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::active);
       }
     }
 
@@ -1894,59 +1894,59 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
     bool isContainer = false;
     mView->IsContainer(aRowIndex, &isContainer);
     if (isContainer) {
-      mScratchArray.AppendElement(nsGkAtoms::container);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::container);
 
       // open or closed
       bool isOpen = false;
       mView->IsContainerOpen(aRowIndex, &isOpen);
       if (isOpen)
-        mScratchArray.AppendElement(nsGkAtoms::open);
+        mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::open);
       else
-        mScratchArray.AppendElement(nsGkAtoms::closed);
+        mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::closed);
     }
     else {
-      mScratchArray.AppendElement(nsGkAtoms::leaf);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::leaf);
     }
 
     // drop orientation
     if (mSlots && mSlots->mDropAllowed && mSlots->mDropRow == aRowIndex) {
       if (mSlots->mDropOrient == nsITreeView::DROP_BEFORE)
-        mScratchArray.AppendElement(nsGkAtoms::dropBefore);
+        mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::dropBefore);
       else if (mSlots->mDropOrient == nsITreeView::DROP_ON)
-        mScratchArray.AppendElement(nsGkAtoms::dropOn);
+        mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::dropOn);
       else if (mSlots->mDropOrient == nsITreeView::DROP_AFTER)
-        mScratchArray.AppendElement(nsGkAtoms::dropAfter);
+        mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::dropAfter);
     }
 
     // odd or even
     if (aRowIndex % 2)
-      mScratchArray.AppendElement(nsGkAtoms::odd);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::odd);
     else
-      mScratchArray.AppendElement(nsGkAtoms::even);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::even);
 
     Element* baseContent = GetBaseElement();
     if (baseContent && baseContent->HasAttr(kNameSpaceID_None, nsGkAtoms::editing))
-      mScratchArray.AppendElement(nsGkAtoms::editing);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::editing);
 
     // multiple columns
     if (mColumns->GetColumnAt(1))
-      mScratchArray.AppendElement(nsGkAtoms::multicol);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::multicol);
   }
 
   if (aCol) {
     mScratchArray.AppendElement(aCol->GetAtom());
 
     if (aCol->IsPrimary())
-      mScratchArray.AppendElement(nsGkAtoms::primary);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::primary);
 
     if (aCol->GetType() == TreeColumn_Binding::TYPE_CHECKBOX) {
-      mScratchArray.AppendElement(nsGkAtoms::checkbox);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::checkbox);
 
       if (aRowIndex != -1) {
         nsAutoString value;
         mView->GetCellValue(aRowIndex, aCol, value);
         if (value.EqualsLiteral("true"))
-          mScratchArray.AppendElement(nsGkAtoms::checked);
+          mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::checked);
       }
     }
 
@@ -1955,12 +1955,12 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
                                     nsGkAtoms::insertbefore,
                                     nsGkAtoms::_true,
                                     eCaseMatters))
-      mScratchArray.AppendElement(nsGkAtoms::insertbefore);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::insertbefore);
     if (aCol->mContent->AttrValueIs(kNameSpaceID_None,
                                     nsGkAtoms::insertafter,
                                     nsGkAtoms::_true,
                                     eCaseMatters))
-      mScratchArray.AppendElement(nsGkAtoms::insertafter);
+      mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::insertafter);
   }
 }
 

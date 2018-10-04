@@ -38,7 +38,7 @@ static const uint32_t kGenericAccType = 0;
 static const nsRoleMapEntry sWAIRoleMaps[] =
 {
   { // alert
-    &nsGkAtoms::alert,
+    nsGkAtoms::alert,
     roles::ALERT,
     kUseMapRole,
     eNoValue,
@@ -48,7 +48,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // alertdialog
-    &nsGkAtoms::alertdialog,
+    nsGkAtoms::alertdialog,
     roles::DIALOG,
     kUseMapRole,
     eNoValue,
@@ -58,7 +58,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // application
-    &nsGkAtoms::application,
+    nsGkAtoms::application,
     roles::APPLICATION,
     kUseMapRole,
     eNoValue,
@@ -68,7 +68,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // article
-    &nsGkAtoms::article,
+    nsGkAtoms::article,
     roles::ARTICLE,
     kUseMapRole,
     eNoValue,
@@ -79,7 +79,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eReadonlyUntilEditable
   },
   { // banner
-    &nsGkAtoms::banner,
+    nsGkAtoms::banner,
     roles::NOTHING,
     kUseNativeRole,
     eNoValue,
@@ -89,7 +89,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // blockquote
-    &nsGkAtoms::blockquote,
+    nsGkAtoms::blockquote,
     roles::BLOCKQUOTE,
     kUseMapRole,
     eNoValue,
@@ -98,7 +98,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kGenericAccType,
   },
   { // button
-    &nsGkAtoms::button,
+    nsGkAtoms::button,
     roles::PUSHBUTTON,
     kUseMapRole,
     eNoValue,
@@ -109,7 +109,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     // eARIAPressed is auto applied on any button
   },
   { // caption
-    &nsGkAtoms::caption,
+    nsGkAtoms::caption,
     roles::CAPTION,
     kUseMapRole,
     eNoValue,
@@ -118,7 +118,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kGenericAccType,
   },
   { // cell
-    &nsGkAtoms::cell,
+    nsGkAtoms::cell,
     roles::CELL,
     kUseMapRole,
     eNoValue,
@@ -128,7 +128,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // checkbox
-    &nsGkAtoms::checkbox,
+    nsGkAtoms::checkbox,
     roles::CHECKBUTTON,
     kUseMapRole,
     eNoValue,
@@ -140,7 +140,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly
   },
   { // columnheader
-    &nsGkAtoms::columnheader,
+    nsGkAtoms::columnheader,
     roles::COLUMNHEADER,
     kUseMapRole,
     eNoValue,
@@ -152,7 +152,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonlyOrEditableIfDefined
   },
   { // combobox, which consists of text input and popup
-    &nsGkAtoms::combobox,
+    nsGkAtoms::combobox,
     roles::EDITCOMBOBOX,
     kUseMapRole,
     eNoValue,
@@ -165,7 +165,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAOrientation
   },
   { // complementary
-    &nsGkAtoms::complementary,
+    nsGkAtoms::complementary,
     roles::NOTHING,
     kUseNativeRole,
     eNoValue,
@@ -175,7 +175,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // contentinfo
-    &nsGkAtoms::contentinfo,
+    nsGkAtoms::contentinfo,
     roles::NOTHING,
     kUseNativeRole,
     eNoValue,
@@ -185,7 +185,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // dialog
-    &nsGkAtoms::dialog,
+    nsGkAtoms::dialog,
     roles::DIALOG,
     kUseMapRole,
     eNoValue,
@@ -195,7 +195,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // directory
-    &nsGkAtoms::directory,
+    nsGkAtoms::directory,
     roles::LIST,
     kUseMapRole,
     eNoValue,
@@ -205,7 +205,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::READONLY
   },
   { // doc-abstract
-    &nsGkAtoms::docAbstract,
+    nsGkAtoms::docAbstract,
     roles::SECTION,
     kUseMapRole,
     eNoValue,
@@ -215,7 +215,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-acknowledgments
-    &nsGkAtoms::docAcknowledgments,
+    nsGkAtoms::docAcknowledgments,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -225,7 +225,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-afterword
-    &nsGkAtoms::docAfterword,
+    nsGkAtoms::docAfterword,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -235,7 +235,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-appendix
-    &nsGkAtoms::docAppendix,
+    nsGkAtoms::docAppendix,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -245,7 +245,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-backlink
-    &nsGkAtoms::docBacklink,
+    nsGkAtoms::docBacklink,
     roles::LINK,
     kUseMapRole,
     eNoValue,
@@ -255,7 +255,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::LINKED
   },
   { // doc-biblioentry
-    &nsGkAtoms::docBiblioentry,
+    nsGkAtoms::docBiblioentry,
     roles::LISTITEM,
     kUseMapRole,
     eNoValue,
@@ -265,7 +265,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::READONLY
   },
   { // doc-bibliography
-    &nsGkAtoms::docBibliography,
+    nsGkAtoms::docBibliography,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -275,7 +275,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-biblioref
-    &nsGkAtoms::docBiblioref,
+    nsGkAtoms::docBiblioref,
     roles::LINK,
     kUseMapRole,
     eNoValue,
@@ -285,7 +285,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::LINKED
   },
   { // doc-chapter
-    &nsGkAtoms::docChapter,
+    nsGkAtoms::docChapter,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -295,7 +295,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-colophon
-    &nsGkAtoms::docColophon,
+    nsGkAtoms::docColophon,
     roles::SECTION,
     kUseMapRole,
     eNoValue,
@@ -305,7 +305,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-conclusion
-    &nsGkAtoms::docConclusion,
+    nsGkAtoms::docConclusion,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -315,7 +315,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-cover
-    &nsGkAtoms::docCover,
+    nsGkAtoms::docCover,
     roles::GRAPHIC,
     kUseMapRole,
     eNoValue,
@@ -325,7 +325,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-credit
-    &nsGkAtoms::docCredit,
+    nsGkAtoms::docCredit,
     roles::SECTION,
     kUseMapRole,
     eNoValue,
@@ -335,7 +335,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-credits
-    &nsGkAtoms::docCredits,
+    nsGkAtoms::docCredits,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -345,7 +345,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-dedication
-    &nsGkAtoms::docDedication,
+    nsGkAtoms::docDedication,
     roles::SECTION,
     kUseMapRole,
     eNoValue,
@@ -355,7 +355,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-endnote
-    &nsGkAtoms::docEndnote,
+    nsGkAtoms::docEndnote,
     roles::LISTITEM,
     kUseMapRole,
     eNoValue,
@@ -365,7 +365,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::READONLY
   },
   { // doc-endnotes
-    &nsGkAtoms::docEndnotes,
+    nsGkAtoms::docEndnotes,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -375,7 +375,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-epigraph
-    &nsGkAtoms::docEpigraph,
+    nsGkAtoms::docEpigraph,
     roles::SECTION,
     kUseMapRole,
     eNoValue,
@@ -385,7 +385,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-epilogue
-    &nsGkAtoms::docEpilogue,
+    nsGkAtoms::docEpilogue,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -395,7 +395,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-errata
-    &nsGkAtoms::docErrata,
+    nsGkAtoms::docErrata,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -405,7 +405,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-example
-    &nsGkAtoms::docExample,
+    nsGkAtoms::docExample,
     roles::SECTION,
     kUseMapRole,
     eNoValue,
@@ -415,7 +415,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-footnote
-    &nsGkAtoms::docFootnote,
+    nsGkAtoms::docFootnote,
     roles::FOOTNOTE,
     kUseMapRole,
     eNoValue,
@@ -425,7 +425,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-foreword
-    &nsGkAtoms::docForeword,
+    nsGkAtoms::docForeword,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -435,7 +435,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-glossary
-    &nsGkAtoms::docGlossary,
+    nsGkAtoms::docGlossary,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -445,7 +445,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-glossref
-    &nsGkAtoms::docGlossref,
+    nsGkAtoms::docGlossref,
     roles::LINK,
     kUseMapRole,
     eNoValue,
@@ -455,7 +455,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::LINKED
   },
   { // doc-index
-    &nsGkAtoms::docIndex,
+    nsGkAtoms::docIndex,
     roles::NAVIGATION,
     kUseMapRole,
     eNoValue,
@@ -465,7 +465,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-introduction
-    &nsGkAtoms::docIntroduction,
+    nsGkAtoms::docIntroduction,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -475,7 +475,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-noteref
-    &nsGkAtoms::docNoteref,
+    nsGkAtoms::docNoteref,
     roles::LINK,
     kUseMapRole,
     eNoValue,
@@ -485,7 +485,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::LINKED
   },
   { // doc-notice
-    &nsGkAtoms::docNotice,
+    nsGkAtoms::docNotice,
     roles::NOTE,
     kUseMapRole,
     eNoValue,
@@ -495,7 +495,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-pagebreak
-    &nsGkAtoms::docPagebreak,
+    nsGkAtoms::docPagebreak,
     roles::SEPARATOR,
     kUseMapRole,
     eNoValue,
@@ -505,7 +505,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-pagelist
-    &nsGkAtoms::docPagelist,
+    nsGkAtoms::docPagelist,
     roles::NAVIGATION,
     kUseMapRole,
     eNoValue,
@@ -515,7 +515,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-part
-    &nsGkAtoms::docPart,
+    nsGkAtoms::docPart,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -525,7 +525,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-preface
-    &nsGkAtoms::docPreface,
+    nsGkAtoms::docPreface,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -535,7 +535,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-prologue
-    &nsGkAtoms::docPrologue,
+    nsGkAtoms::docPrologue,
     roles::LANDMARK,
     kUseMapRole,
     eNoValue,
@@ -545,7 +545,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-pullquote
-    &nsGkAtoms::docPullquote,
+    nsGkAtoms::docPullquote,
     roles::SECTION,
     kUseMapRole,
     eNoValue,
@@ -555,7 +555,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-qna
-    &nsGkAtoms::docQna,
+    nsGkAtoms::docQna,
     roles::SECTION,
     kUseMapRole,
     eNoValue,
@@ -565,7 +565,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-subtitle
-    &nsGkAtoms::docSubtitle,
+    nsGkAtoms::docSubtitle,
     roles::HEADING,
     kUseMapRole,
     eNoValue,
@@ -575,7 +575,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-tip
-    &nsGkAtoms::docTip,
+    nsGkAtoms::docTip,
     roles::NOTE,
     kUseMapRole,
     eNoValue,
@@ -585,7 +585,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // doc-toc
-    &nsGkAtoms::docToc,
+    nsGkAtoms::docToc,
     roles::NAVIGATION,
     kUseMapRole,
     eNoValue,
@@ -595,7 +595,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // document
-    &nsGkAtoms::document,
+    nsGkAtoms::document,
     roles::NON_NATIVE_DOCUMENT,
     kUseMapRole,
     eNoValue,
@@ -606,7 +606,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eReadonlyUntilEditable
   },
   { // feed
-    &nsGkAtoms::feed,
+    nsGkAtoms::feed,
     roles::GROUPING,
     kUseMapRole,
     eNoValue,
@@ -616,7 +616,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // figure
-    &nsGkAtoms::figure,
+    nsGkAtoms::figure,
     roles::FIGURE,
     kUseMapRole,
     eNoValue,
@@ -626,7 +626,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // form
-    &nsGkAtoms::form,
+    nsGkAtoms::form,
     roles::FORM,
     kUseMapRole,
     eNoValue,
@@ -636,7 +636,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // graphics-document
-    &nsGkAtoms::graphicsDocument,
+    nsGkAtoms::graphicsDocument,
     roles::NON_NATIVE_DOCUMENT,
     kUseMapRole,
     eNoValue,
@@ -647,7 +647,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eReadonlyUntilEditable
   },
   { // graphics-object
-    &nsGkAtoms::graphicsObject,
+    nsGkAtoms::graphicsObject,
     roles::GROUPING,
     kUseMapRole,
     eNoValue,
@@ -657,7 +657,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // graphics-symbol
-    &nsGkAtoms::graphicsSymbol,
+    nsGkAtoms::graphicsSymbol,
     roles::GRAPHIC,
     kUseMapRole,
     eNoValue,
@@ -667,7 +667,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // grid
-    &nsGkAtoms::grid,
+    nsGkAtoms::grid,
     roles::TABLE,
     kUseMapRole,
     eNoValue,
@@ -680,7 +680,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eFocusableUntilDisabled
   },
   { // gridcell
-    &nsGkAtoms::gridcell,
+    nsGkAtoms::gridcell,
     roles::GRID_CELL,
     kUseMapRole,
     eNoValue,
@@ -692,7 +692,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonlyOrEditableIfDefined
   },
   { // group
-    &nsGkAtoms::group,
+    nsGkAtoms::group,
     roles::GROUPING,
     kUseMapRole,
     eNoValue,
@@ -702,7 +702,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // heading
-    &nsGkAtoms::heading,
+    nsGkAtoms::heading,
     roles::HEADING,
     kUseMapRole,
     eNoValue,
@@ -712,7 +712,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // img
-    &nsGkAtoms::img,
+    nsGkAtoms::img,
     roles::GRAPHIC,
     kUseMapRole,
     eNoValue,
@@ -722,7 +722,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // key
-    &nsGkAtoms::key,
+    nsGkAtoms::key,
     roles::KEY,
     kUseMapRole,
     eNoValue,
@@ -733,7 +733,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAPressed
   },
   { // link
-    &nsGkAtoms::link,
+    nsGkAtoms::link,
     roles::LINK,
     kUseMapRole,
     eNoValue,
@@ -743,7 +743,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::LINKED
   },
   { // list
-    &nsGkAtoms::list_,
+    nsGkAtoms::list_,
     roles::LIST,
     kUseMapRole,
     eNoValue,
@@ -753,7 +753,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::READONLY
   },
   { // listbox
-    &nsGkAtoms::listbox,
+    nsGkAtoms::listbox,
     roles::LISTBOX,
     kUseMapRole,
     eNoValue,
@@ -767,7 +767,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAOrientation
   },
   { // listitem
-    &nsGkAtoms::listitem,
+    nsGkAtoms::listitem,
     roles::LISTITEM,
     kUseMapRole,
     eNoValue,
@@ -777,7 +777,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::READONLY
   },
   { // log
-    &nsGkAtoms::log_,
+    nsGkAtoms::log_,
     roles::NOTHING,
     kUseNativeRole,
     eNoValue,
@@ -787,7 +787,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // main
-    &nsGkAtoms::main,
+    nsGkAtoms::main,
     roles::NOTHING,
     kUseNativeRole,
     eNoValue,
@@ -797,7 +797,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // marquee
-    &nsGkAtoms::marquee,
+    nsGkAtoms::marquee,
     roles::ANIMATION,
     kUseMapRole,
     eNoValue,
@@ -807,7 +807,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // math
-    &nsGkAtoms::math,
+    nsGkAtoms::math,
     roles::FLAT_EQUATION,
     kUseMapRole,
     eNoValue,
@@ -817,7 +817,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // menu
-    &nsGkAtoms::menu,
+    nsGkAtoms::menu,
     roles::MENUPOPUP,
     kUseMapRole,
     eNoValue,
@@ -829,7 +829,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAOrientation
   },
   { // menubar
-    &nsGkAtoms::menubar,
+    nsGkAtoms::menubar,
     roles::MENUBAR,
     kUseMapRole,
     eNoValue,
@@ -840,7 +840,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAOrientation
   },
   { // menuitem
-    &nsGkAtoms::menuitem,
+    nsGkAtoms::menuitem,
     roles::MENUITEM,
     kUseMapRole,
     eNoValue,
@@ -850,7 +850,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // menuitemcheckbox
-    &nsGkAtoms::menuitemcheckbox,
+    nsGkAtoms::menuitemcheckbox,
     roles::CHECK_MENU_ITEM,
     kUseMapRole,
     eNoValue,
@@ -862,7 +862,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly
   },
   { // menuitemradio
-    &nsGkAtoms::menuitemradio,
+    nsGkAtoms::menuitemradio,
     roles::RADIO_MENU_ITEM,
     kUseMapRole,
     eNoValue,
@@ -874,7 +874,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly
   },
   { // navigation
-    &nsGkAtoms::navigation,
+    nsGkAtoms::navigation,
     roles::NOTHING,
     kUseNativeRole,
     eNoValue,
@@ -884,7 +884,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // none
-    &nsGkAtoms::none,
+    nsGkAtoms::none,
     roles::NOTHING,
     kUseMapRole,
     eNoValue,
@@ -894,7 +894,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // note
-    &nsGkAtoms::note_,
+    nsGkAtoms::note_,
     roles::NOTE,
     kUseMapRole,
     eNoValue,
@@ -904,7 +904,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // option
-    &nsGkAtoms::option,
+    nsGkAtoms::option,
     roles::OPTION,
     kUseMapRole,
     eNoValue,
@@ -916,7 +916,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIACheckedMixed
   },
   { // paragraph
-    &nsGkAtoms::paragraph,
+    nsGkAtoms::paragraph,
     roles::PARAGRAPH,
     kUseMapRole,
     eNoValue,
@@ -925,7 +925,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kGenericAccType,
   },
   { // presentation
-    &nsGkAtoms::presentation,
+    nsGkAtoms::presentation,
     roles::NOTHING,
     kUseMapRole,
     eNoValue,
@@ -935,7 +935,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // progressbar
-    &nsGkAtoms::progressbar,
+    nsGkAtoms::progressbar,
     roles::PROGRESSBAR,
     kUseMapRole,
     eHasValueMinMax,
@@ -946,7 +946,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eIndeterminateIfNoValue
   },
   { // radio
-    &nsGkAtoms::radio,
+    nsGkAtoms::radio,
     roles::RADIOBUTTON,
     kUseMapRole,
     eNoValue,
@@ -957,7 +957,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIACheckableBool
   },
   { // radiogroup
-    &nsGkAtoms::radiogroup,
+    nsGkAtoms::radiogroup,
     roles::RADIO_GROUP,
     kUseMapRole,
     eNoValue,
@@ -969,7 +969,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly
   },
   { // region
-    &nsGkAtoms::region,
+    nsGkAtoms::region,
     roles::REGION,
     kUseMapRole,
     eNoValue,
@@ -979,7 +979,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // row
-    &nsGkAtoms::row,
+    nsGkAtoms::row,
     roles::ROW,
     kUseMapRole,
     eNoValue,
@@ -990,7 +990,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIASelectable
   },
   { // rowgroup
-    &nsGkAtoms::rowgroup,
+    nsGkAtoms::rowgroup,
     roles::GROUPING,
     kUseMapRole,
     eNoValue,
@@ -1000,7 +1000,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // rowheader
-    &nsGkAtoms::rowheader,
+    nsGkAtoms::rowheader,
     roles::ROWHEADER,
     kUseMapRole,
     eNoValue,
@@ -1012,7 +1012,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonlyOrEditableIfDefined
   },
   { // scrollbar
-    &nsGkAtoms::scrollbar,
+    nsGkAtoms::scrollbar,
     roles::SCROLLBAR,
     kUseMapRole,
     eHasValueMinMax,
@@ -1024,7 +1024,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly
   },
   { // search
-    &nsGkAtoms::search,
+    nsGkAtoms::search,
     roles::NOTHING,
     kUseNativeRole,
     eNoValue,
@@ -1034,7 +1034,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // searchbox
-    &nsGkAtoms::searchbox,
+    nsGkAtoms::searchbox,
     roles::ENTRY,
     kUseMapRole,
     eNoValue,
@@ -1047,7 +1047,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonlyOrEditable
   },
   { // separator
-    &nsGkAtoms::separator_,
+    nsGkAtoms::separator_,
     roles::SEPARATOR,
     kUseMapRole,
     eHasValueMinMaxIfFocusable,
@@ -1058,7 +1058,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAOrientation
   },
   { // slider
-    &nsGkAtoms::slider,
+    nsGkAtoms::slider,
     roles::SLIDER,
     kUseMapRole,
     eHasValueMinMax,
@@ -1070,7 +1070,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly
   },
   { // spinbutton
-    &nsGkAtoms::spinbutton,
+    nsGkAtoms::spinbutton,
     roles::SPINBUTTON,
     kUseMapRole,
     eHasValueMinMax,
@@ -1081,7 +1081,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly
   },
   { // status
-    &nsGkAtoms::status,
+    nsGkAtoms::status,
     roles::STATUSBAR,
     kUseMapRole,
     eNoValue,
@@ -1091,7 +1091,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // switch
-    &nsGkAtoms::svgSwitch,
+    nsGkAtoms::svgSwitch,
     roles::SWITCH,
     kUseMapRole,
     eNoValue,
@@ -1103,7 +1103,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonly
   },
   { // tab
-    &nsGkAtoms::tab,
+    nsGkAtoms::tab,
     roles::PAGETAB,
     kUseMapRole,
     eNoValue,
@@ -1114,7 +1114,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIASelectable
   },
   { // table
-    &nsGkAtoms::table,
+    nsGkAtoms::table,
     roles::TABLE,
     kUseMapRole,
     eNoValue,
@@ -1125,7 +1125,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIASelectable
   },
   { // tablist
-    &nsGkAtoms::tablist,
+    nsGkAtoms::tablist,
     roles::PAGETABLIST,
     kUseMapRole,
     eNoValue,
@@ -1137,7 +1137,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAMultiSelectable
   },
   { // tabpanel
-    &nsGkAtoms::tabpanel,
+    nsGkAtoms::tabpanel,
     roles::PROPERTYPAGE,
     kUseMapRole,
     eNoValue,
@@ -1147,7 +1147,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // term
-    &nsGkAtoms::term,
+    nsGkAtoms::term,
     roles::TERM,
     kUseMapRole,
     eNoValue,
@@ -1157,7 +1157,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     states::READONLY
   },
   { // textbox
-    &nsGkAtoms::textbox,
+    nsGkAtoms::textbox,
     roles::ENTRY,
     kUseMapRole,
     eNoValue,
@@ -1170,7 +1170,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAReadonlyOrEditable
   },
   { // timer
-    &nsGkAtoms::timer,
+    nsGkAtoms::timer,
     roles::NOTHING,
     kUseNativeRole,
     eNoValue,
@@ -1179,7 +1179,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // toolbar
-    &nsGkAtoms::toolbar,
+    nsGkAtoms::toolbar,
     roles::TOOLBAR,
     kUseMapRole,
     eNoValue,
@@ -1190,7 +1190,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAOrientation
   },
   { // tooltip
-    &nsGkAtoms::tooltip,
+    nsGkAtoms::tooltip,
     roles::TOOLTIP,
     kUseMapRole,
     eNoValue,
@@ -1200,7 +1200,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     kNoReqStates
   },
   { // tree
-    &nsGkAtoms::tree,
+    nsGkAtoms::tree,
     roles::OUTLINE,
     kUseMapRole,
     eNoValue,
@@ -1214,7 +1214,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAOrientation
   },
   { // treegrid
-    &nsGkAtoms::treegrid,
+    nsGkAtoms::treegrid,
     roles::TREE_TABLE,
     kUseMapRole,
     eNoValue,
@@ -1228,7 +1228,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eARIAOrientation
   },
   { // treeitem
-    &nsGkAtoms::treeitem,
+    nsGkAtoms::treeitem,
     roles::OUTLINEITEM,
     kUseMapRole,
     eNoValue,
@@ -1243,7 +1243,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
 };
 
 static const nsRoleMapEntry sLandmarkRoleMap = {
-  &nsGkAtoms::_empty,
+  nsGkAtoms::_empty,
   roles::NOTHING,
   kUseNativeRole,
   eNoValue,
@@ -1254,7 +1254,7 @@ static const nsRoleMapEntry sLandmarkRoleMap = {
 };
 
 nsRoleMapEntry aria::gEmptyRoleMap = {
-  &nsGkAtoms::_empty,
+  nsGkAtoms::_empty,
   roles::NOTHING,
   kUseMapRole,
   eNoValue,
@@ -1289,48 +1289,48 @@ static const EStateRule sWAIUnivStateMap[] = {
 
 struct AttrCharacteristics
 {
-  nsStaticAtom** attributeName;
+  const nsStaticAtom* const attributeName;
   const uint8_t characteristics;
 };
 
 static const AttrCharacteristics gWAIUnivAttrMap[] = {
-  {&nsGkAtoms::aria_activedescendant,  ATTR_BYPASSOBJ                               },
-  {&nsGkAtoms::aria_atomic,   ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_busy,                               ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               }, /* exposes checkable obj attr */
-  {&nsGkAtoms::aria_controls,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_describedby,       ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_details,           ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_disabled,          ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_dropeffect,                         ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_errormessage,      ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_expanded,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_flowto,            ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_grabbed,                            ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_haspopup,          ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_hidden,            ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL }, /* handled special way */
-  {&nsGkAtoms::aria_invalid,           ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_label,             ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_labelledby,        ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_level,             ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
-  {&nsGkAtoms::aria_live,                               ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_modal,             ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_multiline,         ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_multiselectable,   ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_owns,              ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_orientation,                        ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_posinset,          ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
-  {&nsGkAtoms::aria_pressed,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_readonly,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_relevant,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_required,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_selected,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_setsize,           ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
-  {&nsGkAtoms::aria_sort,                               ATTR_VALTOKEN               },
-  {&nsGkAtoms::aria_valuenow,          ATTR_BYPASSOBJ                               },
-  {&nsGkAtoms::aria_valuemin,          ATTR_BYPASSOBJ                               },
-  {&nsGkAtoms::aria_valuemax,          ATTR_BYPASSOBJ                               },
-  {&nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                               }
+  {nsGkAtoms::aria_activedescendant,  ATTR_BYPASSOBJ                               },
+  {nsGkAtoms::aria_atomic,   ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_busy,                               ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_checked,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               }, /* exposes checkable obj attr */
+  {nsGkAtoms::aria_controls,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_describedby,       ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_details,           ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_disabled,          ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_dropeffect,                         ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_errormessage,      ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_expanded,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_flowto,            ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_grabbed,                            ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_haspopup,          ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_hidden,            ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL }, /* handled special way */
+  {nsGkAtoms::aria_invalid,           ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_label,             ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_labelledby,        ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_level,             ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
+  {nsGkAtoms::aria_live,                               ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_modal,             ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {nsGkAtoms::aria_multiline,         ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_multiselectable,   ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_owns,              ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_orientation,                        ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_posinset,          ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
+  {nsGkAtoms::aria_pressed,           ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_readonly,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_relevant,          ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
+  {nsGkAtoms::aria_required,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_selected,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_setsize,           ATTR_BYPASSOBJ                               }, /* handled via groupPosition */
+  {nsGkAtoms::aria_sort,                               ATTR_VALTOKEN               },
+  {nsGkAtoms::aria_valuenow,          ATTR_BYPASSOBJ                               },
+  {nsGkAtoms::aria_valuemin,          ATTR_BYPASSOBJ                               },
+  {nsGkAtoms::aria_valuemax,          ATTR_BYPASSOBJ                               },
+  {nsGkAtoms::aria_valuetext,         ATTR_BYPASSOBJ                               }
 };
 
 namespace {
@@ -1423,7 +1423,7 @@ uint8_t
 aria::AttrCharacteristicsFor(nsAtom* aAtom)
 {
   for (uint32_t i = 0; i < ArrayLength(gWAIUnivAttrMap); i++)
-    if (*gWAIUnivAttrMap[i].attributeName == aAtom)
+    if (gWAIUnivAttrMap[i].attributeName == aAtom)
       return gWAIUnivAttrMap[i].characteristics;
 
   return 0;

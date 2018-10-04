@@ -296,6 +296,10 @@ BinTokenReaderTester::enterTaggedTuple(BinKind& tag, BinFields& fields, AutoTagg
     // Now fields.
     BINJS_MOZ_TRY_DECL(fieldNum, readInternalUint32());
 
+    if (fieldNum > FIELD_NUM_MAX) {
+        return raiseError("Too many fields");
+    }
+
     fields.clear();
     if (!fields.reserve(fieldNum)) {
         return raiseOOM();

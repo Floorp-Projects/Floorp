@@ -186,19 +186,19 @@ SVGLength::GetUserUnitsPerPercent(const nsSVGElement *aElement, uint8_t aAxis)
 // Helpers:
 
 // These items must be at the same index as the SVGLength constants!
-static nsStaticAtom** const unitMap[] =
+static const nsStaticAtom* const unitMap[] =
 {
   nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
   nullptr, /* SVG_LENGTHTYPE_NUMBER */
-  &nsGkAtoms::percentage,
-  &nsGkAtoms::em,
-  &nsGkAtoms::ex,
-  &nsGkAtoms::px,
-  &nsGkAtoms::cm,
-  &nsGkAtoms::mm,
-  &nsGkAtoms::in,
-  &nsGkAtoms::pt,
-  &nsGkAtoms::pc
+  nsGkAtoms::percentage,
+  nsGkAtoms::em,
+  nsGkAtoms::ex,
+  nsGkAtoms::px,
+  nsGkAtoms::cm,
+  nsGkAtoms::mm,
+  nsGkAtoms::in,
+  nsGkAtoms::pt,
+  nsGkAtoms::pc
 };
 
 static void
@@ -206,7 +206,7 @@ GetUnitString(nsAString& unit, uint16_t unitType)
 {
   if (SVGLength::IsValidUnitType(unitType)) {
     if (unitMap[unitType]) {
-      (*unitMap[unitType])->ToString(unit);
+      unitMap[unitType]->ToString(unit);
     }
     return;
   }
@@ -224,7 +224,7 @@ GetUnitTypeForString(const nsAString& unitStr)
 
   if (unitAtom) {
     for (uint32_t i = 1 ; i < ArrayLength(unitMap) ; i++) {
-      if (unitMap[i] && *unitMap[i] == unitAtom) {
+      if (unitMap[i] == unitAtom) {
         return i;
       }
     }

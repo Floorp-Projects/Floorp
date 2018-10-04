@@ -293,7 +293,7 @@ DocAccessibleChild::RecvARIARoleAtom(const uint64_t& aID, nsString* aRole)
   }
 
   if (const nsRoleMapEntry* roleMap = acc->ARIARoleMap()) {
-    if (nsAtom* roleAtom = *(roleMap->roleAtom)) {
+    if (nsStaticAtom* roleAtom = roleMap->roleAtom) {
       roleAtom->ToString(*aRole);
     }
   }

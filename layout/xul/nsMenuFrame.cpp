@@ -904,7 +904,7 @@ void
 nsMenuFrame::UpdateMenuType()
 {
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nullptr};
+    {nsGkAtoms::checkbox, nsGkAtoms::radio, nullptr};
   switch (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                  nsGkAtoms::type,
                                                  strings, eCaseMatters)) {

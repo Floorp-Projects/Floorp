@@ -6,5 +6,5 @@ setModuleResolveHook(function(module, specifier) {
 });
 let a = moduleRepo['a'] = parseModule("var x = 1; export { x };");
 let b = moduleRepo['b'] = parseModule("import { x as y } from 'a';");
-getModuleObject(a).__proto__ = {15: 1337};
-instantiateModule(b);
+a.__proto__ = {15: 1337};
+b.declarationInstantiation();
