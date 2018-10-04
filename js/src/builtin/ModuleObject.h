@@ -260,6 +260,7 @@ class ModuleObject : public NativeObject
         StatusSlot,
         EvaluationErrorSlot,
         MetaObjectSlot,
+        HostDefinedSlot,
         RequestedModulesSlot,
         ImportEntriesSlot,
         LocalExportEntriesSlot,
@@ -310,6 +311,7 @@ class ModuleObject : public NativeObject
     bool hadEvaluationError() const;
     Value evaluationError() const;
     JSObject* metaObject() const;
+    Value hostDefinedField() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
     ArrayObject& localExportEntries() const;
@@ -324,6 +326,8 @@ class ModuleObject : public NativeObject
                                                              HandleModuleObject self);
 
     void setMetaObject(JSObject* obj);
+
+    void setHostDefinedField(const JS::Value& value);
 
     // For BytecodeEmitter.
     bool noteFunctionDeclaration(JSContext* cx, HandleAtom name, HandleFunction fun);

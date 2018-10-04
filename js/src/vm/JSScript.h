@@ -1833,13 +1833,8 @@ class JSScript : public js::gc::TenuredCell
      *
      * If this script has a function associated to it, then it is not the
      * top-level of a file.
-     *
-     * Note that this can returns true for eval scripts as well as global
-     * scripts and modules.
      */
-    bool isTopLevel() const {
-        return code() && !functionNonDelazifying();
-    }
+    bool isTopLevel() { return code() && !functionNonDelazifying(); }
 
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&);
@@ -2191,12 +2186,6 @@ class JSScript : public js::gc::TenuredCell
 #ifdef DEBUG
     uint32_t stepModeCount() { return bitFields_.hasDebugScript_ ? debugScript()->stepMode : 0; }
 #endif
-
-    // Set/get a embedding pointer that can be associated with top-level (global
-    // or module) scripts. Note that although isTopLevel() can return true for
-    // eval scripts, these are not supported.
-    void setTopLevelPrivate(void* value);
-    void* maybeTopLevelPrivate() const;
 
     void finalize(js::FreeOp* fop);
 
