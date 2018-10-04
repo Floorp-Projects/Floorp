@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "util/Unicode.h" // unicode::REPLACEMENT_CHARACTER
 #include "vm/JSContext.h"
 
 using namespace js;
@@ -80,8 +81,6 @@ JS::GetDeflatedUTF8StringLength(JSFlatString* s)
            : ::GetDeflatedUTF8StringLength(s->twoByteChars(nogc), s->length());
 }
 
-static const char16_t UTF8_REPLACEMENT_CHAR = 0xFFFD;
-
 template <typename CharT>
 static void
 DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<char> dst,
@@ -101,16 +100,16 @@ DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<ch
         char16_t c = *src++;
         srclen--;
         if (c >= 0xDC00 && c <= 0xDFFF) {
-            v = UTF8_REPLACEMENT_CHAR;
+            v = unicode::REPLACEMENT_CHARACTER;
         } else if (c < 0xD800 || c > 0xDBFF) {
             v = c;
         } else {
             if (srclen < 1) {
-                v = UTF8_REPLACEMENT_CHAR;
+                v = unicode::REPLACEMENT_CHARACTER;
             } else {
                 char16_t c2 = *src;
                 if (c2 < 0xDC00 || c2 > 0xDFFF) {
-                    v = UTF8_REPLACEMENT_CHAR;
+                    v = unicode::REPLACEMENT_CHARACTER;
                 } else {
                     src++;
                     srclen--;
@@ -271,10 +270,6 @@ enum class OnUTF8Error {
     Crash,
 };
 
-// The Unicode REPLACEMENT CHARACTER, rendered as a diamond with a question
-// mark, meaning "someone screwed up here but it wasn't me".
-static const char16_t REPLACEMENT_CHARACTER = 0xFFFD;
-
 // If making changes to this algorithm, make sure to also update
 // LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
 //
@@ -311,7 +306,7 @@ InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars src, OutputFn dst)
                 } else {                                                \
                     char16_t replacement;                               \
                     if (ErrorAction == OnUTF8Error::InsertReplacementCharacter) { \
-                        replacement = REPLACEMENT_CHARACTER;            \
+                        replacement = unicode::REPLACEMENT_CHARACTER;   \
                     } else {                                            \
                         MOZ_ASSERT(ErrorAction == OnUTF8Error::InsertQuestionMark); \
                         replacement = '?';                              \
