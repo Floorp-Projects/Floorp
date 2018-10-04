@@ -3379,10 +3379,8 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
           Http2Stream *pushSink = streamToCleanup->GetConsumerStream();
           if (pushSink) {
             bool enqueueSink = true;
-            for (auto iter = mPushesReadyForRead.begin();
-                 iter != mPushesReadyForRead.end();
-                 ++iter) {
-              if (*iter == pushSink) {
+            for (auto s : mPushesReadyForRead) {
+              if (s == pushSink) {
                 enqueueSink = false;
                 break;
               }
