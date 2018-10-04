@@ -223,9 +223,16 @@ KeyShortcuts.prototype = {
       return false;
     }
     if (shortcut.shift != event.shiftKey) {
+      // Check the `keyCode` to see whether it's a character (see also Bug 1493646)
+      const char = String.fromCharCode(event.keyCode);
+      let isAlphabetical = (char.length == 1 && char.match(/[a-zA-Z]/));
+
       // Shift is a special modifier, it may implicitly be required if the expected key
       // is a special character accessible via shift.
-      const isAlphabetical = event.key && event.key.match(/[a-zA-Z]/);
+      if (!isAlphabetical) {
+        isAlphabetical = event.key && event.key.match(/[a-zA-Z]/);
+      }
+
       // OSX: distinguish cmd+[key] from cmd+shift+[key] shortcuts (Bug 1300458)
       const cmdShortcut = shortcut.meta && !shortcut.alt && !shortcut.ctrl;
       if (isAlphabetical || cmdShortcut) {

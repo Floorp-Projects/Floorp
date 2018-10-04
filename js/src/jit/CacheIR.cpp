@@ -5853,8 +5853,9 @@ BinaryArithIRGenerator::tryAttachStub()
         return true;
     }
 
-    if (tryAttachStringNumberConcat())
+    if (tryAttachStringNumberConcat()) {
         return true;
+    }
 
 
     trackAttached(IRGenerator::NotAttached);
@@ -6057,8 +6058,9 @@ bool
 BinaryArithIRGenerator::tryAttachStringNumberConcat()
 {
     // Only Addition
-    if (op_ != JSOP_ADD)
+    if (op_ != JSOP_ADD) {
         return false;
+    }
 
     if (!(lhs_.isString() && rhs_.isNumber()) &&
         !(lhs_.isNumber() && rhs_.isString()))

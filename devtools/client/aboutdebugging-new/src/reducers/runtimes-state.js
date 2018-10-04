@@ -25,9 +25,9 @@ const TYPE_TO_RUNTIMES_KEY = {
   [RUNTIMES.USB]: "usbRuntimes",
 };
 
-function RuntimesState(networkRuntimes = []) {
+function RuntimesState() {
   return {
-    networkRuntimes,
+    networkRuntimes: [],
     selectedRuntimeId: null,
     thisFirefoxRuntimes: [{
       id: RUNTIMES.THIS_FIREFOX,
@@ -37,42 +37,44 @@ function RuntimesState(networkRuntimes = []) {
   };
 }
 
+/**
+ * Update the runtime matching the provided runtimeId with the content of updatedRuntime,
+ * and return the new state.
+ *
+ * @param  {String} runtimeId
+ *         The id of the runtime to update
+ * @param  {Object} updatedRuntime
+ *         Object used to update the runtime matching the idea using Object.assign.
+ * @param  {Object} state
+ *         Current runtimes state.
+ * @return {Object} The updated state
+ */
+function _updateRuntimeById(runtimeId, updatedRuntime, state) {
+  // Find the array of runtimes that contains the updated runtime.
+  const runtime = findRuntimeById(runtimeId, state);
+  const key = TYPE_TO_RUNTIMES_KEY[runtime.type];
+  const runtimesToUpdate = state[key];
+
+  // Update the runtime with the provided updatedRuntime.
+  const updatedRuntimes = runtimesToUpdate.map(r => {
+    if (r.id === runtimeId) {
+      return Object.assign({}, r, updatedRuntime);
+    }
+    return r;
+  });
+  return Object.assign({}, state, { [key]: updatedRuntimes });
+}
+
 function runtimesReducer(state = RuntimesState(), action) {
   switch (action.type) {
     case CONNECT_RUNTIME_SUCCESS: {
-      const { id, client, info } = action.runtime;
-
-      // Find the array of runtimes that contains the updated runtime.
-      const runtime = findRuntimeById(id, state);
-      const key = TYPE_TO_RUNTIMES_KEY[runtime.type];
-      const runtimesToUpdate = state[key];
-
-      // Add the new client to the runtime.
-      const updatedRuntimes = runtimesToUpdate.map(r => {
-        if (r.id === id) {
-          return Object.assign({}, r, { client, info });
-        }
-        return r;
-      });
-      return Object.assign({}, state, { [key]: updatedRuntimes });
+      const { id, client } = action.runtime;
+      return _updateRuntimeById(id, { client }, state);
     }
 
     case DISCONNECT_RUNTIME_SUCCESS: {
       const { id } = action.runtime;
-
-      // Find the array of runtimes that contains the updated runtime.
-      const runtime = findRuntimeById(id, state);
-      const key = TYPE_TO_RUNTIMES_KEY[runtime.type];
-      const runtimesToUpdate = state[key];
-
-      // Remove the client from the updated runtime.
-      const updatedRuntimes = runtimesToUpdate.map(r => {
-        if (r.id === id) {
-          return Object.assign({}, r, { client: null, info: null });
-        }
-        return r;
-      });
-      return Object.assign({}, state, { [key]: updatedRuntimes });
+      return _updateRuntimeById(id, { client: null }, state);
     }
 
     case NETWORK_LOCATIONS_UPDATED: {
@@ -96,7 +98,6 @@ function runtimesReducer(state = RuntimesState(), action) {
       const usbRuntimes = runtimes.map(runtime => {
         return {
           id: runtime.id,
-          model: runtime._model,
           name: runtime.name,
           socketPath: runtime._socketPath,
           type: RUNTIMES.USB,

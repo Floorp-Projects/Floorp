@@ -326,9 +326,6 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
         return NS_ERROR_FAILURE;
       }
 
-      // Assign a principal:
-      currentTransferable->SetRequestingPrincipal(mSourceNode->NodePrincipal());
-
       // Transform the transferable to an NSDictionary
       NSDictionary* pasteboardOutputDict =
         nsClipboard::PasteboardDictFromTransferable(currentTransferable);

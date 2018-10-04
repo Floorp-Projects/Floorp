@@ -19,8 +19,6 @@
            simpleScopeChain="true"
            extends="chrome://global/content/bindings/datetimebox.xml#datetime-input-base">
     <resources>
-      <stylesheet src="chrome://global/content/textbox.css"/>
-      <stylesheet src="chrome://global/skin/textbox.css"/>
       <stylesheet src="chrome://global/content/bindings/datetimebox.css"/>
     </resources>
 
@@ -433,8 +431,6 @@
            simpleScopeChain="true"
            extends="chrome://global/content/bindings/datetimebox.xml#datetime-input-base">
     <resources>
-      <stylesheet src="chrome://global/content/textbox.css"/>
-      <stylesheet src="chrome://global/skin/textbox.css"/>
       <stylesheet src="chrome://global/content/bindings/datetimebox.css"/>
     </resources>
 
@@ -1200,8 +1196,6 @@
   <binding id="datetime-input-base"
            simpleScopeChain="true">
     <resources>
-      <stylesheet src="chrome://global/content/textbox.css"/>
-      <stylesheet src="chrome://global/skin/textbox.css"/>
       <stylesheet src="chrome://global/content/bindings/datetimebox.css"/>
     </resources>
 

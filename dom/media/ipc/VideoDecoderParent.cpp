@@ -45,6 +45,7 @@ private:
 VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
                                        const VideoInfo& aVideoInfo,
                                        float aFramerate,
+                                       bool aDisallowHWDecoder,
                                        const layers::TextureFactoryIdentifier& aIdentifier,
                                        TaskQueue* aManagerTaskQueue,
                                        TaskQueue* aDecodeTaskQueue,
@@ -67,6 +68,9 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
   mKnowsCompositor->IdentifyTextureHost(aIdentifier);
 
 #ifdef XP_WIN
+  using Option = CreateDecoderParams::Option;
+  using OptionSet = CreateDecoderParams::OptionSet;
+
   // TODO: Ideally we wouldn't hardcode the WMF PDM, and we'd use the normal PDM
   // factory logic for picking a decoder.
   WMFDecoderModule::Init();
@@ -78,6 +82,8 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
   params.mKnowsCompositor = mKnowsCompositor;
   params.mImageContainer = new layers::ImageContainer();
   params.mRate = CreateDecoderParams::VideoFrameRate(aFramerate);
+  params.mOptions = OptionSet(
+    aDisallowHWDecoder ? Option::HardwareDecoderNotAllowed : Option::Default);
   MediaResult error(NS_OK);
   params.mError = &error;
 

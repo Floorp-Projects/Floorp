@@ -180,7 +180,7 @@ class AddonTarget extends Component {
     const { client, connect, target } = this.props;
 
     if (connect.type === "REMOTE") {
-      debugRemoteAddon(target.form, client);
+      debugRemoteAddon(target.addonID, client);
     } else if (connect.type === "LOCAL") {
       debugLocalAddon(target.addonID);
     }

@@ -13,13 +13,11 @@ const Actions = require("./index");
 const {
   findRuntimeById,
 } = require("../modules/runtimes-state-helper");
-const { isSupportedDebugTarget } = require("../modules/debug-target-support");
 
 const {
   CONNECT_RUNTIME_FAILURE,
   CONNECT_RUNTIME_START,
   CONNECT_RUNTIME_SUCCESS,
-  DEBUG_TARGETS,
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
@@ -68,38 +66,18 @@ async function createClientForRuntime(runtime) {
   return null;
 }
 
-async function getRuntimeInfo(runtime, client) {
-  const { model, type } = runtime;
-  const deviceFront = await client.mainRoot.getFront("device");
-  const { brandName: name, channel, version } = await deviceFront.getDescription();
-  const icon =
-    (channel === "release" || channel === "beta" || channel === "aurora")
-      ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
-      : "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
-
-  return {
-    icon,
-    model,
-    name,
-    type,
-    version,
-  };
-}
-
 function connectRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: CONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const client = await createClientForRuntime(runtime);
-      const info = await getRuntimeInfo(runtime, client);
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
         runtime: {
           id,
           client,
-          info,
           type: runtime.type,
         }
       });
@@ -146,17 +124,9 @@ function watchRuntime(id) {
       const runtime = findRuntimeById(id, getState().runtimes);
       await dispatch({ type: WATCH_RUNTIME_SUCCESS, runtime });
 
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
-        dispatch(Actions.requestExtensions());
-      }
-
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-        dispatch(Actions.requestTabs());
-      }
-
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-        dispatch(Actions.requestWorkers());
-      }
+      dispatch(Actions.requestExtensions());
+      dispatch(Actions.requestTabs());
+      dispatch(Actions.requestWorkers());
     } catch (e) {
       dispatch({ type: WATCH_RUNTIME_FAILURE, error: e.message });
     }
