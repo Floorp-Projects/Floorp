@@ -22,7 +22,7 @@ class ModuleScript final : public nsISupports
 {
   RefPtr<ScriptLoader> mLoader;
   nsCOMPtr<nsIURI> mBaseURL;
-  JS::Heap<JSScript*> mScript;
+  JS::Heap<JSObject*> mModuleRecord;
   JS::Heap<JS::Value> mParseError;
   JS::Heap<JS::Value> mErrorToRethrow;
   bool mSourceElementAssociated;
@@ -36,13 +36,13 @@ public:
   ModuleScript(ScriptLoader* aLoader,
                nsIURI* aBaseURL);
 
-  void SetScript(JS::Handle<JSScript*> aScript);
+  void SetModuleRecord(JS::Handle<JSObject*> aModuleRecord);
   void SetParseError(const JS::Value& aError);
   void SetErrorToRethrow(const JS::Value& aError);
   void SetSourceElementAssociated();
 
   ScriptLoader* Loader() const { return mLoader; }
-  JSScript* Script() const { return mScript; }
+  JSObject* ModuleRecord() const { return mModuleRecord; }
   nsIURI* BaseURL() const { return mBaseURL; }
   JS::Value ParseError() const { return mParseError; }
   JS::Value ErrorToRethrow() const { return mErrorToRethrow; }
@@ -50,7 +50,7 @@ public:
   bool HasErrorToRethrow() const { return !mErrorToRethrow.isUndefined(); }
   bool SourceElementAssociated() const { return mSourceElementAssociated; }
 
-  void UnlinkScript();
+  void UnlinkModuleRecord();
 };
 
 } // dom namespace
