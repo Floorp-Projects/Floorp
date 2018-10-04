@@ -72,6 +72,7 @@ protected:
 
   PVideoDecoderChild* AllocPVideoDecoderChild(const VideoInfo& aVideoInfo,
                                               const float& aFramerate,
+                                              const bool& aDisallowHWDecoder,
                                               const layers::TextureFactoryIdentifier& aIdentifier,
                                               bool* aSuccess,
                                               nsCString* aBlacklistedD3D11Driver,

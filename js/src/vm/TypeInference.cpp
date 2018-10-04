@@ -4759,8 +4759,9 @@ ObjectGroup::sweep(const AutoSweepObjectGroup& sweep)
     AssertGCStateForSweep(zone());
 
     Maybe<AutoClearTypeInferenceStateOnOOM> clearStateOnOOM;
-    if (!zone()->types.isSweepingTypes())
+    if (!zone()->types.isSweepingTypes()) {
         clearStateOnOOM.emplace(zone());
+    }
 
     AutoTouchingGrayThings tgt;
 
@@ -4886,8 +4887,9 @@ JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep)
     AssertGCStateForSweep(zone());
 
     Maybe<AutoClearTypeInferenceStateOnOOM> clearStateOnOOM;
-    if (!zone()->types.isSweepingTypes())
+    if (!zone()->types.isSweepingTypes()) {
         clearStateOnOOM.emplace(zone());
+    }
 
     TypeZone& types = zone()->types;
 

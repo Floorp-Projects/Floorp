@@ -187,15 +187,6 @@ public:
     GetInterface(NS_GET_TEMPLATE_IID(T), getter_AddRefs(result));
   }
 
-  // Helper function for calling QueryInterface on this.
-  nsQueryInterface do_QueryInterface() {
-    return nsQueryInterface(static_cast<nsIChannel *>(this));
-  }
-  // MSVC needs this:
-  nsQueryInterface do_QueryInterface(nsISupports *obj) {
-    return nsQueryInterface(obj);
-  }
-
   // If a subclass does not want to feed transport-layer progress events to the
   // base channel via nsITransportEventSink, then it may set this flag to cause
   // the base channel to synthesize progress events when it receives data from

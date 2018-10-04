@@ -6,6 +6,7 @@
 #include "nsBaseDragService.h"
 #include "nsITransferable.h"
 
+#include "nsArrayUtils.h"
 #include "nsIServiceManager.h"
 #include "nsITransferable.h"
 #include "nsSize.h"
@@ -257,6 +258,17 @@ nsBaseDragService::InvokeDragSession(nsINode *aDOMNode,
   // feedback for things like trees because the event coordinates
   // are in the wrong coord system, so turn off mouse capture.
   nsIPresShell::ClearMouseCapture(nullptr);
+
+  uint32_t length = 0;
+  mozilla::Unused << aTransferableArray->GetLength(&length);
+  for (uint32_t i = 0; i < length; ++i) {
+    nsCOMPtr<nsITransferable> trans = do_QueryElementAt(aTransferableArray, i);
+    if (trans) {
+      // Set the requestingPrincipal on the transferable.
+      trans->SetRequestingPrincipal(mSourceNode->NodePrincipal());
+      trans->SetContentPolicyType(mContentPolicyType);
+    }
+  }
 
   nsresult rv = InvokeDragSessionImpl(aTransferableArray,
                                       mRegion, aActionType);

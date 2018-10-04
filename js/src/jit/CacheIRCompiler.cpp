@@ -4047,8 +4047,9 @@ CacheIRCompiler::emitCallInt32ToString() {
     Register result = allocator.defineRegister(masm, reader.stringOperandId());
 
     FailurePath* failure;
-    if (!addFailurePath(&failure))
+    if (!addFailurePath(&failure)) {
         return false;
+    }
 
     LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
     volatileRegs.takeUnchecked(result);
@@ -4076,8 +4077,9 @@ CacheIRCompiler::emitCallNumberToString() {
     Register result = allocator.defineRegister(masm, reader.stringOperandId());
 
     FailurePath* failure;
-    if (!addFailurePath(&failure))
+    if (!addFailurePath(&failure)) {
         return false;
+    }
 
     LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
     volatileRegs.takeUnchecked(result);
