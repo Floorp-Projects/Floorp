@@ -77,8 +77,9 @@ static float calculateNormalizationScale(const nsTArray<const float*>& response,
     return scale;
 }
 
-Reverb::Reverb(const AudioChunk& impulseResponse, size_t maxFFTSize, bool useBackgroundThreads, bool normalize, float sampleRate)
+Reverb::Reverb(const AudioChunk& impulseResponse, size_t maxFFTSize, bool useBackgroundThreads, bool normalize, float sampleRate, bool* aAllocationFailure)
 {
+    MOZ_ASSERT(aAllocationFailure);
     size_t impulseResponseBufferLength = impulseResponse.mDuration;
     float scale = impulseResponse.mVolume;
 
@@ -90,7 +91,12 @@ Reverb::Reverb(const AudioChunk& impulseResponse, size_t maxFFTSize, bool useBac
     }
 
     if (scale != 1.0f) {
-        tempBuf.SetLength(irChannels.Length()*impulseResponseBufferLength);
+        bool rv = tempBuf.SetLength(irChannels.Length()*impulseResponseBufferLength, mozilla::fallible);
+        *aAllocationFailure = !rv;
+        if (*aAllocationFailure) {
+          return;
+        }
+
         for (uint32_t i = 0; i < irChannels.Length(); ++i) {
             float* buf = &tempBuf[i*impulseResponseBufferLength];
             AudioBufferCopyWithScale(irChannels[i], scale, buf,
