@@ -1256,7 +1256,6 @@ pref("browser.newtabpage.activity-stream.fxaccounts.endpoint", "https://accounts
 pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", true);
 #else
 pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", false);
-#else
 #endif
 
 // Enable the DOM fullscreen API.
