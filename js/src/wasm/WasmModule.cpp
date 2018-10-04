@@ -579,8 +579,9 @@ Module::initSegments(JSContext* cx,
     // partial initialization if an error is reported.
 
     for (const ElemSegment* seg : elemSegments_) {
-        if (!seg->active())
+        if (!seg->active()) {
             continue;
+        }
 
         uint32_t tableLength = tables[seg->tableIndex]->length();
         uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
@@ -595,8 +596,9 @@ Module::initSegments(JSContext* cx,
     if (memoryObj) {
         uint32_t memoryLength = memoryObj->volatileMemoryLength();
         for (const DataSegment* seg : dataSegments_) {
-            if (!seg->active())
+            if (!seg->active()) {
                 continue;
+            }
 
             uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
 
@@ -624,8 +626,9 @@ Module::initSegments(JSContext* cx,
         uint8_t* memoryBase = memoryObj->buffer().dataPointerEither().unwrap(/* memcpy */);
 
         for (const DataSegment* seg : dataSegments_) {
-            if (!seg->active())
+            if (!seg->active()) {
                 continue;
+            }
 
             // But apply active segments right now.
             uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());

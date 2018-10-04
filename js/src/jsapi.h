@@ -4460,6 +4460,7 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(ION_FORCE_IC, "ion.forceinlineCaches")                         \
     Register(ION_ENABLE, "ion.enable")                                      \
     Register(ION_CHECK_RANGE_ANALYSIS, "ion.check-range-analysis")          \
+    Register(ION_FREQUENT_BAILOUT_THRESHOLD, "ion.frequent-bailout-threshold") \
     Register(BASELINE_ENABLE, "baseline.enable")                            \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable")  \
     Register(FULL_DEBUG_CHECKS, "jit.full-debug-checks")                    \

@@ -223,7 +223,7 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // if you need to limit under a directory, the path should end with "/" like
 // "example.com/foo/".  Note that this cannot limit port number for now.
 pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys",
-     "*.etherpad.org/p/,etherpad.wikimedia.org/p/,board.net/p/,pad.riseup.net/p/,*.sandstorm.io,factor.cc/pad/,*.etherpad.fr/p/,piratenpad.de/p/,notes.typo3.org/p/,etherpad.net/p/,*.framapad.org/p/,pad.ouvaton.coop/,pad.systemli.org/p/,pad.lqdn.fr/p/,public.etherpad-mozilla.org/p/,*.cloudron.me/p/,pad.aquilenet.fr/p/,free.primarypad.com/p/,pad.ondesk.work/p/,demo.maadix.org/etherpad/pads/,medium.com/p/");
+     "medium.com/p/");
 #else
 pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
 #endif
@@ -1410,7 +1410,13 @@ pref("javascript.options.strict",           false);
 pref("javascript.options.strict.debug",     false);
 #endif
 pref("javascript.options.baselinejit",      true);
+//Duplicated in JitOptions - ensure both match.
+pref("javascript.options.baselinejit.threshold", 10);
 pref("javascript.options.ion",              true);
+//Duplicated in JitOptions - ensure both match.
+pref("javascript.options.ion.threshold",    1000);
+//Duplicated in JitOptions - ensure both match.
+pref("javascript.options.ion.frequent_bailout_threshold", 10);
 pref("javascript.options.asmjs",            true);
 pref("javascript.options.wasm",             true);
 pref("javascript.options.wasm_ionjit",      true);

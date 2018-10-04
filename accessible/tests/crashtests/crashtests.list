@@ -8,6 +8,7 @@ load 1380199.html
 load 1402999.html
 load 1463962.html
 load 1484778.html
+load 1494707.html
 
 # last_test_to_unload_testsuite.xul MUST be the last test in the list because it
 # is responsible for shutting down accessibility service affecting later tests.

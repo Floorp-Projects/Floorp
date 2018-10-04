@@ -31,8 +31,9 @@ FRAGMENT(unwind, simple) {
     using namespace JS;
 
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-    if (!JS_DefineFunctionsWithHelp(cx, global, unwind_functions))
+    if (!JS_DefineFunctionsWithHelp(cx, global, unwind_functions)) {
         return;
+    }
 
     // baseline-eager.
     uint32_t saveThreshold = js::jit::JitOptions.baselineWarmUpThreshold;

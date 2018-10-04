@@ -100,12 +100,13 @@ WMFDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
     return nullptr;
   }
 
-  nsAutoPtr<WMFVideoMFTManager> manager(
-    new WMFVideoMFTManager(aParams.VideoConfig(),
-                           aParams.mKnowsCompositor,
-                           aParams.mImageContainer,
-                           aParams.mRate.mValue,
-                           sDXVAEnabled));
+  nsAutoPtr<WMFVideoMFTManager> manager(new WMFVideoMFTManager(
+    aParams.VideoConfig(),
+    aParams.mKnowsCompositor,
+    aParams.mImageContainer,
+    aParams.mRate.mValue,
+    sDXVAEnabled && !aParams.mOptions.contains(
+                      CreateDecoderParams::Option::HardwareDecoderNotAllowed)));
 
   MediaResult result = manager->Init();
   if (NS_FAILED(result)) {

@@ -956,8 +956,9 @@ ModuleGenerator::finishCodeTier()
     // All functions and stubs have been compiled.  Perform module-end
     // validation.
 
-    if (!deferredValidationState_.lock()->performDeferredValidation(*env_, error_))
+    if (!deferredValidationState_.lock()->performDeferredValidation(*env_, error_)) {
         return nullptr;
+    }
 
     // Finish linking and metadata.
 

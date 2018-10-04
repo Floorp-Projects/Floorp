@@ -677,8 +677,9 @@ ReadTimeZoneLink(const char* tz)
     constexpr size_t linkNameLen = mozilla::ArrayLength(linkName) - 1; // -1 to null-terminate.
 
     // Return if the TZ value is too large.
-    if (std::strlen(tz) > linkNameLen)
+    if (std::strlen(tz) > linkNameLen) {
         return icu::UnicodeString();
+    }
 
     std::strcpy(linkName, tz);
 
@@ -691,13 +692,15 @@ ReadTimeZoneLink(const char* tz)
     const char* timeZoneWithZoneInfo;
     while (!(timeZoneWithZoneInfo = std::strstr(linkName, ZoneInfoPath))) {
         // Return if the symlink nesting is too deep.
-        if (++depth > FollowDepthLimit)
+        if (++depth > FollowDepthLimit) {
             return icu::UnicodeString();
+        }
 
         // Return on error or if the result was truncated.
         ssize_t slen = readlink(linkName, linkTarget, linkTargetLen);
-        if (slen < 0 || size_t(slen) >= linkTargetLen)
+        if (slen < 0 || size_t(slen) >= linkTargetLen) {
             return icu::UnicodeString();
+        }
 
         // Ensure linkTarget is null-terminated. (readlink may not necessarily
         // null-terminate the string.)
@@ -725,8 +728,9 @@ ReadTimeZoneLink(const char* tz)
         separator[1] = '\0';
 
         // Return if the concatenated path name is too large.
-        if (std::strlen(linkName) + len > linkNameLen)
+        if (std::strlen(linkName) + len > linkNameLen) {
             return icu::UnicodeString();
+        }
 
         // Keep it simple and just concatenate the path names.
         std::strcat(linkName, linkTarget);
@@ -744,12 +748,14 @@ ReadTimeZoneLink(const char* tz)
         // According to theory.html, '.' is allowed in time zone ids, but the
         // accompanying zic.c file doesn't allow it. Assume the source file is
         // correct and disallow '.' here, too.
-        if (mozilla::IsAsciiAlphanumeric(c) || c == '_' || c == '-' || c == '+')
+        if (mozilla::IsAsciiAlphanumeric(c) || c == '_' || c == '-' || c == '+') {
             continue;
+        }
 
         // Reject leading, trailing, or consecutive '/' characters.
-        if (c == '/' && i > 0 && i + 1 < timeZoneLen && timeZone[i + 1] != '/')
+        if (c == '/' && i > 0 && i + 1 < timeZoneLen && timeZone[i + 1] != '/') {
             continue;
+        }
 
         return icu::UnicodeString();
     }
@@ -787,8 +793,9 @@ js::ResyncICUDefaultTimeZone()
             // zone names.)  We need to handle absolute paths ourselves,
             // including handling that they might be symlinks.
             // <https://unicode-org.atlassian.net/browse/ICU-13694>
-            if (const char* tzlink = TZContainsAbsolutePath(tz))
+            if (const char* tzlink = TZContainsAbsolutePath(tz)) {
                 tzid.setTo(ReadTimeZoneLink(tzlink));
+            }
 #endif /* defined(XP_WIN) */
 
             if (!tzid.isEmpty()) {
