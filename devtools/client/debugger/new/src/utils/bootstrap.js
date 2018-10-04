@@ -110,7 +110,8 @@ function bootstrapWorkers() {
 
   if ((0, _devtoolsEnvironment.isDevelopment)()) {
     // When used in Firefox, the toolbox manages the source map worker.
-    (0, _devtoolsSourceMap.startSourceMapWorker)(`${workerPath}/source-map-worker.js`);
+    (0, _devtoolsSourceMap.startSourceMapWorker)(`${workerPath}/source-map-worker.js`, // This is relative to the worker itself.
+    "./source-map-worker-assets/");
   }
 
   prettyPrint.start(`${workerPath}/pretty-print-worker.js`);
