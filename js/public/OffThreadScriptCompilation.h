@@ -75,7 +75,7 @@ CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
                        SourceBufferHolder& srcBuf, OffThreadCompileCallback callback,
                        void* callbackData);
 
-extern JS_PUBLIC_API(JSScript*)
+extern JS_PUBLIC_API(JSObject*)
 FinishOffThreadModule(JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API(void)

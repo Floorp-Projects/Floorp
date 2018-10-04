@@ -121,7 +121,7 @@ JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
     return StartOffThreadParseModule(cx, options, srcBuf, callback, callbackData);
 }
 
-JS_PUBLIC_API(JSScript*)
+JS_PUBLIC_API(JSObject*)
 JS::FinishOffThreadModule(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);

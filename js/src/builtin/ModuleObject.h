@@ -419,7 +419,7 @@ class MOZ_STACK_CLASS ModuleBuilder
 };
 
 JSObject*
-GetOrCreateModuleMetaObject(JSContext* cx, HandleScript script);
+GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 
 } // namespace js
 

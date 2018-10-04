@@ -3123,13 +3123,6 @@ public:
         return Get(realm);
     }
 
-    // Get the RealmPrivate for a given script.
-    static RealmPrivate* Get(JSScript* script)
-    {
-        JS::Realm* realm = JS::GetScriptRealm(script);
-        return Get(realm);
-    }
-
     // The scriptability of this realm.
     Scriptability scriptability;
 

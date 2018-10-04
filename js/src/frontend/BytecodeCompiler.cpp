@@ -52,7 +52,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     JSScript* compileGlobalScript(ScopeKind scopeKind);
     JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
-    JSScript* compileModule();
+    ModuleObject* compileModule();
     bool compileStandaloneFunction(MutableHandleFunction fun, GeneratorKind generatorKind,
                                    FunctionAsyncKind asyncKind,
                                    const Maybe<uint32_t>& parameterListEnd);
@@ -411,7 +411,7 @@ BytecodeCompiler::compileEvalScript(HandleObject environment, HandleScope enclos
     return compileScript(environment, &evalsc);
 }
 
-JSScript*
+ModuleObject*
 BytecodeCompiler::compileModule()
 {
     if (!createSourceAndParser(ParseGoal::Module)) {
@@ -462,7 +462,7 @@ BytecodeCompiler::compileModule()
     }
 
     MOZ_ASSERT_IF(!cx->helperThread(), !cx->isExceptionPending());
-    return script;
+    return module;
 }
 
 // Compile a standalone JS function, which might appear as the value of an
@@ -741,7 +741,7 @@ frontend::CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
 
 }
 
-JSScript*
+ModuleObject*
 frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
                         SourceBufferHolder& srcBuf, LifoAlloc& alloc,
                         ScriptSourceObject** sourceObjectOut)
@@ -759,16 +759,16 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
     BytecodeCompiler compiler(cx, alloc, options, srcBuf, emptyGlobalScope);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
-    JSScript* script = compiler.compileModule();
-    if (!script) {
+    ModuleObject* module = compiler.compileModule();
+    if (!module) {
         return nullptr;
     }
 
     assertException.reset();
-    return script;
+    return module;
 }
 
-JSScript*
+ModuleObject*
 frontend::CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                         SourceBufferHolder& srcBuf)
 {
@@ -779,20 +779,19 @@ frontend::CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options
     }
 
     LifoAlloc& alloc = cx->tempLifoAlloc();
-    RootedScript script(cx, CompileModule(cx, options, srcBuf, alloc));
-    if (!script) {
+    RootedModuleObject module(cx, CompileModule(cx, options, srcBuf, alloc));
+    if (!module) {
         return nullptr;
     }
 
     // This happens in GlobalHelperThreadState::finishModuleParseTask() when a
     // module is compiled off thread.
-    RootedModuleObject module(cx, script->module());
     if (!ModuleObject::Freeze(cx, module)) {
         return nullptr;
     }
 
     assertException.reset();
-    return script;
+    return module;
 }
 
 // When leaving this scope, the given function should either:
