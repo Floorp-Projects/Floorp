@@ -717,10 +717,10 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat("Should have one focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(1))
         // The focused field, its siblings, and its parent should be visible.
-        assertThat("Should have at least six visible fields",
+        assertThat("Should have six visible nodes",
                    countAutoFillNodes({ node -> node.isVisibleToUser &&
                            !(Rect().also({ node.getBoundsInScreen(it) }).isEmpty) }),
-                   greaterThanOrEqualTo(6))
+                   equalTo(6))
 
         mainSession.evaluateJS("$('#pass1').blur()")
         sessionRule.waitUntilCalled(object : EventDelegate {
