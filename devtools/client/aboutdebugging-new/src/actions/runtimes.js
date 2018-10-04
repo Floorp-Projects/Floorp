@@ -13,13 +13,11 @@ const Actions = require("./index");
 const {
   findRuntimeById,
 } = require("../modules/runtimes-state-helper");
-const { isSupportedDebugTarget } = require("../modules/debug-target-support");
 
 const {
   CONNECT_RUNTIME_FAILURE,
   CONNECT_RUNTIME_START,
   CONNECT_RUNTIME_SUCCESS,
-  DEBUG_TARGETS,
   DISCONNECT_RUNTIME_FAILURE,
   DISCONNECT_RUNTIME_START,
   DISCONNECT_RUNTIME_SUCCESS,
@@ -69,7 +67,7 @@ async function createClientForRuntime(runtime) {
 }
 
 async function getRuntimeInfo(runtime, client) {
-  const { model, type } = runtime;
+  const { model } = runtime;
   const deviceFront = await client.mainRoot.getFront("device");
   const { brandName: name, channel, version } = await deviceFront.getDescription();
   const icon =
@@ -81,7 +79,6 @@ async function getRuntimeInfo(runtime, client) {
     icon,
     model,
     name,
-    type,
     version,
   };
 }
@@ -146,17 +143,9 @@ function watchRuntime(id) {
       const runtime = findRuntimeById(id, getState().runtimes);
       await dispatch({ type: WATCH_RUNTIME_SUCCESS, runtime });
 
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
-        dispatch(Actions.requestExtensions());
-      }
-
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.TAB)) {
-        dispatch(Actions.requestTabs());
-      }
-
-      if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
-        dispatch(Actions.requestWorkers());
-      }
+      dispatch(Actions.requestExtensions());
+      dispatch(Actions.requestTabs());
+      dispatch(Actions.requestWorkers());
     } catch (e) {
       dispatch({ type: WATCH_RUNTIME_FAILURE, error: e.message });
     }
