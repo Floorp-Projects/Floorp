@@ -1103,8 +1103,27 @@ def check_for_midl(target, compile_environment):
 
 midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True)
 
-# Needed until we move MIDL_FLAGS and --disable-accessibility from old-configure
+
+@depends(c_compiler, target, when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
+def midl_flags(c_compiler, target):
+    if c_compiler and c_compiler.type in ('msvc', 'clang-cl'):
+        env = {
+            'x86': 'win32',
+            'x86_64': 'x64',
+            'aarch64': 'arm64',
+        }[target.cpu]
+        return ['-env', env]
+
+    # mingw
+    return {
+        'x86': ['--win32', '-m32'],
+        'x86_64': ['--win64', '-m64'],
+    }[target.cpu]
+
+
+# Needed until we move --disable-accessibility from old-configure
 add_old_configure_assignment('MIDL', midl)
+set_config('MIDL_FLAGS', midl_flags)
 
 # Addon signing
 # ==============================================================

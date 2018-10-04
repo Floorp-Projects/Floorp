@@ -263,19 +263,6 @@ case "$target" in
 
         INCREMENTAL_LINKER=1
 
-        # Set midl environment
-        case "$target" in
-        i*86-*)
-            MIDL_FLAGS="${MIDL_FLAGS} -env win32"
-            ;;
-        x86_64-*)
-            MIDL_FLAGS="${MIDL_FLAGS} -env x64"
-            ;;
-        aarch64-*)
-            MIDL_FLAGS="${MIDL_FLAGS} -env arm64"
-            ;;
-        esac
-
         unset _MSVC_VER_FILTER
 
         WRAP_STL_INCLUDES=1
@@ -318,17 +305,6 @@ case "$target" in
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
 
-        if test -n "$MIDL"; then
-            case "$target" in
-            i*86-*)
-                MIDL_FLAGS="$MIDL_FLAGS --win32 -m32"
-                ;;
-            x86_64-*)
-                MIDL_FLAGS="$MIDL_FLAGS --win64 -m64"
-                ;;
-            esac
-        fi
-
         # strsafe.h on mingw uses macros for function deprecation that pollutes namespace
         # causing problems with local implementations with the same name.
         AC_DEFINE(STRSAFE_NO_DEPRECATE)
@@ -355,7 +331,6 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
-AC_SUBST(MIDL_FLAGS)
 AC_SUBST(_MSC_VER)
 
 AC_SUBST(GNU_AS)
