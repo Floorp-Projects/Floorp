@@ -24,20 +24,23 @@ namespace layers {
 using namespace gfx;
 
 D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
-                                             const gfx::IntRect& aRect)
- : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE),
-   mSize(aSize),
-   mPictureRect(aRect)
+                                             const gfx::IntRect& aRect,
+                                             const GUID& aSourceFormat)
+  : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE)
+  , mSize(aSize)
+  , mPictureRect(aRect)
+  , mSourceFormat(aSourceFormat)
+
 {
 }
 
 bool
 D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
-                                       ID3D11Device* aDevice,
-                                       bool aPreferNV12)
+                                       ID3D11Device* aDevice)
 {
   if (aAllocator) {
-    if (aPreferNV12 && gfxPrefs::PDMWMFUseNV12Format() &&
+    if (mSourceFormat == MFVideoFormat_NV12 &&
+        gfxPrefs::PDMWMFUseNV12Format() &&
         gfx::DeviceManagerDx::Get()->CanUseNV12()) {
       mTextureClient =
         aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
@@ -102,10 +105,11 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 
     RefPtr<ID3D11Texture2D> outTexture;
 
-    hr = manager->CopyToBGRATexture(texture, getter_AddRefs(outTexture));
+    hr = manager->CopyToBGRATexture(
+      texture, mSourceFormat, getter_AddRefs(outTexture));
 
     if (FAILED(hr)) {
-      gfxWarning() << "Failed to copy NV12 to BGRA texture.";
+      gfxWarning() << "Failed to copy to BGRA texture.";
       return nullptr;
     }
 
