@@ -4302,6 +4302,24 @@ FlexLine::PositionItemsInCrossAxis(nscoord aLineStartPosition,
 }
 
 void
+nsFlexContainerFrame::DidReflow(nsPresContext* aPresContext,
+                                const ReflowInput* aReflowInput)
+{
+  // Remove the cached values if we got an interrupt because the values will be
+  // the wrong ones for following reflows.
+  //
+  // TODO(emilio): Can we do this only for the kids that are interrupted? We
+  // probably want to figure out what the right thing to do here is regarding
+  // interrupts, see bug 1495532.
+  if (aPresContext->HasPendingInterrupt()) {
+    for (nsIFrame* frame : mFrames) {
+      frame->DeleteProperty(CachedFlexMeasuringReflow());
+    }
+  }
+  nsContainerFrame::DidReflow(aPresContext, aReflowInput);
+}
+
+void
 nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                              ReflowOutput& aDesiredSize,
                              const ReflowInput& aReflowInput,
