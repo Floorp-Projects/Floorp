@@ -3773,6 +3773,7 @@ Tab.prototype = {
     this.browser.addEventListener("DOMWindowFocus", this, true);
     this.browser.addEventListener("focusin", this, true);
     this.browser.addEventListener("focusout", this, true);
+    this.browser.addEventListener("TabSelect", this, true);
 
     // Note that the XBL binding is untrusted
     this.browser.addEventListener("VideoBindingAttached", this, true, true);
@@ -3911,6 +3912,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMWindowFocus", this, true);
     this.browser.removeEventListener("focusin", this, true);
     this.browser.removeEventListener("focusout", this, true);
+    this.browser.removeEventListener("TabSelect", this, true);
 
     this.browser.removeEventListener("VideoBindingAttached", this, true, true);
     this.browser.removeEventListener("VideoBindingCast", this, true, true);
@@ -4440,28 +4442,38 @@ Tab.prototype = {
       }
 
       case "focusin": {
-        if (aEvent.composedTarget instanceof HTMLInputElement) {
+        if (BrowserApp.selectedTab === this &&
+            aEvent.composedTarget instanceof HTMLInputElement) {
           this._autoFill.onFocus(aEvent.composedTarget);
         }
         break;
       }
 
       case "focusout": {
-        if (aEvent.composedTarget instanceof HTMLInputElement) {
+        if (BrowserApp.selectedTab === this &&
+            aEvent.composedTarget instanceof HTMLInputElement) {
           this._autoFill.onFocus(null);
         }
         break;
       }
 
+      case "TabSelect": {
+        this._autoFill.clearElements();
+        this._autoFill.scanDocument(this.browser.contentDocument);
+        break;
+      }
+
       case "pagehide": {
-        if (aEvent.target === this.browser.contentDocument) {
+        if (BrowserApp.selectedTab === this &&
+            aEvent.target === this.browser.contentDocument) {
           this._autoFill.clearElements();
         }
         break;
       }
 
       case "pageshow": {
-        if (aEvent.target === this.browser.contentDocument && aEvent.persisted) {
+        if (BrowserApp.selectedTab === this &&
+            aEvent.target === this.browser.contentDocument && aEvent.persisted) {
           this._autoFill.scanDocument(aEvent.target);
         }
 
