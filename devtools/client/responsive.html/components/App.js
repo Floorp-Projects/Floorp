@@ -175,6 +175,11 @@ class App extends PureComponent {
   }
 
   onResizeViewport(id, width, height) {
+    window.postMessage({
+      type: "viewport-resize",
+      width,
+      height,
+    }, "*");
     this.props.dispatch(resizeViewport(id, width, height));
   }
 
