@@ -625,26 +625,6 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
 // wasm specific methods, used in both the wasm baseline compiler and ion.
 
 void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, Label* label)
-{
-    cmp32(index, boundsCheckLimit);
-    j(cond, label);
-    if (JitOptions.spectreIndexMasking) {
-        cmovCCl(cond, Operand(boundsCheckLimit), index);
-    }
-}
-
-void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, Label* label)
-{
-    cmp32(index, Operand(boundsCheckLimit));
-    j(cond, label);
-    if (JitOptions.spectreIndexMasking) {
-        cmovCCl(cond, Operand(boundsCheckLimit), index);
-    }
-}
-
-void
 MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, AnyRegister out)
 {
     MOZ_ASSERT(srcAddr.kind() == Operand::MEM_REG_DISP || srcAddr.kind() == Operand::MEM_SCALE);

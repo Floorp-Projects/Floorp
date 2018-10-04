@@ -40,11 +40,12 @@ PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
 {
   // The launcher process's DLL blocking code is incompatible with ASAN because
   // it is able to execute before ASAN itself has even initialized.
-#if defined(MOZ_ASAN)
+  // Also, the AArch64 build doesn't yet have a working interceptor.
+#if defined(MOZ_ASAN) || defined(_M_ARM64)
   return true;
 #else
   return mozilla::InitializeDllBlocklistOOP(aChildProcess);
-#endif // defiend(MOZ_ASAN)
+#endif // defined(MOZ_ASAN) || defined(_M_ARM64)
 }
 
 #if !defined(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)

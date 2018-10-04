@@ -797,9 +797,7 @@ Instance::Instance(JSContext* cx,
     MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
     tlsData()->memoryBase = memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
-#ifndef WASM_HUGE_MEMORY
     tlsData()->boundsCheckLimit = memory ? memory->buffer().wasmBoundsCheckLimit() : 0;
-#endif
     tlsData()->instance = this;
     tlsData()->realm = realm_;
     tlsData()->cx = cx;
@@ -987,7 +985,6 @@ Instance::memoryMappedSize() const
     return memory_->buffer().wasmMappedSize();
 }
 
-#ifdef JS_SIMULATOR
 bool
 Instance::memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const
 {
@@ -1005,7 +1002,6 @@ Instance::memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const
     size_t lastByteOffset = addr - base + (numBytes - 1);
     return lastByteOffset >= memory()->volatileMemoryLength() && lastByteOffset < memoryMappedSize();
 }
-#endif
 
 void
 Instance::tracePrivate(JSTracer* trc)
@@ -1237,9 +1233,7 @@ Instance::onMovingGrowMemory(uint8_t* prevMemoryBase)
 
     ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
     tlsData()->memoryBase = buffer.dataPointer();
-#ifndef WASM_HUGE_MEMORY
     tlsData()->boundsCheckLimit = buffer.wasmBoundsCheckLimit();
-#endif
 }
 
 void

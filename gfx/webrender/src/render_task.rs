@@ -16,7 +16,7 @@ use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use glyph_rasterizer::GpuGlyphCacheKey;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::{BorderInstance, ImageSource, RasterizationSpace, UvRectKind};
-use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
+use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
 use picture::PictureCacheKey;
@@ -116,16 +116,6 @@ impl RenderTaskTree {
             }
         }
 
-        // If this task can be shared between multiple
-        // passes, render it in the first pass so that
-        // it is available to all subsequent passes.
-        let pass_index = if task.is_shared() {
-            debug_assert!(task.children.is_empty());
-            0
-        } else {
-            pass_index
-        };
-
         let pass = &mut passes[pass_index];
         pass.add_render_task(id, task.get_dynamic_size(), task.target_kind());
     }
@@ -174,13 +164,27 @@ impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
     }
 }
 
+/// Identifies the output buffer location for a given `RenderTask`.
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTaskLocation {
+    /// The `RenderTask` should be drawn to a fixed region in a specific render
+    /// target. This is used for the root `RenderTask`, where the main
+    /// framebuffer is used as the render target.
     Fixed(DeviceIntRect),
+    /// The `RenderTask` should be drawn to a target provided by the atlas
+    /// allocator. This is the most common case.
+    ///
+    /// The second member specifies the width and height of the task
+    /// output, and the first member is initially left as `None`. During the
+    /// build phase, we invoke `RenderTargetList::alloc()` and store the
+    /// resulting location in the first member. That location identifies the
+    /// render target and the offset of the allocated region within that target.
     Dynamic(Option<(DeviceIntPoint, RenderTargetIndex)>, DeviceIntSize),
-    TextureCache(SourceTexture, i32, DeviceIntRect),
+    /// The output of the `RenderTask` will be persisted beyond this frame, and
+    /// thus should be drawn into the `TextureCache`.
+    TextureCache(CacheTextureId, i32, DeviceIntRect),
 }
 
 #[derive(Debug)]
@@ -868,33 +872,6 @@ impl RenderTask {
             RenderTaskKind::Blit(..) => {
                 RenderTargetKind::Color
             }
-        }
-    }
-
-    // Check if this task wants to be made available as an input
-    // to all passes (except the first) in the render task tree.
-    // To qualify for this, the task needs to have no children / dependencies.
-    // Currently, this is only supported for A8 targets, but it can be
-    // trivially extended to also support RGBA8 targets in the future
-    // if we decide that is useful.
-    pub fn is_shared(&self) -> bool {
-        match self.kind {
-            RenderTaskKind::Picture(..) |
-            RenderTaskKind::VerticalBlur(..) |
-            RenderTaskKind::Readback(..) |
-            RenderTaskKind::HorizontalBlur(..) |
-            RenderTaskKind::Scaling(..) |
-            RenderTaskKind::ClipRegion(..) |
-            RenderTaskKind::Blit(..) |
-            RenderTaskKind::Border(..) |
-            RenderTaskKind::Glyph(..) => false,
-
-            // TODO(gw): For now, we've disabled the shared clip mask
-            //           optimization. It's of dubious value in the
-            //           future once we start to cache clip tasks anyway.
-            //           I have left shared texture support here though,
-            //           just in case we want it in the future.
-            RenderTaskKind::CacheMask(..) => false,
         }
     }
 

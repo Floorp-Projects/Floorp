@@ -33,7 +33,7 @@ struct ImageBrushData {
 };
 
 ImageBrushData fetch_image_data(int address) {
-    vec4[3] raw_data = fetch_from_resource_cache_3(address);
+    vec4[3] raw_data = fetch_from_gpu_cache_3(address);
     ImageBrushData data = ImageBrushData(
         raw_data[0],
         raw_data[1],
