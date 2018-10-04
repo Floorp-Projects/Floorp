@@ -1077,6 +1077,35 @@ def proxy_bypass_protection(_):
 set_config('MOZ_PROXY_BYPASS_PROTECTION', proxy_bypass_protection)
 set_define('MOZ_PROXY_BYPASS_PROTECTION', proxy_bypass_protection)
 
+# MIDL
+# ==============================================================
+
+@depends(c_compiler, toolchain_prefix)
+def midl_names(c_compiler, toolchain_prefix):
+    if c_compiler and c_compiler.type in ['gcc', 'clang']:
+        # mingw
+        widl = ('widl', )
+        if toolchain_prefix:
+            prefixed = tuple('%s%s' % (p, 'widl') for p in toolchain_prefix)
+            widl = prefixed + widl
+        return widl
+
+    return ('midl',)
+
+@depends(target, '--enable-compile-environment')
+def check_for_midl(target, compile_environment):
+    if target.os != 'WINNT':
+        return
+
+    if compile_environment:
+        return True
+
+
+midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True)
+
+# Needed until we move MIDL_FLAGS and --disable-accessibility from old-configure
+add_old_configure_assignment('MIDL', midl)
+
 # Addon signing
 # ==============================================================
 
