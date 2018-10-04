@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VPXDecoder.h"
+#include "BitReader.h"
 #include "TimeUnits.h"
 #include "gfx2DGlue.h"
 #include "mozilla/PodOperations.h"
@@ -337,5 +338,33 @@ VPXDecoder::GetFrameSize(Span<const uint8_t> aBuffer, Codec aCodec)
 
   return gfx::IntSize(si.w, si.h);
 }
+
+/* static */
+int
+VPXDecoder::GetVP9Profile(Span<const uint8_t> aBuffer)
+{
+  if (aBuffer.Length() < 2) {
+    // Can't be good.
+    return -1;
+  }
+  BitReader br(aBuffer.Elements(), aBuffer.Length() * 8);
+
+  uint32_t frameMarker = br.ReadBits(2); // frame_marker
+  if (frameMarker != 2) {
+    // That's not a valid vp9 header.
+    return -1;
+  }
+  uint32_t profile = br.ReadBits(1); // profile_low_bit
+  profile |= br.ReadBits(1) << 1; // profile_high_bit
+  if (profile == 3) {
+    profile += br.ReadBits(1); // reserved_zero
+    if (profile > 3) {
+      // reserved_zero wasn't zero.
+      return -1;
+    }
+  }
+  return profile;
+}
+
 } // namespace mozilla
 #undef LOG

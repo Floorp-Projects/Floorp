@@ -158,6 +158,7 @@ DefaultJitOptions::DefaultJitOptions()
 
     // How many invocations or loop iterations are needed before functions
     // are compiled with the baseline compiler.
+    // Duplicated in all.js - ensure both match.
     SET_DEFAULT(baselineWarmUpThreshold, 10);
 
     // Number of exception bailouts (resuming into catch/finally block) before
@@ -166,6 +167,7 @@ DefaultJitOptions::DefaultJitOptions()
 
     // Number of bailouts without invalidation before we set
     // JSScript::hadFrequentBailouts and invalidate.
+    // Duplicated in all.js - ensure both match.
     SET_DEFAULT(frequentBailoutThreshold, 10);
 
     // Whether to run all debug checks in debug builds.

@@ -23,7 +23,7 @@ parent:
   // more sync IPC call.
   // Considering that this information is only used for telemetry usage in bug 1393392 and should be removed once
   // we have collected enough data, we add these two return values here for convenience.
-  sync PVideoDecoder(VideoInfo info, float framerate, TextureFactoryIdentifier identifier)
+  sync PVideoDecoder(VideoInfo info, float framerate, bool disallowHWDecoder, TextureFactoryIdentifier identifier)
          returns (bool success,
                   nsCString aBlacklistedD3D11Driver,
                   nsCString aBlacklistedD3D9Driver,

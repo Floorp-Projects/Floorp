@@ -611,6 +611,9 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
     case TrackType::kVideoTrack: {
       // Decoders use the layers backend to decide if they can use hardware decoding,
       // so specify LAYERS_NONE if we want to forcibly disable it.
+      using Option = CreateDecoderParams::Option;
+      using OptionSet = CreateDecoderParams::OptionSet;
+
       aData.mDecoder = platform->CreateDecoder(
         { *ownerData.GetCurrentInfo()->GetAsVideoInfo(),
           ownerData.mTaskQueue,
@@ -621,7 +624,10 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
           &result,
           TrackType::kVideoTrack,
           &mOwner->OnTrackWaitingForKeyProducer(),
-          CreateDecoderParams::VideoFrameRate(ownerData.mMeanRate.Mean()) });
+          CreateDecoderParams::VideoFrameRate(ownerData.mMeanRate.Mean()),
+          OptionSet(ownerData.mHardwareDecodingDisabled
+                      ? Option::HardwareDecoderNotAllowed
+                      : Option::Default) });
       break;
     }
 
@@ -2231,6 +2237,9 @@ MediaFormatReader::HandleDemuxedSamples(
       if (!recyclable) {
         LOG("Decoder does not support recycling, recreate decoder.");
         ShutdownDecoder(aTrack);
+        // We're going to be using a new decoder following the change of content
+        // We can attempt to use hardware decoding again.
+        decoder.mHardwareDecodingDisabled = false;
       } else if (decoder.HasWaitingPromise()) {
         decoder.Flush();
       }
@@ -2583,13 +2592,24 @@ MediaFormatReader::Update(TrackType aTrack)
   if (decoder.mError && !decoder.HasFatalError()) {
     MOZ_RELEASE_ASSERT(!decoder.HasInternalSeekPending(),
                        "No error can occur while an internal seek is pending");
+
+    nsCString error;
+    bool firstFrameDecodingFailedWithHardware =
+      decoder.mFirstFrameTime &&
+      decoder.mError.ref() == NS_ERROR_DOM_MEDIA_DECODE_ERR &&
+      decoder.mDecoder && decoder.mDecoder->IsHardwareAccelerated(error) &&
+      !decoder.mHardwareDecodingDisabled;
     bool needsNewDecoder =
-      decoder.mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
+      decoder.mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER ||
+      firstFrameDecodingFailedWithHardware;
     if (!needsNewDecoder &&
         ++decoder.mNumOfConsecutiveError > decoder.mMaxConsecutiveError) {
       DDLOG(DDLogCategory::Log, "too_many_decode_errors", decoder.mError.ref());
       NotifyError(aTrack, decoder.mError.ref());
       return;
+    }
+    if (firstFrameDecodingFailedWithHardware) {
+      decoder.mHardwareDecodingDisabled = true;
     }
     decoder.mError.reset();
 

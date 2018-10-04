@@ -50,6 +50,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   {
     Default,
     LowLatency,
+    HardwareDecoderNotAllowed,
   };
   using OptionSet = EnumSet<Option>;
 
