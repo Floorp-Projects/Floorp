@@ -19,7 +19,7 @@ struct SolidBrush {
 };
 
 SolidBrush fetch_solid_primitive(int address) {
-    vec4 data = fetch_from_resource_cache_1(address);
+    vec4 data = fetch_from_gpu_cache_1(address);
     return SolidBrush(data);
 }
 

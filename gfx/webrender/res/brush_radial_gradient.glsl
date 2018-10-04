@@ -31,7 +31,7 @@ struct RadialGradient {
 };
 
 RadialGradient fetch_radial_gradient(int address) {
-    vec4 data[2] = fetch_from_resource_cache_2(address);
+    vec4 data[2] = fetch_from_gpu_cache_2(address);
     return RadialGradient(
         data[0],
         data[1].x,

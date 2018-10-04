@@ -15,6 +15,7 @@ const IFRAME_PAGE_PATH = "/browser/toolkit/components/passwordmgr/test/browser/f
  */
 add_task(async function test_initialize() {
   Services.prefs.setBoolPref("signon.autofillForms", false);
+  Services.prefs.setBoolPref("signon.schemeUpgrades", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("signon.autofillForms");
     Services.prefs.clearUserPref("signon.schemeUpgrades");
@@ -28,22 +29,17 @@ add_task(async function test_initialize() {
  * Check if the password field is correctly filled when it's in an iframe.
  */
 add_task(async function test_context_menu_iframe_fill() {
-  Services.prefs.setBoolPref("signon.schemeUpgrades", true);
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: TEST_HOSTNAME + IFRAME_PAGE_PATH,
   }, async function(browser) {
-    function getPasswordInput() {
-      let frame = content.document.getElementById("test-iframe");
-      return frame.contentDocument.getElementById("form-basic-password");
-    }
-
     let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
     let eventDetails = {type: "contextmenu", button: 2};
 
     // To click at the right point we have to take into account the iframe offset.
     // Synthesize a right mouse click over the password input element.
-    BrowserTestUtils.synthesizeMouseAtCenter(getPasswordInput, eventDetails, browser);
+    BrowserTestUtils.synthesizeMouseAtCenter(["#test-iframe", "#form-basic-password"],
+                                             eventDetails, browser);
     await contextMenuShownPromise;
 
     // Synthesize a mouse click over the fill login menu header.
@@ -85,6 +81,52 @@ add_task(async function test_context_menu_iframe_fill() {
     is(usernameOriginalValue,
        usernameNewValue,
        "Username value was not changed.");
+
+    let contextMenu = document.getElementById("contentAreaContextMenu");
+    contextMenu.hidePopup();
+  });
+});
+
+/**
+ * Check that the login context menu items don't appear on an opaque origin.
+ */
+add_task(async function test_context_menu_iframe_sandbox() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: TEST_HOSTNAME + IFRAME_PAGE_PATH,
+  }, async function(browser) {
+    let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
+    let eventDetails = {type: "contextmenu", button: 2};
+
+    BrowserTestUtils.synthesizeMouseAtCenter(["#test-iframe-sandbox", "#form-basic-password"],
+                                             eventDetails, browser);
+    await contextMenuShownPromise;
+
+    let popupHeader = document.getElementById("fill-login");
+    ok(popupHeader.disabled, "Check that the Fill Login menu item is disabled");
+
+    let contextMenu = document.getElementById("contentAreaContextMenu");
+    contextMenu.hidePopup();
+  });
+});
+
+/**
+ * Check that the login context menu item appears for sandbox="allow-same-origin"
+ */
+add_task(async function test_context_menu_iframe_sandbox_same_origin() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: TEST_HOSTNAME + IFRAME_PAGE_PATH,
+  }, async function(browser) {
+    let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
+    let eventDetails = {type: "contextmenu", button: 2};
+
+    BrowserTestUtils.synthesizeMouseAtCenter(["#test-iframe-sandbox-same-origin", "#form-basic-password"],
+                                             eventDetails, browser);
+    await contextMenuShownPromise;
+
+    let popupHeader = document.getElementById("fill-login");
+    ok(!popupHeader.disabled, "Check that the Fill Login menu item is enabled");
 
     let contextMenu = document.getElementById("contentAreaContextMenu");
     contextMenu.hidePopup();

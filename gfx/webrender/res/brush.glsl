@@ -37,7 +37,7 @@ void main(void) {
                           VECS_PER_SPECIFIC_BRUSH +
                           segment_index * VECS_PER_SEGMENT;
 
-    vec4[2] segment_data = fetch_from_resource_cache_2(segment_address);
+    vec4[2] segment_data = fetch_from_gpu_cache_2(segment_address);
     RectWithSize local_segment_rect = RectWithSize(segment_data[0].xy, segment_data[0].zw);
 
     VertexInfo vi;

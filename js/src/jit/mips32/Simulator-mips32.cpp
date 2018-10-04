@@ -523,7 +523,7 @@ SimulatorProcess* SimulatorProcess::singleton_ = nullptr;
 int Simulator::StopSimAt = -1;
 
 Simulator*
-Simulator::Create(JSContext* cx)
+Simulator::Create()
 {
     auto sim = MakeUnique<Simulator>();
     if (!sim) {
@@ -1639,90 +1639,6 @@ Simulator::registerState()
     return state;
 }
 
-// WebAssembly memories contain an extra region of guard pages (see
-// WasmArrayRawBuffer comment). The guard pages catch out-of-bounds accesses
-// using a signal handler that redirects PC to a stub that safely reports an
-// error. However, if the handler is hit by the simulator, the PC is in C++ code
-// and cannot be redirected. Therefore, we must avoid hitting the handler by
-// redirecting in the simulator before the real handler would have been hit.
-bool
-Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
-{
-    if (!wasm::CodeExists) {
-        return false;
-    }
-
-    JSContext* cx = TlsContext.get();
-    if (!cx->activation() || !cx->activation()->isJit()) {
-        return false;
-    }
-    JitActivation* act = cx->activation()->asJit();
-
-    void* pc = reinterpret_cast<void*>(get_pc());
-    uint8_t* fp = reinterpret_cast<uint8_t*>(getRegister(Register::fp));
-
-    const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
-    if (!segment || !segment->isModule()) {
-        return false;
-    }
-    const wasm::ModuleSegment* moduleSegment = segment->asModule();
-
-    wasm::Instance* instance = wasm::LookupFaultingInstance(*moduleSegment, pc, fp);
-    if (!instance) {
-        return false;
-    }
-
-    MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
-
-    if (!instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes)) {
-         return false;
-    }
-
-    LLBit_ = false;
-
-    wasm::Trap trap;
-    wasm::BytecodeOffset bytecode;
-    MOZ_ALWAYS_TRUE(moduleSegment->code().lookupTrap(pc, &trap, &bytecode));
-
-    MOZ_RELEASE_ASSERT(trap == wasm::Trap::OutOfBounds);
-
-    act->startWasmTrap(wasm::Trap::OutOfBounds, bytecode.offset(), registerState());
-    set_pc(int32_t(moduleSegment->trapCode()));
-    return true;
-}
-
-bool
-Simulator::handleWasmTrapFault()
-{
-    if (!wasm::CodeExists) {
-        return false;
-    }
-
-    JSContext* cx = TlsContext.get();
-    if (!cx->activation() || !cx->activation()->isJit()) {
-        return false;
-    }
-    JitActivation* act = cx->activation()->asJit();
-
-    void* pc = reinterpret_cast<void*>(get_pc());
-
-    const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
-    if (!segment || !segment->isModule()) {
-        return false;
-    }
-    const wasm::ModuleSegment* moduleSegment = segment->asModule();
-
-    wasm::Trap trap;
-    wasm::BytecodeOffset bytecode;
-    if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
-        return false;
-    }
-
-    act->startWasmTrap(trap, bytecode.offset(), registerState());
-    set_pc(int32_t(moduleSegment->trapCode()));
-    return true;
-}
-
 // MIPS memory instructions (except lwl/r and swl/r) trap on unaligned memory
 // access enabling the OS to handle them via trap-and-emulate.
 // Note that simulator runs have the runtime system running directly on the host
@@ -1735,7 +1651,7 @@ Simulator::handleWasmTrapFault()
 int
 Simulator::readW(uint32_t addr, SimInstruction* instr)
 {
-    if (handleWasmFault(addr, 4)) {
+    if (handleWasmSegFault(addr, 4)) {
         return -1;
     }
 
@@ -1753,7 +1669,7 @@ Simulator::readW(uint32_t addr, SimInstruction* instr)
 void
 Simulator::writeW(uint32_t addr, int value, SimInstruction* instr)
 {
-    if (handleWasmFault(addr, 4)) {
+    if (handleWasmSegFault(addr, 4)) {
         return;
     }
 
@@ -1772,7 +1688,7 @@ Simulator::writeW(uint32_t addr, int value, SimInstruction* instr)
 double
 Simulator::readD(uint32_t addr, SimInstruction* instr)
 {
-    if (handleWasmFault(addr, 8)) {
+    if (handleWasmSegFault(addr, 8)) {
         return NAN;
     }
 
@@ -1790,7 +1706,7 @@ Simulator::readD(uint32_t addr, SimInstruction* instr)
 void
 Simulator::writeD(uint32_t addr, double value, SimInstruction* instr)
 {
-    if (handleWasmFault(addr, 8)) {
+    if (handleWasmSegFault(addr, 8)) {
         return;
     }
 
@@ -1809,7 +1725,7 @@ Simulator::writeD(uint32_t addr, double value, SimInstruction* instr)
 uint16_t
 Simulator::readHU(uint32_t addr, SimInstruction* instr)
 {
-    if (handleWasmFault(addr, 2)) {
+    if (handleWasmSegFault(addr, 2)) {
         return 0xffff;
     }
 
@@ -1827,7 +1743,7 @@ Simulator::readHU(uint32_t addr, SimInstruction* instr)
 int16_t
 Simulator::readH(uint32_t addr, SimInstruction* instr)
 {
-    if (handleWasmFault(addr, 2)) {
+    if (handleWasmSegFault(addr, 2)) {
         return -1;
     }
 
@@ -1845,7 +1761,7 @@ Simulator::readH(uint32_t addr, SimInstruction* instr)
 void
 Simulator::writeH(uint32_t addr, uint16_t value, SimInstruction* instr)
 {
-    if (handleWasmFault(addr, 2)) {
+    if (handleWasmSegFault(addr, 2)) {
         return;
     }
 
@@ -1864,7 +1780,7 @@ Simulator::writeH(uint32_t addr, uint16_t value, SimInstruction* instr)
 void
 Simulator::writeH(uint32_t addr, int16_t value, SimInstruction* instr)
 {
-    if (handleWasmFault(addr, 2)) {
+    if (handleWasmSegFault(addr, 2)) {
         return;
     }
 
@@ -1883,7 +1799,7 @@ Simulator::writeH(uint32_t addr, int16_t value, SimInstruction* instr)
 uint32_t
 Simulator::readBU(uint32_t addr)
 {
-    if (handleWasmFault(addr, 1)) {
+    if (handleWasmSegFault(addr, 1)) {
         return 0xff;
     }
 
@@ -1894,7 +1810,7 @@ Simulator::readBU(uint32_t addr)
 int32_t
 Simulator::readB(uint32_t addr)
 {
-    if (handleWasmFault(addr, 1)) {
+    if (handleWasmSegFault(addr, 1)) {
         return -1;
     }
 
@@ -1905,7 +1821,7 @@ Simulator::readB(uint32_t addr)
 void
 Simulator::writeB(uint32_t addr, uint8_t value)
 {
-    if (handleWasmFault(addr, 1)) {
+    if (handleWasmSegFault(addr, 1)) {
         return;
     }
 
@@ -1917,7 +1833,7 @@ Simulator::writeB(uint32_t addr, uint8_t value)
 void
 Simulator::writeB(uint32_t addr, int8_t value)
 {
-    if (handleWasmFault(addr, 1)) {
+    if (handleWasmSegFault(addr, 1)) {
         return;
     }
 
@@ -1931,7 +1847,7 @@ Simulator::loadLinkedW(uint32_t addr, SimInstruction* instr)
 {
     if ((addr & kPointerAlignmentMask) == 0) {
 
-        if (handleWasmFault(addr, 1)) {
+        if (handleWasmSegFault(addr, 1)) {
             return -1;
         }
 
@@ -2346,8 +2262,12 @@ Simulator::softwareInterrupt(SimInstruction* instr)
             case ff_tltu:
             case ff_teq:
             case ff_tne:
-            if (instr->bits(15, 6) == kWasmTrapCode && handleWasmTrapFault()) {
-                return;
+            if (instr->bits(15, 6) == kWasmTrapCode) {
+                uint8_t* newPC;
+                if (wasm::HandleIllegalInstruction(registerState(), &newPC)) {
+                    set_pc(int32_t(newPC));
+                    return;
+                }
             }
         };
         // All remaining break_ codes, and all traps are handled here.

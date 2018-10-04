@@ -2,12 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! The webrender API.
+//! The high-level module responsible for interfacing with the GPU.
 //!
-//! The `webrender::renderer` module provides the interface to webrender, which
-//! is accessible through [`Renderer`][renderer]
+//! Much of WebRender's design is driven by separating work into different
+//! threads. To avoid the complexities of multi-threaded GPU access, we restrict
+//! all communication with the GPU to one thread, the render thread. But since
+//! issuing GPU commands is often a bottleneck, we move everything else (i.e.
+//! the computation of what commands to issue) to another thread, the
+//! RenderBackend thread. The RenderBackend, in turn, may delegate work to other
+//! thread (like the SceneBuilder threads or Rayon workers), but the
+//! Render-vs-RenderBackend distinction is the most important.
 //!
-//! [renderer]: struct.Renderer.html
+//! The consumer is responsible for initializing the render thread before
+//! calling into WebRender, which means that this module also serves as the
+//! initial entry point into WebRender, and is responsible for spawning the
+//! various other threads discussed above. That said, WebRender initialization
+//! returns both the `Renderer` instance as well as a channel for communicating
+//! directly with the `RenderBackend`. Aside from a few high-level operations
+//! like 'render now', most of interesting commands from the consumer go over
+//! that channel and operate on the `RenderBackend`.
 
 use api::{BlobImageHandler, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, Epoch, ExternalImageId};
@@ -39,7 +52,7 @@ use gpu_cache::GpuDebugChunk;
 #[cfg(feature = "pathfinder")]
 use gpu_glyph_renderer::GpuGlyphRenderer;
 use gpu_types::ScalingInstance;
-use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
+use internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use internal_types::{CacheTextureId, DebugOutput, FastHashMap, RenderedDocument, ResultMsg};
 use internal_types::{TextureUpdateList, TextureUpdateOp, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
@@ -274,21 +287,22 @@ impl From<GlyphFormat> for ShaderColorMode {
     }
 }
 
+/// Enumeration of the texture samplers used across the various WebRender shaders.
+///
+/// Each variant corresponds to a uniform declared in shader source. We only bind
+/// the variants we need for a given shader, so not every variant is bound for every
+/// batch.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum TextureSampler {
     Color0,
     Color1,
     Color2,
-    CacheA8,
-    CacheRGBA8,
-    ResourceCache,
+    PrevPassAlpha,
+    PrevPassColor,
+    GpuCache,
     TransformPalette,
     RenderTasks,
     Dither,
-    // A special sampler that is bound to the A8 output of
-    // the *first* pass. Items rendered in this target are
-    // available as inputs to tasks in any subsequent pass.
-    SharedCacheA8,
     PrimitiveHeadersF,
     PrimitiveHeadersI,
 }
@@ -312,15 +326,14 @@ impl Into<TextureSlot> for TextureSampler {
             TextureSampler::Color0 => TextureSlot(0),
             TextureSampler::Color1 => TextureSlot(1),
             TextureSampler::Color2 => TextureSlot(2),
-            TextureSampler::CacheA8 => TextureSlot(3),
-            TextureSampler::CacheRGBA8 => TextureSlot(4),
-            TextureSampler::ResourceCache => TextureSlot(5),
+            TextureSampler::PrevPassAlpha => TextureSlot(3),
+            TextureSampler::PrevPassColor => TextureSlot(4),
+            TextureSampler::GpuCache => TextureSlot(5),
             TextureSampler::TransformPalette => TextureSlot(6),
             TextureSampler::RenderTasks => TextureSlot(7),
             TextureSampler::Dither => TextureSlot(8),
-            TextureSampler::SharedCacheA8 => TextureSlot(9),
-            TextureSampler::PrimitiveHeadersF => TextureSlot(10),
-            TextureSampler::PrimitiveHeadersI => TextureSlot(11),
+            TextureSampler::PrimitiveHeadersF => TextureSlot(9),
+            TextureSampler::PrimitiveHeadersI => TextureSlot(10),
         }
     }
 }
@@ -703,48 +716,64 @@ impl GpuGlyphRenderer {
 #[cfg(not(feature = "pathfinder"))]
 struct StenciledGlyphPage;
 
+/// A Texture that has been initialized by the `device` module and is ready to
+/// be used.
 struct ActiveTexture {
     texture: Texture,
     saved_index: Option<SavedTargetIndex>,
-    is_shared: bool,
 }
 
-struct SourceTextureResolver {
-    /// A vector for fast resolves of texture cache IDs to
-    /// native texture IDs. This maps to a free-list managed
-    /// by the backend thread / texture cache. We free the
-    /// texture memory associated with a TextureId when its
-    /// texture cache ID is freed by the texture cache, but
-    /// reuse the TextureId when the texture caches's free
-    /// list reuses the texture cache ID. This saves having to
-    /// use a hashmap, and allows a flat vector for performance.
-    cache_texture_map: Vec<Texture>,
+/// Helper struct for resolving device Textures for use during rendering passes.
+///
+/// Manages the mapping between the at-a-distance texture handles used by the
+/// `RenderBackend` (which does not directly interface with the GPU) and actual
+/// device texture handles.
+struct TextureResolver {
+    /// A vector for fast resolves of texture cache IDs to native texture IDs.
+    /// This maps to a free-list managed by the backend thread / texture cache.
+    /// We free the texture memory associated with a TextureId when its texture
+    /// cache ID is freed by the texture cache, but reuse the TextureId when the
+    /// texture caches's free list reuses the texture cache ID. This saves
+    /// having to use a hashmap, and allows a flat vector for performance.
+    texture_cache_map: Vec<Texture>,
 
     /// Map of external image IDs to native textures.
     external_images: FastHashMap<(ExternalImageId, u8), ExternalTexture>,
 
-    /// A special 1x1 dummy cache texture used for shaders that expect to work
-    /// with the cache but are actually running in the first pass
-    /// when no target is yet provided as a cache texture input.
+    /// A special 1x1 dummy texture used for shaders that expect to work with
+    /// the output of the previous pass but are actually running in the first
+    /// pass.
     dummy_cache_texture: Texture,
 
-    /// The current cache textures.
-    cache_rgba8_texture: Option<ActiveTexture>,
-    cache_a8_texture: Option<ActiveTexture>,
+    /// The outputs of the previous pass, if applicable.
+    prev_pass_color: Option<ActiveTexture>,
+    prev_pass_alpha: Option<ActiveTexture>,
 
-    /// An alpha texture shared between all passes.
-    //TODO: just use the standard texture saving logic instead.
-    shared_alpha_texture: Option<Texture>,
+    /// Saved render targets from previous passes. This is used when a pass
+    /// needs access to the result of a pass other than the immediately-preceding
+    /// one. In this case, the `RenderTask` will get a a non-`None` `saved_index`,
+    /// which will cause the resulting render target to be persisted in this list
+    /// (at that index) until the end of the frame.
+    saved_targets: Vec<Texture>,
 
-    /// Saved cache textures that are to be re-used.
-    saved_textures: Vec<Texture>,
-
-    /// General pool of render targets.
+    /// Pool of idle render target textures ready for re-use.
+    ///
+    /// Naively, it would seem like we only ever need two pairs of (color,
+    /// alpha) render targets: one for the output of the previous pass (serving
+    /// as input to the current pass), and one for the output of the current
+    /// pass. However, there are cases where the output of one pass is used as
+    /// the input to multiple future passes. For example, drop-shadows draw the
+    /// picture in pass X, then reference it in pass X+1 to create the blurred
+    /// shadow, and pass the results of both X and X+1 to pass X+2 draw the
+    /// actual content.
+    ///
+    /// See the comments in `allocate_target_texture` for more insight on why
+    /// reuse is a win.
     render_target_pool: Vec<Texture>,
 }
 
-impl SourceTextureResolver {
-    fn new(device: &mut Device) -> SourceTextureResolver {
+impl TextureResolver {
+    fn new(device: &mut Device) -> TextureResolver {
         let mut dummy_cache_texture = device
             .create_texture(TextureTarget::Array, ImageFormat::BGRA8);
         device.init_texture::<u8>(
@@ -757,14 +786,13 @@ impl SourceTextureResolver {
             None,
         );
 
-        SourceTextureResolver {
-            cache_texture_map: Vec::new(),
+        TextureResolver {
+            texture_cache_map: Vec::new(),
             external_images: FastHashMap::default(),
             dummy_cache_texture,
-            cache_a8_texture: None,
-            cache_rgba8_texture: None,
-            shared_alpha_texture: None,
-            saved_textures: Vec::default(),
+            prev_pass_alpha: None,
+            prev_pass_color: None,
+            saved_targets: Vec::default(),
             render_target_pool: Vec::new(),
         }
     }
@@ -772,7 +800,7 @@ impl SourceTextureResolver {
     fn deinit(self, device: &mut Device) {
         device.delete_texture(self.dummy_cache_texture);
 
-        for texture in self.cache_texture_map {
+        for texture in self.texture_cache_map {
             device.delete_texture(texture);
         }
 
@@ -782,18 +810,16 @@ impl SourceTextureResolver {
     }
 
     fn begin_frame(&mut self) {
-        assert!(self.cache_rgba8_texture.is_none());
-        assert!(self.cache_a8_texture.is_none());
-        assert!(self.saved_textures.is_empty());
+        assert!(self.prev_pass_color.is_none());
+        assert!(self.prev_pass_alpha.is_none());
+        assert!(self.saved_targets.is_empty());
     }
 
     fn end_frame(&mut self, device: &mut Device, frame_id: FrameId) {
         // return the cached targets to the pool
         self.end_pass(None, None);
-        // return the global alpha texture
-        self.render_target_pool.extend(self.shared_alpha_texture.take());
         // return the saved targets as well
-        self.render_target_pool.extend(self.saved_textures.drain(..));
+        self.render_target_pool.extend(self.saved_targets.drain(..));
 
         // GC the render target pool.
         //
@@ -830,23 +856,18 @@ impl SourceTextureResolver {
         // Also assign the pool index of those cache textures to last pass's index because this is
         // the result of last pass.
         // Note: the order here is important, needs to match the logic in `RenderPass::build()`.
-        if let Some(at) = self.cache_rgba8_texture.take() {
-            assert!(!at.is_shared);
+        if let Some(at) = self.prev_pass_color.take() {
             if let Some(index) = at.saved_index {
-                assert_eq!(self.saved_textures.len(), index.0);
-                self.saved_textures.push(at.texture);
+                assert_eq!(self.saved_targets.len(), index.0);
+                self.saved_targets.push(at.texture);
             } else {
                 self.render_target_pool.push(at.texture);
             }
         }
-        if let Some(at) = self.cache_a8_texture.take() {
+        if let Some(at) = self.prev_pass_alpha.take() {
             if let Some(index) = at.saved_index {
-                assert!(!at.is_shared);
-                assert_eq!(self.saved_textures.len(), index.0);
-                self.saved_textures.push(at.texture);
-            } else if at.is_shared {
-                assert!(self.shared_alpha_texture.is_none());
-                self.shared_alpha_texture = Some(at.texture);
+                assert_eq!(self.saved_targets.len(), index.0);
+                self.saved_targets.push(at.texture);
             } else {
                 self.render_target_pool.push(at.texture);
             }
@@ -854,40 +875,40 @@ impl SourceTextureResolver {
 
         // We have another pass to process, make these textures available
         // as inputs to the next pass.
-        self.cache_rgba8_texture = rgba8_texture;
-        self.cache_a8_texture = a8_texture;
+        self.prev_pass_color = rgba8_texture;
+        self.prev_pass_alpha = a8_texture;
     }
 
     // Bind a source texture to the device.
-    fn bind(&self, texture_id: &SourceTexture, sampler: TextureSampler, device: &mut Device) {
+    fn bind(&self, texture_id: &TextureSource, sampler: TextureSampler, device: &mut Device) {
         match *texture_id {
-            SourceTexture::Invalid => {}
-            SourceTexture::CacheA8 => {
-                let texture = match self.cache_a8_texture {
+            TextureSource::Invalid => {}
+            TextureSource::PrevPassAlpha => {
+                let texture = match self.prev_pass_alpha {
                     Some(ref at) => &at.texture,
                     None => &self.dummy_cache_texture,
                 };
                 device.bind_texture(sampler, texture);
             }
-            SourceTexture::CacheRGBA8 => {
-                let texture = match self.cache_rgba8_texture {
+            TextureSource::PrevPassColor => {
+                let texture = match self.prev_pass_color {
                     Some(ref at) => &at.texture,
                     None => &self.dummy_cache_texture,
                 };
                 device.bind_texture(sampler, texture);
             }
-            SourceTexture::External(external_image) => {
+            TextureSource::External(external_image) => {
                 let texture = self.external_images
                     .get(&(external_image.id, external_image.channel_index))
                     .expect(&format!("BUG: External image should be resolved by now"));
                 device.bind_external_texture(sampler, texture);
             }
-            SourceTexture::TextureCache(index) => {
-                let texture = &self.cache_texture_map[index.0];
+            TextureSource::TextureCache(index) => {
+                let texture = &self.texture_cache_map[index.0];
                 device.bind_texture(sampler, texture);
             }
-            SourceTexture::RenderTaskCache(saved_index) => {
-                let texture = &self.saved_textures[saved_index.0];
+            TextureSource::RenderTaskCache(saved_index) => {
+                let texture = &self.saved_targets[saved_index.0];
                 device.bind_texture(sampler, texture)
             }
         }
@@ -896,29 +917,29 @@ impl SourceTextureResolver {
     // Get the real (OpenGL) texture ID for a given source texture.
     // For a texture cache texture, the IDs are stored in a vector
     // map for fast access.
-    fn resolve(&self, texture_id: &SourceTexture) -> Option<&Texture> {
+    fn resolve(&self, texture_id: &TextureSource) -> Option<&Texture> {
         match *texture_id {
-            SourceTexture::Invalid => None,
-            SourceTexture::CacheA8 => Some(
-                match self.cache_a8_texture {
+            TextureSource::Invalid => None,
+            TextureSource::PrevPassAlpha => Some(
+                match self.prev_pass_alpha {
                     Some(ref at) => &at.texture,
                     None => &self.dummy_cache_texture,
                 }
             ),
-            SourceTexture::CacheRGBA8 => Some(
-                match self.cache_rgba8_texture {
+            TextureSource::PrevPassColor => Some(
+                match self.prev_pass_color {
                     Some(ref at) => &at.texture,
                     None => &self.dummy_cache_texture,
                 }
             ),
-            SourceTexture::External(..) => {
+            TextureSource::External(..) => {
                 panic!("BUG: External textures cannot be resolved, they can only be bound.");
             }
-            SourceTexture::TextureCache(index) => {
-                Some(&self.cache_texture_map[index.0])
+            TextureSource::TextureCache(index) => {
+                Some(&self.texture_cache_map[index.0])
             }
-            SourceTexture::RenderTaskCache(saved_index) => {
-                Some(&self.saved_textures[saved_index.0])
+            TextureSource::RenderTaskCache(saved_index) => {
+                Some(&self.saved_targets[saved_index.0])
             }
         }
     }
@@ -928,7 +949,7 @@ impl SourceTextureResolver {
 
         // We're reporting GPU memory rather than heap-allocations, so we don't
         // use size_of_op.
-        for t in self.cache_texture_map.iter() {
+        for t in self.texture_cache_map.iter() {
             report.texture_cache_textures += t.size_in_bytes();
         }
         for t in self.render_target_pool.iter() {
@@ -963,9 +984,9 @@ impl CacheRow {
     }
 }
 
-/// The bus over which CPU and GPU versions of the cache
+/// The bus over which CPU and GPU versions of the GPU cache
 /// get synchronized.
-enum CacheBus {
+enum GpuCacheBus {
     /// PBO-based updates, currently operate on a row granularity.
     /// Therefore, are subject to fragmentation issues.
     PixelBuffer {
@@ -993,12 +1014,12 @@ enum CacheBus {
 }
 
 /// The device-specific representation of the cache texture in gpu_cache.rs
-struct CacheTexture {
+struct GpuCacheTexture {
     texture: Texture,
-    bus: CacheBus,
+    bus: GpuCacheBus,
 }
 
-impl CacheTexture {
+impl GpuCacheTexture {
     fn new(device: &mut Device, use_scatter: bool) -> Result<Self, RendererError> {
         let texture = device.create_texture(TextureTarget::Default, ImageFormat::RGBAF32);
 
@@ -1013,7 +1034,7 @@ impl CacheTexture {
                 buf_position.stream_with(&desc::GPU_CACHE_UPDATE.vertex_attributes[0..1]),
                 buf_value   .stream_with(&desc::GPU_CACHE_UPDATE.vertex_attributes[1..2]),
             ]);
-            CacheBus::Scatter {
+            GpuCacheBus::Scatter {
                 program,
                 vao,
                 buf_position,
@@ -1022,14 +1043,14 @@ impl CacheTexture {
             }
         } else {
             let buffer = device.create_pbo();
-            CacheBus::PixelBuffer {
+            GpuCacheBus::PixelBuffer {
                 buffer,
                 rows: Vec::new(),
                 cpu_blocks: Vec::new(),
             }
         };
 
-        Ok(CacheTexture {
+        Ok(GpuCacheTexture {
             texture,
             bus,
         })
@@ -1038,10 +1059,10 @@ impl CacheTexture {
     fn deinit(self, device: &mut Device) {
         device.delete_texture(self.texture);
         match self.bus {
-            CacheBus::PixelBuffer { buffer, ..} => {
+            GpuCacheBus::PixelBuffer { buffer, ..} => {
                 device.delete_pbo(buffer);
             }
-            CacheBus::Scatter { program, vao, buf_position, buf_value, ..} => {
+            GpuCacheBus::Scatter { program, vao, buf_position, buf_value, ..} => {
                 device.delete_program(program);
                 device.delete_custom_vao(vao);
                 device.delete_vbo(buf_position);
@@ -1065,7 +1086,7 @@ impl CacheTexture {
         let new_size = DeviceUintSize::new(MAX_VERTEX_TEXTURE_WIDTH as _, max_height);
 
         match self.bus {
-            CacheBus::PixelBuffer { ref mut rows, .. } => {
+            GpuCacheBus::PixelBuffer { ref mut rows, .. } => {
                 if max_height > old_size.height {
                     // Create a f32 texture that can be used for the vertex shader
                     // to fetch data from.
@@ -1087,7 +1108,7 @@ impl CacheTexture {
                     }
                 }
             }
-            CacheBus::Scatter {
+            GpuCacheBus::Scatter {
                 ref mut buf_position,
                 ref mut buf_value,
                 ref mut count,
@@ -1122,7 +1143,7 @@ impl CacheTexture {
 
     fn update(&mut self, device: &mut Device, updates: &GpuCacheUpdateList) {
         match self.bus {
-            CacheBus::PixelBuffer { ref mut rows, ref mut cpu_blocks, .. } => {
+            GpuCacheBus::PixelBuffer { ref mut rows, ref mut cpu_blocks, .. } => {
                 for update in &updates.updates {
                     match *update {
                         GpuCacheUpdate::Copy {
@@ -1155,7 +1176,7 @@ impl CacheTexture {
                     }
                 }
             }
-            CacheBus::Scatter {
+            GpuCacheBus::Scatter {
                 ref buf_position,
                 ref buf_value,
                 ref mut count,
@@ -1193,7 +1214,7 @@ impl CacheTexture {
 
     fn flush(&mut self, device: &mut Device) -> usize {
         match self.bus {
-            CacheBus::PixelBuffer { ref buffer, ref mut rows, ref cpu_blocks } => {
+            GpuCacheBus::PixelBuffer { ref buffer, ref mut rows, ref cpu_blocks } => {
                 let rows_dirty = rows
                     .iter()
                     .filter(|row| row.is_dirty)
@@ -1228,7 +1249,7 @@ impl CacheTexture {
 
                 rows_dirty
             }
-            CacheBus::Scatter { ref program, ref vao, count, .. } => {
+            GpuCacheBus::Scatter { ref program, ref vao, count, .. } => {
                 device.disable_depth();
                 device.set_blend(false);
                 device.bind_program(program);
@@ -1397,6 +1418,9 @@ pub struct RendererVAOs {
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
+///
+/// We have a separate `Renderer` instance for each instance of WebRender (generally
+/// one per OS window), and all instances share the same thread.
 pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
     debug_server: DebugServer,
@@ -1436,7 +1460,7 @@ pub struct Renderer {
     prim_header_i_texture: VertexDataTexture,
     transforms_texture: VertexDataTexture,
     render_task_texture: VertexDataTexture,
-    gpu_cache_texture: CacheTexture,
+    gpu_cache_texture: GpuCacheTexture,
     #[cfg(feature = "debug_renderer")]
     gpu_cache_debug_chunks: Vec<GpuDebugChunk>,
 
@@ -1446,7 +1470,7 @@ pub struct Renderer {
     pipeline_info: PipelineInfo,
 
     // Manages and resolves source textures IDs to real texture IDs.
-    texture_resolver: SourceTextureResolver,
+    texture_resolver: TextureResolver,
 
     // A PBO used to do asynchronous texture cache uploads.
     texture_cache_upload_pbo: PBO,
@@ -1698,14 +1722,14 @@ impl Renderer {
         let scale_vao = device.create_vao_with_new_instances(&desc::SCALE, &prim_vao);
         let texture_cache_upload_pbo = device.create_pbo();
 
-        let texture_resolver = SourceTextureResolver::new(&mut device);
+        let texture_resolver = TextureResolver::new(&mut device);
 
         let prim_header_f_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAF32);
         let prim_header_i_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAI32);
         let transforms_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAF32);
         let render_task_texture = VertexDataTexture::new(&mut device, ImageFormat::RGBAF32);
 
-        let gpu_cache_texture = CacheTexture::new(
+        let gpu_cache_texture = GpuCacheTexture::new(
             &mut device,
             options.scatter_gpu_cache_updates,
         )?;
@@ -2300,13 +2324,13 @@ impl Renderer {
             | DebugCommand::SimulateLongLowPrioritySceneBuild(_) => {}
             DebugCommand::InvalidateGpuCache => {
                 match self.gpu_cache_texture.bus {
-                    CacheBus::PixelBuffer { ref mut rows, .. } => {
+                    GpuCacheBus::PixelBuffer { ref mut rows, .. } => {
                         info!("Invalidating GPU caches");
                         for row in rows {
                             row.is_dirty = true;
                         }
                     }
-                    CacheBus::Scatter { .. } => {
+                    GpuCacheBus::Scatter { .. } => {
                         warn!("Unable to invalidate scattered GPU cache");
                     }
                 }
@@ -2651,7 +2675,7 @@ impl Renderer {
         // Note: the texture might have changed during the `update`,
         // so we need to bind it here.
         self.device.bind_texture(
-            TextureSampler::ResourceCache,
+            TextureSampler::GpuCache,
             &self.gpu_cache_texture.texture,
         );
     }
@@ -2672,13 +2696,13 @@ impl Renderer {
                         render_target,
                     } => {
                         let CacheTextureId(cache_texture_index) = update.id;
-                        if self.texture_resolver.cache_texture_map.len() == cache_texture_index {
+                        if self.texture_resolver.texture_cache_map.len() == cache_texture_index {
                             // Create a new native texture, as requested by the texture cache.
                             let texture = self.device.create_texture(TextureTarget::Array, format);
-                            self.texture_resolver.cache_texture_map.push(texture);
+                            self.texture_resolver.texture_cache_map.push(texture);
                         }
                         let texture =
-                            &mut self.texture_resolver.cache_texture_map[cache_texture_index];
+                            &mut self.texture_resolver.texture_cache_map[cache_texture_index];
                         assert_eq!(texture.get_format(), format);
 
                         // Ensure no PBO is bound when creating the texture storage,
@@ -2700,7 +2724,7 @@ impl Renderer {
                         layer_index,
                         offset,
                     } => {
-                        let texture = &self.texture_resolver.cache_texture_map[update.id.0];
+                        let texture = &self.texture_resolver.texture_cache_map[update.id.0];
                         let mut uploader = self.device.upload_texture(
                             texture,
                             &self.texture_cache_upload_pbo,
@@ -2748,7 +2772,7 @@ impl Renderer {
                         self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
                     }
                     TextureUpdateOp::Free => {
-                        let texture = &mut self.texture_resolver.cache_texture_map[update.id.0];
+                        let texture = &mut self.texture_resolver.texture_cache_map[update.id.0];
                         self.device.free_texture_storage(texture);
                     }
                 }
@@ -2831,7 +2855,7 @@ impl Renderer {
         }
 
         let cache_texture = self.texture_resolver
-            .resolve(&SourceTexture::CacheRGBA8)
+            .resolve(&TextureSource::PrevPassColor)
             .unwrap();
 
         // Before submitting the composite batch, do the
@@ -2909,7 +2933,7 @@ impl Renderer {
                     // TODO(gw): Support R8 format here once we start
                     //           creating mips for alpha masks.
                     let src_texture = self.texture_resolver
-                        .resolve(&SourceTexture::CacheRGBA8)
+                        .resolve(&TextureSource::PrevPassColor)
                         .expect("BUG: invalid source texture");
                     let source = &render_tasks[task_id];
                     let (source_rect, layer) = source.get_target_rect();
@@ -2928,7 +2952,7 @@ impl Renderer {
     fn handle_scaling(
         &mut self,
         scalings: &[ScalingInstance],
-        source: SourceTexture,
+        source: TextureSource,
         projection: &Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
@@ -2937,12 +2961,12 @@ impl Renderer {
         }
 
         match source {
-            SourceTexture::CacheRGBA8 => {
+            TextureSource::PrevPassColor => {
                 self.shaders.cs_scale_rgba8.bind(&mut self.device,
                                                  &projection,
                                                  &mut self.renderer_errors);
             }
-            SourceTexture::CacheA8 => {
+            TextureSource::PrevPassAlpha => {
                 self.shaders.cs_scale_a8.bind(&mut self.device,
                                               &projection,
                                               &mut self.renderer_errors);
@@ -3064,7 +3088,7 @@ impl Renderer {
             }
         }
 
-        self.handle_scaling(&target.scalings, SourceTexture::CacheRGBA8, projection, stats);
+        self.handle_scaling(&target.scalings, TextureSource::PrevPassColor, projection, stats);
 
         //TODO: record the pixel count for cached primitives
 
@@ -3356,7 +3380,7 @@ impl Renderer {
             }
         }
 
-        self.handle_scaling(&target.scalings, SourceTexture::CacheA8, projection, stats);
+        self.handle_scaling(&target.scalings, TextureSource::PrevPassAlpha, projection, stats);
 
         // Draw the clip items into the tiled alpha mask.
         {
@@ -3387,8 +3411,8 @@ impl Renderer {
                 let textures = BatchTextures {
                     colors: [
                         mask_texture_id.clone(),
-                        SourceTexture::Invalid,
-                        SourceTexture::Invalid,
+                        TextureSource::Invalid,
+                        TextureSource::Invalid,
                     ],
                 };
                 self.shaders.cs_clip_box_shadow
@@ -3423,8 +3447,8 @@ impl Renderer {
                 let textures = BatchTextures {
                     colors: [
                         mask_texture_id.clone(),
-                        SourceTexture::Invalid,
-                        SourceTexture::Invalid,
+                        TextureSource::Invalid,
+                        TextureSource::Invalid,
                     ],
                 };
                 self.shaders.cs_clip_image
@@ -3443,15 +3467,16 @@ impl Renderer {
 
     fn draw_texture_cache_target(
         &mut self,
-        texture: &SourceTexture,
+        texture: &CacheTextureId,
         layer: i32,
         target: &TextureCacheRenderTarget,
         render_tasks: &RenderTaskTree,
         stats: &mut RendererStats,
     ) {
+        let texture_source = TextureSource::TextureCache(*texture);
         let (target_size, projection) = {
             let texture = self.texture_resolver
-                .resolve(texture)
+                .resolve(&texture_source)
                 .expect("BUG: invalid target texture");
             let target_size = texture.get_dimensions();
             let projection = Transform3D::ortho(
@@ -3475,7 +3500,7 @@ impl Renderer {
 
         {
             let texture = self.texture_resolver
-                .resolve(texture)
+                .resolve(&texture_source)
                 .expect("BUG: invalid target texture");
             self.device
                 .bind_draw_target(Some((texture, layer)), Some(target_size));
@@ -3660,6 +3685,18 @@ impl Renderer {
         }
     }
 
+    /// Allocates a texture to be used as the output for a rendering pass.
+    ///
+    /// We make an effort to reuse render targe textures across passes and
+    /// across frames. Reusing a texture with the same dimensions (width,
+    /// height, and layer-count) and format is obviously ideal. Reusing a
+    /// texture with different dimensions but the same format can be faster
+    /// than allocating a new texture, since it basically boils down to
+    /// a realloc in GPU memory, which can be very cheap if the existing
+    /// region can be resized. However, some drivers/GPUs require textures
+    /// with different formats to be allocated in different arenas,
+    /// reinitializing with a different format can force a large copy. As
+    /// such, we just allocate a new texture in that case.
     fn allocate_target_texture<T: RenderTarget>(
         &mut self,
         list: &mut RenderTargetList<T>,
@@ -3725,7 +3762,6 @@ impl Renderer {
         Some(ActiveTexture {
             texture,
             saved_index: list.saved_index.clone(),
-            is_shared: list.is_shared,
         })
     }
 
@@ -3767,8 +3803,8 @@ impl Renderer {
             &self.render_task_texture.texture,
         );
 
-        debug_assert!(self.texture_resolver.cache_a8_texture.is_none());
-        debug_assert!(self.texture_resolver.cache_rgba8_texture.is_none());
+        debug_assert!(self.texture_resolver.prev_pass_alpha.is_none());
+        debug_assert!(self.texture_resolver.prev_pass_color.is_none());
     }
 
     fn draw_tile_frame(
@@ -3797,13 +3833,13 @@ impl Renderer {
             self.gpu_profile.place_marker(&format!("pass {}", pass_index));
 
             self.texture_resolver.bind(
-                &SourceTexture::CacheA8,
-                TextureSampler::CacheA8,
+                &TextureSource::PrevPassAlpha,
+                TextureSampler::PrevPassAlpha,
                 &mut self.device,
             );
             self.texture_resolver.bind(
-                &SourceTexture::CacheRGBA8,
-                TextureSampler::CacheRGBA8,
+                &TextureSource::PrevPassColor,
+                TextureSampler::PrevPassColor,
                 &mut self.device,
             );
 
@@ -3908,12 +3944,6 @@ impl Renderer {
                     (alpha_tex, color_tex)
                 }
             };
-
-            //Note: the `end_pass` will make sure this texture is not recycled this frame
-            if let Some(ActiveTexture { ref texture, is_shared: true, .. }) = cur_alpha {
-                self.device
-                    .bind_texture(TextureSampler::SharedCacheA8, texture);
-            }
 
             self.texture_resolver.end_pass(
                 cur_alpha,
@@ -4039,7 +4069,7 @@ impl Renderer {
         let mut size = 512;
         let fb_width = framebuffer_size.width as i32;
         let num_layers: i32 = self.texture_resolver
-            .cache_texture_map
+            .texture_cache_map
             .iter()
             .map(|texture| texture.get_layer_count())
             .sum();
@@ -4051,7 +4081,7 @@ impl Renderer {
         }
 
         let mut i = 0;
-        for texture in &self.texture_resolver.cache_texture_map {
+        for texture in &self.texture_resolver.texture_cache_map {
             let y = spacing + if self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) {
                 528
             } else {
@@ -4230,7 +4260,7 @@ impl Renderer {
         let mut report = MemoryReport::default();
 
         // GPU cache CPU memory.
-        if let CacheBus::PixelBuffer{ref cpu_blocks, ..} = self.gpu_cache_texture.bus {
+        if let GpuCacheBus::PixelBuffer{ref cpu_blocks, ..} = self.gpu_cache_texture.bus {
             report.gpu_cache_cpu_mirror += self.size_of(cpu_blocks.as_ptr());
         }
 
@@ -4740,7 +4770,7 @@ impl Renderer {
             };
 
             info!("saving cached textures");
-            for texture in &self.texture_resolver.cache_texture_map {
+            for texture in &self.texture_resolver.texture_cache_map {
                 let file_name = format!("cache-{}", plain_self.textures.len() + 1);
                 info!("\t{}", file_name);
                 let plain = Self::save_texture(texture, &file_name, &config.root, &mut self.device);
@@ -4794,14 +4824,14 @@ impl Renderer {
             info!("loading cached textures");
             self.device.begin_frame();
 
-            for texture in self.texture_resolver.cache_texture_map.drain(..) {
+            for texture in self.texture_resolver.texture_cache_map.drain(..) {
                 self.device.delete_texture(texture);
             }
             for texture in renderer.textures {
                 info!("\t{}", texture.data);
                 let mut t = self.device.create_texture(TextureTarget::Array, texture.format);
                 Self::load_texture(&mut t, &texture, &root, &mut self.device);
-                self.texture_resolver.cache_texture_map.push(t);
+                self.texture_resolver.texture_cache_map.push(t);
             }
 
             info!("loading gpu cache");
@@ -4812,7 +4842,7 @@ impl Renderer {
                 &mut self.device,
             );
             match self.gpu_cache_texture.bus {
-                CacheBus::PixelBuffer { ref mut rows, ref mut cpu_blocks, .. } => {
+                GpuCacheBus::PixelBuffer { ref mut rows, ref mut cpu_blocks, .. } => {
                     let dim = self.gpu_cache_texture.texture.get_dimensions();
                     let blocks = unsafe {
                         slice::from_raw_parts(
@@ -4826,7 +4856,7 @@ impl Renderer {
                     rows.extend((0 .. dim.height).map(|_| CacheRow::new()));
                     cpu_blocks.extend_from_slice(blocks);
                 }
-                CacheBus::Scatter { .. } => {}
+                GpuCacheBus::Scatter { .. } => {}
             }
             self.gpu_cache_frame_id = renderer.gpu_cache_frame_id;
 
