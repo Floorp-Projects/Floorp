@@ -237,7 +237,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
       return hr;
     }
     if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-      hr = mDecoder->FindDecoderOutputType(false /* check all attribute */);
+      hr = mDecoder->FindDecoderOutputType();
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
       hr = UpdateOutputType();
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
