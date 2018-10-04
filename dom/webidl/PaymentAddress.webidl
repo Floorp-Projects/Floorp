@@ -21,7 +21,6 @@ interface PaymentAddress {
   [Frozen, Cached, Pure]
   readonly attribute sequence<DOMString>    addressLine;
   readonly attribute DOMString              region;
-  readonly attribute DOMString              regionCode;
   readonly attribute DOMString              city;
   readonly attribute DOMString              dependentLocality;
   readonly attribute DOMString              postalCode;

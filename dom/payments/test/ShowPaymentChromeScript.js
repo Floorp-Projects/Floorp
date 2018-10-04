@@ -26,7 +26,6 @@ addressLine.appendElement(address);
 shippingAddress.init("USA",              // country
                      addressLine,        // address line
                      "CA",               // region
-                     "CA",               // region code
                      "San Bruno",        // city
                      "Test locality",    // dependent locality
                      "94066",            // postal code
