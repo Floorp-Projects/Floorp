@@ -13,6 +13,8 @@ import java.net.URL
  * HttpURLConnection-based Http client
  */
 internal class HttpURLConnectionHttpClient : HttpClient {
+    @Suppress("TooGenericExceptionCaught")
+    @Throws(ExperimentDownloadException::class)
     override fun get(url: URL, headers: Map<String, String>?): String {
         var urlConnection: HttpURLConnection? = null
         try {
@@ -29,6 +31,11 @@ internal class HttpURLConnectionHttpClient : HttpClient {
         } catch (e: IOException) {
             throw ExperimentDownloadException(e)
         } catch (e: ClassCastException) {
+            throw ExperimentDownloadException(e)
+        } catch (e: ArrayIndexOutOfBoundsException) {
+            // On some devices we are seeing an ArrayIndexOutOfBoundsException being thrown
+            // somewhere inside AOSP/okhttp.
+            // See: https://github.com/mozilla-mobile/android-components/issues/964
             throw ExperimentDownloadException(e)
         } finally {
             urlConnection?.disconnect()

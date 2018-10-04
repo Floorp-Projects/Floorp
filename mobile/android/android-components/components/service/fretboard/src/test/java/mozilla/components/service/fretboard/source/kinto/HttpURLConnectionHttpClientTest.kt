@@ -5,6 +5,7 @@
 package mozilla.components.service.fretboard.source.kinto
 
 import mozilla.components.service.fretboard.ExperimentDownloadException
+import mozilla.components.support.test.mock
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
@@ -12,9 +13,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 
 @RunWith(RobolectricTestRunner::class)
@@ -77,6 +81,24 @@ class HttpURLConnectionHttpClientTest {
         testGET(mapOf("Accept" to "application/json")) {
             assertEquals("application/json", it.headers["Accept"])
         }
+    }
+
+    /**
+     * On some devices we are seeing an ArrayIndexOutOfBoundsException somewhere inside AOSP/okhttp.
+     *
+     * See:
+     * https://github.com/mozilla-mobile/android-components/issues/964
+     */
+    @Test(expected = ExperimentDownloadException::class)
+    fun testArrayIndexOutOfBoundsException() {
+        val client = HttpURLConnectionHttpClient()
+
+        val connection: HttpURLConnection = mock()
+        val url: URL = mock()
+        doReturn(connection).`when`(url).openConnection()
+        doThrow(ArrayIndexOutOfBoundsException()).`when`(connection).responseCode
+
+        client.get(url, mapOf()) // Should wrap exception and throw ExperimentDownloadException
     }
 
     private fun testGET(headers: Map<String, String>? = null, responseCode: Int = 200, assertions: ((RecordedRequest) -> Unit)? = null) {
