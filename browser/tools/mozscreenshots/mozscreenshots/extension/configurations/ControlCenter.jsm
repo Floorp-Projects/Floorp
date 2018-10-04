@@ -15,7 +15,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 let {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
-const RESOURCE_PATH = "browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/chrome/mozscreenshots/lib/controlCenter";
+const RESOURCE_PATH = "browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/resources/lib/controlCenter";
 const HTTP_PAGE = "http://example.com/";
 const HTTPS_PAGE = "https://example.com/";
 const PERMISSIONS_PAGE = "https://test1.example.com/";
@@ -41,7 +41,7 @@ var ControlCenter = {
       selectors: ["#identity-popup"],
       async applyConfig() {
         let channel = NetUtil.newChannel({
-            uri: "chrome://mozscreenshots/content/lib/mozscreenshots.html",
+            uri: "resource://mozscreenshots/lib/mozscreenshots.html",
             loadUsingSystemPrincipal: true,
         });
         channel = channel.QueryInterface(Ci.nsIFileChannel);

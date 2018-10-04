@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "mozscreenshots",
+  "description": "Take screenshots of Mozilla applications in various UI configurations.",
+  "version": "1.0",
+
+  "applications": {
+    "gecko": {
+      "id": "mozscreenshots@mozilla.org"
+    }
+  },
+
+  "experiment_apis": {
+    "mozscreenshots": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "events": ["startup"]
+      }
+    }
+  }
+}

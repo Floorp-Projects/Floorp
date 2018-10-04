@@ -29,7 +29,7 @@ async function setup() {
   return new Promise(async (resolve) => {
     let aAddon = await AddonManager.getAddonByID("mozscreenshots@mozilla.org");
     isnot(aAddon, null, "The mozscreenshots extension should be installed");
-    TestRunner = ChromeUtils.import("chrome://mozscreenshots/content/TestRunner.jsm", {}).TestRunner;
+    TestRunner = ChromeUtils.import("resource://mozscreenshots/TestRunner.jsm", {}).TestRunner;
     TestRunner.initTest(this);
     resolve();
   });
