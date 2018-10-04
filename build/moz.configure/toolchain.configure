@@ -1906,6 +1906,18 @@ def as_dash_c_flag(as_info, target):
 
 set_config('AS_DASH_C_FLAG', as_dash_c_flag)
 
+
+@depends(as_info, target)
+def as_outoption(as_info, target):
+    # The uses of ASOUTOPTION depend on the spacing for -o/-Fo.
+    if as_info.type == 'masm' and target.cpu != 'aarch64':
+        return '-Fo'
+
+    return '-o '
+
+
+set_config('ASOUTOPTION', as_outoption)
+
 # clang plugin handling
 # ==============================================================
 
