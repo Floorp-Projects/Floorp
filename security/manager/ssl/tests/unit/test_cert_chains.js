@@ -21,8 +21,29 @@ function test_cert_equals() {
      " should return false");
 }
 
+function test_bad_cert_list_serialization() {
+  // Normally the serialization of an nsIX509CertList consists of some header
+  // junk (IIDs and whatnot), 4 bytes representing how many nsIX509Cert follow,
+  // and then the serialization of each nsIX509Cert. This serialization consists
+  // of the header junk for an nsIX509CertList with 1 "nsIX509Cert", but then
+  // instead of an nsIX509Cert, the subsequent bytes represent the serialization
+  // of another nsIX509CertList (with 0 nsIX509Cert). This test ensures that
+  // nsIX509CertList safely handles this unexpected input when deserializing.
+  const badCertListSerialization =
+    "lZ+xZWUXSH+rm9iRO+UxlwAAAAAAAAAAwAAAAAAAAEYAAAABlZ+xZWUXSH+rm9iRO+UxlwAAAAAA" +
+    "AAAAwAAAAAAAAEYAAAAA";
+  let serHelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                    .getService(Ci.nsISerializationHelper);
+  throws(() => serHelper.deserializeObject(badCertListSerialization),
+         /NS_ERROR_UNEXPECTED/,
+         "deserializing a bogus nsIX509CertList should throw NS_ERROR_UNEXPECTED");
+}
+
 function test_cert_list_serialization() {
   let certList = build_cert_chain(["default-ee", "expired-ee"]);
+
+  throws(() => certList.addCert(null), /NS_ERROR_ILLEGAL_VALUE/,
+         "trying to add a null cert to an nsIX509CertList should throw");
 
   // Serialize the cert list to a string
   let serHelper = Cc["@mozilla.org/network/serialization-helper;1"]
@@ -197,6 +218,11 @@ function run_test() {
   // Test nsIX509Cert.equals
   add_test(function() {
     test_cert_equals();
+    run_next_test();
+  });
+
+  add_test(function() {
+    test_bad_cert_list_serialization();
     run_next_test();
   });
 
