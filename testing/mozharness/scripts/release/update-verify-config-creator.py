@@ -235,8 +235,9 @@ class UpdateVerifyConfigCreator(BaseScript):
         for release_name, release_info in \
             reversed(sorted(releases.items(),
                             key=lambda x: MozillaVersion(x[1]['version']))):
-            product = release_info['product']
-            version = release_info['version']
+            # we need to use releases_name instead of release_info since esr
+            # string is included in the name. later we rely on this.
+            product, version = release_name.split('-', 1)
             category = release_info['category']
             tag = "{}_{}_RELEASE".format(product.upper(), version.replace(".", "_"))
             # Product details has a "category" for releases that we can use to
