@@ -927,8 +927,8 @@ falling back to not using job objects for managing child processes""", file=sys.
 
         new_pid is the new process id of the child process.
         """
-        if not self.proc:
-            return
+        if not hasattr(self, "proc"):
+            raise RuntimeError("Process hasn't been started yet")
 
         if isPosix:
             new_pgid = self._getpgid(new_pid)
