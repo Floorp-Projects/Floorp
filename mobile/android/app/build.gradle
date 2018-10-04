@@ -2,13 +2,18 @@ buildDir "${topobjdir}/gradle/build/mobile/android/app"
 
 apply plugin: 'com.android.application'
 apply plugin: 'checkstyle'
-apply plugin: 'com.getkeepsafe.dexcount'
 apply plugin: 'findbugs'
+
+if (mozconfig.substs.MOZILLA_OFFICIAL) {
+    apply plugin: 'com.getkeepsafe.dexcount'
+}
 
 apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
 
-dexcount {
-    format = "tree"
+if (mozconfig.substs.MOZILLA_OFFICIAL) {
+    dexcount {
+        format = "tree"
+    }
 }
 
 android {
