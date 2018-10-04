@@ -10,7 +10,7 @@ use freelist::{FreeList, FreeListHandle, UpsertResult, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle};
 use gpu_types::{ImageSource, UvRectKind};
 use internal_types::{CacheTextureId, FastHashMap, TextureUpdateList, TextureUpdateSource};
-use internal_types::{RenderTargetInfo, SourceTexture, TextureUpdate, TextureUpdateOp};
+use internal_types::{RenderTargetInfo, TextureSource, TextureUpdate, TextureUpdateOp};
 use profiler::{ResourceProfileCounter, TextureCacheProfileCounters};
 use render_backend::FrameId;
 use resource_cache::CacheItem;
@@ -575,7 +575,7 @@ impl TextureCache {
                 };
                 CacheItem {
                     uv_rect_handle: entry.uv_rect_handle,
-                    texture_id: SourceTexture::TextureCache(entry.texture_id),
+                    texture_id: TextureSource::TextureCache(entry.texture_id),
                     uv_rect: DeviceUintRect::new(origin, entry.size),
                     texture_layer: layer_index as i32,
                 }
@@ -589,7 +589,7 @@ impl TextureCache {
     pub fn get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> (SourceTexture, i32, DeviceUintRect) {
+    ) -> (CacheTextureId, i32, DeviceUintRect) {
         let handle = handle
             .entry
             .as_ref()
@@ -609,7 +609,7 @@ impl TextureCache {
                 ..
             } => (layer_index, origin),
         };
-        (SourceTexture::TextureCache(entry.texture_id),
+        (entry.texture_id,
          layer_index as i32,
          DeviceUintRect::new(origin, entry.size))
     }

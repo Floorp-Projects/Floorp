@@ -127,6 +127,8 @@ pub enum ColorDepth {
     Color10,
     /// 12 bits image
     Color12,
+    /// 16 bits image
+    Color16,
 }
 
 impl ColorDepth {
@@ -136,6 +138,7 @@ impl ColorDepth {
             ColorDepth::Color8 => 8,
             ColorDepth::Color10 => 10,
             ColorDepth::Color12 => 12,
+            ColorDepth::Color16 => 16,
         }
     }
     /// 10 and 12 bits images are encoded using 16 bits integer, we need to
@@ -145,6 +148,7 @@ impl ColorDepth {
             ColorDepth::Color8 => 1.0,
             ColorDepth::Color10 => 64.0,
             ColorDepth::Color12 => 16.0,
+            ColorDepth::Color16 => 1.0,
         }
     }
 }

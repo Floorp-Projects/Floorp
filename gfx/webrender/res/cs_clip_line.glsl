@@ -28,7 +28,7 @@ struct LineDecorationData {
 };
 
 LineDecorationData fetch_data(ivec2 address) {
-    vec4 data[2] = fetch_from_resource_cache_2_direct(address);
+    vec4 data[2] = fetch_from_gpu_cache_2_direct(address);
     RectWithSize local_rect = RectWithSize(data[0].xy, data[0].zw);
     LineDecorationData line_data = LineDecorationData(
         local_rect,

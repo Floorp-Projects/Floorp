@@ -1474,6 +1474,24 @@ struct TrapSiteVectorArray : EnumeratedArray<Trap, Trap::Limit, TrapSiteVector>
     WASM_DECLARE_SERIALIZABLE(TrapSiteVectorArray)
 };
 
+// On trap, the bytecode offset to be reported in callstacks is saved.
+
+struct TrapData
+{
+    // The resumePC indicates where, if the trap doesn't throw, the trap stub
+    // should jump to after restoring all register state.
+    void* resumePC;
+
+    // The unwoundPC is the PC after adjustment by wasm::StartUnwinding(), which
+    // basically unwinds partially-construted wasm::Frames when pc is in the
+    // prologue/epilogue. Stack traces during a trap should use this PC since
+    // it corresponds to the JitActivation::wasmExitFP.
+    void* unwoundPC;
+
+    Trap trap;
+    uint32_t bytecodeOffset;
+};
+
 // The (,Callable,Func)Offsets classes are used to record the offsets of
 // different key points in a CodeRange during compilation.
 
@@ -1985,10 +2003,8 @@ struct TlsData
     // Pointer to the base of the default memory (or null if there is none).
     uint8_t* memoryBase;
 
-#ifndef WASM_HUGE_MEMORY
     // Bounds check limit of memory, in bytes (or zero if there is no memory).
     uint32_t boundsCheckLimit;
-#endif
 
     // Pointer to the Instance that contains this TLS data.
     Instance* instance;

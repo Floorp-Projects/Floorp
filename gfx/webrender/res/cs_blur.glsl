@@ -46,9 +46,9 @@ void main(void) {
     RectWithSize target_rect = blur_task.common_data.task_rect;
 
 #if defined WR_FEATURE_COLOR_TARGET
-    vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0).xy);
+    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0).xy);
 #else
-    vec2 texture_size = vec2(textureSize(sCacheA8, 0).xy);
+    vec2 texture_size = vec2(textureSize(sPrevPassAlpha, 0).xy);
 #endif
     vUv.z = src_task.texture_layer_index;
     vSigma = blur_task.blur_radius;
@@ -89,10 +89,10 @@ void main(void) {
 
 #if defined WR_FEATURE_COLOR_TARGET
 #define SAMPLE_TYPE vec4
-#define SAMPLE_TEXTURE(uv)  texture(sCacheRGBA8, uv)
+#define SAMPLE_TEXTURE(uv)  texture(sPrevPassColor, uv)
 #else
 #define SAMPLE_TYPE float
-#define SAMPLE_TEXTURE(uv)  texture(sCacheA8, uv).r
+#define SAMPLE_TEXTURE(uv)  texture(sPrevPassAlpha, uv).r
 #endif
 
 // TODO(gw): Write a fast path blur that handles smaller blur radii

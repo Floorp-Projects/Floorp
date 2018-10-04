@@ -10,7 +10,7 @@ tabmodalprompt {
   -moz-box-orient: vertical;
 }
 
-.mainContainer {
+.tabmodalprompt-mainContainer {
   min-width: 20em;
   min-height: 12em;
   -moz-user-focus: normal;
@@ -30,6 +30,6 @@ tabmodalprompt {
   unicode-bidi: plaintext;
 }
 
-label[value=""] {
+tabmodalprompt label[value=""] {
   visibility: collapse;
 }

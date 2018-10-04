@@ -415,9 +415,9 @@ SimulatorProcess* SimulatorProcess::singleton_ = nullptr;
 int64_t Simulator::StopSimAt = -1L;
 
 Simulator*
-Simulator::Create(JSContext* cx)
+Simulator::Create()
 {
-    auto sim = MakeUnique<Simulator>(cx);
+    auto sim = MakeUnique<Simulator>();
     if (!sim) {
         return nullptr;
     }
@@ -1152,8 +1152,7 @@ SimulatorProcess::FlushICache(void* start_addr, size_t size)
     }
 }
 
-Simulator::Simulator(JSContext* cx)
-  : cx_(cx)
+Simulator::Simulator()
 {
     // Set up simulator support first. Some of this information is needed to
     // setup the architecture state.
@@ -1597,90 +1596,6 @@ Simulator::registerState()
     state.sp = (void*) get_register(sp);
     state.lr = (void*) get_register(lr);
     return state;
-}
-
-static inline JitActivation*
-GetJitActivation(JSContext* cx)
-{
-    if (!wasm::CodeExists) {
-        return nullptr;
-    }
-    if (!cx->activation() || !cx->activation()->isJit()) {
-        return nullptr;
-    }
-    return cx->activation()->asJit();
-}
-
-// WebAssembly memories contain an extra region of guard pages (see
-// WasmArrayRawBuffer comment). The guard pages catch out-of-bounds accesses
-// using a signal handler that redirects PC to a stub that safely reports an
-// error. However, if the handler is hit by the simulator, the PC is in C++ code
-// and cannot be redirected. Therefore, we must avoid hitting the handler by
-// redirecting in the simulator before the real handler would have been hit.
-bool
-Simulator::handleWasmSegFault(int32_t addr, unsigned numBytes)
-{
-    JitActivation* act = GetJitActivation(cx_);
-    if (!act) {
-        return false;
-    }
-
-    void* pc = reinterpret_cast<void*>(get_pc());
-    uint8_t* fp = reinterpret_cast<uint8_t*>(get_register(r11));
-
-    const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
-    if (!segment || !segment->isModule()) {
-        return false;
-    }
-    const wasm::ModuleSegment* moduleSegment = segment->asModule();
-
-    wasm::Instance* instance = wasm::LookupFaultingInstance(*moduleSegment, pc, fp);
-    if (!instance) {
-        return false;
-    }
-
-    MOZ_RELEASE_ASSERT(&instance->code() == &moduleSegment->code());
-
-    if (!instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes)) {
-        return false;
-    }
-
-    wasm::Trap trap;
-    wasm::BytecodeOffset bytecode;
-    MOZ_ALWAYS_TRUE(moduleSegment->code().lookupTrap(pc, &trap, &bytecode));
-
-    MOZ_RELEASE_ASSERT(trap == wasm::Trap::OutOfBounds);
-
-    act->startWasmTrap(wasm::Trap::OutOfBounds, bytecode.offset(), registerState());
-    set_pc(int32_t(moduleSegment->trapCode()));
-    return true;
-}
-
-bool
-Simulator::handleWasmIllFault()
-{
-    JitActivation* act = GetJitActivation(cx_);
-    if (!act) {
-        return false;
-    }
-
-    void* pc = reinterpret_cast<void*>(get_pc());
-
-    const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
-    if (!segment || !segment->isModule()) {
-        return false;
-    }
-    const wasm::ModuleSegment* moduleSegment = segment->asModule();
-
-    wasm::Trap trap;
-    wasm::BytecodeOffset bytecode;
-    if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
-        return false;
-    }
-
-    act->startWasmTrap(trap, bytecode.offset(), registerState());
-    set_pc(int32_t(moduleSegment->trapCode()));
-    return true;
 }
 
 uint64_t
@@ -3677,7 +3592,9 @@ void
 Simulator::decodeType3(SimInstruction* instr)
 {
     if (MOZ_UNLIKELY(instr->isUDF())) {
-        if (handleWasmIllFault()) {
+        uint8_t* newPC;
+        if (wasm::HandleIllegalInstruction(registerState(), &newPC)) {
+            set_pc((int32_t)newPC);
             return;
         }
         MOZ_CRASH("illegal instruction encountered");
