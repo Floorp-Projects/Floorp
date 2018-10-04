@@ -369,8 +369,6 @@ enum nsCSSUnit {
   eCSSUnit_Calc_Divided = 35,     // (nsCSSValue::Array*) / within calc
 
   eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
-  eCSSUnit_GridTemplateAreas   = 44,   // (GridTemplateAreasValue*)
-                                       // for grid-template-areas
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
   eCSSUnit_List         = 53,     // (nsCSSValueList*) list of values
@@ -463,7 +461,6 @@ public:
   nsCSSValue(Array* aArray, nsCSSUnit aUnit);
   explicit nsCSSValue(mozilla::css::URLValue* aValue);
   explicit nsCSSValue(mozilla::css::ImageValue* aValue);
-  explicit nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue);
   explicit nsCSSValue(mozilla::SharedFontList* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   nsCSSValue(nsCSSValue&& aOther)
@@ -636,13 +633,6 @@ public:
     return mValue.mURL;
   }
 
-  mozilla::css::GridTemplateAreasValue* GetGridTemplateAreas() const
-  {
-    MOZ_ASSERT(mUnit == eCSSUnit_GridTemplateAreas,
-               "not a grid-template-areas value");
-    return mValue.mGridTemplateAreas;
-  }
-
   // Not making this inline because that would force us to include
   // imgIRequest.h, which leads to REQUIRES hell, since this header is included
   // all over.
@@ -686,7 +676,6 @@ public:
   void SetIntegerCoordValue(nscoord aCoord);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   void SetURLValue(mozilla::css::URLValue* aURI);
-  void SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue);
   void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
@@ -730,7 +719,6 @@ protected:
     nsAtom* MOZ_OWNING_REF mAtom;
     Array* MOZ_OWNING_REF mArray;
     mozilla::css::URLValue* MOZ_OWNING_REF mURL;
-    mozilla::css::GridTemplateAreasValue* MOZ_OWNING_REF mGridTemplateAreas;
     nsCSSValuePair_heap* MOZ_OWNING_REF mPair;
     nsCSSValueList_heap* MOZ_OWNING_REF mList;
     nsCSSValueList* mListDependent;
