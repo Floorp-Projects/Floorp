@@ -16,7 +16,7 @@ const {Connection} = require("devtools/shared/client/connection-manager");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-const {GetAvailableAddons} = require("devtools/client/webide/modules/addons");
+const {getADBAddon} = require("devtools/client/webide/modules/addons");
 const {getJSON} = require("devtools/client/shared/getjson");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
@@ -86,8 +86,8 @@ var UI = {
     // If the user decides to uninstall any of this addon, we won't install it again.
     const autoinstallADBExtension = Services.prefs.getBoolPref("devtools.webide.autoinstallADBExtension");
     if (autoinstallADBExtension) {
-      const addons = GetAvailableAddons();
-      addons.adb.install();
+      const adbAddon = getADBAddon();
+      adbAddon.install();
     }
 
     Services.prefs.setBoolPref("devtools.webide.autoinstallADBExtension", false);

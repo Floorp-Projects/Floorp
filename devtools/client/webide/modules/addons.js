@@ -34,23 +34,20 @@ addonsListener.onEnabled =
 addonsListener.onDisabled =
 addonsListener.onInstalled =
 addonsListener.onUninstalled = (updatedAddon) => {
-  const addons = GetAvailableAddons();
-  addons.adb.updateInstallStatus();
+  getADBAddon().updateInstallStatus();
 };
 AddonManager.addAddonListener(addonsListener);
 
-var AvailableAddons = null;
-var GetAvailableAddons = exports.GetAvailableAddons = function() {
-  if (!AvailableAddons) {
-    AvailableAddons = {
-      adb: new ADBAddon()
-    };
+var adbAddon = null;
+var getADBAddon = exports.getADBAddon = function() {
+  if (!adbAddon) {
+    adbAddon = new ADBAddon();
   }
-  return AvailableAddons;
+  return adbAddon;
 };
 
-exports.ForgetAddonsList = function() {
-  AvailableAddons = null;
+exports.forgetADBAddon = function() {
+  adbAddon = null;
 };
 
 function ADBAddon() {
