@@ -6,14 +6,18 @@
  */
 "use strict";
 
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
 const { pmmConsoleMethod, pmmLoadFrameScripts, pmmClearFrameScripts }
   = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const MARKER_NAME = "TimeStamp";
 
 add_task(async function() {
-  const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
 
-  const front = target.getFront("performance");
+  initDebuggerServer();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
   const rec = await front.startRecording({ withMarkers: true });
 
@@ -37,6 +41,6 @@ add_task(async function() {
 
   pmmClearFrameScripts();
 
-  await target.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });

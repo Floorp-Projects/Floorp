@@ -12,10 +12,15 @@
 // Time in ms
 const WAIT_TIME = 1000;
 
-add_task(async function() {
-  const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-  const front = target.getFront("performance");
+add_task(async function() {
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
+
+  initDebuggerServer();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
   const rec = await front.startRecording();
@@ -43,7 +48,7 @@ add_task(async function() {
     "At least some samples have been iterated over, checking for root nodes.");
 
   await front.destroy();
-  await target.getFront("performance");
+  await client.close();
   gBrowser.removeCurrentTab();
 });
 

@@ -9,12 +9,16 @@
 
 "use strict";
 
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
 const { pmmIsProfilerActive, pmmLoadFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 
 add_task(async function() {
-  const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
 
-  const front = target.getFront("performance");
+  initDebuggerServer();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
   pmmLoadFrameScripts(gBrowser);
@@ -33,7 +37,7 @@ add_task(async function() {
     "The built-in profiler module should still be active (2).");
 
   await front.destroy();
-  await target.destroy();
+  await client.close();
 
   ok(!(await pmmIsProfilerActive()),
     "The built-in profiler module should no longer be active.");

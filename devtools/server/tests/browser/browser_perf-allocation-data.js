@@ -7,9 +7,15 @@
 
 "use strict";
 
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
+
 add_task(async function() {
-  const target  = await addTabTarget(MAIN_DOMAIN + "doc_allocations.html");
-  const front = target.getFront("performance");
+  await addTab(MAIN_DOMAIN + "doc_allocations.html");
+
+  initDebuggerServer();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
   const rec = await front.startRecording(
@@ -30,6 +36,6 @@ add_task(async function() {
   ok(sizes.every(n => n > 0 && typeof n === "number"), "all sizes are positive numbers");
 
   await front.destroy();
-  await target.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 });
