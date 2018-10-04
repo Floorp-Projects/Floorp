@@ -43,7 +43,7 @@ function FrameLocation({
   frame
 }) {
   if (!frame.source) {
-    return;
+    return null;
   }
 
   if (frame.library) {

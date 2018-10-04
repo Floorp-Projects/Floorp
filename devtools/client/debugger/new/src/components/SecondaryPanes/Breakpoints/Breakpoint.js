@@ -10,8 +10,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
 var _classnames = require("devtools/client/debugger/new/dist/vendors").vendored["classnames"];
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -32,6 +30,8 @@ var _prefs = require("../../../utils/prefs");
 
 var _editor = require("../../../utils/editor/index");
 
+var _source = require("../../../utils/source");
+
 var _selectors = require("../../../selectors/index");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -40,7 +40,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function getMappedLocation(mappedLocation, selectedSource) {
-  return selectedSource && (0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id) ? mappedLocation.generatedLocation : mappedLocation.location;
+  return selectedSource && (0, _source.isGenerated)(selectedSource) ? mappedLocation.generatedLocation : mappedLocation.location;
 }
 
 class Breakpoint extends _react.PureComponent {
@@ -137,7 +137,7 @@ class Breakpoint extends _react.PureComponent {
       return condition;
     }
 
-    if (selectedSource && (0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id)) {
+    if (selectedSource && (0, _source.isGenerated)(selectedSource)) {
       return breakpoint.text;
     }
 

@@ -9,6 +9,7 @@ add_task(async function() {
 
   await waitForSources(dbg, "doc-asm.html", "asm.js");
 
+  // Make sure sources appear.
   is(findAllElements(dbg, "sourceNodes").length, 4);
 
   await selectSource(dbg, "asm.js");

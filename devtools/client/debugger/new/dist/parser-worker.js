@@ -25545,6 +25545,7 @@ const {
 
 const dispatcher = new WorkerDispatcher();
 
+const setAssetRootURL = dispatcher.task("setAssetRootURL");
 const getOriginalURLs = dispatcher.task("getOriginalURLs");
 const getOriginalRanges = dispatcher.task("getOriginalRanges");
 const getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
@@ -25581,8 +25582,9 @@ module.exports = {
   applySourceMap,
   clearSourceMaps,
   getOriginalStackFrames,
-  startSourceMapWorker(workerURL) {
-    dispatcher.start(workerURL);
+  startSourceMapWorker(url, assetRoot) {
+    dispatcher.start(url);
+    setAssetRootURL(assetRoot);
   },
   stopSourceMapWorker: dispatcher.stop.bind(dispatcher)
 };
@@ -25806,6 +25808,10 @@ WorkerDispatcher.prototype = {
     };
 
     return (...args) => push(args);
+  },
+
+  invoke(method, ...args) {
+    return this.task(method)(...args);
   }
 };
 
