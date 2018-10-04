@@ -270,9 +270,6 @@ enum class OnUTF8Error {
     Crash,
 };
 
-// If making changes to this algorithm, make sure to also update
-// LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
-//
 // Scan UTF8 input and (internally, at least) convert it to a series of UTF-16
 // code units. But you can also do odd things like pass an empty lambda for
 // `dst`, in which case the output is discarded entirely--the only effect of
