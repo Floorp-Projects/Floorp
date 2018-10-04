@@ -148,13 +148,6 @@ public:
   // and serializing just the fragment if true.
   void GetSourceString(nsString& aRef) const;
 
-  bool EqualsExceptRef(nsIURI* aURI) const;
-
-  bool IsStringEmpty() const
-  {
-    return GetString().IsEmpty();
-  }
-
   nsDependentCSubstring GetString() const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
