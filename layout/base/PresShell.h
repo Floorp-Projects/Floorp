@@ -345,6 +345,8 @@ public:
     return (mMobileViewportManager != nullptr);
   }
 
+  void UpdateViewportOverridden(bool aAfterInitialization) override;
+
   bool IsLayoutFlushObserver() override
   {
     return GetPresContext()->RefreshDriver()->
