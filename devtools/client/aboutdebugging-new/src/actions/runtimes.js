@@ -66,37 +66,18 @@ async function createClientForRuntime(runtime) {
   return null;
 }
 
-async function getRuntimeInfo(runtime, client) {
-  const { model } = runtime;
-  const deviceFront = await client.mainRoot.getFront("device");
-  const { brandName: name, channel, version } = await deviceFront.getDescription();
-  const icon =
-    (channel === "release" || channel === "beta" || channel === "aurora")
-      ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
-      : "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
-
-  return {
-    icon,
-    model,
-    name,
-    version,
-  };
-}
-
 function connectRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: CONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const client = await createClientForRuntime(runtime);
-      const info = await getRuntimeInfo(runtime, client);
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
         runtime: {
           id,
           client,
-          info,
           type: runtime.type,
         }
       });

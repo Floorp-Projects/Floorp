@@ -23,8 +23,8 @@ const TemporaryExtensionInstaller =
   createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
+const Services = require("Services");
 const { DEBUG_TARGET_PANE } = require("../constants");
-const { getCurrentRuntimeInfo } = require("../modules/runtimes-state-helper");
 
 class RuntimePage extends PureComponent {
   static get propTypes() {
@@ -33,7 +33,6 @@ class RuntimePage extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       installedExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       otherWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
-      runtimeInfo: PropTypes.object,
       serviceWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       sharedWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -47,24 +46,21 @@ class RuntimePage extends PureComponent {
       dispatch,
       installedExtensions,
       otherWorkers,
-      runtimeInfo,
       serviceWorkers,
       sharedWorkers,
       tabs,
       temporaryExtensions,
     } = this.props;
 
-    if (!runtimeInfo) {
-      // runtimeInfo can be null when the selectPage action navigates from a runtime A
-      // to a runtime B (between unwatchRuntime and watchRuntime).
-      return null;
-    }
-
     return dom.article(
       {
         className: "page js-runtime-page",
       },
-      RuntimeInfo(runtimeInfo),
+      RuntimeInfo({
+        icon: "chrome://branding/content/icon64.png",
+        name: Services.appinfo.name,
+        version: Services.appinfo.version,
+      }),
       TemporaryExtensionInstaller({ dispatch }),
       Localized(
         {
@@ -165,7 +161,6 @@ const mapStateToProps = state => {
     collapsibilities: state.ui.debugTargetCollapsibilities,
     installedExtensions: state.debugTargets.installedExtensions,
     otherWorkers: state.debugTargets.otherWorkers,
-    runtimeInfo: getCurrentRuntimeInfo(state.runtimes),
     serviceWorkers: state.debugTargets.serviceWorkers,
     sharedWorkers: state.debugTargets.sharedWorkers,
     tabs: state.debugTargets.tabs,
