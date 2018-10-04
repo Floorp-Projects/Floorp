@@ -16,11 +16,11 @@ var _selectors = require("../selectors/index");
 
 var _promise = require("./utils/middleware/promise");
 
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
 var _expressions = require("../utils/expressions");
 
 var _prefs = require("../utils/prefs");
+
+var _source = require("../utils/source");
 
 var _parser = require("../workers/parser/index");
 
@@ -187,10 +187,9 @@ function evaluateExpression(expression) {
         location
       } = frame;
       const source = (0, _selectors.getSourceFromId)(getState(), location.sourceId);
-      const sourceId = source.id;
       const selectedSource = (0, _selectors.getSelectedSource)(getState());
 
-      if (selectedSource && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) && !(0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id)) {
+      if (selectedSource && (0, _source.isOriginal)(source) && (0, _source.isOriginal)(selectedSource)) {
         const mapResult = await dispatch(getMappedExpression(input));
 
         if (mapResult) {
