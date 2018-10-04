@@ -1404,16 +1404,8 @@ css::ImageValue::LoadImage(nsIDocument* aDocument)
                          this,
                          mCORSMode);
 
-  // Register the image in the loading document, and in our document if it's
-  // different from the loading document.
-  imgRequestProxy* request =
-    loadingDoc->StyleImageLoader()->RegisterCSSImage(this);
-
-  if (aDocument != loadingDoc) {
-    request = aDocument->StyleImageLoader()->RegisterCSSImage(this);
-  }
-
-  return request;
+  // Register the image in the document that's using it.
+  return aDocument->StyleImageLoader()->RegisterCSSImage(this);
 }
 
 css::ImageValue::~ImageValue()
