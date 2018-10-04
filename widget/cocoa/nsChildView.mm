@@ -1471,10 +1471,6 @@ nsChildView::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   debug_DumpEvent(stdout, event->mWidget, event, "something", 0);
 #endif
 
-  NS_ASSERTION(!(mTextInputHandler && mTextInputHandler->IsIMEComposing() &&
-                 event->HasKeyEventMessage()),
-    "Any key events should not be fired during IME composing");
-
   if (event->mFlags.mIsSynthesizedForTests) {
     WidgetKeyboardEvent* keyEvent = event->AsKeyboardEvent();
     if (keyEvent) {

@@ -212,7 +212,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           return;
         }
       }
-      await this.addSearchEngine(searchProvider);
+      await this.addSearchEngine();
       if (searchProvider.is_default) {
         if (extension.startupReason === "ADDON_INSTALL") {
           // Don't ask if it already the current engine
@@ -264,7 +264,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     }
   }
 
-  async addSearchEngine(searchProvider) {
+  async addSearchEngine() {
     let {extension} = this;
     let isCurrent = false;
     let index = -1;
@@ -279,24 +279,15 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       }
     }
     try {
-      let params = {
-        template: searchProvider.search_url,
-        iconURL: searchProvider.favicon_url,
-        alias: searchProvider.keyword,
-        extensionID: extension.id,
-        suggestURL: searchProvider.suggest_url,
-        queryCharset: "UTF-8",
-      };
-      if (searchProvider.search_url_post_params) {
-        params.method = "POST";
-        params.postData = searchProvider.search_url_post_params;
-      }
-      Services.search.addEngineWithDetails(searchProvider.name.trim(), params);
+      Services.search.addEnginesFromExtension(extension);
+      // Bug 1488516.  Preparing to support multiple engines per extension so
+      // multiple locales can be loaded.
+      let engines = Services.search.getEnginesByExtensionID(extension.id);
       await ExtensionSettingsStore.addSetting(
         extension.id, DEFAULT_SEARCH_STORE_TYPE, ENGINE_ADDED_SETTING_NAME,
-        searchProvider.name.trim());
+        engines[0].name);
       if (extension.startupReason === "ADDON_UPGRADE") {
-        let engine = Services.search.getEngineByName(searchProvider.name.trim());
+        let engine = Services.search.getEngineByName(engines[0].name);
         if (isCurrent) {
           Services.search.currentEngine = engine;
         }

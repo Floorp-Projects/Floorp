@@ -42,6 +42,8 @@ public:
 
   virtual gl::GLContext* gl() const { return nullptr; }
 
+  virtual bool MakeCurrent();
+
   virtual bool UseANGLE() const { return false; }
 
   virtual bool UseDComp() const { return false; }

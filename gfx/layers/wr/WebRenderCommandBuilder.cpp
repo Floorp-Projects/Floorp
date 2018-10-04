@@ -328,8 +328,6 @@ struct DIGroup
   //    and we don't need to heap allocate the BlobItemData's
   nsTHashtable<nsPtrHashKey<BlobItemData>> mDisplayItems;
 
-  nsPoint mAnimatedGeometryRootOrigin;
-  nsPoint mLastAnimatedGeometryRootOrigin;
   IntRect mInvalidRect;
   nsRect mGroupBounds;
   LayerIntRect mPaintRect;
@@ -401,10 +399,6 @@ struct DIGroup
     nsRegion combined;
     const DisplayItemClip& clip = aItem->GetClip();
 
-    nsPoint shift = mAnimatedGeometryRootOrigin - mLastAnimatedGeometryRootOrigin;
-
-    if (shift.x != 0 || shift.y != 0)
-      GP("shift %d %d\n", shift.x, shift.y);
     int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
     MOZ_RELEASE_ASSERT(mAppUnitsPerDevPixel == appUnitsPerDevPixel);
     LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(mGroupBounds, appUnitsPerDevPixel);
@@ -471,7 +465,6 @@ struct DIGroup
       MOZ_RELEASE_ASSERT(imageRect.IsEqualEdges(aData->mImageRect));
       MOZ_RELEASE_ASSERT(mLayerBounds.TopLeft() == aData->mGroupOffset);
       GP("else invalidate: %s\n", aItem->Name());
-      aData->mGeometry->MoveBy(shift);
       // this includes situations like reflow changing the position
       aItem->ComputeInvalidationRegion(aBuilder, aData->mGeometry.get(), &combined);
       if (!combined.IsEmpty()) {
@@ -479,7 +472,7 @@ struct DIGroup
         // smaller areas
         InvalidateRect(aData->mRect.Intersect(imageRect)); // invalidate the old area -- in theory combined should take care of this
         UniquePtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(aBuilder));
-        aData->mClip.AddOffsetAndComputeDifference(shift, aData->mGeometry->ComputeInvalidationRegion(), clip,
+        aData->mClip.AddOffsetAndComputeDifference(nsPoint(), aData->mGeometry->ComputeInvalidationRegion(), clip,
                                                    geometry ? geometry->ComputeInvalidationRegion() :
                                                    aData->mGeometry->ComputeInvalidationRegion(),
                                                    &combined);
@@ -586,7 +579,6 @@ struct DIGroup
                 nsDisplayItem* aStartItem,
                 nsDisplayItem* aEndItem)
   {
-    mLastAnimatedGeometryRootOrigin = mAnimatedGeometryRootOrigin;
     GP("\n\n");
     GP("Begin EndGroup\n");
 
@@ -1252,7 +1244,6 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
                                 .PostTranslate(residualOffset.x, residualOffset.y);
   group.mScale = scale;
   group.mScrollId = scrollId;
-  group.mAnimatedGeometryRootOrigin = group.mGroupBounds.TopLeft();
   g.ConstructGroups(aDisplayListBuilder, this, aBuilder, aResources, &group, aList, aSc);
   mClipManager.EndList(aSc);
 }

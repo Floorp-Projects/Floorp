@@ -459,6 +459,9 @@ public class GeckoPreferences
                 } else if (header.id == R.id.pref_header_clear_private_data
                            && !Restrictions.isAllowed(this, Restrictable.CLEAR_HISTORY)) {
                     iterator.remove();
+                } else if (header.id == R.id.pref_header_notifications
+                        && !haveNotificationsPreferences(this)) {
+                    iterator.remove();
                 }
             }
 
