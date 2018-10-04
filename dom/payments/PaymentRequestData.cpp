@@ -815,7 +815,6 @@ NS_IMETHODIMP
 PaymentAddress::Init(const nsAString& aCountry,
                      nsIArray* aAddressLine,
                      const nsAString& aRegion,
-                     const nsAString& aRegionCode,
                      const nsAString& aCity,
                      const nsAString& aDependentLocality,
                      const nsAString& aPostalCode,
@@ -827,7 +826,6 @@ PaymentAddress::Init(const nsAString& aCountry,
   mCountry = aCountry;
   mAddressLine = aAddressLine;
   mRegion = aRegion;
-  mRegionCode = aRegionCode;
   mCity = aCity;
   mDependentLocality = aDependentLocality;
   mPostalCode = aPostalCode;
@@ -858,13 +856,6 @@ NS_IMETHODIMP
 PaymentAddress::GetRegion(nsAString& aRegion)
 {
   aRegion = mRegion;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PaymentAddress::GetRegionCode(nsAString& aRegionCode)
-{
-  aRegionCode = mRegionCode;
   return NS_OK;
 }
 

@@ -23,7 +23,6 @@ addressLine.appendElement(address);
 shippingAddress.init("USA",              // country
                      addressLine,        // address line
                      "CA",               // region
-                     "CA",               // region code
                      "San Bruno",        // city
                      "Test locality",    // dependent locality
                      "94066",            // postal code
@@ -121,10 +120,6 @@ function checkAddressErrors(errors) {
   }
   if (errors.region != "region error") {
     emitTestFail("Expect shippingAddressErrors.region as 'region error', but got" +
-                  errors.region);
-  }
-  if (errors.regionCode != "regionCode error") {
-    emitTestFail("Expect shippingAddressErrors.regionCode as 'regionCode error', but got" +
                   errors.region);
   }
   if (errors.sortingCode != "sortingCode error") {
