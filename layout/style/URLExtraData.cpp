@@ -36,10 +36,6 @@ URLExtraData::ReleaseDummy()
 URLExtraData::~URLExtraData()
 {
   if (!NS_IsMainThread()) {
-    NS_ReleaseOnMainThreadSystemGroup("URLExtraData::mBaseURI",
-                                      mBaseURI.forget());
-    NS_ReleaseOnMainThreadSystemGroup("URLExtraData::mReferrer",
-                                      mReferrer.forget());
     NS_ReleaseOnMainThreadSystemGroup("URLExtraData::mPrincipal",
                                       mPrincipal.forget());
   }
