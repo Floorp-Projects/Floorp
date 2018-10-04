@@ -9,6 +9,8 @@ const NS_ERROR_UNEXPECTED = Cr.NS_ERROR_UNEXPECTED;
 const NS_ERROR_STORAGE_BUSY = Cr.NS_ERROR_STORAGE_BUSY;
 const NS_ERROR_FILE_NO_DEVICE_SPACE = Cr.NS_ERROR_FILE_NO_DEVICE_SPACE;
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 function is(a, b, msg)
 {
   Assert.equal(a, b, msg);
