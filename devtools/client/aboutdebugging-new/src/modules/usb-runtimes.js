@@ -5,7 +5,7 @@
 "use strict";
 
 const { ADBScanner } = require("devtools/shared/adb/adb-scanner");
-const { getADBAddon } = require("devtools/shared/adb/adb-addon");
+loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
 
 /**
  * This module provides a collection of helper methods to detect USB runtimes whom Firefox
@@ -22,7 +22,6 @@ function disableUSBRuntimes() {
 exports.disableUSBRuntimes = disableUSBRuntimes;
 
 async function enableUSBRuntimes() {
-  const adbAddon = getADBAddon();
   if (adbAddon.status !== "installed") {
     console.error("ADB extension is not installed");
     return;
