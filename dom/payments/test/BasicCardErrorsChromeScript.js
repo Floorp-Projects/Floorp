@@ -34,6 +34,7 @@ function makeBillingAddress() {
     "USA", // country
     addressLine, // address line
     "CA", // region
+    "CA", // regionCode
     "San Bruno", // city
     "", // dependent locality
     "94066", // postal code
