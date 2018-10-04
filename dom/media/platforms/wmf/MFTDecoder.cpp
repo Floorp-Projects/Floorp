@@ -88,7 +88,6 @@ MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
                           std::function<HRESULT(IMFMediaType*)>&& aCallback)
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
-  mOutputType = aOutputType;
 
   // Set the input type to the one the caller gave us...
   HRESULT hr = mDecoder->SetInputType(0, aInputType, 0);
@@ -132,10 +131,7 @@ MFTDecoder::FindDecoderOutputType(bool aMatchAllAttributes)
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mOutputType, "SetDecoderTypes must have been called once");
 
-  GUID currentSubtype = {0};
-  HRESULT hr = mOutputType->GetGUID(MF_MT_SUBTYPE, &currentSubtype);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  return FindDecoderOutputTypeWithSubtype(currentSubtype, aMatchAllAttributes);
+  return FindDecoderOutputTypeWithSubtype(mOutputSubType, aMatchAllAttributes);
 }
 
 HRESULT
@@ -191,6 +187,7 @@ MFTDecoder::SetDecoderOutputType(
                                             MFT_OUTPUT_STREAM_PROVIDES_SAMPLES);
 
       mOutputType = outputType;
+      mOutputSubType = outSubtype;
 
       return S_OK;
     }
