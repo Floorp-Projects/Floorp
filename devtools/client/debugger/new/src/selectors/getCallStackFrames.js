@@ -12,7 +12,7 @@ var _pause = require("../reducers/pause");
 
 var _frames = require("../utils/pause/frames/index");
 
-var _source = require("../utils/source");
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
 var _lodash = require("devtools/client/shared/vendor/lodash");
 
@@ -31,7 +31,7 @@ function getSourceForFrame(sources, frame, isGeneratedSource) {
 }
 
 function appendSource(sources, frame, selectedSource) {
-  const isGeneratedSource = selectedSource && !(0, _source.isOriginal)(selectedSource);
+  const isGeneratedSource = selectedSource && !(0, _devtoolsSourceMap.isOriginalId)(selectedSource.id);
   return { ...frame,
     location: getLocation(frame, isGeneratedSource),
     source: getSourceForFrame(sources, frame, isGeneratedSource)

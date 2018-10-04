@@ -270,10 +270,6 @@ WorkerDispatcher.prototype = {
     };
 
     return (...args) => push(args);
-  },
-
-  invoke(method, ...args) {
-    return this.task(method)(...args);
   }
 };
 

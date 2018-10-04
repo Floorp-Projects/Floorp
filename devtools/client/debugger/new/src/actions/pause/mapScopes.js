@@ -15,7 +15,7 @@ var _prefs = require("../../utils/prefs");
 
 var _log = require("../../utils/log");
 
-var _source = require("../../utils/source");
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
 var _mapScopes = require("../../utils/pause/mapScopes/index");
 
@@ -35,7 +35,7 @@ function mapScopes(scopes, frame) {
       type: "MAP_SCOPES",
       frame,
       [_promise.PROMISE]: async function () {
-        if (!_prefs.features.mapScopes || !source || !generatedSource || generatedSource.isWasm || source.isPrettyPrinted || (0, _source.isGenerated)(source)) {
+        if (!_prefs.features.mapScopes || !source || !generatedSource || generatedSource.isWasm || source.isPrettyPrinted || (0, _devtoolsSourceMap.isGeneratedId)(frame.location.sourceId)) {
           return null;
         }
 
