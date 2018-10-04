@@ -450,24 +450,14 @@ class TestMetadata(object):
             return
 
         wpt_path = os.path.join(self._srcdir, "testing", "web-platform")
-        wptrunner_path = os.path.join(wpt_path, "tests", "tools", "wptrunner")
-        manifest_path = os.path.join(self._objdir, "_tests", "web-platform")
+        sys.path = [wpt_path] + sys.path
 
-        sys.path = [wpt_path, wptrunner_path] + sys.path
-
-        import manifestdownload
-        import wptrunner
-        from wptrunner.wptrunner import testloader
-
-        manifestdownload.run(manifest_path, self._srcdir)
-
-        kwargs = {"config": os.path.join(self._objdir, "_tests", "web-platform",
-                                         "wptrunner.local.ini"),
-                  "tests_root": None,
-                  "metadata_root": None}
-
-        wptrunner.wptcommandline.set_from_config(kwargs)
-        manifests = testloader.ManifestLoader(kwargs["test_paths"]).load()
+        import manifestupdate
+        manifests = manifestupdate.run(self._srcdir, self._objdir, rebuild=False, download=True,
+                                       config_path=None, rewrite_config=True, update=True)
+        if not manifests:
+            print("Loading wpt manifest failed")
+            return
 
         for manifest, data in manifests.iteritems():
             tests_root = data["tests_path"]

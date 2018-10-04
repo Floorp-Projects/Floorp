@@ -121,6 +121,51 @@ JS::SetProfilingThreadCallbacks(JS::RegisterThreadCallback registerThread,
     HelperThreadState().unregisterThread = unregisterThread;
 }
 
+/* static */ void
+HelperThread::WakeupAll()
+{
+    AutoLockHelperThreadState lock;
+    HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
+}
+
+// Uses of the helper thread state lock are not included in Web Replay
+// recordings and threads which block on the lock indefinitely need to
+// coordinate with the record/replay system to make sure they enter the right
+// idle state when the main thread wants to save or restore a checkpoint.
+// This method must be used before any thread might wait on a condition
+// variable associated with the lock.
+//
+// This can release the lock, however, so the normal way of using this is:
+//
+// while (true) {
+//   MaybeWaitForRecordReplayCheckpointSave(...);
+//   if (doneWaiting) {
+//     break;
+//   }
+//   HelperThreadState().wait(...);
+// }
+static void
+MaybeWaitForRecordReplayCheckpointSave(AutoLockHelperThreadState& locked)
+{
+    if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+        // Unlock the helper thread state lock before potentially blocking
+        // while the main thread waits for all threads to become idle.
+        // Otherwise we would need to see if we need to block at every point
+        // where any thread acquires the helper thread state lock.
+        {
+            AutoUnlockHelperThreadState unlock(locked);
+            mozilla::recordreplay::MaybeWaitForCheckpointSave();
+        }
+
+        // For the std::function destructor invoked below.
+        JS::AutoSuppressGCAnalysis nogc;
+
+        // Now that we are holding the helper thread state lock again,
+        // notify the record/replay system that we might block soon.
+        mozilla::recordreplay::NotifyUnrecordedWait(HelperThread::WakeupAll);
+    }
+}
+
 bool
 js::StartOffThreadWasmCompile(wasm::CompileTask* task, wasm::CompileMode mode)
 {
@@ -186,7 +231,11 @@ CancelOffThreadWasmTier2GeneratorLocked(AutoLockHelperThreadState& lock)
             // tier2 compilation is trying to finish, which requires it to have access
             // to helper threads.
             uint32_t oldFinishedCount = HelperThreadState().wasmTier2GeneratorsFinished(lock);
-            while (HelperThreadState().wasmTier2GeneratorsFinished(lock) == oldFinishedCount) {
+            while (true) {
+                MaybeWaitForRecordReplayCheckpointSave(lock);
+                if (HelperThreadState().wasmTier2GeneratorsFinished(lock) != oldFinishedCount) {
+                    break;
+                }
                 HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
             }
 
@@ -331,6 +380,7 @@ CancelOffThreadIonCompileLocked(const CompilationSelector& selector, bool discar
     /* Wait for in progress entries to finish up. */
     bool cancelled;
     do {
+        MaybeWaitForRecordReplayCheckpointSave(lock);
         cancelled = false;
         for (auto& helper : *HelperThreadState().threads) {
             if (helper.ionBuilder() &&
@@ -665,6 +715,7 @@ js::CancelOffThreadParses(JSRuntime* rt)
     // and in progress ones to complete. Otherwise the final GC may not collect
     // everything due to zones being used off thread.
     while (true) {
+        MaybeWaitForRecordReplayCheckpointSave(lock);
         bool pending = false;
         GlobalHelperThreadState::ParseTaskVector& worklist = HelperThreadState().parseWorklist(lock);
         for (size_t i = 0; i < worklist.length(); i++) {
@@ -1178,7 +1229,11 @@ GlobalHelperThreadState::waitForAllThreadsLocked(AutoLockHelperThreadState& lock
     CancelOffThreadIonCompileLocked(CompilationSelector(AllCompilations()), false, lock);
     CancelOffThreadWasmTier2GeneratorLocked(lock);
 
-    while (hasActiveThreads(lock)) {
+    while (true) {
+        MaybeWaitForRecordReplayCheckpointSave(lock);
+        if (!hasActiveThreads(lock)) {
+            break;
+        }
         wait(lock, CONSUMER);
     }
 }
@@ -1646,7 +1701,11 @@ js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock)
         return;
     }
 
-    while (!isFinished(lock)) {
+    while (true) {
+        MaybeWaitForRecordReplayCheckpointSave(lock);
+        if (isFinished(lock)) {
+            break;
+        }
         HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
     }
 
@@ -2350,6 +2409,8 @@ js::CancelOffThreadCompressions(JSRuntime* runtime)
     // Cancel all in-process compression tasks and wait for them to join so we
     // clean up the finished tasks.
     while (true) {
+        MaybeWaitForRecordReplayCheckpointSave(lock);
+
         bool inProgress = false;
         for (auto& thread : *HelperThreadState().threads) {
             SourceCompressionTask* task = thread.compressionTask();
@@ -2452,13 +2513,6 @@ GlobalHelperThreadState::trace(JSTracer* trc)
     for (auto parseTask : parseWaitingOnGC_) {
         parseTask->trace(trc);
     }
-}
-
-/* static */ void
-HelperThread::WakeupAll()
-{
-    AutoLockHelperThreadState lock;
-    HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
 }
 
 void
@@ -2567,22 +2621,7 @@ HelperThread::threadLoop()
     while (!terminate) {
         MOZ_ASSERT(idle());
 
-        if (mozilla::recordreplay::IsRecordingOrReplaying()) {
-            // Unlock the helper thread state lock before potentially
-            // blocking while the main thread waits for all threads to
-            // become idle. Otherwise we would need to see if we need to
-            // block at every point where a helper thread acquires the
-            // helper thread state lock.
-            {
-                AutoUnlockHelperThreadState unlock(lock);
-                mozilla::recordreplay::MaybeWaitForCheckpointSave();
-            }
-            // Now that we are holding the helper thread state lock again,
-            // notify the record/replay system that we might block soon.
-            // The helper thread state lock may not be released until the
-            // block occurs.
-            mozilla::recordreplay::NotifyUnrecordedWait(WakeupAll);
-        }
+        MaybeWaitForRecordReplayCheckpointSave(lock);
 
         maybeFreeUnusedMemory(&cx);
 
