@@ -590,7 +590,6 @@ void Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut css_value,
 // Take an addrefed nsAtom and set it to the nsCSSValue
 void Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut css_value, nsAtom* atom);
 void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
-void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, mozilla::css::URLValue* uri);
 void Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut css_value, int32_t integer, nsCSSUnit unit);
 void Gecko_CSSValue_SetFloat(nsCSSValueBorrowedMut css_value, float value, nsCSSUnit unit);
 void Gecko_CSSValue_SetPair(nsCSSValueBorrowedMut css_value,
