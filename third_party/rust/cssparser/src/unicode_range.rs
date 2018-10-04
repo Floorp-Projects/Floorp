@@ -13,6 +13,7 @@ use tokenizer::Token;
 ///
 /// Can not be empty. Can represent a single code point when start == end.
 #[derive(PartialEq, Eq, Clone, Hash)]
+#[repr(C)]
 pub struct UnicodeRange {
     /// Inclusive start of the range. In [0, end].
     pub start: u32,
