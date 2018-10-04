@@ -6,15 +6,56 @@
 
 XPI_NAME = 'mozscreenshots'
 
-JAR_MANIFESTS += ['jar.mn']
-
 USE_EXTENSION_MANIFEST = True
 NO_JS_MANIFEST = True
 
 FINAL_TARGET_FILES += [
-    'bootstrap.js'
+    'api.js',
+    'manifest.json',
+    'schema.json',
 ]
 
-FINAL_TARGET_PP_FILES += [
-    'install.rdf',
+FINAL_TARGET_FILES.resources += [
+    'Screenshot.jsm',
+    'TestRunner.jsm',
+]
+
+FINAL_TARGET_FILES.resources.configurations += [
+    'configurations/AppMenu.jsm',
+    'configurations/Buttons.jsm',
+    'configurations/ControlCenter.jsm',
+    'configurations/CustomizeMode.jsm',
+    'configurations/DevTools.jsm',
+    'configurations/LightweightThemes.jsm',
+    'configurations/PermissionPrompts.jsm',
+    'configurations/Preferences.jsm',
+    'configurations/Tabs.jsm',
+    'configurations/TabsInTitlebar.jsm',
+    'configurations/Toolbars.jsm',
+    'configurations/UIDensities.jsm',
+    'configurations/WindowSize.jsm',
+]
+
+FINAL_TARGET_FILES.resources.lib += [
+    'lib/black_theme.png',
+    'lib/borderify.xpi',
+    'lib/mozscreenshots-script.js',
+    'lib/mozscreenshots-style.css',
+    'lib/mozscreenshots.html',
+    'lib/permissionPrompts.html',
+    'lib/robot.png',
+    'lib/robot_center.png',
+    'lib/robot_cropped_diagonal.png',
+    'lib/robot_diagonal.png',
+    'lib/robot_uncropped.png',
+    'lib/robot_upperleft.png',
+    'lib/white_theme.png',
+]
+
+FINAL_TARGET_FILES.resources.lib.controlCenter += [
+    'lib/controlCenter/mixed.html',
+    'lib/controlCenter/mixed_active.html',
+    'lib/controlCenter/mixed_passive.html',
+    'lib/controlCenter/password.html',
+    'lib/controlCenter/tracking.html',
 ]
