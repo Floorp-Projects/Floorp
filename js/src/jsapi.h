@@ -3062,16 +3062,17 @@ CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf, JS::MutableHandleScript script);
 
 /**
- * Set the [[HostDefined]] field of a classic script or module script.
+ * Set the [[HostDefined]] field of a source text module record to the given
+ * value.
  */
 extern JS_PUBLIC_API(void)
-SetTopLevelScriptPrivate(JSScript* script, void* value);
+SetModuleHostDefinedField(JSScript* module, const JS::Value& value);
 
 /**
- * Get the [[HostDefined]] field of a classic script or module script.
+ * Get the [[HostDefined]] field of a source text module record.
  */
-extern JS_PUBLIC_API(void*)
-GetTopLevelScriptPrivate(JSScript* script);
+extern JS_PUBLIC_API(JS::Value)
+GetModuleHostDefinedField(JSScript* script);
 
 /*
  * Perform the ModuleInstantiate operation on the given source text module

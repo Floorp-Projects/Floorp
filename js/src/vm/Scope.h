@@ -423,17 +423,6 @@ class Scope : public js::gc::TenuredCell
 class BaseScopeData
 {};
 
-/*
- * Scope for a top level script: either a global (classic) script or a module
- * script.
- */
-class TopLevelScopeData : public BaseScopeData
-{
-  public:
-    // Private data for use by the embedding.
-    void* privateData = nullptr;
-};
-
 template<class Data>
 inline size_t
 SizeOfData(uint32_t numBindings)
@@ -789,7 +778,7 @@ class GlobalScope : public Scope
   public:
     // Data is public because it is created by the frontend. See
     // Parser<FullParseHandler>::newGlobalScopeData.
-    struct Data : public TopLevelScopeData
+    struct Data : BaseScopeData
     {
         // Bindings are sorted by kind.
         // `vars` includes top-level functions which is distinguished by a bit
@@ -842,14 +831,6 @@ class GlobalScope : public Scope
 
     bool hasBindings() const {
         return data().length > 0;
-    }
-
-    void setTopLevelPrivate(void* value) {
-        data().privateData = value;
-    }
-
-    void* topLevelPrivate() const {
-        return data().privateData;
     }
 };
 
@@ -991,7 +972,7 @@ class ModuleScope : public Scope
   public:
     // Data is public because it is created by the frontend. See
     // Parser<FullParseHandler>::newModuleScopeData.
-    struct Data : public TopLevelScopeData
+    struct Data : BaseScopeData
     {
         // The module of the scope.
         GCPtr<ModuleObject*> module = {};
@@ -1047,14 +1028,6 @@ class ModuleScope : public Scope
     }
 
     JSScript* script() const;
-
-    void setTopLevelPrivate(void* value) {
-        data().privateData = value;
-    }
-
-    void* topLevelPrivate() const {
-        return data().privateData;
-    }
 
     static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
