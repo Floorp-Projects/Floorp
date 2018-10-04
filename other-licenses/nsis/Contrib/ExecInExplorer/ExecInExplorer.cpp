@@ -186,7 +186,8 @@ Exec(HWND, int, TCHAR *, stack_t **stacktop, void *)
   path[0] = L'\0';
   args[0] = L'\0';
   popstring(stacktop, path, MAX_PATH);
-  if (popstring(stacktop, args, MAX_PATH) == 0) {
+  if (!stacktop || !*stacktop) {
+    popstring(stacktop, args, MAX_PATH);
     // This stack item may not be for us, but we don't know yet.
     restoreArgString = true;
   }
