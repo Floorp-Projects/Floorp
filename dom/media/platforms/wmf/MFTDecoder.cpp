@@ -85,8 +85,7 @@ MFTDecoder::Create(HMODULE aDecoderDLL, const GUID& aMFTClsID)
 HRESULT
 MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
                           IMFMediaType* aOutputType,
-                          ConfigureOutputCallback aCallback,
-                          void* aData)
+                          std::function<HRESULT(IMFMediaType*)>&& aCallback)
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   mOutputType = aOutputType;
@@ -102,8 +101,7 @@ MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
   hr = SetDecoderOutputType(currentSubtype,
                             aOutputType,
                             true /* match all attributes */,
-                            aCallback,
-                            aData);
+                            std::move(aCallback));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = mDecoder->GetInputStreamInfo(0, &mInputStreamInfo);
@@ -145,15 +143,15 @@ MFTDecoder::FindDecoderOutputTypeWithSubtype(const GUID& aSubType,
                                              bool aMatchAllAttributes)
 {
   return SetDecoderOutputType(
-    aSubType, nullptr, aMatchAllAttributes, nullptr, nullptr);
+    aSubType, nullptr, aMatchAllAttributes, [](IMFMediaType*) { return S_OK; });
 }
 
 HRESULT
-MFTDecoder::SetDecoderOutputType(const GUID& aSubType,
-                                 IMFMediaType* aTypeToUse,
-                                 bool aMatchAllAttributes,
-                                 ConfigureOutputCallback aCallback,
-                                 void* aData)
+MFTDecoder::SetDecoderOutputType(
+  const GUID& aSubType,
+  IMFMediaType* aTypeToUse,
+  bool aMatchAllAttributes,
+  std::function<HRESULT(IMFMediaType*)>&& aCallback)
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
@@ -180,10 +178,9 @@ MFTDecoder::SetDecoderOutputType(const GUID& aSubType,
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     }
     if (resultMatch == TRUE) {
-      if (aCallback) {
-        hr = aCallback(outputType, aData);
-        NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-      }
+      hr = aCallback(outputType);
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
       hr = mDecoder->SetOutputType(0, outputType, 0);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 

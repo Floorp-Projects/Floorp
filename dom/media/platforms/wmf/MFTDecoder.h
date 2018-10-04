@@ -38,12 +38,10 @@ public:
   //  - aOutputType needs at least major and minor types set.
   //    This is used to select the matching output type out
   //    of all the available output types of the MFT.
-  typedef HRESULT (*ConfigureOutputCallback)(IMFMediaType* aOutputType,
-                                             void* aData);
   HRESULT SetMediaTypes(IMFMediaType* aInputType,
                         IMFMediaType* aOutputType,
-                        ConfigureOutputCallback aCallback = nullptr,
-                        void* aData = nullptr);
+                        std::function<HRESULT(IMFMediaType*)>&& aCallback =
+                          [](IMFMediaType* aOutput) { return S_OK; });
 
   // Returns the MFT's IMFAttributes object.
   already_AddRefed<IMFAttributes> GetAttributes();
@@ -94,11 +92,11 @@ public:
 private:
   // Will search a suitable MediaType using aTypeToUse if set, if not will
   // use the current mOutputType.
-  HRESULT SetDecoderOutputType(const GUID& aSubType,
-                               IMFMediaType* aTypeToUse,
-                               bool aMatchAllAttributes,
-                               ConfigureOutputCallback aCallback,
-                               void* aData);
+  HRESULT SetDecoderOutputType(
+    const GUID& aSubType,
+    IMFMediaType* aTypeToUse,
+    bool aMatchAllAttributes,
+    std::function<HRESULT(IMFMediaType*)>&& aCallback);
   HRESULT CreateOutputSample(RefPtr<IMFSample>* aOutSample);
 
   MFT_INPUT_STREAM_INFO mInputStreamInfo;
