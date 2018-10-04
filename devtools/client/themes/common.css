@@ -818,6 +818,11 @@ checkbox:-moz-focusring {
   transition: background-color .1s ease-out;
 }
 
+/* For right-to-left layout, the toggle thumb goes in the opposite direction. */
+html[dir="rtl"] .devtools-checkbox-toggle {
+  --x-pos: -.15em;
+}
+
 .devtools-checkbox-toggle:focus {
   box-shadow: 0 0 0 1px var(--blue-55);
 }
@@ -830,6 +835,10 @@ checkbox:-moz-focusring {
 .devtools-checkbox-toggle:checked {
   --x-pos: 1.15em;
   background-color: var(--blue-55);
+}
+
+html[dir="rtl"] .devtools-checkbox-toggle:checked {
+  --x-pos: -1.15em;
 }
 
 .devtools-checkbox-toggle::before {
