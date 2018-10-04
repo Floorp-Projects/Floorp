@@ -10,6 +10,7 @@
 #include "GLTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/RenderCompositor.h"
+#include "mozilla/webrender/RenderThread.h"
 
 struct ID3D11DeviceContext;
 struct ID3D11Device;
@@ -38,7 +39,9 @@ public:
   void Pause() override;
   bool Resume() override;
 
-  gl::GLContext* gl() const override { return mGL; }
+  gl::GLContext* gl() const override { return RenderThread::Get()->SharedGL(); }
+
+  bool MakeCurrent() override;
 
   bool UseANGLE() const override { return true; }
 
@@ -55,7 +58,6 @@ protected:
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);
   bool SutdownEGLLibraryIfNecessary();
 
-  RefPtr<gl::GLContext> mGL;
   EGLConfig mEGLConfig;
   EGLSurface mEGLSurface;
 

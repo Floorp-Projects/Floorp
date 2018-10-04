@@ -39,5 +39,11 @@ RenderCompositor::~RenderCompositor()
 {
 }
 
+bool
+RenderCompositor::MakeCurrent()
+{
+  return gl()->MakeCurrent();
+}
+
 } // namespace wr
 } // namespace mozilla
