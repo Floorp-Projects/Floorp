@@ -27,7 +27,13 @@ ProfilerScreenshots::ProfilerScreenshots()
 ProfilerScreenshots::~ProfilerScreenshots()
 {
   if (mThread) {
-    mThread->Shutdown();
+    // Shut down mThread. Do the actual shutdown on the main thread, because it
+    // has to happen on an XPCOM thread, and ~ProfilerScreenshots() may not be
+    // running on an XPCOM thread - it usually runs on the Compositor thread
+    // which is a chromium thread.
+    SystemGroup::Dispatch(TaskCategory::Other,
+                          NewRunnableMethod("ProfilerScreenshots::~ProfilerScreenshots",
+                                            mThread, &nsIThread::Shutdown));
     mThread = nullptr;
   }
 }
