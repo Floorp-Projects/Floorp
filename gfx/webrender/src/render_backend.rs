@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! The high-level module responsible for managing the pipeline and preparing
+//! commands to be issued by the `Renderer`.
+//!
+//! See the comment at the top of the `renderer` module for a description of
+//! how these two pieces interact.
+
 use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
@@ -661,6 +667,10 @@ impl RenderBackend {
                     SceneBuilderResult::ExternalEvent(evt) => {
                         self.notifier.external_event(evt);
                     }
+                    SceneBuilderResult::ClearNamespace(id) => {
+                        self.resource_cache.clear_namespace(id);
+                        self.documents.retain(|doc_id, _doc| doc_id.0 != id);
+                    }
                     SceneBuilderResult::Stopped => {
                         panic!("We haven't sent a Stop yet, how did we get a Stopped back?");
                     }
@@ -770,9 +780,8 @@ impl RenderBackend {
             ApiMsg::ExternalEvent(evt) => {
                 self.low_priority_scene_tx.send(SceneBuilderRequest::ExternalEvent(evt)).unwrap();
             }
-            ApiMsg::ClearNamespace(namespace_id) => {
-                self.resource_cache.clear_namespace(namespace_id);
-                self.documents.retain(|did, _doc| did.0 != namespace_id);
+            ApiMsg::ClearNamespace(id) => {
+                self.low_priority_scene_tx.send(SceneBuilderRequest::ClearNamespace(id)).unwrap();
             }
             ApiMsg::MemoryPressure => {
                 // This is drastic. It will basically flush everything out of the cache,

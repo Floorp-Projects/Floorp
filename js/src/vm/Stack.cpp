@@ -1860,7 +1860,7 @@ jit::JitActivation::startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset,
 
     bool unwound;
     wasm::UnwindState unwindState;
-    MOZ_ALWAYS_TRUE(wasm::StartUnwinding(state, &unwindState, &unwound));
+    MOZ_RELEASE_ASSERT(wasm::StartUnwinding(state, &unwindState, &unwound));
     MOZ_ASSERT(unwound == (trap == wasm::Trap::IndirectCallBadSig));
 
     void* pc = unwindState.pc;

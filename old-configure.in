@@ -884,7 +884,12 @@ case "$target" in
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
-        WIN32_SUBSYSTEM_VERSION=6.01
+        # aarch64 doesn't support subsystems below 6.02
+        if test "$CPU_ARCH" = "aarch64"; then
+            WIN32_SUBSYSTEM_VERSION=6.02
+        else
+            WIN32_SUBSYSTEM_VERSION=6.01
+        fi
         WIN32_CONSOLE_EXE_LDFLAGS=-SUBSYSTEM:CONSOLE,$WIN32_SUBSYSTEM_VERSION
         WIN32_GUI_EXE_LDFLAGS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION

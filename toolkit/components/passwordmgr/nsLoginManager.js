@@ -10,13 +10,16 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginFormFactory",
+                               "resource://gre/modules/LoginManagerContent.jsm");
+ChromeUtils.defineModuleGetter(this, "LoginManagerContent",
+                               "resource://gre/modules/LoginManagerContent.jsm");
+ChromeUtils.defineModuleGetter(this, "UserAutoCompleteResult",
                                "resource://gre/modules/LoginManagerContent.jsm");
 ChromeUtils.defineModuleGetter(this, "InsecurePasswordUtils",
                                "resource://gre/modules/InsecurePasswordUtils.jsm");
@@ -503,8 +506,25 @@ LoginManager.prototype = {
     // aPreviousResult is an nsIAutoCompleteResult, aElement is
     // HTMLInputElement
 
-    let form = LoginFormFactory.createFromField(aElement);
-    let isSecure = InsecurePasswordUtils.isFormSecure(form);
+    let {isNullPrincipal} = aElement.nodePrincipal;
+    // Show the insecure login warning in the passwords field on null principal documents.
+    let isSecure = !isNullPrincipal;
+    // Avoid loading InsecurePasswordUtils.jsm in a sandboxed document (e.g. an ad. frame) if we
+    // already know it has a null principal and will therefore get the insecure autocomplete
+    // treatment.
+    // InsecurePasswordUtils doesn't handle the null principal case as not secure because we don't
+    // want the same treatment:
+    // * The web console warnings will be confusing (as they're primarily about http:) and not very
+    //   useful if the developer intentionally sandboxed the document.
+    // * The site identity insecure field warning would require LoginManagerContent being loaded and
+    //   listening to some of the DOM events we're ignoring in null principal documents. For memory
+    //   reasons it's better to not load LMC at all for these sandboxed frames. Also, if the top-
+    //   document is sandboxing a document, it probably doesn't want that sandboxed document to be
+    //   able to affect the identity icon in the address bar by adding a password field.
+    if (isSecure) {
+      let form = LoginFormFactory.createFromField(aElement);
+      isSecure = InsecurePasswordUtils.isFormSecure(form);
+    }
     let isPasswordField = aElement.type == "password";
 
     let completeSearch = (autoCompleteLookupPromise, { logins, messageManager }) => {
@@ -522,6 +542,14 @@ LoginManager.prototype = {
       });
       aCallback.onSearchCompletion(results);
     };
+
+    if (isNullPrincipal) {
+      // Don't search login storage when the field has a null principal as we don't want to fill
+      // logins for the `location` in this case.
+      let acLookupPromise = this._autoCompleteLookupPromise = Promise.resolve({ logins: [] });
+      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
+      return;
+    }
 
     if (isPasswordField && aSearchString) {
       // Return empty result on password fields with password already filled.

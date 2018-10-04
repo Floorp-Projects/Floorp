@@ -14,7 +14,7 @@ use euclid::{TypedPoint2D, TypedVector2D};
 use gpu_cache::{GpuCache};
 use gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use gpu_types::{TransformData, TransformPalette};
-use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
+use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSource};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
 use prim_store::{PrimitiveStore, DeferredResolve};
@@ -32,6 +32,7 @@ const MIN_TARGET_SIZE: u32 = 2048;
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
 const STYLE_MASK: i32 = 0x00FF_FF00;
 
+/// Identifies a given `RenderTarget` in a `RenderTargetList`.
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -86,12 +87,35 @@ impl TextureAllocator {
     }
 }
 
+/// Represents a number of rendering operations on a surface.
+///
+/// In graphics parlance, a "render target" usually means "a surface (texture or
+/// framebuffer) bound to the output of a shader". This trait has a slightly
+/// different meaning, in that it represents the operations on that surface
+/// _before_ it's actually bound and rendered. So a `RenderTarget` is built by
+/// the `RenderBackend` by inserting tasks, and then shipped over to the
+/// `Renderer` where a device surface is resolved and the tasks are transformed
+/// into draw commands on that surface.
+///
+/// We express this as a trait to generalize over color and alpha surfaces.
+/// a given `RenderTask` will draw to one or the other, depending on its type
+/// and sometimes on its parameters. See `RenderTask::target_kind`.
 pub trait RenderTarget {
+    /// Creates a new RenderTarget of the given type.
     fn new(
         size: Option<DeviceUintSize>,
         screen_size: DeviceIntSize,
     ) -> Self;
+
+    /// Allocates a region of the given size in this target, and returns either
+    /// the offset of that region or `None` if it won't fit.
+    ///
+    /// If a non-`None` result is returned, that value is generally stored in
+    /// a task which is then added to this target via `add_task()`.
     fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint>;
+
+    /// Optional hook to provide additional processing for the target at the
+    /// end of the build phase.
     fn build(
         &mut self,
         _ctx: &mut RenderTargetContext,
@@ -102,13 +126,16 @@ pub trait RenderTarget {
         _transforms: &mut TransformPalette,
     ) {
     }
-    // TODO(gw): It's a bit odd that we need the deferred resolves and mutable
-    //           GPU cache here. They are typically used by the build step
-    //           above. They are used for the blit jobs to allow resolve_image
-    //           to be called. It's a bit of extra overhead to store the image
-    //           key here and the resolve them in the build step separately.
-    //           BUT: if/when we add more texture cache target jobs, we might
-    //           want to tidy this up.
+
+    /// Associates a `RenderTask` with this target. That task must be assigned
+    /// to a region returned by invoking `allocate()` on this target.
+    ///
+    /// TODO(gw): It's a bit odd that we need the deferred resolves and mutable
+    /// GPU cache here. They are typically used by the build step above. They
+    /// are used for the blit jobs to allow resolve_image to be called. It's a
+    /// bit of extra overhead to store the image key here and the resolve them
+    /// in the build step separately.  BUT: if/when we add more texture cache
+    /// target jobs, we might want to tidy this up.
     fn add_task(
         &mut self,
         task_id: RenderTaskId,
@@ -123,14 +150,40 @@ pub trait RenderTarget {
     fn needs_depth(&self) -> bool;
 }
 
+/// A tag used to identify the output format of a `RenderTarget`.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTargetKind {
-    Color, // RGBA32
+    Color, // RGBA8
     Alpha, // R8
 }
 
+/// A series of `RenderTarget` instances, serving as the high-level container
+/// into which `RenderTasks` are assigned.
+///
+/// During the build phase, we iterate over the tasks in each `RenderPass`. For
+/// each task, we invoke `allocate()` on the `RenderTargetList`, which in turn
+/// attempts to allocate an output region in the last `RenderTarget` in the
+/// list. If allocation fails (or if the list is empty), a new `RenderTarget` is
+/// created and appended to the list. The build phase then assign the task into
+/// the target associated with the final allocation.
+///
+/// The result is that each `RenderPass` is associated with one or two
+/// `RenderTargetLists`, depending on whether we have all our tasks have the
+/// same `RenderTargetKind`. The lists are then shipped to the `Renderer`, which
+/// allocates a device texture array, with one slice per render target in the
+/// list.
+///
+/// The upshot of this scheme is that it maximizes batching. In a given pass,
+/// we need to do a separate batch for each individual render target. But with
+/// the texture array, we can expose the entirety of the previous pass to each
+/// task in the current pass in a single batch, which generally allows each
+/// task to be drawn in a single batch regardless of how many results from the
+/// previous pass it depends on.
+///
+/// Note that in some cases (like drop-shadows), we can depend on the output of
+/// a pass earlier than the immediately-preceding pass. See `SavedTargetIndex`.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTargetList<T> {
@@ -139,7 +192,6 @@ pub struct RenderTargetList<T> {
     pub max_size: DeviceUintSize,
     pub targets: Vec<T>,
     pub saved_index: Option<SavedTargetIndex>,
-    pub is_shared: bool,
 }
 
 impl<T: RenderTarget> RenderTargetList<T> {
@@ -153,7 +205,6 @@ impl<T: RenderTarget> RenderTargetList<T> {
             max_size: DeviceUintSize::new(MIN_TARGET_SIZE, MIN_TARGET_SIZE),
             targets: Vec::new(),
             saved_index: None,
-            is_shared: false,
         }
     }
 
@@ -256,7 +307,7 @@ pub struct FrameOutput {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum BlitJobSource {
-    Texture(SourceTexture, i32, DeviceIntRect),
+    Texture(TextureSource, i32, DeviceIntRect),
     RenderTask(RenderTaskId),
 }
 
@@ -285,7 +336,10 @@ pub struct GlyphJob {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GlyphJob;
 
-/// A render target represents a number of rendering operations on a surface.
+/// Contains the work (in the form of instance arrays) needed to fill a color
+/// color output surface (RGBA8).
+///
+/// See `RenderTarget`.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ColorRenderTarget {
@@ -500,6 +554,10 @@ impl RenderTarget for ColorRenderTarget {
     }
 }
 
+/// Contains the work (in the form of instance arrays) needed to fill an alpha
+/// output surface (R8).
+///
+/// See `RenderTarget`.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct AlphaRenderTarget {
@@ -727,14 +785,18 @@ impl TextureCacheRenderTarget {
     fn add_glyph_task(&mut self, _: &mut GlyphTask, _: DeviceIntRect) {}
 }
 
+/// Contains the set of `RenderTarget`s specific to the kind of pass.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderPassKind {
+    /// The final pass to the main frame buffer, where we have a single color
+    /// target for display to the user.
     MainFramebuffer(ColorRenderTarget),
+    /// An intermediate pass, where we may have multiple targets.
     OffScreen {
         alpha: RenderTargetList<AlphaRenderTarget>,
         color: RenderTargetList<ColorRenderTarget>,
-        texture_cache: FastHashMap<(SourceTexture, i32), TextureCacheRenderTarget>,
+        texture_cache: FastHashMap<(CacheTextureId, i32), TextureCacheRenderTarget>,
     },
 }
 
@@ -742,15 +804,21 @@ pub enum RenderPassKind {
 /// another.
 ///
 /// A render pass can have several render targets if there wasn't enough space in one
-/// target to do all of the rendering for that pass.
+/// target to do all of the rendering for that pass. See `RenderTargetList`.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderPass {
+    /// The kind of pass, as well as the set of targets associated with that
+    /// kind of pass.
     pub kind: RenderPassKind,
+    /// The set of tasks to be performed in this pass, as indices into the
+    /// `RenderTaskTree`.
     tasks: Vec<RenderTaskId>,
 }
 
 impl RenderPass {
+    /// Creates a pass for the main framebuffer. There is only one of these, and
+    /// it is always the last pass.
     pub fn new_main_framebuffer(screen_size: DeviceIntSize) -> Self {
         let target = ColorRenderTarget::new(None, screen_size);
         RenderPass {
@@ -759,6 +827,7 @@ impl RenderPass {
         }
     }
 
+    /// Creates an intermediate off-screen pass.
     pub fn new_off_screen(screen_size: DeviceIntSize) -> Self {
         RenderPass {
             kind: RenderPassKind::OffScreen {
@@ -770,6 +839,7 @@ impl RenderPass {
         }
     }
 
+    /// Adds a task to this pass.
     pub fn add_render_task(
         &mut self,
         task_id: RenderTaskId,
@@ -788,6 +858,11 @@ impl RenderPass {
         self.tasks.push(task_id);
     }
 
+    /// Processes this pass to prepare it for rendering.
+    ///
+    /// Among other things, this allocates output regions for each of our tasks
+    /// (added via `add_render_task`) in a RenderTarget and assigns it into that
+    /// target.
     pub fn build(
         &mut self,
         ctx: &mut RenderTargetContext,
@@ -824,11 +899,6 @@ impl RenderPass {
                 );
             }
             RenderPassKind::OffScreen { ref mut color, ref mut alpha, ref mut texture_cache } => {
-                let is_shared_alpha = self.tasks.iter().any(|&task_id| {
-                    let task = &render_tasks[task_id];
-                    task.is_shared() &&
-                        task.target_kind() == RenderTargetKind::Alpha
-                });
                 let saved_color = if self.tasks.iter().any(|&task_id| {
                     let t = &render_tasks[task_id];
                     t.target_kind() == RenderTargetKind::Color && t.saved_index.is_some()
@@ -940,7 +1010,6 @@ impl RenderPass {
                     prim_headers,
                     transforms,
                 );
-                alpha.is_shared = is_shared_alpha;
             }
         }
     }

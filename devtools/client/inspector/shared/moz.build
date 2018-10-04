@@ -10,7 +10,6 @@ DevToolsModules(
     'reflow-tracker.js',
     'style-change-tracker.js',
     'style-inspector-menu.js',
-    'three-pane-onboarding-tooltip.js',
     'tooltips-overlay.js',
     'utils.js'
 )
