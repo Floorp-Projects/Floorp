@@ -402,8 +402,8 @@ class GCSchedulingTunables
      * When in the |highFrequencyGC| mode, these parameterize the per-zone
      * "HeapGrowthFactor" computation.
      */
-    MainThreadData<uint64_t> highFrequencyLowLimitBytes_;
-    MainThreadData<uint64_t> highFrequencyHighLimitBytes_;
+    MainThreadData<size_t> highFrequencyLowLimitBytes_;
+    MainThreadData<size_t> highFrequencyHighLimitBytes_;
     MainThreadData<float> highFrequencyHeapGrowthMax_;
     MainThreadData<float> highFrequencyHeapGrowthMin_;
 
@@ -451,8 +451,8 @@ class GCSchedulingTunables
     size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
     bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
     const mozilla::TimeDuration &highFrequencyThreshold() const { return highFrequencyThreshold_; }
-    uint64_t highFrequencyLowLimitBytes() const { return highFrequencyLowLimitBytes_; }
-    uint64_t highFrequencyHighLimitBytes() const { return highFrequencyHighLimitBytes_; }
+    size_t highFrequencyLowLimitBytes() const { return highFrequencyLowLimitBytes_; }
+    size_t highFrequencyHighLimitBytes() const { return highFrequencyHighLimitBytes_; }
     double highFrequencyHeapGrowthMax() const { return highFrequencyHeapGrowthMax_; }
     double highFrequencyHeapGrowthMin() const { return highFrequencyHeapGrowthMin_; }
     double lowFrequencyHeapGrowth() const { return lowFrequencyHeapGrowth_; }
@@ -469,8 +469,8 @@ class GCSchedulingTunables
     void setMaxMallocBytes(size_t value);
 
 private:
-    void setHighFrequencyLowLimit(uint64_t value);
-    void setHighFrequencyHighLimit(uint64_t value);
+    void setHighFrequencyLowLimit(size_t value);
+    void setHighFrequencyHighLimit(size_t value);
     void setHighFrequencyHeapGrowthMin(float value);
     void setHighFrequencyHeapGrowthMax(float value);
     void setLowFrequencyHeapGrowth(float value);
