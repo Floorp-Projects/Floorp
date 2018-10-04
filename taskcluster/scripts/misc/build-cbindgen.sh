@@ -3,7 +3,7 @@ set -x -e -v
 
 # If you update this, make sure to update the minimum version in rust.configure
 # as well.
-CBINDGEN_VERSION=v0.6.2
+CBINDGEN_VERSION=v0.6.4
 TARGET="$1"
 
 case "$(uname -s)" in
