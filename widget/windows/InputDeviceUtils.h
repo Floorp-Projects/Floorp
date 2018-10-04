@@ -16,6 +16,9 @@ class InputDeviceUtils {
 public:
   static HDEVNOTIFY RegisterNotification(HWND aHwnd);
   static void UnregisterNotification(HDEVNOTIFY aHandle);
+
+  // Returns the number of mouse type devices connected to this system.
+  static DWORD CountMouseDevices();
 };
 
 } // namespace widget
