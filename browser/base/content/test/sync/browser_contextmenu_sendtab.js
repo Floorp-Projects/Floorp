@@ -105,7 +105,6 @@ add_task(async function test_tab_contextmenu_fxa_disabled() {
 
   updateTabContextMenu(testTab);
   is(document.getElementById("context_sendTabToDevice").hidden, true, "Send tab to device is hidden");
-  is(document.getElementById("context_sendTabToDevice_separator").hidden, true, "Separator is also hidden");
 
   getter.restore();
   [...document.querySelectorAll(".sync-ui-item")].forEach(e => e.hidden = false);

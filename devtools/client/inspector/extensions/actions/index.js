@@ -14,6 +14,9 @@ createEnum([
   // Update the extension sidebar with an object value grip preview.
   "EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE",
 
+  // Switch the extension sidebar into an extension page container.
+  "EXTENSION_SIDEBAR_PAGE_UPDATE",
+
   // Remove an extension sidebar from the inspector store.
   "EXTENSION_SIDEBAR_REMOVE"
 

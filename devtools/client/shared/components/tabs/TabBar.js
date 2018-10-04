@@ -139,8 +139,10 @@ class Tabbar extends Component {
     }
 
     const tabs = this.state.tabs.slice();
-    let activeId;
-    let activeTab;
+
+    // Preselect the first sidebar tab if none was explicitly selected.
+    let activeTab = 0;
+    let activeId = this.queuedTabs[0].id;
 
     for (const { id, index, panel, selected, title, url } of this.queuedTabs) {
       if (index >= 0) {
