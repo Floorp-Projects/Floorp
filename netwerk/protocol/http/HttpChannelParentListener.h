@@ -59,7 +59,7 @@ public:
                                        uint64_t aIdentifier);
 
 private:
-  virtual ~HttpChannelParentListener() = default;
+  virtual ~HttpChannelParentListener();
 
   // Private partner function to SuspendForDiversion.
   MOZ_MUST_USE nsresult ResumeForDiversion();

@@ -782,8 +782,8 @@ MarkThreadStacksAsUntracked()
     // determine stack boundaries if we track these trailing regions and end up
     // marking them as readable.
 
-    // Find the mapped region containing the thread's stack.
-    uint8_t* base = thread->StackBase();
+    // Find the mapped region containing the end of the thread's stack.
+    uint8_t* base = thread->StackBase() + thread->StackSize() - 1;
     size_t size;
     if (!QueryRegion(&base, &size)) {
       MOZ_CRASH("Could not find memory region information for thread stack");
@@ -791,7 +791,6 @@ MarkThreadStacksAsUntracked()
 
     // Sanity check the region size. Note that we don't mark this entire region
     // as untracked, since it may contain TLS data which should be tracked.
-    MOZ_RELEASE_ASSERT(base <= thread->StackBase());
     MOZ_RELEASE_ASSERT(base + size >= thread->StackBase() + thread->StackSize());
 
     uint8_t* trailing = base + size;
