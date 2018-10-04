@@ -682,6 +682,7 @@
               class="accessory-button"
               icon="network"
               data-l10n-id="network-proxy-connection-settings"
+              searchkeywords="doh trr"
               search-l10n-ids="
                 connection-window.title,
                 connection-proxy-option-no.label,
