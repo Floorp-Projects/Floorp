@@ -336,9 +336,7 @@ enum nsCSSUnit {
   eCSSUnit_String       = 11,     // (char16_t*) a string value
   eCSSUnit_Ident        = 12,     // (char16_t*) a string value
   eCSSUnit_Attr         = 14,     // (char16_t*) a attr(string) value
-  eCSSUnit_Local_Font   = 15,     // (char16_t*) a local font name
-  eCSSUnit_Font_Format  = 16,     // (char16_t*) a font format name
-  eCSSUnit_Element      = 17,     // (char16_t*) an element id
+  eCSSUnit_Element      = 15,     // (char16_t*) an element id
 
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
@@ -367,8 +365,6 @@ enum nsCSSUnit {
   eCSSUnit_Calc_Times_L = 33,     // (nsCSSValue::Array*) num * val within calc
   eCSSUnit_Calc_Times_R = 34,     // (nsCSSValue::Array*) val * num within calc
   eCSSUnit_Calc_Divided = 35,     // (nsCSSValue::Array*) / within calc
-
-  eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
   eCSSUnit_List         = 53,     // (nsCSSValueList*) list of values
@@ -444,8 +440,6 @@ public:
   struct Array;
   friend struct Array;
 
-  friend struct mozilla::css::URLValueData;
-
   friend struct mozilla::css::ImageValue;
 
   // for valueless units only (null, auto, inherit, none, all, normal)
@@ -459,8 +453,6 @@ public:
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsString& aValue, nsCSSUnit aUnit);
   nsCSSValue(Array* aArray, nsCSSUnit aUnit);
-  explicit nsCSSValue(mozilla::css::URLValue* aValue);
-  explicit nsCSSValue(mozilla::css::ImageValue* aValue);
   explicit nsCSSValue(mozilla::SharedFontList* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   nsCSSValue(nsCSSValue&& aOther)
@@ -594,12 +586,6 @@ public:
     return mValue.mArray;
   }
 
-  nsIURI* GetURLValue() const
-  {
-    MOZ_ASSERT(mUnit == eCSSUnit_URL, "not a URL value");
-    return mValue.mURL->GetURI();
-  }
-
   nsCSSValueSharedList* GetSharedListValue() const
   {
     MOZ_ASSERT(mUnit == eCSSUnit_SharedList, "not a shared list value");
@@ -624,14 +610,6 @@ public:
 
   inline nsCSSValuePairList* GetPairListValue();
   inline const nsCSSValuePairList* GetPairListValue() const;
-
-  mozilla::css::URLValue* GetURLStructValue() const
-  {
-    // Not allowing this for Image values, because if the caller takes
-    // a ref to them they won't be able to delete them properly.
-    MOZ_ASSERT(mUnit == eCSSUnit_URL, "not a URL value");
-    return mValue.mURL;
-  }
 
   // Not making this inline because that would force us to include
   // imgIRequest.h, which leads to REQUIRES hell, since this header is included
@@ -675,7 +653,6 @@ public:
   // converts the nscoord to pixels
   void SetIntegerCoordValue(nscoord aCoord);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
-  void SetURLValue(mozilla::css::URLValue* aURI);
   void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
@@ -718,7 +695,6 @@ protected:
     nsStringBuffer* MOZ_OWNING_REF mString;
     nsAtom* MOZ_OWNING_REF mAtom;
     Array* MOZ_OWNING_REF mArray;
-    mozilla::css::URLValue* MOZ_OWNING_REF mURL;
     nsCSSValuePair_heap* MOZ_OWNING_REF mPair;
     nsCSSValueList_heap* MOZ_OWNING_REF mList;
     nsCSSValueList* mListDependent;
