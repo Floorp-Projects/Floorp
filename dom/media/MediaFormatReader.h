@@ -386,6 +386,7 @@ private:
       , mIsHardwareAccelerated(false)
       , mLastStreamSourceID(UINT32_MAX)
       , mIsNullDecode(false)
+      , mHardwareDecodingDisabled(false)
     {
       DecoderDoctorLogger::LogConstruction("MediaFormatReader::DecoderData",
                                            this);
@@ -622,6 +623,7 @@ private:
     Maybe<media::TimeUnit> mFirstDemuxedSampleTime;
     // Use NullDecoderModule or not.
     bool mIsNullDecode;
+    bool mHardwareDecodingDisabled;
 
     class
     {

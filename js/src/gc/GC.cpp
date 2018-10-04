@@ -4286,8 +4286,9 @@ GCRuntime::purgeRuntime()
 
     // If we're the main runtime, tell helper threads to free their unused
     // memory when they are next idle.
-    if (!rt->parentRuntime)
+    if (!rt->parentRuntime) {
         HelperThreadState().triggerFreeUnusedMemory();
+    }
 }
 
 bool

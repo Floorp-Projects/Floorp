@@ -746,8 +746,9 @@ template<typename Tok>
 void
 BinASTParser<Tok>::doTrace(JSTracer* trc)
 {
-    if (tokenizer_)
+    if (tokenizer_) {
         tokenizer_->traceMetadata(trc);
+    }
 }
 
 // Force class instantiation.
