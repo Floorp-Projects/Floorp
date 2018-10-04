@@ -35,6 +35,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     this.clearDPPXOverride();
     this.clearNetworkThrottling();
     this.clearTouchEventsOverride();
+    this.clearMetaViewportOverride();
     this.clearUserAgentOverride();
     this.targetActor = null;
     this.docShell = null;
@@ -202,6 +203,33 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
   clearTouchEventsOverride() {
     if (this._previousTouchEventsOverride !== undefined) {
       return this.setTouchEventsOverride(this._previousTouchEventsOverride);
+    }
+    return false;
+  },
+
+  /* Meta viewport override */
+
+  _previousMetaViewportOverride: undefined,
+
+  setMetaViewportOverride(flag) {
+    if (this.getMetaViewportOverride() == flag) {
+      return false;
+    }
+    if (this._previousMetaViewportOverride === undefined) {
+      this._previousMetaViewportOverride = this.getMetaViewportOverride();
+    }
+
+    this.docShell.metaViewportOverride = flag;
+    return true;
+  },
+
+  getMetaViewportOverride() {
+    return this.docShell.metaViewportOverride;
+  },
+
+  clearMetaViewportOverride() {
+    if (this._previousMetaViewportOverride !== undefined) {
+      return this.setMetaViewportOverride(this._previousMetaViewportOverride);
     }
     return false;
   },
