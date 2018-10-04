@@ -34,7 +34,8 @@ class ProcTestOutput(proctest.ProcTest):
         """
         Process is started, outputs data with no newline
         """
-        p = processhandler.ProcessHandler([self.python, "scripts", "procnonewline.py"],
+        p = processhandler.ProcessHandler([self.python,
+                                           os.path.join("scripts", "procnonewline.py")],
                                           cwd=here)
 
         p.run()

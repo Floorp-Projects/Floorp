@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'addons.js',
     'app-manager.js',
     'app-projects.js',
     'app-validator.js',
