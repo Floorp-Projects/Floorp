@@ -20,6 +20,7 @@ addressLine.appendElement(address);
 shippingAddress.init("",  // country
                      addressLine, // address line
                      "",  // region
+                     "",  // region code
                      "",  // city
                      "",  // dependent locality
                      "",  // postal code
