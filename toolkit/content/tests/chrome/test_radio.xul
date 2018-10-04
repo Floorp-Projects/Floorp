@@ -24,6 +24,8 @@
   <radio label="Three" value="three" selected="true"/>
 </radiogroup>
 
+<radiogroup id="radio-creation" hidden="true" />
+
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
@@ -32,7 +34,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function test_radio()
+async function test_radio()
 {
   var element = document.getElementById("radiogroup");
   test_nsIDOMXULSelectControlElement(element, "radio", null);
@@ -43,7 +45,7 @@ function test_radio()
   var accessKeyDetails = (navigator.platform.includes("Mac")) ?
                          { altKey : true, ctrlKey : true } :
                          { altKey : true, shiftKey: true };
-  synthesizeKey("t", accessKeyDetails);  
+  synthesizeKey("t", accessKeyDetails);
 
   var radiogroup = $("radiogroup-initwithselected");
   is(document.activeElement, radiogroup, "accesskey focuses radiogroup");
@@ -52,10 +54,25 @@ function test_radio()
   $("radiogroup-initwithvalue").focus();
 
   $("one").disabled = true;
-  synthesizeKey("o", accessKeyDetails);  
+  synthesizeKey("o", accessKeyDetails);
 
   is(document.activeElement, $("radiogroup-initwithvalue"), "accesskey on disabled radio doesn't focus");
   is(radiogroup.selectedItem, $("two"), "accesskey on disabled radio doesn't change selection");
+
+  info("Testing appending child");
+  var dynamicRadiogroup = document.querySelector("#radio-creation");
+  var radio = document.createXULElement("radio");
+  radio.setAttribute("selected", "true");
+  radio.setAttribute("label", "one");
+  radio.setAttribute("value", "one");
+  dynamicRadiogroup.appendChild(radio);
+  dynamicRadiogroup.appendChild(document.createXULElement("radio"));
+
+  dynamicRadiogroup.hidden = false;
+  info("Waiting for condition");
+  await SimpleTest.promiseWaitForCondition(() => dynamicRadiogroup.value == "one",
+    "Value gets set once child is constructed");
+  is(dynamicRadiogroup._radioChildren.length, 2, "Correct number of children");
 
   SimpleTest.finish();
 }
