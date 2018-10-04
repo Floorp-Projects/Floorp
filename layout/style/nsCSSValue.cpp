@@ -1041,19 +1041,6 @@ css::URLValue::GetSourceString(nsString& aRef) const
   aRef = NS_ConvertUTF8toUTF16(cref);
 }
 
-bool
-css::URLValue::EqualsExceptRef(nsIURI* aURI) const
-{
-  nsIURI* uri = GetURI();
-  if (!uri) {
-    return false;
-  }
-
-  bool ret = false;
-  uri->EqualsExceptRef(aURI, &ret);
-  return ret;
-}
-
 size_t
 css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
