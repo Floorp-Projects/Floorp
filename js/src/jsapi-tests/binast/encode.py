@@ -16,11 +16,13 @@ parser.add_option('--binjs_encode', dest='binjs_encode',
                   help='path to binjs_encode commad')
 (options, args) = parser.parse_args()
 
+
 def ensure_dir(path, name):
     if not os.path.isdir(path):
         print('{} directory {} does not exit'.format(name, path),
               file=sys.stderr)
         sys.exit(1)
+
 
 def ensure_file(path, name):
     if not os.path.isfile(path):
@@ -28,9 +30,11 @@ def ensure_file(path, name):
               file=sys.stderr)
         sys.exit(1)
 
+
 ensure_dir(options.topsrcdir, 'topsrcdir')
 ensure_dir(options.binjsdir, 'binjsdir')
 ensure_file(options.binjs_encode, 'binjs_encode command')
+
 
 def encode(infile_path, outfile_path, binjs_encode_args=[]):
     print(infile_path)
@@ -47,6 +51,7 @@ def encode(infile_path, outfile_path, binjs_encode_args=[]):
               file=sys.stderr)
         sys.exit(1)
 
+
 def encode_inplace(dir, *args, **kwargs):
     js_pat = re.compile('\.js$')
     for root, dirs, files in os.walk(dir):
@@ -56,6 +61,7 @@ def encode_inplace(dir, *args, **kwargs):
                 infile_path = os.path.join(root, filename)
                 outfile_path = os.path.join(root, binjsfilename)
                 encode(infile_path, outfile_path, *args, **kwargs)
+
 
 wpt_dir = os.path.join(options.topsrcdir, 'testing', 'web-platform')
 ensure_dir(wpt_dir, 'wpt')
