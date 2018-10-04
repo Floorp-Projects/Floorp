@@ -88,13 +88,6 @@ nsCSSValue::nsCSSValue(mozilla::css::URLValue* aValue)
   mValue.mURL->AddRef();
 }
 
-nsCSSValue::nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue)
-  : mUnit(eCSSUnit_GridTemplateAreas)
-{
-  mValue.mGridTemplateAreas = aValue;
-  mValue.mGridTemplateAreas->AddRef();
-}
-
 nsCSSValue::nsCSSValue(SharedFontList* aValue)
   : mUnit(eCSSUnit_FontFamilyList)
 {
@@ -148,10 +141,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   }
   else if (eCSSUnit_PairListDep == mUnit) {
     mValue.mPairListDependent = aCopy.mValue.mPairListDependent;
-  }
-  else if (eCSSUnit_GridTemplateAreas == mUnit) {
-    mValue.mGridTemplateAreas = aCopy.mValue.mGridTemplateAreas;
-    mValue.mGridTemplateAreas->AddRef();
   }
   else if (eCSSUnit_FontFamilyList == mUnit) {
     mValue.mFontFamilyList = aCopy.mValue.mFontFamilyList;
@@ -225,9 +214,6 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     else if (eCSSUnit_PairList == mUnit) {
       return nsCSSValuePairList::Equal(mValue.mPairList,
                                        aOther.mValue.mPairList);
-    }
-    else if (eCSSUnit_GridTemplateAreas == mUnit) {
-      return *mValue.mGridTemplateAreas == *aOther.mValue.mGridTemplateAreas;
     }
     else if (eCSSUnit_FontFamilyList == mUnit) {
       return mValue.mFontFamilyList->mNames ==
@@ -324,8 +310,6 @@ void nsCSSValue::DoReset()
     DO_RELEASE(mSharedList);
   } else if (eCSSUnit_PairList == mUnit) {
     DO_RELEASE(mPairList);
-  } else if (eCSSUnit_GridTemplateAreas == mUnit) {
-    DO_RELEASE(mGridTemplateAreas);
   } else if (eCSSUnit_FontFamilyList == mUnit) {
     DO_RELEASE(mFontFamilyList);
   } else if (eCSSUnit_AtomIdent == mUnit) {
@@ -672,11 +656,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
     // PairListDep: not measured because it's non-owning.
     case eCSSUnit_PairListDep:
-      break;
-
-    // GridTemplateAreas
-    case eCSSUnit_GridTemplateAreas:
-      n += mValue.mGridTemplateAreas->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     case eCSSUnit_FontFamilyList:
