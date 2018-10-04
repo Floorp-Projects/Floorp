@@ -10,7 +10,6 @@
 #include <dbt.h>
 #include <hidclass.h>
 #include <ntddmou.h>
-#include <setupapi.h>
 
 namespace mozilla {
 namespace widget {
@@ -36,33 +35,6 @@ InputDeviceUtils::UnregisterNotification(HDEVNOTIFY aHandle)
     return;
   }
   UnregisterDeviceNotification(aHandle);
-}
-
-DWORD
-InputDeviceUtils::CountMouseDevices()
-{
-  HDEVINFO hdev = SetupDiGetClassDevs(&GUID_DEVINTERFACE_MOUSE,
-                                      nullptr,
-                                      nullptr,
-                                      DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
-  if (hdev == INVALID_HANDLE_VALUE) {
-    return 0;
-  }
-
-  DWORD count = 0;
-  SP_INTERFACE_DEVICE_DATA info = {};
-  info.cbSize = sizeof(SP_INTERFACE_DEVICE_DATA);
-  while (SetupDiEnumDeviceInterfaces(hdev,
-                                     nullptr,
-                                     &GUID_DEVINTERFACE_MOUSE,
-                                     index,
-                                     &info)) {
-    if (info.Flags & SPINT_ACTIVE) {
-      count++;
-    }
-  }
-  SetupDiDestroyDeviceInfoList(hdev);
-  return count;
 }
 
 } // namespace widget
