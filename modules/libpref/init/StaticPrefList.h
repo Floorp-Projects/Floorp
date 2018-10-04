@@ -208,6 +208,19 @@ VARCACHE_PREF(
 // Note, this is not currently safe to use for normal browsing yet.
 PREF("dom.serviceWorkers.parent_intercept", bool, false)
 
+// Enable PaymentRequest API
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE  true
+#else
+# define PREF_VALUE  false
+#endif
+VARCACHE_PREF(
+  "dom.payments.request.enabled",
+   dom_payments_request_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Whether a user gesture is required to call PaymentRequest.prototype.show().
 VARCACHE_PREF(
   "dom.payments.request.user_interaction_required",
