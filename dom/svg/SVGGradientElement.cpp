@@ -29,19 +29,19 @@ using namespace SVGUnitTypes_Binding;
 //--------------------- Gradients------------------------
 
 nsSVGEnumMapping SVGGradientElement::sSpreadMethodMap[] = {
-  {&nsGkAtoms::pad, SVG_SPREADMETHOD_PAD},
-  {&nsGkAtoms::reflect, SVG_SPREADMETHOD_REFLECT},
-  {&nsGkAtoms::repeat, SVG_SPREADMETHOD_REPEAT},
+  {nsGkAtoms::pad, SVG_SPREADMETHOD_PAD},
+  {nsGkAtoms::reflect, SVG_SPREADMETHOD_REFLECT},
+  {nsGkAtoms::repeat, SVG_SPREADMETHOD_REPEAT},
   {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo SVGGradientElement::sEnumInfo[2] =
 {
-  { &nsGkAtoms::gradientUnits,
+  { nsGkAtoms::gradientUnits,
     sSVGUnitTypesMap,
     SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
   },
-  { &nsGkAtoms::spreadMethod,
+  { nsGkAtoms::spreadMethod,
     sSpreadMethodMap,
     SVG_SPREADMETHOD_PAD
   }
@@ -49,8 +49,8 @@ nsSVGElement::EnumInfo SVGGradientElement::sEnumInfo[2] =
 
 nsSVGElement::StringInfo SVGGradientElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_None, true },
-  { &nsGkAtoms::href, kNameSpaceID_XLink, true }
+  { nsGkAtoms::href, kNameSpaceID_None, true },
+  { nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
 //----------------------------------------------------------------------
@@ -132,10 +132,10 @@ SVGLinearGradientElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenP
 
 nsSVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::y1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::x2, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::y2, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { nsGkAtoms::x1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { nsGkAtoms::y1, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { nsGkAtoms::x2, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { nsGkAtoms::y2, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
 };
 
 //----------------------------------------------------------------------
@@ -206,12 +206,12 @@ SVGRadialGradientElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenP
 
 nsSVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[6] =
 {
-  { &nsGkAtoms::cx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::cy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::r, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::XY },
-  { &nsGkAtoms::fx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::fy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::fr, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::XY },
+  { nsGkAtoms::cx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { nsGkAtoms::cy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { nsGkAtoms::r, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::XY },
+  { nsGkAtoms::fx, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { nsGkAtoms::fy, 50, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { nsGkAtoms::fr, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::XY },
 };
 
 //----------------------------------------------------------------------

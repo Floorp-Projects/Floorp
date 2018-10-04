@@ -32,5 +32,5 @@ export default 1;
 moduleRepo['A'] = parseModule(ASrc);
 
 let m = parseModule(mainSrc);
-instantiateModule(m)
-evaluateModule(m);
+m.declarationInstantiation()
+m.evaluation();

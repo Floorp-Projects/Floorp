@@ -7,5 +7,5 @@ function addThis() {
   return statusmessages[i] = Number;
 }
 `);
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();

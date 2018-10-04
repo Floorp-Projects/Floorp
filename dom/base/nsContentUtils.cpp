@@ -4645,7 +4645,7 @@ nsContentUtils::HasNonEmptyAttr(const nsIContent* aContent,
                                 int32_t aNameSpaceID,
                                 nsAtom* aName)
 {
-  static Element::AttrValuesArray strings[] = {&nsGkAtoms::_empty, nullptr};
+  static Element::AttrValuesArray strings[] = {nsGkAtoms::_empty, nullptr};
   return aContent->IsElement() &&
     aContent->AsElement()->FindAttrValueIn(aNameSpaceID, aName, strings, eCaseMatters)
       == Element::ATTR_VALUE_NO_MATCH;

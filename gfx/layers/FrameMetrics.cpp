@@ -80,7 +80,6 @@ FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
 
 void
 ScrollMetadata::SetUsesContainerScrolling(bool aValue) {
-  MOZ_ASSERT_IF(aValue, gfxPrefs::LayoutUseContainersForRootFrames());
   mUsesContainerScrolling = aValue;
 }
 

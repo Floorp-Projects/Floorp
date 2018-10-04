@@ -24,24 +24,24 @@ SVGFEDisplacementMapElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGiv
 
 nsSVGElement::NumberInfo SVGFEDisplacementMapElement::sNumberInfo[1] =
 {
-  { &nsGkAtoms::scale, 0, false },
+  { nsGkAtoms::scale, 0, false },
 };
 
 nsSVGEnumMapping SVGFEDisplacementMapElement::sChannelMap[] = {
-  {&nsGkAtoms::R, SVG_CHANNEL_R},
-  {&nsGkAtoms::G, SVG_CHANNEL_G},
-  {&nsGkAtoms::B, SVG_CHANNEL_B},
-  {&nsGkAtoms::A, SVG_CHANNEL_A},
+  {nsGkAtoms::R, SVG_CHANNEL_R},
+  {nsGkAtoms::G, SVG_CHANNEL_G},
+  {nsGkAtoms::B, SVG_CHANNEL_B},
+  {nsGkAtoms::A, SVG_CHANNEL_A},
   {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo SVGFEDisplacementMapElement::sEnumInfo[2] =
 {
-  { &nsGkAtoms::xChannelSelector,
+  { nsGkAtoms::xChannelSelector,
     sChannelMap,
     SVG_CHANNEL_A
   },
-  { &nsGkAtoms::yChannelSelector,
+  { nsGkAtoms::yChannelSelector,
     sChannelMap,
     SVG_CHANNEL_A
   }
@@ -49,9 +49,9 @@ nsSVGElement::EnumInfo SVGFEDisplacementMapElement::sEnumInfo[2] =
 
 nsSVGElement::StringInfo SVGFEDisplacementMapElement::sStringInfo[3] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true },
-  { &nsGkAtoms::in2, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true },
+  { nsGkAtoms::in2, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

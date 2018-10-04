@@ -11,5 +11,5 @@ m = parseModule(`
   function g() { return this.hours = 0; }
   evalInFrame.call(0, 0, "g()")
 `);
-instantiateModule(m);
-evaluateModule(m);
+m.declarationInstantiation();
+m.evaluation();

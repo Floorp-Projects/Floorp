@@ -676,12 +676,13 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
   nsPoint point =
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aRefPoint, aRootFrame);
   uint32_t flags = 0;
-#ifdef MOZ_WIDGET_ANDROID
-  // On Android, we need IGNORE_ROOT_SCROLL_FRAME for correct hit testing
-  // when zoomed out. On desktop, don't use it because it interferes with
-  // hit testing for some purposes such as scrollbar dragging.
-  flags = nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME;
-#endif
+  if (gfxPrefs::APZAllowZooming()) {
+    // If zooming is enabled, we need IGNORE_ROOT_SCROLL_FRAME for correct
+    // hit testing. Otherwise, don't use it because it interferes with
+    // hit testing for some purposes such as scrollbar dragging (this will
+    // need to be fixed before enabling zooming by default on desktop).
+    flags = nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME;
+  }
   nsIFrame* target =
     nsLayoutUtils::GetFrameForPoint(aRootFrame, point, flags);
   nsIScrollableFrame* scrollAncestor = target

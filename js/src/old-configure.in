@@ -65,8 +65,6 @@ _PTHREAD_LDFLAGS=""
 
 LDFLAGS="$LDFLAGS $LINKER_LDFLAGS"
 
-MOZ_DEFAULT_COMPILER
-
 if test -z "$JS_STANDALONE"; then
   autoconfmk=autoconf-js.mk
 fi
@@ -304,7 +302,6 @@ AC_SUBST(QEMU_CANT_RUN_JS_SHELL)
 
 AC_SUBST(_MSC_VER)
 
-AC_SUBST(GNU_AS)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
@@ -400,10 +397,7 @@ AC_SUBST(MOZJS_ALPHA)
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
-AS_BIN=$AS
 AR_EXTRACT='$(AR) x'
-AS='$(CC)'
-AS_DASH_C_FLAG='-c'
 MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
@@ -676,9 +670,6 @@ case "$target" in
         TARGET_COMPILER_ABI=msvc
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
-        if test "$AS_BIN"; then
-            AS="$(basename "$AS_BIN")"
-        fi
         case "$LINKER" in
         *lld*)
             AR='llvm-lib'
@@ -1661,15 +1652,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
-if test "$JS_HAS_CTYPES"; then
-  dnl JS_HAS_CTYPES is defined by Python configure. This check remains
-  dnl as long as determining $AS remains in old-configure.
-  dnl Error out if we're on MSVC and MASM is unavailable.
-  if test -n "$_MSC_VER" -a \( "$AS" != "ml.exe" -a "$AS" != "ml64.exe" \); then
-    AC_MSG_ERROR([\"$AS\" is not a suitable assembler to build js-ctypes. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK. Or do not use --enable-ctypes.])
-  fi
-fi
-
 dnl ========================================================
 dnl =
 dnl = Options for generating the shell as a script
@@ -1694,10 +1676,8 @@ dnl ========================================================
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
 AC_SUBST(AR_EXTRACT)
-AC_SUBST(AS)
 AC_SUBST(NM)
 AC_SUBST_LIST(ASFLAGS)
-AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)

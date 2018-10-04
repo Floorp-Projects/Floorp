@@ -14,19 +14,12 @@ define([AC_HEADER_STDC], [])
 
 AC_DEFUN([MOZ_TOOL_VARIABLES],
 [
-GNU_AS=
-
 GNU_CC=
 GNU_CXX=
 if test "$CC_TYPE" = "gcc"; then
     GNU_CC=1
     GNU_CXX=1
 fi
-
-if test "`echo | $AS -o conftest.out -v 2>&1 | grep -c GNU`" != "0"; then
-    GNU_AS=1
-fi
-rm -f conftest.out
 
 CLANG_CC=
 CLANG_CXX=

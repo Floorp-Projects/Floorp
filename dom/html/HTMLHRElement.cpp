@@ -173,11 +173,11 @@ NS_IMETHODIMP_(bool)
 HTMLHRElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsGkAtoms::align },
-    { &nsGkAtoms::width },
-    { &nsGkAtoms::size },
-    { &nsGkAtoms::color },
-    { &nsGkAtoms::noshade },
+    { nsGkAtoms::align },
+    { nsGkAtoms::width },
+    { nsGkAtoms::size },
+    { nsGkAtoms::color },
+    { nsGkAtoms::noshade },
     { nullptr },
   };
 

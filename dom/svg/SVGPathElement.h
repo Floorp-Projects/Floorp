@@ -63,7 +63,7 @@ public:
     return &mD;
   }
 
-  virtual nsAtom* GetPathDataAttrName() const override {
+  virtual nsStaticAtom* GetPathDataAttrName() const override {
     return nsGkAtoms::d;
   }
 

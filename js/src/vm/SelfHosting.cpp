@@ -2192,19 +2192,18 @@ intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedScript script(cx, module->script());
-    RootedScript result(cx);
-    result = moduleResolveHook(cx, script, specifier);
+    RootedObject result(cx);
+    result = moduleResolveHook(cx, module, specifier);
     if (!result) {
         return false;
     }
 
-    if (!result->module()) {
-        JS_ReportErrorASCII(cx, "Module resolve hook did not return a module script");
+    if (!result->is<ModuleObject>()) {
+        JS_ReportErrorASCII(cx, "Module resolve hook did not return Module object");
         return false;
     }
 
-    args.rval().setObject(*result->module());
+    args.rval().setObject(*result);
     return true;
 }
 

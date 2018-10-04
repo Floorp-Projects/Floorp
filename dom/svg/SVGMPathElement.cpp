@@ -27,8 +27,8 @@ SVGMPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::StringInfo SVGMPathElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_None, false },
-  { &nsGkAtoms::href, kNameSpaceID_XLink, false }
+  { nsGkAtoms::href, kNameSpaceID_None, false },
+  { nsGkAtoms::href, kNameSpaceID_XLink, false }
 };
 
 // Cycle collection magic -- based on SVGUseElement

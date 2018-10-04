@@ -20,7 +20,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::dom;
 
 nsSVGElement::NumberInfo SVGGeometryElement::sNumberInfo =
-{ &nsGkAtoms::pathLength, 0, false };
+{ nsGkAtoms::pathLength, 0, false };
 
 //----------------------------------------------------------------------
 // Implementation
@@ -70,7 +70,7 @@ SVGGeometryElement::AttributeDefinesGeometry(const nsAtom *aName)
   // Check for nsSVGLength2 attribute
   LengthAttributesInfo info = GetLengthInfo();
   for (uint32_t i = 0; i < info.mLengthCount; i++) {
-    if (aName == *info.mLengthInfo[i].mName) {
+    if (aName == info.mLengthInfo[i].mName) {
       return true;
     }
   }

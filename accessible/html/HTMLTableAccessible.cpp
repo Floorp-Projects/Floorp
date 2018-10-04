@@ -307,8 +307,8 @@ HTMLTableHeaderCellAccessible::NativeRole() const
 {
   // Check value of @scope attribute.
   static Element::AttrValuesArray scopeValues[] =
-    { &nsGkAtoms::col, &nsGkAtoms::colgroup,
-      &nsGkAtoms::row, &nsGkAtoms::rowgroup, nullptr };
+    { nsGkAtoms::col, nsGkAtoms::colgroup,
+      nsGkAtoms::row, nsGkAtoms::rowgroup, nullptr };
   int32_t valueIdx =
     mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::scope,
                                            scopeValues, eCaseMatters);

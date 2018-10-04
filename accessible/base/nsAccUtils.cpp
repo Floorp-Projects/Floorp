@@ -208,20 +208,19 @@ nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsAtom *aAtom)
   return true;
 }
 
-nsAtom*
+nsStaticAtom*
 nsAccUtils::GetARIAToken(dom::Element* aElement, nsAtom* aAttr)
 {
   if (!HasDefinedARIAToken(aElement, aAttr))
     return nsGkAtoms::_empty;
 
   static Element::AttrValuesArray tokens[] =
-    { &nsGkAtoms::_false, &nsGkAtoms::_true,
-      &nsGkAtoms::mixed, nullptr};
+    { nsGkAtoms::_false, nsGkAtoms::_true, nsGkAtoms::mixed, nullptr};
 
   int32_t idx = aElement->FindAttrValueIn(kNameSpaceID_None,
                                           aAttr, tokens, eCaseMatters);
   if (idx >= 0)
-    return *(tokens[idx]);
+    return tokens[idx];
 
   return nullptr;
 }

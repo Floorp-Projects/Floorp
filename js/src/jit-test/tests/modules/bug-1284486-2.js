@@ -15,7 +15,7 @@ let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
 let e1;
 let threw = false;
 try {
-    instantiateModule(c);
+    c.declarationInstantiation();
 } catch (exc) {
     threw = true;
     e1 = exc;
@@ -26,7 +26,7 @@ assertEq(typeof e1 === "undefined", false);
 threw = false;
 let e2;
 try {
-    instantiateModule(c);
+    c.declarationInstantiation();
 } catch (exc) {
     threw = true;
     e2 = exc;

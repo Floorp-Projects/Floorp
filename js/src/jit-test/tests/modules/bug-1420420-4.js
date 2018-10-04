@@ -6,10 +6,10 @@ moduleRepo["a"] = parseModule(`throw undefined`);
 let b = moduleRepo["b"] = parseModule(`import "a";`);
 let c = moduleRepo["c"] = parseModule(`import "a";`);
 
-instantiateModule(b);
-instantiateModule(c);
+b.declarationInstantiation();
+c.declarationInstantiation();
 
 let count = 0;
-try { evaluateModule(b) } catch (e) { count++; }
-try { evaluateModule(c) } catch (e) { count++; }
+try { b.evaluation() } catch (e) { count++; }
+try { c.evaluation() } catch (e) { count++; }
 assertEq(count, 2);

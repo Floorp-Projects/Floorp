@@ -64,6 +64,9 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
     class AutoTuple;
     class AutoTaggedTuple;
 
+    // The maximum number of fields in single tagged tuple.
+    static const uint32_t FIELD_NUM_MAX = 32;
+
   public:
     /**
      * Construct a token reader.
