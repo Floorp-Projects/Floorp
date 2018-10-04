@@ -52,7 +52,6 @@ function ADBAddon() {
 
 ADBAddon.prototype = {
   set status(value) {
-    Devices.adbExtensionInstalled = (value == "installed");
     if (this._status != value) {
       this._status = value;
       this.emit("update");
