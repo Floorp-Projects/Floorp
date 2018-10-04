@@ -2281,13 +2281,6 @@ Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut aCSSValue, int32_t aLength)
 }
 
 void
-Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut aCSSValue, URLValue* aURL)
-{
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
-  aCSSValue->SetURLValue(aURL);
-}
-
-void
 Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut aCSSValue,
                       int32_t aInteger, nsCSSUnit aUnit)
 {

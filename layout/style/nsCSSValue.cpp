@@ -81,13 +81,6 @@ nsCSSValue::nsCSSValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   mValue.mArray->AddRef();
 }
 
-nsCSSValue::nsCSSValue(mozilla::css::URLValue* aValue)
-  : mUnit(eCSSUnit_URL)
-{
-  mValue.mURL = aValue;
-  mValue.mURL->AddRef();
-}
-
 nsCSSValue::nsCSSValue(SharedFontList* aValue)
   : mUnit(eCSSUnit_FontFamilyList)
 {
@@ -115,10 +108,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (UnitHasArrayValue()) {
     mValue.mArray = aCopy.mValue.mArray;
     mValue.mArray->AddRef();
-  }
-  else if (eCSSUnit_URL == mUnit) {
-    mValue.mURL = aCopy.mValue.mURL;
-    mValue.mURL->AddRef();
   }
   else if (eCSSUnit_Pair == mUnit) {
     mValue.mPair = aCopy.mValue.mPair;
@@ -198,9 +187,6 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (UnitHasArrayValue()) {
       return *mValue.mArray == *aOther.mValue.mArray;
-    }
-    else if (eCSSUnit_URL == mUnit) {
-      return mValue.mURL->Equals(*aOther.mValue.mURL);
     }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
@@ -300,8 +286,6 @@ void nsCSSValue::DoReset()
     mValue.mString->Release();
   } else if (UnitHasArrayValue()) {
     DO_RELEASE(mArray);
-  } else if (eCSSUnit_URL == mUnit) {
-    DO_RELEASE(mURL);
   } else if (eCSSUnit_Pair == mUnit) {
     DO_RELEASE(mPair);
   } else if (eCSSUnit_List == mUnit) {
@@ -383,14 +367,6 @@ void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   MOZ_ASSERT(UnitHasArrayValue(), "bad unit");
   mValue.mArray = aValue;
   mValue.mArray->AddRef();
-}
-
-void nsCSSValue::SetURLValue(mozilla::css::URLValue* aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_URL;
-  mValue.mURL = aValue;
-  mValue.mURL->AddRef();
 }
 
 void nsCSSValue::SetPairValue(const nsCSSValuePair* aValue)
@@ -602,8 +578,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_String:
     case eCSSUnit_Ident:
     case eCSSUnit_Attr:
-    case eCSSUnit_Local_Font:
-    case eCSSUnit_Font_Format:
     case eCSSUnit_Element:
       n += mValue.mString->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
       break;
@@ -622,11 +596,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_Calc_Times_L:
     case eCSSUnit_Calc_Times_R:
     case eCSSUnit_Calc_Divided:
-      break;
-
-    // URL
-    case eCSSUnit_URL:
-      n += mValue.mURL->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Pair
