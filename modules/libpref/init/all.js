@@ -3282,7 +3282,11 @@ pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 pref("dom.ipc.plugins.forcedirect.enabled", true);
 
 // Enable multi by default.
+#if defined(NIGHTLY_BUILD)
+pref("dom.ipc.processCount", 8);
+#else
 pref("dom.ipc.processCount", 4);
+#endif
 
 // Default to allow only one file:// URL content process.
 pref("dom.ipc.processCount.file", 1);
