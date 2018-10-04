@@ -54,7 +54,9 @@ public:
     return E_FAIL;
   }
 
-  virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
+  virtual HRESULT ConfigureForSize(IMFMediaType* aInputType,
+                                   uint32_t aWidth,
+                                   uint32_t aHeight)
   {
     return S_OK;
   }
