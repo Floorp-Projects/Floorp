@@ -203,6 +203,7 @@ VideoDecoderManagerParent::ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyRea
 PVideoDecoderParent*
 VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
                                                     const float& aFramerate,
+                                                    const bool& aDisallowHWDecoder,
                                                     const layers::TextureFactoryIdentifier& aIdentifier,
                                                     bool* aSuccess,
                                                     nsCString* aBlacklistedD3D11Driver,
@@ -214,7 +215,7 @@ VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
     "VideoDecoderParent::mDecodeTaskQueue");
 
   auto* parent = new VideoDecoderParent(
-    this, aVideoInfo, aFramerate, aIdentifier,
+    this, aVideoInfo, aFramerate, aDisallowHWDecoder, aIdentifier,
     sManagerTaskQueue, decodeTaskQueue, aSuccess, aErrorDescription);
 
 #ifdef XP_WIN

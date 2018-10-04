@@ -5054,12 +5054,14 @@ class MOZ_STACK_CLASS Debugger::SourceQuery : public Debugger::QueryBase
     {}
 
     bool findSources() {
-        if (!matchAllDebuggeeGlobals())
+        if (!matchAllDebuggeeGlobals()) {
             return false;
+        }
 
         Realm* singletonRealm = nullptr;
-        if (realms.count() == 1)
+        if (realms.count() == 1) {
             singletonRealm = realms.all().front();
+        }
 
         // Search each realm for debuggee scripts.
         MOZ_ASSERT(sources.empty());
@@ -5106,43 +5108,53 @@ class MOZ_STACK_CLASS Debugger::SourceQuery : public Debugger::QueryBase
     }
 
     void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
-        if (oom || script->selfHosted())
+        if (oom || script->selfHosted()) {
             return;
+        }
         Realm* realm = script->realm();
-        if (!realms.has(realm))
+        if (!realms.has(realm)) {
             return;
+        }
 
-        if (!script->sourceObject())
+        if (!script->sourceObject()) {
             return;
+        }
 
         ScriptSourceObject* source =
             &UncheckedUnwrap(script->sourceObject())->as<ScriptSourceObject>();
-        if (!sources.put(source))
+        if (!sources.put(source)) {
             oom = true;
+        }
     }
 
     void consider(LazyScript* lazyScript, const JS::AutoRequireNoGC& nogc) {
-        if (oom)
+        if (oom) {
             return;
+        }
         Realm* realm = lazyScript->realm();
-        if (!realms.has(realm))
+        if (!realms.has(realm)) {
             return;
+        }
 
         // If the script is already delazified, it should already be handled.
-        if (lazyScript->maybeScript())
+        if (lazyScript->maybeScript()) {
             return;
+        }
 
         ScriptSourceObject* source = &lazyScript->sourceObject();
-        if (!sources.put(source))
+        if (!sources.put(source)) {
             oom = true;
+        }
     }
 
     void consider(WasmInstanceObject* instanceObject) {
-        if (oom)
+        if (oom) {
             return;
+        }
 
-        if (!sources.put(instanceObject))
+        if (!sources.put(instanceObject)) {
             oom = true;
+        }
     }
 };
 
@@ -5166,15 +5178,17 @@ Debugger::findSources(JSContext* cx, unsigned argc, Value* vp)
     }
 
     SourceQuery query(cx, dbg);
-    if (!query.findSources())
+    if (!query.findSources()) {
         return false;
+    }
 
     Handle<SourceQuery::SourceSet> sources(query.foundSources());
 
     size_t resultLength = sources.count();
     RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, resultLength));
-    if (!result)
+    if (!result) {
         return false;
+    }
 
     result->ensureDenseInitializedLength(cx, 0, resultLength);
 
@@ -5182,8 +5196,9 @@ Debugger::findSources(JSContext* cx, unsigned argc, Value* vp)
     for (auto iter = sources.get().iter(); !iter.done(); iter.next()) {
         Rooted<DebuggerSourceReferent> sourceReferent(cx, AsSourceReferent(iter.get()));
         RootedObject sourceObject(cx, dbg->wrapVariantReferent(cx, sourceReferent));
-        if (!sourceObject)
+        if (!sourceObject) {
             return false;
+        }
         result->setDenseElement(i, ObjectValue(*sourceObject));
         i++;
     }

@@ -10,7 +10,6 @@ const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser
 const {
   debugLocalAddon,
   debugRemoteAddon,
-  getAddonForm,
   openTemporaryExtension,
   uninstallAddon,
 } = require("../modules/extensions-helper");
@@ -54,8 +53,7 @@ function inspectDebugTarget(type, id) {
       }
       case DEBUG_TARGETS.EXTENSION: {
         if (runtimeType === RUNTIMES.NETWORK) {
-          const addonForm = await getAddonForm(id, client);
-          debugRemoteAddon(addonForm, client);
+          await debugRemoteAddon(id, client);
         } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
           debugLocalAddon(id);
         }

@@ -24,6 +24,7 @@ add_task(async function() {
   await testCtrlModifier(shortcuts);
   await testInvalidShortcutString(shortcuts);
   await testCmdShiftShortcut(shortcuts);
+  await testTabCharacterShortcut(shortcuts);
   shortcuts.destroy();
 
   await testTarget();
@@ -421,4 +422,41 @@ function testInvalidShortcutString(shortcuts) {
 
   shortcuts.on("Cmmd+F", function() {});
   ok(true, "on() shouldn't throw when passing invalid shortcut string");
+}
+
+/**
+ * Shift+Alt+I generates ^ key (`event.key`) on OSX and KeyShortcuts module
+ * must ensure that this doesn't interfere with shortcuts CmdOrCtrl+Alt+Shift+I
+ * for opening the Browser Toolbox and CmdOrCtrl+Alt+I for toggling the Toolbox.
+ */
+async function testTabCharacterShortcut(shortcuts) {
+  if (!isOSX) {
+    return;
+  }
+
+  info("Test tab character shortcut");
+
+  once(shortcuts, "CmdOrCtrl+Alt+I", event => {
+    ok(false, "This handler must not be executed");
+  });
+
+  const onKey = once(shortcuts, "CmdOrCtrl+Alt+Shift+I", event => {
+    info("Test for CmdOrCtrl+Alt+Shift+I");
+    is(event.key, "^");
+    is(event.keyCode, 73);
+  });
+
+  // Simulate `CmdOrCtrl+Alt+Shift+I` shortcut. Note that EventUtils doesn't
+  // generate `^` like real keyboard, so we need to pass it explicitly
+  // and use proper keyCode for `I` character.
+  EventUtils.synthesizeKey("^", {
+    code: "KeyI",
+    key: "^",
+    keyCode: 73,
+    shiftKey: true,
+    altKey: true,
+    metaKey: true,
+  }, window);
+
+  await onKey;
 }

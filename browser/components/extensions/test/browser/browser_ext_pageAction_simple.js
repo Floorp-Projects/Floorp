@@ -4,6 +4,8 @@
 
 ChromeUtils.import("resource:///modules/PageActions.jsm");
 
+const BASE = "http://example.com/browser/browser/components/extensions/test/browser/";
+
 add_task(async function test_pageAction_basic() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -103,6 +105,86 @@ add_task(async function test_pageAction_pinned() {
   // that we've properly set the pinned value to false.
   let action = PageActions.actionForID(makeWidgetId(extension.id));
   ok(action && !action.pinnedToUrlbar, "pageAction is in main pageaction menu");
+
+  await extension.unload();
+});
+
+add_task(async function test_pageAction_icon_on_subframe_navigation() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "page_action": {
+        "default_popup": "popup.html",
+      },
+    },
+
+    files: {
+      "popup.html": `
+      <!DOCTYPE html>
+      <html><body>
+      </body></html>
+      `,
+    },
+
+    background: function() {
+      browser.tabs.query({active: true, currentWindow: true}, tabs => {
+        let tabId = tabs[0].id;
+
+        browser.pageAction.show(tabId).then(() => {
+          browser.test.sendMessage("page-action-shown");
+        });
+      });
+    },
+  });
+
+  await navigateTab(gBrowser.selectedTab, "data:text/html,<h1>Top Level Frame</h1>");
+
+  await extension.startup();
+  await extension.awaitMessage("page-action-shown");
+
+  const pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return document.getElementById(pageActionId);
+  }, "pageAction is initially visible");
+
+  info("Create a sub-frame");
+
+  let subframeURL = `${BASE}#subframe-url-1`;
+  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async (url) => {
+    const iframe = this.content.document.createElement("iframe");
+    iframe.setAttribute("id", "test-subframe");
+    iframe.setAttribute("src", url);
+    iframe.setAttribute("style", "height: 200px; width: 200px");
+
+    // Await the initial url to be loaded in the subframe.
+    await new Promise(resolve => {
+      iframe.onload = resolve;
+      this.content.document.body.appendChild(iframe);
+    });
+  });
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return document.getElementById(pageActionId);
+  }, "pageAction should be visible when a subframe is created");
+
+  info("Navigating the sub-frame");
+
+  subframeURL = `${BASE}/file_dummy.html#subframe-url-2`;
+  await ContentTask.spawn(gBrowser.selectedBrowser, subframeURL, async (url) => {
+    const iframe = this.content.document.querySelector("iframe#test-subframe");
+
+    // Await the subframe navigation.
+    await new Promise(resolve => {
+      iframe.onload = resolve;
+      iframe.setAttribute("src", url);
+    });
+  });
+
+  info("Subframe location changed");
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return document.getElementById(pageActionId);
+  }, "pageAction should be visible after a subframe navigation");
 
   await extension.unload();
 });
