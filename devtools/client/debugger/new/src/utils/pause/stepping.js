@@ -9,6 +9,8 @@ var _lodash = require("devtools/client/shared/vendor/lodash");
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
+var _source = require("../../utils/source");
+
 var _selectors = require("../../selectors/index");
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -19,7 +21,7 @@ function getFrameLocation(source, frame) {
     return null;
   }
 
-  return (0, _devtoolsSourceMap.isOriginalId)(source.id) ? frame.location : frame.generatedLocation;
+  return (0, _source.isOriginal)(source) ? frame.location : frame.generatedLocation;
 }
 
 function shouldStep(rootFrame, state, sourceMaps) {
