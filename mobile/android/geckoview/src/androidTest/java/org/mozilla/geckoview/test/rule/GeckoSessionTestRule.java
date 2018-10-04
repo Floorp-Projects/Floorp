@@ -6,17 +6,14 @@
 package org.mozilla.geckoview.test.rule;
 
 import org.mozilla.geckoview.GeckoDisplay;
-import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.GeckoResult;
-import org.mozilla.geckoview.GeckoResult.OnExceptionListener;
 import org.mozilla.geckoview.GeckoResult.OnValueListener;
 import org.mozilla.geckoview.GeckoRuntime;
-import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.SessionTextInput;
+import org.mozilla.geckoview.test.util.RuntimeCreator;
 import org.mozilla.geckoview.test.util.Environment;
-import org.mozilla.geckoview.test.TestCrashHandler;
 import org.mozilla.geckoview.test.util.UiThreadUtils;
 import org.mozilla.geckoview.test.rdp.Actor;
 import org.mozilla.geckoview.test.rdp.Promise;
@@ -41,11 +38,7 @@ import android.app.Instrumentation;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.net.LocalSocketAddress;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Debug;
 import android.os.Looper;
-import android.os.Process;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -813,7 +806,6 @@ public class GeckoSessionTestRule implements TestRule {
 
     private static final Set<Class<?>> DEFAULT_DELEGATES = getDefaultDelegates();
 
-    private static GeckoRuntime sRuntime;
     private static RDPConnection sRDPConnection;
     protected static GeckoSession sCachedSession;
     protected static Tab sCachedRDPTab;
@@ -944,7 +936,7 @@ public class GeckoSessionTestRule implements TestRule {
      * @return GeckoRuntime object.
      */
     public @NonNull GeckoRuntime getRuntime() {
-        return sRuntime;
+        return RuntimeCreator.getRuntime();
     }
 
     protected static Object setDelegate(final @NonNull Class<?> cls,
@@ -1120,7 +1112,7 @@ public class GeckoSessionTestRule implements TestRule {
 
                     if (sOnCrash.equals(method) && !mIgnoreCrash && isUsingSession(session)) {
                         if (env.shouldShutdownOnCrash()) {
-                            sRuntime.shutdown();
+                            getRuntime().shutdown();
                         }
 
                         throw new ChildCrashedException("Child process crashed");
@@ -1192,30 +1184,6 @@ public class GeckoSessionTestRule implements TestRule {
                                                 classes, recorder);
         mAllDelegates = new HashSet<>(DEFAULT_DELEGATES);
 
-        if (sRuntime == null) {
-            final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
-                new GeckoRuntimeSettings.Builder();
-            runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
-                    .extras(InstrumentationRegistry.getArguments())
-                    .remoteDebuggingEnabled(true)
-                    .consoleOutput(true);
-
-            if (env.isAutomation()) {
-                runtimeSettingsBuilder.crashHandler(TestCrashHandler.class);
-            }
-
-            sRuntime = GeckoRuntime.create(
-                InstrumentationRegistry.getTargetContext(),
-                runtimeSettingsBuilder.build());
-
-            sRuntime.setDelegate(new GeckoRuntime.Delegate() {
-                @Override
-                public void onShutdown() {
-                    Process.killProcess(Process.myPid());
-                }
-            });
-        }
-
         if (sCachedSession != null && !sCachedSession.isOpen()) {
             sCachedSession = null;
         }
@@ -1267,7 +1235,7 @@ public class GeckoSessionTestRule implements TestRule {
      * @param session Session to open.
      */
     public void openSession(final GeckoSession session) {
-        session.open(sRuntime);
+        session.open(getRuntime());
         waitForOpenSession(session);
     }
 
@@ -1371,8 +1339,8 @@ public class GeckoSessionTestRule implements TestRule {
         return session.equals(mMainSession) || mSubSessions.contains(session);
     }
 
-    protected static void deleteCrashDumps() {
-        File dumpDir = new File(sRuntime.getProfileDir(), "minidumps");
+    protected void deleteCrashDumps() {
+        File dumpDir = new File(getRuntime().getProfileDir(), "minidumps");
         for (final File dump : dumpDir.listFiles()) {
             dump.delete();
         }
