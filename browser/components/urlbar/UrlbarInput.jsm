@@ -104,6 +104,7 @@ class UrlbarInput {
     this.inputField.addEventListener("blur", this);
     this.inputField.addEventListener("focus", this);
     this.inputField.addEventListener("mousedown", this);
+    this.inputField.addEventListener("mouseover", this);
     this.inputField.addEventListener("overflow", this);
     this.inputField.addEventListener("underflow", this);
     this.inputField.addEventListener("scrollend", this);
@@ -208,6 +209,14 @@ class UrlbarInput {
         this.setAttribute("textoverflow", side);
       }
     });
+  }
+
+  _updateUrlTooltip() {
+    if (this.focused || !this._inOverflow) {
+      this.inputField.removeAttribute("title");
+    } else {
+      this.inputField.setAttribute("title", this.value);
+    }
   }
 
   _getSelectedValueForClipboard() {
@@ -328,7 +337,13 @@ class UrlbarInput {
   }
 
   _on_focus(event) {
+    this._updateUrlTooltip();
+
     this.formatValue();
+  }
+
+  _on_mouseover(event) {
+    this._updateUrlTooltip();
   }
 
   _on_mousedown(event) {
@@ -390,7 +405,10 @@ class UrlbarInput {
       return;
     }
     this._inOverflow = false;
+
     this._updateTextOverflow();
+
+    this._updateUrlTooltip();
   }
 
   _on_scrollend(event) {

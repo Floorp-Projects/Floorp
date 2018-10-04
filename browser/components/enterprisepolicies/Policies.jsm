@@ -765,7 +765,7 @@ var Policies = {
           try {
             pkcs11.addModule(deviceName, securityDevices[deviceName], 0, 0);
           } catch (ex) {
-            log.error("Unable to add security device ${deviceName}");
+            log.error(`Unable to add security device ${deviceName}`);
             log.debug(ex);
           }
         }
