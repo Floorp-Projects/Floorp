@@ -95,7 +95,7 @@ GetNetworkProxyTypeFromPref(int32_t* type)
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
   nsresult rv = prefs->GetIntPref("network.proxy.type", type);
-  if (!NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
     LOG(("Failed to retrieve network.proxy.type from prefs"));
     return rv;
   }
@@ -564,8 +564,11 @@ nsPACMan::LoadPACFromURI(const nsACString &aSpec)
     if (NS_FAILED(rv)) {
       return rv;
     }
-    MOZ_RELEASE_ASSERT(mProxyConfigType == nsIProtocolProxyService::PROXYCONFIG_WPAD,
-            "WPAD is being executed when not selected by user");
+    if (mProxyConfigType != nsIProtocolProxyService::PROXYCONFIG_WPAD) {
+      LOG(("LoadPACFromURI - Aborting WPAD autodetection because the pref "
+           "doesn't match anymore"));
+      return NS_BINDING_ABORTED;
+    }
   }
   // Since we might get called from nsProtocolProxyService::Init, we need to
   // post an event back to the main thread before we try to use the IO service.
@@ -610,8 +613,11 @@ nsPACMan::ConfigureWPAD(nsACString &aSpec)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
 
-  MOZ_RELEASE_ASSERT(mProxyConfigType == nsIProtocolProxyService::PROXYCONFIG_WPAD,
-            "WPAD is being executed when not selected by user");
+  if (mProxyConfigType != nsIProtocolProxyService::PROXYCONFIG_WPAD) {
+    LOG(("ConfigureWPAD - Aborting WPAD autodetection because the pref "
+         "doesn't match anymore"));
+    return NS_BINDING_ABORTED;
+  }
 
   aSpec.Truncate();
   if (mWPADOverDHCPEnabled) {
@@ -651,7 +657,7 @@ nsPACMan::StartLoading()
 
   if (mAutoDetect) {
     nsresult rv = GetNetworkProxyTypeFromPref(&mProxyConfigType);
-    if (!NS_SUCCEEDED(rv)) {
+    if (NS_FAILED(rv)) {
       NS_WARNING("Could not retrieve Network Proxy Type pref when auto-detecting proxy. Halting.");
       return;
     }
