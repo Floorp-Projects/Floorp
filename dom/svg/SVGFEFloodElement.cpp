@@ -26,7 +26,7 @@ SVGFEFloodElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::StringInfo SVGFEFloodElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

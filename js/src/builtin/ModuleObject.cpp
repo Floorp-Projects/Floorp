@@ -1051,6 +1051,18 @@ ModuleObject::setMetaObject(JSObject* obj)
     setReservedSlot(MetaObjectSlot, ObjectValue(*obj));
 }
 
+Value
+ModuleObject::hostDefinedField() const
+{
+    return getReservedSlot(HostDefinedSlot);
+}
+
+void
+ModuleObject::setHostDefinedField(const JS::Value& value)
+{
+    setReservedSlot(HostDefinedSlot, value);
+}
+
 Scope*
 ModuleObject::enclosingScope() const
 {
@@ -1243,6 +1255,8 @@ GlobalObject::initModuleProto(JSContext* cx, Handle<GlobalObject*> global)
     static const JSFunctionSpec protoFunctions[] = {
         JS_SELF_HOSTED_FN("getExportedNames", "ModuleGetExportedNames", 1, 0),
         JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 2, 0),
+        JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleInstantiate", 0, 0),
+        JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluate", 0, 0),
         JS_FS_END
     };
 
@@ -1759,10 +1773,9 @@ ArrayObject* ModuleBuilder::createArray(const JS::Rooted<GCHashMap<K, V>>& map)
 }
 
 JSObject*
-js::GetOrCreateModuleMetaObject(JSContext* cx, HandleScript script)
+js::GetOrCreateModuleMetaObject(JSContext* cx, HandleObject moduleArg)
 {
-    MOZ_ASSERT(script->module());
-    RootedModuleObject module(cx, script->module());
+    HandleModuleObject module = moduleArg.as<ModuleObject>();
     if (JSObject* obj = module->metaObject()) {
         return obj;
     }
@@ -1778,7 +1791,7 @@ js::GetOrCreateModuleMetaObject(JSContext* cx, HandleScript script)
         return nullptr;
     }
 
-    if (!func(cx, script, metaObject)) {
+    if (!func(cx, module, metaObject)) {
         return nullptr;
     }
 

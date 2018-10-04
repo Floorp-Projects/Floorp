@@ -8374,6 +8374,9 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
     MOZ_TRY(tokenizer_->enterList(length, guard));
     (void) start;
     auto result = Ok();
+    if (length >= ARGNO_LIMIT) {
+        return raiseError("Too many function parameters");
+    }
     BINJS_TRY(positionalParams.get().resize(length));
     for (uint32_t i = 0; i < length; i++) {
         positionalParams.get()[i] = nullptr;

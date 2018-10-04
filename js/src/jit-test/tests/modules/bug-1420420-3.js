@@ -2,7 +2,7 @@ if (!('stackTest' in this))
    quit();
 
 let a = parseModule(`throw new Error`);
-instantiateModule(a);
+a.declarationInstantiation();
 stackTest(function() {
-    evaluateModule(a);
+    a.evaluation();
 });

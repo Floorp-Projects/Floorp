@@ -4576,6 +4576,101 @@ SetRNGState(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
+static ModuleEnvironmentObject*
+GetModuleEnvironment(JSContext* cx, HandleModuleObject module)
+{
+    // Use the initial environment so that tests can check bindings exists
+    // before they have been instantiated.
+    RootedModuleEnvironmentObject env(cx, &module->initialEnvironment());
+    MOZ_ASSERT(env);
+    return env;
+}
+
+static bool
+GetModuleEnvironmentNames(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportErrorASCII(cx, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<ModuleObject>()) {
+        JS_ReportErrorASCII(cx, "First argument should be a ModuleObject");
+        return false;
+    }
+
+    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+    if (module->hadEvaluationError()) {
+        JS_ReportErrorASCII(cx, "Module environment unavailable");
+        return false;
+    }
+
+    RootedModuleEnvironmentObject env(cx, GetModuleEnvironment(cx, module));
+    Rooted<IdVector> ids(cx, IdVector(cx));
+    if (!JS_Enumerate(cx, env, &ids)) {
+        return false;
+    }
+
+    uint32_t length = ids.length();
+    RootedArrayObject array(cx, NewDenseFullyAllocatedArray(cx, length));
+    if (!array) {
+        return false;
+    }
+
+    array->setDenseInitializedLength(length);
+    for (uint32_t i = 0; i < length; i++) {
+        array->initDenseElement(i, StringValue(JSID_TO_STRING(ids[i])));
+    }
+
+    args.rval().setObject(*array);
+    return true;
+}
+
+static bool
+GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 2) {
+        JS_ReportErrorASCII(cx, "Wrong number of arguments");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<ModuleObject>()) {
+        JS_ReportErrorASCII(cx, "First argument should be a ModuleObject");
+        return false;
+    }
+
+    if (!args[1].isString()) {
+        JS_ReportErrorASCII(cx, "Second argument should be a string");
+        return false;
+    }
+
+    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+    if (module->hadEvaluationError()) {
+        JS_ReportErrorASCII(cx, "Module environment unavailable");
+        return false;
+    }
+
+    RootedModuleEnvironmentObject env(cx, GetModuleEnvironment(cx, module));
+    RootedString name(cx, args[1].toString());
+    RootedId id(cx);
+    if (!JS_StringToId(cx, name, &id)) {
+        return false;
+    }
+
+    if (!GetProperty(cx, env, env, id, args.rval())) {
+        return false;
+    }
+
+    if (args.rval().isMagic(JS_UNINITIALIZED_LEXICAL)) {
+        ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
+        return false;
+    }
+
+    return true;
+}
+
 #ifdef DEBUG
 static const char*
 AssertionTypeToString(irregexp::RegExpAssertion::AssertionType type)
@@ -6167,6 +6262,14 @@ gc::ZealModeHelpText),
 "setRNGState(seed0, seed1)",
 "  Set this compartment's RNG state.\n"),
 #endif
+
+    JS_FN_HELP("getModuleEnvironmentNames", GetModuleEnvironmentNames, 1, 0,
+"getModuleEnvironmentNames(module)",
+"  Get the list of a module environment's bound names for a specified module.\n"),
+
+    JS_FN_HELP("getModuleEnvironmentValue", GetModuleEnvironmentValue, 2, 0,
+"getModuleEnvironmentValue(module, name)",
+"  Get the value of a bound name in a module environment.\n"),
 
 #if defined(FUZZING) && defined(__AFL_COMPILER)
     JS_FN_HELP("aflloop", AflLoop, 1, 0,

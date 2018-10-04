@@ -89,6 +89,11 @@ public class SpeechSynthesisService  {
 
     @WrapForJNI(calledFrom = "gecko")
     public static String speak(final String uri, final String text, float rate, float pitch, float volume) {
+        if (sTTS == null) {
+            Log.w(LOGTAG, "TextToSpeech is not initialized");
+            return null;
+        }
+
         HashMap<String, String> params = new HashMap<String, String>();
         final String utteranceId = UUID.randomUUID().toString();
         params.put(TextToSpeech.Engine.KEY_PARAM_VOLUME, Float.toString(volume));
@@ -105,6 +110,11 @@ public class SpeechSynthesisService  {
     }
 
     private static void setUtteranceListener() {
+        if (sTTS == null) {
+            Log.w(LOGTAG, "TextToSpeech is not initialized");
+            return;
+        }
+
         sTTS.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
             public void onDone(String utteranceId) {
@@ -151,6 +161,11 @@ public class SpeechSynthesisService  {
 
     @WrapForJNI(calledFrom = "gecko")
     public static void stop() {
+        if (sTTS == null) {
+            Log.w(LOGTAG, "TextToSpeech is not initialized");
+            return;
+        }
+
         sTTS.stop();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             // Android M has onStop method.  If Android L or above, dispatch

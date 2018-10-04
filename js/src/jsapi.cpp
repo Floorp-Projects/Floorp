@@ -1286,15 +1286,6 @@ JS::GetNonCCWObjectGlobal(JSObject* obj)
     return &obj->nonCCWGlobal();
 }
 
-JS_PUBLIC_API(JSObject*)
-JS::GetScriptGlobal(JSScript* script)
-{
-    AssertHeapIsIdleOrIterating();
-    JSObject* global = script->realm()->maybeGlobal();
-    MOZ_ASSERT(global);
-    return global;
-}
-
 JS_PUBLIC_API(bool)
 JS::detail::ComputeThis(JSContext* cx, Value* vp, MutableHandleObject thisObject)
 {
@@ -4150,61 +4141,53 @@ JS::SetModuleMetadataHook(JSRuntime* rt, JS::ModuleMetadataHook func)
 
 JS_PUBLIC_API(bool)
 JS::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                  SourceBufferHolder& srcBuf, JS::MutableHandleScript script)
+                  SourceBufferHolder& srcBuf, JS::MutableHandleObject module)
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
 
-    script.set(frontend::CompileModule(cx, options, srcBuf));
-    return !!script;
+    module.set(frontend::CompileModule(cx, options, srcBuf));
+    return !!module;
 }
 
 JS_PUBLIC_API(void)
-JS::SetTopLevelScriptPrivate(JSScript* script, void* value)
+JS::SetModuleHostDefinedField(JSObject* module, const JS::Value& value)
 {
-    MOZ_ASSERT(script);
-    script->setTopLevelPrivate(value);
+    module->as<ModuleObject>().setHostDefinedField(value);
 }
 
-JS_PUBLIC_API(void*)
-JS::GetTopLevelScriptPrivate(JSScript* script)
+JS_PUBLIC_API(JS::Value)
+JS::GetModuleHostDefinedField(JSObject* module)
 {
-    MOZ_ASSERT(script);
-    return script->maybeTopLevelPrivate();
-}
-
-JS_PUBLIC_API(bool)
-JS::ModuleInstantiate(JSContext* cx, JS::HandleScript script)
-{
-    AssertHeapIsIdle();
-    CHECK_THREAD(cx);
-    cx->check(script);
-    RootedModuleObject module(cx, script->module());
-    MOZ_ASSERT(module);
-    return ModuleObject::Instantiate(cx, module);
+    return module->as<ModuleObject>().hostDefinedField();
 }
 
 JS_PUBLIC_API(bool)
-JS::ModuleEvaluate(JSContext* cx, JS::HandleScript script)
+JS::ModuleInstantiate(JSContext* cx, JS::HandleObject moduleArg)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(script);
-    RootedModuleObject module(cx, script->module());
-    MOZ_ASSERT(module);
-    return ModuleObject::Evaluate(cx, module);
+    cx->check(moduleArg);
+    return ModuleObject::Instantiate(cx, moduleArg.as<ModuleObject>());
+}
+
+JS_PUBLIC_API(bool)
+JS::ModuleEvaluate(JSContext* cx, JS::HandleObject moduleArg)
+{
+    AssertHeapIsIdle();
+    CHECK_THREAD(cx);
+    cx->check(moduleArg);
+    return ModuleObject::Evaluate(cx, moduleArg.as<ModuleObject>());
 }
 
 JS_PUBLIC_API(JSObject*)
-JS::GetRequestedModules(JSContext* cx, JS::HandleScript script)
+JS::GetRequestedModules(JSContext* cx, JS::HandleObject moduleArg)
 {
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
-    cx->check(script);
-    RootedModuleObject module(cx, script->module());
-    MOZ_ASSERT(module);
-    return &module->requestedModules();
+    cx->check(moduleArg);
+    return &moduleArg->as<ModuleObject>().requestedModules();
 }
 
 JS_PUBLIC_API(JSString*)
@@ -4229,6 +4212,13 @@ JS::GetRequestedModuleSourcePos(JSContext* cx, JS::HandleValue value,
     auto& requested = value.toObject().as<RequestedModuleObject>();
     *lineNumber = requested.lineNumber();
     *columnNumber = requested.columnNumber();
+}
+
+JS_PUBLIC_API(JSScript*)
+JS::GetModuleScript(JS::HandleObject moduleRecord)
+{
+    AssertHeapIsIdle();
+    return moduleRecord->as<ModuleObject>().script();
 }
 
 JS_PUBLIC_API(JSObject*)

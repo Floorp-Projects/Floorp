@@ -57,7 +57,7 @@ enum QuotedName { eQuotedName, eUnquotedName };
 
 struct FontFamilyName final {
     FontFamilyName()
-        : mType(eFamily_named)
+        : mType(eFamily_none)
     {}
 
     // named font family - e.g. Helvetica

@@ -23,9 +23,9 @@ SVGFEPointLightElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenPro
 
 nsSVGElement::NumberInfo SVGFEPointLightElement::sNumberInfo[3] =
 {
-  { &nsGkAtoms::x, 0, false },
-  { &nsGkAtoms::y, 0, false },
-  { &nsGkAtoms::z, 0, false }
+  { nsGkAtoms::x, 0, false },
+  { nsGkAtoms::y, 0, false },
+  { nsGkAtoms::z, 0, false }
 };
 
 //----------------------------------------------------------------------

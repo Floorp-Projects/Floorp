@@ -797,6 +797,33 @@ def default_cxx_compilers(c_compiler, other_c_compiler=None, other_cxx_compiler=
 
 
 @template
+def provided_program(env_var):
+    '''Template handling cases where a program can be specified either as a
+    path or as a path with applicable arguments.
+    '''
+
+    @depends_if(env_var)
+    @imports(_from='itertools', _import='takewhile')
+    @imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')
+    def provided(cmd):
+        # Assume the first dash-prefixed item (and any subsequent items) are
+        # command-line options, the item before the dash-prefixed item is
+        # the program we're looking for, and anything before that is a wrapper
+        # of some kind (e.g. sccache).
+        cmd = shell_split(cmd[0])
+
+        without_flags = list(takewhile(lambda x: not x.startswith('-'), cmd))
+
+        return namespace(
+            wrapper=without_flags[:-1],
+            program=without_flags[-1],
+            flags=cmd[len(without_flags):],
+        )
+
+    return provided
+
+
+@template
 def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
              other_c_compiler=None):
     '''Template handling the generic base checks for the compiler for the
@@ -841,31 +868,14 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
 
     # Handle the compiler given by the user through one of the CC/CXX/HOST_CC/
     # HOST_CXX variables.
-    @depends_if(var)
-    @imports(_from='itertools', _import='takewhile')
-    @imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')
-    def provided_compiler(cmd):
-        # Historically, the compiler variables have contained more than the
-        # path to the compiler itself. So for backwards compatibility, try to
-        # find what is what in there, assuming the first dash-prefixed item is
-        # a compiler option, the item before that is the compiler, and anything
-        # before that is a compiler wrapper.
-        cmd = shell_split(cmd[0])
-
-        without_flags = list(takewhile(lambda x: not x.startswith('-'), cmd))
-
-        return namespace(
-            wrapper=without_flags[:-1],
-            compiler=without_flags[-1],
-            flags=cmd[len(without_flags):],
-        )
+    provided_compiler = provided_program(var)
 
     # Normally, we'd use `var` instead of `_var`, but the interaction with
     # old-configure complicates things, and for now, we a) can't take the plain
     # result from check_prog as CC/CXX/HOST_CC/HOST_CXX and b) have to let
     # old-configure AC_SUBST it (because it's autoconf doing it, not us)
     compiler = check_prog('_%s' % var, what=what, progs=default_compilers,
-                          input=provided_compiler.compiler,
+                          input=provided_compiler.program,
                           paths=toolchain_search_path)
 
     @depends(compiler, provided_compiler, compiler_wrapper, host_or_target)
@@ -1807,6 +1817,109 @@ set_config('LD_IS_BFD', depends(select_linker.KIND)
            (lambda x: x == 'bfd' or None))
 add_old_configure_assignment('LINKER_LDFLAGS', select_linker.LINKER_FLAG)
 
+
+# Assembler detection
+# ==============================================================
+
+js_option(env='AS', nargs=1, help='Path to the assembler')
+
+@depends(target, c_compiler)
+def as_info(target, c_compiler):
+    if c_compiler.type in ('msvc', 'clang-cl'):
+        ml = {
+            'x86': 'ml',
+            'x86_64': 'ml64',
+            'aarch64': 'armasm64.exe',
+        }.get(target.cpu)
+        return namespace(
+            type='masm',
+            names=(ml, )
+        )
+    # When building with anything but MSVC, we just use the C compiler as the assembler.
+    return namespace(
+        type='gcc',
+        names=(c_compiler.compiler, )
+    )
+
+# One would expect the assembler to be specified merely as a program.  But in
+# cases where the assembler is passed down into js/, it can be specified in
+# the same way as CC: a program + a list of argument flags.  We might as well
+# permit the same behavior in general, even though it seems somewhat unusual.
+# So we have to do the same sort of dance as we did above with
+# `provided_compiler`.
+provided_assembler = provided_program('AS')
+assembler = check_prog('_AS', input=provided_assembler.program,
+                       what='the assembler', progs=as_info.names)
+
+@depends(as_info, assembler, provided_assembler, c_compiler)
+def as_with_flags(as_info, assembler, provided_assembler, c_compiler):
+    if provided_assembler:
+        return provided_assembler.wrapper + \
+            [provided_assembler.program] + \
+            provided_assembler.flags
+
+    if as_info.type == 'masm':
+        return assembler
+
+    assert as_info.type == 'gcc'
+
+    # Need to add compiler wrappers and flags as appropriate.
+    return c_compiler.wrapper + [assembler] + c_compiler.flags
+
+
+add_old_configure_assignment('AS', as_with_flags)
+
+
+@depends(assembler, c_compiler, extra_toolchain_flags)
+@imports('subprocess')
+@imports(_from='os', _import='devnull')
+def gnu_as(assembler, c_compiler, toolchain_flags):
+    # clang uses a compatible GNU assembler.
+    if c_compiler.type == 'clang':
+        return True
+
+    if c_compiler.type == 'gcc':
+        cmd = [assembler] + c_compiler.flags
+        if toolchain_flags:
+            cmd += toolchain_flags
+        cmd += ['-Wa,--version', '-c', '-o', devnull, '-x', 'assembler', '-']
+        # We don't actually have to provide any input on stdin, `Popen.communicate` will
+        # close the stdin pipe.
+        # clang will error if it uses its integrated assembler for this target,
+        # so handle failures gracefully.
+        if 'GNU' in check_cmd_output(*cmd, stdin=subprocess.PIPE, onerror=lambda: '').decode('utf-8'):
+            return True
+
+
+set_config('GNU_AS', gnu_as)
+add_old_configure_assignment('GNU_AS', gnu_as)
+
+
+@depends(as_info, target)
+def as_dash_c_flag(as_info, target):
+    # armasm64 doesn't understand -c.
+    if as_info.type == 'masm' and target.cpu == 'aarch64':
+        return ''
+    else:
+        return '-c'
+
+
+set_config('AS_DASH_C_FLAG', as_dash_c_flag)
+
+
+@depends(as_info, target)
+def as_outoption(as_info, target):
+    # The uses of ASOUTOPTION depend on the spacing for -o/-Fo.
+    if as_info.type == 'masm' and target.cpu != 'aarch64':
+        return '-Fo'
+
+    return '-o '
+
+
+set_config('ASOUTOPTION', as_outoption)
+
+# clang plugin handling
+# ==============================================================
 
 js_option('--enable-clang-plugin', env='ENABLE_CLANG_PLUGIN',
           help="Enable building with the mozilla clang plugin")

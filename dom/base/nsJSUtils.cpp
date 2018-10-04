@@ -476,7 +476,7 @@ nsJSUtils::CompileModule(JSContext* aCx,
                        JS::SourceBufferHolder& aSrcBuf,
                        JS::Handle<JSObject*> aEvaluationGlobal,
                        JS::CompileOptions &aCompileOptions,
-                       JS::MutableHandle<JSScript*> aScript)
+                       JS::MutableHandle<JSObject*> aModule)
 {
   AUTO_PROFILER_LABEL("nsJSUtils::CompileModule", JS);
 
@@ -490,7 +490,7 @@ nsJSUtils::CompileModule(JSContext* aCx,
 
   NS_ENSURE_TRUE(xpc::Scriptability::Get(aEvaluationGlobal).Allowed(), NS_OK);
 
-  if (!JS::CompileModule(aCx, aCompileOptions, aSrcBuf, aScript)) {
+  if (!JS::CompileModule(aCx, aCompileOptions, aSrcBuf, aModule)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -499,7 +499,7 @@ nsJSUtils::CompileModule(JSContext* aCx,
 
 nsresult
 nsJSUtils::InitModuleSourceElement(JSContext* aCx,
-                                   JS::Handle<JSScript*> aScript,
+                                   JS::Handle<JSObject*> aModule,
                                    nsIScriptElement* aElement)
 {
   JS::Rooted<JS::Value> value(aCx);
@@ -512,7 +512,8 @@ nsJSUtils::InitModuleSourceElement(JSContext* aCx,
   MOZ_ASSERT(value.isObject());
   JS::Rooted<JSObject*> object(aCx, &value.toObject());
 
-  if (!JS::InitScriptSourceElement(aCx, aScript, object, nullptr)) {
+  JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(aModule));
+  if (!JS::InitScriptSourceElement(aCx, script, object, nullptr)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -520,7 +521,7 @@ nsJSUtils::InitModuleSourceElement(JSContext* aCx,
 }
 
 nsresult
-nsJSUtils::ModuleInstantiate(JSContext* aCx, JS::Handle<JSScript*> aScript)
+nsJSUtils::ModuleInstantiate(JSContext* aCx, JS::Handle<JSObject*> aModule)
 {
   AUTO_PROFILER_LABEL("nsJSUtils::ModuleInstantiate", JS);
 
@@ -529,9 +530,9 @@ nsJSUtils::ModuleInstantiate(JSContext* aCx, JS::Handle<JSScript*> aScript)
   MOZ_ASSERT(CycleCollectedJSContext::Get() &&
              CycleCollectedJSContext::Get()->MicroTaskLevel());
 
-  NS_ENSURE_TRUE(xpc::Scriptability::Get(aScript).Allowed(), NS_OK);
+  NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), NS_OK);
 
-  if (!JS::ModuleInstantiate(aCx, aScript)) {
+  if (!JS::ModuleInstantiate(aCx, aModule)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -539,7 +540,7 @@ nsJSUtils::ModuleInstantiate(JSContext* aCx, JS::Handle<JSScript*> aScript)
 }
 
 nsresult
-nsJSUtils::ModuleEvaluate(JSContext* aCx, JS::Handle<JSScript*> aScript)
+nsJSUtils::ModuleEvaluate(JSContext* aCx, JS::Handle<JSObject*> aModule)
 {
   AUTO_PROFILER_LABEL("nsJSUtils::ModuleEvaluate", JS);
 
@@ -548,9 +549,9 @@ nsJSUtils::ModuleEvaluate(JSContext* aCx, JS::Handle<JSScript*> aScript)
   MOZ_ASSERT(CycleCollectedJSContext::Get() &&
              CycleCollectedJSContext::Get()->MicroTaskLevel());
 
-  NS_ENSURE_TRUE(xpc::Scriptability::Get(aScript).Allowed(), NS_OK);
+  NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), NS_OK);
 
-  if (!JS::ModuleEvaluate(aCx, aScript)) {
+  if (!JS::ModuleEvaluate(aCx, aModule)) {
     return NS_ERROR_FAILURE;
   }
 

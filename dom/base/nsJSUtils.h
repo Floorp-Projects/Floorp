@@ -189,17 +189,17 @@ public:
                                 JS::SourceBufferHolder& aSrcBuf,
                                 JS::Handle<JSObject*> aEvaluationGlobal,
                                 JS::CompileOptions &aCompileOptions,
-                                JS::MutableHandle<JSScript*> aScript);
+                                JS::MutableHandle<JSObject*> aModule);
 
   static nsresult InitModuleSourceElement(JSContext* aCx,
-                                          JS::Handle<JSScript*> aScript,
+                                          JS::Handle<JSObject*> aModule,
                                           nsIScriptElement* aElement);
 
   static nsresult ModuleInstantiate(JSContext* aCx,
-                                    JS::Handle<JSScript*> aScript);
+                                    JS::Handle<JSObject*> aModule);
 
   static nsresult ModuleEvaluate(JSContext* aCx,
-                                 JS::Handle<JSScript*> aScript);
+                                 JS::Handle<JSObject*> aModule);
 
   // Returns false if an exception got thrown on aCx.  Passing a null
   // aElement is allowed; that wil produce an empty aScopeChain.

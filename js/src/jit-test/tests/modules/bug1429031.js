@@ -13,7 +13,7 @@ let b = moduleRepo['b'] = parseModule(
     \`import * as ns from 'a';
      export var x = ns.a + ns.b;\`
 );
-instantiateModule(b);
+b.declarationInstantiation();
 let ns = getModuleEnvironmentValue(b, "ns");
 assertEq(ns.a, 1);
 while ( t.ArrayType() ) 1;

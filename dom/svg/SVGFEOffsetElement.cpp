@@ -23,14 +23,14 @@ SVGFEOffsetElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::NumberInfo SVGFEOffsetElement::sNumberInfo[2] =
 {
-  { &nsGkAtoms::dx, 0, false },
-  { &nsGkAtoms::dy, 0, false }
+  { nsGkAtoms::dx, 0, false },
+  { nsGkAtoms::dy, 0, false }
 };
 
 nsSVGElement::StringInfo SVGFEOffsetElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

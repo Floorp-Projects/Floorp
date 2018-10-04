@@ -662,7 +662,7 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
   if (!sort.IsEmpty()) {
     nsAutoString sortdirection;
     static Element::AttrValuesArray strings[] =
-      {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
+      {nsGkAtoms::ascending, nsGkAtoms::descending, nullptr};
     switch (column->FindAttrValueIn(kNameSpaceID_None,
                                     nsGkAtoms::sortDirection,
                                     strings, eCaseMatters)) {

@@ -27,41 +27,41 @@ SVGFEConvolveMatrixElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGive
 
 nsSVGElement::NumberInfo SVGFEConvolveMatrixElement::sNumberInfo[2] =
 {
-  { &nsGkAtoms::divisor, 1, false },
-  { &nsGkAtoms::bias, 0, false }
+  { nsGkAtoms::divisor, 1, false },
+  { nsGkAtoms::bias, 0, false }
 };
 
 nsSVGElement::NumberPairInfo SVGFEConvolveMatrixElement::sNumberPairInfo[1] =
 {
-  { &nsGkAtoms::kernelUnitLength, 0, 0 }
+  { nsGkAtoms::kernelUnitLength, 0, 0 }
 };
 
 nsSVGElement::IntegerInfo SVGFEConvolveMatrixElement::sIntegerInfo[2] =
 {
-  { &nsGkAtoms::targetX, 0 },
-  { &nsGkAtoms::targetY, 0 }
+  { nsGkAtoms::targetX, 0 },
+  { nsGkAtoms::targetY, 0 }
 };
 
 nsSVGElement::IntegerPairInfo SVGFEConvolveMatrixElement::sIntegerPairInfo[1] =
 {
-  { &nsGkAtoms::order, 3, 3 }
+  { nsGkAtoms::order, 3, 3 }
 };
 
 nsSVGElement::BooleanInfo SVGFEConvolveMatrixElement::sBooleanInfo[1] =
 {
-  { &nsGkAtoms::preserveAlpha, false }
+  { nsGkAtoms::preserveAlpha, false }
 };
 
 nsSVGEnumMapping SVGFEConvolveMatrixElement::sEdgeModeMap[] = {
-  {&nsGkAtoms::duplicate, SVG_EDGEMODE_DUPLICATE},
-  {&nsGkAtoms::wrap, SVG_EDGEMODE_WRAP},
-  {&nsGkAtoms::none, SVG_EDGEMODE_NONE},
+  {nsGkAtoms::duplicate, SVG_EDGEMODE_DUPLICATE},
+  {nsGkAtoms::wrap, SVG_EDGEMODE_WRAP},
+  {nsGkAtoms::none, SVG_EDGEMODE_NONE},
   {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo SVGFEConvolveMatrixElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::edgeMode,
+  { nsGkAtoms::edgeMode,
     sEdgeModeMap,
     SVG_EDGEMODE_DUPLICATE
   }
@@ -69,13 +69,13 @@ nsSVGElement::EnumInfo SVGFEConvolveMatrixElement::sEnumInfo[1] =
 
 nsSVGElement::StringInfo SVGFEConvolveMatrixElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 nsSVGElement::NumberListInfo SVGFEConvolveMatrixElement::sNumberListInfo[1] =
 {
-  { &nsGkAtoms::kernelMatrix }
+  { nsGkAtoms::kernelMatrix }
 };
 
 //----------------------------------------------------------------------

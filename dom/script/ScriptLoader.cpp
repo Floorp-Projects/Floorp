@@ -481,12 +481,12 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
   nsresult rv;
   {
     JSContext* cx = aes.cx();
-    JS::Rooted<JSScript*> script(cx);
+    JS::Rooted<JSObject*> module(cx);
 
     if (aRequest->mWasCompiledOMT) {
-      script = JS::FinishOffThreadModule(cx, aRequest->mOffThreadToken);
+      module = JS::FinishOffThreadModule(cx, aRequest->mOffThreadToken);
       aRequest->mOffThreadToken = nullptr;
-      rv = script ? NS_OK : NS_ERROR_FAILURE;
+      rv = module ? NS_OK : NS_ERROR_FAILURE;
     } else {
       JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
@@ -496,19 +496,19 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
       if (NS_SUCCEEDED(rv)) {
         auto srcBuf = GetScriptSource(cx, aRequest);
         if (srcBuf) {
-          rv = nsJSUtils::CompileModule(cx, *srcBuf, global, options, &script);
+          rv = nsJSUtils::CompileModule(cx, *srcBuf, global, options, &module);
         } else {
           rv = NS_ERROR_OUT_OF_MEMORY;
         }
       }
     }
 
-    MOZ_ASSERT(NS_SUCCEEDED(rv) == (script != nullptr));
+    MOZ_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
 
     RefPtr<ModuleScript> moduleScript = new ModuleScript(this, aRequest->mBaseURL);
     aRequest->mModuleScript = moduleScript;
 
-    if (!script) {
+    if (!module) {
       LOG(("ScriptLoadRequest (%p):   compilation failed (%d)",
            aRequest, unsigned(rv)));
 
@@ -524,7 +524,7 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
       return NS_OK;
     }
 
-    moduleScript->SetScript(script);
+    moduleScript->SetModuleRecord(module);
 
     // Validate requested modules and treat failure to resolve module specifiers
     // the same as a parse error.
@@ -617,14 +617,14 @@ ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>* aUrlsOu
   ModuleScript* ms = aRequest->mModuleScript;
 
   AutoJSAPI jsapi;
-  if (!jsapi.Init(JS::GetScriptGlobal(ms->Script()))) {
+  if (!jsapi.Init(ms->ModuleRecord())) {
     return NS_ERROR_FAILURE;
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSScript*> script(cx, ms->Script());
+  JS::Rooted<JSObject*> moduleRecord(cx, ms->ModuleRecord());
   JS::Rooted<JSObject*> requestedModules(cx);
-  requestedModules = JS::GetRequestedModules(cx, script);
+  requestedModules = JS::GetRequestedModules(cx, moduleRecord);
   MOZ_ASSERT(requestedModules);
 
   uint32_t length;
@@ -758,19 +758,14 @@ ScriptLoader::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
 }
 
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, specifier)
-JSScript*
-HostResolveImportedModule(JSContext* aCx, JS::Handle<JSScript*> aScript,
+JSObject*
+HostResolveImportedModule(JSContext* aCx, JS::Handle<JSObject*> aModule,
                           JS::Handle<JSString*> aSpecifier)
 {
   // Let referencing module script be referencingModule.[[HostDefined]].
-  void* value = JS::GetTopLevelScriptPrivate(aScript);
-  if (!value) {
-    JS_ReportErrorASCII(aCx, "Module script not found");
-    return nullptr;
-  }
-
-  auto script = static_cast<ModuleScript*>(value);
-  MOZ_ASSERT(script->Script() == aScript);
+  JS::Value value = JS::GetModuleHostDefinedField(aModule);
+  auto script = static_cast<ModuleScript*>(value.toPrivate());
+  MOZ_ASSERT(script->ModuleRecord() == aModule);
 
   // Let url be the result of resolving a module specifier given referencing
   // module script and specifier.
@@ -791,25 +786,25 @@ HostResolveImportedModule(JSContext* aCx, JS::Handle<JSScript*> aScript,
   MOZ_ASSERT(ms, "Resolved module not found in module map");
 
   MOZ_ASSERT(!ms->HasParseError());
-  MOZ_ASSERT(ms->Script());
+  MOZ_ASSERT(ms->ModuleRecord());
 
-  return ms->Script();
+  return ms->ModuleRecord();
 }
 
 bool
-HostPopulateImportMeta(JSContext* aCx, JS::Handle<JSScript*> aScript,
+HostPopulateImportMeta(JSContext* aCx, JS::Handle<JSObject*> aModule,
                        JS::Handle<JSObject*> aMetaObject)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aScript);
+  MOZ_DIAGNOSTIC_ASSERT(aModule);
 
-  void* value = JS::GetTopLevelScriptPrivate(aScript);
-  if (!value) {
+  JS::Value value = JS::GetModuleHostDefinedField(aModule);
+  if (value.isUndefined()) {
     JS_ReportErrorASCII(aCx, "Module script not found");
     return false;
   }
 
-  auto script = static_cast<ModuleScript*>(value);
-  MOZ_DIAGNOSTIC_ASSERT(script->Script() == aScript);
+  auto script = static_cast<ModuleScript*>(value.toPrivate());
+  MOZ_DIAGNOSTIC_ASSERT(script->ModuleRecord() == aModule);
 
   nsAutoCString url;
   MOZ_DIAGNOSTIC_ASSERT(script->BaseURL());
@@ -940,18 +935,18 @@ ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest)
     return true;
   }
 
-  MOZ_ASSERT(moduleScript->Script());
+  MOZ_ASSERT(moduleScript->ModuleRecord());
 
   nsAutoMicroTask mt;
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(JS::GetScriptGlobal(moduleScript->Script())))) {
+  if (NS_WARN_IF(!jsapi.Init(moduleScript->ModuleRecord()))) {
     return false;
   }
 
   EnsureModuleResolveHook(jsapi.cx());
 
-  JS::Rooted<JSScript*> script(jsapi.cx(), moduleScript->Script());
-  bool ok = NS_SUCCEEDED(nsJSUtils::ModuleInstantiate(jsapi.cx(), script));
+  JS::Rooted<JSObject*> module(jsapi.cx(), moduleScript->ModuleRecord());
+  bool ok = NS_SUCCEEDED(nsJSUtils::ModuleInstantiate(jsapi.cx(), module));
 
   if (!ok) {
     LOG(("ScriptLoadRequest (%p): Instantiate failed", aRequest));
@@ -987,14 +982,15 @@ ScriptLoader::AssociateSourceElementsForModuleTree(JSContext* aCx,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JS::Rooted<JSScript*> script(aCx, moduleScript->Script());
-  MOZ_ASSERT(script);
+  JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
+  MOZ_ASSERT(module);
 
-  nsresult rv = nsJSUtils::InitModuleSourceElement(aCx, script, aRequest->Element());
+  nsresult rv = nsJSUtils::InitModuleSourceElement(aCx, module, aRequest->Element());
   NS_ENSURE_SUCCESS(rv, rv);
   moduleScript->SetSourceElementAssociated();
 
   // The script is now ready to be exposed to the debugger.
+  JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(module));
   JS::ExposeScriptToDebugger(aCx, script);
 
   return NS_OK;
@@ -2344,15 +2340,15 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
         return NS_OK; // An error is reported by AutoEntryScript.
       }
 
-      JS::Rooted<JSScript*> script(cx, moduleScript->Script());
-      MOZ_ASSERT(script);
+      JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
+      MOZ_ASSERT(module);
 
       if (!moduleScript->SourceElementAssociated()) {
         rv = AssociateSourceElementsForModuleTree(cx, request);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      rv = nsJSUtils::ModuleEvaluate(cx, script);
+      rv = nsJSUtils::ModuleEvaluate(cx, module);
       MOZ_ASSERT(NS_FAILED(rv) == aes.HasException());
       if (NS_FAILED(rv)) {
         LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));

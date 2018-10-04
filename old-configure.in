@@ -80,8 +80,6 @@ _PTHREAD_LDFLAGS=""
 
 LDFLAGS="$LDFLAGS $LINKER_LDFLAGS"
 
-MOZ_DEFAULT_COMPILER
-
 if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_NDK
 fi # COMPILE_ENVIRONMENT
@@ -158,7 +156,6 @@ case "$target" in
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
-        AC_CHECK_PROGS(MIDL, midl)
 
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -nologo"
@@ -266,19 +263,6 @@ case "$target" in
 
         INCREMENTAL_LINKER=1
 
-        # Set midl environment
-        case "$target" in
-        i*86-*)
-            MIDL_FLAGS="${MIDL_FLAGS} -env win32"
-            ;;
-        x86_64-*)
-            MIDL_FLAGS="${MIDL_FLAGS} -env x64"
-            ;;
-        aarch64-*)
-            MIDL_FLAGS="${MIDL_FLAGS} -env arm64"
-            ;;
-        esac
-
         unset _MSVC_VER_FILTER
 
         WRAP_STL_INCLUDES=1
@@ -321,18 +305,6 @@ case "$target" in
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
 
-        AC_CHECK_PROGS(MIDL, $target-widl widl)
-        if test -n "$MIDL"; then
-            case "$target" in
-            i*86-*)
-                MIDL_FLAGS="$MIDL_FLAGS --win32 -m32"
-                ;;
-            x86_64-*)
-                MIDL_FLAGS="$MIDL_FLAGS --win64 -m64"
-                ;;
-            esac
-        fi
-
         # strsafe.h on mingw uses macros for function deprecation that pollutes namespace
         # causing problems with local implementations with the same name.
         AC_DEFINE(STRSAFE_NO_DEPRECATE)
@@ -359,10 +331,8 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
-AC_SUBST(MIDL_FLAGS)
 AC_SUBST(_MSC_VER)
 
-AC_SUBST(GNU_AS)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
@@ -443,10 +413,7 @@ fi # COMPILE_ENVIRONMENT
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
-AS_BIN=$AS
 AR_EXTRACT='$(AR) x'
-AS='$(CC)'
-AS_DASH_C_FLAG='-c'
 MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
@@ -863,13 +830,6 @@ case "$target" in
         fi
     else
         TARGET_COMPILER_ABI=msvc
-        if test "$AS_BIN"; then
-            AS="$(basename "$AS_BIN")"
-        fi
-        # armasm64 doesn't understand -c.
-        if test "$CPU_ARCH" = "aarch64"; then
-            AS_DASH_C_FLAG=
-        fi
         case "$LINKER" in
         *lld*)
             AR='llvm-lib'
@@ -1924,7 +1884,6 @@ MOZ_NO_SMART_CARDS=
 NECKO_COOKIES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
-ACCESSIBILITY=1
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
@@ -2296,27 +2255,6 @@ dnl = Whether to exclude hyphenations files in the build
 dnl =========================================================
 if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
     AC_DEFINE(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
-fi
-
-dnl ========================================================
-dnl accessibility support on by default on all platforms
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(accessibility,
-[  --disable-accessibility Disable accessibility support],
-    ACCESSIBILITY=,
-    ACCESSIBILITY=1 )
-if test "$ACCESSIBILITY"; then
-    case "$target" in
-    *-mingw*)
-        if test -z "$MIDL"; then
-            if test "$GCC" != "yes"; then
-                AC_MSG_ERROR([MIDL could not be found. Building accessibility without MIDL is not supported.])
-            else
-                AC_MSG_ERROR([You have accessibility enabled, but widl could not be found. Add --disable-accessibility to your mozconfig or install widl. See https://developer.mozilla.org/en-US/docs/Cross_Compile_Mozilla_for_Mingw32 for details.])
-            fi
-        fi
-    esac
-    AC_DEFINE(ACCESSIBILITY)
 fi
 
 AC_TRY_COMPILE([#include <linux/ethtool.h>],
@@ -3914,10 +3852,8 @@ dnl ========================================================
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
 AC_SUBST(AR_EXTRACT)
-AC_SUBST(AS)
 AC_SUBST(NM)
 AC_SUBST_LIST(ASFLAGS)
-AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)
@@ -3933,7 +3869,6 @@ AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 
 AC_SUBST(MOZ_UNIVERSALCHARDET)
-AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
 AC_SUBST(MOZ_CRASHREPORTER)

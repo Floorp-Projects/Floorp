@@ -1077,6 +1077,80 @@ def proxy_bypass_protection(_):
 set_config('MOZ_PROXY_BYPASS_PROTECTION', proxy_bypass_protection)
 set_define('MOZ_PROXY_BYPASS_PROTECTION', proxy_bypass_protection)
 
+# MIDL
+# ==============================================================
+
+@depends(c_compiler, toolchain_prefix)
+def midl_names(c_compiler, toolchain_prefix):
+    if c_compiler and c_compiler.type in ['gcc', 'clang']:
+        # mingw
+        widl = ('widl', )
+        if toolchain_prefix:
+            prefixed = tuple('%s%s' % (p, 'widl') for p in toolchain_prefix)
+            widl = prefixed + widl
+        return widl
+
+    return ('midl',)
+
+@depends(target, '--enable-compile-environment')
+def check_for_midl(target, compile_environment):
+    if target.os != 'WINNT':
+        return
+
+    if compile_environment:
+        return True
+
+
+midl = check_prog('MIDL', midl_names, when=check_for_midl, allow_missing=True)
+
+
+@depends(c_compiler, target, when=depends(midl, target)(lambda m, t: m and t.kernel == 'WINNT'))
+def midl_flags(c_compiler, target):
+    if c_compiler and c_compiler.type in ('msvc', 'clang-cl'):
+        env = {
+            'x86': 'win32',
+            'x86_64': 'x64',
+            'aarch64': 'arm64',
+        }[target.cpu]
+        return ['-env', env]
+
+    # mingw
+    return {
+        'x86': ['--win32', '-m32'],
+        'x86_64': ['--win64', '-m64'],
+    }[target.cpu]
+
+
+set_config('MIDL_FLAGS', midl_flags)
+
+# Accessibility
+# ==============================================================
+
+option('--disable-accessibility', help='Disable accessibility support')
+
+@depends('--disable-accessibility', check_for_midl, midl, c_compiler)
+def accessibility(value, check_for_midl, midl, c_compiler):
+    enabled = bool(value)
+
+    if not enabled:
+        return
+
+    if check_for_midl and not midl:
+        if c_compiler and c_compiler.type in ('gcc', 'clang'):
+            die('You have accessibility enabled, but widl could not be found. '
+                'Add --disable-accessibility to your mozconfig or install widl. '
+                'See https://developer.mozilla.org/en-US/docs/Cross_Compile_Mozilla_for_Mingw32 for details.')
+        else:
+            die('MIDL could not be found. '
+                'Building accessibility without MIDL is not supported.')
+
+    return enabled
+
+
+set_config('ACCESSIBILITY', accessibility)
+set_define('ACCESSIBILITY', accessibility)
+add_old_configure_assignment('ACCESSIBILITY', accessibility)
+
 # Addon signing
 # ==============================================================
 

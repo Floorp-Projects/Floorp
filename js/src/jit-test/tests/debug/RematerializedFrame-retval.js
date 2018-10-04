@@ -32,8 +32,8 @@ loadFile(lfLogBuffer);
 function loadFile(lfVarx) {
     try {
          let m = parseModule(lfVarx);
-         instantiateModule(m);
-         evaluateModule(m);
+         m.declarationInstantiation();
+         m.evaluation();
     } catch (lfVare) {}
 }
 

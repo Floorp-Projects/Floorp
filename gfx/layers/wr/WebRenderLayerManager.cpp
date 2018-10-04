@@ -213,11 +213,15 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   // Since we don't do repeat transactions right now, just set the time
   mAnimationReadyTime = TimeStamp::Now();
 
-  if (aFlags & EndTransactionFlags::END_NO_COMPOSITE && 
+  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
+
+  if (aFlags & EndTransactionFlags::END_NO_COMPOSITE &&
       !mWebRenderCommandBuilder.NeedsEmptyTransaction() &&
       mPendingScrollUpdates.empty()) {
     MOZ_ASSERT(!mTarget);
     WrBridge()->SendSetFocusTarget(mFocusTarget);
+    // Revoke TransactionId to trigger next paint.
+    mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
     return true;
   }
 
@@ -226,7 +230,6 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 
   mWebRenderCommandBuilder.EmptyTransaction();
 
-  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
   TimeStamp refreshStart = mTransactionIdAllocator->GetTransactionStart();
 
   // Skip the synchronization for buffer since we also skip the painting during

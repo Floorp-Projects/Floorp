@@ -36,7 +36,7 @@ public:
   virtual SVGAnimatedPointList* GetAnimatedPointList() override {
     return &mPoints;
   }
-  virtual nsAtom* GetPointListAttrName() const override {
+  virtual nsStaticAtom* GetPointListAttrName() const override {
     return nsGkAtoms::points;
   }
 

@@ -461,7 +461,7 @@ NS_IMETHODIMP_(bool)
 HTMLTextAreaElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsGkAtoms::wrap },
+    { nsGkAtoms::wrap },
     { nullptr }
   };
 

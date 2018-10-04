@@ -53,10 +53,10 @@ using namespace mozilla::gfx;
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
-  { &nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
-  { &nsGkAtoms::width, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
-  { &nsGkAtoms::height, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y }
+  { nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { nsGkAtoms::y, 0, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y },
+  { nsGkAtoms::width, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::X },
+  { nsGkAtoms::height, 100, SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE, SVGContentUtils::Y }
 };
 
 //----------------------------------------------------------------------
@@ -200,35 +200,35 @@ namespace dom {
 
 nsSVGElement::NumberListInfo SVGComponentTransferFunctionElement::sNumberListInfo[1] =
 {
-  { &nsGkAtoms::tableValues }
+  { nsGkAtoms::tableValues }
 };
 
 nsSVGElement::NumberInfo SVGComponentTransferFunctionElement::sNumberInfo[5] =
 {
-  { &nsGkAtoms::slope,     1, false },
-  { &nsGkAtoms::intercept, 0, false },
-  { &nsGkAtoms::amplitude, 1, false },
-  { &nsGkAtoms::exponent,  1, false },
-  { &nsGkAtoms::offset,    0, false }
+  { nsGkAtoms::slope,     1, false },
+  { nsGkAtoms::intercept, 0, false },
+  { nsGkAtoms::amplitude, 1, false },
+  { nsGkAtoms::exponent,  1, false },
+  { nsGkAtoms::offset,    0, false }
 };
 
 nsSVGEnumMapping SVGComponentTransferFunctionElement::sTypeMap[] = {
-  {&nsGkAtoms::identity,
+  {nsGkAtoms::identity,
    SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY},
-  {&nsGkAtoms::table,
+  {nsGkAtoms::table,
    SVG_FECOMPONENTTRANSFER_TYPE_TABLE},
-  {&nsGkAtoms::discrete,
+  {nsGkAtoms::discrete,
    SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE},
-  {&nsGkAtoms::linear,
+  {nsGkAtoms::linear,
    SVG_FECOMPONENTTRANSFER_TYPE_LINEAR},
-  {&nsGkAtoms::gamma,
+  {nsGkAtoms::gamma,
    SVG_FECOMPONENTTRANSFER_TYPE_GAMMA},
   {nullptr, 0}
 };
 
 nsSVGElement::EnumInfo SVGComponentTransferFunctionElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::type,
+  { nsGkAtoms::type,
     sTypeMap,
     SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY
   }
@@ -441,21 +441,21 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncAElement)
 //
 nsSVGElement::NumberInfo nsSVGFELightingElement::sNumberInfo[4] =
 {
-  { &nsGkAtoms::surfaceScale, 1, false },
-  { &nsGkAtoms::diffuseConstant, 1, false },
-  { &nsGkAtoms::specularConstant, 1, false },
-  { &nsGkAtoms::specularExponent, 1, false }
+  { nsGkAtoms::surfaceScale, 1, false },
+  { nsGkAtoms::diffuseConstant, 1, false },
+  { nsGkAtoms::specularConstant, 1, false },
+  { nsGkAtoms::specularExponent, 1, false }
 };
 
 nsSVGElement::NumberPairInfo nsSVGFELightingElement::sNumberPairInfo[1] =
 {
-  { &nsGkAtoms::kernelUnitLength, 0, 0 }
+  { nsGkAtoms::kernelUnitLength, 0, 0 }
 };
 
 nsSVGElement::StringInfo nsSVGFELightingElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------
