@@ -2835,12 +2835,13 @@ toolbar#nav-bar {
                 ignoreMissingLeaks.append(processType)
                 leakThresholds[processType] = sys.maxsize
 
+        utilityPath = options.utilityPath or options.xrePath
         mozleak.process_leak_log(
             self.leak_report_file,
             leak_thresholds=leakThresholds,
             ignore_missing_leaks=ignoreMissingLeaks,
             log=self.log,
-            stack_fixer=get_stack_fixer_function(options.utilityPath,
+            stack_fixer=get_stack_fixer_function(utilityPath,
                                                  options.symbolsPath),
         )
 
