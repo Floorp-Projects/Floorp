@@ -118,6 +118,7 @@ SurfaceFormatForColorDepth(ColorDepth aColorDepth)
       break;
     case ColorDepth::COLOR_10:
     case ColorDepth::COLOR_12:
+    case ColorDepth::COLOR_16:
       format = SurfaceFormat::A16;
       break;
     case ColorDepth::UNKNOWN:
@@ -139,6 +140,9 @@ BitDepthForColorDepth(ColorDepth aColorDepth)
     case ColorDepth::COLOR_12:
       depth = 12;
       break;
+    case ColorDepth::COLOR_16:
+      depth = 16;
+      break;
     case ColorDepth::UNKNOWN:
       MOZ_ASSERT_UNREACHABLE("invalid color depth value");
   }
@@ -157,6 +161,9 @@ ColorDepthForBitDepth(uint8_t aBitDepth)
       break;
     case 12:
       depth = ColorDepth::COLOR_12;
+      break;
+    case 16:
+      depth = ColorDepth::COLOR_16;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("invalid color depth value");
@@ -178,6 +185,8 @@ RescalingFactorForColorDepth(ColorDepth aColorDepth)
       break;
     case ColorDepth::COLOR_12:
       factor = 16;
+      break;
+    case ColorDepth::COLOR_16:
       break;
     case ColorDepth::UNKNOWN:
       MOZ_ASSERT_UNREACHABLE("invalid color depth value");
