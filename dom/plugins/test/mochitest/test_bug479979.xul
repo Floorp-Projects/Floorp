@@ -13,8 +13,10 @@
 SimpleTest.waitForExplicitFinish();
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-function runTests() {
+async function runTests() {
   var pluginElement1 = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement1.setUndefinedValueTest !== undefined,
+                                           "Waited too long for plugin to activate");
 
   var rv = true; // we want !true from the test plugin
   var exceptionThrown = false;

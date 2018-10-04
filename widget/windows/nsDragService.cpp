@@ -171,7 +171,7 @@ nsDragService::InvokeDragSessionImpl(nsIArray* anArrayTransferables,
   // Try and get source URI of the items that are being dragged
   nsIURI *uri = nullptr;
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mSourceDocument));
+  nsCOMPtr<nsIDocument> doc(mSourceDocument);
   if (doc) {
     uri = doc->GetDocumentURI();
   }

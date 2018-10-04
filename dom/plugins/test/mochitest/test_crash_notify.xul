@@ -91,7 +91,7 @@ function onPluginCrashed(aEvent) {
   eventListenerDeferred.resolve();
 }
 
-function runTests() {
+async function runTests() {
   var os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   os.addObserver(testObserver, "plugin-crashed", true);
@@ -99,6 +99,8 @@ function runTests() {
   document.addEventListener("PluginCrashed", onPluginCrashed, false);
 
   var pluginElement = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement.crash !== undefined,
+                                           "Waited too long for plugin to activate");
   try {
     pluginElement.crash();
   } catch (e) {

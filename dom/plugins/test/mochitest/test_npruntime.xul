@@ -17,8 +17,10 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-function runTests() {
+async function runTests() {
   var pluginElement = document.getElementById("plugin1");
+  await SimpleTest.promiseWaitForCondition(() => pluginElement.identifierToStringTest !== undefined,
+                                           "Waited too long for plugin to activate");
 
   ok(pluginElement.identifierToStringTest('foo') == "foo", "identifierToStringTest failed");
 
