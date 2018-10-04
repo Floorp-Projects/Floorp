@@ -9,6 +9,7 @@
 #include "nsIObserverService.h"
 #include "nsWidgetsCID.h"
 #include "nsWindow.h"
+#include "nsSystemInfo.h"
 #include "nsIServiceManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -49,6 +50,8 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
+#define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"
+
 // This sets how opaque the drag image is
 #define DRAG_IMAGE_ALPHA_LEVEL 0.5
 
@@ -73,6 +76,7 @@ static const char gMimeListType[] = "application/x-moz-internal-item-list";
 static const char gMozUrlType[] = "_NETSCAPE_URL";
 static const char gTextUriListType[] = "text/uri-list";
 static const char gTextPlainUTF8Type[] = "text/plain;charset=utf-8";
+static const char gXdndDirectSaveType[] = "XdndDirectSave0";
 
 static void
 invisibleSourceDragBegin(GtkWidget        *aWidget,
@@ -1411,6 +1415,17 @@ nsDragService::GetSourceList(void)
                                     urlTarget->target));
                             targetArray.AppendElement(urlTarget);
                         }
+                        // XdndDirectSave
+                        else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
+                            GtkTargetEntry *directsaveTarget =
+                             (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
+                            directsaveTarget->target = g_strdup(gXdndDirectSaveType);
+                            directsaveTarget->flags = 0;
+                            MOZ_LOG(sDragLm, LogLevel::Debug,
+                                   ("automatically adding target %s\n",
+                                    directsaveTarget->target));
+                            targetArray.AppendElement(directsaveTarget);
+                        }
                     }
                 } // foreach flavor in item
             } // if valid flavor list
@@ -1449,6 +1464,10 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
 {
     // this just releases the list of data items that we provide
     mSourceDataItems = nullptr;
+
+    // Remove this property, if it exists, to satisfy the Direct Save Protocol.
+    GdkAtom property = gdk_atom_intern(gXdndDirectSaveType, FALSE);
+    gdk_property_delete(gdk_drag_context_get_source_window(aContext), property);
 
     if (!mDoingDrag || mScheduledTask == eDragTaskSourceEnd)
         // EndDragSession() was already called on drop
@@ -1655,8 +1674,98 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
             actualFlavor = gTextUriListType;
             needToDoConversionToPlainText = true;
         }
-        else
+        // Someone is asking for the special Direct Save Protocol type.
+        else if (mimeFlavor.EqualsLiteral(gXdndDirectSaveType)) {
+            // Indicate failure by default.
+            gtk_selection_data_set(aSelectionData, target, 8, (guchar *)"E", 1);
+
+            GdkAtom property = gdk_atom_intern(gXdndDirectSaveType, FALSE);
+            GdkAtom type = gdk_atom_intern(kTextMime, FALSE);
+
+            guchar *data;
+            gint length;
+            if (!gdk_property_get(gdk_drag_context_get_source_window(aContext),
+                                  property, type, 0, INT32_MAX,
+                                  FALSE, nullptr, nullptr,
+                                  &length, &data)) {
+                return;
+            }
+
+            // Zero-terminate the string.
+            data = (guchar *)g_realloc(data, length + 1);
+            if (!data)
+                return;
+            data[length] = '\0';
+
+            gchar *hostname;
+            char *gfullpath = g_filename_from_uri((const gchar *)data, &hostname, nullptr);
+            g_free(data);
+            if (!gfullpath)
+                return;
+
+            nsCString fullpath(gfullpath);
+            g_free(gfullpath);
+
+            MOZ_LOG(sDragLm, LogLevel::Debug, ("XdndDirectSave filepath is %s\n",
+                                               fullpath.get()));
+
+            // If there is no hostname in the URI, NULL will be stored.
+            // We should not accept uris with from a different host.
+            if (hostname) {
+                nsCOMPtr<nsIPropertyBag2> infoService = do_GetService(NS_SYSTEMINFO_CONTRACTID);
+                if (!infoService)
+                    return;
+
+                nsAutoCString host;
+                if (NS_SUCCEEDED(infoService->GetPropertyAsACString(
+                        NS_LITERAL_STRING("host"), host))) {
+                    if (!host.Equals(hostname)) {
+                        MOZ_LOG(sDragLm, LogLevel::Debug,
+                                ("ignored drag because of different host.\n"));
+
+                        // Special error code "F" for this case.
+                        gtk_selection_data_set(aSelectionData, target, 8,
+                                               (guchar *)"F", 1);
+                        g_free(hostname);
+                        return;
+                    }
+                }
+
+                g_free(hostname);
+            }
+
+            nsCOMPtr<nsIFile> file;
+            if (NS_FAILED(NS_NewNativeLocalFile(fullpath, false,
+                                                getter_AddRefs(file)))) {
+                return;
+            }
+
+            // We have to split the path into a directory and filename,
+            // because our internal file-promise API is based on these.
+
+            nsCOMPtr<nsIFile> directory;
+            file->GetParent(getter_AddRefs(directory));
+
+            item->SetTransferData(kFilePromiseDirectoryMime, directory,
+                                  sizeof(nsIFile*));
+
+            nsCOMPtr<nsISupportsString> filenamePrimitive =
+                do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+            if (!filenamePrimitive)
+                return;
+
+            nsAutoString leafName;
+            file->GetLeafName(leafName);
+            filenamePrimitive->SetData(leafName);
+
+            item->SetTransferData(kFilePromiseDestFilename, filenamePrimitive,
+                                  leafName.Length() * sizeof(PRUnichar));
+
+            // Request a different type in GetTransferData.
+            actualFlavor = kFilePromiseMime;
+        } else {
             actualFlavor = mimeFlavor.get();
+        }
 
         uint32_t tmpDataLen = 0;
         void    *tmpData = nullptr;
@@ -1665,6 +1774,16 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         rv = item->GetTransferData(actualFlavor,
                                    getter_AddRefs(data),
                                    &tmpDataLen);
+
+        if (strcmp(actualFlavor, kFilePromiseMime) == 0) {
+            if (NS_SUCCEEDED(rv)) {
+                // Indicate success.
+                gtk_selection_data_set(aSelectionData, target, 8,
+                                       (guchar *)"S", 1);
+            }
+            return;
+        }
+
         if (NS_SUCCEEDED(rv)) {
             nsPrimitiveHelpers::CreateDataFromPrimitive(
                 nsDependentCString(actualFlavor), data, &tmpData, tmpDataLen);
@@ -1705,6 +1824,56 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
                 g_free(uriList);
                 return;
             }
+        }
+    }
+}
+
+void
+nsDragService::SourceBeginDrag(GdkDragContext *aContext)
+{
+    nsCOMPtr<nsITransferable> transferable =
+        do_QueryElementAt(mSourceDataItems, 0);
+    if (!transferable)
+        return;
+
+    nsCOMPtr<nsIArray> flavorList;
+    nsresult rv = transferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+    NS_ENSURE_SUCCESS(rv,);
+
+    uint32_t length;
+    flavorList->GetLength(&length);
+
+    for (uint32_t i = 0; i < length; ++i) {
+        nsCOMPtr<nsISupportsCString> currentFlavor =
+            do_QueryElementAt(flavorList, i);
+        if (!currentFlavor)
+            return;
+
+        nsCString flavorStr;
+        currentFlavor->ToString(getter_Copies(flavorStr));
+        if (flavorStr.EqualsLiteral(kFilePromiseDestFilename)) {
+            nsCOMPtr<nsISupports> data;
+            uint32_t dataSize = 0;
+            transferable->GetTransferData(kFilePromiseDestFilename,
+                                          getter_AddRefs(data), &dataSize);
+            nsCOMPtr<nsISupportsString> fileName = do_QueryInterface(data);
+            if (!fileName)
+                return;
+
+            nsAutoString fileNameStr;
+            fileName->GetData(fileNameStr);
+
+            nsCString fileNameCStr;
+            CopyUTF16toUTF8(fileNameStr, fileNameCStr);
+
+            GdkAtom property = gdk_atom_intern(gXdndDirectSaveType, FALSE);
+            GdkAtom type = gdk_atom_intern(kTextMime, FALSE);
+
+            gdk_property_change(gdk_drag_context_get_source_window(aContext),
+                                property, type,
+                                8, GDK_PROP_MODE_REPLACE,
+                                (const guchar*)fileNameCStr.get(),
+                                fileNameCStr.Length());
         }
     }
 }
@@ -1768,6 +1937,7 @@ invisibleSourceDragBegin(GtkWidget        *aWidget,
     MOZ_LOG(sDragLm, LogLevel::Debug, ("invisibleSourceDragBegin"));
     nsDragService *dragService = (nsDragService *)aData;
 
+    dragService->SourceBeginDrag(aContext);
     dragService->SetDragIcon(aContext);
 }
 
