@@ -6,10 +6,27 @@ package org.mozilla.focus.biometrics
 
 import android.content.Context
 import android.support.v4.hardware.fingerprint.FingerprintManagerCompat
+import android.app.KeyguardManager
+import android.os.Build
+import org.mozilla.focus.utils.Settings
 
 object Biometrics {
     fun hasFingerprintHardware(context: Context): Boolean {
         val fingerprintManager = FingerprintManagerCompat.from(context)
-        return fingerprintManager.isHardwareDetected && fingerprintManager.hasEnrolledFingerprints()
+
+        // #3566: There are some devices with fingerprint readers that will retain enrolled fingerprints
+        // after disabling the lockscreen. AndroidKeyStore requires having the lock screen enabled,
+        // so we need to make sure the lock screen is enabled before we can enable the fingerprint sensor
+        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+
+        return keyguardManager.isKeyguardSecure &&
+                fingerprintManager.isHardwareDetected &&
+                fingerprintManager.hasEnrolledFingerprints()
+    }
+
+    fun isBiometricsEnabled(context: Context): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                Settings.getInstance(context).shouldUseBiometrics() &&
+                hasFingerprintHardware(context)
     }
 }

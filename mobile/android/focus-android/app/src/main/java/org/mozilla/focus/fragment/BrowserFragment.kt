@@ -79,7 +79,6 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Features
-import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
@@ -165,12 +164,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         super.onCreate(savedInstanceState)
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
-        if (biometricController == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            Biometrics.hasFingerprintHardware(requireContext())
-        ) {
-            biometricController = BiometricAuthenticationHandler(requireContext())
-        }
-
         val sessionUUID = arguments!!.getString(ARGUMENT_SESSION_UUID) ?: throw IllegalAccessError("No session exists")
 
         session = requireComponents.sessionManager.findSessionById(sessionUUID) ?: Session("about:blank")
@@ -183,11 +176,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     override fun onPause() {
         super.onPause()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            Settings.getInstance(requireContext()).shouldUseBiometrics() &&
-            Biometrics.hasFingerprintHardware(requireContext())
-        ) {
-            biometricController!!.stopListening()
+        if (Biometrics.isBiometricsEnabled(requireContext())) {
+            biometricController?.stopListening()
             view!!.alpha = 0f
         }
 
@@ -751,12 +741,18 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             statusBar!!.layoutParams.height = statusBarHeight
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            Settings.getInstance(requireContext()).shouldUseBiometrics() &&
-            Biometrics.hasFingerprintHardware(requireContext())
-        ) {
+        if (Biometrics.isBiometricsEnabled(requireContext())) {
+            if (biometricController == null) {
+                biometricController = BiometricAuthenticationHandler(context!!)
+            }
+
             displayBiometricPromptIfNeeded()
         } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                biometricController?.stopListening()
+            }
+
+            biometricController = null
             view!!.alpha = 1f
         }
     }

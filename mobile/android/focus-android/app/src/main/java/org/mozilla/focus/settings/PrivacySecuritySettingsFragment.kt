@@ -28,12 +28,12 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
         ) {
             preferenceScreen.removePreference(preference)
         }
-
-        updateStealthToggleAvailability()
     }
 
     override fun onResume() {
         super.onResume()
+        updateBiometricsToggleAvailability()
+        updateStealthToggleAvailability()
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
@@ -51,6 +51,22 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
         updateStealthToggleAvailability()
+    }
+
+    private fun updateBiometricsToggleAvailability() {
+        val switch = preferenceScreen.findPreference(resources.getString(R.string.pref_key_biometric))
+                as SwitchPreferenceCompat
+
+        if (!Biometrics.hasFingerprintHardware(requireContext())) {
+            switch.isChecked = false
+            switch.isEnabled = false
+            preferenceManager.sharedPreferences
+                    .edit()
+                    .putBoolean(resources.getString(R.string.pref_key_biometric), false)
+                    .apply()
+        } else {
+            switch.isEnabled = true
+        }
     }
 
     private fun updateStealthToggleAvailability() {
