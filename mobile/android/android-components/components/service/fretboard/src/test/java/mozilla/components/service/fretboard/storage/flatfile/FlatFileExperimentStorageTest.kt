@@ -125,4 +125,17 @@ class FlatFileExperimentStorageTest {
         assertEquals(0, experimentsResult.experiments.size)
         assertNull(experimentsResult.lastModified)
     }
+
+    @Test
+    fun testReadingCorruptJSON() {
+        val file = File(RuntimeEnvironment.application.filesDir, "corrupt-experiments.json")
+        file.writer().use {
+            it.write("""{"experiment":[""")
+        }
+
+        val snapshot = FlatFileExperimentStorage(file).retrieve()
+
+        assertNull(snapshot.lastModified)
+        assertEquals(0, snapshot.experiments.size)
+    }
 }

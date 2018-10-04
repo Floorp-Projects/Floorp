@@ -10,6 +10,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.runBlocking
+import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,6 +26,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.File
 import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.isAccessible
 
@@ -560,5 +562,20 @@ class FretboardTest {
                 .forEach {
                     assertTrue(it.value in 350..650)
                 }
+    }
+
+    @Test
+    fun testLoadingCorruptJSON() {
+        val experimentSource = mock(ExperimentSource::class.java)
+
+        val file = File(RuntimeEnvironment.application.filesDir, "corrupt-experiments.json")
+        file.writer().use {
+            it.write("""{"experiment":[""")
+        }
+
+        val experimentStorage = FlatFileExperimentStorage(file)
+
+        val fretboard = Fretboard(experimentSource, experimentStorage)
+        fretboard.loadExperiments() // Should not throw
     }
 }

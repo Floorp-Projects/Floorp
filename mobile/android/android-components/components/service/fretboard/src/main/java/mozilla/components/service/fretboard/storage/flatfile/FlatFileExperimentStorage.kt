@@ -7,6 +7,7 @@ package mozilla.components.service.fretboard.storage.flatfile
 import android.util.AtomicFile
 import mozilla.components.service.fretboard.ExperimentStorage
 import mozilla.components.service.fretboard.ExperimentsSnapshot
+import org.json.JSONException
 import java.io.FileNotFoundException
 import java.io.File
 import java.io.IOException
@@ -24,6 +25,10 @@ class FlatFileExperimentStorage(file: File) : ExperimentStorage {
             val experimentsJson = String(atomicFile.readFully())
             ExperimentsSerializer().fromJson(experimentsJson)
         } catch (e: FileNotFoundException) {
+            ExperimentsSnapshot(listOf(), null)
+        } catch (e: JSONException) {
+            // The JSON we read from disk is corrupt. There's nothing we can do here and therefore
+            // we just continue as if the file wouldn't exist.
             ExperimentsSnapshot(listOf(), null)
         }
     }

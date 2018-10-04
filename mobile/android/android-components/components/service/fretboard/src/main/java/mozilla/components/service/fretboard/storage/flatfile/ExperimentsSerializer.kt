@@ -8,6 +8,7 @@ import mozilla.components.service.fretboard.Experiment
 import mozilla.components.service.fretboard.JSONExperimentParser
 import mozilla.components.service.fretboard.ExperimentsSnapshot
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -43,6 +44,7 @@ internal class ExperimentsSerializer {
      *
      * @return experiment snapshot with the parsed list of experiments
      */
+    @Throws(JSONException::class)
     fun fromJson(json: String): ExperimentsSnapshot {
         val experimentsJson = JSONObject(json)
         val experimentsJsonArray = experimentsJson.getJSONArray(EXPERIMENTS_KEY)
