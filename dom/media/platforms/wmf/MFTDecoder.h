@@ -49,6 +49,7 @@ public:
   // Retrieves the media type being output. This may not be valid until
   //  the first sample is decoded.
   HRESULT GetOutputMediaType(RefPtr<IMFMediaType>& aMediaType);
+  const GUID& GetOutputMediaSubType() const { return mOutputSubType; }
 
   // Submits data into the MFT for processing.
   //
@@ -105,6 +106,7 @@ private:
   RefPtr<IMFTransform> mDecoder;
 
   RefPtr<IMFMediaType> mOutputType;
+  GUID mOutputSubType;
 
   // True if the IMFTransform allocates the samples that it returns.
   bool mMFTProvidesOutputSamples = false;
