@@ -80,8 +80,6 @@ _PTHREAD_LDFLAGS=""
 
 LDFLAGS="$LDFLAGS $LINKER_LDFLAGS"
 
-MOZ_DEFAULT_COMPILER
-
 if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_NDK
 fi # COMPILE_ENVIRONMENT
@@ -441,10 +439,7 @@ fi # COMPILE_ENVIRONMENT
 dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
-AS_BIN=$AS
 AR_EXTRACT='$(AR) x'
-AS='$(CC)'
-AS_DASH_C_FLAG='-c'
 MOZ_USER_DIR=".mozilla"
 
 MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
@@ -861,13 +856,6 @@ case "$target" in
         fi
     else
         TARGET_COMPILER_ABI=msvc
-        if test "$AS_BIN"; then
-            AS="$(basename "$AS_BIN")"
-        fi
-        # armasm64 doesn't understand -c.
-        if test "$CPU_ARCH" = "aarch64"; then
-            AS_DASH_C_FLAG=
-        fi
         case "$LINKER" in
         *lld*)
             AR='llvm-lib'
@@ -3912,10 +3900,8 @@ dnl ========================================================
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
 AC_SUBST(AR_EXTRACT)
-AC_SUBST(AS)
 AC_SUBST(NM)
 AC_SUBST_LIST(ASFLAGS)
-AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)
