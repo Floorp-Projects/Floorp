@@ -20,7 +20,7 @@ nsQueryInterfaceISupports::operator()(const nsIID& aIID, void** aAnswer) const
 }
 
 nsresult
-nsQueryInterfaceWithError::operator()(const nsIID& aIID, void** aAnswer) const
+nsQueryInterfaceISupportsWithError::operator()(const nsIID& aIID, void** aAnswer) const
 {
   nsresult status;
   if (mRawPtr) {
@@ -55,7 +55,7 @@ nsCOMPtr_base::assign_from_qi(const nsQueryInterfaceISupports aQI, const nsIID& 
 }
 
 void
-nsCOMPtr_base::assign_from_qi_with_error(const nsQueryInterfaceWithError& aQI,
+nsCOMPtr_base::assign_from_qi_with_error(const nsQueryInterfaceISupportsWithError& aQI,
                                          const nsIID& aIID)
 {
   void* newRawPtr;
