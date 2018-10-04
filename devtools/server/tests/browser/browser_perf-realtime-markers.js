@@ -7,10 +7,15 @@
 
 "use strict";
 
-add_task(async function() {
-  const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
-  const front = target.getFront("performance");
+add_task(async function() {
+  await addTab(MAIN_DOMAIN + "doc_perf.html");
+
+  initDebuggerServer();
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  const form = await connectDebuggerClient(client);
+  const front = PerformanceFront(client, form);
   await front.connect();
 
   let lastMemoryDelta = 0;
@@ -41,7 +46,7 @@ add_task(async function() {
   is(counters.ticks.length, 3, "three ticks events fired.");
 
   await front.destroy();
-  await target.destroy();
+  await client.close();
   gBrowser.removeCurrentTab();
 
   function handler(name, data) {
