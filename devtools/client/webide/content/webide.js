@@ -87,7 +87,7 @@ var UI = {
     // If the user decides to uninstall any of this addon, we won't install it again.
     const autoinstallADBExtension = Services.prefs.getBoolPref("devtools.webide.autoinstallADBExtension");
     if (autoinstallADBExtension) {
-      adbAddon.install();
+      adbAddon.install("webide");
     }
 
     Services.prefs.setBoolPref("devtools.webide.autoinstallADBExtension", false);

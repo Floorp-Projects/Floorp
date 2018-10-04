@@ -80,7 +80,7 @@ function BuildUI() {
 
   const installButton = document.createElement("button");
   installButton.className = "install-button";
-  installButton.onclick = () => adbAddon.install();
+  installButton.onclick = () => adbAddon.install("webide");
   installButton.textContent = Strings.GetStringFromName("addons_install_button");
   li.appendChild(installButton);
 
