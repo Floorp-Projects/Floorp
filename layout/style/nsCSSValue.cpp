@@ -1376,8 +1376,8 @@ css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
 {
 }
 
-void
-css::ImageValue::Initialize(nsIDocument* aDocument)
+imgRequestProxy*
+css::ImageValue::LoadImage(nsIDocument* aDocument)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
