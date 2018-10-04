@@ -21,14 +21,6 @@
           src="../events.js" />
 
   <script type="application/javascript">
-    function getColorBtn(aBtnObj)
-    {
-      var colorpicker = aBtnObj.colorpicker;
-      var container = colorpicker.firstChild;
-      var btn = container.getChildAt(aBtnObj.btnIndex);
-      return btn;
-    }
-
     //gA11yEventDumpID = "eventdump"; // debug stuff
     //gA11yEventDumpToConsole = true; // debug stuff
 
@@ -74,19 +66,6 @@
       // show popup again for the next test
       gQueue.push(new synthClick("popupbutton", new nofocusChecker()));
 
-      // focus colorpicker button
-      gQueue.push(new synthFocus("colorpicker"));
-      // click on button, open popup, focus goes to current color button
-      var btnObj = { colorpicker: getAccessible("colorpicker"), btnIndex: 0 };
-      var checker = new focusChecker(getColorBtn, btnObj);
-      gQueue.push(new synthClick("colorpicker", checker));
-      // select sibling color button, focus on it
-      btnObj = { colorpicker: getAccessible("colorpicker"), btnIndex: 1 };
-      var checker = new focusChecker(getColorBtn, btnObj);
-      gQueue.push(new synthRightKey("colorpicker", checker));
-      // choose selected color button, close popup, focus on colorpicker button
-      gQueue.push(new synthEnterKey("colorpicker", new focusChecker("colorpicker")));
-
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -128,9 +107,6 @@
 
       <button id="checkbutton" type="checkbox" label="checkbutton"/>
       <button id="radiobutton" type="radio" group="rbgroup" label="radio1"/>
-
-      <colorpicker id="colorpicker" type="button" label="color picker"
-                   color="#FFFFFF"/>
 
       <popupset>
         <menupopup id="backpopup" position="after_start">

@@ -73,7 +73,6 @@ xbl|children {
 
 button,
 checkbox,
-colorpicker[type="button"],
 datepicker[type="grid"],
 menulist,
 radiogroup,
@@ -669,16 +668,6 @@ panel[type="autocomplete-richlistbox"] {
   width: 0 !important;
   min-width: 0%;
   min-height: 0%;
-}
-
-/********** colorpicker **********/
-
-colorpicker {
-  -moz-binding: url("chrome://global/content/bindings/colorpicker.xml#colorpicker");
-}
-
-colorpicker[type="button"] {
-  -moz-binding: url("chrome://global/content/bindings/colorpicker.xml#colorpicker-button");
 }
 
 /********** menulist **********/

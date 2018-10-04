@@ -68,7 +68,6 @@ toolkit.jar:
    content/global/bindings/button.xml          (widgets/button.xml)
    content/global/bindings/calendar.js         (widgets/calendar.js)
    content/global/bindings/checkbox.xml        (widgets/checkbox.xml)
-   content/global/bindings/colorpicker.xml     (widgets/colorpicker.xml)
    content/global/bindings/datekeeper.js       (widgets/datekeeper.js)
    content/global/bindings/datepicker.js       (widgets/datepicker.js)
    content/global/bindings/datetimepopup.xml   (widgets/datetimepopup.xml)

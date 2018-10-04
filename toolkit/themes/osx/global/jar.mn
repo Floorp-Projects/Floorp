@@ -8,7 +8,6 @@ toolkit.jar:
   skin/classic/global/autocomplete.css
   skin/classic/global/button.css
   skin/classic/global/checkbox.css
-  skin/classic/global/colorpicker.css
   skin/classic/global/commonDialog.css
   skin/classic/global/dialog.css
   skin/classic/global/dropmarker.css
