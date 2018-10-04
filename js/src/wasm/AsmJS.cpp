@@ -6555,17 +6555,8 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
     }
 
     if (buffer->is<ArrayBufferObject>()) {
-        // On 64-bit, bounds checks are statically removed so the huge guard
-        // region is always necessary. On 32-bit, allocating a guard page
-        // requires reallocating the incoming ArrayBuffer which could trigger
-        // OOM. Thus, don't ask for a guard page in this case;
-#ifdef WASM_HUGE_MEMORY
-        bool needGuard = true;
-#else
-        bool needGuard = false;
-#endif
         Rooted<ArrayBufferObject*> arrayBuffer(cx, &buffer->as<ArrayBufferObject>());
-        if (!ArrayBufferObject::prepareForAsmJS(cx, arrayBuffer, needGuard)) {
+        if (!ArrayBufferObject::prepareForAsmJS(cx, arrayBuffer)) {
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
         }
     } else {

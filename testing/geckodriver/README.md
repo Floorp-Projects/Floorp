@@ -44,6 +44,7 @@ Documentation
   * [Ruby API](https://seleniumhq.github.io/selenium/docs/api/rb/)
 
 * [geckodriver usage](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/Usage.html)
+  * [Supported platforms](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/Support.html)
   * [Firefox capabilities](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/Capabilities.html)
   * [Capabilities example](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/Capabilities.html#capabilities-example)
   * [Enabling trace logs](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/TraceLogs.html)

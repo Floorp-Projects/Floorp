@@ -72,10 +72,8 @@ public class LayerSession {
             LayerSession.this.onCompositorDetached();
         }
 
-        @Override protected void disposeNative() {
-            // Disposal happens in native code.
-            throw new UnsupportedOperationException();
-        }
+        @WrapForJNI(dispatchTo = "gecko")
+        @Override protected native void disposeNative();
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         public native void attachNPZC(PanZoomController npzc);
@@ -140,6 +138,11 @@ public class LayerSession {
         @WrapForJNI(calledFrom = "ui")
         private void updateOverscrollOffset(final float x, final float y) {
             LayerSession.this.updateOverscrollOffset(x, y);
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+            disposeNative();
         }
     }
 

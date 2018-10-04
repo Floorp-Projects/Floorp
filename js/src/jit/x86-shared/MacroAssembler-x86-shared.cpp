@@ -791,6 +791,26 @@ MacroAssembler::wasmTrapInstruction()
     return ud2();
 }
 
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, Label* label)
+{
+    cmp32(index, boundsCheckLimit);
+    j(cond, label);
+    if (JitOptions.spectreIndexMasking) {
+        cmovCCl(cond, Operand(boundsCheckLimit), index);
+    }
+}
+
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, Label* label)
+{
+    cmp32(index, Operand(boundsCheckLimit));
+    j(cond, label);
+    if (JitOptions.spectreIndexMasking) {
+        cmovCCl(cond, Operand(boundsCheckLimit), index);
+    }
+}
+
 // RAII class that generates the jumps to traps when it's destructed, to
 // prevent some code duplication in the outOfLineWasmTruncateXtoY methods.
 struct MOZ_RAII AutoHandleWasmTruncateToIntErrors

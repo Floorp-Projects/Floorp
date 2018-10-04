@@ -25,12 +25,14 @@
 # include <mach/mach.h>
 #endif
 
-#include "js/TypeDecls.h"
+#include "js/ProfilingFrameIterator.h"
 #include "threading/Thread.h"
-#include "wasm/WasmTypes.h"
+#include "wasm/WasmProcess.h"
 
 namespace js {
 namespace wasm {
+
+typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
 
 // Ensure the given JSRuntime is set up to use signals. Failure to enable signal
 // handlers indicates some catastrophic failure and creation of the runtime must
@@ -42,6 +44,17 @@ EnsureSignalHandlers(JSContext* cx);
 // out-of-bounds.
 bool
 HaveSignalHandlers();
+
+// Return whether, with the given simulator register state, a memory access to
+// 'addr' of size 'numBytes' needs to trap and, if so, where the simulator
+// should redirect pc to.
+bool
+MemoryAccessTraps(const RegisterState& regs, uint8_t* addr, uint32_t numBytes, uint8_t** newPC);
+
+// Return whether, with the given simulator register state, an illegal
+// instruction fault is expected and, if so, the value of the next PC.
+bool
+HandleIllegalInstruction(const RegisterState& regs, uint8_t** newPC);
 
 #if defined(XP_DARWIN)
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
@@ -66,16 +79,6 @@ class MachExceptionHandler
     bool install(JSContext* cx);
 };
 #endif
-
-// On trap, the bytecode offset to be reported in callstacks is saved.
-
-struct TrapData
-{
-    void* resumePC;
-    void* unwoundPC;
-    Trap trap;
-    uint32_t bytecodeOffset;
-};
 
 } // namespace wasm
 } // namespace js

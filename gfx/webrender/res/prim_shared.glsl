@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include rect,render_task,resource_cache,snap,transform
+#include rect,render_task,gpu_cache,snap,transform
 
 #define EXTEND_MODE_CLAMP  0
 #define EXTEND_MODE_REPEAT 1
@@ -15,11 +15,8 @@
 #define RASTER_LOCAL            0
 #define RASTER_SCREEN           1
 
-uniform sampler2DArray sCacheA8;
-uniform sampler2DArray sCacheRGBA8;
-
-// An A8 target for standalone tasks that is available to all passes.
-uniform sampler2DArray sSharedCacheA8;
+uniform sampler2DArray sPrevPassAlpha;
+uniform sampler2DArray sPrevPassColor;
 
 vec2 clamp_rect(vec2 pt, RectWithSize rect) {
     return clamp(pt, rect.p0, rect.p0 + rect.size);
@@ -121,14 +118,12 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     vec4 world_pos = transform.m * vec4(clamped_local_pos, 0.0, 1.0);
 
     // Convert the world positions to device pixel space.
-    vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
+    vec2 device_pos = world_pos.xy * uDevicePixelRatio;
 
     // Apply offsets for the render task to get correct screen location.
-    vec2 final_pos = device_pos + snap_offset -
-                     task.content_origin +
-                     task.common_data.task_rect.p0;
+    vec2 final_offset = snap_offset - task.content_origin + task.common_data.task_rect.p0;
 
-    gl_Position = uTransform * vec4(final_pos, z, 1.0);
+    gl_Position = uTransform * vec4(device_pos + final_offset * world_pos.w, z * world_pos.w, world_pos.w);
 
     VertexInfo vi = VertexInfo(
         clamped_local_pos,
@@ -254,7 +249,7 @@ float do_clip() {
     // is still interpolated and becomes a subject of precision-caused
     // fluctuations, see https://bugzilla.mozilla.org/show_bug.cgi?id=1491911
     ivec3 tc = ivec3(mask_uv, vClipMaskUv.z + 0.5);
-    return texelFetch(sCacheA8, tc, 0).r;
+    return texelFetch(sPrevPassAlpha, tc, 0).r;
 }
 
 #ifdef WR_FEATURE_DITHERING
@@ -297,7 +292,7 @@ vec4 sample_gradient(int address, float offset, float gradient_repeat) {
     lut_offset = clamp(lut_offset, 0, 2 * (GRADIENT_ENTRIES + 1));
 
     // Fetch the start and end color.
-    vec4 texels[2] = fetch_from_resource_cache_2(address + lut_offset);
+    vec4 texels[2] = fetch_from_gpu_cache_2(address + lut_offset);
 
     // Finally interpolate and apply dithering
     return dither(mix(texels[0], texels[1], fract(x)));

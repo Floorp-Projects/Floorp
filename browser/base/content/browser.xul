@@ -11,6 +11,12 @@
      both "content" and "skin" packages, which bug 1385444 will unify later. -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
+<!-- While these stylesheets are defined in Toolkit, they are only used in the
+     main browser window, so we can load them here. Bug 1474241 is on file to
+     consider moving these widgets to the "browser" folder. -->
+<?xml-stylesheet href="chrome://global/content/tabprompts.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/tabprompts.css" type="text/css"?>
+
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/tabbrowser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/downloads/downloads.css" type="text/css"?>

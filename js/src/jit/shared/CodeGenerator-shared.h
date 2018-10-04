@@ -522,16 +522,6 @@ class CodeGeneratorShared : public LElementVisitor
     void emitTracelogIonStop() {}
 #endif
 
-  protected:
-    inline void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, bool isLoad,
-                                            Scalar::Type type, Operand mem, LAllocation alloc);
-
-  public:
-    inline void verifyLoadDisassembly(uint32_t begin, uint32_t end, Scalar::Type type,
-                                      Operand mem, LAllocation alloc);
-    inline void verifyStoreDisassembly(uint32_t begin, uint32_t end, Scalar::Type type,
-                                       Operand mem, LAllocation alloc);
-
     bool isGlobalObject(JSObject* object);
 };
 

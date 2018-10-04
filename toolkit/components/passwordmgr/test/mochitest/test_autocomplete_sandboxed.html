@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form field autocomplete in sandboxed documents (null principal)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script>
+var chromeScript = runChecksAfterCommonInit();
+
+var setupScript = runInParent(function setup() {
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+  var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                           Ci.nsILoginInfo, "init");
+  assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
+
+  var login1 = new nsLoginInfo("https://example.com", "", null,
+                               "tempuser1", "temppass1", "uname", "pword");
+
+  // try/catch in case someone runs the tests manually, twice.
+  try {
+    Services.logins.addLogin(login1);
+  } catch (e) {
+    assert.ok(false, "addLogin threw: " + e);
+  }
+});
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+  <iframe id="sandboxed"
+          sandbox=""
+          src="form_basic.html"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: form field autocomplete in sandboxed documents (null principal) **/
+
+let sandboxed = document.getElementById("sandboxed");
+let uname;
+let pword;
+
+// Check for expected username/password in form.
+function checkACForm(expectedUsername, expectedPassword) {
+  var formID = uname.parentNode.id;
+  is(uname.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
+  is(pword.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["security.insecure_field_warning.contextual.enabled", true],
+  ]});
+
+  let frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;
+  // Can't use SimpleTest.promiseFocus as it doesn't work with the sandbox.
+  await SimpleTest.promiseWaitForCondition(() => {
+    return frameWindow.document.readyState == "complete" && frameWindow.location.href != "about:blank";
+  }, "Check frame is loaded");
+  let frameDoc = SpecialPowers.wrap(sandboxed).contentDocument;
+  uname = frameDoc.getElementById("form-basic-username");
+  pword = frameDoc.getElementById("form-basic-password");
+});
+
+add_task(async function test_no_autofill() {
+  // Make sure initial form is empty as autofill shouldn't happen in the sandboxed frame.
+  checkACForm("", "");
+  let popupState = await getPopupState();
+  is(popupState.open, false, "Check popup is initially closed");
+});
+
+add_task(async function test_autocomplete_warning_no_logins() {
+  pword.focus();
+  let shownPromise = promiseACShown();
+  synthesizeKey("KEY_ArrowDown"); // open the popup
+  let results = await shownPromise;
+
+  let popupState = await getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+
+  let expectedMenuItems = [
+    "This connection is not secure. Logins entered here could be compromised. Learn More",
+  ];
+  checkArrayValues(results, expectedMenuItems, "Check all menuitems are displayed correctly.");
+
+  checkACForm("", "");
+});
+</script>
+</pre>
+</body>
+</html>

@@ -28,7 +28,7 @@ use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::UvRectKind;
 use image::{compute_tile_range, for_each_tile_in_range};
-use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList};
+use internal_types::{FastHashMap, FastHashSet, TextureSource, TextureUpdateList};
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use render_backend::FrameId;
 use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
@@ -67,7 +67,7 @@ pub struct GlyphFetchResult {
 // various CPU-side structures.
 #[derive(Debug, Clone)]
 pub struct CacheItem {
-    pub texture_id: SourceTexture,
+    pub texture_id: TextureSource,
     pub uv_rect_handle: GpuCacheHandle,
     pub uv_rect: DeviceUintRect,
     pub texture_layer: i32,
@@ -76,7 +76,7 @@ pub struct CacheItem {
 impl CacheItem {
     pub fn invalid() -> Self {
         CacheItem {
-            texture_id: SourceTexture::Invalid,
+            texture_id: TextureSource::Invalid,
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect: DeviceUintRect::zero(),
             texture_layer: 0,
@@ -1232,13 +1232,13 @@ impl ResourceCache {
         gpu_cache: &mut GpuCache,
         mut f: F,
     ) where
-        F: FnMut(SourceTexture, GlyphFormat, &[GlyphFetchResult]),
+        F: FnMut(TextureSource, GlyphFormat, &[GlyphFetchResult]),
     {
         debug_assert_eq!(self.state, State::QueryResources);
 
         self.glyph_rasterizer.prepare_font(&mut font);
 
-        let mut current_texture_id = SourceTexture::Invalid;
+        let mut current_texture_id = TextureSource::Invalid;
         let mut current_glyph_format = GlyphFormat::Subpixel;
         debug_assert!(fetch_buffer.is_empty());
 
@@ -1282,14 +1282,14 @@ impl ResourceCache {
         gpu_cache: &mut GpuCache,
         mut f: F,
     ) where
-        F: FnMut(SourceTexture, GlyphFormat, &[GlyphFetchResult]),
+        F: FnMut(TextureSource, GlyphFormat, &[GlyphFetchResult]),
     {
         debug_assert_eq!(self.state, State::QueryResources);
 
         self.glyph_rasterizer.prepare_font(&mut font);
         let glyph_key_cache = self.cached_glyphs.get_glyph_key_cache_for_font(&font);
 
-        let mut current_texture_id = SourceTexture::Invalid;
+        let mut current_texture_id = TextureSource::Invalid;
         let mut current_glyph_format = GlyphFormat::Subpixel;
         debug_assert!(fetch_buffer.is_empty());
 
@@ -1625,6 +1625,10 @@ impl ResourceCache {
             .retain(|key, _| key.0 != namespace);
         self.cached_images
             .clear_keys(|key| key.0 == namespace);
+
+        self.blob_image_templates.retain(|key, _| key.0 != namespace);
+
+        self.rasterized_blob_images.retain(|key, _| key.0 != namespace);
 
         self.resources.font_instances
             .write()

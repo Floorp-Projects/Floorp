@@ -382,12 +382,11 @@ fn create_prim_shader(
                 ("sColor1", TextureSampler::Color1),
                 ("sColor2", TextureSampler::Color2),
                 ("sDither", TextureSampler::Dither),
-                ("sCacheA8", TextureSampler::CacheA8),
-                ("sCacheRGBA8", TextureSampler::CacheRGBA8),
+                ("sPrevPassAlpha", TextureSampler::PrevPassAlpha),
+                ("sPrevPassColor", TextureSampler::PrevPassColor),
                 ("sTransformPalette", TextureSampler::TransformPalette),
                 ("sRenderTasks", TextureSampler::RenderTasks),
-                ("sResourceCache", TextureSampler::ResourceCache),
-                ("sSharedCacheA8", TextureSampler::SharedCacheA8),
+                ("sGpuCache", TextureSampler::GpuCache),
                 ("sPrimitiveHeadersF", TextureSampler::PrimitiveHeadersF),
                 ("sPrimitiveHeadersI", TextureSampler::PrimitiveHeadersI),
             ],
@@ -399,8 +398,7 @@ fn create_prim_shader(
 
 fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program, ShaderError> {
     let prefix = format!(
-        "#define WR_MAX_VERTEX_TEXTURE_WIDTH {}U\n
-        #define WR_FEATURE_TRANSFORM\n",
+        "#define WR_MAX_VERTEX_TEXTURE_WIDTH {}U\n",
         MAX_VERTEX_TEXTURE_WIDTH
     );
 
@@ -415,8 +413,7 @@ fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program
                 ("sColor0", TextureSampler::Color0),
                 ("sTransformPalette", TextureSampler::TransformPalette),
                 ("sRenderTasks", TextureSampler::RenderTasks),
-                ("sResourceCache", TextureSampler::ResourceCache),
-                ("sSharedCacheA8", TextureSampler::SharedCacheA8),
+                ("sGpuCache", TextureSampler::GpuCache),
                 ("sPrimitiveHeadersF", TextureSampler::PrimitiveHeadersF),
                 ("sPrimitiveHeadersI", TextureSampler::PrimitiveHeadersI),
             ],

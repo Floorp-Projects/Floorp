@@ -38,6 +38,11 @@ LookupCodeSegment(const void* pc, const CodeRange** codeRange = nullptr);
 const Code*
 LookupCode(const void* pc, const CodeRange** codeRange = nullptr);
 
+// Return whether the given PC is in any type of wasm code (module or builtin).
+
+bool
+InCompiledCode(void* pc);
+
 // A bool member that can be used as a very fast lookup to know if there is any
 // code segment at all.
 
