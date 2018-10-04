@@ -26,6 +26,14 @@ awsy:
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
 
+awsy-dmd:
+    description: "Are we slim yet - dmd enabled"
+    treeherder-symbol: SY(sy-d)
+    run-on-projects: ['try']
+    mozharness:
+        extra-options:
+            - --dmd
+
 awsy-base:
     description: "Are we slim yet - about:blank base case"
     treeherder-symbol: SY(ab)
@@ -36,6 +44,15 @@ awsy-base:
     mozharness:
         extra-options:
             - --base
+
+awsy-base-dmd:
+    description: "Are we slim yet - about:blank base case - dmd enabled"
+    treeherder-symbol: SY(ab-d)
+    run-on-projects: ['try']
+    mozharness:
+        extra-options:
+            - --base
+            - --dmd
 
 awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
