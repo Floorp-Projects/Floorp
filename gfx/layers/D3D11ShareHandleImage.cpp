@@ -24,29 +24,22 @@ namespace layers {
 using namespace gfx;
 
 D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
-                                             const gfx::IntRect& aRect,
-                                             const GUID& aSourceFormat)
-  : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE)
-  , mSize(aSize)
-  , mPictureRect(aRect)
-  , mSourceFormat(aSourceFormat)
-
+                                             const gfx::IntRect& aRect)
+ : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE),
+   mSize(aSize),
+   mPictureRect(aRect)
 {
 }
 
 bool
-D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
-                                       ID3D11Device* aDevice)
+D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice)
 {
   if (aAllocator) {
-    if (mSourceFormat == MFVideoFormat_NV12 &&
-        gfxPrefs::PDMWMFUseNV12Format() &&
+    if (gfxPrefs::PDMWMFUseNV12Format() &&
         gfx::DeviceManagerDx::Get()->CanUseNV12()) {
-      mTextureClient =
-        aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
+      mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
     } else {
-      mTextureClient =
-        aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
+      mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
     }
     if (mTextureClient) {
       mTexture = static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())->GetD3D11Texture();
@@ -94,7 +87,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 
   HRESULT hr;
 
-  if (desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM) {
+  if (desc.Format == DXGI_FORMAT_NV12) {
     nsAutoCString error;
     std::unique_ptr<DXVA2Manager> manager(DXVA2Manager::CreateD3D11DXVA(nullptr, error, device));
 
@@ -105,11 +98,10 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 
     RefPtr<ID3D11Texture2D> outTexture;
 
-    hr = manager->CopyToBGRATexture(
-      texture, mSourceFormat, getter_AddRefs(outTexture));
+    hr = manager->CopyToBGRATexture(texture, getter_AddRefs(outTexture));
 
     if (FAILED(hr)) {
-      gfxWarning() << "Failed to copy to BGRA texture.";
+      gfxWarning() << "Failed to copy NV12 to BGRA texture.";
       return nullptr;
     }
 
