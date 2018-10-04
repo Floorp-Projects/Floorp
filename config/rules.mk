@@ -900,11 +900,6 @@ else
 environment_cleaner =
 endif
 
-rust_unlock_unstable =
-ifdef MOZ_RUST_SIMD
-rust_unlock_unstable += RUSTC_BOOTSTRAP=1
-endif
-
 ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
@@ -955,7 +950,7 @@ endif # MOZ_ASAN
 # don't use the prefix when make -n is used, so that cargo doesn't run
 # in that case)
 define RUN_CARGO
-$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleaner) $(rust_unlock_unstable) $(sccache_wrap) \
+$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleaner) $(sccache_wrap) \
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTFLAGS='$(2)' \
 	RUSTC=$(RUSTC) \
