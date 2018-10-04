@@ -87,16 +87,14 @@ public:
   // Sends a message to the MFT.
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData);
 
-  HRESULT FindDecoderOutputTypeWithSubtype(const GUID& aSubType,
-                                           bool aMatchAllAttributes);
-  HRESULT FindDecoderOutputType(bool aMatchAllAttributes);
+  HRESULT FindDecoderOutputTypeWithSubtype(const GUID& aSubType);
+  HRESULT FindDecoderOutputType();
 private:
   // Will search a suitable MediaType using aTypeToUse if set, if not will
   // use the current mOutputType.
   HRESULT SetDecoderOutputType(
     const GUID& aSubType,
     IMFMediaType* aTypeToUse,
-    bool aMatchAllAttributes,
     std::function<HRESULT(IMFMediaType*)>&& aCallback);
   HRESULT CreateOutputSample(RefPtr<IMFSample>* aOutSample);
 

@@ -1087,12 +1087,11 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
       // if HW accelerated: NV12, P010, P016
       // if SW: YV12, P010, P016
       if (FAILED((hr = (mDecoder->FindDecoderOutputTypeWithSubtype(
-                    mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12,
-                    false)))) &&
+                    mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12)))) &&
           FAILED((hr = mDecoder->FindDecoderOutputTypeWithSubtype(
-                    MFVideoFormat_P010, false))) &&
+                    MFVideoFormat_P010))) &&
           FAILED((hr = mDecoder->FindDecoderOutputTypeWithSubtype(
-                    MFVideoFormat_P016, false)))) {
+                    MFVideoFormat_P016)))) {
         LOG("No suitable output format found");
         return hr;
       }
