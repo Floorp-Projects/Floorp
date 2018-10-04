@@ -28,26 +28,27 @@ SimpleTest.requestFlakyTimeout("untriaged");
 // run in an iframe, which by default will not have the allowfullscreen
 // attribute set, so full-screen won't work.
 var gTestWindows = [
-  "file_fullscreen-multiple.html",
-  "file_fullscreen-rollback.html",
-  "file_fullscreen-esc-exit.html",
-  "file_fullscreen-denied.html",
-  "file_fullscreen-api.html",
-  "file_fullscreen-plugins.html",
-  "file_fullscreen-hidden.html",
-  "file_fullscreen-svg-element.html",
-  "file_fullscreen-navigation.html",
-  "file_fullscreen-scrollbar.html",
-  "file_fullscreen-selector.html",
-  "file_fullscreen-shadowdom.html",
-  "file_fullscreen-top-layer.html",
-  "file_fullscreen-backdrop.html",
-  "file_fullscreen-nested.html",
-  "file_fullscreen-prefixed.html",
-  "file_fullscreen-unprefix-disabled.html",
-  "file_fullscreen-lenient-setters.html",
-  "file_fullscreen-table.html",
-  "file_fullscreen-event-order.html",
+  { test: "file_fullscreen-multiple.html" },
+  { test: "file_fullscreen-rollback.html" },
+  { test: "file_fullscreen-esc-exit.html" },
+  { test: "file_fullscreen-denied.html" },
+  { test: "file_fullscreen-api.html" },
+  { test: "file_fullscreen-plugins.html" },
+  { test: "file_fullscreen-hidden.html" },
+  { test: "file_fullscreen-svg-element.html" },
+  { test: "file_fullscreen-navigation.html" },
+  { test: "file_fullscreen-scrollbar.html" },
+  { test: "file_fullscreen-selector.html" },
+  { test: "file_fullscreen-shadowdom.html" },
+  { test: "file_fullscreen-top-layer.html" },
+  { test: "file_fullscreen-backdrop.html" },
+  { test: "file_fullscreen-nested.html" },
+  { test: "file_fullscreen-prefixed.html" },
+  { test: "file_fullscreen-unprefix-disabled.html" },
+  { test: "file_fullscreen-lenient-setters.html" },
+  { test: "file_fullscreen-table.html" },
+  { test: "file_fullscreen-event-order.html" },
+  { test: "file_fullscreen-featurePolicy.html", prefs: [["dom.security.featurePolicy.enabled", true]] },
 ];
 
 var testWindow = null;
@@ -112,30 +113,35 @@ function waitForEvent(eventTarget, eventName, checkFn, callback) {
 function runNextTest() {
   if (gTestIndex < gTestWindows.length) {
     let test = gTestWindows[gTestIndex];
-    if (shouldSkipTest(test)) {
-      info(`Skip test ${test}`);
+    if (shouldSkipTest(test.test)) {
+      info(`Skip test ${test.test}`);
       SimpleTest.executeSoon(runNextTest);
     } else {
-      info(`Run test ${test}`);
-      testWindow = window.open(test, "", "width=500,height=500,scrollbars=yes");
-      // We'll wait for the window to load, then make sure our window is refocused
-      // before starting the test, which will get kicked off on "focus".
-      // This ensures that we're essentially back on the primary "desktop" on
-      // OS X Lion before we run the test.
-      waitForLoadAndPaint(testWindow, function() {
-        SimpleTest.waitForFocus(function() {
+      let promise = ("prefs" in test)
+                      ? SpecialPowers.pushPrefEnv({"set": test.prefs})
+                      : Promise.resolve();
+      promise.then(function() {
+        info(`Run test ${test.test}`);
+        testWindow = window.open(test.test, "", "width=500,height=500,scrollbars=yes");
+        // We'll wait for the window to load, then make sure our window is refocused
+        // before starting the test, which will get kicked off on "focus".
+        // This ensures that we're essentially back on the primary "desktop" on
+        // OS X Lion before we run the test.
+        waitForLoadAndPaint(testWindow, function() {
           SimpleTest.waitForFocus(function() {
-            // For the platforms that support reporting occlusion state (e.g. Mac),
-            // we should wait until the docshell has been activated again,
-            // otherwise, the fullscreen request might be denied.
-            if (testWindow.document.hidden) {
-              waitForEvent(testWindow.document, "visibilitychange", (event) => {
-                return !testWindow.document.hidden;
-              }, testWindow.begin);
-              return;
-            }
-            testWindow.begin();
-          }, testWindow);
+            SimpleTest.waitForFocus(function() {
+              // For the platforms that support reporting occlusion state (e.g. Mac),
+              // we should wait until the docshell has been activated again,
+              // otherwise, the fullscreen request might be denied.
+              if (testWindow.document.hidden) {
+                waitForEvent(testWindow.document, "visibilitychange", (event) => {
+                  return !testWindow.document.hidden;
+                }, testWindow.begin);
+                return;
+              }
+              testWindow.begin();
+            }, testWindow);
+          });
         });
       });
     }
