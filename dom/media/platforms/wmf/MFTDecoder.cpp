@@ -99,7 +99,6 @@ MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
 
   hr = SetDecoderOutputType(currentSubtype,
                             aOutputType,
-                            true /* match all attributes */,
                             std::move(aCallback));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -126,27 +125,25 @@ MFTDecoder::GetAttributes()
 }
 
 HRESULT
-MFTDecoder::FindDecoderOutputType(bool aMatchAllAttributes)
+MFTDecoder::FindDecoderOutputType()
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mOutputType, "SetDecoderTypes must have been called once");
 
-  return FindDecoderOutputTypeWithSubtype(mOutputSubType, aMatchAllAttributes);
+  return FindDecoderOutputTypeWithSubtype(mOutputSubType);
 }
 
 HRESULT
-MFTDecoder::FindDecoderOutputTypeWithSubtype(const GUID& aSubType,
-                                             bool aMatchAllAttributes)
+MFTDecoder::FindDecoderOutputTypeWithSubtype(const GUID& aSubType)
 {
   return SetDecoderOutputType(
-    aSubType, nullptr, aMatchAllAttributes, [](IMFMediaType*) { return S_OK; });
+    aSubType, nullptr, [](IMFMediaType*) { return S_OK; });
 }
 
 HRESULT
 MFTDecoder::SetDecoderOutputType(
   const GUID& aSubType,
   IMFMediaType* aTypeToUse,
-  bool aMatchAllAttributes,
   std::function<HRESULT(IMFMediaType*)>&& aCallback)
 {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
@@ -166,14 +163,7 @@ MFTDecoder::SetDecoderOutputType(
     HRESULT hr = outputType->GetGUID(MF_MT_SUBTYPE, &outSubtype);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-    BOOL resultMatch = aSubType == outSubtype;
-
-    if (resultMatch && aMatchAllAttributes) {
-      hr = aTypeToUse->Compare(outputType, MF_ATTRIBUTES_MATCH_OUR_ITEMS,
-                               &resultMatch);
-      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-    }
-    if (resultMatch == TRUE) {
+    if (aSubType == outSubtype) {
       hr = aCallback(outputType);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
