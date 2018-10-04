@@ -533,6 +533,9 @@ ResponsiveUI.prototype = {
       case "remove-device-association":
         this.onRemoveDeviceAssociation(event);
         break;
+      case "viewport-resize":
+        this.onViewportResize(event);
+        break;
     }
   },
 
@@ -609,6 +612,14 @@ ResponsiveUI.prototype = {
     }
     // Used by tests
     this.emit("device-association-removed");
+  },
+
+  onViewportResize(event) {
+    const { width, height } = event.data;
+    this.emit("viewport-resize", {
+      width,
+      height,
+    });
   },
 
   /**
