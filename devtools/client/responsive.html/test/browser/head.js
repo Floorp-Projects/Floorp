@@ -137,35 +137,39 @@ function waitForViewportResizeTo(ui, width, height) {
     const isSizeMatching = data => data.width == width && data.height == height;
 
     // If the viewport has already the expected size, we resolve the promise immediately.
-    const size = await getContentSize(ui);
+    const size = ui.getViewportSize();
     if (isSizeMatching(size)) {
-      info(`Content already resized to ${width} x ${height}`);
+      info(`Viewport already resized to ${width} x ${height}`);
       resolve();
       return;
     }
 
-    // Otherwise, we'll listen to both content's resize event and browser's load end;
-    // since a racing condition can happen, where the content's listener is added after
-    // the resize, because the content's document was reloaded; therefore the test would
-    // hang forever. See bug 1302879.
+    // Otherwise, we'll listen to the content's resize event, the viewport's resize event,
+    // and the browser's load end; since a racing condition can happen, where the
+    // content's listener is added after the resize, because the content's document was
+    // reloaded; therefore the test would hang forever. See bug 1302879.
     const browser = ui.getViewportBrowser();
 
     const onResize = data => {
       if (!isSizeMatching(data)) {
         return;
       }
+      ui.off("viewport-resize", onResize);
       ui.off("content-resize", onResize);
       browser.removeEventListener("mozbrowserloadend", onBrowserLoadEnd);
-      info(`Got content-resize to ${width} x ${height}`);
+      info(`Got content-resize or viewport-resize to ${width} x ${height}`);
       resolve();
     };
 
     const onBrowserLoadEnd = async function() {
-      const data = await getContentSize(ui);
+      const data = ui.getViewportSize(ui);
       onResize(data);
     };
 
-    info(`Waiting for content-resize to ${width} x ${height}`);
+    info(`Waiting for content-resize or viewport-resize to ${width} x ${height}`);
+    // Depending on whether or not the viewport is overridden, we'll either get a
+    // viewport-resize event or a content-resize event.
+    ui.on("viewport-resize", onResize);
     ui.on("content-resize", onResize);
     browser.addEventListener("mozbrowserloadend",
       onBrowserLoadEnd, { once: true });
