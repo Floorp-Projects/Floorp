@@ -1079,6 +1079,10 @@ private: // data members
   // as constants in the nsIDocShell.idl file.
   uint32_t mTouchEventsOverride;
 
+  // Whether or not handling of the <meta name="viewport"> tag is overridden.
+  // Possible values are defined as constants in nsIDocShell.idl.
+  uint32_t mMetaViewportOverride;
+
   // mFullscreenAllowed stores how we determine whether fullscreen is allowed
   // when GetFullscreenAllowed() is called. Fullscreen is allowed in a
   // docshell when all containing iframes have the allowfullscreen
