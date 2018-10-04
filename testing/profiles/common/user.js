@@ -49,3 +49,4 @@ user_pref("media.autoplay.enabled.user-gestures-needed", true);
 user_pref("media.autoplay.ask-permission", false);
 user_pref("media.autoplay.block-webaudio", false);
 user_pref("media.allowed-to-play.enabled", true);
+user_pref("toolkit.telemetry.coverage.endpoint.base", "http://localhost");
