@@ -5,7 +5,6 @@
 "use strict";
 
 const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
-const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -29,31 +28,10 @@ if (platform.includes("Win")) {
   }
 }
 
-const addonsListener = {};
-addonsListener.onEnabled =
-addonsListener.onDisabled =
-addonsListener.onInstalled =
-addonsListener.onUninstalled = (updatedAddon) => {
-  getADBAddon().updateInstallStatus();
-};
-AddonManager.addAddonListener(addonsListener);
-
-// adbAddon is the exposed singleton for ADBAddon.
-let adbAddon = null;
-function getADBAddon() {
-  if (!adbAddon) {
-    adbAddon = new ADBAddon();
-  }
-  return adbAddon;
-}
-exports.getADBAddon = getADBAddon;
-
-exports.forgetADBAddon = function() {
-  adbAddon = null;
-};
-
 function ADBAddon() {
   EventEmitter.decorate(this);
+
+  this._status = "unknown";
 
   // This addon uses the string "linux" for "linux32"
   const fixedOS = OS == "linux32" ? "linux" : OS;
@@ -63,10 +41,16 @@ function ADBAddon() {
   this.uninstallOldExtension();
 
   this.updateInstallStatus();
+
+  const addonsListener = {};
+  addonsListener.onEnabled =
+  addonsListener.onDisabled =
+  addonsListener.onInstalled =
+  addonsListener.onUninstalled = () => this.updateInstallStatus();
+  AddonManager.addAddonListener(addonsListener);
 }
 
 ADBAddon.prototype = {
-  _status: "unknown",
   set status(value) {
     Devices.adbExtensionInstalled = (value == "installed");
     if (this._status != value) {
@@ -74,6 +58,7 @@ ADBAddon.prototype = {
       this.emit("update");
     }
   },
+
   get status() {
     return this._status;
   },
@@ -158,3 +143,5 @@ ADBAddon.prototype = {
     this.installFailureHandler(install, "Install failed");
   },
 };
+
+exports.adbAddon = new ADBAddon();

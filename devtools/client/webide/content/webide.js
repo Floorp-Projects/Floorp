@@ -6,7 +6,7 @@
 /* import-globals-from project-panel.js */
 /* import-globals-from runtime-panel.js */
 
-const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 const {Toolbox} = require("devtools/client/framework/toolbox");
@@ -16,11 +16,12 @@ const {Connection} = require("devtools/shared/client/connection-manager");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-const {getADBAddon} = require("devtools/shared/adb/adb-addon");
 const {getJSON} = require("devtools/client/shared/getjson");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 const {openContentLink} = require("devtools/client/shared/link");
+
+loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
 
 const Strings =
   Services.strings.createBundle("chrome://devtools/locale/webide.properties");
@@ -86,7 +87,6 @@ var UI = {
     // If the user decides to uninstall any of this addon, we won't install it again.
     const autoinstallADBExtension = Services.prefs.getBoolPref("devtools.webide.autoinstallADBExtension");
     if (autoinstallADBExtension) {
-      const adbAddon = getADBAddon();
       adbAddon.install();
     }
 
