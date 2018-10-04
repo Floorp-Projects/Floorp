@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+    <head><title>Async scrolling with transforms</title></head>
+    <body style="height: 2000px" onload="window.scrollTo(0,20); document.documentElement.classList.remove('reftest-wait')">
+        <div style="transform: rotate(90deg); transform-origin: bottom left">Some vertical text</div>
+    </body>
+</html>

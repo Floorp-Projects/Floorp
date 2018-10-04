@@ -67,6 +67,7 @@ skip-if(!asyncPan) == position-sticky-bug1434250.html position-sticky-bug1434250
 fuzzy-if(Android,0-6,0-4) skip-if(!asyncPan) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html
 fuzzy-if(Android,0-6,0-4) skip == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
 fuzzy-if(Android,0-2,0-4) skip-if(!asyncPan) == curtain-effect-1.html curtain-effect-1-ref.html
+fuzzy-if(Android,0-1,0-4) skip-if(!asyncPan) == transformed-1.html transformed-1-ref.html
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in
