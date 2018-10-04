@@ -7,13 +7,14 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {div, button} = dom;
-const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 
 const MeatballMenu = createFactory(require("devtools/client/framework/components/MeatballMenu"));
 const MenuButton = createFactory(require("devtools/client/shared/components/menu/MenuButton"));
 const MenuItem = createFactory(require("devtools/client/shared/components/menu/MenuItem"));
 const MenuList = createFactory(require("devtools/client/shared/components/menu/MenuList"));
 const ToolboxTabs = createFactory(require("devtools/client/framework/components/ToolboxTabs"));
+
+loader.lazyRequireGetter(this, "getUnicodeUrl", "devtools/client/shared/unicode-url", true);
 
 /**
  * This is the overall component for the toolbox toolbar. It is designed to not know how
