@@ -5,7 +5,7 @@
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
-const {GetAvailableAddons, ForgetAddonsList} = require("devtools/client/webide/modules/addons");
+const {getADBAddon, forgetADBAddon} = require("devtools/client/webide/modules/addons");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 const {ADBScanner} = require("devtools/shared/adb/adb-scanner");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
@@ -18,22 +18,20 @@ window.addEventListener("load", function() {
     }
   };
   document.querySelector("#close").onclick = CloseUI;
-  BuildUI(GetAvailableAddons());
+  BuildUI();
 }, {capture: true, once: true});
 
 window.addEventListener("unload", function() {
-  ForgetAddonsList();
+  forgetADBAddon();
 }, {capture: true, once: true});
 
 function CloseUI() {
   window.parent.UI.openProject();
 }
 
-function BuildUI(addons) {
-  BuildItem(addons.adb, "adb");
-}
+function BuildUI() {
+  const addon = getADBAddon();
 
-function BuildItem(addon, type) {
   function onAddonUpdate(arg) {
     progress.removeAttribute("value");
     li.setAttribute("status", addon.status);
@@ -73,12 +71,8 @@ function BuildItem(addon, type) {
   const name = document.createElement("span");
   name.className = "name";
 
-  switch (type) {
-    case "adb":
-      li.setAttribute("addon", type);
-      name.textContent = "ADB Extension";
-      break;
-  }
+  li.setAttribute("addon", "adb");
+  name.textContent = "ADB Extension";
 
   li.appendChild(name);
 
@@ -102,12 +96,10 @@ function BuildItem(addon, type) {
   const progress = document.createElement("progress");
   li.appendChild(progress);
 
-  if (type == "adb") {
-    const warning = document.createElement("p");
-    warning.textContent = Strings.GetStringFromName("addons_adb_warning");
-    warning.className = "warning";
-    li.appendChild(warning);
-  }
+  const warning = document.createElement("p");
+  warning.textContent = Strings.GetStringFromName("addons_adb_warning");
+  warning.className = "warning";
+  li.appendChild(warning);
 
   document.querySelector("ul").appendChild(li);
 }
