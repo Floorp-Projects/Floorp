@@ -7,15 +7,15 @@
 
 // A button that toggles a doorhanger menu.
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Services = require("Services");
+const flags = require("devtools/shared/flags");
+const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { button } = dom;
-const {
-  HTMLTooltip,
-} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
+
+loader.lazyRequireGetter(this, "createPortal", "devtools/client/shared/vendor/react-dom", true);
 
 // Return a copy of |obj| minus |fields|.
 const omit = (obj, fields) => {
@@ -71,20 +71,29 @@ class MenuButton extends PureComponent {
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
 
-    this.tooltip = null;
-    this.buttonRef = null;
-    this.setButtonRef = element => {
-      this.buttonRef = element;
-    };
+    this.buttonRef = createRef();
 
     this.state = {
       expanded: false,
+      // In tests, initialize the menu immediately.
+      isMenuInitialized: flags.testing || false,
       win: props.doc.defaultView.top,
     };
+
+    this.initializeTooltip();
   }
 
-  componentWillMount() {
-    this.initializeTooltip();
+  componentDidMount() {
+    if (!this.state.isMenuInitialized) {
+      // Initialize the menu when the button is focused or moused over.
+      for (const event of ["focus", "mousemove"]) {
+        this.buttonRef.current.addEventListener(event, () => {
+          if (!this.state.isMenuInitialized) {
+            this.setState({ isMenuInitialized: true });
+          }
+        }, { once: true });
+      }
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -177,11 +186,11 @@ class MenuButton extends PureComponent {
   // Used by the call site to indicate that the menu content has changed so
   // its container should be updated.
   resizeContent() {
-    if (!this.state.expanded || !this.tooltip || !this.buttonRef) {
+    if (!this.state.expanded || !this.tooltip || !this.buttonRef.current) {
       return;
     }
 
-    this.tooltip.updateContainerBounds(this.buttonRef, {
+    this.tooltip.updateContainerBounds(this.buttonRef.current, {
       position: this.props.menuPosition,
       y: this.props.menuOffset,
     });
@@ -201,8 +210,8 @@ class MenuButton extends PureComponent {
     // before the "click" event that we want to ignore.  As a result, we queue
     // up a task using setTimeout() to run after the "click" event.
     this.state.win.setTimeout(() => {
-      if (this.buttonRef) {
-        this.buttonRef.style.pointerEvents = "auto";
+      if (this.buttonRef.current) {
+        this.buttonRef.current.style.pointerEvents = "auto";
       }
     }, 0);
 
@@ -212,10 +221,10 @@ class MenuButton extends PureComponent {
   }
 
   async onClick(e) {
-    if (e.target === this.buttonRef) {
+    if (e.target === this.buttonRef.current) {
       // On Mac, even after clicking the button it doesn't get focus.
       // Force focus to the button so that our keydown handlers get called.
-      this.buttonRef.focus();
+      this.buttonRef.current.focus();
 
       if (this.props.onClick) {
         this.props.onClick(e);
@@ -233,7 +242,7 @@ class MenuButton extends PureComponent {
         // the button to close the menu.
         if (!this.state.expanded &&
             !Services.prefs.getBoolPref("ui.popup.disable_autohide", false)) {
-          this.buttonRef.style.pointerEvents = "none";
+          this.buttonRef.current.style.pointerEvents = "none";
         }
         await this.toggleMenu(e.target);
         // If the menu was activated by keyboard, focus the first item.
@@ -263,7 +272,7 @@ class MenuButton extends PureComponent {
     }
 
     const isButtonFocussed =
-      this.props.doc && this.props.doc.activeElement === this.buttonRef;
+      this.props.doc && this.props.doc.activeElement === this.buttonRef.current;
 
     switch (e.key) {
       case "Escape":
@@ -291,13 +300,6 @@ class MenuButton extends PureComponent {
   }
 
   render() {
-    const menu = ReactDOM.createPortal(
-      typeof this.props.children === "function"
-        ? this.props.children()
-        : this.props.children,
-      this.tooltip.panel
-    );
-
     const buttonProps = {
       // Pass through any props set on the button, except the ones we handle
       // here.
@@ -305,7 +307,7 @@ class MenuButton extends PureComponent {
       onClick: this.onClick,
       "aria-expanded": this.state.expanded,
       "aria-haspopup": "menu",
-      ref: this.setButtonRef,
+      ref: this.buttonRef,
     };
 
     if (this.state.expanded) {
@@ -316,7 +318,18 @@ class MenuButton extends PureComponent {
       buttonProps["aria-controls"] = this.props.menuId;
     }
 
-    return button(buttonProps, menu);
+    if (this.state.isMenuInitialized) {
+      const menu = createPortal(
+        typeof this.props.children === "function"
+          ? this.props.children()
+          : this.props.children,
+        this.tooltip.panel
+      );
+
+      return button(buttonProps, menu);
+    }
+
+    return button(buttonProps);
   }
 }
 

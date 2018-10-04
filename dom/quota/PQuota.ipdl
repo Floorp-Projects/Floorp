@@ -21,6 +21,10 @@ struct InitParams
 {
 };
 
+struct InitTemporaryStorageParams
+{
+};
+
 struct InitOriginParams
 {
   PrincipalInfo principalInfo;
@@ -78,6 +82,7 @@ struct PersistParams
 union RequestParams
 {
   InitParams;
+  InitTemporaryStorageParams;
   InitOriginParams;
   ClearOriginParams;
   ClearDataParams;

@@ -71,6 +71,7 @@ exports.addWebReplayMenu = function(doc) {
   const menu = doc.createXULElement("menu");
   menu.id = "menu_webreplay";
   menu.setAttribute("label", l10n("devtoolsWebReplay.label"));
+  menu.setAttribute("hidden", "true");
 
   const popup = doc.createXULElement("menupopup");
   popup.id = "menupopup_webreplay";

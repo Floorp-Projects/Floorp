@@ -30,7 +30,6 @@ static FeatureMap sSupportedFeatures[] = {
   // TODO: not supported yet!!!
   { "camera", FeatureMap::eAll  },
   { "encrypted-media", FeatureMap::eAll  },
-  // TODO: not supported yet!!!
   { "fullscreen", FeatureMap::eAll  },
   // TODO: not supported yet!!!
   { "geolocation", FeatureMap::eAll  },
