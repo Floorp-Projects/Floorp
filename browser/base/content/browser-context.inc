@@ -267,7 +267,7 @@
             accesskey="&sendPageToDevice.accesskey;"
             hidden="true">
         <menupopup id="context-sendpagetodevice-popup"
-                   onpopupshowing="(() => { gSync.populateSendTabToDevicesMenu(event.target, gBrowser.currentURI.spec, gBrowser.contentTitle, gBrowser.selectedTab.multiselected); })()"/>
+                   onpopupshowing="(() => { gSync.populateSendTabToDevicesMenu(event.target, gBrowser.currentURI.spec, gBrowser.contentTitle); })()"/>
       </menu>
       <menuseparator id="context-sep-viewbgimage"/>
       <menuitem id="context-viewbgimage"
