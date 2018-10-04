@@ -14,7 +14,7 @@ function testChangeParam(key) {
 
 function testLargeParamValue(key) {
     let prev = gcparam(key);
-    const value = 1000000;
+    const value = 1024;
     gcparam(key, value);
     assertEq(gcparam(key), value);
     gcparam(key, prev);
