@@ -52,6 +52,7 @@
 #include "nsDOMString.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/AnimatableBinding.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/HTMLDivElement.h"
 #include "mozilla/dom/HTMLSpanElement.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
@@ -3590,6 +3591,13 @@ Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aRv)
 {
   auto request = FullscreenRequest::Create(this, aCallerType, aRv);
   RefPtr<Promise> promise = request->GetPromise();
+
+  if (!FeaturePolicyUtils::IsFeatureAllowed(OwnerDoc(),
+                                            NS_LITERAL_STRING("fullscreen"))) {
+    request->Reject("FullscreenDeniedFeaturePolicy");
+    return promise.forget();
+  }
+
   // Only grant fullscreen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
   // This stops the fullscreen from being abused similar to the popups of old,

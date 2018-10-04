@@ -179,8 +179,6 @@ function CssRuleView(inspector, document, store, pageStyle) {
 
   this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
 
-  this._showEmpty();
-
   // Add the tooltips and highlighters to the view
   this.tooltips = new TooltipsOverlay(this);
 }

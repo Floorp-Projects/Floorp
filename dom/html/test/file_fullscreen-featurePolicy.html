@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for FeaturePolicy + fullscreen</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+  <style>
+  body {
+    background-color: black;
+  }
+  </style>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function ok(condition, msg) {
+  opener.ok(condition, "[featurePolicy] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[featurePolicy] " + msg);
+}
+
+const INNER_FILE = "file_fullscreen-featurePolicy-inner.html";
+
+function setupForInnerTest(targetName, callback) {
+  window.testTargetName = targetName;
+  window.continueTest = event => {
+    delete window.testTargetName;
+    delete window.continueTest;
+    callback(event);
+  };
+}
+
+function begin() {
+  nextTest();
+}
+
+var tests = [
+  [ "fullscreen 'none'", "fullscreenerror"],
+  [ "fullscreen", "fullscreenchange"],
+  [ "fullscreen 'src'", "fullscreenchange"],
+  [ "fullscreen 'self'", "fullscreenchange"],
+  [ "fullscreen *", "fullscreenchange"],
+  [ "fullscreen http://random.net", "fullscreenerror"],
+  [ null, "fullscreenchange"],
+];
+
+function nextTest() {
+  if (tests.length == 0) {
+    opener.nextTest();
+    return;
+  }
+
+  let test = tests.shift();
+
+  // Create an iframe with an allowfullscreen and with an allow attribute.
+  // The request should be denied or allowed, based on the current test.
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("allowfullscreen", "true");
+  if (test[0]) {
+    iframe.setAttribute("allow", test[0]);
+  }
+  iframe.src = INNER_FILE;
+  setupForInnerTest("an iframe+allowfullscreen+allow: " + test[0], event => {
+    is(event, test[1], "Expected a " + test[1] + " event");
+    document.body.removeChild(iframe);
+    SimpleTest.executeSoon(nextTest);
+  });
+  document.body.appendChild(iframe);
+}
+
+</script>
+</body>
+</html>

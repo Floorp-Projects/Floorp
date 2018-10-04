@@ -232,16 +232,6 @@ Inspector.prototype = {
     }
   },
 
-  // Added in 53.
-  get canGetCssPath() {
-    return this._target.client.traits.getCssPath;
-  },
-
-  // Added in 56.
-  get canGetXPath() {
-    return this._target.client.traits.getXPath;
-  },
-
   get notificationBox() {
     if (!this._notificationBox) {
       this._notificationBox = this.toolbox.getNotificationBox();
@@ -1762,7 +1752,6 @@ Inspector.prototype = {
       accesskey:
         INSPECTOR_L10N.getStr("inspectorCopyCSSPath.accesskey"),
       disabled: !isSelectionElement,
-      hidden: !this.canGetCssPath,
       click: () => this.copyCssPath(),
     }));
     copySubmenu.append(new MenuItem({
@@ -1771,7 +1760,6 @@ Inspector.prototype = {
       accesskey:
         INSPECTOR_L10N.getStr("inspectorCopyXPath.accesskey"),
       disabled: !isSelectionElement,
-      hidden: !this.canGetXPath,
       click: () => this.copyXPath(),
     }));
     copySubmenu.append(new MenuItem({

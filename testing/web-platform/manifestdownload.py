@@ -55,6 +55,8 @@ def should_download(logger, manifest_paths, rebuild_time=timedelta(days=5)):
 
 
 def taskcluster_url(logger, commits):
+    artifact_path = '/artifacts/public/manifests.tar.gz'
+
     cset_url = ('https://hg.mozilla.org/mozilla-central/json-pushes?'
                 'changeset={changeset}&version=2&tipsonly=1')
 
@@ -93,20 +95,20 @@ def taskcluster_url(logger, commits):
             return False
 
         if req.status_code == 200:
-            return tc_url.format(changeset=cset)
+            return tc_url.format(changeset=cset) + artifact_path
 
     logger.info("Can't find a commit-specific manifest so just using the most"
                 "recent one")
 
     return ("https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central."
-            "latest.source.manifest-upload")
+            "latest.source.manifest-upload" +
+            artifact_path)
 
 
-def download_manifest(logger, wpt_dir, commits_func, url_func, force=False):
-    manifest_path = os.path.join(wpt_dir, "meta", "MANIFEST.json")
-    mozilla_manifest_path = os.path.join(wpt_dir, "mozilla", "meta", "MANIFEST.json")
+def download_manifest(logger, test_paths, commits_func, url_func, force=False):
+    manifest_paths = [item["manifest_path"] for item in test_paths.itervalues()]
 
-    if not force and not should_download(logger, [manifest_path, mozilla_manifest_path]):
+    if not force and not should_download(logger, manifest_paths):
         return True
 
     commits = commits_func()
@@ -117,7 +119,6 @@ def download_manifest(logger, wpt_dir, commits_func, url_func, force=False):
     if not url:
         logger.warning("No generated manifest found")
         return False
-    url+= "/artifacts/public/manifests.tar.gz"
 
     logger.info("Downloading manifest from %s" % url)
     try:
@@ -132,107 +133,31 @@ def download_manifest(logger, wpt_dir, commits_func, url_func, force=False):
         return False
 
     tar = tarfile.open(mode="r:gz", fileobj=StringIO(req.content))
-    try:
-        tar.extractall(path=wpt_dir)
-    except IOError:
-        logger.warning("Failed to decompress downloaded file")
-        return False
+    for paths in test_paths.itervalues():
+        try:
+            member = tar.getmember(paths["manifest_rel_path"].replace(os.path.sep, "/"))
+        except KeyError:
+            logger.warning("Failed to find downloaded manifest %s" % paths["manifest_rel_path"])
+        else:
+            try:
+                logger.debug("Unpacking %s to %s" % (member.name, paths["manifest_path"]))
+                src = tar.extractfile(member)
+                with open(paths["manifest_path"], "w") as dest:
+                    dest.write(src.read())
+                src.close()
+            except IOError:
+                import traceback
+                logger.warning("Failed to decompress %s:\n%s" % (paths["manifest_rel_path"], traceback.format_exc()))
+                return False
 
-    os.utime(manifest_path, None)
-    os.utime(mozilla_manifest_path, None)
-
-    logger.info("Manifest downloaded")
-    return True
-
-
-def create_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-p", "--path", type=abs_path, help="Path to manifest file.")
-    parser.add_argument(
-        "--force", action="store_true",
-        help="Always download, even if the existing manifest is recent")
-    parser.add_argument(
-        "--no-manifest-update", action="store_false", dest="manifest_update",
-        default=True, help="Don't update the downloaded manifest")
-    return parser
-
-
-def download_from_taskcluster(logger, wpt_dir, repo_root, force=False):
-    return download_manifest(logger, wpt_dir, lambda: get_commits(logger, repo_root),
-                             taskcluster_url, force)
-
-
-def generate_config(obj_base_path):
-    """Generate the local wptrunner.ini file to use locally"""
-    import ConfigParser
-    here = os.path.split(os.path.abspath(__file__))[0]
-    config_path = os.path.join(here, 'wptrunner.ini')
-
-    if not os.path.exists(obj_base_path):
-        os.makedirs(obj_base_path)
-
-    path = os.path.join(obj_base_path, 'wptrunner.local.ini')
-
-    if os.path.exists(path):
-        return True
-
-    parser = ConfigParser.SafeConfigParser()
-    success = parser.read(config_path)
-    assert config_path in success, success
-
-    for name, path_prefix in [("upstream", ""),
-                              ("mozilla", "mozilla")]:
-        obj_path = os.path.join(obj_base_path, path_prefix)
-        src_path = os.path.join(here, path_prefix)
-        parser.set('manifest:%s' % name, 'manifest',
-                   os.path.join(obj_path, 'meta', 'MANIFEST.json'))
-
-        for key, dir_path in [("tests", "tests"), ("metadata", "meta")]:
-            parser.set("manifest:%s" % name, key, os.path.join(src_path, dir_path))
-
-    parser.set('paths', 'prefs', os.path.abspath(os.path.join(here, "..", 'profiles')))
-
-    with open(path, 'wb') as config_file:
-        parser.write(config_file)
+        os.utime(paths["manifest_path"], None)
 
     return True
 
 
-def update_manifest(logger, config_dir, manifest_update=True):
-    if manifest_update:
-        logger.info("Updating manifests")
-        import manifestupdate
-        here = os.path.split(os.path.abspath(__file__))[0]
-        return manifestupdate.update(logger, here, config_dir=config_dir) is 0
-    else:
-        logger.info("Skipping manifest update")
-        return True
-
-def check_dirs(logger, success, wpt_dir):
-    if success:
-        return
-    else:
-        logger.info("Could not download manifests.")
-        logger.info("Generating from scratch instead.")
-        try:
-            os.mkdir(os.path.join(wpt_dir, "meta"))
-        except OSError:
-            pass
-        try:
-            os.makedirs(os.path.join(wpt_dir, "mozilla", "meta"))
-        except OSError:
-            pass
-
-
-def run(wpt_dir, repo_root, logger=None, force=False, manifest_update=True):
-    if not logger:
-        logger = logging.getLogger(__name__)
-        handler = logging.FileHandler(os.devnull)
-        logger.addHandler(handler)
-
-    success = download_from_taskcluster(logger, wpt_dir, repo_root, force)
-    check_dirs(logger, success, wpt_dir)
-    generate_config(wpt_dir)
-    success |= update_manifest(logger, wpt_dir, manifest_update)
-    return 0 if success else 1
+def download_from_taskcluster(logger, repo_root, test_paths, force=False):
+    return download_manifest(logger,
+                             test_paths,
+                             lambda: get_commits(logger, repo_root),
+                             taskcluster_url,
+                             force)

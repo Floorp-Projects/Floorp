@@ -658,9 +658,10 @@ ChildProcessInfo::WaitUntil(const std::function<bool()>& aCallback)
             // Try to get the child to crash, so that we can get a minidump.
             // Sending the message will reset mLastMessageTime so we get to
             // wait another HangSeconds before hitting the restart case below.
+            // Use SendMessageRaw to avoid problems if we are recovering.
             CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RecordReplayHang,
                                                true);
-            SendMessage(TerminateMessage());
+            SendMessageRaw(TerminateMessage());
             sentTerminateMessage = true;
           } else {
             // The child is still non-responsive after sending the terminate

@@ -3449,6 +3449,7 @@ tls13_CopyKeyShareEntry(TLS13KeyShareEntry *o)
 
     if (SECSuccess != SECITEM_CopyItem(NULL, &n->key_exchange, &o->key_exchange)) {
         PORT_Free(n);
+        return NULL;
     }
     n->group = o->group;
     return n;
