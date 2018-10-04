@@ -127,6 +127,10 @@ add_task(async function test_theme_updates() {
      "Theme 1 has been updated to an XPI packaged theme");
   equal(theme1.userDisabled, true, "Theme 1 is not active");
 
+  Assert.deepEqual(theme1.installTelemetryInfo, {
+    source: "lwt-converted-theme",
+  }, "Got the expected source on the converted webextension theme");
+
   // Update the current LWT to an XPI
   updates["/2"] = {
     converted_theme: {
@@ -145,6 +149,10 @@ add_task(async function test_theme_updates() {
   ok(!theme2.id.endsWith("@personas.mozilla.org"),
      "Theme 2 has been updated to an XPI packaged theme");
   equal(theme2.userDisabled, false, "Theme 2 is active");
+
+  Assert.deepEqual(theme2.installTelemetryInfo, {
+    source: "lwt-converted-theme",
+  }, "Got the expected source on the converted webextension theme");
 
   // Serve an update with a bad hash, the LWT should remain in place.
   updates["/3"] = {
