@@ -77,6 +77,7 @@ a {
   border-inline-start: solid 3px transparent;
   font-size: var(--console-output-font-size);
   line-height: var(--console-output-line-height);
+  position: relative;
 }
 
 /*
@@ -104,6 +105,22 @@ a {
 .message.warn {
   color: var(--warning-color);
   background-color: var(--warning-background-color);
+}
+
+.message.paused::before {
+  background: #d8461f;
+  opacity: 0.6;
+  width: 100vw;
+  height: 1px;
+  bottom: 0px;
+  left: -3px;
+  display: block;
+  content: "";
+  position: absolute;
+}
+
+.message.paused ~ .message {
+  opacity: 0.5;
 }
 
 .message.startGroup,
@@ -190,7 +207,7 @@ a {
 }
 
 
-span.icon[title="Jump"] {
+.message > span.icon[title="Jump"] {
   background-image:var(--theme-console-jump-image);
   background-size: 14px 14px;
   cursor: pointer;

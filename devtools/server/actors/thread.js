@@ -1479,6 +1479,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       packet.frame = this._createFrameActor(frame).form();
     }
 
+    if (this.dbg.replaying) {
+      const message = this.dbg.getNewConsoleMessage();
+      if (message) {
+        packet.executionPoint = message.executionPoint;
+      }
+    }
+
     if (poppedFrames) {
       packet.poppedFrames = poppedFrames;
     }
