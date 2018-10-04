@@ -1778,13 +1778,17 @@ PeerConnectionWrapper.prototype = {
    *        The stats to check from this PeerConnectionWrapper
    */
   checkStats : function(stats, twoMachines) {
+    // Allow for clock drift observed on Windows 7. (Bug 979649)
+    const isWin7 = navigator.userAgent.includes("Windows NT 6.1");
+    const clockDriftAllowance = isWin7 ? 1000 : 0;
+
     // Use spec way of enumerating stats
     var counters = {};
     for (let [key, res] of stats) {
       info("Checking stats for " + key + " : " + res);
       // validate stats
       ok(res.id == key, "Coherent stats id");
-      var nowish = Date.now();
+      var nowish = Date.now() + clockDriftAllowance;
       var minimum = this.whenCreated;
       if (false) { // Bug 1325430 - timestamps aren't working properly in update 49
       // if (!twoMachines) {
