@@ -256,20 +256,12 @@ impl SpatialNode {
                     .pre_mul(&source_transform.into())
                     .pre_mul(&info.source_perspective);
 
-                // In order to compute a transformation to world coordinates, we need to apply the
-                // following transforms in order:
-                //   state.parent_accumulated_scroll_offset
-                //   info.source_perspective
-                //   info.source_transform
-                //   info.origin_in_parent_reference_frame
-                //   state.parent_reference_frame_transform
-                // The first one incorporates the scrolling effect of any scrollframes/sticky nodes
-                // between this reference frame and the parent reference frame. The middle three
-                // transforms (which are combined into info.resolved_transform) do the conversion
-                // into the parent reference frame's coordinate space, and then the last one
-                // applies the parent reference frame's transform to the world space.
+                // The transformation for this viewport in world coordinates is the transformation for
+                // our parent reference frame, plus any accumulated scrolling offsets from nodes
+                // between our reference frame and this node. Finally, we also include
+                // whatever local transformation this reference frame provides.
                 let relative_transform = info.resolved_transform
-                    .pre_translate(&state.parent_accumulated_scroll_offset)
+                    .post_translate(state.parent_accumulated_scroll_offset)
                     .to_transform()
                     .with_destination::<LayoutPixel>();
                 self.world_viewport_transform =

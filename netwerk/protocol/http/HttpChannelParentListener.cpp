@@ -46,6 +46,11 @@ HttpChannelParentListener::HttpChannelParentListener(HttpChannelParent* aInitial
   }
 }
 
+HttpChannelParentListener::~HttpChannelParentListener()
+{
+  LOG(("HttpChannelParentListener::~HttpChannelParentListener %p", this));
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelParentListener::nsISupports
 //-----------------------------------------------------------------------------

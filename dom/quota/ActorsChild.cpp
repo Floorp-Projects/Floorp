@@ -316,6 +316,7 @@ QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
       break;
 
     case RequestResponse::TInitResponse:
+    case RequestResponse::TInitTemporaryStorageResponse:
     case RequestResponse::TClearOriginResponse:
     case RequestResponse::TClearDataResponse:
     case RequestResponse::TClearAllResponse:

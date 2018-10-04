@@ -1229,6 +1229,27 @@ private:
   GetResponse(RequestResponse& aResponse) override;
 };
 
+class InitTemporaryStorageOp final
+  : public QuotaRequestBase
+{
+public:
+  InitTemporaryStorageOp()
+    : QuotaRequestBase(/* aExclusive */ false)
+  {
+    AssertIsOnOwningThread();
+  }
+
+private:
+  ~InitTemporaryStorageOp()
+  { }
+
+  nsresult
+  DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void
+  GetResponse(RequestResponse& aResponse) override;
+};
+
 class InitOriginOp final
   : public QuotaRequestBase
 {
@@ -6765,6 +6786,10 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
       actor = new InitOp();
       break;
 
+    case RequestParams::TInitTemporaryStorageParams:
+      actor = new InitTemporaryStorageOp();
+      break;
+
     case RequestParams::TInitOriginParams:
       actor = new InitOriginOp(aParams);
       break;
@@ -7405,6 +7430,31 @@ InitOp::GetResponse(RequestResponse& aResponse)
   AssertIsOnOwningThread();
 
   aResponse = InitResponse();
+}
+
+nsresult
+InitTemporaryStorageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
+{
+  AssertIsOnIOThread();
+
+  AUTO_PROFILER_LABEL("InitTemporaryStorageOp::DoDirectoryWork", OTHER);
+
+  aQuotaManager->AssertStorageIsInitialized();
+
+  nsresult rv = aQuotaManager->EnsureTemporaryStorageIsInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+void
+InitTemporaryStorageOp::GetResponse(RequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+
+  aResponse = InitTemporaryStorageResponse();
 }
 
 InitOriginOp::InitOriginOp(const RequestParams& aParams)

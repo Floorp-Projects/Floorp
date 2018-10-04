@@ -459,6 +459,31 @@ QuotaManagerService::Init(nsIQuotaRequest** _retval)
 }
 
 NS_IMETHODIMP
+QuotaManagerService::InitTemporaryStorage(nsIQuotaRequest** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+  if (NS_WARN_IF(!gTestingMode)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<Request> request = new Request();
+
+  InitTemporaryStorageParams params;
+
+  nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
+
+  nsresult rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 QuotaManagerService::InitStoragesForPrincipal(
                                              nsIPrincipal* aPrincipal,
                                              const nsACString& aPersistenceType,

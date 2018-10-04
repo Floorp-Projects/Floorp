@@ -128,10 +128,6 @@ RootActor.prototype = {
     // Whether the server can return wasm binary source
     wasmBinarySource: true,
     bulk: true,
-    // Whether the dom node actor implements the getCssPath method. Added in 53.
-    getCssPath: true,
-    // Whether the dom node actor implements the getXPath method. Added in 56.
-    getXPath: true,
     // Whether the director scripts are supported
     directorScripts: true,
     // Whether the debugger server supports

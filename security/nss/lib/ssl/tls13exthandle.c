@@ -249,6 +249,7 @@ tls13_ClientHandleKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     }
 
     if (SSL_READER_REMAINING(&rdr)) {
+        tls13_DestroyKeyShareEntry(ks);
         PORT_SetError(SSL_ERROR_RX_MALFORMED_KEY_SHARE);
         return SECFailure;
     }
@@ -1310,6 +1311,9 @@ tls13_ServerHandleEsniXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     PRUint64 tmp;
     while (SSL_READER_REMAINING(&sniRdr)) {
         rv = sslRead_ReadNumber(&sniRdr, 1, &tmp);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
         if (tmp != 0) {
             goto loser;
         }

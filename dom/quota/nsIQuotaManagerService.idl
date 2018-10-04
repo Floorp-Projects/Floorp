@@ -25,6 +25,16 @@ interface nsIQuotaManagerService : nsISupports
   init();
 
   /**
+   * Initializes temporary storage. This can be used in tests to verify
+   * temporary storage initialization.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  initTemporaryStorage();
+
+  /**
    * Initializes storages for the given principal. This can be used in tests to
    * verify origin initialization.
    *
