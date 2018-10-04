@@ -393,7 +393,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 
     size_t len = 0;
     bool allASCII = true;
-    auto count = [&](char16_t c) -> LoopDisposition {
+    auto count = [&len, &allASCII](char16_t c) -> LoopDisposition {
         len++;
         allASCII &= (c < 0x80);
         return LoopDisposition::Continue;
@@ -420,7 +420,7 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
             ? OnUTF8Error::InsertQuestionMark
             : OnUTF8Error::InsertReplacementCharacter;
         size_t j = 0;
-        auto push = [&](char16_t c) -> LoopDisposition {
+        auto push = [dst, &j](char16_t c) -> LoopDisposition {
             dst[j++] = CharT(c);
             return LoopDisposition::Continue;
         };
@@ -462,7 +462,7 @@ JS::SmallestEncoding
 JS::FindSmallestEncoding(UTF8Chars utf8)
 {
     JS::SmallestEncoding encoding = JS::SmallestEncoding::ASCII;
-    auto onChar = [&](char16_t c) -> LoopDisposition {
+    auto onChar = [&encoding](char16_t c) -> LoopDisposition {
         if (c >= 0x80) {
             if (c < 0x100) {
                 encoding = JS::SmallestEncoding::Latin1;
