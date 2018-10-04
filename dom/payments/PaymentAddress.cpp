@@ -24,7 +24,6 @@ PaymentAddress::PaymentAddress(nsPIDOMWindowInner* aWindow,
                                const nsAString& aCountry,
                                const nsTArray<nsString>& aAddressLine,
                                const nsAString& aRegion,
-                               const nsAString& aRegionCode,
                                const nsAString& aCity,
                                const nsAString& aDependentLocality,
                                const nsAString& aPostalCode,
@@ -35,7 +34,6 @@ PaymentAddress::PaymentAddress(nsPIDOMWindowInner* aWindow,
   : mCountry(aCountry)
   , mAddressLine(aAddressLine)
   , mRegion(aRegion)
-  , mRegionCode(aRegionCode)
   , mCity(aCity)
   , mDependentLocality(aDependentLocality)
   , mPostalCode(aPostalCode)
@@ -63,12 +61,6 @@ void
 PaymentAddress::GetRegion(nsAString& aRetVal) const
 {
   aRetVal = mRegion;
-}
-
-void
-PaymentAddress::GetRegionCode(nsAString& aRetVal) const
-{
-  aRetVal = mRegionCode;
 }
 
 void

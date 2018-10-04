@@ -20,17 +20,16 @@ const addressLine = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray
 const address = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
 address.data = "Easton Ave";
 addressLine.appendElement(address);
-billingAddress.init("USA",               // country
+billingAddress.init("USA",              // country
                      addressLine,        // address line
                      "CA",               // region
-                     "CA",               // region code
                      "San Bruno",        // city
                      "",                 // dependent locality
                      "94066",            // postal code
                      "123456",           // sorting code
                      "",                 // organization
                      "Bill A. Pacheco",  // recipient
-                     "+14344413879");    // phone
+                     "+14344413879"); // phone
 
 function acceptPayment(requestId) {
   const basiccardResponseData = Cc["@mozilla.org/dom/payments/basiccard-response-data;1"].

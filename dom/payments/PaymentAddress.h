@@ -24,7 +24,6 @@ public:
                  const nsAString& aCountry,
                  const nsTArray<nsString>& aAddressLine,
                  const nsAString& aRegion,
-                 const nsAString& aRegionCode,
                  const nsAString& aCity,
                  const nsAString& aDependentLocality,
                  const nsAString& aPostalCode,
@@ -48,8 +47,6 @@ public:
 
   void GetRegion(nsAString& aRetVal) const;
 
-  void GetRegionCode(nsAString& aRetVal) const;
-
   void GetCity(nsAString& aRetVal) const;
 
   void GetDependentLocality(nsAString& aRetVal) const;
@@ -70,7 +67,6 @@ private:
   nsString mCountry;
   nsTArray<nsString> mAddressLine;
   nsString mRegion;
-  nsString mRegionCode;
   nsString mCity;
   nsString mDependentLocality;
   nsString mPostalCode;
