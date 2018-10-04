@@ -8736,7 +8736,8 @@ class LAsmJSLoadHeap : public LInstructionHelper<1, 3, 0>
 {
   public:
     LIR_HEADER(AsmJSLoadHeap);
-    explicit LAsmJSLoadHeap(const LAllocation& ptr, const LAllocation& boundsCheckLimit = LAllocation(),
+    explicit LAsmJSLoadHeap(const LAllocation& ptr,
+                            const LAllocation& boundsCheckLimit,
                             const LAllocation& memoryBase = LAllocation())
       : LInstructionHelper(classOpcode)
     {
@@ -8762,8 +8763,9 @@ class LAsmJSStoreHeap : public LInstructionHelper<0, 4, 0>
 {
   public:
     LIR_HEADER(AsmJSStoreHeap);
-    LAsmJSStoreHeap(const LAllocation& ptr, const LAllocation& value,
-                    const LAllocation& boundsCheckLimit = LAllocation(),
+    LAsmJSStoreHeap(const LAllocation& ptr,
+                    const LAllocation& value,
+                    const LAllocation& boundsCheckLimit,
                     const LAllocation& memoryBase = LAllocation())
       : LInstructionHelper(classOpcode)
     {

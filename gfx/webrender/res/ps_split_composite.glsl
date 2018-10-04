@@ -14,11 +14,11 @@ struct SplitGeometry {
 };
 
 SplitGeometry fetch_split_geometry(int address) {
-    ivec2 uv = get_resource_cache_uv(address);
+    ivec2 uv = get_gpu_cache_uv(address);
 
-    vec4 data0 = TEXEL_FETCH(sResourceCache, uv, 0, ivec2(0, 0));
-    vec4 data1 = TEXEL_FETCH(sResourceCache, uv, 0, ivec2(1, 0));
-    vec4 data2 = TEXEL_FETCH(sResourceCache, uv, 0, ivec2(2, 0));
+    vec4 data0 = TEXEL_FETCH(sGpuCache, uv, 0, ivec2(0, 0));
+    vec4 data1 = TEXEL_FETCH(sGpuCache, uv, 0, ivec2(1, 0));
+    vec4 data2 = TEXEL_FETCH(sGpuCache, uv, 0, ivec2(2, 0));
 
     SplitGeometry geo;
     geo.local = vec2[4](
@@ -86,7 +86,7 @@ void main(void) {
 
     gl_Position = uTransform * final_pos;
 
-    vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
+    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 
@@ -115,6 +115,6 @@ void main(void) {
 void main(void) {
     float alpha = do_clip();
     vec2 uv = clamp(vUv.xy, vUvSampleBounds.xy, vUvSampleBounds.zw);
-    oFragColor = alpha * textureLod(sCacheRGBA8, vec3(uv, vUv.z), 0.0);
+    oFragColor = alpha * textureLod(sPrevPassColor, vec3(uv, vUv.z), 0.0);
 }
 #endif

@@ -39,6 +39,13 @@ The available levels are, in descending order of severity, `Trace`,
 is treated case-insensitively.
 
 
+`marionette.log.truncate`
+-------------------------
+
+Certain log messages that are known to be long, such as wire protocol
+dumps, are truncated.  This preference causes them not to be truncated.
+
+
 `marionette.port`
 -----------------
 

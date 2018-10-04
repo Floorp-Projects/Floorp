@@ -44,6 +44,7 @@
 #include "js/AllocPolicy.h"
 #include "vm/MutexIDs.h"
 #include "vm/PosixNSPR.h"
+#include "wasm/WasmSignalHandlers.h"
 
 namespace vixl {
 
@@ -696,13 +697,13 @@ class Redirection;
 
 class Simulator : public DecoderVisitor {
  public:
-  explicit Simulator(JSContext* cx, Decoder* decoder, FILE* stream = stdout);
+  explicit Simulator(Decoder* decoder, FILE* stream = stdout);
   ~Simulator();
 
   // Moz changes.
   void init(Decoder* decoder, FILE* stream);
   static Simulator* Current();
-  static Simulator* Create(JSContext* cx);
+  static Simulator* Create();
   static void Destroy(Simulator* sim);
   uintptr_t stackLimit() const;
   uintptr_t* addressOfStackLimit();
@@ -746,8 +747,21 @@ class Simulator : public DecoderVisitor {
     pc_modified_ = true;
   }
 
-  bool handle_wasm_ill_fault();
-  bool handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes);
+  // Handle any wasm faults, returning true if the fault was handled.
+  // This method is rather hot so inline the normal (no-wasm) case.
+  bool MOZ_ALWAYS_INLINE handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes) {
+    if (MOZ_LIKELY(!js::wasm::CodeExists)) {
+      return false;
+    }
+
+    uint8_t* newPC;
+    if (!js::wasm::MemoryAccessTraps(registerState(), (uint8_t*)addr, numBytes, &newPC)) {
+      return false;
+    }
+
+    set_pc((Instruction*)newPC);
+    return true;
+  }
 
   void increment_pc() {
     if (!pc_modified_) {
@@ -2517,8 +2531,6 @@ class Simulator : public DecoderVisitor {
   void DoPrintf(const Instruction* instr);
 
   // Processor state ---------------------------------------
-
-  JSContext* const cx_;
 
   // Simulated monitors for exclusive access instructions.
   SimExclusiveLocalMonitor local_monitor_;

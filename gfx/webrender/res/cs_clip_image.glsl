@@ -17,7 +17,7 @@ struct ImageMaskData {
 };
 
 ImageMaskData fetch_mask_data(ivec2 address) {
-    vec4 data = fetch_from_resource_cache_1_direct(address);
+    vec4 data = fetch_from_gpu_cache_1_direct(address);
     RectWithSize local_rect = RectWithSize(data.xy, data.zw);
     ImageMaskData mask_data = ImageMaskData(local_rect);
     return mask_data;

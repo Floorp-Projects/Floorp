@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -65,7 +66,13 @@ import android.view.inputmethod.EditorInfo;
     // Filters to implement Editable's filtering functionality
     private InputFilter[] mFilters;
 
-    /* package */ final GeckoSession mSession;
+    /**
+     * We need a WeakReference here to avoid unnecessary
+     * retention of the GeckoSession. Passing objects around
+     * via JNI seems to confuse the GC into thinking we have
+     * a native GC root.
+     */
+    /* package */ final WeakReference<GeckoSession> mSession;
     private final AsyncText mText;
     private final Editable mProxy;
     private final ConcurrentLinkedQueue<Action> mActions;
@@ -640,7 +647,7 @@ import android.view.inputmethod.EditorInfo;
             ThreadUtils.assertOnUiThread();
         }
 
-        mSession = session;
+        mSession = new WeakReference<>(session);
         mText = new AsyncText();
         mActions = new ConcurrentLinkedQueue<Action>();
 
@@ -1371,7 +1378,11 @@ import android.view.inputmethod.EditorInfo;
                 if (toggleSoftInput) {
                     mSoftInputReentrancyGuard.incrementAndGet();
                 }
-                mSession.getTextInput().getDelegate().restartInput(mSession, reason);
+
+                final GeckoSession session = mSession.get();
+                if (session != null) {
+                    session.getTextInput().getDelegate().restartInput(session, reason);
+                }
 
                 if (!toggleSoftInput) {
                     return;
@@ -1511,7 +1522,12 @@ import android.view.inputmethod.EditorInfo;
                 // selection changing when highlighting. However in this case we don't want to
                 // show/hide the keyboard because the find box has the focus and is taking input from
                 // the keyboard.
-                final View view = mSession.getTextInput().getView();
+                final GeckoSession session = mSession.get();
+                if (session == null) {
+                    return;
+                }
+
+                final View view = session.getTextInput().getView();
                 final boolean isFocused = (view == null) || view.hasFocus();
 
                 final boolean isUserAction = ((flags &
@@ -1528,14 +1544,14 @@ import android.view.inputmethod.EditorInfo;
                     if (DEBUG) {
                         Log.d(LOGTAG, "hideSoftInput");
                     }
-                    mSession.getTextInput().getDelegate().hideSoftInput(mSession);
+                    session.getTextInput().getDelegate().hideSoftInput(session);
                     return;
                 }
                 if (DEBUG) {
                     Log.d(LOGTAG, "showSoftInput");
                 }
-                mSession.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
-                mSession.getTextInput().getDelegate().showSoftInput(mSession);
+                session.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
+                session.getTextInput().getDelegate().showSoftInput(session);
             }
         });
     }

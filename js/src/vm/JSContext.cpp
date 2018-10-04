@@ -118,7 +118,7 @@ JSContext::init(ContextKind kind)
         }
 
 #ifdef JS_SIMULATOR
-        simulator_ = jit::Simulator::Create(this);
+        simulator_ = jit::Simulator::Create();
         if (!simulator_) {
             return false;
         }

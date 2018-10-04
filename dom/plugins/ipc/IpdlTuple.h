@@ -7,6 +7,56 @@
 namespace mozilla {
 namespace plugins {
 
+// The stuff in this "internal" namespace used to be inside the IpdlTuple
+// class, but that prevented the DECLARE_USE_COPY_CONSTRUCTORS that is
+// needed on the IpdlTupleElement struct. Without this, nsTArray can end
+// up using a move constructor on this struct, which is not memmovable on
+// Windows.
+namespace internal {
+
+struct InvalidType {};
+
+// Like Variant but with a default constructor.
+template <typename ... Types>
+struct MaybeVariant
+{
+public:
+  MaybeVariant() : mValue(InvalidType()) {}
+  MaybeVariant(MaybeVariant&& o) : mValue(std::move(o.mValue)) {}
+
+  template <typename Param> void Set(const Param& aParam)
+  {
+    mValue = mozilla::AsVariant(aParam);
+  }
+
+  typedef mozilla::Variant<InvalidType, Types...> MaybeVariantType;
+  MaybeVariantType& GetVariant() { return mValue; }
+  const MaybeVariantType& GetVariant() const { return mValue; }
+
+private:
+  MaybeVariantType mValue;
+};
+
+#if defined(XP_WIN)
+typedef MaybeVariant<int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,
+                     int64_t,uint64_t,nsCString,bool,OpenFileNameIPC,
+                     OpenFileNameRetIPC,NativeWindowHandle,
+                     IPCSchannelCred,IPCInternetBuffers,StringArray,
+                     IPCPrintDlg> IpdlTupleElement;
+#else
+typedef MaybeVariant<int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,
+                     int64_t,uint64_t,nsCString,bool> IpdlTupleElement;
+#endif // defined(XP_WIN)
+
+} // namespace internal
+} // namespace plugins
+} // namespace mozilla
+
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::plugins::internal::IpdlTupleElement)
+
+namespace mozilla {
+namespace plugins {
+
 /**
  * IpdlTuple is used by automatic function brokering to pass parameter
  * lists for brokered functions.  It supports a limited set of types
@@ -41,39 +91,8 @@ public:
   }
 
 private:
-  struct InvalidType {};
-
-  // Like Variant but with a default constructor.
-  template <typename ... Types>
-  struct MaybeVariant
-  {
-  public:
-    MaybeVariant() : mValue(InvalidType()) {}
-    MaybeVariant(MaybeVariant&& o) : mValue(std::move(o.mValue)) {}
-
-    template <typename Param> void Set(const Param& aParam)
-    {
-      mValue = mozilla::AsVariant(aParam);
-    }
-
-    typedef mozilla::Variant<InvalidType, Types...> MaybeVariantType;
-    MaybeVariantType& GetVariant() { return mValue; }
-    const MaybeVariantType& GetVariant() const { return mValue; }
-
-  private:
-    MaybeVariantType mValue;
-  };
-
-#if defined(XP_WIN)
-  typedef MaybeVariant<int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,
-                       int64_t,uint64_t,nsCString,bool,OpenFileNameIPC,
-                       OpenFileNameRetIPC,NativeWindowHandle,
-                       IPCSchannelCred,IPCInternetBuffers,StringArray,
-                       IPCPrintDlg> IpdlTupleElement;
-#else
-  typedef MaybeVariant<int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,
-                       int64_t,uint64_t,nsCString,bool> IpdlTupleElement;
-#endif // defined(XP_WIN)
+  typedef mozilla::plugins::internal::InvalidType InvalidType;
+  typedef mozilla::plugins::internal::IpdlTupleElement IpdlTupleElement;
 
   friend struct IPC::ParamTraits<IpdlTuple>;
   friend struct IPC::ParamTraits<IpdlTuple::IpdlTupleElement>;
@@ -82,11 +101,13 @@ private:
   nsTArray<IpdlTupleElement> mTupleElements;
 };
 
+namespace internal {
 template <> template<>
-inline void IpdlTuple::IpdlTupleElement::Set<nsDependentCSubstring>(const nsDependentCSubstring& aParam)
+inline void IpdlTupleElement::Set<nsDependentCSubstring>(const nsDependentCSubstring& aParam)
 {
   mValue = MaybeVariantType(mozilla::VariantType<nsCString>(), aParam);
 }
+} // namespace internal
 
 } // namespace plugins
 } // namespace mozilla

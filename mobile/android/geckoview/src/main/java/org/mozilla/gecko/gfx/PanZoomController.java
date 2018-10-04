@@ -205,6 +205,11 @@ public class PanZoomController extends JNIObject {
         return handleMotionEvent(event);
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        setAttached(false);
+    }
+
     /**
      * Process a non-touch motion event through the pan-zoom controller. Currently, hover
      * and scroll events are supported. Pointer coordinates should be relative to the

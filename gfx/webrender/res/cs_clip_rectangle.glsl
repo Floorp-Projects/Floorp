@@ -18,7 +18,7 @@ struct ClipRect {
 };
 
 ClipRect fetch_clip_rect(ivec2 address) {
-    vec4 data[2] = fetch_from_resource_cache_2_direct(address);
+    vec4 data[2] = fetch_from_gpu_cache_2_direct(address);
     ClipRect rect = ClipRect(RectWithSize(data[0].xy, data[0].zw), data[1]);
     return rect;
 }
@@ -32,7 +32,7 @@ struct ClipCorner {
 // miscompilations with a macOS 10.12 Intel driver.
 ClipCorner fetch_clip_corner(ivec2 address, float index) {
     address += ivec2(2 + 2 * int(index), 0);
-    vec4 data[2] = fetch_from_resource_cache_2_direct(address);
+    vec4 data[2] = fetch_from_gpu_cache_2_direct(address);
     ClipCorner corner = ClipCorner(RectWithSize(data[0].xy, data[0].zw), data[1]);
     return corner;
 }
