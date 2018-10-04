@@ -18,10 +18,11 @@ function SubDialog({template, parentElement, id}) {
   this._id = id;
 
   this._overlay = template.cloneNode(true);
-  this._frame = this._overlay.querySelector(".dialogFrame");
   this._box = this._overlay.querySelector(".dialogBox");
-  this._closeButton = this._overlay.querySelector(".dialogClose");
+  this._titleBar = this._overlay.querySelector(".dialogTitleBar");
   this._titleElement = this._overlay.querySelector(".dialogTitle");
+  this._closeButton = this._overlay.querySelector(".dialogClose");
+  this._frame = this._overlay.querySelector(".dialogFrame");
 
   this._overlay.id = `dialogOverlay-${id}`;
   this._frame.setAttribute("name", `dialogFrame-${id}`);
@@ -281,16 +282,14 @@ SubDialog.prototype = {
     // Do this on load to wait for the CSS to load and apply before calculating the size.
     let docEl = this._frame.contentDocument.documentElement;
 
-    let groupBoxTitle = document.getAnonymousElementByAttribute(this._box, "class", "groupbox-title");
-    let groupBoxTitleHeight = groupBoxTitle.clientHeight +
-                              parseFloat(getComputedStyle(groupBoxTitle).borderBottomWidth);
+    let titleBarHeight = this._titleBar.clientHeight +
+                         parseFloat(getComputedStyle(this._titleBar).borderBottomWidth);
 
-    let groupBoxBody = document.getAnonymousElementByAttribute(this._box, "class", "groupbox-body");
     // These are deduced from styles which we don't change, so it's safe to get them now:
-    let boxVerticalPadding = 2 * parseFloat(getComputedStyle(groupBoxBody).paddingTop);
-    let boxHorizontalPadding = 2 * parseFloat(getComputedStyle(groupBoxBody).paddingLeft);
     let boxHorizontalBorder = 2 * parseFloat(getComputedStyle(this._box).borderLeftWidth);
     let boxVerticalBorder = 2 * parseFloat(getComputedStyle(this._box).borderTopWidth);
+    let frameHorizontalMargin = 2 * parseFloat(getComputedStyle(this._frame).marginLeft);
+    let frameVerticalMargin = 2 * parseFloat(getComputedStyle(this._frame).marginTop);
 
     // The difference between the frame and box shouldn't change, either:
     let boxRect = this._box.getBoundingClientRect();
@@ -312,7 +311,7 @@ SubDialog.prototype = {
                      frameMinWidth;
     this._frame.style.width = frameWidth;
     this._box.style.minWidth = "calc(" +
-                               (boxHorizontalBorder + boxHorizontalPadding) +
+                               (boxHorizontalBorder + frameHorizontalMargin) +
                                "px + " + frameMinWidth + ")";
 
     // Now do the same but for the height. We need to do this afterwards because otherwise
@@ -352,7 +351,7 @@ SubDialog.prototype = {
 
     this._frame.style.height = frameHeight;
     this._box.style.minHeight = "calc(" +
-                                (boxVerticalBorder + groupBoxTitleHeight + boxVerticalPadding) +
+                                (boxVerticalBorder + titleBarHeight + frameVerticalMargin) +
                                 "px + " + frameMinHeight + ")";
 
     this._overlay.dispatchEvent(new CustomEvent("dialogopen", {
