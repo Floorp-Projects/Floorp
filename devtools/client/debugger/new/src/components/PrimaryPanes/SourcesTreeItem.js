@@ -4,8 +4,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
 var _react = require("devtools/client/shared/vendor/react");
 
 var _react2 = _interopRequireDefault(_react);
@@ -31,6 +29,8 @@ var _selectors = require("../../selectors/index");
 var _actions = require("../../actions/index");
 
 var _actions2 = _interopRequireDefault(_actions);
+
+var _source = require("../../utils/source");
 
 var _sourcesTree = require("../../utils/sources-tree/index");
 
@@ -220,11 +220,11 @@ class SourceTreeItem extends _react.Component {
 }
 
 function getHasMatchingGeneratedSource(state, source) {
-  if (!source || !_devtoolsSourceMap.isOriginalId(source.id)) {
+  if (!source || !(0, _source.isOriginal)(source)) {
     return false;
   }
 
-  return !!(0, _selectors.getSourceByURL)(state, source.url, false);
+  return !!(0, _selectors.getGeneratedSourceByURL)(state, source.url);
 }
 
 const mapStateToProps = (state, props) => {
