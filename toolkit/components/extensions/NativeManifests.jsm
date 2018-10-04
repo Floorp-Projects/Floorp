@@ -59,7 +59,11 @@ var NativeManifests = {
     let path = WindowsRegistry.readRegKey(REGISTRY.ROOT_KEY_CURRENT_USER,
                                           regPath, "", REGISTRY.WOW64_64);
     if (!path) {
-      path = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+      path = WindowsRegistry.readRegKey(REGISTRY.ROOT_KEY_LOCAL_MACHINE,
+                                        regPath, "", REGISTRY.WOW64_32);
+    }
+    if (!path) {
+      path = WindowsRegistry.readRegKey(REGISTRY.ROOT_KEY_LOCAL_MACHINE,
                                         regPath, "", REGISTRY.WOW64_64);
     }
     if (!path) {
