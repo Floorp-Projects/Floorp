@@ -5,18 +5,17 @@
 "use strict";
 
 const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
-const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-var ADB_LINK = Services.prefs.getCharPref("devtools.remote.adb.extensionURL");
-var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.remote.adb.extensionID");
+const ADB_LINK = Services.prefs.getCharPref("devtools.remote.adb.extensionURL");
+const ADB_ADDON_ID = Services.prefs.getCharPref("devtools.remote.adb.extensionID");
 
 // Extension ID for adb helper extension that might be installed on Firefox 63 or older.
 const OLD_ADB_ADDON_ID = "adbhelper@mozilla.org";
 
-var platform = Services.appShell.hiddenDOMWindow.navigator.platform;
-var OS = "";
+const platform = Services.appShell.hiddenDOMWindow.navigator.platform;
+let OS = "";
 if (platform.includes("Win")) {
   OS = "win32";
 } else if (platform.includes("Mac")) {
@@ -29,32 +28,10 @@ if (platform.includes("Win")) {
   }
 }
 
-var addonsListener = {};
-addonsListener.onEnabled =
-addonsListener.onDisabled =
-addonsListener.onInstalled =
-addonsListener.onUninstalled = (updatedAddon) => {
-  const addons = GetAvailableAddons();
-  addons.adb.updateInstallStatus();
-};
-AddonManager.addAddonListener(addonsListener);
-
-var AvailableAddons = null;
-var GetAvailableAddons = exports.GetAvailableAddons = function() {
-  if (!AvailableAddons) {
-    AvailableAddons = {
-      adb: new ADBAddon()
-    };
-  }
-  return AvailableAddons;
-};
-
-exports.ForgetAddonsList = function() {
-  AvailableAddons = null;
-};
-
 function ADBAddon() {
   EventEmitter.decorate(this);
+
+  this._status = "unknown";
 
   // This addon uses the string "linux" for "linux32"
   const fixedOS = OS == "linux32" ? "linux" : OS;
@@ -64,17 +41,23 @@ function ADBAddon() {
   this.uninstallOldExtension();
 
   this.updateInstallStatus();
+
+  const addonsListener = {};
+  addonsListener.onEnabled =
+  addonsListener.onDisabled =
+  addonsListener.onInstalled =
+  addonsListener.onUninstalled = () => this.updateInstallStatus();
+  AddonManager.addAddonListener(addonsListener);
 }
 
 ADBAddon.prototype = {
-  _status: "unknown",
   set status(value) {
-    Devices.adbExtensionInstalled = (value == "installed");
     if (this._status != value) {
       this._status = value;
       this.emit("update");
     }
   },
+
   get status() {
     return this._status;
   },
@@ -88,7 +71,14 @@ ADBAddon.prototype = {
     }
   },
 
-  install: async function() {
+  /**
+   * Install and enable the adb extension. Returns a promise that resolves when ADB is
+   * enabled.
+   *
+   * @param {String} source
+   *        String passed to the AddonManager for telemetry.
+   */
+  install: async function(source) {
     const addon = await AddonManager.getAddonByID(ADB_ADDON_ID);
     if (addon && !addon.userDisabled) {
       this.status = "installed";
@@ -98,8 +88,12 @@ ADBAddon.prototype = {
     if (addon && addon.userDisabled) {
       await addon.enable();
     } else {
-      const install = await AddonManager.getInstallForURL(this.xpiLink, "application/x-xpinstall", null,
-                                                          null, null, null, null, {source: "webide"});
+      const install = await AddonManager.getInstallForURL(
+        this.xpiLink,
+        "application/x-xpinstall",
+        null, null, null, null, null,
+        { source }
+      );
       install.addListener(this);
       install.install();
     }
@@ -155,3 +149,5 @@ ADBAddon.prototype = {
     this.installFailureHandler(install, "Install failed");
   },
 };
+
+exports.adbAddon = new ADBAddon();

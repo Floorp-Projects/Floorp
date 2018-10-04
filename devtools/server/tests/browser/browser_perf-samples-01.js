@@ -11,16 +11,11 @@
 // time in ms
 const WAIT_TIME = 1000;
 
-const { PerformanceFront } = require("devtools/shared/fronts/performance");
-
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [["privacy.reduceTimerPrecision", false]]});
-  await addTab(MAIN_DOMAIN + "doc_perf.html");
+  const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
 
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const front = PerformanceFront(client, form);
+  const front = target.getFront("performance");
   await front.connect();
 
   // Perform the first recording...
@@ -65,6 +60,6 @@ add_task(async function() {
     "even though the total number of frames did not overflow.");
 
   await front.destroy();
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

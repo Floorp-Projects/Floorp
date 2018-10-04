@@ -6,16 +6,12 @@
  */
 "use strict";
 
-const { PerformanceFront } = require("devtools/shared/fronts/performance");
 const MARKER_NAME = "Parse HTML";
 
 add_task(async function() {
-  await addTab(MAIN_DOMAIN + "doc_innerHTML.html");
+  const target = await addTabTarget(MAIN_DOMAIN + "doc_innerHTML.html");
 
-  initDebuggerServer();
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  const form = await connectDebuggerClient(client);
-  const front = PerformanceFront(client, form);
+  const front = target.getFront("performance");
   await front.connect();
   const rec = await front.startRecording({ withMarkers: true });
 
@@ -24,6 +20,6 @@ add_task(async function() {
 
   ok(markers.some(m => m.name === MARKER_NAME), `got some ${MARKER_NAME} markers`);
 
-  await client.close();
+  await target.destroy();
   gBrowser.removeCurrentTab();
 });

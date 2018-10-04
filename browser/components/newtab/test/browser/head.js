@@ -19,6 +19,7 @@ async function setDefaultTopSites() { // eslint-disable-line no-unused-vars
   // Toggle the feed off and on as a workaround to read the new prefs.
   await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", false]);
   await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", true]);
+  await pushPrefs(["browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", true]);
 }
 
 async function clearHistoryAndBookmarks() { // eslint-disable-line no-unused-vars

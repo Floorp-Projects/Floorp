@@ -23,6 +23,9 @@ __all__ = ['ProcessHandlerMixin', 'ProcessHandler', 'LogOutput',
 # Set the MOZPROCESS_DEBUG environment variable to 1 to see some debugging output
 MOZPROCESS_DEBUG = os.getenv("MOZPROCESS_DEBUG")
 
+
+INTERVAL_PROCESS_ALIVE_CHECK = 0.02
+
 # We dont use mozinfo because it is expensive to import, see bug 933558.
 isWin = os.name == "nt"
 isPosix = os.name == "posix"  # includes MacOS X
@@ -189,7 +192,7 @@ class ProcessHandlerMixin(object):
                         if self.poll() is not None:
                             # process terminated nicely
                             break
-                        time.sleep(0.02)
+                        time.sleep(INTERVAL_PROCESS_ALIVE_CHECK)
                     else:
                         # process did not terminate - send SIGKILL to force
                         send_sig(signal.SIGKILL)
@@ -202,14 +205,27 @@ class ProcessHandlerMixin(object):
             return self.returncode
 
         def poll(self):
-            """ Popen.poll
-                Check if child process has terminated. Set and return returncode attribute.
-            """
-            # If we have a handle, the process is alive
-            if isWin and getattr(self, '_handle', None):
-                return None
+            """Check if child process has terminated, and set returncode attribute.
 
-            return subprocess.Popen.poll(self)
+            This method overrides the Popen.poll implementation for our custom
+            process handling for Windows.
+            """
+            if isWin:
+                # If we have a handle, check that the process is still alive.
+                if self._handle:
+                    returncode = winprocess.GetExitCodeProcess(self._handle)
+
+                    # If the process doesn't exist anymore run cleanup steps
+                    if returncode != winprocess.STILL_ACTIVE:
+                        self.returncode = returncode
+                        self._cleanup()
+                    else:
+                        self.returncode = None
+
+            else:
+                self.returncode = subprocess.Popen.poll(self)
+
+            return self.returncode
 
         def wait(self):
             """ Popen.wait
@@ -789,9 +805,9 @@ falling back to not using job objects for managing child processes""", file=sys.
         :param sig: Signal used to kill the process, defaults to SIGKILL
                     (has no effect on Windows)
         """
-        if not hasattr(self, 'proc'):
-            raise RuntimeError("Calling kill() on a non started process is not"
-                               " allowed.")
+        if not hasattr(self, "proc"):
+            raise RuntimeError("Process hasn't been started yet")
+
         self.proc.kill(sig=sig)
 
         # When we kill the the managed process we also have to wait for the
@@ -808,16 +824,16 @@ falling back to not using job objects for managing child processes""", file=sys.
         - '0' if the process ended without failures
 
         """
+        if not hasattr(self, "proc"):
+            raise RuntimeError("Process hasn't been started yet")
+
         # Ensure that we first check for the reader status. Otherwise
         # we might mark the process as finished while output is still getting
         # processed.
-        if not hasattr(self, 'proc'):
-            raise RuntimeError("Calling poll() on a non started process is not"
-                               " allowed.")
         elif self.reader.is_alive():
             return None
-        elif hasattr(self.proc, "returncode"):
-            return self.proc.returncode
+        elif hasattr(self, "returncode"):
+            return self.returncode
         else:
             return self.proc.poll()
 
@@ -857,12 +873,12 @@ falling back to not using job objects for managing child processes""", file=sys.
         - '0' if the process ended without failures
 
         """
+        # Thread.join() blocks the main thread until the reader thread is finished
+        # wake up once a second in case a keyboard interrupt is sent
         if self.reader.thread and self.reader.thread is not threading.current_thread():
-            # Thread.join() blocks the main thread until the reader thread is finished
-            # wake up once a second in case a keyboard interrupt is sent
             count = 0
             while self.reader.is_alive():
-                self.reader.thread.join(timeout=1)
+                self.reader.join(timeout=1)
                 count += 1
                 if timeout is not None and count > timeout:
                     return None
@@ -872,6 +888,9 @@ falling back to not using job objects for managing child processes""", file=sys.
 
     @property
     def pid(self):
+        if not hasattr(self, "proc"):
+            raise RuntimeError("Process hasn't been started yet")
+
         return self.proc.pid
 
     @staticmethod
@@ -924,8 +943,8 @@ falling back to not using job objects for managing child processes""", file=sys.
 
         new_pid is the new process id of the child process.
         """
-        if not self.proc:
-            return
+        if not hasattr(self, "proc"):
+            raise RuntimeError("Process hasn't been started yet")
 
         if isPosix:
             new_pgid = self._getpgid(new_pid)
@@ -1014,7 +1033,7 @@ class ProcessReader(object):
                 or (stderr_reader and stderr_reader.is_alive()):
             has_line = True
             try:
-                line, callback = queue.get(True, 0.02)
+                line, callback = queue.get(True, INTERVAL_PROCESS_ALIVE_CHECK)
             except Empty:
                 has_line = False
             now = time.time()
@@ -1047,6 +1066,11 @@ class ProcessReader(object):
         if self.thread:
             return self.thread.is_alive()
         return False
+
+    def join(self, timeout=None):
+        if self.thread:
+            self.thread.join(timeout=timeout)
+
 
 # default output handlers
 # these should be callables that take the output line
