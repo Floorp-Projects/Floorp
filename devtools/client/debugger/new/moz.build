@@ -8,8 +8,6 @@ DIRS += [
   'src',
 ]
 
-include('node-templates.mozbuild')
-
 DevToolsModules(
     'panel.js',
 )
