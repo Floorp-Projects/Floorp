@@ -17,7 +17,7 @@ function findImportEntry(array, target)
 }
 
 function testImportEntries(source, expected) {
-    var module = getModuleObject(parseModule(source));
+    var module = parseModule(source);
     var actual = module.importEntries.slice(0);
     assertEq(actual.length, expected.length);
     for (var i = 0; i < expected.length; i++) {
