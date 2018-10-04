@@ -25,6 +25,10 @@ add_task(async function setup() {
 add_task(async function test_extension_adding_engine() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
+      "icons": {
+        "16": "foo.ico",
+        "32": "foo32.ico",
+      },
       "chrome_settings_overrides": {
         "search_provider": {
           "name": "MozSearch",
@@ -41,6 +45,13 @@ add_task(async function test_extension_adding_engine() {
 
   let engine = Services.search.getEngineByName("MozSearch");
   ok(engine, "Engine should exist.");
+
+  let {baseURI} = ext1.extension;
+  equal(engine.iconURI.spec, baseURI.resolve("foo.ico"), "icon path matches");
+  let icons = engine.getIcons();
+  equal(icons.length, 2, "both icons avialable");
+  equal(icons[0].url, baseURI.resolve("foo.ico"), "icon path matches");
+  equal(icons[1].url, baseURI.resolve("foo32.ico"), "icon path matches");
 
   let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
   let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
@@ -138,4 +149,43 @@ add_task(async function test_upgrade_default_position_engine() {
 
   engine = Services.search.getEngineByName("MozSearch");
   ok(!engine, "Engine should not exist");
+});
+
+add_task(async function test_extension_post_params() {
+  let ext1 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "chrome_settings_overrides": {
+        "search_provider": {
+          "name": "MozSearch",
+          "keyword": "MozSearch",
+          "search_url": kSearchEngineURL,
+          "search_url_post_params": "foo=bar&bar=foo",
+          "suggest_url": kSearchSuggestURL,
+          "suggest_url_post_params": "foo=bar&bar=foo",
+        },
+      },
+    },
+    useAddonManager: "temporary",
+  });
+
+  await ext1.startup();
+
+  let engine = Services.search.getEngineByName("MozSearch");
+  ok(engine, "Engine should exist.");
+
+  let url = engine.wrappedJSObject._getURLOfType("text/html");
+  equal(url.method, "POST", "Search URLs method is POST");
+
+  let expectedURL = kSearchEngineURL.replace("{searchTerms}", kSearchTerm);
+  let submission = engine.getSubmission(kSearchTerm);
+  equal(submission.uri.spec, expectedURL, "Search URLs should match");
+  // postData is a nsIMIMEInputStream which contains a nsIStringInputStream.
+  equal(submission.postData.data.data, "foo=bar&bar=foo", "Search postData should match");
+
+  let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
+  let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
+  equal(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
+  equal(submissionSuggest.postData.data.data, "foo=bar&bar=foo", "Suggest postData should match");
+
+  await ext1.unload();
 });

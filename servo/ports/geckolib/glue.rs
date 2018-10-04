@@ -14,7 +14,6 @@ use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::fmt::Write;
 use std::iter;
-use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
 use style::applicable_declarations::ApplicableDeclarationBlock;

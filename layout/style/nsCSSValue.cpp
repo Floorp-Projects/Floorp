@@ -1366,7 +1366,7 @@ css::ImageValue::ImageValue(nsIURI* aURI,
                             CORSMode aCORSMode)
   : URLValueData(do_AddRef(aURI), aString, std::move(aExtraData), aCORSMode)
 {
-  Initialize(aDocument);
+  LoadImage(aDocument);
 }
 
 css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
@@ -1376,10 +1376,16 @@ css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
 {
 }
 
-void
-css::ImageValue::Initialize(nsIDocument* aDocument)
+imgRequestProxy*
+css::ImageValue::LoadImage(nsIDocument* aDocument)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  static uint64_t sNextLoadID = 1;
+
+  if (mLoadID == 0) {
+    mLoadID = sNextLoadID++;
+  }
 
   // NB: If aDocument is not the original document, we may not be able to load
   // images from aDocument.  Instead we do the image load from the original doc
@@ -1389,39 +1395,31 @@ css::ImageValue::Initialize(nsIDocument* aDocument)
     loadingDoc = aDocument;
   }
 
-  if (!mLoadedImage) {
-    loadingDoc->StyleImageLoader()->LoadImage(GetURI(),
-                                              mExtraData->GetPrincipal(),
-                                              mExtraData->GetReferrer(),
-                                              mExtraData->GetReferrerPolicy(),
-                                              this,
-                                              mCORSMode);
+  // Kick off the load in the loading document.
+  ImageLoader::LoadImage(GetURI(),
+                         mExtraData->GetPrincipal(),
+                         mExtraData->GetReferrer(),
+                         mExtraData->GetReferrerPolicy(),
+                         loadingDoc,
+                         this,
+                         mCORSMode);
 
-    mLoadedImage = true;
+  // Register the image in the loading document, and in our document if it's
+  // different from the loading document.
+  imgRequestProxy* request =
+    loadingDoc->StyleImageLoader()->RegisterCSSImage(this);
+
+  if (aDocument != loadingDoc) {
+    request = aDocument->StyleImageLoader()->RegisterCSSImage(this);
   }
 
-  aDocument->StyleImageLoader()->MaybeRegisterCSSImage(this);
+  return request;
 }
 
 css::ImageValue::~ImageValue()
 {
-  MOZ_ASSERT(NS_IsMainThread() || mRequests.Count() == 0,
-             "Destructor should run on main thread, or on non-main thread "
-             "when mRequest is empty!");
-
-  for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
-    nsIDocument* doc = iter.Key();
-    RefPtr<imgRequestProxy>& proxy = iter.Data();
-
-    if (doc) {
-      doc->StyleImageLoader()->DeregisterCSSImage(this);
-    }
-
-    if (proxy) {
-      proxy->CancelAndForgetObserver(NS_BINDING_ABORTED);
-    }
-
-    iter.Remove();
+  if (mLoadID != 0) {
+    ImageLoader::DeregisterCSSImageFromAllLoaders(this);
   }
 }
 
@@ -1430,7 +1428,6 @@ css::ImageValue::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += css::URLValueData::SizeOfExcludingThis(aMallocSizeOf);
-  n += mRequests.ShallowSizeOfExcludingThis(aMallocSizeOf);
   return n;
 }
 

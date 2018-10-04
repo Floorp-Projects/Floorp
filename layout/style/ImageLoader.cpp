@@ -25,23 +25,43 @@
 namespace mozilla {
 namespace css {
 
+/* static */ void
+ImageLoader::Init()
+{
+  sImages = new nsClassHashtable<nsUint64HashKey, ImageTableEntry>();
+}
+
+/* static */ void
+ImageLoader::Shutdown()
+{
+  delete sImages;
+  sImages = nullptr;
+}
+
 void
 ImageLoader::DropDocumentReference()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // It's okay if GetPresContext returns null here (due to the presshell pointer
   // on the document being null) as that means the presshell has already
   // been destroyed, and it also calls ClearFrames when it is destroyed.
   ClearFrames(GetPresContext());
 
-  for (auto it = mImages.Iter(); !it.Done(); it.Next()) {
-    ImageLoader::Image* image = it.Get()->GetKey();
-    imgIRequest* request = image->mRequests.GetWeak(mDocument);
-    if (request) {
+  for (auto it = mRegisteredImages.Iter(); !it.Done(); it.Next()) {
+    if (imgRequestProxy* request = it.Data()) {
       request->CancelAndForgetObserver(NS_BINDING_ABORTED);
     }
-    image->mRequests.Remove(mDocument);
+
+    // Need to check whether the entry exists, since the css::ImageValue might
+    // go away before ImageLoader::DropDocumentReference is called.
+    uint64_t imageLoadID = it.Key();
+    if (auto entry = sImages->Lookup(imageLoadID)) {
+      entry.Data()->mImageLoaders.RemoveEntry(this);
+    }
   }
-  mImages.Clear();
+
+  mRegisteredImages.Clear();
 
   mDocument = nullptr;
 }
@@ -70,6 +90,8 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
                                      nsIFrame* aFrame,
                                      FrameFlags aFlags)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<imgINotificationObserver> observer;
   aRequest->GetNotificationObserver(getter_AddRefs(observer));
   if (!observer) {
@@ -185,22 +207,35 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
              "We should only add to one map iff we also add to the other map.");
 }
 
-void
-ImageLoader::MaybeRegisterCSSImage(ImageLoader::Image* aImage)
+imgRequestProxy*
+ImageLoader::RegisterCSSImage(ImageLoader::Image* aImage)
 {
-  NS_ASSERTION(aImage, "This should never be null!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aImage);
 
-  bool found = false;
-  aImage->mRequests.GetWeak(mDocument, &found);
-  if (found) {
-    // This document already has a request.
-    return;
+  if (aImage->LoadID() == 0) {
+    MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
+    return nullptr;
   }
 
-  imgRequestProxy* canonicalRequest = aImage->mRequests.GetWeak(nullptr);
-  if (!canonicalRequest) {
-    // The image was blocked or something.
-    return;
+  if (imgRequestProxy* request = mRegisteredImages.GetWeak(aImage->LoadID())) {
+    // This document already has a request.
+    return request;
+  }
+
+  imgRequestProxy* canonicalRequest = nullptr;
+  {
+    auto entry = sImages->Lookup(aImage->LoadID());
+    if (entry) {
+      canonicalRequest = entry.Data()->mCanonicalRequest;
+    }
+
+    if (!canonicalRequest) {
+      // The image was blocked or something.
+      return nullptr;
+    }
+
+    entry.Data()->mImageLoaders.PutEntry(this);
   }
 
   RefPtr<imgRequestProxy> request;
@@ -211,15 +246,63 @@ ImageLoader::MaybeRegisterCSSImage(ImageLoader::Image* aImage)
   canonicalRequest->SyncClone(this, mDocument, getter_AddRefs(request));
   mInClone = false;
 
-  aImage->mRequests.Put(mDocument, request);
+  MOZ_ASSERT(!mRegisteredImages.Contains(aImage->LoadID()));
 
-  AddImage(aImage);
+  imgRequestProxy* requestWeak = request;
+  mRegisteredImages.Put(aImage->LoadID(), request.forget());
+  return requestWeak;
 }
 
-void
-ImageLoader::DeregisterCSSImage(ImageLoader::Image* aImage)
+/* static */ void
+ImageLoader::DeregisterCSSImageFromAllLoaders(ImageLoader::Image* aImage)
 {
-  RemoveImage(aImage);
+  MOZ_ASSERT(aImage);
+
+  uint64_t loadID = aImage->LoadID();
+
+  if (loadID == 0) {
+    MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
+    return;
+  }
+
+  if (NS_IsMainThread()) {
+    DeregisterCSSImageFromAllLoaders(loadID);
+  } else {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "css::ImageLoader::DeregisterCSSImageFromAllLoaders",
+      [loadID] {
+        DeregisterCSSImageFromAllLoaders(loadID);
+      }
+    ));
+  }
+}
+
+/* static */ void
+ImageLoader::DeregisterCSSImageFromAllLoaders(uint64_t aImageLoadID)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aImageLoadID != 0);
+
+  if (auto e = sImages->Lookup(aImageLoadID)) {
+    ImageTableEntry* tableEntry = e.Data();
+    if (imgRequestProxy* request = tableEntry->mCanonicalRequest) {
+      request->CancelAndForgetObserver(NS_BINDING_ABORTED);
+    }
+
+    for (auto iter = tableEntry->mImageLoaders.Iter();
+         !iter.Done();
+         iter.Next()) {
+      ImageLoader* loader = iter.Get()->GetKey();
+      if (auto e = loader->mRegisteredImages.Lookup(aImageLoadID)) {
+        if (imgRequestProxy* request = e.Data()) {
+          request->CancelAndForgetObserver(NS_BINDING_ABORTED);
+        }
+        e.Remove();
+      }
+    }
+
+    e.Remove();
+  }
 }
 
 void
@@ -285,7 +368,9 @@ void
 ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
                                           nsIFrame*    aFrame)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aFrame->HasImageRequest(), "why call me?");
+
   RemoveRequestToFrameMapping(aRequest, aFrame);
   RemoveFrameToRequestMapping(aRequest, aFrame);
 }
@@ -293,7 +378,9 @@ ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
 void
 ImageLoader::DropRequestsForFrame(nsIFrame* aFrame)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aFrame->HasImageRequest(), "why call me?");
+
   nsAutoPtr<RequestSet> requestSet;
   mFrameToRequestMap.Remove(aFrame, &requestSet);
   aFrame->SetHasImageRequest(false);
@@ -309,6 +396,7 @@ ImageLoader::DropRequestsForFrame(nsIFrame* aFrame)
 void
 ImageLoader::SetAnimationMode(uint16_t aMode)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aMode == imgIContainer::kNormalAnimMode ||
                aMode == imgIContainer::kDontAnimMode ||
                aMode == imgIContainer::kLoopOnceAnimMode,
@@ -338,6 +426,8 @@ ImageLoader::SetAnimationMode(uint16_t aMode)
 void
 ImageLoader::ClearFrames(nsPresContext* aPresContext)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   for (auto iter = mRequestToFrameMap.ConstIter(); !iter.Done(); iter.Next()) {
     auto request = static_cast<imgIRequest*>(iter.Key());
 
@@ -359,16 +449,32 @@ ImageLoader::ClearFrames(nsPresContext* aPresContext)
   mFrameToRequestMap.Clear();
 }
 
-void
-ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
+/* static */ void
+ImageLoader::LoadImage(nsIURI* aURI,
+                       nsIPrincipal* aOriginPrincipal,
                        nsIURI* aReferrer,
                        mozilla::net::ReferrerPolicy aPolicy,
+                       nsIDocument* aDocument,
                        ImageLoader::Image* aImage,
                        CORSMode aCorsMode)
 {
-  NS_ASSERTION(aImage->mRequests.Count() == 0, "Huh?");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aDocument);
+  MOZ_ASSERT(aImage);
+  MOZ_ASSERT(aImage->LoadID() != 0);
 
-  aImage->mRequests.Put(nullptr, nullptr);
+  if (aImage->LoadID() == 0) {
+    MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
+    return;
+  }
+
+  if (sImages->Contains(aImage->LoadID())) {
+    // This css::ImageValue has already been loaded.
+    return;
+  }
+
+  ImageTableEntry* entry = new ImageTableEntry();
+  sImages->Put(aImage->LoadID(), entry);
 
   if (!aURI) {
     return;
@@ -378,7 +484,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
                       nsContentUtils::CORSModeToLoadImageFlags(aCorsMode);
 
   RefPtr<imgRequestProxy> request;
-  nsresult rv = nsContentUtils::LoadImage(aURI, mDocument, mDocument,
+  nsresult rv = nsContentUtils::LoadImage(aURI, aDocument, aDocument,
                                           aOriginPrincipal, 0, aReferrer,
                                           aPolicy,
                                           nullptr, loadFlags,
@@ -389,33 +495,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
     return;
   }
 
-  RefPtr<imgRequestProxy> clonedRequest;
-  mInClone = true;
-  rv = request->SyncClone(this, mDocument, getter_AddRefs(clonedRequest));
-  mInClone = false;
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  aImage->mRequests.Put(nullptr, request);
-  aImage->mRequests.Put(mDocument, clonedRequest);
-
-  AddImage(aImage);
-}
-
-void
-ImageLoader::AddImage(ImageLoader::Image* aImage)
-{
-  NS_ASSERTION(!mImages.Contains(aImage), "Huh?");
-  mImages.PutEntry(aImage);
-}
-
-void
-ImageLoader::RemoveImage(ImageLoader::Image* aImage)
-{
-  NS_ASSERTION(mImages.Contains(aImage), "Huh?");
-  mImages.RemoveEntry(aImage);
+  entry->mCanonicalRequest = std::move(request);
 }
 
 nsPresContext*
@@ -739,16 +819,15 @@ ImageLoader::OnLoadComplete(imgIRequest* aRequest)
 void
 ImageLoader::FlushUseCounters()
 {
-  for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
-    nsPtrHashKey<Image>* key = iter.Get();
-    ImageLoader::Image* image = key->GetKey();
+  MOZ_ASSERT(NS_IsMainThread());
 
-    imgIRequest* request = image->mRequests.GetWeak(mDocument);
-
-    nsCOMPtr<imgIContainer> container;
-    request->GetImage(getter_AddRefs(container));
-    if (container) {
-      static_cast<image::Image*>(container.get())->ReportUseCounters();
+  for (auto iter = mRegisteredImages.Iter(); !iter.Done(); iter.Next()) {
+    if (imgRequestProxy* request = iter.Data()) {
+      nsCOMPtr<imgIContainer> container;
+      request->GetImage(getter_AddRefs(container));
+      if (container) {
+        static_cast<image::Image*>(container.get())->ReportUseCounters();
+      }
     }
   }
 }
@@ -783,6 +862,9 @@ ImageLoader::ImageReflowCallback::ReflowCallbackCanceled()
   // Get rid of this callback object.
   delete this;
 }
+
+nsClassHashtable<nsUint64HashKey, ImageLoader::ImageTableEntry>*
+ImageLoader::sImages = nullptr;
 
 } // namespace css
 } // namespace mozilla

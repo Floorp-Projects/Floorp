@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   Lz4: "resource://gre/modules/lz4.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -65,6 +66,7 @@ const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 // We load plugins from APP_SEARCH_PREFIX, where a list.json
 // file needs to exist to list available engines.
 const APP_SEARCH_PREFIX = "resource://search-plugins/";
+const EXT_SEARCH_PREFIX = "resource://search-extensions/";
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
@@ -1079,9 +1081,13 @@ EngineURL.prototype = {
     if (this.method == "GET") {
       // GET method requests have no post data, and append the encoded
       // query string to the url...
-      if (!url.includes("?") && dataString)
-        url += "?";
-      url += dataString;
+      if (dataString) {
+        if (url.includes("?")) {
+          url = `${url}&${dataString}`;
+        } else {
+          url = `${url}?${dataString}`;
+        }
+      }
     } else if (this.method == "POST") {
       // POST method requests must wrap the encoded text in a MIME
       // stream and supply that as POSTDATA.
@@ -1282,6 +1288,9 @@ Engine.prototype = {
   _iconUpdateURL: null,
   /* The extension ID if added by an extension. */
   _extensionID: null,
+  // If the extension is builtin we treat it as a builtin search engine as well.
+  // Both System and Distribution extensions are considered builtin for search engines.
+  _isBuiltinExtension: false,
 
   /**
    * Retrieves the data from the engine's file.
@@ -1677,6 +1686,7 @@ Engine.prototype = {
           return;
         }
         // Fall through to the data case
+      case "moz-extension":
       case "data":
         if (!this._hasPreferredIcon || aIsPreferred) {
           this._iconURI = uri;
@@ -1772,6 +1782,38 @@ Engine.prototype = {
   },
 
   /**
+   * Initialize an EngineURL object from metadata.
+   */
+  _initEngineURLFromMetaData(aType, aParams) {
+    let url = new EngineURL(aType, aParams.method || "GET", aParams.template);
+
+    if (aParams.postParams) {
+      let queries = new URLSearchParams(aParams.postParams);
+      for (let [name, value] of queries) {
+        url.addParam(name, value);
+      }
+    }
+
+    if (aParams.mozParams) {
+      for (let p of aParams.mozParams) {
+        if ((p.condition || p.purpose) && !this._isDefault) {
+          continue;
+        }
+        if (p.condition == "pref") {
+          let value = getMozParamPref(p.pref);
+          url.addParam(p.name, value);
+          url._addMozParam(p);
+        } else {
+          url.addParam(p.name, p.value, p.purpose || undefined);
+        }
+      }
+    }
+
+    this._urls.push(url);
+    return url;
+  },
+
+  /**
    * Initialize this Engine object from a collection of metadata.
    */
   _initFromMetadata: function SRCH_ENG_initMetaData(aName, aParams) {
@@ -1779,11 +1821,24 @@ Engine.prototype = {
                 "Can't call _initFromMetaData on a readonly engine!",
                 Cr.NS_ERROR_FAILURE);
 
-    let method = aParams.method || "GET";
-    this._urls.push(new EngineURL(URLTYPE_SEARCH_HTML, method, aParams.template));
+    this._extensionID = aParams.extensionID;
+    this._isBuiltinExtension = !!aParams.isBuiltIn;
+
+    this._initEngineURLFromMetaData(URLTYPE_SEARCH_HTML, {
+      method: (aParams.searchPostParams && "POST") || aParams.method || "GET",
+      template: aParams.template,
+      postParams: aParams.searchPostParams,
+      mozParams: aParams.mozParams,
+    });
+
     if (aParams.suggestURL) {
-      this._urls.push(new EngineURL(URLTYPE_SUGGEST_JSON, "GET", aParams.suggestURL));
+      this._initEngineURLFromMetaData(URLTYPE_SUGGEST_JSON, {
+        method: (aParams.suggestPostParams && "POST") || aParams.method || "GET",
+        template: aParams.suggestURL,
+        postParams: aParams.suggestPostParams,
+      });
     }
+
     if (aParams.queryCharset) {
       this._queryCharset = aParams.queryCharset;
     }
@@ -1797,8 +1852,15 @@ Engine.prototype = {
     this._name = aName;
     this.alias = aParams.alias;
     this._description = aParams.description;
-    this._setIcon(aParams.iconURL, true);
-    this._extensionID = aParams.extensionID;
+    if (aParams.iconURL) {
+      this._setIcon(aParams.iconURL, true);
+    }
+    // Other sizes
+    if (aParams.icons) {
+      for (let icon of aParams.icons) {
+        this._addIconToMap(icon.size, icon.size, icon.url);
+      }
+    }
   },
 
   /**
@@ -2214,6 +2276,10 @@ Engine.prototype = {
   },
 
   get _isDefault() {
+    if (this._extensionID) {
+      return this._isBuiltinExtension;
+    }
+
     // If we don't have a shortName, the engine is being parsed from a
     // downloaded file, so this can't be a default engine.
     if (!this._shortName)
@@ -3903,6 +3969,38 @@ SearchService.prototype = {
     if (isCurrent) {
       this.currentEngine = newEngine;
     }
+  },
+
+  addEnginesFromExtension(extension) {
+    let {IconDetails} = ExtensionParent;
+    let {manifest} = extension;
+
+    // General set of icons for an engine.
+    let icons = extension.manifest.icons;
+    let iconList = [];
+    if (icons) {
+      iconList = Object.entries(icons).map(icon => {
+        return {width: icon[0], height: icon[0],
+                url: extension.baseURI.resolve(icon[1])};
+      });
+    }
+    let preferredIconUrl = icons && extension.baseURI.resolve(IconDetails.getPreferredIcon(icons).icon);
+
+    let searchProvider = manifest.chrome_settings_overrides.search_provider;
+    let params = {
+      template: searchProvider.search_url,
+      searchPostParams: searchProvider.search_url_post_params,
+      iconURL: searchProvider.favicon_url || preferredIconUrl,
+      icons: iconList,
+      alias: searchProvider.keyword,
+      extensionID: extension.id,
+      isBuiltIn: extension.isPrivileged,
+      suggestURL: searchProvider.suggest_url,
+      suggestPostParams: searchProvider.suggest_url_post_params,
+      queryCharset: "UTF-8",
+      mozParams: searchProvider.params,
+    };
+    this.addEngineWithDetails(searchProvider.name.trim(), params);
   },
 
   addEngine: function SRCH_SVC_addEngine(aEngineURL, aDataType, aIconURL,

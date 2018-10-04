@@ -111,6 +111,7 @@
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsThreadManager.h"
+#include "mozilla/css/ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -173,6 +174,7 @@ nsLayoutStatics::Initialize()
   mozilla::SharedFontList::Initialize();
   StaticPresData::Init();
   nsCSSRendering::Init();
+  css::ImageLoader::Init();
 
   rv = nsHTMLDNSPrefetch::Initialize();
   if (NS_FAILED(rv)) {
@@ -393,4 +395,6 @@ nsLayoutStatics::Shutdown()
   PromiseDebugging::Shutdown();
 
   BlobURLProtocolHandler::RemoveDataEntries();
+
+  css::ImageLoader::Shutdown();
 }

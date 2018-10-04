@@ -2024,8 +2024,8 @@ nsStyleGradient::HasCalc()
 // nsStyleImageRequest
 
 /**
- * Runnable to release the nsStyleImageRequest's mRequestProxy,
- * mImageValue and mImageTracker on the main thread, and to perform
+ * Runnable to release the nsStyleImageRequest's mRequestProxy
+ * and mImageTracker on the main thread, and to perform
  * any necessary unlocking and untracking of the image.
  */
 class StyleImageRequestCleanupTask : public mozilla::Runnable
@@ -2035,12 +2035,10 @@ public:
 
   StyleImageRequestCleanupTask(Mode aModeFlags,
                                already_AddRefed<imgRequestProxy> aRequestProxy,
-                               already_AddRefed<css::ImageValue> aImageValue,
                                already_AddRefed<ImageTracker> aImageTracker)
     : mozilla::Runnable("StyleImageRequestCleanupTask")
     , mModeFlags(aModeFlags)
     , mRequestProxy(aRequestProxy)
-    , mImageValue(aImageValue)
     , mImageTracker(aImageTracker)
   {
   }
@@ -2071,9 +2069,6 @@ public:
 protected:
   virtual ~StyleImageRequestCleanupTask()
   {
-    MOZ_ASSERT(mImageValue->mRequests.Count() == 0 || NS_IsMainThread(),
-               "If mImageValue has any mRequests, we need to run on main "
-               "thread to release ImageValues!");
     MOZ_ASSERT((!mRequestProxy && !mImageTracker) || NS_IsMainThread(),
                "mRequestProxy and mImageTracker's destructor need to run "
                "on the main thread!");
@@ -2084,7 +2079,6 @@ private:
   // Since we always dispatch this runnable to the main thread, these will be
   // released on the main thread when the runnable itself is released.
   RefPtr<imgRequestProxy> mRequestProxy;
-  RefPtr<css::ImageValue> mImageValue;
   RefPtr<ImageTracker> mImageTracker;
 };
 
@@ -2100,12 +2094,11 @@ nsStyleImageRequest::~nsStyleImageRequest()
 {
   // We may or may not be being destroyed on the main thread.  To clean
   // up, we must untrack and unlock the image (depending on mModeFlags),
-  // and release mRequestProxy and mImageValue, all on the main thread.
+  // and release mRequestProxy and mImageTracker, all on the main thread.
   {
     RefPtr<StyleImageRequestCleanupTask> task =
         new StyleImageRequestCleanupTask(mModeFlags,
                                          mRequestProxy.forget(),
-                                         mImageValue.forget(),
                                          mImageTracker.forget());
     if (NS_IsMainThread()) {
       task->Run();
@@ -2120,7 +2113,6 @@ nsStyleImageRequest::~nsStyleImageRequest()
   }
 
   MOZ_ASSERT(!mRequestProxy);
-  MOZ_ASSERT(!mImageValue);
   MOZ_ASSERT(!mImageTracker);
 }
 
@@ -2167,8 +2159,7 @@ nsStyleImageRequest::Resolve(
     mRequestProxy = aOldImageRequest->mRequestProxy;
   } else {
     mDocGroup = doc->GetDocGroup();
-    mImageValue->Initialize(doc);
-    imgRequestProxy* request = mImageValue->mRequests.GetWeak(doc);
+    imgRequestProxy* request = mImageValue->LoadImage(doc);
     if (aPresContext->IsDynamic()) {
       mRequestProxy = request;
     } else if (request) {
