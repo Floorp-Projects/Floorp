@@ -203,8 +203,6 @@ def toolkit_define(toolkit):
 set_define(toolkit_define, True)
 
 
-set_config('MOZ_ENABLE_XREMOTE', True, when=toolkit_gtk)
-set_define('MOZ_ENABLE_XREMOTE', True, when=toolkit_gtk)
 set_config('MOZ_X11', True, when=toolkit_gtk)
 set_define('MOZ_X11', True, when=toolkit_gtk)
 add_old_configure_assignment('MOZ_X11', True, when=toolkit_gtk)
