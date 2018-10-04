@@ -405,26 +405,17 @@ var gEditItemOverlay = {
                                               this._recentFolders[i].title);
     }
 
-    this._folderMenuList.addEventListener("select", this);
-    this._folderMenuListListenerAdded = true;
-
     let title = (await PlacesUtils.bookmarks.fetch(aSelectedFolderGuid)).title;
     var defaultItem = this._getFolderMenuItem(aSelectedFolderGuid, title);
     this._folderMenuList.selectedItem = defaultItem;
 
+    // Set a selectedIndex attribute to show special icons
+    this._folderMenuList.setAttribute("selectedIndex",
+                                      this._folderMenuList.selectedIndex);
+
     // Hide the folders-separator if no folder is annotated as recently-used
     this._element("foldersSeparator").hidden = (menupopup.children.length <= 6);
     this._folderMenuList.disabled = this.readOnly;
-  },
-
-  _onFolderListSelected() {
-    // Set a selectedGuid attribute to show special icons
-    let folderGuid = this.selectedFolderGuid;
-    if (folderGuid) {
-      this._folderMenuList.setAttribute("selectedGuid", folderGuid);
-    } else {
-      this._folderMenuList.removeAttribute("selectedGuid");
-    }
   },
 
   QueryInterface:
@@ -450,11 +441,6 @@ var gEditItemOverlay = {
     if (this._observersAdded) {
       PlacesUtils.bookmarks.removeObserver(this);
       this._observersAdded = false;
-    }
-
-    if (this._folderMenuListListenerAdded) {
-      this._folderMenuList.removeEventListener("select", this);
-      this._folderMenuListListenerAdded = false;
     }
 
     this._setPaneInfo(null);
@@ -695,6 +681,9 @@ var gEditItemOverlay = {
     if (!this._paneInfo) {
       return;
     }
+    // Set a selectedIndex attribute to show special icons
+    this._folderMenuList.setAttribute("selectedIndex",
+                                      this._folderMenuList.selectedIndex);
 
     if (aEvent.target.id == "editBMPanel_chooseFolderMenuItem") {
       // reset the selection back to where it was and expand the tree
@@ -880,9 +869,6 @@ var gEditItemOverlay = {
       break;
     case "unload":
       this.uninitPanel(false);
-      break;
-    case "select":
-      this._onFolderListSelected();
       break;
     }
   },
