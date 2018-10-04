@@ -11,11 +11,11 @@ var _preview = require("../utils/preview");
 
 var _ast = require("../utils/ast");
 
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
 var _promise = require("./utils/middleware/promise");
 
 var _getExpression = require("../utils/editor/get-expression");
-
-var _source = require("../utils/source");
 
 var _selectors = require("../selectors/index");
 
@@ -93,9 +93,10 @@ function setPreview(expression, location, tokenPos, cursorPos) {
           return;
         }
 
+        const sourceId = source.id;
         const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 
-        if (location && (0, _source.isOriginal)(source)) {
+        if (location && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId)) {
           const mapResult = await dispatch((0, _expressions.getMappedExpression)(expression));
 
           if (mapResult) {

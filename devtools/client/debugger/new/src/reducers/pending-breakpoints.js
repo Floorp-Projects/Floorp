@@ -7,11 +7,11 @@ exports.getPendingBreakpoints = getPendingBreakpoints;
 exports.getPendingBreakpointList = getPendingBreakpointList;
 exports.getPendingBreakpointsForSource = getPendingBreakpointsForSource;
 
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
 var _sources = require("./sources");
 
 var _breakpoint = require("../utils/breakpoint/index");
-
-var _source = require("../utils/source");
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -175,7 +175,7 @@ function getPendingBreakpointList(state) {
 function getPendingBreakpointsForSource(state, source) {
   const sources = (0, _sources.getSourcesByURL)(state, source.url);
 
-  if (sources.length > 1 && (0, _source.isGenerated)(source)) {
+  if (sources.length > 1 && (0, _devtoolsSourceMap.isGeneratedId)(source.id)) {
     // Don't return pending breakpoints for duplicated generated sources
     return [];
   }

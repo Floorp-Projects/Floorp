@@ -10,21 +10,25 @@ var _sources = require("../reducers/sources");
 
 var _breakpoints = require("../reducers/breakpoints");
 
-var _source = require("../utils/source");
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+function isGenerated(selectedSource) {
+  return (0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id);
+}
+
 function getColumn(column, selectedSource) {
   if (column) {
     return column;
   }
 
-  return (0, _source.isGenerated)(selectedSource) ? undefined : 0;
+  return isGenerated(selectedSource) ? undefined : 0;
 }
 
 function getLocation(bp, selectedSource) {
-  return (0, _source.isGenerated)(selectedSource) ? bp.generatedLocation || bp.location : bp.location;
+  return isGenerated(selectedSource) ? bp.generatedLocation || bp.location : bp.location;
 }
 
 function getBreakpointsForSource(state, selectedSource) {

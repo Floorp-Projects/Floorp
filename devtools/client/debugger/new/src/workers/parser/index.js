@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getPausePoints = exports.getFramework = exports.mapExpression = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getSymbols = exports.clearSymbols = exports.clearScopes = exports.getScopes = exports.clearASTs = exports.getNextStep = exports.findOutOfScopeLocations = exports.stop = exports.start = undefined;
+exports.replaceOriginalVariableName = exports.getPausePoints = exports.getFramework = exports.mapExpression = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stop = exports.start = undefined;
 
 var _devtoolsUtils = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-utils"];
 
@@ -14,35 +14,21 @@ const {
   WorkerDispatcher
 } = _devtoolsUtils.workerUtils;
 const dispatcher = new WorkerDispatcher();
-
-const start = exports.start = url => dispatcher.start(url);
-
-const stop = exports.stop = () => dispatcher.stop();
-
-const findOutOfScopeLocations = exports.findOutOfScopeLocations = async (sourceId, position) => dispatcher.invoke("findOutOfScopeLocations", sourceId, position);
-
-const getNextStep = exports.getNextStep = async (sourceId, pausedPosition) => dispatcher.invoke("getNextStep", sourceId, pausedPosition);
-
-const clearASTs = exports.clearASTs = async () => dispatcher.invoke("clearASTs");
-
-const getScopes = exports.getScopes = async location => dispatcher.invoke("getScopes", location);
-
-const clearScopes = exports.clearScopes = async () => dispatcher.invoke("clearScopes");
-
-const clearSymbols = exports.clearSymbols = async () => dispatcher.invoke("clearSymbols");
-
-const getSymbols = exports.getSymbols = async sourceId => dispatcher.invoke("getSymbols", sourceId);
-
-const hasSource = exports.hasSource = async sourceId => dispatcher.invoke("hasSource", sourceId);
-
-const setSource = exports.setSource = async source => dispatcher.invoke("setSource", source);
-
-const clearSources = exports.clearSources = async () => dispatcher.invoke("clearSources");
-
-const hasSyntaxError = exports.hasSyntaxError = async input => dispatcher.invoke("hasSyntaxError", input);
-
-const mapExpression = exports.mapExpression = async (expression, mappings, bindings, shouldMapBindings, shouldMapAwait) => dispatcher.invoke("mapExpression", expression, mappings, bindings, shouldMapBindings, shouldMapAwait);
-
-const getFramework = exports.getFramework = async sourceId => dispatcher.invoke("getFramework", sourceId);
-
-const getPausePoints = exports.getPausePoints = async sourceId => dispatcher.invoke("getPausePoints", sourceId);
+const start = exports.start = dispatcher.start.bind(dispatcher);
+const stop = exports.stop = dispatcher.stop.bind(dispatcher);
+const getClosestExpression = exports.getClosestExpression = dispatcher.task("getClosestExpression");
+const getSymbols = exports.getSymbols = dispatcher.task("getSymbols");
+const getScopes = exports.getScopes = dispatcher.task("getScopes");
+const findOutOfScopeLocations = exports.findOutOfScopeLocations = dispatcher.task("findOutOfScopeLocations");
+const clearSymbols = exports.clearSymbols = dispatcher.task("clearSymbols");
+const clearScopes = exports.clearScopes = dispatcher.task("clearScopes");
+const clearASTs = exports.clearASTs = dispatcher.task("clearASTs");
+const getNextStep = exports.getNextStep = dispatcher.task("getNextStep");
+const hasSource = exports.hasSource = dispatcher.task("hasSource");
+const setSource = exports.setSource = dispatcher.task("setSource");
+const clearSources = exports.clearSources = dispatcher.task("clearSources");
+const hasSyntaxError = exports.hasSyntaxError = dispatcher.task("hasSyntaxError");
+const mapExpression = exports.mapExpression = dispatcher.task("mapExpression");
+const getFramework = exports.getFramework = dispatcher.task("getFramework");
+const getPausePoints = exports.getPausePoints = dispatcher.task("getPausePoints");
+const replaceOriginalVariableName = exports.replaceOriginalVariableName = dispatcher.task("replaceOriginalVariableName");
