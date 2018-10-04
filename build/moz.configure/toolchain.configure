@@ -1869,6 +1869,32 @@ def as_with_flags(as_info, assembler, provided_assembler, c_compiler):
 
 add_old_configure_assignment('AS', as_with_flags)
 
+
+@depends(assembler, c_compiler, extra_toolchain_flags)
+@imports('subprocess')
+@imports(_from='os', _import='devnull')
+def gnu_as(assembler, c_compiler, toolchain_flags):
+    # clang uses a compatible GNU assembler.
+    if c_compiler.type == 'clang':
+        return True
+
+    if c_compiler.type == 'gcc':
+        cmd = [assembler] + c_compiler.flags
+        if toolchain_flags:
+            cmd += toolchain_flags
+        cmd += ['-Wa,--version', '-c', '-o', devnull, '-x', 'assembler', '-']
+        # We don't actually have to provide any input on stdin, `Popen.communicate` will
+        # close the stdin pipe.
+        # clang will error if it uses its integrated assembler for this target,
+        # so handle failures gracefully.
+        if 'GNU' in check_cmd_output(*cmd, stdin=subprocess.PIPE, onerror=lambda: '').decode('utf-8'):
+            return True
+
+
+set_config('GNU_AS', gnu_as)
+add_old_configure_assignment('GNU_AS', gnu_as)
+
+
 @depends(as_info, target)
 def as_dash_c_flag(as_info, target):
     # armasm64 doesn't understand -c.
