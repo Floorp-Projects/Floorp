@@ -1121,9 +1121,35 @@ def midl_flags(c_compiler, target):
     }[target.cpu]
 
 
-# Needed until we move --disable-accessibility from old-configure
-add_old_configure_assignment('MIDL', midl)
 set_config('MIDL_FLAGS', midl_flags)
+
+# Accessibility
+# ==============================================================
+
+option('--disable-accessibility', help='Disable accessibility support')
+
+@depends('--disable-accessibility', check_for_midl, midl, c_compiler)
+def accessibility(value, check_for_midl, midl, c_compiler):
+    enabled = bool(value)
+
+    if not enabled:
+        return
+
+    if check_for_midl and not midl:
+        if c_compiler and c_compiler.type in ('gcc', 'clang'):
+            die('You have accessibility enabled, but widl could not be found. '
+                'Add --disable-accessibility to your mozconfig or install widl. '
+                'See https://developer.mozilla.org/en-US/docs/Cross_Compile_Mozilla_for_Mingw32 for details.')
+        else:
+            die('MIDL could not be found. '
+                'Building accessibility without MIDL is not supported.')
+
+    return enabled
+
+
+set_config('ACCESSIBILITY', accessibility)
+set_define('ACCESSIBILITY', accessibility)
+add_old_configure_assignment('ACCESSIBILITY', accessibility)
 
 # Addon signing
 # ==============================================================

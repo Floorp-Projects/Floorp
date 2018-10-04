@@ -1884,7 +1884,6 @@ MOZ_NO_SMART_CARDS=
 NECKO_COOKIES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
-ACCESSIBILITY=1
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
@@ -2256,27 +2255,6 @@ dnl = Whether to exclude hyphenations files in the build
 dnl =========================================================
 if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
     AC_DEFINE(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
-fi
-
-dnl ========================================================
-dnl accessibility support on by default on all platforms
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(accessibility,
-[  --disable-accessibility Disable accessibility support],
-    ACCESSIBILITY=,
-    ACCESSIBILITY=1 )
-if test "$ACCESSIBILITY"; then
-    case "$target" in
-    *-mingw*)
-        if test -z "$MIDL"; then
-            if test "$GCC" != "yes"; then
-                AC_MSG_ERROR([MIDL could not be found. Building accessibility without MIDL is not supported.])
-            else
-                AC_MSG_ERROR([You have accessibility enabled, but widl could not be found. Add --disable-accessibility to your mozconfig or install widl. See https://developer.mozilla.org/en-US/docs/Cross_Compile_Mozilla_for_Mingw32 for details.])
-            fi
-        fi
-    esac
-    AC_DEFINE(ACCESSIBILITY)
 fi
 
 AC_TRY_COMPILE([#include <linux/ethtool.h>],
@@ -3891,7 +3869,6 @@ AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 
 AC_SUBST(MOZ_UNIVERSALCHARDET)
-AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
 AC_SUBST(MOZ_CRASHREPORTER)
