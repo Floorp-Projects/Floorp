@@ -3737,17 +3737,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       // If we are floating, and our shape-outside, shape-margin, or
       // shape-image-threshold are changed, our descendants are not impacted,
       // but our ancestor and siblings are.
-      //
-      // This is similar to a float-only change, but since the ISize of the
-      // float area changes arbitrarily along its block axis, more is required
-      // to get the siblings to adjust properly. Hinting overflow change is
-      // sufficient to trigger the correct calculation, but may be too
-      // heavyweight.
-
-      // XXX What is the minimum hint to ensure mShapeInfo is regenerated in
-      // the next reflow?
-      hint |= nsChangeHint_ReflowHintsForFloatAreaChange |
-              nsChangeHint_ScrollbarChange;
+      hint |= nsChangeHint_ReflowHintsForFloatAreaChange;
     } else {
       // shape-outside or shape-margin or shape-image-threshold changed,
       // but we don't need to reflow because we're not floating.

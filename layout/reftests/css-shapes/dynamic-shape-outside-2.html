@@ -1,17 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>Reference: Dynamic change to shape-outside</title>
+<title>Dynamic change to shape-outside</title>
 <style>
 .circle {
   float: left;
   width: 25vmin;
   height: 25vmin;
   background: #f06;
-  shape-outside: circle();
+  shape-outside: circle(100%);
 }
 </style>
+<script>
+function doTest() {
+  let circle = document.querySelector(".circle");
+  circle.style.shapeOutside = "circle()";
+
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
 </head>
 <body>
 <div class="circle"></div>
