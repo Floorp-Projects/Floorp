@@ -63,7 +63,8 @@ class Message extends Component {
       notes: PropTypes.arrayOf(PropTypes.shape({
         messageBody: PropTypes.string.isRequired,
         frame: PropTypes.any,
-      }))
+      })),
+      isPaused: PropTypes.bool
     };
   }
 
@@ -143,6 +144,7 @@ class Message extends Component {
       collapseTitle,
       source,
       type,
+      isPaused,
       level,
       indent,
       topLevelClasses,
@@ -156,7 +158,7 @@ class Message extends Component {
       notes
     } = this.props;
 
-    topLevelClasses.push("message", source, type, level);
+    topLevelClasses.push("message", source, type, level, isPaused ? "paused" : "");
     if (open) {
       topLevelClasses.push("open");
     }

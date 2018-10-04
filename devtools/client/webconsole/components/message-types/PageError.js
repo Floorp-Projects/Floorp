@@ -32,6 +32,7 @@ function PageError(props) {
     repeat,
     serviceContainer,
     timestampsVisible,
+    isPaused
   } = props;
   const {
     id: messageId,
@@ -57,6 +58,7 @@ function PageError(props) {
   return Message({
     dispatch,
     messageId,
+    isPaused,
     open,
     collapsible: Array.isArray(stacktrace),
     source,
