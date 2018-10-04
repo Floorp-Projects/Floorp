@@ -686,8 +686,8 @@ WMFVideoMFTManager::InitInternal()
       (mUseHwAccel ? "Yes" : "No"));
 
   if (mUseHwAccel) {
-    hr = mDXVA2Manager->ConfigureForSize(mVideoInfo.ImageRect().width,
-                                         mVideoInfo.ImageRect().height);
+    hr = mDXVA2Manager->ConfigureForSize(
+      outputType, mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
     NS_ENSURE_TRUE(SUCCEEDED(hr),
                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                RESULT_DETAIL("Fail to configure image size for "
@@ -1060,21 +1060,39 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
 
     if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
       MOZ_ASSERT(!sample);
-      // Video stream output type change, probably geometric aperture change.
+      // Video stream output type change, probably geometric aperture change or
+      // pixel type.
       // We must reconfigure the decoder output type.
-      hr = mDecoder->SetDecoderOutputType(false /* check all attribute */,
-                                          nullptr,
-                                          nullptr);
+
+      // Attempt to find an appropriate OutputType, trying in order:
+      // if HW accelerated: NV12, P010, P016
+      // if SW: YV12
+      if (FAILED((hr = (mDecoder->FindDecoderOutputTypeWithSubtype(
+                    mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12,
+                    false)))) &&
+          (!mUseHwAccel ||
+           (FAILED((hr = mDecoder->FindDecoderOutputTypeWithSubtype(
+                      MFVideoFormat_P010, false))) &&
+            FAILED((hr = mDecoder->FindDecoderOutputTypeWithSubtype(
+                      MFVideoFormat_P016, false)))))) {
+        LOG("No suitable output format found");
+        return hr;
+      }
+
+      RefPtr<IMFMediaType> outputType;
+      hr = mDecoder->GetOutputMediaType(outputType);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-      if (!mUseHwAccel) {
-        // The stride may have changed, recheck for it.
-        RefPtr<IMFMediaType> outputType;
-        hr = mDecoder->GetOutputMediaType(outputType);
+      if (mUseHwAccel) {
+        hr = mDXVA2Manager->ConfigureForSize(outputType,
+                                             mVideoInfo.ImageRect().width,
+                                             mVideoInfo.ImageRect().height);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+      } else {
+        // The stride may have changed, recheck for it.
         mYUVColorSpace = GetYUVColorSpace(outputType);
-        hr = GetDefaultStride(outputType, mVideoInfo.ImageRect().width,
-                              &mVideoStride);
+        hr = GetDefaultStride(
+          outputType, mVideoInfo.ImageRect().width, &mVideoStride);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
         UINT32 width = 0, height = 0;
