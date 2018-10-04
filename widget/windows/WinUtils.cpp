@@ -13,6 +13,7 @@
 #include "gfxUtils.h"
 #include "nsWindow.h"
 #include "nsWindowDefs.h"
+#include "InputDeviceUtils.h"
 #include "KeyboardLayout.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BackgroundHangMonitor.h"
@@ -1900,7 +1901,26 @@ IsTabletDevice()
 static bool
 IsMousePresent()
 {
-  return ::GetSystemMetrics(SM_MOUSEPRESENT);
+  if (!::GetSystemMetrics(SM_MOUSEPRESENT)) {
+    return false;
+  }
+
+  DWORD count = InputDeviceUtils::CountMouseDevices();
+  if (!count) {
+    return false;
+  }
+
+  // If there is a mouse device and if this machine is a tablet or has a
+  // digitizer, that's counted as the mouse device.
+  // FIXME: Bug 1495938:  We should drop this heuristic way once we find out a
+  // reliable way to tell there is no mouse or not.
+  if (count == 1 &&
+      (WinUtils::IsTouchDeviceSupportPresent() ||
+       IsTabletDevice())) {
+    return false;
+  }
+
+  return true;
 }
 
 /* static */
@@ -1912,7 +1932,7 @@ WinUtils::GetPrimaryPointerCapabilities()
   }
 
   if (IsMousePresent()) {
-    return PointerCapabilities::Fine|
+    return PointerCapabilities::Fine |
            PointerCapabilities::Hover;
   }
 
