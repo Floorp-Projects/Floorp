@@ -34,8 +34,6 @@ exports.getTextAtPosition = getTextAtPosition;
 exports.getSourceClassnames = getSourceClassnames;
 exports.getRelativeUrl = getRelativeUrl;
 exports.underRoot = underRoot;
-exports.isOriginal = isOriginal;
-exports.isGenerated = isGenerated;
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
@@ -75,7 +73,7 @@ function trimUrlQuery(url) {
 }
 
 function shouldPrettyPrint(source) {
-  if (!source || isPretty(source) || !isJavaScript(source) || isOriginal(source) || source.sourceMapURL || !_prefs.prefs.clientSourceMapsEnabled) {
+  if (!source || isPretty(source) || !isJavaScript(source) || (0, _devtoolsSourceMap.isOriginalId)(source.id) || source.sourceMapURL || !_prefs.prefs.clientSourceMapsEnabled) {
     return false;
   }
 
@@ -520,14 +518,4 @@ function getRelativeUrl(source, root) {
 
 function underRoot(source, root) {
   return source.url && source.url.includes(root);
-}
-
-function isOriginal(source) {
-  // Pretty-printed sources are given original IDs, so no need
-  // for any additional check
-  return (0, _devtoolsSourceMap.isOriginalId)(source.id);
-}
-
-function isGenerated(source) {
-  return (0, _devtoolsSourceMap.isGeneratedId)(source.id);
 }

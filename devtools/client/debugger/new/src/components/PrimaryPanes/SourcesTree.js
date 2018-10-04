@@ -343,7 +343,7 @@ function getSourceForTree(state, source) {
     return source;
   }
 
-  return (0, _sources.getGeneratedSourceByURL)(state, (0, _source.getRawSourceURL)(source.url));
+  return (0, _sources.getSourceByURL)(state, (0, _source.getRawSourceURL)(source.url));
 }
 
 const mapStateToProps = state => {

@@ -88,6 +88,8 @@ var _source = require("../source");
 
 var _wasm = require("../wasm");
 
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
 let editor;
 
 function getEditor() {
@@ -144,7 +146,7 @@ function shouldShowFooter(selectedSource, horizontal) {
     return false;
   }
 
-  return shouldShowPrettyPrint(selectedSource) || (0, _source.isOriginal)(selectedSource);
+  return shouldShowPrettyPrint(selectedSource) || (0, _devtoolsSourceMap.isOriginalId)(selectedSource.id);
 }
 
 function traverseResults(e, ctx, query, dir, modifiers) {
