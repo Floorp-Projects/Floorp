@@ -789,9 +789,9 @@ falling back to not using job objects for managing child processes""", file=sys.
         :param sig: Signal used to kill the process, defaults to SIGKILL
                     (has no effect on Windows)
         """
-        if not hasattr(self, 'proc'):
-            raise RuntimeError("Calling kill() on a non started process is not"
-                               " allowed.")
+        if not hasattr(self, "proc"):
+            raise RuntimeError("Process hasn't been started yet")
+
         self.proc.kill(sig=sig)
 
         # When we kill the the managed process we also have to wait for the
@@ -811,9 +811,9 @@ falling back to not using job objects for managing child processes""", file=sys.
         # Ensure that we first check for the reader status. Otherwise
         # we might mark the process as finished while output is still getting
         # processed.
-        if not hasattr(self, 'proc'):
-            raise RuntimeError("Calling poll() on a non started process is not"
-                               " allowed.")
+        if not hasattr(self, "proc"):
+            raise RuntimeError("Process hasn't been started yet")
+
         elif self.reader.is_alive():
             return None
         elif hasattr(self.proc, "returncode"):
@@ -872,6 +872,9 @@ falling back to not using job objects for managing child processes""", file=sys.
 
     @property
     def pid(self):
+        if not hasattr(self, "proc"):
+            raise RuntimeError("Process hasn't been started yet")
+
         return self.proc.pid
 
     @staticmethod
