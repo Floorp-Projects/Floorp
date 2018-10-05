@@ -46,6 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "logging.h"
 #include "nsError.h"
+#include "nsThreadUtils.h"
 
 // nICEr includes
 extern "C" {
@@ -657,7 +658,11 @@ void NrIceMediaStream::Ready() {
   if (state_ != ICE_OPEN) {
     MOZ_MTLOG(ML_DEBUG, "Marking stream ready '" << name_ << "'");
     state_ = ICE_OPEN;
-    CloseStream(&old_stream_);
+    NS_DispatchToCurrentThread(NewRunnableMethod<nr_ice_media_stream*>(
+          "NrIceMediaStream::DeferredCloseOldStream",
+          this,
+          &NrIceMediaStream::DeferredCloseOldStream,
+          old_stream_));
     SignalReady(this);
   }
   else {
@@ -670,7 +675,11 @@ void NrIceMediaStream::Failed() {
     MOZ_MTLOG(ML_DEBUG, "Marking stream failed '" << name_ << "'");
     state_ = ICE_CLOSED;
     // We don't need the old stream anymore.
-    CloseStream(&old_stream_);
+    NS_DispatchToCurrentThread(NewRunnableMethod<nr_ice_media_stream*>(
+          "NrIceMediaStream::DeferredCloseOldStream",
+          this,
+          &NrIceMediaStream::DeferredCloseOldStream,
+          old_stream_));
     SignalFailed(this);
   }
 }
@@ -693,6 +702,14 @@ NrIceMediaStream::CloseStream(nr_ice_media_stream **stream)
       MOZ_MTLOG(ML_ERROR, "Failed to remove stream, error=" << r);
     }
     *stream = nullptr;
+  }
+}
+
+void
+NrIceMediaStream::DeferredCloseOldStream(const nr_ice_media_stream *old)
+{
+  if (old == old_stream_) {
+    CloseStream(&old_stream_);
   }
 }
 
