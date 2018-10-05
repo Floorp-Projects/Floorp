@@ -32,6 +32,8 @@ clang_checkers:
   - name: bugprone-macro-repeated-side-effects
   - name: bugprone-misplaced-widening-cast
   - name: bugprone-multiple-statement-macro
+    # Incompatible with our code base, see bug 1496379.
+    publish: !!bool no
   - name: bugprone-sizeof-expression
   - name: bugprone-string-constructor
   - name: bugprone-string-integer-assignment
