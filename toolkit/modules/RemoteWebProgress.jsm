@@ -92,6 +92,16 @@ RemoteWebProgressManager.prototype = {
     this._messageManager.addMessageListener("Content:LoadURIResult", this);
   },
 
+  swapListeners(aOtherRemoteWebProgressManager) {
+    let temp = aOtherRemoteWebProgressManager.progressListeners;
+    aOtherRemoteWebProgressManager._progressListeners = this._progressListeners;
+    this._progressListeners = temp;
+  },
+
+  get progressListeners() {
+    return this._progressListeners;
+  },
+
   get topLevelWebProgress() {
     return this._topLevelWebProgress;
   },
