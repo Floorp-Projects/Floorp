@@ -12,62 +12,12 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-
-  <binding id="download"
-           extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
-    <content orient="horizontal"
-             onclick="DownloadsView.onDownloadClick(event);">
-      <xul:hbox class="downloadMainArea"
-                flex="1"
-                align="center">
-        <xul:stack>
-          <xul:image class="downloadTypeIcon"
-                     validate="always"
-                     xbl:inherits="src=image"/>
-          <xul:image class="downloadBlockedBadge" />
-        </xul:stack>
-        <xul:vbox pack="center"
-                  flex="1"
-                  class="downloadContainer">
-          <!-- We're letting localizers put a min-width in here primarily
-               because of the downloads summary at the bottom of the list of
-               download items. An element in the summary has the same min-width
-               on a description, and we don't want the panel to change size if the
-               summary isn't being displayed, so we ensure that items share the
-               same minimum width.
-               -->
-          <xul:description class="downloadTarget"
-                           crop="center"
-                           xbl:inherits="value=displayName,tooltiptext=displayName"/>
-          <xul:progressmeter anonid="progressmeter"
-                             class="downloadProgress"
-                             min="0"
-                             max="100"
-                             xbl:inherits="progress-undetermined,mode=progressmode,value=progress,paused=progresspaused"/>
-          <xul:description class="downloadDetails downloadDetailsNormal"
-                           crop="end"
-                           xbl:inherits="value=status,tooltiptext=status"/>
-          <xul:description class="downloadDetails downloadDetailsHover"
-                           crop="end"
-                           xbl:inherits="value=hoverStatus"/>
-          <xul:description class="downloadDetails downloadDetailsButtonHover"
-                           crop="end"
-                           xbl:inherits="value=buttonHoverStatus"/>
-        </xul:vbox>
-      </xul:hbox>
-      <xul:toolbarseparator />
-      <xul:button class="downloadButton"
-                  xbl:inherits="class=buttonclass,aria-label=buttonarialabel,tooltiptext=buttontooltiptext"
-                  oncommand="DownloadsView.onDownloadButton(event);"/>
-    </content>
-  </binding>
-
   <binding id="download-subview-toolbarbutton"
            extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
+      <xul:image class="toolbarbutton-icon" validate="always" xbl:inherits="src=image"/>
       <xul:vbox class="toolbarbutton-text" flex="1">
-        <xul:label crop="end" xbl:inherits="value=label,accesskey,crop,wrap"/>
+        <xul:label crop="end" xbl:inherits="value=label"/>
         <xul:label class="status-text status-full" crop="end" xbl:inherits="value=status"/>
         <xul:label class="status-text status-open" crop="end" xbl:inherits="value=openLabel"/>
         <xul:label class="status-text status-retry" crop="end" xbl:inherits="value=retryLabel"/>

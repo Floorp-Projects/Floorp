@@ -147,6 +147,14 @@ class UrlbarController {
   }
 
   /**
+   * When switching tabs, clear some internal caches to handle cases like
+   * backspace, autofill or repeated searches.
+   */
+  tabContextChanged() {
+    // TODO: implementation needed (bug 1496685)
+  }
+
+  /**
    * Internal function to notify listeners of results.
    *
    * @param {string} name Name of the notification.
