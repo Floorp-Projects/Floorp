@@ -14,6 +14,7 @@ use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use webrender::{AsyncPropertySampler, PipelineInfo, SceneBuilderHooks};
 use webrender::{UploadMethod, VertexUsageHint};
+use webrender::ShaderPrecacheFlags;
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dBlobImageHandler;
 use program_cache::{WrProgramCache, remove_disk_cache};
@@ -967,6 +968,12 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         UploadMethod::PixelBuffer(VertexUsageHint::Dynamic)
     };
 
+    let precache_flags = if env_var_to_bool("MOZ_WR_PRECACHE_SHADERS") {
+        ShaderPrecacheFlags::FULL_COMPILE
+    } else {
+        ShaderPrecacheFlags::empty()
+    };
+
     let opts = RendererOptions {
         enable_aa: true,
         enable_subpixel_aa: true,
@@ -993,7 +1000,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         sampler: Some(Box::new(SamplerCallback::new(window_id))),
         max_texture_size: Some(8192), // Moz2D doesn't like textures bigger than this
         clear_color: Some(ColorF::new(0.0, 0.0, 0.0, 0.0)),
-        precache_shaders: env_var_to_bool("MOZ_WR_PRECACHE_SHADERS"),
+        precache_flags,
         namespace_alloc_by_client: true,
         ..Default::default()
     };
