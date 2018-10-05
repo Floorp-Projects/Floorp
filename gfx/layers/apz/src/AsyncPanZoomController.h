@@ -946,6 +946,10 @@ private:
   CSSPoint mCompositedScrollOffset;
   CSSToParentLayerScale2D mCompositedZoom;
 
+  // Groups state variables that are specific to a platform.
+  // Initialized on first use.
+  UniquePtr<PlatformSpecificStateBase> mPlatformSpecificState;
+
   AxisX mX;
   AxisY mY;
 
@@ -976,10 +980,6 @@ private:
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
   UniquePtr<OverscrollEffectBase> mOverscrollEffect;
-
-  // Groups state variables that are specific to a platform.
-  // Initialized on first use.
-  UniquePtr<PlatformSpecificStateBase> mPlatformSpecificState;
 
   friend class Axis;
 
