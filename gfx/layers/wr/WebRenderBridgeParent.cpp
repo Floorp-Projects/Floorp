@@ -263,6 +263,23 @@ WebRenderBridgeParent::~WebRenderBridgeParent()
 }
 
 mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvEnsureConnected(TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                           MaybeIdNamespace* aMaybeIdNamespace)
+{
+  if (mDestroyed) {
+    *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
+    *aMaybeIdNamespace = Nothing();
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(mIdNamespace.mHandle != 0);
+  *aTextureFactoryIdentifier = GetTextureFactoryIdentifier();
+  *aMaybeIdNamespace = Some(mIdNamespace);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvShutdown()
 {
   return HandleShutdown();

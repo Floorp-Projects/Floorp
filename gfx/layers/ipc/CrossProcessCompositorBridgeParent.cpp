@@ -195,9 +195,7 @@ CrossProcessCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
 
 PWebRenderBridgeParent*
 CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
-                                                                const LayoutDeviceIntSize& aSize,
-                                                                TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                                wr::IdNamespace *aIdNamespace)
+                                                                const LayoutDeviceIntSize& aSize)
 {
 #ifndef MOZ_BUILD_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -235,8 +233,6 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     NS_WARNING(nsPrintfCString("Created child without a matching parent? root %p", root.get()).get());
     WebRenderBridgeParent* parent = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
     parent->AddRef(); // IPDL reference
-    *aIdNamespace = parent->GetIdNamespace();
-    *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     return parent;
   }
 
@@ -252,8 +248,6 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     sIndirectLayerTrees[layersId].mCrossProcessParent = this;
     sIndirectLayerTrees[layersId].mWrBridge = parent;
   }
-  *aTextureFactoryIdentifier = parent->GetTextureFactoryIdentifier();
-  *aIdNamespace = parent->GetIdNamespace();
 
   return parent;
 }

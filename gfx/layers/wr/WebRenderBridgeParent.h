@@ -65,6 +65,9 @@ public:
   AsyncImagePipelineManager* AsyncImageManager() { return mAsyncImageManager; }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
+  mozilla::ipc::IPCResult RecvEnsureConnected(TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                              MaybeIdNamespace* aMaybeIdNamespace) override;
+
   mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
                                               const TextureInfo& aInfo) override;
   mozilla::ipc::IPCResult RecvReleaseCompositable(const CompositableHandle& aHandle) override;
