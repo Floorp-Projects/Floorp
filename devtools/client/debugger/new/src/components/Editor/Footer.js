@@ -10,8 +10,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
 var _classnames = require("devtools/client/debugger/new/dist/vendors").vendored["classnames"];
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -162,7 +160,7 @@ class SourceFooter extends _react.PureComponent {
       selectedSource
     } = this.props;
 
-    if (!mappedSource || !(0, _devtoolsSourceMap.isOriginalId)(selectedSource.id)) {
+    if (!mappedSource || !(0, _source.isOriginal)(selectedSource)) {
       return null;
     }
 

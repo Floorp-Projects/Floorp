@@ -26,7 +26,7 @@ UNQUOTED_TOKENS_RE = _tokens2re(
   whitespace=r'[\t\r\n ]+',
   quote=r'[\'"]',
   comment='#',
-  special=r'[<>&|`~(){}$;\*\?]',
+  special=r'[<>&|`(){}$;\*\?]',
   backslashed=r'\\[^\\]',
 )
 

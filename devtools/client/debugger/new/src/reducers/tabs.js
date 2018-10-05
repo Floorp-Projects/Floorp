@@ -10,6 +10,8 @@ exports.getNewSelectedSourceId = getNewSelectedSourceId;
 
 var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["reselect"];
 
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
 var _lodashMove = require("devtools/client/debugger/new/dist/vendors").vendored["lodash-move"];
 
 var _lodashMove2 = _interopRequireDefault(_lodashMove);
@@ -51,12 +53,12 @@ function update(state = [], action) {
   }
 }
 
-function removeSourceFromTabList(tabs, url) {
-  return tabs.filter(tab => tab.url !== url);
+function removeSourceFromTabList(tabs, source) {
+  return tabs.filter(tab => tab.url !== source.url || tab.isOriginal != (0, _devtoolsSourceMap.isOriginalId)(source.id));
 }
 
-function removeSourcesFromTabList(tabs, urls) {
-  return urls.reduce((t, url) => removeSourceFromTabList(t, url), tabs);
+function removeSourcesFromTabList(tabs, sources) {
+  return sources.reduce((t, source) => removeSourceFromTabList(t, source), tabs);
 }
 /**
  * Adds the new source to the tab list if it is not already there
@@ -67,14 +69,16 @@ function removeSourcesFromTabList(tabs, urls) {
 
 function updateTabList(tabs, {
   url,
-  framework = null
+  framework = null,
+  isOriginal = false
 }) {
-  const currentIndex = tabs.findIndex(tab => tab.url == url);
+  const currentIndex = tabs.findIndex(tab => isSimilarTab(tab, url, isOriginal));
 
   if (currentIndex === -1) {
     tabs = [{
       url,
-      framework
+      framework,
+      isOriginal
     }, ...tabs];
   } else if (framework) {
     tabs[currentIndex].framework = framework;
@@ -117,7 +121,7 @@ function getNewSelectedSourceId(state, availableTabs) {
     return "";
   }
 
-  const matchingTab = availableTabs.find(tab => tab.url == selectedTab.url);
+  const matchingTab = availableTabs.find(tab => isSimilarTab(tab, selectedTab.url, (0, _devtoolsSourceMap.isOriginalId)(selectedLocation.sourceId)));
 
   if (matchingTab) {
     const sources = state.sources.sources;
@@ -126,7 +130,7 @@ function getNewSelectedSourceId(state, availableTabs) {
       return "";
     }
 
-    const selectedSource = (0, _sources.getSourceByURL)(state, selectedTab.url);
+    const selectedSource = (0, _sources.getSpecificSourceByURL)(state, selectedTab.url, (0, _devtoolsSourceMap.isOriginalId)(selectedTab.id));
 
     if (selectedSource) {
       return selectedSource.id;
@@ -142,7 +146,7 @@ function getNewSelectedSourceId(state, availableTabs) {
   const availableTab = availableTabs[newSelectedTabIndex];
 
   if (availableTab) {
-    const tabSource = (0, _sources.getSourceByUrlInSources)((0, _sources.getSources)(state), (0, _sources.getUrls)(state), availableTab.url);
+    const tabSource = (0, _sources.getSpecificSourceByUrlInSources)((0, _sources.getSources)(state), (0, _sources.getUrls)(state), availableTab.url, availableTab.isOriginal);
 
     if (tabSource) {
       return tabSource.id;
@@ -162,8 +166,8 @@ function getNewSelectedSourceId(state, availableTabs) {
 
 const getTabs = exports.getTabs = state => state.tabs;
 
-const getSourceTabs = exports.getSourceTabs = (0, _reselect.createSelector)(getTabs, _sources.getSources, _sources.getUrls, (tabs, sources, urls) => tabs.filter(tab => (0, _sources.getSourceByUrlInSources)(sources, urls, tab.url)));
+const getSourceTabs = exports.getSourceTabs = (0, _reselect.createSelector)(getTabs, _sources.getSources, _sources.getUrls, (tabs, sources, urls) => tabs.filter(tab => (0, _sources.getSpecificSourceByUrlInSources)(sources, urls, tab.url, tab.isOriginal)));
 const getSourcesForTabs = exports.getSourcesForTabs = (0, _reselect.createSelector)(getSourceTabs, _sources.getSources, _sources.getUrls, (tabs, sources, urls) => {
-  return tabs.map(tab => (0, _sources.getSourceByUrlInSources)(sources, urls, tab.url)).filter(source => source);
+  return tabs.map(tab => (0, _sources.getSpecificSourceByUrlInSources)(sources, urls, tab.url, tab.isOriginal)).filter(Boolean);
 });
 exports.default = update;

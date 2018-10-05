@@ -1938,17 +1938,17 @@ class StaticAnalysis(MachCommandBase):
             _, config, _ = self._get_config_environment()
             clang_tools_path = self.topsrcdir
             self._clang_tidy_path = mozpath.join(
-                clang_tools_path, "clang", "bin",
+                clang_tools_path, "clang-tidy", "bin",
                 "clang-tidy" + config.substs.get('BIN_SUFFIX', ''))
             self._clang_format_path = mozpath.join(
-                clang_tools_path, "clang", "bin",
+                clang_tools_path, "clang-tidy", "bin",
                 "clang-format" + config.substs.get('BIN_SUFFIX', ''))
             self._clang_apply_replacements = mozpath.join(
-                clang_tools_path, "clang", "bin",
+                clang_tools_path, "clang-tidy", "bin",
                 "clang-apply-replacements" + config.substs.get('BIN_SUFFIX', ''))
-            self._run_clang_tidy_path = mozpath.join(clang_tools_path, "clang", "share",
+            self._run_clang_tidy_path = mozpath.join(clang_tools_path, "clang-tidy", "share",
                                                      "clang", "run-clang-tidy.py")
-            self._clang_format_diff = mozpath.join(clang_tools_path, "clang", "share",
+            self._clang_format_diff = mozpath.join(clang_tools_path, "clang-tidy", "share",
                                                    "clang", "clang-format-diff.py")
 
             # Ensure that clang-tidy is present
@@ -2361,17 +2361,17 @@ class StaticAnalysis(MachCommandBase):
             return rc
 
         clang_tools_path = mozpath.join(self._mach_context.state_dir, "clang-tools")
-        self._clang_tidy_path = mozpath.join(clang_tools_path, "clang", "bin",
+        self._clang_tidy_path = mozpath.join(clang_tools_path, "clang-tidy", "bin",
                                              "clang-tidy" + config.substs.get('BIN_SUFFIX', ''))
         self._clang_format_path = mozpath.join(
-            clang_tools_path, "clang", "bin",
+            clang_tools_path, "clang-tidy", "bin",
             "clang-format" + config.substs.get('BIN_SUFFIX', ''))
         self._clang_apply_replacements = mozpath.join(
-            clang_tools_path, "clang", "bin",
+            clang_tools_path, "clang-tidy", "bin",
             "clang-apply-replacements" + config.substs.get('BIN_SUFFIX', ''))
-        self._run_clang_tidy_path = mozpath.join(clang_tools_path, "clang", "share", "clang",
+        self._run_clang_tidy_path = mozpath.join(clang_tools_path, "clang-tidy", "share", "clang",
                                                  "run-clang-tidy.py")
-        self._clang_format_diff = mozpath.join(clang_tools_path, "clang", "share", "clang",
+        self._clang_format_diff = mozpath.join(clang_tools_path, "clang-tidy", "share", "clang",
                                                "clang-format-diff.py")
 
         if os.path.exists(self._clang_tidy_path) and \

@@ -9,6 +9,8 @@ exports.moveTab = moveTab;
 exports.closeTab = closeTab;
 exports.closeTabs = closeTabs;
 
+var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
+
 var _editor = require("../utils/editor/index");
 
 var _sources = require("./sources/index");
@@ -23,19 +25,28 @@ var _selectors = require("../selectors/index");
  * Redux actions for the editor tabs
  * @module actions/tabs
  */
-function updateTab(url, framework) {
+function updateTab(source, framework) {
+  const {
+    url
+  } = source;
+  const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
   return {
     type: "UPDATE_TAB",
     url,
-    framework
+    framework,
+    isOriginal
   };
 }
 
-function addTab(url, framework) {
+function addTab(source) {
+  const {
+    url
+  } = source;
+  const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
   return {
     type: "ADD_TAB",
     url,
-    framework
+    isOriginal
   };
 }
 
@@ -52,14 +63,18 @@ function moveTab(url, tabIndex) {
  */
 
 
-function closeTab(url) {
+function closeTab(source) {
   return ({
     dispatch,
     getState,
     client
   }) => {
-    (0, _editor.removeDocument)(url);
-    const tabs = (0, _selectors.removeSourceFromTabList)((0, _selectors.getSourceTabs)(getState()), url);
+    const {
+      id,
+      url
+    } = source;
+    (0, _editor.removeDocument)(id);
+    const tabs = (0, _selectors.removeSourceFromTabList)((0, _selectors.getSourceTabs)(getState()), source);
     const sourceId = (0, _selectors.getNewSelectedSourceId)(getState(), tabs);
     dispatch({
       type: "CLOSE_TAB",
@@ -81,17 +96,12 @@ function closeTabs(urls) {
     getState,
     client
   }) => {
-    urls.forEach(url => {
-      const source = (0, _selectors.getSourceByURL)(getState(), url);
-
-      if (source) {
-        (0, _editor.removeDocument)(source.id);
-      }
-    });
-    const tabs = (0, _selectors.removeSourcesFromTabList)((0, _selectors.getSourceTabs)(getState()), urls);
+    const sources = (0, _selectors.getSourcesByURLs)(getState(), urls);
+    sources.map(source => (0, _editor.removeDocument)(source.id));
+    const tabs = (0, _selectors.removeSourcesFromTabList)((0, _selectors.getSourceTabs)(getState()), sources);
     dispatch({
       type: "CLOSE_TABS",
-      urls,
+      sources,
       tabs
     });
     const sourceId = (0, _selectors.getNewSelectedSourceId)(getState(), tabs);

@@ -5,8 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.loadSourceText = loadSourceText;
 
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
 var _promise = require("../utils/middleware/promise");
 
 var _selectors = require("../../selectors/index");
@@ -41,9 +39,11 @@ async function loadSource(source, {
   sourceMaps,
   client
 }) {
-  const id = source.id;
+  const {
+    id
+  } = source;
 
-  if ((0, _devtoolsSourceMap.isOriginalId)(id)) {
+  if ((0, _source.isOriginal)(source)) {
     return sourceMaps.getOriginalSourceText(source);
   }
 
@@ -107,7 +107,7 @@ function loadSourceText(source) {
       return;
     }
 
-    if ((0, _devtoolsSourceMap.isOriginalId)(newSource.id) && !newSource.isWasm) {
+    if ((0, _source.isOriginal)(newSource) && !newSource.isWasm) {
       const generatedSource = (0, _selectors.getGeneratedSource)(getState(), source);
       await dispatch(loadSourceText(generatedSource));
     }
