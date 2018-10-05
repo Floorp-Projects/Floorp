@@ -33,16 +33,6 @@ function ReloadAndRecordTab() {
   });
 }
 
-function ReloadAndStopRecordingTab() {
-  const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
-  const url = gBrowser.currentURI.spec;
-  gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true,
-                                   { newFrameloader: true });
-  gBrowser.loadURI(url, {
-    triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
-  });
-}
-
 function SaveRecording() {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
   const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
@@ -100,6 +90,3 @@ exports.addWebReplayMenu = function(doc) {
     mds.parentNode.insertBefore(menu, mds);
   }
 };
-
-exports.reloadAndRecordTab = ReloadAndRecordTab;
-exports.reloadAndStopRecordingTab = ReloadAndStopRecordingTab;
