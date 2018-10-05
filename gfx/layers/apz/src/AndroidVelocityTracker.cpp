@@ -33,6 +33,7 @@ static const uint8_t kHistorySize = 20;
 
 AndroidVelocityTracker::AndroidVelocityTracker()
   : mLastEventTime(0)
+  , mAdditionalDelta(0)
 {
 }
 
@@ -57,10 +58,10 @@ AndroidVelocityTracker::AddPosition(ParentLayerCoord aPos,
   // If we are axis-locked, adjust the position to reflect the fact that
   // no movement is happening.
   if (aIsAxisLocked && !mHistory.IsEmpty()) {
-    aPos = mHistory[mHistory.Length() - 1].second;
+    aPos = mHistory[mHistory.Length() - 1].second - mAdditionalDelta;
   }
 
-  mHistory.AppendElement(std::make_pair(aTimestampMs, aPos));
+  mHistory.AppendElement(std::make_pair(aTimestampMs, aPos + mAdditionalDelta));
   if (mHistory.Length() > kHistorySize) {
     mHistory.RemoveElementAt(0);
   }
@@ -79,7 +80,16 @@ AndroidVelocityTracker::HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
                                                      uint32_t aEndTimestampMs,
                                                      ParentLayerCoord aDelta)
 {
-  // TODO: Implement fully.
+  // If the dynamic toolbar is moving, the page content is moving relative
+  // to the screen. The positions passed to AddPosition() reflect the position
+  // of the finger relative to the page content, but we want the velocity we
+  // compute to be based on the physical movement of the finger (that is, its
+  // position relative to the screen). To accomplish this, we maintain
+  // |mAdditionalDelta|, a delta representing the amount by which the page has
+  // moved relative to the screen, and add it to every position recorded in
+  // the history in AddPosition().
+  mAdditionalDelta += aDelta;
+
   float timeDelta = aEndTimestampMs - aStartTimestampMs;
   MOZ_ASSERT(timeDelta != 0);
   return aDelta / timeDelta;
@@ -300,6 +310,7 @@ AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs)
 void
 AndroidVelocityTracker::Clear()
 {
+  mAdditionalDelta = 0;
   mHistory.Clear();
 }
 
