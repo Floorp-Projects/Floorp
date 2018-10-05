@@ -49,4 +49,4 @@ class OpenBSDBootstrapper(BaseBootstrapper):
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
         # Clang / llvm already installed as browser package
-        self.ensure_rust_package('cbindgen')
+        self.run_as_root(['pkg_add', 'cbindgen'])
