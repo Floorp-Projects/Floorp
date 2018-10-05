@@ -20,8 +20,6 @@ var _parser = require("../workers/parser/index");
 
 var _promise = require("./utils/middleware/promise");
 
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
 var _prefs = require("../utils/prefs");
 
 var _source = require("../utils/source");
@@ -41,7 +39,11 @@ function setSourceMetaData(sourceId) {
     }
 
     const framework = await (0, _parser.getFramework)(source.id);
-    dispatch((0, _tabs.updateTab)(source.url, framework));
+
+    if (framework) {
+      dispatch((0, _tabs.updateTab)(source, framework));
+    }
+
     dispatch({
       type: "SET_SOURCE_METADATA",
       sourceId: source.id,
@@ -113,7 +115,7 @@ function compressPausePoints(pausePoints) {
 
     for (const col in pausePoints[line]) {
       const point = pausePoints[line][col];
-      compressed[line][col] = (point.break && 1) | (point.step && 2);
+      compressed[line][col] = (point.break ? 1 : 0) | (point.step ? 2 : 0);
     }
   }
 
@@ -139,7 +141,7 @@ function setPausePoints(sourceId) {
     const pausePoints = await (0, _parser.getPausePoints)(sourceId);
     const compressed = compressPausePoints(pausePoints);
 
-    if ((0, _devtoolsSourceMap.isGeneratedId)(sourceId)) {
+    if ((0, _source.isGenerated)(source)) {
       await client.setPausePoints(sourceId, compressed);
     }
 

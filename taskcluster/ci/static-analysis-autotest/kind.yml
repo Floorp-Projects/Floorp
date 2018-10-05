@@ -39,6 +39,11 @@ jobs:
         treeherder:
             platform: linux64/debug
         worker-type: aws-provisioner-v1/gecko-t-linux-large
+        worker:
+            env:
+                # clang-tidy needs a recent libstdc++, which can be found in the clang
+                # toolchain.
+                LD_LIBRARY_PATH: /builds/worker/workspace/build/src/clang/lib
         run:
             config:
                 - builds/releng_base_firefox.py

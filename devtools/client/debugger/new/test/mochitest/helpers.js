@@ -6,10 +6,10 @@
  * required from other panel test files.
  */
 
- // Import helpers for the new debugger
- Services.scriptloader.loadSubScript(
- "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers/context.js",
- this);
+// Import helpers for the new debugger
+Services.scriptloader.loadSubScript(
+"chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers/context.js",
+this);
 
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { Task } = require("devtools/shared/task");
@@ -593,8 +593,7 @@ async function selectSource(dbg, url, line) {
 
 
 async function closeTab(dbg, url) {
-  const source = findSource(dbg, url);
-  await dbg.actions.closeTab(source.url);
+  await dbg.actions.closeTab(findSource(dbg, url));
 }
 
 /**
