@@ -498,7 +498,7 @@ public:
 
   virtual SyncHandle GetSyncHandle() override;
 
-  virtual bool Synchronize() override;
+  virtual bool Synchronize(bool aFallible) override;
 
   IDXGIKeyedMutex* GetKeyedMutex() { return mKeyedMutex.get(); };
 
