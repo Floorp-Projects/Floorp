@@ -263,16 +263,16 @@ Inspector.prototype = {
   },
 
   _deferredOpen: async function() {
-    this.walker.on("new-root", this.onNewRoot);
-    this.toolbox.on("host-changed", this.onHostChanged);
-    this.selection.on("new-node-front", this.onNewSelection);
-    this.selection.on("detached-front", this.onDetached);
-
     this._initMarkup();
     this.isReady = false;
 
-    // Setup the splitter before the sidebar is displayed so,
-    // we don't miss any events.
+    // Set the node front so that the markup and sidebar panels will have the selected
+    // nodeFront ready when they're initialized.
+    if (this._defaultNode) {
+      this.selection.setNodeFront(this._defaultNode, { reason: "inspector-open" });
+    }
+
+    // Setup the splitter before the sidebar is displayed so, we don't miss any events.
     this.setupSplitter();
 
     // We can display right panel with: tab bar, markup view and breadbrumb. Right after
@@ -280,24 +280,25 @@ Inspector.prototype = {
     // during load of the inspector.
     this.panelDoc.getElementById("inspector-main-content").style.visibility = "visible";
 
+    // Setup the sidebar panels.
     this.setupSidebar();
 
     await this.once("markuploaded");
     this.isReady = true;
 
-    // All the components are initialized. Let's select a node.
-    if (this._defaultNode) {
-      const onAllPanelsUpdated = this.once("inspector-updated");
-      this.selection.setNodeFront(this._defaultNode, { reason: "inspector-open" });
-      await onAllPanelsUpdated;
-      await this.markup.expandNode(this.selection.nodeFront);
-    }
-
-    // Take care of the remaining initialization and setup.
+    // All the components are initialized. Take care of the remaining initialization
+    // and setup.
     this.breadcrumbs = new HTMLBreadcrumbs(this);
     this.setupExtensionSidebars();
     this.setupSearchBox();
     await this.setupToolbar();
+
+    this.onNewSelection();
+
+    this.walker.on("new-root", this.onNewRoot);
+    this.toolbox.on("host-changed", this.onHostChanged);
+    this.selection.on("new-node-front", this.onNewSelection);
+    this.selection.on("detached-front", this.onDetached);
 
     if (this.target.isLocalTab) {
       this.target.on("thread-paused", this._updateDebuggerPausedWarning);
@@ -1249,6 +1250,18 @@ Inspector.prototype = {
   },
 
   /**
+   * On any new selection made by the user, store the unique css selector
+   * of the selected node so it can be restored after reload of the same page
+   */
+  updateSelectionCssSelector() {
+    if (this.selection.isElementNode()) {
+      this.selection.nodeFront.getUniqueSelector().then(selector => {
+        this.selectionCssSelector = selector;
+      }, this._handleRejectionIfNotDestroyed);
+    }
+  },
+
+  /**
    * Can a new HTML element be inserted into the currently selected element?
    * @return {Boolean}
    */
@@ -1265,6 +1278,18 @@ Inspector.prototype = {
            !selection.isAnonymousNode() &&
            !invalidTagNames.includes(
             selection.nodeFront.nodeName.toLowerCase());
+  },
+
+  /**
+   * Update the state of the add button in the toolbar depending on the current selection.
+   */
+  updateAddElementButton() {
+    const btn = this.panelDoc.getElementById("inspector-element-add-button");
+    if (this.canAddHTMLChild()) {
+      btn.removeAttribute("disabled");
+    } else {
+      btn.setAttribute("disabled", "true");
+    }
   },
 
   /**
@@ -1294,31 +1319,13 @@ Inspector.prototype = {
       return;
     }
 
-    // Wait for all the known tools to finish updating and then let the
-    // client know.
-    const selection = this.selection.nodeFront;
-
-    // Update the state of the add button in the toolbar depending on the
-    // current selection.
-    const btn = this.panelDoc.querySelector("#inspector-element-add-button");
-    if (this.canAddHTMLChild()) {
-      btn.removeAttribute("disabled");
-    } else {
-      btn.setAttribute("disabled", "true");
-    }
-
-    // On any new selection made by the user, store the unique css selector
-    // of the selected node so it can be restored after reload of the same page
-    if (this.selection.isElementNode()) {
-      selection.getUniqueSelector().then(selector => {
-        this.selectionCssSelector = selector;
-      }, this._handleRejectionIfNotDestroyed);
-    }
+    this.updateAddElementButton();
+    this.updateSelectionCssSelector();
 
     const selfUpdate = this.updating("inspector-panel");
     executeSoon(() => {
       try {
-        selfUpdate(selection);
+        selfUpdate(this.selection.nodeFront);
       } catch (ex) {
         console.error(ex);
       }
@@ -1956,11 +1963,8 @@ Inspector.prototype = {
 
   _onMarkupFrameLoad: function() {
     this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
-
     this._markupFrame.contentWindow.focus();
-
     this.markup = new MarkupView(this, this._markupFrame, this._toolbox.win);
-
     this._markupBox.style.visibility = "visible";
     this.emit("markuploaded");
   },
