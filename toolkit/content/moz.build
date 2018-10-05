@@ -29,8 +29,6 @@ if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
 
 JAR_MANIFESTS += ['jar.mn']
 
-SPHINX_TREES['toolkit_widgets'] = 'widgets/docs'
-
 DEFINES['TOPOBJDIR'] = TOPOBJDIR
 
 with Files('**'):
