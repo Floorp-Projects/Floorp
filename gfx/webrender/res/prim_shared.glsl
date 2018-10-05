@@ -89,11 +89,6 @@ struct VertexInfo {
     vec4 world_pos;
 };
 
-//Note: this function is unsafe for `vi.world_pos.w <= 0.0`
-vec2 snap_device_pos(VertexInfo vi) {
-    return vi.world_pos.xy * uDevicePixelRatio / max(0.0, vi.world_pos.w) + vi.snap_offset;
-}
-
 VertexInfo write_vertex(RectWithSize instance_rect,
                         RectWithSize local_clip_rect,
                         float z,
@@ -111,14 +106,15 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     vec2 snap_offset = compute_snap_offset(
         clamped_local_pos,
         transform.m,
-        snap_rect
+        snap_rect,
+        task.common_data.device_pixel_scale
     );
 
     // Transform the current vertex to world space.
     vec4 world_pos = transform.m * vec4(clamped_local_pos, 0.0, 1.0);
 
     // Convert the world positions to device pixel space.
-    vec2 device_pos = world_pos.xy * uDevicePixelRatio;
+    vec2 device_pos = world_pos.xy * task.common_data.device_pixel_scale;
 
     // Apply offsets for the render task to get correct screen location.
     vec2 final_offset = snap_offset - task.content_origin + task.common_data.task_rect.p0;
@@ -195,7 +191,7 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
     // Transform the current vertex to the world cpace.
     vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
     vec4 final_pos = vec4(
-        world_pos.xy * uDevicePixelRatio + task_offset * world_pos.w,
+        world_pos.xy * task.common_data.device_pixel_scale + task_offset * world_pos.w,
         z * world_pos.w,
         world_pos.w
     );
@@ -218,7 +214,7 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
 }
 
 void write_clip(vec4 world_pos, vec2 snap_offset, ClipArea area) {
-    vec2 uv = world_pos.xy * uDevicePixelRatio +
+    vec2 uv = world_pos.xy * area.common_data.device_pixel_scale +
         world_pos.w * (snap_offset + area.common_data.task_rect.p0 - area.screen_origin);
     vClipMaskUvBounds = vec4(
         area.common_data.task_rect.p0,

@@ -1,0 +1,11 @@
+--- bindings.rs
++++ bindings.rs
+@@ -1017,7 +1023,7 @@
+         sampler: Some(Box::new(SamplerCallback::new(window_id))),
+         max_texture_size: Some(8192), // Moz2D doesn't like textures bigger than this
+         clear_color: Some(ColorF::new(0.0, 0.0, 0.0, 0.0)),
+-        precache_shaders: env_var_to_bool("MOZ_WR_PRECACHE_SHADERS"),
++        precache_flags,
+         ..Default::default()
+     };
+ 

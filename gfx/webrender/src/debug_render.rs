@@ -105,10 +105,19 @@ pub struct DebugRenderer {
 
 impl DebugRenderer {
     pub fn new(device: &mut Device) -> Result<Self, ShaderError> {
-        let font_program = device.create_program("debug_font", "", &DESC_FONT)?;
+        let font_program = device.create_program_linked(
+            "debug_font",
+            "",
+            &DESC_FONT,
+        )?;
+        device.bind_program(&font_program);
         device.bind_shader_samplers(&font_program, &[("sColor0", DebugSampler::Font)]);
 
-        let color_program = device.create_program("debug_color", "", &DESC_COLOR)?;
+        let color_program = device.create_program_linked(
+            "debug_color",
+            "",
+            &DESC_COLOR,
+        )?;
 
         let font_vao = device.create_vao(&DESC_FONT);
         let line_vao = device.create_vao(&DESC_COLOR);

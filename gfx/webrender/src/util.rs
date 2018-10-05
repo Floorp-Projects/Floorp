@@ -83,10 +83,12 @@ impl ScaleOffset {
     }
 
     pub fn offset(&self, offset: Vector2D<f32>) -> Self {
-        ScaleOffset {
-            scale: self.scale,
-            offset: self.offset + offset,
-        }
+        self.accumulate(
+            &ScaleOffset {
+                scale: Vector2D::new(1.0, 1.0),
+                offset,
+            }
+        )
     }
 
     // Produce a ScaleOffset that includes both self
@@ -101,20 +103,6 @@ impl ScaleOffset {
             offset: Vector2D::new(
                 self.offset.x + self.scale.x * other.offset.x,
                 self.offset.y + self.scale.y * other.offset.y,
-            ),
-        }
-    }
-
-    // Find the difference between two ScaleOffset types.
-    pub fn difference(&self, other: &ScaleOffset) -> Self {
-        ScaleOffset {
-            scale: Vector2D::new(
-                other.scale.x / self.scale.x,
-                other.scale.y / self.scale.y,
-            ),
-            offset: Vector2D::new(
-                (other.offset.x - self.offset.x) / self.scale.x,
-                (other.offset.y - self.offset.y) / self.scale.y,
             ),
         }
     }
@@ -378,6 +366,7 @@ pub fn extract_inner_rect_safe<U>(
 
 #[cfg(test)]
 pub mod test {
+    use api::{LayoutTransform, LayoutVector3D};
     use super::*;
     use euclid::{Point2D, Angle, Transform3D};
     use std::f32::consts::PI;
@@ -391,6 +380,76 @@ pub mod test {
         let m1 = Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(PI / 3.0));
         // rotation by 60 degrees would imply scaling of X component by a factor of 2
         assert_eq!(m1.inverse_project(&p0), Some(Point2D::new(2.0, 2.0)));
+    }
+
+    fn validate_convert(xref: &LayoutTransform) {
+        let so = ScaleOffset::from_transform(xref).unwrap();
+        let xf = so.to_transform();
+        assert!(xref.approx_eq(&xf));
+    }
+
+    #[test]
+    fn scale_offset_convert() {
+        let xref = LayoutTransform::create_translation(130.0, 200.0, 0.0);
+        validate_convert(&xref);
+
+        let xref = LayoutTransform::create_scale(13.0, 8.0, 1.0);
+        validate_convert(&xref);
+
+        let xref = LayoutTransform::create_scale(0.5, 0.5, 1.0)
+                        .pre_translate(LayoutVector3D::new(124.0, 38.0, 0.0));
+        validate_convert(&xref);
+
+        let xref = LayoutTransform::create_translation(50.0, 240.0, 0.0)
+                        .pre_mul(&LayoutTransform::create_scale(30.0, 11.0, 1.0));
+        validate_convert(&xref);
+    }
+
+    fn validate_inverse(xref: &LayoutTransform) {
+        let s0 = ScaleOffset::from_transform(xref).unwrap();
+        let s1 = s0.inverse().accumulate(&s0);
+        assert!((s1.scale.x - 1.0).abs() < NEARLY_ZERO &&
+                (s1.scale.y - 1.0).abs() < NEARLY_ZERO &&
+                s1.offset.x.abs() < NEARLY_ZERO &&
+                s1.offset.y.abs() < NEARLY_ZERO,
+                "{:?}",
+                s1);
+    }
+
+    #[test]
+    fn scale_offset_inverse() {
+        let xref = LayoutTransform::create_translation(130.0, 200.0, 0.0);
+        validate_inverse(&xref);
+
+        let xref = LayoutTransform::create_scale(13.0, 8.0, 1.0);
+        validate_inverse(&xref);
+
+        let xref = LayoutTransform::create_scale(0.5, 0.5, 1.0)
+                        .pre_translate(LayoutVector3D::new(124.0, 38.0, 0.0));
+        validate_inverse(&xref);
+
+        let xref = LayoutTransform::create_translation(50.0, 240.0, 0.0)
+                        .pre_mul(&LayoutTransform::create_scale(30.0, 11.0, 1.0));
+        validate_inverse(&xref);
+    }
+
+    fn validate_accumulate(x0: &LayoutTransform, x1: &LayoutTransform) {
+        let x = x0.pre_mul(x1);
+
+        let s0 = ScaleOffset::from_transform(x0).unwrap();
+        let s1 = ScaleOffset::from_transform(x1).unwrap();
+
+        let s = s0.accumulate(&s1).to_transform();
+
+        assert!(x.approx_eq(&s), "{:?}\n{:?}", x, s);
+    }
+
+    #[test]
+    fn scale_offset_accumulate() {
+        let x0 = LayoutTransform::create_translation(130.0, 200.0, 0.0);
+        let x1 = LayoutTransform::create_scale(7.0, 3.0, 1.0);
+
+        validate_accumulate(&x0, &x1);
     }
 }
 

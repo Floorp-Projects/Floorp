@@ -186,7 +186,7 @@ pub use frame_builder::ChasePrimitive;
 pub use renderer::{AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind};
 pub use renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource, GpuProfile};
 pub use renderer::{GraphicsApi, GraphicsApiInfo, PipelineInfo, Renderer, RendererOptions};
-pub use renderer::{RendererStats, SceneBuilderHooks, ThreadListener};
+pub use renderer::{RendererStats, SceneBuilderHooks, ThreadListener, ShaderPrecacheFlags};
 pub use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 pub use webrender_api as api;
 pub use resource_cache::intersect_for_tile;

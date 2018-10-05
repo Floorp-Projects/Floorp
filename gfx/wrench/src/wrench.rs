@@ -20,7 +20,7 @@ use std::sync::mpsc::Receiver;
 use time;
 use webrender;
 use webrender::api::*;
-use webrender::{DebugFlags, RendererStats};
+use webrender::{DebugFlags, RendererStats, ShaderPrecacheFlags};
 use yaml_frame_writer::YamlFrameWriterReceiver;
 use {WindowWrapper, NotifierEvent};
 
@@ -205,6 +205,12 @@ impl Wrench {
         debug_flags.set(DebugFlags::DISABLE_BATCHING, no_batch);
         let callbacks = Arc::new(Mutex::new(blob::BlobCallbacks::new()));
 
+        let precache_flags = if precache_shaders {
+            ShaderPrecacheFlags::FULL_COMPILE
+        } else {
+            ShaderPrecacheFlags::empty()
+        };
+
         let opts = webrender::RendererOptions {
             device_pixel_ratio: dp_ratio,
             resource_override_path: shader_override_path,
@@ -213,7 +219,7 @@ impl Wrench {
             debug_flags,
             enable_clear_scissor: !no_scissor,
             max_recorded_profiles: 16,
-            precache_shaders,
+            precache_flags,
             blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
             disable_dual_source_blending,
             chase_primitive,

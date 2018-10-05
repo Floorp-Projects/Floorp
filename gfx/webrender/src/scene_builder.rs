@@ -447,10 +447,11 @@ impl SceneBuilder {
             }
         }
 
+        let is_low_priority = false;
         let blob_requests = replace(&mut txn.blob_requests, Vec::new());
         let mut rasterized_blobs = txn.blob_rasterizer.as_mut().map_or(
             Vec::new(),
-            |rasterizer| rasterizer.rasterize(&blob_requests),
+            |rasterizer| rasterizer.rasterize(&blob_requests, is_low_priority),
         );
         rasterized_blobs.append(&mut txn.rasterized_blobs);
 
@@ -570,9 +571,10 @@ impl LowPrioritySceneBuilder {
 
     fn process_transaction(&mut self, mut txn: Box<Transaction>) -> Box<Transaction> {
         let blob_requests = replace(&mut txn.blob_requests, Vec::new());
+        let is_low_priority = true;
         let mut more_rasterized_blobs = txn.blob_rasterizer.as_mut().map_or(
             Vec::new(),
-            |rasterizer| rasterizer.rasterize(&blob_requests),
+            |rasterizer| rasterizer.rasterize(&blob_requests, is_low_priority),
         );
         txn.rasterized_blobs.append(&mut more_rasterized_blobs);
 

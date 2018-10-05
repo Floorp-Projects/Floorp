@@ -13,7 +13,7 @@ use internal_types::RenderTargetInfo;
 use pathfinder_gfx_utils::ShelfBinPacker;
 use profiler::GpuProfileTag;
 use renderer::{self, ImageBufferKind, Renderer, RendererError, RendererStats};
-use renderer::{TextureSampler, VertexArrayKind};
+use renderer::{TextureSampler, VertexArrayKind, ShaderPrecacheFlags};
 use shade::{LazilyCompiledShader, ShaderKind};
 use tiling::GlyphJob;
 
@@ -42,7 +42,7 @@ pub struct GpuGlyphRenderer {
 }
 
 impl GpuGlyphRenderer {
-    pub fn new(device: &mut Device, prim_vao: &VAO, precache_shaders: bool)
+    pub fn new(device: &mut Device, prim_vao: &VAO, precache_flags: ShaderPrecacheFlags)
                -> Result<GpuGlyphRenderer, RendererError> {
         // Make sure the area LUT is uncompressed grayscale TGA, 8bpp.
         debug_assert!(AREA_LUT_TGA_BYTES[2] == 3);
@@ -74,14 +74,14 @@ impl GpuGlyphRenderer {
                                       "pf_vector_stencil",
                                       &[ImageBufferKind::Texture2D.get_feature_string()],
                                       device,
-                                      precache_shaders)
+                                      precache_flags)
         };
         let vector_cover = try!{
             LazilyCompiledShader::new(ShaderKind::VectorCover,
                                       "pf_vector_cover",
                                       &[ImageBufferKind::Texture2D.get_feature_string()],
                                       device,
-                                      precache_shaders)
+                                      precache_flags)
         };
 
         Ok(GpuGlyphRenderer {

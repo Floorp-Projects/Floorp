@@ -526,11 +526,24 @@ impl Drop for Texture {
     }
 }
 
+/// Temporary state retained by a program when it
+/// is created, discarded when it is linked.
+struct ProgramInitState {
+    base_filename: String,
+    sources: ProgramSources,
+}
+
 pub struct Program {
     id: gl::GLuint,
     u_transform: gl::GLint,
-    u_device_pixel_ratio: gl::GLint,
     u_mode: gl::GLint,
+    init_state: Option<ProgramInitState>,
+}
+
+impl Program {
+    pub fn is_initialized(&self) -> bool {
+        self.init_state.is_none()
+    }
 }
 
 impl Drop for Program {
@@ -1036,8 +1049,132 @@ impl Device {
         }
     }
 
+    /// Link a program, attaching the supplied vertex format.
+    /// Ideally, this should be run some time after the program
+    /// is created. This gives some drivers time to compile the
+    /// shader on a background thread, before blocking due to
+    /// an API call accessing the shader.
+    pub fn link_program(
+        &mut self,
+        program: &mut Program,
+        descriptor: &VertexDescriptor,
+    ) -> Result<(), ShaderError> {
+        if let Some(init_state) = program.init_state.take() {
+            let mut build_program = true;
+
+            // See if we hit the binary shader cache
+            if let Some(ref cached_programs) = self.cached_programs {
+                if let Some(binary) = cached_programs.binaries.borrow().get(&init_state.sources) {
+                    let mut link_status = [0];
+                    unsafe {
+                        self.gl.get_program_iv(program.id, gl::LINK_STATUS, &mut link_status);
+                    }
+                    if link_status[0] == 0 {
+                        let error_log = self.gl.get_program_info_log(program.id);
+                        error!(
+                          "Failed to load a program object with a program binary: {} renderer {}\n{}",
+                          &init_state.base_filename,
+                          self.renderer_name,
+                          error_log
+                        );
+                        if let Some(ref program_cache_handler) = cached_programs.program_cache_handler {
+                            program_cache_handler.notify_program_binary_failed(&binary);
+                        }
+                    } else {
+                        build_program = false;
+                    }
+                }
+            }
+
+            // If not, we need to do a normal compile + link pass.
+            if build_program {
+                // Compile the vertex shader
+                let vs_id =
+                    match Device::compile_shader(&*self.gl, &init_state.base_filename, gl::VERTEX_SHADER, &init_state.sources.vs_source) {
+                        Ok(vs_id) => vs_id,
+                        Err(err) => return Err(err),
+                    };
+
+                // Compile the fragment shader
+                let fs_id =
+                    match Device::compile_shader(&*self.gl, &init_state.base_filename, gl::FRAGMENT_SHADER, &init_state.sources.fs_source) {
+                        Ok(fs_id) => fs_id,
+                        Err(err) => {
+                            self.gl.delete_shader(vs_id);
+                            return Err(err);
+                        }
+                    };
+
+                // Attach shaders
+                self.gl.attach_shader(program.id, vs_id);
+                self.gl.attach_shader(program.id, fs_id);
+
+                // Bind vertex attributes
+                for (i, attr) in descriptor
+                    .vertex_attributes
+                    .iter()
+                    .chain(descriptor.instance_attributes.iter())
+                    .enumerate()
+                {
+                    self.gl
+                        .bind_attrib_location(program.id, i as gl::GLuint, attr.name);
+                }
+
+                if self.cached_programs.is_some() {
+                    self.gl.program_parameter_i(program.id, gl::PROGRAM_BINARY_RETRIEVABLE_HINT, gl::TRUE as gl::GLint);
+                }
+
+                // Link!
+                self.gl.link_program(program.id);
+
+                // GL recommends detaching and deleting shaders once the link
+                // is complete (whether successful or not). This allows the driver
+                // to free any memory associated with the parsing and compilation.
+                self.gl.detach_shader(program.id, vs_id);
+                self.gl.detach_shader(program.id, fs_id);
+                self.gl.delete_shader(vs_id);
+                self.gl.delete_shader(fs_id);
+
+                let mut link_status = [0];
+                unsafe {
+                    self.gl.get_program_iv(program.id, gl::LINK_STATUS, &mut link_status);
+                }
+                if link_status[0] == 0 {
+                    let error_log = self.gl.get_program_info_log(program.id);
+                    error!(
+                        "Failed to link shader program: {}\n{}",
+                        &init_state.base_filename,
+                        error_log
+                    );
+                    self.gl.delete_program(program.id);
+                    return Err(ShaderError::Link(init_state.base_filename.clone(), error_log));
+                }
+
+                if let Some(ref cached_programs) = self.cached_programs {
+                    if !cached_programs.binaries.borrow().contains_key(&init_state.sources) {
+                        let (buffer, format) = self.gl.get_program_binary(program.id);
+                        if buffer.len() > 0 {
+                            let program_binary = Arc::new(ProgramBinary::new(buffer, format, &init_state.sources));
+                            if let Some(ref program_cache_handler) = cached_programs.program_cache_handler {
+                                program_cache_handler.notify_binary_added(&program_binary);
+                            }
+                            cached_programs.binaries.borrow_mut().insert(init_state.sources, program_binary);
+                        }
+                    }
+                }
+            }
+
+            // If we get here, the link succeeded, so get the uniforms.
+            program.u_transform = self.gl.get_uniform_location(program.id, "uTransform");
+            program.u_mode = self.gl.get_uniform_location(program.id, "uMode");
+        }
+
+        Ok(())
+    }
+
     pub fn bind_program(&mut self, program: &Program) {
         debug_assert!(self.inside_frame);
+        debug_assert!(program.init_state.is_none());
 
         if self.bound_program != program.id {
             self.gl.use_program(program.id);
@@ -1431,11 +1568,25 @@ impl Device {
         program.id = 0;
     }
 
-    pub fn create_program(
+    /// Create a shader program and link it immediately.
+    pub fn create_program_linked(
         &mut self,
         base_filename: &str,
         features: &str,
         descriptor: &VertexDescriptor,
+    ) -> Result<Program, ShaderError> {
+        let mut program = self.create_program(base_filename, features)?;
+        self.link_program(&mut program, descriptor)?;
+        Ok(program)
+    }
+
+    /// Create a shader program. This does minimal amount of work
+    /// to start loading a binary shader. The main part of the
+    /// work is done in link_program.
+    pub fn create_program(
+        &mut self,
+        base_filename: &str,
+        features: &str,
     ) -> Result<Program, ShaderError> {
         debug_assert!(self.inside_frame);
 
@@ -1453,123 +1604,28 @@ impl Device {
         // Create program
         let pid = self.gl.create_program();
 
-        let mut loaded = false;
-
+        // Attempt to load a cached binary if possible.
         if let Some(ref cached_programs) = self.cached_programs {
-            if let Some(binary) = cached_programs.binaries.borrow().get(&sources)
-            {
+            if let Some(binary) = cached_programs.binaries.borrow().get(&sources) {
                 self.gl.program_binary(pid, binary.format, &binary.binary);
-
-                let mut link_status = [0];
-                unsafe {
-                    self.gl.get_program_iv(pid, gl::LINK_STATUS, &mut link_status);
-                }
-                if link_status[0] == 0 {
-                    let error_log = self.gl.get_program_info_log(pid);
-                    error!(
-                      "Failed to load a program object with a program binary: {} renderer {}\n{}",
-                      base_filename,
-                      self.renderer_name,
-                      error_log
-                    );
-                    if let Some(ref program_cache_handler) = cached_programs.program_cache_handler {
-                        program_cache_handler.notify_program_binary_failed(&binary);
-                    }
-                } else {
-                    loaded = true;
-                }
             }
         }
 
-        if loaded == false {
-            // Compile the vertex shader
-            let vs_id =
-                match Device::compile_shader(&*self.gl, base_filename, gl::VERTEX_SHADER, &sources.vs_source) {
-                    Ok(vs_id) => vs_id,
-                    Err(err) => return Err(err),
-                };
-
-            // Compiler the fragment shader
-            let fs_id =
-                match Device::compile_shader(&*self.gl, base_filename, gl::FRAGMENT_SHADER, &sources.fs_source) {
-                    Ok(fs_id) => fs_id,
-                    Err(err) => {
-                        self.gl.delete_shader(vs_id);
-                        return Err(err);
-                    }
-                };
-
-            // Attach shaders
-            self.gl.attach_shader(pid, vs_id);
-            self.gl.attach_shader(pid, fs_id);
-
-            // Bind vertex attributes
-            for (i, attr) in descriptor
-                .vertex_attributes
-                .iter()
-                .chain(descriptor.instance_attributes.iter())
-                .enumerate()
-            {
-                self.gl
-                    .bind_attrib_location(pid, i as gl::GLuint, attr.name);
-            }
-
-            if self.cached_programs.is_some() {
-                self.gl.program_parameter_i(pid, gl::PROGRAM_BINARY_RETRIEVABLE_HINT, gl::TRUE as gl::GLint);
-            }
-
-            // Link!
-            self.gl.link_program(pid);
-
-            // GL recommends detaching and deleting shaders once the link
-            // is complete (whether successful or not). This allows the driver
-            // to free any memory associated with the parsing and compilation.
-            self.gl.detach_shader(pid, vs_id);
-            self.gl.detach_shader(pid, fs_id);
-            self.gl.delete_shader(vs_id);
-            self.gl.delete_shader(fs_id);
-
-            let mut link_status = [0];
-            unsafe {
-                self.gl.get_program_iv(pid, gl::LINK_STATUS, &mut link_status);
-            }
-            if link_status[0] == 0 {
-                let error_log = self.gl.get_program_info_log(pid);
-                error!(
-                    "Failed to link shader program: {}\n{}",
-                    base_filename,
-                    error_log
-                );
-                self.gl.delete_program(pid);
-                return Err(ShaderError::Link(base_filename.to_string(), error_log));
-            }
-        }
-
-        if let Some(ref cached_programs) = self.cached_programs {
-            if !cached_programs.binaries.borrow().contains_key(&sources) {
-                let (buffer, format) = self.gl.get_program_binary(pid);
-                if buffer.len() > 0 {
-                    let program_binary = Arc::new(ProgramBinary::new(buffer, format, &sources));
-                    if let Some(ref program_cache_handler) = cached_programs.program_cache_handler {
-                        program_cache_handler.notify_binary_added(&program_binary);
-                    }
-                    cached_programs.binaries.borrow_mut().insert(sources, program_binary);
-                }
-            }
-        }
+        // Set up the init state that will be used in link_program.
+        let init_state = Some(ProgramInitState {
+            base_filename: base_filename.to_owned(),
+            sources,
+        });
 
         let u_transform = self.gl.get_uniform_location(pid, "uTransform");
-        let u_device_pixel_ratio = self.gl.get_uniform_location(pid, "uDevicePixelRatio");
         let u_mode = self.gl.get_uniform_location(pid, "uMode");
 
         let program = Program {
             id: pid,
             u_transform,
-            u_device_pixel_ratio,
             u_mode,
+            init_state,
         };
-
-        self.bind_program(&program);
 
         Ok(program)
     }
@@ -1578,6 +1634,9 @@ impl Device {
     where
         S: Into<TextureSlot> + Copy,
     {
+        // bind_program() must be called before calling bind_shader_samplers
+        assert_eq!(self.bound_program, program.id);
+
         for binding in bindings {
             let u_location = self.gl.get_uniform_location(program.id, binding.0);
             if u_location != -1 {
@@ -1601,8 +1660,6 @@ impl Device {
         debug_assert!(self.inside_frame);
         self.gl
             .uniform_matrix_4fv(program.u_transform, false, &transform.to_row_major_array());
-        self.gl
-            .uniform_1f(program.u_device_pixel_ratio, self.device_pixel_ratio);
     }
 
     pub fn switch_mode(&self, mode: i32) {
