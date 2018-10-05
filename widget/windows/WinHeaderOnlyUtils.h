@@ -8,6 +8,7 @@
 #define mozilla_WinHeaderOnlyUtils_h
 
 #include <windows.h>
+#include <winternl.h>
 
 #include "mozilla/Maybe.h"
 #include "mozilla/WindowsVersion.h"
@@ -78,22 +79,58 @@ WaitForInputIdle(HANDLE aProcess, DWORD aTimeoutMs = kWaitForInputIdleTimeoutMS)
   }
 }
 
+enum PathType {
+  eNtPath,
+  eDosPath,
+};
+
 class FileUniqueId final
 {
 public:
-  explicit FileUniqueId(const wchar_t* aPath)
+  explicit FileUniqueId(const wchar_t* aPath, PathType aPathType)
     : mId()
   {
     if (!aPath) {
       return;
     }
 
-    nsAutoHandle file(::CreateFileW(aPath, 0, FILE_SHARE_READ |
-                                    FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                                    nullptr, OPEN_EXISTING,
-                                    FILE_FLAG_BACKUP_SEMANTICS, nullptr));
-    if (file == INVALID_HANDLE_VALUE) {
+    nsAutoHandle file(INVALID_HANDLE_VALUE);
+    switch (aPathType) {
+    default:
       return;
+
+    case eNtPath:
+      {
+        UNICODE_STRING unicodeString;
+        ::RtlInitUnicodeString(&unicodeString, aPath);
+        OBJECT_ATTRIBUTES objectAttributes;
+        InitializeObjectAttributes(&objectAttributes, &unicodeString,
+                                   OBJ_CASE_INSENSITIVE, nullptr, nullptr);
+        IO_STATUS_BLOCK ioStatus = {};
+        HANDLE ntHandle;
+        NTSTATUS status = ::NtOpenFile(&ntHandle, SYNCHRONIZE |
+                                       FILE_READ_ATTRIBUTES,
+                                       &objectAttributes, &ioStatus,
+                                       FILE_SHARE_READ | FILE_SHARE_WRITE |
+                                       FILE_SHARE_DELETE,
+                                       FILE_SYNCHRONOUS_IO_NONALERT |
+                                       FILE_OPEN_FOR_BACKUP_INTENT);
+        if (!NT_SUCCESS(status) || ntHandle == INVALID_HANDLE_VALUE) {
+          return;
+        }
+        file.own(ntHandle);
+      }
+      break;
+
+    case eDosPath:
+      file.own(::CreateFileW(aPath, 0, FILE_SHARE_READ |
+                             FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                             nullptr, OPEN_EXISTING,
+                             FILE_FLAG_BACKUP_SEMANTICS, nullptr));
+      if (file == INVALID_HANDLE_VALUE) {
+        return;
+      }
+      break;
     }
 
     GetId(file);
@@ -165,14 +202,16 @@ private:
 };
 
 inline Maybe<bool>
-DoPathsPointToIdenticalFile(const wchar_t* aPath1, const wchar_t* aPath2)
+DoPathsPointToIdenticalFile(const wchar_t* aPath1, const wchar_t* aPath2,
+                            PathType aPathType1 = eDosPath,
+                            PathType aPathType2 = eDosPath)
 {
-  FileUniqueId id1(aPath1);
+  FileUniqueId id1(aPath1, aPathType1);
   if (!id1) {
     return Nothing();
   }
 
-  FileUniqueId id2(aPath2);
+  FileUniqueId id2(aPath2, aPathType2);
   if (!id2) {
     return Nothing();
   }
