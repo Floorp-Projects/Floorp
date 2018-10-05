@@ -404,9 +404,7 @@ this.TelemetryFeed = class TelemetryFeed {
 
   /**
    * Create a ping for AS router event. The client_id is set to "n/a" by default,
-   * AS router components could change that by including a boolean "includeClientID"
-   * to the payload of the action, impression_id would be set to "n/a" at the same time.
-   * Note that "includeClientID" will not be included in the result ping.
+   * different component can override this by its own telemetry collection policy.
    */
   createASRouterEvent(action) {
     const ping = {
@@ -415,21 +413,19 @@ this.TelemetryFeed = class TelemetryFeed {
       locale: Services.locale.getAppLocaleAsLangTag(),
       impression_id: this._impressionId
     };
-    if (action.data.includeClientID) {
-      // Ping-centre client will fill in the client_id if it's not provided in the ping
-      delete ping.client_id;
-      delete action.data.includeClientID;
-      ping.impression_id = "n/a";
-    }
     const event = Object.assign(ping, action.data);
     if (event.action === "cfr_user_event") {
       return this.applyCFRPolicy(event);
+    } else if (event.action === "snippets_user_event") {
+      return this.applySnippetsPolicy(event);
+    } else if (event.action === "onboarding_user_event") {
+      return this.applyOnboardingPolicy(event);
     }
     return event;
   }
 
   /**
-   * CFR metrics comply with following policies:
+   * Per Bug 1484035, CFR metrics comply with following policies:
    * 1). In release, it collects impression_id, and treats bucket_id as message_id
    * 2). In prerelease, it collects client_id and message_id
    * 3). In shield experiments conducted in release, it collects client_id and message_id
@@ -446,6 +442,28 @@ this.TelemetryFeed = class TelemetryFeed {
     }
     // bucket_id is no longer needed
     delete ping.bucket_id;
+    return ping;
+  }
+
+  /**
+   * Per Bug 1485069, all the metrics for Snippets in AS router use client_id in
+   * all the release channels
+   */
+  applySnippetsPolicy(ping) {
+    // Ping-centre client will fill in the client_id if it's not provided in the ping.
+    delete ping.client_id;
+    ping.impression_id = "n/a";
+    return ping;
+  }
+
+  /**
+   * Per Bug 1482134, all the metrics for Onboarding in AS router use client_id in
+   * all the release channels
+   */
+  applyOnboardingPolicy(ping) {
+    // Ping-centre client will fill in the client_id if it's not provided in the ping.
+    delete ping.client_id;
+    ping.impression_id = "n/a";
     return ping;
   }
 
