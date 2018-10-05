@@ -26,6 +26,11 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/Promise.h"
 
+extern mozilla::LazyLogModule gAudioChannelLog;
+
+#define AUDIO_CHANNEL_LOG(msg, ...)                                     \
+  MOZ_LOG(gAudioChannelLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+
 namespace mozilla {
 namespace dom {
 
@@ -495,10 +500,9 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted)
     return NS_OK;
   }
 
-  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioDestinationNode, WindowVolumeChanged, "
-          "this = %p, aVolume = %f, aMuted = %s\n",
-          this, aVolume, aMuted ? "true" : "false"));
+  AUDIO_CHANNEL_LOG("AudioDestinationNode %p WindowVolumeChanged, "
+                    "aVolume = %f, aMuted = %s\n",
+                    this, aVolume, aMuted ? "true" : "false");
 
   float volume = aMuted ? 0.0 : aVolume;
   mStream->SetAudioOutputVolume(&gWebAudioOutputKey, volume);
@@ -526,9 +530,8 @@ AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend)
     return NS_OK;
   }
 
-  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioDestinationNode, WindowSuspendChanged, "
-          "this = %p, aSuspend = %s\n", this, SuspendTypeToStr(aSuspend)));
+  AUDIO_CHANNEL_LOG("AudioDestinationNode %p WindowSuspendChanged, "
+                    "aSuspend = %s\n", this, SuspendTypeToStr(aSuspend));
 
   mAudioChannelSuspended = suspended;
 
@@ -604,6 +607,9 @@ AudioDestinationNode::NotifyAudibleStateChanged(bool aAudible)
     }
     CreateAudioChannelAgent();
   }
+
+  AUDIO_CHANNEL_LOG("AudioDestinationNode %p NotifyAudibleStateChanged, audible=%d",
+    this, aAudible);
 
   if (!aAudible) {
     mAudioChannelAgent->NotifyStoppedPlaying();
