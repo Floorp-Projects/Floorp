@@ -165,15 +165,13 @@ Inspector.prototype = {
     // Localize all the nodes containing a data-localization attribute.
     localizeMarkup(this.panelDoc);
 
-    this._cssProperties = await initCssProperties(this.toolbox);
-    await this._getPageStyle();
+    await Promise.all([
+      this._getCssProperties(),
+      this._getPageStyle(),
+      this._getDefaultSelection()
+    ]);
 
-    // This may throw if the document is still loading and we are
-    // refering to a dead about:blank document
-    const defaultSelection = await this._getDefaultNodeForSelection()
-      .catch(this._handleRejectionIfNotDestroyed);
-
-    return this._deferredOpen(defaultSelection);
+    return this._deferredOpen();
   },
 
   get toolbox() {
@@ -264,7 +262,7 @@ Inspector.prototype = {
     }
   },
 
-  _deferredOpen: async function(defaultSelection) {
+  _deferredOpen: async function() {
     this.breadcrumbs = new HTMLBreadcrumbs(this);
 
     this.walker.on("new-root", this.onNewRoot);
@@ -300,9 +298,9 @@ Inspector.prototype = {
     this.isReady = true;
 
     // All the components are initialized. Let's select a node.
-    if (defaultSelection) {
+    if (this._defaultNode) {
       const onAllPanelsUpdated = this.once("inspector-updated");
-      this.selection.setNodeFront(defaultSelection, { reason: "inspector-open" });
+      this.selection.setNodeFront(this._defaultNode, { reason: "inspector-open" });
       await onAllPanelsUpdated;
       await this.markup.expandNode(this.selection.nodeFront);
     }
@@ -324,6 +322,18 @@ Inspector.prototype = {
     this.selection.setNodeFront(null);
     this._destroyMarkup();
     this._pendingSelection = null;
+  },
+
+  _getCssProperties: function() {
+    return initCssProperties(this.toolbox).then(cssProperties => {
+      this._cssProperties = cssProperties;
+    }, this._handleRejectionIfNotDestroyed);
+  },
+
+  _getDefaultSelection: function() {
+    // This may throw if the document is still loading and we are
+    // refering to a dead about:blank document
+    return this._getDefaultNodeForSelection().catch(this._handleRejectionIfNotDestroyed);
   },
 
   _getPageStyle: function() {
