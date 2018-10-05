@@ -20,7 +20,7 @@ Release date: 2018-10-05
     * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
     * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
 
-* :warning: **Releases are now getting published on [maven.mozilla.org](http://maven.mozilla.org/?prefix=maven2/org/mozilla/components/)**.
+* ⚠️ **Releases are now getting published on [maven.mozilla.org](http://maven.mozilla.org/?prefix=maven2/org/mozilla/components/)**.
   * Additionally all artifacts published now use an artifact name that matches the gradle module name (e.g. `browser-toolbar` instead of just `toolbar`).
   * All artifcats are published with the group id `org.mozilla.components` (`org.mozilla.photon` is not being used anymore).
   * For a smooth transition all artifacts still get published on JCenter with the old group ids and artifact ids. In the near future releases will only be published on maven.mozilla.org. Old releases will remain on JCenter and not get removed.
