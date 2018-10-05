@@ -121,6 +121,7 @@ ul {
   background-color: #FFF090; /* Pale yellow */
   padding: 10px;
   border-radius: 10px;
+  display: none;
 }
 
 /* Custom styling for 'blacklist' error class */
