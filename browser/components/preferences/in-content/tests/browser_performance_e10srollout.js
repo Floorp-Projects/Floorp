@@ -44,9 +44,7 @@ add_task(async function testPrefsAreDefault() {
 });
 
 add_task(async function testPrefsSetByUser() {
-  const kNewCount = DEFAULT_PROCESS_COUNT - 2;
-
-  Services.prefs.setIntPref("dom.ipc.processCount", kNewCount);
+  Services.prefs.setIntPref("dom.ipc.processCount", DEFAULT_PROCESS_COUNT + 2);
   Services.prefs.setBoolPref("browser.preferences.defaultPerformanceSettings.enabled", false);
 
   let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
@@ -58,8 +56,8 @@ add_task(async function testPrefsSetByUser() {
 
   let contentProcessCount = doc.querySelector("#contentProcessCount");
   is(contentProcessCount.disabled, false, "process count control should be enabled");
-  is(Services.prefs.getIntPref("dom.ipc.processCount"), kNewCount, "process count should be the set value");
-  is(contentProcessCount.selectedItem.value, kNewCount, "selected item should be the set one");
+  is(Services.prefs.getIntPref("dom.ipc.processCount"), DEFAULT_PROCESS_COUNT + 2, "process count should be the set value");
+  is(contentProcessCount.selectedItem.value, DEFAULT_PROCESS_COUNT + 2, "selected item should be the set one");
 
   let useRecommendedPerformanceSettings = doc.querySelector("#useRecommendedPerformanceSettings");
   useRecommendedPerformanceSettings.click();
