@@ -37,6 +37,9 @@ private:
   // The last time an event was added to the tracker (in milliseconds),
   // or zero if no events have been added.
   uint32_t mLastEventTime;
+  // The amount by which the page has moved relative to the screen (caused
+  // by dynamic toolbar movement) since we have started tracking velocity.
+  ParentLayerCoord mAdditionalDelta;
 };
 
 } // namespace layers
