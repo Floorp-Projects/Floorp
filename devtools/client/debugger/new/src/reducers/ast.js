@@ -204,8 +204,11 @@ function getPausePoint(state, location) {
     return;
   }
 
-  const linePoints = pausePoints[line];
-  return linePoints && linePoints[column];
+  const linePoints = pausePoints[String(line)];
+
+  if (linePoints && column) {
+    return linePoints[String(column)];
+  }
 }
 
 function hasPausePoints(state, sourceId) {
