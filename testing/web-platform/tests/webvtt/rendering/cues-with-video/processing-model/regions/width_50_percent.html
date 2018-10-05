@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-<title>WebVTT rendering, align:middle, position less than 50%</title>
-<link rel="match" href="align_middle_position_lt_50-ref.html">
+<title>WebVTT rendering regions, width 50%</title>
+<link rel="match" href="width_50_percent-ref.html">
 <style>
 html { overflow:hidden }
 body { margin:0 }
@@ -12,9 +12,9 @@ body { margin:0 }
 </style>
 <script src="/common/reftest-wait.js"></script>
 <video width="320" height="180" autoplay onplaying="this.onplaying = null; this.pause(); takeScreenshot();">
-    <source src="/media/white.webm" type="video/webm">
-    <source src="/media/white.mp4" type="video/mp4">
-    <track src="support/align_middle_position_lt_50.vtt">
+    <source src="../media/white.webm" type="video/webm">
+    <source src="../media/white.mp4" type="video/mp4">
+    <track src="support/width_50_percent.vtt">
     <script>
     document.getElementsByTagName('track')[0].track.mode = 'showing';
     </script>
