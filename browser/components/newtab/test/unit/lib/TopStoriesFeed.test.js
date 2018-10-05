@@ -1021,6 +1021,13 @@ describe("Top Stories Feed", () => {
       assert.equal(action.type, at.TELEMETRY_PERFORMANCE_EVENT);
       assert.equal(action.data.event, "topstories.domain.affinity.calculation.ms");
     });
+    it("should add idle-daily observer right away, before waiting on init data", async () => {
+      const addObserver = globals.sandbox.stub();
+      globals.set("Services", {obs: {addObserver}});
+      const initPromise = instance.onInit();
+      assert.calledOnce(addObserver);
+      await initPromise;
+    });
     it("should not call init and uninit if data doesn't match on options change ", () => {
       sinon.spy(instance, "init");
       sinon.spy(instance, "uninit");
