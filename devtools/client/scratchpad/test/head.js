@@ -11,8 +11,6 @@ const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 const {gDevTools} = require("devtools/client/framework/devtools");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const promise = require("promise");
-const defer = require("devtools/shared/defer");
 
 var gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
@@ -81,7 +79,7 @@ function openScratchpad(aReadyCallback, aOptions = {}) {
 function openTabAndScratchpad(aOptions = {}) {
   waitForExplicitFinish();
   // eslint-disable-next-line new-cap
-  return new promise(resolve => {
+  return new Promise(resolve => {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
     const {selectedBrowser} = gBrowser;
     BrowserTestUtils.browserLoaded(selectedBrowser).then(function() {
@@ -128,9 +126,9 @@ function createTempFile(aName, aContent, aCallback = function() {}) {
 /**
  * Run a set of asychronous tests sequentially defined by input and output.
  *
- * @param Scratchpad aScratchpad
+ * @param Scratchpad scratchpad
  *        The scratchpad to use in running the tests.
- * @param array aTests
+ * @param array tests
  *        An array of test objects, each with the following properties:
  *        - method
  *          Scratchpad method to use, one of "run", "display", or "inspect".
@@ -143,26 +141,24 @@ function createTempFile(aName, aContent, aCallback = function() {}) {
  * @return Promise
  *         The promise that will be resolved when all tests are finished.
  */
-function runAsyncTests(aScratchpad, aTests) {
-  const deferred = defer();
-
-  (function runTest() {
-    if (aTests.length) {
-      const test = aTests.shift();
-      aScratchpad.setText(test.code);
-      aScratchpad[test.method]().then(function success() {
-        is(aScratchpad.getText(), test.result, test.label);
-        runTest();
-      }, function failure(error) {
-        ok(false, error.stack + " " + test.label);
-        runTest();
-      });
-    } else {
-      deferred.resolve();
-    }
-  })();
-
-  return deferred.promise;
+function runAsyncTests(scratchpad, tests) {
+  return new Promise(resolve => {
+    (function runTest() {
+      if (tests.length) {
+        const test = tests.shift();
+        scratchpad.setText(test.code);
+        scratchpad[test.method]().then(function success() {
+          is(scratchpad.getText(), test.result, test.label);
+          runTest();
+        }, function failure(error) {
+          ok(false, error.stack + " " + test.label);
+          runTest();
+        });
+      } else {
+        resolve();
+      }
+    })();
+  });
 }
 
 /**
