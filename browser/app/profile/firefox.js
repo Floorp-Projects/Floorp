@@ -1251,6 +1251,13 @@ pref("browser.library.activity-stream.enabled", true);
 // The remote FxA root content URL for the Activity Stream firstrun page.
 pref("browser.newtabpage.activity-stream.fxaccounts.endpoint", "https://accounts.firefox.com/");
 
+// The pref that controls if the search shortcuts experiment is on
+#ifdef EARLY_BETA_OR_EARLIER
+pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", true);
+#else
+pref("browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts", false);
+#endif
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 
