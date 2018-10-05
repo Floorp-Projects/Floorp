@@ -618,7 +618,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
   // more outgoing messages.
   while (!output_queue_.empty()) {
 #ifdef FUZZING
-    Singleton<mozilla::ipc::Faulty>::get()->MaybeCollectAndClosePipe(pipe_);
+    mozilla::ipc::Faulty::instance().MaybeCollectAndClosePipe(pipe_);
 #endif
     Message* msg = output_queue_.front();
 
@@ -782,7 +782,7 @@ bool Channel::ChannelImpl::Send(Message* message) {
 #endif
 
 #ifdef FUZZING
-  message = Singleton<mozilla::ipc::Faulty>::get()->MutateIPCMessage("Channel::ChannelImpl::Send", message);
+  message = mozilla::ipc::Faulty::instance().MutateIPCMessage("Channel::ChannelImpl::Send", message);
 #endif
 
   // If the channel has been closed, ProcessOutgoingMessages() is never going
