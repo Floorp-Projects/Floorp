@@ -1522,6 +1522,9 @@ pref("browser.contentblocking.reportBreakage.enabled", true);
 #else
 pref("browser.contentblocking.reportBreakage.enabled", false);
 #endif
+// Show report breakage for tracking cookies in all channels.
+pref("browser.contentblocking.rejecttrackers.reportBreakage.enabled", true);
+
 pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-issues.herokuapp.com/new");
 
 // Content Blocking has a separate pref for the intro count, since the former TP intro
