@@ -30,7 +30,7 @@ function resizeTest() {
     Profiler.resume("resize " + count);
     dataSet[count] = {"start": window.performance.now()};
     window.resizeTo(windowSize, windowSize);
-  } catch (ex) { finish([ex + "\n"]); }
+  } catch (ex) { finish({error: ex.message}); }
 }
 
 function testCompleted() {
@@ -44,16 +44,8 @@ function testCompleted() {
       diffs.push(diff);
     }
     var average = (total / count);
-    var retVal = [];
-    if (dumpDataSet) {
-      retVal.push("__start_reporttresize-test.html," + diffs + "__end_report\n");
-    } else {
-      retVal.push("__start_report" + average + "__end_report\n");
-    }
-    // eslint-disable-next-line mozilla/avoid-Date-timing
-    retVal.push("__startTimestamp" + Date.now() + "__endTimestamp\n");
-    finish(retVal);
-  } catch (ex) { finish([ex + "\n"]); }
+    finish({diffs, average});
+  } catch (ex) { finish({error: ex.message}); }
 }
 
 function resizeCompleted() {
