@@ -404,7 +404,11 @@ class MozSearchbar extends MozXULElement {
       this.select();
     });
 
-    this.addEventListener("DOMMouseScroll", (event) => { this.selectEngine(event, (event.detail > 0)); }, true);
+    this.addEventListener("DOMMouseScroll", (event) => {
+      if (event.getModifierState("Accel")) {
+        this.selectEngine(event, event.detail > 0);
+      }
+    }, true);
 
     this.addEventListener("input", (event) => { this.updateGoButtonVisibility(); });
 

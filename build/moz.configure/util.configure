@@ -469,11 +469,11 @@ def extra_old_configure_args():
 
 
 @template
-def add_old_configure_assignment(var, value):
+def add_old_configure_assignment(var, value, when=None):
     var = dependable(var)
     value = dependable(value)
 
-    @depends(old_configure_assignments, var, value)
+    @depends(old_configure_assignments, var, value, when=when)
     @imports(_from='mozbuild.shellutil', _import='quote')
     def add_assignment(assignments, var, value):
         if var is None or value is None:

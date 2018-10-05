@@ -280,6 +280,7 @@ public final class SessionTextInput {
     private SparseArray<GeckoBundle> mAutoFillNodes;
     private SparseArray<EventCallback> mAutoFillRoots;
     private int mAutoFillFocusedId = View.NO_ID;
+    private int mAutoFillFocusedRoot = View.NO_ID;
 
     /* package */ SessionTextInput(final @NonNull GeckoSession session,
                                    final @NonNull NativeQueue queue) {
@@ -510,17 +511,10 @@ public final class SessionTextInput {
         final int size = mAutoFillRoots.size();
         structure.setChildCount(size);
 
-        int focusedRoot = View.NO_ID;
-        for (int newId = mAutoFillFocusedId; newId != View.NO_ID;) {
-            focusedRoot = newId;
-            newId = mAutoFillNodes.get(newId).getInt("parent", View.NO_ID);
-        }
-
         for (int i = 0; i < size; i++) {
             final int id = mAutoFillRoots.keyAt(i);
             final GeckoBundle root = mAutoFillNodes.get(id);
-            fillAutoFillStructure(view, id, root, structure.newChild(i),
-                                  (focusedRoot == id) ? rect : null);
+            fillAutoFillStructure(view, id, root, structure.newChild(i), rect);
         }
     }
 
@@ -575,7 +569,7 @@ public final class SessionTextInput {
     private void fillAutoFillStructure(@Nullable final View view, final int id,
                                        @NonNull final GeckoBundle bundle,
                                        @NonNull final ViewStructure structure,
-                                       @Nullable final Rect rect) {
+                                       @NonNull final Rect rect) {
         if (mAutoFillRoots == null) {
             return;
         }
@@ -592,7 +586,8 @@ public final class SessionTextInput {
         }
         structure.setId(id, null, null, null);
 
-        if (rect != null) {
+        if (mAutoFillFocusedRoot != View.NO_ID &&
+                mAutoFillFocusedRoot == bundle.getInt("root", View.NO_ID)) {
             structure.setDimens(0, 0, 0, 0, rect.width(), rect.height());
         }
 
@@ -721,6 +716,7 @@ public final class SessionTextInput {
         mAutoFillRoots = null;
         mAutoFillNodes = null;
         mAutoFillFocusedId = View.NO_ID;
+        mAutoFillFocusedRoot = View.NO_ID;
 
         getDelegate().notifyAutoFill(
                 mSession, GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_CANCELED, View.NO_ID);
@@ -732,11 +728,12 @@ public final class SessionTextInput {
         }
 
         final int id;
+        final int root;
         if (message != null) {
             id = message.getInt("id");
-            mAutoFillNodes.put(id, message);
+            root = message.getInt("root");
         } else {
-            id = View.NO_ID;
+            id = root = View.NO_ID;
         }
 
         if (DEBUG) {
@@ -752,6 +749,7 @@ public final class SessionTextInput {
         }
 
         mAutoFillFocusedId = id;
+        mAutoFillFocusedRoot = root;
         if (id != View.NO_ID) {
             getDelegate().notifyAutoFill(
                     mSession, GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED, id);

@@ -12,7 +12,7 @@
 
 [package]
 name = "simd"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Huon Wilson <dbau.pp+github@gmail.com>"]
 description = "`simd` offers limited cross-platform access to SIMD instructions on\nCPUs, as well as raw interfaces to platform-specific instructions.\n(To be obsoleted by the `std::simd` implementation RFC 2366.)\n"
 documentation = "https://docs.rs/simd/"

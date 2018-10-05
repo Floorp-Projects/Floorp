@@ -244,6 +244,7 @@ public class SessionAccessibility {
     private SparseArray<GeckoBundle> mAutoFillNodes;
     private SparseArray<EventCallback> mAutoFillRoots;
     private int mAutoFillFocusedId = View.NO_ID;
+    private int mAutoFillFocusedRoot = View.NO_ID;
 
     private boolean mAttached = false;
 
@@ -566,15 +567,6 @@ public class SessionAccessibility {
         return true;
     }
 
-    private int getAutoFillRootId(final int id) {
-        int root = View.NO_ID;
-        for (int newId = id; newId != View.NO_ID;) {
-            root = newId;
-            newId = mAutoFillNodes.get(newId).getInt("parent", View.NO_ID);
-        }
-        return root;
-    }
-
     /* package */ AccessibilityNodeInfo getAutoFillNode(final int id) {
         if (mView == null || mAutoFillRoots == null) {
             return null;
@@ -594,7 +586,8 @@ public class SessionAccessibility {
         node.setParent(mView, bundle.getInt("parent", View.NO_ID));
         node.setEnabled(true);
 
-        if (getAutoFillRootId(mAutoFillFocusedId) == getAutoFillRootId(id)) {
+        if (mAutoFillFocusedRoot != View.NO_ID &&
+                mAutoFillFocusedRoot == bundle.getInt("root", View.NO_ID)) {
             // Some auto-fill clients require a dummy rect for the focused View.
             final Rect rect = new Rect();
             mSession.getSurfaceBounds(rect);
@@ -765,6 +758,7 @@ public class SessionAccessibility {
             mAutoFillRoots = null;
             mAutoFillNodes = null;
             mAutoFillFocusedId = View.NO_ID;
+            mAutoFillFocusedRoot = View.NO_ID;
             fireWindowChangedEvent(View.NO_ID);
         }
     }
@@ -775,11 +769,12 @@ public class SessionAccessibility {
         }
 
         final int id;
+        final int root;
         if (message != null) {
             id = message.getInt("id");
-            mAutoFillNodes.put(id, message);
+            root = message.getInt("root");
         } else {
-            id = View.NO_ID;
+            id = root = View.NO_ID;
         }
 
         if (DEBUG) {
@@ -789,6 +784,7 @@ public class SessionAccessibility {
             return;
         }
         mAutoFillFocusedId = id;
+        mAutoFillFocusedRoot = root;
 
         // We already send "TYPE_VIEW_FOCUSED" in touch exploration mode,
         // so in that case don't send it here.

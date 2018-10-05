@@ -424,10 +424,10 @@ class ContentDelegateTest : BaseSessionTest() {
         })
         assertThat("Should have one focused field",
                    countAutoFillNodes({ it.isFocused }), equalTo(1))
-        // The focused field, its siblings, and its parent should be visible.
-        assertThat("Should have at least six visible fields",
+        // The focused field, its siblings, its parent, and the root node should be visible.
+        assertThat("Should have seven visible nodes",
                    countAutoFillNodes({ node -> node.width > 0 && node.height > 0 }),
-                   greaterThanOrEqualTo(6))
+                   equalTo(7))
 
         mainSession.evaluateJS("$('#pass1').blur()")
         sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {

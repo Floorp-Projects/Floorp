@@ -6,6 +6,9 @@
 
 "use strict";
 
+const {gDevTools} = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm", {});
+const {devtools: {TargetFactory}} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+
 add_task(async function capture() {
   if (!shouldCapture()) {
     return;
@@ -13,4 +16,7 @@ add_task(async function capture() {
   let sets = ["DevTools"];
 
   await TestRunner.start(sets, "devtools");
+
+  let target = await TargetFactory.forTab(gBrowser.selectedTab);
+  await gDevTools.closeToolbox(target);
 });

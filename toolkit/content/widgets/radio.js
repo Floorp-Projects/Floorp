@@ -112,6 +112,13 @@ class MozRadiogroup extends MozBaseControl {
   }
 
   connectedCallback() {
+    this.init();
+    if (!this.value) {
+      this.selectedIndex = 0;
+    }
+  }
+
+  init() {
     this._radioChildren = null;
 
     if (this.getAttribute("disabled") == "true")
@@ -129,8 +136,23 @@ class MozRadiogroup extends MozBaseControl {
     var value = this.value;
     if (value)
       this.value = value;
-    else
-      this.selectedIndex = 0;
+  }
+
+  /**
+   * Called when a new <radio> gets added and XBL construction happens on
+   * it. Sometimes the XBL construction happens after the <radiogroup> has
+   * already been added to the DOM. This can happen due to asynchronous XBL
+   * construction (see Bug 1496137), or just due to normal DOM appending after
+   * the <radiogroup> is created. When this happens, reinitialize the UI if
+   * necessary to make sure the state is consistent.
+   *
+   * @param {DOMNode} child
+   *                  The <radio> element that got added
+   */
+  radioChildConstructed(child) {
+    if (!this._radioChildren || !this._radioChildren.includes(child)) {
+      this.init();
+    }
   }
 
   set value(val) {
@@ -345,7 +367,6 @@ class MozRadiogroup extends MozBaseControl {
     radio.setAttribute("label", label);
     radio.setAttribute("value", value);
     this.appendChild(radio);
-    this._radioChildren = null;
     return radio;
   }
 }
