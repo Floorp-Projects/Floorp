@@ -183,7 +183,11 @@ struct Rasterizer {
 }
 
 impl AsyncBlobImageRasterizer for Rasterizer {
-    fn rasterize(&mut self, requests: &[BlobImageParams]) -> Vec<(BlobImageRequest, BlobImageResult)> {
+    fn rasterize(
+        &mut self,
+        requests: &[BlobImageParams],
+        _low_priority: bool
+    ) -> Vec<(BlobImageRequest, BlobImageResult)> {
         let requests: Vec<Command> = requests.into_iter().map(
             |item| {
                 let (color, tile_size) = self.image_cmds[&item.request.key];
