@@ -13,7 +13,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobBinding.h"
-#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/File.h"
@@ -1186,13 +1185,11 @@ XMLHttpRequestMainThread::GetResponseHeader(const nsACString& header,
 
     // Even non-http channels supply content type and content length.
     // Remember we don't leak header information from denied cross-site
-    // requests. However, we handle file: and blob: URLs for blob response
-    // types by canceling them with a specific error, so we have to allow
-    // them to pass through this check.
+    // requests.
     nsresult status;
     if (!mChannel ||
         NS_FAILED(mChannel->GetStatus(&status)) ||
-        (NS_FAILED(status) && status != NS_ERROR_FILE_ALREADY_EXISTS)) {
+        NS_FAILED(status)) {
       return;
     }
 
@@ -1658,32 +1655,6 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
 
 namespace {
 
-void
-GetBlobURIFromChannel(nsIRequest* aRequest, nsIURI** aURI)
-{
-  MOZ_ASSERT(aRequest);
-  MOZ_ASSERT(aURI);
-
-  *aURI = nullptr;
-
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-  if (!channel) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = channel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (!dom::IsBlobURI(uri)) {
-    return;
-  }
-
-  uri.forget(aURI);
-}
-
 nsresult
 GetLocalFileFromChannel(nsIRequest* aRequest, nsIFile** aFile)
 {
@@ -1800,29 +1771,14 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
 
   nsresult rv;
 
+  nsCOMPtr<nsIFile> localFile;
   if (mResponseType == XMLHttpRequestResponseType::Blob) {
-    nsCOMPtr<nsIFile> localFile;
-    nsCOMPtr<nsIURI> blobURI;
-    GetBlobURIFromChannel(request, getter_AddRefs(blobURI));
-    if (blobURI) {
-      RefPtr<BlobImpl> blobImpl;
-      rv = NS_GetBlobForBlobURI(blobURI, getter_AddRefs(blobImpl));
-      if (NS_SUCCEEDED(rv)) {
-        if (blobImpl) {
-          mResponseBlob = Blob::Create(GetOwner(), blobImpl);
-        }
-        if (!mResponseBlob) {
-          rv = NS_ERROR_FILE_NOT_FOUND;
-        }
-      }
-    } else {
-      rv = GetLocalFileFromChannel(request, getter_AddRefs(localFile));
-    }
+    rv = GetLocalFileFromChannel(request, getter_AddRefs(localFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    if (mResponseBlob || localFile) {
+    if (localFile) {
       mBlobStorage = nullptr;
       NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
 
@@ -2185,18 +2141,12 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     return NS_OK;
   }
 
-  // If we were just reading a blob URL, we're already done
-  if (status == NS_ERROR_FILE_ALREADY_EXISTS && mResponseBlob) {
-    ChangeStateToDone();
-    return NS_OK;
-  }
-
   bool waitingForBlobCreation = false;
 
   // If we have this error, we have to deal with a file: URL + responseType =
   // blob. We have this error because we canceled the channel. The status will
   // be set to NS_OK.
-  if (!mResponseBlob && status == NS_ERROR_FILE_ALREADY_EXISTS &&
+  if (status == NS_ERROR_FILE_ALREADY_EXISTS &&
       mResponseType == XMLHttpRequestResponseType::Blob) {
     nsCOMPtr<nsIFile> file;
     nsresult rv = GetLocalFileFromChannel(request, getter_AddRefs(file));

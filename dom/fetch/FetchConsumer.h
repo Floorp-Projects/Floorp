@@ -102,7 +102,6 @@ private:
   MutableBlobStorage::MutableBlobStorageType mBlobStorageType;
   nsCString mBodyMimeType;
 
-  nsCString mBodyBlobURISpec;
   nsString mBodyLocalPath;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
