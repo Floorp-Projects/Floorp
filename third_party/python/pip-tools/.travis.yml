@@ -1,0 +1,75 @@
+sudo: false
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "pypy"
+
+env:
+  - PIP=8.1.1
+  - PIP=9.0.1
+  - PIP=9.0.3
+  - PIP=10.0.1
+  - PIP=master
+  - PIP=latest
+
+cache: pip
+install:
+  - travis_retry pip install tox-travis
+script:
+  - tox
+
+jobs:
+  include:
+    # Python 3.7 in Travis: https://github.com/travis-ci/travis-ci/issues/9815
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: PIP=8.1.1
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: PIP=9.0.1
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: PIP=9.0.3
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: PIP=10.0.1
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: PIP=latest
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: PIP=master
+
+    - stage: flake8
+      python: 2.7
+      env: TOXENV=flake8
+    - stage: readme
+      python: 2.7
+      env: TOXENV=readme
+    - stage: deploy
+      install: skip  # No need to install tox-travis on deploy.
+      script: skip  # No test on the deploy stage.
+      python: 2.7
+      env: skip  # No special env required.
+      deploy:
+        provider: pypi
+        user: jazzband
+        server: https://jazzband.co/projects/pip-tools/upload
+        distributions: sdist bdist_wheel
+        password:
+          secure: TCG9beQgarL/EDHiwSCgEf1JnofTroA5QRp2OTL3QC+eaar6FftqxcJQw3FwnHJ7NarI6E7bcxn9wDRs6tXqiLcyGOzWUnR4jQ94w/7YaLQjzLr8g1toRnb9dNwU1l14z2hmnzc4oRqu7+pi4wIpBx+11Ke9JXNcrC+cRFwCdLQ=
+        on:
+          tags: true
+          repo: jazzband/pip-tools
+
+  allow_failures:
+    - env: PIP=master

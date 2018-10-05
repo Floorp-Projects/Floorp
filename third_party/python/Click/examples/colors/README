@@ -1,0 +1,11 @@
+$ colors_
+
+  colors is a simple example that shows how you can
+  colorize text.
+
+  For this to work on Windows, colorama is required.
+
+Usage:
+
+  $ pip install --editable .
+  $ colors
