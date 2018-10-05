@@ -3820,7 +3820,7 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
 static bool
 EnsureGeckoProfilingStackInstalled(JSContext* cx, ShellContext* sc)
 {
-    if (cx->geckoProfiler().installed()) {
+    if (cx->geckoProfiler().infraInstalled()) {
         MOZ_ASSERT(sc->geckoProfilingStack);
         return true;
     }
