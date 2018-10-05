@@ -908,7 +908,7 @@ class MochitestDesktop(object):
         kwargs['log'] = self.log
         return test_environment(**kwargs)
 
-    def parseExtraPrefs(self, prefs):
+    def extraPrefs(self, prefs):
         """Interpolate extra preferences from option strings"""
 
         try:
@@ -1936,7 +1936,7 @@ toolbar#nav-bar {
         self.profile.set_preferences(prefs)
 
         # Extra prefs from --setpref
-        self.profile.set_preferences(options.extraPrefs)
+        self.profile.set_preferences(self.extraPrefs(options.extraPrefs))
         return manifest
 
     def getGMPPluginPath(self, options):
@@ -2559,20 +2559,13 @@ toolbar#nav-bar {
 
     def runTests(self, options):
         """ Prepare, configure, run tests and cleanup """
-        options.extraPrefs = self.parseExtraPrefs(options.extraPrefs)
 
         # a11y and chrome tests don't run with e10s enabled in CI. Need to set
         # this here since |mach mochitest| sets the flavor after argument parsing.
         if options.flavor in ('a11y', 'chrome'):
             options.e10s = False
-
-        # for test manifest parsing.
-        mozinfo.update({
-            "e10s": options.e10s,
-            "headless": options.headless,
-            "serviceworker_e10s": options.extraPrefs.get(
-                'dom.serviceWorkers.parent_intercept', False),
-        })
+        mozinfo.update({"e10s": options.e10s})  # for test manifest parsing.
+        mozinfo.update({"headless": options.headless})  # for test manifest parsing.
 
         if options.jscov_dir_prefix is not None:
             mozinfo.update({'coverage': True})
@@ -2601,18 +2594,17 @@ toolbar#nav-bar {
         # code for --run-by-manifest
         manifests = set(t['manifest'] for t in tests)
         result = 0
-
-        origPrefs = options.extraPrefs.copy()
+        origPrefs = options.extraPrefs[:]
         for m in sorted(manifests):
             self.log.info("Running manifest: {}".format(m))
 
             prefs = list(self.prefs_by_manifest[m])[0]
-            options.extraPrefs = origPrefs.copy()
+            options.extraPrefs = origPrefs[:]
             if prefs:
                 prefs = prefs.strip().split()
                 self.log.info("The following extra prefs will be set:\n  {}".format(
                     '\n  '.join(prefs)))
-                options.extraPrefs.update(self.parseExtraPrefs(prefs))
+                options.extraPrefs.extend(prefs)
 
             # If we are using --run-by-manifest, we should not use the profile path (if) provided
             # by the user, since we need to create a new directory for each run. We would face
@@ -2799,8 +2791,6 @@ toolbar#nav-bar {
                     testURL += "?" + "&".join(self.urlOpts)
 
                 self.log.info("runtests.py | Running with e10s: {}".format(options.e10s))
-                self.log.info("runtests.py | Running with serviceworker_e10s: {}".format(
-                    mozinfo.info.get('serviceworker_e10s', False)))
                 self.log.info("runtests.py | Running tests: start.\n")
                 ret, _ = self.runApp(
                     testURL,
