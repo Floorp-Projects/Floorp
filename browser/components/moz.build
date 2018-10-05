@@ -59,10 +59,7 @@ DIRS += [
 DIRS += ['build']
 
 if CONFIG['NIGHTLY_BUILD']:
-    DIRS += [
-        'aboutconfig',
-        'payments',
-    ]
+    DIRS += ['payments']
 
 XPIDL_SOURCES += [
     'nsIBrowserHandler.idl',
