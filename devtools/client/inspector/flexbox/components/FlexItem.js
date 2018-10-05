@@ -23,19 +23,23 @@ class FlexItem extends PureComponent {
   static get propTypes() {
     return {
       flexItem: PropTypes.shape(Types.flexItem).isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
+      onToggleFlexItemShown: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { nodeFront } = this.props.flexItem;
+    const {
+      flexItem,
+      onToggleFlexItemShown,
+    } = this.props;
+    const { nodeFront } = flexItem;
 
     return (
       dom.li({},
         dom.button(
           {
             className: "devtools-button devtools-monospace",
-            onClick: () => this.props.setSelectedNode(nodeFront),
+            onClick: () => onToggleFlexItemShown(nodeFront),
           },
           Rep({
             defaultRep: Rep.ElementNode,
