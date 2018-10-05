@@ -105,7 +105,7 @@ add_task(async function modifyEngine() {
 });
 
 add_task(async function search() {
-  let { mm } = await addTab();
+  let { browser } = await addTab();
   let engine = Services.search.currentEngine;
   let data = {
     engineName: engine.name,
@@ -115,13 +115,8 @@ add_task(async function search() {
   };
   let submissionURL =
     engine.getSubmission(data.searchString, "", data.whence).uri.spec;
-  mm.sendAsyncMessage(TEST_MSG, {
-    type: "Search",
-    data,
-    expectedURL: submissionURL,
-  });
-  let msg = await waitForTestMsg(mm, "loadStopped");
-  Assert.equal(msg.data.url, submissionURL, "Correct search page loaded");
+
+  await performSearch(browser, data, submissionURL);
 });
 
 add_task(async function searchInBackgroundTab() {
@@ -129,7 +124,7 @@ add_task(async function searchInBackgroundTab() {
   // in another.  In other words, it performs a search in a background tab.  The
   // search page should be loaded in the same tab that performed the search, in
   // the background tab.
-  let { mm } = await addTab();
+  let { browser } = await addTab();
   let engine = Services.search.currentEngine;
   let data = {
     engineName: engine.name,
@@ -139,18 +134,13 @@ add_task(async function searchInBackgroundTab() {
   };
   let submissionURL =
     engine.getSubmission(data.searchString, "", data.whence).uri.spec;
-  mm.sendAsyncMessage(TEST_MSG, {
-    type: "Search",
-    data,
-    expectedURL: submissionURL,
-  });
 
+  let searchPromise = performSearch(browser, data, submissionURL);
   let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   registerCleanupFunction(() => gBrowser.removeTab(newTab));
 
-  let msg = await waitForTestMsg(mm, "loadStopped");
-  Assert.equal(msg.data.url, submissionURL, "Correct search page loaded");
+  await searchPromise;
 });
 
 add_task(async function badImage() {
@@ -262,6 +252,21 @@ add_task(async function GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntr
   Services.search.removeEngine(engine);
   await waitForTestMsg(mm, "CurrentState");
 });
+
+async function performSearch(browser, data, expectedURL) {
+  let mm = browser.messageManager;
+  let stoppedPromise = BrowserTestUtils.browserStopped(browser, expectedURL);
+  mm.sendAsyncMessage(TEST_MSG, {
+    type: "Search",
+    data,
+    expectedURL,
+  });
+
+  await stoppedPromise;
+  // BrowserTestUtils.browserStopped should ensure this, but let's
+  // be absolutely sure.
+  Assert.equal(browser.currentURI.spec, expectedURL, "Correct search page loaded");
+}
 
 function buffersEqual(actualArrayBuffer, expectedArrayBuffer) {
   let expectedView = new Int8Array(expectedArrayBuffer);
