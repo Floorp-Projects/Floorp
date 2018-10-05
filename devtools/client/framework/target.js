@@ -446,6 +446,10 @@ TabTarget.prototype = {
     return !this.window;
   },
 
+  get canRewind() {
+    return this.activeTab.traits.canRewind;
+  },
+
   getExtensionPathName(url) {
     // Return the url if the target is not a webextension.
     if (!this.isWebExtension) {
@@ -845,6 +849,10 @@ WorkerTarget.prototype = {
 
   get client() {
     return this._workerClient.client;
+  },
+
+  get canRewind() {
+    return false;
   },
 
   destroy: function() {
