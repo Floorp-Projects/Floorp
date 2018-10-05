@@ -149,8 +149,10 @@ this.HighlightsFeed = class HighlightsFeed {
       let results = await this.downloadsManager.getDownloads(RECENT_DOWNLOAD_THRESHOLD, {numItems: 1, onlySucceeded: true, onlyExists: true});
       if (results.length) {
         // We only want 1 download, the most recent one
-        results = NewTabUtils.activityStreamProvider._processHighlights(results, {numItems: 1}, "download");
-        manyPages.push(...results);
+        manyPages.push({
+          ...results[0],
+          type: "download",
+        });
       }
     }
 
