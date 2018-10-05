@@ -17,6 +17,7 @@
   --command-paintflashing-image: url(images/command-paintflashing.svg);
   --command-screenshot-image: url(images/command-screenshot.svg);
   --command-responsive-image: url(images/command-responsivemode.svg);
+  --command-replay-image: url(images/command-replay.svg);
   --command-scratchpad-image: url(images/tool-scratchpad.svg);
   --command-pick-image: url(images/command-pick.svg);
   --command-pick-accessibility-image: url(images/command-pick-accessibility.svg);
@@ -288,6 +289,27 @@
 }
 
 #command-button-responsive.checked::before {
+  fill: currentColor;
+}
+
+#command-button-stop-replay::before, #command-button-replay::before {
+  background-image: var(--command-replay-image);
+  fill: var(--theme-toolbar-photon-icon-color);
+  -moz-context-properties: fill;
+  background-repeat: no-repeat;
+  height: 16px;
+  background-size: contain;
+}
+
+#command-button-replay, #command-button-stop-replay {
+  background-color: transparent;
+}
+
+#command-button-replay:hover, #command-button-stop-replay:hover {
+  background: var(--toolbarbutton-background);
+}
+
+#command-button-stop-replay::before {
   fill: currentColor;
 }
 
