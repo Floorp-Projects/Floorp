@@ -94,14 +94,12 @@ if os_macosx:
 
 if os_bsd:
     SOURCES += [
-        'src/base/atomicops_internals_x86_gcc.cc',
         'src/base/process_util_linux.cc',
         'src/base/time_posix.cc',
     ]
 
 if os_linux:
     SOURCES += [
-        'src/base/atomicops_internals_x86_gcc.cc',
         'src/base/process_util_linux.cc',
         'src/base/time_posix.cc',
     ]
@@ -120,14 +118,8 @@ if os_bsd or os_linux:
 
 if os_solaris:
     SOURCES += [
-        'src/base/atomicops_internals_x86_gcc.cc',
         'src/base/process_util_linux.cc',
         'src/base/time_posix.cc',
-    ]
-
-if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] not in ('arm', 'aarch64', 'mips32', 'mips64', 'ppc', 'ppc64'):
-    SOURCES += [
-        'src/base/atomicops_internals_mutex.cc',
     ]
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
@@ -135,10 +127,6 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-DIRS += [
-    'atomics',
-]
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
