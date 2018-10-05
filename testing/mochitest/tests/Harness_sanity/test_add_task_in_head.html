@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mochitest with add_task</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <script type="text/javascript" src="head_with_add_task.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<div id="content" style="display: none">
+
+</div>
+<script class="testbody" type="text/javascript">
+
+info("The <script> block runs");
+
+add_task(async function test() {
+  ok(true, "test function runs");
+});
+
+</script>
+</pre>
+</body>
+</html>
+
