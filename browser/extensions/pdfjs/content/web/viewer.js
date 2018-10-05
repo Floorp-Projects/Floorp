@@ -478,7 +478,7 @@ let PDFViewerApplication = {
     const appConfig = this.appConfig;
     this.overlayManager = new _overlay_manager.OverlayManager();
     const dispatchToDOM = _app_options.AppOptions.get('eventBusDispatchToDOM');
-    let eventBus = appConfig.eventBus || (0, _dom_events.getGlobalEventBus)(dispatchToDOM);
+    const eventBus = appConfig.eventBus || (0, _dom_events.getGlobalEventBus)(dispatchToDOM);
     this.eventBus = eventBus;
     let pdfRenderingQueue = new _pdf_rendering_queue.PDFRenderingQueue();
     pdfRenderingQueue.onIdle = this.cleanup.bind(this);
@@ -531,9 +531,7 @@ let PDFViewerApplication = {
       eventBus
     });
     pdfLinkService.setHistory(this.pdfHistory);
-    let findBarConfig = Object.create(appConfig.findBar);
-    findBarConfig.eventBus = eventBus;
-    this.findBar = new _pdf_find_bar.PDFFindBar(findBarConfig, this.l10n);
+    this.findBar = new _pdf_find_bar.PDFFindBar(appConfig.findBar, eventBus, this.l10n);
     this.pdfDocumentProperties = new _pdf_document_properties.PDFDocumentProperties(appConfig.documentProperties, this.overlayManager, eventBus, this.l10n);
     this.pdfCursorTools = new _pdf_cursor_tools.PDFCursorTools({
       container,
@@ -565,9 +563,7 @@ let PDFViewerApplication = {
     let sidebarConfig = Object.create(appConfig.sidebar);
     sidebarConfig.pdfViewer = this.pdfViewer;
     sidebarConfig.pdfThumbnailViewer = this.pdfThumbnailViewer;
-    sidebarConfig.pdfOutlineViewer = this.pdfOutlineViewer;
-    sidebarConfig.eventBus = eventBus;
-    this.pdfSidebar = new _pdf_sidebar.PDFSidebar(sidebarConfig, this.l10n);
+    this.pdfSidebar = new _pdf_sidebar.PDFSidebar(sidebarConfig, eventBus, this.l10n);
     this.pdfSidebar.onToggled = this.forceRendering.bind(this);
     this.pdfSidebarResizer = new _pdf_sidebar_resizer.PDFSidebarResizer(appConfig.sidebarResizer, eventBus, this.l10n);
   },
@@ -692,7 +688,6 @@ let PDFViewerApplication = {
     this.pdfLoadingTask = null;
     if (this.pdfDocument) {
       this.pdfDocument = null;
-      this.findController.setDocument(null);
       this.pdfThumbnailViewer.setDocument(null);
       this.pdfViewer.setDocument(null);
       this.pdfLinkService.setDocument(null);
@@ -873,7 +868,6 @@ let PDFViewerApplication = {
     const store = this.store = new _view_history.ViewHistory(pdfDocument.fingerprint);
     let baseDocumentUrl;
     baseDocumentUrl = this.baseUrl;
-    this.findController.setDocument(pdfDocument);
     this.pdfLinkService.setDocument(pdfDocument, baseDocumentUrl);
     this.pdfDocumentProperties.setDocument(pdfDocument, this.url);
     let pdfViewer = this.pdfViewer;
@@ -2838,17 +2832,15 @@ const SidebarView = {
   ATTACHMENTS: 3
 };
 class PDFSidebar {
-  constructor(options, l10n = _ui_utils.NullL10n) {
+  constructor(options, eventBus, l10n = _ui_utils.NullL10n) {
     this.isOpen = false;
     this.active = SidebarView.THUMBS;
     this.isInitialViewSet = false;
     this.onToggled = null;
     this.pdfViewer = options.pdfViewer;
     this.pdfThumbnailViewer = options.pdfThumbnailViewer;
-    this.pdfOutlineViewer = options.pdfOutlineViewer;
     this.outerContainer = options.outerContainer;
     this.viewerContainer = options.viewerContainer;
-    this.eventBus = options.eventBus;
     this.toggleButton = options.toggleButton;
     this.thumbnailButton = options.thumbnailButton;
     this.outlineButton = options.outlineButton;
@@ -2857,6 +2849,7 @@ class PDFSidebar {
     this.outlineView = options.outlineView;
     this.attachmentsView = options.attachmentsView;
     this.disableNotification = options.disableNotification || false;
+    this.eventBus = eventBus;
     this.l10n = l10n;
     this._addEventListeners();
   }
@@ -3075,7 +3068,7 @@ class PDFSidebar {
       this.switchView(SidebarView.OUTLINE);
     });
     this.outlineButton.addEventListener('dblclick', () => {
-      this.pdfOutlineViewer.toggleOutlineTree();
+      this.eventBus.dispatch('toggleoutlinetree', { source: this });
     });
     this.attachmentsButton.addEventListener('click', () => {
       this.switchView(SidebarView.ATTACHMENTS);
@@ -3997,13 +3990,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFFindBar = undefined;
 
-var _pdf_find_controller = __webpack_require__(16);
-
 var _ui_utils = __webpack_require__(2);
+
+var _pdf_find_controller = __webpack_require__(16);
 
 const MATCHES_COUNT_LIMIT = 1000;
 class PDFFindBar {
-  constructor(options, l10n = _ui_utils.NullL10n) {
+  constructor(options, eventBus = (0, _ui_utils.getGlobalEventBus)(), l10n = _ui_utils.NullL10n) {
     this.opened = false;
     this.bar = options.bar || null;
     this.toggleButton = options.toggleButton || null;
@@ -4015,7 +4008,7 @@ class PDFFindBar {
     this.findResultsCount = options.findResultsCount || null;
     this.findPreviousButton = options.findPreviousButton || null;
     this.findNextButton = options.findNextButton || null;
-    this.eventBus = options.eventBus;
+    this.eventBus = eventBus;
     this.l10n = l10n;
     this.toggleButton.addEventListener('click', () => {
       this.toggle();
@@ -4206,13 +4199,7 @@ class PDFFindController {
     this._linkService = linkService;
     this._eventBus = eventBus;
     this._reset();
-    eventBus.on('findbarclose', () => {
-      this._highlightMatches = false;
-      eventBus.dispatch('updatetextlayermatches', {
-        source: this,
-        pageIndex: -1
-      });
-    });
+    eventBus.on('findbarclose', this._onFindBarClose.bind(this));
     const replace = Object.keys(CHARACTERS_TO_NORMALIZE).join('');
     this._normalizationRegex = new RegExp(`[${replace}]`, 'g');
   }
@@ -4239,21 +4226,29 @@ class PDFFindController {
       return;
     }
     this._pdfDocument = pdfDocument;
+    this._firstPageCapability.resolve();
   }
   executeCommand(cmd, state) {
-    if (!this._pdfDocument) {
-      return;
-    }
+    const pdfDocument = this._pdfDocument;
     if (this._state === null || cmd !== 'findagain') {
       this._dirtyMatch = true;
     }
     this._state = state;
     this._updateUIState(FindState.PENDING);
-    this._firstPagePromise.then(() => {
+    this._firstPageCapability.promise.then(() => {
+      if (!this._pdfDocument || pdfDocument && this._pdfDocument !== pdfDocument) {
+        return;
+      }
       this._extractText();
-      clearTimeout(this._findTimeout);
+      if (this._findTimeout) {
+        clearTimeout(this._findTimeout);
+        this._findTimeout = null;
+      }
       if (cmd === 'find') {
-        this._findTimeout = setTimeout(this._nextMatch.bind(this), FIND_TIMEOUT);
+        this._findTimeout = setTimeout(() => {
+          this._nextMatch();
+          this._findTimeout = null;
+        }, FIND_TIMEOUT);
       } else {
         this._nextMatch();
       }
@@ -4280,14 +4275,9 @@ class PDFFindController {
     this._pendingFindMatches = Object.create(null);
     this._resumePageIdx = null;
     this._dirtyMatch = false;
+    clearTimeout(this._findTimeout);
     this._findTimeout = null;
-    this._firstPagePromise = new Promise(resolve => {
-      const eventBus = this._eventBus;
-      eventBus.on('pagesinit', function onPagesInit() {
-        eventBus.off('pagesinit', onPagesInit);
-        resolve();
-      });
-    });
+    this._firstPageCapability = (0, _pdfjsLib.createPromiseCapability)();
   }
   _normalize(text) {
     return text.replace(this._normalizationRegex, function (ch) {
@@ -4560,6 +4550,24 @@ class PDFFindController {
     if (this._selected.pageIdx !== -1) {
       this._updatePage(this._selected.pageIdx);
     }
+  }
+  _onFindBarClose(evt) {
+    const pdfDocument = this._pdfDocument;
+    this._firstPageCapability.promise.then(() => {
+      if (!this._pdfDocument || pdfDocument && this._pdfDocument !== pdfDocument) {
+        return;
+      }
+      if (this._findTimeout) {
+        clearTimeout(this._findTimeout);
+        this._findTimeout = null;
+        this._updateUIState(FindState.FOUND);
+      }
+      this._highlightMatches = false;
+      this._eventBus.dispatch('updatetextlayermatches', {
+        source: this,
+        pageIndex: -1
+      });
+    });
   }
   _requestMatchesCount() {
     const { pageIdx, matchIdx } = this._selected;
@@ -5289,14 +5297,6 @@ class PDFLinkService {
       action
     });
   }
-  onFileAttachmentAnnotation({ id, filename, content }) {
-    this.eventBus.dispatch('fileattachmentannotation', {
-      source: this,
-      id,
-      filename,
-      content
-    });
-  }
   cachePageRef(pageNum, pageRef) {
     if (!pageRef) {
       return;
@@ -5382,7 +5382,6 @@ class SimpleLinkService {
   }
   setHash(hash) {}
   executeNamedAction(action) {}
-  onFileAttachmentAnnotation({ id, filename, content }) {}
   cachePageRef(pageNum, pageRef) {}
 }
 exports.PDFLinkService = PDFLinkService;
@@ -5409,6 +5408,7 @@ class PDFOutlineViewer {
     this.linkService = linkService;
     this.eventBus = eventBus;
     this.reset();
+    eventBus.on('toggleoutlinetree', this.toggleOutlineTree.bind(this));
   }
   reset() {
     this.outline = null;
@@ -6784,6 +6784,9 @@ class BaseViewer {
     if (this.pdfDocument) {
       this._cancelRendering();
       this._resetView();
+      if (this.findController) {
+        this.findController.setDocument(null);
+      }
     }
     this.pdfDocument = pdfDocument;
     if (!pdfDocument) {
@@ -6872,6 +6875,9 @@ class BaseViewer {
         }
       });
       this.eventBus.dispatch('pagesinit', { source: this });
+      if (this.findController) {
+        this.findController.setDocument(pdfDocument);
+      }
       if (this.defaultRenderingQueue) {
         this.update();
       }
