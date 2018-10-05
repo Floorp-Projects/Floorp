@@ -1170,6 +1170,7 @@ class GeneratedFile(ContextDerived):
             '.inc',
             '.py',
             '.rs',
+            'node.stub', # To avoid VPATH issues with installing node files: https://bugzilla.mozilla.org/show_bug.cgi?id=1461714#c55
         )
         self.required_for_compile = [f for f in self.outputs if f.endswith(suffixes) or 'stl_wrappers/' in f]
 

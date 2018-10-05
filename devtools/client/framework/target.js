@@ -237,6 +237,10 @@ function TabTarget({ form, client, chrome, tab = null }) {
   // Cache of already created targed-scoped fronts
   // [typeName:string => Front instance]
   this.fronts = new Map();
+  // Temporary fix for bug #1493131 - inspector has a different life cycle
+  // than most other fronts because it is closely related to the toolbox.
+  // TODO: remove once inspector is separated from the toolbox
+  this._inspector = null;
 }
 
 exports.TabTarget = TabTarget;
@@ -373,6 +377,18 @@ TabTarget.prototype = {
   // Get a promise of the RootActor's form
   get root() {
     return this.client.mainRoot.rootForm;
+  },
+
+  // Temporary fix for bug #1493131 - inspector has a different life cycle
+  // than most other fronts because it is closely related to the toolbox.
+  // TODO: remove once inspector is separated from the toolbox
+  getInspector(typeName) {
+    // the front might have been destroyed and no longer have an actor ID
+    if (this._inspector && this._inspector.actorID) {
+      return this._inspector;
+    }
+    this._inspector = getFront(this.client, "inspector", this.form);
+    return this._inspector;
   },
 
   // Get a Front for a target-scoped actor.
