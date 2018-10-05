@@ -800,6 +800,12 @@
                  "description": "The window that contains the tabs.",
                  "minimum": -2
                },
+               "populate": {
+                 "type": "boolean",
+                 "optional": true,
+                 "default": true,
+                 "description": "If true, the $(ref:windows.Window) returned will have a <var>tabs</var> property that contains a list of the $(ref:tabs.Tab) objects. The <code>Tab</code> objects only contain the <code>url</code>, <code>title</code> and <code>favIconUrl</code> properties if the extension's manifest file includes the <code>\"tabs\"</code> permission. If false, the $(ref:windows.Window) won't have the <var>tabs</var> property."
+               },
                "tabs": {
                  "description": "One or more tab indices to highlight.",
                  "choices": [
