@@ -30,7 +30,6 @@
 
     // Uniform inputs
     uniform mat4 uTransform;       // Orthographic projection
-    uniform float uDevicePixelRatio;
 
     // Attribute inputs
     in vec3 aPosition;

@@ -14,7 +14,7 @@ use renderer::{
     desc,
     MAX_VERTEX_TEXTURE_WIDTH,
     BlendMode, DebugFlags, ImageBufferKind, RendererError, RendererOptions,
-    TextureSampler, VertexArrayKind,
+    TextureSampler, VertexArrayKind, ShaderPrecacheFlags,
 };
 
 use gleam::gl::GlType;
@@ -79,7 +79,7 @@ impl LazilyCompiledShader {
         name: &'static str,
         features: &[&'static str],
         device: &mut Device,
-        precache: bool,
+        precache_flags: ShaderPrecacheFlags,
     ) -> Result<Self, ShaderError> {
         let mut shader = LazilyCompiledShader {
             program: None,
@@ -88,16 +88,12 @@ impl LazilyCompiledShader {
             features: features.to_vec(),
         };
 
-        if precache {
+        if precache_flags.intersects(ShaderPrecacheFlags::ASYNC_COMPILE | ShaderPrecacheFlags::FULL_COMPILE) {
             let t0 = precise_time_ns();
-            let program = shader.get(device)?;
+            shader.get_internal(device, precache_flags)?;
             let t1 = precise_time_ns();
-            device.bind_program(program);
-            device.draw_triangles_u16(0, 3);
-            let t2 = precise_time_ns();
-            debug!("[C: {:.1} ms D: {:.1} ms] Precache {} {:?}",
+            debug!("[C: {:.1} ms ] Precache {} {:?}",
                 (t1 - t0) as f64 / 1000000.0,
-                (t2 - t1) as f64 / 1000000.0,
                 name,
                 features
             );
@@ -123,32 +119,32 @@ impl LazilyCompiledShader {
         device.set_uniforms(program, projection);
     }
 
-    fn get(&mut self, device: &mut Device) -> Result<&Program, ShaderError> {
+    fn get_internal(
+        &mut self,
+        device: &mut Device,
+        precache_flags: ShaderPrecacheFlags,
+    ) -> Result<&mut Program, ShaderError> {
         if self.program.is_none() {
             let program = match self.kind {
                 ShaderKind::Primitive | ShaderKind::Brush | ShaderKind::Text => {
                     create_prim_shader(self.name,
                                        device,
-                                       &self.features,
-                                       VertexArrayKind::Primitive)
+                                       &self.features)
                 }
-                ShaderKind::Cache(format) => {
+                ShaderKind::Cache(..) => {
                     create_prim_shader(self.name,
                                        device,
-                                       &self.features,
-                                       format)
+                                       &self.features)
                 }
                 ShaderKind::VectorStencil => {
                     create_prim_shader(self.name,
                                        device,
-                                       &self.features,
-                                       VertexArrayKind::VectorStencil)
+                                       &self.features)
                 }
                 ShaderKind::VectorCover => {
                     create_prim_shader(self.name,
                                        device,
-                                       &self.features,
-                                       VertexArrayKind::VectorCover)
+                                       &self.features)
                 }
                 ShaderKind::ClipCache => {
                     create_clip_shader(self.name, device)
@@ -157,7 +153,71 @@ impl LazilyCompiledShader {
             self.program = Some(program?);
         }
 
-        Ok(self.program.as_ref().unwrap())
+        let program = self.program.as_mut().unwrap();
+
+        if precache_flags.contains(ShaderPrecacheFlags::FULL_COMPILE) && !program.is_initialized() {
+            let vertex_format = match self.kind {
+                ShaderKind::Primitive |
+                ShaderKind::Brush |
+                ShaderKind::Text => VertexArrayKind::Primitive,
+                ShaderKind::Cache(format) => format,
+                ShaderKind::VectorStencil => VertexArrayKind::VectorStencil,
+                ShaderKind::VectorCover => VertexArrayKind::VectorCover,
+                ShaderKind::ClipCache => VertexArrayKind::Clip,
+            };
+
+            let vertex_descriptor = match vertex_format {
+                VertexArrayKind::Primitive => &desc::PRIM_INSTANCES,
+                VertexArrayKind::Blur => &desc::BLUR,
+                VertexArrayKind::Clip => &desc::CLIP,
+                VertexArrayKind::VectorStencil => &desc::VECTOR_STENCIL,
+                VertexArrayKind::VectorCover => &desc::VECTOR_COVER,
+                VertexArrayKind::Border => &desc::BORDER,
+                VertexArrayKind::Scale => &desc::SCALE,
+            };
+
+            device.link_program(program, vertex_descriptor)?;
+            device.bind_program(program);
+            match self.kind {
+                ShaderKind::ClipCache => {
+                    device.bind_shader_samplers(
+                        &program,
+                        &[
+                            ("sColor0", TextureSampler::Color0),
+                            ("sTransformPalette", TextureSampler::TransformPalette),
+                            ("sRenderTasks", TextureSampler::RenderTasks),
+                            ("sGpuCache", TextureSampler::GpuCache),
+                            ("sPrimitiveHeadersF", TextureSampler::PrimitiveHeadersF),
+                            ("sPrimitiveHeadersI", TextureSampler::PrimitiveHeadersI),
+                        ],
+                    );
+                }
+                _ => {
+                    device.bind_shader_samplers(
+                        &program,
+                        &[
+                            ("sColor0", TextureSampler::Color0),
+                            ("sColor1", TextureSampler::Color1),
+                            ("sColor2", TextureSampler::Color2),
+                            ("sDither", TextureSampler::Dither),
+                            ("sPrevPassAlpha", TextureSampler::PrevPassAlpha),
+                            ("sPrevPassColor", TextureSampler::PrevPassColor),
+                            ("sTransformPalette", TextureSampler::TransformPalette),
+                            ("sRenderTasks", TextureSampler::RenderTasks),
+                            ("sGpuCache", TextureSampler::GpuCache),
+                            ("sPrimitiveHeadersF", TextureSampler::PrimitiveHeadersF),
+                            ("sPrimitiveHeadersI", TextureSampler::PrimitiveHeadersI),
+                        ],
+                    );
+                }
+            }
+        }
+
+        Ok(program)
+    }
+
+    fn get(&mut self, device: &mut Device) -> Result<&mut Program, ShaderError> {
+        self.get_internal(device, ShaderPrecacheFlags::FULL_COMPILE)
     }
 
     fn deinit(self, device: &mut Device) {
@@ -190,7 +250,7 @@ impl BrushShader {
         name: &'static str,
         device: &mut Device,
         features: &[&'static str],
-        precache: bool,
+        precache_flags: ShaderPrecacheFlags,
         dual_source: bool,
     ) -> Result<Self, ShaderError> {
         let opaque = LazilyCompiledShader::new(
@@ -198,7 +258,7 @@ impl BrushShader {
             name,
             features,
             device,
-            precache,
+            precache_flags,
         )?;
 
         let mut alpha_features = features.to_vec();
@@ -209,7 +269,7 @@ impl BrushShader {
             name,
             &alpha_features,
             device,
-            precache,
+            precache_flags,
         )?;
 
         let dual_source = if dual_source {
@@ -221,7 +281,7 @@ impl BrushShader {
                 name,
                 &dual_source_features,
                 device,
-                precache,
+                precache_flags,
             )?;
 
             Some(shader)
@@ -237,7 +297,7 @@ impl BrushShader {
             name,
             &debug_overdraw_features,
             device,
-            precache,
+            precache_flags,
         )?;
 
         Ok(BrushShader {
@@ -287,14 +347,14 @@ impl TextShader {
         name: &'static str,
         device: &mut Device,
         features: &[&'static str],
-        precache: bool,
+        precache_flags: ShaderPrecacheFlags,
     ) -> Result<Self, ShaderError> {
         let simple = LazilyCompiledShader::new(
             ShaderKind::Text,
             name,
             features,
             device,
-            precache,
+            precache_flags,
         )?;
 
         let mut glyph_transform_features = features.to_vec();
@@ -305,7 +365,7 @@ impl TextShader {
             name,
             &glyph_transform_features,
             device,
-            precache,
+            precache_flags,
         )?;
 
         let mut debug_overdraw_features = features.to_vec();
@@ -316,7 +376,7 @@ impl TextShader {
             name,
             &debug_overdraw_features,
             device,
-            precache,
+            precache_flags,
         )?;
 
         Ok(TextShader { simple, glyph_transform, debug_overdraw })
@@ -349,7 +409,6 @@ fn create_prim_shader(
     name: &'static str,
     device: &mut Device,
     features: &[&'static str],
-    vertex_format: VertexArrayKind,
 ) -> Result<Program, ShaderError> {
     let mut prefix = format!(
         "#define WR_MAX_VERTEX_TEXTURE_WIDTH {}U\n",
@@ -362,38 +421,7 @@ fn create_prim_shader(
 
     debug!("PrimShader {}", name);
 
-    let vertex_descriptor = match vertex_format {
-        VertexArrayKind::Primitive => desc::PRIM_INSTANCES,
-        VertexArrayKind::Blur => desc::BLUR,
-        VertexArrayKind::Clip => desc::CLIP,
-        VertexArrayKind::VectorStencil => desc::VECTOR_STENCIL,
-        VertexArrayKind::VectorCover => desc::VECTOR_COVER,
-        VertexArrayKind::Border => desc::BORDER,
-        VertexArrayKind::Scale => desc::SCALE,
-    };
-
-    let program = device.create_program(name, &prefix, &vertex_descriptor);
-
-    if let Ok(ref program) = program {
-        device.bind_shader_samplers(
-            program,
-            &[
-                ("sColor0", TextureSampler::Color0),
-                ("sColor1", TextureSampler::Color1),
-                ("sColor2", TextureSampler::Color2),
-                ("sDither", TextureSampler::Dither),
-                ("sPrevPassAlpha", TextureSampler::PrevPassAlpha),
-                ("sPrevPassColor", TextureSampler::PrevPassColor),
-                ("sTransformPalette", TextureSampler::TransformPalette),
-                ("sRenderTasks", TextureSampler::RenderTasks),
-                ("sGpuCache", TextureSampler::GpuCache),
-                ("sPrimitiveHeadersF", TextureSampler::PrimitiveHeadersF),
-                ("sPrimitiveHeadersI", TextureSampler::PrimitiveHeadersI),
-            ],
-        );
-    }
-
-    program
+    device.create_program(name, &prefix)
 }
 
 fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program, ShaderError> {
@@ -404,23 +432,7 @@ fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program
 
     debug!("ClipShader {}", name);
 
-    let program = device.create_program(name, &prefix, &desc::CLIP);
-
-    if let Ok(ref program) = program {
-        device.bind_shader_samplers(
-            program,
-            &[
-                ("sColor0", TextureSampler::Color0),
-                ("sTransformPalette", TextureSampler::TransformPalette),
-                ("sRenderTasks", TextureSampler::RenderTasks),
-                ("sGpuCache", TextureSampler::GpuCache),
-                ("sPrimitiveHeadersF", TextureSampler::PrimitiveHeadersF),
-                ("sPrimitiveHeadersI", TextureSampler::PrimitiveHeadersI),
-            ],
-        );
-    }
-
-    program
+    device.create_program(name, &prefix)
 }
 
 // NB: If you add a new shader here, make sure to deinitialize it
@@ -472,20 +484,11 @@ impl Shaders {
         gl_type: GlType,
         options: &RendererOptions,
     ) -> Result<Self, ShaderError> {
-        // needed for the precache fake draws
-        let dummy_vao = if options.precache_shaders {
-            let vao = device.create_custom_vao(&[]);
-            device.bind_custom_vao(&vao);
-            Some(vao)
-        } else {
-            None
-        };
-
         let brush_solid = BrushShader::new(
             "brush_solid",
             device,
             &[],
-            options.precache_shaders,
+            options.precache_flags,
             false,
         )?;
 
@@ -493,7 +496,7 @@ impl Shaders {
             "brush_blend",
             device,
             &[],
-            options.precache_shaders,
+            options.precache_flags,
             false,
         )?;
 
@@ -501,7 +504,7 @@ impl Shaders {
             "brush_mix_blend",
             device,
             &[],
-            options.precache_shaders,
+            options.precache_flags,
             false,
         )?;
 
@@ -513,7 +516,7 @@ impl Shaders {
             } else {
                &[]
             },
-            options.precache_shaders,
+            options.precache_flags,
             false,
         )?;
 
@@ -525,7 +528,7 @@ impl Shaders {
             } else {
                &[]
             },
-            options.precache_shaders,
+            options.precache_flags,
             false,
         )?;
 
@@ -534,7 +537,7 @@ impl Shaders {
             "cs_blur",
             &["ALPHA_TARGET"],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let cs_blur_rgba8 = LazilyCompiledShader::new(
@@ -542,7 +545,7 @@ impl Shaders {
             "cs_blur",
             &["COLOR_TARGET"],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let cs_clip_rectangle = LazilyCompiledShader::new(
@@ -550,7 +553,7 @@ impl Shaders {
             "cs_clip_rectangle",
             &[],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let cs_clip_box_shadow = LazilyCompiledShader::new(
@@ -558,7 +561,7 @@ impl Shaders {
             "cs_clip_box_shadow",
             &[],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let cs_clip_line = LazilyCompiledShader::new(
@@ -566,7 +569,7 @@ impl Shaders {
             "cs_clip_line",
             &[],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let cs_clip_image = LazilyCompiledShader::new(
@@ -574,7 +577,7 @@ impl Shaders {
             "cs_clip_image",
             &[],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let cs_scale_a8 = LazilyCompiledShader::new(
@@ -582,7 +585,7 @@ impl Shaders {
             "cs_scale",
             &["ALPHA_TARGET"],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let cs_scale_rgba8 = LazilyCompiledShader::new(
@@ -590,19 +593,25 @@ impl Shaders {
             "cs_scale",
             &["COLOR_TARGET"],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let ps_text_run = TextShader::new("ps_text_run",
             device,
             &[],
-            options.precache_shaders,
+            options.precache_flags,
         )?;
+
+        let dual_source_precache_flags = if options.disable_dual_source_blending {
+            ShaderPrecacheFlags::empty()
+        } else {
+            options.precache_flags
+        };
 
         let ps_text_run_dual_source = TextShader::new("ps_text_run",
             device,
             &[DUAL_SOURCE_FEATURE],
-            options.precache_shaders && !options.disable_dual_source_blending,
+            dual_source_precache_flags,
         )?;
 
         // All image configuration.
@@ -622,7 +631,7 @@ impl Shaders {
                     "brush_image",
                     device,
                     &image_features,
-                    options.precache_shaders,
+                    options.precache_flags,
                     !options.disable_dual_source_blending,
                 )?);
             }
@@ -658,7 +667,7 @@ impl Shaders {
                             "brush_yuv_image",
                             device,
                             &yuv_features,
-                            options.precache_shaders,
+                            options.precache_flags,
                             false,
                         )?;
                         let index = Self::get_yuv_shader_index(
@@ -678,7 +687,7 @@ impl Shaders {
             "cs_border_segment",
              &[],
              device,
-             options.precache_shaders,
+             options.precache_flags,
         )?;
 
         let cs_border_solid = LazilyCompiledShader::new(
@@ -686,7 +695,7 @@ impl Shaders {
             "cs_border_solid",
             &[],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
 
         let ps_split_composite = LazilyCompiledShader::new(
@@ -694,12 +703,8 @@ impl Shaders {
             "ps_split_composite",
             &[],
             device,
-            options.precache_shaders,
+            options.precache_flags,
         )?;
-
-        if let Some(vao) = dummy_vao {
-            device.delete_custom_vao(vao);
-        }
 
         Ok(Shaders {
             cs_blur_a8,
