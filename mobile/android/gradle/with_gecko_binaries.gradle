@@ -42,20 +42,22 @@ task buildOmnijars(type:Exec) {
 ext.configureVariantWithGeckoBinaries = { variant ->
     // :app needs the full Fennec omni.ja, whereas other projects need the
     // GeckoView-specific omni.ja.
-    def omnijar_dir = "app".equals(project.name) ? "fennec" : "geckoview"
-    def distDir = "${topobjdir}/dist/${omnijar_dir}"
+    def omnijarDir = { "${topobjdir}/dist/${it}" }("app".equals(project.name) ? "fennec" : "geckoview")
+    // All projects take the same Gecko libraries, which (for historical
+    // reasons) are in "fennec".
+    def distDir = "${topobjdir}/dist/fennec"
 
     def syncOmnijarFromDistDir = task("syncOmnijarFromDistDirFor${variant.name.capitalize()}", type: Sync) {
         onlyIf {
             if (source.empty) {
-                throw new StopExecutionException("Required omnijar not found in ${distDir}/{omni.ja,assets/omni.ja}.  Have you built and packaged?")
+                throw new StopExecutionException("Required omnijar not found in ${omnijarDir}/{omni.ja,assets/omni.ja}.  Have you built and packaged?")
             }
             return true
         }
 
         into("${project.buildDir}/moz.build/src/${variant.name}/omnijar")
-        from("${distDir}/omni.ja",
-             "${distDir}/assets/omni.ja") {
+        from("${omnijarDir}/omni.ja",
+             "${omnijarDir}/assets/omni.ja") {
             // Throw an exception if we find multiple, potentially conflicting omni.ja files.
             duplicatesStrategy 'fail'
         }

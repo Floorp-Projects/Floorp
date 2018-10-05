@@ -24,7 +24,14 @@
 @BINPATH@/hyphenation/*
 @BINPATH@/localization/*
 
+; We want fennec/assets for both Fennec and GeckoView, so we turn
+; geckoview/assets into fennec/assets.
+#ifndef MOZ_GECKOVIEW_JAR
 [assets xz_compress="1" destdir="assets/@ANDROID_CPU_ARCH@"]
+#else
+[assets xz_compress="1" destdir="../fennec/assets/@ANDROID_CPU_ARCH@"]
+#endif
+
 #ifndef MOZ_STATIC_JS
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
@@ -71,7 +78,14 @@
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
 #endif
 
+; We want fennec/lib for both Fennec and GeckoView, so we turn
+; geckoview/lib into fennec/lib.
+#ifndef MOZ_GECKOVIEW_JAR
 [lib destdir="lib/@ANDROID_CPU_ARCH@"]
+#else
+[lib destdir="../fennec/lib/@ANDROID_CPU_ARCH@"]
+#endif
+
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 # This should be MOZ_CHILD_PROCESS_NAME, but that has a "lib/" prefix.
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
