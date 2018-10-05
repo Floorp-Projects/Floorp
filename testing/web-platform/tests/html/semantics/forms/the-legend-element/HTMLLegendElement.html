@@ -25,10 +25,12 @@
   test(function() {
     assert_equals(document.getElementById("lgd2").form, document.getElementById("fs").form,
                   "The legend.form should be same as fieldset.form.");
+    assert_equals(document.getElementById("lgd2").form, document.getElementById("fm"),
+                  "The legend.form should be the correct form.");
   }, "The legend.form must be same value as fieldset.form");
 
   test(function() {
-    assert_true(document.getElementById("lgd1") instanceof HTMLLegendElement, "form", "Check if the form is readonly");
+    assert_true(document.getElementById("lgd1") instanceof HTMLLegendElement, "legend should be a HTMLLegendElement");
     assert_readonly(document.getElementById("lgd1"), "form", "The form is not readonly");
   }, "Interface HTMLLegendElement");
 </script>
