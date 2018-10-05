@@ -475,6 +475,7 @@ MSG_DEF(JSMSG_DEBUG_NO_ENV_OBJECT,     0, JSEXN_TYPEERR, "declarative Environmen
 MSG_DEF(JSMSG_DEBUG_PROTO,             2, JSEXN_TYPEERR, "{0}.prototype is not a valid {1} instance")
 MSG_DEF(JSMSG_DEBUG_WRONG_OWNER,       1, JSEXN_TYPEERR, "{0} belongs to a different Debugger")
 MSG_DEF(JSMSG_DEBUG_OPTIMIZED_OUT,     1, JSEXN_ERR, "variable `{0}' has been optimized out")
+MSG_DEF(JSMSG_DEBUG_OPTIMIZED_OUT_FUN, 0, JSEXN_ERR, "function is optimized out")
 MSG_DEF(JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED, 0, JSEXN_TYPEERR, "resumption values are disallowed in this hook")
 MSG_DEF(JSMSG_DEBUG_VARIABLE_NOT_FOUND,0, JSEXN_TYPEERR, "variable not found in environment")
 MSG_DEF(JSMSG_DEBUG_WRAPPER_IN_WAY,    3, JSEXN_TYPEERR, "{0} is {1}{2}a global object, but a direct reference is required")
