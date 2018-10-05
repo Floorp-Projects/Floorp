@@ -263,24 +263,13 @@ Inspector.prototype = {
   },
 
   _deferredOpen: async function() {
-    this.breadcrumbs = new HTMLBreadcrumbs(this);
-
     this.walker.on("new-root", this.onNewRoot);
     this.toolbox.on("host-changed", this.onHostChanged);
     this.selection.on("new-node-front", this.onNewSelection);
     this.selection.on("detached-front", this.onDetached);
 
-    if (this.target.isLocalTab) {
-      this.target.on("thread-paused", this._updateDebuggerPausedWarning);
-      this.target.on("thread-resumed", this._updateDebuggerPausedWarning);
-      this.toolbox.on("select", this._updateDebuggerPausedWarning);
-      this._updateDebuggerPausedWarning();
-    }
-
     this._initMarkup();
     this.isReady = false;
-
-    this.setupSearchBox();
 
     // Setup the splitter before the sidebar is displayed so,
     // we don't miss any events.
@@ -292,7 +281,6 @@ Inspector.prototype = {
     this.panelDoc.getElementById("inspector-main-content").style.visibility = "visible";
 
     this.setupSidebar();
-    this.setupExtensionSidebars();
 
     await this.once("markuploaded");
     this.isReady = true;
@@ -305,8 +293,18 @@ Inspector.prototype = {
       await this.markup.expandNode(this.selection.nodeFront);
     }
 
-    // Setup the toolbar only now because it may depend on the document.
+    // Take care of the remaining initialization and setup.
+    this.breadcrumbs = new HTMLBreadcrumbs(this);
+    this.setupExtensionSidebars();
+    this.setupSearchBox();
     await this.setupToolbar();
+
+    if (this.target.isLocalTab) {
+      this.target.on("thread-paused", this._updateDebuggerPausedWarning);
+      this.target.on("thread-resumed", this._updateDebuggerPausedWarning);
+      this.toolbox.on("select", this._updateDebuggerPausedWarning);
+      this._updateDebuggerPausedWarning();
+    }
 
     // Log the 3 pane inspector setting on inspector open. The question we want to answer
     // is:
