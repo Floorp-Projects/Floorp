@@ -186,7 +186,7 @@ add_task(async function test_oneOff_enterSelection() {
   // for this test.
   const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
   let suggestionEngine = await new Promise((resolve, reject) => {
-    Services.search.addEngine(url, "", false, {
+    Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine); },
       onError() { reject(); },
     });
@@ -254,7 +254,7 @@ add_task(async function test_suggestion_click() {
   // for this test.
   const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
   let suggestionEngine = await new Promise((resolve, reject) => {
-    Services.search.addEngine(url, "", false, {
+    Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine); },
       onError() { reject(); },
     });
@@ -311,7 +311,7 @@ add_task(async function test_suggestion_enterSelection() {
   // for this test.
   const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
   let suggestionEngine = await new Promise((resolve, reject) => {
-    Services.search.addEngine(url, "", false, {
+    Services.search.addEngine(url, null, "", false, {
       onSuccess(engine) { resolve(engine); },
       onError() { reject(); },
     });

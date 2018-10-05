@@ -50,7 +50,7 @@ add_test(function simple_callback_test() {
     },
   };
   Services.search.addEngine(gDataUrl + "engine.xml", null,
-                            false, searchCallback);
+                            null, false, searchCallback);
 });
 
 // Test of the search callback on duplicate engine failures
@@ -67,7 +67,7 @@ add_test(function duplicate_failure_test() {
   };
   // Re-add the same engine added in the previous test
   Services.search.addEngine(gDataUrl + "engine.xml", null,
-                            false, searchCallback);
+                            null, false, searchCallback);
 });
 
 // Test of the search callback on failure to load the engine failures
@@ -84,7 +84,7 @@ add_test(function load_failure_test() {
   };
   // Try adding an engine that doesn't exist
   Services.search.addEngine("http://invalid/data/engine.xml", null,
-                            false, searchCallback);
+                            null, false, searchCallback);
 });
 
 function run_test() {

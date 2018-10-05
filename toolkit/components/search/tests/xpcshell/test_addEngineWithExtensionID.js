@@ -40,7 +40,7 @@ add_test(function test_addEngineWithExtensionID() {
     },
   };
   Services.search.addEngine(gDataUrl + "engine.xml", null,
-                            false, searchCallback, kExtensionID2);
+                            null, false, searchCallback, kExtensionID2);
 });
 
 function run_test() {

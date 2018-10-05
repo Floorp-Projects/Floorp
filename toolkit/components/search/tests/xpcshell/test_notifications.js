@@ -66,5 +66,5 @@ function run_test() {
 
   Services.obs.addObserver(search_observer, "browser-search-engine-modified");
 
-  Services.search.addEngine(gDataUrl + "engine.xml", null, false);
+  Services.search.addEngine(gDataUrl + "engine.xml", null, null, false);
 }
