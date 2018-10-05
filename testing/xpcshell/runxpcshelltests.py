@@ -1153,10 +1153,6 @@ class XPCShellTests(object):
 
         mozinfo.update(self.mozInfo)
 
-        # Add a flag to mozinfo to indicate that code coverage is enabled.
-        if self.jscovdir:
-            mozinfo.update({"coverage": True})
-
         return True
 
     def runTests(self, options, testClass=XPCShellTestThread, mobileArgs=None):
