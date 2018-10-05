@@ -1471,9 +1471,9 @@ WorkerPrivate::SetCSP(nsIContentSecurityPolicy* aCSP)
     return;
   }
   aCSP->EnsureEventTarget(mMainThreadEventTarget);
+  aCSP->SetEventListener(mCSPEventListener);
 
   mLoadInfo.mCSP = aCSP;
-  EnsureCSPEventListener();
 }
 
 nsresult
@@ -1493,6 +1493,7 @@ WorkerPrivate::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
   }
 
   csp->EnsureEventTarget(mMainThreadEventTarget);
+  csp->SetEventListener(mCSPEventListener);
 
   // If there's a CSP header, apply it.
   if (!cspHeaderValue.IsEmpty()) {
@@ -1514,7 +1515,6 @@ WorkerPrivate::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
   mLoadInfo.mCSP = csp;
   mLoadInfo.mEvalAllowed = evalAllowed;
   mLoadInfo.mReportCSPViolations = reportEvalViolations;
-  EnsureCSPEventListener();
 
   return NS_OK;
 }
@@ -3445,11 +3445,9 @@ WorkerPrivate::EnsureClientSource()
 bool
 WorkerPrivate::EnsureCSPEventListener()
 {
-  if (!mCSPEventListener) {
-    mCSPEventListener = WorkerCSPEventListener::Create(this);
-    if (NS_WARN_IF(!mCSPEventListener)) {
-      return false;
-    }
+  mCSPEventListener = WorkerCSPEventListener::Create(this);
+  if (NS_WARN_IF(!mCSPEventListener)) {
+    return false;
   }
 
   return true;
