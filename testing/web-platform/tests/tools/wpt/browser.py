@@ -503,6 +503,13 @@ class ChromeAndroid(Browser):
         return None
 
 
+class ChromeWebDriver(Chrome):
+    """Chrome-specific interface for chrome without using selenium.
+
+    Includes webdriver installation.
+    """
+    product = "chrome_webdriver"
+
 class Opera(Browser):
     """Opera-specific interface.
 
