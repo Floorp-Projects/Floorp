@@ -24,6 +24,13 @@ const componentMap = new Map([
   ["PageError", require("./message-types/PageError")]
 ]);
 
+function isPaused({ getMessage, pausedExecutionPoint }) {
+  const message = getMessage();
+  return pausedExecutionPoint
+  && message.executionPoint
+    && pausedExecutionPoint.checkpoint === message.executionPoint.checkpoint;
+}
+
 class MessageContainer extends Component {
   static get propTypes() {
     return {
@@ -52,19 +59,23 @@ class MessageContainer extends Component {
       this.props.timestampsVisible !== nextProps.timestampsVisible;
     const networkMessageUpdateChanged =
       this.props.networkMessageUpdate !== nextProps.networkMessageUpdate;
+    const pausedChanged = isPaused(this.props) !== isPaused(nextProps);
 
     return repeatChanged
       || openChanged
       || tableDataChanged
       || timestampVisibleChanged
-      || networkMessageUpdateChanged;
+      || networkMessageUpdateChanged
+      || pausedChanged;
   }
 
   render() {
     const message = this.props.getMessage();
 
     const MessageComponent = getMessageComponent(message);
-    return MessageComponent(Object.assign({message}, this.props));
+    return MessageComponent(Object.assign({message}, this.props, {
+      isPaused: isPaused(this.props)
+    }));
   }
 }
 

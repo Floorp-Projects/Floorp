@@ -133,9 +133,6 @@ DIRS += [
     '/tools/profiler',
 ]
 
-if CONFIG['MOZ_ENABLE_XREMOTE']:
-    DIRS += ['/widget/xremoteclient']
-
 if CONFIG['MOZ_SPELLCHECK']:
     DIRS += ['/extensions/spellcheck']
 
@@ -157,7 +154,10 @@ DIRS += [
 ]
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
-    DIRS += ['/toolkit/system/gnome']
+    DIRS += [
+        '/toolkit/system/gnome',
+        '/widget/xremoteclient',
+    ]
 
 if CONFIG['ENABLE_MARIONETTE']:
     DIRS += [
