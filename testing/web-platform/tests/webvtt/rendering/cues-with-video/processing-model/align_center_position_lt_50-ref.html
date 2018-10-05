@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<title>Reference for WebVTT rendering, align:middle, position greater than 50%</title>
+<title>Reference for WebVTT rendering, align:center, position less than 50%</title>
 <style>
 html { overflow:hidden }
 body { margin:0 }
@@ -13,9 +13,10 @@ body { margin:0 }
 .cue {
     position: absolute;
     bottom: 0;
-    right: 23px;
+    left: 23px;
+    right: 0;
     width: 64px;
-    text-align: center;
+    text-align: center
 }
 .cue > span {
     font-family: Ahem, sans-serif;
@@ -23,4 +24,4 @@ body { margin:0 }
     color: green;
 }
 </style>
-<div class=video><span class=cue><span>Aweso<br>me!!!</span></span></div>
+<div class=video><span class=cue><span>Awesome<br>!!!</span></span></div>
