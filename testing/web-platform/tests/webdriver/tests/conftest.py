@@ -9,7 +9,7 @@ import webdriver
 from tests.support import defaults
 from tests.support.helpers import cleanup_session
 from tests.support.http_request import HTTPRequest
-from tests.support.wait import wait
+from tests.support.sync import wait
 
 
 _current_session = None
