@@ -43,6 +43,8 @@
   <string name="preference_subitem_autocomplete">Peuleungkap URL keudroe</string>
   <string name="preference_switch_autocomplete">Peuleungkap keudroe</string>
   <string name="preference_category_autocomplete_preinstalled">Dapeuta URL Teutap</string>
+  <string name="preference_category_autocomplete_custom_urls">URL Kustom</string>
+  <string name="preference_autocomplete_subitem_customlist">URL Kustom</string>
   <string name="preference_autocomplete_learn_more">Meurunoë lom</string>
   <string name="preference_mozilla_telemetry_summary">Meurunoë lom</string>
   <string name="download_dialog_action_cancel">Bateuë</string>
