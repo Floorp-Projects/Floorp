@@ -583,9 +583,9 @@ This reports the impression of Activity Stream Router.
 #### Snippets impression
 ```js
 {
-  "client_id": "n/a",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "action": "snippets_user_event",
-  "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
+  "impression_id": "n/a",
   "source": "SNIPPETS",
   "addon_version": "20180710100040",
   "locale": "en-US",
@@ -635,10 +635,10 @@ This reports the user's interaction with Activity Stream Router.
 #### Snippets interaction pings
 ```js
 {
-  "client_id": "n/a",
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   "action": "snippets_user_event",
   "addon_version": "20180710100040",
-  "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
+  "impression_id": "n/a",
   "locale": "en-US",
   "source": "NEWTAB_FOOTER_BAR",
   "message_id": "some_snippet_id",
