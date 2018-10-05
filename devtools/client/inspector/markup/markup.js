@@ -134,6 +134,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   }
 
   this._onNewSelection();
+  this.expandNode(this.inspector.selection.nodeFront);
 
   this._prefObserver = new PrefObserver("devtools.markup");
   this._prefObserver.on(ATTR_COLLAPSE_ENABLED_PREF, this._onCollapseAttributesPrefChange);
