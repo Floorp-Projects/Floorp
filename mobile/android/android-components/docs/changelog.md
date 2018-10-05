@@ -4,6 +4,111 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 0.26.0
+
+Release date: 2018-10-05
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.25.1...v0.26.0),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/26?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.26.0/index)
+
+* Compiled against:
+  * Android (SDK: 27, Support Libraries: 27.1.1)
+  * Kotlin (Stdlib: 1.2.61, Coroutines: 0.23.4)
+  * GeckoView
+    * Nightly: 64.0.20180905100117
+    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
+    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
+
+* :warning: **Releases are now getting published on [maven.mozilla.org](http://maven.mozilla.org/?prefix=maven2/org/mozilla/components/)**.
+  * Additionally all artifacts published now use an artifact name that matches the gradle module name (e.g. `browser-toolbar` instead of just `toolbar`).
+  * All artifcats are published with the group id `org.mozilla.components` (`org.mozilla.photon` is not being used anymore).
+  * For a smooth transition all artifacts still get published on JCenter with the old group ids and artifact ids. In the near future releases will only be published on maven.mozilla.org. Old releases will remain on JCenter and not get removed.
+* **browser-domains**
+  * Removed `microsoftonline.com` from the global and localized domain lists. No content is being served from that domain. Only subdomains like `login.microsoftonline.com` are used.
+* **browser-errorpages**
+  * Added error page support for multiple error types.
+    ```kotlin
+    override fun onErrorRequest(
+        session: EngineSession,
+        errorType: ErrorType, // This used to be an Int
+        uri: String?
+    ): RequestInterceptor.ErrorResponse? {
+        // Create an error page.
+        val errorPage = ErrorPages.createErrorPage(context, errorType)
+        // Return it to the request interceptor to take care of default error cases.
+        return RequestInterceptor.ErrorResponse(errorPage)
+    }
+    ```
+  * :warning: **This is a breaking change for the `RequestInterceptor#onErrorRequest` method signature!**
+* **browser-engine-***
+  * Added a setting for enabling remote debugging.
+  * Creating an `Engine` requires a `Context` now.
+      ```kotlin
+       val geckoEngine = GeckoEngine(context)
+       val systemEngine = SystemEngine(context)
+      ```
+* **browser-engine-system**
+  * The user agent string now defaults to WebView's default, if not provided, and to the user's default, if provided. It can also be read and changed:
+    ```kotlin
+    // Using WebView's default
+    val engine = SystemEngine(context)
+
+    // Using customized WebView default
+    val engine = SystemEngine(context)
+    engine.settings.userAgentString = buildUserAgentString(engine.settings.userAgentString)
+
+    // Using custom default
+    val engine = SystemEngine(context, DefaultSettings(userAgentString = "foo"))
+    ```
+  * The tracking protection policy can now be set, both as a default and at any time later.
+    ```kotlin
+    // Set the default tracking protection policy
+    val engine = SystemEngine(context, DefaultSettings(
+      trackingProtectionPolicy = TrackingProtectionPolicy.all())
+    )
+
+    // Change the tracking protection policy
+    engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+      TrackingProtectionPolicy.AD,
+      TrackingProtectionPolicy.SOCIAL
+    )
+    ```
+* **browser-engine-gecko(-*)**
+  * Creating a `GeckoEngine` requires a `Context` now. Providing a `GeckoRuntime` is now optional.
+* **browser-session**
+  * Fixed an issue that caused a Custom Tab `Session` to get selected if it is the first session getting added.
+  * `Observer` instances that get attached to a `LifecycleOwner` can now automatically pause and resume observing whenever the lifecycle pauses and resumes. This behavior is off by default and can be enabled by using the `autoPause` parameter when registering the `Observer`.
+    ```kotlin
+    sessionManager.register(
+        observer = object : SessionManager.Observer {
+            // ...
+        },
+        owner = lifecycleOwner,
+        autoPause = true
+    )
+    ```
+  * Added an optional callback to provide a default `Session` whenever  `SessionManager` is empty:
+    ```kotlin
+    val sessionManager = SessionManager(
+        engine,
+        defaultSession = { Session("https://www.mozilla.org") }
+    )
+    ```
+* **service-telemetry**
+  * Added `Telemetry.getClientId()` to let consumers read the client ID.
+  * `Telemetry.recordSessionEnd()` now takes an optional callback to be executed upon failure - instead of throwing `IllegalStateException`.
+* **service-fretboard**
+  * Added `ValuesProvider.getClientId()` to let consumers specify the client ID to be used for bucketing the client. By default fretboard will generate and save an internal UUID used for bucketing. By specifying the client ID consumers can use the same ID for telemetry and bucketing.
+  * Update jobs scheduled with `WorkManagerSyncScheduler` will now automatically retry if the configuration couldn't get updated.
+  * The update interval of `WorkManagerSyncScheduler` can now be configured.
+  * Fixed an issue when reading a corrupt experiments file from disk.
+  * Added a workaround for HttpURLConnection throwing ArrayIndexOutOfBoundsException.
+* **ui-autocomplete**
+  * Fixed an issue causing desyncs between the soft keyboard and `InlineAutocompleteEditText`.
+* **samples-firefox-accounts**
+  * Showcasing new pairing flow which allows connecting new devices to existing accounts using a QR code.
+
 # 0.25.1 (2018-09-27)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.25...v0.25.1),
