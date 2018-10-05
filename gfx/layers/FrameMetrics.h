@@ -538,16 +538,6 @@ public:
   // This is a no-op if mIsRootContent is false.
   void RecalculateViewportOffset();
 
-  // Helper function for RecalculateViewportOffset(). Exposed so that
-  // APZC can perform the operation on other copies of the layout
-  // and visual viewport rects (e.g. the "effective" ones used to implement
-  // the frame delay).
-  // Modifies |aLayoutViewport| to continue enclosing |aVisualViewport|
-  // if possible.
-  static void KeepLayoutViewportEnclosingVisualViewport(
-      const CSSRect& aVisualViewport,
-      CSSRect& aLayoutViewport);
-
 private:
   // A unique ID assigned to each scrollable frame.
   ViewID mScrollId;
