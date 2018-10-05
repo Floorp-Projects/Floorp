@@ -168,6 +168,15 @@ var whitelist = [
    platforms: ["macosx"]},
   // Bug 1483277 (temporarily unreferenced)
   {file: "chrome://browser/content/browser.xhtml"},
+  // Bug 1494170
+  // (The references to these files are dynamically generated, so the test can't
+  // find the references)
+  {file: "chrome://devtools/skin/images/aboutdebugging-firefox-aurora.svg",
+   isFromDevTools: true},
+  {file: "chrome://devtools/skin/images/aboutdebugging-firefox-beta.svg",
+   isFromDevTools: true},
+  {file: "chrome://devtools/skin/images/aboutdebugging-firefox-release.svg",
+   isFromDevTools: true},
 ];
 
 whitelist = new Set(whitelist.filter(item =>
