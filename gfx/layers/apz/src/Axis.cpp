@@ -142,14 +142,20 @@ void Axis::AddVelocityToQueue(uint32_t aTimestampMs, float aVelocity) {
   }
 }
 
-void Axis::HandleTouchVelocity(uint32_t aTimestampMs, float aSpeed) {
+void Axis::HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
+                                        uint32_t aEndTimestampMs,
+                                        ParentLayerCoord aDelta)
+{
   // mVelocityQueue is controller-thread only
   APZThreadUtils::AssertOnControllerThread();
 
-  mVelocity = ApplyFlingCurveToVelocity(aSpeed);
-  mVelocitySampleTimeMs = aTimestampMs;
+  float timeDelta = aEndTimestampMs - aStartTimestampMs;
+  MOZ_ASSERT(timeDelta != 0);
+  float speed = aDelta / timeDelta;
+  mVelocity = ApplyFlingCurveToVelocity(speed);
+  mVelocitySampleTimeMs = aEndTimestampMs;
 
-  AddVelocityToQueue(aTimestampMs, mVelocity);
+  AddVelocityToQueue(aEndTimestampMs, mVelocity);
 }
 
 void Axis::StartTouch(ParentLayerCoord aPos, uint32_t aTimestampMs) {

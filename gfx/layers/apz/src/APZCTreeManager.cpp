@@ -2008,10 +2008,15 @@ APZCTreeManager::ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
 }
 
 void
-APZCTreeManager::ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY)
+APZCTreeManager::ProcessDynamicToolbarMovement(uint32_t aStartTimestampMs,
+                                                    uint32_t aEndTimestampMs,
+                                                    ScreenCoord aDeltaY)
 {
   if (mApzcForInputBlock) {
-    mApzcForInputBlock->HandleTouchVelocity(aTimestampMs, aSpeedY);
+    mApzcForInputBlock->HandleDynamicToolbarMovement(
+        aStartTimestampMs,
+        aEndTimestampMs,
+        ViewAs<ParentLayerPixel>(aDeltaY, PixelCastJustification::ScreenIsParentLayerForRoot));
   }
 }
 
