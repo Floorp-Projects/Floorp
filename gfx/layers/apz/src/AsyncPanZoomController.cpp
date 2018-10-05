@@ -1501,8 +1501,8 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
   // UpdateWithTouchAtDevicePoint() acquires the tree lock, so
   // it cannot be called while the mRecursiveMutex lock is held.
   if (!allowZoom) {
-    mX.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.x, 0, aEvent.mTime);
-    mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.y, 0, aEvent.mTime);
+    mX.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.x, aEvent.mTime);
+    mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.y, aEvent.mTime);
   }
 
   if (!gfxPrefs::APZAllowZooming()) {
@@ -2453,8 +2453,14 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
   // size and position. We need to do so even if this is a momentum pan (i.e.
   // aFingersOnTouchpad == false); in that case the "with touch" part is not
   // really appropriate, so we may want to rethink this at some point.
-  mX.UpdateWithTouchAtDevicePoint(aEvent.mLocalPanStartPoint.x, logicalPanDisplacement.x, aEvent.mTime);
-  mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalPanStartPoint.y, logicalPanDisplacement.y, aEvent.mTime);
+  // Note that we have to make all simulated positions relative to
+  // Axis::GetPos(), because the current position is an invented position, and
+  // because resetting the position to the mouse position (e.g.
+  // aEvent.mLocalStartPoint) would mess up velocity calculation. (This is
+  // the only caller of UpdateWithTouchAtDevicePoint() for pan events, so
+  // there is no risk of other calls resetting the position.)
+  mX.UpdateWithTouchAtDevicePoint(mX.GetPos() + logicalPanDisplacement.x, aEvent.mTime);
+  mY.UpdateWithTouchAtDevicePoint(mY.GetPos() + logicalPanDisplacement.y, aEvent.mTime);
 
   HandlePanningUpdate(physicalPanDisplacement);
 
@@ -2891,8 +2897,8 @@ AsyncPanZoomController::StartPanning(const ParentLayerPoint& aStartPoint) {
 
 void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(const MultiTouchInput& aEvent) {
   ParentLayerPoint point = GetFirstTouchPoint(aEvent);
-  mX.UpdateWithTouchAtDevicePoint(point.x, 0, aEvent.mTime);
-  mY.UpdateWithTouchAtDevicePoint(point.y, 0, aEvent.mTime);
+  mX.UpdateWithTouchAtDevicePoint(point.x, aEvent.mTime);
+  mY.UpdateWithTouchAtDevicePoint(point.y, aEvent.mTime);
 }
 
 bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
