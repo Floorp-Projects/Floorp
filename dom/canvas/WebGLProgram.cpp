@@ -487,6 +487,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const
                                              i);
                 return nullptr;
             }
+            i++;
         }
     }
 
