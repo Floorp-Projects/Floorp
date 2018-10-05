@@ -197,7 +197,7 @@ def convert_xml_element(element, conversion_dict):
 
 
 async def async_main(session, task_id):
-    asyncQueue = taskcluster.aio.Queue(session=session)
+    asyncQueue = taskcluster.aio.Queue(options={'rootUrl':'https://taskcluster.net'}, session=session)
     task_definition = await asyncQueue.task(task_id)
     upstream_zip_definitions = task_definition['payload']['upstreamZip']
 
