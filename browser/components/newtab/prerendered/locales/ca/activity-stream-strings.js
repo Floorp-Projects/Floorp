@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Temes populars:",
   "pocket_read_even_more": "Mostra més articles",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Comenceu a navegar i aquí us mostrarem els millors articles, vídeos i altres pàgines que hàgiu visitat o afegit a les adreces d'interès recentment.",

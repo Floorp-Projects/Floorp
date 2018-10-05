@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "জনপ্রিয় বিষয়:",
   "pocket_read_even_more": "আরও গল্প দেখুন",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ব্রাউজি করা শুরু করুন, এবং কিছু গুরুত্বপূর্ণ নিবন্ধ, ভিডিও, এবং আপনি সম্প্রতি পরিদর্শন বা বুকমার্ক করেছেন এমন কিছু পৃষ্ঠা আমরা এখানে প্রদর্শন করব।",

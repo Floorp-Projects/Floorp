@@ -19,7 +19,6 @@ import ProviderResponseSchema from "content-src/asrouter/schemas/provider-respon
 import {QueryCache} from "lib/ASRouterTargeting.jsm";
 
 const MESSAGE_PROVIDER_PREF_NAME = "browser.newtabpage.activity-stream.asrouter.messageProviders";
-const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 const FAKE_PROVIDERS = [FAKE_LOCAL_PROVIDER, FAKE_REMOTE_PROVIDER, FAKE_REMOTE_SETTINGS_PROVIDER];
 const ALL_MESSAGE_IDS = [...FAKE_LOCAL_MESSAGES, ...FAKE_REMOTE_MESSAGES].map(message => message.id);
 const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
@@ -202,18 +201,6 @@ describe("ASRouter", () => {
       assert.lengthOf(Router.state.providers, length);
       assert.isDefined(provider);
     });
-    it("should update the list of providers and load messages on legacy onboarding pref change", async () => {
-      sandbox.spy(Router, "_updateMessageProviders");
-      sandbox.spy(Router, "loadMessagesFromAllProviders");
-      // we do NOT want to set the onboarding pref again and cause an infinite loop
-      sandbox.stub(global.Services.prefs, "setBoolPref");
-
-      await Router.observe(null, null, ONBOARDING_FINISHED_PREF);
-
-      assert.calledOnce(Router._updateMessageProviders);
-      assert.calledOnce(Router.loadMessagesFromAllProviders);
-      assert.notCalled(global.Services.prefs.setBoolPref);
-    });
   });
 
   describe("setState", () => {
@@ -228,51 +215,6 @@ describe("ASRouter", () => {
       await Router.setState({foo: 123});
 
       assert.notCalled(channel.sendAsyncMessage);
-    });
-  });
-
-  describe("#overrideOrEnableLegacyOnboarding", () => {
-    it("should set the onboarding finished pref to true if legacy onboarding is NOT allowed", async () => {
-      sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(ONBOARDING_FINISHED_PREF).returns(false);
-      sandbox.stub(ASRouterPreferences, "specialConditions").get(() => ({allowLegacyOnboarding: false}));
-      const setStub = sandbox.stub(global.Services.prefs, "setBoolPref");
-
-      Router.overrideOrEnableLegacyOnboarding();
-      assert.calledWith(setStub, ONBOARDING_FINISHED_PREF, true);
-    });
-    it("should set the onboarding finished pref to false if ASRPreferences.allowLegacyOnboarding is true and we previously override onboarding", async () => {
-      // First override the finished pref to be to true so we can reverse the overriding
-      const onboardingPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(ONBOARDING_FINISHED_PREF).returns(false);
-      const specialConditionsStub = sandbox.stub(ASRouterPreferences, "specialConditions").get(() => ({allowLegacyOnboarding: false}));
-      Router.overrideOrEnableLegacyOnboarding();
-
-      // Now reverse it
-      onboardingPrefStub.withArgs(ONBOARDING_FINISHED_PREF).returns(true);
-      specialConditionsStub.get(() => ({allowLegacyOnboarding: true}));
-      const setStub = sandbox.stub(global.Services.prefs, "setBoolPref");
-
-      Router.overrideOrEnableLegacyOnboarding();
-      assert.calledWith(setStub, ONBOARDING_FINISHED_PREF, false);
-    });
-    it("should call .overrideOrEnableLegacyOnboarding on init", async () => {
-      Router = new _ASRouter();
-      sandbox.spy(Router, "overrideOrEnableLegacyOnboarding");
-
-      await Router.init(channel, createFakeStorage(), dispatchStub);
-
-      assert.calledOnce(Router.overrideOrEnableLegacyOnboarding);
-    });
-    it("should call .overrideOrEnableLegacyOnboarding on a preference change", async () => {
-      sandbox.spy(Router, "overrideOrEnableLegacyOnboarding");
-
-      await Router.onPrefChange();
-
-      assert.calledOnce(Router.overrideOrEnableLegacyOnboarding);
-    });
-    it("should call .overrideOrEnableLegacyOnboarding on uninit", async () => {
-      sandbox.spy(Router, "overrideOrEnableLegacyOnboarding");
-      Router.uninit();
-      assert.calledOnce(Router.overrideOrEnableLegacyOnboarding);
     });
   });
 
@@ -383,15 +325,6 @@ describe("ASRouter", () => {
       Router._updateMessageProviders();
       assert.equal(Router.state.providers.length, 1);
       assert.equal(Router.state.providers[0].id, providers[1].id);
-    });
-    it("should not add snippets if legacy onboarding is not finished", () => {
-      sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(ONBOARDING_FINISHED_PREF).returns(false);
-      const providers = [
-        {id: "snippets", enabled: true, type: "remote", url: "https://www.foo.com/"},
-      ];
-      setMessageProviderPref(providers);
-      Router._updateMessageProviders();
-      assert.equal(Router.state.providers.length, 0);
     });
   });
 
@@ -570,6 +503,22 @@ describe("ASRouter", () => {
       await Router.onMessage(msg);
 
       assert.isTrue(Router.state.messageBlockList.includes("foo"));
+      assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: "foo"}});
+    });
+    it("should not broadcast CLEAR_MESSAGE if preventDismiss is true", async () => {
+      const msg = fakeAsyncMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id: "foo", preventDismiss: true}});
+      await Router.onMessage(msg);
+
+      assert.notCalled(channel.sendAsyncMessage);
+    });
+  });
+
+  describe("#onMessage: DISMISS_MESSAGE_BY_ID", () => {
+    it("should reply with CLEAR_MESSAGE with the correct id", async () => {
+      const msg = fakeAsyncMessage({type: "DISMISS_MESSAGE_BY_ID", data: {id: "foo"}});
+
+      await Router.onMessage(msg);
+
       assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: "foo"}});
     });
   });
@@ -804,7 +753,7 @@ describe("ASRouter", () => {
     });
     it("should call openLinkIn with the correct params on OPEN_URL", async () => {
       let [testMessage] = Router.state.messages;
-      testMessage.button_action = {type: "OPEN_URL", data: {url: "some/url.com"}};
+      testMessage.button_action = {type: "OPEN_URL", data: {args: "some/url.com"}};
       const msg = fakeExecuteUserAction(testMessage.button_action);
       await Router.onMessage(msg);
 
@@ -814,7 +763,7 @@ describe("ASRouter", () => {
     });
     it("should call openLinkIn with the correct params on OPEN_ABOUT_PAGE", async () => {
       let [testMessage] = Router.state.messages;
-      testMessage.button_action = {type: "OPEN_ABOUT_PAGE", data: {page: "something"}};
+      testMessage.button_action = {type: "OPEN_ABOUT_PAGE", data: {args: "something"}};
       const msg = fakeExecuteUserAction(testMessage.button_action);
       await Router.onMessage(msg);
 
@@ -823,10 +772,28 @@ describe("ASRouter", () => {
     });
   });
 
+  describe("#onMessage: SHOW_FIREFOX_ACCOUNTS", () => {
+    let globals;
+    beforeEach(() => {
+      globals = new GlobalOverrider();
+      globals.set("FxAccounts", {config: {promiseSignUpURI: sandbox.stub().resolves("some/url")}});
+    });
+    it("should call openLinkIn with the correct params on OPEN_URL", async () => {
+      let [testMessage] = Router.state.messages;
+      testMessage.button_action = {type: "SHOW_FIREFOX_ACCOUNTS"};
+      const msg = fakeExecuteUserAction(testMessage.button_action);
+      await Router.onMessage(msg);
+
+      assert.calledOnce(msg.target.browser.ownerGlobal.openLinkIn);
+      assert.calledWith(msg.target.browser.ownerGlobal.openLinkIn,
+        "some/url", "tabshifted", {"private": false, "triggeringPrincipal": undefined});
+    });
+  });
+
   describe("#onMessage: INSTALL_ADDON_FROM_URL", () => {
     it("should call installAddonFromURL with correct arguments", async () => {
       sandbox.stub(MessageLoaderUtils, "installAddonFromURL").resolves(null);
-      const msg = fakeExecuteUserAction({type: "INSTALL_ADDON_FROM_URL", data: {url: "foo.com"}});
+      const msg = fakeExecuteUserAction({type: "INSTALL_ADDON_FROM_URL", data: {args: "foo.com"}});
 
       await Router.onMessage(msg);
 
@@ -895,7 +862,7 @@ describe("ASRouter", () => {
       globals.set("UITour", {showMenu: showMenuStub});
     });
     it("should call UITour.showMenu with the correct params on OPEN_APPLICATIONS_MENU", async () => {
-      const msg = fakeExecuteUserAction({type: "OPEN_APPLICATIONS_MENU", data: {target: "appMenu"}});
+      const msg = fakeExecuteUserAction({type: "OPEN_APPLICATIONS_MENU", data: {args: "appMenu"}});
       await Router.onMessage(msg);
 
       assert.calledOnce(showMenuStub);

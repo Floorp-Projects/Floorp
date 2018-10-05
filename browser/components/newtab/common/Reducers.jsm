@@ -18,7 +18,6 @@ const INITIAL_STATE = {
   },
   ASRouter: {
     initialized: false,
-    allowLegacyOnboarding: null,
     allowLegacySnippets: null,
   },
   Snippets: {initialized: false},

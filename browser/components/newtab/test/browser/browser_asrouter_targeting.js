@@ -357,15 +357,6 @@ add_task(async function check_sync() {
     "should return correct mobileDevices info");
 });
 
-add_task(async function check_onboarding_cohort() {
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: 1}])]);
-  is(await ASRouterTargeting.Environment.isInExperimentCohort, 1);
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify(17)]);
-  is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: "hello"}])]);
-  is(await ASRouterTargeting.Environment.isInExperimentCohort, 0);
-});
-
 add_task(async function check_provider_cohorts() {
   await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: "foo"}, {id: "cfr", messages: [], cohort: "bar"}])]);
   is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo");

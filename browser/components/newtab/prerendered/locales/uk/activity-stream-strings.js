@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Популярні теми:",
   "pocket_read_even_more": "Переглянути більше історій",
   "pocket_more_reccommendations": "Інші рекомендації",
-  "pocket_learn_more": "Докладніше",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Отримати Pocket",
   "pocket_cta_text": "Зберігайте улюблені статті в Pocket і задовольніть себе захопливим читанням.",
   "highlights_empty_state": "Почніть перегляд і ми покажемо вам деякі чудові статті, відео та інші сторінки, нещодавно відвідані чи збережені вами до закладок тут.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Умови надання послуги",
   "firstrun_privacy_notice": "Повідомлення про приватність",
   "firstrun_continue_to_login": "Продовжити",
-  "firstrun_skip_login": "Пропустити цей крок"
+  "firstrun_skip_login": "Пропустити цей крок",
+  "pocket_learn_more": "Докладніше"
 };

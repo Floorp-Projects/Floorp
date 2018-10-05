@@ -45,20 +45,13 @@ class _ASRouterPreferences {
   }
 
   get specialConditions() {
-    let allowLegacyOnboarding = true;
     let allowLegacySnippets = true;
     for (const provider of this.providers) {
-      if (provider.id === "onboarding" && provider.enabled && provider.cohort) {
-        allowLegacyOnboarding = false;
-      }
       if (provider.id === "snippets" && provider.enabled) {
         allowLegacySnippets = false;
       }
     }
-    return {
-      allowLegacyOnboarding,
-      allowLegacySnippets,
-    };
+    return {allowLegacySnippets};
   }
 
   observe(aSubject, aTopic, aPrefName) {

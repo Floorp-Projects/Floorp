@@ -87,15 +87,10 @@
 
   .learn-more-link {
     font-size: 11px;
+    margin-inline-start: 12px;
 
     a span {
       color: var(--newtab-link-secondary-color);
-    }
-
-    &::before {
-      content: '•';
-      padding: 8px;
-      color: var(--newtab-section-navigation-text-color);
     }
   }
 

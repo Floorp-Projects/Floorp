@@ -74,10 +74,10 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "Man xsamajib'ëx ta ri wachib'äl. Titojtob'ëx rik'in jun chik URL.",
   "pocket_read_more": "Nima'q taq Na'oj:",
   "pocket_read_even_more": "Ketz'et ch'aqa' chik taq B'anob'äl",
-  "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
-  "pocket_cta_button": "Get Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_more_reccommendations": "Ch'aqa' chik taq Chilab'enïk",
+  "pocket_how_it_works": "How it works",
+  "pocket_cta_button": "Tik'ul Pocket",
+  "pocket_cta_text": "Ke'ayaka' ri taq b'anob'äl ye'awajo' pa Pocket, chuqa' taya' ruchuq'a' ajolom kik'in jeb'ël taq sik'inïk.",
   "highlights_empty_state": "Katok pa k'amaya'l richin niqak'üt chawäch jeb'ël taq cholna'oj, taq silowachib'äl, chuqa' ch'aqa' chik taq ruxaq k'a b'a' ke'atz'ët o aya'on kan ketal wawe'.",
   "topstories_empty_state": "Xaq'i'. Katzolin chik pe richin ye'ak'ül ri utziläj taq rub'anob'al {provider}. ¿La man noyob'en ta? Tacha' jun ütz na'oj richin nawïl ch'aqa' chik taq b'anob'äl e k'o chi rij ri ajk'amaya'l.",
   "manual_migration_explanation2": "Tatojtob'ej Firefox kik'in ri taq ruyaketal, runatab'äl chuqa' taq ewan rutzij jun chik okik'amaya'l.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Kojqanem Samaj",
   "firstrun_privacy_notice": "Ichinan Na'oj",
   "firstrun_continue_to_login": "Titikïr chik el",
-  "firstrun_skip_login": "Tixakalüx re jun ruxak re'"
+  "firstrun_skip_login": "Tixakalüx re jun ruxak re'",
+  "pocket_learn_more": "Tetamäx Ch'aqa' Chik"
 };

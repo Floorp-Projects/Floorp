@@ -140,13 +140,6 @@ describe("SnippetsMap", () => {
       assert.equal(dispatch.firstCall.args[0].type, at.SHOW_FIREFOX_ACCOUNTS);
     });
   });
-  describe("#disableOnboarding", () => {
-    it("should dispatch a DISABLE_ONBOARDING action", () => {
-      snippetsMap.disableOnboarding();
-      assert.calledOnce(dispatch);
-      assert.equal(dispatch.firstCall.args[0].type, at.DISABLE_ONBOARDING);
-    });
-  });
   describe("#getTotalBookmarksCount", () => {
     it("should dispatch a TOTAL_BOOKMARKS_REQUEST and resolve with the right data", async () => {
       const bookmarksPromise = snippetsMap.getTotalBookmarksCount();
@@ -264,15 +257,6 @@ describe("SnippetsProvider", () => {
       assert.calledOnce(spy);
       window.removeEventListener("Snippets:Enabled", spy);
     });
-    it("should show the onboarding element if it exists", async () => {
-      const fakeEl = {style: {display: "none"}};
-      sandbox.stub(global.document, "getElementById").returns(fakeEl);
-      snippets = new SnippetsProvider(dispatch);
-
-      await snippets.init({connect: false});
-
-      assert.equal(fakeEl.style.display, "");
-    });
     it("should add a message listener for incoming messages", async () => {
       await snippets.init({connect: false});
       assert.calledWith(global.RPMAddMessageListener, INCOMING_MESSAGE_NAME, snippets._onAction);
@@ -297,11 +281,6 @@ describe("SnippetsProvider", () => {
       snippets.uninit();
       assert.calledOnce(spy);
       window.removeEventListener("Snippets:Disabled", spy);
-    });
-    it("should hide the onboarding element if it exists", () => {
-      snippets = new SnippetsProvider(dispatch);
-      snippets.uninit();
-      assert.equal(fakeEl.style.display, "none");
     });
     it("should remove the message listener for incoming messages", () => {
       snippets = new SnippetsProvider(dispatch);

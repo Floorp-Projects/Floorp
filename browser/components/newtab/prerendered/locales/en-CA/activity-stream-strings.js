@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Popular Topics:",
   "pocket_read_even_more": "View More Stories",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
@@ -121,5 +121,6 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_body": "Read short and sweet updates from Mozilla about Firefox, internet culture, and the occasional random meme.",
   "settings_pane_done_button": "Done",
   "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
-  "pocket_description": "Discover high-quality content you might otherwise miss, with help from Pocket, now part of Mozilla."
+  "pocket_description": "Discover high-quality content you might otherwise miss, with help from Pocket, now part of Mozilla.",
+  "pocket_learn_more": "Learn More"
 };

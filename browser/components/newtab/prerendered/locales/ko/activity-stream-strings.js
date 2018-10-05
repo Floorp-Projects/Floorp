@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "인기 주제:",
   "pocket_read_even_more": "더 많은 이야기 보기",
   "pocket_more_reccommendations": "더 많은 추천",
-  "pocket_learn_more": "자세히 보기",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pocket 받기",
   "pocket_cta_text": "좋아하는 이야기를 Pocket에 저장하고 재미있게 읽어 보세요.",
   "highlights_empty_state": "브라우징을 시작하면 최근 방문하거나 북마크한 좋은 글이나 영상, 페이지를 여기에 보여줍니다.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "이용 약관",
   "firstrun_privacy_notice": "개인 정보 보호 정책",
   "firstrun_continue_to_login": "계속",
-  "firstrun_skip_login": "단계 건너뛰기"
+  "firstrun_skip_login": "단계 건너뛰기",
+  "pocket_learn_more": "자세히 보기"
 };

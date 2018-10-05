@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "ຫົວຂໍ້ຍອດນິຍົມ:",
   "pocket_read_even_more": "ເບິ່ງບົດເລື່ອງເພີ່ມເຕີມ",
   "pocket_more_reccommendations": "ຂໍ້ແນະນໍາເພີ່ມເຕີມ",
-  "pocket_learn_more": "ຮຽນຮູ້ເພີມຕື່ມ",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "ຮັບ Pocket",
   "pocket_cta_text": "ຊ່ວຍບັນທຶກເລື່ອງທີ່ທ່ານຮັກໃນ Pocket, ແລະນ້ໍາໃຈຂອງທ່ານກັບອ່ານທີ່ຫນ້າສົນໃຈ.",
   "highlights_empty_state": "ເລີ່ມການທ່ອງເວັບ ແລະ ພວກເຮົາຈະສະແດງເນື້ອຫາ, ວິດີໂອ ແລະ ຫນ້າອື່ນໆບາງສ່ວນທີ່ທ່ານຫາກໍເຂົ້າໄປເບິງມາ ຫລື ຫາກໍໄດ້ບຸກມາກໄວ້ທີ່ນີ້.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "ເງື່ອນໄຂການໃຫ້ບໍລິການ",
   "firstrun_privacy_notice": "ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ",
   "firstrun_continue_to_login": "ສືບຕໍ່",
-  "firstrun_skip_login": "ຂ້າມຂັ້ນຕອນນີ້"
+  "firstrun_skip_login": "ຂ້າມຂັ້ນຕອນນີ້",
+  "pocket_learn_more": "ຮຽນຮູ້ເພີມຕື່ມ"
 };

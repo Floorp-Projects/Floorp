@@ -129,6 +129,10 @@ module.exports = function(config) {
             },
           },
           {
+            test: /\.md$/,
+            use: "raw-loader",
+          },
+          {
             enforce: "post",
             test: /\.jsm?$/,
             loader: "istanbul-instrumenter-loader",
@@ -141,6 +145,7 @@ module.exports = function(config) {
               path.resolve("test"),
               path.resolve("vendor"),
               path.resolve("lib/ASRouterTargeting.jsm"),
+              path.resolve("content-src/lib/snippets.js"),
               path.resolve("lib/ASRouterTriggerListeners.jsm"),
               path.resolve("lib/OnboardingMessageProvider.jsm"),
               path.resolve("lib/CFRMessageProvider.jsm"),

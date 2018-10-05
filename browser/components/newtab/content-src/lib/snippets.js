@@ -62,9 +62,7 @@ export class SnippetsMap extends Map {
     }
   }
 
-  disableOnboarding() {
-    this._dispatch(ac.AlsoToMain({type: at.DISABLE_ONBOARDING}));
-  }
+  disableOnboarding() {}
 
   showFirefoxAccounts() {
     this._dispatch(ac.AlsoToMain({type: at.SHOW_FIREFOX_ACCOUNTS}));
@@ -253,14 +251,6 @@ export class SnippetsProvider {
     // TODO
   }
 
-  _forceOnboardingVisibility(shouldBeVisible) {
-    const onboardingEl = document.getElementById("onboarding-notification-bar");
-
-    if (onboardingEl) {
-      onboardingEl.style.display = shouldBeVisible ? "" : "none";
-    }
-  }
-
   _showRemoteSnippets() {
     const snippetsEl = document.getElementById(this.elementId);
     const payload = this.snippetsMap.get("snippets");
@@ -352,13 +342,11 @@ export class SnippetsProvider {
 
     window.dispatchEvent(new Event(SNIPPETS_ENABLED_EVENT));
 
-    this._forceOnboardingVisibility(true);
     this.initialized = true;
   }
 
   uninit() {
     window.dispatchEvent(new Event(SNIPPETS_DISABLED_EVENT));
-    this._forceOnboardingVisibility(false);
     if (global.RPMRemoveMessageListener) {
       global.RPMRemoveMessageListener("ActivityStream:MainToContent", this._onAction);
     }

@@ -74,9 +74,9 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "Суретті жүктеу қатемен аяқталды. Басқа URL адресін қолданып көріңіз.",
   "pocket_read_more": "Әйгілі тақырыптар:",
   "pocket_read_even_more": "Көбірек хикаяларды қарау",
-  "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
-  "pocket_cta_button": "Get Pocket",
+  "pocket_more_reccommendations": "Көбірек ұсыныстар",
+  "pocket_how_it_works": "How it works",
+  "pocket_cta_button": "Pocket-ті алу",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Шолуды бастаңыз, сіз жақында шолған немесе бетбелгілерге қосқан тамаша мақалалар, видеолар немесе басқа парақтардың кейбіреулері осында көрсетіледі.",
   "topstories_empty_state": "Дайын. {provider} ұсынған көбірек мақалаларды алу үшін кейінірек тексеріңіз. Күте алмайсыз ба? Интернеттен көбірек тамаша мақалаларды алу үшін әйгілі теманы таңдаңыз.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Қолдану шарттары",
   "firstrun_privacy_notice": "Жекелік ескертуі",
   "firstrun_continue_to_login": "Жалғастыру",
-  "firstrun_skip_login": "Бұл қадамды аттап кету"
+  "firstrun_skip_login": "Бұл қадамды аттап кету",
+  "pocket_learn_more": "Көбірек білу"
 };

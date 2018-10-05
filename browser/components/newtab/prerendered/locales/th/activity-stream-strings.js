@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "หัวข้อยอดนิยม:",
   "pocket_read_even_more": "ดูเรื่องราวเพิ่มเติม",
   "pocket_more_reccommendations": "คำแนะนำเพิ่มเติม",
-  "pocket_learn_more": "เรียนรู้เพิ่มเติม",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "รับ Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "เริ่มการท่องเว็บและเราจะแสดงบทความ, วิดีโอ และหน้าอื่น ๆ บางส่วนที่ยอดเยี่ยมที่คุณได้เยี่ยมชมหรือเพิ่มที่คั่นหน้าไว้ล่าสุดที่นี่",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "เงื่อนไขการให้บริการ",
   "firstrun_privacy_notice": "ประกาศความเป็นส่วนตัว",
   "firstrun_continue_to_login": "ดำเนินการต่อ",
-  "firstrun_skip_login": "ข้ามขั้นตอนนี้"
+  "firstrun_skip_login": "ข้ามขั้นตอนนี้",
+  "pocket_learn_more": "เรียนรู้เพิ่มเติม"
 };

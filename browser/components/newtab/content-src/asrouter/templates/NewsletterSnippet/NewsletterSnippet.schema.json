@@ -1,0 +1,113 @@
+{
+  "title": "NewsletterSchema",
+  "description": "A template with two states: a SimpleSnippet and another that contains a form",
+  "version": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "richText": {
+      "description": "Text with HTML subset allowed: i, b, u, strong, em, br",
+      "type": "string"
+    },
+    "link_url": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "properties": {
+    "title": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Snippet title displayed before snippet text"}
+      ]
+    },
+    "text": {
+      "allOf": [
+        {"$ref": "#/definitions/richText"},
+        {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+      ]
+    },
+    "icon": {
+      "type": "string",
+      "description": "Snippet icon. 64x64px. SVG or PNG preferred."
+    },
+    "title_icon": {
+      "type": "string",
+      "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."
+    },
+    "form_action": {
+      "type": "string",
+      "description": "Endpoint to submit form data."
+    },
+    "success_text": {
+      "type": "string",
+      "description": "Message shown on successful registration."
+    },
+    "error_text": {
+      "type": "string",
+      "description": "Message shown if registration failed."
+    },
+    "scene2_text": {
+      "type": "string",
+      "description": "Main body of the snippet in the second scene."
+    },
+    "scene2_email_placeholder_text": {
+      "type": "string",
+      "description": "Value to show while input is empty."
+    },
+    "scene2_button_label": {
+      "type": "string",
+      "description": "Label for form submit button"
+    },
+    "scene2_privacy_html": {
+      "type": "string",
+      "description": "Information about how the form data is used."
+    },
+    "hidden_inputs": {
+      "type": "object",
+      "description": "Each entry represents a hidden input, key is used as value for the name property."
+    },
+    "button_label": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Text for a button next to main snippet text that links to button_url. Requires button_url."}
+      ]
+    },
+    "button_color": {
+      "type": "string",
+      "description": "The text color of the button. Valid CSS color."
+    },
+    "button_background_color": {
+      "type": "string",
+      "description": "The background color of the button. Valid CSS color."
+    },
+    "do_not_autoblock": {
+      "type": "boolean",
+      "description": "Used to prevent blocking the snippet after the CTA (link or button) has been clicked"
+    },
+    "links": {
+      "additionalProperties": {
+        "url": {
+          "allOf": [
+            {"$ref": "#/definitions/link_url"},
+            {"description": "The url where the link points to."}
+          ]
+        },
+        "metric": {
+          "type": "string",
+          "description": "Custom event name sent with telemetry event."
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["text", "form_action", "scene2_text", "hidden_inputs"],
+  "dependencies": {
+    "button_color": ["button_label"],
+    "button_background_color": ["button_label"]
+  }
+}

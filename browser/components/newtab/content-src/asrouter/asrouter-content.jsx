@@ -3,11 +3,18 @@ import {actionCreators as ac} from "common/Actions.jsm";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
 import {ImpressionsWrapper} from "./components/ImpressionsWrapper/ImpressionsWrapper";
 import {MessageContext} from "fluent";
+import {NewsletterSnippet} from "./templates/NewsletterSnippet/NewsletterSnippet";
 import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage";
 import React from "react";
 import ReactDOM from "react-dom";
 import {safeURI} from "./template-utils";
 import {SimpleSnippet} from "./templates/SimpleSnippet/SimpleSnippet";
+
+// Key names matching schema name of templates
+const SnippetComponents = {
+  simple_snippet: SimpleSnippet,
+  newsletter_snippet: NewsletterSnippet,
+};
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
@@ -23,8 +30,11 @@ export const ASRouterUtils = {
   sendMessage(action) {
     global.RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
   },
-  blockById(id) {
-    ASRouterUtils.sendMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id}});
+  blockById(id, options) {
+    ASRouterUtils.sendMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id, ...options}});
+  },
+  dismissById(id) {
+    ASRouterUtils.sendMessage({type: "DISMISS_MESSAGE_BY_ID", data: {id}});
   },
   blockBundle(bundle) {
     ASRouterUtils.sendMessage({type: "BLOCK_BUNDLE", data: {bundle}});
@@ -71,7 +81,9 @@ function shouldSendImpressionOnUpdate(nextProps, prevProps) {
 
 function generateMessages(content) {
   const cx = new MessageContext("en-US");
-  cx.addMessages(`RichTextSnippet = ${content}`);
+  Object.keys(content).forEach(key => {
+    cx.addMessages(`${key} = ${content[key]}`);
+  });
   return [cx];
 }
 
@@ -92,7 +104,15 @@ const ALLOWED_TAGS = {
 export function convertLinks(links, sendClick) {
   if (links) {
     return Object.keys(links).reduce((acc, linkTag) => {
-      acc[linkTag] = <a href={safeURI(links[linkTag].url)} data-metric={links[linkTag].metric} onClick={sendClick} />;
+      const {action} = links[linkTag];
+      // Setting the value to false will not include the attribute in the anchor
+      const url = action ? false : safeURI(links[linkTag].url);
+
+      acc[linkTag] = (<a href={url}
+        data-metric={links[linkTag].metric}
+        data-action={action}
+        data-args={links[linkTag].args}
+        onClick={sendClick} />);
       return acc;
     }, {});
   }
@@ -105,7 +125,7 @@ export function convertLinks(links, sendClick) {
  */
 function RichText(props) {
   return (
-    <Localized id="RichTextSnippet" {...ALLOWED_TAGS} {...convertLinks(props.links, props.sendClick)}>
+    <Localized id={props.localization_id} {...ALLOWED_TAGS} {...convertLinks(props.links, props.sendClick)}>
       <span>{props.text}</span>
     </Localized>
   );
@@ -148,24 +168,33 @@ export class ASRouterUISurface extends React.PureComponent {
   // telemetry field which can have arbitrary values.
   // Used for router messages with links as part of the content.
   sendClick(event) {
-    if (this.state.message.provider === "preview") {
-      return;
-    }
-
     const metric = {
       value: event.target.dataset.metric,
       // Used for the `source` of the event. Needed to differentiate
       // from other snippet or onboarding events that may occur.
       id: "NEWTAB_FOOTER_BAR_CONTENT",
     };
-    this.sendUserActionTelemetry({event: "CLICK_BUTTON", ...metric});
+    const action = {
+      type: event.target.dataset.action,
+      data: {args: event.target.dataset.args},
+    };
+    if (action.type) {
+      ASRouterUtils.executeAction(action);
+    }
     if (!this.state.message.content.do_not_autoblock) {
       ASRouterUtils.blockById(this.state.message.id);
+    }
+    if (this.state.message.provider !== "preview") {
+      this.sendUserActionTelemetry({event: "CLICK_BUTTON", ...metric});
     }
   }
 
   onBlockById(id) {
-    return () => ASRouterUtils.blockById(id);
+    return options => ASRouterUtils.blockById(id, options);
+  }
+
+  onDismissById(id) {
+    return () => ASRouterUtils.dismissById(id);
   }
 
   clearBundle(bundle) {
@@ -217,6 +246,17 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   renderSnippets() {
+    let privacyNoticeRichText;
+    const SnippetComponent = SnippetComponents[this.state.message.template];
+    const {content} = this.state.message;
+
+    if (this.state.message.template === "newsletter_snippet") {
+      privacyNoticeRichText = (<RichText text={content.scene2_privacy_html}
+        localization_id="privacy_notice"
+        links={content.links}
+        sendClick={this.sendClick} />);
+    }
+
     return (
       <ImpressionsWrapper
         id="NEWTAB_FOOTER_BAR"
@@ -225,14 +265,20 @@ export class ASRouterUISurface extends React.PureComponent {
         shouldSendImpressionOnUpdate={shouldSendImpressionOnUpdate}
         // This helps with testing
         document={this.props.document}>
-          <LocalizationProvider messages={generateMessages(this.state.message.content.text)}>
-            <SimpleSnippet
+          <LocalizationProvider messages={generateMessages({
+            privacy_notice: content.privacy_notice_text,
+            snippet_text: content.text,
+          })}>
+            <SnippetComponent
               {...this.state.message}
               richText={<RichText text={this.state.message.content.text}
+                                  localization_id="snippet_text"
                                   links={this.state.message.content.links}
                                   sendClick={this.sendClick} />}
+              privacyNoticeRichText={privacyNoticeRichText}
               UISurface="NEWTAB_FOOTER_BAR"
               onBlock={this.onBlockById(this.state.message.id)}
+              onDismiss={this.onDismissById(this.state.message.id)}
               onAction={ASRouterUtils.executeAction}
               sendUserActionTelemetry={this.sendUserActionTelemetry} />
           </LocalizationProvider>

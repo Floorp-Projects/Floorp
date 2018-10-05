@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populární témata:",
   "pocket_read_even_more": "Zobrazit více článků",
   "pocket_more_reccommendations": "Další doporučení",
-  "pocket_learn_more": "Zjistit více",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Získejte Pocket",
   "pocket_cta_text": "Ukládejte si články do služby Pocket a užívejte si skvělé čtení.",
   "highlights_empty_state": "Začněte prohlížet a my vám zde ukážeme některé skvělé články, videa a další stránky, které jste nedávno viděli nebo uložili do záložek.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Podmínkami používání služby",
   "firstrun_privacy_notice": "Zásadami ochrany soukromí",
   "firstrun_continue_to_login": "Pokračovat",
-  "firstrun_skip_login": "Přeskočit tento krok"
+  "firstrun_skip_login": "Přeskočit tento krok",
+  "pocket_learn_more": "Zjistit více"
 };

@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populêre ûnderwerpen:",
   "pocket_read_even_more": "Mear ferhalen besjen",
   "pocket_more_reccommendations": "Mear oanrekommandaasjes",
-  "pocket_learn_more": "Mear ynfo",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pocket brûke",
   "pocket_cta_text": "Bewarje de ferhalen dy't jo ynteressant fine yn Pocket, en stimulearje jo tinzen mei boeiende lêsstof.",
   "highlights_empty_state": "Start mei sneupen en wy toane jo guon moaie artikelen, fideo's en oare siden dy't jo resint besocht hawwe of in blêdwizer fan makke hawwe.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Tsjinstbetingsten",
   "firstrun_privacy_notice": "Privacyferklearring",
   "firstrun_continue_to_login": "Trochgean",
-  "firstrun_skip_login": "Dizze stap oerslaan"
+  "firstrun_skip_login": "Dizze stap oerslaan",
+  "pocket_learn_more": "Mear ynfo"
 };
