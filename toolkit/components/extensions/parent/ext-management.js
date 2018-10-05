@@ -197,7 +197,12 @@ this.management = class extends ExtensionAPI {
             },
           };
 
-          let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall", hash);
+          let telemetryInfo = {
+            source: "extension",
+            method: "management-webext-api",
+          };
+          let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall", hash,
+                                                            null, null, null, null, telemetryInfo);
           install.addListener(listener);
           try {
             await install.install();

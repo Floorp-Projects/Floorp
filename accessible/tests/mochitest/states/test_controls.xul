@@ -20,33 +20,6 @@
 
   <script type="application/javascript">
   <![CDATA[
-    function openColorpicker(aID)
-    {
-      this.popupNode = getNode(aID).mPicker.parentNode;
-      this.popup = getAccessible(this.popupNode);
-
-      this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.popupNode)
-      ];
-
-      this.invoke = function openColorpicker_invoke()
-      {
-        getNode(aID).showPopup();
-      }
-
-      this.finalCheck = function openColorpicker_finalCheck()
-      {
-        testStates(this.popup.firstChild,
-                   STATE_FOCUSABLE | STATE_SELECTABLE, 0,
-                   STATE_UNAVAILABLE);
-      }
-
-      this.getID = function openColorpicker_getID()
-      {
-        return "open colorpicker";
-      }
-    }
-
     var gQueue = null;
     function doTest()
     {
@@ -59,8 +32,6 @@
       testStates("radio-disabledradiogroup", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
       testStates("button", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
       testStates("button-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
-      testStates("colorpicker", STATE_FOCUSABLE | STATE_HASPOPUP, 0, STATE_UNAVAILABLE);
-      testStates("colorpicker-disabled", STATE_HASPOPUP, 0, STATE_FOCUSABLE);
       testStates("combobox", STATE_FOCUSABLE | STATE_HASPOPUP, 0, STATE_UNAVAILABLE);
       testStates("combobox-disabled", STATE_UNAVAILABLE | STATE_HASPOPUP, 0, STATE_FOCUSABLE);
       testStates("listbox", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
@@ -74,7 +45,6 @@
       testStates("tab-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED);
 
       gQueue = new eventQueue();
-      gQueue.push(new openColorpicker("colorpicker"));
       gQueue.invoke(); // Will call SimpleTest.finish()
     }
 
@@ -119,9 +89,6 @@
 
     <button id="button" value="button"/>
     <button id="button-disabled" disabled="true" value="button"/>
-
-    <colorpicker id="colorpicker" type="button"/>
-    <colorpicker id="colorpicker-disabled" type="button" disabled="true"/>
 
     <menulist id="combobox">
       <menupopup>
@@ -178,4 +145,3 @@
   </hbox>
 
 </window>
-

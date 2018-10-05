@@ -1282,7 +1282,7 @@ this.tabs = class extends ExtensionAPI {
           if (!gMultiSelectEnabled) {
             throw new ExtensionError(`tabs.highlight is currently experimental and must be enabled with the ${MULTISELECT_PREFNAME} preference.`);
           }
-          let {windowId, tabs} = highlightInfo;
+          let {windowId, tabs, populate} = highlightInfo;
           if (windowId == null) {
             windowId = Window.WINDOW_ID_CURRENT;
           }
@@ -1299,7 +1299,7 @@ this.tabs = class extends ExtensionAPI {
             }
             return tab;
           });
-          return windowManager.convert(window, {populate: true});
+          return windowManager.convert(window, {populate});
         },
       },
     };

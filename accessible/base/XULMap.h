@@ -39,17 +39,6 @@ XULMAP_TYPE(toolbarbutton, XULToolbarButtonAccessible)
 XULMAP_TYPE(tooltip, XULTooltipAccessible)
 
 XULMAP(
-  colorpicker,
-  [](Element* aElement, Accessible* aContext) -> Accessible* {
-    if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                              nsGkAtoms::button, eIgnoreCase)) {
-      return new XULColorPickerAccessible(aElement, aContext->Document());
-    }
-    return nullptr;
-  }
-)
-
-XULMAP(
   label,
   [](Element* aElement, Accessible* aContext) -> Accessible* {
     if (aElement->ClassList()->Contains(NS_LITERAL_STRING("text-link"))) {
@@ -64,10 +53,6 @@ XULMAP(
   [](Element* aElement, Accessible* aContext) -> Accessible* {
     if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
       return new XULToolbarButtonAccessible(aElement, aContext->Document());
-    }
-
-    if (aElement->ClassList()->Contains(NS_LITERAL_STRING("colorpickertile"))) {
-      return new XULColorPickerTileAccessible(aElement, aContext->Document());
     }
 
     // Don't include nameless images in accessible tree.

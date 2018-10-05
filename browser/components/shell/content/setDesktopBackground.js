@@ -165,7 +165,7 @@ if (AppConstants.platform != "macosx") {
     this.updateColor(this._rgbToHex(r, g, b));
 
     var colorpicker = document.getElementById("desktopColor");
-    colorpicker.color = this._backgroundColor;
+    colorpicker.value = this._backgroundColor;
   };
 
   gSetBackground.updateColor = function(aColor) {

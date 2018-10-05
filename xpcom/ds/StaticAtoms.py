@@ -1241,7 +1241,6 @@ STATIC_ATOMS = [
     Atom("colorDodge", "color-dodge"),
     Atom("colorInterpolation", "color-interpolation"),
     Atom("colorInterpolationFilters", "color-interpolation-filters"),
-    Atom("colorpicker", "colorpicker"),
     Atom("colorProfile", "color-profile"),
     Atom("cursor", "cursor"),
     Atom("cx", "cx"),
