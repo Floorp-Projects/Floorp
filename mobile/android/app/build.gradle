@@ -323,7 +323,27 @@ android.applicationVariants.all { variant ->
             filter(ExpandXMLEntitiesFilter)
         }
         exclude('**/*.mkdir.done')
+
+        // Bug 1478411: We want to turn XML entity expansion errors into the "error:" strings that
+        // Tree Herder parses.  It's surprisingly difficult to do useful things with exceptions in a
+        // filter, but it appears that something deep in the XML parser prints errors to stderr, so
+        // we amplify those error outputs to achieve the goal.
+        def listener = {
+            def matches = (it =~ /\[Fatal Error\] +(.*)/)
+            if (matches) {
+                def (_, message) = matches[0]
+                logger.lifecycle "error: ${topobjdir}/mobile/android/base/res/values/strings.xml${message}"
+            }
+        } as StandardOutputListener
+
+        doFirst {
+            logging.addStandardErrorListener(listener)
+        }
+        doLast {
+            logging.removeStandardErrorListener(listener)
+        }
     }
+
     // This is an Android-Gradle plugin 3+-ism.  Determined by reading the
     // source.  The added directory doesn't appear in the paths listed by the
     // `sourceSets` task, for reasons unknown.
