@@ -4,9 +4,12 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
 
 /**
  * This component displays runtime information.
@@ -15,13 +18,14 @@ class RuntimeInfo extends PureComponent {
   static get propTypes() {
     return {
       icon: PropTypes.string.isRequired,
+      model: PropTypes.string,
       name: PropTypes.string.isRequired,
       version: PropTypes.string.isRequired,
     };
   }
 
   render() {
-    const { icon, name, version } = this.props;
+    const { icon, model, name, version } = this.props;
 
     return dom.h1(
       {
@@ -33,7 +37,16 @@ class RuntimeInfo extends PureComponent {
           src: icon,
         }
       ),
-      `${ name } (${ version })`
+      Localized(
+        {
+          id: model ? "about-debugging-runtime-info-with-model"
+                    : "about-debugging-runtime-info",
+          $name: name,
+          $model: model,
+          $version: version,
+        },
+        dom.label({}, `${ name } on ${ model } (${ version })`)
+      )
     );
   }
 }
