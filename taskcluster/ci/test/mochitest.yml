@@ -7,6 +7,10 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86/opt: 3
             default: default
+    serviceworker-e10s:
+        by-test-platform:
+            linux64/debug: both
+            default: false
     mozharness:
         script:
             by-test-platform:
@@ -356,6 +360,7 @@ mochitest-valgrind:
     # We could re-enable e10s later.
     # There's no intrinsic reason not to use it.
     e10s: false
+    serviceworker-e10s: false
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
