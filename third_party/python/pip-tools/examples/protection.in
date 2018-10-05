@@ -1,0 +1,3 @@
+# This package depends on setuptools, which should not end up in the compiled
+# requirements, because it may cause conflicts with pip itself
+python-levenshtein==0.12.0
