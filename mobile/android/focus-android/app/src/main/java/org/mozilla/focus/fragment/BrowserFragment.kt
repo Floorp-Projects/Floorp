@@ -714,7 +714,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     }
 
     override fun onCreateNewSession() {
-        erase()
+        requireComponents.sessionManager.removeSessions()
     }
 
     override fun onAuthSuccess() {
