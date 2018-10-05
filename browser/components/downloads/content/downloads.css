@@ -4,10 +4,6 @@
 
 /*** Downloads Panel ***/
 
-#downloadsListBox > richlistitem {
-  -moz-binding: url('chrome://browser/content/downloads/download.xml#download');
-}
-
 #downloadsListBox > richlistitem:not([selected]) button {
   /* Only focus buttons in the selected item. */
   -moz-user-focus: none;
@@ -44,12 +40,8 @@
  *
  * We might be able to do away with this workaround once bug 653881 is fixed.
  */
-#downloadsRichListBox > richlistitem {
+#downloadsRichListBox > richlistitem:not([active]) {
   -moz-binding: none;
-}
-
-#downloadsRichListBox > richlistitem[active] {
-  -moz-binding: url("chrome://browser/content/downloads/download.xml#download");
 }
 
 #downloadsRichListBox > richlistitem button {

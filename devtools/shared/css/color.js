@@ -5,14 +5,11 @@
 "use strict";
 
 const Services = require("Services");
-
-loader.lazyRequireGetter(this, "CSS_ANGLEUNIT",
-  "devtools/shared/css/properties-db", true);
-
-const {getAngleValueInDegrees} = require("devtools/shared/css/parsing-utils");
-
 const {getCSSLexer} = require("devtools/shared/css/lexer");
 const {cssColors} = require("devtools/shared/css/color-db");
+
+loader.lazyRequireGetter(this, "getAngleValueInDegrees", "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "CSS_ANGLEUNIT", "devtools/shared/css/properties-db", true);
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 

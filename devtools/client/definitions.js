@@ -26,6 +26,8 @@ loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratc
 loader.lazyGetter(this, "DomPanel", () => require("devtools/client/dom/panel").DomPanel);
 loader.lazyGetter(this, "AccessibilityPanel", () => require("devtools/client/accessibility/panel").AccessibilityPanel);
 loader.lazyGetter(this, "ApplicationPanel", () => require("devtools/client/application/panel").ApplicationPanel);
+loader.lazyGetter(this, "reloadAndRecordTab", () => require("devtools/client/webreplay/menu.js").reloadAndRecordTab);
+loader.lazyGetter(this, "reloadAndStopRecordingTab", () => require("devtools/client/webreplay/menu.js").reloadAndStopRecordingTab);
 
 // Other dependencies
 loader.lazyRequireGetter(this, "AccessibilityStartup", "devtools/client/accessibility/accessibility-startup", true);
@@ -533,6 +535,26 @@ exports.ToolboxButtons = [
     onClick(event, toolbox) {
       ScratchpadManager.openScratchpad();
     }
+  },
+  {
+    id: "command-button-replay",
+    description: l10n("toolbox.buttons.replay"),
+    isTargetSupported: target =>
+      Services.prefs.getBoolPref("devtools.recordreplay.mvp.enabled")
+      && !target.canRewind
+      && target.isLocalTab,
+    onClick: () => reloadAndRecordTab(),
+    isChecked: () => false
+  },
+  {
+    id: "command-button-stop-replay",
+    description: l10n("toolbox.buttons.stopReplay"),
+    isTargetSupported: target =>
+      Services.prefs.getBoolPref("devtools.recordreplay.mvp.enabled")
+      && target.canRewind
+      && target.isLocalTab,
+    onClick: () => reloadAndStopRecordingTab(),
+    isChecked: () => true
   },
   { id: "command-button-responsive",
     description: l10n("toolbox.buttons.responsive",

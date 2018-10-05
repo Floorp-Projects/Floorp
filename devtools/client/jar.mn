@@ -144,6 +144,7 @@ devtools.jar:
     skin/images/command-paintflashing.svg (themes/images/command-paintflashing.svg)
     skin/images/command-screenshot.svg (themes/images/command-screenshot.svg)
     skin/images/command-responsivemode.svg (themes/images/command-responsivemode.svg)
+    skin/images/command-replay.svg (themes/images/command-replay.svg)
     skin/images/command-pick.svg (themes/images/command-pick.svg)
     skin/images/command-pick-accessibility.svg (themes/images/command-pick-accessibility.svg)
     skin/images/command-frames.svg (themes/images/command-frames.svg)

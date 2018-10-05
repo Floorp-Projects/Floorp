@@ -49,22 +49,6 @@ HistoryDownloadElementShell.prototype = {
   __proto__: DownloadsViewUI.DownloadElementShell.prototype,
 
   /**
-   * Manages the "active" state of the shell.  By default all the shells are
-   * inactive, thus their UI is not updated.  They must be activated when
-   * entering the visible area.
-   */
-  ensureActive() {
-    if (!this._active) {
-      this._active = true;
-      this.element.setAttribute("active", true);
-      this.onChanged();
-    }
-  },
-  get active() {
-    return !!this._active;
-  },
-
-  /**
    * Overrides the base getter to return the Download or HistoryDownload object
    * for displaying information and executing commands in the user interface.
    */
