@@ -1,10 +1,10 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/setDesktopBackground.css" type="text/css"?>
 
 
@@ -44,7 +44,7 @@
     <hbox align="center">
       <label value="&position.label;"/>
       <menulist id="menuPosition"
-                label="&position.label;" 
+                label="&position.label;"
                 oncommand="gSetBackground.updatePosition();">
         <menupopup>
           <menuitem label="&center.label;"  value="CENTER"/>
@@ -56,9 +56,9 @@
       </menulist>
       <spacer flex="1"/>
       <label value="&color.label;"/>
-      <colorpicker id="desktopColor"
-                   type="button" 
-                   onchange="gSetBackground.updateColor(this.color);"/> 
+      <html:input id="desktopColor"
+                  type="color"
+                  onchange="gSetBackground.updateColor(this.value);"/> 
     </hbox>
 #endif
     <groupbox align="center">
@@ -69,13 +69,13 @@
         <image id="monitor"/>
       </stack>
     </groupbox>
-    
+
 #ifdef XP_MACOSX
     <separator/>
-    
+
     <hbox align="right">
       <button id="setDesktopBackground"
-              label="&setDesktopBackground.title;" 
+              label="&setDesktopBackground.title;"
               oncommand="gSetBackground.setDesktopBackground();"/>
       <button id="showDesktopPreferences"
               label="&openDesktopPrefs.label;"
