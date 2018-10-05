@@ -2293,6 +2293,8 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
     struct CompressedLengthMatcher
     {
         size_t match(Uncompressed&) {
+            // Return 0 for uncompressed source so that |if (compressedLength)|
+            // can be used to distinguish compressed and uncompressed source.
             return 0;
         }
 
@@ -2341,12 +2343,13 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
     sourceRetrievable_ = retrievable;
 
     if ((hasSource || hasBinSource) && !sourceRetrievable_) {
-        uint32_t len = 0;
+        uint32_t uncompressedLength = 0;
         if (mode == XDR_ENCODE) {
-            len = length();
+            uncompressedLength = length();
         }
-        MOZ_TRY(xdr->codeUint32(&len));
+        MOZ_TRY(xdr->codeUint32(&uncompressedLength));
 
+        // A compressed length of 0 indicates source is uncompressed.
         uint32_t compressedLength;
         if (mode == XDR_ENCODE) {
             CompressedLengthMatcher m;
@@ -2354,17 +2357,17 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         }
         MOZ_TRY(xdr->codeUint32(&compressedLength));
 
-        size_t byteLen = hasBinSource ? len : compressedLength ? compressedLength : (len * sizeof(char16_t));
         if (mode == XDR_DECODE) {
-            auto bytes = xdr->cx()->template make_pod_array<char>(Max<size_t>(byteLen, 1));
-            if (!bytes) {
-                return xdr->fail(JS::TranscodeResult_Throw);
-            }
-            MOZ_TRY(xdr->codeBytes(bytes.get(), byteLen));
-
             if (hasBinSource) {
 #if defined(JS_BUILD_BINAST)
-                if (!setBinASTSource(xdr->cx(), std::move(bytes), len)) {
+                auto bytes =
+                    xdr->cx()->template make_pod_array<char>(Max<size_t>(uncompressedLength, 1));
+                if (!bytes) {
+                    return xdr->fail(JS::TranscodeResult_Throw);
+                }
+                MOZ_TRY(xdr->codeBytes(bytes.get(), uncompressedLength));
+
+                if (!setBinASTSource(xdr->cx(), std::move(bytes), uncompressedLength)) {
                     return xdr->fail(JS::TranscodeResult_Throw);
                 }
 #else
@@ -2372,19 +2375,42 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
                 return xdr->fail(JS::TranscodeResult_Throw);
 #endif /* JS_BUILD_BINAST */
             } else if (compressedLength) {
-                if (!setCompressedSource(xdr->cx(), std::move(bytes), byteLen, len)) {
+                auto bytes =
+                    xdr->cx()->template make_pod_array<char>(Max<size_t>(compressedLength, 1));
+                if (!bytes) {
+                    return xdr->fail(JS::TranscodeResult_Throw);
+                }
+                MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
+
+                if (!setCompressedSource(xdr->cx(), std::move(bytes), compressedLength,
+                                         uncompressedLength))
+                {
                     return xdr->fail(JS::TranscodeResult_Throw);
                 }
             } else {
-                UniqueTwoByteChars source(reinterpret_cast<char16_t*>(bytes.release()));
-                if (!setSource(xdr->cx(), std::move(source), len)) {
+                auto sourceChars =
+                    xdr->cx()->template make_pod_array<char16_t>(Max<size_t>(uncompressedLength,
+                                                                             1));
+                if (!sourceChars) {
+                    return xdr->fail(JS::TranscodeResult_Throw);
+                }
+                MOZ_TRY(xdr->codeChars(sourceChars.get(), uncompressedLength));
+
+                if (!setSource(xdr->cx(), std::move(sourceChars), uncompressedLength)) {
                     return xdr->fail(JS::TranscodeResult_Throw);
                 }
             }
         } else {
-            RawDataMatcher rdm;
-            void* p = data.match(rdm);
-            MOZ_TRY(xdr->codeBytes(p, byteLen));
+            if (hasBinSource) {
+                void* bytes = data.match(RawDataMatcher());
+                MOZ_TRY(xdr->codeBytes(bytes, uncompressedLength));
+            } else if (compressedLength) {
+                void* bytes = data.match(RawDataMatcher());
+                MOZ_TRY(xdr->codeBytes(bytes, compressedLength));
+            } else {
+                char16_t* sourceChars = static_cast<char16_t*>(data.match(RawDataMatcher()));
+                MOZ_TRY(xdr->codeChars(sourceChars, uncompressedLength));
+            }
         }
 
         uint8_t hasMetadata = !!binASTMetadata_;
@@ -2520,7 +2546,10 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         }
 
         // Note the content of sources decoded when recording or replaying.
-        if (mode == XDR_DECODE && hasSourceText() && mozilla::recordreplay::IsRecordingOrReplaying()) {
+        if (mode == XDR_DECODE &&
+            hasSourceText() &&
+            mozilla::recordreplay::IsRecordingOrReplaying())
+        {
             UncompressedSourceCache::AutoHoldEntry holder;
             ScriptSource::PinnedChars chars(xdr->cx(), this, holder, 0, length());
             if (!chars.get()) {

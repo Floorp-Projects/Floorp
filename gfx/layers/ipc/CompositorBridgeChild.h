@@ -210,9 +210,7 @@ public:
   void WillEndTransaction();
 
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const wr::PipelineId& aPipelineId,
-                                                    const LayoutDeviceIntSize&,
-                                                    TextureFactoryIdentifier*,
-                                                    wr::IdNamespace*) override;
+                                                    const LayoutDeviceIntSize&) override;
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
 
   wr::MaybeExternalImageId GetNextExternalImageId() override;

@@ -11,11 +11,12 @@ uniform HIGHP_SAMPLER_FLOAT sampler2D sRenderTasks;
 struct RenderTaskCommonData {
     RectWithSize task_rect;
     float texture_layer_index;
+    float device_pixel_scale;
 };
 
 struct RenderTaskData {
     RenderTaskCommonData common_data;
-    vec3 data1;
+    vec2 user_data;
 };
 
 RenderTaskData fetch_render_task_data(int index) {
@@ -31,12 +32,13 @@ RenderTaskData fetch_render_task_data(int index) {
 
     RenderTaskCommonData common_data = RenderTaskCommonData(
         task_rect,
-        texel1.x
+        texel1.x,
+        texel1.y
     );
 
     RenderTaskData data = RenderTaskData(
         common_data,
-        texel1.yzw
+        texel1.zw
     );
 
     return data;
@@ -55,7 +57,8 @@ RenderTaskCommonData fetch_render_task_common_data(int index) {
 
     RenderTaskCommonData data = RenderTaskCommonData(
         task_rect,
-        texel1.x
+        texel1.x,
+        texel1.y
     );
 
     return data;
@@ -79,7 +82,7 @@ PictureTask fetch_picture_task(int address) {
 
     PictureTask task = PictureTask(
         task_data.common_data,
-        task_data.data1.xy
+        task_data.user_data
     );
 
     return task;
@@ -90,7 +93,6 @@ PictureTask fetch_picture_task(int address) {
 struct ClipArea {
     RenderTaskCommonData common_data;
     vec2 screen_origin;
-    bool local_space;
 };
 
 ClipArea fetch_clip_area(int index) {
@@ -99,15 +101,13 @@ ClipArea fetch_clip_area(int index) {
     if (index >= CLIP_TASK_EMPTY) {
         RectWithSize rect = RectWithSize(vec2(0.0), vec2(0.0));
 
-        area.common_data = RenderTaskCommonData(rect, 0.0);
+        area.common_data = RenderTaskCommonData(rect, 0.0, 1.0);
         area.screen_origin = vec2(0.0);
-        area.local_space = false;
     } else {
         RenderTaskData task_data = fetch_render_task_data(index);
 
         area.common_data = task_data.common_data;
-        area.screen_origin = task_data.data1.xy;
-        area.local_space = task_data.data1.z == 0.0;
+        area.screen_origin = task_data.user_data;
     }
 
     return area;
