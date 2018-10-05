@@ -19,7 +19,7 @@ struct Shader {
 const SHADER_PREFIX: &str = "#define WR_MAX_VERTEX_TEXTURE_WIDTH 1024U\n";
 
 const BRUSH_FEATURES: &[&str] = &["", "ALPHA_PASS"];
-const CLIP_FEATURES: &[&str] = &["TRANSFORM"];
+const CLIP_FEATURES: &[&str] = &[""];
 const CACHE_FEATURES: &[&str] = &[""];
 const GRADIENT_FEATURES: &[&str] = &[ "", "DITHERING", "ALPHA_PASS", "DITHERING,ALPHA_PASS" ];
 const PRIM_FEATURES: &[&str] = &[""];

@@ -1443,10 +1443,11 @@ impl ResourceCache {
             .unwrap()
             .prepare_resources(&self.resources, &self.missing_blob_images);
 
+        let is_low_priority = false;
         let rasterized_blobs = self.blob_image_rasterizer
             .as_mut()
             .unwrap()
-            .rasterize(&self.missing_blob_images);
+            .rasterize(&self.missing_blob_images, is_low_priority);
 
         self.add_rasterized_blob_images(rasterized_blobs);
 
@@ -1884,7 +1885,7 @@ impl ResourceCache {
                     let blob_handler = self.blob_image_handler.as_mut().unwrap();
                     blob_handler.prepare_resources(&self.resources, blob_request_params);
                     let mut rasterizer = blob_handler.create_blob_rasterizer();
-                    let (_, result) = rasterizer.rasterize(blob_request_params).pop().unwrap();
+                    let (_, result) = rasterizer.rasterize(blob_request_params, false).pop().unwrap();
                     let result = result.expect("Blob rasterization failed");
 
                     assert_eq!(result.rasterized_rect.size, desc.size);

@@ -32,7 +32,7 @@ BlurTask fetch_blur_task(int address) {
 
     BlurTask task = BlurTask(
         task_data.common_data,
-        task_data.data1.x
+        task_data.user_data.x
     );
 
     return task;
