@@ -23,27 +23,6 @@ win64-clang-cl:
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang.tar.bz2
 
-win32-clang-cl-st-an:
-    description: "Clang-cl static analysis toolchain build"
-    treeherder:
-        kind: build
-        platform: toolchains/opt
-        symbol: TW32(clang-cl-st-an)
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 7200
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
-    run:
-        using: toolchain-script
-        script: build-clang32-st-an-windows.sh
-        resources:
-            - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-win32-st-an.json'
-            - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
-        toolchain-artifact: public/build/clang.tar.bz2
-
 win64-clang-cl-st-an:
     description: "Clang-cl static analysis toolchain build"
     treeherder:
