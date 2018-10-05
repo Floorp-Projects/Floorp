@@ -77,7 +77,7 @@ function loadSourceMap(sourceId) {
   }) {
     const source = (0, _selectors.getSource)(getState(), sourceId);
 
-    if (!source || !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) || !source.sourceMapURL) {
+    if (!source || (0, _source.isOriginal)(source) || !source.sourceMapURL) {
       return;
     }
 

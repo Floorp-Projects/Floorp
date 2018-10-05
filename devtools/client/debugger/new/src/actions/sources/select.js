@@ -158,7 +158,7 @@ function selectLocation(location, {
     const tabSources = (0, _tabs.getSourcesForTabs)(getState());
 
     if (!tabSources.includes(source)) {
-      dispatch((0, _tabs2.addTab)(source.url));
+      dispatch((0, _tabs2.addTab)(source));
     }
 
     dispatch(setSelectedLocation(source, location));
@@ -172,7 +172,7 @@ function selectLocation(location, {
 
     if (keepContext && _prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), loadedSource.id) && (0, _source.shouldPrettyPrint)(loadedSource) && (0, _source.isMinified)(loadedSource)) {
       await dispatch((0, _prettyPrint.togglePrettyPrint)(loadedSource.id));
-      dispatch((0, _tabs2.closeTab)(loadedSource.url));
+      dispatch((0, _tabs2.closeTab)(loadedSource));
     }
 
     dispatch((0, _ast.setSymbols)(loadedSource.id));
