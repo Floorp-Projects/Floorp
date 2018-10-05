@@ -179,7 +179,7 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
                                        output_parser=parser,
                                        env=env)
 
-        tbpl_status, log_level = parser.evaluate_parser(return_code)
+        tbpl_status, log_level, _ = parser.evaluate_parser(return_code)
         self.record_status(tbpl_status, level=log_level)
 
         return return_code
