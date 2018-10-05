@@ -68,13 +68,13 @@ function _updateRuntimeById(runtimeId, updatedRuntime, state) {
 function runtimesReducer(state = RuntimesState(), action) {
   switch (action.type) {
     case CONNECT_RUNTIME_SUCCESS: {
-      const { id, client } = action.runtime;
-      return _updateRuntimeById(id, { client }, state);
+      const { id, client, info } = action.runtime;
+      return _updateRuntimeById(id, { client, info }, state);
     }
 
     case DISCONNECT_RUNTIME_SUCCESS: {
       const { id } = action.runtime;
-      return _updateRuntimeById(id, { client: null }, state);
+      return _updateRuntimeById(id, { client: null, info: null }, state);
     }
 
     case NETWORK_LOCATIONS_UPDATED: {
@@ -98,6 +98,7 @@ function runtimesReducer(state = RuntimesState(), action) {
       const usbRuntimes = runtimes.map(runtime => {
         return {
           id: runtime.id,
+          model: runtime._model,
           name: runtime.name,
           socketPath: runtime._socketPath,
           type: RUNTIMES.USB,

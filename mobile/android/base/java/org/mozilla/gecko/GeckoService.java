@@ -199,14 +199,18 @@ public abstract class GeckoService extends JobIntentService {
                     profileDir != null ? new File(profileDir) : null);
         }
 
-        String args;
+        StringBuilder args = new StringBuilder();
         if (profileDir != null) {
-            args = "-profile " + profileDir;
-        } else {
-            args = "-P " + profileName;
+            args.append("-profile ").append(profileDir);
+        }
+        if (profileName != null) {
+            if (args.length() > 0) {
+                args.append(' ');
+            }
+            args.append("-P ").append(profileName);
         }
 
-        intent.putExtra(GeckoThread.EXTRA_ARGS, args);
+        intent.putExtra(GeckoThread.EXTRA_ARGS, args.toString());
         GeckoApplication.createRuntime(this, new SafeIntent(intent));
         return true;
     }

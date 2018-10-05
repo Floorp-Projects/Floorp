@@ -23,8 +23,9 @@ const TemporaryExtensionInstaller =
   createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
-const Services = require("Services");
 const { DEBUG_TARGET_PANE } = require("../constants");
+const { getCurrentRuntimeInfo } = require("../modules/runtimes-state-helper");
+const { isSupportedDebugTargetPane } = require("../modules/debug-target-support");
 
 class RuntimePage extends PureComponent {
   static get propTypes() {
@@ -33,6 +34,7 @@ class RuntimePage extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       installedExtensions: PropTypes.arrayOf(PropTypes.object).isRequired,
       otherWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
+      runtimeInfo: PropTypes.object,
       serviceWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       sharedWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       tabs: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -40,118 +42,93 @@ class RuntimePage extends PureComponent {
     };
   }
 
+  renderDebugTargetPane(name, targets, actionComponent,
+                        detailComponent, paneKey, localizationId) {
+    const { collapsibilities, dispatch, runtimeInfo } = this.props;
+
+    if (!isSupportedDebugTargetPane(runtimeInfo.type, paneKey)) {
+      return null;
+    }
+
+    return Localized(
+      {
+        id: localizationId,
+        attrs: { name: true }
+      },
+      DebugTargetPane({
+        actionComponent,
+        collapsibilityKey: paneKey,
+        detailComponent,
+        dispatch,
+        isCollapsed: collapsibilities.get(paneKey),
+        name,
+        targets,
+      })
+    );
+  }
+
   render() {
     const {
-      collapsibilities,
       dispatch,
       installedExtensions,
       otherWorkers,
+      runtimeInfo,
       serviceWorkers,
       sharedWorkers,
       tabs,
       temporaryExtensions,
     } = this.props;
 
+    if (!runtimeInfo) {
+      // runtimeInfo can be null when the selectPage action navigates from a runtime A
+      // to a runtime B (between unwatchRuntime and watchRuntime).
+      return null;
+    }
+
     return dom.article(
       {
         className: "page js-runtime-page",
       },
-      RuntimeInfo({
-        icon: "chrome://branding/content/icon64.png",
-        name: Services.appinfo.name,
-        version: Services.appinfo.version,
-      }),
-      TemporaryExtensionInstaller({ dispatch }),
-      Localized(
-        {
-          id: "about-debugging-runtime-temporary-extensions",
-          attrs: { name: true }
-        },
-        DebugTargetPane({
-          actionComponent: TemporaryExtensionAction,
-          collapsibilityKey: DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
-          detailComponent: ExtensionDetail,
-          dispatch,
-          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TEMPORARY_EXTENSION),
-          name: "Temporary Extensions",
-          targets: temporaryExtensions,
-        })
-      ),
-      Localized(
-        {
-          id: "about-debugging-runtime-extensions",
-          attrs: { name: true }
-        },
-        DebugTargetPane({
-          actionComponent: InspectAction,
-          collapsibilityKey: DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
-          detailComponent: ExtensionDetail,
-          dispatch,
-          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.INSTALLED_EXTENSION),
-          name: "Extensions",
-          targets: installedExtensions,
-        })
-      ),
-      Localized(
-        {
-          id: "about-debugging-runtime-tabs",
-          attrs: { name: true }
-        },
-        DebugTargetPane({
-          actionComponent: InspectAction,
-          collapsibilityKey: DEBUG_TARGET_PANE.TAB,
-          detailComponent: TabDetail,
-          dispatch,
-          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.TAB),
-          name: "Tabs",
-          targets: tabs
-        })
-      ),
-      Localized(
-        {
-          id: "about-debugging-runtime-service-workers",
-          attrs: { name: true }
-        },
-        DebugTargetPane({
-          actionComponent: ServiceWorkerAction,
-          collapsibilityKey: DEBUG_TARGET_PANE.SERVICE_WORKER,
-          detailComponent: WorkerDetail,
-          dispatch,
-          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SERVICE_WORKER),
-          name: "Service Workers",
-          targets: serviceWorkers
-        })
-      ),
-      Localized(
-        {
-          id: "about-debugging-runtime-shared-workers",
-          attrs: { name: true }
-        },
-        DebugTargetPane({
-          actionComponent: InspectAction,
-          collapsibilityKey: DEBUG_TARGET_PANE.SHARED_WORKER,
-          detailComponent: WorkerDetail,
-          dispatch,
-          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.SHARED_WORKER),
-          name: "Shared Workers",
-          targets: sharedWorkers
-        })
-      ),
-      Localized(
-        {
-          id: "about-debugging-runtime-other-workers",
-          attrs: { name: true }
-        },
-        DebugTargetPane({
-          actionComponent: InspectAction,
-          collapsibilityKey: DEBUG_TARGET_PANE.OTHER_WORKER,
-          detailComponent: WorkerDetail,
-          dispatch,
-          isCollapsed: collapsibilities.get(DEBUG_TARGET_PANE.OTHER_WORKER),
-          name: "Other Workers",
-          targets: otherWorkers
-        })
-      ),
+      RuntimeInfo(runtimeInfo),
+      isSupportedDebugTargetPane(runtimeInfo.type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
+        ? TemporaryExtensionInstaller({ dispatch })
+        : null,
+      this.renderDebugTargetPane("Temporary Extensions",
+                                 temporaryExtensions,
+                                 TemporaryExtensionAction,
+                                 ExtensionDetail,
+                                 DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
+                                 "about-debugging-runtime-temporary-extensions"),
+      this.renderDebugTargetPane("Extensions",
+                                 installedExtensions,
+                                 InspectAction,
+                                 ExtensionDetail,
+                                 DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
+                                 "about-debugging-runtime-extensions"),
+      this.renderDebugTargetPane("Tabs",
+                                 tabs,
+                                 InspectAction,
+                                 TabDetail,
+                                 DEBUG_TARGET_PANE.TAB,
+                                 "about-debugging-runtime-tabs"),
+      this.renderDebugTargetPane("Service Workers",
+                                 serviceWorkers,
+                                 ServiceWorkerAction,
+                                 WorkerDetail,
+                                 DEBUG_TARGET_PANE.SERVICE_WORKER,
+                                 "about-debugging-runtime-service-workers"),
+      this.renderDebugTargetPane("Shared Workers",
+                                 sharedWorkers,
+                                 InspectAction,
+                                 WorkerDetail,
+                                 DEBUG_TARGET_PANE.SHARED_WORKER,
+                                 "about-debugging-runtime-shared-workers"),
+      this.renderDebugTargetPane("Other Workers",
+                                 otherWorkers,
+                                 InspectAction,
+                                 WorkerDetail,
+                                 DEBUG_TARGET_PANE.OTHER_WORKER,
+                                 "about-debugging-runtime-other-workers"),
     );
   }
 }
@@ -161,6 +138,7 @@ const mapStateToProps = state => {
     collapsibilities: state.ui.debugTargetCollapsibilities,
     installedExtensions: state.debugTargets.installedExtensions,
     otherWorkers: state.debugTargets.otherWorkers,
+    runtimeInfo: getCurrentRuntimeInfo(state.runtimes),
     serviceWorkers: state.debugTargets.serviceWorkers,
     sharedWorkers: state.debugTargets.sharedWorkers,
     tabs: state.debugTargets.tabs,
