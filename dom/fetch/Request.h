@@ -143,14 +143,6 @@ public:
     mRequest->SetBody(aStream, aBodyLength);
   }
 
-  using FetchBody::BodyBlobURISpec;
-
-  const nsACString&
-  BodyBlobURISpec() const
-  {
-    return mRequest->BodyBlobURISpec();
-  }
-
   using FetchBody::BodyLocalPath;
 
   const nsAString&

@@ -434,7 +434,6 @@ FetchBodyConsumer<Derived>::FetchBodyConsumer(nsIEventTarget* aMainThreadEventTa
 #endif
   , mBodyStream(aBodyStream)
   , mBlobStorageType(MutableBlobStorage::eOnlyInMemory)
-  , mBodyBlobURISpec(aBody ? aBody->BodyBlobURISpec() : VoidCString())
   , mBodyLocalPath(aBody ? aBody->BodyLocalPath() : VoidString())
   , mGlobal(aGlobalObject)
   , mConsumeType(aType)
@@ -598,26 +597,11 @@ FetchBodyConsumer<Derived>::BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWor
     return;
   }
 
+  // If we're trying to consume a blob, and the request was for a local
+  // file, then generate and return a File blob.
   if (mConsumeType == CONSUME_BLOB) {
-    nsresult rv;
-
-    // If we're trying to consume a blob, and the request was for a blob URI,
-    // then just consume that URI's blob instance.
-    if (!mBodyBlobURISpec.IsEmpty()) {
-      RefPtr<BlobImpl> blobImpl;
-      rv = NS_GetBlobForBlobURISpec(mBodyBlobURISpec, getter_AddRefs(blobImpl));
-      if (NS_WARN_IF(NS_FAILED(rv)) || !blobImpl) {
-        return;
-      }
-      autoReject.DontFail();
-      ContinueConsumeBlobBody(blobImpl);
-      return;
-    }
-
-    // If we're trying to consume a blob, and the request was for a local
-    // file, then generate and return a File blob.
     nsCOMPtr<nsIFile> file;
-    rv = GetBodyLocalFile(getter_AddRefs(file));
+    nsresult rv = GetBodyLocalFile(getter_AddRefs(file));
     if (!NS_WARN_IF(NS_FAILED(rv)) && file) {
       ChromeFilePropertyBag bag;
       bag.mType = NS_ConvertUTF8toUTF16(mBodyMimeType);

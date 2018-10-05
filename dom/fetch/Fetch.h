@@ -187,9 +187,6 @@ public:
           JS::MutableHandle<JSObject*> aBodyOut,
           ErrorResult& aRv);
 
-  const nsACString&
-  BodyBlobURISpec() const;
-
   const nsAString&
   BodyLocalPath() const;
 
