@@ -112,14 +112,6 @@ public:
 
   using FetchBody::GetBody;
 
-  using FetchBody::BodyBlobURISpec;
-
-  const nsACString&
-  BodyBlobURISpec() const
-  {
-    return mInternalResponse->BodyBlobURISpec();
-  }
-
   using FetchBody::BodyLocalPath;
 
   const nsAString&
