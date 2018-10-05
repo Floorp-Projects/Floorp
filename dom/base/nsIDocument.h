@@ -4307,7 +4307,6 @@ protected:
   bool mValidHeight: 1;
   bool mAutoSize: 1;
   bool mAllowZoom: 1;
-  bool mAllowDoubleTapZoom: 1;
   bool mValidScaleFloat: 1;
   bool mValidMaxScale: 1;
   bool mScaleStrEmpty: 1;

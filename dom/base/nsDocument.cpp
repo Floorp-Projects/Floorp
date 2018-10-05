@@ -1444,7 +1444,6 @@ nsIDocument::nsIDocument()
     mValidHeight(false),
     mAutoSize(false),
     mAllowZoom(false),
-    mAllowDoubleTapZoom(false),
     mValidScaleFloat(false),
     mValidMaxScale(false),
     mScaleStrEmpty(false),
