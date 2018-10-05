@@ -642,11 +642,12 @@ AndroidDynamicToolbarAnimator::ProcessTouchDelta(const RefPtr<APZCTreeManager>& 
 
     uint32_t timeDelta = aTimeStamp - mControllerLastEventTimeStamp;
     if (mControllerLastEventTimeStamp && timeDelta && aDelta) {
-      float speed = -(float)aDelta / (float)timeDelta;
       // we can't use mApz because we're on the controller thread, so we have
       // the caller provide a RefPtr to the same underlying object, which should
       // be safe to use.
-      aApz->ProcessTouchVelocity(aTimeStamp, speed);
+      aApz->ProcessDynamicToolbarMovement(mControllerLastEventTimeStamp,
+                                          aTimeStamp,
+                                          -(float)aDelta);
     }
   }
 
