@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<title>Reference for WebVTT rendering, align:middle</title>
+<title>Reference for WebVTT rendering, align:center, position less than 50%, size greater than maximum size</title>
 <style>
 html { overflow:hidden }
 body { margin:0 }
@@ -13,8 +13,9 @@ body { margin:0 }
 .cue {
     position: absolute;
     bottom: 0;
-    left: 0;
+    left: 23px;
     right: 0;
+    width: 64px;
     text-align: center;
 }
 .cue > span {
@@ -23,4 +24,4 @@ body { margin:0 }
     color: green;
 }
 </style>
-<div class=video><span class=cue><span>This is a test</span></span></div>
+<div class=video><span class=cue><span>Aweso<br>me!!!</span></span></div>
