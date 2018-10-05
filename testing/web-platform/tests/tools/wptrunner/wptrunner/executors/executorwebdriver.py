@@ -251,7 +251,7 @@ class WebDriverRun(object):
                 if message:
                     message += "\n"
                 message += traceback.format_exc(e)
-                self.result = False, ("ERROR", message)
+                self.result = False, ("INTERNAL-ERROR", message)
         finally:
             self.result_flag.set()
 
