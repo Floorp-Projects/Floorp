@@ -4,24 +4,10 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
-loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 loader.lazyGetter(this, "adbScanner", () => {
-  const { ADBScanner } = require("devtools/shared/adb/adb-scanner");
-  return new ADBScanner();
+  const { AddonAwareADBScanner } = require("devtools/shared/adb/addon-aware-adb-scanner");
+  return new AddonAwareADBScanner();
 });
-
-function _onAdbAddonUpdate() {
-  // We are only listening to adbAddon updates if usb-runtimes are enabled.
-  if (adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
-    // If the status switched to installed, the scanner should be enabled.
-    adbScanner.enable();
-  } else {
-    // Otherwise disable the scanner. disable() can be called several times without side
-    // effect.
-    adbScanner.disable();
-  }
-}
 
 /**
  * This module provides a collection of helper methods to detect USB runtimes whom Firefox
@@ -33,18 +19,12 @@ function addUSBRuntimesObserver(listener) {
 exports.addUSBRuntimesObserver = addUSBRuntimesObserver;
 
 function disableUSBRuntimes() {
-  if (adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
-    adbScanner.disable();
-  }
-  adbAddon.off("update", _onAdbAddonUpdate);
+  adbScanner.disable();
 }
 exports.disableUSBRuntimes = disableUSBRuntimes;
 
 async function enableUSBRuntimes() {
-  if (adbAddon.status === ADB_ADDON_STATES.INSTALLED) {
-    adbScanner.enable();
-  }
-  adbAddon.on("update", _onAdbAddonUpdate);
+  adbScanner.enable();
 }
 exports.enableUSBRuntimes = enableUSBRuntimes;
 
