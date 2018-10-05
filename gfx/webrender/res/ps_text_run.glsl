@@ -81,7 +81,7 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
     // Compute the snapping offset only if the scroll node transform is axis-aligned.
     if (remove_subpx_offset) {
         // Transform from local space to device space.
-        float device_scale = uDevicePixelRatio / transform.m[3].w;
+        float device_scale = task.common_data.device_pixel_scale / transform.m[3].w;
         mat2 device_transform = mat2(transform.m) * device_scale;
 
         // Ensure the transformed text offset does not contain a subpixel translation
@@ -130,7 +130,7 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
 
     // Map the clamped local space corner into device space.
     vec4 world_pos = transform.m * vec4(local_pos, 0.0, 1.0);
-    vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
+    vec2 device_pos = world_pos.xy / world_pos.w * task.common_data.device_pixel_scale;
 
     // Apply offsets for the render task to get correct screen location.
     vec2 final_pos = device_pos -
@@ -172,7 +172,7 @@ void main(void) {
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     // Transform from local space to glyph space.
-    mat2 glyph_transform = mat2(transform.m) * uDevicePixelRatio;
+    mat2 glyph_transform = mat2(transform.m) * task.common_data.device_pixel_scale;
 
     // Compute the glyph rect in glyph space.
     RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text.offset + glyph.offset),
@@ -180,7 +180,7 @@ void main(void) {
 
 #else
     // Scale from glyph space to local space.
-    float scale = res.scale / uDevicePixelRatio;
+    float scale = res.scale / task.common_data.device_pixel_scale;
 
     // Compute the glyph rect in local space.
     RectWithSize glyph_rect = RectWithSize(scale * res.offset + text.offset + glyph.offset,

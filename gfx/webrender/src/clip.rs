@@ -1229,11 +1229,9 @@ fn add_clip_node_to_current_chain(
     let conversion = if spatial_node_index == clip_spatial_node_index {
         Some(ClipSpaceConversion::Local)
     } else if ref_spatial_node.coordinate_system_id == clip_spatial_node.coordinate_system_id {
-        let scale_offset = ref_spatial_node
-            .coordinate_system_relative_scale_offset
-            .difference(
-                &clip_spatial_node.coordinate_system_relative_scale_offset
-            );
+        let scale_offset = ref_spatial_node.coordinate_system_relative_scale_offset
+            .inverse()
+            .accumulate(&clip_spatial_node.coordinate_system_relative_scale_offset);
         Some(ClipSpaceConversion::ScaleOffset(scale_offset))
     } else {
         let xf = clip_scroll_tree.get_relative_transform(

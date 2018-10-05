@@ -19,23 +19,16 @@ FrameMetrics::RecalculateViewportOffset()
   if (!mIsRootContent) {
     return;
   }
-  KeepLayoutViewportEnclosingVisualViewport(GetVisualViewport(), mViewport);
-}
-
-/* static */ void
-FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
-    const CSSRect& aVisualViewport,
-    CSSRect& aLayoutViewport)
-{
+  CSSRect visualViewport = GetVisualViewport();
   // If the visual viewport is contained within the layout viewport, we don't
   // need to make any adjustments, so we can exit early.
   //
   // Additionally, if the composition bounds changes (due to an orientation
-  // change, window resize, etc.), it may take a few frames for aLayoutViewport to
+  // change, window resize, etc.), it may take a few frames for mViewport to
   // update and during that time, the visual viewport may be larger than the
   // layout viewport. In such situations, we take an early exit if the visual
   // viewport contains the layout viewport.
-  if (aLayoutViewport.Contains(aVisualViewport) || aVisualViewport.Contains(aLayoutViewport)) {
+  if (mViewport.Contains(visualViewport) || visualViewport.Contains(mViewport)) {
     return;
   }
 
@@ -43,40 +36,39 @@ FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
   // viewport such that it remains inside the visual viewport. Otherwise,
   // move the layout viewport such that the visual viewport is contained
   // inside the layout viewport.
-  if ((aLayoutViewport.Width() < aVisualViewport.Width() &&
-        !FuzzyEqualsMultiplicative(aLayoutViewport.Width(), aVisualViewport.Width())) ||
-       (aLayoutViewport.Height() < aVisualViewport.Height() &&
-        !FuzzyEqualsMultiplicative(aLayoutViewport.Height(), aVisualViewport.Height()))) {
+  if ((mViewport.Width() < visualViewport.Width() &&
+        !FuzzyEqualsMultiplicative(mViewport.Width(), visualViewport.Width())) ||
+       (mViewport.Height() < visualViewport.Height() &&
+        !FuzzyEqualsMultiplicative(mViewport.Height(), visualViewport.Height()))) {
 
-     if (aLayoutViewport.X() < aVisualViewport.X()) {
+     if (mViewport.X() < visualViewport.X()) {
         // layout viewport moves right
-        aLayoutViewport.MoveToX(aVisualViewport.X());
-     } else if (aVisualViewport.XMost() < aLayoutViewport.XMost()) {
+        mViewport.MoveToX(visualViewport.X());
+     } else if (visualViewport.XMost() < mViewport.XMost()) {
         // layout viewport moves left
-        aLayoutViewport.MoveByX(aVisualViewport.XMost() - aLayoutViewport.XMost());
+        mViewport.MoveByX(visualViewport.XMost() - mViewport.XMost());
      }
-     if (aLayoutViewport.Y() < aVisualViewport.Y()) {
+     if (mViewport.Y() < visualViewport.Y()) {
         // layout viewport moves down
-        aLayoutViewport.MoveToY(aVisualViewport.Y());
-     } else if (aVisualViewport.YMost() < aLayoutViewport.YMost()) {
+        mViewport.MoveToY(visualViewport.Y());
+     } else if (visualViewport.YMost() < mViewport.YMost()) {
         // layout viewport moves up
-        aLayoutViewport.MoveByY(aVisualViewport.YMost() - aLayoutViewport.YMost());
+        mViewport.MoveByY(visualViewport.YMost() - mViewport.YMost());
      }
    } else {
 
-     if (aVisualViewport.X() < aLayoutViewport.X()) {
-        aLayoutViewport.MoveToX(aVisualViewport.X());
-     } else if (aLayoutViewport.XMost() < aVisualViewport.XMost()) {
-        aLayoutViewport.MoveByX(aVisualViewport.XMost() - aLayoutViewport.XMost());
+     if (visualViewport.X() < mViewport.X()) {
+        mViewport.MoveToX(visualViewport.X());
+     } else if (mViewport.XMost() < visualViewport.XMost()) {
+        mViewport.MoveByX(visualViewport.XMost() - mViewport.XMost());
      }
-     if (aVisualViewport.Y() < aLayoutViewport.Y()) {
-        aLayoutViewport.MoveToY(aVisualViewport.Y());
-     } else if (aLayoutViewport.YMost() < aVisualViewport.YMost()) {
-        aLayoutViewport.MoveByY(aVisualViewport.YMost() - aLayoutViewport.YMost());
+     if (visualViewport.Y() < mViewport.Y()) {
+        mViewport.MoveToY(visualViewport.Y());
+     } else if (mViewport.YMost() < visualViewport.YMost()) {
+        mViewport.MoveByY(visualViewport.YMost() - mViewport.YMost());
      }
    }
 }
-
 
 void
 ScrollMetadata::SetUsesContainerScrolling(bool aValue) {

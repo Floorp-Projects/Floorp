@@ -221,16 +221,33 @@ MOZ_NoReturn(int aLine)
        MOZ_NoReturn(line); \
      } while (false)
 #else
+
+/*
+ * MOZ_CRASH_WRITE_ADDR is the address to be used when performing a forced
+ * crash. NULL is preferred however if for some reason NULL cannot be used
+ * this makes choosing another value possible.
+ *
+ * In the case of UBSan certain checks, bounds specifically, cause the compiler
+ * to emit the 'ud2' instruction when storing to 0x0. This causes forced
+ * crashes to manifest as ILL (at an arbitrary address) instead of the expected
+ * SEGV at 0x0.
+ */
+#  ifdef MOZ_UBSAN
+#    define MOZ_CRASH_WRITE_ADDR 0x1
+#  else
+#    define MOZ_CRASH_WRITE_ADDR NULL
+#  endif
+
 #  ifdef __cplusplus
 #    define MOZ_REALLY_CRASH(line) \
        do { \
-         *((volatile int*) NULL) = line; \
+         *((volatile int*) MOZ_CRASH_WRITE_ADDR) = line; \
          ::abort(); \
        } while (false)
 #  else
 #    define MOZ_REALLY_CRASH(line) \
        do { \
-         *((volatile int*) NULL) = line; \
+         *((volatile int*) MOZ_CRASH_WRITE_ADDR) = line; \
          abort(); \
        } while (false)
 #  endif

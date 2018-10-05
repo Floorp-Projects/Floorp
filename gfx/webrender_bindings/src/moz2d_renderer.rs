@@ -446,8 +446,8 @@ struct Moz2dBlobRasterizer {
 }
 
 impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
-
-    fn rasterize(&mut self, requests: &[BlobImageParams]) -> Vec<(BlobImageRequest, BlobImageResult)> {
+   
+    fn rasterize(&mut self, requests: &[BlobImageParams], _low_priority: bool) -> Vec<(BlobImageRequest, BlobImageResult)> {
         // All we do here is spin up our workers to callback into gecko to replay the drawing commands.
 
         struct Job {
