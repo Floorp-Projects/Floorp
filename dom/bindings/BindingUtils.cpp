@@ -4186,6 +4186,10 @@ GetPerInterfaceObjectHandle(JSContext* aCx,
   /* Make sure our global is sane.  Hopefully we can remove this sometime */
   JSObject* global = JS::CurrentGlobalOrNull(aCx);
   if (!(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL)) {
+    if (aSlotId == prototypes::id::HTMLDocument ||
+        aSlotId == prototypes::id::Document) {
+      MOZ_CRASH("Looks like bug 1488480/1405521, with a non-DOM global in GetPerInterfaceObjectHandle");
+    }
     return nullptr;
   }
 
@@ -4210,6 +4214,14 @@ GetPerInterfaceObjectHandle(JSContext* aCx,
   const JS::Heap<JSObject*>& entrySlot =
     protoAndIfaceCache.EntrySlotMustExist(aSlotId);
   MOZ_ASSERT(JS::ObjectIsNotGray(entrySlot));
+
+  if (!entrySlot) {
+    if (aSlotId == prototypes::id::HTMLDocument ||
+        aSlotId == prototypes::id::Document) {
+      MOZ_CRASH("Looks like bug 1488480/1405521, with aCreator failing to create the per-interface object");
+    }
+  }
+
   return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
 }
 
