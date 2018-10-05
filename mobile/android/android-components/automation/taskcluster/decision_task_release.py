@@ -63,8 +63,7 @@ def generate_build_task(version):
         command=(checkout +
                  ' && ./gradlew --no-daemon clean test detektCheck ktlint '
                  + assemble_task +
-                 ' docs uploadArchives zipMavenArtifacts' +
-                 bintray_publishing),
+                 ' docs uploadArchives zipMavenArtifacts'),
         features={
             "chainOfTrust": True
         },
