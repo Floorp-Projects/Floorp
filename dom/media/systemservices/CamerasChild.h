@@ -14,7 +14,6 @@
 #include "mozilla/camera/PCamerasParent.h"
 #include "mozilla/media/DeviceChangeCallback.h"
 #include "mozilla/Mutex.h"
-#include "base/singleton.h"
 #include "nsCOMPtr.h"
 
 // conflicts with #include of scoped_ptr.h
@@ -70,38 +69,41 @@ template <class T> class LockAndDispatch;
 
 class CamerasSingleton {
 public:
-  CamerasSingleton();
-  ~CamerasSingleton();
-
   static OffTheBooksMutex& Mutex() {
-    return Singleton<mozilla::camera::CamerasSingleton>::get()->mCamerasMutex;
+    return singleton().mCamerasMutex;
   }
 
   static CamerasChild*& Child() {
     Mutex().AssertCurrentThreadOwns();
-    return Singleton<mozilla::camera::CamerasSingleton>::get()->mCameras;
+    return singleton().mCameras;
   }
 
   static nsCOMPtr<nsIThread>& Thread() {
     Mutex().AssertCurrentThreadOwns();
-    return Singleton<mozilla::camera::CamerasSingleton>::get()->mCamerasChildThread;
+    return singleton().mCamerasChildThread;
   }
 
   static nsCOMPtr<nsIThread>& FakeDeviceChangeEventThread() {
     Mutex().AssertCurrentThreadOwns();
-    return Singleton<mozilla::camera::CamerasSingleton>::get()->mFakeDeviceChangeEventThread;
+    return singleton().mFakeDeviceChangeEventThread;
   }
 
   static bool InShutdown() {
-    return gTheInstance.get()->mInShutdown;
+    return singleton().mInShutdown;
   }
 
   static void StartShutdown() {
-    gTheInstance.get()->mInShutdown = true;
+    singleton().mInShutdown = true;
   }
 
 private:
-  static Singleton<CamerasSingleton> gTheInstance;
+  CamerasSingleton();
+  ~CamerasSingleton();
+
+  static CamerasSingleton& singleton() {
+    static CamerasSingleton camera;
+    return camera;
+  }
 
   // Reinitializing CamerasChild will change the pointers below.
   // We don't want this to happen in the middle of preparing IPC.
