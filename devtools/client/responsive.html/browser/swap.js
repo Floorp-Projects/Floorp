@@ -406,6 +406,9 @@ function addXULBrowserDecorations(browser) {
   if (browser._remoteWebProgressManager == undefined) {
     browser._remoteWebProgressManager = {
       swapBrowser() {},
+      get progressListeners() {
+        return [];
+      },
     };
   }
   if (browser._remoteWebProgress == undefined) {
