@@ -3588,15 +3588,20 @@ var SessionStoreInternal = {
   /**
    * Prepare connection to host beforehand.
    *
+   * @param tab
+   *        Tab we are loading from.
    * @param url
    *        URL of a host.
    * @returns a flag indicates whether a connection has been made
    */
-  prepareConnectionToHost(url) {
+  prepareConnectionToHost(tab, url) {
     if (!url.startsWith("about:")) {
+      let principal = Services.scriptSecurityManager.createNullPrincipal({
+        userContextId: tab.userContextId,
+      });
       let sc = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
       let uri = Services.io.newURI(url);
-      sc.speculativeConnect(uri, null, null);
+      sc.speculativeConnect2(uri, principal, null);
       return true;
     }
     return false;
@@ -3614,7 +3619,7 @@ var SessionStoreInternal = {
     let tabState = TAB_LAZY_STATES.get(tab);
     if (tabState && !tabState.connectionPrepared) {
       let url = this.getLazyTabValue(tab, "url");
-      let prepared = this.prepareConnectionToHost(url);
+      let prepared = this.prepareConnectionToHost(tab, url);
       // This is used to test if a connection has been made beforehand.
       if (gDebuggingEnabled) {
         tab.__test_connection_prepared = prepared;
@@ -3921,7 +3926,7 @@ var SessionStoreInternal = {
         if (TabRestoreQueue.willRestoreSoon(tab)) {
           if (activeIndex in tabData.entries) {
             let url = tabData.entries[activeIndex].url;
-            let prepared = this.prepareConnectionToHost(url);
+            let prepared = this.prepareConnectionToHost(tab, url);
             if (gDebuggingEnabled) {
               tab.__test_connection_prepared = prepared;
               tab.__test_connection_url = url;
