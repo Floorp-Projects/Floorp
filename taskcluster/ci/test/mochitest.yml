@@ -41,10 +41,7 @@ job-defaults:
 
 mochitest:
     description: "Mochitest plain run"
-    suite:
-        by-test-platform:
-            linux64-jsdcov/opt: mochitest/plain-chunked-coverage
-            default: mochitest/plain-chunked
+    suite: mochitest/plain-chunked
     treeherder-symbol: M()
     loopback-video: true
     run-on-projects:
@@ -57,7 +54,6 @@ mochitest:
             default: default
     instance-size:
         by-test-platform:
-            linux64-jsdcov/opt: xlarge
             android-em.*: xlarge
             default: default
     virtualization:
@@ -108,10 +104,7 @@ mochitest-a11y:
 
 mochitest-browser-chrome:
     description: "Mochitest browser-chrome run"
-    suite:
-        by-test-platform:
-            linux64-jsdcov/opt: mochitest/browser-chrome-coverage
-            default: mochitest/browser-chrome-chunked
+    suite: mochitest/browser-chrome-chunked
     treeherder-symbol: M(bc)
     loopback-video: true
     chunks:
@@ -130,10 +123,7 @@ mochitest-browser-chrome:
         mochitest-flavor: browser
         chunked: true
     # Bug 1281241: migrating to m3.large instances
-    instance-size:
-        by-test-platform:
-            linux64-jsdcov/opt: xlarge
-            default: default
+    instance-size: default
     allow-software-gl-layers: false
 
 browser-instrumentation:
@@ -232,10 +222,7 @@ mochitest-clipboard:
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
-    suite:
-        by-test-platform:
-            linux64-jsdcov/opt: mochitest/mochitest-devtools-chrome-coverage
-            default: mochitest/mochitest-devtools-chrome-chunked
+    suite: mochitest/mochitest-devtools-chrome-chunked
     treeherder-symbol: M(dt)
     loopback-video: true
     max-run-time:
@@ -243,10 +230,6 @@ mochitest-devtools-chrome:
             windows10-64-ccov/debug: 7200
             macosx64-ccov/debug: 9000
             default: 5400
-    run-on-projects:
-        by-test-platform:
-            linux64-jsdcov/opt: ['try']  # jsdcov only on try, Bug 1442823
-            default: built-projects
     chunks:
         by-test-platform:
             linux64-ccov/debug: 12

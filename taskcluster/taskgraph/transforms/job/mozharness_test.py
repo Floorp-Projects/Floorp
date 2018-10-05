@@ -29,7 +29,6 @@ VARIANTS = [
     'stylo-sequential',
     'qr',
     'ccov',
-    'jsdcov',
 ]
 
 

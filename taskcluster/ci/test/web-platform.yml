@@ -172,9 +172,8 @@ test-verify-wpt:
     max-run-time: 10800
     run-on-projects:
         by-test-platform:
-            # do not run on ccov or jsdcov
+            # do not run on ccov
             .*-ccov/.*: []
-            .*-jsdcov/.*: []
             .*-asan/.*: []
             # do not run on beta or release: usually just confirms earlier results
             .*-msvc/.*: ['mozilla-central', 'try']

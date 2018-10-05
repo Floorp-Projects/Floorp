@@ -2574,9 +2574,6 @@ toolbar#nav-bar {
                 'dom.serviceWorkers.parent_intercept', False),
         })
 
-        if options.jscov_dir_prefix is not None:
-            mozinfo.update({'coverage': True})
-
         self.setTestRoot(options)
 
         # Despite our efforts to clean up servers started by this script, in practice
