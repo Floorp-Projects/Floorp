@@ -550,6 +550,7 @@ void Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* dst, const nsStyleSVG* s
 mozilla::css::URLValue* Gecko_NewURLValue(ServoBundledURI uri);
 size_t Gecko_URLValue_SizeOfIncludingThis(mozilla::css::URLValue* url);
 void Gecko_GetComputedURLSpec(const mozilla::css::URLValueData* url, nsCString* spec);
+void Gecko_GetComputedImageURLSpec(const mozilla::css::URLValueData* url, nsCString* spec);
 void Gecko_nsIURI_Debug(nsIURI*, nsCString* spec);
 
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::URLValue, CSSURLValue);

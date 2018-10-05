@@ -281,29 +281,14 @@ private:
   already_AddRefed<CSSValue> DoGetGridRowEnd();
 
   /* StyleImageLayer properties */
-  already_AddRefed<CSSValue> DoGetImageLayerImage(const nsStyleImageLayers& aLayers);
   already_AddRefed<CSSValue> DoGetImageLayerPosition(const nsStyleImageLayers& aLayers);
-  already_AddRefed<CSSValue> DoGetImageLayerPositionX(const nsStyleImageLayers& aLayers);
-  already_AddRefed<CSSValue> DoGetImageLayerPositionY(const nsStyleImageLayers& aLayers);
-  already_AddRefed<CSSValue> DoGetImageLayerRepeat(const nsStyleImageLayers& aLayers);
-  already_AddRefed<CSSValue> DoGetImageLayerSize(const nsStyleImageLayers& aLayers);
 
   /* Background properties */
-  already_AddRefed<CSSValue> DoGetBackgroundImage();
   already_AddRefed<CSSValue> DoGetBackgroundPosition();
-  already_AddRefed<CSSValue> DoGetBackgroundPositionX();
-  already_AddRefed<CSSValue> DoGetBackgroundPositionY();
-  already_AddRefed<CSSValue> DoGetBackgroundRepeat();
-  already_AddRefed<CSSValue> DoGetBackgroundSize();
 
   /* Mask properties */
   already_AddRefed<CSSValue> DoGetMask();
-  already_AddRefed<CSSValue> DoGetMaskImage();
   already_AddRefed<CSSValue> DoGetMaskPosition();
-  already_AddRefed<CSSValue> DoGetMaskPositionX();
-  already_AddRefed<CSSValue> DoGetMaskPositionY();
-  already_AddRefed<CSSValue> DoGetMaskRepeat();
-  already_AddRefed<CSSValue> DoGetMaskSize();
 
   /* Padding properties */
   already_AddRefed<CSSValue> DoGetPaddingTop();
@@ -330,7 +315,6 @@ private:
   already_AddRefed<CSSValue> DoGetBorderTopRightRadius();
 
   /* Border Image */
-  already_AddRefed<CSSValue> DoGetBorderImageSource();
   already_AddRefed<CSSValue> DoGetBorderImageSlice();
   already_AddRefed<CSSValue> DoGetBorderImageWidth();
   already_AddRefed<CSSValue> DoGetBorderImageOutset();
@@ -399,7 +383,6 @@ private:
   already_AddRefed<CSSValue> DoGetTransformOrigin();
   already_AddRefed<CSSValue> DoGetPerspective();
   already_AddRefed<CSSValue> DoGetPerspectiveOrigin();
-  already_AddRefed<CSSValue> DoGetTransformStyle();
   already_AddRefed<CSSValue> DoGetOverscrollBehaviorX();
   already_AddRefed<CSSValue> DoGetOverscrollBehaviorY();
   already_AddRefed<CSSValue> DoGetScrollSnapTypeX();
@@ -483,8 +466,6 @@ private:
   void SetValueForWidgetColor(nsROCSSPrimitiveValue* aValue,
                               const mozilla::StyleComplexColor& aColor,
                               mozilla::StyleAppearance aWidgetType);
-  void SetValueToStyleImage(const nsStyleImage& aStyleImage,
-                            nsROCSSPrimitiveValue* aValue);
   void SetValueToPositionCoord(const mozilla::Position::Coord& aCoord,
                                nsROCSSPrimitiveValue* aValue);
   void SetValueToPosition(const mozilla::Position& aPosition,

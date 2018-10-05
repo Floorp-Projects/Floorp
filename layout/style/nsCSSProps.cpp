@@ -190,22 +190,6 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
 
 /***************************************************************************/
 
-const KTableEntry nsCSSProps::kTransformStyleKTable[] = {
-  { eCSSKeyword_flat, NS_STYLE_TRANSFORM_STYLE_FLAT },
-  { eCSSKeyword_preserve_3d, NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kImageLayerRepeatKTable[] = {
-  { eCSSKeyword_no_repeat,  StyleImageLayerRepeat::NoRepeat },
-  { eCSSKeyword_repeat,     StyleImageLayerRepeat::Repeat },
-  { eCSSKeyword_repeat_x,   StyleImageLayerRepeat::RepeatX },
-  { eCSSKeyword_repeat_y,   StyleImageLayerRepeat::RepeatY },
-  { eCSSKeyword_round,      StyleImageLayerRepeat::Round},
-  { eCSSKeyword_space,      StyleImageLayerRepeat::Space},
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kBorderImageRepeatKTable[] = {
   { eCSSKeyword_stretch, StyleBorderImageRepeat::Stretch },
   { eCSSKeyword_repeat, StyleBorderImageRepeat::Repeat },
@@ -564,14 +548,6 @@ const KTableEntry nsCSSProps::kOverflowSubKTable[] = {
   // Deprecated:
   { eCSSKeyword__moz_hidden_unscrollable, NS_STYLE_OVERFLOW_CLIP },
   { eCSSKeyword_UNKNOWN, -1 }
-};
-
-const KTableEntry nsCSSProps::kRadialGradientSizeKTable[] = {
-  { eCSSKeyword_closest_side,    NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE },
-  { eCSSKeyword_closest_corner,  NS_STYLE_GRADIENT_SIZE_CLOSEST_CORNER },
-  { eCSSKeyword_farthest_side,   NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE },
-  { eCSSKeyword_farthest_corner, NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER },
-  { eCSSKeyword_UNKNOWN,         -1 }
 };
 
 const KTableEntry nsCSSProps::kOverscrollBehaviorKTable[] = {
