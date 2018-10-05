@@ -11,15 +11,14 @@
 
 #include "APZCTreeManager.h"            // for APZCTreeManager
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
-#include "mozilla/layers/APZThreadUtils.h" // for AssertOnControllerThread
 #include "FrameMetrics.h"               // for FrameMetrics
+#include "SimpleVelocityTracker.h"      // for FrameMetrics
 #include "mozilla/Attributes.h"         // for final
-#include "mozilla/ComputedTimingFunction.h" // for ComputedTimingFunction
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
+#include "mozilla/layers/APZThreadUtils.h" // for AssertOnControllerThread
 #include "mozilla/mozalloc.h"           // for operator new
 #include "mozilla/FloatingPoint.h"      // for FuzzyEqualsAdditive
-#include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "nsMathUtils.h"                // for NS_lround
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsThreadUtils.h"              // for NS_DispatchToMainThread, etc
@@ -32,30 +31,20 @@
 namespace mozilla {
 namespace layers {
 
-// When we compute the velocity we do so by taking two input events and
-// dividing the distance delta over the time delta. In some cases the time
-// delta can be really small, which can make the velocity computation very
-// volatile. To avoid this we impose a minimum time delta below which we do
-// not recompute the velocity.
-const uint32_t MIN_VELOCITY_SAMPLE_TIME_MS = 5;
-
 bool FuzzyEqualsCoordinate(float aValue1, float aValue2)
 {
   return FuzzyEqualsAdditive(aValue1, aValue2, COORDINATE_EPSILON)
       || FuzzyEqualsMultiplicative(aValue1, aValue2);
 }
 
-extern StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
-
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0),
-    mVelocitySampleTimeMs(0),
-    mVelocitySamplePos(0),
     mVelocity(0.0f),
     mAxisLocked(false),
     mAsyncPanZoomController(aAsyncPanZoomController),
     mOverscroll(0),
-    mMSDModel(0.0, 0.0, 0.0, 400.0, 1.2)
+    mMSDModel(0.0, 0.0, 0.0, 400.0, 1.2),
+    mVelocityTracker(MakeUnique<SimpleVelocityTracker>(this))
 {
 }
 
@@ -72,73 +61,13 @@ float Axis::ToLocalVelocity(float aVelocityInchesPerMs) const {
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, uint32_t aTimestampMs) {
-  // mVelocityQueue is controller-thread only
+  // mVelocityTracker is controller-thread only
   APZThreadUtils::AssertOnControllerThread();
 
-  if (aTimestampMs <= mVelocitySampleTimeMs + MIN_VELOCITY_SAMPLE_TIME_MS) {
-    // See also the comment on MIN_VELOCITY_SAMPLE_TIME_MS.
-    // We still update mPos so that the positioning is correct (and we don't run
-    // into problems like bug 1042734) but the velocity will remain where it was.
-    // In particular we don't update either mVelocitySampleTimeMs or
-    // mVelocitySamplePos so that eventually when we do get an event with the
-    // required time delta we use the corresponding distance delta as well.
-    AXIS_LOG("%p|%s skipping velocity computation for small time delta %dms\n",
-        mAsyncPanZoomController, Name(), (aTimestampMs - mVelocitySampleTimeMs));
-    mPos = aPos;
-    return;
-  }
-
-  float newVelocity = mAxisLocked ? 0.0f : (float)(mVelocitySamplePos - aPos) / (float)(aTimestampMs - mVelocitySampleTimeMs);
-
-  newVelocity = ApplyFlingCurveToVelocity(newVelocity);
-
-  AXIS_LOG("%p|%s updating velocity to %f with touch\n",
-    mAsyncPanZoomController, Name(), newVelocity);
-  mVelocity = newVelocity;
   mPos = aPos;
-  mVelocitySampleTimeMs = aTimestampMs;
-  mVelocitySamplePos = aPos;
 
-  AddVelocityToQueue(aTimestampMs, mVelocity);
-}
-
-float Axis::ApplyFlingCurveToVelocity(float aVelocity) const {
-  float newVelocity = aVelocity;
-  if (gfxPrefs::APZMaxVelocity() > 0.0f) {
-    bool velocityIsNegative = (newVelocity < 0);
-    newVelocity = fabs(newVelocity);
-
-    float maxVelocity = ToLocalVelocity(gfxPrefs::APZMaxVelocity());
-    newVelocity = std::min(newVelocity, maxVelocity);
-
-    if (gfxPrefs::APZCurveThreshold() > 0.0f && gfxPrefs::APZCurveThreshold() < gfxPrefs::APZMaxVelocity()) {
-      float curveThreshold = ToLocalVelocity(gfxPrefs::APZCurveThreshold());
-      if (newVelocity > curveThreshold) {
-        // here, 0 < curveThreshold < newVelocity <= maxVelocity, so we apply the curve
-        float scale = maxVelocity - curveThreshold;
-        float funcInput = (newVelocity - curveThreshold) / scale;
-        float funcOutput =
-          gVelocityCurveFunction->GetValue(funcInput,
-            ComputedTimingFunction::BeforeFlag::Unset);
-        float curvedVelocity = (funcOutput * scale) + curveThreshold;
-        AXIS_LOG("%p|%s curving up velocity from %f to %f\n",
-          mAsyncPanZoomController, Name(), newVelocity, curvedVelocity);
-        newVelocity = curvedVelocity;
-      }
-    }
-
-    if (velocityIsNegative) {
-      newVelocity = -newVelocity;
-    }
-  }
-
-  return newVelocity;
-}
-
-void Axis::AddVelocityToQueue(uint32_t aTimestampMs, float aVelocity) {
-  mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, aVelocity));
-  if (mVelocityQueue.Length() > gfxPrefs::APZMaxVelocityQueueSize()) {
-    mVelocityQueue.RemoveElementAt(0);
+  if (Maybe<float> newVelocity = mVelocityTracker->AddPosition(aPos, aTimestampMs, mAxisLocked)) {
+    mVelocity = *newVelocity;
   }
 }
 
@@ -146,23 +75,18 @@ void Axis::HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
                                         uint32_t aEndTimestampMs,
                                         ParentLayerCoord aDelta)
 {
-  // mVelocityQueue is controller-thread only
+  // mVelocityTracker is controller-thread only
   APZThreadUtils::AssertOnControllerThread();
 
-  float timeDelta = aEndTimestampMs - aStartTimestampMs;
-  MOZ_ASSERT(timeDelta != 0);
-  float speed = aDelta / timeDelta;
-  mVelocity = ApplyFlingCurveToVelocity(speed);
-  mVelocitySampleTimeMs = aEndTimestampMs;
-
-  AddVelocityToQueue(aEndTimestampMs, mVelocity);
+  mVelocity = mVelocityTracker->HandleDynamicToolbarMovement(aStartTimestampMs,
+                                                             aEndTimestampMs,
+                                                             aDelta);
 }
 
 void Axis::StartTouch(ParentLayerCoord aPos, uint32_t aTimestampMs) {
   mStartPos = aPos;
   mPos = aPos;
-  mVelocitySampleTimeMs = aTimestampMs;
-  mVelocitySamplePos = aPos;
+  mVelocityTracker->StartTracking(aPos, aTimestampMs);
   mAxisLocked = false;
 }
 
@@ -317,19 +241,7 @@ void Axis::EndTouch(uint32_t aTimestampMs) {
   APZThreadUtils::AssertOnControllerThread();
 
   mAxisLocked = false;
-  mVelocity = 0;
-  int count = 0;
-  for (const auto& e : mVelocityQueue) {
-    uint32_t timeDelta = (aTimestampMs - e.first);
-    if (timeDelta < gfxPrefs::APZVelocityRelevanceTime()) {
-      count++;
-      mVelocity += e.second;
-    }
-  }
-  mVelocityQueue.Clear();
-  if (count > 1) {
-    mVelocity /= count;
-  }
+  mVelocity = mVelocityTracker->ComputeVelocity(aTimestampMs);
   AXIS_LOG("%p|%s ending touch, computed velocity %f\n",
     mAsyncPanZoomController, Name(), mVelocity);
 }
@@ -341,7 +253,7 @@ void Axis::CancelGesture() {
   AXIS_LOG("%p|%s cancelling touch, clearing velocity queue\n",
     mAsyncPanZoomController, Name());
   mVelocity = 0.0f;
-  mVelocityQueue.Clear();
+  mVelocityTracker->Clear();
 }
 
 bool Axis::CanScroll() const {
