@@ -557,6 +557,40 @@ describe("TelemetryFeed", () => {
       assert.isUndefined(ping.bucket_id);
     });
   });
+  describe("#applySnippetsPolicy", () => {
+    it("should drop client_id and unset impression_id", () => {
+      const data = {
+        action: "snippets_user_event",
+        source: "SNIPPETS",
+        event: "IMPRESSION",
+        client_id: "n/a",
+        impression_id: "some_impression_id",
+        message_id: "snippets_message_01"
+      };
+      const ping = instance.applySnippetsPolicy(data);
+
+      assert.isUndefined(ping.client_id);
+      assert.propertyVal(ping, "impression_id", "n/a");
+      assert.propertyVal(ping, "message_id", "snippets_message_01");
+    });
+  });
+  describe("#applyOnboardingPolicy", () => {
+    it("should drop client_id and unset impression_id", () => {
+      const data = {
+        action: "onboarding_user_event",
+        source: "ONBOARDING",
+        event: "CLICK_BUTTION",
+        client_id: "n/a",
+        impression_id: "some_impression_id",
+        message_id: "onboarding_message_01"
+      };
+      const ping = instance.applyOnboardingPolicy(data);
+
+      assert.isUndefined(ping.client_id);
+      assert.propertyVal(ping, "impression_id", "n/a");
+      assert.propertyVal(ping, "message_id", "onboarding_message_01");
+    });
+  });
   describe("#createASRouterEvent", () => {
     it("should create a valid AS Router event", async () => {
       const data = {
@@ -573,34 +607,44 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "source", "SNIPPETS");
       assert.propertyVal(ping, "event", "CLICK");
     });
-    it("should drop the default client_id if includeClientID presents", async () => {
-      const data = {
-        action: "snippet_user_event",
-        source: "SNIPPETS",
-        event: "CLICK",
-        message_id: "snippets_message_01",
-        includeClientID: true
-      };
-      const action = ac.ASRouterUserEvent(data);
-      const ping = await instance.createASRouterEvent(action);
-
-      assert.isUndefined(ping.client_id);
-      assert.isUndefined(ping.includeClientID);
-      assert.propertyVal(ping, "impression_id", "n/a");
-    });
     it("should call applyCFRPolicy if action equals to cfr_user_event", async () => {
       const data = {
         action: "cfr_user_event",
         source: "CFR",
         event: "IMPRESSION",
-        message_id: "cfr_message_01",
-        includeClientID: true
+        message_id: "cfr_message_01"
       };
       sandbox.stub(instance, "applyCFRPolicy");
       const action = ac.ASRouterUserEvent(data);
       await instance.createASRouterEvent(action);
 
       assert.calledOnce(instance.applyCFRPolicy);
+    });
+    it("should call applySnippetsPolicy if action equals to snippets_user_event", async () => {
+      const data = {
+        action: "snippets_user_event",
+        source: "SNIPPETS",
+        event: "IMPRESSION",
+        message_id: "snippets_message_01"
+      };
+      sandbox.stub(instance, "applySnippetsPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applySnippetsPolicy);
+    });
+    it("should call applyOnboardingPolicy if action equals to onboarding_user_event", async () => {
+      const data = {
+        action: "onboarding_user_event",
+        source: "ONBOARDING",
+        event: "CLICK_BUTTON",
+        message_id: "onboarding_message_01"
+      };
+      sandbox.stub(instance, "applyOnboardingPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applyOnboardingPolicy);
     });
   });
   describe("#sendEvent", () => {
