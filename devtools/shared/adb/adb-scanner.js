@@ -12,17 +12,20 @@ const { RuntimeTypes } =
 const { ADB } = require("devtools/shared/adb/adb");
 loader.lazyRequireGetter(this, "Device", "devtools/shared/adb/adb-device");
 
-const ADBScanner = {
+class ADBScanner extends EventEmitter {
+  constructor() {
+    super();
+    this._runtimes = [];
 
-  _runtimes: [],
-
-  enable() {
     this._onDeviceConnected = this._onDeviceConnected.bind(this);
     this._onDeviceDisconnected = this._onDeviceDisconnected.bind(this);
+    this._updateRuntimes = this._updateRuntimes.bind(this);
+  }
+
+  enable() {
     EventEmitter.on(ADB, "device-connected", this._onDeviceConnected);
     EventEmitter.on(ADB, "device-disconnected", this._onDeviceDisconnected);
 
-    this._updateRuntimes = this._updateRuntimes.bind(this);
     Devices.on("register", this._updateRuntimes);
     Devices.on("unregister", this._updateRuntimes);
     Devices.on("addon-status-updated", this._updateRuntimes);
@@ -31,7 +34,7 @@ const ADBScanner = {
       ADB.trackDevices();
     });
     this._updateRuntimes();
-  },
+  }
 
   disable() {
     EventEmitter.off(ADB, "device-connected", this._onDeviceConnected);
@@ -39,20 +42,20 @@ const ADBScanner = {
     Devices.off("register", this._updateRuntimes);
     Devices.off("unregister", this._updateRuntimes);
     Devices.off("addon-status-updated", this._updateRuntimes);
-  },
+  }
 
   _emitUpdated() {
     this.emit("runtime-list-updated");
-  },
+  }
 
   _onDeviceConnected(deviceId) {
     const device = new Device(deviceId);
     Devices.register(deviceId, device);
-  },
+  }
 
   _onDeviceDisconnected(deviceId) {
     Devices.unregister(deviceId);
-  },
+  }
 
   _updateRuntimes() {
     if (this._updatingPromise) {
@@ -72,26 +75,23 @@ const ADBScanner = {
       this._updatingPromise = null;
     });
     return this._updatingPromise;
-  },
+  }
 
-  _detectRuntimes: async function(device) {
+  async _detectRuntimes(device) {
     const model = await device.getModel();
     const detectedRuntimes =
       await FirefoxOnAndroidRuntime.detect(device, model);
     this._runtimes.push(...detectedRuntimes);
-  },
+  }
 
   scan() {
     return this._updateRuntimes();
-  },
+  }
 
   listRuntimes() {
     return this._runtimes;
   }
-
-};
-
-EventEmitter.decorate(ADBScanner);
+}
 
 function Runtime(device, model, socketPath) {
   this.device = device;
