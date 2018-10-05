@@ -75,6 +75,7 @@ public:
   virtual AsyncPanZoomAnimation* CreateFlingAnimation(AsyncPanZoomController& aApzc,
                                                       const FlingHandoffState& aHandoffState,
                                                       float aPLPPI);
+  virtual UniquePtr<VelocityTracker> CreateVelocityTracker(Axis* aAxis);
 
   static void InitializeGlobalState() {}
 };
