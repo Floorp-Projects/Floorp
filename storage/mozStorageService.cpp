@@ -619,8 +619,10 @@ Service::OpenAsyncDatabase(nsIVariant *aDatabaseStore,
       return NS_ERROR_INVALID_ARG;
     }
 
-    rv = storageFile->Clone(getter_AddRefs(storageFile));
+    nsCOMPtr<nsIFile> cloned;
+    rv = storageFile->Clone(getter_AddRefs(cloned));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+    storageFile = cloned.forget();
 
     if (!readOnly) {
       // Ensure that SQLITE_OPEN_CREATE is passed in for compatibility reasons.
