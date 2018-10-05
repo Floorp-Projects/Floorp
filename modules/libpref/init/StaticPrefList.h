@@ -200,7 +200,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "dom.performance.enable_scheduler_timing",
   dom_performance_enable_scheduler_timing,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, true
 )
 
 // If true. then the service worker interception and the ServiceWorkerManager
