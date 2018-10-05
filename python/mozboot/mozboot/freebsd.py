@@ -68,7 +68,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
         # Clang / llvm already installed as browser package
-        self.ensure_rust_package('cbindgen')
+        self.pkg_install('rust-cbindgen')
 
     def upgrade_mercurial(self, current):
         self.pkg_install('mercurial')
