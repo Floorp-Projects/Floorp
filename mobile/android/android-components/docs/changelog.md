@@ -4,6 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
+# 0.27.0-SNAPTSHOT (In Development)
+
+Release date: TBD
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.26.0..master),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/27?closed=1)
+
+* Compiled against:
+  * Android (SDK: 27, Support Libraries: 27.1.1)
+  * Kotlin (Stdlib: 1.2.61, Coroutines: 0.23.4)
+  * GeckoView
+    * Nightly: 64.0.20180905100117
+    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
+    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
+
 # 0.26.0
 
 Release date: 2018-10-05
