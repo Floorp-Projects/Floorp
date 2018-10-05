@@ -152,246 +152,6 @@ this.AntiTracking = {
 
         this._createTask({
           name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlocking: false,
-          blockingByContentBlockingUI: true,
-          blockingByContentBlockingRTUI: true,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlocking: false,
-          blockingByContentBlockingUI: true,
-          blockingByContentBlockingRTUI: false,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlocking: false,
-          blockingByContentBlockingUI: true,
-          blockingByContentBlockingRTUI: false,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlocking: true,
-          blockingByContentBlockingUI: false,
-          blockingByContentBlockingRTUI: true,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlocking: true,
-          blockingByContentBlockingUI: false,
-          blockingByContentBlockingRTUI: false,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlocking: true,
-          blockingByContentBlockingUI: false,
-          blockingByContentBlockingRTUI: false,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlocking: false,
-          blockingByContentBlockingUI: true,
-          blockingByContentBlockingRTUI: true,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlocking: false,
-          blockingByContentBlockingUI: true,
-          blockingByContentBlockingRTUI: false,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlocking: false,
-          blockingByContentBlockingUI: true,
-          blockingByContentBlockingRTUI: false,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlocking: true,
-          blockingByContentBlockingUI: false,
-          blockingByContentBlockingRTUI: true,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlocking: true,
-          blockingByContentBlockingUI: false,
-          blockingByContentBlockingRTUI: false,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlocking: true,
-          blockingByContentBlockingUI: false,
-          blockingByContentBlockingRTUI: false,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlocking: false,
-          blockingByContentBlockingUI: true,
-          blockingByContentBlockingRTUI: true,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlocking: true,
-          blockingByContentBlockingUI: false,
-          blockingByContentBlockingRTUI: true,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlocking: false,
-          blockingByContentBlockingUI: true,
-          blockingByContentBlockingRTUI: true,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
-          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlocking: true,
-          blockingByContentBlockingUI: false,
-          blockingByContentBlockingRTUI: true,
-          allowList: true,
-          callback: callbackNonTracking,
-          extraPrefs: [],
-          expectedBlockingNotifications: false,
-          runInPrivateWindow,
-          iframeSandbox,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
           cookieBehavior: BEHAVIOR_ACCEPT,
           blockingByContentBlocking: false,
           blockingByContentBlockingUI: true,
@@ -480,12 +240,251 @@ this.AntiTracking = {
         });
         this._createCleanupTask(cleanupFunction);
 
-        // Try testing using the allow list with both reject foreign and reject tracker cookie behaviors
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: false,
+          blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: true,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: false,
+          blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: false,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: false,
+          blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: false,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: true,
+          blockingByContentBlockingUI: false,
+          blockingByContentBlockingRTUI: true,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: true,
+          blockingByContentBlockingUI: false,
+          blockingByContentBlockingRTUI: false,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: true,
+          blockingByContentBlockingUI: false,
+          blockingByContentBlockingRTUI: false,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: false,
+          blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: true,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
+          blockingByContentBlocking: true,
+          blockingByContentBlockingUI: false,
+          blockingByContentBlockingRTUI: true,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
         this._createTask({
           name,
           cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
           blockingByContentBlocking: true,
           blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: true,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: false,
+          blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: true,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: false,
+          blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: false,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: false,
+          blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: false,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: true,
+          blockingByContentBlockingUI: false,
+          blockingByContentBlockingRTUI: true,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: true,
+          blockingByContentBlockingUI: false,
+          blockingByContentBlockingRTUI: false,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: true,
+          blockingByContentBlockingUI: false,
+          blockingByContentBlockingRTUI: false,
+          allowList: false,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: false,
+          blockingByContentBlockingUI: true,
+          blockingByContentBlockingRTUI: true,
+          allowList: true,
+          callback: callbackNonTracking,
+          extraPrefs: [],
+          expectedBlockingNotifications: false,
+          runInPrivateWindow,
+          iframeSandbox,
+        });
+        this._createCleanupTask(cleanupFunction);
+
+        this._createTask({
+          name,
+          cookieBehavior: BEHAVIOR_REJECT_TRACKER,
+          blockingByContentBlocking: true,
+          blockingByContentBlockingUI: false,
           blockingByContentBlockingRTUI: true,
           allowList: true,
           callback: callbackNonTracking,
