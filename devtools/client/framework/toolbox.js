@@ -2677,7 +2677,10 @@ Toolbox.prototype = {
   initInspector: function() {
     if (!this._initInspector) {
       this._initInspector = (async function() {
-        this._inspector = this.target.getFront("inspector");
+        // Temporary fix for bug #1493131 - inspector has a different life cycle
+        // than most other fronts because it is closely related to the toolbox.
+        // TODO: replace with getFront once inspector is separated from the toolbox
+        this._inspector = this.target.getInspector();
         const pref = "devtools.inspector.showAllAnonymousContent";
         const showAllAnonymousContent = Services.prefs.getBoolPref(pref);
         this._walker = await this._inspector.getWalker({ showAllAnonymousContent });
@@ -2748,6 +2751,7 @@ Toolbox.prototype = {
   /**
    * Destroy the inspector/walker/selection fronts
    * Returns a promise that resolves when the fronts are destroyed
+   * TODO: move to the inspector front once we can have listener hooks into fronts
    */
   destroyInspector: function() {
     if (this._destroyingInspector) {
@@ -2769,6 +2773,9 @@ Toolbox.prototype = {
       } else {
         await this.highlighterUtils.stopPicker();
       }
+      // Temporary fix for bug #1493131 - inspector has a different life cycle
+      // than most other fronts because it is closely related to the toolbox.
+      this._inspector.destroy();
 
       if (this._highlighter) {
         // Note that if the toolbox is closed, this will work fine, but will fail
