@@ -1770,13 +1770,7 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
 
     nsCOMPtr<nsIPrincipal> loadingPrincipal = aPrincipal;
 
-    NS_ASSERTION(aPrincipal, "We expect passing a principal here.");
-
-    // If the principal is given, we use this principal directly. Otherwise,
-    // we fallback to use the system principal.
-    if (!aPrincipal) {
-        loadingPrincipal = nsContentUtils::GetSystemPrincipal();
-    }
+    MOZ_ASSERT(aPrincipal, "We expect passing a principal here.");
 
     // dummy channel used to create a TCP connection.
     // we perform security checks on the *real* channel, responsible
@@ -1814,25 +1808,11 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
-nsIOService::SpeculativeConnect(nsIURI *aURI,
-                                nsIInterfaceRequestor *aCallbacks)
-{
-    return SpeculativeConnectInternal(aURI, nullptr, aCallbacks, false);
-}
-
-NS_IMETHODIMP
 nsIOService::SpeculativeConnect2(nsIURI *aURI,
                                  nsIPrincipal *aPrincipal,
                                  nsIInterfaceRequestor *aCallbacks)
 {
     return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, false);
-}
-
-NS_IMETHODIMP
-nsIOService::SpeculativeAnonymousConnect(nsIURI *aURI,
-                                         nsIInterfaceRequestor *aCallbacks)
-{
-    return SpeculativeConnectInternal(aURI, nullptr, aCallbacks, true);
 }
 
 NS_IMETHODIMP
