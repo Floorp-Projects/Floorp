@@ -12,4 +12,4 @@ mozrunner >= 7.0.1
 moztest >= 0.8
 mozversion >= 1.1
 six
-wptserve >= 1.3.0
+wptserve >= 2.0.0
