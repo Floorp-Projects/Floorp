@@ -59,7 +59,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
   // The current version of the device registration, we use this to re-register
   // devices after we update what we send on device registration.
   @VisibleForTesting
-  static final Integer DEVICE_REGISTRATION_VERSION = 2;
+  static final Integer DEVICE_REGISTRATION_VERSION = 3;
 
   private static FxAccountDeviceRegistrator instance;
   private final WeakReference<Context> context;
