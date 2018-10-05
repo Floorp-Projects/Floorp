@@ -42,7 +42,7 @@ function addSearchEngine(basename) {
   return new Promise((resolve, reject) => {
     info("Waiting for engine to be added: " + basename);
     let url = getRootDirectory(gTestPath) + basename;
-    Services.search.addEngine(url, "", false, {
+    Services.search.addEngine(url, null, "", false, {
       onSuccess: (engine) => {
         info(`Search engine added: ${basename}`);
         registerCleanupFunction(() => Services.search.removeEngine(engine));

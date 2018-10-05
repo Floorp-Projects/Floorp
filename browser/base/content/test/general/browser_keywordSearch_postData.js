@@ -22,7 +22,7 @@ add_task(async function setup() {
   });
 
   Services.search.addEngine("http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml",
-                            null, false);
+                            null, null, false);
 
   let [subject, data] = await engineAddedPromise;
 
