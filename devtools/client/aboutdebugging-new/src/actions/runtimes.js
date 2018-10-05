@@ -66,7 +66,8 @@ async function createClientForRuntime(runtime) {
   return null;
 }
 
-async function getRuntimeInfo(client) {
+async function getRuntimeInfo(runtime, client) {
+  const { model } = runtime;
   const deviceFront = await client.mainRoot.getFront("device");
   const { brandName: name, channel, version } = await deviceFront.getDescription();
   const icon =
@@ -76,6 +77,7 @@ async function getRuntimeInfo(client) {
 
   return {
     icon,
+    model,
     name,
     version,
   };
@@ -87,7 +89,7 @@ function connectRuntime(id) {
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
       const client = await createClientForRuntime(runtime);
-      const info = await getRuntimeInfo(client);
+      const info = await getRuntimeInfo(runtime, client);
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
