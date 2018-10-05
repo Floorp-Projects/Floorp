@@ -242,8 +242,7 @@ parent:
   sync SyncWithCompositor();
 
   // The pipelineId is the same as the layersId
-  sync PWebRenderBridge(PipelineId pipelineId, LayoutDeviceIntSize aSize)
-    returns (TextureFactoryIdentifier textureFactoryIdentifier, IdNamespace idNamespace);
+  async PWebRenderBridge(PipelineId pipelineId, LayoutDeviceIntSize aSize);
 
   sync CheckContentOnlyTDR(uint32_t sequenceNum)
     returns (bool isContentOnlyTDR);

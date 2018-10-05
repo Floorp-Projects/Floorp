@@ -15,7 +15,7 @@ void main(void) {
     vColor = aColor;
     vColorTexCoord = aColorTexCoord;
     vec4 pos = vec4(aPosition, 1.0);
-    pos.xy = floor(pos.xy * uDevicePixelRatio + 0.5) / uDevicePixelRatio;
+    pos.xy = floor(pos.xy + 0.5);
     gl_Position = uTransform * pos;
 }
 #endif

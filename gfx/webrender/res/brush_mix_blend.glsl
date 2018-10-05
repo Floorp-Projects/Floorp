@@ -12,6 +12,11 @@ flat varying int vOp;
 
 #ifdef WR_VERTEX_SHADER
 
+//Note: this function is unsafe for `vi.world_pos.w <= 0.0`
+vec2 snap_device_pos(VertexInfo vi, float device_pixel_scale) {
+    return vi.world_pos.xy * device_pixel_scale / max(0.0, vi.world_pos.w) + vi.snap_offset;
+}
+
 void brush_vs(
     VertexInfo vi,
     int prim_address,
@@ -23,7 +28,7 @@ void brush_vs(
     int brush_flags,
     vec4 unused
 ) {
-    vec2 snapped_device_pos = snap_device_pos(vi);
+    vec2 snapped_device_pos = snap_device_pos(vi, pic_task.common_data.device_pixel_scale);
     vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
     vOp = user_data.x;
 
