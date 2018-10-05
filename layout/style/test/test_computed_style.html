@@ -178,9 +178,9 @@ var noframe_container = document.getElementById("content");
     [ "0 calc(3px - 3px)", "0px 0px", "computed 0 calc with units vertical" ],
     [ "calc(0%) 0", "0% 0px", "0% calc horizontal"],
     [ "0 calc(0%)", "0px 0%", "0% calc vertical"],
-    [ "calc(3px + 2% - 2%) 0", "calc(3px + 0%) 0px",
+    [ "calc(3px + 2% - 2%) 0", "calc(0% + 3px) 0px",
                       "computed 0% calc horizontal"],
-    [ "0 calc(3px + 2% - 2%)", "0px calc(3px + 0%)",
+    [ "0 calc(3px + 2% - 2%)", "0px calc(0% + 3px)",
                       "computed 0% calc vertical"],
     [ "calc(3px - 5px) calc(6px - 9px)",
       "calc(-2px) calc(-3px)", "negative pixel width" ],
@@ -207,10 +207,10 @@ var noframe_container = document.getElementById("content");
       "radial-gradient(at 10% 100%, rgb(255, 255, 255), rgb(0, 0, 0))",
       "radial gradient 1" ],
     [ "radial-gradient(#ffffff, black)",
-      "radial-gradient(rgb(255, 255, 255), rgb(0, 0, 0))",
+      "radial-gradient(at 50% 50%, rgb(255, 255, 255), rgb(0, 0, 0))",
       "radial gradient 2" ],
     [ "radial-gradient(farthest-corner, #ffffff, black)",
-      "radial-gradient(rgb(255, 255, 255), rgb(0, 0, 0))",
+      "radial-gradient(at 50% 50%, rgb(255, 255, 255), rgb(0, 0, 0))",
       "radial gradient 3" ],
     [ "linear-gradient(red, blue)",
       "linear-gradient(rgb(255, 0, 0), rgb(0, 0, 255))",
@@ -629,7 +629,7 @@ var noframe_container = document.getElementById("content");
 
     // Radial gradients (should be serialized using modern unprefixed style):
     [ "-webkit-radial-gradient(contain, red, blue)",
-      "radial-gradient(closest-side, rgb(255, 0, 0), rgb(0, 0, 255))",
+      "radial-gradient(closest-side at 50% 50%, rgb(255, 0, 0), rgb(0, 0, 255))",
       "-webkit-radial-gradient with legacy 'contain' keyword" ],
   ];
 
