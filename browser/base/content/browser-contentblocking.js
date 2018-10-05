@@ -143,6 +143,7 @@ var TrackingProtection = {
 var ThirdPartyCookies = {
   reportBreakageLabel: "cookierestrictions",
   PREF_ENABLED: "network.cookie.cookieBehavior",
+  PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.rejecttrackers.reportBreakage.enabled",
   PREF_ENABLED_VALUES: [
     // These values match the ones exposed under the Content Blocking section
     // of the Preferences UI.
@@ -161,6 +162,8 @@ var ThirdPartyCookies = {
     XPCOMUtils.defineLazyPreferenceGetter(this, "behaviorPref", this.PREF_ENABLED,
                                           Ci.nsICookieService.BEHAVIOR_ACCEPT);
     XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
+    XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
+      this.PREF_REPORT_BREAKAGE_ENABLED, false);
   },
   get enabled() {
     return this.PREF_ENABLED_VALUES.includes(this.behaviorPref);
@@ -287,14 +290,6 @@ var ContentBlocking = {
 
     Services.prefs.addObserver(this.PREF_GLOBAL_TOGGLE, this.updateGlobalToggleVisibility);
 
-    this.updateReportBreakageUI = () => {
-      this.reportBreakageButton.hidden = !Services.prefs.getBoolPref(this.PREF_REPORT_BREAKAGE_ENABLED);
-    };
-
-    this.updateReportBreakageUI();
-
-    Services.prefs.addObserver(this.PREF_REPORT_BREAKAGE_ENABLED, this.updateReportBreakageUI);
-
     this.updateAnimationsEnabled = () => {
       this.iconBox.toggleAttribute("animationsenabled",
         Services.prefs.getBoolPref(this.PREF_ANIMATIONS_ENABLED, false));
@@ -312,6 +307,8 @@ var ContentBlocking = {
 
     XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingEnabled", this.PREF_ENABLED, false,
       this.updateEnabled.bind(this));
+    XPCOMUtils.defineLazyPreferenceGetter(this, "reportBreakageEnabled",
+      this.PREF_REPORT_BREAKAGE_ENABLED, false);
     XPCOMUtils.defineLazyPreferenceGetter(this, "contentBlockingUIEnabled", this.PREF_UI_ENABLED, false,
       this.updateUIEnabled.bind(this));
 
@@ -332,7 +329,6 @@ var ContentBlocking = {
     }
 
     Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
-    Services.prefs.removeObserver(this.PREF_REPORT_BREAKAGE_ENABLED, this.updateReportBreakageUI);
     Services.prefs.removeObserver(this.PREF_GLOBAL_TOGGLE, this.updateGlobalToggleVisibility);
   },
 
@@ -516,6 +512,18 @@ var ContentBlocking = {
 
     this.iconBox.toggleAttribute("active", active);
     this.iconBox.toggleAttribute("hasException", this.enabled && hasException);
+
+    // For release (due to the large volume) we only want to receive reports
+    // for breakage that is directly related to third party cookie blocking.
+    if (this.reportBreakageEnabled ||
+        (ThirdPartyCookies.reportBreakageEnabled &&
+         ThirdPartyCookies.activated &&
+         !FastBlock.activated &&
+         !TrackingProtection.activated)) {
+      this.reportBreakageButton.removeAttribute("hidden");
+    } else {
+      this.reportBreakageButton.setAttribute("hidden", "true");
+    }
 
     if (isSimulated) {
       this.iconBox.removeAttribute("animate");
