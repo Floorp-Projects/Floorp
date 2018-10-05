@@ -1982,7 +1982,7 @@ var Impl = {
     }
 
     // Prio encode the data and add to payload.
-    const batchID = Policy.now();
+    const batchID = Services.appinfo.appBuildID;
 
     let prioEncodedData;
 

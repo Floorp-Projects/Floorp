@@ -69,6 +69,12 @@ add_task(async function test_management_install() {
   is(style.backgroundColor, "rgb(255, 165, 0)", "Background is the new black");
 
   let addon = await AddonManager.getAddonByID("tiger@persona.beard");
+
+  Assert.deepEqual(addon.installTelemetryInfo, {
+    source: "extension",
+    method: "management-webext-api",
+  }, "Got the expected telemetry info on the installed webext theme");
+
   await addon.uninstall();
 
   // Test installing a standard WE.

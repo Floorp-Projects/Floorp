@@ -10,6 +10,7 @@
 
 <dialog id="ColorsDialog" type="child" class="prefwindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="colors-window"
         data-l10n-attrs="title, style"
         buttons="accept,cancel,help"
@@ -39,14 +40,14 @@
         <hbox align="center">
           <label data-l10n-id="colors-text-header" control="foregroundtextmenu"/>
           <spacer flex="1"/>
-          <colorpicker type="button" id="foregroundtextmenu" palettename="standard"
-                       preference="browser.display.foreground_color"/>
+          <html:input type="color" id="foregroundtextmenu"
+                      preference="browser.display.foreground_color"/>
         </hbox>
         <hbox align="center" style="margin-top: 5px">
           <label data-l10n-id="colors-background" control="backgroundmenu" />
           <spacer flex="1"/>
-          <colorpicker type="button" id="backgroundmenu" palettename="standard"
-                       preference="browser.display.background_color"/>
+          <html:input type="color" id="backgroundmenu"
+                      preference="browser.display.background_color"/>
         </hbox>
         <separator class="thin"/>
         <hbox align="center">
@@ -60,14 +61,14 @@
         <hbox align="center">
           <label data-l10n-id="colors-unvisited-links" control="unvisitedlinkmenu" />
           <spacer flex="1"/>
-          <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard"
-                       preference="browser.anchor_color"/>
+          <html:input type="color" id="unvisitedlinkmenu"
+                      preference="browser.anchor_color"/>
         </hbox>
         <hbox align="center" style="margin-top: 5px">
           <label data-l10n-id="colors-visited-links" control="visitedlinkmenu" />
           <spacer flex="1"/>
-          <colorpicker type="button" id="visitedlinkmenu" palettename="standard"
-                       preference="browser.visited_color"/>
+          <html:input type="color" id="visitedlinkmenu"
+                      preference="browser.visited_color"/>
         </hbox>
         <separator class="thin"/>
         <hbox align="center">
