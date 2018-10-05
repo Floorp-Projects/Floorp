@@ -105,6 +105,13 @@ this.PrefsFeed = class PrefsFeed {
     values.fxa_endpoint = Services.prefs.getStringPref(
       "browser.newtabpage.activity-stream.fxaccounts.endpoint", "https://accounts.firefox.com");
 
+    // Read the pref for search shortcuts top sites experiment from firefox.js and store it
+    // in our interal list of prefs to watch
+    let searchTopSiteExperimentPrefValue = Services.prefs.getBoolPref(
+      "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts");
+    values["improvesearch.topSiteSearchShortcuts"] = searchTopSiteExperimentPrefValue;
+    this._prefMap.set("improvesearch.topSiteSearchShortcuts", searchTopSiteExperimentPrefValue);
+
     // Set the initial state of all prefs in redux
     this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));
 
