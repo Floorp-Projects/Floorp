@@ -134,7 +134,7 @@ FxAccountsPush.prototype = {
     })
     .catch(err => {
       Log.d("Error while decoding incoming message : " + err);
-      EventDispatcher.instance.sendRequest({
+      EventDispatcher.instance.sendRequestForResult({
         type: "FxAccountsPush:ReceivedPushMessageToDecode:Response",
         error: err.message || ""
       });
