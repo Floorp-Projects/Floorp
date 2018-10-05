@@ -414,6 +414,10 @@ class UrlbarInput {
   _on_scrollend(event) {
     this._updateTextOverflow();
   }
+
+  _on_TabSelect(event) {
+    this.controller.tabContextChanged();
+  }
 }
 
 /**
