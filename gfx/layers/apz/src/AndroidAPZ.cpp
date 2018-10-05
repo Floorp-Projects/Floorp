@@ -7,11 +7,13 @@
 #include "AndroidAPZ.h"
 
 #include "AndroidFlingPhysics.h"
+#include "AndroidVelocityTracker.h"
 #include "AsyncPanZoomController.h"
 #include "GeneratedJNIWrappers.h"
 #include "GenericFlingAnimation.h"
 #include "gfxPrefs.h"
 #include "OverscrollHandoffState.h"
+#include "SimpleVelocityTracker.h"
 #include "ViewConfiguration.h"
 
 #define ANDROID_APZ_LOG(...)
@@ -62,6 +64,14 @@ AndroidSpecificState::CreateFlingAnimation(AsyncPanZoomController& aApzc,
         aHandoffState.mIsHandoff,
         aHandoffState.mScrolledApzc);
   }
+}
+
+UniquePtr<VelocityTracker>
+AndroidSpecificState::CreateVelocityTracker(Axis* aAxis) {
+  if (gfxPrefs::APZUseChromeFlingPhysics()) {
+      return MakeUnique<AndroidVelocityTracker>();
+  }
+  return MakeUnique<SimpleVelocityTracker>(aAxis);
 }
 
 /* static */ void
