@@ -4,21 +4,25 @@
 
 #ifdef WR_VERTEX_SHADER
 
-vec4 compute_snap_positions(mat4 transform, RectWithSize snap_rect) {
+vec4 compute_snap_positions(
+    mat4 transform,
+    RectWithSize snap_rect,
+    float device_pixel_scale
+) {
     // Ensure that the snap rect is at *least* one device pixel in size.
     // TODO(gw): It's not clear to me that this is "correct". Specifically,
     //           how should it interact with sub-pixel snap rects when there
     //           is a transform with scale present? But it does fix
     //           the test cases we have in Servo that are failing without it
     //           and seem better than not having this at all.
-    snap_rect.size = max(snap_rect.size, vec2(1.0 / uDevicePixelRatio));
+    snap_rect.size = max(snap_rect.size, vec2(1.0 / device_pixel_scale));
 
     // Transform the snap corners to the world space.
     vec4 world_snap_p0 = transform * vec4(snap_rect.p0, 0.0, 1.0);
     vec4 world_snap_p1 = transform * vec4(snap_rect.p0 + snap_rect.size, 0.0, 1.0);
     // Snap bounds in world coordinates, adjusted for pixel ratio. XY = top left, ZW = bottom right
-    vec4 world_snap = uDevicePixelRatio * vec4(world_snap_p0.xy, world_snap_p1.xy) /
-                                          vec4(world_snap_p0.ww, world_snap_p1.ww);
+    vec4 world_snap = device_pixel_scale * vec4(world_snap_p0.xy, world_snap_p1.xy) /
+                                           vec4(world_snap_p0.ww, world_snap_p1.ww);
     return world_snap;
 }
 
@@ -43,10 +47,12 @@ vec2 compute_snap_offset_impl(
 // given local position on the transform and a snap rectangle.
 vec2 compute_snap_offset(vec2 local_pos,
                          mat4 transform,
-                         RectWithSize snap_rect) {
+                         RectWithSize snap_rect,
+                         float device_pixel_scale) {
     vec4 snap_positions = compute_snap_positions(
         transform,
-        snap_rect
+        snap_rect,
+        device_pixel_scale
     );
 
     vec2 snap_offsets = compute_snap_offset_impl(

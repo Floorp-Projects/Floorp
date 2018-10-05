@@ -1076,7 +1076,8 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
     if (mode == XDR_ENCODE) {
         JS::AutoCheckCannotGC nogc;
         if (latin1) {
-            return xdr->codeChars(atomp->latin1Chars(nogc), length);
+            return xdr->codeChars(const_cast<JS::Latin1Char*>(atomp->latin1Chars(nogc)),
+                                  length);
         }
         return xdr->codeChars(const_cast<char16_t*>(atomp->twoByteChars(nogc)), length);
     }
