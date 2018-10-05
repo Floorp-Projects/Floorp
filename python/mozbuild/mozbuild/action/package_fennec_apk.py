@@ -92,37 +92,6 @@ def package_fennec_apk(inputs=[], omni_ja=None,
                     # We need to store (rather than deflate) compressed libraries
                     # (even if we don't compress them ourselves).
                     compress = False
-                elif buildconfig.substs.get('XZ'):
-                    cmd = [buildconfig.substs.get('XZ'), '-zkf',
-                           mozpath.join(finder.base, p)]
-
-                    # For now, the mozglue XZStream ELF loader can only support xz files
-                    # with a single stream that contains a single block. In xz, there is no
-                    # explicit option to set the max block count. Instead, we force xz to use
-                    # single thread mode, which results in a single block.
-                    cmd.extend(['--threads=1'])
-
-                    bcj = None
-                    if buildconfig.substs.get('MOZ_THUMB2'):
-                        bcj = '--armthumb'
-                    elif buildconfig.substs.get('CPU_ARCH') == 'arm':
-                        bcj = '--arm'
-                    elif buildconfig.substs.get('CPU_ARCH') == 'x86':
-                        bcj = '--x86'
-
-                    if bcj:
-                        cmd.extend([bcj])
-                    # We need to explicitly specify the LZMA filter chain to ensure consistent builds
-                    # across platforms. Note that the dict size must be less then 16MiB per the hardcoded
-                    # value in mozglue/linker/XZStream.cpp. This is the default LZMA filter chain for for
-                    # xz-utils version 5.0. See:
-                    # https://github.com/xz-mirror/xz/blob/v5.0.0/src/liblzma/lzma/lzma_encoder_presets.c
-                    # https://github.com/xz-mirror/xz/blob/v5.0.0/src/liblzma/api/lzma/container.h#L31
-                    cmd.extend(['--lzma2=dict=8MiB,lc=3,lp=0,pb=2,mode=normal,nice=64,mf=bt4,depth=0'])
-                    print('xz-compressing %s with %s' % (p, ' '.join(cmd)))
-                    subprocess.check_output(cmd)
-                    os.rename(f.path + '.xz', f.path)
-                    compress = False
 
             add(mozpath.join('assets', p), f, compress=compress)
 
