@@ -241,6 +241,7 @@ class RobocopTestRunner(MochitestDesktop):
             'mochikit@mozilla.org',
         ])
 
+        self.extraPrefs = self.parseExtraPrefs(self.options.extraPrefs)
         manifest = MochitestDesktop.buildProfile(self, self.options)
         self.localProfile = self.options.profilePath
         self.log.debug("Profile created at %s" % self.localProfile)
