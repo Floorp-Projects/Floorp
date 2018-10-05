@@ -4,10 +4,9 @@
 
 from __future__ import absolute_import, print_function
 
-import sys
 import urllib
 
-from unittest import skip, skipIf
+from unittest import skip
 
 from marionette_driver import errors
 from marionette_driver.by import By
@@ -118,6 +117,16 @@ class TestQuitRestart(MarionetteTestCase):
             Services.startup.quit(flags);
         """, script_args=(restart,))
 
+    def test_force_restart(self):
+        self.marionette.restart()
+        self.assertEqual(self.marionette.profile, self.profile)
+        self.assertNotEqual(self.marionette.session_id, self.session_id)
+
+        # A forced restart will cause a new process id
+        self.assertNotEqual(self.marionette.process_id, self.pid)
+        self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
+                            "about:about")
+
     def test_force_clean_restart(self):
         self.marionette.restart(clean=True)
         self.assertNotEqual(self.marionette.profile, self.profile)
@@ -127,14 +136,12 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:about")
 
-    def test_force_restart(self):
-        self.marionette.restart()
-        self.assertEqual(self.marionette.profile, self.profile)
-        self.assertNotEqual(self.marionette.session_id, self.session_id)
-        # A forced restart will cause a new process id
-        self.assertNotEqual(self.marionette.process_id, self.pid)
-        self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:about")
+    def test_force_quit(self):
+        self.marionette.quit()
+
+        self.assertEqual(self.marionette.session, None)
+        with self.assertRaisesRegexp(errors.InvalidSessionIdException, "Please start a session"):
+            self.marionette.get_url()
 
     def test_force_clean_quit(self):
         self.marionette.quit(clean=True)
@@ -149,26 +156,14 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:about")
 
-    def test_force_quit(self):
-        self.marionette.quit()
-
-        self.assertEqual(self.marionette.session, None)
-        with self.assertRaisesRegexp(errors.InvalidSessionIdException, "Please start a session"):
-            self.marionette.get_url()
-
-        self.marionette.start_session()
-        self.assertEqual(self.marionette.profile, self.profile)
-        self.assertNotEqual(self.marionette.session_id, self.session_id)
-        self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
-                            "about:about")
-
     def test_no_in_app_clean_restart(self):
         # Test that in_app and clean cannot be used in combination
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegexp(ValueError, "cannot be triggered with the clean flag set"):
             self.marionette.restart(in_app=True, clean=True)
 
     def test_in_app_restart(self):
         self.marionette.restart(in_app=True)
+
         self.assertEqual(self.marionette.profile, self.profile)
         self.assertNotEqual(self.marionette.session_id, self.session_id)
 
@@ -197,6 +192,31 @@ class TestQuitRestart(MarionetteTestCase):
         self.assertNotEqual(self.marionette.get_pref("startup.homepage_welcome_url"),
                             "about:about")
 
+    def test_in_app_restart_with_callback_not_callable(self):
+        with self.assertRaisesRegexp(ValueError, "is not callable"):
+            self.marionette.restart(in_app=True, callback=4)
+
+    def test_in_app_restart_with_callback_but_process_quit(self):
+        timeout_shutdown = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
+        # Wait at least 70s for the hang monitor in case of a shutdown hang
+        self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 70
+
+        try:
+            with self.assertRaisesRegexp(IOError, "Process unexpectedly quit without restarting"):
+                self.marionette.restart(in_app=True, callback=lambda: self.shutdown(restart=False))
+        finally:
+            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout_shutdown
+
+    def test_in_app_restart_with_callback_missing_shutdown(self):
+        try:
+            timeout_shutdown = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
+            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 5
+
+            with self.assertRaisesRegexp(IOError, "the connection to Marionette server is lost"):
+                self.marionette.restart(in_app=True, callback=lambda: False)
+        finally:
+            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout_shutdown
+
     @skip("Bug 1397612 - Hang of Marionette client after the restart")
     def test_in_app_restart_safe_mode(self):
 
@@ -220,26 +240,9 @@ class TestQuitRestart(MarionetteTestCase):
             self.marionette.restart(in_app=True, callback=restart_in_safe_mode)
             self.assertTrue(self.is_safe_mode, "Safe Mode is not enabled")
         finally:
+            if self.marionette.session is None:
+                self.marionette.start_session()
             self.marionette.quit(clean=True)
-
-    def test_in_app_restart_with_callback_not_callable(self):
-        with self.assertRaisesRegexp(ValueError, "is not callable"):
-            self.marionette.restart(in_app=True, callback=4)
-
-    @skipIf(sys.platform.startswith("win"),
-            "Bug 1433873 - Fix race condition in Marionette for in_app quit and restart")
-    def test_in_app_restart_with_callback_missing_shutdown(self):
-        try:
-            timeout_startup = self.marionette.DEFAULT_STARTUP_TIMEOUT
-            timeout_shutdown = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
-            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 5
-            self.marionette.DEFAULT_STARTUP_TIMEOUT = 5
-
-            with self.assertRaisesRegexp(IOError, "the connection to Marionette server is lost"):
-                self.marionette.restart(in_app=True, callback=lambda: False)
-        finally:
-            self.marionette.DEFAULT_STARTUP_TIMEOUT = timeout_startup
-            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout_shutdown
 
     def test_in_app_quit(self):
         self.marionette.quit(in_app=True)
@@ -269,9 +272,9 @@ class TestQuitRestart(MarionetteTestCase):
     def test_in_app_quit_with_callback_missing_shutdown(self):
         try:
             timeout = self.marionette.DEFAULT_SHUTDOWN_TIMEOUT
-            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 10
+            self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = 5
 
-            with self.assertRaisesRegexp(IOError, "a requested application quit did not happen"):
+            with self.assertRaisesRegexp(IOError, "Process still running"):
                 self.marionette.quit(in_app=True, callback=lambda: False)
         finally:
             self.marionette.DEFAULT_SHUTDOWN_TIMEOUT = timeout

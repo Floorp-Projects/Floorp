@@ -686,11 +686,13 @@ class Marionette(object):
         finally:
             s.close()
 
-    def raise_for_port(self, timeout=None):
+    def raise_for_port(self, timeout=None, check_process_status=True):
         """Raise socket.timeout if no connection can be established.
 
-        :param timeout: Timeout in seconds for the server to be ready.
-
+        :param timeout: Optional timeout in seconds for the server to be ready.
+        :param check_process_status: Optional, if `True` the process will be
+            continuously checked if it has exited, and the connection
+            attempt will be aborted.
         """
         if timeout is None:
             timeout = self.DEFAULT_STARTUP_TIMEOUT
@@ -708,7 +710,7 @@ class Marionette(object):
         connected = False
         while datetime.datetime.now() < timeout_time:
             # If the instance we want to connect to is not running return immediately
-            if runner is not None and not runner.is_running():
+            if check_process_status and runner is not None and not runner.is_running():
                 break
 
             try:
@@ -1094,30 +1096,39 @@ class Marionette(object):
 
         cause = None
         if in_app:
-            if callback is not None:
-                if not callable(callback):
-                    raise ValueError("Specified callback '{}' is not callable".format(callback))
+            if callback is not None and not callable(callback):
+                raise ValueError("Specified callback '{}' is not callable".format(callback))
 
-                self._send_message("Marionette:AcceptConnections",
-                                   {"value": False})
-                callback()
-            else:
-                cause = self._request_in_app_shutdown()
+            # Block Marionette from accepting new connections
+            self._send_message("Marionette:AcceptConnections",
+                               {"value": False})
 
-            self.delete_session(send_request=False)
+            try:
+                self.is_shutting_down = True
+                if callback is not None:
+                    callback()
+                else:
+                    cause = self._request_in_app_shutdown()
 
-            # Give the application some time to shutdown
+            except IOError:
+                # A possible IOError should be ignored at this point, given that
+                # quit() could have been called inside of `using_context`,
+                # which wants to reset the context but fails sending the message.
+                pass
+
             returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
             if returncode is None:
-                # This will force-close the application without sending any other message.
+                # The process did not shutdown itself, so force-closing it.
                 self.cleanup()
 
-                message = ("Process killed because a requested application quit did not happen "
-                           "within {}s. Check gecko.log for errors.")
+                message = "Process still running {}s after quit request"
                 raise IOError(message.format(self.DEFAULT_SHUTDOWN_TIMEOUT))
 
+            self.is_shutting_down = False
+            self.delete_session(send_request=False)
+
         else:
-            self.delete_session()
+            self.delete_session(send_request=False)
             self.instance.close(clean=clean)
 
         if cause not in (None, "shutdown"):
@@ -1150,26 +1161,53 @@ class Marionette(object):
             if clean:
                 raise ValueError("An in_app restart cannot be triggered with the clean flag set")
 
-            if callback is not None:
-                if not callable(callback):
-                    raise ValueError("Specified callback '{}' is not callable".format(callback))
+            if callback is not None and not callable(callback):
+                raise ValueError("Specified callback '{}' is not callable".format(callback))
 
-                self._send_message("Marionette:AcceptConnections",
-                                   {"value": False})
-                callback()
-            else:
-                cause = self._request_in_app_shutdown("eRestart")
-
-            self.delete_session(send_request=False)
+            # Block Marionette from accepting new connections
+            self._send_message("Marionette:AcceptConnections",
+                               {"value": False})
 
             try:
-                timeout = self.DEFAULT_SHUTDOWN_TIMEOUT + self.DEFAULT_STARTUP_TIMEOUT
-                self.raise_for_port(timeout=timeout)
+                self.is_shutting_down = True
+                if callback is not None:
+                    callback()
+                else:
+                    cause = self._request_in_app_shutdown("eRestart")
+
+            except IOError:
+                # A possible IOError should be ignored at this point, given that
+                # restart() could have been called inside of `using_context`,
+                # which wants to reset the context but fails sending the message.
+                pass
+
+            try:
+                # Wait for a new Marionette connection to appear while the
+                # process restarts itself.
+                self.raise_for_port(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT,
+                                    check_process_status=False)
             except socket.timeout:
-                if self.instance.runner.returncode is not None:
-                    exc, val, tb = sys.exc_info()
+                exc, val, tb = sys.exc_info()
+
+                if self.instance.runner.returncode is None:
+                    # The process is still running, which means the shutdown
+                    # request was not correct or the application ignored it.
+                    # Allow Marionette to accept connections again.
+                    self._send_message("acceptConnections", {"value": True})
+
+                    message = "Process still running {}s after restart request"
+                    reraise(exc, message.format(self.DEFAULT_SHUTDOWN_TIMEOUT), tb)
+
+                else:
+                    # The process shutdown but didn't start again.
                     self.cleanup()
-                    reraise(exc, "Requested restart of the application was aborted", tb)
+                    msg = "Process unexpectedly quit without restarting (exit code: {})"
+                    reraise(exc, msg.format(self.instance.runner.returncode), tb)
+
+            finally:
+                self.is_shutting_down = False
+
+            self.delete_session(send_request=False)
 
         else:
             self.delete_session()
