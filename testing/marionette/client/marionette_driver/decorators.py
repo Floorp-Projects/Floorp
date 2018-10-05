@@ -25,9 +25,14 @@ def do_process_check(func):
         try:
             return func(*args, **kwargs)
         except (socket.error, socket.timeout):
-            # In case of socket failures which will also include crashes of the
-            # application, make sure to handle those correctly.
             m = _find_marionette_in_args(*args, **kwargs)
+
+            # In case of socket failures which will also include crashes of the
+            # application, make sure to handle those correctly. In case of an
+            # active shutdown just let it bubble up.
+            if m.is_shutting_down:
+                raise
+
             m._handle_socket_failure()
 
     return _
