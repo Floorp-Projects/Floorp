@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.system
 
 import android.content.Context
+import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -81,7 +82,10 @@ class SystemEngine(
     }
 
     companion object {
-        internal var defaultUserAgent: String? = null
+        // In Robolectric tests we can't call WebSettings.getDefaultUserAgent(context)
+        // as this would result in a NPE. So, we expose this field to circumvent the call.
+        @VisibleForTesting
+        var defaultUserAgent: String? = null
 
         private fun initDefaultUserAgent(context: Context): String {
             if (defaultUserAgent == null) {
