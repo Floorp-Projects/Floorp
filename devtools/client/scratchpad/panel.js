@@ -6,8 +6,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const promise = require("promise");
-const defer = require("devtools/shared/defer");
 
 function ScratchpadPanel(iframeWindow, toolbox) {
   const { Scratchpad } = iframeWindow;
@@ -18,13 +16,13 @@ function ScratchpadPanel(iframeWindow, toolbox) {
   Scratchpad.target = this.target;
   Scratchpad.hideMenu();
 
-  const deferred = defer();
-  this._readyObserver = deferred.promise;
-  Scratchpad.addObserver({
-    onReady: function() {
-      Scratchpad.removeObserver(this);
-      deferred.resolve();
-    }
+  this._readyObserver = new Promise(resolve => {
+    Scratchpad.addObserver({
+      onReady() {
+        Scratchpad.removeObserver(this);
+        resolve();
+      }
+    });
   });
 
   EventEmitter.decorate(this);
@@ -36,7 +34,7 @@ ScratchpadPanel.prototype = {
    * Open is effectively an asynchronous constructor. For the ScratchpadPanel,
    * by the time this is called, the Scratchpad will already be ready.
    */
-  open: function() {
+  open() {
     return this._readyObserver.then(() => {
       this.isReady = true;
       this.emit("ready");
@@ -48,8 +46,8 @@ ScratchpadPanel.prototype = {
     return this._toolbox.target;
   },
 
-  destroy: function() {
+  destroy() {
     this.emit("destroyed");
-    return promise.resolve();
+    return Promise.resolve();
   }
 };
