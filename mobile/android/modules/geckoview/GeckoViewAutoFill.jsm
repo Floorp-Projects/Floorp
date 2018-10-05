@@ -67,7 +67,7 @@ class GeckoViewAutoFill {
       return;
     }
 
-    debug `Adding auto-fill ${aFormLike}`;
+    debug `Adding auto-fill ${aFormLike.rootElement.tagName}`;
 
     this._autoFillTasks.delete(aFormLike.rootElement);
 
@@ -78,7 +78,7 @@ class GeckoViewAutoFill {
 
     let sendFocusEvent = false;
     const window = aFormLike.rootElement.ownerGlobal;
-    const getInfo = (element, parent) => {
+    const getInfo = (element, parent, root) => {
       let info = this._autoFillInfos.get(element);
       if (info) {
         return info;
@@ -86,6 +86,7 @@ class GeckoViewAutoFill {
       info = {
         id: ++this._autoFillId,
         parent,
+        root,
         tag: element.tagName,
         type: element instanceof window.HTMLInputElement ? element.type : null,
         editable: (element instanceof window.HTMLInputElement) &&
@@ -105,9 +106,10 @@ class GeckoViewAutoFill {
       return info;
     };
 
-    const rootInfo = getInfo(aFormLike.rootElement, null);
+    const rootInfo = getInfo(aFormLike.rootElement, null, undefined);
+    rootInfo.root = rootInfo.id;
     rootInfo.children = aFormLike.elements.map(
-        element => getInfo(element, rootInfo.id));
+        element => getInfo(element, rootInfo.id, rootInfo.id));
 
     this._eventDispatcher.dispatch("GeckoView:AddAutoFill", rootInfo, {
       onSuccess: responses => {

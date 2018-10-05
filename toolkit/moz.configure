@@ -203,25 +203,9 @@ def toolkit_define(toolkit):
 set_define(toolkit_define, True)
 
 
-option('--without-x', env='WITHOUT_X', help='Disable X11 support')
-
-@depends('--without-x', toolkit)
-def x11(value, toolkit):
-    if not value:
-        die('--without-x is not supported')
-
-    x11_toolkits = ('gtk3',)
-    if value and value.origin != 'default' and toolkit not in x11_toolkits:
-        die('--with-x is only valid with --enable-default-toolkit={%s}',
-            ','.join(x11_toolkits))
-
-    return True if value and toolkit in x11_toolkits else None
-
-set_config('MOZ_ENABLE_XREMOTE', x11)
-set_define('MOZ_ENABLE_XREMOTE', x11)
-set_config('MOZ_X11', x11)
-set_define('MOZ_X11', x11)
-add_old_configure_assignment('MOZ_X11', x11)
+set_config('MOZ_X11', True, when=toolkit_gtk)
+set_define('MOZ_X11', True, when=toolkit_gtk)
+add_old_configure_assignment('MOZ_X11', True, when=toolkit_gtk)
 
 # Wayland support
 # ==============================================================
@@ -247,13 +231,13 @@ def gl_provider_define(provider):
 
 set_define('MOZ_GL_PROVIDER', gl_provider_define)
 
-@depends(gl_provider, wayland, x11)
-def gl_default_provider(value, wayland, x11):
+@depends(gl_provider, wayland, toolkit_gtk)
+def gl_default_provider(value, wayland, toolkit_gtk):
     if value:
         return value
     elif wayland:
         return 'EGL'
-    elif x11:
+    elif toolkit_gtk:
         return 'GLX'
 
 set_config('MOZ_GL_PROVIDER', gl_provider)

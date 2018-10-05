@@ -18,6 +18,19 @@ function findMessages(hud, text, selector = ".message") {
   return elements;
 }
 
+function waitForThreadEvents(console, eventName) {
+  info(`Waiting for thread event '${eventName}' to fire.`);
+  const thread = console.threadClient;
+
+  return new Promise(function(resolve, reject) {
+    thread.addListener(eventName, function onEvent(eventName, ...args) {
+      info(`Thread event '${eventName}' fired.`);
+      thread.removeListener(eventName, onEvent);
+      resolve.apply(resolve, args);
+    });
+  });
+}
+
 async function openContextMenu(hud, element) {
   const onConsoleMenuOpened = hud.ui.consoleOutput.once("menu-open");
   synthesizeContextMenuEvent(element);
@@ -60,6 +73,10 @@ async function test() {
   await hideContextMenu(hud);
 
   await once(Services.ppmm, "TimeWarpFinished");
+
+  await waitForThreadEvents(console, 'paused')
+  messages = findMessages(hud, "", ".paused");
+  ok(messages.length == 1, "Found one paused message");
 
   let toolbox = await attachDebugger(tab), client = toolbox.threadClient;
   await client.interrupt();

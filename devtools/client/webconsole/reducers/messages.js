@@ -55,6 +55,7 @@ const MessageState = overrides => Object.freeze(Object.assign({
   // Map of the form {messageId : networkInformation}
   // `networkInformation` holds request, response, totalTime, ...
   networkMessagesUpdateById: {},
+  pausedExecutionPoint: null
 }, overrides));
 
 function cloneState(state) {
@@ -69,6 +70,7 @@ function cloneState(state) {
     removedActors: [...state.removedActors],
     repeatById: {...state.repeatById},
     networkMessagesUpdateById: {...state.networkMessagesUpdateById},
+    pausedExecutionPoint: state.pausedExecutionPoint
   };
 }
 
@@ -159,6 +161,8 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
 
   let newState;
   switch (action.type) {
+    case constants.PAUSED_EXCECUTION_POINT:
+      return { ...state, pausedExecutionPoint: action.executionPoint };
     case constants.MESSAGES_ADD:
       // Preemptively remove messages that will never be rendered
       const list = [];

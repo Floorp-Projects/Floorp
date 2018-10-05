@@ -21,6 +21,7 @@ const {
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
   MESSAGE_TABLE_RECEIVE,
+  PAUSED_EXCECUTION_POINT,
   PRIVATE_MESSAGES_CLEAR,
 } = require("../constants");
 
@@ -54,6 +55,13 @@ function messagesAdd(packets, idGenerator = null) {
 function messagesClear() {
   return {
     type: MESSAGES_CLEAR
+  };
+}
+
+function setPauseExecutionPoint(executionPoint) {
+  return {
+    type: PAUSED_EXCECUTION_POINT,
+    executionPoint
   };
 }
 
@@ -139,4 +147,5 @@ module.exports = {
   privateMessagesClear,
   // for test purpose only.
   messageTableDataReceive,
+  setPauseExecutionPoint,
 };

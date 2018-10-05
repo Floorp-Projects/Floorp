@@ -343,7 +343,7 @@ ReplayDebugger.prototype = {
                                () => handler.call(this, this.getNewestFrame()));
   },
 
-  _getNewConsoleMessage() {
+  getNewConsoleMessage() {
     const message = this._sendRequest({ type: "getNewConsoleMessage" });
     return this._convertConsoleMessage(message);
   },
@@ -353,7 +353,7 @@ ReplayDebugger.prototype = {
   },
   set onConsoleMessage(handler) {
     this._breakpointKindSetter("ConsoleMessage", handler,
-                               () => handler.call(this, this._getNewConsoleMessage()));
+                               () => handler.call(this, this.getNewConsoleMessage()));
   },
 
   clearAllBreakpoints: NYI,

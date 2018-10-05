@@ -15,6 +15,7 @@ const {
   getAllMessagesTableDataById,
   getAllNetworkMessagesUpdateById,
   getVisibleMessages,
+  getPausedExecutionPoint,
   getAllRepeatById,
 } = require("devtools/client/webconsole/selectors/messages");
 const MessageContainer = createFactory(require("devtools/client/webconsole/components/MessageContainer").MessageContainer);
@@ -44,6 +45,7 @@ class ConsoleOutput extends Component {
       visibleMessages: PropTypes.array.isRequired,
       networkMessageActiveTabId: PropTypes.string.isRequired,
       onFirstMeaningfulPaint: PropTypes.func.isRequired,
+      pausedExecutionPoint: PropTypes.any
     };
   }
 
@@ -132,6 +134,7 @@ class ConsoleOutput extends Component {
       serviceContainer,
       timestampsVisible,
       initialized,
+      pausedExecutionPoint
     } = this.props;
 
     if (!initialized) {
@@ -153,6 +156,7 @@ class ConsoleOutput extends Component {
       repeat: messagesRepeat[messageId],
       networkMessageUpdate: networkMessagesUpdate[messageId],
       networkMessageActiveTabId,
+      pausedExecutionPoint,
       getMessage: () => messages.get(messageId)
     }));
 
@@ -183,6 +187,7 @@ function isScrolledToBottom(outputNode, scrollNode) {
 function mapStateToProps(state, props) {
   return {
     initialized: state.ui.initialized,
+    pausedExecutionPoint: getPausedExecutionPoint(state),
     messages: getAllMessagesById(state),
     visibleMessages: getVisibleMessages(state),
     messagesUi: getAllMessagesUiById(state),

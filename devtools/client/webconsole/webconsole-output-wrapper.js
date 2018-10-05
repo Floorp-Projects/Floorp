@@ -173,6 +173,9 @@ WebConsoleOutputWrapper.prototype = {
       };
 
       if (this.toolbox) {
+        this.toolbox.threadClient.addListener("paused", this.dispatchPaused.bind(this));
+        this.toolbox.threadClient.addListener("resumed", this.dispatchResumed.bind(this));
+
         Object.assign(serviceContainer, {
           onViewSourceInDebugger: frame => {
             this.toolbox.viewSourceInDebugger(frame.url, frame.line).then(() => {
@@ -353,6 +356,16 @@ WebConsoleOutputWrapper.prototype = {
 
   dispatchTimestampsToggle: function(enabled) {
     store.dispatch(actions.timestampsToggle(enabled));
+  },
+
+  dispatchPaused: function(_, packet) {
+    if (packet.executionPoint) {
+      store.dispatch(actions.setPauseExecutionPoint(packet.executionPoint));
+    }
+  },
+
+  dispatchResumed: function(_, packet) {
+    store.dispatch(actions.setPauseExecutionPoint(null));
   },
 
   dispatchMessageUpdate: function(message, res) {

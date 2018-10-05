@@ -1,6 +1,6 @@
 [package]
 name = "u2fhid"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Kyle Machulis <kyle@nonpolynomial.com>", "J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>"]
 
 [target.'cfg(target_os = "linux")'.dependencies]

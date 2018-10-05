@@ -1,6 +1,0 @@
-mozscreenshots.jar:
-% content mozscreenshots chrome/mozscreenshots/
-  Screenshot.jsm
-  TestRunner.jsm
-  configurations/ (configurations/*.jsm)
-  lib/            (lib/*)

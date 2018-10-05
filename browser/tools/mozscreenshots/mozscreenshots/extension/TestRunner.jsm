@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["TestRunner"];
 
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 const APPLY_CONFIG_TIMEOUT_MS = 60 * 1000;
-const HOME_PAGE = "chrome://mozscreenshots/content/lib/mozscreenshots.html";
+const HOME_PAGE = "resource://mozscreenshots/lib/mozscreenshots.html";
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
@@ -20,7 +20,7 @@ ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
                                "resource://testing-common/BrowserTestUtils.jsm");
 // Screenshot.jsm must be imported this way for xpcshell tests to work
-ChromeUtils.defineModuleGetter(this, "Screenshot", "chrome://mozscreenshots/content/Screenshot.jsm");
+ChromeUtils.defineModuleGetter(this, "Screenshot", "resource://mozscreenshots/Screenshot.jsm");
 
 var TestRunner = {
   combos: null,
@@ -172,7 +172,7 @@ var TestRunner = {
         restrictions = filteredData.restrictions;
       }
       let imported = {};
-      ChromeUtils.import("chrome://mozscreenshots/content/configurations/" + setName + ".jsm",
+      ChromeUtils.import(`resource://mozscreenshots/configurations/${setName}.jsm`,
                          imported);
       imported[setName].init(this._libDir);
       let configurationNames = Object.keys(imported[setName].configurations);

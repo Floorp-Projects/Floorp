@@ -57,8 +57,8 @@ add_task(async function crop() {
   const tmp = OS.Constants.Path.tmpDir;
   is(await cropAndCompare(
       window,
-      "chrome://mozscreenshots/content/lib/robot.png",
-      "chrome://mozscreenshots/content/lib/robot_upperleft.png",
+      "resource://mozscreenshots/lib/robot.png",
+      "resource://mozscreenshots/lib/robot_upperleft.png",
       OS.Path.join(tmp, "test_cropped_upperleft.png"),
       new Rect(0, 0, 32, 32),
       [new Rect(0, 0, 32, 32)]
@@ -66,8 +66,8 @@ add_task(async function crop() {
 
   is(await cropAndCompare(
       window,
-      "chrome://mozscreenshots/content/lib/robot.png",
-      "chrome://mozscreenshots/content/lib/robot_center.png",
+      "resource://mozscreenshots/lib/robot.png",
+      "resource://mozscreenshots/lib/robot_center.png",
       OS.Path.join(tmp, "test_cropped_center.png"),
       new Rect(16, 16, 32, 32),
       [new Rect(16, 16, 32, 32)]
@@ -75,8 +75,8 @@ add_task(async function crop() {
 
   is(await cropAndCompare(
       window,
-      "chrome://mozscreenshots/content/lib/robot.png",
-      "chrome://mozscreenshots/content/lib/robot_uncropped.png",
+      "resource://mozscreenshots/lib/robot.png",
+      "resource://mozscreenshots/lib/robot_uncropped.png",
       OS.Path.join(tmp, "test_uncropped.png"),
       new Rect(-8, -9, 80, 80),
       [new Rect(-8, -9, 80, 80)]
@@ -84,8 +84,8 @@ add_task(async function crop() {
 
   is(await cropAndCompare(
       window,
-      "chrome://mozscreenshots/content/lib/robot.png",
-      "chrome://mozscreenshots/content/lib/robot_diagonal.png",
+      "resource://mozscreenshots/lib/robot.png",
+      "resource://mozscreenshots/lib/robot_diagonal.png",
       OS.Path.join(tmp, "test_diagonal.png"),
       new Rect(0, 0, 64, 64),
       [
@@ -98,8 +98,8 @@ add_task(async function crop() {
 
   is(await cropAndCompare(
       window,
-      "chrome://mozscreenshots/content/lib/robot.png",
-      "chrome://mozscreenshots/content/lib/robot_cropped_diagonal.png",
+      "resource://mozscreenshots/lib/robot.png",
+      "resource://mozscreenshots/lib/robot_cropped_diagonal.png",
       OS.Path.join(tmp, "test_cropped_diagonal.png"),
       new Rect(16, 16, 48, 48),
       [

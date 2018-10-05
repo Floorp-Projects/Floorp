@@ -49,6 +49,10 @@ function getGroupsById(state) {
   return state.messages.groupsById;
 }
 
+function getPausedExecutionPoint(state) {
+  return state.messages.pausedExecutionPoint;
+}
+
 module.exports = {
   getAllGroupsById,
   getAllMessagesById,
@@ -61,4 +65,5 @@ module.exports = {
   getGroupsById,
   getMessage,
   getVisibleMessages,
+  getPausedExecutionPoint
 };
