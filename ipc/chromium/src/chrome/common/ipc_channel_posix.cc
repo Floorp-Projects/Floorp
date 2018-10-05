@@ -29,7 +29,6 @@
 #include "base/logging.h"
 #include "base/process_util.h"
 #include "base/string_util.h"
-#include "base/singleton.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/file_descriptor_set_posix.h"
 #include "chrome/common/ipc_message_utils.h"
@@ -140,7 +139,15 @@ class PipeMap {
     map_[channel_id] = fd;
   }
 
+  static PipeMap& instance() {
+    static PipeMap map;
+    return map;
+  }
+
  private:
+  PipeMap() = default;
+  ~PipeMap() = default;
+
   Lock lock_;
   typedef std::map<std::string, int> ChannelToFDMap;
   ChannelToFDMap map_;
@@ -160,7 +167,7 @@ static int gClientChannelFd =
 // Used to map a channel name to the equivalent FD # in the client process.
 int ChannelNameToClientFD(const std::string& channel_id) {
   // See the large block comment above PipeMap for the reasoning here.
-  const int fd = Singleton<PipeMap>()->Lookup(channel_id);
+  const int fd = PipeMap::instance().Lookup(channel_id);
   if (fd != -1)
     return dup(fd);
 
@@ -275,7 +282,7 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
     client_pipe_ = pipe_fds[1];
 
     if (pipe_name_.length()) {
-      Singleton<PipeMap>()->Insert(pipe_name_, client_pipe_);
+      PipeMap::instance().Insert(pipe_name_, client_pipe_);
     }
   } else {
     pipe_ = ChannelNameToClientFD(pipe_name_);
@@ -364,7 +371,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
     DCHECK(bytes_read);
 
     if (client_pipe_ != -1) {
-      Singleton<PipeMap>()->Remove(pipe_name_);
+      PipeMap::instance().Remove(pipe_name_);
       IGNORE_EINTR(close(client_pipe_));
       client_pipe_ = -1;
     }
@@ -811,7 +818,7 @@ void Channel::ChannelImpl::GetClientFileDescriptorMapping(int *src_fd,
 
 void Channel::ChannelImpl::CloseClientFileDescriptor() {
   if (client_pipe_ != -1) {
-    Singleton<PipeMap>()->Remove(pipe_name_);
+    PipeMap::instance().Remove(pipe_name_);
     IGNORE_EINTR(close(client_pipe_));
     client_pipe_ = -1;
   }
@@ -886,7 +893,7 @@ void Channel::ChannelImpl::Close() {
     pipe_ = -1;
   }
   if (client_pipe_ != -1) {
-    Singleton<PipeMap>()->Remove(pipe_name_);
+    PipeMap::instance().Remove(pipe_name_);
     IGNORE_EINTR(close(client_pipe_));
     client_pipe_ = -1;
   }
