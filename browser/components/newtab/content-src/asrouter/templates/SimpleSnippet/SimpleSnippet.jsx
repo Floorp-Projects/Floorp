@@ -15,7 +15,10 @@ export class SimpleSnippet extends React.PureComponent {
     if (this.props.provider !== "preview") {
       this.props.sendUserActionTelemetry({event: "CLICK_BUTTON", id: this.props.UISurface});
     }
-    this.props.onAction(this.props.content.button_action);
+    this.props.onAction({
+      type: this.props.content.button_action,
+      data: {args: this.props.content.button_action_args},
+    });
     if (!this.props.content.do_not_autoblock) {
       this.props.onBlock();
     }
@@ -33,12 +36,12 @@ export class SimpleSnippet extends React.PureComponent {
 
   renderButton() {
     const {props} = this;
-    if (!props.content.button_action) {
+    if (!props.content.button_action && !props.onButtonClick) {
       return null;
     }
 
     return (<Button
-      onClick={this.onButtonClick}
+      onClick={props.onButtonClick || this.onButtonClick}
       color={props.content.button_color}
       backgroundColor={props.content.button_background_color}>
       {props.content.button_label}

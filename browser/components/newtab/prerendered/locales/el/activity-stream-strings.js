@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Δημοφιλή θέματα:",
   "pocket_read_even_more": "Προβολή περισσότερων ιστοριών",
   "pocket_more_reccommendations": "Περισσότερες προτάσεις",
-  "pocket_learn_more": "Μάθετε περισσότερα",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Αποκτήστε το Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Ξεκινήστε την περιήγηση και θα σάς δείξουμε μερικά υπέροχα άρθρα, βίντεο και άλλες σελίδες που έχετε επισκεφθεί πρόσφατα ή έχετε προσθέσει στους σελιδοδείκτες σας.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Όρους Υπηρεσίας",
   "firstrun_privacy_notice": "Σημείωση Απορρήτου",
   "firstrun_continue_to_login": "Συνέχεια",
-  "firstrun_skip_login": "Παράλειψη βήματος"
+  "firstrun_skip_login": "Παράλειψη βήματος",
+  "pocket_learn_more": "Μάθετε περισσότερα"
 };

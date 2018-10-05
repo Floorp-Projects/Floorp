@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Lok macuk gi lamal:",
   "pocket_read_even_more": "Nen Lok mapol",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Nong ngec mapol",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Cak yeny, ka wa binyuto coc akwana mabeco, video, ki potbuk mukene ma ilimo cokcokki onyo ma kiketo alamabuk kany.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Cik me Tic",
   "firstrun_privacy_notice": "Ngec me mung",
   "firstrun_continue_to_login": "Mede",
-  "firstrun_skip_login": "Kal citep man"
+  "firstrun_skip_login": "Kal citep man",
+  "pocket_learn_more": "Nong ngec mapol"
 };

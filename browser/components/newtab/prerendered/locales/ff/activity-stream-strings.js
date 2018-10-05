@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Loowdiiji lolluɗi:",
   "pocket_read_even_more": "Yiy Daarti Goɗɗi",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Fuɗɗo wanngaade, min kolloymaa huunde e binndanɗe mawɗe ɗee, widewooji kañum e kelle goɗɗe ɗe njilliɗaa ko ɓooyaani walla maantoraaɗe ɗoo.",

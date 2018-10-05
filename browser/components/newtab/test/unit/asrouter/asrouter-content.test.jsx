@@ -132,6 +132,24 @@ describe("ASRouterUISurface", () => {
       assert.propertyVal(result.cta.props, "data-metric", cta.metric);
       assert.propertyVal(result.cta.props, "onClick", stub);
     });
+    it("should return an anchor element without href", () => {
+      const cta = {
+        url: "https://foo.com",
+        metric: "foo",
+        action: "OPEN_MENU",
+        args: "appMenu",
+      };
+      const stub = sandbox.stub();
+      const result = convertLinks({cta}, stub);
+
+      assert.property(result, "cta");
+      assert.propertyVal(result.cta, "type", "a");
+      assert.propertyVal(result.cta.props, "href", false);
+      assert.propertyVal(result.cta.props, "data-metric", cta.metric);
+      assert.propertyVal(result.cta.props, "data-action", cta.action);
+      assert.propertyVal(result.cta.props, "data-args", cta.args);
+      assert.propertyVal(result.cta.props, "onClick", stub);
+    });
   });
 
   describe("impressions", () => {
@@ -146,6 +164,15 @@ describe("ASRouterUISurface", () => {
 
       assert.calledOnce(ASRouterUtils.blockById);
       assert.calledWithExactly(ASRouterUtils.blockById, FAKE_MESSAGE.id);
+    });
+
+    it("should executeAction if defined on the anchor", () => {
+      wrapper.setState({message: FAKE_MESSAGE});
+      sandbox.spy(ASRouterUtils, "executeAction");
+      wrapper.instance().sendClick({target: {dataset: {action: "OPEN_MENU", args: "appMenu"}}});
+
+      assert.calledOnce(ASRouterUtils.executeAction);
+      assert.calledWithExactly(ASRouterUtils.executeAction, {type: "OPEN_MENU", data: {args: "appMenu"}});
     });
 
     it("should not call blockById if do_not_autoblock is true", () => {

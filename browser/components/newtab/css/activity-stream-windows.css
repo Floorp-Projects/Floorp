@@ -235,11 +235,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   overflow-y: scroll; }
-  body.hide-onboarding > #onboarding-overlay-button,
-  body.hide-main > #onboarding-overlay-button {
-    display: none !important; }
-  body.hide-main > #onboarding-notification-bar {
-    display: none; }
 
 h1,
 h2 {
@@ -1785,13 +1780,10 @@ a.firstrun-link {
     .collapsible-section.active .section-top-bar .context-menu-button {
       fill: var(--newtab-section-active-contextmenu-color); }
   .collapsible-section .learn-more-link {
-    font-size: 11px; }
+    font-size: 11px;
+    margin-inline-start: 12px; }
     .collapsible-section .learn-more-link a span {
       color: var(--newtab-link-secondary-color); }
-    .collapsible-section .learn-more-link::before {
-      content: '•';
-      padding: 8px;
-      color: var(--newtab-section-navigation-text-color); }
   .collapsible-section .section-body-fallback {
     height: 266px; }
   .collapsible-section .section-body {
@@ -1856,8 +1848,8 @@ a.firstrun-link {
   font-size: 13px;
   margin-inline-end: 20px;
   display: inline-block; }
-  .pocket-logged-in-cta a {
-    background: #EF4056;
+  .pocket-logged-in-cta .pocket-cta-button {
+    background: #0060DF;
     letter-spacing: -0.34px;
     color: #FFF;
     border-radius: 4px;
@@ -1865,13 +1857,16 @@ a.firstrun-link {
     max-width: 130px;
     margin-top: -1px;
     min-height: 18px;
-    padding: 0 6px;
+    padding: 0 8px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     font-size: 11px;
     margin-inline-end: 10px; }
-  .pocket-logged-in-cta a,
+  .pocket-logged-in-cta .cta-text {
+    font-weight: normal;
+    font-size: 13px; }
+  .pocket-logged-in-cta .pocket-cta-button,
   .pocket-logged-in-cta .cta-text {
     vertical-align: top; }
 
@@ -1903,9 +1898,19 @@ a.firstrun-link {
   font-family: inherit;
   padding: 8px 15px;
   margin-inline-start: 12px;
-  color: inherit; }
+  color: inherit;
+  cursor: pointer; }
   .tall .ASRouterButton {
     margin-inline-start: 20px; }
+  .ASRouterButton.primary {
+    border: 1px solid var(--newtab-border-primary-color);
+    background-color: var(--newtab-button-primary-color);
+    color: #F9F9FA; }
+  .ASRouterButton.secondary {
+    background: var(--newtab-button-secondary-color);
+    border: 1px solid var(--newtab-border-primary-color);
+    font-size: 14px;
+    font-weight: 600; }
 
 .SnippetBaseContainer {
   position: fixed;
@@ -1920,6 +1925,9 @@ a.firstrun-link {
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   display: flex;
   align-items: center; }
+  .SnippetBaseContainer a {
+    cursor: pointer;
+    color: var(--newtab-link-primary-color); }
   .SnippetBaseContainer .innerWrapper {
     margin: 0 auto;
     display: flex;
@@ -1954,6 +1962,11 @@ a.firstrun-link {
         inset-inline-end: 24px; } }
   .SnippetBaseContainer:hover .blockButton {
     display: block; }
+  .SnippetBaseContainer .icon {
+    height: 42px;
+    width: 42px;
+    margin-inline-end: 12px;
+    flex-shrink: 0; }
 
 .snippets-preview-banner {
   font-size: 15px;
@@ -2069,17 +2082,55 @@ a.firstrun-link {
   display: inline;
   margin: 0; }
 
-.SimpleSnippet .icon {
-  height: 42px;
-  width: 42px;
-  margin-inline-end: 12px;
-  flex-shrink: 0; }
-
 .SimpleSnippet.tall .icon {
   margin-inline-end: 20px; }
 
 .SimpleSnippet .ASRouterButton {
   cursor: pointer; }
+
+.NewsletterSnippet {
+  flex-direction: column;
+  flex: 1 1 100%;
+  width: 100%; }
+  .NewsletterSnippet .ASRouterButton.primary {
+    font-size: 15px;
+    flex: 1 1 0; }
+  .NewsletterSnippet form {
+    display: flex;
+    flex-direction: column;
+    width: 100%; }
+  .NewsletterSnippet .message {
+    font-size: 14px;
+    align-self: stretch;
+    flex: 0 0 100%; }
+  .NewsletterSnippet .privacy-notice {
+    color: var(--newtab-text-secondary-color);
+    flex: 0 0 100%; }
+  .NewsletterSnippet .innerWrapper {
+    max-width: 670px;
+    flex-wrap: wrap;
+    justify-items: center; }
+  .NewsletterSnippet .footer {
+    width: 100%;
+    margin: 0 auto;
+    text-align: right;
+    background: #EDEDF0;
+    padding: 10px 0; }
+    .NewsletterSnippet .footer .footer-content {
+      margin: 0 auto;
+      max-width: 768px;
+      width: 100%;
+      text-align: right; }
+  .NewsletterSnippet input[type='email'] {
+    background-color: var(--newtab-textbox-background-color);
+    border: 1px solid var(--newtab-textbox-border);
+    padding: 0 8px;
+    height: 32px;
+    font-size: 15px;
+    width: 50%; }
+    .NewsletterSnippet input[type='email']:focus {
+      border: 1px solid var(--newtab-textbox-focus-color);
+      box-shadow: var(--newtab-textbox-focus-boxshadow); }
 
 .onboardingMessageContainer {
   display: grid;

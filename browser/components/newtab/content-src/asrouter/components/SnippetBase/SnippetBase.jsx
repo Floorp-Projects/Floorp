@@ -14,6 +14,22 @@ export class SnippetBase extends React.PureComponent {
     this.props.onBlock();
   }
 
+  renderDismissButton() {
+    if (this.props.footerDismiss) {
+      return (
+        <div className="footer">
+          <div className="footer-content">
+            <button className="ASRouterButton secondary" title={this.props.content.block_button_text} onClick={this.props.onDismiss}>{this.props.content.dismiss_button_label}</button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <button className="blockButton" title={this.props.content.block_button_text} onClick={this.onBlockClicked} />
+    );
+  }
+
   render() {
     const {props} = this;
 
@@ -23,7 +39,7 @@ export class SnippetBase extends React.PureComponent {
       <div className="innerWrapper">
         {props.children}
       </div>
-      <button className="blockButton" onClick={this.onBlockClicked} />
+      {this.renderDismissButton()}
     </div>);
   }
 }
