@@ -46,11 +46,11 @@ public:
   /**
    * Notify this Axis that a new touch has been received, including a timestamp
    * for when the touch was received. This triggers a recalculation of velocity.
-   * This can also used for pan gesture events. For those events, the "touch"
-   * location is stationary and the scroll displacement is passed in as
-   * aAdditionalDelta.
+   * This can also used for pan gesture events. For those events, |aPos| is
+   * an invented position corresponding to the mouse position plus any
+   * accumulated displacements over the course of the pan gesture.
    */
-  void UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord aAdditionalDelta, uint32_t aTimestampMs);
+  void UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, uint32_t aTimestampMs);
 
 protected:
   float ApplyFlingCurveToVelocity(float aVelocity) const;
@@ -251,6 +251,13 @@ public:
   virtual const char* Name() const = 0;
 
 protected:
+  // A position along the axis, used during input event processing to
+  // track velocities (and for touch gestures, to track the length of
+  // the gesture). For touch events, this represents the position of
+  // the finger (or in the case of two-finger scrolling, the midpoint
+  // of the two fingers). For pan gesture events, this represents an
+  // invented position corresponding to the mouse position at the start
+  // of the pan, plus deltas representing the displacement of the pan.
   ParentLayerCoord mPos;
 
   // mVelocitySampleTimeMs and mVelocitySamplePos are the time and position

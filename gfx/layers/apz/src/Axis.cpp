@@ -71,7 +71,7 @@ float Axis::ToLocalVelocity(float aVelocityInchesPerMs) const {
   return localVelocity.Length();
 }
 
-void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord aAdditionalDelta, uint32_t aTimestampMs) {
+void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, uint32_t aTimestampMs) {
   // mVelocityQueue is controller-thread only
   APZThreadUtils::AssertOnControllerThread();
 
@@ -88,7 +88,7 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord 
     return;
   }
 
-  float newVelocity = mAxisLocked ? 0.0f : (float)(mVelocitySamplePos - aPos + aAdditionalDelta) / (float)(aTimestampMs - mVelocitySampleTimeMs);
+  float newVelocity = mAxisLocked ? 0.0f : (float)(mVelocitySamplePos - aPos) / (float)(aTimestampMs - mVelocitySampleTimeMs);
 
   newVelocity = ApplyFlingCurveToVelocity(newVelocity);
 
