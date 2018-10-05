@@ -1214,9 +1214,13 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(const InputData& aEvent
   return rv;
 }
 
-void AsyncPanZoomController::HandleTouchVelocity(uint32_t aTimesampMs, float aSpeedY)
+void AsyncPanZoomController::HandleDynamicToolbarMovement(uint32_t aStartTimestampMs,
+                                                          uint32_t aEndTimestampMs,
+                                                          ParentLayerCoord aDeltaY)
 {
-  mY.HandleTouchVelocity(aTimesampMs, aSpeedY);
+  mY.HandleDynamicToolbarMovement(aStartTimestampMs,
+                                  aEndTimestampMs,
+                                  aDeltaY);
 }
 
 void AsyncPanZoomController::StartAutoscroll(const ScreenPoint& aPoint)
