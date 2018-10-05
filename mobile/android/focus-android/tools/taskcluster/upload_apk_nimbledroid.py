@@ -35,8 +35,9 @@ def uploadApk(apk,key):
 secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
 data = secrets.get('project/focus/nimbledroid')
 
+# disable focus webview upload until https://github.com/mozilla-mobile/focus-android/issues/3574 is resolved
 klar_file = {'apk': open('app/build/outputs/apk/klarArm/nightly/app-klar-arm-nightly-unsigned.apk')}
-focus_file = {'apk': open('app/build/outputs/apk/focusArm/release/app-focus-arm-release-unsigned.apk')}
+# focus_file = {'apk': open('app/build/outputs/apk/focusArm/release/app-focus-arm-release-unsigned.apk')}
 
 uploadApk(klar_file, data['secret']['api_key'])
-uploadApk(focus_file, data['secret']['api_key'])
+# uploadApk(focus_file, data['secret']['api_key'])

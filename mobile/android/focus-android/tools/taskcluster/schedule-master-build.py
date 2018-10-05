@@ -123,7 +123,7 @@ def upload_apk_nimbledroid_task(dependencies):
 		name = "(Focus for Android) Upload Debug APK to Nimbledroid",
 		description = "Upload APKs to Nimbledroid for performance measurement and tracking.",
 		command = ('echo "--" > .adjust_token'
-				   ' && ./gradlew --no-daemon clean assembleFocusArmRelease assembleKlarArmNightly'
+				   ' && ./gradlew --no-daemon clean assembleKlarArmNightly'
 				   ' && python tools/taskcluster/upload_apk_nimbledroid.py'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/nimbledroid' ],
