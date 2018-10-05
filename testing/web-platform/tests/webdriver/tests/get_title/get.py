@@ -1,6 +1,6 @@
 from tests.support.asserts import assert_error, assert_success
 from tests.support.inline import inline
-from tests.support.wait import wait
+from tests.support.sync import wait
 
 
 def read_global(session, name):
