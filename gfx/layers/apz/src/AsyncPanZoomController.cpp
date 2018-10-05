@@ -28,6 +28,7 @@
 #include "InputQueue.h"                 // for InputQueue
 #include "Overscroll.h"                 // for OverscrollAnimation
 #include "OverscrollHandoffState.h"     // for OverscrollHandoffState
+#include "SimpleVelocityTracker.h"      // for SimpleVelocityTracker
 #include "Units.h"                      // for CSSRect, CSSPoint, etc
 #include "UnitTransforms.h"             // for TransformTo
 #include "base/message_loop.h"          // for MessageLoop
@@ -547,6 +548,12 @@ PlatformSpecificStateBase::CreateFlingAnimation(AsyncPanZoomController& aApzc,
       aHandoffState.mIsHandoff,
       aHandoffState.mScrolledApzc,
       aPLPPI);
+}
+
+UniquePtr<VelocityTracker>
+PlatformSpecificStateBase::CreateVelocityTracker(Axis* aAxis)
+{
+  return MakeUnique<SimpleVelocityTracker>(aAxis);
 }
 
 TimeStamp

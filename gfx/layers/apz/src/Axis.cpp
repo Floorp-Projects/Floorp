@@ -44,7 +44,7 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
     mAsyncPanZoomController(aAsyncPanZoomController),
     mOverscroll(0),
     mMSDModel(0.0, 0.0, 0.0, 400.0, 1.2),
-    mVelocityTracker(MakeUnique<SimpleVelocityTracker>(this))
+    mVelocityTracker(mAsyncPanZoomController->GetPlatformSpecificState()->CreateVelocityTracker(this))
 {
 }
 
