@@ -108,27 +108,47 @@ const flexContainerProperties = exports.flexContainerProperties = {
 /**
  * A flex container data.
  */
-exports.flexbox = {
+const flexContainer = exports.flexContainer = {
 
   // The actor ID of the flex container.
   actorID: PropTypes.string,
 
-  // The color of the flexbox highlighter overlay.
-  color: PropTypes.string,
-
-  // Array of flex container's flex items.
+  // An array of flex items belonging to the flex container.
   flexItems: PropTypes.arrayOf(PropTypes.shape(flexItem)),
 
-  // The NodeFront actor ID of the flex item to display the flex item sizing properties.
-  flexItemShown: PropTypes.string,
+  // Whether or not the flex container data represents the selected flex container
+  // or the parent flex container. This is true if the flex container data represents
+  // the parent flex container.
+  isFlexItemContainer: PropTypes.bool,
 
-  // Whether or not the flexbox highlighter is highlighting the flex container.
-  highlighted: PropTypes.bool,
+  // The NodeFront actor ID of the flex item to display in the flex item sizing
+  // properties.
+  flexItemShown: PropTypes.string,
 
   // The NodeFront of the flex container.
   nodeFront: PropTypes.object,
 
   // The computed style properties of the flex container.
   properties: PropTypes.shape(flexContainerProperties),
+
+};
+
+/**
+ * The Flexbox UI state.
+ */
+exports.flexbox = {
+
+  // The color of the flexbox highlighter overlay.
+  color: PropTypes.string,
+
+  // The selected flex container.
+  flexContainer: PropTypes.shape(flexContainer),
+
+  // The selected flex container can also be a flex item. This object contains the
+  // parent flex container properties.
+  flexItemContainer: PropTypes.shape(flexContainer),
+
+  // Whether or not the flexbox highlighter is highlighting the flex container.
+  highlighted: PropTypes.bool,
 
 };

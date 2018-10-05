@@ -12,6 +12,7 @@ const {
   gridSpec,
   layoutSpec,
 } = require("devtools/shared/specs/layout");
+const { ELEMENT_NODE } = require("devtools/shared/dom-node-constants");
 const { SHOW_ELEMENT } = require("devtools/shared/dom-node-filter-constants");
 const { getStringifiableFragments } =
   require("devtools/server/actors/utils/css-grid-utils");
@@ -102,6 +103,10 @@ const FlexboxActor = ActorClassWithSpec(flexboxSpec, {
 
     for (const line of flex.getLines()) {
       for (const item of line.getItems()) {
+        if (item.node.nodeType !== ELEMENT_NODE) {
+          continue;
+        }
+
         flexItemActors.push(new FlexItemActor(this, item.node, {
           crossMaxSize: item.crossMaxSize,
           crossMinSize: item.crossMinSize,
@@ -152,17 +157,20 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
       return this.actorID;
     }
 
-    const { flexDirection } = CssLogic.getComputedStyle(this.containerEl);
-    const styles = CssLogic.getComputedStyle(this.element);
-    const clientRect = this.element.getBoundingClientRect();
-    const dimension = flexDirection.startsWith("row") ? "width" : "height";
-
     const form = {
       actor: this.actorID,
       // The flex item sizing data.
       flexItemSizing: this.flexItemSizing,
+    };
+
+    if (this.element.nodeType === ELEMENT_NODE) {
+      const { flexDirection } = CssLogic.getComputedStyle(this.containerEl);
+      const styles = CssLogic.getComputedStyle(this.element);
+      const clientRect = this.element.getBoundingClientRect();
+      const dimension = flexDirection.startsWith("row") ? "width" : "height";
+
       // The computed style properties of the flex item.
-      properties: {
+      form.properties = {
         "flex-basis": styles.flexBasis,
         "flex-grow": styles.flexGrow,
         "flex-shrink": styles.flexShrink,
@@ -172,8 +180,8 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
         [`max-${dimension}`]: styles[`max-${dimension}`],
         // Computed width/height of the flex item element.
         [dimension]: parseFloat(clientRect[dimension.toLowerCase()].toPrecision(6)),
-      },
-    };
+      };
+    }
 
     // If the WalkerActor already knows the flex item element, then also return its
     // ActorID so we avoid the client from doing another round trip to get it in many
@@ -261,15 +269,15 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
   },
 
   /**
-   * Helper function for getCurrentGrid and getCurrentFlexbox. Returns the grid or
-   * flex container (whichever is requested) found by iterating on the given selected
-   * node. The current node can be a grid/flex container or grid/flex item. If it is a
-   * grid/flex item, returns the parent grid/flex container. Otherwise, returns null
-   * if the current or parent node is not a grid/flex container.
+   * Helper function for getAsFlexItem, getCurrentGrid and getCurrentFlexbox. Returns the
+   * grid or flex container (whichever is requested) found by iterating on the given
+   * selected node. The current node can be a grid/flex container or grid/flex item.
+   * If it is a grid/flex item, returns the parent grid/flex container. Otherwise, returns
+   * null if the current or parent node is not a grid/flex container.
    *
    * @param  {Node|NodeActor} node
    *         The node to start iterating at.
-   * @param {String} type
+   * @param  {String} type
    *         Can be "grid" or "flex", the display type we are searching for.
    * @return {GridActor|FlexboxActor|null} The GridActor or FlexboxActor of the
    * grid/flex container of the give node. Otherwise, returns null.
@@ -300,7 +308,8 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
       return new GridActor(this, currentNode);
     }
 
-    // Otherwise, check if this is a flex item or the parent node is a flex container.
+    // Otherwise, check if this is a flex/grid item or the parent node is a flex/grid
+    // container.
     while ((currentNode = treeWalker.parentNode())) {
       if (!currentNode) {
         break;
@@ -333,7 +342,7 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    *
    * @param  {Node|NodeActor} node
    *         The node to start iterating at.
-   * @return {GridActor|null} The GridActor of the grid container of the give node.
+   * @return {GridActor|null} The GridActor of the grid container of the given node.
    * Otherwise, returns null.
    */
   getCurrentGrid(node) {
@@ -348,10 +357,16 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
    *
    * @param  {Node|NodeActor} node
    *         The node to start iterating at.
-   * @return {FlexboxActor|null} The FlexboxActor of the flex container of the give node.
+   * @param  {Boolean|null} onlyLookAtParents
+   *         Whether or not to only consider the parent node of the given node.
+   * @return {FlexboxActor|null} The FlexboxActor of the flex container of the given node.
    * Otherwise, returns null.
    */
-  getCurrentFlexbox(node) {
+  getCurrentFlexbox(node, onlyLookAtParents) {
+    if (onlyLookAtParents) {
+      node = node.rawNode.parentNode;
+    }
+
     return this.getCurrentDisplay(node, "flex");
   },
 
