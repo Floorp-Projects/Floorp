@@ -5,7 +5,6 @@
 // found in the LICENSE file.
 
 // For atomic operations on reference counts, see atomic_refcount.h.
-// For atomic operations on sequence numbers, see atomic_sequence_num.h.
 
 // The routines exported by this module are subtle.  If you use them, even if
 // you get the code right, it will depend on careful reasoning about atomicity
