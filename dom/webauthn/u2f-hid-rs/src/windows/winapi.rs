@@ -20,7 +20,7 @@ use platform::winapi::winapi::shared::{hidclass, hidpi, hidusage};
 use platform::winapi::winapi::um::{handleapi, setupapi};
 
 #[link(name = "setupapi")]
-extern "stdcall" {
+extern "system" {
     fn SetupDiGetClassDevsW(
         ClassGuid: *const guiddef::GUID,
         Enumerator: ntdef::PCSTR,
@@ -49,7 +49,7 @@ extern "stdcall" {
 }
 
 #[link(name = "hid")]
-extern "stdcall" {
+extern "system" {
     fn HidD_GetPreparsedData(
         HidDeviceObject: ntdef::HANDLE,
         PreparsedData: *mut hidpi::PHIDP_PREPARSED_DATA,
