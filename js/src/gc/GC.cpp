@@ -8819,6 +8819,12 @@ js::ReleaseAllJITCode(FreeOp* fop)
         zone->setPreservingCode(false);
         zone->discardJitCode(fop);
     }
+
+    for (RealmsIter realm(fop->runtime()); !realm.done(); realm.next()) {
+        if (jit::JitRealm* jitRealm = realm->jitRealm()) {
+            jitRealm->discardStubs();
+        }
+    }
 }
 
 void
