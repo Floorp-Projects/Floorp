@@ -131,7 +131,8 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
                 CoordinateSpaceMapping::ScaleOffset(
                     ref_spatial_node.coordinate_system_relative_scale_offset
-                        .difference(
+                        .inverse()
+                        .accumulate(
                             &target_spatial_node.coordinate_system_relative_scale_offset
                         )
                 )
@@ -517,6 +518,58 @@ impl BrushSegment {
             edge_flags,
             extra_data,
             brush_flags,
+        }
+    }
+
+    pub fn update_clip_task(
+        &mut self,
+        clip_chain: Option<&ClipChainInstance>,
+        prim_bounding_rect: WorldRect,
+        root_spatial_node_index: SpatialNodeIndex,
+        pic_state: &mut PictureState,
+        frame_context: &FrameBuildingContext,
+        frame_state: &mut FrameBuildingState,
+    ) {
+        match clip_chain {
+            Some(clip_chain) => {
+                if !clip_chain.needs_mask ||
+                   (!self.may_need_clip_mask && !clip_chain.has_non_local_clips) {
+                    self.clip_task_id = BrushSegmentTaskId::Opaque;
+                    return;
+                }
+
+                let (device_rect, _, _) = match get_raster_rects(
+                    clip_chain.pic_clip_rect,
+                    &pic_state.map_pic_to_raster,
+                    &pic_state.map_raster_to_world,
+                    prim_bounding_rect,
+                    frame_context.device_pixel_scale,
+                ) {
+                    Some(info) => info,
+                    None => {
+                        self.clip_task_id = BrushSegmentTaskId::Empty;
+                        return;
+                    }
+                };
+
+                let clip_task = RenderTask::new_mask(
+                    device_rect.to_i32(),
+                    clip_chain.clips_range,
+                    root_spatial_node_index,
+                    frame_state.clip_store,
+                    frame_state.gpu_cache,
+                    frame_state.resource_cache,
+                    frame_state.render_tasks,
+                    &mut frame_state.resources.clip_data_store,
+                );
+
+                let clip_task_id = frame_state.render_tasks.add(clip_task);
+                pic_state.tasks.push(clip_task_id);
+                self.clip_task_id = BrushSegmentTaskId::RenderTaskId(clip_task_id);
+            }
+            None => {
+                self.clip_task_id = BrushSegmentTaskId::Empty;
+            }
         }
     }
 }
@@ -2235,68 +2288,50 @@ impl Primitive {
             None => return false,
         };
 
-        for segment in &mut segment_desc.segments {
-            // Build a clip chain for the smaller segment rect. This will
-            // often manage to eliminate most/all clips, and sometimes
-            // clip the segment completely.
-            let segment_clip_chain = frame_state
-                .clip_store
-                .build_clip_chain_instance(
-                    self.metadata.clip_chain_id,
-                    segment.local_rect,
-                    self.metadata.local_clip_rect,
-                    prim_context.spatial_node_index,
-                    &pic_state.map_local_to_pic,
-                    &pic_state.map_pic_to_world,
-                    &frame_context.clip_scroll_tree,
-                    frame_state.gpu_cache,
-                    frame_state.resource_cache,
-                    frame_context.device_pixel_scale,
-                    &frame_context.world_rect,
-                    clip_node_collector,
-                    &mut frame_state.resources.clip_data_store,
-                );
-
-            match segment_clip_chain {
-                Some(segment_clip_chain) => {
-                    if !segment_clip_chain.needs_mask ||
-                       (!segment.may_need_clip_mask && !segment_clip_chain.has_non_local_clips) {
-                        segment.clip_task_id = BrushSegmentTaskId::Opaque;
-                        continue;
-                    }
-
-                    let (device_rect, _, _) = match get_raster_rects(
-                        segment_clip_chain.pic_clip_rect,
-                        &pic_state.map_pic_to_raster,
-                        &pic_state.map_raster_to_world,
-                        prim_bounding_rect,
-                        frame_context.device_pixel_scale,
-                    ) {
-                        Some(info) => info,
-                        None => {
-                            segment.clip_task_id = BrushSegmentTaskId::Empty;
-                            continue;
-                        }
-                    };
-
-                    let clip_task = RenderTask::new_mask(
-                        device_rect.to_i32(),
-                        segment_clip_chain.clips_range,
-                        root_spatial_node_index,
-                        frame_state.clip_store,
+        // If we only built 1 segment, there is no point in re-running
+        // the clip chain builder. Instead, just use the clip chain
+        // instance that was built for the main primitive. This is a
+        // significant optimization for the common case.
+        if segment_desc.segments.len() == 1 {
+            segment_desc.segments[0].update_clip_task(
+                Some(prim_clip_chain),
+                prim_bounding_rect,
+                root_spatial_node_index,
+                pic_state,
+                frame_context,
+                frame_state,
+            );
+        } else {
+            for segment in &mut segment_desc.segments {
+                // Build a clip chain for the smaller segment rect. This will
+                // often manage to eliminate most/all clips, and sometimes
+                // clip the segment completely.
+                let segment_clip_chain = frame_state
+                    .clip_store
+                    .build_clip_chain_instance(
+                        self.metadata.clip_chain_id,
+                        segment.local_rect,
+                        self.metadata.local_clip_rect,
+                        prim_context.spatial_node_index,
+                        &pic_state.map_local_to_pic,
+                        &pic_state.map_pic_to_world,
+                        &frame_context.clip_scroll_tree,
                         frame_state.gpu_cache,
                         frame_state.resource_cache,
-                        frame_state.render_tasks,
+                        frame_context.device_pixel_scale,
+                        &frame_context.world_rect,
+                        clip_node_collector,
                         &mut frame_state.resources.clip_data_store,
                     );
 
-                    let clip_task_id = frame_state.render_tasks.add(clip_task);
-                    pic_state.tasks.push(clip_task_id);
-                    segment.clip_task_id = BrushSegmentTaskId::RenderTaskId(clip_task_id);
-                }
-                None => {
-                    segment.clip_task_id = BrushSegmentTaskId::Empty;
-                }
+                segment.update_clip_task(
+                    segment_clip_chain.as_ref(),
+                    prim_bounding_rect,
+                    root_spatial_node_index,
+                    pic_state,
+                    frame_context,
+                    frame_state,
+                );
             }
         }
 

@@ -43,6 +43,7 @@ typedef wr::WrEpoch Epoch;
 typedef wr::WrExternalImageId ExternalImageId;
 typedef wr::WrDebugFlags DebugFlags;
 
+typedef mozilla::Maybe<mozilla::wr::IdNamespace> MaybeIdNamespace;
 typedef mozilla::Maybe<mozilla::wr::WrImageMask> MaybeImageMask;
 typedef Maybe<ExternalImageId> MaybeExternalImageId;
 

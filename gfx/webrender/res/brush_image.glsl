@@ -42,20 +42,6 @@ ImageBrushData fetch_image_data(int address) {
     return data;
 }
 
-#ifdef WR_FEATURE_ALPHA_PASS
-vec2 transform_point_snapped(
-    vec2 local_pos,
-    RectWithSize local_rect,
-    mat4 transform
-) {
-    vec2 snap_offset = compute_snap_offset(local_pos, transform, local_rect);
-    vec4 world_pos = transform * vec4(local_pos, 0.0, 1.0);
-    vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
-
-    return device_pos + snap_offset;
-}
-#endif
-
 void brush_vs(
     VertexInfo vi,
     int prim_address,
@@ -95,10 +81,10 @@ void brush_vs(
         //       works. That assumption may not hold if this
         //       is used for other purposes in the future.
         if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X) != 0) {
-            stretch_size.x = (texel_rect.z - texel_rect.x) / uDevicePixelRatio;
+            stretch_size.x = (texel_rect.z - texel_rect.x) / pic_task.common_data.device_pixel_scale;
         }
         if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y) != 0) {
-            stretch_size.y = (texel_rect.w - texel_rect.y) / uDevicePixelRatio;
+            stretch_size.y = (texel_rect.w - texel_rect.y) / pic_task.common_data.device_pixel_scale;
         }
 
         uv0 = res.uv_rect.p0 + texel_rect.xy;
