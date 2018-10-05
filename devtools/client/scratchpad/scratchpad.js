@@ -52,8 +52,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {DevToolsWorker} = require("devtools/shared/worker/worker");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
-const promise = require("promise");
-const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const { extend } = require("devtools/shared/extend");
@@ -479,12 +477,12 @@ var Scratchpad = {
    * Evaluate a string in the currently desired context, that is either the
    * chrome window or the tab content window object.
    *
-   * @param string aString
+   * @param string string
    *        The script you want to evaluate.
    * @return Promise
    *         The promise for the script evaluation result.
    */
-  evaluate: function SP_evaluate(aString) {
+  async evaluate(string) {
     let connection;
     if (this.target) {
       connection = ScratchpadTarget.consoleFor(this.target);
@@ -495,24 +493,18 @@ var Scratchpad = {
     }
 
     const evalOptions = { url: this.uniqueName };
+    const { debuggerClient, webConsoleClient } = await connection;
+    this.debuggerClient = debuggerClient;
+    this.webConsoleClient = webConsoleClient;
+    const response = await webConsoleClient.evaluateJSAsync(string, null, evalOptions);
 
-    return connection.then(({ debuggerClient, webConsoleClient }) => {
-      const deferred = defer();
-
-      webConsoleClient.evaluateJSAsync(aString, aResponse => {
-        this.debuggerClient = debuggerClient;
-        this.webConsoleClient = webConsoleClient;
-        if (aResponse.error) {
-          deferred.reject(aResponse);
-        } else if (aResponse.exception !== null) {
-          deferred.resolve([aString, aResponse]);
-        } else {
-          deferred.resolve([aString, undefined, aResponse.result]);
-        }
-      }, evalOptions);
-
-      return deferred.promise;
-    });
+    if (response.error) {
+      throw new Error(response.error);
+    } else if (response.exception !== null) {
+      return [string, response];
+    } else {
+      return [string, undefined, response.result];
+    }
   },
 
   /**
@@ -522,7 +514,7 @@ var Scratchpad = {
    * @return Promise
    *         The promise for the script evaluation result.
    */
-  execute: function SP_execute() {
+  execute() {
     WebConsoleUtils.usageCount++;
     const selection = this.editor.getSelection() || this.getText();
     return this.evaluate(selection);
@@ -535,22 +527,14 @@ var Scratchpad = {
    * @return Promise
    *         The promise for the script evaluation result.
    */
-  run: function SP_run() {
-    const deferred = defer();
-    const reject = aReason => deferred.reject(aReason);
-
-    this.execute().then(([aString, aError, aResult]) => {
-      const resolve = () => deferred.resolve([aString, aError, aResult]);
-
-      if (aError) {
-        this.writeAsErrorComment(aError).then(resolve, reject);
-      } else {
-        this.editor.dropSelection();
-        resolve();
-      }
-    }, reject);
-
-    return deferred.promise;
+  async run() {
+    const [string, error, result] = await this.execute();
+    if (error) {
+      await this.writeAsErrorComment(error);
+    } else {
+      this.editor.dropSelection();
+    }
+    return [string, error, result];
   },
 
   /**
@@ -560,22 +544,15 @@ var Scratchpad = {
    * @return Promise
    *         The promise for the script evaluation result.
    */
-  inspect: function SP_inspect() {
-    const deferred = defer();
-    const reject = aReason => deferred.reject(aReason);
-
-    this.execute().then(([aString, aError, aResult]) => {
-      const resolve = () => deferred.resolve([aString, aError, aResult]);
-
-      if (aError) {
-        this.writeAsErrorComment(aError).then(resolve, reject);
-      } else {
-        this.editor.dropSelection();
-        this.sidebar.open(aString, aResult).then(resolve, reject);
-      }
-    }, reject);
-
-    return deferred.promise;
+  async inspect() {
+    const [string, error, result] = await this.execute();
+    if (error) {
+      await this.writeAsErrorComment(error);
+    } else {
+      this.editor.dropSelection();
+      await this.sidebar.open(string, result);
+    }
+    return [string, error, result];
   },
 
   /**
@@ -586,9 +563,7 @@ var Scratchpad = {
    * @return Promise
    *         The promise for the script evaluation result.
    */
-  reloadAndRun: async function SP_reloadAndRun() {
-    const deferred = defer();
-
+  async reloadAndRun() {
     if (this.executionContext !== SCRATCHPAD_CONTEXT_CONTENT) {
       console.error(this.strings
                     .GetStringFromName("scratchpadContext.invalid"));
@@ -596,12 +571,11 @@ var Scratchpad = {
     }
 
     const target = await TargetFactory.forTab(this.gBrowser.selectedTab);
-    target.once("navigate", () => {
-      this.run().then(results => deferred.resolve(results));
-    });
-    target.attach().then(() => target.activeTab.reload());
-
-    return deferred.promise;
+    await target.attach();
+    const onNavigate = target.once("navigate");
+    target.activeTab.reload();
+    await onNavigate;
+    await this.run();
   },
 
   /**
@@ -613,32 +587,24 @@ var Scratchpad = {
    * @return Promise
    *         The promise for the script evaluation result.
    */
-  display: function SP_display() {
-    const deferred = defer();
-    const reject = aReason => deferred.reject(aReason);
-
-    this.execute().then(([aString, aError, aResult]) => {
-      const resolve = () => deferred.resolve([aString, aError, aResult]);
-
-      if (aError) {
-        this.writeAsErrorComment(aError).then(resolve, reject);
-      } else if (VariablesView.isPrimitive({ value: aResult })) {
-        this._writePrimitiveAsComment(aResult).then(resolve, reject);
-      } else {
-        const objectClient = new ObjectClient(this.debuggerClient, aResult);
-        objectClient.getDisplayString(aResponse => {
-          if (aResponse.error) {
-            reportError("display", aResponse);
-            reject(aResponse);
-          } else {
-            this.writeAsComment(aResponse.displayString);
-            resolve();
-          }
-        });
-      }
-    }, reject);
-
-    return deferred.promise;
+  async display() {
+    const [string, error, result] = await this.execute();
+    if (error) {
+      await this.writeAsErrorComment(error);
+      return [string, error, result];
+    } else if (VariablesView.isPrimitive({ value: result })) {
+      await this._writePrimitiveAsComment(result);
+      return [string, error, result];
+    }
+    const objectClient = new ObjectClient(this.debuggerClient, result);
+    const response = await objectClient.getDisplayString();
+    if (response.error) {
+      reportError("display", response);
+      throw new Error(response.error);
+    } else {
+      this.writeAsComment(response.displayString);
+      return [string, error, result];
+    }
   },
 
   _prettyPrintWorker: null,
@@ -802,17 +768,17 @@ var Scratchpad = {
    *
    * @returns Promise [text, error, result]
    */
-  evalTopLevelFunction: function SP_evalTopLevelFunction() {
+  evalTopLevelFunction() {
     const text = this.getText();
     const ast = this._parseText(text);
     if (!ast) {
-      return promise.resolve([text, undefined, undefined]);
+      return Promise.resolve([text, undefined, undefined]);
     }
 
     const cursorPos = this.editor.getCursor();
     const funcStatement = this._findTopLevelFunction(ast, cursorPos);
     if (!funcStatement) {
-      return promise.resolve([text, undefined, undefined]);
+      return Promise.resolve([text, undefined, undefined]);
     }
 
     let functionText = this._getFunctionText(funcStatement, text);
@@ -847,102 +813,93 @@ var Scratchpad = {
    * to be printed directly (number, string) as well as grips to values
    * (null, undefined, longString).
    *
-   * @param any aValue
+   * @param any value
    *        The value to print.
    * @return Promise
    *         The promise that resolves after the value has been printed.
    */
-  _writePrimitiveAsComment: function SP__writePrimitiveAsComment(aValue) {
-    const deferred = defer();
-
-    if (aValue.type == "longString") {
+  async _writePrimitiveAsComment(value) {
+    if (value.type == "longString") {
       const client = this.webConsoleClient;
-      client.longString(aValue).substring(0, aValue.length, aResponse => {
-        if (aResponse.error) {
-          reportError("display", aResponse);
-          deferred.reject(aResponse);
-        } else {
-          deferred.resolve(aResponse.substring);
-        }
-      });
+      const response = await client.longString(value).substring(0, value.length);
+      if (response.error) {
+        reportError("display", response);
+        throw new Error(response.error);
+      } else {
+        this.writeAsComment(response.substring);
+      }
     } else {
-      deferred.resolve(aValue.type || aValue);
+      this.writeAsComment(value.type || value);
     }
-
-    return deferred.promise.then(aComment => {
-      this.writeAsComment(aComment);
-    });
   },
 
   /**
    * Write out a value at the next line from the current insertion point.
    * The comment block will always be preceded by a newline character.
-   * @param object aValue
+   * @param object value
    *        The Object to write out as a string
    */
-  writeAsComment: function SP_writeAsComment(aValue) {
-    const value = "\n/*\n" + aValue + "\n*/";
+  writeAsComment(value) {
+    const comment = "\n/*\n" + value + "\n*/";
 
     if (this.editor.somethingSelected()) {
       const from = this.editor.getCursor("end");
-      this.editor.replaceSelection(this.editor.getSelection() + value);
-      const to = this.editor.getPosition(this.editor.getOffset(from) + value.length);
+      this.editor.replaceSelection(this.editor.getSelection() + comment);
+      const to = this.editor.getPosition(this.editor.getOffset(from) + comment.length);
       this.editor.setSelection(from, to);
       return;
     }
 
     const text = this.editor.getText();
-    this.editor.setText(text + value);
+    this.editor.setText(text + comment);
 
-    const [ from, to ] = this.editor.getPosition(text.length, (text + value).length);
+    const [ from, to ] = this.editor.getPosition(text.length, (text + comment).length);
     this.editor.setSelection(from, to);
   },
 
   /**
    * Write out an error at the current insertion point as a block comment
-   * @param object aValue
+   * @param object error
    *        The error object to write out the message and stack trace. It must
    *        contain an |exception| property with the actual error thrown, but it
    *        will often be the entire response of an evaluateJS request.
    * @return Promise
    *         The promise that indicates when writing the comment completes.
    */
-  writeAsErrorComment: function SP_writeAsErrorComment(aError) {
-    const deferred = defer();
-
-    if (VariablesView.isPrimitive({ value: aError.exception })) {
-      const error = aError.exception;
-      const type = error.type;
-      if (type == "undefined" ||
-          type == "null" ||
-          type == "Infinity" ||
-          type == "-Infinity" ||
-          type == "NaN" ||
-          type == "-0") {
-        deferred.resolve(type);
-      } else if (type == "longString") {
-        deferred.resolve(error.initial + "\u2026");
+  writeAsErrorComment(error) {
+    return new Promise(async (resolve, reject) => {
+      const exception = error.exception;
+      if (VariablesView.isPrimitive({ value: exception })) {
+        const type = exception.type;
+        if (type == "undefined" ||
+            type == "null" ||
+            type == "Infinity" ||
+            type == "-Infinity" ||
+            type == "NaN" ||
+            type == "-0") {
+          resolve(type);
+        } else if (type == "longString") {
+          resolve(exception.initial + "\u2026");
+        } else {
+          resolve(exception);
+        }
+      } else if ("preview" in exception) {
+        const stack = this._constructErrorStack(exception.preview);
+        if (typeof error.exceptionMessage == "string") {
+          resolve(error.exceptionMessage + stack);
+        } else {
+          resolve(stack);
+        }
       } else {
-        deferred.resolve(error);
-      }
-    } else if ("preview" in aError.exception) {
-      const error = aError.exception;
-      const stack = this._constructErrorStack(error.preview);
-      if (typeof aError.exceptionMessage == "string") {
-        deferred.resolve(aError.exceptionMessage + stack);
-      } else {
-        deferred.resolve(stack);
-      }
-    } else {
-      // If there is no preview information, we need to ask the server for more.
-      const objectClient = new ObjectClient(this.debuggerClient, aError.exception);
-      objectClient.getPrototypeAndProperties(aResponse => {
-        if (aResponse.error) {
-          deferred.reject(aResponse);
+        // If there is no preview information, we need to ask the server for more.
+        const objectClient = new ObjectClient(this.debuggerClient, exception);
+        const response = await objectClient.getPrototypeAndProperties();
+        if (response.error) {
+          reject(response);
           return;
         }
 
-        const { ownProperties, safeGetterValues } = aResponse;
+        const {ownProperties, safeGetterValues} = response;
         const error = Object.create(null);
 
         // Combine all the property descriptor/getter values into one object.
@@ -957,24 +914,21 @@ var Scratchpad = {
         const stack = this._constructErrorStack(error);
 
         if (typeof error.message == "string") {
-          deferred.resolve(error.message + stack);
+          resolve(error.message + stack);
         } else {
-          objectClient.getDisplayString(aResponse => {
-            if (aResponse.error) {
-              deferred.reject(aResponse);
-            } else if (typeof aResponse.displayString == "string") {
-              deferred.resolve(aResponse.displayString + stack);
-            } else {
-              deferred.resolve(stack);
-            }
-          });
+          const response = await objectClient.getDisplayString();
+          if (response.error) {
+            reject(response);
+          } else if (typeof response.displayString == "string") {
+            resolve(response.displayString + stack);
+          } else {
+            resolve(stack);
+          }
         }
-      });
-    }
-
-    return deferred.promise.then(aMessage => {
-      console.error(aMessage);
-      this.writeAsComment("Exception: " + aMessage);
+      }
+    }).then((message) => {
+      console.error(message);
+      this.writeAsComment("Exception: " + message);
     });
   },
 
@@ -1023,21 +977,20 @@ var Scratchpad = {
   /**
    * Export the textbox content to a file.
    *
-   * @param nsIFile aFile
+   * @param nsIFile file
    *        The file where you want to save the textbox content.
-   * @param boolean aNoConfirmation
+   * @param boolean noConfirmation
    *        If the file already exists, ask for confirmation?
-   * @param boolean aSilentError
+   * @param boolean silentError
    *        True if you do not want to display an error when file save fails,
    *        false otherwise.
-   * @param function aCallback
+   * @param function callback
    *        Optional function you want to call when file save completes. It will
    *        get the following arguments:
    *        1) the nsresult status code for the export operation.
    */
-  exportToFile: function SP_exportToFile(aFile, aNoConfirmation, aSilentError,
-                                         aCallback) {
-    if (!aNoConfirmation && aFile.exists() &&
+  async exportToFile(file, noConfirmation, silentError, callback) {
+    if (!noConfirmation && file.exists() &&
         !window.confirm(this.strings
                         .GetStringFromName("export.fileOverwriteConfirmation"))) {
       return;
@@ -1045,19 +998,19 @@ var Scratchpad = {
 
     const encoder = new TextEncoder();
     const buffer = encoder.encode(this.getText());
-    const writePromise = OS.File.writeAtomic(aFile.path, buffer, {tmpPath: aFile.path + ".tmp"});
-    writePromise.then(value => {
-      if (aCallback) {
-        aCallback.call(this, Cr.NS_OK);
+    try {
+      await OS.File.writeAtomic(file.path, buffer, {tmpPath: file.path + ".tmp"});
+      if (callback) {
+        callback.call(this, Cr.NS_OK);
       }
-    }, reason => {
-      if (!aSilentError) {
+    } catch (error) {
+      if (!silentError) {
         window.alert(this.strings.GetStringFromName("saveFile.failed"));
       }
-      if (aCallback) {
-        aCallback.call(this, Cr.NS_ERROR_UNEXPECTED);
+      if (callback) {
+        callback.call(this, Cr.NS_ERROR_UNEXPECTED);
       }
-    });
+    }
   },
 
   /**
@@ -1438,25 +1391,25 @@ var Scratchpad = {
   /**
    * Save the textbox content to a new file.
    *
-   * @param function aCallback
+   * @param function callback
    *        Optional function you want to call when file is saved
    * @return Promise
    */
-  saveFileAs: function SP_saveFileAs(aCallback) {
+  saveFileAs(callback) {
     return new Promise(resolve => {
       const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      const fpCallback = aResult => {
-        if (aResult != Ci.nsIFilePicker.returnCancel) {
+      const fpCallback = result => {
+        if (result != Ci.nsIFilePicker.returnCancel) {
           this.setFilename(fp.file.path);
-          this.exportToFile(fp.file, true, false, aStatus => {
-            if (Components.isSuccessCode(aStatus)) {
+          this.exportToFile(fp.file, true, false, status => {
+            if (Components.isSuccessCode(status)) {
               this.dirty = false;
               this.setRecentFile(fp.file);
             }
-            if (aCallback) {
-              aCallback(aStatus);
+            if (callback) {
+              callback(status);
             }
-            resolve(aStatus);
+            resolve(status);
           });
         }
       };
@@ -2044,59 +1997,56 @@ ScratchpadTab.prototype = {
   /**
    * Initialize a debugger client and connect it to the debugger server.
    *
-   * @param object aSubject
+   * @param object subject
    *        The tab or window to obtain the connection for.
    * @return Promise
    *         The promise for the result of connecting to this tab or window.
    */
-  connect: function ST_connect(aSubject) {
+  connect(subject) {
     if (this._connector) {
       return this._connector;
     }
 
-    const deferred = defer();
-    this._connector = deferred.promise;
-
-    const connectTimer = setTimeout(() => {
-      deferred.reject({
-        error: "timeout",
-        message: Scratchpad.strings.GetStringFromName("connectionTimeout"),
-      });
-    }, REMOTE_TIMEOUT);
-
-    deferred.promise.then(() => clearTimeout(connectTimer));
-
-    this._attach(aSubject).then(aTarget => {
-      const consoleActor = aTarget.form.consoleActor;
-      const client = aTarget.client;
-      client.attachConsole(consoleActor, [])
-        .then(([aResponse, aWebConsoleClient]) => {
-          deferred.resolve({
-            webConsoleClient: aWebConsoleClient,
-            debuggerClient: client
-          });
-        }, error => {
-          reportError("attachConsole", error);
-          deferred.reject(error);
+    this._connector = new Promise(async (resolve, reject) => {
+      const connectTimer = setTimeout(() => {
+        reject({
+          error: "timeout",
+          message: Scratchpad.strings.GetStringFromName("connectionTimeout"),
         });
+      }, REMOTE_TIMEOUT);
+
+      const target = await this._attach(subject);
+      const consoleActor = target.form.consoleActor;
+      const client = target.client;
+      try {
+        const [, webConsoleClient] = await client.attachConsole(consoleActor, []);
+        clearTimeout(connectTimer);
+        resolve({
+          webConsoleClient,
+          debuggerClient: client
+        });
+      } catch (error) {
+        reportError("attachConsole", error);
+        reject(error);
+      }
     });
 
-    return deferred.promise;
+    return this._connector;
   },
 
   /**
    * Attach to this tab.
    *
-   * @param object aSubject
+   * @param object subject
    *        The tab or window to obtain the connection for.
    * @return Promise
    *         The promise for the TabTarget for this tab.
    */
-  _attach: async function ST__attach(aSubject) {
+  async _attach(subject) {
     const target = await TargetFactory.forTab(this._tab);
     target.once("close", () => {
       if (scratchpadTargets) {
-        scratchpadTargets.delete(aSubject);
+        scratchpadTargets.delete(subject);
       }
     });
     return target.attach().then(() => target);
@@ -2118,17 +2068,15 @@ ScratchpadWindow.prototype = extend(ScratchpadTab.prototype, {
    * @return Promise
    *         The promise for the target for this window.
    */
-  _attach: function SW__attach() {
+  async _attach() {
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
     DebuggerServer.allowChromeProcess = true;
 
     const client = new DebuggerClient(DebuggerServer.connectPipe());
-    return client.connect()
-      .then(() => client.getProcess())
-      .then(aResponse => {
-        return { form: aResponse.form, client: client };
-      });
+    await client.connect();
+    const response = await client.getProcess();
+    return { form: response.form, client };
   }
 });
 
@@ -2139,9 +2087,9 @@ function ScratchpadTarget(aTarget) {
 ScratchpadTarget.consoleFor = ScratchpadTab.consoleFor;
 
 ScratchpadTarget.prototype = extend(ScratchpadTab.prototype, {
-  _attach: function ST__attach() {
+  _attach() {
     if (this._target.isRemote) {
-      return promise.resolve(this._target);
+      return Promise.resolve(this._target);
     }
     return this._target.attach().then(() => this._target);
   }
@@ -2182,57 +2130,55 @@ ScratchpadSidebar.prototype = {
    * Open the sidebar, if not open already, and populate it with the properties
    * of the given object.
    *
-   * @param string aString
+   * @param string string
    *        The string that was evaluated.
-   * @param object aObject
+   * @param object obj
    *        The object to inspect, which is the aEvalString evaluation result.
    * @return Promise
    *         A promise that will resolve once the sidebar is open.
    */
-  open: function SS_open(aEvalString, aObject) {
+  open(string, obj) {
     this.show();
 
-    const deferred = defer();
+    return new Promise(resolve => {
+      const onTabReady = () => {
+        if (this.variablesView) {
+          this.variablesView.controller.releaseActors();
+        } else {
+          const window = this._sidebar.getWindowForTab("variablesview");
+          const container = window.document.querySelector("#variables");
 
-    const onTabReady = () => {
-      if (this.variablesView) {
-        this.variablesView.controller.releaseActors();
+          this.variablesView = new VariablesView(container, {
+            searchEnabled: true,
+            searchPlaceholder: this._scratchpad.strings
+              .GetStringFromName("propertiesFilterPlaceholder")
+          });
+
+          VariablesViewController.attach(this.variablesView, {
+            getEnvironmentClient: grip => {
+              return new EnvironmentClient(this._scratchpad.debuggerClient, grip);
+            },
+            getObjectClient: grip => {
+              return new ObjectClient(this._scratchpad.debuggerClient, grip);
+            },
+            getLongStringClient: actor => {
+              return this._scratchpad.webConsoleClient.longString(actor);
+            },
+            releaseActor: actor => {
+              this._scratchpad.debuggerClient.release(actor);
+            }
+          });
+        }
+        this._update(obj).then(resolve);
+      };
+
+      if (this._sidebar.getCurrentTabID() == "variablesview") {
+        onTabReady();
       } else {
-        const window = this._sidebar.getWindowForTab("variablesview");
-        const container = window.document.querySelector("#variables");
-
-        this.variablesView = new VariablesView(container, {
-          searchEnabled: true,
-          searchPlaceholder: this._scratchpad.strings
-                             .GetStringFromName("propertiesFilterPlaceholder")
-        });
-
-        VariablesViewController.attach(this.variablesView, {
-          getEnvironmentClient: aGrip => {
-            return new EnvironmentClient(this._scratchpad.debuggerClient, aGrip);
-          },
-          getObjectClient: aGrip => {
-            return new ObjectClient(this._scratchpad.debuggerClient, aGrip);
-          },
-          getLongStringClient: aActor => {
-            return this._scratchpad.webConsoleClient.longString(aActor);
-          },
-          releaseActor: aActor => {
-            this._scratchpad.debuggerClient.release(aActor);
-          }
-        });
+        this._sidebar.once("variablesview-ready", onTabReady);
+        this._sidebar.addTab("variablesview", VARIABLES_VIEW_URL, {selected: true});
       }
-      this._update(aObject).then(() => deferred.resolve());
-    };
-
-    if (this._sidebar.getCurrentTabID() == "variablesview") {
-      onTabReady();
-    } else {
-      this._sidebar.once("variablesview-ready", onTabReady);
-      this._sidebar.addTab("variablesview", VARIABLES_VIEW_URL, {selected: true});
-    }
-
-    return deferred.promise;
+    });
   },
 
   /**
