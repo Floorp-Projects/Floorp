@@ -5,6 +5,7 @@
 
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+const COOKIE_PAGE = "http://not-tracking.example.com/browser/browser/base/content/test/trackingUI/cookiePage.html";
 
 const CB_PREF = "browser.contentblocking.enabled";
 const CB_UI_PREF = "browser.contentblocking.ui.enabled";
@@ -78,11 +79,23 @@ add_task(async function testReportBreakageVisibility() {
       },
       buttonVisible: false,
     },
+    {
+      url: COOKIE_PAGE,
+      prefs: {
+        "browser.contentblocking.enabled": true,
+        "browser.fastblock.enabled": false,
+        "privacy.trackingprotection.enabled": false,
+        "network.cookie.cookieBehavior": Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+        "browser.contentblocking.reportBreakage.enabled": false,
+        "browser.contentblocking.rejecttrackers.reportBreakage.enabled": true,
+      },
+      buttonVisible: true,
+    },
   ];
 
   for (let scenario of scenarios) {
     for (let pref in scenario.prefs) {
-      Services.prefs.setBoolPref(pref, scenario.prefs[pref]);
+      Preferences.set(pref, scenario.prefs[pref]);
     }
 
     let uri = Services.io.newURI(scenario.url);
