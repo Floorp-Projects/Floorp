@@ -12,6 +12,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { translateNodeFrontToGrip } = require("devtools/client/inspector/shared/utils");
 
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
@@ -23,7 +24,8 @@ const Types = require("../types");
 class FlexContainer extends PureComponent {
   static get propTypes() {
     return {
-      flexbox: PropTypes.shape(Types.flexbox).isRequired,
+      color: PropTypes.string.isRequired,
+      flexContainer: PropTypes.shape(Types.flexContainer).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
@@ -43,23 +45,17 @@ class FlexContainer extends PureComponent {
   }
 
   componentDidMount() {
-    const {
-      flexbox,
-      getSwatchColorPickerTooltip,
-      onSetFlexboxOverlayColor,
-    } = this.props;
-
-    const tooltip = getSwatchColorPickerTooltip();
+    const tooltip = this.props.getSwatchColorPickerTooltip();
 
     let previousColor;
     tooltip.addSwatch(this.swatchEl.current, {
       onCommit: this.setFlexboxColor,
       onPreview: this.setFlexboxColor,
       onRevert: () => {
-        onSetFlexboxOverlayColor(previousColor);
+        this.props.onSetFlexboxOverlayColor(previousColor);
       },
       onShow: () => {
-        previousColor = flexbox.color;
+        previousColor = this.props.color;
       },
     });
   }
@@ -75,21 +71,18 @@ class FlexContainer extends PureComponent {
   }
 
   onFlexboxInspectIconClick(nodeFront) {
-    const { setSelectedNode } = this.props;
-    setSelectedNode(nodeFront, { reason: "layout-panel" });
+    this.props.setSelectedNode(nodeFront, { reason: "layout-panel" });
     nodeFront.scrollIntoView().catch(e => console.error(e));
   }
 
   render() {
     const {
-      flexbox,
+      color,
+      flexContainer,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
     } = this.props;
-    const {
-      color,
-      nodeFront,
-    } = flexbox;
+    const { nodeFront } = flexContainer;
 
     return createElement(Fragment, null,
       Rep({
@@ -123,4 +116,10 @@ class FlexContainer extends PureComponent {
   }
 }
 
-module.exports = FlexContainer;
+const mapStateToProps = state => {
+  return {
+    color: state.flexbox.color,
+  };
+};
+
+module.exports = connect(mapStateToProps)(FlexContainer);
