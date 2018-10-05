@@ -15,7 +15,6 @@ class OpenBSDBootstrapper(BaseBootstrapper):
             'autoconf-2.13',
             'gmake',
             'gtar',
-            'node',
             'rust',
             'wget',
             'unzip',
@@ -50,3 +49,6 @@ class OpenBSDBootstrapper(BaseBootstrapper):
     def ensure_stylo_packages(self, state_dir, checkout_root):
         # Clang / llvm already installed as browser package
         self.run_as_root(['pkg_add', 'cbindgen'])
+
+    def ensure_node_packages(self, state_dir, checkout_root):
+        self.run_as_root(['pkg_add', 'node'])
