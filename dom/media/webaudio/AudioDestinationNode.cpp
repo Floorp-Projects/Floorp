@@ -203,41 +203,13 @@ private:
   bool mBufferAllocated;
 };
 
-class InputMutedRunnable final : public Runnable
-{
-public:
-  InputMutedRunnable(AudioNodeStream* aStream, bool aInputMuted)
-    : Runnable("dom::InputMutedRunnable")
-    , mStream(aStream)
-    , mInputMuted(aInputMuted)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    RefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
-
-    if (node) {
-      RefPtr<AudioDestinationNode> destinationNode =
-        static_cast<AudioDestinationNode*>(node.get());
-      destinationNode->InputMuted(mInputMuted);
-    }
-    return NS_OK;
-  }
-
-private:
-  RefPtr<AudioNodeStream> mStream;
-  bool mInputMuted;
-};
-
 class DestinationNodeEngine final : public AudioNodeEngine
 {
 public:
   explicit DestinationNodeEngine(AudioDestinationNode* aNode)
     : AudioNodeEngine(aNode)
     , mVolume(1.0f)
-    , mLastInputMuted(true)
+    , mLastInputAudible(false)
     , mSuspended(false)
   {
     MOZ_ASSERT(aNode);
@@ -256,16 +228,25 @@ public:
       return;
     }
 
-    bool newInputMuted = aInput.IsNull() ||
-                         aInput.IsMuted() ||
-                         !aInput.IsAudible();
-    if (newInputMuted != mLastInputMuted) {
-      mLastInputMuted = newInputMuted;
+    bool isInputAudible = !aInput.IsNull() &&
+                          !aInput.IsMuted() &&
+                          aInput.IsAudible();
+    if (isInputAudible != mLastInputAudible) {
+      mLastInputAudible = isInputAudible;
 
-      RefPtr<InputMutedRunnable> runnable =
-        new InputMutedRunnable(aStream, newInputMuted);
+      RefPtr<AudioNodeStream> stream = aStream;
+      auto r = [stream, isInputAudible] () -> void {
+        MOZ_ASSERT(NS_IsMainThread());
+        RefPtr<AudioNode> node = stream->Engine()->NodeMainThread();
+        if (node) {
+          RefPtr<AudioDestinationNode> destinationNode =
+            static_cast<AudioDestinationNode*>(node.get());
+          destinationNode->NotifyAudibleStateChanged(isInputAudible);
+        }
+      };
+
       aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-        runnable.forget());
+        NS_NewRunnableFunction("dom::WebAudioAudibleStateChangedRunnable", r));
     }
   }
 
@@ -291,7 +272,7 @@ public:
     if (aIndex == SUSPENDED) {
       mSuspended = !!aParam;
       if (mSuspended) {
-        mLastInputMuted = true;
+        mLastInputAudible = false;
       }
     }
   }
@@ -308,7 +289,7 @@ public:
 
 private:
   float mVolume;
-  bool mLastInputMuted;
+  bool mLastInputAudible;
   bool mSuspended;
 };
 
@@ -613,18 +594,18 @@ AudioDestinationNode::CreateAudioChannelAgent()
 }
 
 void
-AudioDestinationNode::InputMuted(bool aMuted)
+AudioDestinationNode::NotifyAudibleStateChanged(bool aAudible)
 {
   MOZ_ASSERT(Context() && !Context()->IsOffline());
 
   if (!mAudioChannelAgent) {
-    if (aMuted) {
+    if (!aAudible) {
       return;
     }
     CreateAudioChannelAgent();
   }
 
-  if (aMuted) {
+  if (!aAudible) {
     mAudioChannelAgent->NotifyStoppedPlaying();
     // Reset the state, and it would always be regard as audible.
     mAudible = AudioChannelService::AudibleState::eAudible;
@@ -632,7 +613,7 @@ AudioDestinationNode::InputMuted(bool aMuted)
   }
 
   if (mDurationBeforeFirstTimeAudible.IsZero()) {
-    MOZ_ASSERT(!aMuted);
+    MOZ_ASSERT(aAudible);
     mDurationBeforeFirstTimeAudible = TimeStamp::Now() - mCreatedTime;
     Telemetry::Accumulate(Telemetry::WEB_AUDIO_BECOMES_AUDIBLE_TIME,
                           mDurationBeforeFirstTimeAudible.ToSeconds());
