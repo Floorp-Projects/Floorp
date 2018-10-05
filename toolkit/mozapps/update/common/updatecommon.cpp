@@ -234,16 +234,29 @@ PathContainsInvalidLinks(wchar_t * const fullPath)
       wchar_t* reparseTarget = nullptr;
       switch (buffer->ReparseTag) {
         case IO_REPARSE_TAG_MOUNT_POINT:
-          reparseTarget = buffer->MountPointReparseBuffer.PathBuffer;
+          reparseTarget = buffer->MountPointReparseBuffer.PathBuffer +
+            (buffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(wchar_t));
+          if (buffer->MountPointReparseBuffer.SubstituteNameLength <
+              ARRAYSIZE(L"\\??\\")) {
+            return false;
+          }
           break;
         case IO_REPARSE_TAG_SYMLINK:
-          reparseTarget = buffer->SymbolicLinkReparseBuffer.PathBuffer;
+          reparseTarget = buffer->SymbolicLinkReparseBuffer.PathBuffer +
+            (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(wchar_t));
+          if (buffer->SymbolicLinkReparseBuffer.SubstituteNameLength <
+              ARRAYSIZE(L"\\??\\")) {
+            return false;
+          }
           break;
         default:
           return true;
           break;
       }
 
+      if (!reparseTarget) {
+        return false;
+      }
       if (wcsncmp(reparseTarget, L"\\??\\", ARRAYSIZE(L"\\??\\") - 1) != 0) {
         return true;
       }
