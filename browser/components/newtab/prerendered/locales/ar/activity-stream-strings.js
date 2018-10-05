@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "المواضيع الشائعة:",
   "pocket_read_even_more": "اعرض المزيد من الأخبار",
   "pocket_more_reccommendations": "مقترحات أخرى",
-  "pocket_learn_more": "اطّلع على المزيد",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ابدأ التصفح وسنعرض أمامك بعض المقالات والفيديوهات والمواقع الأخرى التي زرتها حديثا أو أضفتها إلى العلامات هنا.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "بنود الخدمة",
   "firstrun_privacy_notice": "تنويه الخصوصية",
   "firstrun_continue_to_login": "تابِع",
-  "firstrun_skip_login": "تجاوز هذه الخطوة"
+  "firstrun_skip_login": "تجاوز هذه الخطوة",
+  "pocket_learn_more": "اطّلع على المزيد"
 };

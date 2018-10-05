@@ -133,26 +133,6 @@ describe("ASRouterPreferences", () => {
     });
   });
   describe(".specialConditions", () => {
-    it("should return .allowLegacyOnboarding=true if onboarding is not present, disabled, or doesn't have cohort", () => {
-      ASRouterPreferences.init();
-      let testProviders = [];
-      sandbox.stub(ASRouterPreferences, "providers").get(() => testProviders);
-
-      testProviders = [{id: "foo"}];
-      assert.isTrue(ASRouterPreferences.specialConditions.allowLegacyOnboarding);
-
-      testProviders = [{id: "onboarding", enabled: false, cohort: "test"}];
-      assert.isTrue(ASRouterPreferences.specialConditions.allowLegacyOnboarding);
-
-      testProviders = [{id: "onboarding", enabled: true}];
-      assert.isTrue(ASRouterPreferences.specialConditions.allowLegacyOnboarding);
-    });
-    it("should return .allowLegacyOnboarding=false if onboarding is enabled and has a cohort", () => {
-      ASRouterPreferences.init();
-      sandbox.stub(ASRouterPreferences, "providers").get(() => [{id: "onboarding", enabled: true, cohort: "test"}]);
-
-      assert.isFalse(ASRouterPreferences.specialConditions.allowLegacyOnboarding);
-    });
     it("should return .allowLegacySnippets=true if snippets is not present or disabled", () => {
       ASRouterPreferences.init();
       let testProviders = [];

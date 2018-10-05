@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populære emner:",
   "pocket_read_even_more": "Se flere historier",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Gå i gang med at browse, så vil vi vise dig nogle af de artikler, videoer og andre sider, du har besøgt eller gemt et bogmærke til for nylig.",

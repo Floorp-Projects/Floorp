@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "લોકપ્રિય વિષયો:",
   "pocket_read_even_more": "વધુ વાર્તાઓ જુઓ",
   "pocket_more_reccommendations": "વધુ ભલામણો",
-  "pocket_learn_more": "વધુ શીખો",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pocket મેળવો",
   "pocket_cta_text": "Pocket તમને જે કથાઓ ગમે છે તે સાચવો, અને તમારા મનને રસપ્રદ વાંચન સાથે ઉત્તેજિત કરો.",
   "highlights_empty_state": "બ્રાઉઝ કરવું પ્રારંભ કરો અને અમે અહીં કેટલાક સરસ લેખો, વિડિઓઝ અને અન્ય પૃષ્ઠો દર્શાવીશું જે તમે તાજેતરમાં મુલાકાત લીધાં છે અથવા બુકમાર્ક કર્યા છે.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "સેવાની શરતો",
   "firstrun_privacy_notice": "ખાનગી સૂચના",
   "firstrun_continue_to_login": "ચાલુ રાખો",
-  "firstrun_skip_login": "આ પગલું છોડી દો"
+  "firstrun_skip_login": "આ પગલું છોડી દો",
+  "pocket_learn_more": "વધુ શીખો"
 };

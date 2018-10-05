@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "人気のトピック:",
   "pocket_read_even_more": "他の記事を見る",
   "pocket_more_reccommendations": "他のおすすめ",
-  "pocket_learn_more": "詳細",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pocket を入手",
   "pocket_cta_text": "お気に入りに記事を Pocket に保存して、魅力的な読み物を思う存分楽しみましょう。",
   "highlights_empty_state": "ブラウジング中にあなたが最近訪れたりブックマークしたりした、優れた記事、動画、その他ページの一部をここに表示します。",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "サービス利用規約",
   "firstrun_privacy_notice": "プライバシーに関する通知",
   "firstrun_continue_to_login": "続ける",
-  "firstrun_skip_login": "この手順をスキップ"
+  "firstrun_skip_login": "この手順をスキップ",
+  "pocket_learn_more": "詳細"
 };

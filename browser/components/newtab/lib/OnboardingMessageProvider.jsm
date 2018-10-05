@@ -55,7 +55,6 @@ const ONBOARDING_MESSAGES = () => ([
         data: {page: "addons"},
       },
     },
-    targeting: "isInExperimentCohort == 1",
     trigger: {id: "firstRun"},
   },
   {
@@ -73,7 +72,7 @@ const ONBOARDING_MESSAGES = () => ([
         data: {url: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/"},
       },
     },
-    targeting: "isInExperimentCohort == 2",
+    targeting: "providerCohorts.onboarding == 'ghostery'",
     trigger: {id: "firstRun"},
   },
 ]);

@@ -39,7 +39,6 @@ for (const type of [
   "DELETE_HISTORY_URL",
   "DIALOG_CANCEL",
   "DIALOG_OPEN",
-  "DISABLE_ONBOARDING",
   "DOWNLOAD_CHANGED",
   "FILL_SEARCH_TERM",
   "INIT",
@@ -134,6 +133,7 @@ for (const type of [
   "OPEN_PRIVATE_BROWSER_WINDOW",
   "OPEN_URL",
   "OPEN_ABOUT_PAGE",
+  "SHOW_FIREFOX_ACCOUNTS",
 ]) {
   ASRouterActions[type] = type;
 }

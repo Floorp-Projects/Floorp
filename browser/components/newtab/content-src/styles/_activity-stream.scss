@@ -17,15 +17,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   overflow-y: scroll;
-
-  &.hide-onboarding > #onboarding-overlay-button, // sass-lint:disable-line no-ids
-  &.hide-main > #onboarding-overlay-button { // sass-lint:disable-line no-ids
-    display: none !important; // sass-lint:disable-line no-important
-  }
-
-  &.hide-main > #onboarding-notification-bar { // sass-lint:disable-line no-ids
-    display: none;
-  }
 }
 
 h1,
@@ -159,4 +150,5 @@ input {
 @import '../asrouter/components/SnippetBase/SnippetBase';
 @import '../asrouter/components/ModalOverlay/ModalOverlay';
 @import '../asrouter/templates/SimpleSnippet/SimpleSnippet';
+@import '../asrouter/templates/NewsletterSnippet/NewsletterSnippet';
 @import '../asrouter/templates/OnboardingMessage/OnboardingMessage';

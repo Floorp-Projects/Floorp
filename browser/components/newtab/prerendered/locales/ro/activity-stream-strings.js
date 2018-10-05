@@ -75,9 +75,9 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Subiecte populare:",
   "pocket_read_even_more": "Vezi mai multe articole",
   "pocket_more_reccommendations": "Mai multe recomandări",
-  "pocket_learn_more": "Află mai multe",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Obține Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_cta_text": "Salvează în Pocket articolele care ți-au plăcut și hrănește-ți mintea cu lecturi fascinante.",
   "highlights_empty_state": "Începe să navighezi și noi îți vom arăta articole interesante, videouri sau alte pagini pe care le-ai vizitat sau marcat recent.",
   "topstories_empty_state": "Ai ajuns la capăt. Revino mai târziu pentru alte articole de la {provider}. Nu mai vrei să aștepți? Selectează un subiect popular și găsește alte articole interesante de pe web.",
   "manual_migration_explanation2": "Încearcă Firefox cu marcajele, istoricul și parolele din alt browser.",
@@ -101,10 +101,11 @@ window.gActivityStreamStrings = {
   "firstrun_form_header": "Introdu e-mailul tău",
   "firstrun_form_sub_header": "pentru a continua la Firefox Sync.",
   "firstrun_email_input_placeholder": "E-mail",
-  "firstrun_invalid_input": "Valid email required",
+  "firstrun_invalid_input": "Necesită o adresă de e-mail validă",
   "firstrun_extra_legal_links": "Continuând, ești de acord cu {terms} și {privacy}.",
   "firstrun_terms_of_service": "Termenii de utilizare a serviciului",
   "firstrun_privacy_notice": "Politica de confidențialitate",
   "firstrun_continue_to_login": "Continuă",
-  "firstrun_skip_login": "Omite acest pas"
+  "firstrun_skip_login": "Omite acest pas",
+  "pocket_learn_more": "Află mai multe"
 };

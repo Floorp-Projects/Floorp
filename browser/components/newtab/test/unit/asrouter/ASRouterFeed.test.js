@@ -63,7 +63,7 @@ describe("ASRouterFeed", () => {
     });
   });
   describe("#onAction: UNINIT", () => {
-    it("should uninitialize the ASRouter and restore onboarding", async () => {
+    it("should uninitialize the ASRouter", async () => {
       await Router.init(new FakeRemotePageManager(), storage, () => {});
       sinon.stub(Router, "uninit");
 
