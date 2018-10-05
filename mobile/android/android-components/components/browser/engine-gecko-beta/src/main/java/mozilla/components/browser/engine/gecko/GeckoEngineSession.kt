@@ -21,6 +21,7 @@ import org.mozilla.gecko.util.ThreadUtils
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_AUDIO
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
@@ -433,60 +434,34 @@ class GeckoEngineSession(
          * Provides an ErrorType corresponding to the error code provided.
          */
         @Suppress("ComplexMethod")
-        internal fun geckoErrorToErrorType(@GeckoSession.NavigationDelegate.LoadError errorCode: Int) =
+        internal fun geckoErrorToErrorType(@NavigationDelegate.LoadError errorCode: Int) =
             when (errorCode) {
-                GeckoSession.NavigationDelegate.ERROR_UNKNOWN ->
-                    ErrorType.UNKNOWN
-                GeckoSession.NavigationDelegate.ERROR_SECURITY_SSL ->
-                    ErrorType.ERROR_SECURITY_SSL
-                GeckoSession.NavigationDelegate.ERROR_SECURITY_BAD_CERT ->
-                    ErrorType.ERROR_SECURITY_BAD_CERT
-                GeckoSession.NavigationDelegate.ERROR_NET_INTERRUPT ->
-                    ErrorType.ERROR_NET_INTERRUPT
-                GeckoSession.NavigationDelegate.ERROR_NET_TIMEOUT ->
-                    ErrorType.ERROR_NET_TIMEOUT
-                GeckoSession.NavigationDelegate.ERROR_CONNECTION_REFUSED ->
-                    ErrorType.ERROR_CONNECTION_REFUSED
-                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_SOCKET_TYPE ->
-                    ErrorType.ERROR_UNKNOWN_SOCKET_TYPE
-                GeckoSession.NavigationDelegate.ERROR_REDIRECT_LOOP ->
-                    ErrorType.ERROR_REDIRECT_LOOP
-                GeckoSession.NavigationDelegate.ERROR_OFFLINE ->
-                    ErrorType.ERROR_OFFLINE
-                GeckoSession.NavigationDelegate.ERROR_PORT_BLOCKED ->
-                    ErrorType.ERROR_PORT_BLOCKED
-                GeckoSession.NavigationDelegate.ERROR_NET_RESET ->
-                    ErrorType.ERROR_NET_RESET
-                GeckoSession.NavigationDelegate.ERROR_UNSAFE_CONTENT_TYPE ->
-                    ErrorType.ERROR_UNSAFE_CONTENT_TYPE
-                GeckoSession.NavigationDelegate.ERROR_CORRUPTED_CONTENT ->
-                    ErrorType.ERROR_CORRUPTED_CONTENT
-                GeckoSession.NavigationDelegate.ERROR_CONTENT_CRASHED ->
-                    ErrorType.ERROR_CONTENT_CRASHED
-                GeckoSession.NavigationDelegate.ERROR_INVALID_CONTENT_ENCODING ->
-                    ErrorType.ERROR_INVALID_CONTENT_ENCODING
-                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_HOST ->
-                    ErrorType.ERROR_UNKNOWN_HOST
-                GeckoSession.NavigationDelegate.ERROR_MALFORMED_URI ->
-                    ErrorType.ERROR_MALFORMED_URI
-                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_PROTOCOL ->
-                    ErrorType.ERROR_UNKNOWN_PROTOCOL
-                GeckoSession.NavigationDelegate.ERROR_FILE_NOT_FOUND ->
-                    ErrorType.ERROR_FILE_NOT_FOUND
-                GeckoSession.NavigationDelegate.ERROR_FILE_ACCESS_DENIED ->
-                    ErrorType.ERROR_FILE_ACCESS_DENIED
-                GeckoSession.NavigationDelegate.ERROR_PROXY_CONNECTION_REFUSED ->
-                    ErrorType.ERROR_PROXY_CONNECTION_REFUSED
-                GeckoSession.NavigationDelegate.ERROR_UNKNOWN_PROXY_HOST ->
-                    ErrorType.ERROR_UNKNOWN_PROXY_HOST
-                GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_MALWARE_URI ->
-                    ErrorType.ERROR_SAFEBROWSING_MALWARE_URI
-                GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_UNWANTED_URI ->
-                    ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI
-                GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_HARMFUL_URI ->
-                    ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI
-                GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_PHISHING_URI ->
-                    ErrorType.ERROR_SAFEBROWSING_PHISHING_URI
+                NavigationDelegate.ERROR_UNKNOWN -> ErrorType.UNKNOWN
+                NavigationDelegate.ERROR_SECURITY_SSL -> ErrorType.ERROR_SECURITY_SSL
+                NavigationDelegate.ERROR_SECURITY_BAD_CERT -> ErrorType.ERROR_SECURITY_BAD_CERT
+                NavigationDelegate.ERROR_NET_INTERRUPT -> ErrorType.ERROR_NET_INTERRUPT
+                NavigationDelegate.ERROR_NET_TIMEOUT -> ErrorType.ERROR_NET_TIMEOUT
+                NavigationDelegate.ERROR_CONNECTION_REFUSED -> ErrorType.ERROR_CONNECTION_REFUSED
+                NavigationDelegate.ERROR_UNKNOWN_SOCKET_TYPE -> ErrorType.ERROR_UNKNOWN_SOCKET_TYPE
+                NavigationDelegate.ERROR_REDIRECT_LOOP -> ErrorType.ERROR_REDIRECT_LOOP
+                NavigationDelegate.ERROR_OFFLINE -> ErrorType.ERROR_OFFLINE
+                NavigationDelegate.ERROR_PORT_BLOCKED -> ErrorType.ERROR_PORT_BLOCKED
+                NavigationDelegate.ERROR_NET_RESET -> ErrorType.ERROR_NET_RESET
+                NavigationDelegate.ERROR_UNSAFE_CONTENT_TYPE -> ErrorType.ERROR_UNSAFE_CONTENT_TYPE
+                NavigationDelegate.ERROR_CORRUPTED_CONTENT -> ErrorType.ERROR_CORRUPTED_CONTENT
+                NavigationDelegate.ERROR_CONTENT_CRASHED -> ErrorType.ERROR_CONTENT_CRASHED
+                NavigationDelegate.ERROR_INVALID_CONTENT_ENCODING -> ErrorType.ERROR_INVALID_CONTENT_ENCODING
+                NavigationDelegate.ERROR_UNKNOWN_HOST -> ErrorType.ERROR_UNKNOWN_HOST
+                NavigationDelegate.ERROR_MALFORMED_URI -> ErrorType.ERROR_MALFORMED_URI
+                NavigationDelegate.ERROR_UNKNOWN_PROTOCOL -> ErrorType.ERROR_UNKNOWN_PROTOCOL
+                NavigationDelegate.ERROR_FILE_NOT_FOUND -> ErrorType.ERROR_FILE_NOT_FOUND
+                NavigationDelegate.ERROR_FILE_ACCESS_DENIED -> ErrorType.ERROR_FILE_ACCESS_DENIED
+                NavigationDelegate.ERROR_PROXY_CONNECTION_REFUSED -> ErrorType.ERROR_PROXY_CONNECTION_REFUSED
+                NavigationDelegate.ERROR_UNKNOWN_PROXY_HOST -> ErrorType.ERROR_UNKNOWN_PROXY_HOST
+                NavigationDelegate.ERROR_SAFEBROWSING_MALWARE_URI -> ErrorType.ERROR_SAFEBROWSING_MALWARE_URI
+                NavigationDelegate.ERROR_SAFEBROWSING_UNWANTED_URI -> ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI
+                NavigationDelegate.ERROR_SAFEBROWSING_HARMFUL_URI -> ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI
+                NavigationDelegate.ERROR_SAFEBROWSING_PHISHING_URI -> ErrorType.ERROR_SAFEBROWSING_PHISHING_URI
                 else -> ErrorType.UNKNOWN
             }
     }
