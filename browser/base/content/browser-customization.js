@@ -43,20 +43,9 @@ var CustomizationHandler = {
 
   _customizationEnding(aDetails) {
     // Update global UI elements that may have been added or removed
-    if (aDetails.changed) {
-      gURLBar = document.getElementById("urlbar");
-
-      if (AppConstants.platform != "macosx")
-        updateEditUIVisibility();
-
-      // Hacky: update the PopupNotifications' object's reference to the iconBox,
-      // if it already exists, since it may have changed if the URL bar was
-      // added/removed.
-      if (!window.__lookupGetter__("PopupNotifications")) {
-        PopupNotifications.iconBox =
-          document.getElementById("notification-popup-box");
-      }
-
+    if (aDetails.changed &&
+        AppConstants.platform != "macosx") {
+      updateEditUIVisibility();
     }
 
     PlacesToolbarHelper.customizeDone();
