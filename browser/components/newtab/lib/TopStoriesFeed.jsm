@@ -53,6 +53,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       this.storiesLoaded = false;
       this.domainAffinitiesLastUpdated = 0;
       this.dispatchPocketCta(this._prefs.get("pocketCta"), false);
+      Services.obs.addObserver(this, "idle-daily");
 
       // Cache is used for new page loads, which shouldn't have changed data.
       // If we have changed data, cache should be cleared,
@@ -69,8 +70,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
       // This is filtered so an update function can return true to retry on the next run
       this.contentUpdateQueue = this.contentUpdateQueue.filter(update => update());
-
-      Services.obs.addObserver(this, "idle-daily");
     } catch (e) {
       Cu.reportError(`Problem initializing top stories feed: ${e.message}`);
     }
