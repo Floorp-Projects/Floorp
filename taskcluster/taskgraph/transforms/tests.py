@@ -752,7 +752,7 @@ def handle_suite_category(config, tests):
 
 @transforms.add
 def enable_code_coverage(config, tests):
-    """Enable code coverage for the ccov and jsdcov build-platforms"""
+    """Enable code coverage for the ccov build-platforms"""
     for test in tests:
         if 'ccov' in test['build-platform']:
             # Do not run tests on fuzzing or opt build
@@ -807,12 +807,6 @@ def enable_code_coverage(config, tests):
                 test['max-run-time'] = 1800
                 if 'linux' in test['build-platform']:
                     test['docker-image'] = {"in-tree": "desktop1604-test"}
-        elif 'jsdcov' in test['build-platform']:
-            # Ensure we always run on the projects defined by the build, unless the test
-            # is try only or shouldn't run at all.
-            if test['run-on-projects'] not in [[], ['try']]:
-                test['run-on-projects'] = 'built-projects'
-            test['mozharness'].setdefault('extra-options', []).append('--jsd-code-coverage')
         yield test
 
 

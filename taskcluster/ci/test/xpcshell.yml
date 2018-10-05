@@ -27,10 +27,7 @@ job-defaults:
 
 xpcshell:
     description: "xpcshell test run"
-    suite:
-        by-test-platform:
-            linux64-jsdcov/opt: xpcshell/xpcshell-coverage
-            default: xpcshell
+    suite: xpcshell
     treeherder-symbol: X(X)
     run-on-projects:
         by-test-platform:

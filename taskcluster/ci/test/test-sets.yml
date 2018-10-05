@@ -174,12 +174,6 @@ windows-qr-tests:
     - mochitest-webgl2-ext
     - reftest
 
-jsdcov-code-coverage-tests:
-    - mochitest
-    - mochitest-browser-chrome
-    - mochitest-devtools-chrome
-    - xpcshell
-
 ccov-code-coverage-tests:
     - test-coverage
     - test-coverage-wpt

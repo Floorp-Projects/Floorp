@@ -119,10 +119,6 @@ linux64-ccov/debug:
         - awsy
         - talos
         - ccov-code-coverage-tests
-linux64-jsdcov/opt:
-    build-platform: linux64-jsdcov/opt
-    test-sets:
-        - jsdcov-code-coverage-tests
 
 ##
 # Windows platforms (matching /windows.*/)
