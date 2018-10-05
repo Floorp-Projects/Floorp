@@ -38,6 +38,7 @@ const layoutSpec = generateActorSpec({
     getCurrentFlexbox: {
       request: {
         node: Arg(0, "domnode"),
+        onlyLookAtParents: Arg(1, "nullable:boolean"),
       },
       response: {
         flexbox: RetVal("nullable:flexbox")
