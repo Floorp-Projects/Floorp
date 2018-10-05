@@ -16,14 +16,14 @@ class FlexItemList extends PureComponent {
   static get propTypes() {
     return {
       flexItems: PropTypes.arrayOf(PropTypes.shape(Types.flexItem)).isRequired,
-      setSelectedNode: PropTypes.func.isRequired,
+      onToggleFlexItemShown: PropTypes.func.isRequired,
     };
   }
 
   render() {
     const {
       flexItems,
-      setSelectedNode,
+      onToggleFlexItemShown,
     } = this.props;
 
     return (
@@ -32,7 +32,7 @@ class FlexItemList extends PureComponent {
         flexItems.map(flexItem => FlexItem({
           key: flexItem.actorID,
           flexItem,
-          setSelectedNode,
+          onToggleFlexItemShown,
         }))
       )
     );

@@ -27,68 +27,67 @@ const Types = require("../types");
 class Flexbox extends PureComponent {
   static get propTypes() {
     return {
-      flexContainer: PropTypes.shape(Types.flexContainer).isRequired,
+      flexbox: PropTypes.shape(Types.flexbox).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetFlexboxOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
+      onToggleFlexItemShown: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
-  renderFlexContainerProperties() {
-    // Don't show the flex container properties for the parent flex container of the
-    // selected element.
-    if (this.props.flexContainer.isFlexItemContainer) {
-      return null;
-    }
-
-    return FlexContainerProperties({
-      properties: this.props.flexContainer.properties,
-    });
-  }
-
   renderFlexItemList() {
-    const { setSelectedNode } = this.props;
-    const { flexItems } = this.props.flexContainer;
-
-    return FlexItemList({
-      flexItems,
-      setSelectedNode,
-    });
-  }
-
-  renderFlexItemSizing() {
+    const {
+      flexbox,
+      onToggleFlexItemShown,
+    } = this.props;
     const {
       flexItems,
       flexItemShown,
-      properties,
-    } = this.props.flexContainer;
+    } = flexbox;
 
-    const flexItem = flexItems.find(item => item.nodeFront.actorID === flexItemShown);
-    if (!flexItem) {
+    if (flexItemShown || !flexItems.length) {
+      return null;
+    }
+
+    return FlexItemList({
+      flexItems,
+      onToggleFlexItemShown,
+    });
+  }
+
+  renderFlexItemSizingProperties() {
+    const { flexbox } = this.props;
+    const {
+      flexItems,
+      flexItemShown,
+    } = flexbox;
+
+    if (!flexItemShown) {
       return null;
     }
 
     return FlexItemSizingProperties({
-      flexDirection: properties["flex-direction"],
-      flexItem,
+      flexDirection: flexbox.properties["flex-direction"],
+      flexItem: flexItems.find(item => item.nodeFront.actorID === flexItemShown),
     });
   }
 
   render() {
     const {
-      flexContainer,
+      flexbox,
       getSwatchColorPickerTooltip,
       onHideBoxModelHighlighter,
       onSetFlexboxOverlayColor,
       onShowBoxModelHighlighterForNode,
       onToggleFlexboxHighlighter,
+      onToggleFlexItemShown,
       setSelectedNode,
     } = this.props;
 
-    if (!flexContainer.actorID) {
+    if (!flexbox.actorID) {
       return (
         dom.div({ className: "devtools-sidepanel-no-result" },
           getStr("flexbox.noFlexboxeOnThisPage")
@@ -96,25 +95,23 @@ class Flexbox extends PureComponent {
       );
     }
 
-    const {
-      flexItems,
-      flexItemShown,
-    } = flexContainer;
-
     return (
       dom.div({ id: "layout-flexbox-container" },
         Header({
-          flexContainer,
+          flexbox,
           getSwatchColorPickerTooltip,
           onHideBoxModelHighlighter,
           onSetFlexboxOverlayColor,
           onShowBoxModelHighlighterForNode,
           onToggleFlexboxHighlighter,
+          onToggleFlexItemShown,
           setSelectedNode,
         }),
-        !flexItemShown && flexItems.length ? this.renderFlexItemList() : null,
-        flexItemShown ? this.renderFlexItemSizing() : null,
-        this.renderFlexContainerProperties()
+        this.renderFlexItemList(),
+        this.renderFlexItemSizingProperties(),
+        FlexContainerProperties({
+          properties: flexbox.properties,
+        })
       )
     );
   }

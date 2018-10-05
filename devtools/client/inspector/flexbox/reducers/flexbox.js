@@ -6,51 +6,27 @@
 
 const {
   CLEAR_FLEXBOX,
+  TOGGLE_FLEX_ITEM_SHOWN,
   UPDATE_FLEXBOX,
   UPDATE_FLEXBOX_COLOR,
   UPDATE_FLEXBOX_HIGHLIGHTED,
 } = require("../actions/index");
 
 const INITIAL_FLEXBOX = {
+  // The actor ID of the flex container.
+  actorID: null,
   // The color of the flexbox highlighter overlay.
   color: "",
-  // The flex container of the selected element.
-  flexContainer: {
-    // The actor ID of the selected flex container.
-    actorID: "",
-    // An array of flex items belonging to the selected flex container.
-    flexItems: [],
-    // The NodeFront actor ID of the flex item to display in the flex item sizing
-    // properties.
-    flexItemShown: null,
-    // This flag specifies that the flex container data represents the selected flex
-    // container.
-    isFlexItemContainer: false,
-    // The NodeFront of the selected flex container.
-    nodeFront: null,
-    // The computed style properties of the selected flex container.
-    properties: null,
-  },
-  // The selected flex container can also be a flex item. This object contains the
-  // parent flex container properties of the selected element.
-  flexItemContainer: {
-    // The actor ID of the parent flex container.
-    actorID: "",
-    // An array of flex items belonging to the parent flex container.
-    flexItems: [],
-    // The NodeFront actor ID of the flex item to display in the flex item sizing
-    // properties.
-    flexItemShown: null,
-    // This flag specifies that the flex container data represents the parent flex
-    // container of the selected element.
-    isFlexItemContainer: true,
-    // The NodeFront of the parent flex container.
-    nodeFront: null,
-    // The computed styles properties of the parent flex container.
-    properties: null,
-  },
+  // An array of flex items belonging to the current flex container.
+  flexItems: [],
+  // The NodeFront actor ID  of the flex item to display the flex item sizing properties.
+  flexItemShown: null,
   // Whether or not the flexbox highlighter is highlighting the flex container.
   highlighted: false,
+  // The NodeFront of the flex container.
+  nodeFront: null,
+  // The computed style properties of the flex container.
+  properties: {},
 };
 
 const reducers = {
@@ -59,22 +35,34 @@ const reducers = {
     return INITIAL_FLEXBOX;
   },
 
+  [TOGGLE_FLEX_ITEM_SHOWN](flexbox, { nodeFront }) {
+    let flexItemShown = null;
+
+    // Get the NodeFront actor ID of the flex item.
+    if (nodeFront) {
+      const flexItem = flexbox.flexItems.find(item => item.nodeFront === nodeFront);
+      flexItemShown = flexItem.nodeFront.actorID;
+    }
+
+    return Object.assign({}, flexbox, {
+      flexItemShown,
+    });
+  },
+
   [UPDATE_FLEXBOX](_, { flexbox }) {
     return flexbox;
   },
 
   [UPDATE_FLEXBOX_COLOR](flexbox, { color }) {
-    return {
-      ...flexbox,
+    return Object.assign({}, flexbox, {
       color,
-    };
+    });
   },
 
   [UPDATE_FLEXBOX_HIGHLIGHTED](flexbox, { highlighted }) {
-    return {
-      ...flexbox,
+    return Object.assign({}, flexbox, {
       highlighted,
-    };
+    });
   },
 
 };
