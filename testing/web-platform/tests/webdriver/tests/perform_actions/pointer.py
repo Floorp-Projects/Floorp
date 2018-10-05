@@ -6,7 +6,7 @@ from tests.perform_actions.support.mouse import get_inview_center, get_viewport_
 from tests.perform_actions.support.refine import filter_dict, get_events
 from tests.support.asserts import assert_move_to_coordinates
 from tests.support.inline import inline
-from tests.support.wait import wait
+from tests.support.sync import wait
 
 
 def link_doc(dest):
