@@ -24,7 +24,7 @@
 @BINPATH@/hyphenation/*
 @BINPATH@/localization/*
 
-[assets destdir="assets/@ANDROID_CPU_ARCH@"]
+[assets xz_compress="1" destdir="assets/@ANDROID_CPU_ARCH@"]
 #ifndef MOZ_STATIC_JS
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
