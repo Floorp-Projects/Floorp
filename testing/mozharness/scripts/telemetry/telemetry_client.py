@@ -102,9 +102,12 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
-
-        requirements = os.path.join(GECKO_SRCDIR, 'testing',
-                                    'config', 'telemetry_tests_requirements.txt')
+        requirements = os.path.join(
+            GECKO_SRCDIR,
+            'testing',
+            'config',
+            'telemetry_tests_source_requirements.txt',
+        )
         self.register_virtualenv_module(requirements=[requirements], two_pass=True)
 
     def query_abs_dirs(self):
