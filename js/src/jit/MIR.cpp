@@ -2327,6 +2327,31 @@ MPhi::congruentTo(const MDefinition* ins) const
     return congruentIfOperandsEqual(ins);
 }
 
+bool
+MPhi::updateForReplacement(MDefinition* def)
+{
+    // This function is called to fix the current Phi flags using it as a
+    // replacement of the other Phi instruction |def|.
+    //
+    // When dealing with usage analysis, any Use will replace all other values,
+    // such as Unused and Unknown. Unless both are Unused, the merge would be
+    // Unknown.
+    MPhi* other = def->toPhi();
+    if (usageAnalysis_ == PhiUsage::Used || other->usageAnalysis_ == PhiUsage::Used) {
+        usageAnalysis_ = PhiUsage::Used;
+    } else if (usageAnalysis_ != other->usageAnalysis_) {
+        //    this == unused && other == unknown
+        // or this == unknown && other == unused
+        usageAnalysis_ = PhiUsage::Unknown;
+    } else {
+        //    this == unused && other == unused
+        // or this == unknown && other = unknown
+        MOZ_ASSERT(usageAnalysis_ == PhiUsage::Unused || usageAnalysis_ == PhiUsage::Unknown);
+        MOZ_ASSERT(usageAnalysis_ == other->usageAnalysis_);
+    }
+    return true;
+}
+
 static inline TemporaryTypeSet*
 MakeMIRTypeSet(TempAllocator& alloc, MIRType type)
 {
