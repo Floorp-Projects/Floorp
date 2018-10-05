@@ -1,0 +1,75 @@
+environment:
+
+    matrix:
+        - TOXENV: py27-pip8.1.1
+          PIP: 8.1.1
+        - TOXENV: py27-pip9.0.1
+          PIP: 9.0.1
+        - TOXENV: py27-pip9.0.3
+          PIP: 9.0.3
+        - TOXENV: py27-pip10.0.1
+          PIP: 10.0.1
+        - TOXENV: py27-pipmaster
+          PIP: master
+        - TOXENV: py27-piplatest
+          PIP: latest
+        - TOXENV: py34-pip8.1.1
+          PIP: 8.1.1
+        - TOXENV: py34-pip9.0.1
+          PIP: 9.0.1
+        - TOXENV: py34-pip9.0.3
+          PIP: 9.0.3
+        - TOXENV: py34-pip10.0.1
+          PIP: 10.0.1
+        - TOXENV: py34-pipmaster
+          PIP: master
+        - TOXENV: py34-piplatest
+          PIP: latest
+        - TOXENV: py35-pip8.1.1
+          PIP: 8.1.1
+        - TOXENV: py35-pip9.0.1
+          PIP: 9.0.1
+        - TOXENV: py35-pip9.0.3
+          PIP: 9.0.3
+        - TOXENV: py35-pip10.0.1
+          PIP: 10.0.1
+        - TOXENV: py35-pipmaster
+          PIP: master
+        - TOXENV: py35-piplatest
+          PIP: latest
+        - TOXENV: py36-pip8.1.1
+          PIP: 8.1.1
+        - TOXENV: py36-pip9.0.1
+          PIP: 9.0.1
+        - TOXENV: py36-pip9.0.3
+          PIP: 9.0.3
+        - TOXENV: py36-pip10.0.1
+          PIP: 10.0.1
+        - TOXENV: py36-pipmaster
+          PIP: master
+        - TOXENV: py36-piplatest
+          PIP: latest
+        - TOXENV: py37-pip8.1.1
+          PIP: 8.1.1
+        - TOXENV: py37-pip9.0.1
+          PIP: 9.0.1
+        - TOXENV: py37-pip9.0.3
+          PIP: 9.0.3
+        - TOXENV: py37-pip10.0.1
+          PIP: 10.0.1
+        - TOXENV: py37-pipmaster
+          PIP: master
+        - TOXENV: py37-piplatest
+          PIP: latest
+
+matrix:
+  allow_failures:
+    - PIP: master
+
+install:
+    - C:\Python36\python -m pip install tox
+
+build: false
+
+test_script:
+    - C:\Python36\Scripts\tox
