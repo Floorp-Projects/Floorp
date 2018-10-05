@@ -1,0 +1,181 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>HitResult - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.concept.engine</a>&nbsp;/&nbsp;<a href="./index.html">HitResult</a><br/>
+<br/>
+<h1>HitResult</h1>
+<code><span class="keyword">sealed</span> <span class="keyword">class </span><span class="identifier">HitResult</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/HitResult.kt#L12">(source)</a>
+<p>Represents all the different supported types of data that can be found from long clicking
+an element.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-a-u-d-i-o/index.html">AUDIO</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AUDIO</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>If the HTML element was of type 'HTMLAudioElement'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-e-m-a-i-l/index.html">EMAIL</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">EMAIL</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>The type used if the URI is prepended with 'mailto:'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-g-e-o/index.html">GEO</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">GEO</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>The type used if the URI is prepended with 'geo:'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-i-m-a-g-e/index.html">IMAGE</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">IMAGE</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>If the HTML element was of type 'HTMLImageElement'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-i-m-a-g-e_-s-r-c/index.html">IMAGE_SRC</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">IMAGE_SRC</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>If the HTML element was of type 'HTMLImageElement' and contained a URI.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-p-h-o-n-e/index.html">PHONE</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">PHONE</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>The type used if the URI is prepended with 'tel:'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-u-n-k-n-o-w-n/index.html">UNKNOWN</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">UNKNOWN</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>Default type if we're unable to match the type to anything. It may or may not have a src.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-v-i-d-e-o/index.html">VIDEO</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">VIDEO</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>If the HTML element was of type 'HTMLVideoElement'.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="src.html">src</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">src</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-a-u-d-i-o/index.html">AUDIO</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">AUDIO</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>If the HTML element was of type 'HTMLAudioElement'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-e-m-a-i-l/index.html">EMAIL</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">EMAIL</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>The type used if the URI is prepended with 'mailto:'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-g-e-o/index.html">GEO</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">GEO</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>The type used if the URI is prepended with 'geo:'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-i-m-a-g-e/index.html">IMAGE</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">IMAGE</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>If the HTML element was of type 'HTMLImageElement'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-i-m-a-g-e_-s-r-c/index.html">IMAGE_SRC</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">IMAGE_SRC</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>If the HTML element was of type 'HTMLImageElement' and contained a URI.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-p-h-o-n-e/index.html">PHONE</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">PHONE</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>The type used if the URI is prepended with 'tel:'.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-u-n-k-n-o-w-n/index.html">UNKNOWN</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">UNKNOWN</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>Default type if we're unable to match the type to anything. It may or may not have a src.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-v-i-d-e-o/index.html">VIDEO</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">VIDEO</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">HitResult</span></a></code>
+<p>If the HTML element was of type 'HTMLVideoElement'.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

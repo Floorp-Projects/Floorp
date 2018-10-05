@@ -1,0 +1,88 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>SearchLocalizationProvider - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.search.provider.localization</a>&nbsp;/&nbsp;<a href="./index.html">SearchLocalizationProvider</a><br/>
+<br/>
+<h1>SearchLocalizationProvider</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">SearchLocalizationProvider</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/search/src/main/java/mozilla/components/browser/search/provider/localization/SearchLocalizationProvider.kt#L11">(source)</a>
+<p>Class providing language, country and optionally region (actual location) of the user/device to
+customize the search experience.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">SearchLocalizationProvider</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>Class providing language, country and optionally region (actual location) of the user/device to
+customize the search experience.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="country.html">country</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">country</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>ISO 3166 alpha-2 country code or UN M.49 numeric-3 area code.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="language.html">language</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">language</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>ISO 639 alpha-2 or alpha-3 language code, or registered language subtags up to 8 alpha letters
+(for future enhancements).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="language-tag.html">languageTag</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">languageTag</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>Returns a language tag of the form -.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="region.html">region</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">region</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">?</span></code>
+<p>Optional actual location (region only) of the user/device. ISO 3166 alpha-2 country code or
+UN M.49 numeric-3 area code.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-locale-search-localization-provider/index.html">LocaleSearchLocalizationProvider</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">LocaleSearchLocalizationProvider</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">SearchLocalizationProvider</span></a></code>
+<p>LocalizationProvider implementation that only provides the language and country from the system's
+default languageTag.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
