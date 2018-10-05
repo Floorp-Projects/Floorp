@@ -1121,11 +1121,7 @@ or run without that action (ie: --no-{action})"
         self.preflight_build()
         self._run_mach_command_in_build_env(['static-analysis', 'autotest', '--intree-tool'])
 
-    def _run_mach_command_in_build_env(self, args):
-        """Run a mach command in a build context."""
-        env = self.query_build_env()
-        env.update(self.query_mach_build_env())
-
+    def _query_mach(self):
         dirs = self.query_abs_dirs()
 
         if 'MOZILLABUILD' in os.environ:
@@ -1138,6 +1134,16 @@ or run without that action (ie: --no-{action})"
             ]
         else:
             mach = [sys.executable, 'mach']
+        return mach
+
+    def _run_mach_command_in_build_env(self, args):
+        """Run a mach command in a build context."""
+        env = self.query_build_env()
+        env.update(self.query_mach_build_env())
+
+        dirs = self.query_abs_dirs()
+
+        mach = self._query_mach()
 
         return_code = self.run_command(
             command=mach + ['--log-no-times'] + args,
@@ -1280,8 +1286,7 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_check_test_env())
 
-        cmd = [
-            sys.executable, 'mach',
+        cmd = self._query_mach() + [
             '--log-no-times',
             'build',
             '-v',
