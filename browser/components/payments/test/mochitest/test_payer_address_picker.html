@@ -10,7 +10,6 @@ Test the paymentOptions address-picker
   <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <script src="payments_common.js"></script>
 
-  <script src="../../res/vendor/custom-elements.min.js"></script>
   <script src="../../res/unprivileged-fallbacks.js"></script>
   <script src="autofillEditForms.js"></script>
 
@@ -120,7 +119,9 @@ let initialState;
 
 add_task(async function setup_once() {
   registerConsoleFilter(function consoleFilter(msg) {
-    return msg.errorMessage.includes("selectedPayerAddress option a9e830667189 does not exist");
+    return msg.errorMessage &&
+      msg.errorMessage.toString().includes("selectedPayerAddress option a9e830667189 " +
+                                           "does not exist");
   });
 
   let templateFrame = document.getElementById("templateFrame");
@@ -265,6 +266,10 @@ add_task(async function test_filtered_options() {
     ok(isVisible(elem), `field ${fieldName} is visible`);
   }
 
+  // The selectedPayerAddress (a9e830667189) doesn't have a phone number and
+  // therefore will cause an error.
+  SimpleTest.expectUncaughtException(true);
+
   setPaymentOptions(requestStore, {
     requestPayerPhone: true,
   });
@@ -284,6 +289,10 @@ add_task(async function test_no_matches() {
   setPaymentOptions(requestStore, {
     requestPayerPhone: true,
   });
+
+  // The selectedPayerAddress (a9e830667189) doesn't have a phone number and
+  // therefore will cause an error.
+  SimpleTest.expectUncaughtException(true);
 
   requestStore.setState({
     savedAddresses: {

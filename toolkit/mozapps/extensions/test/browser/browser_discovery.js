@@ -52,14 +52,6 @@ function test() {
     blocklistState: Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
     userDisabled: false,
   }, {
-    id: "addon2@tests.mozilla.org",
-    name: "Test add-on 2",
-    type: "plugin",
-    version: "3.1.5",
-    isCompatible: true,
-    blocklistState: Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
-    userDisabled: false,
-  }, {
     id: "addon3@tests.mozilla.org",
     name: "Test add-on 3",
     type: "theme",
@@ -117,17 +109,13 @@ async function testHash(aBrowser, aTestAddonVisible) {
   else
     ok(!("addon1@tests.mozilla.org" in data), "Test add-on 1 should not be listed");
   if (aTestAddonVisible[1])
-    ok("addon2@tests.mozilla.org" in data, "Test add-on 2 should be listed");
-  else
-    ok(!("addon2@tests.mozilla.org" in data), "Test add-on 2 should not be listed");
-  if (aTestAddonVisible[2])
     ok("addon3@tests.mozilla.org" in data, "Test add-on 3 should be listed");
   else
     ok(!("addon3@tests.mozilla.org" in data), "Test add-on 3 should not be listed");
 
   // Test against all the add-ons the manager knows about since plugins and
   // app extensions may exist
-  let aAddons = await AddonManager.getAllAddons();
+  let aAddons = await AddonManager.getAddonsByTypes(["extension", "theme"]);
   for (let addon of aAddons) {
     if (!(addon.id in data)) {
       // Test add-ons will have shown an error if necessary above
@@ -195,7 +183,7 @@ add_test(async function() {
   var browser = gManagerWindow.document.getElementById("discover-browser");
   is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-  await testHash(browser, [true, true, true]);
+  await testHash(browser, [true, true]);
   close_manager(gManagerWindow, run_next_test);
 });
 
@@ -203,9 +191,7 @@ add_test(async function() {
 // selected view displays the right url
 add_test(async function() {
   // Hide one of the test add-ons
-  Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
-  Services.prefs.setBoolPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled", true);
-
+  Services.prefs.setBoolPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled", false);
   await open_manager(null, null, function(aWindow) {
     gManagerWindow = aWindow;
     ok(isLoading(), "Should be loading at first");
@@ -216,16 +202,14 @@ add_test(async function() {
   var browser = gManagerWindow.document.getElementById("discover-browser");
   is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-  await testHash(browser, [true, false, true]);
+  await testHash(browser, [true, false]);
   close_manager(gManagerWindow, run_next_test);
 });
 
 // Tests that loading the add-ons manager with the discovery view as the initial
 // view displays the right url
 add_test(async function() {
-  Services.prefs.clearUserPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled");
-  Services.prefs.setBoolPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled", false);
-
+  Services.prefs.clearUserPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled");
   let aWindow = await open_manager(null);
   gManagerWindow = aWindow;
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
@@ -241,8 +225,8 @@ add_test(async function() {
   var browser = gManagerWindow.document.getElementById("discover-browser");
   is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-  await testHash(browser, [true, true, false]);
-  Services.prefs.clearUserPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled");
+  await testHash(browser, [true, true]);
+
   close_manager(gManagerWindow, run_next_test);
 });
 

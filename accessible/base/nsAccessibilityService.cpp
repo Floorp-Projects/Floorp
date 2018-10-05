@@ -75,7 +75,6 @@
 
 #ifdef MOZ_XUL
 #include "XULAlertAccessible.h"
-#include "XULColorPickerAccessible.h"
 #include "XULComboboxAccessible.h"
 #include "XULElementAccessibles.h"
 #include "XULFormControlAccessible.h"
