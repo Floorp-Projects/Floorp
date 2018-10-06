@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const DEFAULT_PROCESS_COUNT = Services.prefs.getDefaultBranch(null).getIntPref("dom.ipc.processCount");
+
 add_task(async function test_slow_content_script() {
   // Make sure we get a new process for our tab, or our reportProcessHangs
   // preferences value won't apply to it.
@@ -15,7 +17,7 @@ add_task(async function test_slow_content_script() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["dom.ipc.processCount", 8],
+      ["dom.ipc.processCount", DEFAULT_PROCESS_COUNT * 2],
       ["dom.ipc.processPrelaunch.enabled", false],
       ["dom.ipc.reportProcessHangs", true],
     ],
