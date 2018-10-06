@@ -1525,7 +1525,7 @@ ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
     return;
   }
 
-  ScrollTo(dest, nsIScrollableFrame::INSTANT, &allowedRange);
+  ScrollTo(dest, nsIScrollableFrame::INSTANT, nsGkAtoms::other, &allowedRange);
 }
 
 void
@@ -2294,8 +2294,24 @@ ScrollFrameHelper::HasBgAttachmentLocal() const
 }
 
 void
+ScrollFrameHelper::ScrollTo(nsPoint aScrollPosition,
+                            nsIScrollableFrame::ScrollMode aMode,
+                            nsAtom* aOrigin,
+                            const nsRect* aRange,
+                            nsIScrollbarMediator::ScrollSnapMode aSnap)
+{
+  if (aOrigin == nullptr) {
+    aOrigin = nsGkAtoms::other;
+  }
+  ScrollToWithOrigin(aScrollPosition, aMode,
+                     aOrigin, aRange,
+                     aSnap);
+}
+
+void
 ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
-                                     nsIScrollableFrame::ScrollMode aMode)
+                                     nsIScrollableFrame::ScrollMode aMode,
+                                     nsAtom* aOrigin)
 {
   nsPoint current = GetScrollPosition();
   CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
@@ -2315,7 +2331,10 @@ ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
     range.y = pt.y;
     range.height = 0;
   }
-  ScrollTo(pt, aMode, &range);
+  if (aOrigin == nullptr) {
+    aOrigin = nsGkAtoms::other;
+  }
+  ScrollTo(pt, aMode, aOrigin, &range);
   // 'this' might be destroyed here
 }
 
@@ -4229,7 +4248,7 @@ ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
     if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
       GetSnapPointForDestination(aUnit, mDestination, pos);
     }
-    ScrollTo(pos, aMode);
+    ScrollTo(pos, aMode, nsGkAtoms::other);
     // 'this' might be destroyed here
     if (aOverflow) {
       *aOverflow = nsIntPoint(0, 0);
@@ -4295,6 +4314,36 @@ ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
 }
 
 void
+ScrollFrameHelper::ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                                     nsIScrollableFrame::ScrollMode aMode,
+                                     nsAtom* aOrigin)
+{
+  nsPoint current = GetScrollPosition();
+  nsPoint pt = current + CSSPoint::ToAppUnits(aDelta);
+  nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
+  nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2*halfPixel - 1, 2*halfPixel - 1);
+  // XXX I don't think the following blocks are needed anymore, now that
+  // ScrollToImpl simply tries to scroll an integer number of layer
+  // pixels from the current position
+  if (aDelta.x == 0.0f) {
+    pt.x = current.x;
+    range.x = pt.x;
+    range.width = 0;
+  }
+  if (aDelta.y == 0.0f) {
+    pt.y = current.y;
+    range.y = pt.y;
+    range.height = 0;
+  }
+  if (aOrigin == nullptr) {
+    aOrigin = nsGkAtoms::other;
+  }
+  ScrollToWithOrigin(pt, aMode, aOrigin, &range,
+                     nsIScrollbarMediator::DISABLE_SNAP);
+  // 'this' might be destroyed here
+}
+
+void
 ScrollFrameHelper::ScrollSnap(nsIScrollableFrame::ScrollMode aMode)
 {
   float flingSensitivity = gfxPrefs::ScrollSnapPredictionSensitivity();
@@ -4321,7 +4370,7 @@ ScrollFrameHelper::ScrollSnap(const nsPoint &aDestination,
   if (GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS,
                                                  pos,
                                                  snapDestination)) {
-    ScrollTo(snapDestination, aMode);
+    ScrollTo(snapDestination, aMode, nsGkAtoms::other);
   }
 }
 
@@ -6620,7 +6669,7 @@ ScrollFrameHelper::DragScroll(WidgetEvent* aEvent)
   }
 
   if (offset.x || offset.y) {
-    ScrollTo(GetScrollPosition() + offset, nsIScrollableFrame::NORMAL);
+    ScrollTo(GetScrollPosition() + offset, nsIScrollableFrame::NORMAL, nsGkAtoms::other);
   }
 
   return willScroll;
