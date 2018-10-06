@@ -226,22 +226,32 @@ function originQuery(conditions = "", bookmarkedFragment = "NULL") {
             SELECT host,
                    host AS fixed_up_host,
                    TOTAL(frecency) AS host_frecency,
-                   ${bookmarkedFragment} AS bookmarked
+                   (
+                     SELECT TOTAL(foreign_count) > 0
+                     FROM moz_places
+                     WHERE moz_places.origin_id = moz_origins.id
+                   ) AS bookmarked
             FROM moz_origins
             WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
                   ${conditions}
             GROUP BY host
             HAVING host_frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                   OR bookmarked
             UNION ALL
             SELECT host,
                    fixup_url(host) AS fixed_up_host,
                    TOTAL(frecency) AS host_frecency,
-                   ${bookmarkedFragment} AS bookmarked
+                   (
+                     SELECT TOTAL(foreign_count) > 0
+                     FROM moz_places
+                     WHERE moz_places.origin_id = moz_origins.id
+                   ) AS bookmarked
             FROM moz_origins
             WHERE host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'
                   ${conditions}
             GROUP BY host
             HAVING host_frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                   OR bookmarked
           ) AS grouped_hosts
           JOIN moz_origins ON moz_origins.host = grouped_hosts.host
           ORDER BY frecency DESC, id DESC
@@ -255,16 +265,12 @@ const SQL_ORIGIN_PREFIX_QUERY = originQuery(
 );
 
 const SQL_ORIGIN_BOOKMARKED_QUERY = originQuery(
-  `AND bookmarked`,
-  `(SELECT TOTAL(foreign_count) > 0 FROM moz_places
-    WHERE moz_places.origin_id = moz_origins.id)`
+  `AND bookmarked`
 );
 
 const SQL_ORIGIN_PREFIX_BOOKMARKED_QUERY = originQuery(
   `AND bookmarked
    AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  `(SELECT TOTAL(foreign_count) > 0 FROM moz_places
-    WHERE moz_places.origin_id = moz_origins.id)`
 );
 
 // Result row indexes for urlQuery()
@@ -283,7 +289,10 @@ function urlQuery(conditions1, conditions2) {
                  id
           FROM moz_places
           WHERE rev_host = :revHost
-                AND MAX(frecency, 0) >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                AND (
+                  MAX(frecency, 0) >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                  OR bookmarked
+                )
                 AND hidden = 0
                 ${conditions1}
           UNION ALL
@@ -295,7 +304,10 @@ function urlQuery(conditions1, conditions2) {
                  id
           FROM moz_places
           WHERE rev_host = :revHost || 'www.'
-                AND MAX(frecency, 0) >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                AND (
+                  MAX(frecency, 0) >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
+                  OR bookmarked
+                )
                 AND hidden = 0
                 ${conditions2}
           ORDER BY frecency DESC, id DESC
