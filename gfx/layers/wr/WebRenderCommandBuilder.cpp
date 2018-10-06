@@ -90,6 +90,7 @@ struct BlobItemData
 
   // XXX: only used for debugging
   bool mInvalid;
+  bool mInvalidRegion;
   bool mEmpty;
 
   // properties that are used to emulate layer tree invalidation
@@ -107,6 +108,7 @@ struct BlobItemData
     , mOpacity(0.0)
   {
     mInvalid = false;
+    mInvalidRegion = false;
     mEmpty = false;
     mDisplayItemKey = aItem->GetPerFrameKey();
     AddFrame(aItem->Frame());
@@ -411,6 +413,7 @@ struct DIGroup
     /*if (aItem->IsReused() && aData->mGeometry) {
       return;
     }*/
+    aData->mInvalidRegion = false;
 
     GP("pre mInvalidRect: %s %p-%d - inv: %d %d %d %d\n", aItem->Name(), aItem->Frame(), aItem->GetPerFrameKey(),
        mInvalidRect.x, mInvalidRect.y, mInvalidRect.width, mInvalidRect.height);
@@ -489,6 +492,7 @@ struct DIGroup
         aData->mRect = transformedRect.Intersect(imageRect);
 
         aData->mInvalid = true;
+        aData->mInvalidRegion = true;
       } else {
         if (aData->mClip != clip) {
           UniquePtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(aBuilder));
@@ -743,9 +747,9 @@ struct DIGroup
             const Matrix4x4Flagged& t = transformItem->GetTransform();
             Matrix t2d;
             bool is2D = t.Is2D(&t2d);
-            gfxCriticalError() << "DisplayItemTransform-" << is2D << "-should-be-invalid";
+            gfxCriticalError() << "DisplayItemTransform-" << is2D << "-region-" << data->mInvalidRegion << "-should-be-invalid";
           } else {
-            gfxCriticalError() << "DisplayItem" << item->Name() << "should be invalid";
+            gfxCriticalError() << "DisplayItem" << item->Name() << "-region-" << data->mInvalidRegion << "-should be invalid";
           }
         }
         // if the item is invalid it needs to be fully contained
