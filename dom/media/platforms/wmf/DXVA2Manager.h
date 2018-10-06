@@ -46,8 +46,7 @@ public:
                               const gfx::IntRect& aRegion,
                               layers::Image** aOutImage) = 0;
 
-  virtual HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture,
-                                    const GUID& aSubType,
+  virtual HRESULT CopyToBGRATexture(ID3D11Texture2D *aInTexture,
                                     ID3D11Texture2D** aOutTexture)
   {
     // Not implemented!
@@ -55,7 +54,7 @@ public:
     return E_FAIL;
   }
 
-  virtual HRESULT ConfigureForSize(IMFMediaType* aInputType)
+  virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   {
     return S_OK;
   }
