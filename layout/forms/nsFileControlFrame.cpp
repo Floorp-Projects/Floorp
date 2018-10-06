@@ -27,6 +27,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/EventStates.h"
 #include "nsTextNode.h"
+#include "nsTextFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -54,6 +55,144 @@ nsFileControlFrame::Init(nsIContent*       aContent,
   nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
 
   mMouseListener = new DnDListener(this);
+}
+
+bool
+nsFileControlFrame::CropTextToWidth(gfxContext&     aRenderingContext,
+                                    const nsIFrame* aFrame,
+                                    nscoord         aWidth,
+                                    nsString&       aText)
+{
+  if (aText.IsEmpty()) {
+    return false;
+  }
+
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsForFrame(aFrame, 1.0f);
+
+  // see if the text will completely fit in the width given
+  nscoord textWidth =
+    nsLayoutUtils::AppUnitWidthOfStringBidi(aText, aFrame, *fm,
+                                            aRenderingContext);
+  if (textWidth <= aWidth) {
+    return false;
+  }
+
+  DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+  const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
+
+  // see if the width is even smaller than the ellipsis
+  fm->SetTextRunRTL(false);
+  textWidth = nsLayoutUtils::AppUnitWidthOfString(kEllipsis, *fm, drawTarget);
+  if (textWidth >= aWidth) {
+    aText = kEllipsis;
+    return true;
+  }
+
+  // determine how much of the string will fit in the max width
+  nscoord totalWidth = textWidth;
+  using mozilla::unicode::ClusterIterator;
+  using mozilla::unicode::ClusterReverseIterator;
+  ClusterIterator leftIter(aText.Data(), aText.Length());
+  ClusterReverseIterator rightIter(aText.Data(), aText.Length());
+  const char16_t* leftPos = leftIter;
+  const char16_t* rightPos = rightIter;
+  const char16_t* pos;
+  ptrdiff_t length;
+  nsAutoString leftString, rightString;
+
+  while (leftPos < rightPos) {
+    leftIter.Next();
+    pos = leftIter;
+    length = pos - leftPos;
+    textWidth = nsLayoutUtils::AppUnitWidthOfString(leftPos, length,
+                                                    *fm, drawTarget);
+    if (totalWidth + textWidth > aWidth) {
+      break;
+    }
+
+    leftString.Append(leftPos, length);
+    leftPos = pos;
+    totalWidth += textWidth;
+
+    if (leftPos >= rightPos) {
+      break;
+    }
+
+    rightIter.Next();
+    pos = rightIter;
+    length = rightPos - pos;
+    textWidth = nsLayoutUtils::AppUnitWidthOfString(pos, length,
+                                                    *fm, drawTarget);
+    if (totalWidth + textWidth > aWidth) {
+      break;
+    }
+
+    rightString.Insert(pos, 0, length);
+    rightPos = pos;
+    totalWidth += textWidth;
+  }
+
+  aText = leftString + kEllipsis + rightString;
+  return true;
+}
+
+void
+nsFileControlFrame::Reflow(nsPresContext*     aPresContext,
+                           ReflowOutput&      aMetrics,
+                           const ReflowInput& aReflowInput,
+                           nsReflowStatus&    aStatus)
+{
+  // Restore the uncropped filename.
+  nsAutoString filename;
+  HTMLInputElement::FromNode(mContent)->GetDisplayFileName(filename);
+
+  bool done = false;
+  while (true) {
+    UpdateDisplayedValue(filename, false);  // update the text node
+    AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+    LinesBegin()->MarkDirty();
+    nsBlockFrame::Reflow(aPresContext, aMetrics, aReflowInput, aStatus);
+    if (done) {
+      break;
+    }
+    nscoord lineISize = LinesBegin()->ISize();
+    const auto cbWM = aMetrics.GetWritingMode();
+    const auto wm = GetWritingMode();
+    nscoord iSize = wm.IsOrthogonalTo(cbWM) ? aMetrics.BSize(cbWM)
+                                            : aMetrics.ISize(cbWM);
+    auto bp = GetLogicalUsedBorderAndPadding(wm);
+    nscoord contentISize = iSize - bp.IStartEnd(wm);
+    if (lineISize > contentISize) {
+      // The filename overflows - crop it and reflow again (once).
+      // NOTE: the label frame might have bidi-continuations
+      auto* labelFrame = mTextContent->GetPrimaryFrame();
+      nscoord labelBP =
+        labelFrame->GetLogicalUsedBorderAndPadding(wm).IStartEnd(wm);
+      auto* lastLabelCont = labelFrame->LastContinuation();
+      if (lastLabelCont != labelFrame) {
+        labelBP +=
+          lastLabelCont->GetLogicalUsedBorderAndPadding(wm).IStartEnd(wm);
+      }
+      auto* buttonFrame = mBrowseFilesOrDirs->GetPrimaryFrame();
+      nscoord availableISizeForLabel = contentISize - buttonFrame->ISize(wm) -
+        buttonFrame->GetLogicalUsedMargin(wm).IStartEnd(wm);
+      if (CropTextToWidth(*aReflowInput.mRenderingContext,
+                          labelFrame,
+                          availableISizeForLabel - labelBP,
+                          filename)) {
+        nsBlockFrame::DidReflow(aPresContext, &aReflowInput);
+        aStatus.Reset();
+        labelFrame->AddStateBits(NS_FRAME_IS_DIRTY |
+                                 NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+        mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+        mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+        done = true;
+        continue;
+      }
+    }
+    break;
+  }
 }
 
 void
@@ -410,13 +549,30 @@ nsFileControlFrame::DnDListener::CanDropTheseFiles(DataTransfer* aDataTransfer,
 }
 
 nscoord
-nsFileControlFrame::GetMinISize(gfxContext *aRenderingContext)
+nsFileControlFrame::GetMinISize(gfxContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
   // Our min inline size is our pref inline size
   result = GetPrefISize(aRenderingContext);
+  return result;
+}
+
+nscoord
+nsFileControlFrame::GetPrefISize(gfxContext* aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_INLINE_SIZE(this, result);
+
+  // Make sure we measure with the uncropped filename.
+  if (mPrefWidth == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    nsAutoString filename;
+    HTMLInputElement::FromNode(mContent)->GetDisplayFileName(filename);
+    UpdateDisplayedValue(filename, false);
+  }
+
+  result = nsBlockFrame::GetPrefISize(aRenderingContext);
   return result;
 }
 
@@ -470,7 +626,15 @@ void
 nsFileControlFrame::UpdateDisplayedValue(const nsAString& aValue, bool aNotify)
 {
   auto* text = Text::FromNode(mTextContent->GetFirstChild());
+  uint32_t oldLength = aNotify ? 0 : text->TextLength();
   text->SetText(aValue, aNotify);
+  if (!aNotify) {
+    // We can't notify during Reflow so we need to tell the text frame
+    // about the text content change we just did.
+    if (auto* textFrame = static_cast<nsTextFrame*>(text->GetPrimaryFrame())) {
+      textFrame->NotifyNativeAnonymousTextnodeChange(oldLength);
+    }
+  }
 }
 
 nsresult
