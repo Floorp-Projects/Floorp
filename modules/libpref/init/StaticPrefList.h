@@ -720,31 +720,19 @@ VARCACHE_PREF(
 
 // Pref to control whether display: -moz-box and display: -moz-inline-box are
 // parsed in content pages.
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 VARCACHE_PREF(
   "layout.css.xul-box-display-values.content.enabled",
    layout_css_xul_box_display_values_content_enabled,
-  bool, PREF_VALUE
+  bool, false
 )
-#undef PREF_VALUE
 
 // Pref to control whether ::xul-tree-* pseudo-elements are parsed in content
 // pages.
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 VARCACHE_PREF(
   "layout.css.xul-tree-pseudos.content.enabled",
    layout_css_xul_tree_pseudos_content_enabled,
-  bool, PREF_VALUE
+  bool, false
 )
-#undef PREF_VALUE
 
 // Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
 VARCACHE_PREF(
