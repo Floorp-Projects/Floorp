@@ -1,0 +1,22 @@
+{
+    "llvm_revision": "317840",
+    "stages": "3",
+    "build_libcxx": false,
+    "build_type": "Release",
+    "assertions": false,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/trunk",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "python_path": "c:/mozilla-build/python/python.exe",
+    "cc": "cl.exe",
+    "cxx": "cl.exe",
+    "patches": [
+      "r318309.patch",
+      "r320462.patch",
+      "msvc-host-x64.patch",
+      "aarch64-vastart-checking.patch",
+      "loosen-msvc-detection.patch"
+    ]
+}
