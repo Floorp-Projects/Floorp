@@ -8,7 +8,6 @@
 
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
-@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 *|*::-moz-fieldset-content {
   display: block; /* StyleAdjuster::adjust_for_fieldset_content overrides this in some cases */
@@ -480,7 +479,7 @@ input[type="image"]:-moz-focusring {
 /* file selector */
 input[type="file"] {
   display: inline-block;
-  white-space: nowrap;
+  white-space: nowrap !important;
   overflow: hidden;
   overflow-clip-box: padding-box;
   color: unset;
@@ -495,7 +494,7 @@ input[type="file"] {
   padding: unset;
 }
 
-input[type="file"] > xul|label {
+input[type="file"] > label {
   min-inline-size: 12em;
   padding-inline-start: 5px;
   text-align: match-parent;
@@ -504,11 +503,8 @@ input[type="file"] > xul|label {
   font-size: unset;
   letter-spacing: unset;
 
-  /*
-   * Force the text to have LTR directionality. Otherwise filenames containing
-   * RTL characters will be reordered with chaotic results.
-   */
-  direction: ltr !important;
+  -moz-user-select: none;
+  unicode-bidi: plaintext;
 }
 
 /* button part of file selector */
@@ -530,14 +526,6 @@ input[type="color"]::-moz-color-swatch {
   box-sizing: border-box;
   border: 1px solid grey;
   display: block;
-}
-
-/* Try to make RTL <input type='file'> look nicer. */
-/* TODO: find a better solution than forcing direction: ltr on all file
-   input labels and remove this override -- bug 1161482 */
-input[type="file"]:dir(rtl) > xul|label {
-  padding-inline-start: 0px;
-  padding-inline-end: 5px;
 }
 
 /* radio buttons */
