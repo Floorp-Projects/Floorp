@@ -47,7 +47,6 @@
 #include "base/basictypes.h"
 #include "base/lock.h"
 #include "base/logging.h"
-#include "base/singleton.h"
 #include "mozilla/Casting.h"
 
 using base::Time;
@@ -249,6 +248,11 @@ class NowSingleton {
     return TimeDelta::FromMilliseconds(now) + rollover_;
   }
 
+  static NowSingleton& instance() {
+    static NowSingleton now;
+    return now;
+  }
+
  private:
   Lock lock_;  // To protected last_seen_ and rollover_.
   TimeDelta rollover_;  // Accumulation of time lost due to rollover.
@@ -269,5 +273,5 @@ TimeTicks::TickFunctionType TimeTicks::SetMockTickFunction(
 
 // static
 TimeTicks TimeTicks::Now() {
-  return TimeTicks() + Singleton<NowSingleton>::get()->Now();
+  return TimeTicks() + NowSingleton::instance().Now();
 }

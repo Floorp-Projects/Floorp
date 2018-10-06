@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/rate_limiter.h"

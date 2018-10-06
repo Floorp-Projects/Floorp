@@ -18,7 +18,6 @@
 #include "mozilla/mozalloc.h"
 #include "mozilla/TimeStamp.h"
 #ifdef FUZZING
-#include "base/singleton.h"
 #include "mozilla/ipc/Faulty.h"
 #endif
 #if !defined(FUZZING) && (!defined(RELEASE_OR_BETA) || defined(DEBUG))

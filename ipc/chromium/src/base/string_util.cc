@@ -24,7 +24,6 @@
 
 #include "base/basictypes.h"
 #include "base/logging.h"
-#include "base/singleton.h"
 
 namespace {
 

@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 #include "base/string16.h"
-#include "base/singleton.h"
 #include "nsDebug.h"
 #include "nsTArray.h"
 
@@ -43,6 +42,8 @@ class Faulty
     static nsresult CreateOutputDirectory(const char *aPathname);
     static nsresult ReadFile(const char* aPathname, nsTArray<nsCString> &aArray);
     static void CopyFDs(IPC::Message* aDstMsg, IPC::Message* aSrcMsg);
+
+    static Faulty& instance();
 
     // Fuzzing methods for Pickle.
     void FuzzBool(bool* aValue, unsigned int aProbability=sDefaultProbability);
@@ -92,7 +93,6 @@ class Faulty
     static const bool sIsLoggingEnabled;
 
     Faulty();
-    friend struct DefaultSingletonTraits<Faulty>;
     DISALLOW_EVIL_CONSTRUCTORS(Faulty);
 
     static bool IsValidProcessType(void);

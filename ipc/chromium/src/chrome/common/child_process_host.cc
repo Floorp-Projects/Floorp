@@ -10,7 +10,6 @@
 #include "base/logging.h"
 #include "base/message_loop.h"
 #include "base/process_util.h"
-#include "base/singleton.h"
 #include "base/waitable_event.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
