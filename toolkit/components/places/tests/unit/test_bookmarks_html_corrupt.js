@@ -89,23 +89,6 @@ var database_check = async function() {
   root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
   Assert.equal(root.childCount, 3);
 
-  // For now some promises are resolved later, so we can't guarantee an order.
-  let foundLivemark = false;
-  for (let i = 0; i < root.childCount; ++i) {
-    let node = root.getChild(i);
-    if (node.title == "Latest Headlines") {
-      foundLivemark = true;
-      Assert.equal("Latest Headlines", node.title);
-
-      let livemark = await PlacesUtils.livemarks.getLivemark({ guid: node.bookmarkGuid });
-      Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
-                   livemark.siteURI.spec);
-      Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
-                   livemark.feedURI.spec);
-    }
-  }
-  Assert.ok(foundLivemark);
-
   // cleanup
   root.containerOpen = false;
 
