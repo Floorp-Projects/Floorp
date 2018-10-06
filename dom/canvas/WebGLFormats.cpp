@@ -102,11 +102,6 @@ InitCompressedFormatInfo()
     AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 ,  64, 4, 4, CompressionFamily::ES3);
     AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,  64, 4, 4, CompressionFamily::ES3);
 
-    // AMD_compressed_ATC_texture
-    AddCompressedFormatInfo(EffectiveFormat::ATC_RGB_AMD                    ,  64, 4, 4, CompressionFamily::ATC);
-    AddCompressedFormatInfo(EffectiveFormat::ATC_RGBA_EXPLICIT_ALPHA_AMD    , 128, 4, 4, CompressionFamily::ATC);
-    AddCompressedFormatInfo(EffectiveFormat::ATC_RGBA_INTERPOLATED_ALPHA_AMD, 128, 4, 4, CompressionFamily::ATC);
-
     // EXT_texture_compression_bptc
     AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_RGBA_BPTC_UNORM        , 16*8, 4, 4, CompressionFamily::BPTC);
     AddCompressedFormatInfo(EffectiveFormat::COMPRESSED_SRGB_ALPHA_BPTC_UNORM  , 16*8, 4, 4, CompressionFamily::BPTC);
@@ -329,11 +324,6 @@ InitFormatInfo()
     AddFormatInfo(FOO(COMPRESSED_SIGNED_RG11_EAC               ), 0, 1,1,0,0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormInt );
     AddFormatInfo(FOO(COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 ), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
     AddFormatInfo(FOO(COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
-
-    // AMD_compressed_ATC_texture
-    AddFormatInfo(FOO(ATC_RGB_AMD                    ), 0, 1,1,1,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(ATC_RGBA_EXPLICIT_ALPHA_AMD    ), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(ATC_RGBA_INTERPOLATED_ALPHA_AMD), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
 
     // EXT_texture_compression_bptc
     AddFormatInfo(FOO(COMPRESSED_RGBA_BPTC_UNORM        ), 0, 1,1,1,1, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
