@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CycleCollectedJSContext.h" // for nsAutoMicroTask
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PositionError.h"
 #include "mozilla/dom/PositionErrorBinding.h"
@@ -1162,6 +1163,23 @@ Geolocation::ShouldBlockInsecureRequests() const
 }
 
 bool
+Geolocation::FeaturePolicyBlocked() const
+{
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryReferent(mOwner);
+  if (!win) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+  if (!doc) {
+    return false;
+  }
+
+  return FeaturePolicyUtils::IsFeatureAllowed(doc,
+                                              NS_LITERAL_STRING("geolocation"));
+}
+
+bool
 Geolocation::ClearPendingRequest(nsGeolocationRequest* aRequest)
 {
   if (aRequest->IsWatch() && this->IsAlreadyCleared(aRequest)) {
@@ -1221,7 +1239,8 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
                              std::move(options), static_cast<uint8_t>(mProtocolType), target,
                              false, EventStateManager::IsHandlingUserInput());
 
-  if (!sGeoEnabled || ShouldBlockInsecureRequests()) {
+  if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
+      !FeaturePolicyBlocked()) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     target->Dispatch(ev.forget());
     return NS_OK;
@@ -1304,7 +1323,8 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
                              static_cast<uint8_t>(mProtocolType), target, true,
                              EventStateManager::IsHandlingUserInput(), watchId);
 
-  if (!sGeoEnabled || ShouldBlockInsecureRequests()) {
+  if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
+      !FeaturePolicyBlocked()) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     target->Dispatch(ev.forget());
     return watchId;
