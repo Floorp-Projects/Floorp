@@ -491,6 +491,18 @@ public:
   }
 
   void
+  SetBodyBlobURISpec(nsACString& aBlobURISpec)
+  {
+    mBodyBlobURISpec = aBlobURISpec;
+  }
+
+  const nsACString&
+  BodyBlobURISpec() const
+  {
+    return mBodyBlobURISpec;
+  }
+
+  void
   SetBodyLocalPath(nsAString& aLocalPath)
   {
     mBodyLocalPath = aLocalPath;
@@ -608,6 +620,7 @@ private:
   // mURLList: a list of one or more fetch URLs
   nsTArray<nsCString> mURLList;
   RefPtr<InternalHeaders> mHeaders;
+  nsCString mBodyBlobURISpec;
   nsString mBodyLocalPath;
   nsCOMPtr<nsIInputStream> mBodyStream;
   int64_t mBodyLength;

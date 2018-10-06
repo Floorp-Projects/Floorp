@@ -1253,6 +1253,21 @@ void
 FetchBody<Response>::SetMimeType();
 
 template <class Derived>
+const nsACString&
+FetchBody<Derived>::BodyBlobURISpec() const
+{
+  return DerivedClass()->BodyBlobURISpec();
+}
+
+template
+const nsACString&
+FetchBody<Request>::BodyBlobURISpec() const;
+
+template
+const nsACString&
+FetchBody<Response>::BodyBlobURISpec() const;
+
+template <class Derived>
 const nsAString&
 FetchBody<Derived>::BodyLocalPath() const
 {
