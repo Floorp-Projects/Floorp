@@ -736,6 +736,7 @@ struct DIGroup
       if (mInvalidRect.Contains(bounds)) {
         GP("Wholely contained\n");
         BlobItemData* data = GetBlobItemData(item);
+        data->mInvalid = false;
       } else {
         BlobItemData* data = GetBlobItemData(item);
         if (data->mInvalid) {
@@ -1098,11 +1099,6 @@ Grouper::ConstructItemInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
 {
   nsDisplayList* children = aItem->GetChildren();
   BlobItemData* data = GetBlobItemDataForGroup(aItem, aGroup);
-
-  /* mInvalid unfortunately persists across paints. Clear it so that if we don't
-   * set it to 'true' we ensure that we're not using the value from the last
-   * time that we painted */
-  data->mInvalid = false;
 
   if (aItem->GetType() == DisplayItemType::TYPE_FILTER) {
     gfx::Size scale(1, 1);
