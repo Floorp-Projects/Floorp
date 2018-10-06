@@ -37,6 +37,8 @@
   <string name="preference_category_general">Geral</string>
   <string name="preference_category_data_collection_use">Uso e Dados coletados</string>
   <string name="preference_category_search">Pesquisar</string>
+  <string name="preference_show_search_suggestions">Obtenha sugestões de pesquisa</string>
+  <string name="preference_show_search_suggestions_summary">%1$s enviará o que você escreve na barra de endereço para seu mecanismo de pesquisa</string>
   <string name="preference_search_engine_default">Padrão</string>
   <string name="preference_state_on">Ativado</string>
   <string name="preference_state_off">Desativado</string>
@@ -77,8 +79,11 @@
   <string name="preference_privacy_should_block_cookies_no_option">Não</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquear somente cookies de terceiros</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Sim</string>
+  <string name="preference_security_biometric">Use impressão digital para desbloquear seu aplicativo</string>
+  <string name="preference_security_biometric_summary">Sua impressão digital pode desbloquear %1$s se a URL já estiver aberta no aplicativo. O modo invisível será ligado.</string>
   <string name="preference_privacy_secure_mode">Furtividade</string>
   <string name="preference_privacy_stealth_summary">Esconder páginas web quando trocar aplicativo</string>
+  <string name="preference_category_security">Segurança</string>
   <string name="preference_category_performance">Desempenho</string>
   <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
   <string name="preference_performance_block_webfonts_summary">Pode resultar em falta de ícones ou imagens</string>
@@ -96,6 +101,7 @@
   <string name="preference_search_add2">Adicionar outro mecanismo de pesquisa</string>
   <string name="preference_search_remove_title">Remover mecanismos de pesquisa</string>
   <string name="preference_search_remove">Remover</string>
+  <string name="preference_homescreen_tips">Mostrar dicas na tela inicial</string>
   <string name="action_option_add_search_engine">Adicionar mecanismo de pesquisa</string>
   <string name="search_add_manually_name_hint">Nome do mecanismo de pesquisa</string>
   <string name="search_add_manually_string">Termo de pesquisa a ser usado</string>
@@ -119,6 +125,7 @@
   <string name="content_description_back">Navegar de volta</string>
   <string name="content_description_stop">Parar de carregar o site</string>
   <string name="content_description_customtab_exit">Retornar ao aplicativo anterior</string>
+  <string name="content_description_trackers_blocked">Número de rastreadores bloqueados</string>
   <string name="content_description_blocking_switch">Bloquear rastreadores</string>
   <string name="your_rights">Seus direitos</string>
   <string name="external_app_prompt_title">Abrir link em um outro app</string>
@@ -200,4 +207,26 @@
   <string name="http_auth_dialog_password">Senha</string>
   <string name="preference_performance_request_desktop_site">Requisitar site para desktop</string>
   <string name="custom_tab_copy_url_action">URL copiada</string>
+  <string name="preference_advanced_summary">Ferramentas do desenvolvedor</string>
+  <string name="preference_category_advanced">Avançado</string>
+  <string name="preference_remote_debugging">Depuração remota via USB/Wi-Fi</string>
+  <string name="biometric_auth_title">Desbloquear %1$s</string>
+  <string name="biometric_auth_description">Toque no sensor de impressão digital para continuar.</string>
+  <string name="biometric_auth_new_session">Nova sessão</string>
+  <string name="biometric_auth_image_description">Ícone de impressão digital</string>
+  <string name="biometric_auth_not_recognized_error">Impressão digital não reconhecida. Tente novamente.</string>
+  <string name="enable_search_suggestion_title">Deseja ativar as sugestões de pesquisa?</string>
+  <string name="enable_search_suggestion_subtitle">Para obter sugestões de pesquisa, %1$s precisa enviar o que você escreve na barra de endereços para o mecanismo de pesquisa que você escolheu. %2$s.</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">Saiba mais</string>
+  <string name="enable_search_suggestions_no">Não</string>
+  <string name="enable_search_suggestions_yes">Sim</string>
+  <string name="no_suggestions_message">Alguns mecanismos de pesquisa não podem mostrar sugestões.</string>
+  <string name="dismiss_no_suggestions_prompt_button">Descartar</string>
+  <string name="tip_disable_tracking_protection">O site está se comportando de maneira inesperada?\n Tente desativar a proteção de rastreamento</string>
+  <string name="tip_add_to_homescreen">Acessar com apenas um toque os sites que você mais usa%1$s Menu &gt; Adicionar à tela inicial</string>
+  <string name="tip_set_default_browser">Abrir todos os links no %1$s\n Configure o %1$s como seu navegador padrão</string>
+  <string name="tip_autocomplete_url">Autocompletar as URLs para os sites que você mais usa\n Pressione continuamente qualquer URL na barra de endereços</string>
+  <string name="tip_open_in_new_tab">Abrir um link numa nova aba\n Pressione continuamente qualquer link numa página</string>
+  <string name="tip_request_desktop">Prefere ver a versão desktop completa do site?%1$s Menu &gt; Solicitar site desktop</string>
+  <string name="tip_disable_tips">Desative as sugestões na tela inicial do %1$s</string>
 </resources>
