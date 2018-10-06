@@ -220,6 +220,21 @@ public:
   }
 
   void
+  SetBodyBlobURISpec(nsACString& aBlobURISpec)
+  {
+    mBodyBlobURISpec = aBlobURISpec;
+  }
+
+  const nsACString&
+  BodyBlobURISpec() const
+  {
+    if (mWrappedResponse) {
+      return mWrappedResponse->BodyBlobURISpec();
+    }
+    return mBodyBlobURISpec;
+  }
+
+  void
   SetBodyLocalPath(nsAString& aLocalPath)
   {
     mBodyLocalPath = aLocalPath;
@@ -388,6 +403,7 @@ private:
   const nsCString mStatusText;
   RefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
+  nsCString mBodyBlobURISpec;
   nsString mBodyLocalPath;
   int64_t mBodySize;
   // It's used to passed to the CacheResponse to generate padding size. Once, we

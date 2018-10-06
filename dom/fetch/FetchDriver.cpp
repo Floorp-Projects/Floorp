@@ -48,6 +48,31 @@ namespace dom {
 
 namespace {
 
+void
+GetBlobURISpecFromChannel(nsIRequest* aRequest, nsCString& aBlobURISpec)
+{
+  MOZ_ASSERT(aRequest);
+
+  aBlobURISpec.SetIsVoid(true);
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if (!channel) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = channel->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (!dom::IsBlobURI(uri)) {
+    return;
+  }
+
+  uri->GetSpec(aBlobURISpec);
+}
+
 bool
 ShouldCheckSRI(const InternalRequest* const aRequest,
                const InternalResponse* const aResponse)
@@ -961,6 +986,14 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
       nsAutoString path;
       file->GetPath(path);
       response->SetBodyLocalPath(path);
+    }
+  } else {
+    // If the request is a blob URI, then remember that URI so that we
+    // can later just use that blob instance instead of cloning it.
+    nsCString blobURISpec;
+    GetBlobURISpecFromChannel(aRequest, blobURISpec);
+    if (!blobURISpec.IsVoid()) {
+      response->SetBodyBlobURISpec(blobURISpec);
     }
   }
 
