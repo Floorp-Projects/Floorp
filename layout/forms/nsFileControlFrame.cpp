@@ -141,25 +141,19 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   }
 
   // Create and setup the text showing the selected files.
-  RefPtr<NodeInfo> nodeInfo;
-  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::label, nullptr,
-                                                 kNameSpaceID_XUL,
-                                                 nsINode::ELEMENT_NODE);
-  NS_TrustedNewXULElement(getter_AddRefs(mTextContent), nodeInfo.forget());
+  mTextContent = doc->CreateHTMLElement(nsGkAtoms::label);
   // NOTE: SetIsNativeAnonymousRoot() has to be called before setting any
   // attribute.
   mTextContent->SetIsNativeAnonymousRoot();
-  mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::crop,
-                        NS_LITERAL_STRING("center"), false);
+  RefPtr<nsTextNode> text = new nsTextNode(doc->NodeInfoManager());
+  mTextContent->AppendChildTo(text, false);
 
   // Update the displayed text to reflect the current element's value.
   nsAutoString value;
   HTMLInputElement::FromNode(mContent)->GetDisplayFileName(value);
   UpdateDisplayedValue(value, false);
 
-  if (!aElements.AppendElement(mTextContent)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  aElements.AppendElement(mTextContent);
 
   // We should be able to interact with the element by doing drag and drop.
   mContent->AddSystemEventListener(NS_LITERAL_STRING("drop"),
@@ -475,7 +469,8 @@ nsFileControlFrame::GetFrameName(nsAString& aResult) const
 void
 nsFileControlFrame::UpdateDisplayedValue(const nsAString& aValue, bool aNotify)
 {
-  mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue, aNotify);
+  auto* text = Text::FromNode(mTextContent->GetFirstChild());
+  text->SetText(aValue, aNotify);
 }
 
 nsresult
