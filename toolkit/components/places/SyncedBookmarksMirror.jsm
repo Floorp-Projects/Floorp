@@ -1251,15 +1251,7 @@ class SyncedBookmarksMirror {
                   /* Queries are bookmarks with a "place:" URL scheme. */
                   WHEN 'place:' THEN :queryKind
                   ELSE :bookmarkKind END)
-                WHEN :folderType THEN (
-                  CASE WHEN EXISTS(
-                    /* Livemarks are folders with a feed URL annotation. */
-                    SELECT 1 FROM moz_items_annos a
-                    JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-                    WHERE a.item_id = s.id AND
-                          n.name = :feedURLAnno
-                  ) THEN :livemarkKind
-                  ELSE :folderKind END)
+                WHEN :folderType THEN :folderKind
                 ELSE :separatorKind END) AS kind,
              s.lastModified / 1000 AS localModified, s.syncChangeCounter,
              s.level, s.isSyncable
@@ -1269,8 +1261,6 @@ class SyncedBookmarksMirror {
         queryKind: SyncedBookmarksMirror.KIND.QUERY,
         bookmarkKind: SyncedBookmarksMirror.KIND.BOOKMARK,
         folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
-        feedURLAnno: PlacesUtils.LMANNO_FEEDURI,
-        livemarkKind: SyncedBookmarksMirror.KIND.LIVEMARK,
         folderKind: SyncedBookmarksMirror.KIND.FOLDER,
         separatorKind: SyncedBookmarksMirror.KIND.SEPARATOR });
 
@@ -1646,29 +1636,6 @@ class SyncedBookmarksMirror {
         }
 
         case PlacesUtils.bookmarks.TYPE_FOLDER: {
-          let feedURLHref = row.getResultByName("feedURL");
-          if (feedURLHref) {
-            // Places stores livemarks as folders with feed and site URL annos.
-            // See bug 1072833 for discussion about changing them to queries.
-            let livemarkCleartext = {
-              id: recordId,
-              type: "livemark",
-              parentid: parentRecordId,
-              hasDupe: true,
-              parentName: row.getResultByName("parentTitle"),
-              dateAdded: row.getResultByName("dateAdded") || undefined,
-              title: row.getResultByName("title"),
-              feedUri: feedURLHref,
-            };
-            let siteURLHref = row.getResultByName("siteURL");
-            if (siteURLHref) {
-              livemarkCleartext.siteUri = siteURLHref;
-            }
-            changeRecords[recordId] = new BookmarkChangeRecord(
-              syncChangeCounter, livemarkCleartext);
-            continue;
-          }
-
           let folderCleartext = {
             id: recordId,
             type: "folder",
@@ -2682,9 +2649,18 @@ async function inflateTree(tree, pseudoTree, parentNode) {
       // syncable and non-syncable items. Non-syncable items might be
       // reuploaded by Android after a node reassignment, or orphaned on the
       // server.
-      node.isSyncable = parentNode == tree.root ?
-        PlacesUtils.bookmarks.userContentRoots.includes(node.guid) :
-        parentNode.isSyncable;
+      if (parentNode == tree.root) {
+        node.isSyncable = PlacesUtils.bookmarks.userContentRoots.includes(node.guid);
+      } else if (node.kind == SyncedBookmarksMirror.KIND.LIVEMARK) {
+        // Places no longer supports livemarks, so we flag unmerged remote
+        // livemarks as non-syncable. This will delete them locally, upload
+        // tombstones, and reupload their parents. Note that we *don't* flag
+        // livemarks that have already been synced, to minimize data loss.
+        // This is only for livemarks that we haven't downloaded yet.
+        node.isSyncable = false;
+      } else {
+        node.isSyncable = parentNode.isSyncable;
+      }
       tree.insert(parentNode.guid, node);
       await inflateTree(tree, pseudoTree, node);
     }
@@ -2972,20 +2948,6 @@ class BookmarkNode {
          remoteNode.kind == SyncedBookmarksMirror.KIND.QUERY) ||
         (this.kind == SyncedBookmarksMirror.KIND.QUERY &&
          remoteNode.kind == SyncedBookmarksMirror.KIND.BOOKMARK)) {
-      return true;
-    }
-    // A local folder can become a livemark as the remote may have synced
-    // as a folder before the annotation was added. However, we don't allow
-    // a local livemark to "downgrade" to a folder.
-    // We allow merging local folders and remote livemarks because Places
-    // stores livemarks as empty folders with feed and site URL annotations.
-    // The livemarks service first inserts the folder, and *then* sets
-    // annotations. Since this isn't wrapped in a transaction, we might sync
-    // before the annotations are set, and upload a folder record instead
-    // of a livemark record (bug 632287), then replace the folder with a
-    // livemark on the next sync.
-    if (this.kind == SyncedBookmarksMirror.KIND.FOLDER &&
-        remoteNode.kind == SyncedBookmarksMirror.KIND.LIVEMARK) {
       return true;
     }
     return false;
@@ -4434,7 +4396,6 @@ class BookmarkObserverRecorder {
       await PlacesUtils.keywords.invalidateCachedKeywords();
     }
     await this.notifyBookmarkObservers();
-    await PlacesUtils.livemarks.invalidateCachedLivemarks();
     await this.updateFrecencies();
   }
 
