@@ -237,18 +237,17 @@ public:
    * This is a closed-ended range --- aRange.XMost()/aRange.YMost() are allowed.
    */
   void ScrollTo(nsPoint aScrollPosition, nsIScrollableFrame::ScrollMode aMode,
+                nsAtom* aOrigin = nullptr,
                 const nsRect* aRange = nullptr,
                 nsIScrollbarMediator::ScrollSnapMode aSnap
-                  = nsIScrollbarMediator::DISABLE_SNAP) {
-    ScrollToWithOrigin(aScrollPosition, aMode, nsGkAtoms::other, aRange,
-                       aSnap);
-  }
+                  = nsIScrollbarMediator::DISABLE_SNAP);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
   void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                          nsIScrollableFrame::ScrollMode aMode
-                           = nsIScrollableFrame::INSTANT);
+                           = nsIScrollableFrame::INSTANT,
+                         nsAtom* aOrigin = nullptr);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -270,6 +269,10 @@ public:
                 nsIScrollableFrame::ScrollMomentum aMomentum = nsIScrollableFrame::NOT_MOMENTUM,
                 nsIScrollbarMediator::ScrollSnapMode aSnap
                   = nsIScrollbarMediator::DISABLE_SNAP);
+  void ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                         nsIScrollableFrame::ScrollMode aMode
+                           = nsIScrollableFrame::INSTANT,
+                         nsAtom* aOrigin = nullptr);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -877,15 +880,16 @@ public:
                         nsIScrollbarMediator::ScrollSnapMode aSnap
                           = nsIScrollbarMediator::DISABLE_SNAP)
                         override {
-    mHelper.ScrollTo(aScrollPosition, aMode, aRange, aSnap);
+    mHelper.ScrollTo(aScrollPosition, aMode, nsGkAtoms::other, aRange, aSnap);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
   virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                                  nsIScrollableFrame::ScrollMode aMode
-                                   = nsIScrollableFrame::INSTANT) override {
-    mHelper.ScrollToCSSPixels(aScrollPosition, aMode);
+                                   = nsIScrollableFrame::INSTANT,
+                                 nsAtom* aOrigin = nullptr) override {
+    mHelper.ScrollToCSSPixels(aScrollPosition, aMode, aOrigin);
   }
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition,
                                             nsAtom* aOrigin = nullptr) override {
@@ -907,6 +911,12 @@ public:
                           = nsIScrollbarMediator::DISABLE_SNAP)
                         override {
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum, aSnap);
+  }
+  virtual void ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                                 nsIScrollableFrame::ScrollMode aMode
+                                   = nsIScrollableFrame::INSTANT,
+                                 nsAtom* aOrigin = nullptr) override {
+    mHelper.ScrollByCSSPixels(aDelta, aMode, aOrigin);
   }
   virtual void ScrollSnap() override {
     mHelper.ScrollSnap();
@@ -1331,15 +1341,16 @@ public:
                         const nsRect* aRange = nullptr,
                         ScrollSnapMode aSnap = nsIScrollbarMediator::DISABLE_SNAP)
                         override {
-    mHelper.ScrollTo(aScrollPosition, aMode, aRange, aSnap);
+    mHelper.ScrollTo(aScrollPosition, aMode, nsGkAtoms::other, aRange, aSnap);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
   virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                                  nsIScrollableFrame::ScrollMode aMode
-                                   = nsIScrollableFrame::INSTANT) override {
-    mHelper.ScrollToCSSPixels(aScrollPosition, aMode);
+                                   = nsIScrollableFrame::INSTANT,
+                                 nsAtom* aOrigin = nullptr) override {
+    mHelper.ScrollToCSSPixels(aScrollPosition, aMode, aOrigin);
   }
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition,
                                             nsAtom* aOrigin = nullptr) override {
@@ -1358,6 +1369,12 @@ public:
                           = nsIScrollbarMediator::DISABLE_SNAP)
                         override {
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum, aSnap);
+  }
+  virtual void ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                                 nsIScrollableFrame::ScrollMode aMode
+                                   = nsIScrollableFrame::INSTANT,
+                                 nsAtom* aOrigin = nullptr) override {
+    mHelper.ScrollByCSSPixels(aDelta, aMode, aOrigin);
   }
   virtual void ScrollSnap() override {
     mHelper.ScrollSnap();
