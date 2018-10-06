@@ -36,6 +36,7 @@ namespace dom {
 #define Country NS_LITERAL_STRING("country")
 #define AddressLine NS_LITERAL_STRING("addressLine")
 #define Region NS_LITERAL_STRING("region")
+#define RegionCode NS_LITERAL_STRING("regionCode")
 #define City NS_LITERAL_STRING("city")
 #define DependentLocality NS_LITERAL_STRING("dependentLocality")
 #define PostalCode NS_LITERAL_STRING("postalCode")
@@ -114,6 +115,7 @@ bool IsAddressKey(const nsAString& aKey)
   return Country.Equals(aKey) ||
          AddressLine.Equals(aKey) ||
          Region.Equals(aKey) ||
+         RegionCode.Equals(aKey) ||
          City.Equals(aKey) ||
          DependentLocality.Equals(aKey) ||
          PostalCode.Equals(aKey) ||
@@ -258,6 +260,7 @@ BasicCardService::EncodeBasicCardData(const nsAString& aCardholderName,
   }
   EncodeBasicCardProperty(AddressLine ,addressLineString , aResult);
   EncodeAddressProperty(aBillingAddress, Region, aResult);
+  EncodeAddressProperty(aBillingAddress, RegionCode, aResult);
   EncodeAddressProperty(aBillingAddress, City, aResult);
   EncodeAddressProperty(aBillingAddress, DependentLocality, aResult);
   EncodeAddressProperty(aBillingAddress, PostalCode, aResult);
@@ -278,6 +281,7 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
   nsTArray<nsString> addressLine;
   nsAutoString country;
   nsAutoString region;
+  nsAutoString regionCode;
   nsAutoString city;
   nsAutoString dependentLocality;
   nsAutoString postalCode;
@@ -311,6 +315,7 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
 
     DecodeAddressProperty(key, value, Country, country);
     DecodeAddressProperty(key, value, Region, region);
+    DecodeAddressProperty(key, value, RegionCode, regionCode);
     DecodeAddressProperty(key, value, City, city);
     DecodeAddressProperty(key, value, DependentLocality, dependentLocality);
     DecodeAddressProperty(key, value, PostalCode, postalCode);
@@ -332,6 +337,7 @@ BasicCardService::DecodeBasicCardData(const nsAString& aData,
                                                            country,
                                                            addressLine,
                                                            region,
+                                                           regionCode,
                                                            city,
                                                            dependentLocality,
                                                            postalCode,
@@ -379,6 +385,7 @@ BasicCardService::IsValidBasicCardErrors(JSContext* aCx,
 #undef Country
 #undef AddressLine
 #undef Region
+#undef RegionCode
 #undef City
 #undef DependentLocality
 #undef PostalCode
