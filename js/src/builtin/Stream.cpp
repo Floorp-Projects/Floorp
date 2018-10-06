@@ -840,7 +840,7 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
     //         rejected with a TypeError exception.
     if (stream->locked()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAM_NOT_LOCKED, "cancel");
+                                  JSMSG_READABLESTREAM_LOCKED_METHOD, "cancel");
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 

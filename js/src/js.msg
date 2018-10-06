@@ -640,7 +640,7 @@ MSG_DEF(JSMSG_NUMBER_MUST_BE_FINITE_NON_NEGATIVE, 1, JSEXN_RANGEERR, "'{0}' must
 MSG_DEF(JSMSG_READABLEBYTESTREAMCONTROLLER_INVALID_BYTESWRITTEN, 0, JSEXN_RANGEERR, "'bytesWritten' exceeds remaining length.")
 MSG_DEF(JSMSG_READABLEBYTESTREAMCONTROLLER_INVALID_VIEW_SIZE, 0, JSEXN_RANGEERR, "view size does not match requested data.")
 MSG_DEF(JSMSG_READABLEBYTESTREAMCONTROLLER_INVALID_VIEW_OFFSET, 0, JSEXN_RANGEERR, "view offset does not match requested position.")
-MSG_DEF(JSMSG_READABLESTREAM_NOT_LOCKED,                 1, JSEXN_TYPEERR, "'{0}' may only be called on a locked stream.")
+MSG_DEF(JSMSG_READABLESTREAM_LOCKED_METHOD,              1, JSEXN_TYPEERR, "'{0}' can't be called on a locked stream.")
 MSG_DEF(JSMSG_READABLESTREAM_LOCKED,                     0, JSEXN_TYPEERR, "A Reader may only be created for an unlocked ReadableStream.")
 MSG_DEF(JSMSG_READABLESTREAM_NOT_BYTE_STREAM_CONTROLLER, 1, JSEXN_TYPEERR, "{0} requires a ReadableByteStreamController.")
 MSG_DEF(JSMSG_READABLESTREAM_NOT_DEFAULT_CONTROLLER,     1, JSEXN_TYPEERR, "{0} requires a ReadableStreamDefaultController.")
