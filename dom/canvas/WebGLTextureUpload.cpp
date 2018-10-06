@@ -1002,7 +1002,7 @@ ValidateCompressedTexImageRestrictions(WebGLContext* webgl,
         break;
 
     // Default: There are no restrictions on CompressedTexImage.
-    default: // ATC, ETC1, ES3
+    default: // ETC1, ES3
         break;
     }
 
@@ -1030,7 +1030,6 @@ ValidateTargetForFormat(WebGLContext* webgl, TexImageTarget target,
                     return false;
                 break;
 
-            case webgl::CompressionFamily::ATC:
             case webgl::CompressionFamily::ETC1:
             case webgl::CompressionFamily::PVRTC:
             case webgl::CompressionFamily::RGTC:
@@ -1566,7 +1565,6 @@ WebGLTexture::CompressedTexSubImage(TexImageTarget target,
     switch (format->compression->family) {
     // Forbidden:
     case webgl::CompressionFamily::ETC1:
-    case webgl::CompressionFamily::ATC:
         mContext->ErrorInvalidOperation("Format does not allow sub-image"
                                         " updates.");
         return;

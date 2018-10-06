@@ -887,14 +887,6 @@ interface WEBGL_compressed_texture_astc {
 };
 
 [NoInterfaceObject]
-interface WEBGL_compressed_texture_atc
-{
-    const GLenum COMPRESSED_RGB_ATC_WEBGL                     = 0x8C92;
-    const GLenum COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL     = 0x8C93;
-    const GLenum COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL = 0x87EE;
-};
-
-[NoInterfaceObject]
 interface WEBGL_compressed_texture_etc
 {
     const GLenum COMPRESSED_R11_EAC                                 = 0x9270;
