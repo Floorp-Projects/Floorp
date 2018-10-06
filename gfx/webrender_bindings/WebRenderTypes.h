@@ -864,8 +864,6 @@ static inline wr::WrColorDepth ToWrColorDepth(gfx::ColorDepth aColorDepth) {
       return wr::WrColorDepth::Color10;
     case gfx::ColorDepth::COLOR_12:
       return wr::WrColorDepth::Color12;
-    case gfx::ColorDepth::COLOR_16:
-      return wr::WrColorDepth::Color16;
     default:
       MOZ_ASSERT_UNREACHABLE("Tried to convert invalid color depth value.");
   }
