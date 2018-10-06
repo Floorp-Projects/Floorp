@@ -2,73 +2,66 @@
  * tresize-test - A purer form of paint measurement than tpaint. This
  * test opens a single window positioned at 10,10 and sized to 425,425,
  * then resizes the window outward |max| times measuring the amount of
- * time it takes to repaint each resize. Dumps the resulting dataset
- * and average to stdout or logfile.
+ * time it takes to repaint each resize.  Calls the provided callback
+ * with an array of resize times in milliseconds.
  */
 
-var dataSet = [];
-var windowSize = 425;
-var resizeIncrement = 2;
-var count = 0;
-var max = 300;
+async function runTest(callback, locationSearch) {
+  const INCREMENT = 2;
+  const MAX = 300;
 
-var dumpDataSet = false;
-var doneCallback = null;
+  // Measure the time it take for the provided action to trigger a
+  // MozAfterPaint event.  This function ensures that the event being
+  // measured is really a result of the given action.
+  function measurePaintTime(action, marker) {
+    return new Promise(resolve => {
+      let startTime;
+      let lastTransaction = window.windowUtils.lastTransactionId;
+      function painted(event) {
+        if (event.transactionId <= lastTransaction) {
+          return;
+        }
 
-function painted() {
-  window.removeEventListener("MozAfterPaint", painted, true);
-  var paintTime = window.performance.now();
-  Profiler.pause("resize " + count);
-  dataSet[count].end = paintTime;
-  setTimeout(resizeCompleted, 20);
-}
-
-function resizeTest() {
-  try {
-    windowSize += resizeIncrement;
-    window.addEventListener("MozAfterPaint", painted, true);
-    Profiler.resume("resize " + count);
-    dataSet[count] = {"start": window.performance.now()};
-    window.resizeTo(windowSize, windowSize);
-  } catch (ex) { finish({error: ex.message}); }
-}
-
-function testCompleted() {
-  try {
-    Profiler.finishTest();
-    var total = 0;
-    var diffs = [];
-    for (var idx = 0; idx < count; idx++) {
-      var diff = dataSet[idx].end - dataSet[idx].start;
-      total += diff;
-      diffs.push(diff);
-    }
-    var average = (total / count);
-    finish({diffs, average});
-  } catch (ex) { finish({error: ex.message}); }
-}
-
-function resizeCompleted() {
-  count++;
-  if (count >= max) {
-    testCompleted();
-  } else {
-    resizeTest();
+        if (marker) {
+          Profiler.pause(marker);
+        }
+        window.removeEventListener("MozAfterPaint", painted, true);
+        let time = event.paintTimeStamp - startTime;
+        resolve(time);
+      }
+      window.addEventListener("MozAfterPaint", painted, true);
+      if (marker) {
+        Profiler.resume(marker);
+      }
+      startTime = window.performance.now();
+      action();
+    });
   }
-}
 
-function runTest(callback, locationSearch) {
-  doneCallback = callback;
-  window.moveTo(10, 10);
-  window.resizeTo(windowSize, windowSize);
+  // Position the intial window and set up profiling...
+  let windowSize = 425;
+  await measurePaintTime(() => {
+    window.moveTo(10, 10);
+    window.resizeTo(windowSize, windowSize);
+  });
+
   Profiler.initFromURLQueryParams(locationSearch);
   Profiler.beginTest("tresize");
-  resizeTest();
-}
 
-function finish(msgs) {
-  if (doneCallback) {
-    doneCallback(msgs);
+  let times = [];
+  for (let i = 0; i < MAX; i++) {
+    const marker = `resize ${i}`;
+    windowSize += INCREMENT;
+
+    let time = await measurePaintTime(() => {
+      window.resizeTo(windowSize, windowSize);
+    }, marker);
+    times.push(time);
+
+    await new Promise(resolve => setTimeout(resolve, 20));
   }
-}
 
+  let total = times.reduce((a, b) => a + b);
+  let average = total / times.length;
+  callback({average});
+}
