@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <script src="webgl-util.js"></script>
 <script src="es3-data.js"></script>
-<title>WebGL test: test WEBGL_compressed_texture_es3 extension</title>
+<title>WebGL test: test WEBGL_compressed_texture_etc extension</title>
 <style>
 img {
  border: 1px solid black;
@@ -124,12 +124,12 @@ function runTest() {
         runTestDisabled();
 
         // Query the extension and store globally so shouldBe can access it
-        ext = gl.getExtension("WEBGL_compressed_texture_es3");
+        ext = gl.getExtension("WEBGL_compressed_texture_etc");
         if (!ext) {
-            ok(true, "No WEBGL_compressed_texture_es3 support -- this is legal");
+            ok(true, "No WEBGL_compressed_texture_etc support -- this is legal");
             runSupportedTest(false);
         } else {
-            ok(true, "Successfully enabled WEBGL_compressed_texture_es3 extension");
+            ok(true, "Successfully enabled WEBGL_compressed_texture_etc extension");
 
             runSupportedTest(true);
             runTestExtension();
@@ -140,17 +140,17 @@ function runTest() {
 
 function runSupportedTest(extensionEnabled) {
     var supported = gl.getSupportedExtensions();
-    if (supported.includes("WEBGL_compressed_texture_es3")) {
+    if (supported.includes("WEBGL_compressed_texture_etc")) {
         if (extensionEnabled) {
-            ok(true, "WEBGL_compressed_texture_es3 listed as supported and getExtension succeeded");
+            ok(true, "WEBGL_compressed_texture_etc listed as supported and getExtension succeeded");
         } else {
-            ok(false, "WEBGL_compressed_texture_es3 listed as supported but getExtension failed");
+            ok(false, "WEBGL_compressed_texture_etc listed as supported but getExtension failed");
         }
     } else {
         if (extensionEnabled) {
-            ok(false, "WEBGL_compressed_texture_es3 not listed as supported but getExtension succeeded");
+            ok(false, "WEBGL_compressed_texture_etc not listed as supported but getExtension succeeded");
         } else {
-            ok(true, "WEBGL_compressed_texture_es3 not listed as supported and getExtension failed -- this is legal");
+            ok(true, "WEBGL_compressed_texture_etc not listed as supported and getExtension failed -- this is legal");
         }
     }
 }

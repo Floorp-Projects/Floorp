@@ -290,7 +290,6 @@ class WebGLContext
     friend class WebGL2Context;
     friend class WebGLContextUserData;
     friend class WebGLExtensionCompressedTextureASTC;
-    friend class WebGLExtensionCompressedTextureATC;
     friend class WebGLExtensionCompressedTextureBPTC;
     friend class WebGLExtensionCompressedTextureES3;
     friend class WebGLExtensionCompressedTextureETC1;
