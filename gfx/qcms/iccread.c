@@ -280,7 +280,7 @@ qcms_bool qcms_profile_is_bogus(qcms_profile *profile)
        if (profile->color_space != RGB_SIGNATURE)
 	       return false;
 
-       if (profile->A2B0 || profile->B2A0)
+       if (profile->A2B0 || profile->B2A0 || profile->mAB || profile->mBA)
                return false;
 
        rX = s15Fixed16Number_to_float(profile->redColorant.X);
@@ -929,6 +929,7 @@ qcms_profile* qcms_profile_create_rgb_with_gamma(
 	profile->class = DISPLAY_DEVICE_PROFILE;
 	profile->rendering_intent = QCMS_INTENT_PERCEPTUAL;
 	profile->color_space = RGB_SIGNATURE;
+        profile->pcs = XYZ_SIGNATURE;
 	return profile;
 }
 
@@ -958,6 +959,7 @@ qcms_profile* qcms_profile_create_rgb_with_table(
 	profile->class = DISPLAY_DEVICE_PROFILE;
 	profile->rendering_intent = QCMS_INTENT_PERCEPTUAL;
 	profile->color_space = RGB_SIGNATURE;
+        profile->pcs = XYZ_SIGNATURE;
 	return profile;
 }
 
