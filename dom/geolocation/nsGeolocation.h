@@ -207,6 +207,10 @@ private:
   // within a context that is not secure.
   bool ShouldBlockInsecureRequests() const;
 
+  // Return whather the Feature 'geolocation' is blocked by FeaturePolicy
+  // directive.
+  bool FeaturePolicyBlocked() const;
+
   // Two callback arrays.  The first |mPendingCallbacks| holds objects for only
   // one callback and then they are released/removed from the array.  The second
   // |mWatchingCallbacks| holds objects until the object is explictly removed or
