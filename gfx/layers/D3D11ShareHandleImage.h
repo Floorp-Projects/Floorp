@@ -52,12 +52,10 @@ protected:
 class D3D11ShareHandleImage final : public Image {
 public:
   D3D11ShareHandleImage(const gfx::IntSize& aSize,
-                        const gfx::IntRect& aRect,
-                        const GUID& aSourceFormat);
+                        const gfx::IntRect& aRect);
   virtual ~D3D11ShareHandleImage() {}
 
-  bool AllocateTexture(D3D11RecycleAllocator* aAllocator,
-                       ID3D11Device* aDevice);
+  bool AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice);
 
   gfx::IntSize GetSize() const override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
@@ -69,7 +67,6 @@ public:
 private:
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
-  const GUID mSourceFormat;
   RefPtr<TextureClient> mTextureClient;
   RefPtr<ID3D11Texture2D> mTexture;
 };

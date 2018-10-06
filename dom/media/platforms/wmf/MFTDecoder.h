@@ -38,10 +38,12 @@ public:
   //  - aOutputType needs at least major and minor types set.
   //    This is used to select the matching output type out
   //    of all the available output types of the MFT.
+  typedef HRESULT (*ConfigureOutputCallback)(IMFMediaType* aOutputType,
+                                             void* aData);
   HRESULT SetMediaTypes(IMFMediaType* aInputType,
                         IMFMediaType* aOutputType,
-                        std::function<HRESULT(IMFMediaType*)>&& aCallback =
-                          [](IMFMediaType* aOutput) { return S_OK; });
+                        ConfigureOutputCallback aCallback = nullptr,
+                        void* aData = nullptr);
 
   // Returns the MFT's IMFAttributes object.
   already_AddRefed<IMFAttributes> GetAttributes();
@@ -49,7 +51,6 @@ public:
   // Retrieves the media type being output. This may not be valid until
   //  the first sample is decoded.
   HRESULT GetOutputMediaType(RefPtr<IMFMediaType>& aMediaType);
-  const GUID& GetOutputMediaSubType() const { return mOutputSubType; }
 
   // Submits data into the MFT for processing.
   //
@@ -87,15 +88,10 @@ public:
   // Sends a message to the MFT.
   HRESULT SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData);
 
-  HRESULT FindDecoderOutputTypeWithSubtype(const GUID& aSubType);
-  HRESULT FindDecoderOutputType();
+  HRESULT SetDecoderOutputType(bool aMatchAllAttributes,
+                               ConfigureOutputCallback aCallback,
+                               void* aData);
 private:
-  // Will search a suitable MediaType using aTypeToUse if set, if not will
-  // use the current mOutputType.
-  HRESULT SetDecoderOutputType(
-    const GUID& aSubType,
-    IMFMediaType* aTypeToUse,
-    std::function<HRESULT(IMFMediaType*)>&& aCallback);
   HRESULT CreateOutputSample(RefPtr<IMFSample>* aOutSample);
 
   MFT_INPUT_STREAM_INFO mInputStreamInfo;
@@ -104,7 +100,6 @@ private:
   RefPtr<IMFTransform> mDecoder;
 
   RefPtr<IMFMediaType> mOutputType;
-  GUID mOutputSubType;
 
   // True if the IMFTransform allocates the samples that it returns.
   bool mMFTProvidesOutputSamples = false;
