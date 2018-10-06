@@ -22,7 +22,7 @@ class TestEscapeAutocomplete(PuppeteerMixin, MarionetteTestCase):
         self.test_urls = [self.marionette.absolute_url(t)
                           for t in self.test_urls]
 
-        self.test_string = 'mozilla'
+        self.test_string = 'mozilla.org/'
 
         self.locationbar = self.browser.navbar.locationbar
         self.autocomplete_results = self.locationbar.autocomplete_results
