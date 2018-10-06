@@ -99,6 +99,17 @@
          of 25 characters. -->
     <string name="shortcut_erase_long_label">Erase browsing history</string>
 
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Erase &amp; open</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_and_open_long_label">Erase and open Focus</string>
+
+
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Search Privately</string>

@@ -115,6 +115,8 @@
         <activity android:name=".activity.EraseShortcutActivity"
             android:theme="@android:style/Theme.Translucent" />
 
+        <activity android:name=".activity.EraseAndOpenShortcutActivity"
+            android:theme="@android:style/Theme.Translucent" />
         <service
             android:name=".customtabs.CustomTabsService"
             android:exported="true"

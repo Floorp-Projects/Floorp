@@ -16,4 +16,17 @@
                 <extra android:name="shortcut" android:value="true" />
         </intent>
     </shortcut>
+  <shortcut
+      android:shortcutId="erase_and_open"
+      android:enabled="true"
+      android:icon="@drawable/ic_shortcut_erase"
+      android:shortcutShortLabel="@string/shortcut_erase_and_open_short_label"
+      android:shortcutLongLabel="@string/shortcut_erase_and_open_long_label">
+    <intent
+        android:action="erase"
+        android:targetPackage="org.mozilla.focus.beta"
+        android:targetClass="org.mozilla.focus.activity.EraseAndOpenShortcutActivity">
+      <extra android:name="shortcut" android:value="true" />
+    </intent>
+  </shortcut>
 </shortcuts>

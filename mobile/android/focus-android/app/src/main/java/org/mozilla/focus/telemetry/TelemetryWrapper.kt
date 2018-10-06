@@ -573,6 +573,12 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
+    fun eraseAndOpenShortcutEvent() {
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.SHORTCUT, Value.ERASE_AND_OPEN))
+            .queue()
+    }
+
+    @JvmStatic
     fun eraseTaskRemoved() {
         withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.RECENT_APPS, Value.ERASE))
                 .queue()
