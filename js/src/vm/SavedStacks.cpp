@@ -347,10 +347,6 @@ SavedFrame::HashPolicy::rekey(Key& key, const Key& newKey)
 /* static */ bool
 SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject proto)
 {
-    // The only object with the SavedFrame::class_ that doesn't have a source
-    // should be the prototype.
-    proto->as<NativeObject>().setReservedSlot(SavedFrame::JSSLOT_SOURCE, NullValue());
-
     return FreezeObject(cx, proto);
 }
 
@@ -370,7 +366,7 @@ static const ClassOps SavedFrameClassOps = {
 
 const ClassSpec SavedFrame::classSpec_ = {
     GenericCreateConstructor<SavedFrame::construct, 0, gc::AllocKind::FUNCTION>,
-    GenericCreatePrototype,
+    GenericCreatePrototype<SavedFrame>,
     SavedFrame::staticFunctions,
     nullptr,
     SavedFrame::protoFunctions,
@@ -387,6 +383,13 @@ const ClassSpec SavedFrame::classSpec_ = {
     JSCLASS_IS_ANONYMOUS |
     JSCLASS_FOREGROUND_FINALIZE,
     &SavedFrameClassOps,
+    &SavedFrame::classSpec_
+};
+
+const Class SavedFrame::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_SavedFrame),
+    JS_NULL_CLASS_OPS,
     &SavedFrame::classSpec_
 };
 
