@@ -13,11 +13,6 @@
 
 #include <assert.h>
 
-#if defined(WEBRTC_ANDROID)
-#define OS_LINUX
-#endif
-#include "base/singleton.h"
-
 namespace webrtc {
 
 enum CountOperation {
@@ -36,7 +31,8 @@ template <class T>
 // "static initialization order fiasco".
 static T* GetStaticInstance(CountOperation count_operation) {
   // Simple solution since we don't use this for large objects anymore
-  return Singleton<T>::get();
+  static T instance;
+  return &instance;
 }
 
 }  // namspace webrtc

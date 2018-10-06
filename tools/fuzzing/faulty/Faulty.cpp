@@ -351,6 +351,14 @@ Faulty::MutationFactor()
   return sPropValue;
 }
 
+// static
+Faulty&
+Faulty::instance()
+{
+  static Faulty faulty;
+  return faulty;
+}
+
 //
 // Strategy: Pipes
 //

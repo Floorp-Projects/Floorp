@@ -51,7 +51,6 @@ class LayoutApp extends PureComponent {
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       onShowGridOutlineHighlight: PropTypes.func.isRequired,
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
-      onToggleFlexItemShown: PropTypes.func.isRequired,
       onToggleGeometryEditor: PropTypes.func.isRequired,
       onToggleGridHighlighter: PropTypes.func.isRequired,
       onToggleShowGridAreas: PropTypes.func.isRequired,
@@ -62,23 +61,21 @@ class LayoutApp extends PureComponent {
     };
   }
 
-  getFlexboxHeader() {
-    const { flexbox } = this.props;
-
-    if (!flexbox.actorID) {
+  getFlexboxHeader(flexContainer) {
+    if (!flexContainer.actorID) {
       // No flex container or flex item selected.
       return LAYOUT_L10N.getStr("flexbox.header");
-    } else if (!flexbox.flexItemShown) {
+    } else if (!flexContainer.flexItemShown) {
       // No flex item selected.
       return LAYOUT_L10N.getStr("flexbox.flexContainer");
     }
 
-    const grip = translateNodeFrontToGrip(flexbox.nodeFront);
+    const grip = translateNodeFrontToGrip(flexContainer.nodeFront);
     return LAYOUT_L10N.getFormatStr("flexbox.flexItemOf", getSelectorFromGrip(grip));
   }
 
   render() {
-    let items = [
+    const items = [
       {
         component: Grid,
         componentProps: this.props,
@@ -102,19 +99,43 @@ class LayoutApp extends PureComponent {
     ];
 
     if (Services.prefs.getBoolPref(FLEXBOX_ENABLED_PREF)) {
-      items = [
-        {
+      // Since the flexbox panel is hidden behind a pref. We insert the flexbox container
+      // to the first index of the accordion item list.
+      items.splice(0, 0, {
+        component: Flexbox,
+        componentProps: {
+          ...this.props,
+          flexContainer: this.props.flexbox.flexContainer,
+        },
+        header: this.getFlexboxHeader(this.props.flexbox.flexContainer),
+        opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
+        onToggled: () => {
+          const opened =  Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF);
+          Services.prefs.setBoolPref(FLEXBOX_OPENED_PREF, !opened);
+        }
+      });
+
+      // If the current selected node is both a flex container and flex item. Render
+      // an accordion with another Flexbox component where the flexbox to show is the
+      // parent flex container of the current selected node.
+      if (this.props.flexbox.flexItemContainer &&
+          this.props.flexbox.flexItemContainer.actorID) {
+        // Insert the parent flex container to the second index of the accordion item
+        // list.
+        items.splice(1, 0, {
           component: Flexbox,
-          componentProps: this.props,
-          header: this.getFlexboxHeader(),
+          componentProps: {
+            ...this.props,
+            flexContainer: this.props.flexbox.flexItemContainer,
+          },
+          header: this.getFlexboxHeader(this.props.flexbox.flexItemContainer),
           opened: Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF),
           onToggled: () => {
             const opened =  Services.prefs.getBoolPref(FLEXBOX_OPENED_PREF);
             Services.prefs.setBoolPref(FLEXBOX_OPENED_PREF, !opened);
           }
-        },
-        ...items
-      ];
+        });
+      }
     }
 
     return (

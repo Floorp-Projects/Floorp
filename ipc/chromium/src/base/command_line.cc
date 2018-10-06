@@ -14,7 +14,6 @@
 #include <algorithm>
 
 #include "base/logging.h"
-#include "base/singleton.h"
 #include "base/string_piece.h"
 #include "base/string_util.h"
 #include "base/sys_string_conversions.h"
