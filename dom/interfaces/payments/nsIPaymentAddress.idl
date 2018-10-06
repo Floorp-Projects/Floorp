@@ -13,6 +13,7 @@ interface nsIPaymentAddress : nsISupports
   readonly attribute AString country;
   readonly attribute nsIArray addressLine;
   readonly attribute AString region;
+  readonly attribute AString regionCode;
   readonly attribute AString city;
   readonly attribute AString dependentLocality;
   readonly attribute AString postalCode;
@@ -24,6 +25,7 @@ interface nsIPaymentAddress : nsISupports
   void init(in AString aCountry,
             in nsIArray aAddressLine,
             in AString aRegion,
+            in AString aRegionCode,
             in AString aCity,
             in AString aDependentLocality,
             in AString aPostalCode,

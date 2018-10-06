@@ -126,6 +126,7 @@ public:
   nsresult UpdateShippingAddress(const nsAString& aCountry,
                                  const nsTArray<nsString>& aAddressLine,
                                  const nsAString& aRegion,
+                                 const nsAString& aRegionCode,
                                  const nsAString& aCity,
                                  const nsAString& aDependentLocality,
                                  const nsAString& aPostalCode,
