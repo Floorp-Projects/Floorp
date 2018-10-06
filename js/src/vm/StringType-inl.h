@@ -88,6 +88,26 @@ NewInlineString(JSContext* cx, HandleLinearString base, size_t start, size_t len
     return s;
 }
 
+template <typename CharT>
+static MOZ_ALWAYS_INLINE JSFlatString*
+TryEmptyOrStaticString(JSContext* cx, const CharT* chars, size_t n)
+{
+    // Measurements on popular websites indicate empty strings are pretty common
+    // and most strings with length 1 or 2 are in the StaticStrings table. For
+    // length 3 strings that's only about 1%, so we check n <= 2.
+    if (n <= 2) {
+        if (n == 0) {
+            return cx->emptyString();
+        }
+
+        if (JSFlatString* str = cx->staticStrings().lookup(chars, n)) {
+            return str;
+        }
+    }
+
+    return nullptr;
+}
+
 } /* namespace js */
 
 MOZ_ALWAYS_INLINE bool

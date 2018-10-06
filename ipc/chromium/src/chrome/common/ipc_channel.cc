@@ -8,15 +8,16 @@
 
 #include <limits>
 
-#include "base/atomic_sequence_num.h"
 #include "base/process_util.h"
 #include "base/rand_util.h"
 #include "base/string_util.h"
 
+#include "mozilla/Atomics.h"
+
 namespace {
 
 // Global atomic used to guarantee channel IDs are unique.
-base::StaticAtomicSequenceNumber g_last_id;
+mozilla::Atomic<int> g_last_id;
 
 }  // namespace
 
@@ -34,7 +35,7 @@ std::wstring Channel::GenerateUniqueRandomChannelID() {
 
   return StringPrintf(L"%d.%u.%d",
       base::GetCurrentProcId(),
-      g_last_id.GetNext(),
+      g_last_id++,
       base::RandInt(0, std::numeric_limits<int32_t>::max()));
 }
 

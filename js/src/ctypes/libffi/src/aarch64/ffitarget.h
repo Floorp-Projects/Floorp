@@ -27,8 +27,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #endif
 
 #ifndef LIBFFI_ASM
+#ifdef _MSC_VER
+typedef unsigned long long ffi_arg;
+typedef signed long long ffi_sarg;
+#define FFI_SIZEOF_ARG 8
+#else
 typedef unsigned long ffi_arg;
 typedef signed long ffi_sarg;
+#endif
 
 typedef enum ffi_abi
   {

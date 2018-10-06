@@ -56,6 +56,7 @@
 #include "vm/WrapperObject.h"
 #include "wasm/WasmJS.h"
 
+#include "vm/InlineCharBuffer-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 
@@ -2165,11 +2166,12 @@ JSStructuredCloneReader::readStringImpl(uint32_t nchars)
                                   "string length");
         return nullptr;
     }
-    UniquePtr<CharT[], JS::FreePolicy> chars = AllocateChars<CharT>(context(), nchars);
-    if (!chars || !in.readChars(chars.get(), nchars)) {
+
+    InlineCharBuffer<CharT> chars;
+    if (!chars.maybeAlloc(context(), nchars) || !in.readChars(chars.get(), nchars)) {
         return nullptr;
     }
-    return NewString<CanGC>(context(), std::move(chars), nchars);
+    return chars.toStringDontDeflate(context(), nchars);
 }
 
 JSString*
