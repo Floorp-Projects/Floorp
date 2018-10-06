@@ -241,7 +241,8 @@ public:
    */
   virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                                  nsIScrollableFrame::ScrollMode aMode
-                                   = nsIScrollableFrame::INSTANT) = 0;
+                                   = nsIScrollableFrame::INSTANT,
+                                 nsAtom* aOrigin = nullptr) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in float CSS pixels.
@@ -278,6 +279,11 @@ public:
                         ScrollMomentum aMomentum = NOT_MOMENTUM,
                         nsIScrollbarMediator::ScrollSnapMode aSnap
                           = nsIScrollbarMediator::DISABLE_SNAP) = 0;
+
+  virtual void ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                                 nsIScrollableFrame::ScrollMode aMode
+                                   = nsIScrollableFrame::INSTANT,
+                                 nsAtom* aOrigin = nullptr) = 0;
 
   /**
    * Perform scroll snapping, possibly resulting in a smooth scroll to
