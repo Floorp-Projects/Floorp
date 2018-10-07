@@ -37,6 +37,8 @@
   <string name="preference_category_general">ਆਮ</string>
   <string name="preference_category_data_collection_use">ਡਾਟਾ ਇਕੱਤਰ ਅਤੇ ਵਰਤੋਂ</string>
   <string name="preference_category_search">ਖੋਜੋ</string>
+  <string name="preference_show_search_suggestions">ਖੋਜ ਸੁਝਾਅ ਲਵੋ</string>
+  <string name="preference_show_search_suggestions_summary">%1$s ਤੁਹਾਡੇ ਖੋਜ ਇੰਜਣ ਨੂੰ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ ਤੁਹਾਡੇ ਵਲੋਂ ਲਿਖਤ ਭੇਜੀ ਜਾਵੇਗੀ</string>
   <string name="preference_search_engine_default">ਮੂਲ</string>
   <string name="preference_state_on">ਚਾਲੂ</string>
   <string name="preference_state_off">ਬੰਦ</string>
@@ -76,8 +78,10 @@
   <string name="preference_privacy_should_block_cookies_no_option">ਨਹੀਂ</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">ਸਿਰਫ ਤੀਜੀ ਪਾਰਟੀ ਕੂਕੀਜ਼ ਬਲਾੱਕ ਕਰੋ</string>
   <string name="preference_privacy_should_block_cookies_yes_option">ਹਾਂ</string>
+  <string name="preference_security_biometric">ਐਪ ਅਣ-ਲਾਕ ਕਰਨ ਲਈ ਫਿੰਗਰਪਰਿੰਟ ਵਰਤੋ</string>
   <string name="preference_privacy_secure_mode">ਭੇਤ</string>
-  <string name="preference_privacy_stealth_summary">ਐਪ ਸਵਿਚ ਕਰਦੇ ਸਮੇਂ ਵੈੱਬ ਪੇਜ ਛਪਾਓ</string>
+  <string name="preference_privacy_stealth_summary">ਐਪਾਂ ਸਵਿੱਚ ਕਰਨ ਦੌਰਾਨ ਵੈੱਬ ਸਫ਼ੇ ਲੁਕਾਓ ਅਤੇ ਸਕਰੀਨਸ਼ਾਟ ਲੈਣ ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ।</string>
+  <string name="preference_category_security">ਸੁਰੱਖਿਆ</string>
   <string name="preference_category_performance">ਕਾਰਗੁਜ਼ਾਰੀ</string>
   <string name="preference_performance_block_webfonts">ਵੈੱਬ ਅੱਖਰ ਬਲਾੱਕ ਕਰੋ</string>
   <string name="preference_performance_block_webfonts_summary">ਨਤੀਜੇ ਵਜੋਂ ਆਈਕਾਨ ਜਾਂ ਚਿੱਤਰ ਲਾਪਤਾ ਹੋ ਸਕਦੇ ਹਨ</string>
@@ -95,6 +99,7 @@
   <string name="preference_search_add2">+ਹੋਰ ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
   <string name="preference_search_remove_title">ਖੋਜ ਇੰਜਣਾਂ ਨੂੰ ਹਟਾਓ</string>
   <string name="preference_search_remove">ਹਟਾਓ</string>
+  <string name="preference_homescreen_tips">ਮੁੱਖ ਸਕਰੀਨ ਦੇ ਗੁਰ ਵੇਖਾਓ</string>
   <string name="action_option_add_search_engine">ਖੋਜ ਇੰਜਣ ਨੂੰ ਜੋੜੋ</string>
   <string name="search_add_manually_name_hint">ਖੋਜ ਇੰਜਣ ਨਾਂਮ</string>
   <string name="search_add_manually_string">ਵਰਤਣ ਲਈ ਖੋਜ ਸਟ੍ਰਿੰਗ</string>
@@ -118,6 +123,7 @@
   <string name="content_description_back">ਪਿੱਛੇ ਵੱਲ ਨੈਵੀਗੇਟ ਕਰੋ</string>
   <string name="content_description_stop">ਵੈੱਬਸਾਈਟ ਨੂੰ ਲੋਡ ਕਰਨਾ ਬੰਦ ਕਰੋ</string>
   <string name="content_description_customtab_exit">ਪਿਛਲੇ ਐਪ \'ਤੇ ਜਾਓ</string>
+  <string name="content_description_trackers_blocked">ਪਾਬੰਦੀ ਲਾਏ ਟਰੈਕਾਂ ਦੀ ਗਿਣਤੀ</string>
   <string name="content_description_blocking_switch">ਟ੍ਰੈਕਰਾਂ ਨੂੰ ਬਲੌਕ ਕਰੋ</string>
   <string name="your_rights">ਤੁਹਾਡੇ ਹੱਕ</string>
   <string name="external_app_prompt_title">ਲਿੰਕ ਨੂੰ ਹੋਰ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
@@ -160,7 +166,9 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">ਜੋੜੋ</string>
   <string name="dialog_addtohomescreen_action_cancel">ਰੱਦ ਕਰੋ</string>
+  <string name="dialog_addtohomescreen_tracking_protection">ਸ਼ਾਰਟਕੱਟ ਨੂੰ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਅਸਮਰੱਥ ਕਰਕੇ ਖੋਲ੍ਹਿਆ ਜਾਵੇਗਾ</string>
   <string name="notification_browsing_session_channel_name">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਰਿੰਗ ਕਾਰਜਕਾਲ</string>
+  <string name="notification_browsing_session_channel_description">ਸੂਚਨਾਵਾਂ ਛੂਹਣ ਨਾਲ ਤੁਹਾਡੇ %1$s ਸ਼ੈਸ਼ਨ ਨੂੰ ਮਿਟਾਉਣ ਦੇਣਗੀਆਂ। ਤੁਹਾਨੂੰ ਐਪ ਖੋਲ੍ਹਣ ਜਾਂ ਆਪਣੇ ਬਰਾਊਜ਼ਰ ਵਿੱਚ ਚੱਲਣਾ ਵੇਖਣ ਦੀ ਲਓੜ ਨਹੀਂ ਹੈ।</string>
   <string name="tabs_tray_action_erase">ਬਰਾਊਜ਼ ਕਰਨ ਦਾ ਅਤੀਤ ਮਿਟਾਓ</string>
   <string name="download_firefox">ਫਾਇਰਫਾਕਸ ਡਾਊਨਲੋਡ ਕਰੋ</string>
   <string name="your_rights_content1">ਮੋਜ਼ੀਲਾ ਅਤੇ ਹੋਰ ਯੋਗਦਾਨੀਆਂ ਦੁਆਰਾ ਬਣਾਏ ਗਏ %1$s ਮੁਫ਼ਤ ਅਤੇ ਓਪਨ ਸੋਰਸ ਸਾਫਟਵੇਅਰ ਹੈ।</string>
@@ -185,4 +193,20 @@
   <string name="http_auth_dialog_password">ਪਾਸਵਰਡ</string>
   <string name="preference_performance_request_desktop_site">ਡੈਸਕਟਾਪ ਸਾਈਟ ਦੀ ਮੰਗ</string>
   <string name="custom_tab_copy_url_action">URL ਕਾਪੀ ਕੀਤਾ</string>
+  <string name="preference_advanced_summary">ਡਿਵੈਲਪਰ ਟੂਲ</string>
+  <string name="preference_category_advanced">ਤਕਨੀਕੀ</string>
+  <string name="preference_remote_debugging">USB//Wi-Fi ਰਾਹੀਂ ਰਿਮੋਟ ਡੀਬੱਗ ਕਰਨਾ</string>
+  <string name="biometric_auth_title">%1$s ਅਣ-ਲਾਕ ਕਰੋ</string>
+  <string name="biometric_auth_description">ਜਾਰੀ ਰੱਖਣ ਲਈ ਫਿੰਗਰਪਰਿੰਟ ਸੈਂਸਰ ਨੂੰ ਛੂਹੋ।</string>
+  <string name="biometric_auth_new_session">ਨਵਾਂ ਸ਼ੈਸ਼ਨ</string>
+  <string name="biometric_auth_image_description">ਫਿੰਗਰਪਰਿੰਟ ਆਈਕਾਨ</string>
+  <string name="biometric_auth_not_recognized_error">ਫਿੰਗਰਪਰਿੰਟ ਦੀ ਪਛਾਣ ਨਹੀਂ ਹੋਈ। ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
+  <string name="biometric_auth_moved_too_quickly">ਉਂਗਲ ਬਹੁਤ ਤੇਜ਼ੀ ਨਾਲ ਹਿਲਾਈ ਗਈ। ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
+  <string name="enable_search_suggestion_title">ਕੀ ਤੁਸੀਂ ਖੋਜ ਸੁਝਾਅ ਚਾਲੂ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
+  <string name="enable_search_suggestion_subtitle_learnmore">ਹੋਰ ਸਿੱਖੋ</string>
+  <string name="enable_search_suggestions_no">ਨਹੀਂ</string>
+  <string name="enable_search_suggestions_yes">ਹਾਂ</string>
+  <string name="no_suggestions_message">ਕੁਝ ਖੋਜ ਇੰਜਣ ਸੁਝਾਅ ਨਹੀਂ ਵੇਖਾ ਸਕਦੇ ਹਨ।</string>
+  <string name="dismiss_no_suggestions_prompt_button">ਰੱਦ ਕਰੋ</string>
+  <string name="tip_disable_tracking_protection">ਸਾਈਟ ਅਜੀਬ ਵਿਹਾਰ ਕਰ ਰਹੀ ਹੈ?\n ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਨੂੰ ਬੰਦ ਕਰਕੇ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
 </resources>
