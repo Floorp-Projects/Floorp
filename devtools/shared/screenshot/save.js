@@ -183,15 +183,13 @@ function saveToClipboard(base64URI) {
     const base64Data = base64URI.replace("data:image/png;base64,", "");
 
     const image = atob(base64Data);
-    const imgPtr = Cc["@mozilla.org/supports-interface-pointer;1"]
-                   .createInstance(Ci.nsISupportsInterfacePointer);
-    imgPtr.data = imageTools.decodeImageFromBuffer(image, image.length, "image/png");
+    const img = imageTools.decodeImageFromBuffer(image, image.length, "image/png");
 
     const transferable = Cc["@mozilla.org/widget/transferable;1"]
                      .createInstance(Ci.nsITransferable);
     transferable.init(null);
     transferable.addDataFlavor("image/png");
-    transferable.setTransferData("image/png", imgPtr, -1);
+    transferable.setTransferData("image/png", img, -1);
 
     Services.clipboard.setData(transferable, null, Services.clipboard.kGlobalClipboard);
     return L10N.getStr("screenshotCopied");
