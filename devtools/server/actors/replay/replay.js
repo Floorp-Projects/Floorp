@@ -707,8 +707,14 @@ function ProcessRequest(request) {
     }
     return { exception: "No handler for " + request.type };
   } catch (e) {
-    RecordReplayControl.dump("ReplayDebugger Record/Replay Error: " + e + "\n");
-    return { exception: "" + e };
+    let msg;
+    try {
+      msg = "" + e;
+    } catch (ee) {
+      msg = "Unknown";
+    }
+    RecordReplayControl.dump("ReplayDebugger Record/Replay Error: " + msg + "\n");
+    return { exception: msg };
   }
 }
 
