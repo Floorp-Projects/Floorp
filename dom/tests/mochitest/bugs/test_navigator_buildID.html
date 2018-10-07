@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=583181
+-->
+<head>
+  <title>Test for Bug 583181</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=583181">Mozilla Bug 583181</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const LEGACY_BUILD_ID = 20100101; // Resist Fingerprinting's build ID
+
+//
+// Access navigator.buildID from unprivileged web content.
+//
+var isOK = false;
+try {
+  var contentBuildID = navigator.buildID;
+  isOK = true;
+} catch (ex) {
+}
+ok(isOK, "navigator.buildID should never throw");
+is(typeof(contentBuildID), "string", "navigator.buildID should be a string");
+ok(+contentBuildID > LEGACY_BUILD_ID,
+   `navigator.buildID should be exposed in content - got "${contentBuildID}"`);
+
+//
+// Access navigator.buildID from chrome.
+//
+let chromeScript = SpecialPowers.loadChromeScript(() => {
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  addMessageListener("test:getBuildID", nav => {
+    let browser = Services.wm.getMostRecentWindow('navigator:browser');
+    return browser.navigator.buildID;
+  });
+});
+
+let chromeBuildID = chromeScript.sendSyncMessage("test:getBuildID")[0][0];
+chromeScript.destroy();
+
+ok(+chromeBuildID > LEGACY_BUILD_ID,
+   `navigator.buildID should be exposed in chrome - got "${chromeBuildID}"`);
+
+function onMozillaIFrameLoaded() {
+  //
+  // Access navigator.buildID from mozilla.org.
+  //
+  let mozillaBuildID = getMozillaBuildID();
+
+  ok(+mozillaBuildID > LEGACY_BUILD_ID,
+     `navigator.buildID should be exposed on mozilla.org ` +
+     `- got "${mozillaBuildID}"`);
+  is(chromeBuildID, mozillaBuildID,
+     "navigator.buildID should be the same in chrome and on mozilla.org");
+
+  //
+  // Access navigator.buildID from mozilla.org when resisting fingerprinting.
+  //
+  SpecialPowers.pushPrefEnv(
+    {"set": [["privacy.resistFingerprinting", true]]},
+    () => {
+      let resistBuildID = getMozillaBuildID();
+
+      is(+resistBuildID, LEGACY_BUILD_ID,
+         "navigator.buildID should be spoofed on mozilla.org when " +
+         "resisting fingerprinting");
+
+      SimpleTest.finish();
+    }
+  );
+}
+
+function getMozillaBuildID() {
+  let Cu = SpecialPowers.Cu;
+  let mozillaIFrame = document.getElementById("mozillaIFrame").contentWindow;
+  let mozillaSandbox = Cu.Sandbox(mozillaIFrame,
+                                  {sandboxPrototype: mozillaIFrame});
+  let mozillaBuildID = Cu.evalInSandbox("window.navigator.buildID",
+                                        mozillaSandbox);
+  Cu.nukeSandbox(mozillaSandbox);
+  return mozillaBuildID;
+}
+</script>
+</pre>
+<iframe id="mozillaIFrame" onload="onMozillaIFrameLoaded();" src="https://www.mozilla.org/" />
+</body>
+</html>
