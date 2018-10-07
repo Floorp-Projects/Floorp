@@ -67,6 +67,7 @@ class MenuButton extends PureComponent {
     this.onHidden = this.onHidden.bind(this);
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
+    this.onTouchStart = this.onTouchStart.bind(this);
 
     this.tooltip = null;
     this.buttonRef = null;
@@ -78,6 +79,7 @@ class MenuButton extends PureComponent {
       expanded: false,
       win: props.doc.defaultView.top,
     };
+    this.ignoreNextClick = false;
   }
 
   componentWillMount() {
@@ -175,6 +177,44 @@ class MenuButton extends PureComponent {
     });
   }
 
+  // When we are closing the menu we will get a 'hidden' event before we get
+  // a 'click' event. We want to re-enable the pointer-events: auto setting we
+  // use on the button while the menu is visible, but we don't want to do it
+  // until after the subsequent click event since otherwise we will end up
+  // re-opening the menu.
+  //
+  // For mouse events, we achieve this by using setTimeout(..., 0) to schedule
+  // a separate task to run after the click event, but in the case of touch
+  // events the event order differs and the setTimeout callback will run before
+  // the click event.
+  //
+  // In order to prevent that we detect touch events and set a flag to ignore
+  // the next click event. However, we need to differentiate between touch drag
+  // events and long press events (which don't generate a 'click') and "taps"
+  // (which do). We do that by looking for a 'touchmove' event and clearing the
+  // flag if we get one.
+  onTouchStart(evt) {
+    const touchend = () => {
+      const anchorRect = this.buttonRef.current.getClientRects()[0];
+      const { clientX, clientY } = evt.changedTouches[0];
+      // We need to check that the click is inside the bounds since when the
+      // menu is being closed the button will currently have
+      // pointer-events: none (and if we don't check the bounds we will end up
+      // ignoring unrelated clicks).
+      if (anchorRect.x <= clientX && clientX <= anchorRect.x + anchorRect.width &&
+          anchorRect.y <= clientY && clientY <= anchorRect.y + anchorRect.height) {
+        this.ignoreNextClick = true;
+      }
+    };
+
+    const touchmove = () => {
+      this.state.win.removeEventListener("touchend", touchend);
+    };
+
+    this.state.win.addEventListener("touchend", touchend, { once: true });
+    this.state.win.addEventListener("touchmove", touchmove, { once: true });
+  }
+
   onHidden() {
     this.setState({ expanded: false });
     // While the menu is open, if we click _anywhere_ outside the menu, it will
@@ -192,10 +232,21 @@ class MenuButton extends PureComponent {
       if (this.buttonRef) {
         this.buttonRef.style.pointerEvents = "auto";
       }
+      this.state.win.removeEventListener("touchstart",
+                                         this.onTouchStart,
+                                         true);
     }, 0);
+
+    this.state.win.addEventListener("touchstart", this.onTouchStart, true);
+
   }
 
   async onClick(e) {
+    if (this.ignoreNextClick) {
+      this.ignoreNextClick = false;
+      return;
+    }
+
     if (e.target === this.buttonRef) {
       // On Mac, even after clicking the button it doesn't get focus.
       // Force focus to the button so that our keydown handlers get called.
