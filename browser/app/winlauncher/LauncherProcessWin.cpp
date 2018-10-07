@@ -188,8 +188,8 @@ IsSameBinaryAsParentProcess()
 
   WCHAR parentExe[MAX_PATH + 1] = {};
   DWORD parentExeLen = mozilla::ArrayLength(parentExe);
-  if (!::QueryFullProcessImageNameW(parentProcess.get(), 0, parentExe,
-                                    &parentExeLen)) {
+  if (!::QueryFullProcessImageNameW(parentProcess.get(), PROCESS_NAME_NATIVE,
+                                    parentExe, &parentExeLen)) {
     // If QueryFullProcessImageNameW failed, we should not behave as the
     // launcher process for the same reason as NtQueryInformationProcess.
     MOZ_CRASH("QueryFullProcessImageNameW failed");
@@ -205,7 +205,8 @@ IsSameBinaryAsParentProcess()
   }
 
   mozilla::Maybe<bool> isSame =
-    mozilla::DoPathsPointToIdenticalFile(parentExe, ourExe);
+    mozilla::DoPathsPointToIdenticalFile(parentExe, ourExe,
+                                         mozilla::eNtPath);
   if (!isSame) {
     // If DoPathsPointToIdenticalFile failed, we should not behave as the
     // launcher process for the same reason as NtQueryInformationProcess.
