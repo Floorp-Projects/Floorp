@@ -27,29 +27,23 @@ class nsFileControlFrame final : public nsBlockFrame,
                                  public nsIAnonymousContentCreator
 {
 public:
-  NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsFileControlFrame)
-
   explicit nsFileControlFrame(ComputedStyle* aStyle);
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
-  void Reflow(nsPresContext*     aPresContext,
-              ReflowOutput&      aDesiredSize,
-              const ReflowInput& aReflowInput,
-              nsReflowStatus&    aStatus) override;
-
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsDisplayListSet& aLists) override;
+
+  NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS(nsFileControlFrame)
 
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
   virtual void SetFocus(bool aOn, bool aRepaint) override;
 
-  nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  virtual nscoord GetMinISize(gfxContext *aRenderingContext) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
@@ -57,9 +51,9 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  nsresult AttributeChanged(int32_t aNameSpaceID,
-                            nsAtom* aAttribute,
-                            int32_t aModType) override;
+  virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
+                                    nsAtom*        aAttribute,
+                                    int32_t         aModType) override;
   virtual void ContentStatesChanged(mozilla::EventStates aStates) override;
 
   // nsIAnonymousContentCreator
@@ -157,15 +151,6 @@ protected:
   RefPtr<DnDListener> mMouseListener;
 
 protected:
-  /**
-   * Crop aText to fit inside aWidth using the styles of aFrame.
-   * @return true if aText was modified
-   */
-  static bool CropTextToWidth(gfxContext&     aRenderingContext,
-                              const nsIFrame* aFrame,
-                              nscoord         aWidth,
-                              nsString&       aText);
-
   /**
    * Sync the disabled state of the content with anonymous children.
    */

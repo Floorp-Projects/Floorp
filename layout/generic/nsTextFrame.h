@@ -668,13 +668,6 @@ public:
 
   bool HasAnyNoncollapsedCharacters() override;
 
-  /**
-   * Call this after you have manually changed the text node contents without
-   * notifying that change.  This behaves as if all the text contents changed.
-   * (You should only use this for native anonymous content.)
-   */
-  void NotifyNativeAnonymousTextnodeChange(uint32_t aOldLength);
-
 protected:
   virtual ~nsTextFrame();
 
