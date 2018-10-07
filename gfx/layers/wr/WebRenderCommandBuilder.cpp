@@ -491,6 +491,20 @@ struct DIGroup
         transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
         aData->mRect = transformedRect.Intersect(imageRect);
 
+        // CGC invariant broken
+        if (!mInvalidRect.Contains(aData->mRect)) {
+          gfxCriticalError() << "CGC-" <<
+            "-" << aData->mRect.x <<
+            "-" << aData->mRect.y <<
+            "-" << aData->mRect.width <<
+            "-" << aData->mRect.height <<
+            "," << invalidRect.x <<
+            "-" << invalidRect.y <<
+            "-" << invalidRect.width <<
+            "-" << invalidRect.height <<
+            "-ib";
+        }
+
         aData->mInvalid = true;
         aData->mInvalidRegion = true;
       } else {
@@ -747,7 +761,16 @@ struct DIGroup
             const Matrix4x4Flagged& t = transformItem->GetTransform();
             Matrix t2d;
             bool is2D = t.Is2D(&t2d);
-            gfxCriticalError() << "DisplayItemTransform-" << is2D << "-region-" << data->mInvalidRegion << "-should-be-invalid";
+            gfxCriticalError() << "DIT-" << is2D << "-r-" << data->mInvalidRegion <<
+              "-" << bounds.x <<
+              "-" << bounds.y <<
+              "-" << bounds.width <<
+              "-" << bounds.height <<
+              "," << mInvalidRect.x <<
+              "-" << mInvalidRect.y <<
+              "-" << mInvalidRect.width <<
+              "-" << mInvalidRect.height <<
+              "-sbi";
           } else {
             gfxCriticalError() << "DisplayItem" << item->Name() << "-region-" << data->mInvalidRegion << "-should be invalid";
           }
