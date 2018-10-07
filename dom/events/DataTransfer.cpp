@@ -1161,19 +1161,9 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
       // value 0) as the length.
       fdp.forget(aSupports);
       *aLength = nsITransferable::kFlavorHasDataProvider;
-    }
-    else {
-      // wrap the item in an nsISupportsInterfacePointer
-      nsCOMPtr<nsISupportsInterfacePointer> ptrSupports =
-        do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-      if (!ptrSupports) {
-        return false;
-      }
-
-      ptrSupports->SetData(data);
-      ptrSupports.forget(aSupports);
-
-      *aLength = sizeof(nsISupportsInterfacePointer *);
+    } else {
+      data.forget(aSupports);
+      *aLength = sizeof(nsISupports *);
     }
 
     return true;
