@@ -16,271 +16,6 @@
   <label class="header-name" flex="1" data-l10n-id="privacy-header"/>
 </hbox>
 
-<!-- Passwords -->
-<groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" hidden="true">
-  <caption><label data-l10n-id="forms-header"/></caption>
-
-  <vbox id="passwordSettings">
-    <hbox id="savePasswordsBox">
-      <checkbox id="savePasswords"
-                data-l10n-id="forms-ask-to-save-logins"
-                preference="signon.rememberSignons"
-                onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
-                flex="1" />
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <button id="passwordExceptions"
-                class="accessory-button"
-                data-l10n-id="forms-exceptions"
-                preference="pref.privacy.disable_button.view_passwords_exceptions"
-                search-l10n-ids="
-                  permissions-address,
-                  permissions-exceptions-saved-logins-window.title,
-                  permissions-exceptions-saved-logins-desc,
-                "/>
-      </hbox>
-    </hbox>
-    <hbox id="showPasswordBox" pack="end">
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <button id="showPasswords"
-                class="accessory-button"
-                data-l10n-id="forms-saved-logins"
-                search-l10n-ids="forms-saved-logins.label"
-                preference="pref.privacy.disable_button.view_passwords"/>
-      </hbox>
-    </hbox>
-  </vbox>
-  <hbox id="masterPasswordRow">
-    <checkbox id="useMasterPassword"
-              data-l10n-id="forms-master-pw-use"
-              flex="1"/>
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <button id="changeMasterPassword"
-              class="accessory-button"
-              data-l10n-id="forms-master-pw-change"/>
-    </hbox>
-  </hbox>
-</groupbox>
-
-<!-- History -->
-<groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
-  <caption><label data-l10n-id="history-header"/></caption>
-  <hbox align="center">
-    <label id="historyModeLabel"
-           control="historyMode"
-           data-l10n-id="history-remember-label"/>
-    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-    <hbox>
-      <menulist id="historyMode">
-        <menupopup>
-          <menuitem data-l10n-id="history-remember-option-all"
-                    value="remember"
-                    search-l10n-ids="history-remember-description"/>
-          <menuitem data-l10n-id="history-remember-option-never"
-                    value="dontremember"
-                    search-l10n-ids="history-dontremember-description"/>
-          <menuitem data-l10n-id="history-remember-option-custom"
-                    value="custom"
-                    search-l10n-ids="
-                      history-private-browsing-permanent.label,
-                      history-remember-browser-option.label,
-                      history-remember-search-option.label,
-                      history-clear-on-close-option.label,
-                      history-clear-on-close-settings.label"/>
-        </menupopup>
-      </menulist>
-    </hbox>
-  </hbox>
-  <hbox>
-    <deck id="historyPane" flex="1">
-      <vbox id="historyRememberPane">
-        <hbox align="center" flex="1">
-          <vbox flex="1">
-            <description
-              class="description-with-side-element"
-              data-l10n-id="history-remember-description"/>
-          </vbox>
-        </hbox>
-      </vbox>
-      <vbox id="historyDontRememberPane">
-        <hbox align="center" flex="1">
-          <vbox flex="1">
-            <description
-              class="description-with-side-element"
-              data-l10n-id="history-dontremember-description"/>
-          </vbox>
-        </hbox>
-      </vbox>
-      <vbox id="historyCustomPane">
-        <vbox>
-          <checkbox id="privateBrowsingAutoStart"
-                    data-l10n-id="history-private-browsing-permanent"
-                    preference="browser.privatebrowsing.autostart"/>
-          <vbox class="indent">
-            <checkbox id="rememberHistory"
-                      data-l10n-id="history-remember-browser-option"
-                      preference="places.history.enabled"/>
-            <checkbox id="rememberForms"
-                      data-l10n-id="history-remember-search-option"
-                      preference="browser.formfill.enable"/>
-            <hbox id="clearDataBox"
-                  align="center">
-              <checkbox id="alwaysClear"
-                        preference="privacy.sanitize.sanitizeOnShutdown"
-                        data-l10n-id="history-clear-on-close-option"
-                        flex="1" />
-            </hbox>
-          </vbox>
-        </vbox>
-      </vbox>
-    </deck>
-    <vbox id="historyButtons" align="end">
-      <button id="clearHistoryButton"
-              class="accessory-button"
-              icon="clear"
-              data-l10n-id="history-clear-button"/>
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <button id="clearDataSettings"
-                class="accessory-button"
-                data-l10n-id="history-clear-on-close-settings"
-                searchkeywords="&clearDataSettings4.label;
-                                &historySection.label;
-                                &itemHistoryAndDownloads.label;
-                                &itemCookies.label;
-                                &itemActiveLogins.label;
-                                &itemCache.label;
-                                &itemFormSearchHistory.label;
-                                &dataSection.label;
-                                &itemSitePreferences.label;
-                                &itemOfflineApps.label;"/>
-      </hbox>
-    </vbox>
-  </hbox>
-</groupbox>
-
-<!-- Site Data -->
-<groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize">
-  <caption><label data-l10n-id="sitedata-header"/></caption>
-
-  <hbox data-subcategory="sitedata" align="baseline">
-    <vbox flex="1">
-      <description class="description-with-side-element" flex="1">
-        <html:span id="totalSiteDataSize" class="tail-with-learn-more"></html:span>
-        <label id="siteDataLearnMoreLink"
-          class="learnMore text-link" data-l10n-id="sitedata-learn-more"/>
-      </description>
-      <description class="description-with-side-element warning-description"
-                   flex="1" hidden="true" id="blockCookiesWarning"
-                   data-l10n-id="sitedata-warning-your-settings-prevent-changes"/>
-      <radiogroup id="blockCookies"
-                  preference="network.cookie.cookieBehavior"
-                  onsyncfrompreference="return gPrivacyPane.readBlockCookies();"
-                  onsynctopreference="return gPrivacyPane.writeBlockCookies();">
-        <radio value="allow"
-               data-l10n-id="sitedata-allow-cookies-option"
-               flex="1" />
-        <radio value="disallow"
-               data-l10n-id="sitedata-disallow-cookies-option"
-               flex="1" />
-        <hbox id="blockThirdPartyRow"
-              class="indent"
-              align="center">
-          <label id="blockCookiesLabel" control="blockCookiesMenu"
-                 data-l10n-id="sitedata-block-desc"/>
-          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-          <hbox>
-            <menulist id="blockCookiesMenu" preference="network.cookie.cookieBehavior"
-                      onsyncfrompreference="return gPrivacyPane.readBlockCookiesFrom();"
-                      onsynctopreference="return gPrivacyPane.writeBlockCookiesFrom();">
-              <menupopup>
-                <menuitem id="blockCookiesFromTrackers" data-l10n-id="sitedata-block-trackers-option" value="trackers"/>
-                <menuitem data-l10n-id="sitedata-block-unvisited-option" value="unvisited"/>
-                <menuitem data-l10n-id="sitedata-block-all-third-party-option" value="all-third-parties"/>
-                <menuitem data-l10n-id="sitedata-block-all-option" value="always"/>
-              </menupopup>
-            </menulist>
-          </hbox>
-        </hbox>
-        <hbox id="keepRow"
-              align="center">
-          <label id="keepUntil"
-                 control="keepCookiesUntil"
-                 data-l10n-id="sitedata-keep-until"/>
-          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-          <hbox>
-            <menulist id="keepCookiesUntil"
-                      onsyncfrompreference="return gPrivacyPane.readKeepCookiesUntil();"
-                      preference="network.cookie.lifetimePolicy">
-              <menupopup>
-                <menuitem data-l10n-id="sitedata-keep-until-expire" value="0"/>
-                <menuitem data-l10n-id="sitedata-keep-until-closed" value="2"/>
-              </menupopup>
-            </menulist>
-          </hbox>
-        </hbox>
-      </radiogroup>
-    </vbox>
-    <vbox>
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <button id="clearSiteDataButton"
-            class="accessory-button"
-            icon="clear"
-            search-l10n-ids="clear-site-data-cookies-empty.label, clear-site-data-cache-empty.label"
-            data-l10n-id="sitedata-clear"/>
-      </hbox>
-      <hbox>
-        <button id="siteDataSettings"
-                class="accessory-button"
-                data-l10n-id="sitedata-settings"
-                search-l10n-ids="
-                  site-data-settings-window.title,
-                  site-data-column-host.label,
-                  site-data-column-cookies.label,
-                  site-data-column-storage.label,
-                  site-data-settings-description,
-                  site-data-remove-all.label,
-                "/>
-      </hbox>
-      <hbox>
-        <button id="cookieExceptions"
-                class="accessory-button"
-                data-l10n-id="sitedata-cookies-exceptions"
-                preference="pref.privacy.disable_button.cookie_exceptions"
-                search-l10n-ids="
-                  permissions-address,
-                  permissions-block.label,
-                  permissions-allow.label,
-                  permissions-remove.label,
-                  permissions-remove-all.label,
-                  permissions-button-cancel.label,
-                  permissions-button-ok.label,
-                  permissions-exceptions-cookie-desc,
-                " />
-      </hbox>
-    </vbox>
-  </hbox>
-</groupbox>
-
-<!-- Address Bar -->
-<groupbox id="locationBarGroup"
-          data-category="panePrivacy"
-          hidden="true">
-  <caption><label data-l10n-id="addressbar-header"/></caption>
-  <label id="locationBarSuggestionLabel" data-l10n-id="addressbar-suggest"/>
-  <checkbox id="historySuggestion" data-l10n-id="addressbar-locbar-history-option"
-            preference="browser.urlbar.suggest.history"/>
-  <checkbox id="bookmarkSuggestion" data-l10n-id="addressbar-locbar-bookmarks-option"
-            preference="browser.urlbar.suggest.bookmark"/>
-  <checkbox id="openpageSuggestion" data-l10n-id="addressbar-locbar-openpage-option"
-            preference="browser.urlbar.suggest.openpage"/>
-  <label class="text-link" id="openSearchEnginePreferences"
-         data-l10n-id="addressbar-suggestions-settings"/>
-</groupbox>
-
 <!-- Tracking / Content Blocking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" aria-describedby="contentBlockingDescription">
   <caption>
@@ -479,6 +214,271 @@
       </radiogroup>
     </vbox>
   </vbox>
+</groupbox>
+
+<!-- Site Data -->
+<groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize">
+  <caption><label data-l10n-id="sitedata-header"/></caption>
+
+  <hbox data-subcategory="sitedata" align="baseline">
+    <vbox flex="1">
+      <description class="description-with-side-element" flex="1">
+        <html:span id="totalSiteDataSize" class="tail-with-learn-more"></html:span>
+        <label id="siteDataLearnMoreLink"
+          class="learnMore text-link" data-l10n-id="sitedata-learn-more"/>
+      </description>
+      <description class="description-with-side-element warning-description"
+                   flex="1" hidden="true" id="blockCookiesWarning"
+                   data-l10n-id="sitedata-warning-your-settings-prevent-changes"/>
+      <radiogroup id="blockCookies"
+                  preference="network.cookie.cookieBehavior"
+                  onsyncfrompreference="return gPrivacyPane.readBlockCookies();"
+                  onsynctopreference="return gPrivacyPane.writeBlockCookies();">
+        <radio value="allow"
+               data-l10n-id="sitedata-allow-cookies-option"
+               flex="1" />
+        <radio value="disallow"
+               data-l10n-id="sitedata-disallow-cookies-option"
+               flex="1" />
+        <hbox id="blockThirdPartyRow"
+              class="indent"
+              align="center">
+          <label id="blockCookiesLabel" control="blockCookiesMenu"
+                 data-l10n-id="sitedata-block-desc"/>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <menulist id="blockCookiesMenu" preference="network.cookie.cookieBehavior"
+                      onsyncfrompreference="return gPrivacyPane.readBlockCookiesFrom();"
+                      onsynctopreference="return gPrivacyPane.writeBlockCookiesFrom();">
+              <menupopup>
+                <menuitem id="blockCookiesFromTrackers" data-l10n-id="sitedata-block-trackers-option" value="trackers"/>
+                <menuitem data-l10n-id="sitedata-block-unvisited-option" value="unvisited"/>
+                <menuitem data-l10n-id="sitedata-block-all-third-party-option" value="all-third-parties"/>
+                <menuitem data-l10n-id="sitedata-block-all-option" value="always"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </hbox>
+        <hbox id="keepRow"
+              align="center">
+          <label id="keepUntil"
+                 control="keepCookiesUntil"
+                 data-l10n-id="sitedata-keep-until"/>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <menulist id="keepCookiesUntil"
+                      onsyncfrompreference="return gPrivacyPane.readKeepCookiesUntil();"
+                      preference="network.cookie.lifetimePolicy">
+              <menupopup>
+                <menuitem data-l10n-id="sitedata-keep-until-expire" value="0"/>
+                <menuitem data-l10n-id="sitedata-keep-until-closed" value="2"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </hbox>
+      </radiogroup>
+    </vbox>
+    <vbox>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="clearSiteDataButton"
+            class="accessory-button"
+            icon="clear"
+            search-l10n-ids="clear-site-data-cookies-empty.label, clear-site-data-cache-empty.label"
+            data-l10n-id="sitedata-clear"/>
+      </hbox>
+      <hbox>
+        <button id="siteDataSettings"
+                class="accessory-button"
+                data-l10n-id="sitedata-settings"
+                search-l10n-ids="
+                  site-data-settings-window.title,
+                  site-data-column-host.label,
+                  site-data-column-cookies.label,
+                  site-data-column-storage.label,
+                  site-data-settings-description,
+                  site-data-remove-all.label,
+                "/>
+      </hbox>
+      <hbox>
+        <button id="cookieExceptions"
+                class="accessory-button"
+                data-l10n-id="sitedata-cookies-exceptions"
+                preference="pref.privacy.disable_button.cookie_exceptions"
+                search-l10n-ids="
+                  permissions-address,
+                  permissions-block.label,
+                  permissions-allow.label,
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-button-cancel.label,
+                  permissions-button-ok.label,
+                  permissions-exceptions-cookie-desc,
+                " />
+      </hbox>
+    </vbox>
+  </hbox>
+</groupbox>
+
+<!-- Passwords -->
+<groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" hidden="true">
+  <caption><label data-l10n-id="forms-header"/></caption>
+
+  <vbox id="passwordSettings">
+    <hbox id="savePasswordsBox">
+      <checkbox id="savePasswords"
+                data-l10n-id="forms-ask-to-save-logins"
+                preference="signon.rememberSignons"
+                onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
+                flex="1" />
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="passwordExceptions"
+                class="accessory-button"
+                data-l10n-id="forms-exceptions"
+                preference="pref.privacy.disable_button.view_passwords_exceptions"
+                search-l10n-ids="
+                  permissions-address,
+                  permissions-exceptions-saved-logins-window.title,
+                  permissions-exceptions-saved-logins-desc,
+                "/>
+      </hbox>
+    </hbox>
+    <hbox id="showPasswordBox" pack="end">
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="showPasswords"
+                class="accessory-button"
+                data-l10n-id="forms-saved-logins"
+                search-l10n-ids="forms-saved-logins.label"
+                preference="pref.privacy.disable_button.view_passwords"/>
+      </hbox>
+    </hbox>
+  </vbox>
+  <hbox id="masterPasswordRow">
+    <checkbox id="useMasterPassword"
+              data-l10n-id="forms-master-pw-use"
+              flex="1"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="changeMasterPassword"
+              class="accessory-button"
+              data-l10n-id="forms-master-pw-change"/>
+    </hbox>
+  </hbox>
+</groupbox>
+
+<!-- History -->
+<groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
+  <caption><label data-l10n-id="history-header"/></caption>
+  <hbox align="center">
+    <label id="historyModeLabel"
+           control="historyMode"
+           data-l10n-id="history-remember-label"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <menulist id="historyMode">
+        <menupopup>
+          <menuitem data-l10n-id="history-remember-option-all"
+                    value="remember"
+                    search-l10n-ids="history-remember-description"/>
+          <menuitem data-l10n-id="history-remember-option-never"
+                    value="dontremember"
+                    search-l10n-ids="history-dontremember-description"/>
+          <menuitem data-l10n-id="history-remember-option-custom"
+                    value="custom"
+                    search-l10n-ids="
+                      history-private-browsing-permanent.label,
+                      history-remember-browser-option.label,
+                      history-remember-search-option.label,
+                      history-clear-on-close-option.label,
+                      history-clear-on-close-settings.label"/>
+        </menupopup>
+      </menulist>
+    </hbox>
+  </hbox>
+  <hbox>
+    <deck id="historyPane" flex="1">
+      <vbox id="historyRememberPane">
+        <hbox align="center" flex="1">
+          <vbox flex="1">
+            <description
+              class="description-with-side-element"
+              data-l10n-id="history-remember-description"/>
+          </vbox>
+        </hbox>
+      </vbox>
+      <vbox id="historyDontRememberPane">
+        <hbox align="center" flex="1">
+          <vbox flex="1">
+            <description
+              class="description-with-side-element"
+              data-l10n-id="history-dontremember-description"/>
+          </vbox>
+        </hbox>
+      </vbox>
+      <vbox id="historyCustomPane">
+        <vbox>
+          <checkbox id="privateBrowsingAutoStart"
+                    data-l10n-id="history-private-browsing-permanent"
+                    preference="browser.privatebrowsing.autostart"/>
+          <vbox class="indent">
+            <checkbox id="rememberHistory"
+                      data-l10n-id="history-remember-browser-option"
+                      preference="places.history.enabled"/>
+            <checkbox id="rememberForms"
+                      data-l10n-id="history-remember-search-option"
+                      preference="browser.formfill.enable"/>
+            <hbox id="clearDataBox"
+                  align="center">
+              <checkbox id="alwaysClear"
+                        preference="privacy.sanitize.sanitizeOnShutdown"
+                        data-l10n-id="history-clear-on-close-option"
+                        flex="1" />
+            </hbox>
+          </vbox>
+        </vbox>
+      </vbox>
+    </deck>
+    <vbox id="historyButtons" align="end">
+      <button id="clearHistoryButton"
+              class="accessory-button"
+              icon="clear"
+              data-l10n-id="history-clear-button"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="clearDataSettings"
+                class="accessory-button"
+                data-l10n-id="history-clear-on-close-settings"
+                searchkeywords="&clearDataSettings4.label;
+                                &historySection.label;
+                                &itemHistoryAndDownloads.label;
+                                &itemCookies.label;
+                                &itemActiveLogins.label;
+                                &itemCache.label;
+                                &itemFormSearchHistory.label;
+                                &dataSection.label;
+                                &itemSitePreferences.label;
+                                &itemOfflineApps.label;"/>
+      </hbox>
+    </vbox>
+  </hbox>
+</groupbox>
+
+<!-- Address Bar -->
+<groupbox id="locationBarGroup"
+          data-category="panePrivacy"
+          hidden="true">
+  <caption><label data-l10n-id="addressbar-header"/></caption>
+  <label id="locationBarSuggestionLabel" data-l10n-id="addressbar-suggest"/>
+  <checkbox id="historySuggestion" data-l10n-id="addressbar-locbar-history-option"
+            preference="browser.urlbar.suggest.history"/>
+  <checkbox id="bookmarkSuggestion" data-l10n-id="addressbar-locbar-bookmarks-option"
+            preference="browser.urlbar.suggest.bookmark"/>
+  <checkbox id="openpageSuggestion" data-l10n-id="addressbar-locbar-openpage-option"
+            preference="browser.urlbar.suggest.openpage"/>
+  <label class="text-link" id="openSearchEnginePreferences"
+         data-l10n-id="addressbar-suggestions-settings"/>
 </groupbox>
 
 <hbox id="permissionsCategory"
