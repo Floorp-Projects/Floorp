@@ -147,6 +147,19 @@
       <description id="update-restart-description">&updateRestart.message2;</description>
     </popupnotificationcontent>
   </popupnotification>
+
+  <popupnotification id="appMenu-addon-installed-notification"
+                     popupid="addon-installed"
+                     closebuttonhidden="true"
+                     secondarybuttonhidden="true"
+                     dropmarkerhidden="true"
+                     checkboxhidden="true"
+                     buttonhighlight="true"
+                     hidden="true">
+    <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
+      <description>&addonPostInstallMessage.label;</description>
+    </popupnotificationcontent>
+  </popupnotification>
 </panel>
 
 <menupopup id="customizationPaletteItemContextMenu"
