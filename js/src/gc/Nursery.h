@@ -396,9 +396,6 @@ class Nursery
 
     mozilla::TimeDuration timeInChunkAlloc_;
 
-    /* Promotion rate for the previous minor collection. */
-    float previousPromotionRate_;
-
     /* Report minor collections taking at least this long, if enabled. */
     mozilla::TimeDuration profileThreshold_;
     bool enableProfiling_;
