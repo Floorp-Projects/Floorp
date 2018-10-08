@@ -195,22 +195,23 @@ describe("Top Stories Feed", () => {
 
       await instance.fetchStories();
 
-      assert.calledTwice(instance.cache.set);
+      assert.calledOnce(instance.cache.set);
       const {args} = instance.cache.set.firstCall;
-      assert.equal(args[0], "spocs");
-      assert.equal(args[1][0].guid, "spoc1");
+      assert.equal(args[0], "stories");
+      assert.equal(args[1].spocs[0].id, "spoc1");
     });
     it("should get spocs on cache load", async () => {
       instance.cache.get = () => ({
-        stories: {recommendations:  [{"id": "1"}, {"id": "2"}]},
-        spocs: [{"id": "spoc1"}]
+        stories: {
+          recommendations:  [{"id": "1"}, {"id": "2"}],
+          spocs: [{"id": "spoc1"}],
+        },
       });
       instance.storiesLastUpdated = 0;
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: () => {}}});
 
       await instance.loadCachedData();
-
-      assert.equal(instance.spocs[0].id, "spoc1");
+      assert.equal(instance.spocs[0].guid, "spoc1");
     });
   });
   describe("#fetch", () => {
