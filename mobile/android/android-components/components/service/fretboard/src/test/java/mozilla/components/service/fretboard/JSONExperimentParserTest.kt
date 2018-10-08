@@ -13,7 +13,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class JSONExperimentParserTest {
     @Test
-    fun testToJson() {
+    fun toJson() {
         val experiment = Experiment("sample-id",
             "sample-name",
             "sample-description",
@@ -49,7 +49,7 @@ class JSONExperimentParserTest {
     }
 
     @Test
-    fun testToJsonNullValues() {
+    fun toJsonNullValues() {
         val experiment = Experiment("id", "name")
         val jsonObject = JSONExperimentParser().toJson(experiment)
         val buckets = jsonObject.getJSONObject("buckets")
@@ -61,7 +61,7 @@ class JSONExperimentParserTest {
     }
 
     @Test
-    fun testFromJson() {
+    fun fromJson() {
         val json = """{"buckets":{"min":0,"max":20},"name":"sample-name","match":{"regions":["US"],"appId":"sample-appId","lang":"es|en"},"description":"sample-description","id":"sample-id","last_modified":1526991669}"""
         val expectedExperiment = Experiment("sample-id",
             "sample-name",
@@ -73,13 +73,13 @@ class JSONExperimentParserTest {
     }
 
     @Test
-    fun testFromJsonNonPresentValues() {
+    fun fromJsonNonPresentValues() {
         val json = """{"id":"id","name":"name"}"""
         assertEquals(Experiment("id", "name"), JSONExperimentParser().fromJson(JSONObject(json)))
     }
 
     @Test
-    fun testFromJsonNullValues() {
+    fun fromJsonNullValues() {
         val json = """{"buckets":null,"name":"sample-name","match":null,"description":null,"id":"sample-id","last_modified":null}"""
         assertEquals(Experiment("sample-id", "sample-name"), JSONExperimentParser().fromJson(JSONObject(json)))
         val emptyObjects = """{"id":"sample-id","name":"sample-name","buckets":{"min":null,"max":null},"match":{"lang":null,"appId":null,"region":null}}"""
@@ -88,7 +88,7 @@ class JSONExperimentParserTest {
     }
 
     @Test
-    fun testPayloadFromJson() {
+    fun payloadFromJson() {
         val json = """{"buckets":null,"name":null,"match":null,"description":null,"id":"sample-id","last_modified":null,"values":{"a":"a","b":3,"c":3.5,"d":true,"e":[1,2,3,4]}}"""
         val experiment = JSONExperimentParser().fromJson(JSONObject(json))
         assertEquals("a", experiment.payload?.get("a"))
@@ -99,7 +99,7 @@ class JSONExperimentParserTest {
     }
 
     @Test
-    fun testPayloadToJson() {
+    fun payloadToJson() {
         val payload = ExperimentPayload()
         payload.put("a", "a")
         payload.put("b", 3)

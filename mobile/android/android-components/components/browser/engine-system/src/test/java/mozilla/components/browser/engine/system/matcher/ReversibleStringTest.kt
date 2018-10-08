@@ -12,7 +12,7 @@ class ReversibleStringTest {
 
     @Test(expected = StringIndexOutOfBoundsException::class)
     @Throws(StringIndexOutOfBoundsException::class)
-    fun testOutOfBounds() {
+    fun outOfBounds() {
         val fullStringRaw = "a"
         val fullString = ReversibleString.create(fullStringRaw)
         fullString.charAt(1)
@@ -20,7 +20,7 @@ class ReversibleStringTest {
 
     @Test(expected = StringIndexOutOfBoundsException::class)
     @Throws(StringIndexOutOfBoundsException::class)
-    fun testOutOfBoundsAfterSubstring() {
+    fun outOfBoundsAfterSubstring() {
         val fullStringRaw = "abcd"
         val fullString = ReversibleString.create(fullStringRaw)
 
@@ -30,7 +30,7 @@ class ReversibleStringTest {
 
     @Test(expected = StringIndexOutOfBoundsException::class)
     @Throws(StringIndexOutOfBoundsException::class)
-    fun testOutOfBoundsSubstring() {
+    fun outOfBoundsSubstring() {
         val fullStringRaw = "abcd"
         val fullString = ReversibleString.create(fullStringRaw)
         fullString.substring(5)
@@ -38,7 +38,7 @@ class ReversibleStringTest {
 
     @Test(expected = StringIndexOutOfBoundsException::class)
     @Throws(StringIndexOutOfBoundsException::class)
-    fun testOutOfBoundsSubstringNegative() {
+    fun outOfBoundsSubstringNegative() {
         val fullStringRaw = "abcd"
         val fullString = ReversibleString.create(fullStringRaw)
         fullString.substring(-1)
@@ -46,7 +46,7 @@ class ReversibleStringTest {
 
     @Test(expected = StringIndexOutOfBoundsException::class)
     @Throws(StringIndexOutOfBoundsException::class)
-    fun testOutOfBoundsAfterSubstringEmpty() {
+    fun outOfBoundsAfterSubstringEmpty() {
         val fullStringRaw = "abcd"
         val fullString = ReversibleString.create(fullStringRaw)
 
@@ -55,7 +55,7 @@ class ReversibleStringTest {
     }
 
     @Test
-    fun testSubstringLength() {
+    fun substringLength() {
         val fullStringRaw = "a"
         val fullString = ReversibleString.create(fullStringRaw)
 
@@ -70,7 +70,7 @@ class ReversibleStringTest {
     }
 
     @Test
-    fun testForwardString() {
+    fun forwardString() {
         val fullStringRaw = "abcd"
         val fullString = ReversibleString.create(fullStringRaw)
 
@@ -89,7 +89,7 @@ class ReversibleStringTest {
     }
 
     @Test
-    fun testReverseString() {
+    fun reverseString() {
         val fullUnreversedStringRaw = "abcd"
         val fullStringRaw = StringBuffer(fullUnreversedStringRaw).reverse().toString()
         val fullString = ReversibleString.create(fullUnreversedStringRaw).reverse()
@@ -109,7 +109,7 @@ class ReversibleStringTest {
     }
 
     @Test
-    fun testReverseReversedString() {
+    fun reverseReversedString() {
         val fullUnreversedStringRaw = "abcd"
         val fullStringRaw = StringBuffer(fullUnreversedStringRaw).toString()
         val fullString = ReversibleString.create(fullUnreversedStringRaw).reverse().reverse()

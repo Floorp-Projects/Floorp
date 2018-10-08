@@ -19,7 +19,7 @@ import org.mockito.Mockito.spy
 class EngineObserverTest {
 
     @Test
-    fun testEngineSessionObserver() {
+    fun engineSessionObserver() {
         val session = Session("")
         val engineSession = object : EngineSession() {
             override val settings: Settings
@@ -72,7 +72,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun testEngineSessionObserverWithSecurityChanges() {
+    fun engineSessionObserverWithSecurityChanges() {
         val session = Session("")
         val engineSession = object : EngineSession() {
             override val settings: Settings
@@ -115,7 +115,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun testEngineSessionObserverWithTrackingProtection() {
+    fun engineSessionObserverWithTrackingProtection() {
         val session = Session("")
         val engineSession = object : EngineSession() {
             override val settings: Settings
@@ -164,7 +164,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun testEngineObserverClearsWebsiteTitleIfNewPageStartsLoading() {
+    fun engineObserverClearsWebsiteTitleIfNewPageStartsLoading() {
         val session = Session("https://www.mozilla.org")
         session.title = "Hello World"
 
@@ -179,7 +179,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun testEngineObserverClearsBlockedTrackersIfNewPageStartsLoading() {
+    fun engineObserverClearsBlockedTrackersIfNewPageStartsLoading() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)
 
@@ -192,7 +192,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun testEngineObserverPassingHitResult() {
+    fun engineObserverPassingHitResult() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)
         val hitResult = HitResult.UNKNOWN("data://foobar")
@@ -207,7 +207,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun testEngineObserverClearsFindResults() {
+    fun engineObserverClearsFindResults() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)
 
@@ -222,7 +222,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun testEngineObserverClearsFindResultIfNewPageStartsLoading() {
+    fun engineObserverClearsFindResultIfNewPageStartsLoading() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)
 
@@ -237,7 +237,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun testEngineObserverNotifiesFullscreenMode() {
+    fun engineObserverNotifiesFullscreenMode() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)
 

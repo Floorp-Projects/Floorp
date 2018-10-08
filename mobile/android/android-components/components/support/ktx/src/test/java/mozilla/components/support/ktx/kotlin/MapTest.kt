@@ -20,7 +20,7 @@ import java.io.Serializable
 class MapTest {
 
     @Test
-    fun testToBundle() {
+    fun toBundle() {
         val binder = mock(Binder::class.java)
         val boolean = true
         val booleanArray = BooleanArray(2, { true })

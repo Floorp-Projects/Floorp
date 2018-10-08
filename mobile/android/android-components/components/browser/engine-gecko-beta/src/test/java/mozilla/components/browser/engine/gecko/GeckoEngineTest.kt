@@ -29,22 +29,22 @@ class GeckoEngineTest {
     private val context: Context = mock(Context::class.java)
 
     @Test
-    fun testCreateView() {
+    fun createView() {
         assertTrue(GeckoEngine(context, runtime = runtime).createView(RuntimeEnvironment.application) is GeckoEngineView)
     }
 
     @Test
-    fun testCreateSession() {
+    fun createSession() {
         assertTrue(GeckoEngine(context, runtime = runtime).createSession() is GeckoEngineSession)
     }
 
     @Test
-    fun testName() {
+    fun name() {
         assertEquals("Gecko", GeckoEngine(context, runtime = runtime).name())
     }
 
     @Test
-    fun testSettings() {
+    fun settings() {
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
@@ -81,7 +81,7 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun testDefaultSettings() {
+    fun defaultSettings() {
         val runtime = mock(GeckoRuntime::class.java)
         val runtimeSettings = mock(GeckoRuntimeSettings::class.java)
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)

@@ -22,7 +22,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class DeviceUuidFactoryTest {
     @Test
-    fun testUuidNoPreference() {
+    fun uuidNoPreference() {
         val context = mock(Context::class.java)
         val sharedPreferences = mock(SharedPreferences::class.java)
         val editor = mock(SharedPreferences.Editor::class.java)
@@ -35,7 +35,7 @@ class DeviceUuidFactoryTest {
     }
 
     @Test
-    fun testUuidSavedInPreferences() {
+    fun uuidSavedInPreferences() {
         val savedUuid = "99111a0f-ca5d-4de1-913a-daba905c53b2"
         val context = mock(Context::class.java)
         val sharedPreferences = mock(SharedPreferences::class.java)

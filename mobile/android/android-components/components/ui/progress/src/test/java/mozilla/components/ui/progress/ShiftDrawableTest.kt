@@ -19,7 +19,7 @@ import org.robolectric.RobolectricTestRunner
 class ShiftDrawableTest {
 
     @Test
-    fun testDraw() {
+    fun draw() {
         val canvas = mock(Canvas::class.java)
         val wrappedDrawable = mock(Drawable::class.java)
         val drawable = ShiftDrawable(wrappedDrawable)

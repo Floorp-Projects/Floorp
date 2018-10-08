@@ -23,7 +23,7 @@ import org.robolectric.RobolectricTestRunner
 class CustomTabsServiceTest {
 
     @Test
-    fun testCustomTabService() {
+    fun customTabService() {
         val customTabsService = CustomTabsService()
         val customTabsServiceStub = customTabsService.onBind(mock(Intent::class.java))
         assertNotNull(customTabsServiceStub)

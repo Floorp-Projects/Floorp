@@ -18,7 +18,7 @@ class KintoClientTest {
     private val collectionName = "experiments"
 
     @Test
-    fun testGet() {
+    fun get() {
         val httpClient = mock(HttpClient::class.java)
         val kintoClient = KintoClient(httpClient, baseUrl, bucketName, collectionName)
         kintoClient.get()
@@ -26,7 +26,7 @@ class KintoClientTest {
     }
 
     @Test
-    fun testDiff() {
+    fun diff() {
         val httpClient = mock(HttpClient::class.java)
         val kintoClient = KintoClient(httpClient, baseUrl, bucketName, collectionName)
         kintoClient.diff(1527179995)

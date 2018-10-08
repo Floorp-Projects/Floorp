@@ -27,7 +27,7 @@ class SearchUseCasesTest {
     private val useCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionManager)
 
     @Test
-    fun testDefaultSearch() {
+    fun defaultSearch() {
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 

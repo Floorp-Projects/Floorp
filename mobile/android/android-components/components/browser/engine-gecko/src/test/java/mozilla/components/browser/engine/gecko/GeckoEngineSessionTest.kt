@@ -50,7 +50,7 @@ import org.robolectric.RobolectricTestRunner
 class GeckoEngineSessionTest {
 
     @Test
-    fun testEngineSessionInitialization() {
+    fun engineSessionInitialization() {
         val runtime = mock(GeckoRuntime::class.java)
         val engineSession = GeckoEngineSession(runtime)
 
@@ -60,7 +60,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testProgressDelegateNotifiesObservers() {
+    fun progressDelegateNotifiesObservers() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var observedProgress = 0
@@ -97,7 +97,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testNavigationDelegateNotifiesObservers() {
+    fun navigationDelegateNotifiesObservers() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var observedUrl = ""
@@ -125,7 +125,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testLoadUrl() {
+    fun loadUrl() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var loadUriReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
@@ -138,7 +138,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testLoadData() {
+    fun loadData() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var loadUriReceived = false
@@ -164,7 +164,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testLoadDataBase64() {
+    fun loadDataBase64() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         val geckoSession = mock(GeckoSession::class.java)
 
@@ -181,7 +181,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testStopLoading() {
+    fun stopLoading() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var stopLoadingReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
@@ -194,7 +194,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testReload() {
+    fun reload() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         engineSession.loadUrl("http://mozilla.org")
 
@@ -209,7 +209,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testGoBack() {
+    fun goBack() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var eventReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
@@ -222,7 +222,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testGoForward() {
+    fun goForward() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var eventReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
@@ -235,7 +235,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testSaveState() {
+    fun saveState() {
         ThreadUtils.sGeckoHandler = Handler()
 
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
@@ -249,7 +249,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testRestoreState() {
+    fun restoreState() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var eventReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
@@ -262,7 +262,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testProgressDelegateIgnoresInitialLoadOfAboutBlank() {
+    fun progressDelegateIgnoresInitialLoadOfAboutBlank() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var observedSecurityChange = false
@@ -293,7 +293,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testNavigationDelegateIgnoresInitialLoadOfAboutBlank() {
+    fun navigationDelegateIgnoresInitialLoadOfAboutBlank() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var observedUrl = ""
@@ -319,7 +319,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testTrackingProtectionDelegateNotifiesObservers() {
+    fun trackingProtectionDelegateNotifiesObservers() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var trackerBlocked = ""
@@ -334,7 +334,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testEnableTrackingProtection() {
+    fun enableTrackingProtection() {
         val runtime = mock(GeckoRuntime::class.java)
         `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
         val engineSession = GeckoEngineSession(runtime)
@@ -353,7 +353,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testDisableTrackingProtection() {
+    fun disableTrackingProtection() {
         val runtime = mock(GeckoRuntime::class.java)
         `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
         val engineSession = GeckoEngineSession(runtime)
@@ -371,7 +371,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testSettingPrivateMode() {
+    fun settingPrivateMode() {
         val runtime = mock(GeckoRuntime::class.java)
         `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
 
@@ -383,7 +383,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testUnsupportedSettings() {
+    fun unsupportedSettings() {
         val settings = GeckoEngineSession(mock(GeckoRuntime::class.java)).settings
 
         expectException(UnsupportedSettingException::class) {
@@ -400,7 +400,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testSettingRequestInterceptor() {
+    fun settingRequestInterceptor() {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
@@ -423,7 +423,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testOnLoadRequestWithoutInterceptor() {
+    fun onLoadRequestWithoutInterceptor() {
         val defaultSettings = DefaultSettings()
 
         val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
@@ -436,7 +436,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testOnLoadRequestWithInterceptorThatDoesNotIntercept() {
+    fun onLoadRequestWithInterceptorThatDoesNotIntercept() {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
@@ -459,7 +459,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testContentDelegate() {
+    fun contentDelegate() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         val geckoSession = mock(GeckoSession::class.java)
         val delegate = engineSession.createContentDelegate()
@@ -484,7 +484,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testHandleLongClick() {
+    fun handleLongClick() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var result = engineSession.handleLongClick("file.mp3", ELEMENT_TYPE_AUDIO)
@@ -532,7 +532,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testFindAll() {
+    fun findAll() {
         val finderResult = mock(GeckoSession.FinderResult::class.java)
         val sessionFinder = mock(SessionFinder::class.java)
         `when`(sessionFinder.find("mozilla", 0)).thenReturn(GeckoResult.fromValue(finderResult))
@@ -565,7 +565,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testFindNext() {
+    fun findNext() {
         val finderResult = mock(GeckoSession.FinderResult::class.java)
         val sessionFinder = mock(SessionFinder::class.java)
         `when`(sessionFinder.find(eq(null), anyInt())).thenReturn(GeckoResult.fromValue(finderResult))
@@ -596,7 +596,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testClearFindMatches() {
+    fun clearFindMatches() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var clearMatchesReceived = false
         engineSession.geckoSession.eventDispatcher.registerUiThreadListener(
@@ -641,7 +641,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun testClearData() {
+    fun clearData() {
         val runtime = mock(GeckoRuntime::class.java)
         val engineSession = GeckoEngineSession(runtime)
         val observer: EngineSession.Observer = mock()

@@ -36,7 +36,7 @@ class SignatureVerifierTest {
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testValidSignatureOneCertificate() {
+    fun validSignatureOneCertificate() {
         val url = server.url("/").url().toString()
         val metadataBody = "{\"data\":{\"signature\":{\"x5u\":\"$url\",\"signature\":\"kRhyWZdLyjligYHSFhzhbyzUXBoUwoTPvyt9V0e-E7LKGgUYF2MVfqpA2zfIEDdqrImcMABVGHLUx9Nk614zciRBQ-gyaKA5SL2pPdZvoQXk_LLsPhEBgG4VDnxG4SBL\"}}}"
         val certChainBody = "-----BEGIN CERTIFICATE-----\n" +
@@ -80,7 +80,7 @@ class SignatureVerifierTest {
     }
 
     @Test
-    fun testValidSignatureCorrect() {
+    fun validSignatureCorrect() {
         val url = server.url("/").url().toString()
         val metadataBody = "{\"data\":{\"signature\":{\"x5u\":\"$url\",\"signature\":\"kRhyWZdLyjligYHSFhzhbyzUXBoUwoTPvyt9V0e-E7LKGgUYF2MVfqpA2zfIEDdqrImcMABVGHLUx9Nk614zciRBQ-gyaKA5SL2pPdZvoQXk_LLsPhEBgG4VDnxG4SBL\"}}}"
         val certChainBody = "-----BEGIN CERTIFICATE-----\n" +
@@ -183,7 +183,7 @@ class SignatureVerifierTest {
     }
 
     @Test
-    fun testValidSignatureIncorrect() {
+    fun validSignatureIncorrect() {
         val url = server.url("/").url().toString()
         val metadataBody = "{\"data\":{\"signature\":{\"x5u\":\"$url\",\"signature\":\"kRyhWZdLyjligYHSFhzhbyzUXBoUwoTPvyt9V0e-E7LKGgUYF2MVfqpA2zfIEDdqrImcMABVGHLUx9Nk614zciRBQ-gyaKA5SL2pPdZvoQXk_LLsPhEBgG4VDnxG4SBL\"}}}"
         val certChainBody = "-----BEGIN CERTIFICATE-----\n" +
@@ -286,7 +286,7 @@ class SignatureVerifierTest {
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testValidSignatureInvalidChainOrder() {
+    fun validSignatureInvalidChainOrder() {
         val url = server.url("/").url().toString()
         val metadataBody = "{\"data\":{\"signature\":{\"x5u\":\"$url\",\"signature\":\"kRhyWZdLyjligYHSFhzhbyzUXBoUwoTPvyt9V0e-E7LKGgUYF2MVfqpA2zfIEDdqrImcMABVGHLUx9Nk614zciRBQ-gyaKA5SL2pPdZvoQXk_LLsPhEBgG4VDnxG4SBL\"}}}"
         val certChainBody = "-----BEGIN CERTIFICATE-----\n" +
@@ -389,7 +389,7 @@ class SignatureVerifierTest {
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testValidSignatureExpiredCertificate() {
+    fun validSignatureExpiredCertificate() {
         val url = server.url("/").url().toString()
         val metadataBody = "{\"data\":{\"signature\":{\"x5u\":\"$url\",\"signature\":\"kRhyWZdLyjligYHSFhzhbyzUXBoUwoTPvyt9V0e-E7LKGgUYF2MVfqpA2zfIEDdqrImcMABVGHLUx9Nk614zciRBQ-gyaKA5SL2pPdZvoQXk_LLsPhEBgG4VDnxG4SBL\"}}}"
         val certChainBody = "-----BEGIN CERTIFICATE-----\n" +
@@ -497,7 +497,7 @@ class SignatureVerifierTest {
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testValidSignatureCertificateNotYetValid() {
+    fun validSignatureCertificateNotYetValid() {
         val url = server.url("/").url().toString()
         val metadataBody = "{\"data\":{\"signature\":{\"x5u\":\"$url\",\"signature\":\"kRhyWZdLyjligYHSFhzhbyzUXBoUwoTPvyt9V0e-E7LKGgUYF2MVfqpA2zfIEDdqrImcMABVGHLUx9Nk614zciRBQ-gyaKA5SL2pPdZvoQXk_LLsPhEBgG4VDnxG4SBL\"}}}"
         val certChainBody = "-----BEGIN CERTIFICATE-----\n" +

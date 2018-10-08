@@ -22,7 +22,7 @@ class AssetManagerTest {
      * Verify that AssetManager.readJSONObject() closes its stream.
      */
     @Test
-    fun testReadJSONObjectClosesStream() {
+    fun readJSONObjectClosesStream() {
         // Setup
 
         val stream = Mockito.spy(ByteArrayInputStream("{}".toByteArray()))
@@ -47,7 +47,7 @@ class AssetManagerTest {
      * The stream returned by the AssetManager will be read and converted into a JSONObject instance.
      */
     @Test
-    fun testStreamsIsTransformedIntoJSONObject() {
+    fun streamsIsTransformedIntoJSONObject() {
         // Setup
 
         val stream = Mockito.spy(ByteArrayInputStream("{'firstName': 'John', 'lastName': 'Smith'}".toByteArray()))

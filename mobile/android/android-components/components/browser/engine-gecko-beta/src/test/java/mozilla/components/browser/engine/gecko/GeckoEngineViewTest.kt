@@ -19,7 +19,7 @@ import org.robolectric.RuntimeEnvironment
 class GeckoEngineViewTest {
 
     @Test
-    fun testRender() {
+    fun render() {
         val engineView = GeckoEngineView(RuntimeEnvironment.application)
         val engineSession = mock(GeckoEngineSession::class.java)
         val geckoSession = mock(GeckoSession::class.java)

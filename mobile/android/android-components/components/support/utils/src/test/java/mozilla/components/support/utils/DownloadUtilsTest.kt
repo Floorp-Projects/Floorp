@@ -22,7 +22,7 @@ class DownloadUtilsTest {
     }
 
     @Test
-    fun testGuessFileName_contentDisposition() {
+    fun guessFileName_contentDisposition() {
         // Default file name
         assertContentDisposition("downloadfile.bin", "")
 
@@ -63,7 +63,7 @@ class DownloadUtilsTest {
     }
 
     @Test
-    fun testGuessFileName_url() {
+    fun guessFileName_url() {
         assertUrl("downloadfile.bin", "http://example.com/")
         assertUrl("downloadfile.bin", "http://example.com/filename/")
         assertUrl("filename.jpg", "http://example.com/filename.jpg")
@@ -71,7 +71,7 @@ class DownloadUtilsTest {
     }
 
     @Test
-    fun testGuessFileName_mimeType() {
+    fun guessFileName_mimeType() {
         Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("jpg", "image/jpeg")
 
         assertEquals("file.jpg", DownloadUtils.guessFileName(null, "http://example.com/file.jpg", "image/jpeg"))

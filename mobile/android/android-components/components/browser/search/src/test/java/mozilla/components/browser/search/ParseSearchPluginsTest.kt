@@ -22,7 +22,7 @@ class ParseSearchPluginsTest(private val searchEngineIdentifier: String) {
 
     @Test
     @Throws(Exception::class)
-    fun testParser() {
+    fun parser() {
         val stream = FileInputStream(File(basePath, searchEngineIdentifier))
         val searchEngine = SearchEngineParser().load(searchEngineIdentifier, stream)
         assertEquals(searchEngineIdentifier, searchEngine.identifier)

@@ -36,7 +36,7 @@ class InlineAutocompleteEditTextTest {
     private val attributes: AttributeSet = mock(AttributeSet::class.java)
 
     @Test
-    fun testAutoCompleteResult() {
+    fun autoCompleteResult() {
         val empty = AutocompleteResult.emptyResult()
         assertTrue(empty.isEmpty)
         assertEquals(0, empty.length)
@@ -52,7 +52,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testGetNonAutocompleteText() {
+    fun getNonAutocompleteText() {
         val et = InlineAutocompleteEditText(context)
         et.setText("Test")
         assertEquals("Test", et.nonAutocompleteText)
@@ -65,7 +65,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testGetOriginalText() {
+    fun getOriginalText() {
         val et = InlineAutocompleteEditText(context, attributes)
         et.setText("Test")
         assertEquals("Test", et.originalText)
@@ -78,7 +78,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnFocusChange() {
+    fun onFocusChange() {
         val et = InlineAutocompleteEditText(context, attributes, R.attr.editTextStyle)
         val searchStates = mutableListOf<Boolean>()
 
@@ -98,7 +98,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testSendAccessibilityEventUnchecked() {
+    fun sendAccessibilityEventUnchecked() {
         val et = spy(InlineAutocompleteEditText(context, attributes))
         doReturn(false).`when`(et).isShown
         doReturn(mock(ViewParent::class.java)).`when`(et).parent
@@ -113,7 +113,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnAutocompleteSetsEmptyResult() {
+    fun onAutocompleteSetsEmptyResult() {
         val et = spy(InlineAutocompleteEditText(context, attributes))
 
         doReturn(false).`when`(et).isEnabled
@@ -126,7 +126,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnAutocompleteDiscardsStaleResult() {
+    fun onAutocompleteDiscardsStaleResult() {
         val et = spy(InlineAutocompleteEditText(context, attributes))
         doReturn(true).`when`(et).isEnabled
         et.setText("text")
@@ -140,7 +140,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnAutocompleteReplacesExistingAutocompleteText() {
+    fun onAutocompleteReplacesExistingAutocompleteText() {
         val et = spy(InlineAutocompleteEditText(context, attributes))
         doReturn(true).`when`(et).isEnabled
 
@@ -151,7 +151,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnAutocompleteAppendsExistingText() {
+    fun onAutocompleteAppendsExistingText() {
         val et = spy(InlineAutocompleteEditText(context, attributes))
         doReturn(true).`when`(et).isEnabled
 
@@ -161,7 +161,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnAutocompleteSetsSpan() {
+    fun onAutocompleteSetsSpan() {
         val et = spy(InlineAutocompleteEditText(context, attributes))
         doReturn(true).`when`(et).isEnabled
 
@@ -174,7 +174,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnKeyPreImeListenerInvocation() {
+    fun onKeyPreImeListenerInvocation() {
         val et = InlineAutocompleteEditText(context, attributes)
         var invokedWithParams: List<Any>? = null
         et.setOnKeyPreImeListener { p1, p2, p3 ->
@@ -187,7 +187,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnSelectionChangedListenerInvocation() {
+    fun onSelectionChangedListenerInvocation() {
         val et = InlineAutocompleteEditText(context, attributes)
         var invokedWithParams: List<Any>? = null
         et.setOnSelectionChangedListener { p1, p2 ->
@@ -198,7 +198,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnSelectionChangedCommitsResult() {
+    fun onSelectionChangedCommitsResult() {
         val et = InlineAutocompleteEditText(context, attributes)
         et.onAttachedToWindow()
 
@@ -211,7 +211,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnWindowFocusChangedListenerInvocation() {
+    fun onWindowFocusChangedListenerInvocation() {
         val et = InlineAutocompleteEditText(context, attributes)
         var invokedWithParams: List<Any>? = null
         et.setOnWindowsFocusChangeListener { p1 ->
@@ -222,7 +222,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnCommitListenerInvocation() {
+    fun onCommitListenerInvocation() {
         val et = InlineAutocompleteEditText(context, attributes)
         var invoked: Boolean = false
         et.setOnCommitListener { invoked = true }
@@ -233,7 +233,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnTextChangeListenerInvocation() {
+    fun onTextChangeListenerInvocation() {
         val et = InlineAutocompleteEditText(context, attributes)
         var invokedWithParams: List<Any>? = null
         et.setOnTextChangeListener { p1, p2 ->
@@ -246,7 +246,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnSearchStateChangeListenerInvocation() {
+    fun onSearchStateChangeListenerInvocation() {
         val et = InlineAutocompleteEditText(context, attributes)
         et.onAttachedToWindow()
 
@@ -263,7 +263,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnFilterListenerInvocation() {
+    fun onFilterListenerInvocation() {
         val et = InlineAutocompleteEditText(context, attributes)
         et.onAttachedToWindow()
 
@@ -292,7 +292,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testOnCreateInputConnection() {
+    fun onCreateInputConnection() {
         val et = spy(InlineAutocompleteEditText(context, attributes))
         val icw = et.onCreateInputConnection(mock(EditorInfo::class.java))
         doReturn(true).`when`(et).isEnabled
@@ -323,7 +323,7 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
-    fun testRemoveAutocompleteOnComposing() {
+    fun removeAutocompleteOnComposing() {
         val et = InlineAutocompleteEditText(context, attributes)
         val ic = et.onCreateInputConnection(mock(EditorInfo::class.java))
 

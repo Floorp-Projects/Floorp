@@ -22,7 +22,7 @@ class SessionFeatureTest {
     private val sessionUseCases = SessionUseCases(sessionManager)
 
     @Test
-    fun testStart() {
+    fun start() {
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView, sessionStorage)
         feature.start()
         verify(sessionManager).register(feature.presenter)
@@ -30,7 +30,7 @@ class SessionFeatureTest {
     }
 
     @Test
-    fun testHandleBackPressed() {
+    fun handleBackPressed() {
         val session = Session("https://www.mozilla.org")
         `when`(sessionManager.selectedSession).thenReturn(session)
         `when`(sessionManager.selectedSessionOrThrow).thenReturn(session)
@@ -49,7 +49,7 @@ class SessionFeatureTest {
     }
 
     @Test
-    fun testStop() {
+    fun stop() {
         val feature = SessionFeature(sessionManager, sessionUseCases, engineView, sessionStorage)
         feature.stop()
         verify(sessionManager).unregister(feature.presenter)

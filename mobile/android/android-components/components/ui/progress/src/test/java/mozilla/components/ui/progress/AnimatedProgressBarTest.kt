@@ -18,7 +18,7 @@ import org.robolectric.RuntimeEnvironment
 class AnimatedProgressBarTest {
 
     @Test
-    fun testSetProgress() {
+    fun setProgress() {
         val progressBar = AnimatedProgressBar(RuntimeEnvironment.application)
 
         progressBar.progress = -1
@@ -35,7 +35,7 @@ class AnimatedProgressBarTest {
     }
 
     @Test
-    fun testSetVisibility() {
+    fun setVisibility() {
         val progressBar = spy(AnimatedProgressBar(RuntimeEnvironment.application))
 
         progressBar.visibility = View.GONE

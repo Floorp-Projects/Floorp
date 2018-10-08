@@ -50,7 +50,7 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun testProcessWithDefaultHandlers() {
+    fun processWithDefaultHandlers() {
         val engine = mock(Engine::class.java)
         val sessionManager = spy(SessionManager(engine))
         val useCases = SessionUseCases(sessionManager)
@@ -76,7 +76,7 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun testProcessWithDefaultHandlersUsingSelectedSession() {
+    fun processWithDefaultHandlersUsingSelectedSession() {
         val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, true, false)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
@@ -87,7 +87,7 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun testProcessWithDefaultHandlersHavingNoSelectedSession() {
+    fun processWithDefaultHandlersHavingNoSelectedSession() {
         `when`(sessionManager.selectedSession).thenReturn(null)
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
@@ -101,7 +101,7 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun testProcessWithoutDefaultHandlers() {
+    fun processWithoutDefaultHandlers() {
         val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, useDefaultHandlers = false)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
@@ -112,7 +112,7 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun testProcessWithCustomHandlers() {
+    fun processWithCustomHandlers() {
         val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, useDefaultHandlers = false)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
@@ -134,7 +134,7 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun testProcessCustomTabIntentWithDefaultHandlers() {
+    fun processCustomTabIntentWithDefaultHandlers() {
         val engine = mock(Engine::class.java)
         val sessionManager = spy(SessionManager(engine))
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())

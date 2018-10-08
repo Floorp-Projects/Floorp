@@ -33,7 +33,7 @@ class EngineViewTest {
     }
 
     @Test
-    fun testLifecycleObserver() {
+    fun lifecycleObserver() {
         val engineView = spy(createDummyEngineView(RuntimeEnvironment.application))
         val observer = LifecycleObserver(engineView)
 

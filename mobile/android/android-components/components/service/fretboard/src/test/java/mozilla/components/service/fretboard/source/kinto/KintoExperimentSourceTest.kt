@@ -22,7 +22,7 @@ class KintoExperimentSourceTest {
     private val collectionName = "experiments"
 
     @Test
-    fun testNoExperiments() {
+    fun noExperiments() {
         val httpClient = mock(HttpClient::class.java)
 
         `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records")))
@@ -34,7 +34,7 @@ class KintoExperimentSourceTest {
     }
 
     @Test
-    fun testGetExperimentsNoDiff() {
+    fun getExperimentsNoDiff() {
         val httpClient = mock(HttpClient::class.java)
 
         `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records")))
@@ -56,7 +56,7 @@ class KintoExperimentSourceTest {
     }
 
     @Test
-    fun testGetExperimentsDiffAdd() {
+    fun getExperimentsDiffAdd() {
         val httpClient = mock(HttpClient::class.java)
         `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000")))
             .thenReturn("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""")
@@ -86,7 +86,7 @@ class KintoExperimentSourceTest {
     }
 
     @Test
-    fun testGetExperimentsDiffDelete() {
+    fun getExperimentsDiffDelete() {
         val httpClient = mock(HttpClient::class.java)
         `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000")))
             .thenReturn("""{"data":[{"deleted":true,"id":"id","last_modified":1523549899999}]}""")
@@ -118,7 +118,7 @@ class KintoExperimentSourceTest {
     }
 
     @Test
-    fun testGetExperimentsDiffUpdate() {
+    fun getExperimentsDiffUpdate() {
         val httpClient = mock(HttpClient::class.java)
         `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549800000")))
             .thenReturn("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""")
@@ -147,7 +147,7 @@ class KintoExperimentSourceTest {
     }
 
     @Test
-    fun testGetExperimentsEmptyDiff() {
+    fun getExperimentsEmptyDiff() {
         val httpClient = mock(HttpClient::class.java)
         `when`(httpClient.get(URL("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549895713")))
             .thenReturn("""{"data":[]}""")

@@ -59,7 +59,7 @@ class KeystoreTest {
     }
 
     @Test
-    fun testWorkingWithLabel() {
+    fun workingWithLabel() {
         val keystore = createKeystore("test-labels")
 
         Assert.assertFalse(keystore.available())
@@ -70,7 +70,7 @@ class KeystoreTest {
     }
 
     @Test
-    fun testCreateEncryptCipher() {
+    fun createEncryptCipher() {
         val keystore = createKeystore("test-encrypt-ciphers")
 
         Assert.assertFalse(keystore.available())
@@ -93,7 +93,7 @@ class KeystoreTest {
     }
 
     @Test
-    fun testCreateDecryptCipher() {
+    fun createDecryptCipher() {
         val keystore = createKeystore("test-decrypt-ciphers")
         val iv = ByteArray(12)
         rng.nextBytes(iv)
@@ -119,7 +119,7 @@ class KeystoreTest {
 
     @Ignore("troubleshooting test-env crypto errors")
     @Test
-    fun testCryptoRoundTrip() {
+    fun cryptoRoundTrip() {
         val keystore = createKeystore("test-roundtrip")
         keystore.generateKey()
 

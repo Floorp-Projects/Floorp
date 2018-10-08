@@ -17,7 +17,7 @@ import org.junit.Test
 class SettingsTest {
 
     @Test
-    fun testSettingsThrowByDefault() {
+    fun settingsThrowByDefault() {
         val settings = object : Settings() { }
 
         expectUnsupportedSettingException(
@@ -65,7 +65,7 @@ class SettingsTest {
     }
 
     @Test
-    fun testDefaultSettings() {
+    fun defaultSettings() {
         val settings = DefaultSettings()
         assertTrue(settings.domStorageEnabled)
         assertTrue(settings.javascriptEnabled)

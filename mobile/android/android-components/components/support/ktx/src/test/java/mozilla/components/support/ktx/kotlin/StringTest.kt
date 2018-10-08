@@ -15,7 +15,7 @@ import org.robolectric.RobolectricTestRunner
 class StringTest {
 
     @Test
-    fun testToNormalizedUrl() {
+    fun toNormalizedUrl() {
         val expectedUrl = "http://mozilla.org"
         assertEquals(expectedUrl, "http://mozilla.org".toNormalizedUrl())
         assertEquals(expectedUrl, "  http://mozilla.org  ".toNormalizedUrl())
@@ -23,7 +23,7 @@ class StringTest {
     }
 
     @Test
-    fun testIsUrl() {
+    fun isUrl() {
         assertTrue("mozilla.org".isUrl())
         assertTrue(" mozilla.org ".isUrl())
         assertTrue("http://mozilla.org".isUrl())
@@ -37,7 +37,7 @@ class StringTest {
     }
 
     @Test
-    fun testIsPhone() {
+    fun isPhone() {
         assertTrue("tel:+1234567890".isPhone())
         assertTrue(" tel:+1234567890".isPhone())
         assertTrue("tel:+1234567890 ".isPhone())
@@ -47,7 +47,7 @@ class StringTest {
     }
 
     @Test
-    fun testIsEmail() {
+    fun isEmail() {
         assertTrue("mailto:asa@mozilla.com".isEmail())
         assertTrue(" mailto:asa@mozilla.com".isEmail())
         assertTrue("mailto:asa@mozilla.com ".isEmail())
@@ -56,7 +56,7 @@ class StringTest {
     }
 
     @Test
-    fun testGeoLocation() {
+    fun geoLocation() {
         assertTrue("geo:1,-1".isGeoLocation())
         assertTrue("geo:1,-1;u=1".isGeoLocation())
         assertTrue("geo:1,-1,0.5;u=1".isGeoLocation())

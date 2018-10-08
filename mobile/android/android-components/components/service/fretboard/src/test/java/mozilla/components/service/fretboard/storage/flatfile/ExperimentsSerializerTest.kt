@@ -59,7 +59,7 @@ val experimentsJson = """
 @RunWith(RobolectricTestRunner::class)
 class ExperimentsSerializerTest {
     @Test
-    fun testFromJsonValid() {
+    fun fromJsonValid() {
         val experimentsResult = ExperimentsSerializer().fromJson(experimentsJson)
         val experiments = experimentsResult.experiments
         assertEquals(2, experiments.size)
@@ -87,12 +87,12 @@ class ExperimentsSerializerTest {
     }
 
     @Test(expected = JSONException::class)
-    fun testFromJsonEmptyString() {
+    fun fromJsonEmptyString() {
         ExperimentsSerializer().fromJson("")
     }
 
     @Test
-    fun testFromJsonEmptyArray() {
+    fun fromJsonEmptyArray() {
         val experimentsJson = """ {"experiments":[]} """
         val experimentsResult = ExperimentsSerializer().fromJson(experimentsJson)
         assertEquals(0, experimentsResult.experiments.size)
@@ -100,7 +100,7 @@ class ExperimentsSerializerTest {
     }
 
     @Test
-    fun testToJsonValid() {
+    fun toJsonValid() {
         val experiments = listOf(
             Experiment("experiment-id",
                 "first",
@@ -152,7 +152,7 @@ class ExperimentsSerializerTest {
     }
 
     @Test
-    fun testToJsonEmptyList() {
+    fun toJsonEmptyList() {
         val experiments = listOf<Experiment>()
         val experimentsJson = JSONObject(ExperimentsSerializer().toJson(ExperimentsSnapshot(experiments, null)))
         assertEquals(1, experimentsJson.length())

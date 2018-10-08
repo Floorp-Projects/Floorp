@@ -27,21 +27,21 @@ import org.robolectric.RuntimeEnvironment
 class CustomTabConfigTest {
 
     @Test
-    fun testIsCustomTabIntent() {
+    fun isCustomTabIntent() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         assertTrue(CustomTabConfig.isCustomTabIntent(SafeIntent(customTabsIntent.intent)))
         assertFalse(CustomTabConfig.isCustomTabIntent(SafeIntent(mock(Intent::class.java))))
     }
 
     @Test
-    fun testCreateFromIntentAssignsId() {
+    fun createFromIntentAssignsId() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         val customTabConfig = CustomTabConfig.createFromIntent(SafeIntent((customTabsIntent.intent)))
         assertTrue(customTabConfig.id.isNotBlank())
     }
 
     @Test
-    fun testCreateFromIntentWithToolbarColor() {
+    fun createFromIntentWithToolbarColor() {
         val builder = CustomTabsIntent.Builder()
         builder.setToolbarColor(Color.BLACK)
 
@@ -51,7 +51,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithCloseButton() {
+    fun createFromIntentWithCloseButton() {
         val size = 24
         val builder = CustomTabsIntent.Builder()
         val closeButtonIcon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888)
@@ -65,7 +65,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithMaxOversizedCloseButton() {
+    fun createFromIntentWithMaxOversizedCloseButton() {
         val size = 64
         val builder = CustomTabsIntent.Builder()
         val closeButtonIcon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888)
@@ -77,7 +77,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithInvalidCloseButton() {
+    fun createFromIntentWithInvalidCloseButton() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         // Intent is a parcelable but not a Bitmap
         customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON, Intent())
@@ -88,7 +88,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithUrlbarHiding() {
+    fun createFromIntentWithUrlbarHiding() {
         val builder = CustomTabsIntent.Builder()
         builder.enableUrlBarHiding()
 
@@ -98,7 +98,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithShareMenuItem() {
+    fun createFromIntentWithShareMenuItem() {
         val builder = CustomTabsIntent.Builder()
         builder.addDefaultShareMenuItem()
 
@@ -108,7 +108,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithCustomizedMenu() {
+    fun createFromIntentWithCustomizedMenu() {
         val builder = CustomTabsIntent.Builder()
         val pendingIntent = PendingIntent.getActivity(null, 0, null, 0)
         builder.addMenuItem("menuitem1", pendingIntent)
@@ -124,7 +124,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithActionButton() {
+    fun createFromIntentWithActionButton() {
         val builder = CustomTabsIntent.Builder()
 
         val bitmap = mock(Bitmap::class.java)
@@ -142,7 +142,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithInvalidActionButton() {
+    fun createFromIntentWithInvalidActionButton() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
 
         val invalid = Bundle()
@@ -153,7 +153,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithInvalidExtras() {
+    fun createFromIntentWithInvalidExtras() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
 
         val extrasField = Intent::class.java.getDeclaredField("mExtras")
@@ -170,7 +170,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithActionButtonTint() {
+    fun createFromIntentWithActionButtonTint() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_TINT_ACTION_BUTTON, true)
 
@@ -179,7 +179,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithBottomToolbarOption() {
+    fun createFromIntentWithBottomToolbarOption() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_TOOLBAR_ITEMS, Bundle())
 
@@ -188,7 +188,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithExitAnimationOption() {
+    fun createFromIntentWithExitAnimationOption() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_EXIT_ANIMATION_BUNDLE, Bundle())
 
@@ -197,7 +197,7 @@ class CustomTabConfigTest {
     }
 
     @Test
-    fun testCreateFromIntentWithPageTitleOption() {
+    fun createFromIntentWithPageTitleOption() {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_TITLE_VISIBILITY_STATE, CustomTabsIntent.SHOW_PAGE_TITLE)
 

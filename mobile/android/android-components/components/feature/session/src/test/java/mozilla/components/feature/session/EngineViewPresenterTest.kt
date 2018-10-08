@@ -19,14 +19,14 @@ class EngineViewPresenterTest {
     private val session = mock(Session::class.java)
 
     @Test
-    fun testStartRegistersObserver() {
+    fun startRegistersObserver() {
         val engineViewPresenter = EngineViewPresenter(sessionManager, engineView)
         engineViewPresenter.start()
         verify(sessionManager).register(engineViewPresenter)
     }
 
     @Test
-    fun testStartRendersSession() {
+    fun startRendersSession() {
         val testSession = mock(Session::class.java)
         `when`(sessionManager.selectedSession).thenReturn(session)
         `when`(sessionManager.findSessionById("testSession")).thenReturn(testSession)
@@ -41,7 +41,7 @@ class EngineViewPresenterTest {
     }
 
     @Test
-    fun testStopUnregistersObserver() {
+    fun stopUnregistersObserver() {
         val engineViewPresenter = EngineViewPresenter(sessionManager, engineView)
         engineViewPresenter.stop()
         verify(sessionManager).unregister(engineViewPresenter)

@@ -15,7 +15,7 @@ import org.junit.Assert.assertEquals
 @RunWith(RobolectricTestRunner::class)
 class ColorUtilsTest {
     @Test
-    fun testGetReadableTextColor() {
+    fun getReadableTextColor() {
         assertEquals(Color.BLACK.toLong(), ColorUtils.getReadableTextColor(Color.WHITE).toLong())
         assertEquals(Color.WHITE.toLong(), ColorUtils.getReadableTextColor(Color.BLACK).toLong())
 

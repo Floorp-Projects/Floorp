@@ -29,13 +29,13 @@ class SystemEngineTest {
     }
 
     @Test
-    fun testCreateView() {
+    fun createView() {
         val engine = SystemEngine(context)
         assertTrue(engine.createView(context) is SystemEngineView)
     }
 
     @Test
-    fun testCreateSession() {
+    fun createSession() {
         val engine = SystemEngine(context)
         assertTrue(engine.createSession() is SystemEngineSession)
 
@@ -47,13 +47,13 @@ class SystemEngineTest {
     }
 
     @Test
-    fun testName() {
+    fun name() {
         val engine = SystemEngine(context)
         assertEquals("System", engine.name())
     }
 
     @Test
-    fun testSettings() {
+    fun settings() {
         var engine = SystemEngine(context, DefaultSettings(
                 remoteDebuggingEnabled = true,
                 trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()

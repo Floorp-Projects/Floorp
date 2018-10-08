@@ -14,14 +14,14 @@ import org.robolectric.RuntimeEnvironment
 class DomainsTest {
 
     @Test
-    fun testLoadDomains() {
+    fun loadDomains() {
         val domains = Domains.load(RuntimeEnvironment.application, setOf("us"))
         Assert.assertFalse(domains.isEmpty())
         Assert.assertTrue(domains.contains("reddit.com"))
     }
 
     @Test
-    fun testLoadDomainsWithDefaultCountries() {
+    fun loadDomainsWithDefaultCountries() {
         val domains = Domains.load(RuntimeEnvironment.application)
         Assert.assertFalse(domains.isEmpty())
         // From the global list

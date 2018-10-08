@@ -33,7 +33,7 @@ import kotlin.reflect.jvm.isAccessible
 @RunWith(RobolectricTestRunner::class)
 class FretboardTest {
     @Test
-    fun testLoadExperiments() {
+    fun loadExperiments() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val fretboard = Fretboard(experimentSource, experimentStorage)
@@ -42,7 +42,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testUpdateExperimentsStorageNotLoaded() {
+    fun updateExperimentsStorageNotLoaded() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val fretboard = Fretboard(experimentSource, experimentStorage)
@@ -53,7 +53,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testUpdateExperimentsEmptyStorage() {
+    fun updateExperimentsEmptyStorage() {
         val experimentSource = mock(ExperimentSource::class.java)
         val result = ExperimentsSnapshot(listOf(), null)
         `when`(experimentSource.getExperiments(result)).thenReturn(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
@@ -66,7 +66,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testUpdateExperimentsFromStorage() {
+    fun updateExperimentsFromStorage() {
         val experimentSource = mock(ExperimentSource::class.java)
         `when`(experimentSource.getExperiments(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))).thenReturn(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
         val experimentStorage = mock(ExperimentStorage::class.java)
@@ -78,7 +78,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testExperiments() {
+    fun experiments() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
@@ -97,7 +97,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testExperimentsNoExperiments() {
+    fun experimentsNoExperiments() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf<Experiment>()
@@ -108,7 +108,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testGetActiveExperiments() {
+    fun getActiveExperiments() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
@@ -159,7 +159,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testGetExperimentsMap() {
+    fun getExperimentsMap() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
@@ -212,7 +212,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testIsInExperiment() {
+    fun isInExperiment() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         var experiments = listOf(
@@ -260,7 +260,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testWithExperiment() {
+    fun withExperiment() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         var experiments = listOf(
@@ -322,7 +322,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testGetExperiment() {
+    fun getExperiment() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
@@ -342,7 +342,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testSetOverride() {
+    fun setOverride() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
@@ -389,7 +389,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testClearOverride() {
+    fun clearOverride() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
@@ -434,7 +434,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testClearAllOverrides() {
+    fun clearAllOverrides() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf(
@@ -479,7 +479,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testUpdateExperimentsException() {
+    fun updateExperimentsException() {
         val source = mock(ExperimentSource::class.java)
         doAnswer {
             throw ExperimentDownloadException("test")
@@ -491,7 +491,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testGetUserBucket() {
+    fun getUserBucket() {
         val context = mock(Context::class.java)
         val sharedPrefs = mock(SharedPreferences::class.java)
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
@@ -508,7 +508,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testGetUserBucketWithOverridenClientId() {
+    fun getUserBucketWithOverridenClientId() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
 
@@ -526,7 +526,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testEvenDistribution() {
+    fun evenDistribution() {
         val context = mock(Context::class.java)
         val sharedPrefs = mock(SharedPreferences::class.java)
         val prefsEditor = mock(SharedPreferences.Editor::class.java)
@@ -565,7 +565,7 @@ class FretboardTest {
     }
 
     @Test
-    fun testLoadingCorruptJSON() {
+    fun loadingCorruptJSON() {
         val experimentSource = mock(ExperimentSource::class.java)
 
         val file = File(RuntimeEnvironment.application.filesDir, "corrupt-experiments.json")

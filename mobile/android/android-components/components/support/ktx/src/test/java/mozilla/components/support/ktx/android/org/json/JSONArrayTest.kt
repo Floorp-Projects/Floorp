@@ -15,7 +15,7 @@ import org.robolectric.RobolectricTestRunner
 class JSONArrayTest {
 
     @Test
-    fun testItCanBeIterated() {
+    fun itCanBeIterated() {
         val array = JSONArray("[1, 2, 3]")
 
         val sum = array.asSequence()
@@ -26,21 +26,21 @@ class JSONArrayTest {
     }
 
     @Test
-    fun testToListNull() {
+    fun toListNull() {
         val jsonArray: JSONArray? = null
         val list = jsonArray.toList<Any>()
         assertEquals(0, list.size)
     }
 
     @Test
-    fun testToListEmpty() {
+    fun toListEmpty() {
         val jsonArray = JSONArray()
         val list = jsonArray.toList<Any>()
         assertEquals(0, list.size)
     }
 
     @Test
-    fun testToListNotEmpty() {
+    fun toListNotEmpty() {
         val jsonArray = JSONArray()
         jsonArray.put("value")
         jsonArray.put("another-value")

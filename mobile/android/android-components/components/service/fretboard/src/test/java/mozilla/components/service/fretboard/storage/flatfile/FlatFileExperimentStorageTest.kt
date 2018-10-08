@@ -22,7 +22,7 @@ import java.nio.file.Paths
 @RunWith(RobolectricTestRunner::class)
 class FlatFileExperimentStorageTest {
     @Test
-    fun testSave() {
+    fun save() {
         val experiments = listOf(
             Experiment("sample-id",
                 "sample-name",
@@ -41,7 +41,7 @@ class FlatFileExperimentStorageTest {
     }
 
     @Test
-    fun testReplacingContent() {
+    fun replacingContent() {
         val file = File(RuntimeEnvironment.application.filesDir, "experiments.json")
 
         FlatFileExperimentStorage(file).save(ExperimentsSnapshot(listOf(
@@ -97,7 +97,7 @@ class FlatFileExperimentStorageTest {
     }
 
     @Test
-    fun testRetrieve() {
+    fun retrieve() {
         val file = File(RuntimeEnvironment.application.filesDir, "experiments.json")
         file.writer().use {
             it.write("""{"experiments":[{"name":"sample-name","match":{"lang":"es|en","appId":"sample-appId","regions":["US"]},"buckets":{"max":20,"min":0},"description":"sample-description","id":"sample-id","last_modified":1526991669}],"last_modified":1526991669}""")
@@ -119,7 +119,7 @@ class FlatFileExperimentStorageTest {
     }
 
     @Test
-    fun testRetrieveFileNotFound() {
+    fun retrieveFileNotFound() {
         val file = File(RuntimeEnvironment.application.filesDir, "missingFile.json")
         val experimentsResult = FlatFileExperimentStorage(file).retrieve()
         assertEquals(0, experimentsResult.experiments.size)
@@ -127,7 +127,7 @@ class FlatFileExperimentStorageTest {
     }
 
     @Test
-    fun testReadingCorruptJSON() {
+    fun readingCorruptJSON() {
         val file = File(RuntimeEnvironment.application.filesDir, "corrupt-experiments.json")
         file.writer().use {
             it.write("""{"experiment":[""")

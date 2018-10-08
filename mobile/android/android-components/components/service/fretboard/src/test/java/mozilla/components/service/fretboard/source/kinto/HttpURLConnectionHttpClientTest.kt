@@ -24,7 +24,7 @@ import java.net.URL
 @RunWith(RobolectricTestRunner::class)
 class HttpURLConnectionHttpClientTest {
     @Test(expected = ExperimentDownloadException::class)
-    fun testGETIOException() {
+    fun gETIOException() {
         val server = MockWebServer()
         try {
             val serverUrl = server.url("/").url().toString()
@@ -35,49 +35,49 @@ class HttpURLConnectionHttpClientTest {
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testNonHTTPURL() {
+    fun nonHTTPURL() {
         HttpURLConnectionHttpClient().get(URL("file://filename.json"))
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testOpenConnectionException() {
+    fun openConnectionException() {
         val url = mock(URL::class.java)
         `when`(url.openConnection()).thenThrow(IOException())
         HttpURLConnectionHttpClient().get(url)
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testGET404() {
+    fun get404() {
         testGETResponseCode(404)
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testGET500() {
+    fun get500() {
         testGETResponseCode(500)
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testGET199() {
+    fun get199() {
         testGETResponseCode(199)
     }
 
     @Test(expected = ExperimentDownloadException::class)
-    fun testGET300() {
+    fun get300() {
         testGETResponseCode(300)
     }
 
     @Test
-    fun testGET299() {
+    fun get299() {
         testGET(responseCode = 299)
     }
 
     @Test
-    fun testGETWithoutHeaders() {
+    fun getWithoutHeaders() {
         testGET()
     }
 
     @Test
-    fun testGETWithHeaders() {
+    fun getWithHeaders() {
         testGET(mapOf("Accept" to "application/json")) {
             assertEquals("application/json", it.headers["Accept"])
         }
@@ -90,7 +90,7 @@ class HttpURLConnectionHttpClientTest {
      * https://github.com/mozilla-mobile/android-components/issues/964
      */
     @Test(expected = ExperimentDownloadException::class)
-    fun testArrayIndexOutOfBoundsException() {
+    fun arrayIndexOutOfBoundsException() {
         val client = HttpURLConnectionHttpClient()
 
         val connection: HttpURLConnection = mock()

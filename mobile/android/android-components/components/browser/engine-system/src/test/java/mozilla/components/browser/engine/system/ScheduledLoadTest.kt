@@ -6,7 +6,7 @@ import org.junit.Test
 
 class ScheduledLoadTest {
     @Test
-    fun testConstructorNullability() {
+    fun constructorNullability() {
         var scheduledLoad = ScheduledLoad()
         assertNull(scheduledLoad.url)
         assertNull(scheduledLoad.data)

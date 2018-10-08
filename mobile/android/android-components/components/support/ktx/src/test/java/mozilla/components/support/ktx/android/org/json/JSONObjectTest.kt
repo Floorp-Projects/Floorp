@@ -11,7 +11,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class JSONObjectTest {
     @Test
-    fun testSortKeys() {
+    fun sortKeys() {
         val jsonObject = JSONObject()
         jsonObject.put("second-key", "second-value")
         jsonObject.put("third-key", JSONArray().apply {
@@ -28,7 +28,7 @@ class JSONObjectTest {
     }
 
     @Test
-    fun testPutIfNotNull() {
+    fun putIfNotNull() {
         val jsonObject = JSONObject()
         assertEquals(0, jsonObject.length())
         jsonObject.putIfNotNull("key", null)
@@ -39,40 +39,40 @@ class JSONObjectTest {
     }
 
     @Test
-    fun testTryGetStringNull() {
+    fun tryGetStringNull() {
         val jsonObject = JSONObject("""{"key":null}""")
         assertNull(jsonObject.tryGetString("key"))
         assertNull(jsonObject.tryGetString("another-key"))
     }
 
     @Test
-    fun testTryGetStringNotNull() {
+    fun tryGetStringNotNull() {
         val jsonObject = JSONObject("""{"key":"value"}""")
         assertEquals("value", jsonObject.tryGetString("key"))
     }
 
     @Test
-    fun testTryGetLongNull() {
+    fun tryGetLongNull() {
         val jsonObject = JSONObject("""{"key":null}""")
         assertNull(jsonObject.tryGetLong("key"))
         assertNull(jsonObject.tryGetLong("another-key"))
     }
 
     @Test
-    fun testTryGetLongNotNull() {
+    fun tryGetLongNotNull() {
         val jsonObject = JSONObject("""{"key":218728173837192717}""")
         assertEquals(218728173837192717, jsonObject.tryGetLong("key"))
     }
 
     @Test
-    fun testTryGetIntNull() {
+    fun tryGetIntNull() {
         val jsonObject = JSONObject("""{"key":null}""")
         assertNull(jsonObject.tryGetInt("key"))
         assertNull(jsonObject.tryGetInt("another-key"))
     }
 
     @Test
-    fun testTryGetIntNotNull() {
+    fun tryGetIntNotNull() {
         val jsonObject = JSONObject("""{"key":3}""")
         assertEquals(3, jsonObject.tryGetInt("key"))
     }

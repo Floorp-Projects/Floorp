@@ -40,13 +40,13 @@ class RustObjectTest {
     }
 
     @Test(expected = NullPointerException::class)
-    fun testValidPointerThrowsIfNull() {
+    fun validPointerThrowsIfNull() {
         val rustObject = MockRustObject(null)
         rustObject.validPointer()
     }
 
     @Test
-    fun testConsumePointer() {
+    fun consumePointer() {
         val rustObject = MockRustObject(MockRawPointer())
         assertFalse(rustObject.isConsumed)
 
@@ -55,7 +55,7 @@ class RustObjectTest {
     }
 
     @Test
-    fun testCloseConsumesAndDestroys() {
+    fun closeConsumesAndDestroys() {
         val rustObject = MockRustObject(MockRawPointer())
         assertFalse(rustObject.isConsumed)
         assertFalse(rustObject.destroyed)
@@ -66,7 +66,7 @@ class RustObjectTest {
     }
 
     @Test
-    fun testGetAndConsumeString() {
+    fun getAndConsumeString() {
         val str = "test"
         val strPointer = Memory(str.length.toLong() + 1)
         strPointer.setString(0, str)
@@ -76,7 +76,7 @@ class RustObjectTest {
     }
 
     @Test
-    fun testSafeAsync() {
+    fun safeAsync() {
         var latch = CountDownLatch(1)
         var complete = false
         var error = false
@@ -115,7 +115,7 @@ class RustObjectTest {
     }
 
     @Test
-    fun testSafeSync() {
+    fun safeSync() {
         assertTrue(RustObject.safeSync { true })
 
         try {

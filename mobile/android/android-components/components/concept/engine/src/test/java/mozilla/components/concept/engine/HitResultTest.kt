@@ -6,7 +6,7 @@ import org.junit.Test
 
 class HitResultTest {
     @Test
-    fun testConstructor() {
+    fun constructor() {
         var result: HitResult = HitResult.UNKNOWN("file://foobar")
         assertTrue(result is HitResult.UNKNOWN)
         assertEquals(result.src, "file://foobar")

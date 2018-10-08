@@ -16,7 +16,7 @@ import org.junit.Assert.assertNull
 class TrieTest {
 
     @Test
-    fun testFindNode() {
+    fun findNode() {
         val trie = Trie.createRootNode()
 
         assertNull(trie.findNode("hello"))

@@ -25,7 +25,7 @@ import java.util.HashMap
 class UrlMatcherTest {
 
     @Test
-    fun testBasicMatching() {
+    fun basicMatching() {
         val matcher = UrlMatcher(arrayOf("bcd.random"))
 
         assertTrue(matcher.matches("http://bcd.random/something", "http://mozilla.org"))
@@ -54,7 +54,7 @@ class UrlMatcherTest {
      * and test that only the expected domains are actually blocked.
      */
     @Test
-    fun testEnableDisableCategories() {
+    fun enableDisableCategories() {
         val categories = HashMap<String, Trie>()
         val suppportedCategories = mutableSetOf<String>()
         val enabledCategories = mutableSetOf<String>()
@@ -223,7 +223,7 @@ class UrlMatcherTest {
       }
     }"""
     @Test
-    fun testCreateMatcher() {
+    fun createMatcher() {
         val matcher = UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
                 listOf(StringReader(OVERRIDES)),
@@ -251,7 +251,7 @@ class UrlMatcherTest {
     }
 
     @Test
-    fun testIsWebFont() {
+    fun isWebFont() {
         assertFalse(UrlMatcher.isWebFont(mock(Uri::class.java)))
         assertFalse(UrlMatcher.isWebFont(Uri.parse("mozilla.org")))
         assertTrue(UrlMatcher.isWebFont(Uri.parse("/fonts/test.woff2")))
@@ -262,7 +262,7 @@ class UrlMatcherTest {
     }
 
     @Test
-    fun testSetCategoriesEnabled() {
+    fun setCategoriesEnabled() {
         val matcher = spy(UrlMatcher.createMatcher(
                 StringReader(BLOCK_LIST),
                 listOf(StringReader(OVERRIDES)),

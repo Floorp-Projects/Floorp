@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit
 class DefaultSessionStorageTest {
 
     @Test
-    fun testPersistAndRestore() {
+    fun persistAndRestore() {
         val session1 = Session("http://mozilla.org")
         val session2 = Session("http://getpocket.com")
         val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
@@ -81,7 +81,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testPersistAndRestoreWithoutSession() {
+    fun persistAndRestoreWithoutSession() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
@@ -100,7 +100,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testPersistIgnoresCustomTabSessions() {
+    fun persistIgnoresCustomTabSessions() {
         val session = Session("http://mozilla.org")
         session.customTabConfig = mock(CustomTabConfig::class.java)
         val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
@@ -130,7 +130,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testPersistIgnoresPrivateSessions() {
+    fun persistIgnoresPrivateSessions() {
         val session = Session("http://mozilla.org", true)
         val engineSessionState = mutableMapOf("k0" to "v0", "k1" to 1, "k2" to true, "k3" to emptyList<Any>())
 
@@ -159,7 +159,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testRestoreReturnsFalseOnIOException() {
+    fun restoreReturnsFalseOnIOException() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
@@ -175,7 +175,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testRestoreReturnsFalseOnJSONException() {
+    fun restoreReturnsFalseOnJSONException() {
         val session = Session("http://mozilla.org")
         val engineSession = mock(EngineSession::class.java)
 
@@ -196,7 +196,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testPersistReturnsFalseOnIOException() {
+    fun persistReturnsFalseOnIOException() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
@@ -217,7 +217,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testPersistReturnsFalseOnJSONException() {
+    fun persistReturnsFalseOnJSONException() {
         val engine = mock(Engine::class.java)
         `when`(engine.name()).thenReturn("gecko")
 
@@ -238,7 +238,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testStartSchedulesPeriodicSaves() {
+    fun startSchedulesPeriodicSaves() {
         val engine = mock(Engine::class.java)
         val scheduler = mock(ScheduledExecutorService::class.java)
         val scheduledFuture = mock(ScheduledFuture::class.java)
@@ -256,7 +256,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testStopCancelsScheduledTask() {
+    fun stopCancelsScheduledTask() {
         val engine = mock(Engine::class.java)
         val scheduler = mock(ScheduledExecutorService::class.java)
         val scheduledFuture = mock(ScheduledFuture::class.java)
@@ -275,7 +275,7 @@ class DefaultSessionStorageTest {
     }
 
     @Test
-    fun testDeserializeWithInvalidSource() {
+    fun deserializeWithInvalidSource() {
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
 
         val json = JSONObject()

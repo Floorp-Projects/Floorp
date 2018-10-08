@@ -48,7 +48,7 @@ import java.lang.reflect.Modifier
 class SystemEngineSessionTest {
 
     @Test
-    fun testWebChromeClientNotifiesObservers() {
+    fun webChromeClientNotifiesObservers() {
         val engineSession = SystemEngineSession()
         val engineView = SystemEngineView(RuntimeEnvironment.application)
         engineView.render(engineSession)
@@ -63,7 +63,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testLoadUrl() {
+    fun loadUrl() {
         var loadedUrl: String? = null
         var loadHeaders: Map<String, String>? = null
 
@@ -92,7 +92,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testLoadData() {
+    fun loadData() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
 
@@ -112,7 +112,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testStopLoading() {
+    fun stopLoading() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
 
@@ -126,7 +126,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testReload() {
+    fun reload() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
 
@@ -140,7 +140,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testGoBack() {
+    fun goBack() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
 
@@ -154,7 +154,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testGoForward() {
+    fun goForward() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
 
@@ -168,7 +168,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testSaveState() {
+    fun saveState() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
 
@@ -182,7 +182,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testRestoreState() {
+    fun restoreState() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
 
@@ -196,7 +196,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testEnableTrackingProtection() {
+    fun enableTrackingProtection() {
         SystemEngineView.URL_MATCHER = UrlMatcher(arrayOf(""))
 
         val engineSession = spy(SystemEngineSession())
@@ -219,7 +219,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testDisableTrackingProtection() {
+    fun disableTrackingProtection() {
         val engineSession = spy(SystemEngineSession())
         var enabledObserved: Boolean? = null
         engineSession.register(object : EngineSession.Observer {
@@ -237,7 +237,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testSettings() {
+    fun settings() {
         assertEquals(DefaultSettings(), spy(SystemEngineSession()).settings)
 
         val defaultSettings = DefaultSettings(trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all())
@@ -255,7 +255,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testInitSettings() {
+    fun initSettings() {
         val engineSession = spy(SystemEngineSession())
         val webViewSettings = mock(WebSettings::class.java)
         `when`(webViewSettings.displayZoomControls).thenReturn(true)
@@ -351,7 +351,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testDefaultSettings() {
+    fun defaultSettings() {
         val defaultSettings = DefaultSettings(
                 javascriptEnabled = false,
                 domStorageEnabled = false,
@@ -383,7 +383,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testSharedFieldsAreVolatile() {
+    fun sharedFieldsAreVolatile() {
         val settingsField = SystemEngineSession::class.java.getDeclaredField("internalSettings")
         val webFontsEnabledField = SystemEngineSession::class.java.getDeclaredField("webFontsEnabled")
         val trackingProtectionField = SystemEngineSession::class.java.getDeclaredField("trackingProtectionPolicy")
@@ -394,7 +394,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testSettingRequestInterceptor() {
+    fun settingRequestInterceptor() {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
@@ -428,7 +428,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testOnLoadRequestWithoutInterceptor() {
+    fun onLoadRequestWithoutInterceptor() {
         val defaultSettings = DefaultSettings()
 
         val engineSession = SystemEngineSession(defaultSettings)
@@ -447,7 +447,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testOnLoadRequestWithInterceptorThatDoesNotIntercept() {
+    fun onLoadRequestWithInterceptorThatDoesNotIntercept() {
         var interceptorCalledWithUri: String? = null
 
         val interceptor = object : RequestInterceptor {
@@ -477,7 +477,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testWebViewErrorMappingToErrorType() {
+    fun webViewErrorMappingToErrorType() {
         Assert.assertEquals(
             ErrorType.ERROR_UNKNOWN_HOST,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_HOST_LOOKUP)
@@ -525,7 +525,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testDesktopMode() {
+    fun desktopMode() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
@@ -551,7 +551,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testDesktopModeUA() {
+    fun desktopModeUA() {
         val userAgentMobile = "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 Mobile Safari/537.36"
         val userAgentDesktop = "Mozilla/5.0 (Linux; diordnA 9) AppleWebKit/537.36 eliboM Safari/537.36"
         val engineSession = spy(SystemEngineSession())
@@ -561,7 +561,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testFindAll() {
+    fun findAll() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
         engineSession.findAll("mozilla")
@@ -580,7 +580,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testFindNext() {
+    fun findNext() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
         engineSession.findNext(true)
@@ -592,7 +592,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testClearFindMatches() {
+    fun clearFindMatches() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)
         engineSession.clearFindMatches()
@@ -604,7 +604,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testClearDataMakingExpectedCalls() {
+    fun clearDataMakingExpectedCalls() {
         val engineSession = spy(SystemEngineSession::class.java)
         val webView = mock(WebView::class.java)
         val webStorage: WebStorage = mock()
@@ -634,7 +634,7 @@ class SystemEngineSessionTest {
     }
 
     @Test
-    fun testCaptureThumbnail() {
+    fun captureThumbnail() {
         val engineSession = spy(SystemEngineSession::class.java)
         val webView = mock(WebView::class.java)
         assertNull(engineSession.captureThumbnail())

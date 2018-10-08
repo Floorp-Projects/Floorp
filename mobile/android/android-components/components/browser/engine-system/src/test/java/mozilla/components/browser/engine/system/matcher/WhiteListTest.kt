@@ -27,7 +27,7 @@ class WhiteListTest {
      * mozilla.org can only use foo.com, but foo.mozilla.org can use both foo.com and bar.com
      */
     @Test
-    fun testWhiteList() {
+    fun whiteList() {
         val mozillaOrg = "mozilla.org"
         val fooMozillaOrg = "foo.mozilla.org"
         val fooCom = "foo.com"
@@ -66,7 +66,7 @@ class WhiteListTest {
     }
 
     @Test
-    fun testWhiteListTrie() {
+    fun whiteListTrie() {
         val whitelist = Trie.createRootNode()
         whitelist.put("abc")
 
@@ -108,7 +108,7 @@ class WhiteListTest {
     }"""
 
     @Test
-    fun testFromJson() {
+    fun fromJson() {
         val whiteList = WhiteList.fromJson(JsonReader(StringReader(WHITE_LIST_JSON)))
 
         assertTrue(whiteList.contains("http://host1.com", "http://host1ads.com"))

@@ -31,7 +31,7 @@ class DomainAutoCompleteProviderTest {
     }
 
     @Test
-    fun testDomainCreation() {
+    fun domainCreation() {
         val firstItem = Domain.create("https://mozilla.com")
 
         assertTrue(firstItem.protocol == "https://")
@@ -46,7 +46,7 @@ class DomainAutoCompleteProviderTest {
     }
 
     @Test
-    fun testDomainCanCreateUrl() {
+    fun domainCanCreateUrl() {
         val firstItem = Domain.create("https://mozilla.com")
         assertEquals("https://mozilla.com", firstItem.url)
 
@@ -55,12 +55,12 @@ class DomainAutoCompleteProviderTest {
     }
 
     @Test(expected = IllegalStateException::class)
-    fun testDomainCreationWithBadURLThrowsException() {
+    fun domainCreationWithBadURLThrowsException() {
         Domain.create("http://www.")
     }
 
     @Test
-    fun testAutocompletionWithShippedDomains() {
+    fun autocompletionWithShippedDomains() {
         val provider = DomainAutoCompleteProvider()
         provider.initialize(RuntimeEnvironment.application, true, false, false)
 
@@ -83,7 +83,7 @@ class DomainAutoCompleteProviderTest {
     }
 
     @Test
-    fun testAutocompletionWithCustomDomains() {
+    fun autocompletionWithCustomDomains() {
         val domains = listOf("facebook.com", "google.com", "mozilla.org")
         val customDomains = listOf("gap.com", "www.fanfiction.com", "https://mobile.de")
 
@@ -106,7 +106,7 @@ class DomainAutoCompleteProviderTest {
     }
 
     @Test
-    fun testAutocompletionWithoutDomains() {
+    fun autocompletionWithoutDomains() {
         val filter = DomainAutoCompleteProvider()
         assertNoCompletion(filter, "mozilla")
     }
