@@ -16,6 +16,9 @@
 #include <unordered_map>
 #include <functional>
 
+#include "nsHashKeys.h"
+#include "nsTHashtable.h"
+
 namespace mozilla {
 namespace gfx {
 
@@ -110,6 +113,11 @@ public:
   virtual void StoreSourceSurfaceRecording(SourceSurface *aSurface,
                                            const char *aReason);
 
+  virtual void AddDependentSurface(uint64_t aDependencyId)
+  {
+    MOZ_CRASH("GFX: AddDependentSurface");
+  }
+
 protected:
   void StoreExternalSurfaceRecording(SourceSurface* aSurface,
                                      uint64_t aKey);
@@ -177,6 +185,10 @@ public:
 
   void RecordEvent(const RecordedEvent &aEvent) override;
 
+  void AddDependentSurface(uint64_t aDependencyId) override;
+
+  nsTHashtable<nsUint64HashKey>&& TakeDependentSurfaces();
+
   /**
    * @return the current size of the recording (in chars).
    */
@@ -205,6 +217,7 @@ protected:
 
 private:
   SerializeResourcesFn mSerializeCallback;
+  nsTHashtable<nsUint64HashKey> mDependentSurfaces;
 
   void Flush() override;
 };

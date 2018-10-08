@@ -119,6 +119,11 @@ public:
   ToCloneData() const;
 
   static already_AddRefed<ImageBitmap>
+  CreateFromSourceSurface(nsIGlobalObject* aGlobal,
+                          gfx::SourceSurface* aSource,
+                          ErrorResult& aRv);
+
+  static already_AddRefed<ImageBitmap>
   CreateFromCloneData(nsIGlobalObject* aGlobal, ImageBitmapCloneData* aData);
 
   static already_AddRefed<ImageBitmap>
