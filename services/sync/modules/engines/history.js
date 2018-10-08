@@ -215,8 +215,9 @@ HistoryStore.prototype = {
         toRemove.push(record);
       } else {
         try {
-          if (await this._recordToPlaceInfo(record)) {
-            toAdd.push(record);
+          let pageInfo = await this._recordToPlaceInfo(record);
+          if (pageInfo) {
+            toAdd.push(pageInfo);
           }
         } catch (ex) {
           if (Async.isShutdownException(ex)) {
@@ -330,8 +331,8 @@ HistoryStore.prototype = {
    * Converts a Sync history record to a mozIPlaceInfo.
    *
    * Throws if an invalid record is encountered (invalid URI, etc.),
-   * returns true if the record is to be applied, false otherwise
-   * (no visits to add, etc.),
+   * returns a new PageInfo object if the record is to be applied, null
+   * otherwise (no visits to add, etc.),
    */
   async _recordToPlaceInfo(record) {
     // Sort out invalid URIs and ones Places just simply doesn't want.
@@ -340,7 +341,7 @@ HistoryStore.prototype = {
 
     if (!Utils.checkGUID(record.id)) {
       this._log.warn("Encountered record with invalid GUID: " + record.id);
-      return false;
+      return null;
     }
     record.guid = record.id;
 
@@ -348,7 +349,7 @@ HistoryStore.prototype = {
         !this.engine.shouldSyncURL(record.uri.spec)) {
       this._log.trace("Ignoring record " + record.id + " with URI "
                       + record.uri.spec + ": can't add this URI.");
-      return false;
+      return null;
     }
 
     // We dupe visits by date and type. So an incoming visit that has
@@ -429,10 +430,20 @@ HistoryStore.prototype = {
     if (!record.visits.length) {
       this._log.trace("Ignoring record " + record.id + " with URI "
                       + record.uri.spec + ": no visits to add.");
-      return false;
+      return null;
     }
 
-    return true;
+    // PageInfo is validated using validateItemProperties which does a shallow
+    // copy of the properties. Since record uses getters some of the properties
+    // are not copied over. Thus we create and return a new object.
+    let pageInfo = {
+      title: record.title,
+      url: record.url,
+      guid: record.guid,
+      visits: record.visits,
+    };
+
+    return pageInfo;
   },
 
   async remove(record) {
