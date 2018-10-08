@@ -48,9 +48,12 @@ class MozFindbar extends XULElement {
   }
 
   connectedCallback() {
-    this.appendChild(document.importNode(this.content, true));
-
+    // Hide the findbar immediately without animation. This prevents a flicker in the case where
+    // we'll never be shown (i.e. adopting a tab that has a previously-opened-but-now-closed
+    // findbar into a new window).
+    this.setAttribute("noanim", "true");
     this.hidden = true;
+    this.appendChild(document.importNode(this.content, true));
 
     /**
      * Please keep in sync with toolkit/modules/FindBarChild.jsm
