@@ -1115,22 +1115,6 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D *aInTexture,
   return S_OK;
 }
 
-HRESULT ConfigureOutput(IMFMediaType* aOutput, void* aData)
-{
-  HRESULT hr =
-    aOutput->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  hr = aOutput->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  gfx::IntSize* size = reinterpret_cast<gfx::IntSize*>(aData);
-  hr = MFSetAttributeSize(aOutput, MF_MT_FRAME_SIZE, size->width, size->height);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  return S_OK;
-}
-
 HRESULT
 D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
                                     uint32_t aWidth,
@@ -1182,11 +1166,20 @@ D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
   hr = outputType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_ARGB32);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  gfx::IntSize size(aWidth, aHeight);
   hr = E_FAIL;
   mozilla::mscom::EnsureMTA([&]() -> void {
-    hr =
-      mTransform->SetMediaTypes(inputType, outputType, ConfigureOutput, &size);
+    hr = mTransform->SetMediaTypes(
+      inputType, outputType, [aWidth, aHeight](IMFMediaType* aOutput) {
+        HRESULT hr = aOutput->SetUINT32(MF_MT_INTERLACE_MODE,
+                                        MFVideoInterlace_Progressive);
+        NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+        hr = aOutput->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE);
+        NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+        hr = MFSetAttributeSize(aOutput, MF_MT_FRAME_SIZE, aWidth, aHeight);
+        NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+        return S_OK;
+      });
   });
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
