@@ -23,7 +23,6 @@ const {SplitView} = require("resource://devtools/client/shared/SplitView.jsm");
 const {StyleSheetEditor} = require("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
 const {PluralForm} = require("devtools/shared/plural-form");
 const {PrefObserver} = require("devtools/client/shared/prefs");
-const csscoverage = require("devtools/shared/fronts/csscoverage");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 const {OriginalSource} = require("devtools/client/styleeditor/original-source");
 
@@ -636,7 +635,7 @@ StyleEditorUI.prototype = {
           this.emit("editor-selected", showEditor);
 
           // Is there any CSS coverage markup to include?
-          const usage = await csscoverage.getUsage(this._target);
+          const usage = this._target.getFront("cssUsage");
           if (usage == null) {
             return;
           }
