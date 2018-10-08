@@ -176,11 +176,8 @@ async function getImageSizeFromClipboard() {
 
   // Due to the differences in how images could be stored in the clipboard the
   // checks below are needed. The clipboard could already provide the image as
-  // byte streams, but also as pointer, or as image container. If it's not
-  // possible obtain a byte stream, the function returns `null`.
-  if (image instanceof Ci.nsISupportsInterfacePointer) {
-    image = image.data;
-  }
+  // byte streams or as image container. If it's not possible obtain a
+  // byte stream, the function throws.
 
   if (image instanceof Ci.imgIContainer) {
     image = Cc["@mozilla.org/image/tools;1"]

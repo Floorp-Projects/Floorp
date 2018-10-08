@@ -421,15 +421,8 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-    nsCOMPtr<nsISupportsInterfacePointer>
-      imgPtr(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = imgPtr->SetData(image);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // copy the image data onto the transferable
-    rv = trans->SetTransferData(kNativeImageMime, imgPtr,
+    rv = trans->SetTransferData(kNativeImageMime, image,
                                 sizeof(nsISupports*));
     NS_ENSURE_SUCCESS(rv, rv);
   }
