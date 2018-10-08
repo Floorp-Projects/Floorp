@@ -38,6 +38,7 @@ DevToolsModules(
     'performance-recording.js',
     'performance.js',
     'preference.js',
+    'promises.js',
     'property-iterator.js',
     'reflow.js',
     'screenshot.js',

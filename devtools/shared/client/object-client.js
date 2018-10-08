@@ -242,6 +242,65 @@ ObjectClient.prototype = {
       return packet;
     },
   }),
+
+  /**
+   * Request the promises directly depending on the current promise.
+   */
+  getDependentPromises: DebuggerClient.requester({
+    type: "dependentPromises"
+  }, {
+    before: function(packet) {
+      if (this._grip.class !== "Promise") {
+        throw new Error("getDependentPromises is only valid for promise " +
+          "grips.");
+      }
+      return packet;
+    }
+  }),
+
+  /**
+   * Request the stack to the promise's allocation point.
+   */
+  getPromiseAllocationStack: DebuggerClient.requester({
+    type: "allocationStack"
+  }, {
+    before: function(packet) {
+      if (this._grip.class !== "Promise") {
+        throw new Error("getAllocationStack is only valid for promise grips.");
+      }
+      return packet;
+    }
+  }),
+
+  /**
+   * Request the stack to the promise's fulfillment point.
+   */
+  getPromiseFulfillmentStack: DebuggerClient.requester({
+    type: "fulfillmentStack"
+  }, {
+    before: function(packet) {
+      if (this._grip.class !== "Promise") {
+        throw new Error("getPromiseFulfillmentStack is only valid for " +
+          "promise grips.");
+      }
+      return packet;
+    }
+  }),
+
+  /**
+   * Request the stack to the promise's rejection point.
+   */
+  getPromiseRejectionStack: DebuggerClient.requester({
+    type: "rejectionStack"
+  }, {
+    before: function(packet) {
+      if (this._grip.class !== "Promise") {
+        throw new Error("getPromiseRejectionStack is only valid for " +
+          "promise grips.");
+      }
+      return packet;
+    }
+  })
 };
 
 module.exports = ObjectClient;
