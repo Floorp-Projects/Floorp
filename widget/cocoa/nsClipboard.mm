@@ -587,14 +587,8 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       uint32_t dataSize = 0;
       nsCOMPtr<nsISupports> transferSupports;
       aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(transferSupports), &dataSize);
-      nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_QueryInterface(transferSupports));
-      if (!ptrPrimitive)
-        continue;
 
-      nsCOMPtr<nsISupports> primitiveData;
-      ptrPrimitive->GetData(getter_AddRefs(primitiveData));
-
-      nsCOMPtr<imgIContainer> image(do_QueryInterface(primitiveData));
+      nsCOMPtr<imgIContainer> image(do_QueryInterface(transferSupports));
       if (!image) {
         NS_WARNING("Image isn't an imgIContainer in transferable");
         continue;
@@ -647,15 +641,6 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       }
 
       nsCOMPtr<nsIFile> file(do_QueryInterface(genericFile));
-      if (!file) {
-        nsCOMPtr<nsISupportsInterfacePointer> ptr(do_QueryInterface(genericFile));
-
-        if (ptr) {
-          ptr->GetData(getter_AddRefs(genericFile));
-          file = do_QueryInterface(genericFile);
-        }
-      }
-
       if (!file) {
         continue;
       }
