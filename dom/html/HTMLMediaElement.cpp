@@ -2699,8 +2699,8 @@ HTMLMediaElement::FastSeek(double aTime, ErrorResult& aRv)
   LOG(LogLevel::Debug, ("%p FastSeek(%f) called by JS", this, aTime));
   LOG(LogLevel::Debug, ("Reporting telemetry VIDEO_FASTSEEK_USED"));
   Telemetry::Accumulate(Telemetry::VIDEO_FASTSEEK_USED, 1);
-  RefPtr<Promise> tobeDropped = Seek(aTime, SeekTarget::PrevSyncPoint, aRv);
-  aRv.SuppressException();
+  RefPtr<Promise> tobeDropped = Seek(aTime, SeekTarget::PrevSyncPoint,
+                                     IgnoreErrors());
 }
 
 already_AddRefed<Promise>
@@ -2725,8 +2725,8 @@ HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv)
 {
   LOG(LogLevel::Debug,
       ("%p SetCurrentTime(%f) called by JS", this, aCurrentTime));
-  RefPtr<Promise> tobeDropped = Seek(aCurrentTime, SeekTarget::Accurate, aRv);
-  aRv.SuppressException();
+  RefPtr<Promise> tobeDropped = Seek(aCurrentTime, SeekTarget::Accurate,
+                                     IgnoreErrors());
 }
 
 /**
@@ -2769,6 +2769,7 @@ HTMLMediaElement::Seek(double aTime,
   // aTime should be non-NaN.
   MOZ_ASSERT(!mozilla::IsNaN(aTime));
 
+  RefPtr<Promise> promise = CreateDOMPromise(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -2890,7 +2891,9 @@ HTMLMediaElement::Seek(double aTime,
   AddRemoveSelfReference();
 
   // Keep the DOM promise.
-  return do_AddRef(mSeekDOMPromise = CreateDOMPromise(aRv));
+  mSeekDOMPromise = promise;
+
+  return promise.forget();
 }
 
 double
