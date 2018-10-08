@@ -177,7 +177,7 @@ class sessionrestore(TsBase):
     2. Launch Firefox.
     3. Measure the delta between firstPaint and sessionRestored.
     """
-    extensions = ['${talos}/pageloader', '${talos}/startup_test/sessionrestore/addon']
+    extensions = ['${talos}/startup_test/sessionrestore/addon']
     cycles = 10
     timeout = 900
     gecko_profile_startup = True
@@ -200,7 +200,10 @@ class sessionrestore_no_auto_restore(sessionrestore):
     2. Launch Firefox.
     3. Measure the delta between firstPaint and sessionRestored.
     """
-    preferences = {'browser.startup.page': 1}
+    preferences = {
+        'browser.startup.page': 1,
+        'talos.sessionrestore.norestore': True,
+    }
 
 
 @register_test()
