@@ -167,12 +167,26 @@
         background-size: 16px 16px;
       }
       #dispatch-tbody > tr > td.root{
-        background-position: 8px;
-        padding-inline-start: 34px;
+        background-position: 36px;
+        padding-inline-start: 62px;
+      }
+      .twisty {
+        margin-inline-start: -62px;
+        margin-inline-end: 26px;
+        padding-inline-end: 18px;
+        padding-inline-start: 18px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
+        -moz-context-properties: fill;
+        fill: currentColor;
+      }
+      .twisty.open {
+        background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
       }
       #dispatch-tbody > tr > td.indent {
-        padding-inline-start: 60px;
-        background-position: 34px;
+        padding-inline-start: 88px;
+        background-position: 62px;
       }
       #dispatch-tbody > tr > td.tracking {
         background-image: url(chrome://browser/skin/controlcenter/trackers.svg);
