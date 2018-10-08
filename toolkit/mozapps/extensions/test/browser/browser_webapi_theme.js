@@ -20,7 +20,7 @@ add_task(async function test_theme_install() {
       Services.obs.removeObserver(observer, "lightweight-theme-styling-update");
     });
 
-    let promptPromise = promiseNotification("addon-installed");
+    let promptPromise = acceptAppMenuNotificationWhenShown("addon-installed");
 
     let installPromise = ContentTask.spawn(browser, URL, async (url) => {
       let install = await content.navigator.mozAddonManager.createInstall({url});

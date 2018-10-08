@@ -80,12 +80,6 @@
       </popupnotificationcontent>
     </popupnotification>
 
-    <popupnotification id="addon-installed-notification" hidden="true">
-      <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
-        <description>&addonPostInstallMessage.label;</description>
-      </popupnotificationcontent>
-    </popupnotification>
-
     <popupnotification id="contextual-feature-recommendation-notification" hidden="true">
       <popupnotificationheader id="cfr-notification-header">
         <stack id="cfr-notification-header-stack">
