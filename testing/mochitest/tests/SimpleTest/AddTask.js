@@ -27,7 +27,20 @@ var add_task = (function () {
       // we need to spawn a "master task" that calls each task in succesion.
       // Use setTimeout to ensure the master task runs after the client
       // script finishes.
-      setTimeout(function () {
+      setTimeout(function nextTick() {
+        // If we are in a HTML document, we should wait for the document
+        // to be fully loaded.
+        // These checks ensure that we are in an HTML document without
+        // throwing TypeError; also I am told that readyState in XUL documents
+        // are totally bogus so we don't try to do this there.
+        if (typeof window !== "undefined" &&
+            typeof HTMLDocument !== "undefined" &&
+            window.document instanceof HTMLDocument &&
+            window.document.readyState !== "complete") {
+          setTimeout(nextTick);
+          return;
+        }
+
         (async () => {
           // Allow for a task to be skipped; we need only use the structured logger
           // for this, whilst deactivating log buffering to ensure that messages
