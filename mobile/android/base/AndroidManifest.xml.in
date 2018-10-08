@@ -211,10 +211,6 @@
                   android:launchMode="singleTop"
                   android:theme="@style/OverlayActivity" />
 
-        <activity android:name="org.mozilla.gecko.promotion.HomeScreenPrompt"
-                  android:launchMode="singleTop"
-                  android:theme="@style/OverlayActivity" />
-
         <!-- The main reason for the Tab Queue build flag is to not mess with the VIEW intent filter
              before the rest of the plumbing is in place -->
 

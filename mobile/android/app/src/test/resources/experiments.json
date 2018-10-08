@@ -54,24 +54,6 @@
         }
       },
     {
-      "name": "promote-add-to-homescreen",
-      "buckets": {
-        "max": "100",
-        "min": "50"
-      },
-      "last_modified": 1467705654772,
-      "values": {
-        "lastVisitMaximumAgeMs": 600000,
-        "minimumTotalVisits": 5,
-        "lastVisitMinimumAgeMs": 30000
-      },
-      "id": "20d278d7-0d35-4811-8f01-bf24e31ba51b",
-      "match": {
-        "appId": "^org.mozilla.fennec|^org.mozilla.firefox_beta$"
-      },
-      "schema": 1467705310595
-    },
-    {
       "name": "offline-cache",
       "buckets": {
         "max": "100",
