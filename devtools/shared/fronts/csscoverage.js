@@ -105,21 +105,3 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
 });
 
 exports.CSSUsageFront = CSSUsageFront;
-
-const knownFronts = new WeakMap();
-
-/**
- * Create a CSSUsageFront only when needed (returns a promise)
- * For notes on target.attach(), see
- * https://bugzilla.mozilla.org/show_bug.cgi?id=1016330#c7
- */
-exports.getUsage = function(trgt) {
-  return trgt.attach().then(() => {
-    let front = knownFronts.get(trgt.client);
-    if (front == null && trgt.form.cssUsageActor != null) {
-      front = new CSSUsageFront(trgt.client, trgt.form);
-      knownFronts.set(trgt.client, front);
-    }
-    return front;
-  });
-};

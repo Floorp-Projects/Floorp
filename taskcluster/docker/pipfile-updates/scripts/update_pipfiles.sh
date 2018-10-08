@@ -116,6 +116,9 @@ fi
 clone_repo
 
 ${PIP} install pipenv
+# Bug 1497162
+# Can be removed when https://github.com/pypa/pipenv/issues/2924 is released
+${PIP} install --user pip==18.0
 
 update_pipfile "${PIPFILE_DIRECTORY}"
 echo "INFO: diffing old/new Pipfile.lock into ${DIFF_ARTIFACT}"

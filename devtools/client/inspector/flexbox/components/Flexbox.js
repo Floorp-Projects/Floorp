@@ -4,7 +4,12 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createElement,
+  createFactory,
+  Fragment,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
@@ -14,6 +19,9 @@ loader.lazyGetter(this, "FlexContainerProperties", function() {
 });
 loader.lazyGetter(this, "FlexItemList", function() {
   return createFactory(require("./FlexItemList"));
+});
+loader.lazyGetter(this, "FlexItemSizingOutline", function() {
+  return createFactory(require("./FlexItemSizingOutline"));
 });
 loader.lazyGetter(this, "FlexItemSizingProperties", function() {
   return createFactory(require("./FlexItemSizingProperties"));
@@ -27,6 +35,7 @@ const Types = require("../types");
 class Flexbox extends PureComponent {
   static get propTypes() {
     return {
+      flexbox: PropTypes.shape(Types.flexbox).isRequired,
       flexContainer: PropTypes.shape(Types.flexContainer).isRequired,
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
@@ -61,6 +70,9 @@ class Flexbox extends PureComponent {
 
   renderFlexItemSizing() {
     const {
+      color,
+    } = this.props.flexbox;
+    const {
       flexItems,
       flexItemShown,
       properties,
@@ -71,10 +83,17 @@ class Flexbox extends PureComponent {
       return null;
     }
 
-    return FlexItemSizingProperties({
-      flexDirection: properties["flex-direction"],
-      flexItem,
-    });
+    return createElement(Fragment, null,
+      FlexItemSizingOutline({
+        color,
+        flexDirection: properties["flex-direction"],
+        flexItem,
+      }),
+      FlexItemSizingProperties({
+        flexDirection: properties["flex-direction"],
+        flexItem,
+      })
+    );
   }
 
   render() {

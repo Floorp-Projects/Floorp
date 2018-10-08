@@ -39,6 +39,27 @@ function promisePopupNotificationShown(name) {
   });
 }
 
+function promiseAppMenuNotificationShown(id) {
+  ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+  return new Promise(resolve => {
+    function popupshown() {
+      let notification = AppMenuNotifications.activeNotification;
+      if (!notification) { return; }
+
+      is(notification.id, id, `${id} notification shown`);
+      ok(PanelUI.isNotificationPanelOpen, "notification panel open");
+
+      PanelUI.notificationPanel.removeEventListener("popupshown", popupshown);
+
+      let popupnotificationID = PanelUI._getPopupId(notification);
+      let popupnotification = document.getElementById(popupnotificationID);
+
+      resolve(popupnotification);
+    }
+    PanelUI.notificationPanel.addEventListener("popupshown", popupshown);
+  });
+}
+
 /**
  * Wait for a specific install event to fire for a given addon
  *
@@ -307,7 +328,7 @@ async function testInstallMethod(installFn, telemetryBase) {
       } catch (err) {}
     } else {
       // Look for post-install notification
-      let postInstallPromise = promisePopupNotificationShown("addon-installed");
+      let postInstallPromise = promiseAppMenuNotificationShown("addon-installed");
       panel.button.click();
 
       // Press OK on the post-install notification

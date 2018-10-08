@@ -38,7 +38,7 @@ runInParent(function addLogins() {
 <p id="display"></p>
 
 <div id="content">
-  <iframe src="https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html"></iframe>
+  <iframe></iframe>
 </div>
 
 <pre id="test">
@@ -48,6 +48,7 @@ let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
 let iframeDoc;
 
 add_task(async function setup() {
+  iframe.src = "https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html";
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
       resolve();
