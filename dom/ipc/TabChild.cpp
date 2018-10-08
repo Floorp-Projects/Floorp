@@ -26,6 +26,7 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/PaymentRequestChild.h"
+#include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/layers/APZChild.h"
@@ -2664,6 +2665,31 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, cons
     MakeHidden();
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabChild::RecvRequestRootPaint(const IntRect& aRect, const float& aScale, const nscolor& aBackgroundColor, RequestRootPaintResolver&& aResolve)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return IPC_OK();
+  }
+
+  aResolve(gfx::PaintFragment::Record(docShell, aRect, aScale, aBackgroundColor));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabChild::RecvRequestSubPaint(const float& aScale, const nscolor& aBackgroundColor, RequestSubPaintResolver&& aResolve)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return IPC_OK();
+  }
+
+  gfx::IntRect rect = gfx::RoundedIn(gfx::Rect(0.0f, 0.0f, mUnscaledInnerSize.width, mUnscaledInnerSize.height));
+  aResolve(gfx::PaintFragment::Record(docShell, rect, aScale, aBackgroundColor));
   return IPC_OK();
 }
 

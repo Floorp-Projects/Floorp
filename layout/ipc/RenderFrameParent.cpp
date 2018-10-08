@@ -165,13 +165,8 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
 {
   MOZ_ASSERT(aFrame,
              "makes no sense to have a shadow tree without a frame");
-  MOZ_ASSERT(!mContainer ||
-             IsTempLayerManager(aManager) ||
-             mContainer->Manager() == aManager,
-             "retaining manager changed out from under us ... HELP!");
 
-  if (IsTempLayerManager(aManager) ||
-      (mContainer && mContainer->Manager() != aManager)) {
+  if (IsTempLayerManager(aManager)) {
     // This can happen if aManager is a "temporary" manager, or if the
     // widget's layer manager changed out from under us.  We need to
     // FIXME handle the former case somehow, probably with an API to
@@ -280,23 +275,6 @@ RenderFrameParent::TriggerRepaint()
 }
 
 void
-RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                    nsSubDocumentFrame* aFrame,
-                                    const nsDisplayListSet& aLists)
-{
-  // We're the subdoc for <browser remote="true"> and it has
-  // painted content.  Display its shadow layer tree.
-  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-
-  nsPoint offset = aBuilder->ToReferenceFrame(aFrame);
-  nsRect bounds = aFrame->EnsureInnerView()->GetBounds() + offset;
-  clipState.ClipContentDescendants(bounds);
-
-  aLists.Content()->AppendToTop(
-    MakeDisplayItem<nsDisplayRemote>(aBuilder, aFrame));
-}
-
-void
 RenderFrameParent::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   RefPtr<LayerManager> lm = mFrameLoader ? GetLayerManager(mFrameLoader) : nullptr;
@@ -346,6 +324,7 @@ RenderFrameParent::EnsureLayersConnected(CompositorOptions* aCompositorOptions)
 nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
                                  nsSubDocumentFrame* aFrame)
   : nsDisplayItem(aBuilder, aFrame)
+  , mTabId{0}
   , mEventRegionsOverride(EventRegionsOverride::NoOverride)
 {
   bool frameIsPointerEventsNone =
@@ -357,6 +336,25 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
   if (nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(aFrame->PresShell())) {
     mEventRegionsOverride |= EventRegionsOverride::ForceDispatchToContent;
   }
+
+  nsFrameLoader* frameLoader = GetRenderFrameParent()->FrameLoader();
+  if (frameLoader) {
+    TabParent* browser = TabParent::GetFrom(frameLoader);
+    if (browser) {
+      mTabId = browser->GetTabId();
+    }
+  }
+}
+
+mozilla::LayerState
+nsDisplayRemote::GetLayerState(nsDisplayListBuilder* aBuilder,
+                               LayerManager* aManager,
+                               const ContainerLayerParameters& aParameters)
+{
+  if (mozilla::layout::IsTempLayerManager(aManager)) {
+    return mozilla::LAYER_NONE;
+  }
+  return mozilla::LAYER_ACTIVE_FORCE;
 }
 
 bool
@@ -381,6 +379,21 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
     layer->AsRefLayer()->SetEventRegionsOverride(mEventRegionsOverride);
   }
   return layer.forget();
+}
+
+void
+nsDisplayRemote::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx)
+{
+  DrawTarget* target = aCtx->GetDrawTarget();
+  if (!target->IsRecording() || mTabId == 0) {
+    NS_WARNING("Remote iframe not rendered");
+    return;
+  }
+
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  Rect destRect =
+    mozilla::NSRectToSnappedRect(GetContentRect(), appUnitsPerDevPixel, *target);
+  target->DrawDependentSurface(mTabId, destRect);
 }
 
 bool

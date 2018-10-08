@@ -142,11 +142,12 @@ VOID = VoidType()
 
 
 class ImportedCxxType(Type):
-    def __init__(self, qname, refcounted):
+    def __init__(self, qname, refcounted, moveonly):
         assert isinstance(qname, QualifiedId)
         self.loc = qname.loc
         self.qname = qname
         self.refcounted = refcounted
+        self.moveonly = moveonly
 
     def isCxx(self):
         return True
@@ -156,6 +157,9 @@ class ImportedCxxType(Type):
 
     def isRefcounted(self):
         return self.refcounted
+
+    def isMoveonly(self):
+        return self.moveonly
 
     def name(self):
         return self.qname.baseid
@@ -848,11 +852,14 @@ class GatherDecls(TcheckVisitor):
         elif fullname == 'mozilla::ipc::FileDescriptor':
             ipdltype = FDType(using.type.spec)
         else:
-            ipdltype = ImportedCxxType(using.type.spec, using.isRefcounted())
+            ipdltype = ImportedCxxType(using.type.spec, using.isRefcounted(), using.isMoveonly())
             existingType = self.symtab.lookup(ipdltype.fullname())
             if existingType and existingType.fullname == ipdltype.fullname():
                 if ipdltype.isRefcounted() != existingType.type.isRefcounted():
                     self.error(using.loc, "inconsistent refcounted status of type `%s`",
+                               str(using.type))
+                if ipdltype.isMoveonly() != existingType.type.isMoveonly():
+                    self.error(using.loc, "inconsistent moveonly status of type `%s`",
                                str(using.type))
                 using.decl = existingType
                 return
