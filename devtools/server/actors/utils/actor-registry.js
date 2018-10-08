@@ -231,11 +231,6 @@ const ActorRegistry = {
       constructor: "AnimationsActor",
       type: { target: true }
     });
-    this.registerModule("devtools/server/actors/promises", {
-      prefix: "promises",
-      constructor: "PromisesActor",
-      type: { target: true }
-    });
     this.registerModule("devtools/server/actors/emulation", {
       prefix: "emulation",
       constructor: "EmulationActor",

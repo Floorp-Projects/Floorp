@@ -52,7 +52,6 @@ DevToolsModules(
     'preference.js',
     'pretty-print-worker.js',
     'process.js',
-    'promises.js',
     'reflow.js',
     'root.js',
     'screenshot.js',
