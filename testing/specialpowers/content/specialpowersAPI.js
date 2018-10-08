@@ -511,13 +511,16 @@ SpecialPowersAPI.prototype = {
    */
   loadPrivilegedScript(aFunction) {
     var str = "(" + aFunction.toString() + ")();";
-    var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    var sb = Cu.Sandbox(systemPrincipal);
+    let gGlobalObject = Cu.getGlobalForObject(this);
+    let sb = Cu.Sandbox(gGlobalObject);
     var window = this.window.get();
     var mc = new window.MessageChannel();
     sb.port = mc.port1;
     try {
-      sb.eval(str);
+      Cu.importGlobalProperties(["URL", "Blob"]);
+      let blob = new Blob([str], {type: "application/javascript"});
+      let blobUrl = URL.createObjectURL(blob);
+      Services.scriptloader.loadSubScript(blobUrl, sb);
     } catch (e) {
       throw wrapIfUnwrapped(e);
     }
