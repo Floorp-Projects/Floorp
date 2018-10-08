@@ -75,6 +75,28 @@ async function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 
   return PopupNotifications.panel;
 }
 
+function acceptAppMenuNotificationWhenShown(id) {
+  ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+  return new Promise(resolve => {
+    function popupshown() {
+      let notification = AppMenuNotifications.activeNotification;
+      if (!notification) { return; }
+
+      is(notification.id, id, `${id} notification shown`);
+      ok(PanelUI.isNotificationPanelOpen, "notification panel open");
+
+      PanelUI.notificationPanel.removeEventListener("popupshown", popupshown);
+
+      let popupnotificationID = PanelUI._getPopupId(notification);
+      let popupnotification = document.getElementById(popupnotificationID);
+      popupnotification.button.click();
+
+      resolve();
+    }
+    PanelUI.notificationPanel.addEventListener("popupshown", popupshown);
+  });
+}
+
 async function waitForNotification(aId, aExpectedCount = 1) {
   info("Waiting for " + aId + " notification");
 
@@ -123,6 +145,9 @@ async function waitForNotification(aId, aExpectedCount = 1) {
 }
 
 function waitForNotificationClose() {
+  if (!PopupNotifications.isPanelOpen) {
+    return Promise.resolve();
+  }
   return new Promise(resolve => {
     info("Waiting for notification to close");
     PopupNotifications.panel.addEventListener("popuphidden", function() {
@@ -229,9 +254,9 @@ async function test_blockedInstall() {
 
   let installDialog = await dialogPromise;
 
-  notificationPromise = waitForNotification("addon-installed");
+  notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed");
   installDialog.button.click();
-  panel = await notificationPromise;
+  await notificationPromise;
 
   let installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should be no pending installs");
@@ -263,7 +288,7 @@ async function test_whitelistedInstall() {
   is(gBrowser.selectedTab, tab,
      "tab selected in response to the addon-install-confirmation notification");
 
-  let notificationPromise = waitForNotification("addon-installed");
+  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed");
   acceptInstallDialog(installDialog);
   await notificationPromise;
 
@@ -359,7 +384,7 @@ async function test_restartless() {
   await progressPromise;
   let installDialog = await dialogPromise;
 
-  let notificationPromise = waitForNotification("addon-installed");
+  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed");
   acceptInstallDialog(installDialog);
   await notificationPromise;
 
@@ -476,7 +501,7 @@ async function test_allUnverified() {
   is(container.children[0].firstElementChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
   is(container.children[0].children.length, 1, "Shouldn't have the unverified marker");
 
-  let notificationPromise = waitForNotification("addon-installed");
+  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed");
   acceptInstallDialog(installDialog);
   await notificationPromise;
 
@@ -587,7 +612,7 @@ async function test_urlBar() {
   await progressPromise;
   let installDialog = await dialogPromise;
 
-  let notificationPromise = waitForNotification("addon-installed");
+  let notificationPromise = acceptAppMenuNotificationWhenShown("addon-installed");
   installDialog.button.click();
   await notificationPromise;
 

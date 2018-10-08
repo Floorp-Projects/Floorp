@@ -502,7 +502,7 @@ pref("media.getusermedia.noise_enabled", true);
 #endif
 pref("media.getusermedia.aec_extended_filter", true);
 pref("media.getusermedia.noise", 1);
-pref("media.getusermedia.agc_enabled", false);
+pref("media.getusermedia.agc_enabled", true);
 pref("media.getusermedia.agc", 3); // kAgcAdaptiveDigital
 // capture_delay: Adjustments for OS-specific input delay (lower bound)
 // playout_delay: Adjustments for OS-specific AudioStream+cubeb+output delay (lower bound)

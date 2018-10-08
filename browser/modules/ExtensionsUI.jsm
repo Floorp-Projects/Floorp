@@ -401,8 +401,7 @@ var ExtensionsUI = {
   },
 
   showInstallNotification(target, addon) {
-    let {browser, window} = getTabBrowser(target);
-    let popups = window.PopupNotifications;
+    let {window} = getTabBrowser(target);
 
     let brandBundle = window.document.getElementById("bundle_brand");
     let appName = brandBundle.getString("brandShortName");
@@ -421,19 +420,13 @@ var ExtensionsUI = {
                  AddonManager.getPreferredIconURL(addon, 32, window) || DEFAULT_EXTENSION_ICON :
                  "chrome://browser/skin/addons/addon-install-installed.svg";
       let options = {
-        hideClose: true,
-        timeout: Date.now() + 30000,
-        popupIconURL: icon,
-        eventCallback(topic) {
-          if (topic == "dismissed") {
-            resolve();
-          }
-        },
         name: addon.name,
+        message,
+        popupIconURL: icon,
+        onDismissed: resolve,
       };
 
-      popups.show(browser, "addon-installed", message, "addons-notification-icon",
-                  action, null, options);
+      AppMenuNotifications.showNotification("addon-installed", action, null, options);
     });
   },
 };

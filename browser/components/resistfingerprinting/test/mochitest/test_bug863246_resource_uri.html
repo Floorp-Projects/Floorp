@@ -5,12 +5,6 @@
 <script>
 /* global SimpleTest SpecialPowers add_task */
 
-function waitForDOMContentLoaded() {
-  return new Promise((aResolve) => {
-    document.addEventListener("DOMContentLoaded", aResolve);
-  });
-}
-
 function testResourceUri(aTest, aUri, aContentAccessible) {
   return new Promise((aResolve) => {
     let link = document.createElement("link");
@@ -29,7 +23,6 @@ function testResourceUri(aTest, aUri, aContentAccessible) {
 }
 
 add_task(async function() {
-  await waitForDOMContentLoaded();
   await testResourceUri(
       "resource://content-accessible is content-accessible",
       "resource://content-accessible/viewsource.css",

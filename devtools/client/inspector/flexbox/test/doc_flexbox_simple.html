@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+.container {
+  width: 300px;
+  height: 150px;
+  margin: 10px;
+  display: flex;
+}
+.container.column {
+  height: 300px;
+  width: 150px;
+  flex-direction: column;
+}
+.item {
+  background: #0004;
+}
+.shrinking .item {
+  flex-basis: 500px;
+  flex-shrink: 1;
+}
+.shrinking.is-clamped .item {
+  min-width: 350px;
+}
+.growing .item {
+  flex-basis: 200px;
+  flex-grow: 1;
+}
+.growing.is-clamped .item {
+  max-width: 250px;
+}
+</style>
+<div class="container">
+  <div class="item">flex item in a row flex container</div>
+</div>
+<div class="container column">
+  <div class="item">flex item in a column flex container</div>
+</div>
+<div class="container shrinking">
+  <div class="item">Shrinking flex item</div>
+</div>
+<div class="container shrinking is-clamped">
+  <div class="item">Shrinking and clamped flex item</div>
+</div>
+<div class="container growing">
+  <div class="item">Growing flex item</div>
+</div>
+<div class="container growing is-clamped">
+  <div class="item">Growing and clamped flex item</div>
+</div>
