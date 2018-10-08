@@ -88,9 +88,6 @@ protected:
   nsAtom* ConvertEventToDOMEventType(
              const mozilla::WidgetKeyboardEvent& aWidgetKeyboardEvent) const;
 
-  // lazily load the special doc info for loading handlers
-  static void EnsureSpecialDocInfo();
-
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document
   nsresult EnsureHandlers();
@@ -126,12 +123,7 @@ protected:
   nsWeakPtr              mWeakPtrForElement;
   mozilla::dom::EventTarget* mTarget; // weak ref
 
-  // these are not owning references; the prototype handlers are owned
-  // by the prototype bindings which are owned by the docinfo.
   nsXBLPrototypeHandler* mHandler;     // platform bindings
-
-  // holds reference count to document info about bindings
-  static uint32_t sRefCnt;
 };
 
 already_AddRefed<nsXBLWindowKeyHandler>
