@@ -453,8 +453,14 @@ class TestMetadata(object):
         sys.path = [wpt_path] + sys.path
 
         import manifestupdate
+        # Set up a logger that will drop all the output
+        import logging
+        logger = logging.getLogger("manifestupdate")
+        logger.propogate = False
+
         manifests = manifestupdate.run(self._srcdir, self._objdir, rebuild=False, download=True,
-                                       config_path=None, rewrite_config=True, update=True)
+                                       config_path=None, rewrite_config=True, update=True,
+                                       logger=logger)
         if not manifests:
             print("Loading wpt manifest failed")
             return

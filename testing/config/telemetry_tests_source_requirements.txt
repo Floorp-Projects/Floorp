@@ -1,0 +1,5 @@
+# These dependencies are required for running telemetry tests from a source checkout
+
+-r marionette_source_requirements.txt
+
+../../toolkit/components/telemetry/tests/marionette/harness

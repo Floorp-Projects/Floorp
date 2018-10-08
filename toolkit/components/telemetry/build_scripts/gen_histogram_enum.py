@@ -13,8 +13,8 @@
 # The histograms are defined in files provided as command-line arguments.
 
 from __future__ import print_function
-from python_mozparsers.shared_telemetry_utils import ParserError
-from python_mozparsers import parse_histograms
+from mozparsers.shared_telemetry_utils import ParserError
+from mozparsers import parse_histograms
 
 import itertools
 import sys
