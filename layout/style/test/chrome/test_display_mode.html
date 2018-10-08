@@ -30,8 +30,6 @@ function promiseNextTick() {
 }
 
 add_task(async function() {
-  await waitOneEvent(window, "load");
-
   var iframe = document.getElementById("subdoc");
   var subdoc = iframe.contentDocument;
   var style = subdoc.getElementById("style");

@@ -50,7 +50,7 @@ runInParent(function addLogins() {
 
 <!-- we presumably can't hide the content for this test. -->
 <div id="content">
-  <iframe src="https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html"></iframe>
+  <iframe></iframe>
 </div>
 
 <pre id="test">
@@ -78,6 +78,7 @@ function checkACForm(expectedUsername, expectedPassword) {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
 
+  iframe.src = "https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
       resolve();
