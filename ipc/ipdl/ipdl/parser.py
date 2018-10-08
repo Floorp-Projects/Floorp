@@ -132,6 +132,7 @@ reserved = set((
     'prio',
     'protocol',
     'refcounted',
+    'moveonly',
     'returns',
     'struct',
     'sync',
@@ -288,13 +289,20 @@ def p_MaybeRefcounted(p):
     p[0] = 2 == len(p)
 
 
+def p_MaybeMoveOnly(p):
+    """MaybeMoveOnly : MOVEONLY
+                       |"""
+    p[0] = 2 == len(p)
+
+
 def p_UsingStmt(p):
-    """UsingStmt : USING MaybeRefcounted UsingKind CxxType FROM STRING"""
+    """UsingStmt : USING MaybeRefcounted MaybeMoveOnly UsingKind CxxType FROM STRING"""
     p[0] = UsingStmt(locFromTok(p, 1),
                      refcounted=p[2],
-                     kind=p[3],
-                     cxxTypeSpec=p[4],
-                     cxxHeader=p[6])
+                     moveonly=p[3],
+                     kind=p[4],
+                     cxxTypeSpec=p[5],
+                     cxxHeader=p[7])
 
 # --------------------
 # Namespaced stuff

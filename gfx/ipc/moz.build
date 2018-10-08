@@ -13,6 +13,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.gfx += [
+    'CrossProcessPaint.h',
     'GPUChild.h',
     'GPUParent.h',
     'GPUProcessHost.h',
@@ -49,6 +50,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 UNIFIED_SOURCES += [
     'CompositorSession.cpp',
     'CompositorWidgetVsyncObserver.cpp',
+    'CrossProcessPaint.cpp',
     'D3DMessageUtils.cpp',
     'GPUChild.cpp',
     'GPUProcessHost.cpp',

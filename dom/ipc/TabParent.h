@@ -17,6 +17,7 @@
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
@@ -561,6 +562,9 @@ public:
                             const bool& aRunInGlobalScope);
 
   void LayerTreeUpdate(const LayersObserverEpoch& aEpoch, bool aActive);
+
+  void RequestRootPaint(gfx::CrossProcessPaint* aPaint, IntRect aRect, float aScale, nscolor aBackgroundColor);
+  void RequestSubPaint(gfx::CrossProcessPaint* aPaint, float aScale, nscolor aBackgroundColor);
 
   virtual mozilla::ipc::IPCResult
   RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,

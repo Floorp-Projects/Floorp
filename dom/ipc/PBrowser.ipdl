@@ -32,6 +32,7 @@ include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
+using moveonly mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
 using mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
@@ -766,6 +767,9 @@ child:
      */
     async RenderLayers(bool aEnabled, bool aForceRepaint, LayersObserverEpoch aEpoch);
 
+    async RequestRootPaint(IntRect aRect, float aScale, nscolor aBackgroundColor) returns (PaintFragment retval);
+    async RequestSubPaint(float aScale, nscolor aBackgroundColor) returns (PaintFragment retval);
+child:
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.
      * This is useful to speed up interactive operations over async

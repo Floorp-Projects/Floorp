@@ -3098,6 +3098,38 @@ TabParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch, bool aActive)
   mFrameElement->DispatchEvent(*event);
 }
 
+void
+TabParent::RequestRootPaint(gfx::CrossProcessPaint* aPaint, IntRect aRect, float aScale, nscolor aBackgroundColor)
+{
+  auto promise = SendRequestRootPaint(aRect, aScale, aBackgroundColor);
+
+  RefPtr<gfx::CrossProcessPaint> paint(aPaint);
+  TabId tabId(GetTabId());
+  promise->Then(GetMainThreadSerialEventTarget(), __func__,
+                [paint, tabId] (PaintFragment&& aFragment) {
+                  paint->ReceiveFragment(tabId, std::move(aFragment));
+                },
+                [paint, tabId] (ResponseRejectReason aReason) {
+                  paint->LostFragment(tabId);
+                });
+}
+
+void
+TabParent::RequestSubPaint(gfx::CrossProcessPaint* aPaint, float aScale, nscolor aBackgroundColor)
+{
+  auto promise = SendRequestSubPaint(aScale, aBackgroundColor);
+
+  RefPtr<gfx::CrossProcessPaint> paint(aPaint);
+  TabId tabId(GetTabId());
+  promise->Then(GetMainThreadSerialEventTarget(), __func__,
+                [paint, tabId] (PaintFragment&& aFragment) {
+                  paint->ReceiveFragment(tabId, std::move(aFragment));
+                },
+                [paint, tabId] (ResponseRejectReason aReason) {
+                  paint->LostFragment(tabId);
+                });
+}
+
 mozilla::ipc::IPCResult
 TabParent::RecvPaintWhileInterruptingJSNoOp(const LayersObserverEpoch& aEpoch)
 {

@@ -1904,6 +1904,24 @@
         </body>
       </method>
 
+      <method name="drawSnapshot">
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <parameter name="w"/>
+        <parameter name="h"/>
+        <parameter name="scale"/>
+        <parameter name="backgroundColor"/>
+        <body>
+          <![CDATA[
+            if (!this.frameLoader) {
+              throw Components.Exception("No frame loader.",
+                                         Cr.NS_ERROR_FAILURE);
+            }
+            return this.frameLoader.drawSnapshot(x, y, w, h, scale, backgroundColor);
+          ]]>
+        </body>
+      </method>
+
       <method name="dropLinks">
         <parameter name="aLinksCount"/>
         <parameter name="aLinks"/>
