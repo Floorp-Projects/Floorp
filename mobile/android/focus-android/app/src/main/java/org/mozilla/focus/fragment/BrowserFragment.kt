@@ -1249,6 +1249,26 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             ?.commit()
     }
 
+    private fun updateSecurityIcon(session: Session, securityInfo: Session.SecurityInfo = session.securityInfo) {
+        val securityView = securityView ?: return
+
+        if (!session.loading) {
+            if (securityInfo.secure) {
+                securityView.setImageResource(R.drawable.ic_lock)
+            } else {
+                if (URLUtil.isHttpUrl(url)) {
+                    // HTTP site
+                    securityView.setImageResource(R.drawable.ic_internet)
+                } else {
+                    // Certificate is bad
+                    securityView.setImageResource(R.drawable.ic_warning)
+                }
+            }
+        } else {
+            securityView.setImageResource(R.drawable.ic_internet)
+        }
+    }
+
     @Suppress("DEPRECATION", "MagicNumber")
     private fun updateFindInPageResult(activeMatchOrdinal: Int, numberOfMatches: Int) {
         var actualActiveMatchOrdinal = activeMatchOrdinal
@@ -1302,6 +1322,8 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                     progressView!!.visibility = View.GONE
                 }
                 swipeRefresh!!.isRefreshing = false
+
+                updateSecurityIcon(session)
             }
 
             updateBlockingBadging(loading || session.trackerBlockingEnabled)
@@ -1331,21 +1353,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
 
         override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
-            if (!session.loading) {
-                if (securityInfo.secure) {
-                    securityView!!.setImageResource(R.drawable.ic_lock)
-                } else {
-                    if (URLUtil.isHttpUrl(url)) {
-                        // HTTP site
-                        securityView!!.setImageResource(R.drawable.ic_internet)
-                    } else {
-                        // Certificate is bad
-                        securityView!!.setImageResource(R.drawable.ic_warning)
-                    }
-                }
-            } else {
-                securityView!!.setImageResource(R.drawable.ic_internet)
-            }
+            updateSecurityIcon(session, securityInfo)
         }
     }
 
