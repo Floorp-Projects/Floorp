@@ -135,7 +135,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 repositories {
-    mavenCentral()
     maven {
         //  For the latest version of GeckoView (moving target!):
         //
@@ -184,18 +183,18 @@ dependencies {
     compileOnly 'net.jcip:jcip-annotations:1.0'
     compileOnly "com.github.spotbugs:spotbugs-annotations:$spotbugs_version"
 
-    implementation "org.mozilla.components:session:$mozilla_components_version"
-    implementation "org.mozilla.components:engine:$mozilla_components_version"
-    implementation "org.mozilla.components:telemetry:$mozilla_components_version"
-    implementation "org.mozilla.components:ktx:$mozilla_components_version"
-    implementation "org.mozilla.components:utils:$mozilla_components_version"
-    implementation "org.mozilla.components:domains:$mozilla_components_version"
-    implementation "org.mozilla.components:autocomplete:$mozilla_components_version"
-    implementation "org.mozilla.components:search:$mozilla_components_version"
-    implementation "org.mozilla.photon:colors:$mozilla_components_version"
-    implementation "org.mozilla.components:fretboard:$mozilla_components_version", {
+    implementation "org.mozilla.components:browser-session:$mozilla_components_version"
+    implementation "org.mozilla.components:browser-domains:$mozilla_components_version"
+    implementation "org.mozilla.components:browser-search:$mozilla_components_version"
+    implementation "org.mozilla.components:concept-engine:$mozilla_components_version"
+    implementation "org.mozilla.components:ui-autocomplete:$mozilla_components_version"
+    implementation "org.mozilla.components:ui-colors:$mozilla_components_version"
+    implementation "org.mozilla.components:service-telemetry:$mozilla_components_version"
+    implementation "org.mozilla.components:service-fretboard:$mozilla_components_version", {
         exclude group: 'android.arch.work', module: 'work-runtime'
     }
+    implementation "org.mozilla.components:support-ktx:$mozilla_components_version"
+    implementation "org.mozilla.components:support-utils:$mozilla_components_version"
 
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
 

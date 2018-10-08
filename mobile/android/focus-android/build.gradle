@@ -8,7 +8,7 @@ buildscript {
     ext.geckoview_revision = '33bec02bb81f303b8e3d22586b9e67690e939dbb'
     ext.geckoview_version = '62.0.3.20181001191808' // GeckoView 62 RelBranch from 2018.10.01
     ext.spotbugs_version = '3.1.2'
-    ext.mozilla_components_version = '0.25'
+    ext.mozilla_components_version = '0.26.0'
 
     repositories {
         google()
@@ -49,6 +49,9 @@ detekt {
 allprojects {
     repositories {
         google()
+        maven {
+            url "https://maven.mozilla.org/maven2"
+        }
         jcenter()
     }
 }
