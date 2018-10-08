@@ -80,8 +80,11 @@
 #include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
+#include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/ServoCSSParser.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "GeckoProfiler.h"
 
@@ -129,8 +132,8 @@ typedef FrameMetrics::ViewID ViewID;
 //             itself.  Note that "#foo" on the end of URL doesn't affect
 //             whether it's considered identical, but "?foo" or ";foo" are
 //             considered and compared.
-// Bug 228829: Limit this to 1, like IE does.
-#define MAX_SAME_URL_CONTENT_FRAMES 1
+// Limit this to 2, like chromium does.
+#define MAX_SAME_URL_CONTENT_FRAMES 2
 
 // Bug 8065: Limit content frame depth to some reasonable level. This
 // does not count chrome frames when determining depth, nor does it
@@ -3101,6 +3104,64 @@ nsFrameLoader::Print(uint64_t aOuterWindowID,
     return;
   }
 #endif
+}
+
+already_AddRefed<mozilla::dom::Promise>
+nsFrameLoader::DrawSnapshot(double aX,
+                            double aY,
+                            double aW,
+                            double aH,
+                            double aScale,
+                            const nsAString& aBackgroundColor,
+                            mozilla::ErrorResult& aRv)
+{
+  RefPtr<nsIGlobalObject> global = GetOwnerContent()->GetOwnerGlobal();
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<nsIDocument> document = GetOwnerContent()->GetOwnerDocument();
+  if (NS_WARN_IF(!document)) {
+    aRv = NS_ERROR_FAILURE;
+    return nullptr;
+  }
+  nsIPresShell* presShell = document->GetShell();
+  if (NS_WARN_IF(!presShell)) {
+    aRv = NS_ERROR_FAILURE;
+    return nullptr;
+  }
+
+  nscolor color;
+  css::Loader* loader = document->CSSLoader();
+  ServoStyleSet* set = presShell->StyleSet();
+  if (NS_WARN_IF(!ServoCSSParser::ComputeColor(set,
+                                               NS_RGB(0, 0, 0),
+                                               aBackgroundColor,
+                                               &color,
+                                               nullptr,
+                                               loader))) {
+    aRv = NS_ERROR_FAILURE;
+    return nullptr;
+  }
+
+  gfx::IntRect rect = gfx::IntRect::RoundOut(gfx::Rect(aX, aY, aW, aH));
+
+  if (IsRemoteFrame()) {
+    gfx::CrossProcessPaint::StartRemote(mRemoteBrowser->GetTabId(),
+                                        rect,
+                                        aScale,
+                                        color,
+                                        promise);
+  } else {
+    gfx::CrossProcessPaint::StartLocal(mDocShell,
+                                       rect,
+                                       aScale,
+                                       color,
+                                       promise);
+  }
+
+  return promise.forget();
 }
 
 already_AddRefed<nsITabParent>

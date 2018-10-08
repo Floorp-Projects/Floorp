@@ -116,6 +116,12 @@ public:
                                  /*out*/ TabId* aOpenerTabId);
 
   /**
+   * Get the ContentParentId of the parent of the given tab id.
+   */
+  ContentParentId
+  GetTabProcessId(const TabId& aTabId);
+
+  /**
    * Get all TabParents' Ids managed by the givent content process.
    * Return empty array when TabParent couldn't be found via aChildCpId
    */
@@ -157,6 +163,7 @@ public:
 private:
   static StaticAutoPtr<ContentProcessManager> sSingleton;
   std::map<ContentParentId, ContentProcessInfo> mContentParentMap;
+  std::map<TabId, ContentParentId> mTabProcessMap;
 
   ContentProcessManager() {MOZ_COUNT_CTOR(ContentProcessManager);};
 };
