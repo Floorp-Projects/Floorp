@@ -620,8 +620,9 @@ public:
                       const gfx::IntRect& aRegion,
                       Image** aOutImage) override;
 
-  virtual HRESULT CopyToBGRATexture(ID3D11Texture2D *aInTexture,
-                                    ID3D11Texture2D** aOutTexture);
+  HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture,
+                            const GUID& aSubType,
+                            ID3D11Texture2D** aOutTexture) override;
 
   HRESULT ConfigureForSize(IMFMediaType* aInputType,
                            uint32_t aWidth,
@@ -655,6 +656,7 @@ private:
   uint32_t mHeight = 0;
   UINT mDeviceManagerToken = 0;
   RefPtr<IMFMediaType> mInputType;
+  GUID mInputSubType;
 };
 
 bool
@@ -921,8 +923,8 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   NS_ENSURE_TRUE(aOutImage, E_POINTER);
   MOZ_ASSERT(mTextureClientAllocator);
 
-  RefPtr<D3D11ShareHandleImage> image =
-    new D3D11ShareHandleImage(gfx::IntSize(mWidth, mHeight), aRegion);
+  RefPtr<D3D11ShareHandleImage> image = new D3D11ShareHandleImage(
+    gfx::IntSize(mWidth, mHeight), aRegion, mInputSubType);
 
   // Retrieve the DXGI_FORMAT for the current video sample.
   RefPtr<IMFMediaBuffer> buffer;
@@ -937,20 +939,21 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   hr = dxgiBuf->GetResource(__uuidof(ID3D11Texture2D), getter_AddRefs(tex));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  D3D11_TEXTURE2D_DESC desc;
-  tex->GetDesc(&desc);
+  D3D11_TEXTURE2D_DESC inDesc;
+  tex->GetDesc(&inDesc);
 
-  bool ok = image->AllocateTexture(
-    mTextureClientAllocator, mDevice, desc.Format == DXGI_FORMAT_NV12);
+  bool ok = image->AllocateTexture(mTextureClientAllocator, mDevice);
   NS_ENSURE_TRUE(ok, E_FAIL);
 
   RefPtr<TextureClient> client =
     image->GetTextureClient(ImageBridgeChild::GetSingleton().get());
   NS_ENSURE_TRUE(client, E_FAIL);
 
-  RefPtr<IDXGIKeyedMutex> mutex;
   RefPtr<ID3D11Texture2D> texture = image->GetTexture();
+  D3D11_TEXTURE2D_DESC outDesc;
+  texture->GetDesc(&outDesc);
 
+  RefPtr<IDXGIKeyedMutex> mutex;
   texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
   {
@@ -963,7 +966,7 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
       NS_ENSURE_TRUE(mSyncObject, E_FAIL);
     }
 
-    if (client && client->GetFormat() == SurfaceFormat::NV12) {
+    if (outDesc.Format == inDesc.Format) {
       // Our video frame is stored in a non-sharable ID3D11Texture2D. We need
       // to create a copy of that frame as a sharable resource, save its share
       // handle, and put that handle into the rendering pipeline.
@@ -1003,23 +1006,9 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   return S_OK;
 }
 
-const GUID& TextureFormatToSubType(DXGI_FORMAT aFormat)
-{
-  switch (aFormat) {
-    case DXGI_FORMAT_NV12:
-      return MFVideoFormat_NV12;
-    case DXGI_FORMAT_P010:
-      return MFVideoFormat_P010;
-    case DXGI_FORMAT_P016:
-      return MFVideoFormat_P016;
-    default:
-      // TextureFormat not handled.
-      return MFVideoFormat_NV12;
-  }
-}
-
 HRESULT
-D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D *aInTexture,
+D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
+                                     const GUID& aSubType,
                                      ID3D11Texture2D** aOutTexture)
 {
   NS_ENSURE_TRUE(aInTexture, E_POINTER);
@@ -1041,7 +1030,7 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D *aInTexture,
     hr = inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-    hr = inputType->SetGUID(MF_MT_SUBTYPE, TextureFormatToSubType(desc.Format));
+    hr = inputType->SetGUID(MF_MT_SUBTYPE, aSubType);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
     hr =
@@ -1120,17 +1109,11 @@ D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
                                     uint32_t aWidth,
                                     uint32_t aHeight)
 {
-  GUID inputSubType = { 0 };
-  HRESULT hr = aInputType->GetGUID(MF_MT_SUBTYPE, &inputSubType);
+  GUID subType = { 0 };
+  HRESULT hr = aInputType->GetGUID(MF_MT_SUBTYPE, &subType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  GUID subType = { 0 };
-  if (mInputType) {
-    hr = mInputType->GetGUID(MF_MT_SUBTYPE, &subType);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  }
-
-  if (inputSubType == subType && aWidth == mWidth && aHeight == mHeight) {
+  if (subType == mInputSubType && aWidth == mWidth && aHeight == mHeight) {
     // If the media type hasn't changed, don't reconfigure.
     return S_OK;
   }
@@ -1186,6 +1169,7 @@ D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
   mWidth = aWidth;
   mHeight = aHeight;
   mInputType = inputType;
+  mInputSubType = subType;
 
   return S_OK;
 }
