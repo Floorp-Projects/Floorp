@@ -237,7 +237,7 @@ const initCssProperties = async function(toolbox) {
 
   // Get the list dynamically if the cssProperties actor exists.
   if (toolbox.target.hasActor("cssProperties")) {
-    front = toolbox.target.getFront("cssProperties");
+    front = CssPropertiesFront(client, toolbox.target.form);
     db = await front.getCSSDatabase();
   } else {
     // The target does not support this actor, so require a static list of supported
