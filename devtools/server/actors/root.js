@@ -14,10 +14,6 @@ const { DebuggerServer } = require("devtools/server/main");
 
 loader.lazyRequireGetter(this, "ChromeWindowTargetActor",
   "devtools/server/actors/targets/chrome-window", true);
-loader.lazyRequireGetter(this, "ContentProcessTargetActor",
-  "devtools/server/actors/targets/content-process", true);
-loader.lazyRequireGetter(this, "ParentProcessTargetActor",
-  "devtools/server/actors/targets/parent-process", true);
 
 /* Root actor for the remote debugging protocol. */
 
@@ -525,30 +521,16 @@ RootActor.prototype = {
     // If the request doesn't contains id parameter or id is 0
     // (id == 0, based on onListProcesses implementation)
     if ((!("id" in request)) || request.id === 0) {
-      // Check if we are running on xpcshell. hiddenDOMWindow is going to throw on it.
-      // When running on xpcshell, there is no valid browsing context to attach to
-      // and so ParentProcessTargetActor doesn't make sense as it inherits from
-      // BrowsingContextTargetActor. So instead use ContentProcessTargetActor, which
-      // matches xpcshell needs.
-      let isXpcshell = true;
-      try {
-        isXpcshell = !Services.wm.getMostRecentWindow(null) &&
-                     !Services.appShell.hiddenDOMWindow;
-      } catch (e) {}
-
-      if (!isXpcshell && this._parentProcessTargetActor &&
-          (!this._parentProcessTargetActor.docShell ||
-            this._parentProcessTargetActor.docShell.isBeingDestroyed)) {
+      if (this._parentProcessTargetActor && (!this._parentProcessTargetActor.docShell ||
+          this._parentProcessTargetActor.docShell.isBeingDestroyed)) {
         this._parentProcessTargetActor.destroy();
         this._parentProcessTargetActor = null;
       }
       if (!this._parentProcessTargetActor) {
-        // Create the target actor for the parent process
-        if (isXpcshell) {
-          this._parentProcessTargetActor = new ContentProcessTargetActor(this.conn);
-        } else {
-          this._parentProcessTargetActor = new ParentProcessTargetActor(this.conn);
-        }
+        // Create a ParentProcessTargetActor for the parent process
+        const { ParentProcessTargetActor } =
+          require("devtools/server/actors/targets/parent-process");
+        this._parentProcessTargetActor = new ParentProcessTargetActor(this.conn);
         this._globalActorPool.manage(this._parentProcessTargetActor);
       }
 
