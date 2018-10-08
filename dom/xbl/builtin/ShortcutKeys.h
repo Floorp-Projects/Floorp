@@ -5,6 +5,10 @@
 #ifndef mozilla_dom_ShortcutKeys_h
 #define mozilla_dom_ShortcutKeys_h
 
+#include "nsIObserver.h"
+
+class nsXBLPrototypeHandler;
+
 namespace mozilla {
 
 typedef struct
@@ -16,13 +20,44 @@ typedef struct
    const char16_t* command;
 } ShortcutKeyData;
 
-class ShortcutKeys
+enum class HandlerType
 {
+  eInput,
+  eTextArea,
+  eBrowser,
+  eEditor,
+};
+
+class ShortcutKeys : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  // Returns a pointer to the first handler for the given type.
+  static nsXBLPrototypeHandler* GetHandlers(HandlerType aType);
+
 protected:
+  ShortcutKeys();
+  virtual ~ShortcutKeys();
+
+  // Returns a pointer to the first handler for the given type.
+  nsXBLPrototypeHandler* EnsureHandlers(HandlerType aType);
+
+  // Maintains a strong reference to the only instance.
+  static StaticRefPtr<ShortcutKeys> sInstance;
+
+  // Shortcut keys for different elements.
   static ShortcutKeyData sBrowserHandlers[];
   static ShortcutKeyData sEditorHandlers[];
   static ShortcutKeyData sInputHandlers[];
   static ShortcutKeyData sTextAreaHandlers[];
+
+  // Cached event handlers generated from the above data.
+  nsXBLPrototypeHandler* mBrowserHandlers;
+  nsXBLPrototypeHandler* mEditorHandlers;
+  nsXBLPrototypeHandler* mInputHandlers;
+  nsXBLPrototypeHandler* mTextAreaHandlers;
 };
 
 } // namespace mozilla
