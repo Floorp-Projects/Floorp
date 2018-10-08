@@ -78,9 +78,9 @@ tasks:
             taskclusterProxy: true
           env:
             TASK_ID: {$eval: as_slugid("decision_task")}
-            GITHUB_HEAD_REPO_URL: ${event.repository.clone_url}
-            GITHUB_HEAD_BRANCH: ${event.ref}
-            GITHUB_HEAD_SHA: ${event.after}
+            MOBILE_HEAD_REPOSITORY: ${event.repository.clone_url}
+            MOBILE_HEAD_BRANCH: ${event.ref}
+            MOBILE_HEAD_REV: ${event.after}
           command:
             - /bin/bash
             - --login
@@ -106,68 +106,159 @@ tasks:
 ###############################################################################
   - $if: 'tasks_for == "github-release"'
     then:
-      taskId: {$eval: as_slugid("decision_task")}
-      # The next line won't be needed anymore after https://github.com/taskcluster/taskcluster-github/pull/273
-      taskGroupId: {$eval: as_slugid("decision_task")}
-      created: {$fromNow: ''}
-      deadline: {$fromNow: '2 hours'}
-      expires: {$fromNow: '1 year'}
-      provisionerId: aws-provisioner-v1
-      workerType: gecko-focus   # This workerType has ChainOfTrust enabled
-      scopes:
-        - queue:create-task:aws-provisioner-v1/github-worker
-        - queue:create-task:highest:aws-provisioner-v1/gecko-focus
-        - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
-        - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
-        - queue:scheduler-id:taskcluster-github
-        - project:mobile:focus:releng:signing:cert:release-signing
-        - project:mobile:focus:releng:signing:format:focus-jar
-        - project:mobile:focus:releng:googleplay:product:focus
-        - secrets:get:project/focus/tokens
-        - queue:route:index.project.mobile.focus.release.latest
-      payload:
-        maxRunTime: 7200
-        image: mozillamobile/focus-android:1.2
-        features:
-          taskclusterProxy: true
-          chainOfTrust: true
-        env:
-          TASK_ID: {$eval: as_slugid("decision_task")}
-          GITHUB_HEAD_REPO_URL: ${event.repository.clone_url}
-          GITHUB_HEAD_BRANCH: ${event.release.target_commitish}
-          GITHUB_HEAD_SHA: ${event.release.tag_name}
-        command:
-          - /bin/bash
-          - --login
-          - -cx
-          - >-
-            git fetch origin --tags
-            && git config advice.detachedHead false
-            && git checkout ${event.release.tag_name}
-            && python tools/taskcluster/release.py \
-              --tag ${event.release.tag_name} \
-              --track alpha \
-              --commit \
-              --output /opt/focus-android/app/build/outputs/apk \
-              --apk focusX86/release/app-focus-x86-release-unsigned.apk \
-              --apk klarX86/release/app-klar-x86-release-unsigned.apk \
-              --apk focusArm/release/app-focus-arm-release-unsigned.apk \
-              --apk klarArm/release/app-klar-arm-release-unsigned.apk
-        artifacts:
-          public/task-graph.json:
-            type: file
-            path: /opt/focus-android/task-graph.json
-            expires: {$fromNow: '1 year'}
-          public/actions.json:
-            type: file
-            path: /opt/focus-android/actions.json
-            expires: {$fromNow: '1 year'}
-          public/parameters.yml:
-            type: file
-            path: /opt/focus-android/parameters.yml
-            expires: {$fromNow: '1 year'}
-      metadata:
-        name: (Focus for Android) Decision task (${event.release.tag_name})
-        description: Scheduling tasks for releasing Focus/Klar
-        owner: ${event.sender.login}@users.noreply.github.com
-        source: ${event.repository.clone_url}
+      $let:
+        decision_task_id: {$eval: as_slugid("decision_task")}
+        expires_in: {$fromNow: '1 year'}
+        repository: https://github.com/mozilla-mobile/focus-android
+        scheduler_id: taskcluster-github
+      in:
+        taskId: ${decision_task_id}
+        taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '2 hours'}
+        expires: ${expires_in}
+        schedulerId: ${scheduler_id}   # Must be explicit because of Chain of Trust
+        provisionerId: aws-provisioner-v1
+        workerType: gecko-focus   # This workerType has ChainOfTrust enabled
+        requires: all-completed   # Must be explicit because of Chain of Trust
+        priority: highest
+        retries: 5
+        scopes:
+          - queue:scheduler-id:${scheduler_id}
+          - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+          - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
+          - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
+          - project:mobile:focus:releng:signing:cert:release-signing
+          - project:mobile:focus:releng:signing:format:focus-jar
+          - project:mobile:focus:releng:googleplay:product:focus
+          - secrets:get:project/focus/tokens
+          - queue:route:index.project.mobile.focus.release.latest
+        payload:
+          maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
+          image: mozillamobile/focus-android:1.2
+          features:
+            taskclusterProxy: true
+            chainOfTrust: true
+          env:
+            TASK_ID: ${decision_task_id}
+            SCHEDULER_ID: ${scheduler_id}
+            MOBILE_HEAD_REPOSITORY: ${repository}
+            MOBILE_HEAD_BRANCH: ${event.release.target_commitish}
+            MOBILE_HEAD_REV: ${event.release.tag_name}
+            MOBILE_TRIGGERED_BY: ${event.sender.login}
+          command:
+            - /bin/bash
+            - --login
+            - -cx
+            - >-
+              git fetch origin --tags
+              && git config advice.detachedHead false
+              && git checkout ${event.release.tag_name}
+              && python tools/taskcluster/release.py \
+                --tag ${event.release.tag_name} \
+                --track alpha \
+                --commit \
+                --output /opt/focus-android/app/build/outputs/apk \
+                --apk focusX86/release/app-focus-x86-release-unsigned.apk \
+                --apk klarX86/release/app-klar-x86-release-unsigned.apk \
+                --apk focusArm/release/app-focus-arm-release-unsigned.apk \
+                --apk klarArm/release/app-klar-arm-release-unsigned.apk
+          artifacts:
+            public/task-graph.json:
+              type: file
+              path: /opt/focus-android/task-graph.json
+              expires: ${expires_in}
+            public/actions.json:
+              type: file
+              path: /opt/focus-android/actions.json
+              expires: ${expires_in}
+            public/parameters.yml:
+              type: file
+              path: /opt/focus-android/parameters.yml
+              expires: ${expires_in}
+        extra:
+            tasks_for: ${tasks_for}
+        metadata:
+          name: (Focus for Android) Decision task (${event.release.tag_name})
+          description: Scheduling tasks for releasing Focus/Klar
+          owner: ${event.sender.login}@users.noreply.github.com
+          source: ${repository}/raw/${event.release.tag_name}/.taskcluster.yml
+# Nighly builds
+  - $if: 'tasks_for == "cron"'
+    then:
+      $let:
+        decision_task_id: {$eval: as_slugid("decision_task")}
+        expires_in: {$fromNow: '1 year'}
+        repository: https://github.com/mozilla-mobile/focus-android
+        scheduler_id: focus-nightly-sched
+      in:
+        taskId: ${decision_task_id}
+        taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '2 hours'}
+        expires: ${expires_in}
+        schedulerId: ${scheduler_id}    # Must be explicit because of Chain of Trust
+        provisionerId: aws-provisioner-v1
+        workerType: gecko-focus   # This workerType has ChainOfTrust enabled
+        requires: all-completed   # Must be explicit because of Chain of Trust
+        priority: medium
+        retries: 5
+        scopes:
+          - queue:scheduler-id:${scheduler_id}
+          - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+          - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
+          - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
+          - project:mobile:focus:releng:signing:cert:release-signing
+          - project:mobile:focus:releng:signing:format:focus-jar
+          - project:mobile:focus:releng:googleplay:product:focus
+          - secrets:get:project/focus/tokens
+          - queue:route:index.project.mobile.focus.nightly.latest
+        payload:
+          maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
+          image: mozillamobile/focus-android:1.2
+          features:
+            taskclusterProxy: true
+            chainOfTrust: true
+          env:
+            TASK_ID: ${decision_task_id}
+            SCHEDULER_ID: ${scheduler_id}
+            MOBILE_HEAD_REPOSITORY: ${repository}
+            MOBILE_HEAD_BRANCH: ${event.release.target_commitish}
+            MOBILE_HEAD_REV: ${event.release.tag_name}
+            MOBILE_TRIGGERED_BY: ${event.sender.login}
+          command:
+            - /bin/bash
+            - --login
+            - -cx
+            - >-
+              git fetch origin
+              && git reset --hard origin/master
+              && python tools/taskcluster/release.py \
+                --track nightly \
+                --commit \
+                --output /opt/focus-android/app/build/outputs/apk \
+                --apk klarArm/nightly/app-klar-arm-nightly-unsigned.apk \
+                --apk klarX86/nightly/app-klar-x86-nightly-unsigned.apk \
+                --apk focusArm/nightly/app-focus-arm-nightly-unsigned.apk \
+                --apk focusX86/nightly/app-focus-x86-nightly-unsigned.apk
+          artifacts:
+            public/task-graph.json:
+              type: file
+              path: /opt/focus-android/task-graph.json
+              expires: ${expires_in}
+            public/actions.json:
+              type: file
+              path: /opt/focus-android/actions.json
+              expires: ${expires_in}
+            public/parameters.yml:
+              type: file
+              path: /opt/focus-android/parameters.yml
+              expires: ${expires_in}
+        extra:
+          cron: {$json: {$eval: 'cron'}}
+          tasks_for: ${tasks_for}
+        metadata:
+          name: (Focus for Android) Focus/Klar Nightly Builds (Public)
+          description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
+          owner: ${event.sender.login}@users.noreply.github.com
+          source: ${repository}/raw/${event.release.tag_name}/.taskcluster.yml

@@ -13,10 +13,13 @@ import json
 import taskcluster
 import os
 
+from lib.tasks import schedule_task
+
+
 TASK_ID = os.environ.get('TASK_ID')
-REPO_URL = os.environ.get('GITHUB_HEAD_REPO_URL')
-BRANCH = os.environ.get('GITHUB_HEAD_BRANCH')
-COMMIT = os.environ.get('GITHUB_HEAD_SHA')
+REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
+BRANCH = os.environ.get('MOBILE_HEAD_BRANCH')
+COMMIT = os.environ.get('MOBILE_HEAD_REV')
 OWNER = "skaspari@mozilla.com"
 SOURCE = "https://github.com/mozilla-mobile/focus-android/tree/master/tools/taskcluster"
 
@@ -172,14 +175,6 @@ def generate_task(name, description, command, dependencies = [], artifacts = {},
 			"source": SOURCE
 		}
 	}
-
-
-def schedule_task(queue, taskId, task):
-	print "TASK", taskId
-	print json.dumps(task, indent=4, separators=(',', ': '))
-
-	result = queue.createTask(taskId, task)
-	print json.dumps(result)
 
 
 if __name__ == "__main__":
