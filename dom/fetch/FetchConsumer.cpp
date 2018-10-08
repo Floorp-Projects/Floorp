@@ -767,7 +767,15 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
   }
 
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
-    localPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    // Per https://fetch.spec.whatwg.org/#concept-read-all-bytes-from-readablestream
+    // Decoding errors should reject with a TypeError
+    if (aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
+      IgnoredErrorResult rv;
+      rv.ThrowTypeError<MSG_DOM_DECODING_FAILED>();
+      localPromise->MaybeReject(rv);
+    } else {
+      localPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    }
   }
 
   // Don't warn here since we warned above.
