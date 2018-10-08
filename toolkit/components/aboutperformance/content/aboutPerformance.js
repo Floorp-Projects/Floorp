@@ -996,6 +996,10 @@ var View = {
     tbody.appendChild(this._fragment);
     this._fragment = document.createDocumentFragment();
   },
+  insertAfterRow(row) {
+    row.parentNode.insertBefore(this._fragment, row.nextSibling);
+    this._fragment = document.createDocumentFragment();
+  },
   appendRow(name, value, tooltip, classes, image = "") {
     let row = document.createElement("tr");
 
@@ -1022,12 +1026,31 @@ var View = {
 };
 
 var Control = {
+  _openItems: new Set(),
   init() {
     this._initAutorefresh();
     this._initDisplayMode();
     let tbody = document.getElementById("dispatch-tbody");
     tbody.addEventListener("click", () => {
-      let row = event.target.parentNode;
+      // Handle showing or hiding subitems of a row.
+      let target = event.target;
+      if (target.classList.contains("twisty")) {
+        let row = target.parentNode.parentNode;
+        let id = row.windowId;
+        if (target.classList.toggle("open")) {
+          this._openItems.add(id);
+          this._showChildren(row);
+          View.insertAfterRow(row);
+        } else {
+          this._openItems.delete(id);
+          while (row.nextSibling.firstChild.classList.contains("indent"))
+            row.nextSibling.remove();
+        }
+        return;
+      }
+
+      // Handle selection changes
+      let row = target.parentNode;
       if (this.selectedRow) {
         this.selectedRow.removeAttribute("selected");
       }
@@ -1038,6 +1061,8 @@ var Control = {
         this.selectedRow = null;
       }
     });
+
+    // Select the tab of double clicked items.
     tbody.addEventListener("dblclick", () => {
       let id = parseInt(event.target.parentNode.windowId);
       if (isNaN(id))
@@ -1075,51 +1100,23 @@ var Control = {
     } else {
 
       let selectedId = -1;
+      // Reset the selectedRow field and the _openItems set each time we redraw
+      // to avoid keeping forever references to closed window ids.
       if (this.selectedRow) {
         selectedId = this.selectedRow.windowId;
         this.selectedRow = null;
       }
+      let openItems = this._openItems;
+      this._openItems = new Set();
 
       let counters = this._sortCounters(State.getCounters());
       for (let {id, name, image, totalDispatches, dispatchesSincePrevious,
                 totalDuration, durationSincePrevious, children} of counters) {
-
-        function dispatchesAndDuration(dispatches, duration) {
-          let result = dispatches;
-          if (duration) {
-            duration /= 1000;
-            duration = Math.round(duration);
-            if (duration)
-              result += duration >= 1000 ? ` (${duration / 1000}s)` : ` (${duration}ms)`;
-            else
-              result += " (< 1ms)";
-          }
-          return result;
-        }
-
-        function formatTooltip(totalDispatches, totalDuration,
-                               dispatchesSincePrevious, durationSincePrevious) {
-          return `${dispatchesAndDuration(totalDispatches, totalDuration)} dispatches since load\n` +
-            `${dispatchesAndDuration(dispatchesSincePrevious, durationSincePrevious)} in the last seconds`;
-        }
-
-        let formatEnergyImpact = (dispatches, duration) => {
-          let energyImpact = this._computeEnergyImpact(dispatches, duration);
-          if (!energyImpact)
-            return "None";
-          energyImpact = Math.ceil(energyImpact * 100) / 100;
-          if (energyImpact < 1)
-            return `Low (${energyImpact})`;
-          if (energyImpact < 25)
-            return `Medium (${energyImpact})`;
-          return `High (${energyImpact})`;
-        };
-
         let row =
           View.appendRow(name,
-                         formatEnergyImpact(dispatchesSincePrevious, durationSincePrevious),
-                         formatTooltip(totalDispatches, totalDuration,
-                                       dispatchesSincePrevious, durationSincePrevious),
+                         this._formatEnergyImpact(dispatchesSincePrevious, durationSincePrevious),
+                         this._formatTooltip(totalDispatches, totalDuration,
+                                             dispatchesSincePrevious, durationSincePrevious),
                          null, image);
         row.windowId = id;
         if (id == selectedId) {
@@ -1127,22 +1124,22 @@ var Control = {
           this.selectedRow = row;
         }
 
-        children.sort((a, b) => b.dispatchesSincePrevious - a.dispatchesSincePrevious);
-        for (let row of children) {
-          let host = row.host.replace(/^blob:https?:\/\//, "");
-          let classes = ["indent"];
-          if (State.isTracker(host))
-            classes.push("tracking");
-          if (row.isWorker)
-            classes.push("worker");
-          View.appendRow(row.host,
-                         formatEnergyImpact(row.dispatchesSincePrevious,
-                                            row.durationSincePrevious),
-                         formatTooltip(row.dispatchCount, row.duration,
-                                       row.dispatchesSincePrevious,
-                                       row.durationSincePrevious),
-                         classes);
+        if (!children.length)
+          continue;
+
+        let elt = row.firstChild;
+        let img = document.createElement("img");
+        img.className = "twisty";
+        let open = openItems.has(id);
+        if (open) {
+          img.classList.add("open");
+          this._openItems.add(id);
         }
+        elt.insertBefore(img, elt.firstChild);
+
+        row._children = children;
+        if (open)
+          this._showChildren(row);
       }
 
       View.commit();
@@ -1152,6 +1149,25 @@ var Control = {
 
     // Inform watchers
     Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, mode);
+  },
+  _showChildren(row) {
+    let children = row._children;
+    children.sort((a, b) => b.dispatchesSincePrevious - a.dispatchesSincePrevious);
+    for (let row of children) {
+      let host = row.host.replace(/^blob:https?:\/\//, "");
+      let classes = ["indent"];
+      if (State.isTracker(host))
+        classes.push("tracking");
+      if (row.isWorker)
+        classes.push("worker");
+      View.appendRow(row.host,
+                     this._formatEnergyImpact(row.dispatchesSincePrevious,
+                                              row.durationSincePrevious),
+                     this._formatTooltip(row.dispatchCount, row.duration,
+                                         row.dispatchesSincePrevious,
+                                         row.durationSincePrevious),
+                     classes);
+    }
   },
   _computeEnergyImpact(dispatches, duration) {
     // 'Dispatches' doesn't make sense to users, and it's difficult to present
@@ -1163,6 +1179,35 @@ var Control = {
     // looks like a familiar percentage to users, as fullying using one core will
     // result in a number close to 100.
     return Math.max(duration || 0, dispatches * 1000) / UPDATE_INTERVAL_MS / 10;
+  },
+  _formatTooltip(totalDispatches, totalDuration,
+                 dispatchesSincePrevious, durationSincePrevious) {
+    function dispatchesAndDuration(dispatches, duration) {
+      let result = dispatches;
+      if (duration) {
+        duration /= 1000;
+        duration = Math.round(duration);
+        if (duration)
+          result += duration >= 1000 ? ` (${duration / 1000}s)` : ` (${duration}ms)`;
+        else
+          result += " (< 1ms)";
+      }
+      return result;
+    }
+
+    return `${dispatchesAndDuration(totalDispatches, totalDuration)} dispatches since load\n` +
+      `${dispatchesAndDuration(dispatchesSincePrevious, durationSincePrevious)} in the last seconds`;
+  },
+  _formatEnergyImpact(dispatches, duration) {
+    let energyImpact = this._computeEnergyImpact(dispatches, duration);
+    if (!energyImpact)
+      return "None";
+    energyImpact = Math.ceil(energyImpact * 100) / 100;
+    if (energyImpact < 1)
+      return `Low (${energyImpact})`;
+    if (energyImpact < 25)
+      return `Medium (${energyImpact})`;
+    return `High (${energyImpact})`;
   },
   _sortCounters(counters) {
     return counters.sort((a, b) => {
