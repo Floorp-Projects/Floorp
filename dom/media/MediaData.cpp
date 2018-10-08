@@ -323,14 +323,18 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
 #if XP_WIN
   // We disable this code path on Windows version earlier of Windows 8 due to
   // intermittent crashes with old drivers. See bug 1405110.
-  if (IsWin8OrLater() && !XRE_IsParentProcess() &&
-      aAllocator && aAllocator->SupportsD3D11()) {
+  // D3D11YCbCrImage can only handle YCbCr images using 3 non-interleaved planes
+  // non-zero mSkip value indicates that one of the plane would be interleaved.
+  if (IsWin8OrLater() && !XRE_IsParentProcess() && aAllocator &&
+      aAllocator->SupportsD3D11() && aBuffer.mPlanes[0].mSkip == 0 &&
+      aBuffer.mPlanes[1].mSkip == 0 && aBuffer.mPlanes[2].mSkip == 0) {
     RefPtr<layers::D3D11YCbCrImage> d3d11Image = new layers::D3D11YCbCrImage();
     PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
     if (d3d11Image->SetData(layers::ImageBridgeChild::GetSingleton()
-                            ? layers::ImageBridgeChild::GetSingleton().get()
-                            : aAllocator,
-                            aContainer, data)) {
+                              ? layers::ImageBridgeChild::GetSingleton().get()
+                              : aAllocator,
+                            aContainer,
+                            data)) {
       v->mImage = d3d11Image;
       return v.forget();
     }

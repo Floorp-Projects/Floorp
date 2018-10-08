@@ -7753,14 +7753,7 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
                                                      getter_AddRefs(imageContainer));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsISupportsInterfacePointer> imgPtr =
-          do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-        NS_ENSURE_TRUE(imgPtr, NS_ERROR_FAILURE);
-
-        rv = imgPtr->SetData(imageContainer);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        aTransferable->SetTransferData(item.flavor().get(), imgPtr, sizeof(nsISupports*));
+        aTransferable->SetTransferData(item.flavor().get(), imageContainer, sizeof(nsISupports*));
       } else {
         nsCOMPtr<nsISupportsCString> dataWrapper =
           do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
@@ -8015,12 +8008,6 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
 
           item->data() = dataAsShmem;
         } else {
-          nsCOMPtr<nsISupportsInterfacePointer> sip =
-            do_QueryInterface(data);
-          if (sip) {
-            sip->GetData(getter_AddRefs(data));
-          }
-
           // Images to be pasted on the clipboard are nsIInputStreams
           nsCOMPtr<nsIInputStream> stream(do_QueryInterface(data));
           if (stream) {
