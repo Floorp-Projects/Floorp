@@ -41,6 +41,18 @@ Release date: TBD
   }
   ```
 
+* browser-engine-gecko-nightly:
+  * Enabled [Java 8 support](https://developer.android.com/studio/write/java8-support) to meet upstream [GeckoView requirements](https://mail.mozilla.org/pipermail/mobile-firefox-dev/2018-September/002411.html). Apps using this component need to enable Java 8 support as well:
+  ```Groovy
+  android {
+    ...
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_1_8
+      targetCompatibility JavaVersion.VERSION_1_8
+    }
+  }
+  ```
+
 # 0.26.0
 
 Release date: 2018-10-05
