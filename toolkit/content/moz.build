@@ -267,6 +267,9 @@ with Files('plugins*'):
 with Files('resetProfile*'):
     BUG_COMPONENT = ('Firefox', 'Migration')
 
+with Files('textbox*'):
+    BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
+
 with Files('timepicker*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
 

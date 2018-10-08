@@ -12,6 +12,11 @@
 
   <binding id="numberbox"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
+
+    <resources>
+      <stylesheet src="chrome://global/skin/numberbox.css"/>
+    </resources>
+
     <content>
       <xul:moz-input-box anonid="moz-input-box" class="numberbox-input-box" flex="1" xbl:inherits="context,disabled,focused">
         <html:input class="numberbox-input textbox-input" type="number" anonid="input"

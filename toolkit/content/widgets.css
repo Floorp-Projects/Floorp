@@ -23,11 +23,6 @@
 @import url("chrome://global/skin/scrollbox.css");
 @import url("chrome://global/skin/splitter.css");
 @import url("chrome://global/skin/tabbox.css");
-
-/* numberbox.css needs to be loaded after textbox.css since it overrides it */
-@import url("chrome://global/skin/textbox.css");
-@import url("chrome://global/skin/numberbox.css");
-
 @import url("chrome://global/skin/toolbar.css");
 @import url("chrome://global/skin/toolbarbutton.css");
 @import url("chrome://global/skin/tree.css");
