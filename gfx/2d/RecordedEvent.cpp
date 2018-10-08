@@ -65,6 +65,8 @@ RecordedEvent::GetEventName(EventType aType)
     return "Stroke";
   case DRAWSURFACE:
     return "DrawSurface";
+  case DRAWDEPENDENTSURFACE:
+    return "DrawDependentSurface";
   case DRAWSURFACEWITHSHADOW:
     return "DrawSurfaceWithShadow";
   case DRAWFILTER:

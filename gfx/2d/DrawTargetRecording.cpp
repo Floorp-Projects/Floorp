@@ -418,6 +418,16 @@ DrawTargetRecording::DrawSurface(SourceSurface *aSurface,
 }
 
 void
+DrawTargetRecording::DrawDependentSurface(uint64_t aId,
+                                          const Rect &aDest,
+                                          const DrawSurfaceOptions &aSurfOptions,
+                                          const DrawOptions &aOptions)
+{
+  mRecorder->AddDependentSurface(aId);
+  mRecorder->RecordEvent(RecordedDrawDependentSurface(this, aId, aDest, aSurfOptions, aOptions));
+}
+
+void
 DrawTargetRecording::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                            const Point &aDest,
                                            const Color &aColor,

@@ -1037,6 +1037,12 @@ public:
                            const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
                            const DrawOptions &aOptions = DrawOptions()) = 0;
 
+  virtual void DrawDependentSurface(uint64_t aId,
+                                    const Rect &aDest,
+                                    const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
+                                    const DrawOptions &aOptions = DrawOptions())
+  { MOZ_CRASH("GFX: DrawDependentSurface"); }
+
   /**
    * Draw the output of a FilterNode to the DrawTarget.
    *

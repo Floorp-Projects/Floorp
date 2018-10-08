@@ -58,6 +58,14 @@ public:
     aFrom.mCapacity = 0;
   }
 
+  ByteBuf& operator=(ByteBuf&& aFrom)
+  {
+    std::swap(mData, aFrom.mData);
+    std::swap(mLen, aFrom.mLen);
+    std::swap(mCapacity, aFrom.mCapacity);
+    return *this;
+  }
+
   ~ByteBuf()
   {
     free(mData);

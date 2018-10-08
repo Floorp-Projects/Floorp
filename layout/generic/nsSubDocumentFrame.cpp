@@ -367,7 +367,16 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   if (rfp) {
-    rfp->BuildDisplayList(aBuilder, this, aLists);
+    // We're the subdoc for <browser remote="true"> and it has
+    // painted content.  Display its shadow layer tree.
+    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+
+    nsPoint offset = aBuilder->ToReferenceFrame(this);
+    nsRect bounds = this->EnsureInnerView()->GetBounds() + offset;
+    clipState.ClipContentDescendants(bounds);
+
+    aLists.Content()->AppendToTop(
+      MakeDisplayItem<nsDisplayRemote>(aBuilder, this));
     return;
   }
 
