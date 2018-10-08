@@ -8194,7 +8194,7 @@ HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists()
     RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "dom::HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists",
-      [=]() { promise->MaybeResolveWithUndefined(); });
+      [promise]() { promise->MaybeResolveWithUndefined(); });
     mAbstractMainThread->Dispatch(r.forget());
     mSeekDOMPromise = nullptr;
   }
@@ -8208,7 +8208,7 @@ HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists()
     RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "dom::HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists",
-      [=]() { promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR); });
+      [promise]() { promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR); });
     mAbstractMainThread->Dispatch(r.forget());
     mSeekDOMPromise = nullptr;
   }
