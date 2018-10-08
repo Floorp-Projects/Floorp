@@ -10,7 +10,7 @@ diff --git a/ipc/chromium/src/third_party/libevent/evutil_rand.c b/ipc/chromium/
  	ev_arc4random_buf(buf, n);
  }
  
-+#if !defined(__OpenBSD__) && !defined(ANDROID)
++#if !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(ANDROID)
  void
  evutil_secure_rng_add_bytes(const char *buf, size_t n)
  {
@@ -36,7 +36,7 @@ diff --git a/ipc/chromium/src/third_party/libevent/include/event2/util.h b/ipc/c
  EVENT2_EXPORT_SYMBOL
  int evutil_secure_rng_set_urandom_device_file(char *fname);
  
-+#if !defined(__OpenBSD__) && !defined(ANDROID)
++#if !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(ANDROID)
  /** Seed the random number generator with extra random bytes.
  
      You should almost never need to call this function; it should be
