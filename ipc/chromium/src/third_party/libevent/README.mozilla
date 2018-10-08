@@ -24,9 +24,9 @@ added, also add a static assertion for it to message_pump_libevent.cc.
 2. Apply the following patches from
 ipc/chromium/src/third_party/libevent/patches/:
 
-- "openbsd-no-arc4random_addrandom.patch". Fixes the build on OpenBSD
-  and Android (which don't provide arc4random_addrandom anymore).
-  See bug 931354 and bug 1259218.
+- "openbsd-no-arc4random_addrandom.patch". Fixes the build on OpenBSD,
+  FreeBSD and Android (which don't provide arc4random_addrandom anymore).
+  See bug 931354, bug 1259218, bug 1497169.
 
 - "dont-use-issetugid-on-android.patch". Fixes Android startup crashes.
   See bug 1030899.
