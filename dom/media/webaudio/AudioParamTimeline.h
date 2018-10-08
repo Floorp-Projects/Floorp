@@ -8,8 +8,8 @@
 #define AudioParamTimeline_h_
 
 #include "AudioEventTimeline.h"
+#include "AudioNodeStream.h"
 #include "mozilla/ErrorResult.h"
-#include "MediaStreamGraph.h"
 #include "AudioSegment.h"
 
 namespace mozilla {
@@ -19,8 +19,8 @@ namespace dom {
 // This helper class is used to represent the part of the AudioParam
 // class that gets sent to AudioNodeEngine instances.  In addition to
 // AudioEventTimeline methods, it holds a pointer to an optional
-// MediaStream which represents the AudioNode inputs to the AudioParam.
-// This MediaStream is managed by the AudioParam subclass on the main
+// AudioNodeStream which represents the AudioNode inputs to the AudioParam.
+// This AudioNodeStream is managed by the AudioParam subclass on the main
 // thread, and can only be obtained from the AudioNodeEngine instances
 // consuming this class.
 class AudioParamTimeline : public AudioEventTimeline
@@ -33,14 +33,15 @@ public:
   {
   }
 
-  MediaStream* Stream() const
+  AudioNodeStream* Stream() const
   {
     return mStream;
   }
 
   bool HasSimpleValue() const
   {
-    return BaseClass::HasSimpleValue() && !mStream;
+    return BaseClass::HasSimpleValue() &&
+      (!mStream || mStream->LastChunks()[0].IsNull());
   }
 
   template<class TimeType>
@@ -98,7 +99,7 @@ private:
 
 protected:
   // This is created lazily when needed.
-  RefPtr<MediaStream> mStream;
+  RefPtr<AudioNodeStream> mStream;
 };
 
 template<> inline float
