@@ -40,7 +40,8 @@ public:
 
   bool HasSimpleValue() const
   {
-    return BaseClass::HasSimpleValue() && !mStream;
+    return BaseClass::HasSimpleValue() &&
+      (!mStream || mStream->LastChunks()[0].IsNull());
   }
 
   template<class TimeType>
