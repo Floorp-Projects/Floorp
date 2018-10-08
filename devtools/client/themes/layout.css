@@ -159,8 +159,185 @@
 }
 
 /**
+ * Flex Item Sizing Outline
+ */
+
+.flex-outline-container {
+  display: flex;
+  justify-content: center;
+}
+
+.flex-outline {
+  display: grid;
+  margin: 2em 0;
+  grid-auto-rows: 35px;
+  flex-basis: 80%;
+  max-width: 450px;
+}
+
+.flex-outline.column {
+  transform: translate(50%, -2em) rotate(.25turn);
+  transform-origin: center left;
+  flex-basis: 150px;
+  margin-bottom: 120px;
+}
+
+.flex-outline-final,
+.flex-outline-basis,
+.flex-outline-delta {
+  grid-row: 1;
+}
+
+.flex-outline-final {
+  border: 1px solid currentColor;
+  position: relative;
+  grid-column: final-start / final-end;
+}
+
+.flex-outline-final.clamped::after {
+  content: "";
+  background-color: var(--theme-body-background);
+  background-image: url(chrome://devtools/skin/images/lock.svg);
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center 1px;
+  fill: currentColor;
+  -moz-context-properties: fill;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: -10px;
+  top: 6px;
+  border-radius: 50%;
+}
+
+.flex-outline.column .flex-outline-final.clamped::after {
+  transform: rotate(-.25turn);
+}
+
+.flex-outline-basis {
+  border-style: dotted;
+  border-width: 3px;
+  margin: 1px 0;
+  grid-column: basis-start / basis-end;
+}
+
+.flex-outline-basis.zero-basis {
+  border-width: 0 0 0 3px;
+}
+
+.flex-outline-delta {
+  background-repeat: round;
+  fill: currentColor;
+  -moz-context-properties: fill;
+  grid-column: delta-start / delta-end;
+  margin: 4px;
+}
+
+.flex-outline.growing .flex-outline-delta {
+  background-image: url(chrome://devtools/skin/images/arrowhead-right.svg);
+}
+
+.flex-outline.shrinking .flex-outline-delta {
+  background-image: url(chrome://devtools/skin/images/arrowhead-left.svg);
+}
+
+.flex-outline-point {
+  position: relative;
+  -moz-user-select: none;
+}
+
+.flex-outline-point {
+  grid-row: 1;
+}
+
+.flex-outline-point.basis {
+  grid-column-end: basis-end;
+  justify-self: end;
+}
+
+.flex-outline.shrinking .flex-outline-point.basis {
+  grid-column-start: basis-end;
+  justify-self: start;
+}
+
+.flex-outline-point.final {
+  grid-column-start: final-end;
+  left: -1px;
+}
+
+.flex-outline.shrinking .flex-outline-point.final {
+  grid-column-end: final-end;
+  grid-column-start: unset;
+  justify-self: end;
+}
+
+.flex-outline-point.min {
+  grid-column: min;
+  place-self: end;
+}
+
+.flex-outline.shrinking .flex-outline-point.min {
+  place-self: end start;
+}
+
+.flex-outline-point.max {
+  grid-column: max;
+  align-self: end;
+  left: -1px;
+}
+
+.flex-outline-point::before {
+  content: attr(data-label);
+  display: block;
+  position: relative;
+  padding: 0 3px;
+  height: 10px;
+  border-color: currentColor;
+  border-style: solid;
+  border-width: 0;
+}
+
+.flex-outline.column .flex-outline-point::before {
+  padding: 0;
+  writing-mode: sideways-lr;
+}
+
+.flex-outline-point.basis::before,
+.flex-outline-point.final::before {
+  top: -12px;
+}
+
+.flex-outline-point.min::before,
+.flex-outline-point.max::before {
+  bottom: -12px;
+}
+
+.flex-outline.column .flex-outline-point.min::before,
+.flex-outline.column .flex-outline-point.min::before {
+  text-indent: -12px;
+}
+
+.flex-outline-point.final::before,
+.flex-outline.shrinking .flex-outline-point.min::before,
+.flex-outline-point.max::before,
+.flex-outline.shrinking .flex-outline-point.basis::before {
+  border-width: 0 0 0 1px;
+}
+
+.flex-outline-point.basis::before,
+.flex-outline-point.min::before,
+.flex-outline.shrinking .flex-outline-point.final::before {
+  border-width: 0 1px 0 0;
+}
+
+/**
  * Flex Item Sizing Properties
  */
+
+#flex-item-sizing-properties {
+  padding-top: 0;
+}
 
 #flex-item-sizing-properties span {
  font-weight: 600;
