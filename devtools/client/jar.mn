@@ -107,6 +107,7 @@ devtools.jar:
     skin/images/accessibility.svg (themes/images/accessibility.svg)
     skin/images/add.svg (themes/images/add.svg)
     skin/images/arrowhead-left.svg (themes/images/arrowhead-left.svg)
+    skin/images/arrowhead-right.svg (themes/images/arrowhead-right.svg)
     skin/images/arrowhead-down.svg (themes/images/arrowhead-down.svg)
     skin/images/arrowhead-up.svg (themes/images/arrowhead-up.svg)
     skin/images/breadcrumbs-divider.svg (themes/images/breadcrumbs-divider.svg)
@@ -278,6 +279,7 @@ devtools.jar:
     skin/images/reveal.svg (themes/images/reveal.svg)
     skin/images/select-arrow.svg (themes/images/select-arrow.svg)
     skin/images/settings.svg (themes/images/settings.svg)
+    skin/images/lock.svg (themes/images/lock.svg)
 
     # Debugger
     skin/images/debugger/angular.svg (themes/images/debugger/angular.svg)
