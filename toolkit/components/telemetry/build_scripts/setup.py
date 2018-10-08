@@ -14,7 +14,7 @@ setup(
     author_email='telemetry-client-dev@mozilla.com',
     url=('https://firefox-source-docs.mozilla.org/'
          'toolkit/components/telemetry/telemetry/collection/index.html'),
-    name='python_mozparsers',
+    name='mozparsers',
     description='Shared parsers for the Telemetry probe regitries.',
     long_description=long_description,
     long_description_content_type="text/markdown",

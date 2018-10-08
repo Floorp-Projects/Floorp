@@ -20,10 +20,9 @@ from marionette_harness.runner import httpd
 
 class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
 
-    ping_list = []
-
     def __init__(self, *args, **kwargs):
         super(TelemetryTestCase, self).__init__(*args, **kwargs)
+        self.ping_list = []
 
     def setUp(self, *args, **kwargs):
         super(TelemetryTestCase, self).setUp(*args, **kwargs)
