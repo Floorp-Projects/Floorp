@@ -50,6 +50,9 @@ project(':browser-engine-gecko-nightly').projectDir = new File(rootDir, 'compone
 include ':browser-engine-system'
 project(':browser-engine-system').projectDir = new File(rootDir, 'components/browser/engine-system')
 
+include ':browser-engine-servo'
+project(':browser-engine-servo').projectDir = new File(rootDir, 'components/browser/engine-servo')
+
 include ':browser-errorpages'
 project(':browser-errorpages').projectDir = new File(rootDir, 'components/browser/errorpages')
 
