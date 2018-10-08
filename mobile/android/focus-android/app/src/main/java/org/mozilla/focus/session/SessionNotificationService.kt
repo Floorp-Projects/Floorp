@@ -156,11 +156,7 @@ class SessionNotificationService : Service() {
             // calls by running this after potentially expensive calls in FocusApplication.onCreate and
             // BrowserFragment.inflateView by posting it to the end of the main thread.
             ThreadUtils.postToMainThread(Runnable {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent)
-                } else {
-                    context.startService(intent)
-                }
+                context.startService(intent)
             })
         }
 
