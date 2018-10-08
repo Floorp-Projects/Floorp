@@ -25,7 +25,7 @@ class ServoEngineSession(
 
     private var urlToLoad: String? = null
     private var viewReference: WeakReference<ServoEngineView>? = null
-    private val view: ServoView?
+    internal val view: ServoView?
         get() = viewReference?.get()?.servoView
 
     @Suppress("TooGenericExceptionCaught")

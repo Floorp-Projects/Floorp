@@ -44,6 +44,10 @@ android {
         system {
             dimension "engine"
         }
+
+        servo {
+            dimension "engine"
+        }
         
         // Processor architecture
         arm {
@@ -75,9 +79,23 @@ android {
         if (flavors.contains("gecko") && flavors.contains("universal")) {
             setIgnore(true)
         }
+
+        if (flavors.contains("servo") && !flavors.contains("arm")) {
+            setIgnore(true)
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
+repositories {
+    flatDir {
+        dirs project(':browser-engine-servo').file('libs')
+    }
+}
 
 configurations {
     geckoNightlyArmImplementation {}
@@ -115,6 +133,8 @@ dependencies {
     implementation project(':ui-autocomplete')
 
     implementation project(':support-utils')
+
+    servoImplementation project(':browser-engine-servo')
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
     geckoNightlyArmImplementation Gecko.geckoview_nightly_arm

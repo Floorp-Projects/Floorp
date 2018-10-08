@@ -16,7 +16,7 @@ import mozilla.components.concept.engine.Settings
  * Servo-based implementation of the Engine interface.
  */
 class ServoEngine(
-    private val defaultSettings: DefaultSettings? = null
+    private val defaultSettings: DefaultSettings? = DefaultSettings()
 ) : Engine {
     override fun createView(context: Context, attrs: AttributeSet?): EngineView {
         return ServoEngineView(context, attrs)
