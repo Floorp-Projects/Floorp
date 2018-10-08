@@ -28,8 +28,9 @@ add_task(async function() {
   // Even though we have no tabs, getProcess gives us the chromeDebugger.
   const response = await client.getProcess();
 
-  const { chromeDebugger } = response.form;
-  const [, threadClient] = await client.attachThread(chromeDebugger);
+  const actor = response.form.actor;
+  const [, tabClient] = await client.attachTarget(actor);
+  const [, threadClient] = await tabClient.attachThread(null);
   const onResumed = new Promise(resolve => {
     threadClient.addOneTimeListener("paused", (event, packet) => {
       equal(packet.why.type, "breakpoint",
