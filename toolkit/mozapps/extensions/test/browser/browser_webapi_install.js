@@ -197,7 +197,7 @@ function makeRegularTest(options, what) {
       },
     ];
 
-    let promptPromise = promiseNotification("addon-installed");
+    let promptPromise = acceptAppMenuNotificationWhenShown("addon-installed");
 
     await testInstall(browser, options, steps, what);
 

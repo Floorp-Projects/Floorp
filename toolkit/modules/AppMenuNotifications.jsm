@@ -122,6 +122,9 @@ var AppMenuNotifications = {
 
     notifications.forEach(n => {
       n.dismissed = true;
+      if (n.options.onDismissed) {
+        n.options.onDismissed();
+      }
     });
     this._updateNotifications();
   },
