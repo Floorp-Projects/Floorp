@@ -325,7 +325,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         const val ACTION_ERASE = "erase"
         const val ACTION_OPEN = "open"
 
-        const val EXTRA_TEXT_SELECTION = "text_selection"
         const val EXTRA_NOTIFICATION = "notification"
 
         private const val EXTRA_SHORTCUT = "shortcut"

@@ -13,6 +13,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.WebURLFinder
+import org.mozilla.focus.activity.TextActionActivity
 import org.mozilla.focus.ext.shouldRequestDesktopSite
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.utils.UrlUtils
@@ -63,18 +64,31 @@ class IntentProcessor(
                     return null
                 }
 
-                return if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
-                    val blockingEnabled = intent.getBooleanExtra(HomeScreen.BLOCKING_ENABLED, true)
-                    val requestDesktop = intent.getBooleanExtra(HomeScreen.REQUEST_DESKTOP, false)
+                return when {
+                    intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG) -> {
+                        val blockingEnabled =
+                            intent.getBooleanExtra(HomeScreen.BLOCKING_ENABLED, true)
+                        val requestDesktop =
+                            intent.getBooleanExtra(HomeScreen.REQUEST_DESKTOP, false)
 
-                    createSession(
-                        Session.Source.HOME_SCREEN,
+                        createSession(
+                            Session.Source.HOME_SCREEN,
+                            intent,
+                            intent.dataString ?: "",
+                            blockingEnabled,
+                            requestDesktop
+                        )
+                    }
+                    intent.hasExtra(TextActionActivity.EXTRA_TEXT_SELECTION) -> createSession(
+                        Session.Source.TEXT_SELECTION,
                         intent,
-                        intent.dataString ?: "",
-                        blockingEnabled,
-                        requestDesktop)
-                } else {
-                    createSession(Session.Source.ACTION_VIEW, intent, intent.dataString ?: "")
+                        intent.dataString ?: ""
+                    )
+                    else -> createSession(
+                        Session.Source.ACTION_VIEW,
+                        intent,
+                        intent.dataString ?: ""
+                    )
                 }
             }
 

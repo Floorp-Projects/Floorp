@@ -31,15 +31,20 @@ class TextActionActivity : Activity() {
         } else {
             ""
         }
+
         val searchUrl = UrlUtils.createSearchUrl(this, searchText)
 
-        val searchIntent = Intent(this, MainActivity::class.java)
+        val searchIntent = Intent(this, IntentReceiverActivity::class.java)
         searchIntent.action = Intent.ACTION_VIEW
-        searchIntent.putExtra(MainActivity.EXTRA_TEXT_SELECTION, true)
+        searchIntent.putExtra(EXTRA_TEXT_SELECTION, true)
         searchIntent.data = Uri.parse(searchUrl)
 
         startActivity(searchIntent)
 
         finish()
+    }
+
+    companion object {
+        const val EXTRA_TEXT_SELECTION = "text_selection"
     }
 }
