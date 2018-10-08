@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for AudioWorklet</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function configureTest() {
+
+  var expected_errors = [
+    "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor is not a constructor.",
+    "NotSupportedError: Argument 1 of AudioWorkletGlobalScope.registerProcessor should not be an empty string.",
+    "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor is not an object.",
+    "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.process is not callable.",
+    "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.process is not callable.",
+    "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.parameterDescriptors is neither an array nor undefined.",
+    "NotSupportedError: Argument 1 of AudioWorkletGlobalScope.registerProcessor is invalid: a class with the same name is already registered.",
+    ];
+
+  var expected_errors_i = 0;
+
+  function consoleListener() {
+    SpecialPowers.addObserver(this, "console-api-log-event");
+  }
+
+  consoleListener.prototype  = {
+    observe: function(aSubject, aTopic, aData) {
+      if (aTopic == "console-api-log-event") {
+        var obj = aSubject.wrappedJSObject;
+        if (obj.arguments[0] == expected_errors[expected_errors_i]) {
+          ok(true, "Expected error received: " + obj.arguments[0]);
+          expected_errors_i++;
+        }
+
+        if (expected_errors_i == expected_errors.length) {
+          // All errors have been received, this test has been completed
+          // succesfully!
+          SpecialPowers.removeObserver(this, "console-api-log-event");
+          SimpleTest.finish();
+          return;
+        }
+      }
+    }
+  }
+
+  var cl = new consoleListener();
+
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  ok(window.isSecureContext, "Test should run in secure context");
+  var audioContext = new AudioContext();
+  ok(audioContext.audioWorklet instanceof AudioWorklet,
+     "AudioContext.audioWorklet should be an instance of AudioWorklet");
+  audioContext.audioWorklet.addModule("worklet_test_audioWorkletGlobalScopeRegisterProcessor.js")
+}
+</script>
+</body>
+</html>
