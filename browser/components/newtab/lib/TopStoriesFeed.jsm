@@ -141,8 +141,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
         this.spocCampaignMap = new Map(body.spocs.map(s => [s.id, `${s.campaign_id}`]));
         this.spocs = this.transform(body.spocs).filter(s => s.score >= s.min_score);
         this.cleanUpCampaignImpressionPref();
-        // Spocs won't exist without stories, so no need to worry about last updated.
-        this.cache.set("spocs", this.spocs);
       }
       this.storiesLastUpdated = Date.now();
       body._timestamp = this.storiesLastUpdated;
@@ -156,7 +154,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
     const data = await this.cache.get();
     let stories = data.stories && data.stories.recommendations;
     let topics = data.topics && data.topics.topics;
-    let {spocs} = data;
 
     let affinities = data.domainAffinities;
     if (this.personalized && affinities && affinities.scores) {
@@ -168,8 +165,10 @@ this.TopStoriesFeed = class TopStoriesFeed {
       this.updateSettings(data.stories.settings);
       this.stories = this.rotate(this.transform(stories));
       this.storiesLastUpdated = data.stories._timestamp;
-      if (spocs && spocs.length) {
-        this.spocs = spocs;
+      if (data.stories.spocs && data.stories.spocs.length) {
+        this.spocCampaignMap = new Map(data.stories.spocs.map(s => [s.id, `${s.campaign_id}`]));
+        this.spocs = this.transform(data.stories.spocs).filter(s => s.score >= s.min_score);
+        this.cleanUpCampaignImpressionPref();
       }
     }
     if (topics && topics.length > 0 && this.topicsLastUpdated === 0) {
