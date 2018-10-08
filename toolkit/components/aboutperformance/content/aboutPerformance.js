@@ -1005,6 +1005,8 @@ var View = {
       elt.style.backgroundImage = `url('${image}')`;
     if (classes)
       elt.classList.add(...classes);
+    if (!classes || !classes.includes("indent"))
+      elt.classList.add("root");
     row.appendChild(elt);
 
     elt = document.createElement("td");
