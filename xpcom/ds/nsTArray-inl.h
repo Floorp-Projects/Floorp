@@ -111,6 +111,23 @@ bool IsTwiceTheRequiredBytesRepresentableAsUint32(size_t aCapacity,
 template<class Alloc, class Copy>
 template<typename ActualAlloc>
 typename ActualAlloc::ResultTypeProxy
+nsTArray_base<Alloc, Copy>::ExtendCapacity(size_type aLength,
+                                           size_type aCount,
+                                           size_type aElemSize)
+{
+  mozilla::CheckedInt<size_type> newLength = aLength;
+  newLength += aCount;
+
+  if (!newLength.isValid()) {
+    return ActualAlloc::FailureResult();
+  }
+
+  return this->EnsureCapacity<ActualAlloc>(newLength.value(), aElemSize);
+}
+
+template<class Alloc, class Copy>
+template<typename ActualAlloc>
+typename ActualAlloc::ResultTypeProxy
 nsTArray_base<Alloc, Copy>::EnsureCapacity(size_type aCapacity,
                                            size_type aElemSize)
 {
