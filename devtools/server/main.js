@@ -1216,7 +1216,7 @@ DebuggerServerConnection.prototype = {
     }
     return addonList.getList().then((addonTargetActors) => {
       for (const actor of addonTargetActors) {
-        if (actor.id != id) {
+        if (actor.addonId != id) {
           continue;
         }
         actor.setOptions(options);

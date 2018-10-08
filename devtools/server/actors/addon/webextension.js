@@ -42,7 +42,7 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
   initialize(conn, addon) {
     this.conn = conn;
     this.addon = addon;
-    this.id = addon.id;
+    this.addonId = addon.id;
     this._childFormPromise = null;
 
     AddonManager.addAddonListener(this);
@@ -72,10 +72,10 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
   },
 
   form() {
-    const policy = ExtensionParent.WebExtensionPolicy.getByID(this.id);
+    const policy = ExtensionParent.WebExtensionPolicy.getByID(this.addonId);
     return {
       actor: this.actorID,
-      id: this.id,
+      id: this.addonId,
       name: this.addon.name,
       url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
       iconURL: this.addon.iconURL,
@@ -86,7 +86,7 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
       isWebExtension: this.addon.isWebExtension,
       isAPIExtension: this.addon.isAPIExtension,
       manifestURL: policy && policy.getURL("manifest.json"),
-      warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(this.id),
+      warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(this.addonId),
     };
   },
 
@@ -124,7 +124,7 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
   // AddonManagerListener callbacks.
 
   onInstalled(addon) {
-    if (addon.id != this.id) {
+    if (addon.id != this.addonId) {
       return;
     }
 
@@ -146,7 +146,7 @@ exports.WebExtensionActor = WebExtensionActor;
 function WebExtensionTargetActorProxy(connection, parentActor) {
   this._conn = connection;
   this._parentActor = parentActor;
-  this.addonId = parentActor.id;
+  this.addonId = parentActor.addonId;
 
   this._onChildExit = this._onChildExit.bind(this);
 
