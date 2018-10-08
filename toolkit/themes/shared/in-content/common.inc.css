@@ -393,12 +393,10 @@ html|input[type="text"],
 html|textarea,
 xul|textbox {
   -moz-appearance: none;
+  color: var(--in-content-text-color);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
-  /* !important to override disabled styling from textbox.css. We reduce the
-     opacity instead of changing colors. */
-  color: var(--in-content-text-color) !important;
-  background-color: var(--in-content-box-background) !important;
+  background-color: var(--in-content-box-background);
 }
 
 xul|textbox {
