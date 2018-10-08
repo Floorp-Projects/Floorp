@@ -8,14 +8,12 @@
   padding-inline-start: 5px;
 }
 
-#mac > html|input,
-#mac > html|textarea {
+#mac html|input, #mac html|textarea {
   margin: 4px;
   padding: 0 1px;
 }
 
-textbox[multiline="true"],
-html|textarea {
+textbox[multiline="true"], html|textarea {
   border: none !important;
   -moz-appearance: none !important;
   background-color: white !important;
@@ -23,8 +21,7 @@ html|textarea {
   border-bottom-left-radius: 0;
 }
 
-html|input,
-html|textarea {
+html|input, html|textarea {
   font: inherit;
 }
 
