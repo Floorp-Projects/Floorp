@@ -229,10 +229,8 @@ function TabTarget({ form, client, chrome, tab = null }) {
   } else {
     // browser content toolbox's form will be of the form:
     //   server0.conn0.content-process0/contentProcessTarget7
-    // while xpcshell debugging will be:
-    //   server1.conn0.contentProcessTarget7
     const isContentProcessTarget =
-      this._form.actor.match(/conn\d+\.(content-process\d+\/)?contentProcessTarget\d+/);
+      this._form.actor.match(/conn\d+\.content-process\d+\/contentProcessTarget\d+/);
     this._isBrowsingContext = !this.isLegacyAddon && !isContentProcessTarget;
   }
 
