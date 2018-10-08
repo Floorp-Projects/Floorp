@@ -92,18 +92,16 @@ AudioParam::Stream()
   }
 
   AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
-  RefPtr<AudioNodeStream> stream =
-    AudioNodeStream::Create(mNode->Context(), engine,
-                            AudioNodeStream::NO_STREAM_FLAGS,
-                            mNode->Context()->Graph());
+  mStream = AudioNodeStream::Create(mNode->Context(), engine,
+                                    AudioNodeStream::NO_STREAM_FLAGS,
+                                    mNode->Context()->Graph());
 
   // Force the input to have only one channel, and make it down-mix using
   // the speaker rules if needed.
-  stream->SetChannelMixingParametersImpl(1, ChannelCountMode::Explicit, ChannelInterpretation::Speakers);
+  mStream->SetChannelMixingParametersImpl(1, ChannelCountMode::Explicit,
+                                          ChannelInterpretation::Speakers);
   // Mark as an AudioParam helper stream
-  stream->SetAudioParamHelperStream();
-
-  mStream = stream.forget();
+  mStream->SetAudioParamHelperStream();
 
   // Setup the AudioParam's stream as an input to the owner AudioNode's stream
   AudioNodeStream* nodeStream = mNode->GetStream();
@@ -185,8 +183,7 @@ AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
   // get its value now.  We use aCounter to tell us which frame of the last
   // AudioChunk to look at.
   float audioNodeInputValue = 0.0f;
-  const AudioBlock& lastAudioNodeChunk =
-    static_cast<AudioNodeStream*>(mStream.get())->LastChunks()[0];
+  const AudioBlock& lastAudioNodeChunk = mStream->LastChunks()[0];
   if (!lastAudioNodeChunk.IsNull()) {
     MOZ_ASSERT(lastAudioNodeChunk.GetDuration() == WEBAUDIO_BLOCK_SIZE);
     audioNodeInputValue =
