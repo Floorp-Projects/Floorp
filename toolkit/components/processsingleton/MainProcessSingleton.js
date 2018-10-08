@@ -53,7 +53,7 @@ MainProcessSingleton.prototype = {
       if (status != Cr.NS_OK)
         return;
 
-      Services.search.addEngine(engineURL.spec, null, iconURL ? iconURL.spec : null, true);
+      Services.search.addEngine(engineURL.spec, iconURL ? iconURL.spec : null, true);
     });
   },
 

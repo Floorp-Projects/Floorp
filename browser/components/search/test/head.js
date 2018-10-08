@@ -61,7 +61,7 @@ function promiseNewEngine(basename, options = {}) {
       onInitComplete() {
         let url = getRootDirectory(options.testPath || gTestPath) + basename;
         let current = Services.search.currentEngine;
-        Services.search.addEngine(url, null, options.iconURL || "", false, {
+        Services.search.addEngine(url, options.iconURL || "", false, {
           onSuccess(engine) {
             info("Search engine added: " + basename);
             if (setAsCurrent) {
