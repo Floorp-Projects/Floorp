@@ -124,7 +124,7 @@ class NetErrorChild extends ActorChild {
             msg1 = "";
             msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer4", [hostString], 1);
             msg1 += "\n\n";
-            msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer6", [brandName, hostString], 2);
+            msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer5", [brandName, hostString], 2);
             msg1 += "\n\n";
           } else {
             msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") + "\n";
@@ -168,7 +168,7 @@ class NetErrorChild extends ActorChild {
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
             let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix2", [brandName, hostString], 2) + " ";
+            msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix1", [brandName, hostString], 2) + " ";
             msgPrefix += gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
           } else {
             msgPrefix = gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
@@ -242,7 +242,7 @@ class NetErrorChild extends ActorChild {
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
             let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msg = gPipNSSBundle.formatStringFromName("certErrorMismatchMultiple2", [brandName, hostString], 2) + " ";
+            msg = gPipNSSBundle.formatStringFromName("certErrorMismatchMultiple1", [brandName, hostString], 2) + " ";
           } else {
             msg = gPipNSSBundle.GetStringFromName("certErrorMismatchMultiple") + "\n";
           }
@@ -259,7 +259,7 @@ class NetErrorChild extends ActorChild {
         if (newErrorPagesEnabled) {
           technicalInfo.textContent = "";
           let brandName = gBrandBundle.GetStringFromName("brandShortName");
-          msg = gPipNSSBundle.formatStringFromName("certErrorMismatch2", [brandName, hostString], 2) + " ";
+          msg = gPipNSSBundle.formatStringFromName("certErrorMismatch1", [brandName, hostString], 2) + " ";
         } else {
           msg = gPipNSSBundle.formatStringFromName("certErrorMismatch",
                                                      [hostString], 1);
@@ -277,7 +277,7 @@ class NetErrorChild extends ActorChild {
         if (nowTime > input.data.validity.notAfter) {
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
-            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow2",
+            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow1",
                                                     [hostString], 1);
             msg += "\n";
           } else {
@@ -289,7 +289,7 @@ class NetErrorChild extends ActorChild {
           // eslint-disable-next-line no-lonely-if
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
-            msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow2",
+            msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow1",
                                                       [hostString], 1);
             msg += "\n";
           } else {
@@ -303,7 +303,7 @@ class NetErrorChild extends ActorChild {
         // eslint-disable-next-line no-lonely-if
           if (newErrorPagesEnabled) {
             technicalInfo.textContent = "";
-            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow2",
+            msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow1",
                                                       [hostString], 1);
             msg += "\n";
           } else {
