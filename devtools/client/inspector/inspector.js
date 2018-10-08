@@ -1454,7 +1454,6 @@ Inspector.prototype = {
       this._search = null;
     }
 
-    const cssPropertiesDestroyer = this._cssProperties.front.destroy();
     const sidebarDestroyer = this.sidebar.destroy();
     const ruleViewSideBarDestroyer = this.ruleViewSideBar ?
       this.ruleViewSideBar.destroy() : null;
@@ -1487,7 +1486,6 @@ Inspector.prototype = {
     this.telemetry = null;
 
     this._panelDestroyer = promise.all([
-      cssPropertiesDestroyer,
       markupDestroyer,
       sidebarDestroyer,
       ruleViewSideBarDestroyer
