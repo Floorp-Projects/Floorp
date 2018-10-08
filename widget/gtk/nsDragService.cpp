@@ -1591,20 +1591,7 @@ CreateUriList(nsIArray *items, gchar **text, gint *length)
                                            getter_AddRefs(data),
                                            &tmpDataLen);
                 if (NS_SUCCEEDED(rv)) {
-                    nsCOMPtr<nsIFile> file = do_QueryInterface(data);
-                    if (!file) {
-                        // Sometimes the file is wrapped in a
-                        // nsISupportsInterfacePointer. See bug 1310193 for
-                        // removing this distinction.
-                        nsCOMPtr<nsISupportsInterfacePointer> ptr =
-                          do_QueryInterface(data);
-                        if (ptr) {
-                            ptr->GetData(getter_AddRefs(data));
-                            file = do_QueryInterface(data);
-                        }
-                    }
-
-                    if (file) {
+                    if (nsCOMPtr<nsIFile> file = do_QueryInterface(data)) {
                         nsCOMPtr<nsIURI> fileURI;
                         NS_NewFileURI(getter_AddRefs(fileURI), file);
                         if (fileURI) {

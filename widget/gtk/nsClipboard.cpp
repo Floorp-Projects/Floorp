@@ -536,19 +536,18 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         static const char* const imageMimeTypes[] = {
             kNativeImageMime, kPNGImageMime, kJPEGImageMime, kJPGImageMime, kGIFImageMime };
         nsCOMPtr<nsISupports> imageItem;
-        nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive;
-        for (uint32_t i = 0; !ptrPrimitive && i < ArrayLength(imageMimeTypes); i++) {
+        nsCOMPtr<imgIContainer> image;
+        for (uint32_t i = 0; i < ArrayLength(imageMimeTypes); i++) {
             rv = trans->GetTransferData(imageMimeTypes[i], getter_AddRefs(imageItem), &len);
-            ptrPrimitive = do_QueryInterface(imageItem);
+            image = do_QueryInterface(imageItem);
+            if (image) {
+                break;
+            }
         }
-        if (!ptrPrimitive)
-            return;
 
-        nsCOMPtr<nsISupports> primitiveData;
-        ptrPrimitive->GetData(getter_AddRefs(primitiveData));
-        nsCOMPtr<imgIContainer> image(do_QueryInterface(primitiveData));
-        if (!image) // Not getting an image for an image mime type!?
+        if (!image) { // Not getting an image for an image mime type!?
             return;
+        }
 
         GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
         if (!pixbuf)
