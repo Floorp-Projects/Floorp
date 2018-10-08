@@ -168,11 +168,6 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/preference",
   },
   {
-    types: ["promises"],
-    spec: "devtools/shared/specs/promises",
-    front: "devtools/shared/fronts/promises",
-  },
-  {
     types: ["propertyIterator"],
     spec: "devtools/shared/specs/property-iterator",
     front: null,
