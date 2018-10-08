@@ -459,8 +459,9 @@ protected:
   // @param aElementSize the size of an array element.
   // @param aElemAlign the alignment in bytes of an array element.
   template<typename ActualAlloc>
-  bool InsertSlotsAt(index_type aIndex, size_type aCount,
-                     size_type aElementSize, size_t aElemAlign);
+  typename ActualAlloc::ResultTypeProxy
+  InsertSlotsAt(index_type aIndex, size_type aCount,
+                size_type aElementSize, size_t aElemAlign);
 
   template<typename ActualAlloc, class Allocator>
   typename ActualAlloc::ResultTypeProxy
@@ -2241,9 +2242,8 @@ protected:
   template<typename ActualAlloc = Alloc>
   elem_type* InsertElementsAt(index_type aIndex, size_type aCount)
   {
-    if (!base_type::template InsertSlotsAt<ActualAlloc>(aIndex, aCount,
-                                                        sizeof(elem_type),
-                                                        MOZ_ALIGNOF(elem_type))) {
+    if (!ActualAlloc::Successful(this->template InsertSlotsAt<ActualAlloc>(
+          aIndex, aCount, sizeof(elem_type), MOZ_ALIGNOF(elem_type)))) {
       return nullptr;
     }
 
@@ -2466,9 +2466,8 @@ auto
 nsTArray_Impl<E, Alloc>::InsertElementsAt(index_type aIndex, size_type aCount,
                                           const Item& aItem) -> elem_type*
 {
-  if (!base_type::template InsertSlotsAt<ActualAlloc>(aIndex, aCount,
-                                                      sizeof(elem_type),
-                                                      MOZ_ALIGNOF(elem_type))) {
+  if (!ActualAlloc::Successful(this->template InsertSlotsAt<ActualAlloc>(
+        aIndex, aCount, sizeof(elem_type), MOZ_ALIGNOF(elem_type)))) {
     return nullptr;
   }
 
