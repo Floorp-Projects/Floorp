@@ -5,8 +5,6 @@
 XPCOMUtils.defineLazyServiceGetter(this, "imgTools",
                                    "@mozilla.org/image/tools;1", "imgITools");
 
-const SupportsInterfacePointer = Components.Constructor(
-  "@mozilla.org/supports-interface-pointer;1", "nsISupportsInterfacePointer");
 const Transferable = Components.Constructor(
   "@mozilla.org/widget/transferable;1", "nsITransferable");
 
@@ -19,9 +17,9 @@ this.clipboard = class extends ExtensionAPI {
             return Promise.reject({message: "Writing images to the clipboard is not supported on Android"});
           }
           let mimeType = `image/${imageType}`;
-          let container;
+          let img;
           try {
-            container = imgTools.decodeImageFromArrayBuffer(imageData, mimeType);
+            img = imgTools.decodeImageFromArrayBuffer(imageData, mimeType);
           } catch (e) {
             return Promise.reject({message: `Data is not a valid ${imageType} image`});
           }
@@ -34,13 +32,10 @@ this.clipboard = class extends ExtensionAPI {
           //
           // The common protocol for exporting a nsITransferable as an image is:
           // - Use nsITransferable::GetTransferData to fetch the stored data.
-          // - QI a nsISupportsInterfacePointer and get the underlying pointer.
           // - QI imgIContainer on the pointer.
           // - Convert the image to the native clipboard format.
           //
           // Below we create a nsITransferable in the above format.
-          let imgPtr = new SupportsInterfacePointer();
-          imgPtr.data = container;
           let transferable = new Transferable();
           transferable.init(null);
           transferable.addDataFlavor(mimeType);
@@ -53,7 +48,7 @@ this.clipboard = class extends ExtensionAPI {
           // On macOS, nsClipboard::GetNativeClipboardData (nsClipboard.mm) uses
           // a cached copy of nsITransferable if available, e.g. when the copy
           // was initiated by the same browser instance. Consequently, the
-          // transferable still holds a nsISupportsInterfacePointer pointer
+          // transferable still holds a imgIContainer pointer
           // instead of a nsIInputStream, and logic that assumes the data to be
           // a nsIInputStream instance fails.
           // For example HTMLEditor::InsertObject (HTMLEditorDataTransfer.cpp)
@@ -68,7 +63,7 @@ this.clipboard = class extends ExtensionAPI {
           //
           // Note that the length itself is not really used if the data is not
           // a string type, so the actual value does not matter.
-          transferable.setTransferData(mimeType, imgPtr, 0);
+          transferable.setTransferData(mimeType, img, 0);
 
           Services.clipboard.setData(
             transferable, null, Services.clipboard.kGlobalClipboard);

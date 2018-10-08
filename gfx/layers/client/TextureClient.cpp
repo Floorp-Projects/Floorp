@@ -1895,13 +1895,6 @@ MappedYCbCrChannelData::CopyInto(MappedYCbCrChannelData& aDst)
   if (bytesPerPixel == 1) {
     copyData(aDst.data, aDst, data, *this);
   } else if (bytesPerPixel == 2) {
-    if (skip != 0) {
-      // The skip value definition doesn't specify if it's in bytes, or in
-      // "pixels". We will assume the later. There are currently no decoders
-      // returning HDR content with a skip value different than zero anyway.
-      NS_WARNING("skip value non zero for HDR content, please verify code "
-                 "(see bug 1421187)");
-    }
     copyData(reinterpret_cast<uint16_t*>(aDst.data),
              aDst,
              reinterpret_cast<uint16_t*>(data),
