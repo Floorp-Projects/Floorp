@@ -2051,13 +2051,13 @@ BytecodeEmitter::emitPropLHS(PropertyAccess* prop)
 bool
 BytecodeEmitter::emitSuperPropLHS(UnaryNode* superBase, bool isCall)
 {
-    if (!emitGetThisForSuperBase(superBase)) {
+    if (!emitGetThisForSuperBase(superBase)) {            // THIS
         return false;
     }
-    if (isCall && !emit1(JSOP_DUP)) {
+    if (isCall && !emit1(JSOP_DUP)) {                     // THIS? THIS
         return false;
     }
-    if (!emit1(JSOP_SUPERBASE)) {
+    if (!emit1(JSOP_SUPERBASE)) {                         // THIS? THIS SUPERBASE
         return false;
     }
     return true;
@@ -2089,16 +2089,17 @@ bool
 BytecodeEmitter::emitSuperGetProp(PropertyAccess* prop, bool isCall)
 {
     UnaryNode* base = &prop->expression().as<UnaryNode>();
-    if (!emitSuperPropLHS(base, isCall)) {
+    if (!emitSuperPropLHS(base, isCall)) {                // THIS? THIS SUPERBASE
         return false;
     }
 
-    if (!emitAtomOp(&prop->key(), JSOP_GETPROP_SUPER)) {
+    if (!emitAtomOp(&prop->key(), JSOP_GETPROP_SUPER)) {  // THIS? PROP
         return false;
     }
 
-    if (isCall && !emit1(JSOP_SWAP)) {
-        return false;
+    if (isCall) {
+        if (!emit1(JSOP_SWAP))                            // PROP THIS
+            return false;
     }
 
     return true;
@@ -2129,35 +2130,45 @@ BytecodeEmitter::emitPropIncDec(UnaryNode* incDec)
             return false;
         }
     }
-    if (!emitAtomOp(&prop->key(), isSuper ? JSOP_GETPROP_SUPER : JSOP_GETPROP)) { // OBJ V
+    if (!emitAtomOp(&prop->key(), isSuper ? JSOP_GETPROP_SUPER : JSOP_GETPROP)) {
+        return false;                               // THIS? OBJ V
+    }
+    if (!emit1(JSOP_POS)) {                         // ... N
         return false;
     }
-    if (!emit1(JSOP_POS)) {                         // OBJ N
+    if (post) {
+        if (!emit1(JSOP_DUP)) {                     // ... N N
+            return false;
+        }
+    }
+    if (!emit1(JSOP_ONE)) {                         // ... N? N 1
         return false;
     }
-    if (post && !emit1(JSOP_DUP)) {                 // OBJ N? N
-        return false;
-    }
-    if (!emit1(JSOP_ONE)) {                         // OBJ N? N 1
-        return false;
-    }
-    if (!emit1(binop)) {                            // OBJ N? N+1
+    if (!emit1(binop)) {                            // ... N? N+1
         return false;
     }
 
     if (post) {
-        if (!emit2(JSOP_PICK, 2 + isSuper)) {      // N? N+1 OBJ
-            return false;
-        }
-        if (!emit1(JSOP_SWAP)) {                   // N? OBJ N+1
-            return false;
-        }
-        if (isSuper) {
-            if (!emit2(JSOP_PICK, 3)) {            // N THIS N+1 OBJ
+        if (isSuper) {                              // THIS OBJ N N+1
+            if (!emit2(JSOP_PICK, 3)) {             // OBJ N N+1 THIS
                 return false;
             }
-            if (!emit1(JSOP_SWAP)) {               // N THIS OBJ N+1
+            if (!emit1(JSOP_SWAP)) {                // OBJ N THIS N+1
                 return false;
+            }
+            if (!emit2(JSOP_PICK, 3)) {             // N THIS N+1 OBJ
+                return false;
+            }
+            if (!emit1(JSOP_SWAP)) {                // N THIS OBJ N+1
+                return false;
+            }
+        } else {                                    // OBJ N N+1
+            if (!emit2(JSOP_PICK, 2)) {             // N N+1 OBJ
+                return false;
+            }
+            if (!emit1(JSOP_SWAP)) {                // N OBJ N+1
+                return false;
+
             }
         }
     }
@@ -2167,8 +2178,10 @@ BytecodeEmitter::emitPropIncDec(UnaryNode* incDec)
     if (!emitAtomOp(&prop->key(), setOp)) {         // N? N+1
         return false;
     }
-    if (post && !emit1(JSOP_POP)) {                 // RESULT
-        return false;
+    if (post) {
+        if (!emit1(JSOP_POP)) {                     // N
+            return false;
+        }
     }
 
     return true;
@@ -2254,26 +2267,26 @@ BytecodeEmitter::emitNameIncDec(UnaryNode* incDec)
 bool
 BytecodeEmitter::emitElemOperands(PropertyByValue* elem, EmitElemOption opts)
 {
-    if (!emitTree(&elem->expression())) {
+    if (!emitTree(&elem->expression())) {                 // OBJ
         return false;
     }
 
     if (opts == EmitElemOption::IncDec) {
-        if (!emit1(JSOP_CHECKOBJCOERCIBLE)) {
+        if (!emit1(JSOP_CHECKOBJCOERCIBLE)) {             // OBJ
             return false;
         }
     } else if (opts == EmitElemOption::Call) {
-        if (!emit1(JSOP_DUP)) {
+        if (!emit1(JSOP_DUP)) {                           // OBJ OBJ
             return false;
         }
     }
 
-    if (!emitTree(&elem->key())) {
+    if (!emitTree(&elem->key())) {                        // OBJ? OBJ KEY
         return false;
     }
 
     if (opts == EmitElemOption::IncDec || opts == EmitElemOption::CompoundAssign) {
-        if (!emit1(JSOP_TOID)) {
+        if (!emit1(JSOP_TOID)) {                          // OBJ KEY
             return false;
         }
     }
@@ -2337,7 +2350,13 @@ BytecodeEmitter::emitElemOp(PropertyByValue* elem, JSOp op)
 
     EmitElemOption opts = op == JSOP_CALLELEM ? EmitElemOption::Call : EmitElemOption::Get;
 
-    return emitElemOperands(elem, opts) && emitElemOpBase(op);
+    if (!emitElemOperands(elem, opts)) {                  // OBJ? OBJ KEY
+        return false;
+    }
+    if (!emitElemOpBase(op)) {                            // OBJ? ELEM
+        return false;
+    }
+    return true;
 }
 
 bool
@@ -2352,8 +2371,10 @@ BytecodeEmitter::emitSuperGetElem(PropertyByValue* elem, bool isCall)
         return false;
     }
 
-    if (isCall && !emit1(JSOP_SWAP)) {              // VALUE THIS
-        return false;
+    if (isCall) {
+        if (!emit1(JSOP_SWAP)) {                    // VALUE THIS
+            return false;
+        }
     }
 
     return true;
@@ -2370,11 +2391,11 @@ BytecodeEmitter::emitElemIncDec(UnaryNode* incDec)
     // emit(Super)ElemOperands.
     if (isSuper) {
         if (!emitSuperElemOperands(elem, EmitElemOption::IncDec)) {
-            return false;
+            return false;                                 // THIS KEY OBJ
         }
     } else {
         if (!emitElemOperands(elem, EmitElemOption::IncDec)) {
-            return false;
+            return false;                                 // OBJ KEY
         }
     }
 
@@ -2402,7 +2423,7 @@ BytecodeEmitter::emitElemIncDec(UnaryNode* incDec)
         }
         getOp = JSOP_GETELEM;
     }
-    if (!emitElemOpBase(getOp)) {                       // OBJ KEY V
+    if (!emitElemOpBase(getOp)) {                       // OBJ KEY ELEM
         return false;
     }
     if (!emit1(JSOP_POS)) {                             // OBJ KEY N
@@ -2957,11 +2978,11 @@ BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target, size_t* emitted)
         PropertyAccess* prop = &target->as<PropertyAccess>();
         if (prop->isSuper()) {
             if (!emitSuperPropLHS(&prop->expression().as<UnaryNode>())) {
-                return false;
+                return false;                             // THIS SUPERBASE
             }
             *emitted = 2;
         } else {
-            if (!emitTree(&prop->expression())) {
+            if (!emitTree(&prop->expression())) {         // OBJ
                 return false;
             }
             *emitted = 1;
@@ -2973,12 +2994,12 @@ BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target, size_t* emitted)
         PropertyByValue* elem = &target->as<PropertyByValue>();
         if (elem->isSuper()) {
             if (!emitSuperElemOperands(elem, EmitElemOption::Ref)) {
-                return false;
+                return false;                             // THIS KEY OBJ
             }
             *emitted = 3;
         } else {
             if (!emitElemOperands(elem, EmitElemOption::Ref)) {
-                return false;
+                return false;                             // OBJ KEY
             }
             *emitted = 2;
         }
@@ -3086,12 +3107,12 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
             // The reference is already pushed by emitDestructuringLHSRef.
             PropertyAccess* prop = &target->as<PropertyAccess>();
             JSOp setOp;
-            if (prop->isSuper()) {
+            if (prop->isSuper()) {                        // THIS OBJ VAL
                 setOp = sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER;
-            } else {
+            } else {                                      // OBJ VAL
                 setOp = sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP;
             }
-            if (!emitAtomOp(&prop->key(), setOp)) {
+            if (!emitAtomOp(&prop->key(), setOp)) {       // VAL
                 return false;
             }
             break;
@@ -3100,16 +3121,16 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
           case ParseNodeKind::Elem: {
             // The reference is already pushed by emitDestructuringLHSRef.
             PropertyByValue* elem = &target->as<PropertyByValue>();
-            if (elem->isSuper()) {
+            if (elem->isSuper()) {                        // THIS KEY OBJ VAL
                 JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER;
                 // emitDestructuringLHSRef already did emitSuperElemOperands
                 // part of emitSuperElemOp.  Perform remaining part here.
-                if (!emitElemOpBase(setOp)) {
+                if (!emitElemOpBase(setOp)) {             // VAL
                     return false;
                 }
-            } else {
+            } else {                                      // OBJ KEY VAL
                 JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
-                if (!emitElemOpBase(setOp)) {
+                if (!emitElemOpBase(setOp)) {             // VAL
                     return false;
                 }
             }
@@ -4364,11 +4385,11 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
         PropertyAccess* prop = &lhs->as<PropertyAccess>();
         if (prop->isSuper()) {
             if (!emitSuperPropLHS(&prop->expression().as<UnaryNode>())) {
-                return false;
+                return false;                             // THIS SUPERBASE
             }
             offset += 2;
         } else {
-            if (!emitTree(&prop->expression())) {
+            if (!emitTree(&prop->expression())) {         // OBJ
                 return false;
             }
             offset += 1;
@@ -4382,12 +4403,12 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
         PropertyByValue* elem = &lhs->as<PropertyByValue>();
         EmitElemOption opt = op == JSOP_NOP ? EmitElemOption::Get : EmitElemOption::CompoundAssign;
         if (elem->isSuper()) {
-            if (!emitSuperElemOperands(elem, opt)) {
+            if (!emitSuperElemOperands(elem, opt)) {      // THIS KEY OBJ
                 return false;
             }
             offset += 3;
         } else {
-            if (!emitElemOperands(elem, opt)) {
+            if (!emitElemOperands(elem, opt)) {           // OBJ KEY
                 return false;
             }
             offset += 2;
@@ -4424,18 +4445,18 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
             JSOp getOp;
             PropertyAccess* prop = &lhs->as<PropertyAccess>();
             if (prop->isSuper()) {
-                if (!emit1(JSOP_DUP2)) {
+                if (!emit1(JSOP_DUP2)) {                  // THIS OBJ THIS OBJ
                     return false;
                 }
                 getOp = JSOP_GETPROP_SUPER;
             } else {
-                if (!emit1(JSOP_DUP)) {
+                if (!emit1(JSOP_DUP)) {                   // OBJ OBJ
                     return false;
                 }
                 bool isLength = prop->key().atom() == cx->names().length;
                 getOp = isLength ? JSOP_LENGTH : JSOP_GETPROP;
             }
-            if (!emitIndex32(getOp, atomIndex)) {
+            if (!emitIndex32(getOp, atomIndex)) {         // THIS? OBJ VAL
                 return false;
             }
             break;
@@ -4444,23 +4465,26 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
             JSOp elemOp;
             PropertyByValue* elem = &lhs->as<PropertyByValue>();
             if (elem->isSuper()) {
-                if (!emitDupAt(2)) {
+                if (!emitDupAt(2)) {                      // THIS KEY OBJ THIS
                     return false;
                 }
-                if (!emitDupAt(2)) {
+                if (!emitDupAt(2)) {                      // THIS KEY OBJ THIS KEY
                     return false;
                 }
-                if (!emitDupAt(2)) {
+                if (!emitDupAt(2)) {                      // THIS KEY OBJ THIS KEY OBJ
                     return false;
                 }
                 elemOp = JSOP_GETELEM_SUPER;
             } else {
-                if (!emit1(JSOP_DUP2)) {
+                if (!emit1(JSOP_DUP2)) {                  // OBJ KEY OBJ KEY
                     return false;
                 }
                 elemOp = JSOP_GETELEM;
             }
-            if (!emitElemOpBase(elemOp)) {
+            if (!emitElemOpBase(elemOp)) {                // [Super]
+                //                                        // THIS KEY OBJ ELEM
+                //                                        // [Other]
+                //                                        // OBJ KEY ELEM
                 return false;
             }
             break;
@@ -4477,7 +4501,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
         }
     }
 
-    if (!EmitAssignmentRhs(this, rhs, offset)) {
+    if (!EmitAssignmentRhs(this, rhs, offset)) {          // ... VAL? RHS
         return false;
     }
 
@@ -4486,7 +4510,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
         if (!newSrcNote(SRC_ASSIGNOP)) {
             return false;
         }
-        if (!emit1(op)) {
+        if (!emit1(op)) {                                 // ... VAL
             return false;
         }
     }
@@ -4497,7 +4521,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
         JSOp setOp = lhs->as<PropertyAccess>().isSuper() ?
                        (sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER) :
                        (sc->strict() ? JSOP_STRICTSETPROP : JSOP_SETPROP);
-        if (!emitIndexOp(setOp, atomIndex)) {
+        if (!emitIndexOp(setOp, atomIndex)) {             // VAL
             return false;
         }
         break;
@@ -4509,7 +4533,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, ParseNodeKind pnk, ParseNode* rh
         JSOp setOp = lhs->as<PropertyByValue>().isSuper() ?
                        sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER :
                        sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
-        if (!emit1(setOp)) {
+        if (!emit1(setOp)) {                              // VAL
             return false;
         }
         break;
@@ -6045,11 +6069,13 @@ BytecodeEmitter::emitGetFunctionThis(ParseNode* pn)
     MOZ_ASSERT(pn->isKind(ParseNodeKind::Name));
     MOZ_ASSERT(pn->name() == cx->names().dotThis);
 
-    if (!emitTree(pn)) {
+    if (!emitTree(pn)) {                                  // THIS
         return false;
     }
-    if (sc->needsThisTDZChecks() && !emit1(JSOP_CHECKTHIS)) {
-        return false;
+    if (sc->needsThisTDZChecks()) {
+        if (!emit1(JSOP_CHECKTHIS)) {                     // THIS
+            return false;
+        }
     }
 
     return true;
@@ -6059,22 +6085,22 @@ bool
 BytecodeEmitter::emitGetThisForSuperBase(UnaryNode* superBase)
 {
     MOZ_ASSERT(superBase->isKind(ParseNodeKind::SuperBase));
-    return emitGetFunctionThis(superBase->kid());
+    return emitGetFunctionThis(superBase->kid());         // THIS
 }
 
 bool
 BytecodeEmitter::emitThisLiteral(ThisLiteral* pn)
 {
     if (ParseNode* thisName = pn->kid()) {
-        return emitGetFunctionThis(thisName);
+        return emitGetFunctionThis(thisName);             // THIS
     }
 
     if (sc->thisBinding() == ThisBinding::Module) {
-        return emit1(JSOP_UNDEFINED);
+        return emit1(JSOP_UNDEFINED);                     // UNDEF
     }
 
     MOZ_ASSERT(sc->thisBinding() == ThisBinding::Global);
-    return emit1(JSOP_GLOBALTHIS);
+    return emit1(JSOP_GLOBALTHIS);                        // THIS
 }
 
 bool
@@ -7224,12 +7250,12 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCa
         PropertyAccess* prop = &callee->as<PropertyAccess>();
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         if (prop->isSuper()) {
-            if (!emitSuperGetProp(prop, isCall)) {
+            if (!emitSuperGetProp(prop, isCall)) {        // CALLEE THIS?
                 return false;
             }
         } else {
             if (!emitPropOp(prop, isCall ? JSOP_CALLPROP : JSOP_GETPROP)) {
-                return false;
+                return false;                             // CALLEE THIS?
             }
         }
 
@@ -7239,19 +7265,19 @@ BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call, bool isCa
         PropertyByValue* elem = &callee->as<PropertyByValue>();
         MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
         if (elem->isSuper()) {
-            if (!emitSuperGetElem(elem, isCall)) {
+            if (!emitSuperGetElem(elem, isCall)) {        // CALLEE THIS?
                 return false;
             }
         } else {
             if (isCall) {
-                if (!emitElemOp(elem, JSOP_CALLELEM)) {
+                if (!emitElemOp(elem, JSOP_CALLELEM)) {   // THIS CALLEE
                     return false;
                 }
-                if (!emit1(JSOP_SWAP)) {
+                if (!emit1(JSOP_SWAP)) {                  // CALLEE THIS
                     return false;
                 }
             } else {
-                if (!emitElemOp(elem, JSOP_GETELEM)) {
+                if (!emitElemOp(elem, JSOP_GETELEM)) {    // CALLEE
                     return false;
                 }
             }
