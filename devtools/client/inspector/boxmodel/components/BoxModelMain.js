@@ -280,6 +280,8 @@ class BoxModelMain extends PureComponent {
       showOnly: region,
       onlyRegionArea: true,
     });
+
+    event.preventDefault();
   }
 
   /**
