@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Популарне теме:",
   "pocket_read_even_more": "Погледајте још прича",
   "pocket_more_reccommendations": "Још препорука",
-  "pocket_learn_more": "Сазнајте више",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Преузмите Pocket",
   "pocket_cta_text": "Сачувајте приче које волите у Pocket и напуните свој ум фасцинантним причама.",
   "highlights_empty_state": "Почните са коришћењем веба а ми ћемо вам овде приказивати неке од одличних чланака, видео записа и других страница које сте скоро посетили.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "услове коришћења",
   "firstrun_privacy_notice": "обавештење о приватности",
   "firstrun_continue_to_login": "Настави",
-  "firstrun_skip_login": "Прескочи овај корак"
+  "firstrun_skip_login": "Прескочи овај корак",
+  "pocket_learn_more": "Сазнајте више"
 };

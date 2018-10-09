@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Popüler konular:",
   "pocket_read_even_more": "Daha fazla yazı göster",
   "pocket_more_reccommendations": "Daha fazla öneri",
-  "pocket_learn_more": "Daha fazla bilgi al",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pocket’ı edinin",
   "pocket_cta_text": "Sevdiğiniz yazıları Pocket’a kaydedin, aklınız okumaya değer şeylerle doldurun.",
   "highlights_empty_state": "Gezinmeye başlayın. Son zamanlarda baktığınız veya yer imlerinize eklediğiniz bazı güzel makaleleri, videoları ve diğer sayfaları burada göstereceğiz.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Kullanım Koşullarını",
   "firstrun_privacy_notice": "Gizlilik Bildirimini",
   "firstrun_continue_to_login": "Devam et",
-  "firstrun_skip_login": "Bu adımı atla"
+  "firstrun_skip_login": "Bu adımı atla",
+  "pocket_learn_more": "Daha fazla bilgi al"
 };

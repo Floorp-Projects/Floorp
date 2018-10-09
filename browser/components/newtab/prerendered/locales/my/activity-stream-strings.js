@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "လူကြိုက်များခေါင်းစဉ်များ",
   "pocket_read_even_more": "နောက်ထပ်သတင်းများ ကြည့်ရန်",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",

@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "موضوع‌های محبوب:",
   "pocket_read_even_more": "مشاهده داستان‌های بیشتر",
   "pocket_more_reccommendations": "توصیه‌های بیشتر",
-  "pocket_learn_more": "بیشتر بدانید",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "دریافت پاکت",
   "pocket_cta_text": "داستان‌هایی را که دوست دارید در پاکت خود ذخیره کنید و ذهن خود را با خواندنی‌های جذاب پرورش دهید.",
   "highlights_empty_state": "مرور کردن را شروع کنید و شاهد تعداد زیادی مقاله، فیلم و صفحات خوبی باشید که اخیر مشاهده کرده اید یا نشانگ گذاری کرده اید.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "قوانین سرویس",
   "firstrun_privacy_notice": "نکات حریم‌خصوصی",
   "firstrun_continue_to_login": "ادامه",
-  "firstrun_skip_login": "پرش از این مرحله"
+  "firstrun_skip_login": "پرش از این مرحله",
+  "pocket_learn_more": "بیشتر بدانید"
 };

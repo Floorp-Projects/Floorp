@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populære emne:",
   "pocket_read_even_more": "Vis fleire saker",
   "pocket_more_reccommendations": "Fleire tilrådingar",
-  "pocket_learn_more": "Les meir",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Last ned Pocket",
   "pocket_cta_text": "Lagre artiklane du synest er interessante i Pocket, og stimuler tankane dine med fasinerande lesemateriell.",
   "highlights_empty_state": "Begynn å surfe, og vi vil vise deg nokre av dei beste artiklane, videoane og andre sider du nyleg har besøkt eller bokmerka her.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Tenestevilkår",
   "firstrun_privacy_notice": "Personvernpraksis",
   "firstrun_continue_to_login": "Fortset",
-  "firstrun_skip_login": "Hopp over dette steget"
+  "firstrun_skip_login": "Hopp over dette steget",
+  "pocket_learn_more": "Les meir"
 };

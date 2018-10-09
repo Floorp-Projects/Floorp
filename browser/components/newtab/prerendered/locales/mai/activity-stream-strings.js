@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "लोकप्रिय विषय:",
   "pocket_read_even_more": "बेसी स्टोरी देखाबू",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_learn_more": "Learn More",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ब्राउजिंग आरंभ करू, आओर हम अहाँक किछु बढियाँ नवीन आर्टिकिल, वीडियो, आओर आन पेज देखाएब, जकरा अङाँ हाले में विजिट कएलहुँ अथवा एतय बुकमार्क कएलहुँ.",

@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Temas populares:",
   "pocket_read_even_more": "Ver más historias",
   "pocket_more_reccommendations": "Más recomendaciones",
-  "pocket_learn_more": "Saber más",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Obtener Pocket",
   "pocket_cta_text": "Guarda las historias que quieras en Pocket y llena tu mente con fascinantes lecturas.",
   "highlights_empty_state": "Empieza a navegar, y nosotros te mostraremos aquí algunos de los mejores artículos, videos y otras páginas que hayas visitado recientemente o marcado.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Términos del servicio",
   "firstrun_privacy_notice": "Política de privacidad",
   "firstrun_continue_to_login": "Continuar",
-  "firstrun_skip_login": "Saltar este paso"
+  "firstrun_skip_login": "Saltar este paso",
+  "pocket_learn_more": "Saber más"
 };

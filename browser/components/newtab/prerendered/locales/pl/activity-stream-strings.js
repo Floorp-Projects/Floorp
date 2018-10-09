@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Popularne treści:",
   "pocket_read_even_more": "Pokaż więcej artykułów",
   "pocket_more_reccommendations": "Więcej polecanych",
-  "pocket_learn_more": "Więcej informacji",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Pobierz Pocket",
   "pocket_cta_text": "Zachowuj historie w Pocket, aby wrócić później do ich lektury.",
   "highlights_empty_state": "Zacznij przeglądać Internet, a pojawią się tutaj świetne artykuły, filmy oraz inne ostatnio odwiedzane strony i dodane zakładki.",
@@ -119,5 +119,6 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_body": "Krótkie i słodkie informacje od Mozilli o Firefoksie i kulturze internetowej, a od czasu do czasu także jakiś żart.",
   "settings_pane_done_button": "Gotowe",
   "settings_pane_topstories_options_sponsored": "Sponsorowane treści",
+  "pocket_learn_more": "Więcej informacji",
   "pocket_description": "Odkrywaj wysokiej jakości treści dzięki serwisowi Pocket, który jest teraz częścią Mozilli."
 };

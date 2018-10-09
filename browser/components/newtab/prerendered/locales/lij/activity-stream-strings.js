@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Argomenti popolari:",
   "pocket_read_even_more": "Amia atre stöie",
   "pocket_more_reccommendations": "Atri conseggi",
-  "pocket_learn_more": "Atre informaçioin",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Piggite Pocket",
   "pocket_cta_text": "Sarva e stöie che te piaxan into Pocket, e carega torna a mente con letue che incantan.",
   "highlights_empty_state": "Iniçia a navegâ e, in sta seçion, saian mostræ articoli, video e atre pagine vixitæ de fresco ò azonti a-i segnalibbri.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Termini do serviçio",
   "firstrun_privacy_notice": "Informativa in sciâ privacy",
   "firstrun_continue_to_login": "Continoa",
-  "firstrun_skip_login": "Sata sto passo"
+  "firstrun_skip_login": "Sata sto passo",
+  "pocket_learn_more": "Atre informaçioin"
 };

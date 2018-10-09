@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Subiecte populare:",
   "pocket_read_even_more": "Vezi mai multe articole",
   "pocket_more_reccommendations": "Mai multe recomandări",
-  "pocket_learn_more": "Află mai multe",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Obține Pocket",
   "pocket_cta_text": "Salvează în Pocket articolele care ți-au plăcut și hrănește-ți mintea cu lecturi fascinante.",
   "highlights_empty_state": "Începe să navighezi și noi îți vom arăta articole interesante, videouri sau alte pagini pe care le-ai vizitat sau marcat recent.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Termenii de utilizare a serviciului",
   "firstrun_privacy_notice": "Politica de confidențialitate",
   "firstrun_continue_to_login": "Continuă",
-  "firstrun_skip_login": "Omite acest pas"
+  "firstrun_skip_login": "Omite acest pas",
+  "pocket_learn_more": "Află mai multe"
 };
