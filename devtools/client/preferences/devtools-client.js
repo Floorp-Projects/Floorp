@@ -307,6 +307,12 @@ pref("devtools.editor.detectindentation", true);
 pref("devtools.editor.enableCodeFolding", true);
 pref("devtools.editor.autocomplete", true);
 
+// The width of the viewport.
+pref("devtools.responsive.viewport.width", 320);
+// The height of the viewport.
+pref("devtools.responsive.viewport.height", 480);
+// The pixel ratio of the viewport.
+pref("devtools.responsive.viewport.pixelRatio", 0);
 // Whether or not the viewports are left aligned.
 pref("devtools.responsive.leftAlignViewport.enabled", false);
 // Whether to reload when touch simulation is toggled
@@ -315,6 +321,11 @@ pref("devtools.responsive.reloadConditions.touchSimulation", false);
 pref("devtools.responsive.reloadConditions.userAgent", false);
 // Whether to show the notification about reloading to apply emulation
 pref("devtools.responsive.reloadNotification.enabled", true);
+// Whether or not touch simulation is enabled.
+pref("devtools.responsive.touchSimulation.enabled", false);
+// The user agent of the viewport.
+pref("devtools.responsive.userAgent", "");
+
 // Whether to show the settings onboarding tooltip only in release or beta builds.
 #if defined(RELEASE_OR_BETA)
 pref("devtools.responsive.show-setting-tooltip", true);
