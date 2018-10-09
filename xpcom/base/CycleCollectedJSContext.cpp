@@ -260,6 +260,7 @@ CycleCollectedJSContext::GetIncumbentGlobalCallback(JSContext* aCx)
 /* static */
 bool
 CycleCollectedJSContext::EnqueuePromiseJobCallback(JSContext* aCx,
+                                                   JS::HandleObject aPromise,
                                                    JS::HandleObject aJob,
                                                    JS::HandleObject aAllocationSite,
                                                    JS::HandleObject aIncumbentGlobal,

@@ -663,7 +663,8 @@ JSRuntime::enqueuePromiseJob(JSContext* cx, HandleFunction job, HandleObject pro
             allocationSite = JS::GetPromiseAllocationSite(unwrappedPromise);
         }
     }
-    return cx->enqueuePromiseJobCallback(cx, job, allocationSite, incumbentGlobal, data);
+    return cx->enqueuePromiseJobCallback(cx, promise, job, allocationSite,
+                                         incumbentGlobal, data);
 }
 
 void

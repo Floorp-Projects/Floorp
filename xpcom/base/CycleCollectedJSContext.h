@@ -113,6 +113,7 @@ private:
 
   static JSObject* GetIncumbentGlobalCallback(JSContext* aCx);
   static bool EnqueuePromiseJobCallback(JSContext* aCx,
+                                        JS::HandleObject aPromise,
                                         JS::HandleObject aJob,
                                         JS::HandleObject aAllocationSite,
                                         JS::HandleObject aIncumbentGlobal,

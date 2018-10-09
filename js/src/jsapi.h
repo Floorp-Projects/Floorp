@@ -189,7 +189,7 @@ typedef JSObject*
 (* JSGetIncumbentGlobalCallback)(JSContext* cx);
 
 typedef bool
-(* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject job,
+(* JSEnqueuePromiseJobCallback)(JSContext* cx, JS::HandleObject promise, JS::HandleObject job,
                                 JS::HandleObject allocationSite, JS::HandleObject incumbentGlobal,
                                 void* data);
 
