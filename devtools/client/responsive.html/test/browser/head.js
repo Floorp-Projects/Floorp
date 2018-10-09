@@ -66,6 +66,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.responsive.show-setting-tooltip");
   Services.prefs.clearUserPref("devtools.responsive.showUserAgentInput");
   await asyncStorage.removeItem("devtools.devices.url_cache");
+  await asyncStorage.removeItem("devtools.responsive.deviceState");
   await removeLocalDevices();
 });
 
@@ -377,6 +378,11 @@ async function waitForClientClose(ui) {
   info("RDM's debugger client is now closed");
 }
 
+async function testDevicePixelRatio(ui, expected) {
+  const dppx = await getViewportDevicePixelRatio(ui);
+  is(dppx, expected, `devicePixelRatio should be set to ${expected}`);
+}
+
 async function testTouchEventsOverride(ui, expected) {
   const { document } = ui.toolWindow;
   const touchButton = document.getElementById("touch-simulation-button");
@@ -422,6 +428,15 @@ async function testUserAgentFromBrowser(browser, expected) {
     return content.navigator.userAgent;
   });
   is(ua, expected, `UA should be set to ${expected}`);
+}
+
+function testViewportDimensions(ui, w, h) {
+  const viewport = ui.toolWindow.document.querySelector(".viewport-content");
+
+  is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("width"),
+     `${w}px`, `Viewport should have width of ${w}px`);
+  is(ui.toolWindow.getComputedStyle(viewport).getPropertyValue("height"),
+     `${h}px`, `Viewport should have height of ${h}px`);
 }
 
 async function changeUserAgentInput(ui, value) {
