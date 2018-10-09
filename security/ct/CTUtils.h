@@ -24,6 +24,7 @@ struct DeleteHelper
   {
     SECKEY_DestroySubjectPublicKeyInfo(value);
   }
+  void operator()(PK11Context* value) { PK11_DestroyContext(value, true); }
   void operator()(PK11SlotInfo* value) { PK11_FreeSlot(value); }
   void operator()(SECKEYPublicKey* value) { SECKEY_DestroyPublicKey(value); }
   void operator()(SECItem* value) { SECITEM_FreeItem(value, true); }
@@ -43,6 +44,8 @@ struct MaybeDeleteHelper
 
 typedef std::unique_ptr<CERTSubjectPublicKeyInfo, MaybeDeleteHelper<CERTSubjectPublicKeyInfo>>
   UniqueCERTSubjectPublicKeyInfo;
+typedef std::unique_ptr<PK11Context, MaybeDeleteHelper<PK11Context>>
+  UniquePK11Context;
 typedef std::unique_ptr<PK11SlotInfo, MaybeDeleteHelper<PK11SlotInfo>>
   UniquePK11SlotInfo;
 typedef std::unique_ptr<SECKEYPublicKey, MaybeDeleteHelper<SECKEYPublicKey>>

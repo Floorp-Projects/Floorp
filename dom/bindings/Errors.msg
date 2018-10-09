@@ -115,3 +115,4 @@ MSG_DEF(MSG_VALUE_OUT_OF_RANGE, 1, JSEXN_RANGEERR, "The value for the {0} is out
 MSG_DEF(MSG_INVALID_PANNERNODE_REFDISTANCE_ERROR, 0, JSEXN_RANGEERR, "The refDistance value passed to PannerNode must not be negative.")
 MSG_DEF(MSG_INVALID_PANNERNODE_MAXDISTANCE_ERROR, 0, JSEXN_RANGEERR, "The maxDistance value passed to PannerNode must be positive.")
 MSG_DEF(MSG_INVALID_PANNERNODE_ROLLOFF_ERROR, 0, JSEXN_RANGEERR, "The rolloffFactor value passed to PannerNode must not be negative.")
+MSG_DEF(MSG_NOT_ARRAY_NOR_UNDEFINED, 1, JSEXN_TYPEERR, "{0} is neither an array nor undefined.")
