@@ -144,12 +144,10 @@ class TestTrickle(TestUsingServer):
         self.assertEqual(resp.info()["Expires"], "0")
 
 class TestPipesWithVariousHandlers(TestUsingServer):
-    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_with_python_file_handler(self):
         resp = self.request("/test_string.py", query="pipe=slice(null,2)")
-        self.assertEqual(resp.read(), "PA")
+        self.assertEqual(resp.read(), b"PA")
 
-    @pytest.mark.xfail(sys.version_info >= (3,), reason="wptserve only works on Py2")
     def test_with_python_func_handler(self):
         @wptserve.handlers.handler
         def handler(request, response):
@@ -157,7 +155,7 @@ class TestPipesWithVariousHandlers(TestUsingServer):
         route = ("GET", "/test/test_pipes_1/", handler)
         self.server.router.register(*route)
         resp = self.request(route[1], query="pipe=slice(null,2)")
-        self.assertEqual(resp.read(), "PA")
+        self.assertEqual(resp.read(), b"PA")
 
     def test_with_python_func_handler_using_response_writer(self):
         @wptserve.handlers.handler
