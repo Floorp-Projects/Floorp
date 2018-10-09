@@ -54,7 +54,7 @@ add_task(async function() {
       };
       Services.obs.addObserver(searchObserver, "browser-search-engine-modified");
       Services.search.addEngine("http://test:80/browser/browser/base/content/test/about/POSTSearchEngine.xml",
-                                null, null, false);
+                                null, false);
     });
   });
 });

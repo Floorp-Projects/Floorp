@@ -4,7 +4,6 @@ toolkit.jar:
    content/global/minimal-xul.css
 *  content/global/xul.css
    content/global/components.css
-   content/global/textbox.css
    content/global/autocomplete.css
    content/global/aboutAbout.js
    content/global/aboutAbout.xhtml

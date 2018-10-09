@@ -19,11 +19,6 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="textbox">
-    <resources>
-      <stylesheet src="chrome://global/content/textbox.css"/>
-      <stylesheet src="chrome://global/skin/textbox.css"/>
-    </resources>
-
     <content>
       <children/>
       <xul:moz-input-box anonid="moz-input-box" flex="1" xbl:inherits="context,spellcheck">

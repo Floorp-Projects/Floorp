@@ -30,6 +30,7 @@
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
 <script src="../../js/js-test-pre.js"></script>
 <script src="../../js/webgl-test-utils.js"></script>
+<script src="../../js/tests/compressed-texture-utils.js"></script>
 <title>WebGL WEBGL_compressed_texture_astc Conformance Tests</title>
 <style>
 img {
@@ -1601,6 +1602,7 @@ var decoded_12x12_argb_hdr = new Uint8Array([
 ]);
 
 var wtu = WebGLTestUtils;
+var ctu = CompressedTextureUtils;
 var contextVersion = wtu.getDefault3DContextVersion();
 var canvas = document.getElementById("canvas");
 var gl = wtu.create3DContext(canvas, {antialias: false});
@@ -1641,125 +1643,42 @@ var validFormats = {
 
 };
 var name;
-var supportedFormats;
 
 if (!gl) {
     testFailed("WebGL context does not exist");
 } else {
     testPassed("WebGL context exists");
 
-    // Run tests with extension disabled
-    runTestDisabled();
-    debug("");
+    // The texture size 3 * 5 * 8 below is divisible by all the different block sizes supported by the extension.
+    ctu.testCompressedFormatsUnavailableWhenExtensionDisabled(gl, validFormats, expectedByteLength, 3 * 5 * 8);
 
     // Query the extension and store globally so shouldBe can access it
     ext = wtu.getExtensionWithKnownPrefixes(gl, extFlag);
     if (!ext) {
         testPassed("No WEBGL_compressed_texture_astc support -- this is legal");
-        runSupportedTest(false);
+        wtu.runExtensionSupportedTest(gl, "WEBGL_compressed_texture_astc", false);
     } else {
         testPassed("Successfully enabled WEBGL_compressed_texture_astc extension");
 
         debug("");
-        runSupportedTest(true);
+        wtu.runExtensionSupportedTest(gl, "WEBGL_compressed_texture_astc", true);
         runTestExtension();
     }
-}
-
-function runSupportedTest(extensionEnabled) {
-    var name = wtu.getSupportedExtensionWithKnownPrefixes(gl, extFlag);
-    if (name !== undefined) {
-        if (extensionEnabled) {
-            testPassed("WEBGL_compressed_texture_astc listed as supported and getExtension succeeded");
-        } else {
-            testFailed("WEBGL_compressed_texture_astc listed as supported but getExtension failed");
-        }
-    } else {
-        if (extensionEnabled) {
-            testFailed("WEBGL_compressed_texture_astc not listed as supported but getExtension succeeded");
-        } else {
-            testPassed("WEBGL_compressed_texture_astc not listed as supported and getExtension failed -- this is legal");
-        }
-    }
-}
-
-
-function runTestDisabled() {
-    debug("Testing binding enum with extension disabled");
-
-    supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-    shouldBe("supportedFormats", "[]");
 }
 
 function runTestExtension() {
     debug("");
     debug("Testing " + extFlag);
 
-    supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-    // There should be exactly 28 formats for both WebGL 1.0 and WebGL 2.0.
-    shouldBe("supportedFormats.length", "28");
+    // Test that enum values are listed correctly in supported formats and in the extension object.
+    ctu.testCompressedFormatsListed(gl, validFormats);
+    ctu.testCorrectEnumValuesInExt(ext, validFormats);
+    // Test that texture upload buffer size is validated correctly.
+    ctu.testFormatRestrictionsOnBufferSize(gl, validFormats, expectedByteLength, getBlockDimensions);
 
-    console.log(wtu);
-
-    // check that all 28 formats exist
-    testFormatsExist(supportedFormats);
-    // check that all format enums exist.
-    testCompressionFormatsValidity();
-    // check that the specified restrictions fails with
-    // an INVALID_VALUE error when not respected
-    testASTCFormatsRestrictions();
     // Tests ASTC texture with every format
     testLDRTextures();
     testHDRTextures();
-}
-
-function testFormatsExist(supportedFormats) {
-    debug("");
-    debug("Testing every supported formats exist");
-
-    var failed;
-    for (var name in validFormats) {
-        var format = validFormats[name];
-        failed = true;
-        for (var ii = 0; ii < supportedFormats.length; ++ii) {
-            if (format == supportedFormats[ii]) {
-                testPassed("supported format " + formatToString(format) + " exists");
-                failed = false;
-                break;
-            }
-        }
-        if (failed) {
-            testFailed("supported format " + formatToString(format) + " does not exist");
-        }
-    }
-}
-
-function testCompressionFormatsValidity() {
-    debug("");
-    debug("Testing every supported formats is valid");
-
-    for (name in validFormats) {
-        var expected = "0x" + validFormats[name].toString(16);
-        var actual = "ext['" + name + "']";
-        shouldBe(actual, expected);
-    }
-}
-
-function testASTCFormatsRestrictions() {
-    debug("");
-    debug("Testing format restrictions on buffer size");
-
-    var data = new Uint8Array(17);
-
-    var tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    for (var formatId in validFormats) {
-        var format = validFormats[formatId];
-        var expectedSize = expectedByteLength(16, 16, format, data.length);
-        gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, 16, 16, 0, data);
-        wtu.glErrorShouldBe(gl, gl.INVALID_VALUE,
-            formatToString(format) + " expected size: " + expectedSize);
-    }
 }
 
 function testLDRTextures() {
@@ -1850,7 +1769,7 @@ function testASTCTexture(test, useTexStorage) {
     canvas.height = height;
     gl.viewport(0, 0, width, height);
     debug("");
-    debug("testing " + formatToString(format) + " " + width + "x" + height + " (" + test.mode + ")" +
+    debug("testing " + ctu.formatToString(ext, format) + " " + width + "x" + height + " (" + test.mode + ")" +
           (useTexStorage ? " via texStorage2D" : " via compressedTexImage2D"));
     debug("");
 
@@ -1913,10 +1832,10 @@ function compareRect(
 
     var div = document.createElement("div");
     div.className = "testimages";
-    insertImg(div, "expected", makeImage(
+    ctu.insertCaptionedImg(div, "expected", ctu.makeScaledImage(
             actualWidth, actualHeight, dataWidth, expectedData,
             actualChannels == 4));
-    insertImg(div, "actual", makeImage(
+    ctu.insertCaptionedImg(div, "actual", ctu.makeScaledImage(
             actualWidth, actualHeight, actualWidth, actual,
             actualChannels == 4));
     div.appendChild(document.createElement('br'));
@@ -1975,74 +1894,51 @@ function buildTests(data, formats, raws, mode) {
     return tests;
 }
 
-function formatToString(format) {
-    for (var p in ext) {
-        if (ext[p] == format) {
-            return p;
-        }
-    }
-    return "0x" + format.toString(16);
-}
-
 function expectedByteLength(w, h, format) {
 
-    if (format == ext.COMPRESSED_RGBA_ASTC_4x4_KHR)
+    if (format == validFormats.COMPRESSED_RGBA_ASTC_4x4_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR)
         return Math.floor((w + 3) / 4) * Math.floor((h + 3) / 4) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_5x4_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_5x4_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR)
         return Math.floor((w + 4) / 5) * Math.floor((h + 3) / 4) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_5x5_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_5x5_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR)
         return Math.floor((w + 4) / 5) * Math.floor((h + 4) / 5) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_6x5_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_6x5_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR)
         return Math.floor((w + 5) / 6) * Math.floor((h + 4) / 5) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_6x6_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_6x6_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR)
         return Math.floor((w + 5) / 6) * Math.floor((h + 5) / 6) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_8x5_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_8x5_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR)
         return Math.floor((w + 7) / 8) * Math.floor((h + 4) / 5) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_8x6_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_8x6_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR)
         return Math.floor((w + 7) / 8) * Math.floor((h + 5) / 6) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_8x8_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_8x8_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR)
         return Math.floor((w + 7) / 8) * Math.floor((h + 7) / 8) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_10x5_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_10x5_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR)
         return Math.floor((w + 9) / 10) * Math.floor((h + 4) / 5) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_10x6_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_10x6_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR)
         return Math.floor((w + 9) / 10) * Math.floor((h + 5) / 6) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_10x8_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_10x8_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR)
         return Math.floor((w + 9) / 10) * Math.floor((h + 7) / 8) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_10x10_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_10x10_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR)
         return Math.floor((w + 9) / 10) * Math.floor((h + 9) / 10) * 16;
-    else if (format == ext.COMPRESSED_RGBA_ASTC_12x10_KHR)
+    else if (format == validFormats.COMPRESSED_RGBA_ASTC_12x10_KHR || format == validFormats.COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR)
         return Math.floor((w + 11) / 12) * Math.floor((h + 9) / 10) * 16;
 
     return Math.floor((w + 11) / 12) * Math.floor((h + 11) / 12) * 16;
 }
 
-function insertImg(element, caption, img) {
-    var div = document.createElement("div");
-    div.appendChild(img);
-    var label = document.createElement("div");
-    label.appendChild(document.createTextNode(caption));
-    div.appendChild(label);
-    element.appendChild(div);
-}
-
-function makeImage(imageWidth, imageHeight, dataWidth, data, alpha) {
-    var scale = 8;
-    var c = document.createElement("canvas");
-    c.width = imageWidth * scale;
-    c.height = imageHeight * scale;
-    var ctx = c.getContext("2d");
-    for (var yy = 0; yy < imageHeight; ++yy) {
-        for (var xx = 0; xx < imageWidth; ++xx) {
-            var offset = (yy * dataWidth + xx) * 4;
-            ctx.fillStyle = "rgba(" +
-                    data[offset + 0] + "," +
-                    data[offset + 1] + "," +
-                    data[offset + 2] + "," +
-                    (alpha ? data[offset + 3] / 255 : 1) + ")";
-            ctx.fillRect(xx * scale, yy * scale, scale, scale);
+function getBlockDimensions(format) {
+    var re = /.*_(\d+)x(\d+)_KHR/;
+    for (name in validFormats) {
+        if (validFormats[name] === format) {
+            var match = name.match(re);
+            return {
+              width: parseInt(match[1], 10),
+              height: parseInt(match[2], 10)
+              };
         }
     }
-    return wtu.makeImageFromCanvas(c);
+    testFailed('Could not find block dimensions for format ' + ctu.formatToString(ext, format));
+    return {width: 4, height: 4};
 }
 
 // Swaps two cells in an arraybuffer.

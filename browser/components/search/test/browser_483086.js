@@ -24,7 +24,7 @@ function test() {
 
   Services.obs.addObserver(observer, "browser-search-engine-modified");
   gSS.addEngine("http://mochi.test:8888/browser/browser/components/search/test/483086-1.xml",
-                null, "data:image/x-icon;%00", false);
+                "data:image/x-icon;%00", false);
 }
 
 function test2() {
@@ -45,5 +45,5 @@ function test2() {
 
   Services.obs.addObserver(observer, "browser-search-engine-modified");
   gSS.addEngine("http://mochi.test:8888/browser/browser/components/search/test/483086-2.xml",
-                null, "data:image/x-icon;%00", false);
+                "data:image/x-icon;%00", false);
 }
