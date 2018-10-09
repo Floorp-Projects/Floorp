@@ -146,6 +146,7 @@ class JitTest:
         # Exit status or error output.
         self.expect_crash = False
         self.is_module = False
+        self.is_binast = False
         # Reflect.stringify implementation to test
         self.test_reflect_stringify = None
 
@@ -172,6 +173,7 @@ class JitTest:
         t.test_reflect_stringify = self.test_reflect_stringify
         t.enable = True
         t.is_module = self.is_module
+        t.is_binast = self.is_binast
         return t
 
     def copy_and_extend_jitflags(self, variant):
@@ -225,7 +227,16 @@ class JitTest:
                 dir_meta = cls.find_directives(meta_file_name)
             cls.Directives[dir_name] = dir_meta
 
-        meta = cls.find_directives(path)
+        file_extension = os.path.splitext(path)[1]
+        if file_extension == '.binjs':
+            # BinAST does not have an inline comment format, so it's hard
+            # to parse file-by-file directives. In future, we can look for
+            # an adjacent test-specific directives file, if we want.
+            meta = ''
+            test.is_binast = True
+        else:
+            meta = cls.find_directives(path)
+
         if meta != '' or dir_meta != '':
             meta = meta + dir_meta
             parts = meta.split(';')
@@ -340,6 +351,10 @@ class JitTest:
         if self.is_module:
             cmd += ['--module-load-path', moduledir]
             cmd += ['--module', path]
+        elif self.is_binast:
+            # In builds with BinAST, this will run the test file. In builds without,
+            # It's a no-op and the tests will silently pass.
+            cmd += ['-B', path]
         elif self.test_reflect_stringify is None:
             cmd += ['-f', path]
         else:
@@ -369,7 +384,7 @@ def find_tests(substring=None):
         if dirpath == '.':
             continue
         for filename in filenames:
-            if not filename.endswith('.js'):
+            if not (filename.endswith('.js') or filename.endswith('.binjs')):
                 continue
             if filename in ('shell.js', 'browser.js'):
                 continue
