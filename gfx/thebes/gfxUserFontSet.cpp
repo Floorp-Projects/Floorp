@@ -112,7 +112,7 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
              const nsTArray<gfxFontVariation>& aVariationSettings,
              uint32_t aLanguageOverride,
              gfxCharacterMap* aUnicodeRanges,
-             StyleFontDisplay aFontDisplay,
+             uint8_t aFontDisplay,
              RangeFlags aRangeFlags)
     : gfxFontEntry(NS_LITERAL_CSTRING("userfont")),
       mUserFontLoadState(STATUS_NOT_LOADED),
@@ -152,7 +152,7 @@ gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                           const nsTArray<gfxFontVariation>& aVariationSettings,
                           uint32_t aLanguageOverride,
                           gfxCharacterMap* aUnicodeRanges,
-                          StyleFontDisplay aFontDisplay,
+                          uint8_t aFontDisplay,
                           RangeFlags aRangeFlags)
 {
     return Weight() == aWeight &&
@@ -953,7 +953,7 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
-                               StyleFontDisplay aFontDisplay,
+                               uint8_t aFontDisplay,
                                RangeFlags aRangeFlags)
 {
     RefPtr<gfxUserFontEntry> entry;
@@ -996,7 +996,7 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                const nsTArray<gfxFontVariation>& aVariationSettings,
                                uint32_t aLanguageOverride,
                                gfxCharacterMap* aUnicodeRanges,
-                               StyleFontDisplay aFontDisplay,
+                               uint8_t aFontDisplay,
                                RangeFlags aRangeFlags)
 {
     nsTArray<RefPtr<gfxFontEntry>>& fontList = aFamily->GetFontList();
@@ -1042,7 +1042,7 @@ gfxUserFontSet::AddUserFontEntry(const nsCString& aFamilyName,
               (aUserFontEntry->IsOblique() ? "oblique" : "normal")),
              weightString.get(),
              stretchString.get(),
-             static_cast<int>(aUserFontEntry->GetFontDisplay())));
+             aUserFontEntry->GetFontDisplay()));
     }
 }
 
