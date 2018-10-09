@@ -29,7 +29,7 @@ public:
   VideoDecoderParent(VideoDecoderManagerParent* aParent,
                      const VideoInfo& aVideoInfo,
                      float aFramerate,
-                     bool aDisallowHWDecoder,
+                     const CreateDecoderParams::OptionSet& aOptions,
                      const layers::TextureFactoryIdentifier& aIdentifier,
                      TaskQueue* aManagerTaskQueue,
                      TaskQueue* aDecodeTaskQueue,

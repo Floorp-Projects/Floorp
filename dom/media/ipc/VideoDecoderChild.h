@@ -51,7 +51,7 @@ public:
   MOZ_IS_CLASS_INIT
   MediaResult InitIPDL(const VideoInfo& aVideoInfo,
                        float aFramerate,
-                       bool aDisallowHWDecoder,
+                       const CreateDecoderParams::OptionSet& aOptions,
                        const layers::TextureFactoryIdentifier& aIdentifier);
   void DestroyIPDL();
 
