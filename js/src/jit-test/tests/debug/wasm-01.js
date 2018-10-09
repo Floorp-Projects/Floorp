@@ -1,7 +1,6 @@
-// Tests that wasm module scripts are available via findScripts.
+// |jit-test| skip-if: !wasmDebuggingIsSupported()
 
-if (!wasmDebuggingIsSupported())
-  quit();
+// Tests that wasm module scripts are available via findScripts.
 
 var g = newGlobal();
 g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func) (export "" 0))')));`);
