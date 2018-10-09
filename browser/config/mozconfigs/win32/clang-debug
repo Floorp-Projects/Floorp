@@ -11,10 +11,8 @@ ac_add_options --enable-debug
 ac_add_options --enable-clang-plugin
 
 . $topsrcdir/build/win32/mozconfig.vs-latest
-
-# Regardless of what mozconfig.vs-latest sets, lld-link that comes with the old
-# clang version used for static analysis fails to link multiple things. So
-# until bug 1427808 is resolved, use the Microsoft linker.
+# Regardless of what mozconfig.vs-latest sets, clang-plugin builds need to use
+# the Microsoft linker until at least bugs 1414287 and 1427808 are resolved.
 export LINKER=link
 
 . "$topsrcdir/build/mozconfig.common.override"

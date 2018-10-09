@@ -18,7 +18,6 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'autoconf213',
             'gmake',
             'gtar',
-            'npm',
             'pkgconf',
             'py%s%s-sqlite3' % sys.version_info[0:2],
             'python3',
@@ -32,6 +31,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'gconf2',
             'gtk2',
             'gtk3',
+            'libXt',
             'mesa-dri',  # depends on llvm*
             'pulseaudio',
             'v4l_compat',
@@ -67,7 +67,10 @@ class FreeBSDBootstrapper(BaseBootstrapper):
 
     def ensure_stylo_packages(self, state_dir, checkout_root):
         # Clang / llvm already installed as browser package
-        self.ensure_rust_package('cbindgen')
+        self.pkg_install('rust-cbindgen')
+
+    def ensure_node_packages(self, state_dir, checkout_root):
+        self.pkg_install('npm')
 
     def upgrade_mercurial(self, current):
         self.pkg_install('mercurial')
