@@ -44,7 +44,7 @@ const INITIAL_STATE = {
   },
   Sections: [],
   Pocket: {
-    isUserLoggedIn: false,
+    isUserLoggedIn: null,
     pocketCta: {},
     waitingForSpoc: true
   }
