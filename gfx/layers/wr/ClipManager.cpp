@@ -162,39 +162,15 @@ ClipManager::BeginItem(nsDisplayItem* aItem,
   // some overhead further down the pipeline.
   bool separateLeaf = false;
   if (clip && clip->mASR == asr && clip->mClip.GetRoundedRectCount() == 0) {
-    switch (type) {
-      case DisplayItemType::TYPE_BLEND_CONTAINER:
-      case DisplayItemType::TYPE_BLEND_MODE:
-      case DisplayItemType::TYPE_FILTER:
-      case DisplayItemType::TYPE_FIXED_POSITION:
-      case DisplayItemType::TYPE_MASK:
-      case DisplayItemType::TYPE_OPACITY:
-      case DisplayItemType::TYPE_OWN_LAYER:
-      case DisplayItemType::TYPE_PERSPECTIVE:
-      case DisplayItemType::TYPE_RESOLUTION:
-      case DisplayItemType::TYPE_SCROLL_INFO_LAYER:
-      case DisplayItemType::TYPE_STICKY_POSITION:
-      case DisplayItemType::TYPE_SUBDOCUMENT:
-      case DisplayItemType::TYPE_SVG_WRAPPER:
-      case DisplayItemType::TYPE_TABLE_BLEND_CONTAINER:
-      case DisplayItemType::TYPE_TABLE_BLEND_MODE:
-      case DisplayItemType::TYPE_TABLE_FIXED_POSITION:
-      case DisplayItemType::TYPE_TRANSFORM:
-      case DisplayItemType::TYPE_WRAP_LIST:
-        // Container display items are not currently supported because the clip
-        // rect of a stacking context is not handled the same as normal display
-        // items.
-        break;
-      case DisplayItemType::TYPE_TEXT:
-        // Text with shadows interprets the text display item clip rect and
-        // clips from the clip chain differently.
-        if (aItem->Frame()->StyleText()->HasTextShadow()) {
-          break;
-        }
-        MOZ_FALLTHROUGH;
-      default:
-        separateLeaf = true;
-        break;
+    if (type == DisplayItemType::TYPE_TEXT) {
+      // Text with shadows interprets the text display item clip rect and
+      // clips from the clip chain differently.
+      separateLeaf = !aItem->Frame()->StyleText()->HasTextShadow();
+    } else {
+      // Container display items are not currently supported because the clip
+      // rect of a stacking context is not handled the same as normal display
+      // items.
+      separateLeaf = aItem->GetChildren() == nullptr;
     }
   }
 
