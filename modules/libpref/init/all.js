@@ -1461,7 +1461,7 @@ pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
 
 // JSGC_MAX_NURSERY_BYTES
-#if defined(ANDROID) || defined(XP_IOS) || defined(MOZ_B2G)
+#if defined(ANDROID) || defined(XP_IOS)
 pref("javascript.options.mem.nursery.max_kb", 4096);
 #else
 pref("javascript.options.mem.nursery.max_kb", 16384);
