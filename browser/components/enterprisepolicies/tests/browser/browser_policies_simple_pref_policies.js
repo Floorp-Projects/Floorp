@@ -154,6 +154,35 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.offlineApps": true,
     },
   },
+
+  // POLICY: DNSOverHTTPS Locked
+  {
+    policies: {
+      "DNSOverHTTPS": {
+        "Enabled": true,
+        "ProviderURL": "http://example.com/provider",
+        "Locked": true,
+      },
+    },
+    lockedPrefs: {
+      "network.trr.mode": 2,
+      "network.trr.uri": "http://example.com/provider",
+    },
+  },
+
+  // POLICY: DNSOverHTTPS Unlocked
+  {
+    policies: {
+      "DNSOverHTTPS": {
+        "Enabled": false,
+        "ProviderURL": "http://example.com/provider",
+      },
+    },
+    unlockedPrefs: {
+      "network.trr.mode": 5,
+      "network.trr.uri": "http://example.com/provider",
+    },
+  },
 ];
 
 add_task(async function test_policy_remember_passwords() {
