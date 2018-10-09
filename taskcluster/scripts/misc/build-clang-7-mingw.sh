@@ -10,10 +10,12 @@ elif [ "$1" == "x86" ]; then
   machine="i686"
   compiler_rt_machine="i386"
   crt_flags="--enable-lib32 --disable-lib64"
+  WRAPPER_FLAGS="-fsjlj-exceptions"
 elif [ "$1" == "x64" ]; then
   machine="x86_64"
   compiler_rt_machine="x86_64"
   crt_flags="--disable-lib32 --enable-lib64"
+  WRAPPER_FLAGS=""
 else
   echo "Provide either x86 or x64 to specify a toolchain."
   exit 1;
@@ -77,17 +79,19 @@ prepare() {
 install_wrappers() {
   pushd $INSTALL_DIR/bin
 
+  compiler_flags="--sysroot \$DIR/../$machine-w64-mingw32 -rtlib=compiler-rt -stdlib=libc++ -fuse-ld=lld $WRAPPER_FLAGS -fuse-cxa-atexit -Qunused-arguments"
+
   cat <<EOF >$machine-w64-mingw32-clang
 #!/bin/sh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-\$DIR/clang -target $machine-w64-mingw32 --sysroot \$DIR/../$machine-w64-mingw32 -rtlib=compiler-rt -stdlib=libc++ -fuse-ld=lld -fdwarf-exceptions -Qunused-arguments "\$@"
+\$DIR/clang -target $machine-w64-mingw32 $compiler_flags "\$@"
 EOF
   chmod +x $machine-w64-mingw32-clang
 
   cat <<EOF >$machine-w64-mingw32-clang++
 #!/bin/sh
 DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-\$DIR/clang -target $machine-w64-mingw32 --sysroot \$DIR/../$machine-w64-mingw32 --driver-mode=g++ -rtlib=compiler-rt -stdlib=libc++ -fuse-ld=lld -fdwarf-exceptions -Qunused-arguments "\$@"
+\$DIR/clang -target $machine-w64-mingw32 --driver-mode=g++ $compiler_flags "\$@"
 EOF
   chmod +x $machine-w64-mingw32-clang++
 
