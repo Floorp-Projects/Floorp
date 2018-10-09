@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Populære emner:",
   "pocket_read_even_more": "Se flere historier",
   "pocket_more_reccommendations": "Flere anbefalinger",
-  "pocket_learn_more": "Læs mere",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Hent Pocket",
   "pocket_cta_text": "Gem dine yndlingshistorier i Pocket og hav dem altid ved hånden.",
   "highlights_empty_state": "Gå i gang med at browse, så vil vi vise dig nogle af de artikler, videoer og andre sider, du har besøgt eller gemt et bogmærke til for nylig.",
@@ -119,5 +119,6 @@ window.gActivityStreamStrings = {
   "settings_pane_snippets_body": "Læs korte opdateringer fra Mozilla om Firefox, internet-kultur og lidt underholdning fra tid til anden.",
   "settings_pane_done_button": "Færdig",
   "settings_pane_topstories_options_sponsored": "Vis sponsorerede historier",
+  "pocket_learn_more": "Læs mere",
   "pocket_description": "Opdag indhold af høj kvalitet, som du måske ellers ikke ville have opdaget. Indholdet kommer fra Pocket, der nu er en del af Mozilla."
 };

@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Tema Popullore:",
   "pocket_read_even_more": "Shihni Më Tepër Histori",
   "pocket_more_reccommendations": "Më Tepër Rekomandime",
-  "pocket_learn_more": "Mësoni Më Tepër",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Merreni Pocket-in",
   "pocket_cta_text": "Ruajini në Pocket shkrimet që doni, dhe ushqejeni mendjen me lexime të mahnitshme.",
   "highlights_empty_state": "Filloni shfletimin, dhe do t'ju shfaqim disa nga artikujt, videot dhe të tjera faqe interesante që keni vizituar apo faqerojtur këtu kohët e fundit.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Kushte Shërbimi",
   "firstrun_privacy_notice": "Shënim Mbi Privatësinë",
   "firstrun_continue_to_login": "Vazhdo",
-  "firstrun_skip_login": "Anashkalojeni këtë hap"
+  "firstrun_skip_login": "Anashkalojeni këtë hap",
+  "pocket_learn_more": "Mësoni Më Tepër"
 };

@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Isental ittwasnen aṭas:",
   "pocket_read_even_more": "Wali ugar n teqsiḍin",
   "pocket_more_reccommendations": "Ugar n iwellihen",
-  "pocket_learn_more": "Issin ugar",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Awi-d Pocket",
   "pocket_cta_text": "Sekles tiqṣiḍin i tḥemmleḍ deg Pocket, sedhu allaɣ-ik s tɣuri ifazen.",
   "highlights_empty_state": "Bdu tuniginn sakin nekkni ad k-n-sken imagraden, tividyutin, akked isebtar nniḍen i γef terziḍ yakan neγ i tceṛḍeḍ dagi.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Tiwtilin n useqdec",
   "firstrun_privacy_notice": "Tasertit n tbaḍnit",
   "firstrun_continue_to_login": "Kemmel",
-  "firstrun_skip_login": "Zgel amecwaṛ-agi"
+  "firstrun_skip_login": "Zgel amecwaṛ-agi",
+  "pocket_learn_more": "Issin ugar"
 };

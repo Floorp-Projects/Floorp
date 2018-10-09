@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Gai ezagunak:",
   "pocket_read_even_more": "Ikusi istorio gehiago",
   "pocket_more_reccommendations": "Gomendio gehiago",
-  "pocket_learn_more": "Argibide gehiago",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Eskuratu Pocket",
   "pocket_cta_text": "Gorde gogoko dituzun istorioak Pocket-en eta piztu zure gogoa irakurgai erakargarriekin.",
   "highlights_empty_state": "Hasi nabigatzen eta azkenaldian bisitatutako edo laster-marka egindako aparteko artikulu, bideo eta orriak erakutsiko ditugu.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Zerbitzu-baldintzak",
   "firstrun_privacy_notice": "Pribatutasun-oharra",
   "firstrun_continue_to_login": "Jarraitu",
-  "firstrun_skip_login": "Saltatu urrats hau"
+  "firstrun_skip_login": "Saltatu urrats hau",
+  "pocket_learn_more": "Argibide gehiago"
 };

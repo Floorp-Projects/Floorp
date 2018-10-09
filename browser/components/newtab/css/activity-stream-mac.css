@@ -1753,13 +1753,10 @@ a.firstrun-link {
     .collapsible-section.active .section-top-bar .context-menu-button {
       fill: var(--newtab-section-active-contextmenu-color); }
   .collapsible-section .learn-more-link {
-    font-size: 11px; }
+    font-size: 11px;
+    margin-inline-start: 12px; }
     .collapsible-section .learn-more-link a span {
       color: var(--newtab-link-secondary-color); }
-    .collapsible-section .learn-more-link::before {
-      content: '•';
-      padding: 8px;
-      color: var(--newtab-section-navigation-text-color); }
   .collapsible-section .section-body-fallback {
     height: 266px; }
   .collapsible-section .section-body {
@@ -1824,8 +1821,8 @@ a.firstrun-link {
   font-size: 13px;
   margin-inline-end: 20px;
   display: inline-block; }
-  .pocket-logged-in-cta a {
-    background: #EF4056;
+  .pocket-logged-in-cta .pocket-cta-button {
+    background: #0060DF;
     letter-spacing: -0.34px;
     color: #FFF;
     border-radius: 4px;
@@ -1833,13 +1830,16 @@ a.firstrun-link {
     max-width: 130px;
     margin-top: -1px;
     min-height: 18px;
-    padding: 0 6px;
+    padding: 0 8px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     font-size: 11px;
     margin-inline-end: 10px; }
-  .pocket-logged-in-cta a,
+  .pocket-logged-in-cta .cta-text {
+    font-weight: normal;
+    font-size: 13px; }
+  .pocket-logged-in-cta .pocket-cta-button,
   .pocket-logged-in-cta .cta-text {
     vertical-align: top; }
 

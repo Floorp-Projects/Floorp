@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "Sujets populaires :",
   "pocket_read_even_more": "Afficher plus d’articles",
   "pocket_more_reccommendations": "Plus de recommandations",
-  "pocket_learn_more": "En savoir plus",
+  "pocket_how_it_works": "How it works",
   "pocket_cta_button": "Installer Pocket",
   "pocket_cta_text": "Enregistrez les articles que vous aimez dans Pocket, et stimulez votre imagination avec des lectures fascinantes.",
   "highlights_empty_state": "Commencez à naviguer puis nous afficherons des articles, des vidéos ou d’autres pages que vous avez récemment visités ou ajoutés aux marque-pages.",
@@ -106,5 +106,6 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Conditions d’utilisation",
   "firstrun_privacy_notice": "Politique de confidentialité",
   "firstrun_continue_to_login": "Continuer",
-  "firstrun_skip_login": "Ignorer cette étape"
+  "firstrun_skip_login": "Ignorer cette étape",
+  "pocket_learn_more": "En savoir plus"
 };
