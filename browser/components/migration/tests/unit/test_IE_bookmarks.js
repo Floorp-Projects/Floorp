@@ -14,28 +14,22 @@ add_task(async function() {
                           PlacesUtils.toolbarFolderId ];
 
   let itemCount = 0;
-  let bmObserver = {
-    onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI, aTitle) {
-      if (aTitle != label) {
+  let listener = events => {
+    for (let event of events) {
+      if (event.title != label) {
         itemCount++;
       }
-      if (expectedParents.length > 0 && aTitle == label) {
-        let index = expectedParents.indexOf(aParentId);
+      if (expectedParents.length > 0 && event.title == label) {
+        let index = expectedParents.indexOf(event.parentId);
         Assert.notEqual(index, -1);
         expectedParents.splice(index, 1);
       }
-    },
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onItemRemoved() {},
-    onItemChanged() {},
-    onItemVisited() {},
-    onItemMoved() {},
+    }
   };
-  PlacesUtils.bookmarks.addObserver(bmObserver);
+  PlacesUtils.observers.addListener(["bookmark-added"], listener);
 
   await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS);
-  PlacesUtils.bookmarks.removeObserver(bmObserver);
+  PlacesUtils.observers.removeListener(["bookmark-added"], listener);
   Assert.equal(MigrationUtils._importQuantities.bookmarks, itemCount,
                "Ensure telemetry matches actual number of imported items.");
 

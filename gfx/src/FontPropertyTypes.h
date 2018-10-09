@@ -275,6 +275,16 @@ public:
     return FontStretch(kUltraExpanded);
   }
 
+  // The style system represents percentages in the 0.0..1.0 range, and
+  // FontStretch does it in the 0.0..100.0 range.
+  //
+  // TODO(emilio): We should consider changing this class to deal with the same
+  // range as the style system.
+  static FontStretch FromStyle(float aStylePercentage)
+  {
+    return FontStretch(std::min(aStylePercentage * 100.0f, float(kMax)));
+  }
+
   bool IsNormal() const { return mValue == kNormal; }
   float Percentage() const { return ToFloat(); }
 
