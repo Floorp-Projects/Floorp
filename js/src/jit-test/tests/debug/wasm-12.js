@@ -1,8 +1,6 @@
-// |jit-test| test-also-no-wasm-baseline
-// Tests that wasm module scripts have special URLs.
+// |jit-test| test-also-no-wasm-baseline; skip-if: !wasmDebuggingIsSupported()
 
-if (!wasmDebuggingIsSupported())
-  quit();
+// Tests that wasm module scripts have special URLs.
 
 var g = newGlobal();
 var dbg = new Debugger(g);

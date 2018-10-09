@@ -1,10 +1,7 @@
-// |jit-test| test-also-no-wasm-baseline
+// |jit-test| test-also-no-wasm-baseline; skip-if: !wasmDebuggingIsSupported()
 // Checking if Debugger.Script.isInCatchScope return false for wasm.
 
 load(libdir + "wasm.js");
-
-if (!wasmDebuggingIsSupported())
-    quit();
 
 var results;
 wasmRunWithDebugger(
